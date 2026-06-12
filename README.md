@@ -1,152 +1,82 @@
-# EDGE FACTORY
+EDGE FACTORY
+Scrape → Assay → Discover → Validate → Monitor decay → Emit picks.
+Sport-agnostic. Source-agnostic. Wilson LB only. Walk-forward only.
 
-> Scrape → Assay → Discover → Validate → Monitor decay → Emit picks.
-> Sport-agnostic. Source-agnostic. The registry only ever contains edges
-> that survived out-of-sample validation.
+Born from Ma Golide – industrialized.
 
-Born from the Ma Golide lineage: Wilson lower bounds, bankers vs robbers,
-contract enforcement — industrialized.
-
-## The mental model
-
-```
-                 ┌─────────────────────────────────────────────────┐
-                 │                  SUPABASE (Postgres)            │
-                 │  events · predictions · odds · results · edges  │
-                 └─────────────────────────────────────────────────┘
-                      ▲              ▲                    │
-              ingest  │              │ certify            │ read-only
-                      │              │                    ▼
-   ┌──────────────┐   │   ┌──────────────────┐   ┌──────────────────┐
-   │   SOURCES    │───┘   │   EDGE MINER      │   │   PICK EMITTER   │
-   │ (adapters)   │       │ discover/validate │   │ slips, alerts,   │
-   │ forebet, ... │       │ /decay (walk-fwd) │   │ exports          │
-   └──────────────┘       └──────────────────┘   └──────────────────┘
-```
-
-Three pipelines, three cron schedules, one database. Everything else is a plugin.
-
-## Golden rules (the "right way", learned the hard way)
-
-1. **Raw first, opinions later.** Ingest stores raw payloads (`raw_payloads`) AND
-   normalized rows. You can always re-derive opinions from raw; never the reverse.
-2. **Sport-agnostic core.** The schema knows nothing about soccer. A "market" is
-   a string, a "selection" is a string, an outcome is WIN/LOSS/PUSH/VOID. Adding
-   tennis = writing one adapter file, zero schema changes.
-3. **Walk-forward or it didn't happen.** Edges are mined on train, certified on
-   out-of-sample data they never saw, and re-audited monthly. The pick emitter
-   reads ONLY certified, non-decayed edges.
-4. **Append-only facts.** Odds and predictions are snapshots with `captured_at`.
-   Never UPDATE a fact — insert a new snapshot. Line movement is itself a signal.
-5. **Idempotent everything.** Every ingest can be re-run for any date without
-   duplicating data (natural keys + upserts). Backfill = replay.
-6. **Politeness is infrastructure.** Rate limits and retry/backoff live in the
-   base adapter, not in each scraper. One misbehaving adapter can't burn an IP.
-7. **The dashboard never lies.** Live performance is always shown against the
-   edge's certified OOS benchmark, with Wilson bounds. Decay triggers auto-bench.
-
-## Repo layout
-
-```
-edge-factory/
-├── README.md
-├── pyproject.toml
-├── .env.example                 # SUPABASE_URL, SUPABASE_KEY (never commit .env)
-├── supabase/
-│   └── migrations/
-│       ├── 0001_core.sql        # sports, leagues, events, results
-│       ├── 0002_signals.sql     # sources, predictions, odds snapshots, raw payloads
-│       └── 0003_edges.sql       # edge registry, edge_picks ledger, decay audits
-├── src/edgefactory/
-│   ├── config.py                # env + settings
-│   ├── db.py                    # supabase client, bulk upsert helpers
-│   ├── models.py                # dataclasses mirroring the schema
-│   ├── assay.py                 # wilson, ROI, grading, decay verdicts (pure functions)
-│   ├── sources/
-│   │   ├── base.py              # SourceAdapter ABC + rate limiting + retries
-│   │   └── forebet.py           # first adapter (soccer, 4 markets)
-│   └── pipelines/
-│       ├── ingest.py            # source -> events/predictions/odds (+ results)
-│       ├── settle.py            # fill results, settle open edge_picks
-│       ├── mine.py              # walk-forward discovery -> certify -> edges table
-│       └── emit.py              # certified edges + today's events -> picks
-├── scripts/
-│   ├── backfill.py              # replay a source over a date range
-│   └── daily.py                 # the one cron entrypoint: ingest→settle→emit
-├── tests/
-│   └── test_assay.py            # the math must never silently break
-└── .github/workflows/daily.yml  # scheduled runs via GitHub Actions (free cron)
-```
-
-## Quickstart
+Quickstart
 
 ```bash
-# 1. create a Supabase project (free tier is fine to start), grab URL + service key
-cp .env.example .env   # fill in
+pip install -r requirements.txt
+PYTHONPATH=src python -m pytest tests/ -q   # 5 passed
 
-# 2. apply migrations (Supabase SQL editor, or: supabase db push)
+# backfill a source
+python scripts/local_backfill.py forebet 2024-01-01 2026-06-12 --max-seconds 1500
 
-# 3. install
-pip install -e .
+# daily capture (all 12 sources)
+python scripts/capture_daily.py
 
-# 4. backfill forebet history
-python scripts/backfill.py forebet 2024-01-01 2026-06-11
+# build warehouse
+python scripts/build_warehouse.py
 
-# 5. mine edges (walk-forward)
-python -m edgefactory.pipelines.mine --split-months 12
+# mine consensus edges
+python scripts/mine_consensus.py --split 2025-06-01
 
-# 6. daily run (or let the GitHub Action do it)
-python scripts/daily.py
+# today's picks
+PYTHONPATH=src python scripts/picks_today.py
 ```
 
-## Registered sources (all live-tested)
+Sources (12)
+source	markets	odds	history
+forebet	1x2, ou, btts	✅	2024-01+
+zulubet	1x2	✅	2023-12+
+statarea	1x2, ou_1.5/2.5/3.5	—	2015+ (2024+ scraped)
+vitibet	1x2	—	2018+
+scoutingstats	1x2, btts, ou	✅	capture-forward
+predictz	1x2 pick	✅	capture-forward
+windrawwin	1x2 pick	—	capture-forward
+afootballreport	ou, btts	—	capture-forward
+betclan	1x2	—	capture-forward
+freesupertips	expert tips	✅	capture-forward
+bettingclosed	1x2, ou, btts	✅	archive
+bzzoiro	1x2, ou, btts, xG	—	API, ~7 weeks ahead, needs BZZOIRO_TOKEN
+All adapters: fetch_day(date) -> list[dict], COLUMNS = [...]
 
-| source | markets | odds | history (backfillable) | notes |
-|---|---|---|---|---|
-| forebet | 1x2, ou_2.5, btts | ✅ best | ✅ to 2024-01 | reference adapter, JSON endpoint |
-| zulubet | 1x2 | ✅ avg | ✅ to ~2024 | `tips-DD-MM-YYYY.html` archives |
-| statarea | 1x2, ht_1x2, ou_1.5/2.5/3.5 | — | ✅ to ~2024 | `/predictions/YYYY-MM-DD`, results+HT |
-| scoutingstats | 1x2, btts, ou_1.5/2.5/3.5 | ✅ | capture-forward | ML model, clean JSON API |
-| vitibet | 1x2 | — | capture-forward | quicktips page, ~30 matches/day |
-| afootballreport | ou_1.5/2.5, btts | — | capture-forward | streak-based tips -> pseudo-prob + streak in extra |
+Layout
 
-Backfillable keys are listed in `sources/__init__.py::BACKFILLABLE`.
-Three independent historical sources = consensus mining on day one.
-
-## Adding a new sport/source = one file
-
-```python
-# src/edgefactory/sources/my_tennis_source.py
-class MyTennisSource(SourceAdapter):
-    source_key = "my_tennis_source"
-    sport = "tennis"
-    def fetch_day(self, date): ...      # hit their API/page
-    def normalize(self, raw): ...       # -> list[NormalizedEvent]
 ```
-Register it in `sources/__init__.py`. Done — ingest, mining, decay, picks all
-work automatically because they only speak the normalized schema.
+src/edgefactory/
+  assay.py       # Wilson LB/UB, grade, decay_verdict, roi – TESTED
+  config.py      # GATES
+  util.py        # norm_team
+  warehouse.py   # DuckDB views for all 12 sources
+  sources/       # 12 adapters
+scripts/
+  local_backfill.py   # CSV backfill, resumable
+  capture_daily.py    # daily cron, all sources
+  build_warehouse.py  # CSV → warehouse.duckdb
+  mine_consensus.py   # walk-forward miner
+  picks_today.py      # certified picks
+tests/test_assay.py   # 5 passed
+supabase/migrations/  # 0001-0005, registers all 12 sources
+HANDOVER.md           # single source of truth – update in place
+```
 
-## Scaling path
+Golden rules
+Wilson lower bound, never raw hit rate
+Walk-forward only, no mini-backtests
+ROI alongside hit rate, always
+Edge decay: HEALTHY / WATCH / DECAYING / DEAD – auto-bench
+Best odds inflate ROI ~2x – caveat always
+Repo clean – stale files deleted immediately. ONE handover file: HANDOVER.md
 
-| Stage | Volume | What changes |
-|---|---|---|
-| now | <5M rows | Supabase free/pro, this repo as-is |
-| growth | 5–50M | partition `odds_snapshots` by month, materialized views for mining |
-| serious | 50M+ | move mining to DuckDB/Polars reading parquet exports; Supabase stays the system of record for picks/edges |
+Certified edges (split 2025-06-01)
+2-way unanimous avg≥70% → 87% hit, LB 0.823, +4.9% ROI – PLATINUM
+3-way unanimous avg≥65% → 80% hit, LB 0.763 – strong
+Disagreement → 33-40% – VETO, never bet
+See HANDOVER.md for full details.
 
-The mining pipeline already reads via chunked exports, so the DuckDB jump is a
-swap, not a rewrite.
+Supabase
+Schema in supabase/migrations/ – ready for edge registry / pick ledger. Live ingest is CSV/DuckDB first. Set BZZOIRO_TOKEN in env / GitHub Actions secret.
 
-## Running Locally & Setup
-
-1. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. **Key Scripts to run:**
-   - `scripts/capture_daily.py`: Scrape daily data from all sources.
-   - `scripts/build_warehouse.py`: Process and store data locally in DuckDB.
-   - `scripts/mine_consensus.py`: Run edge discovery across multiple sources.
-   - `scripts/picks_today.py`: Emit today's picks.
-3. **Data Storage:**
-   - The `localdata/` directory is strictly for local intermediate cache and is NOT tracked in git. The ultimate destination and system of record is Supabase.
+Antidrift build – 2026-06-12
