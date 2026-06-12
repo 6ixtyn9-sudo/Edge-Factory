@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# OS/Editor
+.DS_Store
+*.swp
+*.swo
+*~
+*.tmp
+
+# Project Data
+localdata/*.duckdb
+localdata/*.csv.gz
+localdata/state_*.json
