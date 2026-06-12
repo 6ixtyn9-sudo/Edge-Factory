@@ -290,9 +290,11 @@ def main():
         print("edge registry missing/empty -> fallback to certified "
               "thresholds: 1x2 2-way>=70 / 3-way>=65 + veto; OU/BTTS skipped")
 
+    all_picks: list = []
     total = 0
     for day in days:
         picks, vetoes, n_up = run_day(day, t1x2, ou_edge, btts_edge)
+        all_picks.extend(picks)
         total += len(picks)
         print(f"\n=== {day} — {len(picks)} certified picks "
               f"({vetoes} vetoed, {n_up} upcoming matches) ===")
@@ -311,6 +313,11 @@ def main():
               "no edge, no bet.")
     print("\n⚠️  'Best odds' overstate realizable ROI (~halve it at a real book)."
           "\n⚠️  Flat stakes, never chase. Bet only what you can afford to lose.")
+
+    # Write JSON for daily.py report generation and Supabase sync
+    _json_path = ROOT / "localdata" / "picks_today.json"
+    _json_path.parent.mkdir(parents=True, exist_ok=True)
+    _json_path.write_text(__import__("json").dumps(all_picks, indent=2))
 
 
 if __name__ == "__main__":
