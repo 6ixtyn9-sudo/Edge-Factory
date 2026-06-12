@@ -8,6 +8,8 @@ Quickstart
 
 ```bash
 pip install -r requirements.txt
+cp .env.example .env        # fill BZZOIRO_TOKEN; .env is gitignored, NEVER commit
+set -a; source .env; set +a # nothing auto-loads .env yet - export it yourself
 PYTHONPATH=src python -m pytest tests/ -q   # 5 passed
 
 # backfill a source
@@ -62,6 +64,9 @@ supabase/migrations/  # 0001-0005, registers all 12 sources
 HANDOVER.md           # single source of truth – update in place
 ```
 
+Environment
+`cp .env.example .env` and fill in. Required today: BZZOIRO_TOKEN (bzzoiro adapter reads os.environ directly). Supabase keys stay placeholders until the sync step ships. NOTE: no load_dotenv() in the code yet - export the file into your shell (`set -a; source .env; set +a`) or use CI secrets. GitHub Actions uses the BZZOIRO_TOKEN repo secret, not .env.
+
 Golden rules
 Wilson lower bound, never raw hit rate
 Walk-forward only, no mini-backtests
@@ -69,6 +74,7 @@ ROI alongside hit rate, always
 Edge decay: HEALTHY / WATCH / DECAYING / DEAD – auto-bench
 Best odds inflate ROI ~2x – caveat always
 Repo clean – stale files deleted immediately. ONE handover file: HANDOVER.md
+Every repo change ships via the anti-drift handover protocol – HANDOVER.md §10 (file payloads + SHA-256 gates + pinned base commit + independent GitHub verification). No code travels through chat.
 
 Certified edges (split 2025-06-01)
 2-way unanimous avg≥70% → 87% hit, LB 0.823, +4.9% ROI – PLATINUM

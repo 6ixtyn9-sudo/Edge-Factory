@@ -73,6 +73,11 @@ See localdata/edges_consensus.json after running mine_consensus.py
 ```bash
 pip install -r requirements.txt   # pandas numpy duckdb curl_cffi pytest
 
+# one-time env setup: copy template, fill BZZOIRO_TOKEN (rest are placeholders
+# until Supabase sync ships). NOTHING auto-loads .env yet - export it:
+cp .env.example .env
+set -a; source .env; set +a
+
 # backfill a source
 PYTHONPATH=src python scripts/local_backfill.py forebet 2024-01-01 2026-06-12 --max-seconds 1500
 
@@ -128,10 +133,34 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * mine_consensus.py now dynamically verifies and scales all probabilities, and covers 1x2, OU2.5, and BTTS across forebet, zulubet, statarea, vitibet, betclan, scoutingstats, and bzzoiro gracefully.
 * predictz / windrawwin / betclan need curl_cffi – installed via requirements.txt
 * bzzoiro needs BZZOIRO_TOKEN env – adapter uses Authorization: Token <key>
+* .env is NOT auto-loaded – no load_dotenv() call anywhere yet (python-dotenv is in requirements but unused). Export manually (`set -a; source .env; set +a`) or via CI secrets. Wire load_dotenv into config.py as part of the Supabase sync step, not before.
 * picks_today.py now supports 1x2/OU/BTTS, reads localdata/edges_consensus.json (certified edges only) with fallback to certified thresholds T2=70/T3=65 + veto when the registry is missing/empty. OU/BTTS run only with certified edges (no fallback). Fresh clone: localdata/ is empty BY DESIGN – run picks_today directly, fallback triggers; backfill is a separate parallel job, never a prerequisite. Live adapters vitibet/betclan return 0-100 probs – picks_today normalizes defensively (>1.5 → /100).
 * No live odds movement tracking yet – odds_snapshots table exists in Supabase schema, not wired to CSV pipeline
 * GitHub Actions: .github/workflows/daily-capture.yml runs capture_daily.py – needs BZZOIRO_TOKEN secret set
 
+10. OPERATIONAL STANDARD — anti-drift handover protocol (MANDATORY for every repo change)
+
+Lesson learned 2026-06-12, the hard way: LLM executors corrupt byte-sensitive payloads routed through chat. Attempt 1: markdown mangled raw Python (indentation stripped, comments eaten, `_x_` italicized). Attempt 2: a 13KB base64 blob was regenerated from the executor's own context and hallucinated mid-stream (`{vetoes}` became garbage, typos inside valid base64). Both were caught ONLY by SHA-256 gates. File-based handoff fixed it. Steps 3 and 4 shipped this way with zero drift. This protocol is now LAW for every commit:
+
+ROLES: BUILDER (planning agent: writes + tests the change in a sandbox against current GitHub HEAD, produces the handoff bundle) → EXECUTOR (has push credentials: copies files, verifies hashes, commits, pushes) → VERIFIER (independently re-clones GitHub and re-checks everything).
+
+THE BUNDLE: payload files (full file contents, never diffs-in-prose) + SHA256SUMS + commit_msg.txt + an executor prompt. Payloads travel as FILES (download/disk), NEVER as chat text — no heredocs, no base64-in-prompt, no “retype this code”.
+
+EXECUTOR RULES:
+* Gate 0 FIRST: verify every payload hash BEFORE touching the repo. Mismatch → STOP.
+* Required base commit pinned in the prompt; if origin/main differs → STOP, never merge/guess.
+* Install by `cp` only. Never open payloads in an editor, never retype, never reconstruct from logs/transcripts/memory, never “repair” — a hash mismatch means corrupted transfer, not a fixable problem.
+* Post-install gates: per-file SHA-256, pytest green, py_compile, localdata/ empty, `git status --porcelain` matching the EXACT expected line set — nothing extra.
+* One ordinary commit on main, parent = pinned base. No rebase/squash/force-push. Commit message from file (`git commit -F`).
+* ANY gate fails → STOP, report verbatim, change nothing.
+* Helper files (payloads, *.b64, runner scripts) never enter the repo tree.
+
+PROOF BUNDLE (raw, unedited): git ls-remote of GitHub main + rev-parse HEAD/HEAD^ + show --stat + file hashes + pytest output + runtime smoke output. Claims without matching on-GitHub state = task failed.
+
+VERIFIER: fresh clone from GitHub; re-check remote SHA, parent commit, byte-identity of changed files vs the canonical build, diff scope, tests, runtime. On-GitHub state is the ONLY source of truth — executor reports are hypotheses until the clone confirms them.
+
+DATA JOBS (backfill/capture) are the ONE exception to the bundle — only because localdata/ is gitignored and they push nothing. They must still end with `git status --porcelain` EMPTY (helpers deleted) and a verifiable completion report (row counts, state files, miner output).
+
 Run order (nightly): capture_daily → build_warehouse → mine_consensus → decay_monitor → picks_today. decay_monitor needs warehouse + registry; with neither it reports and exits 0 (safe on fresh clone).
 
-Last updated: 2026-06-12 – Added scripts/decay_monitor.py (Step 4): HEALTHY/WATCH/DECAYING/DEAD audit per certified edge over a 60d window (config.recent_window_days), auto-bench writes status="benched" back to edges_consensus.json; benching is a circuit breaker – next mine_consensus run re-validates on full data. Previously: picks_today 1x2/OU/BTTS registry-aware; mine_consensus extended to OU/BTTS + vitibet/betclan/bzzoiro.
+Last updated: 2026-06-12 – Baked anti-drift handover protocol into §10 as operational standard; documented .env setup (BZZOIRO_TOKEN required, .env not auto-loaded). Previously: Added scripts/decay_monitor.py (Step 4): HEALTHY/WATCH/DECAYING/DEAD audit per certified edge over a 60d window (config.recent_window_days), auto-bench writes status="benched" back to edges_consensus.json; benching is a circuit breaker – next mine_consensus run re-validates on full data. Previously: picks_today 1x2/OU/BTTS registry-aware; mine_consensus extended to OU/BTTS + vitibet/betclan/bzzoiro.
