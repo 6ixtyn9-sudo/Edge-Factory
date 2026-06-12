@@ -288,15 +288,15 @@ def main():
         if has_sa:
             selects.append("sa.pick_ou AS sa_pick_ou")
             p_avg.append(f"CASE WHEN sa.pick_ou = 'over' THEN sa.p_o25/{ssa} ELSE (1.0 - sa.p_o25/{ssa}) END")
-            picks_eq.append("fb.pick_ou = sa.pick_ou")
+            picks_eq.append("fb_pick_ou = sa_pick_ou")
         if has_ss:
             selects.append("ss.pick_ou AS ss_pick_ou")
             p_avg.append(f"CASE WHEN ss.pick_ou = 'over' THEN ss.p_o25/{sss} ELSE (1.0 - ss.p_o25/{sss}) END")
-            picks_eq.append("fb.pick_ou = ss.pick_ou")
+            picks_eq.append("fb_pick_ou = ss_pick_ou")
         if has_bzzoiro_settled:
             selects.append("bz.pick_ou AS bz_pick_ou")
             p_avg.append(f"CASE WHEN bz.pick_ou = 'over' THEN bz.p_o25/{sbz} ELSE (1.0 - bz.p_o25/{sbz}) END")
-            picks_eq.append("fb.pick_ou = bz.pick_ou")
+            picks_eq.append("fb_pick_ou = bz_pick_ou")
             
         selects.append(f"(({'+'.join(p_avg)})/{len(p_avg)})*100 AS avg_p")
         
@@ -348,11 +348,11 @@ def main():
         if has_ss:
             selects.append("ss.pick_btts AS ss_pick_btts")
             p_avg.append(f"CASE WHEN ss.pick_btts = 'yes' THEN ss.p_gg/{sss} ELSE ss.p_ng/{sss} END")
-            picks_eq.append("fb.pick_btts = ss.pick_btts")
+            picks_eq.append("fb_pick_btts = ss_pick_btts")
         if has_bzzoiro_settled:
             selects.append("bz.pick_btts AS bz_pick_btts")
             p_avg.append(f"CASE WHEN bz.pick_btts = 'yes' THEN bz.p_gg/{sbz} ELSE (1.0 - bz.p_gg/{sbz}) END")
-            picks_eq.append("fb.pick_btts = bz.pick_btts")
+            picks_eq.append("fb_pick_btts = bz_pick_btts")
             
         selects.append(f"(({'+'.join(p_avg)})/{len(p_avg)})*100 AS avg_p")
         
