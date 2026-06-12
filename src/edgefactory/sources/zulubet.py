@@ -1,79 +1,84 @@
+"""Zulubet adapter — plain HTML, 1x2 probs + average odds + FT score.
+
+URL: https://www.zulubet.com/tips-DD-MM-YYYY.html
+History: 410 Gone before ~2023-12-25.
 """
-zulubet.py — Zulubet adapter (soccer, 1x2 probs + average odds + FT results).
-History: date-addressable archives (tips-DD-MM-YYYY.html) back to ~2024.
-"""
+from __future__ import annotations
+
 import re
-from datetime import date, datetime, timedelta, timezone
+import time
+import urllib.error
+import urllib.request
 
-from ..models import (NormalizedEvent, NormalizedOdds, NormalizedPrediction,
-                      NormalizedResult)
-from .base import SourceAdapter
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+MIN_DATE = "2023-12-25"
 
-BASE = "https://www.zulubet.com"
-
-# one match row, non-greedy across the whole <tr>
-ROW_RE = re.compile(
-    r"<noscript>(\d{2}-\d{2}), (\d{2}:\d{2})</noscript>.*?"
-    r'title="([^"]*)"[^>]*>\s*([^<]+?)\s*-\s*([^<]+?)</td>'
-    r".*?1: (\d+)%.*?X: (\d+)%.*?2: (\d+)%"
-    r".*?1: ([\d.]+)<br>X: ([\d.]+)<br>2: ([\d.]+)"
-    r'.*?<td style="text-align: center;">([^<]*)</td>',
-    re.S)
-
-SCORE_RE = re.compile(r"^(\d+):(\d+)$")
+_ROWSPLIT = re.compile(r'<tr style="background-color:#(?:EFEFEF|FFFFFF)">')
+_LEAGUE = re.compile(r'title="([^"]*)"')
+_TEAMS = re.compile(r'height="11"\s*/?>\s*([^<]+?)\s*-\s*([^<]+?)</td>')
+_PROBS = re.compile(r'class="prob prediction_full"[^>]*>(\d+)%</td>')
+_TIP = re.compile(r"<span style=\"color:green\"><b>([^<]+)</b></span>")
+_ODDS = re.compile(r'class="aver_odds_full">([\d.]+)</td>')
+_SCORE = re.compile(r'<td style="text-align: center;">(\d+):(\d+)</td>')
+_TIME = re.compile(r"<noscript>([\d-]+, [\d:]+)</noscript>")
 
 
-class ZulubetSource(SourceAdapter):
-    source_key = "zulubet"
-    sport = "soccer"
-    min_delay = 1.0          # be extra polite, plain PHP site
+def fetch_day(date: str, retries: int = 3) -> list[dict]:
+    """date is ISO YYYY-MM-DD; zulubet wants DD-MM-YYYY."""
+    if date < MIN_DATE:
+        return []
+    y, m, d = date.split("-")
+    url = f"https://www.zulubet.com/tips-{d}-{m}-{y}.html"
+    html = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                html = r.read().decode("utf-8", "replace")
+            break
+        except urllib.error.HTTPError as e:
+            if e.code in (404, 410):
+                return []
+            if attempt == retries - 1:
+                raise
+            time.sleep(1.5 * (attempt + 1))
+        except Exception:
+            if attempt == retries - 1:
+                raise
+            time.sleep(1.5 * (attempt + 1))
+    if not html:
+        return []
+    out = []
+    for chunk in _ROWSPLIT.split(html)[1:]:
+        teams = _TEAMS.search(chunk)
+        probs = _PROBS.findall(chunk)
+        if not teams or len(probs) < 3:
+            continue
+        league = _LEAGUE.search(chunk)
+        tip = _TIP.search(chunk)
+        odds = _ODDS.findall(chunk)
+        score = _SCORE.search(chunk)
+        t = _TIME.search(chunk)
+        out.append(
+            {
+                "date": date,
+                "kickoff": t.group(1) if t else None,
+                "league": league.group(1) if league else None,
+                "home": teams.group(1).strip(),
+                "away": teams.group(2).strip(),
+                "p1": float(probs[0]), "px": float(probs[1]), "p2": float(probs[2]),
+                "tip": tip.group(1) if tip else None,
+                "odd1": float(odds[0]) if len(odds) > 0 else None,
+                "oddx": float(odds[1]) if len(odds) > 1 else None,
+                "odd2": float(odds[2]) if len(odds) > 2 else None,
+                "hs": int(score.group(1)) if score else None,
+                "gs": int(score.group(2)) if score else None,
+            }
+        )
+    return out
 
-    def fetch_day(self, day: date) -> dict:
-        url = f"{BASE}/tips-{day.strftime('%d-%m-%Y')}.html"
-        return {"html": self.get(url).text, "url": url}
 
-    def normalize(self, raw: dict, day: date) -> list[NormalizedEvent]:
-        html = raw["html"]
-        events = []
-        # split per row to keep the regex anchored within one match
-        chunks = html.split("<noscript>")
-        for chunk in chunks[1:]:
-            m = ROW_RE.search("<noscript>" + chunk[:4000])
-            if not m:
-                continue
-            (dm, hhmm, league_title, home, away,
-             p1, px, p2, o1, ox, o2, tail) = m.groups()
-
-            # noscript time is UTC+1 on zulubet; date sanity: trust requested day
-            try:
-                hh, mm = map(int, hhmm.split(":"))
-                dd, mo = map(int, dm.split("-"))
-                start = datetime(day.year, mo, dd, hh, mm,
-                                 tzinfo=timezone.utc) - timedelta(hours=1)
-            except ValueError:
-                continue
-
-            country, _, league = league_title.partition(" ")
-            home, away = home.strip(), away.strip()
-
-            preds = [NormalizedPrediction("1x2", "home", int(p1) / 100),
-                     NormalizedPrediction("1x2", "draw", int(px) / 100),
-                     NormalizedPrediction("1x2", "away", int(p2) / 100)]
-            odds = [NormalizedOdds("1x2", "home", float(o1), bookmaker="avg"),
-                    NormalizedOdds("1x2", "draw", float(ox), bookmaker="avg"),
-                    NormalizedOdds("1x2", "away", float(o2), bookmaker="avg")]
-
-            result = None
-            sm = SCORE_RE.match(tail.strip())
-            if sm:
-                fh, fa = int(sm.group(1)), int(sm.group(2))
-                result = NormalizedResult(fh, fa, {"ft": [fh, fa]})
-
-            ref = f"{day.isoformat()}:{home}:{away}"
-            events.append(NormalizedEvent(
-                source_ref=ref, sport=self.sport,
-                competition_name=league.strip() or league_title,
-                competition_ref=league_title, country=country,
-                home_name=home, home_ref=home, away_name=away, away_ref=away,
-                start_time=start, predictions=preds, odds=odds, result=result))
-        return events
+COLUMNS = [
+    "date", "kickoff", "league", "home", "away",
+    "p1", "px", "p2", "tip", "odd1", "oddx", "odd2", "hs", "gs",
+]

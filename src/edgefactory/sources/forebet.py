@@ -1,108 +1,121 @@
+"""Forebet adapter — JSON endpoint, richest source (probs + best odds + FT/HT scores).
+
+Endpoint: /scripts/getrs.php?ln=en&tp={1x2,uo,bts,ht}&in=DATE&ord=0&tz=0&tzs=&tze=
+Needs UA + Referer + X-Requested-With. Serves nothing before 2024-01-01.
+Response: [rows, meta]. The 1x2 payload already carries FT and HT scores,
+so one merged wide row per match covers all markets.
 """
-forebet.py — first adapter. Soccer, 4 markets via Forebet's JSON endpoint.
-This is the reference implementation: copy this file to add a new source.
-"""
-from datetime import date, datetime, timezone
+from __future__ import annotations
 
-from ..models import (NormalizedEvent, NormalizedOdds, NormalizedPrediction,
-                      NormalizedResult)
-from .base import SourceAdapter
+import json
+import time
+import urllib.request
 
-BASE = "https://www.forebet.com"
-VOID_COMMENTS = {"Postp.", "Aban.", "Cancl.", "Awarded", "Int."}
+BASE = "https://www.forebet.com/scripts/getrs.php"
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    ),
+    "Referer": "https://www.forebet.com/en/football-tips-and-predictions-for-today",
+    "X-Requested-With": "XMLHttpRequest",
+}
+MIN_DATE = "2024-01-01"
+DEFAULT_MARKETS = ("1x2", "uo", "bts")  # ht is certified charcoal; opt-in only
 
 
-def _num(v):
+def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
+    url = f"{BASE}?ln=en&tp={tp}&in={date}&ord=0&tz=0&tzs=&tze="
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                data = json.loads(r.read().decode("utf-8", "replace"))
+            if isinstance(data, list) and data and isinstance(data[0], list):
+                return data[0]
+            return []
+        except Exception:
+            if attempt == retries - 1:
+                raise
+            time.sleep(1.5 * (attempt + 1))
+    return []
+
+
+def _f(v):
     try:
-        return float(v)
+        x = float(v)
+        return x if x == x else None
     except (TypeError, ValueError):
         return None
 
 
-class ForebetSource(SourceAdapter):
-    source_key = "forebet"
-    sport = "soccer"
-    min_delay = 0.4
+def _i(v):
+    try:
+        return int(v)
+    except (TypeError, ValueError):
+        return None
 
-    MARKETS = ("1x2", "uo", "bts")
 
-    def fetch_day(self, day: date) -> dict:
-        ds = day.isoformat()
-        tzs = int(datetime(day.year, day.month, day.day, tzinfo=timezone.utc).timestamp())
-        out = {}
-        for tp in self.MARKETS:
-            url = (f"{BASE}/scripts/getrs.php?ln=en&tp={tp}&in={ds}"
-                   f"&ord=0&tz=0&tzs={tzs}&tze={tzs + 100800}")
-            resp = self.get(url, headers={
-                "Referer": f"{BASE}/en/football-predictions/predictions-1x2/{ds}",
-                "X-Requested-With": "XMLHttpRequest"})
-            out[tp] = resp.json()
-        return out
+def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[dict]:
+    """Fetch one calendar day, merge all market endpoints by match id."""
+    if date < MIN_DATE:
+        return []
+    rows: dict[str, dict] = {}
+    for tp in markets:
+        try:
+            payload = _get(tp, date)
+        except Exception:
+            payload = []
+        for m in payload:
+            mid = str(m.get("id"))
+            row = rows.setdefault(
+                mid,
+                {
+                    "date": date,
+                    "kickoff": m.get("DATE_BAH"),
+                    "league_id": m.get("league_id"),
+                    "league": m.get("short_tag"),
+                    "home": m.get("HOST_NAME"),
+                    "away": m.get("GUEST_NAME"),
+                    "hs": _i(m.get("Host_SC")),
+                    "gs": _i(m.get("Guest_SC")),
+                    "ht_hs": _i(m.get("Host_SC_HT")),
+                    "ht_gs": _i(m.get("Guest_SC_HT")),
+                    "status": m.get("comment"),
+                },
+            )
+            if tp == "1x2":
+                row.update(
+                    p1=_f(m.get("Pred_1")), px=_f(m.get("Pred_X")), p2=_f(m.get("Pred_2")),
+                    odd1=_f(m.get("best_odd_1")), oddx=_f(m.get("best_odd_X")),
+                    odd2=_f(m.get("best_odd_2")), kelly=_f(m.get("kelly")),
+                    pred_hs=_i(m.get("host_sc_pr")), pred_gs=_i(m.get("guest_sc_pr")),
+                )
+            elif tp == "uo":
+                row.update(
+                    p_under=_f(m.get("pr_under")), p_over=_f(m.get("pr_over")),
+                    odd_under=_f(m.get("best_under")), odd_over=_f(m.get("best_over")),
+                    goalsavg=_f(m.get("goalsavg")),
+                )
+            elif tp == "bts":
+                row.update(
+                    p_gg=_f(m.get("Pred_gg")), p_ng=_f(m.get("Pred_no_gg")),
+                    odd_gg=_f(m.get("odds_gg_y")), odd_ng=_f(m.get("odds_gg_n")),
+                )
+            elif tp == "ht":
+                row.update(
+                    p1_ht=_f(m.get("Pred_1_HT")), px_ht=_f(m.get("Pred_X_HT")),
+                    p2_ht=_f(m.get("Pred_2_HT")),
+                )
+        time.sleep(sleep)
+    return list(rows.values())
 
-    def normalize(self, raw: dict, day: date) -> list[NormalizedEvent]:
-        m1, leagues = (raw["1x2"] + [[], {}])[:2] if isinstance(raw["1x2"], list) else ([], {})
-        uo = {m["id"]: m for m in (raw["uo"][0] or [])}
-        bts = {m["id"]: m for m in (raw["bts"][0] or [])}
 
-        events = []
-        for m in (m1 or []):
-            p1, px, p2 = _num(m.get("Pred_1")), _num(m.get("Pred_X")), _num(m.get("Pred_2"))
-            if p1 is None:
-                continue
-            lg = leagues.get(str(m.get("league_id"))) or []
-            try:
-                start = datetime.strptime(m["DATE_BAH"], "%Y-%m-%d %H:%M:%S").replace(
-                    tzinfo=timezone.utc)
-            except (KeyError, ValueError, TypeError):
-                continue
-
-            preds = [
-                NormalizedPrediction("1x2", "home", p1 / 100,
-                                     {"pred_score": [m.get("host_sc_pr"), m.get("guest_sc_pr")],
-                                      "avg_goals": m.get("goalsavg")}),
-                NormalizedPrediction("1x2", "draw", (px or 0) / 100),
-                NormalizedPrediction("1x2", "away", (p2 or 0) / 100),
-            ]
-            odds = []
-            for sel, key in (("home", "best_odd_1"), ("draw", "best_odd_X"),
-                             ("away", "best_odd_2")):
-                if (o := _num(m.get(key))):
-                    odds.append(NormalizedOdds("1x2", sel, o))
-
-            u = uo.get(m["id"], {})
-            if (pu := _num(u.get("pr_under"))) is not None:
-                po = _num(u.get("pr_over")) or 0
-                preds += [NormalizedPrediction("ou_2.5", "under", pu / 100),
-                          NormalizedPrediction("ou_2.5", "over", po / 100)]
-                for sel, key in (("under", "best_under"), ("over", "best_over")):
-                    if (o := _num(u.get(key))):
-                        odds.append(NormalizedOdds("ou_2.5", sel, o))
-
-            b = bts.get(m["id"], {})
-            if (pg := _num(b.get("Pred_gg"))) is not None:
-                pn = _num(b.get("Pred_no_gg")) or 0
-                preds += [NormalizedPrediction("btts", "yes", pg / 100),
-                          NormalizedPrediction("btts", "no", pn / 100)]
-                for sel, key in (("yes", "odds_gg_y"), ("no", "odds_gg_n")):
-                    if (o := _num(b.get(key))):
-                        odds.append(NormalizedOdds("btts", sel, o))
-
-            result = None
-            fh, fa = _num(m.get("Host_SC")), _num(m.get("Guest_SC"))
-            comment = (m.get("comment") or "").strip()
-            if comment in VOID_COMMENTS:
-                result = NormalizedResult(None, None, {}, status="void")
-            elif fh is not None and fa is not None:
-                result = NormalizedResult(fh, fa, {
-                    "ft": [fh, fa],
-                    "ht": [_num(m.get("Host_SC_HT")), _num(m.get("Guest_SC_HT"))]})
-
-            events.append(NormalizedEvent(
-                source_ref=str(m["id"]), sport=self.sport,
-                competition_name=lg[1] if len(lg) > 1 else "",
-                competition_ref=str(m.get("league_id", "")),
-                country=lg[0] if lg else "",
-                home_name=m.get("HOST_NAME", ""), home_ref=str(m.get("host_id", "")),
-                away_name=m.get("GUEST_NAME", ""), away_ref=str(m.get("guest_id", "")),
-                start_time=start, predictions=preds, odds=odds, result=result))
-        return events
+COLUMNS = [
+    "date", "kickoff", "league_id", "league", "home", "away",
+    "hs", "gs", "ht_hs", "ht_gs", "status",
+    "p1", "px", "p2", "odd1", "oddx", "odd2", "kelly", "pred_hs", "pred_gs",
+    "p_under", "p_over", "odd_under", "odd_over", "goalsavg",
+    "p_gg", "p_ng", "odd_gg", "odd_ng",
+    "p1_ht", "px_ht", "p2_ht",
+]

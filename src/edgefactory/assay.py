@@ -1,104 +1,103 @@
+"""Assay core: Wilson bounds, grading, decay verdicts.
+The non-negotiables:
+- Wilson lower bound, never raw hit rate, for any certification decision.
+- Walk-forward only. No mini-backtests.
+- ROI alongside hit rate, always.
 """
-assay.py — the pure math. No I/O, no DB, fully unit-tested.
-If these functions are wrong, everything downstream lies. Keep them boring.
-"""
+
+from __future__ import annotations
 import math
 from dataclasses import dataclass
 
-WILSON_Z = 1.645  # 95% one-sided
+Z95 = 1.959963984540054
 
-GRADES = [
-    ("PLATINUM", 0.85),
-    ("GOLD", 0.72),
-    ("SILVER", 0.62),
-    ("BRONZE", 0.55),
-    ("CHARCOAL", 0.0),
-]
-
-
-def wilson_lower_bound(wins: int, n: int, z: float = WILSON_Z) -> float:
-    """Worst plausible true win rate given the sample. Small n -> punished."""
-    if n == 0:
-        return 0.0
+def wilson_bounds(wins: int, n: int, z: float = Z95) -> tuple[float, float]:
+    """Wilson score interval (lower, upper) for a binomial proportion."""
+    if n <= 0:
+        return 0.0, 0.0
     p = wins / n
     denom = 1 + z * z / n
-    center = p + z * z / (2 * n)
-    spread = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
-    return max(0.0, (center - spread) / denom)
+    centre = p + z * z / (2 * n)
+    spread = z * math.sqrt((p * (1 - p) + z * z / (4 * n)) / n)
+    return (centre - spread) / denom, (centre + spread) / denom
 
+def wilson_lb(wins: int, n: int, z: float = Z95) -> float:
+    return wilson_bounds(wins, n, z)[0]
 
-def grade(rate: float) -> str:
-    for name, threshold in GRADES:
-        if rate >= threshold:
+def wilson_ub(wins: int, n: int, z: float = Z95) -> float:
+    return wilson_bounds(wins, n, z)[1]
+
+# ---- grading -----------------------------------------------------------
+
+GRADES = [
+    (0.80, "PLATINUM"),
+    (0.70, "GOLD"),
+    (0.60, "SILVER"),
+    (0.52, "BRONZE"),
+    (0.45, "COPPER"),
+]
+
+def grade(wins: int, n: int, min_n: int = 30) -> str:
+    """Grade a rule by its Wilson lower bound. Small n => UNGRADED, never inflated."""
+    if n < min_n:
+        return "UNGRADED"
+    lb = wilson_lb(wins, n)
+    for threshold, name in GRADES:
+        if lb >= threshold:
             return name
     return "CHARCOAL"
 
+# ---- decay -------------------------------------------------------------
 
 @dataclass
-class BetStats:
-    n: int = 0
-    wins: int = 0
-    pl_units: float = 0.0   # flat 1u staking
-    priced_n: int = 0
+class DecayReport:
+    verdict: str          # HEALTHY | WATCH | DECAYING | DEAD
+    baseline_lb: float
+    recent_lb: float
+    recent_ub: float
+    n_recent: int
 
-    def add(self, won: bool, odds: float | None) -> None:
-        self.n += 1
-        self.wins += int(won)
-        if odds is not None and odds > 1.0:
-            self.priced_n += 1
-            self.pl_units += (odds - 1.0) if won else -1.0
+def decay_verdict(
+    baseline_wins: int,
+    baseline_n: int,
+    recent_wins: int,
+    recent_n: int,
+    min_recent: int = 30,
+) -> DecayReport:
+    """Compare recent window against certified baseline.
+    DEAD:     recent Wilson UB below baseline LB (recent can't even touch the old floor)
+    DECAYING: recent LB below 90% of baseline LB and recent point estimate below baseline LB
+    WATCH:    recent point estimate below baseline LB
+    HEALTHY:  otherwise (or insufficient recent n -> WATCH, never HEALTHY by default)
+    """
+    b_lb = wilson_lb(baseline_wins, baseline_n)
+    r_lb, r_ub = wilson_bounds(recent_wins, recent_n)
 
-    @property
-    def hit_rate(self) -> float:
-        return self.wins / self.n if self.n else 0.0
+    if recent_n < min_recent:
+        return DecayReport("WATCH", b_lb, r_lb, r_ub, recent_n)
 
-    @property
-    def lb(self) -> float:
-        return wilson_lower_bound(self.wins, self.n)
+    r_p = recent_wins / recent_n
+    if r_ub < b_lb:
+        v = "DEAD"
+    elif r_p < b_lb and r_lb < 0.90 * b_lb:
+        v = "DECAYING"
+    elif r_p < b_lb:
+        v = "WATCH"
+    else:
+        v = "HEALTHY"
 
-    @property
-    def roi_pct(self) -> float | None:
-        return self.pl_units / self.priced_n * 100 if self.priced_n else None
+    return DecayReport(v, b_lb, r_lb, r_ub, recent_n)
 
-    def as_dict(self) -> dict:
-        return {
-            "n": self.n, "wins": self.wins,
-            "hit": round(self.hit_rate, 4), "lb": round(self.lb, 4),
-            "roi": round(self.roi_pct, 2) if self.roi_pct is not None else None,
-            "grade": grade(self.lb),
-        }
+def should_bench(report: DecayReport, recent_roi: float | None = None) -> bool:
+    """Bench an edge if decay says so, or recent ROI has gone materially negative."""
+    if report.verdict in ("DEAD", "DECAYING"):
+        return True
+    if recent_roi is not None and report.n_recent >= 30 and recent_roi < -0.05:
+        return True
+    return False
 
-
-def decay_verdict(monthly_roi: list[float]) -> str:
-    """Compare first half vs second half of a monthly ROI curve."""
-    if len(monthly_roi) < 4:
-        return "unknown"
-    half = len(monthly_roi) // 2
-    first = sum(monthly_roi[:half]) / half
-    second = sum(monthly_roi[half:]) / (len(monthly_roi) - half)
-    if second > first + 3:
-        return "growing"
-    if second < first - 8:
-        return "dead" if second < 0 else "decaying"
-    return "stable"
-
-
-def wilson_upper_bound(wins: int, n: int, z: float = WILSON_Z) -> float:
-    """Best plausible true win rate given the sample."""
-    if n == 0:
-        return 1.0
-    p = wins / n
-    denom = 1 + z * z / n
-    center = p + z * z / (2 * n)
-    spread = z * math.sqrt(p * (1 - p) / n + z * z / (4 * n * n))
-    return min(1.0, (center + spread) / denom)
-
-
-def should_bench(live_wins: int, live_n: int, certified_hit: float,
-                 tolerance: float = 0.05, min_n: int = 40) -> bool:
-    """Bench when live performance is SIGNIFICANTLY worse than certificate:
-    even the best plausible live rate (Wilson upper bound) sits below
-    certified_hit - tolerance. Noise alone can't bench an on-track edge."""
-    if live_n < min_n:
-        return False
-    return wilson_upper_bound(live_wins, live_n) < (certified_hit - tolerance)
+def roi(wins: int, n: int, avg_odds: float) -> float:
+    """Flat-stake ROI given wins, total bets and average decimal odds."""
+    if n <= 0:
+        return 0.0
+    return (wins * avg_odds - n) / n

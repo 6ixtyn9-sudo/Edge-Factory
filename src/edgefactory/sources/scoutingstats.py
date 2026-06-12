@@ -1,102 +1,104 @@
+"""ScoutingStats.ai adapter — hidden JSON API, ML model with probs AND odds.
+
+Endpoints:
+  https://scoutingstats.ai/api/fixtures/YYYY-MM-DD      (finished/live/upcoming)
+  https://scoutingstats.ai/api/odds?fixture_ids=1,2,3   (probs + odds, many markets)
+
+History: thin before ~mid-2025 (11 matches on 2024-06-10, 52 on 2025-06-10,
+164 on 2026-01-10) -> treat as capture-forward with shallow backfill.
 """
-scoutingstats.py — ScoutingStats.ai adapter (ML model, JSON API).
-  /api/fixtures/<YYYY-MM-DD>      -> finished/live/upcoming by league
-  /api/odds?fixture_ids=1,2,3     -> model probs + odds for many markets
-Markets: 1x2, btts, ou_1.5, ou_2.5, ou_3.5 (probs AND odds).
-"""
-from datetime import date, datetime, timezone
+from __future__ import annotations
 
-from ..models import (NormalizedEvent, NormalizedOdds, NormalizedPrediction,
-                      NormalizedResult)
-from .base import SourceAdapter
+import json
+import time
+import urllib.request
 
-BASE = "https://scoutingstats.ai"
-ODDS_BATCH = 40
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0",
+    "Accept": "application/json",
+}
+BASE = "https://scoutingstats.ai/api"
 
 
-class ScoutingStatsSource(SourceAdapter):
-    source_key = "scoutingstats"
-    sport = "soccer"
-    min_delay = 0.6
+def _get_json(url: str, retries: int = 3):
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return json.loads(r.read().decode("utf-8", "replace"))
+        except Exception:
+            if attempt == retries - 1:
+                raise
+            time.sleep(1.5 * (attempt + 1))
 
-    def fetch_day(self, day: date) -> dict:
-        fx = self.get(f"{BASE}/api/fixtures/{day.isoformat()}",
-                      headers={"Accept": "application/json"}).json()
-        fixtures = []
-        for section in ("finished", "live", "upcoming"):
-            for league, matches in (fx.get(section) or {}).items():
-                for m in matches:
-                    m["_section"] = section
-                    fixtures.append(m)
-        ids = [str(m["fixture_id"]) for m in fixtures]
-        odds = {}
-        for i in range(0, len(ids), ODDS_BATCH):
-            batch = ",".join(ids[i:i + ODDS_BATCH])
-            try:
-                resp = self.get(f"{BASE}/api/odds?fixture_ids={batch}",
-                                headers={"Accept": "application/json"}).json()
-                odds.update(resp.get("odds") or {})
-            except Exception:
-                continue
-        return {"fixtures": fixtures, "odds": odds}
 
-    def normalize(self, raw: dict, day: date) -> list[NormalizedEvent]:
-        events = []
-        for m in raw["fixtures"]:
-            fid = str(m["fixture_id"])
-            o = raw["odds"].get(fid) or {}
-            if not o:
-                continue
+def fetch_day(date: str) -> list[dict]:
+    data = _get_json(f"{BASE}/fixtures/{date}")
+    if not isinstance(data, dict):
+        return []
+    fixtures = []
+    for status in ("finished", "live", "upcoming"):
+        for league, matches in (data.get(status) or {}).items():
+            for m in matches:
+                fixtures.append((status, league, m))
+    if not fixtures:
+        return []
 
-            start = None
-            for key in ("starting_at", "start_time", "kickoff"):
-                if m.get(key):
-                    try:
-                        start = datetime.fromisoformat(
-                            str(m[key]).replace("Z", "+00:00"))
-                        if start.tzinfo is None:
-                            start = start.replace(tzinfo=timezone.utc)
-                    except ValueError:
-                        pass
-                    break
-            if start is None:
-                start = datetime(day.year, day.month, day.day, tzinfo=timezone.utc)
+    # odds+probs in batches of 50
+    odds_map: dict = {}
+    ids = [str(m["fixture_id"]) for _, _, m in fixtures]
+    for i in range(0, len(ids), 50):
+        chunk = ids[i : i + 50]
+        try:
+            od = _get_json(f"{BASE}/odds?fixture_ids={','.join(chunk)}")
+            odds_map.update((od or {}).get("odds", {}))
+        except Exception:
+            pass
 
-            preds, odds = [], []
+    out = []
+    for status, league, m in fixtures:
+        fid = str(m["fixture_id"])
+        o = odds_map.get(fid, {})
+        out.append(
+            {
+                "date": date,
+                "kickoff": m.get("starting_at"),
+                "league": m.get("league_name") or league,
+                "country": m.get("country_name"),
+                "home": m.get("home_team_name"),
+                "away": m.get("away_team_name"),
+                "hs": m.get("home_score") if m.get("is_finished") else None,
+                "gs": m.get("away_score") if m.get("is_finished") else None,
+                "status": m.get("status_text"),
+                # model probabilities (0-100)
+                "p1": o.get("home_prob"),
+                "px": o.get("draw_prob"),
+                "p2": o.get("away_prob"),
+                "p_o15": o.get("over_15_prob"),
+                "p_o25": o.get("over_25_prob"),
+                "p_o35": o.get("over_35_prob"),
+                "p_gg": o.get("btts_yes_prob"),
+                "p_ng": o.get("btts_no_prob"),
+                # bookmaker odds
+                "odd1": o.get("home_odds"),
+                "oddx": o.get("draw_odds"),
+                "odd2": o.get("away_odds"),
+                "odd_o15": o.get("1.5_over"),
+                "odd_u15": o.get("1.5_under"),
+                "odd_o25": o.get("2.5_over"),
+                "odd_u25": o.get("2.5_under"),
+                "odd_o35": o.get("3.5_over"),
+                "odd_u35": o.get("3.5_under"),
+                "odd_gg": o.get("btts_yes_odds"),
+                "odd_ng": o.get("btts_no_odds"),
+            }
+        )
+    return out
 
-            def add(market, sel, prob_key, odd_key):
-                p = o.get(prob_key)
-                if p is not None:
-                    preds.append(NormalizedPrediction(market, sel, float(p) / 100))
-                d = o.get(odd_key)
-                if d:
-                    odds.append(NormalizedOdds(market, sel, float(d)))
 
-            add("1x2", "home", "home_prob", "home_odds")
-            add("1x2", "draw", "draw_prob", "draw_odds")
-            add("1x2", "away", "away_prob", "away_odds")
-            add("btts", "yes", "btts_yes_prob", "btts_yes_odds")
-            add("btts", "no", "btts_no_prob", "btts_no_odds")
-            for line in ("1.5", "2.5", "3.5"):
-                lk = line.replace(".", "")
-                add(f"ou_{line}", "over", f"over_{lk}_prob", f"{line}_over")
-                add(f"ou_{line}", "under", f"under_{lk}_prob", f"{line}_under")
-
-            result = None
-            if m.get("is_finished"):
-                fh, fa = m.get("home_score"), m.get("away_score")
-                if fh is not None and fa is not None:
-                    result = NormalizedResult(float(fh), float(fa),
-                                              {"ft": [fh, fa]})
-
-            events.append(NormalizedEvent(
-                source_ref=fid, sport=self.sport,
-                competition_name=m.get("league_name", ""),
-                competition_ref=str(m.get("league_id", "")),
-                country=m.get("country_name", ""),
-                home_name=m.get("home_team_name", ""),
-                home_ref=str(m.get("home_team_id", "")),
-                away_name=m.get("away_team_name", ""),
-                away_ref=str(m.get("away_team_id", "")),
-                start_time=start, predictions=preds, odds=odds, result=result))
-        return events
+COLUMNS = [
+    "date", "kickoff", "league", "country", "home", "away", "hs", "gs", "status",
+    "p1", "px", "p2", "p_o15", "p_o25", "p_o35", "p_gg", "p_ng",
+    "odd1", "oddx", "odd2", "odd_o15", "odd_u15", "odd_o25", "odd_u25",
+    "odd_o35", "odd_u35", "odd_gg", "odd_ng",
+]

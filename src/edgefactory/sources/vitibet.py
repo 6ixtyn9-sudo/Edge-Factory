@@ -1,77 +1,88 @@
+"""Vitibet adapter — 1x2 probs + INDEX + predicted score + FT result, DATE ARCHIVE!
+
+URL: https://www.vitibet.com/index.php?clanek=quicktips&sekce=fotbal&lang=en&date=YYYY-MM-DD
+Archive verified back to at least 2018 (42 rows on 2018-06-05; 800+ rows/day 2019-2021).
+CAVEAT: on past dates only ~1 row keeps probs rendered; predictions are wiped
+after settlement. So: probs are capture-forward; FT results ARE served for any
+date -> useful as a settlement source too.
 """
-vitibet.py — Vitibet adapter (algorithmic 1x2 probs + index, FT results).
-The quicktips page renders a livescore-style list; ~30 matches carry full
-1/X/2 probability boxes daily. No date archive -> capture-forward source.
-"""
+from __future__ import annotations
+
 import re
-from datetime import date, datetime, timezone
+import time
+import urllib.request
 
-from ..models import NormalizedEvent, NormalizedPrediction, NormalizedResult
-from .base import SourceAdapter
+HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
-URL = "https://www.vitibet.com/index.php?clanek=quicktips&sekce=fotbal&lang=en"
-
-TIME_RE = re.compile(r"data-time='([^']+)'")
-TEAM_RE = re.compile(r"livescore-team-name'>([^<]+)</span>")
-PROB_RE = re.compile(
-    r"prob-head'>1</div>\s*<div class='prob-val'>(\d+)%</div>"
-    r".*?prob-head'>X</div>\s*<div class='prob-val'>(\d+)%</div>"
-    r".*?prob-head'>2</div>\s*<div class='prob-val'>(\d+)%</div>", re.S)
-FT_RE = re.compile(
-    r"act-badge bg-ft'>FT</div>\s*<div class='act-scores'>\s*"
-    r"<div class='act-score-line[^']*'>(\d+)</div>\s*"
-    r"<div class='act-score-line[^']*'>(\d+)</div>", re.S)
+_ROW = re.compile(r"(?=<a href='/index\.php\?clanek=match-detail)")
+_TEAM = re.compile(r"livescore-team-name'>([^<]+)<")
+_PROB = re.compile(r"prob-val[^>]*>([^<]+)<")
+_FT = re.compile(r"act-score-line[^>]*>(\d+)<")
+_PRED_SC = re.compile(r"livescore-score-line'[^>]*>\s*(\d+)\s*<")
+_TIP = re.compile(r"tip-indicator-circle'[^>]*>([12X])<")
+_TIME = re.compile(r"data-time='([^']+)'")
+_LEAGUE = re.compile(r"league-title'>([^<]+)<")
+_STATUS = re.compile(r"data-status='(\w+)'")
 
 
-class VitibetSource(SourceAdapter):
-    source_key = "vitibet"
-    sport = "soccer"
-    min_delay = 1.0
+def fetch_day(date: str, retries: int = 3) -> list[dict]:
+    url = ("https://www.vitibet.com/index.php?clanek=quicktips"
+           f"&sekce=fotbal&lang=en&date={date}")
+    html = None
+    for attempt in range(retries):
+        try:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                html = r.read().decode("utf-8", "replace")
+            break
+        except Exception:
+            if attempt == retries - 1:
+                raise
+            time.sleep(1.5 * (attempt + 1))
+    if not html:
+        return []
 
-    def fetch_day(self, day: date) -> dict:
-        # no archive: always today's page; `day` recorded for bookkeeping
-        return {"html": self.get(URL).text, "url": URL}
-
-    def normalize(self, raw: dict, day: date) -> list[NormalizedEvent]:
-        html = raw["html"]
-        events = []
-        # each match block starts at the time column
-        blocks = re.split(r"(?=<div class='livescore-match-time-col'>)", html)
-        for block in blocks[1:]:
-            block = block[:6000]
-            pm = PROB_RE.search(block)
-            teams = TEAM_RE.findall(block)
-            if not pm or len(teams) < 2:
-                continue
-            home, away = teams[0].strip(), teams[1].strip()
-
-            start = datetime(day.year, day.month, day.day, tzinfo=timezone.utc)
-            tmatch = TIME_RE.search(block)
-            if tmatch:
+    out = []
+    league = None
+    for chunk in _ROW.split(html):
+        lm = _LEAGUE.findall(chunk)
+        teams = _TEAM.findall(chunk)
+        if len(teams) >= 2 and "livescore-match-row" in chunk:
+            probs = _PROB.findall(chunk)  # [INDEX, p1, px, p2] when present
+            idx = p1 = px = p2 = None
+            if len(probs) >= 4:
                 try:
-                    start = datetime.fromisoformat(tmatch.group(1))
-                    if start.tzinfo is None:
-                        start = start.replace(tzinfo=timezone.utc)
-                    start = start.astimezone(timezone.utc)
+                    idx = float(probs[0].replace("+", ""))
+                    p1 = float(probs[1].rstrip("%"))
+                    px = float(probs[2].rstrip("%"))
+                    p2 = float(probs[3].rstrip("%"))
                 except ValueError:
                     pass
+            ft = _FT.findall(chunk)
+            psc = _PRED_SC.findall(chunk)
+            tip = _TIP.search(chunk)
+            t = _TIME.search(chunk)
+            st = _STATUS.search(chunk)
+            out.append(
+                {
+                    "date": date,
+                    "kickoff": t.group(1) if t else None,
+                    "league": league,
+                    "home": teams[0].strip(),
+                    "away": teams[1].strip(),
+                    "p1": p1, "px": px, "p2": p2, "index": idx,
+                    "tip": tip.group(1) if tip else None,
+                    "pred_hs": int(psc[0]) if len(psc) >= 2 else None,
+                    "pred_gs": int(psc[1]) if len(psc) >= 2 else None,
+                    "hs": int(ft[0]) if len(ft) >= 2 else None,
+                    "gs": int(ft[1]) if len(ft) >= 2 else None,
+                    "status": st.group(1) if st else None,
+                }
+            )
+        if lm:
+            league = lm[-1].strip()
+    return out
 
-            p1, px, p2 = (int(x) for x in pm.groups())
-            preds = [NormalizedPrediction("1x2", "home", p1 / 100),
-                     NormalizedPrediction("1x2", "draw", px / 100),
-                     NormalizedPrediction("1x2", "away", p2 / 100)]
 
-            result = None
-            fm = FT_RE.search(block)
-            if fm:
-                fh, fa = int(fm.group(1)), int(fm.group(2))
-                result = NormalizedResult(fh, fa, {"ft": [fh, fa]})
-
-            ref = f"{start.date().isoformat()}:{home}:{away}"
-            events.append(NormalizedEvent(
-                source_ref=ref, sport=self.sport,
-                competition_name="", competition_ref="vitibet-quicktips",
-                country="", home_name=home, home_ref=home,
-                away_name=away, away_ref=away,
-                start_time=start, predictions=preds, odds=[], result=result))
-        return events
+COLUMNS = ["date", "kickoff", "league", "home", "away", "p1", "px", "p2",
+           "index", "tip", "pred_hs", "pred_gs", "hs", "gs", "status"]
