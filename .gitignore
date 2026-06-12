@@ -15,6 +15,6 @@ venv/
 *.tmp
 
 # Project Data
-localdata/*.duckdb
-localdata/*.csv.gz
-localdata/state_*.json
+localdata/*
+!localdata/.gitkeep
+!localdata/README.md
