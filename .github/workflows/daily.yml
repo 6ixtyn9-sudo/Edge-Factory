@@ -1,0 +1,24 @@
+name: daily-edge-factory
+
+on:
+  schedule:
+    - cron: "0 5 * * *"    # 05:00 UTC — fetch picks + settle
+    - cron: "0 22 * * *"   # 22:00 UTC — settle late finishers
+  workflow_dispatch: {}     # manual trigger button
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -e .
+      - run: python scripts/daily.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
