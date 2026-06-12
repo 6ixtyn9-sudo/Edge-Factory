@@ -22,6 +22,7 @@ _BAR = re.compile(r"width:\s*(\d+)%;min-width")
 _LEAGUE_T = re.compile(r"title='([^']+) Predictions'")
 
 MAX_DETAILS = 60  # politeness cap per day
+FETCH_BUDGET_SECONDS = 30  # wall-clock cap for the full per-day detail loop
 
 
 def fetch_day(date: str, detail_limit: int = MAX_DETAILS) -> list[dict]:
@@ -38,9 +39,14 @@ def fetch_day(date: str, detail_limit: int = MAX_DETAILS) -> list[dict]:
         return []
     links = _LIST_LINK.findall(html)
     seen, out = set(), []
+    deadline = time.monotonic() + FETCH_BUDGET_SECONDS
     for link in links:
         if link in seen or len(out) >= detail_limit:
             continue
+        if time.monotonic() > deadline:
+            print(f"betclan: {FETCH_BUDGET_SECONDS}s budget hit, "
+                  f"stopping early ({len(out)} fetched)", flush=True)
+            break
         seen.add(link)
         try:
             d = get(link)
