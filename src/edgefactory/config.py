@@ -4,6 +4,10 @@ without clearing every one of them on a proper walk-forward split.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from dotenv import load_dotenv
+
+# Load env once at import time
+load_dotenv()
 
 
 @dataclass(frozen=True)
