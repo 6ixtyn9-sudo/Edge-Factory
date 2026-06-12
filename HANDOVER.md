@@ -115,11 +115,11 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * No OO Supabase pipeline files (models.py, db.py, pipelines/) – deleted 2026-06-12 as drift. If Supabase ingest is re-introduced, it must wrap the simple fetch_day() adapters, not replace them.
 
 8. Next steps (priority)
-* Decay monitor: nightly audit of certified edges → auto-bench if DEAD/DECAYING or ROI < -5%
+* Supabase sync: push certified edges + daily picks to edge_picks table (read-only emitter stays)
 * Backfill history: statarea 2017-2023, vitibet 2018+, bettingclosed archive – gives 7+ yr training data (runs IN PARALLEL, full ranges, not a prerequisite for anything)
+* [DONE 2026-06-12] Decay monitor: scripts/decay_monitor.py – nightly audit of certified edges → auto-bench if DEAD/DECAYING or recent ROI < -5% (assay.decay_verdict/should_bench), flips status to "benched" in edges_consensus.json; picks_today excludes benched immediately
 * [DONE 2026-06-12] picks_today.py: expand beyond 3-source consensus – 1x2/OU2.5/BTTS, edges_consensus.json aware with fallback, bzzoiro ML confidence, vitibet index
 * [DONE 2026-06-12] Extend mine_consensus.py: add vitibet, betclan, bzzoiro to consensus grids; add OU/BTTS markets
-* Supabase sync: push certified edges + daily picks to edge_picks table (read-only emitter stays)
 * Notifications: WhatsApp Business Cloud API (owner rejects Telegram) – swap in emit notifier
 * More sources to 15+: oddsportal (CLV), betensured, foresportia
 * ML layer: features = multi-source probs + disagreement spread + odds movement; model = just another source the miner validates
@@ -132,4 +132,6 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * No live odds movement tracking yet – odds_snapshots table exists in Supabase schema, not wired to CSV pipeline
 * GitHub Actions: .github/workflows/daily-capture.yml runs capture_daily.py – needs BZZOIRO_TOKEN secret set
 
-Last updated: 2026-06-12 – Extended mine_consensus.py to include OU/BTTS and new sources (vitibet, betclan, bzzoiro), with robust 0-1/0-100 scaling check. Repo cleanup: deleted stale OO Supabase pipeline, consolidated handover.
+Run order (nightly): capture_daily → build_warehouse → mine_consensus → decay_monitor → picks_today. decay_monitor needs warehouse + registry; with neither it reports and exits 0 (safe on fresh clone).
+
+Last updated: 2026-06-12 – Added scripts/decay_monitor.py (Step 4): HEALTHY/WATCH/DECAYING/DEAD audit per certified edge over a 60d window (config.recent_window_days), auto-bench writes status="benched" back to edges_consensus.json; benching is a circuit breaker – next mine_consensus run re-validates on full data. Previously: picks_today 1x2/OU/BTTS registry-aware; mine_consensus extended to OU/BTTS + vitibet/betclan/bzzoiro.
