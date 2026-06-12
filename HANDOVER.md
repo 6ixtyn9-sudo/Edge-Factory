@@ -115,10 +115,10 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * No OO Supabase pipeline files (models.py, db.py, pipelines/) – deleted 2026-06-12 as drift. If Supabase ingest is re-introduced, it must wrap the simple fetch_day() adapters, not replace them.
 
 8. Next steps (priority)
-* picks_today.py: expand beyond 3-source consensus – include bzzoiro ML confidence, vitibet index, etc.
-* Backfill history: statarea 2017-2023, vitibet 2018+, bettingclosed archive – gives 7+ yr training data
-* [DONE 2026-06-12] Extend mine_consensus.py: add vitibet, betclan, bzzoiro to consensus grids; add OU/BTTS markets
 * Decay monitor: nightly audit of certified edges → auto-bench if DEAD/DECAYING or ROI < -5%
+* Backfill history: statarea 2017-2023, vitibet 2018+, bettingclosed archive – gives 7+ yr training data (runs IN PARALLEL, full ranges, not a prerequisite for anything)
+* [DONE 2026-06-12] picks_today.py: expand beyond 3-source consensus – 1x2/OU2.5/BTTS, edges_consensus.json aware with fallback, bzzoiro ML confidence, vitibet index
+* [DONE 2026-06-12] Extend mine_consensus.py: add vitibet, betclan, bzzoiro to consensus grids; add OU/BTTS markets
 * Supabase sync: push certified edges + daily picks to edge_picks table (read-only emitter stays)
 * Notifications: WhatsApp Business Cloud API (owner rejects Telegram) – swap in emit notifier
 * More sources to 15+: oddsportal (CLV), betensured, foresportia
@@ -128,7 +128,7 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * mine_consensus.py now dynamically verifies and scales all probabilities, and covers 1x2, OU2.5, and BTTS across forebet, zulubet, statarea, vitibet, betclan, scoutingstats, and bzzoiro gracefully.
 * predictz / windrawwin / betclan need curl_cffi – installed via requirements.txt
 * bzzoiro needs BZZOIRO_TOKEN env – adapter uses Authorization: Token <key>
-* picks_today.py currently only uses forebet+zulubet+statarea – extend to 12 sources
+* picks_today.py now supports 1x2/OU/BTTS, reads localdata/edges_consensus.json (certified edges only) with fallback to certified thresholds T2=70/T3=65 + veto when the registry is missing/empty. OU/BTTS run only with certified edges (no fallback). Fresh clone: localdata/ is empty BY DESIGN – run picks_today directly, fallback triggers; backfill is a separate parallel job, never a prerequisite. Live adapters vitibet/betclan return 0-100 probs – picks_today normalizes defensively (>1.5 → /100).
 * No live odds movement tracking yet – odds_snapshots table exists in Supabase schema, not wired to CSV pipeline
 * GitHub Actions: .github/workflows/daily-capture.yml runs capture_daily.py – needs BZZOIRO_TOKEN secret set
 
