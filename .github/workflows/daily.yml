@@ -1,24 +1,43 @@
-name: daily-edge-factory
+name: Daily Edge Factory Run
 
 on:
   schedule:
-    - cron: "0 5 * * *"    # 05:00 UTC — fetch picks + settle
-    - cron: "0 22 * * *"   # 22:00 UTC — settle late finishers
-  workflow_dispatch: {}     # manual trigger button
+    # Run every day at 08:00 UTC
+    - cron: '0 8 * * *'
+  workflow_dispatch:   # Allow manual trigger from GitHub UI
 
 jobs:
-  run:
+  daily:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - run: pip install -e .
-      - run: python scripts/daily.py
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .[dev]
+          pip install python-dotenv supabase
+
+      - name: Run nightly pipeline
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
+        run: |
+          PYTHONPATH=src python scripts/daily.py
+
+      - name: Upload daily report (optional)
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: daily-picks-report
+          path: localdata/picks_*.txt
+          retention-days: 30
