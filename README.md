@@ -136,3 +136,17 @@ work automatically because they only speak the normalized schema.
 
 The mining pipeline already reads via chunked exports, so the DuckDB jump is a
 swap, not a rewrite.
+
+## Running Locally & Setup
+
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+2. **Key Scripts to run:**
+   - `scripts/capture_daily.py`: Scrape daily data from all sources.
+   - `scripts/build_warehouse.py`: Process and store data locally in DuckDB.
+   - `scripts/mine_consensus.py`: Run edge discovery across multiple sources.
+   - `scripts/picks_today.py`: Emit today's picks.
+3. **Data Storage:**
+   - The `localdata/` directory is strictly for local intermediate cache and is NOT tracked in git. The ultimate destination and system of record is Supabase.
