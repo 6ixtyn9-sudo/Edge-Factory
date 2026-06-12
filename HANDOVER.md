@@ -115,9 +115,9 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * No OO Supabase pipeline files (models.py, db.py, pipelines/) – deleted 2026-06-12 as drift. If Supabase ingest is re-introduced, it must wrap the simple fetch_day() adapters, not replace them.
 
 8. Next steps (priority)
-* Backfill history: statarea 2017-2023, vitibet 2018+, bettingclosed archive – gives 7+ yr training data
-* Extend mine_consensus.py: add vitibet, betclan, bzzoiro to consensus grids; add OU/BTTS markets
 * picks_today.py: expand beyond 3-source consensus – include bzzoiro ML confidence, vitibet index, etc.
+* Backfill history: statarea 2017-2023, vitibet 2018+, bettingclosed archive – gives 7+ yr training data
+* [DONE 2026-06-12] Extend mine_consensus.py: add vitibet, betclan, bzzoiro to consensus grids; add OU/BTTS markets
 * Decay monitor: nightly audit of certified edges → auto-bench if DEAD/DECAYING or ROI < -5%
 * Supabase sync: push certified edges + daily picks to edge_picks table (read-only emitter stays)
 * Notifications: WhatsApp Business Cloud API (owner rejects Telegram) – swap in emit notifier
@@ -125,12 +125,11 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * ML layer: features = multi-source probs + disagreement spread + odds movement; model = just another source the miner validates
 
 9. Known issues / caveats
-* vitibet / betclan 1x2 probs are 0-100 %, warehouse converts to 0-1 – forebet/zulubet/statarea are already 0-1? Verify scale before mixing in consensus (currently consensus is fb×zb×sa only)
+* mine_consensus.py now dynamically verifies and scales all probabilities, and covers 1x2, OU2.5, and BTTS across forebet, zulubet, statarea, vitibet, betclan, scoutingstats, and bzzoiro gracefully.
 * predictz / windrawwin / betclan need curl_cffi – installed via requirements.txt
 * bzzoiro needs BZZOIRO_TOKEN env – adapter uses Authorization: Token <key>
 * picks_today.py currently only uses forebet+zulubet+statarea – extend to 12 sources
-* mine_consensus.py only mines 2-way/3-way 1x2 consensus – extend to OU/BTTS, add more sources
 * No live odds movement tracking yet – odds_snapshots table exists in Supabase schema, not wired to CSV pipeline
 * GitHub Actions: .github/workflows/daily-capture.yml runs capture_daily.py – needs BZZOIRO_TOKEN secret set
 
-Last updated: 2026-06-12 – Repo cleanup: deleted stale OO Supabase pipeline (models.py, db.py, pipelines/, base.py), consolidated handover to single file, extended warehouse to all 12 sources, updated Supabase migrations to register all 12 sources, restored CSV-based local_backfill.py
+Last updated: 2026-06-12 – Extended mine_consensus.py to include OU/BTTS and new sources (vitibet, betclan, bzzoiro), with robust 0-1/0-100 scaling check. Repo cleanup: deleted stale OO Supabase pipeline, consolidated handover.
