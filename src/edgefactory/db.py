@@ -21,7 +21,7 @@ def upsert_edges(client, edges_list):
     """Upsert list of edge dicts into the edges table."""
     if not edges_list:
         return
-    resp = client.table("edges").upsert(edges_list).execute()
+    resp = client.table("edges").upsert(edges_list, on_conflict="sport_id,source_id,name").execute()
     print(f"Upserted 'edges': {len(edges_list)} rows")
 
 
