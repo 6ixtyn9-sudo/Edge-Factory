@@ -16,7 +16,7 @@ class Gates:
     min_n_valid: int = 120
     min_roi_train: float = -0.06  # Relaxed to allow certification of high-hit-rate rules with thin odds coverage
     min_roi_valid: float = 0.00   # Critical: must be profitable out-of-sample
-    walkforward_split: str = "2026-01-01" # Optimized to focus on recent model performance
+    walkforward_split: str = "2025-06-01" # Reverted to 2025 to provide 1yr+ validation data
     # consensus-specific
     min_overlap_n: int = 200      # min joined matches before a consensus rule is even scored
     # decay monitoring
