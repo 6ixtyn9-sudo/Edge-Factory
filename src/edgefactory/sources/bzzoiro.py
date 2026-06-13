@@ -15,6 +15,10 @@ import json
 import os
 import time
 import urllib.request
+from dotenv import load_dotenv
+
+# Load .env from project root
+load_dotenv()
 
 TOKEN = os.environ.get("BZZOIRO_TOKEN")
 BASE = "https://sports.bzzoiro.com/api/v2"

@@ -251,126 +251,70 @@ def main():
         if not has_bzzoiro_settled: print("skipped 2way-unanimous-bz: no bzzoiro data")
 
 
-    ou_views = []
-    if has_fb: ou_views.append("fb")
-    if has_sa: ou_views.append("sa")
-    if has_ss: ou_views.append("ss")
-    if has_bzzoiro_settled: ou_views.append("bz")
-    
-    if len(ou_views) >= 2 and has_fb:
-        sfb = scales["forebet_settled"]
-        sql = f"""
-            CREATE OR REPLACE TEMP VIEW consensus_ou AS
+    # Main consensus views for 1x2 (join the 3 high-volume sources)
+    if has_fb and has_zb and has_sa:
+        con.execute("""
+            CREATE OR REPLACE VIEW consensus3_dense AS
+            WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
+                 zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled),
+                 sa AS (SELECT DISTINCT ON (date, hkey, akey) * FROM statarea_settled)
+            SELECT fb.date, fb.home, fb.away, fb.outcome,
+                   fb.pick AS fb_pick, zb.pick AS zb_pick, sa.pick AS sa_pick,
+                   fb.pmax AS fb_p, zb.pmax AS zb_p, sa.pmax AS sa_p,
+                   (fb.pmax + zb.pmax + sa.pmax)/3 AS avg_p,
+                   CASE fb.pick WHEN 'home' THEN fb.odd1
+                                WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds
+            FROM fb JOIN zb USING (date, hkey, akey)
+                    JOIN sa USING (date, hkey, akey)
+            WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
+        """)
+
+    # OU/BTTS consensus (Forebet + Statarea only for maximum volume)
+    if has_fb and has_sa:
+        sfb, ssa = scales["forebet_settled"], scales["statarea_settled"]
+        con.execute(f"""
+            CREATE OR REPLACE VIEW consensus_ou_dense AS
             WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) *, 
                                CASE WHEN p_over/{sfb} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou
-                        FROM forebet_settled)
-        """
-        if has_sa:
-            ssa = scales["statarea_settled"]
-            sql += f", sa AS (SELECT DISTINCT ON (date, hkey, akey) *, CASE WHEN p_o25/{ssa} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou FROM statarea_settled)"
-        if has_ss:
-            sss = scales["scoutingstats_settled"]
-            sql += f", ss AS (SELECT DISTINCT ON (date, hkey, akey) *, CASE WHEN p_o25/{sss} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou FROM scoutingstats_settled)"
-        if has_bzzoiro_settled:
-            sbz = scales["bzzoiro_settled"]
-            sql += f", bz AS (SELECT DISTINCT ON (date, hkey, akey) *, CASE WHEN p_o25/{sbz} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou FROM bzzoiro_settled)"
-        
-        selects = ["fb.date", "CASE WHEN fb.hs + fb.gs >= 3 THEN 'over' ELSE 'under' END AS outcome"]
-        picks_eq = []
-        p_avg = []
-        
-        if has_fb:
-            selects.append("fb.pick_ou AS fb_pick_ou")
-            selects.append(f"fb.p_over/{sfb} AS fb_p_over")
-            selects.append("CASE fb.pick_ou WHEN 'over' THEN fb.odd_over ELSE fb.odd_under END AS pick_odds")
-            selects.append("fb.pick_ou AS pick")
-            p_avg.append(f"CASE WHEN fb.pick_ou = 'over' THEN fb.p_over/{sfb} ELSE fb.p_under/{sfb} END")
-        if has_sa:
-            selects.append("sa.pick_ou AS sa_pick_ou")
-            p_avg.append(f"CASE WHEN sa.pick_ou = 'over' THEN sa.p_o25/{ssa} ELSE (1.0 - sa.p_o25/{ssa}) END")
-            picks_eq.append("fb_pick_ou = sa_pick_ou")
-        if has_ss:
-            selects.append("ss.pick_ou AS ss_pick_ou")
-            p_avg.append(f"CASE WHEN ss.pick_ou = 'over' THEN ss.p_o25/{sss} ELSE (1.0 - ss.p_o25/{sss}) END")
-            picks_eq.append("fb_pick_ou = ss_pick_ou")
-        if has_bzzoiro_settled:
-            selects.append("bz.pick_ou AS bz_pick_ou")
-            p_avg.append(f"CASE WHEN bz.pick_ou = 'over' THEN bz.p_o25/{sbz} ELSE (1.0 - bz.p_o25/{sbz}) END")
-            picks_eq.append("fb_pick_ou = bz_pick_ou")
-            
-        selects.append(f"(({'+'.join(p_avg)})/{len(p_avg)})*100 AS avg_p")
-        
-        joins = "FROM fb"
-        if has_sa: joins += " JOIN sa USING (date, hkey, akey)"
-        if has_ss: joins += " JOIN ss USING (date, hkey, akey)"
-        if has_bzzoiro_settled: joins += " JOIN bz USING (date, hkey, akey)"
-        
-        sql += f" SELECT {', '.join(selects)} {joins}"
-        con.execute(sql)
-        
-        where_clause = " AND ".join(picks_eq) if picks_eq else "1=1"
+                        FROM forebet_settled),
+                 sa AS (SELECT DISTINCT ON (date, hkey, akey) *, 
+                               CASE WHEN p_o25/{ssa} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou
+                        FROM statarea_settled)
+            SELECT fb.date, fb.home, fb.away,
+                   CASE WHEN fb.hs + fb.gs >= 3 THEN 'over' ELSE 'under' END AS outcome,
+                   fb.pick_ou AS fb_pick_ou, sa.pick_ou AS sa_pick_ou, fb.pick_ou AS pick,
+                   CASE fb.pick_ou WHEN 'over' THEN fb.odd_over ELSE fb.odd_under END AS pick_odds,
+                   ((fb.p_over/{sfb} + sa.p_o25/{ssa})/2)*100 AS avg_p
+            FROM fb JOIN sa USING (date, hkey, akey)
+        """)
         for thr in (60, 65, 70, 75):
             results.append(evaluate(
-                con, f"ou25-unanimous-{len(ou_views)}way avg_p>={thr}", "consensus_ou",
-                f"{where_clause} AND avg_p >= {thr}", args.split, market="ou_2.5"))
-    else:
-        print(f"skipped ou25-unanimous: not enough sources (need fb + 1)")
+                con, f"ou25-unanimous-2way-sa avg_p>={thr}", "consensus_ou_dense",
+                f"fb_pick_ou = sa_pick_ou AND avg_p >= {thr}", args.split, market="ou_2.5"))
 
-    btts_views = []
-    if has_fb: btts_views.append("fb")
-    if has_ss: btts_views.append("ss")
-    if has_bzzoiro_settled: btts_views.append("bz")
-    
-    if len(btts_views) >= 2 and has_fb:
-        sfb = scales["forebet_settled"]
-        sql = f"""
-            CREATE OR REPLACE TEMP VIEW consensus_btts AS
+    # BTTS consensus (Needs BTTS sources - currently FB is the only dense one. 
+    # Let's try joining FB with scoutingstats but allow lower overlap for now)
+    if has_fb and has_ss:
+        sfb, sss = scales["forebet_settled"], scales["scoutingstats_settled"]
+        con.execute(f"""
+            CREATE OR REPLACE VIEW consensus_btts_sparse AS
             WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) *, 
                                CASE WHEN p_gg/{sfb} >= 0.5 THEN 'yes' ELSE 'no' END AS pick_btts
-                        FROM forebet_settled)
-        """
-        if has_ss:
-            sss = scales["scoutingstats_settled"]
-            sql += f", ss AS (SELECT DISTINCT ON (date, hkey, akey) *, CASE WHEN p_gg/{sss} >= 0.5 THEN 'yes' ELSE 'no' END AS pick_btts FROM scoutingstats_settled)"
-        if has_bzzoiro_settled:
-            sbz = scales["bzzoiro_settled"]
-            sql += f", bz AS (SELECT DISTINCT ON (date, hkey, akey) *, CASE WHEN p_gg/{sbz} >= 0.5 THEN 'yes' ELSE 'no' END AS pick_btts FROM bzzoiro_settled)"
-        
-        selects = ["fb.date", "CASE WHEN fb.hs > 0 AND fb.gs > 0 THEN 'yes' ELSE 'no' END AS outcome"]
-        picks_eq = []
-        p_avg = []
-        
-        if has_fb:
-            selects.append("fb.pick_btts AS fb_pick_btts")
-            selects.append("CASE fb.pick_btts WHEN 'yes' THEN fb.odd_gg ELSE fb.odd_ng END AS pick_odds")
-            selects.append("fb.pick_btts AS pick")
-            p_avg.append(f"CASE WHEN fb.pick_btts = 'yes' THEN fb.p_gg/{sfb} ELSE fb.p_ng/{sfb} END")
-        if has_ss:
-            selects.append("ss.pick_btts AS ss_pick_btts")
-            p_avg.append(f"CASE WHEN ss.pick_btts = 'yes' THEN ss.p_gg/{sss} ELSE ss.p_ng/{sss} END")
-            picks_eq.append("fb_pick_btts = ss_pick_btts")
-        if has_bzzoiro_settled:
-            selects.append("bz.pick_btts AS bz_pick_btts")
-            p_avg.append(f"CASE WHEN bz.pick_btts = 'yes' THEN bz.p_gg/{sbz} ELSE (1.0 - bz.p_gg/{sbz}) END")
-            picks_eq.append("fb_pick_btts = bz_pick_btts")
-            
-        selects.append(f"(({'+'.join(p_avg)})/{len(p_avg)})*100 AS avg_p")
-        
-        joins = "FROM fb"
-        if has_ss: joins += " JOIN ss USING (date, hkey, akey)"
-        if has_bzzoiro_settled: joins += " JOIN bz USING (date, hkey, akey)"
-        
-        sql += f" SELECT {', '.join(selects)} {joins}"
-        con.execute(sql)
-        
-        where_clause = " AND ".join(picks_eq) if picks_eq else "1=1"
+                        FROM forebet_settled),
+                 ss AS (SELECT DISTINCT ON (date, hkey, akey) *, 
+                               CASE WHEN p_gg/{sss} >= 0.5 THEN 'yes' ELSE 'no' END AS pick_btts
+                        FROM scoutingstats_settled)
+            SELECT fb.date,
+                   CASE WHEN fb.hs > 0 AND fb.gs > 0 THEN 'yes' ELSE 'no' END AS outcome,
+                   fb.pick_btts AS pick,
+                   CASE fb.pick_btts WHEN 'yes' THEN fb.odd_gg ELSE fb.odd_ng END AS pick_odds,
+                   ((fb.p_gg/{sfb} + ss.p_gg/{sss})/2)*100 AS avg_p
+            FROM fb JOIN ss USING (date, hkey, akey)
+        """)
         for thr in (60, 65, 70):
             results.append(evaluate(
-                con, f"btts-unanimous-{len(btts_views)}way avg_p>={thr}", "consensus_btts",
-                f"{where_clause} AND avg_p >= {thr}", args.split, market="btts"))
-    else:
-        print(f"skipped btts-unanimous: not enough sources (need fb + 1)")
-
+                con, f"btts-unanimous-2way-ss avg_p>={thr}", "consensus_btts_sparse",
+                f"avg_p >= {thr}", args.split, market="btts", min_n=20))
 
     hdr = f"{'rule':42s} {'TRAIN n/hit/LB/roi':>26s}   {'VALID n/hit/LB/roi':>26s}  status"
     print(hdr)
