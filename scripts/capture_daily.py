@@ -62,8 +62,11 @@ def main() -> None:
             failures.append(source)
 
     print("\nRebuilding warehouse...")
-    subprocess.run([sys.executable, str(ROOT / "scripts" / "build_warehouse.py")],
-                   cwd=ROOT)
+    rc = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_warehouse.py")],
+                   cwd=ROOT).returncode
+    if rc != 0:
+        print("Warehouse build failed")
+        sys.exit(1)
 
     if failures:
         print("FAILED:", failures)

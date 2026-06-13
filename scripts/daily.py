@@ -56,9 +56,10 @@ def generate_daily_report(today: str):
 def main():
     print("=== Edge Factory Nightly Run ===")
     
+    run("python3 scripts/capture_daily.py")
     run("python3 scripts/build_warehouse.py")
-    run("python3 scripts/mine_consensus.py --split 2025-06-01")
-    run("PYTHONPATH=src python3 scripts/decay_monitor.py --dry-run")
+    run("python3 scripts/mine_consensus.py")
+    run("PYTHONPATH=src python3 scripts/decay_monitor.py")
     run("PYTHONPATH=src python3 scripts/picks_today.py")
     
     # Generate dated report

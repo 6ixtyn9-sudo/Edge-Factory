@@ -57,6 +57,7 @@ All adapters: fetch_day(date: str) -> list[dict], COLUMNS = [...]. No classes, n
 * scripts/build_warehouse.py – materialize CSV → warehouse.duckdb
 * scripts/mine_consensus.py – walk-forward consensus miner → edges_consensus.json
 * scripts/picks_today.py – certified consensus picks (2-way ≥70%, 3-way ≥65%, veto on disagreement)
+* scripts/daily.py – nightly pipeline entrypoint (runs capture -> build -> mine -> monitor -> picks)
 * tests/test_assay.py – 5 tests, must stay green
 
 4. Certified findings (walk-forward, split 2025-06-01)
@@ -163,4 +164,6 @@ DATA JOBS (backfill/capture) are the ONE exception to the bundle — only becaus
 
 Run order (nightly): capture_daily → build_warehouse → mine_consensus → decay_monitor → picks_today. decay_monitor needs warehouse + registry; with neither it reports and exits 0 (safe on fresh clone).
 
-Last updated: 2026-06-12 – Baked anti-drift handover protocol into §10 as operational standard; documented .env setup (BZZOIRO_TOKEN required, .env not auto-loaded). Previously: Added scripts/decay_monitor.py (Step 4): HEALTHY/WATCH/DECAYING/DEAD audit per certified edge over a 60d window (config.recent_window_days), auto-bench writes status="benched" back to edges_consensus.json; benching is a circuit breaker – next mine_consensus run re-validates on full data. Previously: picks_today 1x2/OU/BTTS registry-aware; mine_consensus extended to OU/BTTS + vitibet/betclan/bzzoiro.
+Last updated: 2026-06-13 – Fixed warehouse.py globbing bug (monthly CSV support); added build check to capture_daily.py; fixed Supabase test mock logic to allow green runs without environment variables; added scripts/daily.py to Key files and nightly run order.
+
+2026-06-12 – Baked anti-drift handover protocol into §10 as operational standard; documented .env setup (BZZOIRO_TOKEN required, .env not auto-loaded). Previously: Added scripts/decay_monitor.py (Step 4): HEALTHY/WATCH/DECAYING/DEAD audit per certified edge over a 60d window (config.recent_window_days), auto-bench writes status="benched" back to edges_consensus.json; benching is a circuit breaker – next mine_consensus run re-validates on full data. Previously: picks_today 1x2/OU/BTTS registry-aware; mine_consensus extended to OU/BTTS + vitibet/betclan/bzzoiro.

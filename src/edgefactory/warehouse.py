@@ -59,9 +59,9 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
         "TRY_CAST(hs AS INT) AS hs, TRY_CAST(gs AS INT) AS gs, "
         f"{_prob('p1')} AS p1, {_prob('px')} AS px, {_prob('p2')} AS p2"
     )
-    if _glob.glob(f"{LOCALDATA}/forebet.csv.gz"):
+    if _glob.glob(f"{LOCALDATA}/forebet*.csv.gz"):
         _src_view(
-            con, "forebet", f"{LOCALDATA}/forebet.csv.gz",
+            con, "forebet", f"{LOCALDATA}/forebet*.csv.gz",
             common + f", {_odds('odd1')} AS odd1, {_odds('oddx')} AS oddx,"
             f" {_odds('odd2')} AS odd2,"
             " TRY_CAST(ht_hs AS INT) AS ht_hs, TRY_CAST(ht_gs AS INT) AS ht_gs,"
@@ -71,15 +71,15 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             f" {_odds('odd_gg')} AS odd_gg, {_odds('odd_ng')} AS odd_ng,"
             " league, status",
         )
-    if _glob.glob(f"{LOCALDATA}/zulubet.csv.gz"):
+    if _glob.glob(f"{LOCALDATA}/zulubet*.csv.gz"):
         _src_view(
-            con, "zulubet", f"{LOCALDATA}/zulubet.csv.gz",
+            con, "zulubet", f"{LOCALDATA}/zulubet*.csv.gz",
             common + f", {_odds('odd1')} AS odd1, {_odds('oddx')} AS oddx,"
             f" {_odds('odd2')} AS odd2, tip, league",
         )
-    if _glob.glob(f"{LOCALDATA}/statarea.csv.gz"):
+    if _glob.glob(f"{LOCALDATA}/statarea*.csv.gz"):
         _src_view(
-            con, "statarea", f"{LOCALDATA}/statarea.csv.gz",
+            con, "statarea", f"{LOCALDATA}/statarea*.csv.gz",
             common + ", TRY_CAST(ht_hs AS INT) AS ht_hs, TRY_CAST(ht_gs AS INT) AS ht_gs,"
             f" {_prob('p1_ht')} AS p1_ht, {_prob('px_ht')} AS px_ht,"
             f" {_prob('p2_ht')} AS p2_ht,"
