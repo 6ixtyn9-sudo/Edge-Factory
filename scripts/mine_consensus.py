@@ -254,7 +254,7 @@ def main():
     # Main consensus views for 1x2 (join the 3 high-volume sources)
     if has_fb and has_zb and has_sa:
         con.execute("""
-            CREATE OR REPLACE VIEW consensus3_dense AS
+            CREATE OR REPLACE TEMP VIEW consensus3_dense AS
             WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
                  zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled),
                  sa AS (SELECT DISTINCT ON (date, hkey, akey) * FROM statarea_settled)
@@ -273,7 +273,7 @@ def main():
     if has_fb and has_sa:
         sfb, ssa = scales["forebet_settled"], scales["statarea_settled"]
         con.execute(f"""
-            CREATE OR REPLACE VIEW consensus_ou_dense AS
+            CREATE OR REPLACE TEMP VIEW consensus_ou_dense AS
             WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) *, 
                                CASE WHEN p_over/{sfb} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou
                         FROM forebet_settled),
@@ -297,7 +297,7 @@ def main():
     if has_fb and has_ss:
         sfb, sss = scales["forebet_settled"], scales["scoutingstats_settled"]
         con.execute(f"""
-            CREATE OR REPLACE VIEW consensus_btts_sparse AS
+            CREATE OR REPLACE TEMP VIEW consensus_btts_sparse AS
             WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) *, 
                                CASE WHEN p_gg/{sfb} >= 0.5 THEN 'yes' ELSE 'no' END AS pick_btts
                         FROM forebet_settled),
@@ -314,7 +314,7 @@ def main():
         for thr in (60, 65, 70):
             results.append(evaluate(
                 con, f"btts-unanimous-2way-ss avg_p>={thr}", "consensus_btts_sparse",
-                f"avg_p >= {thr}", args.split, market="btts", min_n=20))
+                f"avg_p >= {thr}", args.split, market="btts"))
 
     hdr = f"{'rule':42s} {'TRAIN n/hit/LB/roi':>26s}   {'VALID n/hit/LB/roi':>26s}  status"
     print(hdr)
