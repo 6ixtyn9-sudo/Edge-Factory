@@ -26,7 +26,10 @@ python scripts/mine_consensus.py --split 2025-06-01
 
 # today's picks
 PYTHONPATH=src python scripts/picks_today.py
-```
+
+# Daily run
+PYTHONPATH=src python3 scripts/daily.py
+
 
 Sources (12)
 source	markets	odds	history
