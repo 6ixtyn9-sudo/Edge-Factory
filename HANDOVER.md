@@ -122,7 +122,7 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 
 8. Next steps (priority)
 * Supabase sync: push certified edges + daily picks to edge_picks table (read-only emitter stays)
-* Backfill history: statarea 2017-2023, vitibet 2018+, bettingclosed archive – gives 7+ yr training data (runs IN PARALLEL, full ranges, not a prerequisite for anything)
+* [DONE 2026-06-13] Initial 7-year deep backfill baseline complete. To extend: PYTHONPATH=src python3 scripts/local_backfill.py <source> 2017-01-01 2023-12-31 --max-seconds 10000
 * [DONE 2026-06-12] Decay monitor: scripts/decay_monitor.py – nightly audit of certified edges → auto-bench if DEAD/DECAYING or recent ROI < -5% (assay.decay_verdict/should_bench), flips status to "benched" in edges_consensus.json; picks_today excludes benched immediately
 * [DONE 2026-06-12] picks_today.py: expand beyond 3-source consensus – 1x2/OU2.5/BTTS, edges_consensus.json aware with fallback, bzzoiro ML confidence, vitibet index
 * [DONE 2026-06-12] Extend mine_consensus.py: add vitibet, betclan, bzzoiro to consensus grids; add OU/BTTS markets

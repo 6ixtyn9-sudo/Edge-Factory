@@ -7,7 +7,7 @@ Runs the full sequence and generates a dated picks report.
 import subprocess
 import sys
 from pathlib import Path
-from datetime import date
+from datetime import date, datetime
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "localdata"
@@ -32,10 +32,11 @@ def generate_daily_report(today: str):
         import json
         picks = json.loads(picks_file.read_text())
         
+        now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         lines = [
             f"Edge Factory Picks — {today}",
             "=" * 60,
-            f"Generated: {date.today().isoformat()}",
+            f"Generated at: {now_ts}",
             "",
         ]
         
