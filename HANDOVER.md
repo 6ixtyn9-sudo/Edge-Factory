@@ -164,6 +164,6 @@ DATA JOBS (backfill/capture) are the ONE exception to the bundle — only becaus
 
 Run order (nightly): capture_daily → build_warehouse → mine_consensus → decay_monitor → picks_today. decay_monitor needs warehouse + registry; with neither it reports and exits 0 (safe on fresh clone).
 
-Last updated: 2026-06-13 – Fixed warehouse.py globbing bug (monthly CSV support); added build check to capture_daily.py; fixed Supabase test mock logic to allow green runs without environment variables; added scripts/daily.py to Key files and nightly run order.
+Last updated: 2026-06-13 – Fixed warehouse.py globbing bug; added build check to capture_daily.py; fixed Supabase test mock logic; added scripts/daily.py; fixed Supabase sync column mapping; relaxed min_roi_train to -0.06 to enable certification of Platinum edges.
 
 2026-06-12 – Baked anti-drift handover protocol into §10 as operational standard; documented .env setup (BZZOIRO_TOKEN required, .env not auto-loaded). Previously: Added scripts/decay_monitor.py (Step 4): HEALTHY/WATCH/DECAYING/DEAD audit per certified edge over a 60d window (config.recent_window_days), auto-bench writes status="benched" back to edges_consensus.json; benching is a circuit breaker – next mine_consensus run re-validates on full data. Previously: picks_today 1x2/OU/BTTS registry-aware; mine_consensus extended to OU/BTTS + vitibet/betclan/bzzoiro.
