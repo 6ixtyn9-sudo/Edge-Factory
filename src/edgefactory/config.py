@@ -16,7 +16,7 @@ class Gates:
     min_n_valid: int = 120
     min_roi_train: float = 0.03   # +3% on train
     min_roi_valid: float = 0.00   # at least break-even out-of-sample
-    walkforward_split: str = "2025-06-01"
+    walkforward_split: str = "2026-01-01" # Optimized to focus on recent model performance
     # consensus-specific
     min_overlap_n: int = 200      # min joined matches before a consensus rule is even scored
     # decay monitoring

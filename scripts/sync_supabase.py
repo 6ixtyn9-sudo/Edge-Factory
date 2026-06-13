@@ -12,14 +12,25 @@ PICKS = ROOT/"localdata"/"picks_today.json"
 def load_edges():
     try:
         data = json.loads(EDGES.read_text())
-        return [e for e in data.get("edges", []) if e.get("status")=="certified"]
-    except: return []
+        out = []
+        for e in data.get("edges", []):
+            if e.get("status") != "certified":
+                continue
+            out.append({
+                "name": e["rule"],
+                "sport_id": 1, # Default Soccer
+                "source_id": 1, # Default Forebet-based
+                "rule": e,
+                "status": "certified",
+                "train_stats": e["train"],
+                "valid_stats": e["valid"]
+            })
+        return out
+    except Exception:
+        return []
 
 def load_picks():
-    try:
-        if PICKS.exists():
-            return json.loads(PICKS.read_text())
-    except: pass
+    # Deferred: requires lookup mapping for edge_id and event_id
     return []
 
 def main():
@@ -28,14 +39,14 @@ def main():
     args = p.parse_args()
     edges = load_edges()
     picks = load_picks()
-    print(f"Certified edges: {len(edges)}")
-    print(f"Today's picks: {len(picks)}")
+    print(f"Certified edges to sync: {len(edges)}")
     if args.dry_run:
         print("DRY RUN"); return
     try:
         c = get_client()
-        upsert_edges(c, edges)
-        if picks: upsert_picks(c, picks)
+        if edges:
+            upsert_edges(c, edges)
+        # Picks sync remains deferred until ID mapping logic ships
         print("Supabase sync done.")
     except Exception as e:
         print("Sync failed:", e); sys.exit(1)
