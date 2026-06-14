@@ -96,6 +96,73 @@ def should_bench(report: DecayReport, recent_roi: float | None = None) -> bool:
         return True
     return False
 
+# ---- context verdict -------------------------------------------------------
+# Two independent layers:
+#   Edge health  (decay_verdict):  HEALTHY / WATCH / DECAYING / DEAD
+#   Context purity (below):        BOOST / ALLOW / CAUTION / VETO / UNKNOWN
+#
+# Context verdict answers: "Is this league/team/odds-band safe for this edge?"
+# Used by: scripts/assay_purity.py → localdata/purity_registry.json
+#          scripts/picks_today.py  → pick bucketing
+
+CONTEXT_VERDICTS = ("BOOST", "ALLOW", "CAUTION", "VETO", "UNKNOWN")
+
+
+def context_verdict_league(
+    n: int,
+    roi: float | None,
+    recent_roi: float | None = None,
+) -> str:
+    """Verdict for a league/market/edge-family/selection-role context group.
+
+    n          = total settled bets in this group (full history)
+    roi        = full-history ROI (decimal: +0.03 = +3%)
+    recent_roi = recent-window ROI (same scale); None if < 30 recent bets
+    """
+    if n < 80 or roi is None:
+        return "UNKNOWN"
+    if roi <= -0.05 and (recent_roi is None or recent_roi <= -0.03):
+        return "VETO"
+    if roi < 0.0 or (recent_roi is not None and recent_roi <= -0.05):
+        return "CAUTION"
+    if n >= 120 and roi >= 0.03 and (recent_roi is None or recent_roi >= 0.0):
+        return "BOOST"
+    return "ALLOW"
+
+
+def context_verdict_team(n: int, roi: float | None) -> str:
+    """Verdict for a team/role/league/market context group.
+
+    n   = total settled bets where this team appeared in this role
+    roi = full-history ROI for those bets
+    """
+    if n < 35 or roi is None:
+        return "UNKNOWN"
+    if roi <= -0.08:
+        return "VETO"
+    if roi <= -0.03:
+        return "CAUTION"
+    if n >= 50 and roi >= 0.05:
+        return "BOOST"
+    return "ALLOW"
+
+
+def context_verdict_odds_band(n: int, roi: float | None) -> str:
+    """Verdict for a sport/market/edge-family/odds-band context group.
+
+    n   = total settled bets in this odds band
+    roi = full-history ROI for those bets
+    """
+    if n < 100 or roi is None:
+        return "UNKNOWN"
+    if roi <= -0.02:
+        return "VETO"
+    if roi <= 0.0:
+        return "CAUTION"
+    if n >= 150 and roi >= 0.02:
+        return "BOOST"
+    return "ALLOW"
+
 def roi(wins: int, n: int, avg_odds: float) -> float:
     """Flat-stake ROI given wins, total bets and average decimal odds."""
     if n <= 0:

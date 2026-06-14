@@ -1,6 +1,8 @@
 """The math must never silently break. Run: pytest"""
 from edgefactory.assay import (wilson_lb, wilson_ub, grade,
-                               decay_verdict, should_bench, roi)
+                               decay_verdict, should_bench, roi,
+                               context_verdict_league, context_verdict_team,
+                               context_verdict_odds_band)
 
 def test_wilson_basics():
     assert wilson_lb(0, 0) == 0.0
@@ -46,3 +48,51 @@ def test_should_bench():
 
     # HEALTHY but ROI < -0.05 -> True
     assert should_bench(rep_healthy, recent_roi=-0.06)
+
+
+def test_context_verdicts():
+    # ---- league ----
+    # n < 80 -> UNKNOWN regardless of ROI
+    assert context_verdict_league(30, 0.05) == "UNKNOWN"
+    # roi=None -> UNKNOWN
+    assert context_verdict_league(100, None) == "UNKNOWN"
+    # roi <= -0.05 AND recent_roi <= -0.03 -> VETO
+    assert context_verdict_league(100, -0.06, recent_roi=-0.04) == "VETO"
+    # roi <= -0.05 but recent_roi None -> VETO (recent unknown = treat as bad)
+    assert context_verdict_league(100, -0.06, recent_roi=None) == "VETO"
+    # roi < 0 -> CAUTION
+    assert context_verdict_league(100, -0.02) == "CAUTION"
+    # recent_roi <= -0.05 -> CAUTION even if full-history roi >= 0
+    assert context_verdict_league(100, 0.01, recent_roi=-0.06) == "CAUTION"
+    # n >= 120, roi >= 0.03, recent_roi >= 0 -> BOOST
+    assert context_verdict_league(130, 0.04, recent_roi=0.01) == "BOOST"
+    # sufficient n and roi but below BOOST thresholds -> ALLOW
+    assert context_verdict_league(90, 0.01) == "ALLOW"
+
+    # ---- team ----
+    # n < 35 -> UNKNOWN
+    assert context_verdict_team(20, -0.10) == "UNKNOWN"
+    # roi=None -> UNKNOWN
+    assert context_verdict_team(40, None) == "UNKNOWN"
+    # roi <= -0.08 -> VETO
+    assert context_verdict_team(40, -0.09) == "VETO"
+    # roi <= -0.03 -> CAUTION
+    assert context_verdict_team(40, -0.04) == "CAUTION"
+    # n >= 50, roi >= 0.05 -> BOOST
+    assert context_verdict_team(55, 0.06) == "BOOST"
+    # sufficient n, mild positive roi -> ALLOW
+    assert context_verdict_team(40, 0.02) == "ALLOW"
+
+    # ---- odds_band ----
+    # n < 100 -> UNKNOWN
+    assert context_verdict_odds_band(50, 0.05) == "UNKNOWN"
+    # roi=None -> UNKNOWN
+    assert context_verdict_odds_band(110, None) == "UNKNOWN"
+    # roi <= -0.02 -> VETO
+    assert context_verdict_odds_band(110, -0.03) == "VETO"
+    # roi <= 0.0 -> CAUTION
+    assert context_verdict_odds_band(110, -0.01) == "CAUTION"
+    # n >= 150, roi >= 0.02 -> BOOST
+    assert context_verdict_odds_band(160, 0.03) == "BOOST"
+    # sufficient n, roi just above 0 but below BOOST -> ALLOW
+    assert context_verdict_odds_band(110, 0.01) == "ALLOW"
