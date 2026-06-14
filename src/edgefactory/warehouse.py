@@ -55,6 +55,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
     con = duckdb.connect(db or ":memory:")
     nh, na = norm_team_sql("home"), norm_team_sql("away")
     common = (
+        "'soccer' AS sport, "
         f"date, home, away, {nh} AS hkey, {na} AS akey, "
         "TRY_CAST(hs AS INT) AS hs, TRY_CAST(gs AS INT) AS gs, "
         f"{_prob('p1')} AS p1, {_prob('px')} AS px, {_prob('p2')} AS p2"
@@ -109,7 +110,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
     if _glob.glob(f"{LOCALDATA}/predictz_*.csv.gz"):
         _src_view(
             con, "predictz_raw", f"{LOCALDATA}/predictz_*.csv.gz",
-            f"date, home, away, {nh} AS hkey, {na} AS akey, league, pick, pred_score,"
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, pick, pred_score,"
             f" {_odds('odd1')} AS odd1, {_odds('oddx')} AS oddx, {_odds('odd2')} AS odd2",
         )
         con.execute("""
@@ -130,7 +131,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
     if _glob.glob(f"{LOCALDATA}/scoutingstats_*.csv.gz"):
         _src_view(
             con, "scoutingstats", f"{LOCALDATA}/scoutingstats_*.csv.gz",
-            f"date, home, away, {nh} AS hkey, {na} AS akey, league, country, status,"
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, country, status,"
             " TRY_CAST(hs AS INT) AS hs, TRY_CAST(gs AS INT) AS gs,"
             f" {_prob('p1')} AS p1, {_prob('px')} AS px, {_prob('p2')} AS p2,"
             f" {_prob('p_o15')} AS p_o15, {_prob('p_o25')} AS p_o25,"
@@ -155,7 +156,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
     if _glob.glob(f"{LOCALDATA}/bettingclosed_*.csv.gz"):
         _src_view(
             con, "bettingclosed", f"{LOCALDATA}/bettingclosed_*.csv.gz",
-            f"date, home, away, {nh} AS hkey, {na} AS akey,"
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey,"
             " TRY_CAST(hs AS INT) AS hs, TRY_CAST(gs AS INT) AS gs,"
             f" {_odds('odd1')} AS odd1, {_odds('oddx')} AS oddx, {_odds('odd2')} AS odd2,"
             f" {_odds('odd_under')} AS odd_under, {_odds('odd_over')} AS odd_over,"
@@ -199,7 +200,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
         def _p100(col): return f"TRY_CAST({col} AS DOUBLE)/100.0"
         _src_view(
             con, "vitibet", f"{LOCALDATA}/vitibet_*.csv.gz",
-            f"date, home, away, {nh} AS hkey, {na} AS akey, league, "
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, "
             "TRY_CAST(hs AS INT) AS hs, TRY_CAST(gs AS INT) AS gs, "
             f"{_p100('p1')} AS p1, {_p100('px')} AS px, {_p100('p2')} AS p2, "
             "tip, pred_hs, pred_gs, status, kickoff"
@@ -216,7 +217,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
         def _p100(col): return f"TRY_CAST({col} AS DOUBLE)/100.0"
         _src_view(
             con, "betclan", f"{LOCALDATA}/betclan_*.csv.gz",
-            f"date, home, away, {nh} AS hkey, {na} AS akey, "
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, "
             f"{_p100('p1')} AS p1, {_p100('px')} AS px, {_p100('p2')} AS p2, "
             "winner, match_id, url"
         )
@@ -225,7 +226,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
     if _glob.glob(f"{LOCALDATA}/bzzoiro_*.csv.gz"):
         _src_view(
             con, "bzzoiro", f"{LOCALDATA}/bzzoiro_*.csv.gz",
-            f"date, home, away, {nh} AS hkey, {na} AS akey, league, event_id, "
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, event_id, "
             f"{_prob('p1')} AS p1, {_prob('px')} AS px, {_prob('p2')} AS p2, "
             f"{_prob('p_o15')} AS p_o15, {_prob('p_o25')} AS p_o25, {_prob('p_o35')} AS p_o35, "
             f"{_prob('p_gg')} AS p_gg, "
@@ -238,7 +239,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
     if _glob.glob(f"{LOCALDATA}/freesupertips_*.csv.gz"):
         _src_view(
             con, "freesupertips", f"{LOCALDATA}/freesupertips_*.csv.gz",
-            f"date, home, away, {nh} AS hkey, {na} AS akey, league, "
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, "
             "tip, " + _odds('odds') + " AS odds, "
             "TRY_CAST(confidence AS INT) AS confidence, stake, kickoff"
         )
@@ -247,7 +248,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
     if _glob.glob(f"{LOCALDATA}/afootballreport_*.csv.gz"):
         _src_view(
             con, "afootballreport", f"{LOCALDATA}/afootballreport_*.csv.gz",
-            f"date, home, away, {nh} AS hkey, {na} AS akey, league, "
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, "
             "market, tip, "
             "TRY_CAST(streak_pct AS INT) AS streak_pct, "
             "TRY_CAST(streak_n AS INT) AS streak_n, "
@@ -258,7 +259,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
     if _glob.glob(f"{LOCALDATA}/windrawwin_*.csv.gz"):
         _src_view(
             con, "windrawwin", f"{LOCALDATA}/windrawwin_*.csv.gz",
-            f"date, home, away, {nh} AS hkey, {na} AS akey, league, "
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, "
             "lower(pick) AS pick, stake, pred_score"
         )
 
@@ -268,7 +269,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             CREATE OR REPLACE VIEW consensus2 AS
             WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
                  zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled)
-            SELECT fb.date, fb.home, fb.away, fb.outcome,
+            SELECT fb.sport, fb.date, fb.home, fb.away, fb.outcome,
                    fb.pick AS fb_pick, zb.pick AS zb_pick,
                    fb.pmax AS fb_p, zb.pmax AS zb_p,
                    (fb.pmax + zb.pmax)/2 AS avg_p,
@@ -286,7 +287,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
                  zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled),
                  sa AS (SELECT DISTINCT ON (date, hkey, akey) * FROM statarea_settled)
-            SELECT fb.date, fb.home, fb.away, fb.outcome,
+            SELECT fb.sport, fb.date, fb.home, fb.away, fb.outcome,
                    fb.pick AS fb_pick, zb.pick AS zb_pick, sa.pick AS sa_pick,
                    fb.pmax AS fb_p, zb.pmax AS zb_p, sa.pmax AS sa_p,
                    (fb.pmax + zb.pmax + sa.pmax)/3 AS avg_p,

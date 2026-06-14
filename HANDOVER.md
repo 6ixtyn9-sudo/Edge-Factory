@@ -29,20 +29,20 @@ Golden rules:
 
 2. Sources — 12 adapters, all in src/edgefactory/sources/
 
-| key | markets | odds | history | type |
-| --- | --- | --- | --- | --- |
-| forebet | 1x2, ou, btts, ht | ✅ best | ✅ 2024-01→now | backfillable |
-| zulubet | 1x2 | ✅ | ✅ ~2023-12→now | backfillable |
-| statarea | 1x2, ht_1x2, ou_1.5/2.5/3.5 | — | ✅ 2024+, archive to 2015 | backfillable |
-| vitibet | 1x2 | — | ✅ archive to 2018, probs capture-forward | backfillable |
-| scoutingstats | 1x2, btts, ou | ✅ | capture-forward | live |
-| predictz | 1x2 pick+score | ✅ | capture-forward (archive ~2026-01+) | live, needs curl_cffi |
-| windrawwin | 1x2 pick+stake | — | capture-forward only | live, needs curl_cffi |
-| afootballreport | ou_1.5/2.5, btts | — | capture-forward, today only | live |
-| betclan | 1x2 | — | capture-forward, today/tomorrow | live, needs curl_cffi |
-| freesupertips | expert tips | ✅ | capture-forward | live |
-| bettingclosed | 1x2, ou, btts | ✅ | ✅ archive | backfillable |
-| bzzoiro | 1x2, ou, btts, xG | — | API, ~490 upcoming, ~7 weeks ahead | capture-forward, needs BZZOIRO_TOKEN env |
+| key | sport | markets | odds | history | type |
+| --- | --- | --- | --- | --- | --- |
+| forebet | soccer | 1x2, ou, btts, ht | ✅ best | ✅ 2024-01→now | backfillable |
+| zulubet | soccer | 1x2 | ✅ | ✅ ~2023-12→now | backfillable |
+| statarea | soccer | 1x2, ht_1x2, ou_1.5/2.5/3.5 | — | ✅ 2024+, archive to 2015 | backfillable |
+| vitibet | soccer | 1x2 | — | ✅ archive to 2018, probs capture-forward | backfillable |
+| scoutingstats | soccer | 1x2, btts, ou | ✅ | capture-forward | live |
+| predictz | soccer | 1x2 pick+score | ✅ | capture-forward (archive ~2026-01+) | live, needs curl_cffi |
+| windrawwin | soccer | 1x2 pick+stake | — | capture-forward only | live, needs curl_cffi |
+| afootballreport | soccer | ou_1.5/2.5, btts | — | capture-forward, today only | live |
+| betclan | soccer | 1x2 | — | capture-forward, today/tomorrow | live, needs curl_cffi |
+| freesupertips | soccer | expert tips | ✅ | capture-forward | live |
+| bettingclosed | soccer | 1x2, ou, btts | ✅ | ✅ archive | backfillable |
+| bzzoiro | soccer | 1x2, ou, btts, xG | — | API, ~490 upcoming, ~7 weeks ahead | capture-forward, needs BZZOIRO_TOKEN env |
 
 All adapters: fetch_day(date: str) -> list[dict], COLUMNS = [...]. No classes, no normalize(). Simple.
 
@@ -51,7 +51,7 @@ All adapters: fetch_day(date: str) -> list[dict], COLUMNS = [...]. No classes, n
 * src/edgefactory/assay.py – Wilson LB/UB, grade(wins,n), decay_verdict(), roi(), should_bench() – UNIT TESTED, 5/5 pass
 * src/edgefactory/util.py – norm_team(), norm_team_sql()
 * src/edgefactory/config.py – GATES: min_n_train=400, min_n_valid=120, min_roi_train=0.03, min_roi_valid=0.0, split="2025-06-01"
-* src/edgefactory/warehouse.py – DuckDB connect(), views for all 12 sources
+* src/edgefactory/warehouse.py – DuckDB connect(), views for all 12 sources, every row carries `sport='soccer'`
 * scripts/local_backfill.py – CSV backfill, resumable, state_*.json – usage: python scripts/local_backfill.py <source> <start> <end> --max-seconds N
 * scripts/capture_daily.py – daily cron: backfill recent window for all 12 sources, rebuild warehouse
 * scripts/build_warehouse.py – materialize CSV → warehouse.duckdb
@@ -126,6 +126,7 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * [DONE 2026-06-12] Decay monitor: scripts/decay_monitor.py – nightly audit of certified edges → auto-bench if DEAD/DECAYING or recent ROI < -5% (assay.decay_verdict/should_bench), flips status to "benched" in edges_consensus.json; picks_today excludes benched immediately
 * [DONE 2026-06-12] picks_today.py: expand beyond 3-source consensus – 1x2/OU2.5/BTTS, edges_consensus.json aware with fallback, bzzoiro ML confidence, vitibet index
 * [DONE 2026-06-12] Extend mine_consensus.py: add vitibet, betclan, bzzoiro to consensus grids; add OU/BTTS markets
+* [DONE 2026-06-13] Phase 1 – sport as a first-class field: every warehouse view, every pick dict, every edge record carries `sport='soccer'`. Architecture readiness only — no behavioural change to consensus. Phase 3 will require `league` to be added to consensus2/3/4 views (deferred; tracked).
 * Notifications: WhatsApp Business Cloud API (owner rejects Telegram) – swap in emit notifier
 * More sources to 15+: oddsportal (CLV), betensured, foresportia
 * ML layer: features = multi-source probs + disagreement spread + odds movement; model = just another source the miner validates

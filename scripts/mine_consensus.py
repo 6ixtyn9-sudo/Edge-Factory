@@ -77,6 +77,7 @@ def evaluate(con, name, view, where, split, market="1x2"):
         and va["wilson_lb"] >= 0.5
     )
     return {"rule": name, "view": view, "where": where, "market": market,
+            "sport": "soccer",
             "train": tr, "valid": va,
             "status": "certified" if certified else "candidate"}
 

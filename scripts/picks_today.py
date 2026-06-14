@@ -205,6 +205,7 @@ def eval_1x2(day, data, t1x2):
         picks.append({
             "date": day, "market": "1x2",
             "match": f"{anchor.get('home')} vs {anchor.get('away')}",
+            "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1), "odds": odds,
             "rule": f"{n_way}WAY-UNANIMOUS≥{thr:.0f}", "n_way": len(used),
@@ -254,6 +255,7 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
         picks.append({
             "date": day, "market": market,
             "match": f"{anchor.get('home')} vs {anchor.get('away')}",
+            "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1), "odds": odds,
             "rule": f"{market.upper()}-UNANIMOUS-{len(used)}WAY≥{thr:.0f}",
