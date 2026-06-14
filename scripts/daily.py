@@ -61,6 +61,7 @@ def main():
     run("python3 scripts/build_warehouse.py")
     run("python3 scripts/mine_consensus.py")
     run("PYTHONPATH=src python3 scripts/decay_monitor.py")
+    run("PYTHONPATH=src python3 scripts/assay_purity.py")
     run("PYTHONPATH=src python3 scripts/picks_today.py")
     
     # Generate dated report
