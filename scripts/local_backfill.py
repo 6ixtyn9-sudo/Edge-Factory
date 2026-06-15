@@ -28,7 +28,17 @@ def load_source(key: str):
         sys.exit(2)
 
 def dedup_key(row: dict, columns: list[str]):
-    # Prefer event_id if present
+    # Odds adapters emit multiple rows per event; preserve market/selection/bookmaker.
+    if row.get("market") or row.get("selection") or row.get("bookmaker"):
+        return (
+            str(row.get("date", "")),
+            str(row.get("home", "")).lower(),
+            str(row.get("away", "")).lower(),
+            str(row.get("market", "")).lower(),
+            str(row.get("selection", "")).lower(),
+            str(row.get("bookmaker", "")).lower(),
+        )
+    # Prefer event_id if present for one-row-per-event prediction adapters.
     if "event_id" in row and row.get("event_id"):
         return str(row["event_id"])
     # fallback: date + home + away
