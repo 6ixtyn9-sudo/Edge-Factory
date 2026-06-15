@@ -146,12 +146,13 @@ def recreate_views(con) -> set[str]:
                      zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled),
                      sa AS (SELECT DISTINCT ON (date, hkey, akey) * FROM statarea_settled),
                      vb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM vitibet_settled)
-                SELECT fb.date, fb.outcome,
+                SELECT fb.sport, fb.date, fb.home, fb.away, fb.outcome,
                        fb.pick AS pick, fb.pick AS fb_pick, zb.pick AS zb_pick,
                        sa.pick AS sa_pick, vb.pick AS vb_pick,
                        ((fb.pmax/{sfb} + zb.pmax/{szb} + sa.pmax/{ssa} + vb.pmax/{svb})/4)*100 AS avg_p,
                        CASE fb.pick WHEN 'home' THEN fb.odd1 WHEN 'draw' THEN fb.oddx
-                            ELSE fb.odd2 END AS pick_odds
+                            ELSE fb.odd2 END AS pick_odds,
+                       fb.league
                 FROM fb JOIN zb USING (date, hkey, akey)
                         JOIN sa USING (date, hkey, akey)
                         JOIN vb USING (date, hkey, akey)

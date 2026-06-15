@@ -7,7 +7,7 @@ DuckDB is where ALL mining and backtesting happens.
 
 Usage:
 from edgefactory.warehouse import connect
-con = connect() # views: forebet, zulubet, statarea, consensus2, consensus3
+con = connect() # views: forebet, zulubet, statarea, consensus2, consensus3, consensus4
 con.sql("SELECT count(*) FROM statarea").show()
 """
 from __future__ import annotations
@@ -297,6 +297,35 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
                    fb.league
             FROM fb JOIN zb USING (date, hkey, akey)
                     JOIN sa USING (date, hkey, akey)
+            WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
+        """)
+
+    # 4-way consensus: + vitibet. Keep context columns on the warehouse view
+    # itself so miners/monitors/purity assays do not have to reconstruct them.
+    if (_table_exists(con, "forebet_settled") and _table_exists(con, "zulubet_settled")
+            and _table_exists(con, "statarea_settled") and _table_exists(con, "vitibet_settled")):
+        con.execute("""
+            CREATE OR REPLACE VIEW consensus4 AS
+            WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM forebet_settled),
+                 zb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM zulubet_settled),
+                 sa AS (SELECT DISTINCT ON (date, hkey, akey) * FROM statarea_settled),
+                 vb AS (SELECT DISTINCT ON (date, hkey, akey) * FROM vitibet_settled)
+            SELECT fb.sport, fb.date, fb.home, fb.away, fb.outcome,
+                   fb.pick AS pick,
+                   fb.pick AS fb_pick, zb.pick AS zb_pick, sa.pick AS sa_pick,
+                   vb.pick AS vb_pick,
+                   fb.pmax AS fb_p, zb.pmax AS zb_p, sa.pmax AS sa_p,
+                   vb.pmax AS vb_p,
+                   ((CASE WHEN fb.pmax > 1.5 THEN fb.pmax ELSE fb.pmax*100 END)
+                    + (CASE WHEN zb.pmax > 1.5 THEN zb.pmax ELSE zb.pmax*100 END)
+                    + (CASE WHEN sa.pmax > 1.5 THEN sa.pmax ELSE sa.pmax*100 END)
+                    + (CASE WHEN vb.pmax > 1.5 THEN vb.pmax ELSE vb.pmax*100 END))/4 AS avg_p,
+                   CASE fb.pick WHEN 'home' THEN fb.odd1
+                                WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds,
+                   fb.league
+            FROM fb JOIN zb USING (date, hkey, akey)
+                    JOIN sa USING (date, hkey, akey)
+                    JOIN vb USING (date, hkey, akey)
             WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
         """)
     return con
