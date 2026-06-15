@@ -502,6 +502,32 @@ def main():
     total_upcoming = 0
     for day in days:
         picks, vetoes, n_up = run_day(day, t1x2, ou_edge, btts_edge)
+
+        # Phase 5: enrich with live odds from bzzoiro_odds (real book prices, not best-odds)
+        try:
+            from edgefactory.sources.bzzoiro_odds import fetch_day
+            odds_rows = fetch_day(day)
+            odds_lookup = {}
+            for r in odds_rows or []:
+                k = (norm_team(r.get("home", "")), norm_team(r.get("away", "")))
+                m = r.get("market")
+                sel = r.get("selection")
+                if k not in odds_lookup:
+                    odds_lookup[k] = {}
+                if m not in odds_lookup[k]:
+                    odds_lookup[k][m] = {}
+                odds_lookup[k][m][sel] = r.get("odds")
+            for p in picks:
+                k = (norm_team(p.get("home", "")), norm_team(p.get("away", "")))
+                m = p.get("market")
+                sel = p.get("pick")
+                live_odds = odds_lookup.get(k, {}).get(m, {}).get(sel)
+                if live_odds is not None:
+                    p["odds"] = live_odds
+                    p["odds_source"] = "bzzoiro"
+        except Exception:
+            pass  # graceful: if odds adapter fails or not installed, keep forebet odds
+
         total_vetoes += vetoes
         total_upcoming += n_up
         # bucket each pick

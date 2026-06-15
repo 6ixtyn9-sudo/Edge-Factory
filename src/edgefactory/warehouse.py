@@ -275,7 +275,8 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
                    (fb.pmax + zb.pmax)/2 AS avg_p,
                    fb.odd1, fb.oddx, fb.odd2,
                    CASE fb.pick WHEN 'home' THEN fb.odd1
-                                WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds
+                                WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds,
+                   fb.league
             FROM fb JOIN zb USING (date, hkey, akey)
             WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
         """)
@@ -292,7 +293,8 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
                    fb.pmax AS fb_p, zb.pmax AS zb_p, sa.pmax AS sa_p,
                    (fb.pmax + zb.pmax + sa.pmax)/3 AS avg_p,
                    CASE fb.pick WHEN 'home' THEN fb.odd1
-                                WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds
+                                WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds,
+                   fb.league
             FROM fb JOIN zb USING (date, hkey, akey)
                     JOIN sa USING (date, hkey, akey)
             WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
