@@ -82,6 +82,66 @@ def evaluate(con, name, view, where, split, market="1x2"):
             "status": "certified" if certified else "candidate"}
 
 
+def _edge_preference(edge: dict) -> tuple[int, int, int]:
+    """Higher is better when two certified edges have identical realized stats.
+
+    This keeps the more general/canonical rule when a stricter description adds
+    no rows or performance difference, e.g. `2way-unanimous avg_p>=70` vs
+    `2way-unanimous no-draw avg_p>=70` when the threshold already removes draws.
+    """
+    rule = edge.get("rule", "").lower()
+    return (
+        0 if "no-draw" in rule else 1,
+        0 if "veto-check" in rule else 1,
+        -len(rule),
+    )
+
+
+def _equivalence_signature(edge: dict) -> tuple | None:
+    """Signature for certified-edge de-duplication.
+
+    Only certified edges are collapsed, and only when the same view/market has
+    exactly the same walk-forward accounting. Candidate scans remain visible.
+    """
+    if edge.get("status") != "certified":
+        return None
+    return (
+        edge.get("sport", "soccer"),
+        edge.get("market", "1x2"),
+        edge.get("view"),
+        json.dumps(edge.get("train", {}), sort_keys=True),
+        json.dumps(edge.get("valid", {}), sort_keys=True),
+    )
+
+
+def dedupe_equivalent_certified_edges(results: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Remove duplicate certified edges with identical realized train/valid stats.
+
+    Returns (deduped_results, removed_edges). Order is stable except when a later
+    canonical rule replaces an earlier duplicate with the same signature.
+    """
+    out: list[dict] = []
+    sig_to_pos: dict[tuple, int] = {}
+    removed: list[dict] = []
+    for edge in results:
+        sig = _equivalence_signature(edge)
+        if sig is None:
+            out.append(edge)
+            continue
+        if sig not in sig_to_pos:
+            sig_to_pos[sig] = len(out)
+            out.append(edge)
+            continue
+        pos = sig_to_pos[sig]
+        incumbent = out[pos]
+        if _edge_preference(edge) > _edge_preference(incumbent):
+            removed.append(incumbent)
+            out[pos] = edge
+        else:
+            removed.append(edge)
+    return out, removed
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default=GATES.walkforward_split)
@@ -323,6 +383,9 @@ def main():
     print("-" * len(hdr))
     
     results = [r for r in results if r["train"]["n"] >= GATES.min_overlap_n]
+    results, deduped = dedupe_equivalent_certified_edges(results)
+    if deduped:
+        print(f"de-duped {len(deduped)} equivalent certified edge(s)")
     
     for r in results:
         t, v = r["train"], r["valid"]

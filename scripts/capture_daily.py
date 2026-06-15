@@ -6,6 +6,7 @@ sources snapshot today+tomorrow (predictions before they're wiped).
 """
 
 from __future__ import annotations
+import argparse
 import subprocess
 import sys
 from datetime import date, timedelta
@@ -48,6 +49,14 @@ def reset_recent_state(source: str, days: list[str]) -> None:
     p.write_text(json.dumps(st))
 
 def main() -> None:
+    ap = argparse.ArgumentParser(description="Daily capture for all sources")
+    ap.add_argument(
+        "--skip-build",
+        action="store_true",
+        help="capture only; caller will run scripts/build_warehouse.py explicitly",
+    )
+    args = ap.parse_args()
+
     window = [D30, YESTERDAY, (date.today() - timedelta(days=2)).isoformat(),
               TODAY, TOMORROW]
     failures = []
@@ -60,12 +69,15 @@ def main() -> None:
         if rc != 0:
             failures.append(source)
 
-    print("\nRebuilding warehouse...")
-    rc = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_warehouse.py")],
-                   cwd=ROOT).returncode
-    if rc != 0:
-        print("Warehouse build failed")
-        sys.exit(1)
+    if args.skip_build:
+        print("\nSkipping warehouse rebuild (--skip-build); caller must run build_warehouse.py next.")
+    else:
+        print("\nRebuilding warehouse...")
+        rc = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_warehouse.py")],
+                       cwd=ROOT).returncode
+        if rc != 0:
+            print("Warehouse build failed")
+            sys.exit(1)
 
     if failures:
         print("FAILED:", failures)

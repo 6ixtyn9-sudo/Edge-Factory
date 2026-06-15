@@ -23,6 +23,7 @@ def upsert_edges(client, edges_list):
         return
     resp = client.table("edges").upsert(edges_list, on_conflict="sport_id,source_id,name").execute()
     print(f"Upserted 'edges': {len(edges_list)} rows")
+    return resp
 
 
 def upsert_picks(client, picks_list):
@@ -35,3 +36,4 @@ def upsert_picks(client, picks_list):
         .execute()
     )
     print(f"Upserted 'edge_picks': {len(picks_list)} rows")
+    return resp
