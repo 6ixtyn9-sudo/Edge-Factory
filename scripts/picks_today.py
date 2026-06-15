@@ -565,11 +565,12 @@ def main():
     n_wl_ctx = len(buckets[BUCKET_WL_CTX])
     n_skip_veto = len(buckets[BUCKET_SKIP_VETO])
     n_skip_dead = len(buckets[BUCKET_SKIP_DEAD])
-    print(f"\nSummary: CLEAN={n_clean} CAUTION={n_caution} "
-          f"WATCHLIST_odds={n_wl_odds} WATCHLIST_ctx={n_wl_ctx} "
-          f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
-          f"({total_vetoes} unanimity-vetoes during consensus, {total_upcoming} upcoming matches scanned)",
-          file=sys.stderr)
+    summary = (f"Summary: CLEAN={n_clean} CAUTION={n_caution} "
+               f"WATCHLIST_odds={n_wl_odds} WATCHLIST_ctx={n_wl_ctx} "
+               f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
+               f"({total_vetoes} vetoes, {total_upcoming} matches)")
+    print(f"\n{summary}", file=sys.stderr)
+    print(summary)  # also to stdout for logs / notifications
 
     # Write JSON for daily.py report generation and Supabase sync
     # includes bucket + ctx fields
