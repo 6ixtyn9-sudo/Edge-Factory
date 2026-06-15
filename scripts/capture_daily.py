@@ -35,6 +35,7 @@ JOBS = [
     ("betclan", TODAY, TODAY),
     ("freesupertips", TODAY, TOMORROW),
     ("bzzoiro", TODAY, TODAY),           # snapshots ALL upcoming (~7 weeks ahead)
+    ("bzzoiro_odds", TODAY, TOMORROW),    # live real-book odds for pick enrichment
     ("bettingclosed", D30, TODAY),
 ]
 

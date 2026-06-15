@@ -3,6 +3,8 @@
 
 from __future__ import annotations
 
+import csv
+import gzip
 import importlib
 import json
 import re
@@ -19,6 +21,8 @@ from edgefactory.market_registry import get_odds_tier
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
+LOCALDATA = ROOT / "localdata"
+BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 
 # ... (keep all existing source lists, fallback thresholds, etc.)
 
@@ -327,6 +331,119 @@ def _f(v):
         return None
 
 
+def _valid_decimal_odds(v) -> float | None:
+    odds = _f(v)
+    if odds is None or odds <= 1.0:
+        return None
+    return odds
+
+
+def _is_polymarket(bookmaker: object) -> bool:
+    return str(bookmaker or "").strip().lower() == "polymarket"
+
+
+def _odds_row_key(row: dict) -> tuple[str, str, str, str, str] | None:
+    day = str(row.get("date") or "")
+    home = norm_team(row.get("home") or "")
+    away = norm_team(row.get("away") or "")
+    market = str(row.get("market") or "")
+    selection = str(row.get("selection") or "")
+    if not (day and home and away and market and selection):
+        return None
+    return (day, home, away, market, selection)
+
+
+def _prefer_odds_row(new: dict, old: dict | None) -> bool:
+    """Prefer real books over Polymarket, then higher decimal odds."""
+    if old is None:
+        return True
+    new_is_pm = _is_polymarket(new.get("bookmaker"))
+    old_is_pm = _is_polymarket(old.get("bookmaker"))
+    if new_is_pm != old_is_pm:
+        return not new_is_pm
+    new_odds = _valid_decimal_odds(new.get("odds")) or 0.0
+    old_odds = _valid_decimal_odds(old.get("odds")) or 0.0
+    if new_odds != old_odds:
+        return new_odds > old_odds
+    return str(new.get("captured_at") or "") > str(old.get("captured_at") or "")
+
+
+def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
+    """Read cached bzzoiro_odds CSV rows for a day, if capture_daily wrote them."""
+    month = day[:7]
+    path = LOCALDATA / f"{BZZOIRO_ODDS_SOURCE}_{month}.csv.gz"
+    if not path.exists():
+        return []
+    try:
+        with gzip.open(path, "rt", newline="") as fh:
+            return [r for r in csv.DictReader(fh) if r.get("date") == day]
+    except Exception:
+        return []
+
+
+def _fetch_live_bzzoiro_odds(day: str) -> list[dict]:
+    """Fetch live odds via adapter. Missing token/API failure -> zero rows."""
+    try:
+        mod = importlib.import_module("edgefactory.sources.bzzoiro_odds")
+        return list(mod.fetch_day(day) or [])
+    except Exception as exc:
+        print(f"bzzoiro_odds enrichment skipped for {day}: {exc}", file=sys.stderr)
+        return []
+
+
+def bzzoiro_odds_index(day: str, *, live: bool = True) -> dict[tuple[str, str, str, str, str], dict]:
+    """Best available bzzoiro_odds row per date/team/market/selection.
+
+    Cached CSV rows are used first; live API rows are then merged when a token is
+    available. Invalid decimal odds (<=1.0) are ignored so Polymarket probability
+    prices never masquerade as bookmaker decimal odds.
+    """
+    rows = _read_cached_bzzoiro_odds(day)
+    if live:
+        rows.extend(_fetch_live_bzzoiro_odds(day))
+
+    out: dict[tuple[str, str, str, str, str], dict] = {}
+    for row in rows:
+        odds = _valid_decimal_odds(row.get("odds"))
+        if odds is None:
+            continue
+        key = _odds_row_key(row)
+        if key is None:
+            continue
+        normalized = dict(row)
+        normalized["odds"] = odds
+        if _prefer_odds_row(normalized, out.get(key)):
+            out[key] = normalized
+    return out
+
+
+def enrich_with_bzzoiro_odds(picks: list[dict], odds_index: dict) -> int:
+    """Fill missing pick odds from bzzoiro_odds before purity bucketing."""
+    enriched = 0
+    for pick in picks:
+        if pick.get("odds") is not None:
+            pick.setdefault("odds_source", "forebet_best")
+            continue
+        key = (
+            str(pick.get("date") or ""),
+            norm_team(pick.get("home") or ""),
+            norm_team(pick.get("away") or ""),
+            str(pick.get("market") or ""),
+            str(pick.get("pick") or ""),
+        )
+        row = odds_index.get(key)
+        if not row:
+            pick.setdefault("odds_source", None)
+            continue
+        pick["odds"] = _valid_decimal_odds(row.get("odds"))
+        pick["odds_source"] = BZZOIRO_ODDS_SOURCE
+        pick["bookmaker"] = row.get("bookmaker")
+        pick["odds_captured_at"] = row.get("captured_at")
+        pick["odds_league"] = row.get("league")
+        enriched += 1
+    return enriched
+
+
 def probs_1x2(row):
     p1, px, p2 = _f(row.get("p1")), _f(row.get("px")), _f(row.get("p2"))
     if p1 is None or px is None or p2 is None:
@@ -397,6 +514,8 @@ def eval_1x2(day, data, t1x2):
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1), "odds": odds,
+            "odds_source": "forebet_best" if odds is not None else None,
+            "bookmaker": None,
             "rule": edge["rule"],
             "edge_rule": edge["rule"],
             "display_rule": edge["display_rule"],
@@ -451,6 +570,8 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1), "odds": odds,
+            "odds_source": "forebet_best" if odds is not None else None,
+            "bookmaker": None,
             "rule": edge["rule"],
             "edge_rule": edge["rule"],
             "display_rule": edge["display_rule"],
@@ -494,7 +615,12 @@ def print_buckets(buckets: dict, title_date: str = ""):
             print()
             continue
         for p in picks:
-            o = f"@{p['odds']:.2f}" if p.get("odds") is not None else "@None"
+            if p.get("odds") is not None:
+                o = f"@{p['odds']:.2f}"
+                if p.get("odds_source") == BZZOIRO_ODDS_SOURCE and p.get("bookmaker"):
+                    o += f" {p['bookmaker']}"
+            else:
+                o = "@None"
             ctx = p.get("ctx", {})
             ctx_str = (
                 f"  league={ctx.get('league_raw','UNKNOWN')}:{ctx.get('league','?')}  "
@@ -538,6 +664,14 @@ def main():
         picks, vetoes, n_up = run_day(day, t1x2, ou_edge, btts_edge)
         total_vetoes += vetoes
         total_upcoming += n_up
+
+        odds_idx = bzzoiro_odds_index(day)
+        enriched_n = enrich_with_bzzoiro_odds(picks, odds_idx)
+        if odds_idx or enriched_n:
+            print(
+                f"bzzoiro_odds enrichment {day}: odds={len(odds_idx)} enriched={enriched_n}",
+                file=sys.stderr,
+            )
 
         # Phase 7 enrichment + new fields
         for p in picks:

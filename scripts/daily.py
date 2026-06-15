@@ -41,7 +41,15 @@ def generate_daily_report(today: str):
         ]
         
         for p in picks:
-            o = f"@{p.get('odds', 'n/a')}"
+            if p.get("odds") is not None:
+                try:
+                    o = f"@{float(p.get('odds')):.2f}"
+                except (TypeError, ValueError):
+                    o = f"@{p.get('odds')}"
+                if p.get("odds_source") == "bzzoiro_odds" and p.get("bookmaker"):
+                    o += f" {p['bookmaker']}"
+            else:
+                o = "@n/a"
             label = p.get("display_rule") or p.get("rule", "?")
             bucket = p.get("bucket", "?")
             ctx = p.get("ctx", {}) or {}

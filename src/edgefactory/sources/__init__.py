@@ -10,3 +10,4 @@ from . import betclan
 from . import freesupertips
 from . import bettingclosed
 from . import bzzoiro
+from . import bzzoiro_odds
