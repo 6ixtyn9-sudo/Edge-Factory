@@ -119,7 +119,7 @@ def context_verdict_league(
     roi        = full-history ROI (decimal: +0.03 = +3%)
     recent_roi = recent-window ROI (same scale); None if < 30 recent bets
     """
-    if n < 80 or roi is None:
+    if n < 50 or roi is None:
         return "UNKNOWN"
     if roi <= -0.05 and (recent_roi is None or recent_roi <= -0.03):
         return "VETO"
@@ -136,7 +136,7 @@ def context_verdict_team(n: int, roi: float | None) -> str:
     n   = total settled bets where this team appeared in this role
     roi = full-history ROI for those bets
     """
-    if n < 35 or roi is None:
+    if n < 30 or roi is None:
         return "UNKNOWN"
     if roi <= -0.08:
         return "VETO"
@@ -153,7 +153,7 @@ def context_verdict_odds_band(n: int, roi: float | None) -> str:
     n   = total settled bets in this odds band
     roi = full-history ROI for those bets
     """
-    if n < 100 or roi is None:
+    if n < 80 or roi is None:
         return "UNKNOWN"
     if roi <= -0.02:
         return "VETO"
