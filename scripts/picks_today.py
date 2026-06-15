@@ -24,6 +24,13 @@ PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
 LOCALDATA = ROOT / "localdata"
 BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 
+# Odds feeds and prediction feeds sometimes use different country/team labels.
+# Keep this local to odds matching so certified mining/team joins remain unchanged.
+ODDS_TEAM_ALIASES = {
+    "caboverde": "capeverde",  # bzzoiro: Cabo Verde; prediction feeds: Cape Verde Islands
+}
+LOW_PRIORITY_BOOKMAKER_TOKENS = ("polymarket", "consensus")
+
 # ... (keep all existing source lists, fallback thresholds, etc.)
 
 SOURCES_1X2 = ["forebet", "zulubet", "statarea", "vitibet", "betclan", "bzzoiro"]
@@ -338,14 +345,24 @@ def _valid_decimal_odds(v) -> float | None:
     return odds
 
 
-def _is_polymarket(bookmaker: object) -> bool:
-    return str(bookmaker or "").strip().lower() == "polymarket"
+def odds_team_key(name: object) -> str:
+    """Team key for odds enrichment only; does not affect certified mining joins."""
+    key = norm_team(str(name or ""))
+    return ODDS_TEAM_ALIASES.get(key, key)
+
+
+def _bookmaker_priority(bookmaker: object) -> int:
+    """Prefer real books over aggregate/Polymarket rows, but keep aggregates as fallback."""
+    b = str(bookmaker or "").strip().lower()
+    if any(token in b for token in LOW_PRIORITY_BOOKMAKER_TOKENS):
+        return 0
+    return 1
 
 
 def _odds_row_key(row: dict) -> tuple[str, str, str, str, str] | None:
     day = str(row.get("date") or "")
-    home = norm_team(row.get("home") or "")
-    away = norm_team(row.get("away") or "")
+    home = odds_team_key(row.get("home") or "")
+    away = odds_team_key(row.get("away") or "")
     market = str(row.get("market") or "")
     selection = str(row.get("selection") or "")
     if not (day and home and away and market and selection):
@@ -354,13 +371,13 @@ def _odds_row_key(row: dict) -> tuple[str, str, str, str, str] | None:
 
 
 def _prefer_odds_row(new: dict, old: dict | None) -> bool:
-    """Prefer real books over Polymarket, then higher decimal odds."""
+    """Prefer real books, then higher decimal odds, then freshest capture."""
     if old is None:
         return True
-    new_is_pm = _is_polymarket(new.get("bookmaker"))
-    old_is_pm = _is_polymarket(old.get("bookmaker"))
-    if new_is_pm != old_is_pm:
-        return not new_is_pm
+    new_priority = _bookmaker_priority(new.get("bookmaker"))
+    old_priority = _bookmaker_priority(old.get("bookmaker"))
+    if new_priority != old_priority:
+        return new_priority > old_priority
     new_odds = _valid_decimal_odds(new.get("odds")) or 0.0
     old_odds = _valid_decimal_odds(old.get("odds")) or 0.0
     if new_odds != old_odds:
@@ -418,28 +435,37 @@ def bzzoiro_odds_index(day: str, *, live: bool = True) -> dict[tuple[str, str, s
 
 
 def enrich_with_bzzoiro_odds(picks: list[dict], odds_index: dict) -> int:
-    """Fill missing pick odds from bzzoiro_odds before purity bucketing."""
+    """Prefer matching bzzoiro real-book odds before purity bucketing.
+
+    If a matching bzzoiro_odds row exists, use it even when Forebet supplied a
+    price, because real book prices are the operational price source. If no row
+    matches, keep the existing Forebet price or leave the pick as no-odds.
+    """
     enriched = 0
     for pick in picks:
-        if pick.get("odds") is not None:
-            pick.setdefault("odds_source", "forebet_best")
-            continue
         key = (
             str(pick.get("date") or ""),
-            norm_team(pick.get("home") or ""),
-            norm_team(pick.get("away") or ""),
+            odds_team_key(pick.get("home") or ""),
+            odds_team_key(pick.get("away") or ""),
             str(pick.get("market") or ""),
             str(pick.get("pick") or ""),
         )
         row = odds_index.get(key)
         if not row:
-            pick.setdefault("odds_source", None)
+            if pick.get("odds") is not None:
+                pick.setdefault("odds_source", "forebet_best")
+            else:
+                pick.setdefault("odds_source", None)
             continue
+        previous_odds = pick.get("odds")
+        previous_source = pick.get("odds_source") or ("forebet_best" if previous_odds is not None else None)
         pick["odds"] = _valid_decimal_odds(row.get("odds"))
         pick["odds_source"] = BZZOIRO_ODDS_SOURCE
         pick["bookmaker"] = row.get("bookmaker")
         pick["odds_captured_at"] = row.get("captured_at")
         pick["odds_league"] = row.get("league")
+        if previous_odds is not None and previous_source != BZZOIRO_ODDS_SOURCE:
+            pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
         enriched += 1
     return enriched
 
