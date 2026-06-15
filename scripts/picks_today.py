@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import csv
 import gzip
+import os
 import importlib
 import json
 import re
@@ -408,18 +409,30 @@ def _fetch_live_bzzoiro_odds(day: str) -> list[dict]:
         return []
 
 
-def bzzoiro_odds_index(day: str, *, live: bool = True) -> dict[tuple[str, str, str, str, str], dict]:
+def _refresh_bzzoiro_odds() -> bool:
+    return os.environ.get("BZZOIRO_ODDS_REFRESH", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def bzzoiro_odds_index(
+    day: str,
+    *,
+    live: bool = True,
+    stats: dict | None = None,
+) -> dict[tuple[str, str, str, str, str], dict]:
     """Best available bzzoiro_odds row per date/team/market/selection.
 
-    Cached CSV rows are used first; live API rows are then merged when a token is
-    available. Invalid decimal odds (<=1.0) are ignored so Polymarket probability
-    prices never masquerade as bookmaker decimal odds.
+    Cache-first: if localdata/bzzoiro_odds_YYYY-MM.csv.gz has rows for `day`,
+    do not hit the API again unless BZZOIRO_ODDS_REFRESH=1. This keeps nightly
+    output clean because capture_daily already refreshed the odds cache.
     """
-    rows = _read_cached_bzzoiro_odds(day)
-    if live:
-        rows.extend(_fetch_live_bzzoiro_odds(day))
+    cached_rows = _read_cached_bzzoiro_odds(day)
+    live_rows: list[dict] = []
+    if live and (_refresh_bzzoiro_odds() or not cached_rows):
+        live_rows = _fetch_live_bzzoiro_odds(day)
 
+    rows = cached_rows + live_rows
     out: dict[tuple[str, str, str, str, str], dict] = {}
+    valid_rows = 0
     for row in rows:
         odds = _valid_decimal_odds(row.get("odds"))
         if odds is None:
@@ -427,10 +440,21 @@ def bzzoiro_odds_index(day: str, *, live: bool = True) -> dict[tuple[str, str, s
         key = _odds_row_key(row)
         if key is None:
             continue
+        valid_rows += 1
         normalized = dict(row)
         normalized["odds"] = odds
         if _prefer_odds_row(normalized, out.get(key)):
             out[key] = normalized
+
+    if stats is not None:
+        stats.update({
+            "cached_rows": len(cached_rows),
+            "live_rows": len(live_rows),
+            "raw_rows": len(rows),
+            "valid_rows": valid_rows,
+            "valid_keys": len(out),
+            "refreshed": bool(live_rows),
+        })
     return out
 
 
@@ -691,11 +715,16 @@ def main():
         total_vetoes += vetoes
         total_upcoming += n_up
 
-        odds_idx = bzzoiro_odds_index(day)
+        odds_stats: dict = {}
+        odds_idx = bzzoiro_odds_index(day, stats=odds_stats)
         enriched_n = enrich_with_bzzoiro_odds(picks, odds_idx)
-        if odds_idx or enriched_n:
+        if odds_stats.get("raw_rows") or enriched_n:
             print(
-                f"bzzoiro_odds enrichment {day}: odds={len(odds_idx)} enriched={enriched_n}",
+                f"bzzoiro_odds enrichment {day}: "
+                f"cached_rows={odds_stats.get('cached_rows', 0)} "
+                f"live_rows={odds_stats.get('live_rows', 0)} "
+                f"valid_keys={odds_stats.get('valid_keys', len(odds_idx))} "
+                f"enriched={enriched_n}",
                 file=sys.stderr,
             )
 
