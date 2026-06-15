@@ -19,13 +19,19 @@ import json
 import os
 import sys
 import time
+import urllib.parse
 import urllib.request
 from datetime import date as _date, datetime, timezone, timedelta
 from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.environ.get("BZZOIRO_TOKEN")
-BASE = "https://sports.bzzoiro.com/api/v2"
+BASE_V2 = "https://sports.bzzoiro.com/api/v2"
+BASE_V1 = "https://sports.bzzoiro.com/api"
+
+# Query each supported market explicitly. /odds/best defaults to 1x2,
+# but relying on that made zero-row captures hard to diagnose.
+MARKET_PARAMS = ("1x2", "over_under_25", "over_under", "btts")
 
 COLUMNS = [
     "source", "source_type", "sport", "date", "league", "home", "away",
@@ -51,7 +57,11 @@ def _market_name(raw: object) -> str | None:
     s = str(raw or "").strip().lower().replace("-", "_").replace(" ", "_")
     if s in {"1x2", "match_winner", "match_result", "winner", "full_time_result"}:
         return "1x2"
-    if s in {"over_under", "ou", "ou_2_5", "ou_2.5", "total_goals", "goals_over_under"}:
+    if s in {
+        "over_under", "over_under_25", "over_under_2_5", "ou", "ou_25",
+        "ou_2_5", "ou_2.5", "total_goals", "total_goals_25",
+        "goals_over_under", "goals_over_under_25",
+    }:
         return "ou_2.5"
     if s in {"btts", "both_teams_to_score", "both_teams_score"}:
         return "btts"
@@ -128,7 +138,12 @@ def _row(item: dict, outcome: dict, market: str, selection: str) -> dict:
         "market": market,
         "selection": selection,
         "odds": _decimal_odds(outcome),
-        "bookmaker": outcome.get("bookmaker_name") or outcome.get("bookmaker_slug"),
+        "bookmaker": (
+            outcome.get("bookmaker_name")
+            or outcome.get("bookmaker")
+            or outcome.get("bookmaker_slug")
+            or outcome.get("bookmaker_code")
+        ),
         "captured_at": captured,
     }
 
@@ -171,6 +186,54 @@ def _market_rows(item: dict) -> list[dict]:
     return rows
 
 
+def _results(data) -> list[dict]:
+    """Return result items from common API envelope shapes."""
+    if isinstance(data, list):
+        return [x for x in data if isinstance(x, dict)]
+    if not isinstance(data, dict):
+        return []
+    for key in ("results", "events", "data", "odds"):
+        value = data.get(key)
+        if isinstance(value, list):
+            return [x for x in value if isinstance(x, dict)]
+    return []
+
+
+def _dedupe_rows(rows: list[dict]) -> list[dict]:
+    out: dict[tuple, dict] = {}
+    for row in rows:
+        key = (
+            row.get("date"), row.get("home"), row.get("away"),
+            row.get("market"), row.get("selection"), row.get("bookmaker"),
+        )
+        out[key] = row
+    return list(out.values())
+
+
+def _fetch_url(url: str, date: str, label: str) -> tuple[int, list[dict]]:
+    """Fetch one URL, parse rows, and print diagnostics. Never raises."""
+    try:
+        data = _get(url)
+    except Exception as exc:
+        print(f"bzzoiro_odds {date}: {label} failed: {exc}", file=sys.stderr)
+        return 0, []
+
+    items = _results(data)
+    rows: list[dict] = []
+    for item in items:
+        rows.extend(_market_rows(item))
+    # v1 /odds/best/?days=N can span multiple dates; keep requested day only.
+    rows = [r for r in rows if not r.get("date") or r.get("date") == date]
+    print(f"bzzoiro_odds {date}: {label} api_results={len(items)} rows={len(rows)}", file=sys.stderr)
+    return len(items), rows
+
+
+def _days_window(date: str) -> int:
+    target = _date.fromisoformat(date)
+    today = _date.today()
+    return max(1, min(14, (target - today).days + 2))
+
+
 def fetch_day(date: str) -> list[dict]:
     """Fetch odds for a specific date (today or tomorrow supported)."""
     if not TOKEN:
@@ -179,16 +242,32 @@ def fetch_day(date: str) -> list[dict]:
 
     start = date
     end = (_date.fromisoformat(date) + timedelta(days=1)).isoformat()
-    url = f"{BASE}/odds/best/?date_from={start}&date_to={end}&limit=200"
+    all_rows: list[dict] = []
+    total_results = 0
 
-    data = _get(url)
-    results = data.get("results", []) if isinstance(data, dict) else []
-    out: list[dict] = []
-    for item in results:
-        if isinstance(item, dict):
-            out.extend(_market_rows(item))
+    for market in MARKET_PARAMS:
+        qs = urllib.parse.urlencode({
+            "market": market,
+            "date_from": start,
+            "date_to": end,
+            "limit": 200,
+        })
+        n, rows = _fetch_url(f"{BASE_V2}/odds/best/?{qs}", date, f"v2 market={market}")
+        total_results += n
+        all_rows.extend(rows)
 
-    print(f"bzzoiro_odds {date}: api_results={len(results)} rows={len(out)}", file=sys.stderr)
+    # Compatibility fallback: the public docs also expose /api/odds/best/?market=...&days=N.
+    # Use it only when v2 returns no items for the date window.
+    if total_results == 0:
+        days = _days_window(date)
+        for market in MARKET_PARAMS:
+            qs = urllib.parse.urlencode({"market": market, "days": days})
+            n, rows = _fetch_url(f"{BASE_V1}/odds/best/?{qs}", date, f"v1 market={market}")
+            total_results += n
+            all_rows.extend(rows)
+
+    out = _dedupe_rows(all_rows)
+    print(f"bzzoiro_odds {date}: total_api_results={total_results} total_rows={len(out)}", file=sys.stderr)
     return out
 
 
