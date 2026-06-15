@@ -60,6 +60,7 @@ All adapters: fetch_day(date: str) -> list[dict], COLUMNS = [...]. No classes, n
 * scripts/decay_monitor.py – nightly decay audit (HEALTHY/WATCH/DECAYING/DEAD), auto-bench circuit breaker
 * scripts/assay_purity.py – context purity assay → localdata/purity_registry.json; CLI: --window N --dry-run
 * scripts/picks_today.py – purity-aware bucketed picks: CERTIFIED_CLEAN / CAUTION / WATCHLIST_NO_ODDS / WATCHLIST_UNKNOWN_CTX / SKIPPED_VETO / SKIPPED_DEAD_EDGE
+* scripts/backfill_results.py – safe retrospective settlement tool. Fills missing hs/gs results using forebet_settled. Does not affect edge certification.
 * scripts/daily.py – nightly pipeline: capture → build → mine → decay_monitor → assay_purity → picks_today → sync_supabase
 * tests/test_assay.py – 6 tests, must stay green
 
@@ -130,8 +131,10 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * [DONE 2026-06-15] Phase 4: picks_today.py bucketing overhaul – purity_registry-aware, six output buckets, bucket+ctx+home+away in picks_today.json (commit 984507e)
 * [DONE 2026-06-15] Phase 4.1 (housekeeping): 
   - Added `fb.league` to consensus2/consensus3 SELECTs in warehouse.py (unlocks real league_context verdicts)
-  - Fixed deprecated `datetime.utcnow()` → `datetime.now(datetime.UTC)` in assay_purity.py
-* Phase 5 DONE: bzzoiro_odds adapter (src/edgefactory/sources/bzzoiro_odds.py) — reuses existing BZZOIRO_TOKEN + BSD API (14+ books + Polymarket). Added live-odds enrichment to picks_today.py (prefers real book prices over forebet best-odds). Decision: chose bzzoiro because it already covers the leagues in the 12 prediction sources and provides CLV-quality lines without new auth.
+  - Fixed deprecated `datetime.utcnow()` → `datetime.now(datetime.timezone.utc)` in assay_purity.py
+* [DONE 2026-06-15] Phase 5: bzzoiro_odds adapter (src/edgefactory/sources/bzzoiro_odds.py) — reuses existing BZZOIRO_TOKEN + BSD API (14+ books + Polymarket). Added live-odds enrichment to picks_today.py (prefers real book prices over forebet best-odds). Decision: chose bzzoiro because it already covers the leagues in the 12 prediction sources and provides CLV-quality lines without new auth.
+* [DONE 2026-06-15] Phase 6: Added bzzoiro_odds to sources, print summary to stderr, added consensus4 league column, patched datetime.UTC.
+* [DONE 2026-06-15] Phase 7 + 7.1: Added market_registry.py (single source of truth for bettable markets), tiered purity thresholds in assay_purity.py, market/odds tier bucketing in picks_today.py. Also added backfill_results.py as a safe retrospective settlement tool (only fills missing results, does not affect edge certification).
 * OPEN GAP: consensus4 view (in assay_purity recreate_views) still lacks league column — will be fixed when consensus4 is promoted to warehouse.py.
 * Supabase sync: push certified edges + daily picks to edge_picks table with bucket/ctx fields
 * Notifications: WhatsApp Business Cloud API (owner rejects Telegram) – swap in emit notifier
