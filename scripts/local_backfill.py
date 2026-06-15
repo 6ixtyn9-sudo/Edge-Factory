@@ -107,6 +107,7 @@ def main():
     t0 = time.time()
     buf: dict[str, list[dict]] = {}
     n = 0
+    n_rows = 0
 
     def flush():
         for month, rows in buf.items():
@@ -143,6 +144,9 @@ def main():
                             r["date"] = d.isoformat()
                     month = d.strftime("%Y-%m")
                     buf.setdefault(month, []).extend(rows)
+                    n_rows += len(rows)
+                elif source_key.endswith("_odds"):
+                    print(f"  {d} | 0 rows")
                 done.add(d.isoformat())
                 n += 1
                 if n % 10 == 0:
@@ -161,7 +165,7 @@ def main():
     finally:
         pass
 
-    print(f"done this run: {n} days in {time.time()-t0:.0f}s; total {len(done)}")
+    print(f"done this run: {n} days, {n_rows} rows in {time.time()-t0:.0f}s; total {len(done)}")
 
 if __name__ == "__main__":
     main()
