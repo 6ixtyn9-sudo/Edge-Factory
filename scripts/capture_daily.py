@@ -16,17 +16,17 @@ ROOT = Path(__file__).resolve().parent.parent
 TODAY = date.today().isoformat()
 TOMORROW = (date.today() + timedelta(days=1)).isoformat()
 YESTERDAY = (date.today() - timedelta(days=1)).isoformat()
-D14 = (date.today() - timedelta(days=14)).isoformat()
+D30 = (date.today() - timedelta(days=30)).isoformat()
 
-# (source, start, end) — widened to 14 days for better context maturity
+# (source, start, end) — widened to 30 days for better context maturity
 JOBS = [
-    # deep-history sources: re-pull last 14 days for settlement + today/tomorrow
-    ("forebet", D14, TOMORROW),
-    ("zulubet", D14, TODAY),
-    ("statarea", D14, TODAY),
-    ("vitibet", D14, TOMORROW),          # archive serves results; probs only live
-    ("scoutingstats", D14, TODAY),
-    ("predictz", D14, TODAY),
+    # deep-history sources: re-pull last 30 days for settlement + today/tomorrow
+    ("forebet", D30, TOMORROW),
+    ("zulubet", D30, TODAY),
+    ("statarea", D30, TODAY),
+    ("vitibet", D30, TOMORROW),          # archive serves results; probs only live
+    ("scoutingstats", D30, TODAY),
+    ("predictz", D30, TODAY),
 
     # capture-forward only
     ("windrawwin", TODAY, TOMORROW),
@@ -34,7 +34,7 @@ JOBS = [
     ("betclan", TODAY, TODAY),
     ("freesupertips", TODAY, TOMORROW),
     ("bzzoiro", TODAY, TODAY),           # snapshots ALL upcoming (~7 weeks ahead)
-    ("bettingclosed", D14, TODAY),
+    ("bettingclosed", D30, TODAY),
 ]
 
 def reset_recent_state(source: str, days: list[str]) -> None:
@@ -48,7 +48,7 @@ def reset_recent_state(source: str, days: list[str]) -> None:
     p.write_text(json.dumps(st))
 
 def main() -> None:
-    window = [D14, YESTERDAY, (date.today() - timedelta(days=2)).isoformat(),
+    window = [D30, YESTERDAY, (date.today() - timedelta(days=2)).isoformat(),
               TODAY, TOMORROW]
     failures = []
     for source, start, end in JOBS:
