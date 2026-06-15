@@ -48,17 +48,19 @@ All adapters: fetch_day(date: str) -> list[dict], COLUMNS = [...]. No classes, n
 
 3. Key files
 
-* src/edgefactory/assay.py – Wilson LB/UB, grade(wins,n), decay_verdict(), roi(), should_bench() – UNIT TESTED, 5/5 pass
+* src/edgefactory/assay.py – Wilson LB/UB, grade, decay_verdict, roi, should_bench + context_verdict_{league,team,odds_band} – UNIT TESTED, 6/6 pass
 * src/edgefactory/util.py – norm_team(), norm_team_sql()
-* src/edgefactory/config.py – GATES: min_n_train=400, min_n_valid=120, min_roi_train=0.03, min_roi_valid=0.0, split="2025-06-01"
-* src/edgefactory/warehouse.py – DuckDB connect(), views for all 12 sources, every row carries `sport='soccer'`
-* scripts/local_backfill.py – CSV backfill, resumable, state_*.json – usage: python scripts/local_backfill.py <source> <start> <end> --max-seconds N
+* src/edgefactory/config.py – GATES: min_n_train=350, min_n_valid=120, split="2025-06-01"
+* src/edgefactory/warehouse.py – DuckDB connect(), views for all 12 sources; all views carry sport='soccer'
+* scripts/local_backfill.py – CSV backfill, resumable – usage: python scripts/local_backfill.py <source> <start> <end> --max-seconds N
 * scripts/capture_daily.py – daily cron: backfill recent window for all 12 sources, rebuild warehouse
 * scripts/build_warehouse.py – materialize CSV → warehouse.duckdb
-* scripts/mine_consensus.py – walk-forward consensus miner → edges_consensus.json
-* scripts/picks_today.py – certified consensus picks (2-way ≥70%, 3-way ≥65%, veto on disagreement)
-* scripts/daily.py – nightly pipeline entrypoint (runs capture -> build -> mine -> monitor -> picks)
-* tests/test_assay.py – 5 tests, must stay green
+* scripts/mine_consensus.py – walk-forward consensus miner → edges_consensus.json; edges carry sport='soccer'
+* scripts/decay_monitor.py – nightly decay audit (HEALTHY/WATCH/DECAYING/DEAD), auto-bench circuit breaker
+* scripts/assay_purity.py – context purity assay → localdata/purity_registry.json; CLI: --window N --dry-run
+* scripts/picks_today.py – purity-aware bucketed picks: CERTIFIED_CLEAN / CAUTION / WATCHLIST_NO_ODDS / WATCHLIST_UNKNOWN_CTX / SKIPPED_VETO / SKIPPED_DEAD_EDGE
+* scripts/daily.py – nightly pipeline: capture → build → mine → decay_monitor → assay_purity → picks_today → sync_supabase
+* tests/test_assay.py – 6 tests, must stay green
 
 4. Certified findings (walk-forward, split 2025-06-01)
 
@@ -97,7 +99,7 @@ PYTHONPATH=src python scripts/picks_today.py
 PYTHONPATH=src python scripts/picks_today.py 2026-06-13
 
 # tests
-PYTHONPATH=src python -m pytest tests/ -q   # 5 passed
+PYTHONPATH=src python -m pytest tests/ -q   # 6 passed
 ```
 
 6. Supabase
@@ -121,24 +123,26 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * No OO Supabase pipeline files (models.py, db.py, pipelines/) – deleted 2026-06-12 as drift. If Supabase ingest is re-introduced, it must wrap the simple fetch_day() adapters, not replace them.
 
 8. Next steps (priority)
-* Supabase sync: push certified edges + daily picks to edge_picks table (read-only emitter stays)
-* [DONE 2026-06-13] Initial 7-year deep backfill baseline complete. To extend: PYTHONPATH=src python3 scripts/local_backfill.py <source> 2017-01-01 2023-12-31 --max-seconds 10000
-* [DONE 2026-06-12] Decay monitor: scripts/decay_monitor.py – nightly audit of certified edges → auto-bench if DEAD/DECAYING or recent ROI < -5% (assay.decay_verdict/should_bench), flips status to "benched" in edges_consensus.json; picks_today excludes benched immediately
-* [DONE 2026-06-12] picks_today.py: expand beyond 3-source consensus – 1x2/OU2.5/BTTS, edges_consensus.json aware with fallback, bzzoiro ML confidence, vitibet index
-* [DONE 2026-06-12] Extend mine_consensus.py: add vitibet, betclan, bzzoiro to consensus grids; add OU/BTTS markets
-* [DONE 2026-06-13] Phase 1 – sport as a first-class field: every warehouse view, every pick dict, every edge record carries `sport='soccer'`. Architecture readiness only — no behavioural change to consensus. Phase 3 will require `league` to be added to consensus2/3/4 views (deferred; tracked).
+* [DONE 2026-06-15] Phase 1: sport='soccer' added to all 12 warehouse views, pick dicts, and edge records in mine_consensus.py (commit 67c5180)
+* [DONE 2026-06-15] Phase 2: context_verdict_{league,team,odds_band} added to assay.py; tests/test_assay.py → 6/6 (commit 0f17793)
+* [DONE 2026-06-15] Phase 3: scripts/assay_purity.py – reads edges_consensus.json + warehouse.duckdb, computes BOOST/ALLOW/CAUTION/VETO/UNKNOWN per league/team/odds_band context, writes localdata/purity_registry.json; wired into daily.py between decay_monitor and picks_today (commit ba8df06)
+* [DONE 2026-06-15] Phase 4: picks_today.py bucketing overhaul – purity_registry-aware, six output buckets, bucket+ctx+home+away in picks_today.json (commit 984507e)
+* Phase 5 NEXT: Odds source adapter – R&D BetExplorer / OddsPortal / TheOddsAPI free tier. Add src/edgefactory/sources/{source}_odds.py with COLUMNS=[source,source_type,sport,date,league,home,away,market,selection,odds,bookmaker,captured_at]. Enrich picks_today with live prices (replaces forebet embedded odds).
+* OPEN GAP: consensus2/consensus3/consensus4 views do not carry `league` column. assay_purity.py handles this gracefully (→ UNKNOWN verdicts). Fix: add `fb.league` to warehouse.py consensus view SELECTs, then re-run assay_purity to get granular league_context.
+* Supabase sync: push certified edges + daily picks to edge_picks table with bucket/ctx fields
 * Notifications: WhatsApp Business Cloud API (owner rejects Telegram) – swap in emit notifier
 * More sources to 15+: oddsportal (CLV), betensured, foresportia
 * ML layer: features = multi-source probs + disagreement spread + odds movement; model = just another source the miner validates
 
 9. Known issues / caveats
-* mine_consensus.py now dynamically verifies and scales all probabilities, and covers 1x2, OU2.5, and BTTS across forebet, zulubet, statarea, vitibet, betclan, scoutingstats, and bzzoiro gracefully.
+* assay_purity.py uses datetime.utcnow() (deprecated in Python 3.13) – replace with datetime.now(datetime.UTC) in a follow-up.
+* mine_consensus.py covers 1x2, OU2.5, and BTTS across forebet, zulubet, statarea, vitibet, betclan, scoutingstats, bzzoiro gracefully.
 * predictz / windrawwin / betclan need curl_cffi – installed via requirements.txt
 * bzzoiro needs BZZOIRO_TOKEN env – adapter uses Authorization: Token <key>
-* .env is NOT auto-loaded – no load_dotenv() call anywhere yet (python-dotenv is in requirements but unused). Export manually (`set -a; source .env; set +a`) or via CI secrets. Wire load_dotenv into config.py as part of the Supabase sync step, not before.
-* picks_today.py now supports 1x2/OU/BTTS, reads localdata/edges_consensus.json (certified edges only) with fallback to certified thresholds T2=70/T3=65 + veto when the registry is missing/empty. OU/BTTS run only with certified edges (no fallback). Fresh clone: localdata/ is empty BY DESIGN – run picks_today directly, fallback triggers; backfill is a separate parallel job, never a prerequisite. Live adapters vitibet/betclan return 0-100 probs – picks_today normalizes defensively (>1.5 → /100).
-* No live odds movement tracking yet – odds_snapshots table exists in Supabase schema, not wired to CSV pipeline
-* GitHub Actions: .github/workflows/daily-capture.yml runs capture_daily.py – needs BZZOIRO_TOKEN secret set
+* .env is NOT auto-loaded – export manually (`set -a; source .env; set +a`) or via CI secrets.
+* picks_today.py: fresh clone (empty localdata/) → purity missing → all ctx=UNKNOWN → WATCHLIST. Edge registry missing → fallback thresholds T2=70/T3=65. Both are correct, never a crash.
+* No live odds movement tracking yet – odds_snapshots table in Supabase schema, not wired to CSV pipeline.
+* GitHub Actions: .github/workflows/daily-capture.yml runs capture_daily.py – needs BZZOIRO_TOKEN secret set.
 
 10. OPERATIONAL STANDARD — anti-drift handover protocol (MANDATORY for every repo change)
 
