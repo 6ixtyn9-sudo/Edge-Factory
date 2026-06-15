@@ -11,6 +11,13 @@ certified thresholds (HANDOVER.md §4): 1x2 2-way unanimous avg_p>=70,
 3-way unanimous avg_p>=65, VETO on any disagreement. OU/BTTS have NO
 fallback: without certified edges those markets are skipped.
 
+Purity registry: reads localdata/purity_registry.json (produced by
+scripts/assay_purity.py). Picks are bucketed into:
+  CERTIFIED_CLEAN, CAUTION, WATCHLIST_NO_ODDS, WATCHLIST_UNKNOWN_CTX,
+  SKIPPED_VETO, SKIPPED_DEAD_EDGE
+If purity_registry is missing -> all contexts = UNKNOWN -> WATCHLIST,
+never crash (fresh clone guarantee).
+
 MUST work with completely empty localdata/ (fresh clone): every source
 fetch is individually fault-tolerant and a missing registry only means
 fallback thresholds — never a crash.
@@ -21,7 +28,7 @@ import importlib
 import json
 import re
 import sys
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from pathlib import Path
 from statistics import mean
 
@@ -31,6 +38,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from edgefactory.util import norm_team  # noqa: E402
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
+PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
 
 # Live sources per market (adapters return raw site scales; see normalization
 # below — vitibet/betclan/scoutingstats return 0-100, warehouse converts but
@@ -52,7 +60,57 @@ BTTS_COL = {"forebet": "p_gg", "scoutingstats": "p_gg", "bzzoiro": "p_gg"}
 FALLBACK_1X2 = {2: 70.0, 3: 65.0}
 
 _RULE_NWAY = re.compile(r"(\d+)\s*way")
-_RULE_THR = re.compile(r"avg_p\s*>=\s*([\d.]+)")
+_RULE_THR = re.compile(r"avg_p\s*>=?\s*([\d.]+)")
+
+# ---- purity buckets (Phase 4) ----
+BUCKET_CERTIFIED = "CERTIFIED_CLEAN"
+BUCKET_CAUTION = "CAUTION"
+BUCKET_WL_ODDS = "WATCHLIST_NO_ODDS"
+BUCKET_WL_CTX = "WATCHLIST_UNKNOWN_CTX"
+BUCKET_SKIP_VETO = "SKIPPED_VETO"
+BUCKET_SKIP_DEAD = "SKIPPED_DEAD_EDGE"
+
+BUCKET_ORDER = [
+    BUCKET_CERTIFIED,
+    BUCKET_CAUTION,
+    BUCKET_WL_ODDS,
+    BUCKET_WL_CTX,
+    BUCKET_SKIP_VETO,
+    BUCKET_SKIP_DEAD,
+]
+
+BUCKET_LABELS = {
+    BUCKET_CERTIFIED: "CERTIFIED CLEAN PICKS",
+    BUCKET_CAUTION: "CAUTION PICKS",
+    BUCKET_WL_ODDS: "WATCHLIST — NO ODDS",
+    BUCKET_WL_CTX: "WATCHLIST — UNKNOWN CONTEXT",
+    BUCKET_SKIP_VETO: "SKIPPED — VETO CONTEXT",
+    BUCKET_SKIP_DEAD: "SKIPPED — DEAD EDGE",
+}
+
+# Odds bands – must match scripts/assay_purity.py
+ODDS_BANDS = [
+    (0.0, 1.10, "1.00-1.10"),
+    (1.10, 1.20, "1.10-1.20"),
+    (1.20, 1.35, "1.20-1.35"),
+    (1.35, 1.50, "1.35-1.50"),
+    (1.50, 1.75, "1.50-1.75"),
+    (1.75, 2.00, "1.75-2.00"),
+    (2.00, 2.50, "2.00-2.50"),
+    (2.50, 999.0, "2.50+"),
+]
+
+def odds_band(odds: float | None) -> str:
+    if odds is None:
+        return "NO_ODDS"
+    try:
+        o = float(odds)
+    except Exception:
+        return "NO_ODDS"
+    for lo, hi, name in ODDS_BANDS:
+        if lo <= o < hi or (lo == 0.0 and o < hi):
+            return name
+    return "2.50+"
 
 
 # ---------------------------------------------------------------- registry --
@@ -93,6 +151,26 @@ def load_thresholds():
     return t1x2, ou_best, btts_best, not bool(edges)
 
 
+def load_edge_meta():
+    """Return {rule: {'status': str, 'decay_verdict': str}}
+    Never raises – missing file → empty dict (all edges assumed HEALTHY/certified).
+    """
+    try:
+        data = json.loads(EDGES_PATH.read_text())
+        out = {}
+        for e in data.get("edges", []):
+            rule = e.get("rule")
+            if not rule:
+                continue
+            status = e.get("status", "certified")
+            decay = e.get("decay", {})
+            verdict = decay.get("verdict", "HEALTHY")
+            out[rule] = {"status": status, "decay_verdict": verdict}
+        return out
+    except Exception:
+        return {}
+
+
 def thr_for(n_sources: int, t1x2: dict[int, float]):
     """Certified threshold for an n-source unanimous 1x2 consensus.
     Uses the largest certified n_way <= n_sources (e.g. 5 agreeing sources
@@ -102,6 +180,91 @@ def thr_for(n_sources: int, t1x2: dict[int, float]):
         return None, None
     k = max(eligible)
     return k, t1x2[k]
+
+
+# ---------------------------------------------------------------- purity --
+def load_purity():
+    """Load purity_registry.json. Never raises. Returns {} on missing/corrupt."""
+    try:
+        return json.loads(PURITY_PATH.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def lookup_context(purity: dict, pick: dict) -> dict:
+    """Build context keys from pick, look up verdicts in purity registry.
+    Returns {"league": verdict, "team_h": verdict, "team_a": verdict, "odds_band": verdict}
+    Missing registry/keys → all "UNKNOWN" (graceful fallback).
+    """
+    ctx = purity.get("contexts", {}) if purity else {}
+    league_ctx = ctx.get("league", {})
+    team_ctx = ctx.get("team", {})
+    odds_ctx = ctx.get("odds_band", {})
+
+    sport = pick.get("sport", "soccer")
+    league = pick.get("league") or "UNKNOWN"
+    market = pick.get("market", "1x2")
+    rule = pick.get("rule", "?")
+    sel = pick.get("pick", "?")
+
+    # league_context: sport|league|market|edge_family|selection_role
+    league_key = f"{sport}|{league}|{market}|{rule}|{sel}"
+    league_v = league_ctx.get(league_key, {}).get("verdict", "UNKNOWN")
+
+    # team_context: sport|team|league|market|role
+    home = pick.get("home", "")
+    away = pick.get("away", "")
+    team_h_key = f"{sport}|{norm_team(home)}|{league}|{market}|home"
+    team_a_key = f"{sport}|{norm_team(away)}|{league}|{market}|away"
+    team_h_v = team_ctx.get(team_h_key, {}).get("verdict", "UNKNOWN")
+    team_a_v = team_ctx.get(team_a_key, {}).get("verdict", "UNKNOWN")
+
+    # odds_band_context
+    odds = pick.get("odds")
+    band = odds_band(odds)
+    odds_key = f"{sport}|{market}|{rule}|{band}"
+    odds_v = odds_ctx.get(odds_key, {}).get("verdict", "UNKNOWN")
+
+    return {
+        "league": league_v,
+        "team_h": team_h_v,
+        "team_a": team_a_v,
+        "odds_band": odds_v,
+        "_keys": {
+            "league": league_key,
+            "team_h": team_h_key,
+            "team_a": team_a_key,
+            "odds_band": odds_key,
+        }
+    }
+
+
+def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified", decay_verdict: str = "HEALTHY") -> str:
+    """Bucket a pick according to purity / health rules (top-to-bottom).
+    Returns one of the BUCKET_* constants.
+    """
+    # 1. edge status == "benched"
+    if edge_status == "benched":
+        return BUCKET_SKIP_DEAD
+    # 2. edge decay verdict in (DEAD, DECAYING)
+    if decay_verdict in ("DEAD", "DECAYING"):
+        return BUCKET_SKIP_DEAD
+    # 3. any context dimension == VETO
+    if "VETO" in (ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band")):
+        return BUCKET_SKIP_VETO
+    # 4. odds is None
+    if pick.get("odds") is None:
+        return BUCKET_WL_ODDS
+    # 5. any critical context == UNKNOWN  (critical = league_context for Phase 3)
+    if ctx.get("league") == "UNKNOWN":
+        return BUCKET_WL_CTX
+    # 6. all contexts in (BOOST, ALLOW, UNKNOWN-non-critical)
+    #    -> CERTIFIED_CLEAN or CAUTION
+    vals = [ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band")]
+    if "CAUTION" in vals:
+        return BUCKET_CAUTION
+    # BOOST / ALLOW / UNKNOWN (non-critical) → clean
+    return BUCKET_CERTIFIED
 
 
 # ------------------------------------------------------------------- fetch --
@@ -114,7 +277,7 @@ def fetch_all(day: str) -> dict[str, dict]:
             mod = importlib.import_module(f"edgefactory.sources.{name}")
             rows = mod.fetch_day(day)
         except Exception as e:  # import OR fetch failure: skip, never crash
-            print(f"skip {name}: {e}")
+            print(f"skip {name}: {e}", file=sys.stderr)
             continue
         by_key = {}
         for r in rows or []:
@@ -202,9 +365,12 @@ def eval_1x2(day, data, t1x2):
         sel = sels[0]
         odds = _f({"home": fb.get("odd1"), "draw": fb.get("oddx"),
                    "away": fb.get("odd2")}.get(sel)) if fb else None
+        home = anchor.get("home")
+        away = anchor.get("away")
         picks.append({
             "date": day, "market": "1x2",
-            "match": f"{anchor.get('home')} vs {anchor.get('away')}",
+            "match": f"{home} vs {away}",
+            "home": home, "away": away,
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1), "odds": odds,
@@ -252,9 +418,12 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
         anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
         sel = sels[0]
         odds = _f(fb.get(outcome_odds[sel])) if fb else None
+        home = anchor.get("home")
+        away = anchor.get("away")
         picks.append({
             "date": day, "market": market,
-            "match": f"{anchor.get('home')} vs {anchor.get('away')}",
+            "match": f"{home} vs {away}",
+            "home": home, "away": away,
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1), "odds": odds,
@@ -282,44 +451,105 @@ def run_day(day, t1x2, ou_edge, btts_edge):
     return picks, vetoes, n_up
 
 
+def print_buckets(buckets: dict, title_date: str = ""):
+    """Print picks grouped by bucket, Phase 4 format."""
+    total_cert = len(buckets.get(BUCKET_CERTIFIED, [])) + len(buckets.get(BUCKET_CAUTION, []))
+    print(f"\nEdge Factory Picks — {title_date}" if title_date else "\nEdge Factory Picks")
+    print("=" * 60)
+    print(f"Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print()
+    for b in BUCKET_ORDER:
+        picks = buckets.get(b, [])
+        label = BUCKET_LABELS.get(b, b)
+        print(f"{label}")
+        print("=" * 60)
+        if not picks:
+            print("  (none)")
+            print()
+            continue
+        for p in picks:
+            o = f"@{p['odds']:.2f}" if p.get("odds") is not None else "@None"
+            ctx = p.get("ctx", {})
+            ctx_str = f"  league={ctx.get('league','?')}  team={ctx.get('team_h','?')}/{ctx.get('team_a','?')}  odds_band={ctx.get('odds_band','?')}"
+            print(f"  [{p['rule']}] {p['match'][:45]:45s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}% {o}")
+            if ctx:
+                print(ctx_str)
+        print()
+    print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
+    print("⚠️  Bet only what you can afford to lose.")
+
+
 def main():
     days = sys.argv[1:] or [
         date.today().isoformat(),
         (date.today() + timedelta(days=1)).isoformat(),
     ]
     t1x2, ou_edge, btts_edge, fallback = load_thresholds()
+    edge_meta = load_edge_meta()
+    purity = load_purity()
+    purity_missing = not bool(purity)
+
     if fallback:
         print("edge registry missing/empty -> fallback to certified "
-              "thresholds: 1x2 2-way>=70 / 3-way>=65 + veto; OU/BTTS skipped")
+              "thresholds: 1x2 2-way>=70 / 3-way>=65 + veto; OU/BTTS skipped",
+              file=sys.stderr)
+    if purity_missing:
+        print("purity_registry.json missing – all contexts will be UNKNOWN → WATCHLIST",
+              file=sys.stderr)
 
     all_picks: list = []
-    total = 0
+    total_vetoes = 0
+    total_upcoming = 0
     for day in days:
         picks, vetoes, n_up = run_day(day, t1x2, ou_edge, btts_edge)
-        all_picks.extend(picks)
-        total += len(picks)
-        print(f"\n=== {day} — {len(picks)} certified picks "
-              f"({vetoes} vetoed, {n_up} upcoming matches) ===")
+        total_vetoes += vetoes
+        total_upcoming += n_up
+        # bucket each pick
         for p in picks:
-            o = f"@{p['odds']:.2f}" if p.get("odds") else "@n/a"
-            extra = ""
-            if p.get("confidence") is not None:
-                extra += f"  conf={p['confidence']:.2f}"
-            if p.get("vitibet_index") is not None:
-                extra += f"  idx={p['vitibet_index']:.0f}"
-            print(f"  [{p['rule']}] {p['match']:45s} -> {p['pick'].upper():5s} "
-                  f"avg {p['avg_p']:.0f}% {o}  ({p['league']}){extra}")
+            rule = p.get("rule", "")
+            meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "HEALTHY"})
+            ctx = lookup_context(purity, p)
+            bucket = bucket_pick(p, ctx,
+                                 edge_status=meta.get("status", "certified"),
+                                 decay_verdict=meta.get("decay_verdict", "HEALTHY"))
+            p["ctx"] = {k: v for k, v in ctx.items() if not k.startswith("_")}
+            p["bucket"] = bucket
+            p["edge_status"] = meta.get("status", "certified")
+            p["decay_verdict"] = meta.get("decay_verdict", "HEALTHY")
+        all_picks.extend(picks)
 
-    if not total:
-        print("\nNo certified picks. That is a feature, not a bug — "
-              "no edge, no bet.")
-    print("\n⚠️  'Best odds' overstate realizable ROI (~halve it at a real book)."
-          "\n⚠️  Flat stakes, never chase. Bet only what you can afford to lose.")
+    # group by bucket
+    buckets: dict[str, list] = {b: [] for b in BUCKET_ORDER}
+    for p in all_picks:
+        b = p.get("bucket", BUCKET_CAUTION)
+        buckets.setdefault(b, []).append(p)
+
+    # sort within buckets by avg_p desc
+    for b in buckets:
+        buckets[b].sort(key=lambda r: -r.get("avg_p", 0))
+
+    # print
+    title = ", ".join(days) if days else date.today().isoformat()
+    print_buckets(buckets, title_date=title)
+
+    # summary line
+    n_clean = len(buckets[BUCKET_CERTIFIED])
+    n_caution = len(buckets[BUCKET_CAUTION])
+    n_wl_odds = len(buckets[BUCKET_WL_ODDS])
+    n_wl_ctx = len(buckets[BUCKET_WL_CTX])
+    n_skip_veto = len(buckets[BUCKET_SKIP_VETO])
+    n_skip_dead = len(buckets[BUCKET_SKIP_DEAD])
+    print(f"\nSummary: CLEAN={n_clean} CAUTION={n_caution} "
+          f"WATCHLIST_odds={n_wl_odds} WATCHLIST_ctx={n_wl_ctx} "
+          f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
+          f"({total_vetoes} unanimity-vetoes during consensus, {total_upcoming} upcoming matches scanned)",
+          file=sys.stderr)
 
     # Write JSON for daily.py report generation and Supabase sync
+    # includes bucket + ctx fields
     _json_path = ROOT / "localdata" / "picks_today.json"
     _json_path.parent.mkdir(parents=True, exist_ok=True)
-    _json_path.write_text(__import__("json").dumps(all_picks, indent=2))
+    _json_path.write_text(json.dumps(all_picks, indent=2))
 
 
 if __name__ == "__main__":
