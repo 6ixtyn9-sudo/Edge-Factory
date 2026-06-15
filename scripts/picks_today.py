@@ -772,7 +772,7 @@ def main():
                f"WATCHLIST_odds={n_wl_odds} WATCHLIST_ctx={n_wl_ctx} "
                f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
-    print(summary)
+    print(f"\n{summary}")
 
     # Write JSON
     _json_path = ROOT / "localdata" / "picks_today.json"
