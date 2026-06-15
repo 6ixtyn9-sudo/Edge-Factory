@@ -31,7 +31,9 @@ BASE_V1 = "https://sports.bzzoiro.com/api"
 
 # Query each supported market explicitly. /odds/best defaults to 1x2,
 # but relying on that made zero-row captures hard to diagnose.
-MARKET_PARAMS = ("1x2", "over_under_25", "over_under", "btts")
+MARKET_PARAMS = ("1x2", "over_under_25", "btts")
+
+MAX_EVENT_COMPARISON = int(os.environ.get("BZZOIRO_ODDS_MAX_EVENTS", "80"))
 
 COLUMNS = [
     "source", "source_type", "sport", "date", "league", "home", "away",
@@ -148,6 +150,100 @@ def _row(item: dict, outcome: dict, market: str, selection: str) -> dict:
     }
 
 
+def _is_odds_leaf(node: dict) -> bool:
+    return _decimal_odds(node) is not None and any(
+        node.get(k) for k in ("bookmaker_name", "bookmaker", "bookmaker_slug", "bookmaker_code")
+    )
+
+
+def _comparison_market_rows(item: dict) -> list[dict]:
+    """Parse /events/{id}/odds/comparison/ markets recursively.
+
+    The comparison endpoint is the capability-proven source on this token. Its
+    `markets` object may be keyed by market -> outcome -> bookmaker rows, or it
+    may contain best_odds/odds lists at different levels. Walk it defensively.
+    """
+    markets = item.get("markets")
+    if not isinstance(markets, dict):
+        return []
+
+    rows: list[dict] = []
+
+    def walk(node, market_hint: str | None = None, outcome_hint: object = None) -> None:
+        if isinstance(node, list):
+            for child in node:
+                walk(child, market_hint, outcome_hint)
+            return
+        if not isinstance(node, dict):
+            return
+
+        market = _market_name(node.get("market")) or market_hint
+
+        def emit_or_walk(child: dict, child_market: str | None, child_outcome: object) -> None:
+            sel = _selection(
+                child.get("outcome") if child.get("outcome") is not None else child_outcome,
+                child.get("outcome_name") or child.get("name") or child.get("selection"),
+                child_market,
+            )
+            if child_market in {"1x2", "ou_2.5", "btts"} and sel is not None and _is_odds_leaf(child):
+                rows.append(_row(item, child, child_market, sel))
+            else:
+                walk(child, child_market, child_outcome)
+
+        for list_key in ("best_odds", "odds", "bookmakers", "prices"):
+            value = node.get(list_key)
+            if isinstance(value, list):
+                for child in value:
+                    if not isinstance(child, dict):
+                        continue
+                    child_market = _market_name(child.get("market")) or market
+                    emit_or_walk(child, child_market, outcome_hint)
+            elif isinstance(value, dict):
+                if _is_odds_leaf(value):
+                    emit_or_walk(value, _market_name(value.get("market")) or market, outcome_hint)
+                else:
+                    for sub_key, sub_child in value.items():
+                        child_market = market
+                        child_outcome = outcome_hint
+                        if child_market and _selection(sub_key, None, child_market) is not None:
+                            child_outcome = sub_key
+                        if isinstance(sub_child, dict):
+                            child = dict(sub_child)
+                            if list_key in {"bookmakers", "prices"}:
+                                child.setdefault("bookmaker", sub_key)
+                            elif child_market and _selection(sub_key, None, child_market) is not None:
+                                child.setdefault("outcome", sub_key)
+                            emit_or_walk(child, _market_name(child.get("market")) or child_market, child_outcome)
+                        elif list_key in {"bookmakers", "prices"} and sub_child is not None:
+                            emit_or_walk(
+                                {"decimal_odds": sub_child, "bookmaker": sub_key},
+                                child_market,
+                                child_outcome,
+                            )
+
+        if _is_odds_leaf(node):
+            sel = _selection(
+                node.get("outcome") if node.get("outcome") is not None else outcome_hint,
+                node.get("outcome_name") or node.get("name") or node.get("selection"),
+                market,
+            )
+            if market in {"1x2", "ou_2.5", "btts"} and sel is not None:
+                rows.append(_row(item, node, market, sel))
+
+        for key, child in node.items():
+            if key in {"best_odds", "odds", "bookmakers", "prices"}:
+                continue
+            key_market = _market_name(key)
+            next_market = key_market or market
+            next_outcome = None if key_market else outcome_hint
+            if next_market and _selection(key, None, next_market) is not None:
+                next_outcome = key
+            walk(child, next_market, next_outcome)
+
+    walk(markets)
+    return rows
+
+
 def _polymarket_rows(item: dict, pm: dict) -> list[dict]:
     rows: list[dict] = []
     for outcome in pm.get("outcomes", []) or []:
@@ -167,7 +263,13 @@ def _market_rows(item: dict) -> list[dict]:
       {event:{...}, comparison:{best_odds:[...], polymarket:{...}}}
     """
     rows: list[dict] = []
+    rows.extend(_comparison_market_rows(item))
+
     comparison = item.get("comparison") if isinstance(item.get("comparison"), dict) else item
+    if comparison is not item:
+        comparison_item = dict(item)
+        comparison_item.update(comparison)
+        rows.extend(_comparison_market_rows(comparison_item))
     item_market = _market_name(item.get("market") or comparison.get("market"))
 
     for outcome in comparison.get("best_odds", []) or []:
@@ -234,6 +336,58 @@ def _days_window(date: str) -> int:
     return max(1, min(14, (target - today).days + 2))
 
 
+def _event_ids_for_day(day: str) -> list[str]:
+    """Fetch event ids for a date window; follows pagination defensively."""
+    end = (_date.fromisoformat(day) + timedelta(days=1)).isoformat()
+    url = f"{BASE_V2}/events/?{urllib.parse.urlencode({'date_from': day, 'date_to': end, 'limit': 200})}"
+    ids: list[str] = []
+    pages = 0
+    while url and pages < 10 and len(ids) < MAX_EVENT_COMPARISON:
+        pages += 1
+        try:
+            data = _get(url)
+        except Exception as exc:
+            print(f"bzzoiro_odds {day}: events page failed: {exc}", file=sys.stderr)
+            break
+        items = _results(data)
+        for item in items:
+            eid = item.get("id") or item.get("event_id")
+            if eid is not None and str(eid) not in ids:
+                ids.append(str(eid))
+                if len(ids) >= MAX_EVENT_COMPARISON:
+                    break
+        next_url = data.get("next") if isinstance(data, dict) else None
+        url = next_url if isinstance(next_url, str) and next_url else None
+    print(f"bzzoiro_odds {day}: events ids={len(ids)} pages={pages}", file=sys.stderr)
+    return ids
+
+
+def _event_comparison_rows(day: str) -> list[dict]:
+    """Fallback to per-event odds comparison, proven by probe_bzzoiro_odds."""
+    ids = _event_ids_for_day(day)
+    rows: list[dict] = []
+    ok = 0
+    failed = 0
+    for eid in ids:
+        url = f"{BASE_V2}/events/{eid}/odds/comparison/"
+        try:
+            data = _get(url)
+            ok += 1
+        except Exception as exc:
+            failed += 1
+            print(f"bzzoiro_odds {day}: event {eid} comparison failed: {exc}", file=sys.stderr)
+            continue
+        if isinstance(data, dict):
+            rows.extend(_market_rows(data))
+    rows = [r for r in rows if not r.get("date") or r.get("date") == day]
+    out = _dedupe_rows(rows)
+    print(
+        f"bzzoiro_odds {day}: event_comparison events={len(ids)} ok={ok} failed={failed} rows={len(out)}",
+        file=sys.stderr,
+    )
+    return out
+
+
 def fetch_day(date: str) -> list[dict]:
     """Fetch odds for a specific date (today or tomorrow supported)."""
     if not TOKEN:
@@ -265,6 +419,9 @@ def fetch_day(date: str) -> list[dict]:
             n, rows = _fetch_url(f"{BASE_V1}/odds/best/?{qs}", date, f"v1 market={market}")
             total_results += n
             all_rows.extend(rows)
+
+    if not all_rows:
+        all_rows.extend(_event_comparison_rows(date))
 
     out = _dedupe_rows(all_rows)
     print(f"bzzoiro_odds {date}: total_api_results={total_results} total_rows={len(out)}", file=sys.stderr)
