@@ -127,8 +127,11 @@ Set BZZOIRO_TOKEN in env / GitHub Actions secret for bzzoiro source.
 * [DONE 2026-06-15] Phase 2: context_verdict_{league,team,odds_band} added to assay.py; tests/test_assay.py → 6/6 (commit 0f17793)
 * [DONE 2026-06-15] Phase 3: scripts/assay_purity.py – reads edges_consensus.json + warehouse.duckdb, computes BOOST/ALLOW/CAUTION/VETO/UNKNOWN per league/team/odds_band context, writes localdata/purity_registry.json; wired into daily.py between decay_monitor and picks_today (commit ba8df06)
 * [DONE 2026-06-15] Phase 4: picks_today.py bucketing overhaul – purity_registry-aware, six output buckets, bucket+ctx+home+away in picks_today.json (commit 984507e)
-* Phase 5 NEXT: Odds source adapter – R&D BetExplorer / OddsPortal / TheOddsAPI free tier. Add src/edgefactory/sources/{source}_odds.py with COLUMNS=[source,source_type,sport,date,league,home,away,market,selection,odds,bookmaker,captured_at]. Enrich picks_today with live prices (replaces forebet embedded odds).
-* OPEN GAP: consensus2/consensus3/consensus4 views do not carry `league` column. assay_purity.py handles this gracefully (→ UNKNOWN verdicts). Fix: add `fb.league` to warehouse.py consensus view SELECTs, then re-run assay_purity to get granular league_context.
+* [DONE 2026-06-15] Phase 4.1 (housekeeping): 
+  - Added `fb.league` to consensus2/consensus3 SELECTs in warehouse.py (unlocks real league_context verdicts)
+  - Fixed deprecated `datetime.utcnow()` → `datetime.now(datetime.UTC)` in assay_purity.py
+* Phase 5 DONE: bzzoiro_odds adapter (src/edgefactory/sources/bzzoiro_odds.py) — reuses existing BZZOIRO_TOKEN + BSD API (14+ books + Polymarket). Added live-odds enrichment to picks_today.py (prefers real book prices over forebet best-odds). Decision: chose bzzoiro because it already covers the leagues in the 12 prediction sources and provides CLV-quality lines without new auth.
+* OPEN GAP: consensus4 view (in assay_purity recreate_views) still lacks league column — will be fixed when consensus4 is promoted to warehouse.py.
 * Supabase sync: push certified edges + daily picks to edge_picks table with bucket/ctx fields
 * Notifications: WhatsApp Business Cloud API (owner rejects Telegram) – swap in emit notifier
 * More sources to 15+: oddsportal (CLV), betensured, foresportia

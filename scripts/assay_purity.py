@@ -549,7 +549,7 @@ def main():
         print(f"  {name:10s} total={len(ctx):4d}  " + "  ".join(f"{k}={c.get(k,0)}" for k in ["BOOST","ALLOW","CAUTION","VETO","UNKNOWN"]))
 
     registry = {
-        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "generated_at": datetime.now(datetime.UTC).isoformat() + "Z",
         "window_days": args.window,
         "contexts": {
             "league": league_all,
