@@ -1,22 +1,9 @@
 #!/usr/bin/env python3
 """
-Retrospective Results Backfill Helper (Phase 7.1)
+Retrospective Results Backfill Helper (Phase 7.1) - Final Version
 
-Purpose:
-Fill missing final scores (hs, gs, ht_hs, ht_gs) into source CSVs
-using forebet as the source of truth.
-
-This helps league_context and team_context mature faster
-without changing any edge certification or purity rules.
-
-Usage:
-    PYTHONPATH=src python scripts/backfill_results.py 2026-06-01 2026-06-10
-
-Safety rules:
-- Only updates rows where hs/gs are currently NULL or empty.
-- Never overwrites existing results.
-- Only uses forebet_settled as the donor.
-- Does NOT touch edges_consensus.json or purity_registry.json.
+Only backfills into sources that store final scores.
+Skips pure prediction sources (betclan, bzzoiro, etc.).
 """
 
 from __future__ import annotations
@@ -24,7 +11,6 @@ from __future__ import annotations
 import argparse
 import glob
 import sys
-from datetime import datetime
 from pathlib import Path
 
 import pandas as pd
@@ -32,56 +18,93 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 LOCALDATA = ROOT / "localdata"
 
+# Sources that can have final scores (from warehouse.py)
+TARGET_SOURCES_WITH_RESULTS = [
+    "zulubet",
+    "statarea",
+    "vitibet",
+    "scoutingstats",
+    "bettingclosed",
+]
 
-def load_forebet_results() -> pd.DataFrame:
-    """Load all settled forebet data as the source of truth."""
-    files = sorted(glob.glob(str(LOCALDATA / "forebet_*.csv.gz")))
-    if not files:
-        print("No forebet files found. Run capture_daily first.")
+DONOR_SOURCES = [
+    "forebet_settled",
+    "statarea_settled",
+    "zulubet_settled",
+    "bettingclosed_settled",
+]
+
+
+def load_donor_results() -> pd.DataFrame:
+    all_results = []
+
+    for source in DONOR_SOURCES:
+        base = source.split("_")[0]
+        files = sorted(glob.glob(str(LOCALDATA / f"{base}_*.csv.gz")))
+        if not files:
+            continue
+
+        dfs = []
+        for f in files:
+            try:
+                df = pd.read_csv(f, dtype=str)
+                dfs.append(df)
+            except Exception:
+                continue
+
+        if not dfs:
+            continue
+
+        df = pd.concat(dfs, ignore_index=True)
+        df = df[df["hs"].notna() & df["gs"].notna()].copy()
+
+        if df.empty:
+            continue
+
+        df["date"] = pd.to_datetime(df["date"]).dt.date.astype(str)
+        df["hkey"] = df["home"].str.lower().str.replace(r"[^a-z0-9]", "", regex=True)
+        df["akey"] = df["away"].str.lower().str.replace(r"[^a-z0-9]", "", regex=True)
+
+        cols = ["date", "hkey", "akey", "hs", "gs"]
+        if "ht_hs" in df.columns and "ht_gs" in df.columns:
+            cols += ["ht_hs", "ht_gs"]
+
+        all_results.append(df[cols])
+
+    if not all_results:
+        print("No donor data found.")
         sys.exit(1)
 
-    dfs = []
-    for f in files:
-        df = pd.read_csv(f, dtype=str)
-        dfs.append(df)
-    forebet = pd.concat(dfs, ignore_index=True)
-
-    # Keep only settled matches
-    forebet = forebet[forebet["hs"].notna() & forebet["gs"].notna()].copy()
-    forebet["date"] = pd.to_datetime(forebet["date"]).dt.date.astype(str)
-
-    # Normalize keys
-    forebet["hkey"] = forebet["home"].str.lower().str.replace(r"[^a-z0-9]", "", regex=True)
-    forebet["akey"] = forebet["away"].str.lower().str.replace(r"[^a-z0-9]", "", regex=True)
-
-    return forebet[["date", "hkey", "akey", "hs", "gs", "ht_hs", "ht_gs"]]
+    combined = pd.concat(all_results, ignore_index=True)
+    combined = combined.drop_duplicates(subset=["date", "hkey", "akey"], keep="first")
+    return combined
 
 
-def backfill_source(source_name: str, forebet: pd.DataFrame, start: str, end: str):
-    """Backfill missing results into one source's CSV files."""
+def backfill_source(source_name: str, donor_df: pd.DataFrame, start: str, end: str):
     files = sorted(glob.glob(str(LOCALDATA / f"{source_name}_*.csv.gz")))
     if not files:
-        print(f"No files for {source_name}")
         return 0
 
     updated_rows = 0
+    has_ht_cols = "ht_hs" in donor_df.columns and "ht_gs" in donor_df.columns
 
     for f in files:
         df = pd.read_csv(f, dtype=str)
 
-        # Only process rows in the requested date range
-        df["date"] = pd.to_datetime(df["date"]).dt.date.astype(str)
-        mask = (df["date"] >= start) & (df["date"] <= end)
-        subset = df[mask].copy()
+        # Skip sources that don't have hs/gs columns
+        if "hs" not in df.columns or "gs" not in df.columns:
+            continue
 
+        df["date"] = pd.to_datetime(df["date"]).dt.date.astype(str)
+
+        mask = (df["date"] >= start) & (df["date"] <= end)
+        subset = df.loc[mask].copy()
         if subset.empty:
             continue
 
-        # Normalize keys for matching
         subset["hkey"] = subset["home"].str.lower().str.replace(r"[^a-z0-9]", "", regex=True)
         subset["akey"] = subset["away"].str.lower().str.replace(r"[^a-z0-9]", "", regex=True)
 
-        # Find rows missing final scores
         missing = subset[
             subset["hs"].isna() | (subset["hs"] == "") |
             subset["gs"].isna() | (subset["gs"] == "")
@@ -90,56 +113,56 @@ def backfill_source(source_name: str, forebet: pd.DataFrame, start: str, end: st
         if missing.empty:
             continue
 
-        # Merge with forebet results
         merged = missing.merge(
-            forebet,
+            donor_df,
             on=["date", "hkey", "akey"],
             how="left",
-            suffixes=("", "_fb")
+            suffixes=("", "_donor")
         )
 
-        # Fill only where we have a match and the original was missing
-        fill_mask = merged["hs_fb"].notna() & (
+        fill_mask = merged["hs_donor"].notna() & (
             merged["hs"].isna() | (merged["hs"] == "")
         )
 
         if fill_mask.any():
-            merged.loc[fill_mask, "hs"] = merged.loc[fill_mask, "hs_fb"]
-            merged.loc[fill_mask, "gs"] = merged.loc[fill_mask, "gs_fb"]
-            merged.loc[fill_mask, "ht_hs"] = merged.loc[fill_mask, "ht_hs_fb"]
-            merged.loc[fill_mask, "ht_gs"] = merged.loc[fill_mask, "ht_gs_fb"]
+            merged.loc[fill_mask, "hs"] = merged.loc[fill_mask, "hs_donor"]
+            merged.loc[fill_mask, "gs"] = merged.loc[fill_mask, "gs_donor"]
 
+            if has_ht_cols and "ht_hs_donor" in merged.columns and "ht_gs_donor" in merged.columns:
+                ht_mask = fill_mask & merged["ht_hs_donor"].notna()
+                if ht_mask.any():
+                    merged.loc[ht_mask, "ht_hs"] = merged.loc[ht_mask, "ht_hs_donor"]
+                    merged.loc[ht_mask, "ht_gs"] = merged.loc[ht_mask, "ht_gs_donor"]
+
+            update_cols = ["hs", "gs"]
+            if has_ht_cols and "ht_hs" in merged.columns:
+                update_cols += ["ht_hs", "ht_gs"]
+
+            df.loc[merged.loc[fill_mask].index, update_cols] = merged.loc[fill_mask, update_cols].values
             updated_rows += fill_mask.sum()
-
-            # Write back the changes
-            df.loc[mask & (df.index.isin(missing.index)), ["hs", "gs", "ht_hs", "ht_gs"]] = \
-                merged.loc[fill_mask, ["hs", "gs", "ht_hs", "ht_gs"]].values
-
-            df.to_csv(f, index=False, compression="gzip")
             print(f"  {source_name}: updated {fill_mask.sum()} rows in {Path(f).name}")
 
     return updated_rows
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Backfill missing final scores from forebet")
-    parser.add_argument("start", help="Start date (YYYY-MM-DD)")
-    parser.add_argument("end", help="End date (YYYY-MM-DD)")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("start")
+    parser.add_argument("end")
     args = parser.parse_args()
 
-    print(f"Retrospective results backfill: {args.start} → {args.end}")
-    print("=" * 60)
+    print(f"Multi-source retrospective results backfill: {args.start} → {args.end}")
+    print("=" * 65)
 
-    forebet = load_forebet_results()
-    print(f"Loaded {len(forebet)} settled forebet matches as source of truth.\n")
+    donor_df = load_donor_results()
+    print(f"Loaded {len(donor_df)} unique settled matches from all donors.\n")
 
-    total_updated = 0
-    for source in ["zulubet", "statarea", "vitibet", "scoutingstats", "betclan"]:
-        updated = backfill_source(source, forebet, args.start, args.end)
-        total_updated += updated
+    total = 0
+    for source in TARGET_SOURCES_WITH_RESULTS:
+        total += backfill_source(source, donor_df, args.start, args.end)
 
-    print(f"\nTotal rows updated across all sources: {total_updated}")
-    print("Re-run build_warehouse.py + assay_purity.py to refresh contexts.")
+    print(f"\nTotal rows updated: {total}")
+    print("Run: python scripts/build_warehouse.py && PYTHONPATH=src python scripts/assay_purity.py")
 
 
 if __name__ == "__main__":
