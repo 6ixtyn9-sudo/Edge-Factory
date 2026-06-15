@@ -41,6 +41,15 @@ COLUMNS = [
 ]
 
 
+def _verbose() -> bool:
+    return os.environ.get("BZZOIRO_ODDS_VERBOSE", "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _log(message: str, *, verbose: bool = False) -> None:
+    if not verbose or _verbose():
+        print(message, file=sys.stderr)
+
+
 def _get(url: str, retries: int = 3):
     for attempt in range(retries):
         try:
@@ -317,7 +326,7 @@ def _fetch_url(url: str, date: str, label: str) -> tuple[int, list[dict]]:
     try:
         data = _get(url)
     except Exception as exc:
-        print(f"bzzoiro_odds {date}: {label} failed: {exc}", file=sys.stderr)
+        _log(f"bzzoiro_odds {date}: {label} failed: {exc}", verbose=True)
         return 0, []
 
     items = _results(data)
@@ -326,7 +335,7 @@ def _fetch_url(url: str, date: str, label: str) -> tuple[int, list[dict]]:
         rows.extend(_market_rows(item))
     # v1 /odds/best/?days=N can span multiple dates; keep requested day only.
     rows = [r for r in rows if not r.get("date") or r.get("date") == date]
-    print(f"bzzoiro_odds {date}: {label} api_results={len(items)} rows={len(rows)}", file=sys.stderr)
+    _log(f"bzzoiro_odds {date}: {label} api_results={len(items)} rows={len(rows)}", verbose=True)
     return len(items), rows
 
 
@@ -347,7 +356,7 @@ def _event_ids_for_day(day: str) -> list[str]:
         try:
             data = _get(url)
         except Exception as exc:
-            print(f"bzzoiro_odds {day}: events page failed: {exc}", file=sys.stderr)
+            _log(f"bzzoiro_odds {day}: events page failed: {exc}", verbose=True)
             break
         items = _results(data)
         for item in items:
@@ -358,7 +367,7 @@ def _event_ids_for_day(day: str) -> list[str]:
                     break
         next_url = data.get("next") if isinstance(data, dict) else None
         url = next_url if isinstance(next_url, str) and next_url else None
-    print(f"bzzoiro_odds {day}: events ids={len(ids)} pages={pages}", file=sys.stderr)
+    _log(f"bzzoiro_odds {day}: events ids={len(ids)} pages={pages}", verbose=True)
     return ids
 
 
@@ -375,15 +384,15 @@ def _event_comparison_rows(day: str) -> list[dict]:
             ok += 1
         except Exception as exc:
             failed += 1
-            print(f"bzzoiro_odds {day}: event {eid} comparison failed: {exc}", file=sys.stderr)
+            _log(f"bzzoiro_odds {day}: event {eid} comparison failed: {exc}", verbose=True)
             continue
         if isinstance(data, dict):
             rows.extend(_market_rows(data))
     rows = [r for r in rows if not r.get("date") or r.get("date") == day]
     out = _dedupe_rows(rows)
-    print(
+    _log(
         f"bzzoiro_odds {day}: event_comparison events={len(ids)} ok={ok} failed={failed} rows={len(out)}",
-        file=sys.stderr,
+        verbose=True,
     )
     return out
 
@@ -391,7 +400,7 @@ def _event_comparison_rows(day: str) -> list[dict]:
 def fetch_day(date: str) -> list[dict]:
     """Fetch odds for a specific date (today or tomorrow supported)."""
     if not TOKEN:
-        print("bzzoiro_odds: BZZOIRO_TOKEN missing; 0 rows", file=sys.stderr)
+        _log("bzzoiro_odds: BZZOIRO_TOKEN missing; 0 rows")
         return []
 
     start = date
@@ -420,11 +429,16 @@ def fetch_day(date: str) -> list[dict]:
             total_results += n
             all_rows.extend(rows)
 
+    comparison_rows = []
     if not all_rows:
-        all_rows.extend(_event_comparison_rows(date))
+        comparison_rows = _event_comparison_rows(date)
+        all_rows.extend(comparison_rows)
 
     out = _dedupe_rows(all_rows)
-    print(f"bzzoiro_odds {date}: total_api_results={total_results} total_rows={len(out)}", file=sys.stderr)
+    _log(
+        f"bzzoiro_odds {date}: best_results={total_results} "
+        f"comparison_rows={len(comparison_rows)} rows={len(out)}"
+    )
     return out
 
 
