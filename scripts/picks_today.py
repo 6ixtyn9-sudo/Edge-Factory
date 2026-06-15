@@ -90,8 +90,51 @@ def odds_band(odds: float | None) -> str:
 
 
 # ---------------------------------------------------------------- registry --
+def display_rule(market: str, n_way: int, threshold: float) -> str:
+    """Short human label; edge_rule remains the exact miner rule for lookups."""
+    if market == "1x2":
+        return f"{n_way}WAY-UNANIMOUS≥{threshold:.0f}"
+    if market == "ou_2.5":
+        return f"OU25-UNANIMOUS-{n_way}WAY≥{threshold:.0f}"
+    if market == "btts":
+        return f"BTTS-UNANIMOUS-{n_way}WAY≥{threshold:.0f}"
+    return f"{market.upper()}-{n_way}WAY≥{threshold:.0f}"
+
+
+def _edge_entry(edge: dict) -> dict | None:
+    rule = edge.get("rule", "")
+    market = edge.get("market", "1x2")
+    mn, mt = _RULE_NWAY.search(rule), _RULE_THR.search(rule)
+    if not mn or not mt:
+        return None
+    n_way, threshold = int(mn.group(1)), float(mt.group(1))
+    return {
+        "n_way": n_way,
+        "threshold": threshold,
+        "rule": rule,
+        "display_rule": display_rule(market, n_way, threshold),
+        "market": market,
+    }
+
+
+def _prefer_entry(new: dict, old: dict | None) -> bool:
+    """Prefer lower certified threshold, then canonical/general rule text."""
+    if old is None:
+        return True
+    if new["threshold"] != old["threshold"]:
+        return new["threshold"] < old["threshold"]
+    new_rule, old_rule = new["rule"].lower(), old["rule"].lower()
+    new_penalty = ("no-draw" in new_rule, len(new_rule))
+    old_penalty = ("no-draw" in old_rule, len(old_rule))
+    return new_penalty < old_penalty
+
+
 def load_thresholds():
-    """Return thresholds (unchanged logic)."""
+    """Return certified thresholds with exact edge rule names.
+
+    The exact miner `rule` is used for edge_meta and purity context lookups;
+    `display_rule` is only for printing.
+    """
     edges = []
     try:
         data = json.loads(EDGES_PATH.read_text())
@@ -101,33 +144,51 @@ def load_thresholds():
         edges = []
 
     if not edges:
-        return dict(FALLBACK_1X2), None, None, True
+        return {
+            k: {
+                "n_way": k,
+                "threshold": v,
+                "rule": display_rule("1x2", k, v),
+                "display_rule": display_rule("1x2", k, v),
+                "market": "1x2",
+            }
+            for k, v in FALLBACK_1X2.items()
+        }, None, None, True
 
-    t1x2: dict[int, float] = {}
+    t1x2: dict[int, dict] = {}
     ou_best = btts_best = None
     for e in edges:
-        rule = e.get("rule", "")
-        market = e.get("market", "1x2")
-        mn, mt = _RULE_NWAY.search(rule), _RULE_THR.search(rule)
-        if not mn or not mt:
+        entry = _edge_entry(e)
+        if entry is None:
             continue
-        n_way, thr = int(mn.group(1)), float(mt.group(1))
+        market = entry["market"]
+        n_way = entry["n_way"]
         if market == "1x2":
-            t1x2[n_way] = min(t1x2.get(n_way, 999.0), thr)
+            if _prefer_entry(entry, t1x2.get(n_way)):
+                t1x2[n_way] = entry
         elif market == "ou_2.5":
-            if ou_best is None or thr < ou_best[1]:
-                ou_best = (n_way, thr)
+            if _prefer_entry(entry, ou_best):
+                ou_best = entry
         elif market == "btts":
-            if btts_best is None or thr < btts_best[1]:
-                btts_best = (n_way, thr)
+            if _prefer_entry(entry, btts_best):
+                btts_best = entry
 
     if not t1x2:
-        t1x2 = dict(FALLBACK_1X2)
+        t1x2 = {
+            k: {
+                "n_way": k,
+                "threshold": v,
+                "rule": display_rule("1x2", k, v),
+                "display_rule": display_rule("1x2", k, v),
+                "market": "1x2",
+            }
+            for k, v in FALLBACK_1X2.items()
+        }
     return t1x2, ou_best, btts_best, not bool(edges)
 
 
 def load_edge_meta():
-    """Return edge metadata (unchanged)."""
+    """Return edge metadata keyed by exact miner rule and display alias."""
     try:
         data = json.loads(EDGES_PATH.read_text())
         out = {}
@@ -138,18 +199,21 @@ def load_edge_meta():
             status = e.get("status", "certified")
             decay = e.get("decay", {})
             verdict = decay.get("verdict", "HEALTHY")
-            out[rule] = {"status": status, "decay_verdict": verdict}
+            meta = {"status": status, "decay_verdict": verdict}
+            out[rule] = meta
+            entry = _edge_entry(e)
+            if entry:
+                out[entry["display_rule"]] = meta
         return out
     except Exception:
         return {}
 
 
-def thr_for(n_sources: int, t1x2: dict[int, float]):
+def thr_for(n_sources: int, t1x2: dict[int, dict]):
     eligible = [k for k in t1x2 if k <= n_sources]
     if not eligible:
-        return None, None
-    k = max(eligible)
-    return k, t1x2[k]
+        return None
+    return t1x2[max(eligible)]
 
 
 # ---------------------------------------------------------------- purity --
@@ -161,7 +225,7 @@ def load_purity():
 
 
 def lookup_context(purity: dict, pick: dict) -> dict:
-    """Build context keys (unchanged logic)."""
+    """Build context keys and return verdicts plus raw diagnostics."""
     ctx = purity.get("contexts", {}) if purity else {}
     league_ctx = ctx.get("league", {})
     team_ctx = ctx.get("team", {})
@@ -170,16 +234,19 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     sport = pick.get("sport", "soccer")
     league = pick.get("league") or "UNKNOWN"
     market = pick.get("market", "1x2")
-    rule = pick.get("rule", "?")
+    rule = pick.get("edge_rule") or pick.get("rule", "?")
     sel = pick.get("pick", "?")
+
+    home = pick.get("home", "")
+    away = pick.get("away", "")
+    home_norm = norm_team(home)
+    away_norm = norm_team(away)
 
     league_key = f"{sport}|{league}|{market}|{rule}|{sel}"
     league_v = league_ctx.get(league_key, {}).get("verdict", "UNKNOWN")
 
-    home = pick.get("home", "")
-    away = pick.get("away", "")
-    team_h_key = f"{sport}|{norm_team(home)}|{league}|{market}|home"
-    team_a_key = f"{sport}|{norm_team(away)}|{league}|{market}|away"
+    team_h_key = f"{sport}|{home_norm}|{league}|{market}|home"
+    team_a_key = f"{sport}|{away_norm}|{league}|{market}|away"
     team_h_v = team_ctx.get(team_h_key, {}).get("verdict", "UNKNOWN")
     team_a_v = team_ctx.get(team_a_key, {}).get("verdict", "UNKNOWN")
 
@@ -193,6 +260,10 @@ def lookup_context(purity: dict, pick: dict) -> dict:
         "team_h": team_h_v,
         "team_a": team_a_v,
         "odds_band": odds_v,
+        "league_raw": league,
+        "home_norm": home_norm,
+        "away_norm": away_norm,
+        "odds_band_name": band,
         "_keys": {
             "league": league_key,
             "team_h": team_h_key,
@@ -303,9 +374,10 @@ def eval_1x2(day, data, t1x2):
         if len(set(sels)) > 1:
             vetoes += 1
             continue
-        n_way, thr = thr_for(len(used), t1x2)
-        if thr is None:
+        edge = thr_for(len(used), t1x2)
+        if edge is None:
             continue
+        n_req, thr = edge["n_way"], edge["threshold"]
         avg_p = mean(ps) * 100.0
         if avg_p < thr:
             continue
@@ -325,7 +397,10 @@ def eval_1x2(day, data, t1x2):
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1), "odds": odds,
-            "rule": f"{n_way}WAY-UNANIMOUS≥{thr:.0f}", "n_way": len(used),
+            "rule": edge["rule"],
+            "edge_rule": edge["rule"],
+            "display_rule": edge["display_rule"],
+            "n_way": len(used), "edge_n_way": n_req,
             "confidence": _f(bz.get("confidence")),
             "model_version": bz.get("model_version"),
             "vitibet_index": _f(vb.get("index")),
@@ -337,7 +412,7 @@ def eval_1x2(day, data, t1x2):
 def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds):
     if edge is None:
         return []
-    n_req, thr = edge
+    n_req, thr = edge["n_way"], edge["threshold"]
     picks = []
     keys = set()
     for s in sources:
@@ -376,8 +451,10 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1), "odds": odds,
-            "rule": f"{market.upper()}-UNANIMOUS-{len(used)}WAY≥{thr:.0f}",
-            "n_way": len(used),
+            "rule": edge["rule"],
+            "edge_rule": edge["rule"],
+            "display_rule": edge["display_rule"],
+            "n_way": len(used), "edge_n_way": n_req,
             "confidence": _f(bz.get("confidence")),
             "model_version": bz.get("model_version"),
             "vitibet_index": None,
@@ -419,10 +496,16 @@ def print_buckets(buckets: dict, title_date: str = ""):
         for p in picks:
             o = f"@{p['odds']:.2f}" if p.get("odds") is not None else "@None"
             ctx = p.get("ctx", {})
-            ctx_str = f"  league={ctx.get('league','?')}  team={ctx.get('team_h','?')}/{ctx.get('team_a','?')}  odds_band={ctx.get('odds_band','?')}"
+            ctx_str = (
+                f"  league={ctx.get('league_raw','UNKNOWN')}:{ctx.get('league','?')}  "
+                f"team={ctx.get('home_norm','?')}:{ctx.get('team_h','?')}/"
+                f"{ctx.get('away_norm','?')}:{ctx.get('team_a','?')}  "
+                f"odds_band={ctx.get('odds_band_name','?')}:{ctx.get('odds_band','?')}"
+            )
             market = p.get("market_type", p.get("market", "?"))
             tier = p.get("odds_tier", "?")
-            print(f"  [{p['rule']}] {p['match'][:45]:45s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}% {o}  [{market}/{tier}]")
+            label = p.get("display_rule") or p.get("rule", "?")
+            print(f"  [{label}] {p['match'][:45]:45s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}% {o}  [{market}/{tier}]")
             if ctx:
                 print(ctx_str)
         print()

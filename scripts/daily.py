@@ -42,7 +42,16 @@ def generate_daily_report(today: str):
         
         for p in picks:
             o = f"@{p.get('odds', 'n/a')}"
-            lines.append(f"  [{p['rule']}] {p['match'][:42]:42s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}% {o}")
+            label = p.get("display_rule") or p.get("rule", "?")
+            bucket = p.get("bucket", "?")
+            ctx = p.get("ctx", {}) or {}
+            ctx_line = (
+                f"     bucket={bucket}  "
+                f"league={ctx.get('league_raw', 'UNKNOWN')}:{ctx.get('league', '?')}  "
+                f"odds_band={ctx.get('odds_band_name', '?')}:{ctx.get('odds_band', '?')}"
+            )
+            lines.append(f"  [{label}] {p['match'][:42]:42s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}% {o}")
+            lines.append(ctx_line)
         
         lines.append("")
         lines.append("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
@@ -57,7 +66,7 @@ def generate_daily_report(today: str):
 def main():
     print("=== Edge Factory Nightly Run ===")
     
-    run("python3 scripts/capture_daily.py")
+    run("python3 scripts/capture_daily.py --skip-build")
     run("python3 scripts/build_warehouse.py")
     run("python3 scripts/mine_consensus.py")
     run("PYTHONPATH=src python3 scripts/decay_monitor.py")
