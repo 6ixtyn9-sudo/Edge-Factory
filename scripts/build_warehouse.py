@@ -36,6 +36,7 @@ TABLES = [
     "windrawwin",
     "consensus2",
     "consensus3",
+    "consensus4",
 ]
 
 def main() -> None:
