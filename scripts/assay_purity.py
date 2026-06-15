@@ -42,7 +42,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from datetime import date, timedelta, datetime
+from datetime import date, timedelta, datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -190,7 +190,8 @@ def recreate_views(con) -> set[str]:
                        sa.pick AS sa_pick, vb.pick AS vb_pick,
                        ((fb.pmax/{sfb} + zb.pmax/{szb} + sa.pmax/{ssa} + vb.pmax/{svb})/4)*100 AS avg_p,
                        CASE fb.pick WHEN 'home' THEN fb.odd1 WHEN 'draw' THEN fb.oddx
-                            ELSE fb.odd2 END AS pick_odds
+                            ELSE fb.odd2 END AS pick_odds,
+                       fb.league
                 FROM fb JOIN zb USING (date, hkey, akey)
                         JOIN sa USING (date, hkey, akey)
                         JOIN vb USING (date, hkey, akey)
@@ -549,7 +550,7 @@ def main():
         print(f"  {name:10s} total={len(ctx):4d}  " + "  ".join(f"{k}={c.get(k,0)}" for k in ["BOOST","ALLOW","CAUTION","VETO","UNKNOWN"]))
 
     registry = {
-        "generated_at": datetime.now(datetime.UTC).isoformat() + "Z",
+        "generated_at": datetime.now(timezone.utc).isoformat() + "Z",
         "window_days": args.window,
         "contexts": {
             "league": league_all,

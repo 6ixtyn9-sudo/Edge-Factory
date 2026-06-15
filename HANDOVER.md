@@ -1,5 +1,5 @@
 🏭 EDGE FACTORY — HANDOVER
-Date: 2026-06-14 | Repo: https://github.com/6ixtyn9-sudo/Edge-Factory.git | Branch: main
+Date: 2026-06-15 | Repo: https://github.com/6ixtyn9-sudo/Edge-Factory.git | Branch: main
 Owner vision: 10+ sources, DuckDB analytics, edge discovery/validation/decay forever.
 
 This is the SINGLE source of truth for handover. Do NOT create BUILD_REPORT.md / CLEANUP_REPORT.md / SANITY_CHECK_REPORT.md etc. – update THIS file in place.
@@ -43,6 +43,7 @@ Golden rules:
 | freesupertips | soccer | expert tips | ✅ | capture-forward | live |
 | bettingclosed | soccer | 1x2, ou, btts | ✅ | ✅ archive | backfillable |
 | bzzoiro | soccer | 1x2, ou, btts, xG | — | API, ~490 upcoming, ~7 weeks ahead | capture-forward, needs BZZOIRO_TOKEN env |
+| bzzoiro_odds | soccer | 1x2, ou_2.5, btts | ✅ real books + Polymarket | capture-forward (today/tomorrow) | live, reuses BZZOIRO_TOKEN |
 
 All adapters: fetch_day(date: str) -> list[dict], COLUMNS = [...]. No classes, no normalize(). Simple.
 
