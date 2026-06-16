@@ -239,6 +239,30 @@ def recreate_views(con) -> set[str]:
         except Exception:
             pass
 
+
+    # consensus2_bc_confirm: v_consensus2 confirmed by bettingclosed_settled.
+    # Joins on (date, home, away) -- consensus2 does not expose hkey/akey.
+    if _table_exists(con, "v_consensus2") and has["bettingclosed_settled"]:
+        try:
+            con.execute("""
+                CREATE OR REPLACE TEMP VIEW consensus2_bc_confirm AS
+                WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
+                     bc AS (SELECT DISTINCT ON (date, home, away)
+                                   date, home, away,
+                                   CASE pick_1x2
+                                     WHEN '1' THEN 'home'
+                                     WHEN '2' THEN 'away'
+                                     WHEN 'x' THEN 'draw'
+                                   END AS bc_pick
+                            FROM bettingclosed_settled
+                            WHERE pick_1x2 IN ('1','2','x'))
+                SELECT c2.*, bc.bc_pick
+                FROM c2 JOIN bc USING (date, home, away)
+            """)
+            avail.add("consensus2_bc_confirm")
+        except Exception:
+            pass
+
     # OU / BTTS
     if has["forebet_settled"]:
         sfb = scales["forebet_settled"]
