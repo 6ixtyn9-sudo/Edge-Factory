@@ -151,7 +151,7 @@ Fixed deprecated datetime.utcnow() → datetime.now(datetime.timezone.utc) in as
 
 [DONE 2026-06-15] Phase 11: Supabase Synchronization Promotion — Shipped migration supabase/migrations/0006_edge_pick_context.sql and completed scripts/sync_supabase.py to push certified edges and fully bucketed daily picks (CERTIFIED_CLEAN, CAUTION, WATCHLIST, etc.) with comprehensive context metadata to Postgres read model.
 
-[DONE 2026-06-16] Phase 12: Weighted Consensus — Wilson LB vote weighting per source/market
+[DONE 2026-06-16] Phase 12 + 12.1: Weighted Consensus — Wilson LB vote weighting per source/market
 
 Instead of counting heads (N sources agree), each source now votes with weight = its walk-forward Wilson LB on that market. A source with LB=0.82 carries ~3× the vote of one with LB=0.52. Disagreement is automatically penalised: a split vote produces a low w_score even if the majority pick wins.
 
@@ -160,6 +160,11 @@ scripts/mine_consensus.py: added _source_wilson_lbs(con, split) — per-source, 
 scripts/picks_today.py: added load_source_weights(market) — reads certified weighted edge's source_weights from edges_consensus.json. eval_1x2 computes w_score per pick; picks sorted by (-w_score, -avg_p); w_score displayed in output. Falls back to uniform weights gracefully if no weighted edge certified yet.
 tests/test_assay.py: test_weighted_consensus_score — 8 assertions covering empty, floor filter, unanimity, 50/50 split, weight-majority, min_lb exclusion, three-way split.
 Tests: 10/10 passed (was 9/9). Commit: 814412a.
+[DONE 2026-06-16] Phase 12.1: Phase 12 bug fixes (commit 651964f)
+
+scripts/picks_today.py: removed stray # ... (keep all existing source lists...) stub comment baked in by previous edit (handover protocol violation); removed duplicate import re inside load_source_weights() (already imported at module top).
+scripts/mine_consensus.py: replaced module-level scales_global global + global scales_global assignment with proper parameter passing (_run_weighted_consensus now receives scales directly); removed unused from itertools import groupby; replaced tautological WHERE hs IS NOT DISTINCT FROM hs (always true) with WHERE outcome IS NOT NULL (actual intent: settled rows only).
+Tests: 10/10 passed.
 Next steps (open priorities):
 
 Notifications: WhatsApp Business Cloud API (owner rejects Telegram) – swap in emit notifier
