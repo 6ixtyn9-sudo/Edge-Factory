@@ -1,44 +1,38 @@
-"""Shared normalization utilities for cross-source matching and context keys.
+"""Shared normalization utilities.
 
-The miner joins, odds enrichment, and purity assay all depend on stable text
-keys. Keep this module dependency-free: only Python stdlib is allowed here.
+Important split:
+- norm_team()/norm_team_sql() are the legacy 9-char miner join keys. Do not
+  change them without re-validating every certified edge.
+- norm_entity_team()/norm_league() are richer context/entity keys for purity,
+  reporting, and the learned entity registry.
 """
 from __future__ import annotations
 
 import re
 import unicodedata
 
-# Tokens that differ between sources but usually do not identify the team.
-# Keep this conservative: over-stripping is worse than leaving a harmless token.
+# Historical miner/source join noise tokens. Keep byte-compatible in spirit with
+# the certified backtests.
 _NOISE = re.compile(
-    r"\b(fc|cf|sc|afc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting|"
-    r"fk|sk|if|bk|nk|kk|sv|vfl|vfb|ssc|asd|us|ud|sd|cs|as|ac|"
-    r"u17|u18|u19|u20|u21|u23|ii|iii|b|w|women|ladies|reserves?|res)\b",
+    r"\b(fc|cf|sc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting|"
+    r"u17|u18|u19|u20|u21|u23|ii|b|w|women|reserves?|res)\b",
     re.IGNORECASE,
 )
 
 _DASHES = str.maketrans({"–": "-", "—": "-", "−": "-", "‐": "-", "‑": "-"})
 
-# Single-character Latin folds for DuckDB SQL translate(). Python uses
-# unicodedata, but warehouse SQL needs an explicit equivalent.
 _ACCENT_FROM = (
-    "ÀÁÂÃÄÅĀĂĄÆÇĆČĎĐÈÉÊËĒĖĘĚÌÍÎÏĪĮİŁÑŃŇÒÓÔÕÖØŌŐŒŔŘŚŠŞȘŤȚÙÚÛÜŪŮŰŲÝŸŽŹŻ"
-    "àáâãäåāăąæçćčďđèéêëēėęěìíîïīįıłñńňòóôõöøōőœŕřśšşșťțùúûüūůűųýÿžźż"
+    "ÀÁÂÃÄÅĀĂĄÇĆČĎĐÈÉÊËĒĖĘĚÌÍÎÏĪĮİŁÑŃŇÒÓÔÕÖØŌŐŔŘŚŠŞȘŤȚÙÚÛÜŪŮŰŲÝŸŽŹŻ"
+    "àáâãäåāăąçćčďđèéêëēėęěìíîïīįıłñńňòóôõöøōőŕřśšşșťțùúûüūůűųýÿžźż"
 )
 _ACCENT_TO = (
-    "AAAAAAAAAACCCDDEEEEEEEEIIIIIIILNNNOOOOOOOOORRSSSSTTUUUUUUUUYYZZZ"
-    "aaaaaaaaaacccddeeeeeeeeiiiiiiilnnnooooooooorrrssssttuuuuuuuuyyzzz"
+    "AAAAAAAAACCCDDEEEEEEEEIIIIIIILNNNOOOOOOOORRSSSSTTUUUUUUUUYYZZZ"
+    "aaaaaaaaacccddeeeeeeeeiiiiiiilnnnoooooooorrssssttuuuuuuuuyyzzz"
 )
-
 
 
 def fold_ascii(text: object) -> str:
-    """Lowercase-ish ASCII fold preserving letters before punctuation stripping.
-
-    This fixes keys like:
-      América Mineiro -> america mineiro, not amrica mineiro
-      Nõmme United    -> nomme united, not nmme united
-    """
+    """Unicode-fold to lowercase ASCII-ish text before punctuation stripping."""
     s = str(text or "").translate(_DASHES)
     s = s.replace("ß", "ss").replace("ẞ", "SS")
     s = s.replace("Æ", "AE").replace("æ", "ae")
@@ -54,33 +48,48 @@ def compact_key(text: object) -> str:
 
 
 def norm_team(name: str, width: int = 9) -> str:
-    """Normalize a team name to a cross-source join/context key.
+    """Legacy team join key used by certified miners and warehouse joins.
 
-    The previous 9-char key stripped accents before folding, so names like
-    América/Nõmme lost meaningful letters. This version transliterates first,
-    strips source-noise tokens, keeps alphanumerics, applies common aliases, and
-    keeps the historical 9-character width so certified miner joins do not drift.
+    Do not upgrade this to accent-folding in-place: changing it alters historical
+    consensus joins and can invalidate certified edge counts.
+    """
+    s = str(name or "").lower()
+    s = _NOISE.sub(" ", s)
+    s = re.sub(r"[^a-z]", "", s)
+    return s[:width]
+
+
+def norm_entity_team(name: object, width: int = 12) -> str:
+    """Canonical team context key for purity/reporting/entity registry.
+
+    Unlike norm_team(), this folds accents first so context keys do not lose
+    letters: América -> america, Nõmme -> nomme.
     """
     s = fold_ascii(name)
     s = _NOISE.sub(" ", s)
-    key = re.sub(r"[^a-z0-9]", "", s)
-    return key[:width]
+    return re.sub(r"[^a-z0-9]", "", s)[:width]
 
 
 def norm_league(name: object) -> str:
-    """Deterministic league text key used as fallback by entities.py.
-
-    Alias/canonical merging belongs in edgefactory.entities via manual overrides
-    and localdata/entity_registry.json. This function only folds text safely.
-    """
+    """Deterministic league text key used as entity fallback."""
     spaced = re.sub(r"[^a-z0-9]+", " ", fold_ascii(name)).strip()
     spaced = re.sub(r"\s+", " ", spaced)
     return spaced or "unknown"
 
 
+# Same legacy team normalization expressed as a DuckDB SQL expression.
+def norm_team_sql(col: str, width: int = 9) -> str:
+    noise = (
+        r"\b(fc|cf|sc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting|"
+        r"u17|u18|u19|u20|u21|u23|ii|b|w|women|reserves?|res)\b"
+    )
+    return (
+        f"substr(regexp_replace(regexp_replace(lower({col}), '{noise}', ' ', 'g'),"
+        f" '[^a-z]', '', 'g'), 1, {width})"
+    )
+
+
 def _sql_ascii_fold(expr: str) -> str:
-    # DuckDB has no Python unicodedata equivalent. Build a deterministic
-    # replace-chain that handles multi-character folds and common Latin accents.
     out = expr
     for old, new in (("ß", "ss"), ("ẞ", "SS"), ("Æ", "AE"), ("æ", "ae"), ("Œ", "OE"), ("œ", "oe")):
         out = f"replace({out}, '{old}', '{new}')"
@@ -89,12 +98,10 @@ def _sql_ascii_fold(expr: str) -> str:
     return f"lower({out})"
 
 
-# Same team normalization expressed as a DuckDB SQL expression on a column name.
-def norm_team_sql(col: str, width: int = 9) -> str:
+def norm_entity_team_sql(col: str, width: int = 12) -> str:
     noise = (
-        r"\b(fc|cf|sc|afc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting|"
-        r"fk|sk|if|bk|nk|kk|sv|vfl|vfb|ssc|asd|us|ud|sd|cs|as|ac|"
-        r"u17|u18|u19|u20|u21|u23|ii|iii|b|w|women|ladies|reserves?|res)\b"
+        r"\b(fc|cf|sc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting|"
+        r"u17|u18|u19|u20|u21|u23|ii|b|w|women|reserves?|res)\b"
     )
     folded = _sql_ascii_fold(col)
     return (
