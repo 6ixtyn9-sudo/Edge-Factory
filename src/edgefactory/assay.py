@@ -168,3 +168,67 @@ def roi(wins: int, n: int, avg_odds: float) -> float:
     if n <= 0:
         return 0.0
     return (wins * avg_odds - n) / n
+
+
+# ---- weighted consensus ------------------------------------------------
+# Instead of counting heads (N sources agree) we weight each source's vote
+# by its Wilson lower bound on the specific market/league combination.
+# A source with LB=0.82 gets nearly 3x the vote of one with LB=0.52.
+# The winning pick is the one with the highest total weight; the score is
+# that sum divided by the total weight across all sources (0–1 scale).
+# Disagreement is penalised automatically: if sources split, the winner
+# gets only a fraction of the total weight → lower score → fails threshold.
+
+def weighted_consensus_score(
+    votes: list[tuple[str, float]],
+    *,
+    min_lb: float = 0.50,
+) -> tuple[str | None, float, bool]:
+    """Weighted consensus from a list of (pick, wilson_lb) pairs.
+
+    Parameters
+    ----------
+    votes     : [(pick, wilson_lb), ...]  — one entry per contributing source.
+                wilson_lb should be the source's validated LB on this market.
+                Sources with lb < min_lb are excluded (not yet trustworthy).
+    min_lb    : floor below which a source's vote is excluded (default 0.50).
+
+    Returns
+    -------
+    (winning_pick, w_score, is_unanimous)
+      winning_pick  – pick with highest weighted vote, or None if no valid votes.
+      w_score       – weighted agreement score in [0, 1]; 1.0 = perfect unanimity.
+      is_unanimous  – True when all valid-weight sources agree on the same pick.
+
+    Maths
+    -----
+    weight_i = lb_i  (each source's Wilson LB is its stake in the vote)
+    W_total  = sum(weight_i for all valid votes)
+    W_pick   = sum(weight_i for votes == winning_pick)
+    w_score  = W_pick / W_total
+
+    When all sources agree:  w_score = 1.0
+    When sources split 50/50 on equal weights: w_score = 0.5
+    """
+    if not votes:
+        return None, 0.0, False
+
+    # filter below-floor sources
+    valid = [(pick, lb) for pick, lb in votes if lb >= min_lb]
+    if not valid:
+        return None, 0.0, False
+
+    # tally weights per pick
+    tally: dict[str, float] = {}
+    for pick, lb in valid:
+        tally[pick] = tally.get(pick, 0.0) + lb
+
+    total_w = sum(tally.values())
+    if total_w <= 0:
+        return None, 0.0, False
+
+    winning_pick = max(tally, key=lambda p: tally[p])
+    w_score = tally[winning_pick] / total_w
+    is_unanimous = len(tally) == 1  # all valid votes cast for same pick
+
+    return winning_pick, round(w_score, 4), is_unanimous
