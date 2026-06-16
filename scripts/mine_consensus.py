@@ -456,6 +456,143 @@ def main():
                 f"fb_pick = zb_pick AND zb_pick = sa_pick AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
                 args.split))
 
+    # ---- Accuracy levers (Phase 13) ----------------------------------------
+    # All five levers are additive scans on the same underlying consensus views.
+    # No existing rules are removed or modified. Every new rule is walk-forward
+    # (train < split, valid >= split) with the same certification gates.
+    #
+    # Lever 1 — No-draw gate on 2way and 3way
+    # Draw picks never work (29–37% hit). Filter them out and measure whether
+    # removing them lifts valid ROI without killing n.
+    if has_fb and has_zb and has_sa:
+        sfb = scales["forebet_settled"]
+        szb = scales["zulubet_settled"]
+        ssa = scales["statarea_settled"]
+        for thr in (60, 65, 70):
+            results.append(evaluate(
+                con, f"3way-unanimous no-draw avg_p>={thr}", "v_consensus3",
+                f"fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick != 'draw' "
+                f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
+                args.split))
+
+    # Lever 2 — Per-source probability floor
+    # "avg_p >= 70" still passes when forebet says 85% and zulubet says 55%.
+    # Enforce a minimum per-source prob so no source drags the others into
+    # agreement. Floor = 60% per source (0.60 on 0-1 scale).
+    if has_fb and has_zb:
+        sfb = scales["forebet_settled"]
+        szb = scales["zulubet_settled"]
+        for thr in (65, 70, 75):
+            results.append(evaluate(
+                con, f"2way-unanimous min_p>=60 avg_p>={thr}", "v_consensus2",
+                f"fb_pick = zb_pick "
+                f"AND fb_p/{sfb} >= 0.60 AND zb_p/{szb} >= 0.60 "
+                f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
+                args.split))
+    if has_fb and has_zb and has_sa:
+        sfb = scales["forebet_settled"]
+        szb = scales["zulubet_settled"]
+        ssa = scales["statarea_settled"]
+        for thr in (60, 65, 70):
+            results.append(evaluate(
+                con, f"3way-unanimous min_p>=60 avg_p>={thr}", "v_consensus3",
+                f"fb_pick = zb_pick AND zb_pick = sa_pick "
+                f"AND fb_p/{sfb} >= 0.60 AND zb_p/{szb} >= 0.60 AND sa_p/{ssa} >= 0.60 "
+                f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
+                args.split))
+
+    # Lever 3 — Odds-band targeted certification
+    # Mine inside the 1.20–1.75 range separately; that band has the most volume
+    # and typically the best-calibrated ROI. Certifying it separately lets the
+    # purity assay make finer decisions per band.
+    if has_fb and has_zb:
+        sfb = scales["forebet_settled"]
+        szb = scales["zulubet_settled"]
+        for thr in (65, 70, 75):
+            results.append(evaluate(
+                con, f"2way-unanimous odds-1.20-1.75 avg_p>={thr}", "v_consensus2",
+                f"fb_pick = zb_pick "
+                f"AND pick_odds >= 1.20 AND pick_odds < 1.75 "
+                f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
+                args.split))
+    if has_fb and has_zb and has_sa:
+        sfb = scales["forebet_settled"]
+        szb = scales["zulubet_settled"]
+        ssa = scales["statarea_settled"]
+        for thr in (60, 65, 70):
+            results.append(evaluate(
+                con, f"3way-unanimous odds-1.20-1.75 avg_p>={thr}", "v_consensus3",
+                f"fb_pick = zb_pick AND zb_pick = sa_pick "
+                f"AND pick_odds >= 1.20 AND pick_odds < 1.75 "
+                f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
+                args.split))
+
+    # Lever 4 — Home/away selection split
+    # Home picks and away picks have different structural hit rates. Split them
+    # to find whether one direction dominates and should be certified separately.
+    if has_fb and has_zb:
+        sfb = scales["forebet_settled"]
+        szb = scales["zulubet_settled"]
+        for sel in ("home", "away"):
+            for thr in (65, 70):
+                results.append(evaluate(
+                    con, f"2way-unanimous {sel}-only avg_p>={thr}", "v_consensus2",
+                    f"fb_pick = zb_pick AND fb_pick = '{sel}' "
+                    f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
+                    args.split))
+    if has_fb and has_zb and has_sa:
+        sfb = scales["forebet_settled"]
+        szb = scales["zulubet_settled"]
+        ssa = scales["statarea_settled"]
+        for sel in ("home", "away"):
+            for thr in (60, 65):
+                results.append(evaluate(
+                    con, f"3way-unanimous {sel}-only avg_p>={thr}", "v_consensus3",
+                    f"fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick = '{sel}' "
+                    f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
+                    args.split))
+
+    # Lever 5 — Bettingclosed as 3rd-source confirmation on existing 2way picks
+    # bettingclosed has 559k settled rows and categorical pick_1x2 ('1','x','2').
+    # Map: '1' → home, '2' → away, 'x' → draw.
+    # Rule: 2way consensus (fb+zb) agrees AND bettingclosed confirms → treat as
+    # a 3-source confirmation without requiring bettingclosed's own prob score.
+    # The consensus view already carries fb+zb unanimous pick; we just join and
+    # check that bettingclosed's pick maps to the same outcome.
+    has_bc_settled_full = _table_exists(con, "bettingclosed_settled")
+    if has_fb and has_zb and has_bc_settled_full and _table_exists(con, "v_consensus2"):
+        sfb = scales["forebet_settled"]
+        szb = scales["zulubet_settled"]
+        try:
+            con.execute(f"""
+                CREATE OR REPLACE TEMP VIEW consensus2_bc_confirm AS
+                WITH c2 AS (SELECT DISTINCT ON (date, hkey, akey) * FROM v_consensus2),
+                     bc AS (SELECT DISTINCT ON (date, hkey, akey)
+                                   date, hkey, akey,
+                                   CASE pick_1x2
+                                     WHEN '1' THEN 'home'
+                                     WHEN '2' THEN 'away'
+                                     WHEN 'x' THEN 'draw'
+                                   END AS bc_pick
+                            FROM bettingclosed_settled
+                            WHERE pick_1x2 IN ('1','2','x'))
+                SELECT c2.*,
+                       bc.bc_pick
+                FROM c2 JOIN bc USING (date, hkey, akey)
+                WHERE length(c2.hkey) >= 4 AND length(c2.akey) >= 4
+            """)
+            for thr in (60, 65, 70, 75):
+                results.append(evaluate(
+                    con, f"2way+bc-confirms avg_p>={thr}", "consensus2_bc_confirm",
+                    f"fb_pick = zb_pick AND fb_pick = bc_pick "
+                    f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
+                    args.split))
+        except Exception as exc:
+            print(f"skipped 2way+bc-confirms: {exc}")
+    else:
+        if not has_bc_settled_full:
+            print("skipped 2way+bc-confirms: no bettingclosed_settled data")
+
     if has_fb and has_zb and has_sa and has_vb:
         sfb = scales["forebet_settled"]
         szb = scales["zulubet_settled"]
