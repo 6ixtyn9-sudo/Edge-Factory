@@ -290,33 +290,26 @@ Run order (nightly): capture_daily → build_warehouse → mine_consensus → de
 
 Last updated: 2026-06-16
 
-<!-- EDGE_FACTORY_PHASE_A_SOURCE_CONFIRMATION_2026_06_16 -->
+<!-- EDGE_FACTORY_PHASE_A_SHADOW_2026_06_16 -->
+[UPDATE 2026-06-16] Phase A source confirmation levers are installed as shadow/maturity scans.
 
-[DONE 2026-06-16] Phase A: Unused soccer source confirmation levers
+Finding from live data:
 
-Scope: additive miner scans only; base certified rules and operational thresholds remain unchanged.
+Phase A views do build:
+consensus2_predictz_confirm (~100 rows)
+consensus3_predictz_confirm (~81 rows)
+consensus2_windrawwin_confirm (~7 rows)
+consensus3_windrawwin_confirm (~7 rows)
+But under the global walk-forward split (2025-06-01) these sources have train n=0 because PredictZ archive starts around 2026 and Windrawwin is capture-forward only.
+Therefore Phase A rules are evaluated but excluded from edges_consensus.json by the normal min_overlap_n/training gates. This is correct and protects certification.
+mine_consensus.py now prints a "Phase A shadow confirmation levers" section before the registry filter so operators can see these levers running without polluting the certified edge registry.
 
-Implemented:
+Operational conclusion:
 
-- `scripts/mine_consensus.py`
-  - Adds `create_phase_a_confirmation_views()` and `run_phase_a_confirmation_levers()`.
-  - Mines `2way+predictz-confirms avg_p>=X` for X in 60/65/70/75.
-  - Mines `3way+predictz-confirms avg_p>=X` for X in 60/65/70.
-  - Mines `2way+windrawwin-confirms avg_p>=X` for X in 60/65/70/75.
-  - Mines `3way+windrawwin-confirms avg_p>=X` for X in 60/65/70.
-  - These are walk-forward candidates/certifications using the same Wilson/ROI gates.
-  - They are confirmation levers only and must not displace canonical picks_today thresholds.
-
-- `scripts/decay_monitor.py` and `scripts/assay_purity.py`
-  - Recreate the same Phase A TEMP views (`consensus2_predictz_confirm`, `consensus3_predictz_confirm`, `consensus2_windrawwin_confirm`, `consensus3_windrawwin_confirm`) so any certified Phase A edge can be audited and assayed. This preserves L1.
-
-- `scripts/picks_today.py`
-  - Marks `predictz-confirms`, `windrawwin-confirms`, and `freesupertips-confirms` as qualified analysis rules so they cannot replace base operational thresholds.
-
-Not done intentionally:
-
-- `freesupertips` confirmation is not mined yet because current local volume is tiny and tip text needs a safer 1x2 mapping layer.
-- `afootballreport` confirmation is not mined yet because it is OU/BTTS-specific and OU/BTTS edges remain unprofitable/not certified.
+Do not use PredictZ/Windrawwin confirmation in picks yet.
+Treat them as maturity monitors until a source-specific walk-forward maturity protocol exists and enough settled rows accumulate.
+Early valid-only results were negative/thin, so this is not currently an alpha source.
+Next priority remains Phase B: odds movement / CLV audit, because odds-band verdicts already have mature sample sizes and clear ROI signal.
 
 Future plans:
 
