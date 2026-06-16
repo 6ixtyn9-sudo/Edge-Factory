@@ -128,12 +128,36 @@ def _edge_entry(edge: dict) -> dict | None:
     }
 
 
+_QUALIFIED_TOKENS = ("min_p", "home-only", "away-only", "odds-", "bc-confirms")
+
+def _is_qualified(rule: str) -> bool:
+    """Qualified rules are analysis variants (min_p, home-only, etc.) that must
+    not displace the base canonical rule as the operational picks_today threshold.
+    They are miner-level findings — they inform the purity assay, not the
+    picks_today threshold selector."""
+    r = rule.lower()
+    return any(tok in r for tok in _QUALIFIED_TOKENS)
+
+
 def _prefer_entry(new: dict, old: dict | None) -> bool:
-    """Prefer lower certified threshold, then canonical/general rule text."""
+    """Prefer the base canonical rule for operational use in picks_today.
+
+    Priority (highest first):
+      1. Unqualified rule beats any qualified rule (min_p, home-only, etc.)
+      2. Lower threshold beats higher threshold (wider coverage)
+      3. Shorter/simpler rule name beats longer/more specific
+    """
     if old is None:
         return True
+    new_qual = _is_qualified(new["rule"])
+    old_qual = _is_qualified(old["rule"])
+    # Unqualified always beats qualified
+    if new_qual != old_qual:
+        return old_qual  # prefer new only if old is qualified and new is not
+    # Both same qualification status: prefer lower threshold
     if new["threshold"] != old["threshold"]:
         return new["threshold"] < old["threshold"]
+    # Same threshold: prefer simpler (shorter) rule
     new_rule, old_rule = new["rule"].lower(), old["rule"].lower()
     new_penalty = ("no-draw" in new_rule, len(new_rule))
     old_penalty = ("no-draw" in old_rule, len(old_rule))

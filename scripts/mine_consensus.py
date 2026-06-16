@@ -564,11 +564,14 @@ def main():
         sfb = scales["forebet_settled"]
         szb = scales["zulubet_settled"]
         try:
+            # consensus2 / v_consensus2 expose (date, home, away) but NOT hkey/akey —
+            # those are absorbed into the join inside the warehouse view.
+            # Join bettingclosed_settled on (date, home, away) instead.
             con.execute(f"""
                 CREATE OR REPLACE TEMP VIEW consensus2_bc_confirm AS
-                WITH c2 AS (SELECT DISTINCT ON (date, hkey, akey) * FROM v_consensus2),
-                     bc AS (SELECT DISTINCT ON (date, hkey, akey)
-                                   date, hkey, akey,
+                WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
+                     bc AS (SELECT DISTINCT ON (date, home, away)
+                                   date, home, away,
                                    CASE pick_1x2
                                      WHEN '1' THEN 'home'
                                      WHEN '2' THEN 'away'
@@ -578,8 +581,7 @@ def main():
                             WHERE pick_1x2 IN ('1','2','x'))
                 SELECT c2.*,
                        bc.bc_pick
-                FROM c2 JOIN bc USING (date, hkey, akey)
-                WHERE length(c2.hkey) >= 4 AND length(c2.akey) >= 4
+                FROM c2 JOIN bc USING (date, home, away)
             """)
             for thr in (60, 65, 70, 75):
                 results.append(evaluate(
