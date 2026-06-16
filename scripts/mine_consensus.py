@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import duckdb  # noqa: E402
 
-from edgefactory.assay import wilson_lb  # noqa: E402
+from edgefactory.assay import wilson_lb, weighted_consensus_score  # noqa: E402
 from edgefactory.config import GATES  # noqa: E402
 
 DB = ROOT / "localdata" / "warehouse.duckdb"
@@ -142,6 +142,216 @@ def dedupe_equivalent_certified_edges(results: list[dict]) -> tuple[list[dict], 
     return out, removed
 
 
+def _source_wilson_lbs(con, split: str) -> dict[str, dict[str, float]]:
+    """Compute Wilson LB for each source on each market using the TRAINING period.
+
+    Returns a nested dict:  source_name -> market -> wilson_lb
+    Only includes sources/markets with >= GATES.min_n_train rows in training.
+
+    The LB is measured on the source's own picks (no cross-joining).  This is
+    used as the per-source vote weight in weighted consensus mining.
+    """
+    # (view_name, source_key, market, pick_col, outcome_col, scale_divisor)
+    SINGLE_SOURCE_SPECS = []
+
+    for view, key, mkt in [
+        ("forebet_settled",    "forebet",    "1x2"),
+        ("zulubet_settled",    "zulubet",    "1x2"),
+        ("statarea_settled",   "statarea",   "1x2"),
+        ("vitibet_settled",    "vitibet",    "1x2"),
+        ("scoutingstats_settled", "scoutingstats", "1x2"),
+    ]:
+        if _table_exists(con, view):
+            SINGLE_SOURCE_SPECS.append((view, key, mkt, "pick", "outcome", 1.0))
+
+    # OU 2.5
+    if _table_exists(con, "forebet_settled"):
+        SINGLE_SOURCE_SPECS.append(("forebet_settled", "forebet", "ou_2.5",
+                                    "CASE WHEN p_over/1.0 >= 0.5 THEN 'over' ELSE 'under' END",
+                                    "CASE WHEN hs+gs >= 3 THEN 'over' ELSE 'under' END", 1.0))
+    if _table_exists(con, "statarea_settled"):
+        SINGLE_SOURCE_SPECS.append(("statarea_settled", "statarea", "ou_2.5",
+                                    "CASE WHEN p_o25/1.0 >= 0.5 THEN 'over' ELSE 'under' END",
+                                    "CASE WHEN hs+gs >= 3 THEN 'over' ELSE 'under' END", 1.0))
+    if _table_exists(con, "scoutingstats_settled"):
+        SINGLE_SOURCE_SPECS.append(("scoutingstats_settled", "scoutingstats", "ou_2.5",
+                                    "CASE WHEN p_o25/1.0 >= 0.5 THEN 'over' ELSE 'under' END",
+                                    "CASE WHEN hs+gs >= 3 THEN 'over' ELSE 'under' END", 1.0))
+
+    # BTTS
+    if _table_exists(con, "forebet_settled"):
+        SINGLE_SOURCE_SPECS.append(("forebet_settled", "forebet", "btts",
+                                    "CASE WHEN p_gg/1.0 >= 0.5 THEN 'yes' ELSE 'no' END",
+                                    "CASE WHEN hs > 0 AND gs > 0 THEN 'yes' ELSE 'no' END", 1.0))
+    if _table_exists(con, "scoutingstats_settled"):
+        SINGLE_SOURCE_SPECS.append(("scoutingstats_settled", "scoutingstats", "btts",
+                                    "CASE WHEN p_gg/1.0 >= 0.5 THEN 'yes' ELSE 'no' END",
+                                    "CASE WHEN hs > 0 AND gs > 0 THEN 'yes' ELSE 'no' END", 1.0))
+
+    out: dict[str, dict[str, float]] = {}
+
+    for view, key, mkt, pick_expr, outcome_expr, _ in SINGLE_SOURCE_SPECS:
+        try:
+            row = con.execute(f"""
+                SELECT count(*) AS n,
+                       sum(CASE WHEN ({pick_expr}) = ({outcome_expr}) THEN 1 ELSE 0 END) AS wins
+                FROM {view}
+                WHERE date < '{split}'
+                  AND hs IS NOT NULL AND gs IS NOT NULL
+            """).fetchone()
+            n, wins = int(row[0] or 0), int(row[1] or 0)
+            if n >= GATES.min_n_train:
+                lb = wilson_lb(wins, n)
+                out.setdefault(key, {})[mkt] = round(lb, 4)
+        except Exception:
+            pass
+
+    return out
+
+
+# Source weight table used in pick-time weighted consensus (also exported via
+# mine so that picks_today.py can read it from edges_consensus.json).
+_WEIGHTED_SOURCES_1X2   = ["forebet", "zulubet", "statarea", "vitibet", "scoutingstats"]
+_WEIGHTED_SOURCES_OU25  = ["forebet", "statarea", "scoutingstats"]
+_WEIGHTED_SOURCES_BTTS  = ["forebet", "scoutingstats"]
+
+
+def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, float]],
+                             results: list[dict], scales: dict[str, float]) -> None:
+    """Mine weighted consensus rules and append to results.
+
+    For each match in the join of all available sources we:
+      1. Collect (pick, wilson_lb) votes from each source.
+      2. Call weighted_consensus_score() to get (winning_pick, w_score, is_unanimous).
+      3. Only retain rows where is_unanimous=True (all valid sources agree).
+      4. Use w_score as the threshold variable (analogous to avg_p in head-count consensus).
+
+    The DuckDB query returns per-match per-source tuples; Python then applies
+    the weighted vote logic so the SQL stays simple (no UDFs needed).
+    """
+
+    # ---- 1x2 weighted ---------------------------------------------------
+    avail_1x2 = [s for s in _WEIGHTED_SOURCES_1X2 if s in source_lbs
+                 and "1x2" in source_lbs[s]]
+    if len(avail_1x2) >= 2:
+        # Build a UNION-style query: one row per (date,hkey,akey,source) with pick+pmax
+        unions = []
+        for src in avail_1x2:
+            view = f"{src}_settled"
+            if not _table_exists(con, view):
+                continue
+            scale = scales.get(view, 1.0)
+            unions.append(f"""
+                SELECT date, hkey, akey, home, away, outcome, league,
+                       pick, pmax/{scale} AS prob,
+                       CASE pick WHEN 'home' THEN odd1 WHEN 'draw' THEN oddx ELSE odd2 END AS pick_odds,
+                       '{src}' AS source
+                FROM (SELECT DISTINCT ON (date, hkey, akey) * FROM {view})
+            """)
+        if len(unions) >= 2:
+            unioned = " UNION ALL ".join(unions)
+            try:
+                rows = con.execute(f"""
+                    WITH base AS ({unioned})
+                    SELECT date, hkey, akey, home, away, outcome, league,
+                           source, pick, prob, pick_odds,
+                           MIN(pick_odds) FILTER (WHERE pick_odds IS NOT NULL) OVER
+                               (PARTITION BY date, hkey, akey) AS best_pick_odds
+                    FROM base
+                    WHERE outcome IS NOT NULL
+                    ORDER BY date, hkey, akey, source
+                """).fetchall()
+            except Exception:
+                # simpler fallback without window
+                try:
+                    rows = con.execute(f"""
+                        WITH base AS ({unioned})
+                        SELECT date, hkey, akey, home, away, outcome, league,
+                               source, pick, prob, pick_odds, pick_odds AS best_pick_odds
+                        FROM base
+                        ORDER BY date, hkey, akey, source
+                    """).fetchall()
+                except Exception:
+                    rows = []
+
+            # Group by match
+            matches: dict[tuple, dict] = {}
+            for date_, hkey, akey, home, away, outcome, league, source, pick, prob, pick_odds, best_odds in rows:
+                key = (date_, hkey, akey)
+                if key not in matches:
+                    matches[key] = {
+                        "date": date_, "home": home, "away": away,
+                        "outcome": outcome, "league": league,
+                        "pick_odds": None, "votes": []
+                    }
+                if best_odds is not None and matches[key]["pick_odds"] is None:
+                    matches[key]["pick_odds"] = best_odds
+                if source in avail_1x2:
+                    lb = source_lbs[source]["1x2"]
+                    matches[key]["votes"].append((pick, lb))
+
+            # Evaluate threshold grid
+            for w_thr in (0.55, 0.60, 0.65, 0.70, 0.75, 0.80):
+                rule_name = f"weighted-1x2 w_score>={w_thr:.2f}"
+                # collect qualifying rows
+                qualifying: list[dict] = []
+                for match in matches.values():
+                    winning_pick, w_score, is_unanimous = weighted_consensus_score(match["votes"])
+                    if not is_unanimous:
+                        continue
+                    if w_score < w_thr:
+                        continue
+                    qualifying.append({
+                        "date": match["date"],
+                        "pick": winning_pick,
+                        "outcome": match["outcome"],
+                        "pick_odds": match["pick_odds"],
+                        "w_score": w_score,
+                    })
+
+                # compute train/valid stats from qualifying list
+                def _stats_from_list(rows_list: list[dict], split_: str, period: str) -> dict:
+                    subset = [r for r in rows_list
+                              if (r["date"] < split_) == (period == "train")]
+                    n = len(subset)
+                    wins_ = sum(1 for r in subset if r["pick"] == r["outcome"])
+                    priced = [r for r in subset if r["pick_odds"] is not None]
+                    pnl = sum((r["pick_odds"] - 1) if r["pick"] == r["outcome"] else -1
+                              for r in priced)
+                    roi_ = pnl / len(priced) if priced else None
+                    return {
+                        "n": n, "wins": wins_,
+                        "hit": round(wins_ / n, 4) if n else 0.0,
+                        "wilson_lb": round(wilson_lb(wins_, n), 4),
+                        "avg_odds": None, "roi": round(roi_, 4) if roi_ is not None else None,
+                        "n_priced": len(priced),
+                    }
+
+                tr = _stats_from_list(qualifying, split, "train")
+                va = _stats_from_list(qualifying, split, "valid")
+                if tr["n"] < GATES.min_overlap_n:
+                    continue
+                certified = (
+                    tr["n"] >= GATES.min_n_train
+                    and va["n"] >= GATES.min_n_valid
+                    and (tr["roi"] is None or tr["roi"] >= GATES.min_roi_train)
+                    and (va["roi"] is None or va["roi"] >= GATES.min_roi_valid)
+                    and va["wilson_lb"] >= 0.5
+                )
+                results.append({
+                    "rule": rule_name,
+                    "view": "weighted_1x2",
+                    "where": f"w_score >= {w_thr}",
+                    "market": "1x2",
+                    "sport": "soccer",
+                    "weighted": True,
+                    "source_weights": {s: source_lbs[s]["1x2"] for s in avail_1x2},
+                    "sources": avail_1x2,
+                    "train": tr, "valid": va,
+                    "status": "certified" if certified else "candidate",
+                })
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default=GATES.walkforward_split)
@@ -170,6 +380,8 @@ def main():
             scales[v] = get_scale(con, v)
         else:
             scales[v] = 1.0
+
+
 
     if has_betclan and has_fb:
         con.execute("""
@@ -378,7 +590,20 @@ def main():
                 con, f"btts-unanimous-2way-ss avg_p>={thr}", "consensus_btts_sparse",
                 f"avg_p >= {thr}", args.split, market="btts"))
 
-    hdr = f"{'rule':42s} {'TRAIN n/hit/LB/roi':>26s}   {'VALID n/hit/LB/roi':>26s}  status"
+    # ---- Weighted consensus scan ----------------------------------------
+    # Compute per-source Wilson LBs then run the weighted miner.
+    # Appends weighted-* rules to results alongside the head-count rules.
+    source_lbs = _source_wilson_lbs(con, args.split)
+    if source_lbs:
+        print(f"\nSource Wilson LBs for weighting (training period < {args.split}):")
+        for src, mkts in sorted(source_lbs.items()):
+            for mkt, lb in sorted(mkts.items()):
+                print(f"  {src:20s} {mkt:8s}  LB={lb:.4f}")
+        _run_weighted_consensus(con, args.split, source_lbs, results, scales)
+    else:
+        print("Weighted consensus skipped: insufficient per-source training data.")
+
+    hdr = f"{'rule':48s} {'TRAIN n/hit/LB/roi':>26s}   {'VALID n/hit/LB/roi':>26s}  status"
     print(hdr)
     print("-" * len(hdr))
     
@@ -395,7 +620,8 @@ def main():
             return f"{s['n']:>6d} {s['hit']:.1%} {s['wilson_lb']:.3f} {roi}"
 
         flag = "🏆" if r["status"] == "certified" else "  "
-        print(f"{r['rule']:42s} {fmt(t):>26s}   {fmt(v):>26s}  {flag} {r['status']}")
+        wtag = " [W]" if r.get("weighted") else ""
+        print(f"{r['rule']:48s} {fmt(t):>26s}   {fmt(v):>26s}  {flag} {r['status']}{wtag}")
 
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(
