@@ -352,6 +352,141 @@ def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, flo
                 })
 
 
+
+def create_phase_a_confirmation_views(con) -> set[str]:
+    """Create Phase A unused-source confirmation views.
+
+    These views never change the base consensus. They only ask whether a thin or
+    previously-unused source confirms an already-certified candidate consensus.
+    If any such lever certifies, decay_monitor.py and assay_purity.py must
+    recreate the same views (L1).
+    """
+    made: set[str] = set()
+
+    if _table_exists(con, "predictz_settled"):
+        try:
+            if _table_exists(con, "v_consensus2"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus2_predictz_confirm AS
+                    WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
+                         pz AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, pick AS pz_pick
+                                FROM predictz_settled
+                                WHERE pick IN ('home','draw','away'))
+                    SELECT c2.*, pz.pz_pick
+                    FROM c2 JOIN pz USING (date, home, away)
+                """)
+                made.add("consensus2_predictz_confirm")
+            if _table_exists(con, "v_consensus3"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus3_predictz_confirm AS
+                    WITH c3 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus3),
+                         pz AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, pick AS pz_pick
+                                FROM predictz_settled
+                                WHERE pick IN ('home','draw','away'))
+                    SELECT c3.*, pz.pz_pick
+                    FROM c3 JOIN pz USING (date, home, away)
+                """)
+                made.add("consensus3_predictz_confirm")
+        except Exception as exc:
+            print(f"skipped predictz confirmation views: {exc}")
+
+    if _table_exists(con, "windrawwin") and _table_exists(con, "forebet_settled"):
+        try:
+            con.execute("""
+                CREATE OR REPLACE TEMP VIEW windrawwin_settled AS
+                WITH ww AS (SELECT DISTINCT ON (date, hkey, akey) * FROM windrawwin
+                            WHERE pick IN ('home','draw','away')),
+                     fb AS (SELECT DISTINCT ON (date, hkey, akey)
+                                   date, hkey, akey, hs, gs
+                            FROM forebet_settled)
+                SELECT ww.*, fb.hs, fb.gs,
+                       ww.pick AS ww_pick,
+                       CASE WHEN fb.hs > fb.gs THEN 'home'
+                            WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome
+                FROM ww JOIN fb USING (date, hkey, akey)
+            """)
+            made.add("windrawwin_settled")
+            if _table_exists(con, "v_consensus2"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus2_windrawwin_confirm AS
+                    WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
+                         ww AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, ww_pick
+                                FROM windrawwin_settled)
+                    SELECT c2.*, ww.ww_pick
+                    FROM c2 JOIN ww USING (date, home, away)
+                """)
+                made.add("consensus2_windrawwin_confirm")
+            if _table_exists(con, "v_consensus3"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus3_windrawwin_confirm AS
+                    WITH c3 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus3),
+                         ww AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, ww_pick
+                                FROM windrawwin_settled)
+                    SELECT c3.*, ww.ww_pick
+                    FROM c3 JOIN ww USING (date, home, away)
+                """)
+                made.add("consensus3_windrawwin_confirm")
+        except Exception as exc:
+            print(f"skipped windrawwin confirmation views: {exc}")
+
+    return made
+
+
+def run_phase_a_confirmation_levers(con, results: list[dict], split: str,
+                                    scales: dict[str, float]) -> None:
+    """Mine Phase A additive confirmation levers for unused 1x2 sources."""
+    made = create_phase_a_confirmation_views(con)
+    sfb = scales.get("forebet_settled", 1.0)
+    szb = scales.get("zulubet_settled", 1.0)
+    ssa = scales.get("statarea_settled", 1.0)
+
+    if "consensus2_predictz_confirm" in made:
+        for thr in (60, 65, 70, 75):
+            results.append(evaluate(
+                con, f"2way+predictz-confirms avg_p>={thr}", "consensus2_predictz_confirm",
+                f"fb_pick = zb_pick AND fb_pick = pz_pick "
+                f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
+                split,
+            ))
+    else:
+        if not _table_exists(con, "predictz_settled"):
+            print("skipped predictz confirmation: no predictz_settled data")
+
+    if "consensus3_predictz_confirm" in made:
+        for thr in (60, 65, 70):
+            results.append(evaluate(
+                con, f"3way+predictz-confirms avg_p>={thr}", "consensus3_predictz_confirm",
+                f"fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick = pz_pick "
+                f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
+                split,
+            ))
+
+    if "consensus2_windrawwin_confirm" in made:
+        for thr in (60, 65, 70, 75):
+            results.append(evaluate(
+                con, f"2way+windrawwin-confirms avg_p>={thr}", "consensus2_windrawwin_confirm",
+                f"fb_pick = zb_pick AND fb_pick = ww_pick "
+                f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
+                split,
+            ))
+    else:
+        if not _table_exists(con, "windrawwin"):
+            print("skipped windrawwin confirmation: no windrawwin data")
+
+    if "consensus3_windrawwin_confirm" in made:
+        for thr in (60, 65, 70):
+            results.append(evaluate(
+                con, f"3way+windrawwin-confirms avg_p>={thr}", "consensus3_windrawwin_confirm",
+                f"fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick = ww_pick "
+                f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
+                split,
+            ))
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--split", default=GATES.walkforward_split)
@@ -594,6 +729,10 @@ def main():
     else:
         if not has_bc_settled_full:
             print("skipped 2way+bc-confirms: no bettingclosed_settled data")
+
+    # Phase A — unused 1x2 source confirmation levers (predictz, windrawwin).
+    # Additive only: these rules must not displace base operational thresholds.
+    run_phase_a_confirmation_levers(con, results, args.split, scales)
 
     if has_fb and has_zb and has_sa and has_vb:
         sfb = scales["forebet_settled"]
