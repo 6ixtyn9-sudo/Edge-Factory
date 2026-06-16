@@ -129,7 +129,7 @@ def _edge_entry(edge: dict) -> dict | None:
     }
 
 
-_QUALIFIED_TOKENS = ("min_p", "home-only", "away-only", "odds-", "bc-confirms")
+_QUALIFIED_TOKENS = ("min_p", "home-only", "away-only", "odds-", "bc-confirms", "predictz-confirms", "windrawwin-confirms", "freesupertips-confirms")
 
 def _is_qualified(rule: str) -> bool:
     """Qualified rules are analysis variants (min_p, home-only, etc.) that must

@@ -223,6 +223,80 @@ def recreate_views(con) -> set[str]:
         except Exception:
             pass
 
+
+
+    # Phase A confirmation views: unused 1x2 sources confirming existing
+    # consensus rows. Must mirror mine_consensus.py (L1).
+    if _table_exists(con, "predictz_settled"):
+        try:
+            if _table_exists(con, "v_consensus2"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus2_predictz_confirm AS
+                    WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
+                         pz AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, pick AS pz_pick
+                                FROM predictz_settled
+                                WHERE pick IN ('home','draw','away'))
+                    SELECT c2.*, pz.pz_pick
+                    FROM c2 JOIN pz USING (date, home, away)
+                """)
+                avail.add("consensus2_predictz_confirm")
+            if _table_exists(con, "v_consensus3"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus3_predictz_confirm AS
+                    WITH c3 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus3),
+                         pz AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, pick AS pz_pick
+                                FROM predictz_settled
+                                WHERE pick IN ('home','draw','away'))
+                    SELECT c3.*, pz.pz_pick
+                    FROM c3 JOIN pz USING (date, home, away)
+                """)
+                avail.add("consensus3_predictz_confirm")
+        except Exception:
+            pass
+
+    if _table_exists(con, "windrawwin") and has.get("forebet_settled"):
+        try:
+            con.execute("""
+                CREATE OR REPLACE TEMP VIEW windrawwin_settled AS
+                WITH ww AS (SELECT DISTINCT ON (date, hkey, akey) * FROM windrawwin
+                            WHERE pick IN ('home','draw','away')),
+                     fb AS (SELECT DISTINCT ON (date, hkey, akey)
+                                   date, hkey, akey, hs, gs
+                            FROM forebet_settled)
+                SELECT ww.*, fb.hs, fb.gs,
+                       ww.pick AS ww_pick,
+                       CASE WHEN fb.hs > fb.gs THEN 'home'
+                            WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome
+                FROM ww JOIN fb USING (date, hkey, akey)
+            """)
+            avail.add("windrawwin_settled")
+            if _table_exists(con, "v_consensus2"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus2_windrawwin_confirm AS
+                    WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
+                         ww AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, ww_pick
+                                FROM windrawwin_settled)
+                    SELECT c2.*, ww.ww_pick
+                    FROM c2 JOIN ww USING (date, home, away)
+                """)
+                avail.add("consensus2_windrawwin_confirm")
+            if _table_exists(con, "v_consensus3"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus3_windrawwin_confirm AS
+                    WITH c3 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus3),
+                         ww AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, ww_pick
+                                FROM windrawwin_settled)
+                    SELECT c3.*, ww.ww_pick
+                    FROM c3 JOIN ww USING (date, home, away)
+                """)
+                avail.add("consensus3_windrawwin_confirm")
+        except Exception:
+            pass
+
     # OU2.5 / BTTS consensus views: source membership depends on what was
     # available at mine time; rebuild with the same membership logic.
     if has["forebet_settled"]:
