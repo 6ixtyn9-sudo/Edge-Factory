@@ -19,6 +19,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.util import norm_team
 from edgefactory.market_registry import get_odds_tier
+from edgefactory.assay import weighted_consensus_score
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
@@ -31,8 +32,6 @@ ODDS_TEAM_ALIASES = {
     "caboverde": "capeverde",  # bzzoiro: Cabo Verde; prediction feeds: Cape Verde Islands
 }
 LOW_PRIORITY_BOOKMAKER_TOKENS = ("polymarket", "consensus")
-
-# ... (keep all existing source lists, fallback thresholds, etc.)
 
 SOURCES_1X2 = ["forebet", "zulubet", "statarea", "vitibet", "betclan", "bzzoiro"]
 SOURCES_OU = ["forebet", "statarea", "scoutingstats", "bzzoiro"]
@@ -226,6 +225,37 @@ def thr_for(n_sources: int, t1x2: dict[int, dict]):
     if not eligible:
         return None
     return t1x2[max(eligible)]
+
+
+def load_source_weights(market: str = "1x2") -> dict[str, float]:
+    """Load per-source Wilson LB weights from edges_consensus.json.
+
+    Looks for the best (highest w_score threshold) certified weighted rule
+    and returns its source_weights dict.  Falls back to equal weights (1.0)
+    for every source if no weighted edge is certified yet.
+    """
+    try:
+        data = json.loads(EDGES_PATH.read_text())
+        best_thr = -1.0
+        best_weights: dict[str, float] = {}
+        for e in data.get("edges", []):
+            if not e.get("weighted"):
+                continue
+            if e.get("market") != market:
+                continue
+            if e.get("status") != "certified":
+                continue
+            # parse threshold from rule name e.g. "weighted-1x2 w_score>=0.70"
+            m = re.search(r">=\s*([\d.]+)", e.get("rule", ""))
+            if not m:
+                continue
+            thr = float(m.group(1))
+            if thr > best_thr and e.get("source_weights"):
+                best_thr = thr
+                best_weights = e["source_weights"]
+        return best_weights
+    except Exception:
+        return {}
 
 
 # ---------------------------------------------------------------- purity --
@@ -518,7 +548,14 @@ def top_pick(p1, px, p2):
 
 
 # --------------------------------------------------------------- consensus --
-def eval_1x2(day, data, t1x2):
+def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
+    """Head-count + optional weighted consensus for 1x2 picks.
+
+    source_weights: {source_name: wilson_lb} from the certified weighted edge.
+    When provided, each source's vote is weighted by its LB; the weighted
+    agreement score (w_score) is stored on the pick for display/sorting.
+    The unweighted avg_p is still computed and stored for backward compatibility.
+    """
     picks, vetoes = [], 0
     keys = set()
     for s in SOURCES_1X2:
@@ -546,6 +583,12 @@ def eval_1x2(day, data, t1x2):
             continue
         n_req, thr = edge["n_way"], edge["threshold"]
         avg_p = mean(ps) * 100.0
+
+        # Weighted consensus score — uses per-source Wilson LB as vote weight.
+        # Falls back to uniform weights (lb=1.0 each) if no weights loaded.
+        votes = [(sel, source_weights.get(s, 1.0)) for s, sel in zip(used, sels)]
+        _, w_score, _ = weighted_consensus_score(votes)
+
         if avg_p < thr:
             continue
         fb = data.get("forebet", {}).get(k) or {}
@@ -563,7 +606,9 @@ def eval_1x2(day, data, t1x2):
             "home": home, "away": away,
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
-            "avg_p": round(avg_p, 1), "odds": odds,
+            "avg_p": round(avg_p, 1),
+            "w_score": round(w_score, 4),   # weighted agreement score (0–1)
+            "odds": odds,
             "odds_source": "forebet_best" if odds is not None else None,
             "bookmaker": None,
             "rule": edge["rule"],
@@ -574,6 +619,7 @@ def eval_1x2(day, data, t1x2):
             "model_version": bz.get("model_version"),
             "vitibet_index": _f(vb.get("index")),
             "sources_used": used,
+            "source_weights": source_weights or {},
         })
     return picks, vetoes, len(keys)
 
@@ -635,16 +681,18 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
 
 
 # --------------------------------------------------------------------- run --
-def run_day(day, t1x2, ou_edge, btts_edge):
+def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = None):
     data = fetch_all(day)
-    picks, vetoes, n_up = eval_1x2(day, data, t1x2)
+    picks, vetoes, n_up = eval_1x2(day, data, t1x2,
+                                   source_weights=source_weights_1x2 or {})
     picks += eval_binary(day, data, "ou_2.5", SOURCES_OU, OU_COL, ou_edge,
                          ("over", "under"),
                          {"over": "odd_over", "under": "odd_under"})
     picks += eval_binary(day, data, "btts", SOURCES_BTTS, BTTS_COL, btts_edge,
                          ("yes", "no"),
                          {"yes": "odd_gg", "no": "odd_ng"})
-    picks.sort(key=lambda r: -r["avg_p"])
+    # Sort by w_score (weighted agreement) then avg_p; both descending.
+    picks.sort(key=lambda r: (-r.get("w_score", 0.0), -r.get("avg_p", 0)))
     return picks, vetoes, n_up
 
 
@@ -681,7 +729,8 @@ def print_buckets(buckets: dict, title_date: str = ""):
             market = p.get("market_type", p.get("market", "?"))
             tier = p.get("odds_tier", "?")
             label = p.get("display_rule") or p.get("rule", "?")
-            print(f"  [{label}] {p['match'][:45]:45s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}% {o}  [{market}/{tier}]")
+            w_str = f"  w={p['w_score']:.2f}" if p.get("w_score") is not None else ""
+            print(f"  [{label}] {p['match'][:45]:45s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}%{w_str} {o}  [{market}/{tier}]")
             if ctx:
                 print(ctx_str)
         print()
@@ -699,6 +748,21 @@ def main():
     purity = load_purity()
     purity_missing = not bool(purity)
 
+    # Weighted consensus: load per-source Wilson LB weights.
+    # Empty dict = fall back to uniform weights silently.
+    source_weights_1x2 = load_source_weights("1x2")
+    if source_weights_1x2:
+        print(
+            f"Weighted consensus active — source LBs: "
+            + ", ".join(f"{s}={lb:.3f}" for s, lb in sorted(source_weights_1x2.items())),
+            file=sys.stderr,
+        )
+    else:
+        print(
+            "Weighted consensus: no certified weighted edge yet — using uniform weights.",
+            file=sys.stderr,
+        )
+
     if fallback:
         print("edge registry missing/empty -> fallback to certified "
               "thresholds: 1x2 2-way>=70 / 3-way>=65 + veto; OU/BTTS skipped",
@@ -711,7 +775,8 @@ def main():
     total_vetoes = 0
     total_upcoming = 0
     for day in days:
-        picks, vetoes, n_up = run_day(day, t1x2, ou_edge, btts_edge)
+        picks, vetoes, n_up = run_day(day, t1x2, ou_edge, btts_edge,
+                                      source_weights_1x2=source_weights_1x2)
         total_vetoes += vetoes
         total_upcoming += n_up
 

@@ -8,13 +8,13 @@ Architecture (CSV / DuckDB first)
 text
 
 sources (12 prediction adapters + 1 odds adapter, fetch_day -> list[dict])
-   ↓  scripts/local_backfill.py  /  scripts/capture_daily.py
+↓ scripts/local_backfill.py / scripts/capture_daily.py
 localdata/*_YYYY-MM.csv.gz
-   ↓  scripts/build_warehouse.py
-localdata/warehouse.duckdb   ← DuckDB views: forebet_settled, zulubet_settled, statarea_settled, predictz_settled, scoutingstats_settled, bettingclosed_settled, vitibet_settled, + raw: betclan, bzzoiro, freesupertips, afootballreport, windrawwin, consensus2, consensus3, consensus4
-   ↓  scripts/mine_consensus.py
+↓ scripts/build_warehouse.py
+localdata/warehouse.duckdb ← DuckDB views: forebet_settled, zulubet_settled, statarea_settled, predictz_settled, scoutingstats_settled, bettingclosed_settled, vitibet_settled, + raw: betclan, bzzoiro, freesupertips, afootballreport, windrawwin, consensus2, consensus3, consensus4
+↓ scripts/mine_consensus.py
 localdata/edges_consensus.json
-   ↓  scripts/picks_today.py
+↓ scripts/picks_today.py
 certified picks → stdout
 Supabase schema exists in supabase/migrations/ (0001-0006). Live ingest is CSV/DuckDB, while certified edges and daily bucketed picks are synced to the Postgres read model (edge_picks table) via scripts/sync_supabase.py. Do NOT re-introduce models.py / db.py / pipelines/ingest.py – that OO Supabase pipeline was deleted 2026-06-12 as stale/bloat (did not match the simple module sources).
 
@@ -26,20 +26,20 @@ ROI alongside hit rate, always
 Edge decay monitoring: HEALTHY / WATCH / DECAYING / DEAD
 Best odds inflate ROI ~2x vs real book – caveat always
 Sources — 12 adapters, all in src/edgefactory/sources/
-key	sport	markets	odds	history	type
-forebet	soccer	1x2, ou, btts, ht	✅ best	✅ 2024-01→now	backfillable
-zulubet	soccer	1x2	✅	✅ ~2023-12→now	backfillable
-statarea	soccer	1x2, ht_1x2, ou_1.5/2.5/3.5	—	✅ 2024+, archive to 2015	backfillable
-vitibet	soccer	1x2	—	✅ archive to 2018, probs capture-forward	backfillable
-scoutingstats	soccer	1x2, btts, ou	✅	capture-forward	live
-predictz	soccer	1x2 pick+score	✅	capture-forward (archive ~2026-01+)	live, needs curl_cffi
-windrawwin	soccer	1x2 pick+stake	—	capture-forward only	live, needs curl_cffi
-afootballreport	soccer	ou_1.5/2.5, btts	—	capture-forward, today only	live
-betclan	soccer	1x2	—	capture-forward, today/tomorrow	live, needs curl_cffi
-freesupertips	soccer	expert tips	✅	capture-forward	live
-bettingclosed	soccer	1x2, ou, btts	✅	✅ archive	backfillable
-bzzoiro	soccer	1x2, ou, btts, xG	—	API, ~490 upcoming, ~7 weeks ahead	capture-forward, needs BZZOIRO_TOKEN env
-bzzoiro_odds	soccer	1x2, ou_2.5, btts	✅ real books + Polymarket	capture-forward (today/tomorrow) / backfillable	live, reuses BZZOIRO_TOKEN
+key sport markets odds history type
+forebet soccer 1x2, ou, btts, ht ✅ best ✅ 2024-01→now backfillable
+zulubet soccer 1x2 ✅ ✅ ~2023-12→now backfillable
+statarea soccer 1x2, ht_1x2, ou_1.5/2.5/3.5 — ✅ 2024+, archive to 2015 backfillable
+vitibet soccer 1x2 — ✅ archive to 2018, probs capture-forward backfillable
+scoutingstats soccer 1x2, btts, ou ✅ capture-forward live
+predictz soccer 1x2 pick+score ✅ capture-forward (archive ~2026-01+) live, needs curl_cffi
+windrawwin soccer 1x2 pick+stake — capture-forward only live, needs curl_cffi
+afootballreport soccer ou_1.5/2.5, btts — capture-forward, today only live
+betclan soccer 1x2 — capture-forward, today/tomorrow live, needs curl_cffi
+freesupertips soccer expert tips ✅ capture-forward live
+bettingclosed soccer 1x2, ou, btts ✅ ✅ archive backfillable
+bzzoiro soccer 1x2, ou, btts, xG — API, ~490 upcoming, ~7 weeks ahead capture-forward, needs BZZOIRO_TOKEN env
+bzzoiro_odds soccer 1x2, ou_2.5, btts ✅ real books + Polymarket capture-forward (today/tomorrow) / backfillable live, reuses BZZOIRO_TOKEN
 All adapters: fetch_day(date: str) -> list[dict], COLUMNS = [...]. No classes, no normalize(). Simple.
 
 Key files
@@ -73,37 +73,38 @@ See localdata/edges_consensus.json after running mine_consensus.py
 How to run
 Bash
 
-pip install -r requirements.txt   # pandas numpy duckdb curl_cffi pytest supabase
+pip install -r requirements.txt # pandas numpy duckdb curl_cffi pytest supabase
 
-# one-time env setup: copy template, fill BZZOIRO_TOKEN. NOTHING auto-loads .env yet - export it:
+one-time env setup: copy template, fill BZZOIRO_TOKEN. NOTHING auto-loads .env yet - export it:
 cp .env.example .env
 set -a; source .env; set +a
 
-# backfill a source
+backfill a source
 PYTHONPATH=src python scripts/local_backfill.py forebet 2024-01-01 2026-06-12 --max-seconds 1500
 
-# live odds backfill
+live odds backfill
 PYTHONPATH=src python scripts/backfill_bzzoiro_odds.py --days 3 --workers 4
 
-# daily capture (all sources, 30-day lookback)
+daily capture (all sources, 30-day lookback)
 python scripts/capture_daily.py
 
-# build warehouse
+build warehouse
 python scripts/build_warehouse.py
 
-# mine edges
+mine edges
 python scripts/mine_consensus.py --split 2025-06-01
 
-# today's picks (with real-book odds enrichment)
+today's picks (with real-book odds enrichment)
 PYTHONPATH=src python scripts/picks_today.py
-# or specific day
+
+or specific day
 PYTHONPATH=src python scripts/picks_today.py 2026-06-13
 
-# sync daily bucketed picks & certified edges to Supabase
+sync daily bucketed picks & certified edges to Supabase
 PYTHONPATH=src python scripts/sync_supabase.py
 
-# tests
-PYTHONPATH=src python -m pytest tests/ -q   # 9 passed
+tests
+PYTHONPATH=src python -m pytest tests/ -q # 9 passed
 Supabase
 Migrations in supabase/migrations/:
 
@@ -150,6 +151,15 @@ Fixed deprecated datetime.utcnow() → datetime.now(datetime.timezone.utc) in as
 
 [DONE 2026-06-15] Phase 11: Supabase Synchronization Promotion — Shipped migration supabase/migrations/0006_edge_pick_context.sql and completed scripts/sync_supabase.py to push certified edges and fully bucketed daily picks (CERTIFIED_CLEAN, CAUTION, WATCHLIST, etc.) with comprehensive context metadata to Postgres read model.
 
+[DONE 2026-06-16] Phase 12: Weighted Consensus — Wilson LB vote weighting per source/market
+
+Instead of counting heads (N sources agree), each source now votes with weight = its walk-forward Wilson LB on that market. A source with LB=0.82 carries ~3× the vote of one with LB=0.52. Disagreement is automatically penalised: a split vote produces a low w_score even if the majority pick wins.
+
+src/edgefactory/assay.py: added weighted_consensus_score(votes, min_lb) → (winning_pick, w_score, is_unanimous). Pure maths, no DB dependency. Sources below min_lb floor excluded before voting.
+scripts/mine_consensus.py: added _source_wilson_lbs(con, split) — per-source, per-market Wilson LB from the training period only (walk-forward safe). Added _run_weighted_consensus() — mines weighted-1x2 w_score>=X rules at thresholds [0.55…0.80]; certified edges carry source_weights dict + weighted=True flag. Printed alongside existing head-count rules, tagged [W].
+scripts/picks_today.py: added load_source_weights(market) — reads certified weighted edge's source_weights from edges_consensus.json. eval_1x2 computes w_score per pick; picks sorted by (-w_score, -avg_p); w_score displayed in output. Falls back to uniform weights gracefully if no weighted edge certified yet.
+tests/test_assay.py: test_weighted_consensus_score — 8 assertions covering empty, floor filter, unanimity, 50/50 split, weight-majority, min_lb exclusion, three-way split.
+Tests: 10/10 passed (was 9/9). Commit: 814412a.
 Next steps (open priorities):
 
 Notifications: WhatsApp Business Cloud API (owner rejects Telegram) – swap in emit notifier
@@ -165,7 +175,7 @@ picks_today.py: fresh clone (empty localdata/) → purity missing → all ctx=UN
 No live odds movement tracking yet – odds_snapshots table in Supabase schema, not wired to CSV pipeline.
 GitHub Actions: .github/workflows/daily-capture.yml runs capture_daily.py – needs BZZOIRO_TOKEN, SUPABASE_URL, and SUPABASE_KEY secrets set.
 OPERATIONAL STANDARD — anti-drift handover protocol (MANDATORY for every repo change)
-Lesson learned 2026-06-12, the hard way: LLM executors corrupt byte-sensitive payloads routed through chat. Attempt 1: markdown mangled raw Python (indentation stripped, comments eaten, _x_ italicized). Attempt 2: a 13KB base64 blob was regenerated from the executor's own context and hallucinated mid-stream ({vetoes} became garbage, typos inside valid base64). Both were caught ONLY by SHA-256 gates. File-based handoff fixed it. Steps 3 and 4 shipped this way with zero drift. This protocol is now LAW for every commit:
+Lesson learned 2026-06-12, the hard way: LLM executors corrupt byte-sensitive payloads routed through chat. Attempt 1: markdown mangled raw Python (indentation stripped, comments eaten, x italicized). Attempt 2: a 13KB base64 blob was regenerated from the executor's own context and hallucinated mid-stream ({vetoes} became garbage, typos inside valid base64). Both were caught ONLY by SHA-256 gates. File-based handoff fixed it. Steps 3 and 4 shipped this way with zero drift. This protocol is now LAW for every commit:
 
 ROLES: BUILDER (planning agent: writes + tests the change in a sandbox against current GitHub HEAD, produces the handoff bundle) → EXECUTOR (has push credentials: copies files, verifies hashes, commits, pushes) → VERIFIER (independently re-clones GitHub and re-checks everything).
 
