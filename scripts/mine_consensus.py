@@ -881,6 +881,24 @@ def main():
     else:
         print("Weighted consensus skipped: insufficient per-source training data.")
 
+    def fmt_stats(s):
+        roi = f"{s['roi']:+.1%}" if s["roi"] is not None else "  n/a"
+        return f"{s['n']:>6d} {s['hit']:.1%} {s['wilson_lb']:.3f} {roi}"
+
+    phase_a_shadow = [
+        r for r in results
+        if ("predictz-confirms" in r.get("rule", "") or "windrawwin-confirms" in r.get("rule", ""))
+        and r["train"]["n"] < GATES.min_overlap_n
+    ]
+    if phase_a_shadow:
+        print("\nPhase A shadow confirmation levers — evaluated but excluded from registry")
+        print(f"Reason: train n < min_overlap_n ({GATES.min_overlap_n}); capture-forward sources have no pre-split training yet.")
+        shdr = f"{'rule':48s} {'TRAIN n/hit/LB/roi':>26s}   {'VALID n/hit/LB/roi':>26s}  status"
+        print(shdr)
+        print("-" * len(shdr))
+        for r in phase_a_shadow:
+            print(f"{r['rule']:48s} {fmt_stats(r['train']):>26s}   {fmt_stats(r['valid']):>26s}  shadow")
+
     hdr = f"{'rule':48s} {'TRAIN n/hit/LB/roi':>26s}   {'VALID n/hit/LB/roi':>26s}  status"
     print(hdr)
     print("-" * len(hdr))
@@ -893,13 +911,9 @@ def main():
     for r in results:
         t, v = r["train"], r["valid"]
 
-        def fmt(s):
-            roi = f"{s['roi']:+.1%}" if s["roi"] is not None else "  n/a"
-            return f"{s['n']:>6d} {s['hit']:.1%} {s['wilson_lb']:.3f} {roi}"
-
         flag = "🏆" if r["status"] == "certified" else "  "
         wtag = " [W]" if r.get("weighted") else ""
-        print(f"{r['rule']:48s} {fmt(t):>26s}   {fmt(v):>26s}  {flag} {r['status']}{wtag}")
+        print(f"{r['rule']:48s} {fmt_stats(t):>26s}   {fmt_stats(v):>26s}  {flag} {r['status']}{wtag}")
 
     OUT.parent.mkdir(exist_ok=True)
     OUT.write_text(json.dumps(
