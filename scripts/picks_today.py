@@ -393,19 +393,34 @@ def lookup_context(purity: dict, pick: dict) -> dict:
 
 def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
                 decay_verdict: str = "HEALTHY") -> str:
-    """Bucket pick (unchanged top-level logic)."""
+    """Bucket pick using mature evidence only as hard gates.
+
+    The purity registry inspection showed league/team contexts are still sparse
+    inside certified-rule subsets, while odds-band contexts have mature sample
+    sizes. Therefore:
+
+    - mature VETO anywhere still skips the pick;
+    - missing odds still goes to WATCHLIST_NO_ODDS;
+    - UNKNOWN odds_band remains WATCHLIST_UNKNOWN_CTX because odds maturity is
+      operationally important;
+    - UNKNOWN league/team means unrated context, not a veto, so it downgrades to
+      CAUTION instead of blocking the pick entirely.
+    """
     if edge_status == "benched":
         return BUCKET_SKIP_DEAD
     if decay_verdict in ("DEAD", "DECAYING"):
         return BUCKET_SKIP_DEAD
-    if "VETO" in (ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band")):
+
+    vals = [ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band")]
+    if "VETO" in vals:
         return BUCKET_SKIP_VETO
     if pick.get("odds") is None:
         return BUCKET_WL_ODDS
-    if ctx.get("league") == "UNKNOWN":
+    if ctx.get("odds_band") == "UNKNOWN":
         return BUCKET_WL_CTX
-    vals = [ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band")]
     if "CAUTION" in vals:
+        return BUCKET_CAUTION
+    if "UNKNOWN" in (ctx.get("league"), ctx.get("team_h"), ctx.get("team_a")):
         return BUCKET_CAUTION
     return BUCKET_CERTIFIED
 
