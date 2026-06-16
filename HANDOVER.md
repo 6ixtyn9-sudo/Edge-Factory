@@ -289,3 +289,55 @@ DATA JOBS (backfill/capture) are the ONE exception to the bundle — only becaus
 Run order (nightly): capture_daily → build_warehouse → mine_consensus → decay_monitor → assay_purity → picks_today → sync_supabase. decay_monitor needs warehouse + registry; with neither it reports and exits 0 (safe on fresh clone).
 
 Last updated: 2026-06-16
+
+<!-- EDGE_FACTORY_PHASE_A_SOURCE_CONFIRMATION_2026_06_16 -->
+
+[DONE 2026-06-16] Phase A: Unused soccer source confirmation levers
+
+Scope: additive miner scans only; base certified rules and operational thresholds remain unchanged.
+
+Implemented:
+
+- `scripts/mine_consensus.py`
+  - Adds `create_phase_a_confirmation_views()` and `run_phase_a_confirmation_levers()`.
+  - Mines `2way+predictz-confirms avg_p>=X` for X in 60/65/70/75.
+  - Mines `3way+predictz-confirms avg_p>=X` for X in 60/65/70.
+  - Mines `2way+windrawwin-confirms avg_p>=X` for X in 60/65/70/75.
+  - Mines `3way+windrawwin-confirms avg_p>=X` for X in 60/65/70.
+  - These are walk-forward candidates/certifications using the same Wilson/ROI gates.
+  - They are confirmation levers only and must not displace canonical picks_today thresholds.
+
+- `scripts/decay_monitor.py` and `scripts/assay_purity.py`
+  - Recreate the same Phase A TEMP views (`consensus2_predictz_confirm`, `consensus3_predictz_confirm`, `consensus2_windrawwin_confirm`, `consensus3_windrawwin_confirm`) so any certified Phase A edge can be audited and assayed. This preserves L1.
+
+- `scripts/picks_today.py`
+  - Marks `predictz-confirms`, `windrawwin-confirms`, and `freesupertips-confirms` as qualified analysis rules so they cannot replace base operational thresholds.
+
+Not done intentionally:
+
+- `freesupertips` confirmation is not mined yet because current local volume is tiny and tip text needs a safer 1x2 mapping layer.
+- `afootballreport` confirmation is not mined yet because it is OU/BTTS-specific and OU/BTTS edges remain unprofitable/not certified.
+
+Future plans:
+
+1. Phase B — odds movement / CLV
+   - Persist periodic real-book odds snapshots in CSV/DuckDB.
+   - Track pick-time odds, closing odds, movement direction, and CLV.
+   - Add CLV as an audit dimension before using it as a miner feature.
+
+2. Phase C — tournament and league classification
+   - Use `entity_registry.json` plus rules to tag domestic league, cup, friendly, international, youth/reserve/women.
+   - Mine/veto these categories separately; friendlies/cups should not silently mix with league fixtures.
+
+3. Phase D — price-sensitive operational rules
+   - Promote odds-band verdicts to explicit rule constraints.
+   - Keep mature odds-band VETO as hard skip; treat sparse league/team contexts as caution only.
+
+4. Phase E — ML as a validated source
+   - Features: multi-source probabilities, agreement count, min_p, avg_p, spread, odds tier, odds movement, source confirmations, entity/tournament tags.
+   - The model must be exported as another source and validated by the same miner/decay process. No bypass.
+
+5. New sports
+   - Do not add another sport yet. Soccer still has unused source levers, odds movement, tournament classification, and ML-source validation to exploit first.
+   - Revisit new sports after CLV and confirmation levers have been monitored for at least one month.
+
