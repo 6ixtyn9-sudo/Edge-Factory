@@ -1,12 +1,11 @@
 #!/usr/bin/env python3
-"""
-Retrospective Results Backfill Helper.
+"""Retrospective results backfill helper.
 
-Backfills missing final scores into sources that store hs/gs, using settled donor
-sources already captured in localdata/*.csv.gz.
+Fills missing final scores (hs/gs) in score-capable source cache files using
+settled donor sources already captured in localdata/*.csv.gz.
 
-Default mode is D30 so nightly.py can safely run it after capture_daily and
-before build_warehouse:
+Default mode is D30 so daily.py can run it after capture_daily and before
+build_warehouse:
 
     python3 scripts/backfill_results.py --days 30
 
@@ -14,6 +13,9 @@ Explicit date windows are still supported:
 
     python3 scripts/backfill_results.py 2026-06-01 2026-06-16
     python3 scripts/backfill_results.py --start 2026-06-01 --end 2026-06-16
+
+This script is intentionally idempotent: it only writes rows where hs/gs are
+missing and a donor result exists.
 """
 
 from __future__ import annotations
@@ -21,15 +23,16 @@ from __future__ import annotations
 import argparse
 import glob
 import sys
+from collections import defaultdict
 from datetime import date, timedelta
 from pathlib import Path
+from typing import NamedTuple
 
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCALDATA = ROOT / "localdata"
 
-# Sources that can have final scores.
 TARGET_SOURCES_WITH_RESULTS = [
     "zulubet",
     "statarea",
@@ -46,11 +49,22 @@ DONOR_SOURCES = [
 ]
 
 
+class BackfillResult(NamedTuple):
+    updated_rows: int
+    updated_files: int
+    file_counts: dict[str, int]
+
+
 def _norm_key(series: pd.Series) -> pd.Series:
     return series.fillna("").astype(str).str.lower().str.replace(r"[^a-z0-9]", "", regex=True)
 
 
-def load_donor_results() -> pd.DataFrame:
+def _normalise_date(series: pd.Series) -> pd.Series:
+    return pd.to_datetime(series, errors="coerce").dt.date.astype(str)
+
+
+def load_donor_results(start: str, end: str, verbose: bool = False) -> pd.DataFrame:
+    """Load settled donor results, filtered to the requested window."""
     all_results: list[pd.DataFrame] = []
 
     for source in DONOR_SOURCES:
@@ -59,38 +73,40 @@ def load_donor_results() -> pd.DataFrame:
         if not files:
             continue
 
-        dfs: list[pd.DataFrame] = []
         for f in files:
+            path = Path(f)
             try:
-                dfs.append(pd.read_csv(f, dtype=str))
+                df = pd.read_csv(path, dtype=str)
             except Exception as exc:  # noqa: BLE001 - one bad cache file should not kill all donors
-                print(f"  WARN: could not read donor file {Path(f).name}: {exc}")
+                if verbose:
+                    print(f"  WARN: could not read donor file {path.name}: {exc}")
+                continue
 
-        if not dfs:
-            continue
+            required = {"date", "home", "away", "hs", "gs"}
+            if not required.issubset(df.columns):
+                continue
 
-        df = pd.concat(dfs, ignore_index=True)
-        required = {"date", "home", "away", "hs", "gs"}
-        if not required.issubset(df.columns):
-            continue
+            df = df.copy()
+            df["date"] = _normalise_date(df["date"])
+            df = df[(df["date"] >= start) & (df["date"] <= end)].copy()
+            if df.empty:
+                continue
 
-        df = df[df["hs"].notna() & df["gs"].notna()].copy()
-        df = df[(df["hs"].astype(str) != "") & (df["gs"].astype(str) != "")].copy()
-        if df.empty:
-            continue
+            df = df[df["hs"].notna() & df["gs"].notna()].copy()
+            df = df[(df["hs"].astype(str) != "") & (df["gs"].astype(str) != "")].copy()
+            if df.empty:
+                continue
 
-        df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date.astype(str)
-        df = df[df["date"].notna() & (df["date"] != "NaT")].copy()
-        df["hkey"] = _norm_key(df["home"])
-        df["akey"] = _norm_key(df["away"])
+            df["hkey"] = _norm_key(df["home"])
+            df["akey"] = _norm_key(df["away"])
 
-        cols = ["date", "hkey", "akey", "hs", "gs"]
-        if "ht_hs" in df.columns and "ht_gs" in df.columns:
-            cols += ["ht_hs", "ht_gs"]
-        all_results.append(df[cols])
+            cols = ["date", "hkey", "akey", "hs", "gs"]
+            if "ht_hs" in df.columns and "ht_gs" in df.columns:
+                cols += ["ht_hs", "ht_gs"]
+            all_results.append(df[cols])
 
     if not all_results:
-        print("No donor data found.")
+        print("No donor data found for requested window.")
         sys.exit(1)
 
     combined = pd.concat(all_results, ignore_index=True)
@@ -98,36 +114,43 @@ def load_donor_results() -> pd.DataFrame:
     return combined
 
 
-def backfill_source(source_name: str, donor_df: pd.DataFrame, start: str, end: str) -> int:
+def backfill_source(source_name: str, donor_df: pd.DataFrame, start: str, end: str) -> BackfillResult:
     files = sorted(glob.glob(str(LOCALDATA / f"{source_name}_*.csv.gz")))
     if not files:
-        return 0
+        return BackfillResult(0, 0, {})
 
     updated_rows = 0
+    file_counts: dict[str, int] = {}
     donor_has_ht_cols = "ht_hs" in donor_df.columns and "ht_gs" in donor_df.columns
 
     for f in files:
-        df = pd.read_csv(f, dtype=str)
+        path = Path(f)
+        df = pd.read_csv(path, dtype=str)
         required = {"date", "home", "away", "hs", "gs"}
         if not required.issubset(df.columns):
             continue
 
-        df["date"] = pd.to_datetime(df["date"], errors="coerce").dt.date.astype(str)
-        mask = (df["date"] >= start) & (df["date"] <= end)
-        subset = df.loc[mask].copy()
-        if subset.empty:
+        df = df.copy()
+        df["date"] = _normalise_date(df["date"])
+        in_window = (df["date"] >= start) & (df["date"] <= end)
+        if not in_window.any():
             continue
 
-        subset["hkey"] = _norm_key(subset["home"])
-        subset["akey"] = _norm_key(subset["away"])
-        missing = subset[
-            subset["hs"].isna()
-            | (subset["hs"].astype(str) == "")
-            | subset["gs"].isna()
-            | (subset["gs"].astype(str) == "")
+        missing = df.loc[
+            in_window
+            & (
+                df["hs"].isna()
+                | (df["hs"].astype(str) == "")
+                | df["gs"].isna()
+                | (df["gs"].astype(str) == "")
+            )
         ].copy()
         if missing.empty:
             continue
+
+        missing = missing.reset_index(names="_row_index")
+        missing["hkey"] = _norm_key(missing["home"])
+        missing["akey"] = _norm_key(missing["away"])
 
         merged = missing.merge(
             donor_df,
@@ -146,47 +169,28 @@ def backfill_source(source_name: str, donor_df: pd.DataFrame, start: str, end: s
         merged.loc[fill_mask, "gs"] = merged.loc[fill_mask, "gs_donor"]
 
         update_cols = ["hs", "gs"]
-        if donor_has_ht_cols and "ht_hs" in merged.columns and "ht_hs_donor" in merged.columns:
+        if (
+            donor_has_ht_cols
+            and "ht_hs" in df.columns
+            and "ht_gs" in df.columns
+            and "ht_hs_donor" in merged.columns
+            and "ht_gs_donor" in merged.columns
+        ):
             ht_mask = fill_mask & merged["ht_hs_donor"].notna()
             if ht_mask.any():
                 merged.loc[ht_mask, "ht_hs"] = merged.loc[ht_mask, "ht_hs_donor"]
                 merged.loc[ht_mask, "ht_gs"] = merged.loc[ht_mask, "ht_gs_donor"]
-            if "ht_hs" in df.columns and "ht_gs" in df.columns:
-                update_cols += ["ht_hs", "ht_gs"]
+            update_cols += ["ht_hs", "ht_gs"]
 
-        # merged keeps the original df index from missing as its index only if merge
-        # preserves it as a column; capture explicitly before merge via reset_index.
-        # For the common path above, missing's index is not reliable after merge.
-        missing_with_index = missing.reset_index(names="_row_index")
-        merged_with_index = missing_with_index.merge(
-            donor_df,
-            on=["date", "hkey", "akey"],
-            how="left",
-            suffixes=("", "_donor"),
-        )
-        fill_mask2 = merged_with_index["hs_donor"].notna() & (
-            merged_with_index["hs"].isna() | (merged_with_index["hs"].astype(str) == "")
-        )
-        if not fill_mask2.any():
-            continue
+        rows = merged.loc[fill_mask, "_row_index"]
+        df.loc[rows, update_cols] = merged.loc[fill_mask, update_cols].values
+        df.to_csv(path, index=False, compression="gzip")
 
-        merged_with_index.loc[fill_mask2, "hs"] = merged_with_index.loc[fill_mask2, "hs_donor"]
-        merged_with_index.loc[fill_mask2, "gs"] = merged_with_index.loc[fill_mask2, "gs_donor"]
-        if donor_has_ht_cols and "ht_hs" in merged_with_index.columns and "ht_hs_donor" in merged_with_index.columns:
-            ht_mask2 = fill_mask2 & merged_with_index["ht_hs_donor"].notna()
-            if ht_mask2.any():
-                merged_with_index.loc[ht_mask2, "ht_hs"] = merged_with_index.loc[ht_mask2, "ht_hs_donor"]
-                merged_with_index.loc[ht_mask2, "ht_gs"] = merged_with_index.loc[ht_mask2, "ht_gs_donor"]
-
-        rows = merged_with_index.loc[fill_mask2, "_row_index"]
-        df.loc[rows, update_cols] = merged_with_index.loc[fill_mask2, update_cols].values
-        df.to_csv(f, index=False, compression="gzip")
-
-        count = int(fill_mask2.sum())
+        count = int(fill_mask.sum())
         updated_rows += count
-        print(f"  {source_name}: updated {count} rows in {Path(f).name}")
+        file_counts[path.name] = count
 
-    return updated_rows
+    return BackfillResult(updated_rows, len(file_counts), file_counts)
 
 
 def resolve_window(args: argparse.Namespace) -> tuple[str, str]:
@@ -215,6 +219,11 @@ def main() -> None:
         default=30,
         help="Backfill window in days if start/end not given (default: 30)",
     )
+    parser.add_argument(
+        "--verbose",
+        action="store_true",
+        help="Print per-file update details. Default output is compact.",
+    )
     args = parser.parse_args()
 
     start, end = resolve_window(args)
@@ -222,15 +231,34 @@ def main() -> None:
     print(f"Multi-source retrospective results backfill: {start} → {end}")
     print("=" * 65)
 
-    donor_df = load_donor_results()
-    print(f"Loaded {len(donor_df)} unique settled matches from all donors.\n")
+    donor_df = load_donor_results(start, end, verbose=args.verbose)
+    print(f"Loaded {len(donor_df)} unique settled donor matches in window.\n")
 
-    total = 0
+    total_rows = 0
+    total_files = 0
+    by_source: dict[str, int] = {}
+    verbose_file_counts: dict[str, dict[str, int]] = defaultdict(dict)
+
     for source in TARGET_SOURCES_WITH_RESULTS:
-        total += backfill_source(source, donor_df, start, end)
+        result = backfill_source(source, donor_df, start, end)
+        if result.updated_rows:
+            by_source[source] = result.updated_rows
+            verbose_file_counts[source] = result.file_counts
+        total_rows += result.updated_rows
+        total_files += result.updated_files
 
-    print(f"\nTotal rows updated: {total}")
-    print("Run: python3 scripts/build_warehouse.py && PYTHONPATH=src python3 scripts/assay_purity.py")
+    if by_source:
+        print("Updated rows by source:")
+        for source, count in by_source.items():
+            print(f"  {source}: {count}")
+            if args.verbose:
+                for filename, file_count in verbose_file_counts[source].items():
+                    print(f"    {filename}: {file_count}")
+    else:
+        print("No missing scores filled; cache already settled for this window.")
+
+    print(f"\nTotal rows updated: {total_rows} across {total_files} file(s)")
+    print("Next: python3 scripts/build_warehouse.py")
 
 
 if __name__ == "__main__":
