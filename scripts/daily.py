@@ -17,7 +17,7 @@ Steps (always in this order):
   5. decay_monitor     — 60-day health audit, auto-bench circuit breaker
   6. assay_purity      — context verdicts → purity_registry.json
   7. picks_today       — certified picks for target date → stdout + picks_today.json
-  8. future planner    — inline N-day calendar export, reusing picks_today.py
+  8. future planner    — inline N-day per-date reports, reusing picks_today.py
   9. sync_supabase     — push target-date picks + certified edges to Postgres
 
 --picks-only skips steps 1–3 (useful when data is already fresh).
@@ -29,7 +29,6 @@ kept inline here to avoid another pipeline script drifting from picks_today.py.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import subprocess
 import sys
@@ -222,64 +221,16 @@ def _pick_date(pick: dict[str, Any], fallback: str) -> str:
 
 
 def write_future_outputs(all_picks: list[dict[str, Any]], days: int) -> None:
+    """Write the aggregate machine-readable future-picks file.
+
+    Human-readable output stays date-native: localdata/picks_YYYY-MM-DD.txt.
+    No calendar-style CSV is produced; it was redundant with the per-date reports.
+    """
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     json_file = REPORT_DIR / f"picks_next_{days}days.json"
-    csv_file = REPORT_DIR / "picks_calendar.csv"
-
     json_file.write_text(json.dumps(all_picks, indent=2, sort_keys=True))
-
-    fieldnames = [
-        "date",
-        "bucket",
-        "match",
-        "home",
-        "away",
-        "pick",
-        "avg_p",
-        "w_score",
-        "odds",
-        "bookmaker",
-        "odds_source",
-        "rule",
-        "display_rule",
-        "market_type",
-        "odds_tier",
-        "league_verdict",
-        "team_verdict",
-        "odds_band_verdict",
-    ]
-
-    with csv_file.open("w", newline="") as fh:
-        writer = csv.DictWriter(fh, fieldnames=fieldnames)
-        writer.writeheader()
-        for p in all_picks:
-            ctx = p.get("ctx", {}) or {}
-            writer.writerow(
-                {
-                    "date": _pick_date(p, ""),
-                    "bucket": p.get("bucket"),
-                    "match": p.get("match"),
-                    "home": p.get("home"),
-                    "away": p.get("away"),
-                    "pick": p.get("pick"),
-                    "avg_p": p.get("avg_p"),
-                    "w_score": p.get("w_score"),
-                    "odds": p.get("odds"),
-                    "bookmaker": p.get("bookmaker"),
-                    "odds_source": p.get("odds_source"),
-                    "rule": p.get("rule"),
-                    "display_rule": p.get("display_rule"),
-                    "market_type": p.get("market_type"),
-                    "odds_tier": p.get("odds_tier"),
-                    "league_verdict": ctx.get("league"),
-                    "team_verdict": ctx.get("team"),
-                    "odds_band_verdict": ctx.get("odds_band"),
-                }
-            )
-
     print(f"Future planner wrote: {json_file}")
-    print(f"Future calendar wrote: {csv_file}")
 
 
 def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, Any]]) -> None:
@@ -293,7 +244,7 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
         print("future_days <= 0 — skipping future planner")
         return
 
-    print(f"\n>>> future planner ({days}-day calendar)")
+    print(f"\n>>> future planner ({days}-day reports)")
 
     start = datetime.strptime(start_date, "%Y-%m-%d").date()
     all_picks: list[dict[str, Any]] = tag_picks(target_picks, start_date)
@@ -314,6 +265,7 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
         try:
             day_picks = load_picks_file()
             all_picks.extend(tag_picks(day_picks, target))
+            generate_daily_report(target)
             print(f"  {target}: added {len(day_picks)} rows")
         except Exception as exc:  # noqa: BLE001 - keep planner robust across sparse future days
             print(f"  {target}: could not read picks: {exc}")
@@ -355,6 +307,12 @@ def main() -> None:
         default=2,
         help="Days ahead for inline future planner (default: 2).",
     )
+    ap.add_argument(
+        "--backfill-days",
+        type=int,
+        default=30,
+        help="Result backfill window for full runs (default: 30).",
+    )
     args = ap.parse_args()
 
     target_date = args.date or date.today().isoformat()
@@ -362,12 +320,16 @@ def main() -> None:
     print("=== Edge Factory Daily Pipeline ===")
     print(f"    target date : {target_date}")
     print(f"    future_days : {args.future_days}")
+    print(f"    backfill_days: {args.backfill_days if not args.picks_only else 'skipped'}")
     print(f"    mode        : {'picks-only (skip capture/backfill/build)' if args.picks_only else 'full run'}")
     print(f"    started at  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 
     if not args.picks_only:
         run("python3 scripts/capture_daily.py --skip-build", "capture_daily (D30 lookback)")
-        run("python3 scripts/backfill_results.py --days 30", "backfill_results (D30)")
+        run(
+            f"python3 scripts/backfill_results.py --days {args.backfill_days}",
+            f"backfill_results (D{args.backfill_days})",
+        )
         run("python3 scripts/build_warehouse.py", "build_warehouse")
 
     run("python3 scripts/mine_consensus.py", "mine_consensus")
