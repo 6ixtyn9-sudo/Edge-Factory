@@ -437,7 +437,9 @@ def main():
     if n_benched:
         print("Benched edges are OUT of picks_today immediately "
               "(it only reads status=='certified').")
-        print("Next mine_consensus.py run re-validates on full data.")
+        print("Next mine_consensus.py run re-certifies from scratch on the full "
+              "walk-forward history — benching is a 60-day-window circuit breaker, "
+              "not a permanent verdict.")
 
     if args.dry_run:
         print("--dry-run: registry NOT updated.")

@@ -616,12 +616,18 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
         if avg_p < thr:
             continue
         fb = data.get("forebet", {}).get(k) or {}
+        zb = data.get("zulubet", {}).get(k) or {}
         bz = data.get("bzzoiro", {}).get(k) or {}
         vb = data.get("vitibet", {}).get(k) or {}
         anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
         sel = sels[0]
-        odds = _f({"home": fb.get("odd1"), "draw": fb.get("oddx"),
-                   "away": fb.get("odd2")}.get(sel)) if fb else None
+        # Cascade: forebet best-odds → zulubet odds → None (bzzoiro_odds enriched later)
+        _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
+        _col = _odds_map[sel]
+        odds = _f(fb.get(_col)) or _f(zb.get(_col)) or None
+        odds_src = ("forebet_best" if _f(fb.get(_col)) is not None
+                    else "zulubet" if _f(zb.get(_col)) is not None
+                    else None)
         home = anchor.get("home")
         away = anchor.get("away")
         picks.append({
@@ -633,7 +639,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             "avg_p": round(avg_p, 1),
             "w_score": round(w_score, 4),   # weighted agreement score (0–1)
             "odds": odds,
-            "odds_source": "forebet_best" if odds is not None else None,
+            "odds_source": odds_src,
             "bookmaker": None,
             "rule": edge["rule"],
             "edge_rule": edge["rule"],
