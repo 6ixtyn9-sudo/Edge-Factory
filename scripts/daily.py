@@ -13,12 +13,13 @@ Steps (always in this order):
   1. capture_daily     — fetch latest data from all sources (D30 lookback)
   2. backfill_results  — fill missing hs/gs from donor sources (D30, auto)
   3. build_warehouse   — materialise CSVs into warehouse.duckdb
-  4. mine_consensus    — walk-forward edge certification → edges_consensus.json
-  5. decay_monitor     — 60-day health audit, auto-bench circuit breaker
-  6. assay_purity      — context verdicts → purity_registry.json
-  7. picks_today       — certified picks for target date → stdout + picks_today.json
-  8. future planner    — inline N-day per-date reports, reusing picks_today.py
-  9. sync_supabase     — push target-date picks + certified edges to Postgres
+  4. build_entities    — learn canonical league/team aliases → entity_registry.json
+  5. mine_consensus    — walk-forward edge certification → edges_consensus.json
+  6. decay_monitor     — 60-day health audit, auto-bench circuit breaker
+  7. assay_purity      — context verdicts → purity_registry.json
+  8. picks_today       — certified picks for target date → stdout + picks_today.json
+  9. future planner    — inline N-day per-date reports, reusing picks_today.py
+ 10. sync_supabase     — push target-date picks + certified edges to Postgres
 
 --picks-only skips steps 1–3 (useful when data is already fresh).
 
@@ -332,6 +333,7 @@ def main() -> None:
         )
         run("python3 scripts/build_warehouse.py", "build_warehouse")
 
+    run("PYTHONPATH=src python3 scripts/build_entity_registry.py", "build_entity_registry")
     run("python3 scripts/mine_consensus.py", "mine_consensus")
     run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
     run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
