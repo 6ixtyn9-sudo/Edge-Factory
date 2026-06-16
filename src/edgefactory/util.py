@@ -53,13 +53,13 @@ def compact_key(text: object) -> str:
     return re.sub(r"[^a-z0-9]", "", fold_ascii(text))
 
 
-def norm_team(name: str, width: int = 12) -> str:
+def norm_team(name: str, width: int = 9) -> str:
     """Normalize a team name to a cross-source join/context key.
 
     The previous 9-char key stripped accents before folding, so names like
     América/Nõmme lost meaningful letters. This version transliterates first,
     strips source-noise tokens, keeps alphanumerics, applies common aliases, and
-    uses a slightly wider key to reduce false joins while preserving fuzzy joins.
+    keeps the historical 9-character width so certified miner joins do not drift.
     """
     s = fold_ascii(name)
     s = _NOISE.sub(" ", s)
@@ -90,7 +90,7 @@ def _sql_ascii_fold(expr: str) -> str:
 
 
 # Same team normalization expressed as a DuckDB SQL expression on a column name.
-def norm_team_sql(col: str, width: int = 12) -> str:
+def norm_team_sql(col: str, width: int = 9) -> str:
     noise = (
         r"\b(fc|cf|sc|afc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting|"
         r"fk|sk|if|bk|nk|kk|sv|vfl|vfb|ssc|asd|us|ud|sd|cs|as|ac|"
