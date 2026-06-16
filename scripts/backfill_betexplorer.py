@@ -22,12 +22,13 @@ Supabase. It is resumable by event_id and safe to stop/restart.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import csv
 import gzip
 import html
 import json
 import math
-import os
+import random
 import re
 import sys
 import time
@@ -37,7 +38,6 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from typing import Iterable
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -82,7 +82,33 @@ def odds_path(month: str) -> Path:
     return LOCALDATA / f"betexplorer_odds_{month}.csv.gz"
 
 
-def fetch(url: str, *, referer: str | None = None, retries: int = 4, sleep: float = 1.0) -> str:
+def _retry_after_seconds(exc: urllib.error.HTTPError) -> float | None:
+    value = exc.headers.get("Retry-After") if exc.headers else None
+    if not value:
+        return None
+    try:
+        return max(0.0, float(value))
+    except ValueError:
+        return None
+
+
+def _nap(base: float, jitter: float) -> None:
+    delay = max(0.0, base)
+    if jitter > 0:
+        delay += random.uniform(0.0, jitter)
+    if delay:
+        time.sleep(delay)
+
+
+def fetch(
+    url: str,
+    *,
+    referer: str | None = None,
+    retries: int = 5,
+    sleep: float = 1.0,
+    jitter: float = 0.0,
+) -> str:
+    """Fetch URL with 429 Retry-After support and jittered backoff."""
     headers = {"User-Agent": UA, "Accept-Language": "en-US,en;q=0.9"}
     if referer:
         headers["Referer"] = referer
@@ -95,13 +121,15 @@ def fetch(url: str, *, referer: str | None = None, retries: int = 4, sleep: floa
         except urllib.error.HTTPError as exc:
             last = exc
             if exc.code == 429:
-                time.sleep(max(5.0, sleep * (attempt + 2) * 3))
+                retry_after = _retry_after_seconds(exc)
+                wait = retry_after if retry_after is not None else max(5.0, sleep * (attempt + 2) * 3)
+                _nap(wait, jitter)
             elif attempt < retries - 1:
-                time.sleep(sleep * (attempt + 1))
+                _nap(sleep * (attempt + 1), jitter)
         except Exception as exc:  # noqa: BLE001 - data job should retry generic network errors
             last = exc
             if attempt < retries - 1:
-                time.sleep(sleep * (attempt + 1))
+                _nap(sleep * (attempt + 1), jitter)
     raise RuntimeError(f"fetch failed {url}: {last}")
 
 
@@ -137,12 +165,6 @@ def read_gzip_csv(path: Path) -> list[dict]:
 
 def write_gzip_csv(path: Path, rows: list[dict], fieldnames: list[str]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    with NamedTemporaryFile("wt", delete=False, newline="", dir=str(path.parent), suffix=".tmp") as tmp:
-        tmp_name = tmp.name
-        with gzip.GzipFile(fileobj=tmp.buffer, mode="wb") as gz:  # type: ignore[attr-defined]
-            pass
-    # NamedTemporaryFile text+gzip is awkward; write direct temp path below.
-    os.unlink(tmp_name)
     tmp_path = path.with_suffix(path.suffix + ".tmp")
     with gzip.open(tmp_path, "wt", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames, extrasaction="ignore")
@@ -221,7 +243,7 @@ def backfill_results(start: str, end: str, *, sleep: float = 0.2) -> FetchStats:
     for day in date_range(start, end):
         y, m, d = day.split("-")
         url = f"{BASE}/football/results/?year={y}&month={m}&day={d}"
-        page = fetch(url, sleep=sleep)
+        page = fetch(url, sleep=sleep, jitter=0.2)
         rows = parse_results_page(page)
         for row in rows:
             by_month[month_key(row["date"])].append(row)
@@ -275,14 +297,15 @@ def parse_1x2_odds_html(odds_html: str) -> dict:
     }
 
 
-def fetch_odds_for_result(row: dict, *, sleep: float) -> dict:
+def fetch_odds_for_result(row: dict, *, sleep: float, jitter: float) -> dict:
     match_url = str(row["match_url"])
     event_id = str(row["event_id"])
-    match_html = fetch(match_url, referer=BASE, sleep=sleep)
+    _nap(sleep, jitter)
+    match_html = fetch(match_url, referer=BASE, sleep=sleep, jitter=jitter)
     page_param = parse_page_param(match_html)
     odds_url = f"{BASE}/match-odds/{event_id}/{page_param}/1x2/bestOdds/?lang=en"
-    time.sleep(sleep)
-    data = json.loads(fetch(odds_url, referer=match_url, sleep=sleep))
+    _nap(sleep, jitter)
+    data = json.loads(fetch(odds_url, referer=match_url, sleep=sleep, jitter=jitter))
     odds = parse_1x2_odds_html(data.get("odds", ""))
     return {
         "date": row["date"],
@@ -324,38 +347,155 @@ def flush_odds(buffer: list[dict]) -> int:
     return written
 
 
-def backfill_odds(start: str, end: str, *, sleep: float, max_seconds: int, limit: int, flush_every: int) -> FetchStats:
+def default_state_path(start: str, end: str) -> Path:
+    return LOCALDATA / f"betexplorer_odds_state_{start}_{end}.json"
+
+
+def write_state(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
+    tmp.replace(path)
+
+
+def backfill_odds(
+    start: str,
+    end: str,
+    *,
+    sleep: float,
+    jitter: float,
+    max_seconds: int,
+    limit: int,
+    flush_every: int,
+    workers: int,
+    state_file: Path | None,
+) -> FetchStats:
+    """Backfill odds concurrently, resumable by CSV event_id and JSON state file."""
     stats = FetchStats()
     rows = load_result_rows(start, end)
     if not rows:
         print("No cached BetExplorer results rows. Run: backfill_betexplorer.py results START END")
         return stats
+
     existing = load_existing_odds_ids(start, end)
     pending = [r for r in rows if str(r.get("event_id")) not in existing]
     if limit:
         pending = pending[:limit]
-    print(f"odds pending: {len(pending)} / results rows={len(rows)} existing_odds={len(existing)}")
+    state_path = state_file or default_state_path(start, end)
+    workers = max(1, int(workers))
+    print(
+        f"odds pending: {len(pending)} / results rows={len(rows)} existing_odds={len(existing)} "
+        f"workers={workers} sleep={sleep} jitter={jitter}"
+    )
+
     started = time.monotonic()
     buffer: list[dict] = []
-    for i, row in enumerate(pending, 1):
-        if max_seconds and time.monotonic() - started >= max_seconds:
-            print(f"max_seconds reached after {i-1} attempts")
-            break
-        try:
-            buffer.append(fetch_odds_for_result(row, sleep=sleep))
-            stats.fetched += 1
-        except Exception as exc:  # noqa: BLE001 - resumable job continues
-            stats.failed += 1
-            if stats.failed <= 20:
-                print(f"  WARN {row.get('date')} {row.get('home')} vs {row.get('away')}: {exc}", file=sys.stderr)
-        if len(buffer) >= flush_every:
+    attempted = 0
+    submitted = 0
+    completed = 0
+    failures: list[dict] = []
+
+    def state_payload() -> dict:
+        elapsed = round(time.monotonic() - started, 1)
+        return {
+            "stage": "odds",
+            "start": start,
+            "end": end,
+            "updated_at": now_iso(),
+            "elapsed_seconds": elapsed,
+            "workers": workers,
+            "sleep": sleep,
+            "jitter": jitter,
+            "results_rows": len(rows),
+            "existing_odds_at_start": len(existing),
+            "pending_at_start": len(pending),
+            "submitted": submitted,
+            "completed": completed,
+            "fetched": stats.fetched,
+            "failed": stats.failed,
+            "written_new": stats.written,
+            "remaining_estimate": max(0, len(pending) - completed),
+            "recent_failures": failures[-20:],
+        }
+
+    def flush_if_needed(force: bool = False) -> None:
+        if buffer and (force or len(buffer) >= flush_every):
             stats.written += flush_odds(buffer)
             buffer.clear()
-        if i % 25 == 0:
-            print(f"  odds attempts {i}/{len(pending)} fetched={stats.fetched} failed={stats.failed}")
-        time.sleep(sleep)
-    if buffer:
-        stats.written += flush_odds(buffer)
+            write_state(state_path, state_payload())
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
+        in_flight: dict[concurrent.futures.Future, dict] = {}
+        iterator = iter(pending)
+
+        def submit_more() -> None:
+            nonlocal submitted
+            while len(in_flight) < workers * 2:
+                if max_seconds and time.monotonic() - started >= max_seconds:
+                    return
+                try:
+                    row = next(iterator)
+                except StopIteration:
+                    return
+                fut = ex.submit(fetch_odds_for_result, row, sleep=sleep, jitter=jitter)
+                in_flight[fut] = row
+                submitted += 1
+
+        submit_more()
+        while in_flight:
+            if max_seconds and time.monotonic() - started >= max_seconds:
+                print("max_seconds reached; waiting for in-flight requests to finish")
+                # Stop submitting new work; in-flight futures still complete.
+            done, _ = concurrent.futures.wait(
+                in_flight,
+                timeout=1.0,
+                return_when=concurrent.futures.FIRST_COMPLETED,
+            )
+            if not done:
+                if max_seconds and time.monotonic() - started >= max_seconds:
+                    break
+                continue
+            for fut in done:
+                row = in_flight.pop(fut)
+                completed += 1
+                attempted += 1
+                try:
+                    buffer.append(fut.result())
+                    stats.fetched += 1
+                except Exception as exc:  # noqa: BLE001 - resumable job continues
+                    stats.failed += 1
+                    failures.append({
+                        "event_id": row.get("event_id"),
+                        "date": row.get("date"),
+                        "home": row.get("home"),
+                        "away": row.get("away"),
+                        "error": str(exc),
+                    })
+                    if stats.failed <= 20:
+                        print(f"  WARN {row.get('date')} {row.get('home')} vs {row.get('away')}: {exc}", file=sys.stderr)
+                flush_if_needed()
+                if attempted % 25 == 0:
+                    write_state(state_path, state_payload())
+                    print(
+                        f"  odds attempts {attempted}/{len(pending)} submitted={submitted} "
+                        f"fetched={stats.fetched} failed={stats.failed} written_new={stats.written}"
+                    )
+            if not (max_seconds and time.monotonic() - started >= max_seconds):
+                submit_more()
+
+        # Try to harvest any in-flight completed after max_seconds stop.
+        for fut, row in list(in_flight.items()):
+            if fut.done():
+                try:
+                    buffer.append(fut.result())
+                    stats.fetched += 1
+                except Exception as exc:  # noqa: BLE001
+                    stats.failed += 1
+                    failures.append({"event_id": row.get("event_id"), "error": str(exc)})
+
+    flush_if_needed(force=True)
+    write_state(state_path, state_payload())
+    print(f"state -> {state_path}")
     print(f"odds done: fetched={stats.fetched} failed={stats.failed} written_new={stats.written}")
     return stats
 
@@ -365,10 +505,13 @@ def main() -> None:
     ap.add_argument("stage", choices=["results", "odds", "all"], help="Which stage to run")
     ap.add_argument("start", help="Start date YYYY-MM-DD")
     ap.add_argument("end", help="End date YYYY-MM-DD")
-    ap.add_argument("--sleep", type=float, default=1.5, help="Sleep between requests (default 1.5; increase if 429)")
+    ap.add_argument("--sleep", type=float, default=1.0, help="Base sleep per request inside each worker (default 1.0)")
+    ap.add_argument("--jitter", type=float, default=0.75, help="Random extra sleep per request, seconds (default 0.75)")
+    ap.add_argument("--workers", type=int, default=4, help="Concurrent odds workers (default 4)")
     ap.add_argument("--max-seconds", type=int, default=0, help="Stop odds stage after N seconds (0 = no limit)")
     ap.add_argument("--limit", type=int, default=0, help="Limit odds rows this run (0 = no limit)")
-    ap.add_argument("--flush-every", type=int, default=25, help="Flush odds cache every N fetched rows")
+    ap.add_argument("--flush-every", type=int, default=50, help="Flush odds cache every N fetched rows")
+    ap.add_argument("--state-file", default=None, help="JSON state file path (default localdata/betexplorer_odds_state_START_END.json)")
     args = ap.parse_args()
 
     LOCALDATA.mkdir(exist_ok=True)
@@ -377,8 +520,17 @@ def main() -> None:
         backfill_results(args.start, args.end, sleep=min(args.sleep, 1.0))
     if args.stage in ("odds", "all"):
         print(f"BetExplorer odds backfill: {args.start} -> {args.end}")
-        backfill_odds(args.start, args.end, sleep=args.sleep, max_seconds=args.max_seconds,
-                      limit=args.limit, flush_every=args.flush_every)
+        backfill_odds(
+            args.start,
+            args.end,
+            sleep=args.sleep,
+            jitter=args.jitter,
+            max_seconds=args.max_seconds,
+            limit=args.limit,
+            flush_every=args.flush_every,
+            workers=args.workers,
+            state_file=Path(args.state_file) if args.state_file else None,
+        )
 
 
 if __name__ == "__main__":
