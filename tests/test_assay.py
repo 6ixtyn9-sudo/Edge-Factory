@@ -2,7 +2,8 @@
 from edgefactory.assay import (wilson_lb, wilson_ub, grade,
                                decay_verdict, should_bench, roi,
                                context_verdict_league, context_verdict_team,
-                               context_verdict_odds_band)
+                               context_verdict_odds_band,
+                               weighted_consensus_score)
 
 def test_wilson_basics():
     assert wilson_lb(0, 0) == 0.0
@@ -96,3 +97,58 @@ def test_context_verdicts():
     assert context_verdict_odds_band(160, 0.03) == "BOOST"
     # sufficient n, roi just above 0 but below BOOST -> ALLOW
     assert context_verdict_odds_band(110, 0.01) == "ALLOW"
+
+
+def test_weighted_consensus_score():
+    # ---- empty / degenerate inputs ----
+    pick, score, unanimous = weighted_consensus_score([])
+    assert pick is None and score == 0.0 and unanimous is False
+
+    # All below min_lb floor -> no valid votes
+    pick, score, unanimous = weighted_consensus_score(
+        [("home", 0.40), ("home", 0.45)], min_lb=0.50)
+    assert pick is None and score == 0.0 and unanimous is False
+
+    # ---- perfect unanimity (all same pick) ----
+    votes = [("home", 0.82), ("home", 0.70), ("home", 0.55)]
+    pick, score, unanimous = weighted_consensus_score(votes)
+    assert pick == "home"
+    assert score == 1.0       # all weight goes to "home"
+    assert unanimous is True
+
+    # ---- 50/50 split on equal weights ----
+    votes = [("home", 0.70), ("away", 0.70)]
+    pick, score, unanimous = weighted_consensus_score(votes)
+    assert score == 0.5
+    assert unanimous is False
+
+    # ---- majority by weight (stronger source wins even outnumbered) ----
+    # forebet LB=0.82 votes "home"; two weaker sources (LB=0.55 each) vote "away"
+    votes = [("home", 0.82), ("away", 0.55), ("away", 0.55)]
+    pick, score, unanimous = weighted_consensus_score(votes)
+    total = 0.82 + 0.55 + 0.55
+    # "away" has 1.10, "home" has 0.82 — so away wins by weight
+    assert pick == "away"
+    # score is rounded to 4dp by assay.py — compare at that precision
+    assert abs(score - round(1.10 / total, 4)) < 1e-9
+    assert unanimous is False
+
+    # ---- high-confidence unanimity: score should be 1.0 regardless of LB values ----
+    votes = [("draw", 0.60), ("draw", 0.75), ("draw", 0.80)]
+    pick, score, unanimous = weighted_consensus_score(votes)
+    assert pick == "draw" and score == 1.0 and unanimous is True
+
+    # ---- min_lb filter removes low-quality sources before vote ----
+    # source C has lb=0.40 (below 0.50 floor) and votes "away" — should be ignored
+    votes = [("home", 0.75), ("home", 0.80), ("away", 0.40)]
+    pick, score, unanimous = weighted_consensus_score(votes, min_lb=0.50)
+    assert pick == "home" and score == 1.0 and unanimous is True
+
+    # ---- three-way split always has a winner by weight, never unanimous ----
+    votes = [("home", 0.80), ("draw", 0.70), ("away", 0.60)]
+    pick, score, unanimous = weighted_consensus_score(votes)
+    assert pick == "home"
+    assert unanimous is False
+    total = 0.80 + 0.70 + 0.60
+    # score is rounded to 4dp by assay.py — compare at that precision
+    assert abs(score - round(0.80 / total, 4)) < 1e-9
