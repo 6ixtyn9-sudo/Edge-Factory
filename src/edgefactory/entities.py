@@ -16,7 +16,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .util import compact_key, norm_league, norm_team
+from .util import compact_key, norm_entity_team, norm_league, norm_team
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG_OVERRIDES_PATH = ROOT / "config" / "entity_overrides.json"
@@ -86,11 +86,11 @@ def canonical_team(raw: object, *, width: int = 12) -> str:
     """Return canonical team key for purity/reporting contexts."""
     override = _override_lookup("teams", raw)
     if override:
-        return norm_team(override, width=width)
+        return norm_entity_team(override, width=width)
     learned = _registry_lookup("teams", raw)
     if learned:
-        return norm_team(learned, width=width)
-    return norm_team(str(raw or ""), width=width)
+        return norm_entity_team(learned, width=width)
+    return norm_entity_team(str(raw or ""), width=width)
 
 
 def explain_entity(kind: str, raw: object) -> dict[str, Any]:

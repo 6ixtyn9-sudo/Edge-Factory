@@ -33,7 +33,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import CONFIG_OVERRIDES_PATH, ENTITY_REGISTRY_PATH  # noqa: E402
-from edgefactory.util import compact_key, norm_league, norm_team  # noqa: E402
+from edgefactory.util import compact_key, norm_entity_team, norm_league  # noqa: E402
 
 LOCALDATA = ROOT / "localdata"
 SOURCE_RE = re.compile(r"^(.+)_\d{4}-\d{2}\.csv\.gz$")
@@ -85,7 +85,7 @@ def canonical_label(labels: list[str], counts: Counter[str], *, kind: str) -> st
     if not labels:
         return "unknown"
     best = max(labels, key=lambda x: label_score(x, counts))
-    return norm_league(best) if kind == "league" else norm_team(best)
+    return norm_league(best) if kind == "league" else norm_entity_team(best)
 
 
 def add_alias_index(index: dict[str, str], raw: str, canonical: str, *, kind: str) -> None:
@@ -96,7 +96,7 @@ def add_alias_index(index: dict[str, str], raw: str, canonical: str, *, kind: st
     if kind == "league":
         index[norm_league(raw)] = canonical
     else:
-        index[norm_team(raw)] = canonical
+        index[norm_entity_team(raw)] = canonical
 
 
 def jaccard(a: set[str], b: set[str]) -> float:
@@ -162,10 +162,10 @@ def main() -> None:
                 continue
 
             rows_seen += 1
-            h_key = norm_team(home)
-            a_key = norm_team(away)
+            h_key = norm_entity_team(home)
+            a_key = norm_entity_team(away)
             l_key = norm_league(league)
-            loose_event = (day, norm_team(home, width=6), norm_team(away, width=6))
+            loose_event = (day, norm_entity_team(home, width=6), norm_entity_team(away, width=6))
 
             league_dsu.find(l_key)
             team_dsu.find(h_key)
@@ -219,7 +219,7 @@ def main() -> None:
         league_counts[str(raw)] += 1
         league_counts[str(canon)] += 1
     for raw, canon in (overrides.get("teams", {}) or {}).items():
-        team_dsu.union(norm_team(raw), norm_team(canon))
+        team_dsu.union(norm_entity_team(raw), norm_entity_team(canon))
         team_counts[str(raw)] += 1
         team_counts[str(canon)] += 1
 
@@ -237,7 +237,7 @@ def main() -> None:
     for raw in league_counts:
         raw_leagues_by_key[norm_league(raw)].add(raw)
     for raw in team_counts:
-        raw_teams_by_key[norm_team(raw)].add(raw)
+        raw_teams_by_key[norm_entity_team(raw)].add(raw)
 
     for _, keys in league_groups.items():
         raw_aliases = sorted({raw for key in keys for raw in raw_leagues_by_key.get(key, {key})})
