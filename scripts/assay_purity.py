@@ -5,7 +5,7 @@ For every CERTIFIED edge in localdata/edges_consensus.json, compute
 context purity verdicts (BOOST / ALLOW / CAUTION / VETO / UNKNOWN)
 across three dimensions, write localdata/purity_registry.json
 
-    python3 scripts/assay_purity.py                # 60-day recent window
+    python3 scripts/assay_purity.py                # all-history recent_roi window
     python3 scripts/assay_purity.py --window 90
     python3 scripts/assay_purity.py --dry-run      # report only, no write
 
@@ -53,7 +53,7 @@ from edgefactory.assay import (  # noqa: E402
     context_verdict_team,
     context_verdict_odds_band,
 )
-from edgefactory.util import norm_team  # noqa: E402
+from edgefactory.entities import canonical_league, canonical_team  # noqa: E402
 
 DB = ROOT / "localdata" / "warehouse.duckdb"
 REG = ROOT / "localdata" / "edges_consensus.json"
@@ -420,9 +420,12 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict]:
         """
         try:
             for league, sel, n, pnl, n_priced in con.execute(sql).fetchall():
+                raw_league = league or "UNKNOWN"
+                league_key_name = canonical_league(raw_league)
                 n = int(n or 0)
                 roi = float(pnl) / n_priced if n_priced else None
-                # recent roi
+                # recent roi. With the default max window this is effectively
+                # all available history, but explicit --window still works.
                 recent_roi = None
                 if has_date:
                     try:
@@ -432,17 +435,17 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict]:
                                    SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) n_priced
                             FROM {view} WHERE ({where}) AND date >= ?
                               AND COALESCE(league,'UNKNOWN') = ? AND pick = ?
-                        """, [recent_cutoff, league, sel]).fetchone()
+                        """, [recent_cutoff, raw_league, sel]).fetchone()
                         rn, rpn, rn_priced = int(r[0] or 0), r[1] or 0, int(r[2] or 0)
                         if rn >= 30 and rn_priced:
                             recent_roi = float(rpn) / rn_priced
                     except Exception:
                         pass
                 verdict = context_verdict_league(n, roi, recent_roi)
-                key = f"{sport}|{league}|{market}|{rule}|{sel}"
+                key = f"{sport}|{league_key_name}|{market}|{rule}|{sel}"
                 league_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None,
                                    "recent_roi": round(recent_roi, 4) if recent_roi is not None else None,
-                                   "verdict": verdict}
+                                   "verdict": verdict, "raw": raw_league}
         except Exception:
             pass
 
@@ -462,7 +465,7 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict]:
                 n = int(n or 0)
                 roi = float(pnl) / n_priced if n_priced else None
                 verdict = context_verdict_team(n, roi)
-                key = f"{sport}|{norm_team(team)}|{league}|{market}|home"
+                key = f"{sport}|{canonical_team(team)}|{canonical_league(league)}|{market}|home"
                 team_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
         except Exception:
             pass
@@ -479,8 +482,48 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict]:
                 n = int(n or 0)
                 roi = float(pnl) / n_priced if n_priced else None
                 verdict = context_verdict_team(n, roi)
-                key = f"{sport}|{norm_team(team)}|{league}|{market}|away"
+                key = f"{sport}|{canonical_team(team)}|{canonical_league(league)}|{market}|away"
                 team_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
+        except Exception:
+            pass
+
+
+    # ---- team_context fallback: sport|team|*|market|role ----
+    # This pools a team's history across league label variants and competitions.
+    # picks_today tries exact league first, then this wildcard fallback.
+    if has_home and has_away:
+        try:
+            sql = f"""
+                SELECT home AS team, COUNT(*) n,
+                       SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) pnl,
+                       SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) n_priced
+                FROM {view} WHERE ({where})
+                GROUP BY home
+            """
+            for team, n, pnl, n_priced in con.execute(sql).fetchall():
+                n = int(n or 0)
+                roi = float(pnl) / n_priced if n_priced else None
+                verdict = context_verdict_team(n, roi)
+                key = f"{sport}|{canonical_team(team)}|*|{market}|home"
+                team_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None,
+                                 "verdict": verdict, "scope": "team_any_league"}
+        except Exception:
+            pass
+        try:
+            sql = f"""
+                SELECT away AS team, COUNT(*) n,
+                       SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) pnl,
+                       SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) n_priced
+                FROM {view} WHERE ({where})
+                GROUP BY away
+            """
+            for team, n, pnl, n_priced in con.execute(sql).fetchall():
+                n = int(n or 0)
+                roi = float(pnl) / n_priced if n_priced else None
+                verdict = context_verdict_team(n, roi)
+                key = f"{sport}|{canonical_team(team)}|*|{market}|away"
+                team_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None,
+                                 "verdict": verdict, "scope": "team_any_league"}
         except Exception:
             pass
 
@@ -513,7 +556,7 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict]:
 
 def main():
     ap = argparse.ArgumentParser(description="Assay purity: build context verdict registry")
-    ap.add_argument("--window", type=int, default=60, help="recent window in days for recent_roi")
+    ap.add_argument("--window", type=int, default=36500, help="recent_roi lookback in days (default: max/all available history)")
     ap.add_argument("--dry-run", action="store_true", help="print verdicts, do not write registry")
     args = ap.parse_args()
 
@@ -545,7 +588,7 @@ def main():
     team_all: dict = {}
     odds_all: dict = {}
 
-    print(f"Purity assay — {len(certified)} certified edges, window {args.window}d")
+    print(f"Purity assay — {len(certified)} certified edges, window {args.window}d (max/all-history default)")
     print("-" * 72)
     for e in certified:
         rule = e.get("rule", "?")

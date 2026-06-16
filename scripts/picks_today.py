@@ -17,6 +17,7 @@ from statistics import mean
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.entities import canonical_league, canonical_team
 from edgefactory.util import norm_team
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
@@ -290,6 +291,35 @@ def load_purity():
         return {}
 
 
+
+def _best_ctx(candidates: list[dict | None]) -> tuple[str, dict]:
+    """Pick the strongest available context verdict from ordered candidates.
+
+    First non-UNKNOWN wins. If all are UNKNOWN/missing, return the UNKNOWN entry
+    with the largest sample so diagnostics still show what was found.
+    """
+    best_unknown: dict = {}
+    for entry in candidates:
+        if not entry:
+            continue
+        if int(entry.get("n") or 0) > int(best_unknown.get("n") or 0):
+            best_unknown = entry
+        verdict = entry.get("verdict", "UNKNOWN")
+        if verdict != "UNKNOWN":
+            return verdict, entry
+    return "UNKNOWN", best_unknown
+
+
+def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
+    """Best non-UNKNOWN context matching a key prefix/suffix, by sample size."""
+    matches = [v for k, v in ctx.items() if k.startswith(prefix) and (not suffix or k.endswith(suffix))]
+    non_unknown = [v for v in matches if v.get("verdict") != "UNKNOWN"]
+    pool = non_unknown or matches
+    if not pool:
+        return {}
+    return max(pool, key=lambda v: int(v.get("n") or 0))
+
+
 def lookup_context(purity: dict, pick: dict) -> dict:
     """Build context keys and return verdicts plus raw diagnostics."""
     ctx = purity.get("contexts", {}) if purity else {}
@@ -298,38 +328,60 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     odds_ctx = ctx.get("odds_band", {})
 
     sport = pick.get("sport", "soccer")
-    league = pick.get("league") or "UNKNOWN"
+    league_raw = pick.get("league") or "UNKNOWN"
+    league = canonical_league(league_raw)
     market = pick.get("market", "1x2")
     rule = pick.get("edge_rule") or pick.get("rule", "?")
     sel = pick.get("pick", "?")
 
     home = pick.get("home", "")
     away = pick.get("away", "")
-    home_norm = norm_team(home)
-    away_norm = norm_team(away)
+    home_norm = canonical_team(home)
+    away_norm = canonical_team(away)
 
     league_key = f"{sport}|{league}|{market}|{rule}|{sel}"
-    league_v = league_ctx.get(league_key, {}).get("verdict", "UNKNOWN")
+    league_exact = league_ctx.get(league_key)
+    league_fallback = _scan_best(
+        league_ctx,
+        prefix=f"{sport}|{league}|{market}|",
+        suffix=f"|{sel}",
+    )
+    league_v, league_meta = _best_ctx([league_exact, league_fallback])
 
     team_h_key = f"{sport}|{home_norm}|{league}|{market}|home"
     team_a_key = f"{sport}|{away_norm}|{league}|{market}|away"
-    team_h_v = team_ctx.get(team_h_key, {}).get("verdict", "UNKNOWN")
-    team_a_v = team_ctx.get(team_a_key, {}).get("verdict", "UNKNOWN")
+    team_h_exact = team_ctx.get(team_h_key)
+    team_a_exact = team_ctx.get(team_a_key)
+    team_h_any = team_ctx.get(f"{sport}|{home_norm}|*|{market}|home")
+    team_a_any = team_ctx.get(f"{sport}|{away_norm}|*|{market}|away")
+    team_h_scan = _scan_best(team_ctx, prefix=f"{sport}|{home_norm}|", suffix=f"|{market}|home")
+    team_a_scan = _scan_best(team_ctx, prefix=f"{sport}|{away_norm}|", suffix=f"|{market}|away")
+    team_h_v, team_h_meta = _best_ctx([team_h_exact, team_h_any, team_h_scan])
+    team_a_v, team_a_meta = _best_ctx([team_a_exact, team_a_any, team_a_scan])
 
     odds = pick.get("odds")
     band = odds_band(odds)
     odds_key = f"{sport}|{market}|{rule}|{band}"
-    odds_v = odds_ctx.get(odds_key, {}).get("verdict", "UNKNOWN")
+    odds_exact = odds_ctx.get(odds_key)
+    odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|", suffix=f"|{band}")
+    odds_v, odds_meta = _best_ctx([odds_exact, odds_fallback])
 
     return {
         "league": league_v,
         "team_h": team_h_v,
         "team_a": team_a_v,
         "odds_band": odds_v,
-        "league_raw": league,
+        "league_raw": league_raw,
+        "league_key": league,
         "home_norm": home_norm,
         "away_norm": away_norm,
         "odds_band_name": band,
+        "_meta": {
+            "league": league_meta,
+            "team_h": team_h_meta,
+            "team_a": team_a_meta,
+            "odds_band": odds_meta,
+        },
         "_keys": {
             "league": league_key,
             "team_h": team_h_key,
