@@ -18,7 +18,7 @@ Steps (always in this order):
   6. decay_monitor     — 60-day health audit, auto-bench circuit breaker
   7. assay_purity      — context verdicts → purity_registry.json
   8. picks_today       — certified picks for target date → stdout + picks_today.json
-  9. audit_clv         — capture pick-time CLV snapshot + rolling report (non-critical)
+  9. audit_clv         — capture pick-time and end-of-run CLV snapshots + rolling report (non-critical)
  10. future planner    — inline N-day per-date reports, reusing picks_today.py
  11. sync_supabase     — push target-date picks + certified edges to Postgres
 
@@ -353,10 +353,6 @@ def main() -> None:
         f"audit_clv capture {target_date} [pick_time]",
     )
     clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
-    run_soft(
-        f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
-        f"audit_clv report {clv_start}..{target_date}",
-    )
 
     target_picks_text = PICKS_TODAY_FILE.read_text() if PICKS_TODAY_FILE.exists() else None
     target_picks = load_picks_file()
@@ -365,6 +361,14 @@ def main() -> None:
     run_future_planner(target_date, args.future_days, target_picks)
 
     restore_target_picks(target_picks_text)
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label end_of_run",
+        f"audit_clv capture {target_date} [end_of_run]",
+    )
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+        f"audit_clv report {clv_start}..{target_date}",
+    )
     run("python3 scripts/sync_supabase.py", "sync_supabase")
 
     print(f"\n=== Done — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
