@@ -658,13 +658,48 @@ def main():
     con = duckdb.connect(str(DB), read_only=True)
     avail = recreate_views(con)
 
+    # High-density base fallback views to resolve purity context sparsity
+    high_density_bases = []
+    if "v_consensus2" in avail:
+        high_density_bases.append({
+            "rule": "v_consensus2_base",
+            "view": "v_consensus2",
+            "where": "1=1",
+            "market": "1x2",
+            "sport": "soccer",
+        })
+    if "v_consensus3" in avail:
+        high_density_bases.append({
+            "rule": "v_consensus3_base",
+            "view": "v_consensus3",
+            "where": "1=1",
+            "market": "1x2",
+            "sport": "soccer",
+        })
+    if "consensus_ou" in avail:
+        high_density_bases.append({
+            "rule": "consensus_ou_base",
+            "view": "consensus_ou",
+            "where": "1=1",
+            "market": "ou_2.5",
+            "sport": "soccer",
+        })
+    if "consensus_btts" in avail:
+        high_density_bases.append({
+            "rule": "consensus_btts_base",
+            "view": "consensus_btts",
+            "where": "1=1",
+            "market": "btts",
+            "sport": "soccer",
+        })
+
     league_all: dict = {}
     team_all: dict = {}
     odds_all: dict = {}
 
-    print(f"Purity assay — {len(certified)} certified edges, window {args.window}d (max/all-history default)")
+    print(f"Purity assay — {len(certified)} certified edges + {len(high_density_bases)} base views, window {args.window}d (max/all-history default)")
     print("-" * 72)
-    for e in certified:
+    for e in certified + high_density_bases:
         rule = e.get("rule", "?")
         view = e.get("view", "?")
         if view not in avail:
