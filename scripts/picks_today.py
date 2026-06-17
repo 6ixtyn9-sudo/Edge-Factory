@@ -1378,10 +1378,52 @@ def main():
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
     print(f"\n{summary}")
 
+    # Merge with existing picks_today.json to prevent overwriting rolled-off picks of the day
+    _json_path = ROOT / "localdata" / "picks_today.json"
+    final_picks = all_picks
+    if _json_path.exists() and days:
+        try:
+            existing_picks = json.loads(_json_path.read_text())
+            if isinstance(existing_picks, list):
+                min_run_date = min(days)
+                
+                new_map = {}
+                for p in all_picks:
+                    key = (p.get("date"), p.get("match"), p.get("market"), p.get("pick"), p.get("rule"))
+                    new_map[key] = p
+                
+                merged_picks = []
+                merged_keys = set()
+                
+                # Process existing picks
+                for p in existing_picks:
+                    if not isinstance(p, dict):
+                        continue
+                    p_date = p.get("date") or ""
+                    # Purge yesterday's obsolete picks, keep current and future ones
+                    if p_date < min_run_date:
+                        continue
+                        
+                    key = (p_date, p.get("match"), p.get("market"), p.get("pick"), p.get("rule"))
+                    if key in new_map:
+                        merged_picks.append(new_map[key])
+                        merged_keys.add(key)
+                    else:
+                        merged_picks.append(p)
+                
+                # Append brand new picks
+                for key, p in new_map.items():
+                    if key not in merged_keys:
+                        merged_picks.append(p)
+                
+                final_picks = merged_picks
+        except Exception as e:
+            print(f"Error merging picks: {e}", file=sys.stderr)
+
     # Write JSON
     _json_path = ROOT / "localdata" / "picks_today.json"
     _json_path.parent.mkdir(parents=True, exist_ok=True)
-    _json_path.write_text(json.dumps(all_picks, indent=2))
+    _json_path.write_text(json.dumps(final_picks, indent=2))
 
 
 if __name__ == "__main__":
