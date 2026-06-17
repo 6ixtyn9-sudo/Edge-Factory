@@ -18,8 +18,9 @@ Steps (always in this order):
   6. decay_monitor     — 60-day health audit, auto-bench circuit breaker
   7. assay_purity      — context verdicts → purity_registry.json
   8. picks_today       — certified picks for target date → stdout + picks_today.json
-  9. future planner    — inline N-day per-date reports, reusing picks_today.py
- 10. sync_supabase     — push target-date picks + certified edges to Postgres
+  9. audit_clv         — capture pick-time CLV snapshot + rolling report (non-critical)
+ 10. future planner    — inline N-day per-date reports, reusing picks_today.py
+ 11. sync_supabase     — push target-date picks + certified edges to Postgres
 
 --picks-only skips steps 1–3 (useful when data is already fresh).
 
@@ -50,6 +51,15 @@ def run(cmd: str, label: str | None = None) -> None:
     if result.returncode != 0:
         print(f"\nFAILED: {display}")
         sys.exit(result.returncode)
+
+
+def run_soft(cmd: str, label: str | None = None) -> None:
+    """Run a non-critical step and continue on failure."""
+    display = label or cmd
+    print(f"\n>>> {display}")
+    result = subprocess.run(cmd, shell=True, cwd=ROOT)
+    if result.returncode != 0:
+        print(f"WARNING: non-critical step failed: {display}")
 
 
 def run_capture(cmd: str, label: str | None = None) -> str:
@@ -338,6 +348,15 @@ def main() -> None:
     run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
     run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
     run(f"PYTHONPATH=src python3 scripts/picks_today.py {target_date}", f"picks_today {target_date}")
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
+        f"audit_clv capture {target_date} [pick_time]",
+    )
+    clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+        f"audit_clv report {clv_start}..{target_date}",
+    )
 
     target_picks_text = PICKS_TODAY_FILE.read_text() if PICKS_TODAY_FILE.exists() else None
     target_picks = load_picks_file()
