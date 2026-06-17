@@ -19,8 +19,9 @@ Steps (always in this order):
   7. assay_purity      — context verdicts → purity_registry.json
   8. picks_today       — certified picks for target date → stdout + picks_today.json
   9. audit_clv         — capture pick-time and end-of-run CLV snapshots + rolling report (non-critical)
- 10. future planner    — inline N-day per-date reports, reusing picks_today.py
- 11. sync_supabase     — push target-date picks + certified edges to Postgres
+ 10. audit_recent_picks — score archived daily picks against settled results (non-critical)
+ 11. future planner    — inline N-day per-date reports, reusing picks_today.py
+ 12. sync_supabase     — push target-date picks + certified edges to Postgres
 
 --picks-only skips steps 1–3 (useful when data is already fresh).
 
@@ -41,6 +42,13 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "localdata"
 PICKS_TODAY_FILE = REPORT_DIR / "picks_today.json"
+
+
+def archive_target_picks(target_date: str, picks_text: str | None) -> None:
+    if picks_text is None:
+        return
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    (REPORT_DIR / f"picks_{target_date}.json").write_text(picks_text)
 
 
 def run(cmd: str, label: str | None = None) -> None:
@@ -355,6 +363,7 @@ def main() -> None:
     clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
 
     target_picks_text = PICKS_TODAY_FILE.read_text() if PICKS_TODAY_FILE.exists() else None
+    archive_target_picks(target_date, target_picks_text)
     target_picks = load_picks_file()
 
     generate_daily_report(target_date)
@@ -368,6 +377,10 @@ def main() -> None:
     run_soft(
         f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
         f"audit_clv report {clv_start}..{target_date}",
+    )
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
+        f"audit_recent_picks {target_date} [30d]",
     )
     run("python3 scripts/sync_supabase.py", "sync_supabase")
 
