@@ -976,6 +976,20 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
         if edge is None:
             continue
         n_req, thr = edge["n_way"], edge["threshold"]
+
+        # Option 2: Dynamic Competition-Type Gating (Custom Thresholds)
+        anchor = next(data[s][k] for s in used if k in data.get(s, {}))
+        comp_type = classify_competition(anchor.get("league"))
+        if comp_type == "cup":
+            thr += 5.0
+        elif comp_type == "friendly":
+            thr += 10.0
+            if n_req < 3:
+                n_req = 3
+
+        if len(used) < n_req:
+            continue
+
         avg_p = mean(ps) * 100.0
 
         # Weighted consensus score — uses per-source Wilson LB as vote weight.
@@ -1046,12 +1060,28 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
             sels.append(sel)
             confs.append(p if sel == yes_no[0] else 1.0 - p)
             used.append(s)
-        if len(used) < max(2, n_req):
+        if len(used) < 2:
             continue
         if len(set(sels)) > 1:
             continue
+
+        # Option 2: Dynamic Competition-Type Gating for binary markets
+        anchor = next(data[s][k] for s in used if k in data.get(s, {}))
+        comp_type = classify_competition(anchor.get("league"))
+        adj_thr = thr
+        adj_n_req = n_req
+        if comp_type == "cup":
+            adj_thr += 5.0
+        elif comp_type == "friendly":
+            adj_thr += 10.0
+            if adj_n_req < 3:
+                adj_n_req = 3
+
+        if len(used) < max(2, adj_n_req):
+            continue
+
         avg_p = mean(confs) * 100.0
-        if avg_p < thr:
+        if avg_p < adj_thr:
             continue
         fb = data.get("forebet", {}).get(k) or {}
         bz = data.get("bzzoiro", {}).get(k) or {}
@@ -1208,6 +1238,20 @@ def main():
     purity = load_purity()
     purity_missing = not bool(purity)
 
+    # Option 1: Load initial odds map from previously saved picks_today.json for Steam/Drift protection
+    initial_odds_map: dict[str, float] = {}
+    picks_today_path = ROOT / "localdata" / "picks_today.json"
+    if picks_today_path.exists():
+        try:
+            old_picks = json.loads(picks_today_path.read_text())
+            for p in old_picks:
+                p_id = f"{p.get('date')}|{p.get('match')}|{p.get('market')}|{p.get('pick')}|{p.get('rule')}"
+                odds_val = p.get("odds")
+                if odds_val is not None:
+                    initial_odds_map[p_id] = float(odds_val)
+        except Exception:
+            pass
+
     # Weighted consensus: load per-source Wilson LB weights.
     # Empty dict = fall back to uniform weights silently.
     source_weights_1x2 = load_source_weights("1x2")
@@ -1284,6 +1328,22 @@ def main():
             p["bucket"] = bucket
             p["edge_status"] = meta.get("status", "certified")
             p["decay_verdict"] = meta.get("decay_verdict", "HEALTHY")
+
+            # Option 1: Steam/Drift protection gate using initial_odds_map
+            p_id = f"{p.get('date')}|{p.get('match')}|{p.get('market')}|{p.get('pick')}|{p.get('rule')}"
+            if p_id in initial_odds_map and p.get("odds") is not None:
+                first_odds = initial_odds_map[p_id]
+                try:
+                    current_odds = float(p["odds"])
+                    p["first_captured_odds"] = first_odds
+                    if current_odds > 1.05 * first_odds:
+                        p["bucket"] = BUCKET_SKIP_VETO
+                        p["ctx"]["clv_drift_veto"] = f"drift_from_{first_odds:.2f}_to_{current_odds:.2f}"
+                    elif current_odds < 0.90 * first_odds:
+                        p["bucket"] = BUCKET_SKIP_VETO
+                        p["ctx"]["clv_steam_veto"] = f"steam_from_{first_odds:.2f}_to_{current_odds:.2f}"
+                except (ValueError, TypeError):
+                    pass
 
             # Phase 7 additions
             p["market_type"] = p.get("market", "1x2")
