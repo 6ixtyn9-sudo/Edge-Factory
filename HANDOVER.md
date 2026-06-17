@@ -200,9 +200,6 @@ odds movement summaries
 src/edgefactory/sources/bzzoiro_odds.py
 real-book odds adapter
 now preserves kickoff time for operational matching and CLV snapshots
-src/edgefactory/sources/oddspapi_odds.py
-targeted live odds helper for unmatched same-day soccer picks
-used as tertiary fallback, not broad daily polling
 src/edgefactory/config.py
 certification gates
 important defaults:
@@ -317,9 +314,6 @@ bzzoiro_odds
 operational primary live odds enrichment for picks_today
 scoutingstats embedded odds
 operational secondary live odds fallback for picks_today and CLV capture
-oddspapi_odds
-operational tertiary live odds fallback for unmatched same-day 1x2 picks
-requires targeted direct API usage because free-tier quota is limited
 BetExplorer
 research only
 last resort only
@@ -569,7 +563,6 @@ Live ingestion and analytics remain CSV / DuckDB, not Supabase.
 Required environment variables:
 
 BZZOIRO_TOKEN
-ODDSPAPI_API_KEY
 SUPABASE_URL
 SUPABASE_KEY
 .env is not auto-loaded. Use:
@@ -631,7 +624,7 @@ same-day report is only meaningful after at least two snapshot labels exist for 
 current daily.py captures pick_time and end_of_run automatically
 same-label reruns are expected to show duplicate skips
 operational live odds matching no longer relies on entity-registry canonical fallback
-current live odds order is bzzoiro_odds first, then scoutingstats embedded odds, then oddspapi_odds for unmatched same-day 1x2 picks, then existing pick-row fallback
+current live odds order is bzzoiro_odds first, then scoutingstats embedded odds, then existing pick-row fallback
 matching path inside each odds source is exact match, explicit odds-only aliases, then kickoff-aware alias fallback
 unmatched diagnostics are written to localdata/clv_unmatched_YYYY-MM-DD.json
 operational duplicate picks are collapsed before final picks_today output and sync
@@ -771,7 +764,7 @@ reporting is audit-only
 same-label reruns dedupe correctly
 a report with only one snapshot per pick must show no CLV comparison yet
 live odds matching is now isolated from entity-registry canonical fallback
-current operational path is bzzoiro_odds first, then scoutingstats embedded odds, then oddspapi_odds for unmatched same-day 1x2 picks, with exact match, explicit odds-only aliases, and kickoff-aware alias fallback inside each source
+current operational path is bzzoiro_odds first, then scoutingstats embedded odds, with exact match, explicit odds-only aliases, and kickoff-aware alias fallback inside each source
 
 Next session should focus on:
 
