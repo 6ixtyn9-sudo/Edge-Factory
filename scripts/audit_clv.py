@@ -49,6 +49,7 @@ SNAPSHOT_FIELDS = [
     "edge_status",
     "live_odds_matched",
     "used_input_odds_fallback",
+    "odds_match_method",
 ]
 
 
@@ -132,7 +133,7 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
         odds_index_by_date: dict[str, dict] = {}
         for match_date in sorted({str(p.get("date") or run_date)[:10] for p in picks}):
             stats: dict[str, int] = {}
-            odds_index_by_date[match_date] = picks_today.bzzoiro_odds_index(match_date, stats=stats)
+            odds_index_by_date[match_date] = picks_today.bzzoiro_odds_bundle(match_date, stats=stats)
             odds_stats_by_date[match_date] = stats
     finally:
         if should_refresh:
@@ -146,6 +147,9 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
     matched = 0
     missing = 0
     fallback = 0
+    exact_matches = 0
+    canonical_league_matches = 0
+    canonical_team_matches = 0
 
     for pick in picks:
         match_date = str(pick.get("date") or run_date)[:10]
@@ -159,23 +163,22 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
             rule_name,
         )
         live_pick = dict(pick)
-        key = (
-            match_date,
-            picks_today.odds_team_key(pick.get("home") or ""),
-            picks_today.odds_team_key(pick.get("away") or ""),
-            str(pick.get("market") or ""),
-            str(pick.get("pick") or ""),
-        )
-        live_row = odds_index_by_date.get(match_date, {}).get(key)
-        live_odds_matched = bool(live_row)
         original_odds = _coerce_float(pick.get("odds"))
-        if live_row:
-            picks_today.enrich_with_bzzoiro_odds([live_pick], odds_index_by_date.get(match_date, {}))
+        picks_today.enrich_with_bzzoiro_odds([live_pick], odds_index_by_date.get(match_date, {}))
+        match_method = str(live_pick.get("odds_match_method") or "")
+        live_odds_matched = match_method in {"exact", "canonical_league", "canonical_teams"}
+        if live_odds_matched:
             matched += 1
+            if match_method == "exact":
+                exact_matches += 1
+            elif match_method == "canonical_league":
+                canonical_league_matches += 1
+            elif match_method == "canonical_teams":
+                canonical_team_matches += 1
         observed_odds = _coerce_float(live_pick.get("odds"))
         if observed_odds is None:
             missing += 1
-        elif not live_odds_matched and original_odds is not None:
+        elif match_method == "fallback" and original_odds is not None:
             fallback += 1
 
         row = {
@@ -199,13 +202,17 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
             "min_p": pick.get("min_p") if pick.get("min_p") is not None else "",
             "edge_status": pick.get("edge_status") or "",
             "live_odds_matched": "1" if live_odds_matched else "0",
-            "used_input_odds_fallback": "1" if (observed_odds is not None and not live_odds_matched and original_odds is not None) else "0",
+            "used_input_odds_fallback": "1" if (observed_odds is not None and match_method == "fallback" and original_odds is not None) else "0",
+            "odds_match_method": match_method,
         }
         rows.append(row)
 
     return rows, {
         "picks_read": len(picks),
         "live_odds_matched": matched,
+        "exact_matches": exact_matches,
+        "canonical_league_matches": canonical_league_matches,
+        "canonical_team_matches": canonical_team_matches,
         "missing_odds": missing,
         "used_input_odds_fallback": fallback,
         "dates_seen": len(odds_stats_by_date),
@@ -245,6 +252,9 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
     print(f"CLV capture — {run_date} [{label}]")
     print(f"  picks read: {stats['picks_read']}")
     print(f"  live odds matched: {stats['live_odds_matched']}")
+    print(f"    exact: {stats['exact_matches']}")
+    print(f"    canonical_league: {stats['canonical_league_matches']}")
+    print(f"    canonical_teams: {stats['canonical_team_matches']}")
     print(f"  input fallback used: {stats['used_input_odds_fallback']}")
     print(f"  missing odds: {stats['missing_odds']}")
     print(f"  rows written: {written}")
