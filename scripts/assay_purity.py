@@ -53,7 +53,7 @@ from edgefactory.assay import (  # noqa: E402
     context_verdict_team,
     context_verdict_odds_band,
 )
-from edgefactory.entities import canonical_league, canonical_team  # noqa: E402
+from edgefactory.entities import canonical_league, canonical_team, classify_competition  # noqa: E402
 
 DB = ROOT / "localdata" / "warehouse.duckdb"
 REG = ROOT / "localdata" / "edges_consensus.json"
@@ -444,8 +444,8 @@ def _safe_ident(s: str) -> str:
     return s
 
 
-def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict]:
-    """Return (league_ctx, team_ctx, odds_band_ctx) dicts for one edge.
+def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dict]:
+    """Return (league_ctx, team_ctx, odds_ctx, comp_ctx) dicts for one edge.
     Each maps context_key -> {n, roi, recent_roi?, verdict}
     Never raises – missing columns / query errors → empty dicts.
     """
@@ -456,17 +456,17 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict]:
     sport = edge.get("sport", "soccer")
 
     if not view:
-        return {}, {}, {}
+        return {}, {}, {}, {}
 
     try:
         _safe_ident(view)
         cols = _columns(con, view)
     except Exception:
-        return {}, {}, {}
+        return {}, {}, {}, {}
 
     # required columns
     if not {"pick", "outcome"}.issubset(cols):
-        return {}, {}, {}
+        return {}, {}, {}, {}
 
     has_league = "league" in cols
     has_home = "home" in cols
@@ -480,6 +480,7 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict]:
     league_ctx: dict = {}
     team_ctx: dict = {}
     odds_ctx: dict = {}
+    comp_ctx: dict = {}
 
     # ---- league_context: sport|league|market|edge_family|selection_role ----
     if True:  # always try, fall back to UNKNOWN league name
@@ -625,7 +626,27 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict]:
         except Exception:
             pass
 
-    return league_ctx, team_ctx, odds_ctx
+    # ---- competition_type_context: sport|market|edge_family|comp_type ----
+    if has_league:
+        try:
+            sql = f"""
+                SELECT classify_competition(COALESCE(league, 'UNKNOWN')) AS comp_type,
+                       COUNT(*) AS n,
+                       SUM(CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END) AS pnl,
+                       SUM(CASE WHEN pick_odds IS NOT NULL THEN 1 ELSE 0 END) AS n_priced
+                FROM {view} WHERE ({where})
+                GROUP BY 1
+            """
+            for comp_type, n, pnl, n_priced in con.execute(sql).fetchall():
+                n = int(n or 0)
+                roi = float(pnl) / n_priced if n_priced else None
+                verdict = context_verdict_league(n, roi)
+                key = f"{sport}|{market}|{rule}|{comp_type}"
+                comp_ctx[key] = {"n": n, "roi": round(roi, 4) if roi is not None else None, "verdict": verdict}
+        except Exception:
+            pass
+
+    return league_ctx, team_ctx, odds_ctx, comp_ctx
 
 
 def main():
@@ -656,6 +677,7 @@ def main():
 
     import duckdb
     con = duckdb.connect(str(DB), read_only=True)
+    con.create_function("classify_competition", classify_competition)
     avail = recreate_views(con)
 
     # High-density base fallback views to resolve purity context sparsity
@@ -696,6 +718,7 @@ def main():
     league_all: dict = {}
     team_all: dict = {}
     odds_all: dict = {}
+    comp_all: dict = {}
 
     print(f"Purity assay — {len(certified)} certified edges + {len(high_density_bases)} base views, window {args.window}d (max/all-history default)")
     print("-" * 72)
@@ -709,11 +732,12 @@ def main():
             except Exception:
                 print(f"{rule:45s}  SKIP – view {view} unavailable")
                 continue
-        l_ctx, t_ctx, o_ctx = assay_edge(con, e, args.window)
+        l_ctx, t_ctx, o_ctx, c_ctx = assay_edge(con, e, args.window)
         league_all.update(l_ctx)
         team_all.update(t_ctx)
         odds_all.update(o_ctx)
-        print(f"{rule:45s}  league:{len(l_ctx):3d}  team:{len(t_ctx):3d}  odds:{len(o_ctx):3d}")
+        comp_all.update(c_ctx)
+        print(f"{rule:45s}  league:{len(l_ctx):3d}  team:{len(t_ctx):3d}  odds:{len(o_ctx):3d}  comp:{len(c_ctx):3d}")
 
     # summary counts
     def count_verdicts(d):
@@ -721,7 +745,7 @@ def main():
         return Counter(v["verdict"] for v in d.values())
 
     print("\nContext verdict summary:")
-    for name, ctx in [("league", league_all), ("team", team_all), ("odds_band", odds_all)]:
+    for name, ctx in [("league", league_all), ("team", team_all), ("odds_band", odds_all), ("competition_type", comp_all)]:
         c = count_verdicts(ctx)
         print(f"  {name:10s} total={len(ctx):4d}  " + "  ".join(f"{k}={c.get(k,0)}" for k in ["BOOST","ALLOW","CAUTION","VETO","UNKNOWN"]))
 
@@ -732,6 +756,7 @@ def main():
             "league": league_all,
             "team": team_all,
             "odds_band": odds_all,
+            "competition_type": comp_all,
         },
     }
 

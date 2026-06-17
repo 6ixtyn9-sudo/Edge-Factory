@@ -17,7 +17,7 @@ from statistics import mean
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.entities import canonical_league, canonical_team
+from edgefactory.entities import canonical_league, canonical_team, classify_competition
 from edgefactory.util import compact_key, norm_team
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
@@ -329,6 +329,7 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     league_ctx = ctx.get("league", {})
     team_ctx = ctx.get("team", {})
     odds_ctx = ctx.get("odds_band", {})
+    comp_ctx = ctx.get("competition_type", {})
 
     sport = pick.get("sport", "soccer")
     league_raw = pick.get("league") or "UNKNOWN"
@@ -369,27 +370,37 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|", suffix=f"|{band}")
     odds_v, odds_meta = _best_ctx([odds_exact, odds_fallback])
 
+    comp_type = classify_competition(league_raw)
+    comp_key = f"{sport}|{market}|{rule}|{comp_type}"
+    comp_exact = comp_ctx.get(comp_key)
+    comp_fallback = _scan_best(comp_ctx, prefix=f"{sport}|{market}|", suffix=f"|{comp_type}")
+    comp_v, comp_meta = _best_ctx([comp_exact, comp_fallback])
+
     return {
         "league": league_v,
         "team_h": team_h_v,
         "team_a": team_a_v,
         "odds_band": odds_v,
+        "competition_type": comp_v,
         "league_raw": league_raw,
         "league_key": league,
         "home_norm": home_norm,
         "away_norm": away_norm,
         "odds_band_name": band,
+        "comp_type_name": comp_type,
         "_meta": {
             "league": league_meta,
             "team_h": team_h_meta,
             "team_a": team_a_meta,
             "odds_band": odds_meta,
+            "competition_type": comp_meta,
         },
         "_keys": {
             "league": league_key,
             "team_h": team_h_key,
             "team_a": team_a_key,
             "odds_band": odds_key,
+            "competition_type": comp_key,
         }
     }
 
@@ -406,7 +417,7 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     - missing odds still goes to WATCHLIST_NO_ODDS;
     - UNKNOWN odds_band remains WATCHLIST_UNKNOWN_CTX because odds maturity is
       operationally important;
-    - UNKNOWN league/team means unrated context, not a veto, so it downgrades to
+    - UNKNOWN league/team/competition means unrated context, not a veto, so it downgrades to
       CAUTION instead of blocking the pick entirely.
     """
     if edge_status == "benched":
@@ -414,7 +425,7 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     if decay_verdict in ("DEAD", "DECAYING"):
         return BUCKET_SKIP_DEAD
 
-    vals = [ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band")]
+    vals = [ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band"), ctx.get("competition_type")]
     if "VETO" in vals:
         return BUCKET_SKIP_VETO
     if pick.get("odds") is None:
@@ -423,7 +434,7 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
         return BUCKET_WL_CTX
     if "CAUTION" in vals:
         return BUCKET_CAUTION
-    if "UNKNOWN" in (ctx.get("league"), ctx.get("team_h"), ctx.get("team_a")):
+    if "UNKNOWN" in (ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("competition_type")):
         return BUCKET_CAUTION
     return BUCKET_CERTIFIED
 
@@ -1130,7 +1141,8 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 f"  league={ctx.get('league_raw','UNKNOWN')}:{ctx.get('league','?')}  "
                 f"team={ctx.get('home_norm','?')}:{ctx.get('team_h','?')}/"
                 f"{ctx.get('away_norm','?')}:{ctx.get('team_a','?')}  "
-                f"odds_band={ctx.get('odds_band_name','?')}:{ctx.get('odds_band','?')}"
+                f"odds_band={ctx.get('odds_band_name','?')}:{ctx.get('odds_band','?')}  "
+                f"comp_type={ctx.get('comp_type_name','?')}:{ctx.get('competition_type','?')}"
             )
             market = p.get("market_type", p.get("market", "?"))
             tier = p.get("odds_tier", "?")

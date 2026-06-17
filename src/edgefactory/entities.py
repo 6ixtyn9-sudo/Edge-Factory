@@ -84,6 +84,22 @@ def canonical_league(raw: object) -> str:
     return norm_league(raw)
 
 
+def classify_competition(league_name: object) -> str:
+    """Classify a competition/league into structural categories:
+    friendly, youth, women, cup, or league.
+    """
+    s = str(league_name or "").lower()
+    if any(tok in s for tok in ("friendly", "amichevole", "freundschaftsspiele", "club amic")):
+        return "friendly"
+    if any(tok in s for tok in ("u17", "u18", "u19", "u20", "u21", "u23", "youth", "reserves", "reserve", "young", "primavera", "junior")):
+        return "youth"
+    if any(tok in s for tok in ("women", "fem", "donna", "ladies", "w-cup", "frau")):
+        return "women"
+    if any(tok in s for tok in ("cup", "copa", "coppa", "coupe", "pokal", "trophy", "shield", "fa cup", "dff pokal", "ko-runde", "play-offs", "playoffs", "tournament")):
+        return "cup"
+    return "league"
+
+
 def canonical_team(raw: object, *, width: int = 24) -> str:
     """Return canonical team key for purity/reporting contexts."""
     override = _override_lookup("teams", raw)
