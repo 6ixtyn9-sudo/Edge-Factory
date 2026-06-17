@@ -765,7 +765,8 @@ def bzzoiro_odds_index(
 
 
 def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
-    """Find the best odds row for a pick using exact then kickoff-aware fallback."""
+    """Find the best odds row for a pick using exact, kickoff-aware fallback,
+    and learned entity registry canonical matching fallback."""
     if "exact" not in odds_data:
         key = (
             str(pick.get("date") or ""),
@@ -802,6 +803,47 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
                 return bounded[0][1], "alias_time"
         # Always fall back to the first sorted candidate of the exact same event
         return candidates[0], "alias_unique"
+
+    # Dynamic Learned Entity Registry Canonical Fallback Matching
+    pick_date = str(pick.get("date") or "")
+    pick_market = str(pick.get("market") or "")
+    pick_selection = str(pick.get("pick") or "")
+    pick_home_canon = canonical_team(pick.get("home"))
+    pick_away_canon = canonical_team(pick.get("away"))
+
+    canon_candidates = []
+    for row in odds_data["exact"].values():
+        if (
+            str(row.get("date") or "") == pick_date
+            and str(row.get("market") or "") == pick_market
+            and str(row.get("selection") or "") == pick_selection
+        ):
+            if (
+                canonical_team(row.get("home")) == pick_home_canon
+                and canonical_team(row.get("away")) == pick_away_canon
+            ):
+                canon_candidates.append(row)
+
+    if canon_candidates:
+        pick_kickoff = _kickoff_value(pick)
+        if pick_kickoff:
+            canon_candidates.sort(
+                key=lambda r: (
+                    _kickoff_delta_minutes(pick_kickoff, _kickoff_value(r)) is None,
+                    _kickoff_delta_minutes(pick_kickoff, _kickoff_value(r)) or 10**9,
+                    -_bookmaker_priority(r.get("bookmaker")),
+                    -(r.get("odds") or 0.0),
+                )
+            )
+        else:
+            canon_candidates.sort(
+                key=lambda r: (
+                    -_bookmaker_priority(r.get("bookmaker")),
+                    -(r.get("odds") or 0.0),
+                )
+            )
+        return canon_candidates[0], "alias_unique"
+
     return None, None
 
 
