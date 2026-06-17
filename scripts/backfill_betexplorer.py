@@ -17,6 +17,15 @@ all
 
 This is a data job only. It does not update warehouse, consensus, picks, or
 Supabase. It is resumable by event_id and safe to stop/restart.
+
+Failure cache
+-------------
+Terminal 404s are written to:
+    localdata/betexplorer_odds_failures_YYYY-MM.csv.gz
+
+Known terminal failures are skipped on later runs unless --retry-failures is
+provided. This prevents the final stale BetExplorer URLs from being retried
+forever.
 """
 
 from __future__ import annotations
@@ -36,7 +45,7 @@ import urllib.error
 import urllib.request
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Iterable
 
@@ -44,6 +53,13 @@ ROOT = Path(__file__).resolve().parent.parent
 LOCALDATA = ROOT / "localdata"
 BASE = "https://www.betexplorer.com"
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"
+
+sys.path.insert(0, str(ROOT / "src"))
+try:
+    from edgefactory.util import norm_team  # type: ignore  # noqa: E402
+except Exception:  # pragma: no cover - fallback for standalone script checks
+    def norm_team(name: str, width: int = 9) -> str:  # type: ignore
+        return re.sub(r"[^a-z]", "", str(name or "").lower())[:width]
 
 RESULT_COLUMNS = [
     "date", "kickoff", "country", "league", "home", "away", "hs", "gs",
@@ -57,17 +73,28 @@ ODDS_COLUMNS = [
     "page_param", "fetched_at",
 ]
 
+FAILURE_COLUMNS = [
+    "date", "event_id", "match_url", "home", "away", "error", "failed_at",
+]
+
+
+class TerminalFetchError(RuntimeError):
+    """Non-retryable fetch failure, e.g. BetExplorer stale 404 match URL."""
+
 
 @dataclass
 class FetchStats:
     fetched: int = 0
     skipped: int = 0
     failed: int = 0
+    terminal_failed: int = 0
+    transient_failed: int = 0
     written: int = 0
+    failures_written: int = 0
 
 
 def now_iso() -> str:
-    return datetime.utcnow().isoformat() + "Z"
+    return datetime.now(timezone.utc).isoformat()
 
 
 def month_key(day: str) -> str:
@@ -80,6 +107,10 @@ def results_path(month: str) -> Path:
 
 def odds_path(month: str) -> Path:
     return LOCALDATA / f"betexplorer_odds_{month}.csv.gz"
+
+
+def failures_path(month: str) -> Path:
+    return LOCALDATA / f"betexplorer_odds_failures_{month}.csv.gz"
 
 
 def _retry_after_seconds(exc: urllib.error.HTTPError) -> float | None:
@@ -108,7 +139,11 @@ def fetch(
     sleep: float = 1.0,
     jitter: float = 0.0,
 ) -> str:
-    """Fetch URL with 429 Retry-After support and jittered backoff."""
+    """Fetch URL with 429 Retry-After support and jittered backoff.
+
+    404 is treated as terminal because BetExplorer result archives sometimes
+    point at stale match URLs that no longer resolve.
+    """
     headers = {"User-Agent": UA, "Accept-Language": "en-US,en;q=0.9"}
     if referer:
         headers["Referer"] = referer
@@ -120,6 +155,8 @@ def fetch(
                 return resp.read().decode("utf-8", "replace")
         except urllib.error.HTTPError as exc:
             last = exc
+            if exc.code == 404:
+                raise TerminalFetchError(f"HTTP 404: {url}") from exc
             if exc.code == 429:
                 retry_after = _retry_after_seconds(exc)
                 wait = retry_after if retry_after is not None else max(5.0, sleep * (attempt + 2) * 3)
@@ -327,11 +364,76 @@ def load_result_rows(start: str, end: str) -> list[dict]:
     return rows
 
 
+def _avgp_sql(col: str = "avg_p") -> str:
+    return f"CASE WHEN {col} > 1.5 THEN {col} ELSE {col}*100 END"
+
+
+def load_warehouse_candidate_keys(warehouse: Path, start: str, end: str, threshold: float) -> set[tuple[str, str, str]]:
+    """Return (date,hkey,akey) for broad EF consensus candidate rows.
+
+    This is an odds-fetch prioritizer only. It intentionally uses a broad
+    threshold (default 60) so BetExplorer odds are fetched for plausible EF
+    overlap rows before fetching the whole BetExplorer universe. It does not
+    certify or create edges.
+    """
+    try:
+        import duckdb
+    except Exception as exc:
+        raise RuntimeError("--only-warehouse-candidates requires duckdb") from exc
+
+    if not warehouse.exists():
+        raise RuntimeError(f"warehouse not found: {warehouse}")
+
+    con = duckdb.connect(str(warehouse), read_only=True)
+    keys: set[tuple[str, str, str]] = set()
+
+    queries = [
+        (
+            "consensus2",
+            f"""
+            SELECT date, home, away
+            FROM consensus2
+            WHERE date >= ? AND date <= ?
+              AND fb_pick = zb_pick
+              AND {_avgp_sql('avg_p')} >= ?
+            """,
+        ),
+        (
+            "consensus3",
+            f"""
+            SELECT date, home, away
+            FROM consensus3
+            WHERE date >= ? AND date <= ?
+              AND fb_pick = zb_pick AND zb_pick = sa_pick
+              AND {_avgp_sql('avg_p')} >= ?
+            """,
+        ),
+    ]
+
+    for name, sql in queries:
+        try:
+            for day, home, away in con.execute(sql, [start, end, threshold]).fetchall():
+                keys.add((str(day)[:10], norm_team(str(home or "")), norm_team(str(away or ""))))
+        except Exception as exc:
+            print(f"  WARN: warehouse candidate query skipped for {name}: {exc}", file=sys.stderr)
+    return keys
+
+
 def load_existing_odds_ids(start: str, end: str) -> set[str]:
     months = sorted({month_key(d) for d in date_range(start, end)})
     ids: set[str] = set()
     for month in months:
         for row in read_gzip_csv(odds_path(month)):
+            if row.get("event_id"):
+                ids.add(str(row["event_id"]))
+    return ids
+
+
+def load_known_failure_ids(start: str, end: str) -> set[str]:
+    months = sorted({month_key(d) for d in date_range(start, end)})
+    ids: set[str] = set()
+    for month in months:
+        for row in read_gzip_csv(failures_path(month)):
             if row.get("event_id"):
                 ids.add(str(row["event_id"]))
     return ids
@@ -347,6 +449,16 @@ def flush_odds(buffer: list[dict]) -> int:
     return written
 
 
+def flush_failures(buffer: list[dict]) -> int:
+    by_month: dict[str, list[dict]] = defaultdict(list)
+    for row in buffer:
+        by_month[month_key(str(row["date"]))].append(row)
+    written = 0
+    for month, rows in by_month.items():
+        written += upsert_monthly(failures_path(month), rows, "event_id", FAILURE_COLUMNS)
+    return written
+
+
 def default_state_path(start: str, end: str) -> Path:
     return LOCALDATA / f"betexplorer_odds_state_{start}_{end}.json"
 
@@ -356,6 +468,18 @@ def write_state(path: Path, payload: dict) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
     tmp.replace(path)
+
+
+def failure_row(row: dict, exc: Exception) -> dict:
+    return {
+        "date": row.get("date"),
+        "event_id": row.get("event_id"),
+        "match_url": row.get("match_url"),
+        "home": row.get("home"),
+        "away": row.get("away"),
+        "error": str(exc),
+        "failed_at": now_iso(),
+    }
 
 
 def backfill_odds(
@@ -369,27 +493,52 @@ def backfill_odds(
     flush_every: int,
     workers: int,
     state_file: Path | None,
+    retry_failures: bool,
+    warehouse_candidates: Path | None,
+    candidate_threshold: float,
 ) -> FetchStats:
-    """Backfill odds concurrently, resumable by CSV event_id and JSON state file."""
+    """Backfill odds concurrently, resumable by CSV event_id and failure cache."""
     stats = FetchStats()
     rows = load_result_rows(start, end)
     if not rows:
         print("No cached BetExplorer results rows. Run: backfill_betexplorer.py results START END")
         return stats
 
+    candidate_keys: set[tuple[str, str, str]] | None = None
+    if warehouse_candidates is not None:
+        candidate_keys = load_warehouse_candidate_keys(warehouse_candidates, start, end, candidate_threshold)
+        before = len(rows)
+        rows = [
+            r for r in rows
+            if (str(r.get("date"))[:10], norm_team(str(r.get("home") or "")), norm_team(str(r.get("away") or "")))
+            in candidate_keys
+        ]
+        print(
+            f"warehouse candidate filter: {len(rows)} / {before} results rows "
+            f"matched consensus2/3 threshold>={candidate_threshold:g} from {warehouse_candidates}"
+        )
+
     existing = load_existing_odds_ids(start, end)
-    pending = [r for r in rows if str(r.get("event_id")) not in existing]
+    known_failures = set() if retry_failures else load_known_failure_ids(start, end)
+    pending = [
+        r for r in rows
+        if str(r.get("event_id")) not in existing
+        and str(r.get("event_id")) not in known_failures
+    ]
     if limit:
         pending = pending[:limit]
     state_path = state_file or default_state_path(start, end)
     workers = max(1, int(workers))
+    if workers > 64:
+        print(f"WARNING: --workers {workers} is very high; consider 24-32 unless you are intentionally stress-testing.")
     print(
         f"odds pending: {len(pending)} / results rows={len(rows)} existing_odds={len(existing)} "
-        f"workers={workers} sleep={sleep} jitter={jitter}"
+        f"known_failures={len(known_failures)} workers={workers} sleep={sleep} jitter={jitter}"
     )
 
     started = time.monotonic()
     buffer: list[dict] = []
+    failure_buffer: list[dict] = []
     attempted = 0
     submitted = 0
     completed = 0
@@ -407,13 +556,20 @@ def backfill_odds(
             "sleep": sleep,
             "jitter": jitter,
             "results_rows": len(rows),
+            "warehouse_candidates": str(warehouse_candidates) if warehouse_candidates else None,
+            "candidate_threshold": candidate_threshold if warehouse_candidates else None,
+            "candidate_keys": len(candidate_keys) if candidate_keys is not None else None,
             "existing_odds_at_start": len(existing),
+            "known_failures_at_start": len(known_failures),
             "pending_at_start": len(pending),
             "submitted": submitted,
             "completed": completed,
             "fetched": stats.fetched,
             "failed": stats.failed,
+            "terminal_failed": stats.terminal_failed,
+            "transient_failed": stats.transient_failed,
             "written_new": stats.written,
+            "failures_written": stats.failures_written,
             "remaining_estimate": max(0, len(pending) - completed),
             "recent_failures": failures[-20:],
         }
@@ -422,6 +578,10 @@ def backfill_odds(
         if buffer and (force or len(buffer) >= flush_every):
             stats.written += flush_odds(buffer)
             buffer.clear()
+        if failure_buffer and (force or len(failure_buffer) >= flush_every):
+            stats.failures_written += flush_failures(failure_buffer)
+            failure_buffer.clear()
+        if force:
             write_state(state_path, state_payload())
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as ex:
@@ -442,10 +602,11 @@ def backfill_odds(
                 submitted += 1
 
         submit_more()
+        max_printed = False
         while in_flight:
-            if max_seconds and time.monotonic() - started >= max_seconds:
+            if max_seconds and time.monotonic() - started >= max_seconds and not max_printed:
                 print("max_seconds reached; waiting for in-flight requests to finish")
-                # Stop submitting new work; in-flight futures still complete.
+                max_printed = True
             done, _ = concurrent.futures.wait(
                 in_flight,
                 timeout=1.0,
@@ -462,41 +623,55 @@ def backfill_odds(
                 try:
                     buffer.append(fut.result())
                     stats.fetched += 1
-                except Exception as exc:  # noqa: BLE001 - resumable job continues
+                except TerminalFetchError as exc:
                     stats.failed += 1
-                    failures.append({
-                        "event_id": row.get("event_id"),
-                        "date": row.get("date"),
-                        "home": row.get("home"),
-                        "away": row.get("away"),
-                        "error": str(exc),
-                    })
-                    if stats.failed <= 20:
-                        print(f"  WARN {row.get('date')} {row.get('home')} vs {row.get('away')}: {exc}", file=sys.stderr)
-                flush_if_needed()
+                    stats.terminal_failed += 1
+                    fr = failure_row(row, exc)
+                    failure_buffer.append(fr)
+                    failures.append(fr)
+                    if stats.terminal_failed <= 20:
+                        print(f"  WARN terminal {row.get('date')} {row.get('home')} vs {row.get('away')}: {exc}", file=sys.stderr)
+                except Exception as exc:  # noqa: BLE001 - transient job continues but is not cached as terminal
+                    stats.failed += 1
+                    stats.transient_failed += 1
+                    fr = failure_row(row, exc)
+                    failures.append(fr)
+                    if stats.transient_failed <= 20:
+                        print(f"  WARN transient {row.get('date')} {row.get('home')} vs {row.get('away')}: {exc}", file=sys.stderr)
+                if len(buffer) >= flush_every or len(failure_buffer) >= flush_every:
+                    flush_if_needed(force=True)
                 if attempted % 25 == 0:
                     write_state(state_path, state_payload())
                     print(
                         f"  odds attempts {attempted}/{len(pending)} submitted={submitted} "
-                        f"fetched={stats.fetched} failed={stats.failed} written_new={stats.written}"
+                        f"fetched={stats.fetched} failed={stats.failed} "
+                        f"terminal={stats.terminal_failed} transient={stats.transient_failed} "
+                        f"written_new={stats.written} failures_written={stats.failures_written}"
                     )
             if not (max_seconds and time.monotonic() - started >= max_seconds):
                 submit_more()
 
-        # Try to harvest any in-flight completed after max_seconds stop.
+        # Harvest any already-finished in-flight futures after max_seconds stop.
         for fut, row in list(in_flight.items()):
             if fut.done():
                 try:
                     buffer.append(fut.result())
                     stats.fetched += 1
-                except Exception as exc:  # noqa: BLE001
+                except TerminalFetchError as exc:
                     stats.failed += 1
-                    failures.append({"event_id": row.get("event_id"), "error": str(exc)})
+                    stats.terminal_failed += 1
+                    failure_buffer.append(failure_row(row, exc))
+                except Exception:
+                    stats.failed += 1
+                    stats.transient_failed += 1
 
     flush_if_needed(force=True)
-    write_state(state_path, state_payload())
     print(f"state -> {state_path}")
-    print(f"odds done: fetched={stats.fetched} failed={stats.failed} written_new={stats.written}")
+    print(
+        f"odds done: fetched={stats.fetched} failed={stats.failed} "
+        f"terminal={stats.terminal_failed} transient={stats.transient_failed} "
+        f"written_new={stats.written} failures_written={stats.failures_written}"
+    )
     return stats
 
 
@@ -510,8 +685,26 @@ def main() -> None:
     ap.add_argument("--workers", type=int, default=4, help="Concurrent odds workers (default 4)")
     ap.add_argument("--max-seconds", type=int, default=0, help="Stop odds stage after N seconds (0 = no limit)")
     ap.add_argument("--limit", type=int, default=0, help="Limit odds rows this run (0 = no limit)")
-    ap.add_argument("--flush-every", type=int, default=50, help="Flush odds cache every N fetched rows")
+    ap.add_argument("--flush-every", type=int, default=50, help="Flush odds/failure cache every N fetched rows")
     ap.add_argument("--state-file", default=None, help="JSON state file path (default localdata/betexplorer_odds_state_START_END.json)")
+    ap.add_argument("--retry-failures", action="store_true", help="Retry event_ids in betexplorer_odds_failures_YYYY-MM.csv.gz")
+    ap.add_argument(
+        "--only-warehouse-candidates",
+        nargs="?",
+        const=str(LOCALDATA / "warehouse.duckdb"),
+        default=None,
+        help=(
+            "Odds stage only: fetch odds only for BetExplorer results matching broad "
+            "consensus2/3 candidates in the given DuckDB warehouse. If no path is "
+            "provided, defaults to localdata/warehouse.duckdb."
+        ),
+    )
+    ap.add_argument(
+        "--candidate-threshold",
+        type=float,
+        default=60.0,
+        help="Broad avg_p threshold for --only-warehouse-candidates (default: 60)",
+    )
     args = ap.parse_args()
 
     LOCALDATA.mkdir(exist_ok=True)
@@ -530,6 +723,9 @@ def main() -> None:
             flush_every=args.flush_every,
             workers=args.workers,
             state_file=Path(args.state_file) if args.state_file else None,
+            retry_failures=args.retry_failures,
+            warehouse_candidates=Path(args.only_warehouse_candidates) if args.only_warehouse_candidates else None,
+            candidate_threshold=args.candidate_threshold,
         )
 
 
