@@ -979,6 +979,54 @@ def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = Non
     return picks, vetoes, n_up
 
 
+def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
+    """Collapse duplicate operational picks for the same real-world event.
+
+    This is intentionally stricter than reporting grouping and completely
+    separate from miner join keys. It uses operational odds-only aliases and
+    kickoff when available to avoid showing or syncing duplicate picks such as
+    Congo DR vs DR Congo variants from different source labels.
+    """
+    best: dict[tuple[str, str, str, str, str], dict] = {}
+    removed = 0
+    for pick in picks:
+        key = (
+            str(pick.get("date") or ""),
+            odds_match_team_key(pick.get("home") or ""),
+            odds_match_team_key(pick.get("away") or ""),
+            str(pick.get("market") or ""),
+            str(pick.get("pick") or ""),
+        )
+        current = best.get(key)
+        if current is None:
+            best[key] = pick
+            continue
+        current_score = (
+            _kickoff_value(current) is None,
+            -(1 if current.get("odds_source") == BZZOIRO_ODDS_SOURCE else 0),
+            -(1 if current.get("odds_match_method") == "exact" else 0),
+            -(1 if current.get("odds_match_method") == "alias_time" else 0),
+            -float(current.get("w_score") or 0),
+            -float(current.get("avg_p") or 0),
+            len(str(current.get("match") or "")),
+        )
+        new_score = (
+            _kickoff_value(pick) is None,
+            -(1 if pick.get("odds_source") == BZZOIRO_ODDS_SOURCE else 0),
+            -(1 if pick.get("odds_match_method") == "exact" else 0),
+            -(1 if pick.get("odds_match_method") == "alias_time" else 0),
+            -float(pick.get("w_score") or 0),
+            -float(pick.get("avg_p") or 0),
+            len(str(pick.get("match") or "")),
+        )
+        if new_score < current_score:
+            best[key] = pick
+        removed += 1
+    deduped = list(best.values())
+    deduped.sort(key=lambda r: (-r.get("w_score", 0.0), -r.get("avg_p", 0)))
+    return deduped, removed
+
+
 def print_buckets(buckets: dict, title_date: str = ""):
     """Print picks grouped by bucket."""
     total_cert = len(buckets.get(BUCKET_CERTIFIED, [])) + len(buckets.get(BUCKET_CAUTION, []))
@@ -1083,8 +1131,12 @@ def main():
                 file=sys.stderr,
             )
 
+        deduped_picks, removed_dupes = dedupe_operational_picks(picks)
+        if removed_dupes:
+            print(f"operational pick dedupe {day}: removed={removed_dupes}", file=sys.stderr)
+
         # Phase 7 enrichment + new fields
-        for p in picks:
+        for p in deduped_picks:
             rule = p.get("rule", "")
             meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "HEALTHY"})
             ctx = lookup_context(purity, p)
@@ -1100,7 +1152,7 @@ def main():
             p["market_type"] = p.get("market", "1x2")
             p["odds_tier"] = get_odds_tier(p.get("market", "1x2"))
 
-        all_picks.extend(picks)
+        all_picks.extend(deduped_picks)
 
     # group by bucket
     buckets: dict[str, list] = {b: [] for b in BUCKET_ORDER}
