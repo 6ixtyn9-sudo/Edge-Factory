@@ -286,14 +286,24 @@ def _comparison_rows(snapshot_rows: list[dict[str, str]]) -> tuple[list[dict[str
 
     comparisons: list[dict[str, Any]] = []
     unmatched = 0
+    insufficient_snapshots = 0
     for pick_id, rows in by_pick.items():
         rows.sort(key=lambda r: (str(r.get("captured_at_utc") or ""), str(r.get("snapshot_label") or "")))
         first = rows[0]
-        last = rows[-1]
         first_odds = _coerce_float(first.get("observed_odds"))
-        last_odds = _coerce_float(last.get("observed_odds"))
         if first_odds is None:
             unmatched += 1
+
+        comparable = len(rows) >= 2
+        if comparable:
+            last = rows[-1]
+            last_odds = _coerce_float(last.get("observed_odds"))
+            last_label = last.get("snapshot_label") or ""
+        else:
+            insufficient_snapshots += 1
+            last_odds = None
+            last_label = ""
+
         comparisons.append(
             {
                 "pick_id": pick_id,
@@ -302,14 +312,17 @@ def _comparison_rows(snapshot_rows: list[dict[str, str]]) -> tuple[list[dict[str
                 "first_odds": first_odds,
                 "last_odds": last_odds,
                 "first_label": first.get("snapshot_label") or "",
-                "last_label": last.get("snapshot_label") or "",
+                "last_label": last_label,
                 "snapshot_count": len(rows),
                 "raw_odds_delta": raw_odds_delta(first_odds, last_odds),
                 "implied_prob_delta": implied_prob_delta(first_odds, last_odds),
                 "beat_later_price": beat_later_price(first_odds, last_odds),
             }
         )
-    return comparisons, {"unmatched_picks": unmatched}
+    return comparisons, {
+        "unmatched_picks": unmatched,
+        "insufficient_snapshots": insufficient_snapshots,
+    }
 
 
 def _write_report_json(path: Path, payload: dict[str, Any]) -> None:
@@ -330,6 +343,7 @@ def _write_report_md(path: Path, start: str, end: str, overall: dict[str, Any], 
         f"- beat-later-price rate: {overall.get('beat_later_price_rate')}",
         f"- beat-later-price sample: {overall.get('beat_later_price_n', 0)}",
         f"- unmatched picks: {meta.get('unmatched_picks', 0)}",
+        f"- picks with fewer than two snapshots: {meta.get('insufficient_snapshots', 0)}",
         "",
         "## By rule",
         "",
@@ -385,6 +399,7 @@ def report(start: str, end: str) -> int:
     print(f"CLV report — {start} to {end}")
     print(f"  total unique picks: {overall.get('total_picks', 0)}")
     print(f"  picks with at least two prices: {overall.get('with_two_prices', 0)}")
+    print(f"  picks with fewer than two snapshots: {meta.get('insufficient_snapshots', 0)}")
     print(f"  average implied-probability delta: {overall.get('avg_implied_prob_delta')}")
     print(f"  beat-later-price rate: {overall.get('beat_later_price_rate')}")
     print(f"  json: {json_path}")
