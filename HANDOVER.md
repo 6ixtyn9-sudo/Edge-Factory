@@ -23,6 +23,8 @@ BetExplorer research is concluded and should not be promoted into production.
 PredictZ and Windrawwin remain shadow-only.
 A small CLV audit spike is now wired into scripts/daily.py.
 Current CLV is audit-only and not used for certification or pick gating.
+Trusted current operational baseline starts on 2026-06-17.
+Treat 2026-06-17 as day 0/1 of the current machine-auditable regime.
 Best next focus is maintaining the pipeline, monitoring certified edges, and improving CLV coverage using existing real-book odds.
 Expected healthy accounting:
 
@@ -69,12 +71,18 @@ writes localdata/purity_registry.json
 Picks
 scripts/picks_today.py
 writes stdout and localdata/picks_today.json
+daily.py also archives final target-day picks to localdata/picks_YYYY-MM-DD.json
 CLV audit
 scripts/audit_clv.py
 writes localdata/clv_snapshots_YYYY-MM.csv.gz
 writes localdata/clv_report_rolling.json
 writes localdata/clv_report_YYYY-MM-DD.md
 captures pick-time and end-of-run snapshots from daily.py
+Recent picks audit
+scripts/audit_recent_picks.py
+writes localdata/picks_audit_rolling.json
+writes localdata/picks_audit_YYYY-MM-DD.md
+scores archived daily picks against settled warehouse results
 Future planning
 inline inside scripts/daily.py
 writes localdata/picks_YYYY-MM-DD.txt
@@ -103,11 +111,13 @@ mine_consensus
 decay_monitor
 assay_purity
 picks_today
+archive target-day picks JSON
 audit_clv pick_time
 inline future planner
 restore target picks
 audit_clv end_of_run
 audit_clv rolling report
+audit_recent_picks rolling report
 sync_supabase
 Naming convention:
 
@@ -245,10 +255,14 @@ CLV capture and report utility
 capture is wired into daily.py with pick_time and end_of_run labels
 report stays audit-only in v1
 writes unmatched diagnostics for missed live odds matches
+scripts/audit_recent_picks.py
+recent operational performance audit
+reads archived picks_YYYY-MM-DD.json files and scores settled 1x2 picks against warehouse results
 scripts/daily.py
 single orchestrator
 also contains inline future planner
 also triggers CLV capture and rolling report
+also archives target-day picks JSON and runs recent picks audit
 scripts/sync_supabase.py
 syncs certified edges and daily bucketed picks to Supabase
 Optional research-only scripts:
@@ -595,9 +609,11 @@ python3 scripts/mine_consensus.py
 PYTHONPATH=src python3 scripts/decay_monitor.py
 PYTHONPATH=src python3 scripts/assay_purity.py
 PYTHONPATH=src python3 scripts/picks_today.py 2026-06-16
+cp localdata/picks_today.json localdata/picks_2026-06-16.json
 PYTHONPATH=src python3 scripts/audit_clv.py capture --date 2026-06-16 --label pick_time
 PYTHONPATH=src python3 scripts/audit_clv.py capture --date 2026-06-16 --label end_of_run
 PYTHONPATH=src python3 scripts/audit_clv.py report --start 2026-05-18 --end 2026-06-16
+PYTHONPATH=src python3 scripts/audit_recent_picks.py --end 2026-06-16 --days 30
 PYTHONPATH=src python3 scripts/sync_supabase.py
 Tests:
 
@@ -623,6 +639,10 @@ currently audit-only
 same-day report is only meaningful after at least two snapshot labels exist for a pick
 current daily.py captures pick_time and end_of_run automatically
 same-label reruns are expected to show duplicate skips
+recent picks audit
+currently 1x2-only and settled-results-only
+depends on archived picks_YYYY-MM-DD.json files existing
+legacy per-date .txt reports from before 2026-06-17 are human reference only and should not be used as machine-performance history for the current regime
 operational live odds matching no longer relies on entity-registry canonical fallback
 current live odds order is bzzoiro_odds first, then scoutingstats embedded odds, then existing pick-row fallback
 matching path inside each odds source is exact match, explicit odds-only aliases, then kickoff-aware alias fallback
@@ -765,6 +785,19 @@ same-label reruns dedupe correctly
 a report with only one snapshot per pick must show no CLV comparison yet
 live odds matching is now isolated from entity-registry canonical fallback
 current operational path is bzzoiro_odds first, then scoutingstats embedded odds, with exact match, explicit odds-only aliases, and kickoff-aware alias fallback inside each source
+
+Current regime rule:
+
+start trusted machine-performance history from 2026-06-17
+treat older .txt reports as legacy human reference only
+let the current soccer system run for about one week before deciding on another sport
+
+Readiness gate before sport #2:
+
+seven consecutive current-regime runs without major breakage
+recent picks audit populated with real settled results
+live odds coverage no longer obviously broken
+no recurring duplicate-event or identity drift issues
 
 Next session should focus on:
 
