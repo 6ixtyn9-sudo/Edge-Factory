@@ -26,6 +26,7 @@ EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
 LOCALDATA = ROOT / "localdata"
 BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
+SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 
 # Odds feeds and prediction feeds sometimes use different country/team labels.
 # Keep this local to odds matching so certified mining/team joins remain unchanged.
@@ -591,6 +592,47 @@ def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
         return []
 
 
+def _read_cached_scoutingstats(day: str) -> list[dict]:
+    """Read cached scoutingstats rows for a day from the monthly CSV cache."""
+    month = day[:7]
+    path = LOCALDATA / f"scoutingstats_{month}.csv.gz"
+    if not path.exists():
+        return []
+    try:
+        with gzip.open(path, "rt", newline="") as fh:
+            return [
+                r for r in csv.DictReader(fh)
+                if r.get("date") == day and r.get("hs") in (None, "")
+            ]
+    except Exception:
+        return []
+
+
+def _scoutingstats_rows_to_odds(rows: list[dict]) -> list[dict]:
+    out: list[dict] = []
+    for row in rows:
+        base = {
+            "date": row.get("date"),
+            "kickoff": row.get("kickoff") or row.get("time"),
+            "league": row.get("league"),
+            "home": row.get("home"),
+            "away": row.get("away"),
+            "captured_at": row.get("kickoff") or row.get("time") or "",
+            "bookmaker": SCOUTINGSTATS_ODDS_SOURCE,
+        }
+        for market, mapping in (
+            ("1x2", {"home": "odd1", "draw": "oddx", "away": "odd2"}),
+            ("ou_2.5", {"over": "odd_o25", "under": "odd_u25"}),
+            ("btts", {"yes": "odd_gg", "no": "odd_ng"}),
+        ):
+            for selection, col in mapping.items():
+                odds = _valid_decimal_odds(row.get(col))
+                if odds is None:
+                    continue
+                out.append({**base, "market": market, "selection": selection, "odds": odds})
+    return out
+
+
 def _fetch_live_bzzoiro_odds(day: str) -> list[dict]:
     """Fetch live odds via adapter. Missing token/API failure -> zero rows."""
     try:
@@ -605,25 +647,7 @@ def _refresh_bzzoiro_odds() -> bool:
     return os.environ.get("BZZOIRO_ODDS_REFRESH", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
-def bzzoiro_odds_bundle(
-    day: str,
-    *,
-    live: bool = True,
-    stats: dict | None = None,
-) -> dict[str, dict]:
-    """Best available bzzoiro_odds rows for exact and kickoff-aware fallback matching.
-
-    Matching order should remain:
-      1. exact legacy odds key
-      2. explicit odds-only alias key + kickoff proximity
-      3. explicit odds-only alias key when there is exactly one candidate
-    """
-    cached_rows = _read_cached_bzzoiro_odds(day)
-    live_rows: list[dict] = []
-    if live and (_refresh_bzzoiro_odds() or not cached_rows):
-        live_rows = _fetch_live_bzzoiro_odds(day)
-
-    rows = cached_rows + live_rows
+def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | None = None) -> dict[str, dict]:
     exact: dict[tuple[str, str, str, str, str], dict] = {}
     time_candidates: dict[tuple[str, str, str, str, str], list[dict]] = {}
     market_candidates: dict[tuple[str, str, str], list[dict]] = {}
@@ -639,6 +663,7 @@ def bzzoiro_odds_bundle(
         valid_rows += 1
         normalized = dict(row)
         normalized["odds"] = odds
+        normalized.setdefault("provider", provider)
         if _prefer_odds_row(normalized, exact.get(exact_key)):
             exact[exact_key] = normalized
         time_candidates.setdefault(time_key, []).append(normalized)
@@ -666,21 +691,56 @@ def bzzoiro_odds_bundle(
 
     if stats is not None:
         stats.update({
-            "cached_rows": len(cached_rows),
-            "live_rows": len(live_rows),
             "raw_rows": len(rows),
             "valid_rows": valid_rows,
             "valid_keys": len(exact),
             "time_match_keys": len(time_candidates),
             "market_candidate_keys": len(market_candidates),
-            "refreshed": bool(live_rows),
         })
 
     return {
+        "provider": provider,
         "exact": exact,
         "time_candidates": time_candidates,
         "market_candidates": market_candidates,
     }
+
+
+def bzzoiro_odds_bundle(
+    day: str,
+    *,
+    live: bool = True,
+    stats: dict | None = None,
+) -> dict[str, dict]:
+    """Best available bzzoiro_odds rows for exact and kickoff-aware fallback matching."""
+    cached_rows = _read_cached_bzzoiro_odds(day)
+    live_rows: list[dict] = []
+    if live and (_refresh_bzzoiro_odds() or not cached_rows):
+        live_rows = _fetch_live_bzzoiro_odds(day)
+
+    bundle = _odds_bundle_from_rows(cached_rows + live_rows, provider=BZZOIRO_ODDS_SOURCE, stats=stats)
+    if stats is not None:
+        stats.update({
+            "cached_rows": len(cached_rows),
+            "live_rows": len(live_rows),
+            "refreshed": bool(live_rows),
+        })
+    return bundle
+
+
+def scoutingstats_odds_bundle(
+    day: str,
+    *,
+    cached_rows: list[dict] | None = None,
+    stats: dict | None = None,
+) -> dict[str, dict]:
+    """Secondary odds bundle built from scoutingstats upcoming rows."""
+    source_rows = cached_rows if cached_rows is not None else _read_cached_scoutingstats(day)
+    odds_rows = _scoutingstats_rows_to_odds(source_rows)
+    bundle = _odds_bundle_from_rows(odds_rows, provider=SCOUTINGSTATS_ODDS_SOURCE, stats=stats)
+    if stats is not None:
+        stats.update({"cached_rows": len(source_rows), "live_rows": 0, "refreshed": False})
+    return bundle
 
 
 def bzzoiro_odds_index(
@@ -693,7 +753,7 @@ def bzzoiro_odds_index(
     return bzzoiro_odds_bundle(day, live=live, stats=stats)["exact"]
 
 
-def find_bzzoiro_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
+def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
     """Find the best odds row for a pick using exact then kickoff-aware fallback."""
     if "exact" not in odds_data:
         key = (
@@ -734,7 +794,7 @@ def find_bzzoiro_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str
     return None, None
 
 
-def nearby_bzzoiro_candidates(pick: dict, odds_data: dict, *, limit: int = 5) -> list[dict]:
+def nearby_odds_candidates(pick: dict, odds_data: dict, *, limit: int = 5) -> list[dict]:
     """Return nearby same-date odds rows for unmatched diagnostics."""
     market_key = _market_pick_key(pick, selection_key="pick")
     candidates = list(odds_data.get("market_candidates", {}).get(market_key, []))
@@ -765,18 +825,19 @@ def nearby_bzzoiro_candidates(pick: dict, odds_data: dict, *, limit: int = 5) ->
     return out
 
 
-def enrich_with_bzzoiro_odds(picks: list[dict], odds_index: dict) -> int:
-    """Prefer matching bzzoiro real-book odds before purity bucketing.
-
-    Matching order:
-      1. exact odds key
-      2. explicit odds-only alias key + kickoff proximity
-      3. explicit odds-only alias key when unique
-      4. existing embedded odds fallback
-    """
+def enrich_with_live_odds(
+    picks: list[dict],
+    primary_odds: dict,
+    secondary_odds: dict | None = None,
+) -> int:
+    """Prefer primary live odds, then secondary live odds, then embedded fallback."""
     enriched = 0
     for pick in picks:
-        row, match_method = find_bzzoiro_odds_row(pick, odds_index)
+        row, match_method = find_odds_row(pick, primary_odds)
+        provider = primary_odds.get("provider", BZZOIRO_ODDS_SOURCE) if row else None
+        if not row and secondary_odds is not None:
+            row, match_method = find_odds_row(pick, secondary_odds)
+            provider = secondary_odds.get("provider", SCOUTINGSTATS_ODDS_SOURCE) if row else None
         if not row:
             if pick.get("odds") is not None:
                 pick.setdefault("odds_source", "forebet_best")
@@ -788,15 +849,20 @@ def enrich_with_bzzoiro_odds(picks: list[dict], odds_index: dict) -> int:
         previous_odds = pick.get("odds")
         previous_source = pick.get("odds_source") or ("forebet_best" if previous_odds is not None else None)
         pick["odds"] = _valid_decimal_odds(row.get("odds"))
-        pick["odds_source"] = BZZOIRO_ODDS_SOURCE
+        pick["odds_source"] = provider or BZZOIRO_ODDS_SOURCE
         pick["odds_match_method"] = match_method or "exact"
         pick["bookmaker"] = row.get("bookmaker")
         pick["odds_captured_at"] = row.get("captured_at")
         pick["odds_league"] = row.get("league")
-        if previous_odds is not None and previous_source != BZZOIRO_ODDS_SOURCE:
+        if previous_odds is not None and previous_source != pick["odds_source"]:
             pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
         enriched += 1
     return enriched
+
+
+def enrich_with_bzzoiro_odds(picks: list[dict], odds_index: dict) -> int:
+    """Backward-compatible wrapper for primary-only live odds enrichment."""
+    return enrich_with_live_odds(picks, odds_index, None)
 
 
 def probs_1x2(row):
@@ -976,7 +1042,7 @@ def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = Non
                          {"yes": "odd_gg", "no": "odd_ng"})
     # Sort by w_score (weighted agreement) then avg_p; both descending.
     picks.sort(key=lambda r: (-r.get("w_score", 0.0), -r.get("avg_p", 0)))
-    return picks, vetoes, n_up
+    return picks, vetoes, n_up, data
 
 
 def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
@@ -1106,27 +1172,35 @@ def main():
     total_vetoes = 0
     total_upcoming = 0
     for day in days:
-        picks, vetoes, n_up = run_day(day, t1x2, ou_edge, btts_edge,
-                                      source_weights_1x2=source_weights_1x2)
+        picks, vetoes, n_up, data = run_day(day, t1x2, ou_edge, btts_edge,
+                                            source_weights_1x2=source_weights_1x2)
         total_vetoes += vetoes
         total_upcoming += n_up
 
-        odds_stats: dict = {}
-        odds_bundle = bzzoiro_odds_bundle(day, stats=odds_stats)
-        enriched_n = enrich_with_bzzoiro_odds(picks, odds_bundle)
-        if odds_stats.get("raw_rows") or enriched_n:
+        bzz_stats: dict = {}
+        scouting_stats: dict = {}
+        odds_bundle = bzzoiro_odds_bundle(day, stats=bzz_stats)
+        secondary_bundle = scoutingstats_odds_bundle(
+            day,
+            cached_rows=list(data.get("scoutingstats", {}).values()),
+            stats=scouting_stats,
+        )
+        enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
+        if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or enriched_n:
             exact_n = sum(1 for p in picks if p.get("odds_match_method") == "exact")
             alias_time_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_time")
             alias_unique_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_unique")
             fallback_n = sum(1 for p in picks if p.get("odds_match_method") == "fallback")
+            bzz_n = sum(1 for p in picks if p.get("odds_source") == BZZOIRO_ODDS_SOURCE)
+            scouting_n = sum(1 for p in picks if p.get("odds_source") == SCOUTINGSTATS_ODDS_SOURCE)
             print(
-                f"bzzoiro_odds enrichment {day}: "
-                f"cached_rows={odds_stats.get('cached_rows', 0)} "
-                f"live_rows={odds_stats.get('live_rows', 0)} "
-                f"valid_keys={odds_stats.get('valid_keys', len(odds_bundle.get('exact', {})))} "
-                f"time_match_keys={odds_stats.get('time_match_keys', 0)} "
-                f"market_candidate_keys={odds_stats.get('market_candidate_keys', 0)} "
-                f"enriched={enriched_n} "
+                f"live odds enrichment {day}: "
+                f"bzz_cached={bzz_stats.get('cached_rows', 0)} "
+                f"bzz_live={bzz_stats.get('live_rows', 0)} "
+                f"bzz_valid_keys={bzz_stats.get('valid_keys', len(odds_bundle.get('exact', {})))} "
+                f"ss_cached={scouting_stats.get('cached_rows', 0)} "
+                f"ss_valid_keys={scouting_stats.get('valid_keys', len(secondary_bundle.get('exact', {})))} "
+                f"enriched={enriched_n} bzz={bzz_n} scoutingstats={scouting_n} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} fallback={fallback_n}",
                 file=sys.stderr,
             )
