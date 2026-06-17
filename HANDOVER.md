@@ -21,20 +21,18 @@ Consensus counts are back to expected levels.
 Certified edge accounting is restored.
 BetExplorer research is concluded and should not be promoted into production.
 PredictZ and Windrawwin remain shadow-only.
-A small CLV audit spike is now wired into scripts/daily.py.
-Current CLV is audit-only and not used for certification or pick gating.
-Best next focus is maintaining the pipeline, monitoring certified edges, and improving CLV coverage using existing real-book odds.
+Best next focus is maintaining the pipeline, monitoring certified edges, and building CLV using existing real-book odds.
 Expected healthy accounting:
 
 consensus2: about 27,450
 consensus3: about 15,807
 consensus4: about 383
 certified audited: 9
-benched by decay: 1
-active certified: 8
-
-Current stable architecture
+benched by decay: 2
+active certified: 7
+1) Current stable architecture
 Core principle:
+
 Edge Factory is CSV / DuckDB first.
 Supabase is a read model, not the live analytics engine.
 Pipeline flow:
@@ -69,12 +67,6 @@ writes localdata/purity_registry.json
 Picks
 scripts/picks_today.py
 writes stdout and localdata/picks_today.json
-CLV audit
-scripts/audit_clv.py
-writes localdata/clv_snapshots_YYYY-MM.csv.gz
-writes localdata/clv_report_rolling.json
-writes localdata/clv_report_YYYY-MM-DD.md
-captures pick-time and end-of-run snapshots from daily.py
 Future planning
 inline inside scripts/daily.py
 writes localdata/picks_YYYY-MM-DD.txt
@@ -103,11 +95,7 @@ mine_consensus
 decay_monitor
 assay_purity
 picks_today
-audit_clv pick_time
 inline future planner
-restore target picks
-audit_clv end_of_run
-audit_clv rolling report
 sync_supabase
 Naming convention:
 
@@ -153,7 +141,7 @@ Correct restored state:
 consensus2: about 27,450
 consensus3: about 15,807
 consensus4: about 383
-certified audited / benched / active: 9 / 1 / 8
+certified audited / benched / active: 9 / 2 / 7
 Join-key rule:
 
 norm_team() and norm_team_sql() are legacy 9-character miner / source join keys.
@@ -168,8 +156,9 @@ context lookup
 read-model keys
 It must not silently alter warehouse / miner joins.
 
-Key files
+4) Key files
 Core package:
+
 src/edgefactory/assay.py
 Wilson LB / UB
 grading
@@ -190,11 +179,6 @@ context and reporting only
 src/edgefactory/market_registry.py
 market classification
 odds-tier classification
-src/edgefactory/clv.py
-pure CLV helpers
-pick ids
-implied probability conversion
-odds movement summaries
 src/edgefactory/config.py
 certification gates
 important defaults:
@@ -233,14 +217,9 @@ certified picks engine
 purity-aware buckets
 real-book odds enrichment
 weighted consensus display and sorting
-scripts/audit_clv.py
-CLV capture and report utility
-capture is wired into daily.py with pick_time and end_of_run labels
-report stays audit-only in v1
 scripts/daily.py
 single orchestrator
 also contains inline future planner
-also triggers CLV capture and rolling report
 scripts/sync_supabase.py
 syncs certified edges and daily bucketed picks to Supabase
 Optional research-only scripts:
@@ -316,28 +295,29 @@ freesupertips
 afootballreport
 Phase A showed PredictZ and Windrawwin are not ready for certification under the current split.
 
-Certified edge state
+6) Certified edge state
 Latest stable counts:
+
 consensus2: about 27,450
 consensus3: about 15,807
 consensus4: about 383
 Latest certified audit shape:
 
 certified audited: 9
-benched by decay: 1
-active certified: 8
+benched by decay: 2
+active certified: 7
 Expected active / base findings:
 
 2way-unanimous avg_p>=70 -> WATCH / active
 3way-unanimous avg_p>=65 -> HEALTHY / active
 2way-unanimous min_p>=60 avg_p>=65 -> HEALTHY / active
-3way-unanimous min_p>=60 avg_p>=60 -> WATCH / active
 3way-unanimous min_p>=60 avg_p>=65 -> WATCH / active
 2way-unanimous home-only avg_p>=65 -> HEALTHY / active
 3way-unanimous home-only avg_p>=60 -> HEALTHY / active
 3way-unanimous home-only avg_p>=65 -> HEALTHY / active
 Benched by the 60-day decay circuit breaker:
 
+3way-unanimous min_p>=60 avg_p>=60
 2way+bc-confirms avg_p>=60
 Do not manually unbench. The next scripts/mine_consensus.py run re-evaluates from full walk-forward history.
 
@@ -404,8 +384,9 @@ These appear in a shadow section but are excluded from localdata/edges_consensus
 
 Do not use PredictZ or Windrawwin in picks yet. Do not force certification.
 
-BetExplorer investigation — concluded negative for alpha
+9) BetExplorer investigation — concluded negative for alpha
 BetExplorer investigation is complete. It is not useful enough to add to consensus or picks.
+
 Research utilities added:
 
 scripts/backfill_betexplorer.py
@@ -585,9 +566,6 @@ python3 scripts/mine_consensus.py
 PYTHONPATH=src python3 scripts/decay_monitor.py
 PYTHONPATH=src python3 scripts/assay_purity.py
 PYTHONPATH=src python3 scripts/picks_today.py 2026-06-16
-PYTHONPATH=src python3 scripts/audit_clv.py capture --date 2026-06-16 --label pick_time
-PYTHONPATH=src python3 scripts/audit_clv.py capture --date 2026-06-16 --label end_of_run
-PYTHONPATH=src python3 scripts/audit_clv.py report --start 2026-05-18 --end 2026-06-16
 PYTHONPATH=src python3 scripts/sync_supabase.py
 Tests:
 
@@ -608,11 +586,6 @@ sparse or unrated
 treat UNKNOWN as CAUTION, not a hard block
 odds-band purity
 mature and useful
-CLV audit
-currently audit-only
-same-day report is only meaningful after at least two snapshot labels exist for a pick
-current daily.py captures pick_time and end_of_run automatically
-same-label reruns are expected to show duplicate skips
 bzzoiro
 requires BZZOIRO_TOKEN
 curl_cffi
@@ -635,10 +608,9 @@ Monitor current certified soccer edges.
 let the decay circuit breaker do its job
 do not manually unbench
 CLV with existing operational odds.
-current state: pick_time and end_of_run snapshots are wired into daily.py
-keep CLV audit-only for now
-improve odds coverage and later-snapshot usefulness
+use existing bzzoiro_odds and real-book snapshots already captured
 track pick-time price versus later or closing price
+add CLV as an audit dimension first
 only later consider CLV as a feature
 Tournament / league classification.
 classify competitions such as domestic league, cup, friendly, international, youth / reserves / women
@@ -692,8 +664,7 @@ L4 — No stubs or placeholders
 Do not leave:
 
 ...
-
-keep existing
+# keep existing
 editorial comments pretending to be code
 Payload files must be complete and runnable.
 
@@ -740,19 +711,10 @@ and require a row-count report
 16) Current call
 BetExplorer investigation is concluded. It is not useful enough to add to consensus or picks.
 
-CLV audit spike is now live.
-
-Current CLV state:
-
-pick_time and end_of_run snapshots are captured automatically from scripts/daily.py
-reporting is audit-only
-same-label reruns dedupe correctly
-a report with only one snapshot per pick must show no CLV comparison yet
-
 Next session should focus on:
 
 stable current daily pipeline
 monitoring certified edges
-CLV coverage and later-snapshot quality using existing bzzoiro_odds and real-book odds
+CLV with existing bzzoiro_odds and real-book odds
 avoiding broad source rabbit holes unless standalone proof exists
 Last updated: 2026-06-17
