@@ -68,6 +68,28 @@ def beat_later_price(first_odds: float | None, last_odds: float | None) -> bool 
     return last < first
 
 
+def check_clv_protection(
+    initial_odds: float | None,
+    current_odds: float | None,
+    steam_max: float = 0.15,
+    drift_max: float = 0.20,
+) -> str | None:
+    """Return 'STEAM_VETO' if odds dropped too much, 'DRIFT_VETO' if rose too much, or None."""
+    try:
+        first = float(initial_odds)
+        last = float(current_odds)
+    except (TypeError, ValueError):
+        return None
+    if first <= 1.0 or last <= 1.0:
+        return None
+
+    if last < first * (1.0 - steam_max):
+        return "STEAM_VETO"
+    if last > first * (1.0 + drift_max):
+        return "DRIFT_VETO"
+    return None
+
+
 def summarize_clv(rows: list[dict]) -> dict:
     total = len(rows)
     with_two_prices = 0
