@@ -27,6 +27,7 @@ PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
 LOCALDATA = ROOT / "localdata"
 BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
+ODDSPAPI_ODDS_SOURCE = "oddspapi_odds"
 
 # Odds feeds and prediction feeds sometimes use different country/team labels.
 # Keep this local to odds matching so certified mining/team joins remain unchanged.
@@ -743,6 +744,120 @@ def scoutingstats_odds_bundle(
     return bundle
 
 
+def _oddspapi_fixture_exact_key(fixture: dict) -> tuple[str, str, str] | None:
+    day = str(fixture.get("startTime") or "")[:10]
+    home = odds_team_key(fixture.get("participant1Name") or "")
+    away = odds_team_key(fixture.get("participant2Name") or "")
+    if not (day and home and away):
+        return None
+    return (day, home, away)
+
+
+def _oddspapi_fixture_time_key(fixture: dict) -> tuple[str, str, str] | None:
+    day = str(fixture.get("startTime") or "")[:10]
+    home = odds_match_team_key(fixture.get("participant1Name") or "")
+    away = odds_match_team_key(fixture.get("participant2Name") or "")
+    if not (day and home and away):
+        return None
+    return (day, home, away)
+
+
+def _pick_event_exact_key(pick: dict) -> tuple[str, str, str]:
+    return (
+        str(pick.get("date") or ""),
+        odds_team_key(pick.get("home") or ""),
+        odds_team_key(pick.get("away") or ""),
+    )
+
+
+def _pick_event_time_key(pick: dict) -> tuple[str, str, str]:
+    return (
+        str(pick.get("date") or ""),
+        odds_match_team_key(pick.get("home") or ""),
+        odds_match_team_key(pick.get("away") or ""),
+    )
+
+
+def _load_oddspapi_module():
+    try:
+        return importlib.import_module("edgefactory.sources.oddspapi_odds")
+    except Exception:
+        return None
+
+
+def _match_oddspapi_fixture(pick: dict, fixtures: list[dict]) -> dict | None:
+    exact_key = _pick_event_exact_key(pick)
+    exact_matches = [f for f in fixtures if _oddspapi_fixture_exact_key(f) == exact_key]
+    if len(exact_matches) == 1:
+        return exact_matches[0]
+    if len(exact_matches) > 1 and _kickoff_value(pick):
+        bounded = [
+            (_kickoff_delta_minutes(_kickoff_value(pick), f.get("startTime")), f)
+            for f in exact_matches
+        ]
+        bounded = [(delta, f) for delta, f in bounded if delta is not None and delta <= 90]
+        if bounded:
+            bounded.sort(key=lambda item: item[0])
+            return bounded[0][1]
+
+    time_key = _pick_event_time_key(pick)
+    time_matches = [f for f in fixtures if _oddspapi_fixture_time_key(f) == time_key]
+    if len(time_matches) == 1:
+        return time_matches[0]
+    if time_matches and _kickoff_value(pick):
+        bounded = [
+            (_kickoff_delta_minutes(_kickoff_value(pick), f.get("startTime")), f)
+            for f in time_matches
+        ]
+        bounded = [(delta, f) for delta, f in bounded if delta is not None and delta <= 90]
+        if bounded:
+            bounded.sort(key=lambda item: item[0])
+            return bounded[0][1]
+    return None
+
+
+def oddspapi_odds_bundle(
+    day: str,
+    *,
+    target_picks: list[dict] | None = None,
+    stats: dict | None = None,
+) -> dict[str, dict]:
+    """Tertiary live odds bundle from OddsPapi, limited to unmatched same-day picks."""
+    mod = _load_oddspapi_module()
+    if mod is None or not getattr(mod, "enabled", lambda: False)():
+        if stats is not None:
+            stats.update({"fixtures": 0, "matched_fixtures": 0, "odds_calls": 0, "enabled": False})
+        return _odds_bundle_from_rows([], provider=ODDSPAPI_ODDS_SOURCE, stats=stats)
+
+    fixtures = list(mod.fetch_fixtures(day) or [])
+    matched_fixtures: dict[str, dict] = {}
+    for pick in target_picks or []:
+        if str(pick.get("market") or "") != "1x2":
+            continue
+        fixture = _match_oddspapi_fixture(pick, fixtures)
+        if fixture and fixture.get("fixtureId"):
+            matched_fixtures[str(fixture["fixtureId"])] = fixture
+
+    odds_rows: list[dict] = []
+    for fixture_id in matched_fixtures:
+        try:
+            odds_rows.extend(mod.rows_from_odds_response(mod.fetch_odds(fixture_id)))
+        except Exception:
+            continue
+
+    bundle = _odds_bundle_from_rows(odds_rows, provider=ODDSPAPI_ODDS_SOURCE, stats=stats)
+    if stats is not None:
+        stats.update(
+            {
+                "fixtures": len(fixtures),
+                "matched_fixtures": len(matched_fixtures),
+                "odds_calls": len(matched_fixtures),
+                "enabled": True,
+            }
+        )
+    return bundle
+
+
 def bzzoiro_odds_index(
     day: str,
     *,
@@ -829,8 +944,9 @@ def enrich_with_live_odds(
     picks: list[dict],
     primary_odds: dict,
     secondary_odds: dict | None = None,
+    tertiary_odds: dict | None = None,
 ) -> int:
-    """Prefer primary live odds, then secondary live odds, then embedded fallback."""
+    """Prefer primary, then secondary, then tertiary live odds, then embedded fallback."""
     enriched = 0
     for pick in picks:
         row, match_method = find_odds_row(pick, primary_odds)
@@ -838,6 +954,9 @@ def enrich_with_live_odds(
         if not row and secondary_odds is not None:
             row, match_method = find_odds_row(pick, secondary_odds)
             provider = secondary_odds.get("provider", SCOUTINGSTATS_ODDS_SOURCE) if row else None
+        if not row and tertiary_odds is not None:
+            row, match_method = find_odds_row(pick, tertiary_odds)
+            provider = tertiary_odds.get("provider", ODDSPAPI_ODDS_SOURCE) if row else None
         if not row:
             if pick.get("odds") is not None:
                 pick.setdefault("odds_source", "forebet_best")
@@ -1045,6 +1164,17 @@ def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = Non
     return picks, vetoes, n_up, data
 
 
+def _odds_source_rank(source: object) -> int:
+    s = str(source or "")
+    if s == BZZOIRO_ODDS_SOURCE:
+        return 3
+    if s == ODDSPAPI_ODDS_SOURCE:
+        return 2
+    if s == SCOUTINGSTATS_ODDS_SOURCE:
+        return 1
+    return 0
+
+
 def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
     """Collapse duplicate operational picks for the same real-world event.
 
@@ -1069,7 +1199,7 @@ def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
             continue
         current_score = (
             _kickoff_value(current) is None,
-            -(1 if current.get("odds_source") == BZZOIRO_ODDS_SOURCE else 0),
+            -_odds_source_rank(current.get("odds_source")),
             -(1 if current.get("odds_match_method") == "exact" else 0),
             -(1 if current.get("odds_match_method") == "alias_time" else 0),
             -float(current.get("w_score") or 0),
@@ -1078,7 +1208,7 @@ def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
         )
         new_score = (
             _kickoff_value(pick) is None,
-            -(1 if pick.get("odds_source") == BZZOIRO_ODDS_SOURCE else 0),
+            -_odds_source_rank(pick.get("odds_source")),
             -(1 if pick.get("odds_match_method") == "exact" else 0),
             -(1 if pick.get("odds_match_method") == "alias_time" else 0),
             -float(pick.get("w_score") or 0),
@@ -1179,20 +1309,23 @@ def main():
 
         bzz_stats: dict = {}
         scouting_stats: dict = {}
+        oddspapi_stats: dict = {}
         odds_bundle = bzzoiro_odds_bundle(day, stats=bzz_stats)
         secondary_bundle = scoutingstats_odds_bundle(
             day,
             cached_rows=list(data.get("scoutingstats", {}).values()),
             stats=scouting_stats,
         )
-        enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
-        if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or enriched_n:
+        tertiary_bundle = oddspapi_odds_bundle(day, target_picks=picks, stats=oddspapi_stats)
+        enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle, tertiary_bundle)
+        if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or oddspapi_stats.get("raw_rows") or enriched_n:
             exact_n = sum(1 for p in picks if p.get("odds_match_method") == "exact")
             alias_time_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_time")
             alias_unique_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_unique")
             fallback_n = sum(1 for p in picks if p.get("odds_match_method") == "fallback")
             bzz_n = sum(1 for p in picks if p.get("odds_source") == BZZOIRO_ODDS_SOURCE)
             scouting_n = sum(1 for p in picks if p.get("odds_source") == SCOUTINGSTATS_ODDS_SOURCE)
+            oddspapi_n = sum(1 for p in picks if p.get("odds_source") == ODDSPAPI_ODDS_SOURCE)
             print(
                 f"live odds enrichment {day}: "
                 f"bzz_cached={bzz_stats.get('cached_rows', 0)} "
@@ -1200,7 +1333,10 @@ def main():
                 f"bzz_valid_keys={bzz_stats.get('valid_keys', len(odds_bundle.get('exact', {})))} "
                 f"ss_cached={scouting_stats.get('cached_rows', 0)} "
                 f"ss_valid_keys={scouting_stats.get('valid_keys', len(secondary_bundle.get('exact', {})))} "
-                f"enriched={enriched_n} bzz={bzz_n} scoutingstats={scouting_n} "
+                f"op_fixtures={oddspapi_stats.get('fixtures', 0)} "
+                f"op_matched={oddspapi_stats.get('matched_fixtures', 0)} "
+                f"op_valid_keys={oddspapi_stats.get('valid_keys', len(tertiary_bundle.get('exact', {})))} "
+                f"enriched={enriched_n} bzz={bzz_n} scoutingstats={scouting_n} oddspapi={oddspapi_n} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} fallback={fallback_n}",
                 file=sys.stderr,
             )
