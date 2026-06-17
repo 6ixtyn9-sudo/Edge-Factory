@@ -12,7 +12,13 @@ import os
 import time
 import urllib.parse
 import urllib.request
+import urllib.error
 from datetime import date as _date, timedelta
+
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36",
+    "Accept": "application/json",
+}
 
 TOKEN = os.environ.get("ODDSPAPI_API_KEY")
 BASE = "https://api.oddspapi.io/v4"
@@ -29,8 +35,15 @@ def _get_json(url: str, retries: int = 3):
     last: Exception | None = None
     for attempt in range(retries):
         try:
-            with urllib.request.urlopen(url, timeout=30) as resp:
+            req = urllib.request.Request(url, headers=HEADERS)
+            with urllib.request.urlopen(req, timeout=30) as resp:
                 return json.loads(resp.read().decode("utf-8", "replace"))
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code in (401, 403):
+                raise
+            if attempt < retries - 1:
+                time.sleep(1.5 * (attempt + 1))
         except Exception as exc:  # noqa: BLE001 - keep helper dependency-free
             last = exc
             if attempt < retries - 1:

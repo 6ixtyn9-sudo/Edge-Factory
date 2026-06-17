@@ -822,14 +822,32 @@ def oddspapi_odds_bundle(
     target_picks: list[dict] | None = None,
     stats: dict | None = None,
 ) -> dict[str, dict]:
-    """Tertiary live odds bundle from OddsPapi, limited to unmatched same-day picks."""
+    """Tertiary live odds bundle from OddsPapi, limited to unmatched same-day picks.
+
+    This source must never break picks_today. Any auth/quota/provider failure
+    disables the tertiary layer for the run and falls back silently to lower
+    priority odds paths.
+    """
     mod = _load_oddspapi_module()
     if mod is None or not getattr(mod, "enabled", lambda: False)():
         if stats is not None:
             stats.update({"fixtures": 0, "matched_fixtures": 0, "odds_calls": 0, "enabled": False})
         return _odds_bundle_from_rows([], provider=ODDSPAPI_ODDS_SOURCE, stats=stats)
 
-    fixtures = list(mod.fetch_fixtures(day) or [])
+    try:
+        fixtures = list(mod.fetch_fixtures(day) or [])
+    except Exception as exc:  # noqa: BLE001 - tertiary source must not kill picks
+        print(f"oddspapi fallback disabled for {day}: {exc}", file=sys.stderr)
+        if stats is not None:
+            stats.update({
+                "fixtures": 0,
+                "matched_fixtures": 0,
+                "odds_calls": 0,
+                "enabled": False,
+                "error": str(exc),
+            })
+        return _odds_bundle_from_rows([], provider=ODDSPAPI_ODDS_SOURCE, stats=stats)
+
     matched_fixtures: dict[str, dict] = {}
     for pick in target_picks or []:
         if str(pick.get("market") or "") != "1x2":
@@ -839,10 +857,12 @@ def oddspapi_odds_bundle(
             matched_fixtures[str(fixture["fixtureId"])] = fixture
 
     odds_rows: list[dict] = []
+    failed_calls = 0
     for fixture_id in matched_fixtures:
         try:
             odds_rows.extend(mod.rows_from_odds_response(mod.fetch_odds(fixture_id)))
         except Exception:
+            failed_calls += 1
             continue
 
     bundle = _odds_bundle_from_rows(odds_rows, provider=ODDSPAPI_ODDS_SOURCE, stats=stats)
@@ -852,6 +872,7 @@ def oddspapi_odds_bundle(
                 "fixtures": len(fixtures),
                 "matched_fixtures": len(matched_fixtures),
                 "odds_calls": len(matched_fixtures),
+                "odds_failed_calls": failed_calls,
                 "enabled": True,
             }
         )
