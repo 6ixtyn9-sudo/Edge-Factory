@@ -141,16 +141,13 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
         for match_date in sorted(picks_by_date):
             bzz_stats: dict[str, int] = {}
             scouting_stats: dict[str, int] = {}
-            oddspapi_stats: dict[str, int] = {}
             odds_index_by_date[match_date] = {
                 "primary": picks_today.bzzoiro_odds_bundle(match_date, stats=bzz_stats),
                 "secondary": picks_today.scoutingstats_odds_bundle(match_date, stats=scouting_stats),
-                "tertiary": picks_today.oddspapi_odds_bundle(match_date, target_picks=picks_by_date[match_date], stats=oddspapi_stats),
             }
             odds_stats_by_date[match_date] = {
                 "bzz_valid_keys": bzz_stats.get("valid_keys", 0),
                 "scouting_valid_keys": scouting_stats.get("valid_keys", 0),
-                "oddspapi_valid_keys": oddspapi_stats.get("valid_keys", 0),
             }
     finally:
         if should_refresh:
@@ -169,7 +166,6 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
     alias_unique_matches = 0
     bzz_matches = 0
     scouting_matches = 0
-    oddspapi_matches = 0
     unmatched_details: list[dict[str, Any]] = []
 
     for pick in picks:
@@ -188,8 +184,7 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
         odds_pair = odds_index_by_date.get(match_date, {})
         primary_odds = odds_pair.get("primary", {})
         secondary_odds = odds_pair.get("secondary", {})
-        tertiary_odds = odds_pair.get("tertiary", {})
-        picks_today.enrich_with_live_odds([live_pick], primary_odds, secondary_odds, tertiary_odds)
+        picks_today.enrich_with_live_odds([live_pick], primary_odds, secondary_odds)
         match_method = str(live_pick.get("odds_match_method") or "")
         live_odds_matched = match_method in {"exact", "alias_time", "alias_unique"}
         if live_odds_matched:
@@ -198,8 +193,6 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
                 bzz_matches += 1
             elif live_pick.get("odds_source") == picks_today.SCOUTINGSTATS_ODDS_SOURCE:
                 scouting_matches += 1
-            elif live_pick.get("odds_source") == picks_today.ODDSPAPI_ODDS_SOURCE:
-                oddspapi_matches += 1
             if match_method == "exact":
                 exact_matches += 1
             elif match_method == "alias_time":
@@ -222,7 +215,6 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
                     "away_key": picks_today.odds_match_team_key(pick.get("away") or ""),
                     "nearby_bzzoiro_candidates": picks_today.nearby_odds_candidates(pick, primary_odds),
                     "nearby_scoutingstats_candidates": picks_today.nearby_odds_candidates(pick, secondary_odds),
-                    "nearby_oddspapi_candidates": picks_today.nearby_odds_candidates(pick, tertiary_odds),
                 }
             )
         observed_odds = _coerce_float(live_pick.get("odds"))
@@ -268,7 +260,6 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
         "alias_unique_matches": alias_unique_matches,
         "bzz_matches": bzz_matches,
         "scouting_matches": scouting_matches,
-        "oddspapi_matches": oddspapi_matches,
         "missing_odds": missing,
         "used_input_odds_fallback": fallback,
         "dates_seen": len(odds_stats_by_date),
@@ -312,7 +303,6 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
     print(f"  live odds matched: {stats['live_odds_matched']}")
     print(f"    bzzoiro: {stats['bzz_matches']}")
     print(f"    scoutingstats: {stats['scouting_matches']}")
-    print(f"    oddspapi: {stats['oddspapi_matches']}")
     print(f"    exact: {stats['exact_matches']}")
     print(f"    alias_time: {stats['alias_time_matches']}")
     print(f"    alias_unique: {stats['alias_unique_matches']}")
