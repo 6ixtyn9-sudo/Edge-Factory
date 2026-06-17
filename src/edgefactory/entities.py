@@ -19,7 +19,9 @@ from typing import Any
 from .util import compact_key, norm_entity_team, norm_league, norm_team
 
 ROOT = Path(__file__).resolve().parents[2]
-CONFIG_OVERRIDES_PATH = ROOT / "config" / "entity_overrides.json"
+CONFIG_OVERRIDES_PATH = ROOT / "Config" / "entity_overrides.json"
+if not CONFIG_OVERRIDES_PATH.exists():
+    CONFIG_OVERRIDES_PATH = ROOT / "config" / "entity_overrides.json"
 ENTITY_REGISTRY_PATH = ROOT / "localdata" / "entity_registry.json"
 
 
@@ -82,7 +84,7 @@ def canonical_league(raw: object) -> str:
     return norm_league(raw)
 
 
-def canonical_team(raw: object, *, width: int = 12) -> str:
+def canonical_team(raw: object, *, width: int = 24) -> str:
     """Return canonical team key for purity/reporting contexts."""
     override = _override_lookup("teams", raw)
     if override:

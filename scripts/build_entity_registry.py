@@ -165,7 +165,7 @@ def main() -> None:
             h_key = norm_entity_team(home)
             a_key = norm_entity_team(away)
             l_key = norm_league(league)
-            loose_event = (day, norm_entity_team(home, width=6), norm_entity_team(away, width=6))
+            loose_event = (day, norm_entity_team(home, width=24), norm_entity_team(away, width=24))
 
             league_dsu.find(l_key)
             team_dsu.find(h_key)

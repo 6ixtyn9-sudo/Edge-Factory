@@ -21,6 +21,11 @@ _NOISE = re.compile(
 
 _DASHES = str.maketrans({"–": "-", "—": "-", "−": "-", "‐": "-", "‑": "-"})
 
+_ENTITY_NOISE = re.compile(
+    r"\b(fc|cf|sc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting)\b",
+    re.IGNORECASE,
+)
+
 _ACCENT_FROM = (
     "ÀÁÂÃÄÅĀĂĄÇĆČĎĐÈÉÊËĒĖĘĚÌÍÎÏĪĮİŁÑŃŇÒÓÔÕÖØŌŐŔŘŚŠŞȘŤȚÙÚÛÜŪŮŰŲÝŸŽŹŻ"
     "àáâãäåāăąçćčďđèéêëēėęěìíîïīįıłñńňòóôõöøōőŕřśšşșťțùúûüūůűųýÿžźż"
@@ -59,14 +64,14 @@ def norm_team(name: str, width: int = 9) -> str:
     return s[:width]
 
 
-def norm_entity_team(name: object, width: int = 12) -> str:
+def norm_entity_team(name: object, width: int = 24) -> str:
     """Canonical team context key for purity/reporting/entity registry.
 
     Unlike norm_team(), this folds accents first so context keys do not lose
     letters: América -> america, Nõmme -> nomme.
     """
     s = fold_ascii(name)
-    s = _NOISE.sub(" ", s)
+    s = _ENTITY_NOISE.sub(" ", s)
     return re.sub(r"[^a-z0-9]", "", s)[:width]
 
 
@@ -98,10 +103,9 @@ def _sql_ascii_fold(expr: str) -> str:
     return f"lower({out})"
 
 
-def norm_entity_team_sql(col: str, width: int = 12) -> str:
+def norm_entity_team_sql(col: str, width: int = 24) -> str:
     noise = (
-        r"\b(fc|cf|sc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting|"
-        r"u17|u18|u19|u20|u21|u23|ii|b|w|women|reserves?|res)\b"
+        r"\b(fc|cf|sc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting)\b"
     )
     folded = _sql_ascii_fold(col)
     return (
