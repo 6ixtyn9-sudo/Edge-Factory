@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_league, canonical_team, classify_competition
-from edgefactory.util import compact_key, norm_team
+from edgefactory.util import compact_key, norm_team, fold_ascii
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
 
@@ -482,8 +482,8 @@ def _valid_decimal_odds(v) -> float | None:
 
 
 def odds_team_key(name: object) -> str:
-    """Legacy exact-match team key for odds enrichment only."""
-    key = norm_team(str(name or ""))
+    """Legacy exact-match team key for odds enrichment only with accent folding."""
+    key = norm_team(fold_ascii(str(name or "")))
     return ODDS_TEAM_ALIASES.get(key, key)
 
 
@@ -800,8 +800,8 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
             if bounded:
                 bounded.sort(key=lambda item: (item[0], -_bookmaker_priority(item[1].get("bookmaker")), -(item[1].get("odds") or 0.0)))
                 return bounded[0][1], "alias_time"
-        if len(candidates) == 1:
-            return candidates[0], "alias_unique"
+        # Always fall back to the first sorted candidate of the exact same event
+        return candidates[0], "alias_unique"
     return None, None
 
 
