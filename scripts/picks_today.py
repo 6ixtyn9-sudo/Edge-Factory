@@ -18,7 +18,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_league, canonical_team
-from edgefactory.util import norm_team
+from edgefactory.util import compact_key, norm_team
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
 
@@ -31,6 +31,7 @@ BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 # Keep this local to odds matching so certified mining/team joins remain unchanged.
 ODDS_TEAM_ALIASES = {
     "caboverde": "capeverde",  # bzzoiro: Cabo Verde; prediction feeds: Cape Verde Islands
+    "drcongo": "congodr",      # keep odds-only aliasing explicit and local
 }
 LOW_PRIORITY_BOOKMAKER_TOKENS = ("polymarket", "consensus")
 
@@ -48,6 +49,7 @@ FALLBACK_1X2 = {2: 70.0, 3: 65.0}
 
 _RULE_NWAY = re.compile(r"(\d+)\s*way")
 _RULE_THR = re.compile(r"avg_p\s*>=?\s*([\d.]+)")
+_TIME_RE = re.compile(r"(?<!\d)(\d{1,2}):(\d{2})(?!\d)")
 
 # ---- purity buckets (unchanged) ----
 BUCKET_CERTIFIED = "CERTIFIED_CLEAN"
@@ -473,15 +475,44 @@ def odds_team_key(name: object) -> str:
     return ODDS_TEAM_ALIASES.get(key, key)
 
 
-def odds_entity_team_key(name: object) -> str:
-    """Canonical team key for odds fallback matching only.
+def odds_match_team_key(name: object) -> str:
+    """Operational team key for odds fallback matching.
 
-    This uses the entity registry / canonical_team path and must not be reused
-    for miner joins.
+    Unlike canonical_team(), this preserves identity-bearing suffixes such as
+    U19/U21/B/II because operational odds matching must not merge those away.
     """
     raw = str(name or "")
-    aliased = ODDS_TEAM_ALIASES.get(norm_team(raw), raw)
-    return canonical_team(aliased)
+    compact = compact_key(raw)
+    return ODDS_TEAM_ALIASES.get(compact, compact)
+
+
+def _kickoff_value(obj: dict) -> str | None:
+    for key in ("kickoff", "time"):
+        value = obj.get(key)
+        if value:
+            return str(value)
+    return None
+
+
+def _kickoff_minutes(value: object) -> int | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    match = _TIME_RE.search(text)
+    if not match:
+        return None
+    hour, minute = int(match.group(1)), int(match.group(2))
+    if hour > 23 or minute > 59:
+        return None
+    return hour * 60 + minute
+
+
+def _kickoff_delta_minutes(a: object, b: object) -> int | None:
+    a_min = _kickoff_minutes(a)
+    b_min = _kickoff_minutes(b)
+    if a_min is None or b_min is None:
+        return None
+    return abs(a_min - b_min)
 
 
 def _bookmaker_priority(bookmaker: object) -> int:
@@ -503,46 +534,32 @@ def _odds_row_key(row: dict) -> tuple[str, str, str, str, str] | None:
     return (day, home, away, market, selection)
 
 
-def _canonical_odds_row_key(
-    row: dict,
-    *,
-    with_league: bool,
-) -> tuple[str, ...] | None:
+def _time_match_key(row: dict) -> tuple[str, str, str, str, str] | None:
     day = str(row.get("date") or "")
-    home = odds_entity_team_key(row.get("home") or "")
-    away = odds_entity_team_key(row.get("away") or "")
+    home = odds_match_team_key(row.get("home") or "")
+    away = odds_match_team_key(row.get("away") or "")
     market = str(row.get("market") or "")
     selection = str(row.get("selection") or "")
     if not (day and home and away and market and selection):
         return None
-    if with_league:
-        league = canonical_league(row.get("league") or "")
-        return (day, league, home, away, market, selection)
     return (day, home, away, market, selection)
 
 
-def _canonical_pick_key(
-    pick: dict,
-    *,
-    with_league: bool,
-) -> tuple[str, ...]:
-    day = str(pick.get("date") or "")
-    home = odds_entity_team_key(pick.get("home") or "")
-    away = odds_entity_team_key(pick.get("away") or "")
-    market = str(pick.get("market") or "")
-    selection = str(pick.get("pick") or "")
-    if with_league:
-        league = canonical_league(pick.get("league") or "")
-        return (day, league, home, away, market, selection)
-    return (day, home, away, market, selection)
-
-
-def _odds_event_sig(row: dict) -> tuple[str, str, str, str]:
+def _time_pick_key(pick: dict) -> tuple[str, str, str, str, str]:
     return (
-        canonical_league(row.get("league") or ""),
-        odds_entity_team_key(row.get("home") or ""),
-        odds_entity_team_key(row.get("away") or ""),
-        str(row.get("market") or ""),
+        str(pick.get("date") or ""),
+        odds_match_team_key(pick.get("home") or ""),
+        odds_match_team_key(pick.get("away") or ""),
+        str(pick.get("market") or ""),
+        str(pick.get("pick") or ""),
+    )
+
+
+def _market_pick_key(obj: dict, *, selection_key: str) -> tuple[str, str, str]:
+    return (
+        str(obj.get("date") or ""),
+        str(obj.get("market") or ""),
+        str(obj.get(selection_key) or ""),
     )
 
 
@@ -594,12 +611,12 @@ def bzzoiro_odds_bundle(
     live: bool = True,
     stats: dict | None = None,
 ) -> dict[str, dict]:
-    """Best available bzzoiro_odds rows for exact and canonical fallback matching.
+    """Best available bzzoiro_odds rows for exact and kickoff-aware fallback matching.
 
     Matching order should remain:
       1. exact legacy odds key
-      2. canonical league + canonical teams
-      3. canonical teams only, but only when unambiguous
+      2. explicit odds-only alias key + kickoff proximity
+      3. explicit odds-only alias key when there is exactly one candidate
     """
     cached_rows = _read_cached_bzzoiro_odds(day)
     live_rows: list[dict] = []
@@ -608,39 +625,44 @@ def bzzoiro_odds_bundle(
 
     rows = cached_rows + live_rows
     exact: dict[tuple[str, str, str, str, str], dict] = {}
-    canonical_league: dict[tuple[str, ...], dict] = {}
-    canonical_teams_best: dict[tuple[str, ...], dict] = {}
-    canonical_teams_events: dict[tuple[str, ...], set[tuple[str, str, str, str]]] = {}
+    time_candidates: dict[tuple[str, str, str, str, str], list[dict]] = {}
+    market_candidates: dict[tuple[str, str, str], list[dict]] = {}
     valid_rows = 0
     for row in rows:
         odds = _valid_decimal_odds(row.get("odds"))
         if odds is None:
             continue
         exact_key = _odds_row_key(row)
-        canonical_league_key = _canonical_odds_row_key(row, with_league=True)
-        canonical_team_key = _canonical_odds_row_key(row, with_league=False)
-        if exact_key is None:
+        time_key = _time_match_key(row)
+        if exact_key is None or time_key is None:
             continue
         valid_rows += 1
         normalized = dict(row)
         normalized["odds"] = odds
         if _prefer_odds_row(normalized, exact.get(exact_key)):
             exact[exact_key] = normalized
-        if canonical_league_key is not None and _prefer_odds_row(normalized, canonical_league.get(canonical_league_key)):
-            canonical_league[canonical_league_key] = normalized
-        if canonical_team_key is not None:
-            canonical_teams_events.setdefault(canonical_team_key, set()).add(_odds_event_sig(normalized))
-            if _prefer_odds_row(normalized, canonical_teams_best.get(canonical_team_key)):
-                canonical_teams_best[canonical_team_key] = normalized
+        time_candidates.setdefault(time_key, []).append(normalized)
+        market_candidates.setdefault(_market_pick_key(normalized, selection_key="selection"), []).append(normalized)
 
-    canonical_teams = {
-        key: row
-        for key, row in canonical_teams_best.items()
-        if len(canonical_teams_events.get(key, set())) == 1
-    }
-    ambiguous_canonical_team_keys = sum(
-        1 for events in canonical_teams_events.values() if len(events) > 1
-    )
+    for key, candidates in time_candidates.items():
+        candidates.sort(
+            key=lambda row: (
+                _kickoff_minutes(_kickoff_value(row)) is None,
+                _kickoff_minutes(_kickoff_value(row)) or 10**9,
+                -_bookmaker_priority(row.get("bookmaker")),
+                -(row.get("odds") or 0.0),
+            )
+        )
+
+    for key, candidates in market_candidates.items():
+        candidates.sort(
+            key=lambda row: (
+                _kickoff_minutes(_kickoff_value(row)) is None,
+                _kickoff_minutes(_kickoff_value(row)) or 10**9,
+                -_bookmaker_priority(row.get("bookmaker")),
+                -(row.get("odds") or 0.0),
+            )
+        )
 
     if stats is not None:
         stats.update({
@@ -649,16 +671,15 @@ def bzzoiro_odds_bundle(
             "raw_rows": len(rows),
             "valid_rows": valid_rows,
             "valid_keys": len(exact),
-            "canonical_league_keys": len(canonical_league),
-            "canonical_team_keys": len(canonical_teams),
-            "ambiguous_canonical_team_keys": ambiguous_canonical_team_keys,
+            "time_match_keys": len(time_candidates),
+            "market_candidate_keys": len(market_candidates),
             "refreshed": bool(live_rows),
         })
 
     return {
         "exact": exact,
-        "canonical_league": canonical_league,
-        "canonical_teams": canonical_teams,
+        "time_candidates": time_candidates,
+        "market_candidates": market_candidates,
     }
 
 
@@ -673,7 +694,7 @@ def bzzoiro_odds_index(
 
 
 def find_bzzoiro_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
-    """Find the best odds row for a pick using exact then canonical fallback."""
+    """Find the best odds row for a pick using exact then kickoff-aware fallback."""
     if "exact" not in odds_data:
         key = (
             str(pick.get("date") or ""),
@@ -696,16 +717,52 @@ def find_bzzoiro_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str
     if row:
         return row, "exact"
 
-    league_key = _canonical_pick_key(pick, with_league=True)
-    row = odds_data["canonical_league"].get(league_key)
-    if row:
-        return row, "canonical_league"
-
-    team_key = _canonical_pick_key(pick, with_league=False)
-    row = odds_data["canonical_teams"].get(team_key)
-    if row:
-        return row, "canonical_teams"
+    candidates = odds_data["time_candidates"].get(_time_pick_key(pick), [])
+    if candidates:
+        pick_kickoff = _kickoff_value(pick)
+        if pick_kickoff:
+            bounded = [
+                (_kickoff_delta_minutes(pick_kickoff, _kickoff_value(row)), row)
+                for row in candidates
+            ]
+            bounded = [(delta, row) for delta, row in bounded if delta is not None and delta <= 90]
+            if bounded:
+                bounded.sort(key=lambda item: (item[0], -_bookmaker_priority(item[1].get("bookmaker")), -(item[1].get("odds") or 0.0)))
+                return bounded[0][1], "alias_time"
+        if len(candidates) == 1:
+            return candidates[0], "alias_unique"
     return None, None
+
+
+def nearby_bzzoiro_candidates(pick: dict, odds_data: dict, *, limit: int = 5) -> list[dict]:
+    """Return nearby same-date odds rows for unmatched diagnostics."""
+    market_key = _market_pick_key(pick, selection_key="pick")
+    candidates = list(odds_data.get("market_candidates", {}).get(market_key, []))
+    pick_kickoff = _kickoff_value(pick)
+    candidates.sort(
+        key=lambda row: (
+            _kickoff_delta_minutes(pick_kickoff, _kickoff_value(row)) is None,
+            _kickoff_delta_minutes(pick_kickoff, _kickoff_value(row)) or 10**9,
+            odds_match_team_key(row.get("home") or "") != odds_match_team_key(pick.get("home") or ""),
+            odds_match_team_key(row.get("away") or "") != odds_match_team_key(pick.get("away") or ""),
+        )
+    )
+    out = []
+    for row in candidates[:limit]:
+        out.append({
+            "home": row.get("home"),
+            "away": row.get("away"),
+            "league": row.get("league"),
+            "kickoff": _kickoff_value(row),
+            "market": row.get("market"),
+            "selection": row.get("selection"),
+            "odds": row.get("odds"),
+            "bookmaker": row.get("bookmaker"),
+            "home_key": odds_match_team_key(row.get("home") or ""),
+            "away_key": odds_match_team_key(row.get("away") or ""),
+            "kickoff_delta_minutes": _kickoff_delta_minutes(pick_kickoff, _kickoff_value(row)),
+        })
+    return out
 
 
 def enrich_with_bzzoiro_odds(picks: list[dict], odds_index: dict) -> int:
@@ -713,8 +770,8 @@ def enrich_with_bzzoiro_odds(picks: list[dict], odds_index: dict) -> int:
 
     Matching order:
       1. exact odds key
-      2. canonical league + canonical teams
-      3. canonical teams only when unambiguous
+      2. explicit odds-only alias key + kickoff proximity
+      3. explicit odds-only alias key when unique
       4. existing embedded odds fallback
     """
     enriched = 0
@@ -828,6 +885,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             "date": day, "market": "1x2",
             "match": f"{home} vs {away}",
             "home": home, "away": away,
+            "kickoff": anchor.get("kickoff") or anchor.get("time"),
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1),
@@ -887,6 +945,7 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
             "date": day, "market": market,
             "match": f"{home} vs {away}",
             "home": home, "away": away,
+            "kickoff": anchor.get("kickoff") or anchor.get("time"),
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1), "odds": odds,
@@ -1009,19 +1068,18 @@ def main():
         enriched_n = enrich_with_bzzoiro_odds(picks, odds_bundle)
         if odds_stats.get("raw_rows") or enriched_n:
             exact_n = sum(1 for p in picks if p.get("odds_match_method") == "exact")
-            canonical_league_n = sum(1 for p in picks if p.get("odds_match_method") == "canonical_league")
-            canonical_teams_n = sum(1 for p in picks if p.get("odds_match_method") == "canonical_teams")
+            alias_time_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_time")
+            alias_unique_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_unique")
             fallback_n = sum(1 for p in picks if p.get("odds_match_method") == "fallback")
             print(
                 f"bzzoiro_odds enrichment {day}: "
                 f"cached_rows={odds_stats.get('cached_rows', 0)} "
                 f"live_rows={odds_stats.get('live_rows', 0)} "
                 f"valid_keys={odds_stats.get('valid_keys', len(odds_bundle.get('exact', {})))} "
-                f"canonical_league_keys={odds_stats.get('canonical_league_keys', 0)} "
-                f"canonical_team_keys={odds_stats.get('canonical_team_keys', 0)} "
-                f"ambiguous_team_keys={odds_stats.get('ambiguous_canonical_team_keys', 0)} "
+                f"time_match_keys={odds_stats.get('time_match_keys', 0)} "
+                f"market_candidate_keys={odds_stats.get('market_candidate_keys', 0)} "
                 f"enriched={enriched_n} "
-                f"exact={exact_n} canonical_league={canonical_league_n} canonical_teams={canonical_teams_n} fallback={fallback_n}",
+                f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} fallback={fallback_n}",
                 file=sys.stderr,
             )
 

@@ -9,7 +9,7 @@ Standard adapter contract:
     COLUMNS = [...]
 
 Output fields:
-    source, source_type="odds", sport, date, league, home, away,
+    source, source_type="odds", sport, date, kickoff, league, home, away,
     market, selection, odds, bookmaker, captured_at
 """
 
@@ -36,7 +36,7 @@ MARKET_PARAMS = ("1x2", "over_under_25", "btts")
 MAX_EVENT_COMPARISON = int(os.environ.get("BZZOIRO_ODDS_MAX_EVENTS", "80"))
 
 COLUMNS = [
-    "source", "source_type", "sport", "date", "league", "home", "away",
+    "source", "source_type", "sport", "date", "kickoff", "league", "home", "away",
     "market", "selection", "odds", "bookmaker", "captured_at",
 ]
 
@@ -121,28 +121,30 @@ def _decimal_odds(outcome: dict):
     )
 
 
-def _event_fields(item: dict) -> tuple[str | None, str | None, str | None, str, str]:
-    """Return (home, away, league, event_date, captured_at) from flat/nested shapes."""
+def _event_fields(item: dict) -> tuple[str | None, str | None, str | None, str, str | None, str]:
+    """Return (home, away, league, event_date, kickoff, captured_at) from flat/nested shapes."""
     ev = item.get("event") if isinstance(item.get("event"), dict) else item
     home = ev.get("home_team") or ev.get("home")
     away = ev.get("away_team") or ev.get("away")
     league = ev.get("league_name") or ev.get("league")
-    event_date = (ev.get("event_date") or ev.get("date") or item.get("event_date") or "")[:10]
+    kickoff = ev.get("event_date") or ev.get("date") or item.get("event_date") or item.get("date")
+    event_date = str(kickoff or "")[:10]
     captured = (
         item.get("captured_at")
         or item.get("updated_at")
         or datetime.now(timezone.utc).isoformat()
     )
-    return home, away, league, event_date, captured
+    return home, away, league, event_date, kickoff, captured
 
 
 def _row(item: dict, outcome: dict, market: str, selection: str) -> dict:
-    home, away, league, dt, captured = _event_fields(item)
+    home, away, league, dt, kickoff, captured = _event_fields(item)
     return {
         "source": "bzzoiro",
         "source_type": "odds",
         "sport": "soccer",
         "date": dt,
+        "kickoff": kickoff,
         "league": league,
         "home": home,
         "away": away,
@@ -314,7 +316,7 @@ def _dedupe_rows(rows: list[dict]) -> list[dict]:
     out: dict[tuple, dict] = {}
     for row in rows:
         key = (
-            row.get("date"), row.get("home"), row.get("away"),
+            row.get("date"), row.get("kickoff"), row.get("home"), row.get("away"),
             row.get("market"), row.get("selection"), row.get("bookmaker"),
         )
         out[key] = row

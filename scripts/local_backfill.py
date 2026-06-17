@@ -29,9 +29,11 @@ def load_source(key: str):
 
 def dedup_key(row: dict, columns: list[str]):
     # Odds adapters emit multiple rows per event; preserve market/selection/bookmaker.
+    # Include kickoff when available so same-day duplicate fixtures do not collapse.
     if row.get("market") or row.get("selection") or row.get("bookmaker"):
         return (
             str(row.get("date", "")),
+            str(row.get("kickoff", "")).lower(),
             str(row.get("home", "")).lower(),
             str(row.get("away", "")).lower(),
             str(row.get("market", "")).lower(),

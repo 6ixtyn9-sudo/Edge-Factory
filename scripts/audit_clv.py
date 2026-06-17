@@ -76,6 +76,10 @@ def _snapshot_path(run_date: str) -> Path:
     return LOCALDATA / f"clv_snapshots_{str(run_date)[:7]}.csv.gz"
 
 
+def _unmatched_path(run_date: str) -> Path:
+    return LOCALDATA / f"clv_unmatched_{run_date}.json"
+
+
 def _read_snapshot_rows(path: Path) -> list[dict[str, str]]:
     if not path.exists():
         return []
@@ -148,8 +152,9 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
     missing = 0
     fallback = 0
     exact_matches = 0
-    canonical_league_matches = 0
-    canonical_team_matches = 0
+    alias_time_matches = 0
+    alias_unique_matches = 0
+    unmatched_details: list[dict[str, Any]] = []
 
     for pick in picks:
         match_date = str(pick.get("date") or run_date)[:10]
@@ -164,17 +169,35 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
         )
         live_pick = dict(pick)
         original_odds = _coerce_float(pick.get("odds"))
-        picks_today.enrich_with_bzzoiro_odds([live_pick], odds_index_by_date.get(match_date, {}))
+        odds_data = odds_index_by_date.get(match_date, {})
+        picks_today.enrich_with_bzzoiro_odds([live_pick], odds_data)
         match_method = str(live_pick.get("odds_match_method") or "")
-        live_odds_matched = match_method in {"exact", "canonical_league", "canonical_teams"}
+        live_odds_matched = match_method in {"exact", "alias_time", "alias_unique"}
         if live_odds_matched:
             matched += 1
             if match_method == "exact":
                 exact_matches += 1
-            elif match_method == "canonical_league":
-                canonical_league_matches += 1
-            elif match_method == "canonical_teams":
-                canonical_team_matches += 1
+            elif match_method == "alias_time":
+                alias_time_matches += 1
+            elif match_method == "alias_unique":
+                alias_unique_matches += 1
+        else:
+            unmatched_details.append(
+                {
+                    "date": match_date,
+                    "kickoff": pick.get("kickoff"),
+                    "home": pick.get("home"),
+                    "away": pick.get("away"),
+                    "league": pick.get("league"),
+                    "market": pick.get("market"),
+                    "pick": pick.get("pick"),
+                    "rule_name": rule_name,
+                    "match_method": match_method or "none",
+                    "home_key": picks_today.odds_match_team_key(pick.get("home") or ""),
+                    "away_key": picks_today.odds_match_team_key(pick.get("away") or ""),
+                    "nearby_candidates": picks_today.nearby_bzzoiro_candidates(pick, odds_data),
+                }
+            )
         observed_odds = _coerce_float(live_pick.get("odds"))
         if observed_odds is None:
             missing += 1
@@ -207,15 +230,20 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
         }
         rows.append(row)
 
+    unmatched_path = _unmatched_path(run_date)
+    unmatched_path.write_text(json.dumps(unmatched_details, indent=2))
+
     return rows, {
         "picks_read": len(picks),
         "live_odds_matched": matched,
         "exact_matches": exact_matches,
-        "canonical_league_matches": canonical_league_matches,
-        "canonical_team_matches": canonical_team_matches,
+        "alias_time_matches": alias_time_matches,
+        "alias_unique_matches": alias_unique_matches,
         "missing_odds": missing,
         "used_input_odds_fallback": fallback,
         "dates_seen": len(odds_stats_by_date),
+        "unmatched_file": str(unmatched_path),
+        "unmatched_count": len(unmatched_details),
     }
 
 
@@ -253,12 +281,13 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
     print(f"  picks read: {stats['picks_read']}")
     print(f"  live odds matched: {stats['live_odds_matched']}")
     print(f"    exact: {stats['exact_matches']}")
-    print(f"    canonical_league: {stats['canonical_league_matches']}")
-    print(f"    canonical_teams: {stats['canonical_team_matches']}")
+    print(f"    alias_time: {stats['alias_time_matches']}")
+    print(f"    alias_unique: {stats['alias_unique_matches']}")
     print(f"  input fallback used: {stats['used_input_odds_fallback']}")
     print(f"  missing odds: {stats['missing_odds']}")
     print(f"  rows written: {written}")
     print(f"  duplicates skipped: {duplicates}")
+    print(f"  unmatched diagnostics: {stats['unmatched_count']} -> {stats['unmatched_file']}")
     print(f"  snapshot file: {path}")
     return 0
 
