@@ -161,6 +161,15 @@ def restore_target_picks(target_picks_text: str | None) -> None:
     PICKS_TODAY_FILE.write_text(target_picks_text)
 
 
+def format_kickoff(pick: dict[str, Any]) -> str:
+    """Human report kickoff display. Always show missing kickoff explicitly."""
+    for key in ("kickoff", "time", "start_time", "ko"):
+        value = pick.get(key)
+        if value not in (None, ""):
+            return str(value)
+    return "n/a"
+
+
 def generate_daily_report(target_date: str) -> None:
     """Write a human-readable .txt summary of picks_today.json."""
     report_file = REPORT_DIR / f"picks_{target_date}.txt"
@@ -226,11 +235,12 @@ def generate_daily_report(target_date: str) -> None:
                 ctx = p.get("ctx", {}) or {}
                 w_str = f"  w={p['w_score']:.2f}" if p.get("w_score") is not None else ""
                 match = str(p.get("match", ""))[:42]
+                kickoff = format_kickoff(p)
                 pick = str(p.get("pick", "?")).upper()
                 avg_p = float(p.get("avg_p") or 0)
 
                 lines.append(
-                    f"  [{label}] {match:42s} -> "
+                    f"  [{label}] {match:42s} KO {kickoff:5s} -> "
                     f"{pick:5s}  avg {avg_p:.0f}%{w_str} {odds}"
                 )
                 lines.append(
