@@ -2,10 +2,14 @@
 # Note: ignore directory CONTENTS (localdata/*), not the directory itself,
 # otherwise git cannot re-include specific files via negation.
 localdata/*
-# Exception: commit the certified edge registry so it survives cache eviction.
-# Without this, a cold GitHub Actions run certifies 0 edges (no pre-split
-# history) and clobbers a good registry, cascading into empty picks/WhatsApps.
+# Exception: commit the certified edge registry and purity registry so they
+# survive cache eviction. Without these, a cold GitHub Actions run certifies
+# 0 edges (no pre-split history) and clobbers a good registry, cascading into
+# empty picks/WhatsApps. The purity registry's odds_band verdicts are the
+# critical gate: without them, all picks land in WATCHLIST_UNKNOWN_CTX and
+# are never pushed. Its keys are deterministic (no entity_registry dependency).
 !localdata/edges_consensus.json
+!localdata/purity_registry.json
 *.csv
 *.csv.gz
 *.duckdb
