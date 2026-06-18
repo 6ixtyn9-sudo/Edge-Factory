@@ -59,6 +59,61 @@ DB = ROOT / "localdata" / "warehouse.duckdb"
 REG = ROOT / "localdata" / "edges_consensus.json"
 OUT = ROOT / "localdata" / "purity_registry.json"
 
+
+def _purity_context_count(registry: dict) -> int:
+    """Total context entries across all dimensions."""
+    if not isinstance(registry, dict):
+        return 0
+    contexts = registry.get("contexts", {})
+    if not isinstance(contexts, dict):
+        return 0
+    return sum(
+        len(v) for v in contexts.values() if isinstance(v, dict)
+    )
+
+
+def _existing_context_count() -> int:
+    """Count contexts already present in OUT, or 0 if missing/invalid."""
+    if not OUT.exists():
+        return 0
+    try:
+        return _purity_context_count(json.loads(OUT.read_text()))
+    except Exception:
+        return 0
+
+
+def write_purity_registry(payload: dict) -> bool:
+    """Persist the purity registry with a regression-to-zero circuit breaker.
+
+    Same pattern as mine_consensus.write_registry(): on cold CI the warehouse
+    lacks deep history, so the consensus views are unavailable and the assay
+    yields 0 contexts. Without this guard, the empty result overwrites the
+    committed purity_registry.json (which carries the real verdicts from the
+    local full-history run). That cascades into all picks landing in
+    WATCHLIST_UNKNOWN_CTX (odds_band UNKNOWN gate) and never being pushed.
+
+    Returns True if a new file was written, False if the existing file was kept.
+    """
+    new_count = _purity_context_count(payload)
+    existing_count = _existing_context_count()
+
+    if new_count == 0 and existing_count > 0:
+        print(
+            f"\n⚠️  PURITY REGRESSION GUARD: this run produced 0 contexts, but the "
+            f"existing purity_registry.json already holds {existing_count} context(s)."
+        )
+        print("    Keeping the existing registry to avoid clobbering real verdicts.")
+        print("    Usual cause: cold/evicted warehouse missing consensus views")
+        print("    (assay_purity recreates TEMP views that need deep history).")
+        print("    Restore: re-run locally with full history and commit purity_registry.json.")
+        print(f"    Preserved file: {OUT}")
+        return False
+
+    OUT.parent.mkdir(exist_ok=True)
+    OUT.write_text(json.dumps(payload, indent=2))
+    print(f"\nwrote {OUT}  (contexts={new_count})")
+    return True
+
 # Odds bands – string keys exact, per implementation plan
 ODDS_BANDS = [
     (0.0, 1.10, "1.00-1.10"),
@@ -764,9 +819,7 @@ def main():
         print("\n--dry-run: registry NOT written.")
         return
 
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    OUT.write_text(json.dumps(registry, indent=2))
-    print(f"\nwrote {OUT}  ({len(league_all)} league, {len(team_all)} team, {len(odds_all)} odds_band contexts)")
+    write_purity_registry(registry)
 
 
 if __name__ == "__main__":
