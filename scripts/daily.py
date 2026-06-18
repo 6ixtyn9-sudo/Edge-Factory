@@ -33,22 +33,41 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 import subprocess
 import sys
 from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 REPORT_DIR = ROOT / "localdata"
 PICKS_TODAY_FILE = REPORT_DIR / "picks_today.json"
+DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
+
+
+def local_tz() -> ZoneInfo:
+    return ZoneInfo(DEFAULT_LOCAL_TZ)
+
+
+def make_run_as_of() -> str:
+    return datetime.now(local_tz()).isoformat(timespec="seconds")
+
+
+def picks_env_prefix(run_as_of: str) -> str:
+    return f"EDGE_FACTORY_RUN_AS_OF={shlex.quote(run_as_of)}"
+
+
+def archived_picks_file(target_date: str) -> Path:
+    return REPORT_DIR / f"picks_{target_date}.json"
 
 
 def archive_target_picks(target_date: str, picks_text: str | None) -> None:
     if picks_text is None:
         return
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    (REPORT_DIR / f"picks_{target_date}.json").write_text(picks_text)
+    archived_picks_file(target_date).write_text(picks_text)
 
 
 def run(cmd: str, label: str | None = None) -> None:
@@ -252,7 +271,7 @@ def write_future_outputs(all_picks: list[dict[str, Any]], days: int) -> None:
     print(f"Future planner wrote: {json_file}")
 
 
-def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, Any]]) -> None:
+def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, Any]], run_as_of: str) -> None:
     """Inline N-day planner using scripts/picks_today.py as the only pick engine.
 
     The target day is not re-run. It is reused from the already generated
@@ -272,7 +291,7 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
     for offset in range(1, days):
         target = (start + timedelta(days=offset)).isoformat()
         output = run_capture(
-            f"PYTHONPATH=src python3 scripts/picks_today.py {target}",
+            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target}",
             f"future planner: picks_today {target}",
         )
         print_pick_run_summary(output)
@@ -332,13 +351,21 @@ def main() -> None:
         default=30,
         help="Result backfill window for full runs (default: 30).",
     )
+    ap.add_argument(
+        "--force-repick",
+        action="store_true",
+        help="Ignore archived picks_YYYY-MM-DD.json and regenerate target-date picks.",
+    )
     args = ap.parse_args()
 
     target_date = args.date or date.today().isoformat()
+    run_as_of = make_run_as_of()
 
     print("=== Edge Factory Daily Pipeline ===")
     print(f"    target date : {target_date}")
     print(f"    future_days : {args.future_days}")
+    print(f"    run_as_of   : {run_as_of}")
+    print(f"    force_repick: {args.force_repick}")
     print(f"    backfill_days: {args.backfill_days if not args.picks_only else 'skipped'}")
     print(f"    mode        : {'picks-only (skip capture/backfill/build)' if args.picks_only else 'full run'}")
     print(f"    started at  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -355,19 +382,31 @@ def main() -> None:
     run("python3 scripts/mine_consensus.py", "mine_consensus")
     run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
     run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
-    run(f"PYTHONPATH=src python3 scripts/picks_today.py {target_date}", f"picks_today {target_date}")
+
+    target_archive = archived_picks_file(target_date)
+    if target_archive.exists() and not args.force_repick:
+        print(f"\n>>> restore frozen target picks {target_date}")
+        target_picks_text = target_archive.read_text()
+        restore_target_picks(target_picks_text)
+        print(f"  reused archive: {target_archive}")
+    else:
+        run(
+            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
+            f"picks_today {target_date}",
+        )
+        target_picks_text = PICKS_TODAY_FILE.read_text() if PICKS_TODAY_FILE.exists() else None
+        archive_target_picks(target_date, target_picks_text)
+
     run_soft(
         f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
         f"audit_clv capture {target_date} [pick_time]",
     )
     clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
 
-    target_picks_text = PICKS_TODAY_FILE.read_text() if PICKS_TODAY_FILE.exists() else None
-    archive_target_picks(target_date, target_picks_text)
     target_picks = load_picks_file()
 
     generate_daily_report(target_date)
-    run_future_planner(target_date, args.future_days, target_picks)
+    run_future_planner(target_date, args.future_days, target_picks, run_as_of)
 
     restore_target_picks(target_picks_text)
     run_soft(
