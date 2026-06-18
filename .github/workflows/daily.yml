@@ -27,6 +27,8 @@ jobs:
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
+      CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+      CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
       TZ: 'Africa/Johannesburg'
 
     steps:
