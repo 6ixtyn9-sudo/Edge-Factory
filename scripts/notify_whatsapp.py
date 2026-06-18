@@ -57,11 +57,16 @@ def _build_match_dedupe_key(pick: dict[str, Any], fallback_date: str) -> str:
 
 def _load_json_list(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
+        logging.warning(f"⚠️ Source picks file does not exist: {path}")
         return []
     try:
         data = json.loads(path.read_text())
-        return data if isinstance(data, list) else []
-    except Exception:
+        if not isinstance(data, list):
+            logging.warning(f"⚠️ Expected JSON list but found {type(data)} in {path}")
+            return []
+        return data
+    except Exception as exc:
+        logging.warning(f"⚠️ Exception reading JSON picks from {path}: {exc}")
         return []
 
 
@@ -71,13 +76,17 @@ def _load_sent_ledger(path: Path) -> set[str]:
     try:
         data = json.loads(path.read_text())
         return set(data) if isinstance(data, list) else set()
-    except Exception:
+    except Exception as exc:
+        logging.warning(f"⚠️ Could not load sent ledger from {path}: {exc}")
         return set()
 
 
 def _save_sent_ledger(path: Path, keys: set[str]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(sorted(keys), indent=2))
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(sorted(keys), indent=2))
+    except Exception as exc:
+        logging.warning(f"⚠️ Could not save sent ledger to {path}: {exc}")
 
 
 def main() -> int:
