@@ -1,14 +1,33 @@
-name: Daily Edge Factory Run
+name: Autonomous Edge Factory 3-Hour Service
 
 on:
   schedule:
-    # Run every day at 08:00 UTC
-    - cron: '0 8 * * *'
-  workflow_dispatch:   # Allow manual trigger from GitHub UI
+    # Wake up every 3 hours (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
+    - cron: '0 0,3,6,9,12,15,18,21 * * *'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Execution Mode'
+        required: false
+        default: 'auto'
+        type: choice
+        options:
+          - auto
+          - official_morning
+          - forecast_refresh
+          - clv_only
 
 jobs:
-  daily:
+  run-autonomous-agent:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
+      TZ: 'Africa/Johannesburg'
 
     steps:
       - name: Checkout repository
@@ -17,27 +36,53 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.13'
           cache: 'pip'
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e .[dev]
-          pip install python-dotenv supabase
+          pip install -r requirements.txt
+          pip install supabase
 
-      - name: Run nightly pipeline
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
+      - name: Restore localdata State (Cache)
+        uses: actions/cache/restore@v4
+        with:
+          path: localdata
+          key: localdata-main-${{ github.run_id }}
+          restore-keys: |
+            localdata-main-
+
+      - name: Execute Autonomous Smart Schedule
         run: |
-          PYTHONPATH=src python scripts/daily.py
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" != "auto" ]; then
+            echo ">>> Executing explicit manual mode: ${{ inputs.mode }}"
+            if [ "${{ inputs.mode }}" = "official_morning" ]; then
+              PYTHONPATH=src python3 scripts/daily.py --force-repick
+            elif [ "${{ inputs.mode }}" = "forecast_refresh" ]; then
+              PYTHONPATH=src python3 scripts/daily.py --forecast-refresh
+            elif [ "${{ inputs.mode }}" = "clv_only" ]; then
+              PYTHONPATH=src python3 scripts/daily.py --clv-only
+            fi
+          else
+            # Execute exactly one autonomous iteration of the smart accumulating ledger
+            PYTHONPATH=src python3 scripts/daily.py --auto-once
+          fi
 
-      - name: Upload daily report (optional)
+      - name: Persist localdata State (Cache)
+        uses: actions/cache/save@v4
+        if: always()
+        with:
+          path: localdata
+          key: localdata-main-${{ github.run_id }}
+
+      - name: Upload Pick Ledgers & Reports as Artifacts
         uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: daily-picks-report
-          path: localdata/picks_*.txt
-          retention-days: 30
+          name: EdgeFactory-Reports
+          path: |
+            localdata/*.txt
+            localdata/*.json
+            localdata/*.md
+          retention-days: 14

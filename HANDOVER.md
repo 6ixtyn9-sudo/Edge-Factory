@@ -268,6 +268,9 @@ also triggers CLV capture and rolling report
 archives target-day picks JSON and runs recent picks audit
 freezes target-date picks: if localdata/picks_YYYY-MM-DD.json already exists, reruns restore it instead of regenerating unless --force-repick is passed
 passes one fixed EDGE_FACTORY_RUN_AS_OF timestamp into all picks_today invocations for that run
+supports automated scheduling via --auto-run / --auto-once, splitting official morning heavy runs from lightweight intraday forecast refreshes
+supports non-official forecast refreshes via --forecast-refresh, archiving to localdata/forecast_YYYY-MM-DD_HHMM.json and .txt
+supports deliberate promotion of forecast runs to official records via --promote-forecast
 scripts/sync_supabase.py
 syncs certified edges and daily bucketed picks to Supabase
 Optional research-only scripts:
@@ -598,6 +601,17 @@ set -a; source .env; set +a
 Full daily:
 
 PYTHONPATH=src python3 scripts/daily.py
+Autonomous 3-Hour Service (Local Background Loop):
+
+PYTHONPATH=src python3 scripts/daily.py --auto-run
+Autonomous Cloud Service (100% Free on GitHub Actions):
+
+Enabled by default in .github/workflows/daily.yml
+Wakes up every 3 hours (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
+Uses GitHub Actions Cache (actions/cache) to completely persist the localdata/ DuckDB warehouse, pick ledgers, and CLV snapshots across runs
+Uploads human-readable pick reports (.txt) and ledgers as downloadable workflow artifacts
+Runs sync_supabase to push certified edges and accumulating picks straight to your mobile app / Supabase read model
+Fully self-sustaining and costs $0.00
 Picks only:
 
 PYTHONPATH=src python3 scripts/daily.py --picks-only --future-days 2
@@ -820,6 +834,16 @@ CLV / steam / drift is audit-only and cannot move picks into SKIPPED_VETO
 Regression tests live in tests/test_picks_today_operational.py
 Operational audit note: do not use the conflicting 2026-06-18 reruns as clean machine-performance history. Restart trusted pick-performance accounting from the first frozen run after this fix.
 
+Current automated scheduling and forecast separation update, 2026-06-18:
+
+Implemented official vs non-official forecast separation and automated 3-hour service in scripts/daily.py:
+
+scripts/daily.py --auto-run: Smart automated 3-hour background service. Auto-detects whether to run the heavy official morning run (if today's official frozen archive localdata/picks_YYYY-MM-DD.json does not exist) or lightweight intraday forecast refreshes and CLV monitoring.
+scripts/daily.py --auto-once: Executes exactly one smart auto schedule iteration and exits.
+scripts/daily.py --forecast-refresh: Deliberate mode for non-official forecast refreshes. Saves newly appearing fixtures and odds to localdata/forecast_YYYY-MM-DD_HHMM.json and .txt, captures qualitative intraday CLV snapshots (midday, afternoon, evening), and automatically restores live picks_today.json from the official archive to guarantee pristine official performance accounting.
+scripts/daily.py --promote-forecast [PATH|LABEL]: Deliberately promotes a specific forecast refresh to become the official tracked performance ledger and pushes to Supabase.
+Core pipeline orchestrator remains single source of truth; no separate nightly or future scripts were added.
+Automated orchestration tests live in tests/test_daily_orchestration.py.
 Current regime rule:
 
 restart trusted machine-performance history from the first frozen run after the 2026-06-18 determinism fix
