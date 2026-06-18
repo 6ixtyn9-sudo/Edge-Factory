@@ -25,6 +25,59 @@ DB = ROOT / "localdata" / "warehouse.duckdb"
 OUT = ROOT / "localdata" / "edges_consensus.json"
 
 
+def _count_certified(edges: list[dict]) -> int:
+    return sum(1 for e in edges if e.get("status") == "certified")
+
+
+def _existing_certified_count() -> int:
+    """Count certified edges already present in OUT, or 0 if missing/invalid."""
+    if not OUT.exists():
+        return 0
+    try:
+        data = json.loads(OUT.read_text())
+        return _count_certified(data.get("edges", []))
+    except Exception:
+        return 0
+
+
+def write_registry(payload: dict) -> bool:
+    """Persist the mined registry with a regression-to-zero circuit breaker.
+
+    Deep walk-forward history (pre-split training rows) lives only on the
+    operator's local machine and in the GitHub Actions cache. On a cold or
+    evicted cache the warehouse holds only a rolling D30 window, which is
+    entirely post-split, so no rule can satisfy min_n_train and the miner
+    yields 0 certified edges.
+
+    Left unguarded, that empty result overwrites a good registry and cascades
+    into empty picks, empty WhatsApps, and a frozen intraday loop. This guard
+    preserves the last known-good registry whenever a run certifies nothing but
+    the existing file already holds certified edges.
+
+    Returns True if a new file was written, False if the existing file was kept.
+    """
+    new_certified = _count_certified(payload.get("edges", []))
+    existing_certified = _existing_certified_count()
+
+    if new_certified == 0 and existing_certified > 0:
+        print(
+            "\n⚠️  REGRESSION GUARD: this run certified 0 edges, but the existing "
+            f"registry already holds {existing_certified} certified edge(s)."
+        )
+        print("    Keeping the existing registry to avoid clobbering certified edges.")
+        print("    Usual cause: cold/evicted warehouse missing pre-split training history")
+        print("    (capture_daily only backfills a D30 window, all of it post-split).")
+        print("    Restore: re-run on a machine with full history, or commit edges_consensus.json")
+        print("    into the repo so the certified registry survives cache loss (see HANDOVER.md).")
+        print(f"    Preserved file: {OUT}")
+        return False
+
+    OUT.parent.mkdir(exist_ok=True)
+    OUT.write_text(json.dumps(payload, indent=2))
+    print(f"\nwritten -> {OUT}  (certified={new_certified})")
+    return True
+
+
 def _table_exists(con, name: str) -> bool:
     try:
         con.execute(f"SELECT 1 FROM {name} LIMIT 0")
@@ -494,8 +547,7 @@ def main():
 
     if not DB.exists():
         print("Warehouse does not exist, exiting gracefully.")
-        OUT.parent.mkdir(exist_ok=True)
-        OUT.write_text(json.dumps({"split": args.split, "gates": vars(GATES), "edges": []}, indent=2))
+        write_registry({"split": args.split, "gates": vars(GATES), "edges": []})
         return
 
     con = duckdb.connect(str(DB), read_only=True)
@@ -915,10 +967,7 @@ def main():
         wtag = " [W]" if r.get("weighted") else ""
         print(f"{r['rule']:48s} {fmt_stats(t):>26s}   {fmt_stats(v):>26s}  {flag} {r['status']}{wtag}")
 
-    OUT.parent.mkdir(exist_ok=True)
-    OUT.write_text(json.dumps(
-        {"split": args.split, "gates": vars(GATES), "edges": results}, indent=2))
-    print(f"\nwritten -> {OUT}")
+    write_registry({"split": args.split, "gates": vars(GATES), "edges": results})
 
 
 if __name__ == "__main__":

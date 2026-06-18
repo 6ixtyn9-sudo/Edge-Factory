@@ -1,5 +1,11 @@
 # data — migrating to Supabase, never commit
-localdata/
+# Note: ignore directory CONTENTS (localdata/*), not the directory itself,
+# otherwise git cannot re-include specific files via negation.
+localdata/*
+# Exception: commit the certified edge registry so it survives cache eviction.
+# Without this, a cold GitHub Actions run certifies 0 edges (no pre-split
+# history) and clobbers a good registry, cascading into empty picks/WhatsApps.
+!localdata/edges_consensus.json
 *.csv
 *.csv.gz
 *.duckdb
