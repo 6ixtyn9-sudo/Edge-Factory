@@ -1340,6 +1340,15 @@ def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
     return collapse_final_operational_picks(picks)
 
 
+def format_kickoff(pick: dict) -> str:
+    """Human stdout kickoff display. Always show missing kickoff explicitly."""
+    for key in ("kickoff", "time", "start_time", "ko"):
+        value = pick.get(key)
+        if value not in (None, ""):
+            return str(value)
+    return "n/a"
+
+
 def print_buckets(buckets: dict, title_date: str = ""):
     """Print picks grouped by bucket."""
     total_cert = len(buckets.get(BUCKET_CERTIFIED, [])) + len(buckets.get(BUCKET_CAUTION, []))
@@ -1374,8 +1383,9 @@ def print_buckets(buckets: dict, title_date: str = ""):
             market = p.get("market_type", p.get("market", "?"))
             tier = p.get("odds_tier", "?")
             label = p.get("display_rule") or p.get("rule", "?")
+            kickoff = format_kickoff(p)
             w_str = f"  w={p['w_score']:.2f}" if p.get("w_score") is not None else ""
-            print(f"  [{label}] {p['match'][:45]:45s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}%{w_str} {o}  [{market}/{tier}]")
+            print(f"  [{label}] {p['match'][:45]:45s} KO {kickoff:5s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}%{w_str} {o}  [{market}/{tier}]")
             if ctx:
                 print(ctx_str)
         print()
