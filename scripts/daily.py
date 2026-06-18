@@ -1,32 +1,31 @@
 #!/usr/bin/env python3
-"""Edge Factory — single trigger for the full daily pipeline.
+"""Edge Factory — single orchestrator for autonomous daily maintenance and smart accumulating ledgers.
 
 Usage
 -----
   python3 scripts/daily.py
   python3 scripts/daily.py --picks-only
   python3 scripts/daily.py --date 2026-06-15
-  python3 scripts/daily.py --picks-only --date 2026-06-15
   python3 scripts/daily.py --future-days 2
 
-Steps (always in this order):
-  1. capture_daily     — fetch latest data from all sources (D30 lookback)
-  2. backfill_results  — fill missing hs/gs from donor sources (D30, auto)
-  3. build_warehouse   — materialise CSVs into warehouse.duckdb
-  4. build_entities    — learn canonical league/team aliases → entity_registry.json
-  5. mine_consensus    — walk-forward edge certification → edges_consensus.json
-  6. decay_monitor     — 60-day health audit, auto-bench circuit breaker
-  7. assay_purity      — context verdicts → purity_registry.json
-  8. picks_today       — certified picks for target date → stdout + picks_today.json
-  9. audit_clv         — capture pick-time and end-of-run CLV snapshots + rolling report (non-critical)
- 10. audit_recent_picks — score archived daily picks against settled results (non-critical)
- 11. future planner    — inline N-day per-date reports, reusing picks_today.py
- 12. sync_supabase     — push target-date picks + certified edges to Postgres
+Autonomous 3-Hour Background Service & Accumulating Ledger:
+  python3 scripts/daily.py --auto-run
+      Runs an autonomous service every 3 hours. Completely eliminates manual human involvement:
+      - If today's official archive does not exist yet (06:00 / First Run): executes the complete heavy maintenance pipeline, builds DuckDB, locks the morning picks, and syncs to Supabase.
+      - If today's archive already exists (Intraday Runs): automatically scans for newly appearing fixtures/odds (the late slate). It perfectly retains all existing locked morning picks to prevent intraday performance corruption, automatically appends any brand new certified bets to the official ledger, captures qualitative time-of-day CLV snapshots, and syncs late-slate discoveries directly to Supabase.
 
---picks-only skips steps 1–3 (useful when data is already fresh).
+  python3 scripts/daily.py --auto-once
+      Performs exactly one autonomous iteration of the smart accumulating schedule and exits.
 
-No separate scripts/picks_future.py is required: the future planner is intentionally
-kept inline here to avoid another pipeline script drifting from picks_today.py.
+Deliberate Human-Intervention Modes (Optional):
+  python3 scripts/daily.py --forecast-refresh
+      Performs a standalone non-official forecast refresh, saving to localdata/forecast_*.json without modifying official ledgers.
+
+  python3 scripts/daily.py --promote-forecast localdata/forecast_2026-06-19_1100.json
+      Promotes an external forecast file to overwrite the official tracked performance record.
+
+  python3 scripts/daily.py --clv-only
+      Runs CLV monitoring capture and rolling report without running miners or picks.
 """
 
 from __future__ import annotations
@@ -36,12 +35,17 @@ import json
 import shlex
 import subprocess
 import sys
+import time
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+
+from edgefactory.util import norm_team  # noqa: E402
+
 REPORT_DIR = ROOT / "localdata"
 PICKS_TODAY_FILE = REPORT_DIR / "picks_today.json"
 DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
@@ -131,10 +135,13 @@ def print_pick_run_summary(output: str) -> None:
 def load_picks_file() -> list[dict[str, Any]]:
     if not PICKS_TODAY_FILE.exists():
         return []
-    data = json.loads(PICKS_TODAY_FILE.read_text())
-    if not isinstance(data, list):
+    try:
+        data = json.loads(PICKS_TODAY_FILE.read_text())
+        if not isinstance(data, list):
+            return []
+        return [p for p in data if isinstance(p, dict)]
+    except Exception:
         return []
-    return [p for p in data if isinstance(p, dict)]
 
 
 def tag_picks(picks: list[dict[str, Any]], target: str) -> list[dict[str, Any]]:
@@ -148,13 +155,7 @@ def tag_picks(picks: list[dict[str, Any]], target: str) -> list[dict[str, Any]]:
 
 
 def restore_target_picks(target_picks_text: str | None) -> None:
-    """Restore picks_today.json to target-date picks before sync_supabase.
-
-    The future planner has to call picks_today.py for tomorrow/next days, and
-    picks_today.py always writes localdata/picks_today.json. Without this restore,
-    sync_supabase would accidentally sync the last future day instead of the
-    requested target date.
-    """
+    """Restore picks_today.json to target-date picks before sync_supabase."""
     if target_picks_text is None:
         return
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -170,19 +171,24 @@ def format_kickoff(pick: dict[str, Any]) -> str:
     return "n/a"
 
 
-def generate_daily_report(target_date: str) -> None:
-    """Write a human-readable .txt summary of picks_today.json."""
-    report_file = REPORT_DIR / f"picks_{target_date}.txt"
+def generate_daily_report(
+    target_date: str,
+    output_path: Path | None = None,
+    header_title: str | None = None,
+    source_picks: list[dict[str, Any]] | None = None,
+) -> Path | None:
+    """Write a human-readable .txt summary of picks_today.json or provided picks."""
+    report_file = output_path or (REPORT_DIR / f"picks_{target_date}.txt")
 
-    if not PICKS_TODAY_FILE.exists():
+    if source_picks is None and not PICKS_TODAY_FILE.exists():
         print("No picks file found — skipping report")
-        return
+        return None
 
     try:
-        picks = load_picks_file()
+        picks = source_picks if source_picks is not None else load_picks_file()
         now_ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         lines = [
-            f"Edge Factory Picks — {target_date}",
+            header_title or f"Edge Factory Picks — {target_date}",
             "=" * 60,
             f"Generated at: {now_ts}",
             "",
@@ -255,9 +261,11 @@ def generate_daily_report(target_date: str) -> None:
 
         REPORT_DIR.mkdir(parents=True, exist_ok=True)
         report_file.write_text("\n".join(lines))
-        print(f"Daily report written: {report_file}")
+        print(f"Report written: {report_file}")
+        return report_file
     except Exception as exc:  # noqa: BLE001 - report generation must never kill pipeline
         print(f"Could not generate report: {exc}")
+        return None
 
 
 def _pick_date(pick: dict[str, Any], fallback: str) -> str:
@@ -269,11 +277,7 @@ def _pick_date(pick: dict[str, Any], fallback: str) -> str:
 
 
 def write_future_outputs(all_picks: list[dict[str, Any]], days: int) -> None:
-    """Write the aggregate machine-readable future-picks file.
-
-    Human-readable output stays date-native: localdata/picks_YYYY-MM-DD.txt.
-    No calendar-style CSV is produced; it was redundant with the per-date reports.
-    """
+    """Write the aggregate machine-readable future-picks file."""
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     json_file = REPORT_DIR / f"picks_next_{days}days.json"
@@ -282,12 +286,7 @@ def write_future_outputs(all_picks: list[dict[str, Any]], days: int) -> None:
 
 
 def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, Any]], run_as_of: str) -> None:
-    """Inline N-day planner using scripts/picks_today.py as the only pick engine.
-
-    The target day is not re-run. It is reused from the already generated
-    picks_today.json, so stdout stays clean and the target-day report remains the
-    primary visible pick output.
-    """
+    """Inline N-day planner using scripts/picks_today.py as the only pick engine."""
     if days <= 0:
         print("future_days <= 0 — skipping future planner")
         return
@@ -330,9 +329,346 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
     write_future_outputs(all_picks, days)
 
 
+def generate_forecast_report(target_date: str, flabel: str, picks: list[dict[str, Any]]) -> Path | None:
+    """Generate a dedicated human-readable .txt summary for a forecast refresh."""
+    output_path = REPORT_DIR / f"forecast_{target_date}_{flabel}.txt"
+    title = f"Edge Factory Forecast Refresh — {target_date} [{flabel}]"
+    return generate_daily_report(target_date, output_path=output_path, header_title=title, source_picks=picks)
+
+
+def promote_forecast(forecast_arg: str, default_date: str) -> None:
+    """Deliberately promote a non-official forecast JSON to become the official record."""
+    path = Path(forecast_arg)
+    if not path.exists():
+        candidates = [
+            REPORT_DIR / forecast_arg,
+            REPORT_DIR / f"forecast_{forecast_arg}.json",
+            REPORT_DIR / f"forecast_{default_date}_{forecast_arg}.json",
+        ]
+        for c in candidates:
+            if c.exists():
+                path = c
+                break
+    if not path.exists():
+        print(f"❌ Could not find forecast file matching '{forecast_arg}'", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"\n>>> Deliberate Promotion of Forecast: {path}")
+    data = json.loads(path.read_text())
+    if not isinstance(data, list):
+        print(f"❌ Forecast file does not contain a JSON list: {path}", file=sys.stderr)
+        sys.exit(1)
+
+    target_date = _pick_date(data[0] if data else {}, default_date)
+
+    archive_file = archived_picks_file(target_date)
+    text_content = path.read_text()
+    archive_file.write_text(text_content)
+    PICKS_TODAY_FILE.write_text(text_content)
+    print(f"  Promoted to official archive: {archive_file}")
+    print(f"  Promoted to live ledger     : {PICKS_TODAY_FILE}")
+
+    generate_daily_report(target_date)
+
+    run("python3 scripts/sync_supabase.py", "sync_supabase (Promoted Official Record)")
+    print(f"✅ Forecast {path.name} successfully promoted to official record for {target_date}.")
+
+
+def match_market_key(pick: dict[str, Any]) -> tuple[str, str, str, str]:
+    """Deterministic event-market natural key for our autonomous ledger merger."""
+    match_date = str(pick.get("date") or pick.get("picked_for") or "")[:10]
+    home = norm_team(pick.get("home") or "")
+    away = norm_team(pick.get("away") or "")
+    if not home or not away:
+        match_str = str(pick.get("match") or "").lower().strip()
+        home, away = match_str, match_str
+    market = str(pick.get("market") or "1x2").lower()
+    return (match_date, home, away, market)
+
+
+def autonomous_intraday_merge(
+    existing_ledger: list[dict[str, Any]],
+    fresh_run: list[dict[str, Any]],
+) -> tuple[list[dict[str, Any]], int]:
+    """The core autonomous accumulating ledger engine.
+
+    Returns (merged_picks, newly_added_count).
+    Retains all existing locked picks exactly to protect Day 0 performance records,
+    and appends any brand new late-slate discoveries.
+    """
+    seen_keys: set[tuple[str, str, str, str]] = set()
+    merged: list[dict[str, Any]] = []
+
+    for pick in existing_ledger:
+        key = match_market_key(pick)
+        seen_keys.add(key)
+        merged.append(pick)
+
+    new_added = 0
+    for pick in fresh_run:
+        key = match_market_key(pick)
+        if key not in seen_keys:
+            seen_keys.add(key)
+            merged.append(pick)
+            new_added += 1
+
+    merged.sort(
+        key=lambda p: (
+            _pick_date(p, "9999-99-99"),
+            str(p.get("bucket", "")),
+            -float(p.get("w_score") or 0),
+            -float(p.get("avg_p") or 0),
+            str(p.get("match", "")),
+        )
+    )
+    return merged, new_added
+
+
+def get_qualitative_hour_label() -> str:
+    """Return a qualitative intraday label for CLV capture based on local hour."""
+    hour = datetime.now(local_tz()).hour
+    if 10 <= hour < 14:
+        return "midday"
+    if 14 <= hour < 18:
+        return "afternoon"
+    if hour >= 18:
+        return "evening"
+    return "morning"
+
+
+def run_pipeline(
+    target_date: str,
+    mode: str,  # "official", "autonomous_intraday", "forecast", "clv_only"
+    future_days: int = 2,
+    backfill_days: int = 30,
+    force_repick: bool = False,
+    picks_only: bool = False,
+    forecast_label: str | None = None,
+    clv_label: str | None = None,
+) -> None:
+    """Execute the pipeline according to the requested operational mode."""
+    if mode == "clv_only":
+        label = clv_label or "monitoring"
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label {label}",
+            f"audit_clv capture {target_date} [{label}]",
+        )
+        clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+            f"audit_clv report {clv_start}..{target_date}",
+        )
+        return
+
+    run_as_of = make_run_as_of()
+    print(f"=== Edge Factory Pipeline ({mode.upper()}) ===")
+    print(f"    target date : {target_date}")
+    print(f"    future_days : {future_days}")
+    print(f"    run_as_of   : {run_as_of}")
+    print(f"    started at  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    if mode == "official":
+        if not picks_only:
+            run("python3 scripts/capture_daily.py --skip-build", "capture_daily (D30 lookback)")
+            run(
+                f"python3 scripts/backfill_results.py --days {backfill_days}",
+                f"backfill_results (D{backfill_days})",
+            )
+            run("python3 scripts/build_warehouse.py", "build_warehouse")
+
+        run("PYTHONPATH=src python3 scripts/build_entity_registry.py", "build_entity_registry")
+        run("python3 scripts/mine_consensus.py", "mine_consensus")
+        run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
+        run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
+
+        target_archive = archived_picks_file(target_date)
+        if target_archive.exists() and not force_repick:
+            print(f"\n>>> restore frozen target picks {target_date}")
+            target_picks_text = target_archive.read_text()
+            restore_target_picks(target_picks_text)
+            print(f"  reused archive: {target_archive}")
+        else:
+            run(
+                f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
+                f"picks_today {target_date}",
+            )
+            target_picks_text = PICKS_TODAY_FILE.read_text() if PICKS_TODAY_FILE.exists() else None
+            archive_target_picks(target_date, target_picks_text)
+
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
+            f"audit_clv capture {target_date} [pick_time]",
+        )
+        clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
+
+        target_picks = load_picks_file()
+
+        generate_daily_report(target_date)
+        run_future_planner(target_date, future_days, target_picks, run_as_of)
+
+        restore_target_picks(target_picks_text)
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label end_of_run",
+            f"audit_clv capture {target_date} [end_of_run]",
+        )
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+            f"audit_clv report {clv_start}..{target_date}",
+        )
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
+            f"audit_recent_picks {target_date} [30d]",
+        )
+        run("python3 scripts/sync_supabase.py", "sync_supabase")
+        print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
+
+    elif mode == "autonomous_intraday":
+        # Completely hands-off accumulating ledger run
+        run("PYTHONPATH=src python3 scripts/build_entity_registry.py", "build_entity_registry")
+        run("python3 scripts/mine_consensus.py", "mine_consensus")
+        run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
+        run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
+
+        target_archive = archived_picks_file(target_date)
+        try:
+            existing_ledger = json.loads(target_archive.read_text())
+            if not isinstance(existing_ledger, list):
+                existing_ledger = []
+        except Exception:
+            existing_ledger = []
+
+        print(f"\n>>> Autonomous Intraday Discovery Run {target_date}")
+        run(
+            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
+            f"picks_today {target_date} (Late Slate Scan)",
+        )
+
+        fresh_picks = load_picks_file()
+        merged_picks, new_added = autonomous_intraday_merge(existing_ledger, fresh_picks)
+
+        print("\n=== Autonomous Accumulating Ledger Verdict ===")
+        print(f"  Existing Locked Morning Picks : {len(existing_ledger)}")
+        print(f"  Brand New Late-Slate Bets     : {new_added}")
+        print(f"  Total Active Official Ledger  : {len(merged_picks)}")
+
+        if new_added > 0:
+            print("\n>>> Updating official frozen archives & production databases with new discoveries...")
+            merged_text = json.dumps(merged_picks, indent=2, sort_keys=True)
+            target_archive.write_text(merged_text)
+            PICKS_TODAY_FILE.write_text(merged_text)
+            generate_daily_report(target_date)
+            run("python3 scripts/sync_supabase.py", "sync_supabase (Autonomous Accumulating Record)")
+        else:
+            print("\n  No new matches/edges appeared. Locked official ledger unchanged.")
+            # Ensure picks_today.json matches the pristine official ledger
+            restore_target_picks(target_archive.read_text())
+
+        # Qualitative time-of-day CLV capture
+        qlabel = get_qualitative_hour_label()
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label {qlabel}",
+            f"audit_clv capture {target_date} [{qlabel}]",
+        )
+
+        clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+            f"audit_clv report {clv_start}..{target_date}",
+        )
+        print(f"\n=== Autonomous Intraday Service Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
+
+    elif mode == "forecast":
+        # Fast non-official forecast refresh (Human research mode)
+        run("PYTHONPATH=src python3 scripts/build_entity_registry.py", "build_entity_registry")
+        run("python3 scripts/mine_consensus.py", "mine_consensus")
+        run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
+        run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
+
+        flabel = forecast_label or datetime.now(local_tz()).strftime("%H%M")
+        print(f"\n>>> forecast refresh {target_date} [{flabel}]")
+        run(
+            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
+            f"picks_today {target_date} (Forecast Mode)",
+        )
+
+        if not PICKS_TODAY_FILE.exists():
+            print("❌ No picks_today.json generated during forecast refresh.")
+            return
+
+        forecast_picks = load_picks_file()
+
+        json_path = REPORT_DIR / f"forecast_{target_date}_{flabel}.json"
+        json_path.write_text(PICKS_TODAY_FILE.read_text())
+        print(f"  Forecast JSON saved: {json_path}")
+
+        txt_path = generate_forecast_report(target_date, flabel, forecast_picks)
+        if txt_path:
+            print(f"  Forecast TXT saved : {txt_path}")
+
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label forecast_{flabel} --input {json_path}",
+            f"audit_clv capture {target_date} [forecast_{flabel}]",
+        )
+
+        qlabel = get_qualitative_hour_label()
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label {qlabel} --input {json_path}",
+            f"audit_clv capture {target_date} [{qlabel}]",
+        )
+
+        clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+            f"audit_clv report {clv_start}..{target_date}",
+        )
+
+        target_archive = archived_picks_file(target_date)
+        if target_archive.exists():
+            print(f"\n>>> Restoring live picks_today.json from official archive {target_archive}")
+            restore_target_picks(target_archive.read_text())
+        else:
+            print("\n⚠️ No official archive exists for today yet. Live picks_today.json currently holds forecast refresh.")
+
+        print(f"\n=== Pipeline Forecast Refresh Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
+
+
+def run_smart_auto(future_days: int, backfill_days: int) -> None:
+    """Determine operational state for the target date and execute autonomous accumulating run."""
+    now = datetime.now(local_tz())
+    target_date = now.strftime("%Y-%m-%d")
+
+    target_archive = archived_picks_file(target_date)
+
+    print(f"\n=== Smart Autonomous Schedule Execution — {now.strftime('%Y-%m-%d %H:%M:%S')} ===")
+    print(f"    target date: {target_date}")
+    print(f"    local time : {now.strftime('%H:%M:%S %Z')}")
+    print(f"    archive    : {'EXISTS (Running Accumulating Discovery)' if target_archive.exists() else 'MISSING (Running Full Morning Heavy Run)'}")
+
+    if not target_archive.exists():
+        print(f"\n>>> [Smart Auto] Case 1: No frozen official archive for {target_date}. Executing Official Full Run.")
+        run_pipeline(
+            target_date=target_date,
+            mode="official",
+            future_days=future_days,
+            backfill_days=backfill_days,
+            force_repick=False,
+            picks_only=False,  # Full morning run
+        )
+    else:
+        print(f"\n>>> [Smart Auto] Case 2: Official archive exists for {target_date}. Executing Intraday Accumulating Discovery & CLV Capture.")
+        run_pipeline(
+            target_date=target_date,
+            mode="autonomous_intraday",
+            future_days=future_days,
+            backfill_days=backfill_days,
+            force_repick=True,
+            picks_only=True,
+        )
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(
-        description="Edge Factory full daily pipeline trigger.",
+        description="Edge Factory single orchestrator for autonomous daily maintenance, smart accumulating ledgers, and human research forecasts.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
@@ -347,7 +683,7 @@ def main() -> None:
     ap.add_argument(
         "--date",
         default=None,
-        help="Target date for picks_today (YYYY-MM-DD). Defaults to today.",
+        help="Target date for picks_today (YYYY-MM-DD). Defaults to today in local TZ.",
     )
     ap.add_argument(
         "--future-days",
@@ -364,76 +700,100 @@ def main() -> None:
     ap.add_argument(
         "--force-repick",
         action="store_true",
-        help="Ignore archived picks_YYYY-MM-DD.json and regenerate target-date picks.",
+        help="Ignore archived picks_YYYY-MM-DD.json and regenerate official target-date picks.",
+    )
+    ap.add_argument(
+        "--auto-run",
+        action="store_true",
+        help="Start the autonomous 3-hour accumulating background service.",
+    )
+    ap.add_argument(
+        "--auto-once",
+        action="store_true",
+        help="Perform exactly one autonomous iteration of the smart accumulating schedule and exit.",
+    )
+    ap.add_argument(
+        "--forecast-refresh",
+        action="store_true",
+        help="Execute a non-official forecast refresh (human research mode) to discover new fixtures/odds.",
+    )
+    ap.add_argument(
+        "--forecast-label",
+        default=None,
+        help="Specific label or HHMM timestamp for forecast refresh (default: current HHMM).",
+    )
+    ap.add_argument(
+        "--promote-forecast",
+        default=None,
+        help="Path or label of a forecast JSON file to promote to official tracked performance record.",
+    )
+    ap.add_argument(
+        "--clv-only",
+        action="store_true",
+        help="Run only CLV monitoring capture and rolling report for the target date.",
+    )
+    ap.add_argument(
+        "--clv-label",
+        default=None,
+        help="Snapshot label to use when --clv-only is passed.",
     )
     args = ap.parse_args()
 
-    target_date = args.date or date.today().isoformat()
-    run_as_of = make_run_as_of()
+    target_date = args.date or datetime.now(local_tz()).strftime("%Y-%m-%d")
 
-    print("=== Edge Factory Daily Pipeline ===")
-    print(f"    target date : {target_date}")
-    print(f"    future_days : {args.future_days}")
-    print(f"    run_as_of   : {run_as_of}")
-    print(f"    force_repick: {args.force_repick}")
-    print(f"    backfill_days: {args.backfill_days if not args.picks_only else 'skipped'}")
-    print(f"    mode        : {'picks-only (skip capture/backfill/build)' if args.picks_only else 'full run'}")
-    print(f"    started at  : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    if args.promote_forecast:
+        promote_forecast(args.promote_forecast, target_date)
+        return
 
-    if not args.picks_only:
-        run("python3 scripts/capture_daily.py --skip-build", "capture_daily (D30 lookback)")
-        run(
-            f"python3 scripts/backfill_results.py --days {args.backfill_days}",
-            f"backfill_results (D{args.backfill_days})",
+    if args.auto_run:
+        print(f"=== Starting Edge Factory Autonomous 3-Hour Service ({DEFAULT_LOCAL_TZ}) ===")
+        while True:
+            try:
+                run_smart_auto(args.future_days, args.backfill_days)
+            except (Exception, SystemExit) as exc:
+                print(
+                    f"\n⚠️ [Auto-Run] Network/Scraping exception during automated execution: {exc}.\n"
+                    "   (If your laptop is offline or asleep, live capture will naturally pause). Retrying on next scheduled window...",
+                    file=sys.stderr,
+                )
+
+            next_run = datetime.now(local_tz()) + timedelta(hours=3)
+            print(f"\n💤 Autonomous service resting. Next execution scheduled for {next_run.strftime('%Y-%m-%d %H:%M:%S %Z')} (in 3 hours)...")
+            time.sleep(3 * 3600)
+
+    if args.auto_once:
+        run_smart_auto(args.future_days, args.backfill_days)
+        return
+
+    if args.clv_only:
+        run_pipeline(
+            target_date=target_date,
+            mode="clv_only",
+            clv_label=args.clv_label,
         )
-        run("python3 scripts/build_warehouse.py", "build_warehouse")
+        return
 
-    run("PYTHONPATH=src python3 scripts/build_entity_registry.py", "build_entity_registry")
-    run("python3 scripts/mine_consensus.py", "mine_consensus")
-    run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
-    run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
-
-    target_archive = archived_picks_file(target_date)
-    if target_archive.exists() and not args.force_repick:
-        print(f"\n>>> restore frozen target picks {target_date}")
-        target_picks_text = target_archive.read_text()
-        restore_target_picks(target_picks_text)
-        print(f"  reused archive: {target_archive}")
-    else:
-        run(
-            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
-            f"picks_today {target_date}",
+    if args.forecast_refresh:
+        run_pipeline(
+            target_date=target_date,
+            mode="forecast",
+            future_days=args.future_days,
+            backfill_days=args.backfill_days,
+            force_repick=True,
+            picks_only=True,
+            forecast_label=args.forecast_label,
         )
-        target_picks_text = PICKS_TODAY_FILE.read_text() if PICKS_TODAY_FILE.exists() else None
-        archive_target_picks(target_date, target_picks_text)
+        return
 
-    run_soft(
-        f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
-        f"audit_clv capture {target_date} [pick_time]",
+    # Default official pipeline run
+    run_pipeline(
+        target_date=target_date,
+        mode="official",
+        future_days=args.future_days,
+        backfill_days=args.backfill_days,
+        force_repick=args.force_repick,
+        picks_only=args.picks_only,
     )
-    clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
-
-    target_picks = load_picks_file()
-
-    generate_daily_report(target_date)
-    run_future_planner(target_date, args.future_days, target_picks, run_as_of)
-
-    restore_target_picks(target_picks_text)
-    run_soft(
-        f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label end_of_run",
-        f"audit_clv capture {target_date} [end_of_run]",
-    )
-    run_soft(
-        f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
-        f"audit_clv report {clv_start}..{target_date}",
-    )
-    run_soft(
-        f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
-        f"audit_recent_picks {target_date} [30d]",
-    )
-    run("python3 scripts/sync_supabase.py", "sync_supabase")
-
-    print(f"\n=== Done — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
 
 if __name__ == "__main__":
