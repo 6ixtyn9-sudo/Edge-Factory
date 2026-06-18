@@ -1408,9 +1408,13 @@ Required action to restore live picks: mine locally with full history, confirm e
 
 Secondary issues still open from the same run (not blocking the registry fix):
 
-bzzoiro live odds enrichment returned enriched=0 (bzz_cached=948, bzz_valid_keys=63); the odds-key matching is failing, so most picks would land in WATCHLIST_NO_ODDS even after the registry is restored. Investigate with scripts/probe_bzzoiro_odds.py.
+bzzoiro odds enrichment returned enriched=0 in run #14. Investigation confirmed this is a SYMPTOM, not a root cause: picks get odds from forebet/zulubet prediction data inside eval_1x2 before enrichment runs, so enrichment is an UPGRADE to real bookmaker odds, not a requirement for a pick to exist. enriched=0 means picks kept their source odds. The run had 0 picks in every bucket (including WATCHLIST_NO_ODDS=0) because 0 picks survived the 21:52 SAST pre-match guard (almost all same-day matches had kicked off), compounded by the empty registry. The odds index itself loaded fine: 948 cached rows -> 63 valid keys.
 
-scoutingstats timed out ("The read operation timed out"), so the secondary odds fallback was unavailable.
+The bzzoiro enrichment diagnostic in picks_today.py was upgraded to print picks=, bzz_alias_keys=, and none= so future runs are self-diagnosing. enriched=0 + picks=0 means "nothing to enrich"; enriched=0 + picks>0 means "matching failed" (a real odds-key gap).
+
+Known team-name matching fragility (audit-only, enhancement quality): exact-match (9-char norm_team key) matches ~8/12 realistic cross-feed pairs. The 9-char truncation actually outperforms full-length alias matching. Failing pairs are abbreviation differences that no normalization resolves without an explicit alias table (Man City vs Manchester City, Dortmund vs Borussia Dortmund, Sporting CP vs Sporting Lisbon, Wolfsburg vs VfL Wolfsburg). These do NOT block picks (forebet odds are retained) but mean ~1/3 of potential upgrades silently miss. Fix only if live-book odds coverage becomes a priority; expand ODDS_TEAM_ALIASES carefully (do not use entity-registry canonical fallback for live odds — it over-merges).
+
+scoutingstats timed out ("The read operation timed out") in run #14, so the secondary odds fallback was unavailable.
 
 Current WhatsApp delivery fix, 2026-06-18:
 

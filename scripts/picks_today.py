@@ -1458,22 +1458,25 @@ def main():
             stats=scouting_stats,
         )
         enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
-        if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or enriched_n:
+        if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or enriched_n or picks:
             exact_n = sum(1 for p in picks if p.get("odds_match_method") == "exact")
             alias_time_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_time")
             alias_unique_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_unique")
             fallback_n = sum(1 for p in picks if p.get("odds_match_method") == "fallback")
+            none_n = sum(1 for p in picks if p.get("odds_match_method") == "none")
             bzz_n = sum(1 for p in picks if p.get("odds_source") == BZZOIRO_ODDS_SOURCE)
             scouting_n = sum(1 for p in picks if p.get("odds_source") == SCOUTINGSTATS_ODDS_SOURCE)
             print(
                 f"live odds enrichment {day}: "
+                f"picks={len(picks)} "
                 f"bzz_cached={bzz_stats.get('cached_rows', 0)} "
                 f"bzz_live={bzz_stats.get('live_rows', 0)} "
                 f"bzz_valid_keys={bzz_stats.get('valid_keys', len(odds_bundle.get('exact', {})))} "
+                f"bzz_alias_keys={bzz_stats.get('time_match_keys', len(odds_bundle.get('time_candidates', {})))} "
                 f"ss_cached={scouting_stats.get('cached_rows', 0)} "
                 f"ss_valid_keys={scouting_stats.get('valid_keys', len(secondary_bundle.get('exact', {})))} "
                 f"enriched={enriched_n} bzz={bzz_n} scoutingstats={scouting_n} "
-                f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} fallback={fallback_n}",
+                f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} fallback={fallback_n} none={none_n}",
                 file=sys.stderr,
             )
 
