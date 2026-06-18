@@ -332,4 +332,3 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
         """)
     return con
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
