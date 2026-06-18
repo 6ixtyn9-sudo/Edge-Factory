@@ -249,7 +249,10 @@ purity-aware buckets
 primary live odds from bzzoiro_odds
 secondary live odds fallback from scoutingstats cached rows
 weighted consensus display and sorting
-operational duplicate-pick collapse before final output and sync
+operational duplicate-pick collapse after bucket assignment, before final output and sync
+pre-match guard skips same-day picks that are already started / inside the configured lead window or missing kickoff
+final collapse is local to pick/report output; it does not mutate miner join keys
+final collapse strips only safe club tokens such as AC / FC / IFK, preserves W / U19 / B / II / reserve-like identity suffixes, and propagates the worst bucket across duplicate aliases
 scripts/audit_clv.py
 CLV capture and report utility
 capture is wired into daily.py with pick_time and end_of_run labels
@@ -262,7 +265,9 @@ scripts/daily.py
 single orchestrator
 also contains inline future planner
 also triggers CLV capture and rolling report
-also archives target-day picks JSON and runs recent picks audit
+archives target-day picks JSON and runs recent picks audit
+freezes target-date picks: if localdata/picks_YYYY-MM-DD.json already exists, reruns restore it instead of regenerating unless --force-repick is passed
+passes one fixed EDGE_FACTORY_RUN_AS_OF timestamp into all picks_today invocations for that run
 scripts/sync_supabase.py
 syncs certified edges and daily bucketed picks to Supabase
 Optional research-only scripts:
@@ -639,6 +644,7 @@ currently audit-only
 same-day report is only meaningful after at least two snapshot labels exist for a pick
 current daily.py captures pick_time and end_of_run automatically
 same-label reruns are expected to show duplicate skips
+CLV / steam / drift must not gate picks_today buckets until separately validated and promoted
 recent picks audit
 currently 1x2-only and settled-results-only
 depends on archived picks_YYYY-MM-DD.json files existing
@@ -647,7 +653,10 @@ operational live odds matching no longer relies on entity-registry canonical fal
 current live odds order is bzzoiro_odds first, then scoutingstats embedded odds, then existing pick-row fallback
 matching path inside each odds source is exact match, explicit odds-only aliases, then kickoff-aware alias fallback
 unmatched diagnostics are written to localdata/clv_unmatched_YYYY-MM-DD.json
-operational duplicate picks are collapsed before final picks_today output and sync
+operational duplicate picks are collapsed after bucket assignment and before final picks_today output and sync
+picks_today.json must be exactly the rows requested by the current invocation; do not merge stale existing picks_today.json rows back into a fresh run
+same-date reruns must be archive-first: daily.py restores localdata/picks_YYYY-MM-DD.json unless --force-repick is explicitly passed
+past-date picks must not be regenerated from live source pages; use the archived JSON only
 bzzoiro
 requires BZZOIRO_TOKEN
 curl_cffi
@@ -783,14 +792,39 @@ pick_time and end_of_run snapshots are captured automatically from scripts/daily
 reporting is audit-only
 same-label reruns dedupe correctly
 a report with only one snapshot per pick must show no CLV comparison yet
-live odds matching is now isolated from entity-registry canonical fallback
+live odds matching is isolated from entity-registry canonical fallback
 current operational path is bzzoiro_odds first, then scoutingstats embedded odds, with exact match, explicit odds-only aliases, and kickoff-aware alias fallback inside each source
+CLV / steam / drift remains audit-only and is not allowed to move a pick into SKIPPED_VETO
+
+Current operational determinism / identity fix, 2026-06-18:
+
+A duplicate-event leak was observed in localdata/picks_2026-06-18.txt: AC Oulu vs IFK Mariehamn and AC Oulu vs Mariehamn appeared as separate rows with different rules / buckets.
+The same target date also changed between morning and afternoon reruns: new same-day picks appeared later and buckets changed as live source pages / odds changed. This makes 2026-06-18 operational history tainted unless using a clearly frozen first archive.
+Fix applied in scripts/picks_today.py and scripts/daily.py:
+
+one run-level EDGE_FACTORY_RUN_AS_OF timestamp is passed from daily.py to picks_today.py
+same-day picks are filtered by a pre-match guard; default EDGE_FACTORY_MIN_LEAD_MINUTES is 30
+same-day rows with missing kickoff are skipped rather than treated as bettable
+past dates are not regenerated from live pages by daily.py; archived localdata/picks_YYYY-MM-DD.json is restored instead
+same-date reruns are archive-first unless --force-repick is passed
+picks_today.py no longer merges stale existing picks_today.json rows into the new run
+final duplicate collapse now runs after context bucketing so VETO / DEAD cannot be hidden by pre-bucket de-dupe
+same real-world event / same market / same pick collapses across 2-way and 3-way rules
+worst bucket wins across duplicate aliases
+safe club tokens AC / FC / IFK etc. are stripped only in the final operational output key
+identity-bearing W / U19 / B / II / reserve suffixes are preserved
+Khovd FC and Khovd Western remain distinct
+IFK Mariehamn / Mariehamn is an explicit odds alias
+learned entity-registry canonical fallback was removed from live odds matching
+CLV / steam / drift is audit-only and cannot move picks into SKIPPED_VETO
+Regression tests live in tests/test_picks_today_operational.py
+Operational audit note: do not use the conflicting 2026-06-18 reruns as clean machine-performance history. Restart trusted pick-performance accounting from the first frozen run after this fix.
 
 Current regime rule:
 
-start trusted machine-performance history from 2026-06-17
-treat older .txt reports as legacy human reference only
-let the current soccer system run for about one week before deciding on another sport
+restart trusted machine-performance history from the first frozen run after the 2026-06-18 determinism fix
+treat older .txt reports and conflicting 2026-06-18 reruns as legacy human reference only
+let the current soccer system run for about one clean week before deciding on another sport
 
 Readiness gate before sport #2:
 
@@ -805,4 +839,4 @@ stable current daily pipeline
 monitoring certified edges
 CLV coverage and later-snapshot quality using existing bzzoiro_odds and real-book odds
 avoiding broad source rabbit holes unless standalone proof exists
-Last updated: 2026-06-17
+Last updated: 2026-06-18

@@ -11,6 +11,7 @@ import json
 import re
 import sys
 from datetime import date, timedelta, datetime
+from zoneinfo import ZoneInfo
 from pathlib import Path
 from statistics import mean
 
@@ -33,6 +34,20 @@ SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 ODDS_TEAM_ALIASES = {
     "caboverde": "capeverde",  # bzzoiro: Cabo Verde; prediction feeds: Cape Verde Islands
     "drcongo": "congodr",      # keep odds-only aliasing explicit and local
+    "ifkmarieh": "mariehamn",  # norm_team("IFK Mariehamn")
+    "ifkmariehamn": "mariehamn",
+}
+
+# Final pick/report de-duplication is operational only.  It must be safer than
+# the legacy miner join key, but it must not use the learned entity registry or
+# canonical_team() because those can over-merge unrelated live odds/events.
+# Strip only non-identity club designators; preserve W/U19/B/II/reserve-like
+# suffixes so different squads do not collapse.  This intentionally collapses
+# source spelling variants such as "AC Oulu"/"Oulu" and
+# "IFK Mariehamn"/"Mariehamn" while keeping "Khovd" and "Khovd Western" apart.
+OPERATIONAL_CLUB_TOKENS = {
+    "fc", "afc", "cf", "sc", "ac", "cd", "ca", "fk", "ifk", "bk", "sk",
+    "club",
 }
 LOW_PRIORITY_BOOKMAKER_TOKENS = ("polymarket", "consensus")
 
@@ -51,6 +66,42 @@ FALLBACK_1X2 = {2: 70.0, 3: 65.0}
 _RULE_NWAY = re.compile(r"(\d+)\s*way")
 _RULE_THR = re.compile(r"avg_p\s*>=?\s*([\d.]+)")
 _TIME_RE = re.compile(r"(?<!\d)(\d{1,2}):(\d{2})(?!\d)")
+DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
+DEFAULT_MIN_LEAD_MINUTES = 30
+
+
+def _local_tz() -> ZoneInfo:
+    name = os.environ.get("EDGE_FACTORY_TZ", DEFAULT_LOCAL_TZ).strip() or DEFAULT_LOCAL_TZ
+    try:
+        return ZoneInfo(name)
+    except Exception:
+        return ZoneInfo(DEFAULT_LOCAL_TZ)
+
+
+def _parse_as_of(value: object | None) -> datetime | None:
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        normalized = text[:-1] + "+00:00" if text.endswith("Z") else text
+        parsed = datetime.fromisoformat(normalized)
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=_local_tz())
+    return parsed.astimezone(_local_tz())
+
+
+def pick_run_as_of() -> datetime:
+    return _parse_as_of(os.environ.get("EDGE_FACTORY_RUN_AS_OF")) or datetime.now(_local_tz())
+
+
+def min_lead_minutes() -> int:
+    raw = os.environ.get("EDGE_FACTORY_MIN_LEAD_MINUTES", str(DEFAULT_MIN_LEAD_MINUTES))
+    try:
+        return max(0, int(raw))
+    except (TypeError, ValueError):
+        return DEFAULT_MIN_LEAD_MINUTES
 
 # ---- purity buckets (unchanged) ----
 BUCKET_CERTIFIED = "CERTIFIED_CLEAN"
@@ -498,6 +549,19 @@ def odds_match_team_key(name: object) -> str:
     return ODDS_TEAM_ALIASES.get(compact, compact)
 
 
+def operational_team_key(name: object) -> str:
+    """Conservative event key for final pick/report duplicate collapse only.
+
+    This is deliberately local to the operational output layer.  It does not
+    alter warehouse/miner joins and it does not depend on entity-registry
+    canonical fallbacks.
+    """
+    tokens = re.findall(r"[a-z0-9]+", fold_ascii(str(name or "")))
+    filtered = [t for t in tokens if t not in OPERATIONAL_CLUB_TOKENS]
+    compact = "".join(filtered) or compact_key(name)
+    return ODDS_TEAM_ALIASES.get(compact, compact)
+
+
 def _kickoff_value(obj: dict) -> str | None:
     for key in ("kickoff", "time"):
         value = obj.get(key)
@@ -525,6 +589,61 @@ def _kickoff_delta_minutes(a: object, b: object) -> int | None:
     if a_min is None or b_min is None:
         return None
     return abs(a_min - b_min)
+
+
+def operational_pick_eligibility(
+    pick: dict,
+    *,
+    as_of: datetime,
+    min_lead: int,
+) -> tuple[bool, str | None]:
+    """Guard against after-the-fact same-day picks.
+
+    For operational output, a target-day match must be generated before kickoff
+    with a configurable lead time.  Future-date picks are allowed.  Past dates
+    must be read from archived picks_YYYY-MM-DD.json by daily.py, not recreated
+    from live source pages after results or source pages have drifted.
+    """
+    p_date = str(pick.get("date") or "")[:10]
+    try:
+        pick_date = datetime.strptime(p_date, "%Y-%m-%d").date()
+    except ValueError:
+        return False, "bad_date"
+
+    as_of_date = as_of.date()
+    if pick_date < as_of_date:
+        return False, "past_target_date"
+    if pick_date > as_of_date:
+        return True, None
+
+    kickoff_min = _kickoff_minutes(_kickoff_value(pick))
+    if kickoff_min is None:
+        return False, "missing_kickoff_same_day"
+
+    as_of_min = as_of.hour * 60 + as_of.minute
+    if kickoff_min - as_of_min < min_lead:
+        return False, f"inside_{min_lead}m_lead_or_started"
+    return True, None
+
+
+def filter_operational_pre_match_picks(
+    picks: list[dict],
+    *,
+    as_of: datetime,
+    min_lead: int,
+) -> tuple[list[dict], dict[str, int]]:
+    kept: list[dict] = []
+    skipped: dict[str, int] = {}
+    as_of_text = as_of.isoformat(timespec="seconds")
+    for pick in picks:
+        ok, reason = operational_pick_eligibility(pick, as_of=as_of, min_lead=min_lead)
+        if not ok:
+            skipped[reason or "unknown"] = skipped.get(reason or "unknown", 0) + 1
+            continue
+        pick["as_of"] = as_of_text
+        pick["min_lead_minutes"] = min_lead
+        kept.append(pick)
+    return kept, skipped
 
 
 def _bookmaker_priority(bookmaker: object) -> int:
@@ -765,8 +884,12 @@ def bzzoiro_odds_index(
 
 
 def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
-    """Find the best odds row for a pick using exact, kickoff-aware fallback,
-    and learned entity registry canonical matching fallback."""
+    """Find the best odds row using exact and explicit odds-only aliases.
+
+    Do not use learned entity-registry canonical fallbacks here: live odds
+    matching must stay explicit and kickoff-aware so identity drift cannot
+    silently move prices between different real-world events.
+    """
     if "exact" not in odds_data:
         key = (
             str(pick.get("date") or ""),
@@ -803,46 +926,6 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
                 return bounded[0][1], "alias_time"
         # Always fall back to the first sorted candidate of the exact same event
         return candidates[0], "alias_unique"
-
-    # Dynamic Learned Entity Registry Canonical Fallback Matching
-    pick_date = str(pick.get("date") or "")
-    pick_market = str(pick.get("market") or "")
-    pick_selection = str(pick.get("pick") or "")
-    pick_home_canon = canonical_team(pick.get("home"))
-    pick_away_canon = canonical_team(pick.get("away"))
-
-    canon_candidates = []
-    for row in odds_data["exact"].values():
-        if (
-            str(row.get("date") or "") == pick_date
-            and str(row.get("market") or "") == pick_market
-            and str(row.get("selection") or "") == pick_selection
-        ):
-            if (
-                canonical_team(row.get("home")) == pick_home_canon
-                and canonical_team(row.get("away")) == pick_away_canon
-            ):
-                canon_candidates.append(row)
-
-    if canon_candidates:
-        pick_kickoff = _kickoff_value(pick)
-        if pick_kickoff:
-            canon_candidates.sort(
-                key=lambda r: (
-                    _kickoff_delta_minutes(pick_kickoff, _kickoff_value(r)) is None,
-                    _kickoff_delta_minutes(pick_kickoff, _kickoff_value(r)) or 10**9,
-                    -_bookmaker_priority(r.get("bookmaker")),
-                    -(r.get("odds") or 0.0),
-                )
-            )
-        else:
-            canon_candidates.sort(
-                key=lambda r: (
-                    -_bookmaker_priority(r.get("bookmaker")),
-                    -(r.get("odds") or 0.0),
-                )
-            )
-        return canon_candidates[0], "alias_unique"
 
     return None, None
 
@@ -1137,52 +1220,124 @@ def _odds_source_rank(source: object) -> int:
     return 0
 
 
-def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
-    """Collapse duplicate operational picks for the same real-world event.
+_BUCKET_SEVERITY = {
+    BUCKET_CERTIFIED: 0,
+    BUCKET_CAUTION: 10,
+    BUCKET_WL_CTX: 20,
+    BUCKET_WL_ODDS: 30,
+    BUCKET_SKIP_VETO: 50,
+    BUCKET_SKIP_DEAD: 60,
+}
 
-    This is intentionally stricter than reporting grouping and completely
-    separate from miner join keys. It uses operational odds-only aliases and
-    kickoff when available to avoid showing or syncing duplicate picks such as
-    Congo DR vs DR Congo variants from different source labels.
+
+def _bucket_severity(bucket: object) -> int:
+    return _BUCKET_SEVERITY.get(str(bucket or BUCKET_CAUTION), _BUCKET_SEVERITY[BUCKET_CAUTION])
+
+
+def _event_base_key(pick: dict) -> tuple[str, str, str, str, str]:
+    """Final operational event key for output collapse.
+
+    Rule is intentionally excluded: if the same real-world event/outcome appears
+    under both a 2-way and 3-way certified rule, the output must still show only
+    one operational decision.  Any worse bucket among the aliases is propagated.
     """
-    best: dict[tuple[str, str, str, str, str], dict] = {}
-    removed = 0
+    return (
+        str(pick.get("date") or ""),
+        operational_team_key(pick.get("home") or ""),
+        operational_team_key(pick.get("away") or ""),
+        str(pick.get("market") or ""),
+        str(pick.get("pick") or ""),
+    )
+
+
+def _same_event_cluster(a: dict, b: dict) -> bool:
+    """Return True when two same-base picks should collapse.
+
+    If both kickoff times are known and more than three hours apart, keep them
+    separate.  Missing kickoff stays permissive because alias duplicates often
+    lose kickoff in one source.
+    """
+    a_min = _kickoff_minutes(_kickoff_value(a))
+    b_min = _kickoff_minutes(_kickoff_value(b))
+    if a_min is None or b_min is None:
+        return True
+    return abs(a_min - b_min) <= 180
+
+
+def _representative_score(pick: dict) -> tuple:
+    """Higher score wins when choosing which duplicate row to display."""
+    return (
+        _bucket_severity(pick.get("bucket")),  # conservative: display worst bucket
+        _kickoff_value(pick) is not None,
+        _odds_source_rank(pick.get("odds_source")),
+        pick.get("odds_match_method") == "exact",
+        pick.get("odds_match_method") == "alias_time",
+        float(pick.get("w_score") or 0),
+        float(pick.get("avg_p") or 0),
+        int(pick.get("n_way") or 0),
+        -len(str(pick.get("match") or "")),
+    )
+
+
+def _with_duplicate_metadata(group: list[dict]) -> dict:
+    rep = dict(max(group, key=_representative_score))
+    if len(group) <= 1:
+        return rep
+
+    ctx = dict(rep.get("ctx") or {})
+    buckets = [str(p.get("bucket") or BUCKET_CAUTION) for p in group]
+    rules = sorted({str(p.get("display_rule") or p.get("rule") or "?") for p in group})
+    matches = sorted({str(p.get("match") or "") for p in group if p.get("match")})
+    keys = sorted({
+        f"{operational_team_key(p.get('home') or '')} vs {operational_team_key(p.get('away') or '')}"
+        for p in group
+    })
+
+    worst = max(group, key=lambda p: _bucket_severity(p.get("bucket")))
+    rep["bucket"] = worst.get("bucket", rep.get("bucket", BUCKET_CAUTION))
+    rep["duplicate_rows_collapsed"] = len(group) - 1
+    rep["duplicate_bucket_sources"] = sorted(set(buckets), key=_bucket_severity)
+    rep["duplicate_rules_collapsed"] = rules
+    rep["duplicate_matches_collapsed"] = matches
+    ctx["duplicate_alias_collapse"] = "true"
+    ctx["duplicate_bucket_sources"] = ",".join(rep["duplicate_bucket_sources"])
+    ctx["duplicate_event_keys"] = ",".join(keys)
+    rep["ctx"] = ctx
+    return rep
+
+
+def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
+    """Collapse duplicate final picks after bucket assignment.
+
+    This is the last safety net before stdout/JSON/Supabase sync.  It is run
+    after context bucketing so duplicate aliases cannot hide a VETO/DEAD result.
+    """
+    grouped: dict[tuple[str, str, str, str, str], list[list[dict]]] = {}
     for pick in picks:
-        key = (
-            str(pick.get("date") or ""),
-            odds_match_team_key(pick.get("home") or ""),
-            odds_match_team_key(pick.get("away") or ""),
-            str(pick.get("market") or ""),
-            str(pick.get("pick") or ""),
-        )
-        current = best.get(key)
-        if current is None:
-            best[key] = pick
-            continue
-        current_score = (
-            _kickoff_value(current) is None,
-            -_odds_source_rank(current.get("odds_source")),
-            -(1 if current.get("odds_match_method") == "exact" else 0),
-            -(1 if current.get("odds_match_method") == "alias_time" else 0),
-            -float(current.get("w_score") or 0),
-            -float(current.get("avg_p") or 0),
-            len(str(current.get("match") or "")),
-        )
-        new_score = (
-            _kickoff_value(pick) is None,
-            -_odds_source_rank(pick.get("odds_source")),
-            -(1 if pick.get("odds_match_method") == "exact" else 0),
-            -(1 if pick.get("odds_match_method") == "alias_time" else 0),
-            -float(pick.get("w_score") or 0),
-            -float(pick.get("avg_p") or 0),
-            len(str(pick.get("match") or "")),
-        )
-        if new_score < current_score:
-            best[key] = pick
-        removed += 1
-    deduped = list(best.values())
-    deduped.sort(key=lambda r: (-r.get("w_score", 0.0), -r.get("avg_p", 0)))
-    return deduped, removed
+        base = _event_base_key(pick)
+        clusters = grouped.setdefault(base, [])
+        for cluster in clusters:
+            if _same_event_cluster(cluster[0], pick):
+                cluster.append(pick)
+                break
+        else:
+            clusters.append([pick])
+
+    out: list[dict] = []
+    removed = 0
+    for clusters in grouped.values():
+        for cluster in clusters:
+            out.append(_with_duplicate_metadata(cluster))
+            removed += max(0, len(cluster) - 1)
+
+    out.sort(key=lambda r: (-_bucket_severity(r.get("bucket")), -float(r.get("w_score") or 0.0), -float(r.get("avg_p") or 0)))
+    return out, removed
+
+
+# Backwards-compatible name for tests/importers.  Operational code uses the
+# post-bucket collapse above; this wrapper is intentionally conservative too.
+def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
+    return collapse_final_operational_picks(picks)
 
 
 def print_buckets(buckets: dict, title_date: str = ""):
@@ -1237,20 +1392,12 @@ def main():
     edge_meta = load_edge_meta()
     purity = load_purity()
     purity_missing = not bool(purity)
-
-    # Option 1: Load initial odds map from previously saved picks_today.json for Steam/Drift protection
-    initial_odds_map: dict[str, float] = {}
-    picks_today_path = ROOT / "localdata" / "picks_today.json"
-    if picks_today_path.exists():
-        try:
-            old_picks = json.loads(picks_today_path.read_text())
-            for p in old_picks:
-                p_id = f"{p.get('date')}|{p.get('match')}|{p.get('market')}|{p.get('pick')}|{p.get('rule')}"
-                odds_val = p.get("odds")
-                if odds_val is not None:
-                    initial_odds_map[p_id] = float(odds_val)
-        except Exception:
-            pass
+    as_of = pick_run_as_of()
+    lead_minutes = min_lead_minutes()
+    print(
+        f"operational as_of={as_of.isoformat(timespec='seconds')} min_lead={lead_minutes}m",
+        file=sys.stderr,
+    )
 
     # Weighted consensus: load per-source Wilson LB weights.
     # Empty dict = fall back to uniform weights silently.
@@ -1283,6 +1430,14 @@ def main():
                                             source_weights_1x2=source_weights_1x2)
         total_vetoes += vetoes
         total_upcoming += n_up
+        picks, pre_match_skips = filter_operational_pre_match_picks(
+            picks,
+            as_of=as_of,
+            min_lead=lead_minutes,
+        )
+        if pre_match_skips:
+            details = ", ".join(f"{k}={v}" for k, v in sorted(pre_match_skips.items()))
+            print(f"pre-match guard {day}: skipped {sum(pre_match_skips.values())} ({details})", file=sys.stderr)
 
         bzz_stats: dict = {}
         scouting_stats: dict = {}
@@ -1312,12 +1467,13 @@ def main():
                 file=sys.stderr,
             )
 
-        deduped_picks, removed_dupes = dedupe_operational_picks(picks)
-        if removed_dupes:
-            print(f"operational pick dedupe {day}: removed={removed_dupes}", file=sys.stderr)
+        # Bucket every row before final operational collapse.  This prevents an
+        # alias duplicate from hiding a VETO/DEAD context on the row that would
+        # otherwise be removed.
+        day_picks: list[dict] = []
 
         # Phase 7 enrichment + new fields
-        for p in deduped_picks:
+        for p in picks:
             rule = p.get("rule", "")
             meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "HEALTHY"})
             ctx = lookup_context(purity, p)
@@ -1329,27 +1485,16 @@ def main():
             p["edge_status"] = meta.get("status", "certified")
             p["decay_verdict"] = meta.get("decay_verdict", "HEALTHY")
 
-            # Option 1: Steam/Drift protection gate using initial_odds_map
-            p_id = f"{p.get('date')}|{p.get('match')}|{p.get('market')}|{p.get('pick')}|{p.get('rule')}"
-            if p_id in initial_odds_map and p.get("odds") is not None:
-                first_odds = initial_odds_map[p_id]
-                try:
-                    current_odds = float(p["odds"])
-                    p["first_captured_odds"] = first_odds
-                    if current_odds > 1.05 * first_odds:
-                        p["bucket"] = BUCKET_SKIP_VETO
-                        p["ctx"]["clv_drift_veto"] = f"drift_from_{first_odds:.2f}_to_{current_odds:.2f}"
-                    elif current_odds < 0.90 * first_odds:
-                        p["bucket"] = BUCKET_SKIP_VETO
-                        p["ctx"]["clv_steam_veto"] = f"steam_from_{first_odds:.2f}_to_{current_odds:.2f}"
-                except (ValueError, TypeError):
-                    pass
-
             # Phase 7 additions
             p["market_type"] = p.get("market", "1x2")
             p["odds_tier"] = get_odds_tier(p.get("market", "1x2"))
+            day_picks.append(p)
 
-        all_picks.extend(deduped_picks)
+        collapsed_day_picks, removed_dupes = collapse_final_operational_picks(day_picks)
+        if removed_dupes:
+            print(f"operational final pick collapse {day}: removed={removed_dupes}", file=sys.stderr)
+
+        all_picks.extend(collapsed_day_picks)
 
     # group by bucket
     buckets: dict[str, list] = {b: [] for b in BUCKET_ORDER}
@@ -1378,47 +1523,10 @@ def main():
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
     print(f"\n{summary}")
 
-    # Merge with existing picks_today.json to prevent overwriting rolled-off picks of the day
-    _json_path = ROOT / "localdata" / "picks_today.json"
+    # Write exactly the picks requested by this invocation.  Do not merge with
+    # an existing picks_today.json: stale target/future rows can re-enter human
+    # reports and Supabase sync as duplicate operational picks.
     final_picks = all_picks
-    if _json_path.exists() and days:
-        try:
-            existing_picks = json.loads(_json_path.read_text())
-            if isinstance(existing_picks, list):
-                min_run_date = min(days)
-                
-                new_map = {}
-                for p in all_picks:
-                    key = (p.get("date"), p.get("match"), p.get("market"), p.get("pick"), p.get("rule"))
-                    new_map[key] = p
-                
-                merged_picks = []
-                merged_keys = set()
-                
-                # Process existing picks
-                for p in existing_picks:
-                    if not isinstance(p, dict):
-                        continue
-                    p_date = p.get("date") or ""
-                    # Purge yesterday's obsolete picks, keep current and future ones
-                    if p_date < min_run_date:
-                        continue
-                        
-                    key = (p_date, p.get("match"), p.get("market"), p.get("pick"), p.get("rule"))
-                    if key in new_map:
-                        merged_picks.append(new_map[key])
-                        merged_keys.add(key)
-                    else:
-                        merged_picks.append(p)
-                
-                # Append brand new picks
-                for key, p in new_map.items():
-                    if key not in merged_keys:
-                        merged_picks.append(p)
-                
-                final_picks = merged_picks
-        except Exception as e:
-            print(f"Error merging picks: {e}", file=sys.stderr)
 
     # Write JSON
     _json_path = ROOT / "localdata" / "picks_today.json"
