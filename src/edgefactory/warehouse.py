@@ -113,20 +113,23 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, pick, pred_score,"
             f" {_odds('odd1')} AS odd1, {_odds('oddx')} AS oddx, {_odds('odd2')} AS odd2",
         )
-        con.execute("""
-            CREATE OR REPLACE VIEW predictz_settled AS
-            WITH pz AS (SELECT DISTINCT ON (date, hkey, akey) * FROM predictz_raw
-                        WHERE pick IS NOT NULL),
-                 fb AS (SELECT DISTINCT ON (date, hkey, akey) date, hkey, akey, hs, gs
-                        FROM forebet WHERE hs IS NOT NULL)
-            SELECT pz.*, fb.hs, fb.gs,
-                   CASE WHEN fb.hs > fb.gs THEN 'home'
-                        WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome,
-                   CASE pz.pick WHEN 'home' THEN pz.odd1
-                                WHEN 'draw' THEN pz.oddx ELSE pz.odd2 END AS pick_odds
-            FROM pz JOIN fb USING (date, hkey, akey)
-            WHERE length(pz.hkey) >= 4 AND length(pz.akey) >= 4
-        """)
+        # Guard: predictz_settled joins against forebet for results — skip if
+        # forebet data is unavailable (e.g. partial cache restore on CI).
+        if _table_exists(con, "forebet"):
+            con.execute("""
+                CREATE OR REPLACE VIEW predictz_settled AS
+                WITH pz AS (SELECT DISTINCT ON (date, hkey, akey) * FROM predictz_raw
+                            WHERE pick IS NOT NULL),
+                     fb AS (SELECT DISTINCT ON (date, hkey, akey) date, hkey, akey, hs, gs
+                            FROM forebet WHERE hs IS NOT NULL)
+                SELECT pz.*, fb.hs, fb.gs,
+                       CASE WHEN fb.hs > fb.gs THEN 'home'
+                            WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome,
+                       CASE pz.pick WHEN 'home' THEN pz.odd1
+                                    WHEN 'draw' THEN pz.oddx ELSE pz.odd2 END AS pick_odds
+                FROM pz JOIN fb USING (date, hkey, akey)
+                WHERE length(pz.hkey) >= 4 AND length(pz.akey) >= 4
+            """)
 
     if _glob.glob(f"{LOCALDATA}/scoutingstats_*.csv.gz"):
         _src_view(
@@ -329,3 +332,4 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
         """)
     return con
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
