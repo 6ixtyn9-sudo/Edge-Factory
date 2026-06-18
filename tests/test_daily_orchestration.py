@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import importlib.util
 import json
 import sys
 from pathlib import Path
@@ -7,9 +8,12 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "scripts"))
-
-import daily
+SCRIPT = ROOT / "scripts" / "daily.py"
+SPEC = importlib.util.spec_from_file_location("daily", SCRIPT)
+daily = importlib.util.module_from_spec(SPEC)
+sys.modules["daily"] = daily
+assert SPEC is not None and SPEC.loader is not None
+SPEC.loader.exec_module(daily)
 
 
 @patch("daily.run_pipeline")
