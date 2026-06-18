@@ -1322,6 +1322,21 @@ The fix is the discovery-vs-application split: edges_consensus.json is committed
 
 Deep historical mining (re-validation, new sources, threshold scans) remains a periodic local job on the machine with full history. Daily CI is application only: it applies the committed certified edges to fresh fixtures.
 
+L11 — Cache restore overwrites committed registries (the run #17 trap)
+
+Two layers protect the certified registry, and BOTH are required:
+
+.gitignore exception commits edges_consensus.json and purity_registry.json to the repo.
+mine_consensus.write_registry() guards against a cold run clobbering a good registry.
+But neither alone fixes CI, because actions/cache/restore unpacks localdata/ AFTER checkout and silently overwrites the committed registries with a stale 0-certified copy from an earlier cold run. The guard then sees existing_certified=0 and lets the zero-write through.
+
+The third layer (required) is a workflow step "Restore committed registries" that runs after cache restore and re-checks out the committed registries from HEAD (git checkout HEAD -- localdata/edges_consensus.json localdata/purity_registry.json). This guarantees the committed live registry wins over stale cache before mining runs.
+
+Sequence on a cold CI run after all three layers:
+checkout (9) -> cache restore (0, overwrites) -> committed-registry restore (9, HEAD wins) -> mining (0 certified from cold warehouse) -> write_registry guard (preserves 9).
+
+Never remove the committed-registry restore step. It is the only thing that survives cache clobber.
+
 L9 — Silent failures in non-critical steps hide real problems
 
 notify_whatsapp and the optional CLV / sync steps run via run_soft and never fail the job.
