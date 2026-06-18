@@ -233,7 +233,7 @@ def send_callmebot_whatsapp(
     clean_phone = "".join(filter(str.isdigit, str(phone)))
     encoded_text = urllib.parse.quote(message_text)
 
-    url = f"https://api.callmebot.com/whatsapp.py?phone={clean_phone}&text={encoded_text}&apikey={apikey}"
+    url = f"https://api.callmebot.com/whatsapp.php?phone={clean_phone}&text={encoded_text}&apikey={apikey}"
 
     req = urllib.request.Request(url, method="GET")
     with urllib.request.urlopen(req) as resp:
