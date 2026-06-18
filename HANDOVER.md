@@ -472,9 +472,11 @@ scripts/mine_consensus.py
 
 walk-forward consensus miner
 
-writes localdata/edges_consensus.json
+writes localdata/edges_consensus.json (this file is committed to the repo via a .gitignore exception so the certified registry survives cache eviction)
 
 includes Phase A shadow scans for PredictZ and Windrawwin
+
+write_registry() regression-to-zero circuit breaker: if a run certifies 0 edges but the existing registry already holds certified edges, the existing file is preserved instead of being clobbered. This prevents a single cold-cache run from permanently zeroing the registry and cascading into empty picks/WhatsApps. See section 16.
 
 scripts/decay_monitor.py
 
@@ -1038,6 +1040,14 @@ PYTHONPATH=src python3 -m pytest tests/test_assay.py -q
 python3 -m py_compile src/edgefactory/util.py src/edgefactory/entities.py src/edgefactory/whatsapp.py scripts/*.py
 
 Known issues and caveats
+Cold-cache certification trap
+
+certification needs deep pre-split history; a cold/evicted GitHub Actions cache holds only a D30 post-split window, so it certifies 0 edges
+
+fixed 2026-06-18: edges_consensus.json is committed to the repo and mine_consensus.write_registry() preserves a good registry when a run certifies nothing
+
+if "REGRESSION GUARD" appears in the logs, the existing registry was kept; restore full history and re-mine to refresh it
+
 WhatsApp / CallMeBot
 
 the CallMeBot endpoint in src/edgefactory/whatsapp.py is whatsapp.py and must be changed to whatsapp.php (see section 9)
@@ -1298,6 +1308,28 @@ A green Actions run does NOT prove that WhatsApps were delivered or that Supabas
 
 Always confirm delivery from the phone or from the run logs (look for "CallMeBot Dispatch Success") before assuming push works.
 
+L10 — Cold-cache certification trap (discovery vs application)
+
+Certification needs deep pre-split history (min_n_train=350, split=2025-06-01).
+
+capture_daily only pulls a rolling D30 window, which is entirely post-split.
+
+Therefore a cold or evicted GitHub Actions cache CANNOT certify any edge: train n = 0 -> 0 certified -> empty registry.
+
+An unguarded empty registry then cascades: 0 certified -> picks_today fallback -> 0 picks -> empty WhatsApp, and the intraday loop stays wedged in Case 2 for the rest of the day.
+
+The fix is the discovery-vs-application split: edges_consensus.json is committed to the repo (survives cache loss) and mine_consensus.write_registry() refuses to overwrite a good registry with a zero-certified result.
+
+Deep historical mining (re-validation, new sources, threshold scans) remains a periodic local job on the machine with full history. Daily CI is application only: it applies the committed certified edges to fresh fixtures.
+
+L9 — Silent failures in non-critical steps hide real problems
+
+notify_whatsapp and the optional CLV / sync steps run via run_soft and never fail the job.
+
+A green Actions run does NOT prove that WhatsApps were delivered or that Supabase was written.
+
+Always confirm delivery from the phone or from the run logs (look for "CallMeBot Dispatch Success") before assuming push works.
+
 Operational standard — anti-drift protocol
 Every repo change should follow:
 
@@ -1357,6 +1389,28 @@ live odds matching is isolated from entity-registry canonical fallback
 current operational path is bzzoiro_odds first, then scoutingstats embedded odds, with exact match, explicit odds-only aliases, and kickoff-aware alias fallback inside each source
 
 CLV / steam / drift remains audit-only and is not allowed to move a pick into SKIPPED_VETO
+
+Current cold-cache / empty-registry fix, 2026-06-18:
+
+Incident: run #14 delivered a green job and a successful CallMeBot dispatch, but the WhatsApp message was empty ("No matching certified edges found"). Root cause: the GitHub Actions cache was evicted, so the warehouse held only a post-split D30 window. mine_consensus then certified 0 edges (train n=0 < min_n_train=350), overwrote edges_consensus.json to empty, and that cascaded into 0 picks across every bucket. The intraday loop stayed frozen in Case 2 for the rest of the day because it does not rebuild the warehouse.
+
+Root cause confirmed by the log line: "edge registry missing/empty -> fallback to certified thresholds" plus 0 picks across all buckets.
+
+Fix applied (discovery vs application split):
+
+localdata/edges_consensus.json is now committed to the repo via a .gitignore exception (!localdata/edges_consensus.json). It survives cache eviction and is the daily source of truth for certified thresholds, decay, and purity context.
+
+scripts/mine_consensus.py gained write_registry() with a regression-to-zero circuit breaker. If a run certifies 0 edges but the existing registry already holds certified edges, the existing file is preserved and a "REGRESSION GUARD" warning is logged. Both write sites (the no-warehouse early exit and the normal end of run) route through it.
+
+Deep historical re-validation (new sources, threshold scans, re-certification) remains a periodic LOCAL job on the machine with full pre-split history. After mining locally, commit the refreshed edges_consensus.json. Daily CI is application only: apply the committed certified edges to fresh fixtures.
+
+Required action to restore live picks: mine locally with full history, confirm edges_consensus.json has the expected ~9 certified / 8 active, commit it, then trigger Actions -> Run workflow -> mode: official_morning.
+
+Secondary issues still open from the same run (not blocking the registry fix):
+
+bzzoiro live odds enrichment returned enriched=0 (bzz_cached=948, bzz_valid_keys=63); the odds-key matching is failing, so most picks would land in WATCHLIST_NO_ODDS even after the registry is restored. Investigate with scripts/probe_bzzoiro_odds.py.
+
+scoutingstats timed out ("The read operation timed out"), so the secondary odds fallback was unavailable.
 
 Current WhatsApp delivery fix, 2026-06-18:
 
