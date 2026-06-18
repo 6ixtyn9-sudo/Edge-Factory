@@ -370,7 +370,8 @@ def promote_forecast(forecast_arg: str, default_date: str) -> None:
 
     generate_daily_report(target_date)
 
-    run("python3 scripts/sync_supabase.py", "sync_supabase (Promoted Official Record)")
+    run_soft("python3 scripts/sync_supabase.py", "sync_supabase (Promoted Official Record)")
+    run_soft("python3 scripts/notify_whatsapp.py --force", "notify_whatsapp (Promoted Official Record)")
     print(f"✅ Forecast {path.name} successfully promoted to official record for {target_date}.")
 
 
@@ -519,7 +520,8 @@ def run_pipeline(
             f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
         )
-        run("python3 scripts/sync_supabase.py", "sync_supabase")
+        run_soft("python3 scripts/sync_supabase.py", "sync_supabase")
+        run_soft("python3 scripts/notify_whatsapp.py", "notify_whatsapp (Smart Dispatch)")
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "autonomous_intraday":
@@ -557,11 +559,13 @@ def run_pipeline(
             target_archive.write_text(merged_text)
             PICKS_TODAY_FILE.write_text(merged_text)
             generate_daily_report(target_date)
-            run("python3 scripts/sync_supabase.py", "sync_supabase (Autonomous Accumulating Record)")
+            run_soft("python3 scripts/sync_supabase.py", "sync_supabase (Autonomous Accumulating Record)")
+            run_soft("python3 scripts/notify_whatsapp.py", "notify_whatsapp (Autonomous Intraday Dispatch)")
         else:
             print("\n  No new matches/edges appeared. Locked official ledger unchanged.")
             # Ensure picks_today.json matches the pristine official ledger
             restore_target_picks(target_archive.read_text())
+            run_soft("python3 scripts/notify_whatsapp.py", "notify_whatsapp (Silent Check)")
 
         # Qualitative time-of-day CLV capture
         qlabel = get_qualitative_hour_label()
