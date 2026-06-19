@@ -1,19 +1,26 @@
 # data — migrating to Supabase, never commit
-# Note: ignore directory CONTENTS (localdata/*), not the directory itself,
-# otherwise git cannot re-include specific files via negation.
-localdata/*
-# Exception: commit the certified edge registry and purity registry so they
-# survive cache eviction. Without these, a cold GitHub Actions run certifies
-# 0 edges (no pre-split history) and clobbers a good registry, cascading into
-# empty picks/WhatsApps. The purity registry's odds_band verdicts are the
-# critical gate: without them, all picks land in WATCHLIST_UNKNOWN_CTX and
-# are never pushed. Its keys are deterministic (no entity_registry dependency).
-!localdata/edges_consensus.json
-!localdata/purity_registry.json
+# Broad ignores come FIRST so specific negations below can re-include files
+# (in .gitignore, the LAST matching pattern wins).
 *.csv
 *.csv.gz
 *.duckdb
 *.duckdb.wal
+
+# Ignore localdata contents entirely (directory is created at runtime).
+localdata/*
+
+# --- Negations: files that ARE committed to the repo ---
+# Regenerated on each run; committed so they survive cache eviction.
+!localdata/edges_consensus.json
+!localdata/purity_registry.json
+
+# Core pre-split history (immutable settled matches before 2025-06-01).
+# These 3 concatenated files give CI the deep training history it needs to
+# certify edges and assay purity WITHOUT any local intervention.
+# ~37M total. Pre-split data never changes, so commit once = autonomous forever.
+!localdata/forebet.csv.gz
+!localdata/zulubet.csv.gz
+!localdata/statarea.csv.gz
 
 # secrets
 .env
