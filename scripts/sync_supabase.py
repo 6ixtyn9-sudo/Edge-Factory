@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Sync certified edges + daily picks to Supabase.
 
-CSV/DuckDB remains the live ingest path. This script only promotes the current
-edge registry and the picks_today.json ledger into Supabase for dashboards / app
-read models. It is failure-safe for fresh clones: missing localdata files simply
-produce zero rows.
+CSV/DuckDB remains the live ingest path. This script promotes the current edge
+registry and an explicit picks ledger into Supabase for dashboards / app read
+models. It supports authoritative replace-for-date syncing so stale same-day
+rows cannot survive downstream.
 """
 from __future__ import annotations
 
@@ -12,20 +12,21 @@ import argparse
 import hashlib
 import json
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
+from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.db import get_client, upsert_edges, upsert_picks  # noqa: E402
+from edgefactory.db import delete_picks_for_date, get_client, upsert_edges, upsert_picks  # noqa: E402
 from edgefactory.util import norm_team  # noqa: E402
 
 EDGES = ROOT / "localdata" / "edges_consensus.json"
-PICKS = ROOT / "localdata" / "picks_today.json"
+DEFAULT_PICKS = ROOT / "localdata" / "picks_today.json"
 
-SPORT_ID = 1          # sports.key='soccer'
-SOURCE_ID = 1         # sources.key='forebet' / consensus base source
+SPORT_ID = 1  # sports.key='soccer'
+SOURCE_ID = 1  # sources.key='forebet' / consensus base source
 EVENT_SOURCE_KEY = "edgefactory_picks"
 
 
@@ -51,7 +52,6 @@ def _display_rule_from_name(name: str, market: str = "1x2") -> str | None:
 
 
 def load_edges() -> list[dict]:
-    """Load certified edges as rows for the Supabase edges table."""
     try:
         data = json.loads(EDGES.read_text())
     except Exception:
@@ -75,17 +75,25 @@ def load_edges() -> list[dict]:
     return out
 
 
-def load_picks_raw() -> list[dict]:
-    """Load picks_today.json. Missing/unreadable file -> zero rows."""
+def load_picks_raw(path: Path) -> list[dict]:
     try:
-        data = json.loads(PICKS.read_text())
+        data = json.loads(path.read_text())
     except Exception:
         return []
     return data if isinstance(data, list) else []
 
 
+def infer_target_date(picks: list[dict], fallback: str | None = None) -> str | None:
+    if fallback:
+        return fallback
+    for p in picks:
+        value = str(p.get("picked_for") or p.get("date") or "")[:10]
+        if value:
+            return value
+    return None
+
+
 def build_rule_aliases(edges: list[dict]) -> dict[str, str]:
-    """Return alias -> exact edge name for old/new picks_today rule strings."""
     aliases: dict[str, str] = {}
     for e in edges:
         name = e.get("name")
@@ -100,7 +108,6 @@ def build_rule_aliases(edges: list[dict]) -> dict[str, str]:
 
 
 def pick_edge_name(pick: dict, aliases: dict[str, str]) -> str | None:
-    """Resolve a pick to an exact certified edge name."""
     for key in ("edge_rule", "rule", "display_rule"):
         val = pick.get(key)
         if val and val in aliases:
@@ -109,13 +116,11 @@ def pick_edge_name(pick: dict, aliases: dict[str, str]) -> str | None:
 
 
 def event_source_ref(pick: dict) -> str:
-    """Deterministic event natural key for the CSV/DuckDB promotion layer."""
     sport = pick.get("sport") or "soccer"
     day = pick.get("date") or date.today().isoformat()
     home = norm_team(pick.get("home") or "")
     away = norm_team(pick.get("away") or "")
     if not home or not away:
-        # Last-resort stable fallback; avoid leaking massive payload into source_ref.
         digest = hashlib.sha1(json.dumps(pick, sort_keys=True).encode()).hexdigest()[:16]
         home, away = "unknown", digest
     return f"{sport}|{day}|{home}|{away}"
@@ -147,7 +152,6 @@ def fetch_edge_ids(client, edge_names: list[str]) -> dict[str, str]:
 
 
 def upsert_events(client, picks: list[dict]) -> dict[str, str]:
-    """Upsert minimal event stubs and return source_ref -> event UUID."""
     if not picks:
         return {}
     by_ref = {event_source_ref(p): event_row_from_pick(p) for p in picks}
@@ -160,8 +164,21 @@ def upsert_events(client, picks: list[dict]) -> dict[str, str]:
         .in_("source_ref", sorted(by_ref))
         .execute()
     )
-    return {r["source_ref"]: r["id"] for r in _response_data(resp)
-            if r.get("source_ref") and r.get("id")}
+    return {
+        r["source_ref"]: r["id"]
+        for r in _response_data(resp)
+        if r.get("source_ref") and r.get("id")
+    }
+
+
+def _sync_meta(target_date: str, picks_path: Path) -> dict[str, Any]:
+    return {
+        "producer": "edgefactory",
+        "target_date": target_date,
+        "sync_mode": "authoritative_replace",
+        "synced_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        "source_file": str(picks_path),
+    }
 
 
 def build_pick_rows(
@@ -169,10 +186,13 @@ def build_pick_rows(
     edge_ids: dict[str, str],
     event_ids: dict[str, str],
     aliases: dict[str, str],
+    *,
+    target_date: str,
+    picks_path: Path,
 ) -> tuple[list[dict], list[dict]]:
-    """Build Supabase edge_picks rows. Returns (rows, skipped)."""
     rows: list[dict] = []
     skipped: list[dict] = []
+    sync_meta = _sync_meta(target_date, picks_path)
     for p in picks:
         edge_name = pick_edge_name(p, aliases)
         event_ref = event_source_ref(p)
@@ -186,6 +206,8 @@ def build_pick_rows(
             probability = round(float(p.get("avg_p")) / 100.0, 4)
         except Exception:
             probability = None
+        payload = dict(p)
+        payload["_sync_meta"] = sync_meta
         rows.append({
             "edge_id": edge_id,
             "event_id": event_id,
@@ -195,43 +217,88 @@ def build_pick_rows(
             "odds": p.get("odds"),
             "status": "skipped" if str(bucket).startswith("SKIPPED") else "open",
             "bucket": bucket,
-            "context": p.get("ctx", {}),
+            "context": {**(p.get("ctx", {}) or {}), "_sync_meta": sync_meta},
             "rule": edge_name,
             "match_name": p.get("match"),
-            "picked_for": p.get("date"),
+            "picked_for": (p.get("date") or target_date)[:10],
             "market_type": p.get("market_type") or p.get("market"),
             "odds_tier": p.get("odds_tier"),
-            "source_payload": p,
+            "source_payload": payload,
         })
     return rows, skipped
 
 
+def write_sync_manifest(*, target_date: str, picks_path: Path, raw_text: str, pick_rows: list[dict], replace_date: bool) -> Path:
+    manifest = {
+        "target_date": target_date,
+        "picks_path": str(picks_path),
+        "row_count": len(pick_rows),
+        "sha1": hashlib.sha1(raw_text.encode()).hexdigest(),
+        "sync_mode": "authoritative_replace" if replace_date else "upsert_only",
+        "written_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+    }
+    out = ROOT / "localdata" / f"supabase_sync_manifest_{target_date}.json"
+    out.write_text(json.dumps(manifest, indent=2, sort_keys=True))
+    return out
+
+
 def main() -> None:
-    p = argparse.ArgumentParser(description="Sync certified edges and picks_today ledger to Supabase")
+    p = argparse.ArgumentParser(description="Sync certified edges and an explicit picks ledger to Supabase")
+    p.add_argument("--picks", default=str(DEFAULT_PICKS), help="Path to source picks JSON.")
+    p.add_argument("--target-date", default=None, help="Authoritative target date (YYYY-MM-DD).")
+    p.add_argument("--replace-date", action="store_true", help="Delete existing rows for target date before upserting.")
     p.add_argument("--dry-run", action="store_true")
     args = p.parse_args()
 
+    picks_path = Path(args.picks)
+    raw_text = picks_path.read_text() if picks_path.exists() else "[]"
     edges = load_edges()
-    raw_picks = load_picks_raw()
+    raw_picks = load_picks_raw(picks_path)
+    target_date = infer_target_date(raw_picks, args.target_date)
     aliases = build_rule_aliases(edges)
+
     print(f"Certified edges to sync: {len(edges)}")
     print(f"Daily picks to sync: {len(raw_picks)}")
+    print(f"Sync source file: {picks_path}")
+    print(f"Target date: {target_date}")
+    print(f"Replace date mode: {args.replace_date}")
 
     if args.dry_run:
         print("DRY RUN")
         return
 
+    if args.replace_date and not target_date:
+        print("Sync failed: --replace-date requires --target-date or picks with a date field")
+        sys.exit(1)
+
     try:
         client = get_client()
         if edges:
             upsert_edges(client, edges)
+        if args.replace_date and target_date:
+            delete_picks_for_date(client, target_date)
         edge_ids = fetch_edge_ids(client, [e["name"] for e in edges])
         event_ids = upsert_events(client, raw_picks)
-        pick_rows, skipped = build_pick_rows(raw_picks, edge_ids, event_ids, aliases)
+        pick_rows, skipped = build_pick_rows(
+            raw_picks,
+            edge_ids,
+            event_ids,
+            aliases,
+            target_date=target_date or date.today().isoformat(),
+            picks_path=picks_path,
+        )
         if skipped:
             print(f"Skipped picks without edge/event id: {len(skipped)}")
         if pick_rows:
             upsert_picks(client, pick_rows)
+        manifest = write_sync_manifest(
+            target_date=target_date or date.today().isoformat(),
+            picks_path=picks_path,
+            raw_text=raw_text,
+            pick_rows=pick_rows,
+            replace_date=args.replace_date,
+        )
+        print(f"Sync manifest written: {manifest}")
         print("Supabase sync done.")
     except Exception as e:
         print("Sync failed:", e)

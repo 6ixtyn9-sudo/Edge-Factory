@@ -1,15 +1,10 @@
 #!/usr/bin/env python3
 """WhatsApp Business standalone dispatch agent for Edge Factory.
 
-Reads the localdata/picks_today.json ledger, intelligently dedupes against
-previously sent picks for the same date, and transmits mobile-optimized
-Markdown summaries via official Meta Cloud, Twilio, or CallMeBot APIs.
-
-Usage
------
-  python3 scripts/notify_whatsapp.py
-  python3 scripts/notify_whatsapp.py --force
-  python3 scripts/notify_whatsapp.py --date 2026-06-18
+Reads an explicit picks ledger, dedupes against previously sent items, and
+transmits mobile-optimized Markdown summaries via Meta Cloud, Twilio, or
+CallMeBot APIs. Supports a separate same-day discovery-watchlist flow so late
+watchlist discoveries do not block later real bet alerts.
 """
 
 from __future__ import annotations
@@ -30,16 +25,17 @@ sys.path.insert(0, str(ROOT / "src"))
 from edgefactory.whatsapp import (  # noqa: E402
     BUCKET_CAUTION,
     BUCKET_CLEAN,
+    BUCKET_WL_CTX,
+    BUCKET_WL_ODDS,
+    format_whatsapp_discovery_summary,
     format_whatsapp_summary,
     send_callmebot_whatsapp,
     send_meta_whatsapp_cloud,
     send_twilio_whatsapp,
 )
 
-# Attempt to autoload .env if present
 try:
     from dotenv import load_dotenv
-
     load_dotenv(ROOT / ".env")
 except ImportError:
     pass
@@ -49,12 +45,6 @@ DEFAULT_PICKS_FILE = LOCALDATA / "picks_today.json"
 
 
 def _default_target_date() -> str:
-    """Today's date in the pipeline timezone (not the runner's UTC clock).
-
-    daily.py uses Africa/Johannesburg for target_date; notify_whatsapp must
-    match so the dedup ledger filename and the pick dates stay aligned.
-    Without this, a midnight-SAST run on the UTC runner picks yesterday's date.
-    """
     tz_name = os.environ.get("EDGE_FACTORY_TZ") or os.environ.get("TZ") or "Africa/Johannesburg"
     try:
         return datetime.now(ZoneInfo(tz_name)).strftime("%Y-%m-%d")
@@ -63,7 +53,6 @@ def _default_target_date() -> str:
 
 
 def _build_match_dedupe_key(pick: dict[str, Any], fallback_date: str) -> str:
-    """Return an exact, deterministic key to guard against duplicate alerts."""
     match_date = str(pick.get("date") or pick.get("picked_for") or fallback_date)[:10]
     match_str = str(pick.get("match") or "").lower().strip()
     market = str(pick.get("market") or "1x2").lower()
@@ -79,7 +68,7 @@ def _load_json_list(path: Path) -> list[dict[str, Any]]:
         if not isinstance(data, list):
             logging.warning(f"⚠️ Expected JSON list but found {type(data)} in {path}")
             return []
-        return data
+        return [item for item in data if isinstance(item, dict)]
     except Exception as exc:
         logging.warning(f"⚠️ Exception reading JSON picks from {path}: {exc}")
         return []
@@ -104,84 +93,13 @@ def _save_sent_ledger(path: Path, keys: set[str]) -> None:
         logging.warning(f"⚠️ Could not save sent ledger to {path}: {exc}")
 
 
-def main() -> int:
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+def _morning_baseline_file(target_date: str) -> Path:
+    return LOCALDATA / f"picks_morning_{target_date}.json"
 
-    ap = argparse.ArgumentParser(description="WhatsApp Business Dispatch Engine for Edge Factory.")
-    ap.add_argument("--picks", default=str(DEFAULT_PICKS_FILE), help="Path to source picks JSON.")
-    ap.add_argument("--date", default=None, help="Target date (YYYY-MM-DD). Defaults to today.")
-    ap.add_argument("--force", action="store_true", help="Bypass sent ledger and transmit all items.")
-    ap.add_argument("--late-slate-only", action="store_true", help="Strict intraday scan mode.")
-    args = ap.parse_args()
 
-    picks_file = Path(args.picks)
-    target_date = args.date or _default_target_date()
-    sent_ledger_file = LOCALDATA / f"whatsapp_sent_ledger_{target_date}.json"
-
-    # 1. Verify active credentials
-    meta_token = os.environ.get("WHATSAPP_TOKEN")
-    meta_phone_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
-    meta_recipient = os.environ.get("WHATSAPP_RECIPIENT")
-    meta_template = os.environ.get("WHATSAPP_TEMPLATE_NAME") or "edgefactory_picks_alert"
-
-    twilio_sid = os.environ.get("TWILIO_ACCOUNT_SID")
-    twilio_token = os.environ.get("TWILIO_AUTH_TOKEN")
-    twilio_number = os.environ.get("TWILIO_WHATSAPP_NUMBER")
-
-    callmebot_key = os.environ.get("CALLMEBOT_APIKEY")
-    callmebot_phone = os.environ.get("CALLMEBOT_PHONE") or meta_recipient
-
-    has_meta = bool(meta_token and meta_phone_id and meta_recipient)
-    has_twilio = bool(twilio_sid and twilio_token and twilio_number and meta_recipient)
-    has_callmebot = bool(callmebot_key and callmebot_phone)
-
-    if not any((has_meta, has_twilio, has_callmebot)):
-        logging.warning("⚠️ No active WhatsApp Business credentials detected. Skipping operational notification.")
-        return 0
-
-    # 2. Load picks and evaluate sent ledger
-    raw_picks = _load_json_list(picks_file)
-    logging.info(f"Loaded {len(raw_picks)} total operational picks from {picks_file}")
-
-    # We only notify CERTIFIED_CLEAN and CAUTION
-    notifiable_picks = [p for p in raw_picks if p.get("bucket") in (BUCKET_CLEAN, BUCKET_CAUTION)]
-
-    # If there are no notifiable picks at all, stay silent.
-    # Pushing an empty "no certified edges found" message is pure noise.
-    if not notifiable_picks:
-        logging.info("  [WhatsApp] No CERTIFIED_CLEAN/CAUTION picks to notify. Staying silent.")
-        return 0
-
-    sent_keys = set() if args.force else _load_sent_ledger(sent_ledger_file)
-    is_first_run_of_day = not sent_ledger_file.exists()
-
-    unsent_picks = []
-    for pick in notifiable_picks:
-        dkey = _build_match_dedupe_key(pick, target_date)
-        if dkey not in sent_keys:
-            unsent_picks.append(pick)
-
-    # 3. Smart decision on notification transmission
-    is_late_slate = args.late_slate_only or not is_first_run_of_day
-
-    if not unsent_picks and not is_first_run_of_day and not args.force:
-        logging.info("  [WhatsApp] All active strong/caution picks were already notified earlier today. Remaining silent.")
-        return 0
-
-    message_text = format_whatsapp_summary(
-        target_date=target_date,
-        picks=unsent_picks if is_late_slate else notifiable_picks,
-        is_late_slate_alert=is_late_slate and bool(unsent_picks),
-    )
-
-    logging.info("\n>>> Dispatching operational WhatsApp Business notification...\n")
-    print(message_text)
-    print("\n" + "=" * 60)
-
-    # 4. Transmit via active adapters
+def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_id: str | None, meta_recipient: str | None, meta_template: str, twilio_sid: str | None, twilio_token: str | None, twilio_number: str | None, callmebot_key: str | None, callmebot_phone: str | None) -> bool:
     dispatched = False
-
-    if has_meta and meta_token and meta_phone_id and meta_recipient:
+    if meta_token and meta_phone_id and meta_recipient:
         logging.info(f"  └ Sending via Meta WhatsApp Cloud API to recipient ending in ...{meta_recipient[-4:]}")
         try:
             resp = send_meta_whatsapp_cloud(
@@ -195,8 +113,7 @@ def main() -> int:
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ Meta Cloud API Dispatch Exception: {exc}")
-
-    if has_twilio and twilio_sid and twilio_token and twilio_number and meta_recipient:
+    if twilio_sid and twilio_token and twilio_number and meta_recipient:
         logging.info(f"  └ Sending via Twilio WhatsApp API to recipient ending in ...{meta_recipient[-4:]}")
         try:
             resp = send_twilio_whatsapp(
@@ -210,28 +127,140 @@ def main() -> int:
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ Twilio Dispatch Exception: {exc}")
-
-    if has_callmebot and callmebot_key and callmebot_phone:
+    if callmebot_key and callmebot_phone:
         logging.info(f"  └ Sending via CallMeBot API to phone ending in ...{callmebot_phone[-4:]}")
         try:
-            resp_str = send_callmebot_whatsapp(
-                apikey=callmebot_key,
-                phone=callmebot_phone,
-                message_text=message_text,
-            )
+            send_callmebot_whatsapp(apikey=callmebot_key, phone=callmebot_phone, message_text=message_text)
             logging.info("    └ CallMeBot Dispatch Success")
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ CallMeBot Dispatch Exception: {exc}")
+    return dispatched
 
-    # 5. Persist sent ledger on success
-    if dispatched or args.force:
-        for p in (unsent_picks if is_late_slate else notifiable_picks):
-            sent_keys.add(_build_match_dedupe_key(p, target_date))
-        _save_sent_ledger(sent_ledger_file, sent_keys)
-        logging.info(f"✅ Deduplication ledger updated: {len(sent_keys)} distinct items logged in {sent_ledger_file}")
 
-    return 0 if dispatched else 1
+def main() -> int:
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+    ap = argparse.ArgumentParser(description="WhatsApp Business Dispatch Engine for Edge Factory.")
+    ap.add_argument("--picks", default=str(DEFAULT_PICKS_FILE), help="Path to source picks JSON.")
+    ap.add_argument("--date", default=None, help="Target date (YYYY-MM-DD). Defaults to today.")
+    ap.add_argument("--force", action="store_true", help="Bypass sent ledgers and transmit all items.")
+    ap.add_argument("--late-slate-only", action="store_true", help="Strict intraday scan mode.")
+    args = ap.parse_args()
+
+    picks_file = Path(args.picks)
+    target_date = args.date or _default_target_date()
+    sent_ledger_file = LOCALDATA / f"whatsapp_sent_ledger_{target_date}.json"
+    discovery_sent_ledger_file = LOCALDATA / f"whatsapp_discovery_sent_ledger_{target_date}.json"
+
+    meta_token = os.environ.get("WHATSAPP_TOKEN")
+    meta_phone_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
+    meta_recipient = os.environ.get("WHATSAPP_RECIPIENT")
+    meta_template = os.environ.get("WHATSAPP_TEMPLATE_NAME") or "edgefactory_picks_alert"
+    twilio_sid = os.environ.get("TWILIO_ACCOUNT_SID")
+    twilio_token = os.environ.get("TWILIO_AUTH_TOKEN")
+    twilio_number = os.environ.get("TWILIO_WHATSAPP_NUMBER")
+    callmebot_key = os.environ.get("CALLMEBOT_APIKEY")
+    callmebot_phone = os.environ.get("CALLMEBOT_PHONE") or meta_recipient
+
+    has_meta = bool(meta_token and meta_phone_id and meta_recipient)
+    has_twilio = bool(twilio_sid and twilio_token and twilio_number and meta_recipient)
+    has_callmebot = bool(callmebot_key and callmebot_phone)
+    if not any((has_meta, has_twilio, has_callmebot)):
+        logging.warning("⚠️ No active WhatsApp Business credentials detected. Skipping operational notification.")
+        return 0
+
+    raw_picks = _load_json_list(picks_file)
+    logging.info(f"Loaded {len(raw_picks)} total operational picks from {picks_file}")
+
+    notifiable_picks = [p for p in raw_picks if p.get("bucket") in (BUCKET_CLEAN, BUCKET_CAUTION)]
+    sent_keys = set() if args.force else _load_sent_ledger(sent_ledger_file)
+    is_first_run_of_day = not sent_ledger_file.exists()
+    unsent_picks = [p for p in notifiable_picks if _build_match_dedupe_key(p, target_date) not in sent_keys]
+    is_late_slate = args.late_slate_only or not is_first_run_of_day
+
+    normal_message = None
+    normal_message_picks: list[dict[str, Any]] = []
+    if notifiable_picks:
+        if unsent_picks or is_first_run_of_day or args.force:
+            normal_message_picks = unsent_picks if is_late_slate else notifiable_picks
+            if normal_message_picks:
+                normal_message = format_whatsapp_summary(
+                    target_date=target_date,
+                    picks=normal_message_picks,
+                    is_late_slate_alert=is_late_slate and bool(unsent_picks),
+                )
+        else:
+            logging.info("  [WhatsApp] All active strong/caution picks were already notified earlier today. Remaining silent.")
+
+    discovery_enabled = os.environ.get("EDGE_FACTORY_NOTIFY_DISCOVERY_WATCHLIST", "").strip().lower() in {"1", "true", "yes", "on"}
+    discovery_message = None
+    discovery_picks: list[dict[str, Any]] = []
+    discovery_sent_keys = set() if args.force else _load_sent_ledger(discovery_sent_ledger_file)
+    if discovery_enabled:
+        baseline_rows = _load_json_list(_morning_baseline_file(target_date))
+        baseline_keys = {_build_match_dedupe_key(p, target_date) for p in baseline_rows}
+        candidate_discoveries = [
+            p for p in raw_picks
+            if str(p.get("date") or p.get("picked_for") or target_date)[:10] == target_date
+            and _build_match_dedupe_key(p, target_date) not in baseline_keys
+            and p.get("bucket") in (BUCKET_WL_ODDS, BUCKET_WL_CTX)
+        ]
+        discovery_picks = [p for p in candidate_discoveries if _build_match_dedupe_key(p, target_date) not in discovery_sent_keys]
+        if discovery_picks:
+            discovery_message = format_whatsapp_discovery_summary(target_date, discovery_picks)
+
+    if not normal_message and not discovery_message:
+        logging.info("  [WhatsApp] Nothing new to send. Staying silent.")
+        return 0
+
+    any_dispatched = False
+    if normal_message:
+        logging.info("\n>>> Dispatching operational WhatsApp notification...\n")
+        print(normal_message)
+        print("\n" + "=" * 60)
+        dispatched = _dispatch_message(
+            message_text=normal_message,
+            meta_token=meta_token,
+            meta_phone_id=meta_phone_id,
+            meta_recipient=meta_recipient,
+            meta_template=meta_template,
+            twilio_sid=twilio_sid,
+            twilio_token=twilio_token,
+            twilio_number=twilio_number,
+            callmebot_key=callmebot_key,
+            callmebot_phone=callmebot_phone,
+        )
+        if dispatched or args.force:
+            for p in normal_message_picks:
+                sent_keys.add(_build_match_dedupe_key(p, target_date))
+            _save_sent_ledger(sent_ledger_file, sent_keys)
+            logging.info(f"✅ Bet-alert dedupe ledger updated: {len(sent_keys)} items in {sent_ledger_file}")
+        any_dispatched = any_dispatched or dispatched
+
+    if discovery_message:
+        logging.info("\n>>> Dispatching discovery-watchlist WhatsApp notification...\n")
+        print(discovery_message)
+        print("\n" + "=" * 60)
+        dispatched = _dispatch_message(
+            message_text=discovery_message,
+            meta_token=meta_token,
+            meta_phone_id=meta_phone_id,
+            meta_recipient=meta_recipient,
+            meta_template=meta_template,
+            twilio_sid=twilio_sid,
+            twilio_token=twilio_token,
+            twilio_number=twilio_number,
+            callmebot_key=callmebot_key,
+            callmebot_phone=callmebot_phone,
+        )
+        if dispatched or args.force:
+            for p in discovery_picks:
+                discovery_sent_keys.add(_build_match_dedupe_key(p, target_date))
+            _save_sent_ledger(discovery_sent_ledger_file, discovery_sent_keys)
+            logging.info(f"✅ Discovery-alert dedupe ledger updated: {len(discovery_sent_keys)} items in {discovery_sent_ledger_file}")
+        any_dispatched = any_dispatched or dispatched
+
+    return 0 if any_dispatched or args.force else 1
 
 
 if __name__ == "__main__":
