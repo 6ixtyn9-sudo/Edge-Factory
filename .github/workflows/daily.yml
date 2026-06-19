@@ -55,21 +55,16 @@ jobs:
           restore-keys: |
             localdata-main-
 
-      - name: Restore committed registries (override stale cache)
-        # The certified-edge and purity registries are committed to the repo
-        # so they survive cache eviction. But actions/cache/restore unpacks
-        # localdata/ AFTER checkout and can overwrite them with a stale 0-certified
-        # copy from an earlier cold run. Re-check out the committed versions from
-        # HEAD so the live certified registry always wins over stale cache.
+      - name: Restore committed data (override stale cache)
+        # Committed files in localdata/ (registries + core history CSVs) survive
+        # cache eviction, but actions/cache/restore unpacks localdata/ AFTER
+        # checkout and can overwrite them with stale copies. Re-check out ALL
+        # git-tracked localdata files from HEAD so live versions always win.
+        # Includes the 3 core history CSVs so CI certifies autonomously.
         run: |
           set -e
-          for f in localdata/edges_consensus.json localdata/purity_registry.json; do
-            if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
-              git checkout HEAD -- "$f"
-              echo "restored committed: $f"
-            else
-              echo "not tracked, skipped: $f"
-            fi
+          for f in $(git ls-files localdata/); do
+            git checkout HEAD -- "$f" && echo "restored committed: $f"
           done
           echo "certified edges present: $(python3 -c "import json;d=json.load(open('localdata/edges_consensus.json'));print(sum(1 for e in d.get('edges',[]) if e.get('status')=='certified'))" 2>/dev/null || echo n/a)"
 
