@@ -180,6 +180,7 @@ def main() -> int:
 
     normal_message = None
     normal_message_picks: list[dict[str, Any]] = []
+    normal_silent_logged = False
     if notifiable_picks:
         if unsent_picks or is_first_run_of_day or args.force:
             normal_message_picks = unsent_picks if is_late_slate else notifiable_picks
@@ -191,6 +192,7 @@ def main() -> int:
                 )
         else:
             logging.info("  [WhatsApp] All active strong/caution picks were already notified earlier today. Remaining silent.")
+            normal_silent_logged = True
 
     discovery_enabled = os.environ.get("EDGE_FACTORY_NOTIFY_DISCOVERY_WATCHLIST", "").strip().lower() in {"1", "true", "yes", "on"}
     discovery_message = None
@@ -210,7 +212,8 @@ def main() -> int:
             discovery_message = format_whatsapp_discovery_summary(target_date, discovery_picks)
 
     if not normal_message and not discovery_message:
-        logging.info("  [WhatsApp] Nothing new to send. Staying silent.")
+        if not normal_silent_logged:
+            logging.info("  [WhatsApp] Nothing new to send. Staying silent.")
         return 0
 
     any_dispatched = False

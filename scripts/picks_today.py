@@ -29,13 +29,36 @@ LOCALDATA = ROOT / "localdata"
 BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 
-# Odds feeds and prediction feeds sometimes use different country/team labels.
-# Keep this local to odds matching so certified mining/team joins remain unchanged.
-ODDS_TEAM_ALIASES = {
-    "caboverde": "capeverde",  # bzzoiro: Cabo Verde; prediction feeds: Cape Verde Islands
-    "drcongo": "congodr",      # keep odds-only aliasing explicit and local
-    "ifkmarieh": "mariehamn",  # norm_team("IFK Mariehamn")
+# Operational source/odds aliasing stays local to picks_today so certified miners,
+# warehouse joins, and historical backtests remain unchanged.
+#
+# Two distinct key spaces exist here:
+# - source row joins use legacy norm_team(...)->9 char keys
+# - odds matching uses both legacy exact keys and compact kickoff-aware keys
+#
+# Keep aliases explicit and minimal.
+SOURCE_TEAM_KEY_ALIASES = {
+    "thunder": "dandenong",   # Forebet: Thunder SC; others: Dandenong Thunder
+    "hobartzeb": "clarencez", # some feeds: Hobart Zebras; others: Clarence Zebras
+}
+
+ODDS_EXACT_TEAM_ALIASES = {
+    "caboverde": "capeverde",
+    "drcongo": "congodr",
+    "ifkmarieh": "mariehamn",
     "ifkmariehamn": "mariehamn",
+    "thunder": "dandenong",
+    "hobartzeb": "clarencez",
+}
+
+ODDS_MATCH_TEAM_ALIASES = {
+    "caboverde": "capeverde",
+    "drcongo": "congodr",
+    "ifkmarieh": "mariehamn",
+    "ifkmariehamn": "mariehamn",
+    "thundersc": "dandenongthunder",
+    "hobartzebras": "clarencezebras",
+    "hobartzebrasfc": "clarencezebras",
 }
 
 # Final pick/report de-duplication is operational only.  It must be safer than
@@ -510,7 +533,7 @@ def fetch_all(day: str) -> dict[str, dict]:
                 continue
             if name == "forebet" and r.get("status") == "FT":
                 continue
-            k = (norm_team(home), norm_team(away))
+            k = (source_team_key(home), source_team_key(away))
             if len(k[0]) < 4 or len(k[1]) < 4:
                 continue
             by_key[k] = r
@@ -532,10 +555,21 @@ def _valid_decimal_odds(v) -> float | None:
     return odds
 
 
+def source_team_key(name: object) -> str:
+    """Operational source-join key for picks_today only.
+
+    Uses the legacy 9-char norm_team key, plus a tiny explicit alias layer for
+    known provider drift such as Thunder SC/Dandenong Thunder and
+    Hobart Zebras/Clarence Zebras.
+    """
+    key = norm_team(str(name or ""))
+    return SOURCE_TEAM_KEY_ALIASES.get(key, key)
+
+
 def odds_team_key(name: object) -> str:
     """Legacy exact-match team key for odds enrichment only with accent folding."""
     key = norm_team(fold_ascii(str(name or "")))
-    return ODDS_TEAM_ALIASES.get(key, key)
+    return ODDS_EXACT_TEAM_ALIASES.get(key, key)
 
 
 def odds_match_team_key(name: object) -> str:
@@ -546,7 +580,7 @@ def odds_match_team_key(name: object) -> str:
     """
     raw = str(name or "")
     compact = compact_key(raw)
-    return ODDS_TEAM_ALIASES.get(compact, compact)
+    return ODDS_MATCH_TEAM_ALIASES.get(compact, compact)
 
 
 def operational_team_key(name: object) -> str:
@@ -559,7 +593,7 @@ def operational_team_key(name: object) -> str:
     tokens = re.findall(r"[a-z0-9]+", fold_ascii(str(name or "")))
     filtered = [t for t in tokens if t not in OPERATIONAL_CLUB_TOKENS]
     compact = "".join(filtered) or compact_key(name)
-    return ODDS_TEAM_ALIASES.get(compact, compact)
+    return ODDS_MATCH_TEAM_ALIASES.get(compact, compact)
 
 
 def _kickoff_value(obj: dict) -> str | None:
