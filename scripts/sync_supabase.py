@@ -12,7 +12,7 @@ import argparse
 import hashlib
 import json
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -176,7 +176,7 @@ def _sync_meta(target_date: str, picks_path: Path) -> dict[str, Any]:
         "producer": "edgefactory",
         "target_date": target_date,
         "sync_mode": "authoritative_replace",
-        "synced_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        "synced_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
         "source_file": str(picks_path),
     }
 
@@ -235,7 +235,7 @@ def write_sync_manifest(*, target_date: str, picks_path: Path, raw_text: str, pi
         "row_count": len(pick_rows),
         "sha1": hashlib.sha1(raw_text.encode()).hexdigest(),
         "sync_mode": "authoritative_replace" if replace_date else "upsert_only",
-        "written_at": datetime.utcnow().replace(microsecond=0).isoformat() + "Z",
+        "written_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
     }
     out = ROOT / "localdata" / f"supabase_sync_manifest_{target_date}.json"
     out.write_text(json.dumps(manifest, indent=2, sort_keys=True))
