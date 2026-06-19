@@ -61,6 +61,12 @@ ODDS_MATCH_TEAM_ALIASES = {
     "hobartzebrasfc": "clarencezebras",
 }
 
+DISPLAY_TEAM_ALIASES = {
+    "thundersc": "Dandenong Thunder",
+    "hobartzebras": "Clarence Zebras",
+    "hobartzebrasfc": "Clarence Zebras",
+}
+
 # Final pick/report de-duplication is operational only.  It must be safer than
 # the legacy miner join key, but it must not use the learned entity registry or
 # canonical_team() because those can over-merge unrelated live odds/events.
@@ -553,6 +559,14 @@ def _valid_decimal_odds(v) -> float | None:
     if odds is None or odds <= 1.0:
         return None
     return odds
+
+
+def canonical_display_team(name: object) -> str:
+    """Normalize a small set of provider-specific display aliases for operational output."""
+    raw = str(name or "").strip()
+    if not raw:
+        return raw
+    return DISPLAY_TEAM_ALIASES.get(compact_key(raw), raw)
 
 
 def source_team_key(name: object) -> str:
@@ -1129,8 +1143,8 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
         odds_src = ("forebet_best" if _f(fb.get(_col)) is not None
                     else "zulubet" if _f(zb.get(_col)) is not None
                     else None)
-        home = anchor.get("home")
-        away = anchor.get("away")
+        home = canonical_display_team(anchor.get("home"))
+        away = canonical_display_team(anchor.get("away"))
         picks.append({
             "date": day, "market": "1x2",
             "match": f"{home} vs {away}",
@@ -1205,8 +1219,8 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
         anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
         sel = sels[0]
         odds = _f(fb.get(outcome_odds[sel])) if fb else None
-        home = anchor.get("home")
-        away = anchor.get("away")
+        home = canonical_display_team(anchor.get("home"))
+        away = canonical_display_team(anchor.get("away"))
         picks.append({
             "date": day, "market": market,
             "match": f"{home} vs {away}",
