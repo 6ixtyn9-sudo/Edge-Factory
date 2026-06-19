@@ -19,9 +19,10 @@ import json
 import logging
 import os
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
@@ -45,6 +46,20 @@ except ImportError:
 
 LOCALDATA = ROOT / "localdata"
 DEFAULT_PICKS_FILE = LOCALDATA / "picks_today.json"
+
+
+def _default_target_date() -> str:
+    """Today's date in the pipeline timezone (not the runner's UTC clock).
+
+    daily.py uses Africa/Johannesburg for target_date; notify_whatsapp must
+    match so the dedup ledger filename and the pick dates stay aligned.
+    Without this, a midnight-SAST run on the UTC runner picks yesterday's date.
+    """
+    tz_name = os.environ.get("EDGE_FACTORY_TZ") or os.environ.get("TZ") or "Africa/Johannesburg"
+    try:
+        return datetime.now(ZoneInfo(tz_name)).strftime("%Y-%m-%d")
+    except Exception:
+        return date.today().isoformat()
 
 
 def _build_match_dedupe_key(pick: dict[str, Any], fallback_date: str) -> str:
@@ -100,7 +115,7 @@ def main() -> int:
     args = ap.parse_args()
 
     picks_file = Path(args.picks)
-    target_date = args.date or date.today().isoformat()
+    target_date = args.date or _default_target_date()
     sent_ledger_file = LOCALDATA / f"whatsapp_sent_ledger_{target_date}.json"
 
     # 1. Verify active credentials
@@ -130,6 +145,12 @@ def main() -> int:
 
     # We only notify CERTIFIED_CLEAN and CAUTION
     notifiable_picks = [p for p in raw_picks if p.get("bucket") in (BUCKET_CLEAN, BUCKET_CAUTION)]
+
+    # If there are no notifiable picks at all, stay silent.
+    # Pushing an empty "no certified edges found" message is pure noise.
+    if not notifiable_picks:
+        logging.info("  [WhatsApp] No CERTIFIED_CLEAN/CAUTION picks to notify. Staying silent.")
+        return 0
 
     sent_keys = set() if args.force else _load_sent_ledger(sent_ledger_file)
     is_first_run_of_day = not sent_ledger_file.exists()
