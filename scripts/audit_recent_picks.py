@@ -8,10 +8,12 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Any
+from zoneinfo import ZoneInfo
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCALDATA = ROOT / "localdata"
 WAREHOUSE = LOCALDATA / "warehouse.duckdb"
+DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
 
 import sys
 sys.path.insert(0, str(ROOT / "src"))
@@ -32,6 +34,13 @@ class SettledPick:
     won: bool
     odds: float | None
     pnl: float | None
+
+
+def local_today() -> str:
+    try:
+        return datetime.now(ZoneInfo(DEFAULT_LOCAL_TZ)).date().isoformat()
+    except Exception:
+        return date.today().isoformat()
 
 
 def daterange(start: str, end: str):
@@ -87,20 +96,21 @@ def load_results_index(warehouse_path: Path) -> dict[tuple[str, str, str], dict[
         return {}
 
     union_sql = " UNION ALL ".join(
-        f"SELECT {prio} AS prio, date, hkey, akey, hs, gs, outcome FROM {name} WHERE hs IS NOT NULL AND gs IS NOT NULL"
+        f"SELECT {prio} AS prio, date, hkey, akey, hs, gs, outcome FROM {name} "
+        f"WHERE hs IS NOT NULL AND gs IS NOT NULL"
         for prio, name in active
     )
     sql = f"""
-        WITH all_results AS (
-            {union_sql}
-        ), ranked AS (
-            SELECT *,
-                   ROW_NUMBER() OVER (PARTITION BY date, hkey, akey ORDER BY prio) AS rn
-            FROM all_results
-        )
-        SELECT date, hkey, akey, hs, gs, outcome
-        FROM ranked
-        WHERE rn = 1
+    WITH all_results AS (
+      {union_sql}
+    ), ranked AS (
+      SELECT *,
+             ROW_NUMBER() OVER (PARTITION BY date, hkey, akey ORDER BY prio) AS rn
+      FROM all_results
+    )
+    SELECT date, hkey, akey, hs, gs, outcome
+    FROM ranked
+    WHERE rn = 1
     """
     rows = con.execute(sql).fetchall()
     return {
@@ -166,15 +176,21 @@ def summarize_by(rows: list[SettledPick], attr: str) -> dict[str, dict[str, Any]
     return {name: summarize_scored(group_rows) for name, group_rows in sorted(grouped.items())}
 
 
-def build_report(start: str, end: str, warehouse_path: Path) -> dict[str, Any]:
+def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day: bool = False) -> dict[str, Any]:
     picks = load_archived_picks(start, end)
     results = load_results_index(warehouse_path)
     settled_rows: list[SettledPick] = []
     archived_dates = sorted({str(p.get("date") or "")[:10] for p in picks if p.get("date")})
+    today_local = local_today()
+    same_day_excluded = 0
 
     for pick in picks:
+        pick_date = str(pick.get("date") or "")[:10]
+        if not include_same_day and pick_date >= today_local:
+            same_day_excluded += 1
+            continue
         key = (
-            str(pick.get("date") or "")[:10],
+            pick_date,
             norm_team(str(pick.get("home") or "")),
             norm_team(str(pick.get("away") or "")),
         )
@@ -187,6 +203,9 @@ def build_report(start: str, end: str, warehouse_path: Path) -> dict[str, Any]:
         "end": end,
         "archived_pick_rows": len(picks),
         "archived_pick_dates": archived_dates,
+        "same_day_excluded": same_day_excluded,
+        "same_day_cutoff": today_local,
+        "include_same_day": include_same_day,
         "overall": summarize_scored(settled_rows),
         "by_rule": summarize_by(settled_rows, "rule_name"),
         "by_bucket": summarize_by(settled_rows, "bucket"),
@@ -209,6 +228,12 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- hit rate: {overall.get('hit_rate')}",
         f"- priced picks: {overall.get('priced_picks', 0)}",
         f"- ROI: {overall.get('roi')}",
+        "",
+        "## Settlement policy",
+        "",
+        f"- include same-day picks: {report.get('include_same_day')}",
+        f"- same-day cutoff date: {report.get('same_day_cutoff')}",
+        f"- same-day rows excluded: {report.get('same_day_excluded', 0)}",
         "",
         "## By rule",
         "",
@@ -256,11 +281,16 @@ def main() -> int:
     ap.add_argument("--end", default=date.today().isoformat(), help="End date inclusive (YYYY-MM-DD).")
     ap.add_argument("--days", type=int, default=30, help="Rolling window length in days (default: 30).")
     ap.add_argument("--warehouse", default=str(WAREHOUSE), help="Path to warehouse.duckdb")
+    ap.add_argument(
+        "--include-same-day",
+        action="store_true",
+        help="Allow same-day archived picks to count as settled. Default is OFF to avoid live/in-progress false settlements.",
+    )
     args = ap.parse_args()
 
     end = datetime.strptime(args.end, "%Y-%m-%d").date()
     start = (end - timedelta(days=max(0, args.days - 1))).isoformat()
-    report = build_report(start, end.isoformat(), Path(args.warehouse))
+    report = build_report(start, end.isoformat(), Path(args.warehouse), include_same_day=args.include_same_day)
 
     json_path = LOCALDATA / "picks_audit_rolling.json"
     md_path = LOCALDATA / f"picks_audit_{end.isoformat()}.md"
@@ -269,13 +299,14 @@ def main() -> int:
 
     overall = report.get("overall", {})
     print(f"Recent picks audit — {start} to {end.isoformat()}")
-    print(f"  archived pick rows: {report.get('archived_pick_rows', 0)}")
-    print(f"  archived pick dates: {len(report.get('archived_pick_dates', []))}")
-    print(f"  settled picks: {overall.get('settled_picks', 0)}")
-    print(f"  hit rate: {overall.get('hit_rate')}")
-    print(f"  ROI: {overall.get('roi')}")
-    print(f"  json: {json_path}")
-    print(f"  markdown: {md_path}")
+    print(f" archived pick rows: {report.get('archived_pick_rows', 0)}")
+    print(f" archived pick dates: {len(report.get('archived_pick_dates', []))}")
+    print(f" same-day rows excluded: {report.get('same_day_excluded', 0)}")
+    print(f" settled picks: {overall.get('settled_picks', 0)}")
+    print(f" hit rate: {overall.get('hit_rate')}")
+    print(f" ROI: {overall.get('roi')}")
+    print(f" json: {json_path}")
+    print(f" markdown: {md_path}")
     return 0
 
 
