@@ -74,6 +74,28 @@ def archive_target_picks(target_date: str, picks_text: str | None) -> None:
     archived_picks_file(target_date).write_text(picks_text)
 
 
+def morning_baseline_file(target_date: str) -> Path:
+    return REPORT_DIR / f"picks_morning_{target_date}.json"
+
+
+def save_morning_baseline(target_date: str, picks_text: str | None, *, overwrite: bool = False) -> None:
+    if picks_text is None:
+        return
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    path = morning_baseline_file(target_date)
+    if path.exists() and not overwrite:
+        return
+    path.write_text(picks_text)
+
+
+def sync_official_archive(target_date: str, label: str = "sync_supabase") -> None:
+    archive = archived_picks_file(target_date)
+    run_soft(
+        f"python3 scripts/sync_supabase.py --picks {shlex.quote(str(archive))} --target-date {target_date} --replace-date",
+        label,
+    )
+
+
 def run(cmd: str, label: str | None = None) -> None:
     """Run a pipeline step and stream its output."""
     display = label or cmd
@@ -176,6 +198,7 @@ def generate_daily_report(
     output_path: Path | None = None,
     header_title: str | None = None,
     source_picks: list[dict[str, Any]] | None = None,
+    metadata_lines: list[str] | None = None,
 ) -> Path | None:
     """Write a human-readable .txt summary of picks_today.json or provided picks."""
     report_file = output_path or (REPORT_DIR / f"picks_{target_date}.txt")
@@ -191,8 +214,11 @@ def generate_daily_report(
             header_title or f"Edge Factory Picks — {target_date}",
             "=" * 60,
             f"Generated at: {now_ts}",
-            "",
         ]
+        if metadata_lines:
+            for meta_line in metadata_lines:
+                lines.append(meta_line)
+        lines.append("")
 
         buckets: dict[str, list[dict[str, Any]]] = {}
         for p in picks:
@@ -210,7 +236,7 @@ def generate_daily_report(
         bucket_labels = {
             "CERTIFIED_CLEAN": "CERTIFIED CLEAN PICKS",
             "CAUTION": "CAUTION PICKS",
-            "WATCHLIST_NO_ODDS": "WATCHLIST — NO ODDS",
+            "WATCHLIST_NO_ODDS": "WATCHLIST — NO MATCHED ODDS",
             "WATCHLIST_UNKNOWN_CTX": "WATCHLIST — UNKNOWN CONTEXT",
             "SKIPPED_VETO": "SKIPPED — VETO CONTEXT",
             "SKIPPED_DEAD_EDGE": "SKIPPED — DEAD EDGE",
@@ -276,13 +302,22 @@ def _pick_date(pick: dict[str, Any], fallback: str) -> str:
     return fallback
 
 
-def write_future_outputs(all_picks: list[dict[str, Any]], days: int) -> None:
-    """Write the aggregate machine-readable future-picks file."""
+def write_future_outputs(all_picks: list[dict[str, Any]], days: int, snapshot_as_of: str) -> None:
+    """Write the aggregate machine-readable future-picks file plus forecast manifest."""
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
     json_file = REPORT_DIR / f"picks_next_{days}days.json"
     json_file.write_text(json.dumps(all_picks, indent=2, sort_keys=True))
+    manifest_file = REPORT_DIR / f"picks_next_{days}days_manifest.json"
+    manifest = {
+        "ledger_kind": "forecast",
+        "snapshot_as_of": snapshot_as_of,
+        "days": days,
+        "row_count": len(all_picks),
+    }
+    manifest_file.write_text(json.dumps(manifest, indent=2, sort_keys=True))
     print(f"Future planner wrote: {json_file}")
+    print(f"Future planner manifest: {manifest_file}")
 
 
 def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, Any]], run_as_of: str) -> None:
@@ -312,7 +347,10 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
         try:
             day_picks = load_picks_file()
             all_picks.extend(tag_picks(day_picks, target))
-            generate_daily_report(target)
+            generate_daily_report(
+                target,
+                metadata_lines=[f"Snapshot as of: {run_as_of}", "Ledger kind: forecast"],
+            )
             print(f"  {target}: added {len(day_picks)} rows")
         except Exception as exc:  # noqa: BLE001 - keep planner robust across sparse future days
             print(f"  {target}: could not read picks: {exc}")
@@ -326,14 +364,20 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
             str(p.get("match", "")),
         )
     )
-    write_future_outputs(all_picks, days)
+    write_future_outputs(all_picks, days, run_as_of)
 
 
 def generate_forecast_report(target_date: str, flabel: str, picks: list[dict[str, Any]]) -> Path | None:
     """Generate a dedicated human-readable .txt summary for a forecast refresh."""
     output_path = REPORT_DIR / f"forecast_{target_date}_{flabel}.txt"
     title = f"Edge Factory Forecast Refresh — {target_date} [{flabel}]"
-    return generate_daily_report(target_date, output_path=output_path, header_title=title, source_picks=picks)
+    return generate_daily_report(
+        target_date,
+        output_path=output_path,
+        header_title=title,
+        source_picks=picks,
+        metadata_lines=[f"Snapshot as of: {datetime.now(local_tz()).isoformat(timespec='seconds')}", "Ledger kind: forecast"],
+    )
 
 
 def promote_forecast(forecast_arg: str, default_date: str) -> None:
@@ -487,6 +531,7 @@ def run_pipeline(
             print(f"\n>>> restore frozen target picks {target_date}")
             target_picks_text = target_archive.read_text()
             restore_target_picks(target_picks_text)
+            save_morning_baseline(target_date, target_picks_text, overwrite=False)
             print(f"  reused archive: {target_archive}")
         else:
             run(
@@ -495,6 +540,7 @@ def run_pipeline(
             )
             target_picks_text = PICKS_TODAY_FILE.read_text() if PICKS_TODAY_FILE.exists() else None
             archive_target_picks(target_date, target_picks_text)
+            save_morning_baseline(target_date, target_picks_text, overwrite=force_repick)
 
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
@@ -520,7 +566,7 @@ def run_pipeline(
             f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
         )
-        run_soft("python3 scripts/sync_supabase.py", "sync_supabase")
+        sync_official_archive(target_date, "sync_supabase")
         run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Smart Dispatch)")
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
@@ -559,13 +605,21 @@ def run_pipeline(
             target_archive.write_text(merged_text)
             PICKS_TODAY_FILE.write_text(merged_text)
             generate_daily_report(target_date)
-            run_soft("python3 scripts/sync_supabase.py", "sync_supabase (Autonomous Accumulating Record)")
             run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Autonomous Intraday Dispatch)")
         else:
             print("\n  No new matches/edges appeared. Locked official ledger unchanged.")
-            # Ensure picks_today.json matches the pristine official ledger
             restore_target_picks(target_archive.read_text())
             run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Silent Check)")
+
+        sync_official_archive(target_date, "sync_supabase (Autonomous Accumulating Record)")
+        try:
+            current_target_picks = json.loads(target_archive.read_text())
+            if not isinstance(current_target_picks, list):
+                current_target_picks = []
+        except Exception:
+            current_target_picks = []
+        run_future_planner(target_date, future_days, current_target_picks, run_as_of)
+        restore_target_picks(target_archive.read_text())
 
         # Qualitative time-of-day CLV capture
         qlabel = get_qualitative_hour_label()

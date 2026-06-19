@@ -123,7 +123,7 @@ BUCKET_ORDER = [
 BUCKET_LABELS = {
     BUCKET_CERTIFIED: "CERTIFIED CLEAN PICKS",
     BUCKET_CAUTION: "CAUTION PICKS",
-    BUCKET_WL_ODDS: "WATCHLIST — NO ODDS",
+    BUCKET_WL_ODDS: "WATCHLIST — NO MATCHED ODDS",
     BUCKET_WL_CTX: "WATCHLIST — UNKNOWN CONTEXT",
     BUCKET_SKIP_VETO: "SKIPPED — VETO CONTEXT",
     BUCKET_SKIP_DEAD: "SKIPPED — DEAD EDGE",
@@ -1371,7 +1371,7 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 if p.get("odds_source") == BZZOIRO_ODDS_SOURCE and p.get("bookmaker"):
                     o += f" {p['bookmaker']}"
             else:
-                o = "@None"
+                o = "@n/a"
             ctx = p.get("ctx", {})
             ctx_str = (
                 f"  league={ctx.get('league_raw','UNKNOWN')}:{ctx.get('league','?')}  "
@@ -1501,6 +1501,7 @@ def main():
             # Phase 7 additions
             p["market_type"] = p.get("market", "1x2")
             p["odds_tier"] = get_odds_tier(p.get("market", "1x2"))
+            p["odds_match_status"] = "matched" if p.get("odds") is not None else "unmatched"
             day_picks.append(p)
 
         collapsed_day_picks, removed_dupes = collapse_final_operational_picks(day_picks)

@@ -26,6 +26,18 @@ def upsert_edges(client, edges_list):
     return resp
 
 
+def delete_picks_for_date(client, picked_for: str):
+    """Delete existing edge_picks rows for a target date before authoritative re-sync."""
+    resp = (
+        client.table("edge_picks")
+        .delete()
+        .eq("picked_for", picked_for)
+        .execute()
+    )
+    print(f"Deleted existing 'edge_picks' for {picked_for}")
+    return resp
+
+
 def upsert_picks(client, picks_list):
     """Upsert list of pick dicts into edge_picks (ignore conflicts)."""
     if not picks_list:
