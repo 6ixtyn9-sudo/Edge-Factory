@@ -1544,3 +1544,110 @@ CLV coverage and later-snapshot quality using existing bzzoiro_odds and real-boo
 avoiding broad source rabbit holes unless standalone proof exists
 
 Last updated: 2026-06-18
+
+Diagnostic session and pipeline fix — 2026-06-24
+
+What happened
+Full read-only diagnostic of the past week's performance. No code was changed until the root cause was confirmed. Two lines edited in scripts/picks_today.py. Committed as 4c38294.
+
+Audit baseline (picks_audit_rolling.json, 2026-05-26 to 2026-06-24)
+Settled picks: 14
+Hit rate: 85.7% (12/14)
+Overall ROI: +9.79%
+CAUTION bucket ROI: +14.7%
+3way-unanimous avg_p>=65 ROI: +21.0% (7/8)
+2way-unanimous avg_p>=70 ROI: -8.2% (5/6) — losses were draws on World Cup games, not a rule failure
+Source coverage reality
+The warehouse was queried directly against the settled tables for 2026-06-19 to 2026-06-24.
+
+Forebet covers 839 games per week. Zulubet covers 220. Statarea covers 254.
+
+The 3-way join survives only 38 games — 4.5% of forebet's universe.
+
+The low join rate this week is a seasonal anomaly, not a structural flaw. European leagues (EPL, La Liga, Serie A, Bundesliga) are on summer break. Those are the leagues all three sources agree on. The certified 3way edge is grounded on WCQ (92 qualifiers, 81 wins), EPL (54 qualifiers, 48 wins), La Liga (71, 58), and Serie A (72, 51). Ireland and Iceland dominate this week's output only because they are the only top-tier competition still running.
+
+Zulubet and statarea are not coverage-poor for the leagues that matter. They simply do not cover lower-division summer slates. This self-corrects in August.
+
+Naming mismatches confirmed
+Four World Cup games failed to join at all due to source naming divergence:
+
+Germany vs Ivory Coast: forebet/zulubet use Ivory Coast, statarea uses Cote D Ivoire → hkeys ivorycoas vs cotedivoi → no join
+Türkiye vs Paraguay: forebet uses Türkiye → hkey trkiye; statarea uses Turkey → hkey turkey → no join
+Ecuador vs Curaçao: forebet/zulubet strip accent → curaao; statarea preserves it → curacao → no join
+Colombia vs Congo DR: forebet uses DR Congo → hkey drcongo; zulubet/statarea use Congo DR → hkey congodr → no join
+These are real mismatches. They are seasonal and specific to international tournaments where source naming conventions diverge. Do not fix them during the European summer break. Revisit with entity_overrides.json in August when the volume justifies it.
+
+The actual bug: scan_best base-view bleed
+France vs Iraq qualified on consensus3: 74% avg_p, all three sources unanimous, France won comfortably. It appeared in picks_2026-06-22.json as SKIPPED_VETO.
+
+Root cause: the odds band lookup fallback in lookup_context() used:
+
+text
+
+odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|", suffix=f"|{band}")
+The prefix soccer|1x2| matched every entry in the purity registry including v_consensus2_base and v_consensus3_base. Those base views carry n=2697 and n=1658 respectively and have VETO verdicts on the 1.75-2.00 band (roi=-6.6% and -6.9% on unfiltered all-games data). scan_best selects by max(n), so the base-view VETO always won over the rule-specific entry which had n=4 and verdict UNKNOWN. France/Iraq was priced at 1.75 → band 1.75-2.00 → base-view VETO → SKIPPED_VETO.
+
+This affected any certified pick priced in a band where the rule-specific entry was UNKNOWN (thin) and the base-view entry was VETO (large n). Not just World Cup. Any pick at 1.75-2.00 on the 3way rule was systematically suppressed.
+
+The fix (commit 4c38294)
+Two changes in scripts/picks_today.py:
+
+Change 1 — line 450. Scope the odds fallback to the same rule only:
+
+text
+
+# before
+odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|", suffix=f"|{band}")
+
+# after
+odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|{rule}|", suffix=f"|{band}")
+The fallback now only considers band entries for the specific certified rule being evaluated. Base views cannot bleed across.
+
+Change 2 — line 513. UNKNOWN odds band routes to CAUTION not WATCHLIST:
+
+text
+
+# before
+if ctx.get("odds_band") == "UNKNOWN":
+    return BUCKET_WL_CTX
+
+# after
+if ctx.get("odds_band") == "UNKNOWN":
+    return BUCKET_CAUTION
+Rationale: when a certified rule fires at an odds price in a band that has no opinion yet (UNKNOWN, not VETO), the certified rule's own walk-forward evidence is sufficient. The pick should be delivered as CAUTION for human review, not silently watchlisted.
+
+Operational bucket logic update
+The HANDOVER purity section previously stated:
+
+text
+
+UNKNOWN odds band -> WATCHLIST_UNKNOWN_CTX
+This is now corrected to:
+
+text
+
+UNKNOWN odds band -> CAUTION
+All other bucket logic is unchanged.
+
+Vitibet status
+Vitibet is already a voting consensus source. It is in SOURCES_1X2 and fetch_all() calls vitibet.fetch_day() every run. probs_1x2() correctly handles vitibet's 0-1 probability scale. The vitibet_index field is stored on every 1x2 pick.
+
+Vitibet cannot yet be certified as a standalone consensus gate. vitibet_settled only goes back to 2026-05-01 (5,719 rows). consensus4 has 420 rows total and 31 qualifying at avg_p>=65. The certification gate requires 350 train + 120 valid qualifying rows. Vitibet's probabilities are wiped from its website after settlement so backfill is not possible.
+
+Vitibet will accumulate enough vitibet_settled rows to certify a 4-way rule approximately mid-2027. Monitor passively. Do not force-certify.
+
+consensus4 observed performance this week (2026-06-19 to 2026-06-24): 7/8 wins at avg_p>=65, unanimous 4-way. Strong signal but n=8 is not actionable for certification. Note for the next checkpoint review.
+
+Decay circuit breaker
+The 2way+bc-confirms avg_p>=60 rule was auto-benched during this session's pipeline run. Recent 60-day window: 36 picks, 69.4% hit rate, -7.2% ROI. The circuit breaker fired correctly. Do not manually unbench. The next mine_consensus.py run re-evaluates from full walk-forward history.
+
+What to do in one week (next session)
+Run the same diagnostic queries against the settled tables for 2026-06-25 to 2026-07-01. Confirm:
+
+Bosnia/Qatar (Jun 24, 21:00) result — check if it would have been profitable under CAUTION
+Whether the UNKNOWN odds band CAUTION change is producing good picks in the knockout rounds
+Whether the 2way-unanimous avg_p>=70 rule is recovering its ROI as WC draws normalise away
+Whether consensus4 is accumulating rows at a healthy rate
+Do not touch norm_team() or norm_team_sql(). Do not patch entity_overrides.json for naming mismatches until European leagues resume and the volume justifies it.
+
+Last updated: 2026-06-24
