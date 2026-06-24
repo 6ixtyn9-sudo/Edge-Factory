@@ -447,7 +447,7 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     band = odds_band(odds)
     odds_key = f"{sport}|{market}|{rule}|{band}"
     odds_exact = odds_ctx.get(odds_key)
-    odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|", suffix=f"|{band}")
+    odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|{rule}|", suffix=f"|{band}")
     odds_v, odds_meta = _best_ctx([odds_exact, odds_fallback])
 
     comp_type = classify_competition(league_raw)
@@ -511,7 +511,7 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     if pick.get("odds") is None:
         return BUCKET_WL_ODDS
     if ctx.get("odds_band") == "UNKNOWN":
-        return BUCKET_WL_CTX
+        return BUCKET_CAUTION
     if "CAUTION" in vals:
         return BUCKET_CAUTION
     if "UNKNOWN" in (ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("competition_type")):
