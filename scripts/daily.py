@@ -690,7 +690,7 @@ def run_pipeline(
         print(f"\n=== Pipeline Forecast Refresh Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
 
-def run_smart_auto(future_days: int, backfill_days: int) -> None:
+def run_smart_auto(future_days: int, backfill_days: int, force_repick: bool = False, picks_only: bool = False) -> None:
     """Determine operational state for the target date and execute autonomous accumulating run."""
     now = datetime.now(local_tz())
     target_date = now.strftime("%Y-%m-%d")
@@ -700,17 +700,20 @@ def run_smart_auto(future_days: int, backfill_days: int) -> None:
     print(f"\n=== Smart Autonomous Schedule Execution — {now.strftime('%Y-%m-%d %H:%M:%S')} ===")
     print(f"    target date: {target_date}")
     print(f"    local time : {now.strftime('%H:%M:%S %Z')}")
-    print(f"    archive    : {'EXISTS (Running Accumulating Discovery)' if target_archive.exists() else 'MISSING (Running Full Morning Heavy Run)'}")
+    
+    # If force_repick is True, we treat it as if the archive doesn't exist to trigger a full regeneration
+    archive_exists = target_archive.exists() and not force_repick
+    print(f"    archive    : {'EXISTS (Running Accumulating Discovery)' if archive_exists else 'MISSING/FORCED (Running Full Morning Heavy Run)'}")
 
-    if not target_archive.exists():
-        print(f"\n>>> [Smart Auto] Case 1: No frozen official archive for {target_date}. Executing Official Full Run.")
+    if not archive_exists:
+        print(f"\n>>> [Smart Auto] Case 1: No valid official archive for {target_date}. Executing Official Full Run.")
         run_pipeline(
             target_date=target_date,
             mode="official",
             future_days=future_days,
             backfill_days=backfill_days,
-            force_repick=False,
-            picks_only=False,  # Full morning run
+            force_repick=force_repick,
+            picks_only=picks_only,
         )
     else:
         print(f"\n>>> [Smart Auto] Case 2: Official archive exists for {target_date}. Executing Intraday Accumulating Discovery & CLV Capture.")
@@ -719,8 +722,8 @@ def run_smart_auto(future_days: int, backfill_days: int) -> None:
             mode="autonomous_intraday",
             future_days=future_days,
             backfill_days=backfill_days,
-            force_repick=True,
-            picks_only=True,
+            force_repick=True, # Force repick inside the intraday logic to get fresh discoveries
+            picks_only=True,   # Skip heavy warehouse build for speed during the day
         )
 
 
@@ -843,10 +846,9 @@ def main() -> None:
         )
         return
 
-    # Default official pipeline run
-    run_pipeline(
-        target_date=target_date,
-        mode="official",
+    # Default: Smart Autonomous Run
+    # This handles both the initial morning run and subsequent intraday discovery/merges automatically.
+    run_smart_auto(
         future_days=args.future_days,
         backfill_days=args.backfill_days,
         force_repick=args.force_repick,
