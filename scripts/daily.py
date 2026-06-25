@@ -346,12 +346,15 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
 
         try:
             day_picks = load_picks_file()
-            all_picks.extend(tag_picks(day_picks, target))
+            # De-duplicate future picks against already captured picks to prevent midnight crossing
+            merged_picks, new_added = autonomous_intraday_merge(all_picks, day_picks)
+            all_picks = merged_picks
+            
             generate_daily_report(
                 target,
                 metadata_lines=[f"Snapshot as of: {run_as_of}", "Ledger kind: forecast"],
             )
-            print(f"  {target}: added {len(day_picks)} rows")
+            print(f"  {target}: added {new_added} rows")
         except Exception as exc:  # noqa: BLE001 - keep planner robust across sparse future days
             print(f"  {target}: could not read picks: {exc}")
 
@@ -420,15 +423,22 @@ def promote_forecast(forecast_arg: str, default_date: str) -> None:
 
 
 def match_market_key(pick: dict[str, Any]) -> tuple[str, str, str, str]:
-    """Deterministic event-market natural key for our autonomous ledger merger."""
-    match_date = str(pick.get("date") or pick.get("picked_for") or "")[:10]
+    """Deterministic event-market natural key for our autonomous ledger merger.
+    
+    To prevent 'midnight crossing' (same game appearing on two different dates),
+    we ignore the explicit date field and rely on the match identity.
+    """
     home = norm_team(pick.get("home") or "")
     away = norm_team(pick.get("away") or "")
     if not home or not away:
         match_str = str(pick.get("match") or "").lower().strip()
         home, away = match_str, match_str
     market = str(pick.get("market") or "1x2").lower()
-    return (match_date, home, away, market)
+    
+    # We use a constant 'MATCH_DATE' placeholder because for the purpose of 
+    # intraday/future merging, the identity of the teams + market is the 
+    # primary unique identifier.
+    return ("EVENT_ID", home, away, market)
 
 
 def autonomous_intraday_merge(
