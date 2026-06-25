@@ -67,11 +67,46 @@ def archived_picks_file(target_date: str) -> Path:
     return REPORT_DIR / f"picks_{target_date}.json"
 
 
-def archive_target_picks(target_date: str, picks_text: str | None) -> None:
-    if picks_text is None:
+def get_actual_kickoff_date(pick: dict[str, Any], fallback: str) -> str:
+    """Extract the real match date from kickoff time, fallback to provided date."""
+    for key in ("kickoff", "time", "start_time", "ko"):
+        val = pick.get(key)
+        if val and isinstance(val, str) and len(val) >= 10:
+            # Try to find something that looks like YYYY-MM-DD
+            import re
+            match = re.search(r"(\d{4}-\d{2}-\d{2})", val)
+            if match:
+                return match.group(1)
+    return _pick_date(pick, fallback)
+
+
+def archive_picks_by_kickoff(picks: list[dict[str, Any]], fallback_date: str) -> None:
+    """Distribute picks to archives based on their actual kickoff date."""
+    if not picks:
         return
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
-    archived_picks_file(target_date).write_text(picks_text)
+
+    # Group picks by their actual date
+    by_date: dict[str, list[dict[str, Any]]] = {}
+    for p in picks:
+        d = get_actual_kickoff_date(p, fallback_date)
+        by_date.setdefault(d, []).append(p)
+
+    for d, date_picks in by_date.items():
+        archive_path = archived_picks_file(d)
+        
+        # Load existing archive to merge (avoid duplicates)
+        existing: list[dict[str, Any]] = []
+        if archive_path.exists():
+            try:
+                existing = json.loads(archive_path.read_text())
+                if not isinstance(existing, list): existing = []
+            except Exception:
+                existing = []
+        
+        # Use our merge logic to add new picks or update existing ones
+        merged, _ = autonomous_intraday_merge(existing, date_picks)
+        archive_path.write_text(json.dumps(merged, indent=2, sort_keys=True))
 
 
 def morning_baseline_file(target_date: str) -> Path:
@@ -350,8 +385,12 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
             merged_picks, new_added = autonomous_intraday_merge(all_picks, day_picks)
             all_picks = merged_picks
             
+            # Filter the merged ledger for only this target date to generate a clean, de-duplicated report
+            day_specific_picks = [p for p in all_picks if _pick_date(p, "9999-99-99") == target]
+            
             generate_daily_report(
                 target,
+                source_picks=day_specific_picks,
                 metadata_lines=[f"Snapshot as of: {run_as_of}", "Ledger kind: forecast"],
             )
             print(f"  {target}: added {new_added} rows")
@@ -548,8 +587,13 @@ def run_pipeline(
                 f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
                 f"picks_today {target_date}",
             )
-            target_picks_text = PICKS_TODAY_FILE.read_text() if PICKS_TODAY_FILE.exists() else None
-            archive_target_picks(target_date, target_picks_text)
+            if PICKS_TODAY_FILE.exists():
+                current_picks = load_picks_file()
+                archive_picks_by_kickoff(current_picks, target_date)
+                target_picks_text = PICKS_TODAY_FILE.read_text()
+            else:
+                target_picks_text = None
+            
             save_morning_baseline(target_date, target_picks_text, overwrite=force_repick)
 
         run_soft(
