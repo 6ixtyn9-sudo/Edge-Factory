@@ -184,6 +184,38 @@ def odds_band(odds: float | None) -> str:
     return "2.50+"
 
 
+# Market Expression Policy Constants (Phase-1)
+MARKET_EXPRESSION_VERSION = "phase1-warning-only"
+MARKET_EXPRESSION_POLICY = [
+    (0.0, 1.20, "keep_1x2", "LOW", "short odds, acceptable draw risk"),
+    (1.20, 1.35, "keep_1x2", "MEDIUM", "moderate odds, monitor draw risk"),
+    (1.35, 1.50, "dnb_candidate", "HIGH", "draw trap zone, consider DNB"),
+    (1.50, 1.75, "protected_market_candidate", "HIGH", "high draw risk, DNB/DC advised"),
+    (1.75, 999.0, "avoid_raw_1x2", "EXTREME", "price vs hit-rate math broken for 1X2")
+]
+
+
+def annotate_market_recommendation(pick: dict):
+    """Add Phase-1 market expression guidance to 1X2 picks."""
+    pick["market_expression_version"] = MARKET_EXPRESSION_VERSION
+    if pick.get("market", "") != "1x2":
+        return
+
+    odds = pick.get("odds")
+    if odds is None:
+        pick["recommended_market"] = "unknown"
+        pick["draw_risk_flag"] = "UNKNOWN"
+        pick["market_recommendation_reason"] = "no odds available"
+        return
+
+    for lo, hi, rec, risk, reason in MARKET_EXPRESSION_POLICY:
+        if lo <= odds < hi or (lo == 0.0 and odds < hi):
+            pick["recommended_market"] = rec
+            pick["draw_risk_flag"] = risk
+            pick["market_recommendation_reason"] = reason
+            break
+
+
 # ---------------------------------------------------------------- registry --
 def display_rule(market: str, n_way: int, threshold: float) -> str:
     """Short human label; edge_rule remains the exact miner rule for lookups."""
@@ -1433,7 +1465,18 @@ def print_buckets(buckets: dict, title_date: str = ""):
             label = p.get("display_rule") or p.get("rule", "?")
             kickoff = format_kickoff(p)
             w_str = f"  w={p['w_score']:.2f}" if p.get("w_score") is not None else ""
-            print(f"  [{label}] {p['match'][:45]:45s} KO {kickoff:5s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}%{w_str} {o}  [{market}/{tier}]")
+            
+            warn_str = ""
+            rec = p.get("recommended_market")
+            if rec and rec not in ("keep_1x2", "unknown"):
+                risk = p.get("draw_risk_flag", "")
+                label_txt = rec.upper().replace('_', ' ')
+                if risk == "EXTREME":
+                    warn_str = f"  [⛔ {risk} DRAW/PRICE RISK — {label_txt}]"
+                else:
+                    warn_str = f"  [⚠️ {risk} DRAW RISK — {label_txt}]"
+                    
+            print(f"  [{label}] {p['match'][:45]:45s} KO {kickoff:5s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}%{w_str} {o}  [{market}/{tier}]{warn_str}")
             if ctx:
                 print(ctx_str)
         print()
@@ -1550,6 +1593,9 @@ def main():
             p["market_type"] = p.get("market", "1x2")
             p["odds_tier"] = get_odds_tier(p.get("market", "1x2"))
             p["odds_match_status"] = "matched" if p.get("odds") is not None else "unmatched"
+            
+            annotate_market_recommendation(p)
+            
             day_picks.append(p)
 
         collapsed_day_picks, removed_dupes = collapse_final_operational_picks(day_picks)
