@@ -52,6 +52,7 @@ from edgefactory.assay import (  # noqa: E402
     context_verdict_league,
     context_verdict_team,
     context_verdict_odds_band,
+    context_verdict_niche,
 )
 from edgefactory.entities import canonical_league, canonical_team, classify_competition  # noqa: E402
 
@@ -499,8 +500,8 @@ def _safe_ident(s: str) -> str:
     return s
 
 
-def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dict]:
-    """Return (league_ctx, team_ctx, odds_ctx, comp_ctx) dicts for one edge.
+def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dict, dict]:
+    """Return (league_ctx, team_ctx, odds_ctx, comp_ctx, niche_ctx) dicts for one edge.
     Each maps context_key -> {n, roi, recent_roi?, verdict}
     Never raises – missing columns / query errors → empty dicts.
     """
@@ -701,7 +702,68 @@ def assay_edge(con, edge: dict, window_days: int) -> tuple[dict, dict, dict, dic
         except Exception:
             pass
 
-    return league_ctx, team_ctx, odds_ctx, comp_ctx
+    niche_ctx: dict = {}
+
+    # ---- niche_context: sport|league|market|rule|odds_band|side_role ----
+    if has_league and has_odds and has_home and has_away:
+        try:
+            rows = con.execute(f"""
+                SELECT COALESCE(league, 'UNKNOWN') AS league,
+                       CASE
+                         WHEN lower(pick) = 'home' THEN 'home'
+                         WHEN lower(pick) = 'away' THEN 'away'
+                         ELSE 'other'
+                       END AS side_role,
+                       pick_odds,
+                       CASE WHEN pick = outcome THEN 1 ELSE 0 END AS won,
+                       CASE WHEN pick = outcome THEN COALESCE(pick_odds,1)-1 ELSE -1 END AS pnl,
+                       date
+                FROM {view}
+                WHERE ({where}) AND pick_odds IS NOT NULL
+                  AND lower(pick) IN ('home','away')
+            """).fetchall()
+            buckets: dict[tuple[str, str, str], list[tuple[float, int, str]]] = {}
+            for league, side_role, odds, won, pnl, row_date in rows:
+                try:
+                    band = odds_band(float(odds))
+                except Exception:
+                    band = "NO_ODDS"
+                key = (canonical_league(league or 'UNKNOWN'), str(side_role or 'other'), band)
+                buckets.setdefault(key, []).append((float(pnl), int(won or 0), str(row_date or '')))
+
+            for (league_key_name, side_role, band), vals in buckets.items():
+                n = len(vals)
+                if not n:
+                    continue
+                pnls = [v[0] for v in vals]
+                wins = sum(v[1] for v in vals)
+                roi = sum(pnls) / n
+                hit_rate = wins / n
+                recent_roi = None
+                if has_date:
+                    recent_vals = [v[0] for v in vals if v[2] >= recent_cutoff]
+                    if len(recent_vals) >= 10:
+                        recent_roi = sum(recent_vals) / len(recent_vals)
+                strict_short = band in {"1.00-1.10", "1.10-1.20", "1.20-1.35"}
+                verdict = context_verdict_niche(
+                    n,
+                    roi,
+                    recent_roi=recent_roi,
+                    hit_rate=hit_rate,
+                    strict_short_odds=strict_short,
+                )
+                key = f"{sport}|{league_key_name}|{market}|{rule}|{band}|{side_role}"
+                niche_ctx[key] = {
+                    "n": n,
+                    "roi": round(roi, 4),
+                    "recent_roi": round(recent_roi, 4) if recent_roi is not None else None,
+                    "hit_rate": round(hit_rate, 4),
+                    "verdict": verdict,
+                }
+        except Exception:
+            pass
+
+    return league_ctx, team_ctx, odds_ctx, comp_ctx, niche_ctx
 
 
 def main():
@@ -774,6 +836,7 @@ def main():
     team_all: dict = {}
     odds_all: dict = {}
     comp_all: dict = {}
+    niche_all: dict = {}
 
     print(f"Purity assay — {len(certified)} certified edges + {len(high_density_bases)} base views, window {args.window}d (max/all-history default)")
     print("-" * 72)
@@ -787,12 +850,13 @@ def main():
             except Exception:
                 print(f"{rule:45s}  SKIP – view {view} unavailable")
                 continue
-        l_ctx, t_ctx, o_ctx, c_ctx = assay_edge(con, e, args.window)
+        l_ctx, t_ctx, o_ctx, c_ctx, n_ctx = assay_edge(con, e, args.window)
         league_all.update(l_ctx)
         team_all.update(t_ctx)
         odds_all.update(o_ctx)
         comp_all.update(c_ctx)
-        print(f"{rule:45s}  league:{len(l_ctx):3d}  team:{len(t_ctx):3d}  odds:{len(o_ctx):3d}  comp:{len(c_ctx):3d}")
+        niche_all.update(n_ctx)
+        print(f"{rule:45s}  league:{len(l_ctx):3d}  team:{len(t_ctx):3d}  odds:{len(o_ctx):3d}  comp:{len(c_ctx):3d}  niche:{len(n_ctx):3d}")
 
     # summary counts
     def count_verdicts(d):
@@ -800,7 +864,7 @@ def main():
         return Counter(v["verdict"] for v in d.values())
 
     print("\nContext verdict summary:")
-    for name, ctx in [("league", league_all), ("team", team_all), ("odds_band", odds_all), ("competition_type", comp_all)]:
+    for name, ctx in [("league", league_all), ("team", team_all), ("odds_band", odds_all), ("competition_type", comp_all), ("niche", niche_all)]:
         c = count_verdicts(ctx)
         print(f"  {name:10s} total={len(ctx):4d}  " + "  ".join(f"{k}={c.get(k,0)}" for k in ["BOOST","ALLOW","CAUTION","VETO","UNKNOWN"]))
 
@@ -812,6 +876,7 @@ def main():
             "team": team_all,
             "odds_band": odds_all,
             "competition_type": comp_all,
+            "niche": niche_all,
         },
     }
 

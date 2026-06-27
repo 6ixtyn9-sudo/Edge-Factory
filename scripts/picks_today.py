@@ -188,11 +188,17 @@ def odds_band(odds: float | None) -> str:
 MARKET_EXPRESSION_VERSION = "phase1-warning-only"
 MARKET_EXPRESSION_POLICY = [
     (0.0, 1.20, "keep_1x2", "LOW", "short odds, acceptable draw risk"),
-    (1.20, 1.35, "keep_1x2", "MEDIUM", "moderate odds, monitor draw risk"),
-    (1.35, 1.50, "dnb_candidate", "HIGH", "draw trap zone, consider DNB"),
-    (1.50, 1.75, "protected_market_candidate", "HIGH", "high draw risk, DNB/DC advised"),
+    (1.20, 1.25, "keep_1x2", "MEDIUM", "upper short-odds zone, narrow surviving niche"),
+    (1.25, 1.35, "avoid_raw_1x2", "HIGH", "historically unstable out of sample above 1.25"),
+    (1.35, 1.50, "avoid_raw_1x2", "HIGH", "draw-risk / medium-odds negative-EV zone"),
+    (1.50, 1.75, "avoid_raw_1x2", "EXTREME", "high draw risk and weak signal for raw 1X2"),
     (1.75, 999.0, "avoid_raw_1x2", "EXTREME", "price vs hit-rate math broken for 1X2")
 ]
+
+SHORT_ODDS_SNIPER_MAX = 1.25
+TOXIC_SHORT_ODDS_LEAGUES = {
+    "estonia meistriliiga",  # keep config-driven expansion later; conservative starter set
+}
 
 
 def annotate_market_recommendation(pick: dict):
@@ -442,6 +448,7 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     team_ctx = ctx.get("team", {})
     odds_ctx = ctx.get("odds_band", {})
     comp_ctx = ctx.get("competition_type", {})
+    niche_ctx = ctx.get("niche", {})
 
     sport = pick.get("sport", "soccer")
     league_raw = pick.get("league") or "UNKNOWN"
@@ -482,6 +489,16 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|{rule}|", suffix=f"|{band}")
     odds_v, odds_meta = _best_ctx([odds_exact, odds_fallback])
 
+    side_role = "home" if sel == "home" else "away" if sel == "away" else "other"
+    niche_key = f"{sport}|{league}|{market}|{rule}|{band}|{side_role}"
+    niche_exact = niche_ctx.get(niche_key)
+    niche_fallback = _scan_best(
+        niche_ctx,
+        prefix=f"{sport}|{league}|{market}|{rule}|",
+        suffix=f"|{side_role}",
+    )
+    niche_v, niche_meta = _best_ctx([niche_exact, niche_fallback])
+
     comp_type = classify_competition(league_raw)
     comp_key = f"{sport}|{market}|{rule}|{comp_type}"
     comp_exact = comp_ctx.get(comp_key)
@@ -494,18 +511,21 @@ def lookup_context(purity: dict, pick: dict) -> dict:
         "team_a": team_a_v,
         "odds_band": odds_v,
         "competition_type": comp_v,
+        "niche": niche_v,
         "league_raw": league_raw,
         "league_key": league,
         "home_norm": home_norm,
         "away_norm": away_norm,
         "odds_band_name": band,
         "comp_type_name": comp_type,
+        "side_role": side_role,
         "_meta": {
             "league": league_meta,
             "team_h": team_h_meta,
             "team_a": team_a_meta,
             "odds_band": odds_meta,
             "competition_type": comp_meta,
+            "niche": niche_meta,
         },
         "_keys": {
             "league": league_key,
@@ -513,6 +533,7 @@ def lookup_context(purity: dict, pick: dict) -> dict:
             "team_a": team_a_key,
             "odds_band": odds_key,
             "competition_type": comp_key,
+            "niche": niche_key,
         }
     }
 
@@ -521,27 +542,41 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
                 decay_verdict: str = "HEALTHY") -> str:
     """Bucket pick using mature evidence only as hard gates.
 
-    The purity registry inspection showed league/team contexts are still sparse
-    inside certified-rule subsets, while odds-band contexts have mature sample
-    sizes. Therefore:
-
-    - mature VETO anywhere still skips the pick;
-    - missing odds still goes to WATCHLIST_NO_ODDS;
-    - UNKNOWN odds_band remains WATCHLIST_UNKNOWN_CTX because odds maturity is
-      operationally important;
-    - UNKNOWN league/team/competition means unrated context, not a veto, so it downgrades to
-      CAUTION instead of blocking the pick entirely.
+    Phase A/B tightening:
+    - niche VETO now acts as a first-class hard gate
+    - short-odds sniper candidates are treated more defensively when league
+      context is UNKNOWN
+    - away favourites and >1.25 raw 1X2 expressions are no longer allowed to
+      masquerade as healthy sniper picks
     """
     if edge_status == "benched":
         return BUCKET_SKIP_DEAD
     if decay_verdict in ("DEAD", "DECAYING"):
         return BUCKET_SKIP_DEAD
 
-    vals = [ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band"), ctx.get("competition_type")]
+    vals = [ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band"), ctx.get("competition_type"), ctx.get("niche")]
     if "VETO" in vals:
         return BUCKET_SKIP_VETO
     if pick.get("odds") is None:
         return BUCKET_WL_ODDS
+
+    market = str(pick.get("market") or "")
+    odds = pick.get("odds")
+    sel = str(pick.get("pick") or "")
+    league_key = str(ctx.get("league_key") or "")
+    short_sniper = market == "1x2" and sel == "home" and odds is not None and float(odds) < SHORT_ODDS_SNIPER_MAX
+
+    if market == "1x2" and sel == "away" and odds is not None and float(odds) < 1.30:
+        return BUCKET_SKIP_VETO
+    if market == "1x2" and odds is not None and float(odds) >= 1.25:
+        return BUCKET_SKIP_VETO
+    if short_sniper and league_key in TOXIC_SHORT_ODDS_LEAGUES:
+        return BUCKET_SKIP_VETO
+    if short_sniper and ctx.get("niche") == "UNKNOWN":
+        return BUCKET_WL_CTX
+    if short_sniper and ctx.get("league") == "UNKNOWN":
+        return BUCKET_WL_CTX
+
     if ctx.get("odds_band") == "UNKNOWN":
         return BUCKET_CAUTION
     if "CAUTION" in vals:
