@@ -573,9 +573,24 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     if short_sniper and league_key in TOXIC_SHORT_ODDS_LEAGUES:
         return BUCKET_SKIP_VETO
     if short_sniper and ctx.get("niche") == "UNKNOWN":
-        return BUCKET_WL_CTX
+        ultra_short_home_soft_unknown = (
+            sel == "home"
+            and odds is not None and float(odds) < 1.20
+            and ctx.get("odds_band") in ("ALLOW", "BOOST")
+            and ctx.get("competition_type") != "VETO"
+            and ctx.get("league") != "VETO"
+        )
+        if not ultra_short_home_soft_unknown:
+            return BUCKET_WL_CTX
     if short_sniper and ctx.get("league") == "UNKNOWN":
-        return BUCKET_WL_CTX
+        ultra_short_home_soft_unknown = (
+            sel == "home"
+            and odds is not None and float(odds) < 1.20
+            and ctx.get("odds_band") in ("ALLOW", "BOOST")
+            and ctx.get("competition_type") != "VETO"
+        )
+        if not ultra_short_home_soft_unknown:
+            return BUCKET_WL_CTX
 
     if ctx.get("odds_band") == "UNKNOWN":
         return BUCKET_CAUTION
