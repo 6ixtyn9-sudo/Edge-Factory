@@ -2,6 +2,114 @@ Edge Factory — Handover
 
 Date: 2026-06-18
 
+2026-06-27 addendum — short-odds sniper narrowing, purity rewrite, and monitoring plan
+
+Current strategic thesis
+
+The system is no longer treated as a broad betting engine. The surviving operational thesis is now:
+
+focus on 1X2 only
+focus on home favorites
+focus on short odds under 1.25
+prefer strong consensus / conviction
+aggressively veto medium-odds, away-favorite, and sparse-toxic contexts
+In practice, the current live posture is a defensive short-odds home sniper with strict veto rules.
+
+Key code changes now in repo
+
+scripts/picks_today.py
+
+Default run scope changed to today only.
+Previous default: today + tomorrow
+Current default: today only
+Tomorrow must now be explicitly requested via CLI date argument.
+Phase-1 market expression warning layer exists.
+Additional short-odds sniper safeguards now exist:
+raw 1x2 picks at >= 1.25 are skipped
+short-odds away favorites are skipped
+ultra-short home picks (< 1.20) with sparse niche context may surface as CAUTION instead of WATCHLIST_UNKNOWN_CTX, but only when no explicit veto exists and supportive context gates pass
+scripts/assay_purity.py
+
+Purity registry now includes a new niche context dimension.
+New niche key shape:
+sport|league|market|rule|odds_band|side_role
+This was added to fix the earlier dimension bleed problem where league context was too broad.
+src/edgefactory/assay.py
+
+Added context_verdict_niche(...)
+This is a niche-sensitive verdict function intended for sparse but high-impact contexts, especially short-odds home-favorite niches.
+It does not replace the generic context verdict functions; it exists in parallel.
+Current operational behavior
+
+Expected current behavior when running python3 scripts/picks_today.py:
+
+today only, unless dates are explicitly passed
+ultra-short home 1X2 picks may appear as CAUTION
+away short favorites should be vetoed
+raw 1X2 picks at >= 1.25 should be vetoed
+explicit niche/odds/context vetoes remain hard stops
+Current limitations
+
+Broad league purity context is still mostly sparse / UNKNOWN
+niche context is working, but still dominated by UNKNOWN verdicts in many leagues
+There is not yet enough stable evidence to auto-build robust trusted/toxic short-odds league lists from the current registry alone
+Do not over-tune league lists yet from thin samples
+7-day monitoring plan
+
+For the next week, stop changing logic unless something is obviously broken. Monitor behavior.
+
+Daily commands
+
+Rebuild purity:
+python3 scripts/assay_purity.py
+
+Generate today-only picks:
+python3 scripts/picks_today.py
+
+Record daily summary
+
+Capture the final summary line from picks_today.py, especially:
+
+CLEAN
+CAUTION
+WATCHLIST_odds
+WATCHLIST_ctx
+SKIPPED_veto
+SKIPPED_dead
+Record every CAUTION pick
+
+For each caution pick, track:
+
+date
+match
+league
+rule
+odds
+home/away
+final result once settled
+Healthy signs
+
+most medium-odds / away-favorite / fragile picks remain vetoed
+only a small number of short-home picks surface as CAUTION
+no obvious garbage leaks through
+same weak contexts do not repeatedly pass as playable candidates
+Warning signs
+
+zero usable picks every day
+too many plausible ultra-short home picks still trapped by sparse UNKNOWN
+repeated bad CAUTION picks from the same leagues
+obvious bad picks still leaking through veto logic
+Next likely refinement after monitoring
+
+Only after several days of observation:
+
+review recurring CAUTION picks
+review recurring vetoed leagues / contexts
+decide whether to:
+further soften UNKNOWN handling for ultra-short home picks, or
+introduce a more data-backed toxic short-odds league overlay
+Until that evidence exists, keep the current defensive posture.
+
 Repo: https://github.com/6ixtyn9-sudo/Edge-Factory.git
 
 Branch: main
@@ -1596,10 +1704,10 @@ Change 1 — line 450. Scope the odds fallback to the same rule only:
 
 text
 
-# before
+before
 odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|", suffix=f"|{band}")
 
-# after
+after
 odds_fallback = _scan_best(odds_ctx, prefix=f"{sport}|{market}|{rule}|", suffix=f"|{band}")
 The fallback now only considers band entries for the specific certified rule being evaluated. Base views cannot bleed across.
 
@@ -1607,13 +1715,13 @@ Change 2 — line 513. UNKNOWN odds band routes to CAUTION not WATCHLIST:
 
 text
 
-# before
+before
 if ctx.get("odds_band") == "UNKNOWN":
-    return BUCKET_WL_CTX
+return BUCKET_WL_CTX
 
-# after
+after
 if ctx.get("odds_band") == "UNKNOWN":
-    return BUCKET_CAUTION
+return BUCKET_CAUTION
 Rationale: when a certified rule fires at an odds price in a band that has no opinion yet (UNKNOWN, not VETO), the certified rule's own walk-forward evidence is sufficient. The pick should be delivered as CAUTION for human review, not silently watchlisted.
 
 Operational bucket logic update

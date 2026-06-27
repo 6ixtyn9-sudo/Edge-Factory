@@ -1537,7 +1537,6 @@ def print_buckets(buckets: dict, title_date: str = ""):
 def main():
     days = sys.argv[1:] or [
         date.today().isoformat(),
-        (date.today() + timedelta(days=1)).isoformat(),
     ]
     t1x2, ou_edge, btts_edge, fallback = load_thresholds()
     edge_meta = load_edge_meta()
