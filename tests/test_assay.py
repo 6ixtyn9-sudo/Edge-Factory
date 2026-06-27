@@ -2,7 +2,7 @@
 from edgefactory.assay import (wilson_lb, wilson_ub, grade,
                                decay_verdict, should_bench, roi,
                                context_verdict_league, context_verdict_team,
-                               context_verdict_odds_band,
+                               context_verdict_odds_band, context_verdict_niche,
                                weighted_consensus_score)
 
 def test_wilson_basics():
@@ -97,6 +97,13 @@ def test_context_verdicts():
     assert context_verdict_odds_band(160, 0.03) == "BOOST"
     # sufficient n, roi just above 0 but below BOOST -> ALLOW
     assert context_verdict_odds_band(110, 0.01) == "ALLOW"
+
+    # ---- niche ----
+    assert context_verdict_niche(5, -0.20, strict_short_odds=True) == "UNKNOWN"
+    assert context_verdict_niche(10, -0.09, strict_short_odds=True) == "VETO"
+    assert context_verdict_niche(12, 0.04, strict_short_odds=True) == "BOOST"
+    assert context_verdict_niche(16, -0.01, strict_short_odds=False) == "CAUTION"
+    assert context_verdict_niche(11, 0.01, strict_short_odds=False) == "ALLOW"
 
 
 def test_weighted_consensus_score():

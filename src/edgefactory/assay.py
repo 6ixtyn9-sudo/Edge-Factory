@@ -163,6 +163,46 @@ def context_verdict_odds_band(n: int, roi: float | None) -> str:
         return "BOOST"
     return "ALLOW"
 
+
+def context_verdict_niche(
+    n: int,
+    roi: float | None,
+    *,
+    recent_roi: float | None = None,
+    hit_rate: float | None = None,
+    strict_short_odds: bool = False,
+) -> str:
+    """Aggressive verdict for narrow niche contexts such as short-odds home favourites.
+
+    Designed to defend sparse but high-impact contexts where waiting for n>=50
+    before a veto is too permissive. This is a parallel niche-sensitive layer,
+    not a replacement for the generic verdict functions.
+    """
+    if roi is None or n <= 0:
+        return "UNKNOWN"
+
+    early_veto_n = 10 if strict_short_odds else 12
+    early_boost_n = 12 if strict_short_odds else 15
+
+    if n >= early_veto_n and roi <= -0.08:
+        return "VETO"
+    if recent_roi is not None and n >= early_veto_n and recent_roi <= -0.08:
+        return "VETO"
+    if hit_rate is not None and strict_short_odds and n >= early_veto_n and hit_rate < 0.80:
+        return "VETO"
+
+    if n >= 20 and roi <= -0.04 and (recent_roi is None or recent_roi <= -0.02):
+        return "VETO"
+    if n >= 15 and roi < 0.0:
+        return "CAUTION"
+
+    if n >= early_boost_n and roi >= 0.03 and (recent_roi is None or recent_roi >= 0.0):
+        return "BOOST"
+    if n >= 10 and roi > 0.0:
+        return "ALLOW"
+    return "UNKNOWN"
+
+
 def roi(wins: int, n: int, avg_odds: float) -> float:
     """Flat-stake ROI given wins, total bets and average decimal odds."""
     if n <= 0:
