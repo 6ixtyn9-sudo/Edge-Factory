@@ -309,8 +309,65 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-02T14:55:55+02:00",
-    "avg_p": 70.5,
+    "as_of": "2026-07-02T21:40:42+02:00",
+    "avg_p": 66.0,
+    "away": "FS Jelgava",
+    "bookmaker": null,
+    "bucket": "CAUTION",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "fsjelgava",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "riga",
+      "league": "UNKNOWN",
+      "league_key": "world friendlies clubs",
+      "league_raw": "Latvia Virsliga",
+      "niche": "BOOST",
+      "odds_band": "BOOST",
+      "odds_band_name": "1.10-1.20",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-07-03",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "2WAY-UNANIMOUS\u226565",
+    "draw_risk_flag": "LOW",
+    "edge_n_way": 2,
+    "edge_rule": "2way-unanimous avg_p>=65",
+    "edge_status": "certified",
+    "home": "Riga",
+    "kickoff": "03-07, 17:00",
+    "league": "Latvia Virsliga",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "short odds, acceptable draw risk",
+    "market_type": "1x2",
+    "match": "Riga vs FS Jelgava",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": 1.15,
+    "odds_match_method": "fallback",
+    "odds_match_status": "matched",
+    "odds_source": "zulubet",
+    "odds_tier": "low",
+    "pick": "home",
+    "recommended_market": "keep_1x2",
+    "rule": "2way-unanimous avg_p>=65",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "vitibet_index": 4.24,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-07-02T21:40:42+02:00",
+    "avg_p": 71.0,
     "away": "Mjallby AIF",
     "bookmaker": null,
     "bucket": "SKIPPED_VETO",
@@ -348,7 +405,7 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 2,
-    "odds": 1.68,
+    "odds": 1.67,
     "odds_match_method": "fallback",
     "odds_match_status": "matched",
     "odds_source": "zulubet",
@@ -366,7 +423,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-02T14:55:55+02:00",
+    "as_of": "2026-07-02T21:40:42+02:00",
     "avg_p": 68.0,
     "away": "Asiagoal",
     "bookmaker": null,
@@ -423,7 +480,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-02T14:55:55+02:00",
+    "as_of": "2026-07-02T21:40:42+02:00",
     "avg_p": 67.5,
     "away": "Ponte Preta",
     "bookmaker": "Interwetten",
@@ -468,7 +525,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.33,
+      "odds": 1.3,
       "source": "forebet_best"
     },
     "odds_source": "bzzoiro_odds",
@@ -486,7 +543,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-02T14:55:55+02:00",
+    "as_of": "2026-07-02T21:40:42+02:00",
     "avg_p": 72.5,
     "away": "Cape Verde",
     "bookmaker": "Betano",
