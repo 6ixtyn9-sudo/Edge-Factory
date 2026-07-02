@@ -1,4 +1,6 @@
 {
+  "ambiguous_examples": [],
+  "ambiguous_result_picks": 0,
   "archived_pick_dates": [
     "2026-06-19",
     "2026-06-20",
@@ -26,10 +28,10 @@
       "wins": 17
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.913043,
-      "priced_picks": 20,
-      "roi": 0.24545,
-      "settled_picks": 23,
+      "hit_rate": 0.875,
+      "priced_picks": 21,
+      "roi": 0.186143,
+      "settled_picks": 24,
       "wins": 21
     },
     "WATCHLIST_NO_ODDS": {
@@ -49,10 +51,10 @@
       "wins": 12
     },
     "fallback": {
-      "hit_rate": 0.821429,
-      "priced_picks": 28,
-      "roi": 0.091786,
-      "settled_picks": 28,
+      "hit_rate": 0.793103,
+      "priced_picks": 29,
+      "roi": 0.054138,
+      "settled_picks": 29,
       "wins": 23
     },
     "none": {
@@ -93,19 +95,19 @@
       "wins": 3
     },
     "zulubet": {
-      "hit_rate": 0.875,
-      "priced_picks": 8,
-      "roi": 0.125,
-      "settled_picks": 8,
+      "hit_rate": 0.777778,
+      "priced_picks": 9,
+      "roi": 0.0,
+      "settled_picks": 9,
       "wins": 7
     }
   },
   "by_rule": {
     "2way-unanimous avg_p>=65": {
-      "hit_rate": 1.0,
-      "priced_picks": 6,
-      "roi": 0.32,
-      "settled_picks": 6,
+      "hit_rate": 0.857143,
+      "priced_picks": 7,
+      "roi": 0.131429,
+      "settled_picks": 7,
       "wins": 6
     },
     "2way-unanimous avg_p>=70": {
@@ -123,16 +125,92 @@
       "wins": 22
     }
   },
+  "eligible_prior_picks": 57,
   "end": "2026-07-03",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.769231,
-    "priced_picks": 43,
-    "roi": 0.084837,
-    "settled_picks": 52,
+    "hit_rate": 0.754717,
+    "priced_picks": 44,
+    "roi": 0.060182,
+    "settled_picks": 53,
     "wins": 40
   },
   "same_day_cutoff": "2026-07-03",
   "same_day_excluded": 8,
-  "start": "2026-06-04"
+  "start": "2026-06-04",
+  "unmatched_examples": [
+    {
+      "away": "Canberra White Eagles",
+      "away_key_candidates": [
+        "canberraw"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-06-20",
+      "home": "Tuggeranong United",
+      "home_key_candidates": [
+        "tuggerano"
+      ],
+      "league": "AuA",
+      "match": "Tuggeranong United vs Canberra White Eagles",
+      "odds": 1.4,
+      "pick": "home",
+      "reason": "unmatched_result",
+      "rule": "2way-unanimous avg_p>=70"
+    },
+    {
+      "away": "Tromsdalen Uil",
+      "away_key_candidates": [
+        "tromsdale"
+      ],
+      "bucket": "WATCHLIST_NO_ODDS",
+      "date": "2026-06-26",
+      "home": "Eidsvold",
+      "home_key_candidates": [
+        "eidsvold"
+      ],
+      "league": "Norway: 2. Division - Group 2",
+      "match": "Eidsvold vs Tromsdalen Uil",
+      "odds": null,
+      "pick": "home",
+      "reason": "unmatched_result",
+      "rule": "2way-unanimous avg_p>=70"
+    },
+    {
+      "away": "Naftan",
+      "away_key_candidates": [
+        "naftan"
+      ],
+      "bucket": "WATCHLIST_NO_ODDS",
+      "date": "2026-06-27",
+      "home": "ML Vitebsk",
+      "home_key_candidates": [
+        "mlvitebsk"
+      ],
+      "league": "Belarus: Premier League",
+      "match": "ML Vitebsk vs Naftan",
+      "odds": null,
+      "pick": "home",
+      "reason": "unmatched_result",
+      "rule": "2way-unanimous avg_p>=70"
+    },
+    {
+      "away": "07 Vestur",
+      "away_key_candidates": [
+        "vestur"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-06-28",
+      "home": "KI Klaksvik",
+      "home_key_candidates": [
+        "kiklaksvi"
+      ],
+      "league": "Faroe Islands: Meistaradeildin",
+      "match": "KI Klaksvik vs 07 Vestur",
+      "odds": null,
+      "pick": "home",
+      "reason": "unmatched_result",
+      "rule": "2way-unanimous avg_p>=70"
+    }
+  ],
+  "unmatched_result_picks": 4
 }
