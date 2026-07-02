@@ -18,6 +18,7 @@ DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
 import sys
 sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory.entities import canonical_team  # noqa: E402
 from edgefactory.util import norm_team  # noqa: E402
 
 
@@ -73,6 +74,59 @@ def load_archived_picks(start: str, end: str) -> list[dict[str, Any]]:
                 row.setdefault("date", day)
                 out.append(row)
     return out
+
+
+
+def _dedupe_keys(keys: list[str]) -> list[str]:
+    out: list[str] = []
+    for key in keys:
+        key = str(key or "")
+        if key and key not in out:
+            out.append(key)
+    return out
+
+
+def audit_team_key_candidates(raw: object) -> list[str]:
+    """Audit-only result-match keys.
+
+    First key is the legacy miner key. Extra keys are explicit/canonical aliases
+    collapsed back to the legacy width. This does NOT change certified miner
+    joins; it only stops archived operational picks from disappearing in the
+    recent-picks audit because of aliases such as KPV-j vs KPV Kokkola.
+    """
+    text = str(raw or "")
+    keys = [norm_team(text)]
+    try:
+        keys.append(norm_team(canonical_team(text)))
+    except Exception:
+        pass
+
+    manual = {
+        "kpvj": "kpvkokkol",
+        "kpvjk": "kpvkokkol",
+    }
+    base = norm_team(text)
+    if base in manual:
+        keys.append(manual[base])
+
+    return _dedupe_keys(keys)
+
+
+def _pick_diag(pick: dict[str, Any], reason: str) -> dict[str, Any]:
+    return {
+        "date": str(pick.get("date") or "")[:10],
+        "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
+        "home": pick.get("home"),
+        "away": pick.get("away"),
+        "league": pick.get("league"),
+        "rule": pick.get("edge_rule") or pick.get("rule") or pick.get("display_rule"),
+        "bucket": pick.get("bucket"),
+        "pick": pick.get("pick"),
+        "odds": pick.get("odds"),
+        "reason": reason,
+        "home_key_candidates": audit_team_key_candidates(pick.get("home")),
+        "away_key_candidates": audit_team_key_candidates(pick.get("away")),
+    }
 
 
 def load_results_index(warehouse_path: Path) -> dict[tuple[str, str, str], dict[str, Any]]:
@@ -183,18 +237,46 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
     archived_dates = sorted({str(p.get("date") or "")[:10] for p in picks if p.get("date")})
     today_local = local_today()
     same_day_excluded = 0
+    eligible_prior_picks = 0
+    unmatched_result_examples: list[dict[str, Any]] = []
+    ambiguous_result_examples: list[dict[str, Any]] = []
 
     for pick in picks:
         pick_date = str(pick.get("date") or "")[:10]
         if not include_same_day and pick_date >= today_local:
             same_day_excluded += 1
             continue
-        key = (
-            pick_date,
-            norm_team(str(pick.get("home") or "")),
-            norm_team(str(pick.get("away") or "")),
-        )
-        settled = settle_pick(pick, results.get(key))
+        market = str(pick.get("market") or "")
+        selection = str(pick.get("pick") or "")
+        if market != "1x2" or selection not in {"home", "draw", "away"}:
+            continue
+        eligible_prior_picks += 1
+
+        result = None
+        matched_keys: list[tuple[str, str, str]] = []
+        for hk in audit_team_key_candidates(pick.get("home")):
+            for ak in audit_team_key_candidates(pick.get("away")):
+                key = (pick_date, hk, ak)
+                candidate = results.get(key)
+                if candidate is not None:
+                    result = candidate
+                    matched_keys.append(key)
+
+        # If multiple candidate keys point to different scorelines, do not guess.
+        if len(matched_keys) > 1:
+            seen = set()
+            for key in matched_keys:
+                r = results.get(key) or {}
+                seen.add((r.get("hs"), r.get("gs"), r.get("outcome")))
+            if len(seen) > 1:
+                ambiguous_result_examples.append(_pick_diag(pick, "ambiguous_alias_result"))
+                continue
+
+        if result is None:
+            unmatched_result_examples.append(_pick_diag(pick, "unmatched_result"))
+            continue
+
+        settled = settle_pick(pick, result)
         if settled is not None:
             settled_rows.append(settled)
 
@@ -206,6 +288,11 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "same_day_excluded": same_day_excluded,
         "same_day_cutoff": today_local,
         "include_same_day": include_same_day,
+        "eligible_prior_picks": eligible_prior_picks,
+        "unmatched_result_picks": len(unmatched_result_examples),
+        "ambiguous_result_picks": len(ambiguous_result_examples),
+        "unmatched_examples": unmatched_result_examples[:50],
+        "ambiguous_examples": ambiguous_result_examples[:50],
         "overall": summarize_scored(settled_rows),
         "by_rule": summarize_by(settled_rows, "rule_name"),
         "by_bucket": summarize_by(settled_rows, "bucket"),
@@ -224,6 +311,9 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- archived pick rows: {report.get('archived_pick_rows', 0)}",
         f"- archived pick dates: {len(report.get('archived_pick_dates', []))}",
         f"- settled picks: {overall.get('settled_picks', 0)}",
+        f"- eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}",
+        f"- unmatched result picks: {report.get('unmatched_result_picks', 0)}",
+        f"- ambiguous result picks: {report.get('ambiguous_result_picks', 0)}",
         f"- wins: {overall.get('wins', 0)}",
         f"- hit rate: {overall.get('hit_rate')}",
         f"- priced picks: {overall.get('priced_picks', 0)}",
@@ -273,6 +363,23 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
             lines.append(
                 f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')}, ROI={summary.get('roi')}"
             )
+    lines.extend(["", "## Unmatched result examples", ""])
+    examples = report.get("unmatched_examples", [])
+    if not examples:
+        lines.append("- none")
+    else:
+        for ex in examples[:25]:
+            lines.append(
+                f"- {ex.get('date')} `{ex.get('bucket')}` `{ex.get('rule')}` — {ex.get('match')} -> {str(ex.get('pick')).upper()} @ {ex.get('odds')} ({ex.get('reason')}); keys={ex.get('home_key_candidates')}/{ex.get('away_key_candidates')}"
+            )
+
+    lines.extend(["", "## Ambiguous result examples", ""])
+    amb = report.get("ambiguous_examples", [])
+    if not amb:
+        lines.append("- none")
+    else:
+        for ex in amb[:25]:
+            lines.append(f"- {ex.get('date')} `{ex.get('bucket')}` `{ex.get('rule')}` — {ex.get('match')} ({ex.get('reason')})")
     path.write_text("\n".join(lines) + "\n")
 
 
@@ -302,7 +409,10 @@ def main() -> int:
     print(f" archived pick rows: {report.get('archived_pick_rows', 0)}")
     print(f" archived pick dates: {len(report.get('archived_pick_dates', []))}")
     print(f" same-day rows excluded: {report.get('same_day_excluded', 0)}")
+    print(f" eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}")
     print(f" settled picks: {overall.get('settled_picks', 0)}")
+    print(f" unmatched result picks: {report.get('unmatched_result_picks', 0)}")
+    print(f" ambiguous result picks: {report.get('ambiguous_result_picks', 0)}")
     print(f" hit rate: {overall.get('hit_rate')}")
     print(f" ROI: {overall.get('roi')}")
     print(f" json: {json_path}")
