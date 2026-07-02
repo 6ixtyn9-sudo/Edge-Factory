@@ -13,69 +13,70 @@
     "2026-06-29",
     "2026-06-30",
     "2026-07-01",
-    "2026-07-02"
+    "2026-07-02",
+    "2026-07-03"
   ],
-  "archived_pick_rows": 56,
+  "archived_pick_rows": 65,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.727273,
-      "priced_picks": 22,
-      "roi": -0.063682,
-      "settled_picks": 22,
-      "wins": 16
+      "hit_rate": 0.73913,
+      "priced_picks": 23,
+      "roi": -0.054826,
+      "settled_picks": 23,
+      "wins": 17
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.904762,
-      "priced_picks": 18,
-      "roi": 0.2355,
-      "settled_picks": 21,
-      "wins": 19
+      "hit_rate": 0.913043,
+      "priced_picks": 20,
+      "roi": 0.24545,
+      "settled_picks": 23,
+      "wins": 21
     },
     "WATCHLIST_NO_ODDS": {
-      "hit_rate": 0.4,
+      "hit_rate": 0.333333,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 5,
+      "settled_picks": 6,
       "wins": 2
     }
   },
   "by_odds_match_method": {
     "exact": {
-      "hit_rate": 0.769231,
-      "priced_picks": 13,
-      "roi": 0.044462,
-      "settled_picks": 13,
-      "wins": 10
+      "hit_rate": 0.8,
+      "priced_picks": 15,
+      "roi": 0.071867,
+      "settled_picks": 15,
+      "wins": 12
     },
     "fallback": {
-      "hit_rate": 0.814815,
-      "priced_picks": 27,
-      "roi": 0.083704,
-      "settled_picks": 27,
-      "wins": 22
+      "hit_rate": 0.821429,
+      "priced_picks": 28,
+      "roi": 0.091786,
+      "settled_picks": 28,
+      "wins": 23
     },
     "none": {
-      "hit_rate": 0.625,
+      "hit_rate": 0.555556,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 8,
+      "settled_picks": 9,
       "wins": 5
     }
   },
   "by_odds_source": {
     "UNKNOWN": {
-      "hit_rate": 0.625,
+      "hit_rate": 0.555556,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 8,
+      "settled_picks": 9,
       "wins": 5
     },
     "bzzoiro_odds": {
-      "hit_rate": 0.727273,
-      "priced_picks": 11,
-      "roi": 0.024364,
-      "settled_picks": 11,
-      "wins": 8
+      "hit_rate": 0.75,
+      "priced_picks": 12,
+      "roi": 0.052333,
+      "settled_picks": 12,
+      "wins": 9
     },
     "forebet_best": {
       "hit_rate": 0.8,
@@ -86,17 +87,17 @@
     },
     "scoutingstats_odds": {
       "hit_rate": 1.0,
-      "priced_picks": 2,
-      "roi": 0.155,
-      "settled_picks": 2,
-      "wins": 2
+      "priced_picks": 3,
+      "roi": 0.15,
+      "settled_picks": 3,
+      "wins": 3
     },
     "zulubet": {
-      "hit_rate": 0.857143,
-      "priced_picks": 7,
-      "roi": 0.098571,
-      "settled_picks": 7,
-      "wins": 6
+      "hit_rate": 0.875,
+      "priced_picks": 8,
+      "roi": 0.125,
+      "settled_picks": 8,
+      "wins": 7
     }
   },
   "by_rule": {
@@ -115,23 +116,23 @@
       "wins": 12
     },
     "3way-unanimous avg_p>=65": {
-      "hit_rate": 0.678571,
-      "priced_picks": 25,
-      "roi": 0.01152,
-      "settled_picks": 28,
-      "wins": 19
+      "hit_rate": 0.6875,
+      "priced_picks": 28,
+      "roi": 0.039214,
+      "settled_picks": 32,
+      "wins": 22
     }
   },
-  "end": "2026-07-02",
+  "end": "2026-07-03",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.770833,
-    "priced_picks": 40,
-    "roi": 0.07095,
-    "settled_picks": 48,
-    "wins": 37
+    "hit_rate": 0.769231,
+    "priced_picks": 43,
+    "roi": 0.084837,
+    "settled_picks": 52,
+    "wins": 40
   },
-  "same_day_cutoff": "2026-07-02",
-  "same_day_excluded": 4,
-  "start": "2026-06-03"
+  "same_day_cutoff": "2026-07-03",
+  "same_day_excluded": 8,
+  "start": "2026-06-04"
 }
