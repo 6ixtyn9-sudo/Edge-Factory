@@ -248,16 +248,18 @@ def main() -> None:
             event_aways[loose_event].add(a_key)
 
     # Same loose event = same league/team entity aliases.
-    # League unions are guarded so generic/conflicting labels cannot contaminate
-    # specific domestic leagues. Curated overrides below remain authoritative.
+    #
+    # IMPORTANT:
+    # Do NOT auto-union league labels from same-event evidence.
+    #
+    # Production contamination observed:
+    #   Finland Ykkönen / Latvia Virsliga / Sweden Allsvenskan
+    #   -> world friendlies clubs / premier league / england championship
+    #
+    # League labels are too generic and cross-country ambiguous. Keep league
+    # aliases exact/manual-only. Team aliases below still use same-event evidence.
     same_event_merges = 0
-    for labels in event_leagues.values():
-        labels = list(labels)
-        for i, a in enumerate(labels):
-            for b in labels[i + 1:]:
-                if safe_league_alias_merge(a, b):
-                    league_dsu.union(a, b)
-                    same_event_merges += 1
+
     for labels in event_homes.values():
         labels = list(labels)
         for other in labels[1:]:
@@ -267,18 +269,13 @@ def main() -> None:
         for other in labels[1:]:
             team_dsu.union(labels[0], other)
 
-    # League team-pool overlap catches aliases that did not share exact events.
+    # Automatic league team-pool overlap merging is disabled.
+    #
+    # Reason: cross-country leagues can share team-name patterns and generic
+    # competition labels. False league aliases poison purity contexts. Curated
+    # config/entity_overrides.json remains authoritative below.
     league_keys = list(league_team_sets)
     overlap_merges = 0
-    for i, a in enumerate(league_keys):
-        for b in league_keys[i + 1 :]:
-            shared = len(league_team_sets[a] & league_team_sets[b])
-            if shared < args.min_overlap_teams:
-                continue
-            sim = jaccard(league_team_sets[a], league_team_sets[b])
-            if sim >= args.min_team_overlap and safe_league_alias_merge(a, b):
-                league_dsu.union(a, b)
-                overlap_merges += 1
 
     # Curated overrides are authoritative.
     overrides = read_overrides()
