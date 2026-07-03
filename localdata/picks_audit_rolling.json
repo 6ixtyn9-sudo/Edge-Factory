@@ -28,18 +28,18 @@
       "wins": 17
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.875,
+      "hit_rate": 0.84,
       "priced_picks": 21,
       "roi": 0.186143,
-      "settled_picks": 24,
+      "settled_picks": 25,
       "wins": 21
     },
     "WATCHLIST_NO_ODDS": {
-      "hit_rate": 0.333333,
+      "hit_rate": 0.5,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 6,
-      "wins": 2
+      "settled_picks": 8,
+      "wins": 4
     }
   },
   "by_odds_match_method": {
@@ -58,20 +58,20 @@
       "wins": 23
     },
     "none": {
-      "hit_rate": 0.555556,
+      "hit_rate": 0.583333,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 9,
-      "wins": 5
+      "settled_picks": 12,
+      "wins": 7
     }
   },
   "by_odds_source": {
     "UNKNOWN": {
-      "hit_rate": 0.555556,
+      "hit_rate": 0.583333,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 9,
-      "wins": 5
+      "settled_picks": 12,
+      "wins": 7
     },
     "bzzoiro_odds": {
       "hit_rate": 0.75,
@@ -111,11 +111,11 @@
       "wins": 6
     },
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.857143,
+      "hit_rate": 0.823529,
       "priced_picks": 9,
       "roi": 0.07,
-      "settled_picks": 14,
-      "wins": 12
+      "settled_picks": 17,
+      "wins": 14
     },
     "3way-unanimous avg_p>=65": {
       "hit_rate": 0.6875,
@@ -129,11 +129,11 @@
   "end": "2026-07-03",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.754717,
+    "hit_rate": 0.75,
     "priced_picks": 44,
     "roi": 0.060182,
-    "settled_picks": 53,
-    "wins": 40
+    "settled_picks": 56,
+    "wins": 42
   },
   "same_day_cutoff": "2026-07-03",
   "same_day_excluded": 8,
@@ -156,61 +156,7 @@
       "pick": "home",
       "reason": "unmatched_result",
       "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "Tromsdalen Uil",
-      "away_key_candidates": [
-        "tromsdale"
-      ],
-      "bucket": "WATCHLIST_NO_ODDS",
-      "date": "2026-06-26",
-      "home": "Eidsvold",
-      "home_key_candidates": [
-        "eidsvold"
-      ],
-      "league": "Norway: 2. Division - Group 2",
-      "match": "Eidsvold vs Tromsdalen Uil",
-      "odds": null,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "Naftan",
-      "away_key_candidates": [
-        "naftan"
-      ],
-      "bucket": "WATCHLIST_NO_ODDS",
-      "date": "2026-06-27",
-      "home": "ML Vitebsk",
-      "home_key_candidates": [
-        "mlvitebsk"
-      ],
-      "league": "Belarus: Premier League",
-      "match": "ML Vitebsk vs Naftan",
-      "odds": null,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "07 Vestur",
-      "away_key_candidates": [
-        "vestur"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-06-28",
-      "home": "KI Klaksvik",
-      "home_key_candidates": [
-        "kiklaksvi"
-      ],
-      "league": "Faroe Islands: Meistaradeildin",
-      "match": "KI Klaksvik vs 07 Vestur",
-      "odds": null,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
     }
   ],
-  "unmatched_result_picks": 4
+  "unmatched_result_picks": 1
 }
