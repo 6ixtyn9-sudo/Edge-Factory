@@ -32,11 +32,75 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.entities import CONFIG_OVERRIDES_PATH, ENTITY_REGISTRY_PATH  # noqa: E402
+from edgefactory.entities import CONFIG_OVERRIDES_PATH, ENTITY_REGISTRY_PATH, classify_competition  # noqa: E402
 from edgefactory.util import compact_key, norm_entity_team, norm_league  # noqa: E402
 
 LOCALDATA = ROOT / "localdata"
 SOURCE_RE = re.compile(r"^(.+)_\d{4}-\d{2}\.csv\.gz$")
+
+# Generic league labels from some feeds must not contaminate specific domestic leagues.
+# Production failure observed: Finland Ykkönen / Latvia Virsliga / Sweden Allsvenskan
+# were canonicalized to "world friendlies clubs".
+GENERIC_LEAGUE_KEYS = {
+    "unknown",
+    "world friendlies clubs",
+    "world club friendlies",
+    "club friendlies",
+    "international friendlies",
+    "friendly",
+    "friendlies",
+
+    # Country-less/generic competition labels. These occur in many countries and
+    # must not become canonical aliases for specific domestic leagues.
+    "premier league",
+    "super league",
+    "first league",
+    "second league",
+    "third league",
+    "division 1",
+    "division 2",
+    "division 3",
+    "first division",
+    "second division",
+    "third division",
+    "league one",
+    "league two",
+    "serie a",
+    "serie b",
+    "liga 1",
+    "liga 2",
+}
+
+
+def safe_league_alias_merge(a: str, b: str) -> bool:
+    """Return True only when two league labels are safe to union.
+
+    Event co-occurrence is not enough: generic feed labels like "World Friendlies
+    Clubs" often share exact teams/dates with real domestic fixtures and can
+    poison the context registry if unioned into domestic leagues.
+    """
+    a_key = norm_league(a)
+    b_key = norm_league(b)
+    if not a_key or not b_key or a_key == b_key:
+        return False
+    if a_key in GENERIC_LEAGUE_KEYS or b_key in GENERIC_LEAGUE_KEYS:
+        return False
+    return classify_competition(a_key) == classify_competition(b_key)
+
+
+def is_generic_league_label(raw: object) -> bool:
+    return norm_league(raw) in GENERIC_LEAGUE_KEYS
+
+
+def canonical_league_label(labels: list[str], counts: Counter[str]) -> str:
+    """Pick a canonical league label without allowing generic labels to dominate.
+
+    If a group has any non-generic labels, choose among those only. This prevents
+    unrelated domestic competitions from collapsing into "premier league".
+    """
+    non_generic = [x for x in labels if not is_generic_league_label(x)]
+    pool = non_generic or labels
+    return canonical_label(pool, counts, kind="league")
 
 
 class DSU:
@@ -184,12 +248,16 @@ def main() -> None:
             event_aways[loose_event].add(a_key)
 
     # Same loose event = same league/team entity aliases.
+    # League unions are guarded so generic/conflicting labels cannot contaminate
+    # specific domestic leagues. Curated overrides below remain authoritative.
     same_event_merges = 0
     for labels in event_leagues.values():
         labels = list(labels)
-        for other in labels[1:]:
-            league_dsu.union(labels[0], other)
-            same_event_merges += 1
+        for i, a in enumerate(labels):
+            for b in labels[i + 1:]:
+                if safe_league_alias_merge(a, b):
+                    league_dsu.union(a, b)
+                    same_event_merges += 1
     for labels in event_homes.values():
         labels = list(labels)
         for other in labels[1:]:
@@ -208,7 +276,7 @@ def main() -> None:
             if shared < args.min_overlap_teams:
                 continue
             sim = jaccard(league_team_sets[a], league_team_sets[b])
-            if sim >= args.min_team_overlap:
+            if sim >= args.min_team_overlap and safe_league_alias_merge(a, b):
                 league_dsu.union(a, b)
                 overlap_merges += 1
 
@@ -241,7 +309,7 @@ def main() -> None:
 
     for _, keys in league_groups.items():
         raw_aliases = sorted({raw for key in keys for raw in raw_leagues_by_key.get(key, {key})})
-        canonical = canonical_label(raw_aliases, league_counts, kind="league")
+        canonical = canonical_league_label(raw_aliases, league_counts)
         sources = sorted({src for key in keys for src in league_sources.get(key, set())})
         teams_in_group = sorted({tm for key in keys for tm in league_team_sets.get(key, set())})
         leagues[canonical] = {
