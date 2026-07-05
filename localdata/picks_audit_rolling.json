@@ -1,191 +1,25 @@
 {
   "ambiguous_examples": [],
   "ambiguous_result_picks": 0,
-  "archived_pick_dates": [
-    "2026-06-19",
-    "2026-06-20",
-    "2026-06-21",
-    "2026-06-22",
-    "2026-06-23",
-    "2026-06-24",
-    "2026-06-25",
-    "2026-06-26",
-    "2026-06-27",
-    "2026-06-28",
-    "2026-06-29",
-    "2026-06-30",
-    "2026-07-01",
-    "2026-07-02",
-    "2026-07-03",
-    "2026-07-04",
-    "2026-07-05"
-  ],
-  "archived_pick_rows": 91,
-  "by_bucket": {
-    "CAUTION": {
-      "hit_rate": 0.72,
-      "priced_picks": 25,
-      "roi": -0.08444,
-      "settled_picks": 25,
-      "wins": 18
-    },
-    "SKIPPED_VETO": {
-      "hit_rate": 0.804348,
-      "priced_picks": 40,
-      "roi": 0.150475,
-      "settled_picks": 46,
-      "wins": 37
-    },
-    "WATCHLIST_NO_ODDS": {
-      "hit_rate": 0.5,
-      "priced_picks": 0,
-      "roi": null,
-      "settled_picks": 8,
-      "wins": 4
-    }
-  },
-  "by_odds_match_method": {
-    "exact": {
-      "hit_rate": 0.8,
-      "priced_picks": 20,
-      "roi": 0.0799,
-      "settled_picks": 20,
-      "wins": 16
-    },
-    "fallback": {
-      "hit_rate": 0.777778,
-      "priced_picks": 45,
-      "roi": 0.051333,
-      "settled_picks": 45,
-      "wins": 35
-    },
-    "none": {
-      "hit_rate": 0.571429,
-      "priced_picks": 0,
-      "roi": null,
-      "settled_picks": 14,
-      "wins": 8
-    }
-  },
-  "by_odds_source": {
-    "UNKNOWN": {
-      "hit_rate": 0.571429,
-      "priced_picks": 0,
-      "roi": null,
-      "settled_picks": 14,
-      "wins": 8
-    },
-    "bzzoiro_odds": {
-      "hit_rate": 0.785714,
-      "priced_picks": 14,
-      "roi": 0.084143,
-      "settled_picks": 14,
-      "wins": 11
-    },
-    "forebet_best": {
-      "hit_rate": 0.83871,
-      "priced_picks": 31,
-      "roi": 0.154194,
-      "settled_picks": 31,
-      "wins": 26
-    },
-    "scoutingstats_odds": {
-      "hit_rate": 0.833333,
-      "priced_picks": 6,
-      "roi": 0.07,
-      "settled_picks": 6,
-      "wins": 5
-    },
-    "zulubet": {
-      "hit_rate": 0.642857,
-      "priced_picks": 14,
-      "roi": -0.176429,
-      "settled_picks": 14,
-      "wins": 9
-    }
-  },
-  "by_rule": {
-    "2way-unanimous avg_p>=65": {
-      "hit_rate": 0.666667,
-      "priced_picks": 17,
-      "roi": -0.082941,
-      "settled_picks": 18,
-      "wins": 12
-    },
-    "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.823529,
-      "priced_picks": 9,
-      "roi": 0.07,
-      "settled_picks": 17,
-      "wins": 14
-    },
-    "3way-unanimous avg_p>=65": {
-      "hit_rate": 0.6875,
-      "priced_picks": 28,
-      "roi": 0.039214,
-      "settled_picks": 32,
-      "wins": 22
-    },
-    "3way-unanimous min_p>=60 avg_p>=60": {
-      "hit_rate": 0.916667,
-      "priced_picks": 11,
-      "roi": 0.326364,
-      "settled_picks": 12,
-      "wins": 11
-    }
-  },
-  "eligible_prior_picks": 81,
+  "archived_pick_dates": [],
+  "archived_pick_rows": 0,
+  "by_bucket": {},
+  "by_odds_match_method": {},
+  "by_odds_source": {},
+  "by_rule": {},
+  "eligible_prior_picks": 0,
   "end": "2026-07-05",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.746835,
-    "priced_picks": 65,
-    "roi": 0.060123,
-    "settled_picks": 79,
-    "wins": 59
+    "hit_rate": null,
+    "priced_picks": 0,
+    "roi": null,
+    "settled_picks": 0,
+    "wins": 0
   },
   "same_day_cutoff": "2026-07-05",
-  "same_day_excluded": 10,
+  "same_day_excluded": 0,
   "start": "2026-06-06",
-  "unmatched_examples": [
-    {
-      "away": "Canberra White Eagles",
-      "away_key_candidates": [
-        "canberraw"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-06-20",
-      "home": "Tuggeranong United",
-      "home_key_candidates": [
-        "tuggerano"
-      ],
-      "league": "AuA",
-      "match": "Tuggeranong United vs Canberra White Eagles",
-      "odds": 1.4,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "Launceston United",
-      "away_key_candidates": [
-        "launcesto",
-        "launcestonunit"
-      ],
-      "bucket": "WATCHLIST_UNKNOWN_CTX",
-      "date": "2026-07-04",
-      "home": "Launceston City",
-      "home_key_candidates": [
-        "launcesto",
-        "launcestoncity"
-      ],
-      "league": "AuT",
-      "match": "Launceston City vs Launceston United",
-      "odds": 1.08,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "3way-unanimous min_p>=60 avg_p>=60"
-    }
-  ],
-  "unmatched_result_picks": 2
+  "unmatched_examples": [],
+  "unmatched_result_picks": 0
 }
