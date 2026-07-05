@@ -687,6 +687,10 @@ def run_pipeline(
             f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
             f"audit_clv report {clv_start}..{target_date}",
         )
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
+            f"audit_recent_picks {target_date} [30d]",
+        )
         print(f"\n=== Autonomous Intraday Service Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "forecast":
