@@ -150,7 +150,6 @@ def format_whatsapp_discovery_summary(target_date: str, picks: list[dict[str, An
         lines.append("ℹ️ These are discovery alerts only. The pipeline has not attached a fully actionable bet state yet.")
     return "\n".join(lines)
 
-
 def send_meta_whatsapp_cloud(
     token: str,
     phone_number_id: str,

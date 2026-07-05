@@ -582,8 +582,11 @@ def lookup_context(purity: dict, pick: dict) -> dict:
 
 
 def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
-                decay_verdict: str = "HEALTHY") -> str:
+                decay_verdict: str = "HEALTHY") -> str | None:
     """Bucket pick using mature evidence only as hard gates.
+
+    Returns None for CAUTION picks below the odds floor — these are
+    silently dropped from all output, not rerouted to another bucket.
 
     Phase A/B tightening:
     - niche VETO now acts as a first-class hard gate
@@ -599,6 +602,7 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
 
     vals = [ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("odds_band"), ctx.get("competition_type"), ctx.get("niche")]
     if "VETO" in vals:
+        pick["veto_reason"] = f"context VETO in {[k for k, v in zip(['league','team_h','team_a','odds_band','competition_type','niche'], vals) if v == 'VETO']}"
         return BUCKET_SKIP_VETO
     if pick.get("odds") is None:
         return BUCKET_WL_ODDS
@@ -610,8 +614,10 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     short_sniper = market == "1x2" and sel == "home" and odds is not None and float(odds) < SHORT_ODDS_SNIPER_MAX
 
     if market == "1x2" and sel == "away" and odds is not None and float(odds) < 1.30:
+        pick["veto_reason"] = f"short-odds away favourite {float(odds):.2f}"
         return BUCKET_SKIP_VETO
     if market == "1x2" and odds is not None and float(odds) >= 1.25:
+        pick["veto_reason"] = f"1x2 odds {float(odds):.2f} >= 1.25 draw risk"
         return BUCKET_SKIP_VETO
     if short_sniper and league_key in TOXIC_SHORT_ODDS_LEAGUES:
         return BUCKET_SKIP_VETO
@@ -645,10 +651,10 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
         bucket = BUCKET_CERTIFIED
 
     # CAUTION odds floor: short-odds CAUTION picks are structurally
-    # unprofitable (72% HR can't cover breakeven below 1.40).  Reclassify
-    # to SKIPPED_VETO so they don't enter the betting pipeline.
+    # unprofitable (72% HR can't cover breakeven below 1.40).  Drop them
+    # silently — they must not appear anywhere in the output pipeline.
     if bucket == BUCKET_CAUTION and odds is not None and float(odds) < CAUTION_MIN_ODDS:
-        return BUCKET_SKIP_VETO
+        return None
 
     return bucket
 
@@ -1265,22 +1271,18 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
         if avg_p < thr:
             continue
         fb = data.get("forebet", {}).get(k) or {}
+        zb = data.get("zulubet", {}).get(k) or {}
         bz = data.get("bzzoiro", {}).get(k) or {}
         vb = data.get("vitibet", {}).get(k) or {}
         anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
         sel = sels[0]
-        # Cascade: forebet best-odds → None (bzzoiro_odds enriched later).
-        # Zulubet odds are EXCLUDED from the initial cascade: they produce
-        # -17.6% ROI (14 settled, 64.3% HR) vs forebet_best +15.4%.
-        # Zulubet still contributes PREDICTIONS (consensus voting) — only
-        # its PRICING is deprioritised.  Picks that miss forebet odds will
-        # get None here and be enriched by bzzoiro_odds or scoutingstats
-        # in the live-odds step; if no live odds exist they go to
-        # WATCHLIST_NO_ODDS, which is better than betting at zulubet prices.
+        # Cascade: forebet best-odds → zulubet odds → None (bzzoiro_odds enriched later)
         _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
         _col = _odds_map[sel]
-        odds = _f(fb.get(_col))
-        odds_src = "forebet_best" if odds is not None else None
+        odds = _f(fb.get(_col)) or _f(zb.get(_col)) or None
+        odds_src = ("forebet_best" if _f(fb.get(_col)) is not None
+                    else "zulubet" if _f(zb.get(_col)) is not None
+                    else None)
         home = canonical_display_team(anchor.get("home"))
         away = canonical_display_team(anchor.get("away"))
         picks.append({
@@ -1689,6 +1691,9 @@ def main():
             bucket = bucket_pick(p, ctx,
                                  edge_status=meta.get("status", "certified"),
                                  decay_verdict=meta.get("decay_verdict", "HEALTHY"))
+            if bucket is None:
+                # CAUTION odds floor: silently dropped from all output
+                continue
             p["ctx"] = {k: v for k, v in ctx.items() if not k.startswith("_")}
             p["bucket"] = bucket
             p["edge_status"] = meta.get("status", "certified")
