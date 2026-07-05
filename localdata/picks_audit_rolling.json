@@ -17,23 +17,24 @@
     "2026-07-01",
     "2026-07-02",
     "2026-07-03",
-    "2026-07-04"
+    "2026-07-04",
+    "2026-07-05"
   ],
-  "archived_pick_rows": 81,
+  "archived_pick_rows": 89,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.73913,
-      "priced_picks": 23,
-      "roi": -0.054826,
-      "settled_picks": 23,
-      "wins": 17
+      "hit_rate": 0.72,
+      "priced_picks": 25,
+      "roi": -0.08444,
+      "settled_picks": 25,
+      "wins": 18
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.857143,
-      "priced_picks": 29,
-      "roi": 0.278586,
-      "settled_picks": 35,
-      "wins": 30
+      "hit_rate": 0.804348,
+      "priced_picks": 40,
+      "roi": 0.150475,
+      "settled_picks": 46,
+      "wins": 37
     },
     "WATCHLIST_NO_ODDS": {
       "hit_rate": 0.5,
@@ -45,18 +46,18 @@
   },
   "by_odds_match_method": {
     "exact": {
-      "hit_rate": 0.833333,
-      "priced_picks": 18,
-      "roi": 0.132111,
-      "settled_picks": 18,
-      "wins": 15
+      "hit_rate": 0.8,
+      "priced_picks": 20,
+      "roi": 0.0799,
+      "settled_picks": 20,
+      "wins": 16
     },
     "fallback": {
-      "hit_rate": 0.823529,
-      "priced_picks": 34,
-      "roi": 0.130588,
-      "settled_picks": 34,
-      "wins": 28
+      "hit_rate": 0.777778,
+      "priced_picks": 45,
+      "roi": 0.051333,
+      "settled_picks": 45,
+      "wins": 35
     },
     "none": {
       "hit_rate": 0.571429,
@@ -75,41 +76,41 @@
       "wins": 8
     },
     "bzzoiro_odds": {
-      "hit_rate": 0.769231,
-      "priced_picks": 13,
-      "roi": 0.073692,
-      "settled_picks": 13,
-      "wins": 10
+      "hit_rate": 0.785714,
+      "priced_picks": 14,
+      "roi": 0.084143,
+      "settled_picks": 14,
+      "wins": 11
     },
     "forebet_best": {
-      "hit_rate": 0.84,
-      "priced_picks": 25,
-      "roi": 0.1776,
-      "settled_picks": 25,
-      "wins": 21
+      "hit_rate": 0.83871,
+      "priced_picks": 31,
+      "roi": 0.154194,
+      "settled_picks": 31,
+      "wins": 26
     },
     "scoutingstats_odds": {
-      "hit_rate": 1.0,
-      "priced_picks": 5,
-      "roi": 0.284,
-      "settled_picks": 5,
+      "hit_rate": 0.833333,
+      "priced_picks": 6,
+      "roi": 0.07,
+      "settled_picks": 6,
       "wins": 5
     },
     "zulubet": {
-      "hit_rate": 0.777778,
-      "priced_picks": 9,
-      "roi": 0.0,
-      "settled_picks": 9,
-      "wins": 7
+      "hit_rate": 0.642857,
+      "priced_picks": 14,
+      "roi": -0.176429,
+      "settled_picks": 14,
+      "wins": 9
     }
   },
   "by_rule": {
     "2way-unanimous avg_p>=65": {
-      "hit_rate": 0.75,
-      "priced_picks": 7,
-      "roi": 0.131429,
-      "settled_picks": 8,
-      "wins": 6
+      "hit_rate": 0.666667,
+      "priced_picks": 17,
+      "roi": -0.082941,
+      "settled_picks": 18,
+      "wins": 12
     },
     "2way-unanimous avg_p>=70": {
       "hit_rate": 0.823529,
@@ -126,26 +127,26 @@
       "wins": 22
     },
     "3way-unanimous min_p>=60 avg_p>=60": {
-      "hit_rate": 1.0,
-      "priced_picks": 8,
-      "roi": 0.52125,
-      "settled_picks": 9,
-      "wins": 9
+      "hit_rate": 0.916667,
+      "priced_picks": 11,
+      "roi": 0.326364,
+      "settled_picks": 12,
+      "wins": 11
     }
   },
-  "eligible_prior_picks": 69,
-  "end": "2026-07-04",
+  "eligible_prior_picks": 81,
+  "end": "2026-07-05",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.772727,
-    "priced_picks": 52,
-    "roi": 0.131115,
-    "settled_picks": 66,
-    "wins": 51
+    "hit_rate": 0.746835,
+    "priced_picks": 65,
+    "roi": 0.060123,
+    "settled_picks": 79,
+    "wins": 59
   },
-  "same_day_cutoff": "2026-07-04",
-  "same_day_excluded": 12,
-  "start": "2026-06-05",
+  "same_day_cutoff": "2026-07-05",
+  "same_day_excluded": 8,
+  "start": "2026-06-06",
   "unmatched_examples": [
     {
       "away": "Canberra White Eagles",
@@ -166,41 +167,23 @@
       "rule": "2way-unanimous avg_p>=70"
     },
     {
-      "away": "FS Jelgava",
+      "away": "Launceston United",
       "away_key_candidates": [
-        "fsjelgava"
+        "launcesto"
       ],
-      "bucket": "CAUTION",
-      "date": "2026-07-03",
-      "home": "Riga",
+      "bucket": "WATCHLIST_UNKNOWN_CTX",
+      "date": "2026-07-04",
+      "home": "Launceston City",
       "home_key_candidates": [
-        "riga"
+        "launcesto"
       ],
-      "league": "Latvia Virsliga",
-      "match": "Riga vs FS Jelgava",
-      "odds": 1.15,
+      "league": "AuT",
+      "match": "Launceston City vs Launceston United",
+      "odds": 1.08,
       "pick": "home",
       "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=65"
-    },
-    {
-      "away": "Mjallby AIF",
-      "away_key_candidates": [
-        "mjallbyai"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-07-03",
-      "home": "Sirius",
-      "home_key_candidates": [
-        "sirius"
-      ],
-      "league": "Sweden Allsvenskan",
-      "match": "Sirius vs Mjallby AIF",
-      "odds": 1.67,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=65"
+      "rule": "3way-unanimous min_p>=60 avg_p>=60"
     }
   ],
-  "unmatched_result_picks": 3
+  "unmatched_result_picks": 2
 }
