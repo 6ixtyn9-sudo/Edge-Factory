@@ -35,13 +35,33 @@ _ACCENT_TO = (
     "aaaaaaaaacccddeeeeeeeeiiiiiiilnnnoooooooorrssssttuuuuuuuuyyzzz"
 )
 
+# Single-char → single-char translation table for fold_ascii.
+# NFKD decomposition + combining-mark removal handles most accented Latin
+# characters, but several Nordic/extended letters (ø Ø ð Ð Ł ł Đ đ etc.)
+# do NOT decompose under NFKD.  Without this table they get silently
+# stripped by [^a-z] filters, producing broken keys like "strmsgods"
+# for "Strømsgodset" instead of the correct "stromsgod".
+_ACCENT_TABLE = str.maketrans(_ACCENT_FROM, _ACCENT_TO)
+
 
 def fold_ascii(text: object) -> str:
-    """Unicode-fold to lowercase ASCII-ish text before punctuation stripping."""
+    """Unicode-fold to lowercase ASCII-ish text before punctuation stripping.
+
+    Handles three categories of characters:
+    1. Multi-char ligatures (ß Æ Œ) — replaced before NFKD
+    2. Single-char accents that NFKD won't decompose (ø Ø Ł ł Đ đ etc.)
+       — replaced via _ACCENT_TABLE before NFKD
+    3. Standard combining-mark accents (é å ü etc.) — handled by NFKD
+       decomposition + combining-char removal
+    """
     s = str(text or "").translate(_DASHES)
     s = s.replace("ß", "ss").replace("ẞ", "SS")
     s = s.replace("Æ", "AE").replace("æ", "ae")
     s = s.replace("Œ", "OE").replace("œ", "oe")
+    # Apply accent table for characters that NFKD does not decompose.
+    # This must happen BEFORE NFKD so that, e.g., "Strømsgodset" →
+    # "Stromsgodset" before NFKD processes the rest.
+    s = s.translate(_ACCENT_TABLE)
     s = unicodedata.normalize("NFKD", s)
     s = "".join(ch for ch in s if not unicodedata.combining(ch))
     return s.lower()

@@ -49,6 +49,22 @@ ODDS_EXACT_TEAM_ALIASES = {
     "ifkmariehamn": "mariehamn",
     "thunder": "dandenong",
     "hobartzeb": "clarencez",
+    # 2026-07 mismatch fixes — abbreviations and renames between
+    # prediction sources and odds providers.  fold_ascii now handles
+    # accent mismatches (ø→o etc.) so these only cover structural
+    # naming differences that no normalization can resolve.
+    "ulsanhyun": "ulsanhd",          # Ulsan Hyundai → Ulsan HD (K League 1)
+    "sirius": "iksirius",            # Sirius → IK Sirius (Allsvenskan)
+    "kpvj": "kpvkokkol",             # KPV-j → KPV Kokkola (Finland Ykkönen)
+    "vestur": "vestursor",           # 07 Vestur → 07 Vestur Sorvag (Faroe Islands)
+    "eidsvold": "eidsvoldt",         # Eidsvold → Eidsvold Turn (Norway 2.Div)
+    "mlvitebsk": "maxlinero",        # ML Vitebsk → Maxline Rogachev (Belarus PL, renamed club)
+    "vitebsk": "fkvitebsk",          # Vitebsk → FK Vitebsk (Belarus PL)
+    "ivorycoas": "cotedivoi",        # Ivory Coast → Côte d'Ivoire (World Cup)
+    "hodd": "ilhodd",                # Hodd → IL Hodd (Norway 1.Div)
+    "naftan": "naftannov",           # Naftan → Naftan Novopolotsk (Belarus PL)
+    "lions": "queenslan",            # Lions → Queensland Lions FC (NPL Queensland)
+    "belshina": "belshinab",         # Belshina → Belshina Bobruisk (Belarus)
 }
 
 ODDS_MATCH_TEAM_ALIASES = {
@@ -59,6 +75,24 @@ ODDS_MATCH_TEAM_ALIASES = {
     "thundersc": "dandenongthunder",
     "hobartzebras": "clarencezebras",
     "hobartzebrasfc": "clarencezebras",
+    # 2026-07 mismatch fixes — compact_key space aliases for
+    # abbreviations/renames between prediction sources and odds providers.
+    "ulsanhyundai": "ulsanhd",           # Ulsan Hyundai → Ulsan HD (K League 1)
+    "sirius": "iksirius",                # Sirius → IK Sirius (Allsvenskan)
+    "kpvj": "kpvkokkola",               # KPV-j → KPV Kokkola (Finland Ykkönen)
+    "07vestur": "07vestursorvag",        # 07 Vestur → 07 Vestur Sorvag (Faroe Islands)
+    "eidsvold": "eidsvoldturn",          # Eidsvold → Eidsvold Turn (Norway 2.Div)
+    "mlvitebsk": "maxlinerogachev",      # ML Vitebsk → Maxline Rogachev (Belarus PL, renamed club)
+    "vitebsk": "fkvitebsk",             # Vitebsk → FK Vitebsk (Belarus PL)
+    "ivorycoast": "cotedivoire",         # Ivory Coast → Côte d'Ivoire (World Cup)
+    "hodd": "ilhodd",                    # Hodd → IL Hodd (Norway 1.Div)
+    "naftan": "naftannovopolotsk",       # Naftan → Naftan Novopolotsk (Belarus PL)
+    "lions": "queenslandlionsfc",        # Lions → Queensland Lions FC (NPL Queensland)
+    "olympic": "olympicfc",              # Olympic → Olympic FC (NPL Queensland)
+    "saburtalo": "fcsaburtalo",          # Saburtalo → FC Saburtalo (Georgia)
+    "capeverdeislands": "capeverde",     # Cape Verde Islands → Cape Verde (World Cup)
+    "dinamominsk": "fcdinamominsk",      # Dinamo Minsk → FC Dinamo Minsk (Belarus PL)
+    "belshina": "belshinabobruisk",      # Belshina → Belshina Bobruisk (Belarus)
 }
 
 DISPLAY_TEAM_ALIASES = {
