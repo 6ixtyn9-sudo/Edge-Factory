@@ -626,6 +626,14 @@ def run_pipeline(
 
     elif mode == "autonomous_intraday":
         # Completely hands-off accumulating ledger run
+        # Refresh settled results so audit_recent_picks and CLV have fresh scores
+        # for yesterday and older. capture_daily is the heavy scraper; skip it.
+        # backfill_results fills missing hs/gs from already-captured data (fast).
+        run_soft(
+            f"python3 scripts/backfill_results.py --days {backfill_days}",
+            f"backfill_results (D{backfill_days})",
+        )
+        run_soft("python3 scripts/build_warehouse.py", "build_warehouse")
         run("PYTHONPATH=src python3 scripts/build_entity_registry.py", "build_entity_registry")
         run("python3 scripts/mine_consensus.py", "mine_consensus")
         run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
