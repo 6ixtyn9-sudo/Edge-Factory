@@ -93,11 +93,25 @@ def audit_team_key_candidates(raw: object) -> list[str]:
     collapsed back to the legacy width. This does NOT change certified miner
     joins; it only stops archived operational picks from disappearing in the
     recent-picks audit because of aliases such as KPV-j vs KPV Kokkola.
+
+    When the 9-char norm_team of two different teams collide (e.g.
+    "Launceston City" and "Launceston United" both → "launcesto"), we produce
+    a *disambiguated* longer key by running norm_team at width=14 on the
+    canonical name so the city/United distinction survives.
     """
     text = str(raw or "")
     keys = [norm_team(text)]
     try:
-        keys.append(norm_team(canonical_team(text)))
+        canon = canonical_team(text)
+        keys.append(norm_team(canon))
+        # Disambiguation: if the 9-char key is a known collision,
+        # also produce a wider key to let the audit resolve it.
+        _DISAMBIG = {
+            "launcesto": 14,   # Launceston City vs Launceston United
+        }
+        base9 = norm_team(text)
+        if base9 in _DISAMBIG:
+            keys.append(norm_team(canon, width=_DISAMBIG[base9]))
     except Exception:
         pass
 
@@ -130,7 +144,16 @@ def _pick_diag(pick: dict[str, Any], reason: str) -> dict[str, Any]:
 
 
 def load_results_index(warehouse_path: Path) -> dict[tuple[str, str, str], dict[str, Any]]:
+    """Load settled results keyed by (date, home_key, away_key).
+
+    Produces entries at two key widths: the standard 9-char legacy key and
+    a 14-char disambiguation key.  This lets audit_team_key_candidates()
+    resolve collisions where two different teams share the same 9-char key
+    (e.g. "Launceston City" and "Launceston United" both → "launcesto").
+    """
     import duckdb
+
+    from edgefactory.util import norm_team_sql
 
     if not warehouse_path.exists():
         raise FileNotFoundError(f"warehouse not found: {warehouse_path}")
@@ -149,8 +172,14 @@ def load_results_index(warehouse_path: Path) -> dict[tuple[str, str, str], dict[
     if not active:
         return {}
 
+    nh9, na9 = norm_team_sql("home", 9), norm_team_sql("away", 9)
+    nh14, na14 = norm_team_sql("home", 14), norm_team_sql("away", 14)
+
     union_sql = " UNION ALL ".join(
-        f"SELECT {prio} AS prio, date, hkey, akey, hs, gs, outcome FROM {name} "
+        f"SELECT {prio} AS prio, date, home, away, "
+        f"{nh9} AS hkey, {na9} AS akey, "
+        f"{nh14} AS hkey14, {na14} AS akey14, "
+        f"hs, gs, outcome FROM {name} "
         f"WHERE hs IS NOT NULL AND gs IS NOT NULL"
         for prio, name in active
     )
@@ -159,22 +188,24 @@ def load_results_index(warehouse_path: Path) -> dict[tuple[str, str, str], dict[
       {union_sql}
     ), ranked AS (
       SELECT *,
-             ROW_NUMBER() OVER (PARTITION BY date, hkey, akey ORDER BY prio) AS rn
+             ROW_NUMBER() OVER (PARTITION BY date, hkey, akey, hkey14, akey14 ORDER BY prio) AS rn
       FROM all_results
     )
-    SELECT date, hkey, akey, hs, gs, outcome
+    SELECT date, hkey, akey, hkey14, akey14, hs, gs, outcome
     FROM ranked
     WHERE rn = 1
     """
     rows = con.execute(sql).fetchall()
-    return {
-        (str(day)[:10], str(hkey), str(akey)): {
-            "hs": int(hs),
-            "gs": int(gs),
-            "outcome": str(outcome),
-        }
-        for day, hkey, akey, hs, gs, outcome in rows
-    }
+    index: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for day, hkey, akey, hkey14, akey14, hs, gs, outcome in rows:
+        entry = {"hs": int(hs), "gs": int(gs), "outcome": str(outcome)}
+        d = str(day)[:10]
+        # 9-char key (legacy)
+        index[(d, str(hkey), str(akey))] = entry
+        # 14-char key (disambiguation) — only add if wider and different
+        if str(hkey14) != str(hkey) or str(akey14) != str(akey):
+            index[(d, str(hkey14), str(akey14))] = entry
+    return index
 
 
 def settle_pick(pick: dict[str, Any], result: dict[str, Any] | None) -> SettledPick | None:
