@@ -52,10 +52,10 @@ for pf in picks_files:
 n_two_price = len(clv_data)
 beats = sum(1 for d in clv_data if d['beat'])
 
-# Binomial test
-pval = stats.binom_test(beats, n_two_price, p=0.5, alternative='two-sided') if hasattr(stats, 'binom_test') else stats.binomtest(beats, n_two_price, p=0.5).pvalue
+pval = 1.0
+if n_two_price > 0:
+    pval = stats.binom_test(beats, n_two_price, p=0.5, alternative='two-sided') if hasattr(stats, 'binom_test') else stats.binomtest(beats, n_two_price, p=0.5).pvalue
 
-# Histogram
 bins = [-0.05, -0.02, -0.01, 0.0, 0.01, 0.02, 0.05]
 hist = np.histogram([d['ip_delta'] for d in clv_data], bins=bins)
 
@@ -86,10 +86,11 @@ for gate in np.arange(-0.02, 0.0051, 0.0025):
         roi_surv = 0
     gate_results.append(f"| {gate*100:+.2f}% | {n_surv} | {roi_surv*100:+.2f}% |")
 
-with open('antigravity_output/antigravity_clv_forensic.md', 'w') as f:
-    f.write(f"# CLV Forensic\n\n")
+with open('antigravity_output_v2/antigravity_clv_forensic_v2.md', 'w') as f:
+    f.write(f"# CLV Forensic v2\n\n")
     f.write(f"Total picks with two prices: {n_two_price}\n")
-    f.write(f"Beat later price rate: {beats}/{n_two_price} ({beats/n_two_price*100:.2f}%)\n")
+    rate = beats / n_two_price * 100 if n_two_price > 0 else 0
+    f.write(f"Beat later price rate: {beats}/{n_two_price} ({rate:.2f}%)\n")
     f.write(f"Binomial test p-value: {pval:.2e}\n\n")
     f.write(f"## Correlation & Decay\n")
     f.write(f"CLV vs Result (Point-Biserial): r = {r:.4f}, p = {p_corr:.4f}\n")
