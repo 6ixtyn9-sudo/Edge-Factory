@@ -382,7 +382,7 @@
         "roi": 0.0029,
         "n_priced": 255
       },
-      "status": "certified",
+      "status": "benched",
       "decay": {
         "verdict": "WATCH",
         "window_days": 60,
@@ -397,7 +397,8 @@
         "baseline_lb": 0.7667,
         "recent_lb": 0.4934,
         "recent_ub": 0.8207
-      }
+      },
+      "benched_at": "2026-07-05"
     },
     {
       "rule": "3way-unanimous min_p>=60 avg_p>=65",
@@ -423,7 +424,7 @@
         "roi": 0.0094,
         "n_priced": 231
       },
-      "status": "certified",
+      "status": "benched",
       "decay": {
         "verdict": "WATCH",
         "window_days": 60,
@@ -438,7 +439,8 @@
         "baseline_lb": 0.7746,
         "recent_lb": 0.5392,
         "recent_ub": 0.863
-      }
+      },
+      "benched_at": "2026-07-05"
     },
     {
       "rule": "2way-unanimous odds-1.20-1.75 avg_p>=65",
