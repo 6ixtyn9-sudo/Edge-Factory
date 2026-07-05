@@ -1,1 +1,65 @@
-[]
+[
+  {
+    "date": "2026-07-05",
+    "market": "1x2",
+    "match": "FAR Rabat vs CR Khemis Zemamra",
+    "home": "FAR Rabat",
+    "away": "CR Khemis Zemamra",
+    "kickoff": "05-07, 18:00",
+    "sport": "soccer",
+    "league": "Morocco Botola Pro",
+    "pick": "home",
+    "avg_p": 70.0,
+    "w_score": 1.0,
+    "odds": 1.33,
+    "odds_source": "scoutingstats_odds",
+    "bookmaker": "scoutingstats_odds",
+    "rule": "2way-unanimous avg_p>=70",
+    "edge_rule": "2way-unanimous avg_p>=70",
+    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "n_way": 2,
+    "edge_n_way": 2,
+    "confidence": null,
+    "model_version": null,
+    "vitibet_index": 2.27,
+    "sources_used": [
+      "zulubet",
+      "vitibet"
+    ],
+    "source_weights": {},
+    "as_of": "2026-07-05T16:58:49+02:00",
+    "min_lead_minutes": 30,
+    "odds_match_method": "exact",
+    "odds_captured_at": "2026-07-05T17:00:00Z",
+    "odds_league": "Botola Pro",
+    "odds_replaced": {
+      "source": "zulubet",
+      "odds": 1.35
+    },
+    "ctx": {
+      "league": "UNKNOWN",
+      "team_h": "UNKNOWN",
+      "team_a": "UNKNOWN",
+      "odds_band": "CAUTION",
+      "competition_type": "CAUTION",
+      "niche": "UNKNOWN",
+      "league_raw": "Morocco Botola Pro",
+      "league_key": "morocco botola pro",
+      "home_norm": "farrabat",
+      "away_norm": "crkhemiszemamra",
+      "odds_band_name": "1.20-1.35",
+      "comp_type_name": "league",
+      "side_role": "home"
+    },
+    "bucket": "CAUTION",
+    "edge_status": "certified",
+    "decay_verdict": "WATCH",
+    "market_type": "1x2",
+    "odds_tier": "low",
+    "odds_match_status": "matched",
+    "market_expression_version": "phase1-warning-only",
+    "recommended_market": "avoid_raw_1x2",
+    "draw_risk_flag": "HIGH",
+    "market_recommendation_reason": "historically unstable out of sample above 1.25"
+  }
+]
