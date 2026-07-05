@@ -89,10 +89,24 @@ def decay_verdict(
     return DecayReport(v, b_lb, r_lb, r_ub, recent_n)
 
 def should_bench(report: DecayReport, recent_roi: float | None = None) -> bool:
-    """Bench an edge if decay says so, or recent ROI has gone materially negative."""
+    """Bench an edge if decay says so, or recent ROI has gone materially negative.
+
+    Five benching gates (any one triggers):
+      1. DEAD or DECAYING verdict  → structural decay confirmed
+      2. n >= 30 AND roi < -5%     → original moderate-ROI bail
+      3. n >= 20 AND roi < -10%    → deep-ROI bail (catches n=25-29 blowouts)
+      4. WATCH verdict AND n >= 20 AND roi < -5%  →WATCH + moderate negative ROI
+      5. n >= 40 AND roi < -3%     → large-sample shallow-ROI bail
+    """
     if report.verdict in ("DEAD", "DECAYING"):
         return True
     if recent_roi is not None and report.n_recent >= 30 and recent_roi < -0.05:
+        return True
+    if recent_roi is not None and report.n_recent >= 20 and recent_roi < -0.10:
+        return True
+    if recent_roi is not None and report.verdict == "WATCH" and report.n_recent >= 20 and recent_roi < -0.05:
+        return True
+    if recent_roi is not None and report.n_recent >= 40 and recent_roi < -0.03:
         return True
     return False
 
