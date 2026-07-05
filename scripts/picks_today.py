@@ -243,7 +243,7 @@ TOXIC_SHORT_ODDS_LEAGUES = {
 # barely clears; below that the math flips negative.  This is a surgical fix
 # that preserves the CAUTION bucket for longer-odds picks while eliminating
 # the short-odds trap.
-CAUTION_MIN_ODDS = 1.40
+CAUTION_MIN_ODDS = 1.30
 
 
 def annotate_market_recommendation(pick: dict):
@@ -617,9 +617,6 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
 
     if market == "1x2" and sel == "away" and odds is not None and float(odds) < 1.30:
         pick["veto_reason"] = f"short-odds away favourite {float(odds):.2f}"
-        return BUCKET_SKIP_VETO
-    if market == "1x2" and odds is not None and float(odds) >= 1.25:
-        pick["veto_reason"] = f"1x2 odds {float(odds):.2f} >= 1.25 draw risk"
         return BUCKET_SKIP_VETO
     if short_sniper and league_key in TOXIC_SHORT_ODDS_LEAGUES:
         return BUCKET_SKIP_VETO
