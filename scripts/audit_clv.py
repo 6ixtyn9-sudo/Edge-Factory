@@ -166,6 +166,7 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
     alias_unique_matches = 0
     bzz_matches = 0
     scouting_matches = 0
+    betexplorer_matches = 0
     unmatched_details: list[dict[str, Any]] = []
 
     for pick in picks:
@@ -186,19 +187,23 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
         secondary_odds = odds_pair.get("secondary", {})
         picks_today.enrich_with_live_odds([live_pick], primary_odds, secondary_odds)
         match_method = str(live_pick.get("odds_match_method") or "")
-        live_odds_matched = match_method in {"exact", "alias_time", "alias_unique"}
+        live_odds_matched = match_method in {"exact", "alias_time", "alias_unique", "betexplorer"}
         if live_odds_matched:
             matched += 1
             if live_pick.get("odds_source") == picks_today.BZZOIRO_ODDS_SOURCE:
                 bzz_matches += 1
             elif live_pick.get("odds_source") == picks_today.SCOUTINGSTATS_ODDS_SOURCE:
                 scouting_matches += 1
+            elif live_pick.get("odds_source") == picks_today.BETEXPLORER_ODDS_SOURCE:
+                betexplorer_matches += 1
             if match_method == "exact":
                 exact_matches += 1
             elif match_method == "alias_time":
                 alias_time_matches += 1
             elif match_method == "alias_unique":
                 alias_unique_matches += 1
+            elif match_method == "betexplorer":
+                pass  # counted in betexplorer_matches above
         else:
             unmatched_details.append(
                 {
@@ -254,6 +259,7 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
 
     return rows, {
         "picks_read": len(picks),
+        "betexplorer_matches": betexplorer_matches,
         "live_odds_matched": matched,
         "exact_matches": exact_matches,
         "alias_time_matches": alias_time_matches,
@@ -303,6 +309,7 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
     print(f"  live odds matched: {stats['live_odds_matched']}")
     print(f"    bzzoiro: {stats['bzz_matches']}")
     print(f"    scoutingstats: {stats['scouting_matches']}")
+    print(f"    betexplorer: {stats.get('betexplorer_matches', 0)}")
     print(f"    exact: {stats['exact_matches']}")
     print(f"    alias_time: {stats['alias_time_matches']}")
     print(f"    alias_unique: {stats['alias_unique_matches']}")

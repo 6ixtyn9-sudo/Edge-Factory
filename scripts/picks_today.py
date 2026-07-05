@@ -65,6 +65,7 @@ ODDS_EXACT_TEAM_ALIASES = {
     "naftan": "naftannov",           # Naftan → Naftan Novopolotsk (Belarus PL)
     "lions": "queenslan",            # Lions → Queensland Lions FC (NPL Queensland)
     "belshina": "belshinab",         # Belshina → Belshina Bobruisk (Belarus)
+    "thorakure": "thor",             # Thor Akureyri → Thór (Iceland Besta Deildin)
 }
 
 ODDS_MATCH_TEAM_ALIASES = {
@@ -93,6 +94,7 @@ ODDS_MATCH_TEAM_ALIASES = {
     "capeverdeislands": "capeverde",     # Cape Verde Islands → Cape Verde (World Cup)
     "dinamominsk": "fcdinamominsk",      # Dinamo Minsk → FC Dinamo Minsk (Belarus PL)
     "belshina": "belshinabobruisk",      # Belshina → Belshina Bobruisk (Belarus)
+    "thorakureyri": "thor",              # Thor Akureyri → Thór (Iceland Besta Deildin)
 }
 
 DISPLAY_TEAM_ALIASES = {
@@ -1656,14 +1658,21 @@ def main():
             stats=scouting_stats,
         )
         enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
+
+        # Tertiary: BetExplorer odds for niche-league picks that fell through
+        # bzzoiro + scoutingstats (Australian NPL, Belarus, Kuwait, Latvia, etc.)
+        be_enriched = enrich_unmatched_with_betexplorer(picks, day)
+
         if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or enriched_n or picks:
             exact_n = sum(1 for p in picks if p.get("odds_match_method") == "exact")
             alias_time_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_time")
             alias_unique_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_unique")
             fallback_n = sum(1 for p in picks if p.get("odds_match_method") == "fallback")
             none_n = sum(1 for p in picks if p.get("odds_match_method") == "none")
+            betexp_n = sum(1 for p in picks if p.get("odds_match_method") == "betexplorer")
             bzz_n = sum(1 for p in picks if p.get("odds_source") == BZZOIRO_ODDS_SOURCE)
             scouting_n = sum(1 for p in picks if p.get("odds_source") == SCOUTINGSTATS_ODDS_SOURCE)
+            be_source_n = sum(1 for p in picks if p.get("odds_source") == BETEXPLORER_ODDS_SOURCE)
             print(
                 f"live odds enrichment {day}: "
                 f"picks={len(picks)} "
@@ -1673,8 +1682,8 @@ def main():
                 f"bzz_alias_keys={bzz_stats.get('time_match_keys', len(odds_bundle.get('time_candidates', {})))} "
                 f"ss_cached={scouting_stats.get('cached_rows', 0)} "
                 f"ss_valid_keys={scouting_stats.get('valid_keys', len(secondary_bundle.get('exact', {})))} "
-                f"enriched={enriched_n} bzz={bzz_n} scoutingstats={scouting_n} "
-                f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} fallback={fallback_n} none={none_n}",
+                f"enriched={enriched_n} betexplorer={be_enriched} bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
+                f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} fallback={fallback_n} none={none_n} betexplorer_m={betexp_n}",
                 file=sys.stderr,
             )
 
@@ -1754,3 +1763,83 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# ---------------------------------------------------------------- betexplorer --
+BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
+
+
+def enrich_unmatched_with_betexplorer(
+    picks: list[dict],
+    day: str,
+    *,
+    max_fetches: int = 12,
+) -> int:
+    """Enrich picks that fell through bzzoiro + scoutingstats with BetExplorer odds.
+
+    Only fetches odds for picks whose odds_match_method is "fallback" or
+    "none" (i.e. unmatched by primary/secondary sources).  BetExplorer
+    covers niche leagues (Australian NPL, Belarus, Kuwait, Latvia,
+    Tanzania, etc.) that bzzoiro and scoutingstats don't carry.
+
+    This is a targeted fetch — typically 5-10 unmatched picks per day,
+    not the full BetExplorer universe.  Rate-limited to 3s between
+    requests to avoid 429 errors.
+    """
+    try:
+        import importlib.util as _ilu
+        _spec = _ilu.spec_from_file_location(
+            "edgefactory.sources.betexplorer_odds",
+            str(ROOT / "src" / "edgefactory" / "sources" / "betexplorer_odds.py"),
+        )
+        _be_mod = _ilu.module_from_spec(_spec)
+        _spec.loader.exec_module(_be_mod)
+        betexplorer_odds_rows_for_pick = _be_mod.betexplorer_odds_rows_for_pick
+        reset_fetch_count = _be_mod.reset_fetch_count
+        _BE_SOURCE = _be_mod.BETEXPLORER_ODDS_SOURCE
+    except Exception:
+        print("  betexplorer_odds: adapter not available, skipping", file=sys.stderr)
+        return 0
+
+    from edgefactory.util import norm_team as _norm_team
+
+    reset_fetch_count()
+    enriched = 0
+    for pick in picks:
+        method = str(pick.get("odds_match_method") or "")
+        if method not in ("fallback", "none"):
+            continue
+
+        rows = betexplorer_odds_rows_for_pick(pick, day, norm_team_fn=_norm_team)
+        if not rows:
+            continue
+
+        # Find the row matching the pick's selection
+        sel = str(pick.get("pick") or "")
+        market = str(pick.get("market") or "")
+        matching_row = None
+        for r in rows:
+            if str(r.get("selection") or "") == sel and str(r.get("market") or "") == market:
+                matching_row = r
+                break
+
+        if matching_row is None:
+            continue
+
+        new_odds = _valid_decimal_odds(matching_row.get("odds"))
+        if new_odds is None:
+            continue
+
+        previous_odds = pick.get("odds")
+        previous_source = pick.get("odds_source")
+        pick["odds"] = new_odds
+        pick["odds_source"] = _BE_SOURCE
+        pick["odds_match_method"] = "betexplorer"
+        pick["bookmaker"] = matching_row.get("bookmaker")
+        pick["odds_captured_at"] = matching_row.get("captured_at")
+        pick["odds_league"] = matching_row.get("league")
+        if previous_odds is not None and previous_source != pick["odds_source"]:
+            pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+        enriched += 1
+
+    return enriched
