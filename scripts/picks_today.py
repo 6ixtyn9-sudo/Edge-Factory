@@ -234,6 +234,15 @@ TOXIC_SHORT_ODDS_LEAGUES = {
     "estonia meistriliiga",  # keep config-driven expansion later; conservative starter set
 }
 
+# CAUTION odds floor — any CAUTION pick priced below this is reclassified as
+# SKIPPED_VETO.  The CAUTION bucket historically runs at -8.4% ROI (72% HR at
+# avg odds 1.38), because short odds + uncertain context is structurally
+# unprofitable.  At odds 1.40 the breakeven HR is 71.4%, which CAUTION's 72%
+# barely clears; below that the math flips negative.  This is a surgical fix
+# that preserves the CAUTION bucket for longer-odds picks while eliminating
+# the short-odds trap.
+CAUTION_MIN_ODDS = 1.40
+
 
 def annotate_market_recommendation(pick: dict):
     """Add Phase-1 market expression guidance to 1X2 picks."""
@@ -627,12 +636,21 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
             return BUCKET_WL_CTX
 
     if ctx.get("odds_band") == "UNKNOWN":
-        return BUCKET_CAUTION
-    if "CAUTION" in vals:
-        return BUCKET_CAUTION
-    if "UNKNOWN" in (ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("competition_type")):
-        return BUCKET_CAUTION
-    return BUCKET_CERTIFIED
+        bucket = BUCKET_CAUTION
+    elif "CAUTION" in vals:
+        bucket = BUCKET_CAUTION
+    elif "UNKNOWN" in (ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("competition_type")):
+        bucket = BUCKET_CAUTION
+    else:
+        bucket = BUCKET_CERTIFIED
+
+    # CAUTION odds floor: short-odds CAUTION picks are structurally
+    # unprofitable (72% HR can't cover breakeven below 1.40).  Reclassify
+    # to SKIPPED_VETO so they don't enter the betting pipeline.
+    if bucket == BUCKET_CAUTION and odds is not None and float(odds) < CAUTION_MIN_ODDS:
+        return BUCKET_SKIP_VETO
+
+    return bucket
 
 
 # ------------------------------------------------------------------- fetch --
@@ -1247,18 +1265,22 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
         if avg_p < thr:
             continue
         fb = data.get("forebet", {}).get(k) or {}
-        zb = data.get("zulubet", {}).get(k) or {}
         bz = data.get("bzzoiro", {}).get(k) or {}
         vb = data.get("vitibet", {}).get(k) or {}
         anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
         sel = sels[0]
-        # Cascade: forebet best-odds → zulubet odds → None (bzzoiro_odds enriched later)
+        # Cascade: forebet best-odds → None (bzzoiro_odds enriched later).
+        # Zulubet odds are EXCLUDED from the initial cascade: they produce
+        # -17.6% ROI (14 settled, 64.3% HR) vs forebet_best +15.4%.
+        # Zulubet still contributes PREDICTIONS (consensus voting) — only
+        # its PRICING is deprioritised.  Picks that miss forebet odds will
+        # get None here and be enriched by bzzoiro_odds or scoutingstats
+        # in the live-odds step; if no live odds exist they go to
+        # WATCHLIST_NO_ODDS, which is better than betting at zulubet prices.
         _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
         _col = _odds_map[sel]
-        odds = _f(fb.get(_col)) or _f(zb.get(_col)) or None
-        odds_src = ("forebet_best" if _f(fb.get(_col)) is not None
-                    else "zulubet" if _f(zb.get(_col)) is not None
-                    else None)
+        odds = _f(fb.get(_col))
+        odds_src = "forebet_best" if odds is not None else None
         home = canonical_display_team(anchor.get("home"))
         away = canonical_display_team(anchor.get("away"))
         picks.append({
