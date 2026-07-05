@@ -30,10 +30,10 @@ localdata/*
 
 # Analysis artifacts intentionally committed for performance review.
 !localdata/clv_*
-!localdata/betexplorer_results_2026-06.csv.gz
-!localdata/betexplorer_odds_2026-06.csv.gz
-!localdata/whatsapp_sent_ledger_2026-06-*.json
-!localdata/supabase_sync_manifest_2026-06-*.json
+!localdata/betexplorer_results_2026-*.csv.gz
+!localdata/betexplorer_odds_2026-*.csv.gz
+!localdata/whatsapp_sent_ledger_20*.json
+!localdata/supabase_sync_manifest_20*.json
 
 # secrets
 .env
