@@ -12,7 +12,7 @@ z_beta = norm.ppf(power)
 
 n_list = [65, 79, 100, 150, 200, 300, 600]
 
-with open('antigravity_output/antigravity_power_analysis.md', 'w') as f:
+with open('antigravity_output_v2/antigravity_power_analysis_v2.md', 'w') as f:
     f.write("# Statistical Power & Sample Size\n\n")
     f.write(f"**Live Assumptions:** hit ≈ {hit:.3f}, odds ≈ {odds:.2f}, per-bet SD ≈ {sd:.2f}\n\n")
     

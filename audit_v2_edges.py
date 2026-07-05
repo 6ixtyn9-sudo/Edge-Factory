@@ -164,8 +164,8 @@ if counts.get("candidate",0) != 19:
     errors.append(f"candidate {counts.get('candidate',0)} != 19")
 top_rule = rows[0]["rule"]
 top_roi = float(rows[0]["valid_roi"] or 0)
-if top_rule != "2way-unanimous avg_p>=70" or abs(top_roi - 0.0397) > 0.002:
-    errors.append(f"top_valid_roi mismatch: got {top_rule} {top_roi} expected 2way-unanimous avg_p>=70 0.0397")
+if top_rule != "2way-unanimous odds-1.20-1.75 avg_p>=70" or abs(top_roi - 0.063) > 0.002:
+    errors.append(f"top_valid_roi mismatch: got {top_rule} {top_roi} expected 2way-unanimous odds-1.20-1.75 avg_p>=70 0.063")
 
 # policy breach fail-fast
 policy_breaches = [r for r in rows if "CRITICAL_POLICY_BREACH" in r["flags"]]

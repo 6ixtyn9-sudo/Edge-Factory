@@ -23,10 +23,11 @@ for pf in picks_files:
             'clv': p.get('clv', {})
         })
 
-base_roi = sum((p['odds'] - 1) if p['win'] else -1 for p in live_picks) / len(live_picks)
-
-# Scenario 1: Odds slippage -3 ticks (-0.03)
-s1_roi = sum((p['odds'] - 0.03 - 1) if p['win'] else -1 for p in live_picks) / len(live_picks)
+base_roi = 0.0
+s1_roi = 0.0
+if live_picks:
+    base_roi = sum((p['odds'] - 1) if p['win'] else -1 for p in live_picks) / len(live_picks)
+    s1_roi = sum((p['odds'] - 0.03 - 1) if p['win'] else -1 for p in live_picks) / len(live_picks)
 
 # Scenario 2: Best-odds inflation halved (apply 0.5x edge)
 # ROI drops by half
@@ -81,7 +82,7 @@ p50 = np.percentile(terminal_bankrolls, 50) if len(terminal_bankrolls)>0 else 0
 p95 = np.percentile(terminal_bankrolls, 95) if len(terminal_bankrolls)>0 else 0
 ruin_prob = ruin_count / n_sim
 
-with open('antigravity_output/antigravity_redteam_stress.md', 'w') as f:
+with open('antigravity_output_v2/antigravity_redteam_stress_v2.md', 'w') as f:
     f.write("# Red-Team Adversarial Stress\n\n")
     f.write(f"**Base ROI:** {base_roi*100:+.2f}% (n={len(live_picks)})\n\n")
     
