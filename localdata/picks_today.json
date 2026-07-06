@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "date": "2026-07-06",
+    "market": "1x2",
+    "match": "Universidad Catolica vs Mushuc Runa SC",
+    "home": "Universidad Catolica",
+    "away": "Mushuc Runa SC",
+    "kickoff": "06-07, 22:30",
+    "sport": "soccer",
+    "league": "Ecuador Liga Pro",
+    "pick": "home",
+    "avg_p": 67.0,
+    "w_score": 1.0,
+    "odds": 1.55,
+    "odds_source": "scoutingstats_odds",
+    "bookmaker": "scoutingstats_odds",
+    "rule": "3way-unanimous home-only avg_p>=65",
+    "edge_rule": "3way-unanimous home-only avg_p>=65",
+    "display_rule": "3WAY-UNANIMOUS\u226565",
+    "n_way": 3,
+    "edge_n_way": 3,
+    "confidence": null,
+    "model_version": null,
+    "vitibet_index": 2.1,
+    "sources_used": [
+      "zulubet",
+      "vitibet",
+      "betclan"
+    ],
+    "source_weights": {},
+    "as_of": "2026-07-06T13:15:00+02:00",
+    "min_lead_minutes": 30,
+    "odds_match_method": "exact",
+    "odds_captured_at": "2026-07-06T21:30:00Z",
+    "odds_league": "Liga Pro",
+    "odds_replaced": {
+      "source": "zulubet",
+      "odds": 1.52
+    },
+    "ctx": {
+      "league": "UNKNOWN",
+      "team_h": "UNKNOWN",
+      "team_a": "UNKNOWN",
+      "odds_band": "UNKNOWN",
+      "competition_type": "CAUTION",
+      "niche": "UNKNOWN",
+      "league_raw": "Ecuador Liga Pro",
+      "league_key": "ecuador liga pro",
+      "home_norm": "universidadcatolica",
+      "away_norm": "mushucruna",
+      "odds_band_name": "1.50-1.75",
+      "comp_type_name": "league",
+      "side_role": "home"
+    },
+    "bucket": "CAUTION",
+    "edge_status": "certified",
+    "decay_verdict": "WATCH",
+    "market_type": "1x2",
+    "odds_tier": "low",
+    "odds_match_status": "matched",
+    "market_expression_version": "phase1-warning-only",
+    "recommended_market": "avoid_raw_1x2",
+    "draw_risk_flag": "EXTREME",
+    "market_recommendation_reason": "high draw risk and weak signal for raw 1X2"
+  }
+]
