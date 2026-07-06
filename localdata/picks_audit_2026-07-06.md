@@ -2,8 +2,8 @@
 
 ## Overall
 
-- archived pick rows: 1
-- archived pick dates: 1
+- archived pick rows: 2
+- archived pick dates: 2
 - settled picks: 1
 - eligible prior 1x2 picks: 1
 - unmatched result picks: 0
@@ -17,7 +17,7 @@
 
 - include same-day picks: False
 - same-day cutoff date: 2026-07-06
-- same-day rows excluded: 0
+- same-day rows excluded: 1
 
 ## By rule
 
