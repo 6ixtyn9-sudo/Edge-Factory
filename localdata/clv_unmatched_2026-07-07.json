@@ -45,6 +45,19 @@
         "kickoff": "2026-07-07T16:00:00Z",
         "market": "1x2",
         "selection": "home",
+        "odds": 3.45,
+        "bookmaker": "betika",
+        "home_key": "fcararatarmenia",
+        "away_key": "rigafc",
+        "kickoff_delta_minutes": 270
+      },
+      {
+        "home": "FC Ararat-Armenia",
+        "away": "Riga FC",
+        "league": "Champions League",
+        "kickoff": "2026-07-07T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
         "odds": 2.981,
         "bookmaker": "1xBet",
         "home_key": "fcararatarmenia",
@@ -60,19 +73,6 @@
         "selection": "home",
         "odds": 2.98,
         "bookmaker": "Betsson",
-        "home_key": "fcararatarmenia",
-        "away_key": "rigafc",
-        "kickoff_delta_minutes": 270
-      },
-      {
-        "home": "FC Ararat-Armenia",
-        "away": "Riga FC",
-        "league": "Champions League",
-        "kickoff": "2026-07-07T16:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.85,
-        "bookmaker": "Bwin",
         "home_key": "fcararatarmenia",
         "away_key": "rigafc",
         "kickoff_delta_minutes": 270
@@ -143,6 +143,153 @@
         "home_key": "paok",
         "away_key": "aeklarnaca",
         "kickoff_delta_minutes": 270
+      }
+    ]
+  },
+  {
+    "date": "2026-07-07",
+    "kickoff": "07-07, 19:30",
+    "home": "Tre Fiori",
+    "away": "Larne",
+    "league": "World UEFA Champions League",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "trefiori",
+    "away_key": "larne",
+    "nearby_bzzoiro_candidates": [
+      {
+        "home": "V\u00edkingur Reykjav\u00edk",
+        "away": "ETO FC Gy\u0151r",
+        "league": "Champions League",
+        "kickoff": "2026-07-07T19:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.75,
+        "bookmaker": "1xBet",
+        "home_key": "vikingurreykjavik",
+        "away_key": "etofcgyor",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "V\u00edkingur Reykjav\u00edk",
+        "away": "ETO FC Gy\u0151r",
+        "league": "Champions League",
+        "kickoff": "2026-07-07T19:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.58,
+        "bookmaker": "Betsson",
+        "home_key": "vikingurreykjavik",
+        "away_key": "etofcgyor",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Switzerland",
+        "away": "Colombia",
+        "league": "World Cup 2026",
+        "kickoff": "2026-07-07T20:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.29,
+        "bookmaker": "betinasia",
+        "home_key": "switzerland",
+        "away_key": "colombia",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Switzerland",
+        "away": "Colombia",
+        "league": "World Cup 2026",
+        "kickoff": "2026-07-07T20:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.3,
+        "bookmaker": "Betano",
+        "home_key": "switzerland",
+        "away_key": "colombia",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Klaksv\u00edkar \u00cdtr\u00f3ttarfelag",
+        "away": "Atert Bissen",
+        "league": "Champions League",
+        "kickoff": "2026-07-07T18:45:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 7.8,
+        "bookmaker": "Marathon",
+        "home_key": "klaksvikaritrottarfelag",
+        "away_key": "atertbissen",
+        "kickoff_delta_minutes": 45
+      }
+    ],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Switzerland",
+        "away": "Colombia",
+        "league": "World Cup",
+        "kickoff": "2026-07-07T20:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.25,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "switzerland",
+        "away_key": "colombia",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Bedford Town",
+        "away": "Aldershot Town",
+        "league": "Club Friendlies 3",
+        "kickoff": "2026-07-07T18:45:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.61,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "bedfordtown",
+        "away_key": "aldershottown",
+        "kickoff_delta_minutes": 45
+      },
+      {
+        "home": "Airdrieonians",
+        "away": "Falkirk",
+        "league": "Club Friendlies 3",
+        "kickoff": "2026-07-07T18:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.28,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "airdrieonians",
+        "away_key": "falkirk",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Cove Rangers",
+        "away": "Inverness CT",
+        "league": "Club Friendlies 3",
+        "kickoff": "2026-07-07T18:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.8,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "coverangers",
+        "away_key": "invernessct",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Shelbourne",
+        "away": "Celtic",
+        "league": "Club Friendlies 3",
+        "kickoff": "2026-07-07T17:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.27,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "shelbourne",
+        "away_key": "celtic",
+        "kickoff_delta_minutes": 150
       }
     ]
   }
