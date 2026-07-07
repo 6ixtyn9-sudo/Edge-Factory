@@ -3,33 +3,34 @@
   "ambiguous_result_picks": 0,
   "archived_pick_dates": [
     "2026-07-05",
-    "2026-07-06"
+    "2026-07-06",
+    "2026-07-07"
   ],
-  "archived_pick_rows": 2,
+  "archived_pick_rows": 4,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.0,
-      "priced_picks": 1,
+      "priced_picks": 2,
       "roi": -1.0,
-      "settled_picks": 1,
+      "settled_picks": 2,
       "wins": 0
     }
   },
   "by_odds_match_method": {
     "exact": {
       "hit_rate": 0.0,
-      "priced_picks": 1,
+      "priced_picks": 2,
       "roi": -1.0,
-      "settled_picks": 1,
+      "settled_picks": 2,
       "wins": 0
     }
   },
   "by_odds_source": {
     "scoutingstats_odds": {
       "hit_rate": 0.0,
-      "priced_picks": 1,
+      "priced_picks": 2,
       "roi": -1.0,
-      "settled_picks": 1,
+      "settled_picks": 2,
       "wins": 0
     }
   },
@@ -40,21 +41,28 @@
       "roi": -1.0,
       "settled_picks": 1,
       "wins": 0
+    },
+    "3way-unanimous home-only avg_p>=65": {
+      "hit_rate": 0.0,
+      "priced_picks": 1,
+      "roi": -1.0,
+      "settled_picks": 1,
+      "wins": 0
     }
   },
-  "eligible_prior_picks": 1,
-  "end": "2026-07-06",
+  "eligible_prior_picks": 2,
+  "end": "2026-07-07",
   "include_same_day": false,
   "overall": {
     "hit_rate": 0.0,
-    "priced_picks": 1,
+    "priced_picks": 2,
     "roi": -1.0,
-    "settled_picks": 1,
+    "settled_picks": 2,
     "wins": 0
   },
-  "same_day_cutoff": "2026-07-06",
-  "same_day_excluded": 1,
-  "start": "2026-06-07",
+  "same_day_cutoff": "2026-07-07",
+  "same_day_excluded": 2,
+  "start": "2026-06-08",
   "unmatched_examples": [],
   "unmatched_result_picks": 0
 }
