@@ -4,28 +4,57 @@
   "archived_pick_dates": [
     "2026-07-05",
     "2026-07-06",
-    "2026-07-07"
+    "2026-07-07",
+    "2026-07-08"
   ],
-  "archived_pick_rows": 5,
+  "archived_pick_rows": 6,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.0,
+      "hit_rate": 0.333333,
+      "priced_picks": 3,
+      "roi": -0.486667,
+      "settled_picks": 3,
+      "wins": 1
+    },
+    "SKIPPED_VETO": {
+      "hit_rate": 1.0,
       "priced_picks": 2,
-      "roi": -1.0,
+      "roi": 0.425,
       "settled_picks": 2,
-      "wins": 0
+      "wins": 2
     }
   },
   "by_odds_match_method": {
-    "exact": {
-      "hit_rate": 0.0,
+    "betexplorer": {
+      "hit_rate": 1.0,
       "priced_picks": 2,
-      "roi": -1.0,
+      "roi": 0.485,
       "settled_picks": 2,
-      "wins": 0
+      "wins": 2
+    },
+    "exact": {
+      "hit_rate": 0.333333,
+      "priced_picks": 3,
+      "roi": -0.526667,
+      "settled_picks": 3,
+      "wins": 1
     }
   },
   "by_odds_source": {
+    "betexplorer_odds": {
+      "hit_rate": 1.0,
+      "priced_picks": 2,
+      "roi": 0.485,
+      "settled_picks": 2,
+      "wins": 2
+    },
+    "bzzoiro_odds": {
+      "hit_rate": 1.0,
+      "priced_picks": 1,
+      "roi": 0.42,
+      "settled_picks": 1,
+      "wins": 1
+    },
     "scoutingstats_odds": {
       "hit_rate": 0.0,
       "priced_picks": 2,
@@ -36,33 +65,33 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.0,
-      "priced_picks": 1,
-      "roi": -1.0,
-      "settled_picks": 1,
-      "wins": 0
+      "hit_rate": 0.5,
+      "priced_picks": 2,
+      "roi": -0.285,
+      "settled_picks": 2,
+      "wins": 1
     },
     "3way-unanimous home-only avg_p>=65": {
-      "hit_rate": 0.0,
-      "priced_picks": 1,
-      "roi": -1.0,
-      "settled_picks": 1,
-      "wins": 0
+      "hit_rate": 0.666667,
+      "priced_picks": 3,
+      "roi": -0.013333,
+      "settled_picks": 3,
+      "wins": 2
     }
   },
-  "eligible_prior_picks": 2,
-  "end": "2026-07-07",
+  "eligible_prior_picks": 5,
+  "end": "2026-07-08",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.0,
-    "priced_picks": 2,
-    "roi": -1.0,
-    "settled_picks": 2,
-    "wins": 0
+    "hit_rate": 0.6,
+    "priced_picks": 5,
+    "roi": -0.122,
+    "settled_picks": 5,
+    "wins": 3
   },
-  "same_day_cutoff": "2026-07-07",
-  "same_day_excluded": 3,
-  "start": "2026-06-08",
+  "same_day_cutoff": "2026-07-08",
+  "same_day_excluded": 1,
+  "start": "2026-06-09",
   "unmatched_examples": [],
   "unmatched_result_picks": 0
 }
