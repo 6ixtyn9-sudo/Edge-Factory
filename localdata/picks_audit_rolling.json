@@ -5,9 +5,10 @@
     "2026-07-05",
     "2026-07-06",
     "2026-07-07",
-    "2026-07-08"
+    "2026-07-08",
+    "2026-07-09"
   ],
-  "archived_pick_rows": 6,
+  "archived_pick_rows": 7,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.333333,
@@ -18,19 +19,19 @@
     },
     "SKIPPED_VETO": {
       "hit_rate": 1.0,
-      "priced_picks": 2,
-      "roi": 0.425,
-      "settled_picks": 2,
-      "wins": 2
+      "priced_picks": 3,
+      "roi": 0.396667,
+      "settled_picks": 3,
+      "wins": 3
     }
   },
   "by_odds_match_method": {
     "betexplorer": {
       "hit_rate": 1.0,
-      "priced_picks": 2,
-      "roi": 0.485,
-      "settled_picks": 2,
-      "wins": 2
+      "priced_picks": 3,
+      "roi": 0.436667,
+      "settled_picks": 3,
+      "wins": 3
     },
     "exact": {
       "hit_rate": 0.333333,
@@ -43,10 +44,10 @@
   "by_odds_source": {
     "betexplorer_odds": {
       "hit_rate": 1.0,
-      "priced_picks": 2,
-      "roi": 0.485,
-      "settled_picks": 2,
-      "wins": 2
+      "priced_picks": 3,
+      "roi": 0.436667,
+      "settled_picks": 3,
+      "wins": 3
     },
     "bzzoiro_odds": {
       "hit_rate": 1.0,
@@ -72,26 +73,26 @@
       "wins": 1
     },
     "3way-unanimous home-only avg_p>=65": {
-      "hit_rate": 0.666667,
-      "priced_picks": 3,
-      "roi": -0.013333,
-      "settled_picks": 3,
-      "wins": 2
+      "hit_rate": 0.75,
+      "priced_picks": 4,
+      "roi": 0.075,
+      "settled_picks": 4,
+      "wins": 3
     }
   },
-  "eligible_prior_picks": 5,
-  "end": "2026-07-08",
+  "eligible_prior_picks": 6,
+  "end": "2026-07-09",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.6,
-    "priced_picks": 5,
-    "roi": -0.122,
-    "settled_picks": 5,
-    "wins": 3
+    "hit_rate": 0.666667,
+    "priced_picks": 6,
+    "roi": -0.045,
+    "settled_picks": 6,
+    "wins": 4
   },
-  "same_day_cutoff": "2026-07-08",
+  "same_day_cutoff": "2026-07-09",
   "same_day_excluded": 1,
-  "start": "2026-06-09",
+  "start": "2026-06-10",
   "unmatched_examples": [],
   "unmatched_result_picks": 0
 }
