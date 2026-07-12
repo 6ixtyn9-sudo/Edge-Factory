@@ -27,13 +27,13 @@
         "n_priced": 2193
       },
       "valid": {
-        "n": 1461,
-        "wins": 1102,
-        "hit": 0.7543,
-        "wilson_lb": 0.7316,
-        "avg_odds": 1.39,
-        "roi": -0.005,
-        "n_priced": 1318
+        "n": 1475,
+        "wins": 1113,
+        "hit": 0.7546,
+        "wilson_lb": 0.732,
+        "avg_odds": 1.389,
+        "roi": -0.0056,
+        "n_priced": 1331
       },
       "status": "candidate"
     },
@@ -53,13 +53,13 @@
         "n_priced": 974
       },
       "valid": {
-        "n": 681,
-        "wins": 537,
-        "hit": 0.7885,
-        "wilson_lb": 0.7563,
-        "avg_odds": 1.312,
-        "roi": -0.0007,
-        "n_priced": 608
+        "n": 687,
+        "wins": 542,
+        "hit": 0.7889,
+        "wilson_lb": 0.7569,
+        "avg_odds": 1.311,
+        "roi": -0.0016,
+        "n_priced": 614
       },
       "status": "candidate"
     },
@@ -79,29 +79,29 @@
         "n_priced": 368
       },
       "valid": {
-        "n": 257,
-        "wins": 222,
-        "hit": 0.8638,
-        "wilson_lb": 0.8165,
-        "avg_odds": 1.236,
-        "roi": 0.0397,
-        "n_priced": 240
+        "n": 259,
+        "wins": 224,
+        "hit": 0.8649,
+        "wilson_lb": 0.8179,
+        "avg_odds": 1.234,
+        "roi": 0.0396,
+        "n_priced": 242
       },
       "status": "certified",
       "decay": {
         "verdict": "WATCH",
         "window_days": 60,
-        "checked_at": "2026-07-09",
+        "checked_at": "2026-07-12",
         "recent": {
-          "n": 21,
-          "wins": 17,
-          "hit": 0.8095,
-          "wilson_lb": 0.6,
-          "roi": -0.0305
+          "n": 23,
+          "wins": 19,
+          "hit": 0.8261,
+          "wilson_lb": 0.6286,
+          "roi": -0.0257
         },
-        "baseline_lb": 0.8165,
-        "recent_lb": 0.6,
-        "recent_ub": 0.9233
+        "baseline_lb": 0.8179,
+        "recent_lb": 0.6286,
+        "recent_ub": 0.9302
       }
     },
     {
@@ -120,13 +120,13 @@
         "n_priced": 6792
       },
       "valid": {
-        "n": 4111,
-        "wins": 1371,
-        "hit": 0.3335,
+        "n": 4124,
+        "wins": 1375,
+        "hit": 0.3334,
         "wilson_lb": 0.3192,
-        "avg_odds": 3.076,
-        "roi": -0.0927,
-        "n_priced": 3719
+        "avg_odds": 3.077,
+        "roi": -0.0925,
+        "n_priced": 3732
       },
       "status": "candidate"
     },
@@ -146,13 +146,13 @@
         "n_priced": 974
       },
       "valid": {
-        "n": 681,
-        "wins": 537,
-        "hit": 0.7885,
-        "wilson_lb": 0.7563,
-        "avg_odds": 1.312,
-        "roi": -0.0007,
-        "n_priced": 608
+        "n": 687,
+        "wins": 542,
+        "hit": 0.7889,
+        "wilson_lb": 0.7569,
+        "avg_odds": 1.311,
+        "roi": -0.0016,
+        "n_priced": 614
       },
       "status": "candidate"
     },
@@ -172,13 +172,13 @@
         "n_priced": 1390
       },
       "valid": {
-        "n": 854,
-        "wins": 658,
-        "hit": 0.7705,
-        "wilson_lb": 0.7411,
-        "avg_odds": 1.324,
-        "roi": -0.0109,
-        "n_priced": 798
+        "n": 860,
+        "wins": 662,
+        "hit": 0.7698,
+        "wilson_lb": 0.7405,
+        "avg_odds": 1.323,
+        "roi": -0.0129,
+        "n_priced": 803
       },
       "status": "candidate"
     },
@@ -198,31 +198,31 @@
         "n_priced": 615
       },
       "valid": {
-        "n": 419,
-        "wins": 343,
-        "hit": 0.8186,
-        "wilson_lb": 0.7789,
-        "avg_odds": 1.254,
-        "roi": 0.005,
-        "n_priced": 393
+        "n": 420,
+        "wins": 344,
+        "hit": 0.819,
+        "wilson_lb": 0.7794,
+        "avg_odds": 1.253,
+        "roi": 0.0051,
+        "n_priced": 394
       },
       "status": "benched",
       "decay": {
-        "verdict": "DECAYING",
+        "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-09",
+        "checked_at": "2026-07-12",
         "recent": {
-          "n": 40,
-          "wins": 31,
-          "hit": 0.775,
-          "wilson_lb": 0.625,
-          "roi": -0.047
+          "n": 41,
+          "wins": 32,
+          "hit": 0.7805,
+          "wilson_lb": 0.6329,
+          "roi": -0.0451
         },
-        "baseline_lb": 0.7789,
-        "recent_lb": 0.625,
-        "recent_ub": 0.8768
+        "baseline_lb": 0.7794,
+        "recent_lb": 0.6329,
+        "recent_ub": 0.88
       },
-      "benched_at": "2026-07-09"
+      "benched_at": "2026-07-12"
     },
     {
       "rule": "3way-unanimous avg_p>=70",
@@ -240,13 +240,13 @@
         "n_priced": 199
       },
       "valid": {
-        "n": 130,
-        "wins": 112,
-        "hit": 0.8615,
-        "wilson_lb": 0.7917,
-        "avg_odds": 1.184,
-        "roi": -0.0043,
-        "n_priced": 122
+        "n": 131,
+        "wins": 113,
+        "hit": 0.8626,
+        "wilson_lb": 0.7932,
+        "avg_odds": 1.183,
+        "roi": -0.0041,
+        "n_priced": 123
       },
       "status": "candidate"
     },
@@ -266,13 +266,13 @@
         "n_priced": 1390
       },
       "valid": {
-        "n": 854,
-        "wins": 658,
-        "hit": 0.7705,
-        "wilson_lb": 0.7411,
-        "avg_odds": 1.324,
-        "roi": -0.0109,
-        "n_priced": 798
+        "n": 860,
+        "wins": 662,
+        "hit": 0.7698,
+        "wilson_lb": 0.7405,
+        "avg_odds": 1.323,
+        "roi": -0.0129,
+        "n_priced": 803
       },
       "status": "candidate"
     },
@@ -292,13 +292,13 @@
         "n_priced": 199
       },
       "valid": {
-        "n": 130,
-        "wins": 112,
-        "hit": 0.8615,
-        "wilson_lb": 0.7917,
-        "avg_odds": 1.184,
-        "roi": -0.0043,
-        "n_priced": 122
+        "n": 131,
+        "wins": 113,
+        "hit": 0.8626,
+        "wilson_lb": 0.7932,
+        "avg_odds": 1.183,
+        "roi": -0.0041,
+        "n_priced": 123
       },
       "status": "candidate"
     },
@@ -318,29 +318,29 @@
         "n_priced": 665
       },
       "valid": {
-        "n": 500,
-        "wins": 400,
-        "hit": 0.8,
-        "wilson_lb": 0.7627,
-        "avg_odds": 1.306,
-        "roi": 0.0021,
-        "n_priced": 453
+        "n": 504,
+        "wins": 403,
+        "hit": 0.7996,
+        "wilson_lb": 0.7624,
+        "avg_odds": 1.305,
+        "roi": 0.0007,
+        "n_priced": 457
       },
       "status": "certified",
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-09",
+        "checked_at": "2026-07-12",
         "recent": {
-          "n": 44,
-          "wins": 35,
-          "hit": 0.7955,
-          "wilson_lb": 0.655,
-          "roi": -0.0095
+          "n": 48,
+          "wins": 38,
+          "hit": 0.7917,
+          "wilson_lb": 0.6574,
+          "roi": -0.0221
         },
-        "baseline_lb": 0.7627,
-        "recent_lb": 0.655,
-        "recent_ub": 0.8885
+        "baseline_lb": 0.7624,
+        "recent_lb": 0.6574,
+        "recent_ub": 0.8827
       }
     },
     {
@@ -359,13 +359,13 @@
         "n_priced": 332
       },
       "valid": {
-        "n": 240,
-        "wins": 206,
-        "hit": 0.8583,
-        "wilson_lb": 0.8086,
-        "avg_odds": 1.243,
-        "roi": 0.0379,
-        "n_priced": 224
+        "n": 241,
+        "wins": 207,
+        "hit": 0.8589,
+        "wilson_lb": 0.8093,
+        "avg_odds": 1.242,
+        "roi": 0.0378,
+        "n_priced": 225
       },
       "status": "candidate"
     },
@@ -397,7 +397,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 60,
-        "checked_at": "2026-07-09",
+        "checked_at": "2026-07-12",
         "recent": {
           "n": 28,
           "wins": 20,
@@ -409,7 +409,7 @@
         "recent_lb": 0.5294,
         "recent_ub": 0.8475
       },
-      "benched_at": "2026-07-09"
+      "benched_at": "2026-07-12"
     },
     {
       "rule": "3way-unanimous min_p>=60 avg_p>=65",
@@ -439,7 +439,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 60,
-        "checked_at": "2026-07-09",
+        "checked_at": "2026-07-12",
         "recent": {
           "n": 27,
           "wins": 20,
@@ -451,7 +451,7 @@
         "recent_lb": 0.5532,
         "recent_ub": 0.8683
       },
-      "benched_at": "2026-07-09"
+      "benched_at": "2026-07-12"
     },
     {
       "rule": "2way-unanimous odds-1.20-1.75 avg_p>=65",
@@ -469,13 +469,13 @@
         "n_priced": 604
       },
       "valid": {
-        "n": 372,
-        "wins": 262,
-        "hit": 0.7043,
-        "wilson_lb": 0.656,
-        "avg_odds": 1.394,
-        "roi": -0.0283,
-        "n_priced": 372
+        "n": 374,
+        "wins": 263,
+        "hit": 0.7032,
+        "wilson_lb": 0.655,
+        "avg_odds": 1.395,
+        "roi": -0.0303,
+        "n_priced": 374
       },
       "status": "candidate"
     },
@@ -521,13 +521,13 @@
         "n_priced": 995
       },
       "valid": {
-        "n": 541,
+        "n": 543,
         "wins": 376,
-        "hit": 0.695,
-        "wilson_lb": 0.655,
-        "avg_odds": 1.394,
-        "roi": -0.0411,
-        "n_priced": 541
+        "hit": 0.6924,
+        "wilson_lb": 0.6524,
+        "avg_odds": 1.395,
+        "roi": -0.0447,
+        "n_priced": 543
       },
       "status": "candidate"
     },
@@ -573,29 +573,29 @@
         "n_priced": 688
       },
       "valid": {
-        "n": 457,
-        "wins": 370,
-        "hit": 0.8096,
-        "wilson_lb": 0.7711,
-        "avg_odds": 1.288,
-        "roi": 0.0177,
-        "n_priced": 410
+        "n": 462,
+        "wins": 374,
+        "hit": 0.8095,
+        "wilson_lb": 0.7712,
+        "avg_odds": 1.287,
+        "roi": 0.016,
+        "n_priced": 415
       },
       "status": "certified",
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-09",
+        "checked_at": "2026-07-12",
         "recent": {
-          "n": 31,
-          "wins": 26,
-          "hit": 0.8387,
-          "wilson_lb": 0.6737,
-          "roi": 0.0687
+          "n": 36,
+          "wins": 30,
+          "hit": 0.8333,
+          "wilson_lb": 0.6811,
+          "roi": 0.0422
         },
-        "baseline_lb": 0.7711,
-        "recent_lb": 0.6737,
-        "recent_ub": 0.9291
+        "baseline_lb": 0.7712,
+        "recent_lb": 0.6811,
+        "recent_ub": 0.9213
       }
     },
     {
@@ -614,13 +614,13 @@
         "n_priced": 259
       },
       "valid": {
-        "n": 174,
-        "wins": 151,
-        "hit": 0.8678,
-        "wilson_lb": 0.8095,
-        "avg_odds": 1.216,
+        "n": 176,
+        "wins": 153,
+        "hit": 0.8693,
+        "wilson_lb": 0.8115,
+        "avg_odds": 1.214,
         "roi": 0.0287,
-        "n_priced": 162
+        "n_priced": 164
       },
       "status": "candidate"
     },
@@ -640,13 +640,13 @@
         "n_priced": 286
       },
       "valid": {
-        "n": 224,
-        "wins": 167,
-        "hit": 0.7455,
-        "wilson_lb": 0.6847,
-        "avg_odds": 1.361,
-        "roi": -0.0388,
-        "n_priced": 198
+        "n": 225,
+        "wins": 168,
+        "hit": 0.7467,
+        "wilson_lb": 0.686,
+        "avg_odds": 1.36,
+        "roi": -0.0383,
+        "n_priced": 199
       },
       "status": "candidate"
     },
@@ -666,31 +666,31 @@
         "n_priced": 1074
       },
       "valid": {
-        "n": 632,
-        "wins": 496,
-        "hit": 0.7848,
-        "wilson_lb": 0.7511,
-        "avg_odds": 1.315,
-        "roi": 0.0066,
-        "n_priced": 596
+        "n": 638,
+        "wins": 500,
+        "hit": 0.7837,
+        "wilson_lb": 0.7501,
+        "avg_odds": 1.314,
+        "roi": 0.0039,
+        "n_priced": 601
       },
       "status": "benched",
       "decay": {
         "verdict": "DECAYING",
         "window_days": 60,
-        "checked_at": "2026-07-09",
+        "checked_at": "2026-07-12",
         "recent": {
-          "n": 55,
-          "wins": 41,
-          "hit": 0.7455,
-          "wilson_lb": 0.617,
-          "roi": -0.0367
+          "n": 60,
+          "wins": 45,
+          "hit": 0.75,
+          "wilson_lb": 0.6277,
+          "roi": -0.0449
         },
-        "baseline_lb": 0.7511,
-        "recent_lb": 0.617,
-        "recent_ub": 0.8419
+        "baseline_lb": 0.7501,
+        "recent_lb": 0.6277,
+        "recent_ub": 0.8422
       },
-      "benched_at": "2026-07-09"
+      "benched_at": "2026-07-12"
     },
     {
       "rule": "3way-unanimous home-only avg_p>=65",
@@ -708,29 +708,29 @@
         "n_priced": 495
       },
       "valid": {
-        "n": 328,
-        "wins": 267,
-        "hit": 0.814,
-        "wilson_lb": 0.7684,
-        "avg_odds": 1.253,
-        "roi": 0.0031,
-        "n_priced": 310
+        "n": 329,
+        "wins": 268,
+        "hit": 0.8146,
+        "wilson_lb": 0.7691,
+        "avg_odds": 1.252,
+        "roi": 0.0032,
+        "n_priced": 311
       },
       "status": "certified",
       "decay": {
-        "verdict": "WATCH",
+        "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-09",
+        "checked_at": "2026-07-12",
         "recent": {
-          "n": 29,
-          "wins": 23,
-          "hit": 0.7931,
-          "wilson_lb": 0.6161,
-          "roi": -0.0283
+          "n": 30,
+          "wins": 24,
+          "hit": 0.8,
+          "wilson_lb": 0.6269,
+          "roi": -0.0263
         },
-        "baseline_lb": 0.7684,
-        "recent_lb": 0.6161,
-        "recent_ub": 0.9015
+        "baseline_lb": 0.7691,
+        "recent_lb": 0.6269,
+        "recent_ub": 0.9049
       }
     },
     {
@@ -775,30 +775,31 @@
         "n_priced": 495
       },
       "valid": {
-        "n": 357,
+        "n": 358,
         "wins": 284,
-        "hit": 0.7955,
-        "wilson_lb": 0.7506,
+        "hit": 0.7933,
+        "wilson_lb": 0.7483,
         "avg_odds": 1.325,
-        "roi": 0.0153,
-        "n_priced": 331
+        "roi": 0.0123,
+        "n_priced": 332
       },
-      "status": "certified",
+      "status": "benched",
       "decay": {
-        "verdict": "HEALTHY",
+        "verdict": "DECAYING",
         "window_days": 60,
-        "checked_at": "2026-07-09",
+        "checked_at": "2026-07-12",
         "recent": {
-          "n": 37,
+          "n": 38,
           "wins": 28,
-          "hit": 0.7568,
-          "wilson_lb": 0.5988,
-          "roi": -0.0111
+          "hit": 0.7368,
+          "wilson_lb": 0.5799,
+          "roi": -0.0371
         },
-        "baseline_lb": 0.7506,
-        "recent_lb": 0.5988,
-        "recent_ub": 0.8664
-      }
+        "baseline_lb": 0.7483,
+        "recent_lb": 0.5799,
+        "recent_ub": 0.8503
+      },
+      "benched_at": "2026-07-12"
     },
     {
       "rule": "2way+bc-confirms avg_p>=65",
@@ -842,13 +843,13 @@
         "n_priced": 7698
       },
       "valid": {
-        "n": 6005,
-        "wins": 3701,
-        "hit": 0.6163,
-        "wilson_lb": 0.6039,
+        "n": 6032,
+        "wins": 3720,
+        "hit": 0.6167,
+        "wilson_lb": 0.6044,
         "avg_odds": 1.606,
-        "roi": -0.0288,
-        "n_priced": 5042
+        "roi": -0.0286,
+        "n_priced": 5069
       },
       "status": "candidate"
     },
@@ -868,13 +869,13 @@
         "n_priced": 4198
       },
       "valid": {
-        "n": 3275,
-        "wins": 2122,
-        "hit": 0.6479,
-        "wilson_lb": 0.6314,
-        "avg_odds": 1.532,
-        "roi": -0.0267,
-        "n_priced": 2664
+        "n": 3296,
+        "wins": 2136,
+        "hit": 0.6481,
+        "wilson_lb": 0.6316,
+        "avg_odds": 1.53,
+        "roi": -0.0272,
+        "n_priced": 2685
       },
       "status": "candidate"
     },
@@ -894,13 +895,13 @@
         "n_priced": 2040
       },
       "valid": {
-        "n": 1618,
-        "wins": 1100,
-        "hit": 0.6799,
-        "wilson_lb": 0.6567,
-        "avg_odds": 1.474,
-        "roi": -0.0097,
-        "n_priced": 1279
+        "n": 1634,
+        "wins": 1109,
+        "hit": 0.6787,
+        "wilson_lb": 0.6557,
+        "avg_odds": 1.472,
+        "roi": -0.0127,
+        "n_priced": 1295
       },
       "status": "candidate"
     },
@@ -920,13 +921,13 @@
         "n_priced": 869
       },
       "valid": {
-        "n": 699,
-        "wins": 490,
-        "hit": 0.701,
-        "wilson_lb": 0.666,
-        "avg_odds": 1.409,
-        "roi": -0.0377,
-        "n_priced": 534
+        "n": 709,
+        "wins": 496,
+        "hit": 0.6996,
+        "wilson_lb": 0.6648,
+        "avg_odds": 1.407,
+        "roi": -0.0403,
+        "n_priced": 544
       },
       "status": "candidate"
     }
