@@ -16,9 +16,10 @@
     "2026-07-20",
     "2026-07-21",
     "2026-07-22",
-    "2026-07-23"
+    "2026-07-23",
+    "2026-07-24"
   ],
-  "archived_pick_rows": 44,
+  "archived_pick_rows": 47,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.428571,
@@ -28,11 +29,11 @@
       "wins": 3
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.857143,
-      "priced_picks": 28,
-      "roi": 0.117857,
-      "settled_picks": 28,
-      "wins": 24
+      "hit_rate": 0.833333,
+      "priced_picks": 30,
+      "roi": 0.081,
+      "settled_picks": 30,
+      "wins": 25
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.8,
@@ -51,11 +52,11 @@
       "wins": 23
     },
     "exact": {
-      "hit_rate": 0.666667,
-      "priced_picks": 12,
-      "roi": -0.0075,
-      "settled_picks": 12,
-      "wins": 8
+      "hit_rate": 0.642857,
+      "priced_picks": 14,
+      "roi": -0.068571,
+      "settled_picks": 14,
+      "wins": 9
     }
   },
   "by_odds_source": {
@@ -67,11 +68,11 @@
       "wins": 23
     },
     "bzzoiro_odds": {
-      "hit_rate": 1.0,
-      "priced_picks": 6,
-      "roi": 0.56,
-      "settled_picks": 6,
-      "wins": 6
+      "hit_rate": 0.875,
+      "priced_picks": 8,
+      "roi": 0.31125,
+      "settled_picks": 8,
+      "wins": 7
     },
     "scoutingstats_odds": {
       "hit_rate": 0.333333,
@@ -90,11 +91,11 @@
       "wins": 8
     },
     "3way-unanimous avg_p>=65": {
-      "hit_rate": 0.333333,
-      "priced_picks": 3,
-      "roi": -0.646667,
-      "settled_picks": 3,
-      "wins": 1
+      "hit_rate": 0.4,
+      "priced_picks": 5,
+      "roi": -0.562,
+      "settled_picks": 5,
+      "wins": 2
     },
     "3way-unanimous home-only avg_p>=60": {
       "hit_rate": 0.9,
@@ -111,19 +112,19 @@
       "wins": 13
     }
   },
-  "eligible_prior_picks": 42,
-  "end": "2026-07-23",
+  "eligible_prior_picks": 44,
+  "end": "2026-07-24",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.775,
-    "priced_picks": 40,
-    "roi": 0.0065,
-    "settled_picks": 40,
-    "wins": 31
+    "hit_rate": 0.761905,
+    "priced_picks": 42,
+    "roi": -0.014524,
+    "settled_picks": 42,
+    "wins": 32
   },
-  "same_day_cutoff": "2026-07-23",
-  "same_day_excluded": 2,
-  "start": "2026-06-24",
+  "same_day_cutoff": "2026-07-24",
+  "same_day_excluded": 3,
+  "start": "2026-06-25",
   "unmatched_examples": [
     {
       "away": "Hebei Kungfu",
