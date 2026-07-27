@@ -398,10 +398,14 @@ def main() -> None:
 
     # ----------------- Kickoff-and-Odds Aware Self-Learning Alias Engine -----------------
     scanner_merges = 0
-    print("\nRunning Kickoff-and-Odds Aware Self-Learning Alias Engine...", flush=True)
+    print("\nRunning Kickoff-and-Odds Aware Self-Learning Alias Engine (Incremental Mode: 2026+)...", flush=True)
     all_dates_sorted = sorted(all_matches_by_date.items())
     for idx_day, (day, matches) in enumerate(all_dates_sorted, 1):
-        if idx_day % 20 == 0 or idx_day == len(all_dates_sorted):
+        # Only scan matches from 2026 onwards to keep daily runs near-instantaneous
+        if day < "2026-01-01":
+            continue
+
+        if idx_day % 50 == 0 or idx_day == len(all_dates_sorted):
             print(f"  Scanning date {day}... ({idx_day}/{len(all_dates_sorted)} dates, merged so far: {scanner_merges})", flush=True)
 
         by_min_mod = defaultdict(list)
