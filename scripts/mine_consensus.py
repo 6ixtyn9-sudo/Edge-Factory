@@ -495,6 +495,15 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
         "intercept": float(model.intercept_[0]),
         "feature_cols": feature_cols,
     }
+    
+    # Save predictions to disk so subsequent pipeline stages can recreate the view natively
+    try:
+        ML_PREDS_PATH = ROOT / "localdata" / "ml_meta_predictions.csv.gz"
+        df[['date', 'home', 'away', 'ml_p', 'pick']].to_csv(ML_PREDS_PATH, index=False, compression="gzip")
+        print(f"Saved {len(df):,} ML predictions to disk -> {ML_PREDS_PATH}")
+    except Exception as exc:
+        print(f"Failed to save ML predictions to disk: {exc}")
+
     print(f"ML Meta-Classifier trained successfully! coefficients={payload['coef']}, intercept={payload['intercept']}")
     return payload, model
 

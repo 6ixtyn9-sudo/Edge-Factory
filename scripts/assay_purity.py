@@ -482,6 +482,27 @@ def recreate_views(con) -> set[str]:
             except Exception:
                 pass
 
+    # Recreate ML Meta view if predictions exist on disk (Handover Rule L1 View Graph)
+    ML_PREDS_PATH = ROOT / "localdata" / "ml_meta_predictions.csv.gz"
+    if ML_PREDS_PATH.exists() and _table_exists(con, "consensus3"):
+        try:
+            con.execute(f"""
+                CREATE OR REPLACE TEMP VIEW ml_meta_raw AS
+                SELECT date, home, away, TRY_CAST(ml_p AS DOUBLE) AS ml_p, pick
+                FROM read_csv_auto('{ML_PREDS_PATH}', all_varchar=true, union_by_name=true)
+            """)
+            con.execute("""
+                CREATE OR REPLACE TEMP VIEW ml_meta_settled AS
+                WITH ml AS (SELECT DISTINCT ON (date, home, away) * FROM ml_meta_raw),
+                     c3 AS (SELECT DISTINCT ON (date, home, away) * FROM consensus3)
+                SELECT c3.sport, c3.date, c3.home, c3.away, c3.outcome,
+                       ml.pick, ml.ml_p, c3.pick_odds, c3.league
+                FROM c3 JOIN ml USING (date, home, away)
+            """)
+            avail.add("ml_meta_settled")
+        except Exception:
+            pass
+
     return avail
 
 
