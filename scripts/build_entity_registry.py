@@ -284,6 +284,7 @@ def main() -> None:
     ap.add_argument("--min-overlap-teams", type=int, default=8, help="Minimum shared teams for league overlap merge (default: 8)")
     ap.add_argument("--max-files", type=int, default=0, help="Debug: limit files read (0 = all)")
     ap.add_argument("--dry-run", action="store_true", help="Print summary only, do not write registry")
+    ap.add_argument("--full-scan", action="store_true", help="Scan all historical dates from scratch instead of active year only")
     args = ap.parse_args()
 
     files = sorted(Path(p) for p in glob.glob(str(LOCALDATA / "*.csv.gz")))
@@ -420,11 +421,12 @@ def main() -> None:
 
     # ----------------- Kickoff-and-Odds Aware Self-Learning Alias Engine -----------------
     scanner_merges = 0
-    print("\nRunning Kickoff-and-Odds Aware Self-Learning Alias Engine (Incremental Mode: 2026+)...", flush=True)
+    scan_mode_label = "Full Scan Mode" if args.full_scan else "Incremental Mode: 2026+"
+    print(f"\nRunning Kickoff-and-Odds Aware Self-Learning Alias Engine ({scan_mode_label})...", flush=True)
     all_dates_sorted = sorted(all_matches_by_date.items())
     for idx_day, (day, matches) in enumerate(all_dates_sorted, 1):
-        # Only scan matches from 2026 onwards to keep daily runs near-instantaneous
-        if day < "2026-01-01":
+        # In incremental mode, only scan 2026+ to keep daily runs near-instantaneous
+        if not args.full_scan and day < "2026-01-01":
             continue
 
         if idx_day % 50 == 0 or idx_day == len(all_dates_sorted):
