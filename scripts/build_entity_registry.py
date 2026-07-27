@@ -557,6 +557,7 @@ def main() -> None:
             "min_team_overlap": args.min_team_overlap,
             "min_overlap_teams": args.min_overlap_teams,
             "self_learning_alias_merges": scanner_merges,
+            "full_scan_completed": args.full_scan,
         },
         "alias_index": {
             "leagues": league_alias_index,
