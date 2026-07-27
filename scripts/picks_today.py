@@ -638,9 +638,9 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
         bucket = BUCKET_CAUTION
     elif "CAUTION" in vals:
         bucket = BUCKET_CAUTION
-    elif "UNKNOWN" in (ctx.get("league"), ctx.get("team_h"), ctx.get("team_a"), ctx.get("competition_type")):
-        bucket = BUCKET_CAUTION
     else:
+        # Unrated (UNKNOWN) league, team, or competition_type does not demote a globally certified edge.
+        # It remains CERTIFIED_CLEAN unless there is an explicit, proven CAUTION or VETO context.
         bucket = BUCKET_CERTIFIED
 
     if bucket == BUCKET_CAUTION and odds is not None and float(odds) < CAUTION_MIN_ODDS:
