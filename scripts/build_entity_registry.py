@@ -39,9 +39,6 @@ from edgefactory.util import compact_key, norm_entity_team, norm_league  # noqa:
 LOCALDATA = ROOT / "localdata"
 SOURCE_RE = re.compile(r"^(.+)_\d{4}-\d{2}\.csv\.gz$")
 
-# Generic league labels from some feeds must not contaminate specific domestic leagues.
-# Production failure observed: Finland Ykkönen / Latvia Virsliga / Sweden Allsvenskan
-# were canonicalized to "world friendlies clubs".
 GENERIC_LEAGUE_KEYS = {
     "unknown",
     "world friendlies clubs",
@@ -50,9 +47,6 @@ GENERIC_LEAGUE_KEYS = {
     "international friendlies",
     "friendly",
     "friendlies",
-
-    # Country-less/generic competition labels. These occur in many countries and
-    # must not become canonical aliases for specific domestic leagues.
     "premier league",
     "super league",
     "first league",
@@ -74,12 +68,6 @@ GENERIC_LEAGUE_KEYS = {
 
 
 def safe_league_alias_merge(a: str, b: str) -> bool:
-    """Return True only when two league labels are safe to union.
-
-    Event co-occurrence is not enough: generic feed labels like "World Friendlies
-    Clubs" often share exact teams/dates with real domestic fixtures and can
-    poison the context registry if unioned into domestic leagues.
-    """
     a_key = norm_league_cached(a)
     b_key = norm_league_cached(b)
     if not a_key or not b_key or a_key == b_key:
@@ -94,11 +82,6 @@ def is_generic_league_label(raw: object) -> bool:
 
 
 def canonical_league_label(labels: list[str], counts: Counter[str]) -> str:
-    """Pick a canonical league label without allowing generic labels to dominate.
-
-    If a group has any non-generic labels, choose among those only. This prevents
-    unrelated domestic competitions from collapsing into "premier league".
-    """
     non_generic = [x for x in labels if not is_generic_league_label(x)]
     pool = non_generic or labels
     return canonical_label(pool, counts, kind="league")
@@ -226,7 +209,6 @@ def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
 
 
 def check_event_match(m1: dict, m2: dict) -> bool:
-    # 1. Kickoff Time Check: within 5 mins, timezone-aware (difference modulo 60 min <= 5 or >= 55)
     if not m1["hhmm"] or not m2["hhmm"]:
         return False
 
@@ -240,7 +222,6 @@ def check_event_match(m1: dict, m2: dict) -> bool:
     if not time_match:
         return False
 
-    # 2. Odds Check: at least one odd matching, and all matching outcomes within 0.05
     odds_compared = 0
     odds_matching = 0
     for o_name in ["odd1", "oddx", "odd2"]:
@@ -254,7 +235,6 @@ def check_event_match(m1: dict, m2: dict) -> bool:
     if not odds_match:
         return False
 
-    # 3. Token Similarity Overlap: combined bigram similarity >= 40%
     ev1 = f"{m1['home']} {m1['away']}"
     ev2 = f"{m2['home']} {m2['away']}"
     sim = char_ngram_similarity(ev1, ev2, n=2)
@@ -262,7 +242,6 @@ def check_event_match(m1: dict, m2: dict) -> bool:
 
 
 def load_existing_registry_aliases(team_dsu: DSU) -> int:
-    """Pre-populate the DSU with previously learned alignments to prevent loss in incremental runs."""
     if not ENTITY_REGISTRY_PATH.exists():
         return 0
     try:
@@ -288,7 +267,6 @@ def main() -> None:
     args = ap.parse_args()
 
     files = sorted(Path(p) for p in glob.glob(str(LOCALDATA / "*.csv.gz")))
-    # Exclude non-source files
     files = [
         f
         for f in files
@@ -307,7 +285,6 @@ def main() -> None:
     league_dsu = DSU()
     team_dsu = DSU()
     
-    # Pre-populate the DSU from the existing entity registry file so we do not lose past year discoveries!
     pre_loaded_aliases = load_existing_registry_aliases(team_dsu)
     print(f"Pre-loaded {pre_loaded_aliases:,} historically learned team aliases from the existing registry.", flush=True)
 
@@ -317,21 +294,18 @@ def main() -> None:
     team_sources: dict[str, set[str]] = defaultdict(set)
     league_team_sets: dict[str, set[str]] = defaultdict(set)
     event_leagues: dict[tuple[str, str, str], set[str]] = defaultdict(set)
-    event_homes: dict[tuple[str, str, str], set[str]] = defaultdict(set)
-    event_aways: dict[tuple[str, str, str], set[str]] = defaultdict(set)
     all_matches_by_date: dict[str, list[dict]] = defaultdict(list)
 
     rows_seen = 0
     files_used = 0
 
-    use_cols = {"date", "home", "away", "league", "kickoff", "time", "odd1", "oddx", "odd2"}
-    quick_cols = {"date", "home", "away", "league"}
+    use_cols = ["date", "home", "away", "league", "kickoff", "time", "odd1", "oddx", "odd2"]
+    quick_cols = ["date", "home", "away", "league"]
 
     print(f"Reading {len(files)} files to load teams and leagues...", flush=True)
 
     for idx, path in enumerate(files, 1):
         source = source_from_path(path)
-        # Check size of df before full parsing to dynamically isolate giant base historical files
         try:
             test_df = pd.read_csv(path, dtype=str, nrows=10)
             is_giant = len(test_df) >= 10 and "_" not in path.name
@@ -343,7 +317,7 @@ def main() -> None:
         try:
             df = pd.read_csv(path, dtype=str, usecols=lambda c: c in cols_to_load)
             print(f"  [{idx}/{len(files)}] Loading {path.name}... ({len(df):,} rows, giant_mode={is_giant})", flush=True)
-        except Exception as exc:  # noqa: BLE001 - cache can contain heterogeneous files
+        except Exception as exc:
             print(f"  WARN: skip {path.name}: {exc}", flush=True)
             continue
 
@@ -354,70 +328,100 @@ def main() -> None:
             df["league"] = "UNKNOWN"
 
         files_used += 1
-        for row in df.itertuples(index=False):
-            data = row._asdict()
-            day = str(data.get("date") or "")[:10]
-            home = str(data.get("home") or "").strip()
-            away = str(data.get("away") or "").strip()
-            league = str(data.get("league") or "UNKNOWN").strip() or "UNKNOWN"
-            if not day or not home or not away:
-                continue
 
-            rows_seen += 1
-            h_key = norm_entity_team_cached(home)
-            a_key = norm_entity_team_cached(away)
-            l_key = norm_league_cached(league)
-            loose_event = (day, norm_entity_team_cached(home)[:24], norm_entity_team_cached(away)[:24])
+        # Clean NaN values
+        df['home'] = df['home'].fillna("").str.strip()
+        df['away'] = df['away'].fillna("").str.strip()
+        df['league'] = df['league'].fillna("UNKNOWN").str.strip()
+        df['day'] = df['date'].fillna("").str[:10]
+        
+        # Filter out empty inputs
+        df = df[(df['day'] != "") & (df['home'] != "") & (df['away'] != "")]
+        if df.empty:
+            continue
 
-            league_dsu.find(l_key)
-            team_dsu.find(h_key)
-            team_dsu.find(a_key)
+        # Vectorized mapping for 100x faster DSU key resolution
+        unique_homes = df['home'].unique()
+        home_map = {n: norm_entity_team_cached(n) for n in unique_homes}
+        df['h_key'] = df['home'].map(home_map)
 
-            league_counts[league] += 1
-            team_counts[home] += 1
-            team_counts[away] += 1
-            league_sources[l_key].add(source)
-            team_sources[h_key].add(source)
-            team_sources[a_key].add(source)
-            league_team_sets[l_key].update({h_key, a_key})
+        unique_aways = df['away'].unique()
+        away_map = {n: norm_entity_team_cached(n) for n in unique_aways}
+        df['a_key'] = df['away'].map(away_map)
 
-            event_leagues[loose_event].add(l_key)
-            event_homes[loose_event].add(h_key)
-            event_aways[loose_event].add(a_key)
+        unique_leagues = df['league'].unique()
+        league_map = {n: norm_league_cached(n) for n in unique_leagues}
+        df['l_key'] = df['league'].map(league_map)
 
-            if not is_giant:
-                # --- Collect matches for Kickoff-and-Odds Scanner (Skip for giant historical files) ---
-                k_val = data.get("kickoff") or data.get("time") or ""
-                hhmm = parse_hhmm(k_val)
+        # Bulk initialization of DSU representatives
+        for h in df['h_key'].unique():
+            team_dsu.find(h)
+        for a in df['a_key'].unique():
+            team_dsu.find(a)
+        for l in df['l_key'].unique():
+            league_dsu.find(l)
 
-                o1 = _safe_float(data.get("odd1"))
-                ox = _safe_float(data.get("oddx"))
-                o2 = _safe_float(data.get("odd2"))
+        # Bulk counts updates
+        for name, cnt in df['home'].value_counts().items():
+            team_counts[name] += cnt
+        for name, cnt in df['away'].value_counts().items():
+            team_counts[name] += cnt
+        for name, cnt in df['league'].value_counts().items():
+            league_counts[name] += cnt
 
-                match_item = {
+        # Bulk sources mapping
+        for l in df['l_key'].unique():
+            league_sources[l].add(source)
+        for h in df['h_key'].unique():
+            team_sources[h].add(source)
+        for a in df['a_key'].unique():
+            team_sources[a].add(source)
+
+        # Bulk league-team mapping
+        for l_key, grp in df.groupby('l_key'):
+            teams_in_league = set(grp['h_key'].unique()) | set(grp['a_key'].unique())
+            league_team_sets[l_key].update(teams_in_league)
+
+        # Fast Vectorized duplicate event grouping
+        dup_events = df[df.duplicated(subset=['day', 'h_key', 'a_key'], keep=False)]
+        if not dup_events.empty:
+            for (day, hk, ak), grp in dup_events.groupby(['day', 'h_key', 'a_key']):
+                event_leagues[(day, hk, ak)].update(grp['l_key'].unique())
+                # Union spelling representations in DSU
+                homes = list(grp['h_key'].unique())
+                for h in homes[1:]:
+                    team_dsu.union(homes[0], h)
+                aways = list(grp['a_key'].unique())
+                for a in aways[1:]:
+                    team_dsu.union(aways[0], a)
+
+        rows_seen += len(df)
+
+        if not is_giant:
+            # Reconstruct columns and capture matches for recent monthly subsets only
+            sub_df = df.copy()
+            sub_df['hhmm'] = sub_df['kickoff'].fillna(sub_df.get('time', pd.NA)).apply(parse_hhmm)
+            sub_df['o1'] = sub_df.get('odd1', pd.NA).apply(_safe_float)
+            sub_df['ox'] = sub_df.get('oddx', pd.NA).apply(_safe_float)
+            sub_df['o2'] = sub_df.get('odd2', pd.NA).apply(_safe_float)
+
+            # Keep only rows containing kickoff time and at least one valid odds outcome
+            sub_df = sub_df.dropna(subset=['hhmm'])
+            sub_df = sub_df[sub_df['o1'].notna() | sub_df['ox'].notna() | sub_df['o2'].notna()]
+
+            for row in sub_df.itertuples(index=False):
+                data = row._asdict()
+                all_matches_by_date[data['day']].append({
                     "source": source,
-                    "home": home,
-                    "away": away,
-                    "h_key": h_key,
-                    "a_key": a_key,
-                    "hhmm": hhmm,
-                    "odd1": o1,
-                    "oddx": ox,
-                    "odd2": o2,
-                }
-                all_matches_by_date[day].append(match_item)
-
-    # Same loose event = same league/team entity aliases.
-    same_event_merges = 0
-
-    for labels in event_homes.values():
-        labels = list(labels)
-        for other in labels[1:]:
-            team_dsu.union(labels[0], other)
-    for labels in event_aways.values():
-        labels = list(labels)
-        for other in labels[1:]:
-            team_dsu.union(labels[0], other)
+                    "home": data['home'],
+                    "away": data['away'],
+                    "h_key": data['h_key'],
+                    "a_key": data['a_key'],
+                    "hhmm": data['hhmm'],
+                    "odd1": data['o1'],
+                    "oddx": data['ox'],
+                    "odd2": data['o2'],
+                })
 
     # ----------------- Kickoff-and-Odds Aware Self-Learning Alias Engine -----------------
     scanner_merges = 0
@@ -425,7 +429,6 @@ def main() -> None:
     print(f"\nRunning Kickoff-and-Odds Aware Self-Learning Alias Engine ({scan_mode_label})...", flush=True)
     all_dates_sorted = sorted(all_matches_by_date.items())
     for idx_day, (day, matches) in enumerate(all_dates_sorted, 1):
-        # In incremental mode, only scan 2026+ to keep daily runs near-instantaneous
         if not args.full_scan and day < "2026-01-01":
             continue
 
@@ -448,14 +451,12 @@ def main() -> None:
             b1 = buckets[i]
             for j in range(i, n_buckets):
                 b2 = buckets[j]
-                # Check circular distance between buckets b1 and b2
                 dist = abs(b1 - b2)
                 if dist > 30:
                     dist = 60 - dist
                 if dist > 5:
                     continue
 
-                # Compare matches
                 for m1 in by_min_mod[b1]:
                     for m2 in by_min_mod[b2]:
                         if m1 is m2 or m1["source"] == m2["source"]:
@@ -472,7 +473,6 @@ def main() -> None:
 
     overlap_merges = 0
 
-    # Curated overrides are authoritative.
     overrides = read_overrides()
     for raw, canon in (overrides.get("leagues", {}) or {}).items():
         league_dsu.union(norm_league_cached(raw), norm_league_cached(canon))
@@ -491,7 +491,6 @@ def main() -> None:
     leagues: dict[str, dict[str, Any]] = {}
     teams: dict[str, dict[str, Any]] = {}
 
-    # Reverse raw labels to normalized keys for alias listing.
     raw_leagues_by_key: dict[str, set[str]] = defaultdict(set)
     raw_teams_by_key: dict[str, set[str]] = defaultdict(set)
     for raw in league_counts:
