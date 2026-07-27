@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""picks_today.py with market_type and odds_tier fields (Phase 7)."""
+"""picks_today.py with market_type, odds_tier fields, and integrated ML Meta-Classifier (Phase 7)."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import importlib
 import json
 import re
 import sys
+import math
 from datetime import date, timedelta, datetime
 from zoneinfo import ZoneInfo
 from pathlib import Path
@@ -236,13 +237,7 @@ TOXIC_SHORT_ODDS_LEAGUES = {
     "estonia meistriliiga",  # keep config-driven expansion later; conservative starter set
 }
 
-# CAUTION odds floor — any CAUTION pick priced below this is reclassified as
-# SKIPPED_VETO.  The CAUTION bucket historically runs at -8.4% ROI (72% HR at
-# avg odds 1.38), because short odds + uncertain context is structurally
-# unprofitable.  At odds 1.40 the breakeven HR is 71.4%, which CAUTION's 72%
-# barely clears; below that the math flips negative.  This is a surgical fix
-# that preserves the CAUTION bucket for longer-odds picks while eliminating
-# the short-odds trap.
+# CAUTION odds floor
 CAUTION_MIN_ODDS = 1.30
 
 
@@ -270,6 +265,8 @@ def annotate_market_recommendation(pick: dict):
 # ---------------------------------------------------------------- registry --
 def display_rule(market: str, n_way: int, threshold: float) -> str:
     """Short human label; edge_rule remains the exact miner rule for lookups."""
+    if "ml-meta" in market or n_way == 0:
+        return f"ML-META≥{threshold:.0f}"
     if market == "1x2":
         return f"{n_way}WAY-UNANIMOUS≥{threshold:.0f}"
     if market == "ou_2.5":
@@ -284,6 +281,17 @@ def _edge_entry(edge: dict) -> dict | None:
     market = edge.get("market", "1x2")
     mn, mt = _RULE_NWAY.search(rule), _RULE_THR.search(rule)
     if not mn or not mt:
+        if "ml-meta" in rule:
+            mt = _RULE_THR.search(rule)
+            if mt:
+                threshold = float(mt.group(1))
+                return {
+                    "n_way": 3,
+                    "threshold": threshold,
+                    "rule": rule,
+                    "display_rule": f"ML-META≥{threshold:.0f}",
+                    "market": market,
+                }
         return None
     n_way, threshold = int(mn.group(1)), float(mt.group(1))
     return {
@@ -298,33 +306,19 @@ def _edge_entry(edge: dict) -> dict | None:
 _QUALIFIED_TOKENS = ("min_p", "home-only", "away-only", "odds-", "bc-confirms", "predictz-confirms", "windrawwin-confirms", "freesupertips-confirms")
 
 def _is_qualified(rule: str) -> bool:
-    """Qualified rules are analysis variants (min_p, home-only, etc.) that must
-    not displace the base canonical rule as the operational picks_today threshold.
-    They are miner-level findings — they inform the purity assay, not the
-    picks_today threshold selector."""
     r = rule.lower()
     return any(tok in r for tok in _QUALIFIED_TOKENS)
 
 
 def _prefer_entry(new: dict, old: dict | None) -> bool:
-    """Prefer the base canonical rule for operational use in picks_today.
-
-    Priority (highest first):
-      1. Unqualified rule beats any qualified rule (min_p, home-only, etc.)
-      2. Lower threshold beats higher threshold (wider coverage)
-      3. Shorter/simpler rule name beats longer/more specific
-    """
     if old is None:
         return True
     new_qual = _is_qualified(new["rule"])
     old_qual = _is_qualified(old["rule"])
-    # Unqualified always beats qualified
     if new_qual != old_qual:
-        return old_qual  # prefer new only if old is qualified and new is not
-    # Both same qualification status: prefer lower threshold
+        return old_qual
     if new["threshold"] != old["threshold"]:
         return new["threshold"] < old["threshold"]
-    # Same threshold: prefer simpler (shorter) rule
     new_rule, old_rule = new["rule"].lower(), old["rule"].lower()
     new_penalty = ("no-draw" in new_rule, len(new_rule))
     old_penalty = ("no-draw" in old_rule, len(old_rule))
@@ -332,11 +326,6 @@ def _prefer_entry(new: dict, old: dict | None) -> bool:
 
 
 def load_thresholds():
-    """Return certified thresholds with exact edge rule names.
-
-    The exact miner `rule` is used for edge_meta and purity context lookups;
-    `display_rule` is only for printing.
-    """
     edges = []
     try:
         data = json.loads(EDGES_PATH.read_text())
@@ -389,6 +378,38 @@ def load_thresholds():
     return t1x2, ou_best, btts_best, not bool(edges)
 
 
+def load_ml_rules_and_model() -> tuple[list[dict], dict | None]:
+    try:
+        data = json.loads(EDGES_PATH.read_text())
+        edges = data.get("edges", [])
+        rules = [e for e in edges if e.get("status") == "certified" and "ml-meta" in e.get("rule", "")]
+        model = data.get("ml_model")
+        return rules, model
+    except Exception:
+        return [], None
+
+
+def get_rolling_hit_rate_last_14d(target_date_str: str) -> float:
+    try:
+        import duckdb
+        con = duckdb.connect(str(LOCALDATA / "warehouse.duckdb"), read_only=True)
+        q = f"""
+            SELECT COUNT(*) AS n,
+                   SUM(CASE WHEN fb_pick = outcome THEN 1 ELSE 0 END) AS wins
+            FROM consensus3
+            WHERE date >= CAST('{target_date_str}' AS DATE) - INTERVAL 14 DAY
+              AND date < '{target_date_str}'
+              AND outcome IS NOT NULL
+        """
+        row = con.execute(q).fetchone()
+        con.close()
+        if row and row[0] and row[0] > 0:
+            return float(row[1] / row[0])
+    except Exception:
+        pass
+    return 0.75
+
+
 def load_edge_meta():
     """Return edge metadata keyed by exact miner rule and display alias."""
     try:
@@ -419,12 +440,6 @@ def thr_for(n_sources: int, t1x2: dict[int, dict]):
 
 
 def load_source_weights(market: str = "1x2") -> dict[str, float]:
-    """Load per-source Wilson LB weights from edges_consensus.json.
-
-    Looks for the best (highest w_score threshold) certified weighted rule
-    and returns its source_weights dict.  Falls back to equal weights (1.0)
-    for every source if no weighted edge is certified yet.
-    """
     try:
         data = json.loads(EDGES_PATH.read_text())
         best_thr = -1.0
@@ -436,7 +451,6 @@ def load_source_weights(market: str = "1x2") -> dict[str, float]:
                 continue
             if e.get("status") != "certified":
                 continue
-            # parse threshold from rule name e.g. "weighted-1x2 w_score>=0.70"
             m = re.search(r">=\s*([\d.]+)", e.get("rule", ""))
             if not m:
                 continue
@@ -457,13 +471,7 @@ def load_purity():
         return {}
 
 
-
 def _best_ctx(candidates: list[dict | None]) -> tuple[str, dict]:
-    """Pick the strongest available context verdict from ordered candidates.
-
-    First non-UNKNOWN wins. If all are UNKNOWN/missing, return the UNKNOWN entry
-    with the largest sample so diagnostics still show what was found.
-    """
     best_unknown: dict = {}
     for entry in candidates:
         if not entry:
@@ -477,7 +485,6 @@ def _best_ctx(candidates: list[dict | None]) -> tuple[str, dict]:
 
 
 def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
-    """Best non-UNKNOWN context matching a key prefix/suffix, by sample size."""
     matches = [v for k, v in ctx.items() if k.startswith(prefix) and (not suffix or k.endswith(suffix))]
     non_unknown = [v for v in matches if v.get("verdict") != "UNKNOWN"]
     pool = non_unknown or matches
@@ -487,7 +494,6 @@ def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
 
 
 def lookup_context(purity: dict, pick: dict) -> dict:
-    """Build context keys and return verdicts plus raw diagnostics."""
     ctx = purity.get("contexts", {}) if purity else {}
     league_ctx = ctx.get("league", {})
     team_ctx = ctx.get("team", {})
@@ -585,18 +591,6 @@ def lookup_context(purity: dict, pick: dict) -> dict:
 
 def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
                 decay_verdict: str = "HEALTHY") -> str | None:
-    """Bucket pick using mature evidence only as hard gates.
-
-    Returns None for CAUTION picks below the odds floor — these are
-    silently dropped from all output, not rerouted to another bucket.
-
-    Phase A/B tightening:
-    - niche VETO now acts as a first-class hard gate
-    - short-odds sniper candidates are treated more defensively when league
-      context is UNKNOWN
-    - away favourites and >1.25 raw 1X2 expressions are no longer allowed to
-      masquerade as healthy sniper picks
-    """
     if edge_status == "benched":
         return BUCKET_SKIP_DEAD
     if decay_verdict in ("DEAD", "DECAYING"):
@@ -649,9 +643,6 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     else:
         bucket = BUCKET_CERTIFIED
 
-    # CAUTION odds floor: short-odds CAUTION picks are structurally
-    # unprofitable (72% HR can't cover breakeven below 1.40).  Drop them
-    # silently — they must not appear anywhere in the output pipeline.
     if bucket == BUCKET_CAUTION and odds is not None and float(odds) < CAUTION_MIN_ODDS:
         return None
 
@@ -660,7 +651,6 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
 
 # ------------------------------------------------------------------- fetch --
 def fetch_all(day: str) -> dict[str, dict]:
-    """Fetch every source (unchanged)."""
     out: dict[str, dict] = {}
     for name in ALL_SOURCES:
         try:
@@ -701,7 +691,6 @@ def _valid_decimal_odds(v) -> float | None:
 
 
 def canonical_display_team(name: object) -> str:
-    """Normalize a small set of provider-specific display aliases for operational output."""
     raw = str(name or "").strip()
     if not raw:
         return raw
@@ -709,40 +698,22 @@ def canonical_display_team(name: object) -> str:
 
 
 def source_team_key(name: object) -> str:
-    """Operational source-join key for picks_today only.
-
-    Uses the legacy 9-char norm_team key, plus a tiny explicit alias layer for
-    known provider drift such as Thunder SC/Dandenong Thunder and
-    Hobart Zebras/Clarence Zebras.
-    """
     key = norm_team(str(name or ""))
     return SOURCE_TEAM_KEY_ALIASES.get(key, key)
 
 
 def odds_team_key(name: object) -> str:
-    """Legacy exact-match team key for odds enrichment only with accent folding."""
     key = norm_team(fold_ascii(str(name or "")))
     return ODDS_EXACT_TEAM_ALIASES.get(key, key)
 
 
 def odds_match_team_key(name: object) -> str:
-    """Operational team key for odds fallback matching.
-
-    Unlike canonical_team(), this preserves identity-bearing suffixes such as
-    U19/U21/B/II because operational odds matching must not merge those away.
-    """
     raw = str(name or "")
     compact = compact_key(raw)
     return ODDS_MATCH_TEAM_ALIASES.get(compact, compact)
 
 
 def operational_team_key(name: object) -> str:
-    """Conservative event key for final pick/report duplicate collapse only.
-
-    This is deliberately local to the operational output layer.  It does not
-    alter warehouse/miner joins and it does not depend on entity-registry
-    canonical fallbacks.
-    """
     tokens = re.findall(r"[a-z0-9]+", fold_ascii(str(name or "")))
     filtered = [t for t in tokens if t not in OPERATIONAL_CLUB_TOKENS]
     compact = "".join(filtered) or compact_key(name)
@@ -784,13 +755,6 @@ def operational_pick_eligibility(
     as_of: datetime,
     min_lead: int,
 ) -> tuple[bool, str | None]:
-    """Guard against after-the-fact same-day picks.
-
-    For operational output, a target-day match must be generated before kickoff
-    with a configurable lead time.  Future-date picks are allowed.  Past dates
-    must be read from archived picks_YYYY-MM-DD.json by daily.py, not recreated
-    from live source pages after results or source pages have drifted.
-    """
     p_date = str(pick.get("date") or "")[:10]
     try:
         pick_date = datetime.strptime(p_date, "%Y-%m-%d").date()
@@ -834,7 +798,6 @@ def filter_operational_pre_match_picks(
 
 
 def _bookmaker_priority(bookmaker: object) -> int:
-    """Prefer real books over aggregate/Polymarket rows, but keep aggregates as fallback."""
     b = str(bookmaker or "").strip().lower()
     if any(token in b for token in LOW_PRIORITY_BOOKMAKER_TOKENS):
         return 0
@@ -882,7 +845,6 @@ def _market_pick_key(obj: dict, *, selection_key: str) -> tuple[str, str, str]:
 
 
 def _prefer_odds_row(new: dict, old: dict | None) -> bool:
-    """Prefer real books, then higher decimal odds, then freshest capture."""
     if old is None:
         return True
     new_priority = _bookmaker_priority(new.get("bookmaker"))
@@ -897,7 +859,6 @@ def _prefer_odds_row(new: dict, old: dict | None) -> bool:
 
 
 def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
-    """Read cached bzzoiro_odds CSV rows for a day, if capture_daily wrote them."""
     month = day[:7]
     path = LOCALDATA / f"{BZZOIRO_ODDS_SOURCE}_{month}.csv.gz"
     if not path.exists():
@@ -910,7 +871,6 @@ def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
 
 
 def _read_cached_scoutingstats(day: str) -> list[dict]:
-    """Read cached scoutingstats rows for a day from the monthly CSV cache."""
     month = day[:7]
     path = LOCALDATA / f"scoutingstats_{month}.csv.gz"
     if not path.exists():
@@ -951,7 +911,6 @@ def _scoutingstats_rows_to_odds(rows: list[dict]) -> list[dict]:
 
 
 def _fetch_live_bzzoiro_odds(day: str) -> list[dict]:
-    """Fetch live odds via adapter. Missing token/API failure -> zero rows."""
     try:
         mod = importlib.import_module("edgefactory.sources.bzzoiro_odds")
         return list(mod.fetch_day(day) or [])
@@ -1029,7 +988,6 @@ def bzzoiro_odds_bundle(
     live: bool = True,
     stats: dict | None = None,
 ) -> dict[str, dict]:
-    """Best available bzzoiro_odds rows for exact and kickoff-aware fallback matching."""
     cached_rows = _read_cached_bzzoiro_odds(day)
     live_rows: list[dict] = []
     if live and (_refresh_bzzoiro_odds() or not cached_rows):
@@ -1051,7 +1009,6 @@ def scoutingstats_odds_bundle(
     cached_rows: list[dict] | None = None,
     stats: dict | None = None,
 ) -> dict[str, dict]:
-    """Secondary odds bundle built from scoutingstats upcoming rows."""
     source_rows = cached_rows if cached_rows is not None else _read_cached_scoutingstats(day)
     odds_rows = _scoutingstats_rows_to_odds(source_rows)
     bundle = _odds_bundle_from_rows(odds_rows, provider=SCOUTINGSTATS_ODDS_SOURCE, stats=stats)
@@ -1066,17 +1023,10 @@ def bzzoiro_odds_index(
     live: bool = True,
     stats: dict | None = None,
 ) -> dict[tuple[str, str, str, str, str], dict]:
-    """Backward-compatible exact odds index."""
     return bzzoiro_odds_bundle(day, live=live, stats=stats)["exact"]
 
 
 def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
-    """Find the best odds row using exact and explicit odds-only aliases.
-
-    Do not use learned entity-registry canonical fallbacks here: live odds
-    matching must stay explicit and kickoff-aware so identity drift cannot
-    silently move prices between different real-world events.
-    """
     if "exact" not in odds_data:
         key = (
             str(pick.get("date") or ""),
@@ -1111,14 +1061,12 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
             if bounded:
                 bounded.sort(key=lambda item: (item[0], -_bookmaker_priority(item[1].get("bookmaker")), -(item[1].get("odds") or 0.0)))
                 return bounded[0][1], "alias_time"
-        # Always fall back to the first sorted candidate of the exact same event
         return candidates[0], "alias_unique"
 
     return None, None
 
 
 def nearby_odds_candidates(pick: dict, odds_data: dict, *, limit: int = 5) -> list[dict]:
-    """Return nearby same-date odds rows for unmatched diagnostics."""
     market_key = _market_pick_key(pick, selection_key="pick")
     candidates = list(odds_data.get("market_candidates", {}).get(market_key, []))
     pick_kickoff = _kickoff_value(pick)
@@ -1153,7 +1101,6 @@ def enrich_with_live_odds(
     primary_odds: dict,
     secondary_odds: dict | None = None,
 ) -> int:
-    """Prefer primary, then secondary live odds, then embedded fallback."""
     enriched = 0
     for pick in picks:
         row, match_method = find_odds_row(pick, primary_odds)
@@ -1184,7 +1131,6 @@ def enrich_with_live_odds(
 
 
 def enrich_with_bzzoiro_odds(picks: list[dict], odds_index: dict) -> int:
-    """Backward-compatible wrapper for primary-only live odds enrichment."""
     return enrich_with_live_odds(picks, odds_index, None)
 
 
@@ -1213,17 +1159,17 @@ def top_pick(p1, px, p2):
 
 # --------------------------------------------------------------- consensus --
 def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
-    """Head-count + optional weighted consensus for 1x2 picks.
-
-    source_weights: {source_name: wilson_lb} from the certified weighted edge.
-    When provided, each source's vote is weighted by its LB; the weighted
-    agreement score (w_score) is stored on the pick for display/sorting.
-    The unweighted avg_p is still computed and stored for backward compatibility.
-    """
     picks, vetoes = [], 0
     keys = set()
     for s in SOURCES_1X2:
         keys |= set(data.get(s, {}))
+        
+    # --- Load ML rules and model ---
+    ml_rules, ml_model = load_ml_rules_and_model()
+    rolling_hit_rate = None
+    if ml_rules and ml_model:
+        rolling_hit_rate = get_rolling_hit_rate_last_14d(day)
+
     for k in keys:
         sels, ps, used = [], [], []
         for s in SOURCES_1X2:
@@ -1239,6 +1185,108 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             used.append(s)
         if len(used) < 2:
             continue
+            
+        fb = data.get("forebet", {}).get(k) or {}
+        zb = data.get("zulubet", {}).get(k) or {}
+        sa = data.get("statarea", {}).get(k) or {}
+        bz = data.get("bzzoiro", {}).get(k) or {}
+        vb = data.get("vitibet", {}).get(k) or {}
+        anchor = fb or zb or sa or next(data[s][k] for s in used if k in data.get(s, {}))
+        
+        # --- Evaluate ML Rules ---
+        if ml_rules and ml_model and fb and zb and sa:
+            fb_probs = probs_1x2(fb)
+            zb_probs = probs_1x2(zb)
+            sa_probs = probs_1x2(sa)
+            if fb_probs and zb_probs and sa_probs:
+                # Majority pick
+                sels_maj = []
+                for pr in [fb_probs, zb_probs, sa_probs]:
+                    best = max(pr)
+                    sel_m = "home" if best == pr[0] else ("draw" if best == pr[1] else "away")
+                    sels_maj.append(sel_m)
+                p1, p2, p3 = sels_maj
+                if p1 == p2 or p1 == p3:
+                    majority_pick = p1
+                elif p2 == p3:
+                    majority_pick = p2
+                else:
+                    majority_pick = p1
+                
+                idx_map = {"home": 0, "draw": 1, "away": 2}
+                idx = idx_map[majority_pick]
+                fb_p_feat = fb_probs[idx]
+                zb_p_feat = zb_probs[idx]
+                sa_p_feat = sa_probs[idx]
+                
+                avg_p_feat = (fb_p_feat + zb_p_feat + sa_p_feat) / 3.0
+                min_p_feat = min(fb_p_feat, zb_p_feat, sa_p_feat)
+                variance = sum((x - avg_p_feat)**2 for x in [fb_p_feat, zb_p_feat, sa_p_feat]) / 3.0
+                std_p_feat = math.sqrt(variance)
+                
+                _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
+                _col = _odds_map[majority_pick]
+                pick_odds_feat = _f(fb.get(_col)) or _f(zb.get(_col)) or 1.50
+                
+                is_home = 1.0 if majority_pick == "home" else 0.0
+                is_away = 1.0 if majority_pick == "away" else 0.0
+                
+                comp_type = classify_competition(anchor.get("league"))
+                cat_friendly = 1.0 if comp_type == "friendly" else 0.0
+                cat_youth = 1.0 if comp_type == "youth" else 0.0
+                cat_women = 1.0 if comp_type == "women" else 0.0
+                cat_cup = 1.0 if comp_type == "cup" else 0.0
+                cat_league = 1.0 if comp_type == "league" else 0.0
+                
+                feat_dict = {
+                    "fb_p": fb_p_feat, "zb_p": zb_p_feat, "sa_p": sa_p_feat,
+                    "avg_p": avg_p_feat, "min_p": min_p_feat, "std_p": std_p_feat,
+                    "pick_odds": pick_odds_feat,
+                    "is_home": is_home, "is_away": is_away,
+                    "cat_friendly": cat_friendly, "cat_youth": cat_youth, "cat_women": cat_women, "cat_cup": cat_cup, "cat_league": cat_league,
+                    "rolling_hit_rate": rolling_hit_rate or 0.75
+                }
+                
+                coefs = ml_model["coef"]
+                intercept = ml_model["intercept"]
+                feature_cols = ml_model["feature_cols"]
+                
+                x = [feat_dict.get(col, 0.0) for col in feature_cols]
+                z = sum(w * val for w, val in zip(coefs, x)) + intercept
+                ml_p = 1.0 / (1.0 + math.exp(-z))
+                
+                # Check certified ML rules
+                for rule in ml_rules:
+                    m = re.search(r">=\s*([\d.]+)", rule["rule"])
+                    if m:
+                        thr = float(m.group(1))
+                        if ml_p * 100.0 >= thr:
+                            home = canonical_display_team(anchor.get("home"))
+                            away = canonical_display_team(anchor.get("away"))
+                            picks.append({
+                                "date": day, "market": "1x2",
+                                "match": f"{home} vs {away}",
+                                "home": home, "away": away,
+                                "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                                "sport": anchor.get("sport", "soccer"),
+                                "league": anchor.get("league"), "pick": majority_pick,
+                                "avg_p": round(ml_p * 100.0, 1),
+                                "w_score": round(w_score, 4),
+                                "odds": _f(fb.get(_col)) or _f(zb.get(_col)) or None,
+                                "odds_source": ("forebet_best" if _f(fb.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
+                                "bookmaker": None,
+                                "rule": rule["rule"],
+                                "edge_rule": rule["rule"],
+                                "display_rule": rule["display_rule"] if "display_rule" in rule else f"ML-META≥{thr:.0f}",
+                                "n_way": 3, "edge_n_way": 3,
+                                "confidence": _f(bz.get("confidence")) if bz else None,
+                                "model_version": bz.get("model_version") if bz else None,
+                                "vitibet_index": _f(vb.get("index")) if vb else None,
+                                "sources_used": used,
+                                "source_weights": source_weights or {},
+                                "ml_p": round(ml_p, 4),
+                            })
+
         if len(set(sels)) > 1:
             vetoes += 1
             continue
@@ -1248,7 +1296,6 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
         n_req, thr = edge["n_way"], edge["threshold"]
 
         # Option 2: Dynamic Competition-Type Gating (Custom Thresholds)
-        anchor = next(data[s][k] for s in used if k in data.get(s, {}))
         comp_type = classify_competition(anchor.get("league"))
         if comp_type == "cup":
             thr += 5.0
@@ -1261,21 +1308,10 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             continue
 
         avg_p = mean(ps) * 100.0
-
-        # Weighted consensus score — uses per-source Wilson LB as vote weight.
-        # Falls back to uniform weights (lb=1.0 each) if no weights loaded.
-        votes = [(sel, source_weights.get(s, 1.0)) for s, sel in zip(used, sels)]
-        _, w_score, _ = weighted_consensus_score(votes)
-
         if avg_p < thr:
             continue
-        fb = data.get("forebet", {}).get(k) or {}
-        zb = data.get("zulubet", {}).get(k) or {}
-        bz = data.get("bzzoiro", {}).get(k) or {}
-        vb = data.get("vitibet", {}).get(k) or {}
-        anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
+            
         sel = sels[0]
-        # Cascade: forebet best-odds → zulubet odds → None (bzzoiro_odds enriched later)
         _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
         _col = _odds_map[sel]
         odds = _f(fb.get(_col)) or _f(zb.get(_col)) or None
@@ -1284,6 +1320,11 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                     else None)
         home = canonical_display_team(anchor.get("home"))
         away = canonical_display_team(anchor.get("away"))
+        
+        # Weighted consensus score
+        votes = [(sel, source_weights.get(s, 1.0)) for s, sel in zip(used, sels)]
+        _, w_score, _ = weighted_consensus_score(votes)
+
         picks.append({
             "date": day, "market": "1x2",
             "match": f"{home} vs {away}",
@@ -1292,7 +1333,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             "sport": anchor.get("sport", "soccer"),
             "league": anchor.get("league"), "pick": sel,
             "avg_p": round(avg_p, 1),
-            "w_score": round(w_score, 4),   # weighted agreement score (0–1)
+            "w_score": round(w_score, 4),
             "odds": odds,
             "odds_source": odds_src,
             "bookmaker": None,
@@ -1335,9 +1376,7 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
         if len(set(sels)) > 1:
             continue
 
-        # Option 2: Dynamic Competition-Type Gating for binary markets
-        anchor = next(data[s][k] for s in used if k in data.get(s, {}))
-        comp_type = classify_competition(anchor.get("league"))
+        comp_type = classify_competition(anchor := next(data[s][k] for s in used if k in data.get(s, {})))
         adj_thr = thr
         adj_n_req = n_req
         if comp_type == "cup":
@@ -1393,7 +1432,6 @@ def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = Non
     picks += eval_binary(day, data, "btts", SOURCES_BTTS, BTTS_COL, btts_edge,
                          ("yes", "no"),
                          {"yes": "odd_gg", "no": "odd_ng"})
-    # Sort by w_score (weighted agreement) then avg_p; both descending.
     picks.sort(key=lambda r: (-r.get("w_score", 0.0), -r.get("avg_p", 0)))
     return picks, vetoes, n_up, data
 
@@ -1422,12 +1460,6 @@ def _bucket_severity(bucket: object) -> int:
 
 
 def _event_base_key(pick: dict) -> tuple[str, str, str, str, str]:
-    """Final operational event key for output collapse.
-
-    Rule is intentionally excluded: if the same real-world event/outcome appears
-    under both a 2-way and 3-way certified rule, the output must still show only
-    one operational decision.  Any worse bucket among the aliases is propagated.
-    """
     return (
         str(pick.get("date") or ""),
         operational_team_key(pick.get("home") or ""),
@@ -1438,12 +1470,6 @@ def _event_base_key(pick: dict) -> tuple[str, str, str, str, str]:
 
 
 def _same_event_cluster(a: dict, b: dict) -> bool:
-    """Return True when two same-base picks should collapse.
-
-    If both kickoff times are known and more than three hours apart, keep them
-    separate.  Missing kickoff stays permissive because alias duplicates often
-    lose kickoff in one source.
-    """
     a_min = _kickoff_minutes(_kickoff_value(a))
     b_min = _kickoff_minutes(_kickoff_value(b))
     if a_min is None or b_min is None:
@@ -1452,9 +1478,8 @@ def _same_event_cluster(a: dict, b: dict) -> bool:
 
 
 def _representative_score(pick: dict) -> tuple:
-    """Higher score wins when choosing which duplicate row to display."""
     return (
-        _bucket_severity(pick.get("bucket")),  # conservative: display worst bucket
+        _bucket_severity(pick.get("bucket")),
         _kickoff_value(pick) is not None,
         _odds_source_rank(pick.get("odds_source")),
         pick.get("odds_match_method") == "exact",
@@ -1494,11 +1519,6 @@ def _with_duplicate_metadata(group: list[dict]) -> dict:
 
 
 def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
-    """Collapse duplicate final picks after bucket assignment.
-
-    This is the last safety net before stdout/JSON/Supabase sync.  It is run
-    after context bucketing so duplicate aliases cannot hide a VETO/DEAD result.
-    """
     grouped: dict[tuple[str, str, str, str, str], list[list[dict]]] = {}
     for pick in picks:
         base = _event_base_key(pick)
@@ -1521,14 +1541,11 @@ def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int
     return out, removed
 
 
-# Backwards-compatible name for tests/importers.  Operational code uses the
-# post-bucket collapse above; this wrapper is intentionally conservative too.
 def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
     return collapse_final_operational_picks(picks)
 
 
 def format_kickoff(pick: dict) -> str:
-    """Human stdout kickoff display. Always show missing kickoff explicitly."""
     for key in ("kickoff", "time", "start_time", "ko"):
         value = pick.get(key)
         if value not in (None, ""):
@@ -1537,7 +1554,6 @@ def format_kickoff(pick: dict) -> str:
 
 
 def print_buckets(buckets: dict, title_date: str = ""):
-    """Print picks grouped by bucket."""
     total_cert = len(buckets.get(BUCKET_CERTIFIED, [])) + len(buckets.get(BUCKET_CAUTION, []))
     print(f"\nEdge Factory Picks — {title_date}" if title_date else "\nEdge Factory Picks")
     print("=" * 60)
@@ -1601,17 +1617,6 @@ def enrich_unmatched_with_betexplorer(
     *,
     max_fetches: int = 12,
 ) -> int:
-    """Enrich picks that fell through bzzoiro + scoutingstats with BetExplorer odds.
-
-    Only fetches odds for picks whose odds_match_method is "fallback" or
-    "none" (i.e. unmatched by primary/secondary sources).  BetExplorer
-    covers niche leagues (Australian NPL, Belarus, Kuwait, Latvia,
-    Tanzania, etc.) that bzzoiro and scoutingstats don't carry.
-
-    This is a targeted fetch — typically 5-10 unmatched picks per day,
-    not the full BetExplorer universe.  Rate-limited to 3s between
-    requests to avoid 429 errors.
-    """
     try:
         import importlib.util as _ilu
         _spec = _ilu.spec_from_file_location(
@@ -1640,7 +1645,6 @@ def enrich_unmatched_with_betexplorer(
         if not rows:
             continue
 
-        # Find the row matching the pick's selection
         sel = str(pick.get("pick") or "")
         market = str(pick.get("market") or "")
         matching_row = None
@@ -1686,8 +1690,6 @@ def main():
         file=sys.stderr,
     )
 
-    # Weighted consensus: load per-source Wilson LB weights.
-    # Empty dict = fall back to uniform weights silently.
     source_weights_1x2 = load_source_weights("1x2")
     if source_weights_1x2:
         print(
@@ -1736,8 +1738,6 @@ def main():
         )
         enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
 
-        # Tertiary: BetExplorer odds for niche-league picks that fell through
-        # bzzoiro + scoutingstats (Australian NPL, Belarus, Kuwait, Latvia, etc.)
         be_enriched = enrich_unmatched_with_betexplorer(picks, day)
 
         if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or enriched_n or picks:
@@ -1764,12 +1764,8 @@ def main():
                 file=sys.stderr,
             )
 
-        # Bucket every row before final operational collapse.  This prevents an
-        # alias duplicate from hiding a VETO/DEAD context on the row that would
-        # otherwise be removed.
         day_picks: list[dict] = []
 
-        # Phase 7 enrichment + new fields
         for p in picks:
             rule = p.get("rule", "")
             meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "HEALTHY"})
@@ -1778,14 +1774,12 @@ def main():
                                  edge_status=meta.get("status", "certified"),
                                  decay_verdict=meta.get("decay_verdict", "HEALTHY"))
             if bucket is None:
-                # CAUTION odds floor: silently dropped from all output
                 continue
             p["ctx"] = {k: v for k, v in ctx.items() if not k.startswith("_")}
             p["bucket"] = bucket
             p["edge_status"] = meta.get("status", "certified")
             p["decay_verdict"] = meta.get("decay_verdict", "HEALTHY")
 
-            # Phase 7 additions
             p["market_type"] = p.get("market", "1x2")
             p["odds_tier"] = get_odds_tier(p.get("market", "1x2"))
             p["odds_match_status"] = "matched" if p.get("odds") is not None else "unmatched"
@@ -1800,21 +1794,17 @@ def main():
 
         all_picks.extend(collapsed_day_picks)
 
-    # group by bucket
     buckets: dict[str, list] = {b: [] for b in BUCKET_ORDER}
     for p in all_picks:
         b = p.get("bucket", BUCKET_CAUTION)
         buckets.setdefault(b, []).append(p)
 
-    # sort within buckets
     for b in buckets:
         buckets[b].sort(key=lambda r: -r.get("avg_p", 0))
 
-    # print
     title = ", ".join(days) if days else date.today().isoformat()
     print_buckets(buckets, title_date=title)
 
-    # summary
     n_clean = len(buckets[BUCKET_CERTIFIED])
     n_caution = len(buckets[BUCKET_CAUTION])
     n_wl_odds = len(buckets[BUCKET_WL_ODDS])
@@ -1827,18 +1817,12 @@ def main():
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
     print(f"\n{summary}")
 
-    # Write exactly the picks requested by this invocation.  Do not merge with
-    # an existing picks_today.json: stale target/future rows can re-enter human
-    # reports and Supabase sync as duplicate operational picks.
     final_picks = all_picks
 
-    # Write JSON
     _json_path = ROOT / "localdata" / "picks_today.json"
     _json_path.parent.mkdir(parents=True, exist_ok=True)
-    _json_path.write_text(json.dumps(final_picks, indent=2))
+    _json_path.write_text(json.dumps(final_picks, indent=2, sort_keys=True))
 
 
 if __name__ == "__main__":
     main()
-
-
