@@ -241,20 +241,46 @@ def check_event_match(m1: dict, m2: dict) -> bool:
     return sim >= 0.40
 
 
-def load_existing_registry_aliases(team_dsu: DSU) -> int:
+def check_league_match(l1: str, l2: str) -> bool:
+    """Enforce strict safeguards to prevent generic or cross-country league contamination."""
+    k1 = norm_league_cached(l1)
+    k2 = norm_league_cached(l2)
+    if not k1 or not k2 or k1 == k2:
+        return False
+
+    # Safeguard 1: Do not align/merge generic keywords
+    if k1 in GENERIC_LEAGUE_KEYS or k2 in GENERIC_LEAGUE_KEYS:
+        return False
+
+    # Safeguard 2: Enforce identical structural classification (no league-to-cup merges)
+    if classify_competition(l1) != classify_competition(l2):
+        return False
+
+    # Safeguard 3: Enforce a high bigram similarity floor (>= 50%)
+    sim = char_ngram_similarity(l1, l2, n=2)
+    return sim >= 0.50
+
+
+def load_existing_registry_aliases(team_dsu: DSU, league_dsu: DSU) -> tuple[int, int]:
     if not ENTITY_REGISTRY_PATH.exists():
-        return 0
+        return 0, 0
     try:
         data = json.loads(ENTITY_REGISTRY_PATH.read_text())
-        loaded = 0
+        loaded_teams = 0
         for canonical, info in data.get("teams", {}).items():
             aliases = info.get("aliases", [])
             for alias in aliases:
                 team_dsu.union(norm_entity_team_cached(canonical), norm_entity_team_cached(alias))
-                loaded += 1
-        return loaded
+                loaded_teams += 1
+        loaded_leagues = 0
+        for canonical, info in data.get("leagues", {}).items():
+            aliases = info.get("aliases", [])
+            for alias in aliases:
+                league_dsu.union(norm_league_cached(canonical), norm_league_cached(alias))
+                loaded_leagues += 1
+        return loaded_teams, loaded_leagues
     except Exception:
-        return 0
+        return 0, 0
 
 
 def main() -> None:
@@ -285,8 +311,8 @@ def main() -> None:
     league_dsu = DSU()
     team_dsu = DSU()
     
-    pre_loaded_aliases = load_existing_registry_aliases(team_dsu)
-    print(f"Pre-loaded {pre_loaded_aliases:,} historically learned team aliases from the existing registry.", flush=True)
+    pre_loaded_teams, pre_loaded_leagues = load_existing_registry_aliases(team_dsu, league_dsu)
+    print(f"Pre-loaded {pre_loaded_teams:,} team and {pre_loaded_leagues:,} league aliases from the existing registry.", flush=True)
 
     league_counts: Counter[str] = Counter()
     team_counts: Counter[str] = Counter()
@@ -331,18 +357,15 @@ def main() -> None:
 
         files_used += 1
 
-        # Clean NaN values
         df['home'] = df['home'].fillna("").str.strip()
         df['away'] = df['away'].fillna("").str.strip()
         df['league'] = df['league'].fillna("UNKNOWN").str.strip()
         df['day'] = df['date'].fillna("").str[:10]
         
-        # Filter out empty inputs
         df = df[(df['day'] != "") & (df['home'] != "") & (df['away'] != "")]
         if df.empty:
             continue
 
-        # Vectorized mapping for 100x faster DSU key resolution
         unique_homes = df['home'].unique()
         home_map = {n: norm_entity_team_cached(n) for n in unique_homes}
         df['h_key'] = df['home'].map(home_map)
@@ -355,7 +378,6 @@ def main() -> None:
         league_map = {n: norm_league_cached(n) for n in unique_leagues}
         df['l_key'] = df['league'].map(league_map)
 
-        # Bulk initialization of DSU representatives
         for h in df['h_key'].unique():
             team_dsu.find(h)
         for a in df['a_key'].unique():
@@ -363,7 +385,6 @@ def main() -> None:
         for l in df['l_key'].unique():
             league_dsu.find(l)
 
-        # Bulk counts updates
         for name, cnt in df['home'].value_counts().items():
             team_counts[name] += cnt
         for name, cnt in df['away'].value_counts().items():
@@ -371,7 +392,6 @@ def main() -> None:
         for name, cnt in df['league'].value_counts().items():
             league_counts[name] += cnt
 
-        # Bulk sources mapping
         for l in df['l_key'].unique():
             league_sources[l].add(source)
         for h in df['h_key'].unique():
@@ -379,17 +399,14 @@ def main() -> None:
         for a in df['a_key'].unique():
             team_sources[a].add(source)
 
-        # Bulk league-team mapping
         for l_key, grp in df.groupby('l_key'):
             teams_in_league = set(grp['h_key'].unique()) | set(grp['a_key'].unique())
             league_team_sets[l_key].update(teams_in_league)
 
-        # Fast Vectorized duplicate event grouping
         dup_events = df[df.duplicated(subset=['day', 'h_key', 'a_key'], keep=False)]
         if not dup_events.empty:
             for (day, hk, ak), grp in dup_events.groupby(['day', 'h_key', 'a_key']):
                 event_leagues[(day, hk, ak)].update(grp['l_key'].unique())
-                # Union spelling representations in DSU
                 homes = list(grp['h_key'].unique())
                 for h in homes[1:]:
                     team_dsu.union(homes[0], h)
@@ -400,7 +417,6 @@ def main() -> None:
         rows_seen += len(df)
 
         if not is_giant:
-            # Reconstruct columns and capture matches for recent monthly subsets only
             sub_df = df.copy()
             
             if 'kickoff' in sub_df.columns:
@@ -415,7 +431,6 @@ def main() -> None:
             sub_df['ox'] = sub_df['oddx'].apply(_safe_float) if 'oddx' in sub_df.columns else None
             sub_df['o2'] = sub_df['odd2'].apply(_safe_float) if 'odd2' in sub_df.columns else None
 
-            # Keep only rows containing kickoff time and at least one valid odds outcome
             sub_df = sub_df.dropna(subset=['hhmm'])
             sub_df = sub_df[sub_df['o1'].notna() | sub_df['ox'].notna() | sub_df['o2'].notna()]
 
@@ -425,8 +440,10 @@ def main() -> None:
                     "source": source,
                     "home": data['home'],
                     "away": data['away'],
+                    "league": data['league'],
                     "h_key": data['h_key'],
                     "a_key": data['a_key'],
+                    "l_key": data['l_key'],
                     "hhmm": data['hhmm'],
                     "odd1": data['o1'],
                     "oddx": data['ox'],
@@ -435,6 +452,7 @@ def main() -> None:
 
     # ----------------- Kickoff-and-Odds Aware Self-Learning Alias Engine -----------------
     scanner_merges = 0
+    league_merges = 0
     scan_mode_label = "Full Scan Mode" if args.full_scan else "Incremental Mode: 2026+"
     print(f"\nRunning Kickoff-and-Odds Aware Self-Learning Alias Engine ({scan_mode_label})...", flush=True)
     all_dates_sorted = sorted(all_matches_by_date.items())
@@ -443,7 +461,7 @@ def main() -> None:
             continue
 
         if idx_day % 50 == 0 or idx_day == len(all_dates_sorted):
-            print(f"  Scanning date {day}... ({idx_day}/{len(all_dates_sorted)} dates, merged so far: {scanner_merges})", flush=True)
+            print(f"  Scanning date {day}... ({idx_day}/{len(all_dates_sorted)} dates, merged so far: teams={scanner_merges}, leagues={league_merges})", flush=True)
 
         by_min_mod = defaultdict(list)
         for m in matches:
@@ -471,27 +489,22 @@ def main() -> None:
                     for m2 in by_min_mod[b2]:
                         if m1 is m2 or m1["source"] == m2["source"]:
                             continue
-                        if team_dsu.find(m1["h_key"]) == team_dsu.find(m2["h_key"]) and team_dsu.find(m1["a_key"]) == team_dsu.find(m2["a_key"]):
-                            continue
-
+                        
+                        # Compare events
                         if check_event_match(m1, m2):
-                            team_dsu.union(m1["h_key"], m2["h_key"])
-                            team_dsu.union(m1["a_key"], m2["a_key"])
-                            scanner_merges += 1
+                            # Union teams if they aren't already grouped
+                            if team_dsu.find(m1["h_key"]) != team_dsu.find(m2["h_key"]) or team_dsu.find(m1["a_key"]) != team_dsu.find(m2["a_key"]):
+                                team_dsu.union(m1["h_key"], m2["h_key"])
+                                team_dsu.union(m1["a_key"], m2["a_key"])
+                                scanner_merges += 1
+                                
+                            # Safe Jaccard mapping for leagues with strict safeguards (preventing cups/friendlies overlap)
+                            if check_league_match(m1["league"], m2["league"]):
+                                if league_dsu.find(m1["l_key"]) != league_dsu.find(m2["l_key"]):
+                                    league_dsu.union(m1["l_key"], m2["l_key"])
+                                    league_merges += 1
 
-    print(f"Self-Learning Alias Engine completed! Merged {scanner_merges} team alignments.", flush=True)
-
-    overlap_merges = 0
-
-    overrides = read_overrides()
-    for raw, canon in (overrides.get("leagues", {}) or {}).items():
-        league_dsu.union(norm_league_cached(raw), norm_league_cached(canon))
-        league_counts[str(raw)] += 1
-        league_counts[str(canon)] += 1
-    for raw, canon in (overrides.get("teams", {}) or {}).items():
-        team_dsu.union(norm_entity_team_cached(raw), norm_entity_team_cached(canon))
-        team_counts[str(raw)] += 1
-        team_counts[str(canon)] += 1
+    print(f"Self-Learning Alias Engine completed! Merged {scanner_merges} team alignments and {league_merges} league alignments.", flush=True)
 
     league_groups = league_dsu.groups()
     team_groups = team_dsu.groups()
@@ -557,6 +570,7 @@ def main() -> None:
             "min_team_overlap": args.min_team_overlap,
             "min_overlap_teams": args.min_overlap_teams,
             "self_learning_alias_merges": scanner_merges,
+            "self_learning_league_merges": league_merges,
             "full_scan_completed": args.full_scan,
         },
         "alias_index": {
@@ -573,7 +587,7 @@ def main() -> None:
     print(f"rows_seen : {rows_seen}")
     print(f"leagues   : {len(leagues)} canonical, {len(league_alias_index)} aliases")
     print(f"teams     : {len(teams)} canonical, {len(team_alias_index)} aliases")
-    print(f"merges    : same_event_league={same_event_merges}, league_team_overlap={overlap_merges}, self_learning_alias_merges={scanner_merges}")
+    print(f"merges    : same_event_league={same_event_merges}, league_team_overlap={overlap_merges}, self_learning_alias_merges={scanner_merges}, self_learning_league_merges={league_merges}")
 
     if args.dry_run:
         print("--dry-run: registry NOT written")
