@@ -1,12 +1,12 @@
 {
   "by_bucket": {
     "CAUTION": {
-      "avg_implied_prob_delta": -0.000851,
-      "avg_raw_odds_delta": 0.0012,
-      "beat_later_price_n": 25,
+      "avg_implied_prob_delta": 0.0,
+      "avg_raw_odds_delta": 0.0,
+      "beat_later_price_n": 19,
       "beat_later_price_rate": 0.0,
-      "total_picks": 26,
-      "with_two_prices": 25
+      "total_picks": 20,
+      "with_two_prices": 19
     },
     "SKIPPED_VETO": {
       "avg_implied_prob_delta": -0.009787,
@@ -21,7 +21,7 @@
       "avg_raw_odds_delta": null,
       "beat_later_price_n": 0,
       "beat_later_price_rate": null,
-      "total_picks": 9,
+      "total_picks": 4,
       "with_two_prices": 0
     },
     "WATCHLIST_UNKNOWN_CTX": {
@@ -47,16 +47,16 @@
       "avg_raw_odds_delta": 0.0,
       "beat_later_price_n": 18,
       "beat_later_price_rate": 0.0,
-      "total_picks": 28,
+      "total_picks": 24,
       "with_two_prices": 18
     },
     "3way-unanimous avg_p>=65": {
-      "avg_implied_prob_delta": -0.020817,
-      "avg_raw_odds_delta": 0.115385,
-      "beat_later_price_n": 26,
+      "avg_implied_prob_delta": -0.025998,
+      "avg_raw_odds_delta": 0.1485,
+      "beat_later_price_n": 20,
       "beat_later_price_rate": 0.0,
-      "total_picks": 30,
-      "with_two_prices": 26
+      "total_picks": 23,
+      "with_two_prices": 20
     },
     "3way-unanimous home-only avg_p>=60": {
       "avg_implied_prob_delta": 0.0,
@@ -83,18 +83,18 @@
       "with_two_prices": 19
     }
   },
-  "end": "2026-07-24",
+  "end": "2026-07-27",
   "meta": {
     "insufficient_snapshots": 7,
-    "unmatched_picks": 15
+    "unmatched_picks": 10
   },
   "overall": {
-    "avg_implied_prob_delta": -0.00698,
-    "avg_raw_odds_delta": 0.033462,
-    "beat_later_price_n": 104,
+    "avg_implied_prob_delta": -0.00719,
+    "avg_raw_odds_delta": 0.035204,
+    "beat_later_price_n": 98,
     "beat_later_price_rate": 0.0,
-    "total_picks": 125,
-    "with_two_prices": 104
+    "total_picks": 114,
+    "with_two_prices": 98
   },
-  "start": "2026-06-24"
+  "start": "2026-06-27"
 }
