@@ -23,18 +23,18 @@
   "archived_pick_rows": 53,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.5,
-      "priced_picks": 8,
-      "roi": -0.16625,
-      "settled_picks": 8,
-      "wins": 4
+      "hit_rate": 0.555556,
+      "priced_picks": 9,
+      "roi": -0.004444,
+      "settled_picks": 9,
+      "wins": 5
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.83871,
-      "priced_picks": 31,
-      "roi": 0.082581,
-      "settled_picks": 31,
-      "wins": 26
+      "hit_rate": 0.84375,
+      "priced_picks": 32,
+      "roi": 0.095312,
+      "settled_picks": 32,
+      "wins": 27
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.833333,
@@ -46,11 +46,11 @@
   },
   "by_odds_match_method": {
     "betexplorer": {
-      "hit_rate": 0.827586,
-      "priced_picks": 29,
-      "roi": 0.016552,
-      "settled_picks": 29,
-      "wins": 24
+      "hit_rate": 0.83871,
+      "priced_picks": 31,
+      "roi": 0.072903,
+      "settled_picks": 31,
+      "wins": 26
     },
     "exact": {
       "hit_rate": 0.6875,
@@ -62,11 +62,11 @@
   },
   "by_odds_source": {
     "betexplorer_odds": {
-      "hit_rate": 0.827586,
-      "priced_picks": 29,
-      "roi": 0.016552,
-      "settled_picks": 29,
-      "wins": 24
+      "hit_rate": 0.83871,
+      "priced_picks": 31,
+      "roi": 0.072903,
+      "settled_picks": 31,
+      "wins": 26
     },
     "bzzoiro_odds": {
       "hit_rate": 0.888889,
@@ -85,11 +85,11 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.785714,
-      "priced_picks": 14,
-      "roi": 0.066429,
-      "settled_picks": 14,
-      "wins": 11
+      "hit_rate": 0.8125,
+      "priced_picks": 16,
+      "roi": 0.169375,
+      "settled_picks": 16,
+      "wins": 13
     },
     "3way-unanimous avg_p>=65": {
       "hit_rate": 0.4,
@@ -117,52 +117,15 @@
   "end": "2026-07-27",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.777778,
-    "priced_picks": 45,
-    "roi": 0.017778,
-    "settled_picks": 45,
-    "wins": 35
+    "hit_rate": 0.787234,
+    "priced_picks": 47,
+    "roi": 0.054894,
+    "settled_picks": 47,
+    "wins": 37
   },
   "same_day_cutoff": "2026-07-27",
   "same_day_excluded": 6,
   "start": "2026-06-28",
-  "unmatched_examples": [
-    {
-      "away": "Hebei Kungfu",
-      "away_key_candidates": [
-        "hebeikung"
-      ],
-      "bucket": "CAUTION",
-      "date": "2026-07-11",
-      "home": "Guangzhou E-Power",
-      "home_key_candidates": [
-        "guangzhou"
-      ],
-      "league": "China: League One",
-      "match": "Guangzhou E-Power vs Hebei Kungfu",
-      "odds": 2.29,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "Meizhou Kejia",
-      "away_key_candidates": [
-        "meizhouke"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-07-11",
-      "home": "Shaanxi Union",
-      "home_key_candidates": [
-        "shaanxiun"
-      ],
-      "league": "China: League One",
-      "match": "Shaanxi Union vs Meizhou Kejia",
-      "odds": 1.49,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    }
-  ],
-  "unmatched_result_picks": 2
+  "unmatched_examples": [],
+  "unmatched_result_picks": 0
 }
