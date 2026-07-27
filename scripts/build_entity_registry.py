@@ -80,8 +80,8 @@ def safe_league_alias_merge(a: str, b: str) -> bool:
     Clubs" often share exact teams/dates with real domestic fixtures and can
     poison the context registry if unioned into domestic leagues.
     """
-    a_key = norm_league(a)
-    b_key = norm_league(b)
+    a_key = norm_league_cached(a)
+    b_key = norm_league_cached(b)
     if not a_key or not b_key or a_key == b_key:
         return False
     if a_key in GENERIC_LEAGUE_KEYS or b_key in GENERIC_LEAGUE_KEYS:
@@ -90,7 +90,7 @@ def safe_league_alias_merge(a: str, b: str) -> bool:
 
 
 def is_generic_league_label(raw: object) -> bool:
-    return norm_league(raw) in GENERIC_LEAGUE_KEYS
+    return norm_league_cached(raw) in GENERIC_LEAGUE_KEYS
 
 
 def canonical_league_label(labels: list[str], counts: Counter[str]) -> str:
@@ -141,7 +141,7 @@ def read_overrides() -> dict[str, Any]:
 
 def label_score(label: str, counts: Counter[str]) -> tuple[int, int, int, str]:
     text = str(label or "").strip()
-    has_space = int(" " in norm_league(text))
+    has_space = int(" " in norm_league_cached(text))
     not_code = int(not re.fullmatch(r"[A-Za-z]{1,4}\d?", text.strip()))
     return (not_code, has_space, counts[text], text.lower())
 
@@ -150,7 +150,7 @@ def canonical_label(labels: list[str], counts: Counter[str], *, kind: str) -> st
     if not labels:
         return "unknown"
     best = max(labels, key=lambda x: label_score(x, counts))
-    return norm_league(best) if kind == "league" else norm_entity_team(best)
+    return norm_league_cached(best) if kind == "league" else norm_entity_team_cached(best)
 
 
 def add_alias_index(index: dict[str, str], raw: str, canonical: str, *, kind: str) -> None:
@@ -159,9 +159,9 @@ def add_alias_index(index: dict[str, str], raw: str, canonical: str, *, kind: st
     index[raw] = canonical
     index[compact_key(raw)] = canonical
     if kind == "league":
-        index[norm_league(raw)] = canonical
+        index[norm_league_cached(raw)] = canonical
     else:
-        index[norm_entity_team(raw)] = canonical
+        index[norm_entity_team_cached(raw)] = canonical
 
 
 def jaccard(a: set[str], b: set[str]) -> float:
@@ -170,6 +170,22 @@ def jaccard(a: set[str], b: set[str]) -> float:
     inter = len(a & b)
     union = len(a | b)
     return inter / union if union else 0.0
+
+
+# ----------------- Memoization Cache for High Performance -----------------
+
+_TEAM_CACHE: dict[str, str] = {}
+def norm_entity_team_cached(name: str) -> str:
+    if name not in _TEAM_CACHE:
+        _TEAM_CACHE[name] = norm_entity_team(name)
+    return _TEAM_CACHE[name]
+
+
+_LEAGUE_CACHE: dict[str, str] = {}
+def norm_league_cached(name: str) -> str:
+    if name not in _LEAGUE_CACHE:
+        _LEAGUE_CACHE[name] = norm_league(name)
+    return _LEAGUE_CACHE[name]
 
 
 # ----------------- Kickoff-and-Odds Aware Self-Learning Alias Engine helpers -----------------
@@ -290,7 +306,14 @@ def main() -> None:
 
     for path in files:
         source = source_from_path(path)
-        is_giant = path.name in {"forebet.csv.gz", "statarea.csv.gz"}
+        # Check size of df before full parsing to dynamically isolate giant base historical files
+        try:
+            # lightweight nrows check to see if it's a giant file
+            test_df = pd.read_csv(path, dtype=str, nrows=10)
+            is_giant = len(test_df) >= 10 and "_" not in path.name
+        except Exception:
+            is_giant = False
+
         cols_to_load = quick_cols if is_giant else use_cols
 
         try:
@@ -316,10 +339,10 @@ def main() -> None:
                 continue
 
             rows_seen += 1
-            h_key = norm_entity_team(home)
-            a_key = norm_entity_team(away)
-            l_key = norm_league(league)
-            loose_event = (day, norm_entity_team(home, width=24), norm_entity_team(away, width=24))
+            h_key = norm_entity_team_cached(home)
+            a_key = norm_entity_team_cached(away)
+            l_key = norm_league_cached(league)
+            loose_event = (day, norm_entity_team_cached(home)[:24], norm_entity_team_cached(away)[:24])
 
             league_dsu.find(l_key)
             team_dsu.find(h_key)
@@ -338,7 +361,7 @@ def main() -> None:
             event_aways[loose_event].add(a_key)
 
             if not is_giant:
-                # --- Collect matches for Kickoff-and-Odds Scanner (Skip for giants) ---
+                # --- Collect matches for Kickoff-and-Odds Scanner (Skip for giant historical files) ---
                 k_val = data.get("kickoff") or data.get("time") or ""
                 hhmm = parse_hhmm(k_val)
 
@@ -419,11 +442,11 @@ def main() -> None:
     # Curated overrides are authoritative.
     overrides = read_overrides()
     for raw, canon in (overrides.get("leagues", {}) or {}).items():
-        league_dsu.union(norm_league(raw), norm_league(canon))
+        league_dsu.union(norm_league_cached(raw), norm_league_cached(canon))
         league_counts[str(raw)] += 1
         league_counts[str(canon)] += 1
     for raw, canon in (overrides.get("teams", {}) or {}).items():
-        team_dsu.union(norm_entity_team(raw), norm_entity_team(canon))
+        team_dsu.union(norm_entity_team_cached(raw), norm_entity_team_cached(canon))
         team_counts[str(raw)] += 1
         team_counts[str(canon)] += 1
 
@@ -439,9 +462,9 @@ def main() -> None:
     raw_leagues_by_key: dict[str, set[str]] = defaultdict(set)
     raw_teams_by_key: dict[str, set[str]] = defaultdict(set)
     for raw in league_counts:
-        raw_leagues_by_key[norm_league(raw)].add(raw)
+        raw_leagues_by_key[norm_league_cached(raw)].add(raw)
     for raw in team_counts:
-        raw_teams_by_key[norm_entity_team(raw)].add(raw)
+        raw_teams_by_key[norm_entity_team_cached(raw)].add(raw)
 
     for _, keys in league_groups.items():
         raw_aliases = sorted({raw for key in keys for raw in raw_leagues_by_key.get(key, {key})})
