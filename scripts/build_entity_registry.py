@@ -283,7 +283,7 @@ def main() -> None:
         files = files[: args.max_files]
 
     if not files:
-        print("No localdata CSV cache files found; entity registry not built.")
+        print("No localdata CSV cache files found; entity registry not built.", flush=True)
         return
 
     league_dsu = DSU()
@@ -304,11 +304,12 @@ def main() -> None:
     use_cols = {"date", "home", "away", "league", "kickoff", "time", "odd1", "oddx", "odd2"}
     quick_cols = {"date", "home", "away", "league"}
 
-    for path in files:
+    print(f"Reading {len(files)} files to load teams and leagues...", flush=True)
+
+    for idx, path in enumerate(files, 1):
         source = source_from_path(path)
         # Check size of df before full parsing to dynamically isolate giant base historical files
         try:
-            # lightweight nrows check to see if it's a giant file
             test_df = pd.read_csv(path, dtype=str, nrows=10)
             is_giant = len(test_df) >= 10 and "_" not in path.name
         except Exception:
@@ -318,8 +319,9 @@ def main() -> None:
 
         try:
             df = pd.read_csv(path, dtype=str, usecols=lambda c: c in cols_to_load)
+            print(f"  [{idx}/{len(files)}] Loading {path.name}... ({len(df):,} rows, giant_mode={is_giant})", flush=True)
         except Exception as exc:  # noqa: BLE001 - cache can contain heterogeneous files
-            print(f"  WARN: skip {path.name}: {exc}")
+            print(f"  WARN: skip {path.name}: {exc}", flush=True)
             continue
 
         required = {"date", "home", "away"}
@@ -396,9 +398,12 @@ def main() -> None:
 
     # ----------------- Kickoff-and-Odds Aware Self-Learning Alias Engine -----------------
     scanner_merges = 0
-    print("Running Kickoff-and-Odds Aware Self-Learning Alias Engine...")
-    for day, matches in sorted(all_matches_by_date.items()):
-        # Group matches on this day by circular minute modulo 60 to prune comparisons
+    print("\nRunning Kickoff-and-Odds Aware Self-Learning Alias Engine...", flush=True)
+    all_dates_sorted = sorted(all_matches_by_date.items())
+    for idx_day, (day, matches) in enumerate(all_dates_sorted, 1):
+        if idx_day % 20 == 0 or idx_day == len(all_dates_sorted):
+            print(f"  Scanning date {day}... ({idx_day}/{len(all_dates_sorted)} dates, merged so far: {scanner_merges})", flush=True)
+
         by_min_mod = defaultdict(list)
         for m in matches:
             if m["hhmm"]:
@@ -435,7 +440,7 @@ def main() -> None:
                             team_dsu.union(m1["a_key"], m2["a_key"])
                             scanner_merges += 1
 
-    print(f"Self-Learning Alias Engine merged {scanner_merges} team alignments!")
+    print(f"Self-Learning Alias Engine completed! Merged {scanner_merges} team alignments.", flush=True)
 
     overlap_merges = 0
 
@@ -465,6 +470,8 @@ def main() -> None:
         raw_leagues_by_key[norm_league_cached(raw)].add(raw)
     for raw in team_counts:
         raw_teams_by_key[norm_entity_team_cached(raw)].add(raw)
+
+    print("\nGenerating final registry indexes...", flush=True)
 
     for _, keys in league_groups.items():
         raw_aliases = sorted({raw for key in keys for raw in raw_leagues_by_key.get(key, {key})})
