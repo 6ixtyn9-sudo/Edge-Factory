@@ -298,6 +298,8 @@ def main() -> None:
 
     rows_seen = 0
     files_used = 0
+    same_event_merges = 0
+    overlap_merges = 0
 
     use_cols = ["date", "home", "away", "league", "kickoff", "time", "odd1", "oddx", "odd2"]
     quick_cols = ["date", "home", "away", "league"]
@@ -400,10 +402,18 @@ def main() -> None:
         if not is_giant:
             # Reconstruct columns and capture matches for recent monthly subsets only
             sub_df = df.copy()
-            sub_df['hhmm'] = sub_df['kickoff'].fillna(sub_df.get('time', pd.NA)).apply(parse_hhmm)
-            sub_df['o1'] = sub_df.get('odd1', pd.NA).apply(_safe_float)
-            sub_df['ox'] = sub_df.get('oddx', pd.NA).apply(_safe_float)
-            sub_df['o2'] = sub_df.get('odd2', pd.NA).apply(_safe_float)
+            
+            if 'kickoff' in sub_df.columns:
+                ko_col = sub_df['kickoff']
+            elif 'time' in sub_df.columns:
+                ko_col = sub_df['time']
+            else:
+                ko_col = pd.Series([None] * len(sub_df), index=sub_df.index)
+            
+            sub_df['hhmm'] = ko_col.apply(parse_hhmm)
+            sub_df['o1'] = sub_df['odd1'].apply(_safe_float) if 'odd1' in sub_df.columns else None
+            sub_df['ox'] = sub_df['oddx'].apply(_safe_float) if 'oddx' in sub_df.columns else None
+            sub_df['o2'] = sub_df['odd2'].apply(_safe_float) if 'odd2' in sub_df.columns else None
 
             # Keep only rows containing kickoff time and at least one valid odds outcome
             sub_df = sub_df.dropna(subset=['hhmm'])
