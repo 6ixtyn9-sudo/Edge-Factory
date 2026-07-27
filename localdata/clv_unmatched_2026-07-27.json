@@ -199,19 +199,6 @@
         "kickoff_delta_minutes": 60
       },
       {
-        "home": "Galatasaray",
-        "away": "Venezia",
-        "league": "Club Friendlies",
-        "kickoff": "2026-07-27T18:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.59,
-        "bookmaker": "betfox",
-        "home_key": "galatasaray",
-        "away_key": "venezia",
-        "kickoff_delta_minutes": 60
-      },
-      {
         "home": "CSKA Sofia",
         "away": "Botev Plovdiv",
         "league": "Parva Liga",
@@ -220,6 +207,19 @@
         "selection": "home",
         "odds": 1.746,
         "bookmaker": "Pinnacle",
+        "home_key": "cskasofia",
+        "away_key": "botevplovdiv",
+        "kickoff_delta_minutes": 75
+      },
+      {
+        "home": "CSKA Sofia",
+        "away": "Botev Plovdiv",
+        "league": "Parva Liga",
+        "kickoff": "2026-07-27T18:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.72,
+        "bookmaker": "efbet.net",
         "home_key": "cskasofia",
         "away_key": "botevplovdiv",
         "kickoff_delta_minutes": 75
@@ -493,19 +493,6 @@
         "kickoff_delta_minutes": 60
       },
       {
-        "home": "Galatasaray",
-        "away": "Venezia",
-        "league": "Club Friendlies",
-        "kickoff": "2026-07-27T18:00:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 5.29,
-        "bookmaker": "tipsport",
-        "home_key": "galatasaray",
-        "away_key": "venezia",
-        "kickoff_delta_minutes": 60
-      },
-      {
         "home": "CSKA Sofia",
         "away": "Botev Plovdiv",
         "league": "Parva Liga",
@@ -514,6 +501,19 @@
         "selection": "away",
         "odds": 6.0,
         "bookmaker": "betfair",
+        "home_key": "cskasofia",
+        "away_key": "botevplovdiv",
+        "kickoff_delta_minutes": 75
+      },
+      {
+        "home": "CSKA Sofia",
+        "away": "Botev Plovdiv",
+        "league": "Parva Liga",
+        "kickoff": "2026-07-27T18:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 5.0,
+        "bookmaker": "Bet365",
         "home_key": "cskasofia",
         "away_key": "botevplovdiv",
         "kickoff_delta_minutes": 75
@@ -620,19 +620,6 @@
         "kickoff": "2026-07-27T18:15:00Z",
         "market": "1x2",
         "selection": "away",
-        "odds": 6.0,
-        "bookmaker": "betfair",
-        "home_key": "cskasofia",
-        "away_key": "botevplovdiv",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "CSKA Sofia",
-        "away": "Botev Plovdiv",
-        "league": "Parva Liga",
-        "kickoff": "2026-07-27T18:15:00Z",
-        "market": "1x2",
-        "selection": "away",
         "odds": 5.0,
         "bookmaker": "Bet365",
         "home_key": "cskasofia",
@@ -659,11 +646,24 @@
         "kickoff": "2026-07-27T18:30:00Z",
         "market": "1x2",
         "selection": "away",
-        "odds": 2.53,
-        "bookmaker": "efbet.net",
+        "odds": 2.4,
+        "bookmaker": "Novibet",
         "home_key": "fcbotosani",
         "away_key": "fcrapidbucuresti",
         "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Rosenborg BK",
+        "away": "Fredrikstad FK",
+        "league": "Eliteserien",
+        "kickoff": "2026-07-27T17:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 5.2,
+        "bookmaker": "betfair",
+        "home_key": "rosenborgbk",
+        "away_key": "fredrikstadfk",
+        "kickoff_delta_minutes": 60
       }
     ],
     "nearby_scoutingstats_candidates": [

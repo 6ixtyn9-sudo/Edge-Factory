@@ -261,6 +261,23 @@ def check_event_match(m1: dict, m2: dict) -> bool:
     return sim >= 0.40
 
 
+def load_existing_registry_aliases(team_dsu: DSU) -> int:
+    """Pre-populate the DSU with previously learned alignments to prevent loss in incremental runs."""
+    if not ENTITY_REGISTRY_PATH.exists():
+        return 0
+    try:
+        data = json.loads(ENTITY_REGISTRY_PATH.read_text())
+        loaded = 0
+        for canonical, info in data.get("teams", {}).items():
+            aliases = info.get("aliases", [])
+            for alias in aliases:
+                team_dsu.union(norm_entity_team_cached(canonical), norm_entity_team_cached(alias))
+                loaded += 1
+        return loaded
+    except Exception:
+        return 0
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Build localdata/entity_registry.json from captured CSV cache")
     ap.add_argument("--min-team-overlap", type=float, default=0.65, help="League merge Jaccard threshold (default: 0.65)")
@@ -288,6 +305,11 @@ def main() -> None:
 
     league_dsu = DSU()
     team_dsu = DSU()
+    
+    # Pre-populate the DSU from the existing entity registry file so we do not lose past year discoveries!
+    pre_loaded_aliases = load_existing_registry_aliases(team_dsu)
+    print(f"Pre-loaded {pre_loaded_aliases:,} historically learned team aliases from the existing registry.", flush=True)
+
     league_counts: Counter[str] = Counter()
     team_counts: Counter[str] = Counter()
     league_sources: dict[str, set[str]] = defaultdict(set)
