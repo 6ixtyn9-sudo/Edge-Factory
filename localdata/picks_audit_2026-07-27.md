@@ -2,7 +2,7 @@
 
 ## Overall
 
-- archived pick rows: 50
+- archived pick rows: 53
 - archived pick dates: 17
 - settled picks: 45
 - eligible prior 1x2 picks: 47
@@ -17,7 +17,7 @@
 
 - include same-day picks: False
 - same-day cutoff date: 2026-07-27
-- same-day rows excluded: 3
+- same-day rows excluded: 6
 
 ## By rule
 
