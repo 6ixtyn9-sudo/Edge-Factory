@@ -115,13 +115,16 @@ def audit_team_key_candidates(raw: object) -> list[str]:
     except Exception:
         pass
 
-    manual = {
-        "kpvj": "kpvkokkol",
-        "kpvjk": "kpvkokkol",
+    manual: dict[str, list[str]] = {
+        "kpvj": ["kpvkokkol"],
+        "kpvjk": ["kpvkokkol"],
+        "guangzhou": ["guangdong"],
+        "hebeikung": ["shijiazhu", "poweshiji"],
+        "meizhouke": ["meizhouwu", "meizhouha"],
     }
     base = norm_team(text)
     if base in manual:
-        keys.append(manual[base])
+        keys.extend(manual[base])
 
     return _dedupe_keys(keys)
 
