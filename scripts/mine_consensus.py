@@ -11,7 +11,10 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import numpy as np
+import pandas as pd
 from pathlib import Path
+from sklearn.linear_model import LogisticRegression
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
@@ -19,6 +22,7 @@ sys.path.insert(0, str(ROOT / "src"))
 import duckdb  # noqa: E402
 
 from edgefactory.assay import wilson_lb, weighted_consensus_score  # noqa: E402
+from edgefactory.entities import classify_competition  # noqa: E402
 from edgefactory.config import GATES  # noqa: E402
 
 DB = ROOT / "localdata" / "warehouse.duckdb"
@@ -73,7 +77,7 @@ def write_registry(payload: dict) -> bool:
         return False
 
     OUT.parent.mkdir(exist_ok=True)
-    OUT.write_text(json.dumps(payload, indent=2))
+    OUT.write_text(json.dumps(payload, indent=2, sort_keys=True))
     print(f"\nwritten -> {OUT}  (certified={new_certified})")
     return True
 
@@ -271,23 +275,10 @@ _WEIGHTED_SOURCES_BTTS  = ["forebet", "scoutingstats"]
 
 def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, float]],
                              results: list[dict], scales: dict[str, float]) -> None:
-    """Mine weighted consensus rules and append to results.
-
-    For each match in the join of all available sources we:
-      1. Collect (pick, wilson_lb) votes from each source.
-      2. Call weighted_consensus_score() to get (winning_pick, w_score, is_unanimous).
-      3. Only retain rows where is_unanimous=True (all valid sources agree).
-      4. Use w_score as the threshold variable (analogous to avg_p in head-count consensus).
-
-    The DuckDB query returns per-match per-source tuples; Python then applies
-    the weighted vote logic so the SQL stays simple (no UDFs needed).
-    """
-
-    # ---- 1x2 weighted ---------------------------------------------------
+    """Mine weighted consensus rules and append to results."""
     avail_1x2 = [s for s in _WEIGHTED_SOURCES_1X2 if s in source_lbs
                  and "1x2" in source_lbs[s]]
     if len(avail_1x2) >= 2:
-        # Build a UNION-style query: one row per (date,hkey,akey,source) with pick+pmax
         unions = []
         for src in avail_1x2:
             view = f"{src}_settled"
@@ -315,7 +306,6 @@ def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, flo
                     ORDER BY date, hkey, akey, source
                 """).fetchall()
             except Exception:
-                # simpler fallback without window
                 try:
                     rows = con.execute(f"""
                         WITH base AS ({unioned})
@@ -327,7 +317,6 @@ def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, flo
                 except Exception:
                     rows = []
 
-            # Group by match
             matches: dict[tuple, dict] = {}
             for date_, hkey, akey, home, away, outcome, league, source, pick, prob, pick_odds, best_odds in rows:
                 key = (date_, hkey, akey)
@@ -343,10 +332,8 @@ def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, flo
                     lb = source_lbs[source]["1x2"]
                     matches[key]["votes"].append((pick, lb))
 
-            # Evaluate threshold grid
             for w_thr in (0.55, 0.60, 0.65, 0.70, 0.75, 0.80):
                 rule_name = f"weighted-1x2 w_score>={w_thr:.2f}"
-                # collect qualifying rows
                 qualifying: list[dict] = []
                 for match in matches.values():
                     winning_pick, w_score, is_unanimous = weighted_consensus_score(match["votes"])
@@ -362,7 +349,6 @@ def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, flo
                         "w_score": w_score,
                     })
 
-                # compute train/valid stats from qualifying list
                 def _stats_from_list(rows_list: list[dict], split_: str, period: str) -> dict:
                     subset = [r for r in rows_list
                               if (r["date"] < split_) == (period == "train")]
@@ -405,15 +391,116 @@ def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, flo
                 })
 
 
+# ---- Machine Learning Meta-Classifier (The Level-2 Miner) ----------------
+
+def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression] | tuple[None, None]:
+    """Train walking-forward Logistic Regression model on consensus3.
+
+    Saves weights/intercepts inside the edges_consensus.json registry itself.
+    """
+    if not _table_exists(con, "consensus3"):
+        return None, None
+
+    q = """
+        SELECT date, home, away, outcome, league,
+               fb_pick, zb_pick, sa_pick,
+               fb_p, zb_p, sa_p,
+               pick_odds
+        FROM consensus3
+        WHERE outcome IS NOT NULL AND fb_p IS NOT NULL AND zb_p IS NOT NULL AND sa_p IS NOT NULL
+        ORDER BY date
+    """
+    try:
+        df = con.execute(q).df()
+    except Exception as exc:
+        print(f"ML Meta training skipped (failed query): {exc}")
+        return None, None
+
+    if len(df) < 500:
+        print(f"ML Meta training skipped (insufficient rows: {len(df)} < 500)")
+        return None, None
+
+    def get_majority_pick(row):
+        p1, p2, p3 = row['fb_pick'], row['zb_pick'], row['sa_pick']
+        if p1 == p2 or p1 == p3:
+            return p1
+        if p2 == p3:
+            return p2
+        return p1
+
+    df['pick'] = df.apply(get_majority_pick, axis=1)
+    df['y'] = (df['pick'] == df['outcome']).astype(int)
+
+    probs = df[['fb_p', 'zb_p', 'sa_p']].values
+    df['avg_p'] = np.mean(probs, axis=1)
+    df['min_p'] = np.min(probs, axis=1)
+    df['std_p'] = np.std(probs, axis=1)
+
+    df['is_home'] = (df['pick'] == 'home').astype(int)
+    df['is_away'] = (df['pick'] == 'away').astype(int)
+
+    df['cat'] = df['league'].apply(classify_competition)
+    for cat in ['friendly', 'youth', 'women', 'cup', 'league']:
+        df[f'cat_{cat}'] = (df['cat'] == cat).astype(int)
+
+    df['date_dt'] = pd.to_datetime(df['date'])
+    daily = df.groupby('date_dt').agg(wins=('y', 'sum'), total=('y', 'count')).reset_index()
+    daily = daily.sort_values('date_dt')
+    daily['shift_wins'] = daily['wins'].shift(1)
+    daily['shift_total'] = daily['total'].shift(1)
+    daily['rolling_wins'] = daily.rolling('14D', on='date_dt')['shift_wins'].sum()
+    daily['rolling_total'] = daily.rolling('14D', on='date_dt')['shift_total'].sum()
+    daily['rolling_hit_rate'] = daily['rolling_wins'] / daily['rolling_total']
+    daily['rolling_hit_rate'] = daily['rolling_hit_rate'].fillna(0.75)
+
+    df = df.merge(daily[['date_dt', 'rolling_hit_rate']], on='date_dt', how='left')
+    df['pick_odds'] = pd.to_numeric(df['pick_odds'], errors='coerce').fillna(1.50)
+
+    feature_cols = [
+        'fb_p', 'zb_p', 'sa_p',
+        'avg_p', 'min_p', 'std_p',
+        'pick_odds',
+        'is_home', 'is_away',
+        'cat_friendly', 'cat_youth', 'cat_women', 'cat_cup', 'cat_league',
+        'rolling_hit_rate'
+    ]
+
+    train_df = df[df['date'] < split]
+    if len(train_df) < 300:
+        print(f"ML Meta training skipped (insufficient train size: {len(train_df)} < 300)")
+        return None, None
+
+    X_train = train_df[feature_cols].values
+    y_train = train_df['y'].values
+
+    model = LogisticRegression(max_iter=1000, random_state=42)
+    model.fit(X_train, y_train)
+
+    # Generate probabilities for ALL matches
+    df['ml_p'] = model.predict_proba(df[feature_cols].values)[:, 1]
+
+    # Register in DuckDB view
+    con.register('ml_meta_raw_df', df[['date', 'home', 'away', 'ml_p', 'pick']])
+    con.execute("""
+        CREATE OR REPLACE TEMP VIEW ml_meta_settled AS
+        WITH ml AS (SELECT DISTINCT ON (date, home, away) * FROM ml_meta_raw_df),
+             c3 AS (SELECT DISTINCT ON (date, home, away) * FROM consensus3)
+        SELECT c3.sport, c3.date, c3.home, c3.away, c3.outcome,
+               ml.pick, ml.ml_p, c3.pick_odds, c3.league
+        FROM c3 JOIN ml USING (date, home, away)
+    """)
+
+    payload = {
+        "coef": list(model.coef_[0]),
+        "intercept": float(model.intercept_[0]),
+        "feature_cols": feature_cols,
+    }
+    print(f"ML Meta-Classifier trained successfully! coefficients={payload['coef']}, intercept={payload['intercept']}")
+    return payload, model
+
 
 def create_phase_a_confirmation_views(con) -> set[str]:
-    """Create Phase A unused-source confirmation views.
-
-    These views never change the base consensus. They only ask whether a thin or
-    previously-unused source confirms an already-certified candidate consensus.
-    If any such lever certifies, decay_monitor.py and assay_purity.py must
-    recreate the same views (L1).
-    """
+    """Create Phase A unused-source confirmation views."""
     made: set[str] = set()
 
     if _table_exists(con, "predictz_settled"):
@@ -568,8 +655,6 @@ def main():
         else:
             scales[v] = 1.0
 
-
-
     if has_betclan and has_fb:
         con.execute("""
             CREATE OR REPLACE TEMP VIEW betclan_settled AS
@@ -605,6 +690,14 @@ def main():
         scales["bzzoiro_settled"] = scales["bzzoiro"]
     else:
         has_bzzoiro_settled = False
+
+    # ---- Train and Evaluate ML Meta-Classifier -----------------------------
+    ml_model_payload, _ = train_ml_meta_classifier(con, args.split)
+    if ml_model_payload:
+        for thr in (70, 75, 80, 85):
+            results.append(evaluate(
+                con, f"ml-meta avg_p>={thr}", "ml_meta_settled",
+                f"ml_p*100 >= {thr}", args.split))
 
     if has_fb and has_zb:
         con.execute("""
@@ -643,14 +736,7 @@ def main():
                 f"fb_pick = zb_pick AND zb_pick = sa_pick AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
                 args.split))
 
-    # ---- Accuracy levers (Phase 13) ----------------------------------------
-    # All five levers are additive scans on the same underlying consensus views.
-    # No existing rules are removed or modified. Every new rule is walk-forward
-    # (train < split, valid >= split) with the same certification gates.
-    #
-    # Lever 1 — No-draw gate on 2way and 3way
-    # Draw picks never work (29–37% hit). Filter them out and measure whether
-    # removing them lifts valid ROI without killing n.
+    # ---- Accuracy levers ---------------------------------------------------
     if has_fb and has_zb and has_sa:
         sfb = scales["forebet_settled"]
         szb = scales["zulubet_settled"]
@@ -662,10 +748,6 @@ def main():
                 f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
                 args.split))
 
-    # Lever 2 — Per-source probability floor
-    # "avg_p >= 70" still passes when forebet says 85% and zulubet says 55%.
-    # Enforce a minimum per-source prob so no source drags the others into
-    # agreement. Floor = 60% per source (0.60 on 0-1 scale).
     if has_fb and has_zb:
         sfb = scales["forebet_settled"]
         szb = scales["zulubet_settled"]
@@ -688,10 +770,6 @@ def main():
                 f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
                 args.split))
 
-    # Lever 3 — Odds-band targeted certification
-    # Mine inside the 1.20–1.75 range separately; that band has the most volume
-    # and typically the best-calibrated ROI. Certifying it separately lets the
-    # purity assay make finer decisions per band.
     if has_fb and has_zb:
         sfb = scales["forebet_settled"]
         szb = scales["zulubet_settled"]
@@ -714,9 +792,6 @@ def main():
                 f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
                 args.split))
 
-    # Lever 4 — Home/away selection split
-    # Home picks and away picks have different structural hit rates. Split them
-    # to find whether one direction dominates and should be certified separately.
     if has_fb and has_zb:
         sfb = scales["forebet_settled"]
         szb = scales["zulubet_settled"]
@@ -739,21 +814,11 @@ def main():
                     f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
                     args.split))
 
-    # Lever 5 — Bettingclosed as 3rd-source confirmation on existing 2way picks
-    # bettingclosed has 559k settled rows and categorical pick_1x2 ('1','x','2').
-    # Map: '1' → home, '2' → away, 'x' → draw.
-    # Rule: 2way consensus (fb+zb) agrees AND bettingclosed confirms → treat as
-    # a 3-source confirmation without requiring bettingclosed's own prob score.
-    # The consensus view already carries fb+zb unanimous pick; we just join and
-    # check that bettingclosed's pick maps to the same outcome.
     has_bc_settled_full = _table_exists(con, "bettingclosed_settled")
     if has_fb and has_zb and has_bc_settled_full and _table_exists(con, "v_consensus2"):
         sfb = scales["forebet_settled"]
         szb = scales["zulubet_settled"]
         try:
-            # consensus2 / v_consensus2 expose (date, home, away) but NOT hkey/akey —
-            # those are absorbed into the join inside the warehouse view.
-            # Join bettingclosed_settled on (date, home, away) instead.
             con.execute(f"""
                 CREATE OR REPLACE TEMP VIEW consensus2_bc_confirm AS
                 WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
@@ -782,8 +847,6 @@ def main():
         if not has_bc_settled_full:
             print("skipped 2way+bc-confirms: no bettingclosed_settled data")
 
-    # Phase A — unused 1x2 source confirmation levers (predictz, windrawwin).
-    # Additive only: these rules must not displace base operational thresholds.
     run_phase_a_confirmation_levers(con, results, args.split, scales)
 
     if has_fb and has_zb and has_sa and has_vb:
@@ -854,8 +917,6 @@ def main():
     else:
         if not has_bzzoiro_settled: print("skipped 2way-unanimous-bz: no bzzoiro data")
 
-
-    # Main consensus views for 1x2 (join the 3 high-volume sources)
     if has_fb and has_zb and has_sa:
         con.execute("""
             CREATE OR REPLACE TEMP VIEW consensus3_dense AS
@@ -873,7 +934,6 @@ def main():
             WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
         """)
 
-    # OU/BTTS consensus (Forebet + Statarea only for maximum volume)
     if has_fb and has_sa:
         sfb, ssa = scales["forebet_settled"], scales["statarea_settled"]
         con.execute(f"""
@@ -896,8 +956,6 @@ def main():
                 con, f"ou25-unanimous-2way-sa avg_p>={thr}", "consensus_ou_dense",
                 f"fb_pick_ou = sa_pick_ou AND avg_p >= {thr}", args.split, market="ou_2.5"))
 
-    # BTTS consensus (Needs BTTS sources - currently FB is the only dense one. 
-    # Let's try joining FB with scoutingstats but allow lower overlap for now)
     if has_fb and has_ss:
         sfb, sss = scales["forebet_settled"], scales["scoutingstats_settled"]
         con.execute(f"""
@@ -920,9 +978,6 @@ def main():
                 con, f"btts-unanimous-2way-ss avg_p>={thr}", "consensus_btts_sparse",
                 f"avg_p >= {thr}", args.split, market="btts"))
 
-    # ---- Weighted consensus scan ----------------------------------------
-    # Compute per-source Wilson LBs then run the weighted miner.
-    # Appends weighted-* rules to results alongside the head-count rules.
     source_lbs = _source_wilson_lbs(con, args.split)
     if source_lbs:
         print(f"\nSource Wilson LBs for weighting (training period < {args.split}):")
@@ -962,12 +1017,15 @@ def main():
     
     for r in results:
         t, v = r["train"], r["valid"]
-
         flag = "🏆" if r["status"] == "certified" else "  "
         wtag = " [W]" if r.get("weighted") else ""
         print(f"{r['rule']:48s} {fmt_stats(t):>26s}   {fmt_stats(v):>26s}  {flag} {r['status']}{wtag}")
 
-    write_registry({"split": args.split, "gates": vars(GATES), "edges": results})
+    payload = {"split": args.split, "gates": vars(GATES), "edges": results}
+    if ml_model_payload:
+        payload["ml_model"] = ml_model_payload
+
+    write_registry(payload)
 
 
 if __name__ == "__main__":

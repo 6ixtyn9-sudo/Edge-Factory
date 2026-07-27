@@ -4,6 +4,7 @@
 The registry is learned from evidence already in the cache:
 
 - same loose event signature: date + loose_home_key + loose_away_key
+- Kickoff-and-Odds Aware Self-Learning Alias Engine
 - league team-pool overlap across labels
 - small curated overrides in config/entity_overrides.json
 
@@ -171,6 +172,79 @@ def jaccard(a: set[str], b: set[str]) -> float:
     return inter / union if union else 0.0
 
 
+# ----------------- Kickoff-and-Odds Aware Self-Learning Alias Engine helpers -----------------
+
+def parse_hhmm(val: Any) -> str | None:
+    if pd.isna(val) or not val:
+        return None
+    val_s = str(val).strip()
+    if " " in val_s:
+        val_s = val_s.split(" ")[1]
+    elif "T" in val_s:
+        val_s = val_s.split("T")[1]
+    if len(val_s) >= 5 and val_s[2] == ":":
+        return val_s[:5]
+    return None
+
+
+def _safe_float(val: Any) -> float | None:
+    if pd.isna(val) or not val:
+        return None
+    try:
+        f = float(val)
+        return f if f > 1.0 else None
+    except Exception:
+        return None
+
+
+def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
+    def get_ngrams(s: str) -> set[str]:
+        clean = re.sub(r"[^a-z0-9]", "", s.lower())
+        return {clean[i : i + n] for i in range(len(clean) - n + 1)} if len(clean) >= n else set()
+
+    g1 = get_ngrams(s1)
+    g2 = get_ngrams(s2)
+    if not g1 or not g2:
+        return 0.0
+    return len(g1 & g2) / len(g1 | g2)
+
+
+def check_event_match(m1: dict, m2: dict) -> bool:
+    # 1. Kickoff Time Check: within 5 mins, timezone-aware (difference modulo 60 min <= 5 or >= 55)
+    if not m1["hhmm"] or not m2["hhmm"]:
+        return False
+
+    h1, m_1 = map(int, m1["hhmm"].split(":"))
+    h2, m_2 = map(int, m2["hhmm"].split(":"))
+    mins1 = h1 * 60 + m_1
+    mins2 = h2 * 60 + m_2
+
+    diff = abs(mins1 - mins2) % 60
+    time_match = diff <= 5 or diff >= 55
+    if not time_match:
+        return False
+
+    # 2. Odds Check: at least one odd matching, and all matching outcomes within 0.05
+    odds_compared = 0
+    odds_matching = 0
+    for o_name in ["odd1", "oddx", "odd2"]:
+        v1 = m1[o_name]
+        v2 = m2[o_name]
+        if v1 is not None and v2 is not None:
+            odds_compared += 1
+            if abs(v1 - v2) <= 0.05:
+                odds_matching += 1
+    odds_match = odds_compared >= 1 and odds_matching == odds_compared
+    if not odds_match:
+        return False
+
+    # 3. Token Similarity Overlap: combined bigram similarity >= 40%
+    ev1 = f"{m1['home']} {m1['away']}"
+    ev2 = f"{m2['home']} {m2['away']}"
+    sim = char_ngram_similarity(ev1, ev2, n=2)
+    return sim >= 0.40
+
+
 def main() -> None:
     ap = argparse.ArgumentParser(description="Build localdata/entity_registry.json from captured CSV cache")
     ap.add_argument("--min-team-overlap", type=float, default=0.65, help="League merge Jaccard threshold (default: 0.65)")
@@ -180,6 +254,15 @@ def main() -> None:
     args = ap.parse_args()
 
     files = sorted(Path(p) for p in glob.glob(str(LOCALDATA / "*.csv.gz")))
+    # Exclude non-source files
+    files = [
+        f
+        for f in files
+        if not any(
+            x in f.name
+            for x in ("betexplorer_results", "betexplorer_odds", "clv_snapshots", "purity_registry", "forecast")
+        )
+    ]
     if args.max_files:
         files = files[: args.max_files]
 
@@ -197,14 +280,21 @@ def main() -> None:
     event_leagues: dict[tuple[str, str, str], set[str]] = defaultdict(set)
     event_homes: dict[tuple[str, str, str], set[str]] = defaultdict(set)
     event_aways: dict[tuple[str, str, str], set[str]] = defaultdict(set)
+    all_matches_by_date: dict[str, list[dict]] = defaultdict(list)
 
     rows_seen = 0
     files_used = 0
 
+    use_cols = {"date", "home", "away", "league", "kickoff", "time", "odd1", "oddx", "odd2"}
+    quick_cols = {"date", "home", "away", "league"}
+
     for path in files:
         source = source_from_path(path)
+        is_giant = path.name in {"forebet.csv.gz", "statarea.csv.gz"}
+        cols_to_load = quick_cols if is_giant else use_cols
+
         try:
-            df = pd.read_csv(path, dtype=str, usecols=lambda c: c in {"date", "home", "away", "league"})
+            df = pd.read_csv(path, dtype=str, usecols=lambda c: c in cols_to_load)
         except Exception as exc:  # noqa: BLE001 - cache can contain heterogeneous files
             print(f"  WARN: skip {path.name}: {exc}")
             continue
@@ -247,17 +337,29 @@ def main() -> None:
             event_homes[loose_event].add(h_key)
             event_aways[loose_event].add(a_key)
 
+            if not is_giant:
+                # --- Collect matches for Kickoff-and-Odds Scanner (Skip for giants) ---
+                k_val = data.get("kickoff") or data.get("time") or ""
+                hhmm = parse_hhmm(k_val)
+
+                o1 = _safe_float(data.get("odd1"))
+                ox = _safe_float(data.get("oddx"))
+                o2 = _safe_float(data.get("odd2"))
+
+                match_item = {
+                    "source": source,
+                    "home": home,
+                    "away": away,
+                    "h_key": h_key,
+                    "a_key": a_key,
+                    "hhmm": hhmm,
+                    "odd1": o1,
+                    "oddx": ox,
+                    "odd2": o2,
+                }
+                all_matches_by_date[day].append(match_item)
+
     # Same loose event = same league/team entity aliases.
-    #
-    # IMPORTANT:
-    # Do NOT auto-union league labels from same-event evidence.
-    #
-    # Production contamination observed:
-    #   Finland Ykkönen / Latvia Virsliga / Sweden Allsvenskan
-    #   -> world friendlies clubs / premier league / england championship
-    #
-    # League labels are too generic and cross-country ambiguous. Keep league
-    # aliases exact/manual-only. Team aliases below still use same-event evidence.
     same_event_merges = 0
 
     for labels in event_homes.values():
@@ -269,12 +371,49 @@ def main() -> None:
         for other in labels[1:]:
             team_dsu.union(labels[0], other)
 
-    # Automatic league team-pool overlap merging is disabled.
-    #
-    # Reason: cross-country leagues can share team-name patterns and generic
-    # competition labels. False league aliases poison purity contexts. Curated
-    # config/entity_overrides.json remains authoritative below.
-    league_keys = list(league_team_sets)
+    # ----------------- Kickoff-and-Odds Aware Self-Learning Alias Engine -----------------
+    scanner_merges = 0
+    print("Running Kickoff-and-Odds Aware Self-Learning Alias Engine...")
+    for day, matches in sorted(all_matches_by_date.items()):
+        # Group matches on this day by circular minute modulo 60 to prune comparisons
+        by_min_mod = defaultdict(list)
+        for m in matches:
+            if m["hhmm"]:
+                try:
+                    h, mins = map(int, m["hhmm"].split(":"))
+                    m_mod = (h * 60 + mins) % 60
+                    by_min_mod[m_mod].append(m)
+                except ValueError:
+                    pass
+
+        buckets = list(by_min_mod)
+        n_buckets = len(buckets)
+        for i in range(n_buckets):
+            b1 = buckets[i]
+            for j in range(i, n_buckets):
+                b2 = buckets[j]
+                # Check circular distance between buckets b1 and b2
+                dist = abs(b1 - b2)
+                if dist > 30:
+                    dist = 60 - dist
+                if dist > 5:
+                    continue
+
+                # Compare matches
+                for m1 in by_min_mod[b1]:
+                    for m2 in by_min_mod[b2]:
+                        if m1 is m2 or m1["source"] == m2["source"]:
+                            continue
+                        if team_dsu.find(m1["h_key"]) == team_dsu.find(m2["h_key"]) and team_dsu.find(m1["a_key"]) == team_dsu.find(m2["a_key"]):
+                            continue
+
+                        if check_event_match(m1, m2):
+                            team_dsu.union(m1["h_key"], m2["h_key"])
+                            team_dsu.union(m1["a_key"], m2["a_key"])
+                            scanner_merges += 1
+
+    print(f"Self-Learning Alias Engine merged {scanner_merges} team alignments!")
+
     overlap_merges = 0
 
     # Curated overrides are authoritative.
@@ -350,6 +489,7 @@ def main() -> None:
             "team_overlap_league_merges": overlap_merges,
             "min_team_overlap": args.min_team_overlap,
             "min_overlap_teams": args.min_overlap_teams,
+            "self_learning_alias_merges": scanner_merges,
         },
         "alias_index": {
             "leagues": league_alias_index,
@@ -365,7 +505,7 @@ def main() -> None:
     print(f"rows_seen : {rows_seen}")
     print(f"leagues   : {len(leagues)} canonical, {len(league_alias_index)} aliases")
     print(f"teams     : {len(teams)} canonical, {len(team_alias_index)} aliases")
-    print(f"merges    : same_event_league={same_event_merges}, league_team_overlap={overlap_merges}")
+    print(f"merges    : same_event_league={same_event_merges}, league_team_overlap={overlap_merges}, self_learning_alias_merges={scanner_merges}")
 
     if args.dry_run:
         print("--dry-run: registry NOT written")
