@@ -36,9 +36,11 @@ SOURCE_TEAM_KEY_ALIASES = {
     "thunder": "dandenong",   # Forebet: Thunder SC; others: Dandenong Thunder
     "hobartzeb": "clarencez", # some feeds: Hobart Zebras; others: Clarence Zebras
     "neftchi": "neftchife",   # Neftchi -> Neftchi Fergana (Uzbekistan)
+    "dila": "dilagori",       # Dila -> Dila Gori (Georgia ECL)
 }
 
 ODDS_EXACT_TEAM_ALIASES = {
+    "dila": "dilagori",              # Dila -> Dila Gori (Georgia)
     "neftchi": "neftchife",          # Neftchi -> Neftchi Fergana (Uzbekistan)
     "caboverde": "capeverde",
     "drcongo": "congodr",
@@ -62,6 +64,7 @@ ODDS_EXACT_TEAM_ALIASES = {
 }
 
 ODDS_MATCH_TEAM_ALIASES = {
+    "dila": "dilagori",                  # Dila -> Dila Gori (Georgia)
     "caboverde": "capeverde",
     "drcongo": "congodr",
     "ifkmarieh": "mariehamn",

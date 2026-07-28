@@ -131,6 +131,7 @@ def audit_team_key_candidates(raw: object) -> list[str]:
         "rigaii": ["rigafcii"],
         "valmierab": ["valmiera"],
         "neftchi": ["neftchife"],
+        "dila": ["dilagori"],
     }
     base = norm_team(text)
     if base in manual:
