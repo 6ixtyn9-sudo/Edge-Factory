@@ -366,6 +366,12 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
                     AVG(CASE WHEN gs >= 1 THEN 1.0 ELSE 0.0 END) AS away_score_o05,
                     AVG(CASE WHEN hs >= 2 THEN 1.0 ELSE 0.0 END) AS home_score_o15,
                     AVG(CASE WHEN gs >= 2 THEN 1.0 ELSE 0.0 END) AS away_score_o15,
+                    AVG(CASE WHEN hs >= 3 THEN 1.0 ELSE 0.0 END) AS home_score_o25,
+                    AVG(CASE WHEN gs >= 3 THEN 1.0 ELSE 0.0 END) AS away_score_o25,
+                    AVG(CASE WHEN hs >= 4 THEN 1.0 ELSE 0.0 END) AS home_score_o35,
+                    AVG(CASE WHEN gs >= 4 THEN 1.0 ELSE 0.0 END) AS away_score_o35,
+                    AVG(CASE WHEN hs >= 5 THEN 1.0 ELSE 0.0 END) AS home_score_o45,
+                    AVG(CASE WHEN gs >= 5 THEN 1.0 ELSE 0.0 END) AS away_score_o45,
                     AVG(CASE WHEN hs >= gs THEN 1.0 ELSE 0.0 END) AS home_1x_rate,
                     AVG(CASE WHEN gs >= hs THEN 1.0 ELSE 0.0 END) AS away_x2_rate,
                     AVG(CASE WHEN gs = 0 THEN 1.0 ELSE 0.0 END) AS home_cs_rate,
@@ -377,6 +383,9 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
                 keys = [
                     "n", "avg_goals", "over15_rate", "over25_rate", "under35_rate", "btts_rate",
                     "home_score_o05", "away_score_o05", "home_score_o15", "away_score_o15",
+                    "home_score_o25", "away_score_o25",
+                    "home_score_o35", "away_score_o35",
+                    "home_score_o45", "away_score_o45",
                     "home_1x_rate", "away_x2_rate", "home_cs_rate", "away_cs_rate"
                 ]
                 league_stats = dict(zip(keys, row))
@@ -396,13 +405,20 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
                 AVG(CASE WHEN hs > 0 AND gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
                 AVG(CASE WHEN hs >= 1 THEN 1.0 ELSE 0.0 END) AS score_o05,
                 AVG(CASE WHEN hs >= 2 THEN 1.0 ELSE 0.0 END) AS score_o15,
+                AVG(CASE WHEN hs >= 3 THEN 1.0 ELSE 0.0 END) AS score_o25,
+                AVG(CASE WHEN hs >= 4 THEN 1.0 ELSE 0.0 END) AS score_o35,
+                AVG(CASE WHEN hs >= 5 THEN 1.0 ELSE 0.0 END) AS score_o45,
                 AVG(CASE WHEN hs >= gs THEN 1.0 ELSE 0.0 END) AS rate_1x,
                 AVG(CASE WHEN gs = 0 THEN 1.0 ELSE 0.0 END) AS cs_rate
             FROM forebet_settled
             WHERE hkey = ?
         """, [hkey]).fetchone()
         if row and row[0] >= 5:
-            keys = ["n", "avg_goals", "over15_rate", "over25_rate", "under35_rate", "btts_rate", "score_o05", "score_o15", "rate_1x", "cs_rate"]
+            keys = [
+                "n", "avg_goals", "over15_rate", "over25_rate", "under35_rate", "btts_rate",
+                "score_o05", "score_o15", "score_o25", "score_o35", "score_o45",
+                "rate_1x", "cs_rate"
+            ]
             home_stats = dict(zip(keys, row))
     except Exception:
         pass
@@ -420,13 +436,20 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
                 AVG(CASE WHEN hs > 0 AND gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
                 AVG(CASE WHEN gs >= 1 THEN 1.0 ELSE 0.0 END) AS score_o05,
                 AVG(CASE WHEN gs >= 2 THEN 1.0 ELSE 0.0 END) AS score_o15,
+                AVG(CASE WHEN gs >= 3 THEN 1.0 ELSE 0.0 END) AS score_o25,
+                AVG(CASE WHEN gs >= 4 THEN 1.0 ELSE 0.0 END) AS score_o35,
+                AVG(CASE WHEN gs >= 5 THEN 1.0 ELSE 0.0 END) AS score_o45,
                 AVG(CASE WHEN gs >= hs THEN 1.0 ELSE 0.0 END) AS rate_x2,
                 AVG(CASE WHEN hs = 0 THEN 1.0 ELSE 0.0 END) AS cs_rate
             FROM forebet_settled
             WHERE akey = ?
         """, [akey]).fetchone()
         if row and row[0] >= 5:
-            keys = ["n", "avg_goals", "over15_rate", "over25_rate", "under35_rate", "btts_rate", "score_o05", "score_o15", "rate_x2", "cs_rate"]
+            keys = [
+                "n", "avg_goals", "over15_rate", "over25_rate", "under35_rate", "btts_rate",
+                "score_o05", "score_o15", "score_o25", "score_o35", "score_o45",
+                "rate_x2", "cs_rate"
+            ]
             away_stats = dict(zip(keys, row))
     except Exception:
         pass
@@ -439,6 +462,12 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     l_a_o05 = league_stats.get("away_score_o05", 0.72)
     l_h_o15 = league_stats.get("home_score_o15", 0.45)
     l_a_o15 = league_stats.get("away_score_o15", 0.45)
+    l_h_o25 = league_stats.get("home_score_o25", 0.18)
+    l_a_o25 = league_stats.get("away_score_o25", 0.18)
+    l_h_o35 = league_stats.get("home_score_o35", 0.05)
+    l_a_o35 = league_stats.get("away_score_o35", 0.05)
+    l_h_o45 = league_stats.get("home_score_o45", 0.01)
+    l_a_o45 = league_stats.get("away_score_o45", 0.01)
     l_1x = league_stats.get("home_1x_rate", 0.70)
     l_x2 = league_stats.get("away_x2_rate", 0.70)
     l_h_cs = league_stats.get("home_cs_rate", 0.28)
@@ -450,6 +479,9 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     h_btts = home_stats.get("btts_rate", l_btts)
     h_score_o05 = home_stats.get("score_o05", l_h_o05)
     h_score_o15 = home_stats.get("score_o15", l_h_o15)
+    h_score_o25 = home_stats.get("score_o25", l_h_o25)
+    h_score_o35 = home_stats.get("score_o35", l_h_o35)
+    h_score_o45 = home_stats.get("score_o45", l_h_o45)
     h_1x = home_stats.get("rate_1x", l_1x)
     h_cs = home_stats.get("cs_rate", l_h_cs)
     h_u35 = home_stats.get("under35_rate", l_u35)
@@ -459,6 +491,9 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     a_btts = away_stats.get("btts_rate", l_btts)
     a_score_o05 = away_stats.get("score_o05", l_a_o05)
     a_score_o15 = away_stats.get("score_o15", l_a_o15)
+    a_score_o25 = away_stats.get("score_o25", l_a_o25)
+    a_score_o35 = away_stats.get("score_o35", l_a_o35)
+    a_score_o45 = away_stats.get("score_o45", l_a_o45)
     a_x2 = away_stats.get("rate_x2", l_x2)
     a_cs = away_stats.get("cs_rate", l_a_cs)
     a_u35 = away_stats.get("under35_rate", l_u35)
@@ -484,13 +519,29 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
 
     prob_h_o05 = 0.4 * l_h_o05 + 0.6 * h_score_o05
     prob_h_o15 = 0.4 * l_h_o15 + 0.6 * h_score_o15
+    prob_h_o25 = 0.4 * l_h_o25 + 0.6 * h_score_o25
+    prob_h_o35 = 0.4 * l_h_o35 + 0.6 * h_score_o35
+    prob_h_o45 = 0.4 * l_h_o45 + 0.6 * h_score_o45
     prob_h_u05 = 1.0 - prob_h_o05
     prob_h_u15 = 1.0 - prob_h_o15
+    prob_h_u25 = 1.0 - prob_h_o25
+    prob_h_u35 = 1.0 - prob_h_o35
+    prob_h_u45 = 1.0 - prob_h_o45
     
     prob_a_o05 = 0.4 * l_a_o05 + 0.6 * a_score_o05
     prob_a_o15 = 0.4 * l_a_o15 + 0.6 * a_score_o15
+    prob_a_o25 = 0.4 * l_a_o25 + 0.6 * a_score_o25
+    prob_a_o35 = 0.4 * l_a_o35 + 0.6 * a_score_o35
+    prob_a_o45 = 0.4 * l_a_o45 + 0.6 * a_score_o45
     prob_a_u05 = 1.0 - prob_a_o05
     prob_a_u15 = 1.0 - prob_a_o15
+    prob_a_u25 = 1.0 - prob_a_o25
+    prob_a_u35 = 1.0 - prob_a_o35
+    prob_a_u45 = 1.0 - prob_a_o45
+    prob_a_o25 = 0.4 * l_a_o25 + 0.6 * a_score_o25
+    prob_a_u05 = 1.0 - prob_a_o05
+    prob_a_u15 = 1.0 - prob_a_o15
+    prob_a_u25 = 1.0 - prob_a_o25
 
     candidates = []
     
@@ -557,6 +608,27 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             "label": "Home Team Over 1.5 Goals",
             "reason": f"Home multi-goal rate is {h_score_o15:.1%}"
         })
+    if prob_h_o25 >= 0.80:
+        candidates.append({
+            "market": "home_over_25",
+            "probability": prob_h_o25,
+            "label": "Home Team Over 2.5 Goals",
+            "reason": f"Home ultra-high goal rate is {h_score_o25:.1%}"
+        })
+    if prob_h_o35 >= 0.80:
+        candidates.append({
+            "market": "home_over_35",
+            "probability": prob_h_o35,
+            "label": "Home Team Over 3.5 Goals",
+            "reason": f"Home extremely high goal rate is {h_score_o35:.1%}"
+        })
+    if prob_h_o45 >= 0.80:
+        candidates.append({
+            "market": "home_over_45",
+            "probability": prob_h_o45,
+            "label": "Home Team Over 4.5 Goals",
+            "reason": f"Home elite-level goal rate is {h_score_o45:.1%}"
+        })
     if prob_h_u05 >= 0.80:
         candidates.append({
             "market": "home_under_05",
@@ -570,6 +642,27 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             "probability": prob_h_u15,
             "label": "Home Team Under 1.5 Goals",
             "reason": f"Combined Under 1.5 is {prob_h_u15:.1%}"
+        })
+    if prob_h_u25 >= 0.80:
+        candidates.append({
+            "market": "home_under_25",
+            "probability": prob_h_u25,
+            "label": "Home Team Under 2.5 Goals",
+            "reason": f"Combined Under 2.5 is {prob_h_u25:.1%}"
+        })
+    if prob_h_u35 >= 0.80:
+        candidates.append({
+            "market": "home_under_35",
+            "probability": prob_h_u35,
+            "label": "Home Team Under 3.5 Goals",
+            "reason": f"Combined Under 3.5 is {prob_h_u35:.1%}"
+        })
+    if prob_h_u45 >= 0.80:
+        candidates.append({
+            "market": "home_under_45",
+            "probability": prob_h_u45,
+            "label": "Home Team Under 4.5 Goals",
+            "reason": f"Combined Under 4.5 is {prob_h_u45:.1%}"
         })
     if prob_a_o05 >= 0.80:
         candidates.append({
@@ -585,6 +678,27 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             "label": "Away Team Over 1.5 Goals",
             "reason": f"Away multi-goal rate is {a_score_o15:.1%}"
         })
+    if prob_a_o25 >= 0.80:
+        candidates.append({
+            "market": "away_over_25",
+            "probability": prob_a_o25,
+            "label": "Away Team Over 2.5 Goals",
+            "reason": f"Away ultra-high goal rate is {a_score_o25:.1%}"
+        })
+    if prob_a_o35 >= 0.80:
+        candidates.append({
+            "market": "away_over_35",
+            "probability": prob_a_o35,
+            "label": "Away Team Over 3.5 Goals",
+            "reason": f"Away extremely high goal rate is {a_score_o35:.1%}"
+        })
+    if prob_a_o45 >= 0.80:
+        candidates.append({
+            "market": "away_over_45",
+            "probability": prob_a_o45,
+            "label": "Away Team Over 4.5 Goals",
+            "reason": f"Away elite-level goal rate is {a_score_o45:.1%}"
+        })
     if prob_a_u05 >= 0.80:
         candidates.append({
             "market": "away_under_05",
@@ -598,6 +712,27 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             "probability": prob_a_u15,
             "label": "Away Team Under 1.5 Goals",
             "reason": f"Combined Under 1.5 is {prob_a_u15:.1%}"
+        })
+    if prob_a_u25 >= 0.80:
+        candidates.append({
+            "market": "away_under_25",
+            "probability": prob_a_u25,
+            "label": "Away Team Under 2.5 Goals",
+            "reason": f"Combined Under 2.5 is {prob_a_u25:.1%}"
+        })
+    if prob_a_u35 >= 0.80:
+        candidates.append({
+            "market": "away_under_35",
+            "probability": prob_a_u35,
+            "label": "Away Team Under 3.5 Goals",
+            "reason": f"Combined Under 3.5 is {prob_a_u35:.1%}"
+        })
+    if prob_a_u45 >= 0.80:
+        candidates.append({
+            "market": "away_under_45",
+            "probability": prob_a_u45,
+            "label": "Away Team Under 4.5 Goals",
+            "reason": f"Combined Under 4.5 is {prob_a_u45:.1%}"
         })
     if prob_double_chance >= 0.80:
         dc_label = "1X" if pick_sel == "home" else "X2" if pick_sel == "away" else "12"
