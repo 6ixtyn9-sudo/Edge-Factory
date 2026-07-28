@@ -3,28 +3,28 @@
 
 Usage
 -----
-  /usr/local/bin/python3 scripts/daily.py
-  /usr/local/bin/python3 scripts/daily.py --picks-only
-  /usr/local/bin/python3 scripts/daily.py --date 2026-06-15
-  /usr/local/bin/python3 scripts/daily.py --future-days 2
+  python3 scripts/daily.py
+  python3 scripts/daily.py --picks-only
+  python3 scripts/daily.py --date 2026-06-15
+  python3 scripts/daily.py --future-days 2
 
 Autonomous 3-Hour Background Service & Accumulating Ledger:
-  /usr/local/bin/python3 scripts/daily.py --auto-run
+  python3 scripts/daily.py --auto-run
       Runs an autonomous service every 3 hours. Completely eliminates manual human involvement:
       - If today's official archive does not exist yet (06:00 / First Run): executes the complete heavy maintenance pipeline, builds DuckDB, locks the morning picks, and syncs to Supabase.
       - If today's archive already exists (Intraday Runs): automatically scans for newly appearing fixtures/odds (the late slate). It perfectly retains all existing locked morning picks to prevent intraday performance corruption, automatically appends any brand new certified bets to the official ledger, captures qualitative time-of-day CLV snapshots, and syncs late-slate discoveries directly to Supabase.
 
-  /usr/local/bin/python3 scripts/daily.py --auto-once
+  python3 scripts/daily.py --auto-once
       Performs exactly one autonomous iteration of the smart accumulating schedule and exits.
 
 Deliberate Human-Intervention Modes (Optional):
-  /usr/local/bin/python3 scripts/daily.py --forecast-refresh
+  python3 scripts/daily.py --forecast-refresh
       Performs a standalone non-official forecast refresh, saving to localdata/forecast_*.json without modifying official ledgers.
 
-  /usr/local/bin/python3 scripts/daily.py --promote-forecast localdata/forecast_2026-06-19_1100.json
+  python3 scripts/daily.py --promote-forecast localdata/forecast_2026-06-19_1100.json
       Promotes an external forecast file to overwrite the official tracked performance record.
 
-  /usr/local/bin/python3 scripts/daily.py --clv-only
+  python3 scripts/daily.py --clv-only
       Runs CLV monitoring capture and rolling report without running miners or picks.
 """
 
@@ -58,10 +58,10 @@ def get_build_entity_registry_cmd() -> str:
             data = json.loads(path.read_text())
             inputs = data.get("inputs", {})
             if inputs.get("full_scan_completed") is True:
-                return "PYTHONPATH=src /usr/local/bin/python3 scripts/build_entity_registry.py"
+                return "PYTHONPATH=src python3 scripts/build_entity_registry.py"
         except Exception:
             pass
-    return "PYTHONPATH=src /usr/local/bin/python3 scripts/build_entity_registry.py --full-scan"
+    return "PYTHONPATH=src python3 scripts/build_entity_registry.py --full-scan"
 
 
 def local_tz() -> ZoneInfo:
@@ -139,7 +139,7 @@ def save_morning_baseline(target_date: str, picks_text: str | None, *, overwrite
 def sync_official_archive(target_date: str, label: str = "sync_supabase") -> None:
     archive = archived_picks_file(target_date)
     run_soft(
-        f"/usr/local/bin/python3 scripts/sync_supabase.py --picks {shlex.quote(str(archive))} --target-date {target_date} --replace-date",
+        f"python3 scripts/sync_supabase.py --picks {shlex.quote(str(archive))} --target-date {target_date} --replace-date",
         label,
     )
 
@@ -385,7 +385,7 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
     for offset in range(1, days):
         target = (start + timedelta(days=offset)).isoformat()
         output = run_capture(
-            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src /usr/local/bin/python3 scripts/picks_today.py {target}",
+            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target}",
             f"future planner: picks_today {target}",
         )
         print_pick_run_summary(output)
@@ -471,8 +471,8 @@ def promote_forecast(forecast_arg: str, default_date: str) -> None:
 
     generate_daily_report(target_date)
 
-    run_soft("/usr/local/bin/python3 scripts/sync_supabase.py", "sync_supabase (Promoted Official Record)")
-    run_soft(f"/usr/local/bin/python3 scripts/notify_whatsapp.py --force --date {target_date}", "notify_whatsapp (Promoted Official Record)")
+    run_soft("python3 scripts/sync_supabase.py", "sync_supabase (Promoted Official Record)")
+    run_soft(f"python3 scripts/notify_whatsapp.py --force --date {target_date}", "notify_whatsapp (Promoted Official Record)")
     print(f"✅ Forecast {path.name} successfully promoted to official record for {target_date}.")
 
 
@@ -559,12 +559,12 @@ def run_pipeline(
     if mode == "clv_only":
         label = clv_label or "monitoring"
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py capture --date {target_date} --label {label}",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label {label}",
             f"audit_clv capture {target_date} [{label}]",
         )
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
             f"audit_clv report {clv_start}..{target_date}",
         )
         return
@@ -578,17 +578,17 @@ def run_pipeline(
 
     if mode == "official":
         if not picks_only:
-            run("/usr/local/bin/python3 scripts/capture_daily.py --skip-build", "capture_daily (D30 lookback)")
+            run("python3 scripts/capture_daily.py --skip-build", "capture_daily (D30 lookback)")
             run(
-                f"/usr/local/bin/python3 scripts/backfill_results.py --days {backfill_days}",
+                f"python3 scripts/backfill_results.py --days {backfill_days}",
                 f"backfill_results (D{backfill_days})",
             )
-            run("/usr/local/bin/python3 scripts/build_warehouse.py", "build_warehouse")
+            run("python3 scripts/build_warehouse.py", "build_warehouse")
 
         run(get_build_entity_registry_cmd(), "build_entity_registry")
-        run("PYTHONPATH=src /usr/local/bin/python3 scripts/mine_consensus.py", "mine_consensus")
-        run("PYTHONPATH=src /usr/local/bin/python3 scripts/decay_monitor.py", "decay_monitor")
-        run("PYTHONPATH=src /usr/local/bin/python3 scripts/assay_purity.py", "assay_purity")
+        run("PYTHONPATH=src python3 scripts/mine_consensus.py", "mine_consensus")
+        run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
+        run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
 
         target_archive = archived_picks_file(target_date)
         if target_archive.exists() and not force_repick:
@@ -599,7 +599,7 @@ def run_pipeline(
             print(f"  reused archive: {target_archive}")
         else:
             run(
-                f"{picks_env_prefix(run_as_of)} PYTHONPATH=src /usr/local/bin/python3 scripts/picks_today.py {target_date}",
+                f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
                 f"picks_today {target_date}",
             )
             if PICKS_TODAY_FILE.exists():
@@ -612,7 +612,7 @@ def run_pipeline(
             save_morning_baseline(target_date, target_picks_text, overwrite=force_repick)
 
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
             f"audit_clv capture {target_date} [pick_time]",
         )
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
@@ -624,19 +624,19 @@ def run_pipeline(
 
         restore_target_picks(target_picks_text)
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py capture --date {target_date} --label end_of_run",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label end_of_run",
             f"audit_clv capture {target_date} [end_of_run]",
         )
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
             f"audit_clv report {clv_start}..{target_date}",
         )
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
+            f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
         )
         sync_official_archive(target_date, "sync_supabase")
-        run_soft(f"/usr/local/bin/python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Smart Dispatch)")
+        run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Smart Dispatch)")
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "autonomous_intraday":
@@ -645,14 +645,14 @@ def run_pipeline(
         # for yesterday and older. capture_daily is the heavy scraper; skip it.
         # backfill_results fills missing hs/gs from already-captured data (fast).
         run_soft(
-            f"/usr/local/bin/python3 scripts/backfill_results.py --days {backfill_days}",
+            f"python3 scripts/backfill_results.py --days {backfill_days}",
             f"backfill_results (D{backfill_days})",
         )
-        run_soft("/usr/local/bin/python3 scripts/build_warehouse.py", "build_warehouse")
+        run_soft("python3 scripts/build_warehouse.py", "build_warehouse")
         run(get_build_entity_registry_cmd(), "build_entity_registry")
-        run("PYTHONPATH=src /usr/local/bin/python3 scripts/mine_consensus.py", "mine_consensus")
-        run("PYTHONPATH=src /usr/local/bin/python3 scripts/decay_monitor.py", "decay_monitor")
-        run("PYTHONPATH=src /usr/local/bin/python3 scripts/assay_purity.py", "assay_purity")
+        run("PYTHONPATH=src python3 scripts/mine_consensus.py", "mine_consensus")
+        run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
+        run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
 
         target_archive = archived_picks_file(target_date)
         try:
@@ -664,7 +664,7 @@ def run_pipeline(
 
         print(f"\n>>> Autonomous Intraday Discovery Run {target_date}")
         run(
-            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src /usr/local/bin/python3 scripts/picks_today.py {target_date}",
+            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
             f"picks_today {target_date} (Late Slate Scan)",
         )
 
@@ -682,11 +682,11 @@ def run_pipeline(
             target_archive.write_text(merged_text)
             PICKS_TODAY_FILE.write_text(merged_text)
             generate_daily_report(target_date)
-            run_soft(f"/usr/local/bin/python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Autonomous Intraday Dispatch)")
+            run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Autonomous Intraday Dispatch)")
         else:
             print("\n  No new matches/edges appeared. Locked official ledger unchanged.")
             restore_target_picks(target_archive.read_text())
-            run_soft(f"/usr/local/bin/python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Silent Check)")
+            run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Silent Check)")
 
         sync_official_archive(target_date, "sync_supabase (Autonomous Accumulating Record)")
         try:
@@ -701,17 +701,17 @@ def run_pipeline(
         # Qualitative time-of-day CLV capture
         qlabel = get_qualitative_hour_label()
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py capture --date {target_date} --label {qlabel}",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label {qlabel}",
             f"audit_clv capture {target_date} [{qlabel}]",
         )
 
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
             f"audit_clv report {clv_start}..{target_date}",
         )
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
+            f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
         )
         print(f"\n=== Autonomous Intraday Service Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
@@ -719,14 +719,14 @@ def run_pipeline(
     elif mode == "forecast":
         # Fast non-official forecast refresh (Human research mode)
         run(get_build_entity_registry_cmd(), "build_entity_registry")
-        run("PYTHONPATH=src /usr/local/bin/python3 scripts/mine_consensus.py", "mine_consensus")
-        run("PYTHONPATH=src /usr/local/bin/python3 scripts/decay_monitor.py", "decay_monitor")
-        run("PYTHONPATH=src /usr/local/bin/python3 scripts/assay_purity.py", "assay_purity")
+        run("PYTHONPATH=src python3 scripts/mine_consensus.py", "mine_consensus")
+        run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
+        run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
 
         flabel = forecast_label or datetime.now(local_tz()).strftime("%H%M")
         print(f"\n>>> forecast refresh {target_date} [{flabel}]")
         run(
-            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src /usr/local/bin/python3 scripts/picks_today.py {target_date}",
+            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
             f"picks_today {target_date} (Forecast Mode)",
         )
 
@@ -745,19 +745,19 @@ def run_pipeline(
             print(f"  Forecast TXT saved : {txt_path}")
 
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py capture --date {target_date} --label forecast_{flabel} --input {json_path}",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label forecast_{flabel} --input {json_path}",
             f"audit_clv capture {target_date} [forecast_{flabel}]",
         )
 
         qlabel = get_qualitative_hour_label()
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py capture --date {target_date} --label {qlabel} --input {json_path}",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label {qlabel} --input {json_path}",
             f"audit_clv capture {target_date} [{qlabel}]",
         )
 
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
         run_soft(
-            f"PYTHONPATH=src /usr/local/bin/python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
+            f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
             f"audit_clv report {clv_start}..{target_date}",
         )
 
