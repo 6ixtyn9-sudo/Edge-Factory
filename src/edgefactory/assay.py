@@ -63,6 +63,7 @@ def decay_verdict(
     recent_wins: int,
     recent_n: int,
     min_recent: int = 30,
+    recent_roi: float | None = None,
 ) -> DecayReport:
     """Compare recent window against certified baseline.
     DEAD:     recent Wilson UB below baseline LB (recent can't even touch the old floor)
@@ -85,6 +86,15 @@ def decay_verdict(
         v = "WATCH"
     else:
         v = "HEALTHY"
+
+    # Red-Team ROI-Aware Decay Enforcement:
+    # An edge cannot be healthy if it has a negative ROI over a meaningful sample.
+    if recent_roi is not None and recent_n >= min_recent:
+        if recent_roi < -0.03:
+            v = "DECAYING"
+        elif recent_roi < 0.0:
+            if v == "HEALTHY":
+                v = "WATCH"
 
     return DecayReport(v, b_lb, r_lb, r_ub, recent_n)
 
