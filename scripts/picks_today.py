@@ -35,9 +35,11 @@ SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 SOURCE_TEAM_KEY_ALIASES = {
     "thunder": "dandenong",   # Forebet: Thunder SC; others: Dandenong Thunder
     "hobartzeb": "clarencez", # some feeds: Hobart Zebras; others: Clarence Zebras
+    "neftchi": "neftchife",   # Neftchi -> Neftchi Fergana (Uzbekistan)
 }
 
 ODDS_EXACT_TEAM_ALIASES = {
+    "neftchi": "neftchife",          # Neftchi -> Neftchi Fergana (Uzbekistan)
     "caboverde": "capeverde",
     "drcongo": "congodr",
     "ifkmarieh": "mariehamn",
@@ -326,8 +328,8 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     if not home or not away:
         return out
         
-    hkey = norm_team(home)
-    akey = norm_team(away)
+    hkey = source_team_key(home)
+    akey = source_team_key(away)
     
     # 1. Find the league code
     league_code = None
