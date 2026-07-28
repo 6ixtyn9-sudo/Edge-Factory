@@ -474,20 +474,23 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
 
     pick_sel = str(pick.get("pick") or "").lower()
     
-    prob_team_o05 = 0.0
-    prob_team_o15 = 0.0
     prob_double_chance = 0.0
-    
     if pick_sel == "home":
-        prob_team_o05 = 0.4 * l_h_o05 + 0.6 * h_score_o05
-        prob_team_o15 = 0.4 * l_h_o15 + 0.6 * h_score_o15
         prob_double_chance = 0.4 * l_1x + 0.6 * (h_1x + (1.0 - a_x2)) / 2.0
     elif pick_sel == "away":
-        prob_team_o05 = 0.4 * l_a_o05 + 0.6 * a_score_o05
-        prob_team_o15 = 0.4 * l_a_o15 + 0.6 * a_score_o15
         prob_double_chance = 0.4 * l_x2 + 0.6 * (a_x2 + (1.0 - h_1x)) / 2.0
     else:
         prob_double_chance = 0.70
+
+    prob_h_o05 = 0.4 * l_h_o05 + 0.6 * h_score_o05
+    prob_h_o15 = 0.4 * l_h_o15 + 0.6 * h_score_o15
+    prob_h_u05 = 1.0 - prob_h_o05
+    prob_h_u15 = 1.0 - prob_h_o15
+    
+    prob_a_o05 = 0.4 * l_a_o05 + 0.6 * a_score_o05
+    prob_a_o15 = 0.4 * l_a_o15 + 0.6 * a_score_o15
+    prob_a_u05 = 1.0 - prob_a_o05
+    prob_a_u15 = 1.0 - prob_a_o15
 
     candidates = []
     
@@ -540,32 +543,70 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             "label": "Both Teams to Score - No (BTTS-No)",
             "reason": f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"
         })
-    if pick_sel in ("home", "away"):
-        team_label = "Home" if pick_sel == "home" else "Away"
-        team_o05_rate = h_score_o05 if pick_sel == "home" else a_score_o05
-        team_o15_rate = h_score_o15 if pick_sel == "home" else a_score_o15
-        if prob_team_o05 >= 0.80:
-            candidates.append({
-                "market": "team_over_05",
-                "probability": prob_team_o05,
-                "label": f"{team_label} Team Over 0.5 Goals",
-                "reason": f"{team_label} scoring rate is {team_o05_rate:.1%}"
-            })
-        if prob_team_o15 >= 0.80:
-            candidates.append({
-                "market": "team_over_15",
-                "probability": prob_team_o15,
-                "label": f"{team_label} Team Over 1.5 Goals",
-                "reason": f"{team_label} multi-goal rate is {team_o15_rate:.1%}"
-            })
-        if prob_double_chance >= 0.80:
-            dc_label = "1X" if pick_sel == "home" else "X2"
-            candidates.append({
-                "market": "double_chance",
-                "probability": prob_double_chance,
-                "label": f"Double Chance {dc_label}",
-                "reason": f"Combined double-chance expectation is {prob_double_chance:.1%}"
-            })
+    if prob_h_o05 >= 0.80:
+        candidates.append({
+            "market": "home_over_05",
+            "probability": prob_h_o05,
+            "label": "Home Team Over 0.5 Goals",
+            "reason": f"Home scoring rate is {h_score_o05:.1%}"
+        })
+    if prob_h_o15 >= 0.80:
+        candidates.append({
+            "market": "home_over_15",
+            "probability": prob_h_o15,
+            "label": "Home Team Over 1.5 Goals",
+            "reason": f"Home multi-goal rate is {h_score_o15:.1%}"
+        })
+    if prob_h_u05 >= 0.80:
+        candidates.append({
+            "market": "home_under_05",
+            "probability": prob_h_u05,
+            "label": "Home Team Under 0.5 Goals",
+            "reason": f"Combined Under 0.5 is {prob_h_u05:.1%}"
+        })
+    if prob_h_u15 >= 0.80:
+        candidates.append({
+            "market": "home_under_15",
+            "probability": prob_h_u15,
+            "label": "Home Team Under 1.5 Goals",
+            "reason": f"Combined Under 1.5 is {prob_h_u15:.1%}"
+        })
+    if prob_a_o05 >= 0.80:
+        candidates.append({
+            "market": "away_over_05",
+            "probability": prob_a_o05,
+            "label": "Away Team Over 0.5 Goals",
+            "reason": f"Away scoring rate is {a_score_o05:.1%}"
+        })
+    if prob_a_o15 >= 0.80:
+        candidates.append({
+            "market": "away_over_15",
+            "probability": prob_a_o15,
+            "label": "Away Team Over 1.5 Goals",
+            "reason": f"Away multi-goal rate is {a_score_o15:.1%}"
+        })
+    if prob_a_u05 >= 0.80:
+        candidates.append({
+            "market": "away_under_05",
+            "probability": prob_a_u05,
+            "label": "Away Team Under 0.5 Goals",
+            "reason": f"Combined Under 0.5 is {prob_a_u05:.1%}"
+        })
+    if prob_a_u15 >= 0.80:
+        candidates.append({
+            "market": "away_under_15",
+            "probability": prob_a_u15,
+            "label": "Away Team Under 1.5 Goals",
+            "reason": f"Combined Under 1.5 is {prob_a_u15:.1%}"
+        })
+    if prob_double_chance >= 0.80:
+        dc_label = "1X" if pick_sel == "home" else "X2" if pick_sel == "away" else "12"
+        candidates.append({
+            "market": "double_chance",
+            "probability": prob_double_chance,
+            "label": f"Double Chance {dc_label}",
+            "reason": f"Combined double-chance expectation is {prob_double_chance:.1%}"
+        })
 
     if candidates:
         candidates.sort(key=lambda x: -x["probability"])
