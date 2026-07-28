@@ -187,7 +187,7 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
         secondary_odds = odds_pair.get("secondary", {})
         picks_today.enrich_with_live_odds([live_pick], primary_odds, secondary_odds)
         match_method = str(live_pick.get("odds_match_method") or "")
-        live_odds_matched = match_method in {"exact", "alias_time", "alias_unique", "betexplorer"}
+        live_odds_matched = match_method in {"exact", "alias_time", "alias_unique", "alias_fuzzy", "betexplorer"}
         if live_odds_matched:
             matched += 1
             if live_pick.get("odds_source") == picks_today.BZZOIRO_ODDS_SOURCE:

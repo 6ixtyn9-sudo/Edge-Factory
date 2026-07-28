@@ -702,6 +702,17 @@ def source_team_key(name: object) -> str:
     return SOURCE_TEAM_KEY_ALIASES.get(key, key)
 
 
+def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
+    def get_ngrams(s: str) -> set[str]:
+        clean = re.sub(r"[^a-z0-9]", "", s.lower())
+        return {clean[i:i+n] for i in range(len(clean) - n + 1)} if len(clean) >= n else set()
+    g1 = get_ngrams(s1)
+    g2 = get_ngrams(s2)
+    if not g1 or not g2:
+        return 0.0
+    return len(g1 & g2) / len(g1 | g2)
+
+
 def odds_team_key(name: object) -> str:
     key = norm_team(fold_ascii(str(name or "")))
     return ODDS_EXACT_TEAM_ALIASES.get(key, key)
@@ -979,6 +990,7 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
         "exact": exact,
         "time_candidates": time_candidates,
         "market_candidates": market_candidates,
+        "raw_rows_list": list(exact.values()),
     }
 
 
@@ -1062,6 +1074,30 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
                 bounded.sort(key=lambda item: (item[0], -_bookmaker_priority(item[1].get("bookmaker")), -(item[1].get("odds") or 0.0)))
                 return bounded[0][1], "alias_time"
         return candidates[0], "alias_unique"
+
+    # Systematic Fallback: if exact and time candidate joins fail, fallback to Event-String Fuzzy Jaccard Matcher
+    raw_list = odds_data.get("raw_rows_list", [])
+    if raw_list:
+        pick_str = f"{pick.get('home', '')} {pick.get('away', '')}"
+        pick_kickoff = _kickoff_value(pick)
+        
+        best_row = None
+        best_sim = 0.0
+        
+        for row in raw_list:
+            if str(row.get("market")) != str(pick.get("market")) or str(row.get("selection")) != str(pick.get("pick")):
+                continue
+                
+            delta = _kickoff_delta_minutes(pick_kickoff, _kickoff_value(row))
+            if delta is not None and delta <= 90:
+                res_str = f"{row.get('home', '')} {row.get('away', '')}"
+                sim = char_ngram_similarity(pick_str, res_str, n=2)
+                if sim >= 0.40 and sim > best_sim:
+                    best_sim = sim
+                    best_row = row
+                    
+        if best_row is not None:
+            return best_row, "alias_fuzzy"
 
     return None, None
 
