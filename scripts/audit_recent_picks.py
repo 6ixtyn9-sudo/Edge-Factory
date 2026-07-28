@@ -309,18 +309,42 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
         return hs >= 1 if (enh_type == "home_over_05" or sel == "home") else gs >= 1
     elif enh_type in ("team_over_15", "home_over_15"):
         return hs >= 2 if (enh_type == "home_over_15" or sel == "home") else gs >= 2
+    elif enh_type == "home_over_25":
+        return hs >= 3
+    elif enh_type == "home_over_35":
+        return hs >= 4
+    elif enh_type == "home_over_45":
+        return hs >= 5
     elif enh_type == "home_under_05":
         return hs == 0
     elif enh_type == "home_under_15":
         return hs <= 1
+    elif enh_type == "home_under_25":
+        return hs <= 2
+    elif enh_type == "home_under_35":
+        return hs <= 3
+    elif enh_type == "home_under_45":
+        return hs <= 4
     elif enh_type == "away_over_05":
         return gs >= 1
     elif enh_type == "away_over_15":
         return gs >= 2
+    elif enh_type == "away_over_25":
+        return gs >= 3
+    elif enh_type == "away_over_35":
+        return gs >= 4
+    elif enh_type == "away_over_45":
+        return gs >= 5
     elif enh_type == "away_under_05":
         return gs == 0
     elif enh_type == "away_under_15":
         return gs <= 1
+    elif enh_type == "away_under_25":
+        return gs <= 2
+    elif enh_type == "away_under_35":
+        return gs <= 3
+    elif enh_type == "away_under_45":
+        return gs <= 4
     elif enh_type == "double_chance":
         if sel == "home": # 1X
             return hs >= gs

@@ -51,6 +51,38 @@ def test_check_enhancement_hit():
     # match_under_35
     assert check_enhancement_hit("match_under_35", "home", 3, 0) is True
     assert check_enhancement_hit("match_under_35", "home", 2, 2) is False
+
+    # home_over_25 / home_under_25
+    assert check_enhancement_hit("home_over_25", "home", 3, 0) is True
+    assert check_enhancement_hit("home_over_25", "home", 2, 0) is False
+    assert check_enhancement_hit("home_under_25", "home", 2, 0) is True
+    assert check_enhancement_hit("home_under_25", "home", 3, 0) is False
+
+    # away_over_25 / away_under_25
+    assert check_enhancement_hit("away_over_25", "away", 0, 3) is True
+    assert check_enhancement_hit("away_over_25", "away", 0, 2) is False
+    assert check_enhancement_hit("away_under_25", "away", 0, 2) is True
+    assert check_enhancement_hit("away_under_25", "away", 0, 3) is False
+
+    # home_over_35 / home_under_35 / home_over_45 / home_under_45
+    assert check_enhancement_hit("home_over_35", "home", 4, 0) is True
+    assert check_enhancement_hit("home_over_35", "home", 3, 0) is False
+    assert check_enhancement_hit("home_under_35", "home", 3, 0) is True
+    assert check_enhancement_hit("home_under_35", "home", 4, 0) is False
+    assert check_enhancement_hit("home_over_45", "home", 5, 0) is True
+    assert check_enhancement_hit("home_over_45", "home", 4, 0) is False
+    assert check_enhancement_hit("home_under_45", "home", 4, 0) is True
+    assert check_enhancement_hit("home_under_45", "home", 5, 0) is False
+
+    # away_over_35 / away_under_35 / away_over_45 / away_under_45
+    assert check_enhancement_hit("away_over_35", "away", 0, 4) is True
+    assert check_enhancement_hit("away_over_35", "away", 0, 3) is False
+    assert check_enhancement_hit("away_under_35", "away", 0, 3) is True
+    assert check_enhancement_hit("away_under_35", "away", 0, 4) is False
+    assert check_enhancement_hit("away_over_45", "away", 0, 5) is True
+    assert check_enhancement_hit("away_over_45", "away", 0, 4) is False
+    assert check_enhancement_hit("away_under_45", "away", 0, 4) is True
+    assert check_enhancement_hit("away_under_45", "away", 0, 5) is False
     
     # btts_yes
     assert check_enhancement_hit("btts_yes", "home", 1, 1) is True
