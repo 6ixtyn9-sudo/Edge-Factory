@@ -287,6 +287,48 @@ def summarize_by(rows: list[SettledPick], attr: str) -> dict[str, dict[str, Any]
     return {name: summarize_scored(group_rows) for name, group_rows in sorted(grouped.items())}
 
 
+def parse_statistical_comment(comment: str) -> dict[str, Any]:
+    out = {
+        "over25": None,
+        "btts": None,
+        "home_o15": None,
+        "away_o15": None,
+        "top_scores": []
+    }
+    if not comment:
+        return out
+        
+    m_o25 = re.search(r"Over 2.5:\s*([\d.]+)%", comment)
+    if m_o25:
+        out["over25"] = float(m_o25.group(1)) / 100.0
+        
+    m_btts = re.search(r"BTTS:\s*([\d.]+)%", comment)
+    if m_btts:
+        out["btts"] = float(m_btts.group(1)) / 100.0
+        
+    m_h_o15 = re.search(r"Home Over 1.5 Goals:\s*([\d.]+)%", comment)
+    if m_h_o15:
+        out["home_o15"] = float(m_h_o15.group(1)) / 100.0
+        
+    m_a_o15 = re.search(r"Away Over 1.5 Goals:\s*([\d.]+)%", comment)
+    if m_a_o15:
+        out["away_o15"] = float(m_a_o15.group(1)) / 100.0
+        
+    m_scores = re.search(r"Top Scores:\s*(.*)", comment)
+    if m_scores:
+        scores_str = m_scores.group(1)
+        parts = scores_str.split(",")
+        for part in parts:
+            part = part.strip()
+            m = re.match(r"(\d+-\d+)\s*\(([\d.]+)%\)", part)
+            if m:
+                out["top_scores"].append({
+                    "score": m.group(1),
+                    "pct": float(m.group(2)) / 100.0
+                })
+    return out
+
+
 def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bool | None:
     if hs is None or gs is None:
         return None
@@ -380,6 +422,9 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "by_enhancement": defaultdict(lambda: {"recommended": 0, "hits": 0})
     }
 
+    # Detailed ledger of settled picks and their granular expectations audits
+    settled_ledger = []
+
     for pick in picks:
         pick_date = str(pick.get("date") or "")[:10]
         if not include_same_day and pick_date >= today_local:
@@ -457,6 +502,62 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                         if hit:
                             enh_stats["by_enhancement"][enh_type]["hits"] += 1
 
+                # 5. Granular expectations audit ledger populator
+                comment = pick.get("statistical_comment")
+                parsed_stats = parse_statistical_comment(comment)
+                
+                o25_hit = None
+                if parsed_stats["over25"] is not None:
+                    o25_hit = (hs + gs) >= 3
+                    
+                btts_hit = None
+                if parsed_stats["btts"] is not None:
+                    expected_btts_yes = parsed_stats["btts"] >= 50.0
+                    actual_btts_yes = hs > 0 and gs > 0
+                    btts_hit = actual_btts_yes if expected_btts_yes else not actual_btts_yes
+                    
+                home_o15_hit = None
+                if parsed_stats["home_o15"] is not None:
+                    home_o15_hit = hs >= 2
+                    
+                away_o15_hit = None
+                if parsed_stats["away_o15"] is not None:
+                    away_o15_hit = gs >= 2
+                    
+                top_scores_audited = []
+                for item in parsed_stats["top_scores"]:
+                    actual_score = f"{hs}-{gs}"
+                    hit = item["score"] == actual_score
+                    top_scores_audited.append({
+                        "score": item["score"],
+                        "pct": item["pct"],
+                        "hit": hit
+                    })
+                    
+                actual_outcome = result.get("outcome") or ""
+                settled_ledger.append({
+                    "date": pick_date,
+                    "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
+                    "selection": selection,
+                    "avg_p": pick.get("avg_p") or 0.0,
+                    "hs": hs,
+                    "gs": gs,
+                    "outcome": actual_outcome,
+                    "won": selection == actual_outcome,
+                    "odds": pick.get("odds"),
+                    "parsed_stats": {
+                        "over25_expected": parsed_stats["over25"],
+                        "over25_hit": o25_hit,
+                        "btts_expected": parsed_stats["btts"],
+                        "btts_hit": btts_hit,
+                        "home_o15_expected": parsed_stats["home_o15"],
+                        "home_o15_hit": home_o15_hit,
+                        "away_o15_expected": parsed_stats["away_o15"],
+                        "away_o15_hit": away_o15_hit,
+                        "top_scores": top_scores_audited
+                    }
+                })
+
     serialized_by_enhancement = {}
     for enh, stats in enh_stats["by_enhancement"].items():
         rec = stats["recommended"]
@@ -494,6 +595,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "by_odds_match_method": summarize_by(settled_rows, "odds_match_method"),
         "secondary_stats": sec_stats,
         "enhancements_audit": serialized_enh_audit,
+        "settled_ledger": settled_ledger,
     }
 
 
@@ -612,6 +714,47 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
             lines.append(
                 f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')}, ROI={summary.get('roi')}"
             )
+    # Render Settled Picks Granular Expectations Audit Ledger
+    ledger = report.get("settled_ledger", [])
+    if ledger:
+        lines.extend([
+            "## Settled Picks Granular Expectations Audit",
+            "",
+            "Visual audit of expected historical stats (from the `📊` line) against actual realized scores:",
+            ""
+        ])
+        for item in sorted(ledger, key=lambda x: x["date"], reverse=True):
+            status = "🟢 WON" if item["won"] else "🔴 LOST"
+            lines.append(f"### {item['date']}: {item['match']} (Actual Score: **{item['hs']}-{item['gs']}**)")
+            lines.append(f"- **1X2 Pick**: Selected `{item['selection'].upper()}` @ {item['odds'] or 'n/a'} -> {status} (Expected prob: {item['avg_p']:.1f}%)")
+            
+            stats = item["parsed_stats"]
+            if stats["over25_expected"] is not None:
+                o25_icon = "🟢 HIT" if stats["over25_hit"] else "🔴 MISS"
+                lines.append(f"  - [{o25_icon}] **Over 2.5 Goals**: expected {stats['over25_expected']:.1%} (Actual: {item['hs'] + item['gs']} goals)")
+                
+            if stats["btts_expected"] is not None:
+                btts_icon = "🟢 HIT" if stats["btts_hit"] else "🔴 MISS"
+                btts_dir = "BTTS-Yes" if stats["btts_expected"] >= 0.50 else "BTTS-No"
+                actual_dir = "BTTS-Yes" if item["hs"] > 0 and item["gs"] > 0 else "BTTS-No"
+                lines.append(f"  - [{btts_icon}] **{btts_dir}**: expected {stats['btts_expected']:.1%} (Actual: {actual_dir})")
+                
+            if stats["home_o15_expected"] is not None:
+                h_o15_icon = "🟢 HIT" if stats["home_o15_hit"] else "🔴 MISS"
+                lines.append(f"  - [{h_o15_icon}] **Home Team Over 1.5 Goals**: expected {stats['home_o15_expected']:.1%} (Actual: {item['hs']} goals)")
+                
+            if stats["away_o15_expected"] is not None:
+                a_o15_icon = "🟢 HIT" if stats["away_o15_hit"] else "🔴 MISS"
+                lines.append(f"  - [{a_o15_icon}] **Away Team Over 1.5 Goals**: expected {stats['away_o15_expected']:.1%} (Actual: {item['gs']} goals)")
+                
+            if stats["top_scores"]:
+                scores_strs = []
+                for score_item in stats["top_scores"]:
+                    score_icon = "🟢 HIT" if score_item["hit"] else "🔴 MISS"
+                    scores_strs.append(f"[{score_icon}] {score_item['score']} ({score_item['pct']:.1%})")
+                lines.append(f"  - **Top Scores**: " + ", ".join(scores_strs))
+            lines.append("")
+
     lines.extend(["", "## Unmatched result examples", ""])
     examples = report.get("unmatched_examples", [])
     if not examples:
