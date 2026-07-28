@@ -315,6 +315,24 @@ def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | N
         return None
 
 
+AUDIT_ROLLING_PATH = LOCALDATA / "picks_audit_rolling.json"
+
+
+def load_rolling_audit_hit_rates() -> dict[str, float]:
+    try:
+        if AUDIT_ROLLING_PATH.exists():
+            data = json.loads(AUDIT_ROLLING_PATH.read_text())
+            by_enh = data.get("enhancements_audit", {}).get("by_enhancement", {})
+            out = {}
+            for enh, stats in by_enh.items():
+                if stats.get("recommended", 0) >= 5:
+                    out[enh] = float(stats.get("hit_rate", 1.0))
+            return out
+    except Exception:
+        pass
+    return {}
+
+
 def compute_dynamic_enhancement(con, pick: dict) -> dict:
     """Query the local database to find deep league & team context and determine the single highest probable enhancement."""
     out = {
@@ -538,210 +556,89 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     prob_a_u25 = 1.0 - prob_a_o25
     prob_a_u35 = 1.0 - prob_a_o35
     prob_a_u45 = 1.0 - prob_a_o45
-    prob_a_o25 = 0.4 * l_a_o25 + 0.6 * a_score_o25
-    prob_a_u05 = 1.0 - prob_a_o05
-    prob_a_u15 = 1.0 - prob_a_o15
-    prob_a_u25 = 1.0 - prob_a_o25
 
+    LINE_THRESHOLDS = {
+        "match_over_15": 0.80,
+        "match_under_15": 0.80,
+        "home_over_05": 0.80,
+        "home_over_15": 0.80,
+        "home_under_05": 0.80,
+        "home_under_15": 0.80,
+        "away_over_05": 0.80,
+        "away_over_15": 0.80,
+        "away_under_05": 0.80,
+        "away_under_15": 0.80,
+        "double_chance": 0.80,
+        "btts_yes": 0.85,
+        "btts_no": 0.85,
+        "match_over_25": 0.85,
+        "match_under_25": 0.85,
+        "home_over_25": 0.85,
+        "home_under_25": 0.85,
+        "away_over_25": 0.85,
+        "away_under_25": 0.85,
+        "match_under_35": 0.90,
+        "home_over_35": 0.90,
+        "home_under_35": 0.90,
+        "away_over_35": 0.90,
+        "away_under_35": 0.90,
+        "home_over_45": 0.95,
+        "home_under_45": 0.95,
+        "away_over_45": 0.95,
+        "away_under_45": 0.95,
+    }
+
+    raw_candidates = [
+        ("match_over_15", prob_o15, "Match Over 1.5 Goals", f"League Over 1.5 is {l_o15:.1%}, Home Over 1.5 is {h_o15:.1%}, Away Over 1.5 is {a_o15:.1%}"),
+        ("match_under_15", prob_u15, "Match Under 1.5 Goals", f"Extremely defensive context: Combined Under 1.5 is {prob_u15:.1%}"),
+        ("match_under_25", prob_u25, "Match Under 2.5 Goals", f"Highly defensive context: Combined Under 2.5 is {prob_u25:.1%}"),
+        ("match_under_35", prob_u35, "Match Under 3.5 Goals", f"Safe low-scoring expectation: Combined Under 3.5 is {prob_u35:.1%}"),
+        ("match_over_25", prob_o25, "Match Over 2.5 Goals", f"League Over 2.5 is {l_o25:.1%}, Home Over 2.5 is {h_o25:.1%}, Away Over 2.5 is {a_o25:.1%}"),
+        ("btts_yes", prob_btts_yes, "Both Teams to Score (BTTS)", f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"),
+        ("btts_no", prob_btts_no, "Both Teams to Score - No (BTTS-No)", f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"),
+        ("home_over_05", prob_h_o05, "Home Team Over 0.5 Goals", f"Home scoring rate is {h_score_o05:.1%}"),
+        ("home_over_15", prob_h_o15, "Home Team Over 1.5 Goals", f"Home multi-goal rate is {h_score_o15:.1%}"),
+        ("home_over_25", prob_h_o25, "Home Team Over 2.5 Goals", f"Home ultra-high goal rate is {h_score_o25:.1%}"),
+        ("home_over_35", prob_h_o35, "Home Team Over 3.5 Goals", f"Home extremely high goal rate is {h_score_o35:.1%}"),
+        ("home_over_45", prob_h_o45, "Home Team Over 4.5 Goals", f"Home elite-level goal rate is {h_score_o45:.1%}"),
+        ("home_under_05", prob_h_u05, "Home Team Under 0.5 Goals", f"Combined Under 0.5 is {prob_h_u05:.1%}"),
+        ("home_under_15", prob_h_u15, "Home Team Under 1.5 Goals", f"Combined Under 1.5 is {prob_h_u15:.1%}"),
+        ("home_under_25", prob_h_u25, "Home Team Under 2.5 Goals", f"Combined Under 2.5 is {prob_h_u25:.1%}"),
+        ("home_under_35", prob_h_u35, "Home Team Under 3.5 Goals", f"Combined Under 3.5 is {prob_h_u35:.1%}"),
+        ("home_under_45", prob_h_u45, "Home Team Under 4.5 Goals", f"Combined Under 4.5 is {prob_h_u45:.1%}"),
+        ("away_over_05", prob_a_o05, "Away Team Over 0.5 Goals", f"Away scoring rate is {a_score_o05:.1%}"),
+        ("away_over_15", prob_a_o15, "Away Team Over 1.5 Goals", f"Away multi-goal rate is {a_score_o15:.1%}"),
+        ("away_over_25", prob_a_o25, "Away Team Over 2.5 Goals", f"Away ultra-high goal rate is {a_score_o25:.1%}"),
+        ("away_over_35", prob_a_o35, "Away Team Over 3.5 Goals", f"Away extremely high goal rate is {a_score_o35:.1%}"),
+        ("away_over_45", prob_a_o45, "Away Team Over 4.5 Goals", f"Away elite-level goal rate is {a_score_o45:.1%}"),
+        ("away_under_05", prob_a_u05, "Away Team Under 0.5 Goals", f"Combined Under 0.5 is {prob_a_u05:.1%}"),
+        ("away_under_15", prob_a_u15, "Away Team Under 1.5 Goals", f"Combined Under 1.5 is {prob_a_u15:.1%}"),
+        ("away_under_25", prob_a_u25, "Away Team Under 2.5 Goals", f"Combined Under 2.5 is {prob_a_u25:.1%}"),
+        ("away_under_35", prob_a_u35, "Away Team Under 3.5 Goals", f"Combined Under 3.5 is {prob_a_u35:.1%}"),
+        ("away_under_45", prob_a_u45, "Away Team Under 4.5 Goals", f"Combined Under 4.5 is {prob_a_u45:.1%}"),
+    ]
+    
+    dc_label = "1X" if pick_sel == "home" else "X2" if pick_sel == "away" else "12"
+    raw_candidates.append(
+        ("double_chance", prob_double_chance, f"Double Chance {dc_label}", f"Combined double-chance expectation is {prob_double_chance:.1%}")
+    )
+
+    rolling_hit_rates = load_rolling_audit_hit_rates()
     candidates = []
     
-    if prob_o15 >= 0.80:
-        candidates.append({
-            "market": "match_over_15",
-            "probability": prob_o15,
-            "label": "Match Over 1.5 Goals",
-            "reason": f"League Over 1.5 is {l_o15:.1%}, Home Over 1.5 is {h_o15:.1%}, Away Over 1.5 is {a_o15:.1%}"
-        })
-    if prob_u15 >= 0.80:
-        candidates.append({
-            "market": "match_under_15",
-            "probability": prob_u15,
-            "label": "Match Under 1.5 Goals",
-            "reason": f"Extremely defensive context: Combined Under 1.5 is {prob_u15:.1%}"
-        })
-    if prob_u25 >= 0.80:
-        candidates.append({
-            "market": "match_under_25",
-            "probability": prob_u25,
-            "label": "Match Under 2.5 Goals",
-            "reason": f"Highly defensive context: Combined Under 2.5 is {prob_u25:.1%}"
-        })
-    if prob_u35 >= 0.80:
-        candidates.append({
-            "market": "match_under_35",
-            "probability": prob_u35,
-            "label": "Match Under 3.5 Goals",
-            "reason": f"Safe low-scoring expectation: Combined Under 3.5 is {prob_u35:.1%}"
-        })
-    if prob_o25 >= 0.80:
-        candidates.append({
-            "market": "match_over_25",
-            "probability": prob_o25,
-            "label": "Match Over 2.5 Goals",
-            "reason": f"League Over 2.5 is {l_o25:.1%}, Home Over 2.5 is {h_o25:.1%}, Away Over 2.5 is {a_o25:.1%}"
-        })
-    if prob_btts_yes >= 0.80:
-        candidates.append({
-            "market": "btts_yes",
-            "probability": prob_btts_yes,
-            "label": "Both Teams to Score (BTTS)",
-            "reason": f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"
-        })
-    if prob_btts_no >= 0.80:
-        candidates.append({
-            "market": "btts_no",
-            "probability": prob_btts_no,
-            "label": "Both Teams to Score - No (BTTS-No)",
-            "reason": f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"
-        })
-    if prob_h_o05 >= 0.80:
-        candidates.append({
-            "market": "home_over_05",
-            "probability": prob_h_o05,
-            "label": "Home Team Over 0.5 Goals",
-            "reason": f"Home scoring rate is {h_score_o05:.1%}"
-        })
-    if prob_h_o15 >= 0.80:
-        candidates.append({
-            "market": "home_over_15",
-            "probability": prob_h_o15,
-            "label": "Home Team Over 1.5 Goals",
-            "reason": f"Home multi-goal rate is {h_score_o15:.1%}"
-        })
-    if prob_h_o25 >= 0.80:
-        candidates.append({
-            "market": "home_over_25",
-            "probability": prob_h_o25,
-            "label": "Home Team Over 2.5 Goals",
-            "reason": f"Home ultra-high goal rate is {h_score_o25:.1%}"
-        })
-    if prob_h_o35 >= 0.80:
-        candidates.append({
-            "market": "home_over_35",
-            "probability": prob_h_o35,
-            "label": "Home Team Over 3.5 Goals",
-            "reason": f"Home extremely high goal rate is {h_score_o35:.1%}"
-        })
-    if prob_h_o45 >= 0.80:
-        candidates.append({
-            "market": "home_over_45",
-            "probability": prob_h_o45,
-            "label": "Home Team Over 4.5 Goals",
-            "reason": f"Home elite-level goal rate is {h_score_o45:.1%}"
-        })
-    if prob_h_u05 >= 0.80:
-        candidates.append({
-            "market": "home_under_05",
-            "probability": prob_h_u05,
-            "label": "Home Team Under 0.5 Goals",
-            "reason": f"Combined Under 0.5 is {prob_h_u05:.1%}"
-        })
-    if prob_h_u15 >= 0.80:
-        candidates.append({
-            "market": "home_under_15",
-            "probability": prob_h_u15,
-            "label": "Home Team Under 1.5 Goals",
-            "reason": f"Combined Under 1.5 is {prob_h_u15:.1%}"
-        })
-    if prob_h_u25 >= 0.80:
-        candidates.append({
-            "market": "home_under_25",
-            "probability": prob_h_u25,
-            "label": "Home Team Under 2.5 Goals",
-            "reason": f"Combined Under 2.5 is {prob_h_u25:.1%}"
-        })
-    if prob_h_u35 >= 0.80:
-        candidates.append({
-            "market": "home_under_35",
-            "probability": prob_h_u35,
-            "label": "Home Team Under 3.5 Goals",
-            "reason": f"Combined Under 3.5 is {prob_h_u35:.1%}"
-        })
-    if prob_h_u45 >= 0.80:
-        candidates.append({
-            "market": "home_under_45",
-            "probability": prob_h_u45,
-            "label": "Home Team Under 4.5 Goals",
-            "reason": f"Combined Under 4.5 is {prob_h_u45:.1%}"
-        })
-    if prob_a_o05 >= 0.80:
-        candidates.append({
-            "market": "away_over_05",
-            "probability": prob_a_o05,
-            "label": "Away Team Over 0.5 Goals",
-            "reason": f"Away scoring rate is {a_score_o05:.1%}"
-        })
-    if prob_a_o15 >= 0.80:
-        candidates.append({
-            "market": "away_over_15",
-            "probability": prob_a_o15,
-            "label": "Away Team Over 1.5 Goals",
-            "reason": f"Away multi-goal rate is {a_score_o15:.1%}"
-        })
-    if prob_a_o25 >= 0.80:
-        candidates.append({
-            "market": "away_over_25",
-            "probability": prob_a_o25,
-            "label": "Away Team Over 2.5 Goals",
-            "reason": f"Away ultra-high goal rate is {a_score_o25:.1%}"
-        })
-    if prob_a_o35 >= 0.80:
-        candidates.append({
-            "market": "away_over_35",
-            "probability": prob_a_o35,
-            "label": "Away Team Over 3.5 Goals",
-            "reason": f"Away extremely high goal rate is {a_score_o35:.1%}"
-        })
-    if prob_a_o45 >= 0.80:
-        candidates.append({
-            "market": "away_over_45",
-            "probability": prob_a_o45,
-            "label": "Away Team Over 4.5 Goals",
-            "reason": f"Away elite-level goal rate is {a_score_o45:.1%}"
-        })
-    if prob_a_u05 >= 0.80:
-        candidates.append({
-            "market": "away_under_05",
-            "probability": prob_a_u05,
-            "label": "Away Team Under 0.5 Goals",
-            "reason": f"Combined Under 0.5 is {prob_a_u05:.1%}"
-        })
-    if prob_a_u15 >= 0.80:
-        candidates.append({
-            "market": "away_under_15",
-            "probability": prob_a_u15,
-            "label": "Away Team Under 1.5 Goals",
-            "reason": f"Combined Under 1.5 is {prob_a_u15:.1%}"
-        })
-    if prob_a_u25 >= 0.80:
-        candidates.append({
-            "market": "away_under_25",
-            "probability": prob_a_u25,
-            "label": "Away Team Under 2.5 Goals",
-            "reason": f"Combined Under 2.5 is {prob_a_u25:.1%}"
-        })
-    if prob_a_u35 >= 0.80:
-        candidates.append({
-            "market": "away_under_35",
-            "probability": prob_a_u35,
-            "label": "Away Team Under 3.5 Goals",
-            "reason": f"Combined Under 3.5 is {prob_a_u35:.1%}"
-        })
-    if prob_a_u45 >= 0.80:
-        candidates.append({
-            "market": "away_under_45",
-            "probability": prob_a_u45,
-            "label": "Away Team Under 4.5 Goals",
-            "reason": f"Combined Under 4.5 is {prob_a_u45:.1%}"
-        })
-    if prob_double_chance >= 0.80:
-        dc_label = "1X" if pick_sel == "home" else "X2" if pick_sel == "away" else "12"
-        candidates.append({
-            "market": "double_chance",
-            "probability": prob_double_chance,
-            "label": f"Double Chance {dc_label}",
-            "reason": f"Combined double-chance expectation is {prob_double_chance:.1%}"
-        })
+    for market, prob, label, reason in raw_candidates:
+        hr = rolling_hit_rates.get(market, 1.0)
+        prob_adjusted = prob * hr
+        
+        thr = LINE_THRESHOLDS.get(market, 0.80)
+        if prob_adjusted >= thr:
+            candidates.append({
+                "market": market,
+                "probability": prob_adjusted,
+                "raw_probability": prob,
+                "label": label,
+                "reason": reason + (f" (Performance feedback: HR={hr:.1%}, Adjusted Prob: {prob_adjusted:.1%})" if hr < 1.0 else "")
+            })
 
     if candidates:
         candidates.sort(key=lambda x: -x["probability"])
