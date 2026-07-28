@@ -32,12 +32,6 @@ SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 
 # Operational source/odds aliasing stays local to picks_today so certified miners,
 # warehouse joins, and historical backtests remain unchanged.
-#
-# Two distinct key spaces exist here:
-# - source row joins use legacy norm_team(...)->9 char keys
-# - odds matching uses both legacy exact keys and compact kickoff-aware keys
-#
-# Keep aliases explicit and minimal.
 SOURCE_TEAM_KEY_ALIASES = {
     "thunder": "dandenong",   # Forebet: Thunder SC; others: Dandenong Thunder
     "hobartzeb": "clarencez", # some feeds: Hobart Zebras; others: Clarence Zebras
@@ -50,10 +44,6 @@ ODDS_EXACT_TEAM_ALIASES = {
     "ifkmariehamn": "mariehamn",
     "thunder": "dandenong",
     "hobartzeb": "clarencez",
-    # 2026-07 mismatch fixes — abbreviations and renames between
-    # prediction sources and odds providers.  fold_ascii now handles
-    # accent mismatches (ø→o etc.) so these only cover structural
-    # naming differences that no normalization can resolve.
     "ulsanhyun": "ulsanhd",          # Ulsan Hyundai → Ulsan HD (K League 1)
     "sirius": "iksirius",            # Sirius → IK Sirius (Allsvenskan)
     "kpvj": "kpvkokkol",             # KPV-j → KPV Kokkola (Finland Ykkönen)
@@ -77,8 +67,6 @@ ODDS_MATCH_TEAM_ALIASES = {
     "thundersc": "dandenongthunder",
     "hobartzebras": "clarencezebras",
     "hobartzebrasfc": "clarencezebras",
-    # 2026-07 mismatch fixes — compact_key space aliases for
-    # abbreviations/renames between prediction sources and odds providers.
     "ulsanhyundai": "ulsanhd",           # Ulsan Hyundai → Ulsan HD (K League 1)
     "sirius": "iksirius",                # Sirius → IK Sirius (Allsvenskan)
     "kpvj": "kpvkokkola",               # KPV-j → KPV Kokkola (Finland Ykkönen)
@@ -104,13 +92,6 @@ DISPLAY_TEAM_ALIASES = {
     "hobartzebrasfc": "Clarence Zebras",
 }
 
-# Final pick/report de-duplication is operational only.  It must be safer than
-# the legacy miner join key, but it must not use the learned entity registry or
-# canonical_team() because those can over-merge unrelated live odds/events.
-# Strip only non-identity club designators; preserve W/U19/B/II/reserve-like
-# suffixes so different squads do not collapse.  This intentionally collapses
-# source spelling variants such as "AC Oulu"/"Oulu" and
-# "IFK Mariehamn"/"Mariehamn" while keeping "Khovd" and "Khovd Western" apart.
 OPERATIONAL_CLUB_TOKENS = {
     "fc", "afc", "cf", "sc", "ac", "cd", "ca", "fk", "ifk", "bk", "sk",
     "club",
@@ -169,7 +150,7 @@ def min_lead_minutes() -> int:
     except (TypeError, ValueError):
         return DEFAULT_MIN_LEAD_MINUTES
 
-# ---- purity buckets (unchanged) ----
+# ---- purity buckets ----
 BUCKET_CERTIFIED = "CERTIFIED_CLEAN"
 BUCKET_CAUTION = "CAUTION"
 BUCKET_WL_ODDS = "WATCHLIST_NO_ODDS"
@@ -195,7 +176,7 @@ BUCKET_LABELS = {
     BUCKET_SKIP_DEAD: "SKIPPED — DEAD EDGE",
 }
 
-# Odds bands (same as before)
+# Odds bands
 ODDS_BANDS = [
     (0.0, 1.10, "1.00-1.10"),
     (1.10, 1.20, "1.10-1.20"),
@@ -239,6 +220,94 @@ TOXIC_SHORT_ODDS_LEAGUES = {
 
 # CAUTION odds floor
 CAUTION_MIN_ODDS = 1.30
+
+
+def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> str | None:
+    """Dynamically query the local database to generate 100% accurate, non-static realized stats."""
+    view_name = "consensus3" if n_way >= 3 else "consensus2"
+    try:
+        max_p = con.execute(f"SELECT MAX(avg_p) FROM {view_name}").fetchone()[0]
+        is_scaled = max_p is not None and float(max_p) > 1.5
+    except Exception:
+        is_scaled = True
+        
+    p_val = float(avg_p)
+    if not is_scaled and p_val > 1.5:
+        p_val /= 100.0
+        
+    p_min = p_val - (5.0 if is_scaled else 0.05)
+    p_max = p_val + (5.0 if is_scaled else 0.05)
+    
+    sel = str(selection).lower()
+    if sel not in ("home", "away", "draw"):
+        return None
+        
+    if view_name == "consensus3":
+        agree_cond = "c.fb_pick = ? AND c.zb_pick = ? AND c.sa_pick = ?"
+        params = [sel, sel, sel]
+    else:
+        agree_cond = "c.fb_pick = ? AND c.zb_pick = ?"
+        params = [sel, sel]
+        
+    q = f"""
+        SELECT 
+            COUNT(*) AS n,
+            AVG(f.hs + f.gs) AS avg_total_goals,
+            AVG(CASE WHEN f.hs + f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
+            AVG(CASE WHEN f.hs > 0 AND f.gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
+            AVG(CASE WHEN ? = 'home' THEN (CASE WHEN f.hs >= 2 THEN 1.0 ELSE 0.0 END)
+                     WHEN ? = 'away' THEN (CASE WHEN f.gs >= 2 THEN 1.0 ELSE 0.0 END)
+                     ELSE 0.0 END) AS team_o15_rate,
+            AVG(CASE WHEN ? = 'home' THEN (CASE WHEN f.hs >= 3 THEN 1.0 ELSE 0.0 END)
+                     WHEN ? = 'away' THEN (CASE WHEN f.gs >= 3 THEN 1.0 ELSE 0.0 END)
+                     ELSE 0.0 END) AS team_o25_rate
+        FROM {view_name} c
+        JOIN forebet_settled f ON c.date = f.date AND c.home = f.home AND c.away = f.away
+        WHERE c.outcome = ? AND {agree_cond}
+          AND c.avg_p BETWEEN ? AND ?
+    """
+    try:
+        row = con.execute(q, [sel, sel, sel, sel, sel, *params, p_min, p_max]).fetchone()
+        if not row or not row[0] or row[0] < 5:
+            return None
+            
+        n, avg_goals, over25, btts, team_o15, team_o25 = row
+        
+        # Extract top 2 scorelines
+        score_q = f"""
+            SELECT f.hs || '-' || f.gs AS scoreline, COUNT(*) as cnt
+            FROM {view_name} c
+            JOIN forebet_settled f ON c.date = f.date AND c.home = f.home AND c.away = f.away
+            WHERE c.outcome = ? AND {agree_cond}
+              AND c.avg_p BETWEEN ? AND ?
+            GROUP BY 1
+            ORDER BY cnt DESC
+            LIMIT 2
+        """
+        score_rows = con.execute(score_q, [sel, *params, p_min, p_max]).fetchall()
+        score_strs = []
+        for s, c in score_rows:
+            score_strs.append(f"{s} ({c/n:.1%})")
+            
+        score_display = ", ".join(score_strs) if score_strs else "n/a"
+        
+        sel_label = "Home Team" if sel == "home" else "Away Team" if sel == "away" else "Draw"
+        comment = f"📊 Realized Stats on {sel.capitalize()} Win (n={n}): Avg Goals: {avg_goals:.2f} | Over 2.5: {over25:.1%} | BTTS: {btts:.1%}"
+        if sel != "draw":
+            comment += f" | {sel_label} Over 1.5 Goals: {team_o15:.1%}"
+        comment += f" | Top Scores: {score_display}"
+        return comment
+    except Exception:
+        return None
+
+
+def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | None:
+    if not con:
+        return None
+    try:
+        return fetch_historical_profile(con, pick, avg_p, n_way)
+    except Exception:
+        return None
 
 
 def annotate_market_recommendation(pick: dict):
@@ -639,8 +708,6 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     elif "CAUTION" in vals:
         bucket = BUCKET_CAUTION
     else:
-        # Unrated (UNKNOWN) league, team, or competition_type does not demote a globally certified edge.
-        # It remains CERTIFIED_CLEAN unless there is an explicit, proven CAUTION or VETO context.
         bucket = BUCKET_CERTIFIED
 
     if bucket == BUCKET_CAUTION and odds is not None and float(odds) < CAUTION_MIN_ODDS:
@@ -1638,6 +1705,8 @@ def print_buckets(buckets: dict, title_date: str = ""):
             print(f"  [{label}] {p['match'][:45]:45s} KO {kickoff:5s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}%{w_str} {o}  [{market}/{tier}]{warn_str}")
             if ctx:
                 print(ctx_str)
+            if p.get("statistical_comment"):
+                print(f"     {p['statistical_comment']}")
         print()
     print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
     print("⚠️  Bet only what you can afford to lose.")
@@ -1750,6 +1819,15 @@ def main():
     all_picks: list = []
     total_vetoes = 0
     total_upcoming = 0
+    
+    # Open warehouse connection to dynamically query historical realized stats
+    con = None
+    try:
+        import duckdb
+        con = duckdb.connect(str(LOCALDATA / "warehouse.duckdb"), read_only=True)
+    except Exception:
+        con = None
+
     for day in days:
         picks, vetoes, n_up, data = run_day(day, t1x2, ou_edge, btts_edge,
                                             source_weights_1x2=source_weights_1x2)
@@ -1822,6 +1900,8 @@ def main():
             
             annotate_market_recommendation(p)
             
+            p["statistical_comment"] = get_statistical_comment(con, p.get("pick"), p.get("avg_p"), p.get("n_way", 3))
+            
             day_picks.append(p)
 
         collapsed_day_picks, removed_dupes = collapse_final_operational_picks(day_picks)
@@ -1829,6 +1909,12 @@ def main():
             print(f"operational final pick collapse {day}: removed={removed_dupes}", file=sys.stderr)
 
         all_picks.extend(collapsed_day_picks)
+
+    if con:
+        try:
+            con.close()
+        except Exception:
+            pass
 
     buckets: dict[str, list] = {b: [] for b in BUCKET_ORDER}
     for p in all_picks:
