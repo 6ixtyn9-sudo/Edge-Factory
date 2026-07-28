@@ -507,7 +507,8 @@ def main():
             continue
 
         rep = decay_verdict(b_wins, b_n, rec["wins"], rec["n"],
-                            min_recent=GATES.min_recent_n)
+                            min_recent=GATES.min_recent_n,
+                            recent_roi=rec["roi"])
         bench = should_bench(rep, rec["roi"])
         e["decay"] = {
             "verdict": rep.verdict, "window_days": args.window,

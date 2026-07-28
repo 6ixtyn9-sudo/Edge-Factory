@@ -18,23 +18,24 @@
     "2026-07-22",
     "2026-07-23",
     "2026-07-24",
-    "2026-07-27"
+    "2026-07-27",
+    "2026-07-28"
   ],
-  "archived_pick_rows": 53,
+  "archived_pick_rows": 54,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.555556,
-      "priced_picks": 9,
-      "roi": -0.004444,
-      "settled_picks": 9,
-      "wins": 5
+      "hit_rate": 0.636364,
+      "priced_picks": 11,
+      "roi": 0.105455,
+      "settled_picks": 11,
+      "wins": 7
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.84375,
-      "priced_picks": 32,
-      "roi": 0.095312,
-      "settled_picks": 32,
-      "wins": 27
+      "hit_rate": 0.857143,
+      "priced_picks": 35,
+      "roi": 0.109429,
+      "settled_picks": 35,
+      "wins": 30
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.833333,
@@ -46,34 +47,48 @@
   },
   "by_odds_match_method": {
     "betexplorer": {
-      "hit_rate": 0.83871,
-      "priced_picks": 31,
-      "roi": 0.072903,
-      "settled_picks": 31,
-      "wins": 26
+      "hit_rate": 0.852941,
+      "priced_picks": 34,
+      "roi": 0.092647,
+      "settled_picks": 34,
+      "wins": 29
     },
     "exact": {
-      "hit_rate": 0.6875,
-      "priced_picks": 16,
-      "roi": 0.02,
-      "settled_picks": 16,
-      "wins": 11
+      "hit_rate": 0.705882,
+      "priced_picks": 17,
+      "roi": 0.07,
+      "settled_picks": 17,
+      "wins": 12
+    },
+    "fallback": {
+      "hit_rate": 1.0,
+      "priced_picks": 1,
+      "roi": 0.22,
+      "settled_picks": 1,
+      "wins": 1
     }
   },
   "by_odds_source": {
     "betexplorer_odds": {
-      "hit_rate": 0.83871,
-      "priced_picks": 31,
-      "roi": 0.072903,
-      "settled_picks": 31,
-      "wins": 26
+      "hit_rate": 0.852941,
+      "priced_picks": 34,
+      "roi": 0.092647,
+      "settled_picks": 34,
+      "wins": 29
     },
     "bzzoiro_odds": {
-      "hit_rate": 0.888889,
-      "priced_picks": 9,
-      "roi": 0.394444,
-      "settled_picks": 9,
-      "wins": 8
+      "hit_rate": 0.9,
+      "priced_picks": 10,
+      "roi": 0.442,
+      "settled_picks": 10,
+      "wins": 9
+    },
+    "forebet_best": {
+      "hit_rate": 1.0,
+      "priced_picks": 1,
+      "roi": 0.22,
+      "settled_picks": 1,
+      "wins": 1
     },
     "scoutingstats_odds": {
       "hit_rate": 0.428571,
@@ -85,18 +100,18 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.8125,
-      "priced_picks": 16,
-      "roi": 0.169375,
-      "settled_picks": 16,
-      "wins": 13
+      "hit_rate": 0.842105,
+      "priced_picks": 19,
+      "roi": 0.183684,
+      "settled_picks": 19,
+      "wins": 16
     },
     "3way-unanimous avg_p>=65": {
-      "hit_rate": 0.4,
-      "priced_picks": 5,
-      "roi": -0.562,
-      "settled_picks": 5,
-      "wins": 2
+      "hit_rate": 0.571429,
+      "priced_picks": 7,
+      "roi": -0.23,
+      "settled_picks": 7,
+      "wins": 4
     },
     "3way-unanimous home-only avg_p>=60": {
       "hit_rate": 0.9,
@@ -113,19 +128,39 @@
       "wins": 13
     }
   },
-  "eligible_prior_picks": 47,
-  "end": "2026-07-27",
+  "eligible_prior_picks": 53,
+  "end": "2026-07-28",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.787234,
-    "priced_picks": 47,
-    "roi": 0.054894,
-    "settled_picks": 47,
-    "wins": 37
+    "hit_rate": 0.807692,
+    "priced_picks": 52,
+    "roi": 0.087692,
+    "settled_picks": 52,
+    "wins": 42
   },
-  "same_day_cutoff": "2026-07-27",
-  "same_day_excluded": 6,
-  "start": "2026-06-28",
-  "unmatched_examples": [],
-  "unmatched_result_picks": 0
+  "same_day_cutoff": "2026-07-28",
+  "same_day_excluded": 1,
+  "start": "2026-06-29",
+  "unmatched_examples": [
+    {
+      "away": "Tukums II",
+      "away_key_candidates": [
+        "tukums",
+        "tukumsii"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-07-27",
+      "home": "Metta / LU",
+      "home_key_candidates": [
+        "mettalu"
+      ],
+      "league": "Latvia 1. Liga",
+      "match": "Metta / LU vs Tukums II",
+      "odds": 1.07,
+      "pick": "home",
+      "reason": "unmatched_result",
+      "rule": "2way-unanimous avg_p>=70"
+    }
+  ],
+  "unmatched_result_picks": 1
 }

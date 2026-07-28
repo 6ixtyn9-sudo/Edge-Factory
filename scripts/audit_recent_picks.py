@@ -121,6 +121,15 @@ def audit_team_key_candidates(raw: object) -> list[str]:
         "guangzhou": ["guangdong"],
         "hebeikung": ["shijiazhu", "poweshiji"],
         "meizhouke": ["meizhouwu", "meizhouha"],
+        "fcdunavru": ["dunavruse"],
+        "csvolunta": ["voluntari"],
+        "rfs": ["rigasfs"],
+        "rigasfutb": ["rigasfs"],
+        "rgasfs": ["rigasfs"],
+        "fktukums": ["tukums"],
+        "tukumsii": ["tukums"],
+        "rigaii": ["rigafcii"],
+        "valmierab": ["valmiera"],
     }
     base = norm_team(text)
     if base in manual:
