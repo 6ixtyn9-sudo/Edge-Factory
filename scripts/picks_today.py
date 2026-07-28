@@ -310,6 +310,241 @@ def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | N
         return None
 
 
+def compute_dynamic_enhancement(con, pick: dict) -> dict:
+    """Query the local database to find deep league & team context and determine the single highest probable enhancement."""
+    out = {
+        "recommended_enhancement": None,
+        "enhancement_probability": 0.0,
+        "enhancement_reason": None,
+        "enhancement_label": None
+    }
+    if not con:
+        return out
+        
+    home = pick.get("home")
+    away = pick.get("away")
+    if not home or not away:
+        return out
+        
+    hkey = norm_team(home)
+    akey = norm_team(away)
+    
+    # 1. Find the league code
+    league_code = None
+    try:
+        row_l = con.execute("""
+            SELECT league, COUNT(*) 
+            FROM forebet_settled 
+            WHERE hkey = ? OR akey = ? 
+            GROUP BY 1 
+            ORDER BY 2 DESC 
+            LIMIT 1
+        """, [hkey, akey]).fetchone()
+        if row_l:
+            league_code = row_l[0]
+    except Exception:
+        pass
+        
+    # 2. League stats
+    league_stats = {}
+    if league_code:
+        try:
+            row = con.execute("""
+                SELECT 
+                    COUNT(*) AS n,
+                    AVG(hs + gs) AS avg_goals,
+                    AVG(CASE WHEN hs + gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15_rate,
+                    AVG(CASE WHEN hs + gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
+                    AVG(CASE WHEN hs > 0 AND gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
+                    AVG(CASE WHEN hs >= 1 THEN 1.0 ELSE 0.0 END) AS home_score_o05,
+                    AVG(CASE WHEN gs >= 1 THEN 1.0 ELSE 0.0 END) AS away_score_o05,
+                    AVG(CASE WHEN hs >= 2 THEN 1.0 ELSE 0.0 END) AS home_score_o15,
+                    AVG(CASE WHEN gs >= 2 THEN 1.0 ELSE 0.0 END) AS away_score_o15,
+                    AVG(CASE WHEN hs >= gs THEN 1.0 ELSE 0.0 END) AS home_1x_rate,
+                    AVG(CASE WHEN gs >= hs THEN 1.0 ELSE 0.0 END) AS away_x2_rate,
+                    AVG(CASE WHEN gs = 0 THEN 1.0 ELSE 0.0 END) AS home_cs_rate,
+                    AVG(CASE WHEN hs = 0 THEN 1.0 ELSE 0.0 END) AS away_cs_rate
+                FROM forebet_settled
+                WHERE league = ?
+            """, [league_code]).fetchone()
+            if row and row[0] >= 10:
+                keys = [
+                    "n", "avg_goals", "over15_rate", "over25_rate", "btts_rate",
+                    "home_score_o05", "away_score_o05", "home_score_o15", "away_score_o15",
+                    "home_1x_rate", "away_x2_rate", "home_cs_rate", "away_cs_rate"
+                ]
+                league_stats = dict(zip(keys, row))
+        except Exception:
+            pass
+            
+    # 3. Home team stats
+    home_stats = {}
+    try:
+        row = con.execute("""
+            SELECT 
+                COUNT(*) AS n,
+                AVG(hs + gs) AS avg_goals,
+                AVG(CASE WHEN hs + gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15_rate,
+                AVG(CASE WHEN hs + gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
+                AVG(CASE WHEN hs > 0 AND gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
+                AVG(CASE WHEN hs >= 1 THEN 1.0 ELSE 0.0 END) AS score_o05,
+                AVG(CASE WHEN hs >= 2 THEN 1.0 ELSE 0.0 END) AS score_o15,
+                AVG(CASE WHEN hs >= gs THEN 1.0 ELSE 0.0 END) AS rate_1x,
+                AVG(CASE WHEN gs = 0 THEN 1.0 ELSE 0.0 END) AS cs_rate
+            FROM forebet_settled
+            WHERE hkey = ?
+        """, [hkey]).fetchone()
+        if row and row[0] >= 5:
+            keys = ["n", "avg_goals", "over15_rate", "over25_rate", "btts_rate", "score_o05", "score_o15", "rate_1x", "cs_rate"]
+            home_stats = dict(zip(keys, row))
+    except Exception:
+        pass
+        
+    # 4. Away team stats
+    away_stats = {}
+    try:
+        row = con.execute("""
+            SELECT 
+                COUNT(*) AS n,
+                AVG(hs + gs) AS avg_goals,
+                AVG(CASE WHEN hs + gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15_rate,
+                AVG(CASE WHEN hs + gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
+                AVG(CASE WHEN hs > 0 AND gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
+                AVG(CASE WHEN gs >= 1 THEN 1.0 ELSE 0.0 END) AS score_o05,
+                AVG(CASE WHEN gs >= 2 THEN 1.0 ELSE 0.0 END) AS score_o15,
+                AVG(CASE WHEN gs >= hs THEN 1.0 ELSE 0.0 END) AS rate_x2,
+                AVG(CASE WHEN hs = 0 THEN 1.0 ELSE 0.0 END) AS cs_rate
+            FROM forebet_settled
+            WHERE akey = ?
+        """, [akey]).fetchone()
+        if row and row[0] >= 5:
+            keys = ["n", "avg_goals", "over15_rate", "over25_rate", "btts_rate", "score_o05", "score_o15", "rate_x2", "cs_rate"]
+            away_stats = dict(zip(keys, row))
+    except Exception:
+        pass
+
+    # 5. Gather components with fallbacks
+    l_o15 = league_stats.get("over15_rate", 0.75)
+    l_o25 = league_stats.get("over25_rate", 0.50)
+    l_btts = league_stats.get("btts_rate", 0.52)
+    l_h_o05 = league_stats.get("home_score_o05", 0.72)
+    l_a_o05 = league_stats.get("away_score_o05", 0.72)
+    l_h_o15 = league_stats.get("home_score_o15", 0.45)
+    l_a_o15 = league_stats.get("away_score_o15", 0.45)
+    l_1x = league_stats.get("home_1x_rate", 0.70)
+    l_x2 = league_stats.get("away_x2_rate", 0.70)
+    l_h_cs = league_stats.get("home_cs_rate", 0.28)
+    l_a_cs = league_stats.get("away_cs_rate", 0.28)
+
+    h_o15 = home_stats.get("over15_rate", l_o15)
+    h_o25 = home_stats.get("over25_rate", l_o25)
+    h_btts = home_stats.get("btts_rate", l_btts)
+    h_score_o05 = home_stats.get("score_o05", l_h_o05)
+    h_score_o15 = home_stats.get("score_o15", l_h_o15)
+    h_1x = home_stats.get("rate_1x", l_1x)
+    h_cs = home_stats.get("cs_rate", l_h_cs)
+
+    a_o15 = away_stats.get("over15_rate", l_o15)
+    a_o25 = away_stats.get("over25_rate", l_o25)
+    a_btts = away_stats.get("btts_rate", l_btts)
+    a_score_o05 = away_stats.get("score_o05", l_a_o05)
+    a_score_o15 = away_stats.get("score_o15", l_a_o15)
+    a_x2 = away_stats.get("rate_x2", l_x2)
+    a_cs = away_stats.get("cs_rate", l_a_cs)
+
+    prob_o15 = 0.4 * l_o15 + 0.6 * (h_o15 + a_o15) / 2.0
+    prob_o25 = 0.4 * l_o25 + 0.6 * (h_o25 + a_o25) / 2.0
+    prob_btts_yes = 0.4 * l_btts + 0.6 * (h_btts + a_btts) / 2.0
+    prob_btts_no = 1.0 - prob_btts_yes
+
+    pick_sel = str(pick.get("pick") or "").lower()
+    
+    prob_team_o05 = 0.0
+    prob_team_o15 = 0.0
+    prob_double_chance = 0.0
+    
+    if pick_sel == "home":
+        prob_team_o05 = 0.4 * l_h_o05 + 0.6 * h_score_o05
+        prob_team_o15 = 0.4 * l_h_o15 + 0.6 * h_score_o15
+        prob_double_chance = 0.4 * l_1x + 0.6 * (h_1x + (1.0 - a_x2)) / 2.0
+    elif pick_sel == "away":
+        prob_team_o05 = 0.4 * l_a_o05 + 0.6 * a_score_o05
+        prob_team_o15 = 0.4 * l_a_o15 + 0.6 * a_score_o15
+        prob_double_chance = 0.4 * l_x2 + 0.6 * (a_x2 + (1.0 - h_1x)) / 2.0
+    else:
+        prob_double_chance = 0.70
+
+    candidates = []
+    
+    if prob_o15 >= 0.80:
+        candidates.append({
+            "market": "match_over_15",
+            "probability": prob_o15,
+            "label": "Match Over 1.5 Goals",
+            "reason": f"League Over 1.5 is {l_o15:.1%}, Home Over 1.5 is {h_o15:.1%}, Away Over 1.5 is {a_o15:.1%}"
+        })
+    if prob_o25 >= 0.80:
+        candidates.append({
+            "market": "match_over_25",
+            "probability": prob_o25,
+            "label": "Match Over 2.5 Goals",
+            "reason": f"League Over 2.5 is {l_o25:.1%}, Home Over 2.5 is {h_o25:.1%}, Away Over 2.5 is {a_o25:.1%}"
+        })
+    if prob_btts_yes >= 0.80:
+        candidates.append({
+            "market": "btts_yes",
+            "probability": prob_btts_yes,
+            "label": "Both Teams to Score (BTTS)",
+            "reason": f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"
+        })
+    if prob_btts_no >= 0.80:
+        candidates.append({
+            "market": "btts_no",
+            "probability": prob_btts_no,
+            "label": "Both Teams to Score - No (BTTS-No)",
+            "reason": f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"
+        })
+    if pick_sel in ("home", "away"):
+        team_label = "Home" if pick_sel == "home" else "Away"
+        team_o05_rate = h_score_o05 if pick_sel == "home" else a_score_o05
+        team_o15_rate = h_score_o15 if pick_sel == "home" else a_score_o15
+        if prob_team_o05 >= 0.80:
+            candidates.append({
+                "market": "team_over_05",
+                "probability": prob_team_o05,
+                "label": f"{team_label} Team Over 0.5 Goals",
+                "reason": f"{team_label} scoring rate is {team_o05_rate:.1%}"
+            })
+        if prob_team_o15 >= 0.80:
+            candidates.append({
+                "market": "team_over_15",
+                "probability": prob_team_o15,
+                "label": f"{team_label} Team Over 1.5 Goals",
+                "reason": f"{team_label} multi-goal rate is {team_o15_rate:.1%}"
+            })
+        if prob_double_chance >= 0.80:
+            dc_label = "1X" if pick_sel == "home" else "X2"
+            candidates.append({
+                "market": "double_chance",
+                "probability": prob_double_chance,
+                "label": f"Double Chance {dc_label}",
+                "reason": f"Combined double-chance expectation is {prob_double_chance:.1%}"
+            })
+
+    if candidates:
+        candidates.sort(key=lambda x: -x["probability"])
+        best = candidates[0]
+        out.update({
+            "recommended_enhancement": best["market"],
+            "enhancement_probability": round(best["probability"], 4),
+            "enhancement_reason": best["reason"],
+            "enhancement_label": best["label"]
+        })
+        
+    return out
+
+
+
 def annotate_market_recommendation(pick: dict):
     """Add Phase-1 market expression guidance to 1X2 picks."""
     pick["market_expression_version"] = MARKET_EXPRESSION_VERSION
@@ -1707,6 +1942,8 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 print(ctx_str)
             if p.get("statistical_comment"):
                 print(f"     {p['statistical_comment']}")
+            if p.get("recommended_enhancement") and p.get("enhancement_label"):
+                print(f"     🔥 HIGH-PROBABILITY ENHANCEMENT: {p['enhancement_label'].upper()} (Prob: {p['enhancement_probability']:.1%}) — {p['enhancement_reason']}")
         print()
     print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
     print("⚠️  Bet only what you can afford to lose.")
@@ -1901,6 +2138,10 @@ def main():
             annotate_market_recommendation(p)
             
             p["statistical_comment"] = get_statistical_comment(con, p.get("pick"), p.get("avg_p"), p.get("n_way", 3))
+            
+            # Compute deep dynamic enhancement overlay
+            enh = compute_dynamic_enhancement(con, p)
+            p.update(enh)
             
             day_picks.append(p)
 

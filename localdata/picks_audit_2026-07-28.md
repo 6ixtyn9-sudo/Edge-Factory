@@ -19,6 +19,13 @@
 - same-day cutoff date: 2026-07-28
 - same-day rows excluded: 1
 
+## Secondary Market Realized Rates
+
+Metrics scored against actual outcomes of the settled consensus picks in this window:
+- **Over 2.5 Goals**: occurred in 34 / 53 matches (64.2%)
+- **Both Teams to Score (BTTS)**: occurred in 25 / 53 matches (47.2%)
+- **Selected Team Over 1.5 Goals**: occurred in 40 / 53 matches (75.5%)
+
 ## By rule
 
 - `2way-unanimous avg_p>=70`: settled=20, wins=17, hit_rate=0.85, ROI=0.178

@@ -285,6 +285,38 @@ def summarize_by(rows: list[SettledPick], attr: str) -> dict[str, dict[str, Any]
     return {name: summarize_scored(group_rows) for name, group_rows in sorted(grouped.items())}
 
 
+def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bool | None:
+    if hs is None or gs is None:
+        return None
+    sel = selection.lower()
+    if enh_type == "match_over_15":
+        return (hs + gs) >= 2
+    elif enh_type == "match_over_25":
+        return (hs + gs) >= 3
+    elif enh_type == "btts_yes":
+        return hs > 0 and gs > 0
+    elif enh_type == "btts_no":
+        return hs == 0 or gs == 0
+    elif enh_type == "team_over_05":
+        if sel == "home":
+            return hs >= 1
+        elif sel == "away":
+            return gs >= 1
+    elif enh_type == "team_over_15":
+        if sel == "home":
+            return hs >= 2
+        elif sel == "away":
+            return gs >= 2
+    elif enh_type == "double_chance":
+        if sel == "home": # 1X
+            return hs >= gs
+        elif sel == "away": # X2
+            return gs >= hs
+        elif sel == "draw": # 12
+            return hs != gs
+    return None
+
+
 def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day: bool = False) -> dict[str, Any]:
     picks = load_archived_picks(start, end)
     results, results_by_date = load_results_index(warehouse_path)
@@ -301,6 +333,13 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "over25_wins": 0, "over25_total": 0,
         "btts_wins": 0, "btts_total": 0,
         "team_o15_wins": 0, "team_o15_total": 0,
+    }
+
+    # Dynamic Enhancement Auditing counters
+    enh_stats = {
+        "total_recommended": 0,
+        "total_hits": 0,
+        "by_enhancement": defaultdict(lambda: {"recommended": 0, "hits": 0})
     }
 
     for pick in picks:
@@ -367,6 +406,36 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                     if selected_goals >= 2:
                         sec_stats["team_o15_wins"] += 1
 
+                # 4. Recommended enhancement hit check
+                enh_type = pick.get("recommended_enhancement")
+                if enh_type:
+                    hit = check_enhancement_hit(enh_type, selection, hs, gs)
+                    if hit is not None:
+                        enh_stats["total_recommended"] += 1
+                        if hit:
+                            enh_stats["total_hits"] += 1
+                        
+                        enh_stats["by_enhancement"][enh_type]["recommended"] += 1
+                        if hit:
+                            enh_stats["by_enhancement"][enh_type]["hits"] += 1
+
+    serialized_by_enhancement = {}
+    for enh, stats in enh_stats["by_enhancement"].items():
+        rec = stats["recommended"]
+        hits = stats["hits"]
+        serialized_by_enhancement[enh] = {
+            "recommended": rec,
+            "hits": hits,
+            "hit_rate": round(hits / rec, 6) if rec else 0.0
+        }
+    
+    serialized_enh_audit = {
+        "total_recommended": enh_stats["total_recommended"],
+        "total_hits": enh_stats["total_hits"],
+        "hit_rate": round(enh_stats["total_hits"] / enh_stats["total_recommended"], 6) if enh_stats["total_recommended"] else None,
+        "by_enhancement": serialized_by_enhancement
+    }
+
     return {
         "start": start,
         "end": end,
@@ -386,6 +455,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "by_odds_source": summarize_by(settled_rows, "odds_source"),
         "by_odds_match_method": summarize_by(settled_rows, "odds_match_method"),
         "secondary_stats": sec_stats,
+        "enhancements_audit": serialized_enh_audit,
     }
 
 
@@ -439,6 +509,34 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
             f"- **Selected Team Over 1.5 Goals**: occurred in {team_o15_wins} / {team_o15_total} matches ({team_o15_pct:.1%})",
             "",
         ])
+
+    # Render Recommended Enhancements Audit
+    enh_aud = report.get("enhancements_audit", {})
+    if enh_aud and enh_aud.get("total_recommended", 0) > 0:
+        total_rec = enh_aud.get("total_recommended", 0)
+        total_hits = enh_aud.get("total_hits", 0)
+        overall_rate = enh_aud.get("hit_rate", 0.0)
+        
+        lines.extend([
+            "## Recommended Enhancements Audit",
+            "",
+            "Performance of deep context-derived recommended enhancements overlay:",
+            f"- **Total Recommended Enhancements**: {total_rec}",
+            f"- **Total Hits**: {total_hits}",
+            f"- **Overall Hit Rate**: {overall_rate:.1%}",
+            "",
+            "### Breakdown by Enhancement Type:",
+        ])
+        by_enh = enh_aud.get("by_enhancement", {})
+        if not by_enh:
+            lines.append("- (none)")
+        else:
+            for key, summary in sorted(by_enh.items()):
+                rec = summary.get("recommended", 0)
+                hits = summary.get("hits", 0)
+                hr = summary.get("hit_rate", 0.0)
+                lines.append(f"- `{key}`: recommended={rec}, hits={hits}, hit_rate={hr:.1%}")
+        lines.append("")
 
     lines.extend(["## By rule", ""])
     by_rule = report.get("by_rule", {})
