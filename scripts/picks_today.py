@@ -1862,23 +1862,42 @@ def _with_duplicate_metadata(group: list[dict]) -> dict:
 
 
 def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
-    grouped: dict[tuple[str, str, str, str, str], list[list[dict]]] = {}
+    clusters: list[list[dict]] = []
     for pick in picks:
-        base = _event_base_key(pick)
-        clusters = grouped.setdefault(base, [])
+        matched = False
+        pick_home = pick.get("home", "")
+        pick_away = pick.get("away", "")
+        pick_date = str(pick.get("date") or "")[:10]
+        pick_market = str(pick.get("market") or "")
+        pick_sel = str(pick.get("pick") or "")
+        
         for cluster in clusters:
-            if _same_event_cluster(cluster[0], pick):
-                cluster.append(pick)
-                break
-        else:
+            rep = cluster[0]
+            rep_date = str(rep.get("date") or "")[:10]
+            rep_market = str(rep.get("market") or "")
+            rep_sel = str(rep.get("pick") or "")
+            
+            if pick_date == rep_date and pick_market == rep_market and pick_sel == rep_sel:
+                # Same date, market, selection. Now check kickoff and fuzzy team similarity
+                if _same_event_cluster(rep, pick):
+                    # Compute team Jaccard bigram similarity
+                    h_sim = char_ngram_similarity(pick_home, rep.get("home", ""), n=2)
+                    a_sim = char_ngram_similarity(pick_away, rep.get("away", ""), n=2)
+                    
+                    # Group if both are similar, or one matches exactly and the other is similar
+                    if (h_sim >= 0.40 and a_sim >= 0.40) or (pick_home == rep.get("home") and a_sim >= 0.40) or (pick_away == rep.get("away") and h_sim >= 0.40):
+                        cluster.append(pick)
+                        matched = True
+                        break
+                        
+        if not matched:
             clusters.append([pick])
 
     out: list[dict] = []
     removed = 0
-    for clusters in grouped.values():
-        for cluster in clusters:
-            out.append(_with_duplicate_metadata(cluster))
-            removed += max(0, len(cluster) - 1)
+    for cluster in clusters:
+        out.append(_with_duplicate_metadata(cluster))
+        removed += max(0, len(cluster) - 1)
 
     out.sort(key=lambda r: (-_bucket_severity(r.get("bucket")), -float(r.get("w_score") or 0.0), -float(r.get("avg_p") or 0)))
     return out, removed
