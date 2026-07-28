@@ -260,23 +260,19 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
             AVG(f.hs + f.gs) AS avg_total_goals,
             AVG(CASE WHEN f.hs + f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
             AVG(CASE WHEN f.hs > 0 AND f.gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
-            AVG(CASE WHEN ? = 'home' THEN (CASE WHEN f.hs >= 2 THEN 1.0 ELSE 0.0 END)
-                     WHEN ? = 'away' THEN (CASE WHEN f.gs >= 2 THEN 1.0 ELSE 0.0 END)
-                     ELSE 0.0 END) AS team_o15_rate,
-            AVG(CASE WHEN ? = 'home' THEN (CASE WHEN f.hs >= 3 THEN 1.0 ELSE 0.0 END)
-                     WHEN ? = 'away' THEN (CASE WHEN f.gs >= 3 THEN 1.0 ELSE 0.0 END)
-                     ELSE 0.0 END) AS team_o25_rate
+            AVG(CASE WHEN f.hs >= 2 THEN 1.0 ELSE 0.0 END) AS home_o15_rate,
+            AVG(CASE WHEN f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS away_o15_rate
         FROM {view_name} c
         JOIN forebet_settled f ON c.date = f.date AND c.home = f.home AND c.away = f.away
         WHERE c.outcome = ? AND {agree_cond}
           AND c.avg_p BETWEEN ? AND ?
     """
     try:
-        row = con.execute(q, [sel, sel, sel, sel, sel, *params, p_min, p_max]).fetchone()
+        row = con.execute(q, [sel, *params, p_min, p_max]).fetchone()
         if not row or not row[0] or row[0] < 5:
             return None
             
-        n, avg_goals, over25, btts, team_o15, team_o25 = row
+        n, avg_goals, over25, btts, home_o15, away_o15 = row
         
         # Extract top 2 scorelines
         score_q = f"""
@@ -296,11 +292,7 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
             
         score_display = ", ".join(score_strs) if score_strs else "n/a"
         
-        sel_label = "Home Team" if sel == "home" else "Away Team" if sel == "away" else "Draw"
-        comment = f"📊 Realized Stats on {sel.capitalize()} Win (n={n}): Avg Goals: {avg_goals:.2f} | Over 2.5: {over25:.1%} | BTTS: {btts:.1%}"
-        if sel != "draw":
-            comment += f" | {sel_label} Over 1.5 Goals: {team_o15:.1%}"
-        comment += f" | Top Scores: {score_display}"
+        comment = f"📊 Realized Stats on {sel.capitalize()} Win (n={n}): Avg Goals: {avg_goals:.2f} | Over 2.5: {over25:.1%} | BTTS: {btts:.1%} | Home Over 1.5 Goals: {home_o15:.1%} | Away Over 1.5 Goals: {away_o15:.1%} | Top Scores: {score_display}"
         return comment
     except Exception:
         return None
