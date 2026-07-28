@@ -518,11 +518,15 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                     
                 home_o15_hit = None
                 if parsed_stats["home_o15"] is not None:
-                    home_o15_hit = hs >= 2
+                    expected_over = parsed_stats["home_o15"] >= 0.50
+                    actual_over = hs >= 2
+                    home_o15_hit = actual_over if expected_over else not actual_over
                     
                 away_o15_hit = None
                 if parsed_stats["away_o15"] is not None:
-                    away_o15_hit = gs >= 2
+                    expected_over = parsed_stats["away_o15"] >= 0.50
+                    actual_over = gs >= 2
+                    away_o15_hit = actual_over if expected_over else not actual_over
                     
                 top_scores_audited = []
                 for item in parsed_stats["top_scores"]:
@@ -741,11 +745,17 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 
             if stats["home_o15_expected"] is not None:
                 h_o15_icon = "🟢 HIT" if stats["home_o15_hit"] else "🔴 MISS"
-                lines.append(f"  - [{h_o15_icon}] **Home Team Over 1.5 Goals**: expected {stats['home_o15_expected']:.1%} (Actual: {item['hs']} goals)")
+                if stats["home_o15_expected"] >= 0.50:
+                    lines.append(f"  - [{h_o15_icon}] **Home Team Over 1.5 Goals**: expected {stats['home_o15_expected']:.1%} (Actual: {item['hs']} goals)")
+                else:
+                    lines.append(f"  - [{h_o15_icon}] **Home Team Under 1.5 Goals**: expected {1.0 - stats['home_o15_expected']:.1%} (Actual: {item['hs']} goals)")
                 
             if stats["away_o15_expected"] is not None:
                 a_o15_icon = "🟢 HIT" if stats["away_o15_hit"] else "🔴 MISS"
-                lines.append(f"  - [{a_o15_icon}] **Away Team Over 1.5 Goals**: expected {stats['away_o15_expected']:.1%} (Actual: {item['gs']} goals)")
+                if stats["away_o15_expected"] >= 0.50:
+                    lines.append(f"  - [{a_o15_icon}] **Away Team Over 1.5 Goals**: expected {stats['away_o15_expected']:.1%} (Actual: {item['gs']} goals)")
+                else:
+                    lines.append(f"  - [{a_o15_icon}] **Away Team Under 1.5 Goals**: expected {1.0 - stats['away_o15_expected']:.1%} (Actual: {item['gs']} goals)")
                 
             if stats["top_scores"]:
                 scores_strs = []
