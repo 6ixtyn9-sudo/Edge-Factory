@@ -39,6 +39,18 @@ def test_check_enhancement_hit():
     # match_over_25
     assert check_enhancement_hit("match_over_25", "home", 2, 1) is True
     assert check_enhancement_hit("match_over_25", "home", 2, 0) is False
+
+    # match_under_15
+    assert check_enhancement_hit("match_under_15", "home", 1, 0) is True
+    assert check_enhancement_hit("match_under_15", "home", 1, 1) is False
+
+    # match_under_25
+    assert check_enhancement_hit("match_under_25", "home", 2, 0) is True
+    assert check_enhancement_hit("match_under_25", "home", 2, 1) is False
+
+    # match_under_35
+    assert check_enhancement_hit("match_under_35", "home", 3, 0) is True
+    assert check_enhancement_hit("match_under_35", "home", 2, 2) is False
     
     # btts_yes
     assert check_enhancement_hit("btts_yes", "home", 1, 1) is True

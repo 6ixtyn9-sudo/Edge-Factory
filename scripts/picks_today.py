@@ -360,6 +360,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
                     AVG(hs + gs) AS avg_goals,
                     AVG(CASE WHEN hs + gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15_rate,
                     AVG(CASE WHEN hs + gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
+                    AVG(CASE WHEN hs + gs <= 3 THEN 1.0 ELSE 0.0 END) AS under35_rate,
                     AVG(CASE WHEN hs > 0 AND gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
                     AVG(CASE WHEN hs >= 1 THEN 1.0 ELSE 0.0 END) AS home_score_o05,
                     AVG(CASE WHEN gs >= 1 THEN 1.0 ELSE 0.0 END) AS away_score_o05,
@@ -374,7 +375,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             """, [league_code]).fetchone()
             if row and row[0] >= 10:
                 keys = [
-                    "n", "avg_goals", "over15_rate", "over25_rate", "btts_rate",
+                    "n", "avg_goals", "over15_rate", "over25_rate", "under35_rate", "btts_rate",
                     "home_score_o05", "away_score_o05", "home_score_o15", "away_score_o15",
                     "home_1x_rate", "away_x2_rate", "home_cs_rate", "away_cs_rate"
                 ]
@@ -391,6 +392,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
                 AVG(hs + gs) AS avg_goals,
                 AVG(CASE WHEN hs + gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15_rate,
                 AVG(CASE WHEN hs + gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
+                AVG(CASE WHEN hs + gs <= 3 THEN 1.0 ELSE 0.0 END) AS under35_rate,
                 AVG(CASE WHEN hs > 0 AND gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
                 AVG(CASE WHEN hs >= 1 THEN 1.0 ELSE 0.0 END) AS score_o05,
                 AVG(CASE WHEN hs >= 2 THEN 1.0 ELSE 0.0 END) AS score_o15,
@@ -400,7 +402,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             WHERE hkey = ?
         """, [hkey]).fetchone()
         if row and row[0] >= 5:
-            keys = ["n", "avg_goals", "over15_rate", "over25_rate", "btts_rate", "score_o05", "score_o15", "rate_1x", "cs_rate"]
+            keys = ["n", "avg_goals", "over15_rate", "over25_rate", "under35_rate", "btts_rate", "score_o05", "score_o15", "rate_1x", "cs_rate"]
             home_stats = dict(zip(keys, row))
     except Exception:
         pass
@@ -414,6 +416,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
                 AVG(hs + gs) AS avg_goals,
                 AVG(CASE WHEN hs + gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15_rate,
                 AVG(CASE WHEN hs + gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25_rate,
+                AVG(CASE WHEN hs + gs <= 3 THEN 1.0 ELSE 0.0 END) AS under35_rate,
                 AVG(CASE WHEN hs > 0 AND gs > 0 THEN 1.0 ELSE 0.0 END) AS btts_rate,
                 AVG(CASE WHEN gs >= 1 THEN 1.0 ELSE 0.0 END) AS score_o05,
                 AVG(CASE WHEN gs >= 2 THEN 1.0 ELSE 0.0 END) AS score_o15,
@@ -423,7 +426,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             WHERE akey = ?
         """, [akey]).fetchone()
         if row and row[0] >= 5:
-            keys = ["n", "avg_goals", "over15_rate", "over25_rate", "btts_rate", "score_o05", "score_o15", "rate_x2", "cs_rate"]
+            keys = ["n", "avg_goals", "over15_rate", "over25_rate", "under35_rate", "btts_rate", "score_o05", "score_o15", "rate_x2", "cs_rate"]
             away_stats = dict(zip(keys, row))
     except Exception:
         pass
@@ -440,6 +443,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     l_x2 = league_stats.get("away_x2_rate", 0.70)
     l_h_cs = league_stats.get("home_cs_rate", 0.28)
     l_a_cs = league_stats.get("away_cs_rate", 0.28)
+    l_u35 = league_stats.get("under35_rate", 0.70)
 
     h_o15 = home_stats.get("over15_rate", l_o15)
     h_o25 = home_stats.get("over25_rate", l_o25)
@@ -448,6 +452,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     h_score_o15 = home_stats.get("score_o15", l_h_o15)
     h_1x = home_stats.get("rate_1x", l_1x)
     h_cs = home_stats.get("cs_rate", l_h_cs)
+    h_u35 = home_stats.get("under35_rate", l_u35)
 
     a_o15 = away_stats.get("over15_rate", l_o15)
     a_o25 = away_stats.get("over25_rate", l_o25)
@@ -456,11 +461,16 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     a_score_o15 = away_stats.get("score_o15", l_a_o15)
     a_x2 = away_stats.get("rate_x2", l_x2)
     a_cs = away_stats.get("cs_rate", l_a_cs)
+    a_u35 = away_stats.get("under35_rate", l_u35)
 
     prob_o15 = 0.4 * l_o15 + 0.6 * (h_o15 + a_o15) / 2.0
     prob_o25 = 0.4 * l_o25 + 0.6 * (h_o25 + a_o25) / 2.0
     prob_btts_yes = 0.4 * l_btts + 0.6 * (h_btts + a_btts) / 2.0
     prob_btts_no = 1.0 - prob_btts_yes
+    
+    prob_u15 = 1.0 - prob_o15
+    prob_u25 = 1.0 - prob_o25
+    prob_u35 = 0.4 * l_u35 + 0.6 * (h_u35 + a_u35) / 2.0
 
     pick_sel = str(pick.get("pick") or "").lower()
     
@@ -487,6 +497,27 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             "probability": prob_o15,
             "label": "Match Over 1.5 Goals",
             "reason": f"League Over 1.5 is {l_o15:.1%}, Home Over 1.5 is {h_o15:.1%}, Away Over 1.5 is {a_o15:.1%}"
+        })
+    if prob_u15 >= 0.80:
+        candidates.append({
+            "market": "match_under_15",
+            "probability": prob_u15,
+            "label": "Match Under 1.5 Goals",
+            "reason": f"Extremely defensive context: Combined Under 1.5 is {prob_u15:.1%}"
+        })
+    if prob_u25 >= 0.80:
+        candidates.append({
+            "market": "match_under_25",
+            "probability": prob_u25,
+            "label": "Match Under 2.5 Goals",
+            "reason": f"Highly defensive context: Combined Under 2.5 is {prob_u25:.1%}"
+        })
+    if prob_u35 >= 0.80:
+        candidates.append({
+            "market": "match_under_35",
+            "probability": prob_u35,
+            "label": "Match Under 3.5 Goals",
+            "reason": f"Safe low-scoring expectation: Combined Under 3.5 is {prob_u35:.1%}"
         })
     if prob_o25 >= 0.80:
         candidates.append({

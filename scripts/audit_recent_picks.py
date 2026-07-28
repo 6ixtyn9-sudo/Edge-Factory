@@ -295,6 +295,12 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
         return (hs + gs) >= 2
     elif enh_type == "match_over_25":
         return (hs + gs) >= 3
+    elif enh_type == "match_under_15":
+        return (hs + gs) <= 1
+    elif enh_type == "match_under_25":
+        return (hs + gs) <= 2
+    elif enh_type == "match_under_35":
+        return (hs + gs) <= 3
     elif enh_type == "btts_yes":
         return hs > 0 and gs > 0
     elif enh_type == "btts_no":
