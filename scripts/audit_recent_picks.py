@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
+"""Retrospective results backfill helper.
+
+Fills missing final scores (hs/gs) in score-capable source cache files using
+settled donor sources already captured in localdata/*.csv.gz.
+"""
+
 from __future__ import annotations
 
 import argparse
 import json
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
@@ -76,7 +83,6 @@ def load_archived_picks(start: str, end: str) -> list[dict[str, Any]]:
     return out
 
 
-
 def _dedupe_keys(keys: list[str]) -> list[str]:
     out: list[str] = []
     for key in keys:
@@ -86,28 +92,26 @@ def _dedupe_keys(keys: list[str]) -> list[str]:
     return out
 
 
+def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
+    def get_ngrams(s: str) -> set[str]:
+        clean = re.sub(r"[^a-z0-9]", "", s.lower())
+        return {clean[i : i + n] for i in range(len(clean) - n + 1)} if len(clean) >= n else set()
+
+    g1 = get_ngrams(s1)
+    g2 = get_ngrams(s2)
+    if not g1 or not g2:
+        return 0.0
+    return len(g1 & g2) / len(g1 | g2)
+
+
 def audit_team_key_candidates(raw: object) -> list[str]:
-    """Audit-only result-match keys.
-
-    First key is the legacy miner key. Extra keys are explicit/canonical aliases
-    collapsed back to the legacy width. This does NOT change certified miner
-    joins; it only stops archived operational picks from disappearing in the
-    recent-picks audit because of aliases such as KPV-j vs KPV Kokkola.
-
-    When the 9-char norm_team of two different teams collide (e.g.
-    "Launceston City" and "Launceston United" both → "launcesto"), we produce
-    a *disambiguated* longer key by running norm_team at width=14 on the
-    canonical name so the city/United distinction survives.
-    """
     text = str(raw or "")
     keys = [norm_team(text)]
     try:
         canon = canonical_team(text)
         keys.append(norm_team(canon))
-        # Disambiguation: if the 9-char key is a known collision,
-        # also produce a wider key to let the audit resolve it.
         _DISAMBIG = {
-            "launcesto": 14,   # Launceston City vs Launceston United
+            "launcesto": 14,
         }
         base9 = norm_team(text)
         if base9 in _DISAMBIG:
@@ -155,14 +159,7 @@ def _pick_diag(pick: dict[str, Any], reason: str) -> dict[str, Any]:
     }
 
 
-def load_results_index(warehouse_path: Path) -> dict[tuple[str, str, str], dict[str, Any]]:
-    """Load settled results keyed by (date, home_key, away_key).
-
-    Produces entries at two key widths: the standard 9-char legacy key and
-    a 14-char disambiguation key.  This lets audit_team_key_candidates()
-    resolve collisions where two different teams share the same 9-char key
-    (e.g. "Launceston City" and "Launceston United" both → "launcesto").
-    """
+def load_results_index(warehouse_path: Path) -> tuple[dict[tuple[str, str, str], dict[str, Any]], dict[str, list[dict[str, Any]]]]:
     import duckdb
 
     from edgefactory.util import norm_team_sql
@@ -182,7 +179,7 @@ def load_results_index(warehouse_path: Path) -> dict[tuple[str, str, str], dict[
     ]
     active = [(prio, name) for prio, name in candidates if name in tables]
     if not active:
-        return {}
+        return {}, {}
 
     nh9, na9 = norm_team_sql("home", 9), norm_team_sql("away", 9)
     nh14, na14 = norm_team_sql("home", 14), norm_team_sql("away", 14)
@@ -203,21 +200,40 @@ def load_results_index(warehouse_path: Path) -> dict[tuple[str, str, str], dict[
              ROW_NUMBER() OVER (PARTITION BY date, hkey, akey, hkey14, akey14 ORDER BY prio) AS rn
       FROM all_results
     )
-    SELECT date, hkey, akey, hkey14, akey14, hs, gs, outcome
+    SELECT date, hkey, akey, hkey14, akey14, hs, gs, outcome, home, away
     FROM ranked
     WHERE rn = 1
     """
     rows = con.execute(sql).fetchall()
     index: dict[tuple[str, str, str], dict[str, Any]] = {}
-    for day, hkey, akey, hkey14, akey14, hs, gs, outcome in rows:
-        entry = {"hs": int(hs), "gs": int(gs), "outcome": str(outcome)}
+    results_by_date: dict[str, list[dict[str, Any]]] = defaultdict(list)
+
+    for day, hkey, akey, hkey14, akey14, hs, gs, outcome, home, away in rows:
+        entry = {"hs": int(hs), "gs": int(gs), "outcome": str(outcome), "home": str(home), "away": str(away)}
         d = str(day)[:10]
         # 9-char key (legacy)
         index[(d, str(hkey), str(akey))] = entry
-        # 14-char key (disambiguation) — only add if wider and different
+        # 14-char key (disambiguation)
         if str(hkey14) != str(hkey) or str(akey14) != str(akey):
             index[(d, str(hkey14), str(akey14))] = entry
-    return index
+            
+        results_by_date[d].append(entry)
+
+    return index, results_by_date
+
+
+def find_fuzzy_result_match(pick_home: str, pick_away: str, results_on_date: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Fall back to character bigram Jaccard similarity of combined Event string when key mapping fails."""
+    pick_str = f"{pick_home} {pick_away}"
+    best_match = None
+    best_sim = 0.0
+    for res in results_on_date:
+        res_str = f"{res['home']} {res['away']}"
+        sim = char_ngram_similarity(pick_str, res_str, n=2)
+        if sim >= 0.40 and sim > best_sim:
+            best_sim = sim
+            best_match = res
+    return best_match
 
 
 def settle_pick(pick: dict[str, Any], result: dict[str, Any] | None) -> SettledPick | None:
@@ -275,7 +291,7 @@ def summarize_by(rows: list[SettledPick], attr: str) -> dict[str, dict[str, Any]
 
 def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day: bool = False) -> dict[str, Any]:
     picks = load_archived_picks(start, end)
-    results = load_results_index(warehouse_path)
+    results, results_by_date = load_results_index(warehouse_path)
     settled_rows: list[SettledPick] = []
     archived_dates = sorted({str(p.get("date") or "")[:10] for p in picks if p.get("date")})
     today_local = local_today()
@@ -315,9 +331,15 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                 ambiguous_result_examples.append(_pick_diag(pick, "ambiguous_alias_result"))
                 continue
 
+        # Systematic Fallback: if key-based join fails, fallback to circular Event-String Fuzzy Jaccard Matcher
         if result is None:
-            unmatched_result_examples.append(_pick_diag(pick, "unmatched_result"))
-            continue
+            results_on_date = results_by_date.get(pick_date, [])
+            fuzzy_candidate = find_fuzzy_result_match(pick.get("home", ""), pick.get("away", ""), results_on_date)
+            if fuzzy_candidate is not None:
+                result = fuzzy_candidate
+            else:
+                unmatched_result_examples.append(_pick_diag(pick, "unmatched_result"))
+                continue
 
         settled = settle_pick(pick, result)
         if settled is not None:
