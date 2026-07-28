@@ -143,13 +143,28 @@ def context_verdict_league(
     roi        = full-history ROI (decimal: +0.03 = +3%)
     recent_roi = recent-window ROI (same scale); None if < 30 recent bets
     """
-    if n < 50 or roi is None:
+    if roi is None:
         return "UNKNOWN"
+        
+    # Early Veto / Caution / Allow gates for smaller sample size (12 to 39)
+    if 12 <= n < 40:
+        if roi <= -0.10:
+            return "VETO"
+        if roi <= -0.04:
+            return "CAUTION"
+        if roi >= 0.01:
+            return "ALLOW"
+        return "UNKNOWN"
+        
+    if n < 12:
+        return "UNKNOWN"
+        
+    # Standard gates for n >= 40
     if roi <= -0.05 and (recent_roi is None or recent_roi <= -0.03):
         return "VETO"
     if roi < 0.0 or (recent_roi is not None and recent_roi <= -0.05):
         return "CAUTION"
-    if n >= 120 and roi >= 0.03 and (recent_roi is None or recent_roi >= 0.0):
+    if n >= 100 and roi >= 0.03 and (recent_roi is None or recent_roi >= 0.0):
         return "BOOST"
     return "ALLOW"
 
@@ -160,13 +175,28 @@ def context_verdict_team(n: int, roi: float | None) -> str:
     n   = total settled bets where this team appeared in this role
     roi = full-history ROI for those bets
     """
-    if n < 30 or roi is None:
+    if roi is None:
         return "UNKNOWN"
+        
+    # Early Veto / Caution / Allow gates for smaller sample size (8 to 24)
+    if 8 <= n < 25:
+        if roi <= -0.12:
+            return "VETO"
+        if roi <= -0.05:
+            return "CAUTION"
+        if roi >= 0.02:
+            return "ALLOW"
+        return "UNKNOWN"
+        
+    if n < 8:
+        return "UNKNOWN"
+        
+    # Standard gates for n >= 25
     if roi <= -0.08:
         return "VETO"
     if roi <= -0.03:
         return "CAUTION"
-    if n >= 50 and roi >= 0.05:
+    if n >= 45 and roi >= 0.05:
         return "BOOST"
     return "ALLOW"
 
@@ -177,13 +207,28 @@ def context_verdict_odds_band(n: int, roi: float | None) -> str:
     n   = total settled bets in this odds band
     roi = full-history ROI for those bets
     """
-    if n < 80 or roi is None:
+    if roi is None:
         return "UNKNOWN"
+        
+    # Early Veto / Caution / Allow gates for smaller sample size (20 to 59)
+    if 20 <= n < 60:
+        if roi <= -0.05:
+            return "VETO"
+        if roi <= -0.01:
+            return "CAUTION"
+        if roi >= 0.01:
+            return "ALLOW"
+        return "UNKNOWN"
+        
+    if n < 20:
+        return "UNKNOWN"
+        
+    # Standard gates for n >= 60
     if roi <= -0.02:
         return "VETO"
     if roi <= 0.0:
         return "CAUTION"
-    if n >= 150 and roi >= 0.02:
+    if n >= 120 and roi >= 0.02:
         return "BOOST"
     return "ALLOW"
 
