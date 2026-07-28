@@ -305,16 +305,22 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
         return hs > 0 and gs > 0
     elif enh_type == "btts_no":
         return hs == 0 or gs == 0
-    elif enh_type == "team_over_05":
-        if sel == "home":
-            return hs >= 1
-        elif sel == "away":
-            return gs >= 1
-    elif enh_type == "team_over_15":
-        if sel == "home":
-            return hs >= 2
-        elif sel == "away":
-            return gs >= 2
+    elif enh_type in ("team_over_05", "home_over_05"):
+        return hs >= 1 if (enh_type == "home_over_05" or sel == "home") else gs >= 1
+    elif enh_type in ("team_over_15", "home_over_15"):
+        return hs >= 2 if (enh_type == "home_over_15" or sel == "home") else gs >= 2
+    elif enh_type == "home_under_05":
+        return hs == 0
+    elif enh_type == "home_under_15":
+        return hs <= 1
+    elif enh_type == "away_over_05":
+        return gs >= 1
+    elif enh_type == "away_over_15":
+        return gs >= 2
+    elif enh_type == "away_under_05":
+        return gs == 0
+    elif enh_type == "away_under_15":
+        return gs <= 1
     elif enh_type == "double_chance":
         if sel == "home": # 1X
             return hs >= gs
