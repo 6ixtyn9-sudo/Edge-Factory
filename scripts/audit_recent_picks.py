@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""Retrospective results backfill helper.
-
-Fills missing final scores (hs/gs) in score-capable source cache files using
-settled donor sources already captured in localdata/*.csv.gz.
-"""
+"""Audit recent archived daily picks against settled warehouse results."""
 
 from __future__ import annotations
 
@@ -300,6 +296,13 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
     unmatched_result_examples: list[dict[str, Any]] = []
     ambiguous_result_examples: list[dict[str, Any]] = []
 
+    # Dynamic Secondary Market realized stats counters
+    sec_stats = {
+        "over25_wins": 0, "over25_total": 0,
+        "btts_wins": 0, "btts_total": 0,
+        "team_o15_wins": 0, "team_o15_total": 0,
+    }
+
     for pick in picks:
         pick_date = str(pick.get("date") or "")[:10]
         if not include_same_day and pick_date >= today_local:
@@ -321,7 +324,6 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                     result = candidate
                     matched_keys.append(key)
 
-        # If multiple candidate keys point to different scorelines, do not guess.
         if len(matched_keys) > 1:
             seen = set()
             for key in matched_keys:
@@ -331,7 +333,6 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                 ambiguous_result_examples.append(_pick_diag(pick, "ambiguous_alias_result"))
                 continue
 
-        # Systematic Fallback: if key-based join fails, fallback to circular Event-String Fuzzy Jaccard Matcher
         if result is None:
             results_on_date = results_by_date.get(pick_date, [])
             fuzzy_candidate = find_fuzzy_result_match(pick.get("home", ""), pick.get("away", ""), results_on_date)
@@ -344,6 +345,27 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         settled = settle_pick(pick, result)
         if settled is not None:
             settled_rows.append(settled)
+            
+            # Score secondary markets on this settled match
+            hs = result.get("hs")
+            gs = result.get("gs")
+            if hs is not None and gs is not None:
+                # 1. Over 2.5 goals
+                sec_stats["over25_total"] += 1
+                if hs + gs >= 3:
+                    sec_stats["over25_wins"] += 1
+                    
+                # 2. Both teams to score
+                sec_stats["btts_total"] += 1
+                if hs > 0 and gs > 0:
+                    sec_stats["btts_wins"] += 1
+                    
+                # 3. Selected team over 1.5 goals
+                if selection in ("home", "away"):
+                    sec_stats["team_o15_total"] += 1
+                    selected_goals = hs if selection == "home" else gs
+                    if selected_goals >= 2:
+                        sec_stats["team_o15_wins"] += 1
 
     return {
         "start": start,
@@ -363,6 +385,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "by_bucket": summarize_by(settled_rows, "bucket"),
         "by_odds_source": summarize_by(settled_rows, "odds_source"),
         "by_odds_match_method": summarize_by(settled_rows, "odds_match_method"),
+        "secondary_stats": sec_stats,
     }
 
 
@@ -390,9 +413,34 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- same-day cutoff date: {report.get('same_day_cutoff')}",
         f"- same-day rows excluded: {report.get('same_day_excluded', 0)}",
         "",
-        "## By rule",
-        "",
     ]
+    
+    # Render Secondary Market realized stats
+    sec = report.get("secondary_stats", {})
+    if sec and sec.get("over25_total", 0) > 0:
+        over25_wins = sec.get("over25_wins", 0)
+        over25_total = sec.get("over25_total", 0)
+        over25_pct = over25_wins / over25_total
+        
+        btts_wins = sec.get("btts_wins", 0)
+        btts_total = sec.get("btts_total", 0)
+        btts_pct = btts_wins / btts_total
+        
+        team_o15_wins = sec.get("team_o15_wins", 0)
+        team_o15_total = sec.get("team_o15_total", 0)
+        team_o15_pct = team_o15_wins / team_o15_total
+        
+        lines.extend([
+            "## Secondary Market Realized Rates",
+            "",
+            "Metrics scored against actual outcomes of the settled consensus picks in this window:",
+            f"- **Over 2.5 Goals**: occurred in {over25_wins} / {over25_total} matches ({over25_pct:.1%})",
+            f"- **Both Teams to Score (BTTS)**: occurred in {btts_wins} / {btts_total} matches ({btts_pct:.1%})",
+            f"- **Selected Team Over 1.5 Goals**: occurred in {team_o15_wins} / {team_o15_total} matches ({team_o15_pct:.1%})",
+            "",
+        ])
+
+    lines.extend(["## By rule", ""])
     by_rule = report.get("by_rule", {})
     if not by_rule:
         lines.append("- none")
