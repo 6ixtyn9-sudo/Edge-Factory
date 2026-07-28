@@ -31,11 +31,11 @@
       "wins": 7
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.857143,
-      "priced_picks": 35,
-      "roi": 0.109429,
-      "settled_picks": 35,
-      "wins": 30
+      "hit_rate": 0.861111,
+      "priced_picks": 36,
+      "roi": 0.108333,
+      "settled_picks": 36,
+      "wins": 31
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.833333,
@@ -47,11 +47,11 @@
   },
   "by_odds_match_method": {
     "betexplorer": {
-      "hit_rate": 0.852941,
-      "priced_picks": 34,
-      "roi": 0.092647,
-      "settled_picks": 34,
-      "wins": 29
+      "hit_rate": 0.857143,
+      "priced_picks": 35,
+      "roi": 0.092,
+      "settled_picks": 35,
+      "wins": 30
     },
     "exact": {
       "hit_rate": 0.705882,
@@ -70,11 +70,11 @@
   },
   "by_odds_source": {
     "betexplorer_odds": {
-      "hit_rate": 0.852941,
-      "priced_picks": 34,
-      "roi": 0.092647,
-      "settled_picks": 34,
-      "wins": 29
+      "hit_rate": 0.857143,
+      "priced_picks": 35,
+      "roi": 0.092,
+      "settled_picks": 35,
+      "wins": 30
     },
     "bzzoiro_odds": {
       "hit_rate": 0.9,
@@ -100,11 +100,11 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.842105,
-      "priced_picks": 19,
-      "roi": 0.183684,
-      "settled_picks": 19,
-      "wins": 16
+      "hit_rate": 0.85,
+      "priced_picks": 20,
+      "roi": 0.178,
+      "settled_picks": 20,
+      "wins": 17
     },
     "3way-unanimous avg_p>=65": {
       "hit_rate": 0.571429,
@@ -132,35 +132,15 @@
   "end": "2026-07-28",
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.807692,
-    "priced_picks": 52,
-    "roi": 0.087692,
-    "settled_picks": 52,
-    "wins": 42
+    "hit_rate": 0.811321,
+    "priced_picks": 53,
+    "roi": 0.087358,
+    "settled_picks": 53,
+    "wins": 43
   },
   "same_day_cutoff": "2026-07-28",
   "same_day_excluded": 1,
   "start": "2026-06-29",
-  "unmatched_examples": [
-    {
-      "away": "Tukums II",
-      "away_key_candidates": [
-        "tukums",
-        "tukumsii"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-07-27",
-      "home": "Metta / LU",
-      "home_key_candidates": [
-        "mettalu"
-      ],
-      "league": "Latvia 1. Liga",
-      "match": "Metta / LU vs Tukums II",
-      "odds": 1.07,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    }
-  ],
-  "unmatched_result_picks": 1
+  "unmatched_examples": [],
+  "unmatched_result_picks": 0
 }
