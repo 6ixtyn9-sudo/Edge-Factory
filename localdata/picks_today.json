@@ -1,11 +1,11 @@
 [
   {
-    "as_of": "2026-07-29T11:56:51+02:00",
-    "avg_p": 83.2,
+    "as_of": "2026-07-29T12:07:50+02:00",
+    "avg_p": 83.0,
     "away": "Larne",
     "bookmaker": "888Sport",
     "bucket": "SKIPPED_VETO",
-    "confidence": 0.8937,
+    "confidence": 0.8901,
     "ctx": {
       "away_norm": "larne",
       "comp_type_name": "league",
@@ -18,7 +18,7 @@
       "odds_band": "VETO",
       "odds_band_name": "1.00-1.10",
       "side_role": "home",
-      "team_a": "VETO",
+      "team_a": "UNKNOWN",
       "team_h": "UNKNOWN"
     },
     "date": "2026-07-29",
@@ -63,13 +63,13 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=65): Avg Goals: 4.82 | Over 2.5: 81.5% | BTTS: 41.5% | Home Over 1.5 Goals: 93.8% | Away Over 1.5 Goals: 6.2% | Top Scores: 3-1 (15.4%), 3-0 (12.3%)",
-    "veto_reason": "context VETO in ['team_a', 'odds_band']",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=79): Avg Goals: 4.77 | Over 2.5: 84.8% | BTTS: 39.2% | Home Over 1.5 Goals: 94.9% | Away Over 1.5 Goals: 7.6% | Top Scores: 4-0 (17.7%), 3-1 (12.7%)",
+    "veto_reason": "context VETO in ['odds_band']",
     "vitibet_index": null,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-29T11:56:51+02:00",
+    "as_of": "2026-07-29T12:07:50+02:00",
     "avg_p": 66.0,
     "away": "Saburtalo",
     "bookmaker": "betexplorer_best",
@@ -112,7 +112,7 @@
     "model_version": null,
     "n_way": 3,
     "odds": 1.37,
-    "odds_captured_at": "2026-07-29T10:01:14.870069+00:00",
+    "odds_captured_at": "2026-07-29T10:13:15.214757+00:00",
     "odds_league": "Europe: Champions League",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
