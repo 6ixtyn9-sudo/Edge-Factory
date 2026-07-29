@@ -325,11 +325,16 @@ def generate_daily_report(
                 )
                 lines.append(
                     f"     bucket={b}  "
-                    f"league={ctx.get('league_key', '?')}:{ctx.get('league', '?')}  "
+                    f"league={ctx.get('league_key', 'UNKNOWN')}:{ctx.get('league', '?')}  "
                     f"odds_band={ctx.get('odds_band_name', '?')}:{ctx.get('odds_band', '?')}"
                 )
                 if p.get("statistical_comment"):
                     lines.append(f"     {p['statistical_comment']}")
+                if p.get("recommended_enhancement") and p.get("enhancement_label"):
+                    lines.append(
+                        f"     🔥 HIGH-PROBABILITY ENHANCEMENT: {p['enhancement_label'].upper()} "
+                        f"(Prob: {p['enhancement_probability']:.1%}) — {p['enhancement_reason']}"
+                    )
 
         lines.append("")
         lines.append("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
