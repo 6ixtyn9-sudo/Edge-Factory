@@ -11,6 +11,7 @@ import json
 import re
 import sys
 import math
+from collections import Counter
 from datetime import date, timedelta, datetime
 from zoneinfo import ZoneInfo
 from pathlib import Path
@@ -20,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_league, canonical_team, classify_competition
-from edgefactory.util import compact_key, norm_team, fold_ascii
+from edgefactory.util import char_ngram_similarity, compact_key, norm_team, fold_ascii
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
 
@@ -909,6 +910,28 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     sport = pick.get("sport", "soccer")
     league_raw = pick.get("league") or "UNKNOWN"
     league = canonical_league(league_raw)
+
+    # Fuzzy fallback: if the canonical league key has no matches in the
+    # purity registry, try fuzzy matching against all known league codes.
+    # This catches cases like "World UEFA Europa Conference League" ->
+    # norm_league -> "world uefa europa conference league" which the
+    # registry only knows as "ecl".
+    known_league_keys = {
+        k.split("|")[1] for k in league_ctx
+        if isinstance(k, str) and k.count("|") >= 1
+    }
+    if league and known_league_keys:
+        league_prefix = f"{sport}|{league}|"
+        has_exact = any(k.startswith(league_prefix) for k in league_ctx)
+        if not has_exact:
+            best_key, best_sim = None, 0.0
+            for candidate in known_league_keys:
+                sim = char_ngram_similarity(league, candidate, n=2)
+                if sim >= 0.55 and sim > best_sim:
+                    best_key, best_sim = candidate, sim
+            if best_key is not None:
+                league = best_key
+
     market = pick.get("market", "1x2")
     rule = pick.get("edge_rule") or pick.get("rule", "?")
     sel = pick.get("pick", "?")
@@ -2303,6 +2326,18 @@ def main():
                f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
     print(f"\n{summary}")
+
+    # Layer A: Alert on UNKNOWN league verdicts so missing aliases are caught
+    # immediately instead of requiring cross-file manual inspection.
+    unknown_leagues: Counter = Counter()
+    for p in all_picks:
+        ctx = p.get("ctx", {}) or {}
+        if str(ctx.get("league") or ctx.get("league_raw") or "") in ("UNKNOWN", "?"):
+            unknown_leagues[str(ctx.get("league_raw") or "?")] += 1
+    if unknown_leagues:
+        print("\n⚠️  UNKNOWN league verdicts (consider adding to entity_overrides.json):")
+        for league_raw, count in unknown_leagues.most_common(30):
+            print(f"     {count:>3}x  {league_raw}")
 
     final_picks = all_picks
 
