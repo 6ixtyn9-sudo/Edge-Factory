@@ -761,7 +761,14 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
             "Visual audit of expected historical stats (from the `📊` line) against actual realized scores:",
             ""
         ])
+        granular_cutoff = (
+            date.fromisoformat(report["end"]) - timedelta(days=1)
+        ).isoformat()
+
         for item in sorted(ledger, key=lambda x: x["date"], reverse=True):
+            if str(item.get("date") or "")[:10] < granular_cutoff:
+                continue
+
             status = "🟢 WON" if item["won"] else "🔴 LOST"
             lines.append(f"### {item['date']}: {item['match']} (Actual Score: **{item['hs']}-{item['gs']}**)")
             lines.append(f"- **1X2 Pick**: Selected `{item['selection'].upper()}` @ {item['odds'] or 'n/a'} -> {status} (Expected prob: {item['avg_p']:.1f}%)")
