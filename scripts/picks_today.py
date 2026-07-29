@@ -891,12 +891,35 @@ def _best_ctx(candidates: list[dict | None]) -> tuple[str, dict]:
 
 
 def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
-    matches = [v for k, v in ctx.items() if k.startswith(prefix) and (not suffix or k.endswith(suffix))]
-    non_unknown = [v for v in matches if v.get("verdict") != "UNKNOWN"]
-    pool = non_unknown or matches
-    if not pool:
+    """Find best context verdict from the purity registry.
+
+    When scanning for a fallback verdict, prefers rule-specific entries over
+    generic base views (v_consensus2_base / v_consensus3_base). A rule-specific
+    entry for the actual certified edge (e.g. 'ml-meta avg_p>=70') is a much
+    better predictor than the base view which includes all confidence levels
+    including low-confidence junk.
+    """
+    # Collect (key, value) pairs so we can distinguish base views from rules
+    matched = [(k, v) for k, v in ctx.items() if k.startswith(prefix) and (not suffix or k.endswith(suffix))]
+    if not matched:
         return {}
-    return max(pool, key=lambda v: int(v.get("n") or 0))
+
+    # Separate into rule-specific entries and base-view entries
+    specific = [(k, v) for k, v in matched if "_base" not in k.split("|")[3]]
+    base     = [(k, v) for k, v in matched if "_base"     in k.split("|")[3]]
+
+    def pick_best(pool: list[tuple[str, dict]]) -> dict:
+        """Pick the non-UNKNOWN entry with highest n, or highest-n UNKNOWN."""
+        non_unknown = [v for _, v in pool if v.get("verdict") != "UNKNOWN"]
+        pool_vals = non_unknown or [v for _, v in pool]
+        return max(pool_vals, key=lambda v: int(v.get("n") or 0)) if pool_vals else {}
+
+    # Prefer specific rule entries first; only fall back to base views when
+    # no specific entry exists.
+    result = pick_best(specific)
+    if result:
+        return result
+    return pick_best(base)
 
 
 def lookup_context(purity: dict, pick: dict) -> dict:
