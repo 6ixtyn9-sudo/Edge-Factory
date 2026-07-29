@@ -1917,7 +1917,11 @@ def _same_event_cluster(a: dict, b: dict) -> bool:
 
 
 def _representative_score(pick: dict) -> tuple:
+    comment = pick.get("statistical_comment") or ""
+    mu, sigma = re.search(r"n=(\d+)", comment), re.search(r"Avg Goals: ([\d.]+)", comment)
+    has_rich_stats = 2 if (mu and int(mu.group(1)) >= 100 and sigma) else (1 if comment else 0)
     return (
+        -has_rich_stats,  # prefer picks with 📊 stats (richer = higher priority)
         _bucket_severity(pick.get("bucket")),
         _kickoff_value(pick) is not None,
         _odds_source_rank(pick.get("odds_source")),
