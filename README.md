@@ -30,6 +30,9 @@ PYTHONPATH=src python scripts/picks_today.py
 # Full daily run (capture → warehouse → mine → picks → CLV → sync → WhatsApp)
 PYTHONPATH=src python3 scripts/daily.py
 
+# Force a full repick (including the decay monitor fix so 3way min_p>=60 gets benched)
+PYTHONPATH=src python3 scripts/daily.py --force-repick --picks-only
+
 A local .env IS auto-loaded. config.py, db.py, and notify_whatsapp.py all call load_dotenv() at import, so set -a; source .env; set +a is no longer required (it stays harmless).
 
 Autonomous 3-Hour Service
