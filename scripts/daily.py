@@ -325,7 +325,7 @@ def generate_daily_report(
                 )
                 lines.append(
                     f"     bucket={b}  "
-                    f"league={ctx.get('league_raw', 'UNKNOWN')}:{ctx.get('league', '?')}  "
+                    f"league={ctx.get('league_key', '?')}:{ctx.get('league', '?')}  "
                     f"odds_band={ctx.get('odds_band_name', '?')}:{ctx.get('odds_band', '?')}"
                 )
                 if p.get("statistical_comment"):
