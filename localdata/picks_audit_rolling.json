@@ -2,8 +2,6 @@
   "ambiguous_examples": [],
   "ambiguous_result_picks": 0,
   "archived_pick_dates": [
-    "2026-07-05",
-    "2026-07-06",
     "2026-07-07",
     "2026-07-08",
     "2026-07-09",
@@ -19,24 +17,23 @@
     "2026-07-23",
     "2026-07-24",
     "2026-07-27",
-    "2026-07-28",
-    "2026-07-29"
+    "2026-07-28"
   ],
-  "archived_pick_rows": 59,
+  "archived_pick_rows": 45,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.583333,
-      "priced_picks": 12,
-      "roi": 0.013333,
-      "settled_picks": 12,
-      "wins": 7
+      "hit_rate": 0.833333,
+      "priced_picks": 6,
+      "roi": 0.493333,
+      "settled_picks": 6,
+      "wins": 5
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.868421,
-      "priced_picks": 38,
-      "roi": 0.123158,
-      "settled_picks": 38,
-      "wins": 33
+      "hit_rate": 0.878788,
+      "priced_picks": 33,
+      "roi": 0.109394,
+      "settled_picks": 33,
+      "wins": 29
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.833333,
@@ -47,49 +44,42 @@
     }
   },
   "by_odds_match_method": {
-    "alias_fuzzy": {
-      "hit_rate": 1.0,
-      "priced_picks": 1,
-      "roi": 0.39,
-      "settled_picks": 1,
-      "wins": 1
-    },
     "betexplorer": {
-      "hit_rate": 0.857143,
-      "priced_picks": 35,
-      "roi": 0.092,
-      "settled_picks": 35,
-      "wins": 30
+      "hit_rate": 0.870968,
+      "priced_picks": 31,
+      "roi": 0.109355,
+      "settled_picks": 31,
+      "wins": 27
     },
     "exact": {
-      "hit_rate": 0.722222,
-      "priced_picks": 18,
-      "roi": 0.087778,
-      "settled_picks": 18,
-      "wins": 13
+      "hit_rate": 0.846154,
+      "priced_picks": 13,
+      "roi": 0.194615,
+      "settled_picks": 13,
+      "wins": 11
     },
     "fallback": {
-      "hit_rate": 0.5,
-      "priced_picks": 2,
-      "roi": -0.39,
-      "settled_picks": 2,
+      "hit_rate": 1.0,
+      "priced_picks": 1,
+      "roi": 0.22,
+      "settled_picks": 1,
       "wins": 1
     }
   },
   "by_odds_source": {
     "betexplorer_odds": {
-      "hit_rate": 0.857143,
-      "priced_picks": 35,
-      "roi": 0.092,
-      "settled_picks": 35,
-      "wins": 30
+      "hit_rate": 0.870968,
+      "priced_picks": 31,
+      "roi": 0.109355,
+      "settled_picks": 31,
+      "wins": 27
     },
     "bzzoiro_odds": {
-      "hit_rate": 0.916667,
-      "priced_picks": 12,
-      "roi": 0.433333,
-      "settled_picks": 12,
-      "wins": 11
+      "hit_rate": 1.0,
+      "priced_picks": 8,
+      "roi": 0.47,
+      "settled_picks": 8,
+      "wins": 8
     },
     "forebet_best": {
       "hit_rate": 1.0,
@@ -99,128 +89,83 @@
       "wins": 1
     },
     "scoutingstats_odds": {
-      "hit_rate": 0.428571,
-      "priced_picks": 7,
-      "roi": -0.461429,
-      "settled_picks": 7,
+      "hit_rate": 0.6,
+      "priced_picks": 5,
+      "roi": -0.246,
+      "settled_picks": 5,
       "wins": 3
-    },
-    "zulubet": {
-      "hit_rate": 0.0,
-      "priced_picks": 1,
-      "roi": -1.0,
-      "settled_picks": 1,
-      "wins": 0
     }
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.818182,
-      "priced_picks": 22,
-      "roi": 0.134091,
-      "settled_picks": 22,
-      "wins": 18
+      "hit_rate": 0.933333,
+      "priced_picks": 15,
+      "roi": 0.315333,
+      "settled_picks": 15,
+      "wins": 14
     },
     "3way-unanimous avg_p>=65": {
-      "hit_rate": 0.625,
-      "priced_picks": 8,
-      "roi": -0.1525,
-      "settled_picks": 8,
-      "wins": 5
+      "hit_rate": 0.666667,
+      "priced_picks": 6,
+      "roi": -0.181667,
+      "settled_picks": 6,
+      "wins": 4
     },
     "3way-unanimous home-only avg_p>=60": {
-      "hit_rate": 0.9,
-      "priced_picks": 10,
-      "roi": 0.277,
-      "settled_picks": 10,
-      "wins": 9
+      "hit_rate": 0.888889,
+      "priced_picks": 9,
+      "roi": 0.176667,
+      "settled_picks": 9,
+      "wins": 8
     },
     "3way-unanimous home-only avg_p>=65": {
-      "hit_rate": 0.8125,
-      "priced_picks": 16,
-      "roi": -0.005625,
-      "settled_picks": 16,
+      "hit_rate": 0.866667,
+      "priced_picks": 15,
+      "roi": 0.060667,
+      "settled_picks": 15,
       "wins": 13
     }
   },
-  "eligible_prior_picks": 56,
+  "eligible_prior_picks": 45,
   "end": "2026-07-29",
   "enhancements_audit": {
-    "by_enhancement": {},
-    "hit_rate": null,
-    "total_hits": 0,
-    "total_recommended": 0
+    "by_enhancement": {
+      "home_under_45": {
+        "hit_rate": 1.0,
+        "hits": 1,
+        "recommended": 1
+      }
+    },
+    "hit_rate": 1.0,
+    "total_hits": 1,
+    "total_recommended": 1
   },
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.803571,
-    "priced_picks": 56,
-    "roi": 0.07875,
-    "settled_picks": 56,
-    "wins": 45
+    "hit_rate": 0.866667,
+    "priced_picks": 45,
+    "roi": 0.136444,
+    "settled_picks": 45,
+    "wins": 39
   },
   "same_day_cutoff": "2026-07-29",
-  "same_day_excluded": 3,
+  "same_day_excluded": 0,
   "secondary_stats": {
-    "btts_total": 56,
-    "btts_wins": 26,
-    "over25_total": 56,
-    "over25_wins": 36,
-    "team_o15_total": 56,
-    "team_o15_wins": 42
+    "btts_total": 45,
+    "btts_wins": 23,
+    "over25_total": 45,
+    "over25_wins": 30,
+    "team_o15_total": 45,
+    "team_o15_wins": 36
   },
   "settled_ledger": [
     {
-      "avg_p": 70.0,
-      "date": "2026-07-05",
-      "gs": 0,
-      "hs": 0,
-      "match": "FAR Rabat vs CR Khemis Zemamra",
-      "odds": 1.33,
-      "outcome": "draw",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "home",
-      "won": false
-    },
-    {
-      "avg_p": 67.0,
-      "date": "2026-07-06",
-      "gs": 3,
-      "hs": 2,
-      "match": "Universidad Catolica vs Mushuc Runa SC",
-      "odds": 1.55,
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "home",
-      "won": false
-    },
-    {
-      "avg_p": 65.7,
+      "avg_p": 70.8,
       "date": "2026-07-07",
-      "gs": 1,
-      "hs": 2,
-      "match": "Monaro Panthers vs Queanbeyan City",
-      "odds": 1.54,
+      "gs": 2,
+      "hs": 3,
+      "match": "Argentina vs Egypt",
+      "odds": 1.42,
       "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": null,
@@ -237,34 +182,12 @@
       "won": true
     },
     {
-      "avg_p": 74.5,
+      "avg_p": 65.7,
       "date": "2026-07-07",
       "gs": 1,
-      "hs": 0,
-      "match": "Tre Fiori vs Larne",
-      "odds": 1.43,
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "away",
-      "won": true
-    },
-    {
-      "avg_p": 70.8,
-      "date": "2026-07-07",
-      "gs": 2,
-      "hs": 3,
-      "match": "Argentina vs Egypt",
-      "odds": 1.42,
+      "hs": 2,
+      "match": "Monaro Panthers vs Queanbeyan City",
+      "odds": 1.54,
       "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": null,
@@ -303,78 +226,12 @@
       "won": true
     },
     {
-      "avg_p": 74.0,
-      "date": "2026-07-09",
-      "gs": 0,
-      "hs": 0,
-      "match": "Sheriff Tiraspol vs Aluminij",
-      "odds": 1.31,
-      "outcome": "draw",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "home",
-      "won": false
-    },
-    {
       "avg_p": 74.3,
       "date": "2026-07-09",
       "gs": 0,
       "hs": 3,
       "match": "Qarabag vs Vestri",
       "odds": 1.05,
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "home",
-      "won": true
-    },
-    {
-      "avg_p": 80.0,
-      "date": "2026-07-11",
-      "gs": 2,
-      "hs": 4,
-      "match": "Gnistan vs Mariehamn",
-      "odds": 1.33,
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "home",
-      "won": true
-    },
-    {
-      "avg_p": 73.5,
-      "date": "2026-07-11",
-      "gs": 0,
-      "hs": 2,
-      "match": "Guangzhou E-Power vs Hebei Kungfu",
-      "odds": 2.29,
       "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": null,
@@ -523,13 +380,13 @@
       "won": true
     },
     {
-      "avg_p": 66.0,
-      "date": "2026-07-12",
-      "gs": 1,
-      "hs": 1,
-      "match": "Gimnasia Jujuy vs Chacarita Juniors",
-      "odds": 1.55,
-      "outcome": "draw",
+      "avg_p": 80.0,
+      "date": "2026-07-11",
+      "gs": 2,
+      "hs": 4,
+      "match": "Gnistan vs Mariehamn",
+      "odds": 1.33,
+      "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": null,
         "away_o15_hit": null,
@@ -542,7 +399,29 @@
         "top_scores": []
       },
       "selection": "home",
-      "won": false
+      "won": true
+    },
+    {
+      "avg_p": 73.5,
+      "date": "2026-07-11",
+      "gs": 0,
+      "hs": 2,
+      "match": "Guangzhou E-Power vs Hebei Kungfu",
+      "odds": 2.29,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": null,
+        "away_o15_hit": null,
+        "btts_expected": null,
+        "btts_hit": null,
+        "home_o15_expected": null,
+        "home_o15_hit": null,
+        "over25_expected": null,
+        "over25_hit": null,
+        "top_scores": []
+      },
+      "selection": "home",
+      "won": true
     },
     {
       "avg_p": 71.3,
@@ -565,6 +444,28 @@
       },
       "selection": "home",
       "won": true
+    },
+    {
+      "avg_p": 66.0,
+      "date": "2026-07-12",
+      "gs": 1,
+      "hs": 1,
+      "match": "Gimnasia Jujuy vs Chacarita Juniors",
+      "odds": 1.55,
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": null,
+        "away_o15_hit": null,
+        "btts_expected": null,
+        "btts_hit": null,
+        "home_o15_expected": null,
+        "home_o15_hit": null,
+        "over25_expected": null,
+        "over25_hit": null,
+        "top_scores": []
+      },
+      "selection": "home",
+      "won": false
     },
     {
       "avg_p": 73.0,
@@ -721,12 +622,12 @@
       "won": true
     },
     {
-      "avg_p": 77.4,
+      "avg_p": 71.7,
       "date": "2026-07-15",
-      "gs": 0,
-      "hs": 1,
-      "match": "Universitatea Craiova vs ML Vitebsk",
-      "odds": 1.74,
+      "gs": 1,
+      "hs": 2,
+      "match": "Cuniburo vs El Nacional Quito",
+      "odds": 1.32,
       "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": null,
@@ -743,12 +644,12 @@
       "won": true
     },
     {
-      "avg_p": 71.7,
+      "avg_p": 77.4,
       "date": "2026-07-15",
-      "gs": 1,
-      "hs": 2,
-      "match": "Cuniburo vs El Nacional Quito",
-      "odds": 1.32,
+      "gs": 0,
+      "hs": 1,
+      "match": "Universitatea Craiova vs ML Vitebsk",
+      "odds": 1.74,
       "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": null,
@@ -919,34 +820,12 @@
       "won": true
     },
     {
-      "avg_p": 64.0,
-      "date": "2026-07-21",
-      "gs": 5,
-      "hs": 0,
-      "match": "Walsall vs Aston Villa",
-      "odds": 2.18,
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "away",
-      "won": true
-    },
-    {
       "avg_p": 62.7,
       "date": "2026-07-21",
-      "gs": 1,
-      "hs": 4,
-      "match": "Clyde FC vs Annan Athletic",
-      "odds": 1.61,
+      "gs": 0,
+      "hs": 5,
+      "match": "Dunfermline vs Cove Rangers",
+      "odds": 1.29,
       "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": null,
@@ -965,10 +844,10 @@
     {
       "avg_p": 62.7,
       "date": "2026-07-21",
-      "gs": 0,
-      "hs": 5,
-      "match": "Dunfermline vs Cove Rangers",
-      "odds": 1.29,
+      "gs": 1,
+      "hs": 4,
+      "match": "Clyde FC vs Annan Athletic",
+      "odds": 1.61,
       "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": null,
@@ -1117,50 +996,6 @@
       "won": true
     },
     {
-      "avg_p": 67.3,
-      "date": "2026-07-23",
-      "gs": 1,
-      "hs": 1,
-      "match": "BATE Borisov vs FC Sion",
-      "odds": 1.26,
-      "outcome": "draw",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "away",
-      "won": false
-    },
-    {
-      "avg_p": 71.5,
-      "date": "2026-07-24",
-      "gs": 0,
-      "hs": 2,
-      "match": "Vasteras SK FK vs Orgryte IS",
-      "odds": 2.06,
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "home",
-      "won": true
-    },
-    {
       "avg_p": 75.5,
       "date": "2026-07-24",
       "gs": 5,
@@ -1205,56 +1040,12 @@
       "won": true
     },
     {
-      "avg_p": 79.0,
-      "date": "2026-07-27",
+      "avg_p": 71.5,
+      "date": "2026-07-24",
       "gs": 0,
-      "hs": 3,
-      "match": "Valmiera / BSS vs Riga FC II",
-      "odds": 1.33,
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "home",
-      "won": true
-    },
-    {
-      "avg_p": 65.3,
-      "date": "2026-07-27",
-      "gs": 0,
-      "hs": 5,
-      "match": "CFR 1907 Cluj vs FC Voluntari",
-      "odds": 1.87,
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
-      },
-      "selection": "home",
-      "won": true
-    },
-    {
-      "avg_p": 85.5,
-      "date": "2026-07-27",
-      "gs": 0,
-      "hs": 9,
-      "match": "Metta / LU vs Tukums II",
-      "odds": 1.07,
+      "hs": 2,
+      "match": "Vasteras SK FK vs Orgryte IS",
+      "odds": 2.06,
       "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": null,
@@ -1337,73 +1128,7 @@
       "won": true
     },
     {
-      "avg_p": 73.5,
-      "date": "2026-07-28",
-      "gs": 1,
-      "hs": 1,
-      "match": "Neftchi vs Navbahor",
-      "odds": 1.76,
-      "outcome": "draw",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": 0.40700000000000003,
-        "btts_hit": false,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": 0.746,
-        "over25_hit": false,
-        "top_scores": [
-          {
-            "hit": false,
-            "pct": 0.128,
-            "score": "1-0"
-          },
-          {
-            "hit": false,
-            "pct": 0.126,
-            "score": "2-0"
-          }
-        ]
-      },
-      "selection": "home",
-      "won": false
-    },
-    {
-      "avg_p": 73.0,
-      "date": "2026-07-28",
-      "gs": 0,
-      "hs": 3,
-      "match": "Apollon Limassol vs Dila",
-      "odds": 1.39,
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": 0.42100000000000004,
-        "btts_hit": true,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": 0.755,
-        "over25_hit": true,
-        "top_scores": [
-          {
-            "hit": true,
-            "pct": 0.125,
-            "score": "3-0"
-          },
-          {
-            "hit": false,
-            "pct": 0.12300000000000001,
-            "score": "1-0"
-          }
-        ]
-      },
-      "selection": "home",
-      "won": true
-    },
-    {
-      "avg_p": 65.7,
+      "avg_p": 67.1,
       "date": "2026-07-28",
       "gs": 0,
       "hs": 3,
@@ -1411,15 +1136,26 @@
       "odds": 1.39,
       "outcome": "home",
       "parsed_stats": {
-        "away_o15_expected": null,
-        "away_o15_hit": null,
-        "btts_expected": null,
-        "btts_hit": null,
-        "home_o15_expected": null,
-        "home_o15_hit": null,
-        "over25_expected": null,
-        "over25_hit": null,
-        "top_scores": []
+        "away_o15_expected": 0.098,
+        "away_o15_hit": true,
+        "btts_expected": 0.405,
+        "btts_hit": true,
+        "home_o15_expected": 0.863,
+        "home_o15_hit": true,
+        "over25_expected": 0.6990000000000001,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.16399999999999998,
+            "score": "2-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.13699999999999998,
+            "score": "1-0"
+          }
+        ]
       },
       "selection": "home",
       "won": true

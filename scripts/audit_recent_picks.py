@@ -56,6 +56,11 @@ def daterange(start: str, end: str):
 
 
 def archived_picks_path(day: str) -> Path:
+    # Prefer the immutable morning snapshot. The regular picks file may be
+    # replaced by later forecast reruns and would introduce state drift.
+    morning = LOCALDATA / f"picks_morning_{day}.json"
+    if morning.exists():
+        return morning
     return LOCALDATA / f"picks_{day}.json"
 
 
@@ -80,10 +85,12 @@ def load_archived_picks(start: str, end: str) -> list[dict[str, Any]]:
 
 
 def dedupe_archived_picks(picks: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Deduplicate archived picks by match identity, keeping the entry
-    with the richest statistical_comment (highest n). This prevents
-    duplicate source entries from polluting the audit's settled ledger
-    and ensures the 📊 stats match what was reported at pick time."""
+    """Deduplicate frozen pick rows without replacing them with later state.
+
+    The first row from the selected frozen snapshot is authoritative. Do not
+    choose by statistical sample size, because that can replace pick-time
+    stats with a later regenerated state.
+    """
     best: dict[tuple, dict[str, Any]] = {}
     for p in picks:
         home = norm_team(p.get("home") or "")
@@ -100,6 +107,11 @@ def dedupe_archived_picks(picks: list[dict[str, Any]]) -> list[dict[str, Any]]:
         n_current = int(mu.group(1)) if mu else 0
 
         existing = best.get(key)
+        if existing:
+            # Preserve the first archived pick-time row. Never replace it with
+            # a later row merely because it has a larger stats sample.
+            continue
+
         if existing:
             e_comment = existing.get("statistical_comment") or ""
             e_mu = re.search(r"n=(\d+)", e_comment)
