@@ -575,10 +575,6 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         "home_under_35": 0.90,
         "away_over_35": 0.90,
         "away_under_35": 0.90,
-        "home_over_45": 0.95,
-        "home_under_45": 0.95,
-        "away_over_45": 0.95,
-        "away_under_45": 0.95,
     }
 
     raw_candidates = [
@@ -593,22 +589,18 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         ("home_over_15", prob_h_o15, "Home Team Over 1.5 Goals", f"Home multi-goal rate is {h_score_o15:.1%}"),
         ("home_over_25", prob_h_o25, "Home Team Over 2.5 Goals", f"Home ultra-high goal rate is {h_score_o25:.1%}"),
         ("home_over_35", prob_h_o35, "Home Team Over 3.5 Goals", f"Home extremely high goal rate is {h_score_o35:.1%}"),
-        ("home_over_45", prob_h_o45, "Home Team Over 4.5 Goals", f"Home elite-level goal rate is {h_score_o45:.1%}"),
         ("home_under_05", prob_h_u05, "Home Team Under 0.5 Goals", f"Combined Under 0.5 is {prob_h_u05:.1%}"),
         ("home_under_15", prob_h_u15, "Home Team Under 1.5 Goals", f"Combined Under 1.5 is {prob_h_u15:.1%}"),
         ("home_under_25", prob_h_u25, "Home Team Under 2.5 Goals", f"Combined Under 2.5 is {prob_h_u25:.1%}"),
         ("home_under_35", prob_h_u35, "Home Team Under 3.5 Goals", f"Combined Under 3.5 is {prob_h_u35:.1%}"),
-        ("home_under_45", prob_h_u45, "Home Team Under 4.5 Goals", f"Combined Under 4.5 is {prob_h_u45:.1%}"),
         ("away_over_05", prob_a_o05, "Away Team Over 0.5 Goals", f"Away scoring rate is {a_score_o05:.1%}"),
         ("away_over_15", prob_a_o15, "Away Team Over 1.5 Goals", f"Away multi-goal rate is {a_score_o15:.1%}"),
         ("away_over_25", prob_a_o25, "Away Team Over 2.5 Goals", f"Away ultra-high goal rate is {a_score_o25:.1%}"),
         ("away_over_35", prob_a_o35, "Away Team Over 3.5 Goals", f"Away extremely high goal rate is {a_score_o35:.1%}"),
-        ("away_over_45", prob_a_o45, "Away Team Over 4.5 Goals", f"Away elite-level goal rate is {a_score_o45:.1%}"),
         ("away_under_05", prob_a_u05, "Away Team Under 0.5 Goals", f"Combined Under 0.5 is {prob_a_u05:.1%}"),
         ("away_under_15", prob_a_u15, "Away Team Under 1.5 Goals", f"Combined Under 1.5 is {prob_a_u15:.1%}"),
         ("away_under_25", prob_a_u25, "Away Team Under 2.5 Goals", f"Combined Under 2.5 is {prob_a_u25:.1%}"),
         ("away_under_35", prob_a_u35, "Away Team Under 3.5 Goals", f"Combined Under 3.5 is {prob_a_u35:.1%}"),
-        ("away_under_45", prob_a_u45, "Away Team Under 4.5 Goals", f"Combined Under 4.5 is {prob_a_u45:.1%}"),
     ]
     
     dc_label = "1X" if pick_sel == "home" else "X2" if pick_sel == "away" else "12"
