@@ -332,7 +332,8 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         "recommended_enhancement": None,
         "enhancement_probability": 0.0,
         "enhancement_reason": None,
-        "enhancement_label": None
+        "enhancement_label": None,
+        "event_notes": []
     }
     if not con:
         return out
@@ -627,6 +628,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
 
     if candidates:
         candidates.sort(key=lambda x: -x["probability"])
+        out["event_notes"] = candidates
         best = candidates[0]
         out.update({
             "recommended_enhancement": best["market"],
@@ -2104,8 +2106,13 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 print(ctx_str)
             if p.get("statistical_comment"):
                 print(f"     {p['statistical_comment']}")
-            if p.get("recommended_enhancement") and p.get("enhancement_label"):
-                print(f"     🔥 HIGH-PROBABILITY ENHANCEMENT: {p['enhancement_label'].upper()} (Prob: {p['enhancement_probability']:.1%}) — {p['enhancement_reason']}")
+            notes = p.get("event_notes", [])
+            if notes:
+                event_text = " | ".join(
+                    f"{note['label'].replace(' Goals', '')}: {note['probability']:.1%}"
+                    for note in notes
+                )
+                print(f"     🔥 Possible Events: {event_text}")
         print()
     print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
     print("⚠️  Bet only what you can afford to lose.")

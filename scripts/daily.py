@@ -330,11 +330,13 @@ def generate_daily_report(
                 )
                 if p.get("statistical_comment"):
                     lines.append(f"     {p['statistical_comment']}")
-                if p.get("recommended_enhancement") and p.get("enhancement_label"):
-                    lines.append(
-                        f"     🔥 HIGH-PROBABILITY ENHANCEMENT: {p['enhancement_label'].upper()} "
-                        f"(Prob: {p['enhancement_probability']:.1%}) — {p['enhancement_reason']}"
+                notes = p.get("event_notes", [])
+                if notes:
+                    event_text = " | ".join(
+                        f"{note['label'].replace(' Goals', '')}: {note['probability']:.1%}"
+                        for note in notes
                     )
+                    lines.append(f"     🔥 Possible Events: {event_text}")
 
         lines.append("")
         lines.append("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
