@@ -242,7 +242,14 @@ def check_event_match(m1: dict, m2: dict) -> bool:
 
 
 def check_league_match(l1: str, l2: str) -> bool:
-    """Enforce strict safeguards to prevent generic or cross-country league contamination."""
+    """Check if two league names can be considered aliases.
+
+    Relies on the fact that the caller (the alias engine) already enforces
+    check_event_match() — kickoff within 5min, odds within 0.05, team name
+    bigram >= 0.40. If two sources sit on the exact same match with identical
+    times and odds, their league labels MUST be aliases. No text similarity
+    floor is needed on top of that gate.
+    """
     k1 = norm_league_cached(l1)
     k2 = norm_league_cached(l2)
     if not k1 or not k2 or k1 == k2:
@@ -256,9 +263,12 @@ def check_league_match(l1: str, l2: str) -> bool:
     if classify_competition(l1) != classify_competition(l2):
         return False
 
-    # Safeguard 3: Enforce a high bigram similarity floor (>= 50%)
-    sim = char_ngram_similarity(l1, l2, n=2)
-    return sim >= 0.50
+    # No text-similarity gate needed here. The caller (self-learning alias engine)
+    # already enforces check_event_match() which requires kickoff, odds, and
+    # team-name alignment. If two sources have the exact same match with the
+    # same kickoff and same odds, the league labels are de facto aliases
+    # regardless of surface-form similarity (e.g. "UCL" vs "Champions League").
+    return True
 
 
 def load_existing_registry_aliases(team_dsu: DSU, league_dsu: DSU) -> tuple[int, int]:
