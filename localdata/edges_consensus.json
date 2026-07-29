@@ -443,7 +443,7 @@
       "market": "1x2",
       "rule": "3way-unanimous min_p>=60 avg_p>=60",
       "sport": "soccer",
-      "status": "certified",
+      "status": "benched",
       "train": {
         "avg_odds": 1.287,
         "hit": 0.8072,
@@ -478,7 +478,8 @@
         "baseline_lb": 0.7716,
         "recent_lb": 0.6161,
         "recent_ub": 0.9015
-      }
+      },
+      "benched_at": "2026-07-29"
     },
     {
       "market": "1x2",
