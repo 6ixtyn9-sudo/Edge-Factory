@@ -1,18 +1,18 @@
 [
   {
-    "as_of": "2026-07-29T05:12:23+02:00",
-    "avg_p": 91.4,
+    "as_of": "2026-07-29T11:32:11+02:00",
+    "avg_p": 83.2,
     "away": "Larne",
     "bookmaker": "888Sport",
     "bucket": "SKIPPED_VETO",
-    "confidence": 0.8985,
+    "confidence": 0.8937,
     "ctx": {
       "away_norm": "larne",
       "comp_type_name": "league",
       "competition_type": "CAUTION",
       "home_norm": "crvenazvezda",
-      "league": "UNKNOWN",
-      "league_key": "world uefa champions league",
+      "league": "ALLOW",
+      "league_key": "ucl",
       "league_raw": "World UEFA Champions League",
       "niche": "UNKNOWN",
       "odds_band": "VETO",
@@ -63,14 +63,14 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": null,
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=65): Avg Goals: 4.82 | Over 2.5: 81.5% | BTTS: 41.5% | Home Over 1.5 Goals: 93.8% | Away Over 1.5 Goals: 6.2% | Top Scores: 3-1 (15.4%), 3-0 (12.3%)",
     "veto_reason": "context VETO in ['team_a', 'odds_band']",
     "vitibet_index": null,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-29T05:12:23+02:00",
-    "avg_p": 66.3,
+    "as_of": "2026-07-29T11:32:11+02:00",
+    "avg_p": 66.0,
     "away": "Saburtalo",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
@@ -80,7 +80,7 @@
       "comp_type_name": "league",
       "competition_type": "CAUTION",
       "home_norm": "slovanbratislava",
-      "league": "VETO",
+      "league": "ALLOW",
       "league_key": "ucl",
       "league_raw": "UCL",
       "niche": "UNKNOWN",
@@ -111,8 +111,8 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.36,
-    "odds_captured_at": "2026-07-29T03:23:06.528915+00:00",
+    "odds": 1.37,
+    "odds_captured_at": "2026-07-29T09:36:58.761463+00:00",
     "odds_league": "Europe: Champions League",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -133,8 +133,8 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1899): Avg Goals: 3.50 | Over 2.5: 68.1% | BTTS: 39.5% | Home Over 1.5 Goals: 85.4% | Away Over 1.5 Goals: 9.6% | Top Scores: 2-0 (17.3%), 1-0 (14.6%)",
-    "veto_reason": "context VETO in ['league', 'odds_band']",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1995): Avg Goals: 3.50 | Over 2.5: 68.2% | BTTS: 39.6% | Home Over 1.5 Goals: 85.4% | Away Over 1.5 Goals: 10.0% | Top Scores: 2-0 (17.2%), 1-0 (14.6%)",
+    "veto_reason": "context VETO in ['odds_band']",
     "vitibet_index": 2.57,
     "w_score": 1.0
   }
