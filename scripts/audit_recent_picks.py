@@ -79,6 +79,39 @@ def load_archived_picks(start: str, end: str) -> list[dict[str, Any]]:
     return out
 
 
+def dedupe_archived_picks(picks: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Deduplicate archived picks by match identity, keeping the entry
+    with the richest statistical_comment (highest n). This prevents
+    duplicate source entries from polluting the audit's settled ledger
+    and ensures the 📊 stats match what was reported at pick time."""
+    best: dict[tuple, dict[str, Any]] = {}
+    for p in picks:
+        home = norm_team(p.get("home") or "")
+        away = norm_team(p.get("away") or "")
+        day = str(p.get("date") or "")[:10]
+        market = str(p.get("market") or "")
+        sel = str(p.get("pick") or "")
+        if not (home and away):
+            continue
+        key = (day, home, away, market, sel)
+
+        comment = p.get("statistical_comment") or ""
+        mu = re.search(r"n=(\d+)", comment)
+        n_current = int(mu.group(1)) if mu else 0
+
+        existing = best.get(key)
+        if existing:
+            e_comment = existing.get("statistical_comment") or ""
+            e_mu = re.search(r"n=(\d+)", e_comment)
+            n_existing = int(e_mu.group(1)) if e_mu else 0
+            if n_current <= n_existing:
+                continue
+
+        best[key] = p
+
+    return list(best.values())
+
+
 def _dedupe_keys(keys: list[str]) -> list[str]:
     out: list[str] = []
     for key in keys:
@@ -399,6 +432,7 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
 
 def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day: bool = False) -> dict[str, Any]:
     picks = load_archived_picks(start, end)
+    picks = dedupe_archived_picks(picks)
     results, results_by_date = load_results_index(warehouse_path)
     settled_rows: list[SettledPick] = []
     archived_dates = sorted({str(p.get("date") or "")[:10] for p in picks if p.get("date")})
@@ -788,7 +822,8 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Audit recent archived daily picks against settled warehouse results.")
     ap.add_argument("--end", default=date.today().isoformat(), help="End date inclusive (YYYY-MM-DD).")
-    ap.add_argument("--days", type=int, default=30, help="Rolling window length in days (default: 30).")
+    ap.add_argument("--start", default=None, help="Start date inclusive (YYYY-MM-DD). Overrides --days if provided.")
+    ap.add_argument("--days", type=int, default=30, help="Rolling window length in days (default: 30). Ignored if --start is provided.")
     ap.add_argument("--warehouse", default=str(WAREHOUSE), help="Path to warehouse.duckdb")
     ap.add_argument(
         "--include-same-day",
@@ -798,7 +833,14 @@ def main() -> int:
     args = ap.parse_args()
 
     end = datetime.strptime(args.end, "%Y-%m-%d").date()
-    start = (end - timedelta(days=max(0, args.days - 1))).isoformat()
+    if args.start:
+        start_date = datetime.strptime(args.start, "%Y-%m-%d").date()
+        if start_date > end:
+            print(f"error: --start {args.start} is after --end {args.end}", file=sys.stderr)
+            return 1
+        start = start_date.isoformat()
+    else:
+        start = (end - timedelta(days=max(0, args.days - 1))).isoformat()
     report = build_report(start, end.isoformat(), Path(args.warehouse), include_same_day=args.include_same_day)
 
     json_path = LOCALDATA / "picks_audit_rolling.json"
