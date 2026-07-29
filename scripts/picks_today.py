@@ -2085,7 +2085,7 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 o = "@n/a"
             ctx = p.get("ctx", {})
             ctx_str = (
-                f"  league={ctx.get('league_raw','UNKNOWN')}:{ctx.get('league','?')}  "
+                f"  league={ctx.get('league_key','?')}:{ctx.get('league','?')}  "
                 f"team={ctx.get('home_norm','?')}:{ctx.get('team_h','?')}/"
                 f"{ctx.get('away_norm','?')}:{ctx.get('team_a','?')}  "
                 f"odds_band={ctx.get('odds_band_name','?')}:{ctx.get('odds_band','?')}  "
