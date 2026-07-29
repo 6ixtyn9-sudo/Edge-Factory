@@ -139,3 +139,15 @@ def norm_league_sql(col: str) -> str:
     compact = f"regexp_replace({folded}, '[^a-z0-9]+', ' ', 'g')"
     compact = f"trim(regexp_replace({compact}, '\\s+', ' ', 'g'))"
     return f"CASE WHEN {compact} = '' THEN 'unknown' ELSE {compact} END"
+
+
+def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
+    """Jaccard character n-gram similarity between two strings."""
+    def _ngrams(s: str) -> set[str]:
+        clean = re.sub(r"[^a-z0-9]", "", s.lower())
+        return {clean[i:i+n] for i in range(len(clean) - n + 1)} if len(clean) >= n else set()
+    g1 = _ngrams(s1)
+    g2 = _ngrams(s2)
+    if not g1 or not g2:
+        return 0.0
+    return len(g1 & g2) / len(g1 | g2)
