@@ -2,7 +2,7 @@
 
 ## Overall
 
-- archived pick rows: 58
+- archived pick rows: 59
 - archived pick dates: 19
 - settled picks: 56
 - eligible prior 1x2 picks: 56
@@ -17,7 +17,7 @@
 
 - include same-day picks: False
 - same-day cutoff date: 2026-07-29
-- same-day rows excluded: 2
+- same-day rows excluded: 3
 
 ## Secondary Market Realized Rates
 
