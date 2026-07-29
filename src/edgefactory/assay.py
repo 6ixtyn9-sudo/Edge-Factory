@@ -63,6 +63,7 @@ def decay_verdict(
     recent_wins: int,
     recent_n: int,
     min_recent: int = 30,
+    min_decay_n: int = 15,
     recent_roi: float | None = None,
 ) -> DecayReport:
     """Compare recent window against certified baseline.
@@ -75,6 +76,17 @@ def decay_verdict(
     r_lb, r_ub = wilson_bounds(recent_wins, recent_n)
 
     if recent_n < min_recent:
+        # Insufficient n → never return HEALTHY, but still allow DEAD and
+        # DECAYING when signal is strong enough that one more match wouldn't
+        # change the story. Use a lower threshold min_decay_n for these to
+        # avoid false positives from tiny samples where Wilson bounds are
+        # too wide to be meaningful.
+        r_p = recent_wins / recent_n
+        if recent_n >= min_decay_n:
+            if r_ub < b_lb:
+                return DecayReport("DEAD", b_lb, r_lb, r_ub, recent_n)
+            if r_p < b_lb and r_lb < 0.90 * b_lb:
+                return DecayReport("DECAYING", b_lb, r_lb, r_ub, recent_n)
         return DecayReport("WATCH", b_lb, r_lb, r_ub, recent_n)
 
     r_p = recent_wins / recent_n
