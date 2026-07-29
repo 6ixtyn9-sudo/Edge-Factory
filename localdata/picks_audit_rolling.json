@@ -19,23 +19,24 @@
     "2026-07-23",
     "2026-07-24",
     "2026-07-27",
-    "2026-07-28"
+    "2026-07-28",
+    "2026-07-29"
   ],
-  "archived_pick_rows": 56,
+  "archived_pick_rows": 58,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.636364,
-      "priced_picks": 11,
-      "roi": 0.105455,
-      "settled_picks": 11,
+      "hit_rate": 0.583333,
+      "priced_picks": 12,
+      "roi": 0.013333,
+      "settled_picks": 12,
       "wins": 7
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.861111,
-      "priced_picks": 36,
-      "roi": 0.108333,
-      "settled_picks": 36,
-      "wins": 31
+      "hit_rate": 0.868421,
+      "priced_picks": 38,
+      "roi": 0.123158,
+      "settled_picks": 38,
+      "wins": 33
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.833333,
@@ -46,6 +47,13 @@
     }
   },
   "by_odds_match_method": {
+    "alias_fuzzy": {
+      "hit_rate": 1.0,
+      "priced_picks": 1,
+      "roi": 0.39,
+      "settled_picks": 1,
+      "wins": 1
+    },
     "betexplorer": {
       "hit_rate": 0.857143,
       "priced_picks": 35,
@@ -54,17 +62,17 @@
       "wins": 30
     },
     "exact": {
-      "hit_rate": 0.705882,
-      "priced_picks": 17,
-      "roi": 0.07,
-      "settled_picks": 17,
-      "wins": 12
+      "hit_rate": 0.722222,
+      "priced_picks": 18,
+      "roi": 0.087778,
+      "settled_picks": 18,
+      "wins": 13
     },
     "fallback": {
-      "hit_rate": 1.0,
-      "priced_picks": 1,
-      "roi": 0.22,
-      "settled_picks": 1,
+      "hit_rate": 0.5,
+      "priced_picks": 2,
+      "roi": -0.39,
+      "settled_picks": 2,
       "wins": 1
     }
   },
@@ -77,11 +85,11 @@
       "wins": 30
     },
     "bzzoiro_odds": {
-      "hit_rate": 0.9,
-      "priced_picks": 10,
-      "roi": 0.442,
-      "settled_picks": 10,
-      "wins": 9
+      "hit_rate": 0.916667,
+      "priced_picks": 12,
+      "roi": 0.433333,
+      "settled_picks": 12,
+      "wins": 11
     },
     "forebet_best": {
       "hit_rate": 1.0,
@@ -96,22 +104,29 @@
       "roi": -0.461429,
       "settled_picks": 7,
       "wins": 3
+    },
+    "zulubet": {
+      "hit_rate": 0.0,
+      "priced_picks": 1,
+      "roi": -1.0,
+      "settled_picks": 1,
+      "wins": 0
     }
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.85,
-      "priced_picks": 20,
-      "roi": 0.178,
-      "settled_picks": 20,
-      "wins": 17
+      "hit_rate": 0.818182,
+      "priced_picks": 22,
+      "roi": 0.134091,
+      "settled_picks": 22,
+      "wins": 18
     },
     "3way-unanimous avg_p>=65": {
-      "hit_rate": 0.571429,
-      "priced_picks": 7,
-      "roi": -0.23,
-      "settled_picks": 7,
-      "wins": 4
+      "hit_rate": 0.625,
+      "priced_picks": 8,
+      "roi": -0.1525,
+      "settled_picks": 8,
+      "wins": 5
     },
     "3way-unanimous home-only avg_p>=60": {
       "hit_rate": 0.9,
@@ -128,8 +143,8 @@
       "wins": 13
     }
   },
-  "eligible_prior_picks": 53,
-  "end": "2026-07-28",
+  "eligible_prior_picks": 56,
+  "end": "2026-07-29",
   "enhancements_audit": {
     "by_enhancement": {},
     "hit_rate": null,
@@ -138,21 +153,21 @@
   },
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.811321,
-    "priced_picks": 53,
-    "roi": 0.087358,
-    "settled_picks": 53,
-    "wins": 43
+    "hit_rate": 0.803571,
+    "priced_picks": 56,
+    "roi": 0.07875,
+    "settled_picks": 56,
+    "wins": 45
   },
-  "same_day_cutoff": "2026-07-28",
-  "same_day_excluded": 3,
+  "same_day_cutoff": "2026-07-29",
+  "same_day_excluded": 2,
   "secondary_stats": {
-    "btts_total": 53,
-    "btts_wins": 25,
-    "over25_total": 53,
-    "over25_wins": 34,
-    "team_o15_total": 53,
-    "team_o15_wins": 40
+    "btts_total": 56,
+    "btts_wins": 26,
+    "over25_total": 56,
+    "over25_wins": 36,
+    "team_o15_total": 56,
+    "team_o15_wins": 42
   },
   "settled_ledger": [
     {
@@ -1320,9 +1335,97 @@
       },
       "selection": "away",
       "won": true
+    },
+    {
+      "avg_p": 73.5,
+      "date": "2026-07-28",
+      "gs": 1,
+      "hs": 1,
+      "match": "Neftchi vs Navbahor",
+      "odds": 1.76,
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": null,
+        "away_o15_hit": null,
+        "btts_expected": 0.40700000000000003,
+        "btts_hit": false,
+        "home_o15_expected": null,
+        "home_o15_hit": null,
+        "over25_expected": 0.746,
+        "over25_hit": false,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.128,
+            "score": "1-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.126,
+            "score": "2-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": false
+    },
+    {
+      "avg_p": 73.0,
+      "date": "2026-07-28",
+      "gs": 0,
+      "hs": 3,
+      "match": "Apollon Limassol vs Dila",
+      "odds": 1.39,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": null,
+        "away_o15_hit": null,
+        "btts_expected": 0.42100000000000004,
+        "btts_hit": true,
+        "home_o15_expected": null,
+        "home_o15_hit": null,
+        "over25_expected": 0.755,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": true,
+            "pct": 0.125,
+            "score": "3-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.12300000000000001,
+            "score": "1-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 65.7,
+      "date": "2026-07-28",
+      "gs": 0,
+      "hs": 3,
+      "match": "Apollon Limassol vs Dila Gori",
+      "odds": 1.39,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": null,
+        "away_o15_hit": null,
+        "btts_expected": null,
+        "btts_hit": null,
+        "home_o15_expected": null,
+        "home_o15_hit": null,
+        "over25_expected": null,
+        "over25_hit": null,
+        "top_scores": []
+      },
+      "selection": "home",
+      "won": true
     }
   ],
-  "start": "2026-06-29",
+  "start": "2026-06-30",
   "unmatched_examples": [],
   "unmatched_result_picks": 0
 }
