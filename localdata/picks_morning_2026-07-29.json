@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-07-29T16:14:50+02:00",
+    "as_of": "2026-07-29T16:40:13+02:00",
     "avg_p": 83.0,
     "away": "Larne",
     "bookmaker": "888Sport",
@@ -31,6 +31,36 @@
     "enhancement_label": "Away Team Under 3.5 Goals",
     "enhancement_probability": 0.928,
     "enhancement_reason": "Combined Under 3.5 is 92.8%",
+    "event_notes": [
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9279999999999999,
+        "raw_probability": 0.9279999999999999,
+        "reason": "Combined Under 3.5 is 92.8%"
+      },
+      {
+        "label": "Home Team Over 0.5 Goals",
+        "market": "home_over_05",
+        "probability": 0.8967272727272727,
+        "raw_probability": 0.8967272727272727,
+        "reason": "Home scoring rate is 100.0%"
+      },
+      {
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.8676363636363637,
+        "raw_probability": 0.8676363636363637,
+        "reason": "Combined Under 2.5 is 86.8%"
+      },
+      {
+        "label": "Match Over 1.5 Goals",
+        "market": "match_over_15",
+        "probability": 0.8316363636363635,
+        "raw_probability": 0.8316363636363635,
+        "reason": "League Over 1.5 is 77.5%, Home Over 1.5 is 100.0%, Away Over 1.5 is 73.9%"
+      }
+    ],
     "home": "FK Crvena Zvezda",
     "kickoff": "29-07, 19:00",
     "league": "World UEFA Champions League",
@@ -69,7 +99,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-29T16:14:50+02:00",
+    "as_of": "2026-07-29T16:40:13+02:00",
     "avg_p": 66.0,
     "away": "Saburtalo",
     "bookmaker": "betexplorer_best",
@@ -100,6 +130,15 @@
     "enhancement_label": "Away Team Under 3.5 Goals",
     "enhancement_probability": 0.9262,
     "enhancement_reason": "Combined Under 3.5 is 92.6%",
+    "event_notes": [
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9261721812764623,
+        "raw_probability": 0.9261721812764623,
+        "reason": "Combined Under 3.5 is 92.6%"
+      }
+    ],
     "home": "Slovan Bratislava",
     "kickoff": "2026-07-29 20:15:00",
     "league": "UCL",
@@ -111,8 +150,8 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.38,
-    "odds_captured_at": "2026-07-29T14:20:03.682682+00:00",
+    "odds": 1.37,
+    "odds_captured_at": "2026-07-29T14:44:45.650470+00:00",
     "odds_league": "Europe: Champions League",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
