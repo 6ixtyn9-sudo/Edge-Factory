@@ -712,9 +712,13 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             "btts_yes": 1.75
         }
         
-        # Rank by probability * estimated odds (value proxy)
-        # Apply a 1.2x multiplier to juicy markets so they successfully outrank 1.05 safety odds when viable.
-        candidates.sort(key=lambda x: -(x["probability"] * EST_ODDS.get(x["market"], 1.05) * (1.2 if x["market"] in EST_ODDS else 1.0)))
+        # The "Middle Ground" Sort:
+        # 1. Tier grouping: True if probability >= 40% (safe enough for accas), False if < 40%
+        # 2. Within those tiers, sort by Expected Value (probability * estimated odds)
+        candidates.sort(key=lambda x: (
+            x["probability"] >= 0.40, 
+            x["probability"] * EST_ODDS.get(x["market"], 1.05)
+        ), reverse=True)
         out["event_notes"] = candidates
         best = candidates[0]
         out.update({
