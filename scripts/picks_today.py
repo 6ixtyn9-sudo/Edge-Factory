@@ -510,6 +510,42 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     a_cs = away_stats.get("cs_rate", l_a_cs)
     a_u35 = away_stats.get("under35_rate", l_u35)
 
+    import math
+    def poisson(k, lam):
+        try:
+            return (math.pow(lam, k) * math.exp(-lam)) / math.factorial(k)
+        except:
+            return 0.0
+
+    # Calculate expected goals (lambda)
+    lam = 0.4 * league_stats.get("avg_goals", 2.5) + 0.6 * ((home_stats.get("avg_goals", 2.5) + away_stats.get("avg_goals", 2.5)) / 2.0)
+    
+    p_0 = poisson(0, lam)
+    p_1 = poisson(1, lam)
+    p_2 = poisson(2, lam)
+    p_3 = poisson(3, lam)
+    p_4 = poisson(4, lam)
+    p_5 = poisson(5, lam)
+    p_6 = poisson(6, lam)
+    p_7plus = max(0.0, 1.0 - (p_0 + p_1 + p_2 + p_3 + p_4 + p_5 + p_6))
+
+    prob_goal_range_0_1 = p_0 + p_1
+    prob_goal_range_2_3 = p_2 + p_3
+    prob_goal_range_4_5 = p_4 + p_5
+    prob_goal_range_4_6 = p_4 + p_5 + p_6
+    prob_goal_range_6_plus = p_6 + p_7plus
+    prob_goal_range_7_plus = p_7plus
+
+    prob_exact_0 = p_0
+    prob_exact_1 = p_1
+    prob_exact_2 = p_2
+    prob_exact_3 = p_3
+    prob_exact_4 = p_4
+    prob_exact_5 = p_5
+    
+    prob_over_35_poisson = 1.0 - (p_0 + p_1 + p_2 + p_3)
+    prob_over_45_poisson = 1.0 - (p_0 + p_1 + p_2 + p_3 + p_4)
+
     prob_o15 = 0.4 * l_o15 + 0.6 * (h_o15 + a_o15) / 2.0
     prob_o25 = 0.4 * l_o25 + 0.6 * (h_o25 + a_o25) / 2.0
     prob_btts_yes = 0.4 * l_btts + 0.6 * (h_btts + a_btts) / 2.0
@@ -576,6 +612,20 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         "home_under_35": 0.90,
         "away_over_35": 0.90,
         "away_under_35": 0.90,
+        "goal_range_0_1": 0.45,
+        "goal_range_2_3": 0.50,
+        "goal_range_4_5": 0.35,
+        "goal_range_4_6": 0.35,
+        "goal_range_6_plus": 0.25,
+        "goal_range_7_plus": 0.15,
+        "exact_0": 0.25,
+        "exact_1": 0.30,
+        "exact_2": 0.28,
+        "exact_3": 0.26,
+        "exact_4": 0.20,
+        "exact_5": 0.15,
+        "match_over_35": 0.40,
+        "match_over_45": 0.25,
     }
 
     raw_candidates = [
@@ -602,6 +652,20 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         ("away_under_15", prob_a_u15, "Away Team Under 1.5 Goals", f"Combined Under 1.5 is {prob_a_u15:.1%}"),
         ("away_under_25", prob_a_u25, "Away Team Under 2.5 Goals", f"Combined Under 2.5 is {prob_a_u25:.1%}"),
         ("away_under_35", prob_a_u35, "Away Team Under 3.5 Goals", f"Combined Under 3.5 is {prob_a_u35:.1%}"),
+        ("goal_range_0_1", prob_goal_range_0_1, "Goal Range 0-1", f"Poisson expected hit rate is {prob_goal_range_0_1:.1%}"),
+        ("goal_range_2_3", prob_goal_range_2_3, "Goal Range 2-3", f"Poisson expected hit rate is {prob_goal_range_2_3:.1%}"),
+        ("goal_range_4_5", prob_goal_range_4_5, "Goal Range 4-5", f"Poisson expected hit rate is {prob_goal_range_4_5:.1%}"),
+        ("goal_range_4_6", prob_goal_range_4_6, "Goal Range 4-6", f"Poisson expected hit rate is {prob_goal_range_4_6:.1%}"),
+        ("goal_range_6_plus", prob_goal_range_6_plus, "Goal Range 6+", f"Poisson expected hit rate is {prob_goal_range_6_plus:.1%}"),
+        ("goal_range_7_plus", prob_goal_range_7_plus, "Goal Range 7+", f"Poisson expected hit rate is {prob_goal_range_7_plus:.1%}"),
+        ("exact_0", prob_exact_0, "Exact Goals: 0", f"Poisson expected hit rate is {prob_exact_0:.1%}"),
+        ("exact_1", prob_exact_1, "Exact Goals: 1", f"Poisson expected hit rate is {prob_exact_1:.1%}"),
+        ("exact_2", prob_exact_2, "Exact Goals: 2", f"Poisson expected hit rate is {prob_exact_2:.1%}"),
+        ("exact_3", prob_exact_3, "Exact Goals: 3", f"Poisson expected hit rate is {prob_exact_3:.1%}"),
+        ("exact_4", prob_exact_4, "Exact Goals: 4", f"Poisson expected hit rate is {prob_exact_4:.1%}"),
+        ("exact_5", prob_exact_5, "Exact Goals: 5", f"Poisson expected hit rate is {prob_exact_5:.1%}"),
+        ("match_over_35", prob_over_35_poisson, "Match Over 3.5 Goals", f"Poisson expected hit rate is {prob_over_35_poisson:.1%}"),
+        ("match_over_45", prob_over_45_poisson, "Match Over 4.5 Goals", f"Poisson expected hit rate is {prob_over_45_poisson:.1%}"),
     ]
     
     dc_label = "1X" if pick_sel == "home" else "X2" if pick_sel == "away" else "12"
@@ -627,7 +691,29 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             })
 
     if candidates:
-        candidates.sort(key=lambda x: -x["probability"])
+        # Sort by expected EV to surface lucrative picks first.
+        # This maps markets to typical estimated odds to ensure juicy bets win when viable
+        EST_ODDS = {
+            "goal_range_0_1": 3.50,
+            "goal_range_2_3": 2.05,
+            "goal_range_4_5": 4.50,
+            "goal_range_4_6": 3.00,
+            "goal_range_6_plus": 8.00,
+            "goal_range_7_plus": 12.00,
+            "exact_0": 9.00,
+            "exact_1": 4.50,
+            "exact_2": 3.60,
+            "exact_3": 4.00,
+            "exact_4": 5.50,
+            "exact_5": 8.00,
+            "match_over_25": 1.85,
+            "match_over_35": 3.00,
+            "match_over_45": 5.00,
+            "btts_yes": 1.75
+        }
+        
+        # Rank by probability * estimated odds (value proxy)
+        candidates.sort(key=lambda x: -(x["probability"] * EST_ODDS.get(x["market"], 1.15)))
         out["event_notes"] = candidates
         best = candidates[0]
         out.update({
