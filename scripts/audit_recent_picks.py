@@ -432,6 +432,44 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
         return gs <= 3
     elif enh_type == "away_under_45":
         return gs <= 4
+    elif enh_type == "goal_range_0_1":
+        return (hs + gs) in [0, 1]
+    elif enh_type == "goal_range_2_3":
+        return (hs + gs) in [2, 3]
+    elif enh_type == "goal_range_4_5":
+        return (hs + gs) in [4, 5]
+    elif enh_type == "goal_range_4_6":
+        return (hs + gs) in [4, 5, 6]
+    elif enh_type == "goal_range_6_plus":
+        return (hs + gs) >= 6
+    elif enh_type == "goal_range_7_plus":
+        return (hs + gs) >= 7
+    elif enh_type == "exact_0":
+        return (hs + gs) == 0
+    elif enh_type == "exact_1":
+        return (hs + gs) == 1
+    elif enh_type == "exact_2":
+        return (hs + gs) == 2
+    elif enh_type == "exact_3":
+        return (hs + gs) == 3
+    elif enh_type == "exact_4":
+        return (hs + gs) == 4
+    elif enh_type == "exact_5":
+        return (hs + gs) == 5
+    elif enh_type == "match_over_05":
+        return (hs + gs) >= 1
+    elif enh_type == "match_over_35":
+        return (hs + gs) >= 4
+    elif enh_type == "match_over_45":
+        return (hs + gs) >= 5
+    elif enh_type == "match_over_55":
+        return (hs + gs) >= 6
+    elif enh_type == "match_under_05":
+        return (hs + gs) == 0
+    elif enh_type == "match_under_45":
+        return (hs + gs) <= 4
+    elif enh_type == "match_under_55":
+        return (hs + gs) <= 5
     elif enh_type == "double_chance":
         if sel == "home": # 1X
             return hs >= gs
