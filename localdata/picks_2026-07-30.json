@@ -355,6 +355,127 @@
     "w_score": 1.0
   },
   {
+    "as_of": "2026-07-30T16:44:36+02:00",
+    "avg_p": 68.7,
+    "away": "Gais",
+    "bookmaker": "Betano",
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "gais",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "nordsjaelland",
+      "league": "ALLOW",
+      "league_key": "ecl",
+      "league_raw": "World UEFA Europa Conference League",
+      "niche": "UNKNOWN",
+      "odds_band": "VETO",
+      "odds_band_name": "1.50-1.75",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-07-30",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "3WAY-UNANIMOUS\u226565",
+    "draw_risk_flag": "EXTREME",
+    "edge_n_way": 3,
+    "edge_rule": "3way-unanimous avg_p>=65",
+    "edge_status": "certified",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4641,
+    "enhancement_reason": "Poisson expected hit rate is 46.4%",
+    "event_notes": [
+      {
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.4641411816407096,
+        "raw_probability": 0.4641411816407096,
+        "reason": "Poisson expected hit rate is 46.4%"
+      },
+      {
+        "label": "Exact Goals: 3",
+        "market": "exact_3",
+        "probability": 0.2211926224883215,
+        "raw_probability": 0.2211926224883215,
+        "reason": "Poisson expected hit rate is 22.1%"
+      },
+      {
+        "label": "Exact Goals: 2",
+        "market": "exact_2",
+        "probability": 0.2429485591523881,
+        "raw_probability": 0.2429485591523881,
+        "reason": "Poisson expected hit rate is 24.3%"
+      },
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9674578713525197,
+        "raw_probability": 0.9674578713525197,
+        "reason": "Combined Under 3.5 is 96.7%"
+      },
+      {
+        "label": "Exact Goals: 4",
+        "market": "exact_4",
+        "probability": 0.15103869029093248,
+        "raw_probability": 0.15103869029093248,
+        "reason": "Poisson expected hit rate is 15.1%"
+      },
+      {
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9182444061962134,
+        "raw_probability": 0.9182444061962134,
+        "reason": "Combined Under 3.5 is 91.8%"
+      },
+      {
+        "label": "Match Over 1.5 Goals",
+        "market": "match_over_15",
+        "probability": 0.8041748388904455,
+        "raw_probability": 0.8041748388904455,
+        "reason": "League Over 1.5 is 79.0%, Home Over 1.5 is 79.0%, Away Over 1.5 is 83.7%"
+      }
+    ],
+    "home": "FC Nordsjaelland",
+    "kickoff": "30-07, 18:00",
+    "league": "World UEFA Europa Conference League",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "high draw risk and weak signal for raw 1X2",
+    "market_type": "1x2",
+    "match": "FC Nordsjaelland vs Gais",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 3,
+    "odds": 1.5,
+    "odds_captured_at": "2026-07-29T03:14:02.612535+00:00",
+    "odds_league": "Conference League",
+    "odds_match_method": "exact",
+    "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.49,
+      "source": "zulubet"
+    },
+    "odds_source": "bzzoiro_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "recommended_enhancement": "goal_range_2_3",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "3way-unanimous avg_p>=65",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "vitibet",
+      "betclan"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1428): Avg Goals: 3.66 | Over 2.5: 71.6% | BTTS: 39.6% | Home Over 1.5 Goals: 87.0% | Away Over 1.5 Goals: 10.2% | Top Scores: 2-0 (15.4%), 3-0 (13.4%)",
+    "veto_reason": "context VETO in ['odds_band']",
+    "vitibet_index": 2.16,
+    "w_score": 1.0
+  },
+  {
     "as_of": "2026-07-30T16:27:24+02:00",
     "avg_p": 81.5,
     "away": "\u017delezni\u010dar Pan\u010devo",
