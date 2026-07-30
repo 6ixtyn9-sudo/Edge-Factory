@@ -612,20 +612,20 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         "home_under_35": 0.90,
         "away_over_35": 0.90,
         "away_under_35": 0.90,
-        "goal_range_0_1": 0.45,
-        "goal_range_2_3": 0.50,
-        "goal_range_4_5": 0.35,
-        "goal_range_4_6": 0.35,
-        "goal_range_6_plus": 0.25,
-        "goal_range_7_plus": 0.15,
-        "exact_0": 0.25,
-        "exact_1": 0.30,
-        "exact_2": 0.28,
-        "exact_3": 0.26,
-        "exact_4": 0.20,
-        "exact_5": 0.15,
-        "match_over_35": 0.40,
-        "match_over_45": 0.25,
+        "goal_range_0_1": 0.30,
+        "goal_range_2_3": 0.42,
+        "goal_range_4_5": 0.25,
+        "goal_range_4_6": 0.28,
+        "goal_range_6_plus": 0.15,
+        "goal_range_7_plus": 0.10,
+        "exact_0": 0.10,
+        "exact_1": 0.20,
+        "exact_2": 0.22,
+        "exact_3": 0.22,
+        "exact_4": 0.15,
+        "exact_5": 0.10,
+        "match_over_35": 0.30,
+        "match_over_45": 0.18,
     }
 
     raw_candidates = [
@@ -713,7 +713,8 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         }
         
         # Rank by probability * estimated odds (value proxy)
-        candidates.sort(key=lambda x: -(x["probability"] * EST_ODDS.get(x["market"], 1.15)))
+        # Apply a 1.2x multiplier to juicy markets so they successfully outrank 1.05 safety odds when viable.
+        candidates.sort(key=lambda x: -(x["probability"] * EST_ODDS.get(x["market"], 1.05) * (1.2 if x["market"] in EST_ODDS else 1.0)))
         out["event_notes"] = candidates
         best = candidates[0]
         out.update({
