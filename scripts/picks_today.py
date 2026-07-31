@@ -730,19 +730,22 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         # We completely strip out "Expected Value" calculations for the final sort to prevent overfitting to high-odds/low-probability lotto tickets.
         # Instead, we force the absolute safest, highest-probability markets to the top, provided they meet minimum viability rules.
         def get_safety_tier(m, prob):
-            # Tier 1: The Premium Bread-and-Butter (Match Winner + Over 1.5 or Over 2.5) IF they have > 50% hit rate
-            if m in ["match_over_15", "match_over_25"] and prob >= 0.50: return 5
+            # Tier 1: The Premium Bread-and-Butter (Match Winner + Over 1.5 or Over 2.5) IF they have > 45% hit rate
+            if m in ["match_over_15", "match_over_25"] and prob >= 0.45: return 6
             
-            # Tier 2: Extremely safe Over/Under goals (Over 1.5, Under 3.5, Under 4.5)
-            if ("under_35" in m or "under_45" in m or "match_over_15" == m) and prob >= 0.85: return 4
+            # Tier 2: Goal Ranges (Highly accurate, extremely lucrative acca legs)
+            if "goal_range" in m and prob >= 0.45: return 5
             
-            # Tier 3: Secondary safe Unders (Under 2.5) or standard Team goals
-            if ("under_25" in m or "over_05" in m) and prob >= 0.75: return 3
+            # Tier 3: BTTS Combos
+            if m == "btts_yes" and prob >= 0.45: return 4
             
-            # Tier 4: Goal Ranges and BTTS (Highly volatile, must earn their spot)
-            if "goal_range" in m and prob >= 0.45: return 2
+            # Tier 4: Safe standard Team goals
+            if "over_05" in m and prob >= 0.75: return 3
             
-            # Tier 5: Everything else (Exact Goals, longshots)
+            # Tier 5: Safe isolated Totals
+            if m == "match_over_35" and prob >= 0.30: return 2
+            
+            # Tier 6: The unbettable 1.05 junk (Under 3.5, Under 4.5) pushed to the bottom
             return 1
 
         # Sort strictly by: 1) Safety Tier, 2) Raw Probability (to ensure the absolute highest hit rate wins the tie-breaker)
