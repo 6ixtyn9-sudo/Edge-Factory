@@ -636,7 +636,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         ("match_under_25", prob_u25, "Match Under 2.5 Goals", f"Highly defensive context: Combined Under 2.5 is {prob_u25:.1%}"),
         ("match_under_35", prob_u35, "Match Under 3.5 Goals", f"Safe low-scoring expectation: Combined Under 3.5 is {prob_u35:.1%}"),
         ("match_over_25", prob_o25, f"{team_str} Win + Over 2.5", f"Mathematical expectation is {prob_o25:.1%}"),
-        ("btts_yes", prob_btts_yes, f"{team_str} Win + BTTS", f"Mathematical expectation is {prob_btts_yes:.1%}"),
+        ("btts_yes", prob_btts_yes, f"{team_str} Win + BTTS (Yes)", f"Mathematical expectation is {prob_btts_yes:.1%}"),
         ("btts_no", prob_btts_no, "Both Teams to Score - No (BTTS-No)", f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"),
         ("home_over_05", prob_h_o05, "Home Team Over 0.5 Goals", f"Home scoring rate is {h_score_o05:.1%}"),
         ("home_over_15", prob_h_o15, "Home Team Over 1.5 Goals", f"Home multi-goal rate is {h_score_o15:.1%}"),
