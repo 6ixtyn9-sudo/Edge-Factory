@@ -726,16 +726,27 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         def is_lucrative_combo_leg(market):
             return market in ["match_over_25", "match_over_15", "btts_yes", "home_over_15", "away_over_15", "goal_range_2_3", "goal_range_4_5"]
             
-        # Accuracy-Weighted Expected Value Sort:
-        # BTTS is highly volatile. Goal Ranges (2-3) and Match Totals (O1.5/O2.5) are much more consistent.
-        # We penalize BTTS by effectively halving its perceived "value" so it only wins if it is overwhelmingly likely.
-        def get_accuracy_weight(m):
-            if m == "btts_yes": return 0.50
-            if "goal_range" in m: return 1.20
-            if "over" in m: return 1.10
-            return 1.0
+        # Pure Tiered Strike-Rate Sorting:
+        # We completely strip out "Expected Value" calculations for the final sort to prevent overfitting to high-odds/low-probability lotto tickets.
+        # Instead, we force the absolute safest, highest-probability markets to the top, provided they meet minimum viability rules.
+        def get_safety_tier(m, prob):
+            # Tier 1: The Premium Bread-and-Butter (Match Winner + Over 1.5 or Over 2.5) IF they have > 50% hit rate
+            if m in ["match_over_15", "match_over_25"] and prob >= 0.50: return 5
             
-        candidates.sort(key=lambda x: x["probability"] * get_combo_odds(x["market"]) * get_accuracy_weight(x["market"]), reverse=True)
+            # Tier 2: Extremely safe Over/Under goals (Over 1.5, Under 3.5, Under 4.5)
+            if ("under_35" in m or "under_45" in m or "match_over_15" == m) and prob >= 0.85: return 4
+            
+            # Tier 3: Secondary safe Unders (Under 2.5) or standard Team goals
+            if ("under_25" in m or "over_05" in m) and prob >= 0.75: return 3
+            
+            # Tier 4: Goal Ranges and BTTS (Highly volatile, must earn their spot)
+            if "goal_range" in m and prob >= 0.45: return 2
+            
+            # Tier 5: Everything else (Exact Goals, longshots)
+            return 1
+
+        # Sort strictly by: 1) Safety Tier, 2) Raw Probability (to ensure the absolute highest hit rate wins the tie-breaker)
+        candidates.sort(key=lambda x: (get_safety_tier(x["market"], x["probability"]), x["probability"]), reverse=True)
         out["event_notes"] = candidates
         best = candidates[0]
         out.update({

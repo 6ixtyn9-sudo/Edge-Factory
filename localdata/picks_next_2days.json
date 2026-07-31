@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-07-31T11:56:38+02:00",
+    "as_of": "2026-07-31T12:50:26+02:00",
     "avg_p": 68.0,
     "away": "Cork City",
     "bookmaker": "betexplorer_best",
@@ -28,16 +28,16 @@
     "edge_n_way": 3,
     "edge_rule": "3way-unanimous avg_p>=65",
     "edge_status": "certified",
-    "enhancement_label": "Away Win + BTTS (Yes)",
-    "enhancement_probability": 0.5134,
-    "enhancement_reason": "Mathematical expectation is 51.3%",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4676,
+    "enhancement_reason": "Poisson expected hit rate is 46.8%",
     "event_notes": [
       {
-        "label": "Away Win + BTTS (Yes)",
-        "market": "btts_yes",
-        "probability": 0.5134056627163187,
-        "raw_probability": 0.5134056627163187,
-        "reason": "Mathematical expectation is 51.3%"
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.4675783764778757,
+        "raw_probability": 0.4675783764778757,
+        "reason": "Poisson expected hit rate is 46.8%"
       },
       {
         "label": "Away Team Under 3.5 Goals",
@@ -61,13 +61,6 @@
         "reason": "Combined Under 3.5 is 95.1%"
       },
       {
-        "label": "Goal Range 2-3",
-        "market": "goal_range_2_3",
-        "probability": 0.4675783764778757,
-        "raw_probability": 0.4675783764778757,
-        "reason": "Poisson expected hit rate is 46.8%"
-      },
-      {
         "label": "Home Team Under 2.5 Goals",
         "market": "home_under_25",
         "probability": 0.8537995735607675,
@@ -87,6 +80,13 @@
         "probability": 0.4721397828135072,
         "raw_probability": 0.4721397828135072,
         "reason": "Mathematical expectation is 47.2%"
+      },
+      {
+        "label": "Away Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.5134056627163187,
+        "raw_probability": 0.5134056627163187,
+        "reason": "Mathematical expectation is 51.3%"
       }
     ],
     "home": "Finn Harps",
@@ -101,7 +101,7 @@
     "model_version": null,
     "n_way": 4,
     "odds": 1.3,
-    "odds_captured_at": "2026-07-31T10:07:36.672338+00:00",
+    "odds_captured_at": "2026-07-31T11:03:09.969932+00:00",
     "odds_league": "Ireland: Division 1",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -113,7 +113,7 @@
     "odds_tier": "low",
     "pick": "away",
     "picked_for": "2026-07-31",
-    "recommended_enhancement": "btts_yes",
+    "recommended_enhancement": "goal_range_2_3",
     "recommended_market": "avoid_raw_1x2",
     "rule": "3way-unanimous avg_p>=65",
     "source_weights": {},
@@ -129,8 +129,164 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-31T11:56:38+02:00",
-    "avg_p": 82.0,
+    "as_of": "2026-07-31T12:50:26+02:00",
+    "avg_p": 77.0,
+    "away": "Slaven Belupo",
+    "bookmaker": "betexplorer_best",
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "nkslavenbelupo",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "dinamozagreb",
+      "league": "UNKNOWN",
+      "league_key": "croatia hnl",
+      "league_raw": "Hr1",
+      "niche": "UNKNOWN",
+      "odds_band": "CAUTION",
+      "odds_band_name": "1.20-1.35",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "VETO"
+    },
+    "date": "2026-07-31",
+    "decay_verdict": "WATCH",
+    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "draw_risk_flag": "HIGH",
+    "edge_n_way": 2,
+    "edge_rule": "2way-unanimous avg_p>=70",
+    "edge_status": "certified",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4596,
+    "enhancement_reason": "Poisson expected hit rate is 46.0%",
+    "event_notes": [
+      {
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.4595966216617503,
+        "raw_probability": 0.4595966216617503,
+        "reason": "Poisson expected hit rate is 46.0%"
+      },
+      {
+        "label": "Goal Range 4-6",
+        "market": "goal_range_4_6",
+        "probability": 0.2879190684889704,
+        "raw_probability": 0.2879190684889704,
+        "reason": "Poisson expected hit rate is 28.8%"
+      },
+      {
+        "label": "Match Over 3.5 Goals",
+        "market": "match_over_35",
+        "probability": 0.31329991748402963,
+        "raw_probability": 0.31329991748402963,
+        "reason": "Poisson expected hit rate is 31.3%"
+      },
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9755,
+        "raw_probability": 0.9755,
+        "reason": "Combined Under 3.5 is 97.5%"
+      },
+      {
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.8860357142857143,
+        "raw_probability": 0.8860357142857143,
+        "reason": "Combined Under 2.5 is 88.6%"
+      },
+      {
+        "label": "Home Win + Over 2.5",
+        "market": "match_over_25",
+        "probability": 0.5600571428571429,
+        "raw_probability": 0.5600571428571429,
+        "reason": "Mathematical expectation is 56.0%"
+      },
+      {
+        "label": "Home Team Over 0.5 Goals",
+        "market": "home_over_05",
+        "probability": 0.8091357142857143,
+        "raw_probability": 0.8091357142857143,
+        "reason": "Home scoring rate is 85.6%"
+      },
+      {
+        "label": "Exact Goals: 3",
+        "market": "exact_3",
+        "probability": 0.22283440108836736,
+        "raw_probability": 0.22283440108836736,
+        "reason": "Poisson expected hit rate is 22.3%"
+      },
+      {
+        "label": "Exact Goals: 4",
+        "market": "exact_4",
+        "probability": 0.1572944266239714,
+        "raw_probability": 0.1572944266239714,
+        "reason": "Poisson expected hit rate is 15.7%"
+      },
+      {
+        "label": "Exact Goals: 2",
+        "market": "exact_2",
+        "probability": 0.23676222057338298,
+        "raw_probability": 0.23676222057338298,
+        "reason": "Poisson expected hit rate is 23.7%"
+      },
+      {
+        "label": "Home Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.4883642857142857,
+        "raw_probability": 0.4883642857142857,
+        "reason": "Mathematical expectation is 48.8%"
+      },
+      {
+        "label": "Both Teams to Score - No (BTTS-No)",
+        "market": "btts_no",
+        "probability": 0.5116357142857143,
+        "raw_probability": 0.5116357142857143,
+        "reason": "League BTTS is 48.0%, Home BTTS is 48.8%, Away BTTS is 50.0%"
+      }
+    ],
+    "home": "Dinamo Zagreb",
+    "kickoff": "2026-07-31 20:00:00",
+    "league": "Hr1",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "historically unstable out of sample above 1.25",
+    "market_type": "1x2",
+    "match": "Dinamo Zagreb vs Slaven Belupo",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": 1.25,
+    "odds_captured_at": "2026-07-31T11:02:52.082686+00:00",
+    "odds_league": "Croatia: HNL",
+    "odds_match_method": "betexplorer",
+    "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.2,
+      "source": "forebet_best"
+    },
+    "odds_source": "betexplorer_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "picked_for": "2026-07-31",
+    "recommended_enhancement": "goal_range_2_3",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "2way-unanimous avg_p>=70",
+    "source_weights": {},
+    "sources_used": [
+      "forebet",
+      "betclan"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=482): Avg Goals: 3.95 | Over 2.5: 78.4% | BTTS: 43.6% | Home Over 1.5 Goals: 91.1% | Away Over 1.5 Goals: 9.1% | Top Scores: 2-0 (12.7%), 3-0 (11.6%)",
+    "veto_reason": "context VETO in ['team_h']",
+    "vitibet_index": null,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-07-31T12:50:26+02:00",
+    "avg_p": 76.3,
     "away": "Zlin",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
@@ -157,44 +313,16 @@
     "edge_n_way": 3,
     "edge_rule": "3way-unanimous avg_p>=65",
     "edge_status": "certified",
-    "enhancement_label": "Home Win + BTTS (Yes)",
-    "enhancement_probability": 0.5267,
-    "enhancement_reason": "Mathematical expectation is 52.7%",
+    "enhancement_label": "Goal Range 4-5",
+    "enhancement_probability": 0.2586,
+    "enhancement_reason": "Poisson expected hit rate is 25.9%",
     "event_notes": [
-      {
-        "label": "Home Win + BTTS (Yes)",
-        "market": "btts_yes",
-        "probability": 0.5267145135566188,
-        "raw_probability": 0.5267145135566188,
-        "reason": "Mathematical expectation is 52.7%"
-      },
       {
         "label": "Goal Range 4-5",
         "market": "goal_range_4_5",
         "probability": 0.25861576864322866,
         "raw_probability": 0.25861576864322866,
         "reason": "Poisson expected hit rate is 25.9%"
-      },
-      {
-        "label": "Match Over 3.5 Goals",
-        "market": "match_over_35",
-        "probability": 0.33456011383716944,
-        "raw_probability": 0.33456011383716944,
-        "reason": "Poisson expected hit rate is 33.5%"
-      },
-      {
-        "label": "Away Team Under 3.5 Goals",
-        "market": "away_under_35",
-        "probability": 0.9603174603174603,
-        "raw_probability": 0.9603174603174603,
-        "reason": "Combined Under 3.5 is 96.0%"
-      },
-      {
-        "label": "Away Team Under 2.5 Goals",
-        "market": "away_under_25",
-        "probability": 0.8556998556998557,
-        "raw_probability": 0.8556998556998557,
-        "reason": "Combined Under 2.5 is 85.6%"
       },
       {
         "label": "Goal Range 2-3",
@@ -204,6 +332,13 @@
         "reason": "Poisson expected hit rate is 45.4%"
       },
       {
+        "label": "Match Over 3.5 Goals",
+        "market": "match_over_35",
+        "probability": 0.33456011383716944,
+        "raw_probability": 0.33456011383716944,
+        "reason": "Poisson expected hit rate is 33.5%"
+      },
+      {
         "label": "Goal Range 4-6",
         "market": "goal_range_4_6",
         "probability": 0.3049848600188412,
@@ -211,18 +346,11 @@
         "reason": "Poisson expected hit rate is 30.5%"
       },
       {
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.16329435035987533,
-        "raw_probability": 0.16329435035987533,
-        "reason": "Poisson expected hit rate is 16.3%"
-      },
-      {
-        "label": "Exact Goals: 3",
-        "market": "exact_3",
-        "probability": 0.22379058423313802,
-        "raw_probability": 0.22379058423313802,
-        "reason": "Poisson expected hit rate is 22.4%"
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9603174603174603,
+        "raw_probability": 0.9603174603174603,
+        "reason": "Combined Under 3.5 is 96.0%"
       },
       {
         "label": "Home Win + Over 2.5",
@@ -239,11 +367,39 @@
         "reason": "Home scoring rate is 86.2%"
       },
       {
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.8556998556998557,
+        "raw_probability": 0.8556998556998557,
+        "reason": "Combined Under 2.5 is 85.6%"
+      },
+      {
+        "label": "Exact Goals: 4",
+        "market": "exact_4",
+        "probability": 0.16329435035987533,
+        "raw_probability": 0.16329435035987533,
+        "reason": "Poisson expected hit rate is 16.3%"
+      },
+      {
+        "label": "Exact Goals: 3",
+        "market": "exact_3",
+        "probability": 0.22379058423313802,
+        "raw_probability": 0.22379058423313802,
+        "reason": "Poisson expected hit rate is 22.4%"
+      },
+      {
         "label": "Exact Goals: 2",
         "market": "exact_2",
         "probability": 0.23002430341758218,
         "raw_probability": 0.23002430341758218,
         "reason": "Poisson expected hit rate is 23.0%"
+      },
+      {
+        "label": "Home Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.5267145135566188,
+        "raw_probability": 0.5267145135566188,
+        "reason": "Mathematical expectation is 52.7%"
       }
     ],
     "home": "Sparta Praha",
@@ -258,7 +414,7 @@
     "model_version": null,
     "n_way": 3,
     "odds": 1.22,
-    "odds_captured_at": "2026-07-31T10:07:18.822724+00:00",
+    "odds_captured_at": "2026-07-31T11:02:58.157331+00:00",
     "odds_league": "Czech Republic: Chance Liga",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -270,7 +426,7 @@
     "odds_tier": "low",
     "pick": "home",
     "picked_for": "2026-07-31",
-    "recommended_enhancement": "btts_yes",
+    "recommended_enhancement": "goal_range_4_5",
     "recommended_market": "keep_1x2",
     "rule": "3way-unanimous avg_p>=65",
     "source_weights": {},
@@ -280,169 +436,13 @@
       "betclan"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=65): Avg Goals: 4.02 | Over 2.5: 78.5% | BTTS: 35.4% | Home Over 1.5 Goals: 87.7% | Away Over 1.5 Goals: 3.1% | Top Scores: 4-0 (18.5%), 3-0 (15.4%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=381): Avg Goals: 4.08 | Over 2.5: 79.5% | BTTS: 41.2% | Home Over 1.5 Goals: 90.0% | Away Over 1.5 Goals: 8.9% | Top Scores: 3-0 (14.4%), 3-1 (10.5%)",
     "veto_reason": "context VETO in ['team_h']",
     "vitibet_index": 5.13,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-31T11:56:38+02:00",
-    "avg_p": 77.0,
-    "away": "Slaven Belupo",
-    "bookmaker": "betexplorer_best",
-    "bucket": "SKIPPED_VETO",
-    "confidence": null,
-    "ctx": {
-      "away_norm": "nkslavenbelupo",
-      "comp_type_name": "league",
-      "competition_type": "CAUTION",
-      "home_norm": "dinamozagreb",
-      "league": "UNKNOWN",
-      "league_key": "croatia hnl",
-      "league_raw": "Hr1",
-      "niche": "UNKNOWN",
-      "odds_band": "CAUTION",
-      "odds_band_name": "1.20-1.35",
-      "side_role": "home",
-      "team_a": "UNKNOWN",
-      "team_h": "VETO"
-    },
-    "date": "2026-07-31",
-    "decay_verdict": "WATCH",
-    "display_rule": "2WAY-UNANIMOUS\u226570",
-    "draw_risk_flag": "MEDIUM",
-    "edge_n_way": 2,
-    "edge_rule": "2way-unanimous avg_p>=70",
-    "edge_status": "certified",
-    "enhancement_label": "Home Win + BTTS (Yes)",
-    "enhancement_probability": 0.4884,
-    "enhancement_reason": "Mathematical expectation is 48.8%",
-    "event_notes": [
-      {
-        "label": "Home Win + BTTS (Yes)",
-        "market": "btts_yes",
-        "probability": 0.4883642857142857,
-        "raw_probability": 0.4883642857142857,
-        "reason": "Mathematical expectation is 48.8%"
-      },
-      {
-        "label": "Away Team Under 3.5 Goals",
-        "market": "away_under_35",
-        "probability": 0.9755,
-        "raw_probability": 0.9755,
-        "reason": "Combined Under 3.5 is 97.5%"
-      },
-      {
-        "label": "Away Team Under 2.5 Goals",
-        "market": "away_under_25",
-        "probability": 0.8860357142857143,
-        "raw_probability": 0.8860357142857143,
-        "reason": "Combined Under 2.5 is 88.6%"
-      },
-      {
-        "label": "Goal Range 2-3",
-        "market": "goal_range_2_3",
-        "probability": 0.4595966216617503,
-        "raw_probability": 0.4595966216617503,
-        "reason": "Poisson expected hit rate is 46.0%"
-      },
-      {
-        "label": "Match Over 3.5 Goals",
-        "market": "match_over_35",
-        "probability": 0.31329991748402963,
-        "raw_probability": 0.31329991748402963,
-        "reason": "Poisson expected hit rate is 31.3%"
-      },
-      {
-        "label": "Exact Goals: 3",
-        "market": "exact_3",
-        "probability": 0.22283440108836736,
-        "raw_probability": 0.22283440108836736,
-        "reason": "Poisson expected hit rate is 22.3%"
-      },
-      {
-        "label": "Home Win + Over 2.5",
-        "market": "match_over_25",
-        "probability": 0.5600571428571429,
-        "raw_probability": 0.5600571428571429,
-        "reason": "Mathematical expectation is 56.0%"
-      },
-      {
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.1572944266239714,
-        "raw_probability": 0.1572944266239714,
-        "reason": "Poisson expected hit rate is 15.7%"
-      },
-      {
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.2879190684889704,
-        "raw_probability": 0.2879190684889704,
-        "reason": "Poisson expected hit rate is 28.8%"
-      },
-      {
-        "label": "Exact Goals: 2",
-        "market": "exact_2",
-        "probability": 0.23676222057338298,
-        "raw_probability": 0.23676222057338298,
-        "reason": "Poisson expected hit rate is 23.7%"
-      },
-      {
-        "label": "Home Team Over 0.5 Goals",
-        "market": "home_over_05",
-        "probability": 0.8091357142857143,
-        "raw_probability": 0.8091357142857143,
-        "reason": "Home scoring rate is 85.6%"
-      },
-      {
-        "label": "Both Teams to Score - No (BTTS-No)",
-        "market": "btts_no",
-        "probability": 0.5116357142857143,
-        "raw_probability": 0.5116357142857143,
-        "reason": "League BTTS is 48.0%, Home BTTS is 48.8%, Away BTTS is 50.0%"
-      }
-    ],
-    "home": "Dinamo Zagreb",
-    "kickoff": "2026-07-31 20:00:00",
-    "league": "Hr1",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "upper short-odds zone, narrow surviving niche",
-    "market_type": "1x2",
-    "match": "Dinamo Zagreb vs Slaven Belupo",
-    "min_lead_minutes": 30,
-    "model_version": null,
-    "n_way": 2,
-    "odds": 1.24,
-    "odds_captured_at": "2026-07-31T10:07:24.685843+00:00",
-    "odds_league": "Croatia: HNL",
-    "odds_match_method": "betexplorer",
-    "odds_match_status": "matched",
-    "odds_replaced": {
-      "odds": 1.2,
-      "source": "forebet_best"
-    },
-    "odds_source": "betexplorer_odds",
-    "odds_tier": "low",
-    "pick": "home",
-    "picked_for": "2026-07-31",
-    "recommended_enhancement": "btts_yes",
-    "recommended_market": "keep_1x2",
-    "rule": "2way-unanimous avg_p>=70",
-    "source_weights": {},
-    "sources_used": [
-      "forebet",
-      "betclan"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=482): Avg Goals: 3.95 | Over 2.5: 78.4% | BTTS: 43.6% | Home Over 1.5 Goals: 91.1% | Away Over 1.5 Goals: 9.1% | Top Scores: 2-0 (12.7%), 4-0 (11.6%)",
-    "veto_reason": "context VETO in ['team_h']",
-    "vitibet_index": null,
-    "w_score": 1.0
-  },
-  {
-    "as_of": "2026-07-31T11:56:38+02:00",
+    "as_of": "2026-07-31T12:50:26+02:00",
     "avg_p": 65.0,
     "away": "Rangers",
     "bookmaker": "Betano",
@@ -470,24 +470,10 @@
     "edge_n_way": 3,
     "edge_rule": "3way-unanimous avg_p>=65",
     "edge_status": "certified",
-    "enhancement_label": "Away Win + BTTS (Yes)",
-    "enhancement_probability": 0.5549,
-    "enhancement_reason": "Mathematical expectation is 55.5%",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4605,
+    "enhancement_reason": "Poisson expected hit rate is 46.0%",
     "event_notes": [
-      {
-        "label": "Away Win + BTTS (Yes)",
-        "market": "btts_yes",
-        "probability": 0.5548717948717948,
-        "raw_probability": 0.5548717948717948,
-        "reason": "Mathematical expectation is 55.5%"
-      },
-      {
-        "label": "Away Team Under 3.5 Goals",
-        "market": "away_under_35",
-        "probability": 0.9452991452991453,
-        "raw_probability": 0.9452991452991453,
-        "reason": "Combined Under 3.5 is 94.5%"
-      },
       {
         "label": "Goal Range 2-3",
         "market": "goal_range_2_3",
@@ -496,11 +482,11 @@
         "reason": "Poisson expected hit rate is 46.0%"
       },
       {
-        "label": "Home Team Under 3.5 Goals",
-        "market": "home_under_35",
-        "probability": 0.9230769230769231,
-        "raw_probability": 0.9230769230769231,
-        "reason": "Combined Under 3.5 is 92.3%"
+        "label": "Goal Range 4-6",
+        "market": "goal_range_4_6",
+        "probability": 0.28494075024578563,
+        "raw_probability": 0.28494075024578563,
+        "reason": "Poisson expected hit rate is 28.5%"
       },
       {
         "label": "Match Over 3.5 Goals",
@@ -515,6 +501,27 @@
         "probability": 0.5764102564102563,
         "raw_probability": 0.5764102564102563,
         "reason": "Mathematical expectation is 57.6%"
+      },
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9452991452991453,
+        "raw_probability": 0.9452991452991453,
+        "reason": "Combined Under 3.5 is 94.5%"
+      },
+      {
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9230769230769231,
+        "raw_probability": 0.9230769230769231,
+        "reason": "Combined Under 3.5 is 92.3%"
+      },
+      {
+        "label": "Home Team Over 0.5 Goals",
+        "market": "home_over_05",
+        "probability": 0.8051282051282052,
+        "raw_probability": 0.8051282051282052,
+        "reason": "Home scoring rate is 80.5%"
       },
       {
         "label": "Exact Goals: 3",
@@ -538,18 +545,11 @@
         "reason": "Poisson expected hit rate is 23.8%"
       },
       {
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.28494075024578563,
-        "raw_probability": 0.28494075024578563,
-        "reason": "Poisson expected hit rate is 28.5%"
-      },
-      {
-        "label": "Home Team Over 0.5 Goals",
-        "market": "home_over_05",
-        "probability": 0.8051282051282052,
-        "raw_probability": 0.8051282051282052,
-        "reason": "Home scoring rate is 80.5%"
+        "label": "Away Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.5548717948717948,
+        "raw_probability": 0.5548717948717948,
+        "reason": "Mathematical expectation is 55.5%"
       }
     ],
     "home": "Dundee Utd",
@@ -564,7 +564,7 @@
     "model_version": null,
     "n_way": 3,
     "odds": 1.57,
-    "odds_captured_at": "2026-07-31T09:58:30.515638+00:00",
+    "odds_captured_at": "2026-07-31T10:53:12.182212+00:00",
     "odds_league": "Scottish Premiership",
     "odds_match_method": "alias_fuzzy",
     "odds_match_status": "matched",
@@ -576,7 +576,7 @@
     "odds_tier": "low",
     "pick": "away",
     "picked_for": "2026-07-31",
-    "recommended_enhancement": "btts_yes",
+    "recommended_enhancement": "goal_range_2_3",
     "recommended_market": "avoid_raw_1x2",
     "rule": "3way-unanimous avg_p>=65",
     "source_weights": {},
@@ -592,7 +592,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-31T11:56:38+02:00",
+    "as_of": "2026-07-31T12:50:26+02:00",
     "avg_p": 71.5,
     "away": "O'Connor Knights",
     "bookmaker": null,
@@ -620,17 +620,10 @@
     "edge_n_way": 2,
     "edge_rule": "2way-unanimous avg_p>=70",
     "edge_status": "certified",
-    "enhancement_label": "Match Over 4.5 Goals",
-    "enhancement_probability": 0.3864,
-    "enhancement_reason": "Poisson expected hit rate is 38.6%",
+    "enhancement_label": "Goal Range 6+",
+    "enhancement_probability": 0.2272,
+    "enhancement_reason": "Poisson expected hit rate is 22.7%",
     "event_notes": [
-      {
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.38636773839098326,
-        "raw_probability": 0.38636773839098326,
-        "reason": "Poisson expected hit rate is 38.6%"
-      },
       {
         "label": "Goal Range 6+",
         "market": "goal_range_6_plus",
@@ -639,11 +632,11 @@
         "reason": "Poisson expected hit rate is 22.7%"
       },
       {
-        "label": "Home Win + BTTS (Yes)",
-        "market": "btts_yes",
-        "probability": 0.7147972695736506,
-        "raw_probability": 0.7147972695736506,
-        "reason": "Mathematical expectation is 71.5%"
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.38636773839098326,
+        "raw_probability": 0.38636773839098326,
+        "reason": "Poisson expected hit rate is 38.6%"
       },
       {
         "label": "Match Over 3.5 Goals",
@@ -674,13 +667,6 @@
         "reason": "Poisson expected hit rate is 46.3%"
       },
       {
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.15921603941560528,
-        "raw_probability": 0.15921603941560528,
-        "reason": "Poisson expected hit rate is 15.9%"
-      },
-      {
         "label": "Home Win + Over 1.5",
         "market": "match_over_15",
         "probability": 0.9300595571139045,
@@ -695,18 +681,18 @@
         "reason": "Mathematical expectation is 77.9%"
       },
       {
+        "label": "Exact Goals: 5",
+        "market": "exact_5",
+        "probability": 0.15921603941560528,
+        "raw_probability": 0.15921603941560528,
+        "reason": "Poisson expected hit rate is 15.9%"
+      },
+      {
         "label": "Exact Goals: 4",
         "market": "exact_4",
         "probability": 0.19522077248908185,
         "raw_probability": 0.19522077248908185,
         "reason": "Poisson expected hit rate is 19.5%"
-      },
-      {
-        "label": "Away Team Under 3.5 Goals",
-        "market": "away_under_35",
-        "probability": 0.9461847389558233,
-        "raw_probability": 0.9461847389558233,
-        "reason": "Combined Under 3.5 is 94.6%"
       },
       {
         "label": "Home Team Over 0.5 Goals",
@@ -716,11 +702,25 @@
         "reason": "Home scoring rate is 96.5%"
       },
       {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9461847389558233,
+        "raw_probability": 0.9461847389558233,
+        "reason": "Combined Under 3.5 is 94.6%"
+      },
+      {
         "label": "Away Team Over 0.5 Goals",
         "market": "away_over_05",
         "probability": 0.8255610678006142,
         "raw_probability": 0.8255610678006142,
         "reason": "Away scoring rate is 84.3%"
+      },
+      {
+        "label": "Home Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.7147972695736506,
+        "raw_probability": 0.7147972695736506,
+        "reason": "Mathematical expectation is 71.5%"
       }
     ],
     "home": "Monaro Panthers",
@@ -740,7 +740,7 @@
     "odds_source": "forebet_best",
     "odds_tier": "low",
     "pick": "home",
-    "recommended_enhancement": "match_over_45",
+    "recommended_enhancement": "goal_range_6_plus",
     "recommended_market": "keep_1x2",
     "rule": "2way-unanimous avg_p>=70",
     "source_weights": {},
@@ -755,7 +755,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-31T11:56:38+02:00",
+    "as_of": "2026-07-31T12:50:26+02:00",
     "avg_p": 74.5,
     "away": "Botafogo W",
     "bookmaker": "scoutingstats_odds",
@@ -783,16 +783,23 @@
     "edge_n_way": 2,
     "edge_rule": "2way-unanimous avg_p>=70",
     "edge_status": "certified",
-    "enhancement_label": "Home Win + BTTS (Yes)",
-    "enhancement_probability": 0.5145,
-    "enhancement_reason": "Mathematical expectation is 51.5%",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4669,
+    "enhancement_reason": "Poisson expected hit rate is 46.7%",
     "event_notes": [
       {
-        "label": "Home Win + BTTS (Yes)",
-        "market": "btts_yes",
-        "probability": 0.5145166352069899,
-        "raw_probability": 0.5145166352069899,
-        "reason": "Mathematical expectation is 51.5%"
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.46692369350701324,
+        "raw_probability": 0.46692369350701324,
+        "reason": "Poisson expected hit rate is 46.7%"
+      },
+      {
+        "label": "Home Team Over 0.5 Goals",
+        "market": "home_over_05",
+        "probability": 0.8416971369849919,
+        "raw_probability": 0.8416971369849919,
+        "reason": "Home scoring rate is 87.2%"
       },
       {
         "label": "Away Team Under 2.5 Goals",
@@ -809,13 +816,6 @@
         "reason": "Combined Under 3.5 is 95.6%"
       },
       {
-        "label": "Goal Range 2-3",
-        "market": "goal_range_2_3",
-        "probability": 0.46692369350701324,
-        "raw_probability": 0.46692369350701324,
-        "reason": "Poisson expected hit rate is 46.7%"
-      },
-      {
         "label": "Exact Goals: 2",
         "market": "exact_2",
         "probability": 0.2475437075277226,
@@ -823,18 +823,18 @@
         "reason": "Poisson expected hit rate is 24.8%"
       },
       {
-        "label": "Home Team Over 0.5 Goals",
-        "market": "home_over_05",
-        "probability": 0.8416971369849919,
-        "raw_probability": 0.8416971369849919,
-        "reason": "Home scoring rate is 87.2%"
-      },
-      {
         "label": "Home Win + Over 2.5",
         "market": "match_over_25",
         "probability": 0.5025744470120377,
         "raw_probability": 0.5025744470120377,
         "reason": "Mathematical expectation is 50.3%"
+      },
+      {
+        "label": "Home Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.5145166352069899,
+        "raw_probability": 0.5145166352069899,
+        "reason": "Mathematical expectation is 51.5%"
       }
     ],
     "home": "Cruzeiro W",
@@ -860,7 +860,7 @@
     "odds_source": "scoutingstats_odds",
     "odds_tier": "low",
     "pick": "home",
-    "recommended_enhancement": "btts_yes",
+    "recommended_enhancement": "goal_range_2_3",
     "recommended_market": "keep_1x2",
     "rule": "2way-unanimous avg_p>=70",
     "source_weights": {},
