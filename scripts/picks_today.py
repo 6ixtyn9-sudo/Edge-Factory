@@ -726,16 +726,9 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         def is_lucrative_combo_leg(market):
             return market in ["match_over_25", "match_over_15", "btts_yes", "home_over_15", "away_over_15", "goal_range_2_3", "goal_range_4_5"]
             
-        candidates.sort(key=lambda x: (
-            # Tier 1: Is it a lucrative combo with an empirical historical hit rate of >= 35%? (For a 2.40+ odds bet, 35%+ hit rate is incredibly strong EV)
-            (is_lucrative_combo_leg(x["market"]) and x["probability"] >= 0.35),
-            
-            # Tier 2: If no premium combos exist, fallback to any market with >= 40% probability and playable odds
-            (x["probability"] >= 0.40 and get_combo_odds(x["market"]) >= 1.30),
-            
-            # Tier 3: Sort the tier members by true Expected Value
-            x["probability"] * get_combo_odds(x["market"])
-        ), reverse=True)
+        # Final Expected Value Multiplier Sort:
+        # We mathematically equalize the risk-reward by multiplying the Poisson/Historical Win Rate against the real-world odds payout.
+        candidates.sort(key=lambda x: x["probability"] * get_combo_odds(x["market"]), reverse=True)
         out["event_notes"] = candidates
         best = candidates[0]
         out.update({
