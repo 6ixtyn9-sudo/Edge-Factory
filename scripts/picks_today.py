@@ -726,9 +726,16 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         def is_lucrative_combo_leg(market):
             return market in ["match_over_25", "match_over_15", "btts_yes", "home_over_15", "away_over_15", "goal_range_2_3", "goal_range_4_5"]
             
-        # Final Expected Value Multiplier Sort:
-        # We mathematically equalize the risk-reward by multiplying the Poisson/Historical Win Rate against the real-world odds payout.
-        candidates.sort(key=lambda x: x["probability"] * get_combo_odds(x["market"]), reverse=True)
+        # Accuracy-Weighted Expected Value Sort:
+        # BTTS is highly volatile. Goal Ranges (2-3) and Match Totals (O1.5/O2.5) are much more consistent.
+        # We penalize BTTS by effectively halving its perceived "value" so it only wins if it is overwhelmingly likely.
+        def get_accuracy_weight(m):
+            if m == "btts_yes": return 0.50
+            if "goal_range" in m: return 1.20
+            if "over" in m: return 1.10
+            return 1.0
+            
+        candidates.sort(key=lambda x: x["probability"] * get_combo_odds(x["market"]) * get_accuracy_weight(x["market"]), reverse=True)
         out["event_notes"] = candidates
         best = candidates[0]
         out.update({
