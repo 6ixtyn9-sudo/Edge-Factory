@@ -87,8 +87,15 @@ def format_whatsapp_summary(
             w_score = p.get("w_score")
             w_str = f", w={w_score:.2f}" if w_score is not None else ""
             rule = _pick_rule_label(p)
+            enh_label = p.get("enhancement_label")
+            enh_prob = p.get("enhancement_probability")
+            
             lines.append(f"• *{match}* ➡️ *{selection}* {odds}")
-            lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}\n")
+            if enh_label and enh_prob:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}")
+                lines.append(f"   🔥 *Combo:* {enh_label} ({enh_prob:.1%})\n")
+            else:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}\n")
 
     caution_picks = buckets.get(BUCKET_CAUTION, [])
     if caution_picks:
@@ -102,8 +109,15 @@ def format_whatsapp_summary(
             w_score = p.get("w_score")
             w_str = f", w={w_score:.2f}" if w_score is not None else ""
             rule = _pick_rule_label(p)
+            enh_label = p.get("enhancement_label")
+            enh_prob = p.get("enhancement_probability")
+            
             lines.append(f"• *{match}* ➡️ *{selection}* {odds}")
-            lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}\n")
+            if enh_label and enh_prob:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}")
+                lines.append(f"   🔥 *Combo:* {enh_label} ({enh_prob:.1%})\n")
+            else:
+                lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}\n")
 
     skipped_count = sum(len(v) for k, v in buckets.items() if str(k).startswith("SKIPPED"))
     watchlist_count = sum(len(v) for k, v in buckets.items() if str(k).startswith("WATCHLIST"))
