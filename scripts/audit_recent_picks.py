@@ -379,9 +379,15 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
         return None
     sel = selection.lower()
     if enh_type == "match_over_15":
-        return (hs + gs) >= 2
+        hit = (hs + gs) >= 2
+        if sel == "home": return hit and (hs > gs)
+        if sel in ["away", "2"]: return hit and (gs > hs)
+        return hit
     elif enh_type == "match_over_25":
-        return (hs + gs) >= 3
+        hit = (hs + gs) >= 3
+        if sel == "home": return hit and (hs > gs)
+        if sel in ["away", "2"]: return hit and (gs > hs)
+        return hit
     elif enh_type == "match_under_15":
         return (hs + gs) <= 1
     elif enh_type == "match_under_25":
@@ -389,7 +395,10 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
     elif enh_type == "match_under_35":
         return (hs + gs) <= 3
     elif enh_type == "btts_yes":
-        return hs > 0 and gs > 0
+        hit = (hs > 0 and gs > 0)
+        if sel == "home": return hit and (hs > gs)
+        if sel in ["away", "2"]: return hit and (gs > hs)
+        return hit
     elif enh_type == "btts_no":
         return hs == 0 or gs == 0
     elif enh_type in ("team_over_05", "home_over_05"):
