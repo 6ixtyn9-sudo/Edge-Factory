@@ -7,11 +7,11 @@
       "status": "certified",
       "train": {
         "avg_odds": 1.38,
-        "hit": 0.7918,
-        "n": 1071,
-        "n_priced": 1029,
-        "roi": 0.0784,
-        "wilson_lb": 0.7664,
+        "hit": 0.7925,
+        "n": 1070,
+        "n_priced": 1028,
+        "roi": 0.0795,
+        "wilson_lb": 0.7672,
         "wins": 848
       },
       "valid": {
@@ -28,17 +28,17 @@
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
-          "n": 54,
-          "wins": 46,
-          "hit": 0.8519,
-          "wilson_lb": 0.734,
-          "roi": 0.0398
+          "n": 52,
+          "wins": 45,
+          "hit": 0.8654,
+          "wilson_lb": 0.7473,
+          "roi": 0.0527
         },
         "baseline_lb": 0.7908,
-        "recent_lb": 0.734,
-        "recent_ub": 0.923
+        "recent_lb": 0.7473,
+        "recent_ub": 0.9332
       }
     },
     {
@@ -48,38 +48,38 @@
       "status": "certified",
       "train": {
         "avg_odds": 1.315,
-        "hit": 0.8356,
-        "n": 523,
-        "n_priced": 489,
-        "roi": 0.0846,
-        "wilson_lb": 0.8014,
+        "hit": 0.8372,
+        "n": 522,
+        "n_priced": 488,
+        "roi": 0.0868,
+        "wilson_lb": 0.803,
         "wins": 437
       },
       "valid": {
         "avg_odds": 1.27,
-        "hit": 0.8704,
-        "n": 355,
-        "n_priced": 326,
-        "roi": 0.0358,
-        "wilson_lb": 0.8315,
-        "wins": 309
+        "hit": 0.8701,
+        "n": 354,
+        "n_priced": 325,
+        "roi": 0.035,
+        "wilson_lb": 0.831,
+        "wins": 308
       },
       "view": "ml_meta_settled",
       "where": "ml_p*100 >= 75",
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
-          "n": 33,
-          "wins": 29,
-          "hit": 0.8788,
-          "wilson_lb": 0.7267,
-          "roi": 0.0261
+          "n": 32,
+          "wins": 28,
+          "hit": 0.875,
+          "wilson_lb": 0.7193,
+          "roi": 0.0138
         },
-        "baseline_lb": 0.8315,
-        "recent_lb": 0.7267,
-        "recent_ub": 0.9518
+        "baseline_lb": 0.831,
+        "recent_lb": 0.7193,
+        "recent_ub": 0.9503
       }
     },
     {
@@ -162,7 +162,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
           "n": 23,
           "wins": 20,
@@ -281,17 +281,17 @@
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
-          "n": 44,
-          "wins": 37,
-          "hit": 0.8409,
-          "wilson_lb": 0.7063,
-          "roi": 0.0236
+          "n": 43,
+          "wins": 36,
+          "hit": 0.8372,
+          "wilson_lb": 0.7003,
+          "roi": 0.0144
         },
         "baseline_lb": 0.7819,
-        "recent_lb": 0.7063,
-        "recent_ub": 0.9207
+        "recent_lb": 0.7003,
+        "recent_ub": 0.9188
       }
     },
     {
@@ -400,17 +400,17 @@
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
-          "n": 53,
-          "wins": 44,
-          "hit": 0.8302,
-          "wilson_lb": 0.7077,
-          "roi": 0.0119
+          "n": 52,
+          "wins": 43,
+          "hit": 0.8269,
+          "wilson_lb": 0.7027,
+          "roi": 0.0116
         },
         "baseline_lb": 0.7655,
-        "recent_lb": 0.7077,
-        "recent_ub": 0.908
+        "recent_lb": 0.7027,
+        "recent_ub": 0.9062
       }
     },
     {
@@ -467,7 +467,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
           "n": 29,
           "wins": 23,
@@ -479,7 +479,7 @@
         "recent_lb": 0.6161,
         "recent_ub": 0.9015
       },
-      "benched_at": "2026-07-30"
+      "benched_at": "2026-07-31"
     },
     {
       "market": "1x2",
@@ -509,7 +509,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
           "n": 25,
           "wins": 21,
@@ -654,7 +654,7 @@
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
           "n": 46,
           "wins": 38,
@@ -747,17 +747,17 @@
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
-          "n": 59,
-          "wins": 49,
-          "hit": 0.8305,
-          "wilson_lb": 0.7154,
-          "roi": 0.0626
+          "n": 57,
+          "wins": 48,
+          "hit": 0.8421,
+          "wilson_lb": 0.7264,
+          "roi": 0.0752
         },
         "baseline_lb": 0.7532,
-        "recent_lb": 0.7154,
-        "recent_ub": 0.9052
+        "recent_lb": 0.7264,
+        "recent_ub": 0.9146
       }
     },
     {
@@ -788,17 +788,17 @@
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
-          "n": 32,
-          "wins": 28,
-          "hit": 0.875,
-          "wilson_lb": 0.7193,
-          "roi": 0.06
+          "n": 31,
+          "wins": 27,
+          "hit": 0.871,
+          "wilson_lb": 0.7115,
+          "roi": 0.0484
         },
         "baseline_lb": 0.7731,
-        "recent_lb": 0.7193,
-        "recent_ub": 0.9503
+        "recent_lb": 0.7115,
+        "recent_ub": 0.9487
       }
     },
     {
@@ -855,7 +855,7 @@
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 60,
-        "checked_at": "2026-07-30",
+        "checked_at": "2026-07-31",
         "recent": {
           "n": 33,
           "wins": 27,
@@ -1011,21 +1011,21 @@
   },
   "ml_model": {
     "coef": [
-      -0.002879311942169148,
-      0.003491688555661536,
-      0.03984937720166425,
-      0.01348725127202068,
-      -5.3338674709753566e-05,
-      -0.005233725439693584,
-      -0.01603423591018787,
-      0.39781686806286376,
-      0.589257365318943,
+      -0.002881182125986215,
+      0.003492527322110971,
+      0.03983866174291295,
+      0.013483335646586492,
+      -7.759788135759496e-05,
+      -0.005281658076102333,
+      -0.015952044789607767,
+      0.3988801119878871,
+      0.5896371350420698,
       0.0,
       0.0,
       0.0,
       0.0,
-      -1.3163806761278045,
-      -0.6744060828438667
+      -1.3161469688655636,
+      -0.6745505560103692
     ],
     "feature_cols": [
       "fb_p",
@@ -1044,7 +1044,7 @@
       "cat_league",
       "rolling_hit_rate"
     ],
-    "intercept": -1.3323557086375428
+    "intercept": -1.3313001105418902
   },
   "split": "2025-06-01"
 }
