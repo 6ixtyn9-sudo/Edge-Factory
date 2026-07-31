@@ -715,9 +715,9 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         }
         
         def get_combo_odds(m):
-            if m == "match_over_15": return 1.70  # Avg odds for Win + O1.5
-            if m == "match_over_25": return 2.40  # Avg odds for Win + O2.5
-            if m == "btts_yes": return 3.00       # Avg odds for Win + BTTS
+            if m == "match_over_15": return 1.30  # Realistic odds for Win + O1.5
+            if m == "match_over_25": return 1.55  # Realistic odds for Win + O2.5
+            if m == "btts_yes": return 2.50       # Realistic odds for Win + BTTS
             if m in EST_ODDS: return EST_ODDS[m]
             if "under_35" in m or "under_45" in m or "under_55" in m: return 1.01
             if "under_25" in m: return 1.10
