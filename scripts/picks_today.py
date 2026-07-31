@@ -599,9 +599,9 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         "away_under_05": 0.80,
         "away_under_15": 0.80,
         "double_chance": 0.80,
-        "btts_yes": 0.85,
-        "btts_no": 0.85,
-        "match_over_25": 0.85,
+        "btts_yes": 0.35,
+        "btts_no": 0.50,
+        "match_over_25": 0.35,
         "match_under_25": 0.85,
         "home_over_25": 0.85,
         "home_under_25": 0.85,
@@ -628,13 +628,15 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         "match_over_45": 0.18,
     }
 
+    team_str = "Home" if pick_sel == "home" else "Away" if pick_sel in ["away", "2"] else "Match"
+    
     raw_candidates = [
-        ("match_over_15", prob_o15, "Match Over 1.5 Goals", f"League Over 1.5 is {l_o15:.1%}, Home Over 1.5 is {h_o15:.1%}, Away Over 1.5 is {a_o15:.1%}"),
+        ("match_over_15", prob_o15, f"{team_str} Win + Over 1.5", f"Mathematical expectation is {prob_o15:.1%}"),
         ("match_under_15", prob_u15, "Match Under 1.5 Goals", f"Extremely defensive context: Combined Under 1.5 is {prob_u15:.1%}"),
         ("match_under_25", prob_u25, "Match Under 2.5 Goals", f"Highly defensive context: Combined Under 2.5 is {prob_u25:.1%}"),
         ("match_under_35", prob_u35, "Match Under 3.5 Goals", f"Safe low-scoring expectation: Combined Under 3.5 is {prob_u35:.1%}"),
-        ("match_over_25", prob_o25, "Match Over 2.5 Goals", f"League Over 2.5 is {l_o25:.1%}, Home Over 2.5 is {h_o25:.1%}, Away Over 2.5 is {a_o25:.1%}"),
-        ("btts_yes", prob_btts_yes, "Both Teams to Score (BTTS)", f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"),
+        ("match_over_25", prob_o25, f"{team_str} Win + Over 2.5", f"Mathematical expectation is {prob_o25:.1%}"),
+        ("btts_yes", prob_btts_yes, f"{team_str} Win + BTTS", f"Mathematical expectation is {prob_btts_yes:.1%}"),
         ("btts_no", prob_btts_no, "Both Teams to Score - No (BTTS-No)", f"League BTTS is {l_btts:.1%}, Home BTTS is {h_btts:.1%}, Away BTTS is {a_btts:.1%}"),
         ("home_over_05", prob_h_o05, "Home Team Over 0.5 Goals", f"Home scoring rate is {h_score_o05:.1%}"),
         ("home_over_15", prob_h_o15, "Home Team Over 1.5 Goals", f"Home multi-goal rate is {h_score_o15:.1%}"),
@@ -712,12 +714,27 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             "btts_yes": 1.75
         }
         
-        # The "Middle Ground" Sort:
-        # 1. Tier grouping: True if probability >= 40% (safe enough for accas), False if < 40%
-        # 2. Within those tiers, sort by Expected Value (probability * estimated odds)
+        def get_combo_odds(m):
+            if m == "match_over_15": return 1.70  # Avg odds for Win + O1.5
+            if m == "match_over_25": return 2.40  # Avg odds for Win + O2.5
+            if m == "btts_yes": return 3.00       # Avg odds for Win + BTTS
+            if m in EST_ODDS: return EST_ODDS[m]
+            if "under_35" in m or "under_45" in m or "under_55" in m: return 1.01
+            if "under_25" in m: return 1.10
+            return 1.05
+            
+        def is_lucrative_combo_leg(market):
+            return market in ["match_over_25", "match_over_15", "btts_yes", "home_over_15", "away_over_15", "goal_range_2_3", "goal_range_4_5"]
+            
         candidates.sort(key=lambda x: (
-            x["probability"] >= 0.40, 
-            x["probability"] * EST_ODDS.get(x["market"], 1.05)
+            # Tier 1: Is it a lucrative combo with an empirical historical hit rate of >= 35%? (For a 2.40+ odds bet, 35%+ hit rate is incredibly strong EV)
+            (is_lucrative_combo_leg(x["market"]) and x["probability"] >= 0.35),
+            
+            # Tier 2: If no premium combos exist, fallback to any market with >= 40% probability and playable odds
+            (x["probability"] >= 0.40 and get_combo_odds(x["market"]) >= 1.30),
+            
+            # Tier 3: Sort the tier members by true Expected Value
+            x["probability"] * get_combo_odds(x["market"])
         ), reverse=True)
         out["event_notes"] = candidates
         best = candidates[0]
