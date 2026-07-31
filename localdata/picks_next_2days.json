@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-07-31T05:24:50+02:00",
+    "as_of": "2026-07-31T07:09:49+02:00",
     "avg_p": 80.5,
     "away": "Zlin",
     "bookmaker": "betexplorer_best",
@@ -114,8 +114,8 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 2,
-    "odds": 1.21,
-    "odds_captured_at": "2026-07-31T03:30:18.221036+00:00",
+    "odds": 1.22,
+    "odds_captured_at": "2026-07-31T05:20:00.831552+00:00",
     "odds_league": "Czech Republic: Chance Liga",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -138,7 +138,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-31T05:24:50+02:00",
+    "as_of": "2026-07-31T07:09:49+02:00",
     "avg_p": 77.0,
     "away": "Slaven Belupo",
     "bookmaker": "betexplorer_best",
@@ -162,7 +162,7 @@
     "date": "2026-07-31",
     "decay_verdict": "WATCH",
     "display_rule": "2WAY-UNANIMOUS\u226570",
-    "draw_risk_flag": "HIGH",
+    "draw_risk_flag": "MEDIUM",
     "edge_n_way": 2,
     "edge_rule": "2way-unanimous avg_p>=70",
     "edge_status": "certified",
@@ -239,14 +239,14 @@
     "league": "Hr1",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "historically unstable out of sample above 1.25",
+    "market_recommendation_reason": "upper short-odds zone, narrow surviving niche",
     "market_type": "1x2",
     "match": "Dinamo Zagreb vs Slaven Belupo",
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 2,
-    "odds": 1.25,
-    "odds_captured_at": "2026-07-31T03:30:24.420213+00:00",
+    "odds": 1.24,
+    "odds_captured_at": "2026-07-31T05:20:07.119128+00:00",
     "odds_league": "Croatia: HNL",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -259,7 +259,7 @@
     "pick": "home",
     "picked_for": "2026-07-31",
     "recommended_enhancement": "away_under_35",
-    "recommended_market": "avoid_raw_1x2",
+    "recommended_market": "keep_1x2",
     "rule": "2way-unanimous avg_p>=70",
     "source_weights": {},
     "sources_used": [
@@ -273,142 +273,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-31T05:38:45+02:00",
-    "avg_p": 79.5,
-    "away": "Launceston United",
-    "bookmaker": null,
-    "bucket": "SKIPPED_VETO",
-    "confidence": null,
-    "ctx": {
-      "away_norm": "launcestonunited",
-      "comp_type_name": "league",
-      "competition_type": "CAUTION",
-      "home_norm": "kingboroughlions",
-      "league": "UNKNOWN",
-      "league_key": "australia tasmania npl",
-      "league_raw": "AuT",
-      "niche": "UNKNOWN",
-      "odds_band": "VETO",
-      "odds_band_name": "1.00-1.10",
-      "side_role": "home",
-      "team_a": "UNKNOWN",
-      "team_h": "UNKNOWN"
-    },
-    "date": "2026-08-01",
-    "decay_verdict": "WATCH",
-    "display_rule": "2WAY-UNANIMOUS\u226570",
-    "draw_risk_flag": "LOW",
-    "edge_n_way": 2,
-    "edge_rule": "2way-unanimous avg_p>=70",
-    "edge_status": "certified",
-    "enhancement_label": "Match Over 4.5 Goals",
-    "enhancement_probability": 0.4493,
-    "enhancement_reason": "Poisson expected hit rate is 44.9%",
-    "event_notes": [
-      {
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.4492718086714024,
-        "raw_probability": 0.4492718086714024,
-        "reason": "Poisson expected hit rate is 44.9%"
-      },
-      {
-        "label": "Match Over 3.5 Goals",
-        "market": "match_over_35",
-        "probability": 0.6409663128660809,
-        "raw_probability": 0.6409663128660809,
-        "reason": "Poisson expected hit rate is 64.1%"
-      },
-      {
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.48431730414119106,
-        "raw_probability": 0.48431730414119106,
-        "reason": "Poisson expected hit rate is 48.4%"
-      },
-      {
-        "label": "Match Over 1.5 Goals",
-        "market": "match_over_15",
-        "probability": 0.9229493700833975,
-        "raw_probability": 0.9229493700833975,
-        "reason": "League Over 1.5 is 92.5%, Home Over 1.5 is 89.1%, Away Over 1.5 is 95.3%"
-      },
-      {
-        "label": "Home Team Over 0.5 Goals",
-        "market": "home_over_05",
-        "probability": 0.8730407523510972,
-        "raw_probability": 0.8730407523510972,
-        "reason": "Home scoring rate is 90.9%"
-      },
-      {
-        "label": "Goal Range 6+",
-        "market": "goal_range_6_plus",
-        "probability": 0.2804895314155434,
-        "raw_probability": 0.2804895314155434,
-        "reason": "Poisson expected hit rate is 28.0%"
-      },
-      {
-        "label": "Goal Range 7+",
-        "market": "goal_range_7_plus",
-        "probability": 0.15664900872488974,
-        "raw_probability": 0.15664900872488974,
-        "reason": "Poisson expected hit rate is 15.7%"
-      },
-      {
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.3604767814505374,
-        "raw_probability": 0.3604767814505374,
-        "reason": "Poisson expected hit rate is 36.0%"
-      },
-      {
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.1687822772558589,
-        "raw_probability": 0.1687822772558589,
-        "reason": "Poisson expected hit rate is 16.9%"
-      },
-      {
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.1916945041946785,
-        "raw_probability": 0.1916945041946785,
-        "reason": "Poisson expected hit rate is 19.2%"
-      }
-    ],
-    "home": "Kingborough Lions",
-    "kickoff": "2026-08-01 06:30:00",
-    "league": "AuT",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "short odds, acceptable draw risk",
-    "market_type": "1x2",
-    "match": "Kingborough Lions vs Launceston United",
-    "min_lead_minutes": 30,
-    "model_version": null,
-    "n_way": 2,
-    "odds": 1.01,
-    "odds_match_method": "fallback",
-    "odds_match_status": "matched",
-    "odds_source": "forebet_best",
-    "odds_tier": "low",
-    "pick": "home",
-    "recommended_enhancement": "match_over_45",
-    "recommended_market": "keep_1x2",
-    "rule": "2way-unanimous avg_p>=70",
-    "source_weights": {},
-    "sources_used": [
-      "forebet",
-      "vitibet"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=241): Avg Goals: 3.95 | Over 2.5: 75.1% | BTTS: 37.8% | Home Over 1.5 Goals: 90.5% | Away Over 1.5 Goals: 6.6% | Top Scores: 2-0 (15.4%), 3-0 (14.1%)",
-    "veto_reason": "context VETO in ['odds_band']",
-    "vitibet_index": 9.34,
-    "w_score": 1.0
-  },
-  {
-    "as_of": "2026-07-31T05:38:45+02:00",
+    "as_of": "2026-07-31T07:09:49+02:00",
     "avg_p": 71.5,
     "away": "O'Connor Knights",
     "bookmaker": "betexplorer_best",
@@ -437,91 +302,91 @@
     "edge_rule": "2way-unanimous avg_p>=70",
     "edge_status": "certified",
     "enhancement_label": "Match Over 3.5 Goals",
-    "enhancement_probability": 0.5819,
+    "enhancement_probability": 0.5816,
     "enhancement_reason": "Poisson expected hit rate is 58.2%",
     "event_notes": [
       {
         "label": "Match Over 3.5 Goals",
         "market": "match_over_35",
-        "probability": 0.5818833831669586,
-        "raw_probability": 0.5818833831669586,
+        "probability": 0.5815885108800651,
+        "raw_probability": 0.5815885108800651,
         "reason": "Poisson expected hit rate is 58.2%"
       },
       {
         "label": "Goal Range 4-6",
         "market": "goal_range_4_6",
-        "probability": 0.4627747044480489,
-        "raw_probability": 0.4627747044480489,
+        "probability": 0.4626465534705226,
+        "raw_probability": 0.4626465534705226,
         "reason": "Poisson expected hit rate is 46.3%"
       },
       {
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9460764587525151,
-        "raw_probability": 0.9460764587525151,
+        "probability": 0.9461847389558233,
+        "raw_probability": 0.9461847389558233,
         "reason": "Combined Under 3.5 is 94.6%"
       },
       {
         "label": "Match Over 1.5 Goals",
         "market": "match_over_15",
-        "probability": 0.9299755187471579,
-        "raw_probability": 0.9299755187471579,
-        "reason": "League Over 1.5 is 89.5%, Home Over 1.5 is 96.5%, Away Over 1.5 is 94.1%"
+        "probability": 0.9300595571139045,
+        "raw_probability": 0.9300595571139045,
+        "reason": "League Over 1.5 is 89.6%, Home Over 1.5 is 96.5%, Away Over 1.5 is 94.1%"
       },
       {
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.9057079318013344,
-        "raw_probability": 0.9057079318013344,
+        "probability": 0.905854998943141,
+        "raw_probability": 0.905854998943141,
         "reason": "Home scoring rate is 96.5%"
       },
       {
         "label": "Away Team Over 0.5 Goals",
         "market": "away_over_05",
-        "probability": 0.8262042845307137,
-        "raw_probability": 0.8262042845307137,
+        "probability": 0.8255610678006142,
+        "raw_probability": 0.8255610678006142,
         "reason": "Away scoring rate is 84.3%"
       },
       {
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.38666840608146624,
-        "raw_probability": 0.38666840608146624,
-        "reason": "Poisson expected hit rate is 38.7%"
+        "probability": 0.38636773839098326,
+        "raw_probability": 0.38636773839098326,
+        "reason": "Poisson expected hit rate is 38.6%"
       },
       {
         "label": "Goal Range 6+",
         "market": "goal_range_6_plus",
-        "probability": 0.22739696057558323,
-        "raw_probability": 0.22739696057558323,
+        "probability": 0.22715169897537796,
+        "raw_probability": 0.22715169897537796,
         "reason": "Poisson expected hit rate is 22.7%"
       },
       {
         "label": "Goal Range 4-5",
         "market": "goal_range_4_5",
-        "probability": 0.3544864225913753,
-        "raw_probability": 0.3544864225913753,
+        "probability": 0.3544368119046871,
+        "raw_probability": 0.3544368119046871,
         "reason": "Poisson expected hit rate is 35.4%"
       },
       {
         "label": "Goal Range 7+",
         "market": "goal_range_7_plus",
-        "probability": 0.11910867871890962,
-        "raw_probability": 0.11910867871890962,
+        "probability": 0.1189419574095425,
+        "raw_probability": 0.1189419574095425,
         "reason": "Poisson expected hit rate is 11.9%"
       },
       {
         "label": "Exact Goals: 5",
         "market": "exact_5",
-        "probability": 0.15927144550588296,
-        "raw_probability": 0.15927144550588296,
+        "probability": 0.15921603941560528,
+        "raw_probability": 0.15921603941560528,
         "reason": "Poisson expected hit rate is 15.9%"
       },
       {
         "label": "Exact Goals: 4",
         "market": "exact_4",
-        "probability": 0.19521497708549237,
-        "raw_probability": 0.19521497708549237,
+        "probability": 0.19522077248908185,
+        "raw_probability": 0.19522077248908185,
         "reason": "Poisson expected hit rate is 19.5%"
       }
     ],
@@ -536,8 +401,8 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 2,
-    "odds": 1.05,
-    "odds_captured_at": "2026-07-31T03:47:35.569019+00:00",
+    "odds": 1.06,
+    "odds_captured_at": "2026-07-31T05:20:41.836492+00:00",
     "odds_league": "Australia: NPL ACT",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -563,7 +428,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-07-31T05:38:45+02:00",
+    "as_of": "2026-07-31T07:09:49+02:00",
     "avg_p": 74.5,
     "away": "Botafogo W",
     "bookmaker": "scoutingstats_odds",
@@ -592,43 +457,43 @@
     "edge_rule": "2way-unanimous avg_p>=70",
     "edge_status": "certified",
     "enhancement_label": "Away Team Under 3.5 Goals",
-    "enhancement_probability": 0.956,
+    "enhancement_probability": 0.9558,
     "enhancement_reason": "Combined Under 3.5 is 95.6%",
     "event_notes": [
       {
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9559600852022196,
-        "raw_probability": 0.9559600852022196,
+        "probability": 0.9557730735289642,
+        "raw_probability": 0.9557730735289642,
         "reason": "Combined Under 3.5 is 95.6%"
       },
       {
         "label": "Goal Range 2-3",
         "market": "goal_range_2_3",
-        "probability": 0.4668881194579436,
-        "raw_probability": 0.4668881194579436,
+        "probability": 0.46692369350701324,
+        "raw_probability": 0.46692369350701324,
         "reason": "Poisson expected hit rate is 46.7%"
       },
       {
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8789450120070007,
-        "raw_probability": 0.8789450120070007,
+        "probability": 0.8788305422283533,
+        "raw_probability": 0.8788305422283533,
         "reason": "Combined Under 2.5 is 87.9%"
       },
       {
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8422827963176065,
-        "raw_probability": 0.8422827963176065,
+        "probability": 0.8416971369849919,
+        "raw_probability": 0.8416971369849919,
         "reason": "Home scoring rate is 87.2%"
       },
       {
         "label": "Exact Goals: 2",
         "market": "exact_2",
-        "probability": 0.24747804504729176,
-        "raw_probability": 0.24747804504729176,
-        "reason": "Poisson expected hit rate is 24.7%"
+        "probability": 0.2475437075277226,
+        "raw_probability": 0.2475437075277226,
+        "reason": "Poisson expected hit rate is 24.8%"
       }
     ],
     "home": "Cruzeiro W",

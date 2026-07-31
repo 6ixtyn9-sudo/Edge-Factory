@@ -1,87 +1,6 @@
 [
   {
     "date": "2026-07-31",
-    "kickoff": "2026-07-31T19:00:00+02:00",
-    "home": "Sparta Praha",
-    "away": "Zlin",
-    "league": "Czech Republic: Czech Liga",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "2way-unanimous avg_p>=70",
-    "match_method": "fallback",
-    "home_key": "spartapraha",
-    "away_key": "zlin",
-    "nearby_bzzoiro_candidates": [
-      {
-        "home": "Birmingham City",
-        "away": "FC Barcelona",
-        "league": "Club Friendlies",
-        "kickoff": "2026-07-31T18:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 5.5,
-        "bookmaker": "Bet365",
-        "home_key": "birminghamcity",
-        "away_key": "fcbarcelona",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Southport FC",
-        "away": "Wigan Athletic",
-        "league": "Club Friendlies",
-        "kickoff": "2026-07-31T18:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.15,
-        "bookmaker": "Betsson",
-        "home_key": "southportfc",
-        "away_key": "wiganathletic",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Weston Super Mare",
-        "away": "Gloucester City",
-        "league": "Club Friendlies",
-        "kickoff": "2026-07-31T18:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.68,
-        "bookmaker": "Novibet",
-        "home_key": "westonsupermare",
-        "away_key": "gloucestercity",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Bromley",
-        "away": "Queens Park Rangers",
-        "league": "Club Friendlies",
-        "kickoff": "2026-07-31T18:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.65,
-        "bookmaker": "Novibet",
-        "home_key": "bromley",
-        "away_key": "queensparkrangers",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "SC O\u021belul Gala\u021bi",
-        "away": "FC Dinamo Bucure\u0219ti",
-        "league": "Superliga",
-        "kickoff": "2026-07-31T18:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.64,
-        "bookmaker": "Pinnacle",
-        "home_key": "scotelulgalati",
-        "away_key": "fcdinamobucuresti",
-        "kickoff_delta_minutes": 30
-      }
-    ],
-    "nearby_scoutingstats_candidates": []
-  },
-  {
-    "date": "2026-07-31",
     "kickoff": "2026-07-31 20:00:00",
     "home": "Dinamo Zagreb",
     "away": "Slaven Belupo",
@@ -93,6 +12,19 @@
     "home_key": "dinamozagreb",
     "away_key": "slavenbelupo",
     "nearby_bzzoiro_candidates": [
+      {
+        "home": "Dundee United",
+        "away": "Rangers",
+        "league": "Scottish Premiership",
+        "kickoff": "2026-07-31T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.9,
+        "bookmaker": "Betano",
+        "home_key": "dundeeunited",
+        "away_key": "rangers",
+        "kickoff_delta_minutes": 60
+      },
       {
         "home": "Dundee United",
         "away": "Rangers",
@@ -120,45 +52,98 @@
         "kickoff_delta_minutes": 60
       },
       {
+        "home": "Bod\u00f8/Glimt",
+        "away": "Lillestr\u00f8m SK",
+        "league": "Eliteserien",
+        "kickoff": "2026-07-31T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.27,
+        "bookmaker": "Interwetten",
+        "home_key": "bodoglimt",
+        "away_key": "lillestromsk",
+        "kickoff_delta_minutes": 60
+      },
+      {
         "home": "Birmingham City",
         "away": "FC Barcelona",
         "league": "Club Friendlies",
         "kickoff": "2026-07-31T18:45:00Z",
         "market": "1x2",
         "selection": "home",
+        "odds": 6.4,
+        "bookmaker": "Betsson",
+        "home_key": "birminghamcity",
+        "away_key": "fcbarcelona",
+        "kickoff_delta_minutes": 75
+      }
+    ],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Dundee United",
+        "away": "Rangers",
+        "league": "Premiership",
+        "kickoff": "2026-07-31T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "dundeeunited",
+        "away_key": "rangers",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Drogheda United",
+        "away": "Shamrock Rovers",
+        "league": "Premier Division",
+        "kickoff": "2026-07-31T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "droghedaunited",
+        "away_key": "shamrockrovers",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Bod\u00f8 / Glimt",
+        "away": "Lillestr\u00f8m",
+        "league": "Eliteserien",
+        "kickoff": "2026-07-31T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.25,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "bodoglimt",
+        "away_key": "lillestrom",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Birmingham City",
+        "away": "FC Barcelona",
+        "league": "Club Friendlies 1",
+        "kickoff": "2026-07-31T18:45:00Z",
+        "market": "1x2",
+        "selection": "home",
         "odds": 5.5,
-        "bookmaker": "Bet365",
+        "bookmaker": "scoutingstats_odds",
         "home_key": "birminghamcity",
         "away_key": "fcbarcelona",
         "kickoff_delta_minutes": 75
       },
       {
-        "home": "Southport FC",
+        "home": "Southport",
         "away": "Wigan Athletic",
-        "league": "Club Friendlies",
+        "league": "Club Friendlies 3",
         "kickoff": "2026-07-31T18:45:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 4.15,
-        "bookmaker": "Betsson",
-        "home_key": "southportfc",
+        "odds": 3.4,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "southport",
         "away_key": "wiganathletic",
         "kickoff_delta_minutes": 75
-      },
-      {
-        "home": "Weston Super Mare",
-        "away": "Gloucester City",
-        "league": "Club Friendlies",
-        "kickoff": "2026-07-31T18:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.68,
-        "bookmaker": "Novibet",
-        "home_key": "westonsupermare",
-        "away_key": "gloucestercity",
-        "kickoff_delta_minutes": 75
       }
-    ],
-    "nearby_scoutingstats_candidates": []
+    ]
   }
 ]

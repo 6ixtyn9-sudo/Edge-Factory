@@ -31,21 +31,28 @@
       "wins": 5
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.878788,
-      "priced_picks": 33,
-      "roi": 0.109394,
-      "settled_picks": 33,
-      "wins": 29
+      "hit_rate": 0.888889,
+      "priced_picks": 36,
+      "roi": 0.115417,
+      "settled_picks": 36,
+      "wins": 32
     },
     "WATCHLIST_UNKNOWN_CTX": {
-      "hit_rate": 0.833333,
-      "priced_picks": 6,
-      "roi": -0.071667,
-      "settled_picks": 6,
-      "wins": 5
+      "hit_rate": 0.875,
+      "priced_picks": 8,
+      "roi": 0.0025,
+      "settled_picks": 8,
+      "wins": 7
     }
   },
   "by_odds_match_method": {
+    "alias_fuzzy": {
+      "hit_rate": 1.0,
+      "priced_picks": 2,
+      "roi": 0.225,
+      "settled_picks": 2,
+      "wins": 2
+    },
     "betexplorer": {
       "hit_rate": 0.870968,
       "priced_picks": 31,
@@ -54,11 +61,11 @@
       "wins": 27
     },
     "exact": {
-      "hit_rate": 0.846154,
-      "priced_picks": 13,
-      "roi": 0.194615,
-      "settled_picks": 13,
-      "wins": 11
+      "hit_rate": 0.875,
+      "priced_picks": 16,
+      "roi": 0.192187,
+      "settled_picks": 16,
+      "wins": 14
     },
     "fallback": {
       "hit_rate": 1.0,
@@ -78,10 +85,10 @@
     },
     "bzzoiro_odds": {
       "hit_rate": 1.0,
-      "priced_picks": 8,
-      "roi": 0.47,
-      "settled_picks": 8,
-      "wins": 8
+      "priced_picks": 13,
+      "roi": 0.365769,
+      "settled_picks": 13,
+      "wins": 13
     },
     "forebet_best": {
       "hit_rate": 1.0,
@@ -100,18 +107,18 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.933333,
-      "priced_picks": 15,
-      "roi": 0.315333,
-      "settled_picks": 15,
-      "wins": 14
+      "hit_rate": 0.941176,
+      "priced_picks": 17,
+      "roi": 0.304706,
+      "settled_picks": 17,
+      "wins": 16
     },
     "3way-unanimous avg_p>=65": {
-      "hit_rate": 0.666667,
-      "priced_picks": 6,
-      "roi": -0.181667,
-      "settled_picks": 6,
-      "wins": 4
+      "hit_rate": 0.777778,
+      "priced_picks": 9,
+      "roi": -0.060556,
+      "settled_picks": 9,
+      "wins": 7
     },
     "3way-unanimous home-only avg_p>=60": {
       "hit_rate": 0.888889,
@@ -132,6 +139,11 @@
   "end": "2026-07-31",
   "enhancements_audit": {
     "by_enhancement": {
+      "away_under_35": {
+        "hit_rate": 1.0,
+        "hits": 5,
+        "recommended": 5
+      },
       "home_under_45": {
         "hit_rate": 1.0,
         "hits": 1,
@@ -139,26 +151,26 @@
       }
     },
     "hit_rate": 1.0,
-    "total_hits": 1,
-    "total_recommended": 1
+    "total_hits": 6,
+    "total_recommended": 6
   },
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.866667,
-    "priced_picks": 45,
-    "roi": 0.136444,
-    "settled_picks": 45,
-    "wins": 39
+    "hit_rate": 0.88,
+    "priced_picks": 50,
+    "roi": 0.1427,
+    "settled_picks": 50,
+    "wins": 44
   },
   "same_day_cutoff": "2026-07-31",
   "same_day_excluded": 2,
   "secondary_stats": {
-    "btts_total": 45,
-    "btts_wins": 23,
-    "over25_total": 45,
-    "over25_wins": 30,
-    "team_o15_total": 45,
-    "team_o15_wins": 36
+    "btts_total": 50,
+    "btts_wins": 25,
+    "over25_total": 50,
+    "over25_wins": 35,
+    "team_o15_total": 50,
+    "team_o15_wins": 41
   },
   "settled_ledger": [
     {
@@ -1161,102 +1173,174 @@
       },
       "selection": "home",
       "won": true
+    },
+    {
+      "avg_p": 80.0,
+      "date": "2026-07-30",
+      "gs": 0,
+      "hs": 5,
+      "match": "Benfica vs FC ST. Gallen",
+      "odds": 1.17,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.077,
+        "away_o15_hit": true,
+        "btts_expected": 0.34600000000000003,
+        "btts_hit": true,
+        "home_o15_expected": 0.9079999999999999,
+        "home_o15_hit": true,
+        "over25_expected": 0.738,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.16899999999999998,
+            "score": "2-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.131,
+            "score": "3-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 71.8,
+      "date": "2026-07-30",
+      "gs": 1,
+      "hs": 4,
+      "match": "Hibernian vs Malisheva",
+      "odds": 1.25,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.09300000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.39,
+        "btts_hit": false,
+        "home_o15_expected": 0.883,
+        "home_o15_hit": true,
+        "over25_expected": 0.7490000000000001,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.138,
+            "score": "3-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.134,
+            "score": "2-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 68.4,
+      "date": "2026-07-30",
+      "gs": 0,
+      "hs": 4,
+      "match": "FC Sion vs BATE Borisov",
+      "odds": 1.125,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.102,
+        "away_o15_hit": true,
+        "btts_expected": 0.397,
+        "btts_hit": true,
+        "home_o15_expected": 0.867,
+        "home_o15_hit": true,
+        "over25_expected": 0.7120000000000001,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.155,
+            "score": "2-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.133,
+            "score": "1-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 73.0,
+      "date": "2026-07-30",
+      "gs": 0,
+      "hs": 4,
+      "match": "SC Braga vs \u017delezni\u010dar Pan\u010devo",
+      "odds": 1.21,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.098,
+        "away_o15_hit": true,
+        "btts_expected": 0.42100000000000004,
+        "btts_hit": true,
+        "home_o15_expected": 0.877,
+        "home_o15_hit": true,
+        "over25_expected": 0.755,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.125,
+            "score": "3-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.12300000000000001,
+            "score": "1-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 71.5,
+      "date": "2026-07-30",
+      "gs": 1,
+      "hs": 3,
+      "match": "Austria Vienna vs FK Liepaja",
+      "odds": 1.24,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.102,
+        "away_o15_hit": true,
+        "btts_expected": 0.426,
+        "btts_hit": false,
+        "home_o15_expected": 0.872,
+        "home_o15_hit": true,
+        "over25_expected": 0.7290000000000001,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.14300000000000002,
+            "score": "2-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.132,
+            "score": "3-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
     }
   ],
   "start": "2026-07-02",
-  "unmatched_examples": [
-    {
-      "away": "FC ST. Gallen",
-      "away_key_candidates": [
-        "stgallen"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-07-30",
-      "home": "Benfica",
-      "home_key_candidates": [
-        "benfica",
-        "slbenfica"
-      ],
-      "league": "World UEFA Europa League",
-      "match": "Benfica vs FC ST. Gallen",
-      "odds": 1.17,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "3way-unanimous avg_p>=65"
-    },
-    {
-      "away": "Malisheva",
-      "away_key_candidates": [
-        "malisheva"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-07-30",
-      "home": "Hibernian",
-      "home_key_candidates": [
-        "hibernian"
-      ],
-      "league": "World UEFA Europa Conference League",
-      "match": "Hibernian vs Malisheva",
-      "odds": 1.25,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "3way-unanimous avg_p>=65"
-    },
-    {
-      "away": "BATE Borisov",
-      "away_key_candidates": [
-        "bateboris"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-07-30",
-      "home": "FC Sion",
-      "home_key_candidates": [
-        "sion"
-      ],
-      "league": "ECL",
-      "match": "FC Sion vs BATE Borisov",
-      "odds": 1.125,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "3way-unanimous avg_p>=65"
-    },
-    {
-      "away": "\u017delezni\u010dar Pan\u010devo",
-      "away_key_candidates": [
-        "elezniarp",
-        "zeleznica"
-      ],
-      "bucket": "WATCHLIST_UNKNOWN_CTX",
-      "date": "2026-07-30",
-      "home": "SC Braga",
-      "home_key_candidates": [
-        "braga"
-      ],
-      "league": "World UEFA Europa Conference League",
-      "match": "SC Braga vs \u017delezni\u010dar Pan\u010devo",
-      "odds": 1.21,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "FK Liepaja",
-      "away_key_candidates": [
-        "fkliepaja"
-      ],
-      "bucket": "WATCHLIST_UNKNOWN_CTX",
-      "date": "2026-07-30",
-      "home": "Austria Vienna",
-      "home_key_candidates": [
-        "austriavi"
-      ],
-      "league": "World UEFA Europa Conference League",
-      "match": "Austria Vienna vs FK Liepaja",
-      "odds": 1.24,
-      "pick": "home",
-      "reason": "unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    }
-  ],
-  "unmatched_result_picks": 5
+  "unmatched_examples": [],
+  "unmatched_result_picks": 0
 }
