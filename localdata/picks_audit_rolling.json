@@ -19,9 +19,10 @@
     "2026-07-27",
     "2026-07-28",
     "2026-07-30",
-    "2026-07-31"
+    "2026-07-31",
+    "2026-08-01"
   ],
-  "archived_pick_rows": 54,
+  "archived_pick_rows": 59,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.833333,
@@ -31,11 +32,11 @@
       "wins": 5
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.888889,
-      "priced_picks": 36,
-      "roi": 0.115417,
-      "settled_picks": 36,
-      "wins": 32
+      "hit_rate": 0.875,
+      "priced_picks": 40,
+      "roi": 0.100125,
+      "settled_picks": 40,
+      "wins": 35
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.875,
@@ -47,18 +48,18 @@
   },
   "by_odds_match_method": {
     "alias_fuzzy": {
-      "hit_rate": 1.0,
-      "priced_picks": 2,
-      "roi": 0.225,
-      "settled_picks": 2,
+      "hit_rate": 0.666667,
+      "priced_picks": 3,
+      "roi": -0.183333,
+      "settled_picks": 3,
       "wins": 2
     },
     "betexplorer": {
-      "hit_rate": 0.870968,
-      "priced_picks": 31,
-      "roi": 0.109355,
-      "settled_picks": 31,
-      "wins": 27
+      "hit_rate": 0.882353,
+      "priced_picks": 34,
+      "roi": 0.124706,
+      "settled_picks": 34,
+      "wins": 30
     },
     "exact": {
       "hit_rate": 0.875,
@@ -77,17 +78,17 @@
   },
   "by_odds_source": {
     "betexplorer_odds": {
-      "hit_rate": 0.870968,
-      "priced_picks": 31,
-      "roi": 0.109355,
-      "settled_picks": 31,
-      "wins": 27
+      "hit_rate": 0.882353,
+      "priced_picks": 34,
+      "roi": 0.124706,
+      "settled_picks": 34,
+      "wins": 30
     },
     "bzzoiro_odds": {
-      "hit_rate": 1.0,
-      "priced_picks": 13,
-      "roi": 0.365769,
-      "settled_picks": 13,
+      "hit_rate": 0.928571,
+      "priced_picks": 14,
+      "roi": 0.268214,
+      "settled_picks": 14,
       "wins": 13
     },
     "forebet_best": {
@@ -107,18 +108,18 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.941176,
-      "priced_picks": 17,
-      "roi": 0.304706,
-      "settled_picks": 17,
-      "wins": 16
+      "hit_rate": 0.944444,
+      "priced_picks": 18,
+      "roi": 0.301667,
+      "settled_picks": 18,
+      "wins": 17
     },
     "3way-unanimous avg_p>=65": {
-      "hit_rate": 0.777778,
-      "priced_picks": 9,
-      "roi": -0.060556,
-      "settled_picks": 9,
-      "wins": 7
+      "hit_rate": 0.75,
+      "priced_picks": 12,
+      "roi": -0.07875,
+      "settled_picks": 12,
+      "wins": 9
     },
     "3way-unanimous home-only avg_p>=60": {
       "hit_rate": 0.888889,
@@ -135,8 +136,8 @@
       "wins": 13
     }
   },
-  "eligible_prior_picks": 50,
-  "end": "2026-07-31",
+  "eligible_prior_picks": 54,
+  "end": "2026-08-01",
   "enhancements_audit": {
     "by_enhancement": {
       "away_under_35": {
@@ -148,29 +149,34 @@
         "hit_rate": 1.0,
         "hits": 1,
         "recommended": 1
+      },
+      "match_over_25": {
+        "hit_rate": 0.5,
+        "hits": 2,
+        "recommended": 4
       }
     },
-    "hit_rate": 1.0,
-    "total_hits": 6,
-    "total_recommended": 6
+    "hit_rate": 0.8,
+    "total_hits": 8,
+    "total_recommended": 10
   },
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.88,
-    "priced_picks": 50,
-    "roi": 0.1427,
-    "settled_picks": 50,
-    "wins": 44
+    "hit_rate": 0.87037,
+    "priced_picks": 54,
+    "roi": 0.129352,
+    "settled_picks": 54,
+    "wins": 47
   },
-  "same_day_cutoff": "2026-07-31",
-  "same_day_excluded": 4,
+  "same_day_cutoff": "2026-08-01",
+  "same_day_excluded": 5,
   "secondary_stats": {
-    "btts_total": 50,
-    "btts_wins": 25,
-    "over25_total": 50,
-    "over25_wins": 35,
-    "team_o15_total": 50,
-    "team_o15_wins": 41
+    "btts_total": 54,
+    "btts_wins": 27,
+    "over25_total": 54,
+    "over25_wins": 37,
+    "team_o15_total": 54,
+    "team_o15_wins": 44
   },
   "settled_ledger": [
     {
@@ -1338,9 +1344,141 @@
       },
       "selection": "home",
       "won": true
+    },
+    {
+      "avg_p": 77.0,
+      "date": "2026-07-31",
+      "gs": 0,
+      "hs": 2,
+      "match": "Dinamo Zagreb vs Slaven Belupo",
+      "odds": 1.25,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.091,
+        "away_o15_hit": true,
+        "btts_expected": 0.436,
+        "btts_hit": true,
+        "home_o15_expected": 0.9109999999999999,
+        "home_o15_hit": true,
+        "over25_expected": 0.784,
+        "over25_hit": false,
+        "top_scores": [
+          {
+            "hit": true,
+            "pct": 0.127,
+            "score": "2-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.11599999999999999,
+            "score": "3-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 76.3,
+      "date": "2026-07-31",
+      "gs": 1,
+      "hs": 3,
+      "match": "Sparta Praha vs Zlin",
+      "odds": 1.23,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.08900000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.41200000000000003,
+        "btts_hit": false,
+        "home_o15_expected": 0.9,
+        "home_o15_hit": true,
+        "over25_expected": 0.795,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.14400000000000002,
+            "score": "3-0"
+          },
+          {
+            "hit": true,
+            "pct": 0.105,
+            "score": "3-1"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 68.0,
+      "date": "2026-07-31",
+      "gs": 3,
+      "hs": 0,
+      "match": "Finn Harps vs Cork City",
+      "odds": 1.37,
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.847,
+        "away_o15_hit": true,
+        "btts_expected": 0.344,
+        "btts_hit": true,
+        "home_o15_expected": 0.07,
+        "home_o15_hit": true,
+        "over25_expected": 0.644,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.203,
+            "score": "0-2"
+          },
+          {
+            "hit": false,
+            "pct": 0.153,
+            "score": "0-1"
+          }
+        ]
+      },
+      "selection": "away",
+      "won": true
+    },
+    {
+      "avg_p": 65.0,
+      "date": "2026-07-31",
+      "gs": 1,
+      "hs": 1,
+      "match": "Dundee Utd vs Rangers",
+      "odds": 1.65,
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.863,
+        "away_o15_hit": false,
+        "btts_expected": 0.397,
+        "btts_hit": false,
+        "home_o15_expected": 0.096,
+        "home_o15_hit": true,
+        "over25_expected": 0.675,
+        "over25_hit": false,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.188,
+            "score": "0-2"
+          },
+          {
+            "hit": false,
+            "pct": 0.13699999999999998,
+            "score": "0-1"
+          }
+        ]
+      },
+      "selection": "away",
+      "won": false
     }
   ],
-  "start": "2026-07-02",
+  "start": "2026-07-03",
   "unmatched_examples": [],
   "unmatched_result_picks": 0
 }
