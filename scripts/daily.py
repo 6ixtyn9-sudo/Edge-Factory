@@ -612,10 +612,28 @@ def run_pipeline(
             if PICKS_TODAY_FILE.exists():
                 current_picks = load_picks_file()
                 archive_picks_by_kickoff(current_picks, target_date)
-                target_picks_text = PICKS_TODAY_FILE.read_text()
+                # STACKING: dispatch the merged archive (prior runs + fresh) instead
+                # of the fresh snapshot, so bets found in earlier runs are never
+                # dropped from the official record, reports, CLV, or WhatsApp dispatch.
+                if target_archive.exists():
+                    target_picks_text = target_archive.read_text()
+                    try:
+                        _stacked = json.loads(target_picks_text)
+                    except Exception:
+                        _stacked = []
+                    _n = len(_stacked) if isinstance(_stacked, list) else "?"
+                    print(f">>> stacked ledger {target_date}: {_n} official picks "
+                          f"(prior archive + fresh merged; fresh had {len(current_picks)})")
+                    restore_target_picks(target_picks_text)
+                else:
+                    target_picks_text = PICKS_TODAY_FILE.read_text()
             else:
-                target_picks_text = None
-            
+                # Fresh run produced nothing (scrape/engine failure): never lose the stack.
+                target_picks_text = target_archive.read_text() if target_archive.exists() else None
+                if target_picks_text:
+                    print(f">>> picks_today empty; restored stacked ledger {target_archive}")
+                    restore_target_picks(target_picks_text)
+
             save_morning_baseline(target_date, target_picks_text, overwrite=force_repick)
 
         run_soft(
