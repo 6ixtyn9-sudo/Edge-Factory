@@ -129,7 +129,6 @@
     "odds_source": "betexplorer_odds",
     "odds_tier": "low",
     "pick": "home",
-    "picked_for": "2026-08-02",
     "recommended_enhancement": "match_over_15",
     "recommended_market": "avoid_raw_1x2",
     "rule": "2way-unanimous avg_p>=70",
@@ -287,7 +286,6 @@
     "odds_source": "scoutingstats_odds",
     "odds_tier": "low",
     "pick": "home",
-    "picked_for": "2026-08-02",
     "recommended_enhancement": "match_over_15",
     "recommended_market": "avoid_raw_1x2",
     "rule": "2way-unanimous avg_p>=70",
@@ -407,7 +405,6 @@
     "odds_source": "bzzoiro_odds",
     "odds_tier": "low",
     "pick": "home",
-    "picked_for": "2026-08-02",
     "recommended_enhancement": "match_over_25",
     "recommended_market": "avoid_raw_1x2",
     "rule": "3way-unanimous avg_p>=65",
@@ -532,7 +529,6 @@
     "odds_source": null,
     "odds_tier": "low",
     "pick": "home",
-    "picked_for": "2026-08-02",
     "recommended_enhancement": "match_over_25",
     "recommended_market": "unknown",
     "rule": "2way-unanimous avg_p>=70",
@@ -687,7 +683,6 @@
     "odds_source": "betexplorer_odds",
     "odds_tier": "low",
     "pick": "home",
-    "picked_for": "2026-08-02",
     "recommended_enhancement": "match_over_15",
     "recommended_market": "keep_1x2",
     "rule": "2way-unanimous avg_p>=70",
@@ -699,141 +694,6 @@
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=625): Avg Goals: 3.97 | Over 2.5: 78.6% | BTTS: 43.4% | Home Over 1.5 Goals: 90.6% | Away Over 1.5 Goals: 9.9% | Top Scores: 2-0 (12.0%), 3-0 (11.8%)",
     "vitibet_index": 5.09,
-    "w_score": 1.0
-  },
-  {
-    "as_of": "2026-08-02T04:47:42+02:00",
-    "avg_p": 66.3,
-    "away": "Athlone Town",
-    "bookmaker": "betexplorer_best",
-    "bucket": "SKIPPED_VETO",
-    "confidence": null,
-    "ctx": {
-      "away_norm": "athlonetown",
-      "comp_type_name": "league",
-      "competition_type": "CAUTION",
-      "home_norm": "corkcity",
-      "league": "ALLOW",
-      "league_key": "ireland first division",
-      "league_raw": "Ie2",
-      "niche": "UNKNOWN",
-      "odds_band": "VETO",
-      "odds_band_name": "1.35-1.50",
-      "side_role": "home",
-      "team_a": "ALLOW",
-      "team_h": "UNKNOWN"
-    },
-    "date": "2026-08-03",
-    "decay_verdict": "HEALTHY",
-    "display_rule": "3WAY-UNANIMOUS\u226565",
-    "draw_risk_flag": "HIGH",
-    "edge_n_way": 3,
-    "edge_rule": "3way-unanimous avg_p>=65",
-    "edge_status": "certified",
-    "enhancement_label": "Home Win + Over 2.5",
-    "enhancement_probability": 0.4964,
-    "enhancement_reason": "Mathematical expectation is 49.6%",
-    "event_notes": [
-      {
-        "label": "Home Win + Over 2.5",
-        "market": "match_over_25",
-        "probability": 0.49639093579217985,
-        "raw_probability": 0.49639093579217985,
-        "reason": "Mathematical expectation is 49.6%"
-      },
-      {
-        "label": "Goal Range 2-3",
-        "market": "goal_range_2_3",
-        "probability": 0.4655188268567343,
-        "raw_probability": 0.4655188268567343,
-        "reason": "Poisson expected hit rate is 46.6%"
-      },
-      {
-        "label": "Home Win + BTTS (Yes)",
-        "market": "btts_yes",
-        "probability": 0.4985602927643256,
-        "raw_probability": 0.4985602927643256,
-        "reason": "Mathematical expectation is 49.9%"
-      },
-      {
-        "label": "Away Team Under 3.5 Goals",
-        "market": "away_under_35",
-        "probability": 0.9362702620815028,
-        "raw_probability": 0.9362702620815028,
-        "reason": "Combined Under 3.5 is 93.6%"
-      },
-      {
-        "label": "Home Team Under 3.5 Goals",
-        "market": "home_under_35",
-        "probability": 0.9037558759753723,
-        "raw_probability": 0.9037558759753723,
-        "reason": "Combined Under 3.5 is 90.4%"
-      },
-      {
-        "label": "Away Team Under 2.5 Goals",
-        "market": "away_under_25",
-        "probability": 0.877001969398576,
-        "raw_probability": 0.877001969398576,
-        "reason": "Combined Under 2.5 is 87.7%"
-      },
-      {
-        "label": "Both Teams to Score - No (BTTS-No)",
-        "market": "btts_no",
-        "probability": 0.5014397072356744,
-        "raw_probability": 0.5014397072356744,
-        "reason": "League BTTS is 53.0%, Home BTTS is 44.8%, Away BTTS is 50.7%"
-      },
-      {
-        "label": "Exact Goals: 2",
-        "market": "exact_2",
-        "probability": 0.2451062402615511,
-        "raw_probability": 0.2451062402615511,
-        "reason": "Poisson expected hit rate is 24.5%"
-      },
-      {
-        "label": "Exact Goals: 3",
-        "market": "exact_3",
-        "probability": 0.22041258659518317,
-        "raw_probability": 0.22041258659518317,
-        "reason": "Poisson expected hit rate is 22.0%"
-      }
-    ],
-    "home": "Cork City",
-    "kickoff": "2026-08-03 18:00:00",
-    "league": "Ie2",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
-    "market_type": "1x2",
-    "match": "Cork City vs Athlone Town",
-    "min_lead_minutes": 30,
-    "model_version": null,
-    "n_way": 3,
-    "odds": 1.39,
-    "odds_captured_at": "2026-08-02T02:58:43.274788+00:00",
-    "odds_league": "Ireland: Division 1",
-    "odds_match_method": "betexplorer",
-    "odds_match_status": "matched",
-    "odds_replaced": {
-      "odds": 1.36,
-      "source": "forebet_best"
-    },
-    "odds_source": "betexplorer_odds",
-    "odds_tier": "low",
-    "pick": "home",
-    "recommended_enhancement": "match_over_25",
-    "recommended_market": "avoid_raw_1x2",
-    "rule": "3way-unanimous avg_p>=65",
-    "source_weights": {},
-    "sources_used": [
-      "forebet",
-      "statarea",
-      "vitibet"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1900): Avg Goals: 3.50 | Over 2.5: 68.1% | BTTS: 39.5% | Home Over 1.5 Goals: 85.4% | Away Over 1.5 Goals: 9.6% | Top Scores: 2-0 (17.4%), 1-0 (14.6%)",
-    "veto_reason": "context VETO in ['odds_band']",
-    "vitibet_index": 2.75,
     "w_score": 1.0
   }
 ]

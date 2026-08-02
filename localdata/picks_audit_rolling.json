@@ -20,9 +20,10 @@
     "2026-07-28",
     "2026-07-30",
     "2026-07-31",
-    "2026-08-01"
+    "2026-08-01",
+    "2026-08-02"
   ],
-  "archived_pick_rows": 59,
+  "archived_pick_rows": 64,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.833333,
@@ -32,18 +33,18 @@
       "wins": 5
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.875,
-      "priced_picks": 40,
-      "roi": 0.100125,
-      "settled_picks": 40,
-      "wins": 35
+      "hit_rate": 0.880952,
+      "priced_picks": 42,
+      "roi": 0.117738,
+      "settled_picks": 42,
+      "wins": 37
     },
     "WATCHLIST_UNKNOWN_CTX": {
-      "hit_rate": 0.875,
-      "priced_picks": 8,
-      "roi": 0.0025,
-      "settled_picks": 8,
-      "wins": 7
+      "hit_rate": 0.818182,
+      "priced_picks": 11,
+      "roi": -0.049091,
+      "settled_picks": 11,
+      "wins": 9
     }
   },
   "by_odds_match_method": {
@@ -55,71 +56,71 @@
       "wins": 2
     },
     "betexplorer": {
-      "hit_rate": 0.882353,
-      "priced_picks": 34,
-      "roi": 0.124706,
-      "settled_picks": 34,
-      "wins": 30
+      "hit_rate": 0.888889,
+      "priced_picks": 36,
+      "roi": 0.134722,
+      "settled_picks": 36,
+      "wins": 32
     },
     "exact": {
-      "hit_rate": 0.875,
-      "priced_picks": 16,
-      "roi": 0.192187,
-      "settled_picks": 16,
-      "wins": 14
+      "hit_rate": 0.888889,
+      "priced_picks": 18,
+      "roi": 0.213611,
+      "settled_picks": 18,
+      "wins": 16
     },
     "fallback": {
-      "hit_rate": 1.0,
-      "priced_picks": 1,
-      "roi": 0.22,
-      "settled_picks": 1,
+      "hit_rate": 0.5,
+      "priced_picks": 2,
+      "roi": -0.39,
+      "settled_picks": 2,
       "wins": 1
     }
   },
   "by_odds_source": {
     "betexplorer_odds": {
-      "hit_rate": 0.882353,
-      "priced_picks": 34,
-      "roi": 0.124706,
-      "settled_picks": 34,
-      "wins": 30
+      "hit_rate": 0.888889,
+      "priced_picks": 36,
+      "roi": 0.134722,
+      "settled_picks": 36,
+      "wins": 32
     },
     "bzzoiro_odds": {
-      "hit_rate": 0.928571,
-      "priced_picks": 14,
-      "roi": 0.268214,
-      "settled_picks": 14,
-      "wins": 13
+      "hit_rate": 0.933333,
+      "priced_picks": 15,
+      "roi": 0.287,
+      "settled_picks": 15,
+      "wins": 14
     },
     "forebet_best": {
-      "hit_rate": 1.0,
-      "priced_picks": 1,
-      "roi": 0.22,
-      "settled_picks": 1,
+      "hit_rate": 0.5,
+      "priced_picks": 2,
+      "roi": -0.39,
+      "settled_picks": 2,
       "wins": 1
     },
     "scoutingstats_odds": {
-      "hit_rate": 0.6,
-      "priced_picks": 5,
-      "roi": -0.246,
-      "settled_picks": 5,
-      "wins": 3
+      "hit_rate": 0.666667,
+      "priced_picks": 6,
+      "roi": -0.168333,
+      "settled_picks": 6,
+      "wins": 4
     }
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.944444,
-      "priced_picks": 18,
-      "roi": 0.301667,
-      "settled_picks": 18,
-      "wins": 17
+      "hit_rate": 0.947368,
+      "priced_picks": 19,
+      "roi": 0.297368,
+      "settled_picks": 19,
+      "wins": 18
     },
     "3way-unanimous avg_p>=65": {
       "hit_rate": 0.75,
-      "priced_picks": 12,
-      "roi": -0.07875,
-      "settled_picks": 12,
-      "wins": 9
+      "priced_picks": 16,
+      "roi": -0.049063,
+      "settled_picks": 16,
+      "wins": 12
     },
     "3way-unanimous home-only avg_p>=60": {
       "hit_rate": 0.888889,
@@ -136,8 +137,8 @@
       "wins": 13
     }
   },
-  "eligible_prior_picks": 54,
-  "end": "2026-08-01",
+  "eligible_prior_picks": 59,
+  "end": "2026-08-02",
   "enhancements_audit": {
     "by_enhancement": {
       "away_under_35": {
@@ -145,38 +146,48 @@
         "hits": 5,
         "recommended": 5
       },
+      "goal_range_2_3": {
+        "hit_rate": 0.0,
+        "hits": 0,
+        "recommended": 1
+      },
       "home_under_45": {
         "hit_rate": 1.0,
         "hits": 1,
         "recommended": 1
       },
+      "match_over_15": {
+        "hit_rate": 0.0,
+        "hits": 0,
+        "recommended": 1
+      },
       "match_over_25": {
-        "hit_rate": 0.5,
-        "hits": 2,
-        "recommended": 4
+        "hit_rate": 0.571429,
+        "hits": 4,
+        "recommended": 7
       }
     },
-    "hit_rate": 0.8,
-    "total_hits": 8,
-    "total_recommended": 10
+    "hit_rate": 0.666667,
+    "total_hits": 10,
+    "total_recommended": 15
   },
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.87037,
-    "priced_picks": 54,
-    "roi": 0.129352,
-    "settled_picks": 54,
-    "wins": 47
+    "hit_rate": 0.864407,
+    "priced_picks": 59,
+    "roi": 0.124831,
+    "settled_picks": 59,
+    "wins": 51
   },
-  "same_day_cutoff": "2026-08-01",
+  "same_day_cutoff": "2026-08-02",
   "same_day_excluded": 5,
   "secondary_stats": {
-    "btts_total": 54,
-    "btts_wins": 27,
-    "over25_total": 54,
-    "over25_wins": 37,
-    "team_o15_total": 54,
-    "team_o15_wins": 44
+    "btts_total": 59,
+    "btts_wins": 29,
+    "over25_total": 59,
+    "over25_wins": 40,
+    "team_o15_total": 59,
+    "team_o15_wins": 48
   },
   "settled_ledger": [
     {
@@ -1476,9 +1487,174 @@
       },
       "selection": "away",
       "won": false
+    },
+    {
+      "avg_p": 72.3,
+      "date": "2026-08-01",
+      "gs": 0,
+      "hs": 4,
+      "match": "Universitatea Craiova vs Petrolul Ploiesti",
+      "odds": 1.55,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.094,
+        "away_o15_hit": true,
+        "btts_expected": 0.395,
+        "btts_hit": true,
+        "home_o15_expected": 0.8859999999999999,
+        "home_o15_hit": true,
+        "over25_expected": 0.757,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.146,
+            "score": "3-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.128,
+            "score": "2-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 69.7,
+      "date": "2026-08-01",
+      "gs": 4,
+      "hs": 3,
+      "match": "Gandzasar vs Ararat-Armenia",
+      "odds": 1.39,
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.8340000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.32299999999999995,
+        "btts_hit": false,
+        "home_o15_expected": 0.077,
+        "home_o15_hit": false,
+        "over25_expected": 0.653,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.18100000000000002,
+            "score": "0-2"
+          },
+          {
+            "hit": false,
+            "pct": 0.166,
+            "score": "0-1"
+          }
+        ]
+      },
+      "selection": "away",
+      "won": true
+    },
+    {
+      "avg_p": 74.5,
+      "date": "2026-08-01",
+      "gs": 0,
+      "hs": 4,
+      "match": "Cruzeiro W vs Botafogo W",
+      "odds": 1.22,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.092,
+        "away_o15_hit": true,
+        "btts_expected": 0.418,
+        "btts_hit": true,
+        "home_o15_expected": 0.8740000000000001,
+        "home_o15_hit": true,
+        "over25_expected": 0.746,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.128,
+            "score": "2-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.126,
+            "score": "1-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 69.0,
+      "date": "2026-08-01",
+      "gs": 0,
+      "hs": 2,
+      "match": "Volna Nizhegorodskaya vs Arsenal-2 Tula",
+      "odds": 1.22,
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.102,
+        "away_o15_hit": true,
+        "btts_expected": 0.39899999999999997,
+        "btts_hit": true,
+        "home_o15_expected": 0.871,
+        "home_o15_hit": true,
+        "over25_expected": 0.718,
+        "over25_hit": false,
+        "top_scores": [
+          {
+            "hit": true,
+            "pct": 0.153,
+            "score": "2-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.134,
+            "score": "3-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": true
+    },
+    {
+      "avg_p": 69.0,
+      "date": "2026-08-01",
+      "gs": 1,
+      "hs": 1,
+      "match": "Monaro Panthers vs O'Connor Knights",
+      "odds": 1.09,
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.102,
+        "away_o15_hit": true,
+        "btts_expected": 0.39899999999999997,
+        "btts_hit": false,
+        "home_o15_expected": 0.871,
+        "home_o15_hit": false,
+        "over25_expected": 0.718,
+        "over25_hit": false,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.153,
+            "score": "2-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.134,
+            "score": "3-0"
+          }
+        ]
+      },
+      "selection": "home",
+      "won": false
     }
   ],
-  "start": "2026-07-03",
+  "start": "2026-07-04",
   "unmatched_examples": [],
   "unmatched_result_picks": 0
 }
