@@ -177,3 +177,32 @@ def test_stack_dispatch_never_drops_prior_bets(tmp_path):
         assert "Dinamo Brest vs Belshina" in matches
         cska = next(p for p in merged if p["match"] == "CSKA Sofia vs Dunav Ruse")
         assert cska["odds"] == 1.31, "prior bet must be retained exactly as emitted"
+
+
+def test_match_market_key_folds_accents():
+    """Accent variants of the same team must collapse to one ledger key, so a
+    re-scrape spelling the fixture differently cannot double-enter the stack."""
+    a = daily.match_market_key(
+        {"home": "Strømmen", "away": "Kongsvinger", "market": "1x2"}
+    )
+    b = daily.match_market_key(
+        {"home": "Strommen", "away": "Kongsvinger IL", "market": "1x2"}
+    )
+    assert a == b, f"accent variant produced different keys: {a} vs {b}"
+    # And a genuinely different fixture must NOT collide with it.
+    c = daily.match_market_key(
+        {"home": "Strømsgodset", "away": "Kongsvinger", "market": "1x2"}
+    )
+    assert a != c
+
+
+def test_match_market_key_ignores_date_field():
+    """The ledger key must ignore the explicit date field (midnight-crossing
+    guard): the same match scraped across two dates is still one bet."""
+    a = daily.match_market_key(
+        {"date": "2026-08-02", "home": "Dinamo Brest", "away": "Belshina", "market": "1x2"}
+    )
+    b = daily.match_market_key(
+        {"date": "2026-08-03", "home": "Dinamo Brest", "away": "Belshina", "market": "1x2"}
+    )
+    assert a == b

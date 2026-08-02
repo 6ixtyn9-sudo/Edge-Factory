@@ -44,7 +44,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.util import norm_team  # noqa: E402
+from edgefactory.util import fold_ascii, norm_team  # noqa: E402
 
 REPORT_DIR = ROOT / "localdata"
 PICKS_TODAY_FILE = REPORT_DIR / "picks_today.json"
@@ -489,8 +489,13 @@ def match_market_key(pick: dict[str, Any]) -> tuple[str, str, str, str]:
     To prevent 'midnight crossing' (same game appearing on two different dates),
     we ignore the explicit date field and rely on the match identity.
     """
-    home = norm_team(pick.get("home") or "")
-    away = norm_team(pick.get("away") or "")
+    # Accent-fold BEFORE norm_team: the legacy 9-char join key deliberately does
+    # not fold accents (Strømmen -> strmmen), so without folding here the same
+    # fixture scraped with different spellings could double-enter the ledger.
+    # fold_ascii handles ø/å/æ/ł/đ etc. and is safe for dedupe keys only —
+    # it does NOT touch the certified miner join keys.
+    home = norm_team(fold_ascii(pick.get("home") or ""))
+    away = norm_team(fold_ascii(pick.get("away") or ""))
     if not home or not away:
         match_str = str(pick.get("match") or "").lower().strip()
         home, away = match_str, match_str
@@ -616,15 +621,22 @@ def run_pipeline(
                 # of the fresh snapshot, so bets found in earlier runs are never
                 # dropped from the official record, reports, CLV, or WhatsApp dispatch.
                 if target_archive.exists():
-                    target_picks_text = target_archive.read_text()
+                    _raw = target_archive.read_text()
                     try:
-                        _stacked = json.loads(target_picks_text)
+                        _stacked = json.loads(_raw)
                     except Exception:
-                        _stacked = []
-                    _n = len(_stacked) if isinstance(_stacked, list) else "?"
-                    print(f">>> stacked ledger {target_date}: {_n} official picks "
-                          f"(prior archive + fresh merged; fresh had {len(current_picks)})")
-                    restore_target_picks(target_picks_text)
+                        _stacked = None
+                    if isinstance(_stacked, list) and _stacked:
+                        target_picks_text = _raw
+                        print(f">>> stacked ledger {target_date}: {len(_stacked)} official picks "
+                              f"(prior archive + fresh merged; fresh had {len(current_picks)})")
+                        restore_target_picks(target_picks_text)
+                    else:
+                        # Corrupt/empty archive: never dispatch garbage or a blank
+                        # ledger — fall back to the fresh snapshot instead.
+                        print(f">>> WARNING archive {target_archive} unreadable/empty; "
+                              "dispatching fresh snapshot", file=sys.stderr)
+                        target_picks_text = PICKS_TODAY_FILE.read_text()
                 else:
                     target_picks_text = PICKS_TODAY_FILE.read_text()
             else:
