@@ -448,6 +448,154 @@
     "w_score": 1.0
   },
   {
+    "as_of": "2026-08-02T10:06:42+02:00",
+    "avg_p": 80.5,
+    "away": "Deportivo Cuenca",
+    "bookmaker": "scoutingstats_odds",
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "cuenca",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "independientedelvalle",
+      "league": "UNKNOWN",
+      "league_key": "ecuador liga pro",
+      "league_raw": "Ecuador Liga Pro",
+      "niche": "UNKNOWN",
+      "odds_band": "CAUTION",
+      "odds_band_name": "1.20-1.35",
+      "side_role": "home",
+      "team_a": "VETO",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-08-02",
+    "decay_verdict": "WATCH",
+    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "draw_risk_flag": "HIGH",
+    "edge_n_way": 2,
+    "edge_rule": "2way-unanimous avg_p>=70",
+    "edge_status": "certified",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4652,
+    "enhancement_reason": "Poisson expected hit rate is 46.5%",
+    "event_notes": [
+      {
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.46520599087778913,
+        "raw_probability": 0.46520599087778913,
+        "reason": "Poisson expected hit rate is 46.5%"
+      },
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9811615245009074,
+        "raw_probability": 0.9811615245009074,
+        "reason": "Combined Under 3.5 is 98.1%"
+      },
+      {
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9528301093355761,
+        "raw_probability": 0.9528301093355761,
+        "reason": "Combined Under 3.5 is 95.3%"
+      },
+      {
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.9381397459165154,
+        "raw_probability": 0.9381397459165154,
+        "reason": "Combined Under 2.5 is 93.8%"
+      },
+      {
+        "label": "Away Team Under 1.5 Goals",
+        "market": "away_under_15",
+        "probability": 0.819464609800363,
+        "raw_probability": 0.819464609800363,
+        "reason": "Combined Under 1.5 is 81.9%"
+      },
+      {
+        "label": "Both Teams to Score - No (BTTS-No)",
+        "market": "btts_no",
+        "probability": 0.5810291709087689,
+        "raw_probability": 0.5810291709087689,
+        "reason": "League BTTS is 40.7%, Home BTTS is 50.6%, Away BTTS is 34.7%"
+      },
+      {
+        "label": "Home Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.418970829091231,
+        "raw_probability": 0.418970829091231,
+        "reason": "Mathematical expectation is 41.9%"
+      },
+      {
+        "label": "Goal Range 0-1",
+        "market": "goal_range_0_1",
+        "probability": 0.3523398625248226,
+        "raw_probability": 0.3523398625248226,
+        "reason": "Poisson expected hit rate is 35.2%"
+      },
+      {
+        "label": "Exact Goals: 2",
+        "market": "exact_2",
+        "probability": 0.2679155091262679,
+        "raw_probability": 0.2679155091262679,
+        "reason": "Poisson expected hit rate is 26.8%"
+      },
+      {
+        "label": "Exact Goals: 1",
+        "market": "exact_1",
+        "probability": 0.24254834594872318,
+        "raw_probability": 0.24254834594872318,
+        "reason": "Poisson expected hit rate is 24.3%"
+      },
+      {
+        "label": "Exact Goals: 0",
+        "market": "exact_0",
+        "probability": 0.10979151657609938,
+        "raw_probability": 0.10979151657609938,
+        "reason": "Poisson expected hit rate is 11.0%"
+      }
+    ],
+    "home": "Independiente del Valle",
+    "kickoff": "02-08, 19:00",
+    "league": "Ecuador Liga Pro",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "historically unstable out of sample above 1.25",
+    "market_type": "1x2",
+    "match": "Independiente del Valle vs Deportivo Cuenca",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": 1.33,
+    "odds_captured_at": "2026-08-02T18:00:00Z",
+    "odds_league": "Liga Pro",
+    "odds_match_method": "exact",
+    "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.29,
+      "source": "zulubet"
+    },
+    "odds_source": "scoutingstats_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "recommended_enhancement": "goal_range_2_3",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "2way-unanimous avg_p>=70",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=179): Avg Goals: 4.00 | Over 2.5: 72.1% | BTTS: 38.5% | Home Over 1.5 Goals: 91.6% | Away Over 1.5 Goals: 7.8% | Top Scores: 2-0 (19.6%), 3-1 (14.5%)",
+    "veto_reason": "context VETO in ['team_a']",
+    "vitibet_index": 5.91,
+    "w_score": 1.0
+  },
+  {
     "as_of": "2026-08-02T04:47:42+02:00",
     "avg_p": 69.4,
     "away": "Botev Vratsa",
