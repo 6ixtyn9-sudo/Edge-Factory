@@ -138,3 +138,42 @@ def test_autonomous_intraday_merge():
     # Verify brand new game is appended
     assert merged[1]["home"] == "HJK Helsinki"
     assert merged[1]["pick"] == "2"
+
+
+def test_stack_dispatch_never_drops_prior_bets(tmp_path):
+    """Regression: a re-run whose fresh snapshot is missing a bet found in an
+    earlier run must keep that bet in the stacked archive. This is the contract
+    the official dispatch relies on (WhatsApp/report/CLV read the merged stack,
+    not the fresh subset)."""
+    with patch.object(daily, "REPORT_DIR", tmp_path):
+        prior = [
+            {
+                "date": "2026-08-02",
+                "home": "Dinamo Brest", "away": "Belshina",
+                "match": "Dinamo Brest vs Belshina",
+                "market": "1x2", "pick": "home",
+                "kickoff": "2026-08-02T17:00:00+02:00",
+                "bucket": "CAUTION", "odds": 1.31,
+            },
+            {
+                "date": "2026-08-02",
+                "home": "CSKA Sofia", "away": "Dunav Ruse",
+                "match": "CSKA Sofia vs Dunav Ruse",
+                "market": "1x2", "pick": "home",
+                "kickoff": "2026-08-02T19:15:00+02:00",
+                "bucket": "CAUTION", "odds": 1.31,
+            },
+        ]
+        daily.archive_picks_by_kickoff(prior, "2026-08-02")
+        archive_path = daily.archived_picks_file("2026-08-02")
+        assert archive_path.exists()
+
+        # Run 2: fresh snapshot only found ONE of the two bets (the other vanished).
+        daily.archive_picks_by_kickoff([prior[0]], "2026-08-02")
+
+        merged = json.loads(archive_path.read_text())
+        matches = {p["match"] for p in merged}
+        assert "CSKA Sofia vs Dunav Ruse" in matches, "prior bet was dropped from the stack"
+        assert "Dinamo Brest vs Belshina" in matches
+        cska = next(p for p in merged if p["match"] == "CSKA Sofia vs Dunav Ruse")
+        assert cska["odds"] == 1.31, "prior bet must be retained exactly as emitted"
