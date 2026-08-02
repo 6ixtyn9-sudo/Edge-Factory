@@ -1,5 +1,117 @@
 [
   {
+    "as_of": "2026-08-02T14:07:41+02:00",
+    "avg_p": 76.0,
+    "away": "Orgryte IS",
+    "bookmaker": "Novibet",
+    "bucket": "CAUTION",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "orgryteis",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "aikstockholm",
+      "league": "UNKNOWN",
+      "league_key": "sweden allsvenskan",
+      "league_raw": "Sweden Allsvenskan",
+      "niche": "UNKNOWN",
+      "odds_band": "ALLOW",
+      "odds_band_name": "1.50-1.75",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-08-02",
+    "decay_verdict": "WATCH",
+    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "draw_risk_flag": "EXTREME",
+    "edge_n_way": 2,
+    "edge_rule": "2way-unanimous avg_p>=70",
+    "edge_status": "certified",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4703,
+    "enhancement_reason": "Poisson expected hit rate is 47.0%",
+    "event_notes": [
+      {
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.4702786379494202,
+        "raw_probability": 0.4702786379494202,
+        "reason": "Poisson expected hit rate is 47.0%"
+      },
+      {
+        "label": "Home Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.52,
+        "raw_probability": 0.52,
+        "reason": "Mathematical expectation is 52.0%"
+      },
+      {
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.95,
+        "raw_probability": 0.95,
+        "reason": "Combined Under 3.5 is 95.0%"
+      },
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.95,
+        "raw_probability": 0.95,
+        "reason": "Combined Under 3.5 is 95.0%"
+      },
+      {
+        "label": "Exact Goals: 2",
+        "market": "exact_2",
+        "probability": 0.25651562069968376,
+        "raw_probability": 0.25651562069968376,
+        "reason": "Poisson expected hit rate is 25.7%"
+      },
+      {
+        "label": "Exact Goals: 1",
+        "market": "exact_1",
+        "probability": 0.205212496559747,
+        "raw_probability": 0.205212496559747,
+        "reason": "Poisson expected hit rate is 20.5%"
+      }
+    ],
+    "home": "AIK Stockholm",
+    "kickoff": "02-08, 15:30",
+    "league": "Sweden Allsvenskan",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "high draw risk and weak signal for raw 1X2",
+    "market_type": "1x2",
+    "match": "AIK Stockholm vs Orgryte IS",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": 1.52,
+    "odds_captured_at": "2026-08-01T04:42:31.996563+00:00",
+    "odds_league": "Allsvenskan",
+    "odds_match_method": "alias_fuzzy",
+    "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.43,
+      "source": "zulubet"
+    },
+    "odds_source": "bzzoiro_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "recommended_enhancement": "goal_range_2_3",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "2way-unanimous avg_p>=70",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=579): Avg Goals: 4.03 | Over 2.5: 79.6% | BTTS: 44.7% | Home Over 1.5 Goals: 91.2% | Away Over 1.5 Goals: 10.0% | Top Scores: 4-0 (11.7%), 2-1 (11.7%)",
+    "vitibet_index": 3.63,
+    "w_score": 1.0
+  },
+  {
     "as_of": "2026-08-02T04:47:42+02:00",
     "avg_p": 75.5,
     "away": "Belshina",
@@ -716,6 +828,114 @@
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1301): Avg Goals: 3.70 | Over 2.5: 72.1% | BTTS: 39.5% | Home Over 1.5 Goals: 87.1% | Away Over 1.5 Goals: 10.0% | Top Scores: 2-0 (15.0%), 3-0 (13.8%)",
     "veto_reason": "context VETO in ['team_h', 'odds_band']",
     "vitibet_index": 7.32,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-08-02T14:07:41+02:00",
+    "avg_p": 68.0,
+    "away": "Asane",
+    "bookmaker": null,
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "asane",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "oddballklubb",
+      "league": "UNKNOWN",
+      "league_key": "norway 1 division",
+      "league_raw": "Norway 1. Division",
+      "niche": "UNKNOWN",
+      "odds_band": "VETO",
+      "odds_band_name": "1.35-1.50",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-08-02",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "3WAY-UNANIMOUS\u226565",
+    "draw_risk_flag": "HIGH",
+    "edge_n_way": 3,
+    "edge_rule": "3way-unanimous avg_p>=65",
+    "edge_status": "certified",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4703,
+    "enhancement_reason": "Poisson expected hit rate is 47.0%",
+    "event_notes": [
+      {
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.4702786379494202,
+        "raw_probability": 0.4702786379494202,
+        "reason": "Poisson expected hit rate is 47.0%"
+      },
+      {
+        "label": "Home Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.52,
+        "raw_probability": 0.52,
+        "reason": "Mathematical expectation is 52.0%"
+      },
+      {
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.95,
+        "raw_probability": 0.95,
+        "reason": "Combined Under 3.5 is 95.0%"
+      },
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.95,
+        "raw_probability": 0.95,
+        "reason": "Combined Under 3.5 is 95.0%"
+      },
+      {
+        "label": "Exact Goals: 2",
+        "market": "exact_2",
+        "probability": 0.25651562069968376,
+        "raw_probability": 0.25651562069968376,
+        "reason": "Poisson expected hit rate is 25.7%"
+      },
+      {
+        "label": "Exact Goals: 1",
+        "market": "exact_1",
+        "probability": 0.205212496559747,
+        "raw_probability": 0.205212496559747,
+        "reason": "Poisson expected hit rate is 20.5%"
+      }
+    ],
+    "home": "ODD Ballklubb",
+    "kickoff": "02-08, 16:00",
+    "league": "Norway 1. Division",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
+    "market_type": "1x2",
+    "match": "ODD Ballklubb vs Asane",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 3,
+    "odds": 1.4,
+    "odds_match_method": "fallback",
+    "odds_match_status": "matched",
+    "odds_source": "zulubet",
+    "odds_tier": "low",
+    "pick": "home",
+    "recommended_enhancement": "goal_range_2_3",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "3way-unanimous avg_p>=65",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "statarea",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1608): Avg Goals: 3.61 | Over 2.5: 70.5% | BTTS: 39.4% | Home Over 1.5 Goals: 86.9% | Away Over 1.5 Goals: 10.1% | Top Scores: 2-0 (16.4%), 3-0 (13.1%)",
+    "veto_reason": "context VETO in ['odds_band']",
+    "vitibet_index": 2.27,
     "w_score": 1.0
   },
   {
