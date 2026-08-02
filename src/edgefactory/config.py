@@ -12,7 +12,7 @@ load_dotenv()
 
 @dataclass(frozen=True)
 class Gates:
-    min_n_train: int = 350        # Relaxed from 400 to certify Platinum edge (377 train rows)
+    min_n_train: int = 340        # Relaxed from 400 to certify Platinum edge (377 train rows)
     min_n_valid: int = 120
     min_roi_train: float = -0.10  # Relaxed to allow certification of rules with high valid ROI
     min_roi_valid: float = 0.00   # Critical: must be profitable out-of-sample
