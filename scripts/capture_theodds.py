@@ -38,7 +38,7 @@ import json
 import os
 import sys
 from datetime import date as _date
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone  # timedelta dropped: unused (red-team hygiene)
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -51,6 +51,7 @@ SOURCE_NAME = "theoddsapi_odds"
 CLOSE_WINDOW_MIN = int(os.environ.get("ODDS_API_CLOSE_WINDOW_MIN", "45") or 45)
 START_GRACE_MIN = 30          # don't first-capture a match this close to/after kickoff
 ATTEMPT_RETRY_HOURS = 6       # failure cooldown per fixture/snapshot-type
+KICKOFF_MISMATCH_MIN = 15     # pick-listed vs captured-API kickoff divergence guard
 
 
 def _month_file(day: str) -> Path:
@@ -149,6 +150,28 @@ def _fixture_priced(f: dict, existing_rows: list[dict], match_fn) -> bool:
     return False
 
 
+def _fixture_row_kickoff(f: dict, existing_rows: list[dict], match_fn) -> datetime | None:
+    """Kickoff (UTC) from already-captured rows for this fixture, if present.
+
+    Team orientation tolerant (straight or swapped home/away). The picks listing
+    occasionally carries a non-local (e.g. UK) kickoff time; the API commence_time
+    on captured rows is authoritative, so the planner compares the two sources."""
+    if not match_fn:
+        return None
+    for r in existing_rows or []:
+        try:
+            straight = match_fn(f.get("home"), r.get("home")) and match_fn(f.get("away"), r.get("away"))
+            swapped = match_fn(f.get("home"), r.get("away")) and match_fn(f.get("away"), r.get("home"))
+            if not (straight or swapped):
+                continue
+            iso = (r.get("kickoff") or "").replace("Z", "+00:00")
+            if iso:
+                return datetime.fromisoformat(iso)
+        except Exception:
+            continue
+    return None
+
+
 def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *,
               now: datetime | None = None, kickoff_fn=None, match_fn=None) -> tuple[list[dict], dict, list[str]]:
     """Decide which fixtures need a snapshot this iteration.
@@ -166,6 +189,18 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
         rec = attempts.get(fk, {})
         kickoff = kickoff_fn(f) if kickoff_fn else None
         has_rows = _fixture_priced(f, existing_rows, match_fn) if match_fn else False
+
+        # Kickoff divergence guard: if captured rows disagree with the listing by
+        # more than KICKOFF_MISMATCH_MIN, plan from the EARLIER time — conservative
+        # in both directions (never fire after a true kickoff). Surfaced as WARN.
+        row_ko = _fixture_row_kickoff(f, existing_rows, match_fn) if has_rows else None
+        if row_ko is not None and kickoff is not None:
+            delta_m = abs((row_ko - kickoff).total_seconds()) / 60.0
+            if delta_m > KICKOFF_MISMATCH_MIN:
+                skips.append(
+                    f"WARN kickoff-mismatch {fk}: pick lists {kickoff:%H:%MZ}, captured rows say "
+                    f"{row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from the earlier)")
+                kickoff = min(kickoff, row_ko)
 
         in_close_window = False
         started = False

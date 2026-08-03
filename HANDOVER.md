@@ -2139,3 +2139,177 @@ payloads must always be extracted to /tmp, never into the repo. (2) Full-swipe
 `pytest tests/` hits PRE-EXISTING upstream tests/test_supabase.py which imports
 supabase.create_client — environment-dependent, predates this project phase;
 the gate remains the two scoped suites until that suite is containerised.
+
+--------------------------------------------------------------------------------
+ADDENDUM 8 — 2026-08-03: Enhancement real-odds package (pricing join, registry,
+presentation gate, kickoff guard)
+--------------------------------------------------------------------------------
+
+Trigger (owner question 2026-08-03 ~13:50 SAST): "are the enhancements getting the
+odds data you mentioned? are we being presented with the right enhancements?"
+Code-verified answers then: NO (compute_dynamic_enhancement returns no odds field at
+all; audit scored hit/miss with zero prices) and MOSTLY NO (probability-only ranking
+surfaced trivially-priced team unders; 5-6 unpriced 'Possible Events' rendered on
+VETO-skipped picks with no shadow framing; the one real-priceable product,
+match_over_25, was presented unpriced).
+
+This package (base: live HEAD at package time):
+    NEW src/edgefactory/enh_pricing.py — MARKET_PRICE_MAP pilot (match_over/under_25
+        -> ou_2.5 totals feed; team totals, 1.5-line, goal-range deliberately
+        unmapped=unpriceable). load_prices_index reads theoddsapi monthly odds file,
+        keeps BEST price per (market,selection); attach_enhancement_price writes
+        price/book/at/breakeven/sample-edge onto the archived pick, pair-constrained
+        (both teams must match, either orientation), stale prices actively cleared
+        for unmapped markets, fail-soft everywhere.
+    NEW src/edgefactory/enh_registry.py — certification state machine
+        SHADOW->PAPER->ELIGIBLE->BENCHED per "<market>@v1". ELIGIBLE requires
+        n>=30 PRICED outcomes AND WilsonLB95 hit-rate >= mean breakeven of prices
+        actually paid. BENCHED = rolling 60d ROI<0 on n>=20 (circuit breaker,
+        mirrors decay monitor). Unpriced outcomes never advance certification —
+        "probability without price is not evidence of value". Idempotent per
+        date|match|market key; 400-record ring + 1600-key dedupe ring.
+    MOD scripts/picks_today.py — builds prices index per day, attaches price +
+        enhancement_state to every pick; renderer gate: SKIPPED_VETO picks get
+        '[SHADOW — paper]' tag on Possible Events; recommended line renders as
+        '⭐ (ELIGIBLE) with real price + breakeven/sample-edge' ONLY when the
+        registry says so, else '🔬 (state) [paper-only — not for staking]'.
+    MOD scripts/audit_recent_picks.py — priced settled outcomes accumulate
+        (priced_n/hits/roi per type in the rolling report) and feed the registry
+        (idempotent, fail-soft); report gains 'enhancement_registry' state snapshot.
+    MOD scripts/capture_theodds.py — kickoff-divergence guard: when captured API
+        commence_time disagrees with the listing by >15 min, plan close window from
+        the EARLIER time and emit 'WARN kickoff-mismatch' (Halmstad today: listing
+        18:00 vs API 17:00Z/19:00 SAST — source listing carried UK time).
+    MOD .gitignore — un-ignore localdata/enhancement_registry.json (rides git state
+        loop). Sidecar .lock file stays ignored by design (machine-local).
+    NEW tests x3 (19 tests): pricing join 6, registry state machine 10 (incl.
+        concurrency + corruption recovery), kickoff guard 3.
+
+Hard-won lesson re-flocked (05th lesson of the day, test-proven): POSIX flock must
+sit on a STABLE sidecar lockfile, never on a file that is os.replace'd. flock is
+per-inode; replacing the data file swaps the inode out from under blocked
+contenders -> two 'exclusive' holders, lost updates. First implementation of this
+package measured the loss: only 8-15/40 concurrent records survived. After moving
+the lock to enhancement_registry.lock (same pattern as the quota-ledger's
+USAGE_LOCK_FILE): 40/40, five consecutive runs. Re-validates the quota-ledger design.
+
+Gate evidence (all in operator thread + reproducible):
+    pyflakes: zero findings on all touched/new files. picks_today.py /
+        audit_recent_picks.py findings (incl. 'undefined name w_score' at
+        picks_today.py:1875) verified PRE-EXISTING on pristine baseline dbfc64a —
+        upstream dead-branch landmines recorded here, deliberately untouched
+        (pipeline exercised normally today; dedicated ticket, not this payload).
+    pytest: 39/39 (14 theoddsapi + 6 notify + 6 pricing + 10 registry + 3 kickoff).
+    capture --self-test: PASS.
+    Concurrency: 40/40 five consecutive runs (was 8-15/40 pre-fix).
+    Runtime call-tests: sync_repo_state hotfix regression PASS; pricing join vs the
+        REAL captured CSV (Halmstad over 2.5 -> 1.49 Betsson, breakeven 67.11%,
+        sample-edge +5.64% — the module's first real number); unmapped stale-price
+        clearing PASS; registry record->PAPER PASS; first-deploy status SHADOW PASS;
+        capture module import PASS (KICKOFF_MISMATCH_MIN=15).
+
+Deferred (recorded, not in scope):
+    - Veto re-mine (per-trigger counterfactual on SKIPPED_VETO, walk-forward
+      split=2025-06-01, n>=350 train) — analysis phase 2, informed by real odds now
+      accruing; entity_overrides proposals (Lithuania 1 Lyga, Sweden Allsvenskan)
+      wait for it.
+    - Alternate totals lines / team_totals capture: audit The Odds API free-tier
+      availability + credit cost before extending MARKET_PRICE_MAP.
+    - Calibration: enhancement_probability is a blended realized frequency
+      (40% league / 60% team). The ELIGIBLE gate uses WilsonLB95-vs-prices-paid as
+      the statistical buffer; true calibration shrinkage is a later model task.
+    - Pre-existing upstream pyflakes findings (see above), incl. w_score landmine.
+    - Cosmetic: theoddsapi credits_month display mixes server-union and local-sum
+      views on different lines.
+
+---
+
+## Addendum 9 — 2026-08-03 (post-package RED TEAM → payload v2 supersedes v1)
+
+Context: owner instruction — "provide the zip, make sure you red team engineer it
+first, and antigravity to do the same." Full adversarial review of the addendum-8
+enhancement payload BEFORE release, executed on a fresh clone of live HEAD
+`681a73ae` (drift re-verified: the intermediate state commit touched only
+localdata/; `git apply --check` CLEAN; post-apply `git status` = exactly the 10
+payload paths). Result: 1 CRITICAL feature-defeating defect + 5 real findings +
+2 hygiene items, ALL fixed in-tree before re-release. v1 zip
+(sha `201c854f…8b86`) is SUPERSEDED by the v2 zip (sha in operator thread and
+README_APPLY_ENH.md; manifest re-issued). Antigravity gets an independent
+RED-TEAM PHASE (README §Phase 0) to re-derive every check before applying.
+
+Findings and fixes (reproducers shipped: tests + RED_TEAM_BATTERY outputs on record):
+- RT-0 — gate escape (own-goal, recorded for honesty): pyflakes 3.4 flags
+  `'typing.Any' imported but unused` in MY enh_registry.py:37 — addendum-8's
+  "pyflakes zero findings" did not hold under a fresh toolchain. Lesson pinned:
+  gates must record tool versions. Fixed (import dropped).
+- RT-1 — CRITICAL, feature-defeating: the registry would have STARVED. The audit
+  deliberately prefers the locked morning snapshot (archived_picks_path:
+  "immutable morning snapshot… state drift"); morning freezes happen BEFORE the
+  first theoddsapi snapshot, and the intraday ledger merge retains locked picks
+  verbatim (autonomous_intraday_merge: "retains all existing locked picks
+  exactly"). Archived `enhancement_price` fields can therefore never carry the
+  close price — scoring off them (v1 design) = silent pricing vacuum for the
+  certification engine. Fix (keeps both anti-drift doctrines untouched): the
+  audit now derives prices by probing the IMMUTABLE capture store
+  (per-day `load_prices_index` + `attach_enhancement_price` on a throwaway probe
+  dict). One consistent definition everywhere: best captured theoddsapi price
+  for (date, pair, market). Zero network, zero credits.
+- RT-2 — non-decimal poison: float("nan") / float("inf") parse out of CSV rows and
+  slip naive guards (`nan <= 1.0` is False; `inf` passes `> 1.0` and would zero the
+  breakeven / produce +inf sample-edge, and poison registry profit sums).
+  math.isfinite now gates all three boundaries: pricing loader, registry
+  record_outcome, renderer normalization. Probes: 7/7 hostile rows rejected.
+- RT-3 — stale-price survival: setdefault-based init preserved archived
+  price/breakeven/edge through early-return branches (missing index, missing
+  selection). Fields are now RESET unconditionally at attach entry; re-derivation
+  is provably idempotent.
+- RT-4 — registry corruption silently wiped history (fresh dict on parse error).
+  Now quarantined to `enhancement_registry.corrupt-<epoch>.json` (git-ignored,
+  verified) before rebuild — recoverable + auditable.
+- RT-5 — doc/behavior mismatch: header promised BENCHED re-entry "on fresh
+  evidence"; no such code path existed. Docs pinned to actual semantics: NO
+  automatic re-entry; an explicit operator reset after re-validation only.
+- RT-6 — renderer crash path: `f"{None:.1%}"` on a legacy/archived None
+  probability = TypeError mid-render (production crash class from the P1 lesson).
+  Probability coerced under try/except; NaN/inf prices normalized to unpriced
+  before formatting. Live probe: SKIPPED_VETO pick with None-prob + NaN-price
+  renders "[SHADOW — paper] … (unpriced) [paper-only — not for staking]".
+- Hygiene: capture_theodds.py pre-existing unused `timedelta` import removed
+  (file already in the payload; verified pre-existing on pristine 681a73ae; keeps
+  the G3 "zero findings" promise literally true).
+
+Accepted + recorded limitations (NOT defects, stated for future reviewers):
+- Time-bomb test: test_benched_circuit_breaker bakes outcome dates 2026-08-03
+  against wall-clock BENCH_WINDOW_DAYS=60; refresh or inject the clock before
+  ~2026-10-02 (test-only, LOW).
+- norm_team 9-char truncation cannot mis-price: pair-constrained matching needs
+  BOTH teams to collide inside one same-day file, and a team plays once per day;
+  the matcher fallback is either-orientation + prefix/token strict.
+- Audit `priced_*` report fields now mean "best captured theoddsapi price"
+  (capture-store definition), not the archived presentation-time field. Intentional.
+
+Evidence (commands + raw outputs in operator thread; re-derivable):
+- Drift: apply --check CLEAN on live `681a73ae`; post-apply = exactly 10 paths.
+- pyflakes 3.4.0: 0 findings on enh_pricing/enh_registry/capture_theodds;
+  picks_today + audit findings verified IDENTICAL SET (line-shifted only) vs
+  pristine `681a73ae` baseline (incl. w_score picks_today.py:1875→1877; upstream
+  landmines still deliberately untouched).
+- pytest: 44/44 (14 theoddsapi + 6 notify + 9 pricing + 12 registry + 3 kickoff).
+- capture --self-test: PASS. Concurrency: 40/40 five consecutive runs.
+- Live-CSV join: Halmstad match_over_25 → 1.49 Betsson, breakeven 0.6711,
+  sample-edge +0.0564 (module output vs the real tracked capture file).
+- git physics: `git status` shows enhancement_registry.json untracked-addable;
+  `git add -n` REFUSES .lock / .tmp / .corrupt-* ("ignored by one of your
+  .gitignore files").
+- Scope: 10 repo files, +936/−7; no veto/selection/staking logic touched; zero
+  network in new modules; zero API credits (all reads are local gz/json).
+- Secret sweep: CLEAN across payload files; full zip re-swept after rebuild.
+
+Deferred (carried from addendum 8, plus new items — none in this payload's scope):
+    - Veto re-mine counterfactual (feeds entity_overrides reviews) — phase 2.
+    - Alternate-lines/team-totals capture audit (costed, probe said unavailable/
+      redundant for team totals; alternate totals redundant vs scoutingstats).
+    - Calibration shrinkage for enhancement_probability — later model task.
+    - Time-bomb test clock injection (before ~2026-10-02); BENCHED operator
+      reset runbook; pre-existing upstream pyflakes landmines (incl. w_score);
+      credits_month display wording.
