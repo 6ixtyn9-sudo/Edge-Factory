@@ -2698,3 +2698,29 @@ by_engine aggregation + rendered rows. Suite 101/101 sandbox
 24/24 (conditioning source pins incl. historical-profile untouched,
 extreme-zero/one cohorts, determinism, complement coherence, subprocess
 suite).
+
+---
+
+## Addendum 18 — 2026-08-03 (late night): copy-pastable README git block + Addendum 17 deploy record
+
+README §Git workflow reworked on operator feedback: the example workflow
+carried placeholder pathspecs (scripts/<file>.py) that broke literal
+copy-paste (pasting the line errors with "did not match any files"). The
+block now uses an edit-one-line FILES array — FILES=("…" "…") then
+git add "${FILES[@]}" — zsh/bash-safe; every other line pastes verbatim.
+Docs-only change.
+
+Addendum 17 deploy record (rolled up): shipped as 5f56d92 (feat) + merge
+7f1f190 + 96295f8 (absorb chore; the localdata conflict on
+picks_audit_2026-08-03.md resolved --theirs = bot-owned, the correct
+owner). All 5 files upstream sha-verified against the manifest TARGET;
+payload zip deleted. G4 live-schema smoke: cohorts n=586–2913 across
+avg_p 65–75 home. First live hybrid note observed the same night
+(2026-08-04 forecast, Dinamo Zagreb vs Kauno Zalgiris): BTTS-Yes 47.5%
+tracks the unconditioned cohort rate 0.474; plain source labels at birth
+(Addendum 16). Reader note: that forecast's "Match Over 2.5: 36.7%" is NOT
+the cohort disagreeing — it is the pre-existing performance-feedback
+multiplier (rolling hit-rate debias; match_over_25 hr=0.556 from the
+recommendation ledger) applied on top of the hybrid raw (~0.66). The audit
+scores the displayed post-debias promise, so the by-engine table measures
+what was actually promised.
