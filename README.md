@@ -25,7 +25,7 @@ python scripts/build_warehouse.py
 python scripts/mine_consensus.py --split 2025-06-01
 
 # Today's picks
-PYTHONPATH=src python scripts/picks_today.py
+PYTHONPATH=src python3 scripts/picks_today.py
 
 # Full daily run (capture → warehouse → mine → picks → CLV → sync → WhatsApp)
 PYTHONPATH=src python3 scripts/daily.py
