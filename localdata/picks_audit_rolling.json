@@ -223,6 +223,16 @@
     "total_recommended": 15
   },
   "event_notes_audit": {
+    "by_engine": {
+      "legacy": {
+        "brier": 0.202385,
+        "delta": 0.006368,
+        "hits": 68,
+        "mean_promised": 0.529065,
+        "n": 127,
+        "realized": 0.535433
+      }
+    },
     "by_market": {
       "away_over_05": {
         "brier": 0.030429,
@@ -1912,6 +1922,7 @@
       "match": "Benfica vs FC ST. Gallen",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -1919,6 +1930,7 @@
           "raw_promised": 0.9216558541859746
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Over 0.5 Goals",
           "market": "home_over_05",
@@ -1926,6 +1938,7 @@
           "raw_promised": 0.8691149710504549
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -1933,6 +1946,7 @@
           "raw_promised": 0.4427489618962477
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Goal Range 4-5",
           "market": "goal_range_4_5",
@@ -1940,6 +1954,7 @@
           "raw_promised": 0.27711832802336883
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Match Over 3.5 Goals",
           "market": "match_over_35",
@@ -1947,6 +1962,7 @@
           "raw_promised": 0.368089076351376
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Goal Range 4-6",
           "market": "goal_range_4_6",
@@ -1954,6 +1970,7 @@
           "raw_promised": 0.3310136388160477
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Match Over 4.5 Goals",
           "market": "match_over_45",
@@ -1961,6 +1978,7 @@
           "raw_promised": 0.19635846057212514
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 4",
           "market": "exact_4",
@@ -1968,6 +1986,7 @@
           "raw_promised": 0.17173061577925086
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 3",
           "market": "exact_3",
@@ -1975,6 +1994,7 @@
           "raw_promised": 0.22386977584337267
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Exact Goals: 5",
           "market": "exact_5",
@@ -2017,6 +2037,7 @@
       "match": "Hibernian vs Malisheva",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2024,6 +2045,7 @@
           "raw_promised": 0.9658119658119658
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Team Under 3.5 Goals",
           "market": "home_under_35",
@@ -2031,6 +2053,7 @@
           "raw_promised": 0.9342793129200896
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2038,6 +2061,7 @@
           "raw_promised": 0.4621394460039666
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -2045,6 +2069,7 @@
           "raw_promised": 0.8564102564102565
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Match Over 1.5 Goals",
           "market": "match_over_15",
@@ -2052,6 +2077,7 @@
           "raw_promised": 0.8163106796116505
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Match Over 3.5 Goals",
           "market": "match_over_35",
@@ -2059,6 +2085,7 @@
           "raw_promised": 0.3024405216826047
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 3",
           "market": "exact_3",
@@ -2066,6 +2093,7 @@
           "raw_promised": 0.22205481160831564
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2073,6 +2101,7 @@
           "raw_promised": 0.24008463439565098
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 4",
           "market": "exact_4",
@@ -2115,6 +2144,7 @@
       "match": "FC Sion vs BATE Borisov",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2122,6 +2152,7 @@
           "raw_promised": 0.9590326340326341
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2129,6 +2160,7 @@
           "raw_promised": 0.46436327343515127
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -2136,6 +2168,7 @@
           "raw_promised": 0.8529020979020979
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 3",
           "market": "exact_3",
@@ -2143,6 +2176,7 @@
           "raw_promised": 0.22107895699586555
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2150,6 +2184,7 @@
           "raw_promised": 0.2432843164392857
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Exact Goals: 4",
           "market": "exact_4",
@@ -2192,6 +2227,7 @@
       "match": "SC Braga vs \u017delezni\u010dar Pan\u010devo",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2199,6 +2235,7 @@
           "raw_promised": 0.9594423320659062
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Team Under 3.5 Goals",
           "market": "home_under_35",
@@ -2206,6 +2243,7 @@
           "raw_promised": 0.9310851126060251
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2213,6 +2251,7 @@
           "raw_promised": 0.46806239893000245
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -2220,6 +2259,7 @@
           "raw_promised": 0.8770595690747782
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2262,6 +2302,7 @@
       "match": "Austria Vienna vs FK Liepaja",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2269,6 +2310,7 @@
           "raw_promised": 0.9497092540289085
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2276,6 +2318,7 @@
           "raw_promised": 0.46071831314971234
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -2283,6 +2326,7 @@
           "raw_promised": 0.8775128758930055
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Match Over 3.5 Goals",
           "market": "match_over_35",
@@ -2290,6 +2334,7 @@
           "raw_promised": 0.30866097245424784
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 3",
           "market": "exact_3",
@@ -2297,6 +2342,7 @@
           "raw_promised": 0.22252618461811555
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Exact Goals: 4",
           "market": "exact_4",
@@ -2304,6 +2350,7 @@
           "raw_promised": 0.15591794472584858
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2311,6 +2358,7 @@
           "raw_promised": 0.23819212853159677
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Goal Range 4-6",
           "market": "goal_range_4_6",
@@ -2353,6 +2401,7 @@
       "match": "Dinamo Zagreb vs Slaven Belupo",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Win + Over 2.5",
           "market": "match_over_25",
@@ -2360,6 +2409,7 @@
           "raw_promised": 0.5600571428571429
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2367,6 +2417,7 @@
           "raw_promised": 0.4595966216617503
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Win + BTTS (Yes)",
           "market": "btts_yes",
@@ -2374,6 +2425,7 @@
           "raw_promised": 0.4883642857142857
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Over 0.5 Goals",
           "market": "home_over_05",
@@ -2381,6 +2433,7 @@
           "raw_promised": 0.8091357142857143
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Match Over 3.5 Goals",
           "market": "match_over_35",
@@ -2388,6 +2441,7 @@
           "raw_promised": 0.31329991748402963
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2395,6 +2449,7 @@
           "raw_promised": 0.9755
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -2402,6 +2457,7 @@
           "raw_promised": 0.8860357142857143
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Both Teams to Score - No (BTTS-No)",
           "market": "btts_no",
@@ -2409,6 +2465,7 @@
           "raw_promised": 0.5116357142857143
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 4-6",
           "market": "goal_range_4_6",
@@ -2416,6 +2473,7 @@
           "raw_promised": 0.2879190684889704
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2423,6 +2481,7 @@
           "raw_promised": 0.23676222057338298
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 3",
           "market": "exact_3",
@@ -2430,6 +2489,7 @@
           "raw_promised": 0.22283440108836736
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 4",
           "market": "exact_4",
@@ -2472,6 +2532,7 @@
       "match": "Sparta Praha vs Zlin",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Win + Over 2.5",
           "market": "match_over_25",
@@ -2479,6 +2540,7 @@
           "raw_promised": 0.5595826687931951
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2486,6 +2548,7 @@
           "raw_promised": 0.4538148876507202
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Win + BTTS (Yes)",
           "market": "btts_yes",
@@ -2493,6 +2556,7 @@
           "raw_promised": 0.5267145135566188
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Over 0.5 Goals",
           "market": "home_over_05",
@@ -2500,6 +2564,7 @@
           "raw_promised": 0.8210013670539986
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Match Over 3.5 Goals",
           "market": "match_over_35",
@@ -2507,6 +2572,7 @@
           "raw_promised": 0.33456011383716944
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2514,6 +2580,7 @@
           "raw_promised": 0.9603174603174603
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -2521,6 +2588,7 @@
           "raw_promised": 0.8556998556998557
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Goal Range 4-6",
           "market": "goal_range_4_6",
@@ -2528,6 +2596,7 @@
           "raw_promised": 0.3049848600188412
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Goal Range 4-5",
           "market": "goal_range_4_5",
@@ -2535,6 +2604,7 @@
           "raw_promised": 0.25861576864322866
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2542,6 +2612,7 @@
           "raw_promised": 0.23002430341758218
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 3",
           "market": "exact_3",
@@ -2549,6 +2620,7 @@
           "raw_promised": 0.22379058423313802
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Exact Goals: 4",
           "market": "exact_4",
@@ -2591,6 +2663,7 @@
       "match": "Finn Harps vs Cork City",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Win + Over 2.5",
           "market": "match_over_25",
@@ -2598,6 +2671,7 @@
           "raw_promised": 0.4721397828135072
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2605,6 +2679,7 @@
           "raw_promised": 0.4675783764778757
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Away Win + BTTS (Yes)",
           "market": "btts_yes",
@@ -2612,6 +2687,7 @@
           "raw_promised": 0.5134056627163187
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2619,6 +2695,7 @@
           "raw_promised": 0.9601527247483512
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Under 3.5 Goals",
           "market": "home_under_35",
@@ -2626,6 +2703,7 @@
           "raw_promised": 0.9512665245202558
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -2633,6 +2711,7 @@
           "raw_promised": 0.8753409034561412
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Under 2.5 Goals",
           "market": "home_under_25",
@@ -2640,6 +2719,7 @@
           "raw_promised": 0.8537995735607675
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2682,6 +2762,7 @@
       "match": "Dundee Utd vs Rangers",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Away Win + Over 2.5",
           "market": "match_over_25",
@@ -2689,6 +2770,7 @@
           "raw_promised": 0.5764102564102563
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2696,6 +2778,7 @@
           "raw_promised": 0.4604856302126472
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Win + BTTS (Yes)",
           "market": "btts_yes",
@@ -2703,6 +2786,7 @@
           "raw_promised": 0.5548717948717948
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Over 0.5 Goals",
           "market": "home_over_05",
@@ -2710,6 +2794,7 @@
           "raw_promised": 0.8051282051282052
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Match Over 3.5 Goals",
           "market": "match_over_35",
@@ -2717,6 +2802,7 @@
           "raw_promised": 0.3096412658098574
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2724,6 +2810,7 @@
           "raw_promised": 0.9452991452991453
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Under 3.5 Goals",
           "market": "home_under_35",
@@ -2731,6 +2818,7 @@
           "raw_promised": 0.9230769230769231
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 4-6",
           "market": "goal_range_4_6",
@@ -2738,6 +2826,7 @@
           "raw_promised": 0.28494075024578563
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2745,6 +2834,7 @@
           "raw_promised": 0.23789125620687807
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 3",
           "market": "exact_3",
@@ -2752,6 +2842,7 @@
           "raw_promised": 0.22259437400576917
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 4",
           "market": "exact_4",
@@ -2794,6 +2885,7 @@
       "match": "Universitatea Craiova vs Petrolul Ploiesti",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2801,6 +2893,7 @@
           "raw_promised": 0.4688462590163499
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Win + BTTS (Yes)",
           "market": "btts_yes",
@@ -2808,6 +2901,7 @@
           "raw_promised": 0.5051052227202286
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2815,6 +2909,7 @@
           "raw_promised": 0.9914786967418546
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -2822,6 +2917,7 @@
           "raw_promised": 0.9307773249918689
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Win + Over 2.5",
           "market": "match_over_25",
@@ -2829,6 +2925,7 @@
           "raw_promised": 0.4354589522905111
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2871,6 +2968,7 @@
       "match": "Gandzasar vs Ararat-Armenia",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Win + Over 2.5",
           "market": "match_over_25",
@@ -2878,6 +2976,7 @@
           "raw_promised": 0.5379410916316785
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -2885,6 +2984,7 @@
           "raw_promised": 0.45885112158952923
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Match Over 3.5 Goals",
           "market": "match_over_35",
@@ -2892,6 +2992,7 @@
           "raw_promised": 0.316270892684537
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Under 3.5 Goals",
           "market": "home_under_35",
@@ -2899,6 +3000,7 @@
           "raw_promised": 0.9453143370910851
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -2906,6 +3008,7 @@
           "raw_promised": 0.9345469696484087
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Team Under 2.5 Goals",
           "market": "home_under_25",
@@ -2913,6 +3016,7 @@
           "raw_promised": 0.8927311708970191
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Both Teams to Score - No (BTTS-No)",
           "market": "btts_no",
@@ -2920,6 +3024,7 @@
           "raw_promised": 0.5592157977392762
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Win + BTTS (Yes)",
           "market": "btts_yes",
@@ -2927,6 +3032,7 @@
           "raw_promised": 0.44078420226072373
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 4-6",
           "market": "goal_range_4_6",
@@ -2934,6 +3040,7 @@
           "raw_promised": 0.29032878238990656
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -2941,6 +3048,7 @@
           "raw_promised": 0.23583845312661283
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 3",
           "market": "exact_3",
@@ -2948,6 +3056,7 @@
           "raw_promised": 0.22301266846291642
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 4",
           "market": "exact_4",
@@ -2990,6 +3099,7 @@
       "match": "Cruzeiro W vs Botafogo W",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Win + Over 2.5",
           "market": "match_over_25",
@@ -2997,6 +3107,7 @@
           "raw_promised": 0.5020770867236009
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -3004,6 +3115,7 @@
           "raw_promised": 0.4669528636050701
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Win + BTTS (Yes)",
           "market": "btts_yes",
@@ -3011,6 +3123,7 @@
           "raw_promised": 0.5149029344601447
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Over 0.5 Goals",
           "market": "home_over_05",
@@ -3018,6 +3131,7 @@
           "raw_promised": 0.8419144303148914
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -3025,6 +3139,7 @@
           "raw_promised": 0.9557730735289642
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -3032,6 +3147,7 @@
           "raw_promised": 0.8788305422283533
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -3074,6 +3190,7 @@
       "match": "Volna Nizhegorodskaya vs Arsenal-2 Tula",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Win + Over 2.5",
           "market": "match_over_25",
@@ -3081,6 +3198,7 @@
           "raw_promised": 0.5204942734346018
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Goal Range 2-3",
           "market": "goal_range_2_3",
@@ -3088,6 +3206,7 @@
           "raw_promised": 0.4663091101429793
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Win + BTTS (Yes)",
           "market": "btts_yes",
@@ -3095,6 +3214,7 @@
           "raw_promised": 0.5347868281896037
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Over 0.5 Goals",
           "market": "home_over_05",
@@ -3102,6 +3222,7 @@
           "raw_promised": 0.8016413640159346
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -3109,6 +3230,7 @@
           "raw_promised": 0.9826855946008843
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 2.5 Goals",
           "market": "away_under_25",
@@ -3116,6 +3238,7 @@
           "raw_promised": 0.9126514670787217
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Exact Goals: 2",
           "market": "exact_2",
@@ -3158,6 +3281,7 @@
       "match": "Monaro Panthers vs O'Connor Knights",
       "notes_audit": [
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Win + Over 1.5",
           "market": "match_over_15",
@@ -3165,6 +3289,7 @@
           "raw_promised": 0.9300595571139045
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Home Win + Over 2.5",
           "market": "match_over_25",
@@ -3172,6 +3297,7 @@
           "raw_promised": 0.7792557225807255
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 4-6",
           "market": "goal_range_4_6",
@@ -3179,6 +3305,7 @@
           "raw_promised": 0.4626465534705226
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Win + BTTS (Yes)",
           "market": "btts_yes",
@@ -3186,6 +3313,7 @@
           "raw_promised": 0.7147972695736506
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Home Team Over 0.5 Goals",
           "market": "home_over_05",
@@ -3193,6 +3321,7 @@
           "raw_promised": 0.905854998943141
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Over 0.5 Goals",
           "market": "away_over_05",
@@ -3200,6 +3329,7 @@
           "raw_promised": 0.8255610678006142
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Match Over 3.5 Goals",
           "market": "match_over_35",
@@ -3207,6 +3337,7 @@
           "raw_promised": 0.5815885108800651
         },
         {
+          "engine": "legacy",
           "hit": true,
           "label": "Away Team Under 3.5 Goals",
           "market": "away_under_35",
@@ -3214,6 +3345,7 @@
           "raw_promised": 0.9461847389558233
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Match Over 4.5 Goals",
           "market": "match_over_45",
@@ -3221,6 +3353,7 @@
           "raw_promised": 0.38636773839098326
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 4-5",
           "market": "goal_range_4_5",
@@ -3228,6 +3361,7 @@
           "raw_promised": 0.3544368119046871
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 6+",
           "market": "goal_range_6_plus",
@@ -3235,6 +3369,7 @@
           "raw_promised": 0.22715169897537796
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 4",
           "market": "exact_4",
@@ -3242,6 +3377,7 @@
           "raw_promised": 0.19522077248908185
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Exact Goals: 5",
           "market": "exact_5",
@@ -3249,6 +3385,7 @@
           "raw_promised": 0.15921603941560528
         },
         {
+          "engine": "legacy",
           "hit": false,
           "label": "Goal Range 7+",
           "market": "goal_range_7_plus",

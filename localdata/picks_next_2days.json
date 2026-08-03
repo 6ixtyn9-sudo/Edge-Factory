@@ -788,10 +788,10 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-03T21:14:36+02:00",
+    "as_of": "2026-08-03T23:56:02+02:00",
     "avg_p": 82.5,
     "away": "Kauno \u017dalgiris",
-    "bookmaker": "Betano",
+    "bookmaker": "Betsson",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
@@ -828,6 +828,8 @@
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
+        "cohort_n": null,
+        "engine": "model",
         "label": "Goal Range 2-3",
         "market": "goal_range_2_3",
         "probability": 0.4643902072883783,
@@ -835,6 +837,8 @@
         "reason": "Poisson expected hit rate is 46.4%"
       },
       {
+        "cohort_n": null,
+        "engine": "model",
         "label": "Both Teams to Score - Yes (BTTS-Yes)",
         "market": "btts_yes",
         "probability": 0.4810987903225806,
@@ -842,6 +846,8 @@
         "reason": "Mathematical expectation is 48.1%"
       },
       {
+        "cohort_n": null,
+        "engine": "model",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
         "probability": 0.8084389400921659,
@@ -849,6 +855,8 @@
         "reason": "Home scoring rate is 85.5%"
       },
       {
+        "cohort_n": null,
+        "engine": "model",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
         "probability": 0.96875,
@@ -856,6 +864,8 @@
         "reason": "Combined Under 3.5 is 96.9%"
       },
       {
+        "cohort_n": null,
+        "engine": "model",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
         "probability": 0.8950892857142857,
@@ -863,6 +873,8 @@
         "reason": "Combined Under 2.5 is 89.5%"
       },
       {
+        "cohort_n": null,
+        "engine": "model",
         "label": "Both Teams to Score - No (BTTS-No)",
         "market": "btts_no",
         "probability": 0.5189012096774194,
@@ -870,6 +882,8 @@
         "reason": "League BTTS is 48.0%, Home BTTS is 48.4%, Away BTTS is 48.0%"
       },
       {
+        "cohort_n": null,
+        "engine": "model",
         "label": "Exact Goals: 2",
         "market": "exact_2",
         "probability": 0.24332532152440242,
@@ -877,6 +891,8 @@
         "reason": "Poisson expected hit rate is 24.3%"
       },
       {
+        "cohort_n": null,
+        "engine": "model",
         "label": "Exact Goals: 3",
         "market": "exact_3",
         "probability": 0.22106488576397587,
@@ -884,6 +900,8 @@
         "reason": "Poisson expected hit rate is 22.1%"
       },
       {
+        "cohort_n": null,
+        "engine": "model",
         "label": "Exact Goals: 4",
         "market": "exact_4",
         "probability": 0.15063069703867224,
@@ -903,7 +921,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.19,
-    "odds_captured_at": "2026-08-03T19:17:01.633531+00:00",
+    "odds_captured_at": "2026-08-03T21:58:16.752778+00:00",
     "odds_league": "Champions League",
     "odds_match_method": "alias_fuzzy",
     "odds_match_status": "matched",
@@ -923,7 +941,7 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=44): Avg Goals: 4.70 | Over 2.5: 84.1% | BTTS: 40.9% | Home Over 1.5 Goals: 95.5% | Away Over 1.5 Goals: 11.4% | Top Scores: 4-0 (15.9%), 2-0 (11.4%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=44): Avg Goals: 4.70 | Over 2.5: 84.1% | BTTS: 40.9% | Home Over 1.5 Goals: 95.5% | Away Over 1.5 Goals: 11.4% | Top Scores: 4-0 (15.9%), 3-1 (11.4%)",
     "veto_reason": "context VETO in ['team_h']",
     "vitibet_index": 4.07,
     "w_score": 1.0
