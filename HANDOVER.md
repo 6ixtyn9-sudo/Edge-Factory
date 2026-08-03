@@ -2082,3 +2082,60 @@ Post-apply operator duties (unchanged, now actually sufficient):
 
 Local .env on any operator machine: copy 'The Odds API' block from .env.example
 (only needed for laptop captures; Actions secret alone is enough hands-off).
+
+--------------------------------------------------------------------------------
+ADDENDUM 7 — 2026-08-03 P1 HOTFIX: NameError crash in sync_repo_state (d957ea3)
+--------------------------------------------------------------------------------
+
+Incident: owner ran established commands locally 12:27-12:28 SAST (--force-repick,
+then plain auto) — both crashed with `NameError: name 'os' is not defined` at
+daily.py:148 (sync_repo_state). Every Actions run from 14:15 SAST would have hit
+the same crash had the hotfix not landed first.
+
+Root cause (mine, on record): daily.py's original import set
+(argparse/json/shlex/subprocess/sys/time/datetime/Path) never included `os`;
+sync_repo_state was the first `os` user in the file's history. The v3 gates were
+insufficient: py_compile checks SYNTAX only, and the 20-test suite covers
+theoddsapi/notify but never executes run_pipeline. The clean-room rehearsal proved
+apply + hashes + tests, not EXECUTION of the orchestrator. pyflakes (now a
+mandatory gate) flags it instantly: "daily.py:148/150 undefined name 'os'".
+
+Blast radius: crash fires at run_pipeline start, BEFORE any pick writes, notify,
+or ledger mutation — zero messages sent, zero state corruption; each affected run
+was a silent no-op. Owner's two local crashes were the only production impact
+(no manual cloud run had been fired; verified via Actions API).
+
+Fix (this payload, base = d957ea3 NOT f91cdb9):
+    1. `import os` added to daily.py header.
+    2. sync_repo_state body wrapped in try/except Exception — a sync convenience
+       must never again be able to kill the pipeline (class fix, not point fix).
+
+Process fix (mandatory gates for every future payload):
+    - pyflakes undefined-name scan on all touched python files.
+    - RUNTIME call-test: import the orchestrator module and directly invoke every
+      newly added function under its env-guard configurations (off / CI / live).
+    - Rehearsal must prove execution, not just application.
+
+Verification (fresh clone d957ea3 + hotfix applied): import daily.py via importlib;
+sync_repo_state() passes under EDGE_FACTORY_GIT_SYNC=0, GITHUB_ACTIONS=true, and
+live .git (real git pull --rebase --autostash vs origin — clean no-op);
+capture_theodds_snapshot() no-key path soft-no-ops; pytest 20/20; pyflakes clean;
+manifest 2/2 OK on the APPLIED tree. Files: scripts/daily.py + this HANDOVER.
+
+Deferred (cosmetic, next non-hotfix payload): theoddsapi.py:444 f-string without
+placeholder (pyflakes note, no behaviour impact).
+
+Postscript (same day): upstream advanced to dbfc64a (owner commit "update
+picks_today.json with fresh match data and refreshed odds"; parent d957ea3; touches
+README.md +1/-1 and localdata/picks_today.json only — unrelated to this fix). Hotfix
+diff regenerated against dbfc64a and re-rehearsed end-to-end on a fresh clone:
+apply OK, manifest 2/2 OK, scoped pytest 20/20, runtime call-test all four paths
+PASS (incl. real git pull --rebase --autostash — the exact crashing call).
+Two hygiene facts on record: (1) v3 payload artifacts PATCHES_V3_2026-08-03.diff,
+PAYLOAD_MANIFEST_V3_2026-08-03.sha256, README_APPLY.md were accidentally committed
+at repo ROOT in d957ea3 (zip was unzipped into the repo before `git add -A`) — no
+secrets (leak sweep clean); removal folded into the hotfix apply instructions;
+payloads must always be extracted to /tmp, never into the repo. (2) Full-swipe
+`pytest tests/` hits PRE-EXISTING upstream tests/test_supabase.py which imports
+supabase.create_client — environment-dependent, predates this project phase;
+the gate remains the two scoped suites until that suite is containerised.
