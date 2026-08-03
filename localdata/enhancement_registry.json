@@ -1,0 +1,34 @@
+{
+ "markets": {
+  "match_over_25@v1": {
+   "hits": 2,
+   "inv_price_sum": 1.2180046538685283,
+   "n": 2,
+   "processed": [
+    "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
+    "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1"
+   ],
+   "profit": 1.35,
+   "records": [
+    {
+     "date": "2026-08-01",
+     "hit": true,
+     "match": "Cruzeiro W vs Botafogo W",
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-02",
+     "hit": true,
+     "match": "Ludogorets vs Botev Vratsa",
+     "price": 1.91,
+     "source": "bzzoiro_odds"
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-08-03"
+  }
+ },
+ "version": 2
+}
