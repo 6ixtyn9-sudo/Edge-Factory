@@ -114,6 +114,127 @@
     "w_score": 1.0
   },
   {
+    "as_of": "2026-08-03T13:00:05+02:00",
+    "avg_p": 74.0,
+    "away": "Babrungas",
+    "bookmaker": "betexplorer_best",
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "babrungas",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "transinvest2",
+      "league": "UNKNOWN",
+      "league_key": "lithuania 1 lyga",
+      "league_raw": "Lithuania 1 Lyga",
+      "niche": "UNKNOWN",
+      "odds_band": "ALLOW",
+      "odds_band_name": "1.10-1.20",
+      "side_role": "away",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-08-03",
+    "decay_verdict": "WATCH",
+    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "draw_risk_flag": "LOW",
+    "edge_n_way": 2,
+    "edge_rule": "2way-unanimous avg_p>=70",
+    "edge_status": "certified",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.469,
+    "enhancement_reason": "Poisson expected hit rate is 46.9%",
+    "event_notes": [
+      {
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.46895229845583397,
+        "raw_probability": 0.46895229845583397,
+        "reason": "Poisson expected hit rate is 46.9%"
+      },
+      {
+        "label": "Away Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.46141886686742767,
+        "raw_probability": 0.46141886686742767,
+        "reason": "Mathematical expectation is 46.1%"
+      },
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.965103598691385,
+        "raw_probability": 0.965103598691385,
+        "reason": "Combined Under 3.5 is 96.5%"
+      },
+      {
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9455984312626935,
+        "raw_probability": 0.9455984312626935,
+        "reason": "Combined Under 3.5 is 94.6%"
+      },
+      {
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.8702290076335878,
+        "raw_probability": 0.8702290076335878,
+        "reason": "Combined Under 2.5 is 87.0%"
+      },
+      {
+        "label": "Both Teams to Score - No (BTTS-No)",
+        "market": "btts_no",
+        "probability": 0.5385811331325723,
+        "raw_probability": 0.5385811331325723,
+        "reason": "League BTTS is 47.4%, Home BTTS is 43.1%, Away BTTS is 47.4%"
+      },
+      {
+        "label": "Exact Goals: 2",
+        "market": "exact_2",
+        "probability": 0.25187041451665726,
+        "raw_probability": 0.25187041451665726,
+        "reason": "Poisson expected hit rate is 25.2%"
+      }
+    ],
+    "home": "Transinvest 2",
+    "kickoff": "03-08, 16:00",
+    "league": "Lithuania 1 Lyga",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "short odds, acceptable draw risk",
+    "market_type": "1x2",
+    "match": "Transinvest 2 vs Babrungas",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": 1.19,
+    "odds_captured_at": "2026-08-03T11:11:03.771486+00:00",
+    "odds_league": "Lithuania: I Lyga",
+    "odds_match_method": "betexplorer",
+    "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.17,
+      "source": "zulubet"
+    },
+    "odds_source": "betexplorer_odds",
+    "odds_tier": "low",
+    "pick": "away",
+    "picked_for": "2026-08-03",
+    "recommended_enhancement": "goal_range_2_3",
+    "recommended_market": "keep_1x2",
+    "rule": "2way-unanimous avg_p>=70",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "betclan"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=381): Avg Goals: 3.79 | Over 2.5: 74.3% | BTTS: 35.7% | Home Over 1.5 Goals: 4.7% | Away Over 1.5 Goals: 87.1% | Top Scores: 0-3 (13.6%), 1-2 (13.4%)",
+    "veto_reason": "short-odds away favourite 1.19",
+    "vitibet_index": null,
+    "w_score": 1.0
+  },
+  {
     "as_of": "2026-08-03T02:26:40+02:00",
     "avg_p": 69.6,
     "away": "Athlone Town",
@@ -242,6 +363,140 @@
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1301): Avg Goals: 3.70 | Over 2.5: 72.1% | BTTS: 39.5% | Home Over 1.5 Goals: 87.1% | Away Over 1.5 Goals: 10.0% | Top Scores: 2-0 (15.0%), 3-0 (13.8%)",
     "veto_reason": "context VETO in ['odds_band']",
     "vitibet_index": 2.75,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-08-03T13:00:05+02:00",
+    "avg_p": 82.5,
+    "away": "Kauno \u017dalgiris",
+    "bookmaker": "Betano",
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "kaunozalgiris",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "dinamozagreb",
+      "league": "ALLOW",
+      "league_key": "ucl",
+      "league_raw": "World UEFA Champions League",
+      "niche": "UNKNOWN",
+      "odds_band": "ALLOW",
+      "odds_band_name": "1.10-1.20",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "VETO"
+    },
+    "date": "2026-08-04",
+    "decay_verdict": "WATCH",
+    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "draw_risk_flag": "LOW",
+    "edge_n_way": 2,
+    "edge_rule": "2way-unanimous avg_p>=70",
+    "edge_status": "certified",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4644,
+    "enhancement_reason": "Poisson expected hit rate is 46.4%",
+    "event_notes": [
+      {
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.46438420503061706,
+        "raw_probability": 0.46438420503061706,
+        "reason": "Poisson expected hit rate is 46.4%"
+      },
+      {
+        "label": "Home Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.48164209079858356,
+        "raw_probability": 0.48164209079858356,
+        "reason": "Mathematical expectation is 48.2%"
+      },
+      {
+        "label": "Home Team Over 0.5 Goals",
+        "market": "home_over_05",
+        "probability": 0.8099571904233391,
+        "raw_probability": 0.8099571904233391,
+        "reason": "Home scoring rate is 85.7%"
+      },
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9689234184239733,
+        "raw_probability": 0.9689234184239733,
+        "reason": "Combined Under 3.5 is 96.9%"
+      },
+      {
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.8945615982241953,
+        "raw_probability": 0.8945615982241953,
+        "reason": "Combined Under 2.5 is 89.5%"
+      },
+      {
+        "label": "Both Teams to Score - No (BTTS-No)",
+        "market": "btts_no",
+        "probability": 0.5183579092014164,
+        "raw_probability": 0.5183579092014164,
+        "reason": "League BTTS is 48.1%, Home BTTS is 48.4%, Away BTTS is 48.1%"
+      },
+      {
+        "label": "Exact Goals: 2",
+        "market": "exact_2",
+        "probability": 0.243316177994364,
+        "raw_probability": 0.243316177994364,
+        "reason": "Poisson expected hit rate is 24.3%"
+      },
+      {
+        "label": "Exact Goals: 3",
+        "market": "exact_3",
+        "probability": 0.22106802703625308,
+        "raw_probability": 0.22106802703625308,
+        "reason": "Poisson expected hit rate is 22.1%"
+      },
+      {
+        "label": "Exact Goals: 4",
+        "market": "exact_4",
+        "probability": 0.15064063859381005,
+        "raw_probability": 0.15064063859381005,
+        "reason": "Poisson expected hit rate is 15.1%"
+      }
+    ],
+    "home": "Dinamo Zagreb",
+    "kickoff": "04-08, 19:00",
+    "league": "World UEFA Champions League",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "short odds, acceptable draw risk",
+    "market_type": "1x2",
+    "match": "Dinamo Zagreb vs Kauno \u017dalgiris",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": 1.19,
+    "odds_captured_at": "2026-08-03T11:02:12.975576+00:00",
+    "odds_league": "Champions League",
+    "odds_match_method": "alias_fuzzy",
+    "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.15,
+      "source": "zulubet"
+    },
+    "odds_source": "bzzoiro_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "recommended_enhancement": "goal_range_2_3",
+    "recommended_market": "keep_1x2",
+    "rule": "2way-unanimous avg_p>=70",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=89): Avg Goals: 4.69 | Over 2.5: 84.3% | BTTS: 41.6% | Home Over 1.5 Goals: 95.5% | Away Over 1.5 Goals: 11.2% | Top Scores: 4-0 (15.7%), 3-0 (11.2%)",
+    "veto_reason": "context VETO in ['team_h']",
+    "vitibet_index": 4.07,
     "w_score": 1.0
   }
 ]
