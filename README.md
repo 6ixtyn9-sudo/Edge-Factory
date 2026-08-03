@@ -61,7 +61,8 @@ localdata/ is owned by the GitHub Actions persist loop. It is the ONLY writer al
 Bash
 
 # one-time setup per machine — paste as-is:
-git config pull.rebase false
+
+git checkout -- localdata/ && git pull --no-rebase
 
 # commit workflow — edit ONLY the FILES line to name your change's files, then paste the whole block as-is:
 FILES=("scripts/picks_today.py" "scripts/audit_recent_picks.py" "HANDOVER.md")
@@ -73,6 +74,7 @@ git pull --no-rebase
 git push origin main
 
 # push rejected / "divergent branches" (bot persisted while you worked) — paste as-is:
+
 git pull --no-rebase -X ours
 git push origin main
 
