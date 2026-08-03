@@ -2546,3 +2546,54 @@ cosmetic "Win + …" labels render verbatim from the archive (they are what the
 operator saw). Tests: integration + markdown asserts extended, note-less pick
 fixture added; 93/93 full suite, pyflakes delta-0 (the single pre-existing
 f-string finding only shifted lines). Battery v4 re-run: 23/23.
+
+---
+
+## Addendum 14 — 2026-08-03 (night): graded 🔥 layout — one event per line (📊 parity)
+
+Operator feedback on Addendum 13: the per-pick graded 🔥 line rendered every
+event comma-joined on one run-on line (up to ~13 items) — hard to read unlike
+the per-line 📊 display above it. The render now mirrors the 📊 layout
+exactly: one line per event under a "**🔥 Possible Events (graded)**:" header,
+
+    - [🟢 HIT] **<archive label verbatim>**: expected 47.0% (Actual: 4 goals)
+
+with realized context from `_event_actual_context()` (total goals for match
+totals/ranges/exacts; named side + goals for team totals; BTTS-Yes/No;
+realized outcome for double_chance) and `[⚪ n/a] … (no scoring definition)`
+for unscorable markets. Content unchanged — same shared observations as the
+aggregate tables; presentation only. Tests: markdown asserts updated to the
+per-line format + new `_event_actual_context` unit test (94/94 full suite,
+pyflakes delta-0 — pre-existing f-string finding renumbered only, battery
+23/23).
+
+---
+
+## Addendum 15 — 2026-08-03 (late night): collision-safe git workflow in README + reconciliation record
+
+Third localdata state-sweep collision. At 19:08 SAST a VS Code "Commit All"
+swept localdata into local commit 09acdeec (which carried the payload-#3
+code) three minutes after the bot's persist commit 97b1335 landed on
+origin → pull failed with the divergent-branches fatal. Resolution (now the
+README runbook): `git config pull.rebase false` once;
+`git pull --no-rebase -X ours`; push. Merge 65d062c published with correct
+parents (09acdeec + 97b1335); post-merge independent verification:
+audit_recent_picks.py 4c194a76… and its tests d1e23e2b… byte-identical to
+the payload-#3 manifest, full suite 97 passed, 9 graded 🔥 blocks in the
+audit report.
+
+Post-merge verification ALSO caught a silent partial apply: payload #3's
+HANDOVER hunk (Addendum 14) never landed on the Mac — upstream HANDOVER.md
+sat at the payload-#2 sha 0274aea4 while the two code files matched the
+payload-#3 manifest. This payload restores Addendum 14 (verified: it was
+the ONLY delta) and adds this addendum. Rule hardened: payloads now carry
+FULL file copies alongside PATCHES.diff, and placement is sha256-verified
+against SHA256MANIFEST.txt — "applied" without a matching sha is not
+applied.
+
+README.md gains a "Git workflow (collision-safe)" section: localdata/ is
+owned exclusively by the Actions persist loop; humans/agents commit
+explicit paths only; never `git add -A` / `git add .` / VS Code Commit All;
+pull.rebase=false one-time setup; divergent branches →
+`git pull --no-rebase -X ours` (merge, never erase). Docs-only payload: no
+code changes; full suite re-run as the ship gate (97 passed expected).
