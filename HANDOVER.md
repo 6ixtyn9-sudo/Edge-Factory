@@ -2379,3 +2379,64 @@ Close-snapshot note: cron had no tick inside the guard-planned close window
 the WARN fired live twice in the 15:43 force-repick run); the production odd
 path is conservative + zero-credit by construction, and the first-snapshot rows
 (69, over best 1.49) remain the day's pricing of record.
+
+---
+
+## Addendum 11 — 2026-08-03 (EXT payload: multi-source enhancement pricing, "money on the table")
+
+Context: owner GO after the deployed gate showed 2/6 of today's slate carrying
+btts_yes recommendations with zero price feed (goal_range ×4 additionally
+unpriceable by design). Main payload priced only the theoddsapi pilot window
+(match o/u 2.5); the same-day feeds already captured FREE lines the pilot never
+used. This payload extends the pricing join — and nothing else.
+
+Design (single-module diff by construction):
+- enh_pricing now merges THREE local sources into one index, all file-only
+  (zero network, zero credits): theoddsapi (unified rows, strict source filter),
+  bzzoiro_odds (unified rows; rows store source="bzzoiro" — attribution tagged by
+  FILE, verified collector line 143), scoutingstats (wide per-fixture rows;
+  column map verified against sources/scoutingstats.py COLUMNS: odd_o15/u15 →
+  ou_1.5, odd_o25/u25 → ou_2.5, odd_o35/u35 → ou_3.5, odd_gg/ng → btts yes/no).
+- MARKET_PRICE_MAP v2 (8 priced types): match_over/under_15, match_over/under_25,
+  match_over/under_35, btts_yes, btts_no. Deliberately unpriceable list now
+  recorded WITH reasons: match_over_45 (ladder stops at 3.5), goal_range_*
+  (banded, no feed), team totals (2026-08-03 probe: 0 bookmakers), double_chance
+  (only 1x2 legs captured — NO synthetic prices; doctrine).
+- Merge semantics: best price ACROSS sources wins with source attribution on the
+  winning price (pipeline best-price convention); when ≥2 sources priced the same
+  selection and relative spread > 10%, enhancement_price_divergence records every
+  source's best price + spread_pct (surfaced, never silently averaged).
+- Per-source day scoping; isfinite/junk guards at every boundary (RT-2 pattern
+  extended to all three loaders); full derived-field reset at attach entry
+  incl. the divergence record (RT-3 pattern extended).
+- Index gains a "spread" bucket beside pairs/names — attach() is the only
+  consumer; the audit's pricing probe and the picks renderer upgrade with ZERO
+  call-site changes (shared loader). No registry/capture/veto/picks/audit diffs.
+
+Evidence (commands + raw outputs in operator thread; re-derivable):
+- pyflakes 3.4.0: CLEAN on enh_pricing + tests. pytest: 52/52 (44 prior + 8 EXT:
+  ss ladder/BTTS mapping, bzz unified+book, best-across-sources attribution,
+  >10% divergence flag + content, per-source day scoping, swapped orientation,
+  hostile rows at every source, unmapped-stays-unpriced).
+- capture --self-test: PASS (untouched path guard). Red-team battery v3: ALL
+  PASS (12 sections incl. E1–E5 EXT probes; divergence record
+  {theoddsapi 1.49, scoutingstats 1.70, spread_pct 0.1409}).
+- Live regression on the real tracked theoddsapi CSV: Halmstad match_over_25 →
+  1.49 Betsson, source=theoddsapi, breakeven 0.6711, sample-edge +0.0564 —
+  byte-identical behavior to v2 on existing data.
+- Known asymmetry (recorded): bzzoiro_odds/scoutingstats monthly files do not
+  ride git (only theoddsapi/betexplorer are negated in .gitignore), so author-side
+  verification used schema-verified fixtures; REAL-file values are verified in
+  operator-side gates G4/G7 (README prints actual attached prices from the Mac
+  files — bzz 2026-08 ≈2.5k rows, ss 2026-08 ≈0.5k rows exist on disk).
+
+Expected signals once live: any settled pick carrying a mapped type beyond the
+pilot (e.g. btts_yes, match_over_15) now feeds the registry with a source-tagged
+price; today's Hammarby/Celtic btts_yes class is the immediate beneficiary.
+Divergence records (source-vs-source >10%) begin accumulating in archived picks
+for the later CLV/calibration work.
+
+Deferred (recorded, not this payload): team totals (probe-empty), double_chance
+synthetic pricing (doctrine says no), banded markets, source coverage analytics
+(which slates ss/bzz actually cover day to day), certification of the newly
+mapped types (accumulates from priced settlements going forward).
