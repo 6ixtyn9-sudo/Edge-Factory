@@ -464,12 +464,14 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     assert "MAE=1.205" in text
     assert "Win + …" in text  # combo-label cosmetics caveat documented
 
-    # Per-pick graded 🔥 render (Addendum 13): HIT/MISS/n-a per recorded note,
-    # with the archive's own labels; note-less picks render explicitly.
+    # Per-pick graded 🔥 render (Addendum 13/14): one event per line in the 📊
+    # layout — label verbatim, expected % + realized context; note-less picks
+    # render explicitly.
     assert "🔥 Possible Events (graded)" in text
-    assert "[🟢 HIT] b (81.5%)" in text          # btts_yes note on pick A (1-1)
-    assert "[🔴 MISS] a (55.0%)" in text         # match_over_25 note on pick A
-    assert "[⚪ n/a] d (50.0%)" in text          # corners_over_95 has no scoring definition
+    assert "    - [🟢 HIT] **b**: expected 81.5% (Actual: BTTS-Yes)" in text  # btts_yes on 1-1
+    assert "    - [🔴 MISS] **a**: expected 55.0% (Actual: 2 goals)" in text  # m_o25 on 1-1
+    assert "    - [🟢 HIT] **c**: expected 47.0% (Actual: 2 goals)" in text   # goal_range_2_3
+    assert "    - [⚪ n/a] **d**: promised 50.0% (no scoring definition)" in text
     assert "none recorded on the archived pick" in text  # pick D had no notes
 
     # Empty-state rendering must be explicit (never silent) and crash-proof.
@@ -482,3 +484,24 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     text2 = md2.read_text()
     assert "no settled picks carried machine-readable 🔥 event notes" in text2
     assert "no settled picks carried a parseable 📊 statistical comment" in text2
+
+
+def test_event_actual_context():
+    from scripts.audit_recent_picks import _event_actual_context
+
+    # match totals / ranges / exacts -> total goals
+    assert _event_actual_context("match_over_25", "home", 2, 1) == "3 goals"
+    assert _event_actual_context("goal_range_2_3", "away", 1, 1) == "2 goals"
+    assert _event_actual_context("exact_0", "home", 0, 0) == "0 goals"
+    # team totals name the side and its goals
+    assert _event_actual_context("home_over_15", "home", 3, 0) == "3 home goals"
+    assert _event_actual_context("away_under_25", "home", 1, 2) == "2 away goals"
+    assert _event_actual_context("team_over_05", "away", 0, 4) == "4 away goals"
+    # btts spells the realized side
+    assert _event_actual_context("btts_yes", "home", 1, 1) == "BTTS-Yes"
+    assert _event_actual_context("btts_no", "away", 2, 0) == "BTTS-No"
+    # double chance names the realized outcome
+    assert _event_actual_context("double_chance", "home", 2, 1) == "home (2-1)"
+    assert _event_actual_context("double_chance", "away", 1, 1) == "draw (1-1)"
+    # unknown/garbage markets degrade to total goals, never crash
+    assert _event_actual_context(None, "home", 2, 2) == "4 goals"
