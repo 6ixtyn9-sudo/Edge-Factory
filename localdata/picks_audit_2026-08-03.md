@@ -30,15 +30,101 @@ Metrics scored against actual outcomes of the settled consensus picks in this wi
 
 Performance of deep context-derived recommended enhancements overlay:
 - **Total Recommended Enhancements**: 24
-- **Total Hits**: 14
-- **Overall Hit Rate**: 58.3%
+- **Total Hits**: 16
+- **Overall Hit Rate**: 66.7%
 
 ### Breakdown by Enhancement Type:
 - `away_under_35`: recommended=5, hits=5, hit_rate=100.0%
 - `goal_range_2_3`: recommended=4, hits=1, hit_rate=25.0%
 - `home_under_45`: recommended=1, hits=1, hit_rate=100.0%
-- `match_over_15`: recommended=5, hits=2, hit_rate=40.0%
+- `match_over_15`: recommended=5, hits=4, hit_rate=80.0%
 - `match_over_25`: recommended=9, hits=5, hit_rate=55.6%
+
+## Possible Events (🔥) Full-Surface Audit
+
+> ⚠️ **Calibration ≠ edge.** No prices in this section — a hit-rate is not value. Certification and staking remain gated by the enhancement registry.
+
+Every machine-readable 🔥 note on every settled pick in the window, scored against the final score (plain-market: a note hits iff its market lands in the final score (selection-independent for match totals and BTTS; the 1X2 selection only picks the team for team totals and the double-chance leg)).
+
+- notes on settled picks: **212** | scored: 212
+
+### Per-market hit table
+
+| market | notes | n | hits | realized | promised avg | Δ | Brier |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| `away_under_35` | 21 | 21 | 20 | 95.2% | 95.4% | -0.2% | 0.04387 |
+| `goal_range_2_3` | 19 | 19 | 7 | 36.8% | 46.2% | -9.3% | 0.238706 |
+| `btts_yes` | 17 | 17 | 7 | 41.2% | 52.5% | -11.3% | 0.24082 |
+| `exact_2` | 17 | 17 | 4 | 23.5% | 24.6% | -1.1% | 0.182352 |
+| `match_over_25` | 15 | 15 | 9 | 60.0% | 56.8% | +3.2% | 0.297849 |
+| `away_under_25` | 14 | 14 | 13 | 92.9% | 88.4% | +4.5% | 0.06791 |
+| `exact_4` | 13 | 13 | 5 | 38.5% | 17.0% | +21.5% | 0.285153 |
+| `match_over_35` | 12 | 12 | 7 | 58.3% | 40.3% | +18.1% | 0.308884 |
+| `goal_range_4_6` | 11 | 11 | 5 | 45.5% | 35.3% | +10.1% | 0.263665 |
+| `exact_3` | 10 | 10 | 0 | 0.0% | 22.3% | -22.3% | 0.049515 |
+| `home_over_05` | 10 | 10 | 10 | 100.0% | 83.3% | +16.7% | 0.028759 |
+| `home_under_35` | 9 | 9 | 6 | 66.7% | 94.3% | -27.6% | 0.295675 |
+| `goal_range_4_5` | 7 | 7 | 4 | 57.1% | 31.2% | +26.0% | 0.330817 |
+| `exact_5` | 6 | 6 | 1 | 16.7% | 13.6% | +3.1% | 0.150536 |
+| `match_over_15` | 6 | 6 | 5 | 83.3% | 86.8% | -3.5% | 0.153114 |
+| `match_over_45` | 6 | 6 | 1 | 16.7% | 30.6% | -13.9% | 0.205088 |
+| `btts_no` | 5 | 5 | 3 | 60.0% | 57.6% | +2.4% | 0.230294 |
+| `exact_1` | 3 | 3 | 1 | 33.3% | 21.8% | +11.6% | 0.219319 ⚠️low-n |
+| `away_over_05` | 2 | 2 | 1 | 50.0% | 83.2% | -33.2% | 0.367464 ⚠️low-n |
+| `goal_range_6_plus` | 2 | 2 | 0 | 0.0% | 27.1% | -27.1% | 0.075286 ⚠️low-n |
+| `goal_range_7_plus` | 2 | 2 | 0 | 0.0% | 15.1% | -15.1% | 0.023681 ⚠️low-n |
+| `home_under_25` | 2 | 2 | 1 | 50.0% | 87.3% | -37.3% | 0.409172 ⚠️low-n |
+| `away_under_15` | 1 | 1 | 1 | 100.0% | 81.9% | +18.1% | 0.032593 ⚠️low-n |
+| `exact_0` | 1 | 1 | 0 | 0.0% | 11.0% | -11.0% | 0.012054 ⚠️low-n |
+| `goal_range_0_1` | 1 | 1 | 1 | 100.0% | 35.2% | +64.8% | 0.419464 ⚠️low-n |
+
+Labels reading "Win + …" (`match_over_15`, `match_over_25`, `btts_yes`) are cosmetic: promised %, captured price and scoring are all plain-market (FIX-2). Cosmetic label cleanup is queued for the hardening pass.
+
+### Promised-vs-realized calibration (all 🔥 notes pooled)
+
+| promised bucket | n | promised avg | realized | Δ |
+| --- | --- | --- | --- | --- |
+| 0.1-0.2 | 23 | 15.8% | 30.4% | +14.7% |
+| 0.2-0.3 | 41 | 24.5% | 22.0% | -2.5% |
+| 0.3-0.4 | 20 | 34.1% | 60.0% | +25.9% |
+| 0.4-0.5 | 32 | 46.0% | 40.6% | -5.4% |
+| 0.5-0.6 | 23 | 53.9% | 34.8% | -19.1% |
+| 0.6-0.7 | 4 | 66.6% | 100.0% | +33.4% |
+| 0.7-0.8 | 4 | 74.4% | 50.0% | -24.4% |
+| 0.8-0.9 | 28 | 84.7% | 89.3% | +4.6% |
+| 0.9-1.0 | 37 | 94.5% | 86.5% | -8.0% |
+
+## Statistical Line (📊) Calibration
+
+> ⚠️ **Calibration ≠ edge.** The 📊 line promises historical frequencies, not prices — this section scores promise vs realization only and must not drive staking.
+
+Scored as probabilistic forecasts per settled pick (each metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5 / exact Top Score) — calibration, not a direction call).
+
+- **Avg Goals forecast**: n=24, MAE=1.094167 goals, bias=-0.406667 (realized − promised), promised avg 3.781667 vs realized 3.375
+
+### Per-metric calibration
+
+| metric | n | promised avg | realized | Δ | Brier |
+| --- | --- | --- | --- | --- | --- |
+| Top Scores (exact) | 48 | 14.0% | 10.4% | -3.6% | 0.097298 |
+| Away Over 1.5 | 24 | 19.0% | 16.7% | -2.3% | 0.108031 |
+| BTTS-Yes | 24 | 40.2% | 37.5% | -2.7% | 0.24031 |
+| Home Over 1.5 | 24 | 78.6% | 70.8% | -7.7% | 0.215266 |
+| Over 2.5 | 24 | 73.4% | 70.8% | -2.6% | 0.208913 |
+
+### Promised-vs-realized calibration (all 📊 metrics pooled)
+
+| promised bucket | n | promised avg | realized | Δ |
+| --- | --- | --- | --- | --- |
+| 0.0-0.1 | 16 | 9.1% | 12.5% | +3.4% |
+| 0.1-0.2 | 55 | 13.4% | 10.9% | -2.4% |
+| 0.2-0.3 | 1 | 20.3% | 0.0% | -20.3% |
+| 0.3-0.4 | 13 | 38.2% | 46.2% | +8.0% |
+| 0.4-0.5 | 11 | 42.7% | 27.3% | -15.4% |
+| 0.6-0.7 | 4 | 66.8% | 75.0% | +8.2% |
+| 0.7-0.8 | 20 | 74.7% | 70.0% | -4.7% |
+| 0.8-0.9 | 16 | 86.8% | 87.5% | +0.7% |
+| 0.9-1.0 | 8 | 90.8% | 50.0% | -40.8% |
 
 ## By rule
 
