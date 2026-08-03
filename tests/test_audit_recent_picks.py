@@ -315,8 +315,10 @@ PICK_A = {
         "Top Scores: 2-0 (16.9%), 1-1 (12.0%)"
     ),
     "event_notes": [
-        {"market": "match_over_25", "probability": 0.55, "raw_probability": 0.60, "label": "a"},
-        {"market": "btts_yes", "probability": 0.815, "raw_probability": 0.815, "label": "b"},
+        {"market": "match_over_25", "probability": 0.55, "raw_probability": 0.60,
+         "label": "Home Win + Over 2.5"},   # legacy combo wording — render must normalize (Addendum 16)
+        {"market": "btts_yes", "probability": 0.815, "raw_probability": 0.815,
+         "label": "Home Win + BTTS (Yes)"},  # legacy combo wording — render must normalize (Addendum 16)
         {"market": "goal_range_2_3", "probability": 0.47, "raw_probability": 0.47, "label": "c"},
         {"market": "corners_over_95", "probability": 0.5, "raw_probability": 0.5, "label": "d"},
     ],
@@ -332,7 +334,8 @@ PICK_B = {
         "Top Scores: 0-1 (11.0%)"
     ),
     "event_notes": [
-        {"market": "match_over_25", "probability": 0.62, "raw_probability": 0.62, "label": "e"},
+        {"market": "match_over_25", "probability": 0.62, "raw_probability": 0.62,
+         "label": "Away Win + Over 2.5"},   # legacy combo wording — render must normalize (Addendum 16)
         {"market": "btts_no", "probability": 0.35, "raw_probability": 0.35, "label": "f"},
         {"market": "home_over_15", "probability": 0.71, "raw_probability": 0.71, "label": "g"},
     ],
@@ -412,7 +415,7 @@ def test_build_report_full_surface_integration(tmp_path, monkeypatch):
     assert a_notes["btts_yes"]["hit"] is True             # 1-1 (plain BTTS, FIX-2)
     assert a_notes["goal_range_2_3"]["hit"] is True       # 2 goals
     assert a_notes["corners_over_95"]["hit"] is None      # no outcome definition
-    assert a_notes["btts_yes"]["label"] == "b"            # archive label carried for display
+    assert a_notes["btts_yes"]["label"] == "Home Win + BTTS (Yes)"  # storage preserves archived wording
     d_stats = ledger["Kappa vs Lambda"]
     assert d_stats["notes_audit"] == []                   # nothing recorded -> explicit empty
     assert d_stats["parsed_stats"]["over25_expected"] is None  # no 📊 comment either
@@ -462,15 +465,21 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     assert "0.8-0.9" in text  # pooled promised bucket row
     assert "Avg Goals forecast" in text
     assert "MAE=1.205" in text
-    assert "Win + …" in text  # combo-label cosmetics caveat documented
+    assert "Win + …" in text  # label-honesty disclaimer documents the legacy wording (Addendum 16)
 
     # Per-pick graded 🔥 render (Addendum 13/14): one event per line in the 📊
-    # layout — label verbatim, expected % + realized context; note-less picks
-    # render explicitly.
+    # layout — expected % + realized context; note-less picks render
+    # explicitly. Addendum 16: combo-worded archive labels render as the
+    # canonical plain-market label they were promised/priced/scored as.
     assert "🔥 Possible Events (graded)" in text
-    assert "    - [🟢 HIT] **b**: expected 81.5% (Actual: BTTS-Yes)" in text  # btts_yes on 1-1
-    assert "    - [🔴 MISS] **a**: expected 55.0% (Actual: 2 goals)" in text  # m_o25 on 1-1
-    assert "    - [🟢 HIT] **c**: expected 47.0% (Actual: 2 goals)" in text   # goal_range_2_3
+    assert "    - [🟢 HIT] **Both Teams to Score - Yes (BTTS-Yes)**: expected 81.5% (Actual: BTTS-Yes)" in text
+    assert "    - [🔴 MISS] **Match Over 2.5 Goals**: expected 55.0% (Actual: 2 goals)" in text
+    # Kongsvinger regression pin: no "Home Win + "/"Away Win + " wording may
+    # survive into the report (a 1-3 home loss must never read as a HIT on
+    # "Home Win + Over 1.5").
+    assert "Home Win + " not in text
+    assert "Away Win + " not in text
+    assert "    - [🟢 HIT] **c**: expected 47.0% (Actual: 2 goals)" in text   # non-combo: verbatim
     assert "    - [⚪ n/a] **d**: promised 50.0% (no scoring definition)" in text
     assert "none recorded on the archived pick" in text  # pick D had no notes
 
@@ -505,3 +514,25 @@ def test_event_actual_context():
     assert _event_actual_context("double_chance", "away", 1, 1) == "draw (1-1)"
     # unknown/garbage markets degrade to total goals, never crash
     assert _event_actual_context(None, "home", 2, 2) == "4 goals"
+
+
+def test_display_label_combo_normalization():
+    """Addendum 16 (label honesty): combo-worded archive labels for
+    plain-scored markets render as the canonical plain label — the live
+    Kongsvinger 1-3 specimen graded [🟢 HIT] on "Home Win + Over 1.5" for a
+    home LOSS. Every other market keeps the archived wording verbatim, and
+    storage stays faithful (normalization is display-only)."""
+    from scripts.audit_recent_picks import _display_label
+
+    # The three plain-scored combo markets normalize (home AND away wording).
+    assert _display_label("match_over_15", "Home Win + Over 1.5") == "Match Over 1.5 Goals"
+    assert _display_label("match_over_25", "Away Win + Over 2.5") == "Match Over 2.5 Goals"
+    assert _display_label("btts_yes", "Home Win + BTTS (Yes)") == "Both Teams to Score - Yes (BTTS-Yes)"
+    # Already-plain labels on those markets pass through unchanged.
+    assert _display_label("match_over_15", "Match Over 1.5 Goals") == "Match Over 1.5 Goals"
+    # Non-combo markets: archived wording is verbatim, however short.
+    assert _display_label("goal_range_2_3", "c") == "c"
+    assert _display_label("home_under_35", "Home Team Under 3.5 Goals") == "Home Team Under 3.5 Goals"
+    # Missing label falls back to the market id; missing both never raises.
+    assert _display_label("mystery_market", None) == "mystery_market"
+    assert _display_label(None, None) == "?"

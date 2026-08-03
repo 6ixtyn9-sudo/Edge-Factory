@@ -519,10 +519,40 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
 # extend load_rolling_audit_hit_rates() in picks_today.py to consume them.
 # ---------------------------------------------------------------------------
 
-# Markets whose label reads "{Team} Win + …" while promised %, captured price
-# and scoring are all plain-market (FIX-2 aligned the scorer; the cosmetic
-# label cleanup is queued for the hardening pass).
+# Markets whose archived label may read "{Team} Win + …" while promised %,
+# captured price and scoring are all plain-market (FIX-2). Addendum 16
+# (label honesty): the graded render normalizes them to PLAIN_LABELS via
+# _display_label() so a settled pick never shows a HIT on "Home Win + …"
+# the home side did not land.
 COMBO_LABEL_MARKETS = ("match_over_15", "match_over_25", "btts_yes")
+
+# Canonical plain-market display labels for COMBO_LABEL_MARKETS — this is
+# exactly what is promised, priced and scored for these markets. Picks
+# archived after 2026-08-03 carry these labels from the source
+# (picks_today); _display_label() normalizes older archives at render time.
+PLAIN_LABELS = {
+    "match_over_15": "Match Over 1.5 Goals",
+    "match_over_25": "Match Over 2.5 Goals",
+    "btts_yes": "Both Teams to Score - Yes (BTTS-Yes)",
+}
+
+
+def _display_label(market: str | None, archive_label: str | None) -> str:
+    """Render label for a scored 🔥 note.
+
+    COMBO_LABEL_MARKETS are plain-market end-to-end (FIX-2) but were
+    archived with "{Team} Win + …" wording, which renders contradictions on
+    settled picks (live specimen: Kongsvinger vs Strommen 1-3, the HOME pick
+    LOST, yet "Home Win + Over 1.5" graded [🟢 HIT]). Render the canonical
+    plain label for those markets; every other market keeps the archived
+    wording verbatim. Stored observations stay faithful to the archive —
+    only display is normalized.
+    """
+    if market in PLAIN_LABELS:
+        return PLAIN_LABELS[market]
+    if archive_label:
+        return str(archive_label)
+    return str(market or "?")
 
 NOTE_SCORING_DEFINITION = (
     "plain-market: a note hits iff its market lands in the final score "
@@ -796,10 +826,11 @@ def _render_event_notes_section(aud: dict[str, Any]) -> list[str]:
                 f"{_signed_pct(slot.get('delta'))} | {brier if brier is not None else 'n/a'}{low_n} |"
             )
         lines.append("")
+        labels_mapping = "; ".join(f"`{m}` → \"{PLAIN_LABELS[m]}\"" for m in COMBO_LABEL_MARKETS)
         lines.append(
-            "Labels reading \"Win + …\" (`" + "`, `".join(COMBO_LABEL_MARKETS) + "`) are cosmetic: promised %, "
-            "captured price and scoring are all plain-market (FIX-2). Cosmetic label cleanup is queued "
-            "for the hardening pass."
+            "Labels render plain-market exactly as promised, priced and scored (FIX-2 + label honesty, "
+            "Addendum 16): " + labels_mapping + ". Raw archive labels written before 2026-08-03 may still "
+            "carry the old \"Win + …\" wording in their stored label field; the render normalizes them."
         )
         lines.append("")
     buckets = aud.get("promised_buckets") or []
@@ -1347,12 +1378,13 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
             # Per-pick graded 🔥 Possible Events (Addendum 13/14): the same
             # observations that feed the aggregate table, rendered ONE EVENT
             # PER LINE in the 📊 layout (expected % + realized context) so the
-            # operator can scan pick by pick.
+            # operator can scan pick by pick. Addendum 16: combo-worded
+            # markets render their canonical plain label via _display_label.
             notes_audit = item.get("notes_audit") or []
             if notes_audit:
                 lines.append("  - **🔥 Possible Events (graded)**:")
                 for note in notes_audit:
-                    ev_label = note.get("label") or note.get("market")
+                    ev_label = _display_label(note.get("market"), note.get("label"))
                     if note.get("hit") is None:
                         lines.append(f"    - [⚪ n/a] **{ev_label}**: promised "
                                      f"{_pct(note.get('promised'))} (no scoring definition)")
