@@ -167,6 +167,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 91.2% (Actual: 0 goals)
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 90.0% (Actual: 3 goals)
   - **Top Scores**: [🔴 MISS] 4-0 (11.7%), [🔴 MISS] 2-1 (11.7%)
+  - **🔥 Possible Events (graded)**: [🟢 HIT] Goal Range 2-3 (47.0%), [🔴 MISS] Home Win + BTTS (Yes) (52.0%), [🟢 HIT] Home Team Under 3.5 Goals (95.0%), [🟢 HIT] Away Team Under 3.5 Goals (95.0%), [🔴 MISS] Exact Goals: 2 (25.7%), [🔴 MISS] Exact Goals: 1 (20.5%)
 
 ### 2026-08-02: Dinamo Brest vs Belshina (Actual Score: **4-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.32 -> 🟢 WON (Expected prob: 75.5%)
@@ -175,6 +176,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 90.6% (Actual: 4 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.1% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (12.0%), [🔴 MISS] 3-0 (11.8%)
+  - **🔥 Possible Events (graded)**: [🟢 HIT] Home Win + Over 1.5 (88.6%), [🟢 HIT] Home Win + Over 2.5 (74.2%), [🟢 HIT] Goal Range 4-6 (49.2%), [🟢 HIT] Match Over 3.5 Goals (67.5%), [🟢 HIT] Both Teams to Score - No (BTTS-No) (66.8%), [🔴 MISS] Match Over 4.5 Goals (48.7%), [🟢 HIT] Goal Range 4-5 (36.0%), [🔴 MISS] Goal Range 6+ (31.5%), [🟢 HIT] Exact Goals: 4 (18.7%), [🔴 MISS] Goal Range 7+ (18.2%), [🔴 MISS] Exact Goals: 5 (17.3%)
 
 ### 2026-08-02: Kongsvinger vs Strommen (Actual Score: **1-3**)
 - **1X2 Pick**: Selected `HOME` @ 1.33 -> 🔴 LOST (Expected prob: 75.5%)
@@ -183,6 +185,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 90.6% (Actual: 1 goals)
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 90.1% (Actual: 3 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (12.0%), [🔴 MISS] 3-0 (11.8%)
+  - **🔥 Possible Events (graded)**: [🟢 HIT] Home Win + Over 1.5 (86.8%), [🟢 HIT] Home Win + Over 2.5 (68.1%), [🟢 HIT] Home Win + BTTS (Yes) (64.1%), [🟢 HIT] Home Team Over 0.5 Goals (85.3%), [🟢 HIT] Match Over 3.5 Goals (39.6%), [🟢 HIT] Away Team Under 3.5 Goals (91.8%), [🔴 MISS] Goal Range 2-3 (43.2%), [🟢 HIT] Goal Range 4-6 (35.1%), [🟢 HIT] Goal Range 4-5 (29.1%), [🔴 MISS] Exact Goals: 3 (22.3%), [🔴 MISS] Match Over 4.5 Goals (21.8%), [🟢 HIT] Exact Goals: 4 (17.8%), [🔴 MISS] Exact Goals: 5 (11.3%)
 
 ### 2026-08-02: Noah vs Syunik (Actual Score: **3-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.31 -> 🟢 WON (Expected prob: 68.3%)
@@ -191,6 +194,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 87.2% (Actual: 3 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.7% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (16.3%), [🟢 HIT] 3-0 (12.9%)
+  - **🔥 Possible Events (graded)**: [🟢 HIT] Home Win + Over 1.5 (80.8%), [🔴 MISS] Home Win + BTTS (Yes) (51.7%), [🔴 MISS] Away Team Over 0.5 Goals (83.9%), [🟢 HIT] Home Team Over 0.5 Goals (80.8%), [🔴 MISS] Match Over 3.5 Goals (45.4%), [🔴 MISS] Goal Range 4-6 (39.2%), [🟢 HIT] Home Win + Over 2.5 (37.3%), [🔴 MISS] Goal Range 4-5 (31.7%), [🔴 MISS] Match Over 4.5 Goals (26.7%), [🔴 MISS] Exact Goals: 4 (18.8%), [🔴 MISS] Exact Goals: 5 (13.0%)
 
 ### 2026-08-02: Independiente del Valle vs Deportivo Cuenca (Actual Score: **1-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.33 -> 🟢 WON (Expected prob: 80.5%)
@@ -199,6 +203,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 91.6% (Actual: 1 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 92.2% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (19.6%), [🔴 MISS] 3-1 (14.5%)
+  - **🔥 Possible Events (graded)**: [🔴 MISS] Goal Range 2-3 (46.5%), [🟢 HIT] Away Team Under 3.5 Goals (98.1%), [🟢 HIT] Home Team Under 3.5 Goals (95.3%), [🟢 HIT] Away Team Under 2.5 Goals (93.8%), [🟢 HIT] Away Team Under 1.5 Goals (81.9%), [🟢 HIT] Both Teams to Score - No (BTTS-No) (58.1%), [🔴 MISS] Home Win + BTTS (Yes) (41.9%), [🟢 HIT] Goal Range 0-1 (35.2%), [🔴 MISS] Exact Goals: 2 (26.8%), [🟢 HIT] Exact Goals: 1 (24.3%), [🔴 MISS] Exact Goals: 0 (11.0%)
 
 ### 2026-08-02: Ludogorets vs Botev Vratsa (Actual Score: **2-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.4 -> 🟢 WON (Expected prob: 69.4%)
@@ -207,6 +212,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 87.1% (Actual: 2 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.0% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (15.0%), [🔴 MISS] 3-0 (13.8%)
+  - **🔥 Possible Events (graded)**: [🟢 HIT] Home Win + Over 2.5 (48.5%), [🟢 HIT] Goal Range 2-3 (46.9%), [🟢 HIT] Away Team Under 3.5 Goals (97.5%), [🟢 HIT] Away Team Under 2.5 Goals (91.5%), [🔴 MISS] Both Teams to Score - No (BTTS-No) (56.1%), [🟢 HIT] Home Win + BTTS (Yes) (43.9%), [🔴 MISS] Exact Goals: 2 (25.2%)
 
 ### 2026-08-02: ODD Ballklubb vs Asane (Actual Score: **4-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.4 -> 🟢 WON (Expected prob: 68.0%)
@@ -215,6 +221,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 86.9% (Actual: 4 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.9% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (16.4%), [🔴 MISS] 3-0 (13.1%)
+  - **🔥 Possible Events (graded)**: [🔴 MISS] Goal Range 2-3 (47.0%), [🟢 HIT] Home Win + BTTS (Yes) (52.0%), [🔴 MISS] Home Team Under 3.5 Goals (95.0%), [🟢 HIT] Away Team Under 3.5 Goals (95.0%), [🔴 MISS] Exact Goals: 2 (25.7%), [🔴 MISS] Exact Goals: 1 (20.5%)
 
 ### 2026-08-02: Dunajska Streda vs Dukla Banska Bystrica (Actual Score: **2-0**)
 - **1X2 Pick**: Selected `HOME` @ n/a -> 🟢 WON (Expected prob: 71.0%)
@@ -223,6 +230,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 87.1% (Actual: 2 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.1% (Actual: 0 goals)
   - **Top Scores**: [🟢 HIT] 2-0 (13.5%), [🔴 MISS] 3-0 (13.3%)
+  - **🔥 Possible Events (graded)**: [🔴 MISS] Home Win + Over 2.5 (56.3%), [🟢 HIT] Goal Range 2-3 (46.5%), [🔴 MISS] Home Win + BTTS (Yes) (54.1%), [🟢 HIT] Home Team Under 3.5 Goals (94.7%), [🟢 HIT] Away Team Under 3.5 Goals (94.6%), [🟢 HIT] Away Team Under 2.5 Goals (85.1%), [🟢 HIT] Exact Goals: 2 (24.4%), [🔴 MISS] Exact Goals: 3 (22.1%)
 
 ### 2026-08-02: Clarence Zebras vs Ulverstone (Actual Score: **1-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.23 -> 🟢 WON (Expected prob: 75.5%)
@@ -231,6 +239,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 90.6% (Actual: 1 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.1% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (12.0%), [🔴 MISS] 3-0 (11.8%)
+  - **🔥 Possible Events (graded)**: [🔴 MISS] Home Win + Over 1.5 (90.1%), [🔴 MISS] Home Win + Over 2.5 (74.0%), [🔴 MISS] Home Win + BTTS (Yes) (53.9%), [🟢 HIT] Home Team Over 0.5 Goals (82.1%), [🔴 MISS] Match Over 3.5 Goals (47.2%), [🟢 HIT] Away Team Under 3.5 Goals (91.5%), [🟢 HIT] Away Team Under 2.5 Goals (86.6%), [🔴 MISS] Goal Range 4-6 (40.4%), [🔴 MISS] Goal Range 4-5 (32.4%), [🔴 MISS] Match Over 4.5 Goals (28.2%), [🔴 MISS] Exact Goals: 4 (19.0%), [🔴 MISS] Exact Goals: 5 (13.4%)
 
 
 ## Unmatched result examples
