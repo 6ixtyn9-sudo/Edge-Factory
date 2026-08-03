@@ -136,11 +136,42 @@ def save_morning_baseline(target_date: str, picks_text: str | None, *, overwrite
     path.write_text(picks_text)
 
 
+def sync_repo_state() -> None:
+    """Pull cloud-committed pipeline state (localdata) before local runs.
+
+    The Actions bot commits localdata/ after every iteration; pulling first
+    makes the local cadence start from the exact cloud state (frozen picks,
+    sent ledgers, registries), so the archive-first logic restores the same
+    morning slate instead of re-picking a divergent one. No-op in CI (GitHub
+    Actions checkout is detached) and when .git is absent. Set
+    EDGE_FACTORY_GIT_SYNC=0 to disable. Non-fatal by design."""
+    if os.environ.get("EDGE_FACTORY_GIT_SYNC", "1").strip().lower() in {"0", "false", "no", "off"}:
+        return
+    if os.environ.get("GITHUB_ACTIONS", "").lower() == "true":
+        return
+    if not (ROOT / ".git").exists():
+        return
+    run_soft("git pull --rebase --autostash", "git state sync (cloud -> local)")
+    run_soft("git fetch --prune", "git fetch --prune")
+
+
 def sync_official_archive(target_date: str, label: str = "sync_supabase") -> None:
     archive = archived_picks_file(target_date)
     run_soft(
         f"python3 scripts/sync_supabase.py --picks {shlex.quote(str(archive))} --target-date {target_date} --replace-date",
         label,
+    )
+
+
+def capture_theodds_snapshot(target_date: str, trigger: str) -> None:
+    """The Odds API price snapshot for the frozen shortlist (audit-only CLV).
+
+    --auto is idempotent and attempt-guarded: first snapshot once per fixture
+    per day, close snapshot once per fixture inside the pre-kickoff window;
+    0 credits otherwise. Key rotation + monthly budget live in the adapter."""
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/capture_theodds.py --date {target_date} --auto",
+        f"theoddsapi capture {target_date} [{trigger}]",
     )
 
 
@@ -568,12 +599,14 @@ def run_pipeline(
     clv_label: str | None = None,
 ) -> None:
     """Execute the pipeline according to the requested operational mode."""
+    sync_repo_state()
     if mode == "clv_only":
         label = clv_label or "monitoring"
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label {label}",
             f"audit_clv capture {target_date} [{label}]",
         )
+        capture_theodds_snapshot(target_date, label)
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
@@ -652,6 +685,7 @@ def run_pipeline(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
             f"audit_clv capture {target_date} [pick_time]",
         )
+        capture_theodds_snapshot(target_date, "pick_time")
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
 
         target_picks = load_picks_file()
@@ -664,6 +698,7 @@ def run_pipeline(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label end_of_run",
             f"audit_clv capture {target_date} [end_of_run]",
         )
+        capture_theodds_snapshot(target_date, "end_of_run")
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_clv.py report --start {clv_start} --end {target_date}",
             f"audit_clv report {clv_start}..{target_date}",
@@ -673,7 +708,7 @@ def run_pipeline(
             f"audit_recent_picks {target_date} [30d]",
         )
         sync_official_archive(target_date, "sync_supabase")
-        run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Smart Dispatch)")
+        run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date} --heartbeat", "notify_whatsapp (Smart Dispatch + empty-slate heartbeat)")
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "autonomous_intraday":
@@ -741,6 +776,7 @@ def run_pipeline(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label {qlabel}",
             f"audit_clv capture {target_date} [{qlabel}]",
         )
+        capture_theodds_snapshot(target_date, qlabel)
 
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
         run_soft(

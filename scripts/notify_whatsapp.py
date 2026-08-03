@@ -74,6 +74,38 @@ def _load_json_list(path: Path) -> list[dict[str, Any]]:
         return []
 
 
+HEARTBEAT_MARKER_PREFIX = "__heartbeat__|"
+HEARTBEAT_TEXT = (
+    "📭 Edge Factory — no certified picks today.\n"
+    "System ran normally; the slate is simply empty. Tracking continues automatically."
+)
+
+
+def _filter_discoveries(candidates: list[dict[str, Any]], target_date: str,
+                        discovery_sent_keys: set[str], sent_keys: set[str]) -> list[dict[str, Any]]:
+    """Discovery-alert filter with main-ledger suppression (anti-spam backstop).
+
+    A fixture already messaged via the normal pick path (main sent ledger) must
+    never re-alert as a 'discovery', even if the separate discovery ledger was
+    lost between runs (cache eviction / stale committed copy).
+    """
+    out = []
+    for p in candidates:
+        key = _build_match_dedupe_key(p, target_date)
+        if key in discovery_sent_keys or key in sent_keys:
+            continue
+        out.append(p)
+    return out
+
+
+def _heartbeat_key(target_date: str) -> str:
+    return f"{HEARTBEAT_MARKER_PREFIX}{target_date}"
+
+
+def _heartbeat_pending(sent_keys: set[str], target_date: str) -> bool:
+    return _heartbeat_key(target_date) not in sent_keys
+
+
 def _load_sent_ledger(path: Path) -> set[str]:
     if not path.exists():
         return set()
@@ -145,6 +177,9 @@ def main() -> int:
     ap.add_argument("--date", default=None, help="Target date (YYYY-MM-DD). Defaults to today.")
     ap.add_argument("--force", action="store_true", help="Bypass sent ledgers and transmit all items.")
     ap.add_argument("--late-slate-only", action="store_true", help="Strict intraday scan mode.")
+    ap.add_argument("--heartbeat", action="store_true",
+                    help="Send one 'no certified picks today' ping when the slate is empty "
+                         "(morning official pass only; deduped via the sent ledger).")
     args = ap.parse_args()
 
     picks_file = Path(args.picks)
@@ -207,11 +242,21 @@ def main() -> int:
             and _build_match_dedupe_key(p, target_date) not in baseline_keys
             and p.get("bucket") in (BUCKET_WL_ODDS, BUCKET_WL_CTX)
         ]
-        discovery_picks = [p for p in candidate_discoveries if _build_match_dedupe_key(p, target_date) not in discovery_sent_keys]
+        discovery_picks = _filter_discoveries(candidate_discoveries, target_date, discovery_sent_keys, sent_keys)
         if discovery_picks:
             discovery_message = format_whatsapp_discovery_summary(target_date, discovery_picks)
 
-    if not normal_message and not discovery_message:
+    heartbeat_message = None
+    if (args.heartbeat
+            and os.environ.get("EDGE_FACTORY_HEARTBEAT", "1").strip().lower() not in {"0", "false", "no", "off"}
+            and not notifiable_picks
+            and not discovery_message
+            and _heartbeat_pending(sent_keys, target_date)):
+        # One quiet ping per empty day: distinguishes 'no picks' from 'system dead'
+        # for hands-off tracking. Marked in the same dedup ledger, so max 1/day.
+        heartbeat_message = f"Date: {target_date}\n{HEARTBEAT_TEXT}"
+
+    if not normal_message and not discovery_message and not heartbeat_message:
         if not normal_silent_logged:
             logging.info("  [WhatsApp] Nothing new to send. Staying silent.")
         return 0
@@ -261,6 +306,27 @@ def main() -> int:
                 discovery_sent_keys.add(_build_match_dedupe_key(p, target_date))
             _save_sent_ledger(discovery_sent_ledger_file, discovery_sent_keys)
             logging.info(f"✅ Discovery-alert dedupe ledger updated: {len(discovery_sent_keys)} items in {discovery_sent_ledger_file}")
+        any_dispatched = any_dispatched or dispatched
+
+    if heartbeat_message:
+        logging.info("\n>>> Dispatching empty-slate heartbeat...\\n")
+        print(heartbeat_message)
+        dispatched = _dispatch_message(
+            message_text=heartbeat_message,
+            meta_token=meta_token,
+            meta_phone_id=meta_phone_id,
+            meta_recipient=meta_recipient,
+            meta_template=None,
+            twilio_sid=twilio_sid,
+            twilio_token=twilio_token,
+            twilio_number=twilio_number,
+            callmebot_key=callmebot_key,
+            callmebot_phone=callmebot_phone,
+        )
+        if dispatched or args.force:
+            sent_keys.add(_heartbeat_key(target_date))
+            _save_sent_ledger(sent_ledger_file, sent_keys)
+            logging.info("✅ Heartbeat marker persisted in sent ledger (max 1/day)")
         any_dispatched = any_dispatched or dispatched
 
     return 0 if any_dispatched or args.force else 1
