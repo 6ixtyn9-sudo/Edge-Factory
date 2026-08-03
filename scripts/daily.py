@@ -32,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
 import subprocess
 import sys
@@ -145,14 +146,17 @@ def sync_repo_state() -> None:
     morning slate instead of re-picking a divergent one. No-op in CI (GitHub
     Actions checkout is detached) and when .git is absent. Set
     EDGE_FACTORY_GIT_SYNC=0 to disable. Non-fatal by design."""
-    if os.environ.get("EDGE_FACTORY_GIT_SYNC", "1").strip().lower() in {"0", "false", "no", "off"}:
-        return
-    if os.environ.get("GITHUB_ACTIONS", "").lower() == "true":
-        return
-    if not (ROOT / ".git").exists():
-        return
-    run_soft("git pull --rebase --autostash", "git state sync (cloud -> local)")
-    run_soft("git fetch --prune", "git fetch --prune")
+    try:
+        if os.environ.get("EDGE_FACTORY_GIT_SYNC", "1").strip().lower() in {"0", "false", "no", "off"}:
+            return
+        if os.environ.get("GITHUB_ACTIONS", "").lower() == "true":
+            return
+        if not (ROOT / ".git").exists():
+            return
+        run_soft("git pull --rebase --autostash", "git state sync (cloud -> local)")
+        run_soft("git fetch --prune", "git fetch --prune")
+    except Exception as exc:  # a sync convenience must never kill the pipeline
+        print(f">>> git state sync skipped (non-fatal): {exc}")
 
 
 def sync_official_archive(target_date: str, label: str = "sync_supabase") -> None:
