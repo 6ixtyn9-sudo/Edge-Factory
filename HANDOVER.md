@@ -2797,3 +2797,47 @@ multiplier (rolling hit-rate debias; match_over_25 hr=0.556 from the
 recommendation ledger) applied on top of the hybrid raw (~0.66). The audit
 scores the displayed post-debias promise, so the by-engine table measures
 what was actually promised.
+
+---
+
+## Addendum 20 — Actions secrets parity audit + ODDS_API_* knob wiring (2026-08-03)
+
+**Trigger:** operator question — "is the cloud run as robust as the machine run,
+since GitHub does not have the odds API secrets?"
+
+**Audit findings (operator-verified against Settings > Secrets and variables > Actions):**
+
+1. Core seven secrets exist (SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_KEY,
+   BZZOIRO_TOKEN, CALLMEBOT_APIKEY, CALLMEBOT_PHONE — all ~2 months old).
+2. **ODDS_API_KEYS was added 2026-08-03.** Before this date, every Actions run
+   reached `theoddsapi.enabled()` false and logged "no ODDS_API_KEYS configured;
+   0 rows" — the capture step soft-no-op'd inside run_soft (green logs, zero
+   snapshots). Receipt corroboration: every historical commit touching
+   localdata/theoddsapi_odds_*.csv.gz was authored by the operator account
+   (Mac-side captures), never github-actions[bot]. Mac-only capture explained.
+3. Five tuning knobs were added to secrets the same day (ODDS_API_REGIONS,
+   ODDS_API_MARKETS, ODDS_API_TOTAL_POINTS, ODDS_API_MONTHLY_BUDGET,
+   ODDS_API_CLOSE_WINDOW_MIN) but the workflow env block mapped only the core
+   seven — stored secrets never reach the runner without a mapping line.
+
+**Fix (this addendum):** daily.yml env block now maps the five knobs with
+`${{ secrets.X || '<default>' }}` fallbacks mirroring code defaults
+(theoddsapi.py: eu / h2h,totals / 2.5 / 480; capture_theodds.py: 45). Rationale
+for `||`: the TOTAL_POINTS parse is not empty-string-safe (empty env -> empty
+tuple -> no totals kept), and an unset/empty secret would otherwise inject "".
+With `||`, unset or empty secrets are a no-op; set secrets always win.
+
+**Behavioral delta intended: none locally** (Mac .env unchanged), cloud now
+captures The Odds API snapshots itself under the operator-configured budget
+ring. Pick selection remains odds-independent (consensus + purity gates);
+snapshots feed CLV/audit pricing only.
+
+**Deployment verification plan (receipts, not vibes):** first bot-authored
+commit touching localdata/theoddsapi_odds_YYYY-MM.csv.gz or
+localdata/theoddsapi_usage.json after this merge = cloud capture live.
+Run log line "no ODDS_API_KEYS configured; 0 rows" must be absent thereafter.
+
+**Process note:** the localdata authorship trail showed manual operator commits
+of localdata on 2026-08-03 (15:59, 18:09 UTC). One-off seed commits during the
+divergence repair are acceptable; as a habit they recreate the three-collision
+pattern. localdata stays bot-owned; humans ship code+docs via the FILES block.
