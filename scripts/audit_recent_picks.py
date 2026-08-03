@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import re
 from collections import defaultdict
 from dataclasses import dataclass
@@ -512,8 +513,25 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
     enh_stats = {
         "total_recommended": 0,
         "total_hits": 0,
-        "by_enhancement": defaultdict(lambda: {"recommended": 0, "hits": 0})
+        "by_enhancement": defaultdict(lambda: {"recommended": 0, "hits": 0,
+                                               "priced_n": 0, "priced_hits": 0,
+                                               "priced_profit": 0.0})
     }
+    priced_outcomes: list[dict] = []  # settled outcomes with REAL captured prices (registry feed)
+
+    # RT-1 (red-team 2026-08-03): enhancement scoring must read prices from the
+    # IMMUTABLE capture store (localdata/theoddsapi_odds_YYYY-MM.csv.gz), never
+    # from archived pick fields. Morning snapshots are frozen before the close
+    # capture exists, and the intraday ledger merge retains locked picks verbatim
+    # (anti-drift), so archived enhancement_price fields can never carry the close
+    # price — scoring off them would starve the registry. Probing raw capture rows
+    # per pick-date yields one consistent definition for every metric below and
+    # for the registry: best captured theoddsapi price for (date, pair, market).
+    try:
+        from edgefactory import enh_pricing as _enh_pricing
+    except Exception:
+        _enh_pricing = None
+    _prices_by_day: dict[str, dict] = {}
 
     # Detailed ledger of settled picks and their granular expectations audits
     settled_ledger = []
@@ -591,9 +609,33 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                         if hit:
                             enh_stats["total_hits"] += 1
                         
-                        enh_stats["by_enhancement"][enh_type]["recommended"] += 1
+                        slot = enh_stats["by_enhancement"][enh_type]
+                        slot["recommended"] += 1
                         if hit:
-                            enh_stats["by_enhancement"][enh_type]["hits"] += 1
+                            slot["hits"] += 1
+                        # Price from the immutable capture store (RT-1 above), not
+                        # from the archived presentation-time field.
+                        price = None
+                        price_source = ""
+                        if _enh_pricing is not None and pick_date:
+                            if pick_date not in _prices_by_day:
+                                _prices_by_day[pick_date] = _enh_pricing.load_prices_index(ROOT, pick_date)
+                            probe = {"home": pick.get("home"), "away": pick.get("away"),
+                                     "recommended_enhancement": enh_type}
+                            _enh_pricing.attach_enhancement_price(probe, _prices_by_day[pick_date])
+                            price = probe.get("enhancement_price")
+                            price_source = probe.get("enhancement_price_source") or ""
+                        if (isinstance(price, (int, float)) and not isinstance(price, bool)
+                                and math.isfinite(price) and price > 1.0):
+                            slot["priced_n"] += 1
+                            if hit:
+                                slot["priced_hits"] += 1
+                            slot["priced_profit"] += (price - 1.0) if hit else -1.0
+                            priced_outcomes.append({
+                                "date": str(pick_date), "match": pick.get("match") or "",
+                                "market": enh_type, "price": float(price), "hit": bool(hit),
+                                "source": price_source,
+                            })
 
                 # 5. Granular expectations audit ledger populator
                 comment = pick.get("statistical_comment")
@@ -659,18 +701,36 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
     for enh, stats in enh_stats["by_enhancement"].items():
         rec = stats["recommended"]
         hits = stats["hits"]
+        p_n = stats.get("priced_n", 0)
+        p_profit = stats.get("priced_profit", 0.0)
         serialized_by_enhancement[enh] = {
             "recommended": rec,
             "hits": hits,
-            "hit_rate": round(hits / rec, 6) if rec else 0.0
+            "hit_rate": round(hits / rec, 6) if rec else 0.0,
+            "priced_n": p_n,
+            "priced_hits": stats.get("priced_hits", 0),
+            "priced_roi": round(p_profit / p_n, 6) if p_n else None,
         }
-    
+
     serialized_enh_audit = {
         "total_recommended": enh_stats["total_recommended"],
         "total_hits": enh_stats["total_hits"],
         "hit_rate": round(enh_stats["total_hits"] / enh_stats["total_recommended"], 6) if enh_stats["total_recommended"] else None,
         "by_enhancement": serialized_by_enhancement
     }
+
+    # Enhancement certification registry: feed priced settled outcomes (idempotent,
+    # fail-soft) and snapshot states for the report. Unpriced outcomes never advance
+    # certification — probability without price is not evidence of value.
+    registry_states: dict[str, str] = {}
+    try:
+        from edgefactory.enh_registry import all_statuses, record_outcome
+        for oc in priced_outcomes:
+            record_outcome(ROOT, date_=oc["date"], match=oc["match"], market=oc["market"],
+                           price=oc["price"], hit=oc["hit"], source=oc["source"])
+        registry_states = all_statuses(ROOT)
+    except Exception:
+        registry_states = {}
 
     return {
         "start": start,
@@ -692,6 +752,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "by_odds_match_method": summarize_by(settled_rows, "odds_match_method"),
         "secondary_stats": sec_stats,
         "enhancements_audit": serialized_enh_audit,
+        "enhancement_registry": registry_states,
         "settled_ledger": settled_ledger,
     }
 

@@ -24,6 +24,8 @@ from edgefactory.entities import canonical_league, canonical_team, classify_comp
 from edgefactory.util import char_ngram_similarity, compact_key, norm_team, fold_ascii
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
+from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
+from edgefactory.enh_registry import status_for as enh_status_for
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
@@ -1872,7 +1874,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                                 "sport": anchor.get("sport", "soccer"),
                                 "league": anchor.get("league"), "pick": majority_pick,
                                 "avg_p": round(ml_p * 100.0, 1),
-                                "w_score": round(w_score, 4),
+                                "w_score": round(z, 4),
                                 "odds": _f(fb.get(_col)) or _f(zb.get(_col)) or None,
                                 "odds_source": ("forebet_best" if _f(fb.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
                                 "bookmaker": None,
@@ -2234,7 +2236,34 @@ def print_buckets(buckets: dict, title_date: str = ""):
                     f"{note['label'].replace(' Goals', '')}: {note['probability']:.1%}"
                     for note in notes
                 )
-                print(f"     🔥 Possible Events: {event_text}")
+                # Vetoed core pick -> side-products are shadow research, never advice.
+                shadow_tag = " [SHADOW — paper]" if p.get("bucket") == "SKIPPED_VETO" else ""
+                print(f"     🔥{shadow_tag} Possible Events: {event_text}")
+            rec_market = p.get("recommended_enhancement")
+            if rec_market:
+                rec_state = p.get("enhancement_state") or "SHADOW"
+                rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
+                # RT-6: archived/legacy picks can carry None or string probabilities —
+                # a formatting crash here would kill the whole render.
+                try:
+                    rec_prob = float(p.get("enhancement_probability") or 0.0)
+                except (TypeError, ValueError):
+                    rec_prob = 0.0
+                rec_price = p.get("enhancement_price")
+                if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
+                        and math.isfinite(rec_price) and rec_price > 1.0):
+                    rec_price = None  # NaN/inf/junk must never render as a price (RT-2)
+                if rec_state == "ELIGIBLE" and rec_price is not None:
+                    be = p.get("enhancement_breakeven")
+                    edge = p.get("enhancement_edge_sample")
+                    extra = ""
+                    if isinstance(be, (int, float)) and isinstance(edge, (int, float)):
+                        extra = f"  (breakeven {be:.1%}, sample-edge {edge:+.1%})"
+                    book = f" {p.get('enhancement_price_book')}" if p.get("enhancement_price_book") else ""
+                    print(f"     ⭐ Enhancement (ELIGIBLE): {rec_label} {rec_prob:.1%} @ {rec_price:.2f}{book}{extra}")
+                else:
+                    pr = f" @ {rec_price:.2f}" if rec_price is not None else " (unpriced)"
+                    print(f"     🔬 Enhancement ({rec_state}): {rec_label} {rec_prob:.1%}{pr}  [paper-only — not for staking]")
         print()
     print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
     print("⚠️  Bet only what you can afford to lose.")
@@ -2378,6 +2407,7 @@ def main():
             cached_rows=list(data.get("scoutingstats", {}).values()),
             stats=scouting_stats,
         )
+        prices_index = load_prices_index(ROOT, day)
         enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
 
         be_enriched = enrich_unmatched_with_betexplorer(picks, day)
@@ -2433,6 +2463,12 @@ def main():
             # Compute deep dynamic enhancement overlay
             enh = compute_dynamic_enhancement(con, p)
             p.update(enh)
+
+            # Real-odds overlay: attach best captured price for mappable markets
+            # (pilot: match o/u 2.5) and the certification state from the registry.
+            # Everything else stays display-only — no unpriced recommendation is real.
+            attach_enhancement_price(p, prices_index)
+            p["enhancement_state"] = enh_status_for(p.get("recommended_enhancement"), ROOT)
             
             day_picks.append(p)
 

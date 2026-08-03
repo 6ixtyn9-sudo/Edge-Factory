@@ -1,0 +1,119 @@
+"""Enhancement certification registry tests — state machine, idempotence, flock integrity."""
+import json
+from concurrent.futures import ThreadPoolExecutor
+
+from edgefactory.enh_registry import (all_statuses, record_outcome, registry_path,
+                                      status_for, wilson_lb)
+
+MKT = "match_over_25"
+
+
+def _read(root):
+    return json.loads(registry_path(root).read_text())
+
+
+def test_shadow_default(tmp_path):
+    assert status_for(MKT, tmp_path) == "SHADOW"
+    assert all_statuses(tmp_path) == {}
+
+
+def test_unpriced_never_advances(tmp_path):
+    res = record_outcome(tmp_path, date_="2026-08-03", match="A vs B", market=MKT,
+                         price=None, hit=True, source="")
+    assert res["recorded"] is True
+    assert res["status"] == "SHADOW"
+    assert _read(tmp_path)["markets"]["match_over_25@v1"]["n"] == 0
+
+
+def test_first_priced_moves_to_paper(tmp_path):
+    res = record_outcome(tmp_path, date_="2026-08-03", match="A vs B", market=MKT,
+                         price=1.50, hit=True, source="theoddsapi")
+    assert res["status"] == "PAPER"
+
+
+def test_idempotent_by_key(tmp_path):
+    for _ in range(2):
+        record_outcome(tmp_path, date_="2026-08-03", match="A vs B", market=MKT,
+                       price=1.50, hit=True, source="theoddsapi")
+    assert _read(tmp_path)["markets"]["match_over_25@v1"]["n"] == 1
+
+
+def test_eligible_transition(tmp_path):
+    # 30 priced recs, 27 hits @1.50: wilsonLB95 ~0.758 >= mean breakeven 0.667
+    for i in range(30):
+        res = record_outcome(tmp_path, date_="2026-08-03", match=f"A{i} vs B{i}", market=MKT,
+                             price=1.50, hit=(i < 27), source="theoddsapi")
+    assert res["status"] == "ELIGIBLE"
+    entry = _read(tmp_path)["markets"]["match_over_25@v1"]
+    assert "wilsonLB95" in entry["status_reason"]
+
+
+def test_stays_paper_when_evidence_insufficient(tmp_path):
+    for i in range(30):
+        res = record_outcome(tmp_path, date_="2026-08-03", match=f"A{i} vs B{i}", market=MKT,
+                             price=1.50, hit=(i < 18), source="theoddsapi")
+    assert res["status"] == "PAPER"
+
+
+def test_benched_circuit_breaker(tmp_path):
+    for i in range(30):  # earn ELIGIBLE
+        record_outcome(tmp_path, date_="2026-08-03", match=f"W{i} vs X{i}", market=MKT,
+                       price=1.50, hit=True, source="theoddsapi")
+    status = None
+    for i in range(30):  # rolling window turns sharply unprofitable
+        status = record_outcome(tmp_path, date_="2026-08-03", match=f"L{i} vs M{i}", market=MKT,
+                                price=1.50, hit=False, source="theoddsapi")["status"]
+    assert status == "BENCHED"
+
+
+def test_concurrent_records_are_not_lost(tmp_path):
+    def job(k):
+        for j in range(5):
+            record_outcome(tmp_path, date_="2026-08-03", match=f"T{k}-{j} vs U", market=MKT,
+                           price=1.60, hit=(j % 2 == 0), source="theoddsapi")
+    with ThreadPoolExecutor(max_workers=8) as ex:
+        list(ex.map(job, range(8)))
+    entry = _read(tmp_path)["markets"]["match_over_25@v1"]
+    assert entry["n"] == 40 and len(entry["processed"]) == 40
+
+
+def test_corrupt_file_recovers(tmp_path):
+    registry_path(tmp_path).parent.mkdir(parents=True, exist_ok=True)
+    registry_path(tmp_path).write_text("{ not json")
+    assert status_for(MKT, tmp_path) == "SHADOW"
+    res = record_outcome(tmp_path, date_="2026-08-03", match="A vs B", market=MKT,
+                         price=1.70, hit=True, source="theoddsapi")
+    assert res["recorded"] is True
+    assert res["status"] == "PAPER"
+
+
+def test_corrupt_file_is_quarantined(tmp_path):
+    # RT-4: corruption must be recoverable AND auditable — never silently wiped.
+    reg = registry_path(tmp_path)
+    reg.parent.mkdir(parents=True, exist_ok=True)
+    reg.write_text("{ not json")
+    assert status_for(MKT, tmp_path) == "SHADOW"
+    quarantined = list(reg.parent.glob("enhancement_registry.corrupt-*.json"))
+    assert len(quarantined) == 1 and quarantined[0].read_text() == "{ not json"
+    res = record_outcome(tmp_path, date_="2026-08-03", match="A vs B", market=MKT,
+                         price=1.70, hit=True, source="theoddsapi")
+    assert res["recorded"] is True and res["status"] == "PAPER"
+    assert _read(tmp_path)["markets"]["match_over_25@v1"]["n"] == 1
+
+
+def test_non_finite_price_never_advances(tmp_path):
+    # RT-2: inf would poison profit/breakeven sums; NaN slips past naive guards.
+    res = record_outcome(tmp_path, date_="2026-08-03", match="A vs B", market=MKT,
+                         price=float("inf"), hit=True, source="theoddsapi")
+    assert res["recorded"] is True and res["status"] == "SHADOW"
+    assert _read(tmp_path)["markets"]["match_over_25@v1"]["n"] == 0
+    res = record_outcome(tmp_path, date_="2026-08-04", match="A vs B", market=MKT,
+                         price=float("nan"), hit=True, source="theoddsapi")
+    assert res["recorded"] is True
+    assert _read(tmp_path)["markets"]["match_over_25@v1"]["n"] == 0
+
+
+def test_wilson_lb_monotonic():
+    assert wilson_lb(0, 0) == 0.0
+    assert wilson_lb(9, 10) < wilson_lb(90, 100)  # wider CI (lower LB) on small n
+    assert wilson_lb(27, 30) > 2 / 3  # the eligibility bar used in tests above
