@@ -339,11 +339,21 @@ def parse_statistical_comment(comment: str) -> dict[str, Any]:
         "btts": None,
         "home_o15": None,
         "away_o15": None,
+        "avg_goals": None,
         "top_scores": []
     }
     if not comment:
         return out
-        
+
+    m_avg = re.search(r"Avg Goals:\s*([\d.]+)", comment)
+    if m_avg:
+        try:
+            avg = float(m_avg.group(1))
+            if math.isfinite(avg):
+                out["avg_goals"] = avg
+        except ValueError:
+            pass
+
     m_o25 = re.search(r"Over 2.5:\s*([\d.]+)%", comment)
     if m_o25:
         out["over25"] = float(m_o25.group(1)) / 100.0
@@ -380,15 +390,16 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
         return None
     sel = selection.lower()
     if enh_type == "match_over_15":
-        hit = (hs + gs) >= 2
-        if sel == "home": return hit and (hs > gs)
-        if sel in ["away", "2"]: return hit and (gs > hs)
-        return hit
+        # FIX-2 (2026-08-03, Addendum 12): plain-market scoring. The promised %
+        # rendered for this market and the price captured for it are both the
+        # PLAIN total, so the hit must be selection-independent. The removed
+        # Win+Over combo branches measured a different market than the one
+        # priced, deflating every hit-rate (and any future registry
+        # certification) built on them.
+        return (hs + gs) >= 2
     elif enh_type == "match_over_25":
-        hit = (hs + gs) >= 3
-        if sel == "home": return hit and (hs > gs)
-        if sel in ["away", "2"]: return hit and (gs > hs)
-        return hit
+        # FIX-2: plain-market scoring (see match_over_15).
+        return (hs + gs) >= 3
     elif enh_type == "match_under_15":
         return (hs + gs) <= 1
     elif enh_type == "match_under_25":
@@ -396,10 +407,8 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
     elif enh_type == "match_under_35":
         return (hs + gs) <= 3
     elif enh_type == "btts_yes":
-        hit = (hs > 0 and gs > 0)
-        if sel == "home": return hit and (hs > gs)
-        if sel in ["away", "2"]: return hit and (gs > hs)
-        return hit
+        # FIX-2: plain-market scoring (see match_over_15).
+        return hs > 0 and gs > 0
     elif enh_type == "btts_no":
         return hs == 0 or gs == 0
     elif enh_type in ("team_over_05", "home_over_05"):
@@ -490,6 +499,364 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
     return None
 
 
+# ---------------------------------------------------------------------------
+# Full-surface audit (2026-08-03, Addendum 12)
+#
+# Archived picks carry two machine-readable surfaces the operator reads, but
+# the legacy report only scored the single recommended enhancement:
+#   - event_notes:         the full 🔥 "Possible Events" list
+#                          ({market, probability, raw_probability, label, reason})
+#   - statistical_comment: the 📊 line (Avg Goals / Over 2.5 / BTTS /
+#                          Home|Away Over 1.5 / Top Scores)
+# Every entry on both surfaces promises a probability. The helpers below score
+# EVERY promise against the settled score and aggregate per-market hit tables,
+# promised-vs-realized calibration buckets, Brier scores and an Avg-Goals MAE.
+#
+# Doctrine: none of these numbers carries a price, so they say NOTHING about
+# value. Calibration ≠ edge. They must never feed staking decisions; market
+# certification remains the enhancement registry's job. The JSON shapes are
+# stable (by_market / promised_buckets / avg_goals) so a later payload can
+# extend load_rolling_audit_hit_rates() in picks_today.py to consume them.
+# ---------------------------------------------------------------------------
+
+# Markets whose label reads "{Team} Win + …" while promised %, captured price
+# and scoring are all plain-market (FIX-2 aligned the scorer; the cosmetic
+# label cleanup is queued for the hardening pass).
+COMBO_LABEL_MARKETS = ("match_over_15", "match_over_25", "btts_yes")
+
+NOTE_SCORING_DEFINITION = (
+    "plain-market: a note hits iff its market lands in the final score "
+    "(selection-independent for match totals and BTTS; the 1X2 selection only "
+    "picks the team for team totals and the double-chance leg)"
+)
+
+STATLINE_SCORING_DEFINITION = (
+    "each metric is scored as a probabilistic forecast of its event "
+    "(Over 2.5 / BTTS-Yes / Home|Away Over 1.5 / exact Top Score) — "
+    "calibration, not a direction call"
+)
+
+
+def _finite_prob(value: Any) -> float | None:
+    """Coerce to a finite float in [0, 1]; NaN/Inf/junk -> None (never raises)."""
+    if isinstance(value, bool):
+        return None
+    try:
+        p = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(p) or p < 0.0 or p > 1.0:
+        return None
+    return p
+
+
+def _bucket_label(p: float) -> str:
+    """Decile bucket for a probability in [0,1] -> e.g. '0.7-0.8'."""
+    lo = min(int(p * 10.0), 9) / 10.0
+    return f"{lo:.1f}-{lo + 0.1:.1f}"
+
+
+def _new_calibration_slot() -> dict[str, Any]:
+    return {"n": 0, "hits": 0, "promised_sum": 0.0, "brier_sum": 0.0}
+
+
+def _accumulate(slot: dict[str, Any], promised: float, hit: bool) -> None:
+    slot["n"] += 1
+    if hit:
+        slot["hits"] += 1
+    slot["promised_sum"] += promised
+    slot["brier_sum"] += (promised - (1.0 if hit else 0.0)) ** 2
+
+
+def _finalize_slot(slot: dict[str, Any]) -> dict[str, Any]:
+    n = slot["n"]
+    if not n:
+        return {"n": 0, "hits": 0, "mean_promised": None, "realized": None,
+                "delta": None, "brier": None}
+    mean_promised = slot["promised_sum"] / n
+    realized = slot["hits"] / n
+    return {
+        "n": n,
+        "hits": slot["hits"],
+        "mean_promised": round(mean_promised, 6),
+        "realized": round(realized, 6),
+        "delta": round(realized - mean_promised, 6),
+        "brier": round(slot["brier_sum"] / n, 6),
+    }
+
+
+def score_event_notes(pick: dict[str, Any], selection: str, hs: int, gs: int) -> list[dict[str, Any]]:
+    """Score every 🔥 event note on one settled pick.
+
+    One observation per distinct note market (first note wins if a market is
+    duplicated; corrupt/non-dict entries are skipped). hit=None means the
+    market has no scoring definition in check_enhancement_hit().
+    """
+    out: list[dict[str, Any]] = []
+    notes = pick.get("event_notes")
+    if not isinstance(notes, list):
+        return out
+    seen_markets: set[str] = set()
+    for note in notes:
+        if not isinstance(note, dict):
+            continue
+        market = str(note.get("market") or "")
+        if not market or market in seen_markets:
+            continue
+        seen_markets.add(market)
+        hit = check_enhancement_hit(market, selection, hs, gs)
+        out.append({
+            "market": market,
+            "promised": _finite_prob(note.get("probability")),
+            "raw_promised": _finite_prob(note.get("raw_probability")),
+            "hit": bool(hit) if hit is not None else None,
+        })
+    return out
+
+
+def aggregate_event_notes(observations: list[dict[str, Any]]) -> dict[str, Any]:
+    """Aggregate note observations into per-market + pooled-bucket calibration."""
+    by_market: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
+    pooled: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
+    notes_per_market: dict[str, int] = defaultdict(int)
+    unscorable: dict[str, int] = defaultdict(int)
+    promised_missing = 0
+    for ob in observations:
+        market = str(ob.get("market") or "UNKNOWN")
+        notes_per_market[market] += 1
+        hit = ob.get("hit")
+        if hit is None:
+            unscorable[market] += 1
+            continue
+        promised = ob.get("promised")
+        if promised is None:
+            promised_missing += 1
+            continue
+        _accumulate(by_market[market], promised, bool(hit))
+        _accumulate(pooled[_bucket_label(promised)], promised, bool(hit))
+    return {
+        "definition": NOTE_SCORING_DEFINITION,
+        "total_notes": len(observations),
+        "scored": sum(slot["n"] for slot in by_market.values()) + promised_missing,
+        "promised_missing": promised_missing,
+        "unscorable": dict(sorted(unscorable.items())),
+        "by_market": {
+            m: {**_finalize_slot(by_market[m]), "notes": notes_per_market[m]}
+            for m in sorted(by_market)
+        },
+        "promised_buckets": [
+            {"bucket": label, **_finalize_slot(slot)}
+            for label, slot in sorted(pooled.items())
+        ],
+    }
+
+
+def score_statline(parsed_stats: dict[str, Any], hs: int, gs: int) -> list[dict[str, Any]]:
+    """Score every promised metric of the 📊 line as a probabilistic forecast."""
+    out: list[dict[str, Any]] = []
+    metrics = (
+        ("over25", (hs + gs) >= 3),
+        ("btts", hs > 0 and gs > 0),
+        ("home_o15", hs >= 2),
+        ("away_o15", gs >= 2),
+    )
+    for name, hit in metrics:
+        promised = _finite_prob(parsed_stats.get(name))
+        if promised is None:
+            continue
+        out.append({"metric": name, "promised": promised, "hit": bool(hit)})
+    actual_score = f"{hs}-{gs}"
+    for item in parsed_stats.get("top_scores") or []:
+        if not isinstance(item, dict):
+            continue
+        promised = _finite_prob(item.get("pct"))
+        if promised is None:
+            continue
+        out.append({"metric": "top_score", "promised": promised,
+                    "hit": str(item.get("score") or "") == actual_score})
+    return out
+
+
+def aggregate_statline(observations: list[dict[str, Any]],
+                       goal_forecasts: list[tuple[float, float]] | None = None) -> dict[str, Any]:
+    """Aggregate 📊 observations into per-metric + pooled-bucket calibration
+    plus the Avg-Goals point-forecast error (MAE / bias)."""
+    by_metric: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
+    pooled: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
+    for ob in observations:
+        promised, hit = ob.get("promised"), ob.get("hit")
+        if promised is None or hit is None:
+            continue
+        metric = str(ob.get("metric") or "UNKNOWN")
+        _accumulate(by_metric[metric], promised, bool(hit))
+        _accumulate(pooled[_bucket_label(promised)], promised, bool(hit))
+    avg_goals = None
+    if goal_forecasts:
+        n = len(goal_forecasts)
+        mae = sum(abs(actual - promised) for promised, actual in goal_forecasts) / n
+        bias = sum(actual - promised for promised, actual in goal_forecasts) / n
+        mean_p = sum(p for p, _ in goal_forecasts) / n
+        mean_a = sum(a for _, a in goal_forecasts) / n
+        avg_goals = {"n": n, "mae": round(mae, 6), "bias": round(bias, 6),
+                     "mean_promised": round(mean_p, 6), "mean_actual": round(mean_a, 6)}
+    return {
+        "definition": STATLINE_SCORING_DEFINITION,
+        "by_metric": {m: _finalize_slot(by_metric[m]) for m in sorted(by_metric)},
+        "promised_buckets": [
+            {"bucket": label, **_finalize_slot(slot)}
+            for label, slot in sorted(pooled.items())
+        ],
+        "avg_goals": avg_goals,
+    }
+
+
+def _pct(value: Any) -> str:
+    if isinstance(value, bool):
+        return "n/a"
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return "n/a"
+    if not math.isfinite(v):
+        return "n/a"
+    return f"{v:.1%}"
+
+
+def _signed_pct(value: Any) -> str:
+    if isinstance(value, bool):
+        return "n/a"
+    try:
+        v = float(value)
+    except (TypeError, ValueError):
+        return "n/a"
+    if not math.isfinite(v):
+        return "n/a"
+    return f"{v:+.1%}"
+
+
+def _render_event_notes_section(aud: dict[str, Any]) -> list[str]:
+    lines = [
+        "## Possible Events (🔥) Full-Surface Audit",
+        "",
+        "> ⚠️ **Calibration ≠ edge.** No prices in this section — a hit-rate is not value. "
+        "Certification and staking remain gated by the enhancement registry.",
+        "",
+        "Every machine-readable 🔥 note on every settled pick in the window, scored against the "
+        f"final score ({NOTE_SCORING_DEFINITION}).",
+        "",
+    ]
+    if not aud or not aud.get("total_notes"):
+        lines.append("- (no settled picks carried machine-readable 🔥 event notes in this window)")
+        lines.append("")
+        return lines
+    unsc = aud.get("unscorable") or {}
+    unsc_total = sum(unsc.values())
+    summary = (f"- notes on settled picks: **{aud.get('total_notes', 0)}** | "
+               f"scored: {aud.get('scored', 0)}")
+    if unsc_total:
+        summary += f" | unscorable (no outcome definition): {unsc_total} {unsc}"
+    if aud.get("promised_missing"):
+        summary += f" | without promised % (legacy rows): {aud['promised_missing']}"
+    lines.append(summary)
+    lines.append("")
+    by_market = aud.get("by_market") or {}
+    if by_market:
+        lines.extend([
+            "### Per-market hit table",
+            "",
+            "| market | notes | n | hits | realized | promised avg | Δ | Brier |",
+            "| --- | --- | --- | --- | --- | --- | --- | --- |",
+        ])
+        for market, slot in sorted(by_market.items(), key=lambda kv: (-kv[1].get("n", 0), kv[0])):
+            low_n = " ⚠️low-n" if slot.get("n", 0) < 5 else ""
+            brier = slot.get("brier")
+            lines.append(
+                f"| `{market}` | {slot.get('notes', slot.get('n', 0))} | {slot.get('n', 0)} | "
+                f"{slot.get('hits', 0)} | {_pct(slot.get('realized'))} | {_pct(slot.get('mean_promised'))} | "
+                f"{_signed_pct(slot.get('delta'))} | {brier if brier is not None else 'n/a'}{low_n} |"
+            )
+        lines.append("")
+        lines.append(
+            "Labels reading \"Win + …\" (`" + "`, `".join(COMBO_LABEL_MARKETS) + "`) are cosmetic: promised %, "
+            "captured price and scoring are all plain-market (FIX-2). Cosmetic label cleanup is queued "
+            "for the hardening pass."
+        )
+        lines.append("")
+    buckets = aud.get("promised_buckets") or []
+    if buckets:
+        lines.extend([
+            "### Promised-vs-realized calibration (all 🔥 notes pooled)",
+            "",
+            "| promised bucket | n | promised avg | realized | Δ |",
+            "| --- | --- | --- | --- | --- |",
+        ])
+        for slot in buckets:
+            lines.append(
+                f"| {slot.get('bucket')} | {slot.get('n', 0)} | {_pct(slot.get('mean_promised'))} | "
+                f"{_pct(slot.get('realized'))} | {_signed_pct(slot.get('delta'))} |"
+            )
+        lines.append("")
+    return lines
+
+
+def _render_statline_section(cal: dict[str, Any]) -> list[str]:
+    lines = [
+        "## Statistical Line (📊) Calibration",
+        "",
+        "> ⚠️ **Calibration ≠ edge.** The 📊 line promises historical frequencies, not prices — "
+        "this section scores promise vs realization only and must not drive staking.",
+        "",
+        f"Scored as probabilistic forecasts per settled pick ({STATLINE_SCORING_DEFINITION}).",
+        "",
+    ]
+    by_metric = cal.get("by_metric") or {}
+    avg_goals = cal.get("avg_goals")
+    buckets = cal.get("promised_buckets") or []
+    if not by_metric and not avg_goals and not buckets:
+        lines.append("- (no settled picks carried a parseable 📊 statistical comment in this window)")
+        lines.append("")
+        return lines
+    if avg_goals:
+        lines.append(
+            f"- **Avg Goals forecast**: n={avg_goals.get('n', 0)}, "
+            f"MAE={avg_goals.get('mae')} goals, bias={avg_goals.get('bias')} (realized − promised), "
+            f"promised avg {avg_goals.get('mean_promised')} vs realized {avg_goals.get('mean_actual')}"
+        )
+        lines.append("")
+    if by_metric:
+        label_map = {"over25": "Over 2.5", "btts": "BTTS-Yes", "home_o15": "Home Over 1.5",
+                     "away_o15": "Away Over 1.5", "top_score": "Top Scores (exact)"}
+        lines.extend([
+            "### Per-metric calibration",
+            "",
+            "| metric | n | promised avg | realized | Δ | Brier |",
+            "| --- | --- | --- | --- | --- | --- |",
+        ])
+        for metric, slot in sorted(by_metric.items(), key=lambda kv: (-kv[1].get("n", 0), kv[0])):
+            low_n = " ⚠️low-n" if slot.get("n", 0) < 5 else ""
+            brier = slot.get("brier")
+            lines.append(
+                f"| {label_map.get(metric, metric)} | {slot.get('n', 0)} | {_pct(slot.get('mean_promised'))} | "
+                f"{_pct(slot.get('realized'))} | {_signed_pct(slot.get('delta'))} | "
+                f"{brier if brier is not None else 'n/a'}{low_n} |"
+            )
+        lines.append("")
+    if buckets:
+        lines.extend([
+            "### Promised-vs-realized calibration (all 📊 metrics pooled)",
+            "",
+            "| promised bucket | n | promised avg | realized | Δ |",
+            "| --- | --- | --- | --- | --- |",
+        ])
+        for slot in buckets:
+            lines.append(
+                f"| {slot.get('bucket')} | {slot.get('n', 0)} | {_pct(slot.get('mean_promised'))} | "
+                f"{_pct(slot.get('realized'))} | {_signed_pct(slot.get('delta'))} |"
+            )
+        lines.append("")
+    return lines
+
+
 def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day: bool = False) -> dict[str, Any]:
     picks = load_archived_picks(start, end)
     picks = dedupe_archived_picks(picks)
@@ -518,6 +885,12 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                                                "priced_profit": 0.0})
     }
     priced_outcomes: list[dict] = []  # settled outcomes with REAL captured prices (registry feed)
+
+    # Full-surface audit collectors (Addendum 12): every 🔥 note and every 📊
+    # promised metric on every settled pick — not just the one recommendation.
+    note_observations: list[dict] = []
+    statline_observations: list[dict] = []
+    goal_forecasts: list[tuple[float, float]] = []
 
     # RT-1 (red-team 2026-08-03): enhancement scoring must read prices from the
     # IMMUTABLE capture store (localdata/theoddsapi_odds_YYYY-MM.csv.gz), never
@@ -647,7 +1020,11 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                     
                 btts_hit = None
                 if parsed_stats["btts"] is not None:
-                    expected_btts_yes = parsed_stats["btts"] >= 50.0
+                    # FIX-1 (2026-08-03): parsed fractions are 0..1 (parser
+                    # divides by 100.0); the legacy 50.0 cut was never True, so
+                    # every BTTS expectation was scored as BTTS-No and the
+                    # HIT/MISS icons were inverted for BTTS-Yes expectations.
+                    expected_btts_yes = parsed_stats["btts"] >= 0.50
                     actual_btts_yes = hs > 0 and gs > 0
                     btts_hit = actual_btts_yes if expected_btts_yes else not actual_btts_yes
                     
@@ -696,6 +1073,17 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                         "top_scores": top_scores_audited
                     }
                 })
+
+                # 6. Full-surface audit (Addendum 12): score EVERY 🔥 note and
+                # every 📊 promised metric on this settled pick — the legacy
+                # sections above only score the single recommended enhancement.
+                note_observations.extend(score_event_notes(pick, selection, hs, gs))
+                statline_observations.extend(score_statline(parsed_stats, hs, gs))
+                avg_goals_promised = parsed_stats.get("avg_goals")
+                if (isinstance(avg_goals_promised, (int, float))
+                        and not isinstance(avg_goals_promised, bool)
+                        and math.isfinite(avg_goals_promised)):
+                    goal_forecasts.append((float(avg_goals_promised), float(hs + gs)))
 
     serialized_by_enhancement = {}
     for enh, stats in enh_stats["by_enhancement"].items():
@@ -754,6 +1142,8 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "enhancements_audit": serialized_enh_audit,
         "enhancement_registry": registry_states,
         "settled_ledger": settled_ledger,
+        "event_notes_audit": aggregate_event_notes(note_observations),
+        "statline_calibration": aggregate_statline(statline_observations, goal_forecasts),
     }
 
 
@@ -835,6 +1225,10 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 hr = summary.get("hit_rate", 0.0)
                 lines.append(f"- `{key}`: recommended={rec}, hits={hits}, hit_rate={hr:.1%}")
         lines.append("")
+
+    # Full-surface audit sections (Addendum 12)
+    lines.extend(_render_event_notes_section(report.get("event_notes_audit") or {}))
+    lines.extend(_render_statline_section(report.get("statline_calibration") or {}))
 
     lines.extend(["## By rule", ""])
     by_rule = report.get("by_rule", {})
@@ -986,6 +1380,11 @@ def main() -> int:
     print(f" ambiguous result picks: {report.get('ambiguous_result_picks', 0)}")
     print(f" hit rate: {overall.get('hit_rate')}")
     print(f" ROI: {overall.get('roi')}")
+    _ena = report.get("event_notes_audit", {}) or {}
+    print(f" possible-events notes scored: {_ena.get('scored', 0)}/{_ena.get('total_notes', 0)}")
+    _avg_goals = (report.get("statline_calibration", {}) or {}).get("avg_goals") or {}
+    if _avg_goals:
+        print(f" stat-line avg-goals MAE: {_avg_goals.get('mae')} (n={_avg_goals.get('n')})")
     print(f" json: {json_path}")
     print(f" markdown: {md_path}")
     return 0

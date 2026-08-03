@@ -2440,3 +2440,87 @@ Deferred (recorded, not this payload): team totals (probe-empty), double_chance
 synthetic pricing (doctrine says no), banded markets, source coverage analytics
 (which slates ss/bzz actually cover day to day), certification of the newly
 mapped types (accumulates from priced settlements going forward).
+
+---
+
+## Addendum 12 — 2026-08-03 (evening): Full-Surface Audit + two measurement fixes (FIX-1 / FIX-2)
+
+**What shipped.** `scripts/audit_recent_picks.py` extension: the rolling audit
+now scores EVERY machine-readable forecast the pipeline publishes — not just
+the single recommended enhancement:
+
+1. `## Possible Events (🔥) Full-Surface Audit` — every `event_notes` entry
+   on every settled pick (market + promised %), scored against the final
+   score: per-market hit table (notes, n, hits, realized, promised avg, Δ,
+   Brier, low-n flags), pooled promised-vs-realized decile buckets (the
+   calibration curve), and an unscorable-market inventory (coverage
+   analytics). It reads the SAME immutable morning-snapshot source as the
+   rest of the audit; anti-drift preserved (H6 battery check).
+2. `## Statistical Line (📊) Calibration` — every promised metric in the
+   archived `statistical_comment` (Over 2.5 / BTTS / Home|Away Over 1.5 /
+   Top Scores), scored as probabilistic forecasts (calibration, never a
+   direction call): per-metric table, pooled buckets, plus a NEW `Avg Goals`
+   point-forecast audit (MAE / bias). The parser now returns `avg_goals`.
+3. Machine consumers: the rolling report JSON gains stable keys
+   `event_notes_audit` {definition, total_notes, scored, promised_missing,
+   unscorable, by_market, promised_buckets} and `statline_calibration`
+   {definition, by_metric, promised_buckets, avg_goals} — shaped so a later
+   payload can extend `load_rolling_audit_hit_rates()` (picks_today.py) into
+   a full-surface debias loop.
+
+**Doctrine guardrails (hard requirements, kept).** Both sections carry the
+header "Calibration ≠ edge": none of these numbers carries a price, so they
+are NOT evidence of value and must not drive staking; certification remains
+the enhancement registry's job. No synthetic prices anywhere; the registry
+feed path is unchanged.
+
+**FIX-1 (displayed-truth bug, pre-existing).** The Granular Expectations
+ledger's BTTS HIT/MISS icons: parsed fractions are 0..1 but the expectation
+cut was `>= 50.0` (never True) — every BTTS expectation was silently scored
+as BTTS-No, inverting icons for all BTTS-Yes expectations. Now `>= 0.50`,
+consistent with the renderer and with the home/away-o15 logic. Regression-
+pinned by the integration test (81.5%-Yes and 22%-No discriminators).
+
+**FIX-2 (measurement bug, pre-existing; caught by a RED upstream test).**
+`check_enhancement_hit` scored `match_over_15`, `match_over_25`, `btts_yes`
+as *Win + line* combos for home/away selections, while the promised % and
+(post-EXT) the captured price for these markets are both PLAIN-market. The
+mismatch would have deflated every hit-rate derived from the audit —
+including the certification registry feeds that begin with the first settled
+mapped-market picks (the 2026-08-03 btts_yes slate) — making certification
+under plain-market breakevens unwinnable. Scoring is now selection-
+independent plain-market; the repo's own
+`tests/test_audit_recent_picks.py::test_check_enhancement_hit` (red since
+before this payload — it encoded plain semantics) passes again. Selection
+still drives `team_*` totals and `double_chance` legs. The cosmetic
+"Win + …" labels in picks_today.py are labels-only: probability, price and
+scoring are plain-market; label cleanup is queued for the hardening pass,
+informed by the new audit's per-market numbers.
+
+**Process lesson (gate hardening).** FIX-2 survived two payloads because an
+earlier gate ran a SUBSET of the suite ("52 passed" did not include
+test_audit_recent_picks.py). From this payload onward every gate must run
+the FULL suite (`PYTHONPATH=src python3 -m pytest tests/ -q`) and paste the
+tail; a red test — even pre-existing — blocks the ship until triaged.
+
+**Evidence (sandbox, reproducible).** Full suite: baseline 84 collected
+(83 pass / 1 pre-existing red = the test above) → 93/93 post-patch;
+pyflakes unchanged (single pre-existing f-string finding, :926→:1320, zero
+new); RED_TEAM_BATTERY v4 23/23 — NaN/Inf/junk promised, malformed and
+truncated comments, corrupt archive files, morning-file precedence,
+same-day exclusion policy, determinism, hermetic no-write (no registry file
+created), bucket-edge boundaries, 20,000 notes scored in 0.78s. Battery
+ships inside the payload zip; sha-256 manifest in the payload README.
+
+**Files.** `scripts/audit_recent_picks.py` (+~430 lines: scorers,
+aggregators, renderers, report keys, FIX-1/FIX-2), `tests/`
+`test_audit_recent_picks.py` (+9 tests).
+
+**Deferred (recorded, not this payload):** cosmetic "Win + …" label cleanup
+in the renderer; wiring `event_notes_audit` into
+`load_rolling_audit_hit_rates()` (debias over the FULL note surface, not
+only recommends); veto re-mine for the UNKNOWN-league population (next
+payload — run it once a few days of full-surface numbers exist so the
+hardening decisions are evidence-led, e.g. any market whose realized ≪
+promised at n≥5 is a pricing-source or semantics candidate, not a staking
+candidate).
