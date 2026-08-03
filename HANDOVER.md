@@ -1758,4 +1758,327 @@ Whether the 2way-unanimous avg_p>=70 rule is recovering its ROI as WC draws norm
 Whether consensus4 is accumulating rows at a healthy rate
 Do not touch norm_team() or norm_team_sql(). Do not patch entity_overrides.json for naming mismatches until European leagues resume and the volume justifies it.
 
-Last updated: 2026-06-24
+Last updated: 2026-06-242026-08-03 addendum — theoddsapi wiring, no-freeze policy, enhancement overlay status
+
+Owner directive (2026-08-03): no code freezes. Changes ship live, but every
+change must be appended to this handover with date, rationale, and payload
+SHA-256 (manifest: PAYLOAD_MANIFEST_2026-08-03.sha256). Enhancement overlay
+logic changes must additionally bump the enhancement market version key
+(<market>@v<n>) in any future certification registry so audits certify per
+logic version and samples are never contaminated across versions.
+
+New source: theoddsapi (The Odds API, the-odds-api.com) — AUDIT-ONLY odds capture.
+Purpose: real-book h2h/totals prices for the frozen daily shortlist, pick-time
+and near-close snapshots -> real CLV, and later real-odds certification for the
+enhancement overlay. Nothing gates picks on this feed in v1.
+
+Files (see manifest for SHA-256):
+    src/edgefactory/sources/theoddsapi.py   adapter, standard contract (fetch_day, COLUMNS),
+                                            rows mirror bzzoiro_odds schema (source="theoddsapi",
+                                            markets 1x2 / ou_2.5 / btts, selections home/draw/away/over/under/yes-no)
+    scripts/capture_theodds.py              CLI: --self-test / --dry-run / --refresh-sports / plain capture
+    tests/test_theoddsapi.py                8 offline tests, currently passing
+    src/edgefactory/sources/__init__.py     registered theoddsapi
+    .env.example (+ .env local)             ODDS_API_KEY + quota knobs
+
+Design / quota discipline (free tier ~500 credits/mo):
+    /sports and /events are usage-free; only per-event odds payloads cost
+    credits (markets x regions per request: default 2x1 = 2 credits/event).
+    fetch_day is shortlist-driven (localdata/picks_<date>.json /
+    picks_morning_<date>.json); empty slate -> 0 rows, 0 credits.
+    Monthly ledger localdata/theoddsapi_usage.json; hard stop at
+    ODDS_API_MONTHLY_BUDGET (default 480); server x-requests-remaining header
+    overrides local ledger when present.
+    Sport-key cache: localdata/theoddsapi_sports.json (7-day TTL);
+    LEAGUE_KEY_ALIASES + containment matching; unmatched leagues are reported,
+    never silently mis-priced. Niche slates (e.g. Ie2, Belarus, Armenia) will
+    show honest coverage misses — expected, do not force-match.
+    Team matching is pair-constrained (home-to-home AND away-to-away), full
+    name / 9-char keys / containment / token-subset for affix drops
+    (IK Sirius vs Sirius). This matcher is allowed to differ from norm_team();
+    certified join keys remain untouched.
+
+Ops commands:
+    PYTHONPATH=src python3 scripts/capture_theodds.py --date YYYY-MM-DD --dry-run
+    PYTHONPATH=src python3 scripts/capture_theodds.py --date YYYY-MM-DD --snapshot pick_time
+    PYTHONPATH=src python3 scripts/capture_theodds.py --date YYYY-MM-DD --snapshot close
+    Rows append to localdata/theoddsapi_odds_YYYY-MM.csv.gz (full-row dedupe;
+    both snapshots kept — captured_at distinguishes them).
+
+Status: wired and offline-tested (8/8 pytest + --self-test pass; --dry-run
+against 2026-08-03 slate: 2 fixtures, ~4 credits/snapshot). Live run pending
+ODDS_API_KEY in .env.
+
+Veto attribution: pick["veto_reason"] confirmed present in archived slates
+(at least 2026-07-21 onward; 2026-08-03: both SKIPPED_VETO picks are
+odds_band context vetoes). Prerequisite for the veto-threshold re-mine is
+already accruing — no instrumentation patch needed.
+
+Enhancement overlay status snapshot (audit window 2026-07-05 -> 2026-08-03):
+24 recommended / 14 hits (58.3%); away_under_35 5/5, home_under_45 1/1
+(market does not offer these; not products), match_over_25 5/9 (EV -14% at
+est. 1.55; needs 64.5%), match_over_15 2/5 (EV -48% at est. 1.30; needs
+76.9% — structurally weakest), goal_range_2_3 1/4. Expected probabilities
+overconfident on goals (team O1.5 promised 87-91% vs realized 77.9%; O2.5
+promised 70-80% vs realized 67.6%; BTTS-No undercalled). Overlay remains
+advisory/paper for staking until per-market Wilson LB95 >= breakeven at
+REAL captured odds (theoddsapi feed) on n>=30 — enforced in the staking
+layer, not by gating pick generation.
+
+2026-08-03 live verification — theoddsapi first capture (pick_time snapshot)
+
+First key installed in .env (local only; two spare keys provided by owner,
+unused). Live run against the 2026-08-03 frozen slate:
+    shortlist=2  matched=1  rows=69  credits=2  server used=2 remaining=498
+    Halmstad vs Sirius priced across 21 books (incl. Pinnacle, Betfair,
+    Matchbook) for 1x2 + ou_2.5. Pipeline's pick-time price AWAY @1.41 equals
+    the market BEST price (Pinnacle/Betfair/Matchbook); market mean 1.366,
+    worst 1.26 -> bzzoiro enrichment is sourcing top-of-market prices for
+    this fixture. First real CLV-style comparison captured.
+    Cork City vs Athlone Town (Ie2): correctly unmatched (not covered).
+
+Patch documented same day: league resolver now rejects containment matches
+when the normalized league OR title is < 4 chars (live false positive:
+"Ie2" normalized to "ie" and containment-matched soccer_spl via
+"...premiership...". It wasted one FREE events call, no credits; fixed
+before any repeated cost). Regression test added. Suite 8/8 green.
+
+Updated payload SHA-256 for changed files:
+    theoddsapi.py           (league-match guard)
+    tests/test_theoddsapi.py (Ie2 regression)
+See regenerated PAYLOAD_MANIFEST_2026-08-03.sha256.
+
+Next ops step: schedule --snapshot close ~T-15min before shortlist kickoffs
+(only when pick_time rows exist) to complete CLV pairs; wire audit_clv-style
+report over theoddsapi_odds_*.csv.gz once ~2 weeks of snapshots accrue.
+
+2026-08-03 addendum 2 — daily.py integration + multi-key rotation
+
+Owner directive: established commands only (daily.py --auto-run / --auto-once);
+no standalone capture commands in normal ops. Implemented:
+
+    scripts/daily.py — new helper capture_theodds_snapshot(); hooked at the 4
+    existing CLV capture points: official pick_time, official end_of_run,
+    autonomous intraday hourly label, and clv_only mode. All run via run_soft
+    (failure never blocks the pipeline, per existing convention).
+
+    capture_theodds.py --auto — timing-driven, idempotent across 3h iterations:
+    first snapshot once per fixture per day (skipped within 30 min of kickoff),
+    close snapshot once per fixture inside ODDS_API_CLOSE_WINDOW_MIN (45) min
+    pre-kickoff, attempts ledger localdata/theoddsapi_attempts_<date>.json
+    blocks re-tries for 6h after failed attempts (league-not-covered included)
+    so niche-league misses can never bleed credits every iteration.
+
+Multi-key rotation (owner provided 3 keys; in .env as ODDS_API_KEYS=k1,k2,k3):
+    Daily-rotated ring (start offset = date ordinal % n_keys spreads wear).
+    Any key returning 401/403/429 is fingerprint-marked exhausted in
+    localdata/theoddsapi_usage.json (raw keys never persisted — sha256[:12]
+    fingerprints only) and the ring fails over mid-run. Per-key monthly budget
+    480 (ODDS_API_MONTHLY_BUDGET) -> total ring 3 x 480 = 1440 credits/month.
+    Server x-requests-remaining (when provided) always overrides local ledger.
+    v1 flat ledgers auto-migrate into the first key's slot.
+    Ops introspection: scripts/capture_theodds.py --usage (per-key ring status).
+
+Patches caught during live verification (documented same day):
+    plan_auto priced-check was raw-name equality -> duplicate capture cost
+    2 credits before fix; now uses adapter's cross-feed matcher
+    (_team_names_match: exact / 9-char / prefix / token-subset), exported at
+    module level. The duplicate snapshot is retained as a second pick-time
+    price point (useful for intra-day drift analysis).
+    Skip reasons now label retry cooldowns explicitly.
+
+Verification: 10/10 pytest, capture_theodds.py --self-test PASS (incl. ring
+rotation + plan_auto checks), live --auto no-op confirmation:
+    skip Halmstad|Sirius (priced, close window not open)
+    skip Cork City|Athlone Town (retry cooldown, league uncovered)
+    -> "nothing due this iteration (0 credits)"
+
+Credit ledger after all live runs today: 4/1440 (2 initial capture + 2
+duplicate pre-fix; server-reported remaining=498 on the primary key).
+
+2026-08-03 addendum 3 — WhatsApp re-send loop exorcised, git is now the single source of truth
+
+Owner report (screenshots, 2026-08-02): CSKA Sofia pushed 5x (~3h cadence),
+second full morning message at 04:59, Noah 2x. Root cause: dedup state lived
+in three drifting places and the pipeline actively destroyed its own memory:
+
+    (a) whatsapp_sent_ledger_* is git-tracked (.gitignore whitelists it), and
+        the workflow's 'Restore committed data' step re-runs
+        `git checkout HEAD -- <file>` EVERY run -> keys written by runs after
+        the last human-chore commit were reverted -> fixture counted unsent
+        again -> late-slate alert re-sent every iteration.
+    (b) whatsapp_discovery_sent_ledger_* was gitignored entirely -> lived only
+        in actions/cache (LRU-evictable) -> resets on cache loss.
+    (c) Local machine and Actions each re-picked from divergent state
+        (different commit age, cache overlay, .env/secrets parity), so slates
+        drifted (1.31 vs 1.32 on the same send day) and 'cloud pick != local
+        pick'.
+
+Fixes shipped (no freeze; documented here):
+    .github/workflows/daily.yml — `permissions: contents: write` + new final
+        step 'Persist pipeline state to git': github-actions[bot] commits
+        localdata/ every iteration (if: always()); pull --rebase --autostash
+        + retry before push. Git is now THE state. actions/cache remains as
+        accelerator only.
+    .gitignore — un-ignored whatsapp_discovery_sent_ledger_20*.json and
+        theoddsapi state (usage/sports/attempts/odds csv).
+    scripts/notify_whatsapp.py — discovery alerts now ALSO suppress fixtures
+        already present in the MAIN sent ledger (belt-and-braces even if the
+        discovery ledger is ever lost again); new --heartbeat flag sends ONE
+        quiet 'no certified picks today, system healthy' ping on empty days
+        (marker lives in the sent ledger -> max 1/day; disable with
+        EDGE_FACTORY_HEARTBEAT=0). Dedupe keys verified stable against
+        rule/odds/prob churn (date|match|market only) across 87 archived
+        picks (0 empty match fields).
+    scripts/daily.py — official Smart Dispatch call now passes --heartbeat;
+        new sync_repo_state() at run_pipeline start: `git pull --rebase
+        --autostash` (skipped in CI / when .git absent / EDGE_FACTORY_GIT_SYNC=0).
+        Local cadence now starts from the cloud's exact committed state, so
+        archive-first logic restores the SAME frozen morning slate instead of
+        re-picking a divergent one.
+
+Operator notes:
+    Local .env must carry the same secrets as Actions (BZZOIRO_TOKEN above
+    all) or enrichment will still produce different prices locally.
+    Expect frequent bot commits ('chore: persist pipeline state (run ...)').
+    First local run after this change: a plain `git pull` may conflict if
+    localdata was edited locally; --autostash handles it, review once.
+
+Owner question 'why don't cloud runs persist / missed days': runners are
+ephemeral; previously state survived only per-commit + evictable cache, and
+empty-slate days were indistinguishable from dead-system days. With git-state
+commits + heartbeat, both are fixed: every run persists, and silence now has
+a MAX-1/day 'no picks' explanation attached. Rolling bet tracking remains
+fully automatic: picks_audit_<date>.md + picks_audit_rolling.json regenerate
+in-pipeline and now also persist to git every run.
+
+Verification: tests/test_notify_whatsapp.py (6 tests: cross-ledger
+suppression, heartbeat 1/day, stable dedupe identity) + existing suites =
+16 passed, 0 failed. py_compile clean on changed files.
+
+2026-08-03 addendum 4 — 'missed days' resolved: laptop-era gaps, cloud era starts 2026-07-27
+
+Owner clarification: missed days = days away from the laptop, when the daily
+cadence could not be run manually. Evidence assembled:
+
+    Gap days (txt report only, NO frozen json archive): 2026-07-10, -07-16,
+      -07-17, -07-19, -07-25. Fully empty day (nothing at all): 2026-07-26.
+    GitHub Actions history (api.github.com/.../actions/runs): the 3h cron
+      service first appears 2026-07-27T12:07Z; every ~3h since, all green,
+      zero gaps. Pre-07-27 the laptop was the only scheduler -> away days
+      produced txt-only or empty days. Post-07-27 every day has json+txt+audit.
+
+Doctrine decision (walk-forward): missed slates are NEVER backfilled. Minting
+    archives retroactively would record post-match information as pre-match
+    picks and corrupt all future audits. The gap days above are permanently
+    'no official slate' in the machine-auditable record. Settlement/audit
+    windows self-heal automatically (audit_recent_picks --days 30 reruns over
+    the backlog on every run).
+
+Hands-off posture going forward (all shipped today, 2026-07-27 -> now):
+    Scheduler:    GitHub cron 3h, no laptop needed (Secrets, not .env, are
+                  the CI source of truth).
+    Persistence:  bot commits localdata/ every run -> archives + ledgers +
+                  audits cannot be lost or HEAD-reverted again. Side effect:
+                  constant commit activity prevents GitHub's idle-repo
+                  scheduled-workflow suspension.
+    Visibility:   empty-slate heartbeat (max 1/day) distinguishes 'no picks'
+                  from 'system dead'.
+    Laptop role:  read-only viewer; daily.py sync_repo_state() git-pulls on
+                  start. Manual nudge from phone: GitHub app -> Actions ->
+                  Run workflow (workflow_dispatch already supported).
+
+2026-08-03 addendum 5 — red-team intake (external review) + applied fixes
+
+Payload zip reviewed adversarially (independent agent, prompt-enforced
+evidence rules). Verdict: theoddsapi.py + capture_theodds.py SHIP-WITH-FIXES,
+daily.yml + notify_whatsapp.py SHIP. 16/16 falsification targets CONFIRMED
+(tests, secret sweep, credit bounds, rotation, suppression, heartbeat,
+workflow concurrency sim, e2e --clv-only smoke).
+
+Fixes applied same day:
+    1. Year-boundary (BLOCKER-ish): _pick_kickoff_utc used
+       datetime.now().year — a Dec-31 run on a Jan-01 slate regressed
+       fixtures by a year. Fixed: year is taken from the fixture's own
+       pipeline `date`, never wall-clock. Tests: 4 cases incl. Dec→Jan cross.
+    2. Quota-ledger race: usage/attempts JSONs were non-atomic and
+       read-modify-write was unsynchronized — overlapping 3h cron iterations
+       could tear or clobber credit accounting (silent quota leak -> 429s).
+       Fixed: POSIX flock (advisory, non-fatal if unobtainable) held across
+       the whole load->mutate->save + tmp+os.replace atomic writes for
+       usage AND attempts ledgers. Tests: no tmp litter, 45/45 concurrent
+       thread charges land, corrupt-ledger recovery.
+
+Reviewer-evidence defects found while validating the report itself (kept for
+protocol honesty; neither changes the payload verdict):
+    - §2.3 paste cites `.gitignore:17:!localdata/*.json` — that line does not
+      exist upstream (checked baseline f91cdb9). The discovery-ledger
+      un-ignore comes ONLY from this payload's added line. CONFIRMED verdict
+      stands but the cited evidence was fabricated.
+    - §4 recompute claims "58% hit, 1.06 ROI" for 2026-08-03 — raw
+      picks_audit_rolling.json overall = 58/68 = 85.29% hit, +10.98% ROI.
+      Their 58.3% is the ENHANCEMENT OVERLAY's own rate misfiled as the
+      overall number; "1.06 ROI" unexplained. Anti-hallucination rules
+      require this be on record.
+
+Post-fix verification: 20/20 pytest + --self-test PASS; owner smoke per
+review script: --usage 4/1440 -> --auto --dry-run (2 fixtures, est 2
+credits, Halmstad->soccer_sweden_allsvenskan, Ie2 UNKNOWN) -> --usage
+unchanged (4/1440) -> --refresh-sports 44 active soccer keys (ring live).
+
+Residual accepted risk (documented, not fixed — bounded by the 480/key
+hard cap): two overlapping PROCESSES can still double-fetch the same
+fixture (attempts stamped after fetch); expected cost <= 2 extra credits
+per rare overlap. Attempts stamps are atomic but not cross-process
+serialized; revisit only if overlap collisions are ever observed in logs.
+
+Test suite: 20 passing total (14 theoddsapi incl. fail->pass fix tests,
+6 notify anti-spam). See PAYLOAD_MANIFEST_2026-08-03.sha256 (regenerated, v2).
+
+--------------------------------------------------------------------------------
+ADDENDUM 6 — 2026-08-03: Deployment green-light + v3 payload (self-caught gap)
+--------------------------------------------------------------------------------
+
+Decision: owner + external reviewer green-lit v2 for implementation; no second
+confirmation round. Question was deploy mechanics, so a full dress rehearsal was
+run before any push: fresh clone of upstream -> apply -> verify -> test.
+
+Rehearsal gate #1 (anti-drift): upstream HEAD still f91cdb9d308e4614cafa04d9607e7806efe72d54
+    -> v2 diff base is live-valid, zero upstream movement since authoring.
+
+Rehearsal gate #2 (payload self-review) — DEFECT FOUND IN MY OWN v2:
+    daily.yml granted contents:write and the persist step, and README told the
+    operator to create the ODDS_API_KEYS Actions secret — but the workflow's
+    env: block never mapped it. Net effect: every Actions run would soft-no-op
+    the capture step (keys never reach env); capture would only ever work from
+    the laptop .env. Exactly the cloud/local parity failure class this payload
+    exists to kill. The external review also missed it (scope boundary between
+    'the four named files' and their Actions interaction).
+    Fix: one env mapping + comment in daily.yml env block:
+        ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}
+    Fail-safe note: with the secret unset, the step still soft-no-ops safely
+    (no crash, no spam) — it is inert, not broken.
+
+v3 payload (= v2 + the one-line workflow env mapping + README corrections:
+    test counts 10->14 and '16 passed'->'20 passed' in reviewer checklist).
+    v2 zip retained on disk as an immutable record; v3 is the apply target.
+    Binding hash record: PAYLOAD_MANIFEST_V3_2026-08-03.sha256 inside the v3
+    zip (11 repo files incl. this HANDOVER). The zip's own sha256 is reported
+    in the operator message thread, not inside the payload (circularity).
+
+Rehearsal gate #3 (clean-room, v3): fresh clone f91cdb9 -> `git apply --check`
+    -> apply -> `sha256sum -c` manifest (11/11 OK on the APPLIED tree, proving
+    shipped files == diff result) -> pytest 20/20 -> --self-test PASS ->
+    py_compile daily.py/notify_whatsapp.py OK -> ODDS_API_KEYS line present
+    in applied daily.yml. Results also emitted in operator message.
+
+Post-apply operator duties (unchanged, now actually sufficient):
+    1. Create GitHub Actions secret ODDS_API_KEYS (comma list, 3 keys).
+    2. Verify next bot commit authored by github-actions[bot] appears.
+    3. Tomorrow morning: exactly ONE morning WhatsApp message (or one
+       heartbeat if slate empty), zero fixture repeats intraday.
+    4. First theoddsapi close snapshot fires at the 15:00 UTC cron tick
+       (close window 45 min pre-kickoff) if pushed before 15:00 UTC today.
+
+Local .env on any operator machine: copy 'The Odds API' block from .env.example
+(only needed for laptop captures; Actions secret alone is enough hands-off).

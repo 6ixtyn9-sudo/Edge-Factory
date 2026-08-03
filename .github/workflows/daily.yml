@@ -17,6 +17,9 @@ on:
           - forecast_refresh
           - clv_only
 
+permissions:
+  contents: write
+
 jobs:
   run-autonomous-agent:
     runs-on: ubuntu-latest
@@ -29,6 +32,9 @@ jobs:
       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
       CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
       CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+      # The Odds API multi-key ring (comma-separated). Without this mapping the
+      # capture step soft-no-ops on every Actions run (keys never reach env).
+      ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}
       TZ: 'Africa/Johannesburg'
 
     steps:
@@ -90,6 +96,25 @@ jobs:
         with:
           path: localdata
           key: localdata-main-${{ github.run_id }}
+
+      - name: Persist pipeline state to git (single source of truth)
+        # Every iteration commits its exact end state: frozen picks, WhatsApp
+        # sent/discovery ledgers, capture attempts, registries. Next run's
+        # 'Restore committed data' step then restores FRESH state — kills the
+        # stale-ledger re-send loop, and lets local machines `git pull` into
+        # identical state (daily.py sync_repo_state).
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A localdata/
+          if git diff --cached --quiet; then
+            echo "no localdata changes to persist"
+            exit 0
+          fi
+          git commit -m "chore: persist pipeline state (run ${{ github.run_id }})"
+          git pull --rebase --autostash || true
+          git push || (git pull --rebase --autostash && git push)
 
       - name: Upload Pick Ledgers & Reports as Artifacts
         uses: actions/upload-artifact@v4
