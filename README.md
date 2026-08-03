@@ -60,19 +60,20 @@ localdata/ is owned by the GitHub Actions persist loop. It is the ONLY writer al
 
 Bash
 
-# one-time setup on every machine that touches this repo
+# one-time setup per machine — paste as-is:
 git config pull.rebase false
 
-# the only acceptable commit workflow — explicit paths, no sweeps
-git status --porcelain                                # inspect FIRST
-git restore --staged localdata/ 2>/dev/null; true     # unstage anything the pipeline dirtied
-git add scripts/<file>.py tests/<file>.py HANDOVER.md # name every file explicitly
-git commit -m "..."
-git pull --no-rebase                                  # absorb any bot persist commit
+# commit workflow — edit ONLY the FILES line to name your change's files, then paste the whole block as-is:
+FILES=("scripts/picks_today.py" "scripts/audit_recent_picks.py" "HANDOVER.md")
+git status --porcelain
+git restore --staged localdata/ 2>/dev/null
+git add "${FILES[@]}"
+git commit -m "change: what and why"
+git pull --no-rebase
 git push origin main
 
-# if push is rejected or pull reports divergent branches (bot persisted while you worked):
-git pull --no-rebase -X ours                          # keep local on conflicts, absorb remote
+# push rejected / "divergent branches" (bot persisted while you worked) — paste as-is:
+git pull --no-rebase -X ours
 git push origin main
 
 Never git reset --hard origin/main or discard local commits to "fix" divergence — that is how payload code gets orphaned. Merge, don't erase.
