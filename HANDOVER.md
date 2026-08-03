@@ -2597,3 +2597,52 @@ explicit paths only; never `git add -A` / `git add .` / VS Code Commit All;
 pull.rebase=false one-time setup; divergent branches →
 `git pull --no-rebase -X ours` (merge, never erase). Docs-only payload: no
 code changes; full suite re-run as the ship gate (97 passed expected).
+
+---
+
+## Addendum 16 — 2026-08-03 (late night): label honesty — "Team Win + …" wording retired
+
+Operator-reported live specimen (picks_audit_2026-08-03.md): Kongsvinger vs
+Strommen settled 1-3 — the HOME pick LOST, yet the graded 🔥 block showed
+[🟢 HIT] Home Win + Over 1.5 (86.8%), [🟢 HIT] Home Win + Over 2.5 (68.1%),
+[🟢 HIT] Home Win + BTTS (Yes) (64.1%). A HIT on a win that never happened
+is a contradiction in any reader's eyes and poisons trust in the graded
+view. Root cause known since FIX-2 (Addendum 12): promised %, captured
+price and scoring for match_over_15 / match_over_25 / btts_yes are
+PLAIN-market (selection-independent); only the archived pick-time wording
+still claimed a "Win + …" combo. The audit even printed a disclaimer
+admitting it. Operator's report promotes the queued cosmetic cleanup to
+shipped.
+
+Two-sided fix:
+- picks_today.py (source): the candidate label templates now write plain
+  canonical labels — "Match Over 1.5 Goals", "Match Over 2.5 Goals",
+  "Both Teams to Score - Yes (BTTS-Yes)" — so future archives stop lying at
+  birth. team_str removed (dead after the change; pyflakes-clean).
+  Fallback-odds comments reworded to plain-market wording (VALUES
+  untouched: 1.30 / 1.55 / 2.50 — no behavior change anywhere).
+- audit_recent_picks.py (render): new PLAIN_LABELS map + _display_label() —
+  the graded per-line render normalizes those three markets to the
+  canonical plain label whatever the archive says. Old archives inside the
+  30-day window keep "Win + …" in their STORED label field: storage stays
+  faithful to the archive, display is honest about what was scored. The
+  per-market table's footer note now documents the mapping instead of
+  apologizing for the cosmetics.
+
+Scores, promised %, prices, HIT/MISS icons and Actual contexts are
+UNCHANGED — normalization is display + future-archive wording only.
+
+Evidence: fixture labels made production-realistic ("Home Win + Over 2.5",
+"Away Win + Over 2.5", "Home Win + BTTS (Yes)") so the markdown test is an
+end-to-end Kongsvinger regression pin — canonical labels rendered,
+"Home Win + "/"Away Win + " asserted ABSENT from the whole report;
+storage assert proves the archived wording is preserved verbatim; new
+_display_label unit test (home/away variants, already-plain passthrough,
+verbatim non-combo, None/junk safety). Suite 95/95 sandbox
+(--ignore=test_supabase; 98 expected on the Mac), pyflakes DELTA-0 vs
+pinned base on both touched scripts (audit: the single pre-existing
+f-string finding renumbered :1345→:1376; picks_today: identical 8
+pre-existing findings ±1 line). Deploy proof: re-rendered Kongsvinger block
+must read "Match Over 1.5 Goals" / "Match Over 2.5 Goals" /
+"Both Teams to Score - Yes (BTTS-Yes)" with the SAME icons and expected % —
+pasted back as gate G4.
