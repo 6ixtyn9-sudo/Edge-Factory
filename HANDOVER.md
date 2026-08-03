@@ -2710,6 +2710,79 @@ block now uses an edit-one-line FILES array — FILES=("…" "…") then
 git add "${FILES[@]}" — zsh/bash-safe; every other line pastes verbatim.
 Docs-only change.
 
+---
+
+## Addendum 19 — 2026-08-03 (close of night): ACTIVE WORK QUEUE for the next agent + localdata sync runbook
+
+### A. Work queue (do in this order)
+
+1. **DEBIAS WIRING (engine-aware).** Current state:
+   `load_rolling_audit_hit_rates()` (scripts/picks_today.py, ~line 380)
+   multiplies every raw 🔥 probability by a hit-rate read from
+   picks_audit_rolling.json → enhancements_audit.by_enhancement (gate:
+   recommended>=5). That source is the 24-item recommended-enhancement
+   overlay — tiny n (live example 2026-08-03: match_over_25 damped ×0.556
+   off n=9, displaying 36.7% against a ~0.66 hybrid raw). Target source:
+   event_notes_audit.by_market (full surface, 212 notes/window, Addendum
+   12) with min-n >= 15, AND engine-aware via by_engine (Addendum 17):
+   hybrid_cohort notes are already cohort-shrunk, so multiplying them again
+   double-damps. RULE: before writing code, let 2–3 days of hybrid-tagged
+   notes settle and READ the by-engine table. If hybrid_cohort |Δ| <= model
+   |Δ| per market, gate hr=1.0 for hybrid notes and debias only the
+   model/legacy residual. Ship via payload protocol; unit-test the loader's
+   source preference + min-n + engine gating with fixture JSON.
+
+2. **VETO RE-MINE.** 3,185/4,247 league contexts carry verdict UNKNOWN
+   (purity assay 2026-08-03); UNKNOWN→watchlist/skip is a structural cause
+   of empty certified buckets (2026-08-03 night: 0 certified, 14 vetoes /
+   417 matches). Directions (write the design doc FIRST — no decision made):
+   pool evidence across edges per league; longer windows; hierarchical
+   fallback (league→niche→competition_type). Success metric = certified
+   picks/day delta measured walk-forward; NEVER relax verdicts to
+   manufacture yield.
+
+3. **SMALL TICKETS.** (a) BENCHED reset runbook + time-bomb test: the decay
+   monitor benched `3way-unanimous min_p>=60 avg_p>=60` for the 4th time on
+   2026-08-03; benching self-heals at the next mine_consensus (re-certifies
+   from walk-forward scratch) — document the operator-visible lifecycle. The
+   pre-existing test test_benched_circuit_breaker has a date-stale
+   assumption that goes red around 2026-10-02 — FIX BEFORE THEN. (b)
+   Winner's-curse doc: LINE_THRESHOLDS display only high-side notes (e.g.
+   home_under_35 shown iff p>=0.90), so realized systematically trails
+   promised on display-filtered markets — part of the observed −27.6 Δ is
+   the selection effect, not engine error; document it in the audit section
+   header.
+
+### B. localdata sync — who owns what, and how the Mac refreshes
+
+- In the REPO, localdata/ is written ONLY by the GitHub Actions persist
+  loop (chore: persist pipeline state). The Mac NEVER commits it; local
+  pipeline runs dirty it as disposable, re-derivable scratch.
+- `git pull --no-rebase` DOES pull the Actions-committed localdata to the
+  Mac — but git REFUSES to merge when the same files are locally modified
+  ("Your local changes … would be overwritten by merge"). That refusal is
+  git protecting scratch files, not a bug in the commit block.
+- Refresh recipe (cloud version wins):
+      git checkout -- localdata/     # discard local scratch (safe: re-derivable)
+      git pull --no-rebase           # clean merge brings the bot's state
+  or via stash:  git stash push -- localdata/ && git pull --no-rebase && git stash drop
+  single file:   git checkout origin/main -- localdata/picks_2026-08-04.txt
+- Which version is "truth"? Cloud and Mac runs are PARALLEL computations of
+  the same pipeline; they converge on settled facts. The ownership rule
+  exists for CODE integrity. For reading the freshest forecast, use
+  whichever machine ran most recently — locally, the dirty file on disk.
+
+### C. Standing protocol (condensed; unchanged)
+
+Payloads = full-file placement + SHA256MANIFEST BASE/TARGET + Phase-0
+red-team + battery + fresh-tree rehearsal + Antigravity gates + independent
+upstream sha-verify before "deployed" is declared. Git: explicit FILES
+commits (README §Git workflow); divergent → `git pull --no-rebase -X ours`;
+merge, never erase. Commands: ONLY `--auto-run` / `--auto-once` /
+`--force-repick`. Zero API-credit spend. Gates without pasted output did
+not happen. Calibration ≠ edge: the registry gates value; audit tables
+measure promises only.
+
 Addendum 17 deploy record (rolled up): shipped as 5f56d92 (feat) + merge
 7f1f190 + 96295f8 (absorb chore; the localdata conflict on
 picks_audit_2026-08-03.md resolved --theirs = bot-owned, the correct
