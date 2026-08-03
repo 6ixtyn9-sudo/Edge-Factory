@@ -54,6 +54,29 @@ Wakes every 3h (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
 actions/cache persists the localdata/ DuckDB warehouse, pick ledgers, CLV snapshots, and the WhatsApp sent ledger across runs
 Uploads pick reports (.txt) and ledgers as downloadable artifacts
 Runs sync_supabase then notify_whatsapp as the final steps
+Git workflow (collision-safe)
+
+localdata/ is owned by the GitHub Actions persist loop. It is the ONLY writer allowed to commit those files. Local pipeline runs rewrite localdata constantly; leaving those files dirty/uncommitted in your working tree is expected and correct. Humans and agents commit code + docs only, with explicit paths. NEVER git add -A, git add ., or VS Code "Commit All" — sweeping pipeline state into a manual commit collides with the bot's persist commits and produces the "divergent branches / Need to specify how to reconcile" fatal. This has happened three times (latest: 2026-08-03, merge 65d062c).
+
+Bash
+
+# one-time setup on every machine that touches this repo
+git config pull.rebase false
+
+# the only acceptable commit workflow — explicit paths, no sweeps
+git status --porcelain                                # inspect FIRST
+git restore --staged localdata/ 2>/dev/null; true     # unstage anything the pipeline dirtied
+git add scripts/<file>.py tests/<file>.py HANDOVER.md # name every file explicitly
+git commit -m "..."
+git pull --no-rebase                                  # absorb any bot persist commit
+git push origin main
+
+# if push is rejected or pull reports divergent branches (bot persisted while you worked):
+git pull --no-rebase -X ours                          # keep local on conflicts, absorb remote
+git push origin main
+
+Never git reset --hard origin/main or discard local commits to "fix" divergence — that is how payload code gets orphaned. Merge, don't erase.
+Every repo change is appended to HANDOVER.md with date + rationale (anti-drift protocol).
 Sources (12)
 
 source	markets	odds	history
