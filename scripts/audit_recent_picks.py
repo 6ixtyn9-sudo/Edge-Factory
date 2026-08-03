@@ -735,6 +735,25 @@ def _signed_pct(value: Any) -> str:
     return f"{v:+.1%}"
 
 
+def _event_actual_context(market: Any, selection: str, hs: int, gs: int) -> str:
+    """Short realized context for a graded 🔥 line, mirroring the 📊 style."""
+    m = str(market or "")
+    sel = str(selection or "")
+    if m.startswith("team_"):
+        side_home = sel == "home"
+        return f"{hs if side_home else gs} {'home' if side_home else 'away'} goals"
+    if m.startswith("home_"):
+        return f"{hs} home goals"
+    if m.startswith("away_"):
+        return f"{gs} away goals"
+    if m.startswith("btts_"):
+        return "BTTS-Yes" if (hs > 0 and gs > 0) else "BTTS-No"
+    if m == "double_chance":
+        outcome = "home" if hs > gs else "draw" if hs == gs else "away"
+        return f"{outcome} ({hs}-{gs})"
+    return f"{hs + gs} goals"
+
+
 def _render_event_notes_section(aud: dict[str, Any]) -> list[str]:
     lines = [
         "## Possible Events (🔥) Full-Surface Audit",
@@ -1325,21 +1344,25 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                     scores_strs.append(f"[{score_icon}] {score_item['score']} ({score_item['pct']:.1%})")
                 lines.append(f"  - **Top Scores**: " + ", ".join(scores_strs))
 
-            # Per-pick graded 🔥 Possible Events (Addendum 13): the same
-            # observations that feed the aggregate table, rendered per pick so
-            # the operator sees each promised event graded against the score.
+            # Per-pick graded 🔥 Possible Events (Addendum 13/14): the same
+            # observations that feed the aggregate table, rendered ONE EVENT
+            # PER LINE in the 📊 layout (expected % + realized context) so the
+            # operator can scan pick by pick.
             notes_audit = item.get("notes_audit") or []
             if notes_audit:
-                event_bits = []
+                lines.append("  - **🔥 Possible Events (graded)**:")
                 for note in notes_audit:
+                    ev_label = note.get("label") or note.get("market")
                     if note.get("hit") is None:
-                        event_bits.append(f"[⚪ n/a] {note.get('label') or note.get('market')} "
-                                          f"({_pct(note.get('promised'))})")
+                        lines.append(f"    - [⚪ n/a] **{ev_label}**: promised "
+                                     f"{_pct(note.get('promised'))} (no scoring definition)")
                     else:
                         ev_icon = "🟢 HIT" if note["hit"] else "🔴 MISS"
-                        event_bits.append(f"[{ev_icon}] {note.get('label') or note.get('market')} "
-                                          f"({_pct(note.get('promised'))})")
-                lines.append("  - **🔥 Possible Events (graded)**: " + ", ".join(event_bits))
+                        actual_ctx = _event_actual_context(note.get("market"),
+                                                           item.get("selection"),
+                                                           item["hs"], item["gs"])
+                        lines.append(f"    - [{ev_icon}] **{ev_label}**: expected "
+                                     f"{_pct(note.get('promised'))} (Actual: {actual_ctx})")
             else:
                 lines.append("  - **🔥 Possible Events (graded)**: none recorded on the archived pick")
             lines.append("")
