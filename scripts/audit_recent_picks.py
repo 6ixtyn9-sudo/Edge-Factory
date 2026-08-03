@@ -505,7 +505,8 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
 # Archived picks carry two machine-readable surfaces the operator reads, but
 # the legacy report only scored the single recommended enhancement:
 #   - event_notes:         the full 🔥 "Possible Events" list
-#                          ({market, probability, raw_probability, label, reason})
+#                          ({market, probability, raw_probability, label, reason,
+#                            engine?, cohort_n?} — engine/cohort_n from Addendum 17)
 #   - statistical_comment: the 📊 line (Avg Goals / Over 2.5 / BTTS /
 #                          Home|Away Over 1.5 / Top Scores)
 # Every entry on both surfaces promises a probability. The helpers below score
@@ -641,6 +642,9 @@ def score_event_notes(pick: dict[str, Any], selection: str, hs: int, gs: int) ->
             "promised": _finite_prob(note.get("probability")),
             "raw_promised": _finite_prob(note.get("raw_probability")),
             "hit": bool(hit) if hit is not None else None,
+            # Addendum 17: probability provenance — notes archived before the
+            # hybrid engine carry no tag and bucket as "legacy".
+            "engine": str(note.get("engine") or "legacy"),
         })
     return out
 
@@ -648,6 +652,7 @@ def score_event_notes(pick: dict[str, Any], selection: str, hs: int, gs: int) ->
 def aggregate_event_notes(observations: list[dict[str, Any]]) -> dict[str, Any]:
     """Aggregate note observations into per-market + pooled-bucket calibration."""
     by_market: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
+    by_engine: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
     pooled: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
     notes_per_market: dict[str, int] = defaultdict(int)
     unscorable: dict[str, int] = defaultdict(int)
@@ -664,6 +669,7 @@ def aggregate_event_notes(observations: list[dict[str, Any]]) -> dict[str, Any]:
             promised_missing += 1
             continue
         _accumulate(by_market[market], promised, bool(hit))
+        _accumulate(by_engine[str(ob.get("engine") or "legacy")], promised, bool(hit))
         _accumulate(pooled[_bucket_label(promised)], promised, bool(hit))
     return {
         "definition": NOTE_SCORING_DEFINITION,
@@ -674,6 +680,11 @@ def aggregate_event_notes(observations: list[dict[str, Any]]) -> dict[str, Any]:
         "by_market": {
             m: {**_finalize_slot(by_market[m]), "notes": notes_per_market[m]}
             for m in sorted(by_market)
+        },
+        # Addendum 17: grade the probability engines against each other
+        # (model | hybrid_cohort | legacy) on their own promises.
+        "by_engine": {
+            eng: _finalize_slot(slot) for eng, slot in sorted(by_engine.items())
         },
         "promised_buckets": [
             {"bucket": label, **_finalize_slot(slot)}
@@ -832,6 +843,26 @@ def _render_event_notes_section(aud: dict[str, Any]) -> list[str]:
             "Addendum 16): " + labels_mapping + ". Raw archive labels written before 2026-08-03 may still "
             "carry the old \"Win + …\" wording in their stored label field; the render normalizes them."
         )
+        lines.append("")
+    engines = aud.get("by_engine") or {}
+    if engines:
+        lines.extend([
+            "### By probability engine (🔥)",
+            "",
+            "> `model` = blended rates + Poisson prior · `hybrid_cohort` = outcome-unconditioned "
+            "empirical cohort anchor (Addendum 17) · `legacy` = archived before engine tagging.",
+            "",
+            "| engine | n | hits | realized | promised avg | Δ | Brier |",
+            "| --- | --- | --- | --- | --- | --- | --- |",
+        ])
+        for eng, slot in sorted(engines.items(), key=lambda kv: (-kv[1].get("n", 0), kv[0])):
+            brier = slot.get("brier")
+            lines.append(
+                f"| {eng} | {slot.get('n', 0)} | {slot.get('hits', 0)} | {_pct(slot.get('realized'))} | "
+                f"{_pct(slot.get('mean_promised'))} | {_signed_pct(slot.get('delta'))} | "
+                f"{brier if brier is not None else 'n/a'} |"
+            )
+        lines.append("")
         lines.append("")
     buckets = aud.get("promised_buckets") or []
     if buckets:

@@ -318,8 +318,10 @@ PICK_A = {
         {"market": "match_over_25", "probability": 0.55, "raw_probability": 0.60,
          "label": "Home Win + Over 2.5"},   # legacy combo wording — render must normalize (Addendum 16)
         {"market": "btts_yes", "probability": 0.815, "raw_probability": 0.815,
-         "label": "Home Win + BTTS (Yes)"},  # legacy combo wording — render must normalize (Addendum 16)
-        {"market": "goal_range_2_3", "probability": 0.47, "raw_probability": 0.47, "label": "c"},
+         "label": "Home Win + BTTS (Yes)",  # legacy combo wording — render must normalize (Addendum 16)
+         "engine": "hybrid_cohort", "cohort_n": 220},  # Addendum 17 provenance
+        {"market": "goal_range_2_3", "probability": 0.47, "raw_probability": 0.47, "label": "c",
+         "engine": "hybrid_cohort", "cohort_n": 220},  # Addendum 17 provenance
         {"market": "corners_over_95", "probability": 0.5, "raw_probability": 0.5, "label": "d"},
     ],
 }
@@ -430,6 +432,16 @@ def test_build_report_full_surface_integration(tmp_path, monkeypatch):
     assert aud["by_market"]["btts_yes"]["realized"] == 1.0
     assert aud["by_market"]["btts_no"]["hits"] == 0
 
+    # Addendum 17: provenance rides the observations; the by-engine aggregation
+    # grades each probability engine on its own promises.
+    assert a_notes["btts_yes"]["engine"] == "hybrid_cohort"
+    assert a_notes["match_over_25"]["engine"] == "legacy"   # untagged archive -> legacy
+    engines = aud["by_engine"]
+    assert engines["hybrid_cohort"]["n"] == 2 and engines["hybrid_cohort"]["hits"] == 2
+    assert engines["hybrid_cohort"]["realized"] == 1.0
+    assert engines["legacy"]["n"] == 4 and engines["legacy"]["hits"] == 2
+    assert engines["legacy"]["realized"] == 0.5
+
     # Statistical line calibration.
     cal = report["statline_calibration"]
     assert cal["by_metric"]["over25"]["n"] == 2
@@ -481,6 +493,11 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     assert "Away Win + " not in text
     assert "    - [🟢 HIT] **c**: expected 47.0% (Actual: 2 goals)" in text   # non-combo: verbatim
     assert "    - [⚪ n/a] **d**: promised 50.0% (no scoring definition)" in text
+
+    # Addendum 17: by-engine grading table renders with the provenance rows.
+    assert "### By probability engine (🔥)" in text
+    assert "| hybrid_cohort | 2 | 2 | 100.0% |" in text
+    assert "| legacy | 4 | 2 | 50.0% |" in text
     assert "none recorded on the archived pick" in text  # pick D had no notes
 
     # Empty-state rendering must be explicit (never silent) and crash-proof.

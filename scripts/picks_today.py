@@ -301,6 +301,115 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
         return None
 
 
+# ---------------------------------------------------------------------------
+# Hybrid empirical-cohort engine (Addendum 17)
+#
+# The legacy 🔥 notes engine priced broad markets from raw league/team rate
+# blends plus a Poisson on a blended lambda. The 2026-08-03 full-surface audit
+# measured that surface as the miscalibrated one (btts_yes -11.3pp,
+# home_under_35 -27.6pp, exact_3 -22.3pp, avg-goals bias -0.41/game) while the
+# empirical-cohort 📊 surface stayed within ±7.7pp. The hybrid therefore
+# re-sources broad markets (and the Poisson lambda anchor) from the realized
+# outcome-UNCONDITIONED "matches like this one" cohort — the same consensus
+# cohort fetch_historical_profile() queries, minus its outcome filter: the 📊
+# line conditions on the pick WINNING, which is fine for a display anecdote
+# but fatal for a probability engine (conditioning on the win injects exactly
+# the selection bias the engine is trying to avoid).
+#
+# Shrinkage (empirical Bayes): p = (n * p_cohort + K * p_model) / (n + K).
+# Notes are tagged engine="hybrid_cohort" | "model" (+ cohort_n) so the audit
+# can grade the engines separately (by-engine table). Display/context layer
+# only: registry, pricing and certification paths are untouched.
+HYBRID_MIN_N = 100        # thinner cohorts stay pure model prior
+HYBRID_SHRINK_K = 150.0   # pseudo-count pulling back toward the model prior
+
+
+def _hybrid_pick_n_way(pick: dict) -> int:
+    """consensus3 vs consensus2 cohort selection from the pick (default 3)."""
+    try:
+        rule = str(pick.get("edge_rule") or "").strip().lower()
+        if rule.startswith("2way") or rule.startswith("2-way"):
+            return 2
+        return 3
+    except Exception:
+        return 3
+
+
+def _hybrid_shrink(p_cohort, n: int, p_model: float) -> float:
+    """Empirical-Bayes shrink of the model prior toward the cohort rate."""
+    if p_cohort is None:
+        return p_model
+    return (n * float(p_cohort) + HYBRID_SHRINK_K * float(p_model)) / float(n + HYBRID_SHRINK_K)
+
+
+def fetch_match_cohort(con, selection: str, avg_p: float, n_way: int) -> dict | None:
+    """Realized frequencies of the outcome-UNCONDITIONED 'matches like this
+    one' cohort (all-sources-unanimous pick + avg_p band, settled results
+    joined). Same consensus view, agreement clause and avg_p band logic as
+    fetch_historical_profile(), but WITHOUT its `c.outcome = selection`
+    filter (Addendum 17). Returns None when the cohort is thinner than
+    HYBRID_MIN_N or anything fails — the caller then keeps the model prior.
+    """
+    view_name = "consensus3" if n_way >= 3 else "consensus2"
+    try:
+        max_p = con.execute(f"SELECT MAX(avg_p) FROM {view_name}").fetchone()[0]
+        is_scaled = max_p is not None and float(max_p) > 1.5
+    except Exception:
+        is_scaled = True
+
+    p_val = float(avg_p)
+    if not is_scaled and p_val > 1.5:
+        p_val /= 100.0
+
+    p_min = p_val - (5.0 if is_scaled else 0.05)
+    p_max = p_val + (5.0 if is_scaled else 0.05)
+
+    sel = str(selection).lower()
+    if sel not in ("home", "away", "draw"):
+        return None
+
+    if view_name == "consensus3":
+        agree_cond = "c.fb_pick = ? AND c.zb_pick = ? AND c.sa_pick = ?"
+        params = [sel, sel, sel]
+    else:
+        agree_cond = "c.fb_pick = ? AND c.zb_pick = ?"
+        params = [sel, sel]
+
+    q = f"""
+        SELECT
+            COUNT(*) AS n,
+            AVG(f.hs + f.gs) AS avg_goals,
+            AVG(CASE WHEN f.hs + f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS over15,
+            AVG(CASE WHEN f.hs + f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS over25,
+            AVG(CASE WHEN f.hs + f.gs >= 4 THEN 1.0 ELSE 0.0 END) AS over35,
+            AVG(CASE WHEN f.hs + f.gs >= 5 THEN 1.0 ELSE 0.0 END) AS over45,
+            AVG(CASE WHEN f.hs > 0 AND f.gs > 0 THEN 1.0 ELSE 0.0 END) AS btts,
+            AVG(CASE WHEN f.hs >= 1 THEN 1.0 ELSE 0.0 END) AS h_o05,
+            AVG(CASE WHEN f.hs >= 2 THEN 1.0 ELSE 0.0 END) AS h_o15,
+            AVG(CASE WHEN f.hs >= 3 THEN 1.0 ELSE 0.0 END) AS h_o25,
+            AVG(CASE WHEN f.hs >= 4 THEN 1.0 ELSE 0.0 END) AS h_o35,
+            AVG(CASE WHEN f.gs >= 1 THEN 1.0 ELSE 0.0 END) AS a_o05,
+            AVG(CASE WHEN f.gs >= 2 THEN 1.0 ELSE 0.0 END) AS a_o15,
+            AVG(CASE WHEN f.gs >= 3 THEN 1.0 ELSE 0.0 END) AS a_o25,
+            AVG(CASE WHEN f.gs >= 4 THEN 1.0 ELSE 0.0 END) AS a_o35
+        FROM {view_name} c
+        JOIN forebet_settled f ON c.date = f.date AND c.home = f.home AND c.away = f.away
+        WHERE {agree_cond}
+          AND c.avg_p BETWEEN ? AND ?
+    """
+    keys = ["n", "avg_goals", "over15", "over25", "over35", "over45", "btts",
+            "h_o05", "h_o15", "h_o25", "h_o35", "a_o05", "a_o15", "a_o25", "a_o35"]
+    try:
+        row = con.execute(q, [*params, p_min, p_max]).fetchone()
+        if not row or not row[0] or int(row[0]) < HYBRID_MIN_N:
+            return None
+        out = dict(zip(keys, row))
+        out["n"] = int(out["n"])
+        return out
+    except Exception:
+        return None
+
+
 def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | None:
     if not con:
         return None
@@ -521,6 +630,21 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
 
     # Calculate expected goals (lambda)
     lam = 0.4 * league_stats.get("avg_goals", 2.5) + 0.6 * ((home_stats.get("avg_goals", 2.5) + away_stats.get("avg_goals", 2.5)) / 2.0)
+
+    # --- Hybrid empirical-cohort engine (Addendum 17) ---
+    # Broad markets + the Poisson lambda anchor are re-sourced (with shrinkage)
+    # from the outcome-unconditioned "matches like this one" cohort. Anything
+    # the cohort cannot speak to keeps the legacy model prior.
+    cohort = None
+    _cohort_sel = str(pick.get("pick") or "").lower()
+    _cohort_avg_p = pick.get("avg_p")
+    try:
+        if _cohort_sel in ("home", "away", "draw") and isinstance(_cohort_avg_p, (int, float)):
+            cohort = fetch_match_cohort(con, _cohort_sel, float(_cohort_avg_p), _hybrid_pick_n_way(pick))
+    except Exception:
+        cohort = None
+    if cohort is not None:
+        lam = _hybrid_shrink(cohort.get("avg_goals"), cohort["n"], lam)
     
     p_0 = poisson(0, lam)
     p_1 = poisson(1, lam)
@@ -588,6 +712,39 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     prob_a_u25 = 1.0 - prob_a_o25
     prob_a_u35 = 1.0 - prob_a_o35
     prob_a_u45 = 1.0 - prob_a_o45
+
+    # --- Hybrid overrides (Addendum 17): cohort-backed broad markets shrink
+    # toward the realized cohort rate; every over/under pair is then re-derived
+    # as an EXACT complement so the two sides can never disagree.
+    if cohort is not None:
+        _cn = cohort["n"]
+        prob_o15 = _hybrid_shrink(cohort.get("over15"), _cn, prob_o15)
+        prob_o25 = _hybrid_shrink(cohort.get("over25"), _cn, prob_o25)
+        prob_over_35_poisson = _hybrid_shrink(cohort.get("over35"), _cn, prob_over_35_poisson)
+        prob_over_45_poisson = _hybrid_shrink(cohort.get("over45"), _cn, prob_over_45_poisson)
+        prob_btts_yes = _hybrid_shrink(cohort.get("btts"), _cn, prob_btts_yes)
+        prob_h_o05 = _hybrid_shrink(cohort.get("h_o05"), _cn, prob_h_o05)
+        prob_h_o15 = _hybrid_shrink(cohort.get("h_o15"), _cn, prob_h_o15)
+        prob_h_o25 = _hybrid_shrink(cohort.get("h_o25"), _cn, prob_h_o25)
+        prob_h_o35 = _hybrid_shrink(cohort.get("h_o35"), _cn, prob_h_o35)
+        prob_a_o05 = _hybrid_shrink(cohort.get("a_o05"), _cn, prob_a_o05)
+        prob_a_o15 = _hybrid_shrink(cohort.get("a_o15"), _cn, prob_a_o15)
+        prob_a_o25 = _hybrid_shrink(cohort.get("a_o25"), _cn, prob_a_o25)
+        prob_a_o35 = _hybrid_shrink(cohort.get("a_o35"), _cn, prob_a_o35)
+        prob_btts_no = 1.0 - prob_btts_yes
+        prob_u15 = 1.0 - prob_o15
+        prob_u25 = 1.0 - prob_o25
+        prob_u35 = 1.0 - prob_over_35_poisson
+        prob_h_u05 = 1.0 - prob_h_o05
+        prob_h_u15 = 1.0 - prob_h_o15
+        prob_h_u25 = 1.0 - prob_h_o25
+        prob_h_u35 = 1.0 - prob_h_o35
+        prob_h_u45 = 1.0 - prob_h_o45
+        prob_a_u05 = 1.0 - prob_a_o05
+        prob_a_u15 = 1.0 - prob_a_o15
+        prob_a_u25 = 1.0 - prob_a_o25
+        prob_a_u35 = 1.0 - prob_a_o35
+        prob_a_u45 = 1.0 - prob_a_o45
 
     LINE_THRESHOLDS = {
         "match_over_15": 0.80,
@@ -692,7 +849,10 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
                 "probability": prob_adjusted,
                 "raw_probability": prob,
                 "label": label,
-                "reason": reason + (f" (Performance feedback: HR={hr:.1%}, Adjusted Prob: {prob_adjusted:.1%})" if hr < 1.0 else "")
+                "reason": reason + (f" (Performance feedback: HR={hr:.1%}, Adjusted Prob: {prob_adjusted:.1%})" if hr < 1.0 else ""),
+                # Addendum 17: provenance so the audit can grade engines separately.
+                "engine": "hybrid_cohort" if cohort is not None else "model",
+                "cohort_n": (cohort["n"] if cohort is not None else None),
             })
 
     if candidates:

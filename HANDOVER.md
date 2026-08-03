@@ -2643,6 +2643,58 @@ verbatim non-combo, None/junk safety). Suite 95/95 sandbox
 pinned base on both touched scripts (audit: the single pre-existing
 f-string finding renumbered :1345→:1376; picks_today: identical 8
 pre-existing findings ±1 line). Deploy proof: re-rendered Kongsvinger block
-must read "Match Over 1.5 Goals" / "Match Over 2.5 Goals" /
+read "Match Over 1.5 Goals" / "Match Over 2.5 Goals" /
 "Both Teams to Score - Yes (BTTS-Yes)" with the SAME icons and expected % —
-pasted back as gate G4.
+gate G4 confirmed on the operator paste; deployed as 993f10e and upstream
+sha-verified against the manifest (4/4 files).
+
+---
+
+## Addendum 17 — 2026-08-03 (late night): hybrid empirical-cohort probability engine
+
+The full-surface audit (Addendum 12) measured the split: the blended/Poisson
+🔥 engine was the miscalibrated surface (btts_yes -11.3pp, home_under_35
+-27.6pp, exact_3 -22.3pp, avg-goals bias -0.41/game) while the empirical 📊
+cohort surface stayed within ±7.7pp. This addendum re-sources the broad 🔥
+markets (and the Poisson lambda anchor) from that same kind of evidence:
+the realized frequencies of the outcome-UNCONDITIONED "matches like this
+one" cohort — all-sources-unanimous pick + avg_p ±5 band, settled results
+joined (fetch_match_cohort()). Same consensus view and band logic as the 📊
+line, MINUS its c.outcome = selection filter: conditioning on the pick
+winning is fine for a display anecdote, fatal for a probability engine — it
+injects exactly the selection bias the engine exists to avoid. The 📊 line
+itself is untouched.
+
+Mechanics (picks_today.compute_dynamic_enhancement):
+- Broad markets (match O/U 1.5/2.5/3.5/4.5, BTTS-Yes/No, home/away
+  O0.5–O3.5; unders via complements) shrink toward the cohort rate,
+  empirical Bayes: p = (n·p_cohort + K·p_model)/(n+K), K=150. Cohorts
+  thinner than HYBRID_MIN_N=100 keep the pure model prior — legacy behavior
+  is 100% intact where no deep cohort exists.
+- The Poisson lambda anchor re-sources the same way (shrunk cohort
+  avg_goals), so exacts / goal ranges move with realized goal volume (the
+  -0.41/game over-promise bites here).
+- Every over/under pair is re-derived as an EXACT complement post-override
+  (match_under_35 previously used its own blend vs the Poisson over — the
+  pair is now coherent whenever the cohort is on).
+- Every note carries engine="hybrid_cohort"|"model" + cohort_n provenance.
+  DISPLAY/CONTEXT LAYER ONLY: registry, pricing and certification paths
+  are untouched.
+
+Measurement: the audit aggregates and renders a by-engine table
+(### By probability engine (🔥)) — model / hybrid_cohort / legacy graded on
+their own promises in the same window. First hybrid notes settle tomorrow;
+the window migrates from legacy to hybrid_cohort across the 30-day roll.
+
+Evidence: new tests/test_hybrid_engine.py pins the cohort SQL over a fixture
+deliberately LACKING an outcome column (an accidental outcome condition
+would crash), shrink math to 1e-12, override math by double-run comparison
+(prior observed cohort-free, expected shrink recomputed, matched to 1e-9),
+complement coherence, the λ-anchor against poisson(2, λ), provenance and
+JSON-serializability; audit fixtures tag two notes hybrid_cohort and assert
+by_engine aggregation + rendered rows. Suite 101/101 sandbox
+(--ignore=test_supabase; 104 expected on the Mac). pyflakes DELTA-0 vs the
+993f10e base (same 9 pre-existing identifiers, renumbered only). Battery v6:
+24/24 (conditioning source pins incl. historical-profile untouched,
+extreme-zero/one cohorts, determinism, complement coherence, subprocess
+suite).
