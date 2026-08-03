@@ -352,6 +352,15 @@ PICK_C = {
 }
 
 
+# Pick D settles but carries neither event_notes nor a 📊 comment — exercises
+# the explicit "none recorded" per-pick render and zero-contribution paths.
+PICK_D = {
+    "date": "2026-07-20", "home": "Kappa", "away": "Lambda", "match": "Kappa vs Lambda",
+    "league": "Test League", "market": "1x2", "pick": "home", "odds": 1.60,
+    "edge_rule": "test-rule", "bucket": "TEST", "avg_p": 59.0,
+}
+
+
 def _fixture_report(tmp_path, monkeypatch):
     import duckdb
 
@@ -360,7 +369,7 @@ def _fixture_report(tmp_path, monkeypatch):
     localdata = tmp_path / "localdata"
     localdata.mkdir()
     (localdata / "picks_2026-07-20.json").write_text(
-        json.dumps([PICK_A, PICK_B, PICK_C])
+        json.dumps([PICK_A, PICK_B, PICK_C, PICK_D])
     )
     wh = tmp_path / "warehouse.duckdb"
     con = duckdb.connect(str(wh))
@@ -370,6 +379,7 @@ def _fixture_report(tmp_path, monkeypatch):
     )
     con.execute("INSERT INTO forebet_settled VALUES ('2026-07-20','Alpha','Beta',1,1,'draw')")
     con.execute("INSERT INTO forebet_settled VALUES ('2026-07-20','Gamma','Delta',2,1,'home')")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-07-20','Kappa','Lambda',0,1,'away')")
     con.close()
     # Hermetic: archived picks + price probes + registry read all resolve under tmp.
     monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
@@ -380,8 +390,9 @@ def _fixture_report(tmp_path, monkeypatch):
 def test_build_report_full_surface_integration(tmp_path, monkeypatch):
     report, tmp_path = _fixture_report(tmp_path, monkeypatch)
 
-    # settlement baseline: A (1-1 draw, picked home) and B (2-1 home, picked away) settle; C unmatched
-    assert report["overall"]["settled_picks"] == 2
+    # settlement baseline: A (1-1 draw, picked home), B (2-1 home, picked away),
+    # D (0-1 away, picked home) settle; C unmatched
+    assert report["overall"]["settled_picks"] == 3
     assert report["unmatched_result_picks"] == 1
 
     # FIX-1 regression: parsed fractions are 0..1 — BTTS direction honored.
@@ -392,6 +403,19 @@ def test_build_report_full_surface_integration(tmp_path, monkeypatch):
     b_stats = ledger["Gamma vs Delta"]["parsed_stats"]
     assert b_stats["btts_expected"] == 0.22
     assert b_stats["btts_hit"] is False      # expected No (22%), actual 2-1 Yes -> miss
+
+    # Addendum 13: per-pick graded 🔥 events ride the settled ledger, sharing
+    # the exact observations of the aggregate table.
+    a_notes = {n["market"]: n for n in ledger["Alpha vs Beta"]["notes_audit"]}
+    assert set(a_notes) == {"match_over_25", "btts_yes", "goal_range_2_3", "corners_over_95"}
+    assert a_notes["match_over_25"]["hit"] is False       # 1-1 -> 2 goals (plain scoring)
+    assert a_notes["btts_yes"]["hit"] is True             # 1-1 (plain BTTS, FIX-2)
+    assert a_notes["goal_range_2_3"]["hit"] is True       # 2 goals
+    assert a_notes["corners_over_95"]["hit"] is None      # no outcome definition
+    assert a_notes["btts_yes"]["label"] == "b"            # archive label carried for display
+    d_stats = ledger["Kappa vs Lambda"]
+    assert d_stats["notes_audit"] == []                   # nothing recorded -> explicit empty
+    assert d_stats["parsed_stats"]["over25_expected"] is None  # no 📊 comment either
 
     # Event notes audit: only settled picks contribute (C excluded), plain scoring (FIX-2).
     aud = report["event_notes_audit"]
@@ -439,6 +463,14 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     assert "Avg Goals forecast" in text
     assert "MAE=1.205" in text
     assert "Win + …" in text  # combo-label cosmetics caveat documented
+
+    # Per-pick graded 🔥 render (Addendum 13): HIT/MISS/n-a per recorded note,
+    # with the archive's own labels; note-less picks render explicitly.
+    assert "🔥 Possible Events (graded)" in text
+    assert "[🟢 HIT] b (81.5%)" in text          # btts_yes note on pick A (1-1)
+    assert "[🔴 MISS] a (55.0%)" in text         # match_over_25 note on pick A
+    assert "[⚪ n/a] d (50.0%)" in text          # corners_over_95 has no scoring definition
+    assert "none recorded on the archived pick" in text  # pick D had no notes
 
     # Empty-state rendering must be explicit (never silent) and crash-proof.
     empty_report = {

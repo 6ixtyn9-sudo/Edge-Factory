@@ -607,6 +607,7 @@ def score_event_notes(pick: dict[str, Any], selection: str, hs: int, gs: int) ->
         hit = check_enhancement_hit(market, selection, hs, gs)
         out.append({
             "market": market,
+            "label": str(note.get("label") or market),
             "promised": _finite_prob(note.get("probability")),
             "raw_promised": _finite_prob(note.get("raw_probability")),
             "hit": bool(hit) if hit is not None else None,
@@ -1011,6 +1012,10 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                             })
 
                 # 5. Granular expectations audit ledger populator
+                # (full-surface: score the pick's 🔥 notes ONCE here so the
+                # per-pick graded render and the aggregate tables share the
+                # exact same observations — one definition, no divergence).
+                notes_for_pick = score_event_notes(pick, selection, hs, gs)
                 comment = pick.get("statistical_comment")
                 parsed_stats = parse_statistical_comment(comment)
                 
@@ -1071,13 +1076,14 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                         "away_o15_expected": parsed_stats["away_o15"],
                         "away_o15_hit": away_o15_hit,
                         "top_scores": top_scores_audited
-                    }
+                    },
+                    "notes_audit": notes_for_pick,
                 })
 
                 # 6. Full-surface audit (Addendum 12): score EVERY 🔥 note and
                 # every 📊 promised metric on this settled pick — the legacy
                 # sections above only score the single recommended enhancement.
-                note_observations.extend(score_event_notes(pick, selection, hs, gs))
+                note_observations.extend(notes_for_pick)
                 statline_observations.extend(score_statline(parsed_stats, hs, gs))
                 avg_goals_promised = parsed_stats.get("avg_goals")
                 if (isinstance(avg_goals_promised, (int, float))
@@ -1318,6 +1324,24 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                     score_icon = "🟢 HIT" if score_item["hit"] else "🔴 MISS"
                     scores_strs.append(f"[{score_icon}] {score_item['score']} ({score_item['pct']:.1%})")
                 lines.append(f"  - **Top Scores**: " + ", ".join(scores_strs))
+
+            # Per-pick graded 🔥 Possible Events (Addendum 13): the same
+            # observations that feed the aggregate table, rendered per pick so
+            # the operator sees each promised event graded against the score.
+            notes_audit = item.get("notes_audit") or []
+            if notes_audit:
+                event_bits = []
+                for note in notes_audit:
+                    if note.get("hit") is None:
+                        event_bits.append(f"[⚪ n/a] {note.get('label') or note.get('market')} "
+                                          f"({_pct(note.get('promised'))})")
+                    else:
+                        ev_icon = "🟢 HIT" if note["hit"] else "🔴 MISS"
+                        event_bits.append(f"[{ev_icon}] {note.get('label') or note.get('market')} "
+                                          f"({_pct(note.get('promised'))})")
+                lines.append("  - **🔥 Possible Events (graded)**: " + ", ".join(event_bits))
+            else:
+                lines.append("  - **🔥 Possible Events (graded)**: none recorded on the archived pick")
             lines.append("")
 
     lines.extend(["", "## Unmatched result examples", ""])

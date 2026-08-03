@@ -2524,3 +2524,25 @@ payload — run it once a few days of full-surface numbers exist so the
 hardening decisions are evidence-led, e.g. any market whose realized ≪
 promised at n≥5 is a pricing-source or semantics candidate, not a staking
 candidate).
+
+---
+
+## Addendum 13 — 2026-08-03 (night): per-pick graded 🔥 rendering in the granular ledger
+
+The Addendum-12 full-surface audit graded the 🔥 Possible Events surface only
+at aggregate level (per-market table + pooled buckets). The per-pick Granular
+Expectations blocks graded the 📊 line but left each pick's 🔥 list invisible
+to the operator. This append closes that visual gap: every settled pick's
+granular block now ends with
+
+    - **🔥 Possible Events (graded)**: [🟢 HIT] <label> (promised%), …
+
+rendered from the SAME observations that feed the aggregate table (notes are
+scored once per pick and shared by both layers — one definition, no
+divergence). Notes without an outcome definition render `[⚪ n/a]`; picks
+without archived notes render an explicit "none recorded on the archived
+pick" line (no silent absence). Scoring is unchanged (plain-market, FIX-2).
+cosmetic "Win + …" labels render verbatim from the archive (they are what the
+operator saw). Tests: integration + markdown asserts extended, note-less pick
+fixture added; 93/93 full suite, pyflakes delta-0 (the single pre-existing
+f-string finding only shifted lines). Battery v4 re-run: 23/23.
