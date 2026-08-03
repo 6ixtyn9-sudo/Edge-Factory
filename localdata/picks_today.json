@@ -1,7 +1,120 @@
 [
   {
-    "as_of": "2026-08-03T12:28:51+02:00",
-    "avg_p": 73.0,
+    "as_of": "2026-08-03T02:26:40+02:00",
+    "avg_p": 79.0,
+    "away": "Sirius",
+    "bookmaker": "Novibet",
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "iksirius",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "halmstadsbk",
+      "league": "UNKNOWN",
+      "league_key": "sweden allsvenskan",
+      "league_raw": "Sweden Allsvenskan",
+      "niche": "UNKNOWN",
+      "odds_band": "VETO",
+      "odds_band_name": "1.35-1.50",
+      "side_role": "away",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-08-03",
+    "decay_verdict": "WATCH",
+    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "draw_risk_flag": "HIGH",
+    "edge_n_way": 2,
+    "edge_rule": "2way-unanimous avg_p>=70",
+    "edge_status": "certified",
+    "enhancement_label": "Goal Range 2-3",
+    "enhancement_probability": 0.4703,
+    "enhancement_reason": "Poisson expected hit rate is 47.0%",
+    "event_notes": [
+      {
+        "label": "Goal Range 2-3",
+        "market": "goal_range_2_3",
+        "probability": 0.4702786379494202,
+        "raw_probability": 0.4702786379494202,
+        "reason": "Poisson expected hit rate is 47.0%"
+      },
+      {
+        "label": "Away Win + BTTS (Yes)",
+        "market": "btts_yes",
+        "probability": 0.52,
+        "raw_probability": 0.52,
+        "reason": "Mathematical expectation is 52.0%"
+      },
+      {
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.95,
+        "raw_probability": 0.95,
+        "reason": "Combined Under 3.5 is 95.0%"
+      },
+      {
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.95,
+        "raw_probability": 0.95,
+        "reason": "Combined Under 3.5 is 95.0%"
+      },
+      {
+        "label": "Exact Goals: 2",
+        "market": "exact_2",
+        "probability": 0.25651562069968376,
+        "raw_probability": 0.25651562069968376,
+        "reason": "Poisson expected hit rate is 25.7%"
+      },
+      {
+        "label": "Exact Goals: 1",
+        "market": "exact_1",
+        "probability": 0.205212496559747,
+        "raw_probability": 0.205212496559747,
+        "reason": "Poisson expected hit rate is 20.5%"
+      }
+    ],
+    "home": "Halmstad",
+    "kickoff": "03-08, 18:00",
+    "league": "Sweden Allsvenskan",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
+    "market_type": "1x2",
+    "match": "Halmstad vs Sirius",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": 1.41,
+    "odds_captured_at": "2026-08-03T00:28:27.149254+00:00",
+    "odds_league": "Allsvenskan",
+    "odds_match_method": "alias_fuzzy",
+    "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.36,
+      "source": "zulubet"
+    },
+    "odds_source": "bzzoiro_odds",
+    "odds_tier": "low",
+    "pick": "away",
+    "recommended_enhancement": "goal_range_2_3",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "2way-unanimous avg_p>=70",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=109): Avg Goals: 3.95 | Over 2.5: 81.7% | BTTS: 32.1% | Home Over 1.5 Goals: 5.5% | Away Over 1.5 Goals: 89.0% | Top Scores: 0-3 (22.0%), 1-2 (11.9%)",
+    "veto_reason": "context VETO in ['odds_band']",
+    "vitibet_index": -4.98,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-08-03T13:00:05+02:00",
+    "avg_p": 74.0,
     "away": "Babrungas",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
@@ -94,12 +207,12 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.19,
-    "odds_captured_at": "2026-08-03T10:29:45.027475+00:00",
+    "odds_captured_at": "2026-08-03T11:11:03.771486+00:00",
     "odds_league": "Lithuania: I Lyga",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.21,
+      "odds": 1.17,
       "source": "zulubet"
     },
     "odds_source": "betexplorer_odds",
@@ -114,126 +227,13 @@
       "betclan"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=465): Avg Goals: 3.68 | Over 2.5: 71.8% | BTTS: 34.2% | Home Over 1.5 Goals: 5.2% | Away Over 1.5 Goals: 85.8% | Top Scores: 0-1 (14.2%), 0-2 (14.0%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=381): Avg Goals: 3.79 | Over 2.5: 74.3% | BTTS: 35.7% | Home Over 1.5 Goals: 4.7% | Away Over 1.5 Goals: 87.1% | Top Scores: 0-3 (13.6%), 1-2 (13.4%)",
     "veto_reason": "short-odds away favourite 1.19",
     "vitibet_index": null,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-03T12:28:51+02:00",
-    "avg_p": 72.0,
-    "away": "Sirius",
-    "bookmaker": "Novibet",
-    "bucket": "SKIPPED_VETO",
-    "confidence": null,
-    "ctx": {
-      "away_norm": "iksirius",
-      "comp_type_name": "league",
-      "competition_type": "CAUTION",
-      "home_norm": "halmstadsbk",
-      "league": "UNKNOWN",
-      "league_key": "sweden allsvenskan",
-      "league_raw": "Sweden Allsvenskan",
-      "niche": "UNKNOWN",
-      "odds_band": "VETO",
-      "odds_band_name": "1.35-1.50",
-      "side_role": "away",
-      "team_a": "UNKNOWN",
-      "team_h": "UNKNOWN"
-    },
-    "date": "2026-08-03",
-    "decay_verdict": "WATCH",
-    "display_rule": "2WAY-UNANIMOUS\u226570",
-    "draw_risk_flag": "HIGH",
-    "edge_n_way": 2,
-    "edge_rule": "2way-unanimous avg_p>=70",
-    "edge_status": "certified",
-    "enhancement_label": "Goal Range 2-3",
-    "enhancement_probability": 0.4703,
-    "enhancement_reason": "Poisson expected hit rate is 47.0%",
-    "event_notes": [
-      {
-        "label": "Goal Range 2-3",
-        "market": "goal_range_2_3",
-        "probability": 0.4702786379494202,
-        "raw_probability": 0.4702786379494202,
-        "reason": "Poisson expected hit rate is 47.0%"
-      },
-      {
-        "label": "Away Win + BTTS (Yes)",
-        "market": "btts_yes",
-        "probability": 0.52,
-        "raw_probability": 0.52,
-        "reason": "Mathematical expectation is 52.0%"
-      },
-      {
-        "label": "Home Team Under 3.5 Goals",
-        "market": "home_under_35",
-        "probability": 0.95,
-        "raw_probability": 0.95,
-        "reason": "Combined Under 3.5 is 95.0%"
-      },
-      {
-        "label": "Away Team Under 3.5 Goals",
-        "market": "away_under_35",
-        "probability": 0.95,
-        "raw_probability": 0.95,
-        "reason": "Combined Under 3.5 is 95.0%"
-      },
-      {
-        "label": "Exact Goals: 2",
-        "market": "exact_2",
-        "probability": 0.25651562069968376,
-        "raw_probability": 0.25651562069968376,
-        "reason": "Poisson expected hit rate is 25.7%"
-      },
-      {
-        "label": "Exact Goals: 1",
-        "market": "exact_1",
-        "probability": 0.205212496559747,
-        "raw_probability": 0.205212496559747,
-        "reason": "Poisson expected hit rate is 20.5%"
-      }
-    ],
-    "home": "Halmstad",
-    "kickoff": "03-08, 18:00",
-    "league": "Sweden Allsvenskan",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
-    "market_type": "1x2",
-    "match": "Halmstad vs Sirius",
-    "min_lead_minutes": 30,
-    "model_version": null,
-    "n_way": 2,
-    "odds": 1.42,
-    "odds_captured_at": "2026-08-03T06:03:58.462503+00:00",
-    "odds_league": "Allsvenskan",
-    "odds_match_method": "alias_fuzzy",
-    "odds_match_status": "matched",
-    "odds_replaced": {
-      "odds": 1.36,
-      "source": "zulubet"
-    },
-    "odds_source": "bzzoiro_odds",
-    "odds_tier": "low",
-    "pick": "away",
-    "recommended_enhancement": "goal_range_2_3",
-    "recommended_market": "avoid_raw_1x2",
-    "rule": "2way-unanimous avg_p>=70",
-    "source_weights": {},
-    "sources_used": [
-      "zulubet",
-      "vitibet"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=547): Avg Goals: 3.57 | Over 2.5: 70.9% | BTTS: 33.3% | Home Over 1.5 Goals: 4.4% | Away Over 1.5 Goals: 85.7% | Top Scores: 0-2 (14.8%), 0-3 (14.8%)",
-    "veto_reason": "context VETO in ['odds_band']",
-    "vitibet_index": -4.99,
-    "w_score": 1.0
-  },
-  {
-    "as_of": "2026-08-03T12:28:51+02:00",
+    "as_of": "2026-08-03T02:26:40+02:00",
     "avg_p": 69.6,
     "away": "Athlone Town",
     "bookmaker": "betexplorer_best",
@@ -333,13 +333,13 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 5,
-    "odds": 1.39,
-    "odds_captured_at": "2026-08-03T10:29:57.066278+00:00",
+    "odds": 1.4,
+    "odds_captured_at": "2026-08-03T00:37:30.721470+00:00",
     "odds_league": "Ireland: Division 1",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.38,
+      "odds": 1.4,
       "source": "forebet_best"
     },
     "odds_source": "betexplorer_odds",
