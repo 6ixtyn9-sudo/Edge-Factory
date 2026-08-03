@@ -2313,3 +2313,69 @@ Deferred (carried from addendum 8, plus new items — none in this payload's sco
     - Time-bomb test clock injection (before ~2026-10-02); BENCHED operator
       reset runbook; pre-existing upstream pyflakes landmines (incl. w_score);
       credits_month display wording.
+
+## Addendum 10 — 2026-08-03 (deployment verification of 0cdbde9/9c87c05 + evidence audit)
+Independent post-ship verification of the enhancement payload deployment
+(Antigravity verdict "SHIP, commit 0cdbde9"), run against live main. Verdict on
+the verdict: deployment CORRECT and OPERATIONAL, with one process breach
+ratified post-hoc and two evidence anomalies struck pending output.
+
+Deployment integrity (sha-verified against payload manifest):
+
+9/10 files BYTE-IDENTICAL to the v2 manifest on live main (audit_three scripts,
+both modules, all tests, .gitignore, HANDOVER with addenda 1–9).
+scripts/picks_today.py differs by EXACTLY one token at line 1877:
+"w_score": round(w_score, 4) → round(z, 4).
+w_score → z (independent review): the pick-stamp sits in the ML-meta branch where
+z = Σ coefs·x + intercept is computed ~15 lines above (L1860) and is always
+bound; NameError was real but latent (branch not exercised by any 2026-08-03 run).
+z is the correct semantic: the meta-model logit, monotone with ml_p
+(sigmoid), used only for display (w=) and merge sort — monotonicity preserved.
+Fix is CORRECT and eliminates a second P1-class NameError. PROCESS BREACH,
+however: the finding was fenced "deliberately untouched" (README G3, addenda 8–9);
+an out-of-scope change shipped without pre-announcement, breaking manifest
+identity on one file. Ratified post-hoc with conditions (below). The G3 baseline
+finding list is updated: undefined name 'w_score' at picks_today.py:1877 is
+stricken from the pre-existing-upstream set.
+
+9c87c05 classified BENEFICIAL-NEUTRAL: manual commit of a G7 forecast re-render
+(15:39Z). Content: picks_today.json 6→3 entries — Transinvest 2 (KO 16:00,
+started: guard), Hammarby Talang + FCSB fell out of the refreshed candidate
+scan (pre-existing intraday churn class, NOT payload-induced — payload touches
+no generation logic). Locked-archive integrity PROVEN: dated
+picks_2026-08-03.json retains all 6 incl. dispatched CAUTION FCSB @1.81
+(KO 19:30) — settlement trail intact. Render side-effects confirm the new code
+operates live (entries gained the +7 enhancement fields; odds refreshed
+1.41→1.42). Process note: forecast-state files should ride the bot persist loop,
+not manual commits — benign here, stop doing it.
+
+Evidence anomalies in the verdict table (doctrine: gates without output = not run):
+
+G4 "edge_sample=+0.2173" — the specified probe (prob 0.709 @1.49) gives
++0.0564. If +0.2173 came from a live-render probability (~0.817), paste the
+render line; until then the number is an annotation, not evidence.
+"73.6% hit rate (n=428) >> breakeven" — UNSOURCED (my settled sample: 5/9,
+est. EV −14% @1.55 in ENHANCEMENT_REVIEW_2026-08-03.md). STRUCK. Certification
+starts at n=0 by design: real prices exist only from 2026-08-03 onward; any
+historical hit-rate claim needs command + raw output or stays out of the record.
+Ratified-with-conditions going forward:
+
+Out-of-scope fixes inside a gated payload: announce + get operator sign-off
+BEFORE commit; if truly blocking, land as a SEPARATE commit with its own
+justification so manifest identity on payload files is preserved.
+Expected near-term signals (corrected post-run): today's archived slate carries
+only UNMAPPED enhancement types (goal_range_2_3 ×4, btts_yes ×2 vs the pilot
+map match_over/under_25), so zero priced outcomes are fed by tomorrow's audit
+BY DESIGN — registry stays absent/SHADOW until the first settled pick with a
+MAPPED recommended type (FCSB settles via dated archive 19:30 KO; its enh type
+is goal_range_2_3 → unfeedable). First PAPER-record milestone redefined: first
+settled pick whose archived recommended_enhancement is in MARKET_PRICE_MAP.
+My earlier "must show match_over_25 priced_n ≥ 1" was probe-assumption-based,
+not artifact-based — corrected here (a8c3d45 blob verifies the locked type was
+goal_range_2_3 @ 47.0% all day). FCSB/Halmstad's 1.49 capture rows remain in
+the store but have no mapped type to attach to.
+Close-snapshot note: cron had no tick inside the guard-planned close window
+(15:15–16:00Z, planned from the earlier listing kickoff exactly as designed —
+the WARN fired live twice in the 15:43 force-repick run); the production odd
+path is conservative + zero-credit by construction, and the first-snapshot rows
+(69, over best 1.49) remain the day's pricing of record.
