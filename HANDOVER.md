@@ -2904,3 +2904,37 @@ Even without it, fuzzy >=0.40 matched the real case (pinned by test).
 **Bookkeeping:** folded into the record: operator README commit 3b256934
 (2026-08-03, +3/-1, git-workflow wording for local data handling) — docs-only,
 no HANDOVER entry at the time; noted here per anti-drift protocol.
+
+---
+
+## Addendum 22 — .gitignore inline-comment trap (dead negation) + forced seed (2026-08-04)
+
+**What happened:** Addendum 21 wrote its negation with a trailing comment
+(`!localdata/settled_results.json   # ...`). gitignore supports comments ONLY
+at the start of a line — the trailing text became part of the pattern, making
+the whole negation dead. Receipt: operator's seed attempt refused with "The
+following paths are ignored by one of your .gitignore files". The v7 battery
+grep-checked the line's presence, not git's behavior — text checks cannot
+catch semantic traps.
+
+**Evidence (scratch repo, git ground truth):** BEFORE fix -> `localdata/*`
+swallows the file, add refused. AFTER fix (comment on its own line, pattern on
+the next) -> `git add` accepts, `git check-ignore` exits 1 (not ignored).
+Swept the whole file: this was the only inline-comment negation.
+
+**Fix (this addendum):** two-line layout in .gitignore. Battery v7.1+: assert
+BEHAVIOR (`git check-ignore localdata/settled_results.json` must exit 1), not
+text.
+
+**The one-off seed proceeded via `git add -f`** (force overrides ignore for the
+first add; a tracked file stays tracked forever, so the dead rule only ever
+blocked the FIRST add). Once the seed commit landed, the shared overlay flows
+permanently: bot `git add -A localdata/` picks up tracked-file updates
+regardless of ignore state. Cloud convergence starts with the next bot run:
+export unions inbound (now containing the Mac rows) -> Tasmania fixtures
+persist bot-side -> bot audit shows "settled via shared overlay facts: >= 1".
+Seed receipt: export = 39,103 rows from the Mac warehouse (incl. the NPL
+Tasmania fixtures; local `grep -c "Ulverstone"` = 12).
+
+**Process note:** breakers of assumptions deserve tests that check the
+assumption's behavior, not the text that asserts it.
