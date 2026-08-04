@@ -3424,3 +3424,252 @@ probability; higher payout is not evidence of value.
 shortlist de-duplication/windowing, market-ID/category summary, optional market
 catalog degradation, and offline self-test. Full-suite/battery receipts belong
 to the probe deployment record.
+
+---
+
+## Research receipt — OddsPapi live evidence + locked 2026-08-11 runbook (2026-08-04)
+
+**Purpose:** preserve the actual live-probe evidence and make the first
+post-observation review deterministic. This is a research record, **not** an
+OddsPapi production approval and not a bet recommendation.
+
+### Live evidence receipt (all values are observations at capture time)
+
+Research probe deployment:
+
+```text
+77ef7c51d51aa48d56c6851df6e9acce9a3c6013
+research: add OddsPapi market coverage probe
+```
+
+Credentials loaded locally as a four-key ring; values were never printed,
+committed, or placed in Actions.
+
+1. **Narrow 2026-08-05/06 window:** 258 provider fixtures, 2 target fixtures,
+   0 exact matches. `Fenerbahçe vs Sturm Graz` and
+   `Panathinaikos vs CSKA 1948` were not returned. This was not treated as a
+   fuzzy-match opportunity.
+2. **Expanded 2026-08-04 through 2026-08-08 window:** 1,056 provider fixtures,
+   6 target fixtures, 2 exact matches and 4 unmatched:
+
+   ```text
+   exact:     Dinamo Zagreb vs Kauno Žalgiris
+   exact:     Newport County vs Roma
+   unmatched: BG Pathum United vs Aston Villa
+   unmatched: Montana vs Nesebar
+   unmatched: Fenerbahçe vs Sturm Graz
+   unmatched: Panathinaikos vs CSKA 1948
+   ```
+
+3. **Observed board depth for exact fixtures:**
+
+   ```text
+   Dinamo Zagreb vs Kauno Žalgiris: 143 bookmaker boards;
+   richest observed board: 447 markets / 959 outcomes.
+
+   Newport County vs Roma: 106 bookmaker boards;
+   richest observed board: 221 markets / 486 outcomes.
+   ```
+
+   This confirms a rich provider surface for some exact fixtures. It does
+   **not** establish bookmaker availability, licensing, or account access for
+   the operator.
+4. **Market-label vocabulary:** standard 1X2, BTTS, draw-no-bet, double chance,
+   exact/correct score, handicaps, and totals were observed. Team-total-shaped
+   labels were explicitly present:
+
+   ```text
+   Over Under Team 1
+   Over Under Team 2
+   ```
+
+   On Newport County vs Roma, each appeared at 70 observed bookmaker boards.
+   On Dinamo Zagreb vs Kauno Žalgiris, the corresponding full-time labels
+   appeared at about 120 boards. The former probe category summary classified
+   these as generic `totals` because it only recognised the literal phrase
+   `team total`; that is a **probe-reporting limitation**, not evidence that
+   team totals were absent.
+5. **Explicit combination labels:** none were found in the returned label
+   vocabulary for either exact fixture under `And`, `&`, `+`, `Combo`,
+   `Same Game`, or `Same Match`. This is evidence for these two sampled boards,
+   not a global claim that OddsPapi never carries combinations. Do not construct
+   a bookmaker combo by multiplying separate leg prices or probabilities.
+6. **Canonical fixture / market / price audit:** fixture
+   `id1000085372729786` resolved as:
+
+   ```text
+   participant 1 / Team 1: Newport County
+   participant 2 / Team 2: AS Roma
+   status: Pre-Game
+   ```
+
+   The provider returned canonical full-time Team 1 and Team 2 total markets
+   with explicit line, `Over` / `Under` outcome, decimal price, and per-row
+   state. BC.Game, bet365, and Betano were each observed as
+   `bookmakerIsActive=true`, `suspended=false`, `marketActive=true`, and
+   selection `active=true` for sampled markets. This proves technical
+   availability-plus-price capture for this fixture only; it is not an
+   endorsement of any bookmaker.
+7. **Freshness and execution caveats:** observed `changedAt` ages ranged from
+   about 96 seconds to about 34 minutes. Some prior broad snapshots contained
+   1.00 prices. Therefore a future adapter must not call a price actionable
+   merely because it exists. It needs an explicit freshness policy, active-state
+   checks, and a `price > 1.01` rule. `mainLine` is not a universal filter:
+   active BTTS rows were observed with `mainLine=false`. Stake limits were not
+   supplied in the sampled rows.
+
+### Decision at observation time
+
+```text
+OddsPapi status: PARTIAL COVERAGE CONFIRMED — RESEARCH ONLY
+```
+
+It has passed a narrow technical proof for canonical team-total availability
+and price capture. It has **not** passed broad fixture coverage, current-price
+freshness policy, target-book availability, combination availability, settlement
+validation, calibration, or walk-forward evidence. It must not enter
+`daily.py`, `capture_daily.py`, selection, certification, WhatsApp, Actions
+secrets, or any push path before the separate gates below are satisfied.
+
+### Locked period: 2026-08-04 through 2026-08-10
+
+- Preserve Addendum 26 and the 2026-08-11 by-engine / calibration / debias
+  observation window. Do not alter market selection, source weights,
+  calibration, thresholds, registry transitions, price quarantine, or push
+  logic for OddsPapi research.
+- Do not add `ODDSPAPI_API_KEYS` to GitHub Actions, tracked files, logs, raw
+  URLs, or chat. Keep it local in `.env` only.
+- Do not infer a bet, a combo, or a preferred bookmaker from the captured
+  prices. `structurally_usable_now` from the one-off audit was a data-quality
+  flag, never a recommendation.
+- Break this lock only for an actual operational failure; the repair must be
+  surgical and independently receipted.
+
+### 2026-08-11 review runbook — execute in this order
+
+**This is a review/research gate, not a production-deployment day. No outcome
+on 11 August authorises OddsPapi selection or WhatsApp use.**
+
+#### 1. Confirm date and refresh cloud state
+
+```bash
+cd /Users/apple/Edge-Factory
+date +%F
+git checkout -- localdata/
+git pull --no-rebase
+git status --short
+git log -1 --oneline
+```
+
+Proceed only when the local calendar is `2026-08-11`, the worktree is clean
+apart from intentional review work, and no unresolved operational incident is
+open.
+
+#### 2. Close the existing engine observation first
+
+Before considering OddsPapi, review the already-deferred by-engine,
+calibration, debias, price-evidence, and settlement receipts. Record the
+result separately from provider research:
+
+```text
+ENGINE OBSERVATION: keep frozen / surgical fix only / separately approved work
+```
+
+Do not use a richer odds board as a reason to override an unfavorable engine,
+calibration, quarantine, or context verdict.
+
+#### 3. Take one bounded fresh coverage sample (read-only)
+
+This is the default fresh sample; it uses existing local keys without printing
+them and writes only under `/tmp`:
+
+```bash
+cd /Users/apple/Edge-Factory
+PYTHONPATH=src python3 scripts/probe_oddspapi_markets.py \
+  --date 2026-08-11 \
+  --days 5 \
+  --limit 6 \
+  2>&1 | tee /tmp/oddspapi_probe_2026-08-11.txt
+```
+
+Do not supply `--bookmaker` until actual operator-relevant bookmaker slugs are
+identified. Do not paste `.env`, keys, raw request URLs, or full raw provider
+payloads into chat.
+
+#### 4. Score the fresh sample honestly
+
+For every target fixture, record only:
+
+```text
+target date / fixture class / exact match, unmatched, or ambiguous /
+provider bookmaker count / canonical team-total label present or absent /
+explicit combo label present or absent / active-state and changedAt evidence
+when a canonical audit is deliberately run
+```
+
+Keep fixture classes separate: major league, qualifier, friendly/exhibition,
+lower division, and any other sparse context. Exact normalized pair matching
+only; no alias-fuzzy rescue may be used to claim coverage.
+
+#### 5. Choose one of these three outcomes
+
+```text
+A. HOLD / REJECT FOR NOW
+   Use when relevant fixture classes still do not exact-match, canonical
+   semantics or active/fresh evidence fail, or target books are unavailable.
+   Keep OddsPapi dormant outside the current narrow fallback.
+
+B. BUILD A REVIEW-ONLY RESEARCH PACKET
+   Use only if the fresh evidence reproduces exact, canonical, active
+   team-total coverage across relevant fixture classes. The packet may add a
+   read-only availability/metadata capture surface only; it must not alter
+   selection, certification, pricing eligibility, pushes, or Actions.
+
+C. PRODUCTION INTEGRATION
+   Not an available outcome on 2026-08-11.
+```
+
+#### 6. Scope required for any later research-only packet
+
+A later packet must be full-file, pinned-base, manifest-verified, offline
+battery-tested, fresh-tree rehearsed, and explicitly committed. Its permitted
+scope is limited to:
+
+1. fixture metadata join (`participant 1` / `participant 2` retained with the
+   exact provider fixture ID);
+2. canonical market metadata (`marketType`, `period`, line/handicap, canonical
+   outcome IDs/names) rather than parsing bookmaker-specific outcome strings;
+3. bookmaker, market, and selection state (`bookmakerIsActive`, `suspended`,
+   `marketActive`, selection `active`, `changedAt`, `mainLine`, and limit when
+   present);
+4. archived research rows only when price is numeric and greater than 1.01;
+5. explicit freshness measurement before any future threshold is proposed;
+6. market-specific main-line handling — never drop an active lineless market
+   solely because `mainLine=false`;
+7. explicit report categories for `teamtotals-team1` and `teamtotals-team2`.
+
+It must not create synthetic combinations. Any eventual combo requires actual
+bookmaker availability, settlement-definition mapping, a current valid price,
+a calibrated **joint** probability, and separate walk-forward evidence.
+
+### Evidence required before any production proposal
+
+All of the following remain mandatory after the research packet, not optional:
+
+- reproducible exact coverage across the fixture classes that actually matter;
+- named operator-relevant bookmaker availability — never assumed from a large
+  generic bookmaker count;
+- canonical fixture/side/line/outcome mapping retained in audit data;
+- predeclared freshness and active-state policy with failure tests;
+- price integrity, duplicate, stale, suspension, and 1.00-price rejection tests;
+- settlement and calibration evidence for each proposed market family;
+- walk-forward evidence that the new surface improves decision quality rather
+  than merely exposing higher-payout prices;
+- independent review and an explicit decision to change the frozen production
+  gates.
+
+Until every applicable gate is met, the truthful output remains:
+
+```text
+🔬 research candidate — not a bet recommendation
+```
