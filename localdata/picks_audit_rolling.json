@@ -27,9 +27,10 @@
     "2026-08-01",
     "2026-08-02",
     "2026-08-03",
-    "2026-08-04"
+    "2026-08-04",
+    "2026-08-05"
   ],
-  "archived_pick_rows": 92,
+  "archived_pick_rows": 94,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.571429,
@@ -39,11 +40,11 @@
       "wins": 12
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.867925,
-      "priced_picks": 53,
-      "roi": 0.116132,
-      "settled_picks": 53,
-      "wins": 46
+      "hit_rate": 0.87037,
+      "priced_picks": 54,
+      "roi": 0.11713,
+      "settled_picks": 54,
+      "wins": 47
     },
     "WATCHLIST_NO_ODDS": {
       "hit_rate": 0.666667,
@@ -53,20 +54,20 @@
       "wins": 2
     },
     "WATCHLIST_UNKNOWN_CTX": {
-      "hit_rate": 0.846154,
-      "priced_picks": 13,
-      "roi": -0.006923,
-      "settled_picks": 13,
-      "wins": 11
+      "hit_rate": 0.857143,
+      "priced_picks": 14,
+      "roi": 0.010714,
+      "settled_picks": 14,
+      "wins": 12
     }
   },
   "by_odds_match_method": {
     "alias_fuzzy": {
-      "hit_rate": 0.5,
-      "priced_picks": 6,
-      "roi": -0.356667,
-      "settled_picks": 6,
-      "wins": 3
+      "hit_rate": 0.571429,
+      "priced_picks": 7,
+      "roi": -0.281429,
+      "settled_picks": 7,
+      "wins": 4
     },
     "betexplorer": {
       "hit_rate": 0.869565,
@@ -83,11 +84,11 @@
       "wins": 23
     },
     "fallback": {
-      "hit_rate": 0.6,
-      "priced_picks": 5,
-      "roi": -0.166,
-      "settled_picks": 5,
-      "wins": 3
+      "hit_rate": 0.666667,
+      "priced_picks": 6,
+      "roi": -0.098333,
+      "settled_picks": 6,
+      "wins": 4
     },
     "none": {
       "hit_rate": 0.666667,
@@ -113,11 +114,11 @@
       "wins": 40
     },
     "bzzoiro_odds": {
-      "hit_rate": 0.833333,
-      "priced_picks": 24,
-      "roi": 0.167292,
-      "settled_picks": 24,
-      "wins": 20
+      "hit_rate": 0.84,
+      "priced_picks": 25,
+      "roi": 0.1674,
+      "settled_picks": 25,
+      "wins": 21
     },
     "forebet_best": {
       "hit_rate": 0.5,
@@ -134,11 +135,11 @@
       "wins": 6
     },
     "zulubet": {
-      "hit_rate": 0.666667,
-      "priced_picks": 3,
-      "roi": -0.016667,
-      "settled_picks": 3,
-      "wins": 2
+      "hit_rate": 0.75,
+      "priced_picks": 4,
+      "roi": 0.0475,
+      "settled_picks": 4,
+      "wins": 3
     }
   },
   "by_price_evidence": {
@@ -164,18 +165,18 @@
       "wins": 6
     },
     "SOURCE_FALLBACK": {
-      "hit_rate": 0.6,
-      "priced_picks": 5,
-      "roi": -0.166,
-      "settled_picks": 5,
-      "wins": 3
+      "hit_rate": 0.666667,
+      "priced_picks": 6,
+      "roi": -0.098333,
+      "settled_picks": 6,
+      "wins": 4
     },
     "SUSPECT_ALIAS_FUZZY": {
-      "hit_rate": 0.5,
-      "priced_picks": 6,
-      "roi": -0.356667,
-      "settled_picks": 6,
-      "wins": 3
+      "hit_rate": 0.571429,
+      "priced_picks": 7,
+      "roi": -0.281429,
+      "settled_picks": 7,
+      "wins": 4
     },
     "UNMATCHED": {
       "hit_rate": 0.666667,
@@ -188,21 +189,21 @@
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.861111,
-      "priced_picks": 69,
-      "roi": 0.154855,
-      "settled_picks": 72,
+      "hit_rate": 0.863014,
+      "priced_picks": 70,
+      "roi": 0.156071,
+      "settled_picks": 73,
       "suspect_price_captures": 0,
-      "wins": 62
+      "wins": 63
     },
     "alias_fuzzy": {
       "avg_suspect_price": null,
-      "hit_rate": 0.5,
-      "priced_picks": 6,
-      "roi": -0.356667,
-      "settled_picks": 6,
+      "hit_rate": 0.571429,
+      "priced_picks": 7,
+      "roi": -0.281429,
+      "settled_picks": 7,
       "suspect_price_captures": 0,
-      "wins": 3
+      "wins": 4
     },
     "scoutingstats_sole_source": {
       "avg_suspect_price": null,
@@ -216,11 +217,11 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.769231,
-      "priced_picks": 36,
-      "roi": 0.081389,
-      "settled_picks": 39,
-      "wins": 30
+      "hit_rate": 0.780488,
+      "priced_picks": 38,
+      "roi": 0.087895,
+      "settled_picks": 41,
+      "wins": 32
     },
     "3way-unanimous avg_p>=65": {
       "hit_rate": 0.740741,
@@ -244,8 +245,8 @@
       "wins": 13
     }
   },
-  "eligible_prior_picks": 90,
-  "end": "2026-08-04",
+  "eligible_prior_picks": 92,
+  "end": "2026-08-05",
   "enhancement_registry": {
     "btts_yes": "PAPER",
     "match_over_25": "PAPER"
@@ -269,12 +270,12 @@
         "recommended": 2
       },
       "goal_range_2_3": {
-        "hit_rate": 0.25,
+        "hit_rate": 0.222222,
         "hits": 2,
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 8
+        "recommended": 9
       },
       "home_under_45": {
         "hit_rate": 1.0,
@@ -285,12 +286,12 @@
         "recommended": 1
       },
       "match_over_15": {
-        "hit_rate": 0.8,
-        "hits": 4,
+        "hit_rate": 0.833333,
+        "hits": 5,
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 5
+        "recommended": 6
       },
       "match_over_25": {
         "hit_rate": 0.555556,
@@ -301,12 +302,20 @@
         "recommended": 9
       }
     },
-    "hit_rate": 0.6,
-    "total_hits": 18,
-    "total_recommended": 30
+    "hit_rate": 0.59375,
+    "total_hits": 19,
+    "total_recommended": 32
   },
   "event_notes_audit": {
     "by_engine": {
+      "hybrid_cohort": {
+        "brier": 0.202095,
+        "delta": 0.217268,
+        "hits": 11,
+        "mean_promised": 0.516065,
+        "n": 15,
+        "realized": 0.733333
+      },
       "legacy": {
         "brier": 0.183796,
         "delta": -0.003758,
@@ -314,6 +323,14 @@
         "mean_promised": 0.520868,
         "n": 263,
         "realized": 0.51711
+      },
+      "model": {
+        "brier": 0.095335,
+        "delta": -0.083521,
+        "hits": 4,
+        "mean_promised": 0.527965,
+        "n": 9,
+        "realized": 0.444444
       }
     },
     "by_market": {
@@ -327,49 +344,49 @@
         "realized": 0.5
       },
       "away_under_15": {
-        "brier": 0.032593,
-        "delta": 0.180535,
-        "hits": 1,
-        "mean_promised": 0.819465,
-        "n": 1,
-        "notes": 1,
+        "brier": 0.036228,
+        "delta": 0.190097,
+        "hits": 2,
+        "mean_promised": 0.809903,
+        "n": 2,
+        "notes": 2,
         "realized": 1.0
       },
       "away_under_25": {
-        "brier": 0.058662,
-        "delta": 0.058819,
-        "hits": 16,
-        "mean_promised": 0.882358,
-        "n": 17,
-        "notes": 17,
-        "realized": 0.941176
+        "brier": 0.053212,
+        "delta": 0.060919,
+        "hits": 18,
+        "mean_promised": 0.886449,
+        "n": 19,
+        "notes": 19,
+        "realized": 0.947368
       },
       "away_under_35": {
-        "brier": 0.035946,
-        "delta": 0.008066,
-        "hits": 25,
-        "mean_promised": 0.953473,
-        "n": 26,
-        "notes": 26,
-        "realized": 0.961538
+        "brier": 0.033423,
+        "delta": 0.009186,
+        "hits": 27,
+        "mean_promised": 0.9551,
+        "n": 28,
+        "notes": 28,
+        "realized": 0.964286
       },
       "btts_no": {
-        "brier": 0.230831,
-        "delta": 0.011222,
-        "hits": 4,
-        "mean_promised": 0.560207,
-        "n": 7,
-        "notes": 7,
-        "realized": 0.571429
+        "brier": 0.236462,
+        "delta": 0.003296,
+        "hits": 5,
+        "mean_promised": 0.552259,
+        "n": 9,
+        "notes": 9,
+        "realized": 0.555556
       },
       "btts_yes": {
-        "brier": 0.237859,
-        "delta": -0.089854,
-        "hits": 10,
-        "mean_promised": 0.524637,
-        "n": 23,
-        "notes": 23,
-        "realized": 0.434783
+        "brier": 0.239324,
+        "delta": -0.08071,
+        "hits": 11,
+        "mean_promised": 0.52071,
+        "n": 25,
+        "notes": 25,
+        "realized": 0.44
       },
       "exact_0": {
         "brier": 0.012054,
@@ -390,40 +407,40 @@
         "realized": 0.25
       },
       "exact_2": {
-        "brier": 0.17663,
-        "delta": -0.018399,
+        "brier": 0.171524,
+        "delta": -0.028179,
         "hits": 5,
-        "mean_promised": 0.245672,
-        "n": 22,
-        "notes": 22,
-        "realized": 0.227273
+        "mean_promised": 0.24557,
+        "n": 23,
+        "notes": 23,
+        "realized": 0.217391
       },
       "exact_3": {
-        "brier": 0.049487,
-        "delta": -0.222453,
+        "brier": 0.049388,
+        "delta": -0.222231,
         "hits": 0,
-        "mean_promised": 0.222453,
-        "n": 14,
-        "notes": 14,
+        "mean_promised": 0.222231,
+        "n": 16,
+        "notes": 16,
         "realized": 0.0
       },
       "exact_4": {
-        "brier": 0.280408,
-        "delta": 0.206409,
-        "hits": 6,
-        "mean_promised": 0.168591,
-        "n": 16,
-        "notes": 16,
-        "realized": 0.375
+        "brier": 0.28756,
+        "delta": 0.220474,
+        "hits": 7,
+        "mean_promised": 0.168415,
+        "n": 18,
+        "notes": 18,
+        "realized": 0.388889
       },
       "exact_5": {
-        "brier": 0.115624,
-        "delta": -0.002905,
+        "brier": 0.104434,
+        "delta": -0.016152,
         "hits": 1,
-        "mean_promised": 0.127905,
-        "n": 8,
-        "notes": 8,
-        "realized": 0.125
+        "mean_promised": 0.127263,
+        "n": 9,
+        "notes": 9,
+        "realized": 0.111111
       },
       "goal_range_0_1": {
         "brier": 0.419464,
@@ -435,31 +452,31 @@
         "realized": 1.0
       },
       "goal_range_2_3": {
-        "brier": 0.234496,
-        "delta": -0.14117,
+        "brier": 0.233772,
+        "delta": -0.153602,
         "hits": 8,
-        "mean_promised": 0.46117,
-        "n": 25,
-        "notes": 25,
-        "realized": 0.32
+        "mean_promised": 0.461294,
+        "n": 26,
+        "notes": 26,
+        "realized": 0.307692
       },
       "goal_range_4_5": {
-        "brier": 0.274121,
-        "delta": 0.140782,
-        "hits": 4,
-        "mean_promised": 0.303662,
-        "n": 9,
-        "notes": 9,
-        "realized": 0.444444
+        "brier": 0.294941,
+        "delta": 0.196153,
+        "hits": 5,
+        "mean_promised": 0.303847,
+        "n": 10,
+        "notes": 10,
+        "realized": 0.5
       },
       "goal_range_4_6": {
-        "brier": 0.267681,
-        "delta": 0.112182,
-        "hits": 6,
-        "mean_promised": 0.349357,
-        "n": 13,
-        "notes": 13,
-        "realized": 0.461538
+        "brier": 0.276616,
+        "delta": 0.148934,
+        "hits": 7,
+        "mean_promised": 0.351066,
+        "n": 14,
+        "notes": 14,
+        "realized": 0.5
       },
       "goal_range_6_plus": {
         "brier": 0.075286,
@@ -480,12 +497,12 @@
         "realized": 0.0
       },
       "home_over_05": {
-        "brier": 0.027014,
-        "delta": 0.161234,
-        "hits": 12,
-        "mean_promised": 0.838766,
-        "n": 12,
-        "notes": 12,
+        "brier": 0.026526,
+        "delta": 0.159203,
+        "hits": 14,
+        "mean_promised": 0.840797,
+        "n": 14,
+        "notes": 14,
         "realized": 1.0
       },
       "home_under_25": {
@@ -507,88 +524,88 @@
         "realized": 0.769231
       },
       "match_over_15": {
-        "brier": 0.153114,
-        "delta": -0.034926,
-        "hits": 5,
-        "mean_promised": 0.86826,
-        "n": 6,
-        "notes": 6,
-        "realized": 0.833333
+        "brier": 0.135941,
+        "delta": -0.004023,
+        "hits": 6,
+        "mean_promised": 0.861166,
+        "n": 7,
+        "notes": 7,
+        "realized": 0.857143
       },
       "match_over_25": {
-        "brier": 0.297849,
-        "delta": 0.031502,
+        "brier": 0.304679,
+        "delta": 0.069412,
+        "hits": 10,
+        "mean_promised": 0.555588,
+        "n": 16,
+        "notes": 16,
+        "realized": 0.625
+      },
+      "match_over_35": {
+        "brier": 0.30448,
+        "delta": 0.199023,
         "hits": 9,
-        "mean_promised": 0.568498,
+        "mean_promised": 0.400977,
         "n": 15,
         "notes": 15,
         "realized": 0.6
       },
-      "match_over_35": {
-        "brier": 0.305019,
-        "delta": 0.174316,
-        "hits": 8,
-        "mean_promised": 0.397113,
-        "n": 14,
-        "notes": 14,
-        "realized": 0.571429
-      },
       "match_over_45": {
-        "brier": 0.242338,
-        "delta": -0.02795,
+        "brier": 0.223621,
+        "delta": -0.055045,
         "hits": 2,
-        "mean_promised": 0.27795,
-        "n": 8,
-        "notes": 8,
-        "realized": 0.25
+        "mean_promised": 0.277267,
+        "n": 9,
+        "notes": 9,
+        "realized": 0.222222
       }
     },
     "definition": "plain-market: a note hits iff its market lands in the final score (selection-independent for match totals and BTTS; the 1X2 selection only picks the team for team totals and the double-chance leg)",
     "promised_buckets": [
       {
-        "brier": 0.233912,
+        "brier": 0.233997,
         "bucket": "0.1-0.2",
-        "delta": 0.154775,
-        "hits": 9,
-        "mean_promised": 0.15557,
-        "n": 29,
-        "realized": 0.310345
+        "delta": 0.15726,
+        "hits": 10,
+        "mean_promised": 0.15524,
+        "n": 32,
+        "realized": 0.3125
       },
       {
-        "brier": 0.1492,
+        "brier": 0.142884,
         "bucket": "0.2-0.3",
-        "delta": -0.057387,
+        "delta": -0.069921,
         "hits": 10,
-        "mean_promised": 0.242572,
-        "n": 54,
-        "realized": 0.185185
+        "mean_promised": 0.242334,
+        "n": 58,
+        "realized": 0.172414
       },
       {
-        "brier": 0.30347,
+        "brier": 0.317241,
         "bucket": "0.3-0.4",
-        "delta": 0.241852,
-        "hits": 14,
-        "mean_promised": 0.341482,
-        "n": 24,
-        "realized": 0.583333
+        "delta": 0.287545,
+        "hits": 17,
+        "mean_promised": 0.342085,
+        "n": 27,
+        "realized": 0.62963
       },
       {
-        "brier": 0.238297,
+        "brier": 0.239928,
         "bucket": "0.4-0.5",
-        "delta": -0.086014,
-        "hits": 15,
-        "mean_promised": 0.461014,
-        "n": 40,
-        "realized": 0.375
+        "delta": -0.075253,
+        "hits": 17,
+        "mean_promised": 0.461617,
+        "n": 44,
+        "realized": 0.386364
       },
       {
-        "brier": 0.261774,
+        "brier": 0.2614,
         "bucket": "0.5-0.6",
-        "delta": -0.179174,
-        "hits": 10,
-        "mean_promised": 0.536316,
-        "n": 28,
-        "realized": 0.357143
+        "delta": -0.168858,
+        "hits": 11,
+        "mean_promised": 0.535525,
+        "n": 30,
+        "realized": 0.366667
       },
       {
         "brier": 0.121032,
@@ -609,46 +626,46 @@
         "realized": 0.5
       },
       {
-        "brier": 0.090185,
+        "brier": 0.081765,
         "bucket": "0.8-0.9",
-        "delta": 0.058443,
-        "hits": 30,
-        "mean_promised": 0.850648,
-        "n": 33,
-        "realized": 0.909091
+        "delta": 0.07128,
+        "hits": 35,
+        "mean_promised": 0.849773,
+        "n": 38,
+        "realized": 0.921053
       },
       {
-        "brier": 0.097171,
+        "brier": 0.091303,
         "bucket": "0.9-1.0",
-        "delta": -0.052418,
-        "hits": 41,
-        "mean_promised": 0.943722,
-        "n": 46,
-        "realized": 0.891304
+        "delta": -0.047165,
+        "hits": 44,
+        "mean_promised": 0.945124,
+        "n": 49,
+        "realized": 0.897959
       }
     ],
     "promised_missing": 0,
-    "scored": 263,
-    "total_notes": 263,
+    "scored": 287,
+    "total_notes": 287,
     "unscorable": {}
   },
   "include_same_day": false,
   "overall": {
-    "hit_rate": 0.788889,
-    "priced_picks": 87,
-    "roi": 0.052471,
-    "settled_picks": 90,
-    "wins": 71
+    "hit_rate": 0.793478,
+    "priced_picks": 89,
+    "roi": 0.055899,
+    "settled_picks": 92,
+    "wins": 73
   },
-  "same_day_cutoff": "2026-08-04",
+  "same_day_cutoff": "2026-08-05",
   "same_day_excluded": 2,
   "secondary_stats": {
-    "btts_total": 90,
-    "btts_wins": 46,
-    "over25_total": 90,
-    "over25_wins": 62,
-    "team_o15_total": 90,
-    "team_o15_wins": 68
+    "btts_total": 92,
+    "btts_wins": 47,
+    "over25_total": 92,
+    "over25_wins": 64,
+    "team_o15_total": 92,
+    "team_o15_wins": 70
   },
   "settled_ledger": [
     {
@@ -5633,79 +5650,351 @@
       "selection": "home",
       "suspect_price": null,
       "won": true
+    },
+    {
+      "avg_p": 82.5,
+      "date": "2026-08-04",
+      "gs": 0,
+      "hs": 5,
+      "match": "Dinamo Zagreb vs Kauno \u017dalgiris",
+      "notes_audit": [
+        {
+          "engine": "model",
+          "hit": false,
+          "label": "Goal Range 2-3",
+          "market": "goal_range_2_3",
+          "promised": 0.4643902072883783,
+          "raw_promised": 0.4643902072883783
+        },
+        {
+          "engine": "model",
+          "hit": false,
+          "label": "Both Teams to Score - Yes (BTTS-Yes)",
+          "market": "btts_yes",
+          "promised": 0.4810987903225806,
+          "raw_promised": 0.4810987903225806
+        },
+        {
+          "engine": "model",
+          "hit": true,
+          "label": "Home Team Over 0.5 Goals",
+          "market": "home_over_05",
+          "promised": 0.8084389400921659,
+          "raw_promised": 0.8084389400921659
+        },
+        {
+          "engine": "model",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.96875,
+          "raw_promised": 0.96875
+        },
+        {
+          "engine": "model",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8950892857142857,
+          "raw_promised": 0.8950892857142857
+        },
+        {
+          "engine": "model",
+          "hit": true,
+          "label": "Both Teams to Score - No (BTTS-No)",
+          "market": "btts_no",
+          "promised": 0.5189012096774194,
+          "raw_promised": 0.5189012096774194
+        },
+        {
+          "engine": "model",
+          "hit": false,
+          "label": "Exact Goals: 2",
+          "market": "exact_2",
+          "promised": 0.24332532152440242,
+          "raw_promised": 0.24332532152440242
+        },
+        {
+          "engine": "model",
+          "hit": false,
+          "label": "Exact Goals: 3",
+          "market": "exact_3",
+          "promised": 0.22106488576397587,
+          "raw_promised": 0.22106488576397587
+        },
+        {
+          "engine": "model",
+          "hit": false,
+          "label": "Exact Goals: 4",
+          "market": "exact_4",
+          "promised": 0.15063069703867224,
+          "raw_promised": 0.15063069703867224
+        }
+      ],
+      "odds": 1.17,
+      "odds_match_method": "alias_fuzzy",
+      "odds_source": "bzzoiro_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.114,
+        "away_o15_hit": true,
+        "btts_expected": 0.409,
+        "btts_hit": true,
+        "home_o15_expected": 0.955,
+        "home_o15_hit": true,
+        "over25_expected": 0.841,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.159,
+            "score": "4-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.114,
+            "score": "3-0"
+          }
+        ]
+      },
+      "price_evidence": "SUSPECT_ALIAS_FUZZY",
+      "price_quarantine_reason": "alias_fuzzy",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 72.0,
+      "date": "2026-08-04",
+      "gs": 1,
+      "hs": 3,
+      "match": "Montana vs Nesebar",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 1.5 Goals",
+          "market": "match_over_15",
+          "promised": 0.8186043437417381,
+          "raw_promised": 0.8186043437417381
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Both Teams to Score - Yes (BTTS-Yes)",
+          "market": "btts_yes",
+          "promised": 0.4700137253688693,
+          "raw_promised": 0.4700137253688693
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Over 0.5 Goals",
+          "market": "home_over_05",
+          "promised": 0.8975266210279401,
+          "raw_promised": 0.8975266210279401
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 3.5 Goals",
+          "market": "match_over_35",
+          "promised": 0.455073190709678,
+          "raw_promised": 0.455073190709678
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9837461256771276,
+          "raw_promised": 0.9837461256771276
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.9473626478711615,
+          "raw_promised": 0.9473626478711615
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 1.5 Goals",
+          "market": "away_under_15",
+          "promised": 0.8003408841612618,
+          "raw_promised": 0.8003408841612618
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Both Teams to Score - No (BTTS-No)",
+          "market": "btts_no",
+          "promised": 0.5299862746311307,
+          "raw_promised": 0.5299862746311307
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Goal Range 4-6",
+          "market": "goal_range_4_6",
+          "promised": 0.37328163501473083,
+          "raw_promised": 0.37328163501473083
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.36193696278681237,
+          "raw_promised": 0.6333892098350143
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Goal Range 4-5",
+          "market": "goal_range_4_5",
+          "promised": 0.305505199610843,
+          "raw_promised": 0.305505199610843
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.27180516182837544,
+          "raw_promised": 0.27180516182837544
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Exact Goals: 3",
+          "market": "exact_3",
+          "promised": 0.2202862769128835,
+          "raw_promised": 0.2202862769128835
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Exact Goals: 4",
+          "market": "exact_4",
+          "promised": 0.18337985598340376,
+          "raw_promised": 0.18337985598340376
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Exact Goals: 5",
+          "market": "exact_5",
+          "promised": 0.12212534362743921,
+          "raw_promised": 0.12212534362743921
+        }
+      ],
+      "odds": 1.24,
+      "odds_match_method": "fallback",
+      "odds_source": "zulubet",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.098,
+        "away_o15_hit": true,
+        "btts_expected": 0.42700000000000005,
+        "btts_hit": false,
+        "home_o15_expected": 0.8740000000000001,
+        "home_o15_hit": true,
+        "over25_expected": 0.738,
+        "over25_hit": true,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.136,
+            "score": "2-0"
+          },
+          {
+            "hit": false,
+            "pct": 0.131,
+            "score": "3-0"
+          }
+        ]
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
     }
   ],
   "settled_via_overlay_picks": 6,
-  "start": "2026-07-06",
+  "start": "2026-07-07",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.432667,
-      "mae": 1.268,
-      "mean_actual": 3.333333,
-      "mean_promised": 3.766,
-      "n": 30
+      "bias": -0.388125,
+      "mae": 1.20625,
+      "mean_actual": 3.40625,
+      "mean_promised": 3.794375,
+      "n": 32
     },
     "by_metric": {
       "away_o15": {
-        "brier": 0.166872,
-        "delta": 0.010233,
+        "brier": 0.157149,
+        "delta": 0.002969,
         "hits": 7,
-        "mean_promised": 0.2231,
-        "n": 30,
-        "realized": 0.233333
+        "mean_promised": 0.215781,
+        "n": 32,
+        "realized": 0.21875
       },
       "btts": {
-        "brier": 0.240422,
-        "delta": 0.004067,
-        "hits": 12,
-        "mean_promised": 0.395933,
-        "n": 30,
-        "realized": 0.4
+        "brier": 0.240884,
+        "delta": 0.008938,
+        "hits": 13,
+        "mean_promised": 0.397312,
+        "n": 32,
+        "realized": 0.40625
       },
       "home_o15": {
-        "brier": 0.201756,
-        "delta": -0.081533,
-        "hits": 20,
-        "mean_promised": 0.7482,
-        "n": 30,
-        "realized": 0.666667
+        "brier": 0.189705,
+        "delta": -0.071094,
+        "hits": 22,
+        "mean_promised": 0.758594,
+        "n": 32,
+        "realized": 0.6875
       },
       "over25": {
-        "brier": 0.23439,
-        "delta": -0.066267,
-        "hits": 20,
-        "mean_promised": 0.732933,
-        "n": 30,
-        "realized": 0.666667
+        "brier": 0.222675,
+        "delta": -0.048969,
+        "hits": 22,
+        "mean_promised": 0.736469,
+        "n": 32,
+        "realized": 0.6875
       },
       "top_score": {
-        "brier": 0.082788,
-        "delta": -0.059983,
+        "brier": 0.078769,
+        "delta": -0.064672,
         "hits": 5,
-        "mean_promised": 0.143317,
-        "n": 60,
-        "realized": 0.083333
+        "mean_promised": 0.142797,
+        "n": 64,
+        "realized": 0.078125
       }
     },
     "definition": "each metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5 / exact Top Score) \u2014 calibration, not a direction call",
     "promised_buckets": [
       {
-        "brier": 0.130427,
+        "brier": 0.124674,
         "bucket": "0.0-0.1",
-        "delta": 0.06395,
+        "delta": 0.056238,
         "hits": 3,
-        "mean_promised": 0.08605,
-        "n": 20,
-        "realized": 0.15
+        "mean_promised": 0.086619,
+        "n": 21,
+        "realized": 0.142857
       },
       {
-        "brier": 0.096766,
+        "brier": 0.091329,
         "bucket": "0.1-0.2",
-        "delta": -0.032176,
+        "delta": -0.038932,
         "hits": 7,
-        "mean_promised": 0.135118,
-        "n": 68,
-        "realized": 0.102941
+        "mean_promised": 0.134822,
+        "n": 73,
+        "realized": 0.09589
       },
       {
         "brier": 0.044804,
@@ -5726,13 +6015,13 @@
         "realized": 0.473684
       },
       {
-        "brier": 0.223839,
+        "brier": 0.227526,
         "bucket": "0.4-0.5",
-        "delta": -0.154182,
-        "hits": 3,
-        "mean_promised": 0.426909,
-        "n": 11,
-        "realized": 0.272727
+        "delta": -0.117846,
+        "hits": 4,
+        "mean_promised": 0.425538,
+        "n": 13,
+        "realized": 0.307692
       },
       {
         "brier": 0.165413,
@@ -5744,31 +6033,31 @@
         "realized": 0.833333
       },
       {
-        "brier": 0.233553,
+        "brier": 0.226682,
         "bucket": "0.7-0.8",
-        "delta": -0.092652,
-        "hits": 15,
-        "mean_promised": 0.744826,
-        "n": 23,
-        "realized": 0.652174
+        "delta": -0.077875,
+        "hits": 16,
+        "mean_promised": 0.744542,
+        "n": 24,
+        "realized": 0.666667
       },
       {
-        "brier": 0.1475,
+        "brier": 0.136924,
         "bucket": "0.8-0.9",
-        "delta": -0.047773,
-        "hits": 18,
-        "mean_promised": 0.865955,
-        "n": 22,
-        "realized": 0.818182
+        "delta": -0.031917,
+        "hits": 20,
+        "mean_promised": 0.86525,
+        "n": 24,
+        "realized": 0.833333
       },
       {
-        "brier": 0.463371,
+        "brier": 0.417237,
         "bucket": "0.9-1.0",
-        "delta": -0.463556,
-        "hits": 4,
-        "mean_promised": 0.908,
-        "n": 9,
-        "realized": 0.444444
+        "delta": -0.4127,
+        "hits": 5,
+        "mean_promised": 0.9127,
+        "n": 10,
+        "realized": 0.5
       }
     ]
   },
