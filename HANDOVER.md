@@ -3137,3 +3137,75 @@ working as designed: review beat pride.
 force honesty, 🔬/🔥 marker states, request-length helper). Credit:
 independent agent review + operator-locked refinements — cross-agent
 red-teaming working exactly as intended.
+
+---
+
+## Addendum 25.1.1 — Force semantics made global; hermetic notify tests (2026-08-04)
+
+**Driver:** the independent review red-teamed f8f1679 and verified 25.1's
+shadow fixes, but caught two real remaining defects. Both were reproduced
+from source before fixing — Receipt A reproduced EXACTLY: a clean no-.env
+checkout of f8f1679 gives `1 failed, 133 passed`, failing test
+test_shadow_ledger_barrier_end_to_end (credential gate short-circuits main()
+before the mocked dispatch). Receipt B verified line-by-line: normal,
+discovery, and heartbeat families still gated ledger writes on
+`if dispatched or args.force:`, and the process exit was
+`0 if any_dispatched or args.force`.
+
+### Errata on Addendum 25.1 (prominent — the ledger stays honest)
+
+1. **"Force is a read-only bypass" was true only for the shadow helper.**
+   The other three families + the exit code still carried pre-25 semantics:
+   a --force run with TOTAL dispatch failure returned exit code 0 with no
+   ledger written, and `any_dispatched` let one successful family mask a
+   failed one even without force. The 25.1 claim is corrected: it is now
+   true GLOBALLY (all families + exit status).
+2. **Committed e2e notify tests were not hermetic.** They passed on the
+   operator Mac (134 passed) only because a real .env supplied live
+   credentials; on a clean checkout the same source gives 1 failed / 133
+   passed. They also wrote/unlinked 2099-* ledgers in the repo's REAL
+   localdata. Rule now pinned: no committed test may depend on .env, real
+   credentials, repo-local ledgers, or the network.
+
+### What shipped in 25.1.1
+
+- **Force semantics, global:** --force bypasses ledger READS / dedupe only.
+  Ledger writes now require real dispatch success in ALL four families
+  (main / discovery / shadow / heartbeat) — `if dispatched:`, never
+  `or args.force`. Exit status: non-zero if ANY intended message/burst
+  fails; one successful family never masks another's failure; total failure
+  under --force exits 1; silence (nothing intended) still exits 0.
+- **Provider aggregate semantics PRESERVED, with justification:**
+  _dispatch_message still means "at least one configured provider
+  dispatched". Providers are redundant channels to the same phone; a Meta
+  outage whose CallMeBot copy landed is delivery success, and per-provider
+  exceptions already log ERROR. Changing this would fail runs that achieved
+  delivery.
+- **Telemetry honesty note:** no GitHub Actions workflow invokes
+  notify_whatsapp.py (verified by grep), so the stricter exit code cannot
+  fail any cloud job; it surfaces in operator-run/scheduled invocations —
+  which is where a human looks.
+- **Hermetic committed tests (tests/test_notify_whatsapp.py):** dummy
+  CALLMEBOT_APIKEY/CALLMEBOT_PHONE via monkeypatch.setenv (passes the
+  credential gate identically with or without a real .env), notify.LOCALDATA
+  redirected to tmp_path (zero writes to repo localdata), dispatch stubbed
+  (zero network). New pins: forced failure in EACH family ⇒ non-zero exit +
+  no respective ledger; forced total shadow failure ⇒ non-zero + no shadow
+  ledger; successful family does not mask a failed family; recovery writes
+  ONLY the intended ledger; rerun deduped silent; kill-switch intact;
+  helper force semantics (attempt all, success iff every chunk dispatched)
+  unchanged from 25.1.
+- **Preserved per lock:** SHADOW_ENCODED_TEXT_BUDGET = 1100; dual-length
+  request logging (lengths only, secrets never logged); shared
+  enhancement_marker (🔥 = registry-ELIGIBLE AND currently validly priced;
+  🔬 otherwise) in both slates; no changes to pick logic, source weighting,
+  registry transitions, enhancement ranking, or Addendum 26 scope.
+- **Battery v9.2** reissued: runs offline with dummy credentials only;
+  proves the new global force exit/ledger semantics and repo-localdata
+  non-pollution; retains all v9.1 checks (1100 budget, chunk invariants,
+  state-honest markers, dedupe, .gitignore behavior, helper semantics).
+
+**Suite: 134 → 138 (actual), and — the point of the fix — IDENTICAL with
+.env present and with .env stripped: 138 = 138.** Pyflakes delta-0.
+Credit: independent agent review, round 2 — both receipts held up under
+source verification. Cross-agent red-teaming remains the QA backbone.

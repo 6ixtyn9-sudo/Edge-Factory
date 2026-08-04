@@ -99,52 +99,154 @@ def test_shadow_chunks_success_requires_every_chunk(monkeypatch):
     assert notify._dispatch_shadow_chunks(["c1", "c2", "c3"], force=True, **_KW) is False
 
 
-def _shadow_e2e_picks(tmp_path, date):
-    fp = tmp_path / "picks.json"
+# --- Addendum 25.1.1: hermetic end-to-end dispatch semantics ------------------
+#
+# Receipt-backed fixes: e2e notify tests must NEVER depend on a real .env or
+# real credentials (the Addendum 25.1 versions passed on the operator Mac only
+# because live CallMeBot credentials existed there; a clean no-.env checkout
+# short-circuits main() at the credential gate — reproduced: 1 failed, 133
+# passed). They must NEVER write ledgers into the repo's real localdata (the
+# old tests created/unlinked whatsapp_shadow_sent_ledger_2099-*.json there).
+# And they must pin the GLOBAL force semantics: --force is a ledger-READ
+# bypass only; any failed dispatch means non-zero exit + no ledger write, in
+# EVERY message family.
 
-    def mk(m, b):
-        return {"date": date, "match": m, "home": m.split(" vs ")[0], "away": m.split(" vs ")[1],
-                "pick": "home", "bucket": b, "avg_p": 80.0, "odds": 1.5, "market": "1x2",
-                "display_rule": "2way-unanimous avg_p>=70"}
-    fp.write_text(json.dumps([mk("T1 vs T2", "SKIPPED_VETO"), mk("T3 vs T4", "WATCHLIST_UNKNOWN_CTX")]))
+
+def _mk(date, m, b):
+    return {"date": date, "match": m, "home": m.split(" vs ")[0], "away": m.split(" vs ")[1],
+            "pick": "home", "bucket": b, "avg_p": 80.0, "odds": 1.5, "market": "1x2",
+            "display_rule": "2way-unanimous avg_p>=70"}
+
+
+def _shadow_rows(date):
+    return [_mk(date, "T1 vs T2", "SKIPPED_VETO"), _mk(date, "T3 vs T4", "WATCHLIST_UNKNOWN_CTX")]
+
+
+def _picks_file(tmp_path, rows):
+    fp = tmp_path / "picks.json"
+    fp.write_text(json.dumps(rows))
     return fp
 
 
+def _wire_e2e(monkeypatch, tmp_path, dispatch):
+    """Hermetic e2e rig. Dummy credentials via env — enough to pass the
+    credential gate on ANY machine, with or without a real .env; delivery
+    itself is stubbed, so the network is never touched. Ledgers are redirected
+    to tmp_path / "localdata" — never the repo's real localdata. `dispatch`
+    is a bool or a callable(message_text) -> bool. Returns the list of
+    attempted message texts."""
+    monkeypatch.setenv("CALLMEBOT_APIKEY", "dummy-key")
+    monkeypatch.setenv("CALLMEBOT_PHONE", "27000000000")
+    monkeypatch.setattr(notify, "LOCALDATA", tmp_path / "localdata")
+    sent = []
+
+    def fake_dispatch(**kw):
+        sent.append(kw["message_text"])
+        return dispatch(kw["message_text"]) if callable(dispatch) else bool(dispatch)
+
+    monkeypatch.setattr(notify, "_dispatch_message", fake_dispatch)
+    return sent
+
+
+def _run(monkeypatch, *argv):
+    monkeypatch.setattr(sys, "argv", ["notify_whatsapp.py", *argv])
+    return notify.main()
+
+
 def test_shadow_ledger_barrier_end_to_end(monkeypatch, tmp_path):
+    """Hermetic e2e: (b) forced TOTAL shadow failure ⇒ non-zero main return +
+    no shadow ledger; (e) successful recovery writes ONLY the intended
+    ledger; rerun without force is deduped silent."""
     date = "2099-03-03"
-    ledger = notify.LOCALDATA / f"whatsapp_shadow_sent_ledger_{date}.json"
-    try:
-        ledger.unlink(missing_ok=True)
-        fp = _shadow_e2e_picks(tmp_path, date)
-        monkeypatch.setattr(notify, "_dispatch_message", lambda **kw: False)
-        monkeypatch.setattr(sys, "argv", ["notify_whatsapp.py", "--picks", str(fp), "--date", date, "--force"])
-        assert notify.main() == 0
-        assert not ledger.exists()  # total failure: nothing deduped, whole slate re-sends next run
-        monkeypatch.setattr(notify, "_dispatch_message", lambda **kw: True)
-        assert notify.main() == 0
-        assert ledger.exists()
-        assert len(json.loads(ledger.read_text())) == 2
-        monkeypatch.setattr(sys, "argv", ["notify_whatsapp.py", "--picks", str(fp), "--date", date])
-        sent = []
-        monkeypatch.setattr(notify, "_dispatch_message", lambda **kw: (sent.append(kw), True)[1])
-        assert notify.main() == 0
-        assert not any("Shadow Slate" in str(k.get("message_text")) for k in sent)
-    finally:
-        ledger.unlink(missing_ok=True)
+    ld = tmp_path / "localdata"
+    shadow_ledger = ld / f"whatsapp_shadow_sent_ledger_{date}.json"
+    fp = _picks_file(tmp_path, _shadow_rows(date))
+    state = {"ok": False}
+    sent = _wire_e2e(monkeypatch, tmp_path, lambda _msg: state["ok"])
+
+    rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
+    assert rc != 0                                  # 25.1.1: force cannot fake success
+    assert any("Shadow Slate" in m for m in sent)   # chunks genuinely attempted
+    assert not shadow_ledger.exists()               # total failure: nothing deduped
+
+    state["ok"] = True                              # recovery: whole slate re-sends
+    sent.clear()
+    rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
+    assert rc == 0
+    assert shadow_ledger.exists()
+    assert len(json.loads(shadow_ledger.read_text())) == 2
+    # (e) only the intended ledger was written — no phantom ledgers
+    assert not (ld / f"whatsapp_sent_ledger_{date}.json").exists()
+    assert not (ld / f"whatsapp_discovery_sent_ledger_{date}.json").exists()
+
+    sent.clear()                                    # third run, no force: deduped silent
+    rc = _run(monkeypatch, "--picks", str(fp), "--date", date)
+    assert rc == 0
+    assert not any("Shadow Slate" in m for m in sent)
+
+
+def test_force_main_failure_writes_no_ledger(monkeypatch, tmp_path):
+    """(c, main family) forced failed bet-alert ⇒ non-zero + no main ledger."""
+    date = "2099-03-05"
+    ld = tmp_path / "localdata"
+    fp = _picks_file(tmp_path, [_mk(date, "M1 vs M2", notify.BUCKET_CLEAN)])
+    sent = _wire_e2e(monkeypatch, tmp_path, False)
+    rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
+    assert rc != 0
+    assert sent                                     # the message was attempted
+    assert not (ld / f"whatsapp_sent_ledger_{date}.json").exists()
+
+
+def test_force_discovery_failure_writes_no_ledger(monkeypatch, tmp_path):
+    """(c, discovery family) forced failed discovery ⇒ non-zero + no discovery
+    ledger. Shadow family killed to isolate the discovery path."""
+    date = "2099-03-06"
+    ld = tmp_path / "localdata"
+    monkeypatch.setenv("EDGE_FACTORY_NOTIFY_DISCOVERY_WATCHLIST", "1")
+    monkeypatch.setenv("EDGE_FACTORY_NOTIFY_SHADOW", "0")
+    fp = _picks_file(tmp_path, [_mk(date, "D1 vs D2", "WATCHLIST_NO_ODDS")])
+    _wire_e2e(monkeypatch, tmp_path, False)
+    rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
+    assert rc != 0
+    assert not (ld / f"whatsapp_discovery_sent_ledger_{date}.json").exists()
+    assert not (ld / f"whatsapp_sent_ledger_{date}.json").exists()
+
+
+def test_force_heartbeat_failure_writes_no_marker(monkeypatch, tmp_path):
+    """(c, heartbeat family) forced failed heartbeat ⇒ non-zero + no marker in
+    the main ledger."""
+    date = "2099-03-07"
+    ld = tmp_path / "localdata"
+    fp = _picks_file(tmp_path, [])                   # empty slate ⇒ heartbeat intended
+    _wire_e2e(monkeypatch, tmp_path, False)
+    rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force", "--heartbeat")
+    assert rc != 0
+    assert not (ld / f"whatsapp_sent_ledger_{date}.json").exists()
+
+
+def test_successful_family_does_not_mask_failed_family(monkeypatch, tmp_path):
+    """(f) main OK + shadow fail ⇒ non-zero exit; main ledger written, shadow
+    ledger NOT written (whole shadow slate retries next run)."""
+    date = "2099-03-08"
+    ld = tmp_path / "localdata"
+    rows = [_mk(date, "M1 vs M2", notify.BUCKET_CLEAN)] + _shadow_rows(date)
+    fp = _picks_file(tmp_path, rows)
+    _wire_e2e(monkeypatch, tmp_path, lambda msg: "Shadow Slate" not in msg)
+    rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
+    assert rc != 0
+    main_ledger = ld / f"whatsapp_sent_ledger_{date}.json"
+    assert main_ledger.exists() and len(json.loads(main_ledger.read_text())) == 1
+    assert not (ld / f"whatsapp_shadow_sent_ledger_{date}.json").exists()
 
 
 def test_shadow_kill_switch_blocks_dispatch(monkeypatch, tmp_path):
+    """(g) kill-switch intact — hermetically: nothing intended ⇒ silence exit 0."""
     date = "2099-03-04"
-    ledger = notify.LOCALDATA / f"whatsapp_shadow_sent_ledger_{date}.json"
-    try:
-        ledger.unlink(missing_ok=True)
-        fp = _shadow_e2e_picks(tmp_path, date)
-        sent = []
-        monkeypatch.setattr(notify, "_dispatch_message", lambda **kw: (sent.append(kw), True)[1])
-        monkeypatch.setenv("EDGE_FACTORY_NOTIFY_SHADOW", "0")
-        monkeypatch.setattr(sys, "argv", ["notify_whatsapp.py", "--picks", str(fp), "--date", date, "--force"])
-        assert notify.main() == 0
-        assert not any("Shadow Slate" in str(k.get("message_text")) for k in sent)
-    finally:
-        monkeypatch.delenv("EDGE_FACTORY_NOTIFY_SHADOW", raising=False)
-        ledger.unlink(missing_ok=True)
+    ld = tmp_path / "localdata"
+    fp = _picks_file(tmp_path, _shadow_rows(date))
+    monkeypatch.setenv("EDGE_FACTORY_NOTIFY_SHADOW", "0")
+    sent = _wire_e2e(monkeypatch, tmp_path, True)
+    rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
+    assert rc == 0
+    assert not any("Shadow Slate" in m for m in sent)
+    assert not (ld / f"whatsapp_shadow_sent_ledger_{date}.json").exists()

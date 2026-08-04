@@ -277,7 +277,10 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="WhatsApp Business Dispatch Engine for Edge Factory.")
     ap.add_argument("--picks", default=str(DEFAULT_PICKS_FILE), help="Path to source picks JSON.")
     ap.add_argument("--date", default=None, help="Target date (YYYY-MM-DD). Defaults to today.")
-    ap.add_argument("--force", action="store_true", help="Bypass sent ledgers and transmit all items.")
+    ap.add_argument("--force", action="store_true",
+                    help="Bypass sent-ledger READS (dedupe) and retransmit all items. "
+                         "Read-bypass only: never authorizes a ledger write after a failed "
+                         "dispatch, never masks a failure in the exit status (25.1.1).")
     ap.add_argument("--late-slate-only", action="store_true", help="Strict intraday scan mode.")
     ap.add_argument("--heartbeat", action="store_true",
                     help="Send one 'no certified picks today' ping when the slate is empty "
@@ -388,7 +391,13 @@ def main() -> int:
             logging.info("  [WhatsApp] Nothing new to send. Staying silent.")
         return 0
 
-    any_dispatched = False
+    # Addendum 25.1.1: track FAILURES, not successes. A failed message/burst in
+    # ANY family must surface in the exit status — one successful family must
+    # never mask another's failure, and --force must never fake success.
+    # Ledger writes below require REAL dispatch success in every family:
+    # force is a ledger-READ bypass only; converting a failed send into a
+    # dedupe would silence the item permanently.
+    any_failed = False
     if normal_message:
         logging.info("\n>>> Dispatching operational WhatsApp notification...\n")
         print(normal_message)
@@ -405,12 +414,12 @@ def main() -> int:
             callmebot_key=callmebot_key,
             callmebot_phone=callmebot_phone,
         )
-        if dispatched or args.force:
+        if dispatched:
             for p in normal_message_picks:
                 sent_keys.add(_build_match_dedupe_key(p, target_date))
             _save_sent_ledger(sent_ledger_file, sent_keys)
             logging.info(f"✅ Bet-alert dedupe ledger updated: {len(sent_keys)} items in {sent_ledger_file}")
-        any_dispatched = any_dispatched or dispatched
+        any_failed = any_failed or not dispatched
 
     if discovery_message:
         logging.info("\n>>> Dispatching discovery-watchlist WhatsApp notification...\n")
@@ -428,12 +437,12 @@ def main() -> int:
             callmebot_key=callmebot_key,
             callmebot_phone=callmebot_phone,
         )
-        if dispatched or args.force:
+        if dispatched:
             for p in discovery_picks:
                 discovery_sent_keys.add(_build_match_dedupe_key(p, target_date))
             _save_sent_ledger(discovery_sent_ledger_file, discovery_sent_keys)
             logging.info(f"✅ Discovery-alert dedupe ledger updated: {len(discovery_sent_keys)} items in {discovery_sent_ledger_file}")
-        any_dispatched = any_dispatched or dispatched
+        any_failed = any_failed or not dispatched
 
     if shadow_message:
         shadow_chunks = chunk_whatsapp_shadow_summary(
@@ -460,7 +469,7 @@ def main() -> int:
                 shadow_sent_keys.add(_build_match_dedupe_key(p, target_date))
             _save_sent_ledger(shadow_sent_ledger_file, shadow_sent_keys)
             logging.info(f"✅ Shadow-slate dedupe ledger updated: {len(shadow_sent_keys)} items in {shadow_sent_ledger_file}")
-        any_dispatched = any_dispatched or dispatched
+        any_failed = any_failed or not dispatched
 
     if heartbeat_message:
         logging.info("\n>>> Dispatching empty-slate heartbeat...\\n")
@@ -477,13 +486,16 @@ def main() -> int:
             callmebot_key=callmebot_key,
             callmebot_phone=callmebot_phone,
         )
-        if dispatched or args.force:
+        if dispatched:
             sent_keys.add(_heartbeat_key(target_date))
             _save_sent_ledger(sent_ledger_file, sent_keys)
             logging.info("✅ Heartbeat marker persisted in sent ledger (max 1/day)")
-        any_dispatched = any_dispatched or dispatched
+        any_failed = any_failed or not dispatched
 
-    return 0 if any_dispatched or args.force else 1
+    # Addendum 25.1.1: non-zero iff ANY intended message/burst failed (shadow
+    # all-or-nothing failure included). All dispatched → 0. Total failure → 1,
+    # force included. Silence never reaches here (early return 0 above).
+    return 1 if any_failed else 0
 
 
 if __name__ == "__main__":
