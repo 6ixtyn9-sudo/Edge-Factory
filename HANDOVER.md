@@ -3578,6 +3578,20 @@ ENGINE OBSERVATION: keep frozen / surgical fix only / separately approved work
 Do not use a richer odds board as a reason to override an unfavorable engine,
 calibration, quarantine, or context verdict.
 
+#### 2a. Close the source-funnel finding before provider research
+
+Review the source-funnel receipt appended below before taking a fresh provider
+sample. The `12 sources` headline is not a daily consensus count: the live
+pick engine fetches 7 sources, permits 6 1X2 voters, 4 OU voters, and 3 BTTS
+voters. Record role exclusions separately from live failures.
+
+In particular, determine whether the Bzzoiro capture-forward snapshot can be
+made available to a target-date forecast **without** stale/future leakage, and
+whether BetClan has published the target-day listing. Do not change source
+weights, voter lists, selection, or calibration on this review day. The only
+permitted next step is a separately reviewed, read-only source-funnel research
+packet if the evidence reproduces.
+
 #### 3. Take one bounded fresh coverage sample (read-only)
 
 This is the default fresh sample; it uses existing local keys without printing
@@ -3673,3 +3687,172 @@ Until every applicable gate is met, the truthful output remains:
 ```text
 🔬 research candidate — not a bet recommendation
 ```
+
+---
+
+## Research receipt — source funnel evidence + 2026-08-11 queue (2026-08-04)
+
+**Purpose:** explain why the dashboard/source inventory can show 12 sources
+while a particular pick exposes only two or three `sources_used` entries.
+This is a read-only observation record. It does **not** approve a source-weight,
+source-voter, selection, calibration, price, or WhatsApp change.
+
+### Role accounting (do not conflate these counts)
+
+```text
+README prediction-source inventory: 12
+capture_daily jobs:              13 (includes bzzoiro_odds price adapter)
+picks_today fetch set:            7
+1X2 voter set:                    6
+OU 2.5 voter set:                 4
+BTTS voter set:                   3
+```
+
+The live picker fetches:
+
+```text
+forebet, zulubet, statarea, vitibet, betclan, bzzoiro, scoutingstats
+```
+
+but its 1X2 voter set excludes `scoutingstats`; its OU/BTTS voter sets are
+smaller by design. PredictZ and WinDrawWin are shadow-only; AFootballReport and
+FreeSuperTips are not current consensus voters; BettingClosed is principally
+archive/confirmation; `bzzoiro_odds` is a price adapter, not a prediction vote.
+Therefore `sources_used` is a **post-role, post-validity, post-exact-match**
+field, never a count of all documented adapters.
+
+### Live read-only funnel receipt — target date 2026-08-05
+
+The seven live `picks_today` fetches returned:
+
+```text
+source          raw rows   valid 1X2 rows   exact-shared 1X2 keys
+forebet              133               128                       12
+zulubet               13                11                        8
+statarea              24                24                        8
+vitibet              221                18                       12
+betclan                0                 0                        0
+bzzoiro                0                 0                        0
+scoutingstats         40                26                 non-1X2 voter
+```
+
+The match-stage distribution was:
+
+```text
+fixtures with 1 valid exact 1X2 voter: 141
+fixtures with 2 valid exact 1X2 voters: 9
+fixtures with 3 valid exact 1X2 voters: 2
+fixtures with 4 valid exact 1X2 voters: 4
+fixtures with 5 or 6 valid exact 1X2 voters: 0
+
+fixtures reaching 2+ valid 1X2 voters: 15
+fixtures reaching 3+ valid 1X2 voters: 6
+```
+
+Forebet had 128 valid 1X2 rows but 116 were solo-only. This is the immediate
+reason a large source inventory does not turn into broad multi-source
+consensus. It is a mixture of source coverage, probability availability, exact
+fixture-key overlap, and market-role policy; it is not evidence of a hidden
+12-to-3 cap.
+
+Market-specific overlap was also sparse:
+
+```text
+OU 2.5: 20 exact fixtures reached 2+ voters; none reached 3+.
+BTTS:    6 exact fixtures reached 2+ voters; none reached 3+.
+```
+
+### Bzzoiro finding — healthy data, stranded future forecast path
+
+Bzzoiro was healthy at the provider boundary:
+
+```text
+local token present: yes (value never printed)
+provider prediction count: 277
+first-page rows: 50
+first-page complete 1X2 rows: 50
+first-page rows dated 2026-08-04: 15
+first-page rows dated 2026-08-05: 12
+```
+
+The local Bzzoiro capture cache also held target-date data:
+
+```text
+2026-08-05 cache rows: 20
+unique event IDs: 12
+rows with 1X2, OU 2.5, and BTTS fields: 20 each
+```
+
+However, `edgefactory.sources.bzzoiro.fetch_day(date)` intentionally returns
+all upcoming snapshot rows **only when `date == today`** and returns `[]` for a
+tomorrow target. `picks_today.fetch_all(target_date)` calls that live adapter
+rather than reading the existing date-filtered capture cache. Therefore Bzzoiro
+is absent from the tomorrow forecast consensus even when the provider and cache
+both contain usable tomorrow rows.
+
+This is a confirmed **capture-forward → forecast-path wiring gap**. It is not
+permission to wire cached rows into selection now. The existing Bzzoiro
+`captured_at` field is the provider prediction creation time, not independently
+proven local snapshot freshness; it must not be treated as the future bridge's
+freshness receipt.
+
+### BetClan finding — published today, unavailable tomorrow at probe time
+
+```text
+today listing:    153,450 bytes; 64 legacy detail links;
+                  a 3-detail sample yielded 2 usable 1X2 rows.
+tomorrow listing: empty response at probe time.
+```
+
+This does not prove a parser failure. The today page still matched the current
+listing/detail structure. Treat the empty tomorrow page as an observed
+publication/endpoint availability condition until repeat evidence proves
+otherwise; never silently convert it to zero confidence or a failed vote.
+
+### Locked conclusion
+
+```text
+SOURCE FUNNEL STATUS: OBSERVED GAP — NO PRODUCTION CHANGE
+```
+
+- No source weight, `SOURCES_*` list, threshold, calibration, registry,
+  capture, selection, push, or price-quarantine change is permitted before the
+  11 August review.
+- Do not add a synthetic consensus vote from a cache row or use a source merely
+  to inflate source count.
+- Do not call Bzzoiro cache data fresh based only on its current `captured_at`
+  value.
+
+### 2026-08-11 source-funnel decision gate
+
+Before any OddsPapi research packet, choose exactly one outcome:
+
+```text
+A. HOLD
+   Keep the current source path unchanged if the Bzzoiro bridge cannot prove
+   target-date identity, snapshot timing, and no-look-ahead behavior, or if
+   BetClan remains unpublished for the relevant target date.
+
+B. BUILD A REVIEW-ONLY SOURCE-FUNNEL PACKET
+   Permitted only after reproduced read-only evidence. It may add durable
+   source-stage telemetry and a strictly date-filtered Bzzoiro research bridge.
+   It must not affect sources_used, edge thresholds, weights, selection,
+   certification, prices, Actions, or WhatsApp.
+
+C. PRODUCTION SOURCE EXPANSION
+   Not an available outcome on 2026-08-11.
+```
+
+Any later source-funnel packet must prove with offline tests and fresh-tree
+rehearsal:
+
+1. source role is explicit (`inventory`, `capture`, `voter`, `shadow`,
+   `archive`, or `price adapter`);
+2. each stage is separately recorded: configured → fetched → raw rows → valid
+   market rows → exact fixture overlap → consensus use → final pick use;
+3. Bzzoiro rows are constrained to the target event date and an auditable
+   as-of/snapshot record, with no future-data leakage;
+4. empty/unpublished BetClan pages are visibly reported, never treated as a
+   neutral vote;
+5. no source-count increase can manufacture consensus, price confidence, a
+   recommendation, or a push.
