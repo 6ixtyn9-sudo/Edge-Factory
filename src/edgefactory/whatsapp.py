@@ -261,10 +261,19 @@ def callmebot_request_len(phone: str, apikey: str, message_text: str) -> int:
 # response body and accept ONLY the observed success class. The raw body is
 # never logged — it echoes the message text and could echo request parameters.
 
-_CALLMEBOT_ACCEPT = ("message queued", "success")
 _CALLMEBOT_REJECT_HINTS = (
     "error", "invalid", "fail", "not queued", "activat", "throttl", "exceed", "denied",
 )
+# 25.2.1: STRUCTURAL acceptance. The success body echoes the outbound text
+# ("Text to send: ..."), so a loose substring check confuses echo for ack —
+# reproduced on the deployed 25.2 classifier: bodies echoing 'Success' /
+# 'message queued', an 'unsuccessful' error, and a wrong-tag '<i>Message
+# queued.</i>' were ALL falsely accepted. The real ack carries the phrase as
+# markup: '<b>Message queued.</b>'. Our outbound text is WhatsApp markdown —
+# it never contains that HTML tag. Legacy 'Success' fixture passes only when
+# it IS the whole body. False-rejects fail closed (loud retry, no ledger);
+# false-accepts write false ledgers. Closed is the safe side.
+_CALLMEBOT_QUEUED_TAG = re.compile(r"<b>\s*message\s+queued\.?\s*</b>", re.IGNORECASE)
 
 
 def _callmebot_normalize(body: str | None) -> str:
@@ -276,6 +285,14 @@ def _callmebot_normalize(body: str | None) -> str:
     return re.sub(r"\s+", " ", text).strip().lower()
 
 
+def _callmebot_structurally_accepted(body: str) -> bool:
+    """25.2.1: the sharp signal. Real ack: '<b>Message queued.</b>' markup.
+    Legacy fixture: normalized body IS exactly 'success'. Nothing else."""
+    if _CALLMEBOT_QUEUED_TAG.search(str(body)):
+        return True
+    return _callmebot_normalize(body) == "success"
+
+
 def callmebot_body_category(body: str | None) -> str:
     """Sanitized ack category for logs — one of accepted / error-class /
     empty-body / unknown-class. Never the raw body."""
@@ -284,25 +301,22 @@ def callmebot_body_category(body: str | None) -> str:
         return "empty-body"
     if any(h in norm for h in _CALLMEBOT_REJECT_HINTS):
         return "error-class"
-    if any(p in norm for p in _CALLMEBOT_ACCEPT):
+    if _callmebot_structurally_accepted(body):
         return "accepted"
     return "unknown-class"
 
 
 def callmebot_body_accepted(body: str | None) -> bool:
-    """Addendum 25.2: accept only the observed success class ('message queued'
-    — the 2026-08-04 production ack — and the legacy 'Success' fixture class),
-    and never when an error hint is present anywhere (an 'ERROR: message not
-    queued' style body must not sneak through the accept phrase).
-    Residual, documented: the body echoes our message text; a pathological
-    slate containing an accept phrase could coexist with a hint word — the
-    hint check runs first, so the failure direction is always chosen."""
+    """Addendum 25.2.1: accept only the observed success class — the
+    structural '<b>Message queued.</b>' tag (2026-08-04 production ack) or a
+    body that IS 'Success' — and never when an error hint is present anywhere
+    (an 'ERROR: message not queued' style body must not sneak through)."""
     norm = _callmebot_normalize(body)
     if not norm:
         return False
     if any(h in norm for h in _CALLMEBOT_REJECT_HINTS):
         return False
-    return any(p in norm for p in _CALLMEBOT_ACCEPT)
+    return _callmebot_structurally_accepted(body)
 
 
 def send_callmebot_whatsapp(

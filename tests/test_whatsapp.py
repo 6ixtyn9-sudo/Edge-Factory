@@ -125,6 +125,35 @@ def test_callmebot_ack_classifier_phrase_trap_never_accepts():
     assert not callmebot_body_accepted("ERROR: message not queued for delivery")
 
 
+# --- Addendum 25.2.1: structural acceptance (regression fixtures from the
+# independent review — all four falsely ACCEPTED by the 25.2 classifier,
+# reproduced on the deployed 9cecbb6 code before this fix) --------------------
+
+_ECHO_SUCCESS_FAKE = "Text to send: Success\nsomething unrecognised happened"
+_ECHO_QUEUED_FAKE = "Text to send: message queued\nsomething unrecognised happened"
+
+
+def test_ack_echoed_text_is_not_acceptance():
+    # the body echoes our outbound text; echo must never count as ack
+    for fake in (_ECHO_SUCCESS_FAKE, _ECHO_QUEUED_FAKE):
+        assert not callmebot_body_accepted(fake)
+        assert callmebot_body_category(fake) == "unknown-class"
+
+
+def test_ack_success_substring_trap_rejected():
+    # 'unsuccessful' contains 'success' — substring matching is not acceptance
+    assert not callmebot_body_accepted("We were unsuccessful in queueing your request")
+
+
+def test_ack_requires_structural_tag():
+    assert not callmebot_body_accepted("<i>Message queued.</i> wrong tag")
+    assert callmebot_body_accepted("<b>Message queued.</b>")                      # tag alone
+    assert callmebot_body_accepted("<B>MESSAGE QUEUED</B>")                        # case-insensitive
+    assert callmebot_body_accepted("<b>Message queued</b>")                        # period optional
+    # echo coexisting with the real tag is fine — the tag is what counts
+    assert callmebot_body_accepted("Text to send: Success <b>Message queued.</b> ok")
+
+
 @patch("urllib.request.urlopen")
 def test_send_callmebot_raises_on_rejected_ack_sanitized(mock_urlopen):
     mock_resp = MagicMock()

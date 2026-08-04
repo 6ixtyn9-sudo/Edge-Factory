@@ -3277,3 +3277,44 @@ Pyflakes delta-0. The 2026-08-04 slate reached the handset intact via the
 scoped --force resend (2 chunks, 932/1005 encoded text chars, full URLs
 ~1009/~1082 — ~30% under the suspected ~1,500 pipe ceiling) — Addendum 25's
 truncation + persistence objectives are CLOSED with physical receipts.
+
+---
+
+## Addendum 25.2.1 — Classifier made structural (2026-08-04)
+
+**Driver:** independent review of deployed 9cecbb6 (round 5) proved a real
+25.2 design flaw. The success body ECHOES the outbound text, but the 25.2
+classifier accepted whenever 'message queued' or 'success' appeared ANYWHERE
+in the normalized body — confusing echo for ack. Reproduced on the deployed
+code before fixing — four traps ALL falsely accepted=True/category=accepted:
+(1) 'Text to send: Success …', (2) 'Text to send: message queued …' (the
+reviewer's two fixtures), plus two more found in the same audit: (3)
+'We were unsuccessful in queueing your request' ('unsuccessful' contains
+'success'), (4) '<i>Message queued.</i>' right phrase, wrong tag. Not a live
+hazard for today's slate (current outbound text contains neither phrase) but
+a genuine future false-ledger path. Owned: the loose substring rule was my
+design error in 25.2.
+
+### What changed (scope kept surgical, per the reviewer's lock)
+
+- **Structural acceptance only:** real ack ⇐ the phrase appears as markup —
+  regex `<b>\s*message\s+queued\.?\s*</b>` (case-insensitive, period
+  optional). Our outbound text is WhatsApp markdown; it can never contain
+  that HTML tag, so echo can never forge it.
+- **Legacy fixture:** accepted only when the normalized body IS exactly
+  'success' ('Success' alone in the body — never as a substring).
+- **Reject-hint precedence retained** (error-class always wins).
+- **Category logic uses the same structural test** — 'accepted' is only
+  reported for structurally-accepted bodies.
+- **Regression fixtures committed:** both reviewer echoes, the
+  'unsuccessful' trap, the wrong-tag trap; plus structural pins (tag alone,
+  case-insensitive tag, period-optional, tag+echo coexistence accepted).
+- **Fail-closed by design:** if CallMeBot ever changes its success HTML,
+  acks are rejected → loud retry + no ledger. A false-reject costs one
+  retry; a false-accept writes a false ledger. Closed is the cheap side.
+
+**Suite: 147 → 150 (actual), identical with and without .env (150 = 150).**
+Pyflakes delta-0. Battery v9.3.1 reissued (all v9.3 checks + structural
+classifier pins). Credit: independent reviewer, round 5 — five rounds, five
+real catches, zero false alarms. The cross-agent red-team is the strongest
+QA instrument this project has.
