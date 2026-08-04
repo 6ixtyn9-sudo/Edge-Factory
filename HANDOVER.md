@@ -2978,3 +2978,94 @@ shadow is labeled transparency, not bet-push. Main slate content UNCHANGED.
 **Verification plan:** next morning official run dispatches (or logs the
 reason) both messages; receipts = dedup ledgers of both kinds in the bot's
 persist commit + operator phone.
+
+---
+
+## Addendum 25 — Shadow dispatch integrity: chunker, encoded budget, ledger persistence (2026-08-04)
+
+**Trigger (same-day production receipt):** the first live shadow slate
+(Addendum 24) arrived TRUNCATED mid-pick ("Montana vs Nesebar ➡️ *H").
+Diagnosis: the shadow slate was sent as ONE message; CallMeBot carries text as
+a URL parameter, so ENCODED length — not character count — is what the pipe
+bills on. Cut zone ≈ 2k encoded chars; the formatter's 12-line cap and
+"+N more" pointer never fired (4 picks visible, no pointer) → pipe-side
+truncation, not formatter logic. A runner crash cannot produce a partial
+message (the GET carries the text atomically).
+
+**Second defect (operator-pull receipt):** the bot's persist commit carried no
+whatsapp_shadow_sent_ledger_*.json — Addendum 24 created the ledger but never
+gitignore-negated it, so `git add -A localdata/` silently skipped it; dedup
+memory died with cache eviction (duplicate-slate risk on evict). Verified
+upstream at 54db8a7: main + discovery ledgers negated, shadow missing.
+
+**What shipped:**
+- src/edgefactory/whatsapp.py
+  - Slim one-line shadow picks (odds · prob · KO · rule + certified 🔥 combo
+    token when enhancement_label/probability present; per-line "Stream:"
+    dropped — section headers are restated on every chunk).
+  - SHADOW_MSG_BUDGET = 1500 encoded chars (below observed ~2k cut zone).
+  - _shadow_blocks: single structural source for formatter + chunker (the two
+    renderers cannot drift apart).
+  - chunk_whatsapp_shadow_summary: encoded-budget packer. Atomic unit = one
+    line → a pick can never be torn (the 2026-08-04 failure mode). No orphaned
+    section headers; spanning sections restated "(cont.)"; freak over-long
+    lines hard-truncated and MARKED "(cut)"; "(k/n)" numbering, applied
+    post-pack with a 48-char numbering reserve (first revision packed at full
+    budget then numbered and the monster-slate test caught the overflow —
+    text-vs-behavior class, again).
+- scripts/notify_whatsapp.py: _dispatch_shadow_chunks — in-order sends with
+  per-chunk encoded-size logging; ALL-OR-NOTHING ledger barrier: first failed
+  chunk aborts and writes NO dedup keys (the whole slate re-sends next run;
+  a half-delivered slate is never permanently deduped). --force keeps legacy
+  semantics (attempt all chunks, ledger proceeds).
+- .gitignore: !localdata/whatsapp_shadow_sent_ledger_20*.json (comment on its
+  own line — Addendum 22 lesson: gitignore has no inline comments).
+
+**Tests:** shadow file 6 → 13 (slim-line, enhancement token on/off,
+single-chunk == flat formatter, monster-slate budget/structure, freak-line
+cut marker, determinism, budget guardrail). Suite: 117 → 124 sandbox
+(expected 120 → 127 Mac). Pyflakes delta-0.
+
+**Folded receipts (the Addendum 23 paperwork, landed here per the anti-bloat
+review — one deploy instead of two):**
+- Deploy chain, all sha-verified at source: A19 9c8545d → README 3b25693 →
+  A20 005b11f → c3d2f0f → A21 b7bc6e6 → seed b63993c → A22 1180d9b →
+  f4e1b2ab → A24 cadbe75 → merge e9eca58 (post-merge byte-integrity ✓).
+- Self-heal production receipt (cloud audit at e9eca58): unmatched 2 → 0,
+  settled 88 → 90, "settled via shared overlay facts: 6", hit 0.78409 →
+  0.78889, ROI 0.05077 → 0.05247. Overlay rows now 39,319 and bot-carried.
+- zsh lesson: '#' is literal in interactive zsh — never put trailing comments
+  on command lines in operator blocks (a gate with a trailing comment is a
+  gate that silently did not run).
+- Seed bookkeeping: one-off localdata commit via git add -f (39,103 rows),
+  accepted process precedent with explicit rationale.
+- Open ticket: Tasmania-class coverage miss — cloud capture never saw the
+  South Hobart / Hobart Zebras rows the Mac scraped (scrape budgets / page
+  depth). The overlay masks the symptom; it does not fix capture.
+- Lesson banked: "delivered ≠ delivered intact" — battery v8 proved send()
+  was CALLED with exact text; nothing proved a long message ARRIVES intact.
+  Budget-enforced chunking makes "arrives intact" testable by construction.
+- Stale standing item: README's CallMeBot whatsapp.py endpoint warning — the
+  code already uses whatsapp.php and the 2026-08-04 slate demonstrably
+  arrived. Prune in a future docs pass.
+- Pricing interrogation (operator Mac 2026-08-04, pre-registered verdicts):
+  scoutingstats_odds cohort n=12 settled, ROI −33.2% at logged prices
+  (reproduces the audit to the third decimal — cohort identity proven).
+  Decomposition: 50% hit at ~1.39 avg prices (needs ~72%) ⇒ ~28pp of the loss
+  is selection; ≤ 3–5pp is price (bzzoiro higher on all 3 cross-checkable
+  picks, mean gap +0.10). Pre-registered verdict: INCONCLUSIVE on price
+  toxicity. STRUCTURAL finding: bzzoiro-corroborated 3 picks → +1.0% ROI vs
+  sole-source 9 picks → −44.6% → Addendum 26 queued (corroboration
+  quarantine: scoutingstats-only price ⇒ not pushable, still audited;
+  alias_fuzzy prices ineligible for best-odds + suspect_price specimens;
+  both tables become native audit sections so /tmp forensics retire).
+  alias_fuzzy specimens: 6/6 bzzoiro-attached, −35.7%, and price-split
+  3-0 (≤1.52) vs 0-3 (≥1.52) — consistent with wrong-fixture attachment
+  inflating apparent value; specimen-level proof mechanism lands in A26.
+- Queued: Addendum 27 (category-spanning combo display — best match/home/away
+  enhancement slots) AFTER the 2026-08-11 by-engine verdict. Dynamic selection
+  MUST route through the enhancement certification registry (PAPER/PROVEN/
+  BENCHED), never raw rolling hit rates — display debias IS debias, and the
+  registry is currently EMPTY (enhancement_registry: {} in the rolling
+  audit), so there is nothing legitimate to route through yet.
+- Time-bomb unchanged: test_benched_circuit_breaker hard fix by 2026-10-02.

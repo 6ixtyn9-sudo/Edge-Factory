@@ -1,7 +1,10 @@
-"""Addendum 24: shadow slate formatter tests."""
+"""Addendum 24/25: shadow slate formatter + chunker tests."""
 from edgefactory.whatsapp import (
     BUCKET_VETO,
     SHADOW_MAX_LINES,
+    SHADOW_MSG_BUDGET,
+    chunk_whatsapp_shadow_summary,
+    encoded_len,
     format_stream_record,
     format_whatsapp_shadow_summary,
 )
@@ -17,13 +20,19 @@ def _p(match, bucket, avg_p=70.0, odds=1.9):
             "avg_p": avg_p, "odds": odds, "display_rule": "2way-unanimous avg_p>=70"}
 
 
+def _bullet_lines(text):
+    return [ln for ln in text.splitlines() if ln.startswith("• ")]
+
+
+# --- Addendum 24 formatter behavior (updated for Addendum 25 slim lines) -----
+
+
 def test_renders_all_shadow_sections_with_stream_labels():
     picks = [_p("A vs B", BUCKET_VETO), _p("C vs D", "WATCHLIST_NO_ODDS"),
              _p("E vs F", "WATCHLIST_UNKNOWN_CTX")]
     msg = format_whatsapp_shadow_summary("2026-08-05", picks, stats=_STATS)
     assert "Shadow Slate" in msg
     assert "SKIPPED_VETO" in msg and "WATCHLIST_NO_ODDS" in msg and "WATCHLIST_UNKNOWN_CTX" in msg
-    assert "| Stream: SKIPPED_VETO" in msg
     assert "30d: 86% hit · +11.8% ROI (52 settled)" in msg
     assert "30d: 67% hit · ROI n/a (3 settled)" in msg  # roi None renders honestly
 
@@ -54,3 +63,81 @@ def test_empty_shadow_slate():
 def test_stream_record_without_settled_history():
     assert format_stream_record("SKIPPED_VETO", {}) == "30d: no settled record yet"
     assert format_stream_record("SKIPPED_VETO", None) == "30d: no settled record yet"
+
+
+# --- Addendum 25: slim one-line picks + enhancement token --------------------
+
+
+def test_slim_pick_is_one_logical_line_with_full_context():
+    msg = format_whatsapp_shadow_summary("2026-08-05", [_p("Alpha FC vs Beta United", BUCKET_VETO, avg_p=82.0)], stats=_STATS)
+    bullets = _bullet_lines(msg)
+    assert len(bullets) == 1
+    line = bullets[0]
+    assert "Alpha FC vs Beta United" in line and "82%" in line and "· KO " in line
+    assert "└" not in msg  # the two-line layout is gone
+    assert "| Stream:" not in msg  # section headers carry stream context now
+
+
+def test_enhancement_token_rendered_only_when_present():
+    enh = _p("Gamma vs Delta", BUCKET_VETO)
+    enh["enhancement_label"] = "Home Win + Over 2.5"
+    enh["enhancement_probability"] = 0.5021
+    msg_with = format_whatsapp_shadow_summary("2026-08-05", [enh], stats=_STATS)
+    assert "🔥 Home Win + Over 2.5 (50%)" in msg_with
+    msg_without = format_whatsapp_shadow_summary("2026-08-05", [_p("Gamma vs Delta", BUCKET_VETO)], stats=_STATS)
+    assert "🔥" not in msg_without
+
+
+# --- Addendum 25: chunker invariants ------------------------------------------
+
+
+def test_small_slate_single_chunk_matches_flat_formatter():
+    picks = [_p("A vs B", BUCKET_VETO), _p("C vs D", "WATCHLIST_UNKNOWN_CTX")]
+    chunks = chunk_whatsapp_shadow_summary("2026-08-05", picks, stats=_STATS)
+    assert len(chunks) == 1
+    assert chunks[0] == format_whatsapp_shadow_summary("2026-08-05", picks, stats=_STATS)
+    assert "(1/1)" not in chunks[0]
+
+
+def test_monster_slate_chunks_respect_budget_and_structure():
+    picks = [_p(f"Long Athletic Club {i} vs Rovers United {i}", BUCKET_VETO, avg_p=90.0 - i) for i in range(8)]
+    picks += [_p(f"Watch Wanderers {i} vs City Rovers {i}", "WATCHLIST_UNKNOWN_CTX", avg_p=70.0 - i) for i in range(6)]
+    budget = 700
+    chunks = chunk_whatsapp_shadow_summary("2026-08-05", picks, stats=_STATS, budget=budget)
+    assert len(chunks) >= 2
+    n = len(chunks)
+    for k, c in enumerate(chunks, 1):
+        assert encoded_len(c) <= budget, f"chunk {k} over budget"
+        assert f"({k}/{n})" in c.splitlines()[0]
+    # every shown pick appears exactly once across chunks
+    bullets = [ln for c in chunks for ln in c.splitlines() if ln.startswith("• ")]
+    assert len(bullets) == len(set(bullets)) == 12  # SHADOW_MAX_LINES cap
+    # no chunk ends orphaned on a section header
+    for c in chunks:
+        tail = [ln for ln in c.splitlines() if ln.strip()][-1]
+        assert "— _30d:" not in tail
+    # a split section restates its header
+    assert any("(cont.)" in c for c in chunks)
+
+
+def test_freak_overlong_line_is_truncated_and_marked():
+    freak = _p("A" * 400 + " vs " + "B" * 200, BUCKET_VETO)
+    budget = 500
+    chunks = chunk_whatsapp_shadow_summary("2099-01-01", [freak], stats=_STATS, budget=budget)
+    assert any("(cut)" in c for c in chunks)
+    for c in chunks:
+        assert encoded_len(c) <= budget  # strict: battery v9 caught the loose-bound regression
+    assert len(chunks) >= 1
+
+
+def test_chunk_output_is_deterministic():
+    picks = [_p(f"Side {i} vs Other {i}", BUCKET_VETO, avg_p=80.0 - i) for i in range(6)]
+    a = chunk_whatsapp_shadow_summary("2026-08-05", picks, stats=_STATS)
+    b = chunk_whatsapp_shadow_summary("2026-08-05", picks, stats=_STATS)
+    assert a == b
+
+
+def test_default_budget_sits_below_observed_cut_zone():
+    # 2026-08-04 production truncation happened around ~2k encoded chars.
+    assert SHADOW_MSG_BUDGET <= 1600
+    assert SHADOW_MSG_BUDGET >= 800  # sanity: not so small it fragments normal slates
