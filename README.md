@@ -166,12 +166,13 @@ WhatsApp setup (CallMeBot, free path):
 From your own WhatsApp, add the CallMeBot number and send exactly:
 I allow callmebot to send me messages
 You'll receive API Activated for your phone number. Your APIKEY is ...
-Use that key as CALLMEBOT_APIKEY.
-⚠️ Open fix (2026-06-18): send_callmebot_whatsapp() in src/edgefactory/whatsapp.py uses the endpoint whatsapp.py; it must be whatsapp.php. Until fixed, every dispatch 404s, is swallowed by run_soft, and the job still finishes green with no message. See HANDOVER.md §9.
+Use that key as CALLMEBOT_APIKEY. The active implementation uses `whatsapp.php`, structurally validates the returned CallMeBot acknowledgement, and logs only a sanitized acknowledgement category. Provider acceptance is still not handset delivery; confirm important slates from the phone.
 
 Only CERTIFIED_CLEAN and CAUTION buckets are pushed **as bets** (main slate). Dedup ledger localdata/whatsapp_sent_ledger_YYYY-MM-DD.json means ~one morning message/day plus late-slate alerts only when new fixtures appear.
 
-Shadow slate (Addendum 24, default ON — kill with EDGE_FACTORY_NOTIFY_SHADOW=0): a SECOND daily message carries the streams the old doctrine kept off the phone — SKIPPED_VETO + WATCHLIST_NO_ODDS + WATCHLIST_UNKNOWN_CTX — each section labeled with that stream's rolling 30d audit record (from localdata/picks_audit_rolling.json). Independent dedup ledger localdata/whatsapp_shadow_sent_ledger_YYYY-MM-DD.json: main and shadow sends never suppress each other. Shown for transparency, not pushed as bets; weight the streams by their records.
+Price evidence is independently gated from model/context quality (Addendum 26): a Bzzoiro primary price may remain push-eligible; a ScoutingStats-only fallback price is quarantined to WATCHLIST_UNCORROBORATED_PRICE; an `alias_fuzzy` candidate is saved as `suspect_price` and never replaces operational best odds, landing in WATCHLIST_SUSPECT_PRICE. Both remain archived and scored in the rolling audit.
+
+Shadow slate (Addenda 24–26, default ON — kill with EDGE_FACTORY_NOTIFY_SHADOW=0): a SECOND daily message carries all non-pushed streams — SKIPPED_VETO, WATCHLIST_NO_ODDS, WATCHLIST_UNKNOWN_CTX, WATCHLIST_UNCORROBORATED_PRICE, and WATCHLIST_SUSPECT_PRICE — each labeled with that stream's rolling 30d audit record (from localdata/picks_audit_rolling.json). Independent dedup ledger localdata/whatsapp_shadow_sent_ledger_YYYY-MM-DD.json means main and shadow sends never suppress each other. Shown for transparency, not pushed as bets; weight the streams by their records.
 
 Golden rules
 
@@ -186,7 +187,7 @@ Do not change norm_team() / norm_team_sql() join keys without full revalidation
 New sources must be mined standalone before being added as levers
 Repo clean – stale files deleted immediately. ONE handover file: HANDOVER.md
 Every repo change ships via the anti-drift protocol (payloads + SHA-256 + pinned base commit + independent verification). No code travels through chat.
-A green Actions run does NOT prove WhatsApps were delivered or Supabase was written – run_soft swallows non-critical failures. Confirm from the phone / logs.
+A green Actions run does NOT prove WhatsApps were delivered or Supabase was written – run_soft swallows non-critical failures. A ledger records provider acceptance, not handset delivery; confirm from the phone / logs.
 Certified edges (split 2025-06-01)
 
 Operational thresholds (base canonical only):

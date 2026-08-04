@@ -3318,3 +3318,71 @@ Pyflakes delta-0. Battery v9.3.1 reissued (all v9.3 checks + structural
 classifier pins). Credit: independent reviewer, round 5 — five rounds, five
 real catches, zero false alarms. The cross-agent red-team is the strongest
 QA instrument this project has.
+
+---
+
+## Addendum 26 — Price-evidence quarantine + native audit tables (2026-08-04)
+
+**Driver:** the 2026-08-04 price interrogation separated a real policy problem
+from a pricing accusation. The ScoutingStats-odds cohort was weak at logged
+prices, but the pre-registered decomposition did **not** prove a generic bad
+price feed. It did prove two narrower operational hazards:
+
+- a ScoutingStats fallback price with no Bzzoiro match is sole-source evidence;
+  it must remain auditable but cannot turn an otherwise clean model pick into a
+  pushed bet;
+- an `alias_fuzzy` event-string match can attach the wrong fixture's price. Its
+  candidate must be visible as suspect evidence, never silently become
+  operational “best odds.”
+
+Historical receipt retained from the interrogation: the settled
+`scoutingstats_odds` cohort was n=12 / ROI about -33.2%; Bzzoiro-correlated
+examples were materially different from the sole-source subset, while
+`alias_fuzzy` specimens were weak and price-split in a way consistent with bad
+fixture attachment. That is sufficient for quarantine, not a claim that every
+ScoutingStats price is wrong.
+
+### What changed
+
+1. **Stable price-evidence fields at pick time** (`scripts/picks_today.py`):
+   `BZZOIRO_PRIMARY`, `SCOUTINGSTATS_SOLE`, `SUSPECT_ALIAS_FUZZY`,
+   `BETEXPLORER_RESCUE`, `SOURCE_FALLBACK`, and `UNMATCHED` are archived on the
+   pick. They describe price evidence, not model quality.
+2. **ScoutingStats sole-source quarantine:** a secondary ScoutingStats match
+   is retained with its odds for settlement/audit, but is bucketed
+   `WATCHLIST_UNCORROBORATED_PRICE`, never `CERTIFIED_CLEAN` or `CAUTION`.
+3. **Fuzzy-price exclusion:** an `alias_fuzzy` candidate is copied to
+   `suspect_price` with source/bookmaker/capture metadata and cannot overwrite
+   the pre-existing operational odds. It is bucketed
+   `WATCHLIST_SUSPECT_PRICE`; a context VETO still wins over price quarantine.
+   The established BetExplorer rescue path may clear this only when it supplies
+   its own matched price, at which point evidence becomes `BETEXPLORER_RESCUE`.
+4. **Phone transparency:** both new non-push buckets join `SHADOW_BUCKETS`, so
+   Addendum 24's every-stream doctrine remains true: they appear in the shadow
+   slate with rolling records rather than disappearing from view.
+5. **Native audit surface** (`audit_recent_picks.py`): rolling JSON gains
+   `by_price_evidence` and `by_price_quarantine_reason`; Markdown gains
+   `## Price Evidence / Corroboration Audit` and
+   `## Suspect-price Quarantine Audit`. The latter carries suspect-price capture
+   count and average separately from operational priced ROI. Legacy archives are
+   conservatively classified from stored source/match-method fields; they are
+   not retroactively rebucketed.
+
+### Boundary / doctrine
+
+Quarantine removes **push eligibility**, not evidence. These rows continue
+through frozen archives, Supabase source payloads, settlement, rolling ROI, and
+the phone's shadow lane. The mechanism is deliberately fail-closed: price
+confidence cannot manufacture a bet merely because model/context gates pass.
+
+### Tests
+
+New pure price-quarantine coverage pins Bzzoiro-primary eligibility,
+ScoutingStats-only retention+watchlist quarantine, fuzzy-price non-replacement,
+no-prior-price suspect retention, context-VETO precedence, and unchanged legacy
+fallback behavior. Audit fixtures pin both new JSON groups, native Markdown
+sections, and suspect-price aggregates; shadow formatter coverage pins the new
+sections. Full suite and battery receipts belong to the deployment record.
+
+**Not changed:** model probabilities, source weights, edge certification,
+enhancement registry transitions, or the 2026-08-11 by-engine/debias verdict.
