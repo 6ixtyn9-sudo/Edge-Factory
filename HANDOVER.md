@@ -3069,3 +3069,71 @@ review — one deploy instead of two):**
   registry is currently EMPTY (enhancement_registry: {} in the rolling
   audit), so there is nothing legitimate to route through yet.
 - Time-bomb unchanged: test_benched_circuit_breaker hard fix by 2026-10-02.
+
+---
+
+## Addendum 25.1 — Surgical hardening of shadow dispatch (2026-08-04)
+
+**Driver:** an independent agent red-teamed the DEPLOYED Addendum 25 (be4c697)
+— replicated the full suite independently (127 passed, matches), measured the
+live slate at source, and raised four ambers. All four survived verification;
+two were outright errors in the Addendum 25 fold-in, corrected below. The
+operator locked three refinements (explicit unit naming; force as read-only
+bypass; stricter 🔥 rule through ONE shared helper). This is the process
+working as designed: review beat pride.
+
+### Errata on Addendum 25 (prominent — the ledger stays honest)
+
+1. **Cut-zone estimate was wrong.** Addendum 25 said "~2k encoded chars".
+   Measured reconstruction of the received phone prefix (operator's paste,
+   asterisks restored to wire format, urllib.parse.quote of the exact
+   string): 739 raw chars -> **1,415 encoded text chars**. With ~90 chars of
+   fixed host/path/phone/apikey overhead the request was ~1,500 full-URL
+   chars — suspiciously round; a ~1,500 full-URL ceiling is now the leading
+   suspect. Budget rule stated with method: encoded text <= ~0.78 x observed
+   cut -> **1100**.
+2. **"Enhancement registry EMPTY" was wrong.** The claim was sourced from a
+   stale rolling-json snapshot key; the registry FILE (ground truth,
+   localdata/enhancement_registry.json) held two PAPER entries at be4c697:
+   btts_yes@v1 (n=1, hits 0, -1.0) and match_over_25@v1 (n=2, hits 2, +1.35).
+   Own rule broken: check the artifact, not the summary of the artifact.
+3. **"PROVEN" is not a registry state.** The machine is SHADOW -> PAPER ->
+   ELIGIBLE -> BENCHED (ELIGIBLE = Wilson LB95 hit-rate >= mean breakeven of
+   prices actually paid; BENCHED has no automatic re-entry). The Addendum 25
+   receipts used PROVEN. Wrong enum.
+
+### What shipped in 25.1
+
+- SHADOW_MSG_BUDGET renamed **SHADOW_ENCODED_TEXT_BUDGET = 1100** — the unit
+  is explicit (the encoded text= value, not the full URL). Dispatch logs BOTH
+  encoded-text length AND the full CallMeBot request length — lengths only;
+  the URL embeds phone + apikey and is never logged.
+- _dispatch_shadow_chunks tightened: success <=> EVERY chunk dispatched; any
+  failed chunk -> False. --force now bypasses the ledger READ only; it still
+  attempts every chunk for diagnostics, but can never convert failure into a
+  ledger write. The Addendum 25 version had preserved legacy
+  "dispatched or force" semantics; the reviewer was right that an
+  all-or-nothing barrier returning success after total failure is lie-shaped.
+- State-honest combo markers via ONE shared helper
+  (edgefactory.whatsapp.enhancement_marker) used by BOTH slates, so the two
+  renderers cannot drift again: **🔥 only when the enhancement TYPE is
+  registry-ELIGIBLE AND the current fixture has a valid captured price**;
+  🔬 otherwise (SHADOW/PAPER/BENCHED/unknown types, and ELIGIBLE-but-
+  currently-unpriced — an unpriced fixture is not an actionable
+  recommendation, even for a certified type). Resolution runs in notify
+  (_annotate_enhancement_markers) through the audit's own machinery
+  (enh_registry.all_statuses + enh_pricing attach probe). Fail-soft: anything
+  unresolvable renders 🔬. NOTE: with zero ELIGIBLE types today, EVERY combo
+  token now renders 🔬 in production — the phone finally displays the true
+  certification state; 🔥 appears only when a type earns it on priced
+  evidence.
+- Committed dispatch tests (previously battery-only, deleted after runs):
+  abort-on-failure; force-attempts-all-but-returns-False; success-requires-
+  every-chunk; end-to-end ledger barrier (total failure -> no ledger file;
+  healthy rerun -> ledger written; third run dedup-silent); kill-switch.
+- Suite: 124 -> 131 sandbox (134 Mac expected). Pyflakes delta-0.
+
+**Battery v9.1** reissued with the tightened semantics (budget pinned 1100,
+force honesty, 🔬/🔥 marker states, request-length helper). Credit:
+independent agent review + operator-locked refinements — cross-agent
+red-teaming working exactly as intended.

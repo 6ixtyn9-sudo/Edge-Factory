@@ -2,7 +2,7 @@
 from edgefactory.whatsapp import (
     BUCKET_VETO,
     SHADOW_MAX_LINES,
-    SHADOW_MSG_BUDGET,
+    SHADOW_ENCODED_TEXT_BUDGET,
     chunk_whatsapp_shadow_summary,
     encoded_len,
     format_stream_record,
@@ -83,9 +83,26 @@ def test_enhancement_token_rendered_only_when_present():
     enh["enhancement_label"] = "Home Win + Over 2.5"
     enh["enhancement_probability"] = 0.5021
     msg_with = format_whatsapp_shadow_summary("2026-08-05", [enh], stats=_STATS)
-    assert "🔥 Home Win + Over 2.5 (50%)" in msg_with
+    # Addendum 25.1: unresolved state renders as research (🔬), never 🔥
+    assert "🔬 Home Win + Over 2.5 (50%)" in msg_with
     msg_without = format_whatsapp_shadow_summary("2026-08-05", [_p("Gamma vs Delta", BUCKET_VETO)], stats=_STATS)
-    assert "🔥" not in msg_without
+    assert "🔥" not in msg_without and "🔬" not in msg_without
+
+
+def test_enhancement_marker_is_state_and_price_honest():
+    base = _p("Gamma vs Delta", BUCKET_VETO)
+    base["enhancement_label"] = "Home Win + Over 2.5"
+    base["enhancement_probability"] = 0.5021
+    base["recommended_enhancement"] = "match_over_25"
+    certified = dict(base, _enh_status="ELIGIBLE", _enh_priced=True)
+    msg = format_whatsapp_shadow_summary("2026-08-05", [certified], stats=_STATS)
+    assert "🔥 Home Win + Over 2.5 (50%)" in msg
+    elig_unpriced = dict(base, _enh_status="ELIGIBLE", _enh_priced=False)
+    msg = format_whatsapp_shadow_summary("2026-08-05", [elig_unpriced], stats=_STATS)
+    assert "🔬" in msg and "🔥" not in msg  # ELIGIBLE but unpriced NOW is research
+    paper_priced = dict(base, _enh_status="PAPER", _enh_priced=True)
+    msg = format_whatsapp_shadow_summary("2026-08-05", [paper_priced], stats=_STATS)
+    assert "🔬" in msg and "🔥" not in msg  # priced but uncertified type is research
 
 
 # --- Addendum 25: chunker invariants ------------------------------------------
@@ -137,7 +154,8 @@ def test_chunk_output_is_deterministic():
     assert a == b
 
 
-def test_default_budget_sits_below_observed_cut_zone():
-    # 2026-08-04 production truncation happened around ~2k encoded chars.
-    assert SHADOW_MSG_BUDGET <= 1600
-    assert SHADOW_MSG_BUDGET >= 800  # sanity: not so small it fragments normal slates
+def test_default_budget_sits_below_measured_cut_zone():
+    # Addendum 25.1: production cut MEASURED at ~1,415 encoded text chars
+    # (received-prefix reconstruction of the 2026-08-04 phone paste; the
+    # earlier "~2k" estimate was wrong). Budget pinned at 1100 = ~0.78x cut.
+    assert SHADOW_ENCODED_TEXT_BUDGET == 1100
