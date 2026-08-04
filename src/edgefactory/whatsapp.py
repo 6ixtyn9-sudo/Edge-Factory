@@ -256,6 +256,16 @@ def send_callmebot_whatsapp(
 BUCKET_VETO = "SKIPPED_VETO"
 SHADOW_BUCKETS = (BUCKET_VETO, BUCKET_WL_ODDS, BUCKET_WL_CTX)
 SHADOW_MAX_LINES = 12
+# Addendum 25: CallMeBot carries text as a URL parameter, so ENCODED length —
+# not character count — is what the pipe bills on. The 2026-08-04 production
+# slate was truncated mid-pick at roughly ~2k encoded chars. The budget sits
+# below the observed cut zone; chunked dispatch (notify_whatsapp) does the rest.
+SHADOW_MSG_BUDGET = 1500
+
+
+def encoded_len(text: str) -> int:
+    """URL-encoded length of text — the unit the CallMeBot pipe bills on."""
+    return len(urllib.parse.quote(text))
 
 
 def format_stream_record(bucket: str, stats: dict[str, Any] | None) -> str:
@@ -271,52 +281,176 @@ def format_stream_record(bucket: str, stats: dict[str, Any] | None) -> str:
     return f"30d: {hr_txt} · {roi_txt} ({int(n)} settled)"
 
 
+def _format_shadow_pick_line(p: dict[str, Any]) -> str:
+    """Addendum 25: one logical line per pick. Same information the old two-line
+    layout carried (odds · prob · KO · rule) plus the certified 🔥 combo token
+    when the engine has one. The per-line 'Stream:' label is gone — section
+    headers are restated on every chunk, so a line can never arrive stripped
+    of its stream context."""
+    line = (
+        f"• *{p.get('match', '?')}* ➡️ *{str(p.get('pick', '?')).upper()}* "
+        f"{format_odds_display(p)} · {float(p.get('avg_p') or 0):.0f}% · "
+        f"KO {format_kickoff(p)} · {_pick_rule_label(p)}"
+    )
+    enh_label = p.get("enhancement_label")
+    enh_prob = p.get("enhancement_probability")
+    if enh_label:
+        prob_txt = ""
+        if enh_prob is not None:
+            try:
+                prob_txt = f" ({float(enh_prob):.0%})"
+            except (TypeError, ValueError):
+                prob_txt = ""
+        line += f" · 🔥 {enh_label}{prob_txt}"
+    return line
+
+
+def _shadow_blocks(
+    target_date: str,
+    picks: list[dict[str, Any]],
+    stats: dict[str, Any] | None,
+) -> tuple[list[str], list[tuple[str, list[str]]], list[str]]:
+    """Structural form of the slate: (header lines, [(section title, pick lines)],
+    footer lines). Single source of truth for both the flat formatter and the
+    Addendum 25 chunker, so they can never drift apart."""
+    picks = [p for p in picks if p.get("bucket") in SHADOW_BUCKETS]
+    header = [
+        "🌑 *Edge Factory Shadow Slate* 🌑",
+        f"📅 Date: {target_date}",
+        "⚠️ Shadow streams — NOT pushed as bets. Section labels = rolling 30d audit record.",
+        "",
+    ]
+    section_defs = [
+        ("🚫 *SKIPPED_VETO* (disagreement-vetoed)", BUCKET_VETO),
+        ("🔎 *WATCHLIST_NO_ODDS* (no matched price)", BUCKET_WL_ODDS),
+        ("🧩 *WATCHLIST_UNKNOWN_CTX* (unknown league context)", BUCKET_WL_CTX),
+    ]
+    sections: list[tuple[str, list[str]]] = []
+    shown = 0
+    for title, bucket in section_defs:
+        if shown >= SHADOW_MAX_LINES:
+            break
+        rows = sorted(
+            (p for p in picks if p.get("bucket") == bucket),
+            key=lambda x: -float(x.get("avg_p") or 0),
+        )
+        if not rows:
+            continue
+        pick_lines: list[str] = []
+        for p in rows:
+            if shown >= SHADOW_MAX_LINES:
+                break
+            pick_lines.append(_format_shadow_pick_line(p))
+            shown += 1
+        if pick_lines:
+            sections.append((f"{title} — _{format_stream_record(bucket, stats)}_", pick_lines))
+    footer: list[str] = []
+    if not picks:
+        footer = ["ℹ️ Shadow slate empty — no vetoed or watchlist selections today."]
+    else:
+        if len(picks) > shown:
+            footer.append(f"… +{len(picks) - shown} more on the slate file (localdata/picks_next_2days.json)")
+        footer.append("ℹ️ Shown for transparency; graded per-stream in the rolling audit. Weight them yourself.")
+    return header, sections, footer
+
+
 def format_whatsapp_shadow_summary(
     target_date: str,
     picks: list[dict[str, Any]],
     stats: dict[str, Any] | None = None,
 ) -> str:
-    """Second daily message (Addendum 24): SKIPPED_VETO + WATCHLIST streams.
+    """Second daily message (Addendum 24, slim-lined in Addendum 25): SKIPPED_VETO
+    + WATCHLIST streams. These were not pushed as bets. Every section header
+    carries the stream's rolling 30d audit record so the operator can weight
+    streams themselves — calibration ≠ edge, and stream records differ (the
+    reason this exists: the veto stream was the most profitable stream of the
+    2026-08 window while receiving zero pushes)."""
+    header, sections, footer = _shadow_blocks(target_date, picks, stats)
+    lines: list[str] = list(header)
+    for title, pick_lines in sections:
+        lines.append(title)
+        lines.extend(pick_lines)
+        lines.append("")
+    lines.extend(footer)
+    return "\n".join(lines).rstrip("\n")
 
-    These were not pushed as bets. Every section header carries the stream's
-    rolling 30d audit record so the operator can weight streams themselves —
-    calibration ≠ edge, and stream records differ (the reason this exists:
-    the veto stream was the most profitable stream of the 2026-08 window while
-    receiving zero pushes).
+
+def _fit_line(line: str, prefix_lines: list[str], budget: int) -> str:
+    """Addendum 25: hard-truncate a single line that cannot fit even in a fresh
+    chunk. ALWAYS marked '(cut)' — content is never silently dropped."""
+    if encoded_len("\n".join(prefix_lines + [line])) <= budget:
+        return line
+    keep = len(line)
+    while keep > 0:
+        cand = line[:keep].rstrip() + " …(cut)"
+        if encoded_len("\n".join(prefix_lines + [cand])) <= budget:
+            return cand
+        keep -= 8
+    return "…(cut)"
+
+
+def chunk_whatsapp_shadow_summary(
+    target_date: str,
+    picks: list[dict[str, Any]],
+    stats: dict[str, Any] | None = None,
+    *,
+    budget: int = SHADOW_MSG_BUDGET,
+) -> list[str]:
+    """Addendum 25: split the shadow slate into pipe-safe messages.
+
+    Invariants (battery-enforced, text-vs-behavior class):
+    - every chunk's URL-encoded length <= budget (CallMeBot bills encoded chars)
+    - atomic unit = one rendered line; slim picks are one line, so a split can
+      never tear a pick apart (the 2026-08-04 truncation failure mode)
+    - a section header is never orphaned at a chunk end; when a section spans
+      chunks its header is restated as '(cont.)'
+    - a single line that alone exceeds the budget is hard-truncated and MARKED
+    - chunks carry '(k/n)' numbering so completeness is visible from the phone
+    - when everything fits, the single chunk equals format_whatsapp_shadow_summary
     """
-    picks = [p for p in picks if p.get("bucket") in SHADOW_BUCKETS]
-    lines: list[str] = [
-        f"🌑 *Edge Factory Shadow Slate* 🌑\n📅 Date: {target_date}\n"
-        "⚠️ Shadow streams — NOT pushed as bets. Section labels = rolling 30d audit record.\n"
-    ]
-    sections = [
-        ("🚫 *SKIPPED_VETO* (disagreement-vetoed)", BUCKET_VETO),
-        ("🔎 *WATCHLIST_NO_ODDS* (no matched price)", BUCKET_WL_ODDS),
-        ("🧩 *WATCHLIST_UNKNOWN_CTX* (unknown league context)", BUCKET_WL_CTX),
-    ]
-    shown = 0
-    for title, bucket in sections:
-        rows = [p for p in picks if p.get("bucket") == bucket]
-        if not rows:
-            continue
-        lines.append(f"{title} — _{format_stream_record(bucket, stats)}_")
-        for p in sorted(rows, key=lambda x: -float(x.get("avg_p") or 0)):
-            if shown >= SHADOW_MAX_LINES:
-                break
-            lines.append(
-                f"• *{p.get('match', '?')}* ➡️ *{str(p.get('pick', '?')).upper()}* {format_odds_display(p)}"
-            )
-            lines.append(
-                f"   └ [KO: {format_kickoff(p)}] | Rule: {_pick_rule_label(p)} | "
-                f"Prob: {float(p.get('avg_p') or 0):.0f}% | Stream: {p.get('bucket')}\n"
-            )
-            shown += 1
-        if shown >= SHADOW_MAX_LINES:
-            break
-    if not picks:
-        lines.append("ℹ️ Shadow slate empty — no vetoed or watchlist selections today.")
-    else:
-        if len(picks) > shown:
-            lines.append(f"… +{len(picks) - shown} more on the slate file (localdata/picks_next_2days.json)")
-        lines.append("ℹ️ Shown for transparency; graded per-stream in the rolling audit. Weight them yourself.")
-    return "\n".join(lines)
+    header, sections, footer = _shadow_blocks(target_date, picks, stats)
+    chunks: list[list[str]] = []
+    cur: list[str] = list(header)
+
+    # Numbering (" — 🌑 (k/n)") is applied AFTER packing, so the packer must
+    # reserve encoded space for it — otherwise a chunk that fit when packed
+    # sails over budget once numbered (caught by the monster-slate test).
+    numbering_reserve = 48
+    eff_budget = budget - numbering_reserve if budget > 2 * numbering_reserve else budget
+
+    def fits(lines: list[str]) -> bool:
+        return encoded_len("\n".join(lines)) <= eff_budget
+
+    for title, pick_lines in sections:
+        # Orphan guard: a section header must share its chunk with >= 1 pick line.
+        if not fits(cur + [title, pick_lines[0]]):
+            chunks.append(cur)
+            cur = []
+        cur.append(title)
+        for ln in pick_lines:
+            if not fits(cur + [ln]):
+                chunks.append(cur)
+                cur = [f"{title} (cont.)"]
+                if not fits(cur + [ln]):
+                    ln = _fit_line(ln, cur, eff_budget)
+            cur.append(ln)
+        cur.append("")
+
+    for ln in footer:
+        if not fits(cur + [ln]):
+            chunks.append(cur)
+            cur = []
+        cur.append(ln)
+
+    chunks.append(cur)
+    n = len(chunks)
+    out: list[str] = []
+    for k, chunk_lines in enumerate(chunks, 1):
+        chunk_lines = list(chunk_lines)
+        if n > 1:
+            if k == 1:
+                chunk_lines[0] = f"{chunk_lines[0]} ({k}/{n})"
+            else:
+                chunk_lines[0] = f"{chunk_lines[0]} — 🌑 ({k}/{n})"
+        out.append("\n".join(chunk_lines).rstrip("\n"))
+    return out

@@ -28,6 +28,8 @@ from edgefactory.whatsapp import (  # noqa: E402
     BUCKET_WL_CTX,
     BUCKET_WL_ODDS,
     SHADOW_BUCKETS,
+    chunk_whatsapp_shadow_summary,
+    encoded_len,
     format_whatsapp_discovery_summary,
     format_whatsapp_shadow_summary,
     format_whatsapp_summary,
@@ -182,6 +184,30 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
         except Exception as exc:
             logging.error(f"    └ CallMeBot Dispatch Exception: {exc}")
     return dispatched
+
+
+def _dispatch_shadow_chunks(chunks: list[str], *, force: bool, **dispatch_kwargs) -> bool:
+    """Addendum 25: send every shadow chunk in order, all-or-nothing.
+
+    On the first failed chunk (and not --force) abort immediately and return
+    False so NO dedup-ledger keys are written — the whole slate re-sends next
+    run rather than leaving a half-delivered slate permanently deduped. With
+    --force, mirror legacy force semantics: attempt every chunk and return
+    True (ledger write proceeds) even if a chunk fails.
+    """
+    total = len(chunks)
+    for i, chunk in enumerate(chunks, 1):
+        print(chunk)
+        print("\n" + "=" * 60)
+        ok = _dispatch_message(message_text=chunk, **dispatch_kwargs)
+        logging.info(f"  shadow chunk {i}/{total}: {encoded_len(chunk)} encoded chars, dispatched={ok}")
+        if not ok and not force:
+            logging.warning(
+                f"  shadow chunk {i}/{total} failed — aborting remaining {total - i} chunk(s); "
+                "ledger untouched (all-or-nothing)"
+            )
+            return False
+    return True
 
 
 def main() -> int:
@@ -347,11 +373,15 @@ def main() -> int:
         any_dispatched = any_dispatched or dispatched
 
     if shadow_message:
-        logging.info("\n>>> Dispatching shadow-slate WhatsApp notification...\n")
-        print(shadow_message)
-        print("\n" + "=" * 60)
-        dispatched = _dispatch_message(
-            message_text=shadow_message,
+        shadow_chunks = chunk_whatsapp_shadow_summary(
+            target_date, shadow_picks, stats=_load_rolling_bucket_stats()
+        )
+        logging.info(
+            f"\n>>> Dispatching shadow-slate WhatsApp notification in {len(shadow_chunks)} chunk(s)...\n"
+        )
+        dispatched = _dispatch_shadow_chunks(
+            shadow_chunks,
+            force=args.force,
             meta_token=meta_token,
             meta_phone_id=meta_phone_id,
             meta_recipient=meta_recipient,
@@ -362,7 +392,7 @@ def main() -> int:
             callmebot_key=callmebot_key,
             callmebot_phone=callmebot_phone,
         )
-        if dispatched or args.force:
+        if dispatched:
             for p in shadow_picks:
                 shadow_sent_keys.add(_build_match_dedupe_key(p, target_date))
             _save_sent_ledger(shadow_sent_ledger_file, shadow_sent_keys)
