@@ -136,6 +136,7 @@ scripts/
   picks_today.py          # certified picks engine, purity-aware buckets
   audit_clv.py            # CLV capture + report (audit-only in v1)
   audit_recent_picks.py   # scores archived picks vs settled results
+  export_settled_results.py # settled-score facts overlay shared across machines (Addendum 21)
   daily.py                # SINGLE orchestrator: --auto-run / --auto-once / --forecast-refresh / --promote-forecast / --clv-only
   sync_supabase.py        # promotes edges + picks to Supabase read model
   notify_whatsapp.py      # WhatsApp push dispatch (CERTIFIED_CLEAN + CAUTION only)

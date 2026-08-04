@@ -634,6 +634,10 @@ def run_pipeline(
             )
             run("python3 scripts/build_warehouse.py", "build_warehouse")
 
+        run_soft(
+            "PYTHONPATH=src python3 scripts/export_settled_results.py",
+            "export_settled_results (Addendum 21 overlay)",
+        )
         run(get_build_entity_registry_cmd(), "build_entity_registry")
         run("PYTHONPATH=src python3 scripts/mine_consensus.py", "mine_consensus")
         run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")
@@ -725,6 +729,10 @@ def run_pipeline(
             f"backfill_results (D{backfill_days})",
         )
         run_soft("python3 scripts/build_warehouse.py", "build_warehouse")
+        run_soft(
+            "PYTHONPATH=src python3 scripts/export_settled_results.py",
+            "export_settled_results (Addendum 21 overlay)",
+        )
         run(get_build_entity_registry_cmd(), "build_entity_registry")
         run("PYTHONPATH=src python3 scripts/mine_consensus.py", "mine_consensus")
         run("PYTHONPATH=src python3 scripts/decay_monitor.py", "decay_monitor")

@@ -2841,3 +2841,66 @@ Run log line "no ODDS_API_KEYS configured; 0 rows" must be absent thereafter.
 of localdata on 2026-08-03 (15:59, 18:09 UTC). One-off seed commits during the
 divergence repair are acceptable; as a habit they recreate the three-collision
 pattern. localdata stays bot-owned; humans ship code+docs via the FILES block.
+
+---
+
+## Addendum 21 — Shared settled-results overlay (cloud/laptop audit parity) (2026-08-04)
+
+**Trigger:** operator observation — the cloud-run audit reported 2
+"unmatched_result" picks while identical Mac runs settle everything.
+
+**Root cause (evidence-backed):** warehouses are machine-local (CI cache /
+laptop disk); `audit_recent_picks.load_results_index` settles ONLY from the six
+`*_settled` warehouse views. `.gitignore` shares the 3 pre-split concatenated
+CSVs + an explicit artifact list — post-split scrape memory never crosses
+machines. Receipt (operator Mac query): forebet/vitibet held "South Hobart 2-0
+Ulverstone" (2026-07-11) and "Hobart Zebras 1-0 Ulverstone" (2026-08-02); the
+cloud warehouse never captured either row, and the fuzzy fallback (bigram
+Jaccard >=0.40, pure string sim — entity_registry.json not consulted, confirmed
+by code read) cannot match rows that do not exist. Bonus receipt from the same
+query: 2026-05-10 appears twice with identical score 0-4, once as "Hobart
+Zebras" (forebet) and once as "Clarence Zebras" (statarea) — same club, two
+names; see queued ticket below.
+
+**Fix (this addendum):** settled scores are facts, and facts belong in git.
+- `scripts/export_settled_results.py` (new): exports a deterministic rolling
+  90-day window (`SETTLED_OVERLAY_DAYS`) of priority-deduped settled rows from
+  the six views to `localdata/settled_results.json` (atomic write, same source
+  order as the audit: forebet > bettingclosed > zulubet > statarea >
+  scoutingstats > vitibet). Convergence loop: each export first UNIONS the
+  inbound shared file (other machines' rows, delivered by git pull) with this
+  machine's warehouse rows — dedup by normalized pair, warehouse wins on
+  conflict, stale inbound dropped — so the shared file converges to the union
+  of BOTH machines' memories no matter which machine ran last. (Caught in
+  pre-deploy review: without the inbound union, the file would only ever hold
+  the writer's own rows and cross-machine memory would never travel.)
+- `scripts/daily.py`: runs it via run_soft right after every build_warehouse
+  (official + autonomous_intraday), i.e. always before any audit in the run.
+- `.gitignore`: `!localdata/settled_results.json` — bot-owned like the rest of
+  shared localdata; humans never hand-edit.
+- `audit_recent_picks.load_results_index`: settles from warehouse ∪ overlay.
+  Warehouse rows always win on conflict (freshest local memory); overlay only
+  fills rows the machine never captured. Entries are origin-tagged and the
+  report gains `settled_via_overlay_picks` telemetry (Overall section + stdout).
+
+**Behavioral delta:** none where warehouses already hold the row (warehouse-wins
+dedup); rescue-only elsewhere. Registry/pricing/certification untouched.
+
+**Tests:** +10 (export prio-dedup/window/no-views/self-test incl. inbound
+merge; merge carry/conflict; overlay fill/warehouse-wins/noop; fuzzy rescue of
+the real Clarence-vs-Hobart 08-02 case end-to-end via build_report). Suite:
+101 -> 111 sandbox / 104 -> 114 Mac. Pyflakes delta-0
+vs BASE (pre-existing: daily:40 unused date import, audit f-string).
+
+**Verification plan (receipts):** first bot-authored audit after merge must show
+"settled via shared overlay facts: >= 1" and unmatched_result_picks not climbing;
+the two Tasmanian fixtures settle (South Hobart exact, Clarence/Hobart fuzzy).
+
+**Queued ticket (NOT shipped here):** candidate entity override — forebet serves
+club "Clarence Zebras" as "Hobart Zebras" (post-2019 merger). Requires entity
+review before touching alias layers; join keys (norm_team) are drift-frozen.
+Even without it, fuzzy >=0.40 matched the real case (pinned by test).
+
+**Bookkeeping:** folded into the record: operator README commit 3b256934
+(2026-08-03, +3/-1, git-workflow wording for local data handling) — docs-only,
+no HANDOVER entry at the time; noted here per anti-drift protocol.

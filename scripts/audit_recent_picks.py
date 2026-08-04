@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import json
 import math
+import os
 import re
 from collections import defaultdict
 from dataclasses import dataclass
@@ -203,10 +204,47 @@ def _pick_diag(pick: dict[str, Any], reason: str) -> dict[str, Any]:
     }
 
 
+def _settled_overlay_path() -> Path:
+    env = os.environ.get("EDGE_FACTORY_LOCALDATA")
+    base = Path(env) if env else LOCALDATA
+    return base / "settled_results.json"
+
+
+def load_settled_overlay(path: Path | None = None) -> list[dict[str, Any]]:
+    """Addendum 21: bot-persisted settled-score facts shared across machines.
+
+    Regenerated deterministically by export_settled_results.py (rolling window,
+    bot-owned in git). A missing/stale file means warehouse-only behaviour —
+    exactly the pre-overlay semantics.
+    """
+    p = path or _settled_overlay_path()
+    try:
+        payload = json.loads(p.read_text())
+        rows = payload.get("rows") or []
+    except Exception:
+        return []
+    out: list[dict[str, Any]] = []
+    for r in rows:
+        try:
+            out.append(
+                {
+                    "date": str(r["date"])[:10],
+                    "home": str(r["home"]),
+                    "away": str(r["away"]),
+                    "hs": int(r["hs"]),
+                    "gs": int(r["gs"]),
+                    "outcome": str(r["outcome"]),
+                }
+            )
+        except (KeyError, TypeError, ValueError):
+            continue
+    return out
+
+
 def load_results_index(warehouse_path: Path) -> tuple[dict[tuple[str, str, str], dict[str, Any]], dict[str, list[dict[str, Any]]]]:
     import duckdb
 
-    from edgefactory.util import norm_team_sql
+    from edgefactory.util import norm_team, norm_team_sql
 
     if not warehouse_path.exists():
         raise FileNotFoundError(f"warehouse not found: {warehouse_path}")
@@ -251,17 +289,42 @@ def load_results_index(warehouse_path: Path) -> tuple[dict[tuple[str, str, str],
     rows = con.execute(sql).fetchall()
     index: dict[tuple[str, str, str], dict[str, Any]] = {}
     results_by_date: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    known_pairs: dict[str, set[tuple[str, str]]] = defaultdict(set)
 
     for day, hkey, akey, hkey14, akey14, hs, gs, outcome, home, away in rows:
-        entry = {"hs": int(hs), "gs": int(gs), "outcome": str(outcome), "home": str(home), "away": str(away)}
+        entry = {
+            "hs": int(hs), "gs": int(gs), "outcome": str(outcome),
+            "home": str(home), "away": str(away), "origin": "warehouse",
+        }
         d = str(day)[:10]
         # 9-char key (legacy)
         index[(d, str(hkey), str(akey))] = entry
         # 14-char key (disambiguation)
         if str(hkey14) != str(hkey) or str(akey14) != str(akey):
             index[(d, str(hkey14), str(akey14))] = entry
-            
+
         results_by_date[d].append(entry)
+        known_pairs[d].add((entry["home"].lower(), entry["away"].lower()))
+
+    # Addendum 21: shared settled-results overlay (bot-persisted facts). The
+    # warehouse wins on conflict; the overlay only fills rows this machine
+    # never captured itself, so cloud and laptop settle the same fixtures.
+    for o in load_settled_overlay():
+        entry = {
+            "hs": o["hs"], "gs": o["gs"], "outcome": o["outcome"],
+            "home": o["home"], "away": o["away"], "origin": "overlay",
+        }
+        d = o["date"]
+        h9, a9 = norm_team(o["home"]), norm_team(o["away"])
+        if (d, h9, a9) not in index:
+            index[(d, h9, a9)] = entry
+        h14, a14 = norm_team(o["home"], 14), norm_team(o["away"], 14)
+        if (h14, a14) != (h9, a9):
+            index.setdefault((d, h14, a14), entry)
+        pair = (entry["home"].lower(), entry["away"].lower())
+        if pair not in known_pairs[d]:
+            known_pairs[d].add(pair)
+            results_by_date[d].append(entry)
 
     return index, results_by_date
 
@@ -949,6 +1012,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
     same_day_excluded = 0
     eligible_prior_picks = 0
     unmatched_result_examples: list[dict[str, Any]] = []
+    overlay_rescued = 0
     ambiguous_result_examples: list[dict[str, Any]] = []
 
     # Dynamic Secondary Market realized stats counters
@@ -1032,6 +1096,8 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
 
         settled = settle_pick(pick, result)
         if settled is not None:
+            if result.get("origin") == "overlay":
+                overlay_rescued += 1
             settled_rows.append(settled)
             
             # Score secondary markets on this settled match
@@ -1217,6 +1283,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "include_same_day": include_same_day,
         "eligible_prior_picks": eligible_prior_picks,
         "unmatched_result_picks": len(unmatched_result_examples),
+        "settled_via_overlay_picks": overlay_rescued,
         "ambiguous_result_picks": len(ambiguous_result_examples),
         "unmatched_examples": unmatched_result_examples[:50],
         "ambiguous_examples": ambiguous_result_examples[:50],
@@ -1246,6 +1313,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- settled picks: {overall.get('settled_picks', 0)}",
         f"- eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}",
         f"- unmatched result picks: {report.get('unmatched_result_picks', 0)}",
+        f"- settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)} (Addendum 21)",
         f"- ambiguous result picks: {report.get('ambiguous_result_picks', 0)}",
         f"- wins: {overall.get('wins', 0)}",
         f"- hit rate: {overall.get('hit_rate')}",
@@ -1487,6 +1555,7 @@ def main() -> int:
     print(f" eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}")
     print(f" settled picks: {overall.get('settled_picks', 0)}")
     print(f" unmatched result picks: {report.get('unmatched_result_picks', 0)}")
+    print(f" settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)}")
     print(f" ambiguous result picks: {report.get('ambiguous_result_picks', 0)}")
     print(f" hit rate: {overall.get('hit_rate')}")
     print(f" ROI: {overall.get('roi')}")

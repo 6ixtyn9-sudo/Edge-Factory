@@ -553,3 +553,103 @@ def test_display_label_combo_normalization():
     # Missing label falls back to the market id; missing both never raises.
     assert _display_label("mystery_market", None) == "mystery_market"
     assert _display_label(None, None) == "?"
+
+
+# --- Addendum 21: shared settled-results overlay -----------------------------
+
+
+def _overlay_setup(tmp_path, monkeypatch):
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute(
+        "CREATE TABLE forebet_settled (date VARCHAR, home VARCHAR, away VARCHAR, "
+        "hs INTEGER, gs INTEGER, outcome VARCHAR)"
+    )
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-03','Celtic','Dundee',1,0,'home')")
+    con.close()
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    return audit_mod, localdata, wh
+
+
+def _write_overlay(localdata, rows):
+    (localdata / "settled_results.json").write_text(
+        json.dumps({"schema": 1, "window_days": 90, "rows": rows})
+    )
+
+
+def test_overlay_fills_row_absent_from_warehouse(tmp_path, monkeypatch):
+    audit_mod, localdata, wh = _overlay_setup(tmp_path, monkeypatch)
+    _write_overlay(localdata, [
+        {"date": "2026-07-11", "home": "South Hobart", "away": "Ulverstone",
+         "hs": 2, "gs": 0, "outcome": "home", "src": "forebet_settled"}
+    ])
+    from edgefactory.util import norm_team
+
+    index, by_date = audit_mod.load_results_index(wh)
+    entry = index.get(("2026-07-11", norm_team("South Hobart"), norm_team("Ulverstone")))
+    assert entry is not None
+    assert entry["hs"] == 2 and entry["origin"] == "overlay"
+    assert any(e["home"] == "South Hobart" for e in by_date["2026-07-11"])
+
+
+def test_warehouse_wins_over_overlay_on_conflict(tmp_path, monkeypatch):
+    audit_mod, localdata, wh = _overlay_setup(tmp_path, monkeypatch)
+    _write_overlay(localdata, [
+        {"date": "2026-08-03", "home": "Celtic", "away": "Dundee",
+         "hs": 9, "gs": 9, "outcome": "away", "src": "zulubet_settled"}
+    ])
+    from edgefactory.util import norm_team
+
+    index, by_date = audit_mod.load_results_index(wh)
+    entry = index[("2026-08-03", norm_team("Celtic"), norm_team("Dundee"))]
+    assert entry["hs"] == 1 and entry["origin"] == "warehouse"
+    assert len([e for e in by_date["2026-08-03"] if e["home"] == "Celtic"]) == 1
+
+
+def test_missing_overlay_file_is_noop(tmp_path, monkeypatch):
+    audit_mod, _, wh = _overlay_setup(tmp_path, monkeypatch)
+    index, by_date = audit_mod.load_results_index(wh)
+    assert len(by_date["2026-08-03"]) == 1
+    assert all(e["origin"] == "warehouse" for e in index.values())
+
+
+def test_build_report_rescues_pick_via_overlay_fuzzy(tmp_path, monkeypatch):
+    # The real 2026-08-02 case: pick source said "Clarence Zebras"; forebet
+    # served the same club as "Hobart Zebras". Overlay supplies the row the
+    # local warehouse never captured; fuzzy matcher (>=0.40) bridges the name.
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    (localdata / "picks_2026-08-02.json").write_text(json.dumps([
+        {"date": "2026-08-02", "home": "Clarence Zebras", "away": "Ulverstone",
+         "match": "Clarence Zebras vs Ulverstone", "league": "NPL Tasmania",
+         "market": "1x2", "pick": "home", "odds": 1.23,
+         "edge_rule": "2way-unanimous avg_p>=70", "bucket": "WATCHLIST_UNKNOWN_CTX"},
+    ]))
+    _write_overlay(localdata, [
+        {"date": "2026-08-02", "home": "Hobart Zebras", "away": "Ulverstone",
+         "hs": 1, "gs": 0, "outcome": "home", "src": "forebet_settled"}
+    ])
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute(
+        "CREATE TABLE forebet_settled (date VARCHAR, home VARCHAR, away VARCHAR, "
+        "hs INTEGER, gs INTEGER, outcome VARCHAR)"
+    )
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-03','Celtic','Dundee',1,0,'home')")
+    con.close()
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    report = audit_mod.build_report("2026-08-02", "2026-08-02", wh)
+    assert report["settled_via_overlay_picks"] == 1
+    assert report["unmatched_result_picks"] == 0
+    assert report["overall"]["wins"] == 1
