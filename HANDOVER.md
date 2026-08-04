@@ -3386,3 +3386,41 @@ sections. Full suite and battery receipts belong to the deployment record.
 
 **Not changed:** model probabilities, source weights, edge certification,
 enhancement registry transitions, or the 2026-08-11 by-engine/debias verdict.
+
+---
+
+## Research probe — OddsPapi market coverage (2026-08-04)
+
+**Trigger:** operator identified the real post-Addendum-26 gap: the engine
+cannot select a market it does not know a bookmaker offers. A rich retail board
+may contain team totals, alternate lines, DNB/double chance, handicaps, and
+combinations while the current production market surface sees only a narrow
+subset.
+
+**Scope (deliberately NOT a production adapter):**
+
+- `ODDSPAPI_API_KEYS` is a comma-separated key ring in `.env` only; the tracked
+  template contains placeholders. The existing singular key remains a fallback.
+- `src/edgefactory/sources/oddspapi_odds.py` gains safe key-ring failover on
+  auth/quota rejection, but remains outside `capture_daily` and daily pick
+  selection.
+- `scripts/probe_oddspapi_markets.py` is read-only. It loads a small existing
+  pick shortlist, demands exact normalized fixture-pair matches (including
+  explicit swapped orientation, never fuzzy coverage claims), fetches detailed
+  OddsPapi boards, and reports bookmaker slugs, market IDs/labels, outcome
+  counts, category availability, and requested-book hits. Default JSON output
+  is `/tmp`, never bot-owned `localdata`.
+- The probe determines whether the vendor genuinely covers target fixtures and
+  markets. It does not create bets, alter pushes, capture all events, or infer
+  combo value.
+
+**Decision gate:** do not expand the OddsPapi adapter beyond its current narrow
+1x2 fallback until a real probe confirms exact fixture coverage, target-book
+coverage, actual market IDs, and stable market semantics for several fixture
+classes. Any future combination market still requires a calibrated JOINT
+probability; higher payout is not evidence of value.
+
+**Tests:** key-ring parsing/failover, exact/swapped fixture matching, target
+shortlist de-duplication/windowing, market-ID/category summary, optional market
+catalog degradation, and offline self-test. Full-suite/battery receipts belong
+to the probe deployment record.

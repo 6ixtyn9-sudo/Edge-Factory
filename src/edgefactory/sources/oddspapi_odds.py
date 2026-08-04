@@ -20,7 +20,6 @@ HEADERS = {
     "Accept": "application/json",
 }
 
-TOKEN = os.environ.get("ODDSPAPI_API_KEY")
 BASE = "https://api.oddspapi.io/v4"
 SPORT_ID_SOCCER = 10
 
@@ -31,7 +30,24 @@ OUTCOME_TO_SELECTION = {
 }
 
 
+def api_keys() -> tuple[str, ...]:
+    """Read the optional comma-separated probe/fallback key ring.
+
+    `ODDSPAPI_API_KEYS` is the preferred plural contract. The legacy singular
+    variable remains a fallback for existing local setups. Values are never
+    logged or persisted by this module.
+    """
+    raw = os.environ.get("ODDSPAPI_API_KEYS") or os.environ.get("ODDSPAPI_API_KEY") or ""
+    out: list[str] = []
+    for item in raw.split(","):
+        key = item.strip()
+        if key and key not in out:
+            out.append(key)
+    return tuple(out)
+
+
 def _get_json(url: str, retries: int = 3):
+    """One authenticated request. Key rotation belongs to fetch_json()."""
     last: Exception | None = None
     for attempt in range(retries):
         try:
@@ -40,11 +56,11 @@ def _get_json(url: str, retries: int = 3):
                 return json.loads(resp.read().decode("utf-8", "replace"))
         except urllib.error.HTTPError as exc:
             last = exc
-            if exc.code in (401, 403):
+            if exc.code in (401, 403, 429):
                 raise
             if attempt < retries - 1:
                 time.sleep(1.5 * (attempt + 1))
-        except Exception as exc:  # noqa: BLE001 - keep helper dependency-free
+        except Exception as exc:  # noqa: BLE001 - dependency-free adapter
             last = exc
             if attempt < retries - 1:
                 time.sleep(1.5 * (attempt + 1))
@@ -53,43 +69,61 @@ def _get_json(url: str, retries: int = 3):
     return None
 
 
+def fetch_json(path: str, params: dict[str, object], *, retries: int = 3):
+    """Request OddsPapi with sequential key failover on auth/quota rejection.
+
+    This is read-only market data. The return value contains no key material;
+    callers may inspect its structure but must not print request URLs.
+    """
+    keys = api_keys()
+    if not keys:
+        return None
+    last: Exception | None = None
+    for key in keys:
+        query = urllib.parse.urlencode({**params, "apiKey": key})
+        try:
+            return _get_json(f"{BASE}{path}?{query}", retries=retries)
+        except urllib.error.HTTPError as exc:
+            last = exc
+            if exc.code in (401, 403, 429):
+                continue
+            raise
+    if last is not None:
+        raise last
+    return None
+
+
 def enabled() -> bool:
-    return bool(TOKEN)
+    return bool(api_keys())
 
 
 def fetch_fixtures(day: str) -> list[dict]:
     """Fetch same-day soccer fixtures with odds available."""
-    if not TOKEN:
+    if not enabled():
         return []
     start = f"{day}T00:00:00Z"
     end = (_date.fromisoformat(day) + timedelta(days=1)).isoformat() + "T00:00:00Z"
-    qs = urllib.parse.urlencode(
+    data = fetch_json(
+        "/fixtures",
         {
-            "apiKey": TOKEN,
             "sportId": SPORT_ID_SOCCER,
             "from": start,
             "to": end,
             "statusId": 0,
             "hasOdds": "true",
-        }
+        },
     )
-    data = _get_json(f"{BASE}/fixtures?{qs}")
     return data if isinstance(data, list) else []
 
 
 def fetch_odds(fixture_id: str) -> dict:
     """Fetch detailed bookmaker odds for one fixture."""
-    if not TOKEN:
+    if not enabled():
         return {}
-    qs = urllib.parse.urlencode(
-        {
-            "apiKey": TOKEN,
-            "fixtureId": fixture_id,
-            "language": "en",
-            "verbosity": 1,
-        }
+    data = fetch_json(
+        "/odds",
+        {"fixtureId": fixture_id, "language": "en", "verbosity": 1},
     )
-    data = _get_json(f"{BASE}/odds?{qs}")
     return data if isinstance(data, dict) else {}
 
 

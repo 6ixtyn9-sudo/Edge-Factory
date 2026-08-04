@@ -220,3 +220,29 @@ Stable daily pipeline since 2026-06-17 (day 0/1 of the current machine-auditable
 BetExplorer investigation concluded negative — research-only.
 WhatsApp push wired in; pending the whatsapp.php endpoint fix and CallMeBot authorization.
 Updated – 2026-06-18
+OddsPapi market-coverage probe
+
+The repository includes a read-only market-coverage probe for evaluating whether
+OddsPapi actually exposes the bookmaker and market depth a future adapter would
+need. It is not wired into daily.py, capture_daily.py, selection, settlement, or
+WhatsApp.
+
+Keep real keys only in `.env`:
+
+```text
+ODDSPAPI_API_KEYS=key1,key2,key3,key4
+```
+
+The comma-separated ring is tried only on auth/quota rejection; values are never
+printed or written to probe output. The legacy singular `ODDSPAPI_API_KEY` stays
+accepted for compatibility.
+
+```bash
+PYTHONPATH=src python3 scripts/probe_oddspapi_markets.py --date 2026-08-05
+PYTHONPATH=src python3 scripts/probe_oddspapi_markets.py --date 2026-08-05 --bookmaker betano,betway
+PYTHONPATH=src python3 scripts/probe_oddspapi_markets.py --self-test
+```
+
+The default report lands in `/tmp`, not `localdata/`. Treat coverage as evidence,
+not a new bet recommendation: only a verified fixture/market/selection map and
+later calibration can promote any new market into the pipeline.
