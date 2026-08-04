@@ -3209,3 +3209,71 @@ discovery, and heartbeat families still gated ledger writes on
 .env present and with .env stripped: 138 = 138.** Pyflakes delta-0.
 Credit: independent agent review, round 2 — both receipts held up under
 source verification. Cross-agent red-teaming remains the QA backbone.
+
+---
+
+## Addendum 25.2 — Provider-ack honesty + burst-drop mitigation (2026-08-04)
+
+**Driver:** the first production run of the hardened pipeline (Actions run
+30903853265, head c411a40, 13:12–13:16 SAST) wrote the 4-key shadow dedupe
+ledger — but nothing reached the handset. A same-day scoped --force resend
+(2 chunks, ~1s apart) DID arrive intact ("physical delivery receipt" pasted
+verbatim). The scheduled run's CallMeBot response bodies were DISCARDED by
+the code, so the 13:13 cause is unprovable: accepted-then-dropped provider
+transient is the LEADING explanation, not a fact. The reviewer's precision
+correction stands and this entry adopts it.
+
+### Doctrine (pinned, quoted)
+
+> **The ledger records provider acceptance, not handset delivery. Phone
+> receipt remains the final delivery evidence.**
+
+### Errata (prominent)
+
+1. **Addendum 25.1.1's telemetry note was imprecise.** It said "no GitHub
+   Actions workflow invokes notify_whatsapp.py". Actions invokes daily.py,
+   and daily.py reaches notify through run_soft (call sites at lines
+   517/719/769/773). Practical conclusion unchanged — run_soft turns any
+   notify failure into a WARNING, not a workflow failure — but the mechanism
+   sentence was wrong. Credit: independent reviewer (round 3).
+   Correct wording: **"daily.py reaches notify indirectly via run_soft;
+   notify failure becomes an Actions warning rather than a workflow
+   failure."**
+2. **Dispatch success was never ack-verified (pre-25.2).** send_callmebot
+   RETURNED the response body; notify discarded it. Any non-crashing call —
+   including 200-class error/throttle/activation bodies — counted as
+   dispatched. This is the gap the 13:13 incident exposed.
+
+### What shipped in 25.2
+
+- **CallMeBot ack classifier** (edgefactory.whatsapp): HTML-stripped,
+  normalized body; accept ONLY the observed success class ("message queued"
+  = the 2026-08-04 production ack, verbatim fixture in tests; "Success" =
+  legacy fixture class); reject empty/unknown/error-class; reject-hint scan
+  runs FIRST so an "ERROR: message not queued" style body can never sneak
+  through the accept phrase. send_callmebot_whatsapp now RAISES on rejected
+  acks — the exception carries only the sanitized category (accepted /
+  error-class / empty-body / unknown-class), never the URL, key, phone, or
+  raw body. _dispatch_message's existing exception path converts that into
+  dispatched=False → no ledger + non-zero exit (25.1.1 semantics) → Actions
+  WARNING via run_soft. Loud, honest, self-healing on the next run.
+- **Inter-chunk spacing** (notify._dispatch_shadow_chunks): between chunks
+  delivered via CallMeBot, pause EDGE_FACTORY_SHADOW_CHUNK_DELAY seconds
+  (default 4; 0 disables). Labelled a burst-drop MITIGATION, explicitly not
+  a proven cause. Tested through a mocked sleep; the committed suite pins it
+  to 0 so tests stay instant.
+- **Battery v9.3** reissued: ack-class pins (production body, fixture,
+  rejected/error/empty/unknown, phrase-trap), send-raise sanitization
+  (exception must not leak key/phone), 200-error-body e2e (non-zero exit,
+  no ledger), spacing invocation/default/disabled, and all v9.2 checks
+  retained (1100 budget, chunk invariants, markers, global force semantics,
+  isolation, gitignore behavior, repo non-pollution).
+- **Unchanged per lock:** SHADOW_ENCODED_TEXT_BUDGET = 1100; dual-length
+  logging; shared enhancement_marker; 25.1.1 force/exit semantics; no pick-
+  logic, registry, or Addendum-26 scope touched.
+
+**Suite: 138 → 147 (actual), identical with and without .env (147 = 147).**
+Pyflakes delta-0. The 2026-08-04 slate reached the handset intact via the
+scoped --force resend (2 chunks, 932/1005 encoded text chars, full URLs
+~1009/~1082 — ~30% under the suspected ~1,500 pipe ceiling) — Addendum 25's
+truncation + persistence objectives are CLOSED with physical receipts.

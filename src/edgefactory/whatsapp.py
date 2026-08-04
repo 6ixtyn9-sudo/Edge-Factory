@@ -9,6 +9,7 @@ Supports three robust dispatch mechanisms:
 from __future__ import annotations
 
 import json
+import re
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -252,6 +253,58 @@ def callmebot_request_len(phone: str, apikey: str, message_text: str) -> int:
     return len(url)
 
 
+# --- Addendum 25.2: provider-ack honesty --------------------------------------
+# 2026-08-04 incident: an Actions run wrote the shadow dedupe ledger although
+# nothing reached the handset. HTTP-200 from CallMeBot is NOT delivery
+# acceptance: the free API answers several failure modes (invalid key, expired
+# activation, throttle) with a 200-class body. We therefore classify the
+# response body and accept ONLY the observed success class. The raw body is
+# never logged — it echoes the message text and could echo request parameters.
+
+_CALLMEBOT_ACCEPT = ("message queued", "success")
+_CALLMEBOT_REJECT_HINTS = (
+    "error", "invalid", "fail", "not queued", "activat", "throttl", "exceed", "denied",
+)
+
+
+def _callmebot_normalize(body: str | None) -> str:
+    """Strip HTML tags, collapse whitespace, lowercase. CallMeBot answers with
+    small HTML fragments ('<p>...<b>Message queued.</b>...')."""
+    if not body:
+        return ""
+    text = re.sub(r"<[^>]+>", " ", str(body))
+    return re.sub(r"\s+", " ", text).strip().lower()
+
+
+def callmebot_body_category(body: str | None) -> str:
+    """Sanitized ack category for logs — one of accepted / error-class /
+    empty-body / unknown-class. Never the raw body."""
+    norm = _callmebot_normalize(body)
+    if not norm:
+        return "empty-body"
+    if any(h in norm for h in _CALLMEBOT_REJECT_HINTS):
+        return "error-class"
+    if any(p in norm for p in _CALLMEBOT_ACCEPT):
+        return "accepted"
+    return "unknown-class"
+
+
+def callmebot_body_accepted(body: str | None) -> bool:
+    """Addendum 25.2: accept only the observed success class ('message queued'
+    — the 2026-08-04 production ack — and the legacy 'Success' fixture class),
+    and never when an error hint is present anywhere (an 'ERROR: message not
+    queued' style body must not sneak through the accept phrase).
+    Residual, documented: the body echoes our message text; a pathological
+    slate containing an accept phrase could coexist with a hint word — the
+    hint check runs first, so the failure direction is always chosen."""
+    norm = _callmebot_normalize(body)
+    if not norm:
+        return False
+    if any(h in norm for h in _CALLMEBOT_REJECT_HINTS):
+        return False
+    return any(p in norm for p in _CALLMEBOT_ACCEPT)
+
+
 def send_callmebot_whatsapp(
     apikey: str,
     phone: str,
@@ -261,7 +314,12 @@ def send_callmebot_whatsapp(
     encoded_text = urllib.parse.quote(message_text)
     url = f"https://api.callmebot.com/whatsapp.php?phone={clean_phone}&text={encoded_text}&apikey={apikey}"
     with urllib.request.urlopen(url) as resp:
-        return resp.read().decode("utf-8", "replace")
+        body = resp.read().decode("utf-8", "replace")
+    if not callmebot_body_accepted(body):
+        # 25.2: exception carries the sanitized category ONLY — never the URL
+        # (embeds phone+key), never the raw body.
+        raise RuntimeError(f"CallMeBot ack rejected: {callmebot_body_category(body)}")
+    return body
 
 
 # --- Addendum 24: shadow slate (every stream reaches the phone) --------------
