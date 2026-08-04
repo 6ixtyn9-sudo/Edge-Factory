@@ -12,6 +12,7 @@ from __future__ import annotations
 import argparse
 import json
 import logging
+import math
 import os
 import sys
 from datetime import date, datetime
@@ -28,6 +29,7 @@ from edgefactory.whatsapp import (  # noqa: E402
     BUCKET_WL_CTX,
     BUCKET_WL_ODDS,
     SHADOW_BUCKETS,
+    callmebot_request_len,
     chunk_whatsapp_shadow_summary,
     encoded_len,
     format_whatsapp_discovery_summary,
@@ -129,6 +131,48 @@ def _save_sent_ledger(path: Path, keys: set[str]) -> None:
         logging.warning(f"⚠️ Could not save sent ledger to {path}: {exc}")
 
 
+def _annotate_enhancement_markers(picks: list[dict[str, Any]], target_date: str) -> None:
+    """Addendum 25.1: inject _enh_status/_enh_priced per pick so the shared
+    edgefactory.whatsapp.enhancement_marker helper can distinguish actionable
+    (registry-ELIGIBLE type AND a captured price for THIS fixture) from
+    research (everything else). Uses the audit's own registry + pricing-join
+    machinery. Fail-soft: unset fields render research; this must never raise
+    into dispatch. Mutates pick dicts in place."""
+    try:
+        from edgefactory import enh_pricing, enh_registry
+    except Exception:
+        return
+    try:
+        states = enh_registry.all_statuses(ROOT)
+    except Exception:
+        states = {}
+    prices_by_day: dict[str, Any] = {}
+    for p in picks:
+        enh_type = p.get("recommended_enhancement")
+        if not (p.get("enhancement_label") and enh_type):
+            continue
+        p["_enh_status"] = str((states or {}).get(str(enh_type)) or "")
+        day = str(p.get("date") or p.get("picked_for") or target_date)[:10]
+        if day not in prices_by_day:
+            try:
+                prices_by_day[day] = enh_pricing.load_prices_index(ROOT, day)
+            except Exception:
+                prices_by_day[day] = None
+        priced = False
+        idx = prices_by_day[day]
+        if idx:
+            probe = {"home": p.get("home"), "away": p.get("away"),
+                     "recommended_enhancement": enh_type}
+            try:
+                enh_pricing.attach_enhancement_price(probe, idx)
+                price = probe.get("enhancement_price")
+                priced = (isinstance(price, (int, float)) and not isinstance(price, bool)
+                          and math.isfinite(price) and price > 1.0)
+            except Exception:
+                priced = False
+        p["_enh_priced"] = priced
+
+
 def _load_rolling_bucket_stats() -> dict[str, Any] | None:
     """Rolling 30d per-stream records for shadow-slate labels (Addendum 24).
     Reads localdata/picks_audit_rolling.json (bot-persisted); absent/malformed
@@ -177,6 +221,10 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
             logging.error(f"    └ Twilio Dispatch Exception: {exc}")
     if callmebot_key and callmebot_phone:
         logging.info(f"  └ Sending via CallMeBot API to phone ending in ...{callmebot_phone[-4:]}")
+        logging.info(
+            f"    └ CallMeBot request size: text={encoded_len(message_text)} enc, "
+            f"full_url~{callmebot_request_len(callmebot_phone, callmebot_key, message_text)} chars (lengths only; secrets never logged)"
+        )
         try:
             send_callmebot_whatsapp(apikey=callmebot_key, phone=callmebot_phone, message_text=message_text)
             logging.info("    └ CallMeBot Dispatch Success")
@@ -187,27 +235,41 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
 
 
 def _dispatch_shadow_chunks(chunks: list[str], *, force: bool, **dispatch_kwargs) -> bool:
-    """Addendum 25: send every shadow chunk in order, all-or-nothing.
+    """Addendum 25.1, tightened: send every chunk in order.
 
-    On the first failed chunk (and not --force) abort immediately and return
-    False so NO dedup-ledger keys are written — the whole slate re-sends next
-    run rather than leaving a half-delivered slate permanently deduped. With
-    --force, mirror legacy force semantics: attempt every chunk and return
-    True (ledger write proceeds) even if a chunk fails.
+    - success ⇔ EVERY chunk dispatched. Any failed chunk → return False.
+    - not force: abort at the first failure (remaining chunks skipped).
+    - force: bypasses the ledger READ only (caller skips dedup). It still
+      attempts every remaining chunk for diagnostics, but a failure anywhere
+      makes the final result False — force must never convert a failed
+      delivery into a ledger write. (Addendum 25's version preserved the
+      legacy 'dispatched or force' semantics; the independent review was
+      right: all-or-nothing returning success after total failure is
+      lie-shaped.)
+
+    Ledger keys are written by the caller ONLY when this returns True —
+    never per-chunk, never half a slate.
     """
     total = len(chunks)
+    all_ok = True
     for i, chunk in enumerate(chunks, 1):
         print(chunk)
         print("\n" + "=" * 60)
         ok = _dispatch_message(message_text=chunk, **dispatch_kwargs)
-        logging.info(f"  shadow chunk {i}/{total}: {encoded_len(chunk)} encoded chars, dispatched={ok}")
-        if not ok and not force:
+        logging.info(f"  shadow chunk {i}/{total}: {encoded_len(chunk)} encoded text chars, dispatched={ok}")
+        if not ok:
+            all_ok = False
+            if not force:
+                logging.warning(
+                    f"  shadow chunk {i}/{total} failed — aborting remaining {total - i} chunk(s); "
+                    "ledger untouched (all-or-nothing)"
+                )
+                return False
             logging.warning(
-                f"  shadow chunk {i}/{total} failed — aborting remaining {total - i} chunk(s); "
-                "ledger untouched (all-or-nothing)"
+                f"  shadow chunk {i}/{total} failed under --force — continuing diagnostics; "
+                "ledger write stays blocked unless every chunk dispatches"
             )
-            return False
-    return True
+    return all_ok
 
 
 def main() -> int:
@@ -245,6 +307,7 @@ def main() -> int:
         return 0
 
     raw_picks = _load_json_list(picks_file)
+    _annotate_enhancement_markers(raw_picks, target_date)
     logging.info(f"Loaded {len(raw_picks)} total operational picks from {picks_file}")
 
     notifiable_picks = [p for p in raw_picks if p.get("bucket") in (BUCKET_CLEAN, BUCKET_CAUTION)]

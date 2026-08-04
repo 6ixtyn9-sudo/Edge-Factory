@@ -91,3 +91,24 @@ def test_send_callmebot_whatsapp(mock_urlopen):
 
     res = send_callmebot_whatsapp("APIKEY123", "1234567890", "CallMeBot Alert")
     assert res == "Success"
+
+
+def test_main_slate_combo_marker_is_state_and_price_honest():
+    pick = {
+        "match": "Alpha FC vs Beta FC",
+        "date": "2026-08-05",
+        "pick": "home",
+        "bucket": "CAUTION",
+        "avg_p": 75.0,
+        "odds": 1.9,
+        "display_rule": "2way-unanimous avg_p>=70",
+        "enhancement_label": "Home Win + Over 2.5",
+        "enhancement_probability": 0.51,
+        "recommended_enhancement": "match_over_25",
+    }
+    msg = format_whatsapp_summary("2026-08-05", [pick])
+    assert "🔬 *Combo:* Home Win + Over 2.5 (51.0%)" in msg
+    assert "🔥 *Combo:*" not in msg
+    certified = dict(pick, _enh_status="ELIGIBLE", _enh_priced=True)
+    msg = format_whatsapp_summary("2026-08-05", [certified])
+    assert "🔥 *Combo:* Home Win + Over 2.5 (51.0%)" in msg

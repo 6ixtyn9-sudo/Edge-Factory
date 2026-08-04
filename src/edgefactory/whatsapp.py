@@ -93,7 +93,7 @@ def format_whatsapp_summary(
             lines.append(f"• *{match}* ➡️ *{selection}* {odds}")
             if enh_label and enh_prob:
                 lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}")
-                lines.append(f"   🔥 *Combo:* {enh_label} ({enh_prob:.1%})\n")
+                lines.append(f"   {enhancement_marker(p)} *Combo:* {enh_label} ({enh_prob:.1%})\n")
             else:
                 lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}\n")
 
@@ -115,7 +115,7 @@ def format_whatsapp_summary(
             lines.append(f"• *{match}* ➡️ *{selection}* {odds}")
             if enh_label and enh_prob:
                 lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}")
-                lines.append(f"   🔥 *Combo:* {enh_label} ({enh_prob:.1%})\n")
+                lines.append(f"   {enhancement_marker(p)} *Combo:* {enh_label} ({enh_prob:.1%})\n")
             else:
                 lines.append(f"   └ [KO: {ko}] | Rule: {rule} | Prob: {prob:.0f}%{w_str}\n")
 
@@ -240,6 +240,18 @@ def send_twilio_whatsapp(
         return json.loads(resp.read().decode("utf-8"))
 
 
+def callmebot_request_len(phone: str, apikey: str, message_text: str) -> int:
+    """Addendum 25.1: total GET request length CallMeBot receives, including
+    host/path/query overhead — the length the pipe actually sees. Returns a
+    LENGTH ONLY: the URL embeds phone + apikey and must never be logged."""
+    clean_phone = "".join(filter(str.isdigit, str(phone)))
+    url = (
+        f"https://api.callmebot.com/whatsapp.php?phone={clean_phone}"
+        f"&text={urllib.parse.quote(message_text)}&apikey={apikey}"
+    )
+    return len(url)
+
+
 def send_callmebot_whatsapp(
     apikey: str,
     phone: str,
@@ -256,16 +268,35 @@ def send_callmebot_whatsapp(
 BUCKET_VETO = "SKIPPED_VETO"
 SHADOW_BUCKETS = (BUCKET_VETO, BUCKET_WL_ODDS, BUCKET_WL_CTX)
 SHADOW_MAX_LINES = 12
-# Addendum 25: CallMeBot carries text as a URL parameter, so ENCODED length —
-# not character count — is what the pipe bills on. The 2026-08-04 production
-# slate was truncated mid-pick at roughly ~2k encoded chars. The budget sits
-# below the observed cut zone; chunked dispatch (notify_whatsapp) does the rest.
-SHADOW_MSG_BUDGET = 1500
+# Addendum 25.1: CallMeBot carries text as a URL parameter, so ENCODED TEXT
+# length — not character count, not the full URL — is the budgeted unit here
+# (the full request adds ~90 chars of host/path/phone/apikey on top; the
+# dispatch log tracks both). Measured production cut (2026-08-04, received-
+# prefix reconstruction): ~1,415 encoded text chars ≈ ~1,500 full-URL chars.
+# Budget rule: encoded text <= ~0.78 x observed cut. The Addendum 25 estimate
+# ("~2k") was wrong; HANDOVER records the correction and the method.
+SHADOW_ENCODED_TEXT_BUDGET = 1100
 
 
 def encoded_len(text: str) -> int:
     """URL-encoded length of text — the unit the CallMeBot pipe bills on."""
     return len(urllib.parse.quote(text))
+
+
+def enhancement_marker(pick: dict[str, Any]) -> str:
+    """Addendum 25.1: state-honest combo marker, SHARED by the main and shadow
+    slate formatters (single helper, so the renderers cannot drift again).
+
+    🔥 is reserved for the actionable case: the enhancement TYPE is registry-
+    ELIGIBLE (price-history certified) AND the current fixture has a valid
+    captured price. Everything else — SHADOW/PAPER/BENCHED types, types with no
+    registry entry, or ELIGIBLE but currently unpriced — renders 🔬
+    (research-grade), because an unpriced current fixture is not an actionable
+    recommendation. Resolution happens upstream (notify injects _enh_status /
+    _enh_priced onto the pick); absent fields degrade to 🔬, never to 🔥."""
+    status = str(pick.get("_enh_status") or "")
+    priced = bool(pick.get("_enh_priced"))
+    return "🔥" if status == "ELIGIBLE" and priced else "🔬"
 
 
 def format_stream_record(bucket: str, stats: dict[str, Any] | None) -> str:
@@ -301,7 +332,7 @@ def _format_shadow_pick_line(p: dict[str, Any]) -> str:
                 prob_txt = f" ({float(enh_prob):.0%})"
             except (TypeError, ValueError):
                 prob_txt = ""
-        line += f" · 🔥 {enh_label}{prob_txt}"
+        line += f" · {enhancement_marker(p)} {enh_label}{prob_txt}"
     return line
 
 
@@ -394,7 +425,7 @@ def chunk_whatsapp_shadow_summary(
     picks: list[dict[str, Any]],
     stats: dict[str, Any] | None = None,
     *,
-    budget: int = SHADOW_MSG_BUDGET,
+    budget: int = SHADOW_ENCODED_TEXT_BUDGET,
 ) -> list[str]:
     """Addendum 25: split the shadow slate into pipe-safe messages.
 
