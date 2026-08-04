@@ -167,6 +167,29 @@ Scored as probabilistic forecasts per settled pick (each metric is scored as a p
 - `exact`: settled=30, wins=23, hit_rate=0.766667, ROI=0.0725
 - `fallback`: settled=5, wins=3, hit_rate=0.6, ROI=-0.166
 - `none`: settled=3, wins=2, hit_rate=0.666667, ROI=None
+
+## Price Evidence / Corroboration Audit
+
+> Price provenance is not model quality. `SCOUTINGSTATS_SOLE` is retained for audit but quarantined from push eligibility; `SUSPECT_ALIAS_FUZZY` is never allowed to replace operational best odds.
+
+| price evidence | settled | wins | hit rate | priced | ROI |
+| --- | --- | --- | --- | --- | --- |
+| BetExplorer rescue (`BETEXPLORER_RESCUE`) | 46 | 40 | 0.869565 | 46 | 0.116522 |
+| Bzzoiro primary match (`BZZOIRO_PRIMARY`) | 18 | 17 | 0.944444 | 18 | 0.341944 |
+| ScoutingStats sole fallback (`SCOUTINGSTATS_SOLE`) | 12 | 6 | 0.5 | 12 | -0.331667 |
+| Source fallback (`SOURCE_FALLBACK`) | 5 | 3 | 0.6 | 5 | -0.166 |
+| Suspect alias_fuzzy candidate (`SUSPECT_ALIAS_FUZZY`) | 6 | 3 | 0.5 | 6 | -0.356667 |
+| No usable price (`UNMATCHED`) | 3 | 2 | 0.666667 | 0 | None |
+
+## Suspect-price Quarantine Audit
+
+> Rows remain in the frozen ledger and are scored here. Quarantine removes push eligibility; it does not erase adverse evidence from the audit window.
+
+| quarantine reason | settled | wins | hit rate | priced | ROI | suspect captures | avg suspect price |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| No price quarantine (`NONE`) | 72 | 62 | 0.861111 | 69 | 0.154855 | 0 | None |
+| alias_fuzzy match (`alias_fuzzy`) | 6 | 3 | 0.5 | 6 | -0.356667 | 0 | None |
+| ScoutingStats sole source (`scoutingstats_sole_source`) | 12 | 6 | 0.5 | 12 | -0.331667 | 0 | None |
 ## Settled Picks Granular Expectations Audit
 
 Visual audit of expected historical stats (from the `📊` line) against actual realized scores:
