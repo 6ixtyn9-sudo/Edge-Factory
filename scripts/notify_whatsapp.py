@@ -15,6 +15,7 @@ import logging
 import math
 import os
 import sys
+import time
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -234,6 +235,17 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
     return dispatched
 
 
+def _shadow_chunk_delay_s() -> float:
+    """Addendum 25.2: inter-chunk spacing for CallMeBot (free-queue burst-drop
+    MITIGATION — honestly labelled: the 2026-08-04 accepted-but-undelivered
+    incident cannot prove spacing was the cause, the ack bodies were discarded).
+    Env override EDGE_FACTORY_SHADOW_CHUNK_DELAY (seconds); 0 disables."""
+    try:
+        return max(0.0, float(os.environ.get("EDGE_FACTORY_SHADOW_CHUNK_DELAY", "4")))
+    except ValueError:
+        return 4.0
+
+
 def _dispatch_shadow_chunks(chunks: list[str], *, force: bool, **dispatch_kwargs) -> bool:
     """Addendum 25.1, tightened: send every chunk in order.
 
@@ -246,12 +258,15 @@ def _dispatch_shadow_chunks(chunks: list[str], *, force: bool, **dispatch_kwargs
       legacy 'dispatched or force' semantics; the independent review was
       right: all-or-nothing returning success after total failure is
       lie-shaped.)
+    - Addendum 25.2: between chunks delivered via CallMeBot, pause
+      _shadow_chunk_delay_s() — burst-drop mitigation only, see helper.
 
     Ledger keys are written by the caller ONLY when this returns True —
     never per-chunk, never half a slate.
     """
     total = len(chunks)
     all_ok = True
+    callmebot_active = bool(dispatch_kwargs.get("callmebot_key") and dispatch_kwargs.get("callmebot_phone"))
     for i, chunk in enumerate(chunks, 1):
         print(chunk)
         print("\n" + "=" * 60)
@@ -269,6 +284,11 @@ def _dispatch_shadow_chunks(chunks: list[str], *, force: bool, **dispatch_kwargs
                 f"  shadow chunk {i}/{total} failed under --force — continuing diagnostics; "
                 "ledger write stays blocked unless every chunk dispatches"
             )
+        if i < total and callmebot_active:
+            delay = _shadow_chunk_delay_s()
+            if delay > 0:
+                logging.info(f"  spacing {delay:g}s before next shadow chunk (burst-drop mitigation)")
+                time.sleep(delay)
     return all_ok
 
 

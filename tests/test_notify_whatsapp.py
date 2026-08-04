@@ -137,6 +137,7 @@ def _wire_e2e(monkeypatch, tmp_path, dispatch):
     attempted message texts."""
     monkeypatch.setenv("CALLMEBOT_APIKEY", "dummy-key")
     monkeypatch.setenv("CALLMEBOT_PHONE", "27000000000")
+    monkeypatch.setenv("EDGE_FACTORY_SHADOW_CHUNK_DELAY", "0")  # keep the suite instant
     monkeypatch.setattr(notify, "LOCALDATA", tmp_path / "localdata")
     sent = []
 
@@ -236,6 +237,67 @@ def test_successful_family_does_not_mask_failed_family(monkeypatch, tmp_path):
     assert rc != 0
     main_ledger = ld / f"whatsapp_sent_ledger_{date}.json"
     assert main_ledger.exists() and len(json.loads(main_ledger.read_text())) == 1
+    assert not (ld / f"whatsapp_shadow_sent_ledger_{date}.json").exists()
+
+
+# --- Addendum 25.2: inter-chunk spacing + ack-rejection e2e --------------------
+
+_KW_CMB = dict(_KW, callmebot_key="k", callmebot_phone="p")
+
+
+def test_shadow_chunks_spacing_between_callmebot_chunks(monkeypatch):
+    sleeps = []
+    monkeypatch.setattr(notify.time, "sleep", lambda s: sleeps.append(s))
+    monkeypatch.setenv("EDGE_FACTORY_SHADOW_CHUNK_DELAY", "2.5")
+    monkeypatch.setattr(notify, "_dispatch_message", lambda **kw: True)
+    assert notify._dispatch_shadow_chunks(["c1", "c2", "c3"], force=False, **_KW_CMB) is True
+    assert sleeps == [2.5, 2.5]  # between chunks only — never after the last
+
+
+def test_shadow_chunks_spacing_defaults_to_4s(monkeypatch):
+    sleeps = []
+    monkeypatch.setattr(notify.time, "sleep", lambda s: sleeps.append(s))
+    monkeypatch.delenv("EDGE_FACTORY_SHADOW_CHUNK_DELAY", raising=False)
+    monkeypatch.setattr(notify, "_dispatch_message", lambda **kw: True)
+    assert notify._dispatch_shadow_chunks(["c1", "c2"], force=False, **_KW_CMB) is True
+    assert sleeps == [4.0]
+
+
+def test_shadow_chunks_no_spacing_without_callmebot_or_when_disabled(monkeypatch):
+    sleeps = []
+    monkeypatch.setattr(notify.time, "sleep", lambda s: sleeps.append(s))
+    monkeypatch.setattr(notify, "_dispatch_message", lambda **kw: True)
+    notify._dispatch_shadow_chunks(["c1", "c2"], force=False, **_KW)   # no CallMeBot configured
+    assert sleeps == []
+    monkeypatch.setenv("EDGE_FACTORY_SHADOW_CHUNK_DELAY", "0")
+    notify._dispatch_shadow_chunks(["c1", "c2"], force=False, **_KW_CMB)
+    assert sleeps == []
+
+
+class _ErrResp:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    def read(self):
+        return b"<b>ERROR</b>: apikey invalid"
+
+
+def test_callmebot_200_error_body_fails_dispatch_end_to_end(monkeypatch, tmp_path):
+    """25.2: HTTP-200 with an error-class ack body ⇒ dispatch failure:
+    non-zero exit, NO shadow ledger (the 2026-08-04 incident class)."""
+    date = "2099-03-09"
+    ld = tmp_path / "localdata"
+    fp = _picks_file(tmp_path, _shadow_rows(date))
+    monkeypatch.setenv("CALLMEBOT_APIKEY", "dummy-key")
+    monkeypatch.setenv("CALLMEBOT_PHONE", "27000000000")
+    monkeypatch.setenv("EDGE_FACTORY_SHADOW_CHUNK_DELAY", "0")
+    monkeypatch.setattr(notify, "LOCALDATA", ld)
+    monkeypatch.setattr("urllib.request.urlopen", lambda *a, **k: _ErrResp())
+    rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
+    assert rc != 0
     assert not (ld / f"whatsapp_shadow_sent_ledger_{date}.json").exists()
 
 
