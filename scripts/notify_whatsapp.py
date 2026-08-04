@@ -27,7 +27,9 @@ from edgefactory.whatsapp import (  # noqa: E402
     BUCKET_CLEAN,
     BUCKET_WL_CTX,
     BUCKET_WL_ODDS,
+    SHADOW_BUCKETS,
     format_whatsapp_discovery_summary,
+    format_whatsapp_shadow_summary,
     format_whatsapp_summary,
     send_callmebot_whatsapp,
     send_meta_whatsapp_cloud,
@@ -123,6 +125,18 @@ def _save_sent_ledger(path: Path, keys: set[str]) -> None:
         path.write_text(json.dumps(sorted(keys), indent=2))
     except Exception as exc:
         logging.warning(f"⚠️ Could not save sent ledger to {path}: {exc}")
+
+
+def _load_rolling_bucket_stats() -> dict[str, Any] | None:
+    """Rolling 30d per-stream records for shadow-slate labels (Addendum 24).
+    Reads localdata/picks_audit_rolling.json (bot-persisted); absent/malformed
+    degrades to None and labels render 'no settled record yet'."""
+    try:
+        payload = json.loads((LOCALDATA / "picks_audit_rolling.json").read_text())
+        bb = payload.get("by_bucket")
+        return bb if isinstance(bb, dict) else None
+    except Exception:
+        return None
 
 
 def _morning_baseline_file(target_date: str) -> Path:
@@ -246,17 +260,41 @@ def main() -> int:
         if discovery_picks:
             discovery_message = format_whatsapp_discovery_summary(target_date, discovery_picks)
 
+    # Addendum 24: shadow slate — the streams the old doctrine kept off the
+    # phone (SKIPPED_VETO + WATCHLIST). Default ON; kill with
+    # EDGE_FACTORY_NOTIFY_SHADOW=0. Independent dedup ledger: main-slate sends
+    # must never suppress shadow sends and vice versa.
+    shadow_enabled = os.environ.get("EDGE_FACTORY_NOTIFY_SHADOW", "1").strip().lower() not in {"0", "false", "no", "off"}
+    shadow_message = None
+    shadow_picks: list[dict[str, Any]] = []
+    shadow_sent_ledger_file = LOCALDATA / f"whatsapp_shadow_sent_ledger_{target_date}.json"
+    shadow_sent_keys = set() if args.force else _load_sent_ledger(shadow_sent_ledger_file)
+    if shadow_enabled:
+        day_shadow = [
+            p for p in raw_picks
+            if str(p.get("date") or p.get("picked_for") or target_date)[:10] == target_date
+            and p.get("bucket") in SHADOW_BUCKETS
+        ]
+        unsent_shadow = [p for p in day_shadow if _build_match_dedupe_key(p, target_date) not in shadow_sent_keys]
+        candidate_shadow = day_shadow if args.force else unsent_shadow
+        if candidate_shadow:
+            shadow_picks = candidate_shadow
+            shadow_message = format_whatsapp_shadow_summary(
+                target_date, shadow_picks, stats=_load_rolling_bucket_stats()
+            )
+
     heartbeat_message = None
     if (args.heartbeat
             and os.environ.get("EDGE_FACTORY_HEARTBEAT", "1").strip().lower() not in {"0", "false", "no", "off"}
             and not notifiable_picks
             and not discovery_message
+            and not shadow_message
             and _heartbeat_pending(sent_keys, target_date)):
         # One quiet ping per empty day: distinguishes 'no picks' from 'system dead'
         # for hands-off tracking. Marked in the same dedup ledger, so max 1/day.
         heartbeat_message = f"Date: {target_date}\n{HEARTBEAT_TEXT}"
 
-    if not normal_message and not discovery_message and not heartbeat_message:
+    if not normal_message and not discovery_message and not shadow_message and not heartbeat_message:
         if not normal_silent_logged:
             logging.info("  [WhatsApp] Nothing new to send. Staying silent.")
         return 0
@@ -306,6 +344,29 @@ def main() -> int:
                 discovery_sent_keys.add(_build_match_dedupe_key(p, target_date))
             _save_sent_ledger(discovery_sent_ledger_file, discovery_sent_keys)
             logging.info(f"✅ Discovery-alert dedupe ledger updated: {len(discovery_sent_keys)} items in {discovery_sent_ledger_file}")
+        any_dispatched = any_dispatched or dispatched
+
+    if shadow_message:
+        logging.info("\n>>> Dispatching shadow-slate WhatsApp notification...\n")
+        print(shadow_message)
+        print("\n" + "=" * 60)
+        dispatched = _dispatch_message(
+            message_text=shadow_message,
+            meta_token=meta_token,
+            meta_phone_id=meta_phone_id,
+            meta_recipient=meta_recipient,
+            meta_template=meta_template,
+            twilio_sid=twilio_sid,
+            twilio_token=twilio_token,
+            twilio_number=twilio_number,
+            callmebot_key=callmebot_key,
+            callmebot_phone=callmebot_phone,
+        )
+        if dispatched or args.force:
+            for p in shadow_picks:
+                shadow_sent_keys.add(_build_match_dedupe_key(p, target_date))
+            _save_sent_ledger(shadow_sent_ledger_file, shadow_sent_keys)
+            logging.info(f"✅ Shadow-slate dedupe ledger updated: {len(shadow_sent_keys)} items in {shadow_sent_ledger_file}")
         any_dispatched = any_dispatched or dispatched
 
     if heartbeat_message:

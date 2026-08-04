@@ -2938,3 +2938,43 @@ Tasmania fixtures; local `grep -c "Ulverstone"` = 12).
 
 **Process note:** breakers of assumptions deserve tests that check the
 assumption's behavior, not the text that asserts it.
+
+---
+
+## Addendum 24 — Shadow slate: every stream reaches the phone (2026-08-04)
+
+**Trigger:** operator directive — "lets make every stream reach my phone, not
+just caution" (+ chosen format: two messages).
+
+**Why this is evidence-driven, not just UX:** the rolling audit's by_bucket
+table showed SKIPPED_VETO — the stream the old "never bet vetoes" doctrine
+kept off the phone — as the window's most profitable stream (52 settled,
+86.5% hit, +11.8% ROI), while pushed-bucket CAUTION ran -7.1% (n=21). A veto
+doctrine written on older evidence had inverted. Doctrines die by receipts.
+
+**What shipped:**
+- `format_whatsapp_shadow_summary` (src/edgefactory/whatsapp.py): second daily
+  message — sections SKIPPED_VETO / WATCHLIST_NO_ODDS / WATCHLIST_UNKNOWN_CTX,
+  each labeled with that stream's rolling 30d record (`format_stream_record`,
+  from localdata/picks_audit_rolling.json -> by_bucket; absent -> honest
+  "no settled record yet"). Per-line "| Stream:" label. Cap 12 lines +
+  "+N more" pointer. Formatter self-filters shadow buckets (overflow math
+  can't leak CAUTION/CLEAN counts).
+- `scripts/notify_whatsapp.py`: shadow dispatch with INDEPENDENT dedup ledger
+  localdata/whatsapp_shadow_sent_ledger_<date>.json (main/discovery/shadow
+  sends never suppress each other). Default ON; kill-switch
+  EDGE_FACTORY_NOTIFY_SHADOW=0. Heartbeat stays quiet on shadow-only days
+  (shadow message suppresses the empty-slate ping).
+
+**Tests:** +6 (sections/labels/roi-None honesty/no-stats degradation/overflow
+cap/no-clean-leak/empty). Suite: 111 -> 117 sandbox / 114 -> 120 Mac.
+Battery v8 end-to-end: stubbed dispatch — main+shadow both send, ledgers
+independent (1 vs 2 keys), rerun silent, kill-switch force-sends main only,
+shadow-only day sends shadow without heartbeat. Pyflakes delta-0.
+
+**Behavioral delta:** phone volume rises from ~1 msg/day to ~2 on slate days;
+shadow is labeled transparency, not bet-push. Main slate content UNCHANGED.
+
+**Verification plan:** next morning official run dispatches (or logs the
+reason) both messages; receipts = dedup ledgers of both kinds in the bot's
+persist commit + operator phone.

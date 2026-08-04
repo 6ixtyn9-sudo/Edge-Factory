@@ -169,7 +169,9 @@ You'll receive API Activated for your phone number. Your APIKEY is ...
 Use that key as CALLMEBOT_APIKEY.
 ⚠️ Open fix (2026-06-18): send_callmebot_whatsapp() in src/edgefactory/whatsapp.py uses the endpoint whatsapp.py; it must be whatsapp.php. Until fixed, every dispatch 404s, is swallowed by run_soft, and the job still finishes green with no message. See HANDOVER.md §9.
 
-Only CERTIFIED_CLEAN and CAUTION buckets are pushed. Dedup ledger localdata/whatsapp_sent_ledger_YYYY-MM-DD.json means ~one morning message/day plus late-slate alerts only when new fixtures appear.
+Only CERTIFIED_CLEAN and CAUTION buckets are pushed **as bets** (main slate). Dedup ledger localdata/whatsapp_sent_ledger_YYYY-MM-DD.json means ~one morning message/day plus late-slate alerts only when new fixtures appear.
+
+Shadow slate (Addendum 24, default ON — kill with EDGE_FACTORY_NOTIFY_SHADOW=0): a SECOND daily message carries the streams the old doctrine kept off the phone — SKIPPED_VETO + WATCHLIST_NO_ODDS + WATCHLIST_UNKNOWN_CTX — each section labeled with that stream's rolling 30d audit record (from localdata/picks_audit_rolling.json). Independent dedup ledger localdata/whatsapp_shadow_sent_ledger_YYYY-MM-DD.json: main and shadow sends never suppress each other. Shown for transparency, not pushed as bets; weight the streams by their records.
 
 Golden rules
 

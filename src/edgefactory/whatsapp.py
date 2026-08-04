@@ -250,3 +250,73 @@ def send_callmebot_whatsapp(
     url = f"https://api.callmebot.com/whatsapp.php?phone={clean_phone}&text={encoded_text}&apikey={apikey}"
     with urllib.request.urlopen(url) as resp:
         return resp.read().decode("utf-8", "replace")
+
+
+# --- Addendum 24: shadow slate (every stream reaches the phone) --------------
+BUCKET_VETO = "SKIPPED_VETO"
+SHADOW_BUCKETS = (BUCKET_VETO, BUCKET_WL_ODDS, BUCKET_WL_CTX)
+SHADOW_MAX_LINES = 12
+
+
+def format_stream_record(bucket: str, stats: dict[str, Any] | None) -> str:
+    """One-line rolling 30d record for a stream label. Reads by_bucket from the
+    rolling audit payload; degrades to an honest 'no record yet' when absent."""
+    s = (stats or {}).get(bucket) or {}
+    n = s.get("settled_picks")
+    if not n:
+        return "30d: no settled record yet"
+    hr, roi = s.get("hit_rate"), s.get("roi")
+    hr_txt = f"{float(hr) * 100:.0f}% hit" if hr is not None else "hit n/a"
+    roi_txt = f"{float(roi) * 100:+.1f}% ROI" if roi is not None else "ROI n/a"
+    return f"30d: {hr_txt} · {roi_txt} ({int(n)} settled)"
+
+
+def format_whatsapp_shadow_summary(
+    target_date: str,
+    picks: list[dict[str, Any]],
+    stats: dict[str, Any] | None = None,
+) -> str:
+    """Second daily message (Addendum 24): SKIPPED_VETO + WATCHLIST streams.
+
+    These were not pushed as bets. Every section header carries the stream's
+    rolling 30d audit record so the operator can weight streams themselves —
+    calibration ≠ edge, and stream records differ (the reason this exists:
+    the veto stream was the most profitable stream of the 2026-08 window while
+    receiving zero pushes).
+    """
+    picks = [p for p in picks if p.get("bucket") in SHADOW_BUCKETS]
+    lines: list[str] = [
+        f"🌑 *Edge Factory Shadow Slate* 🌑\n📅 Date: {target_date}\n"
+        "⚠️ Shadow streams — NOT pushed as bets. Section labels = rolling 30d audit record.\n"
+    ]
+    sections = [
+        ("🚫 *SKIPPED_VETO* (disagreement-vetoed)", BUCKET_VETO),
+        ("🔎 *WATCHLIST_NO_ODDS* (no matched price)", BUCKET_WL_ODDS),
+        ("🧩 *WATCHLIST_UNKNOWN_CTX* (unknown league context)", BUCKET_WL_CTX),
+    ]
+    shown = 0
+    for title, bucket in sections:
+        rows = [p for p in picks if p.get("bucket") == bucket]
+        if not rows:
+            continue
+        lines.append(f"{title} — _{format_stream_record(bucket, stats)}_")
+        for p in sorted(rows, key=lambda x: -float(x.get("avg_p") or 0)):
+            if shown >= SHADOW_MAX_LINES:
+                break
+            lines.append(
+                f"• *{p.get('match', '?')}* ➡️ *{str(p.get('pick', '?')).upper()}* {format_odds_display(p)}"
+            )
+            lines.append(
+                f"   └ [KO: {format_kickoff(p)}] | Rule: {_pick_rule_label(p)} | "
+                f"Prob: {float(p.get('avg_p') or 0):.0f}% | Stream: {p.get('bucket')}\n"
+            )
+            shown += 1
+        if shown >= SHADOW_MAX_LINES:
+            break
+    if not picks:
+        lines.append("ℹ️ Shadow slate empty — no vetoed or watchlist selections today.")
+    else:
+        if len(picks) > shown:
+            lines.append(f"… +{len(picks) - shown} more on the slate file (localdata/picks_next_2days.json)")
+        lines.append("ℹ️ Shown for transparency; graded per-stream in the rolling audit. Weight them yourself.")
+    return "\n".join(lines)
