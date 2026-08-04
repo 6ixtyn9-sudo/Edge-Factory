@@ -52,30 +52,30 @@
         "kickoff_delta_minutes": 30
       },
       {
-        "home": "Al-Nassr",
-        "away": "Almer\u00eda",
-        "league": "Club Friendlies",
-        "kickoff": "2026-08-04T17:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.2,
-        "bookmaker": "Interwetten",
-        "home_key": "alnassr",
-        "away_key": "almeria",
-        "kickoff_delta_minutes": 30
-      },
-      {
         "home": "Huesca",
         "away": "UD Logro\u00f1\u00e9s",
         "league": "Club Friendlies",
         "kickoff": "2026-08-04T17:00:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 1.94,
+        "odds": 1.73,
         "bookmaker": "Novibet",
         "home_key": "huesca",
         "away_key": "udlogrones",
         "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Hapoel Be'er Sheva",
+        "away": "FK Crvena zvezda",
+        "league": "Champions League",
+        "kickoff": "2026-08-04T17:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.3,
+        "bookmaker": "Interwetten",
+        "home_key": "hapoelbeersheva",
+        "away_key": "fkcrvenazvezda",
+        "kickoff_delta_minutes": 60
       }
     ],
     "nearby_scoutingstats_candidates": [
@@ -143,6 +143,153 @@
         "home_key": "levskisofia",
         "away_key": "kairat",
         "kickoff_delta_minutes": 60
+      }
+    ]
+  },
+  {
+    "date": "2026-08-04",
+    "kickoff": "04-08, 22:00",
+    "home": "Carabobo FC",
+    "away": "Trujillanos FC",
+    "league": "Venezuela Primera Divisi\u00f3n",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "3way-unanimous avg_p>=65",
+    "match_method": "fallback",
+    "home_key": "carabobofc",
+    "away_key": "trujillanosfc",
+    "nearby_bzzoiro_candidates": [
+      {
+        "home": "Juventude",
+        "away": "Atl\u00e9tico Mineiro",
+        "league": "Copa do Brasil",
+        "kickoff": "2026-08-04T22:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.42,
+        "bookmaker": "Pinnacle",
+        "home_key": "juventude",
+        "away_key": "atleticomineiro",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Juventude",
+        "away": "Atl\u00e9tico Mineiro",
+        "league": "Copa do Brasil",
+        "kickoff": "2026-08-04T22:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.3,
+        "bookmaker": "Novibet",
+        "home_key": "juventude",
+        "away_key": "atleticomineiro",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Llaneros FC",
+        "away": "Fortaleza FC",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-08-04T21:10:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.18,
+        "bookmaker": "Pinnacle",
+        "home_key": "llanerosfc",
+        "away_key": "fortalezafc",
+        "kickoff_delta_minutes": 50
+      },
+      {
+        "home": "Llaneros FC",
+        "away": "Fortaleza FC",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-08-04T21:10:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "Novibet",
+        "home_key": "llanerosfc",
+        "away_key": "fortalezafc",
+        "kickoff_delta_minutes": 50
+      },
+      {
+        "home": "Deportes Tolima",
+        "away": "Independiente Medell\u00edn",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-08-04T23:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "Interwetten",
+        "home_key": "deportestolima",
+        "away_key": "independientemedellin",
+        "kickoff_delta_minutes": 75
+      }
+    ],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Juventude",
+        "away": "Atl\u00e9tico Mineiro",
+        "league": "Copa do Brasil",
+        "kickoff": "2026-08-04T22:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "juventude",
+        "away_key": "atleticomineiro",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Llaneros",
+        "away": "Fortaleza CEIF",
+        "league": "Liga BetPlay",
+        "kickoff": "2026-08-04T21:10:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.1,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "llaneros",
+        "away_key": "fortalezaceif",
+        "kickoff_delta_minutes": 50
+      },
+      {
+        "home": "Deportes Tolima",
+        "away": "Independiente Medell\u00edn",
+        "league": "Liga BetPlay",
+        "kickoff": "2026-08-04T23:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.9,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "deportestolima",
+        "away_key": "independientemedellin",
+        "kickoff_delta_minutes": 75
+      },
+      {
+        "home": "Larne",
+        "away": "FC Iberia 1999",
+        "league": "Europa League",
+        "kickoff": "2026-08-04T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "larne",
+        "away_key": "fciberia1999",
+        "kickoff_delta_minutes": 180
+      },
+      {
+        "home": "Shamrock Rovers",
+        "away": "Egnatia Rrogozhin\u00eb",
+        "league": "Europa League",
+        "kickoff": "2026-08-04T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.9,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "shamrockrovers",
+        "away_key": "egnatiarrogozhine",
+        "kickoff_delta_minutes": 180
       }
     ]
   }
