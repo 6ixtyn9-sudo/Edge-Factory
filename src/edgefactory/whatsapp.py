@@ -19,6 +19,8 @@ BUCKET_CLEAN = "CERTIFIED_CLEAN"
 BUCKET_CAUTION = "CAUTION"
 BUCKET_WL_ODDS = "WATCHLIST_NO_ODDS"
 BUCKET_WL_CTX = "WATCHLIST_UNKNOWN_CTX"
+BUCKET_WL_UNCORROBORATED_PRICE = "WATCHLIST_UNCORROBORATED_PRICE"
+BUCKET_WL_SUSPECT_PRICE = "WATCHLIST_SUSPECT_PRICE"
 
 
 def format_kickoff(pick: dict[str, Any]) -> str:
@@ -338,7 +340,13 @@ def send_callmebot_whatsapp(
 
 # --- Addendum 24: shadow slate (every stream reaches the phone) --------------
 BUCKET_VETO = "SKIPPED_VETO"
-SHADOW_BUCKETS = (BUCKET_VETO, BUCKET_WL_ODDS, BUCKET_WL_CTX)
+SHADOW_BUCKETS = (
+    BUCKET_VETO,
+    BUCKET_WL_ODDS,
+    BUCKET_WL_UNCORROBORATED_PRICE,
+    BUCKET_WL_SUSPECT_PRICE,
+    BUCKET_WL_CTX,
+)
 SHADOW_MAX_LINES = 12
 # Addendum 25.1: CallMeBot carries text as a URL parameter, so ENCODED TEXT
 # length — not character count, not the full URL — is the budgeted unit here
@@ -426,6 +434,10 @@ def _shadow_blocks(
     section_defs = [
         ("🚫 *SKIPPED_VETO* (disagreement-vetoed)", BUCKET_VETO),
         ("🔎 *WATCHLIST_NO_ODDS* (no matched price)", BUCKET_WL_ODDS),
+        ("🧪 *WATCHLIST_UNCORROBORATED_PRICE* (ScoutingStats-only price)",
+         BUCKET_WL_UNCORROBORATED_PRICE),
+        ("⚠️ *WATCHLIST_SUSPECT_PRICE* (fuzzy price match)",
+         BUCKET_WL_SUSPECT_PRICE),
         ("🧩 *WATCHLIST_UNKNOWN_CTX* (unknown league context)", BUCKET_WL_CTX),
     ]
     sections: list[tuple[str, list[str]]] = []

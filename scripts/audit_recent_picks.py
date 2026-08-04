@@ -34,12 +34,15 @@ class SettledPick:
     bucket: str
     odds_source: str
     odds_match_method: str
+    price_evidence: str
+    price_quarantine_reason: str
     market: str
     pick: str
     outcome: str
     won: bool
     odds: float | None
     pnl: float | None
+    suspect_price: float | None
 
 
 def local_today() -> str:
@@ -343,6 +346,33 @@ def find_fuzzy_result_match(pick_home: str, pick_away: str, results_on_date: lis
     return best_match
 
 
+def _price_evidence_from_pick(pick: dict[str, Any]) -> tuple[str, str]:
+    """Return archived price-evidence fields, deriving an honest legacy label.
+
+    Addendum 26 writes explicit fields at pick time. Older frozen archives keep
+    their original odds but are still classifiable for the new native audit
+    tables, never silently promoted to trusted evidence.
+    """
+    explicit = str(pick.get("price_evidence") or "").strip()
+    reason = str(pick.get("price_quarantine_reason") or "").strip()
+    if explicit:
+        return explicit, reason or "NONE"
+
+    method = str(pick.get("odds_match_method") or "").strip()
+    source = str(pick.get("odds_source") or "").strip()
+    if method == "alias_fuzzy":
+        return "SUSPECT_ALIAS_FUZZY", "alias_fuzzy"
+    if source == "scoutingstats_odds":
+        return "SCOUTINGSTATS_SOLE", "scoutingstats_sole_source"
+    if source == "bzzoiro_odds":
+        return "BZZOIRO_PRIMARY", "NONE"
+    if source == "betexplorer_odds":
+        return "BETEXPLORER_RESCUE", "NONE"
+    if pick.get("odds") in (None, ""):
+        return "UNMATCHED", "NONE"
+    return "SOURCE_FALLBACK", "NONE"
+
+
 def settle_pick(pick: dict[str, Any], result: dict[str, Any] | None) -> SettledPick | None:
     if not result:
         return None
@@ -360,18 +390,29 @@ def settle_pick(pick: dict[str, Any], result: dict[str, Any] | None) -> SettledP
     except (TypeError, ValueError):
         odds = None
     pnl = None if odds is None else (odds - 1.0 if won else -1.0)
+    price_evidence, price_quarantine_reason = _price_evidence_from_pick(pick)
+    suspect_payload = pick.get("suspect_price") if isinstance(pick.get("suspect_price"), dict) else {}
+    try:
+        suspect_price = float(suspect_payload.get("odds"))
+        if not math.isfinite(suspect_price) or suspect_price <= 1.0:
+            suspect_price = None
+    except (TypeError, ValueError):
+        suspect_price = None
     return SettledPick(
         date=str(pick.get("date") or "")[:10],
         rule_name=str(pick.get("edge_rule") or pick.get("rule") or pick.get("display_rule") or "UNKNOWN"),
         bucket=str(pick.get("bucket") or "UNKNOWN"),
         odds_source=str(pick.get("odds_source") or "UNKNOWN"),
         odds_match_method=str(pick.get("odds_match_method") or "UNKNOWN"),
+        price_evidence=price_evidence,
+        price_quarantine_reason=price_quarantine_reason,
         market=market,
         pick=selection,
         outcome=outcome,
         won=won,
         odds=odds,
         pnl=pnl,
+        suspect_price=suspect_price,
     )
 
 
@@ -394,6 +435,23 @@ def summarize_by(rows: list[SettledPick], attr: str) -> dict[str, dict[str, Any]
     for row in rows:
         grouped[str(getattr(row, attr) or "UNKNOWN")].append(row)
     return {name: summarize_scored(group_rows) for name, group_rows in sorted(grouped.items())}
+
+
+def summarize_quarantine_by(rows: list[SettledPick], attr: str) -> dict[str, dict[str, Any]]:
+    """Quarantine group scores plus the count/mean of excluded fuzzy prices."""
+    grouped: dict[str, list[SettledPick]] = defaultdict(list)
+    for row in rows:
+        grouped[str(getattr(row, attr) or "UNKNOWN")].append(row)
+    out: dict[str, dict[str, Any]] = {}
+    for name, group_rows in sorted(grouped.items()):
+        summary = summarize_scored(group_rows)
+        suspect_prices = [r.suspect_price for r in group_rows if r.suspect_price is not None]
+        summary["suspect_price_captures"] = len(suspect_prices)
+        summary["avg_suspect_price"] = (
+            round(sum(suspect_prices) / len(suspect_prices), 6) if suspect_prices else None
+        )
+        out[name] = summary
+    return out
 
 
 def parse_statistical_comment(comment: str) -> dict[str, Any]:
@@ -1213,6 +1271,11 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                     "outcome": actual_outcome,
                     "won": selection == actual_outcome,
                     "odds": pick.get("odds"),
+                    "odds_source": settled.odds_source,
+                    "odds_match_method": settled.odds_match_method,
+                    "price_evidence": settled.price_evidence,
+                    "price_quarantine_reason": settled.price_quarantine_reason,
+                    "suspect_price": settled.suspect_price,
                     "parsed_stats": {
                         "over25_expected": parsed_stats["over25"],
                         "over25_hit": o25_hit,
@@ -1292,6 +1355,11 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "by_bucket": summarize_by(settled_rows, "bucket"),
         "by_odds_source": summarize_by(settled_rows, "odds_source"),
         "by_odds_match_method": summarize_by(settled_rows, "odds_match_method"),
+        # Addendum 26: first-class tables for the two pricing interrogations.
+        "by_price_evidence": summarize_by(settled_rows, "price_evidence"),
+        "by_price_quarantine_reason": summarize_quarantine_by(
+            settled_rows, "price_quarantine_reason"
+        ),
         "secondary_stats": sec_stats,
         "enhancements_audit": serialized_enh_audit,
         "enhancement_registry": registry_states,
@@ -1420,6 +1488,67 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         for key, summary in by_method.items():
             lines.append(
                 f"- `{key}`: settled={summary.get('settled_picks', 0)}, wins={summary.get('wins', 0)}, hit_rate={summary.get('hit_rate')}, ROI={summary.get('roi')}"
+            )
+
+    # Addendum 26: these are deliberately separate from raw source/method
+    # breakdowns. They answer the two pre-registered interrogation questions:
+    # which price evidence was allowed to speak, and which rows were quarantined
+    # because their displayed price was not safe to push.
+    evidence_labels = {
+        "BZZOIRO_PRIMARY": "Bzzoiro primary match",
+        "SCOUTINGSTATS_SOLE": "ScoutingStats sole fallback",
+        "SUSPECT_ALIAS_FUZZY": "Suspect alias_fuzzy candidate",
+        "BETEXPLORER_RESCUE": "BetExplorer rescue",
+        "SOURCE_FALLBACK": "Source fallback",
+        "UNMATCHED": "No usable price",
+    }
+    lines.extend([
+        "",
+        "## Price Evidence / Corroboration Audit",
+        "",
+        "> Price provenance is not model quality. `SCOUTINGSTATS_SOLE` is retained for audit "
+        "but quarantined from push eligibility; `SUSPECT_ALIAS_FUZZY` is never allowed "
+        "to replace operational best odds.",
+        "",
+        "| price evidence | settled | wins | hit rate | priced | ROI |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ])
+    by_evidence = report.get("by_price_evidence", {})
+    if not by_evidence:
+        lines.append("| none | 0 | 0 | n/a | 0 | n/a |")
+    else:
+        for key, summary in by_evidence.items():
+            lines.append(
+                f"| {evidence_labels.get(key, key)} (`{key}`) | "
+                f"{summary.get('settled_picks', 0)} | {summary.get('wins', 0)} | "
+                f"{summary.get('hit_rate')} | {summary.get('priced_picks', 0)} | {summary.get('roi')} |"
+            )
+
+    quarantine_labels = {
+        "NONE": "No price quarantine",
+        "alias_fuzzy": "alias_fuzzy match",
+        "scoutingstats_sole_source": "ScoutingStats sole source",
+    }
+    lines.extend([
+        "",
+        "## Suspect-price Quarantine Audit",
+        "",
+        "> Rows remain in the frozen ledger and are scored here. Quarantine removes push "
+        "eligibility; it does not erase adverse evidence from the audit window.",
+        "",
+        "| quarantine reason | settled | wins | hit rate | priced | ROI | suspect captures | avg suspect price |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- |",
+    ])
+    by_quarantine = report.get("by_price_quarantine_reason", {})
+    if not by_quarantine:
+        lines.append("| none | 0 | 0 | n/a | 0 | n/a | 0 | n/a |")
+    else:
+        for key, summary in by_quarantine.items():
+            lines.append(
+                f"| {quarantine_labels.get(key, key)} (`{key}`) | "
+                f"{summary.get('settled_picks', 0)} | {summary.get('wins', 0)} | "
+                f"{summary.get('hit_rate')} | {summary.get('priced_picks', 0)} | {summary.get('roi')} | "
+                f"{summary.get('suspect_price_captures', 0)} | {summary.get('avg_suspect_price')} |"
             )
     # Render Settled Picks Granular Expectations Audit Ledger
     ledger = report.get("settled_ledger", [])

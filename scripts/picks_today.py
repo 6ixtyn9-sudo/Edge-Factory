@@ -163,13 +163,27 @@ BUCKET_CERTIFIED = "CERTIFIED_CLEAN"
 BUCKET_CAUTION = "CAUTION"
 BUCKET_WL_ODDS = "WATCHLIST_NO_ODDS"
 BUCKET_WL_CTX = "WATCHLIST_UNKNOWN_CTX"
+# Addendum 26: price evidence can make a selection auditable but not pushable.
+BUCKET_WL_UNCORROBORATED_PRICE = "WATCHLIST_UNCORROBORATED_PRICE"
+BUCKET_WL_SUSPECT_PRICE = "WATCHLIST_SUSPECT_PRICE"
 BUCKET_SKIP_VETO = "SKIPPED_VETO"
 BUCKET_SKIP_DEAD = "SKIPPED_DEAD_EDGE"
+
+# Stable price-evidence states, archived on every operational pick. These name
+# what we know about the displayed odds, not a prediction-quality verdict.
+PRICE_EVIDENCE_BZZOIRO_PRIMARY = "BZZOIRO_PRIMARY"
+PRICE_EVIDENCE_SCOUTINGSTATS_SOLE = "SCOUTINGSTATS_SOLE"
+PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY = "SUSPECT_ALIAS_FUZZY"
+PRICE_EVIDENCE_BETEXPLORER_RESCUE = "BETEXPLORER_RESCUE"
+PRICE_EVIDENCE_SOURCE_FALLBACK = "SOURCE_FALLBACK"
+PRICE_EVIDENCE_UNMATCHED = "UNMATCHED"
 
 BUCKET_ORDER = [
     BUCKET_CERTIFIED,
     BUCKET_CAUTION,
     BUCKET_WL_ODDS,
+    BUCKET_WL_UNCORROBORATED_PRICE,
+    BUCKET_WL_SUSPECT_PRICE,
     BUCKET_WL_CTX,
     BUCKET_SKIP_VETO,
     BUCKET_SKIP_DEAD,
@@ -179,6 +193,8 @@ BUCKET_LABELS = {
     BUCKET_CERTIFIED: "CERTIFIED CLEAN PICKS",
     BUCKET_CAUTION: "CAUTION PICKS",
     BUCKET_WL_ODDS: "WATCHLIST — NO MATCHED ODDS",
+    BUCKET_WL_UNCORROBORATED_PRICE: "WATCHLIST — UNCORROBORATED SCOUTINGSTATS PRICE",
+    BUCKET_WL_SUSPECT_PRICE: "WATCHLIST — SUSPECT FUZZY PRICE MATCH",
     BUCKET_WL_CTX: "WATCHLIST — UNKNOWN CONTEXT",
     BUCKET_SKIP_VETO: "SKIPPED — VETO CONTEXT",
     BUCKET_SKIP_DEAD: "SKIPPED — DEAD EDGE",
@@ -1330,6 +1346,18 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     if "VETO" in vals:
         pick["veto_reason"] = f"context VETO in {[k for k, v in zip(['league','team_h','team_a','odds_band','competition_type','niche'], vals) if v == 'VETO']}"
         return BUCKET_SKIP_VETO
+
+    # Addendum 26: price evidence gates push eligibility independently from
+    # model/context quality. The pick stays in the archived/audit ledger and
+    # reaches the transparency shadow slate, but neither a sole ScoutingStats
+    # fallback nor an alias_fuzzy fixture match may become a pushed bet.
+    evidence = str(pick.get("price_evidence") or "")
+    if evidence == PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY:
+        pick["price_quarantine_reason"] = "alias_fuzzy"
+        return BUCKET_WL_SUSPECT_PRICE
+    if evidence == PRICE_EVIDENCE_SCOUTINGSTATS_SOLE:
+        pick["price_quarantine_reason"] = "scoutingstats_sole_source"
+        return BUCKET_WL_UNCORROBORATED_PRICE
     if pick.get("odds") is None:
         return BUCKET_WL_ODDS
 
@@ -1865,31 +1893,113 @@ def enrich_with_live_odds(
     primary_odds: dict,
     secondary_odds: dict | None = None,
 ) -> int:
+    """Attach auditable live-price evidence without promoting weak joins.
+
+    Bzzoiro is the operational primary. ScoutingStats is intentionally a
+    secondary fallback: its price can be retained for audit but is quarantined
+    from push eligibility when no primary match exists. An alias_fuzzy match is
+    more serious: its candidate price is saved under ``suspect_price`` and is
+    never allowed to replace the operational odds used by reports/ROI.
+    """
     enriched = 0
     for pick in picks:
+        # Re-derive on every run. A stale quarantine or stale suspect price next
+        # to fresh odds would be as misleading as a stale live price.
+        for field in (
+            "price_evidence",
+            "price_push_eligible",
+            "price_quarantine_reason",
+            "suspect_price",
+        ):
+            pick.pop(field, None)
+
         row, match_method = find_odds_row(pick, primary_odds)
         provider = primary_odds.get("provider", BZZOIRO_ODDS_SOURCE) if row else None
         if not row and secondary_odds is not None:
             row, match_method = find_odds_row(pick, secondary_odds)
             provider = secondary_odds.get("provider", SCOUTINGSTATS_ODDS_SOURCE) if row else None
+
+        previous_odds = pick.get("odds")
+        previous_source = pick.get("odds_source") or (
+            "forebet_best" if previous_odds is not None else None
+        )
+        previous_bookmaker = pick.get("bookmaker")
+        previous_captured_at = pick.get("odds_captured_at")
+        previous_league = pick.get("odds_league")
+
         if not row:
-            if pick.get("odds") is not None:
+            if previous_odds is not None:
                 pick.setdefault("odds_source", "forebet_best")
                 pick["odds_match_method"] = "fallback"
+                pick["price_evidence"] = PRICE_EVIDENCE_SOURCE_FALLBACK
+                pick["price_push_eligible"] = True
             else:
                 pick.setdefault("odds_source", None)
                 pick["odds_match_method"] = "none"
+                pick["price_evidence"] = PRICE_EVIDENCE_UNMATCHED
+                pick["price_push_eligible"] = False
             continue
-        previous_odds = pick.get("odds")
-        previous_source = pick.get("odds_source") or ("forebet_best" if previous_odds is not None else None)
-        pick["odds"] = _valid_decimal_odds(row.get("odds"))
+
+        method = match_method or "exact"
+        candidate_odds = _valid_decimal_odds(row.get("odds"))
+        if candidate_odds is None:
+            # Defensive: bundles reject invalid odds, but a caller can supply a
+            # hand-built index. Treat it exactly as no usable price.
+            pick["odds_match_method"] = "none"
+            pick["price_evidence"] = PRICE_EVIDENCE_UNMATCHED
+            pick["price_push_eligible"] = False
+            continue
+
+        if method == "alias_fuzzy":
+            # Addendum 26: do not let a fuzzy event string join become “best
+            # odds”. Preserve any prior source price, otherwise leave odds n/a;
+            # archive the candidate separately so the audit can grade this
+            # failure mode rather than erase it.
+            pick["odds_match_method"] = method
+            pick["price_evidence"] = PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY
+            pick["price_push_eligible"] = False
+            pick["price_quarantine_reason"] = "alias_fuzzy"
+            pick["suspect_price"] = {
+                "odds": candidate_odds,
+                "source": provider or BZZOIRO_ODDS_SOURCE,
+                "bookmaker": row.get("bookmaker"),
+                "captured_at": row.get("captured_at"),
+                "league": row.get("league"),
+                "match_method": method,
+            }
+            if previous_odds is None:
+                pick["odds"] = None
+                pick["odds_source"] = None
+                pick["bookmaker"] = None
+                pick["odds_captured_at"] = None
+                pick["odds_league"] = None
+            else:
+                pick["odds"] = previous_odds
+                pick["odds_source"] = previous_source
+                pick["bookmaker"] = previous_bookmaker
+                pick["odds_captured_at"] = previous_captured_at
+                pick["odds_league"] = previous_league
+            enriched += 1
+            continue
+
+        pick["odds"] = candidate_odds
         pick["odds_source"] = provider or BZZOIRO_ODDS_SOURCE
-        pick["odds_match_method"] = match_method or "exact"
+        pick["odds_match_method"] = method
         pick["bookmaker"] = row.get("bookmaker")
         pick["odds_captured_at"] = row.get("captured_at")
         pick["odds_league"] = row.get("league")
         if previous_odds is not None and previous_source != pick["odds_source"]:
             pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+
+        if pick["odds_source"] == SCOUTINGSTATS_ODDS_SOURCE:
+            # The secondary fallback matched, but the primary provider had no
+            # corroborating price for this fixture/selection.
+            pick["price_evidence"] = PRICE_EVIDENCE_SCOUTINGSTATS_SOLE
+            pick["price_push_eligible"] = False
+            pick["price_quarantine_reason"] = "scoutingstats_sole_source"
+        else:
+            pick["price_evidence"] = PRICE_EVIDENCE_BZZOIRO_PRIMARY
+            pick["price_push_eligible"] = True
         enriched += 1
     return enriched
 
@@ -2213,7 +2323,9 @@ _BUCKET_SEVERITY = {
     BUCKET_CERTIFIED: 0,
     BUCKET_CAUTION: 10,
     BUCKET_WL_CTX: 20,
-    BUCKET_WL_ODDS: 30,
+    BUCKET_WL_UNCORROBORATED_PRICE: 25,
+    BUCKET_WL_SUSPECT_PRICE: 30,
+    BUCKET_WL_ODDS: 35,
     BUCKET_SKIP_VETO: 50,
     BUCKET_SKIP_DEAD: 60,
 }
@@ -2389,6 +2501,19 @@ def print_buckets(buckets: dict, title_date: str = ""):
             print(f"  [{label}] {p['match'][:45]:45s} KO {kickoff:5s} -> {p['pick'].upper():5s}  avg {p['avg_p']:.0f}%{w_str} {o}  [{market}/{tier}]{warn_str}")
             if ctx:
                 print(ctx_str)
+            evidence = p.get("price_evidence")
+            if evidence:
+                quarantine = p.get("price_quarantine_reason") or "none"
+                print(
+                    f"     price_evidence={evidence} push_eligible={p.get('price_push_eligible')} "
+                    f"quarantine={quarantine}"
+                )
+            if p.get("suspect_price"):
+                suspect = p["suspect_price"]
+                print(
+                    f"     suspect_price={suspect.get('odds')} source={suspect.get('source')} "
+                    f"method={suspect.get('match_method')}"
+                )
             if p.get("statistical_comment"):
                 print(f"     {p['statistical_comment']}")
             notes = p.get("event_notes", [])
@@ -2461,7 +2586,11 @@ def enrich_unmatched_with_betexplorer(
     enriched = 0
     for pick in picks:
         method = str(pick.get("odds_match_method") or "")
-        if method not in ("fallback", "none"):
+        # A BetExplorer row can rescue an alias_fuzzy candidate because the
+        # suspect Bzzoiro/ScoutingStats price was never allowed to overwrite
+        # operational odds. Established BetExplorer matching remains the only
+        # way this function can clear that quarantine.
+        if method not in ("fallback", "none", "alias_fuzzy"):
             continue
 
         rows = betexplorer_odds_rows_for_pick(pick, day, norm_team_fn=_norm_team)
@@ -2491,6 +2620,10 @@ def enrich_unmatched_with_betexplorer(
         pick["bookmaker"] = matching_row.get("bookmaker")
         pick["odds_captured_at"] = matching_row.get("captured_at")
         pick["odds_league"] = matching_row.get("league")
+        pick["price_evidence"] = PRICE_EVIDENCE_BETEXPLORER_RESCUE
+        pick["price_push_eligible"] = True
+        pick.pop("price_quarantine_reason", None)
+        pick.pop("suspect_price", None)
         if previous_odds is not None and previous_source != pick["odds_source"]:
             pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
         enriched += 1
@@ -2577,12 +2710,19 @@ def main():
             exact_n = sum(1 for p in picks if p.get("odds_match_method") == "exact")
             alias_time_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_time")
             alias_unique_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_unique")
+            alias_fuzzy_n = sum(1 for p in picks if p.get("odds_match_method") == "alias_fuzzy")
             fallback_n = sum(1 for p in picks if p.get("odds_match_method") == "fallback")
             none_n = sum(1 for p in picks if p.get("odds_match_method") == "none")
             betexp_n = sum(1 for p in picks if p.get("odds_match_method") == "betexplorer")
             bzz_n = sum(1 for p in picks if p.get("odds_source") == BZZOIRO_ODDS_SOURCE)
             scouting_n = sum(1 for p in picks if p.get("odds_source") == SCOUTINGSTATS_ODDS_SOURCE)
             be_source_n = sum(1 for p in picks if p.get("odds_source") == BETEXPLORER_ODDS_SOURCE)
+            uncorroborated_n = sum(
+                1 for p in picks if p.get("price_evidence") == PRICE_EVIDENCE_SCOUTINGSTATS_SOLE
+            )
+            suspect_price_n = sum(
+                1 for p in picks if p.get("price_evidence") == PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY
+            )
             print(
                 f"live odds enrichment {day}: "
                 f"picks={len(picks)} "
@@ -2593,7 +2733,9 @@ def main():
                 f"ss_cached={scouting_stats.get('cached_rows', 0)} "
                 f"ss_valid_keys={scouting_stats.get('valid_keys', len(secondary_bundle.get('exact', {})))} "
                 f"enriched={enriched_n} betexplorer={be_enriched} bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
-                f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} fallback={fallback_n} none={none_n} betexplorer_m={betexp_n}",
+                f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
+                f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "
+                f"uncorroborated_price={uncorroborated_n} suspect_price={suspect_price_n}",
                 file=sys.stderr,
             )
 
@@ -2615,7 +2757,13 @@ def main():
 
             p["market_type"] = p.get("market", "1x2")
             p["odds_tier"] = get_odds_tier(p.get("market", "1x2"))
-            p["odds_match_status"] = "matched" if p.get("odds") is not None else "unmatched"
+            evidence = str(p.get("price_evidence") or "")
+            if evidence == PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY:
+                p["odds_match_status"] = "suspect"
+            elif evidence == PRICE_EVIDENCE_SCOUTINGSTATS_SOLE:
+                p["odds_match_status"] = "uncorroborated"
+            else:
+                p["odds_match_status"] = "matched" if p.get("odds") is not None else "unmatched"
             
             annotate_market_recommendation(p)
             
@@ -2659,11 +2807,16 @@ def main():
     n_clean = len(buckets[BUCKET_CERTIFIED])
     n_caution = len(buckets[BUCKET_CAUTION])
     n_wl_odds = len(buckets[BUCKET_WL_ODDS])
+    n_wl_uncorroborated = len(buckets[BUCKET_WL_UNCORROBORATED_PRICE])
+    n_wl_suspect = len(buckets[BUCKET_WL_SUSPECT_PRICE])
     n_wl_ctx = len(buckets[BUCKET_WL_CTX])
     n_skip_veto = len(buckets[BUCKET_SKIP_VETO])
     n_skip_dead = len(buckets[BUCKET_SKIP_DEAD])
     summary = (f"Summary: CLEAN={n_clean} CAUTION={n_caution} "
-               f"WATCHLIST_odds={n_wl_odds} WATCHLIST_ctx={n_wl_ctx} "
+               f"WATCHLIST_odds={n_wl_odds} "
+               f"WATCHLIST_uncorroborated_price={n_wl_uncorroborated} "
+               f"WATCHLIST_suspect_price={n_wl_suspect} "
+               f"WATCHLIST_ctx={n_wl_ctx} "
                f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
     print(f"\n{summary}")

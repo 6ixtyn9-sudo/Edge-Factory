@@ -373,8 +373,31 @@ def _fixture_report(tmp_path, monkeypatch):
 
     localdata = tmp_path / "localdata"
     localdata.mkdir()
+    # Addendum 26 fixtures cover both pre-registered price interrogations.
+    # These fields are pick-time evidence, independent of settlement outcome.
+    pick_a = dict(
+        PICK_A,
+        odds_source="scoutingstats_odds",
+        odds_match_method="exact",
+        price_evidence="SCOUTINGSTATS_SOLE",
+        price_quarantine_reason="scoutingstats_sole_source",
+    )
+    pick_b = dict(
+        PICK_B,
+        odds_source="bzzoiro_odds",
+        odds_match_method="alias_fuzzy",
+        price_evidence="SUSPECT_ALIAS_FUZZY",
+        price_quarantine_reason="alias_fuzzy",
+        suspect_price={"odds": 2.88, "source": "bzzoiro_odds", "match_method": "alias_fuzzy"},
+    )
+    pick_d = dict(
+        PICK_D,
+        odds_source="bzzoiro_odds",
+        odds_match_method="exact",
+        price_evidence="BZZOIRO_PRIMARY",
+    )
     (localdata / "picks_2026-07-20.json").write_text(
-        json.dumps([PICK_A, PICK_B, PICK_C, PICK_D])
+        json.dumps([pick_a, pick_b, PICK_C, pick_d])
     )
     wh = tmp_path / "warehouse.duckdb"
     con = duckdb.connect(str(wh))
@@ -455,6 +478,17 @@ def test_build_report_full_surface_integration(tmp_path, monkeypatch):
     assert ag["mae"] == 1.205
     assert ag["bias"] == -0.305
 
+    # Addendum 26: native price evidence and quarantine tables make both
+    # interrogation cohorts machine-readable without /tmp forensics.
+    assert report["by_price_evidence"]["SCOUTINGSTATS_SOLE"]["settled_picks"] == 1
+    assert report["by_price_evidence"]["SUSPECT_ALIAS_FUZZY"]["settled_picks"] == 1
+    assert report["by_price_evidence"]["BZZOIRO_PRIMARY"]["settled_picks"] == 1
+    assert report["by_price_quarantine_reason"]["scoutingstats_sole_source"]["settled_picks"] == 1
+    suspect = report["by_price_quarantine_reason"]["alias_fuzzy"]
+    assert suspect["settled_picks"] == 1
+    assert suspect["suspect_price_captures"] == 1
+    assert suspect["avg_suspect_price"] == 2.88
+
     # Report stays JSON-serializable for picks_audit_rolling.json consumers.
     json.dumps(report, sort_keys=True)
 
@@ -478,6 +512,11 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     assert "Avg Goals forecast" in text
     assert "MAE=1.205" in text
     assert "Win + …" in text  # label-honesty disclaimer documents the legacy wording (Addendum 16)
+    assert "## Price Evidence / Corroboration Audit" in text
+    assert "## Suspect-price Quarantine Audit" in text
+    assert "SCOUTINGSTATS_SOLE" in text
+    assert "SUSPECT_ALIAS_FUZZY" in text
+    assert "alias_fuzzy" in text
 
     # Per-pick graded 🔥 render (Addendum 13/14): one event per line in the 📊
     # layout — expected % + realized context; note-less picks render
@@ -653,3 +692,29 @@ def test_build_report_rescues_pick_via_overlay_fuzzy(tmp_path, monkeypatch):
     assert report["settled_via_overlay_picks"] == 1
     assert report["unmatched_result_picks"] == 0
     assert report["overall"]["wins"] == 1
+
+
+def test_settle_pick_derives_legacy_price_evidence_conservatively():
+    base = {
+        "date": "2026-07-20",
+        "edge_rule": "test-rule",
+        "bucket": "WATCHLIST_UNKNOWN_CTX",
+        "market": "1x2",
+        "pick": "home",
+        "odds": 1.90,
+    }
+    result = {"hs": 1, "gs": 0, "outcome": "home"}
+
+    scouting = settle_pick(
+        dict(base, odds_source="scoutingstats_odds", odds_match_method="exact"), result
+    )
+    assert scouting is not None
+    assert scouting.price_evidence == "SCOUTINGSTATS_SOLE"
+    assert scouting.price_quarantine_reason == "scoutingstats_sole_source"
+
+    fuzzy = settle_pick(
+        dict(base, odds_source="bzzoiro_odds", odds_match_method="alias_fuzzy"), result
+    )
+    assert fuzzy is not None
+    assert fuzzy.price_evidence == "SUSPECT_ALIAS_FUZZY"
+    assert fuzzy.price_quarantine_reason == "alias_fuzzy"

@@ -1,6 +1,8 @@
 """Addendum 24/25: shadow slate formatter + chunker tests."""
 from edgefactory.whatsapp import (
     BUCKET_VETO,
+    BUCKET_WL_UNCORROBORATED_PRICE,
+    BUCKET_WL_SUSPECT_PRICE,
     SHADOW_MAX_LINES,
     SHADOW_ENCODED_TEXT_BUDGET,
     chunk_whatsapp_shadow_summary,
@@ -12,6 +14,8 @@ from edgefactory.whatsapp import (
 _STATS = {
     "SKIPPED_VETO": {"hit_rate": 0.865, "roi": 0.118, "settled_picks": 52, "wins": 45, "priced_picks": 49},
     "WATCHLIST_NO_ODDS": {"hit_rate": 0.667, "roi": None, "settled_picks": 3, "wins": 2, "priced_picks": 0},
+    "WATCHLIST_UNCORROBORATED_PRICE": {"hit_rate": 0.5, "roi": -0.33, "settled_picks": 12, "wins": 6, "priced_picks": 12},
+    "WATCHLIST_SUSPECT_PRICE": {"hit_rate": 0.5, "roi": -0.36, "settled_picks": 6, "wins": 3, "priced_picks": 6},
 }
 
 
@@ -35,6 +39,19 @@ def test_renders_all_shadow_sections_with_stream_labels():
     assert "SKIPPED_VETO" in msg and "WATCHLIST_NO_ODDS" in msg and "WATCHLIST_UNKNOWN_CTX" in msg
     assert "30d: 86% hit · +11.8% ROI (52 settled)" in msg
     assert "30d: 67% hit · ROI n/a (3 settled)" in msg  # roi None renders honestly
+
+
+def test_renders_price_quarantine_sections_as_shadow_transparency():
+    picks = [
+        _p("Scouting Sole vs Price", BUCKET_WL_UNCORROBORATED_PRICE),
+        _p("Fuzzy Match vs Price", BUCKET_WL_SUSPECT_PRICE),
+    ]
+    msg = format_whatsapp_shadow_summary("2026-08-05", picks, stats=_STATS)
+    assert "WATCHLIST_UNCORROBORATED_PRICE" in msg
+    assert "ScoutingStats-only price" in msg
+    assert "WATCHLIST_SUSPECT_PRICE" in msg
+    assert "fuzzy price match" in msg
+    assert "Scouting Sole vs Price" in msg and "Fuzzy Match vs Price" in msg
 
 
 def test_excludes_main_slate_buckets_and_counts_overflow_correctly():
