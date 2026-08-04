@@ -27,6 +27,7 @@ localdata/*
 # such as daily picks, audit reports, morning snapshots, rolling summaries,
 # manifests, and today/next-2-days exports.
 !localdata/picks*
+!localdata/settled_results.json   # Addendum 21: settled-score facts shared across machines (bot-owned)
 
 # Analysis artifacts intentionally committed for performance review.
 !localdata/clv_*
