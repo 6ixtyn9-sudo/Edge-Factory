@@ -4610,3 +4610,40 @@ leagues not yet observed in archives resolve via the digit-preserving
 fallback (structurally safe), but new provider short codes should be added
 to SHORT_LEAGUE_KEYS as they appear in captures; the capture `--dry-run`
 output shows each fixture's resolution and is the audit surface for this.
+
+### Addendum 27.14 — Veto deep dive: interrogating the flagship number (2026-08-05)
+
+**Trigger (operator):** "what would you do next" — answer: before any pilot is
+discussed, verify the one number that would change what we stake. The rolling
+audit (2026-07-07 -> 2026-08-05) shows SKIPPED_VETO at 71 settled / 60 wins /
++9.18% ROI while the staked CAUTION bucket sits at -12.3% over 33 — the
+system's best bucket is the one it refuses to play. A blended figure cannot
+steer policy until its composition is known.
+
+**Anti-pattern guarded:** this must NOT be a side computation with its own
+settlement path. The deep dive groups the SAME settled rows that feed
+`by_bucket` (one `settled_pairs` append in the existing loop), so the deep
+dive and the bucket table can never disagree.
+
+**This commit (`scripts/audit_recent_picks.py`):**
+- New `veto_deep_dive` report section: SKIPPED_VETO cross-cut by
+  `price_evidence`, odds band (<1.50 / 1.50-2.00 / 2.00-3.00 / >=3.00 /
+  unpriced), and `veto_reason` (archived top-level field; older archives read
+  as UNRECORDED — evidence is never silently dropped), plus
+  `trusted_evidence_only` / `soft_evidence_only` splits (soft labels:
+  SUSPECT_ALIAS_FUZZY, SCOUTINGSTATS_SOLE, UNMATCHED, SOURCE_FALLBACK) and a
+  CAUTION contrast cut.
+- Markdown: "Veto Deep Dive" section in picks_audit_{end}.md; console: main()
+  prints the headline (overall vs trusted vs soft) plus per-odds-band rows on
+  every audit run.
+- No new I/O, no warehouse behaviour change, no settlement-path change.
+
+**Verified:** 230 passed (229 + 1 deep-dive test pinning composition, band
+ordering, UNRECORDED survival and the CAUTION contrast); pyflakes clean on
+both touched files (base diff).
+
+**The read it enables (next run of audit_recent_picks.py):**
+- trusted-only ROI positive across bands -> veto miscalibrated -> pilot spec
+  targets a veto-exception bucket (Addendum 27.15).
+- ROI carried by soft evidence / tiny-odds bands -> veto probably right; the
+  audit layer's own provenance is the thing to fix next.
