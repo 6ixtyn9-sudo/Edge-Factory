@@ -4229,3 +4229,48 @@ Verdict: the five decisions (Q1-Q5) are supported; three secondary evidence
 items are inaccurate or unreproducible; none change a decision. Re-verified
 2026-08-05 on registry 36,508 cells / 3,182 league-UNKNOWN: harness still
 reproduces 17 resolved / 15 settled / 13 wins / +0.042 / FLAG-OFF.
+
+### Addendum 27.5 — debias degeneracy observed live: 6/6 btts_yes (2026-08-05)
+
+**Symptom (operator-reported):** on 2026-08-05 every pick's recommended
+enhancement was `btts_yes` (6/6). This is not normal selection variety:
+2026-07-29 → 08-04 the ledgers showed a healthy mix (`match_over_15`,
+`match_over_25`, `goal_range_2_3`, `away_under_35/45`, `btts_yes`).
+
+**Mechanism (verified in code + data):** with the engine-aware debias flag
+OFF, `load_rolling_audit_hit_rates()` reads the tiny recommendation overlay
+(`enhancements_audit.by_enhancement`, gate recommended>=5, n=5-9) and damps:
+
+- `match_over_15` x0.857 (n=7) — drops raw ~0.82 to ~0.70, below the 0.80 bar -> EXCLUDED
+- `match_over_25` x0.556 (n=9) — Spartak raw 0.65 -> 0.361, above display bar but below the 0.45 tier-6 bar -> demoted
+- `goal_range_2_3` x0.222 (n=9) — crushed
+- `btts_yes` hr=1.0 (n=3, never damped) — the only market left standing above its tier bar
+
+Result: the damp table rotates recommendations to whichever market it does
+not damp. This is the F2 red-team finding (overlay too thin to trust) now
+visible as a production symptom. Impact is cosmetic (enhancements are PAPER
+state — not certified, not staked, not pushed) but the recommendation
+surface is uninformative while it persists.
+
+**Flag-ON simulation (verified on the 6 real picks):** engine-aware debias
+returns hr=1.0 for hybrid notes when no hybrid cell has n>=5 (the "no damp
+without evidence" fallback — all hybrid cells are currently n<5). Under that
+resolver, the three picks with stored `match_over_25` raw (Spartak 0.650,
+Panathinaikos 0.646, Fenerbahce 0.677) provably flip away from `btts_yes` to
+the over-market (tier 6 beats tier 4). The other three (Lazio, Napoli,
+Arsenal) have no stored over-market raw (they were excluded by the old damp),
+so their flag-ON outcome is projection, not measurement.
+
+**Blind-spot correction (second-agent review):** an earlier simulation only
+re-scored markets that SURVIVED the old damp (i.e. those present in
+`event_notes`), so `match_over_15` — damped out of all 6 — was invisible to
+it and could re-enter and win under the flag. The honest statement is: flag
+ON breaks 6/6 with certainty; the exact split (match_over_15 vs
+match_over_25) needs a live shadow run to measure.
+
+**Decision (unchanged):** do NOT flip the flag yet. The pre-committed
+activation criteria are unmet (hybrid cells n>=5, or the 08-07/08 pooled
+read). This symptom is the canary: at activation, the shadow comparison
+(multiple runs, flag OFF vs ON, diff the recommendation distributions) is
+the definitive test. Record the before (6/6 btts_yes) and expect the after
+to diversify toward over-markets where the Poisson totals are strong.
