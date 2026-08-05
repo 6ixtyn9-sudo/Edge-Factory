@@ -25,6 +25,7 @@ from edgefactory.util import char_ngram_similarity, compact_key, norm_team, fold
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_debias_hr
+from edgefactory.veto_resolution import apply_resolution_to_ctx, build_pool_table
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
 from edgefactory.enh_registry import status_for as enh_status_for
 
@@ -2648,6 +2649,13 @@ def main():
     edge_meta = load_edge_meta()
     purity = load_purity()
     purity_missing = not bool(purity)
+    # Veto re-mine resolution overlay (Phase 1/2): shadow-logs resolution_*
+    # fields on every pick's ctx ALWAYS (accrual log from day one); applies
+    # the resolved league verdict only when the flag is "1" (>=30-settled
+    # gate required before enabling — see PHASE1_2_VETO_RESOLUTION_SPEC.md).
+    veto_resolution_on = os.environ.get("EDGE_FACTORY_VETO_RESOLUTION") == "1"
+    _veto_contexts = (purity or {}).get("contexts", {}) if isinstance(purity, dict) else {}
+    _veto_pools = build_pool_table(_veto_contexts) if _veto_contexts else {}
     as_of = pick_run_as_of()
     lead_minutes = min_lead_minutes()
     print(
@@ -2754,6 +2762,12 @@ def main():
             rule = p.get("rule", "")
             meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "HEALTHY"})
             ctx = lookup_context(purity, p)
+            ctx = apply_resolution_to_ctx(
+                ctx, _veto_contexts, _veto_pools, veto_resolution_on,
+                sport=p.get("sport", "soccer"),
+                market=p.get("market", "1x2"),
+                rule=p.get("edge_rule") or p.get("rule", ""),
+            )
             bucket = bucket_pick(p, ctx,
                                  edge_status=meta.get("status", "certified"),
                                  decay_verdict=meta.get("decay_verdict", "HEALTHY"))
