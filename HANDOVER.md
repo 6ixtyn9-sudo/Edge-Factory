@@ -4175,6 +4175,7 @@ changed while the gate accrues.
   materially after debias ships, note it in the checkpoint before interpreting
   G2/G3.
 
+
 ### Addendum 27.3 — Addendum 19 queue status + pre-observation checklist (2026-08-05)
 
 Status of the Addendum 19 work queue, so the next reader does not redo or
@@ -4182,12 +4183,12 @@ misread it:
 
 1. **Debias wiring (engine-aware)** — DONE as a flag-gated-off payload
    (`6ccb18f`); awaiting `by_engine_by_market` evidence (activation criteria:
-   4 recommendation markets at n≥5, or the 08-07/08 pooled read).
-2. **Veto re-mine** — design doc, Phase-0 counterfactual harness, and
+   4 recommendation markets at n>=5, or the 08-07/08 pooled read).
+2. **Veto re-mine** — design decisions + Phase-0 counterfactual harness +
    flag-gated-off resolution overlay shipped (`31f47ab`, `d97165e`,
    `1ef4d07`, `d5fe735`); decision rule pre-committed (Addenda 27/27.1/27.2);
-   awaiting n≥30 settled gate (~6–9 weeks).
-3. **Small tickets** — (a) BENCHED time-bomb test: **FIXED in `5fcc6a6`**
+   awaiting n>=30 settled gate (~6-9 weeks).
+3. **Small tickets** — (a) BENCHED time-bomb test: FIXED in `5fcc6a6`
    (evaluation-date injection + pinned + regression tests; no action needed);
    (b) winner's-curse doc: still open.
 
@@ -4197,5 +4198,6 @@ team-alias fragility (only if live-book odds become priority); calibration
 shrinkage. **Calendar-fixed, do not run early:** 2026-08-11 OddsPapi review
 runbook + source-funnel A/B/C gate (locked through 08-10).
 
-Design records are now committed in-repo (referenced by code docstrings):
-`VETO_REMINE_DESIGN_2026-08-05.md` and `PHASE1_2_VETO_RESOLUTION_SPEC.md`.
+Working notes for the veto re-mine (design doc, phase 1/2 spec) live outside
+the repo; the decisions and gate are fully recorded in Addenda 27/27.1/27.2
+per the single-source-of-truth rule.

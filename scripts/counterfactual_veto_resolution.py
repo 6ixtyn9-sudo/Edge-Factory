@@ -5,7 +5,7 @@ Answers: for every pick that was watchlisted/skipped because its context was
 UNKNOWN, what would the locked O1 (rule-pooled) / O2 (hierarchical fallback)
 resolution layer have decided — and would that have helped or hurt?
 
-Locked parameters (VETO_REMINE_DESIGN_2026-08-05.md, sections 8 + 10):
+Locked parameters (see HANDOVER.md Addendum 27 — veto re-mine locked decisions):
   - pool key: (sport, league_key, market, side_role), rules pooled within,
     n-weighted unconditional w_roi (Q2)
   - gates (Scenario B, Q3): ALLOW n>=40, CAUTION n>=20, VETO n>=12
