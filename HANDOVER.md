@@ -4647,3 +4647,59 @@ both touched files (base diff).
   targets a veto-exception bucket (Addendum 27.15).
 - ROI carried by soft evidence / tiny-odds bands -> veto probably right; the
   audit layer's own provenance is the thing to fix next.
+
+### Addendum 27.15 — Pre-registered pilot spec: veto-exception cohort (frozen 2026-08-05)
+
+**The 27.14 read (operator's Mac, warehouse-authoritative, window 2026-07-07
+-> 2026-08-05):** SKIPPED_VETO settled=71 ROI=+9.18% blended; trusted-only
+n=59 ROI=+11.95%; soft-only n=12 ROI=-4.42% — the soft-inflation hypothesis
+is DEAD (soft evidence subtracts). Bands: <1.50 n=66 +7.01%; 1.50-2.00 n=4
++17.75%; 2.00-3.00 n=1 (ignore). Reconciliation: 59x0.1195 + 12x(-0.0442) =
+71x0.0918 to the unit — deep dive and bucket table agree by construction.
+Residual fragility, stated honestly: 93% of the cohort is sub-1.50 odds (thin
+per-pick margin, sample still the whole argument), and this window is
+backfill — prospective evidence is the point of this pilot.
+
+**Decision: branch 1.** The veto leaves money on the table. Vetoes stay
+BINDING for staking policy until this pilot returns and governance approves
+any change — we are testing whether a subset deserves exception, not
+rewriting the veto.
+
+**PILOT SPEC (frozen at the 2026-08-11 calendar gate; code change not
+required before launch):**
+
+- **Cohort (inclusion, complete):** every archived pick with bucket
+  SKIPPED_VETO AND price_evidence NOT IN VETO_DEEP_DIVE_SOFT_EVIDENCE
+  (SUSPECT_ALIAS_FUZZY, SCOUTINGSTATS_SOLE, UNMATCHED, SOURCE_FALLBACK), 1x2
+  market, dated 2026-08-11 forward. No band presupposition: sub-1.50 strength
+  is a backfill observation, band cuts are reviewed AT the n=30 read, not
+  frozen into inclusion (anti-overfitting).
+- **Stake:** flat 0.25u per cohort pick. Exposure cap 15u total. No scaling
+  by confidence, no chasing. Micro-stakes are an operator-side manual
+  decision; this ledger is the contract and the kill criteria bind the human.
+- **Record per pick:** date, pair, selection, odds at pick time,
+  price_evidence, veto_reason, and close price where a covered close exists
+  (theoddsapi close capture when the league resolves; else close=NA and CLV
+  is partial — stated, never filled).
+- **Decision points:** n=30 cohort settles -> formal read (ROI vs breakeven
+  at observed avg odds, CLV-where-available, by_band, by_reason, vs CAUTION
+  over the same days). Pilot also ends at n=60 or cap exhaustion, whichever
+  first.
+- **Kill criteria (any one):** cohort ROI <= -5% at n>=30 from start; OR
+  drawdown >= 6u; OR two consecutive audit runs where trusted-only veto ROI
+  (rolling, all days) < 0.
+- **Success criteria:** n>=30 with ROI > 0 AND (where CLV measurable) mean
+  CLV >= 0. Result: a scoped staking-policy exception for this cohort is
+  TABLED as its own operator-gated addendum. Nothing auto-promotes; the
+  veto remains default.
+- **Anti-overfitting covenant:** the cohort rule is frozen at 08-11. Any
+  narrowing (e.g. excluding a reason after seeing its table) requires a NEW
+  addendum BEFORE it counts; silent edits void the pilot's evidence value.
+- **Checkpoint mapping:** the standing "veto n>=30" checkpoint now refers to
+  THIS cohort's prospective count. Enhancement-pricing accrual (27.12/27.13)
+  continues independently and is unaffected.
+
+**Explicitly not done:** no staking-policy change, no veto-logic change, no
+band-filtered inclusion rule, no multi-source price blending. The veto is on
+trial by exactly this ledger, and is presumed correct until it convicts or
+acquits itself.
