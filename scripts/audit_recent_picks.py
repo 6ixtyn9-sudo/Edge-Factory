@@ -980,6 +980,7 @@ def aggregate_event_notes(observations: list[dict[str, Any]]) -> dict[str, Any]:
     """Aggregate note observations into per-market + pooled-bucket calibration."""
     by_market: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
     by_engine: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
+    by_engine_by_market: dict[tuple[str, str], dict[str, Any]] = defaultdict(_new_calibration_slot)
     pooled: dict[str, dict[str, Any]] = defaultdict(_new_calibration_slot)
     notes_per_market: dict[str, int] = defaultdict(int)
     unscorable: dict[str, int] = defaultdict(int)
@@ -996,7 +997,9 @@ def aggregate_event_notes(observations: list[dict[str, Any]]) -> dict[str, Any]:
             promised_missing += 1
             continue
         _accumulate(by_market[market], promised, bool(hit))
-        _accumulate(by_engine[str(ob.get("engine") or "legacy")], promised, bool(hit))
+        engine = str(ob.get("engine") or "legacy")
+        _accumulate(by_engine[engine], promised, bool(hit))
+        _accumulate(by_engine_by_market[(engine, market)], promised, bool(hit))
         _accumulate(pooled[_bucket_label(promised)], promised, bool(hit))
     return {
         "definition": NOTE_SCORING_DEFINITION,
@@ -1012,6 +1015,18 @@ def aggregate_event_notes(observations: list[dict[str, Any]]) -> dict[str, Any]:
         # (model | hybrid_cohort | legacy) on their own promises.
         "by_engine": {
             eng: _finalize_slot(slot) for eng, slot in sorted(by_engine.items())
+        },
+        # Engine x market cells (Addendum 17 + 19): the per-engine, per-market
+        # promised-vs-realized read the debias rule requires. Pooled-by-engine
+        # deltas alone cannot decide whether hybrid notes should be gated at
+        # hr=1.0; the market-level split can. Audit-only; no policy effect.
+        "by_engine_by_market": {
+            eng: {
+                m: _finalize_slot(by_engine_by_market[(eng, m)])
+                for (e, m) in sorted(by_engine_by_market)
+                if e == eng
+            }
+            for eng in sorted({e for e, _ in by_engine_by_market})
         },
         "promised_buckets": [
             {"bucket": label, **_finalize_slot(slot)}
