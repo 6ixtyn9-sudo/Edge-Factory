@@ -4523,3 +4523,30 @@ PAPER->ELIGIBLE transition only, non-regressive). No migration needed.
 **Constants (reviewable in the diff, changeable by operator):**
 `ODDSPAPI_MAX_AGE_H = 72` (enh_pricing.py),
 `MIN_MULTI_SOURCE_FRAC = 0.25` (enh_registry.py).
+
+### Addendum 27.12 — Evidence on all buckets: forecast archive for odds capture (2026-08-05)
+
+**Trigger (operator):** "we need evidence on all buckets." The audit's best
+ROI bucket is SKIPPED_VETO (71 settled / 60 wins / +9.2% in the 30-day
+window), but on veto-only days no enhancement prices were captured, so the
+registry never accrued evidence on it.
+
+**Finding (verified):** the odds-capture shortlist
+(`src/edgefactory/sources/theoddsapi.py shortlist()`) ALREADY includes ALL
+buckets — it reads every pick from the frozen per-day archive
+(`picks_{date}.json`), with no bucket filter. The real gap was that
+`picks_today.py` (run directly) only wrote `picks_today.json`, never a
+date-stamped archive, so a manual forecast for tomorrow produced no
+`picks_2026-08-06.json` for the shortlist to read — `shortlist=0`, no
+capture, no prices, no registry accrual.
+
+**Fix (this commit):** `picks_today.py` now writes a frozen per-day archive
+`localdata/picks_{day}.json` for EVERY processed day (matching the archive
+shape daily.py writes; overwrites with the freshest run). The capture
+shortlist therefore sees tomorrow's fixtures — including vetoed-but-clean
+matches — and prices them, so the enhancement registry accrues real priced
+evidence on ALL buckets, not just playable ones.
+
+**Verified:** 224 passed (223 + 1 new shortlist test pinning that a
+SKIPPED_VETO pick is in the shortlist) in clean AND polluted-.env; pyflakes
+findings pre-existing only (verified by base diff).

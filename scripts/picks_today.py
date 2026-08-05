@@ -2810,6 +2810,20 @@ def main():
 
         all_picks.extend(collapsed_day_picks)
 
+        # Evidence-on-all-buckets (2026-08-05): persist a frozen per-day
+        # archive for EVERY processed day so the odds-capture shortlist
+        # (src/edgefactory/sources/theoddsapi.py shortlist()) can price
+        # tomorrow's fixtures — including vetoed-but-clean matches (the
+        # SKIPPED_VETO bucket is the audit's best ROI bucket). Mirrors the
+        # archive shape daily.py writes; the capture reads it regardless of
+        # bucket. Overwrites any existing archive with the freshest run.
+        _day_archive = ROOT / "localdata" / f"picks_{day}.json"
+        try:
+            _day_archive.parent.mkdir(parents=True, exist_ok=True)
+            _day_archive.write_text(json.dumps(collapsed_day_picks, indent=2, sort_keys=True))
+        except OSError:
+            print(f"warn: could not write day archive {_day_archive}", file=sys.stderr)
+
     if con:
         try:
             con.close()

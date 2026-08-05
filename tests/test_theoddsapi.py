@@ -281,3 +281,31 @@ def test_default_markets_include_btts():
             os.environ["ODDS_API_MARKETS"] = env_was
         else:
             os.environ.pop("ODDS_API_MARKETS", None)
+
+
+def test_shortlist_reads_vetoed_picks_from_forecast_archive(tmp_path, monkeypatch):
+    # Evidence-on-all-buckets (2026-08-05): the capture shortlist must read
+    # ALL buckets from a forecast archive — including SKIPPED_VETO, the
+    # audit's best ROI bucket — so their prices get captured and their
+    # enhancements get scored.
+    from edgefactory.sources import theoddsapi
+    import json as _json
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    monkeypatch.setattr(theoddsapi, "LOCALDATA", localdata)
+
+    archive = localdata / "picks_2026-08-06.json"
+    archive.write_text(_json.dumps([
+        {"date": "2026-08-06", "home": "Paide", "away": "Rapid Vienna",
+         "kickoff": "2026-08-06T17:00:00Z", "bucket": "SKIPPED_VETO",
+         "league": "World UEFA Europa Conference League"},
+        {"date": "2026-08-06", "home": "Ajax", "away": "Shelbourne",
+         "kickoff": "2026-08-06T19:00:00Z", "bucket": "CAUTION",
+         "league": "World UEFA Europa Conference League"},
+    ]))
+    fixtures = theoddsapi.shortlist("2026-08-06")
+    assert len(fixtures) == 2
+    pairs = {(f["home"], f["away"]) for f in fixtures}
+    assert ("Paide", "Rapid Vienna") in pairs   # vetoed pick IS in the shortlist
+    assert ("Ajax", "Shelbourne") in pairs
