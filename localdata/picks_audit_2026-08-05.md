@@ -10,7 +10,9 @@
 - unsafe regular ledgers ignored: 3
 - settled picks: 128
 - eligible prior 1x2 picks: 131
-- unmatched result picks: 3
+- pending/unmatched result picks: 0
+- voided postponed/cancelled/abandoned events: 3
+- ambiguous event-disposition rows: 0
 - settled via shared overlay facts: 6
 - ambiguous result picks: 0
 - wins: 99
@@ -313,11 +315,18 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
     - [🔴 MISS] **Exact Goals: 5**: expected 10.8% (Actual: 2 goals)
 
 
-## Unmatched result examples
+## Event Disposition / Void Audit
 
-- 2026-07-19 `WATCHLIST_NO_ODDS` `2way-unanimous avg_p>=70` — FC Levadia Tallinn vs Tammeka -> HOME @ None (unmatched_result); keys=['levadiata']/['tammeka']
-- 2026-07-25 `WATCHLIST_NO_ODDS` `2way-unanimous avg_p>=70` — Coquimbo Unido vs Universidad de Concepcion -> HOME @ None (unmatched_result); keys=['coquimbou']/['universid']
-- 2026-07-26 `SKIPPED_VETO` `2way-unanimous avg_p>=70` — Super Nova vs Riga -> AWAY @ 1.26 (unmatched_result); keys=['supernova']/['riga']
+| disposition | voided picks |
+| --- | --- |
+| POSTPONED | 3 |
+- 2026-07-19 `POSTPONED` `WATCHLIST_NO_ODDS` — FC Levadia Tallinn vs Tammeka (verified_disposition); excluded from win/loss/ROI
+- 2026-07-25 `POSTPONED` `WATCHLIST_NO_ODDS` — Coquimbo Unido vs Universidad de Concepcion (verified_disposition); excluded from win/loss/ROI
+- 2026-07-26 `POSTPONED` `SKIPPED_VETO` — Super Nova vs Riga (verified_disposition); excluded from win/loss/ROI
+
+## Pending / Unmatched Result Examples
+
+- none
 
 ## Ambiguous result examples
 

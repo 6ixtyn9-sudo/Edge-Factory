@@ -1,4 +1,6 @@
 {
+  "ambiguous_disposition_examples": [],
+  "ambiguous_disposition_picks": 0,
   "ambiguous_examples": [],
   "ambiguous_result_picks": 0,
   "archived_pick_dates": [
@@ -63,6 +65,9 @@
       "settled_picks": 19,
       "wins": 17
     }
+  },
+  "by_event_disposition": {
+    "POSTPONED": 3
   },
   "by_odds_match_method": {
     "alias_fuzzy": {
@@ -687,6 +692,7 @@
     "settled_picks": 128,
     "wins": 99
   },
+  "pending_result_picks": 0,
   "regular_only_rows": 14,
   "same_day_cutoff": "2026-08-05",
   "same_day_excluded": 5,
@@ -7478,7 +7484,15 @@
       }
     ]
   },
-  "unmatched_examples": [
+  "unmatched_examples": [],
+  "unmatched_result_picks": 0,
+  "unsafe_regular_ledger_dates": [
+    "2026-07-28",
+    "2026-07-30",
+    "2026-07-31"
+  ],
+  "verified_late_additions": 28,
+  "voided_event_examples": [
     {
       "away": "Tammeka",
       "away_key_candidates": [
@@ -7486,6 +7500,7 @@
       ],
       "bucket": "WATCHLIST_NO_ODDS",
       "date": "2026-07-19",
+      "disposition": "POSTPONED",
       "home": "FC Levadia Tallinn",
       "home_key_candidates": [
         "levadiata"
@@ -7493,8 +7508,9 @@
       "league": "Estonia: Meistriliiga",
       "match": "FC Levadia Tallinn vs Tammeka",
       "odds": null,
+      "origin": "verified_disposition",
       "pick": "home",
-      "reason": "unmatched_result",
+      "reason": "void_event",
       "rule": "2way-unanimous avg_p>=70"
     },
     {
@@ -7504,6 +7520,7 @@
       ],
       "bucket": "WATCHLIST_NO_ODDS",
       "date": "2026-07-25",
+      "disposition": "POSTPONED",
       "home": "Coquimbo Unido",
       "home_key_candidates": [
         "coquimbou"
@@ -7511,8 +7528,9 @@
       "league": "Chile: Primera Divisi\u00f3n",
       "match": "Coquimbo Unido vs Universidad de Concepcion",
       "odds": null,
+      "origin": "verified_disposition",
       "pick": "home",
-      "reason": "unmatched_result",
+      "reason": "void_event",
       "rule": "2way-unanimous avg_p>=70"
     },
     {
@@ -7522,6 +7540,7 @@
       ],
       "bucket": "SKIPPED_VETO",
       "date": "2026-07-26",
+      "disposition": "POSTPONED",
       "home": "Super Nova",
       "home_key_candidates": [
         "supernova"
@@ -7529,16 +7548,11 @@
       "league": "Latvia Virsliga",
       "match": "Super Nova vs Riga",
       "odds": 1.26,
+      "origin": "verified_disposition",
       "pick": "away",
-      "reason": "unmatched_result",
+      "reason": "void_event",
       "rule": "2way-unanimous avg_p>=70"
     }
   ],
-  "unmatched_result_picks": 3,
-  "unsafe_regular_ledger_dates": [
-    "2026-07-28",
-    "2026-07-30",
-    "2026-07-31"
-  ],
-  "verified_late_additions": 28
+  "voided_event_picks": 3
 }
