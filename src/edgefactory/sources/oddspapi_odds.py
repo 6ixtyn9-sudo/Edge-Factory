@@ -294,7 +294,8 @@ def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None =
                     continue
                 name = player0.get("name") or outcome.get("name")
                 market, selection = _market_selection(
-                    mtype, name, home, away, player0.get("bookmakerOutcomeId"))
+                    mtype, name, home, away, player0.get("bookmakerOutcomeId"),
+                    outcome=outcome, player0=player0)
                 if not market or not selection:
                     continue
                 # Unified schema only (same shape as theoddsapi/bzzoiro stores)
@@ -317,9 +318,30 @@ def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None =
     return rows
 
 
+def _line_from(obj: dict) -> object:
+    """Read a numeric line from any of the field names providers use."""
+    for k in ("line", "point", "value", "handicap", "total"):
+        v = obj.get(k)
+        if v is not None and v != "":
+            return v
+    return None
+
+
+def _side_from_name(name: str) -> str | None:
+    m = re.search(r"(?i)\b(over|under)\b", name)
+    return m.group(1).lower() if m else None
+
+
 def _market_selection(mtype: str, name: object, home: object, away: object,
-                      outcome_id: object) -> tuple[str | None, str | None]:
-    """Resolve (unified market, selection) for a parsed outcome."""
+                      outcome_id: object, outcome: dict | None = None,
+                      player0: dict | None = None) -> tuple[str | None, str | None]:
+    """Resolve (unified market, selection) for a parsed outcome.
+
+    Tolerates two line shapes: line embedded in the name ("Over 2.5",
+    "Halmstads BK Over 1.5") OR line in a separate field (line/point/value/
+    handicap/total) with the name just "Over"/"Under". Never guesses the
+    side; if it cannot be determined the outcome is skipped.
+    """
     if mtype == "1x2":
         sel = OUTCOME_TO_SELECTION.get(str(outcome_id or "").lower()) or _selection_from_name(name, home, away)
         return ("1x2", sel) if sel else (None, None)
@@ -331,15 +353,29 @@ def _market_selection(mtype: str, name: object, home: object, away: object,
         sel = _DC_SELECTION.get(low)
         return ("dc", sel) if sel else (None, None)
     if mtype in ("totals", "team_totals", "team_totals_home", "team_totals_away"):
-        # name like "Over 2.5" / "Under 1.5" or "Halmstads BK Over 1.5"
+        # The OddsPapi odds payload carries NO line/point/name for these
+        # markets (verified 2026-08-05: market has only bookmakerMarketId +
+        # marketActive + outcomes; outcome has bookmakerOutcomeId + price +
+        # mainLine, no name/line). The line exists only in the provider
+        # catalog, which we DO NOT trust for lines. So we can only emit a
+        # row when the line is genuinely present in the outcome; otherwise
+        # we skip (never guess a line).
         s = str(name or "")
         m = re.search(r"(?i)\b(over|under)\s+([0-9]+(?:\.[0-9]+)?)", s)
-        if not m:
+        line_val = None
+        if m:
+            side = m.group(1).lower()
+            line_val = m.group(2)
+        else:
+            side = _side_from_name(s)
+            line_val = _line_from(player0 or {})
+            if line_val is None:
+                line_val = _line_from(outcome or {})
+        if side is None or line_val is None:
             return (None, None)
-        side = m.group(1).lower()
         try:
-            pstr = f"{float(m.group(2)):g}"
-        except ValueError:
+            pstr = f"{float(line_val):g}"
+        except (TypeError, ValueError):
             return (None, None)
         if mtype == "totals":
             return (f"ou_{pstr}", side)
@@ -348,7 +384,7 @@ def _market_selection(mtype: str, name: object, home: object, away: object,
         if mtype == "team_totals_away":
             return (f"tt_away_{pstr}", side)
         # generic team_totals: side must come from the outcome name's team
-        team_part = s[: m.start()].strip()
+        team_part = s[: m.start()].strip() if m else s
         n = _norm_full(team_part)
         if not n:
             return (None, None)

@@ -4370,3 +4370,33 @@ where they still make sense (below) — what changed is that read-only
   polls.
 - Walk-forward only — no retrospective validation; the odds store only
   accumulates from activation forward.
+
+### Addendum 27.8 — OddsPapi multi-market capture: provider line-shape limitation (2026-08-05)
+
+**Finding (verified from the live payloads, 2026-08-05):** the OddsPapi odds
+response carries NO market line for totals/team-totals markets. The market
+object has only `bookmakerMarketId` + `marketActive` + `outcomes`; the outcome
+has `bookmakerOutcomeId`, `price`, `priceAmerican`, `priceFractional`,
+`mainLine`, `playerName` (null) — but NO `name`, `line`, `point`, `handicap`,
+or side. The distinct market ids (1012/1010/1014/108 = different line
+markets) cannot be resolved to a line from the odds payload; the line exists
+only in the provider catalog (which is coarse: "Over Under Full Time").
+
+**Consequence:** the parser cannot emit `ou_*` / `tt_*` rows for these
+markets without guessing the line — and guessing lines would silently
+mis-price team totals, which is worse than not pricing them. So:
+- btts and double_chance DO capture (side derivable from market label:
+  "Both Teams To Score" -> yes/no; "Double Chance" -> 1X/X2/12 from the
+  outcome's bookmakerOutcomeId mapping — the id carries the selection).
+- totals and team_totals are SKIPPED until the provider exposes the line in
+  the odds payload (or a catalog that maps id -> line). Recorded here so
+  nobody "fixes" it by guessing.
+
+**What still works:** theoddsapi totals/totals_alt/team_totals/double_chance
+(default markets, real lines in the totals payload) — the enhancement
+overlay is priced from theoddsapi for those; OddsPapi adds btts/dc + a
+second 1x2 source. Walk-forward accrual continues.
+
+**Status:** the multi-market OddsPapi capture is honest-but-limited: btts +
+double_chance + 1x2 flow; totals/team_totals are deferred to a provider
+line-shape change.

@@ -153,3 +153,33 @@ def test_classify_label_goals_only():
     assert _classify_label("Match Shots On Target") == ""
     # ambiguous labels are not guessed
     assert _classify_label("Random Market") == ""
+
+
+def test_totals_line_in_separate_field():
+    # Real OddsPapi shape: outcome name may be just "Over"/"Under" with the
+    # line in a separate field (line/point/value). Must still parse.
+    from edgefactory.sources.oddspapi_odds import rows_from_odds_response
+    payload = {
+        "fixtureId": "fx_line", "participant1Name": "Halmstads BK",
+        "participant2Name": "IK Sirius", "startTime": "2026-08-03T17:00:00Z",
+        "tournamentName": "Allsvenskan", "categoryName": "Sweden",
+        "bookmakerOdds": {"Pinnacle": {"markets": {
+            "106": {"outcomes": {
+                "o1": {"players": {"0": {"name": "Over", "price": 1.85, "line": 2.5}}},
+                "o2": {"players": {"0": {"name": "Under", "price": 1.95, "line": 2.5}}},
+            }},
+            "10224": {"outcomes": {
+                "t1": {"players": {"0": {"name": "Over", "price": 1.70, "line": 1.5}}},
+            }},
+            "101": {"outcomes": {
+                "x1": {"players": {"0": {"bookmakerOutcomeId": "home", "price": 2.10}}},
+            }},
+        }}},
+    }
+    rows = rows_from_odds_response(payload, market_type_map={
+        "101": "1x2", "106": "totals", "10224": "team_totals_home"})
+    markets = {(r["market"], r["selection"]) for r in rows}
+    assert ("ou_2.5", "over") in markets
+    assert ("ou_2.5", "under") in markets
+    assert ("tt_home_1.5", "over") in markets
+    assert ("1x2", "home") in markets
