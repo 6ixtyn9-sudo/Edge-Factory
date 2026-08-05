@@ -4154,3 +4154,23 @@ changed while the gate accrues.
   Expected: a small dict (e.g. `Counter({'UNKNOWN': …})` — every pick's ctx
   carries `resolution_*` fields; no pick is changed while the flag is OFF).
   Paste that output for the first accrual read.
+
+### Addendum 27.2 — gate scope clarifications (2026-08-05)
+
+- **Deprecation applies to SHADOW state only.** The pre-committed deprecation
+  trigger (n≥60, G2 AND G3 failing, ROI gap ≥2pp across two checkpoints ≥2
+  weeks apart) governs the overlay while it is OFF. If the overlay ever ships
+  FLAG-ON, deprecation is moot: a live overlay gets its own lifecycle —
+  measured walk-forward like any live feature, and reversible by turning the
+  flag back OFF if its realized performance fails the same G2/G3 standard.
+- **Cohort comparability (two-overlay interplay, subtler case):** if the
+  engine-aware debias overlay ships first and changes which picks surface
+  (probability damp at the 🔥 note stage), the *population* of future
+  WATCHLIST_UNKNOWN_CTX picks could shift — debias does not corrupt the veto
+  counter (it still counts picks that were WATCHLIST_UNKNOWN_CTX at the time
+  they were made), but the n≥30 cohort may not be perfectly comparable to the
+  n=15 cohort measured today. To keep the gate honest, each checkpoint
+  records cohort composition alongside the gate numbers: resolved/unresolved
+  shares and the O1-pool vs O2 fallback mix. If the composition shifts
+  materially after debias ships, note it in the checkpoint before interpreting
+  G2/G3.
