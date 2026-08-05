@@ -121,6 +121,33 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             except Exception as exc:  # noqa: BLE001 - fail-soft
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
                 continue
+            # Payload-vs-emitted accounting: which market ids actually appear
+            # in the fixture payload, and which rows we got. If a non-1x2 id
+            # appears in the payload but no rows for it are emitted, the
+            # parser is dropping it (name/line shape) — the sample shows why.
+            if odds:
+                books = (odds or {}).get("bookmakerOdds") or {}
+                for _b, bd in books.items():
+                    if not isinstance(bd, dict):
+                        continue
+                    for mid, mkt in (bd.get("markets") or {}).items():
+                        mid_s = str(mid)
+                        if type_map.get(mid_s, "1x2") == "1x2":
+                            continue
+                        stats["payload_non1x2"] = stats.get("payload_non1x2", 0) + 1
+                        if stats.get("payload_non1x2") <= 5 and isinstance(mkt, dict):
+                            oc = next(iter((mkt.get("outcomes") or {}).values()), None)
+                            p0 = ((oc or {}).get("players") or {}).get("0") if isinstance(oc, dict) else None
+                            stats.setdefault("non1x2_samples", []).append({
+                                "market_id": mid_s,
+                                "type": type_map.get(mid_s),
+                                "label": catalog.get(mid_s),
+                                "market_keys": sorted(mkt.keys()) if isinstance(mkt, dict) else None,
+                                "market_non_outcome": {k: v for k, v in mkt.items() if k != "outcomes" and k != "players"} if isinstance(mkt, dict) else None,
+                                "outcome_keys": sorted(oc.keys()) if isinstance(oc, dict) else None,
+                                "player0_keys": sorted(p0.keys()) if isinstance(p0, dict) else None,
+                                "player0_nonbet_fields": {k: v for k, v in p0.items() if k != "betslip"} if isinstance(p0, dict) else None,
+                            })
             rows = rows_from_odds_response(odds, market_type_map=type_map) if odds else []
             if rows:
                 stats["matched"] += 1
