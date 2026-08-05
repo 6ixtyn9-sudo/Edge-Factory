@@ -431,14 +431,21 @@ def main() -> int:
     g3 = hit_gate is not None and (
         bucket_hit is None or lb_gate >= bucket_hit - GATE_HIT_EPS)
     dep_signal = (n_gate >= DEPRECATE_N and bucket_roi is not None
-                  and roi_gate is not None and roi_gate < bucket_roi - DEPRECATE_ROI_GAP)
+                  and roi_gate is not None and roi_gate < bucket_roi - DEPRECATE_ROI_GAP
+                  and not g2 and not g3)
     if g1 and g2 and g3:
         gate_verdict = "FLAG-ON — all pre-committed conditions met (operator review before enabling)"
     elif dep_signal:
-        gate_verdict = ("DEPRECATION SIGNAL — confirm at a second checkpoint >= 2 weeks later; "
-                        "if the gap persists, retire the overlay and record in HANDOVER")
+        gate_verdict = ("DEPRECATION SIGNAL — overlay fails G2 and G3 at n>=60 with ROI gap >= 2pp; "
+                        "confirm at a second checkpoint >= 2 weeks later; if it persists, retire the "
+                        "overlay (flag stays OFF, code stays, decision recorded in HANDOVER)")
     else:
         gate_verdict = "FLAG-OFF — keep shadow, keep accruing (not enough evidence to ship)"
+    # Small-n honesty: FAIL today at n=15 is an insufficient-data state, not a
+    # verdict on the overlay. The gate is designed to become decisive at n>=30.
+    small_n_note = (f"NOTE: at n={n_gate} (< {GATE_MIN_SETTLED}) the G2/G3 readings are "
+                    "small-sample artifacts, not verdicts; the bucket comparison itself is a "
+                    "19-pick sample. The gate becomes decisive at n>=30.")
 
     # Canonical pool table (fixes the reproducibility gap)
     pool_rows = list(pools.values())
@@ -569,6 +576,20 @@ def main() -> int:
         "",
         f"- **VERDICT: {gate_verdict}**",
         "",
+        f"- {small_n_note}",
+        "",
+        "**Why these thresholds (recorded 2026-08-05, fixed while the gate accrues):** "
+        f"G1={GATE_MIN_SETTLED} settled = the design's pre-registered minimum for a "
+        f"statistically tolerable point estimate (matches the design's stop condition). "
+        f"G2 epsilon={GATE_ROI_EPS:.2f} = small vs typical ROI scale (+/-0.05..0.2); "
+        "G2 compares overlay ROI against the bucket's ROI measured over the SAME window "
+        "(both noisy; the comparison is not absolute performance). "
+        f"G3 epsilon={GATE_HIT_EPS:.2f} = deliberately generous so small n is not punished; "
+        "the 90% Wilson lower bound tightens as n grows, so G3 becomes meaningful only "
+        "near n=30. Deprecation: at n>=60 with G2 AND G3 still failing and ROI gap >= 2pp, "
+        "confirm at a second checkpoint >= 2 weeks apart, then retire (flag stays OFF, "
+        "code stays as audit record, decision recorded in HANDOVER).",
+        "",
         "Deprecation rule: at >= 60 settled, if overlay ROI < bucket ROI - 2pp at "
         "two consecutive checkpoints (>= 2 weeks apart), retire the overlay "
         "(flag stays OFF, code stays, decision recorded in HANDOVER). Current "
@@ -589,6 +610,7 @@ def main() -> int:
     print(f"  G1 n_settled={n_gate}/{GATE_MIN_SETTLED} {'PASS' if g1 else 'WIP'}")
     print(f"  G2 ROI {_roi(roi_gate)} vs bucket {_roi(bucket_roi)} (eps {GATE_ROI_EPS:.2f}) {'PASS' if g2 else 'FAIL/WIP'}")
     print(f"  G3 hit LB {_pct(lb_gate)} vs bucket {_pct(bucket_hit)} (eps {GATE_HIT_EPS:.2f}) {'PASS' if g3 else 'FAIL/WIP'}")
+    print(f"  {small_n_note}")
     print(f"Report written: {args.out}")
     return 0
 

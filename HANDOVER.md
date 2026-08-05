@@ -4123,3 +4123,34 @@ changed while the gate accrues.
 - Different pipeline stages → no conflict by construction; both OFF; both log
   per-pick. If a third overlay is proposed, document interaction semantics
   before shipping.
+
+### Addendum 27.1 — gate refinements (2026-08-05, recorded while numbers are fresh)
+
+- **Threshold rationale (why 1pp / 5pp):** G2 epsilon 1pp is small vs the
+  typical ROI scale (±0.05–0.2) and compares overlay vs bucket over the SAME
+  window (both are noisy small samples; not absolute performance). G3 epsilon
+  5pp is deliberately generous so small n is not punished; the 90% Wilson LB
+  tightens as n grows, so G3 is meaningful only near n=30. Both thresholds
+  are fixed and must not be changed while the gate accrues.
+- **Small-n honesty:** today's G2/G3 FAIL at n=15 is an insufficient-data
+  state, NOT a verdict on the overlay — the bucket comparison itself is a
+  19-pick sample. The gate becomes decisive at n≥30. The harness prints this
+  note on every run.
+- **Deprecation trigger (defined):** at n≥60 settled with G2 AND G3 still
+  failing and overlay ROI < bucket ROI − 2pp, confirm at a second checkpoint
+  ≥2 weeks apart; if the gap persists, retire the overlay (flag stays OFF,
+  code stays as audit record, decision recorded in HANDOVER).
+- **Two-overlay interaction (explicit):** debias (`6ccb18f`) operates at
+  engine×market level (🔥 note construction); veto (`31f47ab`) at context
+  level (ctx → bucket). They gate on independent counters, so **debias going
+  live does not affect the veto gate's settled-outcome counter**: the veto
+  counter counts picks that were WATCHLIST_UNKNOWN_CTX at the time they were
+  made, which debias (probability damp at note stage) cannot change.
+- **First shadow-data read (concrete):** after the next bot runs, check
+  `localdata/picks_2026-08-06.json` (or the newest archived pick ledger):
+  ```bash
+  python3 -c "import json,collections; d=json.load(open('localdata/picks_2026-08-06.json')); print(collections.Counter(str(p.get('ctx',{}).get('resolution_verdict')) for p in d))"
+  ```
+  Expected: a small dict (e.g. `Counter({'UNKNOWN': …})` — every pick's ctx
+  carries `resolution_*` fields; no pick is changed while the flag is OFF).
+  Paste that output for the first accrual read.
