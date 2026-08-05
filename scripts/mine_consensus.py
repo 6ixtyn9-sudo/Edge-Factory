@@ -828,7 +828,7 @@ def main():
         sfb = scales["forebet_settled"]
         szb = scales["zulubet_settled"]
         try:
-            con.execute(f"""
+            con.execute("""
                 CREATE OR REPLACE TEMP VIEW consensus2_bc_confirm AS
                 WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
                      bc AS (SELECT DISTINCT ON (date, home, away)

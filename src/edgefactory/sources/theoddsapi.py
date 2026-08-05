@@ -505,7 +505,7 @@ def _get_json(path: str, params: dict, *, cost: int = 0, day: str | None = None)
                     body = exc.read().decode("utf-8", "replace").lower()
                 except Exception:
                     pass
-                reason = "usage credits depleted" if "usage" in body or "credit" in body else f"http 401 (auth)"
+                reason = "usage credits depleted" if "usage" in body or "credit" in body else "http 401 (auth)"
                 _mark_exhausted(fp, reason)
                 last = exc
                 continue
@@ -973,7 +973,7 @@ def fetch_fixtures(fixtures: list[dict], *, day: str | None = None) -> tuple[lis
     status = ledger_status()
     _log(
         f"fetch_fixtures {day or ''}: fixtures={len(fixtures)} matched={matched} "
-        f"rows={len(out)} credits_month={status['credits_local']}/{status['budget']} "
+        f"rows={len(out)} credits_used_month={status['credits_local']}/{status['budget']} "
         f"keys_live={sum(1 for k in status['keys'] if not k['exhausted'])}/{status['n_keys']}",
         always=True,
     )

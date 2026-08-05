@@ -1255,6 +1255,11 @@ def _render_event_notes_section(aud: dict[str, Any]) -> list[str]:
         "> ⚠️ **Calibration ≠ edge.** No prices in this section — a hit-rate is not value. "
         "Certification and staking remain gated by the enhancement registry.",
         "",
+        "> ⚠️ **Winner's-curse display effect (Addendum 27.17):** LINE_THRESHOLDS show only "
+        "high-side notes (e.g. home_under_35 iff p≥0.90), so realized systematically trails "
+        "promised on display-filtered markets — part of any promised−realized gap here is "
+        "the selection effect of the display filter, not engine error.",
+        "",
         "Every machine-readable 🔥 note on every settled pick in the window, scored against the "
         f"final score ({NOTE_SCORING_DEFINITION}).",
         "",

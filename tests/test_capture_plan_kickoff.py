@@ -1,6 +1,6 @@
 """Kickoff-divergence guard tests for capture_theodds.plan_auto."""
 import importlib.util
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 
 from edgefactory.sources.theoddsapi import _pick_kickoff_utc, _team_names_match

@@ -23,7 +23,7 @@ LOCALDATA.mkdir(exist_ok=True)
 def load_source(key: str):
     try:
         return importlib.import_module(f"edgefactory.sources.{key}")
-    except ModuleNotFoundError as e:
+    except ModuleNotFoundError:
         print(f"ERROR: source '{key}' not found", file=sys.stderr)
         sys.exit(2)
 
