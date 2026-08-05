@@ -235,7 +235,12 @@ def test_oddspapi_captured_at_is_capture_time():
     rows = rows_from_odds_response(payload, market_type_map={
         "101": "1x2", "103": "btts", "108": "double_chance",
         "115": "team_totals", "107": "totals"})
-    assert rows and rows[0]["captured_at"].startswith("2026-08")  # capture time, not 2020
+    # capture time, not the provider's stale 2020 stamp (audit N3: no
+    # hardcoded month — assert it is NOT the provider stamp and is recent)
+    import datetime as _dt
+    assert rows and not rows[0]["captured_at"].startswith("2020")
+    ts = _dt.datetime.fromisoformat(rows[0]["captured_at"])
+    assert (_dt.datetime.now(_dt.timezone.utc) - ts).total_seconds() < 3600
 
 
 def test_oddspapi_dedupe_excludes_captured_at(tmp_path):
@@ -271,3 +276,28 @@ def test_classify_label_set_winner_rejected():
     # F8: "Set Winner" (non-soccer vocabulary) must not classify as 1x2
     from edgefactory.sources.oddspapi_odds import _classify_label
     assert _classify_label("Set Winner") == ""
+
+
+def test_real_payload_shape_totals_dropped():
+    # Audit N2: the REAL OddsPapi payload carries no name/line on totals
+    # outcomes (only mainLine). Totals/team-totals must be DROPPED (honest
+    # safe-fail per 27.8), and 1x2/btts/dc must still flow.
+    payload = {
+        "fixtureId": "fx_real", "participant1Name": "Halmstads BK",
+        "participant2Name": "IK Sirius", "startTime": "2026-08-03T17:00:00Z",
+        "tournamentName": "Allsvenskan", "categoryName": "Sweden",
+        "bookmakerOdds": {"Pinnacle": {"markets": {
+            "101": {"outcomes": {"a": {"players": {"0": {"bookmakerOutcomeId": "home", "price": 2.10}}}}},
+            "106": {"outcomes": {"b": {"players": {"0": {"mainLine": True, "price": 1.85}}}}},
+            "103": {"outcomes": {"c": {"players": {"0": {"name": "Yes", "price": 1.95}}}}},
+            "101902": {"outcomes": {"d": {"players": {"0": {"name": "HomeOrDraw", "price": 1.05}}}}},
+        }}},
+    }
+    rows = rows_from_odds_response(payload, market_type_map={
+        "101": "1x2", "106": "totals", "103": "btts", "101902": "double_chance"})
+    markets = {(r["market"], r["selection"]) for r in rows}
+    assert ("1x2", "home") in markets
+    assert ("btts", "yes") in markets
+    assert ("dc", "1x") in markets
+    # totals outcome has mainLine but no name/line -> dropped, never guessed
+    assert not any(m.startswith("ou_") for m, _ in markets)

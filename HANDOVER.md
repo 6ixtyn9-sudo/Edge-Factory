@@ -4428,3 +4428,50 @@ Enhancement registry advancement on real priced outcomes remains the design
 (operator-approved); F2+F6 are the freshness/activation controls on that path.
 
 Test suite: 218 passed (210 + 8 new red-team regression tests).
+
+### Addendum 27.10 — Third-pass audit (N1–N5) + corrections (2026-08-05)
+
+An independent third-pass audit of the red-team fix commit (e27e154) found 5
+items. All verified; corrections shipped in this commit.
+
+**N1 (CRITICAL, fixed) — the F3 hermeticity fix was ineffective.** The
+conftest stripped env knobs at test-SETUP, but the production modules read
+env at IMPORT time (theoddsapi.py:62, bzzoiro*, db.py, capture_theodds.py)
+and reload-based tests re-read .env on reload — so a per-test delenv was too
+late. Demonstrated: a realistic operator .env caused 3 test failures at
+e27e154. **Correct fix:** neutralize `dotenv.load_dotenv` for the whole
+session in conftest BEFORE any src import, plus strip the missing knobs
+(EDGE_FACTORY_LOCALDATA, ODDS_API_KEYS, ODDS_API_BASE, ODDSPAPI_API_KEYS).
+Verified: 219 passed with the polluted .env PRESENT and absent.
+
+**N2 (fixed test, behavior unchanged) — real-payload test gap.** Added a
+regression test with the REAL OddsPapi shape (totals outcome has mainLine,
+no name/line): asserts 1x2/btts/dc flow and totals are dropped (honest
+safe-fail per 27.8), so the suite no longer gives false confidence that
+totals flow from oddspapi. `_line_from` intentionally does NOT read
+mainLine: even with the line, the side is unresolvable from the payload
+(27.8), so totals stay skipped — the limitation is now literal, not
+accidental.
+
+**N3 (fixed) — time-bomb test.** `captured_at.startswith("2026-08")` would
+fail in September 2026. Now asserts it is NOT the provider's 2020 stamp and
+is within 1h of now (UTC).
+
+**N4 (documented, operator decision) — freshness measured, not enforced.**
+`captured_at` is now honest but no code rejects stale prices (captured_at is
+never read for staleness). Options if the operator wants enforcement: (a)
+max-age guard — skip rows older than N days vs kickoff in enh_pricing; (b)
+keep measurement-only. Default: measurement-only, documented here.
+
+**N5 (documented, operator decision) — divergence bypass for single-source
+enhancements.** Divergence records only when >=2 sources price the same
+selection; oddspapi-as-sole-source has no divergence record. Options: (a)
+require >=2 sources for any price feeding ELIGIBLE (2-line change in
+audit_recent_picks.py priced_outcomes filter); (b) accept as-is. Default:
+accepted, documented here — consistent with 27.7's operator-authority
+pattern.
+
+**Operational truth (F1, restated):** OddsPapi prices feed the enhancement
+registry (operator-intended, 27.7), now freshness-stamped (F2), flag-gated
+(F6), and the whole suite is env-hermetic (N1). The registry advances only
+on real priced outcomes at n>=30 per market.
