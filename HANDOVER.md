@@ -4703,3 +4703,47 @@ required before launch):**
 band-filtered inclusion rule, no multi-source price blending. The veto is on
 trial by exactly this ledger, and is presumed correct until it convicts or
 acquits itself.
+
+### Addendum 27.16 — The contrast read: soft evidence is the CAUTION poison (2026-08-05)
+
+**Preserved now because the rolling window decays:** the 2026-07-07 rows age
+out of the 30-day audit starting 2026-08-06. Arithmetic below reconciles to
+the unit against the frozen rolling report (by_bucket CAUTION -0.123333).
+
+**Decomposition of the staked bucket (warehouse-authoritative, window
+2026-07-07 -> 2026-08-05, 33 settled):**
+
+| evidence | n | ROI | pnl |
+|---|---|---|---|
+| BETEXPLORER_RESCUE (trusted) | 13 | +7.7% | +1.00u |
+| BZZOIRO_PRIMARY (trusted) | 7 | +70.0% | +4.90u |
+| SCOUTINGSTATS_SOLE (soft) | 10 | -69.7% | -6.97u |
+| SOURCE_FALLBACK (soft) | 1 | -100% | -1.00u |
+| SUSPECT_ALIAS_FUZZY (soft) | 2 | -100% | -2.00u |
+| **total** | 33 | **-12.33%** | **-4.07u** |
+
+Derived: **CAUTION intersect trusted = +29.5% (n=20)**; CAUTION intersect soft
+= -76.7% (n=13). The entire CAUTION loss is 13 soft-evidence rows. Cross-bucket
+corroboration in the SAME window: SCOUTINGSTATS_SOLE negative in SKIPPED_VETO
+(-28.2%, n=5) AND in CAUTION; SUSPECT_ALIAS_FUZZY negative in both. The
+quarantine taxonomy separates winners from losers — the staking layer simply
+does not consume it. Honesty markers: n=20 is still small; BZZOIRO 7/7 is
+noise-watch, not a tier conclusion.
+
+**Veto-cohort reason cuts (same window, for the record):** ['odds_band']-driven
+vetoes n=34 +5.53% (price-policy blocks, not quality vetoes — they performed);
+short-odds away favourites 10/10 wins at +10.9% combined (thin tightrope, one
+loss flips it); ['league']-only family -33.4% (n=5) — the one reason family
+behaving as intended. Trusted veto tiers individually strong: RESCUE n=44
++9.84%, BZZOIRO n=15 +18.12%.
+
+**08-11 gate agenda (pre-registered, two items):**
+1. Launch the 27.15 veto-exception pilot as frozen (no amendment).
+2. DECIDE the soft-evidence staking exclusion: whether CAUTION/CLEAN bucket
+   assignment should hard-reject VETO_DEEP_DIVE_SOFT_EVIDENCE labels into
+   WATCHLIST at pick time (Addendum 26 stamps price_evidence at pick time, so
+   the mechanism exists). Decision and any code belong AT the gate — not
+   before; the prospective check is then visible: next-window audits should
+   show CAUTION intersect soft -> 0 rows.
+
+Explicitly unchanged: the 27.15 pilot covenant; veto logic; no code today.
