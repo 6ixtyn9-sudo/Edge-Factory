@@ -24,6 +24,7 @@ from edgefactory.entities import canonical_league, canonical_team, classify_comp
 from edgefactory.util import char_ngram_similarity, compact_key, norm_team, fold_ascii
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
+from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_debias_hr
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
 from edgefactory.enh_registry import status_for as enh_status_for
 
@@ -852,10 +853,18 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     )
 
     rolling_hit_rates = load_rolling_audit_hit_rates()
+    # Addendum 19 (engine-aware debias): off by default. When enabled, damp
+    # factors come from the full-surface by_market + per-engine x market cells
+    # (edgefactory.debias) instead of the tiny recommendation overlay.
+    engine_aware_debias = os.environ.get(ENV_FLAG) == "1"
+    debias_map = load_engine_aware_debias_map(AUDIT_ROLLING_PATH) if engine_aware_debias else {}
     candidates = []
-    
+
     for market, prob, label, reason in raw_candidates:
+        engine = "hybrid_cohort" if cohort is not None else "model"
         hr = rolling_hit_rates.get(market, 1.0)
+        if engine_aware_debias:
+            hr = resolve_debias_hr(market, engine, debias_map)
         prob_adjusted = prob * hr
         
         thr = LINE_THRESHOLDS.get(market, 0.80)
@@ -867,7 +876,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
                 "label": label,
                 "reason": reason + (f" (Performance feedback: HR={hr:.1%}, Adjusted Prob: {prob_adjusted:.1%})" if hr < 1.0 else ""),
                 # Addendum 17: provenance so the audit can grade engines separately.
-                "engine": "hybrid_cohort" if cohort is not None else "model",
+                "engine": engine,
                 "cohort_n": (cohort["n"] if cohort is not None else None),
             })
 
