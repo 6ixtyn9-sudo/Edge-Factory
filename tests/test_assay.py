@@ -1,5 +1,5 @@
 """The math must never silently break. Run: pytest"""
-from edgefactory.assay import (wilson_lb, wilson_ub, grade,
+from edgefactory.assay import (wilson_lb, grade,
                                decay_verdict, should_bench, roi,
                                context_verdict_league, context_verdict_team,
                                context_verdict_odds_band, context_verdict_niche,

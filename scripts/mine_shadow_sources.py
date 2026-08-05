@@ -16,7 +16,6 @@ sys.path.insert(0, str(ROOT / "src"))
 
 import duckdb
 from edgefactory.entities import classify_competition
-from edgefactory.util import fold_ascii
 
 DB_PATH = ROOT / "localdata" / "warehouse.duckdb"
 OUT_PATH = ROOT / "localdata" / "shadow_mining_report.json"
@@ -54,7 +53,7 @@ def analyze_shadow_source(con, table_name: str, source_label: str) -> dict:
     hit_rate = wins / total if total else 0.0
     roi = pnl / priced_n if priced_n else 0.0
 
-    print(f"Overall Metrics:")
+    print("Overall Metrics:")
     print(f"  Total Rows : {total:,}")
     print(f"  Hit Rate   : {hit_rate:.1%}")
     print(f"  Avg Odds   : {avg_odds:.2f}" if avg_odds else "  Avg Odds   : n/a")
@@ -74,7 +73,7 @@ def analyze_shadow_source(con, table_name: str, source_label: str) -> dict:
         ORDER BY total DESC
     """
     selection_splits = []
-    print(f"\nSelection splits:")
+    print("\nSelection splits:")
     for pick, t, w, p, pn in con.execute(q_sel).fetchall():
         t, w, pn = int(t or 0), int(w or 0), int(pn or 0)
         h = w / t if t else 0.0
@@ -91,7 +90,7 @@ def analyze_shadow_source(con, table_name: str, source_label: str) -> dict:
         comp_groups.setdefault(comp_type, []).append((pick, outcome, pick_odds))
 
     comp_splits = []
-    print(f"\nCompetition-Type splits (classified dynamically):")
+    print("\nCompetition-Type splits (classified dynamically):")
     for comp, rows in sorted(comp_groups.items()):
         t = len(rows)
         w = sum(1 for r in rows if r[0] == r[1])

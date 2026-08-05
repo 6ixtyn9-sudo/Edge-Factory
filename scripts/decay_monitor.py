@@ -301,7 +301,7 @@ def recreate_views(con) -> set[str]:
     # available at mine time; rebuild with the same membership logic.
     if has["forebet_settled"]:
         sfb = scales["forebet_settled"]
-        ou_parts, ou_joins, ou_eq, ou_avg = [], "FROM fb", [], []
+        ou_joins, ou_eq, ou_avg = "FROM fb", [], []
         sql = (f"WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) *, "
                f"CASE WHEN p_over/{sfb} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou "
                f"FROM forebet_settled)")

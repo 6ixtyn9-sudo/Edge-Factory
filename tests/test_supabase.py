@@ -1,5 +1,4 @@
 """Mocked Supabase tests."""
-import pytest
 from unittest.mock import patch, MagicMock
 from edgefactory.db import get_client, upsert_edges, upsert_picks
 

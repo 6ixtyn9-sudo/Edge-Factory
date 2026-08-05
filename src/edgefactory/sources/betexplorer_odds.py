@@ -30,7 +30,6 @@ import time
 import urllib.error
 import urllib.request
 from datetime import date, datetime, timedelta, timezone
-from pathlib import Path
 
 BASE = "https://www.betexplorer.com"
 UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/124 Safari/537.36"

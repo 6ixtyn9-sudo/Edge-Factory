@@ -4747,3 +4747,57 @@ behaving as intended. Trusted veto tiers individually strong: RESCUE n=44
    show CAUTION intersect soft -> 0 rows.
 
 Explicitly unchanged: the 27.15 pilot covenant; veto logic; no code today.
+
+### Addendum 27.17 — Hygiene payload: pyflakes class retired + two deferred docs (2026-08-05)
+
+**Scope (zero behavior change — deletion, labels, docs only):** the recurring
+"pre-existing upstream pyflakes findings" exception is retired. Every gate
+review previously paid a base-diff tax on these; now the repo scan is clean
+outright: `python3 -m pyflakes scripts/ src/ tests/` -> exit 0, suite 230
+passed.
+
+**Code (pure deletion / labels; every removal grep-verified as unread):**
+- picks_today.py: dead `timedelta` import; dead cs_rate chain (l_h_cs/l_a_cs/
+  h_cs/a_cs); the entire dead over/under-45 probability family
+  (l_*_o45, *_score_o45, prob_*_o45, prob_*_u45 — the SQL stats columns stay,
+  they are dict material, not findings); dead `total_cert`; the shadowed
+  `char_ngram_similarity` import (the line-1471 local def is the live binding
+  — every call site resolves after module import); one placeholderless
+  f-string.
+- theoddsapi.py: placeholderless f-string; log label `credits_month` ->
+  `credits_used_month` (the documented wording debt).
+- mine_shadow_sources (dead fold_ascii import, 3 literal f-strings),
+  mine_consensus (literal f-string on a pure-SQL block), local_backfill
+  (unused exception alias), decay_monitor + assay_purity (dead tuple slots
+  dropped from the assignment), betexplorer_odds (dead Path import),
+  sources/__init__ (bare re-export imports now declared via `__all__` — the
+  pyflakes-recognized idiom for an intentional aggregator; note plain
+  pyflakes honors neither `# noqa` nor underscore prefixes).
+- tests: unused imports removed (test_theoddsapi pytest, test_supabase
+  pytest, test_capture_plan_kickoff timezone, test_assay wilson_ub).
+
+**Doc 1 — BENCHED rule lifecycle runbook (code-verified, decay_monitor.py):**
+a certified edge whose recent-window ROI goes DEAD/DECAYING, or < -5% on
+n>=30, is auto-flipped to status "benched" in the registry by
+`scripts/decay_monitor.py` (verdict via edgefactory.assay.decay_verdict /
+should_bench; edges whose views cannot be rebuilt report UNKNOWN and are
+left untouched — never crash, never guess). picks_today.py consumes ONLY
+status=="certified", so a benched rule stops being bet IMMEDIATELY with zero
+picks-code involvement. Recovery: the next `scripts/mine_consensus.py` run
+rebuilds the registry from full data and re-certifies or not — benching is a
+circuit breaker, not a permanent verdict (see: `3way-unanimous min_p>=60
+avg_p>=60`, benched 4th time 2026-08-03). OPERATOR ACTIONS: normally none —
+observe the bench in the decay_monitor output; `--report-only` audits without
+mutating the registry; a bench repeating across consecutive mine cycles means
+the cohort itself may be structurally dead — raise at a gate, do not
+hand-edit the registry. Run order: capture -> backfill -> build_warehouse ->
+mine_consensus -> decay_monitor -> picks_today.
+
+**Doc 2 — winner's-curse display effect (documented in the audit header):**
+LINE_THRESHOLDS display only high-side notes (e.g. home_under_35 iff
+p>=0.90), so on display-filtered markets realized systematically trails
+promised — part of the observed promised-vs-realized gap (the -27.6 delta
+discussed in Addendum 27's working notes) is the SELECTION EFFECT of the
+display filter, not engine error. The caution now rides inside the
+"## Possible Events Full-Surface Audit" markdown header on every audit run,
+next to the calibration-is-not-edge doctrine line.

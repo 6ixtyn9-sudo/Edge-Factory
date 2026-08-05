@@ -12,7 +12,7 @@ import re
 import sys
 import math
 from collections import Counter
-from datetime import date, timedelta, datetime
+from datetime import date, datetime
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from statistics import mean
@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_league, canonical_team, classify_competition
-from edgefactory.util import char_ngram_similarity, compact_key, norm_team, fold_ascii
+from edgefactory.util import compact_key, norm_team, fold_ascii
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_debias_hr
@@ -607,12 +607,8 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     l_a_o25 = league_stats.get("away_score_o25", 0.18)
     l_h_o35 = league_stats.get("home_score_o35", 0.05)
     l_a_o35 = league_stats.get("away_score_o35", 0.05)
-    l_h_o45 = league_stats.get("home_score_o45", 0.01)
-    l_a_o45 = league_stats.get("away_score_o45", 0.01)
     l_1x = league_stats.get("home_1x_rate", 0.70)
     l_x2 = league_stats.get("away_x2_rate", 0.70)
-    l_h_cs = league_stats.get("home_cs_rate", 0.28)
-    l_a_cs = league_stats.get("away_cs_rate", 0.28)
     l_u35 = league_stats.get("under35_rate", 0.70)
 
     h_o15 = home_stats.get("over15_rate", l_o15)
@@ -622,9 +618,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     h_score_o15 = home_stats.get("score_o15", l_h_o15)
     h_score_o25 = home_stats.get("score_o25", l_h_o25)
     h_score_o35 = home_stats.get("score_o35", l_h_o35)
-    h_score_o45 = home_stats.get("score_o45", l_h_o45)
     h_1x = home_stats.get("rate_1x", l_1x)
-    h_cs = home_stats.get("cs_rate", l_h_cs)
     h_u35 = home_stats.get("under35_rate", l_u35)
 
     a_o15 = away_stats.get("over15_rate", l_o15)
@@ -634,9 +628,7 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     a_score_o15 = away_stats.get("score_o15", l_a_o15)
     a_score_o25 = away_stats.get("score_o25", l_a_o25)
     a_score_o35 = away_stats.get("score_o35", l_a_o35)
-    a_score_o45 = away_stats.get("score_o45", l_a_o45)
     a_x2 = away_stats.get("rate_x2", l_x2)
-    a_cs = away_stats.get("cs_rate", l_a_cs)
     a_u35 = away_stats.get("under35_rate", l_u35)
 
     import math
@@ -713,23 +705,19 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
     prob_h_o15 = 0.4 * l_h_o15 + 0.6 * h_score_o15
     prob_h_o25 = 0.4 * l_h_o25 + 0.6 * h_score_o25
     prob_h_o35 = 0.4 * l_h_o35 + 0.6 * h_score_o35
-    prob_h_o45 = 0.4 * l_h_o45 + 0.6 * h_score_o45
     prob_h_u05 = 1.0 - prob_h_o05
     prob_h_u15 = 1.0 - prob_h_o15
     prob_h_u25 = 1.0 - prob_h_o25
     prob_h_u35 = 1.0 - prob_h_o35
-    prob_h_u45 = 1.0 - prob_h_o45
     
     prob_a_o05 = 0.4 * l_a_o05 + 0.6 * a_score_o05
     prob_a_o15 = 0.4 * l_a_o15 + 0.6 * a_score_o15
     prob_a_o25 = 0.4 * l_a_o25 + 0.6 * a_score_o25
     prob_a_o35 = 0.4 * l_a_o35 + 0.6 * a_score_o35
-    prob_a_o45 = 0.4 * l_a_o45 + 0.6 * a_score_o45
     prob_a_u05 = 1.0 - prob_a_o05
     prob_a_u15 = 1.0 - prob_a_o15
     prob_a_u25 = 1.0 - prob_a_o25
     prob_a_u35 = 1.0 - prob_a_o35
-    prob_a_u45 = 1.0 - prob_a_o45
 
     # --- Hybrid overrides (Addendum 17): cohort-backed broad markets shrink
     # toward the realized cohort rate; every over/under pair is then re-derived
@@ -757,12 +745,10 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
         prob_h_u15 = 1.0 - prob_h_o15
         prob_h_u25 = 1.0 - prob_h_o25
         prob_h_u35 = 1.0 - prob_h_o35
-        prob_h_u45 = 1.0 - prob_h_o45
         prob_a_u05 = 1.0 - prob_a_o05
         prob_a_u15 = 1.0 - prob_a_o15
         prob_a_u25 = 1.0 - prob_a_o25
         prob_a_u35 = 1.0 - prob_a_o35
-        prob_a_u45 = 1.0 - prob_a_o45
 
     LINE_THRESHOLDS = {
         "match_over_15": 0.80,
@@ -2463,7 +2449,6 @@ def format_kickoff(pick: dict) -> str:
 
 
 def print_buckets(buckets: dict, title_date: str = ""):
-    total_cert = len(buckets.get(BUCKET_CERTIFIED, [])) + len(buckets.get(BUCKET_CAUTION, []))
     print(f"\nEdge Factory Picks — {title_date}" if title_date else "\nEdge Factory Picks")
     print("=" * 60)
     print(f"Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
@@ -2666,7 +2651,7 @@ def main():
     source_weights_1x2 = load_source_weights("1x2")
     if source_weights_1x2:
         print(
-            f"Weighted consensus active — source LBs: "
+            "Weighted consensus active — source LBs: "
             + ", ".join(f"{s}={lb:.3f}" for s, lb in sorted(source_weights_1x2.items())),
             file=sys.stderr,
         )
