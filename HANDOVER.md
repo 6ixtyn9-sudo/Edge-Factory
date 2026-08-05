@@ -4057,3 +4057,69 @@ ledger is transparent evidence for already-confirmed event facts; it is not a
 substitute for source coverage. This closes the false `unmatched_result`
 classification while preserving unknown/pending rows honestly for later source
 coverage review.
+
+---
+
+## Addendum 27 — Veto re-mine resolution overlay: shadow accrual + pre-committed decision rule (2026-08-05)
+
+**No production behavior change.** The overlay ships flag-gated OFF
+(`EDGE_FACTORY_VETO_RESOLUTION=1` to activate) and shadow-logs `resolution_*`
+fields on every pick's ctx from deploy (flag OFF = log only, no verdict or
+bucket change). Shipped in `31f47ab`: `src/edgefactory/veto_resolution.py`
+(pure O1 rule-pooled league + O2 niche → competition_type ladder; Scenario B
+gates ALLOW≥40 / CAUTION≥20 / VETO≥12), `scripts/picks_today.py` (+14 lines),
+corrected `scripts/counterfactual_veto_resolution.py` (now prints the
+pre-committed gate checklist), `tests/test_veto_resolution.py`.
+
+### Honest Phase-0 evidence (corrected 2026-08-05)
+
+- In-scope = league-UNKNOWN picks ONLY. 17 of 20 bucket picks are in scope;
+  3 (Qarabag, SC Braga, Austria Vienna) are short-sniper niche-UNKNOWN blocks
+  with league already resolved — OUT of scope by design.
+- In-scope: 17/17 resolved (2 O1-pool: 1 BOOST + 1 VETO correctly blocked;
+  15 O2-competition_type CAUTION). Caution-grade: 16 would-play, 15 settled,
+  13 wins, 86.7%, would-be ROI **+0.042**.
+- The 3 out-of-scope picks ALL WON (would-be +0.167) and stay watchlisted —
+  a separate **short-sniper niche-UNKNOWN policy question, independent of the
+  league overlay** (not gated on it; investigate in parallel).
+- Comparison: the audit's WATCHLIST_UNKNOWN_CTX bucket (the watchlist the
+  overlay would replace) shows 19 settled / 17 wins / **+0.061** would-be ROI.
+  The overlay captures only the in-scope subset (+0.042) and leaves the
+  higher-ROI out-of-scope subset unplayed. **Net: current thin evidence mildly
+  favors NOT shipping** — the overlay selects the weaker half of the watchlist.
+  The gate exists to find out whether that gap persists or reverses.
+- **Green-light (ALLOW/BOOST) is N/A as an evidence category:** no in-scope
+  green-light picks with settled outcomes; the overlay is caution-grade-only
+  in practice. The harness prints this note automatically.
+
+### Pre-committed decision rule (write-down-now, anti-mood)
+
+Checkpoint = re-run `scripts/counterfactual_veto_resolution.py`; the report
+prints the gate checklist mechanically. Thresholds are fixed and must not be
+changed while the gate accrues.
+
+- **FLAG-ON requires ALL:** (1) ≥30 settled in-scope caution-grade picks;
+  (2) overlay would-be ROI > 0 AND ≥ bucket ROI − 1pp over the same window;
+  (3) overlay hit-rate 90% Wilson lower bound ≥ bucket hit rate − 5pp.
+- **FLAG-OFF (keep shadow, keep waiting):** any condition fails at a
+  checkpoint.
+- **DEPRECATE:** at ≥60 settled, if overlay ROI < bucket ROI − 2pp at two
+  consecutive checkpoints (≥2 weeks apart), retire the overlay (flag stays
+  OFF, code stays, decision recorded here). Prevents shadow limbo.
+
+### Timeline (be honest)
+
+- First shadow-data read (`resolution_*` present in archived picks): 2–3 bot
+  cycles (days).
+- 30-settled gate: ~6–9 weeks at the observed accrual rate (~0.5 in-scope
+  settled/day).
+
+### Two flag-gated overlays — interaction stated
+
+- `EDGE_FACTORY_ENGINE_AWARE_DEBIAS` (`6ccb18f`): engine/market-level, applies
+  at 🔥 note construction (probability damp).
+- `EDGE_FACTORY_VETO_RESOLUTION` (`31f47ab`): context-level, applies at the
+  ctx → bucket stage.
+- Different pipeline stages → no conflict by construction; both OFF; both log
+  per-pick. If a third overlay is proposed, document interaction semantics
+  before shipping.

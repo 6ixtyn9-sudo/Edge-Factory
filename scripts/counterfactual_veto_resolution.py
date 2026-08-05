@@ -315,6 +315,27 @@ def _roi(x: float | None) -> str:
     return f"{x:+.3f}" if x is not None else "n/a"
 
 
+def _wilson_lb(hits: int, n: int, z: float = 1.645) -> float:
+    """90% Wilson lower bound on a hit rate (stdlib only)."""
+    if n <= 0:
+        return 0.0
+    p = hits / n
+    z2 = z * z
+    denom = 1.0 + z2 / n
+    centre = p + z2 / (2.0 * n)
+    margin = z * ((p * (1.0 - p) + z2 / (4.0 * n)) / n) ** 0.5
+    return (centre - margin) / denom
+
+
+# Pre-committed gate thresholds (PHASE1_2_VETO_RESOLUTION_SPEC.md section 8 —
+# write-down-now, anti-mood; do NOT change them while the gate is accruing).
+GATE_MIN_SETTLED = 30          # FLAG-ON requires >= 30 settled caution-grade picks
+GATE_ROI_EPS = 0.01            # overlay ROI must be >= bucket ROI - 1pp
+GATE_HIT_EPS = 0.05            # overlay 90% Wilson LB must be >= bucket hit - 5pp
+DEPRECATE_N = 60               # deprecation review once >= 60 settled
+DEPRECATE_ROI_GAP = 0.02       # ...if overlay ROI < bucket ROI - 2pp (two checkpoints)
+
+
 def _scenario(rows: list[dict], caution_grade: bool) -> dict:
     if caution_grade:
         played = [r for r in rows if r["would_play_caution"]]
@@ -386,6 +407,39 @@ def main() -> int:
         return (f"{s['settled_played']}/{s['would_play']} settled | {s['wins']} wins | "
                 f"hit {_pct(s['hit_rate'])} | ROI {_roi(s['roi'])}")
 
+    # --- Pre-committed gate checklist (PHASE1_2 spec section 8) ---
+    # Written down now, anti-mood: the checkpoint is mechanical, not
+    # interpretive. Do not change these thresholds while the gate accrues.
+    try:
+        ar = json.loads((localdata / "picks_audit_rolling.json").read_text())
+        bucket = (ar.get("by_bucket") or {}).get("WATCHLIST_UNKNOWN_CTX", {})
+    except Exception:
+        bucket = {}
+    bucket_settled = int(bucket.get("settled_picks") or 0)
+    bucket_wins = int(bucket.get("wins") or 0)
+    bucket_roi = bucket.get("roi")
+    bucket_hit = (bucket_wins / bucket_settled) if bucket_settled else None
+
+    c = full["caution"]
+    n_gate = c["settled_played"]
+    roi_gate = c["roi"]
+    hit_gate = c["hit_rate"]
+    lb_gate = _wilson_lb(c["wins"], c["settled_played"])
+    g1 = n_gate >= GATE_MIN_SETTLED
+    g2 = roi_gate is not None and roi_gate > 0.0 and (
+        bucket_roi is None or roi_gate >= bucket_roi - GATE_ROI_EPS)
+    g3 = hit_gate is not None and (
+        bucket_hit is None or lb_gate >= bucket_hit - GATE_HIT_EPS)
+    dep_signal = (n_gate >= DEPRECATE_N and bucket_roi is not None
+                  and roi_gate is not None and roi_gate < bucket_roi - DEPRECATE_ROI_GAP)
+    if g1 and g2 and g3:
+        gate_verdict = "FLAG-ON — all pre-committed conditions met (operator review before enabling)"
+    elif dep_signal:
+        gate_verdict = ("DEPRECATION SIGNAL — confirm at a second checkpoint >= 2 weeks later; "
+                        "if the gap persists, retire the overlay and record in HANDOVER")
+    else:
+        gate_verdict = "FLAG-OFF — keep shadow, keep accruing (not enough evidence to ship)"
+
     # Canonical pool table (fixes the reproducibility gap)
     pool_rows = list(pools.values())
     pool_vc = Counter(p["verdict"] for p in pool_rows)
@@ -444,6 +498,17 @@ def main() -> int:
         "verdict (played unconditionally); caution-grade also plays CAUTION verdicts "
         "(the live pipeline does play CAUTION picks).",
         "",
+    ]
+    if full["green"]["would_play"] == 0:
+        lines += [
+            "> **Green-light is N/A as an evidence category.** No in-scope "
+            "green-light (ALLOW/BOOST) picks with settled outcomes exist in this "
+            "window; the overlay is caution-grade-only in practice. The green-light "
+            "rows above are informational and must not be read as evidence. If "
+            "in-scope green-light picks accrue, this note drops automatically.",
+            "",
+        ]
+    lines += [
         "## 3. Per-pick counterfactual (full window)",
         "",
         "| date | match | league | rule | side | odds | resolution | path | pool n | pool w_roi | settled | match | would win | would ROI |",
@@ -484,6 +549,30 @@ def main() -> int:
         "NPL, registry raw `AuT`, not Austria).",
         "- `would_roi` uses archived pick-time odds; flat stake; no vig/tax modelling.",
         "- Read-only: no repo file was created or modified by this harness.",
+        "",
+        "## 6. Pre-committed gate checklist (anti-mood; PHASE1_2 spec section 8)",
+        "",
+        "Thresholds were written down BEFORE the gate started accruing and must not "
+        "be changed while it runs. The comparison baseline is the audit's "
+        "WATCHLIST_UNKNOWN_CTX bucket (the watchlist the overlay would replace): "
+        f"settled={bucket_settled}, wins={bucket_wins}, hit={_pct(bucket_hit)}, "
+        f"ROI={_roi(bucket_roi)}.",
+        "",
+        f"- **G1** settled in-scope caution-grade picks >= {GATE_MIN_SETTLED}: "
+        f"**{n_gate}** -> {'PASS' if g1 else 'WIP' if n_gate < GATE_MIN_SETTLED else 'FAIL'}",
+        f"- **G2** overlay ROI > 0 AND >= bucket ROI - {GATE_ROI_EPS:.2f}: "
+        f"overlay {_roi(roi_gate)} vs bucket {_roi(bucket_roi)} -> "
+        f"{'PASS' if g2 else 'FAIL/WIP'}",
+        f"- **G3** overlay 90% Wilson LB >= bucket hit - {GATE_HIT_EPS:.2f}: "
+        f"LB {_pct(lb_gate)} vs bucket {_pct(bucket_hit)} -> "
+        f"{'PASS' if g3 else 'FAIL/WIP'}",
+        "",
+        f"- **VERDICT: {gate_verdict}**",
+        "",
+        "Deprecation rule: at >= 60 settled, if overlay ROI < bucket ROI - 2pp at "
+        "two consecutive checkpoints (>= 2 weeks apart), retire the overlay "
+        "(flag stays OFF, code stays, decision recorded in HANDOVER). Current "
+        f"signal: {'YES' if dep_signal else 'no'}.",
     ]
 
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
@@ -496,6 +585,10 @@ def main() -> int:
     print(f"Full window  incl-caution: {_fmt(full['caution'])}")
     print(f"Operator 30d green: {_fmt(op['green'])}")
     print(f"Operator 30d incl-caution: {_fmt(op['caution'])}")
+    print(f"GATE: {gate_verdict}")
+    print(f"  G1 n_settled={n_gate}/{GATE_MIN_SETTLED} {'PASS' if g1 else 'WIP'}")
+    print(f"  G2 ROI {_roi(roi_gate)} vs bucket {_roi(bucket_roi)} (eps {GATE_ROI_EPS:.2f}) {'PASS' if g2 else 'FAIL/WIP'}")
+    print(f"  G3 hit LB {_pct(lb_gate)} vs bucket {_pct(bucket_hit)} (eps {GATE_HIT_EPS:.2f}) {'PASS' if g3 else 'FAIL/WIP'}")
     print(f"Report written: {args.out}")
     return 0
 
