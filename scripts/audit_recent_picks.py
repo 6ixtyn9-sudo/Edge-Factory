@@ -8,7 +8,7 @@ import json
 import math
 import os
 import re
-from collections import defaultdict
+from collections import Counter, defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -24,6 +24,7 @@ import sys
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_team  # noqa: E402
+from edgefactory.settlement import is_void_disposition, terminal_event_disposition  # noqa: E402
 from edgefactory.util import norm_team  # noqa: E402
 
 
@@ -318,6 +319,135 @@ def load_settled_overlay(path: Path | None = None) -> list[dict[str, Any]]:
         except (KeyError, TypeError, ValueError):
             continue
     return out
+
+
+def _verified_event_dispositions_path() -> Path:
+    preferred = ROOT / "Config" / "verified_event_dispositions.json"
+    if preferred.exists() or (ROOT / "Config").exists():
+        return preferred
+    return ROOT / "config" / "verified_event_dispositions.json"
+
+
+def load_verified_event_dispositions(path: Path | None = None) -> list[dict[str, Any]]:
+    """Load exact, reviewed postponed/cancelled/abandoned facts.
+
+    These are audit-only event dispositions, never result scores and never
+    source/pick inputs. Invalid or non-terminal statuses fail closed.
+    """
+    p = path or _verified_event_dispositions_path()
+    try:
+        payload = json.loads(p.read_text())
+        rows = payload.get("rows") or []
+    except Exception:
+        return []
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        day = str(row.get("date") or "")[:10]
+        home = str(row.get("home") or "")
+        away = str(row.get("away") or "")
+        disposition = str(row.get("disposition") or "")
+        if not day or not home or not away or not is_void_disposition(disposition):
+            continue
+        out.append({
+            "date": day,
+            "home": home,
+            "away": away,
+            "disposition": disposition,
+            "source": str(row.get("source") or "verified_disposition"),
+            "verified_at": str(row.get("verified_at") or ""),
+        })
+    return out
+
+
+def _add_disposition(
+    index: dict[tuple[str, str, str], dict[str, Any]],
+    *,
+    day: str,
+    home: str,
+    away: str,
+    disposition: str,
+    origin: str,
+    replace: bool = False,
+) -> None:
+    if not is_void_disposition(disposition):
+        return
+    entry = {
+        "disposition": disposition,
+        "home": home,
+        "away": away,
+        "origin": origin,
+    }
+    h9, a9 = norm_team(home), norm_team(away)
+    h14, a14 = norm_team(home, 14), norm_team(away, 14)
+    keys = [(day, h9, a9)]
+    if (h14, a14) != (h9, a9):
+        keys.append((day, h14, a14))
+    for key in keys:
+        if replace:
+            index[key] = entry
+        else:
+            index.setdefault(key, entry)
+
+
+def load_event_disposition_index(
+    warehouse_path: Path,
+    *,
+    start: str | None = None,
+    end: str | None = None,
+) -> dict[tuple[str, str, str], dict[str, Any]]:
+    """Collect positive terminal no-score evidence from existing raw sources.
+
+    Only explicit postponed/cancelled/abandoned labels become a disposition.
+    Missing, scheduled, live, and generic suspended statuses remain unknown.
+    Reviewed config facts override source status evidence; a final score still
+    wins later in ``build_report``.
+    """
+    index: dict[tuple[str, str, str], dict[str, Any]] = {}
+    try:
+        import duckdb
+        if not warehouse_path.exists():
+            raise FileNotFoundError
+        con = duckdb.connect(str(warehouse_path), read_only=True)
+        tables = {row[0] for row in con.execute("SHOW TABLES").fetchall()}
+        source_tables = ("forebet", "vitibet", "scoutingstats")
+        for source in source_tables:
+            if source not in tables:
+                continue
+            filters = ["status IS NOT NULL"]
+            if start:
+                filters.append(f"CAST(date AS VARCHAR) >= '{start}'")
+            if end:
+                filters.append(f"CAST(date AS VARCHAR) <= '{end}'")
+            query = f"SELECT date, home, away, status FROM {source} WHERE " + " AND ".join(filters)
+            for day, home, away, status in con.execute(query).fetchall():
+                disposition = terminal_event_disposition(status)
+                if disposition:
+                    _add_disposition(
+                        index,
+                        day=str(day)[:10],
+                        home=str(home),
+                        away=str(away),
+                        disposition=disposition,
+                        origin=f"source_status:{source}",
+                    )
+        con.close()
+    except Exception:
+        # Status evidence enriches audits but must never break score auditing.
+        pass
+
+    for row in load_verified_event_dispositions():
+        _add_disposition(
+            index,
+            day=row["date"],
+            home=row["home"],
+            away=row["away"],
+            disposition=row["disposition"],
+            origin="verified_disposition",
+            replace=True,
+        )
+    return index
 
 
 def load_results_index(warehouse_path: Path) -> tuple[dict[tuple[str, str, str], dict[str, Any]], dict[str, list[dict[str, Any]]]]:
@@ -1140,12 +1270,16 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
     picks, archive_receipt = load_archived_picks_with_receipt(start, end)
     picks = dedupe_archived_picks(picks)
     results, results_by_date = load_results_index(warehouse_path)
+    dispositions = load_event_disposition_index(warehouse_path, start=start, end=end)
     settled_rows: list[SettledPick] = []
     archived_dates = sorted({str(p.get("date") or "")[:10] for p in picks if p.get("date")})
     today_local = local_today()
     same_day_excluded = 0
     eligible_prior_picks = 0
     unmatched_result_examples: list[dict[str, Any]] = []
+    voided_event_examples: list[dict[str, Any]] = []
+    ambiguous_disposition_examples: list[dict[str, Any]] = []
+    voided_by_disposition: Counter[str] = Counter()
     overlay_rescued = 0
     ambiguous_result_examples: list[dict[str, Any]] = []
 
@@ -1220,12 +1354,36 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                 continue
 
         if result is None:
+            # Event dispositions are deliberately exact-only. A false void is
+            # worse than a pending row, so no fuzzy postponed/cancelled match.
+            disposition_hits: list[dict[str, Any]] = []
+            for hk in audit_team_key_candidates(pick.get("home")):
+                for ak in audit_team_key_candidates(pick.get("away")):
+                    candidate = dispositions.get((pick_date, hk, ak))
+                    if candidate is not None:
+                        disposition_hits.append(candidate)
+            unique_dispositions = {
+                (str(item.get("disposition")), str(item.get("origin")))
+                for item in disposition_hits
+            }
+            if len({item[0] for item in unique_dispositions}) == 1 and unique_dispositions:
+                disposition, origin = sorted(unique_dispositions)[0]
+                diag = _pick_diag(pick, "void_event")
+                diag.update({"disposition": disposition, "origin": origin})
+                voided_event_examples.append(diag)
+                voided_by_disposition[disposition] += 1
+                continue
+            if len({item[0] for item in unique_dispositions}) > 1:
+                diag = _pick_diag(pick, "ambiguous_event_disposition")
+                diag["dispositions"] = sorted(unique_dispositions)
+                ambiguous_disposition_examples.append(diag)
+
             results_on_date = results_by_date.get(pick_date, [])
             fuzzy_candidate = find_fuzzy_result_match(pick.get("home", ""), pick.get("away", ""), results_on_date)
             if fuzzy_candidate is not None:
                 result = fuzzy_candidate
             else:
-                unmatched_result_examples.append(_pick_diag(pick, "unmatched_result"))
+                unmatched_result_examples.append(_pick_diag(pick, "pending_or_unmatched_result"))
                 continue
 
         settled = settle_pick(pick, result)
@@ -1426,6 +1584,12 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "include_same_day": include_same_day,
         "eligible_prior_picks": eligible_prior_picks,
         "unmatched_result_picks": len(unmatched_result_examples),
+        "pending_result_picks": len(unmatched_result_examples),
+        "voided_event_picks": len(voided_event_examples),
+        "by_event_disposition": dict(sorted(voided_by_disposition.items())),
+        "voided_event_examples": voided_event_examples[:50],
+        "ambiguous_disposition_picks": len(ambiguous_disposition_examples),
+        "ambiguous_disposition_examples": ambiguous_disposition_examples[:50],
         "settled_via_overlay_picks": overlay_rescued,
         "ambiguous_result_picks": len(ambiguous_result_examples),
         "unmatched_examples": unmatched_result_examples[:50],
@@ -1464,7 +1628,9 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- unsafe regular ledgers ignored: {len(report.get('unsafe_regular_ledger_dates', []))}",
         f"- settled picks: {overall.get('settled_picks', 0)}",
         f"- eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}",
-        f"- unmatched result picks: {report.get('unmatched_result_picks', 0)}",
+        f"- pending/unmatched result picks: {report.get('pending_result_picks', report.get('unmatched_result_picks', 0))}",
+        f"- voided postponed/cancelled/abandoned events: {report.get('voided_event_picks', 0)}",
+        f"- ambiguous event-disposition rows: {report.get('ambiguous_disposition_picks', 0)}",
         f"- settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)} (Addendum 21)",
         f"- ambiguous result picks: {report.get('ambiguous_result_picks', 0)}",
         f"- wins: {overall.get('wins', 0)}",
@@ -1711,7 +1877,24 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 lines.append("  - **🔥 Possible Events (graded)**: none recorded on the archived pick")
             lines.append("")
 
-    lines.extend(["", "## Unmatched result examples", ""])
+    lines.extend(["", "## Event Disposition / Void Audit", ""])
+    dispositions = report.get("by_event_disposition", {}) or {}
+    if not dispositions:
+        lines.append("- none")
+    else:
+        lines.extend([
+            "| disposition | voided picks |",
+            "| --- | --- |",
+        ])
+        for disposition, count in sorted(dispositions.items()):
+            lines.append(f"| {disposition} | {count} |")
+    for item in report.get("voided_event_examples", [])[:25]:
+        lines.append(
+            f"- {item.get('date')} `{item.get('disposition')}` `{item.get('bucket')}` — "
+            f"{item.get('match')} ({item.get('origin')}); excluded from win/loss/ROI"
+        )
+
+    lines.extend(["", "## Pending / Unmatched Result Examples", ""])
     examples = report.get("unmatched_examples", [])
     if not examples:
         lines.append("- none")
@@ -1767,7 +1950,8 @@ def main() -> int:
     print(f" same-day rows excluded: {report.get('same_day_excluded', 0)}")
     print(f" eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}")
     print(f" settled picks: {overall.get('settled_picks', 0)}")
-    print(f" unmatched result picks: {report.get('unmatched_result_picks', 0)}")
+    print(f" pending/unmatched result picks: {report.get('pending_result_picks', report.get('unmatched_result_picks', 0))}")
+    print(f" voided event picks: {report.get('voided_event_picks', 0)}")
     print(f" settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)}")
     print(f" ambiguous result picks: {report.get('ambiguous_result_picks', 0)}")
     print(f" hit rate: {overall.get('hit_rate')}")

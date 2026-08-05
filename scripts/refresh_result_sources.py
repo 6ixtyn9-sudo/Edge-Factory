@@ -3,7 +3,8 @@
 
 This is intentionally narrower than capture_daily: it re-reads only one
 already-completed calendar date from known result donors, preserves existing
-prediction fields, and updates only final-score/status fields. It is used by
+prediction fields, and updates only final-score or positive terminal-event
+status fields. It is used by
 the autonomous intraday path before backfill_results/build_warehouse/export so
 late-finishing matches become auditable on the next cadence without a D30
 full-capture sweep.
@@ -36,6 +37,7 @@ RESULT_SOURCES = (
 SCORE_FIELDS = ("hs", "gs", "ht_hs", "ht_gs")
 
 sys.path.insert(0, str(ROOT / "src"))
+from edgefactory.settlement import terminal_event_disposition  # noqa: E402
 from edgefactory.util import compact_key  # noqa: E402
 
 
@@ -78,28 +80,44 @@ def read_rows(path: Path) -> tuple[list[str], dict[tuple[str, str, str], dict[st
         return [], {}
 
 
-def merge_final_score(existing: dict[str, str], fresh: dict[str, Any]) -> tuple[dict[str, str], bool]:
-    """Preserve pick-time prediction columns; only refresh final-score facts."""
+def has_terminal_event_status(row: dict[str, Any]) -> bool:
+    return terminal_event_disposition(row.get("status")) is not None
+
+
+def merge_terminal_update(existing: dict[str, str], fresh: dict[str, Any]) -> tuple[dict[str, str], bool]:
+    """Preserve pick-time prediction fields while adding a final score or
+    positive terminal no-score status.
+
+    ``scheduled``/blank/live statuses do nothing. A terminal event status is
+    retained for audit disposition but never masquerades as a score.
+    """
     merged = dict(existing)
-    if not has_final_score(fresh):
+    scored = has_final_score(fresh)
+    terminal = has_terminal_event_status(fresh)
+    if not (scored or terminal):
         return merged, False
 
     changed = False
-    for field in SCORE_FIELDS:
-        value = fresh.get(field)
-        if _has_value(value):
-            text = str(value)
-            if merged.get(field) != text:
-                merged[field] = text
-                changed = True
+    if scored:
+        for field in SCORE_FIELDS:
+            value = fresh.get(field)
+            if _has_value(value):
+                text = str(value)
+                if merged.get(field) != text:
+                    merged[field] = text
+                    changed = True
 
-    # Status is useful audit context but never a substitute for hs/gs.
     if _has_value(fresh.get("status")):
         text = str(fresh["status"])
         if merged.get("status") != text:
             merged["status"] = text
             changed = True
     return merged, changed
+
+
+# Compatibility name retained for focused callers/tests.
+def merge_final_score(existing: dict[str, str], fresh: dict[str, Any]) -> tuple[dict[str, str], bool]:
+    return merge_terminal_update(existing, fresh)
 
 
 def _write_rows(path: Path, columns: list[str], rows: dict[tuple[str, str, str], dict[str, str]]) -> None:
@@ -112,46 +130,49 @@ def _write_rows(path: Path, columns: list[str], rows: dict[tuple[str, str, str],
 
 
 def refresh_source(source: str, day: str, *, localdata: Path = LOCALDATA) -> dict[str, Any]:
-    """Fetch one completed day and upsert only score-bearing rows for a source."""
+    """Fetch one completed day and upsert scores or terminal event statuses."""
     try:
         module = importlib.import_module(f"edgefactory.sources.{source}")
         fetched = list(module.fetch_day(day) or [])
     except Exception as exc:  # noqa: BLE001 - report the source class, never abort the batch
-        return {"source": source, "status": f"ERROR:{type(exc).__name__}", "raw": 0, "settled": 0, "new": 0, "updated": 0}
+        return {"source": source, "status": f"ERROR:{type(exc).__name__}", "raw": 0, "scored": 0, "terminal_status": 0, "new": 0, "updated": 0}
 
-    settled = [
+    terminal_rows = [
         row for row in fetched
         if isinstance(row, dict)
         and str(row.get("date") or "")[:10] == day
         and row_key(row) != ("", "", "")
-        and has_final_score(row)
+        and (has_final_score(row) or has_terminal_event_status(row))
     ]
+    scored_rows = sum(1 for row in terminal_rows if has_final_score(row))
+    disposition_rows = sum(1 for row in terminal_rows if not has_final_score(row) and has_terminal_event_status(row))
 
     path = localdata / f"{source}_{day[:7]}.csv.gz"
     columns, existing = read_rows(path)
     source_columns = list(getattr(module, "COLUMNS", []) or [])
-    all_columns = list(dict.fromkeys(columns + source_columns + [key for row in settled for key in row]))
+    all_columns = list(dict.fromkeys(columns + source_columns + [key for row in terminal_rows for key in row]))
 
     new_rows = 0
     updated_rows = 0
-    for row in settled:
+    for row in terminal_rows:
         key = row_key(row)
         if key not in existing:
             existing[key] = {column: "" if row.get(column) is None else str(row.get(column, "")) for column in all_columns}
             new_rows += 1
             continue
-        merged, changed = merge_final_score(existing[key], row)
+        merged, changed = merge_terminal_update(existing[key], row)
         existing[key] = merged
         updated_rows += int(changed)
 
-    if settled and all_columns:
+    if terminal_rows and all_columns:
         _write_rows(path, all_columns, existing)
 
     return {
         "source": source,
         "status": "OK",
         "raw": len(fetched),
-        "settled": len(settled),
+        "scored": scored_rows,
+        "terminal_status": disposition_rows,
         "new": new_rows,
         "updated": updated_rows,
     }
@@ -180,12 +201,19 @@ def self_test() -> int:
         and row_key({"date": "2026-08-04", "home": "Carabobo FC", "away": "Trujillanos FC"})
         == row_key({"date": "2026-08-04", "home": "Carabobo FC", "away": "Trujillanos FC"})
     )
+    postponed, postponed_changed = merge_terminal_update(
+        baseline,
+        {"date": "2026-08-04", "home": "Carabobo FC", "away": "Trujillanos FC", "hs": None, "gs": None, "status": "Postp."},
+    )
+    ok = ok and postponed_changed and postponed["status"] == "Postp." and postponed["p1"] == "0.66"
+    ok = ok and has_terminal_event_status({"status": "Postponed"})
+    ok = ok and not has_terminal_event_status({"status": "scheduled"})
     print(f"refresh_result_sources self-test: ok={ok}")
     return 0 if ok else 1
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Refresh final-score rows from existing result donor sources.")
+    parser = argparse.ArgumentParser(description="Refresh final-score and terminal-status rows from existing result donors.")
     parser.add_argument(
         "--date",
         default=(date.today() - timedelta(days=1)).isoformat(),
@@ -214,7 +242,8 @@ def main() -> int:
         receipt = refresh_source(source, args.date)
         print(
             f"{receipt['source']}: status={receipt['status']} raw={receipt['raw']} "
-            f"settled={receipt['settled']} new={receipt['new']} updated={receipt['updated']}"
+            f"scored={receipt['scored']} terminal_status={receipt['terminal_status']} "
+            f"new={receipt['new']} updated={receipt['updated']}"
         )
         failures += not str(receipt["status"]).startswith("OK")
     return 1 if failures else 0

@@ -516,6 +516,8 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     assert "## Suspect-price Quarantine Audit" in text
     assert "immutable morning-baseline rows" in text
     assert "verified official late-slate additions" in text
+    assert "## Event Disposition / Void Audit" in text
+    assert "pending/unmatched result picks" in text
     assert "SCOUTINGSTATS_SOLE" in text
     assert "SUSPECT_ALIAS_FUZZY" in text
     assert "alias_fuzzy" in text
@@ -814,3 +816,143 @@ def test_build_report_scores_verified_late_row(tmp_path, monkeypatch):
     assert {row["match"] for row in report["settled_ledger"]} == {
         "Alpha vs Beta", "Carabobo FC vs Trujillanos FC",
     }
+
+# --- Event disposition / postponed fixture audit ----------------------------
+
+
+def test_verified_event_disposition_schema_rejects_nonterminal_status(tmp_path, monkeypatch):
+    import scripts.audit_recent_picks as audit_mod
+
+    config = tmp_path / "Config"
+    config.mkdir()
+    (config / "verified_event_dispositions.json").write_text(json.dumps({
+        "schema": 1,
+        "rows": [
+            {"date": "2026-07-19", "home": "FC Levadia Tallinn", "away": "Tammeka", "disposition": "POSTPONED"},
+            {"date": "2026-07-19", "home": "Bad", "away": "Status", "disposition": "SCHEDULED"},
+        ],
+    }))
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+
+    rows = audit_mod.load_verified_event_dispositions()
+
+    assert rows == [{
+        "date": "2026-07-19", "home": "FC Levadia Tallinn", "away": "Tammeka",
+        "disposition": "POSTPONED", "source": "verified_disposition", "verified_at": "",
+    }]
+
+
+def test_build_report_voids_exact_postponed_event_without_scoring(tmp_path, monkeypatch):
+    from collections import defaultdict
+
+    import scripts.audit_recent_picks as audit_mod
+    from edgefactory.util import norm_team
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-07-19"
+    pick = _late_ledger_pick(day, "FC Levadia Tallinn", "Tammeka")
+    (localdata / f"picks_{day}.json").write_text(json.dumps([pick]))
+
+    disposition = {
+        "disposition": "POSTPONED", "home": "FC Levadia Tallinn", "away": "Tammeka", "origin": "verified_disposition",
+    }
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    monkeypatch.setattr(audit_mod, "load_results_index", lambda _warehouse: ({}, defaultdict(list)))
+    monkeypatch.setattr(
+        audit_mod,
+        "load_event_disposition_index",
+        lambda *_args, **_kwargs: {(day, norm_team("FC Levadia Tallinn"), norm_team("Tammeka")): disposition},
+    )
+
+    report = audit_mod.build_report(day, day, tmp_path / "unused.duckdb")
+
+    assert report["voided_event_picks"] == 1
+    assert report["by_event_disposition"] == {"POSTPONED": 1}
+    assert report["unmatched_result_picks"] == 0
+    assert report["overall"]["settled_picks"] == 0
+
+
+def test_score_wins_over_same_fixture_postponement_status(tmp_path, monkeypatch):
+    from collections import defaultdict
+
+    import scripts.audit_recent_picks as audit_mod
+    from edgefactory.util import norm_team
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-07-26"
+    pick = _late_ledger_pick(day, "Super Nova", "Riga", pick="away")
+    (localdata / f"picks_{day}.json").write_text(json.dumps([pick]))
+    result = {"hs": 0, "gs": 2, "outcome": "away", "home": "Super Nova", "away": "Riga", "origin": "warehouse"}
+    disposition = {"disposition": "POSTPONED", "home": "Super Nova", "away": "Riga", "origin": "source_status:forebet"}
+
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    monkeypatch.setattr(
+        audit_mod,
+        "load_results_index",
+        lambda _warehouse: ({(day, norm_team("Super Nova"), norm_team("Riga")): result}, defaultdict(list, {day: [result]})),
+    )
+    monkeypatch.setattr(
+        audit_mod,
+        "load_event_disposition_index",
+        lambda *_args, **_kwargs: {(day, norm_team("Super Nova"), norm_team("Riga")): disposition},
+    )
+
+    report = audit_mod.build_report(day, day, tmp_path / "unused.duckdb")
+
+    assert report["overall"]["settled_picks"] == 1
+    assert report["voided_event_picks"] == 0
+    assert report["overall"]["wins"] == 1
+
+
+def test_source_status_postponement_is_detected_from_raw_warehouse(tmp_path, monkeypatch):
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+    from edgefactory.util import norm_team
+
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet (date VARCHAR, home VARCHAR, away VARCHAR, status VARCHAR)")
+    con.execute("INSERT INTO forebet VALUES ('2026-07-26','Supernova Riga','Riga FC','Postp.')")
+    con.execute("INSERT INTO forebet VALUES ('2026-07-25','Coquimbo Unido','Universidad de Concepcion','scheduled')")
+    con.close()
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+
+    index = audit_mod.load_event_disposition_index(wh, start="2026-07-01", end="2026-07-31")
+
+    postp = index[("2026-07-26", norm_team("Supernova Riga"), norm_team("Riga FC"))]
+    assert postp["disposition"] == "POSTPONED"
+    assert postp["origin"] == "source_status:forebet"
+    assert ("2026-07-25", norm_team("Coquimbo Unido"), norm_team("Universidad de Concepcion")) not in index
+
+
+def test_disposition_is_never_fuzzy_matched(tmp_path, monkeypatch):
+    from collections import defaultdict
+
+    import scripts.audit_recent_picks as audit_mod
+    from edgefactory.util import norm_team
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-07-19"
+    pick = _late_ledger_pick(day, "FC Levadia Tallinn", "Tammeka")
+    (localdata / f"picks_{day}.json").write_text(json.dumps([pick]))
+    wrong = {"disposition": "POSTPONED", "home": "FCI Levadia Town", "away": "Tammeka", "origin": "source_status:forebet"}
+
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    monkeypatch.setattr(audit_mod, "load_results_index", lambda _warehouse: ({}, defaultdict(list)))
+    monkeypatch.setattr(
+        audit_mod,
+        "load_event_disposition_index",
+        lambda *_args, **_kwargs: {(day, norm_team("FCI Levadia Town"), norm_team("Tammeka")): wrong},
+    )
+
+    report = audit_mod.build_report(day, day, tmp_path / "unused.duckdb")
+
+    assert report["voided_event_picks"] == 0
+    assert report["unmatched_result_picks"] == 1
