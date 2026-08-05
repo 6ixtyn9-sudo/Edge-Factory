@@ -35,7 +35,7 @@
     "2026-08-04",
     "2026-08-05"
   ],
-  "archived_pick_rows": 137,
+  "archived_pick_rows": 133,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.545455,
@@ -1127,7 +1127,7 @@
   "pending_result_picks": 0,
   "regular_only_rows": 14,
   "same_day_cutoff": "2026-08-05",
-  "same_day_excluded": 6,
+  "same_day_excluded": 2,
   "secondary_stats": {
     "btts_total": 128,
     "btts_wins": 61,
@@ -7923,7 +7923,270 @@
     "2026-07-30",
     "2026-07-31"
   ],
-  "verified_late_additions": 29,
+  "verified_late_additions": 25,
+  "veto_deep_dive": {
+    "by_odds_band": {
+      "1.50-2.00": {
+        "hit_rate": 0.75,
+        "priced_picks": 4,
+        "roi": 0.1775,
+        "settled_picks": 4,
+        "wins": 3
+      },
+      "2.00-3.00": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 1.18,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "<1.50": {
+        "hit_rate": 0.848485,
+        "priced_picks": 66,
+        "roi": 0.070121,
+        "settled_picks": 66,
+        "wins": 56
+      }
+    },
+    "by_price_evidence": {
+      "BETEXPLORER_RESCUE": {
+        "hit_rate": 0.863636,
+        "priced_picks": 44,
+        "roi": 0.098409,
+        "settled_picks": 44,
+        "wins": 38
+      },
+      "BZZOIRO_PRIMARY": {
+        "hit_rate": 0.866667,
+        "priced_picks": 15,
+        "roi": 0.1812,
+        "settled_picks": 15,
+        "wins": 13
+      },
+      "SCOUTINGSTATS_SOLE": {
+        "hit_rate": 0.6,
+        "priced_picks": 5,
+        "roi": -0.282,
+        "settled_picks": 5,
+        "wins": 3
+      },
+      "SOURCE_FALLBACK": {
+        "hit_rate": 1.0,
+        "priced_picks": 3,
+        "roi": 0.39,
+        "settled_picks": 3,
+        "wins": 3
+      },
+      "SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 0.75,
+        "priced_picks": 4,
+        "roi": -0.0725,
+        "settled_picks": 4,
+        "wins": 3
+      }
+    },
+    "by_veto_reason": {
+      "context VETO in ['league', 'odds_band']": {
+        "hit_rate": 0.857143,
+        "priced_picks": 7,
+        "roi": 0.17,
+        "settled_picks": 7,
+        "wins": 6
+      },
+      "context VETO in ['league', 'team_a', 'odds_band']": {
+        "hit_rate": 0.0,
+        "priced_picks": 1,
+        "roi": -1.0,
+        "settled_picks": 1,
+        "wins": 0
+      },
+      "context VETO in ['league', 'team_a']": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.33,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "context VETO in ['league']": {
+        "hit_rate": 0.6,
+        "priced_picks": 5,
+        "roi": -0.334,
+        "settled_picks": 5,
+        "wins": 3
+      },
+      "context VETO in ['odds_band']": {
+        "hit_rate": 0.794118,
+        "priced_picks": 34,
+        "roi": 0.055294,
+        "settled_picks": 34,
+        "wins": 27
+      },
+      "context VETO in ['team_a', 'odds_band']": {
+        "hit_rate": 1.0,
+        "priced_picks": 2,
+        "roi": 0.3165,
+        "settled_picks": 2,
+        "wins": 2
+      },
+      "context VETO in ['team_a']": {
+        "hit_rate": 1.0,
+        "priced_picks": 4,
+        "roi": 0.47,
+        "settled_picks": 4,
+        "wins": 4
+      },
+      "context VETO in ['team_h', 'odds_band']": {
+        "hit_rate": 1.0,
+        "priced_picks": 2,
+        "roi": 0.41,
+        "settled_picks": 2,
+        "wins": 2
+      },
+      "context VETO in ['team_h']": {
+        "hit_rate": 1.0,
+        "priced_picks": 5,
+        "roi": 0.205,
+        "settled_picks": 5,
+        "wins": 5
+      },
+      "short-odds away favourite 1.05": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.05,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.07": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.07,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.11": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.11,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.12": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.12,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.13": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.13,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.15": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.15,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.16": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.16,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.19": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.19,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.22": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.22,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.23": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.23,
+        "settled_picks": 1,
+        "wins": 1
+      }
+    },
+    "contrast_bucket": "CAUTION",
+    "contrast_by_price_evidence": {
+      "BETEXPLORER_RESCUE": {
+        "hit_rate": 0.692308,
+        "priced_picks": 13,
+        "roi": 0.076923,
+        "settled_picks": 13,
+        "wins": 9
+      },
+      "BZZOIRO_PRIMARY": {
+        "hit_rate": 1.0,
+        "priced_picks": 7,
+        "roi": 0.7,
+        "settled_picks": 7,
+        "wins": 7
+      },
+      "SCOUTINGSTATS_SOLE": {
+        "hit_rate": 0.2,
+        "priced_picks": 10,
+        "roi": -0.697,
+        "settled_picks": 10,
+        "wins": 2
+      },
+      "SOURCE_FALLBACK": {
+        "hit_rate": 0.0,
+        "priced_picks": 1,
+        "roi": -1.0,
+        "settled_picks": 1,
+        "wins": 0
+      },
+      "SUSPECT_ALIAS_FUZZY": {
+        "hit_rate": 0.0,
+        "priced_picks": 2,
+        "roi": -1.0,
+        "settled_picks": 2,
+        "wins": 0
+      }
+    },
+    "focus_bucket": "SKIPPED_VETO",
+    "overall": {
+      "hit_rate": 0.84507,
+      "priced_picks": 71,
+      "roi": 0.091803,
+      "settled_picks": 71,
+      "wins": 60
+    },
+    "soft_evidence_labels": [
+      "SCOUTINGSTATS_SOLE",
+      "SOURCE_FALLBACK",
+      "SUSPECT_ALIAS_FUZZY",
+      "UNMATCHED"
+    ],
+    "soft_evidence_only": {
+      "hit_rate": 0.75,
+      "priced_picks": 12,
+      "roi": -0.044167,
+      "settled_picks": 12,
+      "wins": 9
+    },
+    "trusted_evidence_only": {
+      "hit_rate": 0.864407,
+      "priced_picks": 59,
+      "roi": 0.119458,
+      "settled_picks": 59,
+      "wins": 51
+    }
+  },
   "voided_event_examples": [
     {
       "away": "Tammeka",
