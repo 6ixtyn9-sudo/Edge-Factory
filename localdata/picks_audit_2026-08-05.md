@@ -2,10 +2,10 @@
 
 ## Overall
 
-- archived pick rows: 137
+- archived pick rows: 133
 - archived pick dates: 30
 - immutable morning-baseline rows: 94
-- verified official late-slate additions: 29
+- verified official late-slate additions: 25
 - regular-ledger-only legacy rows: 14
 - unsafe regular ledgers ignored: 3
 - settled picks: 128
@@ -24,7 +24,7 @@
 
 - include same-day picks: False
 - same-day cutoff date: 2026-08-05
-- same-day rows excluded: 6
+- same-day rows excluded: 2
 
 ## Secondary Market Realized Rates
 
@@ -191,6 +191,48 @@ Scored as probabilistic forecasts per settled pick (each metric is scored as a p
 | Source fallback (`SOURCE_FALLBACK`) | 6 | 4 | 0.666667 | 6 | -0.098333 |
 | Suspect alias_fuzzy candidate (`SUSPECT_ALIAS_FUZZY`) | 8 | 5 | 0.625 | 8 | -0.23 |
 | No usable price (`UNMATCHED`) | 5 | 4 | 0.8 | 0 | None |
+
+## Veto Deep Dive
+
+> SKIPPED_VETO cross-cut by price evidence, odds band and veto reason, > computed from the SAME settled rows as the bucket table. > `trusted evidence only` excludes the soft labels: > SCOUTINGSTATS_SOLE, SOURCE_FALLBACK, SUSPECT_ALIAS_FUZZY, UNMATCHED.
+
+| cut | settled | wins | hit rate | priced | ROI |
+| --- | --- | --- | --- | --- | --- |
+| **overall (SKIPPED_VETO)** | 71 | 60 | 0.84507 | 71 | 0.091803 |
+| **trusted evidence only** | 59 | 51 | 0.864407 | 59 | 0.119458 |
+| **soft evidence only** | 12 | 9 | 0.75 | 12 | -0.044167 |
+| evidence: BETEXPLORER_RESCUE | 44 | 38 | 0.863636 | 44 | 0.098409 |
+| evidence: BZZOIRO_PRIMARY | 15 | 13 | 0.866667 | 15 | 0.1812 |
+| evidence: SCOUTINGSTATS_SOLE | 5 | 3 | 0.6 | 5 | -0.282 |
+| evidence: SOURCE_FALLBACK | 3 | 3 | 1.0 | 3 | 0.39 |
+| evidence: SUSPECT_ALIAS_FUZZY | 4 | 3 | 0.75 | 4 | -0.0725 |
+| odds band: <1.50 | 66 | 56 | 0.848485 | 66 | 0.070121 |
+| odds band: 1.50-2.00 | 4 | 3 | 0.75 | 4 | 0.1775 |
+| odds band: 2.00-3.00 | 1 | 1 | 1.0 | 1 | 1.18 |
+| veto reason: context VETO in ['league', 'odds_band'] | 7 | 6 | 0.857143 | 7 | 0.17 |
+| veto reason: context VETO in ['league', 'team_a', 'odds_band'] | 1 | 0 | 0.0 | 1 | -1.0 |
+| veto reason: context VETO in ['league', 'team_a'] | 1 | 1 | 1.0 | 1 | 0.33 |
+| veto reason: context VETO in ['league'] | 5 | 3 | 0.6 | 5 | -0.334 |
+| veto reason: context VETO in ['odds_band'] | 34 | 27 | 0.794118 | 34 | 0.055294 |
+| veto reason: context VETO in ['team_a', 'odds_band'] | 2 | 2 | 1.0 | 2 | 0.3165 |
+| veto reason: context VETO in ['team_a'] | 4 | 4 | 1.0 | 4 | 0.47 |
+| veto reason: context VETO in ['team_h', 'odds_band'] | 2 | 2 | 1.0 | 2 | 0.41 |
+| veto reason: context VETO in ['team_h'] | 5 | 5 | 1.0 | 5 | 0.205 |
+| veto reason: short-odds away favourite 1.05 | 1 | 1 | 1.0 | 1 | 0.05 |
+| veto reason: short-odds away favourite 1.07 | 1 | 1 | 1.0 | 1 | 0.07 |
+| veto reason: short-odds away favourite 1.11 | 1 | 1 | 1.0 | 1 | 0.11 |
+| veto reason: short-odds away favourite 1.12 | 1 | 1 | 1.0 | 1 | 0.12 |
+| veto reason: short-odds away favourite 1.13 | 1 | 1 | 1.0 | 1 | 0.13 |
+| veto reason: short-odds away favourite 1.15 | 1 | 1 | 1.0 | 1 | 0.15 |
+| veto reason: short-odds away favourite 1.16 | 1 | 1 | 1.0 | 1 | 0.16 |
+| veto reason: short-odds away favourite 1.19 | 1 | 1 | 1.0 | 1 | 0.19 |
+| veto reason: short-odds away favourite 1.22 | 1 | 1 | 1.0 | 1 | 0.22 |
+| veto reason: short-odds away favourite 1.23 | 1 | 1 | 1.0 | 1 | 0.23 |
+| contrast CAUTION: BETEXPLORER_RESCUE | 13 | 9 | 0.692308 | 13 | 0.076923 |
+| contrast CAUTION: BZZOIRO_PRIMARY | 7 | 7 | 1.0 | 7 | 0.7 |
+| contrast CAUTION: SCOUTINGSTATS_SOLE | 10 | 2 | 0.2 | 10 | -0.697 |
+| contrast CAUTION: SOURCE_FALLBACK | 1 | 0 | 0.0 | 1 | -1.0 |
+| contrast CAUTION: SUSPECT_ALIAS_FUZZY | 2 | 0 | 0.0 | 2 | -1.0 |
 
 ## Suspect-price Quarantine Audit
 
