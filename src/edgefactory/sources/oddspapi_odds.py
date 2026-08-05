@@ -128,17 +128,104 @@ def fetch_odds(fixture_id: str) -> dict:
     return data if isinstance(data, dict) else {}
 
 
-# OddsPapi market-id vocabulary (verified via the 2026-08-04 live probe).
-# 101 = 1x2; the rest are the commonly-observed ids for the shapes the probe
-# confirmed (BTTS, double chance, team totals, totals). The parser is
-# defensive: any id we do not recognize is skipped, never guessed.
-_MARKET_ID_TO_TYPE = {
-    "101": "1x2",
-    "103": "btts",
-    "108": "double_chance",
-    "115": "team_totals",
-    "107": "totals",
-}
+# OddsPapi market-id -> type is NOT hard-coded: the provider's ids are not
+# stable/guaranteed, so we fetch the /markets catalog at runtime and classify
+# each label (same logic as the probe's _category). Unknown ids are skipped,
+# never guessed. "101" is the one universally-observed 1x2 id and is used as
+# a safe fallback when the catalog is unavailable.
+_FALLBACK_ID_TO_TYPE = {"101": "1x2"}
+_MARKET_ID_TO_TYPE = dict(_FALLBACK_ID_TO_TYPE)
+_MARKET_CATALOG: dict[str, str] = {}  # id -> raw label (for diagnosis)
+
+
+_NON_GOAL = ("corner", "card", "throw", "offside", "shot", "penalt", "foul",
+             "booking", "save", "free kick", "goal kick", "red card", "yellow",
+             "inning", "margin", "period", "quarter")
+_GOAL_WORDS = ("goal", "btts", "both teams", "total", "over", "under",
+               "1x2", "match winner", "full time result", "double chance",
+               "correct score", "winner")
+
+
+def _classify_label(label: str) -> str:
+    """Map a market label to a type; GOALS-ONLY, evidence-driven.
+
+    Rules (derived from the observed /markets catalog 2026-08-05):
+    - "ng"/"gg" bare substrings are NOT used (they matched "winning"/"innings");
+      btts is matched on "both teams" / "btts" only.
+    - "full time" alone is NOT a 1x2 signal ("Over Under Full Time" is a
+      totals market); 1x2 requires "1x2" / "match winner" / "full time result".
+    - Team totals arrive as "Over Under Team 1" / "Over Under Team 2" (the
+      side lives in the LABEL, not the outcome name), so the type carries the
+      side: "team_totals_home" / "team_totals_away".
+    """
+    text = label.lower()
+    if any(w in text for w in _NON_GOAL):
+        return ""  # corners/cards/margins/innings — not a market we price
+    if not any(w in text for w in _GOAL_WORDS):
+        return ""  # not clearly a goal market — never guess
+    is_team = "team" in text and "both teams" not in text
+    if is_team and ("over" in text or "under" in text or "total" in text):
+        if "team 1" in text or "team1" in text or "home" in text:
+            return "team_totals_home"
+        if "team 2" in text or "team2" in text or "away" in text:
+            return "team_totals_away"
+        return ""  # team total but side unresolvable — skip, never guess
+    if "both teams" in text or "btts" in text:
+        return "btts"
+    if "double chance" in text:
+        return "double_chance"
+    if "1x2" in text or "match winner" in text or "full time result" in text or "winner" in text:
+        return "1x2"
+    if "correct score" in text or "exact" in text:
+        return ""
+    if "total" in text or "over" in text or "under" in text:
+        return "totals"
+    return ""
+
+
+def _market_catalog_map(payload: object) -> dict[str, str]:
+    """id -> label from the optional /markets endpoint (same as the probe)."""
+    rows = payload.get("data") if isinstance(payload, dict) else payload
+    if not isinstance(rows, list):
+        rows = payload.get("markets") if isinstance(payload, dict) else None
+    out: dict[str, str] = {}
+    if not isinstance(rows, list):
+        return out
+    for item in rows:
+        if not isinstance(item, dict):
+            continue
+        ident = item.get("marketId") or item.get("id")
+        label = item.get("marketName") or item.get("name") or item.get("label")
+        if ident is not None and label:
+            out[str(ident)] = str(label)
+    return out
+
+
+def load_market_type_map() -> dict[str, str]:
+    """Fetch the /markets catalog once and map ids -> types.
+
+    Never raises: any failure keeps the fallback (101 -> 1x2 only).
+    """
+    global _MARKET_ID_TO_TYPE
+    try:
+        payload = fetch_json("/markets", {"sportId": SPORT_ID_SOCCER, "language": "en"})
+        catalog = _market_catalog_map(payload)
+        mapped: dict[str, str] = {}
+        for mid, label in catalog.items():
+            mtype = _classify_label(label)
+            if mtype:
+                mapped[mid] = mtype
+        if mapped:
+            _MARKET_ID_TO_TYPE = {**_FALLBACK_ID_TO_TYPE, **mapped}
+            _MARKET_CATALOG.update(catalog)
+    except Exception:  # noqa: BLE001 - optional endpoint; fail soft
+        pass
+    return dict(_MARKET_ID_TO_TYPE)
+
+
+def market_catalog() -> dict[str, str]:
+    """id -> raw label from the last catalog fetch (diagnosis only)."""
+    return dict(_MARKET_CATALOG)
 # double-chance outcome-name -> selection
 _DC_SELECTION = {
     "homeordraw": "1x", "awayordraw": "x2", "homeoraway": "12",
@@ -179,9 +266,9 @@ def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None =
     bookmaker_odds = data.get("bookmakerOdds") or {}
     if not isinstance(bookmaker_odds, dict):
         return rows
-    type_map = dict(_MARKET_ID_TO_TYPE)
-    if market_type_map:
-        type_map.update({str(k): v for k, v in market_type_map.items()})
+    type_map = dict(market_type_map) if market_type_map else dict(_MARKET_ID_TO_TYPE)
+    if not type_map:
+        type_map = dict(_FALLBACK_ID_TO_TYPE)
     for bookmaker, book_data in bookmaker_odds.items():
         if not isinstance(book_data, dict):
             continue
@@ -243,7 +330,7 @@ def _market_selection(mtype: str, name: object, home: object, away: object,
         low = str(name or "").strip().lower().replace(" ", "")
         sel = _DC_SELECTION.get(low)
         return ("dc", sel) if sel else (None, None)
-    if mtype in ("totals", "team_totals"):
+    if mtype in ("totals", "team_totals", "team_totals_home", "team_totals_away"):
         # name like "Over 2.5" / "Under 1.5" or "Halmstads BK Over 1.5"
         s = str(name or "")
         m = re.search(r"(?i)\b(over|under)\s+([0-9]+(?:\.[0-9]+)?)", s)
@@ -256,6 +343,11 @@ def _market_selection(mtype: str, name: object, home: object, away: object,
             return (None, None)
         if mtype == "totals":
             return (f"ou_{pstr}", side)
+        if mtype == "team_totals_home":
+            return (f"tt_home_{pstr}", side)
+        if mtype == "team_totals_away":
+            return (f"tt_away_{pstr}", side)
+        # generic team_totals: side must come from the outcome name's team
         team_part = s[: m.start()].strip()
         n = _norm_full(team_part)
         if not n:

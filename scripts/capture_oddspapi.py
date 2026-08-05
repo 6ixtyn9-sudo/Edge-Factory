@@ -42,6 +42,8 @@ from edgefactory.sources.oddspapi_odds import (
     api_keys,
     fetch_fixtures,
     fetch_odds,
+    load_market_type_map,
+    market_catalog,
     rows_from_odds_response,
 )
 
@@ -97,6 +99,19 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             return stats
         fixtures = fetch_fixtures(day) or []
         stats["fixtures"] = len(fixtures)
+        type_map = load_market_type_map()
+        catalog = market_catalog()
+        # Compact summary only — the full catalog is thousands of ids and
+        # dumping it is bloat. Counts + a few (id, label) samples per type
+        # let us verify classification (e.g. that "totals" are goal totals,
+        # not corners/cards, and team totals are not folded into totals).
+        by_type: dict[str, dict] = {}
+        for mid, mtype in type_map.items():
+            slot = by_type.setdefault(mtype, {"count": 0, "samples": []})
+            slot["count"] += 1
+            if len(slot["samples"]) < 5:
+                slot["samples"].append({"id": mid, "label": catalog.get(mid, "?")})
+        stats["type_map_summary"] = by_type
         for fx in fixtures[:max_fixtures]:
             fid = str(fx.get("fixtureId") or fx.get("id") or "")
             if not fid:
@@ -106,7 +121,7 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             except Exception as exc:  # noqa: BLE001 - fail-soft
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
                 continue
-            rows = rows_from_odds_response(odds) if odds else []
+            rows = rows_from_odds_response(odds, market_type_map=type_map) if odds else []
             if rows:
                 stats["matched"] += 1
             stats["rows"] += len(rows)
@@ -161,7 +176,10 @@ def self_test() -> int:
             }},
         },
     }
-    rows = rows_from_odds_response(sample)
+    rows = rows_from_odds_response(sample, market_type_map={
+        "101": "1x2", "103": "btts", "108": "double_chance",
+        "115": "team_totals", "107": "totals",
+    })
     check("10 rows parsed (3x 1x2 + 2x btts + 2x dc + 2x team_totals + 1x totals)",
           len(rows) == 10)
     markets = {(r["market"], r["selection"]) for r in rows}
