@@ -5,7 +5,6 @@ import json
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
-import pytest
 
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "daily.py"
@@ -85,6 +84,13 @@ def test_promote_forecast(mock_picks_today_file, mock_archived_file, mock_gen_re
     mock_gen_report.assert_called_once_with("2026-06-18")
     mock_run_soft.assert_called()
     assert any("sync_supabase" in call[0][0] for call in mock_run_soft.call_args_list)
+
+
+def test_result_refresh_command_targets_yesterday_only():
+    assert daily.result_refresh_day("2026-08-05") == "2026-08-04"
+    assert daily.result_refresh_cmd("2026-08-05") == (
+        "PYTHONPATH=src python3 scripts/refresh_result_sources.py --date 2026-08-04"
+    )
 
 
 def test_autonomous_intraday_merge():

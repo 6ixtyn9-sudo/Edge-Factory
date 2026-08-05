@@ -3856,3 +3856,97 @@ rehearsal:
    neutral vote;
 5. no source-count increase can manufacture consensus, price confidence, a
    recommendation, or a push.
+
+---
+
+## Integrity hotfix — late result refresh + complete official ledger audit (2026-08-05)
+
+**Freeze exception:** this repairs result freshness and performance-audit
+completeness. It changes no market, source voter, probability, calibration,
+price, certification, selection, or notification policy.
+
+### Trigger and source-level proof
+
+The 2026-08-05 rolling audit reported 92 settled rows and zero unmatched rows,
+but that was only the immutable morning baseline. On 2026-08-04:
+
+```text
+picks_morning_2026-08-04.json (immutable baseline): 2 rows
+picks_2026-08-04.json (accumulated official ledger): 5 rows
+late official rows omitted from previous audit:        3 rows
+```
+
+Two omitted rows already had exact facts in `settled_results.json`:
+
+```text
+BG Pathum United 1-3 Aston Villa
+Newport County 1-4 Roma
+```
+
+The third omitted row was `Carabobo FC vs Trujillanos FC`. At 07:35 SAST the
+bot-owned overlay still lacked it, but a bounded read-only re-fetch of the
+**existing** result donors immediately returned the same final score from
+multiple sources:
+
+```text
+Forebet:        Carabobo 2-0 Trujillanos FC (FT)
+Zulubet:        Carabobo FC 2-0 Trujillanos FC
+Statarea:       Carabobo FC 2-0 Trujillanos FC
+BettingClosed:  Carabobo FC 2-0 Trujillanos
+Vitibet:        fixture marked finished but score fields blank
+ScoutingStats:  no fixture row in this sample
+```
+
+This proved the issue was **not** a missing external result or a reason to add
+a manual score. It was a capture-cadence gap: after the morning heavy capture,
+`daily.py` intraday mode ran `backfill_results` only against already-cached
+donor rows. It did not re-fetch the completed prior-day donor pages, so late
+final scores could remain absent until a later heavy capture.
+
+### What changed
+
+1. **Bounded result-donor refresh:** new
+   `scripts/refresh_result_sources.py` re-reads only yesterday's six existing
+   result-capable adapters:
+
+   ```text
+   forebet, zulubet, statarea, vitibet, scoutingstats, bettingclosed
+   ```
+
+   It persists only rows with both final score fields and, when a cached row
+   exists, updates only `hs`, `gs`, optional half-time scores, and status. It
+   preserves pick-time probability and odds fields; it never re-scores or
+   rewrites a prediction because a result page has later lost its probabilities.
+2. **Intraday ordering:** `daily.py` now runs this bounded refresh before
+   `backfill_results` → warehouse rebuild → shared settled-results export →
+   audit. The next three-hourly bot cycle can therefore settle a late-finishing
+   prior-day fixture without a D30 all-source capture.
+3. **Complete official settlement ledger:** `audit_recent_picks.py` now begins
+   with `picks_morning_YYYY-MM-DD.json` and admits new rows from
+   `picks_YYYY-MM-DD.json` only when the latter is a payload-identical superset
+   of every morning row. This includes legitimate intraday official additions
+   while rejecting forecast-overwritten/mutated ledgers fail-closed.
+4. **Scope receipts:** rolling JSON and Markdown now display morning-baseline
+   rows, verified official late-slate additions, legacy regular-only rows, and
+   unsafe regular ledgers ignored. `picks_YYYY-MM-DD.txt` remains a frozen
+   pre-match presentation report, never a mutable results ledger.
+
+### Invariants pinned by tests
+
+```text
+late donor refresh preserves pick-time probabilities while adding final scores
+source refresh failure is visible and does not abort the entire donor batch
+autonomous intraday refresh targets yesterday only
+morning baseline + payload-identical late additions → audited once
+forecast-mutated regular ledger → additions rejected
+same-day audit exclusion → unchanged
+```
+
+### Boundary and expected receipt
+
+No manual final-score override, new external result source, source vote,
+source weight, market logic, odds path, or bot-owned `localdata/` file was
+hand-edited. The next bot intraday run should emit a bounded result-refresh
+receipt, export Carabobo 2-0 through the normal shared facts path, and make the
+August 4 audit include all five official rows. If it does not, inspect the
+refresh receipt before changing result logic again.

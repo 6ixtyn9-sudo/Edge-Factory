@@ -514,6 +514,8 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     assert "Win + …" in text  # label-honesty disclaimer documents the legacy wording (Addendum 16)
     assert "## Price Evidence / Corroboration Audit" in text
     assert "## Suspect-price Quarantine Audit" in text
+    assert "immutable morning-baseline rows" in text
+    assert "verified official late-slate additions" in text
     assert "SCOUTINGSTATS_SOLE" in text
     assert "SUSPECT_ALIAS_FUZZY" in text
     assert "alias_fuzzy" in text
@@ -718,3 +720,97 @@ def test_settle_pick_derives_legacy_price_evidence_conservatively():
     assert fuzzy is not None
     assert fuzzy.price_evidence == "SUSPECT_ALIAS_FUZZY"
     assert fuzzy.price_quarantine_reason == "alias_fuzzy"
+
+# --- Integrity hotfix: complete official late-slate settlement ledger --------
+
+
+def _late_ledger_pick(day, home, away, *, pick="home", bucket="SKIPPED_VETO", odds=1.50):
+    return {
+        "date": day,
+        "home": home,
+        "away": away,
+        "match": f"{home} vs {away}",
+        "league": "Test League",
+        "market": "1x2",
+        "pick": pick,
+        "odds": odds,
+        "edge_rule": "test-rule",
+        "bucket": bucket,
+        "as_of": f"{day}T08:00:00+02:00",
+    }
+
+
+def test_archived_pick_loader_merges_verified_late_official_additions(tmp_path, monkeypatch):
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-08-04"
+    baseline = _late_ledger_pick(day, "Alpha", "Beta")
+    late = _late_ledger_pick(day, "Gamma", "Delta", pick="away")
+    (localdata / f"picks_morning_{day}.json").write_text(json.dumps([baseline]))
+    (localdata / f"picks_{day}.json").write_text(json.dumps([baseline, late]))
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+
+    rows, receipt = audit_mod.load_archived_picks_with_receipt(day, day)
+
+    assert [row["match"] for row in rows] == ["Alpha vs Beta", "Gamma vs Delta"]
+    assert receipt["morning_baseline_rows"] == 1
+    assert receipt["verified_late_additions"] == 1
+    assert receipt["unsafe_regular_ledger_dates"] == []
+
+
+def test_archived_pick_loader_rejects_forecast_mutated_regular_ledger(tmp_path, monkeypatch):
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-08-04"
+    baseline = _late_ledger_pick(day, "Alpha", "Beta")
+    mutated = dict(baseline, odds=9.99)
+    late = _late_ledger_pick(day, "Gamma", "Delta", pick="away")
+    (localdata / f"picks_morning_{day}.json").write_text(json.dumps([baseline]))
+    (localdata / f"picks_{day}.json").write_text(json.dumps([mutated, late]))
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+
+    rows, receipt = audit_mod.load_archived_picks_with_receipt(day, day)
+
+    assert [row["match"] for row in rows] == ["Alpha vs Beta"]
+    assert receipt["verified_late_additions"] == 0
+    assert receipt["unsafe_regular_ledger_dates"] == [day]
+
+
+def test_build_report_scores_verified_late_row(tmp_path, monkeypatch):
+    from collections import defaultdict
+
+    import scripts.audit_recent_picks as audit_mod
+    from edgefactory.util import norm_team
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-08-04"
+    baseline = _late_ledger_pick(day, "Alpha", "Beta")
+    late = _late_ledger_pick(day, "Carabobo FC", "Trujillanos FC")
+    (localdata / f"picks_morning_{day}.json").write_text(json.dumps([baseline]))
+    (localdata / f"picks_{day}.json").write_text(json.dumps([baseline, late]))
+
+    alpha = {"hs": 1, "gs": 0, "outcome": "home", "home": "Alpha", "away": "Beta", "origin": "warehouse"}
+    carabobo = {"hs": 2, "gs": 0, "outcome": "home", "home": "Carabobo FC", "away": "Trujillanos FC", "origin": "warehouse"}
+    index = {
+        (day, norm_team("Alpha"), norm_team("Beta")): alpha,
+        (day, norm_team("Carabobo FC"), norm_team("Trujillanos FC")): carabobo,
+    }
+    by_date = defaultdict(list, {day: [alpha, carabobo]})
+
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    monkeypatch.setattr(audit_mod, "load_results_index", lambda _warehouse: (index, by_date))
+
+    report = audit_mod.build_report(day, day, tmp_path / "unused.duckdb")
+
+    assert report["archived_pick_rows"] == 2
+    assert report["verified_late_additions"] == 1
+    assert report["overall"]["settled_picks"] == 2
+    assert {row["match"] for row in report["settled_ledger"]} == {
+        "Alpha vs Beta", "Carabobo FC vs Trujillanos FC",
+    }
