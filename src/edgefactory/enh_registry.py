@@ -38,6 +38,12 @@ from pathlib import Path
 REGISTRY_FILENAME = "enhancement_registry.json"
 REGISTRY_VERSION = "v1"
 MIN_PRICED_N = 30
+# Governance N5 (Addendum 27.11, 2026-08-05): PAPER->ELIGIBLE additionally
+# requires this fraction of the priced outcomes to have been priced by
+# >=2 DISTINCT sources (multi-source verification). Single-source prices
+# still accrue toward n and the Wilson math (per Addendum 27.7) but cannot
+# certify a market to the staking level. ceil(n * frac) at n=30 -> 8.
+MIN_MULTI_SOURCE_FRAC = 0.25
 WILSON_Z = 1.959963984540054
 BENCH_WINDOW_DAYS = 60
 BENCH_MIN_N = 20
@@ -120,6 +126,7 @@ def _write_atomic(path: Path, data: dict) -> None:
 def _blank() -> dict:
     return {"status": "SHADOW", "n": 0, "hits": 0, "profit": 0.0,
             "inv_price_sum": 0.0, "processed": [], "records": [],
+            "multi_n": 0,  # governance N5: outcomes priced by >=2 distinct sources
             "status_since": None, "status_reason": None}
 
 
@@ -147,8 +154,15 @@ def _evaluate(entry: dict, today: str) -> None:
         mean_be = (entry.get("inv_price_sum", 0.0) / n) if n else None
         lb = wilson_lb(hits, n)
         if mean_be and lb >= mean_be:
-            entry.update(status="ELIGIBLE", status_since=today,
-                         status_reason=f"n={n} wilsonLB95={lb:.4f} >= mean breakeven {mean_be:.4f}")
+            multi_n = entry.get("multi_n", 0)
+            multi_req = max(1, math.ceil(n * MIN_MULTI_SOURCE_FRAC))
+            if multi_n >= multi_req:
+                entry.update(status="ELIGIBLE", status_since=today,
+                             status_reason=f"n={n} wilsonLB95={lb:.4f} >= mean breakeven {mean_be:.4f}, multi-source {multi_n}/{multi_req}")
+            else:
+                # Governance N5: Wilson evidence clears but verification does not.
+                # Stay PAPER with a transparent reason (never silently stall).
+                entry.update(status_reason=f"n={n} wilsonLB95={lb:.4f} >= mean breakeven {mean_be:.4f} but multi-source verification {multi_n}/{multi_req} not met")
 
     if entry["status"] == "ELIGIBLE":
         try:
@@ -166,13 +180,15 @@ def _evaluate(entry: dict, today: str) -> None:
 
 def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                    price: float | None, hit: bool, source: str = "",
-                   today: str | None = None) -> dict:
+                   today: str | None = None, multi_source: bool = False) -> dict:
     """Idempotently record one settled enhancement outcome.
 
     Dedupes on "date|match|<market>@v1" so repeated audit runs cannot double-count.
     Unpriced outcomes are recorded as processed but never advance certification.
     ``today`` injects the evaluation date (default: real system date) so the
     rolling BENCH window is deterministic in tests and batch replay.
+    ``multi_source`` (governance N5): True when >=2 distinct sources priced this
+    outcome; increments the market's multi_n used by the ELIGIBLE floor.
     Returns {"status": str|None, "recorded": bool}. Never raises."""
     try:
         mkey = versioned(market)
@@ -196,8 +212,11 @@ def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
                 entry["inv_price_sum"] = entry.get("inv_price_sum", 0.0) + 1.0 / price_f
                 entry.setdefault("records", []).append(
                     {"date": date_, "match": match, "price": round(price_f, 3),
-                     "hit": bool(hit), "source": source or ""})
+                     "hit": bool(hit), "source": source or "",
+                     "multi_source": bool(multi_source)})
                 entry["records"] = entry["records"][-MAX_RECORDS_PER_MARKET:]
+                if multi_source:
+                    entry["multi_n"] = entry.get("multi_n", 0) + 1
             entry["processed"] = entry["processed"][-MAX_PROCESSED_KEYS:]
             _evaluate(entry, today)
             _write_atomic(path, reg)

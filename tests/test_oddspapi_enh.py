@@ -114,6 +114,9 @@ def test_enh_pricing_oddspapi_is_4th_source(tmp_path):
     rows = rows_from_odds_response(_odds_payload(), market_type_map={
     "101": "1x2", "103": "btts", "108": "double_chance",
     "115": "team_totals", "107": "totals"})
+    # N4 freshness: parser stamps captured_at=now (post-kickoff for the 08-03
+    # payload) -> the guard would drop the rows. Stamp pre-kickoff explicitly.
+    rows = [dict(r, captured_at="2026-08-03T16:00:00Z") for r in rows]
     _write_oddspapi_month(tmp_path, rows)
     idx = load_prices_index(tmp_path, "2026-08-03")
     # team-totals price present, attributed to oddspapi
@@ -201,6 +204,7 @@ def test_oddspapi_flag_gate_controls_merge(tmp_path, monkeypatch):
     rows = rows_from_odds_response(_odds_payload(), market_type_map={
         "101": "1x2", "103": "btts", "108": "double_chance",
         "115": "team_totals", "107": "totals"})
+    rows = [dict(r, captured_at="2026-08-03T16:00:00Z") for r in rows]
     _write_oddspapi_month(tmp_path, rows)
     monkeypatch.delenv("EDGE_FACTORY_ODDSPAPI_PRICES", raising=False)
     idx = load_prices_index(tmp_path, "2026-08-03")
@@ -265,6 +269,7 @@ def test_double_chance_draw_is_unpriced(tmp_path):
     rows = rows_from_odds_response(_odds_payload(), market_type_map={
         "101": "1x2", "103": "btts", "108": "double_chance",
         "115": "team_totals", "107": "totals"})
+    rows = [dict(r, captured_at="2026-08-03T16:00:00Z") for r in rows]
     _write_oddspapi_month(tmp_path, rows)
     idx = load_prices_index(tmp_path, "2026-08-03")
     p = attach_enhancement_price(
@@ -301,3 +306,34 @@ def test_real_payload_shape_totals_dropped():
     assert ("dc", "1x") in markets
     # totals outcome has mainLine but no name/line -> dropped, never guessed
     assert not any(m.startswith("ou_") for m, _ in markets)
+
+
+# --- Governance N4 (Addendum 27.11): freshness window ---
+
+
+def test_oddspapi_freshness_window_drops_stale_and_post_kickoff(tmp_path):
+    # Rows captured outside [kickoff-72h, kickoff] must not merge into the
+    # price index. Unparseable timestamps fail open (kept).
+    rows = rows_from_odds_response(_odds_payload(), market_type_map={
+        "101": "1x2", "103": "btts", "108": "double_chance",
+        "115": "team_totals", "107": "totals"})
+    rows = [dict(r, kickoff="2026-08-03T20:00:00Z") for r in rows]
+
+    def priced_with(captured_at):
+        root = tmp_path / str(abs(hash(str(captured_at))))
+        _write_oddspapi_month(root, [dict(r, captured_at=captured_at) for r in rows])
+        idx = load_prices_index(root, "2026-08-03")
+        return attach_enhancement_price(_pick(recommended_enhancement="match_over_25"), idx)
+
+    # fresh: captured 1h before kickoff -> prices
+    p = priced_with("2026-08-03T19:00:00Z")
+    assert p["enhancement_priced"] is True and p["enhancement_price"] == 1.85
+    # stale: captured 96h before kickoff -> dropped
+    p = priced_with("2026-07-30T19:00:00Z")
+    assert p["enhancement_priced"] is False
+    # post-kickoff lookahead artifact -> dropped
+    p = priced_with("2026-08-03T21:00:00Z")
+    assert p["enhancement_priced"] is False
+    # unparseable captured_at -> fail open (kept)
+    p = priced_with("not-a-date")
+    assert p["enhancement_priced"] is True and p["enhancement_price"] == 1.85

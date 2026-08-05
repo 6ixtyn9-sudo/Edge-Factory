@@ -40,9 +40,12 @@ def test_idempotent_by_key(tmp_path):
 
 def test_eligible_transition(tmp_path):
     # 30 priced recs, 27 hits @1.50: wilsonLB95 ~0.758 >= mean breakeven 0.667
+    # (multi_source=True here: this test pins the Wilson-gate mechanics; the
+    # N5 verification floor is pinned by its own tests below)
     for i in range(30):
         res = record_outcome(tmp_path, date_="2026-08-03", match=f"A{i} vs B{i}", market=MKT,
-                             price=1.50, hit=(i < 27), source="theoddsapi")
+                             price=1.50, hit=(i < 27), source="theoddsapi",
+                             multi_source=True)
     assert res["status"] == "ELIGIBLE"
     entry = _read(tmp_path)["markets"]["match_over_25@v1"]
     assert "wilsonLB95" in entry["status_reason"]
@@ -58,7 +61,8 @@ def test_stays_paper_when_evidence_insufficient(tmp_path):
 def test_benched_circuit_breaker(tmp_path):
     for i in range(30):  # earn ELIGIBLE
         record_outcome(tmp_path, date_="2026-08-03", match=f"W{i} vs X{i}", market=MKT,
-                       price=1.50, hit=True, source="theoddsapi", today="2026-08-03")
+                       price=1.50, hit=True, source="theoddsapi", today="2026-08-03",
+                       multi_source=True)
     status = None
     for i in range(30):  # rolling window turns sharply unprofitable
         status = record_outcome(tmp_path, date_="2026-08-03", match=f"L{i} vs M{i}", market=MKT,
@@ -74,7 +78,8 @@ def test_benched_circuit_breaker_window_is_injected(tmp_path):
         root = tmp_path / today.replace("-", "")
         for i in range(30):
             record_outcome(root, date_="2026-08-03", match=f"W{i} vs X{i}", market=MKT,
-                           price=1.50, hit=True, source="theoddsapi", today=today)
+                           price=1.50, hit=True, source="theoddsapi", today=today,
+                           multi_source=True)
         status = None
         for i in range(30):
             status = record_outcome(root, date_="2026-08-03", match=f"L{i} vs M{i}", market=MKT,
@@ -136,3 +141,42 @@ def test_wilson_lb_monotonic():
     assert wilson_lb(0, 0) == 0.0
     assert wilson_lb(9, 10) < wilson_lb(90, 100)  # wider CI (lower LB) on small n
     assert wilson_lb(27, 30) > 2 / 3  # the eligibility bar used in tests above
+
+
+# --- Governance N5 (Addendum 27.11): multi-source verification floor ---
+
+
+def test_stays_paper_without_multi_source_verification(tmp_path):
+    # 30 priced outcomes, 30 hits @1.50 (Wilson clears easily), but ZERO
+    # multi-source outcomes -> must stay PAPER with a transparent reason.
+    for i in range(30):
+        record_outcome(tmp_path, date_="2026-08-03", match=f"W{i} vs X{i}", market=MKT,
+                       price=1.50, hit=True, source="theoddsapi", today="2026-08-03")
+    entry = _read(tmp_path)["markets"]["match_over_25@v1"]
+    assert entry["status"] == "PAPER"
+    assert "multi-source" in (entry.get("status_reason") or "")
+    assert entry.get("multi_n", 0) == 0
+
+
+def test_eligible_requires_multi_source_floor(tmp_path):
+    # 30 priced outcomes, 30 hits @1.50, exactly 8 of 30 multi-source
+    # (ceil(30 * 0.25) = 8) -> ELIGIBLE; reason records the verification.
+    for i in range(30):
+        record_outcome(tmp_path, date_="2026-08-03", match=f"W{i} vs X{i}", market=MKT,
+                       price=1.50, hit=True, source="theoddsapi", today="2026-08-03",
+                       multi_source=(i < 8))
+    entry = _read(tmp_path)["markets"]["match_over_25@v1"]
+    assert entry["status"] == "ELIGIBLE"
+    assert entry.get("multi_n") == 8
+    assert "multi-source 8/8" in entry["status_reason"]
+
+
+def test_below_multi_source_floor_stays_paper(tmp_path):
+    # 30 priced outcomes, 30 hits @1.50, only 7 of 30 multi-source -> PAPER
+    for i in range(30):
+        record_outcome(tmp_path, date_="2026-08-03", match=f"W{i} vs X{i}", market=MKT,
+                       price=1.50, hit=True, source="theoddsapi", today="2026-08-03",
+                       multi_source=(i < 7))
+    entry = _read(tmp_path)["markets"]["match_over_25@v1"]
+    assert entry["status"] == "PAPER"
+    assert "7/8" in entry["status_reason"]

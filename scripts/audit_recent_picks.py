@@ -1482,6 +1482,9 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                                 "date": str(pick_date), "match": pick.get("match") or "",
                                 "market": enh_type, "price": float(price), "hit": bool(hit),
                                 "source": price_source,
+                                # governance N5 (Addendum 27.11): whether >=2
+                                # distinct sources priced this exact selection.
+                                "multi_source": bool(probe.get("enhancement_multi_source")),
                             })
 
                 # 5. Granular expectations audit ledger populator
@@ -1599,7 +1602,8 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         from edgefactory.enh_registry import all_statuses, record_outcome
         for oc in priced_outcomes:
             record_outcome(ROOT, date_=oc["date"], match=oc["match"], market=oc["market"],
-                           price=oc["price"], hit=oc["hit"], source=oc["source"])
+                           price=oc["price"], hit=oc["hit"], source=oc["source"],
+                           multi_source=oc.get("multi_source", False))
         registry_states = all_statuses(ROOT)
     except Exception:
         registry_states = {}
