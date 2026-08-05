@@ -70,7 +70,9 @@ def _pick(**kw):
 
 
 def test_oddspapi_parser_multimarket():
-    rows = rows_from_odds_response(_odds_payload())
+    rows = rows_from_odds_response(_odds_payload(), market_type_map={
+    "101": "1x2", "103": "btts", "108": "double_chance",
+    "115": "team_totals", "107": "totals"})
     markets = {(r["market"], r["selection"]) for r in rows}
     assert ("1x2", "home") in markets and ("1x2", "draw") in markets and ("1x2", "away") in markets
     assert ("btts", "yes") in markets
@@ -85,7 +87,7 @@ def test_oddspapi_unknown_market_ids_skipped():
     payload = _odds_payload()
     payload["bookmakerOdds"]["Pinnacle"]["markets"]["999"] = {
         "outcomes": {"x": {"players": {"0": {"name": "Mystery", "price": 5.0}}}}}
-    rows = rows_from_odds_response(payload)
+    rows = rows_from_odds_response(payload, market_type_map={"101": "1x2"})
     assert all(r["market"] != "?" for r in rows)
     assert all(("999" not in str(r["market"])) for r in rows)
 
@@ -95,13 +97,15 @@ def test_oddspapi_team_totals_side_matching():
     payload = _odds_payload()
     payload["bookmakerOdds"]["Pinnacle"]["markets"]["115"] = {"outcomes": {
         "t2": {"players": {"0": {"name": "IK Sirius Under 1.5", "price": 2.10}}}}}
-    rows = rows_from_odds_response(payload)
+    rows = rows_from_odds_response(payload, market_type_map={"101": "1x2", "115": "team_totals"})
     assert ("tt_away_1.5", "under") in {(r["market"], r["selection"]) for r in rows}
 
 
 def test_enh_pricing_oddspapi_is_4th_source(tmp_path):
     # oddspapi prices a market that theoddsapi does not: team totals over 1.5
-    rows = rows_from_odds_response(_odds_payload())
+    rows = rows_from_odds_response(_odds_payload(), market_type_map={
+    "101": "1x2", "103": "btts", "108": "double_chance",
+    "115": "team_totals", "107": "totals"})
     _write_oddspapi_month(tmp_path, rows)
     idx = load_prices_index(tmp_path, "2026-08-03")
     # team-totals price present, attributed to oddspapi
@@ -123,3 +127,29 @@ def test_enh_pricing_missing_oddspapi_file_is_noop(tmp_path):
     p = attach_enhancement_price(_pick(recommended_enhancement="home_over_15"), idx)
     assert p["enhancement_priced"] is False
     assert p["enhancement_price"] is None
+
+
+def test_classify_label_goals_only():
+    from edgefactory.sources.oddspapi_odds import _classify_label
+    # goal markets classify
+    assert _classify_label("Total Goals Over/Under 2.5") == "totals"
+    assert _classify_label("Over Under Full Time") == "totals"
+    assert _classify_label("Both Teams To Score") == "btts"
+    assert _classify_label("Both Teams To Score First Half") == "btts"
+    assert _classify_label("Double Chance Full Time") == "double_chance"
+    assert _classify_label("1X2") == "1x2"
+    assert _classify_label("Full Time Result") == "1x2"
+    assert _classify_label("Match Winner") == "1x2"
+    # team totals: side lives in the LABEL ("Over Under Team 1/2")
+    assert _classify_label("Over Under Team 1") == "team_totals_home"
+    assert _classify_label("Over Under Team 2") == "team_totals_away"
+    assert _classify_label("Team Total Goals (Home)") == "team_totals_home"
+    # the "ng" substring bug: "winning"/"innings" must NOT become btts
+    assert _classify_label("Winning Margin Full Time") == ""
+    assert _classify_label("Over Under (incl. extra innings)") == ""
+    # non-goal markets are REJECTED (never guessed into the unified schema)
+    assert _classify_label("Total Corners Over/Under 8.5") == ""
+    assert _classify_label("Total Cards Over/Under 4.5") == ""
+    assert _classify_label("Match Shots On Target") == ""
+    # ambiguous labels are not guessed
+    assert _classify_label("Random Market") == ""
