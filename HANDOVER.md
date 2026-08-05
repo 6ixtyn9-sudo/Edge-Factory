@@ -4475,3 +4475,51 @@ pattern.
 registry (operator-intended, 27.7), now freshness-stamped (F2), flag-gated
 (F6), and the whole suite is env-hermetic (N1). The registry advances only
 on real priced outcomes at n>=30 per market.
+
+### Addendum 27.11 — Governance calls N4 + N5 (operator-delegated, implemented 2026-08-05)
+
+The operator delegated the two outstanding governance items (audit N4, N5) to
+be decided and implemented. Decisions, rationale, and implementation:
+
+**N4 — FRESHNESS: ENFORCE (was: measurement-only).**
+`enh_pricing` now rejects OddsPapi rows captured outside
+`[kickoff - ODDSPAPI_MAX_AGE_H(72h), kickoff]` at the merge. This completes
+the red-team F1/F2/F6 chain: the flag gates activation, the stamp measures,
+the window now enforces. The capture pipeline is same-day/next-2-days, so
+nothing legitimate is dropped; post-kickoff rows are lookahead artifacts
+that must never price a settled pick. Missing/unparseable timestamps fail
+open (the guard must never silently kill a source on a format change).
+Scoped to the oddspapi branch only (the demonstrated problem; theoddsapi/
+bzzoiro/scoutingstats have different capture semantics and are untouched).
+
+**N5 — SINGLE-SOURCE CERTIFICATION: VERIFY AT ELIGIBLE (calibrated).**
+Real single-source prices keep accruing into PAPER and the Wilson math (per
+Addendum 27.7 - they feed the gate unchanged), but PAPER->ELIGIBLE now
+requires `ceil(n * 0.25)` of the market's outcomes priced by >=2 DISTINCT
+sources (`MIN_MULTI_SOURCE_FRAC = 0.25`; 8 of 30 at the gate). Rationale:
+ELIGIBLE is the only level that pushes `⭐` staking recommendations to
+WhatsApp - certification without any cross-source verification was the one
+red-team item with zero response. 25% is reachable (theoddsapi covers
+team_totals/dc/totals/h2h; scoutingstats covers totals/btts) while being a
+real signal: a market with systematic single-source mispricing cannot
+fabricate 8 cross-verified outcomes. Unverified markets cap at PAPER with a
+transparent `status_reason` (never silently stalled). Key semantic: two
+AGREEING sources count as verified even without a divergence flag (the
+divergence record is about disagreement, not verification) - surfaced as
+`enhancement_multi_source` on every priced pick and threaded through
+`priced_outcomes -> record_outcome(multi_source=...)`.
+
+**Verified (fresh tree at 9964662):** 223 passed (219 + 4 new: 1 freshness,
+3 verification-floor) in BOTH clean and polluted-.env environments;
+pyflakes clean. End-to-end sim: identical Wilson evidence (30/30 @1.50) ->
+single-source-only market stays PAPER ("multi-source verification 0/8 not
+met"), 8/30 multi-source -> ELIGIBLE ("multi-source 8/8").
+
+**Compatibility:** existing `enhancement_registry.json` is additive-compatible
+(`multi_n` defaults 0 -> existing markets stay PAPER until verification
+accrues; already-ELIGIBLE markets are unaffected - the floor gates the
+PAPER->ELIGIBLE transition only, non-regressive). No migration needed.
+
+**Constants (reviewable in the diff, changeable by operator):**
+`ODDSPAPI_MAX_AGE_H = 72` (enh_pricing.py),
+`MIN_MULTI_SOURCE_FRAC = 0.25` (enh_registry.py).

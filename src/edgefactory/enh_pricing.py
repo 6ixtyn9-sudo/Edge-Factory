@@ -40,6 +40,7 @@ import csv
 import os
 import gzip
 import math
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -87,6 +88,12 @@ SCOUTINGSTATS_SOURCE = "scoutingstats"
 ODDSPAPI_SOURCE = "oddspapi"
 
 DIVERGENCE_MIN_SPREAD = 0.10  # flag when max/min best-source prices differ by >10%
+# Governance N4 (Addendum 27.11, 2026-08-05): max pre-kickoff capture age in
+# hours for OddsPapi rows. Rows captured outside [kickoff - 72h, kickoff] are
+# dropped at the merge. The capture pipeline is same-day/next-2-days, so
+# nothing legit drops; post-kickoff rows are lookahead artifacts that must
+# never price a settled pick.
+ODDSPAPI_MAX_AGE_H = 72
 
 # scoutingstats wide-row column map: (market, selection) -> odds column.
 # Verified against src/edgefactory/sources/scoutingstats.py COLUMNS (2026-08-03).
@@ -138,8 +145,38 @@ def _put(out: dict[str, Any], nh: str, na: str, mkt: str, sel: str,
         per_src[source] = price
 
 
+def _parse_dt(s: object) -> datetime | None:
+    """Parse an ISO timestamp to aware UTC; None when unparseable."""
+    try:
+        dt = datetime.fromisoformat(str(s or "").strip())
+    except (TypeError, ValueError):
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+
+def _fresh_row(row: dict[str, Any], max_age_h: float) -> bool:
+    """Freshness guard (governance N4, Addendum 27.11).
+
+    Drop rows whose captured_at lies outside [kickoff - max_age_h, kickoff].
+    Missing/unparseable timestamps FAIL OPEN (can't judge -> keep the row;
+    the guard must never silently kill a source on a format change).
+    """
+    ko = _parse_dt(row.get("kickoff") or "")
+    cap = _parse_dt(row.get("captured_at") or "")
+    if ko is None or cap is None:
+        return True
+    if cap > ko:
+        return False  # captured after kickoff - lookahead artifact
+    if (ko - cap).total_seconds() > max_age_h * 3600:
+        return False  # captured too far before kickoff - early-market noise
+    return True
+
+
 def _accumulate_unified(path: Path, *, day: str, source_tag: str,
-                        strict_source: str | None, out: dict[str, Any]) -> None:
+                        strict_source: str | None, out: dict[str, Any],
+                        max_age_h: float | None = None) -> None:
     """Read a unified-schema odds csv.gz (source,date,...,market,selection,odds,
     bookmaker,captured_at). Fail-soft; contributes nothing on any error."""
     try:
@@ -150,6 +187,8 @@ def _accumulate_unified(path: Path, *, day: str, source_tag: str,
                 if strict_source is not None and row.get("source") != strict_source:
                     continue
                 if row.get("date") != day:
+                    continue
+                if max_age_h is not None and not _fresh_row(row, max_age_h):
                     continue
                 home, away = row.get("home"), row.get("away")
                 mkt, sel = row.get("market"), row.get("selection")
@@ -216,7 +255,8 @@ def load_prices_index(root: Path, day: str) -> dict[str, Any]:
     if os.environ.get("EDGE_FACTORY_ODDSPAPI_PRICES") == "1":
         _accumulate_unified(localdata / f"oddspapi_odds_{month}.csv.gz",
                             day=day, source_tag=ODDSPAPI_SOURCE,
-                            strict_source=ODDSPAPI_SOURCE, out=out)
+                            strict_source=ODDSPAPI_SOURCE, out=out,
+                            max_age_h=ODDSPAPI_MAX_AGE_H)
     return out
 
 
@@ -250,6 +290,7 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
     pick.pop("enhancement_breakeven", None)
     pick.pop("enhancement_edge_sample", None)
     pick.pop("enhancement_price_divergence", None)
+    pick["enhancement_multi_source"] = False  # governance N5: True when >=2 sources priced this selection
     market = pick.get("recommended_enhancement")
     mapping = MARKET_PRICE_MAP.get(market)
     if market == "double_chance" and mapping and mapping[1] is None:
@@ -293,6 +334,9 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
         if prob:
             pick["enhancement_edge_sample"] = round(float(prob) * float(price) - 1.0, 4)
         per_src = (index.get("spread") or {}).get(hit_key, {}).get(mapping, {})
+        if isinstance(per_src, dict):
+            pick["enhancement_multi_source"] = (
+                sum(1 for v in per_src.values() if isinstance(v, (int, float)) and v > 1.0) >= 2)
         if isinstance(per_src, dict) and len(per_src) >= 2:
             vals = [v for v in per_src.values() if isinstance(v, (int, float))]
             if len(vals) >= 2 and min(vals) > 0:

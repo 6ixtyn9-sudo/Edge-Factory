@@ -253,6 +253,9 @@ def test_best_across_sources_wins_with_attribution_no_divergence(tmp_path):
     assert p["enhancement_price"] == 1.55 and p["enhancement_price_source"] == "scoutingstats"
     assert p["enhancement_price_book"] is None
     assert "enhancement_price_divergence" not in p  # 4.03% < 10% -> not flagged
+    # Governance N5: two AGREEING sources still count as multi-source verified
+    # (the divergence flag is about disagreement, not verification)
+    assert p["enhancement_multi_source"] is True
 
 
 def test_divergence_flagged_when_sources_disagree_over_10pct(tmp_path):
@@ -264,6 +267,7 @@ def test_divergence_flagged_when_sources_disagree_over_10pct(tmp_path):
     div = p.get("enhancement_price_divergence")
     assert div is not None
     assert div["theoddsapi"] == 1.49 and div["scoutingstats"] == 1.70
+    assert p["enhancement_multi_source"] is True  # N5: >=2 sources priced it
     assert abs(div["spread_pct"] - round(1.70 / 1.49 - 1.0, 4)) < 1e-9  # stored rounded(4dp)
     # ...and the divergence record does not survive an unmapped re-derive (RT-3)
     p["recommended_enhancement"] = "goal_range_2_3"
@@ -284,6 +288,7 @@ def test_swapped_orientation_matches_per_source(tmp_path):
     idx = load_prices_index(tmp_path, "2026-08-03")
     p = attach_enhancement_price(_pick(recommended_enhancement="btts_yes"), idx)
     assert p["enhancement_priced"] is True and p["enhancement_price"] == 1.83
+    assert p["enhancement_multi_source"] is False  # scoutingstats is the only source here
 
 
 def test_hostile_rows_rejected_at_every_source(tmp_path):
