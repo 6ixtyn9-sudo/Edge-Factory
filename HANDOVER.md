@@ -4400,3 +4400,31 @@ second 1x2 source. Walk-forward accrual continues.
 **Status:** the multi-market OddsPapi capture is honest-but-limited: btts +
 double_chance + 1x2 flow; totals/team_totals are deferred to a provider
 line-shape change.
+
+### Addendum 27.9 — Antigravity red-team review: findings + fixes (2026-08-05)
+
+An independent hostile red-team review (base aaef2b0) found 8 issues. All
+verified against the repo; fixes shipped in this commit.
+
+| # | severity | finding (verified) | fix shipped |
+| --- | --- | --- | --- |
+| F1 | CRITICAL | OddsPapi prices feed `priced_outcomes -> record_outcome` -> can reach ELIGIBLE -> `⭐ Enhancement` display on pushed picks (audit_recent_picks.py:1581, picks_today.py:2550). The "PAPER-only" claim in docs was contradicted by the code path — BUT the operator override (27.7) explicitly intended OddsPapi prices to feed the registry like any other source. The REAL defect is stale/unvalidated prices corrupting the gate, which F2 fixes. | F2 + F6 (below); the registry path is by design per 27.7 |
+| F2 | HIGH | `captured_at` used provider `updatedAt` (stale by days); `marketActive=False` / outcome `active=False` ignored -> dead odds ingested. | parser now stamps OUR capture time (`timezone.utc`), drops inactive markets/outcomes at the boundary |
+| F3 | HIGH | `load_dotenv()` at module import (theoddsapi.py:62) -> tests pass/fail on ambient .env (hit live today). | tests/conftest.py autouse fixture strips all ODDS_API_*/EDGE_FACTORY_* knobs (hermetic suite) |
+| F4 | CRITICAL | fuzzy settlement `char_ngram_similarity >= 0.40` on combined strings -> swapped fixtures (Arsenal Chelsea vs Chelsea Arsenal, 0.73) settle REVERSED outcomes. | orientation-checked matching: each pick side must match ITS result side better than the opposite side; combined >= 0.40 preserved. Legit bridges (Clarence->Hobart Zebras) still pass; swaps rejected |
+| F5 | HIGH | `double_chance` draw pick -> "12" (home-or-away) = HEDGE against the draw, not an enhancement. | draw -> None (unpriced, documented); only home->1x / away->x2 |
+| F6 | HIGH | `EDGE_FACTORY_ODDSPAPI_PRICES` never evaluated; enh_pricing merged the oddspapi store unconditionally ("flag-gated" was documentation-only). | REAL gate: store merged only when `EDGE_FACTORY_ODDSPAPI_PRICES=1`; stale file on disk cannot silently feed prices |
+| F7 | MEDIUM | oddspapi dedupe included `captured_at` -> each run appends duplicates (theoddsapi store keeps snapshots by design; oddspapi had no such intent). | dedupe key excludes `captured_at`; only a genuinely changed price appends |
+| F8 | LOW | `_classify_label` mapped "Set Winner" -> 1x2. | "set winner" added to _NON_GOAL |
+
+Economics (verified): theoddsapi 6 markets x 1 region = 6 credits/event;
+480/month budget = ~80 events/month = ~2.6/day -> n=30 per market for
+ELIGIBLE ~60 days. Tight but feasible; drop markets via env knob if needed.
+
+Remaining accepted risks (documented, not fixed): OddsPapi totals/team-totals
+lines are unparseable from the payload (provider limitation, 27.8) so those
+markets stay unpriced from OddsPapi; theoddsapi covers them with real lines.
+Enhancement registry advancement on real priced outcomes remains the design
+(operator-approved); F2+F6 are the freshness/activation controls on that path.
+
+Test suite: 218 passed (210 + 8 new red-team regression tests).

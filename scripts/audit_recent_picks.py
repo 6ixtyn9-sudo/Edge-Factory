@@ -538,16 +538,35 @@ def load_results_index(warehouse_path: Path) -> tuple[dict[tuple[str, str, str],
     return index, results_by_date
 
 
+# Red-team F4 (fixed 2026-08-05): the old fuzzy match compared COMBINED
+# "home away" strings at 0.40, so swapped fixtures (Arsenal Chelsea vs
+# Chelsea Arsenal, sim ~0.73) could settle a pick against the REVERSED
+# outcome. Now ORIENTATION-CHECKED: the pick's home must match the result's
+# home side at least as well as the result's away side (and vice versa).
+# Swaps fail (each pick side matches the OPPOSITE result side better);
+# legitimate name bridges (Clarence Zebras -> Hobart Zebras) still pass.
+# Failing to match is honest (pending/unmatched) — a wrong settlement is not.
+_FUZZY_MIN_SIM = 0.40
+
+
 def find_fuzzy_result_match(pick_home: str, pick_away: str, results_on_date: list[dict[str, Any]]) -> dict[str, Any] | None:
-    """Fall back to character bigram Jaccard similarity of combined Event string when key mapping fails."""
-    pick_str = f"{pick_home} {pick_away}"
+    """Orientation-checked bigram fallback when key mapping fails."""
     best_match = None
     best_sim = 0.0
     for res in results_on_date:
-        res_str = f"{res['home']} {res['away']}"
-        sim = char_ngram_similarity(pick_str, res_str, n=2)
-        if sim >= 0.40 and sim > best_sim:
-            best_sim = sim
+        res_h = str(res.get("home", ""))
+        res_a = str(res.get("away", ""))
+        sim_hh = char_ngram_similarity(pick_home, res_h, n=2)
+        sim_ha = char_ngram_similarity(pick_home, res_a, n=2)
+        sim_ah = char_ngram_similarity(pick_away, res_h, n=2)
+        sim_aa = char_ngram_similarity(pick_away, res_a, n=2)
+        # Orientation guard: each pick side must match ITS result side better
+        # than the opposite side. Rejects swapped-fixture wrong settlements.
+        if not (sim_hh > sim_ha and sim_aa > sim_ah):
+            continue
+        combined = char_ngram_similarity(f"{pick_home} {pick_away}", f"{res_h} {res_a}", n=2)
+        if combined >= _FUZZY_MIN_SIM and combined > best_sim:
+            best_sim = combined
             best_match = res
     return best_match
 
