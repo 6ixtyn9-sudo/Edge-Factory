@@ -4198,6 +4198,34 @@ team-alias fragility (only if live-book odds become priority); calibration
 shrinkage. **Calendar-fixed, do not run early:** 2026-08-11 OddsPapi review
 runbook + source-funnel A/B/C gate (locked through 08-10).
 
-Working notes for the veto re-mine (design doc, phase 1/2 spec) live outside
-the repo; the decisions and gate are fully recorded in Addenda 27/27.1/27.2
-per the single-source-of-truth rule.
+The design working notes were removed per the single-source-of-truth rule;
+the decisions, gate, and verification evidence are recorded here in Addenda
+27 through 27.4.
+
+
+### Addendum 27.4 — second-agent cross-check table (preserved 2026-08-05)
+
+The independent second-agent review's decision-relevant numbers were
+recomputed from the live repo. This table is the verification evidence for
+the claim "the five decisions are supported despite three secondary items
+being inaccurate or unreproducible." It was originally in the design working
+notes; preserved here per the single-source-of-truth rule.
+
+| # | Claim (from review) | Independent recompute | Status |
+| --- | --- | --- | --- |
+| 1 | League UNKNOWN 3,176 / team 19,340 (vs prompt-context 3,175 / 19,346) | recomputed: 3,176 / 19,340 | OK — agent correct; prompt context stale by 1 / 6 (bot regen drift) |
+| 2 | settled_results 38,958 rows, 2026-05-07 to 2026-08-04; last-30d 11,375 | identical | OK |
+| 3 | competition_type: 15 cells, 2 UNKNOWN | identical | OK |
+| 4 | competition_type n range 280-1708 | actual 1-27364; the 2 UNKNOWN cells are youth n=1 and n=4 | WARN - n-range inaccurate; conclusion unaffected (2 tiny youth cells resolve nothing) |
+| 5 | epl\|1x2\|home: 13 rules, 5 neg / 8 pos, w_roi -0.0388 | identical | OK |
+| 6 | it1\|1x2\|home: 13 rules all negative, w_roi -0.1141 | identical | OK |
+| 7 | es1\|1x2\|home: all 13 positive | actual 11 pos / 2 neg (consensus rules -0.042/-0.040), w_roi +0.0179 | WARN - minor; qualitative point (strong positive pool) holds |
+| 8 | Q3 scenario cell resolutions A 2304 / B 1985 / C 1937 | recomputed 2301 / 1982 / 1934 (within 3 cells) | OK |
+| 9 | Q3 pool verdict mixes (A 653 = 350 VETO+199 ALLOW+68 CAUTION+36 BOOST; B 539; C 521) | recomputed A 652 = 350 VETO+198 ALLOW+68 CAUTION+36 BOOST; B 538; C 520 | OK - within 1 pool; VETO=350 exact |
+| 10 | UNKNOWN cells in pools with pooled n<12 = 797 (25.1%) | identical | OK |
+| 11 | Pool n-bucket distribution (n>=12: 188; >=20: 180; >=40: 160; >=100: 103) | not reproducible under any tested definition (counts 353-674 by definition; priced-n>=12 = 663) | FAIL - unverifiable; do NOT quote; the harness computes its own canonical pool table |
+
+Verdict: the five decisions (Q1-Q5) are supported; three secondary evidence
+items are inaccurate or unreproducible; none change a decision. Re-verified
+2026-08-05 on registry 36,508 cells / 3,182 league-UNKNOWN: harness still
+reproduces 17 resolved / 15 settled / 13 wins / +0.042 / FLAG-OFF.
