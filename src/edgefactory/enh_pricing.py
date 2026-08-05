@@ -19,6 +19,9 @@ in the unified schema. Those sources now feed one merged index:
                  rows store source="bzzoiro" — attribution is tagged by FILE)
     scoutingstats localdata/scoutingstats_YYYY-MM.csv.gz    (wide per-fixture row:
                  odd_o15/odd_u15/.../odd_gg/odd_ng -> tuple rows)
+    oddspapi     localdata/oddspapi_odds_YYYY-MM.csv.gz   (unified schema;
+                 team totals, double chance, totals, btts, 1x2 — operator
+                 override 2026-08-05, Addendum 27.7; flag-gated capture)
 
 Merge semantics: best price across sources per (date, pair, market, selection)
 with SOURCE ATTRIBUTION on the winning price, and when >=2 sources price the same
@@ -53,18 +56,34 @@ MARKET_PRICE_MAP: dict[str, tuple[str, str] | None] = {
     "match_under_35": ("ou_3.5", "under"),   # scoutingstats odd_u35
     "btts_yes": ("btts", "yes"),             # bzzoiro + scoutingstats odd_gg
     "btts_no": ("btts", "no"),               # bzzoiro + scoutingstats odd_ng
+    # theoddsapi totals_alt / team_totals / double_chance (captured by default
+    # since 2026-08-05; coverage measured walk-forward):
+    "match_over_45": ("ou_4.5", "over"),     # theoddsapi totals/totals_alt @4.5
+    "match_under_45": ("ou_4.5", "under"),
+    "home_over_05": ("tt_home_0.5", "over"),  # team_totals
+    "away_over_05": ("tt_away_0.5", "over"),
+    "home_over_15": ("tt_home_1.5", "over"),
+    "away_over_15": ("tt_away_1.5", "over"),
+    "home_under_15": ("tt_home_1.5", "under"),
+    "away_under_15": ("tt_away_1.5", "under"),
+    "home_under_25": ("tt_home_2.5", "under"),
+    "away_under_25": ("tt_away_2.5", "under"),
+    "home_under_35": ("tt_home_3.5", "under"),
+    "away_under_35": ("tt_away_3.5", "under"),
+    "home_under_45": ("tt_home_4.5", "under"),
+    "away_under_45": ("tt_away_4.5", "under"),
+    # double_chance is pick-side dependent (1X/X2/12) — handled in
+    # attach_enhancement_price, not via this static map:
+    "double_chance": ("dc", None),
     # Deliberately unpriceable from the captured feeds (absence is a decision,
     # recorded so nobody "fixes" it blindly later):
-    "match_over_45": None,     # scoutingstats ladder stops at 3.5
     "goal_range_2_3": None,    # banded market — no feed offers it
-    "away_under_35": None,     # team totals — 2026-08-03 probe: 0 bookmakers
-    "home_under_45": None,     # team totals — same probe
-    "double_chance": None,     # only 1x2 legs captured; NO synthetic prices
 }
 
 THEODDSAPI_SOURCE = "theoddsapi"
 BZZOIRO_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_SOURCE = "scoutingstats"
+ODDSPAPI_SOURCE = "oddspapi"
 
 DIVERGENCE_MIN_SPREAD = 0.10  # flag when max/min best-source prices differ by >10%
 
@@ -188,6 +207,12 @@ def load_prices_index(root: Path, day: str) -> dict[str, Any]:
                         strict_source=None, out=out)
     _accumulate_scoutingstats(localdata / f"scoutingstats_{month}.csv.gz",
                               day=day, out=out)
+    # Operator override 2026-08-05 (Addendum 27.7): OddsPapi prices team
+    # totals / double chance / totals / btts for the enhancement overlay.
+    # File is absent until capture runs; fail-soft like every other source.
+    _accumulate_unified(localdata / f"oddspapi_odds_{month}.csv.gz",
+                        day=day, source_tag=ODDSPAPI_SOURCE,
+                        strict_source=ODDSPAPI_SOURCE, out=out)
     return out
 
 
@@ -197,7 +222,7 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
 
     Sets (always, so archives carry explicit nulls):
       enhancement_price (float|None), enhancement_price_book, enhancement_price_at,
-      enhancement_price_source ("theoddsapi"|"bzzoiro_odds"|"scoutingstats"|None),
+      enhancement_price_source ("theoddsapi"|"bzzoiro_odds"|"scoutingstats"|"oddspapi"|None),
       enhancement_priced (bool), enhancement_mapped (bool)
     and, when price AND probability exist:
       enhancement_breakeven (= 1/price), enhancement_edge_sample (= prob*price - 1;
@@ -223,6 +248,11 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
     pick.pop("enhancement_price_divergence", None)
     market = pick.get("recommended_enhancement")
     mapping = MARKET_PRICE_MAP.get(market)
+    if market == "double_chance" and mapping and mapping[1] is None:
+        side = str(pick.get("pick") or "").strip().lower()
+        sel = {"home": "1x", "away": "x2", "draw": "12"}.get(side)
+        if sel:
+            mapping = ("dc", sel)
     pick["enhancement_mapped"] = bool(mapping)
     if not market or not mapping or not index:
         return pick

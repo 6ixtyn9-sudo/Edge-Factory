@@ -3533,6 +3533,13 @@ secrets, or any push path before the separate gates below are satisfied.
 
 ### Locked period: 2026-08-04 through 2026-08-10
 
+> **SUPERSEDED 2026-08-05 by OPERATOR OVERRIDE — see Addendum 27.7.**
+> The operator explicitly overruled this lock. The override authorizes
+> wiring OddsPapi into the enhancement pricing path (real captured prices
+> for enhancement markets), flag-gated OFF, walk-forward only, with the
+> safety rails in Addendum 27.7. The 2026-08-11 review remains a calendar
+> checkpoint but is no longer a hard gate for read-only price capture.
+
 - Preserve Addendum 26 and the 2026-08-11 by-engine / calibration / debias
   observation window. Do not alter market selection, source weights,
   calibration, thresholds, registry transitions, price quarantine, or push
@@ -4274,3 +4281,92 @@ read). This symptom is the canary: at activation, the shadow comparison
 (multiple runs, flag OFF vs ON, diff the recommendation distributions) is
 the definitive test. Record the before (6/6 btts_yes) and expect the after
 to diversify toward over-markets where the Poisson totals are strong.
+
+### Addendum 27.6 — enhancement prices wired to the real odds source (theoddsapi btts) (2026-08-05)
+
+**Trigger:** the 6/6 btts_yes canary (Addendum 27.5) plus Addendum 11's
+finding that the enhancement surface is EV-negative at hard-coded estimates
+(match_over_15 EV -48%, match_over_25 EV -14%). The enhancement overlay was
+recommending by probability with either hard-coded estimated odds
+(get_combo_odds) or no price at all, and the enhancement registry could not
+advance (SHADOW -> PAPER -> ELIGIBLE requires real priced outcomes).
+
+**What changed (5 files, +54/-5):** the theoddsapi capture default markets
+now include `btts` (was `h2h,totals`):
+- `src/edgefactory/sources/theoddsapi.py` — MARKETS default
+  `"h2h,totals,btts"` (env `ODDS_API_MARKETS` still overrides);
+- `.github/workflows/daily.yml` — env default `'h2h,totals,btts'`;
+- `.env.example` — same;
+- `scripts/capture_theodds.py` — self-test payload + assertions now cover
+  btts yes/no parsing;
+- `tests/test_theoddsapi.py` — +2 tests: btts rows parsed from payload
+  (unified schema), and the default MARKETS includes btts (pins the wiring).
+
+The parser already supported btts (rows_from_event_odds) and the enhancement
+pricing join already reads the theoddsapi store (enh_pricing v2, merged
+theoddsapi + bzzoiro + scoutingstats, best-price with source attribution).
+The only gap was the capture not requesting the market — so btts_yes/btts_no
+recommendations now get REAL captured odds through the existing pipeline.
+Hard-coded estimates remain only as a display fallback for markets with no
+real capture (goal ranges, exacts, team totals per the 08-03 probe) — and
+never for certification: the enhancement registry only advances on real
+priced outcomes.
+
+**Walk-forward only — no retrospective validation.** The theoddsapi capture
+began 2026-08-03 and btts was never requested before this change; there is
+NO historical data for enhancement-market odds. Per the operator's direction
+and the repo's walk-forward golden rule, we do NOT backtest enhancement EV
+on estimates. Validation proceeds strictly forward through the existing
+enhancement registry gate (per-market Wilson LB95 >= breakeven at REAL
+captured odds on n>=30, HANDOVER:1824): first btts rows land in the odds
+store on the next capture; priced btts outcomes start accruing in the
+registry from the next audits; SHADOW -> PAPER -> ELIGIBLE only on real
+priced evidence.
+
+**Budget:** markets 2 -> 3 on region eu = +50% credit cost per event
+(~3 credits/event); ODDS_API_MONTHLY_BUDGET (480) unchanged; usage.json
+tracks spend. If budget becomes tight, `btts` can be dropped via the env
+knob without code change.
+
+
+### Addendum 27.7 — OPERATOR OVERRIDE: OddsPapi lock superseded; OddsPapi wired as an enhancement price source (2026-08-05)
+
+**Authority:** the operator explicitly overruled the OddsPapi locked period
+(2026-08-04 -> 2026-08-10) on 2026-08-05. This addendum supersedes the lock
+text above and records what the override authorizes. The operator is the
+ultimate authority on this system; this is a deliberate, recorded decision.
+
+**What the lock was protecting:** preserving the 08-11 by-engine /
+calibration / debias observation window, and keeping OddsPapi out of
+production paths until research gates passed. Those concerns are retained
+where they still make sense (below) — what changed is that read-only
+**price capture for the enhancement overlay** is now authorized.
+
+**What is authorized now:**
+- OddsPapi is wired as a real price source for enhancement markets the
+  other feeds do not price: team totals (home/away over/under 0.5/1.5/2.5/
+  3.5/4.5), double chance (1X/X2/12), totals lines (ou_1.5/3.5/4.5), btts,
+  plus 1x2 — parsed from the OddsPapi market-id vocabulary confirmed by the
+  2026-08-04 live probe.
+- Capture writes the unified schema to `localdata/oddspapi_odds_YYYY-MM.csv.gz`
+  (same shape as theoddsapi/bzzoiro stores) and `enh_pricing` merges it as a
+  4th source (best price across sources, source attribution, divergence
+  record). The `synthetic/none` cells of the enhancement market table are
+  replaced by REAL captured prices.
+- The enhancement registry advances only on real priced outcomes (walk
+  forward), exactly as before — OddsPapi prices are real prices, not
+  estimates, so they feed the Wilson-LB95-vs-breakeven gate like any other
+  source.
+
+**Retained safety rails (operator-approved, not a lock):**
+- Flag-gated OFF by default: `EDGE_FACTORY_ODDSPAPI_PRICES=1` to activate
+  capture into daily/capture paths; shadow/walk-forward accrual first.
+- `ODDSPAPI_API_KEYS` stays local in `.env` only — never in Actions, tracked
+  files, logs, or chat (unchanged; the keys are the operator's own).
+- No selection, certification, source-weight, or push change from OddsPapi —
+  it is a price source for the enhancement overlay only.
+- Free-tier quota is small: capture is bounded (unmatched same-day picks
+  first, then enhancement-relevant fixtures), fail-soft, and never broad
+  polls.
+- Walk-forward only — no retrospective validation; the odds store only
+  accumulates from activation forward.

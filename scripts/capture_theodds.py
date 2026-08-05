@@ -263,8 +263,18 @@ def _self_test(mod) -> int:
                          "outcomes": [{"name": "Over", "price": 1.95, "point": 2.5},
                                       {"name": "Under", "price": 1.85, "point": 2.5},
                                       {"name": "Over", "price": 9.0, "point": 4.5}]},
-                        {"key": "totals_alt", "last_update": "x",
+                        {"key": "totals_alt", "last_update": "2026-08-03T10:00:00Z",
                          "outcomes": [{"name": "Over", "price": 1.30, "point": 1.5}]},
+                        {"key": "btts", "last_update": "2026-08-03T10:00:00Z",
+                         "outcomes": [{"name": "Yes", "price": 1.95},
+                                      {"name": "No", "price": 1.80}]},
+                        {"key": "team_totals", "last_update": "2026-08-03T10:00:00Z",
+                         "outcomes": [{"name": "Halmstads BK Over 1.5", "price": 1.30},
+                                      {"name": "IK Sirius Under 1.5", "price": 2.10}]},
+                        {"key": "double_chance", "last_update": "2026-08-03T10:00:00Z",
+                         "outcomes": [{"name": "HomeOrDraw", "price": 1.05},
+                                      {"name": "AwayOrDraw", "price": 4.50},
+                                      {"name": "HomeOrAway", "price": 1.02}]},
                     ]}]}
     failures = []
 
@@ -279,11 +289,20 @@ def _self_test(mod) -> int:
     ev = mod.match_event(pick, events)
     check("pair-constrained match ignores swapped fixture", ev is not None and ev["id"] == "evt_right")
     rows = mod.rows_from_event_odds(pick, events[1], payload)
-    check("5 rows parsed (3x h2h + 2x totals@2.5; alt line filtered)", len(rows) == 5)
+    check("14 rows parsed (3x h2h + 3x totals incl 4.5 + 1x totals_alt@1.5 + 2x btts "
+          "+ 2x team_totals + 3x double_chance)", len(rows) == 14)
     sel = {(r["market"], r["selection"]): r["odds"] for r in rows}
     check("h2h home price", sel.get(("1x2", "home")) == 2.10)
     check("h2h draw price", sel.get(("1x2", "draw")) == 3.40)
     check("ou_2.5 under price", sel.get(("ou_2.5", "under")) == 1.85)
+    check("ou_4.5 over price", sel.get(("ou_4.5", "over")) == 9.0)
+    check("ou_1.5 over price (totals_alt)", sel.get(("ou_1.5", "over")) == 1.30)
+    check("btts yes price", sel.get(("btts", "yes")) == 1.95)
+    check("btts no price", sel.get(("btts", "no")) == 1.80)
+    check("team_totals home over 1.5", sel.get(("tt_home_1.5", "over")) == 1.30)
+    check("team_totals away under 1.5", sel.get(("tt_away_1.5", "under")) == 2.10)
+    check("double_chance 1x", sel.get(("dc", "1x")) == 1.05)
+    check("double_chance 12", sel.get(("dc", "12")) == 1.02)
     check("unknown market ignored", all(r["market"] != "totals_alt" for r in rows))
     check("schema columns", set(mod.COLUMNS) == set(rows[0].keys()) if rows else False)
 

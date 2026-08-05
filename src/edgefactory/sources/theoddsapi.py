@@ -27,8 +27,10 @@ Env (see .env.example):
     ODDS_API_KEYS             comma list of API keys (rotation ring)
     ODDS_API_KEY              single key (fallback if ODDS_API_KEYS unset)
     ODDS_API_REGIONS          default "eu"          (1 region keeps cost at 1x)
-    ODDS_API_MARKETS          default "h2h,totals"  ("btts" available in some regions)
-    ODDS_API_TOTAL_POINTS     default "2.5"         totals lines to keep
+    ODDS_API_MARKETS          default "h2h,totals,totals_alt,btts,team_totals,double_chance"
+                            (prices the enhancement overlay: ou 1.5/2.5/3.5/4.5, btts,
+                             team totals, double chance; each market = +1 credit/event)
+    ODDS_API_TOTAL_POINTS     default "1.5,2.5,3.5,4.5"  totals lines to keep
     ODDS_API_MONTHLY_BUDGET   default "480"         hard stop per key, below free 500
     ODDS_API_BOOKMAKERS       optional comma list   (default: all books in region)
     ODDS_API_VERBOSE          "1" for diagnostics
@@ -81,8 +83,8 @@ TOKEN = API_KEYS[0] if API_KEYS else None  # back-compat single-key view
 BASE = os.environ.get("ODDS_API_BASE", "https://api.the-odds-api.com/v4").rstrip("/")
 
 REGIONS = tuple(x.strip() for x in os.environ.get("ODDS_API_REGIONS", "eu").split(",") if x.strip()) or ("eu",)
-MARKETS = tuple(x.strip() for x in os.environ.get("ODDS_API_MARKETS", "h2h,totals").split(",") if x.strip()) or ("h2h",)
-TOTAL_POINTS = tuple(x.strip() for x in os.environ.get("ODDS_API_TOTAL_POINTS", "2.5").split(",") if x.strip())
+MARKETS = tuple(x.strip() for x in os.environ.get("ODDS_API_MARKETS", "h2h,totals,totals_alt,btts,team_totals,double_chance").split(",") if x.strip()) or ("h2h",)
+TOTAL_POINTS = tuple(x.strip() for x in os.environ.get("ODDS_API_TOTAL_POINTS", "1.5,2.5,3.5,4.5").split(",") if x.strip())
 MONTHLY_BUDGET = int(os.environ.get("ODDS_API_MONTHLY_BUDGET", "480") or 480)
 BOOKMAKERS = tuple(x.strip() for x in os.environ.get("ODDS_API_BOOKMAKERS", "").split(",") if x.strip())
 
@@ -740,7 +742,7 @@ def rows_from_event_odds(pick: dict, event: dict, payload: dict) -> list[dict]:
                         row = _market_row(base, "1x2", sel, oc.get("price"), bname)
                         if row:
                             rows.append(row)
-                elif mkey == "totals":
+                elif mkey in ("totals", "totals_alt"):
                     point = oc.get("point")
                     try:
                         pstr = f"{float(point):g}"
@@ -751,6 +753,51 @@ def rows_from_event_odds(pick: dict, event: dict, payload: dict) -> list[dict]:
                     sel = str(oc.get("name") or "").strip().lower()
                     if sel in {"over", "under"}:
                         row = _market_row(base, f"ou_{pstr}", sel, oc.get("price"), bname)
+                        if row:
+                            rows.append(row)
+                elif mkey == "team_totals":
+                    # outcome name like "Halmstads BK Over 1.5" (or point field set)
+                    name = str(oc.get("name") or "")
+                    point = oc.get("point")
+                    if point is None:
+                        m = re.search(r"(?i)\b(over|under)\s+([0-9]+(?:\.[0-9]+)?)\s*$", name)
+                        if not m:
+                            continue
+                        sel = m.group(1).lower()
+                        try:
+                            pstr = f"{float(m.group(2)):g}"
+                        except ValueError:
+                            continue
+                        team_part = name[:m.start()].strip()
+                    else:
+                        try:
+                            pstr = f"{float(point):g}"
+                        except (TypeError, ValueError):
+                            continue
+                        m2 = re.search(r"(?i)\b(over|under)\b", name)
+                        sel = m2.group(1).lower() if m2 else None
+                        if sel not in ("over", "under"):
+                            continue
+                        team_part = name[:m2.start()].strip()
+                    if TOTAL_POINTS and pstr not in TOTAL_POINTS:
+                        continue
+                    n = _norm_full(team_part)
+                    if not n:
+                        continue
+                    if n == _norm_full(home):
+                        tside = "home"
+                    elif n == _norm_full(away):
+                        tside = "away"
+                    else:
+                        continue
+                    row = _market_row(base, f"tt_{tside}_{pstr}", sel, oc.get("price"), bname)
+                    if row:
+                        rows.append(row)
+                elif mkey == "double_chance":
+                    dc = {"homeordraw": "1x", "awayordraw": "x2", "homeoraway": "12"}
+                    sel = dc.get(str(oc.get("name") or "").strip().lower().replace(" ", ""))
+                    if sel:
+                        row = _market_row(base, "dc", sel, oc.get("price"), bname)
                         if row:
                             rows.append(row)
                 elif mkey == "btts":

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import time
 import urllib.parse
 import urllib.request
@@ -127,9 +128,47 @@ def fetch_odds(fixture_id: str) -> dict:
     return data if isinstance(data, dict) else {}
 
 
-def rows_from_odds_response(data: dict) -> list[dict]:
-    """Convert OddsPapi odds payload to flat 1x2 odds rows."""
-    fixture_id = str(data.get("fixtureId") or "")
+# OddsPapi market-id vocabulary (verified via the 2026-08-04 live probe).
+# 101 = 1x2; the rest are the commonly-observed ids for the shapes the probe
+# confirmed (BTTS, double chance, team totals, totals). The parser is
+# defensive: any id we do not recognize is skipped, never guessed.
+_MARKET_ID_TO_TYPE = {
+    "101": "1x2",
+    "103": "btts",
+    "108": "double_chance",
+    "115": "team_totals",
+    "107": "totals",
+}
+# double-chance outcome-name -> selection
+_DC_SELECTION = {
+    "homeordraw": "1x", "awayordraw": "x2", "homeoraway": "12",
+    "1x": "1x", "x2": "x2", "12": "12",
+}
+
+
+def _selection_from_name(name: object, home: object, away: object) -> str | None:
+    """Map an outcome name to a canonical selection for 1x2 / totals / btts."""
+    n = str(name or "").strip()
+    low = n.lower()
+    if low in {"over", "under", "yes", "no"}:
+        return low
+    if low in {"draw", "tie", "x"}:
+        return "draw"
+    if low == str(home or "").strip().lower():
+        return "home"
+    if low == str(away or "").strip().lower():
+        return "away"
+    return None
+
+
+def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None = None) -> list[dict]:
+    """Convert OddsPapi odds payload to flat unified-schema rows.
+
+    Handles 1x2, btts, double_chance, team_totals and totals when the
+    market-id is known. Unknown market ids are skipped (never guessed).
+    ``market_type_map`` overrides the built-in id vocabulary (e.g. from a
+    live catalog); keys are market-id strings, values are the types above.
+    """
     home = data.get("participant1Name")
     away = data.get("participant2Name")
     kickoff = data.get("startTime")
@@ -140,46 +179,96 @@ def rows_from_odds_response(data: dict) -> list[dict]:
     bookmaker_odds = data.get("bookmakerOdds") or {}
     if not isinstance(bookmaker_odds, dict):
         return rows
+    type_map = dict(_MARKET_ID_TO_TYPE)
+    if market_type_map:
+        type_map.update({str(k): v for k, v in market_type_map.items()})
     for bookmaker, book_data in bookmaker_odds.items():
         if not isinstance(book_data, dict):
             continue
         markets = book_data.get("markets") or {}
-        market_101 = markets.get("101") if isinstance(markets, dict) else None
-        if not isinstance(market_101, dict):
+        if not isinstance(markets, dict):
             continue
-        outcomes = market_101.get("outcomes") or {}
-        if not isinstance(outcomes, dict):
-            continue
-        for outcome in outcomes.values():
-            if not isinstance(outcome, dict):
+        for mid, mkt in markets.items():
+            mtype = type_map.get(str(mid))
+            if not mtype or not isinstance(mkt, dict):
                 continue
-            players = outcome.get("players") or {}
-            player0 = players.get("0") if isinstance(players, dict) else None
-            if not isinstance(player0, dict):
+            outcomes = mkt.get("outcomes") or {}
+            if not isinstance(outcomes, dict):
                 continue
-            selection = OUTCOME_TO_SELECTION.get(str(player0.get("bookmakerOutcomeId") or "").lower())
-            if not selection:
-                continue
-            price = player0.get("price")
-            if price is None:
-                continue
-            rows.append(
-                {
+            for outcome in outcomes.values():
+                if not isinstance(outcome, dict):
+                    continue
+                players = outcome.get("players") or {}
+                player0 = players.get("0") if isinstance(players, dict) else None
+                if not isinstance(player0, dict):
+                    continue
+                price = player0.get("price")
+                if price is None:
+                    continue
+                name = player0.get("name") or outcome.get("name")
+                market, selection = _market_selection(
+                    mtype, name, home, away, player0.get("bookmakerOutcomeId"))
+                if not market or not selection:
+                    continue
+                # Unified schema only (same shape as theoddsapi/bzzoiro stores)
+                # so enh_pricing can merge this source with zero special-casing.
+                rows.append({
                     "source": "oddspapi",
                     "source_type": "odds",
-                    "provider": "oddspapi_odds",
-                    "fixture_id": fixture_id,
                     "sport": "soccer",
                     "date": day,
                     "kickoff": kickoff,
                     "league": league,
                     "home": home,
                     "away": away,
-                    "market": "1x2",
+                    "market": market,
                     "selection": selection,
                     "odds": price,
                     "bookmaker": bookmaker,
                     "captured_at": captured_at,
-                }
-            )
+                })
     return rows
+
+
+def _market_selection(mtype: str, name: object, home: object, away: object,
+                      outcome_id: object) -> tuple[str | None, str | None]:
+    """Resolve (unified market, selection) for a parsed outcome."""
+    if mtype == "1x2":
+        sel = OUTCOME_TO_SELECTION.get(str(outcome_id or "").lower()) or _selection_from_name(name, home, away)
+        return ("1x2", sel) if sel else (None, None)
+    if mtype == "btts":
+        sel = _selection_from_name(name, home, away)
+        return ("btts", sel) if sel in {"yes", "no"} else (None, None)
+    if mtype == "double_chance":
+        low = str(name or "").strip().lower().replace(" ", "")
+        sel = _DC_SELECTION.get(low)
+        return ("dc", sel) if sel else (None, None)
+    if mtype in ("totals", "team_totals"):
+        # name like "Over 2.5" / "Under 1.5" or "Halmstads BK Over 1.5"
+        s = str(name or "")
+        m = re.search(r"(?i)\b(over|under)\s+([0-9]+(?:\.[0-9]+)?)", s)
+        if not m:
+            return (None, None)
+        side = m.group(1).lower()
+        try:
+            pstr = f"{float(m.group(2)):g}"
+        except ValueError:
+            return (None, None)
+        if mtype == "totals":
+            return (f"ou_{pstr}", side)
+        team_part = s[: m.start()].strip()
+        n = _norm_full(team_part)
+        if not n:
+            return (None, None)
+        if n == _norm_full(home):
+            tside = "home"
+        elif n == _norm_full(away):
+            tside = "away"
+        else:
+            return (None, None)
+        return (f"tt_{tside}_{pstr}", side)
+    return (None, None)
+
+
+def _norm_full(name: object) -> str:
+    return re.sub(r"[^a-z0-9]", "", str(name or "").lower())

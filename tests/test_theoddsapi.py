@@ -77,15 +77,16 @@ def test_match_event_no_result():
 
 def test_rows_parse_and_filter():
     rows = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], PAYLOAD)
-    # Pinnacle: 3x h2h + 2x totals@2.5 (4.5 line filtered by TOTAL_POINTS default)
+    # Pinnacle: 3x h2h + 3x totals@2.5/4.5 (TOTAL_POINTS default keeps 1.5-4.5)
     # Betsson:  3x h2h (one malformed price dropped)
-    assert len(rows) == 8
+    assert len(rows) == 9
     prices = {(r["market"], r["selection"], r["bookmaker"]): r["odds"] for r in rows}
     assert prices[("1x2", "home", "Pinnacle")] == 2.10
     assert prices[("1x2", "draw", "Pinnacle")] == 3.40
     assert prices[("ou_2.5", "under", "Pinnacle")] == 1.85
+    assert prices[("ou_4.5", "over", "Pinnacle")] == 9.0
     assert prices[("1x2", "away", "Betsson")] == 3.30
-    assert all(r["market"] in {"1x2", "ou_2.5"} for r in rows)
+    assert all(r["market"] in {"1x2", "ou_2.5", "ou_4.5"} for r in rows)
     assert all(set(theoddsapi.COLUMNS) == set(r.keys()) for r in rows)
     assert all(r["source"] == "theoddsapi" and r["source_type"] == "odds" for r in rows)
 
@@ -236,3 +237,47 @@ def test_ledger_recovers_from_corruption(tmp_path, monkeypatch):
     theoddsapi._record_charge(2, fp, {}, day="2026-08-03")
     data = json.loads(ledger.read_text())
     assert data["keys"][fp]["months"]["2026-08"]["credits"] == 2
+
+
+# --- enhancement pricing wiring (2026-08-05): btts market is captured by default ---
+
+
+def test_btts_rows_parsed_from_payload():
+    payload = {
+        "id": "evt_right", "sport_key": "soccer_sweden_allsvenskan", "sport_title": "Allsvenskan",
+        "bookmakers": [{"key": "pinnacle", "title": "Pinnacle", "markets": [
+            {"key": "h2h", "outcomes": [
+                {"name": "Halmstads BK", "price": 2.10},
+                {"name": "Draw", "price": 3.40},
+                {"name": "IK Sirius", "price": 3.25}]},
+            {"key": "btts", "outcomes": [
+                {"name": "Yes", "price": 1.95},
+                {"name": "No", "price": 1.80}]},
+        ]}],
+    }
+    rows = theoddsapi.rows_from_event_odds(PICK, EVENTS[1], payload)
+    sel = {(r["market"], r["selection"]): r["odds"] for r in rows}
+    assert sel.get(("btts", "yes")) == 1.95
+    assert sel.get(("btts", "no")) == 1.80
+    # h2h still parsed alongside btts
+    assert sel.get(("1x2", "home")) == 2.10
+    # rows carry the unified schema columns
+    assert {"market", "selection", "odds", "bookmaker", "captured_at"} <= set(rows[0].keys())
+
+
+def test_default_markets_include_btts():
+    # Pins the wiring: the capture default now requests btts so the
+    # enhancement overlay can price btts_yes/btts_no from real captured odds.
+    import os
+    env_was = os.environ.get("ODDS_API_MARKETS")
+    try:
+        os.environ.pop("ODDS_API_MARKETS", None)
+        import importlib
+        import edgefactory.sources.theoddsapi as mod
+        importlib.reload(mod)
+        assert "btts" in mod.MARKETS
+    finally:
+        if env_was is not None:
+            os.environ["ODDS_API_MARKETS"] = env_was
+        else:
+            os.environ.pop("ODDS_API_MARKETS", None)
