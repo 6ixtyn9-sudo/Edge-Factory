@@ -1,19 +1,19 @@
 {
   "by_bucket": {
     "CAUTION": {
-      "avg_implied_prob_delta": 0.001597,
-      "avg_raw_odds_delta": -0.005,
-      "beat_later_price_n": 16,
-      "beat_later_price_rate": 0.0625,
-      "total_picks": 17,
-      "with_two_prices": 16
+      "avg_implied_prob_delta": 0.001703,
+      "avg_raw_odds_delta": -0.005333,
+      "beat_later_price_n": 15,
+      "beat_later_price_rate": 0.066667,
+      "total_picks": 16,
+      "with_two_prices": 15
     },
     "SKIPPED_VETO": {
       "avg_implied_prob_delta": -0.004293,
       "avg_raw_odds_delta": 0.010373,
       "beat_later_price_n": 67,
       "beat_later_price_rate": 0.029851,
-      "total_picks": 71,
+      "total_picks": 75,
       "with_two_prices": 67
     },
     "WATCHLIST_NO_ODDS": {
@@ -39,7 +39,7 @@
       "avg_raw_odds_delta": 0.000244,
       "beat_later_price_n": 41,
       "beat_later_price_rate": 0.04878,
-      "total_picks": 45,
+      "total_picks": 47,
       "with_two_prices": 41
     },
     "3way-unanimous avg_p>=65": {
@@ -47,7 +47,7 @@
       "avg_raw_odds_delta": 0.005645,
       "beat_later_price_n": 31,
       "beat_later_price_rate": 0.032258,
-      "total_picks": 33,
+      "total_picks": 35,
       "with_two_prices": 31
     },
     "3way-unanimous home-only avg_p>=60": {
@@ -59,26 +59,26 @@
       "with_two_prices": 9
     },
     "3way-unanimous home-only avg_p>=65": {
-      "avg_implied_prob_delta": -0.010769,
-      "avg_raw_odds_delta": 0.02875,
-      "beat_later_price_n": 16,
+      "avg_implied_prob_delta": -0.011487,
+      "avg_raw_odds_delta": 0.030667,
+      "beat_later_price_n": 15,
       "beat_later_price_rate": 0.0,
-      "total_picks": 16,
-      "with_two_prices": 16
+      "total_picks": 15,
+      "with_two_prices": 15
     }
   },
-  "end": "2026-08-05",
+  "end": "2026-08-06",
   "meta": {
-    "insufficient_snapshots": 6,
+    "insufficient_snapshots": 10,
     "unmatched_picks": 1
   },
   "overall": {
-    "avg_implied_prob_delta": -0.002898,
-    "avg_raw_odds_delta": 0.006649,
-    "beat_later_price_n": 97,
-    "beat_later_price_rate": 0.030928,
-    "total_picks": 104,
-    "with_two_prices": 97
+    "avg_implied_prob_delta": -0.002928,
+    "avg_raw_odds_delta": 0.006719,
+    "beat_later_price_n": 96,
+    "beat_later_price_rate": 0.03125,
+    "total_picks": 107,
+    "with_two_prices": 96
   },
-  "start": "2026-07-06"
+  "start": "2026-07-07"
 }

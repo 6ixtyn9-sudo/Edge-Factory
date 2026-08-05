@@ -2,12 +2,13 @@
  "markets": {
   "btts_yes@v1": {
    "hits": 0,
-   "inv_price_sum": 0.5238344683080146,
-   "n": 1,
+   "inv_price_sum": 1.0501502577816988,
+   "n": 2,
    "processed": [
-    "2026-08-03|Celtic vs Dundee|btts_yes@v1"
+    "2026-08-03|Celtic vs Dundee|btts_yes@v1",
+    "2026-08-05|Fenerbah\u00e7e vs Sturm Graz|btts_yes@v1"
    ],
-   "profit": -1.0,
+   "profit": -2.0,
    "records": [
     {
      "date": "2026-08-03",
@@ -15,6 +16,14 @@
      "match": "Celtic vs Dundee",
      "price": 1.909,
      "source": "bzzoiro_odds"
+    },
+    {
+     "date": "2026-08-05",
+     "hit": false,
+     "match": "Fenerbah\u00e7e vs Sturm Graz",
+     "multi_source": false,
+     "price": 1.9,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
