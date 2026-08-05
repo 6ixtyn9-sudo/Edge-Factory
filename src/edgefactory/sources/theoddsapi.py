@@ -101,32 +101,98 @@ COLUMNS = [
 
 # Manual league-title hints for containment misses (normalized league_raw
 # fragment -> The Odds API sport key). Extend as coverage reports accumulate.
-LEAGUE_KEY_ALIASES = {
-    "englandpremierleague": "soccer_epl",
-    "englisnpremierleague": "soccer_epl",
-    "englandchampionship": "soccer_efl_champ",
-    "spainlaliga": "soccer_spain_la_liga",
-    "germanybundesliga": "soccer_germany_bundesliga",
-    "italyseriea": "soccer_italy_serie_a",
-    "franceligue1": "soccer_france_ligue_one",
-    "netherlandseredivisie": "soccer_netherlands_eredivisie",
-    "swedenallsvenskan": "soccer_sweden_allsvenskan",
-    "norwayeliteserien": "soccer_norway_eliteserien",
-    "australiaaleague": "soccer_australia_aleague",
-    "usamls": "soccer_usa_mls",
-    "brazilseriea": "soccer_brazil_campeonato",
-    "brazilcampeonato": "soccer_brazil_campeonato",
-    "argentinaprimera": "soccer_argentina_primera_division",
-    "denmarksuperliga": "soccer_denmark_superliga",
-    "belgiumfirstdiv": "soccer_belgium_first_div",
-    "austriabundesliga": "soccer_austria_bundesliga",
-    "greecesuperleague": "soccer_greece_super_league",
-    "polandekstraklasa": "soccer_poland_ekstraklasa",
-    "turkeysuperlig": "soccer_turkey_super_league",
-    "mexicoligamx": "soccer_mexico_ligamx",
-    "uefachampionsleague": "soccer_uefa_champs_league",
-    "uefaeuropaleague": "soccer_uefa_europa_league",
+# League label -> The Odds API sport key candidates, in preference order.
+#
+# Values are CHAINS: the first key the provider actually lists wins. Off-season
+# swaps matter — UCL qualifiers sit on soccer_uefa_champs_league_qualification
+# while the main key is unlisted. The first matching FRAGMENT wins-or-returns
+# -None: no fallthrough to other fragments, so a second-tier label can never
+# inherit its top tier's sport key (wrong competition is worse than unpriced).
+# Fragments are matched against the digit-preserving _league_code form and
+# checked longest-first (_ALIAS_FRAGS).
+LEAGUE_KEY_ALIASES: dict[str, tuple[str, ...]] = {
+    # UEFA — qualifying window: main keys go unlisted, the quals key stays live
+    "uefachampionsleague": ("soccer_uefa_champs_league",
+                            "soccer_uefa_champs_league_qualification"),
+    "uefaeuropaconferenceleague": ("soccer_uefa_europa_conference_league",),
+    "uefaeuropaleague": ("soccer_uefa_europa_league",),
+    # England
+    "englandpremierleague": ("soccer_epl",),
+    "englisnpremierleague": ("soccer_epl",),  # historical provider typo, kept
+    "englandchampionship": ("soccer_efl_champ",),
+    "englandleagueone": ("soccer_england_league1",),
+    "englandleague1": ("soccer_england_league1",),
+    "englandleaguetwo": ("soccer_england_league2",),
+    "englandleague2": ("soccer_england_league2",),
+    # Spain / Germany / Italy / France (tier-guard fragments before their prefix)
+    "spainlaliga2": ("soccer_spain_segunda_division",),
+    "spainlaliga": ("soccer_spain_la_liga",),
+    "germanybundesliga2": ("soccer_germany_bundesliga2",),
+    "germanybundesliga": ("soccer_germany_bundesliga",),
+    "italyseriea": ("soccer_italy_serie_a",),
+    "franceligue2": ("soccer_france_ligue_two",),
+    "franceligue1": ("soccer_france_ligue_one",),
+    # Rest of the covered domestic leagues
+    "netherlandseredivisie": ("soccer_netherlands_eredivisie",),
+    "swedenallsvenskan": ("soccer_sweden_allsvenskan",),
+    "norwayeliteserien": ("soccer_norway_eliteserien",),
+    "australiaaleague": ("soccer_australia_aleague",),
+    "usamls": ("soccer_usa_mls",),
+    "brazilserieb": ("soccer_brazil_serie_b",),
+    "brazilseriea": ("soccer_brazil_campeonato",),
+    "brazilcampeonato": ("soccer_brazil_campeonato",),
+    # tightened: bare "argentinaprimera" mislabelled Primera B Metropolitana
+    "argentinaprimeradivisin": ("soccer_argentina_primera_division",),
+    "denmarksuperliga": ("soccer_denmark_superliga",),
+    "belgiumfirstdiv": ("soccer_belgium_first_div",),
+    "austriabundesliga": ("soccer_austria_bundesliga",),
+    "greecesuperleague": ("soccer_greece_super_league",),
+    "polandekstraklasa": ("soccer_poland_ekstraklasa",),
+    "turkeysuperlig": ("soccer_turkey_super_league",),
+    "mexicoligamx": ("soccer_mexico_ligamx",),
+    # Evidence-backed additions (labels observed in the picks archives)
+    "scotlandpremiership": ("soccer_spl",),
+    "chileprimeradivisin": ("soccer_chile_campeonato",),
+    "czechliga": ("soccer_czech_liga",),
 }
+
+# Exact-match provider short codes, matched before any fragment logic on the
+# digit-preserving _league_code form (the code carries the tier: "Se2" is
+# Superettan, "Se4" is Division 2 — stripping digits would collapse them).
+SHORT_LEAGUE_KEYS: dict[str, tuple[str, ...]] = {
+    "ucl": ("soccer_uefa_champs_league", "soccer_uefa_champs_league_qualification"),
+    "uel": ("soccer_uefa_europa_league",),
+    "ecl": ("soccer_uefa_europa_conference_league",),
+    "fi1": ("soccer_finland_veikkausliiga",),
+    "se2": ("soccer_sweden_superettan",),
+    "ie1": ("soccer_league_of_ireland",),
+}
+
+
+def _league_code(raw: object) -> str:
+    """Digit-preserving normalization — the competition tier lives in the digit
+    ("Se2"=Superettan / "Se4"=Division 2; "La Liga 2" != "La Liga"). Fragment
+    and containment matching both run on this form, so a second-tier label can
+    never collapse onto its top tier's sport key."""
+    return re.sub(r"[^a-z0-9]", "", str(raw or "").lower())
+
+
+def _first_listed(keys: tuple[str, ...], sports: list[dict]) -> str | None:
+    """First chain link the provider currently lists.
+
+    With an empty sports list (no cache to verify against) the chain head is
+    trusted — same contract the aliases had before. An empty chain is a
+    deliberate dead-end and returns None.
+    """
+    for key in keys:
+        if any(s.get("key") == key for s in sports):
+            return key
+    return keys[0] if keys and not sports else None
+
+
+# Fragments checked longest-first: tier-guards ("germanybundesliga2") must win
+# over their prefixes ("germanybundesliga"). Deterministic within equal length.
+_ALIAS_FRAGS = sorted(LEAGUE_KEY_ALIASES.items(), key=lambda kv: (-len(kv[0]), kv[0]))
 
 
 class KeysExhausted(Exception):
@@ -152,10 +218,6 @@ def _norm_team(name: object) -> str:
 
 
 def _norm_full(name: object) -> str:
-    return re.sub(r"[^a-z]", "", str(name or "").lower())
-
-
-def _norm_league(name: object) -> str:
     return re.sub(r"[^a-z]", "", str(name or "").lower())
 
 
@@ -504,29 +566,48 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
     """Resolve a pick's league name to a The Odds API sport key.
 
     Returns None when the league is not covered — caller reports the miss.
+    Resolution contract, strictest stage first — and None is always preferred
+    over a wrong-competition key:
+
+      1. exact provider short code ("ECL", "Fi1"; digits preserved: the code
+         carries the tier, so "Se2" -> Superettan can never become Allsvenskan);
+      2. first matching alias fragment wins-or-returns-None (no fallthrough,
+         so a second-tier label never inherits its top tier's sport key);
+      3. containment fallback only on REAL overlap — >= 8 chars and at least
+         half the longer string, otherwise a bare "league" token (digits
+         stripped from "League 2") junk-matches every "...League" label and
+         fabricates wrong-competition prices (2026-08-06 incident: 13 archived
+         labels, incl. all UEFA comps, resolved to soccer_england_league2).
+
+    Stages 2 and 3 match on _league_code (digits preserved), so "K League 2"
+    can never inherit soccer_korea_kleague1 and "Japan J2 League" can never
+    inherit soccer_japan_j_league.
     """
-    norm = _norm_league(league_raw)
-    if len(norm) < 4:
+    if not str(league_raw or "").strip():
+        return None
+    code = _league_code(league_raw)
+    if code in SHORT_LEAGUE_KEYS:
+        return _first_listed(SHORT_LEAGUE_KEYS[code], sports)
+    if len(code) < 4:
         # too short to match safely ("ie2" -> "ie" would false-hit "premiership")
         return None
-    for frag, key in LEAGUE_KEY_ALIASES.items():
-        if frag in norm:
-            if any(s.get("key") == key for s in sports) or not sports:
-                return key
+    for frag, keys in _ALIAS_FRAGS:
+        if frag in code:
+            return _first_listed(keys, sports)  # wins-or-None; never falls through
     candidates = []
     for s in sports:
         if not s.get("active", True):
             continue
-        title_norm = _norm_league(s.get("title"))
-        key_norm = _norm_league(str(s.get("key", "")).replace("soccer_", "").replace("_", ""))
-        # containment only between meaningful lengths: a 2-3 char title or a
-        # 2-3 char league norm produces garbage hits ("ie" in "premiership")
-        if title_norm and len(title_norm) >= 4 and (title_norm in norm or norm in title_norm):
-            candidates.append((len(title_norm), s.get("key")))
-        elif key_norm and len(key_norm) >= 4 and (key_norm in norm or norm in key_norm):
-            candidates.append((len(key_norm), s.get("key")))
+        title_code = _league_code(s.get("title"))
+        key_code = _league_code(str(s.get("key", "")).replace("soccer_", "").replace("_", ""))
+        for cand in (title_code, key_code):
+            overlap = min(len(cand), len(code))
+            if (overlap >= 8 and overlap * 2 >= max(len(cand), len(code))
+                    and (cand in code or code in cand)):
+                candidates.append((overlap, str(s.get("key"))))
+                break
     if candidates:
-        candidates.sort(reverse=True)
+        candidates.sort(key=lambda t: (-t[0], t[1]))  # longest overlap, then name
         return candidates[0][1]
     return None
 
@@ -829,6 +910,16 @@ def fetch_fixtures(fixtures: list[dict], *, day: str | None = None) -> tuple[lis
     if not fixtures:
         return [], [], 0
     sports = load_sports()  # free; raises if the whole ring is dead
+    if any(sport_key_for_league(f.get("league"), sports) is None for f in fixtures):
+        # comp availability swaps at season boundaries (UCL quals key appears,
+        # UECL returns in-season) faster than the 7-day sports cache rolls;
+        # one free refresh re-resolves stale misses. Never fatal, never priced.
+        try:
+            fresh = load_sports(refresh=True)
+            if fresh:
+                sports = fresh
+        except Exception as exc:
+            _log(f"sports refresh skipped (using cache): {exc}")
 
     groups: dict[str, list[dict]] = {}
     unmatched: list[str] = []

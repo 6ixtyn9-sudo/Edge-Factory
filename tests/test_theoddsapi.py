@@ -309,3 +309,105 @@ def test_shortlist_reads_vetoed_picks_from_forecast_archive(tmp_path, monkeypatc
     pairs = {(f["home"], f["away"]) for f in fixtures}
     assert ("Paide", "Rapid Vienna") in pairs   # vetoed pick IS in the shortlist
     assert ("Ajax", "Shelbourne") in pairs
+
+
+# ------------------------------------------------- league resolution integrity (2026-08-06)
+
+OFFSEASON_SPORTS = [
+    {"key": "soccer_england_league1", "group": "Soccer", "title": "League 1", "active": True},
+    {"key": "soccer_england_league2", "group": "Soccer", "title": "League 2", "active": True},
+    {"key": "soccer_efl_champ", "group": "Soccer", "title": "Championship", "active": True},
+    {"key": "soccer_argentina_primera_division", "group": "Soccer", "title": "Primera División - Argentina", "active": True},
+    {"key": "soccer_korea_kleague1", "group": "Soccer", "title": "K League 1", "active": True},
+    {"key": "soccer_uefa_champs_league_qualification", "group": "Soccer", "title": "UEFA Champions League Qualification", "active": True},
+    {"key": "soccer_spl", "group": "Soccer", "title": "Premiership - Scotland", "active": True},
+    {"key": "soccer_sweden_superettan", "group": "Soccer", "title": "Superettan - Sweden", "active": True},
+]
+
+
+def test_league_resolution_never_wrong_competition():
+    # 2026-08-06 incident: 13 archived labels junk-resolved to soccer_england_league2
+    # via a 6-char "league" token (digit-stripped "League 2"). A wrong competition
+    # must always lose to None — provenance fabrication is worse than unpriced.
+    for label in ("World UEFA Europa Conference League", "World: UEFA Europa Conference League",
+                  "World UEFA Europa League", "World: UEFA Europa League",
+                  "Bulgaria First League", "Belarus: Premier League",
+                  "Kuwait,Premier League Championship Round", "Scotland League Cup",
+                  "Uzbekistan Super League", "Argentina Primera B Metropolitana",
+                  "World Friendlies Clubs"):
+        assert theoddsapi.sport_key_for_league(label, OFFSEASON_SPORTS) is None, label
+
+
+def test_league_resolution_uefa_chains_follow_listing():
+    # off-season: the main UCL key is unlisted; the qualifiers key is live
+    assert (theoddsapi.sport_key_for_league("World UEFA Champions League", OFFSEASON_SPORTS)
+            == "soccer_uefa_champs_league_qualification")
+    assert (theoddsapi.sport_key_for_league("UCL", OFFSEASON_SPORTS)
+            == "soccer_uefa_champs_league_qualification")
+    both = OFFSEASON_SPORTS + [{"key": "soccer_uefa_champs_league", "group": "Soccer",
+                                "title": "UEFA Champions League", "active": True}]
+    assert (theoddsapi.sport_key_for_league("World UEFA Champions League", both)
+            == "soccer_uefa_champs_league")
+    uecl = OFFSEASON_SPORTS + [{"key": "soccer_uefa_europa_conference_league", "group": "Soccer",
+                                "title": "UEFA Europa Conference League", "active": True}]
+    assert (theoddsapi.sport_key_for_league("World UEFA Europa Conference League", uecl)
+            == "soccer_uefa_europa_conference_league")
+    # conference key must NOT absorb the Europa League (distinct competitions)
+    assert theoddsapi.sport_key_for_league("World UEFA Europa League", uecl) is None
+
+
+def test_league_short_codes_exact_and_tier_preserving():
+    uecl = [{"key": "soccer_uefa_europa_conference_league", "group": "Soccer",
+             "title": "UEFA Europa Conference League", "active": True}]
+    assert theoddsapi.sport_key_for_league("ECL", uecl) == "soccer_uefa_europa_conference_league"
+    fin = OFFSEASON_SPORTS + [{"key": "soccer_finland_veikkausliiga", "group": "Soccer",
+                               "title": "Veikkausliiga - Finland", "active": True}]
+    assert theoddsapi.sport_key_for_league("Fi1", fin) == "soccer_finland_veikkausliiga"
+    assert theoddsapi.sport_key_for_league("Se2", OFFSEASON_SPORTS) == "soccer_sweden_superettan"
+    # digit preserved at code stage: "Se4" (Division 2) must NOT hit Superettan
+    assert theoddsapi.sport_key_for_league("Se4", OFFSEASON_SPORTS) is None
+    assert theoddsapi.sport_key_for_league("Ie2", OFFSEASON_SPORTS) is None
+    # digit-preserving matching: second-tier labels never inherit the top tier
+    assert theoddsapi.sport_key_for_league("Korea K League 2", OFFSEASON_SPORTS) is None
+    j1 = [{"key": "soccer_japan_j_league", "group": "Soccer", "title": "J League", "active": True}]
+    assert theoddsapi.sport_key_for_league("Japan J2 League", j1) is None
+    assert theoddsapi.sport_key_for_league("South Korea K League 1", OFFSEASON_SPORTS) == "soccer_korea_kleague1"
+
+
+def test_containment_fallback_requires_real_overlap():
+    sports = OFFSEASON_SPORTS + [
+        {"key": "soccer_finland_veikkausliiga", "group": "Soccer", "title": "Veikkausliiga - Finland", "active": True},
+        {"key": "soccer_mexico_ligamx", "group": "Soccer", "title": "Liga MX", "active": True},
+    ]
+    # full-token containment still resolves legitimately
+    assert theoddsapi.sport_key_for_league("Finland Veikkausliiga", sports) == "soccer_finland_veikkausliiga"
+    assert theoddsapi.sport_key_for_league("Mexico,Liga Mx Apertura", sports) == "soccer_mexico_ligamx"
+    # a generic "championship"/"league" token never suffices on its own
+    assert theoddsapi.sport_key_for_league("Kuwait Premier League Championship Round", sports) is None
+
+
+def test_fetch_fixtures_refreshes_stale_sports_cache(monkeypatch):
+    # comp availability swaps at season boundaries faster than the 7-day cache
+    # rolls; one free /sports refresh must re-resolve stale misses.
+    stale = [{"key": "soccer_sweden_allsvenskan", "group": "Soccer", "title": "Allsvenskan", "active": True}]
+    fresh = stale + [{"key": "soccer_uefa_europa_conference_league", "group": "Soccer",
+                      "title": "UEFA Europa Conference League", "active": True}]
+    calls = {"refresh": 0}
+
+    def fake_load_sports(*, refresh=False):
+        if refresh:
+            calls["refresh"] += 1
+            return fresh
+        return stale
+
+    fixture = {"home": "Halmstad", "away": "Sirius",
+               "league": "World UEFA Europa Conference League",
+               "date": "2026-08-03", "kickoff": "03-08, 18:00"}
+    monkeypatch.setattr(theoddsapi, "API_KEYS", ("test-key",))
+    monkeypatch.setattr(theoddsapi, "load_sports", fake_load_sports)
+    monkeypatch.setattr(theoddsapi, "fetch_events", lambda key: EVENTS)
+    monkeypatch.setattr(theoddsapi, "fetch_event_odds", lambda key, event_id, day=None: PAYLOAD)
+    rows, unmatched, matched = theoddsapi.fetch_fixtures([fixture], day="2026-08-03")
+    assert calls["refresh"] == 1                    # exactly one free refresh
+    assert matched == 1 and not unmatched           # stale-cache miss healed
+    assert rows                                     # real rows out of the payload

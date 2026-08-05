@@ -4550,3 +4550,63 @@ evidence on ALL buckets, not just playable ones.
 **Verified:** 224 passed (223 + 1 new shortlist test pinning that a
 SKIPPED_VETO pick is in the shortlist) in clean AND polluted-.env; pyflakes
 findings pre-existing only (verified by base diff).
+
+### Addendum 27.13 — League resolution: wrong-competition fix + UEFA coverage (2026-08-05)
+
+**Trigger (operator):** with the all-buckets archive live (27.12), capture for
+2026-08-06 found the shortlist fixture but reported
+`Paide vs Rapid Vienna (no event in soccer_england_league2)` — a UECL
+qualifier resolving to England League 2.
+
+**Finding (verified against all 112 distinct league labels in the archived
+picks):** `sport_key_for_league` was fabricating wrong-competition
+resolutions at scale. The provider's off-season sports list has no
+UECL/UEL/UCL-main keys, so the alias loop missed and the containment
+fallback matched junk: `_norm_league` strips digits, reducing the title
+"League 2" to a 6-char "league" token that substring-hit every
+"...League" label; ties sorted lexically, so `soccer_england_league2`
+absorbed **13 archived labels** (all UEFA comps, Belarus/Bulgaria Premier,
+Scotland League Cup, Kuwait Premier League, Uzbekistan Super League...).
+Same class: "Kuwait ... Championship Round" -> `soccer_efl_champ`, and the
+"argentinaprimera" fragment mislabelled "Argentina Primera B Metropolitana"
+onto the top-tier key. Tier digits were destroyed before matching
+("Se2"/"Se4" indistinguishable; "K League 2" inheritable by K League 1).
+Provenance rule: wrong competition is worse than unpriced.
+
+**Fix (this commit), `src/edgefactory/sources/theoddsapi.py`:**
+1. Aliases become CHAINS checked longest-first; first provider-listed key
+   wins (UCL falls back to `soccer_uefa_champs_league_qualification` during
+   the qualifying window — qualifiers price TODAY). First matching fragment
+   wins-or-returns-None: no fallthrough, so a second-tier label can never
+   inherit its top tier's key. Tightened `argentinaprimera` ->
+   `argentinaprimeradivisin`; added UECL/UEL-main, Spain Segunda guard,
+   Germany Bundesliga 2 / France Ligue 2 / Brazil Serie B tier guards,
+   England League One/Two, Scotland Premiership, Chile Primera, Czech Liga.
+2. All matching runs on a digit-preserving `_league_code` (the tier lives
+   in the digit): exact short codes (`UCL`/`UEL`/`ECL`/`Fi1`/`Se2`/`Ie1`)
+   added as an exact-match table.
+3. Containment fallback now requires real overlap: >= 8 chars AND >= half
+   the longer string. The 6-char "league" token can no longer carry a
+   resolution; legit containment (Finland/Mexico/Denmark/Poland/Switzerland)
+   verified unchanged.
+4. `fetch_fixtures` performs one free `/sports` refresh when any fixture's
+   league doesn't resolve on the cached list — comp availability swaps at
+   season boundaries faster than the 7-day cache rolls (never fatal, 0
+   credits; stale-cache misses heal on the next capture run).
+
+**Result (112-label acceptance table):** 13 -> 0 wrong-competition
+resolutions; UCL qualifiers now resolve correctly; Scotland Premiership,
+Chile Primera, Fi1/Ie1/Se2 codes gained. Wl1/Bg1/Kr2 remain honest None —
+genuinely not sold by The Odds API; no code change can price them from this
+source.
+
+**Verified:** 229 passed (224 + 5: never-wrong-competition, UEFA chains
+follow listing, short codes exact & tier-preserving, containment overlap
+floor, stale-cache refresh heal); pyflakes findings pre-existing only
+(verified by base diff).
+
+**Residual (honest):** verbose second-tier labels for covered top-tier
+leagues not yet observed in archives resolve via the digit-preserving
+fallback (structurally safe), but new provider short codes should be added
+to SHORT_LEAGUE_KEYS as they appear in captures; the capture `--dry-run`
+output shows each fixture's resolution and is the audit surface for this.
