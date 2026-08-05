@@ -1,9 +1,17 @@
 """OddsPapi -> enhancement pricing wiring tests (Addendum 27.7, operator override).
 
-Covers: multi-market parsing (1x2/btts/dc/team_totals/totals), unified
-schema, the unified-store merge into `load_prices_index`, and real-price
-attachment for markets that were previously "synthetic/none".
+Hermetic flag: this file exercises the oddspapi price path, so the
+EDGE_FACTORY_ODDSPAPI_PRICES flag is set for every test here (the flag-gate
+test manages its own env). The global conftest strips it by default.
 """
+import pytest
+
+
+@pytest.fixture(autouse=True)
+def _oddspapi_enabled(monkeypatch):
+    monkeypatch.setenv("EDGE_FACTORY_ODDSPAPI_PRICES", "1")
+
+
 import csv
 import gzip
 
@@ -183,3 +191,83 @@ def test_totals_line_in_separate_field():
     assert ("ou_2.5", "under") in markets
     assert ("tt_home_1.5", "over") in markets
     assert ("1x2", "home") in markets
+
+
+# --- Red-team fixes (2026-08-05) ---
+
+
+def test_oddspapi_flag_gate_controls_merge(tmp_path, monkeypatch):
+    # F6: the oddspapi store must NOT merge without EDGE_FACTORY_ODDSPAPI_PRICES=1
+    rows = rows_from_odds_response(_odds_payload(), market_type_map={
+        "101": "1x2", "103": "btts", "108": "double_chance",
+        "115": "team_totals", "107": "totals"})
+    _write_oddspapi_month(tmp_path, rows)
+    monkeypatch.delenv("EDGE_FACTORY_ODDSPAPI_PRICES", raising=False)
+    idx = load_prices_index(tmp_path, "2026-08-03")
+    p = attach_enhancement_price(_pick(recommended_enhancement="home_over_15"), idx)
+    assert p["enhancement_priced"] is False  # store ignored without flag
+    monkeypatch.setenv("EDGE_FACTORY_ODDSPAPI_PRICES", "1")
+    idx = load_prices_index(tmp_path, "2026-08-03")
+    p = attach_enhancement_price(_pick(recommended_enhancement="home_over_15"), idx)
+    assert p["enhancement_priced"] is True and p["enhancement_price_source"] == ODDSPAPI_SOURCE
+
+
+def test_oddspapi_inactive_outcomes_dropped():
+    # F2: marketActive=False and player active=False must be dropped
+    payload = _odds_payload()
+    payload["bookmakerOdds"]["Pinnacle"]["markets"]["101"] = {
+        "marketActive": False, "outcomes": {
+            "o1": {"players": {"0": {"bookmakerOutcomeId": "home", "price": 2.10}}}}}
+    payload["bookmakerOdds"]["Pinnacle"]["markets"]["103"] = {"outcomes": {
+        "b1": {"players": {"0": {"name": "Yes", "price": 1.95, "active": False}}}}}
+    rows = rows_from_odds_response(payload, market_type_map={
+        "101": "1x2", "103": "btts", "108": "double_chance",
+        "115": "team_totals", "107": "totals"})
+    markets = {(r["market"], r["selection"]) for r in rows}
+    assert ("1x2", "home") not in markets   # market inactive
+    assert ("btts", "yes") not in markets   # outcome inactive
+
+
+def test_oddspapi_captured_at_is_capture_time():
+    # F2: captured_at must be OUR capture time, not the provider updatedAt
+    payload = _odds_payload()
+    payload["updatedAt"] = "2020-01-01T00:00:00Z"  # stale provider stamp
+    rows = rows_from_odds_response(payload, market_type_map={
+        "101": "1x2", "103": "btts", "108": "double_chance",
+        "115": "team_totals", "107": "totals"})
+    assert rows and rows[0]["captured_at"].startswith("2026-08")  # capture time, not 2020
+
+
+def test_oddspapi_dedupe_excludes_captured_at(tmp_path):
+    # F7: re-appending the same rows (new captured_at) must dedupe to 0 added
+    import scripts.capture_oddspapi as cap
+    rows = rows_from_odds_response(_odds_payload(), market_type_map={
+        "101": "1x2", "103": "btts", "108": "double_chance",
+        "115": "team_totals", "107": "totals"})
+    orig = cap.OUT_DIR
+    cap.OUT_DIR = tmp_path
+    try:
+        a1 = cap._append_rows(rows, "2026-08-03")
+        a2 = cap._append_rows(rows, "2026-08-03")  # same rows, new captured_at
+    finally:
+        cap.OUT_DIR = orig
+    assert a1 > 0 and a2 == 0
+
+
+def test_double_chance_draw_is_unpriced(tmp_path):
+    # F5: a draw pick cannot be hedged with "12"; leave it unpriced
+    from edgefactory.enh_pricing import load_prices_index
+    rows = rows_from_odds_response(_odds_payload(), market_type_map={
+        "101": "1x2", "103": "btts", "108": "double_chance",
+        "115": "team_totals", "107": "totals"})
+    _write_oddspapi_month(tmp_path, rows)
+    idx = load_prices_index(tmp_path, "2026-08-03")
+    p = attach_enhancement_price(
+        _pick(recommended_enhancement="double_chance", enhancement_probability=0.5, pick="draw"), idx)
+    assert p["enhancement_priced"] is False
+
+
+def test_classify_label_set_winner_rejected():
+    # F8: "Set Winner" (non-soccer vocabulary) must not classify as 1x2
+    from edgefactory.sources.oddspapi_odds import _classify_label
+    assert _classify_label("Set Winner") == ""

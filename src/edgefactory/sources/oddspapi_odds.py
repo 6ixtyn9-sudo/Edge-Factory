@@ -140,7 +140,7 @@ _MARKET_CATALOG: dict[str, str] = {}  # id -> raw label (for diagnosis)
 
 _NON_GOAL = ("corner", "card", "throw", "offside", "shot", "penalt", "foul",
              "booking", "save", "free kick", "goal kick", "red card", "yellow",
-             "inning", "margin", "period", "quarter")
+             "inning", "margin", "period", "quarter", "set winner")
 _GOAL_WORDS = ("goal", "btts", "both teams", "total", "over", "under",
                "1x2", "match winner", "full time result", "double chance",
                "correct score", "winner")
@@ -261,7 +261,11 @@ def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None =
     kickoff = data.get("startTime")
     day = str(kickoff or "")[:10]
     league = data.get("tournamentName") or data.get("categoryName")
-    captured_at = data.get("updatedAt") or kickoff
+    # Red-team F2 (fixed 2026-08-05): captured_at is OUR capture time, not
+    # the provider's updatedAt (which can be stale by days). Freshness is
+    # then meaningful for enh_pricing/CLV.
+    from datetime import datetime as _dt, timezone as _tz
+    captured_at = _dt.now(_tz.utc).isoformat()
     rows: list[dict] = []
     bookmaker_odds = data.get("bookmakerOdds") or {}
     if not isinstance(bookmaker_odds, dict):
@@ -279,6 +283,10 @@ def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None =
             mtype = type_map.get(str(mid))
             if not mtype or not isinstance(mkt, dict):
                 continue
+            # Red-team F2 (fixed 2026-08-05): dead markets/outcomes are
+            # dropped at the boundary — never ingested.
+            if mkt.get("marketActive") is False:
+                continue
             outcomes = mkt.get("outcomes") or {}
             if not isinstance(outcomes, dict):
                 continue
@@ -288,6 +296,8 @@ def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None =
                 players = outcome.get("players") or {}
                 player0 = players.get("0") if isinstance(players, dict) else None
                 if not isinstance(player0, dict):
+                    continue
+                if player0.get("active") is False:
                     continue
                 price = player0.get("price")
                 if price is None:

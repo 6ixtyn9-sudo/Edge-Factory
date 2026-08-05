@@ -37,6 +37,7 @@ at the boundary (RT-2, addendum 9) at every source.
 from __future__ import annotations
 
 import csv
+import os
 import gzip
 import math
 from pathlib import Path
@@ -209,10 +210,13 @@ def load_prices_index(root: Path, day: str) -> dict[str, Any]:
                               day=day, out=out)
     # Operator override 2026-08-05 (Addendum 27.7): OddsPapi prices team
     # totals / double chance / totals / btts for the enhancement overlay.
-    # File is absent until capture runs; fail-soft like every other source.
-    _accumulate_unified(localdata / f"oddspapi_odds_{month}.csv.gz",
-                        day=day, source_tag=ODDSPAPI_SOURCE,
-                        strict_source=ODDSPAPI_SOURCE, out=out)
+    # REAL flag gate (red-team finding F6, fixed 2026-08-05): the store is
+    # merged ONLY when EDGE_FACTORY_ODDSPAPI_PRICES=1. Without the flag, a
+    # stale oddspapi file present on disk must not silently feed prices.
+    if os.environ.get("EDGE_FACTORY_ODDSPAPI_PRICES") == "1":
+        _accumulate_unified(localdata / f"oddspapi_odds_{month}.csv.gz",
+                            day=day, source_tag=ODDSPAPI_SOURCE,
+                            strict_source=ODDSPAPI_SOURCE, out=out)
     return out
 
 
@@ -250,7 +254,10 @@ def attach_enhancement_price(pick: dict, index: dict[str, Any] | None, *,
     mapping = MARKET_PRICE_MAP.get(market)
     if market == "double_chance" and mapping and mapping[1] is None:
         side = str(pick.get("pick") or "").strip().lower()
-        sel = {"home": "1x", "away": "x2", "draw": "12"}.get(side)
+        # draw -> None (red-team F5, fixed 2026-08-05): "12" (home-or-away)
+        # is a HEDGE against the draw, not an enhancement of it. A draw pick
+        # cannot be enhanced with double chance; leave it unpriced.
+        sel = {"home": "1x", "away": "x2", "draw": None}.get(side)
         if sel:
             mapping = ("dc", sel)
     pick["enhancement_mapped"] = bool(mapping)

@@ -988,3 +988,17 @@ def test_disposition_is_never_fuzzy_matched(tmp_path, monkeypatch):
 
     assert report["voided_event_picks"] == 0
     assert report["unmatched_result_picks"] == 1
+
+
+def test_fuzzy_match_pair_constrained_rejects_swapped():
+    # Red-team F4: swapped home/away must NOT fuzzy-match (reversed settle)
+    from scripts.audit_recent_picks import find_fuzzy_result_match
+    results = [{"home": "Chelsea", "away": "Arsenal", "hs": 2, "gs": 1}]
+    assert find_fuzzy_result_match("Arsenal", "Chelsea", results) is None
+
+
+def test_fuzzy_match_pair_constrained_accepts_legit_pair():
+    from scripts.audit_recent_picks import find_fuzzy_result_match
+    results = [{"home": "Manchester United", "away": "Liverpool", "hs": 2, "gs": 1}]
+    got = find_fuzzy_result_match("Man United", "Liverpool", results)
+    assert got is not None and got["home"] == "Manchester United"

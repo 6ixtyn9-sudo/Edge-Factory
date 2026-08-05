@@ -63,15 +63,19 @@ def _append_rows(rows: list[dict], day: str) -> int:
     """Append rows to the unified store, deduped on the full row (idempotent re-runs)."""
     path = _out_path(day)
     path.parent.mkdir(parents=True, exist_ok=True)
+    # Red-team F7 (fixed 2026-08-05): dedupe key EXCLUDES captured_at so
+    # re-capturing the same price does not append an unbounded duplicate
+    # row per run. A genuinely changed price (different odds) still appends.
+    DEDUP_COLS = [c for c in COLUMNS if c != "captured_at"]
     seen: set[tuple] = set()
     if path.exists():
         with gzip.open(path, "rt", newline="", encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
-                seen.add(tuple(r.get(k) for k in COLUMNS))
+                seen.add(tuple(r.get(k) for k in DEDUP_COLS))
     added = 0
     fresh = []
     for r in rows:
-        key = tuple(str(r.get(k) or "") for k in COLUMNS)
+        key = tuple(str(r.get(k) or "") for k in DEDUP_COLS)
         if key in seen:
             continue
         seen.add(key)
