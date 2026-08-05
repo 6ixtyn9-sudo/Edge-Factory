@@ -358,6 +358,438 @@
         "realized": 0.444444
       }
     },
+    "by_engine_by_market": {
+      "hybrid_cohort": {
+        "away_over_05": {
+          "brier": 0.018421,
+          "delta": 0.135395,
+          "hits": 2,
+          "mean_promised": 0.864605,
+          "n": 2,
+          "realized": 1.0
+        },
+        "away_under_15": {
+          "brier": 0.037108,
+          "delta": 0.192501,
+          "hits": 2,
+          "mean_promised": 0.807499,
+          "n": 2,
+          "realized": 1.0
+        },
+        "away_under_25": {
+          "brier": 0.002102,
+          "delta": 0.045246,
+          "hits": 2,
+          "mean_promised": 0.954754,
+          "n": 2,
+          "realized": 1.0
+        },
+        "away_under_35": {
+          "brier": 0.000192,
+          "delta": 0.013579,
+          "hits": 2,
+          "mean_promised": 0.986421,
+          "n": 2,
+          "realized": 1.0
+        },
+        "btts_no": {
+          "brier": 0.270106,
+          "delta": -0.28931,
+          "hits": 1,
+          "mean_promised": 0.53931,
+          "n": 4,
+          "realized": 0.25
+        },
+        "btts_yes": {
+          "brier": 0.270106,
+          "delta": 0.28931,
+          "hits": 3,
+          "mean_promised": 0.46069,
+          "n": 4,
+          "realized": 0.75
+        },
+        "exact_3": {
+          "brier": 0.049432,
+          "delta": -0.222329,
+          "hits": 0,
+          "mean_promised": 0.222329,
+          "n": 4,
+          "realized": 0.0
+        },
+        "exact_4": {
+          "brier": 0.349896,
+          "delta": 0.322116,
+          "hits": 2,
+          "mean_promised": 0.177884,
+          "n": 4,
+          "realized": 0.5
+        },
+        "exact_5": {
+          "brier": 0.208589,
+          "delta": 0.136045,
+          "hits": 1,
+          "mean_promised": 0.113955,
+          "n": 4,
+          "realized": 0.25
+        },
+        "goal_range_4_5": {
+          "brier": 0.392308,
+          "delta": 0.458161,
+          "hits": 3,
+          "mean_promised": 0.291839,
+          "n": 4,
+          "realized": 0.75
+        },
+        "goal_range_4_6": {
+          "brier": 0.337805,
+          "delta": 0.397276,
+          "hits": 3,
+          "mean_promised": 0.352724,
+          "n": 4,
+          "realized": 0.75
+        },
+        "home_over_05": {
+          "brier": 0.009978,
+          "delta": 0.099856,
+          "hits": 2,
+          "mean_promised": 0.900144,
+          "n": 2,
+          "realized": 1.0
+        },
+        "home_under_15": {
+          "brier": 0.038519,
+          "delta": 0.196263,
+          "hits": 1,
+          "mean_promised": 0.803737,
+          "n": 1,
+          "realized": 1.0
+        },
+        "home_under_25": {
+          "brier": 0.006871,
+          "delta": 0.080894,
+          "hits": 2,
+          "mean_promised": 0.919106,
+          "n": 2,
+          "realized": 1.0
+        },
+        "home_under_35": {
+          "brier": 0.000841,
+          "delta": 0.027619,
+          "hits": 2,
+          "mean_promised": 0.972381,
+          "n": 2,
+          "realized": 1.0
+        },
+        "match_over_15": {
+          "brier": 0.031803,
+          "delta": 0.178309,
+          "hits": 2,
+          "mean_promised": 0.821691,
+          "n": 2,
+          "realized": 1.0
+        },
+        "match_over_25": {
+          "brier": 0.41141,
+          "delta": 0.641404,
+          "hits": 2,
+          "mean_promised": 0.358596,
+          "n": 2,
+          "realized": 1.0
+        },
+        "match_over_35": {
+          "brier": 0.287387,
+          "delta": 0.336138,
+          "hits": 3,
+          "mean_promised": 0.413862,
+          "n": 4,
+          "realized": 0.75
+        },
+        "match_over_45": {
+          "brier": 0.197076,
+          "delta": 0.006261,
+          "hits": 1,
+          "mean_promised": 0.243739,
+          "n": 4,
+          "realized": 0.25
+        }
+      },
+      "legacy": {
+        "away_over_05": {
+          "brier": 0.367464,
+          "delta": -0.332453,
+          "hits": 1,
+          "mean_promised": 0.832453,
+          "n": 2,
+          "realized": 0.5
+        },
+        "away_under_15": {
+          "brier": 0.032593,
+          "delta": 0.180535,
+          "hits": 1,
+          "mean_promised": 0.819465,
+          "n": 1,
+          "realized": 1.0
+        },
+        "away_under_25": {
+          "brier": 0.058662,
+          "delta": 0.058819,
+          "hits": 16,
+          "mean_promised": 0.882358,
+          "n": 17,
+          "realized": 0.941176
+        },
+        "away_under_35": {
+          "brier": 0.035946,
+          "delta": 0.008066,
+          "hits": 25,
+          "mean_promised": 0.953473,
+          "n": 26,
+          "realized": 0.961538
+        },
+        "btts_no": {
+          "brier": 0.230831,
+          "delta": 0.011222,
+          "hits": 4,
+          "mean_promised": 0.560207,
+          "n": 7,
+          "realized": 0.571429
+        },
+        "btts_yes": {
+          "brier": 0.237859,
+          "delta": -0.089854,
+          "hits": 10,
+          "mean_promised": 0.524637,
+          "n": 23,
+          "realized": 0.434783
+        },
+        "exact_0": {
+          "brier": 0.012054,
+          "delta": -0.109792,
+          "hits": 0,
+          "mean_promised": 0.109792,
+          "n": 1,
+          "realized": 0.0
+        },
+        "exact_1": {
+          "brier": 0.175017,
+          "delta": 0.035454,
+          "hits": 1,
+          "mean_promised": 0.214546,
+          "n": 4,
+          "realized": 0.25
+        },
+        "exact_2": {
+          "brier": 0.17663,
+          "delta": -0.018399,
+          "hits": 5,
+          "mean_promised": 0.245672,
+          "n": 22,
+          "realized": 0.227273
+        },
+        "exact_3": {
+          "brier": 0.049487,
+          "delta": -0.222453,
+          "hits": 0,
+          "mean_promised": 0.222453,
+          "n": 14,
+          "realized": 0.0
+        },
+        "exact_4": {
+          "brier": 0.280408,
+          "delta": 0.206409,
+          "hits": 6,
+          "mean_promised": 0.168591,
+          "n": 16,
+          "realized": 0.375
+        },
+        "exact_5": {
+          "brier": 0.115624,
+          "delta": -0.002905,
+          "hits": 1,
+          "mean_promised": 0.127905,
+          "n": 8,
+          "realized": 0.125
+        },
+        "goal_range_0_1": {
+          "brier": 0.419464,
+          "delta": 0.64766,
+          "hits": 1,
+          "mean_promised": 0.35234,
+          "n": 1,
+          "realized": 1.0
+        },
+        "goal_range_2_3": {
+          "brier": 0.234496,
+          "delta": -0.14117,
+          "hits": 8,
+          "mean_promised": 0.46117,
+          "n": 25,
+          "realized": 0.32
+        },
+        "goal_range_4_5": {
+          "brier": 0.274121,
+          "delta": 0.140782,
+          "hits": 4,
+          "mean_promised": 0.303662,
+          "n": 9,
+          "realized": 0.444444
+        },
+        "goal_range_4_6": {
+          "brier": 0.267681,
+          "delta": 0.112182,
+          "hits": 6,
+          "mean_promised": 0.349357,
+          "n": 13,
+          "realized": 0.461538
+        },
+        "goal_range_6_plus": {
+          "brier": 0.075286,
+          "delta": -0.270876,
+          "hits": 0,
+          "mean_promised": 0.270876,
+          "n": 2,
+          "realized": 0.0
+        },
+        "goal_range_7_plus": {
+          "brier": 0.023681,
+          "delta": -0.150595,
+          "hits": 0,
+          "mean_promised": 0.150595,
+          "n": 2,
+          "realized": 0.0
+        },
+        "home_over_05": {
+          "brier": 0.027014,
+          "delta": 0.161234,
+          "hits": 12,
+          "mean_promised": 0.838766,
+          "n": 12,
+          "realized": 1.0
+        },
+        "home_under_25": {
+          "brier": 0.409172,
+          "delta": -0.373265,
+          "hits": 1,
+          "mean_promised": 0.873265,
+          "n": 2,
+          "realized": 0.5
+        },
+        "home_under_35": {
+          "brier": 0.206569,
+          "delta": -0.168198,
+          "hits": 10,
+          "mean_promised": 0.937429,
+          "n": 13,
+          "realized": 0.769231
+        },
+        "match_over_15": {
+          "brier": 0.153114,
+          "delta": -0.034926,
+          "hits": 5,
+          "mean_promised": 0.86826,
+          "n": 6,
+          "realized": 0.833333
+        },
+        "match_over_25": {
+          "brier": 0.297849,
+          "delta": 0.031502,
+          "hits": 9,
+          "mean_promised": 0.568498,
+          "n": 15,
+          "realized": 0.6
+        },
+        "match_over_35": {
+          "brier": 0.305019,
+          "delta": 0.174316,
+          "hits": 8,
+          "mean_promised": 0.397113,
+          "n": 14,
+          "realized": 0.571429
+        },
+        "match_over_45": {
+          "brier": 0.242338,
+          "delta": -0.02795,
+          "hits": 2,
+          "mean_promised": 0.27795,
+          "n": 8,
+          "realized": 0.25
+        }
+      },
+      "model": {
+        "away_under_25": {
+          "brier": 0.011006,
+          "delta": 0.104911,
+          "hits": 1,
+          "mean_promised": 0.895089,
+          "n": 1,
+          "realized": 1.0
+        },
+        "away_under_35": {
+          "brier": 0.000977,
+          "delta": 0.03125,
+          "hits": 1,
+          "mean_promised": 0.96875,
+          "n": 1,
+          "realized": 1.0
+        },
+        "btts_no": {
+          "brier": 0.231456,
+          "delta": 0.481099,
+          "hits": 1,
+          "mean_promised": 0.518901,
+          "n": 1,
+          "realized": 1.0
+        },
+        "btts_yes": {
+          "brier": 0.231456,
+          "delta": -0.481099,
+          "hits": 0,
+          "mean_promised": 0.481099,
+          "n": 1,
+          "realized": 0.0
+        },
+        "exact_2": {
+          "brier": 0.059207,
+          "delta": -0.243325,
+          "hits": 0,
+          "mean_promised": 0.243325,
+          "n": 1,
+          "realized": 0.0
+        },
+        "exact_3": {
+          "brier": 0.04887,
+          "delta": -0.221065,
+          "hits": 0,
+          "mean_promised": 0.221065,
+          "n": 1,
+          "realized": 0.0
+        },
+        "exact_4": {
+          "brier": 0.02269,
+          "delta": -0.150631,
+          "hits": 0,
+          "mean_promised": 0.150631,
+          "n": 1,
+          "realized": 0.0
+        },
+        "goal_range_2_3": {
+          "brier": 0.215658,
+          "delta": -0.46439,
+          "hits": 0,
+          "mean_promised": 0.46439,
+          "n": 1,
+          "realized": 0.0
+        },
+        "home_over_05": {
+          "brier": 0.036696,
+          "delta": 0.191561,
+          "hits": 1,
+          "mean_promised": 0.808439,
+          "n": 1,
+          "realized": 1.0
+        }
+      }
+    },
     "by_market": {
       "away_over_05": {
         "brier": 0.192942,
