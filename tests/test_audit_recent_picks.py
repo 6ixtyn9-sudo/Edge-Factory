@@ -1002,3 +1002,67 @@ def test_fuzzy_match_pair_constrained_accepts_legit_pair():
     results = [{"home": "Manchester United", "away": "Liverpool", "hs": 2, "gs": 1}]
     got = find_fuzzy_result_match("Man United", "Liverpool", results)
     assert got is not None and got["home"] == "Manchester United"
+
+
+def test_veto_deep_dive_cuts(tmp_path, monkeypatch):
+    """Addendum 27.14: the flagship veto ROI must decompose by evidence tier,
+    odds band and veto reason — from the same settled rows as by_bucket."""
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    # trusted evidence, small odds, recorded reason; result 1-1 draw -> home pick LOSES
+    veto_hard = dict(PICK_A, bucket="SKIPPED_VETO", odds=1.42,
+                     price_evidence="BZZOIRO_PRIMARY", veto_reason=["niche_league"])
+    # soft evidence, mid odds, NO veto_reason field -> UNRECORDED; result 0-1 -> away pick WINS
+    veto_soft = dict(PICK_D, bucket="SKIPPED_VETO", pick="away", odds=2.30,
+                     price_evidence="SCOUTINGSTATS_SOLE")
+    # contrast bucket row on a DISTINCT fixture (dedupe keeps one row per match)
+    caution_row = dict(PICK_B, bucket="CAUTION", price_evidence="SCOUTINGSTATS_SOLE")
+    (localdata / "picks_2026-07-20.json").write_text(
+        json.dumps([veto_hard, veto_soft, caution_row])
+    )
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute(
+        "CREATE TABLE forebet_settled (date VARCHAR, home VARCHAR, away VARCHAR, "
+        "hs INTEGER, gs INTEGER, outcome VARCHAR)"
+    )
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-07-20','Alpha','Beta',1,1,'draw')")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-07-20','Gamma','Delta',2,1,'home')")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-07-20','Kappa','Lambda',0,1,'away')")
+    con.close()
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    report = audit_mod.build_report("2026-07-20", "2026-07-20", wh)
+
+    dd = report["veto_deep_dive"]
+    assert dd["focus_bucket"] == "SKIPPED_VETO"
+    assert dd["overall"]["settled_picks"] == 2
+    assert dd["overall"]["wins"] == 1
+    # pnl: hard lost -1.0 at 1.42-home(draw); soft won +1.30 at 2.30-away -> +0.15 blended
+    assert dd["overall"]["roi"] == 0.15
+
+    ev = dd["by_price_evidence"]
+    assert set(ev) == {"BZZOIRO_PRIMARY", "SCOUTINGSTATS_SOLE"}
+    assert ev["BZZOIRO_PRIMARY"]["roi"] == -1.0            # the trusted row lost
+    assert ev["SCOUTINGSTATS_SOLE"]["roi"] == 1.3          # the soft row won
+    assert dd["trusted_evidence_only"]["settled_picks"] == 1
+    assert dd["trusted_evidence_only"]["roi"] == -1.0
+    assert dd["soft_evidence_only"]["settled_picks"] == 1
+    assert dd["soft_evidence_only"]["roi"] == 1.3
+
+    bands = dd["by_odds_band"]
+    assert bands["<1.50"]["settled_picks"] == 1
+    assert bands["2.00-3.00"]["settled_picks"] == 1
+    assert list(bands) == ["<1.50", "2.00-3.00"]           # band order, not lexical
+
+    reasons = dd["by_veto_reason"]
+    assert reasons["niche_league"]["settled_picks"] == 1
+    assert reasons["UNRECORDED"]["settled_picks"] == 1     # missing field, never dropped
+
+    contrast = dd["contrast_by_price_evidence"]
+    assert contrast["SCOUTINGSTATS_SOLE"]["settled_picks"] == 1
+    assert dd["contrast_bucket"] == "CAUTION"

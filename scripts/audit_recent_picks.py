@@ -679,6 +679,98 @@ def summarize_quarantine_by(rows: list[SettledPick], attr: str) -> dict[str, dic
     return out
 
 
+# --------------------------------------------------------------- veto deep dive
+#
+# Addendum 27.14: the flagship audit number must survive interrogation before it
+# can steer staking policy. SKIPPED_VETO led the ROI table, but one blended
+# figure hides the composition that decides whether the veto is mispriced or the
+# audit is. These cuts are computed from the SAME settled rows as by_bucket —
+# never a parallel settlement path.
+
+VETO_DEEP_DIVE_SOFT_EVIDENCE = (
+    "SUSPECT_ALIAS_FUZZY",
+    "SCOUTINGSTATS_SOLE",
+    "UNMATCHED",
+    "SOURCE_FALLBACK",
+)
+
+_VETO_ODDS_BANDS = (
+    (1.0, 1.5, "<1.50"),
+    (1.5, 2.0, "1.50-2.00"),
+    (2.0, 3.0, "2.00-3.00"),
+    (3.0, None, ">=3.00"),
+)
+
+
+def _veto_odds_band(odds: float | None) -> str:
+    if odds is None:
+        return "unpriced"
+    for lo, hi, name in _VETO_ODDS_BANDS:
+        if odds >= lo and (hi is None or odds < hi):
+            return name
+    return "other"
+
+
+def _veto_reason_label(pick: dict[str, Any]) -> str:
+    raw = pick.get("veto_reason")
+    if isinstance(raw, list):
+        raw = "+".join(str(r) for r in raw if r)
+    return str(raw or "").strip() or "UNRECORDED"
+
+
+def _summarize_pairs(rows: list[tuple[SettledPick, dict[str, Any]]]) -> dict[str, Any]:
+    return summarize_scored([s for s, _p in rows])
+
+
+def build_veto_deep_dive(
+    pairs: list[tuple[SettledPick, dict[str, Any]]],
+    *,
+    focus_bucket: str = "SKIPPED_VETO",
+    contrast_bucket: str = "CAUTION",
+) -> dict[str, Any]:
+    """Cross-cut one bucket's settled rows by evidence, odds band and veto reason."""
+    focus = [(s, p) for s, p in pairs if s.bucket == focus_bucket]
+    contrast = [(s, p) for s, p in pairs if s.bucket == contrast_bucket]
+
+    def cut(rows, key):
+        grouped: dict[str, list] = defaultdict(list)
+        for s, p in rows:
+            grouped[key(s, p)].append((s, p))
+        return grouped
+
+    by_band = cut(focus, lambda s, _p: _veto_odds_band(s.odds))
+    band_order = [name for _lo, _hi, name in _VETO_ODDS_BANDS] + ["unpriced", "other"]
+    soft = set(VETO_DEEP_DIVE_SOFT_EVIDENCE)
+    return {
+        "focus_bucket": focus_bucket,
+        "overall": _summarize_pairs(focus),
+        "by_price_evidence": {
+            k: _summarize_pairs(v)
+            for k, v in sorted(cut(focus, lambda s, _p: s.price_evidence).items())
+        },
+        "by_odds_band": {
+            name: _summarize_pairs(by_band[name])
+            for name in band_order if name in by_band
+        },
+        "by_veto_reason": {
+            k: _summarize_pairs(v)
+            for k, v in sorted(cut(focus, lambda _s, p: _veto_reason_label(p)).items())
+        },
+        "trusted_evidence_only": _summarize_pairs(
+            [(s, p) for s, p in focus if s.price_evidence not in soft]
+        ),
+        "soft_evidence_only": _summarize_pairs(
+            [(s, p) for s, p in focus if s.price_evidence in soft]
+        ),
+        "soft_evidence_labels": sorted(soft),
+        "contrast_bucket": contrast_bucket,
+        "contrast_by_price_evidence": {
+            k: _summarize_pairs(v)
+            for k, v in sorted(cut(contrast, lambda s, _p: s.price_evidence).items())
+        },
+    }
+
+
 def parse_statistical_comment(comment: str) -> dict[str, Any]:
     out = {
         "over25": None,
@@ -1306,6 +1398,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
     results, results_by_date = load_results_index(warehouse_path)
     dispositions = load_event_disposition_index(warehouse_path, start=start, end=end)
     settled_rows: list[SettledPick] = []
+    settled_pairs: list[tuple[SettledPick, dict[str, Any]]] = []  # (row, archived pick) for veto_deep_dive
     archived_dates = sorted({str(p.get("date") or "")[:10] for p in picks if p.get("date")})
     today_local = local_today()
     same_day_excluded = 0
@@ -1425,7 +1518,8 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
             if result.get("origin") == "overlay":
                 overlay_rescued += 1
             settled_rows.append(settled)
-            
+            settled_pairs.append((settled, pick))
+
             # Score secondary markets on this settled match
             hs = result.get("hs")
             gs = result.get("gs")
@@ -1635,6 +1729,9 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "overall": summarize_scored(settled_rows),
         "by_rule": summarize_by(settled_rows, "rule_name"),
         "by_bucket": summarize_by(settled_rows, "bucket"),
+        # Addendum 27.14: the flagship number under interrogation — evidence,
+        # odds-band and veto-reason composition of the best-ROI bucket.
+        "veto_deep_dive": build_veto_deep_dive(settled_pairs),
         "by_odds_source": summarize_by(settled_rows, "odds_source"),
         "by_odds_match_method": summarize_by(settled_rows, "odds_match_method"),
         # Addendum 26: first-class tables for the two pricing interrogations.
@@ -1811,6 +1908,44 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 f"{summary.get('settled_picks', 0)} | {summary.get('wins', 0)} | "
                 f"{summary.get('hit_rate')} | {summary.get('priced_picks', 0)} | {summary.get('roi')} |"
             )
+
+    # Addendum 27.14: the flagship number under interrogation. A blended ROI
+    # cannot steer staking policy until its composition is known.
+    veto_dd = report.get("veto_deep_dive", {}) or {}
+
+    def _dd_row(name: str, summary: dict[str, Any] | None) -> None:
+        summary = summary or {}
+        lines.append(
+            f"| {name} | {summary.get('settled_picks', 0)} | {summary.get('wins', 0)} | "
+            f"{summary.get('hit_rate')} | {summary.get('priced_picks', 0)} | {summary.get('roi')} |"
+        )
+
+    lines.extend([
+        "",
+        "## Veto Deep Dive",
+        "",
+        "> SKIPPED_VETO cross-cut by price evidence, odds band and veto reason, "
+        "> computed from the SAME settled rows as the bucket table. "
+        "> `trusted evidence only` excludes the soft labels: "
+        f"> {', '.join(veto_dd.get('soft_evidence_labels', []))}.",
+        "",
+        "| cut | settled | wins | hit rate | priced | ROI |",
+        "| --- | --- | --- | --- | --- | --- |",
+    ])
+    if not veto_dd:
+        _dd_row("n/a", None)
+    else:
+        _dd_row(f"**overall ({veto_dd.get('focus_bucket', 'SKIPPED_VETO')})**", veto_dd.get("overall"))
+        _dd_row("**trusted evidence only**", veto_dd.get("trusted_evidence_only"))
+        _dd_row("**soft evidence only**", veto_dd.get("soft_evidence_only"))
+        for key, summary in (veto_dd.get("by_price_evidence") or {}).items():
+            _dd_row(f"evidence: {key}", summary)
+        for key, summary in (veto_dd.get("by_odds_band") or {}).items():
+            _dd_row(f"odds band: {key}", summary)
+        for key, summary in (veto_dd.get("by_veto_reason") or {}).items():
+            _dd_row(f"veto reason: {key}", summary)
+        for key, summary in (veto_dd.get("contrast_by_price_evidence") or {}).items():
+            _dd_row(f"contrast {veto_dd.get('contrast_bucket', 'CAUTION')}: {key}", summary)
 
     quarantine_labels = {
         "NONE": "No price quarantine",
@@ -1994,6 +2129,18 @@ def main() -> int:
     print(f" ambiguous result picks: {report.get('ambiguous_result_picks', 0)}")
     print(f" hit rate: {overall.get('hit_rate')}")
     print(f" ROI: {overall.get('roi')}")
+    _vd = report.get("veto_deep_dive", {}) or {}
+    if _vd.get("overall"):
+        _ov = _vd["overall"]
+        _tr = _vd.get("trusted_evidence_only", {}) or {}
+        _so = _vd.get("soft_evidence_only", {}) or {}
+        print(f" veto deep-dive ({_vd.get('focus_bucket', 'SKIPPED_VETO')}): "
+              f"settled={_ov.get('settled_picks', 0)} roi={_ov.get('roi')} | "
+              f"trusted n={_tr.get('priced_picks', 0)} roi={_tr.get('roi')} | "
+              f"soft n={_so.get('priced_picks', 0)} roi={_so.get('roi')}")
+        for _band, _sum in (_vd.get("by_odds_band") or {}).items():
+            print(f"   odds {_band}: settled={_sum.get('settled_picks', 0)} "
+                  f"wins={_sum.get('wins', 0)} roi={_sum.get('roi')}")
     _ena = report.get("event_notes_audit", {}) or {}
     print(f" possible-events notes scored: {_ena.get('scored', 0)}/{_ena.get('total_notes', 0)}")
     _avg_goals = (report.get("statline_calibration", {}) or {}).get("avg_goals") or {}
