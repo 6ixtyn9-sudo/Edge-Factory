@@ -1166,8 +1166,8 @@ def _render_event_notes_section(aud: dict[str, Any]) -> list[str]:
         lines.append("")
         labels_mapping = "; ".join(f"`{m}` → \"{PLAIN_LABELS[m]}\"" for m in COMBO_LABEL_MARKETS)
         lines.append(
-            "Labels render plain-market exactly as promised, priced and scored (FIX-2 + label honesty, "
-            "Addendum 16): " + labels_mapping + ". Raw archive labels written before 2026-08-03 may still "
+            "Labels render plain-market exactly as promised, priced and scored: "
+            "" + labels_mapping + ". Raw archive labels written before 2026-08-03 may still "
             "carry the old \"Win + …\" wording in their stored label field; the render normalizes them."
         )
         lines.append("")
@@ -1177,7 +1177,7 @@ def _render_event_notes_section(aud: dict[str, Any]) -> list[str]:
             "### By probability engine (🔥)",
             "",
             "> `model` = blended rates + Poisson prior · `hybrid_cohort` = outcome-unconditioned "
-            "empirical cohort anchor (Addendum 17) · `legacy` = archived before engine tagging.",
+            "empirical cohort anchor · `legacy` = archived before engine tagging.",
             "",
             "| engine | n | hits | realized | promised avg | Δ | Brier |",
             "| --- | --- | --- | --- | --- | --- | --- |",
@@ -1631,7 +1631,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- pending/unmatched result picks: {report.get('pending_result_picks', report.get('unmatched_result_picks', 0))}",
         f"- voided postponed/cancelled/abandoned events: {report.get('voided_event_picks', 0)}",
         f"- ambiguous event-disposition rows: {report.get('ambiguous_disposition_picks', 0)}",
-        f"- settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)} (Addendum 21)",
+        f"- settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)}",
         f"- ambiguous result picks: {report.get('ambiguous_result_picks', 0)}",
         f"- wins: {overall.get('wins', 0)}",
         f"- hit rate: {overall.get('hit_rate')}",

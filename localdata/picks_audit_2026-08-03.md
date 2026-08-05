@@ -74,11 +74,11 @@ Every machine-readable 🔥 note on every settled pick in the window, scored aga
 | `goal_range_6_plus` | 1 | 1 | 0 | 0.0% | 22.7% | -22.7% | 0.051598 ⚠️low-n |
 | `goal_range_7_plus` | 1 | 1 | 0 | 0.0% | 11.9% | -11.9% | 0.014147 ⚠️low-n |
 
-Labels render plain-market exactly as promised, priced and scored (FIX-2 + label honesty, Addendum 16): `match_over_15` → "Match Over 1.5 Goals"; `match_over_25` → "Match Over 2.5 Goals"; `btts_yes` → "Both Teams to Score - Yes (BTTS-Yes)". Raw archive labels written before 2026-08-03 may still carry the old "Win + …" wording in their stored label field; the render normalizes them.
+Labels render plain-market exactly as promised, priced and scored: `match_over_15` → "Match Over 1.5 Goals"; `match_over_25` → "Match Over 2.5 Goals"; `btts_yes` → "Both Teams to Score - Yes (BTTS-Yes)". Raw archive labels written before 2026-08-03 may still carry the old "Win + …" wording in their stored label field; the render normalizes them.
 
 ### By probability engine (🔥)
 
-> `model` = blended rates + Poisson prior · `hybrid_cohort` = outcome-unconditioned empirical cohort anchor (Addendum 17) · `legacy` = archived before engine tagging.
+> `model` = blended rates + Poisson prior · `hybrid_cohort` = outcome-unconditioned empirical cohort anchor · `legacy` = archived before engine tagging.
 
 | engine | n | hits | realized | promised avg | Δ | Brier |
 | --- | --- | --- | --- | --- | --- | --- |
