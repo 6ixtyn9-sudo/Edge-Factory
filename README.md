@@ -211,8 +211,9 @@ Live ingest is CSV/DuckDB first; Supabase is the read model for dashboards/apps.
 CLV & audits
 
 audit_clv.py captures pick_time and end_of_run snapshots from daily.py automatically. Report stays audit-only in v1; CLV/steam/drift never gate picks.
-audit_recent_picks.py scores archived 1x2 picks against settled warehouse results. It uses the immutable morning baseline plus official late-slate additions only when the accumulated daily ledger preserves every morning row exactly; forecast-overwritten ledgers are rejected from settlement history.
-refresh_result_sources.py refreshes only yesterday's existing result-capable source adapters during autonomous intraday runs, preserving pick-time prediction fields while upserting final scores before warehouse/overlay/audit refresh.
+audit_recent_picks.py scores archived 1x2 picks against settled warehouse results. It uses the immutable morning baseline plus official late-slate additions only when the accumulated daily ledger preserves every morning row exactly; forecast-overwritten ledgers are rejected from settlement history. Confirmed postponed/cancelled/abandoned fixtures are retained as void event dispositions, excluded from win/loss/ROI denominators, and never mislabeled as missing results.
+refresh_result_sources.py refreshes only yesterday's existing result-capable source adapters during autonomous intraday runs, preserving pick-time prediction fields while upserting final scores or positive terminal event statuses before warehouse/overlay/audit refresh.
+Config/verified_event_dispositions.json is a narrow reviewed audit-only fact ledger for an exact confirmed terminal event status that existing sources omit or leave stale. It cannot affect source voting, picks, prices, certification, or WhatsApp; a final score always wins over a disposition.
 decay_monitor.py runs the 60-day health audit and auto-benches decayed edges.
 Status
 

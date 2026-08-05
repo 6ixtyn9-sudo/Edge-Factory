@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "purpose": "Audited terminal event facts for original fixtures that were postponed, cancelled, or abandoned and therefore must be voided from performance denominators. These rows never affect source voting, picks, prices, certification, or notifications.",
+  "rows": [
+    {
+      "date": "2026-07-19",
+      "home": "FC Levadia Tallinn",
+      "away": "Tammeka",
+      "disposition": "POSTPONED",
+      "source": "verified_disposition",
+      "verified_at": "2026-08-05",
+      "evidence": "Operator-supplied Sofascore event page marked Postponed"
+    },
+    {
+      "date": "2026-07-25",
+      "home": "Coquimbo Unido",
+      "away": "Universidad de Concepcion",
+      "disposition": "POSTPONED",
+      "source": "verified_disposition",
+      "verified_at": "2026-08-05",
+      "evidence": "Operator-supplied Sofascore event page marked Postponed"
+    },
+    {
+      "date": "2026-07-26",
+      "home": "Super Nova",
+      "away": "Riga",
+      "disposition": "POSTPONED",
+      "source": "verified_disposition",
+      "verified_at": "2026-08-05",
+      "evidence": "Operator-supplied Sofascore event page marked Postponed; existing Forebet status also read Postp."
+    }
+  ]
+}

@@ -3913,10 +3913,11 @@ final scores could remain absent until a later heavy capture.
    forebet, zulubet, statarea, vitibet, scoutingstats, bettingclosed
    ```
 
-   It persists only rows with both final score fields and, when a cached row
-   exists, updates only `hs`, `gs`, optional half-time scores, and status. It
-   preserves pick-time probability and odds fields; it never re-scores or
-   rewrites a prediction because a result page has later lost its probabilities.
+   It persists rows with both final score fields or a positive terminal event
+   status. When a cached row exists, it updates only `hs`, `gs`, optional
+   half-time scores, and status. It preserves pick-time probability and odds
+   fields; it never re-scores or rewrites a prediction because a result page
+   has later lost its probabilities.
 2. **Intraday ordering:** `daily.py` now runs this bounded refresh before
    `backfill_results` → warehouse rebuild → shared settled-results export →
    audit. The next three-hourly bot cycle can therefore settle a late-finishing
@@ -3950,3 +3951,109 @@ hand-edited. The next bot intraday run should emit a bounded result-refresh
 receipt, export Carabobo 2-0 through the normal shared facts path, and make the
 August 4 audit include all five official rows. If it does not, inspect the
 refresh receipt before changing result logic again.
+
+---
+
+## Integrity hotfix — terminal event dispositions are not missing results (2026-08-05)
+
+**Freeze exception:** this repairs audit classification only. It changes no
+source voting, prediction, market selection, calibration, price, certification,
+push, or notification rule.
+
+### Trigger and evidence
+
+After late official picks began entering the audit, three old rows were honestly
+visible as scoreless:
+
+```text
+2026-07-19  FC Levadia Tallinn vs Tammeka
+2026-07-25  Coquimbo Unido vs Universidad de Concepcion
+2026-07-26  Super Nova vs Riga
+```
+
+The operator supplied corresponding SofaScore event pages. Each page reported
+`Postponed`; these fixtures were never played on their original dates. They are
+not losses, wins, draws, or ordinary `unmatched_result` rows.
+
+A bounded re-fetch of existing sources showed why a score-only audit cannot
+solve this alone:
+
+```text
+Super Nova vs Riga:
+  Forebet = Postp. (positive terminal source evidence)
+
+FC Levadia Tallinn vs Tammeka:
+  Zulubet kept a scoreless fixture but supplied no usable status;
+  other sampled result donors had no exact row.
+
+Coquimbo Unido vs Universidad de Concepcion:
+  Vitibet retained status=scheduled after the original date;
+  other sampled result donors had no exact row.
+```
+
+Thus existing sources can sometimes detect postponement, but missing rows and
+stale `scheduled` labels are not affirmative terminal evidence. A missing score
+must never be automatically called postponed.
+
+### What changed
+
+1. **Explicit disposition vocabulary:** pure settlement helpers classify only
+   positive source status evidence into `POSTPONED`, `CANCELLED`, or
+   `ABANDONED`. Blank, scheduled, live, suspended, and generic missing-score
+   states remain non-terminal.
+2. **Result-refresh preservation:** `refresh_result_sources.py` now persists
+   positive terminal no-score statuses as well as final scores, while preserving
+   pick-time probabilities and odds. It reports separate `scored=` and
+   `terminal_status=` counts.
+3. **Exact-only disposition audit:** `audit_recent_picks.py` reads terminal
+   status evidence from existing raw warehouse source views and applies it only
+   through exact normalized team-pair/alias candidates. There is no fuzzy
+   postponed/cancelled match: a false void is worse than a pending row.
+4. **Reviewed exception facts:**
+   `Config/verified_event_dispositions.json` records the three independently
+   verified postponed original fixtures whose current source status evidence is
+   absent or stale. This is audit-only. It contains no scores, odds, or source
+   votes.
+5. **Score precedence:** any exact final score always wins over a disposition.
+   If a fixture eventually has a same-date result, it settles normally; a
+   disposition cannot erase a real score.
+6. **Honest report surface:** rolling JSON and Markdown now separate:
+
+   ```text
+   settled picks
+   voided postponed/cancelled/abandoned events
+   pending/unmatched result picks
+   ambiguous event-disposition rows
+   ```
+
+   Voided events remain visible in `## Event Disposition / Void Audit` but are
+   excluded from win/loss/ROI and calibration denominators.
+
+### Rescheduling doctrine
+
+A prediction recorded for an original postponed kickoff is **voided by default**.
+It must not inherit a later rescheduled score merely because teams eventually
+meet again. Reusing an original prediction after a reschedule requires a future
+explicit event-ID continuity and as-of-time policy; none is assumed here.
+
+### Invariants pinned by tests
+
+```text
+Postp. / Postponed → POSTPONED
+Cancelled / Abandoned → terminal disposition
+scheduled / live / blank → not terminal
+exact terminal disposition → void, not win/loss/unmatched
+same-fixture final score + disposition → final score wins
+source-status terminal evidence is recognised
+fuzzy disposition matching is absent by design
+same-day exclusion remains unchanged
+```
+
+### Boundary
+
+No external status scraper was introduced, no private browser endpoint was
+reverse engineered, and no source was promoted. The small verified-disposition
+ledger is transparent evidence for already-confirmed event facts; it is not a
+substitute for source coverage. This closes the false `unmatched_result`
+classification while preserving unknown/pending rows honestly for later source
+coverage review.
