@@ -165,18 +165,21 @@ def _evaluate(entry: dict, today: str) -> None:
 
 
 def record_outcome(root: Path, *, date_: str, match: str, market: str | None,
-                   price: float | None, hit: bool, source: str = "") -> dict:
+                   price: float | None, hit: bool, source: str = "",
+                   today: str | None = None) -> dict:
     """Idempotently record one settled enhancement outcome.
 
     Dedupes on "date|match|<market>@v1" so repeated audit runs cannot double-count.
     Unpriced outcomes are recorded as processed but never advance certification.
+    ``today`` injects the evaluation date (default: real system date) so the
+    rolling BENCH window is deterministic in tests and batch replay.
     Returns {"status": str|None, "recorded": bool}. Never raises."""
     try:
         mkey = versioned(market)
         if not mkey or not match:
             return {"status": None, "recorded": False}
         path = registry_path(root)
-        today = date.today().isoformat()
+        today = today or date.today().isoformat()
         pkey = f"{date_}|{match}|{mkey}"
         with _locked(root):
             reg = _read(path)

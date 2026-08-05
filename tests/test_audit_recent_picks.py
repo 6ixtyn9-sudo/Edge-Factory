@@ -276,6 +276,38 @@ def test_aggregate_event_notes_math():
     assert buckets["0.8-0.9"]["realized"] == 1.0
     assert buckets["0.6-0.7"]["realized"] == 1.0
     assert buckets["0.5-0.6"]["realized"] == 0.0
+    # by_engine_by_market: per-engine x per-market cells for the debias read
+    assert aud["by_engine_by_market"]["legacy"]["match_over_25"]["n"] == 2
+    assert aud["by_engine_by_market"]["legacy"]["btts_yes"]["n"] == 1
+    assert set(aud["by_engine_by_market"]) == {"legacy"}
+
+
+def test_aggregate_event_notes_engine_market_cells():
+    from scripts.audit_recent_picks import aggregate_event_notes
+
+    obs = [
+        {"market": "match_over_25", "promised": 0.55, "raw_promised": 0.6, "hit": False,
+         "engine": "hybrid_cohort"},
+        {"market": "match_over_25", "promised": 0.62, "raw_promised": 0.62, "hit": True,
+         "engine": "hybrid_cohort"},
+        {"market": "match_over_25", "promised": 0.5, "raw_promised": 0.5, "hit": True},
+        {"market": "btts_yes", "promised": 0.7, "raw_promised": 0.7, "hit": True,
+         "engine": "model"},
+        {"market": "btts_yes", "promised": 0.6, "raw_promised": 0.6, "hit": None,
+         "engine": "hybrid_cohort"},
+    ]
+    aud = aggregate_event_notes(obs)
+    ebm = aud["by_engine_by_market"]
+    assert set(ebm) == {"hybrid_cohort", "legacy", "model"}
+    assert ebm["hybrid_cohort"]["match_over_25"]["n"] == 2
+    assert ebm["hybrid_cohort"]["match_over_25"]["realized"] == 0.5
+    assert ebm["hybrid_cohort"]["match_over_25"]["mean_promised"] == round((0.55 + 0.62) / 2, 6)
+    assert ebm["legacy"]["match_over_25"]["n"] == 1
+    assert ebm["model"]["btts_yes"]["n"] == 1
+    # unscorable rows (hit None) do not leak into cells
+    assert "btts_yes" not in ebm["hybrid_cohort"]
+    # pooled by_engine stays consistent with the existing surface
+    assert aud["by_engine"]["hybrid_cohort"]["n"] == 2
 
 
 def test_aggregate_statline_math():

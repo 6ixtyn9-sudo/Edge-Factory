@@ -58,12 +58,31 @@ def test_stays_paper_when_evidence_insufficient(tmp_path):
 def test_benched_circuit_breaker(tmp_path):
     for i in range(30):  # earn ELIGIBLE
         record_outcome(tmp_path, date_="2026-08-03", match=f"W{i} vs X{i}", market=MKT,
-                       price=1.50, hit=True, source="theoddsapi")
+                       price=1.50, hit=True, source="theoddsapi", today="2026-08-03")
     status = None
     for i in range(30):  # rolling window turns sharply unprofitable
         status = record_outcome(tmp_path, date_="2026-08-03", match=f"L{i} vs M{i}", market=MKT,
-                                price=1.50, hit=False, source="theoddsapi")["status"]
+                                price=1.50, hit=False, source="theoddsapi", today="2026-08-03")["status"]
     assert status == "BENCHED"
+
+
+def test_benched_circuit_breaker_window_is_injected(tmp_path):
+    # RT: the BENCHED circuit reads a rolling 60-day window against the
+    # evaluation date. With the date injected, the same evidence is stable
+    # forever: inside the window -> BENCHED; beyond the window -> not benched.
+    for today, expect_benched in (("2026-08-03", True), ("2026-10-04", False)):
+        root = tmp_path / today.replace("-", "")
+        for i in range(30):
+            record_outcome(root, date_="2026-08-03", match=f"W{i} vs X{i}", market=MKT,
+                           price=1.50, hit=True, source="theoddsapi", today=today)
+        status = None
+        for i in range(30):
+            status = record_outcome(root, date_="2026-08-03", match=f"L{i} vs M{i}", market=MKT,
+                                    price=1.50, hit=False, source="theoddsapi", today=today)["status"]
+        if expect_benched:
+            assert status == "BENCHED"
+        else:
+            assert status == "ELIGIBLE"  # losses fell out of the 60-day window
 
 
 def test_concurrent_records_are_not_lost(tmp_path):
