@@ -61,32 +61,108 @@ def daterange(start: str, end: str):
 
 
 def archived_picks_path(day: str) -> Path:
-    # Prefer the immutable morning snapshot. The regular picks file may be
-    # replaced by later forecast reruns and would introduce state drift.
+    """Legacy single-path helper for external callers.
+
+    The audit itself uses ``load_archived_picks_with_receipt`` below, which
+    safely combines an immutable morning baseline with verified official late
+    additions. This helper retains the historic morning-first fallback only.
+    """
     morning = LOCALDATA / f"picks_morning_{day}.json"
     if morning.exists():
         return morning
     return LOCALDATA / f"picks_{day}.json"
 
 
-def load_archived_picks(start: str, end: str) -> list[dict[str, Any]]:
+def _archive_pick_key(row: dict[str, Any], fallback_day: str) -> tuple[str, str, str, str, str]:
+    """Stable identity for a frozen 1X2 ledger row."""
+    return (
+        str(row.get("date") or fallback_day)[:10],
+        norm_team(row.get("home") or ""),
+        norm_team(row.get("away") or ""),
+        str(row.get("market") or ""),
+        str(row.get("pick") or ""),
+    )
+
+
+def _load_archive_rows(path: Path, day: str) -> list[dict[str, Any]]:
+    try:
+        raw = json.loads(path.read_text())
+    except Exception:
+        return []
+    if not isinstance(raw, list):
+        return []
     out: list[dict[str, Any]] = []
-    for day in daterange(start, end):
-        path = archived_picks_path(day)
-        if not path.exists():
+    for item in raw:
+        if not isinstance(item, dict):
             continue
-        try:
-            data = json.loads(path.read_text())
-        except Exception:
+        row = dict(item)
+        row.setdefault("date", day)
+        if str(row.get("date") or "")[:10] != day:
             continue
-        if not isinstance(data, list):
-            continue
-        for row in data:
-            if isinstance(row, dict):
-                row = dict(row)
-                row.setdefault("date", day)
-                out.append(row)
+        out.append(row)
     return out
+
+
+def _same_frozen_payload(left: dict[str, Any], right: dict[str, Any]) -> bool:
+    """Accept additions only when the regular ledger preserved each morning
+    row exactly. A forecast-overwritten regular ledger must fail closed."""
+    return json.dumps(left, sort_keys=True, ensure_ascii=False, default=str) == json.dumps(
+        right, sort_keys=True, ensure_ascii=False, default=str
+    )
+
+
+def load_archived_picks_with_receipt(start: str, end: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Load immutable morning picks plus verified official late-slate additions.
+
+    The regular daily ledger may contain valid intraday discoveries, but it can
+    be replaced by a forecast refresh. Its new rows are accepted only when it is
+    a payload-identical superset of every morning baseline row.
+    """
+    out: list[dict[str, Any]] = []
+    receipt: dict[str, Any] = {
+        "morning_baseline_rows": 0,
+        "verified_late_additions": 0,
+        "regular_only_rows": 0,
+        "unsafe_regular_ledger_dates": [],
+    }
+    for day in daterange(start, end):
+        morning_path = LOCALDATA / f"picks_morning_{day}.json"
+        regular_path = LOCALDATA / f"picks_{day}.json"
+        morning = _load_archive_rows(morning_path, day) if morning_path.exists() else []
+        regular = _load_archive_rows(regular_path, day) if regular_path.exists() else []
+
+        if not morning:
+            # Legacy date: regular date archive is the sole available record.
+            out.extend(regular)
+            receipt["regular_only_rows"] += len(regular)
+            continue
+
+        out.extend(morning)
+        receipt["morning_baseline_rows"] += len(morning)
+        if not regular:
+            continue
+
+        morning_by_key = {_archive_pick_key(row, day): row for row in morning}
+        regular_by_key = {_archive_pick_key(row, day): row for row in regular}
+        baseline_preserved = all(
+            key in regular_by_key and _same_frozen_payload(row, regular_by_key[key])
+            for key, row in morning_by_key.items()
+        )
+        if not baseline_preserved:
+            receipt["unsafe_regular_ledger_dates"].append(day)
+            continue
+
+        for row in regular:
+            if _archive_pick_key(row, day) not in morning_by_key:
+                out.append(row)
+                receipt["verified_late_additions"] += 1
+
+    return out, receipt
+
+
+def load_archived_picks(start: str, end: str) -> list[dict[str, Any]]:
+    """Compatibility wrapper for callers/tests that need rows only."""
+    return load_archived_picks_with_receipt(start, end)[0]
 
 
 def dedupe_archived_picks(picks: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -1061,7 +1137,7 @@ def _render_statline_section(cal: dict[str, Any]) -> list[str]:
 
 
 def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day: bool = False) -> dict[str, Any]:
-    picks = load_archived_picks(start, end)
+    picks, archive_receipt = load_archived_picks_with_receipt(start, end)
     picks = dedupe_archived_picks(picks)
     results, results_by_date = load_results_index(warehouse_path)
     settled_rows: list[SettledPick] = []
@@ -1341,6 +1417,10 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "end": end,
         "archived_pick_rows": len(picks),
         "archived_pick_dates": archived_dates,
+        "morning_baseline_rows": archive_receipt["morning_baseline_rows"],
+        "verified_late_additions": archive_receipt["verified_late_additions"],
+        "regular_only_rows": archive_receipt["regular_only_rows"],
+        "unsafe_regular_ledger_dates": archive_receipt["unsafe_regular_ledger_dates"],
         "same_day_excluded": same_day_excluded,
         "same_day_cutoff": today_local,
         "include_same_day": include_same_day,
@@ -1378,6 +1458,10 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         "",
         f"- archived pick rows: {report.get('archived_pick_rows', 0)}",
         f"- archived pick dates: {len(report.get('archived_pick_dates', []))}",
+        f"- immutable morning-baseline rows: {report.get('morning_baseline_rows', 0)}",
+        f"- verified official late-slate additions: {report.get('verified_late_additions', 0)}",
+        f"- regular-ledger-only legacy rows: {report.get('regular_only_rows', 0)}",
+        f"- unsafe regular ledgers ignored: {len(report.get('unsafe_regular_ledger_dates', []))}",
         f"- settled picks: {overall.get('settled_picks', 0)}",
         f"- eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}",
         f"- unmatched result picks: {report.get('unmatched_result_picks', 0)}",
@@ -1601,7 +1685,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 for score_item in stats["top_scores"]:
                     score_icon = "🟢 HIT" if score_item["hit"] else "🔴 MISS"
                     scores_strs.append(f"[{score_icon}] {score_item['score']} ({score_item['pct']:.1%})")
-                lines.append(f"  - **Top Scores**: " + ", ".join(scores_strs))
+                lines.append("  - **Top Scores**: " + ", ".join(scores_strs))
 
             # Per-pick graded 🔥 Possible Events (Addendum 13/14): the same
             # observations that feed the aggregate table, rendered ONE EVENT

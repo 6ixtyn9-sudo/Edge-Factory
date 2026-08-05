@@ -37,7 +37,7 @@ import shlex
 import subprocess
 import sys
 import time
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Any
@@ -75,6 +75,23 @@ def make_run_as_of() -> str:
 
 def picks_env_prefix(run_as_of: str) -> str:
     return f"EDGE_FACTORY_RUN_AS_OF={shlex.quote(run_as_of)}"
+
+
+def result_refresh_day(target_date: str) -> str:
+    """The intraday audit settles completed calendar-day fixtures only.
+
+    Refreshing yesterday's existing result donors is bounded and avoids the
+    D30 all-source capture sweep, while allowing late-final scores to enter the
+    warehouse/overlay on the next three-hourly cadence.
+    """
+    return (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=1)).isoformat()
+
+
+def result_refresh_cmd(target_date: str) -> str:
+    return (
+        "PYTHONPATH=src python3 scripts/refresh_result_sources.py "
+        f"--date {result_refresh_day(target_date)}"
+    )
 
 
 def archived_picks_file(target_date: str) -> Path:
@@ -720,10 +737,15 @@ def run_pipeline(
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "autonomous_intraday":
-        # Completely hands-off accumulating ledger run
-        # Refresh settled results so audit_recent_picks and CLV have fresh scores
-        # for yesterday and older. capture_daily is the heavy scraper; skip it.
-        # backfill_results fills missing hs/gs from already-captured data (fast).
+        # Completely hands-off accumulating ledger run. Capture_daily remains
+        # the heavy D30 all-source path, but final scores can arrive after the
+        # morning capture. Refresh yesterday's six existing result donors first,
+        # then backfill/build/export before the audit consumes the facts.
+        refresh_day = result_refresh_day(target_date)
+        run_soft(
+            result_refresh_cmd(target_date),
+            f"refresh result donors ({refresh_day})",
+        )
         run_soft(
             f"python3 scripts/backfill_results.py --days {backfill_days}",
             f"backfill_results (D{backfill_days})",
