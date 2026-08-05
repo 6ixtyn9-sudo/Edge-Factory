@@ -19,8 +19,8 @@
         "kickoff": "2026-08-05T16:00:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 2.3,
-        "bookmaker": "Interwetten",
+        "odds": 2.34,
+        "bookmaker": "1xBet",
         "home_key": "sandecjanowysacz",
         "away_key": "rekordbielskobiala",
         "kickoff_delta_minutes": 30
@@ -33,7 +33,7 @@
         "market": "1x2",
         "selection": "home",
         "odds": 2.3,
-        "bookmaker": "1xBet",
+        "bookmaker": "Interwetten",
         "home_key": "sandecjanowysacz",
         "away_key": "rekordbielskobiala",
         "kickoff_delta_minutes": 30
@@ -143,6 +143,153 @@
         "home_key": "ponferradina",
         "away_key": "unionistasdesalamanca",
         "kickoff_delta_minutes": 30
+      }
+    ]
+  },
+  {
+    "date": "2026-08-05",
+    "kickoff": "05-08, 17:00",
+    "home": "Lazio",
+    "away": "Ostia Mare",
+    "league": "World Friendlies Clubs",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "lazio",
+    "away_key": "ostiamare",
+    "nearby_bzzoiro_candidates": [
+      {
+        "home": "SSC Napoli",
+        "away": "Osasuna",
+        "league": "Club Friendlies",
+        "kickoff": "2026-08-05T16:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.72,
+        "bookmaker": "efbet.net",
+        "home_key": "sscnapoli",
+        "away_key": "osasuna",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "SSC Napoli",
+        "away": "Osasuna",
+        "league": "Club Friendlies",
+        "kickoff": "2026-08-05T16:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.72,
+        "bookmaker": "efbet.net",
+        "home_key": "sscnapoli",
+        "away_key": "osasuna",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "AGF",
+        "away": "Sabah FK",
+        "league": "Champions League",
+        "kickoff": "2026-08-05T16:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.709,
+        "bookmaker": "Pinnacle",
+        "home_key": "agf",
+        "away_key": "sabahfk",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "AGF",
+        "away": "Sabah FK",
+        "league": "Champions League",
+        "kickoff": "2026-08-05T16:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.68,
+        "bookmaker": "Betsson",
+        "home_key": "agf",
+        "away_key": "sabahfk",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "AGF",
+        "away": "Sabah FK",
+        "league": "Champions League",
+        "kickoff": "2026-08-05T16:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.64,
+        "bookmaker": "Novibet",
+        "home_key": "agf",
+        "away_key": "sabahfk",
+        "kickoff_delta_minutes": 30
+      }
+    ],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Napoli",
+        "away": "Osasuna",
+        "league": "Club Friendlies 3",
+        "kickoff": "2026-08-05T16:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "napoli",
+        "away_key": "osasuna",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Stade Briochin",
+        "away": "Brest",
+        "league": "Club Friendlies 3",
+        "kickoff": "2026-08-05T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "stadebriochin",
+        "away_key": "brest",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "St. Polten W",
+        "away": "Young Boys W",
+        "league": "UEFA Women's Champions League",
+        "kickoff": "2026-08-05T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "stpoltenw",
+        "away_key": "youngboysw",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "\u017dNK Mura W",
+        "away": "Farul Constan\u0163a W",
+        "league": "UEFA Women's Champions League",
+        "kickoff": "2026-08-05T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.8,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "znkmuraw",
+        "away_key": "farulconstantaw",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Mallorca",
+        "away": "Paris Saint Germain",
+        "league": "Club Friendlies 1",
+        "kickoff": "2026-08-05T18:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.4,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "mallorca",
+        "away_key": "parissaintgermain",
+        "kickoff_delta_minutes": 60
       }
     ]
   }
