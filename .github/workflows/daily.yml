@@ -39,8 +39,8 @@ jobs:
       # capture_theodds.py) so an unset or EMPTY secret is a no-op; secrets win
       # whenever they are set. (Addendum 20, 2026-08-03)
       ODDS_API_REGIONS: ${{ secrets.ODDS_API_REGIONS || 'eu' }}
-      ODDS_API_MARKETS: ${{ secrets.ODDS_API_MARKETS || 'h2h,totals' }}
-      ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '2.5' }}
+      ODDS_API_MARKETS: ${{ secrets.ODDS_API_MARKETS || 'h2h,totals,totals_alt,btts,team_totals,double_chance' }}
+      ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '1.5,2.5,3.5,4.5' }}
       ODDS_API_MONTHLY_BUDGET: ${{ secrets.ODDS_API_MONTHLY_BUDGET || '480' }}
       ODDS_API_CLOSE_WINDOW_MIN: ${{ secrets.ODDS_API_CLOSE_WINDOW_MIN || '45' }}
       TZ: 'Africa/Johannesburg'

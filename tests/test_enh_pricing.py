@@ -297,9 +297,12 @@ def test_hostile_rows_rejected_at_every_source(tmp_path):
 
 
 def test_unmapped_types_stay_unpriced_despite_feeds(tmp_path):
+    # Operator override 2026-08-05 (Addendum 27.7): team totals / double
+    # chance / ou_4.5 are now MAPPED to the OddsPapi capture (real prices);
+    # goal ranges remain unmapped (no feed offers a banded market).
     _write_ss_month(tmp_path, [_ss_row()])
     _write_bzz_month(tmp_path, [_bzz_row()])
     idx = load_prices_index(tmp_path, "2026-08-03")
-    for mkt in ("goal_range_2_3", "away_under_35", "double_chance", "match_over_45"):
+    for mkt in ("goal_range_2_3",):
         p = attach_enhancement_price(_pick(recommended_enhancement=mkt), idx)
         assert p["enhancement_mapped"] is False and p["enhancement_price"] is None, mkt
