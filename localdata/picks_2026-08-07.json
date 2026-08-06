@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-08-06T00:03:23+02:00",
+    "as_of": "2026-08-06T03:16:03+02:00",
     "avg_p": 71.0,
     "away": "Gimhae City",
     "bookmaker": "scoutingstats_odds",
@@ -34,7 +34,7 @@
     "edge_n_way": 2,
     "edge_rule": "2way-unanimous avg_p>=70",
     "edge_status": "certified",
-    "enhancement_label": "Both Teams to Score - Yes (BTTS-Yes)",
+    "enhancement_label": "Home Team Over 0.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
     "enhancement_price": null,
@@ -42,19 +42,10 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.502,
-    "enhancement_reason": "Mathematical expectation is 50.2%",
-    "enhancement_state": "PAPER",
+    "enhancement_probability": 0.9104,
+    "enhancement_reason": "Home scoring rate is 78.7%",
+    "enhancement_state": "SHADOW",
     "event_notes": [
-      {
-        "cohort_n": 925,
-        "engine": "hybrid_cohort",
-        "label": "Both Teams to Score - Yes (BTTS-Yes)",
-        "market": "btts_yes",
-        "probability": 0.5019871656638576,
-        "raw_probability": 0.5019871656638576,
-        "reason": "Mathematical expectation is 50.2%"
-      },
       {
         "cohort_n": 925,
         "engine": "hybrid_cohort",
@@ -147,7 +138,7 @@
       }
     ],
     "home": "Suwon Bluewings",
-    "kickoff": "07:00",
+    "kickoff": "04:00",
     "league": "South Korea,K-league 2",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -168,7 +159,7 @@
     "price_evidence": "SCOUTINGSTATS_SOLE",
     "price_push_eligible": false,
     "price_quarantine_reason": "scoutingstats_sole_source",
-    "recommended_enhancement": "btts_yes",
+    "recommended_enhancement": "home_over_05",
     "recommended_market": "avoid_raw_1x2",
     "rule": "2way-unanimous avg_p>=70",
     "source_weights": {},
