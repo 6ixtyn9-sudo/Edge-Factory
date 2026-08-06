@@ -1,14 +1,17 @@
 {
  "markets": {
   "btts_yes@v1": {
-   "hits": 0,
-   "inv_price_sum": 1.0501502577816988,
-   "n": 2,
+   "hits": 2,
+   "inv_price_sum": 2.237606212679514,
+   "multi_n": 1,
+   "n": 4,
    "processed": [
     "2026-08-03|Celtic vs Dundee|btts_yes@v1",
-    "2026-08-05|Fenerbah\u00e7e vs Sturm Graz|btts_yes@v1"
+    "2026-08-05|Fenerbah\u00e7e vs Sturm Graz|btts_yes@v1",
+    "2026-08-05|Napoli vs Osasuna|btts_yes@v1",
+    "2026-08-05|Arsenal vs Real Betis|btts_yes@v1"
    ],
-   "profit": -2.0,
+   "profit": -0.63,
    "records": [
     {
      "date": "2026-08-03",
@@ -24,6 +27,22 @@
      "multi_source": false,
      "price": 1.9,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-05",
+     "hit": true,
+     "match": "Napoli vs Osasuna",
+     "multi_source": false,
+     "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-05",
+     "hit": true,
+     "match": "Arsenal vs Real Betis",
+     "multi_source": true,
+     "price": 1.65,
+     "source": "bzzoiro_odds"
     }
    ],
    "status": "PAPER",
