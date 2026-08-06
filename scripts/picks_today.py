@@ -2440,6 +2440,64 @@ def dedupe_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
     return collapse_final_operational_picks(picks)
 
 
+def _day_archive_row_key(row: dict, day: str) -> tuple[str, str, str, str, str]:
+    """Stable identity for a frozen 1X2 ledger row.
+
+    Must mirror ``audit_recent_picks._archive_pick_key`` so the engine ledger
+    and the audit's fail-closed superset verification agree on row identity.
+    """
+    return (
+        str(row.get("date") or day)[:10],
+        norm_team(row.get("home") or ""),
+        norm_team(row.get("away") or ""),
+        str(row.get("market") or ""),
+        str(row.get("pick") or ""),
+    )
+
+
+def merge_day_archive_rows(existing: list, fresh: list, day: str) -> list:
+    """Append-only merge for the per-day frozen pick ledger.
+
+    The engine re-runs the same target day several times per day (official
+    cycle, late-slate scan, CLV-only sweeps). After kickoff a rerun can
+    legitimately find an empty or partial slate; writing that over the
+    earlier frozen rows silently erases audited history (2026-08-05: the
+    evening run emptied the 6-row 08-05 ledger, and the next audit lost
+    4 of 6 slate rows — Addendum 27.18).
+
+    Doctrine (same as the orchestrator's kickoff-stacking ledger and the
+    audit's ``dedupe_archived_picks`` first-frozen-wins rule):
+
+    - rows already in the ledger are never dropped by a later same-day run;
+    - on an identity conflict the earlier frozen payload wins (pick-time
+      state is authoritative; the audit's payload-identical superset check
+      depends on it);
+    - rows dated to a different day are not preserved (the audit loader
+      filters those too, so keeping them would only add noise);
+    - an unreadable prior file is treated as empty (fresh wins) — the same
+      corrupt-file doctrine daily.py applies to the stacked ledger.
+    """
+    merged: list = []
+    seen: set = set()
+    for row in existing:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("date") or day)[:10] != day:
+            continue
+        key = _day_archive_row_key(row, day)
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(row)
+    for row in fresh:
+        key = _day_archive_row_key(row, day)
+        if key in seen:
+            continue
+        seen.add(key)
+        merged.append(row)
+    return merged
+
+
 def format_kickoff(pick: dict) -> str:
     for key in ("kickoff", "time", "start_time", "ko"):
         value = pick.get(key)
@@ -2801,11 +2859,31 @@ def main():
         # tomorrow's fixtures — including vetoed-but-clean matches (the
         # SKIPPED_VETO bucket is the audit's best ROI bucket). Mirrors the
         # archive shape daily.py writes; the capture reads it regardless of
-        # bucket. Overwrites any existing archive with the freshest run.
+        # bucket. Append-only (Addendum 27.18): earlier frozen rows are
+        # merged back in via merge_day_archive_rows — a post-kickoff rerun
+        # that finds an empty/partial slate must never erase audited history.
         _day_archive = ROOT / "localdata" / f"picks_{day}.json"
         try:
             _day_archive.parent.mkdir(parents=True, exist_ok=True)
-            _day_archive.write_text(json.dumps(collapsed_day_picks, indent=2, sort_keys=True))
+            _existing_rows: list = []
+            if _day_archive.exists():
+                try:
+                    _raw_existing = json.loads(_day_archive.read_text())
+                    if isinstance(_raw_existing, list):
+                        _existing_rows = _raw_existing
+                except Exception:
+                    # Unreadable prior ledger: fresh wins (daily.py's
+                    # corrupt-archive doctrine); warn rather than die.
+                    print(f"warn: unreadable day archive {_day_archive}; writing fresh run", file=sys.stderr)
+            _merged_rows = merge_day_archive_rows(_existing_rows, collapsed_day_picks, day)
+            _preserved = len(_merged_rows) - len(collapsed_day_picks)
+            if _preserved > 0:
+                print(
+                    f"day archive {day}: preserved {_preserved} earlier frozen rows "
+                    f"(fresh run yielded {len(collapsed_day_picks)})",
+                    file=sys.stderr,
+                )
+            _day_archive.write_text(json.dumps(_merged_rows, indent=2, sort_keys=True))
         except OSError:
             print(f"warn: could not write day archive {_day_archive}", file=sys.stderr)
 

@@ -1066,3 +1066,66 @@ def test_veto_deep_dive_cuts(tmp_path, monkeypatch):
     contrast = dd["contrast_by_price_evidence"]
     assert contrast["SCOUTINGSTATS_SOLE"]["settled_picks"] == 1
     assert dd["contrast_bucket"] == "CAUTION"
+
+
+def _ledger_row(home, away, day="2026-08-05", odds=1.50, pick="home"):
+    return {
+        "date": day,
+        "home": home,
+        "away": away,
+        "market": "1x2",
+        "pick": pick,
+        "odds": odds,
+        "bucket": "SKIPPED_VETO",
+    }
+
+
+def test_empty_regular_ledger_flagged_and_baseline_kept(tmp_path, monkeypatch):
+    """Addendum 27.18 regression: a regular ledger that EXISTS but holds []
+    must (a) still yield the morning baseline rows and (b) be enumerated in
+    the receipt — an emptied ledger must never again be a silent coverage gap
+    (2026-08-05: 4 of 6 slate rows vanished from the audit)."""
+    import scripts.audit_recent_picks as arp
+
+    monkeypatch.setattr(arp, "LOCALDATA", tmp_path)
+    day = "2026-08-05"
+    morning = [_ledger_row("Panathinaikos", "CSKA 1948"), _ledger_row("Fenerbahçe", "Sturm Graz")]
+    (tmp_path / f"picks_morning_{day}.json").write_text(__import__("json").dumps(morning))
+    (tmp_path / f"picks_{day}.json").write_text("[]")
+
+    rows, receipt = arp.load_archived_picks_with_receipt(day, day)
+    assert len(rows) == 2
+    assert receipt["morning_baseline_rows"] == 2
+    assert receipt["verified_late_additions"] == 0
+    assert receipt["empty_regular_ledger_dates"] == [day]
+
+
+def test_missing_regular_ledger_is_not_flagged(tmp_path, monkeypatch):
+    """No regular file at all is the ordinary early-day state — not a gap."""
+    import scripts.audit_recent_picks as arp
+
+    monkeypatch.setattr(arp, "LOCALDATA", tmp_path)
+    day = "2026-08-05"
+    morning = [_ledger_row("Panathinaikos", "CSKA 1948")]
+    (tmp_path / f"picks_morning_{day}.json").write_text(__import__("json").dumps(morning))
+
+    rows, receipt = arp.load_archived_picks_with_receipt(day, day)
+    assert len(rows) == 1
+    assert receipt["empty_regular_ledger_dates"] == []
+
+
+def test_nonempty_superset_ledger_not_flagged(tmp_path, monkeypatch):
+    """A payload-identical superset yields verified late additions and no flag."""
+    import scripts.audit_recent_picks as arp
+
+    monkeypatch.setattr(arp, "LOCALDATA", tmp_path)
+    day = "2026-08-05"
+    morning = [_ledger_row("Panathinaikos", "CSKA 1948")]
+    regular = morning + [_ledger_row("Napoli", "Osasuna", odds=1.72)]
+    (tmp_path / f"picks_morning_{day}.json").write_text(__import__("json").dumps(morning))
+    (tmp_path / f"picks_{day}.json").write_text(__import__("json").dumps(regular))
+
+    rows, receipt = arp.load_archived_picks_with_receipt(day, day)
+    assert len(rows) == 2
+    assert receipt["verified_late_additions"] == 1
+    assert receipt["empty_regular_ledger_dates"] == []
