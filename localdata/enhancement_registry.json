@@ -1,17 +1,20 @@
 {
  "markets": {
   "btts_yes@v1": {
-   "hits": 2,
-   "inv_price_sum": 2.237606212679514,
-   "multi_n": 1,
-   "n": 4,
+   "hits": 4,
+   "inv_price_sum": 3.260311243018132,
+   "multi_n": 2,
+   "n": 7,
    "processed": [
     "2026-08-03|Celtic vs Dundee|btts_yes@v1",
     "2026-08-05|Fenerbah\u00e7e vs Sturm Graz|btts_yes@v1",
     "2026-08-05|Napoli vs Osasuna|btts_yes@v1",
-    "2026-08-05|Arsenal vs Real Betis|btts_yes@v1"
+    "2026-08-05|Arsenal vs Real Betis|btts_yes@v1",
+    "2026-08-06|Paide vs Rapid Vienna|btts_yes@v1",
+    "2026-08-06|SC Braga vs Dinamo Minsk|btts_yes@v1",
+    "2026-08-06|Ajax vs Shelbourne|btts_yes@v1"
    ],
-   "profit": -0.63,
+   "profit": 1.99,
    "records": [
     {
      "date": "2026-08-03",
@@ -43,6 +46,30 @@
      "multi_source": true,
      "price": 1.65,
      "source": "bzzoiro_odds"
+    },
+    {
+     "date": "2026-08-06",
+     "hit": true,
+     "match": "Paide vs Rapid Vienna",
+     "multi_source": false,
+     "price": 2.62,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-06",
+     "hit": false,
+     "match": "SC Braga vs Dinamo Minsk",
+     "multi_source": true,
+     "price": 3.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-06",
+     "hit": true,
+     "match": "Ajax vs Shelbourne",
+     "multi_source": false,
+     "price": 3.0,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
