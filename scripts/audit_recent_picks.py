@@ -125,6 +125,7 @@ def load_archived_picks_with_receipt(start: str, end: str) -> tuple[list[dict[st
         "verified_late_additions": 0,
         "regular_only_rows": 0,
         "unsafe_regular_ledger_dates": [],
+        "empty_regular_ledger_dates": [],
     }
     for day in daterange(start, end):
         morning_path = LOCALDATA / f"picks_morning_{day}.json"
@@ -141,6 +142,13 @@ def load_archived_picks_with_receipt(start: str, end: str) -> tuple[list[dict[st
         out.extend(morning)
         receipt["morning_baseline_rows"] += len(morning)
         if not regular:
+            if regular_path.exists():
+                # A regular ledger file exists but holds zero rows. Either the
+                # day legitimately recorded no late additions, or a post-kickoff
+                # rerun emptied the ledger before 27.18 made writes append-only.
+                # Either way the audit is morning-baseline-only for this date —
+                # surface it instead of letting the gap stay silent.
+                receipt["empty_regular_ledger_dates"].append(day)
             continue
 
         morning_by_key = {_archive_pick_key(row, day): row for row in morning}
@@ -1716,6 +1724,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "verified_late_additions": archive_receipt["verified_late_additions"],
         "regular_only_rows": archive_receipt["regular_only_rows"],
         "unsafe_regular_ledger_dates": archive_receipt["unsafe_regular_ledger_dates"],
+        "empty_regular_ledger_dates": archive_receipt.get("empty_regular_ledger_dates", []),
         "same_day_excluded": same_day_excluded,
         "same_day_cutoff": today_local,
         "include_same_day": include_same_day,
@@ -1766,6 +1775,13 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- verified official late-slate additions: {report.get('verified_late_additions', 0)}",
         f"- regular-ledger-only legacy rows: {report.get('regular_only_rows', 0)}",
         f"- unsafe regular ledgers ignored: {len(report.get('unsafe_regular_ledger_dates', []))}",
+        "- empty regular ledgers (morning-baseline coverage only): "
+        f"{len(report.get('empty_regular_ledger_dates', []))}"
+        + (
+            f" ({', '.join(report['empty_regular_ledger_dates'])})"
+            if report.get("empty_regular_ledger_dates")
+            else ""
+        ),
         f"- settled picks: {overall.get('settled_picks', 0)}",
         f"- eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}",
         f"- pending/unmatched result picks: {report.get('pending_result_picks', report.get('unmatched_result_picks', 0))}",

@@ -4801,3 +4801,76 @@ discussed in Addendum 27's working notes) is the SELECTION EFFECT of the
 display filter, not engine error. The caution now rides inside the
 "## Possible Events Full-Surface Audit" markdown header on every audit run,
 next to the calibration-is-not-edge doctrine line.
+
+### Addendum 27.18 — Silent audit-coverage loss: append-only day ledger + restored 08-05 slate (2026-08-06)
+
+**Trigger (operator report):** "the audit did not audit every match from
+localdata/picks_2026-08-05.txt" — the official 08-05 slate had 6 matches
+(1 CAUTION + 5 SKIPPED_VETO); the 2026-08-06 audit carried only 2 of them
+(Panathinaikos-CSKA, Fenerbahce-Sturm Graz).
+
+**Finding (git archaeology, exact):** the per-day frozen ledger
+`localdata/picks_2026-08-05.json` was built correctly by the 27.12 write —
+00:09 persist 2 rows, 07:38/08:27 grows, 15:33 persist (6f95e09) all 6 slate
+rows, payload-identical to the .txt. At 21:12 SAST the three-hourly service
+re-ran picks_today for day 2026-08-05 AFTER every kickoff (16:30–19:30); the
+fixture fetch + pre-match guard yielded an empty slate, and the 27.12 write
+("overwrites any existing archive with the freshest run") replaced 6 frozen
+rows with `[]`; persist 44557f3 shipped the empty file. daily.py's own
+stacked-ledger merge (`autonomous_intraday_merge`) protects the SAME file
+one layer up but only writes back when new discoveries exist (new_added>0),
+so it never restored what the engine had just clobbered. The audit loader
+then did exactly what it is designed to do — kept the 2-row immutable
+morning baseline, and had no late additions to verify in an empty regular
+ledger. Two writers, one file, "freshest wins" vs "kickoff-stacked
+append-only": the engine write was the attacker. Window scan: 08-05 is the
+ONLY day in the 30-day audit window that suffered the emptying (the 06-18
+empty file predates archives; out of window). Nothing in the audit receipt
+flagged an empty regular ledger — the loss was fully silent.
+
+**The 4 lost rows were all settleable and their settlement changes cuts:**
+Spartak Moscow 5-1 FC Orenburg (CAUTION, SOURCE_FALLBACK, zulubet @1.32)
+WON +0.32; Lazio 4-0 Ostia Mare (VETO, SOURCE_FALLBACK, zulubet @1.02)
+WON +0.02; Napoli 2-1 Osasuna (VETO, BETEXPLORER_RESCUE/trusted,
+betexplorer @1.72) WON +0.72; Arsenal 1-3 Real Betis (VETO,
+BZZOIRO_PRIMARY/trusted, Novibet @1.63) LOST -1.00. Counterfactual audited
+cuts with all 6: SKIPPED_VETO 71->74, +7.08% -> +6.44% (trusted-only
++9.42% -> +8.65%; soft-only -4.42% -> -3.92%); CAUTION 32->33, -14.41% ->
+-13.00% (CAUTION∩soft 13->14, -76.7% -> -68.9% — Spartak is a n=1
+counterexample to the soft-poison thesis; the thesis stands at -68.9%);
+rule `3way-unanimous avg_p>=65` 43->45, -6.46% -> -6.80% (bench watch
+DEEPENS past the -5% line); overall settled 127->131, ROI 1.29% -> 1.29%
+(net +0.06u). The flagship paradox is unchanged by the full slate — the
+audit was UNDERSTATING the veto cohort, not inflating it.
+
+**Fix (breakage clause of the 08-11 freeze — evidence-pipeline integrity):**
+1. `picks_today.merge_day_archive_rows()` — the per-day archive write is now
+   APPEND-ONLY: earlier frozen rows are never dropped by a later same-day
+   rerun; identity = the audit's `_archive_pick_key` (date, norm home/away,
+   market, pick); the earlier FROZEN payload wins conflicts (pick-time state
+   is authoritative — the audit's payload-identical superset check depends
+   on it); rows dated to other days are not preserved (the audit filters
+   them too); an unreadable prior file degrades to fresh-wins with a warn
+   (daily.py's corrupt-archive doctrine). Same-day planner-era survivors
+   (as_of != day) are preserved exactly as the orchestrator's kickoff-stack
+   already preserves them — no contract change.
+2. `audit_recent_picks` receipt gains `empty_regular_ledger_dates`: a regular
+   ledger that EXISTS but holds [] alongside a morning baseline is enumerated
+   in the rolling json AND the audit markdown Overview (with dates) — an
+   emptied ledger can never again be a silent gap. Semantics post-fix:
+   benign "no late additions", but pre-fix it marks exactly the lost days.
+3. Retrospective repair WITHOUT hand-editing: the frozen 6-row ledger was
+   restored byte-identical from git commit 6f95e09 (version-controlled
+   truth, not reconstruction); its morning-baseline rows verified
+   payload-identical, so the fail-closed loader accepts all 6 on the next
+   audit run and the counterfactual cuts above become the real cuts.
+
+**Verified:** 9 new tests — 6 merge tests (empty-fresh preserves; partial
+fresh keeps KO'd rows + frozen payload wins conflicts; late discovery
+appended; identity key shape mirrors _archive_pick_key; foreign-day rows
+dropped, missing-as_of kept; empty-existing = fresh) + 3 loader receipt
+tests (empty regular flagged + baseline kept; missing regular not flagged;
+superset additions and fail-closed behavior unaffected). Suite 239 passed
+(was 230).
+pyflakes repo-wide exit 0. Fresh-clone verify: checkout origin/main + this
+payload -> checksums OK -> suite green.
