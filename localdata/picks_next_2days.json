@@ -727,6 +727,192 @@
     "w_score": 1.0
   },
   {
+    "as_of": "2026-08-07T17:41:33+02:00",
+    "avg_p": 75.5,
+    "away": "Kortrijk",
+    "bookmaker": "betexplorer_best",
+    "bucket": "WATCHLIST_UNKNOWN_CTX",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "kortrijk",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "bruggekv",
+      "league": "UNKNOWN",
+      "league_key": "belgium jupiler pro league",
+      "league_raw": "Belgium Jupiler Pro League",
+      "niche": "UNKNOWN",
+      "odds_band": "CAUTION",
+      "odds_band_name": "1.20-1.35",
+      "resolution_original_verdict": "UNKNOWN",
+      "resolution_path": "O2-competition_type",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "O2-competition_type resolved to CAUTION",
+      "resolution_verdict": "CAUTION",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-08-07",
+    "decay_verdict": "WATCH",
+    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "draw_risk_flag": "MEDIUM",
+    "edge_n_way": 2,
+    "edge_rule": "2way-unanimous avg_p>=70",
+    "edge_status": "certified",
+    "enhancement_label": "Home Team Over 0.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": null,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.9258,
+    "enhancement_reason": "Home scoring rate is 82.8%",
+    "enhancement_state": "SHADOW",
+    "event_notes": [
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Over 0.5 Goals",
+        "market": "home_over_05",
+        "probability": 0.9257675885036593,
+        "raw_probability": 0.9257675885036593,
+        "reason": "Home scoring rate is 82.8%"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 3.5 Goals",
+        "market": "match_over_35",
+        "probability": 0.5157509322760477,
+        "raw_probability": 0.5157509322760477,
+        "reason": "Poisson expected hit rate is 51.6%"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.940734344844866,
+        "raw_probability": 0.940734344844866,
+        "reason": "Combined Under 3.5 is 94.1%"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.8617582905750294,
+        "raw_probability": 0.8617582905750294,
+        "reason": "Combined Under 2.5 is 86.2%"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Goal Range 4-6",
+        "market": "goal_range_4_6",
+        "probability": 0.42149843894198913,
+        "raw_probability": 0.42149843894198913,
+        "reason": "Poisson expected hit rate is 42.1%"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.41089783930653606,
+        "raw_probability": 0.7396155190593496,
+        "reason": "Mathematical expectation is 74.0% (Performance feedback: HR=55.6%, Adjusted Prob: 41.1%)"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Goal Range 4-5",
+        "market": "goal_range_4_5",
+        "probability": 0.33454046307075547,
+        "raw_probability": 0.33454046307075547,
+        "reason": "Poisson expected hit rate is 33.5%"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.3090285561053648,
+        "raw_probability": 0.3090285561053648,
+        "reason": "Poisson expected hit rate is 30.9%"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Exact Goals: 4",
+        "market": "exact_4",
+        "probability": 0.19272720240731014,
+        "raw_probability": 0.19272720240731014,
+        "reason": "Poisson expected hit rate is 19.3%"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Goal Range 6+",
+        "market": "goal_range_6_plus",
+        "probability": 0.16693944791655732,
+        "raw_probability": 0.16693944791655732,
+        "reason": "Poisson expected hit rate is 16.7%"
+      },
+      {
+        "cohort_n": 372,
+        "engine": "hybrid_cohort",
+        "label": "Exact Goals: 5",
+        "market": "exact_5",
+        "probability": 0.14181326066344532,
+        "raw_probability": 0.14181326066344532,
+        "reason": "Poisson expected hit rate is 14.2%"
+      }
+    ],
+    "home": "Club Brugge KV",
+    "kickoff": "07-08, 19:45",
+    "league": "Belgium Jupiler Pro League",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "upper short-odds zone, narrow surviving niche",
+    "market_type": "1x2",
+    "match": "Club Brugge KV vs Kortrijk",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": 1.24,
+    "odds_captured_at": "2026-08-07T15:44:04.308694+00:00",
+    "odds_league": "Belgium: Jupiler Pro League",
+    "odds_match_method": "betexplorer",
+    "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.24,
+      "source": "zulubet"
+    },
+    "odds_source": "betexplorer_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "picked_for": "2026-08-07",
+    "price_evidence": "BETEXPLORER_RESCUE",
+    "price_push_eligible": true,
+    "recommended_enhancement": "home_over_05",
+    "recommended_market": "keep_1x2",
+    "rule": "2way-unanimous avg_p>=70",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=308): Avg Goals: 3.97 | Over 2.5: 78.6% | BTTS: 43.5% | Home Over 1.5 Goals: 90.6% | Away Over 1.5 Goals: 10.1% | Top Scores: 2-0 (12.0%), 2-1 (11.4%)",
+    "vitibet_index": 5.42,
+    "w_score": 1.0
+  },
+  {
     "as_of": "2026-08-07T01:47:23+02:00",
     "avg_p": 66.9,
     "away": "Brisbane Roar II",
@@ -914,7 +1100,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-07T14:35:11+02:00",
+    "as_of": "2026-08-07T17:41:33+02:00",
     "avg_p": 76.5,
     "away": "Belconnen United",
     "bookmaker": "betexplorer_best",
@@ -1081,7 +1267,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.08,
-    "odds_captured_at": "2026-08-07T12:39:49.405716+00:00",
+    "odds_captured_at": "2026-08-07T15:45:02.413911+00:00",
     "odds_league": "Australia: NPL ACT",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -1103,13 +1289,13 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=264): Avg Goals: 4.04 | Over 2.5: 79.5% | BTTS: 43.9% | Home Over 1.5 Goals: 91.7% | Away Over 1.5 Goals: 9.5% | Top Scores: 2-0 (12.1%), 3-0 (11.4%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=264): Avg Goals: 4.04 | Over 2.5: 79.5% | BTTS: 43.9% | Home Over 1.5 Goals: 91.7% | Away Over 1.5 Goals: 9.5% | Top Scores: 2-0 (12.1%), 4-0 (11.4%)",
     "veto_reason": "context VETO in ['odds_band']",
     "vitibet_index": 5.99,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-07T14:35:11+02:00",
+    "as_of": "2026-08-07T17:41:33+02:00",
     "avg_p": 75.0,
     "away": "Lechia Gdansk",
     "bookmaker": "scoutingstats_odds",
@@ -1247,7 +1433,7 @@
       }
     ],
     "home": "Podbeskidzie",
-    "kickoff": "14:15",
+    "kickoff": "13:15",
     "league": "Poland,I Liga",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -1283,7 +1469,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-07T14:35:11+02:00",
+    "as_of": "2026-08-07T17:41:33+02:00",
     "avg_p": 73.0,
     "away": "Tamworth",
     "bookmaker": "scoutingstats_odds",
@@ -1430,7 +1616,7 @@
       }
     ],
     "home": "Boreham Wood",
-    "kickoff": "10:00",
+    "kickoff": "09:00",
     "league": "England,National League",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -1460,13 +1646,13 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=500): Avg Goals: 3.78 | Over 2.5: 75.6% | BTTS: 42.2% | Home Over 1.5 Goals: 87.8% | Away Over 1.5 Goals: 9.8% | Top Scores: 1-0 (12.2%), 2-0 (12.2%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=500): Avg Goals: 3.78 | Over 2.5: 75.6% | BTTS: 42.2% | Home Over 1.5 Goals: 87.8% | Away Over 1.5 Goals: 9.8% | Top Scores: 3-0 (12.2%), 1-0 (12.2%)",
     "veto_reason": "context VETO in ['odds_band']",
     "vitibet_index": 4.44,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-07T14:35:11+02:00",
+    "as_of": "2026-08-07T17:41:33+02:00",
     "avg_p": 71.0,
     "away": "Aldosivi",
     "bookmaker": "betexplorer_best",
@@ -1633,7 +1819,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.49,
-    "odds_captured_at": "2026-08-07T12:40:04.176757+00:00",
+    "odds_captured_at": "2026-08-07T15:45:54.705987+00:00",
     "odds_league": "Argentina: Liga Profesional",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -1661,7 +1847,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-07T14:35:11+02:00",
+    "as_of": "2026-08-07T17:41:33+02:00",
     "avg_p": 70.0,
     "away": "Montrose",
     "bookmaker": "scoutingstats_odds",
@@ -1817,7 +2003,7 @@
       }
     ],
     "home": "Ross County",
-    "kickoff": "10:00",
+    "kickoff": "09:00",
     "league": "Scotland,League One",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -1853,7 +2039,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-07T14:35:11+02:00",
+    "as_of": "2026-08-07T17:41:33+02:00",
     "avg_p": 72.0,
     "away": "Dukla Banska Bystrica",
     "bookmaker": null,
@@ -2000,7 +2186,7 @@
       }
     ],
     "home": "Spartak Trnava",
-    "kickoff": "14:30",
+    "kickoff": "13:30",
     "league": "Slovakia,1. Liga",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
