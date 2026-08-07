@@ -212,3 +212,47 @@ def test_match_market_key_ignores_date_field():
         {"date": "2026-08-03", "home": "Dinamo Brest", "away": "Belshina", "market": "1x2"}
     )
     assert a == b
+
+
+def test_daily_report_renders_every_ledger_bucket(tmp_path):
+    """The operator-facing TXT must match the audited JSON ledger row-for-row."""
+    with patch.object(daily, "REPORT_DIR", tmp_path):
+        picks = [
+            {
+                "date": "2026-08-06",
+                "home": "Twente",
+                "away": "Dunajska Streda",
+                "match": "Twente vs Dunajska Streda",
+                "market": "1x2",
+                "pick": "home",
+                "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
+                "avg_p": 72.5,
+                "w_score": 1.0,
+                "odds": 1.2,
+                "odds_source": "scoutingstats_odds",
+                "kickoff": "06-08, 18:00",
+                "ctx": {"league_key": "ecl", "league": "ALLOW", "odds_band_name": "1.20-1.35", "odds_band": "CAUTION"},
+            },
+            {
+                "date": "2026-08-06",
+                "home": "Ajax",
+                "away": "Shelbourne",
+                "match": "Ajax vs Shelbourne",
+                "market": "1x2",
+                "pick": "home",
+                "bucket": "WATCHLIST_SUSPECT_PRICE",
+                "avg_p": 68.0,
+                "w_score": 1.0,
+                "odds": 1.08,
+                "kickoff": "06-08, 19:00",
+                "ctx": {},
+            },
+        ]
+        out = daily.generate_daily_report("2026-08-06", source_picks=picks)
+        text = out.read_text()
+
+    assert "WATCHLIST — UNCORROBORATED SCOUTINGSTATS PRICE" in text
+    assert "Twente vs Dunajska Streda" in text
+    assert "WATCHLIST — SUSPECT FUZZY PRICE MATCH" in text
+    assert "Ajax vs Shelbourne" in text
+    assert "Total archived picks in this report: 2" in text
