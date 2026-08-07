@@ -51,6 +51,40 @@ REPORT_DIR = ROOT / "localdata"
 PICKS_TODAY_FILE = REPORT_DIR / "picks_today.json"
 DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
 
+# Human-readable report buckets. This list must remain a superset of the engine's
+# operational buckets: the official .txt report is an operator decision surface,
+# so it may never silently omit rows that exist in the audited JSON ledger.
+BUCKET_CERTIFIED_CLEAN = "CERTIFIED_CLEAN"
+BUCKET_CAUTION = "CAUTION"
+BUCKET_WATCHLIST_NO_ODDS = "WATCHLIST_NO_ODDS"
+BUCKET_WATCHLIST_UNCORROBORATED_PRICE = "WATCHLIST_UNCORROBORATED_PRICE"
+BUCKET_WATCHLIST_SUSPECT_PRICE = "WATCHLIST_SUSPECT_PRICE"
+BUCKET_WATCHLIST_UNKNOWN_CTX = "WATCHLIST_UNKNOWN_CTX"
+BUCKET_SKIPPED_VETO = "SKIPPED_VETO"
+BUCKET_SKIPPED_DEAD_EDGE = "SKIPPED_DEAD_EDGE"
+
+BUCKET_ORDER = [
+    BUCKET_CERTIFIED_CLEAN,
+    BUCKET_CAUTION,
+    BUCKET_WATCHLIST_NO_ODDS,
+    BUCKET_WATCHLIST_UNCORROBORATED_PRICE,
+    BUCKET_WATCHLIST_SUSPECT_PRICE,
+    BUCKET_WATCHLIST_UNKNOWN_CTX,
+    BUCKET_SKIPPED_VETO,
+    BUCKET_SKIPPED_DEAD_EDGE,
+]
+
+BUCKET_LABELS = {
+    BUCKET_CERTIFIED_CLEAN: "CERTIFIED CLEAN PICKS",
+    BUCKET_CAUTION: "CAUTION PICKS",
+    BUCKET_WATCHLIST_NO_ODDS: "WATCHLIST — NO MATCHED ODDS",
+    BUCKET_WATCHLIST_UNCORROBORATED_PRICE: "WATCHLIST — UNCORROBORATED SCOUTINGSTATS PRICE",
+    BUCKET_WATCHLIST_SUSPECT_PRICE: "WATCHLIST — SUSPECT FUZZY PRICE MATCH",
+    BUCKET_WATCHLIST_UNKNOWN_CTX: "WATCHLIST — UNKNOWN CONTEXT",
+    BUCKET_SKIPPED_VETO: "SKIPPED — VETO CONTEXT",
+    BUCKET_SKIPPED_DEAD_EDGE: "SKIPPED — DEAD EDGE",
+}
+
 
 def get_build_entity_registry_cmd() -> str:
     path = REPORT_DIR / "entity_registry.json"
@@ -325,26 +359,15 @@ def generate_daily_report(
             b = p.get("bucket", "UNKNOWN")
             buckets.setdefault(str(b), []).append(p)
 
-        bucket_order = [
-            "CERTIFIED_CLEAN",
-            "CAUTION",
-            "WATCHLIST_NO_ODDS",
-            "WATCHLIST_UNKNOWN_CTX",
-            "SKIPPED_VETO",
-            "SKIPPED_DEAD_EDGE",
-        ]
-        bucket_labels = {
-            "CERTIFIED_CLEAN": "CERTIFIED CLEAN PICKS",
-            "CAUTION": "CAUTION PICKS",
-            "WATCHLIST_NO_ODDS": "WATCHLIST — NO MATCHED ODDS",
-            "WATCHLIST_UNKNOWN_CTX": "WATCHLIST — UNKNOWN CONTEXT",
-            "SKIPPED_VETO": "SKIPPED — VETO CONTEXT",
-            "SKIPPED_DEAD_EDGE": "SKIPPED — DEAD EDGE",
-        }
+        bucket_order = list(BUCKET_ORDER)
+        # Fail visible rather than producing a shorter operator report than the
+        # machine ledger/audit. Unknown buckets are still rendered in order.
+        for unknown_bucket in sorted(set(buckets) - set(bucket_order)):
+            bucket_order.append(unknown_bucket)
 
         for b in bucket_order:
             bpicks = buckets.get(b, [])
-            lines.append(f"\n{bucket_labels.get(b, b)}")
+            lines.append(f"\n{BUCKET_LABELS.get(b, b)}")
             lines.append("=" * 60)
             if not bpicks:
                 lines.append("  (none)")
@@ -390,7 +413,13 @@ def generate_daily_report(
                     )
                     lines.append(f"     🔥 Possible Events: {event_text}")
 
+        rendered_count = sum(len(buckets.get(b, [])) for b in bucket_order)
+        if rendered_count != len(picks):
+            raise RuntimeError(
+                f"daily report dropped picks: ledger={len(picks)} rendered={rendered_count}"
+            )
         lines.append("")
+        lines.append(f"Total archived picks in this report: {len(picks)}")
         lines.append("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
         lines.append("⚠️  Bet only what you can afford to lose.")
 
