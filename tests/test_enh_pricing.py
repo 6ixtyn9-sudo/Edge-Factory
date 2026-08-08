@@ -64,7 +64,7 @@ def _write_ss_month(root, rows, month="2026-08"):
 
 
 def _bzz_row(**kw):
-    base = {"source": "bzzoiro", "source_type": "odds", "sport": "soccer",
+    base = {"source": "bzzoiro_odds", "source_type": "odds", "sport": "soccer",
             "date": "2026-08-03", "kickoff": "2026-08-03T16:00:00Z",
             "league": "Sweden Allsvenskan", "home": "Halmstads BK", "away": "IK Sirius",
             "market": "btts", "selection": "yes", "odds": 1.95,

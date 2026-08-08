@@ -20,6 +20,10 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: edge-factory-main
+  cancel-in-progress: false
+
 jobs:
   run-autonomous-agent:
     runs-on: ubuntu-latest
@@ -30,8 +34,6 @@ jobs:
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
-      CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
-      CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       # The Odds API multi-key ring (comma-separated). Without this mapping the
