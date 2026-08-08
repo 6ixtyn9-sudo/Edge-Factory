@@ -1,5 +1,5 @@
 """Addendum 24/25: shadow slate formatter + chunker tests."""
-from edgefactory.whatsapp import (
+from edgefactory.notifier import (
     BUCKET_VETO,
     BUCKET_WL_UNCORROBORATED_PRICE,
     BUCKET_WL_SUSPECT_PRICE,
