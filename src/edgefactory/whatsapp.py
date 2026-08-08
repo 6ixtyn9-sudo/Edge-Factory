@@ -452,6 +452,8 @@ def _shadow_blocks(
     target_date: str,
     picks: list[dict[str, Any]],
     stats: dict[str, Any] | None,
+    *,
+    max_lines: int = SHADOW_MAX_LINES,
 ) -> tuple[list[str], list[tuple[str, list[str]]], list[str]]:
     """Structural form of the slate: (header lines, [(section title, pick lines)],
     footer lines). Single source of truth for both the flat formatter and the
@@ -475,7 +477,7 @@ def _shadow_blocks(
     sections: list[tuple[str, list[str]]] = []
     shown = 0
     for title, bucket in section_defs:
-        if shown >= SHADOW_MAX_LINES:
+        if shown >= max_lines:
             break
         rows = sorted(
             (p for p in picks if p.get("bucket") == bucket),
@@ -485,7 +487,7 @@ def _shadow_blocks(
             continue
         pick_lines: list[str] = []
         for p in rows:
-            if shown >= SHADOW_MAX_LINES:
+            if shown >= max_lines:
                 break
             pick_lines.append(_format_shadow_pick_line(p))
             shown += 1
@@ -505,6 +507,8 @@ def format_whatsapp_shadow_summary(
     target_date: str,
     picks: list[dict[str, Any]],
     stats: dict[str, Any] | None = None,
+    *,
+    max_lines: int = SHADOW_MAX_LINES,
 ) -> str:
     """Second daily message (Addendum 24, slim-lined in Addendum 25): SKIPPED_VETO
     + WATCHLIST streams. These were not pushed as bets. Every section header
@@ -512,7 +516,7 @@ def format_whatsapp_shadow_summary(
     streams themselves — calibration ≠ edge, and stream records differ (the
     reason this exists: the veto stream was the most profitable stream of the
     2026-08 window while receiving zero pushes)."""
-    header, sections, footer = _shadow_blocks(target_date, picks, stats)
+    header, sections, footer = _shadow_blocks(target_date, picks, stats, max_lines=max_lines)
     lines: list[str] = list(header)
     for title, pick_lines in sections:
         lines.append(title)
@@ -542,6 +546,7 @@ def chunk_whatsapp_shadow_summary(
     stats: dict[str, Any] | None = None,
     *,
     budget: int = SHADOW_ENCODED_TEXT_BUDGET,
+    max_lines: int = SHADOW_MAX_LINES,
 ) -> list[str]:
     """Addendum 25: split the shadow slate into pipe-safe messages.
 
@@ -555,7 +560,7 @@ def chunk_whatsapp_shadow_summary(
     - chunks carry '(k/n)' numbering so completeness is visible from the phone
     - when everything fits, the single chunk equals format_whatsapp_shadow_summary
     """
-    header, sections, footer = _shadow_blocks(target_date, picks, stats)
+    header, sections, footer = _shadow_blocks(target_date, picks, stats, max_lines=max_lines)
     chunks: list[list[str]] = []
     cur: list[str] = list(header)
 

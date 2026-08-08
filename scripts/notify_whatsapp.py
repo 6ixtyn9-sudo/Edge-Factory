@@ -489,10 +489,16 @@ def main() -> int:
         # Telegram allows 4096 chars per message vs CallMeBot's ~1500 URL cap.
         # Use a larger chunk budget when Telegram is the primary transport so
         # the full shadow slate arrives without '+N more' truncation.
-        shadow_budget = 3800 if (telegram_token and telegram_chat_id) else 1100
+        # Telegram allows 4096 chars per message and has no per-message quota,
+        # so raise both the chunk budget and the max visible pick lines so the
+        # full season slate arrives instead of being cut to '+N more'.
+        is_telegram = bool(telegram_token and telegram_chat_id)
+        shadow_budget = 3800 if is_telegram else 1100
+        shadow_max_lines = 200 if is_telegram else 12
         shadow_chunks = chunk_whatsapp_shadow_summary(
             target_date, shadow_picks, stats=_load_rolling_bucket_stats(),
             budget=shadow_budget,
+            max_lines=shadow_max_lines,
         )
         logging.info(
             f"\n>>> Dispatching shadow-slate WhatsApp notification in {len(shadow_chunks)} chunk(s)...\n"
