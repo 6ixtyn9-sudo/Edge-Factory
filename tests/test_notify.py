@@ -7,8 +7,8 @@ import json
 import sys
 from pathlib import Path
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "notify_whatsapp.py"
-spec = importlib.util.spec_from_file_location("notify_whatsapp", SCRIPT)
+SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "notify.py"
+spec = importlib.util.spec_from_file_location("notify", SCRIPT)
 notify = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(notify)
 
@@ -150,7 +150,7 @@ def _wire_e2e(monkeypatch, tmp_path, dispatch):
 
 
 def _run(monkeypatch, *argv):
-    monkeypatch.setattr(sys, "argv", ["notify_whatsapp.py", *argv])
+    monkeypatch.setattr(sys, "argv", ["notify.py", *argv])
     return notify.main()
 
 
