@@ -4874,3 +4874,47 @@ superset additions and fail-closed behavior unaffected). Suite 239 passed
 (was 230).
 pyflakes repo-wide exit 0. Fresh-clone verify: checkout origin/main + this
 payload -> checksums OK -> suite green.
+
+---
+
+## Addendum — 2026-08-08 (evening): EV-based enhancement selection
+
+**Trigger:** operator report that the same enhancement ("Home Team Over
+0.5 Goals") was recommended on nearly every match, and the
+secondary-market audit showed the highest-probability markets were
+not the ones with demonstrable edge.
+
+**Root cause:** compute_dynamic_enhancement ranked candidates by a
+hand-built safety tier plus raw probability. For home favourites,
+Home Team Over 0.5 Goals is 88–94% and won every ranking, but at
+~1.08 odds it carries negative expected value.
+
+**Change (2026-08-08):** compute_dynamic_enhancement now accepts the
+prices_index and ranks every candidate by real edge
+(edge = model_probability * best_captured_odds - 1), using zero
+extra API credits (prices are read from cached captures). Hard
+filters:
+
+- btts_yes permanently excluded (operator opt-out)
+- goal_range_* excluded automatically (never priced)
+- must be priced from a captured source
+- edge >= +3%
+- probability in [25%, 90%]
+
+When nothing passes, the function falls back to the legacy safety
+tier but leaves the pick unpriced (renders as research, not 🔥).
+
+The Telegram renderer now shows market, probability, captured
+odds, calculated edge, and price source.
+
+**Does not change:** 1X2 selection, buckets, staking, or the
+barbell strategy. Probability calibration (Addendum 17) is
+untouched.
+
+**Measurement:** after 30 days, compare recommended-market
+distribution, priced hit rate vs breakeven, and aggregate priced
+ROI against the prior probability-selected baseline. Revert if
+priced ROI is below -10%.
+
+**Tests:** 242 passed.
+
