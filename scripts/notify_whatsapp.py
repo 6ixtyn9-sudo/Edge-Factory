@@ -35,6 +35,10 @@ from edgefactory.whatsapp import (  # noqa: E402
     encoded_len,
     format_whatsapp_discovery_summary,
     format_whatsapp_shadow_summary,
+    format_telegram_discovery,
+    format_telegram_heartbeat,
+    format_telegram_official,
+    format_telegram_shadow,
     format_whatsapp_summary,
     send_callmebot_whatsapp,
     send_meta_whatsapp_cloud,
@@ -436,7 +440,12 @@ def main() -> int:
     # dedupe would silence the item permanently.
     any_failed = False
     if normal_message:
-        logging.info("\n>>> Dispatching operational WhatsApp notification...\n")
+        if telegram_token and telegram_chat_id:
+            normal_message = format_telegram_official(
+                target_date, normal_message_picks,
+                is_late=bool(is_late_slate and unsent_picks),
+            )
+        logging.info("\n>>> Dispatching operational notification...\n")
         print(normal_message)
         print("\n" + "=" * 60)
         dispatched = _dispatch_message(
@@ -461,7 +470,9 @@ def main() -> int:
         any_failed = any_failed or not dispatched
 
     if discovery_message:
-        logging.info("\n>>> Dispatching discovery-watchlist WhatsApp notification...\n")
+        if telegram_token and telegram_chat_id:
+            discovery_message = format_telegram_discovery(target_date, discovery_picks)
+        logging.info("\n>>> Dispatching discovery-watchlist notification...\n")
         print(discovery_message)
         print("\n" + "=" * 60)
         dispatched = _dispatch_message(
@@ -495,11 +506,20 @@ def main() -> int:
         is_telegram = bool(telegram_token and telegram_chat_id)
         shadow_budget = 3800 if is_telegram else 1100
         shadow_max_lines = 200 if is_telegram else 12
-        shadow_chunks = chunk_whatsapp_shadow_summary(
-            target_date, shadow_picks, stats=_load_rolling_bucket_stats(),
-            budget=shadow_budget,
-            max_lines=shadow_max_lines,
-        )
+        if is_telegram:
+            # Telegram gets a single clean plain-text message instead of the
+            # 5-chunk WhatsApp asterisk-markdown render.
+            shadow_chunks = [format_telegram_shadow(
+                target_date, shadow_picks,
+                stats=_load_rolling_bucket_stats(),
+                max_lines=shadow_max_lines,
+            )]
+        else:
+            shadow_chunks = chunk_whatsapp_shadow_summary(
+                target_date, shadow_picks, stats=_load_rolling_bucket_stats(),
+                budget=shadow_budget,
+                max_lines=shadow_max_lines,
+            )
         logging.info(
             f"\n>>> Dispatching shadow-slate WhatsApp notification in {len(shadow_chunks)} chunk(s)...\n"
         )
@@ -526,6 +546,8 @@ def main() -> int:
         any_failed = any_failed or not dispatched
 
     if heartbeat_message:
+        if telegram_token and telegram_chat_id:
+            heartbeat_message = format_telegram_heartbeat(target_date, HEARTBEAT_TEXT)
         logging.info("\n>>> Dispatching empty-slate heartbeat...\\n")
         print(heartbeat_message)
         dispatched = _dispatch_message(
