@@ -33,7 +33,7 @@ PYTHONPATH=src python3 scripts/daily.py
 # Force a full repick  
 PYTHONPATH=src python3 scripts/daily.py --force-repick
 
-A local .env IS auto-loaded. config.py, db.py, and notify_whatsapp.py all call load_dotenv() at import, so set -a; source .env; set +a is no longer required (it stays harmless).
+A local .env IS auto-loaded. config.py, db.py, and notify.py all call load_dotenv() at import, so set -a; source .env; set +a is no longer required (it stays harmless).
 
 Autonomous 3-Hour Service
 
@@ -53,7 +53,7 @@ If it already exists → lightweight intraday late-slate scan: append only brand
 Wakes every 3h (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
 actions/cache persists the localdata/ DuckDB warehouse, pick ledgers, CLV snapshots, and the WhatsApp sent ledger across runs
 Uploads pick reports (.txt) and ledgers as downloadable artifacts
-Runs sync_supabase then notify_whatsapp as the final steps
+Runs sync_supabase then notify as the final steps
 Git workflow (collision-safe)
 
 localdata/ is owned by the GitHub Actions persist loop. It is the ONLY writer allowed to commit those files. Local pipeline runs rewrite localdata constantly; leaving those files dirty/uncommitted in your working tree is expected and correct. Humans and agents commit code + docs only, with explicit paths. NEVER git add -A, git add ., or VS Code "Commit All" — sweeping pipeline state into a manual commit collides with the bot's persist commits and produces the "divergent branches / Need to specify how to reconcile" fatal. This has happened three times (latest: 2026-08-03, merge 65d062c).
@@ -139,7 +139,7 @@ scripts/
   export_settled_results.py # settled-score facts overlay shared across machines (Addendum 21)
   daily.py                # SINGLE orchestrator: --auto-run / --auto-once / --forecast-refresh / --promote-forecast / --clv-only
   sync_supabase.py        # promotes edges + picks to Supabase read model
-  notify_whatsapp.py      # WhatsApp push dispatch (CERTIFIED_CLEAN + CAUTION only)
+  notify.py      # WhatsApp push dispatch (CERTIFIED_CLEAN + CAUTION only)
 
 tests/                    # assay, picks_today_operational, daily_orchestration
 config/entity_overrides.json  # manual safety layer for aliases
@@ -153,8 +153,8 @@ variable	used by	notes
 BZZOIRO_TOKEN	bzzoiro odds/model adapter	needed for live odds enrichment
 SUPABASE_URL	db.py	project URL
 SUPABASE_SERVICE_KEY	db.py	service_role key, server-side only. (Not SUPABASE_KEY — that is unused.)
-CALLMEBOT_APIKEY	notify_whatsapp.py	returned by CallMeBot after authorization
-CALLMEBOT_PHONE	notify_whatsapp.py	full intl number, no + / spaces (e.g. 27821234567)
+CALLMEBOT_APIKEY	notify.py	returned by CallMeBot after authorization
+CALLMEBOT_PHONE	notify.py	full intl number, no + / spaces (e.g. 27821234567)
 WhatsApp push (Meta Cloud / Twilio) is optional:
 
 Meta: WHATSAPP_TOKEN, WHATSAPP_PHONE_NUMBER_ID, WHATSAPP_RECIPIENT (+ optional WHATSAPP_TEMPLATE_NAME)

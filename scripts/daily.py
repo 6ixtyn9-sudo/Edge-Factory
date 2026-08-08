@@ -560,7 +560,7 @@ def promote_forecast(forecast_arg: str, default_date: str) -> None:
     generate_daily_report(target_date)
 
     run_soft("python3 scripts/sync_supabase.py", "sync_supabase (Promoted Official Record)")
-    run_soft(f"python3 scripts/notify_whatsapp.py --force --date {target_date}", "notify_whatsapp (Promoted Official Record)")
+    run_soft(f"python3 scripts/notify.py --force --date {target_date}", "notify (Promoted Official Record)")
     print(f"✅ Forecast {path.name} successfully promoted to official record for {target_date}.")
 
 
@@ -762,7 +762,7 @@ def run_pipeline(
             f"audit_recent_picks {target_date} [30d]",
         )
         sync_official_archive(target_date, "sync_supabase")
-        run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date} --heartbeat", "notify_whatsapp (Smart Dispatch + empty-slate heartbeat)")
+        run_soft(f"python3 scripts/notify.py --date {target_date} --heartbeat", "notify (Smart Dispatch + empty-slate heartbeat)")
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "autonomous_intraday":
@@ -817,11 +817,11 @@ def run_pipeline(
             target_archive.write_text(merged_text)
             PICKS_TODAY_FILE.write_text(merged_text)
             generate_daily_report(target_date)
-            run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Autonomous Intraday Dispatch)")
+            run_soft(f"python3 scripts/notify.py --date {target_date}", "notify (Autonomous Intraday Dispatch)")
         else:
             print("\n  No new matches/edges appeared. Locked official ledger unchanged.")
             restore_target_picks(target_archive.read_text())
-            run_soft(f"python3 scripts/notify_whatsapp.py --date {target_date}", "notify_whatsapp (Silent Check)")
+            run_soft(f"python3 scripts/notify.py --date {target_date}", "notify (Silent Check)")
 
         sync_official_archive(target_date, "sync_supabase (Autonomous Accumulating Record)")
         try:

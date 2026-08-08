@@ -150,7 +150,7 @@ A small CLV audit spike is now wired into scripts/daily.py.
 
 Current CLV is audit-only and not used for certification or pick gating.
 
-WhatsApp push delivery is now wired into daily.py via scripts/notify_whatsapp.py and src/edgefactory/whatsapp.py. Operational status and a required one-line fix are documented in section 9.
+WhatsApp push delivery is now wired into daily.py via scripts/notify.py and src/edgefactory/notifier.py. Operational status and a required one-line fix are documented in section 9.
 
 Trusted current operational baseline starts on 2026-06-17.
 
@@ -282,9 +282,9 @@ syncs to Supabase / Postgres
 
 WhatsApp push delivery
 
-scripts/notify_whatsapp.py
+scripts/notify.py
 
-src/edgefactory/whatsapp.py
+src/edgefactory/notifier.py
 
 reads localdata/picks_today.json
 
@@ -346,7 +346,7 @@ audit_recent_picks rolling report
 
 sync_supabase
 
-notify_whatsapp (final step, runs in all official and intraday modes)
+notify (final step, runs in all official and intraday modes)
 
 Naming convention:
 
@@ -536,7 +536,7 @@ raises ValueError if either is missing
 
 calls load_dotenv() so a local .env is auto-loaded
 
-src/edgefactory/whatsapp.py
+src/edgefactory/notifier.py
 
 WhatsApp dispatch providers: Meta Cloud, Twilio, CallMeBot
 
@@ -644,7 +644,7 @@ also triggers CLV capture and rolling report
 
 archives target-day picks JSON and runs recent picks audit
 
-calls sync_supabase then notify_whatsapp as the final steps of every official and autonomous_intraday run (both via run_soft, so a push failure never fails the whole job)
+calls sync_supabase then notify as the final steps of every official and autonomous_intraday run (both via run_soft, so a push failure never fails the whole job)
 
 freezes target-date picks: if localdata/picks_YYYY-MM-DD.json already exists, reruns restore them instead of regenerating unless --force-repick is passed
 
@@ -660,7 +660,7 @@ scripts/sync_supabase.py
 
 syncs certified edges and daily bucketed picks to Supabase
 
-scripts/notify_whatsapp.py
+scripts/notify.py
 
 WhatsApp dispatch engine
 
@@ -954,9 +954,9 @@ A WhatsApp notification dispatch system was added to daily.py. It is the final s
 
 Files:
 
-scripts/notify_whatsapp.py — dispatch orchestrator
+scripts/notify.py — dispatch orchestrator
 
-src/edgefactory/whatsapp.py — provider implementations
+src/edgefactory/notifier.py — provider implementations
 
 Provider support (first active set wins; all active providers fire):
 
@@ -986,7 +986,7 @@ Dedup ledger: localdata/whatsapp_sent_ledger_YYYY-MM-DD.json.
 
 First run of the day (no ledger yet) is the "morning slate" — all notifiable picks are pushed.
 
-Later intraday runs are "late slate" — only newly appearing, not-yet-sent picks are pushed. If there are no new picks, notify_whatsapp stays silent on purpose ("Remaining silent").
+Later intraday runs are "late slate" — only newly appearing, not-yet-sent picks are pushed. If there are no new picks, notify stays silent on purpose ("Remaining silent").
 
 --force bypasses the sent ledger and resends all notifiable picks.
 
@@ -994,11 +994,11 @@ Later intraday runs are "late slate" — only newly appearing, not-yet-sent pick
 
 CRITICAL REQUIRED FIX (2026-06-18):
 
-send_callmebot_whatsapp() in src/edgefactory/whatsapp.py currently builds the wrong endpoint:
+send_callmebot_whatsapp() in src/edgefactory/notifier.py currently builds the wrong endpoint:
 
 url = f"https://api.callmebot.com/whatsapp.py?phone={clean_phone}&text={encoded_text}&apikey={apikey}"
 
-The endpoint is whatsapp.php, not whatsapp.py. The current code hits a 404 on every dispatch, raises an exception, and notify_whatsapp.py logs it and continues with dispatched=False. Because daily.py calls notify_whatsapp via run_soft, the job still finishes green. This is why runs succeed but no WhatsApps arrive.
+The endpoint is whatsapp.php, not whatsapp.py. The current code hits a 404 on every dispatch, raises an exception, and notify.py logs it and continues with dispatched=False. Because daily.py calls notify via run_soft, the job still finishes green. This is why runs succeed but no WhatsApps arrive.
 
 Fix: change whatsapp.py -> whatsapp.php in that URL.
 
@@ -1048,12 +1048,12 @@ Required environment variables (verified against the actual code):
 BZZOIRO_TOKEN read by the bzzoiro odds / model adapter
 SUPABASE_URL read by src/edgefactory/db.py
 SUPABASE_SERVICE_KEY read by src/edgefactory/db.py (service_role key, server-side only)
-CALLMEBOT_APIKEY read by scripts/notify_whatsapp.py
-CALLMEBOT_PHONE read by scripts/notify_whatsapp.py
+CALLMEBOT_APIKEY read by scripts/notify.py
+CALLMEBOT_PHONE read by scripts/notify.py
 
 Note: the earlier handover listed SUPABASE_KEY. That is dead weight. The live client in db.py reads SUPABASE_SERVICE_KEY (the service_role key) and raises ValueError if it is missing. Do not rely on SUPABASE_KEY.
 
-A local .env IS auto-loaded. config.py, db.py, and notify_whatsapp.py all call load_dotenv() at import, so set -a; source .env; set +a is no longer required (though it remains harmless). Just keep a .env at repo root for local runs.
+A local .env IS auto-loaded. config.py, db.py, and notify.py all call load_dotenv() at import, so set -a; source .env; set +a is no longer required (though it remains harmless). Just keep a .env at repo root for local runs.
 
 For GitHub Actions, secrets (not .env) are the source of truth. The workflow daily.yml declares: SUPABASE_URL, SUPABASE_KEY, SUPABASE_SERVICE_KEY, BZZOIRO_TOKEN, CALLMEBOT_APIKEY, CALLMEBOT_PHONE, TZ=Africa/Johannesburg. Verify all are set under Settings -> Secrets and variables -> Actions.
 
@@ -1087,7 +1087,7 @@ Uses GitHub Actions Cache (actions/cache) to completely persist the localdata/ D
 
 Uploads human-readable pick reports (.txt) and ledgers as downloadable workflow artifacts
 
-Runs sync_supabase then notify_whatsapp to push certified edges, accumulating picks, and phone alerts
+Runs sync_supabase then notify to push certified edges, accumulating picks, and phone alerts
 
 Fully self-sustaining and costs $0.00
 
@@ -1101,9 +1101,9 @@ PYTHONPATH=src python3 scripts/daily.py --date 2026-06-16
 
 Manual WhatsApp push (after the endpoint fix):
 
-PYTHONPATH=src python3 scripts/notify_whatsapp.py
-PYTHONPATH=src python3 scripts/notify_whatsapp.py --force
-PYTHONPATH=src python3 scripts/notify_whatsapp.py --date 2026-06-18
+PYTHONPATH=src python3 scripts/notify.py
+PYTHONPATH=src python3 scripts/notify.py --force
+PYTHONPATH=src python3 scripts/notify.py --date 2026-06-18
 
 Individual stages:
 
@@ -1135,7 +1135,7 @@ PYTHONPATH=src python3 scripts/audit_recent_picks.py --end 2026-06-16 --days 30
 
 PYTHONPATH=src python3 scripts/sync_supabase.py
 
-PYTHONPATH=src python3 scripts/notify_whatsapp.py
+PYTHONPATH=src python3 scripts/notify.py
 
 Tests:
 
@@ -1145,7 +1145,7 @@ If optional Supabase dependencies are missing, at minimum run:
 
 PYTHONPATH=src python3 -m pytest tests/test_assay.py -q
 
-python3 -m py_compile src/edgefactory/util.py src/edgefactory/entities.py src/edgefactory/whatsapp.py scripts/*.py
+python3 -m py_compile src/edgefactory/util.py src/edgefactory/entities.py src/edgefactory/notifier.py scripts/*.py
 
 Known issues and caveats
 Cold-cache certification trap
@@ -1158,13 +1158,13 @@ if "REGRESSION GUARD" appears in the logs, the existing registry was kept; resto
 
 WhatsApp / CallMeBot
 
-the CallMeBot endpoint in src/edgefactory/whatsapp.py is whatsapp.py and must be changed to whatsapp.php (see section 9)
+the CallMeBot endpoint in src/edgefactory/notifier.py is whatsapp.py and must be changed to whatsapp.php (see section 9)
 
 CallMeBot must be authorized from the owner's phone before any message will be delivered
 
 GitHub secrets CALLMEBOT_APIKEY and CALLMEBOT_PHONE must be set; the workflow env lines alone are not enough
 
-notify_whatsapp runs via run_soft, so a silent push failure never fails the overall job
+notify runs via run_soft, so a silent push failure never fails the overall job
 
 only CERTIFIED_CLEAN and CAUTION picks are pushed; WATCHLIST / SKIPPED buckets are never pushed
 
@@ -1410,7 +1410,7 @@ Do not change them without full revalidation.
 
 L9 — Silent failures in non-critical steps hide real problems
 
-notify_whatsapp and the optional CLV / sync steps run via run_soft and never fail the job.
+notify and the optional CLV / sync steps run via run_soft and never fail the job.
 
 A green Actions run does NOT prove that WhatsApps were delivered or that Supabase was written.
 
@@ -1447,7 +1447,7 @@ Never remove the committed-registry restore step. It is the only thing that surv
 
 L9 — Silent failures in non-critical steps hide real problems
 
-notify_whatsapp and the optional CLV / sync steps run via run_soft and never fail the job.
+notify and the optional CLV / sync steps run via run_soft and never fail the job.
 
 A green Actions run does NOT prove that WhatsApps were delivered or that Supabase was written.
 
@@ -1541,7 +1541,7 @@ scoutingstats timed out ("The read operation timed out") in run #14, so the seco
 
 Current WhatsApp delivery fix, 2026-06-18:
 
-WhatsApp push dispatch is wired into daily.py as the final step after sync_supabase, via scripts/notify_whatsapp.py and src/edgefactory/whatsapp.py.
+WhatsApp push dispatch is wired into daily.py as the final step after sync_supabase, via scripts/notify.py and src/edgefactory/notifier.py.
 
 It supports Meta Cloud, Twilio, and CallMeBot; the current intended free path is CallMeBot.
 
@@ -1553,7 +1553,7 @@ Root cause of missing WhatsApps identified: send_callmebot_whatsapp() uses the e
 
 Required actions before the next run:
 
-apply the whatsapp.py -> whatsapp.php endpoint fix in src/edgefactory/whatsapp.py
+apply the whatsapp.py -> whatsapp.php endpoint fix in src/edgefactory/notifier.py
 
 set GitHub secrets CALLMEBOT_APIKEY and CALLMEBOT_PHONE
 
@@ -1922,7 +1922,7 @@ Fixes shipped (no freeze; documented here):
         accelerator only.
     .gitignore — un-ignored whatsapp_discovery_sent_ledger_20*.json and
         theoddsapi state (usage/sports/attempts/odds csv).
-    scripts/notify_whatsapp.py — discovery alerts now ALSO suppress fixtures
+    scripts/notify.py — discovery alerts now ALSO suppress fixtures
         already present in the MAIN sent ledger (belt-and-braces even if the
         discovery ledger is ever lost again); new --heartbeat flag sends ONE
         quiet 'no certified picks today, system healthy' ping on empty days
@@ -1952,7 +1952,7 @@ a MAX-1/day 'no picks' explanation attached. Rolling bet tracking remains
 fully automatic: picks_audit_<date>.md + picks_audit_rolling.json regenerate
 in-pipeline and now also persist to git every run.
 
-Verification: tests/test_notify_whatsapp.py (6 tests: cross-ledger
+Verification: tests/test_notify.py (6 tests: cross-ledger
 suppression, heartbeat 1/day, stable dedupe identity) + existing suites =
 16 passed, 0 failed. py_compile clean on changed files.
 
@@ -1992,7 +1992,7 @@ Hands-off posture going forward (all shipped today, 2026-07-27 -> now):
 
 Payload zip reviewed adversarially (independent agent, prompt-enforced
 evidence rules). Verdict: theoddsapi.py + capture_theodds.py SHIP-WITH-FIXES,
-daily.yml + notify_whatsapp.py SHIP. 16/16 falsification targets CONFIRMED
+daily.yml + notify.py SHIP. 16/16 falsification targets CONFIRMED
 (tests, secret sweep, credit bounds, rotation, suppression, heartbeat,
 workflow concurrency sim, e2e --clv-only smoke).
 
@@ -2069,7 +2069,7 @@ v3 payload (= v2 + the one-line workflow env mapping + README corrections:
 Rehearsal gate #3 (clean-room, v3): fresh clone f91cdb9 -> `git apply --check`
     -> apply -> `sha256sum -c` manifest (11/11 OK on the APPLIED tree, proving
     shipped files == diff result) -> pytest 20/20 -> --self-test PASS ->
-    py_compile daily.py/notify_whatsapp.py OK -> ODDS_API_KEYS line present
+    py_compile daily.py/notify.py OK -> ODDS_API_KEYS line present
     in applied daily.yml. Results also emitted in operator message.
 
 Post-apply operator duties (unchanged, now actually sufficient):
@@ -2953,14 +2953,14 @@ kept off the phone — as the window's most profitable stream (52 settled,
 doctrine written on older evidence had inverted. Doctrines die by receipts.
 
 **What shipped:**
-- `format_whatsapp_shadow_summary` (src/edgefactory/whatsapp.py): second daily
+- `format_whatsapp_shadow_summary` (src/edgefactory/notifier.py): second daily
   message — sections SKIPPED_VETO / WATCHLIST_NO_ODDS / WATCHLIST_UNKNOWN_CTX,
   each labeled with that stream's rolling 30d record (`format_stream_record`,
   from localdata/picks_audit_rolling.json -> by_bucket; absent -> honest
   "no settled record yet"). Per-line "| Stream:" label. Cap 12 lines +
   "+N more" pointer. Formatter self-filters shadow buckets (overflow math
   can't leak CAUTION/CLEAN counts).
-- `scripts/notify_whatsapp.py`: shadow dispatch with INDEPENDENT dedup ledger
+- `scripts/notify.py`: shadow dispatch with INDEPENDENT dedup ledger
   localdata/whatsapp_shadow_sent_ledger_<date>.json (main/discovery/shadow
   sends never suppress each other). Default ON; kill-switch
   EDGE_FACTORY_NOTIFY_SHADOW=0. Heartbeat stays quiet on shadow-only days
@@ -2999,7 +2999,7 @@ memory died with cache eviction (duplicate-slate risk on evict). Verified
 upstream at 54db8a7: main + discovery ledgers negated, shadow missing.
 
 **What shipped:**
-- src/edgefactory/whatsapp.py
+- src/edgefactory/notifier.py
   - Slim one-line shadow picks (odds · prob · KO · rule + certified 🔥 combo
     token when enhancement_label/probability present; per-line "Stream:"
     dropped — section headers are restated on every chunk).
@@ -3013,7 +3013,7 @@ upstream at 54db8a7: main + discovery ledgers negated, shadow missing.
     post-pack with a 48-char numbering reserve (first revision packed at full
     budget then numbered and the monster-slate test caught the overflow —
     text-vs-behavior class, again).
-- scripts/notify_whatsapp.py: _dispatch_shadow_chunks — in-order sends with
+- scripts/notify.py: _dispatch_shadow_chunks — in-order sends with
   per-chunk encoded-size logging; ALL-OR-NOTHING ledger barrier: first failed
   chunk aborts and writes NO dedup keys (the whole slate re-sends next run;
   a half-delivered slate is never permanently deduped). --force keeps legacy
@@ -3115,7 +3115,7 @@ working as designed: review beat pride.
   "dispatched or force" semantics; the reviewer was right that an
   all-or-nothing barrier returning success after total failure is lie-shaped.
 - State-honest combo markers via ONE shared helper
-  (edgefactory.whatsapp.enhancement_marker) used by BOTH slates, so the two
+  (edgefactory.notifier.enhancement_marker) used by BOTH slates, so the two
   renderers cannot drift again: **🔥 only when the enhancement TYPE is
   registry-ELIGIBLE AND the current fixture has a valid captured price**;
   🔬 otherwise (SHADOW/PAPER/BENCHED/unknown types, and ELIGIBLE-but-
@@ -3182,10 +3182,10 @@ discovery, and heartbeat families still gated ledger writes on
   exceptions already log ERROR. Changing this would fail runs that achieved
   delivery.
 - **Telemetry honesty note:** no GitHub Actions workflow invokes
-  notify_whatsapp.py (verified by grep), so the stricter exit code cannot
+  notify.py (verified by grep), so the stricter exit code cannot
   fail any cloud job; it surfaces in operator-run/scheduled invocations —
   which is where a human looks.
-- **Hermetic committed tests (tests/test_notify_whatsapp.py):** dummy
+- **Hermetic committed tests (tests/test_notify.py):** dummy
   CALLMEBOT_APIKEY/CALLMEBOT_PHONE via monkeypatch.setenv (passes the
   credential gate identically with or without a real .env), notify.LOCALDATA
   redirected to tmp_path (zero writes to repo localdata), dispatch stubbed
@@ -3231,7 +3231,7 @@ correction stands and this entry adopts it.
 ### Errata (prominent)
 
 1. **Addendum 25.1.1's telemetry note was imprecise.** It said "no GitHub
-   Actions workflow invokes notify_whatsapp.py". Actions invokes daily.py,
+   Actions workflow invokes notify.py". Actions invokes daily.py,
    and daily.py reaches notify through run_soft (call sites at lines
    517/719/769/773). Practical conclusion unchanged — run_soft turns any
    notify failure into a WARNING, not a workflow failure — but the mechanism
@@ -3246,7 +3246,7 @@ correction stands and this entry adopts it.
 
 ### What shipped in 25.2
 
-- **CallMeBot ack classifier** (edgefactory.whatsapp): HTML-stripped,
+- **CallMeBot ack classifier** (edgefactory.notifier): HTML-stripped,
   normalized body; accept ONLY the observed success class ("message queued"
   = the 2026-08-04 production ack, verbatim fixture in tests; "Success" =
   legacy fixture class); reject empty/unknown/error-class; reject-hint scan
