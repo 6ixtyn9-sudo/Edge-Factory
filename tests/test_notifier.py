@@ -10,7 +10,7 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.whatsapp import (
+from edgefactory.notifier import (
     BUCKET_CAUTION,
     BUCKET_CLEAN,
     callmebot_body_accepted,
@@ -197,7 +197,7 @@ def test_main_slate_combo_marker_is_state_and_price_honest():
 
 @patch("urllib.request.urlopen")
 def test_send_telegram_message_success(mock_urlopen):
-    from edgefactory.whatsapp import send_telegram_message
+    from edgefactory.notifier import send_telegram_message
     fake_resp = MagicMock()
     fake_resp.read.return_value = b'{"ok": true, "result": {"message_id": 42}}'
     fake_resp.__enter__.return_value = fake_resp
@@ -212,7 +212,7 @@ def test_send_telegram_message_success(mock_urlopen):
 
 @patch("urllib.request.urlopen")
 def test_send_telegram_message_raises_on_api_error(mock_urlopen):
-    from edgefactory.whatsapp import send_telegram_message
+    from edgefactory.notifier import send_telegram_message
     fake_resp = MagicMock()
     fake_resp.read.return_value = b'{"ok": false, "description": "chat not found"}'
     fake_resp.__enter__.return_value = fake_resp

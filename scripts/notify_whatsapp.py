@@ -24,7 +24,7 @@ from zoneinfo import ZoneInfo
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.whatsapp import (  # noqa: E402
+from edgefactory.notifier import (  # noqa: E402
     BUCKET_CAUTION,
     BUCKET_CLEAN,
     BUCKET_WL_CTX,
@@ -139,7 +139,7 @@ def _save_sent_ledger(path: Path, keys: set[str]) -> None:
 
 def _annotate_enhancement_markers(picks: list[dict[str, Any]], target_date: str) -> None:
     """Addendum 25.1: inject _enh_status/_enh_priced per pick so the shared
-    edgefactory.whatsapp.enhancement_marker helper can distinguish actionable
+    edgefactory.notifier.enhancement_marker helper can distinguish actionable
     (registry-ELIGIBLE type AND a captured price for THIS fixture) from
     research (everything else). Uses the audit's own registry + pricing-join
     machinery. Fail-soft: unset fields render research; this must never raise
