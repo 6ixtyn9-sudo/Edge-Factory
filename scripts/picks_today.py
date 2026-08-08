@@ -875,11 +875,20 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
             })
 
     if candidates:
-        # Operator opt-outs (2026-08-08): BTTS-Yes has a coin-flip track record
-        # in the rolling audit and is excluded from recommendations regardless
-        # of edge. Goal ranges have no captured price source and are removed
-        # by the "must be priced" filter below.
-        EXCLUDED_MARKETS = {"btts_yes", "btts_no"}
+        # Operator opt-outs (2026-08-08): BTTS sides have coin-flip track
+        # records in the rolling audit and are excluded from recommendations
+        # regardless of edge. Goal ranges have no captured price source and
+        # are excluded here as well — they must never reach the fallback,
+        # which otherwise recommends an unpriced market as a "tip".
+        EXCLUDED_MARKETS = {
+            "btts_yes", "btts_no",
+            "goal_range_0_1", "goal_range_2_3", "goal_range_4_5",
+            "goal_range_4_6", "goal_range_6_plus", "goal_range_7_plus",
+            "exact_0", "exact_1", "exact_2", "exact_3", "exact_4", "exact_5",
+        }
+        # Apply exclusions up-front so both the EV branch and the fallback
+        # see the same filtered candidate set.
+        candidates = [c for c in candidates if c["market"] not in EXCLUDED_MARKETS]
 
         # Hard filters for the EV-ranked layer:
         #   - must map to a captured market (kills goal_range_*)
@@ -888,15 +897,13 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         #   - must offer >= +3% edge at the best captured price
         #   - probability must sit in [25%, 90%]: sub-25% is lotto noise,
         #     >90% is an obvious outcome with no real value even at best odds
-        MIN_EDGE = 0.03
+        MIN_EDGE = 0.05
         MIN_PROB = 0.25
         MAX_PROB = 0.90
 
         ev_candidates = []
         for c in candidates:
             market = c["market"]
-            if market in EXCLUDED_MARKETS:
-                continue
             if prices_index is not None:
                 # Price this candidate in a throwaway probe without mutating
                 # the real pick. attach_enhancement_price only reads home/away
@@ -1462,7 +1469,7 @@ def _f(v):
 
 def _valid_decimal_odds(v) -> float | None:
     odds = _f(v)
-    if odds is None or odds <= 1.0:
+    if odds is None or not math.isfinite(odds) or odds <= 1.0:
         return None
     return odds
 
@@ -1517,16 +1524,59 @@ def _kickoff_value(obj: dict) -> str | None:
 
 
 def _kickoff_minutes(value: object) -> int | None:
+    """Minutes-from-midnight SAST for a kickoff value.
+
+    Timezone-aware ISO strings are converted to SAST first. Naive strings
+    ("HH:MM", "DD-MM, HH:MM") are assumed to be SAST because every source
+    used by the operational pipeline reports local SAST times. Ambiguous
+    values return None so the pre-match guard fails closed.
+    """
+    dt = parse_kickoff_dt(value)
+    if dt is None:
+        return None
+    return dt.hour * 60 + dt.minute
+
+
+def parse_kickoff_dt(value: object) -> datetime | None:
+    """Return the kickoff as an Africa/Johannesburg datetime, or None.
+
+    Accepts:
+      - ISO 8601 with offset ("2026-08-08T21:00:00+02:00")
+      - Zulu ("2026-08-08T19:00:00Z")
+      - Naive "DD-MM, HH:MM" and "HH:MM" (assumed SAST)
+    Rejects unparseable or out-of-range values.
+    """
     text = str(value or "").strip()
     if not text:
         return None
-    match = _TIME_RE.search(text)
-    if not match:
-        return None
-    hour, minute = int(match.group(1)), int(match.group(2))
-    if hour > 23 or minute > 59:
-        return None
-    return hour * 60 + minute
+    tz = _local_tz()
+    # ISO with optional offset or Z
+    iso_candidate = text.replace("Z", "+00:00") if text.endswith("Z") else text
+    try:
+        dt = datetime.fromisoformat(iso_candidate)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=tz)
+        return dt.astimezone(tz)
+    except ValueError:
+        pass
+    # "DD-MM, HH:MM" or "DD-MM HH:MM"
+    m = re.match(r"^(\d{1,2})-(\d{1,2})[ ,]+(\d{1,2}):(\d{2})\s*$", text)
+    if m:
+        mm, dd, hh, mi = map(int, m.groups())
+        if 0 <= hh <= 23 and 0 <= mi <= 59:
+            year = datetime.now(tz).year
+            try:
+                return datetime(year, mm, dd, hh, mi, tzinfo=tz)
+            except ValueError:
+                return None
+    # bare "HH:MM" — date supplied by caller via pick["date"]; return today
+    m = re.match(r"^(\d{1,2}):(\d{2})\s*$", text)
+    if m:
+        hh, mi = map(int, m.groups())
+        if 0 <= hh <= 23 and 0 <= mi <= 59:
+            today = datetime.now(tz).date()
+            return datetime(today.year, today.month, today.day, hh, mi, tzinfo=tz)
+    return None
 
 
 def _kickoff_delta_minutes(a: object, b: object) -> int | None:
@@ -1555,12 +1605,13 @@ def operational_pick_eligibility(
     if pick_date > as_of_date:
         return True, None
 
-    kickoff_min = _kickoff_minutes(_kickoff_value(pick))
-    if kickoff_min is None:
+    ko = parse_kickoff_dt(_kickoff_value(pick))
+    if ko is None:
         return False, "missing_kickoff_same_day"
-
-    as_of_min = as_of.hour * 60 + as_of.minute
-    if kickoff_min - as_of_min < min_lead:
+    if ko.tzinfo is None:
+        ko = ko.replace(tzinfo=_local_tz())
+    lead = (ko - as_of).total_seconds() / 60.0
+    if lead < min_lead:
         return False, f"inside_{min_lead}m_lead_or_started"
     return True, None
 

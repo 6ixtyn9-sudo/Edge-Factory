@@ -244,7 +244,7 @@ def load_prices_index(root: Path, day: str) -> dict[str, Any]:
                         strict_source=THEODDSAPI_SOURCE, out=out)
     _accumulate_unified(localdata / f"bzzoiro_odds_{month}.csv.gz",
                         day=day, source_tag=BZZOIRO_SOURCE,
-                        strict_source=None, out=out)
+                        strict_source=BZZOIRO_SOURCE, out=out)
     _accumulate_scoutingstats(localdata / f"scoutingstats_{month}.csv.gz",
                               day=day, out=out)
     # Operator override 2026-08-05 (Addendum 27.7): OddsPapi prices team

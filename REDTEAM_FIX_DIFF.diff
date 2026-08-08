@@ -1,0 +1,213 @@
+--- /tmp/picks_today.py.bak	2026-08-08 20:31:10.829948526 +0000
++++ scripts/picks_today.py	2026-08-08 20:32:35.597948526 +0000
+@@ -875,11 +875,20 @@
+             })
+ 
+     if candidates:
+-        # Operator opt-outs (2026-08-08): BTTS-Yes has a coin-flip track record
+-        # in the rolling audit and is excluded from recommendations regardless
+-        # of edge. Goal ranges have no captured price source and are removed
+-        # by the "must be priced" filter below.
+-        EXCLUDED_MARKETS = {"btts_yes", "btts_no"}
++        # Operator opt-outs (2026-08-08): BTTS sides have coin-flip track
++        # records in the rolling audit and are excluded from recommendations
++        # regardless of edge. Goal ranges have no captured price source and
++        # are excluded here as well — they must never reach the fallback,
++        # which otherwise recommends an unpriced market as a "tip".
++        EXCLUDED_MARKETS = {
++            "btts_yes", "btts_no",
++            "goal_range_0_1", "goal_range_2_3", "goal_range_4_5",
++            "goal_range_4_6", "goal_range_6_plus", "goal_range_7_plus",
++            "exact_0", "exact_1", "exact_2", "exact_3", "exact_4", "exact_5",
++        }
++        # Apply exclusions up-front so both the EV branch and the fallback
++        # see the same filtered candidate set.
++        candidates = [c for c in candidates if c["market"] not in EXCLUDED_MARKETS]
+ 
+         # Hard filters for the EV-ranked layer:
+         #   - must map to a captured market (kills goal_range_*)
+@@ -888,15 +897,13 @@
+         #   - must offer >= +3% edge at the best captured price
+         #   - probability must sit in [25%, 90%]: sub-25% is lotto noise,
+         #     >90% is an obvious outcome with no real value even at best odds
+-        MIN_EDGE = 0.03
++        MIN_EDGE = 0.05
+         MIN_PROB = 0.25
+         MAX_PROB = 0.90
+ 
+         ev_candidates = []
+         for c in candidates:
+             market = c["market"]
+-            if market in EXCLUDED_MARKETS:
+-                continue
+             if prices_index is not None:
+                 # Price this candidate in a throwaway probe without mutating
+                 # the real pick. attach_enhancement_price only reads home/away
+@@ -1462,7 +1469,7 @@
+ 
+ def _valid_decimal_odds(v) -> float | None:
+     odds = _f(v)
+-    if odds is None or odds <= 1.0:
++    if odds is None or not math.isfinite(odds) or odds <= 1.0:
+         return None
+     return odds
+ 
+@@ -1517,16 +1524,59 @@
+ 
+ 
+ def _kickoff_minutes(value: object) -> int | None:
++    """Minutes-from-midnight SAST for a kickoff value.
++
++    Timezone-aware ISO strings are converted to SAST first. Naive strings
++    ("HH:MM", "DD-MM, HH:MM") are assumed to be SAST because every source
++    used by the operational pipeline reports local SAST times. Ambiguous
++    values return None so the pre-match guard fails closed.
++    """
++    dt = parse_kickoff_dt(value)
++    if dt is None:
++        return None
++    return dt.hour * 60 + dt.minute
++
++
++def parse_kickoff_dt(value: object) -> datetime | None:
++    """Return the kickoff as an Africa/Johannesburg datetime, or None.
++
++    Accepts:
++      - ISO 8601 with offset ("2026-08-08T21:00:00+02:00")
++      - Zulu ("2026-08-08T19:00:00Z")
++      - Naive "DD-MM, HH:MM" and "HH:MM" (assumed SAST)
++    Rejects unparseable or out-of-range values.
++    """
+     text = str(value or "").strip()
+     if not text:
+         return None
+-    match = _TIME_RE.search(text)
+-    if not match:
+-        return None
+-    hour, minute = int(match.group(1)), int(match.group(2))
+-    if hour > 23 or minute > 59:
+-        return None
+-    return hour * 60 + minute
++    tz = _local_tz()
++    # ISO with optional offset or Z
++    iso_candidate = text.replace("Z", "+00:00") if text.endswith("Z") else text
++    try:
++        dt = datetime.fromisoformat(iso_candidate)
++        if dt.tzinfo is None:
++            dt = dt.replace(tzinfo=tz)
++        return dt.astimezone(tz)
++    except ValueError:
++        pass
++    # "DD-MM, HH:MM" or "DD-MM HH:MM"
++    m = re.match(r"^(\d{1,2})-(\d{1,2})[ ,]+(\d{1,2}):(\d{2})\s*$", text)
++    if m:
++        mm, dd, hh, mi = map(int, m.groups())
++        if 0 <= hh <= 23 and 0 <= mi <= 59:
++            year = datetime.now(tz).year
++            try:
++                return datetime(year, mm, dd, hh, mi, tzinfo=tz)
++            except ValueError:
++                return None
++    # bare "HH:MM" — date supplied by caller via pick["date"]; return today
++    m = re.match(r"^(\d{1,2}):(\d{2})\s*$", text)
++    if m:
++        hh, mi = map(int, m.groups())
++        if 0 <= hh <= 23 and 0 <= mi <= 59:
++            today = datetime.now(tz).date()
++            return datetime(today.year, today.month, today.day, hh, mi, tzinfo=tz)
++    return None
+ 
+ 
+ def _kickoff_delta_minutes(a: object, b: object) -> int | None:
+@@ -1555,12 +1605,13 @@
+     if pick_date > as_of_date:
+         return True, None
+ 
+-    kickoff_min = _kickoff_minutes(_kickoff_value(pick))
+-    if kickoff_min is None:
++    ko = parse_kickoff_dt(_kickoff_value(pick))
++    if ko is None:
+         return False, "missing_kickoff_same_day"
+-
+-    as_of_min = as_of.hour * 60 + as_of.minute
+-    if kickoff_min - as_of_min < min_lead:
++    if ko.tzinfo is None:
++        ko = ko.replace(tzinfo=_local_tz())
++    lead = (ko - as_of).total_seconds() / 60.0
++    if lead < min_lead:
+         return False, f"inside_{min_lead}m_lead_or_started"
+     return True, None
+ 
+--- /tmp/enh_pricing.py.bak	2026-08-08 20:31:10.829948526 +0000
++++ src/edgefactory/enh_pricing.py	2026-08-08 20:33:09.617948526 +0000
+@@ -244,7 +244,7 @@
+                         strict_source=THEODDSAPI_SOURCE, out=out)
+     _accumulate_unified(localdata / f"bzzoiro_odds_{month}.csv.gz",
+                         day=day, source_tag=BZZOIRO_SOURCE,
+-                        strict_source=None, out=out)
++                        strict_source=BZZOIRO_SOURCE, out=out)
+     _accumulate_scoutingstats(localdata / f"scoutingstats_{month}.csv.gz",
+                               day=day, out=out)
+     # Operator override 2026-08-05 (Addendum 27.7): OddsPapi prices team
+--- /tmp/notify.py.bak	2026-08-08 20:31:10.829948526 +0000
++++ scripts/notify.py	2026-08-08 20:32:53.249948526 +0000
+@@ -211,6 +211,8 @@
+             dispatched = True
+         except Exception as exc:
+             logging.error(f"    └ Meta Cloud API Dispatch Exception: {exc}")
++        else:
++            return True
+     if twilio_sid and twilio_token and twilio_number and meta_recipient:
+         logging.info(f"  └ Sending via Twilio WhatsApp API to recipient ending in ...{meta_recipient[-4:]}")
+         try:
+@@ -225,6 +227,8 @@
+             dispatched = True
+         except Exception as exc:
+             logging.error(f"    └ Twilio Dispatch Exception: {exc}")
++        else:
++            return True
+     if telegram_token and telegram_chat_id:
+         logging.info(f"  └ Sending via Telegram Bot API to chat ending in ...{str(telegram_chat_id)[-4:]}")
+         try:
+@@ -238,6 +242,10 @@
+             dispatched = True
+         except Exception as exc:
+             logging.error(f"    └ Telegram Dispatch Exception: {exc}")
++        else:
++            # T25: first successful provider wins; do not fall through to
++            # CallMeBot or any remaining fallback.
++            return True
+     if callmebot_key and callmebot_phone:
+         logging.info(f"  └ Sending via CallMeBot API to phone ending in ...{callmebot_phone[-4:]}")
+         logging.info(
+@@ -247,7 +255,7 @@
+         try:
+             send_callmebot_whatsapp(apikey=callmebot_key, phone=callmebot_phone, message_text=message_text)
+             logging.info("    └ CallMeBot Dispatch Success")
+-            dispatched = True
++            return True
+         except Exception as exc:
+             logging.error(f"    └ CallMeBot Dispatch Exception: {exc}")
+     return dispatched
+--- /tmp/daily.yml.bak	2026-08-08 20:31:10.833948526 +0000
++++ .github/workflows/daily.yml	2026-08-08 20:33:27.493948526 +0000
+@@ -20,6 +20,10 @@
+ permissions:
+   contents: write
+ 
++concurrency:
++  group: edge-factory-main
++  cancel-in-progress: false
++
+ jobs:
+   run-autonomous-agent:
+     runs-on: ubuntu-latest
+@@ -30,8 +34,6 @@
+       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
+-      CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+-      CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+       # The Odds API multi-key ring (comma-separated). Without this mapping the

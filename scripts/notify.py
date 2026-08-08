@@ -211,6 +211,8 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ Meta Cloud API Dispatch Exception: {exc}")
+        else:
+            return True
     if twilio_sid and twilio_token and twilio_number and meta_recipient:
         logging.info(f"  └ Sending via Twilio WhatsApp API to recipient ending in ...{meta_recipient[-4:]}")
         try:
@@ -225,6 +227,8 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ Twilio Dispatch Exception: {exc}")
+        else:
+            return True
     if telegram_token and telegram_chat_id:
         logging.info(f"  └ Sending via Telegram Bot API to chat ending in ...{str(telegram_chat_id)[-4:]}")
         try:
@@ -238,6 +242,10 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ Telegram Dispatch Exception: {exc}")
+        else:
+            # T25: first successful provider wins; do not fall through to
+            # CallMeBot or any remaining fallback.
+            return True
     if callmebot_key and callmebot_phone:
         logging.info(f"  └ Sending via CallMeBot API to phone ending in ...{callmebot_phone[-4:]}")
         logging.info(
@@ -247,7 +255,7 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
         try:
             send_callmebot_whatsapp(apikey=callmebot_key, phone=callmebot_phone, message_text=message_text)
             logging.info("    └ CallMeBot Dispatch Success")
-            dispatched = True
+            return True
         except Exception as exc:
             logging.error(f"    └ CallMeBot Dispatch Exception: {exc}")
     return dispatched
