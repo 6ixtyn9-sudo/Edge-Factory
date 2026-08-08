@@ -227,17 +227,35 @@ def _tg_pick_card(p: dict[str, Any]) -> str:
         f"  {match}",
         f"     ➜ {selection}  @ {odds_txt}{book_txt}   [{prob:.0f}% · {ko} · {rule}]",
     ]
-    # Enhancement / combo line (🔥 when registry-eligible and priced, else 🔬)
+    # Enhancement / combo line (🔥 when registry-eligible and priced, else 🔬).
+    # When the EV selector attached a real price, show price, edge, and source
+    # so the operator can see WHY the market was picked instead of Home O0.5.
     enh_label = p.get("enhancement_label")
     enh_prob = p.get("enhancement_probability")
     if enh_label:
-        prob_txt = ""
+        bits = [enhancement_marker(p), enh_label]
         if enh_prob is not None:
             try:
-                prob_txt = f" {float(enh_prob):.0%}"
+                bits.append(f"{float(enh_prob):.0%}")
             except (TypeError, ValueError):
-                prob_txt = ""
-        lines.append(f"     {enhancement_marker(p)} {enh_label}{prob_txt}")
+                pass
+        enh_price = p.get("enhancement_price")
+        enh_edge = p.get("enhancement_edge_sample")
+        if enh_price:
+            try:
+                bits.append(f"@ {float(enh_price):.2f}")
+            except (TypeError, ValueError):
+                pass
+        if enh_edge is not None:
+            try:
+                bits.append(f"edge {float(enh_edge):+.0%}")
+            except (TypeError, ValueError):
+                pass
+        enh_src = p.get("enhancement_price_source")
+        if enh_src:
+            bits.append(f"[{enh_src}]")
+        # First bit is the marker (no separator), rest join with spaces.
+        lines.append("     " + "  ".join(bits))
     # Trailing blank line so picks are visually separated in the Telegram render.
     lines.append("")
     return "\n".join(lines)
