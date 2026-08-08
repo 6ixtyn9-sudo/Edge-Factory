@@ -323,8 +323,8 @@ def main() -> int:
 
     picks_file = Path(args.picks)
     target_date = args.date or _default_target_date()
-    sent_ledger_file = LOCALDATA / f"whatsapp_sent_ledger_{target_date}.json"
-    discovery_sent_ledger_file = LOCALDATA / f"whatsapp_discovery_sent_ledger_{target_date}.json"
+    sent_ledger_file = LOCALDATA / f"sent_ledger_{target_date}.json"
+    discovery_sent_ledger_file = LOCALDATA / f"discovery_sent_ledger_{target_date}.json"
 
     meta_token = os.environ.get("WHATSAPP_TOKEN")
     meta_phone_id = os.environ.get("WHATSAPP_PHONE_NUMBER_ID")
@@ -396,7 +396,7 @@ def main() -> int:
     shadow_enabled = os.environ.get("EDGE_FACTORY_NOTIFY_SHADOW", "1").strip().lower() not in {"0", "false", "no", "off"}
     shadow_message = None
     shadow_picks: list[dict[str, Any]] = []
-    shadow_sent_ledger_file = LOCALDATA / f"whatsapp_shadow_sent_ledger_{target_date}.json"
+    shadow_sent_ledger_file = LOCALDATA / f"shadow_sent_ledger_{target_date}.json"
     shadow_sent_keys = set() if args.force else _load_sent_ledger(shadow_sent_ledger_file)
     if shadow_enabled:
         day_shadow = [
