@@ -879,7 +879,7 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         # in the rolling audit and is excluded from recommendations regardless
         # of edge. Goal ranges have no captured price source and are removed
         # by the "must be priced" filter below.
-        EXCLUDED_MARKETS = {"btts_yes"}
+        EXCLUDED_MARKETS = {"btts_yes", "btts_no"}
 
         # Hard filters for the EV-ranked layer:
         #   - must map to a captured market (kills goal_range_*)
