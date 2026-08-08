@@ -34,7 +34,7 @@ localdata/*
 !localdata/clv_*
 !localdata/betexplorer_results_2026-*.csv.gz
 !localdata/betexplorer_odds_2026-*.csv.gz
-!localdata/whatsapp_sent_ledger_20*.json
+!localdata/sent_ledger_20*.json
 !localdata/supabase_sync_manifest_20*.json
 
 # secrets
@@ -58,7 +58,7 @@ dist/
 .DS_Store
 .idea/
 .vscode/
-!localdata/whatsapp_discovery_sent_ledger_20*.json
+!localdata/discovery_sent_ledger_20*.json
 !localdata/enhancement_registry.json
 !localdata/theoddsapi_usage.json
 !localdata/theoddsapi_sports.json
@@ -66,4 +66,4 @@ dist/
 !localdata/theoddsapi_odds_2026-*.csv.gz
 
 # Addendum 25: shadow-slate dedup ledger is bot-owned like the other ledgers
-!localdata/whatsapp_shadow_sent_ledger_20*.json
+!localdata/shadow_sent_ledger_20*.json

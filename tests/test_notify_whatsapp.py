@@ -106,7 +106,7 @@ def test_shadow_chunks_success_requires_every_chunk(monkeypatch):
 # because live CallMeBot credentials existed there; a clean no-.env checkout
 # short-circuits main() at the credential gate — reproduced: 1 failed, 133
 # passed). They must NEVER write ledgers into the repo's real localdata (the
-# old tests created/unlinked whatsapp_shadow_sent_ledger_2099-*.json there).
+# old tests created/unlinked shadow_sent_ledger_2099-*.json there).
 # And they must pin the GLOBAL force semantics: --force is a ledger-READ
 # bypass only; any failed dispatch means non-zero exit + no ledger write, in
 # EVERY message family.
@@ -160,7 +160,7 @@ def test_shadow_ledger_barrier_end_to_end(monkeypatch, tmp_path):
     ledger; rerun without force is deduped silent."""
     date = "2099-03-03"
     ld = tmp_path / "localdata"
-    shadow_ledger = ld / f"whatsapp_shadow_sent_ledger_{date}.json"
+    shadow_ledger = ld / f"shadow_sent_ledger_{date}.json"
     fp = _picks_file(tmp_path, _shadow_rows(date))
     state = {"ok": False}
     sent = _wire_e2e(monkeypatch, tmp_path, lambda _msg: state["ok"])
@@ -177,8 +177,8 @@ def test_shadow_ledger_barrier_end_to_end(monkeypatch, tmp_path):
     assert shadow_ledger.exists()
     assert len(json.loads(shadow_ledger.read_text())) == 2
     # (e) only the intended ledger was written — no phantom ledgers
-    assert not (ld / f"whatsapp_sent_ledger_{date}.json").exists()
-    assert not (ld / f"whatsapp_discovery_sent_ledger_{date}.json").exists()
+    assert not (ld / f"sent_ledger_{date}.json").exists()
+    assert not (ld / f"discovery_sent_ledger_{date}.json").exists()
 
     sent.clear()                                    # third run, no force: deduped silent
     rc = _run(monkeypatch, "--picks", str(fp), "--date", date)
@@ -195,7 +195,7 @@ def test_force_main_failure_writes_no_ledger(monkeypatch, tmp_path):
     rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
     assert rc != 0
     assert sent                                     # the message was attempted
-    assert not (ld / f"whatsapp_sent_ledger_{date}.json").exists()
+    assert not (ld / f"sent_ledger_{date}.json").exists()
 
 
 def test_force_discovery_failure_writes_no_ledger(monkeypatch, tmp_path):
@@ -209,8 +209,8 @@ def test_force_discovery_failure_writes_no_ledger(monkeypatch, tmp_path):
     _wire_e2e(monkeypatch, tmp_path, False)
     rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
     assert rc != 0
-    assert not (ld / f"whatsapp_discovery_sent_ledger_{date}.json").exists()
-    assert not (ld / f"whatsapp_sent_ledger_{date}.json").exists()
+    assert not (ld / f"discovery_sent_ledger_{date}.json").exists()
+    assert not (ld / f"sent_ledger_{date}.json").exists()
 
 
 def test_force_heartbeat_failure_writes_no_marker(monkeypatch, tmp_path):
@@ -222,7 +222,7 @@ def test_force_heartbeat_failure_writes_no_marker(monkeypatch, tmp_path):
     _wire_e2e(monkeypatch, tmp_path, False)
     rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force", "--heartbeat")
     assert rc != 0
-    assert not (ld / f"whatsapp_sent_ledger_{date}.json").exists()
+    assert not (ld / f"sent_ledger_{date}.json").exists()
 
 
 def test_successful_family_does_not_mask_failed_family(monkeypatch, tmp_path):
@@ -235,9 +235,9 @@ def test_successful_family_does_not_mask_failed_family(monkeypatch, tmp_path):
     _wire_e2e(monkeypatch, tmp_path, lambda msg: "Shadow Slate" not in msg)
     rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
     assert rc != 0
-    main_ledger = ld / f"whatsapp_sent_ledger_{date}.json"
+    main_ledger = ld / f"sent_ledger_{date}.json"
     assert main_ledger.exists() and len(json.loads(main_ledger.read_text())) == 1
-    assert not (ld / f"whatsapp_shadow_sent_ledger_{date}.json").exists()
+    assert not (ld / f"shadow_sent_ledger_{date}.json").exists()
 
 
 # --- Addendum 25.2: inter-chunk spacing + ack-rejection e2e --------------------
@@ -298,7 +298,7 @@ def test_callmebot_200_error_body_fails_dispatch_end_to_end(monkeypatch, tmp_pat
     monkeypatch.setattr("urllib.request.urlopen", lambda *a, **k: _ErrResp())
     rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
     assert rc != 0
-    assert not (ld / f"whatsapp_shadow_sent_ledger_{date}.json").exists()
+    assert not (ld / f"shadow_sent_ledger_{date}.json").exists()
 
 
 def test_shadow_kill_switch_blocks_dispatch(monkeypatch, tmp_path):
@@ -311,4 +311,4 @@ def test_shadow_kill_switch_blocks_dispatch(monkeypatch, tmp_path):
     rc = _run(monkeypatch, "--picks", str(fp), "--date", date, "--force")
     assert rc == 0
     assert not any("Shadow Slate" in m for m in sent)
-    assert not (ld / f"whatsapp_shadow_sent_ledger_{date}.json").exists()
+    assert not (ld / f"shadow_sent_ledger_{date}.json").exists()
