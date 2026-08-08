@@ -3544,7 +3544,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-08T20:19:09+02:00",
+    "as_of": "2026-08-08T23:17:30+02:00",
     "avg_p": 76.0,
     "away": "Istra 1961",
     "bookmaker": "betexplorer_best",
@@ -3629,24 +3629,6 @@
       {
         "cohort_n": 342,
         "engine": "hybrid_cohort",
-        "label": "Both Teams to Score - No (BTTS-No)",
-        "market": "btts_no",
-        "probability": 0.5028562873320059,
-        "raw_probability": 0.5028562873320059,
-        "reason": "League BTTS is 48.0%, Home BTTS is 48.0%, Away BTTS is 44.9%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.3874978461220822,
-        "raw_probability": 0.3874978461220822,
-        "reason": "Poisson expected hit rate is 38.7%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
         "probability": 0.36895631253111,
@@ -3656,42 +3638,15 @@
       {
         "cohort_n": 342,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.3145011495279819,
-        "raw_probability": 0.3145011495279819,
-        "reason": "Poisson expected hit rate is 31.5%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
         "probability": 0.2969153044479885,
         "raw_probability": 0.2969153044479885,
         "reason": "Poisson expected hit rate is 29.7%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.1866386875666047,
-        "raw_probability": 0.1866386875666047,
-        "reason": "Poisson expected hit rate is 18.7%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.1278624619613772,
-        "raw_probability": 0.1278624619613772,
-        "reason": "Poisson expected hit rate is 12.8%"
       }
     ],
     "home": "HNK Hajduk Split",
-    "kickoff": "20:00",
+    "kickoff": "12:00",
     "league": "Croatia,Hnl",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -3702,7 +3657,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.4,
-    "odds_captured_at": "2026-08-08T18:23:10.317260+00:00",
+    "odds_captured_at": "2026-08-08T21:22:26.573806+00:00",
     "odds_league": "Croatia: HNL",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -3726,7 +3681,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-08T20:19:09+02:00",
+    "as_of": "2026-08-08T23:17:30+02:00",
     "avg_p": 76.0,
     "away": "Ogre United",
     "bookmaker": "betexplorer_best",
@@ -3811,15 +3766,6 @@
       {
         "cohort_n": 342,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.40711967731885257,
-        "raw_probability": 0.40711967731885257,
-        "reason": "Poisson expected hit rate is 40.7%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
         "probability": 0.38543825307014334,
@@ -3829,51 +3775,15 @@
       {
         "cohort_n": 342,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.3263530324849538,
-        "raw_probability": 0.3263530324849538,
-        "reason": "Poisson expected hit rate is 32.6%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
         "probability": 0.3050352550982313,
         "raw_probability": 0.3050352550982313,
         "reason": "Poisson expected hit rate is 30.5%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.19048044578910317,
-        "raw_probability": 0.19048044578910317,
-        "reason": "Poisson expected hit rate is 19.0%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 6+",
-        "market": "goal_range_6_plus",
-        "probability": 0.15130971669301488,
-        "raw_probability": 0.15130971669301488,
-        "reason": "Poisson expected hit rate is 15.1%"
-      },
-      {
-        "cohort_n": 342,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.13587258669585062,
-        "raw_probability": 0.13587258669585062,
-        "reason": "Poisson expected hit rate is 13.6%"
       }
     ],
     "home": "Riga FC",
-    "kickoff": "16:00",
+    "kickoff": "08:00",
     "league": "Latvia,Virsliga",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -3884,7 +3794,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.06,
-    "odds_captured_at": "2026-08-08T18:23:16.296972+00:00",
+    "odds_captured_at": "2026-08-08T21:22:11.150149+00:00",
     "odds_league": "Latvia: Virsliga",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -3908,7 +3818,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-08T20:19:09+02:00",
+    "as_of": "2026-08-08T23:17:30+02:00",
     "avg_p": 76.0,
     "away": "IBV Vestmannaeyjar",
     "bookmaker": "betexplorer_best",
@@ -3993,15 +3903,6 @@
       {
         "cohort_n": 231,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.4328872364365074,
-        "raw_probability": 0.4328872364365074,
-        "reason": "Poisson expected hit rate is 43.3%"
-      },
-      {
-        "cohort_n": 231,
-        "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
         "probability": 0.39513258107675575,
@@ -4011,47 +3912,11 @@
       {
         "cohort_n": 231,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.34065831925066203,
-        "raw_probability": 0.34065831925066203,
-        "reason": "Poisson expected hit rate is 34.1%"
-      },
-      {
-        "cohort_n": 231,
-        "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
         "probability": 0.32838127126064975,
         "raw_probability": 0.32838127126064975,
         "reason": "Poisson expected hit rate is 32.8%"
-      },
-      {
-        "cohort_n": 231,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.19409351544462453,
-        "raw_probability": 0.19409351544462453,
-        "reason": "Poisson expected hit rate is 19.4%"
-      },
-      {
-        "cohort_n": 231,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 6+",
-        "market": "goal_range_6_plus",
-        "probability": 0.18085695852934627,
-        "raw_probability": 0.18085695852934627,
-        "reason": "Poisson expected hit rate is 18.1%"
-      },
-      {
-        "cohort_n": 231,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.14656480380603748,
-        "raw_probability": 0.14656480380603748,
-        "reason": "Poisson expected hit rate is 14.7%"
       }
     ],
     "home": "Vikingur Reykjavik",
@@ -4066,7 +3931,7 @@
     "model_version": null,
     "n_way": 3,
     "odds": 1.32,
-    "odds_captured_at": "2026-08-08T18:23:04.273414+00:00",
+    "odds_captured_at": "2026-08-08T21:22:20.185470+00:00",
     "odds_league": "Iceland: Besta deild karla",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -4095,10 +3960,10 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-08T20:19:09+02:00",
+    "as_of": "2026-08-08T23:17:30+02:00",
     "avg_p": 75.5,
     "away": "Alverca",
-    "bookmaker": "Betsson",
+    "bookmaker": "Betano",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
@@ -4180,15 +4045,6 @@
       {
         "cohort_n": 372,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.3925927029872316,
-        "raw_probability": 0.3925927029872316,
-        "reason": "Poisson expected hit rate is 39.3%"
-      },
-      {
-        "cohort_n": 372,
-        "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
         "probability": 0.3755824546178931,
@@ -4198,42 +4054,15 @@
       {
         "cohort_n": 372,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.317645586970996,
-        "raw_probability": 0.317645586970996,
-        "reason": "Poisson expected hit rate is 31.8%"
-      },
-      {
-        "cohort_n": 372,
-        "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
         "probability": 0.2970867960904743,
         "raw_probability": 0.2970867960904743,
         "reason": "Poisson expected hit rate is 29.7%"
-      },
-      {
-        "cohort_n": 372,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.1877136277009358,
-        "raw_probability": 0.1877136277009358,
-        "reason": "Poisson expected hit rate is 18.8%"
-      },
-      {
-        "cohort_n": 372,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.1299319592700602,
-        "raw_probability": 0.1299319592700602,
-        "reason": "Poisson expected hit rate is 13.0%"
       }
     ],
     "home": "FC Porto",
-    "kickoff": "18:00",
+    "kickoff": "10:00",
     "league": "Portugal,Liga Portugal",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -4243,8 +4072,8 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 2,
-    "odds": 1.21,
-    "odds_captured_at": "2026-08-08T18:22:50.830507+00:00",
+    "odds": 1.22,
+    "odds_captured_at": "2026-08-08T21:21:46.983781+00:00",
     "odds_league": "Liga Portugal Betclic",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -4268,8 +4097,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-08T20:19:09+02:00",
-    "avg_p": 72.0,
+    "as_of": "2026-08-08T23:17:30+02:00",
+    "avg_p": 73.0,
     "away": "FC Vaduz",
     "bookmaker": "Betano",
     "bucket": "SKIPPED_VETO",
@@ -4310,112 +4139,67 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9139,
+    "enhancement_probability": 0.9151,
     "enhancement_reason": "Home scoring rate is 78.1%",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 764,
+        "cohort_n": 624,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.913856808583389,
-        "raw_probability": 0.913856808583389,
+        "probability": 0.9150712184046739,
+        "raw_probability": 0.9150712184046739,
         "reason": "Home scoring rate is 78.1%"
       },
       {
-        "cohort_n": 764,
+        "cohort_n": 624,
         "engine": "hybrid_cohort",
         "label": "Match Over 3.5 Goals",
         "market": "match_over_35",
-        "probability": 0.45842279418849535,
-        "raw_probability": 0.45842279418849535,
-        "reason": "Poisson expected hit rate is 45.8%"
+        "probability": 0.48059098232353764,
+        "raw_probability": 0.48059098232353764,
+        "reason": "Poisson expected hit rate is 48.1%"
       },
       {
-        "cohort_n": 764,
+        "cohort_n": 624,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.980231308456459,
-        "raw_probability": 0.980231308456459,
-        "reason": "Combined Under 3.5 is 98.0%"
+        "probability": 0.98053154512817,
+        "raw_probability": 0.98053154512817,
+        "reason": "Combined Under 3.5 is 98.1%"
       },
       {
-        "cohort_n": 764,
+        "cohort_n": 624,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9357281520497279,
-        "raw_probability": 0.9357281520497279,
-        "reason": "Combined Under 2.5 is 93.6%"
+        "probability": 0.9318546911801697,
+        "raw_probability": 0.9318546911801697,
+        "reason": "Combined Under 2.5 is 93.2%"
       },
       {
-        "cohort_n": 764,
-        "engine": "hybrid_cohort",
-        "label": "Both Teams to Score - No (BTTS-No)",
-        "market": "btts_no",
-        "probability": 0.5055532309731595,
-        "raw_probability": 0.5055532309731595,
-        "reason": "League BTTS is 58.2%, Home BTTS is 47.9%, Away BTTS is 52.1%"
-      },
-      {
-        "cohort_n": 764,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.38714428621501895,
-        "raw_probability": 0.38714428621501895,
-        "reason": "Poisson expected hit rate is 38.7%"
-      },
-      {
-        "cohort_n": 764,
+        "cohort_n": 624,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.36540436313916974,
-        "raw_probability": 0.6577273274686435,
-        "reason": "Mathematical expectation is 65.8% (Performance feedback: HR=55.6%, Adjusted Prob: 36.5%)"
+        "probability": 0.37335859419793427,
+        "raw_probability": 0.6720449319203361,
+        "reason": "Mathematical expectation is 67.2% (Performance feedback: HR=55.6%, Adjusted Prob: 37.3%)"
       },
       {
-        "cohort_n": 764,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.31428131362758904,
-        "raw_probability": 0.31428131362758904,
-        "reason": "Poisson expected hit rate is 31.4%"
-      },
-      {
-        "cohort_n": 764,
+        "cohort_n": 624,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.27463249867432304,
-        "raw_probability": 0.27463249867432304,
-        "reason": "Poisson expected hit rate is 27.5%"
-      },
-      {
-        "cohort_n": 764,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.1865622006663568,
-        "raw_probability": 0.1865622006663568,
-        "reason": "Poisson expected hit rate is 18.7%"
-      },
-      {
-        "cohort_n": 764,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.12771911296123228,
-        "raw_probability": 0.12771911296123228,
-        "reason": "Poisson expected hit rate is 12.8%"
+        "probability": 0.2814670936582212,
+        "raw_probability": 0.2814670936582212,
+        "reason": "Poisson expected hit rate is 28.1%"
       }
     ],
     "home": "FC Sion",
-    "kickoff": "15:30",
+    "kickoff": "07:30",
     "league": "Switzerland,Super League",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -4426,7 +4210,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.47,
-    "odds_captured_at": "2026-08-08T18:22:50.830323+00:00",
+    "odds_captured_at": "2026-08-08T21:21:46.983574+00:00",
     "odds_league": "Super League",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -4444,13 +4228,13 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=604): Avg Goals: 3.74 | Over 2.5: 73.8% | BTTS: 42.7% | Home Over 1.5 Goals: 87.4% | Away Over 1.5 Goals: 9.8% | Top Scores: 2-0 (13.6%), 3-0 (13.1%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=500): Avg Goals: 3.78 | Over 2.5: 75.6% | BTTS: 42.2% | Home Over 1.5 Goals: 87.8% | Away Over 1.5 Goals: 9.8% | Top Scores: 1-0 (12.2%), 2-0 (12.2%)",
     "veto_reason": "context VETO in ['team_h', 'team_a', 'odds_band']",
     "vitibet_index": 4.51,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-08T20:19:09+02:00",
+    "as_of": "2026-08-08T23:17:30+02:00",
     "avg_p": 71.5,
     "away": "Hibernian",
     "bookmaker": "Betsson",
@@ -4535,24 +4319,6 @@
       {
         "cohort_n": 853,
         "engine": "hybrid_cohort",
-        "label": "Both Teams to Score - No (BTTS-No)",
-        "market": "btts_no",
-        "probability": 0.509674643216601,
-        "raw_probability": 0.509674643216601,
-        "reason": "League BTTS is 54.4%, Home BTTS is 43.0%, Away BTTS is 59.6%"
-      },
-      {
-        "cohort_n": 853,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.38520003704237793,
-        "raw_probability": 0.38520003704237793,
-        "reason": "Poisson expected hit rate is 38.5%"
-      },
-      {
-        "cohort_n": 853,
-        "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
         "probability": 0.36161241702689967,
@@ -4562,42 +4328,15 @@
       {
         "cohort_n": 853,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.31306874011082964,
-        "raw_probability": 0.31306874011082964,
-        "reason": "Poisson expected hit rate is 31.3%"
-      },
-      {
-        "cohort_n": 853,
-        "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
         "probability": 0.2758136416807311,
         "raw_probability": 0.2758136416807311,
         "reason": "Poisson expected hit rate is 27.6%"
-      },
-      {
-        "cohort_n": 853,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.1861373019417316,
-        "raw_probability": 0.1861373019417316,
-        "reason": "Poisson expected hit rate is 18.6%"
-      },
-      {
-        "cohort_n": 853,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.12693143816909808,
-        "raw_probability": 0.12693143816909808,
-        "reason": "Poisson expected hit rate is 12.7%"
       }
     ],
     "home": "Rangers",
-    "kickoff": "16:00",
+    "kickoff": "08:00",
     "league": "Scotland,Premiership",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -4608,7 +4347,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.58,
-    "odds_captured_at": "2026-08-08T18:22:50.830392+00:00",
+    "odds_captured_at": "2026-08-08T21:21:46.983642+00:00",
     "odds_league": "Scottish Premiership",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -4632,10 +4371,10 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-08T20:19:09+02:00",
+    "as_of": "2026-08-08T23:17:30+02:00",
     "avg_p": 70.5,
     "away": "Piast Gliwice",
-    "bookmaker": "Novibet",
+    "bookmaker": "Interwetten",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
@@ -4726,15 +4465,6 @@
       {
         "cohort_n": 1012,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.3862416677754626,
-        "raw_probability": 0.3862416677754626,
-        "reason": "Poisson expected hit rate is 38.6%"
-      },
-      {
-        "cohort_n": 1012,
-        "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
         "probability": 0.36300812531734084,
@@ -4744,42 +4474,15 @@
       {
         "cohort_n": 1012,
         "engine": "hybrid_cohort",
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.3137191475546475,
-        "raw_probability": 0.3137191475546475,
-        "reason": "Poisson expected hit rate is 31.4%"
-      },
-      {
-        "cohort_n": 1012,
-        "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
         "probability": 0.2743893947685817,
         "raw_probability": 0.2743893947685817,
         "reason": "Poisson expected hit rate is 27.4%"
-      },
-      {
-        "cohort_n": 1012,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.18636584136148615,
-        "raw_probability": 0.18636584136148615,
-        "reason": "Poisson expected hit rate is 18.6%"
-      },
-      {
-        "cohort_n": 1012,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.12735330619316138,
-        "raw_probability": 0.12735330619316138,
-        "reason": "Poisson expected hit rate is 12.7%"
       }
     ],
     "home": "Lech Poznan",
-    "kickoff": "16:30",
+    "kickoff": "08:30",
     "league": "Poland,Ekstraklasa",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -4789,8 +4492,8 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 2,
-    "odds": 1.62,
-    "odds_captured_at": "2026-08-08T18:22:50.830414+00:00",
+    "odds": 1.63,
+    "odds_captured_at": "2026-08-08T21:21:46.983665+00:00",
     "odds_league": "Ekstraklasa",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -4814,195 +4517,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-08T20:19:09+02:00",
-    "avg_p": 76.3,
-    "away": "Raufoss",
-    "bookmaker": "scoutingstats_odds",
-    "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-    "confidence": null,
-    "ctx": {
-      "away_norm": "raufoss",
-      "comp_type_name": "league",
-      "competition_type": "CAUTION",
-      "home_norm": "haugesund",
-      "league": "UNKNOWN",
-      "league_key": "norway 1 division",
-      "league_raw": "Norway 1. Division",
-      "niche": "UNKNOWN",
-      "odds_band": "CAUTION",
-      "odds_band_name": "1.20-1.35",
-      "resolution_original_verdict": "UNKNOWN",
-      "resolution_path": "O2-competition_type",
-      "resolution_pool_n": null,
-      "resolution_pool_roi": null,
-      "resolution_reason": "O2-competition_type resolved to CAUTION",
-      "resolution_verdict": "CAUTION",
-      "side_role": "home",
-      "team_a": "UNKNOWN",
-      "team_h": "UNKNOWN"
-    },
-    "date": "2026-08-09",
-    "decay_verdict": "WATCH",
-    "display_rule": "3WAY-UNANIMOUS\u226565",
-    "draw_risk_flag": "HIGH",
-    "edge_n_way": 3,
-    "edge_rule": "3way-unanimous avg_p>=65",
-    "edge_status": "certified",
-    "enhancement_label": "Home Team Over 0.5 Goals",
-    "enhancement_mapped": true,
-    "enhancement_multi_source": false,
-    "enhancement_price": null,
-    "enhancement_price_at": null,
-    "enhancement_price_book": null,
-    "enhancement_price_source": null,
-    "enhancement_priced": false,
-    "enhancement_probability": 0.8585,
-    "enhancement_reason": "Home scoring rate is 63.6%",
-    "enhancement_state": "SHADOW",
-    "event_notes": [
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Home Team Over 0.5 Goals",
-        "market": "home_over_05",
-        "probability": 0.8585364911331763,
-        "raw_probability": 0.8585364911331763,
-        "reason": "Home scoring rate is 63.6%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 3.5 Goals",
-        "market": "match_over_35",
-        "probability": 0.496502603204205,
-        "raw_probability": 0.496502603204205,
-        "reason": "Poisson expected hit rate is 49.7%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 3.5 Goals",
-        "market": "away_under_35",
-        "probability": 0.9755051578255998,
-        "raw_probability": 0.9755051578255998,
-        "reason": "Combined Under 3.5 is 97.6%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 2.5 Goals",
-        "market": "away_under_25",
-        "probability": 0.9195417841826682,
-        "raw_probability": 0.9195417841826682,
-        "reason": "Combined Under 2.5 is 92.0%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Both Teams to Score - No (BTTS-No)",
-        "market": "btts_no",
-        "probability": 0.516251014179191,
-        "raw_probability": 0.516251014179191,
-        "reason": "League BTTS is 54.9%, Home BTTS is 47.7%, Away BTTS is 54.9%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.3947563899153491,
-        "raw_probability": 0.3947563899153491,
-        "reason": "Poisson expected hit rate is 39.5%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.37531904228644286,
-        "raw_probability": 0.6755737356566086,
-        "reason": "Mathematical expectation is 67.6% (Performance feedback: HR=55.6%, Adjusted Prob: 37.5%)"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.31896736617799654,
-        "raw_probability": 0.31896736617799654,
-        "reason": "Poisson expected hit rate is 31.9%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.29975355867890163,
-        "raw_probability": 0.29975355867890163,
-        "reason": "Poisson expected hit rate is 30.0%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.18815436078773198,
-        "raw_probability": 0.18815436078773198,
-        "reason": "Poisson expected hit rate is 18.8%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.13081300539026455,
-        "raw_probability": 0.13081300539026455,
-        "reason": "Poisson expected hit rate is 13.1%"
-      }
-    ],
-    "home": "Haugesund",
-    "kickoff": "09-08, 16:00",
-    "league": "Norway 1. Division",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "historically unstable out of sample above 1.25",
-    "market_type": "1x2",
-    "match": "Haugesund vs Raufoss",
-    "min_lead_minutes": 30,
-    "model_version": null,
-    "n_way": 3,
-    "odds": 1.33,
-    "odds_captured_at": "2026-08-09T15:00:00Z",
-    "odds_league": "1. Division",
-    "odds_match_method": "exact",
-    "odds_match_status": "uncorroborated",
-    "odds_replaced": {
-      "odds": 1.31,
-      "source": "zulubet"
-    },
-    "odds_source": "scoutingstats_odds",
-    "odds_tier": "low",
-    "pick": "home",
-    "price_evidence": "SCOUTINGSTATS_SOLE",
-    "price_push_eligible": false,
-    "price_quarantine_reason": "scoutingstats_sole_source",
-    "recommended_enhancement": "home_over_05",
-    "recommended_market": "avoid_raw_1x2",
-    "rule": "3way-unanimous avg_p>=65",
-    "source_weights": {},
-    "sources_used": [
-      "zulubet",
-      "statarea",
-      "vitibet"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=187): Avg Goals: 4.06 | Over 2.5: 79.1% | BTTS: 41.2% | Home Over 1.5 Goals: 89.8% | Away Over 1.5 Goals: 9.1% | Top Scores: 3-0 (13.9%), 3-1 (10.7%)",
-    "vitibet_index": 4.12,
-    "w_score": 1.0
-  },
-  {
-    "as_of": "2026-08-08T20:19:09+02:00",
-    "avg_p": 76.3,
+    "as_of": "2026-08-08T23:17:30+02:00",
+    "avg_p": 79.7,
     "away": "Pardubice",
     "bookmaker": "scoutingstats_odds",
     "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
@@ -5043,117 +4559,45 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9175,
+    "enhancement_probability": 0.8409,
     "enhancement_reason": "Home scoring rate is 87.1%",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
+        "cohort_n": null,
+        "engine": "model",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.9174896660641335,
-        "raw_probability": 0.9174896660641335,
+        "probability": 0.8408750607681089,
+        "raw_probability": 0.8408750607681089,
         "reason": "Home scoring rate is 87.1%"
       },
       {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
+        "cohort_n": null,
+        "engine": "model",
         "label": "Match Over 3.5 Goals",
         "market": "match_over_35",
-        "probability": 0.5126425395557279,
-        "raw_probability": 0.5126425395557279,
-        "reason": "Poisson expected hit rate is 51.3%"
+        "probability": 0.4305663866294377,
+        "raw_probability": 0.4305663866294377,
+        "reason": "Poisson expected hit rate is 43.1%"
       },
       {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
+        "cohort_n": null,
+        "engine": "model",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9592983716476409,
-        "raw_probability": 0.9592983716476409,
-        "reason": "Combined Under 3.5 is 95.9%"
+        "probability": 0.9084400702429732,
+        "raw_probability": 0.9084400702429732,
+        "reason": "Combined Under 3.5 is 90.8%"
       },
       {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 2.5 Goals",
-        "market": "away_under_25",
-        "probability": 0.9148973776077254,
-        "raw_probability": 0.9148973776077254,
-        "reason": "Combined Under 2.5 is 91.5%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Both Teams to Score - No (BTTS-No)",
-        "market": "btts_no",
-        "probability": 0.5139571375785601,
-        "raw_probability": 0.5139571375785601,
-        "reason": "League BTTS is 55.3%, Home BTTS is 52.9%, Away BTTS is 51.0%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 4-6",
-        "market": "goal_range_4_6",
-        "probability": 0.41896656283162265,
-        "raw_probability": 0.41896656283162265,
-        "reason": "Poisson expected hit rate is 41.9%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.3833585036249832,
-        "raw_probability": 0.6900447544891661,
-        "reason": "Mathematical expectation is 69.0% (Performance feedback: HR=55.6%, Adjusted Prob: 38.3%)"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 4-5",
-        "market": "goal_range_4_5",
-        "probability": 0.3331336487820404,
-        "raw_probability": 0.3331336487820404,
-        "reason": "Poisson expected hit rate is 33.3%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
+        "cohort_n": null,
+        "engine": "model",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.31414626120615885,
-        "raw_probability": 0.31414626120615885,
-        "reason": "Poisson expected hit rate is 31.4%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 4",
-        "market": "exact_4",
-        "probability": 0.19237101841696,
-        "raw_probability": 0.19237101841696,
-        "reason": "Poisson expected hit rate is 19.2%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Goal Range 6+",
-        "market": "goal_range_6_plus",
-        "probability": 0.16404368001244962,
-        "raw_probability": 0.16404368001244962,
-        "reason": "Poisson expected hit rate is 16.4%"
-      },
-      {
-        "cohort_n": 212,
-        "engine": "hybrid_cohort",
-        "label": "Exact Goals: 5",
-        "market": "exact_5",
-        "probability": 0.14076263036508038,
-        "raw_probability": 0.14076263036508038,
-        "reason": "Poisson expected hit rate is 14.1%"
+        "probability": 0.24647329448313315,
+        "raw_probability": 0.24647329448313315,
+        "reason": "Poisson expected hit rate is 24.6%"
       }
     ],
     "home": "Slavia Praha",
@@ -5173,7 +4617,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.2,
+      "odds": 1.21,
       "source": "zulubet"
     },
     "odds_source": "scoutingstats_odds",
@@ -5192,8 +4636,150 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=187): Avg Goals: 4.06 | Over 2.5: 79.1% | BTTS: 41.2% | Home Over 1.5 Goals: 89.8% | Away Over 1.5 Goals: 9.1% | Top Scores: 3-0 (13.9%), 4-0 (10.7%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=64): Avg Goals: 3.95 | Over 2.5: 73.4% | BTTS: 34.4% | Home Over 1.5 Goals: 90.6% | Away Over 1.5 Goals: 7.8% | Top Scores: 2-0 (17.2%), 3-1 (12.5%)",
     "vitibet_index": 7.13,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-08-08T23:17:30+02:00",
+    "avg_p": 76.0,
+    "away": "Raufoss",
+    "bookmaker": "scoutingstats_odds",
+    "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "raufoss",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "haugesund",
+      "league": "UNKNOWN",
+      "league_key": "norway 1 division",
+      "league_raw": "Norway 1. Division",
+      "niche": "UNKNOWN",
+      "odds_band": "CAUTION",
+      "odds_band_name": "1.20-1.35",
+      "resolution_original_verdict": "UNKNOWN",
+      "resolution_path": "O2-competition_type",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "O2-competition_type resolved to CAUTION",
+      "resolution_verdict": "CAUTION",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-08-09",
+    "decay_verdict": "WATCH",
+    "display_rule": "3WAY-UNANIMOUS\u226565",
+    "draw_risk_flag": "HIGH",
+    "edge_n_way": 3,
+    "edge_rule": "3way-unanimous avg_p>=65",
+    "edge_status": "certified",
+    "enhancement_label": "Home Team Over 0.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": null,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.8603,
+    "enhancement_reason": "Home scoring rate is 63.6%",
+    "enhancement_state": "SHADOW",
+    "event_notes": [
+      {
+        "cohort_n": 231,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Over 0.5 Goals",
+        "market": "home_over_05",
+        "probability": 0.8603417579795534,
+        "raw_probability": 0.8603417579795534,
+        "reason": "Home scoring rate is 63.6%"
+      },
+      {
+        "cohort_n": 231,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 3.5 Goals",
+        "market": "match_over_35",
+        "probability": 0.5098663072924063,
+        "raw_probability": 0.5098663072924063,
+        "reason": "Poisson expected hit rate is 51.0%"
+      },
+      {
+        "cohort_n": 231,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9767266853881027,
+        "raw_probability": 0.9767266853881027,
+        "reason": "Combined Under 3.5 is 97.7%"
+      },
+      {
+        "cohort_n": 231,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.9235541361525613,
+        "raw_probability": 0.9235541361525613,
+        "reason": "Combined Under 2.5 is 92.4%"
+      },
+      {
+        "cohort_n": 231,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.3799327803351505,
+        "raw_probability": 0.6838784575005048,
+        "reason": "Mathematical expectation is 68.4% (Performance feedback: HR=55.6%, Adjusted Prob: 38.0%)"
+      },
+      {
+        "cohort_n": 231,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.3093049150605631,
+        "raw_probability": 0.3093049150605631,
+        "reason": "Poisson expected hit rate is 30.9%"
+      }
+    ],
+    "home": "Haugesund",
+    "kickoff": "09-08, 16:00",
+    "league": "Norway 1. Division",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "historically unstable out of sample above 1.25",
+    "market_type": "1x2",
+    "match": "Haugesund vs Raufoss",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 3,
+    "odds": 1.33,
+    "odds_captured_at": "2026-08-09T15:00:00Z",
+    "odds_league": "1. Division",
+    "odds_match_method": "exact",
+    "odds_match_status": "uncorroborated",
+    "odds_replaced": {
+      "odds": 1.32,
+      "source": "zulubet"
+    },
+    "odds_source": "scoutingstats_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "price_evidence": "SCOUTINGSTATS_SOLE",
+    "price_push_eligible": false,
+    "price_quarantine_reason": "scoutingstats_sole_source",
+    "recommended_enhancement": "home_over_05",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "3way-unanimous avg_p>=65",
+    "source_weights": {},
+    "sources_used": [
+      "zulubet",
+      "statarea",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=203): Avg Goals: 4.14 | Over 2.5: 80.3% | BTTS: 40.9% | Home Over 1.5 Goals: 90.6% | Away Over 1.5 Goals: 9.4% | Top Scores: 3-0 (13.8%), 3-1 (10.8%)",
+    "vitibet_index": 4.12,
     "w_score": 1.0
   }
 ]
