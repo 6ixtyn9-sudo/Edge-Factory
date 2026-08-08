@@ -2617,17 +2617,18 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 if not (isinstance(rec_price, (int, float)) and not isinstance(rec_price, bool)
                         and math.isfinite(rec_price) and rec_price > 1.0):
                     rec_price = None  # NaN/inf/junk must never render as a price (RT-2)
-                if rec_state == "ELIGIBLE" and rec_price is not None:
-                    be = p.get("enhancement_breakeven")
-                    edge = p.get("enhancement_edge_sample")
-                    extra = ""
-                    if isinstance(be, (int, float)) and isinstance(edge, (int, float)):
-                        extra = f"  (breakeven {be:.1%}, sample-edge {edge:+.1%})"
+                if rec_price is not None:
+                    # Priced but not registry-ELIGIBLE: show the EV pick with
+                    # its captured price and sample edge so the operator can
+                    # act on it. Marker stays 🔬 until the registry certifies.
                     book = f" {p.get('enhancement_price_book')}" if p.get("enhancement_price_book") else ""
-                    print(f"     ⭐ Enhancement (ELIGIBLE): {rec_label} {rec_prob:.1%} @ {rec_price:.2f}{book}{extra}")
-                else:
-                    pr = f" @ {rec_price:.2f}" if rec_price is not None else " (unpriced)"
-                    print(f"     🔬 Enhancement ({rec_state}): {rec_label} {rec_prob:.1%}{pr}  [paper-only — not for staking]")
+                    src = f" [{p.get('enhancement_price_source')}]" if p.get("enhancement_price_source") else ""
+                    edge = p.get("enhancement_edge_sample")
+                    edge_txt = f" edge {float(edge):+.0%}" if isinstance(edge, (int,float)) else ""
+                    print(f"     🔬 {rec_label} {rec_prob:.0%} @ {rec_price:.2f}{book}{edge_txt}{src}")
+                # Unpriced / research-only enhancements are intentionally
+                # hidden: the EV selector already prefers priced markets, and
+                # showing "Home O0.5 (unpriced)" on every favourite is noise.
         print()
     print("⚠️  Flat stakes only. Best odds inflate ROI (~halve it).")
     print("⚠️  Bet only what you can afford to lose.")
