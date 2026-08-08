@@ -32,6 +32,8 @@ jobs:
       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
       CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
       CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
       # The Odds API multi-key ring (comma-separated). Without this mapping the
       # capture step soft-no-ops on every Actions run (keys never reach env).
       ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}

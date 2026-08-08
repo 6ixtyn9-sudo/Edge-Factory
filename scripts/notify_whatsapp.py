@@ -38,6 +38,7 @@ from edgefactory.whatsapp import (  # noqa: E402
     format_whatsapp_summary,
     send_callmebot_whatsapp,
     send_meta_whatsapp_cloud,
+    send_telegram_message,
     send_twilio_whatsapp,
 )
 
@@ -190,7 +191,7 @@ def _morning_baseline_file(target_date: str) -> Path:
     return LOCALDATA / f"picks_morning_{target_date}.json"
 
 
-def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_id: str | None, meta_recipient: str | None, meta_template: str, twilio_sid: str | None, twilio_token: str | None, twilio_number: str | None, callmebot_key: str | None, callmebot_phone: str | None) -> bool:
+def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_id: str | None, meta_recipient: str | None, meta_template: str, twilio_sid: str | None, twilio_token: str | None, twilio_number: str | None, telegram_token: str | None, telegram_chat_id: str | None, callmebot_key: str | None, callmebot_phone: str | None) -> bool:
     dispatched = False
     if meta_token and meta_phone_id and meta_recipient:
         logging.info(f"  └ Sending via Meta WhatsApp Cloud API to recipient ending in ...{meta_recipient[-4:]}")
@@ -220,6 +221,19 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ Twilio Dispatch Exception: {exc}")
+    if telegram_token and telegram_chat_id:
+        logging.info(f"  └ Sending via Telegram Bot API to chat ending in ...{str(telegram_chat_id)[-4:]}")
+        try:
+            resp = send_telegram_message(
+                bot_token=telegram_token,
+                chat_id=telegram_chat_id,
+                message_text=message_text,
+            )
+            result = resp.get("result", {})
+            logging.info(f"    └ Telegram Success message_id={result.get('message_id', 'OK')}")
+            dispatched = True
+        except Exception as exc:
+            logging.error(f"    └ Telegram Dispatch Exception: {exc}")
     if callmebot_key and callmebot_phone:
         logging.info(f"  └ Sending via CallMeBot API to phone ending in ...{callmebot_phone[-4:]}")
         logging.info(
@@ -319,13 +333,16 @@ def main() -> int:
     twilio_sid = os.environ.get("TWILIO_ACCOUNT_SID")
     twilio_token = os.environ.get("TWILIO_AUTH_TOKEN")
     twilio_number = os.environ.get("TWILIO_WHATSAPP_NUMBER")
+    telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    telegram_chat_id = os.environ.get("TELEGRAM_CHAT_ID")
     callmebot_key = os.environ.get("CALLMEBOT_APIKEY")
     callmebot_phone = os.environ.get("CALLMEBOT_PHONE") or meta_recipient
 
     has_meta = bool(meta_token and meta_phone_id and meta_recipient)
     has_twilio = bool(twilio_sid and twilio_token and twilio_number and meta_recipient)
+    has_telegram = bool(telegram_token and telegram_chat_id)
     has_callmebot = bool(callmebot_key and callmebot_phone)
-    if not any((has_meta, has_twilio, has_callmebot)):
+    if not any((has_meta, has_twilio, has_telegram, has_callmebot)):
         logging.warning("⚠️ No active WhatsApp Business credentials detected. Skipping operational notification.")
         return 0
 
@@ -431,6 +448,8 @@ def main() -> int:
             twilio_sid=twilio_sid,
             twilio_token=twilio_token,
             twilio_number=twilio_number,
+            telegram_token=telegram_token,
+            telegram_chat_id=telegram_chat_id,
             callmebot_key=callmebot_key,
             callmebot_phone=callmebot_phone,
         )
@@ -454,6 +473,8 @@ def main() -> int:
             twilio_sid=twilio_sid,
             twilio_token=twilio_token,
             twilio_number=twilio_number,
+            telegram_token=telegram_token,
+            telegram_chat_id=telegram_chat_id,
             callmebot_key=callmebot_key,
             callmebot_phone=callmebot_phone,
         )
@@ -481,6 +502,8 @@ def main() -> int:
             twilio_sid=twilio_sid,
             twilio_token=twilio_token,
             twilio_number=twilio_number,
+            telegram_token=telegram_token,
+            telegram_chat_id=telegram_chat_id,
             callmebot_key=callmebot_key,
             callmebot_phone=callmebot_phone,
         )
@@ -503,6 +526,8 @@ def main() -> int:
             twilio_sid=twilio_sid,
             twilio_token=twilio_token,
             twilio_number=twilio_number,
+            telegram_token=telegram_token,
+            telegram_chat_id=telegram_chat_id,
             callmebot_key=callmebot_key,
             callmebot_phone=callmebot_phone,
         )
