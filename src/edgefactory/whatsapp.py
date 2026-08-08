@@ -207,7 +207,7 @@ def _tg_short_kickoff(kickoff: str) -> str:
 
 
 def _tg_pick_card(p: dict[str, Any]) -> str:
-    """A single Telegram pick rendered as a compact two-line card."""
+    """A single Telegram pick rendered as a spaced three-line card."""
     match = str(p.get("match", "?"))
     selection = str(p.get("pick", "?")).upper()
     ko = _tg_short_kickoff(format_kickoff(p))
@@ -223,9 +223,24 @@ def _tg_pick_card(p: dict[str, Any]) -> str:
         except (TypeError, ValueError):
             odds_txt = str(odds_val)
     book_txt = f"  ·  {book}" if book else ""
-    line1 = f"  {match}"
-    line2 = f"     ➜ {selection}  @ {odds_txt}{book_txt}   [{prob:.0f}% · {ko} · {rule}]"
-    return f"{line1}\n{line2}"
+    lines = [
+        f"  {match}",
+        f"     ➜ {selection}  @ {odds_txt}{book_txt}   [{prob:.0f}% · {ko} · {rule}]",
+    ]
+    # Enhancement / combo line (🔥 when registry-eligible and priced, else 🔬)
+    enh_label = p.get("enhancement_label")
+    enh_prob = p.get("enhancement_probability")
+    if enh_label:
+        prob_txt = ""
+        if enh_prob is not None:
+            try:
+                prob_txt = f" {float(enh_prob):.0%}"
+            except (TypeError, ValueError):
+                prob_txt = ""
+        lines.append(f"     {enhancement_marker(p)} {enh_label}{prob_txt}")
+    # Trailing blank line so picks are visually separated in the Telegram render.
+    lines.append("")
+    return "\n".join(lines)
 
 
 _TG_BUCKET_META = {
@@ -286,7 +301,9 @@ def format_telegram_official(target_date: str, picks: list[dict[str, Any]],
         lines.append("")
 
     lines.append("Flat stakes only. Bet only what you can afford to lose.")
-    return "\n".join(lines).rstrip()
+    text = "\n".join(lines)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.rstrip()
 
 
 def format_telegram_shadow(target_date: str, picks: list[dict[str, Any]],
@@ -334,7 +351,9 @@ def format_telegram_shadow(target_date: str, picks: list[dict[str, Any]],
     if len(picks) > shown:
         lines.append(f"… +{len(picks) - shown} more available in localdata/picks_next_2days.json")
     lines.append("Research only. Each stream's rolling record is shown above its header.")
-    return "\n".join(lines).rstrip()
+    text = "\n".join(lines)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.rstrip()
 
 
 def format_telegram_discovery(target_date: str, picks: list[dict[str, Any]]) -> str:
