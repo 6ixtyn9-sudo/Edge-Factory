@@ -455,8 +455,15 @@ def load_rolling_audit_hit_rates() -> dict[str, float]:
     return {}
 
 
-def compute_dynamic_enhancement(con, pick: dict) -> dict:
-    """Query the local database to find deep league & team context and determine the single highest probable enhancement."""
+def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = None) -> dict:
+    """Query the local database to find deep league & team context and determine
+    the single highest probable enhancement.
+
+    When prices_index is supplied, candidate enhancements are priced from the
+    captured odds and ranked by REAL edge (probability * best_odds - 1), not by
+    raw probability. This is what prevents Home Team Over 0.5 Goals from being
+    recommended on every home favourite: a 92% event at 1.08 odds is not a tip.
+    """
     out = {
         "recommended_enhancement": None,
         "enhancement_probability": 0.0,
@@ -868,72 +875,90 @@ def compute_dynamic_enhancement(con, pick: dict) -> dict:
             })
 
     if candidates:
-        # Sort by expected EV to surface lucrative picks first.
-        # This maps markets to typical estimated odds to ensure juicy bets win when viable
-        EST_ODDS = {
-            "goal_range_0_1": 3.50,
-            "goal_range_2_3": 2.05,
-            "goal_range_4_5": 4.50,
-            "goal_range_4_6": 3.00,
-            "goal_range_6_plus": 8.00,
-            "goal_range_7_plus": 12.00,
-            "exact_0": 9.00,
-            "exact_1": 4.50,
-            "exact_2": 3.60,
-            "exact_3": 4.00,
-            "exact_4": 5.50,
-            "exact_5": 8.00,
-            "match_over_25": 1.85,
-            "match_over_35": 3.00,
-            "match_over_45": 5.00,
-            "btts_yes": 1.75
-        }
-        
-        def get_combo_odds(m):
-            if m == "match_over_15": return 1.30  # Realistic plain-market odds (match O1.5)
-            if m == "match_over_25": return 1.55  # Realistic plain-market odds (match O2.5)
-            if m == "btts_yes": return 2.50       # Realistic plain-market odds (BTTS-Yes)
-            if m in EST_ODDS: return EST_ODDS[m]
-            if "under_35" in m or "under_45" in m or "under_55" in m: return 1.01
-            if "under_25" in m: return 1.10
-            return 1.05
-            
-        def is_lucrative_combo_leg(market):
-            return market in ["match_over_25", "match_over_15", "btts_yes", "home_over_15", "away_over_15", "goal_range_2_3", "goal_range_4_5"]
-            
-        # Pure Tiered Strike-Rate Sorting:
-        # We completely strip out "Expected Value" calculations for the final sort to prevent overfitting to high-odds/low-probability lotto tickets.
-        # Instead, we force the absolute safest, highest-probability markets to the top, provided they meet minimum viability rules.
-        def get_safety_tier(m, prob):
-            # Tier 1: The Premium Bread-and-Butter (Match Winner + Over 1.5 or Over 2.5) IF they have > 45% hit rate
-            if m in ["match_over_15", "match_over_25"] and prob >= 0.45: return 6
-            
-            # Tier 2: Goal Ranges (Highly accurate, extremely lucrative acca legs)
-            if "goal_range" in m and prob >= 0.45: return 5
-            
-            # Tier 3: BTTS Combos
-            if m == "btts_yes" and prob >= 0.45: return 4
-            
-            # Tier 4: Safe standard Team goals
-            if "over_05" in m and prob >= 0.75: return 3
-            
-            # Tier 5: Safe isolated Totals
-            if m == "match_over_35" and prob >= 0.30: return 2
-            
-            # Tier 6: The unbettable 1.05 junk (Under 3.5, Under 4.5) pushed to the bottom
-            return 1
+        # Operator opt-outs (2026-08-08): BTTS-Yes has a coin-flip track record
+        # in the rolling audit and is excluded from recommendations regardless
+        # of edge. Goal ranges have no captured price source and are removed
+        # by the "must be priced" filter below.
+        EXCLUDED_MARKETS = {"btts_yes"}
 
-        # Sort strictly by: 1) Safety Tier, 2) Raw Probability (to ensure the absolute highest hit rate wins the tie-breaker)
-        candidates.sort(key=lambda x: (get_safety_tier(x["market"], x["probability"]), x["probability"]), reverse=True)
-        out["event_notes"] = candidates
-        best = candidates[0]
+        # Hard filters for the EV-ranked layer:
+        #   - must map to a captured market (kills goal_range_*)
+        #   - must have a captured price (zero network, zero credits — the
+        #     prices_index was built from cached captures earlier in the run)
+        #   - must offer >= +3% edge at the best captured price
+        #   - probability must sit in [25%, 90%]: sub-25% is lotto noise,
+        #     >90% is an obvious outcome with no real value even at best odds
+        MIN_EDGE = 0.03
+        MIN_PROB = 0.25
+        MAX_PROB = 0.90
+
+        ev_candidates = []
+        for c in candidates:
+            market = c["market"]
+            if market in EXCLUDED_MARKETS:
+                continue
+            if prices_index is not None:
+                # Price this candidate in a throwaway probe without mutating
+                # the real pick. attach_enhancement_price only reads home/away
+                # and recommended_enhancement.
+                probe = dict(pick)
+                probe["recommended_enhancement"] = market
+                attach_enhancement_price(probe, prices_index)
+                if not probe.get("enhancement_priced"):
+                    continue
+                price = float(probe["enhancement_price"])
+                edge = float(c["probability"]) * price - 1.0
+                c = dict(c)
+                c["enhancement_price"] = round(price, 3)
+                c["enhancement_price_source"] = probe.get("enhancement_price_source")
+                c["enhancement_price_book"] = probe.get("enhancement_price_book")
+                c["enhancement_edge_sample"] = round(edge, 4)
+            else:
+                edge = 0.0  # legacy offline path: no price available
+            prob = float(c["probability"])
+            if prob < MIN_PROB or prob > MAX_PROB:
+                continue
+            if edge < MIN_EDGE:
+                continue
+            c["ev_rank_key"] = (edge, prob)
+            ev_candidates.append(c)
+
+        if ev_candidates:
+            ev_candidates.sort(key=lambda x: x["ev_rank_key"], reverse=True)
+            out["event_notes"] = ev_candidates
+            best = ev_candidates[0]
+        else:
+            # Nothing passed the EV / hard filters. Fall back to the legacy
+            # safety-tier ranking so the pick still carries a research marker,
+            # but it will be unpriced (🔬, not 🔥).
+            def get_safety_tier(m, prob):
+                if m in ["match_over_15", "match_over_25"] and prob >= 0.45: return 6
+                if "goal_range" in m and prob >= 0.45: return 5
+                if m == "btts_yes" and prob >= 0.45: return 4
+                if "over_05" in m and prob >= 0.75: return 3
+                if m == "match_over_35" and prob >= 0.30: return 2
+                return 1
+            candidates.sort(
+                key=lambda x: (get_safety_tier(x["market"], x["probability"]), x["probability"]),
+                reverse=True,
+            )
+            out["event_notes"] = candidates
+            best = candidates[0]
+
         out.update({
             "recommended_enhancement": best["market"],
             "enhancement_probability": round(best["probability"], 4),
             "enhancement_reason": best["reason"],
-            "enhancement_label": best["label"]
+            "enhancement_label": best["label"],
         })
-        
+        # Carry EV / price metadata through when known. The subsequent
+        # attach_enhancement_price call in main() is idempotent and will
+        # re-derive the same fields.
+        for k in ("enhancement_price", "enhancement_price_source",
+                  "enhancement_price_book", "enhancement_edge_sample"):
+            if k in best:
+                out[k] = best[k]
+
     return out
 
 
@@ -2836,7 +2861,7 @@ def main():
             p["statistical_comment"] = get_statistical_comment(con, p.get("pick"), p.get("avg_p"), p.get("n_way", 3))
             
             # Compute deep dynamic enhancement overlay
-            enh = compute_dynamic_enhancement(con, p)
+            enh = compute_dynamic_enhancement(con, p, prices_index)
             p.update(enh)
 
             # Real-odds overlay: attach best captured price for mappable markets
