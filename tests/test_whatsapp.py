@@ -193,3 +193,30 @@ def test_main_slate_combo_marker_is_state_and_price_honest():
     certified = dict(pick, _enh_status="ELIGIBLE", _enh_priced=True)
     msg = format_whatsapp_summary("2026-08-05", [certified])
     assert "🔥 *Combo:* Home Win + Over 2.5 (51.0%)" in msg
+
+
+@patch("urllib.request.urlopen")
+def test_send_telegram_message_success(mock_urlopen):
+    from edgefactory.whatsapp import send_telegram_message
+    fake_resp = MagicMock()
+    fake_resp.read.return_value = b'{"ok": true, "result": {"message_id": 42}}'
+    fake_resp.__enter__.return_value = fake_resp
+    fake_resp.__exit__.return_value = False
+    mock_urlopen.return_value = fake_resp
+    resp = send_telegram_message("TOKEN", "12345", "hello world")
+    assert resp["ok"] is True
+    req = mock_urlopen.call_args[0][0]
+    assert req.full_url == "https://api.telegram.org/botTOKEN/sendMessage"
+    assert req.get_method() == "POST"
+
+
+@patch("urllib.request.urlopen")
+def test_send_telegram_message_raises_on_api_error(mock_urlopen):
+    from edgefactory.whatsapp import send_telegram_message
+    fake_resp = MagicMock()
+    fake_resp.read.return_value = b'{"ok": false, "description": "chat not found"}'
+    fake_resp.__enter__.return_value = fake_resp
+    fake_resp.__exit__.return_value = False
+    mock_urlopen.return_value = fake_resp
+    with pytest.raises(RuntimeError, match="Telegram API rejected"):
+        send_telegram_message("TOKEN", "12345", "hi")

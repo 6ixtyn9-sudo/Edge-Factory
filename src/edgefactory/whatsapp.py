@@ -1,9 +1,10 @@
 """WhatsApp Business professional notification engine.
 
-Supports three robust dispatch mechanisms:
+Supports four dispatch mechanisms:
 1. Official Meta WhatsApp Cloud API (with auto Message Template fallback).
 2. Twilio WhatsApp API.
-3. CallMeBot API (Free personal operational alerts).
+3. Telegram Bot API (free, no per-message quota).
+4. CallMeBot API (Free personal operational alerts, quota-limited).
 """
 
 from __future__ import annotations
@@ -241,6 +242,37 @@ def send_twilio_whatsapp(
     req = urllib.request.Request(url, data=data, headers=headers, method="POST")
     with urllib.request.urlopen(req) as resp:
         return json.loads(resp.read().decode("utf-8"))
+
+
+def send_telegram_message(
+    bot_token: str,
+    chat_id: str,
+    message_text: str,
+    disable_preview: bool = True,
+) -> dict[str, Any]:
+    """Send a plain-text message via the Telegram Bot API.
+
+    Telegram's HTML parse mode would collide with our '*' markdown, so we send
+    plain text. The 4096-char body cap is handled upstream by the chunker.
+    """
+    url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+    payload = {
+        "chat_id": str(chat_id),
+        "text": message_text,
+        "disable_web_page_preview": bool(disable_preview),
+    }
+    data = urllib.parse.urlencode(payload).encode("utf-8")
+    req = urllib.request.Request(url, data=data, method="POST")
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        err_body = exc.read().decode("utf-8", "replace")
+        raise RuntimeError(f"Telegram API error {exc.code}: {err_body[:300]}") from exc
+    if not body.get("ok"):
+        raise RuntimeError(f"Telegram API rejected message: {str(body)[:300]}")
+    return body
+
 
 
 def callmebot_request_len(phone: str, apikey: str, message_text: str) -> int:
