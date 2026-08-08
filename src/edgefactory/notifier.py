@@ -227,12 +227,14 @@ def _tg_pick_card(p: dict[str, Any]) -> str:
         f"  {match}",
         f"     ➜ {selection}  @ {odds_txt}{book_txt}   [{prob:.0f}% · {ko} · {rule}]",
     ]
-    # Enhancement / combo line (🔥 when registry-eligible and priced, else 🔬).
-    # When the EV selector attached a real price, show price, edge, and source
-    # so the operator can see WHY the market was picked instead of Home O0.5.
+    # Enhancement / combo line. Mirror the txt report: only render when the
+    # EV selector attached a real captured price. Unpriced fallback picks
+    # (the legacy "Home O0.5 on every favourite" path) are hidden entirely —
+    # no price means no recommendation, no noise on Telegram.
     enh_label = p.get("enhancement_label")
     enh_prob = p.get("enhancement_probability")
-    if enh_label:
+    enh_priced = bool(p.get("enhancement_priced"))
+    if enh_label and enh_priced:
         bits = [enhancement_marker(p), enh_label]
         if enh_prob is not None:
             try:
