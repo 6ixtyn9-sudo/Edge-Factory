@@ -168,6 +168,196 @@ def format_whatsapp_discovery_summary(target_date: str, picks: list[dict[str, An
         lines.append("ℹ️ These are discovery alerts only. The pipeline has not attached a fully actionable bet state yet.")
     return "\n".join(lines)
 
+# ---------------------------------------------------------------------------
+# Telegram-native formatters
+#
+# The WhatsApp formatters above use *asterisks* for Markdown and pipe glyphs
+# that render as literal characters on Telegram (no parse mode is set because
+# our '*' characters are not valid Telegram MarkdownV2). These formatters emit
+# clean, human-readable plain text with consistent spacing and alignment.
+# ---------------------------------------------------------------------------
+
+
+def _tg_short_kickoff(kickoff: str) -> str:
+    """Render kickoff compactly for Telegram.
+
+    Accepts values like:
+      '08-08, 19:00'
+      '2026-08-08T21:00:00+02:00'
+      '13:30'
+      '2026-08-08 13:00:00'
+    Returns 'HH:MM' when a time is recognisable, else the original trimmed.
+    """
+    if not kickoff or kickoff == "n/a":
+        return "—"
+    k = str(kickoff).strip()
+    # ISO datetime
+    m = re.search(r"T(\d{2}):(\d{2})", k)
+    if m:
+        return f"{m.group(1)}:{m.group(2)}"
+    # 'YYYY-MM-DD HH:MM:SS'
+    m = re.search(r"(\d{2}):(\d{2})(?::\d{2})?$", k)
+    if m:
+        return f"{m.group(1)}:{m.group(2)}"
+    # 'DD-MM, HH:MM'
+    m = re.search(r"(\d{1,2})-(\d{1,2}),?\s*(\d{2}):(\d{2})", k)
+    if m:
+        return f"{m.group(3)}:{m.group(4)}"
+    return k
+
+
+def _tg_pick_card(p: dict[str, Any]) -> str:
+    """A single Telegram pick rendered as a compact two-line card."""
+    match = str(p.get("match", "?"))
+    selection = str(p.get("pick", "?")).upper()
+    ko = _tg_short_kickoff(format_kickoff(p))
+    prob = float(p.get("avg_p") or 0)
+    rule = _pick_rule_label(p)
+    book = p.get("bookmaker") or ""
+    odds_val = p.get("odds")
+    if odds_val is None:
+        odds_txt = "no odds"
+    else:
+        try:
+            odds_txt = f"{float(odds_val):.2f}"
+        except (TypeError, ValueError):
+            odds_txt = str(odds_val)
+    book_txt = f"  ·  {book}" if book else ""
+    line1 = f"  {match}"
+    line2 = f"     ➜ {selection}  @ {odds_txt}{book_txt}   [{prob:.0f}% · {ko} · {rule}]"
+    return f"{line1}\n{line2}"
+
+
+_TG_BUCKET_META = {
+    "CERTIFIED_CLEAN": ("✅", "CERTIFIED CLEAN", "Strong edges — pushable"),
+    "CAUTION": ("⚠️", "CAUTION", "Qualitative / unrated context"),
+    "SKIPPED_VETO": ("🚫", "SKIPPED_VETO", "Vetoed by context/purity"),
+    "WATCHLIST_NO_ODDS": ("🔎", "WATCHLIST_NO_ODDS", "No matched price yet"),
+    "WATCHLIST_UNCORROBORATED_PRICE": ("🧪", "WATCHLIST_UNCORROBORATED_PRICE", "ScoutingStats sole-source"),
+    "WATCHLIST_SUSPECT_PRICE": ("☣️", "WATCHLIST_SUSPECT_PRICE", "Fuzzy price match"),
+    "WATCHLIST_UNKNOWN_CTX": ("🧩", "WATCHLIST_UNKNOWN_CTX", "Unknown league context"),
+}
+
+
+def _tg_section_header(emoji: str, title: str, subtitle: str | None,
+                      record: str | None) -> list[str]:
+    head = f"{emoji}  {title}"
+    out = [head]
+    bits = []
+    if subtitle:
+        bits.append(subtitle)
+    if record:
+        bits.append(record)
+    if bits:
+        out.append("     " + "  ·  ".join(bits))
+    return out
+
+
+def format_telegram_official(target_date: str, picks: list[dict[str, Any]],
+                             is_late: bool = False) -> str:
+    """Clean Telegram render of the operational (CLEAN + CAUTION) slate."""
+    lines: list[str] = []
+    if is_late:
+        lines.append("🚨  LATE-SLATE ALERT")
+        lines.append(f"     {target_date}  ·  intraday discovery scan")
+    else:
+        lines.append("⚽  EDGE FACTORY — OFFICIAL PICKS")
+        lines.append(f"     {target_date}  ·  morning slate")
+    lines.append("")
+
+    if not picks and not is_late:
+        lines.append("No certified edges for this window.")
+        lines.append("Late-slate fixtures are still being scanned.")
+        return "\n".join(lines)
+
+    by_bucket: dict[str, list[dict[str, Any]]] = {}
+    for p in picks:
+        by_bucket.setdefault(str(p.get("bucket", "UNKNOWN")), []).append(p)
+
+    for bucket in ("CERTIFIED_CLEAN", "CAUTION"):
+        rows = by_bucket.get(bucket, [])
+        if not rows:
+            continue
+        emoji, title, subtitle = _TG_BUCKET_META[str(bucket)]
+        lines.extend(_tg_section_header(emoji, title, subtitle, None))
+        lines.append(f"     {len(rows)} pick{'s' if len(rows) != 1 else ''}")
+        for p in sorted(rows, key=lambda x: -float(x.get("avg_p") or 0)):
+            lines.append(_tg_pick_card(p))
+        lines.append("")
+
+    lines.append("Flat stakes only. Bet only what you can afford to lose.")
+    return "\n".join(lines).rstrip()
+
+
+def format_telegram_shadow(target_date: str, picks: list[dict[str, Any]],
+                           stats: dict[str, Any] | None = None,
+                           max_lines: int = 200) -> str:
+    """Clean Telegram render of the full shadow slate."""
+    picks = [p for p in picks if p.get("bucket") in SHADOW_BUCKETS]
+    lines: list[str] = []
+    lines.append("🌑  EDGE FACTORY — SHADOW SLATE")
+    lines.append(f"     {target_date}  ·  NOT pushed as bets")
+    lines.append("")
+
+    if not picks:
+        lines.append("No vetoed or watchlist selections today.")
+        return "\n".join(lines)
+
+    ordered = [
+        "SKIPPED_VETO",
+        "WATCHLIST_UNCORROBORATED_PRICE",
+        "WATCHLIST_SUSPECT_PRICE",
+        "WATCHLIST_NO_ODDS",
+        "WATCHLIST_UNKNOWN_CTX",
+    ]
+    shown = 0
+    for bucket in ordered:
+        if shown >= max_lines:
+            break
+        rows = sorted(
+            (p for p in picks if p.get("bucket") == bucket),
+            key=lambda x: -float(x.get("avg_p") or 0),
+        )
+        if not rows:
+            continue
+        emoji, title, subtitle = _TG_BUCKET_META[str(bucket)]
+        record = format_stream_record(bucket, stats)
+        lines.extend(_tg_section_header(emoji, title, subtitle, record))
+        lines.append(f"     {len(rows)} selection{'s' if len(rows) != 1 else ''}")
+        for p in rows:
+            if shown >= max_lines:
+                break
+            lines.append(_tg_pick_card(p))
+            shown += 1
+        lines.append("")
+
+    if len(picks) > shown:
+        lines.append(f"… +{len(picks) - shown} more available in localdata/picks_next_2days.json")
+    lines.append("Research only. Each stream's rolling record is shown above its header.")
+    return "\n".join(lines).rstrip()
+
+
+def format_telegram_discovery(target_date: str, picks: list[dict[str, Any]]) -> str:
+    lines = [
+        "🛰️  EDGE FACTORY — DISCOVERY WATCHLIST",
+        f"     {target_date}  ·  not present in the morning run",
+        "",
+    ]
+    if not picks:
+        lines.append("No new same-day watchlist discoveries.")
+        return "\n".join(lines)
+    for p in sorted(picks, key=lambda x: -float(x.get("avg_p") or 0)):
+        lines.append(_tg_pick_card(p))
+    lines.append("")
+    lines.append("Discovery alerts only — not yet fully actionable.")
+    return "\n".join(lines)
+
+
+def format_telegram_heartbeat(target_date: str, message: str) -> str:
+    return f"💚  Edge Factory heartbeat — {target_date}\n     {message}"
+
+
+
 def send_meta_whatsapp_cloud(
     token: str,
     phone_number_id: str,
