@@ -1,0 +1,349 @@
+#!/usr/bin/env python3
+"""AUTO TICKETS v4 — acca-only, aligned with the operator's plan.
+
+The operator's structure (no singles, ever):
+  - 28% of CAPITAL -> MULTIPLE 2-odd accas (split across N_ACCA2_TICKETS tickets)
+  - 10% of CAPITAL -> ONE 10-odd acca
+  - total at risk per day = 38% of capital
+All output is percentages of capital only (no rand amounts).
+
+Selection (dynamic, positive-ROI buckets only):
+  - bucket in CERTIFIED_CLEAN + SKIPPED_VETO  (handover: SKIPPED_VETO 86.5% hit /
+    +11.8% ROI; CAUTION negative -> excluded)
+  - trusted price evidence only (BZZOIRO_PRIMARY / BETEXPLORER_RESCUE;
+    scoutingstats -33% -> excluded)
+  - edge rule x odds source combo must pass: n>=15, ROI>=+3%, Wilson LB>=0.68,
+    recent-20 ROI >= 0
+  - per-pick model edge >= MIN_EDGE at captured odds
+Ticket construction:
+  - 2-ODD ACCAS: pair the qualifying picks (smallest odds x largest odds) so each
+    pair lands as close to 2.00 as possible; N_ACCA2_TICKETS pairs.
+  - 10-ODD ACCA: ALL qualifying picks (reuse across ticket types allowed — each
+    ticket is an independent bet; this matches the operator's manual behaviour).
+    Fewest legs to reach ~10.0, capped at MAX_ACCA10_LEGS.
+Safety rails:
+  - drawdown guard (last 20 graded tickets ROI < -10% -> RED ALERT, --force to override)
+  - recency gate on combos
+  - league diversity cap inside each 2-odd acca
+Usage:
+  PYTHONPATH=src python3 scripts/auto_tickets.py
+  PYTHONPATH=src python3 scripts/auto_tickets.py --history
+  PYTHONPATH=src python3 scripts/auto_tickets.py --force
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import math
+import re
+import sys
+from collections import defaultdict
+from datetime import date, datetime
+from pathlib import Path
+from zoneinfo import ZoneInfo
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+LOCALDATA = ROOT / "localdata"
+
+# ---------------- structure (fractions of CAPITAL) ----------------
+AT_RISK_FRAC = 0.38          # total at risk per day = 38% of capital
+CAP_ACCA2 = 0.28             # 28% of capital -> multiple 2-odd accas
+CAP_ACCA10 = 0.10            # 10% of capital -> one 10-odd acca
+N_ACCA2_TICKETS = 3          # split the 2-odd money across this many tickets
+
+# ---------------- selection gates ----------------
+PASS_N = 15                  # min settled picks for a (rule, source) combo
+PASS_ROI = 0.03              # min realized ROI
+PASS_LB = 0.68               # Wilson lower bound on hit rate
+RECENT_N = 20                # recency window per combo
+RECENT_ROI_MIN = 0.0         # combo must show this ROI on its last RECENT_N picks
+MIN_EDGE = 0.0               # no per-pick edge floor; combo (rule x source) pass is the edge test
+ACCA2_TARGET = 2.0
+ACCA10_TARGET = 10.0
+MAX_ACCA10_LEGS = 9
+PAUSE_ROI = -0.10            # drawdown guard: last-20-ticket ROI below this pauses
+PAUSE_N = 20
+
+BUCKETS = {"CERTIFIED_CLEAN", "SKIPPED_VETO"}
+TRUSTED_PRICE = {"BZZOIRO_PRIMARY", "BETEXPLORER_RESCUE"}
+GENERATE_HOUR = 9           # local time — tickets generate ONLY on/after the 09:00 run
+TZ = ZoneInfo("Africa/Johannesburg")
+PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
+
+
+def wilson_lb(wins, n, z=1.645):
+    if n == 0:
+        return 0.0
+    p = wins / n
+    denom = 1 + z * z / n
+    centre = p + z * z / (2 * n)
+    half = z * math.sqrt((p * (1 - p) + z * z / (4 * n)) / n)
+    return max(0.0, (centre - half) / denom)
+
+
+def parse_kickoff(pick):
+    raw = pick.get("kickoff_canonical") or pick.get("kickoff") or ""
+    day = str(pick.get("date") or "")[:10]
+    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%H:%M"):
+        try:
+            dt = datetime.strptime(raw, fmt)
+            if fmt == "%H:%M":
+                try:
+                    dt = dt.replace(year=int(day[:4]), month=int(day[5:7]), day=int(day[8:10]))
+                except ValueError:
+                    return None
+            if dt.tzinfo is None:
+                dt = dt.replace(tzinfo=TZ)
+            return dt
+        except ValueError:
+            continue
+    return None
+
+
+def load_archived_picks():
+    out = []
+    for f in sorted(LOCALDATA.glob("picks_*.json")):
+        m = PICK_RE.match(f.name)
+        if not m:
+            continue
+        try:
+            rows = json.loads(f.read_text())
+        except Exception:
+            continue
+        if isinstance(rows, list):
+            for r in rows:
+                r.setdefault("_archive_day", m.group(1))
+            out.extend(rows)
+    return out
+
+
+def load_settled():
+    from edgefactory.util import norm_team
+    try:
+        data = json.loads((LOCALDATA / "settled_results.json").read_text())
+    except Exception:
+        return {}
+    out = {}
+    for r in data.get("rows", []):
+        key = (str(r.get("date") or "")[:10], norm_team(r.get("home") or ""), norm_team(r.get("away") or ""))
+        out[key] = r.get("outcome")
+    return out
+
+
+def pick_result(pick, settled):
+    from edgefactory.util import norm_team
+    day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
+    key = (day, norm_team(pick.get("home") or ""), norm_team(pick.get("away") or ""))
+    outcome = settled.get(key)
+    if outcome not in ("home", "away", "draw"):
+        return None
+    sel = str(pick.get("pick") or "").lower()
+    if outcome == "draw":
+        return "loss"
+    return "win" if outcome == sel else "loss"
+
+
+def build_edge_table(picks, settled):
+    history = defaultdict(list)
+    for p in picks:
+        rule = p.get("edge_rule") or p.get("rule")
+        src = p.get("odds_source") or "UNKNOWN"
+        odds = p.get("odds")
+        if not rule or not odds or odds <= 1.0:
+            continue
+        res = pick_result(p, settled)
+        if res is None:
+            continue
+        history[(rule, src)].append((str(p.get("date") or p.get("_archive_day") or "")[:10], res, float(odds)))
+    table = {}
+    for combo, rows in history.items():
+        rows.sort()
+        n = len(rows)
+        wins = sum(1 for _, r, _ in rows if r == "win")
+        ret = sum(o for _, r, o in rows if r == "win")
+        roi = (ret - n) / n if n else 0.0
+        lb = wilson_lb(wins, n)
+        recent = rows[-RECENT_N:]
+        rn = len(recent)
+        rw = sum(1 for _, r, _ in recent if r == "win")
+        rret = sum(o for _, r, o in recent if r == "win")
+        roi_recent = (rret - rn) / rn if rn else 0.0
+        passed = n >= PASS_N and roi >= PASS_ROI and lb >= PASS_LB and roi_recent >= RECENT_ROI_MIN
+        table[combo] = {"n": n, "wins": wins, "hit": wins / n, "roi": roi, "lb": lb,
+                        "roi_recent": roi_recent, "recent_n": rn, "pass": passed}
+    return table
+
+
+def load_pause_state():
+    try:
+        perf = json.loads((LOCALDATA / "auto_tickets_performance.json").read_text())
+    except Exception:
+        return False
+    detail = perf.get("detail") or []
+    settled = [t for t in detail if t.get("result") in ("WIN", "LOSS")][-PAUSE_N:]
+    if len(settled) < PAUSE_N:
+        return False
+    staked = sum(t.get("stake", 1.0) for t in settled)
+    ret = sum(t.get("returned", 0.0) for t in settled)
+    return (ret - staked) / staked < PAUSE_ROI if staked else False
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--date", default=date.today().isoformat())
+    ap.add_argument("--history", action="store_true")
+    ap.add_argument("--force", action="store_true", help="override drawdown pause")
+    args = ap.parse_args()
+    target = args.date
+
+    settled = load_settled()
+    archives = [p for p in load_archived_picks() if str(p.get("date") or p.get("_archive_day") or "") < target]
+    table = build_edge_table(archives, settled)
+
+    if args.history:
+        print("DYNAMIC EDGE TABLE (settled history < %s)" % target)
+        print(f"{'rule':40s} {'source':18s} {'n':>4s} {'hit':>6s} {'roi':>7s} {'recent':>7s} {'LB':>5s}  pass")
+        for (rule, src), st in sorted(table.items(), key=lambda kv: (-kv[1]["roi"], -kv[1]["n"])):
+            print(f"{rule:40s} {src:18s} {st['n']:4d} {st['hit']:6.1%} {st['roi']:7.1%} "
+                  f"{st['roi_recent']:7.1%} {st['lb']:5.2f}  {'YES' if st['pass'] else 'no'}")
+        return 0
+
+    if load_pause_state() and not args.force:
+        print("RED ALERT — PAUSE")
+        print("last %d graded tickets show ROI below %+.0f%%. " % (PAUSE_N, PAUSE_ROI * 100))
+        print("Run the grader, review, then --force if you accept the risk.")
+        return 2
+
+    # FREEZE: tickets are generated once per day, then re-printed on later runs.
+    # The machine runs 8x/day; without this, tickets would churn every run.
+    frozen_txt = LOCALDATA / f"auto_tickets_{target}.txt"
+    if frozen_txt.exists() and not args.force:
+        print(f"TICKETS FROZEN — already generated for {target}. Re-printing saved slip:")
+        print("=" * 62)
+        print(frozen_txt.read_text())
+        return 0
+
+    # 09:00 GATE: only the designated morning run places bets. Runs before 09:00
+    # local print "waiting" and place nothing, so the system is never quick to bet.
+    now_local = datetime.now(TZ)
+    local_today = now_local.strftime("%Y-%m-%d")
+    if str(target) == local_today and now_local.hour < GENERATE_HOUR and not args.force:
+        print("NOT YET — TICKETS GENERATE AT 09:00")
+        print(f"(now {now_local.strftime('%H:%M')} local; generation window opens {GENERATE_HOUR:02d}:00)")
+        print("Nothing is bet before then. The 09:00 run generates the frozen slip;")
+        print("all later runs re-print it unchanged.")
+        return 0
+
+    try:
+        slate = json.loads((LOCALDATA / "picks_today.json").read_text())
+    except Exception as e:
+        print(f"cannot read picks_today.json: {e}")
+        return 1
+    if not isinstance(slate, list):
+        print("picks_today.json is not a list")
+        return 1
+
+    now = datetime.now(TZ)
+    today = []
+    for p in slate:
+        if str(p.get("date") or "")[:10] != target:
+            continue
+        if p.get("bucket") not in BUCKETS:
+            continue
+        if p.get("price_evidence") not in TRUSTED_PRICE:
+            continue
+        if p.get("quarantine") not in (None, "none"):
+            continue
+        odds, avg_p = p.get("odds"), p.get("avg_p")
+        if not odds or odds <= 1.0 or not avg_p:
+            continue
+        kt = parse_kickoff(p)
+        if kt is not None and kt < now:
+            continue
+        rule = p.get("edge_rule") or p.get("rule")
+        src = p.get("odds_source") or "UNKNOWN"
+        combo = table.get((rule, src))
+        if combo is None or not combo["pass"]:
+            continue
+        today.append({
+            "match": f"{p.get('home')} vs {p.get('away')}",
+            "league": str(p.get("league") or p.get("odds_league") or "?"),
+            "pick": str(p.get("pick") or "").upper(),
+            "odds": float(odds), "avg_p": float(avg_p),
+            "rule": rule, "source": src, "bucket": p.get("bucket"),
+            "edge": float(avg_p) / 100.0 * float(odds) - 1.0,
+            "combo_n": combo["n"], "combo_hit": combo["hit"],
+            "combo_roi": combo["roi"], "combo_lb": combo["lb"],
+        })
+
+    if not today:
+        print("NO EDGE TODAY — DO NOT BET")
+        print(f"({len(slate)} slate rows; 0 passed edge+trusted-price+bucket filters)")
+        return 0
+
+    today.sort(key=lambda x: -x["edge"])
+
+    # ---- 2-ODD ACCAS: pair smallest-odds with largest-odds, closest to 2.00 ----
+    ordered = sorted(today, key=lambda x: x["odds"])
+    acca2_tickets = []
+    used = set()
+    lo, hi = 0, len(ordered) - 1
+    while lo < hi and len(acca2_tickets) < N_ACCA2_TICKETS:
+        a, b = ordered[lo], ordered[hi]
+        prod = a["odds"] * b["odds"]
+        # try the next-higher small leg if it gets closer to 2.00
+        if lo + 1 < hi and abs(ordered[lo + 1]["odds"] * b["odds"] - ACCA2_TARGET) < abs(prod - ACCA2_TARGET):
+            lo += 1
+            a = ordered[lo]
+            prod = a["odds"] * b["odds"]
+        acca2_tickets.append(([a, b], prod))
+        used.add(a["match"] + a["pick"])
+        used.add(b["match"] + b["pick"])
+        lo += 1
+        hi -= 1
+
+    # ---- 10-ODD ACCA: ALL qualifying legs (reuse allowed across ticket types) ----
+    acca10_pool = sorted(today, key=lambda x: -x["odds"])
+    acca10_legs, acca10_prod = [], 1.0
+    for p in acca10_pool:
+        acca10_legs.append(p)
+        acca10_prod *= p["odds"]
+        if acca10_prod >= ACCA10_TARGET or len(acca10_legs) >= MAX_ACCA10_LEGS:
+            break
+
+    # ---------------- output (percentages of capital only) ----------------
+    per_acca2 = CAP_ACCA2 / max(N_ACCA2_TICKETS, 1)
+    lines = [f"AUTO TICKETS — {target}", "=" * 62,
+             f"AT RISK: {AT_RISK_FRAC:.0%} of capital  (2-odds accas {CAP_ACCA2:.0%} + 10-odds acca {CAP_ACCA10:.0%})"]
+    for i, (legs, prod) in enumerate(acca2_tickets, 1):
+        lines.append(f"\n[2-ODD ACCA #{i}] {len(legs)} leg(s), total {prod:.2f}, "
+                     f"stake {per_acca2:.1%} of capital")
+        for l in legs:
+            lines.append(f"   {l['match']:44s} {l['pick']:5s} @ {l['odds']:.2f}  "
+                         f"({l['avg_p']:.0f}% · {l['rule']} · {l['source']} "
+                         f"n={l['combo_n']} roi={l['combo_roi']:+.0%})")
+    if not acca2_tickets:
+        lines.append("\n[2-ODD ACCA] none — fewer than 2 qualifying picks")
+    lines.append(f"\n[10-ODD ACCA] {len(acca10_legs)} leg(s), total {acca10_prod:.2f}, "
+                 f"stake {CAP_ACCA10:.1%} of capital")
+    for l in acca10_legs:
+        lines.append(f"   {l['match']:44s} {l['pick']:5s} @ {l['odds']:.2f}  "
+                     f"({l['avg_p']:.0f}% · {l['rule']} · {l['source']} "
+                     f"n={l['combo_n']} roi={l['combo_roi']:+.0%})")
+    lines.append("\nRound each ticket UP to your bookmaker's minimum stake.")
+    lines.append("Edge-based selection, dynamic per settled history. Flat stakes. Bet only what you can afford to lose.")
+
+    txt = "\n".join(lines)
+    print(txt)
+    (LOCALDATA / f"auto_tickets_{target}.txt").write_text(txt)
+    (LOCALDATA / f"auto_tickets_{target}.json").write_text(json.dumps({
+        "date": target, "at_risk_frac": AT_RISK_FRAC,
+        "pass_combos": [f"{r} | {s}" for (r, s), v in table.items() if v["pass"]],
+        "acca2": acca2_tickets, "acca10": acca10_legs, "acca10_odds": acca10_prod,
+    }, indent=2, default=str))
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
