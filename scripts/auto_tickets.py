@@ -197,7 +197,13 @@ def load_pause_state():
     settled = [t for t in detail if t.get("result") in ("WIN", "LOSS")][-PAUSE_N:]
     if len(settled) < PAUSE_N:
         return False
-    staked = sum(t.get("stake", 1.0) for t in settled)
+    # Legacy slip tickets have stake=None (per the contract from
+    # scripts/auto_tickets_grade.py::load_tickets — the actual rand
+    # amount is not in the slip itself, the grader does not invent
+    # it). Treat None as 0.0 so legacy tickets do not inflate
+    # staked via the previous default of 1.0 (= 100% of capital per
+    # legacy ticket, which would dominate the ROI calculation).
+    staked = sum(t.get("stake") or 0.0 for t in settled)
     ret = sum(t.get("returned", 0.0) for t in settled)
     return (ret - staked) / staked < PAUSE_ROI if staked else False
 
@@ -269,8 +275,11 @@ def main():
         print(frozen_txt.read_text())
         return 0
 
-    # 09:00 GATE: only the designated morning run places bets. Runs before 09:00
-    # local print "waiting" and place nothing, so the system is never quick to bet.
+    # 12:00 SAST FREEZE (commit 715cf18): only the noon cron tick places
+    # bets. Runs before noon local print "waiting" and place nothing,
+    # so the system is never quick to bet. The 09:00 GATE in earlier
+    # versions of this comment was the pre-adaptive plan; the freeze
+    # moved to 12:00 to give the slate more time to fill in.
     now_local = datetime.now(TZ)
     local_today = now_local.strftime("%Y-%m-%d")
     if str(target) == local_today and now_local.hour < GENERATE_HOUR and not args.force:

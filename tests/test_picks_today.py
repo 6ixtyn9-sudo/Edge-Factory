@@ -465,3 +465,80 @@ def test_different_pick_side_does_not_collapse():
     out, removed = collapse_final_operational_picks(picks)
     assert removed == 0
     assert len(out) == 2
+
+
+# ============================================================
+# Contract 4: load_pause_state does not inflate staked on legacy
+# tickets (auto_tickets.py::load_pause_state)
+# (Regression: pre-fix default of 1.0 made legacy stake=None
+#  tickets count as 100% of capital each, tripping the pause gate
+#  on otherwise-healthy ROI. Verified: the gotcha was real but
+#  low-likelihood because legacy slips are rare. The fix: 0.0
+#  default, matching the "stake not recorded" contract.)
+# ============================================================
+
+
+def test_load_pause_state_treats_legacy_stake_none_as_zero(tmp_path, monkeypatch):
+    """Legacy slip tickets (stake=None) must not inflate the
+    pause-state staked total. Pre-fix default of 1.0 would
+    treat each None as 100% of capital per ticket, dominating
+    the ROI calculation. Post-fix: 0.0 default; legacy
+    tickets contribute nothing to the rolling-20 ROI."""
+    import auto_tickets
+
+    # 20 settled tickets: 18 new (real stake) + 2 legacy (stake=None).
+    # Without the fix, staked = 18*0.0933 + 2*1.0 = 3.68.
+    # With the fix,    staked = 18*0.0933 + 2*0.0 = 1.68.
+    detail = []
+    for i in range(18):
+        detail.append({
+            "date": "2026-07-01", "type": "acca2", "result": "WIN",
+            "odds": 1.96, "stake": 0.0933, "returned": 0.1829,
+            "legs": ["A vs B home @1.96"],
+        })
+    for i in range(2):
+        detail.append({
+            "date": "2026-08-09", "type": "acca2", "result": "WIN",
+            "odds": 1.96, "stake": None, "returned": 0.0,
+            "legs": ["X vs Y home @1.96"],
+        })
+    perf_file = tmp_path / "auto_tickets_performance.json"
+    perf_file.write_text(json.dumps({"detail": detail}))
+
+    monkeypatch.setattr(auto_tickets, "LOCALDATA", tmp_path)
+    paused = auto_tickets.load_pause_state()
+    # With 18 real-stake WINs and 2 legacy WINs:
+    # - pre-fix: staked=3.68, returned=3.29, ROI=-10.6% -> PAUSE=True
+    # - post-fix: staked=1.68, returned=3.29, ROI=+95.8% -> PAUSE=False
+    assert paused is False, \
+        "legacy stake=None should not pause the pipeline (got paused=True)"
+
+
+def test_load_pause_state_handles_short_history(tmp_path, monkeypatch):
+    """With fewer than PAUSE_N=20 settled tickets, the function
+    returns False (no pause). Pre-fix had the same behaviour;
+    this test pins it so the legacy-stake fix doesn't break the
+    short-history case."""
+    import auto_tickets
+
+    detail = [
+        {"date": "2026-08-01", "type": "acca2", "result": "WIN",
+         "odds": 1.96, "stake": 0.0933, "returned": 0.1829,
+         "legs": ["A vs B"]},
+    ]  # only 1 settled, PAUSE_N=20
+    perf_file = tmp_path / "auto_tickets_performance.json"
+    perf_file.write_text(json.dumps({"detail": detail}))
+
+    monkeypatch.setattr(auto_tickets, "LOCALDATA", tmp_path)
+    paused = auto_tickets.load_pause_state()
+    assert paused is False
+
+
+def test_load_pause_state_treats_missing_file_as_no_pause(tmp_path, monkeypatch):
+    """If auto_tickets_performance.json is missing, the function
+    returns False (fail-soft). The pipeline must not be paused
+    by a missing performance file."""
+    import auto_tickets
+    monkeypatch.setattr(auto_tickets, "LOCALDATA", tmp_path)
+    paused = auto_tickets.load_pause_state()
+    assert paused is False
