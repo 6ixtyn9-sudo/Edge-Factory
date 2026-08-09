@@ -72,6 +72,7 @@ def load_tickets():
         for l in (data.get("singles") or []):
             tickets.append({"date": d, "type": "single", "legs": [_leg_dict(l)],
                             "stake": 1.0, "odds": float(l.get("odds") or 1.0)})
+        sf = data.get("stakes_frac") or {}
         # acca2 entries: [ [legs...], product ]
         for entry in (data.get("acca2") or []):
             if isinstance(entry, list) and entry and isinstance(entry[0], list):
@@ -83,12 +84,13 @@ def load_tickets():
             if not legs:
                 continue
             tickets.append({"date": d, "type": "acca2", "legs": [_leg_dict(l) for l in legs],
-                            "stake": 1.0, "odds": float(prod) if prod else None})
+                            "stake": float(sf.get("acca2_per_ticket") or 1.0),
+                            "odds": float(prod) if prod else None})
         # acca10 legs
         legs = data.get("acca10") or []
         if legs:
             tickets.append({"date": d, "type": "acca10", "legs": [_leg_dict(l) for l in legs],
-                            "stake": 1.0,
+                            "stake": float(sf.get("acca10") or 1.0),
                             "odds": float(data.get("acca10_odds") or 0.0) or None})
     return tickets
 
@@ -148,7 +150,7 @@ def main() -> int:
         s = per_day[d]
         roi = (s["returned"] - s["staked"]) / s["staked"] if s["staked"] else 0.0
         lines.append(f"  {d}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
-                     f"staked R{s['staked']:.2f} returned R{s['returned']:.2f} ROI {roi:+.1%}")
+                     f"staked {s['staked']:.2%} of capital returned {s['returned']:.2%} ROI {roi:+.1%}")
         total_staked += s["staked"]; total_ret += s["returned"]
         total_n += s["n"]; total_wins += s["wins"]; total_pend += s["pending"]
     lines.append(f"\n--- per type ---")
