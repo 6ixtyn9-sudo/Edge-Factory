@@ -2140,18 +2140,22 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
         anchor = fb or zb or sa or next(data[s][k] for s in used if k in data.get(s, {}))
         
         # --- Evaluate ML Rules ---
-        if ml_rules and ml_model and fb and zb and sa:
-            fb_probs = probs_1x2(fb)
-            zb_probs = probs_1x2(zb)
-            sa_probs = probs_1x2(sa)
-            if fb_probs and zb_probs and sa_probs:
-                # Majority pick
+        if ml_rules and ml_model and (fb or zb or sa):
+            fb_probs = probs_1x2(fb) if fb else None
+            zb_probs = probs_1x2(zb) if zb else None
+            sa_probs = probs_1x2(sa) if sa else None
+            if fb_probs or zb_probs or sa_probs:
+                # Majority pick from whichever sources are present
                 sels_maj = []
                 for pr in [fb_probs, zb_probs, sa_probs]:
+                    if not pr:
+                        continue
                     best = max(pr)
                     sel_m = "home" if best == pr[0] else ("draw" if best == pr[1] else "away")
                     sels_maj.append(sel_m)
-                p1, p2, p3 = sels_maj
+                if not sels_maj:
+                    continue
+                p1, p2, p3 = (sels_maj + [None, None, None])[:3]
                 if p1 == p2 or p1 == p3:
                     majority_pick = p1
                 elif p2 == p3:
@@ -2161,13 +2165,16 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                 
                 idx_map = {"home": 0, "draw": 1, "away": 2}
                 idx = idx_map[majority_pick]
-                fb_p_feat = fb_probs[idx]
-                zb_p_feat = zb_probs[idx]
-                sa_p_feat = sa_probs[idx]
+                fb_p_feat = fb_probs[idx] if fb_probs else None
+                zb_p_feat = zb_probs[idx] if zb_probs else None
+                sa_p_feat = sa_probs[idx] if sa_probs else None
                 
-                avg_p_feat = (fb_p_feat + zb_p_feat + sa_p_feat) / 3.0
-                min_p_feat = min(fb_p_feat, zb_p_feat, sa_p_feat)
-                variance = sum((x - avg_p_feat)**2 for x in [fb_p_feat, zb_p_feat, sa_p_feat]) / 3.0
+                _feat_ps = [x for x in (fb_p_feat, zb_p_feat, sa_p_feat) if x is not None]
+                if not _feat_ps:
+                    _feat_ps = [0.0]
+                avg_p_feat = sum(_feat_ps) / len(_feat_ps)
+                min_p_feat = min(_feat_ps)
+                variance = sum((x - avg_p_feat)**2 for x in _feat_ps) / len(_feat_ps)
                 std_p_feat = math.sqrt(variance)
                 
                 _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
