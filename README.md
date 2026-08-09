@@ -60,9 +60,16 @@ localdata/ is owned by the GitHub Actions persist loop. It is the ONLY writer al
 
 Bash
 
-# one-time setup per machine — paste as-is:
-
+Situation	Run
+# Bot pushed state commits, machine has nothing local	
+git pull --no-rebase
+# Bot pushed, machine has local outputs you don't want	
 git checkout -- localdata/ && git pull --no-rebase
+# Bot pushed, machine has local outputs you want to keep	
+commit them, then git pull --no-rebase
+# You changed code/config 
+commit → git pull --no-rebase → git push origin main
+# Don't click the VS Code sync button	ever — it does the push/pull dance for you and caused the rejected push earlier
 
 # commit workflow — edit ONLY the FILES line to name your change's files, then paste the whole block as-is:
 FILES=("scripts/picks_today.py" "scripts/audit_recent_picks.py" "HANDOVER.md")
