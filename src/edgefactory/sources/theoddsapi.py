@@ -509,10 +509,18 @@ def _get_json(path: str, params: dict, *, cost: int = 0, day: str | None = None)
                 _mark_exhausted(fp, reason)
                 last = exc
                 continue
-            if exc.code in (403, 422, 429):
+            if exc.code in (403, 429):
                 _mark_exhausted(fp, f"http {exc.code}")
                 last = exc
                 continue
+            if exc.code == 422:
+                # Plan-level rejection (premium market or sport not on this
+                # key's plan) — NOT key exhaustion, and failed calls are
+                # never charged. Record the failure and move on without
+                # permanently killing the ring.
+                _log(f"{fp}: http 422 (market/sport not on plan) — skipping request", always=True)
+                last = exc
+                break
             last = exc
             break
         except Exception as exc:  # network/parse: not a key problem
