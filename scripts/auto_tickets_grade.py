@@ -185,6 +185,7 @@ def main() -> int:
         "total_roi": (total_ret - total_staked) / total_staked if total_staked else 0.0,
         "per_day": per_day, "per_type": per_type, "detail": detail,
     }, indent=2, default=str))
+    (LOCALDATA / "auto_tickets_performance.txt").write_text(txt + "\n")
     return 0
 
 
