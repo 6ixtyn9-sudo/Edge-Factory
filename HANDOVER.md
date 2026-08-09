@@ -4930,3 +4930,69 @@ us4). Verdicts resolve where learned purity cells exist (pt1/nl1 3way65=ALLOW,
 bg1 3way65=VETO); data-limited leagues stay UNKNOWN (non-blocking) until
 settled history accumulates. Alias layer only — no verdicts invented, miners
 untouched. Git restored to main-only; slate commit a9205c3 on main.
+
+---
+
+## Addendum — 2026-08-09: auto-tickets system (selection layer) + operational fixes
+
+**Scope:** new operator-facing selection layer built on top of the existing
+pipeline, plus three operational bug fixes. No staking policy change; no
+veto-logic change. Percentages-of-capital only by design — stakes are a later
+layer once selection is proven.
+
+### New: auto-tickets (scripts/auto_tickets.py + auto_tickets_grade.py)
+
+- **Purpose:** remove hand-picking. Tool chooses today's accas from the slate
+  using only combos with dynamically computed positive edge; freezes them at
+  09:00 SAST so the 8x/day cloud loop cannot churn them; grades settled slips.
+- **Structure (operator plan, acca-only):** 28% of capital -> up to 3 x 2-odd
+  accas (paired smallest x largest odds, closest to 2.00); 10% of capital ->
+  one 10-odd acca (fewest legs to reach 10.0). No singles. All output is
+  percentages; operator does the rand math.
+- **Selection gates (dynamic, recomputed every run):** bucket in
+  CERTIFIED_CLEAN + SKIPPED_VETO (CAUTION excluded — negative ROI historically);
+  combo (edge rule x odds source) passes n>=15, ROI>=+3%, Wilson LB>=0.68,
+  recent-20 ROI>=0; NO hardcoded trusted-price allowlist — a price source is
+  trusted iff it has at least one passing combo (sources earn entry; this
+  un-traps ml-meta/forebet/zulubet once proven).
+- **Safety rails:** 09:00 generation gate (NOT YET before, freeze after);
+  10-odd held back if <3 distinct legs or <4.0 total (no duplicate-of-2-odds);
+  drawdown pause if last 20 graded tickets ROI < -10% (--force overrides);
+  grader writes auto_tickets_performance.txt + .json; slips + performance
+  tracked via .gitignore exception (!localdata/auto_tickets_*).
+- **Wired into daily.py** (official + intraday) as run_soft steps, so the cloud
+  generates/freezes/grades every cycle.
+
+### Fixes
+
+1. **decay_monitor ZeroDivisionError** (src/edgefactory/assay.py): decay_verdict
+   crashed when a certified edge's recent window had n=0 settled picks
+   (r_p = recent_wins / recent_n). Now returns WATCH on recent_n==0 — no
+   crash, never benched on no data.
+2. **ML-meta could never fire** (scripts/picks_today.py): eval_1x2 required
+   forebet AND zulubet AND statarea all present on a fixture; in practice the
+   3-source overlap never occurred, so the certified ml-meta edge was silent
+   forever (0 picks in all archives). Now fires on 2-of-3 sources, missing
+   features excluded from avg/min/std. Cross-layer tripwire (certified edge
+   with zero picks over N days) is a known gap — TODO.
+3. **OddsAPI 422 false-exhaustion** (src/edgefactory/sources/theoddsapi.py):
+   HTTP 422 (market/sport not on plan) was treated as key exhaustion and
+   permanently killed keys. Now 422 is logged-and-skipped; keys stay live.
+   ODDS_API_MARKETS default trimmed to h2h,totals (free-plan only), 2
+   credits/event.
+
+### Known gaps / TODO (not in this payload)
+
+- Certified-edge-not-firing tripwire (proposed, not built).
+- DEBIAS wrong source + 6/6 btts_yes degeneracy (Addendum 19/27.5 — pre-existing).
+- VETO re-mine (Addendum 19 — pre-existing).
+- test_benched_circuit_breaker date-stale ~2026-10-02 (pre-existing).
+- Staking layer: intentionally NOT built; percentages only until selection
+  proven; review at the 2026-08-11 gate.
+- Handover itself is doctrine, not stone — auto-tickets defines its own rules
+  and this addendum records them.
+
+**Tests:** syntax-checked; auto-tickets generation verified (2-leg hold-back
+and 7-leg rich-day cases); assay recent_n=0 verified; picks_today 2-of-3
+ML-meta verified; grader v4 schema verified. Full pytest not re-run this
+payload (pinned-era tree); run before 08-11 review.
