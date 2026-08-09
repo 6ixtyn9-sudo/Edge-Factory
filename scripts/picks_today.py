@@ -2209,7 +2209,12 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                 intercept = ml_model["intercept"]
                 feature_cols = ml_model["feature_cols"]
                 
-                x = [feat_dict.get(col, 0.0) for col in feature_cols]
+                x = []
+                for col in feature_cols:
+                    v = feat_dict.get(col, 0.0)
+                    if v is None:
+                        v = 0.0
+                    x.append(v)
                 z = sum(w * val for w, val in zip(coefs, x)) + intercept
                 ml_p = 1.0 / (1.0 + math.exp(-z))
                 
