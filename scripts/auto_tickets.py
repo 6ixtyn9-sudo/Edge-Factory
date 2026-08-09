@@ -61,6 +61,8 @@ RECENT_ROI_MIN = 0.0         # combo must show this ROI on its last RECENT_N pic
 MIN_EDGE = 0.0               # no per-pick edge floor; combo (rule x source) pass is the edge test
 ACCA2_TARGET = 2.0
 ACCA10_TARGET = 10.0
+ACCA10_MIN_LEGS = 3        # 10-odd only emitted if >= this many distinct legs
+ACCA10_MIN_PROD = 4.0      # ...and total odds at least this (else it's just a 2-odd duplicate)
 MAX_ACCA10_LEGS = 9
 PAUSE_ROI = -0.10            # drawdown guard: last-20-ticket ROI below this pauses
 PAUSE_N = 20
@@ -307,18 +309,21 @@ def main():
         lo += 1
         hi -= 1
 
-    # ---- 10-ODD ACCA: use ALL qualifying legs not already used in 2-odd accas,
+    # ---- 10-ODD ACCA: ALL qualifying legs (reuse allowed across ticket types),
     #      fewest legs to reach ~10.0 (highest odds first). ----
-    acca10_pool = [p for p in today if p["match"] + p["pick"] not in used]
-    if not acca10_pool:
-        acca10_pool = today  # fallback: reuse across types only if no fresh legs
-    acca10_pool = sorted(acca10_pool, key=lambda x: -x["odds"])
+    acca10_pool = sorted(today, key=lambda x: -x["odds"])
     acca10_legs, acca10_prod = [], 1.0
     for p in acca10_pool:
         acca10_legs.append(p)
         acca10_prod *= p["odds"]
         if acca10_prod >= ACCA10_TARGET or len(acca10_legs) >= MAX_ACCA10_LEGS:
             break
+    # Guard: a "10-odd" that is really just the 2-odd duplicated (too few distinct
+    # legs / too small a product) is NOT emitted — that stake stays unbet instead
+    # of being a disguised second bet on the same outcome.
+    acca10_held_back = len(acca10_legs) < ACCA10_MIN_LEGS or acca10_prod < ACCA10_MIN_PROD
+    if acca10_held_back:
+        acca10_legs, acca10_prod = [], 0.0
 
     # ---------------- output (percentages of capital only) ----------------
     per_acca2 = CAP_ACCA2 / max(N_ACCA2_TICKETS, 1)
@@ -333,12 +338,17 @@ def main():
                          f"n={l['combo_n']} roi={l['combo_roi']:+.0%})")
     if not acca2_tickets:
         lines.append("\n[2-ODD ACCA] none — fewer than 2 qualifying picks")
-    lines.append(f"\n[10-ODD ACCA] {len(acca10_legs)} leg(s), total {acca10_prod:.2f}, "
-                 f"stake {CAP_ACCA10:.1%} of capital")
-    for l in acca10_legs:
-        lines.append(f"   {l['match']:44s} {l['pick']:5s} @ {l['odds']:.2f}  "
-                     f"({l['avg_p']:.0f}% · {l['rule']} · {l['source']} "
-                     f"n={l['combo_n']} roi={l['combo_roi']:+.0%})")
+    if acca10_held_back:
+        lines.append(f"\n[10-ODD ACCA] HELD BACK — only {len(acca10_legs)} distinct qualifying "
+                     f"leg(s) and total {acca10_prod:.2f} would just duplicate the 2-odds. "
+                     f"That {CAP_ACCA10:.0%} of capital stays unbet today.")
+    else:
+        lines.append(f"\n[10-ODD ACCA] {len(acca10_legs)} leg(s), total {acca10_prod:.2f}, "
+                     f"stake {CAP_ACCA10:.1%} of capital")
+        for l in acca10_legs:
+            lines.append(f"   {l['match']:44s} {l['pick']:5s} @ {l['odds']:.2f}  "
+                         f"({l['avg_p']:.0f}% · {l['rule']} · {l['source']} "
+                         f"n={l['combo_n']} roi={l['combo_roi']:+.0%})")
     lines.append("\nRound each ticket UP to your bookmaker's minimum stake.")
     lines.append("Edge-based selection, dynamic per settled history. Flat stakes. Bet only what you can afford to lose.")
 
