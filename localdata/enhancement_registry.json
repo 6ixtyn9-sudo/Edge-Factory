@@ -125,6 +125,56 @@
    "status": "PAPER",
    "status_reason": "first priced outcome recorded",
    "status_since": "2026-08-03"
+  },
+  "match_over_35@v1": {
+   "hits": 1,
+   "inv_price_sum": 1.5281874864789688,
+   "multi_n": 0,
+   "n": 4,
+   "processed": [
+    "2026-08-09|Benfica vs Academico Viseu|match_over_35@v1",
+    "2026-08-09|Malm\u00f6 FF vs Degerfors IF|match_over_35@v1",
+    "2026-08-09|Palmeiras vs Internacional|match_over_35@v1",
+    "2026-08-09|Septemvri Sofia vs CSKA-Sofia|match_over_35@v1"
+   ],
+   "profit": -2.1,
+   "records": [
+    {
+     "date": "2026-08-09",
+     "hit": true,
+     "match": "Benfica vs Academico Viseu",
+     "multi_source": false,
+     "price": 1.9,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-09",
+     "hit": false,
+     "match": "Malm\u00f6 FF vs Degerfors IF",
+     "multi_source": false,
+     "price": 2.62,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-09",
+     "hit": false,
+     "match": "Palmeiras vs Internacional",
+     "multi_source": false,
+     "price": 3.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-09",
+     "hit": false,
+     "match": "Septemvri Sofia vs CSKA-Sofia",
+     "multi_source": false,
+     "price": 3.25,
+     "source": "scoutingstats"
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-08-10"
   }
  },
  "version": 2

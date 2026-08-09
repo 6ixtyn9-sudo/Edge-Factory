@@ -2,14 +2,13 @@ AUTO-TICKET GRADING
 ============================================================
 
 --- per day ---
-  2026-08-09: 2 tickets (0W/0L/2P) stake not recorded (pre-adaptive slip, see bookmaker history) n/a n/a
+  2026-08-09: 2 tickets (2W/0L/0P) stake not recorded (pre-adaptive slip, see bookmaker history) n/a n/a
 
 --- per type ---
-  2-odd acca  : 1 tickets (0W/0L/1P) hit 0% ROI n/a (includes legacy slip)
-  10-odd acca : 1 tickets (0W/0L/1P) hit 0% ROI n/a (includes legacy slip)
+  2-odd acca  : 1 tickets (1W/0L/0P) hit 100% ROI n/a (includes legacy slip)
+  10-odd acca : 1 tickets (1W/0L/0P) hit 100% ROI n/a (includes legacy slip)
 
-TOTAL: 2 tickets, 0W, 2 pending, settled hit 0.0%, new-slip ROI +0.0% (legacy slip stake not recorded)
-(2 still pending settlement — grader re-runs each day)
+TOTAL: 2 tickets, 2W, 0 pending, settled hit 100.0%, new-slip ROI +0.0% (legacy slip stake not recorded)
 
-  ⏳ 2026-08-09 acca2  @1.96 — awaiting results
-  ⏳ 2026-08-09 acca10 @1.96 — awaiting results
+  ✅ 2026-08-09 acca2  @1.96 -> returned (stake not recorded)
+  ✅ 2026-08-09 acca10 @1.96 -> returned (stake not recorded)
