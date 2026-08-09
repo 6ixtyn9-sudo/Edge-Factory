@@ -67,7 +67,15 @@ cd ~/Edge-Factory
 git pull --no-rebase
 git status -sb
 
-2. Bot pushed, machine has local outputs you don't want
+# Your full daily loop, complete
+Bash
+
+cd ~/Edge-Factory
+git checkout -- localdata/ && git pull --no-rebase
+cat localdata/auto_tickets_$(date +%F).txt        
+cat localdata/auto_tickets_performance.txt           
+
+# 2. Bot pushed, machine has local outputs you don't want
 Bash
 
 cd ~/Edge-Factory
