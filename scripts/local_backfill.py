@@ -128,7 +128,11 @@ def main():
                 w = csv.DictWriter(f, fieldnames=file_columns)
                 w.writeheader()
                 for row in sorted(existing.values(), key=lambda x: (x.get("date",""), x.get("home",""), x.get("away",""))):
-                    w.writerow(row)
+                    # Restrict every row to file_columns: legacy files captured by
+                    # newer code may carry extra columns (e.g. kickoff_timezone,
+                    # captured_at); writing them against this schema would raise
+                    # "dict contains fields not in fieldnames". Drop extras.
+                    w.writerow({col: row.get(col, "") for col in file_columns})
         buf.clear()
         state_path.write_text(json.dumps({"done": sorted(done)}))
 
