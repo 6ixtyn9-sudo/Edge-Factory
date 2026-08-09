@@ -60,16 +60,76 @@ localdata/ is owned by the GitHub Actions persist loop. It is the ONLY writer al
 
 Bash
 
-Situation	Run
-# Bot pushed state commits, machine has nothing local	
+# 1. Bot pushed state, machine has nothing local
+Bash
+
+cd ~/Edge-Factory
 git pull --no-rebase
-# Bot pushed, machine has local outputs you don't want	
-git checkout -- localdata/ && git pull --no-rebase
-# Bot pushed, machine has local outputs you want to keep	
-commit them, then git pull --no-rebase
-# You changed code/config 
-commit → git pull --no-rebase → git push origin main
-# Don't click the VS Code sync button	ever — it does the push/pull dance for you and caused the rejected push earlier
+git status -sb
+
+2. Bot pushed, machine has local outputs you don't want
+Bash
+
+cd ~/Edge-Factory
+git checkout -- localdata/
+git pull --no-rebase
+git status -sb
+
+# 3. Bot pushed, machine has local outputs you want to keep
+Bash
+
+cd ~/Edge-Factory
+git status --porcelain
+git add localdata/
+git commit -m "state: keep local run outputs"
+git pull --no-rebase
+git status -sb
+git add localdata/ stages everything under localdata that's tracked or un-ignored — the big CSVs stay out automatically via .gitignore, so this is safe and generic. For code changes specifically:
+
+Bash
+
+cd ~/Edge-Factory
+git add scripts/
+git commit -m "change: describe what and why"
+git pull --no-rebase
+git push origin main
+git status -sb
+
+# 4. Conflict during any pull (localdata file)
+Bash
+
+cd ~/Edge-Factory
+git checkout --ours localdata/
+git add localdata/
+git commit -m "state: resolve localdata conflict, take cloud version"
+git pull --no-rebase
+git status -sb
+
+# 5. If you accidentally hit the VS Code sync button
+Bash
+
+cd ~/Edge-Factory
+git fetch origin
+git status -sb
+git checkout -- localdata/
+git pull --no-rebase
+git push origin main
+
+# 6. Your one standard daily routine (covers 90% of days)
+Bash
+
+cd ~/Edge-Factory
+git status --porcelain
+git checkout -- localdata/
+git pull --no-rebase
+git status -sb
+cat localdata/auto_tickets_$(date +%F).txt
+The last line shows today's frozen bet slip. If cat says no such file, it means the bot hasn't generated it yet (before 09:00 or no qualifying edge) — no bet today.
+
+The one rule that makes all of this work
+Never git add -A or git add . — only localdata/ or scripts/ by name
+Never use the VS Code sync button
+git checkout -- localdata/ is always safe — that folder regenerates every run
 
 # commit workflow — edit ONLY the FILES line to name your change's files, then paste the whole block as-is:
 FILES=("scripts/picks_today.py" "scripts/audit_recent_picks.py" "HANDOVER.md")
