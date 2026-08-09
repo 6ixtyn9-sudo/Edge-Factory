@@ -2,10 +2,10 @@
 
 ## Overall
 
-- archived pick rows: 196
+- archived pick rows: 197
 - archived pick dates: 30
 - immutable morning-baseline rows: 123
-- verified official late-slate additions: 27
+- verified official late-slate additions: 28
 - regular-ledger-only legacy rows: 46
 - unsafe regular ledgers ignored: 3
 - empty regular ledgers (morning-baseline coverage only): 0
@@ -25,7 +25,7 @@
 
 - include same-day picks: False
 - same-day cutoff date: 2026-08-09
-- same-day rows excluded: 38
+- same-day rows excluded: 39
 
 ## Secondary Market Realized Rates
 
