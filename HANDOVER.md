@@ -4918,3 +4918,15 @@ priced ROI is below -10%.
 
 **Tests:** 242 passed.
 
+
+## Addendum — 2026-08-09: league-alias overrides for big-slate UNKNOWN verdicts
+
+Trigger: pinned-era (2f3b6d0) big-slate run emitted 22 UNKNOWN league verdict
+warnings. Several were alias gaps (Portugal,Liga Portugal vs portugal primeira
+liga -> same league, different verdicts). Added 69 aliases in
+Config/entity_overrides.json mapping warned raws to registry codes (pt1, lv1,
+se1, se3, ro1, hr1, hu1, kz1, de2, ar2, cz1, no2, br1, brw, ru1, am1, ua1,
+us4). Verdicts resolve where learned purity cells exist (pt1/nl1 3way65=ALLOW,
+bg1 3way65=VETO); data-limited leagues stay UNKNOWN (non-blocking) until
+settled history accumulates. Alias layer only — no verdicts invented, miners
+untouched. Git restored to main-only; slate commit a9205c3 on main.
