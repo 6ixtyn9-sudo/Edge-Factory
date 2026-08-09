@@ -992,17 +992,38 @@ def annotate_market_recommendation(pick: dict):
 
 
 # ---------------------------------------------------------------- registry --
-def display_rule(market: str, n_way: int, threshold: float) -> str:
-    """Short human label; edge_rule remains the exact miner rule for lookups."""
+def display_rule(market: str, n_way: int, threshold: float, rule: str = "") -> str:
+    """Short human label; edge_rule remains the exact miner rule for lookups.
+
+    Honest labels: include the rule QUALIFIER (bc-confirms / home-only / min_p /
+    away-only / odds-) so a variant can never hide behind the plain unanimous
+    name. e.g. 2way+bc-confirms avg_p>=60 renders as 2WAY+BC-CONFIRMS>=60.
+    """
+    qual = ""
+    if rule:
+        rl = rule.lower()
+        toks = []
+        if "bc-confirms" in rl:
+            toks.append("BC-CONFIRMS")
+        if "home-only" in rl:
+            toks.append("HOME-ONLY")
+        if "away-only" in rl:
+            toks.append("AWAY-ONLY")
+        if "min_p" in rl:
+            toks.append("MIN-P")
+        if "odds-" in rl:
+            toks.append("ODDS")
+        if toks:
+            qual = "+" + "+".join(toks)
     if "ml-meta" in market or n_way == 0:
         return f"ML-META≥{threshold:.0f}"
     if market == "1x2":
-        return f"{n_way}WAY-UNANIMOUS≥{threshold:.0f}"
+        return f"{n_way}WAY-UNANIMOUS{qual}≥{threshold:.0f}"
     if market == "ou_2.5":
-        return f"OU25-UNANIMOUS-{n_way}WAY≥{threshold:.0f}"
+        return f"OU25-UNANIMOUS-{n_way}WAY{qual}≥{threshold:.0f}"
     if market == "btts":
-        return f"BTTS-UNANIMOUS-{n_way}WAY≥{threshold:.0f}"
-    return f"{market.upper()}-{n_way}WAY≥{threshold:.0f}"
+        return f"BTTS-UNANIMOUS-{n_way}WAY{qual}≥{threshold:.0f}"
+    return f"{market.upper()}-{n_way}WAY{qual}≥{threshold:.0f}"
 
 
 def _edge_entry(edge: dict) -> dict | None:
@@ -1027,7 +1048,7 @@ def _edge_entry(edge: dict) -> dict | None:
         "n_way": n_way,
         "threshold": threshold,
         "rule": rule,
-        "display_rule": display_rule(market, n_way, threshold),
+        "display_rule": display_rule(market, n_way, threshold, rule),
         "market": market,
     }
 
@@ -2673,6 +2694,7 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 print(f"     🔥{shadow_tag} Possible Events: {event_text}")
             rec_market = p.get("recommended_enhancement")
             if rec_market:
+                rec_state = p.get("enhancement_state") or "SHADOW"
                 rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
                 # RT-6: archived/legacy picks can carry None or string probabilities —
                 # a formatting crash here would kill the whole render.
