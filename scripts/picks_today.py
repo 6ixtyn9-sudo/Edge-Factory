@@ -2156,12 +2156,17 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                 if not sels_maj:
                     continue
                 p1, p2, p3 = (sels_maj + [None, None, None])[:3]
-                if p1 == p2 or p1 == p3:
-                    majority_pick = p1
-                elif p2 == p3:
-                    majority_pick = p2
-                else:
-                    majority_pick = p1
+                # Guard: None == None is True in Python, so never let the
+                # padding values participate. Resolve the majority among the
+                # NON-None picks only; fall back to the first pick.
+                non_none = [x for x in (p1, p2, p3) if x is not None]
+                majority_pick = non_none[0]
+                if len(non_none) >= 3 and non_none[0] == non_none[2]:
+                    majority_pick = non_none[0]
+                elif len(non_none) >= 2 and non_none[0] == non_none[1]:
+                    majority_pick = non_none[0]
+                elif len(non_none) >= 3 and non_none[1] == non_none[2]:
+                    majority_pick = non_none[1]
                 
                 idx_map = {"home": 0, "draw": 1, "away": 2}
                 idx = idx_map[majority_pick]
