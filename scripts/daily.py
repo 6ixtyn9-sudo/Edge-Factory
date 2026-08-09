@@ -761,6 +761,14 @@ def run_pipeline(
             f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
         )
+        run_soft(
+            "PYTHONPATH=src python3 scripts/auto_tickets.py",
+            "auto_tickets (generate/freeze)",
+        )
+        run_soft(
+            "PYTHONPATH=src python3 scripts/auto_tickets_grade.py",
+            "auto_tickets_grade (settle past slips)",
+        )
         sync_official_archive(target_date, "sync_supabase")
         run_soft(f"python3 scripts/notify.py --date {target_date} --heartbeat", "notify (Smart Dispatch + empty-slate heartbeat)")
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
@@ -849,6 +857,14 @@ def run_pipeline(
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
+        )
+        run_soft(
+            "PYTHONPATH=src python3 scripts/auto_tickets.py",
+            "auto_tickets (generate/freeze)",
+        )
+        run_soft(
+            "PYTHONPATH=src python3 scripts/auto_tickets_grade.py",
+            "auto_tickets_grade (settle past slips)",
         )
         print(f"\n=== Autonomous Intraday Service Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
