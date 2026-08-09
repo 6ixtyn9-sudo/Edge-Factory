@@ -73,7 +73,7 @@ BUCKETS = {"CERTIFIED_CLEAN", "SKIPPED_VETO"}
 # sources (e.g. ml-meta via forebet_best/zulubet) earn their way in as their
 # settled history proves positive edge, instead of being permanently blocked.
 # Kept as a name for readability; the real gate is _source_has_passing_combo().
-GENERATE_HOUR = 9           # local time — tickets generate ONLY on/after the 09:00 run
+GENERATE_HOUR = 12          # local time — tickets generate ONLY on/after the 12:00 (midday) run
 TZ = ZoneInfo("Africa/Johannesburg")
 PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
 
@@ -240,7 +240,7 @@ def main():
     now_local = datetime.now(TZ)
     local_today = now_local.strftime("%Y-%m-%d")
     if str(target) == local_today and now_local.hour < GENERATE_HOUR and not args.force:
-        print("NOT YET — TICKETS GENERATE AT 09:00")
+        print("NOT YET — TICKETS GENERATE AT 12:00 (MIDDAY)")
         print(f"(now {now_local.strftime('%H:%M')} local; generation window opens {GENERATE_HOUR:02d}:00)")
         print("Nothing is bet before then. The 09:00 run generates the frozen slip;")
         print("all later runs re-print it unchanged.")
