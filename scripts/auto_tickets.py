@@ -38,7 +38,7 @@ import math
 import re
 import sys
 from collections import defaultdict
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -51,7 +51,8 @@ AT_RISK_FRAC = 0.38          # CEILING, not a target — max total at risk per d
 CAP_ACCA2 = 0.28             # 28% of capital -> multiple 2-odd accas (at full deployment)
 CAP_ACCA10 = 0.10            # 10% of capital -> one 10-odd acca (at full deployment)
 N_ACCA2_TICKETS = 3          # split the 2-odd money across this many tickets
-IDEAL_POOL = 7               # qualifying legs that justify full deployment
+IDEAL_POOL_MIN = 4           # floor: never demand fewer than this
+IDEAL_POOL_LOOKBACK = 10     # trailing days used to derive the adaptive ideal pool
 
 # ---------------- selection gates ----------------
 PASS_N = 15                  # min settled picks for a (rule, source) combo
@@ -201,6 +202,34 @@ def load_pause_state():
     return (ret - staked) / staked < PAUSE_ROI if staked else False
 
 
+def adaptive_ideal_pool(target: str) -> int:
+    """Derive the ideal qualifying-pool size from recent history (trailing
+    median), so full deployment tracks the season's fixture volume instead of
+    a hardcoded constant. Floor at IDEAL_POOL_MIN."""
+    sizes = []
+    from datetime import timedelta as _td
+    from datetime import datetime as _dt
+    cutoff = (_dt.strptime(target, "%Y-%m-%d") - _td(days=IDEAL_POOL_LOOKBACK)).isoformat()
+    for f in sorted(LOCALDATA.glob("picks_*.json")):
+        day = f.name.replace("picks_", "").replace(".json", "")
+        if day >= target or day < cutoff:
+            continue
+        try:
+            rows = json.loads(f.read_text())
+        except Exception:
+            continue
+        n = 0
+        for r in rows:
+            if (r.get("bucket") in BUCKETS and (r.get("odds") or 0) > 1.0):
+                n += 1
+        sizes.append(n)
+    if not sizes:
+        return IDEAL_POOL_MIN
+    sizes.sort()
+    med = sizes[len(sizes) // 2]
+    return max(IDEAL_POOL_MIN, med)
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--date", default=date.today().isoformat())
@@ -340,12 +369,13 @@ def main():
     # day strength = how much of the ideal qualifying pool is actually present.
     # A thin day (2 legs) deploys far less than 38%; a rich day (7+ legs) can
     # approach the ceiling. Unused capital stays unbet.
-    pool_factor = min(1.0, len(today) / IDEAL_POOL)
+    ideal_pool = adaptive_ideal_pool(target)
+    pool_factor = min(1.0, len(today) / ideal_pool)
     per_acca2 = (CAP_ACCA2 * pool_factor) / max(N_ACCA2_TICKETS, 1)
     acca10_stake = CAP_ACCA10 * pool_factor
     lines = [f"AUTO TICKETS — {target}", "=" * 62,
              f"CEILING: {AT_RISK_FRAC:.0%} of capital  ·  DAY STRENGTH: {pool_factor:.0%} "
-             f"({len(today)}/{IDEAL_POOL} qualifying legs)"]
+             f"({len(today)}/{ideal_pool} qualifying legs — adaptive)"]
     deployed = 0.0
     for i, (legs, prod) in enumerate(acca2_tickets, 1):
         lines.append(f"\n[2-ODD ACCA #{i}] {len(legs)} leg(s), total {prod:.2f}, "
