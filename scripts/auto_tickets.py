@@ -292,19 +292,27 @@ def main():
     while lo < hi and len(acca2_tickets) < N_ACCA2_TICKETS:
         a, b = ordered[lo], ordered[hi]
         prod = a["odds"] * b["odds"]
-        # try the next-higher small leg if it gets closer to 2.00
-        if lo + 1 < hi and abs(ordered[lo + 1]["odds"] * b["odds"] - ACCA2_TARGET) < abs(prod - ACCA2_TARGET):
+        # try the next-higher small leg if it gets closer to 2.00 (and is distinct)
+        if (lo + 1 < hi
+                and ordered[lo + 1]["match"] + ordered[lo + 1]["pick"] != b["match"] + b["pick"]
+                and abs(ordered[lo + 1]["odds"] * b["odds"] - ACCA2_TARGET) < abs(prod - ACCA2_TARGET)):
             lo += 1
             a = ordered[lo]
             prod = a["odds"] * b["odds"]
+        if a["match"] + a["pick"] == b["match"] + b["pick"]:
+            break  # pool too small to form a distinct pair
         acca2_tickets.append(([a, b], prod))
         used.add(a["match"] + a["pick"])
         used.add(b["match"] + b["pick"])
         lo += 1
         hi -= 1
 
-    # ---- 10-ODD ACCA: ALL qualifying legs (reuse allowed across ticket types) ----
-    acca10_pool = sorted(today, key=lambda x: -x["odds"])
+    # ---- 10-ODD ACCA: use ALL qualifying legs not already used in 2-odd accas,
+    #      fewest legs to reach ~10.0 (highest odds first). ----
+    acca10_pool = [p for p in today if p["match"] + p["pick"] not in used]
+    if not acca10_pool:
+        acca10_pool = today  # fallback: reuse across types only if no fresh legs
+    acca10_pool = sorted(acca10_pool, key=lambda x: -x["odds"])
     acca10_legs, acca10_prod = [], 1.0
     for p in acca10_pool:
         acca10_legs.append(p)
