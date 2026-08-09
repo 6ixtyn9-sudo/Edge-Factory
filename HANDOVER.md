@@ -1599,7 +1599,7 @@ learned entity-registry canonical fallback was removed from live odds matching
 
 CLV / steam / drift is audit-only and cannot move picks into SKIPPED_VETO
 
-Regression tests live in tests/test_picks_today_operational.py
+Regression tests live in tests/test_picks_today.py (covers the append-only per-day pick ledger, the auto-tickets grader format contract, and the operational duplicate-collapse)
 
 Operational audit note: do not use the conflicting 2026-06-18 reruns as clean machine-performance history. Restart trusted pick-performance accounting from the first frozen run after this fix.
 
@@ -4944,7 +4944,7 @@ layer once selection is proven.
 
 - **Purpose:** remove hand-picking. Tool chooses today's accas from the slate
   using only combos with dynamically computed positive edge; freezes them at
-  09:00 SAST so the 8x/day cloud loop cannot churn them; grades settled slips.
+  12:00 SAST (commit 715cf18) so the 8x/day cloud loop cannot churn them; grades settled slips.
 - **Structure (operator plan, acca-only):** 28% of capital -> up to 3 x 2-odd
   accas (paired smallest x largest odds, closest to 2.00); 10% of capital ->
   one 10-odd acca (fewest legs to reach 10.0). No singles. All output is
@@ -4955,7 +4955,7 @@ layer once selection is proven.
   recent-20 ROI>=0; NO hardcoded trusted-price allowlist — a price source is
   trusted iff it has at least one passing combo (sources earn entry; this
   un-traps ml-meta/forebet/zulubet once proven).
-- **Safety rails:** 09:00 generation gate (NOT YET before, freeze after);
+- **Safety rails:** 12:00 SAST generation gate (NOT YET before, freeze after; rationale: commit 715cf18);
   10-odd held back if <3 distinct legs or <4.0 total (no duplicate-of-2-odds);
   drawdown pause if last 20 graded tickets ROI < -10% (--force overrides);
   grader writes auto_tickets_performance.txt + .json; slips + performance
@@ -4996,3 +4996,67 @@ layer once selection is proven.
 and 7-leg rich-day cases); assay recent_n=0 verified; picks_today 2-of-3
 ML-meta verified; grader v4 schema verified. Full pytest not re-run this
 payload (pinned-era tree); run before 08-11 review.
+
+## Addendum — 2026-08-09: auto-tickets grader legacy-slip display fix
+
+**Trigger.** Operator directive: all slips must display as % of capital,
+not as currency amounts. The 526116e commit fixed the new-slip case
+but introduced a regression for the one legacy slip on disk
+(`localdata/auto_tickets_2026-08-09.json`, generated before the
+`stakes_frac` field existed in commit b1c1946). The grader's fallback
+to `stake=1.0` rendered the legacy slip as "staked 100.00% of capital",
+which is wrong.
+
+**Operator's plan (mirrored from `scripts/auto_tickets.py`):**
+
+- `AT_RISK_FRAC = 0.38` — the **ceiling**, not a target
+- `CAP_ACCA2 = 0.28` split across `N_ACCA2_TICKETS = 3` tickets
+- `CAP_ACCA10 = 0.10` per 10-odd acca
+- The 38% is a CEILING: deployment scales with the qualifying-pool
+  median (adaptive, commit `b1c1946`/`e9beab9`). A thin slate
+  deploys less than the ceiling; a rich slate approaches it.
+- No singles in the current plan (v1-v3 archive slips may still
+  exist on disk; v1-v3 staking was a fixed R1/bet convention)
+
+**Fix.** `scripts/auto_tickets_grade.py::load_tickets` no longer
+**invents** per-ticket stakes for legacy slips (no `stakes_frac`).
+The previous attempt reconstructed `CAP_ACCA2/N_ACCA2_TICKETS` per
+ticket — that was wrong because the actual rand amount depends on
+the adaptive `pool_factor` at generation time, which is not
+recorded on the slip. The grader now marks the day as legacy and
+the per-ticket `stake` is `None`. The per-day display reports
+"stake not recorded (pre-adaptive slip, see bookmaker history)" with
+no percent and no currency. The operator can look at their
+bookmaker history for the actual rand amount.
+
+New slips (with `stakes_frac` written by the post-`b1c1946`
+generator) display normally: the recorded per-ticket percentage
+times the acca2 ticket count + the recorded acca10 percentage =
+total deployed as % of capital. The legacy slip's "stake not
+recorded" status is **explicit**, not silent — the operator can
+see at a glance which rows are legacy.
+
+**Tests.** `tests/test_picks_today.py` extended with 5 grader
+contract cases plus 7 operational duplicate-collapse cases. Total
+suite: 18/18 pass in `tests/test_picks_today.py`. Pre-existing
+failures in other test files are environment-dependent
+(duckdb, curl_cffi) and are not caused by this change.
+
+**Files touched.**
+
+- `scripts/picks_today.py`: 1 line removed (unused `rec_state`
+  local; Addendum 27.17 hygiene).
+- `scripts/auto_tickets.py`: 1 import trimmed (unused `timedelta`),
+  1 local removed (unused `rw`; Addendum 27.17 hygiene).
+- `scripts/auto_tickets_grade.py`: 1 import trimmed (unused `math`),
+  2 f-strings fixed (no-placeholder f-string); `load_tickets`
+  returns `(tickets, legacy_dates)`; per-ticket stake is `None` for
+  legacy slips; per-day and per-type display branches on
+  `legacy_dates` to show "stake not recorded" with a transparent
+  note instead of a percent.
+- `tests/test_picks_today.py`: extended to 18 cases (6 merge
+  contract + 5 grader contract + 7 collapse contract).
+- `HANDOVER.md`: 2 lines reconciled with the 12:00 SAST freeze
+  (commit 715cf18); 1 line reconciled with the actual test
+  filename; this addendum.
+- `README.md`: 1 line reconciled with the 12:00 SAST freeze.
