@@ -93,10 +93,11 @@ def wilson_lb(wins, n, z=1.645):
 def parse_kickoff(pick):
     raw = pick.get("kickoff_canonical") or pick.get("kickoff") or ""
     day = str(pick.get("date") or "")[:10]
-    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M", "%H:%M"):
+    for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M",
+               "%d-%m, %H:%M", "%d-%m, %H:%M:%S", "%H:%M"):
         try:
             dt = datetime.strptime(raw, fmt)
-            if fmt == "%H:%M":
+            if fmt in ("%H:%M", "%d-%m, %H:%M", "%d-%m, %H:%M:%S"):
                 try:
                     dt = dt.replace(year=int(day[:4]), month=int(day[5:7]), day=int(day[8:10]))
                 except ValueError:
@@ -220,7 +221,11 @@ def adaptive_ideal_pool(target: str) -> int:
             continue
         n = 0
         for r in rows:
-            if (r.get("bucket") in BUCKETS and (r.get("odds") or 0) > 1.0):
+            try:
+                o = float(r.get("odds") or 0)
+            except (TypeError, ValueError):
+                o = 0.0
+            if r.get("bucket") in BUCKETS and o > 1.0:
                 n += 1
         sizes.append(n)
     if not sizes:
@@ -299,8 +304,13 @@ def main():
         if p.get("quarantine") not in (None, "none"):
             continue
         odds, avg_p = p.get("odds"), p.get("avg_p")
-        if not odds or odds <= 1.0 or not avg_p:
+        try:
+            odds_f = float(odds) if odds is not None else 0.0
+        except (TypeError, ValueError):
+            odds_f = 0.0
+        if odds_f <= 1.0 or not avg_p:
             continue
+        odds = odds_f
         kt = parse_kickoff(p)
         if kt is not None and kt < now:
             continue
@@ -348,19 +358,30 @@ def main():
         lo += 1
         hi -= 1
 
-    # ---- 10-ODD ACCA: ALL qualifying legs (reuse allowed across ticket types),
-    #      fewest legs to reach ~10.0 (highest odds first). ----
-    acca10_pool = sorted(today, key=lambda x: -x["odds"])
-    acca10_legs, acca10_prod = [], 1.0
-    for p in acca10_pool:
-        acca10_legs.append(p)
-        acca10_prod *= p["odds"]
-        if acca10_prod >= ACCA10_TARGET or len(acca10_legs) >= MAX_ACCA10_LEGS:
-            break
-    # Guard: a "10-odd" that is really just the 2-odd duplicated (too few distinct
-    # legs / too small a product) is NOT emitted — that stake stays unbet instead
-    # of being a disguised second bet on the same outcome.
+    # ---- 10-ODD ACCA: additive by default (no reusing 2-odd legs), but fall
+    #      back to reuse when the FRESH pool is too thin to build a real 10-odd.
+    #      Rule: reuse only if we don't have enough fresh legs; never reuse when
+    #      the fresh pool alone can reach the bar. ----
+    def _build_acca10(pool):
+        pool = sorted(pool, key=lambda x: -x["odds"])
+        legs, prod = [], 1.0
+        for p in pool:
+            legs.append(p)
+            prod *= p["odds"]
+            if prod >= ACCA10_TARGET or len(legs) >= MAX_ACCA10_LEGS:
+                break
+        return legs, prod
+
+    fresh_pool = [p for p in today if p["match"] + p["pick"] not in used]
+    acca10_legs, acca10_prod = _build_acca10(fresh_pool)
+    if len(fresh_pool) < ACCA10_MIN_LEGS:
+        # Not enough DISTINCT fresh bets (fewer than 3 unused legs) -> thin day,
+        # fall back to reuse rather than skip the 10-odd entirely.
+        acca10_legs, acca10_prod = _build_acca10(today)
+    # Guard: still never emit a degenerate "10-odd" that is just the 2-odd
+    # duplicated with too few legs / too small a product.
     acca10_held_back = len(acca10_legs) < ACCA10_MIN_LEGS or acca10_prod < ACCA10_MIN_PROD
+    acca10_n_saved, acca10_prod_saved = len(acca10_legs), acca10_prod
     if acca10_held_back:
         acca10_legs, acca10_prod = [], 0.0
 
@@ -388,8 +409,8 @@ def main():
     if not acca2_tickets:
         lines.append("\n[2-ODD ACCA] none — fewer than 2 qualifying picks")
     if acca10_held_back:
-        lines.append(f"\n[10-ODD ACCA] HELD BACK — only {len(acca10_legs)} distinct qualifying "
-                     f"leg(s) and total {acca10_prod:.2f} would just duplicate the 2-odds. "
+        lines.append(f"\n[10-ODD ACCA] HELD BACK — only {acca10_n_saved} distinct qualifying "
+                     f"leg(s) and total {acca10_prod_saved:.2f} would just duplicate the 2-odds. "
                      f"That {acca10_stake:.0%} of capital stays unbet today.")
     else:
         lines.append(f"\n[10-ODD ACCA] {len(acca10_legs)} leg(s), total {acca10_prod:.2f}, "
@@ -411,6 +432,13 @@ def main():
         "date": target, "at_risk_frac": AT_RISK_FRAC,
         "pass_combos": [f"{r} | {s}" for (r, s), v in table.items() if v["pass"]],
         "acca2": acca2_tickets, "acca10": acca10_legs, "acca10_odds": acca10_prod,
+        "stakes_frac": {
+            "acca2_per_ticket": per_acca2,
+            "acca10": acca10_stake if not acca10_held_back else 0.0,
+            "deployed": deployed,
+            "ceiling": AT_RISK_FRAC,
+            "pool_factor": pool_factor,
+        },
     }, indent=2, default=str))
     return 0
 
