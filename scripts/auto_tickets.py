@@ -68,7 +68,11 @@ PAUSE_ROI = -0.10            # drawdown guard: last-20-ticket ROI below this pau
 PAUSE_N = 20
 
 BUCKETS = {"CERTIFIED_CLEAN", "SKIPPED_VETO"}
-TRUSTED_PRICE = {"BZZOIRO_PRIMARY", "BETEXPLORER_RESCUE"}
+# No hardcoded trusted-price allowlist: a price source is trusted if it has at
+# least one (rule x source) combo that PASSES the edge table. This lets new
+# sources (e.g. ml-meta via forebet_best/zulubet) earn their way in as their
+# settled history proves positive edge, instead of being permanently blocked.
+# Kept as a name for readability; the real gate is _source_has_passing_combo().
 GENERATE_HOUR = 9           # local time — tickets generate ONLY on/after the 09:00 run
 TZ = ZoneInfo("Africa/Johannesburg")
 PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
@@ -177,6 +181,11 @@ def build_edge_table(picks, settled):
     return table
 
 
+def _source_has_passing_combo(table: dict, src: str) -> bool:
+    """True if any (rule, source) combo for this odds source currently passes."""
+    return any(src == s and v.get("pass") for (r, s), v in table.items())
+
+
 def load_pause_state():
     try:
         perf = json.loads((LOCALDATA / "auto_tickets_performance.json").read_text())
@@ -253,7 +262,9 @@ def main():
             continue
         if p.get("bucket") not in BUCKETS:
             continue
-        if p.get("price_evidence") not in TRUSTED_PRICE:
+        rule = p.get("edge_rule") or p.get("rule")
+        src = p.get("odds_source") or "UNKNOWN"
+        if not _source_has_passing_combo(table, src):
             continue
         if p.get("quarantine") not in (None, "none"):
             continue
@@ -263,8 +274,6 @@ def main():
         kt = parse_kickoff(p)
         if kt is not None and kt < now:
             continue
-        rule = p.get("edge_rule") or p.get("rule")
-        src = p.get("odds_source") or "UNKNOWN"
         combo = table.get((rule, src))
         if combo is None or not combo["pass"]:
             continue
