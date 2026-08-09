@@ -2673,7 +2673,6 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 print(f"     🔥{shadow_tag} Possible Events: {event_text}")
             rec_market = p.get("recommended_enhancement")
             if rec_market:
-                rec_state = p.get("enhancement_state") or "SHADOW"
                 rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
                 # RT-6: archived/legacy picks can carry None or string probabilities —
                 # a formatting crash here would kill the whole render.

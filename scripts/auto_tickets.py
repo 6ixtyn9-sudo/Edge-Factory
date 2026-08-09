@@ -38,7 +38,7 @@ import math
 import re
 import sys
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -175,7 +175,6 @@ def build_edge_table(picks, settled):
         lb = wilson_lb(wins, n)
         recent = rows[-RECENT_N:]
         rn = len(recent)
-        rw = sum(1 for _, r, _ in recent if r == "win")
         rret = sum(o for _, r, o in recent if r == "win")
         roi_recent = (rret - rn) / rn if rn else 0.0
         passed = n >= PASS_N and roi >= PASS_ROI and lb >= PASS_LB and roi_recent >= RECENT_ROI_MIN

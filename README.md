@@ -132,7 +132,7 @@ git checkout -- localdata/
 git pull --no-rebase
 git status -sb
 cat localdata/auto_tickets_$(date +%F).txt
-The last line shows today's frozen bet slip. If cat says no such file, it means the bot hasn't generated it yet (before 09:00 or no qualifying edge) — no bet today.
+The last line shows today's frozen bet slip. If cat says no such file, it means the bot hasn't generated it yet (before 12:00 SAST or no qualifying edge) — no bet today.
 
 The one rule that makes all of this work
 Never git add -A or git add . — only localdata/ or scripts/ by name
