@@ -81,6 +81,10 @@ def decay_verdict(
         # change the story. Use a lower threshold min_decay_n for these to
         # avoid false positives from tiny samples where Wilson bounds are
         # too wide to be meaningful.
+        if recent_n == 0:
+            # No recent settled picks at all: no signal to decay on. WATCH
+            # (never HEALTHY, never benched on no data). Avoids division by zero.
+            return DecayReport("WATCH", b_lb, 0.0, 1.0, 0)
         r_p = recent_wins / recent_n
         if recent_n >= min_decay_n:
             if r_ub < b_lb:
