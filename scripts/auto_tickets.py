@@ -47,10 +47,11 @@ sys.path.insert(0, str(ROOT / "src"))
 LOCALDATA = ROOT / "localdata"
 
 # ---------------- structure (fractions of CAPITAL) ----------------
-AT_RISK_FRAC = 0.38          # total at risk per day = 38% of capital
-CAP_ACCA2 = 0.28             # 28% of capital -> multiple 2-odd accas
-CAP_ACCA10 = 0.10            # 10% of capital -> one 10-odd acca
+AT_RISK_FRAC = 0.38          # CEILING, not a target — max total at risk per day
+CAP_ACCA2 = 0.28             # 28% of capital -> multiple 2-odd accas (at full deployment)
+CAP_ACCA10 = 0.10            # 10% of capital -> one 10-odd acca (at full deployment)
 N_ACCA2_TICKETS = 3          # split the 2-odd money across this many tickets
+IDEAL_POOL = 7               # qualifying legs that justify full deployment
 
 # ---------------- selection gates ----------------
 PASS_N = 15                  # min settled picks for a (rule, source) combo
@@ -335,12 +336,21 @@ def main():
         acca10_legs, acca10_prod = [], 0.0
 
     # ---------------- output (percentages of capital only) ----------------
-    per_acca2 = CAP_ACCA2 / max(N_ACCA2_TICKETS, 1)
+    # ADAPTIVE DEPLOYMENT: 38% is a ceiling, not a target. Scale all stakes by
+    # day strength = how much of the ideal qualifying pool is actually present.
+    # A thin day (2 legs) deploys far less than 38%; a rich day (7+ legs) can
+    # approach the ceiling. Unused capital stays unbet.
+    pool_factor = min(1.0, len(today) / IDEAL_POOL)
+    per_acca2 = (CAP_ACCA2 * pool_factor) / max(N_ACCA2_TICKETS, 1)
+    acca10_stake = CAP_ACCA10 * pool_factor
     lines = [f"AUTO TICKETS — {target}", "=" * 62,
-             f"AT RISK: {AT_RISK_FRAC:.0%} of capital  (2-odds accas {CAP_ACCA2:.0%} + 10-odds acca {CAP_ACCA10:.0%})"]
+             f"CEILING: {AT_RISK_FRAC:.0%} of capital  ·  DAY STRENGTH: {pool_factor:.0%} "
+             f"({len(today)}/{IDEAL_POOL} qualifying legs)"]
+    deployed = 0.0
     for i, (legs, prod) in enumerate(acca2_tickets, 1):
         lines.append(f"\n[2-ODD ACCA #{i}] {len(legs)} leg(s), total {prod:.2f}, "
                      f"stake {per_acca2:.1%} of capital")
+        deployed += per_acca2
         for l in legs:
             lines.append(f"   {l['match']:44s} {l['pick']:5s} @ {l['odds']:.2f}  "
                          f"({l['avg_p']:.0f}% · {l['rule']} · {l['source']} "
@@ -350,14 +360,17 @@ def main():
     if acca10_held_back:
         lines.append(f"\n[10-ODD ACCA] HELD BACK — only {len(acca10_legs)} distinct qualifying "
                      f"leg(s) and total {acca10_prod:.2f} would just duplicate the 2-odds. "
-                     f"That {CAP_ACCA10:.0%} of capital stays unbet today.")
+                     f"That {acca10_stake:.0%} of capital stays unbet today.")
     else:
         lines.append(f"\n[10-ODD ACCA] {len(acca10_legs)} leg(s), total {acca10_prod:.2f}, "
-                     f"stake {CAP_ACCA10:.1%} of capital")
+                     f"stake {acca10_stake:.1%} of capital")
+        deployed += acca10_stake
         for l in acca10_legs:
             lines.append(f"   {l['match']:44s} {l['pick']:5s} @ {l['odds']:.2f}  "
                          f"({l['avg_p']:.0f}% · {l['rule']} · {l['source']} "
                          f"n={l['combo_n']} roi={l['combo_roi']:+.0%})")
+    lines.append(f"\nTOTAL DEPLOYED: {deployed:.1%} of capital  (ceiling {AT_RISK_FRAC:.0%} — "
+                 f"{max(0.0, AT_RISK_FRAC - deployed):.1%} held back)")
     lines.append("\nRound each ticket UP to your bookmaker's minimum stake.")
     lines.append("Edge-based selection, dynamic per settled history. Flat stakes. Bet only what you can afford to lose.")
 
