@@ -445,7 +445,11 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
         SELECT date, home, away, outcome, league,
                fb_pick, zb_pick, sa_pick,
                fb_p, zb_p, sa_p,
-               pick_odds
+               pick_odds,
+               -- orphaned-data harvest (consensus3 carries these now)
+               ht_hs, ht_gs, p1_ht, px_ht, p2_ht,
+               kelly, pred_hs, pred_gs, goalsavg,
+               p_ng, p_under
         FROM consensus3
         WHERE outcome IS NOT NULL AND fb_p IS NOT NULL AND zb_p IS NOT NULL AND sa_p IS NOT NULL
         ORDER BY date
@@ -471,6 +475,15 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
     df['pick'] = df.apply(get_majority_pick, axis=1)
     df['y'] = (df['pick'] == df['outcome']).astype(int)
 
+    # Scale fix (2026-08-10): warehouse consensus probs are PERCENT (0-100);
+    # the live path feeds 0-1. Normalize to 0-1 here so train == inference.
+    # Without this the certified model could never fire live (max ml_p ~7%).
+    for col in ('fb_p', 'zb_p', 'sa_p'):
+        df[col] = np.where(df[col] > 1.5, df[col] / 100.0, df[col])
+    for col in ('p1_ht', 'px_ht', 'p2_ht', 'p_ng', 'p_under'):
+        if col in df.columns:
+            df[col] = np.where(df[col] > 1.5, df[col] / 100.0, df[col])
+
     probs = df[['fb_p', 'zb_p', 'sa_p']].values
     df['avg_p'] = np.mean(probs, axis=1)
     df['min_p'] = np.min(probs, axis=1)
@@ -482,6 +495,33 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
     df['cat'] = df['league'].apply(classify_competition)
     for cat in ['friendly', 'youth', 'women', 'cup', 'league']:
         df[f'cat_{cat}'] = (df['cat'] == cat).astype(int)
+
+    # --- orphaned-data features (eyes-open harvest) ---
+    # HT win prob of the majority pick (forebet HT probs, 0-1)
+    def _ht_pick_prob(row):
+        p1h, pxh, p2h = row.get('p1_ht'), row.get('px_ht'), row.get('p2_ht')
+        if p1h is None or pxh is None or p2h is None:
+            return 0.5
+        idx = {'home': 0, 'draw': 1, 'away': 2}.get(row['pick'], 1)
+        v = (p1h, pxh, p2h)[idx]
+        return float(v) if v == v else 0.5  # NaN guard
+    df['ht_p'] = df.apply(_ht_pick_prob, axis=1)
+
+    # HT score state
+    df['ht_diff'] = pd.to_numeric(df['ht_hs'], errors='coerce').fillna(0) - pd.to_numeric(df['ht_gs'], errors='coerce').fillna(0)
+    df['ht_total'] = pd.to_numeric(df['ht_hs'], errors='coerce').fillna(0) + pd.to_numeric(df['ht_gs'], errors='coerce').fillna(0)
+
+    # Kelly (forebet staking signal; raw, can be negative)
+    df['kelly'] = pd.to_numeric(df['kelly'], errors='coerce').fillna(0.0)
+
+    # predicted score totals/diff (forebet)
+    df['pred_total'] = pd.to_numeric(df['pred_hs'], errors='coerce').fillna(0) + pd.to_numeric(df['pred_gs'], errors='coerce').fillna(0)
+    df['pred_diff'] = pd.to_numeric(df['pred_hs'], errors='coerce').fillna(0) - pd.to_numeric(df['pred_gs'], errors='coerce').fillna(0)
+
+    # goalsavg, BTTS-no, under probs
+    df['goalsavg'] = pd.to_numeric(df['goalsavg'], errors='coerce').fillna(0.0)
+    df['p_ng'] = pd.to_numeric(df['p_ng'], errors='coerce').fillna(0.0)
+    df['p_under'] = pd.to_numeric(df['p_under'], errors='coerce').fillna(0.0)
 
     df['date_dt'] = pd.to_datetime(df['date'])
     daily = df.groupby('date_dt').agg(wins=('y', 'sum'), total=('y', 'count')).reset_index()
@@ -502,7 +542,10 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
         'pick_odds',
         'is_home', 'is_away',
         'cat_friendly', 'cat_youth', 'cat_women', 'cat_cup', 'cat_league',
-        'rolling_hit_rate'
+        'rolling_hit_rate',
+        'ht_p', 'ht_diff', 'ht_total',
+        'kelly', 'pred_total', 'pred_diff',
+        'goalsavg', 'p_ng', 'p_under',
     ]
 
     train_df = df[df['date'] < split]

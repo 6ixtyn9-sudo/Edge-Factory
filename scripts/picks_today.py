@@ -2203,13 +2203,41 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                 cat_cup = 1.0 if comp_type == "cup" else 0.0
                 cat_league = 1.0 if comp_type == "league" else 0.0
                 
+                # orphaned-data harvest: mirror the trainer's features exactly.
+                # HT win prob of the majority pick (forebet HT probs, 0-1)
+                _fb_ht = (fb or {}).get
+                _p1h, _pxh, _p2h = _fb_ht("p1_ht"), _fb_ht("px_ht"), _fb_ht("p2_ht")
+                if None not in (_p1h, _pxh, _p2h):
+                    _ht_trip = (_p1h, _pxh, _p2h)
+                    _m = max(_ht_trip)
+                    _ht_scale = 100.0 if _m > 1.5 else 1.0
+                    ht_p_feat = float(_ht_trip[idx]) / _ht_scale
+                else:
+                    ht_p_feat = 0.5
+                _ht_hs = _f(_fb_ht("ht_hs"))
+                _ht_gs = _f(_fb_ht("ht_gs"))
+                ht_diff_feat = (_ht_hs or 0) - (_ht_gs or 0)
+                ht_total_feat = (_ht_hs or 0) + (_ht_gs or 0)
+                kelly_feat = _f(_fb_ht("kelly")) or 0.0
+                _phs, _pgs = _f(_fb_ht("pred_hs")), _f(_fb_ht("pred_gs"))
+                pred_total_feat = (_phs or 0) + (_pgs or 0)
+                pred_diff_feat = (_phs or 0) - (_pgs or 0)
+                goalsavg_feat = _f(_fb_ht("goalsavg")) or 0.0
+                _p_ng = _f(_fb_ht("p_ng"))
+                _p_under = _f(_fb_ht("p_under"))
+                p_ng_feat = _p_ng / 100.0 if _p_ng is not None and _p_ng > 1.5 else (_p_ng or 0.0)
+                p_under_feat = _p_under / 100.0 if _p_under is not None and _p_under > 1.5 else (_p_under or 0.0)
+                
                 feat_dict = {
                     "fb_p": fb_p_feat, "zb_p": zb_p_feat, "sa_p": sa_p_feat,
                     "avg_p": avg_p_feat, "min_p": min_p_feat, "std_p": std_p_feat,
                     "pick_odds": pick_odds_feat,
                     "is_home": is_home, "is_away": is_away,
                     "cat_friendly": cat_friendly, "cat_youth": cat_youth, "cat_women": cat_women, "cat_cup": cat_cup, "cat_league": cat_league,
-                    "rolling_hit_rate": rolling_hit_rate or 0.75
+                    "rolling_hit_rate": rolling_hit_rate or 0.75,
+                    "ht_p": ht_p_feat, "ht_diff": ht_diff_feat, "ht_total": ht_total_feat,
+                    "kelly": kelly_feat, "pred_total": pred_total_feat, "pred_diff": pred_diff_feat,
+                    "goalsavg": goalsavg_feat, "p_ng": p_ng_feat, "p_under": p_under_feat,
                 }
                 
                 coefs = ml_model["coef"]
@@ -2329,6 +2357,15 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             f"-> {sum(1 for p in picks if p.get('rule', '').startswith('ml-meta'))} pick(s)",
             file=sys.stderr,
         )
+        # Persist for the tripwire's ceiling check (a certified edge that can
+        # never reach its threshold is a distinct failure from mere silence).
+        try:
+            state_path = LOCALDATA / "ml_meta_state.json"
+            state = {"date": day, "scored": ml_scored, "max_ml_p": ml_max_p,
+                     "thresholds": thr_list, "picks": sum(1 for p in picks if p.get("rule", "").startswith("ml-meta"))}
+            state_path.write_text(json.dumps(state, indent=2))
+        except Exception:
+            pass
     return picks, vetoes, len(keys)
 
 

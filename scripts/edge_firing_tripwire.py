@@ -86,6 +86,41 @@ def _load_edge_rules(ld: Path) -> list[dict]:
     return [e for e in data.get("edges", []) if e.get("status") == "certified"]
 
 
+def _ml_ceiling_check(ld: Path, findings_edges: list[dict]) -> list[dict]:
+    """Longer wire: a certified ml-meta edge whose live max ml_p is far below
+    its certified threshold is structurally incapable of firing — a CEILING,
+    distinct from mere silence. Uses the persisted ml_meta_state.json written
+    by picks_today each run."""
+    state_path = ld / "ml_meta_state.json"
+    if not state_path.exists():
+        return []
+    try:
+        state = json.loads(state_path.read_text())
+    except (OSError, json.JSONDecodeError):
+        return []
+    max_p = state.get("max_ml_p")
+    thresholds = state.get("thresholds") or []
+    if max_p is None or not thresholds:
+        return []
+    min_thr = min(float(t) for t in thresholds)
+    ceiling = []
+    for f in findings_edges:
+        if "ml-meta" not in f.get("rule", ""):
+            continue
+        if not f.get("silent"):
+            continue
+        gap = min_thr - max_p * 100.0
+        if gap > 15.0:  # structurally far below the bar (>15pp gap)
+            ceiling.append({
+                "rule": f["rule"],
+                "live_max_ml_p": round(max_p * 100.0, 1),
+                "lowest_threshold": min_thr,
+                "gap_pp": round(gap, 1),
+                "ceiling": True,
+            })
+    return ceiling
+
+
 def _scan_edge_firing(ld: Path, rules: list[dict], silent_days: int, today: date) -> list[dict]:
     """For each certified rule, count ledger picks in the last silent_days."""
     since = today  # any pick with date >= today - silent_days
@@ -172,14 +207,22 @@ def main() -> int:
 
     n_silent = len(silent_edges)
     n_stale = sum(1 for s in findings["sources"] if s.get("stale"))
-    findings["warn_count"] = n_silent + n_stale
+    ceilings = _ml_ceiling_check(ld, edge_findings)
+    findings["ceilings"] = ceilings
+    for c in ceilings:
+        print(f"  [🔇 CEILED] {c['rule']}: live max ml_p {c['live_max_ml_p']:.1f}% vs "
+              f"threshold {c['lowest_threshold']:.0f}% (gap {c['gap_pp']:.1f}pp) — "
+              f"structurally cannot fire (unit mismatch or stale model).")
+    n_ceil = len(ceilings)
+    findings["warn_count"] = n_silent + n_stale + n_ceil
     out = ld / "edge_firing_tripwire.json"
     out.write_text(json.dumps(findings, indent=2, sort_keys=True))
 
-    print(f"\n=== edge firing tripwire: {n_silent} silent edge(s), {n_stale} stale source(s) ===")
+    print(f"\n=== edge firing tripwire: {n_silent} silent edge(s), {n_ceil} ceiling(s), {n_stale} stale source(s) ===")
     if findings["warn_count"]:
         print("WARNINGS above are visibility only — the pipeline continues. "
-              "Check whether each silence is expected (threshold/off-season/retired).")
+              "Check whether each silence is expected (threshold/off-season/retired); "
+              "a CEILING means the edge can never fire and needs a fix or decert.")
     print(f"full findings -> {out}")
     return 0
 
