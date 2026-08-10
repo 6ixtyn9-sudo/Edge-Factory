@@ -68,11 +68,13 @@ def load_tickets():
             data = json.loads(f.read_text())
         except Exception:
             continue
-        # legacy singles (v1-v3 only)
+        # legacy singles (v1-v3 only) — never carried stake records
         for l in (data.get("singles") or []):
             tickets.append({"date": d, "type": "single", "legs": [_leg_dict(l)],
-                            "stake": 1.0, "odds": float(l.get("odds") or 1.0)})
-        sf = data.get("stakes_frac") or {}
+                            "stake": None, "odds": float(l.get("odds") or 1.0)})
+        sf_raw = data.get("stakes_frac")
+        has_stakes = isinstance(sf_raw, dict) and bool(sf_raw)
+        sf = sf_raw if has_stakes else {}
         # acca2 entries: [ [legs...], product ]
         for entry in (data.get("acca2") or []):
             if isinstance(entry, list) and entry and isinstance(entry[0], list):
@@ -83,14 +85,16 @@ def load_tickets():
                 continue
             if not legs:
                 continue
+            v = sf.get("acca2_per_ticket") if has_stakes else None
             tickets.append({"date": d, "type": "acca2", "legs": [_leg_dict(l) for l in legs],
-                            "stake": float(sf.get("acca2_per_ticket") or 1.0),
+                            "stake": float(v) if v is not None else None,
                             "odds": float(prod) if prod else None})
         # acca10 legs
         legs = data.get("acca10") or []
         if legs:
+            v = sf.get("acca10") if has_stakes else None
             tickets.append({"date": d, "type": "acca10", "legs": [_leg_dict(l) for l in legs],
-                            "stake": float(sf.get("acca10") or 1.0),
+                            "stake": float(v) if v is not None else None,
                             "odds": float(data.get("acca10_odds") or 0.0) or None})
     return tickets
 
@@ -121,50 +125,74 @@ def main() -> int:
     if args.since:
         tickets = [t for t in tickets if t["date"] >= args.since]
 
-    per_day = defaultdict(lambda: {"n": 0, "wins": 0, "pending": 0, "losses": 0, "staked": 0.0, "returned": 0.0})
-    per_type = defaultdict(lambda: {"n": 0, "wins": 0, "pending": 0, "losses": 0, "staked": 0.0, "returned": 0.0})
+    per_day = defaultdict(lambda: {"n": 0, "wins": 0, "pending": 0, "losses": 0,
+                                   "staked": 0.0, "returned": 0.0, "unstaked_n": 0})
+    per_type = defaultdict(lambda: {"n": 0, "wins": 0, "pending": 0, "losses": 0,
+                                    "staked": 0.0, "returned": 0.0, "unstaked_n": 0})
     detail = []
     for t in tickets:
         res, mult = grade(t, settled)
         st = per_day[t["date"]]
         tp = per_type[t["type"]]
+        has_stake = t["stake"] is not None
         for bucket in (st, tp):
             bucket["n"] += 1
-            bucket["staked"] += t["stake"]
+            if has_stake:
+                bucket["staked"] += t["stake"]
+                if res == "WIN":
+                    bucket["returned"] += t["stake"] * mult
+            else:
+                bucket["unstaked_n"] += 1
             if res == "WIN":
                 bucket["wins"] += 1
-                bucket["returned"] += t["stake"] * mult
             elif res == "PENDING":
                 bucket["pending"] += 1
             else:
                 bucket["losses"] += 1
         detail.append({"date": t["date"], "type": t["type"], "result": res,
                        "odds": t["odds"], "stake": t["stake"],
-                       "returned": t["stake"] * mult if res == "WIN" else 0.0,
+                       "returned": (t["stake"] * mult if res == "WIN" and has_stake else None),
                        "legs": [f"{l['home']} vs {l['away']} {l['pick']} @{l['odds']:.2f}" for l in t["legs"]]})
 
     lines = ["AUTO-TICKET GRADING", "=" * 60]
-    total_staked = total_ret = total_n = total_wins = total_pend = 0
+    total_staked = total_ret = total_n = total_wins = total_pend = total_unstaked = 0
     lines.append(f"\n--- per day ---")
     for d in sorted(per_day):
         s = per_day[d]
-        roi = (s["returned"] - s["staked"]) / s["staked"] if s["staked"] else 0.0
-        lines.append(f"  {d}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
-                     f"staked {s['staked']:.2%} of capital returned {s['returned']:.2%} ROI {roi:+.1%}")
+        if s["staked"]:
+            roi = (s["returned"] - s["staked"]) / s["staked"]
+            lines.append(f"  {d}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
+                         f"staked {s['staked']:.2%} of capital returned {s['returned']:.2%} ROI {roi:+.1%}")
+        else:
+            lines.append(f"  {d}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
+                         f"stake not recorded (legacy slip — no stakes_frac)")
         total_staked += s["staked"]; total_ret += s["returned"]
         total_n += s["n"]; total_wins += s["wins"]; total_pend += s["pending"]
+        total_unstaked += s["unstaked_n"]
     lines.append(f"\n--- per type ---")
     for tp in ("single", "acca2", "acca10"):
         s = per_type[tp]
         if not s["n"]:
             continue
-        roi = (s["returned"] - s["staked"]) / s["staked"] if s["staked"] else 0.0
-        lines.append(f"  {TICKET_TYPES[tp]:12s}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
-                     f"hit {s['wins']/s['n'] if s['n'] else 0:.0%} ROI {roi:+.1%}")
+        if s["staked"]:
+            roi = (s["returned"] - s["staked"]) / s["staked"]
+            lines.append(f"  {TICKET_TYPES[tp]:12s}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
+                         f"hit {s['wins']/s['n'] if s['n'] else 0:.0%} ROI {roi:+.1%}")
+        else:
+            lines.append(f"  {TICKET_TYPES[tp]:12s}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
+                         f"hit {s['wins']/s['n'] if s['n'] else 0:.0%} ROI n/a (stake not recorded)")
     settled_n = total_n - total_pend
-    total_roi = (total_ret - total_staked) / total_staked if total_staked else 0.0
+    if total_staked:
+        total_roi = (total_ret - total_staked) / total_staked
+        roi_str = f"{total_roi:+.1%}"
+    else:
+        total_roi = None
+        roi_str = "n/a (stake not recorded)"
     lines.append(f"\nTOTAL: {total_n} tickets, {total_wins}W, {total_pend} pending, "
-                 f"settled hit {total_wins/settled_n if settled_n else 0:.1%}, ROI {total_roi:+.1%}")
+                 f"settled hit {total_wins/settled_n if settled_n else 0:.1%}, ROI {roi_str}")
+    if total_unstaked:
+        lines.append(f"({total_unstaked} ticket(s) from pre-stakes slips — stake unknown, "
+                     f"excluded from capital totals)")
     if total_pend:
         lines.append(f"({total_pend} still pending settlement — grader re-runs each day)")
     lines.append("")
@@ -173,7 +201,8 @@ def main() -> int:
             lines.append(f"  ⏳ {t['date']} {t['type']:6s} @{(t['odds'] or 0.0):.2f} — awaiting results")
     for t in detail:
         if t["result"] == "WIN":
-            lines.append(f"  ✅ {t['date']} {t['type']:6s} @{(t['odds'] or 0.0):.2f} -> R{t['returned']:.2f}")
+            stake_note = f" (staked {t['stake']:.2%})" if t["stake"] is not None else " (stake not recorded)"
+            lines.append(f"  ✅ {t['date']} {t['type']:6s} @{(t['odds'] or 0.0):.2f} -> +{(t['odds'] or 0.0):.2f}x{stake_note}")
     for t in detail:
         if t["result"] == "LOSS":
             lines.append(f"  ❌ {t['date']} {t['type']:6s} @{(t['odds'] or 0.0):.2f}")
@@ -184,7 +213,8 @@ def main() -> int:
         "generated_at": date.today().isoformat(),
         "total_tickets": total_n, "total_wins": total_wins, "total_pending": total_pend,
         "total_staked": total_staked, "total_returned": total_ret,
-        "total_roi": (total_ret - total_staked) / total_staked if total_staked else 0.0,
+        "total_roi": (total_ret - total_staked) / total_staked if total_staked else None,
+        "unstaked_legacy_n": total_unstaked,
         "per_day": per_day, "per_type": per_type, "detail": detail,
     }, indent=2, default=str))
     (LOCALDATA / "auto_tickets_performance.txt").write_text(txt + "\n")
