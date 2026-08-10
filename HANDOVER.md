@@ -5394,3 +5394,55 @@ No further action needed; item closed.
 - scripts/daily.py (tripwire step + _notify helper)
 - tests/test_enh_registry.py (relative dates)
 - .gitignore (persist tripwire + failure-ledger artifacts)
+---
+
+## Addendum — 2026-08-10 (late 9): cold-cache certification guard (L9 resolved)
+
+**Bug:** mine_consensus.py checked only `if not DB.exists()` before certifying —
+never that the settled tables had enough PRE-SPLIT history. A cold cache
+(fresh/unbuilt warehouse) would certify nothing, then write_registry's
+regression guard PRESERVED stale edges as if re-validated. The system kept
+"certified" edges that were never re-confirmed — a silent untruth.
+
+**Fix (scripts/mine_consensus.py):** MIN_PRE_SPLIT_SETTLED = 500 +
+_cold_cache_check(): counts pre-split settled rows in the 5 consensus tables
+(forebet/zulubet/statarea/scoutingstats/vitibet). Any table under 500 ->
+prints "⚠️ COLD-CACHE: <source> pre-split=N (<500) — cannot certify on this
+cache." and REFUSES to certify, leaving existing edges untouched. Fail-safe:
+missing table or query error -> skip, never false-block (verified with 5
+test cases: cold all-under triggers, warm all-over passes, single-warm
+passes, one-cold-among-warm triggers, error passes).
+
+**Effect:** certification can never again silently run on an empty cache.
+The "certified" label now requires BOTH the walk-forward gates AND a
+history-rich warehouse.
+
+**Deploy note:** this fix lives in the workspace file; the operator's first
+attempt (git pull + py_compile + commit) deployed nothing because the new
+file never reached the Mac — the repo had no diff. Deploy by downloading the
+updated scripts/mine_consensus.py and overwriting the local copy.
+---
+
+## Addendum — 2026-08-10 (late 10): DEBIAS per-engine noise gate (6/6 degeneracy)
+
+**Bug:** src/edgefactory/debias.py MIN_ENGINE_N = 5 let per-engine calibration
+cells with n=5..9 produce damps. Real audit data shows 50 cells across 3
+engines with n<20 (model engine: ALL cells n<=2). A 6/6 btts_yes cell (n=6)
+produces a "confident" damp from noise — the documented degeneracy.
+
+**Note:** the "DEBIAS wrong source" (tiny recommendation overlay vs full
+surface) is ALREADY FIXED — Addendum 19 rewrote the module to read
+event_notes_audit.by_market (MIN_MARKET_N=15). What remained was the
+per-engine gate.
+
+**Fix (src/edgefactory/debias.py):** MIN_ENGINE_N 5 -> 20. Data-grounded:
+with gate>=20 only 10 cells survive (hybrid_cohort 6, legacy 4) — the rest
+fall back to the pooled by_market cell, which is the intended safe path.
+Verified with the real audit JSON: 16 markets pooled, 10 engine cells kept,
+resolve_debias_hr works (exact_4 hybrid -> 1.00).
+
+**Effect:** per-engine damps now require real evidence (n>=20); tiny noisy
+cells can no longer move probabilities. Flag-gated (EDGE_FACTORY_ENGINE_AWARE_
+DEBIAS) so zero production impact until enabled. This also resolves the
+"by-engine verdict" agenda item's data half: n=5 cells are noise, n>=20 is
+the bar.
