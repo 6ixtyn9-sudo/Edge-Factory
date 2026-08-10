@@ -28,6 +28,46 @@ from edgefactory.config import GATES  # noqa: E402
 DB = ROOT / "localdata" / "warehouse.duckdb"
 OUT = ROOT / "localdata" / "edges_consensus.json"
 
+# Cold-cache guard: certification must never silently run on a warehouse with
+# insufficient PRE-SPLIT settled history (the L9 cold-cache trap). The file may
+# exist (or be a fresh build) while the settled tables are nearly empty — the
+# old code only checked DB.exists(), so a cold cache certified nothing and the
+# write_registry regression guard then PRESERVED stale edges as if re-validated.
+MIN_PRE_SPLIT_SETTLED = 500   # well above min_n_train (340); trains on this
+
+
+def _count_pre_split_settled(con, view: str, split: str) -> int:
+    try:
+        n = con.sql(
+            f"SELECT count(*) FROM {view} WHERE date < CAST('{split}' AS DATE)"
+        ).fetchone()[0]
+        return int(n or 0)
+    except Exception:
+        return -1
+
+
+def _cold_cache_check(con, split: str) -> bool:
+    """Return True if the cache is too cold to certify; prints loudly."""
+    tables = [
+        ("forebet_settled", "forebet"),
+        ("zulubet_settled", "zulubet"),
+        ("statarea_settled", "statarea"),
+        ("scoutingstats_settled", "scoutingstats"),
+        ("vitibet_settled", "vitibet"),
+    ]
+    cold = False
+    for view, name in tables:
+        if not _table_exists(con, view):
+            continue
+        n = _count_pre_split_settled(con, view, split)
+        if n < 0:
+            continue
+        if n < MIN_PRE_SPLIT_SETTLED:
+            cold = True
+            print(f"⚠️  COLD-CACHE: {name} settled pre-split rows = {n} "
+                  f"(< {MIN_PRE_SPLIT_SETTLED}) — cannot certify on this cache.")
+    return cold
+
 
 def _count_certified(edges: list[dict]) -> int:
     return sum(1 for e in edges if e.get("status") == "certified")
@@ -647,6 +687,10 @@ def main():
         return
 
     con = duckdb.connect(str(DB), read_only=True)
+    if _cold_cache_check(con, args.split):
+        print("COLD-CACHE GUARD: settled history insufficient for certification — "
+              "refusing to certify; existing certified edges are left in place as-is.")
+        return
     results = []
     
     has_fb = _table_exists(con, "forebet_settled")
