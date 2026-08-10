@@ -2,84 +2,49 @@
   "edge_silent_days": 14,
   "edges": [
     {
-      "decay": "WATCH",
+      "decay": "HEALTHY",
       "last_fired": null,
       "n_last_window": 0,
       "rule": "ml-meta avg_p>=70",
       "silent": true
     },
     {
-      "decay": "WATCH",
+      "decay": "HEALTHY",
       "last_fired": null,
       "n_last_window": 0,
       "rule": "ml-meta avg_p>=75",
       "silent": true
     },
     {
-      "decay": "WATCH",
-      "last_fired": "2026-08-10",
-      "n_last_window": 96,
-      "rule": "2way-unanimous avg_p>=70",
-      "silent": false
-    },
-    {
-      "decay": "WATCH",
+      "decay": "HEALTHY",
       "last_fired": "2026-08-09",
       "n_last_window": 63,
       "rule": "3way-unanimous avg_p>=65",
       "silent": false
     },
     {
-      "decay": "WATCH",
-      "last_fired": null,
-      "n_last_window": 0,
-      "rule": "2way-unanimous min_p>=60 avg_p>=65",
-      "silent": true
-    },
-    {
-      "decay": "WATCH",
-      "last_fired": null,
-      "n_last_window": 0,
-      "rule": "2way-unanimous min_p>=60 avg_p>=70",
-      "silent": true
-    },
-    {
-      "decay": "WATCH",
-      "last_fired": "2026-07-04",
-      "n_last_window": 0,
-      "rule": "3way-unanimous min_p>=60 avg_p>=60",
-      "silent": true
-    },
-    {
-      "decay": "WATCH",
-      "last_fired": null,
-      "n_last_window": 0,
-      "rule": "3way-unanimous min_p>=60 avg_p>=65",
-      "silent": true
-    },
-    {
-      "decay": "WATCH",
-      "last_fired": null,
-      "n_last_window": 0,
-      "rule": "2way-unanimous home-only avg_p>=65",
-      "silent": true
-    },
-    {
-      "decay": "WATCH",
+      "decay": "HEALTHY",
       "last_fired": "2026-07-21",
       "n_last_window": 0,
       "rule": "3way-unanimous home-only avg_p>=60",
       "silent": true
     },
     {
-      "decay": "WATCH",
+      "decay": "HEALTHY",
       "last_fired": "2026-07-14",
       "n_last_window": 0,
       "rule": "3way-unanimous home-only avg_p>=65",
       "silent": true
+    },
+    {
+      "decay": "HEALTHY",
+      "last_fired": "2026-08-11",
+      "n_last_window": 68,
+      "rule": "2way+bc-confirms avg_p>=60",
+      "silent": false
     }
   ],
-  "generated_at": "2026-08-10T09:43:32",
+  "generated_at": "2026-08-10T10:52:44",
   "source_stale_days": 7,
   "sources": [
     {
@@ -138,7 +103,7 @@
     },
     {
       "name": "freesupertips",
-      "newest_date": "2026-08-09",
+      "newest_date": "2026-08-10",
       "newest_file": "freesupertips_2026-08.csv.gz",
       "stale": false
     },
@@ -155,5 +120,5 @@
       "stale": false
     }
   ],
-  "warn_count": 9
+  "warn_count": 4
 }
