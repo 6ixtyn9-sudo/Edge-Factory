@@ -2118,6 +2118,8 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
     # --- Load ML rules and model ---
     ml_rules, ml_model = load_ml_rules_and_model()
     rolling_hit_rate = None
+    ml_max_p = 0.0
+    ml_scored = 0
     if ml_rules and ml_model:
         rolling_hit_rate = get_rolling_hit_rate_last_14d(day)
 
@@ -2222,6 +2224,8 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                     x.append(v)
                 z = sum(w * val for w, val in zip(coefs, x)) + intercept
                 ml_p = 1.0 / (1.0 + math.exp(-z))
+                ml_scored += 1
+                ml_max_p = max(ml_max_p, ml_p)
                 
                 # Check certified ML rules
                 for rule in ml_rules:
@@ -2315,6 +2319,16 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             "sources_used": used,
             "source_weights": source_weights or {},
         })
+    if ml_rules and ml_model and ml_scored:
+        thr_list = sorted(
+            {float(m.group(1)) for r in ml_rules if (m := re.search(r">=\s*([\d.]+)", r.get("rule", "")))}
+        )
+        print(
+            f"ML-meta {day}: scored {ml_scored} fixture(s), max ml_p = {ml_max_p * 100.0:.1f}% "
+            f"(certified thresholds: {', '.join(f'{t:.0f}' for t in thr_list)}) "
+            f"-> {sum(1 for p in picks if p.get('rule', '').startswith('ml-meta'))} pick(s)",
+            file=sys.stderr,
+        )
     return picks, vetoes, len(keys)
 
 
