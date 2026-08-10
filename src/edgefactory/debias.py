@@ -26,7 +26,11 @@ from pathlib import Path
 
 ENV_FLAG = "EDGE_FACTORY_ENGINE_AWARE_DEBIAS"
 MIN_MARKET_N = 15   # full-surface by_market evidence gate (Addendum 19)
-MIN_ENGINE_N = 5    # per-engine x per-market cell evidence gate
+MIN_ENGINE_N = 20   # per-engine x per-market cell evidence gate (was 5 — n=5..9
+                    # cells are noise; a 6/6 btts_yes cell produced degenerate
+                    # damps. Raised 2026-08-10 after data check: gate 20 keeps
+                    # only hybrid 6 + legacy 4 cells; the rest fall back to the
+                    # pooled by_market cell — the safe path.)
 
 
 def _damp(slot: dict) -> float:
