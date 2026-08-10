@@ -99,7 +99,16 @@ def parse_kickoff(pick):
     for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M",
                "%d-%m, %H:%M", "%d-%m, %H:%M:%S", "%H:%M"):
         try:
-            dt = datetime.strptime(raw, fmt)
+            if fmt in ("%d-%m, %H:%M", "%d-%m, %H:%M:%S"):
+                # Yearless formats: strptime would default to year 1900 and
+                # emit a DeprecationWarning (behavior changes in Python 3.15
+                # — it becomes an error). Append the pick's year explicitly;
+                # date components are overridden from the pick's date below
+                # regardless, so behavior is identical, just warning-free.
+                year = day[:4] or "1900"
+                dt = datetime.strptime(f"{raw} {year}", f"{fmt} %Y")
+            else:
+                dt = datetime.strptime(raw, fmt)
             if fmt in ("%H:%M", "%d-%m, %H:%M", "%d-%m, %H:%M:%S"):
                 try:
                     dt = dt.replace(year=int(day[:4]), month=int(day[5:7]), day=int(day[8:10]))
