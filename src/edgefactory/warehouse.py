@@ -313,7 +313,7 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
                    -- (statarea) — surfaced so the ML-meta classifier can use them.
                    fb.ht_hs, fb.ht_gs, fb.p1_ht, fb.px_ht, fb.p2_ht,
                    fb.kelly, fb.pred_hs, fb.pred_gs, fb.goalsavg,
-                   fb.p_ng, fb.p_under, fb.p_over,
+                   fb.p_ng, fb.p_under, fb.p_over, fb.p_gg,
                    sa.p1_ht AS sa_p1_ht, sa.px_ht AS sa_px_ht, sa.p2_ht AS sa_p2_ht
             FROM fb JOIN zb USING (date, hkey, akey)
                     JOIN sa USING (date, hkey, akey)
