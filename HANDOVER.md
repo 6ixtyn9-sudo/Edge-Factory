@@ -5195,3 +5195,25 @@ same-period split and certifies nothing.
 
 **Process:** screen found nothing certifiable -> nothing deployed. The auto-
 tickets grader remains the only thing that decides what gets staked.
+---
+
+## Addendum — 2026-08-10 (late 3): xG O/U closure — redundant with p_o25
+
+**New data:** reran xg_signal_check.py with the p_o25 head-to-head (bzzoiro's
+own over-2.5 probability, already consumed by the system).
+
+**Result (test n=303):** AUC(over2.5) xg_total 0.588 vs p_o25 0.576 —
+statistically identical. corr(xgt, p_o25) = 0.763 (~58% shared variance).
+Train: 0.573 vs 0.576 — identical. Combined with the 1X2 result (p1-p2 0.694
+beats xg_diff 0.632), raw xG columns are REDUNDANT with bzzoiro's own model
+probabilities on both markets.
+
+**Doctrine (updated):** the xG screen closes as NOT useful now. No xG feature
+work; no xG-into-ML-meta. Revisit only if/when (a) a full season of xG history
+exists for a real cross-season walk-forward, AND (b) a feature-ablation test
+shows marginal lift over the model's own probs. This is the truthfulness
+system working: a promising orphaned column got tested and failed to add
+value; the record now says so.
+
+**Note:** xg_signal_check.py lives untracked in the repo dir as an operator
+tool (analysis only, not pipeline code). Leave untracked; never git add -A.
