@@ -45,7 +45,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.util import fold_ascii, norm_team, honest_display_label  # noqa: E402
+from edgefactory.util import fold_ascii, norm_team, honest_display_label, heal_ledger_labels  # noqa: E402
 
 REPORT_DIR = ROOT / "localdata"
 PICKS_TODAY_FILE = REPORT_DIR / "picks_today.json"
@@ -171,6 +171,9 @@ def archive_picks_by_kickoff(picks: list[dict[str, Any]], fallback_date: str) ->
         
         # Use our merge logic to add new picks or update existing ones
         merged, _ = autonomous_intraday_merge(existing, date_picks)
+        healed = heal_ledger_labels(merged)
+        if healed:
+            print(f"  self-healed {healed} stale display labels in {d} archive")
         archive_path.write_text(json.dumps(merged, indent=2, sort_keys=True))
 
 
@@ -553,8 +556,12 @@ def promote_forecast(forecast_arg: str, default_date: str) -> None:
 
     target_date = _pick_date(data[0] if data else {}, default_date)
 
+    healed = heal_ledger_labels(data)
+    if healed:
+        print(f"  self-healed {healed} stale display labels during promotion")
+
     archive_file = archived_picks_file(target_date)
-    text_content = path.read_text()
+    text_content = json.dumps(data, indent=2, sort_keys=True)
     archive_file.write_text(text_content)
     PICKS_TODAY_FILE.write_text(text_content)
     print(f"  Promoted to official archive: {archive_file}")
@@ -816,6 +823,9 @@ def run_pipeline(
 
         fresh_picks = load_picks_file()
         merged_picks, new_added = autonomous_intraday_merge(existing_ledger, fresh_picks)
+        healed_labels = heal_ledger_labels(merged_picks)
+        if healed_labels:
+            print(f"  self-healed {healed_labels} stale display labels in live ledger")
 
         print("\n=== Autonomous Accumulating Ledger Verdict ===")
         print(f"  Existing Locked Morning Picks : {len(existing_ledger)}")

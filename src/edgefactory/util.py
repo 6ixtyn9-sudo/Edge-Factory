@@ -219,3 +219,26 @@ def honest_display_label(pick: dict) -> str:
             except (TypeError, ValueError):
                 pass
     return pick.get("display_rule") or rule or "?"
+
+
+def heal_ledger_labels(ledger: list) -> int:
+    """Rewrite stored display_rule from the exact rule string (self-heal).
+
+    The merge layer retains archived rows exactly, so rows archived by older
+    code can carry a stale display_rule forever (e.g. pre-qualifier labels
+    like "2WAY-UNANIMOUS>=60" for the bc-confirms variant). This derives the
+    honest label from rule/edge_rule and writes it back, making the STORED
+    data truthful too — not just the render. It only touches the display
+    field; never rule, odds, result, or any performance field. Idempotent:
+    rows that already match are left untouched. Returns count healed.
+    """
+    healed = 0
+    for p in ledger:
+        if not isinstance(p, dict):
+            continue
+        stored = p.get("display_rule")
+        derived = honest_display_label(p)
+        if derived != "?" and derived != stored:
+            p["display_rule"] = derived
+            healed += 1
+    return healed
