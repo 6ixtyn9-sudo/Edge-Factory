@@ -5465,3 +5465,26 @@ the bar.
 6. **Tripwire ceiling message fixed:** was reporting the lowest threshold (70) for all ml-meta edges; now uses each rule's own threshold (>=70 gap 15.2pp, >=75 gap 20.2pp, >=80 gap 25.2pp). Verified.
 
 **Note:** ml-meta>=70/75/80 remain certified but silent — the CEILING flag (not mere SILENT) is the honest status until the slate thickens. Auto-tickets unaffected (its gate is the graded combo table, not these edges).
+---
+
+## Addendum — 2026-08-10 (late 15): Phase A — sa_ht_p + p_gg features for ML-meta
+
+**What:** completed the eyes-open harvest with two more features the model
+wasn't using, mirrored across warehouse -> trainer -> live path:
+- `sa_ht_p` — statarea half-time win prob of the majority pick (second
+  source's HT opinion; statarea HT probs already surfaced in consensus3)
+- `p_gg` — forebet BTTS-yes prob (was loaded in the raw forebet view but
+  never carried into consensus3; now added)
+
+**Result:** ML-meta feature set is now 26 (was 15 at the start of the day),
+all trainer == live verified (feature-consistency test passes).
+
+**Certification decides:** the next mine_consensus run re-trains with 26
+features and re-certifies. If sa_ht_p / p_gg earn their keep (walk-forward
+lift), they stay; if not, they're harmlessly dropped by the gates. No manual
+feature veto — the data judges, same as everything else.
+
+**Caveat kept honest:** added features on ~1,400 train rows edge toward
+overfit; the re-certification gates (min_n_train 340, min_n_valid 120, valid
+ROI >= 0, LB >= 0.5) are the tripwire for that. Watch the ML-meta diagnostic
+line + decay table on the next full run.
