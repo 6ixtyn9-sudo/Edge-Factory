@@ -5488,3 +5488,19 @@ feature veto — the data judges, same as everything else.
 overfit; the re-certification gates (min_n_train 340, min_n_valid 120, valid
 ROI >= 0, LB >= 0.5) are the tripwire for that. Watch the ML-meta diagnostic
 line + decay table on the next full run.
+---
+
+## Addendum — 2026-08-10 (late 16): kickoff parse DeprecationWarning fixed (3.15-proofing)
+
+**Warning:** auto_tickets.py parse_kickoff used yearless strptime formats
+("%d-%m, %H:%M", "%d-%m, %H:%M:%S") — Python defaults the year to 1900 and
+emits a DeprecationWarning; behavior becomes an ERROR in Python 3.15.
+
+**Fix:** append the pick's year explicitly before parsing (fallback "1900"
+when the pick has no date, matching the previous default) and use the
+yearful format "%d-%m, %H:%M %Y". The subsequent year/month/day override
+from the pick's date is unchanged — behavior identical, warning-free.
+
+**Verified:** all 5 kickoff formats parse correctly under
+`python3 -W error::DeprecationWarning` (any warning would crash) — yearless
+DD-MM, HH:MM(:SS), full ISO, and bare HH:MM all pass. No behavior change.
