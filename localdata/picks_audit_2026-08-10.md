@@ -9,17 +9,17 @@
 - regular-ledger-only legacy rows: 46
 - unsafe regular ledgers ignored: 3
 - empty regular ledgers (morning-baseline coverage only): 0
-- settled picks: 183
+- settled picks: 184
 - eligible prior 1x2 picks: 189
-- pending/unmatched result picks: 3
+- pending/unmatched result picks: 2
 - voided postponed/cancelled/abandoned events: 3
 - ambiguous event-disposition rows: 0
-- settled via shared overlay facts: 2
+- settled via shared overlay facts: 5
 - ambiguous result picks: 0
-- wins: 137
-- hit rate: 0.748634
-- priced picks: 174
-- ROI: -1.1e-05
+- wins: 138
+- hit rate: +75.0%
+- priced picks: 175
+- ROI: +0.3%
 
 ## Settlement policy
 
@@ -30,16 +30,16 @@
 ## Secondary Market Realized Rates
 
 Metrics scored against actual outcomes of the settled consensus picks in this window:
-- **Over 2.5 Goals**: occurred in 124 / 183 matches (67.8%)
-- **Both Teams to Score (BTTS)**: occurred in 95 / 183 matches (51.9%)
-- **Selected Team Over 1.5 Goals**: occurred in 133 / 183 matches (72.7%)
+- **Over 2.5 Goals**: occurred in 124 / 184 matches (67.4%)
+- **Both Teams to Score (BTTS)**: occurred in 95 / 184 matches (51.6%)
+- **Selected Team Over 1.5 Goals**: occurred in 133 / 184 matches (72.3%)
 
 ## Recommended Enhancements Audit
 
 Performance of deep context-derived recommended enhancements overlay:
-- **Total Recommended Enhancements**: 112
+- **Total Recommended Enhancements**: 113
 - **Total Hits**: 87
-- **Overall Hit Rate**: 77.7%
+- **Overall Hit Rate**: 77.0%
 
 ### Breakdown by Enhancement Type:
 - `away_over_05`: recommended=11, hits=11, hit_rate=100.0%
@@ -52,7 +52,7 @@ Performance of deep context-derived recommended enhancements overlay:
 - `home_under_45`: recommended=1, hits=1, hit_rate=100.0%
 - `match_over_15`: recommended=7, hits=6, hit_rate=85.7%
 - `match_over_25`: recommended=9, hits=5, hit_rate=55.6%
-- `match_over_35`: recommended=4, hits=1, hit_rate=25.0%
+- `match_over_35`: recommended=5, hits=1, hit_rate=20.0%
 
 ## Possible Events (🔥) Full-Surface Audit
 
@@ -62,38 +62,38 @@ Performance of deep context-derived recommended enhancements overlay:
 
 Every machine-readable 🔥 note on every settled pick in the window, scored against the final score (plain-market: a note hits iff its market lands in the final score (selection-independent for match totals and BTTS; the 1X2 selection only picks the team for team totals and the double-chance leg)).
 
-- notes on settled picks: **983** | scored: 983
+- notes on settled picks: **984** | scored: 984
 
 ### Per-market hit table
 
 | market | notes | n | hits | realized | promised avg | Δ | Brier |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `match_over_35` | 92 | 92 | 37 | 40.2% | 43.3% | -3.1% | 0.249259 |
-| `away_under_35` | 89 | 89 | 86 | 96.6% | 97.0% | -0.4% | 0.031761 |
-| `match_over_45` | 81 | 81 | 18 | 22.2% | 26.4% | -4.2% | 0.183015 |
-| `away_under_25` | 78 | 78 | 74 | 94.9% | 92.4% | +2.5% | 0.050881 |
-| `home_over_05` | 74 | 74 | 71 | 95.9% | 89.5% | +6.5% | 0.046876 |
-| `exact_4` | 67 | 67 | 17 | 25.4% | 18.0% | +7.3% | 0.196872 |
-| `goal_range_4_6` | 63 | 63 | 26 | 41.3% | 37.4% | +3.8% | 0.250203 |
-| `goal_range_4_5` | 59 | 59 | 20 | 33.9% | 30.9% | +3.0% | 0.229007 |
-| `match_over_25` | 59 | 59 | 37 | 62.7% | 42.2% | +20.5% | 0.301519 |
-| `exact_5` | 57 | 57 | 6 | 10.5% | 12.6% | -2.1% | 0.096166 |
-| `btts_no` | 40 | 40 | 17 | 42.5% | 52.7% | -10.2% | 0.252916 |
-| `btts_yes` | 38 | 38 | 19 | 50.0% | 50.9% | -0.9% | 0.248905 |
-| `exact_3` | 32 | 32 | 4 | 12.5% | 22.2% | -9.7% | 0.119085 |
-| `goal_range_2_3` | 26 | 26 | 8 | 30.8% | 46.1% | -15.4% | 0.233772 |
-| `home_under_35` | 26 | 26 | 22 | 84.6% | 95.1% | -10.5% | 0.136612 |
-| `exact_2` | 24 | 24 | 5 | 20.8% | 24.5% | -3.7% | 0.166543 |
-| `away_under_15` | 22 | 22 | 19 | 86.4% | 81.0% | +5.4% | 0.120558 |
-| `away_over_05` | 14 | 14 | 13 | 92.9% | 87.3% | +5.6% | 0.065099 |
-| `home_under_25` | 13 | 13 | 11 | 84.6% | 91.5% | -6.9% | 0.138259 |
-| `goal_range_6_plus` | 9 | 9 | 1 | 11.1% | 18.7% | -7.6% | 0.102748 |
-| `match_over_15` | 8 | 8 | 7 | 87.5% | 85.7% | +1.8% | 0.122786 |
-| `exact_1` | 4 | 4 | 1 | 25.0% | 21.5% | +3.5% | 0.175017 ⚠️low-n |
-| `goal_range_7_plus` | 3 | 3 | 1 | 33.3% | 13.5% | +19.8% | 0.282655 ⚠️low-n |
-| `home_under_15` | 3 | 3 | 2 | 66.7% | 80.7% | -14.0% | 0.242735 ⚠️low-n |
-| `exact_0` | 1 | 1 | 0 | 0.0% | 11.0% | -11.0% | 0.012054 ⚠️low-n |
-| `goal_range_0_1` | 1 | 1 | 1 | 100.0% | 35.2% | +64.8% | 0.419464 ⚠️low-n |
+| `match_over_35` | 93 | 93 | 37 | +39.8% | +43.3% | -3.5% | 0.248114 |
+| `away_under_35` | 89 | 89 | 86 | +96.6% | +97.0% | -0.4% | 0.031761 |
+| `match_over_45` | 81 | 81 | 18 | +22.2% | +26.4% | -4.2% | 0.183015 |
+| `away_under_25` | 78 | 78 | 74 | +94.9% | +92.4% | +2.5% | 0.050881 |
+| `home_over_05` | 74 | 74 | 71 | +95.9% | +89.5% | +6.5% | 0.046876 |
+| `exact_4` | 67 | 67 | 17 | +25.4% | +18.0% | +7.3% | 0.196872 |
+| `goal_range_4_6` | 63 | 63 | 26 | +41.3% | +37.4% | +3.8% | 0.250203 |
+| `goal_range_4_5` | 59 | 59 | 20 | +33.9% | +30.9% | +3.0% | 0.229007 |
+| `match_over_25` | 59 | 59 | 37 | +62.7% | +42.2% | +20.5% | 0.301519 |
+| `exact_5` | 57 | 57 | 6 | +10.5% | +12.6% | -2.1% | 0.096166 |
+| `btts_no` | 40 | 40 | 17 | +42.5% | +52.7% | -10.2% | 0.252916 |
+| `btts_yes` | 38 | 38 | 19 | +50.0% | +50.9% | -0.9% | 0.248905 |
+| `exact_3` | 32 | 32 | 4 | +12.5% | +22.2% | -9.7% | 0.119085 |
+| `goal_range_2_3` | 26 | 26 | 8 | +30.8% | +46.1% | -15.4% | 0.233772 |
+| `home_under_35` | 26 | 26 | 22 | +84.6% | +95.1% | -10.5% | 0.136612 |
+| `exact_2` | 24 | 24 | 5 | +20.8% | +24.5% | -3.7% | 0.166543 |
+| `away_under_15` | 22 | 22 | 19 | +86.4% | +81.0% | +5.4% | 0.120558 |
+| `away_over_05` | 14 | 14 | 13 | +92.9% | +87.3% | +5.6% | 0.065099 |
+| `home_under_25` | 13 | 13 | 11 | +84.6% | +91.5% | -6.9% | 0.138259 |
+| `goal_range_6_plus` | 9 | 9 | 1 | +11.1% | +18.7% | -7.6% | 0.102748 |
+| `match_over_15` | 8 | 8 | 7 | +87.5% | +85.7% | +1.8% | 0.122786 |
+| `exact_1` | 4 | 4 | 1 | +25.0% | +21.5% | +3.5% | 0.175017 ⚠️low-n |
+| `goal_range_7_plus` | 3 | 3 | 1 | +33.3% | +13.5% | +19.8% | 0.282655 ⚠️low-n |
+| `home_under_15` | 3 | 3 | 2 | +66.7% | +80.7% | -14.0% | 0.242735 ⚠️low-n |
+| `exact_0` | 1 | 1 | 0 | +0.0% | +11.0% | -11.0% | 0.012054 ⚠️low-n |
+| `goal_range_0_1` | 1 | 1 | 1 | +100.0% | +35.2% | +64.8% | 0.419464 ⚠️low-n |
 
 Labels render plain-market exactly as promised, priced and scored: `match_over_15` → "Match Over 1.5 Goals"; `match_over_25` → "Match Over 2.5 Goals"; `btts_yes` → "Both Teams to Score - Yes (BTTS-Yes)". Raw archive labels written before 2026-08-03 may still carry the old "Win + …" wording in their stored label field; the render normalizes them.
 
@@ -103,24 +103,24 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 | engine | n | hits | realized | promised avg | Δ | Brier |
 | --- | --- | --- | --- | --- | --- | --- |
-| hybrid_cohort | 682 | 363 | 53.2% | 53.1% | +0.1% | 0.1492 |
-| legacy | 263 | 136 | 51.7% | 52.1% | -0.4% | 0.183796 |
-| model | 38 | 24 | 63.2% | 46.1% | +17.0% | 0.280314 |
+| hybrid_cohort | 683 | 363 | +53.1% | +53.1% | +0.1% | 0.149191 |
+| legacy | 263 | 136 | +51.7% | +52.1% | -0.4% | 0.183796 |
+| model | 38 | 24 | +63.2% | +46.1% | +17.0% | 0.280314 |
 
 
 ### Promised-vs-realized calibration (all 🔥 notes pooled)
 
 | promised bucket | n | promised avg | realized | Δ |
 | --- | --- | --- | --- | --- |
-| 0.1-0.2 | 137 | 15.5% | 19.7% | +4.2% |
-| 0.2-0.3 | 148 | 24.8% | 22.3% | -2.6% |
-| 0.3-0.4 | 181 | 35.3% | 44.2% | +8.9% |
-| 0.4-0.5 | 103 | 45.3% | 38.8% | -6.5% |
-| 0.5-0.6 | 78 | 52.6% | 39.7% | -12.8% |
-| 0.6-0.7 | 5 | 65.3% | 100.0% | +34.7% |
-| 0.7-0.8 | 4 | 74.4% | 50.0% | -24.4% |
-| 0.8-0.9 | 90 | 84.8% | 92.2% | +7.5% |
-| 0.9-1.0 | 237 | 94.6% | 93.7% | -1.0% |
+| 0.1-0.2 | 137 | +15.5% | +19.7% | +4.2% |
+| 0.2-0.3 | 148 | +24.8% | +22.3% | -2.6% |
+| 0.3-0.4 | 182 | +35.4% | +44.0% | +8.6% |
+| 0.4-0.5 | 103 | +45.3% | +38.8% | -6.5% |
+| 0.5-0.6 | 78 | +52.6% | +39.7% | -12.8% |
+| 0.6-0.7 | 5 | +65.3% | +100.0% | +34.7% |
+| 0.7-0.8 | 4 | +74.4% | +50.0% | -24.4% |
+| 0.8-0.9 | 90 | +84.8% | +92.2% | +7.5% |
+| 0.9-1.0 | 237 | +94.6% | +93.7% | -1.0% |
 
 ## Statistical Line (📊) Calibration
 
@@ -128,35 +128,35 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 Scored as probabilistic forecasts per settled pick (each metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5 / exact Top Score) — calibration, not a direction call).
 
-- **Avg Goals forecast**: n=111, MAE=1.389279 goals, bias=-0.463514 (realized − promised), promised avg 3.76982 vs realized 3.306306
+- **Avg Goals forecast**: n=112, MAE=1.399375 goals, bias=-0.481875 (realized − promised), promised avg 3.767589 vs realized 3.285714
 
 ### Per-metric calibration
 
 | metric | n | promised avg | realized | Δ | Brier |
 | --- | --- | --- | --- | --- | --- |
-| Top Scores (exact) | 222 | 14.2% | 9.5% | -4.7% | 0.088523 |
-| Away Over 1.5 | 111 | 22.5% | 32.4% | +9.9% | 0.190311 |
-| BTTS-Yes | 111 | 40.7% | 53.2% | +12.5% | 0.267133 |
-| Home Over 1.5 | 111 | 74.5% | 61.3% | -13.2% | 0.218623 |
-| Over 2.5 | 111 | 73.3% | 65.8% | -7.6% | 0.231694 |
+| Top Scores (exact) | 224 | +14.2% | +9.8% | -4.4% | 0.09112 |
+| Away Over 1.5 | 112 | +22.4% | +32.1% | +9.8% | 0.188671 |
+| BTTS-Yes | 112 | +40.7% | +52.7% | +12.0% | 0.266148 |
+| Home Over 1.5 | 112 | +74.6% | +60.7% | -13.9% | 0.223182 |
+| Over 2.5 | 112 | +73.3% | +65.2% | -8.1% | 0.233778 |
 
 ### Promised-vs-realized calibration (all 📊 metrics pooled)
 
 | promised bucket | n | promised avg | realized | Δ |
 | --- | --- | --- | --- | --- |
-| 0.0-0.1 | 82 | 8.8% | 19.5% | +10.7% |
-| 0.1-0.2 | 247 | 13.6% | 11.3% | -2.3% |
-| 0.2-0.3 | 4 | 20.8% | 25.0% | +4.2% |
-| 0.3-0.4 | 39 | 37.7% | 61.5% | +23.8% |
-| 0.4-0.5 | 72 | 42.3% | 48.6% | +6.3% |
-| 0.6-0.7 | 33 | 67.7% | 63.6% | -4.1% |
-| 0.7-0.8 | 71 | 75.0% | 66.2% | -8.8% |
-| 0.8-0.9 | 90 | 86.2% | 71.1% | -15.1% |
-| 0.9-1.0 | 28 | 91.7% | 75.0% | -16.7% |
+| 0.0-0.1 | 83 | +8.8% | +19.3% | +10.5% |
+| 0.1-0.2 | 249 | +13.7% | +11.6% | -2.0% |
+| 0.2-0.3 | 4 | +20.8% | +25.0% | +4.2% |
+| 0.3-0.4 | 40 | +37.8% | +60.0% | +22.2% |
+| 0.4-0.5 | 72 | +42.3% | +48.6% | +6.3% |
+| 0.6-0.7 | 34 | +67.7% | +61.8% | -6.0% |
+| 0.7-0.8 | 71 | +75.0% | +66.2% | -8.8% |
+| 0.8-0.9 | 91 | +86.2% | +70.3% | -15.9% |
+| 0.9-1.0 | 28 | +91.7% | +75.0% | -16.7% |
 
 ## By rule
 
-- `2way+bc-confirms avg_p>=60`: settled=20, wins=12, hit_rate=0.6, ROI=-0.191667
+- `2way+bc-confirms avg_p>=60`: settled=21, wins=13, hit_rate=0.619048, ROI=-0.157895
 - `2way-unanimous avg_p>=70`: settled=89, wins=70, hit_rate=0.786517, ROI=0.037747
 - `3way-unanimous avg_p>=65`: settled=57, wins=40, hit_rate=0.701754, ROI=-0.042768
 - `3way-unanimous home-only avg_p>=60`: settled=10, wins=9, hit_rate=0.9, ROI=0.277
@@ -169,7 +169,7 @@ Scored as probabilistic forecasts per settled pick (each metric is scored as a p
 - `SKIPPED_VETO`: settled=104, wins=83, hit_rate=0.798077, ROI=0.058154
 - `WATCHLIST_NO_ODDS`: settled=9, wins=8, hit_rate=0.888889, ROI=None
 - `WATCHLIST_SUSPECT_PRICE`: settled=2, wins=1, hit_rate=0.5, ROI=-0.4
-- `WATCHLIST_UNCORROBORATED_PRICE`: settled=5, wins=5, hit_rate=1.0, ROI=0.318
+- `WATCHLIST_UNCORROBORATED_PRICE`: settled=6, wins=6, hit_rate=1.0, ROI=0.34
 - `WATCHLIST_UNKNOWN_CTX`: settled=20, wins=17, hit_rate=0.85, ROI=0.027
 
 ## By odds source
@@ -178,14 +178,14 @@ Scored as probabilistic forecasts per settled pick (each metric is scored as a p
 - `betexplorer_odds`: settled=83, wins=65, hit_rate=0.783133, ROI=0.025663
 - `bzzoiro_odds`: settled=49, wins=37, hit_rate=0.755102, ROI=0.075061
 - `forebet_best`: settled=6, wins=3, hit_rate=0.5, ROI=-0.313333
-- `scoutingstats_odds`: settled=29, wins=17, hit_rate=0.586207, ROI=-0.231724
+- `scoutingstats_odds`: settled=30, wins=18, hit_rate=0.6, ROI=-0.209
 - `zulubet`: settled=7, wins=7, hit_rate=1.0, ROI=0.398571
 
 ## By odds match method
 
 - `alias_fuzzy`: settled=10, wins=6, hit_rate=0.6, ROI=-0.264
 - `betexplorer`: settled=83, wins=65, hit_rate=0.783133, ROI=0.025663
-- `exact`: settled=70, wins=49, hit_rate=0.7, ROI=-0.017171
+- `exact`: settled=71, wins=50, hit_rate=0.704225, ROI=-0.010592
 - `fallback`: settled=11, wins=9, hit_rate=0.818182, ROI=0.155455
 - `none`: settled=9, wins=8, hit_rate=0.888889, ROI=None
 
@@ -197,7 +197,7 @@ Scored as probabilistic forecasts per settled pick (each metric is scored as a p
 | --- | --- | --- | --- | --- | --- |
 | BetExplorer rescue (`BETEXPLORER_RESCUE`) | 83 | 65 | 0.783133 | 83 | 0.025663 |
 | Bzzoiro primary match (`BZZOIRO_PRIMARY`) | 41 | 32 | 0.780488 | 41 | 0.134585 |
-| ScoutingStats sole fallback (`SCOUTINGSTATS_SOLE`) | 29 | 17 | 0.586207 | 29 | -0.231724 |
+| ScoutingStats sole fallback (`SCOUTINGSTATS_SOLE`) | 30 | 18 | 0.6 | 30 | -0.209 |
 | Source fallback (`SOURCE_FALLBACK`) | 11 | 9 | 0.818182 | 11 | 0.155455 |
 | Suspect alias_fuzzy candidate (`SUSPECT_ALIAS_FUZZY`) | 10 | 6 | 0.6 | 10 | -0.264 |
 | No usable price (`UNMATCHED`) | 9 | 8 | 0.888889 | 0 | None |
@@ -254,7 +254,7 @@ Scored as probabilistic forecasts per settled pick (each metric is scored as a p
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | No price quarantine (`NONE`) | 144 | 114 | 0.791667 | 135 | 0.069319 | 0 | None |
 | alias_fuzzy match (`alias_fuzzy`) | 10 | 6 | 0.6 | 10 | -0.264 | 2 | 1.24 |
-| ScoutingStats sole source (`scoutingstats_sole_source`) | 29 | 17 | 0.586207 | 29 | -0.231724 | 0 | None |
+| ScoutingStats sole source (`scoutingstats_sole_source`) | 30 | 18 | 0.6 | 30 | -0.209 | 0 | None |
 ## Settled Picks Granular Expectations Audit
 
 Visual audit of expected historical stats (from the `📊` line) against actual realized scores:
@@ -267,12 +267,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.5% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 3-0 (12.7%), [🔴 MISS] 2-1 (10.7%)
   - **🔥 Possible Events (graded)**:
-    - [🔴 MISS] **Home Team Over 0.5 Goals**: expected 94.6% (Actual: 0 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 53.5% (Actual: 1 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.7% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 92.1% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 2.5 Goals**: expected 41.2% (Actual: 1 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 33.4% (Actual: 1 goals)
+    - [🔴 MISS] **Home Team Over 0.5 Goals**: expected +94.6% (Actual: 0 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +53.5% (Actual: 1 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.7% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +92.1% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 2.5 Goals**: expected +41.2% (Actual: 1 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +33.4% (Actual: 1 goals)
 
 ### 2026-08-09: Sheriff Tiraspol vs Dacia Buiucani (Actual Score: **1-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.32 -> 🟢 WON (Expected prob: 73.5%)
@@ -282,13 +282,13 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.3% (Actual: 0 goals)
   - **Top Scores**: [🟢 HIT] 1-0 (12.7%), [🔴 MISS] 2-0 (12.6%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 89.2% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 47.9% (Actual: 1 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 97.9% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 93.9% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 80.5% (Actual: 0 away goals)
-    - [🔴 MISS] **Match Over 2.5 Goals**: expected 37.8% (Actual: 1 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 28.4% (Actual: 1 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +89.2% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +47.9% (Actual: 1 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +97.9% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +93.9% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +80.5% (Actual: 0 away goals)
+    - [🔴 MISS] **Match Over 2.5 Goals**: expected +37.8% (Actual: 1 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +28.4% (Actual: 1 goals)
 
 ### 2026-08-09: PEC Zwolle vs Ajax (Actual Score: **0-2**)
 - **1X2 Pick**: Selected `AWAY` @ 1.49 -> 🟢 WON (Expected prob: 69.0%)
@@ -298,12 +298,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Over 1.5 Goals**: expected 85.5% (Actual: 2 goals)
   - **Top Scores**: [🟢 HIT] 0-2 (15.8%), [🔴 MISS] 0-1 (14.5%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected 89.9% (Actual: 2 away goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 39.6% (Actual: 2 goals)
-    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 98.4% (Actual: 0 home goals)
-    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected 95.1% (Actual: 0 home goals)
-    - [🟢 HIT] **Home Team Under 1.5 Goals**: expected 80.8% (Actual: 0 home goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 23.2% (Actual: 2 goals)
+    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected +89.9% (Actual: 2 away goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +39.6% (Actual: 2 goals)
+    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected +98.4% (Actual: 0 home goals)
+    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected +95.1% (Actual: 0 home goals)
+    - [🟢 HIT] **Home Team Under 1.5 Goals**: expected +80.8% (Actual: 0 home goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +23.2% (Actual: 2 goals)
 
 ### 2026-08-09: Shirak FC vs Noah (Actual Score: **3-4**)
 - **1X2 Pick**: Selected `AWAY` @ 1.3 -> 🟢 WON (Expected prob: 67.5%)
@@ -313,12 +313,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Over 1.5 Goals**: expected 84.7% (Actual: 4 goals)
   - **Top Scores**: [🔴 MISS] 0-2 (16.2%), [🔴 MISS] 0-1 (15.3%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected 88.8% (Actual: 4 away goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 39.1% (Actual: 7 goals)
-    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 98.2% (Actual: 3 home goals)
-    - [🔴 MISS] **Home Team Under 2.5 Goals**: expected 95.3% (Actual: 3 home goals)
-    - [🔴 MISS] **Home Team Under 1.5 Goals**: expected 80.8% (Actual: 3 home goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected 23.0% (Actual: 7 goals)
+    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected +88.8% (Actual: 4 away goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +39.1% (Actual: 7 goals)
+    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected +98.2% (Actual: 3 home goals)
+    - [🔴 MISS] **Home Team Under 2.5 Goals**: expected +95.3% (Actual: 3 home goals)
+    - [🔴 MISS] **Home Team Under 1.5 Goals**: expected +80.8% (Actual: 3 home goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected +23.0% (Actual: 7 goals)
 
 ### 2026-08-09: Hammarby TTF vs FBK Karlstad (Actual Score: **1-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.37 -> 🔴 LOST (Expected prob: 66.0%)
@@ -328,12 +328,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.4% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (16.5%), [🔴 MISS] 1-0 (15.1%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 91.2% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 39.1% (Actual: 2 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.3% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 94.6% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 80.9% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 23.7% (Actual: 2 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +91.2% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +39.1% (Actual: 2 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.3% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +94.6% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +80.9% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +23.7% (Actual: 2 goals)
 
 ### 2026-08-09: Athletic Club Boise vs Forward Madison (Actual Score: **2-1**)
 - **1X2 Pick**: Selected `AWAY` @ 4.0 -> 🔴 LOST (Expected prob: 61.5%)
@@ -343,11 +343,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Over 1.5 Goals**: expected 83.8% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 0-2 (16.3%), [🔴 MISS] 0-1 (16.2%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected 87.4% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 36.9% (Actual: 3 goals)
-    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 98.1% (Actual: 2 home goals)
-    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected 93.0% (Actual: 2 home goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 21.9% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected +87.4% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +36.9% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected +98.1% (Actual: 2 home goals)
+    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected +93.0% (Actual: 2 home goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +21.9% (Actual: 3 goals)
 
 ### 2026-08-09: Benfica vs Academico Viseu (Actual Score: **2-2**)
 - **1X2 Pick**: Selected `HOME` @ 1.14 -> 🔴 LOST (Expected prob: 78.0%)
@@ -357,7 +357,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 91.4% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 3-0 (13.4%), [🔴 MISS] 4-0 (12.8%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 52.2% (Actual: 4 goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +52.2% (Actual: 4 goals)
 
 ### 2026-08-09: Malmö FF vs Degerfors IF (Actual Score: **1-2**)
 - **1X2 Pick**: Selected `HOME` @ 1.5 -> 🔴 LOST (Expected prob: 71.4%)
@@ -367,7 +367,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 89.7% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (13.7%), [🔴 MISS] 3-0 (13.3%)
   - **🔥 Possible Events (graded)**:
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 45.0% (Actual: 3 goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +45.0% (Actual: 3 goals)
 
 ### 2026-08-09: Universitatea Craiova vs FC Argeș Pitești (Actual Score: **0-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.67 -> 🔴 LOST (Expected prob: 68.2%)
@@ -377,13 +377,13 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.9% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (15.1%), [🔴 MISS] 1-0 (13.8%)
   - **🔥 Possible Events (graded)**:
-    - [🔴 MISS] **Home Team Over 0.5 Goals**: expected 91.9% (Actual: 0 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 42.5% (Actual: 1 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.4% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 95.2% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 81.2% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 2.5 Goals**: expected 35.4% (Actual: 1 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 26.2% (Actual: 1 goals)
+    - [🔴 MISS] **Home Team Over 0.5 Goals**: expected +91.9% (Actual: 0 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +42.5% (Actual: 1 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.4% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +95.2% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +81.2% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 2.5 Goals**: expected +35.4% (Actual: 1 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +26.2% (Actual: 1 goals)
 
 ### 2026-08-09: Benjamín Aceval vs 3 de Noviembre (Actual Score: **2-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.63 -> 🟢 WON (Expected prob: 66.5%)
@@ -393,12 +393,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.1% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (15.6%), [🔴 MISS] 1-0 (14.7%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 90.7% (Actual: 2 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 39.8% (Actual: 3 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.6% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 95.5% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 82.3% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 24.2% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +90.7% (Actual: 2 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +39.8% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.6% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +95.5% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +82.3% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +24.2% (Actual: 3 goals)
 
 ### 2026-08-09: Zenit vs Rodina Moscow (Actual Score: **1-2**)
 - **1X2 Pick**: Selected `HOME` @ 1.14 -> 🔴 LOST (Expected prob: 66.0%)
@@ -408,12 +408,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 91.4% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (16.5%), [🔴 MISS] 1-0 (15.1%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 91.0% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 39.0% (Actual: 3 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.6% (Actual: 2 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 95.3% (Actual: 2 away goals)
-    - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 81.7% (Actual: 2 away goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 23.7% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +91.0% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +39.0% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.6% (Actual: 2 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +95.3% (Actual: 2 away goals)
+    - [🔴 MISS] **Away Team Under 1.5 Goals**: expected +81.7% (Actual: 2 away goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +23.7% (Actual: 3 goals)
 
 ### 2026-08-09: FC Porto vs Alverca (Actual Score: **2-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.21 -> 🟢 WON (Expected prob: 76.0%)
@@ -423,16 +423,16 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.9% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 4-0 (11.9%), [🔴 MISS] 2-1 (11.9%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 91.9% (Actual: 2 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 51.0% (Actual: 2 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.2% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 93.5% (Actual: 0 away goals)
-    - [🔴 MISS] **Goal Range 4-6**: expected 39.6% (Actual: 2 goals)
-    - [🔴 MISS] **Match Over 2.5 Goals**: expected 37.7% (Actual: 2 goals)
-    - [🔴 MISS] **Goal Range 4-5**: expected 32.0% (Actual: 2 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 30.0% (Actual: 2 goals)
-    - [🔴 MISS] **Exact Goals: 4**: expected 18.8% (Actual: 2 goals)
-    - [🔴 MISS] **Exact Goals: 5**: expected 13.1% (Actual: 2 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +91.9% (Actual: 2 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +51.0% (Actual: 2 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.2% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +93.5% (Actual: 0 away goals)
+    - [🔴 MISS] **Goal Range 4-6**: expected +39.6% (Actual: 2 goals)
+    - [🔴 MISS] **Match Over 2.5 Goals**: expected +37.7% (Actual: 2 goals)
+    - [🔴 MISS] **Goal Range 4-5**: expected +32.0% (Actual: 2 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +30.0% (Actual: 2 goals)
+    - [🔴 MISS] **Exact Goals: 4**: expected +18.8% (Actual: 2 goals)
+    - [🔴 MISS] **Exact Goals: 5**: expected +13.1% (Actual: 2 goals)
 
 ### 2026-08-09: HNK Hajduk Split vs Istra 1961 (Actual Score: **2-2**)
 - **1X2 Pick**: Selected `HOME` @ 1.39 -> 🔴 LOST (Expected prob: 76.0%)
@@ -442,17 +442,17 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 89.9% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 4-0 (11.9%), [🔴 MISS] 2-1 (11.9%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 90.0% (Actual: 2 home goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 50.6% (Actual: 4 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.6% (Actual: 2 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 94.8% (Actual: 2 away goals)
-    - [🔴 MISS] **Both Teams to Score - No (BTTS-No)**: expected 50.3% (Actual: BTTS-Yes)
-    - [🟢 HIT] **Goal Range 4-6**: expected 38.7% (Actual: 4 goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 36.9% (Actual: 4 goals)
-    - [🟢 HIT] **Goal Range 4-5**: expected 31.5% (Actual: 4 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 29.7% (Actual: 4 goals)
-    - [🟢 HIT] **Exact Goals: 4**: expected 18.7% (Actual: 4 goals)
-    - [🔴 MISS] **Exact Goals: 5**: expected 12.8% (Actual: 4 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +90.0% (Actual: 2 home goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +50.6% (Actual: 4 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.6% (Actual: 2 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +94.8% (Actual: 2 away goals)
+    - [🔴 MISS] **Both Teams to Score - No (BTTS-No)**: expected +50.3% (Actual: BTTS-Yes)
+    - [🟢 HIT] **Goal Range 4-6**: expected +38.7% (Actual: 4 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +36.9% (Actual: 4 goals)
+    - [🟢 HIT] **Goal Range 4-5**: expected +31.5% (Actual: 4 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +29.7% (Actual: 4 goals)
+    - [🟢 HIT] **Exact Goals: 4**: expected +18.7% (Actual: 4 goals)
+    - [🔴 MISS] **Exact Goals: 5**: expected +12.8% (Actual: 4 goals)
 
 ### 2026-08-09: Riga FC vs Ogre United (Actual Score: **4-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.3 -> 🟢 WON (Expected prob: 76.0%)
@@ -462,17 +462,17 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.9% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 4-0 (11.9%), [🔴 MISS] 2-1 (11.9%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 93.1% (Actual: 4 home goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 51.6% (Actual: 5 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 97.3% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 92.1% (Actual: 1 away goals)
-    - [🟢 HIT] **Goal Range 4-6**: expected 40.7% (Actual: 5 goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 38.5% (Actual: 5 goals)
-    - [🟢 HIT] **Goal Range 4-5**: expected 32.6% (Actual: 5 goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected 30.5% (Actual: 5 goals)
-    - [🔴 MISS] **Exact Goals: 4**: expected 19.0% (Actual: 5 goals)
-    - [🔴 MISS] **Goal Range 6+**: expected 15.1% (Actual: 5 goals)
-    - [🟢 HIT] **Exact Goals: 5**: expected 13.6% (Actual: 5 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +93.1% (Actual: 4 home goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +51.6% (Actual: 5 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +97.3% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +92.1% (Actual: 1 away goals)
+    - [🟢 HIT] **Goal Range 4-6**: expected +40.7% (Actual: 5 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +38.5% (Actual: 5 goals)
+    - [🟢 HIT] **Goal Range 4-5**: expected +32.6% (Actual: 5 goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected +30.5% (Actual: 5 goals)
+    - [🔴 MISS] **Exact Goals: 4**: expected +19.0% (Actual: 5 goals)
+    - [🔴 MISS] **Goal Range 6+**: expected +15.1% (Actual: 5 goals)
+    - [🟢 HIT] **Exact Goals: 5**: expected +13.6% (Actual: 5 goals)
 
 ### 2026-08-09: Haugesund vs Raufoss (Actual Score: **7-2**)
 - **1X2 Pick**: Selected `HOME` @ 1.36 -> 🟢 WON (Expected prob: 75.0%)
@@ -482,17 +482,17 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 90.8% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (11.8%), [🔴 MISS] 3-0 (11.2%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 89.0% (Actual: 7 home goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 50.2% (Actual: 9 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 97.5% (Actual: 2 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 92.7% (Actual: 2 away goals)
-    - [🔴 MISS] **Both Teams to Score - No (BTTS-No)**: expected 50.1% (Actual: BTTS-Yes)
-    - [🔴 MISS] **Goal Range 4-6**: expected 39.8% (Actual: 9 goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 38.0% (Actual: 9 goals)
-    - [🔴 MISS] **Goal Range 4-5**: expected 32.1% (Actual: 9 goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected 29.5% (Actual: 9 goals)
-    - [🔴 MISS] **Exact Goals: 4**: expected 18.9% (Actual: 9 goals)
-    - [🔴 MISS] **Exact Goals: 5**: expected 13.2% (Actual: 9 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +89.0% (Actual: 7 home goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +50.2% (Actual: 9 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +97.5% (Actual: 2 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +92.7% (Actual: 2 away goals)
+    - [🔴 MISS] **Both Teams to Score - No (BTTS-No)**: expected +50.1% (Actual: BTTS-Yes)
+    - [🔴 MISS] **Goal Range 4-6**: expected +39.8% (Actual: 9 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +38.0% (Actual: 9 goals)
+    - [🔴 MISS] **Goal Range 4-5**: expected +32.1% (Actual: 9 goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected +29.5% (Actual: 9 goals)
+    - [🔴 MISS] **Exact Goals: 4**: expected +18.9% (Actual: 9 goals)
+    - [🔴 MISS] **Exact Goals: 5**: expected +13.2% (Actual: 9 goals)
 
 ### 2026-08-09: Vikingur Reykjavik vs IBV Vestmannaeyjar (Actual Score: **2-2**)
 - **1X2 Pick**: Selected `HOME` @ 1.31 -> 🔴 LOST (Expected prob: 74.0%)
@@ -502,17 +502,17 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 90.5% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 1-0 (12.6%), [🔴 MISS] 3-0 (12.6%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 93.8% (Actual: 2 home goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 48.4% (Actual: 4 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 97.1% (Actual: 2 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 91.1% (Actual: 2 away goals)
-    - [🟢 HIT] **Goal Range 4-6**: expected 41.1% (Actual: 4 goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 38.4% (Actual: 4 goals)
-    - [🟢 HIT] **Goal Range 4-5**: expected 32.8% (Actual: 4 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 29.0% (Actual: 4 goals)
-    - [🟢 HIT] **Exact Goals: 4**: expected 19.1% (Actual: 4 goals)
-    - [🔴 MISS] **Goal Range 6+**: expected 15.5% (Actual: 4 goals)
-    - [🔴 MISS] **Exact Goals: 5**: expected 13.7% (Actual: 4 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +93.8% (Actual: 2 home goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +48.4% (Actual: 4 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +97.1% (Actual: 2 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +91.1% (Actual: 2 away goals)
+    - [🟢 HIT] **Goal Range 4-6**: expected +41.1% (Actual: 4 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +38.4% (Actual: 4 goals)
+    - [🟢 HIT] **Goal Range 4-5**: expected +32.8% (Actual: 4 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +29.0% (Actual: 4 goals)
+    - [🟢 HIT] **Exact Goals: 4**: expected +19.1% (Actual: 4 goals)
+    - [🔴 MISS] **Goal Range 6+**: expected +15.5% (Actual: 4 goals)
+    - [🔴 MISS] **Exact Goals: 5**: expected +13.7% (Actual: 4 goals)
 
 ### 2026-08-09: FC Sion vs FC Vaduz (Actual Score: **3-2**)
 - **1X2 Pick**: Selected `HOME` @ 1.47 -> 🟢 WON (Expected prob: 73.0%)
@@ -522,17 +522,17 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 90.2% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 3-0 (12.2%), [🔴 MISS] 1-0 (12.2%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 91.5% (Actual: 3 home goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 48.1% (Actual: 5 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.1% (Actual: 2 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 93.2% (Actual: 2 away goals)
-    - [🔴 MISS] **Both Teams to Score - No (BTTS-No)**: expected 50.7% (Actual: BTTS-Yes)
-    - [🟢 HIT] **Goal Range 4-6**: expected 39.1% (Actual: 5 goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 37.3% (Actual: 5 goals)
-    - [🟢 HIT] **Goal Range 4-5**: expected 31.7% (Actual: 5 goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected 28.1% (Actual: 5 goals)
-    - [🔴 MISS] **Exact Goals: 4**: expected 18.7% (Actual: 5 goals)
-    - [🟢 HIT] **Exact Goals: 5**: expected 12.9% (Actual: 5 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +91.5% (Actual: 3 home goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +48.1% (Actual: 5 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.1% (Actual: 2 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +93.2% (Actual: 2 away goals)
+    - [🔴 MISS] **Both Teams to Score - No (BTTS-No)**: expected +50.7% (Actual: BTTS-Yes)
+    - [🟢 HIT] **Goal Range 4-6**: expected +39.1% (Actual: 5 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +37.3% (Actual: 5 goals)
+    - [🟢 HIT] **Goal Range 4-5**: expected +31.7% (Actual: 5 goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected +28.1% (Actual: 5 goals)
+    - [🔴 MISS] **Exact Goals: 4**: expected +18.7% (Actual: 5 goals)
+    - [🟢 HIT] **Exact Goals: 5**: expected +12.9% (Actual: 5 goals)
 
 ### 2026-08-09: Lech Poznan vs Piast Gliwice (Actual Score: **3-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.62 -> 🟢 WON (Expected prob: 71.0%)
@@ -542,17 +542,17 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.1% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (13.5%), [🟢 HIT] 3-0 (13.2%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 92.1% (Actual: 3 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 44.8% (Actual: 3 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.5% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 94.9% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 80.4% (Actual: 0 away goals)
-    - [🔴 MISS] **Goal Range 4-6**: expected 38.3% (Actual: 3 goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 36.1% (Actual: 3 goals)
-    - [🔴 MISS] **Goal Range 4-5**: expected 31.2% (Actual: 3 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 27.3% (Actual: 3 goals)
-    - [🔴 MISS] **Exact Goals: 4**: expected 18.6% (Actual: 3 goals)
-    - [🔴 MISS] **Exact Goals: 5**: expected 12.6% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +92.1% (Actual: 3 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +44.8% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.5% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +94.9% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +80.4% (Actual: 0 away goals)
+    - [🔴 MISS] **Goal Range 4-6**: expected +38.3% (Actual: 3 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +36.1% (Actual: 3 goals)
+    - [🔴 MISS] **Goal Range 4-5**: expected +31.2% (Actual: 3 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +27.3% (Actual: 3 goals)
+    - [🔴 MISS] **Exact Goals: 4**: expected +18.6% (Actual: 3 goals)
+    - [🔴 MISS] **Exact Goals: 5**: expected +12.6% (Actual: 3 goals)
 
 ### 2026-08-09: Rangers vs Hibernian (Actual Score: **1-2**)
 - **1X2 Pick**: Selected `HOME` @ 1.58 -> 🔴 LOST (Expected prob: 71.0%)
@@ -562,17 +562,17 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 90.1% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (13.5%), [🔴 MISS] 3-0 (13.2%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 91.1% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 44.8% (Actual: 3 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.4% (Actual: 2 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 94.0% (Actual: 2 away goals)
-    - [🔴 MISS] **Both Teams to Score - No (BTTS-No)**: expected 50.5% (Actual: BTTS-Yes)
-    - [🔴 MISS] **Goal Range 4-6**: expected 38.4% (Actual: 3 goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 36.2% (Actual: 3 goals)
-    - [🔴 MISS] **Goal Range 4-5**: expected 31.2% (Actual: 3 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 27.3% (Actual: 3 goals)
-    - [🔴 MISS] **Exact Goals: 4**: expected 18.6% (Actual: 3 goals)
-    - [🔴 MISS] **Exact Goals: 5**: expected 12.7% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +91.1% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +44.8% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.4% (Actual: 2 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +94.0% (Actual: 2 away goals)
+    - [🔴 MISS] **Both Teams to Score - No (BTTS-No)**: expected +50.5% (Actual: BTTS-Yes)
+    - [🔴 MISS] **Goal Range 4-6**: expected +38.4% (Actual: 3 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +36.2% (Actual: 3 goals)
+    - [🔴 MISS] **Goal Range 4-5**: expected +31.2% (Actual: 3 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +27.3% (Actual: 3 goals)
+    - [🔴 MISS] **Exact Goals: 4**: expected +18.6% (Actual: 3 goals)
+    - [🔴 MISS] **Exact Goals: 5**: expected +12.7% (Actual: 3 goals)
 
 ### 2026-08-09: Charlestown City vs Maitland FC (Actual Score: **1-2**)
 - **1X2 Pick**: Selected `AWAY` @ 1.63 -> 🟢 WON (Expected prob: 69.7%)
@@ -582,12 +582,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Over 1.5 Goals**: expected 83.4% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 0-2 (18.1%), [🔴 MISS] 0-1 (16.6%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected 90.2% (Actual: 2 away goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 45.6% (Actual: 3 goals)
-    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 95.0% (Actual: 1 home goals)
-    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected 90.1% (Actual: 1 home goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 35.4% (Actual: 3 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 26.9% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected +90.2% (Actual: 2 away goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +45.6% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected +95.0% (Actual: 1 home goals)
+    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected +90.1% (Actual: 1 home goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +35.4% (Actual: 3 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +26.9% (Actual: 3 goals)
 
 ### 2026-08-09: Palmeiras vs Internacional (Actual Score: **0-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.61 -> 🔴 LOST (Expected prob: 65.8%)
@@ -597,7 +597,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.1% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (17.4%), [🔴 MISS] 1-0 (14.9%)
   - **🔥 Possible Events (graded)**:
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 38.7% (Actual: 0 goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +38.7% (Actual: 0 goals)
 
 ### 2026-08-09: Deportivo Moron vs Acassuso (Actual Score: **4-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.57 -> 🟢 WON (Expected prob: 64.5%)
@@ -607,12 +607,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.8% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (17.6%), [🔴 MISS] 1-0 (14.6%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 90.2% (Actual: 4 home goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 37.6% (Actual: 5 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.9% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 95.4% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 82.4% (Actual: 1 away goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected 21.8% (Actual: 5 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +90.2% (Actual: 4 home goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +37.6% (Actual: 5 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.9% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +95.4% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +82.4% (Actual: 1 away goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected +21.8% (Actual: 5 goals)
 
 ### 2026-08-09: Septemvri Sofia vs CSKA-Sofia (Actual Score: **0-3**)
 - **1X2 Pick**: Selected `AWAY` @ 1.49 -> 🟢 WON (Expected prob: 64.5%)
@@ -622,7 +622,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Over 1.5 Goals**: expected 84.6% (Actual: 3 goals)
   - **Top Scores**: [🔴 MISS] 0-2 (17.1%), [🔴 MISS] 0-1 (15.4%)
   - **🔥 Possible Events (graded)**:
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 37.9% (Actual: 3 goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +37.9% (Actual: 3 goals)
 
 ### 2026-08-09: FC St. Pauli vs SpVgg Greuther Furth (Actual Score: **1-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.8 -> 🔴 LOST (Expected prob: 62.0%)
@@ -632,11 +632,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.1% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (17.6%), [🔴 MISS] 1-0 (15.3%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 89.0% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 36.8% (Actual: 2 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.6% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 94.4% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 21.4% (Actual: 2 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +89.0% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +36.8% (Actual: 2 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.6% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +94.4% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +21.4% (Actual: 2 goals)
 
 ### 2026-08-09: Trujillanos FC vs Deportivo Tachira (Actual Score: **1-3**)
 - **1X2 Pick**: Selected `AWAY` @ 1.7 -> 🟢 WON (Expected prob: 61.0%)
@@ -646,11 +646,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Over 1.5 Goals**: expected 83.9% (Actual: 3 goals)
   - **Top Scores**: [🔴 MISS] 0-1 (16.1%), [🔴 MISS] 0-2 (15.6%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected 87.0% (Actual: 3 away goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 36.5% (Actual: 4 goals)
-    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 98.6% (Actual: 1 home goals)
-    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected 93.0% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 21.9% (Actual: 4 goals)
+    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected +87.0% (Actual: 3 away goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +36.5% (Actual: 4 goals)
+    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected +98.6% (Actual: 1 home goals)
+    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected +93.0% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +21.9% (Actual: 4 goals)
 
 ### 2026-08-09: Debreceni VSC vs Nyiregyhaza (Actual Score: **1-0**)
 - **1X2 Pick**: Selected `HOME` @ n/a -> 🟢 WON (Expected prob: 63.0%)
@@ -660,12 +660,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.3% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (17.4%), [🟢 HIT] 1-0 (14.9%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 88.3% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 37.4% (Actual: 1 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.7% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 94.8% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 80.2% (Actual: 0 away goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 21.3% (Actual: 1 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +88.3% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +37.4% (Actual: 1 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.7% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +94.8% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +80.2% (Actual: 0 away goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +21.3% (Actual: 1 goals)
 
 ### 2026-08-09: FC Astana vs Okzhetpes (Actual Score: **2-1**)
 - **1X2 Pick**: Selected `HOME` @ n/a -> 🟢 WON (Expected prob: 62.0%)
@@ -675,12 +675,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.1% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (17.6%), [🔴 MISS] 1-0 (15.3%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 89.3% (Actual: 2 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 36.8% (Actual: 3 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.7% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 94.7% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 80.2% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 21.4% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +89.3% (Actual: 2 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +36.8% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.7% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +94.7% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +80.2% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +21.4% (Actual: 3 goals)
 
 ### 2026-08-09: Levadia Tallinn vs Nõmme United (Actual Score: **5-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.2 -> 🟢 WON (Expected prob: 68.0%)
@@ -690,13 +690,13 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.0% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (14.8%), [🔴 MISS] 1-0 (14.4%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 91.5% (Actual: 5 home goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 41.9% (Actual: 5 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 97.9% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 94.4% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 80.4% (Actual: 0 away goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 35.5% (Actual: 5 goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected 25.7% (Actual: 5 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +91.5% (Actual: 5 home goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +41.9% (Actual: 5 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +97.9% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +94.4% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +80.4% (Actual: 0 away goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +35.5% (Actual: 5 goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected +25.7% (Actual: 5 goals)
 
 ### 2026-08-09: FBC Melgar vs FC Cajamarca (Actual Score: **2-4**)
 - **1X2 Pick**: Selected `HOME` @ 1.28 -> 🔴 LOST (Expected prob: 61.5%)
@@ -706,12 +706,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 91.2% (Actual: 4 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (17.5%), [🔴 MISS] 1-0 (15.5%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 88.9% (Actual: 2 home goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 36.4% (Actual: 6 goals)
-    - [🔴 MISS] **Away Team Under 3.5 Goals**: expected 98.7% (Actual: 4 away goals)
-    - [🔴 MISS] **Away Team Under 2.5 Goals**: expected 94.5% (Actual: 4 away goals)
-    - [🔴 MISS] **Away Team Under 1.5 Goals**: expected 80.3% (Actual: 4 away goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected 20.9% (Actual: 6 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +88.9% (Actual: 2 home goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +36.4% (Actual: 6 goals)
+    - [🔴 MISS] **Away Team Under 3.5 Goals**: expected +98.7% (Actual: 4 away goals)
+    - [🔴 MISS] **Away Team Under 2.5 Goals**: expected +94.5% (Actual: 4 away goals)
+    - [🔴 MISS] **Away Team Under 1.5 Goals**: expected +80.3% (Actual: 4 away goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected +20.9% (Actual: 6 goals)
 
 ### 2026-08-09: Slavia Praha vs Pardubice (Actual Score: **2-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.22 -> 🟢 WON (Expected prob: 77.5%)
@@ -721,17 +721,17 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.3% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 4-0 (12.6%), [🔴 MISS] 3-0 (12.6%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 92.0% (Actual: 2 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 51.0% (Actual: 3 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 96.1% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 91.3% (Actual: 1 away goals)
-    - [🔴 MISS] **Goal Range 4-6**: expected 41.2% (Actual: 3 goals)
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected 38.4% (Actual: 3 goals)
-    - [🔴 MISS] **Goal Range 4-5**: expected 32.9% (Actual: 3 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 29.1% (Actual: 3 goals)
-    - [🔴 MISS] **Exact Goals: 4**: expected 19.1% (Actual: 3 goals)
-    - [🔴 MISS] **Goal Range 6+**: expected 15.7% (Actual: 3 goals)
-    - [🔴 MISS] **Exact Goals: 5**: expected 13.8% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +92.0% (Actual: 2 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +51.0% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +96.1% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +91.3% (Actual: 1 away goals)
+    - [🔴 MISS] **Goal Range 4-6**: expected +41.2% (Actual: 3 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected +38.4% (Actual: 3 goals)
+    - [🔴 MISS] **Goal Range 4-5**: expected +32.9% (Actual: 3 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +29.1% (Actual: 3 goals)
+    - [🔴 MISS] **Exact Goals: 4**: expected +19.1% (Actual: 3 goals)
+    - [🔴 MISS] **Goal Range 6+**: expected +15.7% (Actual: 3 goals)
+    - [🔴 MISS] **Exact Goals: 5**: expected +13.8% (Actual: 3 goals)
 
 ### 2026-08-09: Epitsentr Dunayivtsi vs Shakhtar Donetsk (Actual Score: **0-2**)
 - **1X2 Pick**: Selected `AWAY` @ 1.33 -> 🟢 WON (Expected prob: 65.5%)
@@ -741,11 +741,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Over 1.5 Goals**: expected 84.7% (Actual: 2 goals)
   - **Top Scores**: [🟢 HIT] 0-2 (16.1%), [🔴 MISS] 0-1 (15.3%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected 89.4% (Actual: 2 away goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 39.6% (Actual: 2 goals)
-    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 97.9% (Actual: 0 home goals)
-    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected 93.2% (Actual: 0 home goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 23.6% (Actual: 2 goals)
+    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected +89.4% (Actual: 2 away goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +39.6% (Actual: 2 goals)
+    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected +97.9% (Actual: 0 home goals)
+    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected +93.2% (Actual: 0 home goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +23.6% (Actual: 2 goals)
 
 ### 2026-08-09: Corinthians W vs Santos W (Actual Score: **4-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.36 -> 🟢 WON (Expected prob: 64.5%)
@@ -755,12 +755,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.8% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (17.6%), [🔴 MISS] 1-0 (14.6%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 90.6% (Actual: 4 home goals)
-    - [🟢 HIT] **Match Over 3.5 Goals**: expected 37.7% (Actual: 5 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.8% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 95.1% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 81.8% (Actual: 1 away goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected 21.8% (Actual: 5 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +90.6% (Actual: 4 home goals)
+    - [🟢 HIT] **Match Over 3.5 Goals**: expected +37.7% (Actual: 5 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.8% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +95.1% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +81.8% (Actual: 1 away goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected +21.8% (Actual: 5 goals)
 
 ### 2026-08-09: Asane vs Kongsvinger (Actual Score: **1-2**)
 - **1X2 Pick**: Selected `AWAY` @ 1.48 -> 🟢 WON (Expected prob: 64.0%)
@@ -770,11 +770,21 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Over 1.5 Goals**: expected 84.8% (Actual: 2 goals)
   - **Top Scores**: [🔴 MISS] 0-2 (16.6%), [🔴 MISS] 0-1 (15.2%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected 88.8% (Actual: 2 away goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 38.0% (Actual: 3 goals)
-    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 98.2% (Actual: 1 home goals)
-    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected 93.1% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 22.5% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected +88.8% (Actual: 2 away goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +38.0% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected +98.2% (Actual: 1 home goals)
+    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected +93.1% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +22.5% (Actual: 3 goals)
+
+### 2026-08-09: São Paulo W vs RB Bragantino W (Actual Score: **1-0**)
+- **1X2 Pick**: Selected `HOME` @ 1.45 -> 🟢 WON (Expected prob: 64.0%)
+  - [🔴 MISS] **Over 2.5 Goals**: expected 68.2% (Actual: 1 goals)
+  - [🟢 HIT] **BTTS-No**: expected 39.6% (Actual: BTTS-No)
+  - [🔴 MISS] **Home Team Over 1.5 Goals**: expected 85.4% (Actual: 1 goals)
+  - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 91.9% (Actual: 0 goals)
+  - **Top Scores**: [🔴 MISS] 2-0 (17.2%), [🟢 HIT] 1-0 (14.6%)
+  - **🔥 Possible Events (graded)**:
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +37.8% (Actual: 1 goals)
 
 ### 2026-08-09: KuPS vs Turku PS (Actual Score: **1-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.55 -> 🔴 LOST (Expected prob: 75.5%)
@@ -784,12 +794,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.9% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (12.0%), [🔴 MISS] 3-0 (11.4%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 90.3% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 51.3% (Actual: 2 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 96.3% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 91.5% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 2.5 Goals**: expected 40.3% (Actual: 2 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 30.7% (Actual: 2 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +90.3% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +51.3% (Actual: 2 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +96.3% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +91.5% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 2.5 Goals**: expected +40.3% (Actual: 2 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +30.7% (Actual: 2 goals)
 
 ### 2026-08-09: FK Jablonec vs Slovácko (Actual Score: **1-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.64 -> 🟢 WON (Expected prob: 75.0%)
@@ -799,12 +809,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.8% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (11.8%), [🔴 MISS] 3-1 (11.2%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 87.9% (Actual: 1 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 49.9% (Actual: 1 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 97.9% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 93.2% (Actual: 0 away goals)
-    - [🔴 MISS] **Match Over 2.5 Goals**: expected 37.4% (Actual: 1 goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 29.3% (Actual: 1 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +87.9% (Actual: 1 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +49.9% (Actual: 1 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +97.9% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +93.2% (Actual: 0 away goals)
+    - [🔴 MISS] **Match Over 2.5 Goals**: expected +37.4% (Actual: 1 goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +29.3% (Actual: 1 goals)
 
 ### 2026-08-09: Anderlecht vs RAAL La Louvière (Actual Score: **2-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.75 -> 🟢 WON (Expected prob: 67.3%)
@@ -814,11 +824,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.2% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (16.5%), [🔴 MISS] 1-0 (13.7%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 86.5% (Actual: 2 home goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 40.0% (Actual: 3 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.4% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 95.2% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 23.4% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +86.5% (Actual: 2 home goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +40.0% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.4% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +95.2% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +23.4% (Actual: 3 goals)
 
 ### 2026-08-09: Sparta Rotterdam vs Feyenoord (Actual Score: **0-1**)
 - **1X2 Pick**: Selected `AWAY` @ 1.66 -> 🟢 WON (Expected prob: 66.4%)
@@ -828,11 +838,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Over 1.5 Goals**: expected 85.8% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 0-2 (18.3%), [🟢 HIT] 0-1 (14.2%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected 87.5% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 3.5 Goals**: expected 40.7% (Actual: 1 goals)
-    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 96.5% (Actual: 0 home goals)
-    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected 92.5% (Actual: 0 home goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected 23.8% (Actual: 1 goals)
+    - [🟢 HIT] **Away Team Over 0.5 Goals**: expected +87.5% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 3.5 Goals**: expected +40.7% (Actual: 1 goals)
+    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected +96.5% (Actual: 0 home goals)
+    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected +92.5% (Actual: 0 home goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected +23.8% (Actual: 1 goals)
 
 
 ## Event Disposition / Void Audit
@@ -848,7 +858,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
 
 - 2026-08-08 `SKIPPED_VETO` `2way-unanimous avg_p>=70` — Belshina vs Dinamo Minsk -> AWAY @ 1.32 (pending_or_unmatched_result); keys=['belshina', 'belshinab']/['dinamomin']
 - 2026-08-09 `SKIPPED_VETO` `3way-unanimous avg_p>=65` — Juticalpa vs CD Olimpia -> AWAY @ 1.25 (pending_or_unmatched_result); keys=['juticalpa']/['olimpia']
-- 2026-08-09 `WATCHLIST_UNCORROBORATED_PRICE` `2way+bc-confirms avg_p>=60` — São Paulo W vs RB Bragantino W -> HOME @ 1.45 (pending_or_unmatched_result); keys=['sopaulo', 'saopaulow']/['rbbragant']
 
 ## Ambiguous result examples
 
