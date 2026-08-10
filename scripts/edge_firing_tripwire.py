@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import gzip
 import json
+import re
 import sys
 from datetime import date, datetime
 from pathlib import Path
@@ -109,12 +110,15 @@ def _ml_ceiling_check(ld: Path, findings_edges: list[dict]) -> list[dict]:
             continue
         if not f.get("silent"):
             continue
-        gap = min_thr - max_p * 100.0
-        if gap > 15.0:  # structurally far below the bar (>15pp gap)
+        # each rule's own threshold, not the lowest
+        m = re.search(r">=\s*([\d.]+)", f.get("rule", ""))
+        own_thr = float(m.group(1)) if m else min_thr
+        gap = own_thr - max_p * 100.0
+        if gap > 15.0:  # structurally far below its own bar (>15pp gap)
             ceiling.append({
                 "rule": f["rule"],
                 "live_max_ml_p": round(max_p * 100.0, 1),
-                "lowest_threshold": min_thr,
+                "lowest_threshold": own_thr,
                 "gap_pp": round(gap, 1),
                 "ceiling": True,
             })
