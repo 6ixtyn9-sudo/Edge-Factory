@@ -54,9 +54,7 @@ def test_primary_bzzoiro_price_remains_push_eligible(monkeypatch):
     assert pick["odds"] == 2.10
     assert pick["price_evidence"] == pt.PRICE_EVIDENCE_BZZOIRO_PRIMARY
     assert pick["price_push_eligible"] is True
-    assert pt.bucket_pick(pick, ALLOW_CTX) == pt.BUCKET_CERTIFIED
-
-
+    assert pt.bucket_pick(pick, ALLOW_CTX, decay_verdict="HEALTHY") == pt.BUCKET_CERTIFIED
 def test_scoutingstats_sole_price_is_retained_for_audit_but_quarantined(monkeypatch):
     pick = _pick(odds=None, odds_source=None)
     primary = {"provider": pt.BZZOIRO_ODDS_SOURCE}
@@ -121,4 +119,4 @@ def test_no_live_match_keeps_legacy_source_fallback_behavior(monkeypatch):
     assert pick["odds"] == 1.63
     assert pick["odds_match_method"] == "fallback"
     assert pick["price_evidence"] == pt.PRICE_EVIDENCE_SOURCE_FALLBACK
-    assert pt.bucket_pick(pick, ALLOW_CTX) == pt.BUCKET_CERTIFIED
+    assert pt.bucket_pick(pick, ALLOW_CTX, decay_verdict="HEALTHY") == pt.BUCKET_CERTIFIED

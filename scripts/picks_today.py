@@ -1362,7 +1362,7 @@ def lookup_context(purity: dict, pick: dict) -> dict:
 
 
 def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
-                decay_verdict: str = "HEALTHY") -> str | None:
+                decay_verdict: str = "WATCH") -> str | None:
     if edge_status == "benched":
         return BUCKET_SKIP_DEAD
     if decay_verdict in ("DEAD", "DECAYING"):
@@ -1421,6 +1421,13 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
     if ctx.get("odds_band") == "UNKNOWN":
         bucket = BUCKET_CAUTION
     elif "CAUTION" in vals:
+        bucket = BUCKET_CAUTION
+    elif decay_verdict != "HEALTHY":
+        # Decay-aware honesty: only HEALTHY earns CERTIFIED_CLEAN. WATCH means
+        # the decay monitor's recent window cannot confirm the edge — labeling
+        # it "certified clean" overclaims the evidence (this is exactly what
+        # happened to the bc-confirms>=60 picks: registry said certified, decay
+        # said WATCH, bucket said CERTIFIED_CLEAN, results said -67%).
         bucket = BUCKET_CAUTION
     else:
         bucket = BUCKET_CERTIFIED
@@ -2895,7 +2902,11 @@ def main():
 
         for p in picks:
             rule = p.get("rule", "")
-            meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "HEALTHY"})
+            # Absence of evidence != health: a rule missing from the registry
+            # must NOT default to HEALTHY (that would let unconfirmed edges
+            # wear the CERTIFIED_CLEAN label). Default to WATCH; only the
+            # decay monitor's explicit HEALTHY verdict earns the clean bucket.
+            meta = edge_meta.get(rule, {"status": "certified", "decay_verdict": "WATCH"})
             ctx = lookup_context(purity, p)
             ctx = apply_resolution_to_ctx(
                 ctx, _veto_contexts, _veto_pools, veto_resolution_on,
