@@ -5341,3 +5341,56 @@ decay_verdict="HEALTHY" explicitly where the certified path is asserted.
 UNMATCHED / SOURCE_FALLBACK from push — audit shows those are the worst cuts
 (SCOUTINGSTATS_SOLE -81% n=9, SUSPECT_ALIAS_FUZZY -100% n=2). Related but
 separate; pick up when this area is next touched.
+---
+
+## Addendum — 2026-08-10 (late 8): truthfulness patch batch (P1-P4)
+
+### P1 — Certified-edge-not-firing tripwire (scripts/edge_firing_tripwire.py)
+Surfaces the two classes of SILENT failure the pipeline never reported:
+1. **Certified edge not firing**: any certified rule with zero ledger picks in
+   the last --edge-silent-days (default 14). Would have caught the ML-meta
+   3-source bug (zero picks in every archive for weeks). First run already
+   shows the truth: ml-meta avg_p>=70/75 have NEVER fired (last=never).
+2. **Source capture stale**: any active source whose newest captured row date
+   is older than --source-stale-days (default 7). Would have caught the
+   betexplorer 06-16 freeze. betexplorer deliberately excluded (retired,
+   addendum 4); re-add if revived.
+WARN-only by design (silence can be legitimate: thresholds, off-season) —
+wired into run_smart_auto as a run_soft step; findings printed AND persisted
+to localdata/edge_firing_tripwire.json (now a gitignore exception so the
+cloud bot commits it and history is inspectable).
+
+### P2 — Delivery-failure truth (green run != message arrived)
+notify.py already exits non-zero on any failed channel (Addendum 25.1.1) but
+run_soft swallowed it into a log WARNING. Now: per-provider failures are
+persisted to localdata/notify_delivery_failures_<date>.json (gitignore
+exception), notify.py prints a loud ❌ banner naming the ledger on failure,
+and daily.py's new _notify() helper prints a banner when today's ledger
+exists. Pipeline still continues (notify failure must not block state
+commits) — but the failure is no longer invisible. Verified: ledger append +
+idempotence tested.
+
+### P3 — Test time-bomb killed (tests/test_enh_registry.py)
+test_benched_circuit_breaker_window_is_injected hardcoded 2026-08-03 /
+2026-10-04 for a rolling-60-day window — would silently drift ~2026-10-02.
+Now computes dates relative to date.today() (inside = today, beyond =
+today+61). Same semantics, never stale.
+
+### P4 — Soft-evidence exclusion: closed with evidence, no code change
+Agenda item resolved as ALREADY-IMPLEMENTED + data-verified:
+- SCOUTINGSTATS_SOLE / SUSPECT_ALIAS_FUZZY: already push-quarantined
+  (Addendum 26, bucket_pick + tests/test_price_quarantine.py).
+- UNMATCHED: already WATCHLIST_NO_ODDS.
+- SOURCE_FALLBACK: audit shows +15.5% ROI (n=11) — the data CONTRADICTS
+  excluding it; it stays push-eligible (test_no_live_match_keeps_legacy_...).
+- The audit's horror cuts (SCOUTINGSTATS_SOLE -81% n=9, SUSPECT_ALIAS_FUZZY
+  -100% n=2) are historical rows bucketed before Addendum 26; the current
+  code quarantines those evidence types at bucketing time.
+No further action needed; item closed.
+
+### Files changed
+- NEW scripts/edge_firing_tripwire.py
+- scripts/notify.py (failure ledger + banner)
+- scripts/daily.py (tripwire step + _notify helper)
+- tests/test_enh_registry.py (relative dates)
+- .gitignore (persist tripwire + failure-ledger artifacts)
