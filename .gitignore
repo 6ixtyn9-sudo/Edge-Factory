@@ -67,5 +67,8 @@ dist/
 
 # Addendum 25: shadow-slate dedup ledger is bot-owned like the other ledgers
 !localdata/shadow_sent_ledger_20*.json
-!localdata/auto_tickets_*
-!localdata/auto_tickets_*
+
+# Truthfulness artifacts: silence-detector findings and delivery-failure
+# ledgers persist so the operator can inspect history, not just logs.
+!localdata/edge_firing_tripwire.json
+!localdata/notify_delivery_failures_*.json

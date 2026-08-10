@@ -780,7 +780,7 @@ def run_pipeline(
             "auto_tickets_grade (settle past slips)",
         )
         sync_official_archive(target_date, "sync_supabase")
-        run_soft(f"python3 scripts/notify.py --date {target_date} --heartbeat", "notify (Smart Dispatch + empty-slate heartbeat)")
+        _notify(target_date, "notify (Smart Dispatch + empty-slate heartbeat)")
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "autonomous_intraday":
@@ -838,11 +838,11 @@ def run_pipeline(
             target_archive.write_text(merged_text)
             PICKS_TODAY_FILE.write_text(merged_text)
             generate_daily_report(target_date)
-            run_soft(f"python3 scripts/notify.py --date {target_date}", "notify (Autonomous Intraday Dispatch)")
+            _notify(target_date, "notify (Autonomous Intraday Dispatch)")
         else:
             print("\n  No new matches/edges appeared. Locked official ledger unchanged.")
             restore_target_picks(target_archive.read_text())
-            run_soft(f"python3 scripts/notify.py --date {target_date}", "notify (Silent Check)")
+            _notify(target_date, "notify (Silent Check)")
 
         sync_official_archive(target_date, "sync_supabase (Autonomous Accumulating Record)")
         try:
@@ -971,6 +971,32 @@ def run_smart_auto(future_days: int, backfill_days: int, force_repick: bool = Fa
             force_repick=True, # Force repick inside the intraday logic to get fresh discoveries
             picks_only=True,   # Skip heavy warehouse build for speed during the day
         )
+
+    # Truthfulness tripwire: certified-edge firing + source capture freshness.
+    # WARN-only — silence can be legitimate — but silence is now visible and
+    # persisted to localdata/edge_firing_tripwire.json instead of invisible.
+    run_soft(
+        "PYTHONPATH=src python3 scripts/edge_firing_tripwire.py",
+        "edge firing tripwire (silence detector)",
+    )
+
+
+def _notify(target_date: str, label: str) -> None:
+    """Run the notifier and surface delivery failures loudly.
+
+    notify.py already exits non-zero on any failed channel; run_soft keeps the
+    pipeline alive (a notify failure must not block state commits), but a
+    failure ledger written today gets a prominent banner here so a green run
+    can never silently mean 'message did not arrive'."""
+    run_soft(f"python3 scripts/notify.py --date {target_date}", label)
+    day = datetime.now(local_tz()).strftime("%Y-%m-%d")
+    ledger = REPORT_DIR / f"notify_delivery_failures_{day}.json"
+    if ledger.exists():
+        try:
+            n = len(json.loads(ledger.read_text()))
+        except Exception:
+            n = "?"
+        print(f"❌ NOTIFICATION DELIVERY FAILURE: {n} failed channel(s) — see {ledger.name}")
 
 
 def main() -> None:

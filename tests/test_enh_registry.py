@@ -74,15 +74,21 @@ def test_benched_circuit_breaker_window_is_injected(tmp_path):
     # RT: the BENCHED circuit reads a rolling 60-day window against the
     # evaluation date. With the date injected, the same evidence is stable
     # forever: inside the window -> BENCHED; beyond the window -> not benched.
-    for today, expect_benched in (("2026-08-03", True), ("2026-10-04", False)):
+    # Dates are computed relative to today so the test can never go stale
+    # (the hardcoded 2026-08-03/2026-10-04 pair would silently drift).
+    from datetime import date, timedelta
+    anchor = date.today()
+    inside = anchor.isoformat()
+    beyond = (anchor + timedelta(days=61)).isoformat()
+    for today, expect_benched in ((inside, True), (beyond, False)):
         root = tmp_path / today.replace("-", "")
         for i in range(30):
-            record_outcome(root, date_="2026-08-03", match=f"W{i} vs X{i}", market=MKT,
+            record_outcome(root, date_=inside, match=f"W{i} vs X{i}", market=MKT,
                            price=1.50, hit=True, source="theoddsapi", today=today,
                            multi_source=True)
         status = None
         for i in range(30):
-            status = record_outcome(root, date_="2026-08-03", match=f"L{i} vs M{i}", market=MKT,
+            status = record_outcome(root, date_=inside, match=f"L{i} vs M{i}", market=MKT,
                                     price=1.50, hit=False, source="theoddsapi", today=today)["status"]
         if expect_benched:
             assert status == "BENCHED"

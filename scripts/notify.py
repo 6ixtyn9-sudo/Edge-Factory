@@ -195,6 +195,31 @@ def _morning_baseline_file(target_date: str) -> Path:
     return LOCALDATA / f"picks_morning_{target_date}.json"
 
 
+def _record_delivery_failure(provider: str, error: object) -> None:
+    """Persist a delivery failure so a green pipeline run can never mask a
+    message that did not arrive. Truthfulness: log lines are ephemeral;
+    this ledger is queryable and survives. Never raises (ledgering must not
+    break dispatch)."""
+    try:
+        day = datetime.now().strftime("%Y-%m-%d")
+        path = LOCALDATA / f"notify_delivery_failures_{day}.json"
+        rows: list = []
+        if path.exists():
+            try:
+                loaded = json.loads(path.read_text())
+                rows = loaded if isinstance(loaded, list) else []
+            except (OSError, json.JSONDecodeError):
+                rows = []
+        rows.append({
+            "ts": datetime.now().isoformat(timespec="seconds"),
+            "provider": provider,
+            "error": str(error)[:500],
+        })
+        path.write_text(json.dumps(rows, indent=2, sort_keys=True))
+    except Exception:
+        pass
+
+
 def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_id: str | None, meta_recipient: str | None, meta_template: str, twilio_sid: str | None, twilio_token: str | None, twilio_number: str | None, telegram_token: str | None, telegram_chat_id: str | None, callmebot_key: str | None, callmebot_phone: str | None) -> bool:
     dispatched = False
     if meta_token and meta_phone_id and meta_recipient:
@@ -211,6 +236,7 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ Meta Cloud API Dispatch Exception: {exc}")
+            _record_delivery_failure("meta_whatsapp_cloud", exc)
         else:
             return True
     if twilio_sid and twilio_token and twilio_number and meta_recipient:
@@ -227,6 +253,7 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ Twilio Dispatch Exception: {exc}")
+            _record_delivery_failure("twilio_whatsapp", exc)
         else:
             return True
     if telegram_token and telegram_chat_id:
@@ -242,6 +269,7 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
             dispatched = True
         except Exception as exc:
             logging.error(f"    └ Telegram Dispatch Exception: {exc}")
+            _record_delivery_failure("telegram", exc)
         else:
             # T25: first successful provider wins; do not fall through to
             # CallMeBot or any remaining fallback.
@@ -258,6 +286,7 @@ def _dispatch_message(*, message_text: str, meta_token: str | None, meta_phone_i
             return True
         except Exception as exc:
             logging.error(f"    └ CallMeBot Dispatch Exception: {exc}")
+            _record_delivery_failure("callmebot_whatsapp", exc)
     return dispatched
 
 
@@ -581,6 +610,12 @@ def main() -> int:
     # Addendum 25.1.1: non-zero iff ANY intended message/burst failed (shadow
     # all-or-nothing failure included). All dispatched → 0. Total failure → 1,
     # force included. Silence never reaches here (early return 0 above).
+    if any_failed:
+        day = datetime.now().strftime("%Y-%m-%d")
+        ledger = LOCALDATA / f"notify_delivery_failures_{day}.json"
+        print("\n❌ NOTIFICATION DELIVERY FAILURE — one or more channels failed.")
+        print(f"   Failure ledger: {ledger}")
+        print("   A green pipeline run does NOT mean this message arrived.")
     return 1 if any_failed else 0
 
 
