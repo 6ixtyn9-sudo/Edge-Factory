@@ -70,6 +70,16 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             f" {_odds('odd_under')} AS odd_under, {_odds('odd_over')} AS odd_over,"
             f" {_prob('p_gg')} AS p_gg, {_prob('p_ng')} AS p_ng,"
             f" {_odds('odd_gg')} AS odd_gg, {_odds('odd_ng')} AS odd_ng,"
+            # Addendum (orphaned-data harvest): forebet ships HT probs, Kelly,
+            # predicted scores and goalsavg in the same CSV — they were loaded
+            # into the raw view but never carried into the settled/consensus
+            # layers, so the ML-meta classifier never saw them. Surface them here
+            # so the trainer + live feature path can consume them.
+            f" {_prob('p1_ht')} AS p1_ht, {_prob('px_ht')} AS px_ht,"
+            f" {_prob('p2_ht')} AS p2_ht,"
+            f" {_prob('kelly')} AS kelly,"
+            " TRY_CAST(pred_hs AS INT) AS pred_hs, TRY_CAST(pred_gs AS INT) AS pred_gs,"
+            f" {_prob('goalsavg')} AS goalsavg,"
             " league, status",
         )
     if _glob.glob(f"{LOCALDATA}/zulubet*.csv.gz"):
@@ -297,7 +307,14 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
                    (fb.pmax + zb.pmax + sa.pmax)/3 AS avg_p,
                    CASE fb.pick WHEN 'home' THEN fb.odd1
                                 WHEN 'draw' THEN fb.oddx ELSE fb.odd2 END AS pick_odds,
-                   fb.league
+                   fb.league,
+                   -- orphaned-data harvest: HT probs, HT scores, Kelly, predicted
+                   -- scores, goalsavg, BTTS-no, under probs (forebet) + HT probs
+                   -- (statarea) — surfaced so the ML-meta classifier can use them.
+                   fb.ht_hs, fb.ht_gs, fb.p1_ht, fb.px_ht, fb.p2_ht,
+                   fb.kelly, fb.pred_hs, fb.pred_gs, fb.goalsavg,
+                   fb.p_ng, fb.p_under, fb.p_over,
+                   sa.p1_ht AS sa_p1_ht, sa.px_ht AS sa_px_ht, sa.p2_ht AS sa_p2_ht
             FROM fb JOIN zb USING (date, hkey, akey)
                     JOIN sa USING (date, hkey, akey)
             WHERE length(fb.hkey) >= 4 AND length(fb.akey) >= 4
