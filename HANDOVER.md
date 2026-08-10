@@ -5446,3 +5446,22 @@ cells can no longer move probabilities. Flag-gated (EDGE_FACTORY_ENGINE_AWARE_
 DEBIAS) so zero production impact until enabled. This also resolves the
 "by-engine verdict" agenda item's data half: n=5 cells are noise, n>=20 is
 the bar.
+---
+
+## Addendum — 2026-08-10 (late 14): eyes-open run result — scale fix CONFIRMED, calibration now honest
+
+**The run (full official pipeline after addendum-13 deploy):**
+
+1. **Scale fix confirmed working.** Old model's probability weights were ~0 (fit on 0-100 units); new model (fit on 0-1) has sa_p=+3.19, avg_p=+1.29, fb_p=+0.46 — probabilities now drive the prediction. Live max ml_p jumped 7.1% -> 54.8% (7.7x) in one run. The unit-mismatch diagnosis was correct and the fix is live.
+
+2. **Eyes-open harvest effective.** The 9 orphaned features earned real weights: kelly=-1.39, p_ng=+0.28, ht_diff=+0.24, ht_total=+0.19. The model now sees data it was never given.
+
+3. **Re-certified STRONGER + new edge.** ml-meta>=70 valid 901n 86.1% +34.2% HEALTHY; >=75 valid 559n 90.2% +36.1% HEALTHY; NEW ml-meta>=80 valid 277n 92.1% +30.8% WATCH. Decay healthy across the board.
+
+4. **Still doesn't fire live (max 54.8% vs 70), and that is now an HONEST calibration question, not a bug.** Summer slate (lower leagues/friendlies) genuinely low-information; the model's certified 86%+ comes from peak-season big-league history. The tripwire CEILING flag reports this correctly every run. Watch across the season boundary (EPL/CL from mid-August): if the model fires when confident fixtures exist, the fix is complete; if it stays silent through peak season, thresholds/certification need review. The wire will tell us either way.
+
+5. **Grader honesty confirmed live:** legacy 08-09 slip now prints "stake not recorded", ROI n/a, excluded from capital totals. No fake stakes, no fake rand.
+
+6. **Tripwire ceiling message fixed:** was reporting the lowest threshold (70) for all ml-meta edges; now uses each rule's own threshold (>=70 gap 15.2pp, >=75 gap 20.2pp, >=80 gap 25.2pp). Verified.
+
+**Note:** ml-meta>=70/75/80 remain certified but silent — the CEILING flag (not mere SILENT) is the honest status until the slate thickens. Auto-tickets unaffected (its gate is the graded combo table, not these edges).
