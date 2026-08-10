@@ -60,6 +60,9 @@ PASS_ROI = 0.03              # min realized ROI
 PASS_LB = 0.68               # Wilson lower bound on hit rate
 RECENT_N = 20                # recency window per combo
 RECENT_ROI_MIN = 0.0         # combo must show this ROI on its last RECENT_N picks
+FRESHNESS_DAYS = 30          # combo's newest settled pick must be within this many days
+                             # of the target date, else the source is treated as dead
+                             # (capture stopped) and the combo is ineligible.
 MIN_EDGE = 0.0               # no per-pick edge floor; combo (rule x source) pass is the edge test
 ACCA2_TARGET = 2.0
 ACCA10_TARGET = 10.0
@@ -153,7 +156,11 @@ def pick_result(pick, settled):
     return "win" if outcome == sel else "loss"
 
 
-def build_edge_table(picks, settled):
+def build_edge_table(picks, settled, target_date=None):
+    if target_date is None:
+        target_date = date.today()
+    elif isinstance(target_date, str):
+        target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
     history = defaultdict(list)
     for p in picks:
         rule = p.get("edge_rule") or p.get("rule")
@@ -178,9 +185,23 @@ def build_edge_table(picks, settled):
         rw = sum(1 for _, r, _ in recent if r == "win")
         rret = sum(o for _, r, o in recent if r == "win")
         roi_recent = (rret - rn) / rn if rn else 0.0
-        passed = n >= PASS_N and roi >= PASS_ROI and lb >= PASS_LB and roi_recent >= RECENT_ROI_MIN
+        # Recency evidence is REQUIRED: rn==0 (no settled picks in the count
+        # window) must FAIL the gate — 0.0 is "no evidence", not a pass.
+        recent_ok = rn > 0 and roi_recent >= RECENT_ROI_MIN
+        # Calendar freshness: the count window is NOT enough — a source whose
+        # capture died (e.g. betexplorer_odds stopped mid-June) keeps its old
+        # rows as the "recent" window and would stay eligible forever on frozen
+        # history. The newest settled pick must be recent in real time too.
+        newest = rows[-1][0] if rows else ""
+        fresh_ok = False
+        try:
+            fresh_ok = (target_date - datetime.strptime(newest, "%Y-%m-%d").date()).days <= FRESHNESS_DAYS
+        except (ValueError, TypeError):
+            fresh_ok = False
+        passed = n >= PASS_N and roi >= PASS_ROI and lb >= PASS_LB and recent_ok and fresh_ok
         table[combo] = {"n": n, "wins": wins, "hit": wins / n, "roi": roi, "lb": lb,
-                        "roi_recent": roi_recent, "recent_n": rn, "pass": passed}
+                        "roi_recent": roi_recent, "recent_n": rn, "last": newest,
+                        "fresh": fresh_ok, "pass": passed}
     return table
 
 
@@ -245,7 +266,7 @@ def main():
 
     settled = load_settled()
     archives = [p for p in load_archived_picks() if str(p.get("date") or p.get("_archive_day") or "") < target]
-    table = build_edge_table(archives, settled)
+    table = build_edge_table(archives, settled, target_date=target)
 
     if args.history:
         print("DYNAMIC EDGE TABLE (settled history < %s)" % target)
