@@ -2225,8 +2225,20 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                 goalsavg_feat = _f(_fb_ht("goalsavg")) or 0.0
                 _p_ng = _f(_fb_ht("p_ng"))
                 _p_under = _f(_fb_ht("p_under"))
+                _p_gg = _f(_fb_ht("p_gg"))
                 p_ng_feat = _p_ng / 100.0 if _p_ng is not None and _p_ng > 1.5 else (_p_ng or 0.0)
                 p_under_feat = _p_under / 100.0 if _p_under is not None and _p_under > 1.5 else (_p_under or 0.0)
+                p_gg_feat = _p_gg / 100.0 if _p_gg is not None and _p_gg > 1.5 else (_p_gg or 0.0)
+                
+                # Phase A: statarea half-time prob of the majority pick (0-1)
+                _sa_ht = (sa or {}).get
+                _sp1h, _spxh, _sp2h = _sa_ht("p1_ht"), _sa_ht("px_ht"), _sa_ht("p2_ht")
+                if None not in (_sp1h, _spxh, _sp2h):
+                    _sa_trip = (_sp1h, _spxh, _sp2h)
+                    _sa_scale = 100.0 if max(_sa_trip) > 1.5 else 1.0
+                    sa_ht_p_feat = float(_sa_trip[idx]) / _sa_scale
+                else:
+                    sa_ht_p_feat = 0.5
                 
                 feat_dict = {
                     "fb_p": fb_p_feat, "zb_p": zb_p_feat, "sa_p": sa_p_feat,
@@ -2238,6 +2250,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                     "ht_p": ht_p_feat, "ht_diff": ht_diff_feat, "ht_total": ht_total_feat,
                     "kelly": kelly_feat, "pred_total": pred_total_feat, "pred_diff": pred_diff_feat,
                     "goalsavg": goalsavg_feat, "p_ng": p_ng_feat, "p_under": p_under_feat,
+                    "sa_ht_p": sa_ht_p_feat, "p_gg": p_gg_feat,
                 }
                 
                 coefs = ml_model["coef"]
