@@ -5217,3 +5217,37 @@ value; the record now says so.
 
 **Note:** xg_signal_check.py lives untracked in the repo dir as an operator
 tool (analysis only, not pipeline code). Leave untracked; never git add -A.
+---
+
+## Addendum — 2026-08-10 (late 4): combo freshness gate — dead sources can no longer pass
+
+**Trigger:** betexplorer capture stopped 2026-06-16 (retired — refresh_result_sources
+lists forebet/zulubet/statarea/vitibet/scoutingstats, no betexplorer; daily.py
+never invokes its capture). That raised the question: could a frozen
+betexplorer_odds combo stay eligible in the auto-tickets edge table forever?
+
+**First diagnosis (wrong, recorded honestly):** thought the recency gate passed
+rn==0 (no picks in the last-20 window) as 0.0>=0.0. Test disproved it: the
+window is COUNT-based (rows[-20:]) and any combo with n>=15 always has rn>=15 —
+rn==0 is unreachable for passing combos. Dead-code guard added anyway
+(recent_ok requires rn>0 — semantically right, never triggers).
+
+**Real fix (calendar freshness):** a count window cannot detect a dead source —
+its old rows simply BECOME the "recent" window. Added FRESHNESS_DAYS=30 to
+build_edge_table: the combo's NEWEST settled pick must be within 30 days of the
+target date, else the combo is ineligible ("fresh":false in the table). Verified:
+frozen June combo (last 2026-06-20) now FAILS; active combo passes; negative
+recent ROI still fails; boundary <=30 days is fresh.
+
+**Effect:** a source whose capture dies ages out of eligibility within 30 days
+of its last settled pick, instead of staying eligible forever on frozen
+history. When/if the source returns, eligibility restores once a new settled
+pick lands inside the window. This protects the grader's edge table from
+stale-validated combos (betexplorer_odds today; any future dead source).
+
+**betexplorer decision (operator, open):** capture is retired, not broken.
+Either (a) accept retirement — betexplorer_odds combos age out and die, or
+(b) revive capture. Recommendation: (a) — the other 5 sources cover results and
+bzzoiro_odds/scoutingstats_odds cover prices; betexplorer adds no unique
+market. Only note: any historical betexplorer_odds picks remain in the graded
+ledger and count toward n=30 (they are real graded tickets, just frozen).
