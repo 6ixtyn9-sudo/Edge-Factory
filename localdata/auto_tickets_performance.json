@@ -3,17 +3,19 @@
   "total_tickets": 2,
   "total_wins": 2,
   "total_pending": 0,
-  "total_staked": 2.0,
-  "total_returned": 3.9204000000000003,
-  "total_roi": 0.9602000000000002,
+  "total_staked": 0.0,
+  "total_returned": 0.0,
+  "total_roi": null,
+  "unstaked_legacy_n": 2,
   "per_day": {
     "2026-08-09": {
       "n": 2,
       "wins": 2,
       "pending": 0,
       "losses": 0,
-      "staked": 2.0,
-      "returned": 3.9204000000000003
+      "staked": 0.0,
+      "returned": 0.0,
+      "unstaked_n": 2
     }
   },
   "per_type": {
@@ -22,16 +24,18 @@
       "wins": 1,
       "pending": 0,
       "losses": 0,
-      "staked": 1.0,
-      "returned": 1.9602000000000002
+      "staked": 0.0,
+      "returned": 0.0,
+      "unstaked_n": 1
     },
     "acca10": {
       "n": 1,
       "wins": 1,
       "pending": 0,
       "losses": 0,
-      "staked": 1.0,
-      "returned": 1.9602000000000002
+      "staked": 0.0,
+      "returned": 0.0,
+      "unstaked_n": 1
     },
     "single": {
       "n": 0,
@@ -39,7 +43,8 @@
       "pending": 0,
       "losses": 0,
       "staked": 0.0,
-      "returned": 0.0
+      "returned": 0.0,
+      "unstaked_n": 0
     }
   },
   "detail": [
@@ -48,8 +53,8 @@
       "type": "acca2",
       "result": "WIN",
       "odds": 1.9602000000000002,
-      "stake": 1.0,
-      "returned": 1.9602000000000002,
+      "stake": null,
+      "returned": null,
       "legs": [
         "FC Porto vs Alverca home @1.21",
         "Lech Poznan vs Piast Gliwice home @1.62"
@@ -60,8 +65,8 @@
       "type": "acca10",
       "result": "WIN",
       "odds": 1.9602000000000002,
-      "stake": 1.0,
-      "returned": 1.9602000000000002,
+      "stake": null,
+      "returned": null,
       "legs": [
         "Lech Poznan vs Piast Gliwice home @1.62",
         "FC Porto vs Alverca home @1.21"
