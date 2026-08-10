@@ -5159,3 +5159,39 @@ auto-tickets correctly never bet it (no passing rule×source combo); the current
 edges registry no longer contains bc-confirms at all (re-mine skipped it, no
 bettingclosed data), so no new picks from it going forward. Archived rows
 remain in the ledger for grading.
+---
+
+## Addendum — 2026-08-10 (late 2): xG Phase-1 screen — honest result
+
+**What was tested:** bzzoiro `xg_home/xg_away` vs settled outcomes, walk-forward
+screen, multi-source results (betexplorer/forebet/statarea/scoutingstats union,
+precedence betexplorer>forebet>statarea>scoutingstats). 760 bzzoiro fixtures
+joined (750 base9); split 2026-07-30; train n=429 / test n=303 (with xg).
+Tool: xg_signal_check.py (workspace tool, not committed to repo).
+
+**Result (test window, n=303):**
+- AUC(home win): xg_diff 0.632 vs bzzoiro p1-p2 0.694 — the model's own
+  probabilities BEAT raw xG on the same fixtures.
+- AUC(over2.5): xg_total 0.588 (weak); p_o25 comparison added for the next run.
+- spearman corr(xg_diff, goal_diff) = 0.314; corr(xg_total, total_goals) = 0.187.
+- Buckets are monotone at the extremes (xg_diff +1.0..+1.5 -> 80% home; xg_total
+  3.5+ -> 70% over) but mushy in the middle — directionally real, magnitude weak.
+
+**Honest conclusion:** xG is predictive but WEAK, and for match outcome it is
+INFERIOR to bzzoiro's own p1/p2 — which the system already consumes via ML-meta
+features. The "cheapest, highest-certainty win" claim from the 08-10 addendum is
+NOT supported by this screen. Do NOT rush xg_home/xg_away into ML-meta as a
+headline feature. The real test is marginal value: feature ablation
+(xg_diff/xg_total added to the existing feature set, walk-forward logloss/AUC)
+— deferred until >=1 full season of xG history exists (capture began
+2026-06-13; true cross-season walk-forward is impossible now). This screen is a
+same-period split and certifies nothing.
+
+**Also surfaced (data gaps):**
+- betexplorer capture (odds AND results) stops 2026-06-16 — starves any
+  results join for the xG window. Intentional or dead? (open item)
+- xG history is 2 months old — the 2025-06-01 walk-forward split is impossible
+  for xG; it gets its own data-driven split until a season exists.
+
+**Process:** screen found nothing certifiable -> nothing deployed. The auto-
+tickets grader remains the only thing that decides what gets staked.
