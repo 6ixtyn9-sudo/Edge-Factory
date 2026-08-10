@@ -5060,3 +5060,102 @@ failures in other test files are environment-dependent
   (commit 715cf18); 1 line reconciled with the actual test
   filename; this addendum.
 - `README.md`: 1 line reconciled with the 12:00 SAST freeze.
+## Addendum — 2026-08-10: pivot to truthfulness + orphaned-data inventory
+
+**Operator direction (2026-08-09/10):** stop treating the 08-11 calendar gate as
+the priority. The main focus shifts to (a) letting the auto-tickets ledger be
+the real judge of the system (real executable graded bets > paper audit
+numbers), and (b) making the system TRUTHFUL — surfacing and closing blind
+spots rather than adding scope. 08-11 items (27.15 pilot launch, soft-evidence
+exclusion decision, OddsPapi review, source funnel, debias verdict) remain
+documented and pre-registered, but are NOT being actioned as a ceremony; they
+get picked up opportunistically when they intersect real work.
+
+### Truthfulness findings (data we collect but do not use)
+
+Audited source schemas vs what the warehouse loads vs what miners/picks
+consume. Summary of orphaned signal:
+
+- **Half-time data**: forebet + statarea produce `ht_hs/ht_gs` (HT scores) and
+  `p1_ht/px_ht/p2_ht` (HT win probs). Loaded into warehouse. NEVER consumed by
+  any miner/pick/audit. System is blind to first-half markets and to
+  half-time-state-aware full-time modeling.
+- **xG**: bzzoiro produces `xg_home/xg_away`. Loaded. NEVER mined. Highest-value
+  untapped predictor in the stack.
+- **O/U alternative lines**: forebet `p_under`/`goalsavg`; bzzoiro
+  `p_o15/p_o35`; scoutingstats `p_o15/p_o35` AND `odd_o15/u15/o35/u35` — the
+  scoutingstats 1.5/3.5 ODDS ARE NOT EVEN LOADED into the warehouse. System
+  only models O/U 2.5.
+- **BTTS complement**: forebet + scoutingstats `p_ng` (BTTS-no) unused; only
+  BTTS-yes modeled.
+- **Predicted scores**: bzzoiro/predictz/windrawwin `pred_score`, vitibet +
+  forebet `pred_hs/pred_gs` — unused. Could cross-check O/U or exact-score.
+- **Provider meta**: bzzoiro `rec_bet_favorite`/`rec_winner` — shadow-only
+  potential.
+- **Form streaks**: afootballreport `streak_pct/streak_n` — unused feature
+  candidate for the ML-meta classifier.
+- **Kelly**: forebet `kelly` — NOT LOADED into warehouse (dropped). A
+  ready-made staking-size signal being discarded.
+- **Misc**: bettingclosed pick_* + odds (partial), betclan winner/url,
+  freesupertips/windrawwin `stake`, forebet `league_id`.
+
+### Planned modeling direction (layered, not one mega-model)
+
+1. xG -> enrich existing ML-meta classifier (xg_diff, xg_total features) and a
+   separate O/U model. Cheapest, highest-certainty win (already loaded, proven
+   predictor).
+2. Load scoutingstats 1.5/3.5 odds (2-line data gap) -> unlock O/U 1.5 and
+   O/U 3.5 as separate certified markets.
+3. First-half 1X2 from `p1_ht/px_ht/p2_ht` (same miner structure, HT market).
+4. HT-state features (goal_diff_at_HT, home_led_at_HT) into full-time model.
+5. BTTS-no market; predicted-score O/U cross-check.
+6. Provider recs as shadow sources (Phase-A style), never primary.
+
+Every addition must certify WALK-FORWARD (train pre-split 2025-06-01, certify
+post-split) and be judged by the auto-tickets grader at real prices. No
+backtest-into-deployment. The auto-tickets ledger (auto_tickets_performance)
+is the system's primary truth signal going forward.
+
+### Process notes
+
+- Skipped: 08-11 ceremonial gate (operator decision, this addendum records it).
+- The "honest rule labels" fix (display_rule now shows qualifiers like
+  BC-CONFIRMS/HOME-ONLY/MIN-P) and the readable audit % formatting shipped
+  2026-08-09/10 — part of the truthfulness pivot.
+- Gotcha sweep shipped 2026-08-09: string-odds crash, kickoff "DD-MM, HH:MM"
+  format, additive-10-odd w/ thin-day reuse, held-back msg fix, % stakes in
+  grader, adaptive ideal pool (season-aware), adaptive deployment ceiling.
+
+---
+
+## Addendum — 2026-08-10 (late): stale display_rule in archived ledger rows
+
+**Bug (operator-reported):** the 08-10 slate still showed `[2WAY-UNANIMOUS≥60]`
+for picks whose exact rule is `2way+bc-confirms avg_p>=60` — the honest-label
+fix (7f573b48ab) had landed, but the label persisted.
+
+**Root cause (proven from origin history):** picks for 08-10 fixtures were
+first archived by the 08-09 22:42Z run — 46 minutes BEFORE the honest-label
+commit (23:28Z) — with the pre-qualifier `display_rule` baked into the rows.
+`autonomous_intraday_merge` retains existing ledger rows exactly (Day-0
+performance protection), so the stale display survives every later run; even
+the current cloud `picks_today.json` carried it.
+
+**Fix (single source of truth):** `edgefactory.util.display_rule_label()`
+(canonical qualifier formatter) + `edgefactory.util.honest_display_label()`
+(derives the label from the EXACT rule string at render time, falls back to
+stored values only for unparseable rules). All three render paths now use it:
+`picks_today.print_buckets`, `daily.generate_daily_report` (.txt report), and
+`notifier._pick_rule_label` (Telegram). Stored ledger rows are NOT mutated —
+ledger integrity is untouched; display is always derived from ground truth.
+
+**Verified:** the 4 stale 08-10 rows now render `2WAY-UNANIMOUS+BC-CONFIRMS≥60`;
+the genuine `2way-unanimous avg_p>=70` row (Sirius) still renders
+`2WAY-UNANIMOUS≥70` (no false qualifier); ml-meta / legacy display-string rows
+fall back cleanly; `_edge_entry` + `load_thresholds` regression-tested.
+
+**Context:** the bc-confirms≥60 rule is the audit's −19.2% ROI rule (n=20) —
+auto-tickets correctly never bet it (no passing rule×source combo); the current
+edges registry no longer contains bc-confirms at all (re-mine skipped it, no
+bettingclosed data), so no new picks from it going forward. Archived rows
+remain in the ledger for grading.
