@@ -26,6 +26,87 @@
         "kickoff_delta_minutes": 30
       },
       {
+        "home": "V\u00e4ster\u00e5s SK",
+        "away": "Djurg\u00e5rdens IF",
+        "league": "Allsvenskan",
+        "kickoff": "2026-08-10T17:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.5,
+        "bookmaker": "Bet365",
+        "home_key": "vasterassk",
+        "away_key": "djurgardensif",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Silkeborg IF",
+        "away": "Odense Boldklub",
+        "league": "Danish Superliga",
+        "kickoff": "2026-08-10T17:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.66,
+        "bookmaker": "Pinnacle",
+        "home_key": "silkeborgif",
+        "away_key": "odenseboldklub",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Lusit\u00e2nia Lourosa",
+        "away": "FC Porto B",
+        "league": "Liga Portugal 2",
+        "kickoff": "2026-08-10T17:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.48,
+        "bookmaker": "Pinnacle",
+        "home_key": "lusitanialourosa",
+        "away_key": "fcportob",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "IK Sirius",
+        "away": "IF Brommapojkarna",
+        "league": "Allsvenskan",
+        "kickoff": "2026-08-10T17:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.333,
+        "bookmaker": "Betway",
+        "home_key": "iksirius",
+        "away_key": "ifbrommapojkarna",
+        "kickoff_delta_minutes": 90
+      }
+    ],
+    "nearby_scoutingstats_candidates": []
+  },
+  {
+    "date": "2026-08-10",
+    "kickoff": "10-08, 17:00",
+    "home": "Mura",
+    "away": "Radomlje",
+    "league": "Slovenia 1. SNL",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way+bc-confirms avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "mura",
+    "away_key": "radomlje",
+    "nearby_bzzoiro_candidates": [
+      {
+        "home": "FC Boto\u0219ani",
+        "away": "FC Corvinul Hunedoara",
+        "league": "Superliga",
+        "kickoff": "2026-08-10T15:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.25,
+        "bookmaker": "Interwetten",
+        "home_key": "fcbotosani",
+        "away_key": "fccorvinulhunedoara",
+        "kickoff_delta_minutes": 30
+      },
+      {
         "home": "Botev Vratsa",
         "away": "Slavia Sofia",
         "league": "Parva Liga",
@@ -36,33 +117,7 @@
         "bookmaker": "Pinnacle",
         "home_key": "botevvratsa",
         "away_key": "slaviasofia",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Botev Vratsa",
-        "away": "Slavia Sofia",
-        "league": "Parva Liga",
-        "kickoff": "2026-08-10T16:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.98,
-        "bookmaker": "Unibet",
-        "home_key": "botevvratsa",
-        "away_key": "slaviasofia",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Botev Vratsa",
-        "away": "Slavia Sofia",
-        "league": "Parva Liga",
-        "kickoff": "2026-08-10T16:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.95,
-        "bookmaker": "Interwetten",
-        "home_key": "botevvratsa",
-        "away_key": "slaviasofia",
-        "kickoff_delta_minutes": 30
+        "kickoff_delta_minutes": 60
       },
       {
         "home": "V\u00e4ster\u00e5s SK",
@@ -75,75 +130,35 @@
         "bookmaker": "Bet365",
         "home_key": "vasterassk",
         "away_key": "djurgardensif",
-        "kickoff_delta_minutes": 90
-      }
-    ],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "TransINVEST Vilnius",
-        "away": "Panev\u0117\u017eys",
-        "league": "A Lyga",
-        "kickoff": "2026-08-10T15:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.65,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "transinvestvilnius",
-        "away_key": "panevezys",
-        "kickoff_delta_minutes": 15
+        "kickoff_delta_minutes": 120
       },
       {
-        "home": "Karpaty",
-        "away": "LNZ Cherkasy",
-        "league": "Premier League",
-        "kickoff": "2026-08-10T15:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.7,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "karpaty",
-        "away_key": "lnzcherkasy",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Botev Vratsa",
-        "away": "Slavia Sofia",
-        "league": "First League",
-        "kickoff": "2026-08-10T16:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.95,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "botevvratsa",
-        "away_key": "slaviasofia",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Mura",
-        "away": "Radomlje",
-        "league": "1. SNL",
-        "kickoff": "2026-08-10T16:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.9,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "mura",
-        "away_key": "radomlje",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "V\u00e4ster\u00e5s SK",
-        "away": "Djurg\u00e5rden",
-        "league": "Allsvenskan",
+        "home": "Silkeborg IF",
+        "away": "Odense Boldklub",
+        "league": "Danish Superliga",
         "kickoff": "2026-08-10T17:00:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 4.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "vasterassk",
-        "away_key": "djurgarden",
-        "kickoff_delta_minutes": 90
+        "odds": 2.66,
+        "bookmaker": "Pinnacle",
+        "home_key": "silkeborgif",
+        "away_key": "odenseboldklub",
+        "kickoff_delta_minutes": 120
+      },
+      {
+        "home": "Lusit\u00e2nia Lourosa",
+        "away": "FC Porto B",
+        "league": "Liga Portugal 2",
+        "kickoff": "2026-08-10T17:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.48,
+        "bookmaker": "Pinnacle",
+        "home_key": "lusitanialourosa",
+        "away_key": "fcportob",
+        "kickoff_delta_minutes": 120
       }
-    ]
+    ],
+    "nearby_scoutingstats_candidates": []
   }
 ]
