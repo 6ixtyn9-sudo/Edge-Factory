@@ -45,7 +45,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.util import fold_ascii, norm_team  # noqa: E402
+from edgefactory.util import fold_ascii, norm_team, honest_display_label  # noqa: E402
 
 REPORT_DIR = ROOT / "localdata"
 PICKS_TODAY_FILE = REPORT_DIR / "picks_today.json"
@@ -386,7 +386,10 @@ def generate_daily_report(
                 else:
                     odds = "@n/a"
 
-                label = p.get("display_rule") or p.get("rule", "?")
+                # Derive from the exact rule string at render time: archived
+                # rows may carry a pre-qualifier display_rule from older code
+                # and the merge layer retains rows exactly (stale forever).
+                label = honest_display_label(p)
                 ctx = p.get("ctx", {}) or {}
                 w_str = f"  w={p['w_score']:.2f}" if p.get("w_score") is not None else ""
                 match = str(p.get("match", ""))[:42]

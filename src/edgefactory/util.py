@@ -151,3 +151,71 @@ def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
     if not g1 or not g2:
         return 0.0
     return len(g1 & g2) / len(g1 | g2)
+
+
+# ---------------------------------------------------------------------------
+# Honest rule labels (single source for every render path).
+#
+# Archived ledger rows may carry a display_rule computed by older code (e.g.
+# pre-qualifier labels like "2WAY-UNANIMOUS>=60" for the bc-confirms variant).
+# The merge layer retains rows exactly, so a stored display can stay stale
+# forever. The exact miner rule string is the ground truth — always derive the
+# label from it at render time instead of trusting a stored display.
+# ---------------------------------------------------------------------------
+
+_RULE_NWAY_RE = re.compile(r"(\d+)\s*way")
+_RULE_THR_RE = re.compile(r"avg_p\s*>=?\s*([\d.]+)")
+
+
+def display_rule_label(market: str, n_way: int, threshold: float, rule: str = "") -> str:
+    """Short honest label derived from the exact miner rule.
+
+    Qualifiers (bc-confirms / home-only / away-only / min_p / odds-) are
+    shown so a variant can never hide behind the plain unanimous name:
+    e.g. rule "2way+bc-confirms avg_p>=60" renders as
+    "2WAY-UNANIMOUS+BC-CONFIRMS≥60". Mirrors picks_today.display_rule;
+    keep in sync with that wrapper (which delegates here).
+    """
+    qual = ""
+    if rule:
+        rl = rule.lower()
+        toks = []
+        if "bc-confirms" in rl:
+            toks.append("BC-CONFIRMS")
+        if "home-only" in rl:
+            toks.append("HOME-ONLY")
+        if "away-only" in rl:
+            toks.append("AWAY-ONLY")
+        if "min_p" in rl:
+            toks.append("MIN-P")
+        if "odds-" in rl:
+            toks.append("ODDS")
+        if toks:
+            qual = "+" + "+".join(toks)
+    if "ml-meta" in market.lower() or "ml-meta" in rule.lower() or n_way == 0:
+        return f"ML-META≥{threshold:.0f}"
+    if market == "1x2":
+        return f"{n_way}WAY-UNANIMOUS{qual}≥{threshold:.0f}"
+    if market == "ou_2.5":
+        return f"OU25-UNANIMOUS-{n_way}WAY{qual}≥{threshold:.0f}"
+    if market == "btts":
+        return f"BTTS-UNANIMOUS-{n_way}WAY{qual}≥{threshold:.0f}"
+    return f"{market.upper()}-{n_way}WAY{qual}≥{threshold:.0f}"
+
+
+def honest_display_label(pick: dict) -> str:
+    """Render a pick's rule label from the EXACT rule string.
+
+    Falls back to the stored display/rule for unparseable rules (ml-meta,
+    legacy display-string rows) — never worse than the stored label.
+    """
+    rule = str(pick.get("edge_rule") or pick.get("rule") or "").strip()
+    market = pick.get("market") or "1x2"
+    if rule:
+        mn, mt = _RULE_NWAY_RE.search(rule), _RULE_THR_RE.search(rule)
+        if mn and mt:
+            try:
+                return display_rule_label(market, int(mn.group(1)), float(mt.group(1)), rule)
+            except (TypeError, ValueError):
+                pass
+    return pick.get("display_rule") or rule or "?"

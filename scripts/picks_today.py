@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_league, canonical_team, classify_competition
-from edgefactory.util import compact_key, norm_team, fold_ascii
+from edgefactory.util import compact_key, norm_team, fold_ascii, display_rule_label, honest_display_label
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_debias_hr
@@ -998,32 +998,9 @@ def display_rule(market: str, n_way: int, threshold: float, rule: str = "") -> s
     Honest labels: include the rule QUALIFIER (bc-confirms / home-only / min_p /
     away-only / odds-) so a variant can never hide behind the plain unanimous
     name. e.g. 2way+bc-confirms avg_p>=60 renders as 2WAY+BC-CONFIRMS>=60.
+    Delegates to the single-source formatter in edgefactory.util.
     """
-    qual = ""
-    if rule:
-        rl = rule.lower()
-        toks = []
-        if "bc-confirms" in rl:
-            toks.append("BC-CONFIRMS")
-        if "home-only" in rl:
-            toks.append("HOME-ONLY")
-        if "away-only" in rl:
-            toks.append("AWAY-ONLY")
-        if "min_p" in rl:
-            toks.append("MIN-P")
-        if "odds-" in rl:
-            toks.append("ODDS")
-        if toks:
-            qual = "+" + "+".join(toks)
-    if "ml-meta" in market or n_way == 0:
-        return f"ML-META≥{threshold:.0f}"
-    if market == "1x2":
-        return f"{n_way}WAY-UNANIMOUS{qual}≥{threshold:.0f}"
-    if market == "ou_2.5":
-        return f"OU25-UNANIMOUS-{n_way}WAY{qual}≥{threshold:.0f}"
-    if market == "btts":
-        return f"BTTS-UNANIMOUS-{n_way}WAY{qual}≥{threshold:.0f}"
-    return f"{market.upper()}-{n_way}WAY{qual}≥{threshold:.0f}"
+    return display_rule_label(market, n_way, threshold, rule)
 
 
 def _edge_entry(edge: dict) -> dict | None:
@@ -2651,7 +2628,7 @@ def print_buckets(buckets: dict, title_date: str = ""):
             )
             market = p.get("market_type", p.get("market", "?"))
             tier = p.get("odds_tier", "?")
-            label = p.get("display_rule") or p.get("rule", "?")
+            label = honest_display_label(p)
             kickoff = format_kickoff(p)
             w_str = f"  w={p['w_score']:.2f}" if p.get("w_score") is not None else ""
             

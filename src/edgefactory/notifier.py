@@ -16,6 +16,8 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
+from edgefactory.util import honest_display_label
+
 BUCKET_CLEAN = "CERTIFIED_CLEAN"
 BUCKET_CAUTION = "CAUTION"
 BUCKET_WL_ODDS = "WATCHLIST_NO_ODDS"
@@ -50,7 +52,9 @@ def format_odds_display(pick: dict[str, Any]) -> str:
 
 
 def _pick_rule_label(pick: dict[str, Any]) -> str:
-    return str(pick.get("display_rule") or pick.get("rule") or "?")
+    # Derive from the exact rule string — archived rows can carry a stale
+    # pre-qualifier display_rule (merge retains rows exactly).
+    return str(honest_display_label(pick))
 
 
 def format_whatsapp_summary(
