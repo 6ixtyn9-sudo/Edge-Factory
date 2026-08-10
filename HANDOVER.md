@@ -5251,3 +5251,32 @@ Either (a) accept retirement — betexplorer_odds combos age out and die, or
 bzzoiro_odds/scoutingstats_odds cover prices; betexplorer adds no unique
 market. Only note: any historical betexplorer_odds picks remain in the graded
 ledger and count toward n=30 (they are real graded tickets, just frozen).
+---
+
+## Addendum — 2026-08-10 (late 5): self-healing honest labels
+
+**Problem:** the render-time fix (87fb5a5) made every display honest, but the
+STORED ledger rows still carried the pre-qualifier display_rule (e.g.
+"2WAY-UNANIMOUS>=60" for rule "2way+bc-confirms avg_p>=60"). The merge layer
+retains rows exactly, so stored data stayed stale forever. The data itself was
+not truthful — only the render was.
+
+**Fix (self-heal, two layers):**
+1. `edgefactory.util.heal_ledger_labels()` — derives the honest label from the
+   exact rule string and rewrites the stored display_rule. Touches ONLY the
+   display field; never rule/odds/results/performance. Idempotent.
+2. Wired into daily.py at every ledger write point: archive_picks_by_kickoff,
+   forecast promotion, and the autonomous intraday merge. Every pipeline write
+   heals first, logs "self-healed N stale display labels", then persists — so
+   stale labels can never accumulate again.
+3. `scripts/heal_pick_labels.py` — one-time historical sweep across all
+   picks_*.json / picks_today.json / picks_morning_*.json (idempotent; heals 0
+   on re-run). Run once to make all stored archives truthful immediately.
+
+**Verified:** real 08-10 ledger healed 4 rows (bc-confirms -> +BC-CONFIRMS);
+Sirius (genuine plain 2way>=70) untouched; re-heal = 0; sweep across multiple
+files + idempotency confirmed.
+
+**Note on display_rule for the plain rule:** "2WAY-UNANIMOUS>=70" for
+"2way-unanimous avg_p>=70" is CORRECT — no qualifier exists. The lying labels
+were only the >=60 bc-confirms rows. After the sweep, stored data == truth.
