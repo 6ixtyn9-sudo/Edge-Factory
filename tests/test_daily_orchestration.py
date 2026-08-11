@@ -79,8 +79,12 @@ def test_promote_forecast(mock_picks_today_file, mock_archived_file, mock_gen_re
 
     daily.promote_forecast(str(forecast_file), "2026-06-18")
 
-    mock_archive_dest.write_text.assert_called_once_with(json.dumps(dummy_picks))
-    mock_picks_today_file.write_text.assert_called_once_with(json.dumps(dummy_picks))
+    # promote_forecast re-serializes with heal_ledger_labels (indent=2,
+    # sort_keys=True) — the written form is pretty-printed, not the compact
+    # input. Assert the actual serialization the code writes.
+    expected = json.dumps(dummy_picks, indent=2, sort_keys=True)
+    mock_archive_dest.write_text.assert_called_once_with(expected)
+    mock_picks_today_file.write_text.assert_called_once_with(expected)
     mock_gen_report.assert_called_once_with("2026-06-18")
     mock_run_soft.assert_called()
     assert any("sync_supabase" in call[0][0] for call in mock_run_soft.call_args_list)
