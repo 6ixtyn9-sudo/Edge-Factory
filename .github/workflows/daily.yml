@@ -125,8 +125,24 @@ jobs:
             exit 0
           fi
           git commit -m "chore: persist pipeline state (run ${{ github.run_id }})"
-          git pull --rebase --autostash || true
-          git push || (git pull --rebase --autostash && git push)
+          # Conflict-proof sync: if the rebase/push collides with a remote
+          # that moved mid-run (e.g. a local Mac pushed localdata while we
+          # ran), DROP the local state commit and stay green — localdata is
+          # fully regenerable, the next run persists fresh state. Never fail
+          # or strand the runner in a conflict.
+          if ! git pull --rebase --autostash; then
+            git rebase --abort 2>/dev/null || true
+            echo "WARN: localdata rebase conflicted (remote moved mid-run); dropping regenerable state commit"
+            exit 0
+          fi
+          if ! git push; then
+            if ! git pull --rebase --autostash; then
+              git rebase --abort 2>/dev/null || true
+              echo "WARN: push-race conflict; dropping regenerable state commit"
+              exit 0
+            fi
+            git push
+          fi
 
       - name: Upload Pick Ledgers & Reports as Artifacts
         uses: actions/upload-artifact@v4
