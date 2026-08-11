@@ -20,7 +20,10 @@ class Gates:
     # consensus-specific
     min_overlap_n: int = 200      # min joined matches before a consensus rule is even scored
     # decay monitoring
-    recent_window_days: int = 60
+    recent_window_days: int = 30      # was 60 — for a daily-betting system the
+                                      # recent window should mirror ~a month of
+                                      # tickets, not a quarter; bad settles age
+                                      # out 2x faster so recovery is faster.
     min_recent_n: int = 30
 
 
