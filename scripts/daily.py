@@ -170,7 +170,9 @@ def archive_picks_by_kickoff(picks: list[dict[str, Any]], fallback_date: str) ->
                 existing = []
         
         # Use our merge logic to add new picks or update existing ones
-        merged, _ = autonomous_intraday_merge(existing, date_picks)
+        merged, _, superseded = autonomous_intraday_merge(existing, date_picks)
+        if superseded:
+            print(f"  superseded {superseded} archived row(s) with fresh picks in {d} archive")
         healed = heal_ledger_labels(merged)
         if healed:
             print(f"  self-healed {healed} stale display labels in {d} archive")
@@ -491,7 +493,7 @@ def run_future_planner(start_date: str, days: int, target_picks: list[dict[str, 
         try:
             day_picks = load_picks_file()
             # De-duplicate future picks against already captured picks to prevent midnight crossing
-            merged_picks, new_added = autonomous_intraday_merge(all_picks, day_picks)
+            merged_picks, new_added, _ = autonomous_intraday_merge(all_picks, day_picks)
             all_picks = merged_picks
             
             # Filter the merged ledger for only this target date to generate a clean, de-duplicated report
@@ -601,15 +603,21 @@ def match_market_key(pick: dict[str, Any]) -> tuple[str, str, str, str]:
 def autonomous_intraday_merge(
     existing_ledger: list[dict[str, Any]],
     fresh_run: list[dict[str, Any]],
-) -> tuple[list[dict[str, Any]], int]:
+) -> tuple[list[dict[str, Any]], int, int]:
     """The core autonomous accumulating ledger engine.
 
-    Returns (merged_picks, newly_added_count).
-    Retains all existing locked picks exactly to protect Day 0 performance records,
-    and appends any brand new late-slate discoveries.
+    Returns (merged_picks, newly_added_count, superseded_count).
+    Retains all existing locked picks to protect Day 0 performance records,
+    appends any brand new late-slate discoveries, and — when a FRESH pick
+    collides with an existing row for the SAME fixture + market + match date —
+    PREFERS THE FRESH ROW (the newer run is the current truth; this is what
+    was hiding the ml-meta picks behind archived 3way rows for the same
+    fixture). Midnight-crossing protection stays: a different match date means
+    a different match, so the archived row is kept and the fresh one deduped.
     """
     seen_keys: set[tuple[str, str, str, str]] = set()
     merged: list[dict[str, Any]] = []
+    superseded = 0
 
     for pick in existing_ledger:
         key = match_market_key(pick)
@@ -623,6 +631,15 @@ def autonomous_intraday_merge(
             seen_keys.add(key)
             merged.append(pick)
             new_added += 1
+            continue
+        # Same fixture+market already in the ledger. Prefer fresh only when it
+        # is the same actual match date; otherwise keep the archived row.
+        fresh_date = _pick_date(pick, "")
+        for i, p in enumerate(merged):
+            if match_market_key(p) == key and _pick_date(p, "") == fresh_date:
+                merged[i] = pick
+                superseded += 1
+                break
 
     merged.sort(
         key=lambda p: (
@@ -633,7 +650,7 @@ def autonomous_intraday_merge(
             str(p.get("match", "")),
         )
     )
-    return merged, new_added
+    return merged, new_added, superseded
 
 
 def get_qualitative_hour_label() -> str:
@@ -822,14 +839,17 @@ def run_pipeline(
         )
 
         fresh_picks = load_picks_file()
-        merged_picks, new_added = autonomous_intraday_merge(existing_ledger, fresh_picks)
+        merged_picks, new_added, superseded = autonomous_intraday_merge(existing_ledger, fresh_picks)
         healed_labels = heal_ledger_labels(merged_picks)
         if healed_labels:
             print(f"  self-healed {healed_labels} stale display labels in live ledger")
+        if superseded:
+            print(f"  superseded {superseded} archived row(s) with fresh picks (same fixture+date)")
 
         print("\n=== Autonomous Accumulating Ledger Verdict ===")
         print(f"  Existing Locked Morning Picks : {len(existing_ledger)}")
         print(f"  Brand New Late-Slate Bets     : {new_added}")
+        print(f"  Superseded with fresh         : {superseded}")
         print(f"  Total Active Official Ledger  : {len(merged_picks)}")
 
         if new_added > 0:
