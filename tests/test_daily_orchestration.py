@@ -132,15 +132,18 @@ def test_autonomous_intraday_merge():
         }
     ]
 
-    merged, new_added = daily.autonomous_intraday_merge(existing, fresh)
-    
+    merged, new_added, superseded = daily.autonomous_intraday_merge(existing, fresh)
+
     assert new_added == 1
+    assert superseded == 1
     assert len(merged) == 2
-    # Verify exact morning pick is retained exactly
+    # Prefer-fresh: the duplicate fixture's FRESH row supersedes the archived
+    # one (the old behavior of keeping the archived row silently hid newer,
+    # more truthful picks — e.g. an ml-meta pick behind an archived 3way row).
     assert merged[0]["home"] == "AC Oulu"
-    assert merged[0]["pick"] == "1"
-    assert merged[0]["odds"] == 1.95
-    
+    assert merged[0]["pick"] == "X"
+    assert merged[0]["odds"] == 3.40
+
     # Verify brand new game is appended
     assert merged[1]["home"] == "HJK Helsinki"
     assert merged[1]["pick"] == "2"
