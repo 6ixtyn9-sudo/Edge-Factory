@@ -5572,3 +5572,34 @@ still can't be bet by auto-tickets unless its real-money record is clean.
 
 **Expected sequence:** next full run -> scan shows ml-meta >=55/60/65 verdicts;
 decay shows king verdict under the 30d window. Watch both.
+---
+
+## Addendum — 2026-08-11 (late 18): merge prefers fresh — ml-meta picks no longer hidden
+
+**Bug (operator-caught):** after the fast-lane run, ml-meta fired for the first
+time ever (5 picks incl. Lyon vs Sparta -> HOME CLEAN), but the operator-facing
+report did NOT show them. Lyon appeared under the morning's archived
+3way-unanimous>=65 SKIPPED_VETO row instead of the fresh ml-meta>=55
+CERTIFIED_CLEAN row.
+
+**Root cause:** autonomous_intraday_merge retained all archived rows exactly and
+only APPENDED fresh rows whose (fixture, market) key was unseen. A fresh pick
+for a fixture already in the ledger was silently dropped — so a newer, more
+truthful row (ml-meta, current model) was hidden behind an older one (3way,
+morning run). Same bug family as the stale display_rule: the ledger was hiding
+truth.
+
+**Fix (scripts/daily.py):** on key collision, if the fresh pick's match date
+equals the archived row's match date, the FRESH row supersedes it (counted and
+logged: "superseded N archived row(s) with fresh picks"). Midnight-crossing
+protection preserved: a different date = a different match, archived row kept.
+Return value is now (merged, new_added, superseded) — 3 call sites updated.
+Test updated to assert prefer-fresh (the old test codified the hiding).
+
+**Verified (4 cases):** Lyon case -> fresh ml-meta row wins; midnight-crossing
+-> archived kept; brand-new fixture -> still appends; two collisions -> both
+superseded, ledger size stable.
+
+**Effect:** the operator now sees the CURRENT truth per fixture — ml-meta picks
+show up in the slate the same day they're made. The merge no longer hides
+newer rows behind archived ones.
