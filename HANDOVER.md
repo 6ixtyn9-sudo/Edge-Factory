@@ -5623,3 +5623,27 @@ codifies old behavior is itself a lie; it should assert current truth.
 **Lesson:** stale tests are bug debt too — they fail loudly later and look
 like regressions. This one was already wrong before today's change; the merge
 run just surfaced it.
+---
+
+## Addendum — 2026-08-11 (late 20): cloud bot merge-conflict crash — fixed + discipline rule
+
+**Incident:** Actions run #430 failed (exit 128) in the "Persist pipeline state"
+step: `git pull --rebase` conflicted on localdata files (purity_registry.json,
+settled_results.json, picks_next_2days_manifest.json, theoddsapi_*.json +
+binary theoddsapi_odds CSV). The bot's state commit was dropped; run red.
+
+**Root cause:** TWO WRITERS on the same generated files. The Mac pushed
+localdata commits (9cc6b2ea96, eccfdc3a1a) while the bot was mid-run; the
+bot's commit + the Mac's pushed localdata overlapped -> rebase conflict -> run
+died. Nothing lost (runner ephemeral, main healthy, Mac has all state).
+
+**Fix (workflow, .github/workflows/daily.yml):** the persist step is now
+conflict-proof — if rebase or push collides with a moved remote, it aborts the
+rebase, DROPS the regenerable localdata state commit, warns, and stays green.
+Localdata regenerates on the next run; the bot never strands in a conflict.
+
+**Discipline rule (operator):** NEVER push localdata/ from the Mac. The bot is
+the sole writer of localdata on main (it pulls fresh state each run and commits
+it). The Mac's richer localdata stays local-only; push only scripts/src/tests/
+HANDOVER/. This is the same truthfulness principle applied to the repo itself:
+one writer per artifact class prevents conflicts and keeps the record clean.
