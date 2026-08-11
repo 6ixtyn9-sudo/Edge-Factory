@@ -5603,3 +5603,23 @@ superseded, ledger size stable.
 **Effect:** the operator now sees the CURRENT truth per fixture — ml-meta picks
 show up in the slate the same day they're made. The merge no longer hides
 newer rows behind archived ones.
+---
+
+## Addendum — 2026-08-11 (late 19): stale test fixed — promote_forecast serialization
+
+**Found:** after the merge-prefer-fresh deploy, `python3 -m pytest
+tests/test_daily_orchestration.py` showed 8 passed / 1 failed
+(test_promote_forecast). The failure was NOT the merge change — it was a
+PRE-EXISTING stale test: it asserted the forecast was written as the COMPACT
+input JSON (json.dumps(dummy_picks)), but the code (since the heal_ledger_labels
+fix) re-serializes with indent=2, sort_keys=True. The heal fix changed the
+output; the test never caught up.
+
+**Fix:** the test now asserts the real serialization (json.dumps(picks,
+indent=2, sort_keys=True)) — matching what promote_forecast actually writes,
+verified directly. This is the same discipline as the labels: a test that
+codifies old behavior is itself a lie; it should assert current truth.
+
+**Lesson:** stale tests are bug debt too — they fail loudly later and look
+like regressions. This one was already wrong before today's change; the merge
+run just surfaced it.
