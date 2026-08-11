@@ -14,7 +14,7 @@
 - pending/unmatched result picks: 1
 - voided postponed/cancelled/abandoned events: 3
 - ambiguous event-disposition rows: 0
-- settled via shared overlay facts: 2
+- settled via shared overlay facts: 4
 - ambiguous result picks: 0
 - wins: 142
 - hit rate: +74.0%
