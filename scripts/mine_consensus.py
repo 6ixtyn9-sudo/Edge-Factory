@@ -806,7 +806,12 @@ def main():
     # ---- Train and Evaluate ML Meta-Classifier -----------------------------
     ml_model_payload, _ = train_ml_meta_classifier(con, args.split)
     if ml_model_payload:
-        for thr in (70, 75, 80, 85):
+        # Scan lower thresholds too: the model's live max on summer slates is
+        # ~58%, so 70+ can never fire until peak season. 55/60/65 get judged
+        # by the SAME walk-forward gates — if they certify, the edge fires
+        # NOW instead of waiting for the season; if phantom, they stay
+        # candidates. The data decides, not impatience.
+        for thr in (55, 60, 65, 70, 75, 80, 85):
             results.append(evaluate(
                 con, f"ml-meta avg_p>={thr}", "ml_meta_settled",
                 f"ml_p*100 >= {thr}", args.split))
