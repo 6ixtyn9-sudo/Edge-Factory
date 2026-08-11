@@ -5538,3 +5538,37 @@ still can't be bet by auto-tickets unless its real-money record is clean.
 
 **Expected sequence:** next full run -> scan shows ml-meta >=55/60/65 verdicts;
 decay shows king verdict under the 30d window. Watch both.
+---
+
+## Addendum — 2026-08-11 (late 17): fast lane — ml-meta lower thresholds + 30-day decay window
+
+**Operator direction:** the wait for the next bets felt too long (60-day bench
+window, ml-meta waiting on the season). Two levers pulled, both honest:
+
+### Lever 1 — ml-meta threshold scan widened (scripts/mine_consensus.py)
+The certification scan only evaluated ml-meta >= 70/75/80/85; live max on
+summer slates is ~58%, so 70+ can never fire until peak season. Now scans
+55/60/65/70/75/80/85 — the SAME walk-forward gates judge them (min_n_valid 120,
+valid ROI >= 0, LB >= 0.5). If >=55/60/65 certify, the model fires on current
+fixtures (days, not months); if phantom, they stay candidates. The data
+decides, not impatience. Note: this is a new-certification path, not a
+threshold-lowering of existing edges — each threshold is its own rule.
+
+### Lever 2 — decay window 60 -> 30 days (src/edgefactory/config.py)
+The bench is ROI-driven (should_bench benches on ANY negative recent ROI) and
+the window slides daily. With a 30-day window, bad settles age out 2x faster.
+Critically: the king's current last-30d slice INCLUDES the winning 08-09
+tickets — its recent-30d ROI may already be non-negative, which means the next
+full pipeline run can un-bench it. If still negative, it stays benched
+correctly (the bench exists because it lost money recently) and recovers
+faster as results turn. min_recent_n unchanged (30) — the ROI bench is not
+gated by it, so no leniency leak.
+
+**Tradeoffs accepted:** 30-day window = more noise-sensitive (a bad 2-week
+stretch benches sooner; a good one un-benches sooner). That is aligned with
+daily betting and with the auto-tickets combo gate, which independently
+requires recent-20 ROI >= 0 before betting anything — so an un-benched edge
+still can't be bet by auto-tickets unless its real-money record is clean.
+
+**Expected sequence:** next full run -> scan shows ml-meta >=55/60/65 verdicts;
+decay shows king verdict under the 30d window. Watch both.
