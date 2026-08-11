@@ -35,7 +35,7 @@
     "2026-08-10",
     "2026-08-11"
   ],
-  "archived_pick_rows": 198,
+  "archived_pick_rows": 199,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.578947,
@@ -45,10 +45,10 @@
       "wins": 22
     },
     "CERTIFIED_CLEAN": {
-      "hit_rate": 0.285714,
-      "priced_picks": 7,
-      "roi": -0.55,
-      "settled_picks": 7,
+      "hit_rate": 0.25,
+      "priced_picks": 8,
+      "roi": -0.60625,
+      "settled_picks": 8,
       "wins": 2
     },
     "SKIPPED_VETO": {
@@ -106,10 +106,10 @@
       "wins": 67
     },
     "exact": {
-      "hit_rate": 0.68,
-      "priced_picks": 75,
-      "roi": -0.043093,
-      "settled_picks": 75,
+      "hit_rate": 0.671053,
+      "priced_picks": 76,
+      "roi": -0.055684,
+      "settled_picks": 76,
       "wins": 51
     },
     "fallback": {
@@ -143,10 +143,10 @@
       "wins": 67
     },
     "bzzoiro_odds": {
-      "hit_rate": 0.716981,
-      "priced_picks": 53,
-      "roi": 0.022604,
-      "settled_picks": 53,
+      "hit_rate": 0.703704,
+      "priced_picks": 54,
+      "roi": 0.003667,
+      "settled_picks": 54,
       "wins": 38
     },
     "forebet_best": {
@@ -180,10 +180,10 @@
       "wins": 67
     },
     "BZZOIRO_PRIMARY": {
-      "hit_rate": 0.733333,
-      "priced_picks": 45,
-      "roi": 0.067511,
-      "settled_picks": 45,
+      "hit_rate": 0.717391,
+      "priced_picks": 46,
+      "roi": 0.044304,
+      "settled_picks": 46,
       "wins": 33
     },
     "SCOUTINGSTATS_SOLE": {
@@ -218,10 +218,10 @@
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.78,
-      "priced_picks": 141,
-      "roi": 0.053106,
-      "settled_picks": 150,
+      "hit_rate": 0.774834,
+      "priced_picks": 142,
+      "roi": 0.04569,
+      "settled_picks": 151,
       "suspect_price_captures": 0,
       "wins": 117
     },
@@ -246,10 +246,10 @@
   },
   "by_rule": {
     "2way+bc-confirms avg_p>=60": {
-      "hit_rate": 0.56,
-      "priced_picks": 23,
-      "roi": -0.238261,
-      "settled_picks": 25,
+      "hit_rate": 0.538462,
+      "priced_picks": 24,
+      "roi": -0.27,
+      "settled_picks": 26,
       "wins": 14
     },
     "2way-unanimous avg_p>=70": {
@@ -373,27 +373,27 @@
         "recommended": 9
       },
       "match_over_35": {
-        "hit_rate": 0.166667,
+        "hit_rate": 0.142857,
         "hits": 1,
         "priced_hits": 1,
-        "priced_n": 6,
-        "priced_roi": -0.683333,
-        "recommended": 6
+        "priced_n": 7,
+        "priced_roi": -0.728571,
+        "recommended": 7
       }
     },
-    "hit_rate": 0.768595,
+    "hit_rate": 0.762295,
     "total_hits": 93,
-    "total_recommended": 121
+    "total_recommended": 122
   },
   "event_notes_audit": {
     "by_engine": {
       "hybrid_cohort": {
-        "brier": 0.148184,
-        "delta": -0.002139,
+        "brier": 0.148175,
+        "delta": -0.00266,
         "hits": 385,
-        "mean_promised": 0.538351,
-        "n": 718,
-        "realized": 0.536212
+        "mean_promised": 0.538126,
+        "n": 719,
+        "realized": 0.535466
       },
       "legacy": {
         "brier": 0.183796,
@@ -567,12 +567,12 @@
           "realized": 0.644444
         },
         "match_over_35": {
-          "brier": 0.23065,
-          "delta": -0.100312,
+          "brier": 0.229551,
+          "delta": -0.103721,
           "hits": 27,
-          "mean_promised": 0.437812,
-          "n": 80,
-          "realized": 0.3375
+          "mean_promised": 0.437054,
+          "n": 81,
+          "realized": 0.333333
         },
         "match_over_45": {
           "brier": 0.161131,
@@ -1134,13 +1134,13 @@
         "realized": 0.639344
       },
       "match_over_35": {
-        "brier": 0.245846,
-        "delta": -0.038705,
+        "brier": 0.244783,
+        "delta": -0.042151,
         "hits": 38,
-        "mean_promised": 0.430457,
-        "n": 97,
-        "notes": 97,
-        "realized": 0.391753
+        "mean_promised": 0.429906,
+        "n": 98,
+        "notes": 98,
+        "realized": 0.387755
       },
       "match_over_45": {
         "brier": 0.17307,
@@ -1173,13 +1173,13 @@
         "realized": 0.212903
       },
       {
-        "brier": 0.25327,
+        "brier": 0.25268,
         "bucket": "0.3-0.4",
-        "delta": 0.08728,
+        "delta": 0.084826,
         "hits": 83,
-        "mean_promised": 0.354209,
-        "n": 188,
-        "realized": 0.441489
+        "mean_promised": 0.354327,
+        "n": 189,
+        "realized": 0.439153
       },
       {
         "brier": 0.239883,
@@ -1237,29 +1237,29 @@
       }
     ],
     "promised_missing": 0,
-    "scored": 1019,
-    "total_notes": 1019,
+    "scored": 1020,
+    "total_notes": 1020,
     "unscorable": {}
   },
   "include_same_day": false,
   "morning_baseline_rows": 120,
   "overall": {
-    "hit_rate": 0.742105,
-    "priced_picks": 181,
-    "roi": -0.007856,
-    "settled_picks": 190,
+    "hit_rate": 0.73822,
+    "priced_picks": 182,
+    "roi": -0.013308,
+    "settled_picks": 191,
     "wins": 141
   },
-  "pending_result_picks": 3,
-  "regular_only_rows": 48,
+  "pending_result_picks": 2,
+  "regular_only_rows": 49,
   "same_day_cutoff": "2026-08-11",
-  "same_day_excluded": 2,
+  "same_day_excluded": 3,
   "secondary_stats": {
-    "btts_total": 190,
+    "btts_total": 191,
     "btts_wins": 96,
-    "over25_total": 190,
+    "over25_total": 191,
     "over25_wins": 128,
-    "team_o15_total": 190,
+    "team_o15_total": 191,
     "team_o15_wins": 137
   },
   "settled_ledger": [
@@ -15789,6 +15789,54 @@
       "won": false
     },
     {
+      "avg_p": 63.4,
+      "date": "2026-08-10",
+      "gs": 0,
+      "hs": 0,
+      "match": "Sepsi OSK Sfantu Gheorghe vs FCSB",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 3.5 Goals",
+          "market": "match_over_35",
+          "promised": 0.3764359952388956,
+          "raw_promised": 0.3764359952388956
+        }
+      ],
+      "odds": 1.98,
+      "odds_match_method": "exact",
+      "odds_source": "bzzoiro_odds",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.847,
+        "away_o15_hit": false,
+        "btts_expected": 0.40399999999999997,
+        "btts_hit": true,
+        "home_o15_expected": 0.099,
+        "home_o15_hit": true,
+        "over25_expected": 0.684,
+        "over25_hit": false,
+        "top_scores": [
+          {
+            "hit": false,
+            "pct": 0.163,
+            "score": "0-2"
+          },
+          {
+            "hit": false,
+            "pct": 0.153,
+            "score": "0-1"
+          }
+        ]
+      },
+      "price_evidence": "BZZOIRO_PRIMARY",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": false
+    },
+    {
       "avg_p": 60.7,
       "date": "2026-08-10",
       "gs": 0,
@@ -16177,73 +16225,73 @@
   "start": "2026-07-13",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.515667,
-      "mae": 1.388667,
-      "mean_actual": 3.241667,
-      "mean_promised": 3.757333,
-      "n": 120
+      "bias": -0.540165,
+      "mae": 1.40595,
+      "mean_actual": 3.214876,
+      "mean_promised": 3.755041,
+      "n": 121
     },
     "by_metric": {
       "away_o15": {
-        "brier": 0.197031,
-        "delta": 0.097758,
+        "brier": 0.201332,
+        "delta": 0.08995,
         "hits": 39,
-        "mean_promised": 0.227242,
-        "n": 120,
-        "realized": 0.325
+        "mean_promised": 0.232364,
+        "n": 121,
+        "realized": 0.322314
       },
       "btts": {
-        "brier": 0.264635,
-        "delta": 0.11065,
+        "brier": 0.263797,
+        "delta": 0.106397,
         "hits": 62,
-        "mean_promised": 0.406017,
-        "n": 120,
-        "realized": 0.516667
+        "mean_promised": 0.406,
+        "n": 121,
+        "realized": 0.512397
       },
       "home_o15": {
-        "brier": 0.220924,
-        "delta": -0.1408,
+        "brier": 0.21918,
+        "delta": -0.140455,
         "hits": 72,
-        "mean_promised": 0.7408,
-        "n": 120,
-        "realized": 0.6
+        "mean_promised": 0.735496,
+        "n": 121,
+        "realized": 0.595041
       },
       "over25": {
-        "brier": 0.233099,
-        "delta": -0.080392,
+        "brier": 0.235039,
+        "delta": -0.08538,
         "hits": 78,
-        "mean_promised": 0.730392,
-        "n": 120,
-        "realized": 0.65
+        "mean_promised": 0.730008,
+        "n": 121,
+        "realized": 0.644628
       },
       "top_score": {
-        "brier": 0.095536,
-        "delta": -0.038925,
+        "brier": 0.094953,
+        "delta": -0.039909,
         "hits": 25,
-        "mean_promised": 0.143092,
-        "n": 240,
-        "realized": 0.104167
+        "mean_promised": 0.143215,
+        "n": 242,
+        "realized": 0.103306
       }
     },
     "definition": "each metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5 / exact Top Score) \u2014 calibration, not a direction call",
     "promised_buckets": [
       {
-        "brier": 0.170923,
+        "brier": 0.169171,
         "bucket": "0.0-0.1",
-        "delta": 0.109934,
+        "delta": 0.107663,
         "hits": 18,
-        "mean_promised": 0.087868,
-        "n": 91,
-        "realized": 0.197802
+        "mean_promised": 0.087989,
+        "n": 92,
+        "realized": 0.195652
       },
       {
-        "brier": 0.108782,
+        "brier": 0.108155,
         "bucket": "0.1-0.2",
-        "delta": -0.016958,
+        "delta": -0.018015,
         "hits": 32,
-        "mean_promised": 0.137713,
-        "n": 265,
-        "realized": 0.120755
+        "mean_promised": 0.137865,
+        "n": 267,
+        "realized": 0.11985
       },
       {
         "brier": 0.190711,
@@ -16264,22 +16312,22 @@
         "realized": 0.590909
       },
       {
-        "brier": 0.252728,
+        "brier": 0.251565,
         "bucket": "0.4-0.5",
-        "delta": 0.051618,
+        "delta": 0.045701,
         "hits": 36,
-        "mean_promised": 0.422066,
-        "n": 76,
-        "realized": 0.473684
+        "mean_promised": 0.421831,
+        "n": 77,
+        "realized": 0.467532
       },
       {
-        "brier": 0.249781,
+        "brier": 0.255233,
         "bucket": "0.6-0.7",
-        "delta": -0.087205,
+        "delta": -0.102125,
         "hits": 23,
-        "mean_promised": 0.676949,
-        "n": 39,
-        "realized": 0.589744
+        "mean_promised": 0.677125,
+        "n": 40,
+        "realized": 0.575
       },
       {
         "brier": 0.226697,
@@ -16291,13 +16339,13 @@
         "realized": 0.675676
       },
       {
-        "brier": 0.239508,
+        "brier": 0.244335,
         "bucket": "0.8-0.9",
-        "delta": -0.167735,
+        "delta": -0.174596,
         "hits": 68,
-        "mean_promised": 0.861612,
-        "n": 98,
-        "realized": 0.693878
+        "mean_promised": 0.861465,
+        "n": 99,
+        "realized": 0.686869
       },
       {
         "brier": 0.204217,
@@ -16349,27 +16397,9 @@
       "pick": "home",
       "reason": "pending_or_unmatched_result",
       "rule": "2way+bc-confirms avg_p>=60"
-    },
-    {
-      "away": "FCSB",
-      "away_key_candidates": [
-        "fcsb"
-      ],
-      "bucket": "CERTIFIED_CLEAN",
-      "date": "2026-08-10",
-      "home": "Sepsi OSK Sfantu Gheorghe",
-      "home_key_candidates": [
-        "sepsiosks"
-      ],
-      "league": "Romania: Liga I",
-      "match": "Sepsi OSK Sfantu Gheorghe vs FCSB",
-      "odds": 1.98,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way+bc-confirms avg_p>=60"
     }
   ],
-  "unmatched_result_picks": 3,
+  "unmatched_result_picks": 2,
   "unsafe_regular_ledger_dates": [
     "2026-07-28",
     "2026-07-30",
