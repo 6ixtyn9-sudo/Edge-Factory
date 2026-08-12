@@ -5647,3 +5647,28 @@ the sole writer of localdata on main (it pulls fresh state each run and commits
 it). The Mac's richer localdata stays local-only; push only scripts/src/tests/
 HANDOVER/. This is the same truthfulness principle applied to the repo itself:
 one writer per artifact class prevents conflicts and keeps the record clean.
+---
+
+## Addendum — 2026-08-11/12 (late 21): ml-meta pick shadowing + stale state ceiling
+
+**Two truthfulness glitches surfaced by the 08-12 run:**
+
+1. **Shadowing (scripts/picks_today.py):** the ML block emitted ONE PICK PER
+   QUALIFYING THRESHOLD — a fixture at ml_p 62.9% produced BOTH ml-meta>=55
+   and ml-meta>=60 rows. The collapse kept the first (>=55), so >=60/65/70
+   looked "never fired" in the ledger and tripwire even while the model was
+   firing. Fix: emit ONE pick per fixture at the HIGHEST qualifying
+   threshold (62.9% -> labeled ML-META>=60). Verified across thresholds.
+
+2. **Stale state (scripts/picks_today.py + tripwire message):** ml_meta_state
+   .json was written by EVERY picks_today call including the future-planner's
+   tomorrow scan, whose thinner slate overwrote it — so the 08-12 tripwire
+   reported CEILED against 38.7% while the real 08-12 max was 62.9%. Fix:
+   persist state only for the primary target day. Tripwire CEILED wording
+   corrected (a bar not reached is expected seasonality now, not a "unit
+   mismatch or stale model" — that language was a leftover from the pre-fix
+   era).
+
+**Effect:** ml-meta>=60 now genuinely appears in the slate when the model
+clears 60 (one row, honest strongest label); the tripwire reads the primary
+day's true max; CEILED flags only real, current gaps.
