@@ -5672,3 +5672,28 @@ one writer per artifact class prevents conflicts and keeps the record clean.
 **Effect:** ml-meta>=60 now genuinely appears in the slate when the model
 clears 60 (one row, honest strongest label); the tripwire reads the primary
 day's true max; CEILED flags only real, current gaps.
+---
+
+## Addendum — 2026-08-12 (late 22): auto-tickets build early, freeze at 12:00
+
+**Operator direction:** don't wait for 12:00 to build tickets — build as soon
+as the morning slate exists, then freeze at 12:00.
+
+**Change (scripts/auto_tickets.py):**
+- GENERATE_HOUR (12) split into GENERATE_HOUR_START=6 and FREEZE_HOUR=12.
+- 02:00-05:59 -> "NOT YET" (no data yet).
+- 06:00-11:59 -> BUILDS the slip EVERY run (draft; regenerates as the slate
+  fills and new qualifying legs appear). Prints "DRAFT — regenerates on each
+  run until the 12:00 freeze."
+- 12:00+ -> first run writes a freeze marker (auto_tickets_<date>.frozen) and
+  prints "FROZEN — final slip"; later runs re-print it unchanged. --force
+  bypasses both the early gate and the freeze (builds, no marker mgmt).
+
+**Verified:** 8-case state machine (NOT-YET at 04:00, DRAFT at 06/09/11,
+FROZEN-now at 12:00+, FROZEN-reprint when marker exists regardless of hour,
+force bypasses).
+
+**Why this is safe:** pre-freeze drafts are informative, not actionable — the
+final frozen slip (post-12:00) is what the operator places. Regeneration
+before noon means late-slate legs still get in; the freeze guarantees the
+day-0 record doesn't churn. Same discipline, earlier visibility.
