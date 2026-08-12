@@ -914,10 +914,10 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-12T16:24:08+02:00",
-    "avg_p": 72.0,
+    "as_of": "2026-08-12T19:21:22+02:00",
+    "avg_p": 66.3,
     "away": "Como",
-    "bookmaker": "Bet365",
+    "bookmaker": "Betsson",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
@@ -957,78 +957,76 @@
     "duplicate_rows_collapsed": 1,
     "duplicate_rules_collapsed": [
       "ML-META\u226555",
-      "ML-META\u226565"
+      "ML-META\u226560"
     ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
-    "enhancement_breakeven": 0.7143,
-    "enhancement_edge_sample": -0.3501,
-    "enhancement_label": "Match Over 2.5 Goals",
+    "enhancement_label": "Home Team Over 0.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
-    "enhancement_price": 1.4,
+    "enhancement_price": null,
     "enhancement_price_at": null,
     "enhancement_price_book": null,
-    "enhancement_price_source": "scoutingstats",
-    "enhancement_priced": true,
-    "enhancement_probability": 0.4642,
-    "enhancement_reason": "Mathematical expectation is 68.5% (ML-calibrated 41.6%->63.6%, n=66) (Performance feedback: HR=55.6%, Adjusted Prob: 46.4%)",
-    "enhancement_state": "PAPER",
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.9105,
+    "enhancement_reason": "Home scoring rate is 87.8% (ML-calibrated 88.8%->95.4%, n=87) (Performance feedback: HR=93.5%, Adjusted Prob: 91.0%)",
+    "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 1138,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.46418739241438944,
-        "raw_probability": 0.6847196115557168,
-        "reason": "Mathematical expectation is 68.5% (ML-calibrated 41.6%->63.6%, n=66) (Performance feedback: HR=55.6%, Adjusted Prob: 46.4%)"
-      },
-      {
-        "cohort_n": 1138,
+        "cohort_n": 2516,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.9336869865866523,
-        "raw_probability": 0.9361569532212495,
-        "reason": "Home scoring rate is 87.8% (ML-calibrated 88.8%->95.4%, n=87) (Performance feedback: HR=93.5%, Adjusted Prob: 93.4%)"
+        "probability": 0.9104834472005433,
+        "raw_probability": 0.912892031413717,
+        "reason": "Home scoring rate is 87.8% (ML-calibrated 88.8%->95.4%, n=87) (Performance feedback: HR=93.5%, Adjusted Prob: 91.0%)"
       },
       {
-        "cohort_n": 1138,
+        "cohort_n": 2516,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9784000168300384,
-        "raw_probability": 0.9787778250705156,
-        "reason": "Combined Under 3.5 is 97.9% (ML-calibrated 97.1%->97.1%, n=103)"
+        "probability": 0.9829909511166878,
+        "raw_probability": 0.9833705321420946,
+        "reason": "Combined Under 3.5 is 98.3% (ML-calibrated 97.1%->97.1%, n=103)"
       },
       {
-        "cohort_n": 1138,
+        "cohort_n": 2516,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.955806414361902,
-        "raw_probability": 0.9480645194957,
-        "reason": "Combined Under 2.5 is 94.8% (ML-calibrated 92.6%->93.4%, n=91)"
+        "probability": 0.9590461184164027,
+        "raw_probability": 0.9512779824120261,
+        "reason": "Combined Under 2.5 is 95.1% (ML-calibrated 92.6%->93.4%, n=91)"
       },
       {
-        "cohort_n": 1138,
+        "cohort_n": 2516,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8143750097885076,
-        "raw_probability": 0.8028923643505124,
-        "reason": "Combined Under 1.5 is 80.3% (ML-calibrated 80.9%->83.3%, n=24)"
+        "probability": 0.815750108254913,
+        "raw_probability": 0.8042480739997975,
+        "reason": "Combined Under 1.5 is 80.4% (ML-calibrated 80.9%->83.3%, n=24)"
       },
       {
-        "cohort_n": 1138,
+        "cohort_n": 2516,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.4131921936518836,
+        "raw_probability": 0.6094969466180657,
+        "reason": "Mathematical expectation is 60.9% (ML-calibrated 41.6%->63.6%, n=66) (Performance feedback: HR=55.6%, Adjusted Prob: 41.3%)"
+      },
+      {
+        "cohort_n": 2516,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.27695904698235335,
-        "raw_probability": 0.29007690476985576,
-        "reason": "Poisson expected hit rate is 29.0% (ML-calibrated 26.0%->21.4%, n=98)"
+        "probability": 0.21896829055915285,
+        "raw_probability": 0.22933948054851794,
+        "reason": "Poisson expected hit rate is 22.9% (ML-calibrated 26.0%->21.4%, n=98)"
       }
     ],
     "home": "Arsenal",
@@ -1042,8 +1040,8 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.444,
-    "odds_captured_at": "2026-08-12T14:26:57.290346+00:00",
+    "odds": 1.49,
+    "odds_captured_at": "2026-08-12T17:24:34.872609+00:00",
     "odds_league": "Club Friendlies",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -1056,7 +1054,7 @@
     "pick": "home",
     "price_evidence": "BZZOIRO_PRIMARY",
     "price_push_eligible": true,
-    "recommended_enhancement": "match_over_25",
+    "recommended_enhancement": "home_over_05",
     "recommended_market": "avoid_raw_1x2",
     "rule": "ml-meta avg_p>=55",
     "source_weights": {},
@@ -1066,14 +1064,14 @@
       "betclan"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=948): Avg Goals: 3.83 | Over 2.5: 75.0% | BTTS: 38.8% | Home Over 1.5 Goals: 88.3% | Away Over 1.5 Goals: 9.2% | Top Scores: 3-0 (14.0%), 2-0 (13.3%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1910): Avg Goals: 3.50 | Over 2.5: 68.1% | BTTS: 39.5% | Home Over 1.5 Goals: 85.4% | Away Over 1.5 Goals: 9.7% | Top Scores: 2-0 (17.3%), 1-0 (14.6%)",
     "veto_reason": "context VETO in ['team_h']",
     "vitibet_index": null,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-12T16:24:08+02:00",
-    "avg_p": 57.2,
+    "as_of": "2026-08-12T19:21:22+02:00",
+    "avg_p": 57.7,
     "away": "Aston Villa",
     "bookmaker": "Novibet",
     "bucket": "SKIPPED_VETO",
@@ -1114,45 +1112,45 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.8568,
-    "enhancement_reason": "Home scoring rate is 77.9% (ML-calibrated 88.8%->95.4%, n=87) (Performance feedback: HR=93.5%, Adjusted Prob: 85.7%)",
+    "enhancement_probability": 0.8594,
+    "enhancement_reason": "Home scoring rate is 77.9% (ML-calibrated 88.8%->95.4%, n=87) (Performance feedback: HR=93.5%, Adjusted Prob: 85.9%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 4470,
+        "cohort_n": 4349,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.856778994607835,
-        "raw_probability": 0.8590455095751706,
-        "reason": "Home scoring rate is 77.9% (ML-calibrated 88.8%->95.4%, n=87) (Performance feedback: HR=93.5%, Adjusted Prob: 85.7%)"
+        "probability": 0.8594269146218355,
+        "raw_probability": 0.8617004343714799,
+        "reason": "Home scoring rate is 77.9% (ML-calibrated 88.8%->95.4%, n=87) (Performance feedback: HR=93.5%, Adjusted Prob: 85.9%)"
       },
       {
-        "cohort_n": 4470,
+        "cohort_n": 4349,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9830973506150902,
-        "raw_probability": 0.9834769727265626,
-        "reason": "Combined Under 3.5 is 98.3% (ML-calibrated 97.1%->97.1%, n=103)"
+        "probability": 0.9844306241035156,
+        "raw_probability": 0.9848107610572837,
+        "reason": "Combined Under 3.5 is 98.5% (ML-calibrated 97.1%->97.1%, n=103)"
       },
       {
-        "cohort_n": 4470,
+        "cohort_n": 4349,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9361835825671185,
-        "raw_probability": 0.928600629823976,
-        "reason": "Combined Under 2.5 is 92.9% (ML-calibrated 92.6%->93.4%, n=91)"
+        "probability": 0.9411943123938847,
+        "raw_probability": 0.9335707734578281,
+        "reason": "Combined Under 2.5 is 93.4% (ML-calibrated 92.6%->93.4%, n=91)"
       },
       {
-        "cohort_n": 4470,
+        "cohort_n": 4349,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.3775965062445447,
-        "raw_probability": 0.5569899943550162,
-        "reason": "Mathematical expectation is 55.7% (ML-calibrated 41.6%->63.6%, n=66) (Performance feedback: HR=55.6%, Adjusted Prob: 37.8%)"
+        "probability": 0.38021775791153506,
+        "raw_probability": 0.5608565845566069,
+        "reason": "Mathematical expectation is 56.1% (ML-calibrated 41.6%->63.6%, n=66) (Performance feedback: HR=55.6%, Adjusted Prob: 38.0%)"
       }
     ],
     "home": "Paris Saint Germain",
@@ -1164,11 +1162,11 @@
     "market_type": "1x2",
     "match": "Paris Saint Germain vs Aston Villa",
     "min_lead_minutes": 30,
-    "ml_p": 0.5715,
+    "ml_p": 0.5772,
     "model_version": "dc-blend-v1",
     "n_way": 3,
-    "odds": 1.76,
-    "odds_captured_at": "2026-08-12T04:37:57.136991+00:00",
+    "odds": 1.78,
+    "odds_captured_at": "2026-08-12T15:54:46.512097+00:00",
     "odds_league": "UEFA Super Cup",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -1192,10 +1190,10 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=2812): Avg Goals: 3.23 | Over 2.5: 65.5% | BTTS: 44.2% | Home Over 1.5 Goals: 81.9% | Away Over 1.5 Goals: 9.9% | Top Scores: 1-0 (18.1%), 2-1 (17.6%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=2782): Avg Goals: 3.25 | Over 2.5: 66.1% | BTTS: 44.5% | Home Over 1.5 Goals: 82.4% | Away Over 1.5 Goals: 9.8% | Top Scores: 1-0 (17.6%), 2-1 (17.4%)",
     "veto_reason": "context VETO in ['team_a']",
     "vitibet_index": 1.5,
-    "w_score": 0.2881
+    "w_score": 0.3112
   },
   {
     "as_of": "2026-08-12T09:03:27+02:00",
