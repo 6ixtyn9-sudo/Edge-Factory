@@ -2,9 +2,9 @@
 
 ## Overall
 
-- archived pick rows: 216
+- archived pick rows: 217
 - archived pick dates: 30
-- immutable morning-baseline rows: 140
+- immutable morning-baseline rows: 141
 - verified official late-slate additions: 30
 - regular-ledger-only legacy rows: 46
 - unsafe regular ledgers ignored: 3
@@ -14,7 +14,7 @@
 - pending/unmatched result picks: 2
 - voided postponed/cancelled/abandoned events: 3
 - ambiguous event-disposition rows: 0
-- settled via shared overlay facts: 5
+- settled via shared overlay facts: 2
 - ambiguous result picks: 0
 - wins: 149
 - hit rate: +74.5%
@@ -25,7 +25,7 @@
 
 - include same-day picks: False
 - same-day cutoff date: 2026-08-12
-- same-day rows excluded: 11
+- same-day rows excluded: 12
 
 ## Secondary Market Realized Rates
 
