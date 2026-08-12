@@ -2269,36 +2269,45 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                 ml_max_p = max(ml_max_p, ml_p)
                 
                 # Check certified ML rules
+                # Emit ONE pick at the HIGHEST qualifying threshold. A fixture
+                # clearing 60 also clears 55 — emitting both duplicated rows
+                # that the collapse then resolved to the first (>=55), which
+                # made >=60/65/70 look "never fired" in the ledger/tripwire
+                # even while the model was firing. One pick, strongest label.
+                best = None  # (threshold, rule)
                 for rule in ml_rules:
                     m = re.search(r">=\s*([\d.]+)", rule["rule"])
                     if m:
                         thr = float(m.group(1))
-                        if ml_p * 100.0 >= thr:
-                            home = canonical_display_team(anchor.get("home"))
-                            away = canonical_display_team(anchor.get("away"))
-                            picks.append({
-                                "date": day, "market": "1x2",
-                                "match": f"{home} vs {away}",
-                                "home": home, "away": away,
-                                "kickoff": anchor.get("kickoff") or anchor.get("time"),
-                                "sport": anchor.get("sport", "soccer"),
-                                "league": anchor.get("league"), "pick": majority_pick,
-                                "avg_p": round(ml_p * 100.0, 1),
-                                "w_score": round(z, 4),
-                                "odds": _f(fb.get(_col)) or _f(zb.get(_col)) or None,
-                                "odds_source": ("forebet_best" if _f(fb.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
-                                "bookmaker": None,
-                                "rule": rule["rule"],
-                                "edge_rule": rule["rule"],
-                                "display_rule": rule["display_rule"] if "display_rule" in rule else f"ML-META≥{thr:.0f}",
-                                "n_way": 3, "edge_n_way": 3,
-                                "confidence": _f(bz.get("confidence")) if bz else None,
-                                "model_version": bz.get("model_version") if bz else None,
-                                "vitibet_index": _f(vb.get("index")) if vb else None,
-                                "sources_used": used,
-                                "source_weights": source_weights or {},
-                                "ml_p": round(ml_p, 4),
-                            })
+                        if ml_p * 100.0 >= thr and (best is None or thr > best[0]):
+                            best = (thr, rule)
+                if best is not None:
+                    thr, rule = best
+                    home = canonical_display_team(anchor.get("home"))
+                    away = canonical_display_team(anchor.get("away"))
+                    picks.append({
+                        "date": day, "market": "1x2",
+                        "match": f"{home} vs {away}",
+                        "home": home, "away": away,
+                        "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                        "sport": anchor.get("sport", "soccer"),
+                        "league": anchor.get("league"), "pick": majority_pick,
+                        "avg_p": round(ml_p * 100.0, 1),
+                        "w_score": round(z, 4),
+                        "odds": _f(fb.get(_col)) or _f(zb.get(_col)) or None,
+                        "odds_source": ("forebet_best" if _f(fb.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
+                        "bookmaker": None,
+                        "rule": rule["rule"],
+                        "edge_rule": rule["rule"],
+                        "display_rule": rule["display_rule"] if "display_rule" in rule else f"ML-META≥{thr:.0f}",
+                        "n_way": 3, "edge_n_way": 3,
+                        "confidence": _f(bz.get("confidence")) if bz else None,
+                        "model_version": bz.get("model_version") if bz else None,
+                        "vitibet_index": _f(vb.get("index")) if vb else None,
+                        "sources_used": used,
+                        "source_weights": source_weights or {},
+                        "ml_p": round(ml_p, 4),
+                    })
 
         if len(set(sels)) > 1:
             vetoes += 1
@@ -2370,15 +2379,19 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             f"-> {sum(1 for p in picks if p.get('rule', '').startswith('ml-meta'))} pick(s)",
             file=sys.stderr,
         )
-        # Persist for the tripwire's ceiling check (a certified edge that can
-        # never reach its threshold is a distinct failure from mere silence).
-        try:
-            state_path = LOCALDATA / "ml_meta_state.json"
-            state = {"date": day, "scored": ml_scored, "max_ml_p": ml_max_p,
-                     "thresholds": thr_list, "picks": sum(1 for p in picks if p.get("rule", "").startswith("ml-meta"))}
-            state_path.write_text(json.dumps(state, indent=2))
-        except Exception:
-            pass
+        # Persist for the tripwire's ceiling check — but ONLY for the primary
+        # target day. The future-planner runs picks_today for tomorrow too,
+        # and its (thinner) slate would overwrite this file with a stale max,
+        # making the tripwire report a phantom ceiling (e.g. 38.7% from the
+        # 08-13 scan while the real 08-12 max was 62.9%).
+        if day == date.today().isoformat():
+            try:
+                state_path = LOCALDATA / "ml_meta_state.json"
+                state = {"date": day, "scored": ml_scored, "max_ml_p": ml_max_p,
+                         "thresholds": thr_list, "picks": sum(1 for p in picks if p.get("rule", "").startswith("ml-meta"))}
+                state_path.write_text(json.dumps(state, indent=2))
+            except Exception:
+                pass
     return picks, vetoes, len(keys)
 
 

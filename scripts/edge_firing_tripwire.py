@@ -216,7 +216,7 @@ def main() -> int:
     for c in ceilings:
         print(f"  [🔇 CEILED] {c['rule']}: live max ml_p {c['live_max_ml_p']:.1f}% vs "
               f"threshold {c['lowest_threshold']:.0f}% (gap {c['gap_pp']:.1f}pp) — "
-              f"structurally cannot fire (unit mismatch or stale model).")
+              f"bar not reached; expected on low-signal slates, re-check at season peak.")
     n_ceil = len(ceilings)
     findings["warn_count"] = n_silent + n_stale + n_ceil
     out = ld / "edge_firing_tripwire.json"
