@@ -440,6 +440,40 @@ def get_statistical_comment(con, pick: str, avg_p: float, n_way: int) -> str | N
 AUDIT_ROLLING_PATH = LOCALDATA / "picks_audit_rolling.json"
 
 
+def load_enhancement_calibration(audit_path: Path = AUDIT_ROLLING_PATH) -> dict[str, dict]:
+    """Per-market promised->realized calibration from the rolling audit.
+
+    Light ML assist: learns each market's systematic promised-vs-realized gap
+    from the audit's own settled history (n-weighted), so enhancement
+    probabilities can be corrected toward truth. Returns {market: {realized,
+    mean_promised, n}}; empty dict when no data (safe default)."""
+    try:
+        if not audit_path.exists():
+            return {}
+        data = json.loads(audit_path.read_text())
+        by_market = data.get("event_notes_audit", {}).get("by_market", {})
+    except Exception:
+        return {}
+    out = {}
+    for market, slot in by_market.items():
+        if not isinstance(slot, dict):
+            continue
+        n = int(slot.get("n") or 0)
+        realized = slot.get("realized")
+        promised = slot.get("mean_promised")
+        if n <= 0 or realized is None or promised is None:
+            continue
+        try:
+            out[market] = {
+                "realized": float(realized),
+                "mean_promised": float(promised),
+                "n": n,
+            }
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 def load_rolling_audit_hit_rates() -> dict[str, float]:
     try:
         if AUDIT_ROLLING_PATH.exists():
@@ -847,6 +881,13 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
     )
 
     rolling_hit_rates = load_rolling_audit_hit_rates()
+    # ML assist (light): per-market calibration learned from the audit's own
+    # promised-vs-realized data (n-weighted), applied to the raw probability.
+    # This replaces the single global multiplier with a market-aware shrink
+    # toward the realized rate. Same markets, same wording — just a smarter
+    # probability. Train/test is handled by the audit's rolling window: the
+    # correction uses settled history, so it is walk-forward by construction.
+    calib = load_enhancement_calibration(AUDIT_ROLLING_PATH)
     # Addendum 19 (engine-aware debias): off by default. When enabled, damp
     # factors come from the full-surface by_market + per-engine x market cells
     # (edgefactory.debias) instead of the tiny recommendation overlay.
@@ -860,6 +901,24 @@ def compute_dynamic_enhancement(con, pick: dict, prices_index: dict | None = Non
         if engine_aware_debias:
             hr = resolve_debias_hr(market, engine, debias_map)
         prob_adjusted = prob * hr
+        # ML-assisted calibration: n-weighted correction from the audit.
+        # Over-promising markets get pulled down, under-promising get lifted.
+        if market in calib and calib[market]["n"] >= 10:
+            realized = calib[market]["realized"]
+            promised = calib[market]["mean_promised"]
+            n = calib[market]["n"]
+            # shrink the raw probability toward the realized rate, weighted by
+            # evidence (n) and capped so we never fully trust a young sample
+            w = min(1.0, n / 40.0)          # evidence weight, saturates at n=40
+            prob_adjusted = prob_adjusted + w * (realized - promised) * prob_adjusted
+            prob_adjusted = max(0.01, min(0.99, prob_adjusted))
+            reason = reason + (f" (ML-calibrated {promised:.1%}->{realized:.1%}, n={n})")
+        elif market in calib:
+            # young sample: still nudge, weakly
+            realized = calib[market]["realized"]
+            promised = calib[market]["mean_promised"]
+            prob_adjusted = prob_adjusted + 0.5 * (realized - promised) * prob_adjusted
+            prob_adjusted = max(0.01, min(0.99, prob_adjusted))
         
         thr = LINE_THRESHOLDS.get(market, 0.80)
         if prob_adjusted >= thr:
