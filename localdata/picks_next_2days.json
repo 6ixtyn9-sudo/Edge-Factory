@@ -1,18 +1,15 @@
 [
   {
-    "as_of": "2026-08-12T02:52:31+02:00",
-    "avg_p": 65.6,
+    "as_of": "2026-08-12T06:30:59+02:00",
+    "avg_p": 55.7,
     "away": "Montevideo City Torque",
-    "bookmaker": "Novibet",
+    "bookmaker": "Betano",
     "bucket": "CAUTION",
     "confidence": 0.5223,
     "ctx": {
       "away_norm": "montevideocitytorque",
       "comp_type_name": "cup",
       "competition_type": "UNKNOWN",
-      "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "CAUTION",
-      "duplicate_event_keys": "tigre vs montevideocitytorque",
       "home_norm": "tigre",
       "league": "UNKNOWN",
       "league_key": "international copa sudamericana knockout stage",
@@ -34,22 +31,10 @@
     "decay_verdict": "WATCH",
     "display_rule": "ML-META\u226555",
     "draw_risk_flag": "EXTREME",
-    "duplicate_bucket_sources": [
-      "CAUTION"
-    ],
-    "duplicate_matches_collapsed": [
-      "Tigre vs Montevideo City Torque"
-    ],
-    "duplicate_rows_collapsed": 2,
-    "duplicate_rules_collapsed": [
-      "ML-META\u226555",
-      "ML-META\u226560",
-      "ML-META\u226565"
-    ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
-    "enhancement_label": "Home Team Over 0.5 Goals",
+    "enhancement_label": "Away Team Under 3.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
     "enhancement_price": null,
@@ -57,58 +42,31 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.8421,
-    "enhancement_reason": "Home scoring rate is 68.1% (Performance feedback: HR=94.4%, Adjusted Prob: 84.2%)",
+    "enhancement_probability": 0.9843,
+    "enhancement_reason": "Combined Under 3.5 is 98.4%",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 1311,
-        "engine": "hybrid_cohort",
-        "label": "Home Team Over 0.5 Goals",
-        "market": "home_over_05",
-        "probability": 0.84212238320137,
-        "raw_probability": 0.8916594135823511,
-        "reason": "Home scoring rate is 68.1% (Performance feedback: HR=94.4%, Adjusted Prob: 84.2%)"
-      },
-      {
-        "cohort_n": 1311,
+        "cohort_n": 2239,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9880087804983658,
-        "raw_probability": 0.9880087804983658,
-        "reason": "Combined Under 3.5 is 98.8%"
+        "probability": 0.9842950306856896,
+        "raw_probability": 0.9842950306856896,
+        "reason": "Combined Under 3.5 is 98.4%"
       },
       {
-        "cohort_n": 1311,
+        "cohort_n": 2239,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9609008180143044,
-        "raw_probability": 0.9609008180143044,
-        "reason": "Combined Under 2.5 is 96.1%"
-      },
-      {
-        "cohort_n": 1311,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 1.5 Goals",
-        "market": "away_under_15",
-        "probability": 0.8096976425559639,
-        "raw_probability": 0.8096976425559639,
-        "reason": "Combined Under 1.5 is 81.0%"
-      },
-      {
-        "cohort_n": 1311,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.22152161474347204,
-        "raw_probability": 0.22152161474347204,
-        "reason": "Poisson expected hit rate is 22.2%"
+        "probability": 0.9325559209371698,
+        "raw_probability": 0.9325559209371698,
+        "reason": "Combined Under 2.5 is 93.3%"
       }
     ],
     "home": "Tigre",
-    "kickoff": "15:00",
+    "kickoff": "23:00",
     "league": "International,Copa Sudamericana Knockout Stage",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -116,11 +74,11 @@
     "market_type": "1x2",
     "match": "Tigre vs Montevideo City Torque",
     "min_lead_minutes": 30,
-    "ml_p": 0.6559,
+    "ml_p": 0.5568,
     "model_version": "dc-blend-v1",
     "n_way": 3,
-    "odds": 1.84,
-    "odds_captured_at": "2026-08-12T00:56:58.227707+00:00",
+    "odds": 1.83,
+    "odds_captured_at": "2026-08-12T04:34:28.130588+00:00",
     "odds_league": "Copa Sudamericana",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -130,7 +88,7 @@
     "picked_for": "2026-08-12",
     "price_evidence": "BZZOIRO_PRIMARY",
     "price_push_eligible": true,
-    "recommended_enhancement": "home_over_05",
+    "recommended_enhancement": "away_under_35",
     "recommended_market": "avoid_raw_1x2",
     "rule": "ml-meta avg_p>=55",
     "source_weights": {},
@@ -140,13 +98,13 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=984): Avg Goals: 3.48 | Over 2.5: 67.7% | BTTS: 39.9% | Home Over 1.5 Goals: 85.4% | Away Over 1.5 Goals: 10.1% | Top Scores: 2-0 (17.7%), 1-0 (14.6%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1349): Avg Goals: 3.18 | Over 2.5: 65.2% | BTTS: 46.0% | Home Over 1.5 Goals: 80.9% | Away Over 1.5 Goals: 9.7% | Top Scores: 1-0 (19.1%), 2-1 (19.1%)",
     "vitibet_index": null,
-    "w_score": 0.6451
+    "w_score": 0.2282
   },
   {
-    "as_of": "2026-08-12T02:52:31+02:00",
-    "avg_p": 76.7,
+    "as_of": "2026-08-12T06:30:59+02:00",
+    "avg_p": 73.0,
     "away": "Cerro Porteno",
     "bookmaker": "Betano",
     "bucket": "SKIPPED_VETO",
@@ -163,8 +121,8 @@
       "league_key": "international copa libertadores knockout stage",
       "league_raw": "International,Copa Libertadores Knockout Stage",
       "niche": "UNKNOWN",
-      "odds_band": "VETO",
-      "odds_band_name": "1.20-1.35",
+      "odds_band": "CAUTION",
+      "odds_band_name": "1.35-1.50",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "unresolved",
       "resolution_pool_n": null,
@@ -185,13 +143,11 @@
     "duplicate_matches_collapsed": [
       "Palmeiras vs Cerro Porteno"
     ],
-    "duplicate_rows_collapsed": 5,
+    "duplicate_rows_collapsed": 3,
     "duplicate_rules_collapsed": [
       "ML-META\u226555",
       "ML-META\u226560",
-      "ML-META\u226565",
-      "ML-META\u226570",
-      "ML-META\u226575"
+      "ML-META\u226565"
     ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
@@ -204,61 +160,69 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.8466,
-    "enhancement_reason": "Home scoring rate is 85.8% (Performance feedback: HR=94.4%, Adjusted Prob: 84.7%)",
+    "enhancement_probability": 0.86,
+    "enhancement_reason": "Home scoring rate is 85.8% (Performance feedback: HR=93.4%, Adjusted Prob: 86.0%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 179,
+        "cohort_n": 454,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8465687526850049,
-        "raw_probability": 0.8963673364275753,
-        "reason": "Home scoring rate is 85.8% (Performance feedback: HR=94.4%, Adjusted Prob: 84.7%)"
+        "probability": 0.8600197827966118,
+        "raw_probability": 0.9203722743123713,
+        "reason": "Home scoring rate is 85.8% (Performance feedback: HR=93.4%, Adjusted Prob: 86.0%)"
       },
       {
-        "cohort_n": 179,
+        "cohort_n": 454,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9707725803259221,
-        "raw_probability": 0.9707725803259221,
-        "reason": "Combined Under 3.5 is 97.1%"
+        "probability": 0.97911287901859,
+        "raw_probability": 0.97911287901859,
+        "reason": "Combined Under 3.5 is 97.9%"
       },
       {
-        "cohort_n": 179,
+        "cohort_n": 454,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.900613698205991,
-        "raw_probability": 0.900613698205991,
-        "reason": "Combined Under 2.5 is 90.1%"
+        "probability": 0.9359303091221375,
+        "raw_probability": 0.9359303091221375,
+        "reason": "Combined Under 2.5 is 93.6%"
       },
       {
-        "cohort_n": 179,
+        "cohort_n": 454,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.36689635589162944,
+        "raw_probability": 0.6604129122746031,
+        "reason": "Mathematical expectation is 66.0% (Performance feedback: HR=55.6%, Adjusted Prob: 36.7%)"
+      },
+      {
+        "cohort_n": 454,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.2942886855916715,
-        "raw_probability": 0.2942886855916715,
-        "reason": "Poisson expected hit rate is 29.4%"
+        "probability": 0.297349618341582,
+        "raw_probability": 0.297349618341582,
+        "reason": "Poisson expected hit rate is 29.7%"
       }
     ],
     "home": "Palmeiras",
-    "kickoff": "15:00",
+    "kickoff": "23:00",
     "league": "International,Copa Libertadores Knockout Stage",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "historically unstable out of sample above 1.25",
+    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
     "market_type": "1x2",
     "match": "Palmeiras vs Cerro Porteno",
     "min_lead_minutes": 30,
-    "ml_p": 0.7665,
     "model_version": "dc-blend-v1",
     "n_way": 3,
-    "odds": 1.33,
-    "odds_captured_at": "2026-08-12T00:56:58.227685+00:00",
+    "odds": 1.35,
+    "odds_captured_at": "2026-08-12T04:34:28.130557+00:00",
     "odds_league": "Copa Libertadores",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -278,13 +242,13 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=158): Avg Goals: 4.15 | Over 2.5: 79.1% | BTTS: 38.6% | Home Over 1.5 Goals: 89.9% | Away Over 1.5 Goals: 8.9% | Top Scores: 3-0 (15.2%), 3-1 (12.0%)",
-    "veto_reason": "context VETO in ['team_h', 'team_a', 'odds_band']",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=385): Avg Goals: 3.88 | Over 2.5: 76.1% | BTTS: 40.0% | Home Over 1.5 Goals: 88.3% | Away Over 1.5 Goals: 9.6% | Top Scores: 3-0 (13.5%), 2-0 (12.2%)",
+    "veto_reason": "context VETO in ['team_h', 'team_a']",
     "vitibet_index": null,
-    "w_score": 1.1889
+    "w_score": 1.0
   },
   {
-    "as_of": "2026-08-12T02:52:31+02:00",
+    "as_of": "2026-08-12T06:30:59+02:00",
     "avg_p": 72.5,
     "away": "Adamstown Rosebuds",
     "bookmaker": "betexplorer_best",
@@ -326,8 +290,8 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.8649,
-    "enhancement_reason": "Home scoring rate is 81.8% (Performance feedback: HR=94.4%, Adjusted Prob: 86.5%)",
+    "enhancement_probability": 0.8557,
+    "enhancement_reason": "Home scoring rate is 81.8% (Performance feedback: HR=93.4%, Adjusted Prob: 85.6%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
@@ -335,9 +299,9 @@
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8649032728850917,
+        "probability": 0.8557289851689722,
         "raw_probability": 0.9157803669514464,
-        "reason": "Home scoring rate is 81.8% (Performance feedback: HR=94.4%, Adjusted Prob: 86.5%)"
+        "reason": "Home scoring rate is 81.8% (Performance feedback: HR=93.4%, Adjusted Prob: 85.6%)"
       },
       {
         "cohort_n": 690,
@@ -387,8 +351,8 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 2,
-    "odds": 1.42,
-    "odds_captured_at": "2026-08-12T00:57:06.286195+00:00",
+    "odds": 1.4,
+    "odds_captured_at": "2026-08-12T04:34:35.793782+00:00",
     "odds_league": "Australia: NPL Northern NSW",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -546,6 +510,141 @@
     "veto_reason": "context VETO in ['team_a']",
     "vitibet_index": null,
     "w_score": 0.5938
+  },
+  {
+    "as_of": "2026-08-12T06:30:59+02:00",
+    "avg_p": 63.4,
+    "away": "Como",
+    "bookmaker": "Novibet",
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "como",
+      "comp_type_name": "league",
+      "competition_type": "BOOST",
+      "duplicate_alias_collapse": "true",
+      "duplicate_bucket_sources": "SKIPPED_VETO",
+      "duplicate_event_keys": "arsenal vs como",
+      "home_norm": "arsenal",
+      "league": "UNKNOWN",
+      "league_key": "international club friendlies",
+      "league_raw": "International,Club Friendlies",
+      "niche": "UNKNOWN",
+      "odds_band": "CAUTION",
+      "odds_band_name": "1.35-1.50",
+      "resolution_original_verdict": "UNKNOWN",
+      "resolution_path": "O2-competition_type",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "O2-competition_type resolved to BOOST",
+      "resolution_verdict": "BOOST",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "VETO"
+    },
+    "date": "2026-08-12",
+    "decay_verdict": "WATCH",
+    "display_rule": "ML-META\u226555",
+    "draw_risk_flag": "HIGH",
+    "duplicate_bucket_sources": [
+      "SKIPPED_VETO"
+    ],
+    "duplicate_matches_collapsed": [
+      "Arsenal vs Como"
+    ],
+    "duplicate_rows_collapsed": 1,
+    "duplicate_rules_collapsed": [
+      "ML-META\u226555",
+      "ML-META\u226560"
+    ],
+    "edge_n_way": 3,
+    "edge_rule": "ml-meta avg_p>=55",
+    "edge_status": "certified",
+    "enhancement_label": "Home Team Over 0.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": null,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.8372,
+    "enhancement_reason": "Home scoring rate is 87.8% (Performance feedback: HR=93.4%, Adjusted Prob: 83.7%)",
+    "enhancement_state": "SHADOW",
+    "event_notes": [
+      {
+        "cohort_n": 1563,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Over 0.5 Goals",
+        "market": "home_over_05",
+        "probability": 0.8372032326654327,
+        "raw_probability": 0.8959545567711438,
+        "reason": "Home scoring rate is 87.8% (Performance feedback: HR=93.4%, Adjusted Prob: 83.7%)"
+      },
+      {
+        "cohort_n": 1563,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9822917914132073,
+        "raw_probability": 0.9822917914132073,
+        "reason": "Combined Under 3.5 is 98.2%"
+      },
+      {
+        "cohort_n": 1563,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.9381827793989852,
+        "raw_probability": 0.9381827793989852,
+        "reason": "Combined Under 2.5 is 93.8%"
+      },
+      {
+        "cohort_n": 1563,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.19812731703879335,
+        "raw_probability": 0.19812731703879335,
+        "reason": "Poisson expected hit rate is 19.8%"
+      }
+    ],
+    "home": "Arsenal",
+    "kickoff": "19:30",
+    "league": "International,Club Friendlies",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
+    "market_type": "1x2",
+    "match": "Arsenal vs Como",
+    "min_lead_minutes": 30,
+    "ml_p": 0.6342,
+    "model_version": null,
+    "n_way": 3,
+    "odds": 1.44,
+    "odds_captured_at": "2026-08-12T04:34:28.130479+00:00",
+    "odds_league": "Club Friendlies",
+    "odds_match_method": "exact",
+    "odds_match_status": "matched",
+    "odds_source": "bzzoiro_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "picked_for": "2026-08-12",
+    "price_evidence": "BZZOIRO_PRIMARY",
+    "price_push_eligible": true,
+    "recommended_enhancement": "home_over_05",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "ml-meta avg_p>=55",
+    "source_weights": {},
+    "sources_used": [
+      "statarea",
+      "betclan"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1116): Avg Goals: 3.39 | Over 2.5: 66.4% | BTTS: 41.3% | Home Over 1.5 Goals: 84.1% | Away Over 1.5 Goals: 9.8% | Top Scores: 2-0 (17.7%), 1-0 (15.9%)",
+    "veto_reason": "context VETO in ['team_h']",
+    "vitibet_index": null,
+    "w_score": 0.5501
   },
   {
     "as_of": "2026-08-11T13:56:17+02:00",
