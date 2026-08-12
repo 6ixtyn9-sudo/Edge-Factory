@@ -3,31 +3,38 @@
   "edge_silent_days": 14,
   "edges": [
     {
-      "decay": "HEALTHY",
-      "last_fired": "2026-08-13",
-      "n_last_window": 36,
+      "decay": "WATCH",
+      "last_fired": "2026-08-12",
+      "n_last_window": 34,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
     {
-      "decay": "HEALTHY",
+      "decay": "WATCH",
       "last_fired": null,
       "n_last_window": 0,
       "rule": "ml-meta avg_p>=60",
       "silent": true
     },
     {
-      "decay": "HEALTHY",
+      "decay": "WATCH",
       "last_fired": null,
       "n_last_window": 0,
       "rule": "ml-meta avg_p>=65",
       "silent": true
     },
     {
-      "decay": "HEALTHY",
+      "decay": "WATCH",
       "last_fired": null,
       "n_last_window": 0,
       "rule": "ml-meta avg_p>=70",
+      "silent": true
+    },
+    {
+      "decay": "WATCH",
+      "last_fired": null,
+      "n_last_window": 0,
+      "rule": "ml-meta avg_p>=75",
       "silent": true
     },
     {
@@ -40,7 +47,7 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-13",
-      "n_last_window": 110,
+      "n_last_window": 112,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -50,6 +57,20 @@
       "n_last_window": 59,
       "rule": "3way-unanimous avg_p>=65",
       "silent": false
+    },
+    {
+      "decay": "WATCH",
+      "last_fired": null,
+      "n_last_window": 0,
+      "rule": "2way-unanimous min_p>=60 avg_p>=65",
+      "silent": true
+    },
+    {
+      "decay": "WATCH",
+      "last_fired": null,
+      "n_last_window": 0,
+      "rule": "2way-unanimous min_p>=60 avg_p>=70",
+      "silent": true
     },
     {
       "decay": "WATCH",
@@ -66,7 +87,14 @@
       "silent": true
     },
     {
-      "decay": "HEALTHY",
+      "decay": "WATCH",
+      "last_fired": null,
+      "n_last_window": 0,
+      "rule": "2way-unanimous home-only avg_p>=65",
+      "silent": true
+    },
+    {
+      "decay": "WATCH",
       "last_fired": "2026-07-21",
       "n_last_window": 0,
       "rule": "3way-unanimous home-only avg_p>=60",
@@ -78,90 +106,83 @@
       "n_last_window": 0,
       "rule": "3way-unanimous home-only avg_p>=65",
       "silent": true
-    },
-    {
-      "decay": "WATCH",
-      "last_fired": "2026-08-11",
-      "n_last_window": 68,
-      "rule": "2way+bc-confirms avg_p>=60",
-      "silent": false
     }
   ],
-  "generated_at": "2026-08-12T16:39:58",
+  "generated_at": "2026-08-12T17:52:49",
   "source_stale_days": 7,
   "sources": [
     {
       "name": "forebet",
-      "newest_date": "2026-08-13",
-      "newest_file": "forebet_2026-08.csv.gz",
-      "stale": false
+      "newest_date": "2026-06-12",
+      "newest_file": "forebet.csv.gz",
+      "stale": true
     },
     {
       "name": "statarea",
-      "newest_date": "2026-08-12",
+      "newest_date": "2026-08-11",
       "newest_file": "statarea_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-08-12",
+      "newest_date": "2026-08-11",
       "newest_file": "scoutingstats_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "vitibet",
-      "newest_date": "2026-08-13",
+      "newest_date": "2026-08-06",
       "newest_file": "vitibet_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "zulubet",
-      "newest_date": "2026-08-12",
+      "newest_date": "2026-08-11",
       "newest_file": "zulubet_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "predictz",
-      "newest_date": "2026-08-12",
+      "newest_date": "2026-08-05",
       "newest_file": "predictz_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "windrawwin",
-      "newest_date": "2026-08-13",
+      "newest_date": "2026-08-06",
       "newest_file": "windrawwin_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "afootballreport",
-      "newest_date": "2026-08-12",
+      "newest_date": "2026-08-05",
       "newest_file": "afootballreport_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "betclan",
-      "newest_date": "2026-08-12",
+      "newest_date": "2026-08-05",
       "newest_file": "betclan_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "freesupertips",
-      "newest_date": "2026-08-12",
+      "newest_date": "2026-08-04",
       "newest_file": "freesupertips_2026-08.csv.gz",
-      "stale": false
+      "stale": true
     },
     {
       "name": "bettingclosed",
-      "newest_date": "2026-08-12",
+      "newest_date": "2026-08-11",
       "newest_file": "bettingclosed_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "bzzoiro",
-      "newest_date": "2026-08-13",
+      "newest_date": "2026-08-06",
       "newest_file": "bzzoiro_odds_2026-08.csv.gz",
       "stale": false
     }
   ],
-  "warn_count": 8
+  "warn_count": 14
 }
