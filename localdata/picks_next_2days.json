@@ -248,7 +248,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-12T07:15:01+02:00",
+    "as_of": "2026-08-12T07:39:46+02:00",
     "avg_p": 72.5,
     "away": "Adamstown Rosebuds",
     "bookmaker": "betexplorer_best",
@@ -352,7 +352,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.4,
-    "odds_captured_at": "2026-08-12T05:28:32.113363+00:00",
+    "odds_captured_at": "2026-08-12T05:51:49.938562+00:00",
     "odds_league": "Australia: NPL Northern NSW",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -512,8 +512,8 @@
     "w_score": 0.5938
   },
   {
-    "as_of": "2026-08-12T07:15:01+02:00",
-    "avg_p": 62.6,
+    "as_of": "2026-08-12T07:39:46+02:00",
+    "avg_p": 63.5,
     "away": "Como",
     "bookmaker": "Novibet",
     "bucket": "SKIPPED_VETO",
@@ -554,45 +554,45 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.8371,
-    "enhancement_reason": "Home scoring rate is 87.8% (Performance feedback: HR=93.5%, Adjusted Prob: 83.7%)",
+    "enhancement_probability": 0.8417,
+    "enhancement_reason": "Home scoring rate is 87.8% (Performance feedback: HR=93.5%, Adjusted Prob: 84.2%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 3495,
+        "cohort_n": 3184,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8371286124501149,
-        "raw_probability": 0.8948614967761234,
-        "reason": "Home scoring rate is 87.8% (Performance feedback: HR=93.5%, Adjusted Prob: 83.7%)"
+        "probability": 0.841702754763248,
+        "raw_probability": 0.8997510965053898,
+        "reason": "Home scoring rate is 87.8% (Performance feedback: HR=93.5%, Adjusted Prob: 84.2%)"
       },
       {
-        "cohort_n": 3495,
+        "cohort_n": 3184,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9867395990921328,
-        "raw_probability": 0.9867395990921328,
+        "probability": 0.9867024111250222,
+        "raw_probability": 0.9867024111250222,
         "reason": "Combined Under 3.5 is 98.7%"
       },
       {
-        "cohort_n": 3495,
+        "cohort_n": 3184,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9468057890563681,
-        "raw_probability": 0.9468057890563681,
+        "probability": 0.9466428017727839,
+        "raw_probability": 0.9466428017727839,
         "reason": "Combined Under 2.5 is 94.7%"
       },
       {
-        "cohort_n": 3495,
+        "cohort_n": 3184,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.190012134407258,
-        "raw_probability": 0.190012134407258,
-        "reason": "Poisson expected hit rate is 19.0%"
+        "probability": 0.19845913966447992,
+        "raw_probability": 0.19845913966447992,
+        "reason": "Poisson expected hit rate is 19.8%"
       }
     ],
     "home": "Arsenal",
@@ -604,7 +604,7 @@
     "market_type": "1x2",
     "match": "Arsenal vs Como",
     "min_lead_minutes": 30,
-    "ml_p": 0.6262,
+    "ml_p": 0.6352,
     "model_version": null,
     "n_way": 3,
     "odds": 1.44,
@@ -627,10 +627,10 @@
       "betclan"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=2445): Avg Goals: 3.36 | Over 2.5: 66.2% | BTTS: 41.3% | Home Over 1.5 Goals: 83.4% | Away Over 1.5 Goals: 9.9% | Top Scores: 2-0 (17.2%), 1-0 (16.6%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=2279): Avg Goals: 3.39 | Over 2.5: 66.6% | BTTS: 41.2% | Home Over 1.5 Goals: 84.1% | Away Over 1.5 Goals: 9.8% | Top Scores: 2-0 (17.5%), 1-0 (15.9%)",
     "veto_reason": "context VETO in ['team_h']",
     "vitibet_index": null,
-    "w_score": 0.516
+    "w_score": 0.5545
   },
   {
     "as_of": "2026-08-11T13:56:17+02:00",
