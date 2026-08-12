@@ -78,7 +78,9 @@ BUCKETS = {"CERTIFIED_CLEAN", "SKIPPED_VETO"}
 # sources (e.g. ml-meta via forebet_best/zulubet) earn their way in as their
 # settled history proves positive edge, instead of being permanently blocked.
 # Kept as a name for readability; the real gate is _source_has_passing_combo().
-GENERATE_HOUR = 12          # local time — tickets generate ONLY on/after the 12:00 (midday) run
+GENERATE_HOUR_START = 6    # local time — tickets may START building on/after this hour
+                           # (regenerate each run as the slate fills)
+FREEZE_HOUR = 12           # local time — the slip FREEZES on/after this hour (no more churn)
 TZ = ZoneInfo("Africa/Johannesburg")
 PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
 
@@ -291,24 +293,24 @@ def main():
         print("Run the grader, review, then --force if you accept the risk.")
         return 2
 
-    # FREEZE: tickets are generated once per day, then re-printed on later runs.
-    # The machine runs 8x/day; without this, tickets would churn every run.
+    # FREEZE: the slip is built from the morning (06:00) and REGENERATED each
+    # run as the slate fills, then FROZEN at 12:00 (final, no churn after).
+    # The machine runs 8x/day; the freeze marker stops post-noon churn.
+    frozen_marker = LOCALDATA / f"auto_tickets_{target}.frozen"
     frozen_txt = LOCALDATA / f"auto_tickets_{target}.txt"
-    if frozen_txt.exists() and not args.force:
-        print(f"TICKETS FROZEN — already generated for {target}. Re-printing saved slip:")
+    if frozen_marker.exists() and frozen_txt.exists() and not args.force:
+        print(f"TICKETS FROZEN — final slip for {target} (frozen at 12:00). Re-printing saved slip:")
         print("=" * 62)
         print(frozen_txt.read_text())
         return 0
 
-    # 09:00 GATE: only the designated morning run places bets. Runs before 09:00
-    # local print "waiting" and place nothing, so the system is never quick to bet.
     now_local = datetime.now(TZ)
     local_today = now_local.strftime("%Y-%m-%d")
-    if str(target) == local_today and now_local.hour < GENERATE_HOUR and not args.force:
-        print("NOT YET — TICKETS GENERATE AT 12:00 (MIDDAY)")
-        print(f"(now {now_local.strftime('%H:%M')} local; generation window opens {GENERATE_HOUR:02d}:00)")
-        print("Nothing is bet before then. The 09:00 run generates the frozen slip;")
-        print("all later runs re-print it unchanged.")
+    if str(target) == local_today and now_local.hour < GENERATE_HOUR_START and not args.force:
+        print(f"NOT YET — TICKETS START BUILDING AT {GENERATE_HOUR_START:02d}:00, FREEZE AT {FREEZE_HOUR:02d}:00")
+        print(f"(now {now_local.strftime('%H:%M')} local; build window opens {GENERATE_HOUR_START:02d}:00)")
+        print("Nothing is bet before then. The slip builds from the morning run and")
+        print(f"freezes at {FREEZE_HOUR:02d}:00 — runs after that re-print it unchanged.")
         return 0
 
     try:
@@ -470,6 +472,18 @@ def main():
             "pool_factor": pool_factor,
         },
     }, indent=2, default=str))
+
+    # FREEZE at 12:00: the first run at/after FREEZE_HOUR writes the marker so
+    # later runs re-print the final slip. Before that, the slip is a DRAFT that
+    # regenerates each run as the slate fills (that is the point of building
+    # early instead of waiting for noon).
+    now_local = datetime.now(TZ)
+    local_today = now_local.strftime("%Y-%m-%d")
+    if str(target) == local_today and now_local.hour >= FREEZE_HOUR and not args.force:
+        (LOCALDATA / f"auto_tickets_{target}.frozen").write_text(now_local.isoformat(timespec="seconds"))
+        print(f"\nFROZEN at {now_local.strftime('%H:%M')} — this is the final slip; later runs re-print it unchanged.")
+    elif str(target) == local_today and not args.force:
+        print(f"\nDRAFT — regenerates on each run until the {FREEZE_HOUR:02d}:00 freeze.")
     return 0
 
 
