@@ -5697,3 +5697,34 @@ force bypasses).
 final frozen slip (post-12:00) is what the operator places. Regeneration
 before noon means late-slate legs still get in; the freeze guarantees the
 day-0 record doesn't churn. Same discipline, earlier visibility.
+---
+
+## Addendum — 2026-08-12 (late 23): light ML assist for enhancement probabilities
+
+**Operator direction:** assist the CURRENT enhancements with some ML power —
+not a new model, not a new layer, no bloat, no wording changes.
+
+**What:** a per-market calibration correction learned from the audit's OWN
+settled promised-vs-realized data (picks_audit_rolling.json -> by_market,
+n-weighted). Applied at enhancement compute time inside the existing loop:
+    prob_adjusted = prob_adjusted + w * (realized - promised) * prob_adjusted
+where w = min(1, n/40) (evidence weight, saturates at n=40); weak 0.5 weight
+for young samples (n<10). Same markets, same labels, same reasons (+ an
+"ML-calibrated x%->y%, n=z" suffix). No new files, no new modes, no new
+models, no registry change. The enhancement registry remains the ONLY
+staking gate.
+
+**Why it's truthful (walk-forward by construction):** the correction uses only
+SETTLED history (the rolling audit window), so it never leaks the future; the
+audit re-computes each run, so the correction self-updates as evidence grows.
+
+**Verified against real audit data:**
+- match_over_25 (promised .477 / realized .536, n=28): 0.42 -> 0.437 (lifted)
+- exact_3 (promised .222 / realized .037, n=27): 0.22 -> 0.192 (pulled down)
+- home_over_05 (promised .876 / realized 1.000, n=32): 0.88 -> 0.967 (lifted)
+- away_under_35 (promised .963 / realized .957, n=47): ~unchanged (calibrated)
+
+**Not done (deliberately):** the earlier over-engineered enh_meta.py (stacking
+model + build/predict modes) was removed. The match_over_25 +22pp
+under-promise remains a base-engine issue (Poisson/goalsavg feed); the assist
+mitigates it at the display layer but the real fix belongs in the engine.
