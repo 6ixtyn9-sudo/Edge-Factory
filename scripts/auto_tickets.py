@@ -457,6 +457,22 @@ def main():
     lines.append("\nRound each ticket UP to your bookmaker's minimum stake.")
     lines.append("Edge-based selection, dynamic per settled history. Flat stakes. Bet only what you can afford to lose.")
 
+    # Status header: the slip FILE must tell the operator whether it is a
+    # regenerating DRAFT or the FINAL frozen slip — console-only status was a
+    # trap (operator could read the file and mistake a draft for the final).
+    now_local = datetime.now(TZ)
+    local_today = now_local.strftime("%Y-%m-%d")
+    is_frozen = (str(target) == local_today and now_local.hour >= FREEZE_HOUR and not args.force)
+    if is_frozen:
+        (LOCALDATA / f"auto_tickets_{target}.frozen").write_text(now_local.isoformat(timespec="seconds"))
+        status_line = f"\nSTATUS: ✅ FROZEN at {now_local.strftime('%H:%M')} — FINAL slip; later runs re-print unchanged."
+    elif str(target) == local_today and not args.force:
+        status_line = (f"\nSTATUS: ⏳ DRAFT — regenerates on each run until the {FREEZE_HOUR:02d}:00 freeze. "
+                       "Not final; do not bet until frozen.")
+    else:
+        status_line = "\nSTATUS: FORCED build (--force)."
+    lines.append(status_line)
+
     txt = "\n".join(lines)
     print(txt)
     (LOCALDATA / f"auto_tickets_{target}.txt").write_text(txt)
@@ -472,18 +488,6 @@ def main():
             "pool_factor": pool_factor,
         },
     }, indent=2, default=str))
-
-    # FREEZE at 12:00: the first run at/after FREEZE_HOUR writes the marker so
-    # later runs re-print the final slip. Before that, the slip is a DRAFT that
-    # regenerates each run as the slate fills (that is the point of building
-    # early instead of waiting for noon).
-    now_local = datetime.now(TZ)
-    local_today = now_local.strftime("%Y-%m-%d")
-    if str(target) == local_today and now_local.hour >= FREEZE_HOUR and not args.force:
-        (LOCALDATA / f"auto_tickets_{target}.frozen").write_text(now_local.isoformat(timespec="seconds"))
-        print(f"\nFROZEN at {now_local.strftime('%H:%M')} — this is the final slip; later runs re-print it unchanged.")
-    elif str(target) == local_today and not args.force:
-        print(f"\nDRAFT — regenerates on each run until the {FREEZE_HOUR:02d}:00 freeze.")
     return 0
 
 
