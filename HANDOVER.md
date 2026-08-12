@@ -5728,3 +5728,49 @@ audit re-computes each run, so the correction self-updates as evidence grows.
 model + build/predict modes) was removed. The match_over_25 +22pp
 under-promise remains a base-engine issue (Poisson/goalsavg feed); the assist
 mitigates it at the display layer but the real fix belongs in the engine.
+---
+
+## Addendum — 2026-08-12 (late 24): pre-bench audit — 2 inconsistencies fixed, 4 traps named
+
+**Final sweep before operator break. Two REAL inconsistencies found + fixed:**
+
+1. **decay_monitor stale text (scripts/decay_monitor.py):** the output still
+   claimed "benching is a 60-day-window circuit breaker" while config was
+   already 30 days (addendum 17). Operator-facing text contradicted config.
+   Fix: text now uses GATES.recent_window_days dynamically.
+
+2. **auto_tickets slip file lacked status (scripts/auto_tickets.py):** the
+   DRAFT/FROZEN status was console-only prints; the .txt FILE the operator
+   reads carried no status — a draft could be mistaken for the final slip.
+   Fix: the file now ends with "STATUS: ⏳ DRAFT — regenerates until 12:00
+   freeze. Not final; do not bet until frozen." or "STATUS: ✅ FROZEN at
+   HH:MM — FINAL slip" (or FORCED for --force).
+
+**Traps named (by design or accepted — no fix, operator awareness):**
+
+3. **Telegram "pushable" vs auto-tickets "NO EDGE":** the ✅ CERTIFIED CLEAN
+   Telegram alert means push-eligible by BUCKET, not bettable by COMBO. The
+   two signals disagree loudly (e.g. Charlestown pushed while auto-tickets
+   said no edge — 1 leg, no passing combo). Operator MUST NOT read the
+   Telegram alert as a bet instruction; only the auto-tickets slip is a bet.
+
+4. **ML-calibrated probability vs reason text:** the reason string still
+   carries the raw engine text (e.g. "Combined Under 3.5 is 98.3%") while
+   the probability is the calibrated value (0.917). The suffix explains it;
+   the NUMBER is the truth, not the reason text.
+
+5. **Calibration feedback loop (damped, monitored):** the correction changes
+   displayed probabilities -> changes which notes pass LINE_THRESHOLDS ->
+   changes what the audit scores -> changes the calibration. Capped and
+   shrunk (w = n/40), so it converges rather than diverges, but it is a loop
+   — watch the audit's promised-vs-realized table for oscillation.
+
+6. **Calibration fixes calibration, not value:** match_over_25's realized
+   63.6% is still BELOW the 67.5% overall over-2.5 base rate — the notes
+   select slightly-low-over fixtures. The ML assist makes promises honest;
+   it does NOT create edge. Registry + combo gates remain the only value
+   judges.
+
+**Also flagged (verify on Mac):** Charlestown's ml-meta row showed avg 67%
+but w=1.00 (implies 73%) — a possible merge-field artifact; check the row in
+localdata/picks_2026-08-12.json if it ever gets graded.
