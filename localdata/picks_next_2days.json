@@ -1524,8 +1524,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-13T12:18:57+02:00",
-    "avg_p": 76.0,
+    "as_of": "2026-08-13T14:39:19+02:00",
+    "avg_p": 75.0,
     "away": "Briton Ferry",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
@@ -1580,54 +1580,54 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.495,
-    "enhancement_reason": "Mathematical expectation is 72.2% (ML-calibrated 41.7%->59.2%, n=76) (Performance feedback: HR=58.3%, Adjusted Prob: 49.5%)",
+    "enhancement_probability": 0.4837,
+    "enhancement_reason": "Mathematical expectation is 70.5% (ML-calibrated 41.7%->59.2%, n=76) (Performance feedback: HR=58.3%, Adjusted Prob: 48.4%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 342,
+        "cohort_n": 413,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.49499488678903036,
-        "raw_probability": 0.7218914172010363,
-        "reason": "Mathematical expectation is 72.2% (ML-calibrated 41.7%->59.2%, n=76) (Performance feedback: HR=58.3%, Adjusted Prob: 49.5%)"
+        "probability": 0.4837238576262788,
+        "raw_probability": 0.7054539560620069,
+        "reason": "Mathematical expectation is 70.5% (ML-calibrated 41.7%->59.2%, n=76) (Performance feedback: HR=58.3%, Adjusted Prob: 48.4%)"
       },
       {
-        "cohort_n": 342,
+        "cohort_n": 413,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.9251739236507833,
-        "raw_probability": 0.9203651512757028,
-        "reason": "Home scoring rate is 85.0% (ML-calibrated 88.7%->95.7%, n=94) (Performance feedback: HR=93.9%, Adjusted Prob: 92.5%)"
+        "probability": 0.9227708010853168,
+        "raw_probability": 0.9179745194096728,
+        "reason": "Home scoring rate is 85.0% (ML-calibrated 88.7%->95.7%, n=94) (Performance feedback: HR=93.9%, Adjusted Prob: 92.3%)"
       },
       {
-        "cohort_n": 342,
+        "cohort_n": 413,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9692083721858792,
-        "raw_probability": 0.9677905590169195,
-        "reason": "Combined Under 3.5 is 96.8% (ML-calibrated 97.2%->97.3%, n=111)"
+        "probability": 0.967939856332953,
+        "raw_probability": 0.9665238988211801,
+        "reason": "Combined Under 3.5 is 96.7% (ML-calibrated 97.2%->97.3%, n=111)"
       },
       {
-        "cohort_n": 342,
+        "cohort_n": 413,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9184044303258179,
-        "raw_probability": 0.9065852780558044,
-        "reason": "Combined Under 2.5 is 90.7% (ML-calibrated 92.6%->93.9%, n=99)"
+        "probability": 0.9249404897341073,
+        "raw_probability": 0.913037223451964,
+        "reason": "Combined Under 2.5 is 91.3% (ML-calibrated 92.6%->93.9%, n=99)"
       },
       {
-        "cohort_n": 342,
+        "cohort_n": 413,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.29910441847054475,
-        "raw_probability": 0.31295748138400786,
-        "reason": "Poisson expected hit rate is 31.3% (ML-calibrated 25.7%->21.3%, n=108)"
+        "probability": 0.28829829434589027,
+        "raw_probability": 0.3016508701113701,
+        "reason": "Poisson expected hit rate is 30.2% (ML-calibrated 25.7%->21.3%, n=108)"
       }
     ],
     "home": "The New Saints",
@@ -1661,7 +1661,7 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=286): Avg Goals: 4.02 | Over 2.5: 79.7% | BTTS: 44.8% | Home Over 1.5 Goals: 91.3% | Away Over 1.5 Goals: 10.1% | Top Scores: 4-0 (11.9%), 2-1 (11.9%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=338): Avg Goals: 3.89 | Over 2.5: 76.9% | BTTS: 42.6% | Home Over 1.5 Goals: 88.8% | Away Over 1.5 Goals: 9.2% | Top Scores: 2-0 (11.8%), 3-0 (11.2%)",
     "veto_reason": "context VETO in ['team_h']",
     "vitibet_index": 6.72,
     "w_score": 1.0
