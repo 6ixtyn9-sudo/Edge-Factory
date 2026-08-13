@@ -7,14 +7,14 @@
 - immutable morning-baseline rows: 146
 - verified official late-slate additions: 30
 - regular-ledger-only legacy rows: 46
-- unsafe regular ledgers ignored: 3
+- unsafe regular ledgers ignored: 4
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 206
 - eligible prior 1x2 picks: 211
 - pending/unmatched result picks: 2
 - voided postponed/cancelled/abandoned events: 3
 - ambiguous event-disposition rows: 0
-- settled via shared overlay facts: 6
+- settled via shared overlay facts: 5
 - ambiguous result picks: 0
 - wins: 149
 - hit rate: +72.3%
@@ -31,7 +31,7 @@
 
 Metrics scored against actual outcomes of the settled consensus picks in this window:
 - **Over 2.5 Goals**: occurred in 135 / 206 matches (65.5%)
-- **Both Teams to Score (BTTS)**: occurred in 106 / 206 matches (51.5%)
+- **Both Teams to Score (BTTS)**: occurred in 105 / 206 matches (51.0%)
 - **Selected Team Over 1.5 Goals**: occurred in 144 / 206 matches (69.9%)
 
 ## Recommended Enhancements Audit
