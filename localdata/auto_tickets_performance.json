@@ -1,11 +1,11 @@
 {
   "generated_at": "2026-08-13",
-  "total_tickets": 2,
+  "total_tickets": 3,
   "total_wins": 2,
-  "total_pending": 0,
-  "total_staked": 0.0,
+  "total_pending": 1,
+  "total_staked": 0.037333333333333336,
   "total_returned": 0.0,
-  "total_roi": null,
+  "total_roi": -1.0,
   "unstaked_legacy_n": 2,
   "per_day": {
     "2026-08-09": {
@@ -16,15 +16,24 @@
       "staked": 0.0,
       "returned": 0.0,
       "unstaked_n": 2
+    },
+    "2026-08-13": {
+      "n": 1,
+      "wins": 0,
+      "pending": 1,
+      "losses": 0,
+      "staked": 0.037333333333333336,
+      "returned": 0.0,
+      "unstaked_n": 0
     }
   },
   "per_type": {
     "acca2": {
-      "n": 1,
+      "n": 2,
       "wins": 1,
-      "pending": 0,
+      "pending": 1,
       "losses": 0,
-      "staked": 0.0,
+      "staked": 0.037333333333333336,
       "returned": 0.0,
       "unstaked_n": 1
     },
@@ -70,6 +79,18 @@
       "legs": [
         "Lech Poznan vs Piast Gliwice home @1.62",
         "FC Porto vs Alverca home @1.21"
+      ]
+    },
+    {
+      "date": "2026-08-13",
+      "type": "acca2",
+      "result": "PENDING",
+      "odds": 1.47963,
+      "stake": 0.037333333333333336,
+      "returned": null,
+      "legs": [
+        "FC Nordsjaelland vs Valur Reykjavik home @1.11",
+        "NSI Runavik vs FC Lugano away @1.33"
       ]
     }
   ]
