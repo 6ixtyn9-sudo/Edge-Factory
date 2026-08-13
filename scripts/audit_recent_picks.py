@@ -25,7 +25,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_team  # noqa: E402
 from edgefactory.settlement import is_void_disposition, terminal_event_disposition  # noqa: E402
-from edgefactory.util import norm_team  # noqa: E402
+from edgefactory.util import ledger_team_key, norm_team  # noqa: E402
 
 
 @dataclass
@@ -78,10 +78,10 @@ def _archive_pick_key(row: dict[str, Any], fallback_day: str) -> tuple[str, str,
     """Stable identity for a frozen 1X2 ledger row."""
     return (
         str(row.get("date") or fallback_day)[:10],
-        norm_team(row.get("home") or ""),
-        norm_team(row.get("away") or ""),
-        str(row.get("market") or ""),
-        str(row.get("pick") or ""),
+        ledger_team_key(row.get("home") or ""),
+        ledger_team_key(row.get("away") or ""),
+        str(row.get("market") or "").lower(),
+        str(row.get("pick") or "").lower(),
     )
 
 
@@ -183,11 +183,11 @@ def dedupe_archived_picks(picks: list[dict[str, Any]]) -> list[dict[str, Any]]:
     """
     best: dict[tuple, dict[str, Any]] = {}
     for p in picks:
-        home = norm_team(p.get("home") or "")
-        away = norm_team(p.get("away") or "")
+        home = ledger_team_key(p.get("home") or "")
+        away = ledger_team_key(p.get("away") or "")
         day = str(p.get("date") or "")[:10]
-        market = str(p.get("market") or "")
-        sel = str(p.get("pick") or "")
+        market = str(p.get("market") or "").lower()
+        sel = str(p.get("pick") or "").lower()
         if not (home and away):
             continue
         key = (day, home, away, market, sel)

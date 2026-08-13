@@ -45,7 +45,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.util import fold_ascii, norm_team, honest_display_label, heal_ledger_labels  # noqa: E402
+from edgefactory.util import ledger_team_key, honest_display_label, heal_ledger_labels  # noqa: E402
 
 REPORT_DIR = ROOT / "localdata"
 PICKS_TODAY_FILE = REPORT_DIR / "picks_today.json"
@@ -582,13 +582,10 @@ def match_market_key(pick: dict[str, Any]) -> tuple[str, str, str, str]:
     To prevent 'midnight crossing' (same game appearing on two different dates),
     we ignore the explicit date field and rely on the match identity.
     """
-    # Accent-fold BEFORE norm_team: the legacy 9-char join key deliberately does
-    # not fold accents (Strømmen -> strmmen), so without folding here the same
-    # fixture scraped with different spellings could double-enter the ledger.
-    # fold_ascii handles ø/å/æ/ł/đ etc. and is safe for dedupe keys only —
-    # it does NOT touch the certified miner join keys.
-    home = norm_team(fold_ascii(pick.get("home") or ""))
-    away = norm_team(fold_ascii(pick.get("away") or ""))
+    # The operational ledger key folds accents without changing the legacy
+    # normalization used by certified miner joins.
+    home = ledger_team_key(pick.get("home") or "")
+    away = ledger_team_key(pick.get("away") or "")
     if not home or not away:
         match_str = str(pick.get("match") or "").lower().strip()
         home, away = match_str, match_str
@@ -614,32 +611,48 @@ def autonomous_intraday_merge(
     was hiding the ml-meta picks behind archived 3way rows for the same
     fixture). Midnight-crossing protection stays: a different match date means
     a different match, so the archived row is kept and the fresh one deduped.
+
+    Existing ledgers are normalized on read. This is important because an old
+    archive can already contain duplicate alias rows; merely replacing the
+    first matching row would leave the second duplicate in place forever.
     """
-    seen_keys: set[tuple[str, str, str, str]] = set()
+    seen_match_keys: set[tuple[str, str, str, str]] = set()
+    positions: dict[tuple[tuple[str, str, str, str], str], int] = {}
     merged: list[dict[str, Any]] = []
     superseded = 0
 
     for pick in existing_ledger:
+        if not isinstance(pick, dict):
+            continue
         key = match_market_key(pick)
-        seen_keys.add(key)
+        dated_key = (key, _pick_date(pick, ""))
+        if dated_key in positions:
+            # Repair a duplicate already frozen in the archive. First-frozen
+            # wins until a fresh row for the same event replaces it below.
+            superseded += 1
+            continue
+        positions[dated_key] = len(merged)
+        seen_match_keys.add(key)
         merged.append(pick)
 
     new_added = 0
     for pick in fresh_run:
+        if not isinstance(pick, dict):
+            continue
         key = match_market_key(pick)
-        if key not in seen_keys:
-            seen_keys.add(key)
+        dated_key = (key, _pick_date(pick, ""))
+        existing_position = positions.get(dated_key)
+        if existing_position is not None:
+            merged[existing_position] = pick
+            superseded += 1
+            continue
+        if key not in seen_match_keys:
+            positions[dated_key] = len(merged)
+            seen_match_keys.add(key)
             merged.append(pick)
             new_added += 1
-            continue
-        # Same fixture+market already in the ledger. Prefer fresh only when it
-        # is the same actual match date; otherwise keep the archived row.
-        fresh_date = _pick_date(pick, "")
-        for i, p in enumerate(merged):
-            if match_market_key(p) == key and _pick_date(p, "") == fresh_date:
-                merged[i] = pick
-                superseded += 1
-                break
+        # A key collision on a different date is the midnight-crossing guard:
+        # preserve the archived match and do not append a second copy.
 
     merged.sort(
         key=lambda p: (
@@ -839,7 +852,9 @@ def run_pipeline(
         )
 
         fresh_picks = load_picks_file()
-        merged_picks, new_added, superseded = autonomous_intraday_merge(existing_ledger, fresh_picks)
+        merged_picks, new_added, superseded = autonomous_intraday_merge(
+            existing_ledger, fresh_picks
+        )
         healed_labels = heal_ledger_labels(merged_picks)
         if healed_labels:
             print(f"  self-healed {healed_labels} stale display labels in live ledger")
@@ -852,13 +867,25 @@ def run_pipeline(
         print(f"  Superseded with fresh         : {superseded}")
         print(f"  Total Active Official Ledger  : {len(merged_picks)}")
 
-        if new_added > 0:
-            print("\n>>> Updating official frozen archives & production databases with new discoveries...")
+        ledger_changed = new_added > 0 or superseded > 0 or healed_labels > 0
+        if ledger_changed:
+            if new_added > 0:
+                print(
+                    "\n>>> Updating official frozen archives & production databases "
+                    "with new discoveries..."
+                )
+            else:
+                print("\n>>> Rewriting official frozen archive after dedupe/fresh-row repair...")
             merged_text = json.dumps(merged_picks, indent=2, sort_keys=True)
             target_archive.write_text(merged_text)
             PICKS_TODAY_FILE.write_text(merged_text)
             generate_daily_report(target_date)
-            _notify(target_date, "notify (Autonomous Intraday Dispatch)")
+            notify_label = (
+                "notify (Autonomous Intraday Dispatch)"
+                if new_added > 0
+                else "notify (Silent Repair)"
+            )
+            _notify(target_date, notify_label)
         else:
             print("\n  No new matches/edges appeared. Locked official ledger unchanged.")
             restore_target_picks(target_archive.read_text())

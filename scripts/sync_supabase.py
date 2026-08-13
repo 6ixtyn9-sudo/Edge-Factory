@@ -20,7 +20,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.db import delete_picks_for_date, get_client, upsert_edges, upsert_picks  # noqa: E402
-from edgefactory.util import norm_team  # noqa: E402
+from edgefactory.util import ledger_team_key  # noqa: E402
 
 EDGES = ROOT / "localdata" / "edges_consensus.json"
 DEFAULT_PICKS = ROOT / "localdata" / "picks_today.json"
@@ -118,8 +118,8 @@ def pick_edge_name(pick: dict, aliases: dict[str, str]) -> str | None:
 def event_source_ref(pick: dict) -> str:
     sport = pick.get("sport") or "soccer"
     day = pick.get("date") or date.today().isoformat()
-    home = norm_team(pick.get("home") or "")
-    away = norm_team(pick.get("away") or "")
+    home = ledger_team_key(pick.get("home") or "")
+    away = ledger_team_key(pick.get("away") or "")
     if not home or not away:
         digest = hashlib.sha1(json.dumps(pick, sort_keys=True).encode()).hexdigest()[:16]
         home, away = "unknown", digest
@@ -192,6 +192,7 @@ def build_pick_rows(
 ) -> tuple[list[dict], list[dict]]:
     rows: list[dict] = []
     skipped: list[dict] = []
+    seen_conflicts: set[tuple[Any, Any, Any, Any]] = set()
     sync_meta = _sync_meta(target_date, picks_path)
     for p in picks:
         edge_name = pick_edge_name(p, aliases)
@@ -199,20 +200,42 @@ def build_pick_rows(
         edge_id = edge_ids.get(edge_name or "")
         event_id = event_ids.get(event_ref)
         if not edge_id or not event_id:
-            skipped.append({"pick": p, "edge_name": edge_name, "event_ref": event_ref})
+            skipped.append({
+                "pick": p,
+                "edge_name": edge_name,
+                "event_ref": event_ref,
+                "reason": "missing_edge_or_event_id",
+            })
             continue
         bucket = p.get("bucket") or "UNKNOWN"
         try:
             probability = round(float(p.get("avg_p")) / 100.0, 4)
         except Exception:
             probability = None
+        market = p.get("market", "1x2")
+        selection = p.get("pick")
+        conflict_key = (edge_id, event_id, market, selection)
+        if conflict_key in seen_conflicts:
+            # Postgres rejects an UPSERT batch that proposes the same unique
+            # key twice (SQLSTATE 21000). Keep the first frozen payload and
+            # quarantine the duplicate instead of deleting the date then
+            # failing to repopulate it.
+            skipped.append({
+                "pick": p,
+                "edge_name": edge_name,
+                "event_ref": event_ref,
+                "reason": "duplicate_conflict_key",
+            })
+            continue
+        seen_conflicts.add(conflict_key)
+
         payload = dict(p)
         payload["_sync_meta"] = sync_meta
         rows.append({
             "edge_id": edge_id,
             "event_id": event_id,
-            "market": p.get("market", "1x2"),
-            "selection": p.get("pick"),
+            "market": market,
+            "selection": selection,
             "probability": probability,
             "odds": p.get("odds"),
             "status": "skipped" if str(bucket).startswith("SKIPPED") else "open",
@@ -275,8 +298,6 @@ def main() -> None:
         client = get_client()
         if edges:
             upsert_edges(client, edges)
-        if args.replace_date and target_date:
-            delete_picks_for_date(client, target_date)
         edge_ids = fetch_edge_ids(client, [e["name"] for e in edges])
         event_ids = upsert_events(client, raw_picks)
         pick_rows, skipped = build_pick_rows(
@@ -288,7 +309,22 @@ def main() -> None:
             picks_path=picks_path,
         )
         if skipped:
-            print(f"Skipped picks without edge/event id: {len(skipped)}")
+            reasons: dict[str, int] = {}
+            for item in skipped:
+                reason = str(item.get("reason") or "missing_edge_or_event_id")
+                reasons[reason] = reasons.get(reason, 0) + 1
+            detail = ", ".join(f"{reason}={count}" for reason, count in sorted(reasons.items()))
+            print(f"Skipped picks: {len(skipped)} ({detail})")
+
+        # Prepare and validate the complete replacement batch before deleting
+        # the currently published date. The old order deleted first, so a
+        # duplicate-batch SQLSTATE 21000 left the date empty.
+        if args.replace_date and raw_picks and not pick_rows:
+            raise RuntimeError(
+                "refusing to delete existing date: non-empty source produced zero syncable picks"
+            )
+        if args.replace_date and target_date:
+            delete_picks_for_date(client, target_date)
         if pick_rows:
             upsert_picks(client, pick_rows)
         manifest = write_sync_manifest(

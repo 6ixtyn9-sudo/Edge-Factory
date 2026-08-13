@@ -130,6 +130,20 @@ def test_empty_existing_writes_fresh():
     assert merge_day_archive_rows([], fresh, DAY) == fresh
 
 
+def test_archive_merge_collapses_accent_and_ascii_team_aliases():
+    """Regression: the 2026-08-13 ledger stored Nordsjælland twice.
+
+    One capture used the accented display spelling and an earlier capture used
+    its ASCII form. Operational identity must be accent-safe without changing
+    the legacy miner normalization.
+    """
+    frozen = [_row("FC Nordsjaelland", "Valur Reykjavik", odds=1.12)]
+    fresh = [_row("FC Nordsjælland", "Valur Reykjavik", odds=1.14)]
+    merged = merge_day_archive_rows(frozen, fresh, DAY)
+    assert len(merged) == 1
+    assert merged[0]["odds"] == 1.12  # first frozen payload remains authoritative
+
+
 # ============================================================
 # Contract 2: auto_tickets_grade format branch on stakes_frac
 # (Regression: commit 526116e introduced a display bug for

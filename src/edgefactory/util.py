@@ -84,6 +84,17 @@ def norm_team(name: str, width: int = 9) -> str:
     return s[:width]
 
 
+def ledger_team_key(name: object, width: int = 9) -> str:
+    """Accent-safe team key for operational pick-ledger identity.
+
+    This deliberately wraps, rather than changes, ``norm_team``. Certified
+    miner joins must retain their historical byte-compatible normalization,
+    while operational ledgers must treat spelling variants such as
+    ``Nordsjælland`` and ``Nordsjaelland`` as the same team.
+    """
+    return norm_team(fold_ascii(name), width=width)
+
+
 def norm_entity_team(name: object, width: int = 24) -> str:
     """Canonical team context key for purity/reporting/entity registry.
 

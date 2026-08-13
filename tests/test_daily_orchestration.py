@@ -153,6 +153,33 @@ def test_autonomous_intraday_merge():
     assert merged[1]["pick"] == "2"
 
 
+def test_autonomous_merge_repairs_duplicates_already_in_archive():
+    """A corrupt prior archive must not keep duplicate aliases forever."""
+    first = {
+        "date": "2026-08-13",
+        "home": "FC Nordsjaelland",
+        "away": "Valur Reykjavik",
+        "match": "FC Nordsjaelland vs Valur Reykjavik",
+        "market": "1x2",
+        "pick": "home",
+        "odds": 1.12,
+    }
+    duplicate_alias = {
+        **first,
+        "home": "FC Nordsjælland",
+        "match": "FC Nordsjælland vs Valur Reykjavik",
+    }
+
+    merged, new_added, superseded = daily.autonomous_intraday_merge(
+        [first, duplicate_alias], []
+    )
+
+    assert len(merged) == 1
+    assert new_added == 0
+    assert superseded == 1
+    assert merged[0] == first  # first-frozen wins when there is no fresh row
+
+
 def test_stack_dispatch_never_drops_prior_bets(tmp_path):
     """Regression: a re-run whose fresh snapshot is missing a bet found in an
     earlier run must keep that bet in the stacked archive. This is the contract
