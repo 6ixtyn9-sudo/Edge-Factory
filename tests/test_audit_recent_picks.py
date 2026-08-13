@@ -774,6 +774,18 @@ def _late_ledger_pick(day, home, away, *, pick="home", bucket="SKIPPED_VETO", od
     }
 
 
+def test_audit_dedupe_collapses_accent_and_ascii_team_aliases():
+    import scripts.audit_recent_picks as audit_mod
+
+    day = "2026-08-13"
+    accented = _late_ledger_pick(day, "FC Nordsjælland", "Valur Reykjavik")
+    ascii_alias = _late_ledger_pick(day, "FC Nordsjaelland", "Valur Reykjavik")
+
+    rows = audit_mod.dedupe_archived_picks([accented, ascii_alias])
+
+    assert rows == [accented]
+
+
 def test_archived_pick_loader_merges_verified_late_official_additions(tmp_path, monkeypatch):
     import scripts.audit_recent_picks as audit_mod
 

@@ -23,3 +23,23 @@ def test_upsert_picks(mock_get):
     mock_get.return_value = m
     upsert_picks(m, [{"id":1}])
     m.table.assert_called()
+
+
+def test_upsert_picks_dedupes_postgres_conflict_key():
+    client = MagicMock()
+    duplicate = {
+        "edge_id": "edge-1",
+        "event_id": "event-1",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.12,
+    }
+
+    upsert_picks(client, [duplicate, dict(duplicate)])
+
+    table = client.table.return_value
+    submitted = table.upsert.call_args.args[0]
+    assert submitted == [duplicate]
+    assert table.upsert.call_args.kwargs["on_conflict"] == (
+        "edge_id,event_id,market,selection"
+    )

@@ -39,13 +39,32 @@ def delete_picks_for_date(client, picked_for: str):
 
 
 def upsert_picks(client, picks_list):
-    """Upsert list of pick dicts into edge_picks (ignore conflicts)."""
+    """Upsert unique pick rows into ``edge_picks``.
+
+    Postgres cannot update the same constrained row twice in one UPSERT command
+    (SQLSTATE 21000). Deduplicate at this final boundary as a fail-safe even
+    though the sync builder also filters duplicate conflict keys.
+    """
     if not picks_list:
         return
+
+    unique_picks = []
+    seen = set()
+    conflict_columns = ("edge_id", "event_id", "market", "selection")
+    for pick in picks_list:
+        key = tuple(pick.get(column) for column in conflict_columns)
+        if key in seen:
+            continue
+        seen.add(key)
+        unique_picks.append(pick)
+
+    duplicates = len(picks_list) - len(unique_picks)
+    if duplicates:
+        print(f"Skipped duplicate 'edge_picks' conflict rows: {duplicates}")
     resp = (
         client.table("edge_picks")
-        .upsert(picks_list, on_conflict="edge_id,event_id,market,selection")
+        .upsert(unique_picks, on_conflict=",".join(conflict_columns))
         .execute()
     )
-    print(f"Upserted 'edge_picks': {len(picks_list)} rows")
+    print(f"Upserted 'edge_picks': {len(unique_picks)} rows")
     return resp

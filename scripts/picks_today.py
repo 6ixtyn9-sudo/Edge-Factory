@@ -21,7 +21,14 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_league, canonical_team, classify_competition
-from edgefactory.util import compact_key, norm_team, fold_ascii, display_rule_label, honest_display_label
+from edgefactory.util import (
+    compact_key,
+    norm_team,
+    fold_ascii,
+    ledger_team_key,
+    display_rule_label,
+    honest_display_label,
+)
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_debias_hr
@@ -2682,10 +2689,10 @@ def _day_archive_row_key(row: dict, day: str) -> tuple[str, str, str, str, str]:
     """
     return (
         str(row.get("date") or day)[:10],
-        norm_team(row.get("home") or ""),
-        norm_team(row.get("away") or ""),
-        str(row.get("market") or ""),
-        str(row.get("pick") or ""),
+        ledger_team_key(row.get("home") or ""),
+        ledger_team_key(row.get("away") or ""),
+        str(row.get("market") or "").lower(),
+        str(row.get("pick") or "").lower(),
     )
 
 
