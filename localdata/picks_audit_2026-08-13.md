@@ -4,7 +4,7 @@
 
 - archived pick rows: 224
 - archived pick dates: 30
-- immutable morning-baseline rows: 149
+- immutable morning-baseline rows: 148
 - verified official late-slate additions: 30
 - regular-ledger-only legacy rows: 46
 - unsafe regular ledgers ignored: 3
@@ -14,7 +14,7 @@
 - pending/unmatched result picks: 2
 - voided postponed/cancelled/abandoned events: 3
 - ambiguous event-disposition rows: 0
-- settled via shared overlay facts: 2
+- settled via shared overlay facts: 5
 - ambiguous result picks: 0
 - wins: 149
 - hit rate: +72.3%
