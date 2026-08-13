@@ -2,19 +2,19 @@
 
 ## Overall
 
-- archived pick rows: 222
+- archived pick rows: 223
 - archived pick dates: 30
-- immutable morning-baseline rows: 146
+- immutable morning-baseline rows: 147
 - verified official late-slate additions: 30
 - regular-ledger-only legacy rows: 46
-- unsafe regular ledgers ignored: 4
+- unsafe regular ledgers ignored: 3
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 206
 - eligible prior 1x2 picks: 211
 - pending/unmatched result picks: 2
 - voided postponed/cancelled/abandoned events: 3
 - ambiguous event-disposition rows: 0
-- settled via shared overlay facts: 5
+- settled via shared overlay facts: 2
 - ambiguous result picks: 0
 - wins: 149
 - hit rate: +72.3%
@@ -25,13 +25,13 @@
 
 - include same-day picks: False
 - same-day cutoff date: 2026-08-13
-- same-day rows excluded: 11
+- same-day rows excluded: 12
 
 ## Secondary Market Realized Rates
 
 Metrics scored against actual outcomes of the settled consensus picks in this window:
 - **Over 2.5 Goals**: occurred in 135 / 206 matches (65.5%)
-- **Both Teams to Score (BTTS)**: occurred in 105 / 206 matches (51.0%)
+- **Both Teams to Score (BTTS)**: occurred in 106 / 206 matches (51.5%)
 - **Selected Team Over 1.5 Goals**: occurred in 144 / 206 matches (69.9%)
 
 ## Recommended Enhancements Audit
