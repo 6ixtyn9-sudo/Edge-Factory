@@ -98,15 +98,17 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 2,
-   "inv_price_sum": 1.9872354230992975,
-   "n": 3,
+   "hits": 3,
+   "inv_price_sum": 3.515013200877075,
+   "n": 5,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
-    "2026-08-12|Rapid Vienna vs Paide|match_over_25@v1"
+    "2026-08-12|Rapid Vienna vs Paide|match_over_25@v1",
+    "2026-08-13|Omonia Nicosia vs Lincoln Red Imps|match_over_25@v1",
+    "2026-08-13|FC Nordsj\u00e6lland vs Valur Reykjavik|match_over_25@v1"
    ],
-   "profit": 0.35,
+   "profit": -0.45,
    "records": [
     {
      "date": "2026-08-01",
@@ -128,6 +130,22 @@
      "match": "Rapid Vienna vs Paide",
      "multi_source": false,
      "price": 1.3,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-13",
+     "hit": false,
+     "match": "Omonia Nicosia vs Lincoln Red Imps",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-13",
+     "hit": true,
+     "match": "FC Nordsj\u00e6lland vs Valur Reykjavik",
+     "multi_source": false,
+     "price": 1.2,
      "source": "scoutingstats"
     }
    ],
