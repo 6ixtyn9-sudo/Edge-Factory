@@ -1,8 +1,8 @@
 {
-  "generated_at": "2026-08-13",
+  "generated_at": "2026-08-14",
   "total_tickets": 3,
   "total_wins": 2,
-  "total_pending": 1,
+  "total_pending": 0,
   "total_staked": 0.037333333333333336,
   "total_returned": 0.0,
   "total_roi": -1.0,
@@ -20,8 +20,8 @@
     "2026-08-13": {
       "n": 1,
       "wins": 0,
-      "pending": 1,
-      "losses": 0,
+      "pending": 0,
+      "losses": 1,
       "staked": 0.037333333333333336,
       "returned": 0.0,
       "unstaked_n": 0
@@ -31,8 +31,8 @@
     "acca2": {
       "n": 2,
       "wins": 1,
-      "pending": 1,
-      "losses": 0,
+      "pending": 0,
+      "losses": 1,
       "staked": 0.037333333333333336,
       "returned": 0.0,
       "unstaked_n": 1
@@ -84,7 +84,7 @@
     {
       "date": "2026-08-13",
       "type": "acca2",
-      "result": "PENDING",
+      "result": "LOSS",
       "odds": 1.5276800000000001,
       "stake": 0.037333333333333336,
       "returned": null,
