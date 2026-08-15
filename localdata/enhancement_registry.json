@@ -98,17 +98,18 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 3,
-   "inv_price_sum": 3.515013200877075,
-   "n": 5,
+   "hits": 4,
+   "inv_price_sum": 4.168607972118905,
+   "n": 6,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
     "2026-08-12|Rapid Vienna vs Paide|match_over_25@v1",
     "2026-08-13|Omonia Nicosia vs Lincoln Red Imps|match_over_25@v1",
-    "2026-08-13|FC Nordsj\u00e6lland vs Valur Reykjavik|match_over_25@v1"
+    "2026-08-13|FC Nordsj\u00e6lland vs Valur Reykjavik|match_over_25@v1",
+    "2026-08-14|Lask Linz vs Ried|match_over_25@v1"
    ],
-   "profit": -0.45,
+   "profit": 0.08,
    "records": [
     {
      "date": "2026-08-01",
@@ -146,6 +147,14 @@
      "match": "FC Nordsj\u00e6lland vs Valur Reykjavik",
      "multi_source": false,
      "price": 1.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-14",
+     "hit": true,
+     "match": "Lask Linz vs Ried",
+     "multi_source": false,
+     "price": 1.53,
      "source": "scoutingstats"
     }
    ],
