@@ -1,5 +1,13 @@
 {
-  "ceilings": [],
+  "ceilings": [
+    {
+      "ceiling": true,
+      "gap_pp": 17.1,
+      "live_max_ml_p": 62.9,
+      "lowest_threshold": 80.0,
+      "rule": "ml-meta avg_p>=80"
+    }
+  ],
   "edge_silent_days": 14,
   "edges": [
     {
@@ -108,7 +116,7 @@
       "silent": true
     }
   ],
-  "generated_at": "2026-08-15T05:40:41",
+  "generated_at": "2026-08-15T08:22:39",
   "source_stale_days": 7,
   "sources": [
     {
@@ -184,5 +192,5 @@
       "stale": true
     }
   ],
-  "warn_count": 18
+  "warn_count": 19
 }
