@@ -819,12 +819,12 @@
     "w_score": 0.425
   },
   {
-    "as_of": "2026-08-16T11:15:44+02:00",
-    "avg_p": 56.7,
+    "as_of": "2026-08-16T14:13:51+02:00",
+    "avg_p": 56.3,
     "away": "Houston Dash (w)",
     "bookmaker": "betmgm-uk",
     "bucket": "CAUTION",
-    "confidence": 0.5714,
+    "confidence": 0.6036,
     "ctx": {
       "away_norm": "houstondashw",
       "comp_type_name": "league",
@@ -861,58 +861,58 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.8153,
-    "enhancement_reason": "Home scoring rate is 82.2% (ML-calibrated 88.5%->92.9%, n=140) (Performance feedback: HR=91.4%, Adjusted Prob: 81.5%)",
+    "enhancement_probability": 0.811,
+    "enhancement_reason": "Home scoring rate is 82.2% (ML-calibrated 88.5%->92.9%, n=140) (Performance feedback: HR=91.4%, Adjusted Prob: 81.1%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 2220,
+        "cohort_n": 2216,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8152747196158886,
-        "raw_probability": 0.8544506870642388,
-        "reason": "Home scoring rate is 82.2% (ML-calibrated 88.5%->92.9%, n=140) (Performance feedback: HR=91.4%, Adjusted Prob: 81.5%)"
+        "probability": 0.8110071748585156,
+        "raw_probability": 0.84997807622242,
+        "reason": "Home scoring rate is 82.2% (ML-calibrated 88.5%->92.9%, n=140) (Performance feedback: HR=91.4%, Adjusted Prob: 81.1%)"
       },
       {
-        "cohort_n": 2220,
+        "cohort_n": 2216,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9894792763758208,
-        "raw_probability": 0.9841129086847628,
-        "reason": "Combined Under 3.5 is 98.4% (ML-calibrated 97.5%->98.1%, n=157)"
+        "probability": 0.9886023529208349,
+        "raw_probability": 0.9832407411592932,
+        "reason": "Combined Under 3.5 is 98.3% (ML-calibrated 97.5%->98.1%, n=157)"
       },
       {
-        "cohort_n": 2220,
+        "cohort_n": 2216,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.945707136636657,
-        "raw_probability": 0.9299555495385726,
-        "reason": "Combined Under 2.5 is 93.0% (ML-calibrated 93.4%->95.1%, n=144)"
+        "probability": 0.9442972729623318,
+        "raw_probability": 0.9285691683881729,
+        "reason": "Combined Under 2.5 is 92.9% (ML-calibrated 93.4%->95.1%, n=144)"
       },
       {
-        "cohort_n": 2220,
+        "cohort_n": 2216,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8058753818587964,
-        "raw_probability": 0.7684356596493603,
-        "reason": "Combined Under 1.5 is 76.8% (ML-calibrated 81.4%->86.3%, n=51)"
+        "probability": 0.8014755997486676,
+        "raw_probability": 0.7642402846022756,
+        "reason": "Combined Under 1.5 is 76.4% (ML-calibrated 81.4%->86.3%, n=51)"
       },
       {
-        "cohort_n": 2220,
+        "cohort_n": 2216,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.41690230911211895,
-        "raw_probability": 0.5489428913107245,
-        "reason": "Mathematical expectation is 54.9% (ML-calibrated 41.6%->58.5%, n=130) (Performance feedback: HR=65.0%, Adjusted Prob: 41.7%)"
+        "probability": 0.4150392059998824,
+        "raw_probability": 0.5464897093856369,
+        "reason": "Mathematical expectation is 54.6% (ML-calibrated 41.6%->58.5%, n=130) (Performance feedback: HR=65.0%, Adjusted Prob: 41.5%)"
       }
     ],
     "home": "North Carolina Courage (w)",
-    "kickoff": "19:00",
+    "kickoff": "16:00",
     "league": "USA,Nwsl",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -920,11 +920,11 @@
     "market_type": "1x2",
     "match": "North Carolina Courage (w) vs Houston Dash (w)",
     "min_lead_minutes": 30,
-    "ml_p": 0.5674,
+    "ml_p": 0.5631,
     "model_version": "dc-blend-v1",
     "n_way": 3,
     "odds": 1.58,
-    "odds_captured_at": "2026-08-16T09:19:47.423871+00:00",
+    "odds_captured_at": "2026-08-16T12:18:28.493776+00:00",
     "odds_league": "NWSL",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -942,9 +942,9 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1382): Avg Goals: 3.24 | Over 2.5: 65.8% | BTTS: 45.4% | Home Over 1.5 Goals: 81.8% | Away Over 1.5 Goals: 10.3% | Top Scores: 2-1 (18.4%), 1-0 (18.2%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1347): Avg Goals: 3.20 | Over 2.5: 65.8% | BTTS: 45.7% | Home Over 1.5 Goals: 81.4% | Away Over 1.5 Goals: 9.9% | Top Scores: 2-1 (18.8%), 1-0 (18.6%)",
     "vitibet_index": null,
-    "w_score": 0.2712
+    "w_score": 0.2538
   },
   {
     "as_of": "2026-08-15T02:30:39+02:00",
@@ -1323,7 +1323,7 @@
     "w_score": 1.0346
   },
   {
-    "as_of": "2026-08-16T08:18:53+02:00",
+    "as_of": "2026-08-16T14:13:51+02:00",
     "avg_p": 76.7,
     "away": "Charlestown Azzurri",
     "bookmaker": "betexplorer_best",
@@ -1427,7 +1427,7 @@
     "model_version": null,
     "n_way": 3,
     "odds": 1.25,
-    "odds_captured_at": "2026-08-16T06:23:48.036018+00:00",
+    "odds_captured_at": "2026-08-16T12:19:17.617406+00:00",
     "odds_league": "Australia: NPL Northern NSW",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
