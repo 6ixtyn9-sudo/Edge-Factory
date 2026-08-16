@@ -98,18 +98,20 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 4,
-   "inv_price_sum": 4.168607972118905,
-   "n": 6,
+   "hits": 5,
+   "inv_price_sum": 5.469113022623956,
+   "n": 8,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
     "2026-08-12|Rapid Vienna vs Paide|match_over_25@v1",
     "2026-08-13|Omonia Nicosia vs Lincoln Red Imps|match_over_25@v1",
     "2026-08-13|FC Nordsj\u00e6lland vs Valur Reykjavik|match_over_25@v1",
-    "2026-08-14|Lask Linz vs Ried|match_over_25@v1"
+    "2026-08-14|Lask Linz vs Ried|match_over_25@v1",
+    "2026-08-15|East Kilbride vs Cove Rangers|match_over_25@v1",
+    "2026-08-15|Union Saint-Gilloise vs Zulte Waregem|match_over_25@v1"
    ],
-   "profit": 0.08,
+   "profit": -0.48,
    "records": [
     {
      "date": "2026-08-01",
@@ -155,6 +157,22 @@
      "match": "Lask Linz vs Ried",
      "multi_source": false,
      "price": 1.53,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-15",
+     "hit": true,
+     "match": "East Kilbride vs Cove Rangers",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-15",
+     "hit": false,
+     "match": "Union Saint-Gilloise vs Zulte Waregem",
+     "multi_source": false,
+     "price": 1.65,
      "source": "scoutingstats"
     }
    ],
