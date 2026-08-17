@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-08-17T05:38:39+02:00",
+    "as_of": "2026-08-17T08:27:21+02:00",
     "avg_p": 72.3,
     "away": "Juticalpa",
     "bookmaker": "betexplorer_best",
@@ -116,7 +116,7 @@
       }
     ],
     "home": "Olancho FC",
-    "kickoff": "21:30",
+    "kickoff": "18:30",
     "league": "Honduras,Liga Nacional - Apertura",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -127,7 +127,7 @@
     "model_version": null,
     "n_way": 3,
     "odds": 1.6,
-    "odds_captured_at": "2026-08-17T03:43:19.549641+00:00",
+    "odds_captured_at": "2026-08-17T06:31:46.783005+00:00",
     "odds_league": "Honduras: Liga Nacional",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -151,7 +151,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-17T05:38:39+02:00",
+    "as_of": "2026-08-17T08:27:21+02:00",
     "avg_p": 69.7,
     "away": "SonderjyskE",
     "bookmaker": "betexplorer_best",
@@ -246,7 +246,7 @@
       }
     ],
     "home": "Brondby",
-    "kickoff": "13:00",
+    "kickoff": "10:00",
     "league": "Denmark,Superligaen",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -256,8 +256,8 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.44,
-    "odds_captured_at": "2026-08-17T03:43:25.536976+00:00",
+    "odds": 1.42,
+    "odds_captured_at": "2026-08-17T06:31:52.475569+00:00",
     "odds_league": "Denmark: Superliga",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -400,8 +400,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-17T05:38:39+02:00",
-    "avg_p": 61.6,
+    "as_of": "2026-08-17T08:27:21+02:00",
+    "avg_p": 62.2,
     "away": "CD Eldense",
     "bookmaker": "codere",
     "bucket": "CAUTION",
@@ -442,67 +442,67 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.4674,
-    "enhancement_reason": "Mathematical expectation is 55.9% (ML-calibrated 42.3%->62.3%, n=159) (Performance feedback: HR=69.7%, Adjusted Prob: 46.7%)",
+    "enhancement_probability": 0.4649,
+    "enhancement_reason": "Mathematical expectation is 55.6% (ML-calibrated 42.3%->62.3%, n=159) (Performance feedback: HR=69.7%, Adjusted Prob: 46.5%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 1809,
+        "cohort_n": 1755,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4674135457057958,
-        "raw_probability": 0.5588963813441984,
-        "reason": "Mathematical expectation is 55.9% (ML-calibrated 42.3%->62.3%, n=159) (Performance feedback: HR=69.7%, Adjusted Prob: 46.7%)"
+        "probability": 0.46485868157588117,
+        "raw_probability": 0.5558414756185219,
+        "reason": "Mathematical expectation is 55.6% (ML-calibrated 42.3%->62.3%, n=159) (Performance feedback: HR=69.7%, Adjusted Prob: 46.5%)"
       },
       {
-        "cohort_n": 1809,
+        "cohort_n": 1755,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.84592519247694,
-        "raw_probability": 0.8807500820622941,
-        "reason": "Home scoring rate is 76.3% (ML-calibrated 87.9%->92.8%, n=166) (Performance feedback: HR=91.6%, Adjusted Prob: 84.6%)"
+        "probability": 0.8482245005734581,
+        "raw_probability": 0.8831440476430626,
+        "reason": "Home scoring rate is 76.3% (ML-calibrated 87.9%->92.8%, n=166) (Performance feedback: HR=91.6%, Adjusted Prob: 84.8%)"
       },
       {
-        "cohort_n": 1809,
+        "cohort_n": 1755,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
         "probability": 0.99,
-        "raw_probability": 0.988829945944782,
-        "reason": "Combined Under 3.5 is 98.9% (ML-calibrated 97.7%->98.4%, n=183)"
+        "raw_probability": 0.9895631832576525,
+        "reason": "Combined Under 3.5 is 99.0% (ML-calibrated 97.7%->98.4%, n=183)"
       },
       {
-        "cohort_n": 1809,
+        "cohort_n": 1755,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9519070662781798,
-        "raw_probability": 0.947887077183843,
-        "reason": "Combined Under 2.5 is 94.8% (ML-calibrated 93.7%->94.1%, n=170)"
+        "probability": 0.957803833511262,
+        "raw_probability": 0.9537589418389231,
+        "reason": "Combined Under 2.5 is 95.4% (ML-calibrated 93.7%->94.1%, n=170)"
       },
       {
-        "cohort_n": 1809,
+        "cohort_n": 1755,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8060677816141919,
-        "raw_probability": 0.7985217510666124,
-        "reason": "Combined Under 1.5 is 79.9% (ML-calibrated 81.7%->82.6%, n=69)"
+        "probability": 0.8114304116442006,
+        "raw_probability": 0.8038341786559022,
+        "reason": "Combined Under 1.5 is 80.4% (ML-calibrated 81.7%->82.6%, n=69)"
       },
       {
-        "cohort_n": 1809,
+        "cohort_n": 1755,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.18474300798245724,
-        "raw_probability": 0.18671716860612986,
-        "reason": "Poisson expected hit rate is 18.7% (ML-calibrated 25.2%->24.2%, n=153)"
+        "probability": 0.18583825881537963,
+        "raw_probability": 0.18782412327072096,
+        "reason": "Poisson expected hit rate is 18.8% (ML-calibrated 25.2%->24.2%, n=153)"
       }
     ],
     "home": "Almeria",
-    "kickoff": "15:30",
+    "kickoff": "12:30",
     "league": "Spain,Laliga2",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -510,11 +510,11 @@
     "market_type": "1x2",
     "match": "Almeria vs CD Eldense",
     "min_lead_minutes": 30,
-    "ml_p": 0.6162,
+    "ml_p": 0.6215,
     "model_version": null,
     "n_way": 3,
     "odds": 1.37,
-    "odds_captured_at": "2026-08-17T03:42:31.567076+00:00",
+    "odds_captured_at": "2026-08-17T06:31:23.717492+00:00",
     "odds_league": "Segunda Divisi\u00f3n",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -532,9 +532,9 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1231): Avg Goals: 3.34 | Over 2.5: 66.1% | BTTS: 42.0% | Home Over 1.5 Goals: 83.3% | Away Over 1.5 Goals: 10.1% | Top Scores: 2-0 (17.2%), 1-0 (16.7%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1217): Avg Goals: 3.34 | Over 2.5: 65.7% | BTTS: 41.7% | Home Over 1.5 Goals: 83.3% | Away Over 1.5 Goals: 10.2% | Top Scores: 2-0 (17.7%), 1-0 (16.7%)",
     "vitibet_index": 2.54,
-    "w_score": 0.4733
+    "w_score": 0.496
   },
   {
     "as_of": "2026-08-17T05:38:39+02:00",
@@ -805,12 +805,12 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-17T05:38:39+02:00",
+    "as_of": "2026-08-17T08:27:21+02:00",
     "avg_p": 63.2,
     "away": "Benfica",
     "bookmaker": "bet-at-home",
     "bucket": "SKIPPED_VETO",
-    "confidence": 0.6659,
+    "confidence": 0.6663,
     "ctx": {
       "away_norm": "benfica",
       "comp_type_name": "league",
@@ -889,7 +889,7 @@
       }
     ],
     "home": "Casa Pia",
-    "kickoff": "15:15",
+    "kickoff": "12:15",
     "league": "Portugal,Liga Portugal",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -900,7 +900,7 @@
     "model_version": "dc-blend-v1",
     "n_way": 3,
     "odds": 1.28,
-    "odds_captured_at": "2026-08-17T03:42:32.023393+00:00",
+    "odds_captured_at": "2026-08-17T06:31:24.008124+00:00",
     "odds_league": "Liga Portugal Betclic",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -925,7 +925,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-17T05:38:39+02:00",
+    "as_of": "2026-08-17T08:27:21+02:00",
     "avg_p": 62.0,
     "away": "Deportivo Pasto",
     "bookmaker": "scoutingstats_odds",
@@ -1027,7 +1027,7 @@
       }
     ],
     "home": "Bucaramanga",
-    "kickoff": "17:05",
+    "kickoff": "14:05",
     "league": "Colombia,Primera A Apertura Finalizacion",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -1064,7 +1064,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-17T05:38:39+02:00",
+    "as_of": "2026-08-17T08:27:21+02:00",
     "avg_p": 59.3,
     "away": "HK Kopavogur",
     "bookmaker": "betexplorer_best",
@@ -1148,7 +1148,7 @@
       }
     ],
     "home": "Afturelding",
-    "kickoff": "15:15",
+    "kickoff": "12:15",
     "league": "Iceland,1. Deild",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -1159,7 +1159,7 @@
     "model_version": null,
     "n_way": 3,
     "odds": 1.57,
-    "odds_captured_at": "2026-08-17T03:43:31.183882+00:00",
+    "odds_captured_at": "2026-08-17T06:31:58.480493+00:00",
     "odds_league": "Iceland: Division 1",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -1304,7 +1304,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-17T05:38:39+02:00",
+    "as_of": "2026-08-17T08:27:21+02:00",
     "avg_p": 55.5,
     "away": "Lokomotiv Sofia",
     "bookmaker": "efbet-net",
@@ -1388,7 +1388,7 @@
       }
     ],
     "home": "Arda Kardzhali",
-    "kickoff": "14:15",
+    "kickoff": "11:15",
     "league": "Bulgaria,First Professional League",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -1399,7 +1399,7 @@
     "model_version": "dc-blend-v1",
     "n_way": 4,
     "odds": 1.87,
-    "odds_captured_at": "2026-08-17T03:42:34.612533+00:00",
+    "odds_captured_at": "2026-08-17T06:31:27.402465+00:00",
     "odds_league": "Parva Liga",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
