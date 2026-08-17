@@ -1664,10 +1664,10 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-17T20:19:22+02:00",
-    "avg_p": 60.0,
+    "as_of": "2026-08-17T23:15:00+02:00",
+    "avg_p": 60.4,
     "away": "Puebla",
-    "bookmaker": "betonline",
+    "bookmaker": "betfair",
     "bucket": "CAUTION",
     "confidence": null,
     "ctx": {
@@ -1693,10 +1693,10 @@
     },
     "date": "2026-08-18",
     "decay_verdict": "WATCH",
-    "display_rule": "ML-META\u226555",
+    "display_rule": "ML-META\u226560",
     "draw_risk_flag": "EXTREME",
     "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=55",
+    "edge_rule": "ml-meta avg_p>=60",
     "edge_status": "certified",
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
@@ -1706,58 +1706,58 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.4717,
-    "enhancement_reason": "Mathematical expectation is 56.3% (ML-calibrated 42.3%->62.5%, n=160) (Performance feedback: HR=69.7%, Adjusted Prob: 47.2%)",
+    "enhancement_probability": 0.4698,
+    "enhancement_reason": "Mathematical expectation is 56.1% (ML-calibrated 42.3%->62.5%, n=160) (Performance feedback: HR=69.7%, Adjusted Prob: 47.0%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 2026,
+        "cohort_n": 1908,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4716874745440526,
-        "raw_probability": 0.5628781729634003,
-        "reason": "Mathematical expectation is 56.3% (ML-calibrated 42.3%->62.5%, n=160) (Performance feedback: HR=69.7%, Adjusted Prob: 47.2%)"
+        "probability": 0.46982240230881356,
+        "raw_probability": 0.5606525288475991,
+        "reason": "Mathematical expectation is 56.1% (ML-calibrated 42.3%->62.5%, n=160) (Performance feedback: HR=69.7%, Adjusted Prob: 47.0%)"
       },
       {
-        "cohort_n": 2026,
+        "cohort_n": 1908,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8419780279625746,
-        "raw_probability": 0.8752680307660254,
-        "reason": "Home scoring rate is 77.9% (ML-calibrated 87.9%->92.8%, n=167) (Performance feedback: HR=91.7%, Adjusted Prob: 84.2%)"
+        "probability": 0.8449142338834205,
+        "raw_probability": 0.8783203279625225,
+        "reason": "Home scoring rate is 77.9% (ML-calibrated 87.9%->92.8%, n=167) (Performance feedback: HR=91.7%, Adjusted Prob: 84.5%)"
       },
       {
-        "cohort_n": 2026,
+        "cohort_n": 1908,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
         "probability": 0.99,
-        "raw_probability": 0.9891105719147163,
+        "raw_probability": 0.989458019672703,
         "reason": "Combined Under 3.5 is 98.9% (ML-calibrated 97.7%->98.4%, n=184)"
       },
       {
-        "cohort_n": 2026,
+        "cohort_n": 1908,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9447946699857629,
-        "raw_probability": 0.9460292381415376,
-        "reason": "Combined Under 2.5 is 94.6% (ML-calibrated 93.7%->93.6%, n=171)"
+        "probability": 0.9455863711802819,
+        "raw_probability": 0.9468219738561642,
+        "reason": "Combined Under 2.5 is 94.7% (ML-calibrated 93.7%->93.6%, n=171)"
       },
       {
-        "cohort_n": 2026,
+        "cohort_n": 1908,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.18038044202875703,
-        "raw_probability": 0.18230798434726062,
-        "reason": "Poisson expected hit rate is 18.2% (ML-calibrated 25.2%->24.2%, n=153)"
+        "probability": 0.18111477489168146,
+        "raw_probability": 0.18305016427859908,
+        "reason": "Poisson expected hit rate is 18.3% (ML-calibrated 25.2%->24.2%, n=153)"
       }
     ],
     "home": "Pachuca",
-    "kickoff": "22:00",
+    "kickoff": "23:00",
     "league": "Mexico,Liga Mx Apertura",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -1765,11 +1765,11 @@
     "market_type": "1x2",
     "match": "Pachuca vs Puebla",
     "min_lead_minutes": 30,
-    "ml_p": 0.5995,
+    "ml_p": 0.6044,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.59,
-    "odds_captured_at": "2026-08-17T18:24:42.697710+00:00",
+    "odds": 1.61,
+    "odds_captured_at": "2026-08-17T21:19:28.053160+00:00",
     "odds_league": "Liga MX Apertura",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
@@ -1780,15 +1780,15 @@
     "price_push_eligible": true,
     "recommended_enhancement": "match_over_25",
     "recommended_market": "avoid_raw_1x2",
-    "rule": "ml-meta avg_p>=55",
+    "rule": "ml-meta avg_p>=60",
     "source_weights": {},
     "sources_used": [
       "statarea",
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1357): Avg Goals: 3.30 | Over 2.5: 65.6% | BTTS: 43.6% | Home Over 1.5 Goals: 82.8% | Away Over 1.5 Goals: 10.6% | Top Scores: 1-0 (17.2%), 2-0 (17.2%)",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1295): Avg Goals: 3.29 | Over 2.5: 65.4% | BTTS: 43.0% | Home Over 1.5 Goals: 82.7% | Away Over 1.5 Goals: 10.3% | Top Scores: 2-0 (17.3%), 1-0 (17.3%)",
     "vitibet_index": 2.31,
-    "w_score": 0.4035
+    "w_score": 0.4238
   }
 ]
