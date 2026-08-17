@@ -98,9 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 5,
-   "inv_price_sum": 5.469113022623956,
-   "n": 8,
+   "hits": 9,
+   "inv_price_sum": 9.244280356012329,
+   "multi_n": 2,
+   "n": 14,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -109,9 +110,15 @@
     "2026-08-13|FC Nordsj\u00e6lland vs Valur Reykjavik|match_over_25@v1",
     "2026-08-14|Lask Linz vs Ried|match_over_25@v1",
     "2026-08-15|East Kilbride vs Cove Rangers|match_over_25@v1",
-    "2026-08-15|Union Saint-Gilloise vs Zulte Waregem|match_over_25@v1"
+    "2026-08-15|Union Saint-Gilloise vs Zulte Waregem|match_over_25@v1",
+    "2026-08-16|Rapid Vienna vs Grazer AK|match_over_25@v1",
+    "2026-08-16|Lyngby vs FC Midtjylland|match_over_25@v1",
+    "2026-08-16|Feyenoord vs Go Ahead Eagles|match_over_25@v1",
+    "2026-08-16|CSKA Sofia vs Botev Vratsa|match_over_25@v1",
+    "2026-08-16|Lazio vs Mantova|match_over_25@v1",
+    "2026-08-16|Twente vs PEC Zwolle|match_over_25@v1"
    ],
-   "profit": -0.48,
+   "profit": -0.04,
    "records": [
     {
      "date": "2026-08-01",
@@ -173,6 +180,54 @@
      "match": "Union Saint-Gilloise vs Zulte Waregem",
      "multi_source": false,
      "price": 1.65,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-16",
+     "hit": true,
+     "match": "Rapid Vienna vs Grazer AK",
+     "multi_source": false,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-16",
+     "hit": false,
+     "match": "Lyngby vs FC Midtjylland",
+     "multi_source": false,
+     "price": 1.56,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-16",
+     "hit": true,
+     "match": "Feyenoord vs Go Ahead Eagles",
+     "multi_source": true,
+     "price": 1.34,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-16",
+     "hit": true,
+     "match": "CSKA Sofia vs Botev Vratsa",
+     "multi_source": false,
+     "price": 1.9,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-16",
+     "hit": false,
+     "match": "Lazio vs Mantova",
+     "multi_source": true,
+     "price": 1.69,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-16",
+     "hit": true,
+     "match": "Twente vs PEC Zwolle",
+     "multi_source": false,
+     "price": 1.4,
      "source": "scoutingstats"
     }
    ],
