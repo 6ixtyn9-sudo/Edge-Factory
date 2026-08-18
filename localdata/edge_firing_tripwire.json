@@ -2,8 +2,8 @@
   "ceilings": [
     {
       "ceiling": true,
-      "gap_pp": 16.6,
-      "live_max_ml_p": 63.4,
+      "gap_pp": 18.7,
+      "live_max_ml_p": 61.3,
       "lowest_threshold": 80.0,
       "rule": "ml-meta avg_p>=80"
     }
@@ -12,15 +12,15 @@
   "edges": [
     {
       "decay": "WATCH",
-      "last_fired": "2026-08-17",
-      "n_last_window": 132,
+      "last_fired": "2026-08-18",
+      "n_last_window": 113,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
     {
       "decay": "WATCH",
-      "last_fired": "2026-08-18",
-      "n_last_window": 6,
+      "last_fired": "2026-08-19",
+      "n_last_window": 4,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
@@ -55,14 +55,14 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-17",
-      "n_last_window": 97,
+      "n_last_window": 91,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-08-10",
-      "n_last_window": 32,
+      "n_last_window": 24,
       "rule": "3way-unanimous avg_p>=65",
       "silent": false
     },
@@ -116,7 +116,7 @@
       "silent": true
     }
   ],
-  "generated_at": "2026-08-17T23:20:01",
+  "generated_at": "2026-08-18T02:34:30",
   "source_stale_days": 7,
   "sources": [
     {
@@ -127,13 +127,13 @@
     },
     {
       "name": "statarea",
-      "newest_date": "2026-08-16",
+      "newest_date": "2026-08-17",
       "newest_file": "statarea_2026-08.csv.gz",
       "stale": false
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-08-16",
+      "newest_date": "2026-08-17",
       "newest_file": "scoutingstats_2026-08.csv.gz",
       "stale": false
     },
@@ -145,7 +145,7 @@
     },
     {
       "name": "zulubet",
-      "newest_date": "2026-08-16",
+      "newest_date": "2026-08-17",
       "newest_file": "zulubet_2026-08.csv.gz",
       "stale": false
     },
@@ -181,7 +181,7 @@
     },
     {
       "name": "bettingclosed",
-      "newest_date": "2026-08-16",
+      "newest_date": "2026-08-17",
       "newest_file": "bettingclosed_2026-08.csv.gz",
       "stale": false
     },

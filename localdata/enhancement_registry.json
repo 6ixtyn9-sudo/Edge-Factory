@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 9,
-   "inv_price_sum": 9.244280356012329,
-   "multi_n": 2,
-   "n": 14,
+   "hits": 13,
+   "inv_price_sum": 11.673392263618858,
+   "multi_n": 3,
+   "n": 18,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -116,9 +116,13 @@
     "2026-08-16|Feyenoord vs Go Ahead Eagles|match_over_25@v1",
     "2026-08-16|CSKA Sofia vs Botev Vratsa|match_over_25@v1",
     "2026-08-16|Lazio vs Mantova|match_over_25@v1",
-    "2026-08-16|Twente vs PEC Zwolle|match_over_25@v1"
+    "2026-08-16|Twente vs PEC Zwolle|match_over_25@v1",
+    "2026-08-17|Universitatea Cluj vs UTA Arad|match_over_25@v1",
+    "2026-08-17|Sassuolo vs Cesena|match_over_25@v1",
+    "2026-08-17|Casa Pia vs Benfica|match_over_25@v1",
+    "2026-08-17|Brondby vs SonderjyskE|match_over_25@v1"
    ],
-   "profit": -0.04,
+   "profit": 2.63,
    "records": [
     {
      "date": "2026-08-01",
@@ -229,6 +233,38 @@
      "multi_source": false,
      "price": 1.4,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-17",
+     "hit": true,
+     "match": "Universitatea Cluj vs UTA Arad",
+     "multi_source": false,
+     "price": 2.0,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-17",
+     "hit": true,
+     "match": "Sassuolo vs Cesena",
+     "multi_source": true,
+     "price": 1.55,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-17",
+     "hit": true,
+     "match": "Casa Pia vs Benfica",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-17",
+     "hit": true,
+     "match": "Brondby vs SonderjyskE",
+     "multi_source": false,
+     "price": 1.62,
+     "source": "theoddsapi"
     }
    ],
    "status": "PAPER",
