@@ -5,21 +5,21 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-20",
-      "n_last_window": 123,
+      "n_last_window": 121,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-08-19",
-      "n_last_window": 6,
+      "n_last_window": 9,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
     {
       "decay": "WATCH",
-      "last_fired": "2026-08-19",
-      "n_last_window": 8,
+      "last_fired": "2026-08-16",
+      "n_last_window": 5,
       "rule": "ml-meta avg_p>=65",
       "silent": false
     },
@@ -46,8 +46,8 @@
     },
     {
       "decay": "WATCH",
-      "last_fired": "2026-08-19",
-      "n_last_window": 94,
+      "last_fired": "2026-08-20",
+      "n_last_window": 96,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -108,7 +108,7 @@
       "silent": true
     }
   ],
-  "generated_at": "2026-08-19T05:42:30",
+  "generated_at": "2026-08-19T08:28:30",
   "source_stale_days": 7,
   "sources": [
     {
