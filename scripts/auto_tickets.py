@@ -7,14 +7,16 @@ The operator's structure (no singles, ever):
   - total at risk per day = 38% of capital
 All output is percentages of capital only (no rand amounts).
 
-Selection (dynamic, positive-ROI buckets only):
-  - bucket in CERTIFIED_CLEAN + SKIPPED_VETO  (handover: SKIPPED_VETO 86.5% hit /
-    +11.8% ROI; CAUTION negative -> excluded)
-  - trusted price evidence only (BZZOIRO_PRIMARY / BETEXPLORER_RESCUE;
-    scoutingstats -33% -> excluded)
-  - edge rule x odds source combo must pass: n>=15, ROI>=+3%, Wilson LB>=0.68,
-    recent-20 ROI >= 0
-  - per-pick model edge >= MIN_EDGE at captured odds
+Selection (dynamic, positive-ROI streams only):
+  - bucket in CERTIFIED_CLEAN + SKIPPED_VETO + WATCHLIST_UNKNOWN_CTX +
+    WATCHLIST_UNCORROBORATED_PRICE. Rolling audit (2026-07-21..08-19):
+    veto +5.1%, unknown-ctx +8.1%, uncorroborated +4.0%. CAUTION / CLEAN
+    names do not override the combo ROI gate. SUSPECT_PRICE and NO_ODDS stay out.
+  - no hardcoded trusted-source allowlist and no source-level veto: a pick
+    rides only if its (rule x odds_source) combo itself has positive ROI.
+  - combo must pass: n>=15, lifetime ROI>=+3%, last-20 ROI>=0, newest settle
+    within 30 days. Wilson LB is a mild anti-coin-flip floor (0.50), not a
+    0.68 cliff that can bench a +13% combo at n=28.
 Ticket construction:
   - 2-ODD ACCAS: pair the qualifying picks (smallest odds x largest odds) so each
     pair lands as close to 2.00 as possible; N_ACCA2_TICKETS pairs.
@@ -56,8 +58,8 @@ IDEAL_POOL_LOOKBACK = 10     # trailing days used to derive the adaptive ideal p
 
 # ---------------- selection gates ----------------
 PASS_N = 15                  # min settled picks for a (rule, source) combo
-PASS_ROI = 0.03              # min realized ROI
-PASS_LB = 0.68               # Wilson lower bound on hit rate
+PASS_ROI = 0.03              # min realized ROI — the primary gate
+PASS_LB = 0.50               # Wilson floor only (not-a-coin-flip). ROI decides.
 RECENT_N = 20                # recency window per combo
 RECENT_ROI_MIN = 0.0         # combo must show this ROI on its last RECENT_N picks
 FRESHNESS_DAYS = 30          # combo's newest settled pick must be within this many days
@@ -72,12 +74,15 @@ MAX_ACCA10_LEGS = 9
 PAUSE_ROI = -0.10            # drawdown guard: last-20-ticket ROI below this pauses
 PAUSE_N = 20
 
-BUCKETS = {"CERTIFIED_CLEAN", "SKIPPED_VETO"}
-# No hardcoded trusted-price allowlist: a price source is trusted if it has at
-# least one (rule x source) combo that PASSES the edge table. This lets new
-# sources (e.g. ml-meta via forebet_best/zulubet) earn their way in as their
-# settled history proves positive edge, instead of being permanently blocked.
-# Kept as a name for readability; the real gate is _source_has_passing_combo().
+BUCKETS = {
+    "CERTIFIED_CLEAN",
+    "SKIPPED_VETO",
+    "WATCHLIST_UNKNOWN_CTX",
+    "WATCHLIST_UNCORROBORATED_PRICE",
+}
+# Soft-evidence / no-price streams with negative or unpriced ROI stay out:
+# CAUTION, WATCHLIST_SUSPECT_PRICE, WATCHLIST_NO_ODDS.
+# A source is not trusted globally. Only the (rule x source) combo ROI matters.
 GENERATE_HOUR_START = 6    # local time — tickets may START building on/after this hour
                            # (regenerate each run as the slate fills)
 FREEZE_HOUR = 12           # local time — the slip FREEZES on/after this hour (no more churn)
@@ -331,9 +336,10 @@ def main():
             continue
         rule = p.get("edge_rule") or p.get("rule")
         src = p.get("odds_source") or "UNKNOWN"
-        if not _source_has_passing_combo(table, src):
-            continue
-        if p.get("quarantine") not in (None, "none"):
+        # Fuzzy/suspect attachment stays out even if the bucket is playable.
+        # ScoutingStats-sole (uncorroborated) is allowed to reach the combo ROI gate.
+        q = str(p.get("quarantine") or "none").strip().lower()
+        if q in {"alias_fuzzy", "suspect", "suspect_alias_fuzzy"}:
             continue
         odds, avg_p = p.get("odds"), p.get("avg_p")
         try:
@@ -362,7 +368,7 @@ def main():
 
     if not today:
         print("NO EDGE TODAY — DO NOT BET")
-        print(f"({len(slate)} slate rows; 0 passed edge+trusted-price+bucket filters)")
+        print(f"({len(slate)} slate rows; 0 passed ROI-combo + bucket filters)")
         return 0
 
     today.sort(key=lambda x: -x["edge"])
