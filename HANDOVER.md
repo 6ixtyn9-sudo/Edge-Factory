@@ -5774,3 +5774,81 @@ mitigates it at the display layer but the real fix belongs in the engine.
 **Also flagged (verify on Mac):** Charlestown's ml-meta row showed avg 67%
 but w=1.00 (implies 73%) — a possible merge-field artifact; check the row in
 localdata/picks_2026-08-12.json if it ever gets graded.
+
+---
+
+## Addendum — 2026-08-20: heavy-run sentinel repair + truthful tripwire scope
+
+**Operator constraint:** no IDE/new machine is currently available. This repair
+is therefore shipped as full replacement files with checksums and browser-safe
+GitHub upload instructions. It changes no betting threshold, bucket, source
+weight, auto-ticket gate, stake, or notification policy.
+
+### Incident: future forecast archives starved the official heavy capture
+
+`picks_today.py` deliberately writes `picks_YYYY-MM-DD.json` for every processed
+day so tomorrow's all-bucket shortlist can receive odds. `run_smart_auto()`
+incorrectly treated existence of that same file as proof that the official
+heavy run had completed. The future planner therefore created tomorrow's
+"official" sentinel one day early; when tomorrow arrived, every scheduled run
+entered intraday mode and skipped `capture_daily.py`.
+
+Repository receipt: `picks_2026-08-20.json` first appeared on 2026-08-19 at
+02:35 SAST, while `picks_morning_2026-08-20.json` did not exist. Morning
+baseline files were absent from 2026-08-15 through 2026-08-20. This explains
+why healthy live adapters could keep producing current picks while their
+monthly capture files stayed dated 2026-08-04 through 2026-08-06.
+
+**Fix (`scripts/daily.py` + `.gitignore`):** a dedicated bot-persisted
+`localdata/official_run_YYYY-MM-DD.json` marker is now the ONLY proof that the
+heavy official pipeline completed. A forecast pick archive no longer selects
+intraday mode. When today's marker is absent, Smart Auto runs the complete
+capture/build/mine path with a current-day repick, then atomically writes the
+marker at successful completion. Empty slates are covered because completion,
+not pick count, is recorded. The first scheduled run after deployment will
+self-recover without a laptop: no marker exists yet, so it performs one heavy
+run and refreshes the source caches.
+
+### The former "16 warnings" were 15 unique findings
+
+The old count was 7 silent edges + 1 ceiling + 8 stale source caches. The
+`ml-meta>=80` edge was counted twice (silent and ceiled). Six of the seven
+silent rules were qualified analytical variants (`min_p` / `home-only`) that
+`picks_today.load_thresholds()` intentionally cannot emit operationally. The
+tripwire monitored every registry row with status `certified`, contradicting
+the picker and producing permanent false alarms. It also admitted tomorrow's
+forecast picks into the historical firing window and used a broad source glob
+that allowed `bzzoiro` to inspect `bzzoiro_odds`.
+
+**Fix (`scripts/edge_firing_tripwire.py`):** monitor only reachable canonical
+rules plus all ML thresholds; report excluded certified analytical rules
+separately as information; constrain firing dates to
+`today-silent_days <= date <= today`; classify a ceiled ML edge once rather
+than as both silent and ceiled; use exact monthly source filename patterns;
+retain source roles in telemetry. Warnings remain visibility-only and cannot
+select a bet.
+
+### Live-source falsification receipt
+
+Direct bounded adapter probes on 2026-08-20 returned current rows despite the
+stale-cache warnings: Forebet 141, Vitibet 203, PredictZ 92, WinDrawWin 33,
+aFootballReport 533, capped BetClan sample 10, FreeSuperTips 25. Today's
+committed picks also contain live Vitibet, BetClan and Bzzoiro votes. The main
+failure was capture orchestration/persistence, not provider death.
+
+### Verification
+
+- New/changed focused suites: 15/15 passed.
+- `py_compile`: clean on both production replacements and their tests.
+- `pyflakes`: clean on all touched Python files.
+- Full suite on patched tree: 260 passed / 8 failed.
+- Clean upstream base independently reproduces the exact same 8 failures
+  (255 passed / 8 failed before the five new tests): two stale debias test
+  expectations, four auto-ticket/grader contract mismatches plus its legacy
+  pause-state failure, and one audit-render wording mismatch. Therefore this
+  payload introduces zero full-suite regressions; those unrelated baseline
+  failures remain recorded rather than silently claimed green.
+
+**Replacement paths:** `.gitignore`, `scripts/daily.py`,
+`scripts/edge_firing_tripwire.py`, `tests/test_daily_orchestration.py`,
+`tests/test_edge_firing_tripwire.py`, and this `HANDOVER.md`.
