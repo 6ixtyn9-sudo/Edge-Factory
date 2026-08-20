@@ -8,6 +8,7 @@ so one merged wide row per match covers all markets.
 from __future__ import annotations
 
 import json
+import sys
 import time
 import urllib.request
 
@@ -24,21 +25,68 @@ MIN_DATE = "2024-01-01"
 DEFAULT_MARKETS = ("1x2", "uo", "bts")  # ht is certified charcoal; opt-in only
 
 
+CFFI_IMPERSONATIONS = ("safari17_0", "firefox133")
+
+
+def _decode_payload(raw: bytes | str) -> list[dict]:
+    """Decode and validate Forebet's ``[rows, meta]`` response.
+
+    A Cloudflare/challenge HTML page can return HTTP 200. Treating it as an
+    empty slate hid the cloud-capture failure for weeks, so invalid shape is a
+    transport failure, not ``[]``.
+    """
+    text = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw
+    data = json.loads(text)
+    if not (isinstance(data, list) and data and isinstance(data[0], list)):
+        raise ValueError("unexpected payload shape")
+    return data[0]
+
+
+def _urllib_get(url: str) -> bytes:
+    req = urllib.request.Request(url, headers=HEADERS)
+    with urllib.request.urlopen(req, timeout=30) as response:
+        return response.read()
+
+
+def _cffi_get(url: str, impersonate: str) -> bytes:
+    """Browser-TLS fallback for datacenter/Actions anti-bot responses."""
+    from curl_cffi import requests as curl_requests
+
+    # Let curl_cffi provide a User-Agent matching its TLS fingerprint; retain
+    # the endpoint-specific AJAX headers Forebet requires.
+    headers = {key: value for key, value in HEADERS.items() if key.lower() != "user-agent"}
+    headers["Accept-Language"] = "en-US,en;q=0.9"
+    response = curl_requests.get(
+        url,
+        impersonate=impersonate,
+        headers=headers,
+        timeout=30,
+    )
+    if response.status_code != 200:
+        raise RuntimeError(f"HTTP {response.status_code}")
+    return bytes(response.content)
+
+
 def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
+    """Fetch one market, falling back from urllib to browser impersonation."""
     url = f"{BASE}?ln=en&tp={tp}&in={date}&ord=0&tz=0&tzs=&tze="
-    for attempt in range(retries):
+    transports = [("urllib", lambda: _urllib_get(url))]
+    transports.extend(
+        (f"curl_cffi:{identity}", lambda identity=identity: _cffi_get(url, identity))
+        for identity in CFFI_IMPERSONATIONS
+    )
+    errors = []
+    attempt_limit = max(1, min(int(retries), len(transports)))
+    for attempt, (name, request) in enumerate(transports[:attempt_limit]):
         try:
-            req = urllib.request.Request(url, headers=HEADERS)
-            with urllib.request.urlopen(req, timeout=30) as r:
-                data = json.loads(r.read().decode("utf-8", "replace"))
-            if isinstance(data, list) and data and isinstance(data[0], list):
-                return data[0]
-            return []
-        except Exception:
-            if attempt == retries - 1:
-                raise
-            time.sleep(1.5 * (attempt + 1))
-    return []
+            return _decode_payload(request())
+        except Exception as exc:  # noqa: BLE001 - retry with a distinct transport
+            errors.append(f"{name}={type(exc).__name__}")
+            if attempt + 1 < attempt_limit:
+                time.sleep(1.5 * (attempt + 1))
+    raise RuntimeError(
+        f"Forebet {tp} {date} failed across transports: {', '.join(errors)}"
+    )
 
 
 def _f(v):
@@ -61,10 +109,12 @@ def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[d
     if date < MIN_DATE:
         return []
     rows: dict[str, dict] = {}
+    failures: list[str] = []
     for tp in markets:
         try:
             payload = _get(tp, date)
-        except Exception:
+        except Exception as exc:  # noqa: BLE001 - preserve partial markets, report failure
+            failures.append(f"{tp}:{type(exc).__name__}")
             payload = []
         for m in payload:
             mid = str(m.get("id"))
@@ -108,6 +158,18 @@ def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[d
                     p2_ht=_f(m.get("Pred_2_HT")),
                 )
         time.sleep(sleep)
+    if failures and not rows:
+        # local_backfill must not mark an anti-bot/error response as a completed
+        # zero-fixture day. Raising keeps the day retryable and makes the cause
+        # visible in Actions logs.
+        raise RuntimeError(
+            f"Forebet {date}: no usable rows; failed markets={','.join(failures)}"
+        )
+    if failures:
+        print(
+            f"Forebet {date}: partial capture; failed markets={','.join(failures)}",
+            file=sys.stderr,
+        )
     return list(rows.values())
 
 
