@@ -12,6 +12,7 @@ import os
 import sys
 import time
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
 
 BASE = "https://www.forebet.com/scripts/getrs.php"
 HEADERS = {
@@ -164,6 +165,40 @@ def _i(v):
         return None
 
 
+def _fetch_market_payloads(
+    date: str,
+    markets: tuple[str, ...],
+    sleep: float,
+) -> tuple[dict[str, list[dict]], list[str]]:
+    """Fetch independent markets, concurrently only on the validated relay.
+
+    Results are returned by market key and consumed later in the caller's
+    original order, so concurrency changes wall-clock time—not merge semantics.
+    Local/direct traffic remains sequential and retains its politeness delay.
+    """
+    payloads: dict[str, list[dict]] = {}
+    failures: list[str] = []
+    if _cloud_fetch_mode() == "relay" and len(markets) > 1:
+        with ThreadPoolExecutor(max_workers=min(4, len(markets))) as executor:
+            futures = {market: executor.submit(_get, market, date) for market in markets}
+            for market in markets:
+                try:
+                    payloads[market] = futures[market].result()
+                except Exception as exc:  # noqa: BLE001 - preserve partial markets
+                    failures.append(f"{market}:{type(exc).__name__}")
+                    payloads[market] = []
+        return payloads, failures
+
+    for market in markets:
+        try:
+            payloads[market] = _get(market, date)
+        except Exception as exc:  # noqa: BLE001 - preserve partial markets
+            failures.append(f"{market}:{type(exc).__name__}")
+            payloads[market] = []
+        time.sleep(sleep)
+    return payloads, failures
+
+
 def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[dict]:
     """Fetch one calendar day, merge all market endpoints by match id."""
     if date < MIN_DATE:
@@ -173,15 +208,11 @@ def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[d
             "Forebet cloud fetch explicitly disabled; unset "
             f"{CLOUD_RETRY_ENV} to restore the validated relay"
         )
+    market_order = tuple(markets)
+    payloads, failures = _fetch_market_payloads(date, market_order, sleep)
     rows: dict[str, dict] = {}
-    failures: list[str] = []
-    for tp in markets:
-        try:
-            payload = _get(tp, date)
-        except Exception as exc:  # noqa: BLE001 - preserve partial markets, report failure
-            failures.append(f"{tp}:{type(exc).__name__}")
-            payload = []
-        for m in payload:
+    for tp in market_order:
+        for m in payloads.get(tp, []):
             mid = str(m.get("id"))
             row = rows.setdefault(
                 mid,
@@ -222,7 +253,6 @@ def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[d
                     p1_ht=_f(m.get("Pred_1_HT")), px_ht=_f(m.get("Pred_X_HT")),
                     p2_ht=_f(m.get("Pred_2_HT")),
                 )
-        time.sleep(sleep)
     if failures and not rows:
         # local_backfill must not mark an anti-bot/error response as a completed
         # zero-fixture day. Raising keeps the day retryable and makes the cause
