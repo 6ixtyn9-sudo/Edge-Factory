@@ -28,6 +28,7 @@ from edgefactory.util import (
     ledger_team_key,
     display_rule_label,
     honest_display_label,
+    strip_retired_top_scores,
 )
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
@@ -302,26 +303,16 @@ def fetch_historical_profile(con, selection: str, avg_p: float, n_way: int) -> s
             
         n, avg_goals, over25, btts, home_o15, away_o15 = row
         
-        # Extract top 2 scorelines
-        score_q = f"""
-            SELECT f.hs || '-' || f.gs AS scoreline, COUNT(*) as cnt
-            FROM {view_name} c
-            JOIN forebet_settled f ON c.date = f.date AND c.home = f.home AND c.away = f.away
-            WHERE c.outcome = ? AND {agree_cond}
-              AND c.avg_p BETWEEN ? AND ?
-            GROUP BY 1
-            ORDER BY cnt DESC
-            LIMIT 2
-        """
-        score_rows = con.execute(score_q, [sel, *params, p_min, p_max]).fetchall()
-        score_strs = []
-        for s, c in score_rows:
-            score_strs.append(f"{s} ({c/n:.1%})")
-            
-        score_display = ", ".join(score_strs) if score_strs else "n/a"
-        
-        comment = f"📊 Realized Stats on {sel.capitalize()} Win (n={n}): Avg Goals: {avg_goals:.2f} | Over 2.5: {over25:.1%} | BTTS: {btts:.1%} | Home Over 1.5 Goals: {home_o15:.1%} | Away Over 1.5 Goals: {away_o15:.1%} | Top Scores: {score_display}"
-        return comment
+        # Exact Top Scores were retired after the rolling audit measured only
+        # 49/498 candidate hits (9.8%) versus 15.3% promised. Do not query or
+        # emit that surface for new picks; the audit parser still preserves
+        # legacy observations until they age out of the rolling window.
+        return (
+            f"📊 Realized Stats on {sel.capitalize()} Win (n={n}): "
+            f"Avg Goals: {avg_goals:.2f} | Over 2.5: {over25:.1%} | "
+            f"BTTS: {btts:.1%} | Home Over 1.5 Goals: {home_o15:.1%} | "
+            f"Away Over 1.5 Goals: {away_o15:.1%}"
+        )
     except Exception:
         return None
 
@@ -2808,8 +2799,9 @@ def print_buckets(buckets: dict, title_date: str = ""):
                     f"     suspect_price={suspect.get('odds')} source={suspect.get('source')} "
                     f"method={suspect.get('match_method')}"
                 )
-            if p.get("statistical_comment"):
-                print(f"     {p['statistical_comment']}")
+            statistical_comment = strip_retired_top_scores(p.get("statistical_comment"))
+            if statistical_comment:
+                print(f"     {statistical_comment}")
             notes = p.get("event_notes", [])
             if notes:
                 event_text = " | ".join(
@@ -2821,7 +2813,6 @@ def print_buckets(buckets: dict, title_date: str = ""):
                 print(f"     🔥{shadow_tag} Possible Events: {event_text}")
             rec_market = p.get("recommended_enhancement")
             if rec_market:
-                rec_state = p.get("enhancement_state") or "SHADOW"
                 rec_label = p.get("enhancement_label") or str(rec_market).replace("_", " ")
                 # RT-6: archived/legacy picks can carry None or string probabilities —
                 # a formatting crash here would kill the whole render.
