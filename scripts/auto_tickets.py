@@ -40,7 +40,7 @@ import math
 import re
 import sys
 from collections import defaultdict
-from datetime import date, datetime, timedelta
+from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -198,7 +198,6 @@ def build_edge_table(picks, settled, target_date=None):
         lb = wilson_lb(wins, n)
         recent = rows[-RECENT_N:]
         rn = len(recent)
-        rw = sum(1 for _, r, _ in recent if r == "win")
         rret = sum(o for _, r, o in recent if r == "win")
         roi_recent = (rret - rn) / rn if rn else 0.0
         # Recency evidence is REQUIRED: rn==0 (no settled picks in the count
@@ -235,8 +234,17 @@ def load_pause_state():
     settled = [t for t in detail if t.get("result") in ("WIN", "LOSS")][-PAUSE_N:]
     if len(settled) < PAUSE_N:
         return False
-    staked = sum(t.get("stake", 1.0) for t in settled)
-    ret = sum(t.get("returned", 0.0) for t in settled)
+    # Legacy slips deliberately store stake/returned as None because their
+    # adaptive deployment was never recorded. They must contribute zero—not
+    # an invented 1.0 stake, and not a TypeError—to the drawdown calculation.
+    def recorded_amount(value) -> float:
+        try:
+            return float(value) if value is not None else 0.0
+        except (TypeError, ValueError):
+            return 0.0
+
+    staked = sum(recorded_amount(t.get("stake")) for t in settled)
+    ret = sum(recorded_amount(t.get("returned")) for t in settled)
     return (ret - staked) / staked < PAUSE_ROI if staked else False
 
 
