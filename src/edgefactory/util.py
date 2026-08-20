@@ -113,6 +113,17 @@ def norm_league(name: object) -> str:
     return spaced or "unknown"
 
 
+def strip_retired_top_scores(comment: object) -> str:
+    """Remove the retired ``Top Scores`` tail from a statistical comment.
+
+    Historical archives remain byte-unchanged for audit provenance. Human
+    renderers call this helper so legacy rows stop displaying the retired
+    exact-score surface immediately.
+    """
+    text = str(comment or "")
+    return re.sub(r"\s*\|\s*Top Scores:\s*.*$", "", text, flags=re.IGNORECASE).strip()
+
+
 # Same legacy team normalization expressed as a DuckDB SQL expression.
 def norm_team_sql(col: str, width: int = 9) -> str:
     noise = (
