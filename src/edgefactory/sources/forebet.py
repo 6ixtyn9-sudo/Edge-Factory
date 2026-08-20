@@ -8,6 +8,7 @@ so one merged wide row per match covers all markets.
 from __future__ import annotations
 
 import json
+import os
 import sys
 import time
 import urllib.request
@@ -26,6 +27,22 @@ DEFAULT_MARKETS = ("1x2", "uo", "bts")  # ht is certified charcoal; opt-in only
 
 
 CFFI_IMPERSONATIONS = ("safari17_0", "firefox133")
+CLOUD_RETRY_ENV = "EDGE_FACTORY_FOREBET_CLOUD"
+
+
+def _cloud_fetch_disabled() -> bool:
+    """Fail fast on GitHub-hosted runners after a confirmed provider block.
+
+    Run #503 spent almost 19 minutes in intraday execution while every
+    urllib/curl_cffi Forebet transport still produced zero usable votes. The
+    provider is reachable locally, so local operation remains enabled. An
+    explicit opt-in keeps cloud re-probing possible without another code edit.
+    """
+    in_actions = os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true"
+    opt_in = os.environ.get(CLOUD_RETRY_ENV, "").strip().lower() in {
+        "1", "true", "yes", "on"
+    }
+    return in_actions and not opt_in
 
 
 def _decode_payload(raw: bytes | str) -> list[dict]:
@@ -108,6 +125,11 @@ def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[d
     """Fetch one calendar day, merge all market endpoints by match id."""
     if date < MIN_DATE:
         return []
+    if _cloud_fetch_disabled():
+        raise RuntimeError(
+            "Forebet cloud fetch disabled after confirmed GitHub Actions provider block; "
+            f"set {CLOUD_RETRY_ENV}=1 for a deliberate retry"
+        )
     rows: dict[str, dict] = {}
     failures: list[str] = []
     for tp in markets:
