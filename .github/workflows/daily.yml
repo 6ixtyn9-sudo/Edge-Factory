@@ -27,7 +27,7 @@ concurrency:
 jobs:
   run-autonomous-agent:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
 
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
