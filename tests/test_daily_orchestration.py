@@ -15,13 +15,20 @@ assert SPEC is not None and SPEC.loader is not None
 SPEC.loader.exec_module(daily)
 
 
+@patch("daily.run_soft")
 @patch("daily.run_pipeline")
+@patch("daily.official_run_marker_file")
 @patch("daily.archived_picks_file")
-def test_run_smart_auto_missing_archive(mock_archived_file, mock_run_pipeline):
-    """Test that missing official archive triggers the official morning full run."""
-    mock_path = MagicMock()
-    mock_path.exists.return_value = False
-    mock_archived_file.return_value = mock_path
+def test_run_smart_auto_forecast_archive_without_marker_runs_heavy(
+    mock_archived_file, mock_marker_file, mock_run_pipeline, mock_run_soft
+):
+    """A future-planner archive must not suppress today's heavy official run."""
+    archive = MagicMock()
+    archive.exists.return_value = True  # yesterday's forecast shortlist exists
+    mock_archived_file.return_value = archive
+    marker = MagicMock()
+    marker.exists.return_value = False
+    mock_marker_file.return_value = marker
 
     with patch("daily.datetime") as mock_dt:
         mock_dt.now.return_value.strftime.side_effect = lambda fmt: "2026-06-18" if "%Y" in fmt else "0600"
@@ -34,18 +41,26 @@ def test_run_smart_auto_missing_archive(mock_archived_file, mock_run_pipeline):
             mode="official",
             future_days=2,
             backfill_days=30,
-            force_repick=False,
+            force_repick=True,
             picks_only=False,
         )
+        assert any("edge_firing_tripwire.py" in call.args[0] for call in mock_run_soft.call_args_list)
 
 
+@patch("daily.run_soft")
 @patch("daily.run_pipeline")
+@patch("daily.official_run_marker_file")
 @patch("daily.archived_picks_file")
-def test_run_smart_auto_existing_archive(mock_archived_file, mock_run_pipeline):
-    """Test that existing official archive triggers an autonomous accumulating run."""
-    mock_path = MagicMock()
-    mock_path.exists.return_value = True
-    mock_archived_file.return_value = mock_path
+def test_run_smart_auto_marker_triggers_intraday(
+    mock_archived_file, mock_marker_file, mock_run_pipeline, mock_run_soft
+):
+    """Only the heavy-run completion marker authorizes intraday mode."""
+    archive = MagicMock()
+    archive.exists.return_value = True
+    mock_archived_file.return_value = archive
+    marker = MagicMock()
+    marker.exists.return_value = True
+    mock_marker_file.return_value = marker
 
     with patch("daily.datetime") as mock_dt:
         mock_dt.now.return_value.strftime.side_effect = lambda fmt: "2026-06-18" if "%Y" in fmt else "1100"
@@ -61,6 +76,7 @@ def test_run_smart_auto_existing_archive(mock_archived_file, mock_run_pipeline):
             force_repick=True,
             picks_only=True,
         )
+        assert any("edge_firing_tripwire.py" in call.args[0] for call in mock_run_soft.call_args_list)
 
 
 @patch("daily.run_soft")
@@ -95,6 +111,24 @@ def test_result_refresh_command_targets_yesterday_only():
     assert daily.result_refresh_cmd("2026-08-05") == (
         "PYTHONPATH=src python3 scripts/refresh_result_sources.py --date 2026-08-04"
     )
+
+
+def test_official_run_marker_is_atomic_and_independent_of_pick_archive(tmp_path):
+    with patch.object(daily, "REPORT_DIR", tmp_path):
+        # A future forecast archive may already exist; it is not the marker.
+        daily.archived_picks_file("2026-08-20").write_text("[]")
+        assert not daily.official_run_marker_file("2026-08-20").exists()
+
+        path = daily.mark_official_run_complete(
+            "2026-08-20", "2026-08-20T06:00:00+02:00"
+        )
+        payload = json.loads(path.read_text())
+
+    assert payload["schema"] == 1
+    assert payload["target_date"] == "2026-08-20"
+    assert payload["pipeline"] == "official_heavy"
+    assert payload["run_as_of"] == "2026-08-20T06:00:00+02:00"
+    assert not path.with_suffix(".json.tmp").exists()
 
 
 def test_autonomous_intraday_merge():
