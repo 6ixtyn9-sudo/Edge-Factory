@@ -45,7 +45,12 @@ from typing import Any
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.util import ledger_team_key, honest_display_label, heal_ledger_labels  # noqa: E402
+from edgefactory.util import (  # noqa: E402
+    ledger_team_key,
+    honest_display_label,
+    heal_ledger_labels,
+    strip_retired_top_scores,
+)
 
 REPORT_DIR = ROOT / "localdata"
 PICKS_TODAY_FILE = REPORT_DIR / "picks_today.json"
@@ -440,8 +445,9 @@ def generate_daily_report(
                     f"league={ctx.get('league_key', 'UNKNOWN')}:{ctx.get('league', '?')}  "
                     f"odds_band={ctx.get('odds_band_name', '?')}:{ctx.get('odds_band', '?')}"
                 )
-                if p.get("statistical_comment"):
-                    lines.append(f"     {p['statistical_comment']}")
+                statistical_comment = strip_retired_top_scores(p.get("statistical_comment"))
+                if statistical_comment:
+                    lines.append(f"     {statistical_comment}")
                 notes = p.get("event_notes", [])
                 if notes:
                     event_text = " | ".join(
