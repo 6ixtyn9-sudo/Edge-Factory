@@ -98,30 +98,59 @@ def test_fetch_day_preserves_partial_market_capture(monkeypatch, capsys):
     assert "partial capture" in capsys.readouterr().err
 
 
-def test_github_actions_block_fails_fast_without_calling_transport(monkeypatch):
+def test_relay_wrapper_requires_exact_source_and_single_marker():
+    source = "https://www.forebet.com/scripts/getrs.php?x=1"
+    wrapped = f"Title: \n\nURL Source: {source}\n\n{forebet.RELAY_MARKER}".encode() + _raw([_row()])
+    assert forebet._unwrap_relay(wrapped, source) == _raw([_row()])
+
+    with pytest.raises(ValueError, match="source URL mismatch"):
+        forebet._unwrap_relay(wrapped, source + "&other=1")
+    with pytest.raises(ValueError, match="marker count"):
+        forebet._unwrap_relay(b"no wrapper", source)
+
+
+def test_github_actions_uses_relay_without_direct_transport(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.delenv(forebet.CLOUD_RETRY_ENV, raising=False)
-    monkeypatch.setattr(
-        forebet,
-        "_get",
-        lambda *_args, **_kwargs: (_ for _ in ()).throw(
-            AssertionError("transport must not be called")
-        ),
-    )
-
-    with pytest.raises(RuntimeError, match="cloud fetch disabled"):
-        forebet.fetch_day("2026-08-20", sleep=0)
-
-
-def test_github_actions_retry_requires_explicit_opt_in(monkeypatch):
-    monkeypatch.setenv("GITHUB_ACTIONS", "true")
-    monkeypatch.setenv(forebet.CLOUD_RETRY_ENV, "1")
     calls = []
     monkeypatch.setattr(
         forebet,
-        "_get",
-        lambda market, _day: calls.append(market) or [],
+        "_relay_get",
+        lambda url: calls.append(url) or _raw([_row()]),
+    )
+    monkeypatch.setattr(
+        forebet,
+        "_urllib_get",
+        lambda _url: (_ for _ in ()).throw(AssertionError("direct transport called")),
     )
 
-    assert forebet.fetch_day("2026-08-20", sleep=0) == []
-    assert calls == list(forebet.DEFAULT_MARKETS)
+    rows = forebet._get("1x2", "2026-08-20")
+    assert len(rows) == 1
+    assert calls and calls[0].startswith(forebet.BASE)
+
+
+def test_github_actions_can_be_explicitly_disabled(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv(forebet.CLOUD_RETRY_ENV, "off")
+    with pytest.raises(RuntimeError, match="explicitly disabled"):
+        forebet.fetch_day("2026-08-20", sleep=0)
+
+
+def test_github_actions_direct_retry_requires_explicit_opt_in(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv(forebet.CLOUD_RETRY_ENV, "direct")
+    calls = []
+    monkeypatch.setattr(
+        forebet,
+        "_urllib_get",
+        lambda url: calls.append(url) or _raw([_row()]),
+    )
+    monkeypatch.setattr(
+        forebet,
+        "_relay_get",
+        lambda _url: (_ for _ in ()).throw(AssertionError("relay called")),
+    )
+
+    rows = forebet._get("1x2", "2026-08-20")
+    assert len(rows) == 1
+    assert len(calls) == 1
