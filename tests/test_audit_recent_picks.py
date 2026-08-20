@@ -326,7 +326,8 @@ def test_aggregate_statline_math():
     assert o25["n"] == 2 and o25["hits"] == 1
     assert o25["brier"] == round((0.688**2 + (1 - 0.40) ** 2) / 2, 6)
     assert cal["by_metric"]["btts"]["realized"] == 1.0
-    assert cal["by_metric"]["top_score"]["n"] == 1
+    assert cal["by_metric"]["top_score"]["n"] == 1  # legacy machine history retained
+    assert sum(slot["n"] for slot in cal["promised_buckets"]) == 4  # retired score excluded
     ag = cal["avg_goals"]
     assert ag["n"] == 2
     assert ag["mae"] == round((abs(3.51 - 2) + abs(2.10 - 3)) / 2, 6)  # 1.205
@@ -553,6 +554,10 @@ def test_write_markdown_full_surface_sections(tmp_path, monkeypatch):
     assert "SCOUTINGSTATS_SOLE" in text
     assert "SUSPECT_ALIAS_FUZZY" in text
     assert "alias_fuzzy" in text
+    # Retired exact-score surface remains machine-auditable but is no longer
+    # rendered in either aggregate or per-pick operator reports.
+    assert "Top Scores" not in text
+    assert "2-0 (16.9%)" not in text
 
     # Per-pick graded 🔥 render (Addendum 13/14): one event per line in the 📊
     # layout — expected % + realized context; note-less picks render
