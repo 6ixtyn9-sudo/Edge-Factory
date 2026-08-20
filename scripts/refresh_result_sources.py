@@ -129,11 +129,23 @@ def _write_rows(path: Path, columns: list[str], rows: dict[tuple[str, str, str],
             writer.writerow({column: row.get(column, "") for column in columns})
 
 
+def _fetch_result_rows(module: Any, source: str, day: str) -> list[dict[str, Any]]:
+    """Fetch only the market surface required for result settlement.
+
+    Forebet's 1X2 payload already includes FT/HT scores and terminal status;
+    requesting O/U and BTTS here spent two extra relay calls whose prediction
+    fields are deliberately discarded by this refresher.
+    """
+    if source == "forebet":
+        return list(module.fetch_day(day, markets=("1x2",)) or [])
+    return list(module.fetch_day(day) or [])
+
+
 def refresh_source(source: str, day: str, *, localdata: Path = LOCALDATA) -> dict[str, Any]:
     """Fetch one completed day and upsert scores or terminal event statuses."""
     try:
         module = importlib.import_module(f"edgefactory.sources.{source}")
-        fetched = list(module.fetch_day(day) or [])
+        fetched = _fetch_result_rows(module, source, day)
     except Exception as exc:  # noqa: BLE001 - report the source class, never abort the batch
         return {"source": source, "status": f"ERROR:{type(exc).__name__}", "raw": 0, "scored": 0, "terminal_status": 0, "new": 0, "updated": 0}
 
