@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import threading
 
 import pytest
 
@@ -127,6 +128,24 @@ def test_github_actions_uses_relay_without_direct_transport(monkeypatch):
     rows = forebet._get("1x2", "2026-08-20")
     assert len(rows) == 1
     assert calls and calls[0].startswith(forebet.BASE)
+
+
+def test_github_relay_fetches_independent_markets_concurrently(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.delenv(forebet.CLOUD_RETRY_ENV, raising=False)
+    barrier = threading.Barrier(len(forebet.DEFAULT_MARKETS))
+    calls = []
+
+    def concurrent_get(market, _day):
+        calls.append(market)
+        barrier.wait(timeout=2)
+        return [_row()]
+
+    monkeypatch.setattr(forebet, "_get", concurrent_get)
+    rows = forebet.fetch_day("2026-08-20", sleep=0)
+
+    assert len(rows) == 1
+    assert set(calls) == set(forebet.DEFAULT_MARKETS)
 
 
 def test_github_actions_can_be_explicitly_disabled(monkeypatch):
