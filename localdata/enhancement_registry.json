@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 16,
-   "inv_price_sum": 13.863451968869386,
-   "multi_n": 4,
-   "n": 22,
+   "hits": 17,
+   "inv_price_sum": 14.373656050502039,
+   "multi_n": 5,
+   "n": 23,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -124,9 +124,10 @@
     "2026-08-18|Palestino vs Huachipato|match_over_25@v1",
     "2026-08-18|Pachuca vs Puebla|match_over_25@v1",
     "2026-08-19|Celtic vs Lask Linz|match_over_25@v1",
-    "2026-08-19|Deportes Tolima vs Independiente Del Valle|match_over_25@v1"
+    "2026-08-19|Deportes Tolima vs Independiente Del Valle|match_over_25@v1",
+    "2026-08-19|Vila Nova vs Ponte Preta|match_over_25@v1"
    ],
-   "profit": 3.62,
+   "profit": 4.58,
    "records": [
     {
      "date": "2026-08-01",
@@ -301,6 +302,14 @@
      "multi_source": false,
      "price": 2.6,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-19",
+     "hit": true,
+     "match": "Vila Nova vs Ponte Preta",
+     "multi_source": true,
+     "price": 1.96,
+     "source": "theoddsapi"
     }
    ],
    "status": "PAPER",
