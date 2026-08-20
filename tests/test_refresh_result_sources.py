@@ -57,9 +57,11 @@ def test_refresh_source_writes_only_settled_score_fields(tmp_path, monkeypatch):
         {refresh.row_key(baseline): baseline},
     )
 
-    fake = SimpleNamespace(
-        COLUMNS=list(baseline),
-        fetch_day=lambda _: [
+    calls = []
+
+    def fetch_forebet(requested_day, markets=None):
+        calls.append((requested_day, markets))
+        return [
             {
                 "date": day,
                 "home": "Carabobo FC",
@@ -78,8 +80,9 @@ def test_refresh_source_writes_only_settled_score_fields(tmp_path, monkeypatch):
                 "hs": None,
                 "gs": None,
             },
-        ],
-    )
+        ]
+
+    fake = SimpleNamespace(COLUMNS=list(baseline), fetch_day=fetch_forebet)
     monkeypatch.setattr(refresh.importlib, "import_module", lambda _: fake)
 
     receipt = refresh.refresh_source("forebet", day, localdata=localdata)
@@ -90,6 +93,7 @@ def test_refresh_source_writes_only_settled_score_fields(tmp_path, monkeypatch):
         "source": "forebet", "status": "OK", "raw": 2,
         "scored": 1, "terminal_status": 0, "new": 0, "updated": 1,
     }
+    assert calls == [(day, ("1x2",))]
     assert (row["p1"], row["px"], row["p2"]) == ("0.66", "0.21", "0.13")
     assert (row["hs"], row["gs"], row["status"]) == ("2", "0", "FT")
 
@@ -134,7 +138,7 @@ def test_refresh_source_persists_positive_terminal_status(tmp_path, monkeypatch)
     refresh._write_rows(path, list(baseline), {refresh.row_key(baseline): baseline})
     fake = SimpleNamespace(
         COLUMNS=list(baseline),
-        fetch_day=lambda _: [{
+        fetch_day=lambda _day, markets=None: [{
             "date": day, "home": "Super Nova", "away": "Riga",
             "p1": None, "px": None, "p2": None, "hs": None, "gs": None, "status": "Postp.",
         }],
