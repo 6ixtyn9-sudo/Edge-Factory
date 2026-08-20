@@ -183,6 +183,35 @@ def morning_baseline_file(target_date: str) -> Path:
     return REPORT_DIR / f"picks_morning_{target_date}.json"
 
 
+def official_run_marker_file(target_date: str) -> Path:
+    """Completion marker for the heavy official pipeline.
+
+    A dated picks archive is NOT a completion marker: the future planner
+    deliberately creates ``picks_YYYY-MM-DD.json`` before that date so the
+    odds-capture shortlist can price tomorrow's fixtures.  Using archive
+    existence to select intraday mode starved capture_daily on the next day.
+    """
+    return REPORT_DIR / f"official_run_{target_date}.json"
+
+
+def mark_official_run_complete(target_date: str, run_as_of: str) -> Path:
+    """Atomically record a successful heavy official run, including empty slates."""
+    REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    path = official_run_marker_file(target_date)
+    payload = {
+        "schema": 1,
+        "target_date": target_date,
+        "completed_at": datetime.now(local_tz()).isoformat(timespec="seconds"),
+        "run_as_of": run_as_of,
+        "pipeline": "official_heavy",
+    }
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
+    tmp.replace(path)
+    print(f"  official heavy-run marker: {path}")
+    return path
+
+
 def save_morning_baseline(target_date: str, picks_text: str | None, *, overwrite: bool = False) -> None:
     if picks_text is None:
         return
@@ -811,6 +840,13 @@ def run_pipeline(
         )
         sync_official_archive(target_date, "sync_supabase")
         _notify(target_date, "notify (Smart Dispatch + empty-slate heartbeat)")
+        if not picks_only:
+            # This marker, rather than picks_YYYY-MM-DD.json, proves that the
+            # heavy capture/build/mine path completed.  Future forecast
+            # archives can exist without suppressing tomorrow's official run.
+            mark_official_run_complete(target_date, run_as_of)
+        else:
+            print("  picks-only official run: heavy-run marker intentionally not written")
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "autonomous_intraday":
@@ -989,27 +1025,33 @@ def run_smart_auto(future_days: int, backfill_days: int, force_repick: bool = Fa
     target_date = now.strftime("%Y-%m-%d")
 
     target_archive = archived_picks_file(target_date)
+    official_marker = official_run_marker_file(target_date)
 
     print(f"\n=== Smart Autonomous Schedule Execution — {now.strftime('%Y-%m-%d %H:%M:%S')} ===")
     print(f"    target date: {target_date}")
     print(f"    local time : {now.strftime('%H:%M:%S %Z')}")
-    
-    # If force_repick is True, we treat it as if the archive doesn't exist to trigger a full regeneration
-    archive_exists = target_archive.exists() and not force_repick
-    print(f"    archive    : {'EXISTS (Running Accumulating Discovery)' if archive_exists else 'MISSING/FORCED (Running Full Morning Heavy Run)'}")
 
-    if not archive_exists:
-        print(f"\n>>> [Smart Auto] Case 1: No valid official archive for {target_date}. Executing Official Full Run.")
+    # Forecast archives are created one day early on purpose for odds capture.
+    # They must never masquerade as proof that today's heavy official pipeline
+    # ran.  Only the dedicated completion marker selects intraday mode.
+    official_complete = official_marker.exists() and not force_repick
+    print(f"    archive    : {'EXISTS (forecast/official rows available)' if target_archive.exists() else 'MISSING'}")
+    print(f"    official   : {'COMPLETE (intraday mode)' if official_complete else 'MISSING/FORCED (heavy mode)'}")
+
+    if not official_complete:
+        print(f"\n>>> [Smart Auto] Case 1: No official heavy-run marker for {target_date}. Executing Official Full Run.")
         run_pipeline(
             target_date=target_date,
             mode="official",
             future_days=future_days,
             backfill_days=backfill_days,
-            force_repick=force_repick,
+            # A pre-existing archive may be yesterday's forecast shortlist.
+            # Regenerate current-day truth during the official run.
+            force_repick=True,
             picks_only=picks_only,
         )
     else:
-        print(f"\n>>> [Smart Auto] Case 2: Official archive exists for {target_date}. Executing Intraday Accumulating Discovery & CLV Capture.")
+        print(f"\n>>> [Smart Auto] Case 2: Official heavy run completed for {target_date}. Executing Intraday Accumulating Discovery & CLV Capture.")
         run_pipeline(
             target_date=target_date,
             mode="autonomous_intraday",
