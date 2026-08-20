@@ -28,21 +28,27 @@ DEFAULT_MARKETS = ("1x2", "uo", "bts")  # ht is certified charcoal; opt-in only
 
 CFFI_IMPERSONATIONS = ("safari17_0", "firefox133")
 CLOUD_RETRY_ENV = "EDGE_FACTORY_FOREBET_CLOUD"
+RELAY_BASE = "https://r.jina.ai/"
+RELAY_TIMEOUT_SECONDS = 25
+RELAY_MARKER = "Markdown Content:\n"
 
 
-def _cloud_fetch_disabled() -> bool:
-    """Fail fast on GitHub-hosted runners after a confirmed provider block.
+def _cloud_fetch_mode() -> str:
+    """Return ``local``, ``relay``, ``direct`` or ``disabled``.
 
-    Run #503 spent almost 19 minutes in intraday execution while every
-    urllib/curl_cffi Forebet transport still produced zero usable votes. The
-    provider is reachable locally, so local operation remains enabled. An
-    explicit opt-in keeps cloud re-probing possible without another code edit.
+    GitHub's own IP path is blocked by Forebet even with browser TLS, but the
+    public Jina Reader relay returns the endpoint's JSON byte-for-byte. Relay
+    is therefore the cloud default. Operators can explicitly choose a direct
+    re-probe or fail-fast disable without changing code.
     """
-    in_actions = os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true"
-    opt_in = os.environ.get(CLOUD_RETRY_ENV, "").strip().lower() in {
-        "1", "true", "yes", "on"
-    }
-    return in_actions and not opt_in
+    if os.environ.get("GITHUB_ACTIONS", "").strip().lower() != "true":
+        return "local"
+    value = os.environ.get(CLOUD_RETRY_ENV, "").strip().lower()
+    if value in {"0", "false", "no", "off", "disabled"}:
+        return "disabled"
+    if value in {"1", "true", "yes", "on", "direct"}:
+        return "direct"
+    return "relay"
 
 
 def _decode_payload(raw: bytes | str) -> list[dict]:
@@ -65,6 +71,36 @@ def _urllib_get(url: str) -> bytes:
         return response.read()
 
 
+def _unwrap_relay(raw: bytes | str, source_url: str) -> bytes:
+    """Extract relay body only when wrapper provenance is exact.
+
+    The relay prepends a small text header. Accept exactly one content marker
+    and the exact public source URL; everything else fails closed before JSON
+    decoding. No credentials are sent through this route.
+    """
+    text = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw
+    if text.count(RELAY_MARKER) != 1:
+        raise ValueError("unexpected relay wrapper marker count")
+    header, body = text.split(RELAY_MARKER, 1)
+    if f"URL Source: {source_url}" not in header:
+        raise ValueError("relay source URL mismatch")
+    return body.strip().encode("utf-8")
+
+
+def _relay_get(url: str) -> bytes:
+    request = urllib.request.Request(
+        RELAY_BASE + url,
+        headers={
+            "User-Agent": "EdgeFactory/1.0",
+            "Accept": "text/plain",
+            "X-No-Cache": "true",
+        },
+    )
+    with urllib.request.urlopen(request, timeout=RELAY_TIMEOUT_SECONDS) as response:
+        wrapped = response.read()
+    return _unwrap_relay(wrapped, url)
+
+
 def _cffi_get(url: str, impersonate: str) -> bytes:
     """Browser-TLS fallback for datacenter/Actions anti-bot responses."""
     from curl_cffi import requests as curl_requests
@@ -85,8 +121,15 @@ def _cffi_get(url: str, impersonate: str) -> bytes:
 
 
 def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
-    """Fetch one market, falling back from urllib to browser impersonation."""
+    """Fetch one market through the environment-appropriate transport."""
     url = f"{BASE}?ln=en&tp={tp}&in={date}&ord=0&tz=0&tzs=&tze="
+    mode = _cloud_fetch_mode()
+    if mode == "disabled":
+        raise RuntimeError("Forebet cloud fetch explicitly disabled")
+    if mode == "relay":
+        return _decode_payload(_relay_get(url))
+
+    # Local/default and deliberate cloud direct-probe path.
     transports = [("urllib", lambda: _urllib_get(url))]
     transports.extend(
         (f"curl_cffi:{identity}", lambda identity=identity: _cffi_get(url, identity))
@@ -125,10 +168,10 @@ def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[d
     """Fetch one calendar day, merge all market endpoints by match id."""
     if date < MIN_DATE:
         return []
-    if _cloud_fetch_disabled():
+    if _cloud_fetch_mode() == "disabled":
         raise RuntimeError(
-            "Forebet cloud fetch disabled after confirmed GitHub Actions provider block; "
-            f"set {CLOUD_RETRY_ENV}=1 for a deliberate retry"
+            "Forebet cloud fetch explicitly disabled; unset "
+            f"{CLOUD_RETRY_ENV} to restore the validated relay"
         )
     rows: dict[str, dict] = {}
     failures: list[str] = []
