@@ -96,3 +96,32 @@ def test_fetch_day_preserves_partial_market_capture(monkeypatch, capsys):
     assert len(rows) == 1
     assert rows[0]["home"] == "Alpha"
     assert "partial capture" in capsys.readouterr().err
+
+
+def test_github_actions_block_fails_fast_without_calling_transport(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.delenv(forebet.CLOUD_RETRY_ENV, raising=False)
+    monkeypatch.setattr(
+        forebet,
+        "_get",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("transport must not be called")
+        ),
+    )
+
+    with pytest.raises(RuntimeError, match="cloud fetch disabled"):
+        forebet.fetch_day("2026-08-20", sleep=0)
+
+
+def test_github_actions_retry_requires_explicit_opt_in(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv(forebet.CLOUD_RETRY_ENV, "1")
+    calls = []
+    monkeypatch.setattr(
+        forebet,
+        "_get",
+        lambda market, _day: calls.append(market) or [],
+    )
+
+    assert forebet.fetch_day("2026-08-20", sleep=0) == []
+    assert calls == list(forebet.DEFAULT_MARKETS)
