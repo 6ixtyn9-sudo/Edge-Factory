@@ -16,7 +16,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import math
 import sys
 from collections import defaultdict
 from datetime import date
@@ -54,27 +53,35 @@ def _leg_dict(l):
 
 
 def load_tickets():
-    """auto_tickets_<date>.json -> list of (date, type, legs, stake, odds)
+    """Return ``(tickets, legacy_dates)`` from archived auto-ticket slips.
 
     Handles the v4 schema:
-      - "acca2":   list of [ [leg, leg], product ]  (pairs with their total odds)
-      - "acca10":  list of legs (total odds in "acca10_odds")
-      - legacy "singles" tolerated.
+      - ``acca2``: list of ``[[leg, leg], product]`` pairs;
+      - ``acca10``: list of legs, total in ``acca10_odds``;
+      - legacy v1-v3 ``singles``.
+
+    A date is legacy when the slip has no recorded ``stakes_frac`` or carries
+    old singles. Its true deployed capital cannot be reconstructed, so stake
+    remains ``None`` and the report says so instead of inventing a percent.
     """
     tickets = []
+    legacy_dates: set[str] = set()
     for f in sorted(LOCALDATA.glob("auto_tickets_*.json")):
         d = f.name.replace("auto_tickets_", "").replace(".json", "")
         try:
             data = json.loads(f.read_text())
         except Exception:
             continue
-        # legacy singles (v1-v3 only) — never carried stake records
-        for l in (data.get("singles") or []):
-            tickets.append({"date": d, "type": "single", "legs": [_leg_dict(l)],
-                            "stake": None, "odds": float(l.get("odds") or 1.0)})
         sf_raw = data.get("stakes_frac")
         has_stakes = isinstance(sf_raw, dict) and bool(sf_raw)
         sf = sf_raw if has_stakes else {}
+        singles = data.get("singles") or []
+        if not has_stakes or singles:
+            legacy_dates.add(d)
+        # Legacy singles (v1-v3 only) never carried stake records.
+        for l in singles:
+            tickets.append({"date": d, "type": "single", "legs": [_leg_dict(l)],
+                            "stake": None, "odds": float(l.get("odds") or 1.0)})
         # acca2 entries: [ [legs...], product ]
         for entry in (data.get("acca2") or []):
             if isinstance(entry, list) and entry and isinstance(entry[0], list):
@@ -96,7 +103,7 @@ def load_tickets():
             tickets.append({"date": d, "type": "acca10", "legs": [_leg_dict(l) for l in legs],
                             "stake": float(v) if v is not None else None,
                             "odds": float(data.get("acca10_odds") or 0.0) or None})
-    return tickets
+    return tickets, legacy_dates
 
 
 def grade(ticket, settled):
@@ -121,9 +128,10 @@ def main() -> int:
     args = ap.parse_args()
 
     settled = load_settled()
-    tickets = load_tickets()
+    tickets, legacy_dates = load_tickets()
     if args.since:
         tickets = [t for t in tickets if t["date"] >= args.since]
+        legacy_dates = {day for day in legacy_dates if day >= args.since}
 
     per_day = defaultdict(lambda: {"n": 0, "wins": 0, "pending": 0, "losses": 0,
                                    "staked": 0.0, "returned": 0.0, "unstaked_n": 0})
@@ -156,28 +164,40 @@ def main() -> int:
 
     lines = ["AUTO-TICKET GRADING", "=" * 60]
     total_staked = total_ret = total_n = total_wins = total_pend = total_unstaked = 0
-    lines.append(f"\n--- per day ---")
+    lines.append("\n--- per day ---")
     for d in sorted(per_day):
         s = per_day[d]
         if s["staked"]:
             roi = (s["returned"] - s["staked"]) / s["staked"]
+            unknown_note = (
+                f"; {s['unstaked_n']} ticket stake(s) not recorded"
+                if s["unstaked_n"] else ""
+            )
             lines.append(f"  {d}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
-                         f"staked {s['staked']:.2%} of capital returned {s['returned']:.2%} ROI {roi:+.1%}")
+                         f"staked {s['staked']:.2%} of capital returned {s['returned']:.2%} "
+                         f"ROI {roi:+.1%}{unknown_note}")
+        elif d in legacy_dates:
+            lines.append(f"  {d}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
+                         "stake not recorded (pre-adaptive slip, see bookmaker history)")
         else:
             lines.append(f"  {d}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
-                         f"stake not recorded (legacy slip — no stakes_frac)")
+                         "stake not recorded")
         total_staked += s["staked"]; total_ret += s["returned"]
         total_n += s["n"]; total_wins += s["wins"]; total_pend += s["pending"]
         total_unstaked += s["unstaked_n"]
-    lines.append(f"\n--- per type ---")
+    lines.append("\n--- per type ---")
     for tp in ("single", "acca2", "acca10"):
         s = per_type[tp]
         if not s["n"]:
             continue
         if s["staked"]:
             roi = (s["returned"] - s["staked"]) / s["staked"]
+            unknown_note = (
+                f" ({s['unstaked_n']} stake(s) not recorded)"
+                if s["unstaked_n"] else ""
+            )
             lines.append(f"  {TICKET_TYPES[tp]:12s}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
-                         f"hit {s['wins']/s['n'] if s['n'] else 0:.0%} ROI {roi:+.1%}")
+                         f"hit {s['wins']/s['n'] if s['n'] else 0:.0%} ROI {roi:+.1%}{unknown_note}")
         else:
             lines.append(f"  {TICKET_TYPES[tp]:12s}: {s['n']} tickets ({s['wins']}W/{s['losses']}L/{s['pending']}P) "
                          f"hit {s['wins']/s['n'] if s['n'] else 0:.0%} ROI n/a (stake not recorded)")
