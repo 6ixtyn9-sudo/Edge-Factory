@@ -1762,8 +1762,13 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
     }
 
 
-def _pct(v, nd=1):
-    """Format a hit rate / ROI fraction as a readable percentage (or '-' if None)."""
+def _summary_pct(v, nd=1):
+    """Format headline hit rate / ROI with an explicit sign.
+
+    Keep this separate from the earlier unsigned ``_pct`` probability helper.
+    Reusing the same name silently changed every calibration and per-pick
+    probability to a signed ``+81.5%`` string at function-call time.
+    """
     if v is None:
         return "-"
     try:
@@ -1800,9 +1805,9 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)}",
         f"- ambiguous result picks: {report.get('ambiguous_result_picks', 0)}",
         f"- wins: {overall.get('wins', 0)}",
-        f"- hit rate: {_pct(overall.get('hit_rate'))}",
+        f"- hit rate: {_summary_pct(overall.get('hit_rate'))}",
         f"- priced picks: {overall.get('priced_picks', 0)}",
-        f"- ROI: {_pct(overall.get('roi'))}",
+        f"- ROI: {_summary_pct(overall.get('roi'))}",
         "",
         "## Settlement policy",
         "",
