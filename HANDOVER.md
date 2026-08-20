@@ -5852,3 +5852,76 @@ failure was capture orchestration/persistence, not provider death.
 **Replacement paths:** `.gitignore`, `scripts/daily.py`,
 `scripts/edge_firing_tripwire.py`, `tests/test_daily_orchestration.py`,
 `tests/test_edge_firing_tripwire.py`, and this `HANDOVER.md`.
+
+
+---
+
+## Addendum — 2026-08-20: run #502 recovery receipt, zero-failure suite, Forebet cloud fallback
+
+### Heavy-run recovery confirmed
+
+Scheduled Actions run `32368306183` (#502) completed successfully in 16m33s
+and persisted bot commit `246633c`. It wrote
+`localdata/official_run_2026-08-20.json` at 14:36 SAST, created the missing
+morning baseline, and refreshed 11 of 12 monitored source caches. The long
+runtime was expected for the one-time full capture/build/mine recovery; later
+same-day runs use the marker and return to intraday mode.
+
+The repaired tripwire reduced the old 16-warning report to two honest findings:
+Forebet's monthly cache remained stale, and `ml-meta>=80` had no recent firing.
+Seven qualified analytical rules were correctly reported as excluded rather
+than false operational failures.
+
+### Eight pre-existing test failures closed
+
+The formerly red full suite contained three distinct drift classes:
+
+1. `src/edgefactory/debias.py` correctly raised `MIN_ENGINE_N` from 5 to 20,
+   but two tests still built n=6/7 engine cells while expecting them to pass.
+   Fixtures now use the production constant and test the intended n>=20 path.
+2. `scripts/audit_recent_picks.py` defined `_pct` twice. Python's later signed
+   headline formatter silently replaced the earlier unsigned probability
+   formatter at call time, producing strings such as `+81.5%` in calibration
+   and per-pick probability rows. The headline helper is now
+   `_summary_pct`; probabilities remain unsigned while headline ROI/hit rate
+   retains its explicit sign.
+3. `scripts/auto_tickets_grade.py` had drifted from its documented/tested
+   contract: `load_tickets()` returned only a list instead of
+   `(tickets, legacy_dates)`, and legacy reporting lost the explicit
+   pre-adaptive explanation. The tuple contract and transparent wording are
+   restored. `scripts/auto_tickets.py::load_pause_state()` now treats unknown
+   legacy stake/return values as zero recorded capital instead of raising a
+   `TypeError` (or inventing a 100% stake).
+
+### Forebet diagnosis and repair
+
+Run #502 proved the general capture cadence was fixed, but Forebet alone still
+had no monthly file. The same run's official picks contained zero Forebet votes.
+A bounded direct endpoint probe outside Actions returned HTTP 200 and 141 rows,
+so the adapter/parser and provider data were alive. The previous transport had
+two honesty gaps: an HTTP-200 anti-bot/challenge page could fail JSON parsing,
+and `fetch_day()` swallowed every market exception into an empty slate;
+`local_backfill.py` then marked the zero-row day done.
+
+`src/edgefactory/sources/forebet.py` now validates the `[rows, meta]` payload,
+tries urllib first, then browser-TLS fallbacks (`safari17_0`, `firefox133`) via
+the already-installed `curl_cffi`, and raises when every market transport fails.
+Partial valid market captures remain usable but log the missing markets. A
+forced live fallback probe (urllib deliberately disabled) returned all 141
+1X2 rows. No proxy, new secret, source substitution, or selection change was
+introduced.
+
+### Verification
+
+- Full suite: **277 passed, 0 failed**.
+- Focused audit/debias/auto-ticket/Forebet suites: 78 passed.
+- `py_compile`: clean on all changed production files.
+- `pyflakes`: clean on every changed production and test file.
+- Forced live browser-fallback probe: 141 Forebet 1X2 rows.
+- No betting threshold, bucket, source weight, auto-ticket gate, stake, or
+  notification policy changed.
+
+**Replacement paths:** `scripts/auto_tickets.py`,
+`scripts/auto_tickets_grade.py`, `scripts/audit_recent_picks.py`,
+`src/edgefactory/sources/forebet.py`, `tests/test_debias.py`,
+`tests/test_forebet.py`, and this append-only `HANDOVER.md` entry.
