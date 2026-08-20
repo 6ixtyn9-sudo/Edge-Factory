@@ -299,6 +299,10 @@ def test_daily_report_renders_every_ledger_bucket(tmp_path):
                 "odds": 1.2,
                 "odds_source": "scoutingstats_odds",
                 "kickoff": "06-08, 18:00",
+                "statistical_comment": (
+                    "📊 Realized Stats: Avg Goals: 3.10 | Over 2.5: 65.0% | "
+                    "Top Scores: 2-0 (16.0%), 1-0 (12.0%)"
+                ),
                 "ctx": {"league_key": "ecl", "league": "ALLOW", "odds_band_name": "1.20-1.35", "odds_band": "CAUTION"},
             },
             {
@@ -323,4 +327,7 @@ def test_daily_report_renders_every_ledger_bucket(tmp_path):
     assert "Twente vs Dunajska Streda" in text
     assert "WATCHLIST — SUSPECT FUZZY PRICE MATCH" in text
     assert "Ajax vs Shelbourne" in text
+    assert "Avg Goals: 3.10" in text
+    assert "Top Scores" not in text
+    assert "2-0 (16.0%)" not in text
     assert "Total archived picks in this report: 2" in text
