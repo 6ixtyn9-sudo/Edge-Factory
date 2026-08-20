@@ -5925,3 +5925,95 @@ introduced.
 `scripts/auto_tickets_grade.py`, `scripts/audit_recent_picks.py`,
 `src/edgefactory/sources/forebet.py`, `tests/test_debias.py`,
 `tests/test_forebet.py`, and this append-only `HANDOVER.md` entry.
+
+---
+
+## Addendum — 2026-08-20: run #503 Forebet latency containment
+
+Scheduled run `32385601406` (#503) completed successfully, and the unchanged
+14:36 official marker proved it correctly used intraday rather than repeating
+the heavy pipeline. However, execution expanded to 18m46s (20m51s total),
+versus the pre-fallback intraday baseline of roughly 8–9 minutes. Forebet still
+contributed zero votes to both the 2026-08-20 and 2026-08-21 slates, and its
+cache remained at 2026-06-12. Therefore browser impersonation did not overcome
+the provider's GitHub-hosted-runner block; it only spent repeated transport
+timeouts and moved the workflow too close to its 25-minute limit.
+
+**Containment (`src/edgefactory/sources/forebet.py`):** when
+`GITHUB_ACTIONS=true`, Forebet now fails immediately before any network
+transport. Local execution remains enabled because the same endpoint returns
+current rows outside Actions. A deliberate future cloud re-probe is possible
+without code changes by setting `EDGE_FACTORY_FOREBET_CLOUD=1`; it is OFF by
+default. Forebet's deep committed history remains available to mining, while
+current cloud consensus continues honestly without a Forebet vote—the behavior
+already observed before this containment.
+
+The stale-source tripwire remains visible; this change does not relabel the
+cache as healthy. It removes latency, not evidence. No proxy, replacement
+source, fabricated vote, selection threshold, bucket, source weight,
+auto-ticket gate, stake, or notification rule changed.
+
+**Verification:** two new environment-gate tests prove fail-fast cloud behavior
+and explicit opt-in semantics. Full suite: **279 passed, 0 failed**;
+`py_compile` and `pyflakes` clean on both replacement files.
+
+**Replacement paths:** `src/edgefactory/sources/forebet.py`,
+`tests/test_forebet.py`, and this append-only `HANDOVER.md` entry.
+
+---
+
+## Addendum — 2026-08-20: machine-free Forebet relay qualification
+
+**Operator directive:** recover current Forebet participation without requiring
+a laptop or permanently accepting a disabled source. Direct GitHub-hosted
+runner traffic remained blocked even with browser TLS, so a third network path
+was investigated rather than fabricating a vote or weakening consensus.
+
+### Qualified route
+
+The public Jina Reader endpoint can retrieve Forebet's public `getrs.php` URL
+without credentials. It adds a small text wrapper and leaves the endpoint body
+unchanged. Bounded live qualification on 2026-08-20 proved:
+
+- 1X2: 141 rows; relay JSON body byte-identical and object-identical to direct;
+- O/U: 141 rows; byte/object-identical;
+- BTTS: 141 rows; byte/object-identical;
+- canonical JSON hashes matched independently for all three markets;
+- 2026-08-19 / 20 / 21 1X2 samples contained 282 / 141 / 400 rows and every
+  sampled `DATE_BAH` matched the requested day;
+- no Edge Factory or provider secret is present in the public URL or relay
+  request.
+
+### Production behavior
+
+On GitHub Actions, the Forebet adapter now uses the relay by default. It accepts
+exactly one `Markdown Content:` marker, requires the wrapper's `URL Source:` to
+match the requested Forebet URL exactly, extracts the body, then applies the
+same strict `[rows, meta]` JSON validator used by direct capture. Any wrapper,
+provenance, JSON, or schema mismatch fails closed and Forebet contributes no
+vote. `X-No-Cache: true` is requested and each market has a bounded 25-second
+timeout.
+
+Local execution remains direct. `EDGE_FACTORY_FOREBET_CLOUD=direct` deliberately
+re-tests GitHub's own transport; `off` disables cloud Forebet immediately. The
+relay is a third-party availability dependency, not a new prediction source:
+Forebet remains the named source and its unchanged rows/probabilities are the
+only accepted payload.
+
+### Verification and boundary
+
+Full suite: **281 passed, 0 failed**; `py_compile` and `pyflakes` clean. A final
+live smoke through the production `fetch_day()` with `GITHUB_ACTIONS=true`
+returned 141 merged fixtures, all 141 complete for 1X2, O/U, and BTTS. Observed
+relay responses were roughly 8–15 seconds per market, materially below run
+#503's repeated direct timeout path.
+
+No selection threshold, bucket, source weight, auto-ticket gate, stake,
+notification rule, or historical result changed. The next scheduled run is the
+production confirmation for live Forebet votes; the next heavy run is the
+monthly-cache confirmation. If the relay fails, existing fail-soft source
+handling and the stale-source tripwire remain authoritative.
+
+**Replacement paths:** `src/edgefactory/sources/forebet.py`,
+`tests/test_forebet.py`, plus the run #503 containment and this relay addendum
+appended to `HANDOVER.md`.
