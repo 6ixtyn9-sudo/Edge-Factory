@@ -953,8 +953,10 @@ def check_enhancement_hit(enh_type: str, selection: str, hs: int, gs: int) -> bo
 #   - event_notes:         the full 🔥 "Possible Events" list
 #                          ({market, probability, raw_probability, label, reason,
 #                            engine?, cohort_n?} — engine/cohort_n from Addendum 17)
-#   - statistical_comment: the 📊 line (Avg Goals / Over 2.5 / BTTS /
-#                          Home|Away Over 1.5 / Top Scores)
+#   - statistical_comment: the active 📊 line (Avg Goals / Over 2.5 / BTTS /
+#                          Home|Away Over 1.5). Legacy archives can also carry
+#                          retired Top Scores; those remain machine-audited but
+#                          are no longer generated, rendered, or pooled.
 # Every entry on both surfaces promises a probability. The helpers below score
 # EVERY promise against the settled score and aggregate per-market hit tables,
 # promised-vs-realized calibration buckets, Brier scores and an Avg-Goals MAE.
@@ -1008,9 +1010,9 @@ NOTE_SCORING_DEFINITION = (
 )
 
 STATLINE_SCORING_DEFINITION = (
-    "each metric is scored as a probabilistic forecast of its event "
-    "(Over 2.5 / BTTS-Yes / Home|Away Over 1.5 / exact Top Score) — "
-    "calibration, not a direction call"
+    "each active metric is scored as a probabilistic forecast of its event "
+    "(Over 2.5 / BTTS-Yes / Home|Away Over 1.5) — calibration, not a direction call; "
+    "the retired exact-score field remains in machine history only"
 )
 
 
@@ -1192,7 +1194,10 @@ def aggregate_statline(observations: list[dict[str, Any]],
             continue
         metric = str(ob.get("metric") or "UNKNOWN")
         _accumulate(by_metric[metric], promised, bool(hit))
-        _accumulate(pooled[_bucket_label(promised)], promised, bool(hit))
+        # Preserve retired Top Scores in machine-readable by_metric history,
+        # but do not let them distort active pooled calibration.
+        if metric != "top_score":
+            _accumulate(pooled[_bucket_label(promised)], promised, bool(hit))
     avg_goals = None
     if goal_forecasts:
         n = len(goal_forecasts)
@@ -1358,9 +1363,10 @@ def _render_statline_section(cal: dict[str, Any]) -> list[str]:
         "",
     ]
     by_metric = cal.get("by_metric") or {}
+    active_by_metric = {key: value for key, value in by_metric.items() if key != "top_score"}
     avg_goals = cal.get("avg_goals")
     buckets = cal.get("promised_buckets") or []
-    if not by_metric and not avg_goals and not buckets:
+    if not active_by_metric and not avg_goals and not buckets:
         lines.append("- (no settled picks carried a parseable 📊 statistical comment in this window)")
         lines.append("")
         return lines
@@ -1371,16 +1377,16 @@ def _render_statline_section(cal: dict[str, Any]) -> list[str]:
             f"promised avg {avg_goals.get('mean_promised')} vs realized {avg_goals.get('mean_actual')}"
         )
         lines.append("")
-    if by_metric:
+    if active_by_metric:
         label_map = {"over25": "Over 2.5", "btts": "BTTS-Yes", "home_o15": "Home Over 1.5",
-                     "away_o15": "Away Over 1.5", "top_score": "Top Scores (exact)"}
+                     "away_o15": "Away Over 1.5"}
         lines.extend([
             "### Per-metric calibration",
             "",
             "| metric | n | promised avg | realized | Δ | Brier |",
             "| --- | --- | --- | --- | --- | --- |",
         ])
-        for metric, slot in sorted(by_metric.items(), key=lambda kv: (-kv[1].get("n", 0), kv[0])):
+        for metric, slot in sorted(active_by_metric.items(), key=lambda kv: (-kv[1].get("n", 0), kv[0])):
             low_n = " ⚠️low-n" if slot.get("n", 0) < 5 else ""
             brier = slot.get("brier")
             lines.append(
@@ -2055,13 +2061,6 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
                 else:
                     lines.append(f"  - [{a_o15_icon}] **Away Team Under 1.5 Goals**: expected {1.0 - stats['away_o15_expected']:.1%} (Actual: {item['gs']} goals)")
                 
-            if stats["top_scores"]:
-                scores_strs = []
-                for score_item in stats["top_scores"]:
-                    score_icon = "🟢 HIT" if score_item["hit"] else "🔴 MISS"
-                    scores_strs.append(f"[{score_icon}] {score_item['score']} ({score_item['pct']:.1%})")
-                lines.append("  - **Top Scores**: " + ", ".join(scores_strs))
-
             # Per-pick graded 🔥 Possible Events (Addendum 13/14): the same
             # observations that feed the aggregate table, rendered ONE EVENT
             # PER LINE in the 📊 layout (expected % + realized context) so the
