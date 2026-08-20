@@ -82,8 +82,8 @@ def test_hybrid_gated_when_not_worse_than_model(tmp_path):
         tmp_path,
         by_market={"match_over_25": _slot(17, 9, 0.60, 0.568)},
         by_engine_by_market={
-            "hybrid_cohort": {"match_over_25": _slot(7, 3, 0.45, 0.50)},
-            "model": {"match_over_25": _slot(6, 2, 0.40, 0.50)},
+            "hybrid_cohort": {"match_over_25": _slot(MIN_ENGINE_N, 9, 0.45, 0.50)},
+            "model": {"match_over_25": _slot(MIN_ENGINE_N, 8, 0.40, 0.50)},
         },
     )
     m = load_engine_aware_debias_map(p)
@@ -96,8 +96,8 @@ def test_hybrid_damped_when_worse_than_model(tmp_path):
         tmp_path,
         by_market={"match_over_25": _slot(17, 9, 0.60, 0.568)},
         by_engine_by_market={
-            "hybrid_cohort": {"match_over_25": _slot(7, 2, 0.40, 0.50)},
-            "model": {"match_over_25": _slot(6, 3, 0.45, 0.50)},
+            "hybrid_cohort": {"match_over_25": _slot(MIN_ENGINE_N, 8, 0.40, 0.50)},
+            "model": {"match_over_25": _slot(MIN_ENGINE_N, 9, 0.45, 0.50)},
         },
     )
     m = load_engine_aware_debias_map(p)
@@ -109,7 +109,7 @@ def test_hybrid_without_model_cell_is_gated(tmp_path):
         tmp_path,
         by_market={"btts_yes": _slot(28, 13, 0.464, 0.514)},
         by_engine_by_market={
-            "hybrid_cohort": {"btts_yes": _slot(6, 2, 0.33, 0.50)},
+            "hybrid_cohort": {"btts_yes": _slot(MIN_ENGINE_N, 7, 0.33, 0.50)},
         },
     )
     m = load_engine_aware_debias_map(p)
@@ -125,8 +125,8 @@ def test_model_uses_own_cell_else_pooled_else_one(tmp_path):
             "no_evidence": _slot(5, 1, 0.20, 0.40),
         },
         by_engine_by_market={
-            "model": {"with_cell": _slot(6, 2, 0.25, 0.50)},
-            "legacy": {"with_cell": _slot(6, 2, 0.25, 0.50)},
+            "model": {"with_cell": _slot(MIN_ENGINE_N, 5, 0.25, 0.50)},
+            "legacy": {"with_cell": _slot(MIN_ENGINE_N, 5, 0.25, 0.50)},
         },
     )
     m = load_engine_aware_debias_map(p)
