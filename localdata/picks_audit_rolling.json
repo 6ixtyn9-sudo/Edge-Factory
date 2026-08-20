@@ -25321,7 +25321,7 @@
         "realized": 0.098394
       }
     },
-    "definition": "each metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5 / exact Top Score) \u2014 calibration, not a direction call",
+    "definition": "each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) \u2014 calibration, not a direction call; the retired exact-score field remains in machine history only",
     "promised_buckets": [
       {
         "brier": 0.166986,
@@ -25333,22 +25333,13 @@
         "realized": 0.19209
       },
       {
-        "brier": 0.108664,
+        "brier": 0.22628,
         "bucket": "0.1-0.2",
-        "delta": -0.025556,
-        "hits": 68,
-        "mean_promised": 0.14591,
-        "n": 565,
-        "realized": 0.120354
-      },
-      {
-        "brier": 0.14144,
-        "bucket": "0.2-0.3",
-        "delta": -0.040833,
-        "hits": 1,
-        "mean_promised": 0.2075,
-        "n": 6,
-        "realized": 0.166667
+        "delta": 0.169986,
+        "hits": 20,
+        "mean_promised": 0.103986,
+        "n": 73,
+        "realized": 0.273973
       },
       {
         "brier": 0.276407,

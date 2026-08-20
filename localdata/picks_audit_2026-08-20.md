@@ -128,7 +128,7 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 > ⚠️ **Calibration ≠ edge.** The 📊 line promises historical frequencies, not prices — this section scores promise vs realization only and must not drive staking.
 
-Scored as probabilistic forecasts per settled pick (each metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5 / exact Top Score) — calibration, not a direction call).
+Scored as probabilistic forecasts per settled pick (each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) — calibration, not a direction call; the retired exact-score field remains in machine history only).
 
 - **Avg Goals forecast**: n=249, MAE=1.448193 goals, bias=-0.34257 (realized − promised), promised avg 3.627711 vs realized 3.285141
 
@@ -136,7 +136,6 @@ Scored as probabilistic forecasts per settled pick (each metric is scored as a p
 
 | metric | n | promised avg | realized | Δ | Brier |
 | --- | --- | --- | --- | --- | --- |
-| Top Scores (exact) | 498 | 15.3% | 9.8% | -5.4% | 0.091818 |
 | Away Over 1.5 | 249 | 22.9% | 30.1% | +7.2% | 0.197745 |
 | BTTS-Yes | 249 | 41.4% | 54.2% | +12.8% | 0.2651 |
 | Home Over 1.5 | 249 | 72.7% | 61.0% | -11.7% | 0.219049 |
@@ -147,8 +146,7 @@ Scored as probabilistic forecasts per settled pick (each metric is scored as a p
 | promised bucket | n | promised avg | realized | Δ |
 | --- | --- | --- | --- | --- |
 | 0.0-0.1 | 177 | 8.9% | 19.2% | +10.3% |
-| 0.1-0.2 | 565 | 14.6% | 12.0% | -2.6% |
-| 0.2-0.3 | 6 | 20.8% | 16.7% | -4.1% |
+| 0.1-0.2 | 73 | 10.4% | 27.4% | +17.0% |
 | 0.3-0.4 | 66 | 37.8% | 54.5% | +16.7% |
 | 0.4-0.5 | 182 | 42.8% | 53.8% | +11.0% |
 | 0.6-0.7 | 125 | 66.9% | 58.4% | -8.5% |
@@ -268,7 +266,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **BTTS-No**: expected 41.8% (Actual: BTTS-Yes)
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 87.5% (Actual: 4 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.9% (Actual: 1 goals)
-  - **Top Scores**: [🔴 MISS] 2-0 (12.8%), [🔴 MISS] 1-0 (12.5%)
   - **🔥 Possible Events (graded)**:
     - [🟢 HIT] **Match Over 2.5 Goals**: expected 53.1% (Actual: 5 goals)
     - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 87.3% (Actual: 4 home goals)
@@ -283,7 +280,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **BTTS-No**: expected 40.8% (Actual: BTTS-No)
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 84.0% (Actual: 6 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.0% (Actual: 0 goals)
-  - **Top Scores**: [🔴 MISS] 2-0 (17.6%), [🔴 MISS] 1-0 (16.0%)
   - **🔥 Possible Events (graded)**:
     - [🟢 HIT] **Match Over 2.5 Goals**: expected 50.3% (Actual: 6 goals)
     - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 86.5% (Actual: 6 home goals)
@@ -298,7 +294,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **BTTS-No**: expected 42.9% (Actual: BTTS-Yes)
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 87.1% (Actual: 3 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.1% (Actual: 1 goals)
-  - **Top Scores**: [🔴 MISS] 2-0 (13.5%), [🔴 MISS] 3-0 (13.2%)
   - **🔥 Possible Events (graded)**:
     - [🟢 HIT] **Match Over 2.5 Goals**: expected 56.9% (Actual: 4 goals)
     - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 89.4% (Actual: 3 home goals)
@@ -312,7 +307,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **BTTS-No**: expected 46.0% (Actual: BTTS-No)
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 80.9% (Actual: 3 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.3% (Actual: 0 goals)
-  - **Top Scores**: [🔴 MISS] 2-1 (19.1%), [🔴 MISS] 1-0 (19.1%)
   - **🔥 Possible Events (graded)**:
     - [🟢 HIT] **Match Over 2.5 Goals**: expected 48.8% (Actual: 3 goals)
     - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 82.3% (Actual: 3 home goals)
@@ -325,7 +319,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **BTTS-No**: expected 41.2% (Actual: BTTS-Yes)
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 100.0% (Actual: 2 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 94.1% (Actual: 1 goals)
-  - **Top Scores**: [🔴 MISS] 3-0 (17.6%), [🔴 MISS] 10-0 (11.8%)
   - **🔥 Possible Events (graded)**:
     - [🟢 HIT] **Match Over 2.5 Goals**: expected 46.0% (Actual: 3 goals)
     - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 97.9% (Actual: 1 away goals)
@@ -337,7 +330,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **BTTS-No**: expected 43.0% (Actual: BTTS-No)
   - [🟢 HIT] **Home Team Over 1.5 Goals**: expected 82.7% (Actual: 2 goals)
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.7% (Actual: 0 goals)
-  - **Top Scores**: [🟢 HIT] 2-0 (17.3%), [🔴 MISS] 1-0 (17.3%)
   - **🔥 Possible Events (graded)**:
     - [🔴 MISS] **Match Over 2.5 Goals**: expected 46.8% (Actual: 2 goals)
     - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 84.5% (Actual: 2 home goals)
@@ -351,7 +343,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **BTTS-No**: expected 44.7% (Actual: BTTS-No)
   - [🟢 HIT] **Home Team Under 1.5 Goals**: expected 88.6% (Actual: 0 goals)
   - [🔴 MISS] **Away Team Over 1.5 Goals**: expected 84.8% (Actual: 1 goals)
-  - **Top Scores**: [🔴 MISS] 1-2 (17.2%), [🔴 MISS] 0-2 (16.0%)
   - **🔥 Possible Events (graded)**:
     - [🔴 MISS] **Match Over 2.5 Goals**: expected 49.1% (Actual: 1 goals)
     - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 95.2% (Actual: 0 home goals)
