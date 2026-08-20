@@ -72,3 +72,7 @@ dist/
 # ledgers persist so the operator can inspect history, not just logs.
 !localdata/edge_firing_tripwire.json
 !localdata/notify_delivery_failures_*.json
+
+# Heavy-run completion is separate from future forecast archives. The bot uses
+# this marker to guarantee one full capture/build/mine run per calendar day.
+!localdata/official_run_20*.json
