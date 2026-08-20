@@ -7,7 +7,7 @@
 - immutable morning-baseline rows: 157
 - verified official late-slate additions: 26
 - regular-ledger-only legacy rows: 118
-- unsafe regular ledgers ignored: 4
+- unsafe regular ledgers ignored: 5
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 282
 - eligible prior 1x2 picks: 292
@@ -70,32 +70,32 @@ Every machine-readable 🔥 note on every settled pick in the window, scored aga
 
 | market | notes | n | hits | realized | promised avg | Δ | Brier |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `away_under_35` | 200 | 200 | 197 | +98.5% | +97.8% | +0.7% | 0.014336 |
-| `away_under_25` | 187 | 187 | 175 | +93.6% | +93.7% | -0.1% | 0.061013 |
-| `home_over_05` | 182 | 182 | 170 | +93.4% | +87.6% | +5.8% | 0.066484 |
-| `match_over_25` | 181 | 181 | 116 | +64.1% | +43.1% | +21.0% | 0.278505 |
-| `match_over_45` | 165 | 165 | 43 | +26.1% | +25.1% | +1.0% | 0.196481 |
-| `match_over_35` | 98 | 98 | 38 | +38.8% | +43.0% | -4.2% | 0.244783 |
-| `away_under_15` | 76 | 76 | 62 | +81.6% | +81.6% | -0.0% | 0.149114 |
-| `exact_4` | 67 | 67 | 17 | +25.4% | +18.0% | +7.3% | 0.196872 |
-| `goal_range_4_6` | 63 | 63 | 26 | +41.3% | +37.4% | +3.8% | 0.250203 |
-| `goal_range_4_5` | 59 | 59 | 20 | +33.9% | +30.9% | +3.0% | 0.229007 |
-| `exact_5` | 57 | 57 | 6 | +10.5% | +12.6% | -2.1% | 0.096166 |
-| `home_under_35` | 48 | 48 | 44 | +91.7% | +94.3% | -2.7% | 0.076232 |
-| `btts_no` | 40 | 40 | 17 | +42.5% | +52.7% | -10.2% | 0.252916 |
-| `btts_yes` | 38 | 38 | 19 | +50.0% | +50.9% | -0.9% | 0.248905 |
-| `home_under_25` | 36 | 36 | 33 | +91.7% | +91.3% | +0.3% | 0.077319 |
-| `exact_3` | 32 | 32 | 4 | +12.5% | +22.2% | -9.7% | 0.119085 |
-| `goal_range_2_3` | 26 | 26 | 8 | +30.8% | +46.1% | -15.4% | 0.233772 |
-| `exact_2` | 24 | 24 | 5 | +20.8% | +24.5% | -3.7% | 0.166543 |
-| `away_over_05` | 22 | 22 | 19 | +86.4% | +86.0% | +0.3% | 0.117067 |
-| `goal_range_6_plus` | 9 | 9 | 1 | +11.1% | +18.7% | -7.6% | 0.102748 |
-| `home_under_15` | 8 | 8 | 7 | +87.5% | +81.2% | +6.3% | 0.112258 |
-| `match_over_15` | 8 | 8 | 7 | +87.5% | +85.7% | +1.8% | 0.122786 |
-| `exact_1` | 4 | 4 | 1 | +25.0% | +21.5% | +3.5% | 0.175017 ⚠️low-n |
-| `goal_range_7_plus` | 3 | 3 | 1 | +33.3% | +13.5% | +19.8% | 0.282655 ⚠️low-n |
-| `exact_0` | 1 | 1 | 0 | +0.0% | +11.0% | -11.0% | 0.012054 ⚠️low-n |
-| `goal_range_0_1` | 1 | 1 | 1 | +100.0% | +35.2% | +64.8% | 0.419464 ⚠️low-n |
+| `away_under_35` | 200 | 200 | 197 | 98.5% | 97.8% | +0.7% | 0.014336 |
+| `away_under_25` | 187 | 187 | 175 | 93.6% | 93.7% | -0.1% | 0.061013 |
+| `home_over_05` | 182 | 182 | 170 | 93.4% | 87.6% | +5.8% | 0.066484 |
+| `match_over_25` | 181 | 181 | 116 | 64.1% | 43.1% | +21.0% | 0.278505 |
+| `match_over_45` | 165 | 165 | 43 | 26.1% | 25.1% | +1.0% | 0.196481 |
+| `match_over_35` | 98 | 98 | 38 | 38.8% | 43.0% | -4.2% | 0.244783 |
+| `away_under_15` | 76 | 76 | 62 | 81.6% | 81.6% | -0.0% | 0.149114 |
+| `exact_4` | 67 | 67 | 17 | 25.4% | 18.0% | +7.3% | 0.196872 |
+| `goal_range_4_6` | 63 | 63 | 26 | 41.3% | 37.4% | +3.8% | 0.250203 |
+| `goal_range_4_5` | 59 | 59 | 20 | 33.9% | 30.9% | +3.0% | 0.229007 |
+| `exact_5` | 57 | 57 | 6 | 10.5% | 12.6% | -2.1% | 0.096166 |
+| `home_under_35` | 48 | 48 | 44 | 91.7% | 94.3% | -2.7% | 0.076232 |
+| `btts_no` | 40 | 40 | 17 | 42.5% | 52.7% | -10.2% | 0.252916 |
+| `btts_yes` | 38 | 38 | 19 | 50.0% | 50.9% | -0.9% | 0.248905 |
+| `home_under_25` | 36 | 36 | 33 | 91.7% | 91.3% | +0.3% | 0.077319 |
+| `exact_3` | 32 | 32 | 4 | 12.5% | 22.2% | -9.7% | 0.119085 |
+| `goal_range_2_3` | 26 | 26 | 8 | 30.8% | 46.1% | -15.4% | 0.233772 |
+| `exact_2` | 24 | 24 | 5 | 20.8% | 24.5% | -3.7% | 0.166543 |
+| `away_over_05` | 22 | 22 | 19 | 86.4% | 86.0% | +0.3% | 0.117067 |
+| `goal_range_6_plus` | 9 | 9 | 1 | 11.1% | 18.7% | -7.6% | 0.102748 |
+| `home_under_15` | 8 | 8 | 7 | 87.5% | 81.2% | +6.3% | 0.112258 |
+| `match_over_15` | 8 | 8 | 7 | 87.5% | 85.7% | +1.8% | 0.122786 |
+| `exact_1` | 4 | 4 | 1 | 25.0% | 21.5% | +3.5% | 0.175017 ⚠️low-n |
+| `goal_range_7_plus` | 3 | 3 | 1 | 33.3% | 13.5% | +19.8% | 0.282655 ⚠️low-n |
+| `exact_0` | 1 | 1 | 0 | 0.0% | 11.0% | -11.0% | 0.012054 ⚠️low-n |
+| `goal_range_0_1` | 1 | 1 | 1 | 100.0% | 35.2% | +64.8% | 0.419464 ⚠️low-n |
 
 Labels render plain-market exactly as promised, priced and scored: `match_over_15` → "Match Over 1.5 Goals"; `match_over_25` → "Match Over 2.5 Goals"; `btts_yes` → "Both Teams to Score - Yes (BTTS-Yes)". Raw archive labels written before 2026-08-03 may still carry the old "Win + …" wording in their stored label field; the render normalizes them.
 
@@ -105,24 +105,24 @@ Labels render plain-market exactly as promised, priced and scored: `match_over_1
 
 | engine | n | hits | realized | promised avg | Δ | Brier |
 | --- | --- | --- | --- | --- | --- | --- |
-| hybrid_cohort | 1322 | 865 | +65.4% | +62.9% | +2.5% | 0.134867 |
-| legacy | 263 | 136 | +51.7% | +52.1% | -0.4% | 0.183796 |
-| model | 50 | 36 | +72.0% | +50.5% | +21.5% | 0.262086 |
+| hybrid_cohort | 1322 | 865 | 65.4% | 62.9% | +2.5% | 0.134867 |
+| legacy | 263 | 136 | 51.7% | 52.1% | -0.4% | 0.183796 |
+| model | 50 | 36 | 72.0% | 50.5% | +21.5% | 0.262086 |
 
 
 ### Promised-vs-realized calibration (all 🔥 notes pooled)
 
 | promised bucket | n | promised avg | realized | Δ |
 | --- | --- | --- | --- | --- |
-| 0.1-0.2 | 154 | +15.9% | +20.1% | +4.2% |
-| 0.2-0.3 | 210 | +24.8% | +24.3% | -0.5% |
-| 0.3-0.4 | 221 | +35.6% | +45.2% | +9.6% |
-| 0.4-0.5 | 180 | +44.7% | +50.0% | +5.3% |
-| 0.5-0.6 | 94 | +52.6% | +46.8% | -5.7% |
-| 0.6-0.7 | 5 | +65.3% | +100.0% | +34.7% |
-| 0.7-0.8 | 4 | +74.4% | +50.0% | -24.4% |
-| 0.8-0.9 | 258 | +84.4% | +88.4% | +4.0% |
-| 0.9-1.0 | 509 | +95.3% | +95.5% | +0.2% |
+| 0.1-0.2 | 154 | 15.9% | 20.1% | +4.2% |
+| 0.2-0.3 | 210 | 24.8% | 24.3% | -0.5% |
+| 0.3-0.4 | 221 | 35.6% | 45.2% | +9.6% |
+| 0.4-0.5 | 180 | 44.7% | 50.0% | +5.3% |
+| 0.5-0.6 | 94 | 52.6% | 46.8% | -5.7% |
+| 0.6-0.7 | 5 | 65.3% | 100.0% | +34.7% |
+| 0.7-0.8 | 4 | 74.4% | 50.0% | -24.4% |
+| 0.8-0.9 | 258 | 84.4% | 88.4% | +4.0% |
+| 0.9-1.0 | 509 | 95.3% | 95.5% | +0.2% |
 
 ## Statistical Line (📊) Calibration
 
@@ -136,25 +136,25 @@ Scored as probabilistic forecasts per settled pick (each metric is scored as a p
 
 | metric | n | promised avg | realized | Δ | Brier |
 | --- | --- | --- | --- | --- | --- |
-| Top Scores (exact) | 498 | +15.3% | +9.8% | -5.4% | 0.091818 |
-| Away Over 1.5 | 249 | +22.9% | +30.1% | +7.2% | 0.197745 |
-| BTTS-Yes | 249 | +41.4% | +54.2% | +12.8% | 0.2651 |
-| Home Over 1.5 | 249 | +72.7% | +61.0% | -11.7% | 0.219049 |
-| Over 2.5 | 249 | +71.2% | +64.3% | -6.9% | 0.232389 |
+| Top Scores (exact) | 498 | 15.3% | 9.8% | -5.4% | 0.091818 |
+| Away Over 1.5 | 249 | 22.9% | 30.1% | +7.2% | 0.197745 |
+| BTTS-Yes | 249 | 41.4% | 54.2% | +12.8% | 0.2651 |
+| Home Over 1.5 | 249 | 72.7% | 61.0% | -11.7% | 0.219049 |
+| Over 2.5 | 249 | 71.2% | 64.3% | -6.9% | 0.232389 |
 
 ### Promised-vs-realized calibration (all 📊 metrics pooled)
 
 | promised bucket | n | promised avg | realized | Δ |
 | --- | --- | --- | --- | --- |
-| 0.0-0.1 | 177 | +8.9% | +19.2% | +10.3% |
-| 0.1-0.2 | 565 | +14.6% | +12.0% | -2.6% |
-| 0.2-0.3 | 6 | +20.8% | +16.7% | -4.1% |
-| 0.3-0.4 | 66 | +37.8% | +54.5% | +16.7% |
-| 0.4-0.5 | 182 | +42.8% | +53.8% | +11.0% |
-| 0.6-0.7 | 125 | +66.9% | +58.4% | -8.5% |
-| 0.7-0.8 | 114 | +74.7% | +69.3% | -5.4% |
-| 0.8-0.9 | 216 | +85.1% | +68.5% | -16.6% |
-| 0.9-1.0 | 43 | +92.0% | +79.1% | -12.9% |
+| 0.0-0.1 | 177 | 8.9% | 19.2% | +10.3% |
+| 0.1-0.2 | 565 | 14.6% | 12.0% | -2.6% |
+| 0.2-0.3 | 6 | 20.8% | 16.7% | -4.1% |
+| 0.3-0.4 | 66 | 37.8% | 54.5% | +16.7% |
+| 0.4-0.5 | 182 | 42.8% | 53.8% | +11.0% |
+| 0.6-0.7 | 125 | 66.9% | 58.4% | -8.5% |
+| 0.7-0.8 | 114 | 74.7% | 69.3% | -5.4% |
+| 0.8-0.9 | 216 | 85.1% | 68.5% | -16.6% |
+| 0.9-1.0 | 43 | 92.0% | 79.1% | -12.9% |
 
 ## By rule
 
@@ -270,12 +270,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.9% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (12.8%), [🔴 MISS] 1-0 (12.5%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected +53.1% (Actual: 5 goals)
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +87.3% (Actual: 4 home goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +99.0% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +95.2% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +81.5% (Actual: 1 away goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected +27.5% (Actual: 5 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected 53.1% (Actual: 5 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 87.3% (Actual: 4 home goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 99.0% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 95.2% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 81.5% (Actual: 1 away goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected 27.5% (Actual: 5 goals)
 
 ### 2026-08-19: Vila Nova vs Ponte Preta (Actual Score: **6-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.42 -> 🟢 WON (Expected prob: 64.0%)
@@ -285,12 +285,12 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.0% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (17.6%), [🔴 MISS] 1-0 (16.0%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected +50.3% (Actual: 6 goals)
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +86.5% (Actual: 6 home goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +99.0% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +95.3% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected +80.7% (Actual: 0 away goals)
-    - [🟢 HIT] **Match Over 4.5 Goals**: expected +20.2% (Actual: 6 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected 50.3% (Actual: 6 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 86.5% (Actual: 6 home goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 99.0% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 95.3% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 80.7% (Actual: 0 away goals)
+    - [🟢 HIT] **Match Over 4.5 Goals**: expected 20.2% (Actual: 6 goals)
 
 ### 2026-08-19: Sao Paulo vs Bolívar (Actual Score: **3-1**)
 - **1X2 Pick**: Selected `HOME` @ 1.44 -> 🟢 WON (Expected prob: 71.0%)
@@ -300,11 +300,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.1% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 2-0 (13.5%), [🔴 MISS] 3-0 (13.2%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected +56.9% (Actual: 4 goals)
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +89.4% (Actual: 3 home goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.5% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +93.9% (Actual: 1 away goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected +27.3% (Actual: 4 goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected 56.9% (Actual: 4 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 89.4% (Actual: 3 home goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.5% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 93.9% (Actual: 1 away goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected 27.3% (Actual: 4 goals)
 
 ### 2026-08-19: Celtic vs Lask Linz (Actual Score: **3-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.65 -> 🟢 WON (Expected prob: 55.9%)
@@ -314,10 +314,10 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 90.3% (Actual: 0 goals)
   - **Top Scores**: [🔴 MISS] 2-1 (19.1%), [🔴 MISS] 1-0 (19.1%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected +48.8% (Actual: 3 goals)
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +82.3% (Actual: 3 home goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.9% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +92.3% (Actual: 0 away goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected 48.8% (Actual: 3 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 82.3% (Actual: 3 home goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.9% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 92.3% (Actual: 0 away goals)
 
 ### 2026-08-19: Barcelona vs Al Ahly Cairo (Actual Score: **2-1**)
 - **1X2 Pick**: Selected `HOME` @ n/a -> 🟢 WON (Expected prob: 85.0%)
@@ -327,9 +327,9 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 94.1% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 3-0 (17.6%), [🔴 MISS] 10-0 (11.8%)
   - **🔥 Possible Events (graded)**:
-    - [🟢 HIT] **Match Over 2.5 Goals**: expected +46.0% (Actual: 3 goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +97.9% (Actual: 1 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +89.8% (Actual: 1 away goals)
+    - [🟢 HIT] **Match Over 2.5 Goals**: expected 46.0% (Actual: 3 goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 97.9% (Actual: 1 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 89.8% (Actual: 1 away goals)
 
 ### 2026-08-19: Atletico Madrid vs Malaga (Actual Score: **2-0**)
 - **1X2 Pick**: Selected `HOME` @ 1.3 -> 🟢 WON (Expected prob: 60.4%)
@@ -339,11 +339,11 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🟢 HIT] **Away Team Under 1.5 Goals**: expected 89.7% (Actual: 0 goals)
   - **Top Scores**: [🟢 HIT] 2-0 (17.3%), [🔴 MISS] 1-0 (17.3%)
   - **🔥 Possible Events (graded)**:
-    - [🔴 MISS] **Match Over 2.5 Goals**: expected +46.8% (Actual: 2 goals)
-    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected +84.5% (Actual: 2 home goals)
-    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected +98.9% (Actual: 0 away goals)
-    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected +93.7% (Actual: 0 away goals)
-    - [🔴 MISS] **Match Over 4.5 Goals**: expected +18.1% (Actual: 2 goals)
+    - [🔴 MISS] **Match Over 2.5 Goals**: expected 46.8% (Actual: 2 goals)
+    - [🟢 HIT] **Home Team Over 0.5 Goals**: expected 84.5% (Actual: 2 home goals)
+    - [🟢 HIT] **Away Team Under 3.5 Goals**: expected 98.9% (Actual: 0 away goals)
+    - [🟢 HIT] **Away Team Under 2.5 Goals**: expected 93.7% (Actual: 0 away goals)
+    - [🔴 MISS] **Match Over 4.5 Goals**: expected 18.1% (Actual: 2 goals)
 
 ### 2026-08-19: Deportes Tolima vs Independiente Del Valle (Actual Score: **0-1**)
 - **1X2 Pick**: Selected `AWAY` @ 2.45 -> 🟢 WON (Expected prob: 55.9%)
@@ -353,9 +353,9 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
   - [🔴 MISS] **Away Team Over 1.5 Goals**: expected 84.8% (Actual: 1 goals)
   - **Top Scores**: [🔴 MISS] 1-2 (17.2%), [🔴 MISS] 0-2 (16.0%)
   - **🔥 Possible Events (graded)**:
-    - [🔴 MISS] **Match Over 2.5 Goals**: expected +49.1% (Actual: 1 goals)
-    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected +95.2% (Actual: 0 home goals)
-    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected +91.5% (Actual: 0 home goals)
+    - [🔴 MISS] **Match Over 2.5 Goals**: expected 49.1% (Actual: 1 goals)
+    - [🟢 HIT] **Home Team Under 3.5 Goals**: expected 95.2% (Actual: 0 home goals)
+    - [🟢 HIT] **Home Team Under 2.5 Goals**: expected 91.5% (Actual: 0 home goals)
 
 
 ## Event Disposition / Void Audit
