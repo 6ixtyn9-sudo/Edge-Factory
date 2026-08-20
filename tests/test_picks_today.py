@@ -34,6 +34,7 @@ from picks_today import (  # noqa: E402
     BUCKET_CAUTION,
     BUCKET_SKIP_VETO,
     collapse_final_operational_picks,
+    fetch_historical_profile,
     merge_day_archive_rows,
     operational_team_key,
     OPERATIONAL_CLUB_TOKENS,
@@ -41,6 +42,33 @@ from picks_today import (  # noqa: E402
 
 BUCKET_CLEAN = BUCKET_CERTIFIED  # local alias matches the test vocabulary
 BUCKET_VETO = BUCKET_SKIP_VETO
+
+
+def test_historical_profile_no_longer_queries_or_emits_top_scores():
+    class Result:
+        def __init__(self, row):
+            self.row = row
+
+        def fetchone(self):
+            return self.row
+
+    class FakeConnection:
+        def __init__(self):
+            self.queries = []
+
+        def execute(self, query, _params=None):
+            self.queries.append(query)
+            if "MAX(avg_p)" in query:
+                return Result((80.0,))
+            return Result((100, 3.1, 0.65, 0.52, 0.72, 0.24))
+
+    con = FakeConnection()
+    comment = fetch_historical_profile(con, "home", 70.0, 3)
+
+    assert "Avg Goals: 3.10" in comment
+    assert "Top Scores" not in comment
+    assert len(con.queries) == 2  # scale probe + active aggregate; no score query
+    assert not any("GROUP BY 1" in query for query in con.queries)
 
 
 # ============================================================
