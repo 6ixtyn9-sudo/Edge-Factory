@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-08-21",
+    "kickoff": "2026-08-21T17:00:00+02:00",
+    "home": "Ararat",
+    "away": "Pyunik Yerevan",
+    "league": "Armenia: Premier League",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "ararat",
+    "away_key": "pyunikyerevan",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Paksi SE",
+        "away": "\u00dajpest",
+        "league": "NB I",
+        "kickoff": "2026-08-21T15:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.6,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "paksise",
+        "away_key": "ujpest",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Aluminij",
+        "away": "Grosuplje",
+        "league": "1. SNL",
+        "kickoff": "2026-08-21T15:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.9,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "aluminij",
+        "away_key": "grosuplje",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Al Gharafa",
+        "away": "Al Shahaniya",
+        "league": "Stars League",
+        "kickoff": "2026-08-21T14:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.4,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "algharafa",
+        "away_key": "alshahaniya",
+        "kickoff_delta_minutes": 45
+      },
+      {
+        "home": "Al Jeel",
+        "away": "Al Zulfi",
+        "league": "Division 1",
+        "kickoff": "2026-08-21T15:50:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.8,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "aljeel",
+        "away_key": "alzulfi",
+        "kickoff_delta_minutes": 50
+      },
+      {
+        "home": "Wadi Degla",
+        "away": "ZED FC",
+        "league": "Premier League",
+        "kickoff": "2026-08-21T14:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "wadidegla",
+        "away_key": "zedfc",
+        "kickoff_delta_minutes": 60
+      }
+    ]
+  },
+  {
+    "date": "2026-08-21",
     "kickoff": "2026-08-21 14:00:00",
     "home": "Alashkert",
     "away": "Gandzasar",
@@ -401,87 +482,6 @@
         "home_key": "amstetten",
         "away_key": "wspgwels",
         "kickoff_delta_minutes": 10
-      }
-    ]
-  },
-  {
-    "date": "2026-08-21",
-    "kickoff": "2026-08-21T17:00:00+02:00",
-    "home": "Ararat",
-    "away": "Pyunik Yerevan",
-    "league": "Armenia: Premier League",
-    "market": "1x2",
-    "pick": "away",
-    "rule_name": "2way-unanimous avg_p>=70",
-    "match_method": "fallback",
-    "home_key": "ararat",
-    "away_key": "pyunikyerevan",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Paksi SE",
-        "away": "\u00dajpest",
-        "league": "NB I",
-        "kickoff": "2026-08-21T15:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 3.6,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "paksise",
-        "away_key": "ujpest",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Aluminij",
-        "away": "Grosuplje",
-        "league": "1. SNL",
-        "kickoff": "2026-08-21T15:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.9,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "aluminij",
-        "away_key": "grosuplje",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Al Gharafa",
-        "away": "Al Shahaniya",
-        "league": "Stars League",
-        "kickoff": "2026-08-21T14:15:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 3.4,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "algharafa",
-        "away_key": "alshahaniya",
-        "kickoff_delta_minutes": 45
-      },
-      {
-        "home": "Al Jeel",
-        "away": "Al Zulfi",
-        "league": "Division 1",
-        "kickoff": "2026-08-21T15:50:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 1.8,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "aljeel",
-        "away_key": "alzulfi",
-        "kickoff_delta_minutes": 50
-      },
-      {
-        "home": "Wadi Degla",
-        "away": "ZED FC",
-        "league": "Premier League",
-        "kickoff": "2026-08-21T14:00:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 3.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "wadidegla",
-        "away_key": "zedfc",
-        "kickoff_delta_minutes": 60
       }
     ]
   },
@@ -1049,6 +1049,87 @@
         "home_key": "liefering",
         "away_key": "austriawienii",
         "kickoff_delta_minutes": 30
+      }
+    ]
+  },
+  {
+    "date": "2026-08-21",
+    "kickoff": "2026-08-21 17:00:00",
+    "home": "Pakhtakor",
+    "away": "Surkhon",
+    "league": "Uz1",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "pakhtakor",
+    "away_key": "surkhon",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Aluminij",
+        "away": "Grosuplje",
+        "league": "1. SNL",
+        "kickoff": "2026-08-21T15:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.25,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "aluminij",
+        "away_key": "grosuplje",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Paksi SE",
+        "away": "\u00dajpest",
+        "league": "NB I",
+        "kickoff": "2026-08-21T15:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.9,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "paksise",
+        "away_key": "ujpest",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Al Gharafa",
+        "away": "Al Shahaniya",
+        "league": "Stars League",
+        "kickoff": "2026-08-21T14:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.8,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "algharafa",
+        "away_key": "alshahaniya",
+        "kickoff_delta_minutes": 45
+      },
+      {
+        "home": "Al Jeel",
+        "away": "Al Zulfi",
+        "league": "Division 1",
+        "kickoff": "2026-08-21T15:50:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.6,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "aljeel",
+        "away_key": "alzulfi",
+        "kickoff_delta_minutes": 50
+      },
+      {
+        "home": "Kalba",
+        "away": "Al Wasl",
+        "league": "UAE Pro League",
+        "kickoff": "2026-08-21T14:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "kalba",
+        "away_key": "alwasl",
+        "kickoff_delta_minutes": 60
       }
     ]
   }
