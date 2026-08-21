@@ -1,5 +1,14 @@
 {
-  "ceilings": [],
+  "ceilings": [
+    {
+      "ceiling": true,
+      "gap_pp": 15.7,
+      "live_max_ml_p": 64.3,
+      "lowest_threshold": 80.0,
+      "rule": "ml-meta avg_p>=80",
+      "threshold": 80.0
+    }
+  ],
   "edge_silent_days": 14,
   "edges": [
     {
@@ -59,7 +68,7 @@
       "silent": true
     }
   ],
-  "generated_at": "2026-08-21T20:48:24",
+  "generated_at": "2026-08-21T23:39:18",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
