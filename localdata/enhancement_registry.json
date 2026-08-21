@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 17,
-   "inv_price_sum": 14.373656050502039,
+   "hits": 21,
+   "inv_price_sum": 18.785245802584193,
    "multi_n": 5,
-   "n": 23,
+   "n": 31,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -125,9 +125,17 @@
     "2026-08-18|Pachuca vs Puebla|match_over_25@v1",
     "2026-08-19|Celtic vs Lask Linz|match_over_25@v1",
     "2026-08-19|Deportes Tolima vs Independiente Del Valle|match_over_25@v1",
-    "2026-08-19|Vila Nova vs Ponte Preta|match_over_25@v1"
+    "2026-08-19|Vila Nova vs Ponte Preta|match_over_25@v1",
+    "2026-08-20|Motherwell vs SC Freiburg|match_over_25@v1",
+    "2026-08-20|FC Midtjylland vs HNK Rijeka|match_over_25@v1",
+    "2026-08-20|Vancouver Whitecaps vs Houston Dynamo|match_over_25@v1",
+    "2026-08-20|Getafe vs FK Partizan|match_over_25@v1",
+    "2026-08-20|Seattle Sounders vs Austin FC|match_over_25@v1",
+    "2026-08-20|LDU Quito vs Mirassol|match_over_25@v1",
+    "2026-08-20|Lech Poznan vs FC Thun|match_over_25@v1",
+    "2026-08-20|PAOK vs Brann|match_over_25@v1"
    ],
-   "profit": 4.58,
+   "profit": 3.61,
    "records": [
     {
      "date": "2026-08-01",
@@ -310,6 +318,70 @@
      "multi_source": true,
      "price": 1.96,
      "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-20",
+     "hit": true,
+     "match": "Motherwell vs SC Freiburg",
+     "multi_source": false,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-20",
+     "hit": false,
+     "match": "FC Midtjylland vs HNK Rijeka",
+     "multi_source": false,
+     "price": 1.95,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-20",
+     "hit": false,
+     "match": "Vancouver Whitecaps vs Houston Dynamo",
+     "multi_source": false,
+     "price": 1.65,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-20",
+     "hit": true,
+     "match": "Getafe vs FK Partizan",
+     "multi_source": false,
+     "price": 2.07,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-20",
+     "hit": true,
+     "match": "Seattle Sounders vs Austin FC",
+     "multi_source": false,
+     "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-20",
+     "hit": false,
+     "match": "LDU Quito vs Mirassol",
+     "multi_source": false,
+     "price": 2.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-20",
+     "hit": true,
+     "match": "Lech Poznan vs FC Thun",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-20",
+     "hit": false,
+     "match": "PAOK vs Brann",
+     "multi_source": false,
+     "price": 1.85,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
