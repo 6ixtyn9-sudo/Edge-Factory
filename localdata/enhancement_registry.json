@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 21,
-   "inv_price_sum": 18.785245802584193,
-   "multi_n": 5,
-   "n": 31,
+   "hits": 28,
+   "inv_price_sum": 26.95577442871458,
+   "multi_n": 8,
+   "n": 45,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -133,9 +133,23 @@
     "2026-08-20|Seattle Sounders vs Austin FC|match_over_25@v1",
     "2026-08-20|LDU Quito vs Mirassol|match_over_25@v1",
     "2026-08-20|Lech Poznan vs FC Thun|match_over_25@v1",
-    "2026-08-20|PAOK vs Brann|match_over_25@v1"
+    "2026-08-20|PAOK vs Brann|match_over_25@v1",
+    "2026-08-21|Vejle vs Esbjerg|match_over_25@v1",
+    "2026-08-21|Standard Li\u00e8ge vs RAAL La Louvi\u00e8re|match_over_25@v1",
+    "2026-08-21|Botafogo vs Cienciano|match_over_25@v1",
+    "2026-08-21|Arsenal vs Coventry City|match_over_25@v1",
+    "2026-08-21|Arsenal vs Coventry|match_over_25@v1",
+    "2026-08-21|Al Riyadh SC vs Al Nassr|match_over_25@v1",
+    "2026-08-21|Zamalek SC vs Al-Ittihad Alexandria|match_over_25@v1",
+    "2026-08-21|FK Sarajevo vs BSK Banja Luka|match_over_25@v1",
+    "2026-08-21|Kashiwa Reysol vs V-Varen Nagasaki|match_over_25@v1",
+    "2026-08-21|Bari vs Cavese|match_over_25@v1",
+    "2026-08-21|Levadia Tallinn vs Trans Narva|match_over_25@v1",
+    "2026-08-21|FC Tokyo vs JEF United Chiba|match_over_25@v1",
+    "2026-08-21|Corinthians vs Rosario Central|match_over_25@v1",
+    "2026-08-21|Drogheda United vs St. Patricks Athletic|match_over_25@v1"
    ],
-   "profit": 3.61,
+   "profit": 0.87,
    "records": [
     {
      "date": "2026-08-01",
@@ -382,6 +396,118 @@
      "multi_source": false,
      "price": 1.85,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": true,
+     "match": "Vejle vs Esbjerg",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": false,
+     "match": "Standard Li\u00e8ge vs RAAL La Louvi\u00e8re",
+     "multi_source": false,
+     "price": 2.05,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": false,
+     "match": "Botafogo vs Cienciano",
+     "multi_source": false,
+     "price": 1.3,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": true,
+     "match": "Arsenal vs Coventry City",
+     "multi_source": true,
+     "price": 1.63,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": true,
+     "match": "Arsenal vs Coventry",
+     "multi_source": true,
+     "price": 1.63,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": true,
+     "match": "Al Riyadh SC vs Al Nassr",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": false,
+     "match": "Zamalek SC vs Al-Ittihad Alexandria",
+     "multi_source": false,
+     "price": 2.0,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": false,
+     "match": "FK Sarajevo vs BSK Banja Luka",
+     "multi_source": false,
+     "price": 1.85,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": true,
+     "match": "Kashiwa Reysol vs V-Varen Nagasaki",
+     "multi_source": false,
+     "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": true,
+     "match": "Bari vs Cavese",
+     "multi_source": false,
+     "price": 2.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": true,
+     "match": "Levadia Tallinn vs Trans Narva",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": false,
+     "match": "FC Tokyo vs JEF United Chiba",
+     "multi_source": false,
+     "price": 1.65,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": false,
+     "match": "Corinthians vs Rosario Central",
+     "multi_source": false,
+     "price": 3.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-21",
+     "hit": false,
+     "match": "Drogheda United vs St. Patricks Athletic",
+     "multi_source": true,
+     "price": 2.04,
+     "source": "theoddsapi"
     }
    ],
    "status": "PAPER",
