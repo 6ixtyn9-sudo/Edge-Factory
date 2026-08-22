@@ -5,7 +5,7 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-22",
-      "n_last_window": 130,
+      "n_last_window": 133,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -19,7 +19,7 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-22",
-      "n_last_window": 291,
+      "n_last_window": 285,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
@@ -32,22 +32,22 @@
     },
     {
       "decay": "WATCH",
-      "last_fired": "2026-08-16",
-      "n_last_window": 5,
+      "last_fired": "2026-08-22",
+      "n_last_window": 8,
       "rule": "ml-meta avg_p>=65",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-08-22",
-      "n_last_window": 11,
+      "n_last_window": 14,
       "rule": "ml-meta avg_p>=70",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-08-22",
-      "n_last_window": 7,
+      "n_last_window": 4,
       "rule": "ml-meta avg_p>=75",
       "silent": false
     },
@@ -59,7 +59,7 @@
       "silent": true
     }
   ],
-  "generated_at": "2026-08-22T08:47:18",
+  "generated_at": "2026-08-22T11:45:20",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
