@@ -267,6 +267,9 @@ def audit_team_key_candidates(raw: object) -> list[str]:
         "valmierab": ["valmiera"],
         "neftchi": ["neftchife"],
         "dila": ["dilagori"],
+        # Kyrgyzaltyn Kara-Balta is listed as Kara-Balta on picks and as
+        # Kyrgyzaltyn / FC Kyrgyzaltyn on some result donors.
+        "karabalta": ["kyrgyzalt", "kyrgyzaltyn"],
     }
     base = norm_team(text)
     if base in manual:
