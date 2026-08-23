@@ -88,7 +88,7 @@
     }
   },
   "by_event_disposition": {
-    "POSTPONED": 2
+    "POSTPONED": 11
   },
   "by_odds_match_method": {
     "alias_fuzzy": {
@@ -1302,7 +1302,7 @@
     "settled_picks": 345,
     "wins": 243
   },
-  "pending_result_picks": 13,
+  "pending_result_picks": 4,
   "regular_only_rows": 118,
   "same_day_cutoff": "2026-08-23",
   "same_day_excluded": 27,
@@ -29857,61 +29857,6 @@
   },
   "unmatched_examples": [
     {
-      "away": "Dinamo Minsk",
-      "away_key_candidates": [
-        "dinamomin"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-08-08",
-      "home": "Belshina",
-      "home_key_candidates": [
-        "belshina",
-        "belshinab"
-      ],
-      "league": "Belarus: Premier League",
-      "match": "Belshina vs Dinamo Minsk",
-      "odds": 1.32,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "Pereira",
-      "away_key_candidates": [
-        "pereira"
-      ],
-      "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-      "date": "2026-08-11",
-      "home": "Junior",
-      "home_key_candidates": [
-        "junior"
-      ],
-      "league": "Colombia,Primera A Apertura Finalizacion",
-      "match": "Junior vs Pereira",
-      "odds": 1.33,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way+bc-confirms avg_p>=60"
-    },
-    {
-      "away": "Levski Sofia",
-      "away_key_candidates": [
-        "levskisof"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-08-15",
-      "home": "Slavia Sofia",
-      "home_key_candidates": [
-        "slaviasof"
-      ],
-      "league": "Bg1",
-      "match": "Slavia Sofia vs Levski Sofia",
-      "odds": 1.36,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way-unanimous min_p>=60 avg_p>=65"
-    },
-    {
       "away": "Bars",
       "away_key_candidates": [
         "bars"
@@ -29920,7 +29865,9 @@
       "date": "2026-08-15",
       "home": "Kara-Balta",
       "home_key_candidates": [
-        "karabalta"
+        "karabalta",
+        "kyrgyzalt",
+        "kyrgyzaltyn"
       ],
       "league": "Kg1",
       "match": "Kara-Balta vs Bars",
@@ -29948,24 +29895,6 @@
       "rule": "2way-unanimous min_p>=60 avg_p>=65"
     },
     {
-      "away": "Gil Vicente",
-      "away_key_candidates": [
-        "gilvicent"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-08-16",
-      "home": "SC Braga",
-      "home_key_candidates": [
-        "braga"
-      ],
-      "league": "Portugal,Liga Portugal",
-      "match": "SC Braga vs Gil Vicente",
-      "odds": 1.7,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "ml-meta avg_p>=55"
-    },
-    {
       "away": "Mosta",
       "away_key_candidates": [
         "mosta"
@@ -29982,96 +29911,6 @@
       "pick": "home",
       "reason": "pending_or_unmatched_result",
       "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "Deportivo Pasto",
-      "away_key_candidates": [
-        "pasto"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-08-17",
-      "home": "Bucaramanga",
-      "home_key_candidates": [
-        "bucaraman"
-      ],
-      "league": "Colombia,Primera A Apertura Finalizacion",
-      "match": "Bucaramanga vs Deportivo Pasto",
-      "odds": 1.61,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "ml-meta avg_p>=55"
-    },
-    {
-      "away": "Shelbourne FC",
-      "away_key_candidates": [
-        "shelbourn"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-08-21",
-      "home": "Shamrock Rovers",
-      "home_key_candidates": [
-        "shamrockr"
-      ],
-      "league": "Ie1",
-      "match": "Shamrock Rovers vs Shelbourne FC",
-      "odds": 1.8,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "ml-meta avg_p>=55"
-    },
-    {
-      "away": "St Mirren",
-      "away_key_candidates": [
-        "stmirren"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-08-22",
-      "home": "Rangers",
-      "home_key_candidates": [
-        "rangers"
-      ],
-      "league": "Sc1",
-      "match": "Rangers vs St Mirren",
-      "odds": 1.3,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "Celtic",
-      "away_key_candidates": [
-        "celtic"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-08-22",
-      "home": "St Johnstone",
-      "home_key_candidates": [
-        "stjohnsto"
-      ],
-      "league": "Sc1",
-      "match": "St Johnstone vs Celtic",
-      "odds": 1.42,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "ml-meta avg_p>=55"
-    },
-    {
-      "away": "Kilmarnock",
-      "away_key_candidates": [
-        "kilmarnoc"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-08-22",
-      "home": "Hibernian",
-      "home_key_candidates": [
-        "hibernian"
-      ],
-      "league": "Sc1",
-      "match": "Hibernian vs Kilmarnock",
-      "odds": 1.66,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "ml-meta avg_p>=55"
     },
     {
       "away": "Miami FC II",
@@ -30093,7 +29932,7 @@
       "rule": "ml-meta avg_p>=55"
     }
   ],
-  "unmatched_result_picks": 13,
+  "unmatched_result_picks": 4,
   "unsafe_regular_ledger_dates": [
     "2026-07-28",
     "2026-07-30",
@@ -30436,7 +30275,188 @@
       "pick": "away",
       "reason": "void_event",
       "rule": "2way-unanimous avg_p>=70"
+    },
+    {
+      "away": "Dinamo Minsk",
+      "away_key_candidates": [
+        "dinamomin"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-08-08",
+      "disposition": "POSTPONED",
+      "home": "Belshina",
+      "home_key_candidates": [
+        "belshina",
+        "belshinab"
+      ],
+      "league": "Belarus: Premier League",
+      "match": "Belshina vs Dinamo Minsk",
+      "odds": 1.32,
+      "origin": "verified_disposition",
+      "pick": "away",
+      "reason": "void_event",
+      "rule": "2way-unanimous avg_p>=70"
+    },
+    {
+      "away": "Pereira",
+      "away_key_candidates": [
+        "pereira"
+      ],
+      "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
+      "date": "2026-08-11",
+      "disposition": "POSTPONED",
+      "home": "Junior",
+      "home_key_candidates": [
+        "junior"
+      ],
+      "league": "Colombia,Primera A Apertura Finalizacion",
+      "match": "Junior vs Pereira",
+      "odds": 1.33,
+      "origin": "verified_disposition",
+      "pick": "home",
+      "reason": "void_event",
+      "rule": "2way+bc-confirms avg_p>=60"
+    },
+    {
+      "away": "Levski Sofia",
+      "away_key_candidates": [
+        "levskisof"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-08-15",
+      "disposition": "POSTPONED",
+      "home": "Slavia Sofia",
+      "home_key_candidates": [
+        "slaviasof"
+      ],
+      "league": "Bg1",
+      "match": "Slavia Sofia vs Levski Sofia",
+      "odds": 1.36,
+      "origin": "verified_disposition",
+      "pick": "away",
+      "reason": "void_event",
+      "rule": "2way-unanimous min_p>=60 avg_p>=65"
+    },
+    {
+      "away": "Gil Vicente",
+      "away_key_candidates": [
+        "gilvicent"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-08-16",
+      "disposition": "POSTPONED",
+      "home": "SC Braga",
+      "home_key_candidates": [
+        "braga"
+      ],
+      "league": "Portugal,Liga Portugal",
+      "match": "SC Braga vs Gil Vicente",
+      "odds": 1.7,
+      "origin": "verified_disposition",
+      "pick": "home",
+      "reason": "void_event",
+      "rule": "ml-meta avg_p>=55"
+    },
+    {
+      "away": "Deportivo Pasto",
+      "away_key_candidates": [
+        "pasto"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-08-17",
+      "disposition": "POSTPONED",
+      "home": "Bucaramanga",
+      "home_key_candidates": [
+        "bucaraman"
+      ],
+      "league": "Colombia,Primera A Apertura Finalizacion",
+      "match": "Bucaramanga vs Deportivo Pasto",
+      "odds": 1.61,
+      "origin": "verified_disposition",
+      "pick": "home",
+      "reason": "void_event",
+      "rule": "ml-meta avg_p>=55"
+    },
+    {
+      "away": "Shelbourne FC",
+      "away_key_candidates": [
+        "shelbourn"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-08-21",
+      "disposition": "POSTPONED",
+      "home": "Shamrock Rovers",
+      "home_key_candidates": [
+        "shamrockr"
+      ],
+      "league": "Ie1",
+      "match": "Shamrock Rovers vs Shelbourne FC",
+      "odds": 1.8,
+      "origin": "verified_disposition",
+      "pick": "home",
+      "reason": "void_event",
+      "rule": "ml-meta avg_p>=55"
+    },
+    {
+      "away": "St Mirren",
+      "away_key_candidates": [
+        "stmirren"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-08-22",
+      "disposition": "POSTPONED",
+      "home": "Rangers",
+      "home_key_candidates": [
+        "rangers"
+      ],
+      "league": "Sc1",
+      "match": "Rangers vs St Mirren",
+      "odds": 1.3,
+      "origin": "verified_disposition",
+      "pick": "home",
+      "reason": "void_event",
+      "rule": "2way-unanimous avg_p>=70"
+    },
+    {
+      "away": "Celtic",
+      "away_key_candidates": [
+        "celtic"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-08-22",
+      "disposition": "POSTPONED",
+      "home": "St Johnstone",
+      "home_key_candidates": [
+        "stjohnsto"
+      ],
+      "league": "Sc1",
+      "match": "St Johnstone vs Celtic",
+      "odds": 1.42,
+      "origin": "verified_disposition",
+      "pick": "away",
+      "reason": "void_event",
+      "rule": "ml-meta avg_p>=55"
+    },
+    {
+      "away": "Kilmarnock",
+      "away_key_candidates": [
+        "kilmarnoc"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-08-22",
+      "disposition": "POSTPONED",
+      "home": "Hibernian",
+      "home_key_candidates": [
+        "hibernian"
+      ],
+      "league": "Sc1",
+      "match": "Hibernian vs Kilmarnock",
+      "odds": 1.66,
+      "origin": "verified_disposition",
+      "pick": "home",
+      "reason": "void_event",
+      "rule": "ml-meta avg_p>=55"
     }
   ],
-  "voided_event_picks": 2
+  "voided_event_picks": 11
 }
