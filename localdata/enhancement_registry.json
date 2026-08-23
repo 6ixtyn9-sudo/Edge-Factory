@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 28,
-   "inv_price_sum": 26.95577442871458,
-   "multi_n": 8,
-   "n": 45,
+   "hits": 44,
+   "inv_price_sum": 42.66563749853585,
+   "multi_n": 11,
+   "n": 70,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -147,9 +147,34 @@
     "2026-08-21|Levadia Tallinn vs Trans Narva|match_over_25@v1",
     "2026-08-21|FC Tokyo vs JEF United Chiba|match_over_25@v1",
     "2026-08-21|Corinthians vs Rosario Central|match_over_25@v1",
-    "2026-08-21|Drogheda United vs St. Patricks Athletic|match_over_25@v1"
+    "2026-08-21|Drogheda United vs St. Patricks Athletic|match_over_25@v1",
+    "2026-08-22|West Ham vs Charlton|match_over_25@v1",
+    "2026-08-22|SV Wehen vs Bayer Leverkusen|match_over_25@v1",
+    "2026-08-22|Levski Sofia vs Spartak Varna|match_over_25@v1",
+    "2026-08-22|Fenerbah\u00e7e vs Konyaspor|match_over_25@v1",
+    "2026-08-22|Ludogorets vs Slavia Sofia|match_over_25@v1",
+    "2026-08-22|Inter vs Monza|match_over_25@v1",
+    "2026-08-22|Lens vs Auxerre|match_over_25@v1",
+    "2026-08-22|Heerenveen vs PEC Zwolle|match_over_25@v1",
+    "2026-08-22|Beijing Guoan vs Yunnan Yukun|match_over_25@v1",
+    "2026-08-22|Espanyol vs Real Madrid|match_over_25@v1",
+    "2026-08-22|Kashima Antlers vs Avispa Fukuoka|match_over_25@v1",
+    "2026-08-22|Birmingham City vs Bristol City|match_over_25@v1",
+    "2026-08-22|Hull City vs Manchester United|match_over_25@v1",
+    "2026-08-22|Piast Gliwice vs Legia Warszawa|match_over_25@v1",
+    "2026-08-22|East Fife vs Hamilton Academical|match_over_25@v1",
+    "2026-08-22|Worthing FC vs Wealdstone|match_over_25@v1",
+    "2026-08-22|Erzgebirge Aue vs Hoffenheim|match_over_25@v1",
+    "2026-08-22|Cheonan City vs Suwon Bluewings|match_over_25@v1",
+    "2026-08-22|Suwon City FC vs Gimhae City|match_over_25@v1",
+    "2026-08-22|Al Ain vs Khor Fakkan Club|match_over_25@v1",
+    "2026-08-22|Al Ahli vs Abha Club|match_over_25@v1",
+    "2026-08-22|Fluminense vs Remo|match_over_25@v1",
+    "2026-08-22|Albacete vs Real Sociedad B|match_over_25@v1",
+    "2026-08-22|Al-Ahli Jeddah vs Abha|match_over_25@v1",
+    "2026-08-22|AEK Athens vs Iraklis 1908 FC|match_over_25@v1"
    ],
-   "profit": 0.87,
+   "profit": 1.86,
    "records": [
     {
      "date": "2026-08-01",
@@ -507,6 +532,206 @@
      "match": "Drogheda United vs St. Patricks Athletic",
      "multi_source": true,
      "price": 2.04,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "West Ham vs Charlton",
+     "multi_source": true,
+     "price": 1.68,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "SV Wehen vs Bayer Leverkusen",
+     "multi_source": false,
+     "price": 1.22,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Levski Sofia vs Spartak Varna",
+     "multi_source": false,
+     "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Fenerbah\u00e7e vs Konyaspor",
+     "multi_source": false,
+     "price": 1.6,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": false,
+     "match": "Ludogorets vs Slavia Sofia",
+     "multi_source": false,
+     "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Inter vs Monza",
+     "multi_source": false,
+     "price": 1.53,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Lens vs Auxerre",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": false,
+     "match": "Heerenveen vs PEC Zwolle",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Beijing Guoan vs Yunnan Yukun",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Espanyol vs Real Madrid",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Kashima Antlers vs Avispa Fukuoka",
+     "multi_source": false,
+     "price": 2.3,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Birmingham City vs Bristol City",
+     "multi_source": false,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": false,
+     "match": "Hull City vs Manchester United",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": false,
+     "match": "Piast Gliwice vs Legia Warszawa",
+     "multi_source": false,
+     "price": 1.85,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": false,
+     "match": "East Fife vs Hamilton Academical",
+     "multi_source": false,
+     "price": 1.95,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": false,
+     "match": "Worthing FC vs Wealdstone",
+     "multi_source": false,
+     "price": 1.6,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Erzgebirge Aue vs Hoffenheim",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": false,
+     "match": "Cheonan City vs Suwon Bluewings",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": false,
+     "match": "Suwon City FC vs Gimhae City",
+     "multi_source": false,
+     "price": 1.57,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": false,
+     "match": "Al Ain vs Khor Fakkan Club",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Al Ahli vs Abha Club",
+     "multi_source": false,
+     "price": 1.47,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Fluminense vs Remo",
+     "multi_source": true,
+     "price": 2.07,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Albacete vs Real Sociedad B",
+     "multi_source": true,
+     "price": 1.94,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Al-Ahli Jeddah vs Abha",
+     "multi_source": false,
+     "price": 1.47,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "AEK Athens vs Iraklis 1908 FC",
+     "multi_source": false,
+     "price": 1.53,
      "source": "theoddsapi"
     }
    ],
