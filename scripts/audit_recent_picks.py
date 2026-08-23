@@ -301,6 +301,42 @@ def _settled_overlay_path() -> Path:
     return base / "settled_results.json"
 
 
+
+def load_overlay_event_dispositions(path: Path | None = None) -> list[dict[str, Any]]:
+    """Addendum 21 companion: bot-persisted terminal no-score facts.
+
+    Same overlay file as scores. Only POSTPONED/CANCELLED/ABANDONED rows are
+    accepted. Scheduled/live/blank never become a void. A later same-date
+    score still wins in ``build_report``.
+    """
+    p = path or _settled_overlay_path()
+    try:
+        payload = json.loads(p.read_text())
+        rows = payload.get("dispositions") or []
+    except Exception:
+        return []
+    out: list[dict[str, Any]] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        day = str(row.get("date") or "")[:10]
+        home = str(row.get("home") or "")
+        away = str(row.get("away") or "")
+        disposition = str(row.get("disposition") or "")
+        if not day or not home or not away or not is_void_disposition(disposition):
+            continue
+        out.append(
+            {
+                "date": day,
+                "home": home,
+                "away": away,
+                "disposition": disposition,
+                "origin": str(row.get("src") or row.get("origin") or "overlay"),
+            }
+        )
+    return out
+
+
 def load_settled_overlay(path: Path | None = None) -> list[dict[str, Any]]:
     """Addendum 21: bot-persisted settled-score facts shared across machines.
 
@@ -412,8 +448,8 @@ def load_event_disposition_index(
 
     Only explicit postponed/cancelled/abandoned labels become a disposition.
     Missing, scheduled, live, and generic suspended statuses remain unknown.
-    Reviewed config facts override source status evidence; a final score still
-    wins later in ``build_report``.
+    Warehouse source-status wins over the shared overlay; reviewed config
+    facts override both. A final score still wins later in ``build_report``.
     """
     index: dict[tuple[str, str, str], dict[str, Any]] = {}
     try:
@@ -447,6 +483,17 @@ def load_event_disposition_index(
     except Exception:
         # Status evidence enriches audits but must never break score auditing.
         pass
+
+    for row in load_overlay_event_dispositions():
+        _add_disposition(
+            index,
+            day=row["date"],
+            home=row["home"],
+            away=row["away"],
+            disposition=row["disposition"],
+            origin=str(row.get("origin") or "overlay"),
+            replace=False,
+        )
 
     for row in load_verified_event_dispositions():
         _add_disposition(
