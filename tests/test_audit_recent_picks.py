@@ -980,6 +980,108 @@ def test_source_status_postponement_is_detected_from_raw_warehouse(tmp_path, mon
     assert ("2026-07-25", norm_team("Coquimbo Unido"), norm_team("Universidad de Concepcion")) not in index
 
 
+def test_overlay_disposition_voids_when_warehouse_has_no_status(tmp_path, monkeypatch):
+    from collections import defaultdict
+
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-08-08"
+    pick = _late_ledger_pick(day, "Belshina", "Dinamo Minsk")
+    (localdata / f"picks_{day}.json").write_text(json.dumps([pick]))
+    (localdata / "settled_results.json").write_text(json.dumps({
+        "schema": 1,
+        "rows": [],
+        "dispositions": [{
+            "date": day, "home": "Belshina", "away": "Dinamo Minsk",
+            "disposition": "POSTPONED", "src": "source_status:forebet",
+        }],
+    }))
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    monkeypatch.setattr(audit_mod, "load_results_index", lambda _warehouse: ({}, defaultdict(list)))
+
+    report = audit_mod.build_report(day, day, tmp_path / "missing.duckdb")
+
+    assert report["voided_event_picks"] == 1
+    assert report["by_event_disposition"] == {"POSTPONED": 1}
+    assert report["unmatched_result_picks"] == 0
+    assert report["overall"]["settled_picks"] == 0
+
+
+def test_overlay_disposition_does_not_void_when_score_exists(tmp_path, monkeypatch):
+    from collections import defaultdict
+
+    import scripts.audit_recent_picks as audit_mod
+    from edgefactory.util import norm_team
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-08-17"
+    pick = _late_ledger_pick(day, "Hamrun Spartans", "Mosta", pick="home")
+    (localdata / f"picks_{day}.json").write_text(json.dumps([pick]))
+    result = {
+        "hs": 0, "gs": 2, "outcome": "away",
+        "home": "Hamrun Spartans", "away": "Mosta", "origin": "overlay",
+    }
+    (localdata / "settled_results.json").write_text(json.dumps({
+        "schema": 1,
+        "rows": [{
+            "date": day, "home": "Hamrun Spartans", "away": "Mosta",
+            "hs": 0, "gs": 2, "outcome": "away", "src": "forebet_settled",
+        }],
+        "dispositions": [{
+            "date": day, "home": "Hamrun Spartans", "away": "Mosta",
+            "disposition": "POSTPONED", "src": "source_status:forebet",
+        }],
+    }))
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    monkeypatch.setattr(
+        audit_mod,
+        "load_results_index",
+        lambda _warehouse: (
+            {(day, norm_team("Hamrun Spartans"), norm_team("Mosta")): result},
+            defaultdict(list, {day: [result]}),
+        ),
+    )
+
+    report = audit_mod.build_report(day, day, tmp_path / "unused.duckdb")
+
+    assert report["overall"]["settled_picks"] == 1
+    assert report["voided_event_picks"] == 0
+    assert report["overall"]["wins"] == 0
+
+
+def test_overlay_nonterminal_disposition_is_ignored(tmp_path, monkeypatch):
+    from collections import defaultdict
+
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-08-22"
+    pick = _late_ledger_pick(day, "Charleston Battery", "Miami FC II")
+    (localdata / f"picks_{day}.json").write_text(json.dumps([pick]))
+    (localdata / "settled_results.json").write_text(json.dumps({
+        "schema": 1,
+        "rows": [],
+        "dispositions": [{
+            "date": day, "home": "Charleston Battery", "away": "Miami FC II",
+            "disposition": "DELAY", "src": "overlay",
+        }],
+    }))
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    monkeypatch.setattr(audit_mod, "load_results_index", lambda _warehouse: ({}, defaultdict(list)))
+
+    report = audit_mod.build_report(day, day, tmp_path / "missing.duckdb")
+
+    assert report["voided_event_picks"] == 0
+    assert report["unmatched_result_picks"] == 1
+
+
 def test_disposition_is_never_fuzzy_matched(tmp_path, monkeypatch):
     from collections import defaultdict
 
