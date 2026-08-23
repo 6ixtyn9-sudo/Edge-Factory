@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
+    "as_of": "2026-08-23T17:10:13+02:00",
     "avg_p": 65.0,
     "away": "Vasco da Gama",
     "bookmaker": "1xbet",
@@ -10,9 +10,6 @@
       "away_norm": "vascodagama",
       "comp_type_name": "league",
       "competition_type": "BOOST",
-      "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "CAUTION",
-      "duplicate_event_keys": "palmeiras vs vascodagama",
       "home_norm": "palmeiras",
       "league": "ALLOW",
       "league_key": "br1",
@@ -34,16 +31,6 @@
     "decay_verdict": "WATCH",
     "display_rule": "ML-META\u226560",
     "draw_risk_flag": "EXTREME",
-    "duplicate_bucket_sources": [
-      "CAUTION"
-    ],
-    "duplicate_matches_collapsed": [
-      "Palmeiras vs Vasco da Gama"
-    ],
-    "duplicate_rows_collapsed": 1,
-    "duplicate_rules_collapsed": [
-      "ML-META\u226560"
-    ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=60",
     "edge_status": "certified",
@@ -133,7 +120,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.55,
+      "odds": 1.65,
       "source": "forebet_best"
     },
     "odds_source": "bzzoiro_odds",
@@ -159,7 +146,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
+    "as_of": "2026-08-23T17:10:13+02:00",
     "avg_p": 63.3,
     "away": "Sassuolo",
     "bookmaker": "1xbet",
@@ -169,9 +156,6 @@
       "away_norm": "sassuolo",
       "comp_type_name": "league",
       "competition_type": "BOOST",
-      "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "CAUTION",
-      "duplicate_event_keys": "atalanta vs sassuolo",
       "home_norm": "atalanta",
       "league": "BOOST",
       "league_key": "it1",
@@ -193,16 +177,6 @@
     "decay_verdict": "WATCH",
     "display_rule": "ML-META\u226560",
     "draw_risk_flag": "EXTREME",
-    "duplicate_bucket_sources": [
-      "CAUTION"
-    ],
-    "duplicate_matches_collapsed": [
-      "Atalanta vs Sassuolo"
-    ],
-    "duplicate_rows_collapsed": 1,
-    "duplicate_rules_collapsed": [
-      "ML-META\u226560"
-    ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=60",
     "edge_status": "certified",
@@ -290,7 +264,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.53,
+      "odds": 1.55,
       "source": "forebet_best"
     },
     "odds_source": "bzzoiro_odds",
@@ -1114,7 +1088,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
+    "as_of": "2026-08-23T17:10:13+02:00",
     "avg_p": 71.5,
     "away": "CSKA-Sofia",
     "bookmaker": "scoutingstats_odds",
@@ -1250,7 +1224,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
+    "as_of": "2026-08-23T17:10:13+02:00",
     "avg_p": 71.3,
     "away": "Levadiakos",
     "bookmaker": "scoutingstats_odds",
@@ -1260,9 +1234,6 @@
       "away_norm": "levadiakos",
       "comp_type_name": "league",
       "competition_type": "BOOST",
-      "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "SKIPPED_VETO",
-      "duplicate_event_keys": "paok vs levadiakos",
       "home_norm": "paok",
       "league": "ALLOW",
       "league_key": "gr1",
@@ -1284,17 +1255,6 @@
     "decay_verdict": "WATCH",
     "display_rule": "ML-META\u226560",
     "draw_risk_flag": "HIGH",
-    "duplicate_bucket_sources": [
-      "SKIPPED_VETO"
-    ],
-    "duplicate_matches_collapsed": [
-      "PAOK vs Levadiakos"
-    ],
-    "duplicate_rows_collapsed": 1,
-    "duplicate_rules_collapsed": [
-      "ML-META\u226560",
-      "ML-META\u226565"
-    ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=60",
     "edge_status": "certified",
@@ -1369,13 +1329,13 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.4,
+    "odds": 1.38,
     "odds_captured_at": "2026-08-23T18:00:00Z",
     "odds_league": "Super League",
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.4,
+      "odds": 1.38,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -1556,7 +1516,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
+    "as_of": "2026-08-23T17:10:13+02:00",
     "avg_p": 70.7,
     "away": "Juve Stabia",
     "bookmaker": "scoutingstats_odds",
@@ -1575,9 +1535,9 @@
       "odds_band_name": "1.50-1.75",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O1-pool",
-      "resolution_pool_n": 181,
-      "resolution_pool_roi": -0.008823204419889506,
-      "resolution_reason": "O1 pool n=181 w_roi=-0.0088 -> CAUTION",
+      "resolution_pool_n": 180,
+      "resolution_pool_roi": -0.00331777777777778,
+      "resolution_reason": "O1 pool n=180 w_roi=-0.0033 -> CAUTION",
       "resolution_verdict": "CAUTION",
       "side_role": "home",
       "team_a": "ALLOW",
@@ -1639,7 +1599,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.57,
+      "odds": 1.53,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -1950,7 +1910,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
+    "as_of": "2026-08-23T17:10:13+02:00",
     "avg_p": 68.0,
     "away": "Paderborn",
     "bookmaker": "betexplorer_best",
@@ -2044,13 +2004,13 @@
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
     "n_way": 3,
-    "odds": 1.17,
-    "odds_captured_at": "2026-08-23T12:18:41.880685+00:00",
+    "odds": 1.18,
+    "odds_captured_at": "2026-08-23T15:13:36.273512+00:00",
     "odds_league": "Germany: DFB Pokal",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.14,
+      "odds": 1.16,
       "source": "forebet_best"
     },
     "odds_source": "betexplorer_odds",
@@ -2229,149 +2189,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
-    "avg_p": 65.0,
-    "away": "KR Reykjavik",
-    "bookmaker": "scoutingstats_odds",
-    "bucket": "SKIPPED_VETO",
-    "confidence": null,
-    "ctx": {
-      "away_norm": "krreykjavik",
-      "comp_type_name": "league",
-      "competition_type": "BOOST",
-      "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "SKIPPED_VETO",
-      "duplicate_event_keys": "kaakureyri vs krreykjavik",
-      "home_norm": "kaakureyri",
-      "league": "VETO",
-      "league_key": "iceland urvalsdeild",
-      "league_raw": "Is1",
-      "niche": "UNKNOWN",
-      "odds_band": "ALLOW",
-      "odds_band_name": "1.35-1.50",
-      "resolution_original_verdict": "VETO",
-      "resolution_path": "native",
-      "resolution_pool_n": null,
-      "resolution_pool_roi": null,
-      "resolution_reason": "native verdict VETO unchanged (only UNKNOWN is resolvable)",
-      "resolution_verdict": "VETO",
-      "side_role": "away",
-      "team_a": "VETO",
-      "team_h": "VETO"
-    },
-    "date": "2026-08-23",
-    "decay_verdict": "WATCH",
-    "display_rule": "ML-META\u226560",
-    "draw_risk_flag": "HIGH",
-    "duplicate_bucket_sources": [
-      "SKIPPED_VETO"
-    ],
-    "duplicate_matches_collapsed": [
-      "KA Akureyri vs KR Reykjavik"
-    ],
-    "duplicate_rows_collapsed": 1,
-    "duplicate_rules_collapsed": [
-      "ML-META\u226560",
-      "ML-META\u226565"
-    ],
-    "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=60",
-    "edge_status": "certified",
-    "enhancement_breakeven": 0.8772,
-    "enhancement_edge_sample": -0.4486,
-    "enhancement_label": "Match Over 2.5 Goals",
-    "enhancement_mapped": true,
-    "enhancement_multi_source": false,
-    "enhancement_price": 1.14,
-    "enhancement_price_at": null,
-    "enhancement_price_book": null,
-    "enhancement_price_source": "scoutingstats",
-    "enhancement_priced": true,
-    "enhancement_probability": 0.4837,
-    "enhancement_reason": "Mathematical expectation is 61.9% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 48.4%)",
-    "enhancement_state": "PAPER",
-    "event_notes": [
-      {
-        "cohort_n": 500,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.48367708085945504,
-        "raw_probability": 0.6191515391741191,
-        "reason": "Mathematical expectation is 61.9% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 48.4%)"
-      },
-      {
-        "cohort_n": 500,
-        "engine": "hybrid_cohort",
-        "label": "Home Team Under 3.5 Goals",
-        "market": "home_under_35",
-        "probability": 0.9657317673288917,
-        "raw_probability": 0.9682424199237539,
-        "reason": "Combined Under 3.5 is 96.8% (ML-calibrated 94.3%->94.0%, n=67)"
-      },
-      {
-        "cohort_n": 500,
-        "engine": "hybrid_cohort",
-        "label": "Home Team Under 2.5 Goals",
-        "market": "home_under_25",
-        "probability": 0.9404616952570634,
-        "raw_probability": 0.9117091245947198,
-        "reason": "Combined Under 2.5 is 91.2% (ML-calibrated 91.3%->94.4%, n=54)"
-      },
-      {
-        "cohort_n": 500,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.240588801943422,
-        "raw_probability": 0.23808792636488524,
-        "reason": "Poisson expected hit rate is 23.8% (ML-calibrated 24.9%->25.9%, n=212)"
-      }
-    ],
-    "home": "KA Akureyri",
-    "kickoff": "2026-08-23 19:00:00",
-    "league": "Is1",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
-    "market_type": "1x2",
-    "match": "KA Akureyri vs KR Reykjavik",
-    "min_lead_minutes": 30,
-    "model_version": null,
-    "n_way": 3,
-    "odds": 1.48,
-    "odds_captured_at": "2026-08-23T17:00:00Z",
-    "odds_league": "Besta deild",
-    "odds_match_method": "exact",
-    "odds_match_status": "uncorroborated",
-    "odds_replaced": {
-      "odds": 1.48,
-      "source": "forebet_best"
-    },
-    "odds_source": "scoutingstats_odds",
-    "odds_tier": "low",
-    "pick": "away",
-    "picked_for": "2026-08-23",
-    "price_evidence": "SCOUTINGSTATS_SOLE",
-    "price_push_eligible": false,
-    "price_quarantine_reason": "scoutingstats_sole_source",
-    "recommended_enhancement": "match_over_25",
-    "recommended_market": "avoid_raw_1x2",
-    "rule": "ml-meta avg_p>=60",
-    "source_weights": {},
-    "sources_used": [
-      "forebet",
-      "statarea",
-      "vitibet"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=370): Avg Goals: 3.51 | Over 2.5: 67.6% | BTTS: 39.7% | Home Over 1.5 Goals: 9.7% | Away Over 1.5 Goals: 86.2%",
-    "veto_reason": "context VETO in ['league', 'team_h', 'team_a']",
-    "vitibet_index": -4.14,
-    "w_score": 1.0
-  },
-  {
-    "as_of": "2026-08-23T14:14:24+02:00",
+    "as_of": "2026-08-23T17:10:13+02:00",
     "avg_p": 64.2,
     "away": "Juventus",
     "bookmaker": "scoutingstats_odds",
@@ -2381,9 +2199,6 @@
       "away_norm": "juventus",
       "comp_type_name": "league",
       "competition_type": "BOOST",
-      "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "SKIPPED_VETO",
-      "duplicate_event_keys": "frosinone vs juventus",
       "home_norm": "frosinone",
       "league": "VETO",
       "league_key": "it1",
@@ -2405,16 +2220,6 @@
     "decay_verdict": "WATCH",
     "display_rule": "ML-META\u226560",
     "draw_risk_flag": "HIGH",
-    "duplicate_bucket_sources": [
-      "SKIPPED_VETO"
-    ],
-    "duplicate_matches_collapsed": [
-      "Frosinone vs Juventus"
-    ],
-    "duplicate_rows_collapsed": 1,
-    "duplicate_rules_collapsed": [
-      "ML-META\u226560"
-    ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=60",
     "edge_status": "certified",
@@ -2486,7 +2291,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.44,
+      "odds": 1.42,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -2514,7 +2319,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
+    "as_of": "2026-08-23T17:10:13+02:00",
     "avg_p": 64.0,
     "away": "Barcelona",
     "bookmaker": "1xbet",
@@ -2616,7 +2421,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.36,
+      "odds": 1.33,
       "source": "forebet_best"
     },
     "odds_source": "bzzoiro_odds",
@@ -2790,7 +2595,149 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
+    "as_of": "2026-08-23T17:10:13+02:00",
+    "avg_p": 63.2,
+    "away": "KR Reykjavik",
+    "bookmaker": "scoutingstats_odds",
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "krreykjavik",
+      "comp_type_name": "league",
+      "competition_type": "BOOST",
+      "duplicate_alias_collapse": "true",
+      "duplicate_bucket_sources": "SKIPPED_VETO",
+      "duplicate_event_keys": "kaakureyri vs krreykjavik",
+      "home_norm": "kaakureyri",
+      "league": "VETO",
+      "league_key": "iceland urvalsdeild",
+      "league_raw": "Is1",
+      "niche": "UNKNOWN",
+      "odds_band": "BOOST",
+      "odds_band_name": "1.50-1.75",
+      "resolution_original_verdict": "VETO",
+      "resolution_path": "native",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "native verdict VETO unchanged (only UNKNOWN is resolvable)",
+      "resolution_verdict": "VETO",
+      "side_role": "away",
+      "team_a": "VETO",
+      "team_h": "VETO"
+    },
+    "date": "2026-08-23",
+    "decay_verdict": "WATCH",
+    "display_rule": "ML-META\u226560",
+    "draw_risk_flag": "EXTREME",
+    "duplicate_bucket_sources": [
+      "SKIPPED_VETO"
+    ],
+    "duplicate_matches_collapsed": [
+      "KA Akureyri vs KR Reykjavik"
+    ],
+    "duplicate_rows_collapsed": 1,
+    "duplicate_rules_collapsed": [
+      "ML-META\u226560"
+    ],
+    "edge_n_way": 3,
+    "edge_rule": "ml-meta avg_p>=60",
+    "edge_status": "certified",
+    "enhancement_breakeven": 0.8772,
+    "enhancement_edge_sample": -0.4372,
+    "enhancement_label": "Match Over 2.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": 1.14,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": "scoutingstats",
+    "enhancement_priced": true,
+    "enhancement_probability": 0.4937,
+    "enhancement_reason": "Mathematical expectation is 63.2% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 49.4%)",
+    "enhancement_state": "PAPER",
+    "event_notes": [
+      {
+        "cohort_n": 588,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.493748615980127,
+        "raw_probability": 0.6320440385679911,
+        "reason": "Mathematical expectation is 63.2% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 49.4%)"
+      },
+      {
+        "cohort_n": 588,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9681572598425197,
+        "raw_probability": 0.9706742180900271,
+        "reason": "Combined Under 3.5 is 97.1% (ML-calibrated 94.3%->94.0%, n=67)"
+      },
+      {
+        "cohort_n": 588,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 2.5 Goals",
+        "market": "home_under_25",
+        "probability": 0.9429351435190938,
+        "raw_probability": 0.914106952556325,
+        "reason": "Combined Under 2.5 is 91.4% (ML-calibrated 91.3%->94.4%, n=54)"
+      },
+      {
+        "cohort_n": 588,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.23466334869812494,
+        "raw_probability": 0.23222406709733454,
+        "reason": "Poisson expected hit rate is 23.2% (ML-calibrated 24.9%->25.9%, n=212)"
+      }
+    ],
+    "home": "KA Akureyri",
+    "kickoff": "2026-08-23 19:00:00",
+    "league": "Is1",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "high draw risk and weak signal for raw 1X2",
+    "market_type": "1x2",
+    "match": "KA Akureyri vs KR Reykjavik",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 4,
+    "odds": 1.66,
+    "odds_captured_at": "2026-08-23T17:00:00Z",
+    "odds_league": "Besta deild",
+    "odds_match_method": "exact",
+    "odds_match_status": "uncorroborated",
+    "odds_replaced": {
+      "odds": 1.66,
+      "source": "forebet_best"
+    },
+    "odds_source": "scoutingstats_odds",
+    "odds_tier": "low",
+    "pick": "away",
+    "picked_for": "2026-08-23",
+    "price_evidence": "SCOUTINGSTATS_SOLE",
+    "price_push_eligible": false,
+    "price_quarantine_reason": "scoutingstats_sole_source",
+    "recommended_enhancement": "match_over_25",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "ml-meta avg_p>=60",
+    "source_weights": {},
+    "sources_used": [
+      "forebet",
+      "zulubet",
+      "statarea",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=425): Avg Goals: 3.52 | Over 2.5: 70.6% | BTTS: 41.6% | Home Over 1.5 Goals: 9.4% | Away Over 1.5 Goals: 86.6%",
+    "veto_reason": "context VETO in ['league', 'team_h', 'team_a']",
+    "vitibet_index": -4.14,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-08-23T17:10:13+02:00",
     "avg_p": 61.7,
     "away": "Kifisia",
     "bookmaker": "scoutingstats_odds",
@@ -3916,32 +3863,32 @@
     "w_score": 0.6736
   },
   {
-    "as_of": "2026-08-23T14:14:24+02:00",
-    "avg_p": 75.0,
-    "away": "Heracles",
-    "bookmaker": "betexplorer_best",
+    "as_of": "2026-08-23T17:10:13+02:00",
+    "avg_p": 71.0,
+    "away": "Casa Pia AC",
+    "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
-      "away_norm": "heracles",
+      "away_norm": "casapia",
       "comp_type_name": "league",
       "competition_type": "CAUTION",
-      "home_norm": "jongutrecht",
-      "league": "UNKNOWN",
-      "league_key": "eerste divisie",
-      "league_raw": "Nl2",
+      "home_norm": "gilvicente",
+      "league": "ALLOW",
+      "league_key": "liga portugal",
+      "league_raw": "Pt1",
       "niche": "UNKNOWN",
       "odds_band": "ALLOW",
       "odds_band_name": "1.50-1.75",
-      "resolution_original_verdict": "UNKNOWN",
-      "resolution_path": "O1-pool",
-      "resolution_pool_n": 162,
-      "resolution_pool_roi": -0.010014197530864202,
-      "resolution_reason": "O1 pool n=162 w_roi=-0.0100 -> CAUTION",
-      "resolution_verdict": "CAUTION",
-      "side_role": "away",
+      "resolution_original_verdict": "ALLOW",
+      "resolution_path": "native",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "native verdict ALLOW unchanged (only UNKNOWN is resolvable)",
+      "resolution_verdict": "ALLOW",
+      "side_role": "home",
       "team_a": "VETO",
-      "team_h": "UNKNOWN"
+      "team_h": "VETO"
     },
     "date": "2026-08-24",
     "decay_verdict": "WATCH",
@@ -3958,186 +3905,63 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.5106,
-    "enhancement_reason": "Mathematical expectation is 65.4% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 51.1%)",
+    "enhancement_probability": 0.5098,
+    "enhancement_reason": "Mathematical expectation is 65.3% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 51.0%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 186,
+        "cohort_n": 933,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.5106251920499731,
-        "raw_probability": 0.6536476217501155,
-        "reason": "Mathematical expectation is 65.4% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 51.1%)"
+        "probability": 0.5098488336397016,
+        "raw_probability": 0.6526538109542508,
+        "reason": "Mathematical expectation is 65.3% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 51.0%)"
       },
       {
-        "cohort_n": 186,
-        "engine": "hybrid_cohort",
-        "label": "Home Team Under 3.5 Goals",
-        "market": "home_under_35",
-        "probability": 0.9576322535163255,
-        "raw_probability": 0.9601218494720064,
-        "reason": "Combined Under 3.5 is 96.0% (ML-calibrated 94.3%->94.0%, n=67)"
-      },
-      {
-        "cohort_n": 186,
-        "engine": "hybrid_cohort",
-        "label": "Home Team Under 2.5 Goals",
-        "market": "home_under_25",
-        "probability": 0.9235071861675632,
-        "raw_probability": 0.895272962741582,
-        "reason": "Combined Under 2.5 is 89.5% (ML-calibrated 91.3%->94.4%, n=54)"
-      },
-      {
-        "cohort_n": 186,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.28258955945948666,
-        "raw_probability": 0.2796520938655232,
-        "reason": "Poisson expected hit rate is 28.0% (ML-calibrated 24.9%->25.9%, n=212)"
-      }
-    ],
-    "home": "Jong Utrecht",
-    "kickoff": "2026-08-24 20:00:00",
-    "league": "Nl2",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "high draw risk and weak signal for raw 1X2",
-    "market_type": "1x2",
-    "match": "Jong Utrecht vs Heracles",
-    "min_lead_minutes": 30,
-    "model_version": null,
-    "n_way": 2,
-    "odds": 1.55,
-    "odds_captured_at": "2026-08-23T12:25:41.838769+00:00",
-    "odds_league": "Netherlands: Eerste Divisie",
-    "odds_match_method": "betexplorer",
-    "odds_match_status": "matched",
-    "odds_replaced": {
-      "odds": 1.57,
-      "source": "forebet_best"
-    },
-    "odds_source": "betexplorer_odds",
-    "odds_tier": "low",
-    "pick": "away",
-    "price_evidence": "BETEXPLORER_RESCUE",
-    "price_push_eligible": true,
-    "recommended_enhancement": "match_over_25",
-    "recommended_market": "avoid_raw_1x2",
-    "rule": "2way-unanimous avg_p>=70",
-    "source_weights": {},
-    "sources_used": [
-      "forebet",
-      "vitibet"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=148): Avg Goals: 3.99 | Over 2.5: 78.4% | BTTS: 33.8% | Home Over 1.5 Goals: 4.7% | Away Over 1.5 Goals: 88.5%",
-    "veto_reason": "context VETO in ['team_a']",
-    "vitibet_index": -3.67,
-    "w_score": 1.0
-  },
-  {
-    "as_of": "2026-08-23T14:14:24+02:00",
-    "avg_p": 67.3,
-    "away": "Casa Pia AC",
-    "bookmaker": "scoutingstats_odds",
-    "bucket": "SKIPPED_VETO",
-    "confidence": null,
-    "ctx": {
-      "away_norm": "casapia",
-      "comp_type_name": "league",
-      "competition_type": "BOOST",
-      "home_norm": "gilvicente",
-      "league": "ALLOW",
-      "league_key": "liga portugal",
-      "league_raw": "Pt1",
-      "niche": "BOOST",
-      "odds_band": "BOOST",
-      "odds_band_name": "1.50-1.75",
-      "resolution_original_verdict": "ALLOW",
-      "resolution_path": "native",
-      "resolution_pool_n": null,
-      "resolution_pool_roi": null,
-      "resolution_reason": "native verdict ALLOW unchanged (only UNKNOWN is resolvable)",
-      "resolution_verdict": "ALLOW",
-      "side_role": "home",
-      "team_a": "VETO",
-      "team_h": "VETO"
-    },
-    "date": "2026-08-24",
-    "decay_verdict": "WATCH",
-    "display_rule": "ML-META\u226560",
-    "draw_risk_flag": "EXTREME",
-    "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=60",
-    "edge_status": "certified",
-    "enhancement_label": "Match Over 2.5 Goals",
-    "enhancement_mapped": true,
-    "enhancement_multi_source": false,
-    "enhancement_price": null,
-    "enhancement_price_at": null,
-    "enhancement_price_book": null,
-    "enhancement_price_source": null,
-    "enhancement_priced": false,
-    "enhancement_probability": 0.4808,
-    "enhancement_reason": "Mathematical expectation is 61.5% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 48.1%)",
-    "enhancement_state": "PAPER",
-    "event_notes": [
-      {
-        "cohort_n": 1083,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.48076913411190647,
-        "raw_probability": 0.6154290975372697,
-        "reason": "Mathematical expectation is 61.5% (ML-calibrated 45.7%->63.3%, n=251) (Performance feedback: HR=66.4%, Adjusted Prob: 48.1%)"
-      },
-      {
-        "cohort_n": 1083,
+        "cohort_n": 933,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8735022145120963,
-        "raw_probability": 0.8994041673273749,
-        "reason": "Home scoring rate is 76.7% (ML-calibrated 87.1%->93.0%, n=229) (Performance feedback: HR=91.7%, Adjusted Prob: 87.4%)"
+        "probability": 0.8841832956250322,
+        "raw_probability": 0.9104019744364297,
+        "reason": "Home scoring rate is 76.7% (ML-calibrated 87.1%->93.0%, n=229) (Performance feedback: HR=91.7%, Adjusted Prob: 88.4%)"
       },
       {
-        "cohort_n": 1083,
+        "cohort_n": 933,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9859235999310807,
-        "raw_probability": 0.9852644580086729,
-        "reason": "Combined Under 3.5 is 98.5% (ML-calibrated 97.9%->98.0%, n=248)"
+        "probability": 0.9820333432271677,
+        "raw_probability": 0.9813768021465317,
+        "reason": "Combined Under 3.5 is 98.1% (ML-calibrated 97.9%->98.0%, n=248)"
       },
       {
-        "cohort_n": 1083,
+        "cohort_n": 933,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9595572253047637,
-        "raw_probability": 0.9564049147058931,
-        "reason": "Combined Under 2.5 is 95.6% (ML-calibrated 93.7%->94.0%, n=233)"
+        "probability": 0.9479407966766147,
+        "raw_probability": 0.9448266480446594,
+        "reason": "Combined Under 2.5 is 94.5% (ML-calibrated 93.7%->94.0%, n=233)"
       },
       {
-        "cohort_n": 1083,
+        "cohort_n": 933,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8130288070621836,
-        "raw_probability": 0.8011146302806498,
-        "reason": "Combined Under 1.5 is 80.1% (ML-calibrated 81.5%->83.0%, n=88)"
+        "probability": 0.8056887378648868,
+        "raw_probability": 0.7938821229326327,
+        "reason": "Combined Under 1.5 is 79.4% (ML-calibrated 81.5%->83.0%, n=88)"
       },
       {
-        "cohort_n": 1083,
+        "cohort_n": 933,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.23518455139651503,
-        "raw_probability": 0.23273985199119948,
-        "reason": "Poisson expected hit rate is 23.3% (ML-calibrated 24.9%->25.9%, n=212)"
+        "probability": 0.2761300514870427,
+        "raw_probability": 0.2732597312697849,
+        "reason": "Poisson expected hit rate is 27.3% (ML-calibrated 24.9%->25.9%, n=212)"
       }
     ],
     "home": "Gil Vicente",
@@ -4150,16 +3974,12 @@
     "match": "Gil Vicente vs Casa Pia AC",
     "min_lead_minutes": 30,
     "model_version": null,
-    "n_way": 3,
+    "n_way": 2,
     "odds": 1.7,
     "odds_captured_at": "2026-08-24T19:15:00Z",
     "odds_league": "Liga Portugal",
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
-    "odds_replaced": {
-      "odds": 1.7,
-      "source": "forebet_best"
-    },
     "odds_source": "scoutingstats_odds",
     "odds_tier": "low",
     "pick": "home",
@@ -4168,15 +3988,14 @@
     "price_quarantine_reason": "scoutingstats_sole_source",
     "recommended_enhancement": "match_over_25",
     "recommended_market": "avoid_raw_1x2",
-    "rule": "ml-meta avg_p>=60",
+    "rule": "2way-unanimous avg_p>=70",
     "source_weights": {},
     "sources_used": [
-      "forebet",
       "statarea",
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=826): Avg Goals: 3.56 | Over 2.5: 69.9% | BTTS: 40.6% | Home Over 1.5 Goals: 86.3% | Away Over 1.5 Goals: 9.8%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=727): Avg Goals: 3.75 | Over 2.5: 73.7% | BTTS: 42.8% | Home Over 1.5 Goals: 87.1% | Away Over 1.5 Goals: 9.9%",
     "veto_reason": "context VETO in ['team_h', 'team_a']",
     "vitibet_index": 4.68,
     "w_score": 1.0
