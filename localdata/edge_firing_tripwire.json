@@ -5,40 +5,40 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-23",
-      "n_last_window": 118,
+      "n_last_window": 115,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-08-23",
-      "n_last_window": 71,
+      "n_last_window": 80,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
     {
       "decay": "WATCH",
-      "last_fired": "2026-08-16",
-      "n_last_window": 5,
+      "last_fired": "2026-08-23",
+      "n_last_window": 8,
       "rule": "ml-meta avg_p>=65",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-08-23",
-      "n_last_window": 16,
+      "n_last_window": 10,
       "rule": "ml-meta avg_p>=70",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-08-23",
-      "n_last_window": 1,
+      "n_last_window": 7,
       "rule": "ml-meta avg_p>=80",
       "silent": false
     }
   ],
-  "generated_at": "2026-08-23T11:33:21",
+  "generated_at": "2026-08-23T14:33:35",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
