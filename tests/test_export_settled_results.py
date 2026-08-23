@@ -71,3 +71,50 @@ def test_merge_warehouse_wins_conflict_and_drops_stale_inbound():
     ]
     rows, carried = export_mod.merge_overlay_rows(wh, inbound, "2026-06-01")
     assert len(rows) == 1 and carried == 0 and rows[0]["hs"] == 1
+
+
+def _disp(date, home, away, disposition="POSTPONED", src="source_status:forebet"):
+    return {"date": date, "home": home, "away": away, "disposition": disposition, "src": src}
+
+
+def test_build_overlay_dispositions_exports_only_terminal_status():
+    import duckdb
+
+    con = duckdb.connect(":memory:")
+    con.execute("CREATE TABLE forebet (date VARCHAR, home VARCHAR, away VARCHAR, status VARCHAR)")
+    con.execute("INSERT INTO forebet VALUES ('2026-08-08','Belshina','Dinamo Minsk','Postp.')")
+    con.execute("INSERT INTO forebet VALUES ('2026-08-08','Live','Club','scheduled')")
+    con.execute("INSERT INTO forebet VALUES ('2026-08-08','Blank','Score','')")
+    con.execute("INSERT INTO forebet VALUES ('2026-05-01','Too','Old','Postponed')")
+    rows = export_mod.build_overlay_dispositions(con, "2026-07-01")
+    assert len(rows) == 1
+    assert rows[0]["home"] == "Belshina"
+    assert rows[0]["disposition"] == "POSTPONED"
+    assert rows[0]["src"] == "source_status:forebet"
+
+
+def test_inbound_dispositions_drop_nonterminal_and_merge_warehouse_wins():
+    wh = [_disp("2026-08-08", "Belshina", "Dinamo Minsk", "POSTPONED")]
+    inbound = [
+        _disp("2026-08-08", "Belshina", "Dinamo Minsk", "CANCELLED", src="overlay"),
+        _disp("2026-08-11", "Junior", "Pereira", "POSTPONED", src="overlay"),
+        _disp("2026-01-01", "Too", "Old", "POSTPONED", src="overlay"),
+        {"date": "2026-08-08", "home": "Not", "away": "Terminal", "disposition": "SCHEDULED", "src": "overlay"},
+    ]
+    parsed = []
+    # reuse merge after filtering the way load_inbound_dispositions would
+    from pathlib import Path
+    import json
+    import tempfile
+
+    with tempfile.TemporaryDirectory() as tmp:
+        path = Path(tmp) / "settled_results.json"
+        path.write_text(json.dumps({"schema": 1, "rows": [], "dispositions": inbound}))
+        parsed = export_mod.load_inbound_dispositions(path)
+    assert [r["home"] for r in parsed] == ["Belshina", "Junior", "Too"]
+    rows, carried = export_mod.merge_overlay_dispositions(wh, parsed, "2026-07-01")
+    by_home = {r["home"]: r for r in rows}
+    assert by_home["Belshina"]["disposition"] == "POSTPONED"
+    assert by_home["Junior"]["src"] == "overlay"
+    assert "Too" not in by_home
+    assert carried == 1
