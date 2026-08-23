@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 44,
-   "inv_price_sum": 42.66563749853585,
+   "hits": 46,
+   "inv_price_sum": 44.120088844291544,
    "multi_n": 11,
-   "n": 70,
+   "n": 72,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -172,9 +172,11 @@
     "2026-08-22|Fluminense vs Remo|match_over_25@v1",
     "2026-08-22|Albacete vs Real Sociedad B|match_over_25@v1",
     "2026-08-22|Al-Ahli Jeddah vs Abha|match_over_25@v1",
-    "2026-08-22|AEK Athens vs Iraklis 1908 FC|match_over_25@v1"
+    "2026-08-22|AEK Athens vs Iraklis 1908 FC|match_over_25@v1",
+    "2026-08-22|Rhode Island vs Monterey Bay|match_over_25@v1",
+    "2026-08-22|Inter Miami CF vs Toronto FC|match_over_25@v1"
    ],
-   "profit": 1.86,
+   "profit": 2.67,
    "records": [
     {
      "date": "2026-08-01",
@@ -733,6 +735,22 @@
      "multi_source": false,
      "price": 1.53,
      "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Rhode Island vs Monterey Bay",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-22",
+     "hit": true,
+     "match": "Inter Miami CF vs Toronto FC",
+     "multi_source": false,
+     "price": 1.2,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
