@@ -13,6 +13,7 @@ def test_new_alias_mappings():
     assert "poweshiji" in audit_team_key_candidates("Hebei Kungfu")
     assert "meizhouwu" in audit_team_key_candidates("Meizhou Kejia")
     assert "meizhouha" in audit_team_key_candidates("Meizhou Kejia")
+    assert "kyrgyzalt" in audit_team_key_candidates("Kara-Balta")
 
 
 def test_settle_pick_counts_home_loss():
