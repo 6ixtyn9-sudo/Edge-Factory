@@ -11,14 +11,19 @@ cloud warehouse never captured those rows. Settled scores are FACTS, not
 memory: this script exports a compact rolling window that the bot persists to
 git, and the audit settles from warehouse ∪ overlay.
 
-Reads:  localdata/warehouse.duckdb (the six *_settled views only)
+Reads:  localdata/warehouse.duckdb (the six *_settled views plus raw
+        forebet/vitibet/scoutingstats status columns)
 Writes: localdata/settled_results.json — atomic (tmp + replace). Each export
         UNIONS the inbound shared file (rows other machines contributed,
         delivered by git) with this machine's warehouse rows — dedup by
         normalized pair, warehouse wins on conflict, stale inbound dropped —
         so the shared file converges to the union of BOTH machines' memories
         no matter which machine ran last (Addendum 21 convergence loop).
-        Bot-owned via the .gitignore negation; humans never hand-edit it.
+        ``dispositions`` carry positive terminal no-score facts (POSTPONED /
+        CANCELLED / ABANDONED) the same way. Scheduled/live/blank/missing
+        scores are never exported as voids. A later same-date score in
+        ``rows`` still wins at audit time. Bot-owned via the .gitignore
+        negation; humans never hand-edit it.
 
 Usage:
     PYTHONPATH=src python3 scripts/export_settled_results.py             # export
@@ -46,6 +51,9 @@ SETTLED_SOURCES = [
     (5, "scoutingstats_settled"),
     (6, "vitibet_settled"),
 ]
+
+# Same raw status tables as audit_recent_picks.load_event_disposition_index.
+STATUS_SOURCES = ("forebet", "vitibet", "scoutingstats")
 
 
 def build_overlay_rows(con, window_start: str) -> list[dict]:
@@ -140,6 +148,105 @@ def merge_overlay_rows(warehouse_rows: list[dict], inbound_rows: list[dict], win
     return rows, len(inbound_only)
 
 
+def _disposition_key(row: dict) -> tuple:
+    from edgefactory.util import norm_team
+
+    return (row["date"], norm_team(row["home"], 14), norm_team(row["away"], 14))
+
+
+def build_overlay_dispositions(con, window_start: str) -> list[dict]:
+    """Positive terminal no-score facts on/after window_start.
+
+    Only explicit postponed/cancelled/abandoned labels are exported.
+    Missing, scheduled, live, and generic suspended statuses stay out.
+    """
+    from edgefactory.settlement import terminal_event_disposition
+
+    tables = {row[0] for row in con.execute("SHOW TABLES").fetchall()}
+    index: dict[tuple, dict] = {}
+    for source in STATUS_SOURCES:
+        if source not in tables:
+            continue
+        try:
+            columns = {str(row[0]) for row in con.execute(f"DESCRIBE {source}").fetchall()}
+            if "status" not in columns:
+                continue
+            fetched = con.execute(
+                f"SELECT date, home, away, status FROM {source} "
+                f"WHERE status IS NOT NULL "
+                f"AND substr(CAST(date AS VARCHAR), 1, 10) >= '{window_start}'"
+            ).fetchall()
+        except Exception:
+            continue
+        for day, home, away, status in fetched:
+            disposition = terminal_event_disposition(status)
+            if not disposition:
+                continue
+            entry = {
+                "date": str(day)[:10],
+                "home": str(home),
+                "away": str(away),
+                "disposition": disposition,
+                "src": f"source_status:{source}",
+            }
+            index.setdefault(_disposition_key(entry), entry)
+    return sorted(index.values(), key=lambda x: (x["date"], x["home"], x["away"]))
+
+
+def load_inbound_dispositions(path: Path) -> list[dict]:
+    """Shared overlay dispositions from git. Invalid/non-terminal rows drop."""
+    from edgefactory.settlement import is_void_disposition
+
+    try:
+        payload = json.loads(path.read_text())
+        rows = payload.get("dispositions") or []
+    except Exception:
+        return []
+    out: list[dict] = []
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        try:
+            day = str(row["date"])[:10]
+            home = str(row["home"])
+            away = str(row["away"])
+            disposition = str(row["disposition"])
+        except (KeyError, TypeError):
+            continue
+        if not day or not home or not away or not is_void_disposition(disposition):
+            continue
+        out.append(
+            {
+                "date": day,
+                "home": home,
+                "away": away,
+                "disposition": disposition,
+                "src": str(row.get("src") or "overlay"),
+            }
+        )
+    return out
+
+
+def merge_overlay_dispositions(
+    warehouse_rows: list[dict], inbound_rows: list[dict], window_start: str
+) -> tuple[list[dict], int]:
+    """Union dispositions; warehouse source-status wins on the same pair."""
+    merged: dict[tuple, dict] = {}
+    inbound_only: set[tuple] = set()
+    for row in inbound_rows:
+        if row["date"] < window_start:
+            continue
+        key = _disposition_key(row)
+        merged[key] = row
+        inbound_only.add(key)
+    for row in warehouse_rows:
+        key = _disposition_key(row)
+        merged[key] = row
+        inbound_only.discard(key)
+    rows = sorted(merged.values(), key=lambda x: (x["date"], x["home"], x["away"]))
+    return rows, len(inbound_only)
+
+
 def self_test() -> int:
     import duckdb
 
@@ -186,16 +293,20 @@ def main() -> int:
     con = duckdb.connect(str(wh), read_only=True)
     window_start = (date.today() - timedelta(days=WINDOW_DAYS)).isoformat()
     wh_rows = build_overlay_rows(con, window_start)
+    wh_disp = build_overlay_dispositions(con, window_start)
     con.close()
     # Convergence loop: carry other machines' facts forward (inbound file came
     # down via git pull), then this machine's freshest memory overwrites dupes.
     inbound = load_inbound_rows(OUT_FILE)
     rows, carried = merge_overlay_rows(wh_rows, inbound, window_start)
+    inbound_disp = load_inbound_dispositions(OUT_FILE)
+    dispositions, carried_disp = merge_overlay_dispositions(wh_disp, inbound_disp, window_start)
     payload = {
         "schema": 1,
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "window_days": WINDOW_DAYS,
         "rows": rows,
+        "dispositions": dispositions,
     }
     LOCALDATA.mkdir(parents=True, exist_ok=True)
     tmp = OUT_FILE.with_suffix(".json.tmp")
@@ -203,7 +314,9 @@ def main() -> int:
     tmp.replace(OUT_FILE)
     print(
         f"settled overlay exported: {len(rows)} rows (>= {window_start}; "
-        f"{len(wh_rows)} from this warehouse + {carried} carried from shared file) -> {OUT_FILE}"
+        f"{len(wh_rows)} from this warehouse + {carried} carried from shared file) "
+        f"+ {len(dispositions)} dispositions "
+        f"({len(wh_disp)} from this warehouse + {carried_disp} carried) -> {OUT_FILE}"
     )
     return 0
 
