@@ -1,7 +1,7 @@
 [
   {
     "date": "2026-08-23",
-    "kickoff": "13:00",
+    "kickoff": "15:00",
     "home": "Washington Spirit (w)",
     "away": "Orlando Pride (w)",
     "league": "USA,Nwsl",
@@ -23,7 +23,7 @@
         "bookmaker": "pinnacle",
         "home_key": "pogonszczecin",
         "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
+        "kickoff_delta_minutes": 315
       },
       {
         "home": "Pogo\u0144 Szczecin",
@@ -36,7 +36,7 @@
         "bookmaker": "10bet",
         "home_key": "pogonszczecin",
         "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
+        "kickoff_delta_minutes": 315
       },
       {
         "home": "Pogo\u0144 Szczecin",
@@ -49,7 +49,7 @@
         "bookmaker": "cloudbet",
         "home_key": "pogonszczecin",
         "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
+        "kickoff_delta_minutes": 315
       },
       {
         "home": "Pogo\u0144 Szczecin",
@@ -62,7 +62,7 @@
         "bookmaker": "dafabet",
         "home_key": "pogonszczecin",
         "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
+        "kickoff_delta_minutes": 315
       },
       {
         "home": "Pogo\u0144 Szczecin",
@@ -75,74 +75,74 @@
         "bookmaker": "betfair",
         "home_key": "pogonszczecin",
         "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
+        "kickoff_delta_minutes": 315
       }
     ],
     "nearby_scoutingstats_candidates": [
       {
-        "home": "Gwangju",
-        "away": "Incheon United",
-        "league": "K League 1",
-        "kickoff": "2026-08-23T10:30:00Z",
+        "home": "Radomiak Radom",
+        "away": "Zag\u0142\u0119bie Lubin",
+        "league": "Ekstraklasa",
+        "kickoff": "2026-08-23T12:45:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 4.33,
+        "odds": 2.45,
         "bookmaker": "scoutingstats_odds",
-        "home_key": "gwangju",
-        "away_key": "incheonunited",
+        "home_key": "radomiakradom",
+        "away_key": "zaglebielubin",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Mied\u017a Legnica",
+        "away": "Arka Gdynia",
+        "league": "1. Liga",
+        "kickoff": "2026-08-23T12:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "miedzlegnica",
+        "away_key": "arkagdynia",
         "kickoff_delta_minutes": 30
       },
       {
-        "home": "Jeonnam Dragons",
-        "away": "Hwaseong",
-        "league": "K League 2",
-        "kickoff": "2026-08-23T10:30:00Z",
+        "home": "PSV",
+        "away": "FC Groningen",
+        "league": "Eredivisie",
+        "kickoff": "2026-08-23T12:30:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 3.25,
+        "odds": 1.36,
         "bookmaker": "scoutingstats_odds",
-        "home_key": "jeonnamdragons",
-        "away_key": "hwaseong",
+        "home_key": "psv",
+        "away_key": "fcgroningen",
         "kickoff_delta_minutes": 30
       },
       {
-        "home": "Cheongju",
-        "away": "Gyeongnam",
-        "league": "K League 2",
-        "kickoff": "2026-08-23T10:30:00Z",
+        "home": "Eintracht Braunschweig",
+        "away": "FC Union Berlin",
+        "league": "DFB Pokal",
+        "kickoff": "2026-08-23T13:30:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 2.5,
+        "odds": 3.75,
         "bookmaker": "scoutingstats_odds",
-        "home_key": "cheongju",
-        "away_key": "gyeongnam",
+        "home_key": "eintrachtbraunschweig",
+        "away_key": "fcunionberlin",
         "kickoff_delta_minutes": 30
       },
       {
-        "home": "Daejeon Citizen",
-        "away": "Gangwon",
-        "league": "K League 1",
-        "kickoff": "2026-08-23T10:30:00Z",
+        "home": "ROHDA Raalte",
+        "away": "De Treffers",
+        "league": "Tweede Divisie",
+        "kickoff": "2026-08-23T12:00:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 2.4,
+        "odds": 6.5,
         "bookmaker": "scoutingstats_odds",
-        "home_key": "daejeoncitizen",
-        "away_key": "gangwon",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Chungnam Asan",
-        "away": "Yongin City",
-        "league": "K League 2",
-        "kickoff": "2026-08-23T10:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.9,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "chungnamasan",
-        "away_key": "yongincity",
-        "kickoff_delta_minutes": 30
+        "home_key": "rohdaraalte",
+        "away_key": "detreffers",
+        "kickoff_delta_minutes": 60
       }
     ]
   },
@@ -301,7 +301,7 @@
     "league": "DFB",
     "market": "1x2",
     "pick": "away",
-    "rule_name": "ml-meta avg_p>=80",
+    "rule_name": "ml-meta avg_p>=70",
     "match_method": "fallback",
     "home_key": "bahlingersc",
     "away_key": "magdeburg",
@@ -583,153 +583,6 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "brage",
         "away_key": "unitednordic",
-        "kickoff_delta_minutes": 30
-      }
-    ]
-  },
-  {
-    "date": "2026-08-23",
-    "kickoff": "2026-08-23 13:00:00",
-    "home": "SSV Jeddeloh",
-    "away": "Heidenheim",
-    "league": "DFB",
-    "market": "1x2",
-    "pick": "away",
-    "rule_name": "ml-meta avg_p>=70",
-    "match_method": "fallback",
-    "home_key": "ssvjeddeloh",
-    "away_key": "heidenheim",
-    "nearby_bzzoiro_candidates": [
-      {
-        "home": "Pogo\u0144 Szczecin",
-        "away": "Wis\u0142a Krak\u00f3w",
-        "league": "Ekstraklasa",
-        "kickoff": "2026-08-23T18:15:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 3.04,
-        "bookmaker": "pinnacle",
-        "home_key": "pogonszczecin",
-        "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
-      },
-      {
-        "home": "Pogo\u0144 Szczecin",
-        "away": "Wis\u0142a Krak\u00f3w",
-        "league": "Ekstraklasa",
-        "kickoff": "2026-08-23T18:15:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.95,
-        "bookmaker": "cloudbet",
-        "home_key": "pogonszczecin",
-        "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
-      },
-      {
-        "home": "Pogo\u0144 Szczecin",
-        "away": "Wis\u0142a Krak\u00f3w",
-        "league": "Ekstraklasa",
-        "kickoff": "2026-08-23T18:15:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.95,
-        "bookmaker": "melbet",
-        "home_key": "pogonszczecin",
-        "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
-      },
-      {
-        "home": "Pogo\u0144 Szczecin",
-        "away": "Wis\u0142a Krak\u00f3w",
-        "league": "Ekstraklasa",
-        "kickoff": "2026-08-23T18:15:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.95,
-        "bookmaker": "1xbet",
-        "home_key": "pogonszczecin",
-        "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
-      },
-      {
-        "home": "Pogo\u0144 Szczecin",
-        "away": "Wis\u0142a Krak\u00f3w",
-        "league": "Ekstraklasa",
-        "kickoff": "2026-08-23T18:15:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.88,
-        "bookmaker": "cashpoint",
-        "home_key": "pogonszczecin",
-        "away_key": "wislakrakow",
-        "kickoff_delta_minutes": 435
-      }
-    ],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Seoul E.",
-        "away": "Paju Citizen",
-        "league": "K League 2",
-        "kickoff": "2026-08-23T10:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 5.25,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "seoule",
-        "away_key": "pajucitizen",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Machida Zelvia",
-        "away": "Urawa Reds",
-        "league": "J1 League",
-        "kickoff": "2026-08-23T10:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 4.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "machidazelvia",
-        "away_key": "urawareds",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Chungnam Asan",
-        "away": "Yongin City",
-        "league": "K League 2",
-        "kickoff": "2026-08-23T10:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 3.4,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "chungnamasan",
-        "away_key": "yongincity",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Daejeon Citizen",
-        "away": "Gangwon",
-        "league": "K League 1",
-        "kickoff": "2026-08-23T10:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "daejeoncitizen",
-        "away_key": "gangwon",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Cheongju",
-        "away": "Gyeongnam",
-        "league": "K League 2",
-        "kickoff": "2026-08-23T10:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 2.45,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "cheongju",
-        "away_key": "gyeongnam",
         "kickoff_delta_minutes": 30
       }
     ]
@@ -1025,6 +878,153 @@
         "home_key": "sccambuur",
         "away_key": "feyenoord",
         "kickoff_delta_minutes": 45
+      }
+    ]
+  },
+  {
+    "date": "2026-08-23",
+    "kickoff": "2026-08-23 13:00:00",
+    "home": "SSV Jeddeloh",
+    "away": "Heidenheim",
+    "league": "DFB",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "ssvjeddeloh",
+    "away_key": "heidenheim",
+    "nearby_bzzoiro_candidates": [
+      {
+        "home": "Pogo\u0144 Szczecin",
+        "away": "Wis\u0142a Krak\u00f3w",
+        "league": "Ekstraklasa",
+        "kickoff": "2026-08-23T18:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.04,
+        "bookmaker": "pinnacle",
+        "home_key": "pogonszczecin",
+        "away_key": "wislakrakow",
+        "kickoff_delta_minutes": 435
+      },
+      {
+        "home": "Pogo\u0144 Szczecin",
+        "away": "Wis\u0142a Krak\u00f3w",
+        "league": "Ekstraklasa",
+        "kickoff": "2026-08-23T18:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.95,
+        "bookmaker": "cloudbet",
+        "home_key": "pogonszczecin",
+        "away_key": "wislakrakow",
+        "kickoff_delta_minutes": 435
+      },
+      {
+        "home": "Pogo\u0144 Szczecin",
+        "away": "Wis\u0142a Krak\u00f3w",
+        "league": "Ekstraklasa",
+        "kickoff": "2026-08-23T18:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.95,
+        "bookmaker": "melbet",
+        "home_key": "pogonszczecin",
+        "away_key": "wislakrakow",
+        "kickoff_delta_minutes": 435
+      },
+      {
+        "home": "Pogo\u0144 Szczecin",
+        "away": "Wis\u0142a Krak\u00f3w",
+        "league": "Ekstraklasa",
+        "kickoff": "2026-08-23T18:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.95,
+        "bookmaker": "1xbet",
+        "home_key": "pogonszczecin",
+        "away_key": "wislakrakow",
+        "kickoff_delta_minutes": 435
+      },
+      {
+        "home": "Pogo\u0144 Szczecin",
+        "away": "Wis\u0142a Krak\u00f3w",
+        "league": "Ekstraklasa",
+        "kickoff": "2026-08-23T18:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.88,
+        "bookmaker": "cashpoint",
+        "home_key": "pogonszczecin",
+        "away_key": "wislakrakow",
+        "kickoff_delta_minutes": 435
+      }
+    ],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Seoul E.",
+        "away": "Paju Citizen",
+        "league": "K League 2",
+        "kickoff": "2026-08-23T10:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 5.25,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "seoule",
+        "away_key": "pajucitizen",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Machida Zelvia",
+        "away": "Urawa Reds",
+        "league": "J1 League",
+        "kickoff": "2026-08-23T10:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 4.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "machidazelvia",
+        "away_key": "urawareds",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Chungnam Asan",
+        "away": "Yongin City",
+        "league": "K League 2",
+        "kickoff": "2026-08-23T10:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.4,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "chungnamasan",
+        "away_key": "yongincity",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Daejeon Citizen",
+        "away": "Gangwon",
+        "league": "K League 1",
+        "kickoff": "2026-08-23T10:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "daejeoncitizen",
+        "away_key": "gangwon",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Cheongju",
+        "away": "Gyeongnam",
+        "league": "K League 2",
+        "kickoff": "2026-08-23T10:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.45,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "cheongju",
+        "away_key": "gyeongnam",
+        "kickoff_delta_minutes": 30
       }
     ]
   },
