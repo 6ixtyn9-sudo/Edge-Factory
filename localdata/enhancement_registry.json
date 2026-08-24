@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 46,
-   "inv_price_sum": 44.120088844291544,
-   "multi_n": 11,
-   "n": 72,
+   "hits": 53,
+   "inv_price_sum": 51.51272867147171,
+   "multi_n": 12,
+   "n": 83,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -174,9 +174,20 @@
     "2026-08-22|Al-Ahli Jeddah vs Abha|match_over_25@v1",
     "2026-08-22|AEK Athens vs Iraklis 1908 FC|match_over_25@v1",
     "2026-08-22|Rhode Island vs Monterey Bay|match_over_25@v1",
-    "2026-08-22|Inter Miami CF vs Toronto FC|match_over_25@v1"
+    "2026-08-22|Inter Miami CF vs Toronto FC|match_over_25@v1",
+    "2026-08-23|Universitatea Craiova vs FC Voluntari|match_over_25@v1",
+    "2026-08-23|PAOK vs Levadiakos|match_over_25@v1",
+    "2026-08-23|Manchester City vs Bournemouth|match_over_25@v1",
+    "2026-08-23|BSC Young Boys vs FC Vaduz|match_over_25@v1",
+    "2026-08-23|KA Akureyri vs KR Reykjavik|match_over_25@v1",
+    "2026-08-23|Porto vs FC Arouca|match_over_25@v1",
+    "2026-08-23|Frosinone vs Juventus|match_over_25@v1",
+    "2026-08-23|Elche vs Barcelona|match_over_25@v1",
+    "2026-08-23|Zrinjski vs Zeljeznicar Sarajevo|match_over_25@v1",
+    "2026-08-23|Cambuur vs Feyenoord|match_over_25@v1",
+    "2026-08-23|Midtjylland vs Randers FC|match_over_25@v1"
    ],
-   "profit": 2.67,
+   "profit": 1.78,
    "records": [
     {
      "date": "2026-08-01",
@@ -750,6 +761,94 @@
      "match": "Inter Miami CF vs Toronto FC",
      "multi_source": false,
      "price": 1.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": true,
+     "match": "Universitatea Craiova vs FC Voluntari",
+     "multi_source": false,
+     "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": true,
+     "match": "PAOK vs Levadiakos",
+     "multi_source": false,
+     "price": 1.65,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": true,
+     "match": "Manchester City vs Bournemouth",
+     "multi_source": false,
+     "price": 1.53,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": true,
+     "match": "BSC Young Boys vs FC Vaduz",
+     "multi_source": false,
+     "price": 1.29,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": true,
+     "match": "KA Akureyri vs KR Reykjavik",
+     "multi_source": false,
+     "price": 1.12,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": false,
+     "match": "Porto vs FC Arouca",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": false,
+     "match": "Frosinone vs Juventus",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": true,
+     "match": "Elche vs Barcelona",
+     "multi_source": true,
+     "price": 1.47,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": false,
+     "match": "Zrinjski vs Zeljeznicar Sarajevo",
+     "multi_source": false,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": true,
+     "match": "Cambuur vs Feyenoord",
+     "multi_source": false,
+     "price": 1.33,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-23",
+     "hit": false,
+     "match": "Midtjylland vs Randers FC",
+     "multi_source": false,
+     "price": 1.53,
      "source": "scoutingstats"
     }
    ],
