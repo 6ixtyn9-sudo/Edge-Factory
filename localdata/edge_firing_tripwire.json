@@ -29,9 +29,16 @@
       "n_last_window": 6,
       "rule": "ml-meta avg_p>=65",
       "silent": false
+    },
+    {
+      "decay": "WATCH",
+      "last_fired": "2026-08-22",
+      "n_last_window": 4,
+      "rule": "ml-meta avg_p>=75",
+      "silent": false
     }
   ],
-  "generated_at": "2026-08-24T08:47:54",
+  "generated_at": "2026-08-24T11:52:15",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
