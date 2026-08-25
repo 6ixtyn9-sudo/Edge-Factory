@@ -229,7 +229,7 @@
     "w_score": 0.2391
   },
   {
-    "as_of": "2026-08-25T08:22:47+02:00",
+    "as_of": "2026-08-25T11:22:53+02:00",
     "avg_p": 78.0,
     "away": "Motherwell Youth",
     "bookmaker": "betexplorer_best",
@@ -333,7 +333,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.15,
-    "odds_captured_at": "2026-08-25T06:32:22.238820+00:00",
+    "odds_captured_at": "2026-08-25T09:32:28.976890+00:00",
     "odds_league": "Scotland: Challenge Cup",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -361,7 +361,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-25T08:22:47+02:00",
+    "as_of": "2026-08-25T11:22:53+02:00",
     "avg_p": 61.0,
     "away": "Sekhukhune Utd",
     "bookmaker": "scoutingstats_odds",
@@ -473,13 +473,13 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.33,
+    "odds": 1.28,
     "odds_captured_at": "2026-08-25T17:30:00Z",
     "odds_league": "Premier League",
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.3,
+      "odds": 1.33,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -504,8 +504,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-25T08:22:47+02:00",
-    "avg_p": 60.3,
+    "as_of": "2026-08-25T11:22:53+02:00",
+    "avg_p": 59.7,
     "away": "Grotta",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
@@ -534,7 +534,7 @@
     "date": "2026-08-25",
     "decay_verdict": "WATCH",
     "display_rule": "ML-META\u226555",
-    "draw_risk_flag": "HIGH",
+    "draw_risk_flag": "MEDIUM",
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
@@ -546,54 +546,54 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.4537,
-    "enhancement_reason": "Mathematical expectation is 56.9% (ML-calibrated 45.8%->63.7%, n=284) (Performance feedback: HR=67.6%, Adjusted Prob: 45.4%)",
+    "enhancement_probability": 0.4533,
+    "enhancement_reason": "Mathematical expectation is 56.9% (ML-calibrated 45.8%->63.7%, n=284) (Performance feedback: HR=67.6%, Adjusted Prob: 45.3%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 1967,
+        "cohort_n": 1990,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4536965365468465,
-        "raw_probability": 0.5693088770375845,
-        "reason": "Mathematical expectation is 56.9% (ML-calibrated 45.8%->63.7%, n=284) (Performance feedback: HR=67.6%, Adjusted Prob: 45.4%)"
+        "probability": 0.45328909772351866,
+        "raw_probability": 0.5687976134058721,
+        "reason": "Mathematical expectation is 56.9% (ML-calibrated 45.8%->63.7%, n=284) (Performance feedback: HR=67.6%, Adjusted Prob: 45.3%)"
       },
       {
-        "cohort_n": 1967,
+        "cohort_n": 1990,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8279323664371455,
-        "raw_probability": 0.8787369038421592,
-        "reason": "Home scoring rate is 81.4% (ML-calibrated 87.0%->91.6%, n=251) (Performance feedback: HR=90.1%, Adjusted Prob: 82.8%)"
+        "probability": 0.8265186718312486,
+        "raw_probability": 0.8772364604831079,
+        "reason": "Home scoring rate is 81.4% (ML-calibrated 87.0%->91.6%, n=251) (Performance feedback: HR=90.1%, Adjusted Prob: 82.7%)"
       },
       {
-        "cohort_n": 1967,
+        "cohort_n": 1990,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9838082327724049,
-        "raw_probability": 0.9853207000469771,
+        "probability": 0.9834991863454119,
+        "raw_probability": 0.9850111785044162,
         "reason": "Combined Under 3.5 is 98.5% (ML-calibrated 97.9%->97.8%, n=271)"
       },
       {
-        "cohort_n": 1967,
+        "cohort_n": 1990,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9456456717295038,
-        "raw_probability": 0.9386974333280098,
-        "reason": "Combined Under 2.5 is 93.9% (ML-calibrated 93.7%->94.5%, n=254)"
+        "probability": 0.9448971621735325,
+        "raw_probability": 0.9379544235305592,
+        "reason": "Combined Under 2.5 is 93.8% (ML-calibrated 93.7%->94.5%, n=254)"
       },
       {
-        "cohort_n": 1967,
+        "cohort_n": 1990,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.18708534927336912,
-        "raw_probability": 0.18120506374962989,
-        "reason": "Poisson expected hit rate is 18.1% (ML-calibrated 24.8%->28.0%, n=239)"
+        "probability": 0.18848637537224588,
+        "raw_probability": 0.18256205415292917,
+        "reason": "Poisson expected hit rate is 18.3% (ML-calibrated 24.8%->28.0%, n=239)"
       }
     ],
     "home": "Afturelding",
@@ -601,19 +601,19 @@
     "league": "Is2",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "historically unstable out of sample above 1.25",
+    "market_recommendation_reason": "upper short-odds zone, narrow surviving niche",
     "market_type": "1x2",
     "match": "Afturelding vs Grotta",
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.32,
-    "odds_captured_at": "2026-08-25T06:32:38.328655+00:00",
+    "odds": 1.23,
+    "odds_captured_at": "2026-08-25T09:32:40.668252+00:00",
     "odds_league": "Iceland: Division 1",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.3,
+      "odds": 1.25,
       "source": "forebet_best"
     },
     "odds_source": "betexplorer_odds",
@@ -622,7 +622,7 @@
     "price_evidence": "BETEXPLORER_RESCUE",
     "price_push_eligible": true,
     "recommended_enhancement": "match_over_25",
-    "recommended_market": "avoid_raw_1x2",
+    "recommended_market": "keep_1x2",
     "rule": "ml-meta avg_p>=55",
     "source_weights": {},
     "sources_used": [
@@ -631,13 +631,13 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1327): Avg Goals: 3.29 | Over 2.5: 65.4% | BTTS: 43.0% | Home Over 1.5 Goals: 82.7% | Away Over 1.5 Goals: 10.1%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1331): Avg Goals: 3.30 | Over 2.5: 65.5% | BTTS: 43.7% | Home Over 1.5 Goals: 82.9% | Away Over 1.5 Goals: 10.6%",
     "veto_reason": "context VETO in ['team_h', 'odds_band']",
     "vitibet_index": 5.05,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-25T08:22:47+02:00",
+    "as_of": "2026-08-25T11:22:53+02:00",
     "avg_p": 57.3,
     "away": "Peterborough",
     "bookmaker": "scoutingstats_odds",
@@ -731,13 +731,13 @@
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
     "n_way": 4,
-    "odds": 1.61,
+    "odds": 1.7,
     "odds_captured_at": "2026-08-25T18:45:00Z",
     "odds_league": "Carabao Cup",
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.65,
+      "odds": 1.66,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -1116,7 +1116,7 @@
     "w_score": 0.2216
   },
   {
-    "as_of": "2026-08-25T08:22:47+02:00",
+    "as_of": "2026-08-25T11:22:53+02:00",
     "avg_p": 72.6,
     "away": "Al-Nassr",
     "bookmaker": "scoutingstats_odds",
