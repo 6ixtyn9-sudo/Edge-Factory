@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-08-26T11:28:21+02:00",
+    "as_of": "2026-08-26T14:23:40+02:00",
     "avg_p": 73.1,
     "away": "Real Sociedad",
     "bookmaker": "1xbet",
@@ -534,7 +534,7 @@
     "w_score": 0.2659
   },
   {
-    "as_of": "2026-08-26T11:28:21+02:00",
+    "as_of": "2026-08-26T14:23:40+02:00",
     "avg_p": 71.5,
     "away": "Mlada Boleslav",
     "bookmaker": "betexplorer_best",
@@ -629,7 +629,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.08,
-    "odds_captured_at": "2026-08-26T09:31:45.435992+00:00",
+    "odds_captured_at": "2026-08-26T12:26:59.986626+00:00",
     "odds_league": "Czech Republic: MOL Cup",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -1236,8 +1236,126 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-26T11:28:21+02:00",
-    "avg_p": 65.5,
+    "as_of": "2026-08-26T14:23:40+02:00",
+    "avg_p": 55.7,
+    "away": "Hannover 96 II",
+    "bookmaker": null,
+    "bucket": "SKIPPED_VETO",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "hannover96ii",
+      "comp_type_name": "league",
+      "competition_type": "BOOST",
+      "home_norm": "ssvjeddeloh",
+      "league": "VETO",
+      "league_key": "de4",
+      "league_raw": "De4",
+      "niche": "UNKNOWN",
+      "odds_band": "BOOST",
+      "odds_band_name": "1.75-2.00",
+      "resolution_original_verdict": "VETO",
+      "resolution_path": "native",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "native verdict VETO unchanged (only UNKNOWN is resolvable)",
+      "resolution_verdict": "VETO",
+      "side_role": "away",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-08-26",
+    "decay_verdict": "WATCH",
+    "display_rule": "ML-META\u226555",
+    "draw_risk_flag": "EXTREME",
+    "edge_n_way": 3,
+    "edge_rule": "ml-meta avg_p>=55",
+    "edge_status": "certified",
+    "enhancement_label": "Match Over 2.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": null,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.4815,
+    "enhancement_reason": "Mathematical expectation is 59.9% (ML-calibrated 45.8%->64.0%, n=289) (Performance feedback: HR=68.0%, Adjusted Prob: 48.1%)",
+    "enhancement_state": "PAPER",
+    "event_notes": [
+      {
+        "cohort_n": 1062,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.48147715410184183,
+        "raw_probability": 0.5988842009999452,
+        "reason": "Mathematical expectation is 59.9% (ML-calibrated 45.8%->64.0%, n=289) (Performance feedback: HR=68.0%, Adjusted Prob: 48.1%)"
+      },
+      {
+        "cohort_n": 1062,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9766386504274158,
+        "raw_probability": 0.9720292875458734,
+        "reason": "Combined Under 3.5 is 97.2% (ML-calibrated 94.4%->94.9%, n=78)"
+      },
+      {
+        "cohort_n": 1062,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 2.5 Goals",
+        "market": "home_under_25",
+        "probability": 0.9178777171980875,
+        "raw_probability": 0.8963325711845251,
+        "reason": "Combined Under 2.5 is 89.6% (ML-calibrated 91.3%->93.8%, n=64)"
+      },
+      {
+        "cohort_n": 1062,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.18785753322966312,
+        "raw_probability": 0.18328959006603734,
+        "reason": "Poisson expected hit rate is 18.3% (ML-calibrated 24.8%->27.3%, n=242)"
+      }
+    ],
+    "home": "SSV Jeddeloh",
+    "kickoff": "2026-08-26 19:00:00",
+    "league": "De4",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "price vs hit-rate math broken for 1X2",
+    "market_type": "1x2",
+    "match": "SSV Jeddeloh vs Hannover 96 II",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 3,
+    "odds": 1.86,
+    "odds_match_method": "fallback",
+    "odds_match_status": "matched",
+    "odds_source": "forebet_best",
+    "odds_tier": "low",
+    "pick": "away",
+    "price_evidence": "SOURCE_FALLBACK",
+    "price_push_eligible": true,
+    "recommended_enhancement": "match_over_25",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "ml-meta avg_p>=55",
+    "source_weights": {},
+    "sources_used": [
+      "forebet",
+      "zulubet",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=655): Avg Goals: 3.31 | Over 2.5: 69.0% | BTTS: 44.7% | Home Over 1.5 Goals: 11.5% | Away Over 1.5 Goals: 84.9%",
+    "veto_reason": "context VETO in ['league']",
+    "vitibet_index": -0.76,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-08-26T14:23:40+02:00",
+    "avg_p": 65.7,
     "away": "Real Frontera SC",
     "bookmaker": null,
     "bucket": "SKIPPED_VETO",
@@ -1278,63 +1396,63 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.4765,
-    "enhancement_reason": "Mathematical expectation is 59.3% (ML-calibrated 45.8%->64.0%, n=289) (Performance feedback: HR=68.0%, Adjusted Prob: 47.7%)",
+    "enhancement_probability": 0.4792,
+    "enhancement_reason": "Mathematical expectation is 59.6% (ML-calibrated 45.8%->64.0%, n=289) (Performance feedback: HR=68.0%, Adjusted Prob: 47.9%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 1325,
+        "cohort_n": 1290,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.47651318534280324,
-        "raw_probability": 0.5927097803888757,
-        "reason": "Mathematical expectation is 59.3% (ML-calibrated 45.8%->64.0%, n=289) (Performance feedback: HR=68.0%, Adjusted Prob: 47.7%)"
+        "probability": 0.4791622473285075,
+        "raw_probability": 0.5960048097733275,
+        "reason": "Mathematical expectation is 59.6% (ML-calibrated 45.8%->64.0%, n=289) (Performance feedback: HR=68.0%, Adjusted Prob: 47.9%)"
       },
       {
-        "cohort_n": 1325,
+        "cohort_n": 1290,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8515164054495269,
-        "raw_probability": 0.9000169094323992,
-        "reason": "Home scoring rate is 79.3% (ML-calibrated 87.0%->91.8%, n=255) (Performance feedback: HR=90.3%, Adjusted Prob: 85.2%)"
+        "probability": 0.8551304148503139,
+        "raw_probability": 0.9038367648699922,
+        "reason": "Home scoring rate is 79.3% (ML-calibrated 87.0%->91.8%, n=255) (Performance feedback: HR=90.3%, Adjusted Prob: 85.5%)"
       },
       {
-        "cohort_n": 1325,
+        "cohort_n": 1290,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9847468973967418,
-        "raw_probability": 0.9895869672535791,
-        "reason": "Combined Under 3.5 is 99.0% (ML-calibrated 97.9%->97.5%, n=275)"
+        "probability": 0.984495040736246,
+        "raw_probability": 0.9893338727076592,
+        "reason": "Combined Under 3.5 is 98.9% (ML-calibrated 97.9%->97.5%, n=275)"
       },
       {
-        "cohort_n": 1325,
+        "cohort_n": 1290,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9613018583221387,
-        "raw_probability": 0.9571011414124793,
+        "probability": 0.9616495861285794,
+        "raw_probability": 0.9574473497106992,
         "reason": "Combined Under 2.5 is 95.7% (ML-calibrated 93.7%->94.2%, n=258)"
       },
       {
-        "cohort_n": 1325,
+        "cohort_n": 1290,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8188987289287477,
-        "raw_probability": 0.8053629931036547,
-        "reason": "Combined Under 1.5 is 80.5% (ML-calibrated 81.5%->83.2%, n=95)"
+        "probability": 0.8204435022013215,
+        "raw_probability": 0.8068822325193685,
+        "reason": "Combined Under 1.5 is 80.7% (ML-calibrated 81.5%->83.2%, n=95)"
       },
       {
-        "cohort_n": 1325,
+        "cohort_n": 1290,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.2251505831715428,
-        "raw_probability": 0.2196758223274969,
-        "reason": "Poisson expected hit rate is 22.0% (ML-calibrated 24.8%->27.3%, n=242)"
+        "probability": 0.23017747301082148,
+        "raw_probability": 0.2245804783298841,
+        "reason": "Poisson expected hit rate is 22.5% (ML-calibrated 24.8%->27.3%, n=242)"
       }
     ],
     "home": "Zamora",
@@ -1346,7 +1464,7 @@
     "market_type": "1x2",
     "match": "Zamora vs Real Frontera SC",
     "min_lead_minutes": 30,
-    "ml_p": 0.6547,
+    "ml_p": 0.6567,
     "model_version": null,
     "n_way": 3,
     "odds": 1.1,
@@ -1366,10 +1484,10 @@
       "statarea"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=996): Avg Goals: 3.47 | Over 2.5: 67.6% | BTTS: 39.7% | Home Over 1.5 Goals: 85.3% | Away Over 1.5 Goals: 9.9%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=979): Avg Goals: 3.47 | Over 2.5: 67.5% | BTTS: 39.4% | Home Over 1.5 Goals: 85.1% | Away Over 1.5 Goals: 9.8%",
     "veto_reason": "context VETO in ['league']",
     "vitibet_index": null,
-    "w_score": 0.6399
+    "w_score": 0.6486
   },
   {
     "as_of": "2026-08-25T02:30:49+02:00",
@@ -1742,7 +1860,7 @@
     "w_score": 0.3039
   },
   {
-    "as_of": "2026-08-26T11:28:21+02:00",
+    "as_of": "2026-08-26T14:23:40+02:00",
     "avg_p": 57.5,
     "away": "Kaizer Chiefs",
     "bookmaker": "scoutingstats_odds",
