@@ -1354,10 +1354,10 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-08-26T18:07:41+02:00",
-    "avg_p": 65.7,
+    "as_of": "2026-08-26T21:28:35+02:00",
+    "avg_p": 65.9,
     "away": "Real Frontera SC",
-    "bookmaker": null,
+    "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
@@ -1369,8 +1369,8 @@
       "league_key": "vec",
       "league_raw": "VeC",
       "niche": "UNKNOWN",
-      "odds_band": "BOOST",
-      "odds_band_name": "1.10-1.20",
+      "odds_band": "CAUTION",
+      "odds_band_name": "1.00-1.10",
       "resolution_original_verdict": "VETO",
       "resolution_path": "native",
       "resolution_pool_n": null,
@@ -1464,16 +1464,22 @@
     "market_type": "1x2",
     "match": "Zamora vs Real Frontera SC",
     "min_lead_minutes": 30,
-    "ml_p": 0.6569,
+    "ml_p": 0.6586,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.1,
-    "odds_match_method": "fallback",
+    "odds": 1.08,
+    "odds_captured_at": "2026-08-26T19:31:52.123693+00:00",
+    "odds_league": "Venezuela: Copa Venezuela",
+    "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
-    "odds_source": "forebet_best",
+    "odds_replaced": {
+      "odds": 1.1,
+      "source": "forebet_best"
+    },
+    "odds_source": "betexplorer_odds",
     "odds_tier": "low",
     "pick": "home",
-    "price_evidence": "SOURCE_FALLBACK",
+    "price_evidence": "BETEXPLORER_RESCUE",
     "price_push_eligible": true,
     "recommended_enhancement": "match_over_25",
     "recommended_market": "keep_1x2",
@@ -1487,7 +1493,7 @@
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=979): Avg Goals: 3.47 | Over 2.5: 67.5% | BTTS: 39.4% | Home Over 1.5 Goals: 85.1% | Away Over 1.5 Goals: 9.8%",
     "veto_reason": "context VETO in ['league']",
     "vitibet_index": null,
-    "w_score": 0.6496
+    "w_score": 0.6571
   },
   {
     "as_of": "2026-08-25T02:30:49+02:00",
