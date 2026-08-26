@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 55,
-   "inv_price_sum": 52.832990109380205,
+   "hits": 56,
+   "inv_price_sum": 53.60222087861097,
    "multi_n": 12,
-   "n": 85,
+   "n": 86,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -187,9 +187,10 @@
     "2026-08-23|Cambuur vs Feyenoord|match_over_25@v1",
     "2026-08-23|Midtjylland vs Randers FC|match_over_25@v1",
     "2026-08-24|Jong Utrecht vs Heracles|match_over_25@v1",
-    "2026-08-24|Brondby vs Silkeborg|match_over_25@v1"
+    "2026-08-24|Brondby vs Silkeborg|match_over_25@v1",
+    "2026-08-25|Al-Ettifaq vs Al-Nassr|match_over_25@v1"
    ],
-   "profit": 2.81,
+   "profit": 3.11,
    "records": [
     {
      "date": "2026-08-01",
@@ -868,6 +869,14 @@
      "multi_source": false,
      "price": 1.5,
      "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-25",
+     "hit": true,
+     "match": "Al-Ettifaq vs Al-Nassr",
+     "multi_source": false,
+     "price": 1.3,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
