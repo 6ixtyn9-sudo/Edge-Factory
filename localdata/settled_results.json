@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_at": "2026-08-27T13:30:17",
+ "generated_at": "2026-08-27T15:01:22",
  "window_days": 90,
  "rows": [
   {
@@ -212,21 +212,21 @@
   },
   {
    "date": "2026-05-29",
-   "home": "America RN",
-   "away": "Central SC",
-   "hs": 1,
-   "gs": 0,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-05-29",
    "home": "America de Cali",
    "away": "Macara",
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-05-29",
+   "home": "America-RN",
+   "away": "Central SC",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-29",
@@ -460,7 +460,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-29",
@@ -550,7 +550,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-29",
@@ -933,20 +933,11 @@
   {
    "date": "2026-05-29",
    "home": "FC Nomme United",
-   "away": "FC Flora Tallinn",
+   "away": "Flora Tallinn",
    "hs": 0,
    "gs": 4,
    "outcome": "away",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-05-29",
-   "home": "FC Pisek",
-   "away": "Kladno",
-   "hs": 1,
-   "gs": 3,
-   "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-29",
@@ -965,6 +956,15 @@
    "gs": 0,
    "outcome": "home",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-05-29",
+   "home": "FC Rustavi",
+   "away": "Spaeri",
+   "hs": 2,
+   "gs": 1,
+   "outcome": "home",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-29",
@@ -1491,11 +1491,11 @@
   {
    "date": "2026-05-29",
    "home": "Haka",
-   "away": "JIPPO",
+   "away": "Jippo",
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-29",
@@ -1756,7 +1756,7 @@
    "hs": 2,
    "gs": 4,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-29",
@@ -2021,12 +2021,12 @@
   },
   {
    "date": "2026-05-29",
-   "home": "Mamelodi Sundown",
+   "home": "Mamelodi Sundowns",
    "away": "RB Leipzig",
    "hs": 3,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-29",
@@ -2224,7 +2224,7 @@
    "hs": 4,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-29",
@@ -2507,6 +2507,15 @@
   },
   {
    "date": "2026-05-29",
+   "home": "Pisek",
+   "away": "Kladno",
+   "hs": 1,
+   "gs": 3,
+   "outcome": "away",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-05-29",
    "home": "Podravina Ludbreg",
    "away": "Bilogora 91",
    "hs": 5,
@@ -2706,11 +2715,11 @@
   {
    "date": "2026-05-29",
    "home": "Rosenborg",
-   "away": "Bodo Glimt",
+   "away": "Bodo/Glimt",
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-29",
@@ -2747,15 +2756,6 @@
    "gs": 1,
    "outcome": "home",
    "src": "forebet_settled"
-  },
-  {
-   "date": "2026-05-29",
-   "home": "Rustavi",
-   "away": "Spaeri",
-   "hs": 2,
-   "gs": 1,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
   },
   {
    "date": "2026-05-29",
@@ -3817,7 +3817,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -3983,12 +3983,12 @@
   },
   {
    "date": "2026-05-30",
-   "home": "Adamstown Rosebu",
-   "away": "Newcastle Olympi",
+   "home": "Adamstown Rosebud",
+   "away": "Newcastle Olympic",
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -4546,7 +4546,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -4893,11 +4893,11 @@
   {
    "date": "2026-05-30",
    "home": "Botafogo PB",
-   "away": "Maringa FC",
+   "away": "Maringa",
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -5315,15 +5315,6 @@
   },
   {
    "date": "2026-05-30",
-   "home": "Cham",
-   "away": "Biel Bienne",
-   "hs": 3,
-   "gs": 2,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-05-30",
    "home": "Changnyeong W",
    "away": "Gyeongju W",
    "hs": 2,
@@ -5482,7 +5473,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-30",
@@ -5815,16 +5806,16 @@
    "hs": 1,
    "gs": 8,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-30",
-   "home": "Deportes La Sere",
+   "home": "Deportes La Serena",
    "away": "Colo Colo",
    "hs": 2,
    "gs": 4,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -6395,6 +6386,15 @@
   },
   {
    "date": "2026-05-30",
+   "home": "FC Luzern II",
+   "away": "Bulle",
+   "hs": 2,
+   "gs": 3,
+   "outcome": "away",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-05-30",
    "home": "FC Martigny Spor",
    "away": "Sion II",
    "hs": 2,
@@ -6491,6 +6491,15 @@
    "gs": 3,
    "outcome": "draw",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-05-30",
+   "home": "FC Vevey Sports 05",
+   "away": "Paradiso",
+   "hs": 0,
+   "gs": 2,
+   "outcome": "away",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -7318,7 +7327,7 @@
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -8155,7 +8164,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -8227,7 +8236,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-30",
@@ -8645,12 +8654,12 @@
   },
   {
    "date": "2026-05-30",
-   "home": "Kriens",
-   "away": "Bavois",
-   "hs": 2,
+   "home": "KuPS",
+   "away": "Inter Turku",
+   "hs": 1,
    "gs": 1,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
+   "outcome": "draw",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -8660,15 +8669,6 @@
    "gs": 1,
    "outcome": "draw",
    "src": "forebet_settled"
-  },
-  {
-   "date": "2026-05-30",
-   "home": "KuPs",
-   "away": "Inter Turku",
-   "hs": 1,
-   "gs": 1,
-   "outcome": "draw",
-   "src": "bettingclosed_settled"
   },
   {
    "date": "2026-05-30",
@@ -9010,15 +9010,6 @@
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-05-30",
-   "home": "Luzern II",
-   "away": "Bulle",
-   "hs": 2,
-   "gs": 3,
-   "outcome": "away",
    "src": "bettingclosed_settled"
   },
   {
@@ -9487,7 +9478,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -10081,7 +10072,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -10166,12 +10157,12 @@
   },
   {
    "date": "2026-05-30",
-   "home": "Paris Saint Germ",
+   "home": "Paris Saint Germain",
    "away": "Arsenal",
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-30",
@@ -10697,6 +10688,15 @@
   },
   {
    "date": "2026-05-30",
+   "home": "SC Cham",
+   "away": "FC Biel Bienne",
+   "hs": 3,
+   "gs": 2,
+   "outcome": "home",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-05-30",
    "home": "SC Idar-Oberstein",
    "away": "Arminia Ludwigshafen",
    "hs": 0,
@@ -10712,6 +10712,15 @@
    "gs": 0,
    "outcome": "home",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-05-30",
+   "home": "SC Kriens",
+   "away": "FC Bavois",
+   "hs": 2,
+   "gs": 1,
+   "outcome": "home",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -11427,11 +11436,11 @@
   {
    "date": "2026-05-30",
    "home": "Sport Boys",
-   "away": "Comerciantes Uni",
+   "away": "Comerciantes Unidos",
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -11890,7 +11899,7 @@
    "hs": 6,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-30",
@@ -12317,20 +12326,20 @@
   },
   {
    "date": "2026-05-30",
+   "home": "Universidad De Concepcion",
+   "away": "Union La Calera",
+   "hs": 0,
+   "gs": 0,
+   "outcome": "draw",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-05-30",
    "home": "Universidad de C",
    "away": "D. Concepcion",
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-05-30",
-   "home": "Universidad de C",
-   "away": "Union La Calera",
-   "hs": 0,
-   "gs": 0,
-   "outcome": "draw",
    "src": "bettingclosed_settled"
   },
   {
@@ -12524,15 +12533,6 @@
   },
   {
    "date": "2026-05-30",
-   "home": "Vevey Sports",
-   "away": "Paradiso",
-   "hs": 0,
-   "gs": 2,
-   "outcome": "away",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-05-30",
    "home": "VfB Auerbach",
    "away": "Budissa Bautzen",
    "hs": 4,
@@ -12574,7 +12574,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-30",
@@ -13380,11 +13380,11 @@
   {
    "date": "2026-05-31",
    "home": "Almeria",
-   "away": "Real Valladolid",
+   "away": "Valladolid",
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -13402,7 +13402,7 @@
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -13717,7 +13717,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -13735,7 +13735,7 @@
    "hs": 6,
    "gs": 2,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-31",
@@ -13789,7 +13789,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -14374,7 +14374,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-31",
@@ -14595,11 +14595,11 @@
   {
    "date": "2026-05-31",
    "home": "Deportivo Maipu",
-   "away": "Chacarita junior",
+   "away": "Chacarita Juniors",
    "hs": 3,
    "gs": 2,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -14797,7 +14797,7 @@
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -14842,7 +14842,7 @@
    "hs": 0,
    "gs": 5,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-31",
@@ -14968,7 +14968,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -15193,7 +15193,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -15414,11 +15414,11 @@
   {
    "date": "2026-05-31",
    "home": "Farul Constanta",
-   "away": "Chindia Targovis",
+   "away": "Chindia Targoviste",
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -15598,7 +15598,7 @@
    "hs": 4,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-31",
@@ -15679,7 +15679,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-31",
@@ -15778,7 +15778,7 @@
    "hs": 3,
    "gs": 2,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -16151,6 +16151,15 @@
   },
   {
    "date": "2026-05-31",
+   "home": "IAPE",
+   "away": "Sampaio Correa",
+   "hs": 1,
+   "gs": 3,
+   "outcome": "away",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-05-31",
    "home": "IAPE MA",
    "away": "Sampaio Correa",
    "hs": 1,
@@ -16160,12 +16169,12 @@
   },
   {
    "date": "2026-05-31",
-   "home": "IBV Vestmannaeyj",
+   "home": "IBV Vestmannaeyjar",
    "away": "Keflavik",
    "hs": 6,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -16241,15 +16250,6 @@
   },
   {
    "date": "2026-05-31",
-   "home": "Iape",
-   "away": "Sampaio Correa",
-   "hs": 1,
-   "gs": 3,
-   "outcome": "away",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-05-31",
    "home": "Indep. de Chivilcoy",
    "away": "9 de Julio Rafaela",
    "hs": 2,
@@ -16273,7 +16273,7 @@
    "hs": 0,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-31",
@@ -16336,7 +16336,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -16417,7 +16417,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-31",
@@ -16583,21 +16583,21 @@
   },
   {
    "date": "2026-05-31",
-   "home": "Kamatamare Sanuk",
-   "away": "Giravanz Kitakyu",
-   "hs": 3,
-   "gs": 1,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-05-31",
    "home": "Kamatamare Sanuki",
    "away": "Giravanz K.",
    "hs": 3,
    "gs": 1,
    "outcome": "home",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-05-31",
+   "home": "Kamatamare Sanuki",
+   "away": "Giravanz Kitakyushu",
+   "hs": 3,
+   "gs": 1,
+   "outcome": "home",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -16786,7 +16786,7 @@
    "hs": 4,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -16912,7 +16912,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -17569,7 +17569,7 @@
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -18226,7 +18226,7 @@
    "hs": 3,
    "gs": 4,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -18290,15 +18290,6 @@
    "gs": 0,
    "outcome": "home",
    "src": "forebet_settled"
-  },
-  {
-   "date": "2026-05-31",
-   "home": "Real Zaragoza",
-   "away": "Malaga",
-   "hs": 0,
-   "gs": 2,
-   "outcome": "away",
-   "src": "bettingclosed_settled"
   },
   {
    "date": "2026-05-31",
@@ -18613,7 +18604,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -18793,7 +18784,7 @@
    "hs": 4,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-31",
@@ -18977,21 +18968,21 @@
   },
   {
    "date": "2026-05-31",
-   "home": "Sportivo Italian",
-   "away": "Argentino de Mer",
-   "hs": 0,
-   "gs": 2,
-   "outcome": "away",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-05-31",
    "home": "Sportivo Italiano",
    "away": "Argentino Merlo",
    "hs": 0,
    "gs": 2,
    "outcome": "away",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-05-31",
+   "home": "Sportivo Italiano",
+   "away": "Argentino de Merlo",
+   "hs": 0,
+   "gs": 2,
+   "outcome": "away",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -19072,7 +19063,7 @@
    "hs": 2,
    "gs": 3,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -19099,7 +19090,7 @@
    "hs": 4,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-05-31",
@@ -19716,11 +19707,11 @@
   {
    "date": "2026-05-31",
    "home": "Urena SC",
-   "away": "Yaracuyanos",
+   "away": "Yaracuyanos FC",
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -19769,12 +19760,12 @@
   },
   {
    "date": "2026-05-31",
-   "home": "Vasco da Gama",
+   "home": "Vasco Da Gama",
    "away": "Atletico Mineiro",
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-05-31",
@@ -20183,6 +20174,15 @@
   },
   {
    "date": "2026-05-31",
+   "home": "Zaragoza",
+   "away": "Malaga",
+   "hs": 0,
+   "gs": 2,
+   "outcome": "away",
+   "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-05-31",
    "home": "Zbrojovka Brno II",
    "away": "Hlu\u010d\u00edn",
    "hs": 1,
@@ -20309,15 +20309,6 @@
   },
   {
    "date": "2026-06-01",
-   "home": "AL Najaf",
-   "away": "Al Zawraa",
-   "hs": 1,
-   "gs": 0,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-06-01",
    "home": "AS Fortuna",
    "away": "Canon Yaound\u00e9",
    "hs": 0,
@@ -20336,12 +20327,21 @@
   },
   {
    "date": "2026-06-01",
+   "home": "Al Najaf",
+   "away": "Al Zawra'a",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-06-01",
    "home": "Al Talaba",
    "away": "Al Karkh",
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -20422,7 +20422,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -20503,7 +20503,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -20890,7 +20890,7 @@
    "hs": 1,
    "gs": 3,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -21025,7 +21025,7 @@
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-01",
@@ -21047,12 +21047,12 @@
   },
   {
    "date": "2026-06-01",
-   "home": "Marcilio Dias SC",
+   "home": "Marcilio Dias",
    "away": "Azuriz",
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-01",
@@ -21101,21 +21101,21 @@
   },
   {
    "date": "2026-06-01",
-   "home": "Molinos El Pirat",
-   "away": "Llacuabamba",
-   "hs": 3,
-   "gs": 1,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-06-01",
    "home": "Molinos El Pirata",
    "away": "Deportivo Llacuaba",
    "hs": 3,
    "gs": 1,
    "outcome": "home",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-06-01",
+   "home": "Molinos El Pirata",
+   "away": "Deportivo Llacuabamba",
+   "hs": 3,
+   "gs": 1,
+   "outcome": "home",
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -21214,7 +21214,7 @@
    "hs": 3,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -21367,7 +21367,7 @@
    "hs": 0,
    "gs": 3,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -21448,7 +21448,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -21488,12 +21488,12 @@
   },
   {
    "date": "2026-06-01",
-   "home": "Throttur Reykjav",
+   "home": "Throttur Reykjavik",
    "away": "Grindavik",
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -21547,7 +21547,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-01",
@@ -21880,7 +21880,7 @@
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-02",
@@ -21934,7 +21934,7 @@
    "hs": 0,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-02",
@@ -22087,7 +22087,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-02",
@@ -22118,12 +22118,12 @@
   },
   {
    "date": "2026-06-02",
-   "home": "Havadar SC",
+   "home": "Havadar",
    "away": "Navad Urmia",
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-02",
@@ -22285,7 +22285,7 @@
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-02",
@@ -22321,7 +22321,7 @@
    "hs": 4,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-02",
@@ -22577,12 +22577,12 @@
   },
   {
    "date": "2026-06-02",
-   "home": "Shenavarsazi Qes",
+   "home": "Shenavarsazi Qeshm",
    "away": "Saipa",
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-02",
@@ -22739,12 +22739,12 @@
   },
   {
    "date": "2026-06-02",
-   "home": "Universitario de",
+   "home": "Universitario de Vinto",
    "away": "Aurora",
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-02",
@@ -22807,7 +22807,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-02",
@@ -22888,7 +22888,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -23019,20 +23019,20 @@
   {
    "date": "2026-06-03",
    "home": "Barracas Central",
-   "away": "CA Huracan",
-   "hs": 1,
-   "gs": 0,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-06-03",
-   "home": "Barracas Central",
    "away": "CA Hurac\u00e1n",
    "hs": 1,
    "gs": 0,
    "outcome": "home",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-06-03",
+   "home": "Barracas Central",
+   "away": "Huracan",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -23500,7 +23500,7 @@
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -23554,7 +23554,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -23599,7 +23599,7 @@
    "hs": 4,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -23658,11 +23658,11 @@
   {
    "date": "2026-06-03",
    "home": "IFK Ostersund",
-   "away": "Kubikenborgs IF",
+   "away": "Kubikenborgs If",
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-03",
@@ -23896,7 +23896,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -23932,7 +23932,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -23986,7 +23986,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -24175,7 +24175,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -24202,16 +24202,16 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
    "home": "Portugal U21",
-   "away": "Northern Ireland",
+   "away": "Northern Ireland U21",
    "hs": 4,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -24252,11 +24252,11 @@
   {
    "date": "2026-06-03",
    "home": "Rijnvogels",
-   "away": "Excelsior Maassl",
+   "away": "Excelsior Maassluis",
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-03",
@@ -24895,7 +24895,7 @@
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-04",
@@ -25048,7 +25048,7 @@
    "hs": 4,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-04",
@@ -25309,7 +25309,7 @@
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-04",
@@ -25552,7 +25552,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-04",
@@ -25579,7 +25579,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-04",
@@ -25786,7 +25786,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-04",
@@ -25813,7 +25813,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-04",
@@ -25912,7 +25912,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-04",
@@ -26209,7 +26209,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -26299,7 +26299,7 @@
    "hs": 4,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -26515,7 +26515,7 @@
    "hs": 3,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -26884,7 +26884,7 @@
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-05",
@@ -26929,7 +26929,7 @@
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -26956,7 +26956,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -27010,7 +27010,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -27222,11 +27222,11 @@
   {
    "date": "2026-06-05",
    "home": "Kudrivka",
-   "away": "Ahrobiznes Voloc",
+   "away": "Ahrobiznes Volochysk",
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -27379,7 +27379,7 @@
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -27388,7 +27388,7 @@
    "hs": 5,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -27415,7 +27415,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -27433,7 +27433,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -27811,7 +27811,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -27910,7 +27910,7 @@
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -27982,7 +27982,7 @@
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -28009,7 +28009,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -28144,7 +28144,7 @@
    "hs": 3,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -28189,7 +28189,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-05",
@@ -28432,7 +28432,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -28451,15 +28451,6 @@
    "gs": 0,
    "outcome": "draw",
    "src": "forebet_settled"
-  },
-  {
-   "date": "2026-06-06",
-   "home": "APIA Leichhardt",
-   "away": "Manly United",
-   "hs": 2,
-   "gs": 0,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
   },
   {
    "date": "2026-06-06",
@@ -28576,7 +28567,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -28679,6 +28670,15 @@
   },
   {
    "date": "2026-06-06",
+   "home": "Apia Leichhardt Tigres",
+   "away": "Manly United FC",
+   "hs": 2,
+   "gs": 0,
+   "outcome": "home",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-06-06",
    "home": "Appalachian",
    "away": "Hickory",
    "hs": 2,
@@ -28747,7 +28747,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -28990,7 +28990,7 @@
    "hs": 5,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -29089,7 +29089,7 @@
    "hs": 0,
    "gs": 4,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -29143,7 +29143,7 @@
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-06",
@@ -30025,7 +30025,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -30183,11 +30183,11 @@
   {
    "date": "2026-06-06",
    "home": "FC Tuggen",
-   "away": "Langenthal",
+   "away": "FC Langenthal",
    "hs": 1,
    "gs": 5,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-06",
@@ -30471,11 +30471,11 @@
   {
    "date": "2026-06-06",
    "home": "Fylkir",
-   "away": "Throttur Reykjav",
+   "away": "Throttur Reykjavik",
    "hs": 1,
    "gs": 3,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -30565,7 +30565,7 @@
    "hs": 4,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -30862,7 +30862,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -32082,20 +32082,20 @@
   {
    "date": "2026-06-06",
    "home": "Panama",
+   "away": "Bosnia & Herzegovina",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
+   "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-06-06",
+   "home": "Panama",
    "away": "Bosnia and Herzegovina",
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
    "src": "scoutingstats_settled"
-  },
-  {
-   "date": "2026-06-06",
-   "home": "Panama",
-   "away": "Bosnia-Herzegovi",
-   "hs": 1,
-   "gs": 1,
-   "outcome": "draw",
-   "src": "bettingclosed_settled"
   },
   {
    "date": "2026-06-06",
@@ -32266,16 +32266,16 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
-   "home": "Portugal U19",
-   "away": "Greece U19",
+   "home": "Portugal (u19)",
+   "away": "Greece (u19)",
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-06",
@@ -32338,7 +32338,7 @@
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -32509,7 +32509,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -32864,12 +32864,12 @@
   },
   {
    "date": "2026-06-06",
-   "home": "Serbia U19",
-   "away": "Kazakhstan U19",
+   "home": "Serbia (u19)",
+   "away": "Kazakhstan (u19)",
    "hs": 1,
    "gs": 3,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-06",
@@ -32905,7 +32905,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -33170,6 +33170,15 @@
   },
   {
    "date": "2026-06-06",
+   "home": "St George City",
+   "away": "Sydney Olympic",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
+   "src": "statarea_settled"
+  },
+  {
+   "date": "2026-06-06",
    "home": "St George City FA",
    "away": "Sydney Olympic",
    "hs": 1,
@@ -33185,15 +33194,6 @@
    "gs": 2,
    "outcome": "away",
    "src": "forebet_settled"
-  },
-  {
-   "date": "2026-06-06",
-   "home": "St. George City",
-   "away": "Sydney Olympic",
-   "hs": 1,
-   "gs": 1,
-   "outcome": "draw",
-   "src": "bettingclosed_settled"
   },
   {
    "date": "2026-06-06",
@@ -33787,7 +33787,7 @@
    "hs": 4,
    "gs": 2,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-06",
@@ -34264,7 +34264,7 @@
    "hs": 0,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -34363,7 +34363,7 @@
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -34791,15 +34791,6 @@
   {
    "date": "2026-06-07",
    "home": "CA Progreso",
-   "away": "Albion",
-   "hs": 1,
-   "gs": 2,
-   "outcome": "away",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-06-07",
-   "home": "CA Progreso",
    "away": "Albion FC (URU)",
    "hs": 1,
    "gs": 2,
@@ -34952,12 +34943,12 @@
   },
   {
    "date": "2026-06-07",
-   "home": "Canuelas FC",
+   "home": "Canuelas",
    "away": "El Porvenir",
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -35151,11 +35142,11 @@
   {
    "date": "2026-06-07",
    "home": "Cheonan City",
-   "away": "Suwon City",
+   "away": "Suwon City FC",
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -35299,7 +35290,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -35398,7 +35389,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -35411,12 +35402,12 @@
   },
   {
    "date": "2026-06-07",
-   "home": "Deportes La Sere",
+   "home": "Deportes La Serena",
    "away": "Union La Calera",
    "hs": 0,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -35470,7 +35461,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -35484,11 +35475,11 @@
   {
    "date": "2026-06-07",
    "home": "Deportivo Muniz",
-   "away": "Central Balleste",
+   "away": "Central Ballester",
    "hs": 4,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -35632,7 +35623,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -35943,20 +35934,20 @@
   {
    "date": "2026-06-07",
    "home": "General Lamadrid",
-   "away": "Club Lujan",
-   "hs": 0,
-   "gs": 1,
-   "outcome": "away",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-06-07",
-   "home": "General Lamadrid",
    "away": "Club Luj\u00e1n",
    "hs": 0,
    "gs": 1,
    "outcome": "away",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-06-07",
+   "home": "General Lamadrid",
+   "away": "Lujan",
+   "hs": 0,
+   "gs": 1,
+   "outcome": "away",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -36023,21 +36014,21 @@
   },
   {
    "date": "2026-06-07",
-   "home": "Goiatuba",
-   "away": "Operario VG",
-   "hs": 1,
-   "gs": 0,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-06-07",
    "home": "Goiatuba EC",
    "away": "CEOV MS",
    "hs": 1,
    "gs": 0,
    "outcome": "home",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-06-07",
+   "home": "Goiatuba Sc",
+   "away": "Operario VG",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -36064,7 +36055,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -36235,7 +36226,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -36496,7 +36487,7 @@
    "hs": 4,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -36523,7 +36514,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -36586,7 +36577,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -36613,7 +36604,7 @@
    "hs": 0,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -36757,7 +36748,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -36806,21 +36797,21 @@
   },
   {
    "date": "2026-06-07",
-   "home": "Marconi Stallion",
-   "away": "Wollongong Wolve",
-   "hs": 1,
-   "gs": 0,
-   "outcome": "home",
-   "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-06-07",
    "home": "Marconi Stallions",
    "away": "Wollongong FC",
    "hs": 1,
    "gs": 0,
    "outcome": "home",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-06-07",
+   "home": "Marconi Stallions",
+   "away": "Wollongong Wolves",
+   "hs": 1,
+   "gs": 0,
+   "outcome": "home",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -36946,7 +36937,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -37094,12 +37085,12 @@
   },
   {
    "date": "2026-06-07",
-   "home": "Nova Iguacu",
-   "away": "XV de Piracicaba",
+   "home": "Nova Iguacu FC",
+   "away": "XV De Piracicaba",
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -37130,12 +37121,12 @@
   },
   {
    "date": "2026-06-07",
-   "home": "O.Higgins",
+   "home": "O Higgins",
    "away": "Palestino",
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -37162,7 +37153,7 @@
    "hs": 4,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-07",
@@ -37325,6 +37316,15 @@
    "gs": 2,
    "outcome": "away",
    "src": "forebet_settled"
+  },
+  {
+   "date": "2026-06-07",
+   "home": "Progreso",
+   "away": "Albion FC",
+   "hs": 1,
+   "gs": 2,
+   "outcome": "away",
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -37630,7 +37630,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -37761,11 +37761,11 @@
   {
    "date": "2026-06-07",
    "home": "Sao Joseense",
-   "away": "Marcilio Dias SC",
+   "away": "Marcilio Dias",
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -38337,11 +38337,11 @@
   {
    "date": "2026-06-07",
    "home": "Tochigi SC",
-   "away": "Giravanz Kitakyu",
+   "away": "Giravanz Kitakyushu",
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-07",
@@ -39025,7 +39025,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-08",
@@ -39034,7 +39034,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-08",
@@ -39259,7 +39259,7 @@
    "hs": 3,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-08",
@@ -39322,7 +39322,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-08",
@@ -39511,7 +39511,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-08",
@@ -39529,7 +39529,7 @@
    "hs": 0,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-08",
@@ -39727,7 +39727,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-08",
@@ -39866,12 +39866,12 @@
   },
   {
    "date": "2026-06-09",
-   "home": "Ahrobiznes Voloc",
+   "home": "Ahrobiznes Volochysk",
    "away": "Kudrivka",
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -39898,7 +39898,7 @@
    "hs": 3,
    "gs": 2,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-09",
@@ -39952,7 +39952,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40042,7 +40042,7 @@
    "hs": 2,
    "gs": 2,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40087,7 +40087,7 @@
    "hs": 2,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40105,7 +40105,7 @@
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40267,7 +40267,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40357,7 +40357,7 @@
    "hs": 2,
    "gs": 3,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40411,7 +40411,7 @@
    "hs": 3,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40483,7 +40483,7 @@
    "hs": 1,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40555,7 +40555,7 @@
    "hs": 2,
    "gs": 4,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40609,7 +40609,7 @@
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40663,7 +40663,7 @@
    "hs": 3,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40789,7 +40789,7 @@
    "hs": 3,
    "gs": 2,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40933,7 +40933,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40951,7 +40951,7 @@
    "hs": 1,
    "gs": 3,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40960,7 +40960,7 @@
    "hs": 5,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -40969,7 +40969,7 @@
    "hs": 1,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "statarea_settled"
   },
   {
    "date": "2026-06-09",
@@ -41032,7 +41032,7 @@
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -41046,11 +41046,11 @@
   {
    "date": "2026-06-09",
    "home": "Saipa",
-   "away": "Havadar SC",
+   "away": "Havadar",
    "hs": 0,
    "gs": 0,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -41122,7 +41122,7 @@
    "hs": 0,
    "gs": 1,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -41203,7 +41203,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -41230,7 +41230,7 @@
    "hs": 5,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -41284,7 +41284,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-09",
@@ -41500,7 +41500,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-10",
@@ -41676,11 +41676,11 @@
   {
    "date": "2026-06-10",
    "home": "Canberra Olympic",
-   "away": "Canberra Juventu",
+   "away": "Canberra Juventus",
    "hs": 2,
    "gs": 3,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-10",
@@ -41950,7 +41950,7 @@
    "hs": 3,
    "gs": 0,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-10",
@@ -42238,7 +42238,7 @@
    "hs": 0,
    "gs": 2,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-10",
@@ -42427,7 +42427,7 @@
    "hs": 1,
    "gs": 1,
    "outcome": "draw",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-10",
@@ -42742,7 +42742,7 @@
    "hs": 2,
    "gs": 1,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-10",
@@ -42944,12 +42944,12 @@
   },
   {
    "date": "2026-06-10",
-   "home": "Sparta Rotterdam",
+   "home": "Sparta Rotterdam II",
    "away": "Groningen U21",
    "hs": 3,
    "gs": 2,
    "outcome": "home",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-10",
@@ -43345,7 +43345,7 @@
    "hs": 0,
    "gs": 4,
    "outcome": "away",
-   "src": "bettingclosed_settled"
+   "src": "zulubet_settled"
   },
   {
    "date": "2026-06-11",
@@ -328622,7 +328622,7 @@
   },
   {
    "date": "2026-08-26",
-   "home": "Schaerbeek-Evere",
+   "home": "Schaerbeek - Evere",
    "away": "Union La Calamine",
    "hs": 1,
    "gs": 0,
