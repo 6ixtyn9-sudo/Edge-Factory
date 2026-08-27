@@ -322,6 +322,15 @@ def cmd_backfill(args, st):
     print_status(st)
 
 
+def upsert_slip(st, target, plan):
+    """Place (or REPLACE) the slip for a target date. Draft regeneration must
+    never stack slips: the bot runs up to 3x inside the 06:00-12:00 build
+    window; every rebuild replaces the day's draft (v4 regenerate-then-freeze
+    semantics). Replaced stakes simply un-commit."""
+    st["open_slips"] = [s for s in st["open_slips"] if s["date"] != target]
+    upsert_slip(st, target, plan)
+
+
 def cmd_today(args, st):
     settled = load_settled()
     now = datetime.now(TZ)
