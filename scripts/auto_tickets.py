@@ -95,26 +95,11 @@ def parse_kickoff(pick):
                 dt = datetime.strptime(f"{raw} {year}", f"{fmt} %Y")
             else:
                 dt = datetime.strptime(raw, fmt)
-            if fmt == "%H:%M":
+            if fmt in ("%H:%M", "%d-%m, %H:%M", "%d-%m, %H:%M:%S"):
                 try:
                     dt = dt.replace(year=int(day[:4]), month=int(day[5:7]), day=int(day[8:10]))
                 except ValueError:
                     return None
-            elif fmt in ("%d-%m, %H:%M", "%d-%m, %H:%M:%S"):
-                try:
-                    base = datetime.strptime(day, "%Y-%m-%d").date()
-                except ValueError:
-                    return None
-                cands = []
-                for y in (int(day[:4]) - 1, int(day[:4]), int(day[:4]) + 1):
-                    try:
-                        c = dt.replace(year=y)
-                    except ValueError:
-                        continue
-                    cands.append((abs((c.date() - base).days), c))
-                if not cands:
-                    return None
-                dt = min(cands, key=lambda t: t[0])[1]
             if dt.tzinfo is None:
                 dt = dt.replace(tzinfo=TZ)
             return dt
@@ -153,46 +138,13 @@ def load_settled():
     return out
 
 
-def _fold(s):
-    import unicodedata
-    return "".join(c for c in unicodedata.normalize("NFD", str(s))
-                   if unicodedata.category(c) != "Mn").lower().strip()
-
-
-def _lookup_fallback(settled, day, home, away):
-    """Exact key missed: try +-1 day with accent-folded names, then a bounded
-    fuzzy match (both teams >= 0.8). Fixes late-night slates filed under the
-    kickoff date and the norm_team accent-drop asymmetry ('potos' vs
-    'potosi' - 2026-08-27 Potosi incident)."""
-    from datetime import timedelta as _td
-    from difflib import SequenceMatcher
-    try:
-        base = datetime.strptime(day, "%Y-%m-%d").date()
-    except ValueError:
-        return None
-    cands = [day, str(base - _td(days=1)), str(base + _td(days=1))]
-    fh, fa = _fold(home), _fold(away)
-    best, best_oc = 0.0, None
-    for (d, h, a), oc in settled.items():
-        if d not in cands:
-            continue
-        rh = SequenceMatcher(None, fh, _fold(h)).ratio()
-        if rh < 0.8:
-            continue
-        ra = SequenceMatcher(None, fa, _fold(a)).ratio()
-        if ra >= 0.8 and rh + ra > best:
-            best, best_oc = rh + ra, oc
-    return best_oc
-
-
 def pick_result(pick, settled):
     from edgefactory.util import norm_team
     day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
-    home = norm_team(pick.get("home") or "")
-    away = norm_team(pick.get("away") or "")
-    outcome = settled.get((day, home, away))
+    key = (day, norm_team(pick.get("home") or ""), norm_team(pick.get("away") or ""))
+    outcome = settled.get(key)
     if outcome not in ("home", "away", "draw"):
-        outcome = _lookup_fallback(settled, day, home, away)
+        return None
     sel = str(pick.get("pick") or "").lower()
     if outcome == "draw":
         return "loss"
@@ -368,15 +320,6 @@ def cmd_backfill(args, st):
             break
     save_state(st)
     print_status(st)
-
-
-def upsert_slip(st, target, plan):
-    """Place (or REPLACE) the slip for a target date. Draft regeneration must
-    never stack slips: the bot runs up to 3x inside the 06:00-12:00 build
-    window; every rebuild replaces the day's draft (v4 regenerate-then-freeze
-    semantics). Replaced stakes simply un-commit."""
-    st["open_slips"] = [s for s in st["open_slips"] if s["date"] != target]
-    upsert_slip(st, target, plan)
 
 
 def cmd_today(args, st):
