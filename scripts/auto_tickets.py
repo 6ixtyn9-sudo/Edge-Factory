@@ -1,46 +1,35 @@
 #!/usr/bin/env python3
-"""AUTO TICKETS v5 — acca-only, aligned with the operator's plan.
+"""AUTO TICKETS v4 — acca-only, aligned with the operator's plan.
 
 The operator's structure (no singles, ever):
   - 28% of CAPITAL -> MULTIPLE 2-odd accas (split across N_ACCA2_TICKETS tickets)
-  - 10% of CAPITAL -> ONE 10-odd acca  [SUSPENDED in v5 — see ACCA10_ENABLED]
-  - total at risk per day = 38% of capital (ceiling; halved while on PROBATION)
+  - 10% of CAPITAL -> ONE 10-odd acca
+  - total at risk per day = 38% of capital
 All output is percentages of capital only (no rand amounts).
 
-Selection (dynamic, positive-ROI streams only) — TWO-LEVEL GATE (v5):
+Selection (dynamic, positive-ROI streams only):
   - bucket in CERTIFIED_CLEAN + SKIPPED_VETO + WATCHLIST_UNKNOWN_CTX +
-    WATCHLIST_UNCORROBORATED_PRICE. CAUTION / CLEAN names do not override the
-    ROI gates. SUSPECT_PRICE and NO_ODDS stay out.
-  - a pick rides if EITHER passes (same thresholds for both levels):
-      (a) its (rule x odds_source) COMBO passes  [v4 gate, unchanged], OR
-      (b) its odds_source passes at SOURCE level, pooling all rules.
-    Why (b) exists: forebet_best is +8.0% lifetime (n=52) but fragmented
-    across 14 rules, so no single combo cell ever reaches n>=15 — the v4 gate
-    benched a good source on sample fragmentation, not on evidence. Walk-
-    forward over 2026-06-19..08-28, the two-level gate fires 19/71 days at
-    +3.9% leg ROI / +4.7% acca2 ROI vs 4/71 days at -4.6% for combo-only.
-    No hardcoded trusted-source allowlist and no source-level veto: sources
-    still earn entry only through settled ROI (scoutingstats -12.8% and
-    betexplorer -0.2% fail the source gate on their own numbers today).
-  - gates at both levels: n>=PASS_N, lifetime ROI>=+3%, last-20 ROI>=0,
-    newest settle within 30 days, Wilson LB floor 0.50 (anti-coin-flip only).
+    WATCHLIST_UNCORROBORATED_PRICE. Rolling audit (2026-07-21..08-19):
+    veto +5.1%, unknown-ctx +8.1%, uncorroborated +4.0%. CAUTION / CLEAN
+    names do not override the combo ROI gate. SUSPECT_PRICE and NO_ODDS stay out.
+  - no hardcoded trusted-source allowlist and no source-level veto: a pick
+    rides only if its (rule x odds_source) combo itself has positive ROI.
+  - combo must pass: n>=15, lifetime ROI>=+3%, last-20 ROI>=0, newest settle
+    within 30 days. Wilson LB is a mild anti-coin-flip floor (0.50), not a
+    0.68 cliff that can bench a +13% combo at n=28.
 Ticket construction:
   - 2-ODD ACCAS: pair the qualifying picks (smallest odds x largest odds) so each
     pair lands as close to 2.00 as possible; N_ACCA2_TICKETS pairs.
-  - 10-ODD ACCA: SUSPENDED (ACCA10_ENABLED=False). Rationale: 1.60-2.00 odds
-    band is -7.4% ROI; a 10-odd compounds 6-9 thin edges; CLV beat-rate is
-    13.5% (no market edge). Re-enable only when trailing-30d CLV beat-rate
-    >= 30% AND overall settled leg ROI >= 0.
+  - 10-ODD ACCA: ALL qualifying picks (reuse across ticket types allowed — each
+    ticket is an independent bet; this matches the operator's manual behaviour).
+    Fewest legs to reach ~10.0, capped at MAX_ACCA10_LEGS.
 Safety rails:
-  - PROBATION: until PROBATION_MIN_TICKETS graded tickets settle, all stakes
-    are halved (the v5 two-level gate is promising in backtest, not proven —
-    22 acca2 tickets, Wilson 90% LB on hit 0.55).
   - drawdown guard (last 20 graded tickets ROI < -10% -> RED ALERT, --force to override)
-  - recency + calendar-freshness gates at both levels
+  - recency gate on combos
   - league diversity cap inside each 2-odd acca
 Usage:
   PYTHONPATH=src python3 scripts/auto_tickets.py
-  PYTHONPATH=src python3 scripts/auto_tickets.py --history   (combo + source tables)
+  PYTHONPATH=src python3 scripts/auto_tickets.py --history
   PYTHONPATH=src python3 scripts/auto_tickets.py --force
 """
 from __future__ import annotations
@@ -66,13 +55,6 @@ CAP_ACCA10 = 0.10            # 10% of capital -> one 10-odd acca (at full deploy
 N_ACCA2_TICKETS = 3          # split the 2-odd money across this many tickets
 IDEAL_POOL_MIN = 4           # floor: never demand fewer than this
 IDEAL_POOL_LOOKBACK = 10     # trailing days used to derive the adaptive ideal pool
-
-# ---------------- v5 switches ----------------
-ACCA10_ENABLED = False       # 10-odd suspended: -7.4% odds band, n=1 graded, no CLV edge.
-                             # Re-enable when trailing-30d CLV beat-rate >= 30% AND
-                             # overall settled leg ROI >= 0.
-PROBATION_MIN_TICKETS = 30   # until this many graded tickets have SETTLED ...
-PROBATION_STAKE_SCALE = 0.5  # ... all stakes scale by this factor (v5 unproven at n=22).
 
 # ---------------- selection gates ----------------
 PASS_N = 15                  # min settled picks for a (rule, source) combo
@@ -190,38 +172,6 @@ def pick_result(pick, settled):
     return "win" if outcome == sel else "loss"
 
 
-def _gate_stats(rows, target_date):
-    """Shared gate computation for one group of settled (date, result, odds)
-    rows — used identically by the combo-level and source-level tables."""
-    rows = sorted(rows)
-    n = len(rows)
-    wins = sum(1 for _, r, _ in rows if r == "win")
-    ret = sum(o for _, r, o in rows if r == "win")
-    roi = (ret - n) / n if n else 0.0
-    lb = wilson_lb(wins, n)
-    recent = rows[-RECENT_N:]
-    rn = len(recent)
-    rret = sum(o for _, r, o in recent if r == "win")
-    roi_recent = (rret - rn) / rn if rn else 0.0
-    # Recency evidence is REQUIRED: rn==0 (no settled picks in the count
-    # window) must FAIL the gate — 0.0 is "no evidence", not a pass.
-    recent_ok = rn > 0 and roi_recent >= RECENT_ROI_MIN
-    # Calendar freshness: the count window is NOT enough — a source whose
-    # capture died (e.g. betexplorer_odds stopped mid-June) keeps its old
-    # rows as the "recent" window and would stay eligible forever on frozen
-    # history. The newest settled pick must be recent in real time too.
-    newest = rows[-1][0] if rows else ""
-    fresh_ok = False
-    try:
-        fresh_ok = (target_date - datetime.strptime(newest, "%Y-%m-%d").date()).days <= FRESHNESS_DAYS
-    except (ValueError, TypeError):
-        fresh_ok = False
-    passed = n >= PASS_N and roi >= PASS_ROI and lb >= PASS_LB and recent_ok and fresh_ok
-    return {"n": n, "wins": wins, "hit": wins / n if n else 0.0, "roi": roi, "lb": lb,
-            "roi_recent": roi_recent, "recent_n": rn, "last": newest,
-            "fresh": fresh_ok, "pass": passed}
-
-
 def build_edge_table(picks, settled, target_date=None):
     if target_date is None:
         target_date = date.today()
@@ -238,49 +188,41 @@ def build_edge_table(picks, settled, target_date=None):
         if res is None:
             continue
         history[(rule, src)].append((str(p.get("date") or p.get("_archive_day") or "")[:10], res, float(odds)))
-    return {combo: _gate_stats(rows, target_date) for combo, rows in history.items()}
-
-
-def build_source_table(picks, settled, target_date=None):
-    """v5: pool ALL rules per odds_source and apply the same gates at source
-    level. Rationale: a source can be genuinely +EV while fragmented across
-    many rules so that no single (rule x source) cell reaches n>=PASS_N
-    (forebet_best: +8.0% over n=52 spread over 14 rules). Same thresholds,
-    same recency/freshness logic — a source still earns entry only through
-    settled ROI, never by name."""
-    if target_date is None:
-        target_date = date.today()
-    elif isinstance(target_date, str):
-        target_date = datetime.strptime(target_date, "%Y-%m-%d").date()
-    history = defaultdict(list)
-    for p in picks:
-        rule = p.get("edge_rule") or p.get("rule")
-        src = p.get("odds_source") or "UNKNOWN"
-        odds = p.get("odds")
-        if not rule or not odds or odds <= 1.0:
-            continue
-        res = pick_result(p, settled)
-        if res is None:
-            continue
-        history[src].append((str(p.get("date") or p.get("_archive_day") or "")[:10], res, float(odds)))
-    return {src: _gate_stats(rows, target_date) for src, rows in history.items()}
+    table = {}
+    for combo, rows in history.items():
+        rows.sort()
+        n = len(rows)
+        wins = sum(1 for _, r, _ in rows if r == "win")
+        ret = sum(o for _, r, o in rows if r == "win")
+        roi = (ret - n) / n if n else 0.0
+        lb = wilson_lb(wins, n)
+        recent = rows[-RECENT_N:]
+        rn = len(recent)
+        rret = sum(o for _, r, o in recent if r == "win")
+        roi_recent = (rret - rn) / rn if rn else 0.0
+        # Recency evidence is REQUIRED: rn==0 (no settled picks in the count
+        # window) must FAIL the gate — 0.0 is "no evidence", not a pass.
+        recent_ok = rn > 0 and roi_recent >= RECENT_ROI_MIN
+        # Calendar freshness: the count window is NOT enough — a source whose
+        # capture died (e.g. betexplorer_odds stopped mid-June) keeps its old
+        # rows as the "recent" window and would stay eligible forever on frozen
+        # history. The newest settled pick must be recent in real time too.
+        newest = rows[-1][0] if rows else ""
+        fresh_ok = False
+        try:
+            fresh_ok = (target_date - datetime.strptime(newest, "%Y-%m-%d").date()).days <= FRESHNESS_DAYS
+        except (ValueError, TypeError):
+            fresh_ok = False
+        passed = n >= PASS_N and roi >= PASS_ROI and lb >= PASS_LB and recent_ok and fresh_ok
+        table[combo] = {"n": n, "wins": wins, "hit": wins / n, "roi": roi, "lb": lb,
+                        "roi_recent": roi_recent, "recent_n": rn, "last": newest,
+                        "fresh": fresh_ok, "pass": passed}
+    return table
 
 
 def _source_has_passing_combo(table: dict, src: str) -> bool:
     """True if any (rule, source) combo for this odds source currently passes."""
     return any(src == s and v.get("pass") for (r, s), v in table.items())
-
-
-def graded_settled_tickets() -> int:
-    """Count of WIN/LOSS-settled tickets in the grader's ledger (used by the
-    v5 probation rail: stakes stay halved until this reaches
-    PROBATION_MIN_TICKETS)."""
-    try:
-        perf = json.loads((LOCALDATA / "auto_tickets_performance.json").read_text())
-    except Exception:
-        return 0
-    detail = perf.get("detail") or []
-    return sum(1 for t in detail if t.get("result") in ("WIN", "LOSS"))
 
 
 def load_pause_state():
@@ -349,18 +291,12 @@ def main():
     settled = load_settled()
     archives = [p for p in load_archived_picks() if str(p.get("date") or p.get("_archive_day") or "") < target]
     table = build_edge_table(archives, settled, target_date=target)
-    source_table = build_source_table(archives, settled, target_date=target)
 
     if args.history:
-        print("DYNAMIC EDGE TABLE — COMBO level (rule x source), settled history < %s" % target)
+        print("DYNAMIC EDGE TABLE (settled history < %s)" % target)
         print(f"{'rule':40s} {'source':18s} {'n':>4s} {'hit':>6s} {'roi':>7s} {'recent':>7s} {'LB':>5s}  pass")
         for (rule, src), st in sorted(table.items(), key=lambda kv: (-kv[1]["roi"], -kv[1]["n"])):
             print(f"{rule:40s} {src:18s} {st['n']:4d} {st['hit']:6.1%} {st['roi']:7.1%} "
-                  f"{st['roi_recent']:7.1%} {st['lb']:5.2f}  {'YES' if st['pass'] else 'no'}")
-        print("\nDYNAMIC EDGE TABLE — SOURCE level (all rules pooled), settled history < %s" % target)
-        print(f"{'source':22s} {'n':>4s} {'hit':>6s} {'roi':>7s} {'recent':>7s} {'LB':>5s}  pass")
-        for src, st in sorted(source_table.items(), key=lambda kv: (-kv[1]["roi"], -kv[1]["n"])):
-            print(f"{src:22s} {st['n']:4d} {st['hit']:6.1%} {st['roi']:7.1%} "
                   f"{st['roi_recent']:7.1%} {st['lb']:5.2f}  {'YES' if st['pass'] else 'no'}")
         return 0
 
@@ -424,31 +360,23 @@ def main():
         kt = parse_kickoff(p)
         if kt is not None and kt < now:
             continue
-        # v5 two-level gate: the pick rides if its (rule x source) combo passes
-        # OR its source passes pooled across all rules. Identical thresholds at
-        # both levels; the admitting gate's stats ride on the leg.
         combo = table.get((rule, src))
-        src_st = source_table.get(src)
-        combo_pass = bool(combo and combo["pass"])
-        source_pass = bool(src_st and src_st["pass"])
-        if not (combo_pass or source_pass):
+        if combo is None or not combo["pass"]:
             continue
-        gate_st = combo if combo_pass else src_st
         today.append({
             "match": f"{p.get('home')} vs {p.get('away')}",
             "league": str(p.get("league") or p.get("odds_league") or "?"),
             "pick": str(p.get("pick") or "").upper(),
             "odds": float(odds), "avg_p": float(avg_p),
             "rule": rule, "source": src, "bucket": p.get("bucket"),
-            "via": "combo" if combo_pass else "source",
             "edge": float(avg_p) / 100.0 * float(odds) - 1.0,
-            "combo_n": gate_st["n"], "combo_hit": gate_st["hit"],
-            "combo_roi": gate_st["roi"], "combo_lb": gate_st["lb"],
+            "combo_n": combo["n"], "combo_hit": combo["hit"],
+            "combo_roi": combo["roi"], "combo_lb": combo["lb"],
         })
 
     if not today:
         print("NO EDGE TODAY — DO NOT BET")
-        print(f"({len(slate)} slate rows; 0 passed the ROI gate (combo or source) + bucket filters)")
+        print(f"({len(slate)} slate rows; 0 passed ROI-combo + bucket filters)")
         return 0
 
     today.sort(key=lambda x: -x["edge"])
@@ -490,23 +418,18 @@ def main():
                 break
         return legs, prod
 
-    if not ACCA10_ENABLED:
+    fresh_pool = [p for p in today if p["match"] + p["pick"] not in used]
+    acca10_legs, acca10_prod = _build_acca10(fresh_pool)
+    if len(fresh_pool) < ACCA10_MIN_LEGS:
+        # Not enough DISTINCT fresh bets (fewer than 3 unused legs) -> thin day,
+        # fall back to reuse rather than skip the 10-odd entirely.
+        acca10_legs, acca10_prod = _build_acca10(today)
+    # Guard: still never emit a degenerate "10-odd" that is just the 2-odd
+    # duplicated with too few legs / too small a product.
+    acca10_held_back = len(acca10_legs) < ACCA10_MIN_LEGS or acca10_prod < ACCA10_MIN_PROD
+    acca10_n_saved, acca10_prod_saved = len(acca10_legs), acca10_prod
+    if acca10_held_back:
         acca10_legs, acca10_prod = [], 0.0
-        acca10_held_back = True
-        acca10_n_saved, acca10_prod_saved = 0, 0.0
-    else:
-        fresh_pool = [p for p in today if p["match"] + p["pick"] not in used]
-        acca10_legs, acca10_prod = _build_acca10(fresh_pool)
-        if len(fresh_pool) < ACCA10_MIN_LEGS:
-            # Not enough DISTINCT fresh bets (fewer than 3 unused legs) -> thin day,
-            # fall back to reuse rather than skip the 10-odd entirely.
-            acca10_legs, acca10_prod = _build_acca10(today)
-        # Guard: still never emit a degenerate "10-odd" that is just the 2-odd
-        # duplicated with too few legs / too small a product.
-        acca10_held_back = len(acca10_legs) < ACCA10_MIN_LEGS or acca10_prod < ACCA10_MIN_PROD
-        acca10_n_saved, acca10_prod_saved = len(acca10_legs), acca10_prod
-        if acca10_held_back:
-            acca10_legs, acca10_prod = [], 0.0
 
     # ---------------- output (percentages of capital only) ----------------
     # ADAPTIVE DEPLOYMENT: 38% is a ceiling, not a target. Scale all stakes by
@@ -517,20 +440,9 @@ def main():
     pool_factor = min(1.0, len(today) / ideal_pool)
     per_acca2 = (CAP_ACCA2 * pool_factor) / max(N_ACCA2_TICKETS, 1)
     acca10_stake = CAP_ACCA10 * pool_factor
-    # v5 PROBATION: the two-level gate is backtested (+4.7% acca2 walk-forward,
-    # 27 tickets) but not proven. Until PROBATION_MIN_TICKETS graded tickets
-    # have settled, every stake is scaled by PROBATION_STAKE_SCALE.
-    settled_tickets = graded_settled_tickets()
-    on_probation = settled_tickets < PROBATION_MIN_TICKETS
-    stake_scale = PROBATION_STAKE_SCALE if on_probation else 1.0
-    per_acca2 *= stake_scale
-    acca10_stake *= stake_scale
     lines = [f"AUTO TICKETS — {target}", "=" * 62,
              f"CEILING: {AT_RISK_FRAC:.0%} of capital  ·  DAY STRENGTH: {pool_factor:.0%} "
              f"({len(today)}/{ideal_pool} qualifying legs — adaptive)"]
-    if on_probation:
-        lines.append(f"⏳ PROBATION — {settled_tickets}/{PROBATION_MIN_TICKETS} graded tickets settled; "
-                     f"all stakes x{stake_scale:.2f} until the gate proves itself live")
     deployed = 0.0
     for i, (legs, prod) in enumerate(acca2_tickets, 1):
         lines.append(f"\n[2-ODD ACCA #{i}] {len(legs)} leg(s), total {prod:.2f}, "
@@ -539,14 +451,10 @@ def main():
         for l in legs:
             lines.append(f"   {l['match']:44s} {l['pick']:5s} @ {l['odds']:.2f}  "
                          f"({l['avg_p']:.0f}% · {l['rule']} · {l['source']} "
-                         f"[{l.get('via','?')}-gate] n={l['combo_n']} roi={l['combo_roi']:+.0%})")
+                         f"n={l['combo_n']} roi={l['combo_roi']:+.0%})")
     if not acca2_tickets:
         lines.append("\n[2-ODD ACCA] none — fewer than 2 qualifying picks")
-    if not ACCA10_ENABLED:
-        lines.append("\n[10-ODD ACCA] SUSPENDED (v5) — compounding thin edges with no CLV edge; "
-                     "that 10% of capital stays unbet. Re-enable criterion: trailing-30d "
-                     "CLV beat-rate >= 30% AND settled leg ROI >= 0.")
-    elif acca10_held_back:
+    if acca10_held_back:
         lines.append(f"\n[10-ODD ACCA] HELD BACK — only {acca10_n_saved} distinct qualifying "
                      f"leg(s) and total {acca10_prod_saved:.2f} would just duplicate the 2-odds. "
                      f"That {acca10_stake:.0%} of capital stays unbet today.")
@@ -557,7 +465,7 @@ def main():
         for l in acca10_legs:
             lines.append(f"   {l['match']:44s} {l['pick']:5s} @ {l['odds']:.2f}  "
                          f"({l['avg_p']:.0f}% · {l['rule']} · {l['source']} "
-                         f"[{l.get('via','?')}-gate] n={l['combo_n']} roi={l['combo_roi']:+.0%})")
+                         f"n={l['combo_n']} roi={l['combo_roi']:+.0%})")
     lines.append(f"\nTOTAL DEPLOYED: {deployed:.1%} of capital  (ceiling {AT_RISK_FRAC:.0%} — "
                  f"{max(0.0, AT_RISK_FRAC - deployed):.1%} held back)")
     lines.append("\nRound each ticket UP to your bookmaker's minimum stake.")
@@ -585,16 +493,13 @@ def main():
     (LOCALDATA / f"auto_tickets_{target}.json").write_text(json.dumps({
         "date": target, "at_risk_frac": AT_RISK_FRAC,
         "pass_combos": [f"{r} | {s}" for (r, s), v in table.items() if v["pass"]],
-        "pass_sources": [s for s, v in source_table.items() if v["pass"]],
         "acca2": acca2_tickets, "acca10": acca10_legs, "acca10_odds": acca10_prod,
         "stakes_frac": {
             "acca2_per_ticket": per_acca2,
-            "acca10": acca10_stake if (not acca10_held_back and ACCA10_ENABLED) else 0.0,
+            "acca10": acca10_stake if not acca10_held_back else 0.0,
             "deployed": deployed,
             "ceiling": AT_RISK_FRAC,
             "pool_factor": pool_factor,
-            "probation": on_probation,
-            "stake_scale": stake_scale,
         },
     }, indent=2, default=str))
     return 0
