@@ -6017,3 +6017,88 @@ handling and the stale-source tripwire remain authoritative.
 **Replacement paths:** `src/edgefactory/sources/forebet.py`,
 `tests/test_forebet.py`, plus the run #503 containment and this relay addendum
 appended to `HANDOVER.md`.
+
+## Addendum — 2026-08-27: auto-tickets v5 — two-level gate (combo OR source), 10-odd suspended, probation stakes
+
+**Trigger.** Operator asked why auto tickets were not firing and whether any
+stream was good enough. Full-audit receipt:
+`TICKETS_DIAGNOSIS_2026-08-27.md` (committed, rev 2). Findings: since 08-01
+exactly ONE (rule x source) combo passed the v4 gate (`ml-meta avg_p>=55` x
+`bzzoiro_odds`, ~0.8 legs/day → structurally below the 2-leg acca minimum on
+most days); walk-forward over 2026-06-19..08-28 the v4 gate fired 4/71 days at
+**-4.6% leg ROI / -27% acca2 ROI**; forebet_best (+8.0% lifetime, n=52) was
+benched purely by rule fragmentation (no single cell reaches n=15).
+
+**What shipped (all in `scripts/auto_tickets.py`):**
+
+1. **Two-level gate.** A pick rides if its (rule x source) combo passes OR its
+   source passes pooled across all rules. Identical thresholds at both levels
+   (n>=15, ROI>=+3%, last-20>=0, newest settle <=30d, Wilson LB>=0.50). No
+   hardcoded allowlist and no source-level veto: scoutingstats (-12.8%) and
+   betexplorer (-0.2%, last-20 -9.0%) fail the source gate on their own
+   numbers today. `--history` now prints both tables. Legs record which gate
+   admitted them (`via`), and slips record `pass_sources`.
+2. **10-odd acca SUSPENDED** (`ACCA10_ENABLED=False`). Rationale: 1.60-2.00
+   odds band -7.4% ROI; a 10-odd compounds 6-9 thin edges; CLV beat-later-price
+   rate 13.5% (no market edge); graded 10-odd sample n=1. Re-enable criterion
+   (documented in-code): trailing-30d CLV beat-rate >= 30% AND settled leg
+   ROI >= 0.
+3. **Probation stakes.** Until `PROBATION_MIN_TICKETS=30` graded tickets have
+   settled, all stakes scale by `PROBATION_STAKE_SCALE=0.5` (slip prints a
+   PROBATION banner; `stakes_frac` records `probation` + `stake_scale`). The
+   two-level gate backtests at +4.7% acca2 (27 tickets) — promising, not
+   proven (Wilson 90% LB on hit 0.55).
+
+**Walk-forward receipts (gates see only data < each day; 71 archive days):**
+
+```text
+strategy                                 fireable  legs  legROI   acca2  acca2ROI
+v4 combo-only (status quo ante)               4/71    19   -4.6%      5    -27.0%
+rule-family pooled                            1/71     4  -42.2%      1   -100.0%
+source pooled (v5 basis)                     19/71    79   +3.9%     27     +4.7%
+```
+
+All-bets context for the record (519 settled priced picks, flat 1u): hit
+71.1%, ROI -1.3%; CLV beat-rate 13.5%. Every bucket fades toward break-even as
+n grows (SKIPPED_VETO Jun +18.3% → Jul +6.1% → Aug +0.1%). The gates stay.
+
+**Smoke receipt (real 08-26 slate, sandbox LOCALDATA):** v4 built 1 qualifying
+leg (no ticket possible); v5 built a 2-leg ticket — bzzoiro leg via combo-gate
+(n=33, +6%), forebet leg via source-gate (n=50, +9%) — with PROBATION x0.50
+stakes and the 10-odd correctly suspended.
+
+**Tests.** New `tests/test_auto_tickets_v5.py` (5 cases: source-table
+fragmentation pass/fail, source-gate admission with bad-src exclusion, acca10
+suspension contract, probation halving/lifting, shared `_gate_stats`
+freshness). Full suite: **293 passed, 0 failed** (baseline before change:
+288). pyflakes clean on both touched files. No threshold was loosened: PASS_N,
+PASS_ROI, PASS_LB, RECENT_ROI_MIN, FRESHNESS_DAYS unchanged; the v4 combo
+gate is still evaluated first and can admit legs on its own.
+
+**Veto-resolution checkpoint (Addendum 27 gate, same day):**
+`counterfactual_veto_resolution.py` → FLAG-OFF, keep accruing. G1 n=17/30
+settled in-scope; G2/G3 small-sample artifacts. Decision expected in ~4-8
+weeks at the observed accrual rate.
+
+**Pre-committed follow-up gate — away-side / odds-band veto audit (Addendum-27
+discipline, thresholds fixed now):** the 2026-08-27 all-bucket audit found the
+veto layer is asymmetric: home/league/niche vetoes are protective (team_h
+-4.2%, league -15.4%, team_h+team_a -28.0%, niche -43.3%) while away-side and
+odds-band vetoes discarded winners (team_a-only +10.3% n=33; team_a+odds_band
++18.2% n=12 at 91.7% hit; odds_band-only +6.9% n=75; short-odds away
+favourites 15/15 won). Phase-0 counterfactual evidence, NOT a verdict (15/15
+at ~1.15 odds is p≈0.13). Ship-consideration gate for relaxing any away-side
+or odds-band veto, fixed in advance:
+- G1: >=30 settled counterfactual picks in the veto-reason cut;
+- G2: would-be ROI >= +3% AND Wilson-90 LB of hit >= implied-prob +2pp;
+- G3: same numbers hold on the most recent 20 of those picks;
+- DEPRECATE the idea at n>=60 if ROI < 0 at two checkpoints >=2 weeks apart.
+Run via a read-only counterfactual harness over `picks_*.json` +
+`settled_results.json`; no veto change may ship outside this gate.
+
+**Replacement paths:** `scripts/auto_tickets.py`,
+`tests/test_auto_tickets_v5.py`, `TICKETS_DIAGNOSIS_2026-08-27.md`, and this
+HANDOVER entry. No capture, source-weight, bucket, push, or notification
+change. `auto_tickets_grade.py` untouched — the new slip keeps the
+`stakes_frac` contract (probation-scaled values are the recorded truth) and
+`acca10: []` grades as absent.
