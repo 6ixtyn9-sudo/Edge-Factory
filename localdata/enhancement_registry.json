@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 59,
-   "inv_price_sum": 55.72294165014106,
+   "hits": 62,
+   "inv_price_sum": 57.8391881487405,
    "multi_n": 13,
-   "n": 89,
+   "n": 92,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -191,9 +191,12 @@
     "2026-08-25|Al-Ettifaq vs Al-Nassr|match_over_25@v1",
     "2026-08-26|Real Madrid vs Real Sociedad|match_over_25@v1",
     "2026-08-26|Newcastle vs West Brom|match_over_25@v1",
-    "2026-08-26|Tottenham vs Charlton Athletic|match_over_25@v1"
+    "2026-08-26|Tottenham vs Charlton Athletic|match_over_25@v1",
+    "2026-08-27|Fulham vs AFC Wimbledon|match_over_25@v1",
+    "2026-08-27|Freiburg vs Motherwell|match_over_25@v1",
+    "2026-08-27|Brighton vs Tromso|match_over_25@v1"
    ],
-   "profit": 4.36,
+   "profit": 5.62,
    "records": [
     {
      "date": "2026-08-01",
@@ -903,6 +906,30 @@
      "match": "Tottenham vs Charlton Athletic",
      "multi_source": false,
      "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-27",
+     "hit": true,
+     "match": "Fulham vs AFC Wimbledon",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-27",
+     "hit": true,
+     "match": "Freiburg vs Motherwell",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-27",
+     "hit": true,
+     "match": "Brighton vs Tromso",
+     "multi_source": false,
+     "price": 1.5,
      "source": "scoutingstats"
     }
    ],
