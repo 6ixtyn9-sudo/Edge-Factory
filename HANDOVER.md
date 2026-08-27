@@ -6017,3 +6017,71 @@ handling and the stale-source tripwire remain authoritative.
 **Replacement paths:** `src/edgefactory/sources/forebet.py`,
 `tests/test_forebet.py`, plus the run #503 containment and this relay addendum
 appended to `HANDOVER.md`.
+
+## Addendum — 2026-08-27 (evening): auto-tickets REPLACED by the rolling engine (operator directive)
+
+**Directive.** The operator judged the v4 combo-gate slipper effectively dead
+(4/71 fireable days walk-forward, −4.6% leg ROI on what did fire — receipts in
+`TICKETS_DIAGNOSIS_2026-08-27.md`) and directed replacement with the rolling
+structure validated in the 2026-08-27 simulation session, including a
+TAKE-PROFIT trigger.
+
+**What shipped:**
+
+1. `scripts/auto_tickets.py` is now the stateful ROLLING ENGINE (same entry
+   point — `daily.py` and the Actions loop run it bare, zero pipeline
+   changes). Recipe (all constants carry their validation receipt in the
+   module docstring): playable-bucket legs only (NO further filter — tested
+   best), ordered by stated probability, consecutive 2-leg accas from the
+   top 6, max 3 per day, 50% of settled bank per day split across accas,
+   volume regime (pool ≥12 legs → only stated-prob ≥65% rides), half of
+   every new high-water mark withdrawn at settlement, and **TAKE-PROFIT:
+   when bank reaches 2.0× the base bank, all profit above the base is
+   withdrawn and the cycle resets** (event recorded in
+   `state.events`, printed loudly, surfaced in the slip and performance
+   report). Slips keep the `auto_tickets_<date>.txt` names, 06:00 build /
+   12:00 freeze cadence unchanged. State: `localdata/auto_tickets_state.json`
+   (gitignore exception added — WITHOUT it the bank would reset on every
+   Actions run; `.gitignore` follows the two-line no-inline-comment rule).
+   CLI: bare = settle + build/reprint today; `--status`; `--backfill
+   [--from --to --bank --reset]` replays the ledger (analysis/seeding);
+   `--force` bypasses the freeze marker.
+2. `scripts/auto_tickets_grade.py` is now a reporter: settles via the engine
+   and writes `auto_tickets_performance.txt/.json` from state (bank,
+   withdrawn, wealth multiple, take-profit events, per-day history). The v4
+   pause gate (last-20 ROI < −10%) is superseded by structural protection:
+   50% daily cap + committed-stake accounting + take-profit.
+3. Tests: new `tests/test_auto_tickets_rolling.py` (9 cases: planning,
+   volume regime, settlement, half-high banking, TAKE-PROFIT harvest/reset,
+   open-slip commitment, playable filter, backfill arithmetic — includes an
+   autouse STATE_FILE sandbox after a test leak wrote a phantom slip into
+   the real state). `tests/test_picks_today.py`: removed Contract 2 (v4
+   grader stakes_frac display, 6 tests) and Contract 4 (load_pause_state,
+   3 tests) — both pinned functions no longer exist. Contracts 1/3
+   (ledger merge, duplicate collapse) untouched. **Full suite: 288 passed,
+   0 failed; pyflakes clean.**
+
+**Validation receipts:** engine backfill (2026-06-19..08-26) reproduces the
+session simulation with take-profit active: wealth ×5.76, 2 take-profit
+harvests (Jul 1 +141.53, Jul 7 +101.33), 75W/32L accas, never busted. Note
+honestly: take-profit costs upside vs the pure half-high path (×8.93) — it
+reset the base to 100 mid-July and captured less of the streak — in exchange
+for locking realised profit earlier and carrying only ~56 units at risk into
+the late-August drawdown. That is the requested behaviour.
+
+**Live seed committed:** fresh state (base bank 100 units, wealth ×1.00)
+with one open slip for 2026-08-27 (3 accas, 25 units committed). The
+walk-forward starts here — the bot's existing bare calls do everything:
+settle yesterday, build/reprint today, report. Monitor with
+`PYTHONPATH=src python3 scripts/auto_tickets.py --status` or
+`cat localdata/auto_tickets_performance.txt`.
+
+**Revert path:** `git revert <this commit>` restores the v4 slipper, grader,
+tests, and gitignore wholesale. The v4 receipts remain in this HANDOVER and
+in `TICKETS_DIAGNOSIS_2026-08-27.md`.
+
+**Replacement paths:** `scripts/auto_tickets.py`,
+`scripts/auto_tickets_grade.py`, `tests/test_auto_tickets_rolling.py`,
+`tests/test_picks_today.py`, `.gitignore`, `localdata/auto_tickets_state.json`,
+`localdata/auto_tickets_2026-08-27.txt`, `localdata/auto_tickets_performance.{txt,json}`,
+and this HANDOVER entry.
