@@ -4,8 +4,8 @@
   "edges": [
     {
       "decay": "WATCH",
-      "last_fired": "2026-08-27",
-      "n_last_window": 92,
+      "last_fired": "2026-08-28",
+      "n_last_window": 96,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -17,30 +17,30 @@
       "silent": true
     },
     {
-      "decay": "WATCH",
-      "last_fired": "2026-08-27",
-      "n_last_window": 282,
+      "decay": "HEALTHY",
+      "last_fired": "2026-08-28",
+      "n_last_window": 298,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
     {
-      "decay": "WATCH",
-      "last_fired": "2026-08-26",
-      "n_last_window": 45,
+      "decay": "HEALTHY",
+      "last_fired": "2026-08-28",
+      "n_last_window": 53,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
     {
-      "decay": "WATCH",
-      "last_fired": "2026-08-26",
-      "n_last_window": 8,
+      "decay": "HEALTHY",
+      "last_fired": "2026-08-28",
+      "n_last_window": 12,
       "rule": "ml-meta avg_p>=65",
       "silent": false
     },
     {
       "decay": "WATCH",
-      "last_fired": "2026-08-23",
-      "n_last_window": 10,
+      "last_fired": "2026-08-28",
+      "n_last_window": 14,
       "rule": "ml-meta avg_p>=70",
       "silent": false
     },
@@ -59,10 +59,8 @@
       "silent": false
     }
   ],
-  "generated_at": "2026-08-27T21:53:13",
+  "generated_at": "2026-08-28T01:05:52",
   "ignored_non_operational_rules": [
-    "2way-unanimous home-only avg_p>=65",
-    "2way-unanimous min_p>=60 avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=70",
     "3way-unanimous home-only avg_p>=60",
     "3way-unanimous home-only avg_p>=65",
@@ -80,59 +78,59 @@
     },
     {
       "name": "statarea",
-      "newest_date": "2026-08-26",
+      "newest_date": "2026-08-28",
       "newest_file": "statarea_2026-08.csv.gz",
       "role": "core_voter",
       "stale": false
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-08-26",
+      "newest_date": "2026-08-28",
       "newest_file": "scoutingstats_2026-08.csv.gz",
       "role": "voter_and_price",
       "stale": false
     },
     {
       "name": "vitibet",
-      "newest_date": null,
-      "newest_file": null,
+      "newest_date": "2026-08-29",
+      "newest_file": "vitibet_2026-08.csv.gz",
       "role": "thin_voter",
-      "stale": null
+      "stale": false
     },
     {
       "name": "zulubet",
-      "newest_date": "2026-08-26",
+      "newest_date": "2026-08-28",
       "newest_file": "zulubet_2026-08.csv.gz",
       "role": "core_voter",
       "stale": false
     },
     {
       "name": "predictz",
-      "newest_date": null,
-      "newest_file": null,
+      "newest_date": "2026-08-28",
+      "newest_file": "predictz_2026-08.csv.gz",
       "role": "shadow",
-      "stale": null
+      "stale": false
     },
     {
       "name": "windrawwin",
-      "newest_date": null,
-      "newest_file": null,
+      "newest_date": "2026-08-29",
+      "newest_file": "windrawwin_2026-08.csv.gz",
       "role": "shadow",
-      "stale": null
+      "stale": false
     },
     {
       "name": "afootballreport",
-      "newest_date": null,
-      "newest_file": null,
+      "newest_date": "2026-08-28",
+      "newest_file": "afootballreport_2026-08.csv.gz",
       "role": "research",
-      "stale": null
+      "stale": false
     },
     {
       "name": "betclan",
-      "newest_date": null,
-      "newest_file": null,
+      "newest_date": "2026-08-28",
+      "newest_file": "betclan_2026-08.csv.gz",
       "role": "partial_voter",
-      "stale": null
+      "stale": false
     },
     {
       "name": "freesupertips",
@@ -143,17 +141,17 @@
     },
     {
       "name": "bettingclosed",
-      "newest_date": "2026-08-26",
+      "newest_date": "2026-08-28",
       "newest_file": "bettingclosed_2026-08.csv.gz",
       "role": "confirmation_results",
       "stale": false
     },
     {
       "name": "bzzoiro",
-      "newest_date": null,
-      "newest_file": null,
+      "newest_date": "2026-09-17",
+      "newest_file": "bzzoiro_2026-08.csv.gz",
       "role": "model_voter",
-      "stale": null
+      "stale": false
     }
   ],
   "warn_count": 1
