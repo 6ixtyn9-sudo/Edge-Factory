@@ -134,3 +134,19 @@ OOS legs in the best variant: bzzoiro +7.9% (n=43), forebet +5.2% (n=20). **Hone
 - Don't delete the home/league/niche vetoes (they are protective); don't keep the away/odds-band vetoes on faith either — gate them.
 - Don't chase the >2.00 odds band (+33% on n=14 is noise).
 - Don't read "NO EDGE TODAY" as a malfunction to fix by betting more.
+
+---
+
+## Addendum — 2026-08-27 (evening): the away-short re-pricing experiment
+
+**Question.** Is the away-short deficit (−4.6% n=50 at factory prices) a price-capture artifact (soft feeds pricing aways badly) or real?
+
+**Method + results.**
+1. *Price-source natural experiment (real bets):* away shorts <1.30 priced by SHARP feeds (betexplorer avg / bzzoiro / forebet): **n=43, hit 79.1%, ROI −8.7%**; home shorts sharp-priced: n=82, 86.6%, +1.6%. → capture artifact REFUTED: sharp-priced aways still lose.
+2. *Significance:* both cells are indistinguishable from breakeven (needed ~82–83%; binomial p≈0.35 / 0.24) and from each other (z≈1.1, p≈0.29). The home-vs-away contrast is noise at this n.
+3. *Dual-price records (odds_replaced, n=301):* median final/previous ratio 1.007 (home) vs 1.008 (away); ~21% of each side down-graded. Enrichment is side-fair. Null.
+4. *Direct market re-pricing:* betexplorer odds archive ends 2026-06-16; pick ledgers begin 2026-06-19 → zero overlap. Single theoddsapi 17-book day contains zero ledger picks. **No archived sharp price covers the betting window** — the factory cannot currently measure side-level price quality retrospectively.
+
+**Verdict.** No pricing excuse for away shorts, but no statistically real away deficit either; deep-archive (220,992 matches) says the sides are symmetric over 18 months. Both home-short and away-short sit within noise of breakeven at captured prices.
+
+**Pre-committed follow-up (measurement, not doctrine):** shadow price ledger — snapshot theoddsapi/betexplorer prices for every playable candidate daily alongside the factory price; re-run this test at n≥100 per side (~4–6 weeks). Until then the away veto stays (harmless), and home-short "edge" gets the same skepticism. No production code changed.
