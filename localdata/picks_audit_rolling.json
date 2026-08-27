@@ -354,9 +354,9 @@
       "btts_yes": {
         "hit_rate": 0.538462,
         "hits": 7,
-        "priced_hits": 4,
-        "priced_n": 7,
-        "priced_roi": 0.278571,
+        "priced_hits": 0,
+        "priced_n": 0,
+        "priced_roi": null,
         "recommended": 13
       },
       "goal_range_2_3": {
@@ -402,25 +402,25 @@
       "match_over_15": {
         "hit_rate": 0.857143,
         "hits": 6,
-        "priced_hits": 1,
-        "priced_n": 1,
-        "priced_roi": 0.05,
+        "priced_hits": 0,
+        "priced_n": 0,
+        "priced_roi": null,
         "recommended": 7
       },
       "match_over_25": {
         "hit_rate": 0.688742,
         "hits": 104,
-        "priced_hits": 59,
-        "priced_n": 89,
-        "priced_roi": 0.048315,
+        "priced_hits": 18,
+        "priced_n": 21,
+        "priced_roi": 0.350476,
         "recommended": 151
       },
       "match_over_35": {
         "hit_rate": 0.142857,
         "hits": 1,
-        "priced_hits": 1,
-        "priced_n": 7,
-        "priced_roi": -0.728571,
+        "priced_hits": 0,
+        "priced_n": 0,
+        "priced_roi": null,
         "recommended": 7
       }
     },
@@ -32101,7 +32101,7 @@
       "won": true
     }
   ],
-  "settled_via_overlay_picks": 10,
+  "settled_via_overlay_picks": 357,
   "start": "2026-07-29",
   "statline_calibration": {
     "avg_goals": {
@@ -32262,8 +32262,7 @@
     {
       "away": "Sorrento FC",
       "away_key_candidates": [
-        "sorrento",
-        "sorrentoc"
+        "sorrento"
       ],
       "bucket": "WATCHLIST_UNKNOWN_CTX",
       "date": "2026-08-15",
@@ -32701,8 +32700,7 @@
       "disposition": "POSTPONED",
       "home": "Junior",
       "home_key_candidates": [
-        "junior",
-        "juniorbar"
+        "junior"
       ],
       "league": "Colombia,Primera A Apertura Finalizacion",
       "match": "Junior vs Pereira",
