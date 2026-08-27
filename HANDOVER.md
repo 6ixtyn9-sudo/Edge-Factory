@@ -6085,3 +6085,46 @@ in `TICKETS_DIAGNOSIS_2026-08-27.md`.
 `tests/test_picks_today.py`, `.gitignore`, `localdata/auto_tickets_state.json`,
 `localdata/auto_tickets_2026-08-27.txt`, `localdata/auto_tickets_performance.{txt,json}`,
 and this HANDOVER entry.
+
+## Addendum — 2026-08-27 (evening 2): rolling engine goes PERCENT-ONLY; take-profit becomes a notification
+
+**Operator directive.** No amounts anywhere — percentages of capital only
+(the original v1-v4 doctrine, restored). Take-profit must be a NOTIFICATION
+based on performance, not an amount-harvesting mechanism. Stakes display as
+percentages. The four legacy v4 artifacts were deleted:
+`auto_tickets_2026-08-09.json/.txt`, `auto_tickets_performance.json/.txt`
+(the rolling grader rewrites the performance pair on its next run).
+
+**What changed in `scripts/auto_tickets.py`:**
+- State is percentages: `base_pct` 100 = starting capital; `bank` moves in %
+  of capital. No units, no rand, no withdrawals ledger.
+- The half-of-new-high WITHDRAWAL rule is REMOVED by directive (it was
+  amount bookkeeping). The bank now compounds freely; the profit discipline
+  lives in the notification instead:
+- **TAKE-PROFIT NOTIFICATION:** when `bank >= cycle_base + 100%`, a 🔔 event
+  fires — printed on every subsequent run, recorded in `state.events`, and
+  written to `localdata/auto_tickets_takeprofit_<date>.json` (gitignore
+  exception added) so it persists across bot runs. The cycle baseline resets
+  to the current bank (next target +100% again). Nothing is moved — the
+  operator acts on the notification.
+- Slips/status/grader are percent-only: `stake 16.7% of capital (16.7% of
+  bank)`, `bank 175.4% of capital (x1.75)`, `next take-profit at 200.0%`.
+- `scripts/auto_tickets_grade.py` reports `% of capital`, the multiple, the
+  cycle baseline, next target, and the notification log.
+
+**Backfill receipt (percent semantics, notifications active):** the ledger
+replay compounds to bank 1312.1% (x13.12), 75W/32L accas, with four 🔔
+take-profit notifications (Jun 24, Jul 1, Jul 4, Aug 7 — each at +100% of
+its cycle). Marker files from that replay were removed so only live
+notifications are persisted.
+
+**Tests:** `tests/test_auto_tickets_rolling.py` rewritten for percent
+semantics — 10 cases incl. percent-only field contract (`stake_pct`, no
+`stake`), notification-fires-moves-nothing-resets-cycle, marker-file
+artifact, and percent backfill arithmetic. Full suite **288 passed, 0
+failed**; pyflakes clean.
+
+**Replacement paths:** `scripts/auto_tickets.py`,
+`scripts/auto_tickets_grade.py`, `tests/test_auto_tickets_rolling.py`,
+`.gitignore`, this HANDOVER entry; deleted the four legacy localdata
+artifacts; committed fresh state + today's percent slip + performance pair.

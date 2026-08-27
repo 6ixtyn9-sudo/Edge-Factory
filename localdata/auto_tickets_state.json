@@ -1,8 +1,7 @@
 {
-  "initial_bank": 100.0,
+  "base_pct": 100.0,
   "bank": 100.0,
-  "withdrawn": 0.0,
-  "hwm": 100.0,
+  "cycle_base": 100.0,
   "open_slips": [
     {
       "date": "2026-08-27",
@@ -25,7 +24,7 @@
             }
           ],
           "odds": 1.6,
-          "stake": 16.6667
+          "stake_pct": 16.6667
         },
         {
           "legs": [
@@ -45,7 +44,7 @@
             }
           ],
           "odds": 1.74,
-          "stake": 16.6667
+          "stake_pct": 16.6667
         },
         {
           "legs": [
@@ -65,10 +64,10 @@
             }
           ],
           "odds": 1.87,
-          "stake": 16.6667
+          "stake_pct": 16.6667
         }
       ],
-      "staked": 50.0001
+      "staked_pct": 50.0001
     }
   ],
   "history": [],

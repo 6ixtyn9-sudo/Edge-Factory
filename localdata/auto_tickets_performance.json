@@ -1,10 +1,11 @@
 {
-  "generated_at": "2026-08-27T10:34:15",
-  "initial_bank": 100.0,
-  "bank": 100.0,
-  "withdrawn": 0.0,
-  "wealth": 100.0,
+  "generated_at": "2026-08-27T10:41:36",
+  "unit": "percent_of_capital",
+  "base_pct": 100.0,
+  "bank_pct": 100.0,
   "multiple": 1.0,
+  "cycle_base_pct": 100.0,
+  "next_take_profit_pct": 200.0,
   "bet_days": 0,
   "accas": {
     "wins": 0,
@@ -13,7 +14,7 @@
   "open_slips": [
     {
       "date": "2026-08-27",
-      "staked": 50.0001
+      "staked_pct": 50.0001
     }
   ],
   "events": [],
