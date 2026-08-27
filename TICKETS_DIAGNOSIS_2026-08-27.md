@@ -1,6 +1,6 @@
-# Why the auto tickets have gone quiet — full diagnosis (2026-08-27, rev 2)
+# Why the auto tickets have gone quiet — diagnosis (2026-08-27)
 
-*rev 2: corrected the forebet/statarea/zulubet supply-side claim after reading HANDOVER.md end-to-end (08-20 addenda series), and added the full every-bucket audit incl. veto-reason decomposition, WATCHLIST_NO_ODDS, price-evidence and the veto-overlay shadow. All numbers computed from `localdata/` (71 pick ledgers 2026-06-19→08-28, `settled_results.json` 36,584 matches). Walk-forward backtests use only data available before each day.*
+*Corrected: the forebet/statarea/zulubet supply-side claim after reading HANDOVER.md end-to-end (08-20 addenda series), and added the full every-bucket audit incl. veto-reason decomposition, WATCHLIST_NO_ODDS, price-evidence and the veto-overlay shadow. All numbers computed from `localdata/` (71 pick ledgers 2026-06-19→08-28, `settled_results.json` 36,584 matches). Walk-forward backtests use only data available before each day.*
 
 ---
 
