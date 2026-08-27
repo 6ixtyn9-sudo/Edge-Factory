@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 56,
-   "inv_price_sum": 53.60222087861097,
-   "multi_n": 12,
-   "n": 86,
+   "hits": 59,
+   "inv_price_sum": 55.72294165014106,
+   "multi_n": 13,
+   "n": 89,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -188,9 +188,12 @@
     "2026-08-23|Midtjylland vs Randers FC|match_over_25@v1",
     "2026-08-24|Jong Utrecht vs Heracles|match_over_25@v1",
     "2026-08-24|Brondby vs Silkeborg|match_over_25@v1",
-    "2026-08-25|Al-Ettifaq vs Al-Nassr|match_over_25@v1"
+    "2026-08-25|Al-Ettifaq vs Al-Nassr|match_over_25@v1",
+    "2026-08-26|Real Madrid vs Real Sociedad|match_over_25@v1",
+    "2026-08-26|Newcastle vs West Brom|match_over_25@v1",
+    "2026-08-26|Tottenham vs Charlton Athletic|match_over_25@v1"
    ],
-   "profit": 3.11,
+   "profit": 4.36,
    "records": [
     {
      "date": "2026-08-01",
@@ -876,6 +879,30 @@
      "match": "Al-Ettifaq vs Al-Nassr",
      "multi_source": false,
      "price": 1.3,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-26",
+     "hit": true,
+     "match": "Real Madrid vs Real Sociedad",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-26",
+     "hit": true,
+     "match": "Newcastle vs West Brom",
+     "multi_source": true,
+     "price": 1.49,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-26",
+     "hit": true,
+     "match": "Tottenham vs Charlton Athletic",
+     "multi_source": false,
+     "price": 1.4,
      "source": "scoutingstats"
     }
    ],
