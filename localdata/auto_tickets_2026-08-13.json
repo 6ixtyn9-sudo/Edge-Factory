@@ -1,0 +1,53 @@
+{
+  "date": "2026-08-13",
+  "at_risk_frac": 0.38,
+  "pass_combos": [
+    "2way-unanimous avg_p>=70 | bzzoiro_odds"
+  ],
+  "acca2": [
+    [
+      [
+        {
+          "match": "FC Nordsjaelland vs Valur Reykjavik",
+          "league": "World: UEFA Europa Conference League",
+          "pick": "HOME",
+          "odds": 1.12,
+          "avg_p": 83.0,
+          "rule": "2way-unanimous avg_p>=70",
+          "source": "bzzoiro_odds",
+          "bucket": "SKIPPED_VETO",
+          "edge": -0.07039999999999991,
+          "combo_n": 26,
+          "combo_hit": 0.8461538461538461,
+          "combo_roi": 0.17896153846153842,
+          "combo_lb": 0.6980406212350325
+        },
+        {
+          "match": "NSI Runavik vs FC Lugano",
+          "league": "World: UEFA Europa Conference League",
+          "pick": "AWAY",
+          "odds": 1.364,
+          "avg_p": 72.5,
+          "rule": "2way-unanimous avg_p>=70",
+          "source": "bzzoiro_odds",
+          "bucket": "SKIPPED_VETO",
+          "edge": -0.011099999999999999,
+          "combo_n": 26,
+          "combo_hit": 0.8461538461538461,
+          "combo_roi": 0.17896153846153842,
+          "combo_lb": 0.6980406212350325
+        }
+      ],
+      1.5276800000000001
+    ]
+  ],
+  "acca10": [],
+  "acca10_odds": 0.0,
+  "stakes_frac": {
+    "acca2_per_ticket": 0.037333333333333336,
+    "acca10": 0.0,
+    "deployed": 0.037333333333333336,
+    "ceiling": 0.38,
+    "pool_factor": 0.4
+  }
+}
