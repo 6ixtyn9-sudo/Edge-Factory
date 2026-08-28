@@ -84,6 +84,11 @@ jobs:
           for f in $(git ls-files localdata/); do
             git checkout HEAD -- "$f" && echo "restored committed: $f"
           done
+          # Prune untracked leftovers the cache restore may have unpacked —
+          # files deleted from git must STAY deleted (the 2026-08-27/28
+          # zombie-json resurrections). Untracked-and-not-ignored only;
+          # ignored runtime files are untouched.
+          git clean -fd localdata/ || true
           echo "certified edges present: $(python3 -c "import json;d=json.load(open('localdata/edges_consensus.json'));print(sum(1 for e in d.get('edges',[]) if e.get('status')=='certified'))" 2>/dev/null || echo n/a)"
 
       - name: Execute Autonomous Smart Schedule
