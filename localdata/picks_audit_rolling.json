@@ -52,11 +52,11 @@
       "wins": 9
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.746114,
+      "hit_rate": 0.740933,
       "priced_picks": 193,
-      "roi": 0.024378,
+      "roi": 0.017642,
       "settled_picks": 193,
-      "wins": 144
+      "wins": 143
     },
     "WATCHLIST_NO_ODDS": {
       "hit_rate": 0.894737,
@@ -99,11 +99,11 @@
       "wins": 11
     },
     "betexplorer": {
-      "hit_rate": 0.75,
+      "hit_rate": 0.742424,
       "priced_picks": 132,
-      "roi": 0.040833,
+      "roi": 0.030985,
       "settled_picks": 132,
-      "wins": 99
+      "wins": 98
     },
     "exact": {
       "hit_rate": 0.683333,
@@ -136,11 +136,11 @@
       "wins": 17
     },
     "betexplorer_odds": {
-      "hit_rate": 0.75,
+      "hit_rate": 0.742424,
       "priced_picks": 132,
-      "roi": 0.040833,
+      "roi": 0.030985,
       "settled_picks": 132,
-      "wins": 99
+      "wins": 98
     },
     "bzzoiro_odds": {
       "hit_rate": 0.658824,
@@ -173,11 +173,11 @@
   },
   "by_price_evidence": {
     "BETEXPLORER_RESCUE": {
-      "hit_rate": 0.75,
+      "hit_rate": 0.742424,
       "priced_picks": 132,
-      "roi": 0.040833,
+      "roi": 0.030985,
       "settled_picks": 132,
-      "wins": 99
+      "wins": 98
     },
     "BZZOIRO_PRIMARY": {
       "hit_rate": 0.666667,
@@ -218,12 +218,12 @@
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.736,
+      "hit_rate": 0.732,
       "priced_picks": 231,
-      "roi": 0.02158,
+      "roi": 0.015952,
       "settled_picks": 250,
       "suspect_price_captures": 0,
-      "wins": 184
+      "wins": 183
     },
     "alias_fuzzy": {
       "avg_suspect_price": 1.3545,
@@ -274,11 +274,11 @@
       "wins": 28
     },
     "ml-meta avg_p>=55": {
-      "hit_rate": 0.637584,
+      "hit_rate": 0.630872,
       "priced_picks": 142,
-      "roi": -0.057887,
+      "roi": -0.067042,
       "settled_picks": 149,
-      "wins": 95
+      "wins": 94
     },
     "ml-meta avg_p>=60": {
       "hit_rate": 0.85,
@@ -423,12 +423,12 @@
   "event_notes_audit": {
     "by_engine": {
       "hybrid_cohort": {
-        "brier": 0.13097,
-        "delta": 0.036115,
-        "hits": 1289,
+        "brier": 0.13068,
+        "delta": 0.035578,
+        "hits": 1288,
         "mean_promised": 0.656895,
         "n": 1860,
-        "realized": 0.693011
+        "realized": 0.692473
       },
       "legacy": {
         "brier": 0.183796,
@@ -610,12 +610,12 @@
           "realized": 0.333333
         },
         "match_over_45": {
-          "brier": 0.200507,
-          "delta": 0.028335,
-          "hits": 65,
+          "brier": 0.198217,
+          "delta": 0.024097,
+          "hits": 64,
           "mean_promised": 0.247089,
           "n": 236,
-          "realized": 0.275424
+          "realized": 0.271186
         }
       },
       "legacy": {
@@ -1186,13 +1186,13 @@
         "realized": 0.387755
       },
       "match_over_45": {
-        "brier": 0.211461,
-        "delta": 0.045964,
-        "hits": 75,
+        "brier": 0.209342,
+        "delta": 0.042042,
+        "hits": 74,
         "mean_promised": 0.248154,
         "n": 255,
         "notes": 255,
-        "realized": 0.294118
+        "realized": 0.290196
       }
     },
     "definition": "plain-market: a note hits iff its market lands in the final score (selection-independent for match totals and BTTS; the 1X2 selection only picks the team for team totals and the double-chance leg)",
@@ -1207,13 +1207,13 @@
         "realized": 0.202247
       },
       {
-        "brier": 0.203279,
+        "brier": 0.201263,
         "bucket": "0.2-0.3",
-        "delta": 0.033716,
-        "hits": 76,
+        "delta": 0.029985,
+        "hits": 75,
         "mean_promised": 0.249866,
         "n": 268,
-        "realized": 0.283582
+        "realized": 0.279851
       },
       {
         "brier": 0.253989,
@@ -1287,11 +1287,11 @@
   "include_same_day": false,
   "morning_baseline_rows": 279,
   "overall": {
-    "hit_rate": 0.720867,
+    "hit_rate": 0.718157,
     "priced_picks": 349,
-    "roi": 0.001447,
+    "roi": -0.002278,
     "settled_picks": 369,
-    "wins": 266
+    "wins": 265
   },
   "pending_result_picks": 8,
   "regular_only_rows": 115,
@@ -32290,7 +32290,7 @@
       "avg_p": 65.7,
       "date": "2026-08-27",
       "gs": 2,
-      "hs": 4,
+      "hs": 2,
       "match": "Pafos vs Dinamo Tirana",
       "notes_audit": [
         {
@@ -32335,7 +32335,7 @@
         },
         {
           "engine": "hybrid_cohort",
-          "hit": true,
+          "hit": false,
           "label": "Match Over 4.5 Goals",
           "market": "match_over_45",
           "promised": 0.22977947996269782,
@@ -32345,7 +32345,7 @@
       "odds": 1.3,
       "odds_match_method": "betexplorer",
       "odds_source": "betexplorer_odds",
-      "outcome": "home",
+      "outcome": "draw",
       "parsed_stats": {
         "away_o15_expected": 0.098,
         "away_o15_hit": false,
@@ -32361,7 +32361,7 @@
       "price_quarantine_reason": "NONE",
       "selection": "home",
       "suspect_price": null,
-      "won": true
+      "won": false
     },
     {
       "avg_p": 62.3,
@@ -32445,9 +32445,9 @@
   "start": "2026-07-30",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.209076,
-      "mae": 1.497283,
-      "mean_actual": 3.391304,
+      "bias": -0.214511,
+      "mae": 1.491848,
+      "mean_actual": 3.38587,
       "mean_promised": 3.60038,
       "n": 368
     },
@@ -32739,7 +32739,8 @@
     "2026-08-24",
     "2026-08-25",
     "2026-08-26",
-    "2026-08-27"
+    "2026-08-27",
+    "2026-08-28"
   ],
   "verified_late_additions": 13,
   "veto_deep_dive": {
@@ -32759,20 +32760,20 @@
         "wins": 2
       },
       "<1.50": {
-        "hit_rate": 0.817518,
+        "hit_rate": 0.810219,
         "priced_picks": 137,
-        "roi": 0.053102,
+        "roi": 0.043613,
         "settled_picks": 137,
-        "wins": 112
+        "wins": 111
       }
     },
     "by_price_evidence": {
       "BETEXPLORER_RESCUE": {
-        "hit_rate": 0.830986,
+        "hit_rate": 0.816901,
         "priced_picks": 71,
-        "roi": 0.102817,
+        "roi": 0.084507,
         "settled_picks": 71,
-        "wins": 59
+        "wins": 58
       },
       "BZZOIRO_PRIMARY": {
         "hit_rate": 0.723404,
@@ -32861,11 +32862,11 @@
         "wins": 1
       },
       "context VETO in ['odds_band']": {
-        "hit_rate": 0.854167,
+        "hit_rate": 0.833333,
         "priced_picks": 48,
-        "roi": 0.153958,
+        "roi": 0.126875,
         "settled_picks": 48,
-        "wins": 41
+        "wins": 40
       },
       "context VETO in ['team_a', 'odds_band']": {
         "hit_rate": 0.909091,
@@ -32999,11 +33000,11 @@
     },
     "focus_bucket": "SKIPPED_VETO",
     "overall": {
-      "hit_rate": 0.746114,
+      "hit_rate": 0.740933,
       "priced_picks": 193,
-      "roi": 0.024378,
+      "roi": 0.017642,
       "settled_picks": 193,
-      "wins": 144
+      "wins": 143
     },
     "soft_evidence_labels": [
       "SCOUTINGSTATS_SOLE",
@@ -33019,11 +33020,11 @@
       "wins": 51
     },
     "trusted_evidence_only": {
-      "hit_rate": 0.788136,
+      "hit_rate": 0.779661,
       "priced_picks": 118,
-      "roi": 0.08072,
+      "roi": 0.069703,
       "settled_picks": 118,
-      "wins": 93
+      "wins": 92
     }
   },
   "voided_event_examples": [

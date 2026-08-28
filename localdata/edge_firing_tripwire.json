@@ -5,7 +5,7 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-28",
-      "n_last_window": 96,
+      "n_last_window": 102,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -19,14 +19,14 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-08-28",
-      "n_last_window": 298,
+      "n_last_window": 304,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
     {
       "decay": "HEALTHY",
       "last_fired": "2026-08-28",
-      "n_last_window": 53,
+      "n_last_window": 50,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
@@ -38,9 +38,9 @@
       "silent": false
     },
     {
-      "decay": "WATCH",
+      "decay": "HEALTHY",
       "last_fired": "2026-08-28",
-      "n_last_window": 14,
+      "n_last_window": 11,
       "rule": "ml-meta avg_p>=70",
       "silent": false
     },
@@ -59,7 +59,7 @@
       "silent": false
     }
   ],
-  "generated_at": "2026-08-28T01:05:52",
+  "generated_at": "2026-08-28T03:05:46",
   "ignored_non_operational_rules": [
     "2way-unanimous min_p>=60 avg_p>=70",
     "3way-unanimous home-only avg_p>=60",
@@ -71,7 +71,7 @@
   "sources": [
     {
       "name": "forebet",
-      "newest_date": "2026-08-26",
+      "newest_date": "2026-08-27",
       "newest_file": "forebet_2026-08.csv.gz",
       "role": "core_voter",
       "stale": false
