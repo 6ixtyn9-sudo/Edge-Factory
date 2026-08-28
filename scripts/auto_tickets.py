@@ -245,7 +245,10 @@ def playable_legs(rows, day=None, settled=None):
             continue
         if p.get("bucket") not in BUCKETS:
             continue
-        if str(p.get("quarantine") or "none").strip().lower() in BAD_QUARANTINE:
+        q = str(p.get("price_quarantine_reason") or p.get("quarantine") or "none").strip().lower()
+        if q in BAD_QUARANTINE and not p.get("odds_replaced"):
+            continue   # suspect price unless betexplorer-rescued (rescue pops the reason)
+        if str(p.get("price_evidence") or "").upper() == "SUSPECT_ALIAS_FUZZY" and not p.get("odds_replaced"):
             continue
         ap = p.get("avg_p")
         try:
