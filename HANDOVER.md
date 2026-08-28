@@ -6128,3 +6128,93 @@ failed**; pyflakes clean.
 `scripts/auto_tickets_grade.py`, `tests/test_auto_tickets_rolling.py`,
 `.gitignore`, this HANDOVER entry; deleted the four legacy localdata
 artifacts; committed fresh state + today's percent slip + performance pair.
+
+## Addendum — 2026-08-28: walk-forward days 1-3 — incident log, voids, checkpoint card
+
+**Context.** The rolling engine went live 2026-08-27 (merged PR #1). Days 1-3
+were operational triage: five defects found and fixed, all regression-tested.
+This addendum is the record; the engine docstring carries the recipe.
+
+### Incident log (all fixed, all with tests or verified self-checks)
+
+1. **Draft stacking.** cmd_today appended a slip per run; the bot's 2-3 runs
+   inside the 06:00-12:00 build window stacked same-day slips (state showed
+   50% + 25% committed for 08-27). Fix: upsert_slip — placing replaces the
+   day's draft. (One mangled-paste detour en route briefly produced a
+   recursive helper on main; restored from 82ff921 and re-applied in stages.)
+2. **Potosi incident — three settlement defects.** Real Potosi (KO 26-08
+   23:30, on the 27th's slate, lost 0-1) could never settle because:
+   (a) parse_kickoff stomped day-month formats to the slate date, so a
+   played match passed the kicked-off filter — fixed: day-month keeps its own
+   calendar day, year chosen nearest the slate date; (b) results file under
+   the KICKOFF date, not the slate date — fixed: settlement tries day ±1;
+   (c) norm_team DROPS accented chars asymmetrically ("Potosí"->"potos" vs
+   feed "Potosi"->"potosi"; both spellings exist league-wide) — fixed:
+   accent-folded exact match, then bounded fuzzy (both teams >=0.8
+   similarity, ±1 day). Net effect: +9 previously-unjoinable archive picks
+   now settle.
+3. **Voids.** Postponed/cancelled results previously hung a leg open forever.
+   Fix: book semantics — any non-result outcome = void; a void leg drops out
+   of the acca (odds recompute over live legs; all-void = stake back at 1.0).
+   Exact marker check ordered BEFORE the fuzzy fallback (the first patch's
+   void branch was unreachable — fuzzy overwrote markers with None).
+4. **Duplicate-slip immunity.** load_state now dedupes same-date open slips
+   at load time (keeps first), so a stale bot persist can never re-stack.
+5. **Stale-leg auto-void.** A leg unresolved >5 days after kickoff
+   auto-voids at settlement (rescheduled matches that never re-file).
+6. **CI zombie resurrection.** Deleting v4 files from git was undone every
+   run: actions/cache/restore unpacked pre-deletion snapshots and the persist
+   step's `git add -A localdata/` recommitted them. Fix: delete + bump the
+   cache key (localdata-main- -> localdata-v2-); old caches orphan and age
+   out. Codespace gh token cannot delete caches (403) — key-bump is the
+   no-permission fix.
+
+### Day-one result (honesty receipt)
+
+08-27 frozen slip: acca1 L (Potosi), acca2 W @1.74 (Freiburg x Riga), acca3 L
+(Pafos; MC Alger postponed = void pending). Bank settles ~79.0% of capital.
+Structure capped the day as designed.
+
+### Pre-committed September checkpoint card (thresholds fixed, no mood edits)
+
+1. **Acca count on saturated days:** 3 -> 5 only if 5 still wins median AND
+   p10 on resampled heavy days at month end (current: 5 beats 3 in 80% of
+   resamples, ledger 8 heavy days).
+2. **Conviction-less shorts (odds<1.20 AND stated<70%):** cut only if >=30
+   settled and still < -10% (now n=14 at -28.5% — below actionable n).
+3. **O2.5 inclusion gate:** stated 50-60% band, priced: n>=30 AND hit>=70%
+   AND flat ROI>0 -> earns walk-forward inclusion, SHARP prices only.
+   - Live (scripts/o25_tracker.py, committed): band 23 @ 78% +19.8%;
+     sharp-priced 13 @ 85% +37.2%; soft (scoutingstats) 44 @ 61% -7.2%.
+   - Deep-warehouse check (forebet 2024+, same population = strong home
+     favourites): 642 @ 65.0%, +0.2% at forebet's ~10% overround odds ->
+     expect live numbers to sag toward ~65% / single-digit ROI at sharp
+     prices. The gate exists to measure exactly this sag.
+   - Prerequisite if adopted: route goals pricing sharp-first (77% of overs
+     currently priced by the soft feed).
+4. **League audit:** month-end, league-level leg ROI; n>=30 AND < -10% goes
+   to the purity registry as a veto candidate (the tested mechanism).
+   Pairing stays probability-pure: diverse/concentrated variants differ only
+   by noise (11% of pairs share a league; worst-day unchanged; the killer
+   correlation is day-level, not league-level).
+
+### Session research receipts (no engine changes)
+
+- **Hedging sim:** cash-out at 5% cost = neutral EV with maxDD halved
+  (86%->54%); at 10% cost it destroys ~3/4 of final bank; leg-2 conditional
+  on leg-1 win has no edge (n=98, -0.8%). Operator judged cash-out
+  impractical (bookmaker behaviour) — shelved, not adopted.
+- **Low-odds exclusion sim:** blanket min-odds floors (1.15-1.30) all
+  destroy value and raise drawdown (shorts are slot-1 ballast + thin-day
+  fill); only the conviction-cut is a candidate (see checkpoint 2).
+- **R10 tiered-TP ladder sim** (no TP below R1k; full-gain cycles to R10k;
+  half-of-new-high above): deterministic ledger pass R10 -> R131 with zero
+  withdrawals; month-block MC median ~R26-30k withdrawn/24mo vs zero-edge
+  control R0 / -R209 median — the entire result is the edge-persistence bet.
+  Currency denomination is separable (betting multiple x coin multiple);
+  stablecoin = the only rational crypto rail; LTC float adds tails, not speed.
+
+**Replacement paths this addendum documents (all already on main via
+Codespace patches):** scripts/auto_tickets.py (upsert, kickoff parse,
+fallbacks, voids, dedupe, staleness), .github/workflows/daily.yml (cache
+key v2), scripts/o25_tracker.py (new, read-only), deleted v4 artifacts.
