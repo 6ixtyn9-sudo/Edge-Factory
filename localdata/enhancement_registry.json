@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 62,
-   "inv_price_sum": 57.8391881487405,
-   "multi_n": 13,
-   "n": 92,
+   "hits": 73,
+   "inv_price_sum": 67.11880288613763,
+   "multi_n": 15,
+   "n": 106,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -194,9 +194,23 @@
     "2026-08-26|Tottenham vs Charlton Athletic|match_over_25@v1",
     "2026-08-27|Fulham vs AFC Wimbledon|match_over_25@v1",
     "2026-08-27|Freiburg vs Motherwell|match_over_25@v1",
-    "2026-08-27|Brighton vs Tromso|match_over_25@v1"
+    "2026-08-27|Brighton vs Tromso|match_over_25@v1",
+    "2026-08-28|Al Khaleej Club vs Al Hilal|match_over_25@v1",
+    "2026-08-28|Milan vs Venezia|match_over_25@v1",
+    "2026-08-28|The New Saints vs Colwyn Bay|match_over_25@v1",
+    "2026-08-28|Crystal Palace vs Manchester City|match_over_25@v1",
+    "2026-08-28|Bohemians FC vs Sligo Rovers|match_over_25@v1",
+    "2026-08-28|Aldershot Town vs Harrogate Town|match_over_25@v1",
+    "2026-08-28|Ansan Greeners vs Daegu FC|match_over_25@v1",
+    "2026-08-28|Universitatea Cluj vs Petrolul Ploiesti|match_over_25@v1",
+    "2026-08-28|St Patricks Dublin vs Waterford United|match_over_25@v1",
+    "2026-08-28|Holywell Town vs Caernarfon Town|match_over_25@v1",
+    "2026-08-28|Qatar SC vs Al Sadd SC|match_over_25@v1",
+    "2026-08-28|Bayern M\u00fcnchen vs VfB Stuttgart|match_over_25@v1",
+    "2026-08-28|Pen-y-Bont FC vs Flint Town Utd|match_over_25@v1",
+    "2026-08-28|Scunthorpe Utd vs Solihull Moors|match_over_25@v1"
    ],
-   "profit": 5.62,
+   "profit": 8.06,
    "records": [
     {
      "date": "2026-08-01",
@@ -930,6 +944,118 @@
      "match": "Brighton vs Tromso",
      "multi_source": false,
      "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Al Khaleej Club vs Al Hilal",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": false,
+     "match": "Milan vs Venezia",
+     "multi_source": false,
+     "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "The New Saints vs Colwyn Bay",
+     "multi_source": false,
+     "price": 1.57,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Crystal Palace vs Manchester City",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Bohemians FC vs Sligo Rovers",
+     "multi_source": true,
+     "price": 1.52,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Aldershot Town vs Harrogate Town",
+     "multi_source": false,
+     "price": 1.65,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Ansan Greeners vs Daegu FC",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Universitatea Cluj vs Petrolul Ploiesti",
+     "multi_source": false,
+     "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": false,
+     "match": "St Patricks Dublin vs Waterford United",
+     "multi_source": true,
+     "price": 1.56,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Holywell Town vs Caernarfon Town",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Qatar SC vs Al Sadd SC",
+     "multi_source": false,
+     "price": 1.28,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Bayern M\u00fcnchen vs VfB Stuttgart",
+     "multi_source": false,
+     "price": 1.16,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": false,
+     "match": "Pen-y-Bont FC vs Flint Town Utd",
+     "multi_source": false,
+     "price": 1.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "Scunthorpe Utd vs Solihull Moors",
+     "multi_source": false,
+     "price": 1.53,
      "source": "scoutingstats"
     }
    ],
