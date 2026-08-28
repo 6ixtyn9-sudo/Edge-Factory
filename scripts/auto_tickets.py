@@ -187,12 +187,14 @@ def pick_result(pick, settled):
     home = norm_team(pick.get("home") or "")
     away = norm_team(pick.get("away") or "")
     outcome = settled.get((day, home, away))
-    if outcome not in ("home", "away", "draw"):
+    if outcome is not None and outcome not in ("home", "away", "draw"):
+        return "void"
+    if outcome is None:
         outcome = _lookup_fallback(settled, day, home, away)
+    if outcome is not None and outcome not in ("home", "away", "draw"):
+        return "void"
     if outcome is None:
         return None
-    if outcome not in ("home", "away", "draw"):
-        return "void"   # postponed/cancelled/abandoned — any non-result marker
     sel = str(pick.get("pick") or "").lower()
     if outcome == "draw":
         return "loss"
@@ -202,9 +204,18 @@ def pick_result(pick, settled):
 # ---------------- state (all percentages of capital) ----------------
 def load_state() -> dict:
     try:
-        return json.loads(STATE_FILE.read_text())
+        st = json.loads(STATE_FILE.read_text())
     except Exception:
         return {}
+    slips = st.get("open_slips") or []
+    if slips:
+        seen, order = {}, []
+        for sl in slips:
+            d = sl.get("date")
+            if d not in seen:
+                seen[d] = sl; order.append(d)
+        st["open_slips"] = [seen[d] for d in order]
+    return st
 
 
 def save_state(st: dict) -> None:
@@ -316,7 +327,12 @@ def settle_open_slips(st, settled, archives=None):
             legres = []
             for l in a["legs"]:
                 p = index.get((slip["date"], l["match"], l["pick"]))
-                legres.append(pick_result(p, settled) if p is not None else None)
+                r = pick_result(p, settled) if p is not None else None
+                if r is None and p is not None:
+                    kt = parse_kickoff(p)
+                    if kt is not None and (datetime.now(TZ) - kt).days >= 5:
+                        r = "void"
+                legres.append(r)
             a = dict(a)
             a["results"] = legres
             if legres and all(r for r in legres):
