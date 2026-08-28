@@ -6218,3 +6218,36 @@ Structure capped the day as designed.
 Codespace patches):** scripts/auto_tickets.py (upsert, kickoff parse,
 fallbacks, voids, dedupe, staleness), .github/workflows/daily.yml (cache
 key v2), scripts/o25_tracker.py (new, read-only), deleted v4 artifacts.
+
+## Addendum — 2026-08-28 (evening): growth-lever doctrine, evidence map, withdrawal policy
+
+**Growth levers, ranked (operator discussion receipt).** Bank growth = edge x
+bank size x compounding events. In order of honesty: (1) add starting capital
+(scales linearly); (2) more streams at fixed 50%/day risk — the two queued:
+3->5 accas on saturated days (checkpoint 1) and the O2.5 stream if its gate
+passes sharp-priced (checkpoint 3); (3) sharpen price capture — session
+receipts put price quality at ~10pp ROI (2026 price-flip in the deep archive;
+CLV flat at captured prices), larger than every selection decision tested;
+prerequisite if O2.5 adopts: sharp-first goals pricing (77% currently priced
+soft). Explicitly rejected: raising the stake fraction (100% busted in every
+tested configuration; over-Kelly at thin edge is anti-growth).
+
+**Evidence collection (all automatic, no action needed).** O2.5 gate:
+scripts/o25_tracker.py grades every priced over daily (sharp/soft split
+built in). 3-vs-5 counterfactual: picks_*.json archives ALL playable legs
+incl. would-be legs 7-10, so the max-5 replay runs from ledgers at month
+end. Price capture: the CLV pipeline (clv_report_*.md) plus per-pick
+odds_source/enhancement_price_source cover both 1x2 and goals.
+
+**Withdrawal policy (open, operator decision at first bell).** TP notifies,
+never moves money. Default suggestion: withdraw half at each bell (= the
+cycle's gain; freeroll thereafter); 25%-per-bell is the faster-compounding
+alternative (~x9.4 vs ~x5.1 over 4 cycles, x16 if nothing taken). Doctrine:
+withdrawals determine what SURVIVES the edge dying, not growth speed; if
+~60 bet-days stay profitable, compounding everything becomes defensible.
+
+**Dangling reference note.** Earlier addenda cite
+TICKETS_DIAGNOSIS_2026-08-27.md, deleted from the working tree 2026-08-28
+at operator request. Receipts remain in git history
+(git show 21d8047:TICKETS_DIAGNOSIS_2026-08-27.md) and the key numbers are
+inlined in the 2026-08-27/28 addenda.
