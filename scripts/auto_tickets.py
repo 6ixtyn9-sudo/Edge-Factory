@@ -189,8 +189,10 @@ def pick_result(pick, settled):
     outcome = settled.get((day, home, away))
     if outcome not in ("home", "away", "draw"):
         outcome = _lookup_fallback(settled, day, home, away)
-    if outcome not in ("home", "away", "draw"):
+    if outcome is None:
         return None
+    if outcome not in ("home", "away", "draw"):
+        return "void"   # postponed/cancelled/abandoned — any non-result marker
     sel = str(pick.get("pick") or "").lower()
     if outcome == "draw":
         return "loss"
@@ -317,7 +319,15 @@ def settle_open_slips(st, settled, archives=None):
                 legres.append(pick_result(p, settled) if p is not None else None)
             a = dict(a)
             a["results"] = legres
-            a["won"] = all(r == "win" for r in legres) if legres and all(r for r in legres) else None
+            if legres and all(r for r in legres):
+                live = [l for l, r in zip(a["legs"], legres) if r != "void"]
+                if not live:
+                    a["won"] = True; a["odds"] = 1.0          # all void: stake back
+                else:
+                    a["won"] = all(r == "win" for r in legres if r != "void")
+                    a["odds"] = round(math.prod(l["odds"] for l in live), 2)  # book-style: void drops out
+            else:
+                a["won"] = None
             accas.append(a)
         if accas and all(a["won"] is not None for a in accas):
             ret = sum(a["stake_pct"] * a["odds"] for a in accas if a["won"])
