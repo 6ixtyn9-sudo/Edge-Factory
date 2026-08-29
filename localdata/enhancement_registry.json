@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 73,
-   "inv_price_sum": 67.11880288613763,
+   "hits": 74,
+   "inv_price_sum": 67.64511867561131,
    "multi_n": 15,
-   "n": 106,
+   "n": 107,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -208,9 +208,10 @@
     "2026-08-28|Qatar SC vs Al Sadd SC|match_over_25@v1",
     "2026-08-28|Bayern M\u00fcnchen vs VfB Stuttgart|match_over_25@v1",
     "2026-08-28|Pen-y-Bont FC vs Flint Town Utd|match_over_25@v1",
-    "2026-08-28|Scunthorpe Utd vs Solihull Moors|match_over_25@v1"
+    "2026-08-28|Scunthorpe Utd vs Solihull Moors|match_over_25@v1",
+    "2026-08-28|CD Comerciantes vs FC Cajamarca|match_over_25@v1"
    ],
-   "profit": 8.06,
+   "profit": 8.96,
    "records": [
     {
      "date": "2026-08-01",
@@ -1056,6 +1057,14 @@
      "match": "Scunthorpe Utd vs Solihull Moors",
      "multi_source": false,
      "price": 1.53,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-28",
+     "hit": true,
+     "match": "CD Comerciantes vs FC Cajamarca",
+     "multi_source": false,
+     "price": 1.9,
      "source": "scoutingstats"
     }
    ],
