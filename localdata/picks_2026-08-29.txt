@@ -1,6 +1,6 @@
 Edge Factory Picks — 2026-08-29
 ============================================================
-Generated at: 2026-08-29 15:12:54
+Generated at: 2026-08-29 18:00:45
 
 
 CERTIFIED CLEAN PICKS
@@ -90,6 +90,10 @@ WATCHLIST — UNCORROBORATED SCOUTINGSTATS PRICE
      bucket=WATCHLIST_UNCORROBORATED_PRICE  league=it2:ALLOW  odds_band=1.75-2.00:BOOST
      📊 Realized Stats on Home Win (n=1164): Avg Goals: 3.40 | Over 2.5: 66.2% | BTTS: 40.5% | Home Over 1.5 Goals: 83.9% | Away Over 1.5 Goals: 10.1%
      🔥 Possible Events: Match Over 2.5: 47.7%
+  [ML-META≥55] Fiorentina vs Frosinone                    KO 2026-08-29 18:30:00 -> HOME   avg 58%  w=1.00 @1.66
+     bucket=WATCHLIST_UNCORROBORATED_PRICE  league=it1:BOOST  odds_band=1.50-1.75:BOOST
+     📊 Realized Stats on Home Win (n=1395): Avg Goals: 3.25 | Over 2.5: 65.9% | BTTS: 44.4% | Home Over 1.5 Goals: 82.4% | Away Over 1.5 Goals: 9.8%
+     🔥 Possible Events: Match Over 2.5: 46.1% | Home Team Over 0.5: 81.5% | Away Team Under 3.5: 98.1% | Away Team Under 2.5: 93.2%
   [ML-META≥55] CS Sfaxien vs ES Zarzis                    KO 11:30 -> HOME   avg 57%  w=1.00 @1.65
      bucket=WATCHLIST_UNCORROBORATED_PRICE  league=tunisia ligue i:UNKNOWN  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Home Win (n=1414): Avg Goals: 3.24 | Over 2.5: 65.8% | BTTS: 45.1% | Home Over 1.5 Goals: 81.8% | Away Over 1.5 Goals: 10.2%
@@ -125,10 +129,14 @@ SKIPPED — VETO CONTEXT
      bucket=SKIPPED_VETO  league=liga portugal:VETO  odds_band=1.20-1.35:CAUTION
      📊 Realized Stats on Away Win (n=128): Avg Goals: 4.07 | Over 2.5: 77.3% | BTTS: 34.4% | Home Over 1.5 Goals: 4.7% | Away Over 1.5 Goals: 89.8%
      🔥 Possible Events: Match Over 2.5: 47.3% | Home Team Under 3.5: 99.0% | Home Team Under 2.5: 92.1% | Match Over 4.5: 26.8%
-  [ML-META≥55] Lyon vs Le Havre                           KO 2026-08-29 20:45:00 -> HOME   avg 73%  w=1.00 @1.49
-     bucket=SKIPPED_VETO  league=france ligue 1:ALLOW  odds_band=1.35-1.50:CAUTION
-     📊 Realized Stats on Home Win (n=373): Avg Goals: 3.90 | Over 2.5: 76.7% | BTTS: 40.8% | Home Over 1.5 Goals: 88.5% | Away Over 1.5 Goals: 9.9%
-     🔥 Possible Events: Match Over 2.5: 56.6% | Home Team Over 0.5: 89.0% | Away Team Under 3.5: 98.0% | Away Team Under 2.5: 95.2% | Away Team Under 1.5: 80.3% | Match Over 4.5: 32.4%
+  [2WAY-UNANIMOUS≥70] Lyon vs Le Havre                           KO 2026-08-29 20:45:00 -> HOME   avg 75%  w=1.00 @1.47
+     bucket=SKIPPED_VETO  league=france ligue 1:ALLOW  odds_band=1.35-1.50:VETO
+     📊 Realized Stats on Home Win (n=349): Avg Goals: 3.91 | Over 2.5: 77.4% | BTTS: 42.7% | Home Over 1.5 Goals: 89.1% | Away Over 1.5 Goals: 9.2%
+     🔥 Possible Events: Match Over 2.5: 56.8% | Home Team Over 0.5: 88.9% | Away Team Under 3.5: 97.6% | Away Team Under 2.5: 93.7% | Match Over 4.5: 31.3%
+  [ML-META≥55] Juventus vs Parma                          KO 2026-08-29 20:45:00 -> HOME   avg 73%  w=1.00 @1.22
+     bucket=SKIPPED_VETO  league=it1:BOOST  odds_band=1.20-1.35:VETO
+     📊 Realized Stats on Home Win (n=349): Avg Goals: 3.91 | Over 2.5: 76.8% | BTTS: 41.0% | Home Over 1.5 Goals: 88.3% | Away Over 1.5 Goals: 9.7%
+     🔥 Possible Events: Match Over 2.5: 54.7% | Home Team Over 0.5: 86.5% | Away Team Under 3.5: 97.7% | Away Team Under 2.5: 94.7% | Match Over 4.5: 32.0%
   [2WAY-UNANIMOUS≥70] Galatasaray vs Göztepe                     KO 2026-08-29T20:30:00+02:00 -> HOME   avg 73%  w=1.00 @1.33
      bucket=SKIPPED_VETO  league=turkey super lig:UNKNOWN  odds_band=1.20-1.35:CAUTION
      📊 Realized Stats on Home Win (n=475): Avg Goals: 3.79 | Over 2.5: 75.6% | BTTS: 41.3% | Home Over 1.5 Goals: 87.8% | Away Over 1.5 Goals: 9.9%
@@ -145,22 +153,22 @@ SKIPPED — VETO CONTEXT
      bucket=SKIPPED_VETO  league=by1:UNKNOWN  odds_band=1.20-1.35:CAUTION
      📊 Realized Stats on Home Win (n=624): Avg Goals: 3.75 | Over 2.5: 74.0% | BTTS: 42.5% | Home Over 1.5 Goals: 87.5% | Away Over 1.5 Goals: 9.8%
      🔥 Possible Events: Match Over 2.5: 54.4% | Home Team Over 0.5: 85.9% | Away Team Under 3.5: 97.2% | Away Team Under 2.5: 93.4% | Match Over 4.5: 28.8%
-  [ML-META≥55] Borussia Dortmund vs Hamburger SV          KO 2026-08-29 18:30:00 -> HOME   avg 69%  w=1.00 @1.38
+  [ML-META≥55] LASK Linz vs SCR Altach                    KO 2026-08-29 19:30:00 -> HOME   avg 70%  w=1.00 @1.40 zulubet
+     bucket=SKIPPED_VETO  league=admiral bundesliga:UNKNOWN  odds_band=1.35-1.50:CAUTION
+     📊 Realized Stats on Home Win (n=588): Avg Goals: 3.76 | Over 2.5: 72.6% | BTTS: 39.5% | Home Over 1.5 Goals: 87.4% | Away Over 1.5 Goals: 10.4%
+     🔥 Possible Events: Match Over 2.5: 53.2% | Home Team Over 0.5: 87.3% | Away Team Under 3.5: 98.8% | Away Team Under 2.5: 95.7% | Away Team Under 1.5: 81.0% | Match Over 4.5: 28.6%
+  [ML-META≥55] Borussia Dortmund vs Hamburger SV          KO 2026-08-29 18:30:00 -> HOME   avg 70%  w=1.00 @1.36
      bucket=SKIPPED_VETO  league=bundesliga:ALLOW  odds_band=1.35-1.50:CAUTION
-     📊 Realized Stats on Home Win (n=653): Avg Goals: 3.69 | Over 2.5: 71.7% | BTTS: 39.8% | Home Over 1.5 Goals: 86.7% | Away Over 1.5 Goals: 10.3%
-     🔥 Possible Events: Match Over 2.5: 54.1% | Home Team Over 0.5: 87.2% | Away Team Under 3.5: 97.2% | Away Team Under 2.5: 93.8% | Match Over 4.5: 27.7%
+     📊 Realized Stats on Home Win (n=588): Avg Goals: 3.76 | Over 2.5: 72.6% | BTTS: 39.5% | Home Over 1.5 Goals: 87.4% | Away Over 1.5 Goals: 10.4%
+     🔥 Possible Events: Match Over 2.5: 55.4% | Home Team Over 0.5: 88.0% | Away Team Under 3.5: 97.2% | Away Team Under 2.5: 93.6% | Match Over 4.5: 29.1%
   [ML-META≥55] Afturelding vs Vestri                      KO 2026-08-29 16:00:00 -> HOME   avg 69%  w=1.00 @1.22
      bucket=SKIPPED_VETO  league=is2:UNKNOWN  odds_band=1.20-1.35:VETO
      📊 Realized Stats on Home Win (n=690): Avg Goals: 3.68 | Over 2.5: 71.6% | BTTS: 39.9% | Home Over 1.5 Goals: 87.0% | Away Over 1.5 Goals: 10.6%
      🔥 Possible Events: Match Over 2.5: 53.3% | Home Team Over 0.5: 87.0% | Away Team Under 3.5: 98.1% | Away Team Under 2.5: 95.4% | Match Over 4.5: 27.3%
-  [ML-META≥55] LASK Linz vs SCR Altach                    KO 2026-08-29 19:30:00 -> HOME   avg 68%  w=1.00 @1.42
-     bucket=SKIPPED_VETO  league=admiral bundesliga:UNKNOWN  odds_band=1.35-1.50:CAUTION
-     📊 Realized Stats on Home Win (n=801): Avg Goals: 3.59 | Over 2.5: 70.2% | BTTS: 39.3% | Home Over 1.5 Goals: 86.6% | Away Over 1.5 Goals: 10.2%
-     🔥 Possible Events: Match Over 2.5: 50.8% | Home Team Over 0.5: 86.3% | Away Team Under 3.5: 98.8% | Away Team Under 2.5: 96.2% | Away Team Under 1.5: 81.8% | Match Over 4.5: 25.2%
-  [ML-META≥55] Juventus vs Parma                          KO 2026-08-29 20:45:00 -> HOME   avg 67%  w=1.00 @1.22
-     bucket=SKIPPED_VETO  league=it1:BOOST  odds_band=1.20-1.35:VETO
-     📊 Realized Stats on Home Win (n=841): Avg Goals: 3.55 | Over 2.5: 69.6% | BTTS: 40.4% | Home Over 1.5 Goals: 86.1% | Away Over 1.5 Goals: 10.0%
-     🔥 Possible Events: Match Over 2.5: 50.3% | Home Team Over 0.5: 85.7% | Away Team Under 3.5: 98.3% | Away Team Under 2.5: 95.7% | Away Team Under 1.5: 81.0% | Match Over 4.5: 24.3%
+  [ML-META≥55] AZ Alkmaar vs Go Ahead Eagles              KO 2026-08-29 18:45:00 -> HOME   avg 68%  w=1.00 @1.37
+     bucket=SKIPPED_VETO  league=eredivisie:BOOST  odds_band=1.35-1.50:CAUTION
+     📊 Realized Stats on Home Win (n=769): Avg Goals: 3.62 | Over 2.5: 70.5% | BTTS: 39.8% | Home Over 1.5 Goals: 86.9% | Away Over 1.5 Goals: 10.4%
+     🔥 Possible Events: Match Over 2.5: 52.0% | Home Team Over 0.5: 87.8% | Away Team Under 3.5: 98.6% | Away Team Under 2.5: 96.1% | Match Over 4.5: 26.2%
   [ML-META≥55] Kawasaki Frontale vs JEF United Chiba      KO 2026-08-29 12:00:00 -> HOME   avg 65%  w=1.00 @1.60
      bucket=SKIPPED_VETO  league=j1 league:ALLOW  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Home Win (n=1034): Avg Goals: 3.46 | Over 2.5: 67.1% | BTTS: 39.4% | Home Over 1.5 Goals: 84.9% | Away Over 1.5 Goals: 10.3%
@@ -198,6 +206,6 @@ SKIPPED — DEAD EDGE
 ============================================================
   (none)
 
-Total archived picks in this report: 42
+Total archived picks in this report: 44
 ⚠️  Flat stakes only. Best odds inflate ROI (~halve it).
 ⚠️  Bet only what you can afford to lose.
