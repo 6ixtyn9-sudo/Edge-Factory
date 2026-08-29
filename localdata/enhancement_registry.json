@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 74,
-   "inv_price_sum": 67.64511867561131,
+   "hits": 84,
+   "inv_price_sum": 79.65762642248552,
    "multi_n": 15,
-   "n": 107,
+   "n": 127,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -209,9 +209,29 @@
     "2026-08-28|Bayern M\u00fcnchen vs VfB Stuttgart|match_over_25@v1",
     "2026-08-28|Pen-y-Bont FC vs Flint Town Utd|match_over_25@v1",
     "2026-08-28|Scunthorpe Utd vs Solihull Moors|match_over_25@v1",
-    "2026-08-28|CD Comerciantes vs FC Cajamarca|match_over_25@v1"
+    "2026-08-28|CD Comerciantes vs FC Cajamarca|match_over_25@v1",
+    "2026-08-29|IF Elfsborg vs Degerfors IF|match_over_25@v1",
+    "2026-08-29|Krasnodar vs FC Rostov|match_over_25@v1",
+    "2026-08-29|Celtic vs Falkirk FC|match_over_25@v1",
+    "2026-08-29|Galatasaray vs G\u00f6ztepe|match_over_25@v1",
+    "2026-08-29|Borussia Dortmund vs Hamburger SV|match_over_25@v1",
+    "2026-08-29|Juventus vs Parma|match_over_25@v1",
+    "2026-08-29|Kawasaki Frontale vs JEF United Chiba|match_over_25@v1",
+    "2026-08-29|Polonia Warszawa vs Lechia Gdansk|match_over_25@v1",
+    "2026-08-29|RB Leipzig vs Borussia M'gladbach|match_over_25@v1",
+    "2026-08-29|Walsall FC vs Accrington Stanley|match_over_25@v1",
+    "2026-08-29|SV Elversberg vs Bayer Leverkusen|match_over_25@v1",
+    "2026-08-29|Tokyo Verdy vs Kashima Antlers|match_over_25@v1",
+    "2026-08-29|Partick vs Queens Park|match_over_25@v1",
+    "2026-08-29|BSC Young Boys vs FC Basel 1893|match_over_25@v1",
+    "2026-08-29|Ferrovi\u00e1ria SP vs Confian\u00e7a|match_over_25@v1",
+    "2026-08-29|Liverpool vs Nottingham Forest|match_over_25@v1",
+    "2026-08-29|Hamilton Academical vs Cove Rangers|match_over_25@v1",
+    "2026-08-29|Ascoli vs Carrarese Calcio|match_over_25@v1",
+    "2026-08-29|Barnet vs Cheltenham|match_over_25@v1",
+    "2026-08-29|Shimizu S-Pulse vs Kashiwa Reysol|match_over_25@v1"
    ],
-   "profit": 8.96,
+   "profit": 4.26,
    "records": [
     {
      "date": "2026-08-01",
@@ -1065,6 +1085,166 @@
      "match": "CD Comerciantes vs FC Cajamarca",
      "multi_source": false,
      "price": 1.9,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "IF Elfsborg vs Degerfors IF",
+     "multi_source": false,
+     "price": 1.9,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "Krasnodar vs FC Rostov",
+     "multi_source": false,
+     "price": 2.0,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "Celtic vs Falkirk FC",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "Galatasaray vs G\u00f6ztepe",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "Borussia Dortmund vs Hamburger SV",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "Juventus vs Parma",
+     "multi_source": false,
+     "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "Kawasaki Frontale vs JEF United Chiba",
+     "multi_source": false,
+     "price": 1.57,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "Polonia Warszawa vs Lechia Gdansk",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "RB Leipzig vs Borussia M'gladbach",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "Walsall FC vs Accrington Stanley",
+     "multi_source": false,
+     "price": 2.0,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "SV Elversberg vs Bayer Leverkusen",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "Tokyo Verdy vs Kashima Antlers",
+     "multi_source": false,
+     "price": 2.3,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "Partick vs Queens Park",
+     "multi_source": false,
+     "price": 1.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "BSC Young Boys vs FC Basel 1893",
+     "multi_source": false,
+     "price": 1.3,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "Ferrovi\u00e1ria SP vs Confian\u00e7a",
+     "multi_source": false,
+     "price": 2.05,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "Liverpool vs Nottingham Forest",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "Hamilton Academical vs Cove Rangers",
+     "multi_source": false,
+     "price": 1.75,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "Ascoli vs Carrarese Calcio",
+     "multi_source": false,
+     "price": 1.9,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": true,
+     "match": "Barnet vs Cheltenham",
+     "multi_source": false,
+     "price": 1.75,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-29",
+     "hit": false,
+     "match": "Shimizu S-Pulse vs Kashiwa Reysol",
+     "multi_source": false,
+     "price": 2.0,
      "source": "scoutingstats"
     }
    ],
