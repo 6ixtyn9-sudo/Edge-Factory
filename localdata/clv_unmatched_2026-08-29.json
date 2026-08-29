@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-08-29",
+    "kickoff": "08:00",
+    "home": "Ordabasy",
+    "away": "FC Kyzyl-Zhar SK",
+    "league": "Kazakhstan,Premier League",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "ordabasy",
+    "away_key": "fckyzylzharsk",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Tijuana",
+        "away": "Pumas UNAM",
+        "league": "Liga MX",
+        "kickoff": "2026-08-29T03:10:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.05,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "tijuana",
+        "away_key": "pumasunam",
+        "kickoff_delta_minutes": 170
+      },
+      {
+        "home": "Gamba Osaka",
+        "away": "Sanfrecce Hiroshima",
+        "league": "J1 League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "gambaosaka",
+        "away_key": "sanfreccehiroshima",
+        "kickoff_delta_minutes": 180
+      },
+      {
+        "home": "Mito Hollyhock",
+        "away": "Machida Zelvia",
+        "league": "J1 League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "mitohollyhock",
+        "away_key": "machidazelvia",
+        "kickoff_delta_minutes": 180
+      },
+      {
+        "home": "Kamatamare Sanuki",
+        "away": "Kagoshima United",
+        "league": "J3-League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.7,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "kamatamaresanuki",
+        "away_key": "kagoshimaunited",
+        "kickoff_delta_minutes": 180
+      },
+      {
+        "home": "Qingdao Hainiu",
+        "away": "Wuhan Three Towns",
+        "league": "Super League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "qingdaohainiu",
+        "away_key": "wuhanthreetowns",
+        "kickoff_delta_minutes": 180
+      }
+    ]
+  },
+  {
+    "date": "2026-08-29",
     "kickoff": "2026-08-29 14:00:00",
     "home": "Rosengard W",
     "away": "Hacken W",
@@ -169,7 +250,7 @@
     "league": "Ru1",
     "market": "1x2",
     "pick": "away",
-    "rule_name": "ml-meta avg_p>=55",
+    "rule_name": "ml-meta avg_p>=60",
     "match_method": "fallback",
     "home_key": "fakelvoronezh",
     "away_key": "zenit",
@@ -320,87 +401,6 @@
         "home_key": "qingdaohainiu",
         "away_key": "wuhanthreetowns",
         "kickoff_delta_minutes": 210
-      }
-    ]
-  },
-  {
-    "date": "2026-08-29",
-    "kickoff": "07:00",
-    "home": "Partick",
-    "away": "Queens Park",
-    "league": "Scotland,Championship",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "2way-unanimous avg_p>=70",
-    "match_method": "fallback",
-    "home_key": "partick",
-    "away_key": "queenspark",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Tijuana",
-        "away": "Pumas UNAM",
-        "league": "Liga MX",
-        "kickoff": "2026-08-29T03:10:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.05,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "tijuana",
-        "away_key": "pumasunam",
-        "kickoff_delta_minutes": 110
-      },
-      {
-        "home": "Necaxa",
-        "away": "Cruz Azul",
-        "league": "Liga MX",
-        "kickoff": "2026-08-29T01:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.8,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "necaxa",
-        "away_key": "cruzazul",
-        "kickoff_delta_minutes": 240
-      },
-      {
-        "home": "Atlante",
-        "away": "Le\u00f3n",
-        "league": "Liga MX",
-        "kickoff": "2026-08-29T01:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.55,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "atlante",
-        "away_key": "leon",
-        "kickoff_delta_minutes": 240
-      },
-      {
-        "home": "Gimnasia y Tiro de Salta",
-        "away": "Club Atl\u00e9tico Chacarita Juniors",
-        "league": "Primera B Nacional",
-        "kickoff": "2026-08-29T01:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.1,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "gimnasiaytirodesalta",
-        "away_key": "clubatleticochacaritajuniors",
-        "kickoff_delta_minutes": 240
-      },
-      {
-        "home": "Gamba Osaka",
-        "away": "Sanfrecce Hiroshima",
-        "league": "J1 League",
-        "kickoff": "2026-08-29T09:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 5.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "gambaosaka",
-        "away_key": "sanfreccehiroshima",
-        "kickoff_delta_minutes": 240
       }
     ]
   },
@@ -568,87 +568,6 @@
   },
   {
     "date": "2026-08-29",
-    "kickoff": "08:00",
-    "home": "Ordabasy",
-    "away": "FC Kyzyl-Zhar SK",
-    "league": "Kazakhstan,Premier League",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "2way-unanimous avg_p>=70",
-    "match_method": "fallback",
-    "home_key": "ordabasy",
-    "away_key": "fckyzylzharsk",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Tijuana",
-        "away": "Pumas UNAM",
-        "league": "Liga MX",
-        "kickoff": "2026-08-29T03:10:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.05,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "tijuana",
-        "away_key": "pumasunam",
-        "kickoff_delta_minutes": 170
-      },
-      {
-        "home": "Gamba Osaka",
-        "away": "Sanfrecce Hiroshima",
-        "league": "J1 League",
-        "kickoff": "2026-08-29T09:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 5.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "gambaosaka",
-        "away_key": "sanfreccehiroshima",
-        "kickoff_delta_minutes": 180
-      },
-      {
-        "home": "Mito Hollyhock",
-        "away": "Machida Zelvia",
-        "league": "J1 League",
-        "kickoff": "2026-08-29T09:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "mitohollyhock",
-        "away_key": "machidazelvia",
-        "kickoff_delta_minutes": 180
-      },
-      {
-        "home": "Kamatamare Sanuki",
-        "away": "Kagoshima United",
-        "league": "J3-League",
-        "kickoff": "2026-08-29T09:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.7,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "kamatamaresanuki",
-        "away_key": "kagoshimaunited",
-        "kickoff_delta_minutes": 180
-      },
-      {
-        "home": "Qingdao Hainiu",
-        "away": "Wuhan Three Towns",
-        "league": "Super League",
-        "kickoff": "2026-08-29T09:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "qingdaohainiu",
-        "away_key": "wuhanthreetowns",
-        "kickoff_delta_minutes": 180
-      }
-    ]
-  },
-  {
-    "date": "2026-08-29",
     "kickoff": "2026-08-29 20:45:00",
     "home": "Lyon",
     "away": "Le Havre",
@@ -806,6 +725,87 @@
         "home_key": "pogonsiedlce",
         "away_key": "stalmielec",
         "kickoff_delta_minutes": 30
+      }
+    ]
+  },
+  {
+    "date": "2026-08-29",
+    "kickoff": "07:00",
+    "home": "Partick",
+    "away": "Queens Park",
+    "league": "Scotland,Championship",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "partick",
+    "away_key": "queenspark",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Tijuana",
+        "away": "Pumas UNAM",
+        "league": "Liga MX",
+        "kickoff": "2026-08-29T03:10:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.05,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "tijuana",
+        "away_key": "pumasunam",
+        "kickoff_delta_minutes": 110
+      },
+      {
+        "home": "Necaxa",
+        "away": "Cruz Azul",
+        "league": "Liga MX",
+        "kickoff": "2026-08-29T01:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.8,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "necaxa",
+        "away_key": "cruzazul",
+        "kickoff_delta_minutes": 240
+      },
+      {
+        "home": "Atlante",
+        "away": "Le\u00f3n",
+        "league": "Liga MX",
+        "kickoff": "2026-08-29T01:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.55,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "atlante",
+        "away_key": "leon",
+        "kickoff_delta_minutes": 240
+      },
+      {
+        "home": "Gimnasia y Tiro de Salta",
+        "away": "Club Atl\u00e9tico Chacarita Juniors",
+        "league": "Primera B Nacional",
+        "kickoff": "2026-08-29T01:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.1,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "gimnasiaytirodesalta",
+        "away_key": "clubatleticochacaritajuniors",
+        "kickoff_delta_minutes": 240
+      },
+      {
+        "home": "Gamba Osaka",
+        "away": "Sanfrecce Hiroshima",
+        "league": "J1 League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "gambaosaka",
+        "away_key": "sanfreccehiroshima",
+        "kickoff_delta_minutes": 240
       }
     ]
   },
@@ -1211,6 +1211,87 @@
         "home_key": "ryukyu",
         "away_key": "sagamihara",
         "kickoff_delta_minutes": 30
+      }
+    ]
+  },
+  {
+    "date": "2026-08-29",
+    "kickoff": "08:30",
+    "home": "CS Sfaxien",
+    "away": "ES Zarzis",
+    "league": "Tunisia,Ligue I",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=55",
+    "match_method": "fallback",
+    "home_key": "cssfaxien",
+    "away_key": "eszarzis",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Gamba Osaka",
+        "away": "Sanfrecce Hiroshima",
+        "league": "J1 League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "gambaosaka",
+        "away_key": "sanfreccehiroshima",
+        "kickoff_delta_minutes": 150
+      },
+      {
+        "home": "Mito Hollyhock",
+        "away": "Machida Zelvia",
+        "league": "J1 League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "mitohollyhock",
+        "away_key": "machidazelvia",
+        "kickoff_delta_minutes": 150
+      },
+      {
+        "home": "Kamatamare Sanuki",
+        "away": "Kagoshima United",
+        "league": "J3-League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.7,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "kamatamaresanuki",
+        "away_key": "kagoshimaunited",
+        "kickoff_delta_minutes": 150
+      },
+      {
+        "home": "Qingdao Hainiu",
+        "away": "Wuhan Three Towns",
+        "league": "Super League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "qingdaohainiu",
+        "away_key": "wuhanthreetowns",
+        "kickoff_delta_minutes": 150
+      },
+      {
+        "home": "Ry\u016bky\u016b",
+        "away": "Sagamihara",
+        "league": "J3-League",
+        "kickoff": "2026-08-29T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.62,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "ryukyu",
+        "away_key": "sagamihara",
+        "kickoff_delta_minutes": 150
       }
     ]
   }

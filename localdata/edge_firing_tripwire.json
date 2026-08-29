@@ -5,7 +5,7 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-29",
-      "n_last_window": 133,
+      "n_last_window": 130,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -19,14 +19,14 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-08-29",
-      "n_last_window": 356,
+      "n_last_window": 359,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
     {
       "decay": "HEALTHY",
       "last_fired": "2026-08-29",
-      "n_last_window": 56,
+      "n_last_window": 62,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
@@ -46,13 +46,20 @@
     },
     {
       "decay": "WATCH",
+      "last_fired": "2026-08-22",
+      "n_last_window": 4,
+      "rule": "ml-meta avg_p>=75",
+      "silent": false
+    },
+    {
+      "decay": "WATCH",
       "last_fired": "2026-08-23",
       "n_last_window": 3,
       "rule": "ml-meta avg_p>=80",
       "silent": false
     }
   ],
-  "generated_at": "2026-08-29T03:33:52",
+  "generated_at": "2026-08-29T06:32:24",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
