@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 100.0,
+  "bank": 105.33331199999999,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -70,72 +70,6 @@
       "staked_pct": 50.0001
     },
     {
-      "date": "2026-08-28",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Bayern M\u00fcnchen vs VfB Stuttgart",
-              "pick": "HOME",
-              "prob": 0.79,
-              "odds": 1.25,
-              "result": null
-            },
-            {
-              "match": "FC Vitebsk vs Naftan",
-              "pick": "HOME",
-              "prob": 0.77,
-              "odds": 1.4,
-              "result": null
-            }
-          ],
-          "odds": 1.75,
-          "stake_pct": 8.3333
-        },
-        {
-          "legs": [
-            {
-              "match": "CSKA 1948 vs Lokomotiv Plovdiv",
-              "pick": "HOME",
-              "prob": 0.745,
-              "odds": 1.55,
-              "result": null
-            },
-            {
-              "match": "Al Khaleej Club vs Al Hilal",
-              "pick": "AWAY",
-              "prob": 0.723,
-              "odds": 1.22,
-              "result": null
-            }
-          ],
-          "odds": 1.89,
-          "stake_pct": 8.3333
-        },
-        {
-          "legs": [
-            {
-              "match": "SV Kapfenberg vs FC BW Linz",
-              "pick": "AWAY",
-              "prob": 0.72,
-              "odds": 1.32,
-              "result": null
-            },
-            {
-              "match": "Milan vs Venezia",
-              "pick": "HOME",
-              "prob": 0.7,
-              "odds": 1.38,
-              "result": null
-            }
-          ],
-          "odds": 1.82,
-          "stake_pct": 8.3333
-        }
-      ],
-      "staked_pct": 24.9999
-    },
-    {
       "date": "2026-08-29",
       "accas": [
         {
@@ -202,6 +136,27 @@
       "staked_pct": 12.5001
     }
   ],
-  "history": [],
+  "history": [
+    {
+      "date": "2026-08-28",
+      "staked_pct": 24.9999,
+      "returned_pct": 30.3332,
+      "accas": [
+        {
+          "odds": 1.75,
+          "won": true
+        },
+        {
+          "odds": 1.89,
+          "won": true
+        },
+        {
+          "odds": 1.82,
+          "won": false
+        }
+      ],
+      "bank_pct": 105.3333
+    }
+  ],
   "events": []
 }
