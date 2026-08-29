@@ -276,6 +276,129 @@
     "w_score": 1.0
   },
   {
+    "as_of": "2026-08-29T22:04:16+02:00",
+    "avg_p": 56.0,
+    "away": "Vancouver FC",
+    "bookmaker": "betexplorer_best",
+    "bucket": "CAUTION",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "vancouver",
+      "comp_type_name": "league",
+      "competition_type": "BOOST",
+      "home_norm": "cavalry",
+      "league": "UNKNOWN",
+      "league_key": "ca1",
+      "league_raw": "Ca1",
+      "niche": "UNKNOWN",
+      "odds_band": "CAUTION",
+      "odds_band_name": "1.35-1.50",
+      "resolution_original_verdict": "UNKNOWN",
+      "resolution_path": "O2-competition_type",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "O2-competition_type resolved to BOOST",
+      "resolution_verdict": "BOOST",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-08-29",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "ML-META\u226555",
+    "draw_risk_flag": "HIGH",
+    "edge_n_way": 3,
+    "edge_rule": "ml-meta avg_p>=55",
+    "edge_status": "certified",
+    "enhancement_label": "Match Over 2.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": null,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.453,
+    "enhancement_reason": "Mathematical expectation is 54.9% (ML-calibrated 46.1%->65.4%, n=327) (Performance feedback: HR=69.1%, Adjusted Prob: 45.3%)",
+    "enhancement_state": "PAPER",
+    "event_notes": [
+      {
+        "cohort_n": 2359,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.4529665093242391,
+        "raw_probability": 0.5494381952812012,
+        "reason": "Mathematical expectation is 54.9% (ML-calibrated 46.1%->65.4%, n=327) (Performance feedback: HR=69.1%, Adjusted Prob: 45.3%)"
+      },
+      {
+        "cohort_n": 2359,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Over 0.5 Goals",
+        "market": "home_over_05",
+        "probability": 0.8046671595308896,
+        "raw_probability": 0.848474349204965,
+        "reason": "Home scoring rate is 86.0% (ML-calibrated 86.8%->91.5%, n=282) (Performance feedback: HR=90.6%, Adjusted Prob: 80.5%)"
+      },
+      {
+        "cohort_n": 2359,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.979517224614326,
+        "raw_probability": 0.9826134395623871,
+        "reason": "Combined Under 3.5 is 98.3% (ML-calibrated 98.0%->97.7%, n=300)"
+      },
+      {
+        "cohort_n": 2359,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.9275936755640602,
+        "raw_probability": 0.9272283475951077,
+        "reason": "Combined Under 2.5 is 92.7% (ML-calibrated 94.0%->94.0%, n=283)"
+      }
+    ],
+    "home": "Cavalry FC",
+    "kickoff": "2026-08-29 23:00:00",
+    "league": "Ca1",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
+    "market_type": "1x2",
+    "match": "Cavalry FC vs Vancouver FC",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 3,
+    "odds": 1.45,
+    "odds_captured_at": "2026-08-29T20:09:04.539775+00:00",
+    "odds_league": "Canada: Canadian Premier League",
+    "odds_match_method": "betexplorer",
+    "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.45,
+      "source": "forebet_best"
+    },
+    "odds_source": "betexplorer_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "price_evidence": "BETEXPLORER_RESCUE",
+    "price_push_eligible": true,
+    "recommended_enhancement": "match_over_25",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "ml-meta avg_p>=55",
+    "source_weights": {},
+    "sources_used": [
+      "forebet",
+      "zulubet",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1428): Avg Goals: 3.19 | Over 2.5: 65.3% | BTTS: 45.6% | Home Over 1.5 Goals: 81.1% | Away Over 1.5 Goals: 9.9%",
+    "vitibet_index": 4.08,
+    "w_score": 1.0
+  },
+  {
     "as_of": "2026-08-29T09:00:45+02:00",
     "avg_p": 62.7,
     "away": "Hacken W",
@@ -892,8 +1015,8 @@
     "w_score": 0.4453
   },
   {
-    "as_of": "2026-08-29T15:00:44+02:00",
-    "avg_p": 60.1,
+    "as_of": "2026-08-29T22:04:16+02:00",
+    "avg_p": 60.7,
     "away": "Montreal Impact",
     "bookmaker": "betexplorer_best",
     "bucket": "CERTIFIED_CLEAN",
@@ -934,54 +1057,54 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.4737,
-    "enhancement_reason": "Mathematical expectation is 57.5% (ML-calibrated 46.1%->65.4%, n=327) (Performance feedback: HR=69.1%, Adjusted Prob: 47.4%)",
+    "enhancement_probability": 0.4719,
+    "enhancement_reason": "Mathematical expectation is 57.2% (ML-calibrated 46.1%->65.4%, n=327) (Performance feedback: HR=69.1%, Adjusted Prob: 47.2%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 1995,
+        "cohort_n": 1923,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.47374047840933564,
-        "raw_probability": 0.5746365528815699,
-        "reason": "Mathematical expectation is 57.5% (ML-calibrated 46.1%->65.4%, n=327) (Performance feedback: HR=69.1%, Adjusted Prob: 47.4%)"
+        "probability": 0.4719006837142619,
+        "raw_probability": 0.572404923266265,
+        "reason": "Mathematical expectation is 57.2% (ML-calibrated 46.1%->65.4%, n=327) (Performance feedback: HR=69.1%, Adjusted Prob: 47.2%)"
       },
       {
-        "cohort_n": 1995,
+        "cohort_n": 1923,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8392961993330772,
-        "raw_probability": 0.8849886416819727,
-        "reason": "Home scoring rate is 95.6% (ML-calibrated 86.8%->91.5%, n=282) (Performance feedback: HR=90.6%, Adjusted Prob: 83.9%)"
+        "probability": 0.843742593720912,
+        "raw_probability": 0.8896771039111584,
+        "reason": "Home scoring rate is 95.6% (ML-calibrated 86.8%->91.5%, n=282) (Performance feedback: HR=90.6%, Adjusted Prob: 84.4%)"
       },
       {
-        "cohort_n": 1995,
+        "cohort_n": 1923,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9852536705324352,
-        "raw_probability": 0.98836801815765,
+        "probability": 0.9853318110429684,
+        "raw_probability": 0.9884464056672259,
         "reason": "Combined Under 3.5 is 98.8% (ML-calibrated 98.0%->97.7%, n=300)"
       },
       {
-        "cohort_n": 1995,
+        "cohort_n": 1923,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9407143489701384,
-        "raw_probability": 0.9403438534918626,
-        "reason": "Combined Under 2.5 is 94.0% (ML-calibrated 94.0%->94.0%, n=283)"
+        "probability": 0.9420196182059559,
+        "raw_probability": 0.9416486086541462,
+        "reason": "Combined Under 2.5 is 94.2% (ML-calibrated 94.0%->94.0%, n=283)"
       },
       {
-        "cohort_n": 1995,
+        "cohort_n": 1923,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.19119084379815357,
-        "raw_probability": 0.1835916194844531,
-        "reason": "Poisson expected hit rate is 18.4% (ML-calibrated 24.7%->28.8%, n=274)"
+        "probability": 0.19342197194728325,
+        "raw_probability": 0.1857340674282914,
+        "reason": "Poisson expected hit rate is 18.6% (ML-calibrated 24.7%->28.8%, n=274)"
       }
     ],
     "home": "Inter Miami CF",
@@ -993,16 +1116,16 @@
     "market_type": "1x2",
     "match": "Inter Miami CF vs Montreal Impact",
     "min_lead_minutes": 30,
-    "ml_p": 0.6013,
+    "ml_p": 0.6071,
     "model_version": null,
     "n_way": 3,
     "odds": 4.3,
-    "odds_captured_at": "2026-08-29T13:12:52.749888+00:00",
+    "odds_captured_at": "2026-08-29T20:09:20.991154+00:00",
     "odds_league": "USA: MLS Next Pro",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.42,
+      "odds": 1.4,
       "source": "forebet_best"
     },
     "odds_source": "betexplorer_odds",
@@ -1019,9 +1142,9 @@
       "statarea"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1348): Avg Goals: 3.30 | Over 2.5: 65.7% | BTTS: 43.0% | Home Over 1.5 Goals: 82.9% | Away Over 1.5 Goals: 10.2%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1312): Avg Goals: 3.31 | Over 2.5: 65.5% | BTTS: 42.4% | Home Over 1.5 Goals: 83.0% | Away Over 1.5 Goals: 10.1%",
     "vitibet_index": null,
-    "w_score": 0.4109
+    "w_score": 0.4349
   },
   {
     "as_of": "2026-08-28T02:22:34+02:00",
