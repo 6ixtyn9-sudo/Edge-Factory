@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 105.33331199999999,
+  "bank": 112.258045,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -134,72 +134,6 @@
         }
       ],
       "staked_pct": 12.5001
-    },
-    {
-      "date": "2026-08-30",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Real Madrid vs M\u00e1laga CF",
-              "pick": "HOME",
-              "prob": 0.785,
-              "odds": 1.09,
-              "result": null
-            },
-            {
-              "match": "Feyenoord vs ADO Den Haag",
-              "pick": "HOME",
-              "prob": 0.779,
-              "odds": 1.16,
-              "result": null
-            }
-          ],
-          "odds": 1.26,
-          "stake_pct": 7.1389
-        },
-        {
-          "legs": [
-            {
-              "match": "Trelleborgs FF vs Utsiktens BK",
-              "pick": "HOME",
-              "prob": 0.765,
-              "odds": 1.14,
-              "result": null
-            },
-            {
-              "match": "FC Eindhoven vs Heracles",
-              "pick": "AWAY",
-              "prob": 0.725,
-              "odds": 1.61,
-              "result": null
-            }
-          ],
-          "odds": 1.84,
-          "stake_pct": 7.1389
-        },
-        {
-          "legs": [
-            {
-              "match": "Argentinos Juniors vs CA Aldosivi",
-              "pick": "HOME",
-              "prob": 0.703,
-              "odds": 1.42,
-              "result": null
-            },
-            {
-              "match": "CSKA-Sofia vs Cherno More Varna",
-              "pick": "HOME",
-              "prob": 0.701,
-              "odds": 1.5,
-              "result": null
-            }
-          ],
-          "odds": 2.13,
-          "stake_pct": 7.1389
-        }
-      ],
-      "staked_pct": 21.4167
     }
   ],
   "history": [
@@ -222,6 +156,26 @@
         }
       ],
       "bank_pct": 105.3333
+    },
+    {
+      "date": "2026-08-30",
+      "staked_pct": 21.4167,
+      "returned_pct": 28.3414,
+      "accas": [
+        {
+          "odds": 1.26,
+          "won": false
+        },
+        {
+          "odds": 1.84,
+          "won": true
+        },
+        {
+          "odds": 2.13,
+          "won": true
+        }
+      ],
+      "bank_pct": 112.258
     }
   ],
   "events": []

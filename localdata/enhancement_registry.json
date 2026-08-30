@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 84,
-   "inv_price_sum": 79.65762642248552,
+   "hits": 94,
+   "inv_price_sum": 87.78569805628348,
    "multi_n": 15,
-   "n": 127,
+   "n": 140,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -229,9 +229,22 @@
     "2026-08-29|Hamilton Academical vs Cove Rangers|match_over_25@v1",
     "2026-08-29|Ascoli vs Carrarese Calcio|match_over_25@v1",
     "2026-08-29|Barnet vs Cheltenham|match_over_25@v1",
-    "2026-08-29|Shimizu S-Pulse vs Kashiwa Reysol|match_over_25@v1"
+    "2026-08-29|Shimizu S-Pulse vs Kashiwa Reysol|match_over_25@v1",
+    "2026-08-30|Sporting Kansas City vs Vancouver Whitecaps|match_over_25@v1",
+    "2026-08-30|CSKA-Sofia vs Cherno More Varna|match_over_25@v1",
+    "2026-08-30|FC Eindhoven vs Heracles|match_over_25@v1",
+    "2026-08-30|Argentinos Juniors vs CA Aldosivi|match_over_25@v1",
+    "2026-08-30|Gwangju FC vs FC Seoul|match_over_25@v1",
+    "2026-08-30|Real Mallorca vs AD Ceuta|match_over_25@v1",
+    "2026-08-30|Arka Gdynia vs Polonia Bytom|match_over_25@v1",
+    "2026-08-30|St Gallen vs FC Thun|match_over_25@v1",
+    "2026-08-30|Feyenoord vs ADO Den Haag|match_over_25@v1",
+    "2026-08-30|FCSB vs UTA Arad|match_over_25@v1",
+    "2026-08-30|Tromso vs Sarpsborg 08|match_over_25@v1",
+    "2026-08-30|Portland Timbers vs Austin FC|match_over_25@v1",
+    "2026-08-30|Cagliari vs Inter|match_over_25@v1"
    ],
-   "profit": 4.26,
+   "profit": 7.38,
    "records": [
     {
      "date": "2026-08-01",
@@ -1245,6 +1258,110 @@
      "match": "Shimizu S-Pulse vs Kashiwa Reysol",
      "multi_source": false,
      "price": 2.0,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "Sporting Kansas City vs Vancouver Whitecaps",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "CSKA-Sofia vs Cherno More Varna",
+     "multi_source": false,
+     "price": 1.75,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "FC Eindhoven vs Heracles",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "Argentinos Juniors vs CA Aldosivi",
+     "multi_source": false,
+     "price": 2.1,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "Gwangju FC vs FC Seoul",
+     "multi_source": false,
+     "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "Real Mallorca vs AD Ceuta",
+     "multi_source": false,
+     "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": false,
+     "match": "Arka Gdynia vs Polonia Bytom",
+     "multi_source": false,
+     "price": 1.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "St Gallen vs FC Thun",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "Feyenoord vs ADO Den Haag",
+     "multi_source": false,
+     "price": 1.28,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "FCSB vs UTA Arad",
+     "multi_source": false,
+     "price": 1.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": false,
+     "match": "Tromso vs Sarpsborg 08",
+     "multi_source": false,
+     "price": 1.57,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": true,
+     "match": "Portland Timbers vs Austin FC",
+     "multi_source": false,
+     "price": 1.85,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-30",
+     "hit": false,
+     "match": "Cagliari vs Inter",
+     "multi_source": false,
+     "price": 1.8,
      "source": "scoutingstats"
     }
    ],
