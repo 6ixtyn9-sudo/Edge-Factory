@@ -426,6 +426,7 @@ def cmd_today(args, st):
     pool = playable_legs(slate, day=target, settled=settled)
     pool = [l for l in pool
             if not (parse_kickoff(l["row"]) is not None and parse_kickoff(l["row"]) < now)]
+    pool = [l for l in pool if not l.get("result")]
     if len(pool) < LEGS_PER_ACCA:
         print(f"NO BET TODAY — {len(pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
         print("(bank stays unbet)")
