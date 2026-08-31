@@ -841,8 +841,8 @@ def run_pipeline(
             "auto_tickets (generate/freeze)",
         )
         run_soft(
-            "PYTHONPATH=src python3 scripts/auto_tickets_grade.py",
-            "auto_tickets_grade (settle past slips)",
+            "PYTHONPATH=src python3 scripts/o25_tracker.py",
+            "o25_tracker (goals surface + checkpoint gate)",
         )
         sync_official_archive(target_date, "sync_supabase")
         _notify(target_date, "notify (Smart Dispatch + empty-slate heartbeat)")
@@ -965,8 +965,8 @@ def run_pipeline(
             "auto_tickets (generate/freeze)",
         )
         run_soft(
-            "PYTHONPATH=src python3 scripts/auto_tickets_grade.py",
-            "auto_tickets_grade (settle past slips)",
+            "PYTHONPATH=src python3 scripts/o25_tracker.py",
+            "o25_tracker (goals surface + checkpoint gate)",
         )
         print(f"\n=== Autonomous Intraday Service Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
