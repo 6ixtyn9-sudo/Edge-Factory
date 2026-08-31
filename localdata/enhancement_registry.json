@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 94,
-   "inv_price_sum": 87.78569805628348,
-   "multi_n": 15,
-   "n": 140,
+   "hits": 100,
+   "inv_price_sum": 93.8934002246145,
+   "multi_n": 16,
+   "n": 149,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -242,9 +242,18 @@
     "2026-08-30|FCSB vs UTA Arad|match_over_25@v1",
     "2026-08-30|Tromso vs Sarpsborg 08|match_over_25@v1",
     "2026-08-30|Portland Timbers vs Austin FC|match_over_25@v1",
-    "2026-08-30|Cagliari vs Inter|match_over_25@v1"
+    "2026-08-30|Cagliari vs Inter|match_over_25@v1",
+    "2026-08-31|Flint Town Utd vs GAP Connah's Quay|match_over_25@v1",
+    "2026-08-31|Harrogate Town vs Gateshead|match_over_25@v1",
+    "2026-08-31|Chester FC vs Morecambe|match_over_25@v1",
+    "2026-08-31|Aston Villa vs Arsenal|match_over_25@v1",
+    "2026-08-31|Worthing FC vs Boreham Wood|match_over_25@v1",
+    "2026-08-31|Dagenham and Redbridge vs Slough Town|match_over_25@v1",
+    "2026-08-31|Benfica vs Estoril|match_over_25@v1",
+    "2026-08-31|Barcelona vs Rayo Vallecano|match_over_25@v1",
+    "2026-08-31|Monterrey vs Atletico San Luis|match_over_25@v1"
    ],
-   "profit": 7.38,
+   "profit": 7.11,
    "records": [
     {
      "date": "2026-08-01",
@@ -1362,6 +1371,78 @@
      "match": "Cagliari vs Inter",
      "multi_source": false,
      "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-31",
+     "hit": true,
+     "match": "Flint Town Utd vs GAP Connah's Quay",
+     "multi_source": false,
+     "price": 1.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-31",
+     "hit": true,
+     "match": "Harrogate Town vs Gateshead",
+     "multi_source": false,
+     "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-31",
+     "hit": false,
+     "match": "Chester FC vs Morecambe",
+     "multi_source": false,
+     "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-31",
+     "hit": false,
+     "match": "Aston Villa vs Arsenal",
+     "multi_source": false,
+     "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-31",
+     "hit": true,
+     "match": "Worthing FC vs Boreham Wood",
+     "multi_source": false,
+     "price": 1.33,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-31",
+     "hit": false,
+     "match": "Dagenham and Redbridge vs Slough Town",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-31",
+     "hit": true,
+     "match": "Benfica vs Estoril",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-31",
+     "hit": true,
+     "match": "Barcelona vs Rayo Vallecano",
+     "multi_source": false,
+     "price": 1.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-08-31",
+     "hit": true,
+     "match": "Monterrey vs Atletico San Luis",
+     "multi_source": true,
+     "price": 1.53,
      "source": "scoutingstats"
     }
    ],

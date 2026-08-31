@@ -5,7 +5,7 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-31",
-      "n_last_window": 148,
+      "n_last_window": 135,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -18,15 +18,15 @@
     },
     {
       "decay": "HEALTHY",
-      "last_fired": "2026-08-31",
-      "n_last_window": 376,
+      "last_fired": "2026-09-01",
+      "n_last_window": 339,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
     {
       "decay": "HEALTHY",
       "last_fired": "2026-08-31",
-      "n_last_window": 61,
+      "n_last_window": 58,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
@@ -40,7 +40,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-08-31",
-      "n_last_window": 15,
+      "n_last_window": 13,
       "rule": "ml-meta avg_p>=70",
       "silent": false
     },
@@ -50,16 +50,9 @@
       "n_last_window": 3,
       "rule": "ml-meta avg_p>=80",
       "silent": false
-    },
-    {
-      "decay": "UNKNOWN",
-      "last_fired": "2026-08-31",
-      "n_last_window": 27,
-      "rule": "ou25-unanimous-2way-sa avg_p>=70",
-      "silent": false
     }
   ],
-  "generated_at": "2026-08-31T21:26:45",
+  "generated_at": "2026-09-01T00:30:03",
   "ignored_non_operational_rules": [
     "2way-unanimous min_p>=60 avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=70",
@@ -72,64 +65,64 @@
   "sources": [
     {
       "name": "forebet",
-      "newest_date": "2026-08-31",
-      "newest_file": "forebet_2026-08.csv.gz",
+      "newest_date": "2026-09-02",
+      "newest_file": "forebet_2026-09.csv.gz",
       "role": "core_voter",
       "stale": false
     },
     {
       "name": "statarea",
-      "newest_date": "2026-08-31",
-      "newest_file": "statarea_2026-08.csv.gz",
+      "newest_date": "2026-09-01",
+      "newest_file": "statarea_2026-09.csv.gz",
       "role": "core_voter",
       "stale": false
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-08-31",
-      "newest_file": "scoutingstats_2026-08.csv.gz",
+      "newest_date": "2026-09-01",
+      "newest_file": "scoutingstats_2026-09.csv.gz",
       "role": "voter_and_price",
       "stale": false
     },
     {
       "name": "vitibet",
-      "newest_date": "2026-09-01",
+      "newest_date": "2026-09-02",
       "newest_file": "vitibet_2026-09.csv.gz",
       "role": "thin_voter",
       "stale": false
     },
     {
       "name": "zulubet",
-      "newest_date": "2026-08-31",
-      "newest_file": "zulubet_2026-08.csv.gz",
+      "newest_date": "2026-09-01",
+      "newest_file": "zulubet_2026-09.csv.gz",
       "role": "core_voter",
       "stale": false
     },
     {
       "name": "predictz",
-      "newest_date": "2026-08-31",
-      "newest_file": "predictz_2026-08.csv.gz",
+      "newest_date": "2026-09-01",
+      "newest_file": "predictz_2026-09.csv.gz",
       "role": "shadow",
       "stale": false
     },
     {
       "name": "windrawwin",
-      "newest_date": "2026-09-01",
+      "newest_date": "2026-09-02",
       "newest_file": "windrawwin_2026-09.csv.gz",
       "role": "shadow",
       "stale": false
     },
     {
       "name": "afootballreport",
-      "newest_date": "2026-08-31",
-      "newest_file": "afootballreport_2026-08.csv.gz",
+      "newest_date": "2026-09-01",
+      "newest_file": "afootballreport_2026-09.csv.gz",
       "role": "research",
       "stale": false
     },
     {
       "name": "betclan",
-      "newest_date": "2026-08-31",
-      "newest_file": "betclan_2026-08.csv.gz",
+      "newest_date": "2026-09-01",
+      "newest_file": "betclan_2026-09.csv.gz",
       "role": "partial_voter",
       "stale": false
     },
@@ -142,15 +135,15 @@
     },
     {
       "name": "bettingclosed",
-      "newest_date": "2026-08-31",
-      "newest_file": "bettingclosed_2026-08.csv.gz",
+      "newest_date": "2026-09-01",
+      "newest_file": "bettingclosed_2026-09.csv.gz",
       "role": "confirmation_results",
       "stale": false
     },
     {
       "name": "bzzoiro",
-      "newest_date": "2026-09-17",
-      "newest_file": "bzzoiro_2026-08.csv.gz",
+      "newest_date": "2026-09-07",
+      "newest_file": "bzzoiro_2026-09.csv.gz",
       "role": "model_voter",
       "stale": false
     }
