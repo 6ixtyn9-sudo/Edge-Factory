@@ -406,7 +406,9 @@ def cmd_backfill(args, st):
 
 def upsert_slip(st, target, plan):
     st["open_slips"] = [s for s in st["open_slips"] if s["date"] != target]
-    upsert_slip(st, target, plan)
+    st["open_slips"].append({"date": target, "accas": plan,
+                             "staked_pct": round(sum(a["stake_pct"] for a in plan), 4)})
+    save_state(st)
 
 
 def cmd_today(args, st):
