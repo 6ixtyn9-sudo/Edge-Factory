@@ -436,6 +436,16 @@ def cmd_today(args, st):
     pool = [l for l in pool
             if not (parse_kickoff(l["row"]) is not None and parse_kickoff(l["row"]) < now)]
     pool = [l for l in pool if not l.get("result")]
+    # Cross-slate guard: a fixture already archived on an EARLIER day's slate
+    # has already kicked off (late finishers carried into today's capture).
+    past = set()
+    for a in load_archived_picks():
+        if str(a.get("date") or a.get("_archive_day") or "")[:10] < target:
+            past.add((str(a.get("home") or "").strip().lower(),
+                      str(a.get("away") or "").strip().lower()))
+    pool = [l for l in pool
+            if (str(l["row"].get("home") or "").strip().lower(),
+                str(l["row"].get("away") or "").strip().lower()) not in past]
     if len(pool) < LEGS_PER_ACCA:
         print(f"NO BET TODAY — {len(pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
         print("(bank stays unbet)")
