@@ -43,8 +43,10 @@ for f in sorted(glob.glob(str(ROOT/"localdata/picks_2026-*.json"))):
                 and str(p.get('pick') or '').lower() != 'over'):
             continue
         sc = score_for(day, p.get("home"), p.get("away"))
-        bets.append({"day": day, "prob": float(p.get("enhancement_probability") or 0),
-                     "price": p.get("enhancement_price"), "src": p.get("enhancement_price_source"),
+        bets.append({"day": day,
+                     "prob": float(p.get("enhancement_probability") or float(p.get("avg_p") or 0)/100.0 or 0),
+                     "price": p.get("enhancement_price") or p.get("odds"),
+                     "src": p.get("enhancement_price_source") or p.get("odds_source"),
                      "sc": sc, "win": (sc[0]+sc[1] >= 3) if sc and sc[0] is not None else None})
 
 graded = [b for b in bets if b["win"] is not None]
