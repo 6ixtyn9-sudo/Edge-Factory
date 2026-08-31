@@ -841,6 +841,10 @@ def run_pipeline(
             "auto_tickets (generate/freeze)",
         )
         run_soft(
+            "PYTHONPATH=src python3 scripts/auto_tickets_grade.py",
+            "auto_tickets_grade (settle past slips)",
+        )
+        run_soft(
             "PYTHONPATH=src python3 scripts/o25_tracker.py",
             "o25_tracker (goals surface + checkpoint gate)",
         )
@@ -963,6 +967,10 @@ def run_pipeline(
         run_soft(
             "PYTHONPATH=src python3 scripts/auto_tickets.py",
             "auto_tickets (generate/freeze)",
+        )
+        run_soft(
+            "PYTHONPATH=src python3 scripts/auto_tickets_grade.py",
+            "auto_tickets_grade (settle past slips)",
         )
         run_soft(
             "PYTHONPATH=src python3 scripts/o25_tracker.py",
