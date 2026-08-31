@@ -68,6 +68,12 @@ row("band <50%", lambda b: b["prob"] < 0.50)
 row("band >=60%", lambda b: b["prob"] >= 0.60)
 row("SHARP-priced (theoddsapi/betexpl)", lambda b: b["src"] in SHARP)
 row("SOFT-priced (scoutingstats)", lambda b: b["src"] == "scoutingstats")
+print("\n--- goals surface by rule ---")
+for rn in sorted({b["rule"] for b in graded}):
+    row(f"rule {rn}", lambda b, rn=rn: b["rule"] == rn)
+print("--- goals surface by bucket ---")
+for bk in sorted({b["bucket"] for b in graded}):
+    row(f"bucket {bk}", lambda b, bk=bk: b["bucket"] == bk)
 gate = row("GATE cut: 50-60% AND sharp", lambda b: 0.50 <= b["prob"] < 0.60 and b["src"] in SHARP)
 print("\nCHECKPOINT 3 GATE (50-60% band, priced):")
 g = row("   band 50-60% priced", lambda b: 0.50 <= b["prob"] < 0.60 and b["price"])
