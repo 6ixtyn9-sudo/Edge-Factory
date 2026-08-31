@@ -1,28 +1,28 @@
 {
   "by_bucket": {
     "CAUTION": {
-      "avg_implied_prob_delta": -0.000706,
-      "avg_raw_odds_delta": 0.004235,
-      "beat_later_price_n": 85,
-      "beat_later_price_rate": 0.141176,
+      "avg_implied_prob_delta": -0.000488,
+      "avg_raw_odds_delta": 0.003667,
+      "beat_later_price_n": 90,
+      "beat_later_price_rate": 0.144444,
       "total_picks": 97,
-      "with_two_prices": 85
+      "with_two_prices": 90
     },
     "CERTIFIED_CLEAN": {
-      "avg_implied_prob_delta": -0.010173,
-      "avg_raw_odds_delta": 0.066381,
-      "beat_later_price_n": 42,
-      "beat_later_price_rate": 0.238095,
-      "total_picks": 44,
-      "with_two_prices": 42
+      "avg_implied_prob_delta": -0.01018,
+      "avg_raw_odds_delta": 0.065535,
+      "beat_later_price_n": 43,
+      "beat_later_price_rate": 0.232558,
+      "total_picks": 45,
+      "with_two_prices": 43
     },
     "SKIPPED_VETO": {
-      "avg_implied_prob_delta": 0.000109,
-      "avg_raw_odds_delta": 8.9e-05,
-      "beat_later_price_n": 316,
-      "beat_later_price_rate": 0.170886,
-      "total_picks": 333,
-      "with_two_prices": 316
+      "avg_implied_prob_delta": 0.000512,
+      "avg_raw_odds_delta": -0.000725,
+      "beat_later_price_n": 320,
+      "beat_later_price_rate": 0.178125,
+      "total_picks": 334,
+      "with_two_prices": 320
     },
     "WATCHLIST_NO_ODDS": {
       "avg_implied_prob_delta": null,
@@ -41,12 +41,12 @@
       "with_two_prices": 6
     },
     "WATCHLIST_UNCORROBORATED_PRICE": {
-      "avg_implied_prob_delta": 0.000979,
-      "avg_raw_odds_delta": -0.001325,
-      "beat_later_price_n": 83,
-      "beat_later_price_rate": 0.084337,
-      "total_picks": 92,
-      "with_two_prices": 83
+      "avg_implied_prob_delta": 0.000956,
+      "avg_raw_odds_delta": -0.001294,
+      "beat_later_price_n": 85,
+      "beat_later_price_rate": 0.082353,
+      "total_picks": 90,
+      "with_two_prices": 85
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "avg_implied_prob_delta": -0.003102,
@@ -67,10 +67,10 @@
       "with_two_prices": 33
     },
     "2way-unanimous avg_p>=70": {
-      "avg_implied_prob_delta": -0.000525,
-      "avg_raw_odds_delta": 0.000905,
+      "avg_implied_prob_delta": -0.000116,
+      "avg_raw_odds_delta": 9.5e-05,
       "beat_later_price_n": 148,
-      "beat_later_price_rate": 0.128378,
+      "beat_later_price_rate": 0.141892,
       "total_picks": 168,
       "with_two_prices": 148
     },
@@ -91,12 +91,12 @@
       "with_two_prices": 30
     },
     "ml-meta avg_p>=55": {
-      "avg_implied_prob_delta": 0.00065,
-      "avg_raw_odds_delta": 0.000185,
-      "beat_later_price_n": 270,
-      "beat_later_price_rate": 0.192593,
+      "avg_implied_prob_delta": 0.000908,
+      "avg_raw_odds_delta": -0.000327,
+      "beat_later_price_n": 275,
+      "beat_later_price_rate": 0.196364,
       "total_picks": 297,
-      "with_two_prices": 270
+      "with_two_prices": 275
     },
     "ml-meta avg_p>=60": {
       "avg_implied_prob_delta": -0.015119,
@@ -139,26 +139,26 @@
       "with_two_prices": 2
     },
     "ou25-unanimous-2way-sa avg_p>=70": {
-      "avg_implied_prob_delta": null,
-      "avg_raw_odds_delta": null,
-      "beat_later_price_n": 0,
-      "beat_later_price_rate": null,
+      "avg_implied_prob_delta": 0.0,
+      "avg_raw_odds_delta": 0.0,
+      "beat_later_price_n": 7,
+      "beat_later_price_rate": 0.0,
       "total_picks": 7,
-      "with_two_prices": 0
+      "with_two_prices": 7
     }
   },
   "end": "2026-08-31",
   "meta": {
-    "insufficient_snapshots": 39,
+    "insufficient_snapshots": 27,
     "unmatched_picks": 37
   },
   "overall": {
-    "avg_implied_prob_delta": -0.000745,
-    "avg_raw_odds_delta": 0.005658,
-    "beat_later_price_n": 556,
-    "beat_later_price_rate": 0.151079,
+    "avg_implied_prob_delta": -0.000492,
+    "avg_raw_odds_delta": 0.005081,
+    "beat_later_price_n": 568,
+    "beat_later_price_rate": 0.15493,
     "total_picks": 633,
-    "with_two_prices": 556
+    "with_two_prices": 568
   },
   "start": "2026-08-01"
 }
