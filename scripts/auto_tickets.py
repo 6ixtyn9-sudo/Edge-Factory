@@ -455,9 +455,7 @@ def cmd_today(args, st):
     if not plan:
         print("NO BET TODAY — plan empty")
         return 0
-    st["open_slips"].append({"date": target, "accas": plan,
-                             "staked_pct": round(sum(a["stake_pct"] for a in plan), 4)})
-    save_state(st)
+    upsert_slip(st, target, plan)
     lines = [f"AUTO TICKETS (ROLLING) — {target}", "=" * 62,
              f"PERFORMANCE: bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) · "
              f"committed {st['bank']-bank_eff:.1f}% · next take-profit notification at {take_profit_target(st):.1f}%"]
