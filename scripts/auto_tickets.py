@@ -250,6 +250,13 @@ def playable_legs(rows, day=None, settled=None):
             continue   # suspect price unless betexplorer-rescued (rescue pops the reason)
         if str(p.get("price_evidence") or "").upper() == "SUSPECT_ALIAS_FUZZY" and not p.get("odds_replaced"):
             continue
+        # Market guard: the validated recipe is 1X2 ONLY. Goals/OU picks
+        # (first seen 2026-08-31, "Breidablik OVER") stay out until the
+        # September O2.5 checkpoint passes its gate. Never before.
+        if str(p.get("market") or "1x2").lower() != "1x2":
+            continue
+        if str(p.get("pick") or "").lower() in ("over", "under", "yes", "no"):
+            continue
         ap = p.get("avg_p")
         try:
             odds = float(p.get("odds")) if p.get("odds") is not None else 0.0
