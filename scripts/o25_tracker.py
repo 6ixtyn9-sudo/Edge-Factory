@@ -36,8 +36,12 @@ bets = []
 for f in sorted(glob.glob(str(ROOT/"localdata/picks_2026-*.json"))):
     day = re.match(r"picks_(\S+-\d+-\d+)\.json", f.split("/")[-1]).group(1)
     for p in json.loads(open(f).read()):
-        lbl = str(p.get("enhancement_label") or "").lower()
-        if "over 2.5" not in lbl: continue
+        lbl = str(p.get('enhancement_label') or '')
+        rule = str(p.get('edge_rule') or p.get('rule') or '')
+        if ('over 2.5' not in lbl.lower()
+                and not rule.upper().startswith('OU25')
+                and str(p.get('pick') or '').lower() != 'over'):
+            continue
         sc = score_for(day, p.get("home"), p.get("away"))
         bets.append({"day": day, "prob": float(p.get("enhancement_probability") or 0),
                      "price": p.get("enhancement_price"), "src": p.get("enhancement_price_source"),
