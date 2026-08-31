@@ -5,7 +5,7 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-08-31",
-      "n_last_window": 151,
+      "n_last_window": 148,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -19,7 +19,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-08-31",
-      "n_last_window": 364,
+      "n_last_window": 376,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
@@ -50,9 +50,16 @@
       "n_last_window": 3,
       "rule": "ml-meta avg_p>=80",
       "silent": false
+    },
+    {
+      "decay": "UNKNOWN",
+      "last_fired": "2026-08-31",
+      "n_last_window": 21,
+      "rule": "ou25-unanimous-2way-sa avg_p>=70",
+      "silent": false
     }
   ],
-  "generated_at": "2026-08-31T11:23:21",
+  "generated_at": "2026-08-31T12:31:29",
   "ignored_non_operational_rules": [
     "2way-unanimous min_p>=60 avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=70",
