@@ -47,6 +47,7 @@ for f in sorted(glob.glob(str(ROOT/"localdata/picks_2026-*.json"))):
                      "prob": float(p.get("enhancement_probability") or float(p.get("avg_p") or 0)/100.0 or 0),
                      "price": p.get("enhancement_price") or p.get("odds"),
                      "src": p.get("enhancement_price_source") or p.get("odds_source"),
+                     "rule": rule[:34], "bucket": str(p.get("bucket") or "-"),
                      "sc": sc, "win": (sc[0]+sc[1] >= 3) if sc and sc[0] is not None else None})
 
 graded = [b for b in bets if b["win"] is not None]
