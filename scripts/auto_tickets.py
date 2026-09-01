@@ -154,51 +154,66 @@ _SETTLED_SOURCES = [
 ]
 
 
-def _load_warehouse_settled() -> dict:
-    """Settled outcomes from the warehouse settled views (audit parity).
+def _collect_settled_facts() -> tuple[dict, dict]:
+    """(key_to_outcome, entries_by_date) from warehouse donors + shared overlay.
 
-    auto-ticket grading previously read only the shared overlay, so a fixture
-    settled by a warehouse donor (e.g. BetExplorer on a league the probability
-    sources never captured) stayed unresolved here even though the audit
-    settled it. Warehouse wins on conflict; the overlay only fills gaps.
-    Returns {} when duckdb or the warehouse is unavailable.
+    key_to_outcome is the exact-lookup map (warehouse wins on conflict, then
+    overlay fills gaps). entries_by_date keeps the FULL home/away names per
+    date so alias-conflict detection can see every spelling of a fixture.
     """
     from edgefactory.util import norm_team
 
+    key_to: dict = {}
+    entries: dict[str, list[dict]] = {}
     wh = LOCALDATA / "warehouse.duckdb"
-    if not wh.exists():
-        return {}
-    try:
-        import duckdb
-    except Exception:
-        return {}
-    out: dict = {}
-    con = None
-    try:
-        con = duckdb.connect(str(wh), read_only=True)
-        tables = {row[0] for row in con.execute("SHOW TABLES").fetchall()}
-    except Exception:
-        return {}
-    try:
-        for _prio, name in _SETTLED_SOURCES:
-            if name not in tables:
-                continue
+    if wh.exists():
+        try:
+            import duckdb
+        except Exception:
+            duckdb = None
+        if duckdb is not None:
+            con = None
             try:
-                rows = con.execute(
-                    f"SELECT date, home, away, outcome FROM {name} "
-                    "WHERE hs IS NOT NULL AND gs IS NOT NULL"
-                ).fetchall()
+                con = duckdb.connect(str(wh), read_only=True)
+                tables = {row[0] for row in con.execute("SHOW TABLES").fetchall()}
+                for _prio, name in _SETTLED_SOURCES:
+                    if name not in tables:
+                        continue
+                    try:
+                        rows = con.execute(
+                            f"SELECT date, home, away, outcome FROM {name} "
+                            "WHERE hs IS NOT NULL AND gs IS NOT NULL"
+                        ).fetchall()
+                    except Exception:
+                        continue
+                    for day, home, away, outcome in rows:
+                        d = str(day)[:10]
+                        key_to.setdefault((d, norm_team(home), norm_team(away)), str(outcome))
+                        entries.setdefault(d, []).append(
+                            {"home": str(home), "away": str(away), "outcome": str(outcome)}
+                        )
             except Exception:
-                continue
-            for day, home, away, outcome in rows:
-                out.setdefault(
-                    (str(day)[:10], norm_team(home), norm_team(away)),
-                    str(outcome),
+                pass
+            finally:
+                if con is not None:
+                    con.close()
+    try:
+        data = json.loads((LOCALDATA / "settled_results.json").read_text())
+    except Exception:
+        data = None
+    if data:
+        seen_sigs: set[tuple] = set()
+        for r in data.get("rows", []):
+            d = str(r.get("date") or "")[:10]
+            home, away = r.get("home"), r.get("away")
+            key_to.setdefault((d, norm_team(home), norm_team(away)), r.get("outcome"))
+            sig = (d, str(home or "").lower(), str(away or "").lower())
+            if sig not in seen_sigs:
+                seen_sigs.add(sig)
+                entries.setdefault(d, []).append(
+                    {"home": str(home), "away": str(away), "outcome": str(r.get("outcome"))}
                 )
-    finally:
-        if con is not None:
-            con.close()
-    return out
+    return key_to, entries
 
 
 def load_settled():
@@ -207,17 +222,12 @@ def load_settled():
     Keeps auto-ticket grading on the same result facts as the audit instead
     of overlay-only, so BetExplorer-settled fixtures grade here too.
     """
-    from edgefactory.util import norm_team
+    return _collect_settled_facts()[0]
 
-    out = _load_warehouse_settled()
-    try:
-        data = json.loads((LOCALDATA / "settled_results.json").read_text())
-    except Exception:
-        return out
-    for r in data.get("rows", []):
-        key = (str(r.get("date") or "")[:10], norm_team(r.get("home") or ""), norm_team(r.get("away") or ""))
-        out.setdefault(key, r.get("outcome"))
-    return out
+
+def load_settled_entries():
+    """Per-date list of {home, away, outcome} for alias-conflict detection."""
+    return _collect_settled_facts()[1]
 
 
 def _fold(s):
@@ -273,6 +283,59 @@ def pick_result(pick, settled):
     if outcome == "draw":
         return "loss"
     return "win" if outcome == sel else "loss"
+
+
+def _ngram_sim(s1: str, s2: str, n: int = 2) -> float:
+    """Bigram Jaccard similarity (same rule as the audit's fuzzy matcher)."""
+    def grams(s: str) -> set[str]:
+        clean = re.sub(r"[^a-z0-9]", "", s.lower())
+        return {clean[i:i + n] for i in range(len(clean) - n + 1)} if len(clean) >= n else set()
+    g1, g2 = grams(s1), grams(s2)
+    if not g1 or not g2:
+        return 0.0
+    return len(g1 & g2) / len(g1 | g2)
+
+
+_ALIAS_MIN_SIM = 0.40  # matches the audit's _FUZZY_MIN_SIM
+_ALIAS_SIDE_MIN_SIM = 0.30  # per-side floor: key collisions (W-suffix teams) are not aliases
+
+
+def alias_outcome_conflict(pick, entries_by_date) -> bool:
+    """True when the fixture is filed under several spellings on its date with
+    differing outcomes (Pafos vs Dinamo Tirana 2-2 draw vs 4-2 home).
+
+    Fail-closed: a conflict keeps the leg unresolved instead of silently
+    first-winning one spelling. Pre-filtered by shared team key, then
+    orientation-checked by bigram similarity so genuinely different fixtures
+    sharing a key fragment do not trigger a conflict.
+    """
+    from edgefactory.util import norm_team
+
+    day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
+    home = str(pick.get("home") or "")
+    away = str(pick.get("away") or "")
+    home_keys = {norm_team(home)}
+    away_keys = {norm_team(away)}
+    outcomes: set[str] = set()
+    for e in entries_by_date.get(day, []):
+        rh = str(e.get("home") or "")
+        ra = str(e.get("away") or "")
+        hk = norm_team(rh)
+        ak = norm_team(ra)
+        if not (hk in home_keys or ak in away_keys or hk in away_keys or ak in home_keys):
+            continue
+        sim_hh = _ngram_sim(home, rh)
+        sim_aa = _ngram_sim(away, ra)
+        if min(sim_hh, sim_aa) < _ALIAS_SIDE_MIN_SIM:
+            continue
+        if not (sim_hh > _ngram_sim(home, ra) and sim_aa > _ngram_sim(away, rh)):
+            continue
+        if _ngram_sim(f"{home} {away}", f"{rh} {ra}") < _ALIAS_MIN_SIM:
+            continue
+        oc = str(e.get("outcome") or "")
+        if oc in ("home", "away", "draw"):
+            outcomes.add(oc)
+    return len(outcomes) > 1
 
 
 # ---------------- state (all percentages of capital) ----------------
@@ -421,14 +484,18 @@ def _record_acca_settlement(st, slip_date, acca):
     })
 
 
-def settle_open_slips(st, settled, archives=None):
+def settle_open_slips(st, settled, archives=None, entries_by_date=None):
     """Grade every acca whose legs are all settled; the bank moves per acca.
 
     An acca settles as soon as all its legs resolve — a single stuck leg no
-    longer freezes the whole day's stake. Returns event lines.
+    longer freezes the whole day's stake. A leg whose fixture is filed under
+    several spellings with differing outcomes is held open (fail-closed) and
+    surfaced as a conflict. Returns event lines.
     """
     if archives is None:
         archives = load_archived_picks()
+    if entries_by_date is None:
+        entries_by_date = load_settled_entries()
     index = {}
     for p in archives:
         day = str(p.get("date") or p.get("_archive_day") or "")[:10]
@@ -438,17 +505,27 @@ def settle_open_slips(st, settled, archives=None):
         open_accas = []
         for a in slip["accas"]:
             legres = []
+            conflicts = []
             for l in a["legs"]:
                 p = index.get((slip["date"], l["match"], l["pick"]))
-                r = pick_result(p, settled) if p is not None else None
-                if r is None and p is not None:
-                    kt = parse_kickoff(p)
-                    if kt is not None and (datetime.now(TZ) - kt).days >= 5:
-                        r = "void"
+                if p is None:
+                    r = None
+                elif alias_outcome_conflict(p, entries_by_date):
+                    # Fail-closed: donors disagree across spellings. Hold the
+                    # leg instead of first-winning the exact-key spelling.
+                    r = "conflict"
+                    conflicts.append(l["match"])
+                else:
+                    r = pick_result(p, settled)
+                    if r is None:
+                        kt = parse_kickoff(p)
+                        if kt is not None and (datetime.now(TZ) - kt).days >= 5:
+                            r = "void"
                 legres.append(r)
             a = dict(a)
             a["results"] = legres
-            if legres and all(r for r in legres):
+            resolved = legres and all(r in ("win", "loss", "void") for r in legres)
+            if resolved:
                 live = [l for l, r in zip(a["legs"], legres) if r != "void"]
                 if not live:
                     a["won"] = True; a["odds"] = 1.0          # all void: stake back
@@ -458,6 +535,11 @@ def settle_open_slips(st, settled, archives=None):
             else:
                 a["won"] = None
             if a["won"] is None:
+                if conflicts:
+                    lines.append(
+                        f"held {slip['date']} acca @{a['odds']:.2f}: conflict on "
+                        f"{', '.join(conflicts)} (donor spellings disagree on outcome)"
+                    )
                 open_accas.append(a)
                 continue
             ret = a["stake_pct"] * a["odds"] if a["won"] else 0.0

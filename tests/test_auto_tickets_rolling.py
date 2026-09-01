@@ -261,3 +261,54 @@ def test_settle_per_acca_does_not_freeze_bank_on_one_stuck_leg():
     assert at.effective_bank(st) == pytest.approx(st["bank"] - 25.0)
     assert len(lines) == 1
     assert [a for h in st["history"] for a in h["accas"]] == [{"odds": 1.69, "won": True}]
+
+
+def test_alias_outcome_conflict_true_false_and_womens_collision():
+    entries = {"2026-08-27": [
+        {"home": "Pafos", "away": "Dinamo Tirana", "outcome": "draw"},
+        {"home": "Pafos", "away": "KS Dinamo Tirana", "outcome": "home"},
+    ]}
+    pick = {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana"}
+    assert at.alias_outcome_conflict(pick, entries) is True
+
+    # single spelling -> no conflict
+    clean = {"2026-08-27": [{"home": "Pafos", "away": "Dinamo Tirana", "outcome": "draw"}]}
+    assert at.alias_outcome_conflict(pick, clean) is False
+
+    # women's key collision is not a conflict
+    women = {"2026-08-23": [
+        {"home": "Universitatea Craiova", "away": "Voluntari", "outcome": "home"},
+        {"home": "Universitatea Craiova W", "away": "Ol. Cluj W", "outcome": "away"},
+    ]}
+    assert at.alias_outcome_conflict(
+        {"date": "2026-08-23", "home": "Universitatea Craiova", "away": "FC Voluntari"},
+        women,
+    ) is False
+
+
+def test_settle_holds_acca_on_alias_conflict():
+    """A leg whose fixture is filed under conflicting spellings holds the acca
+    open instead of silently first-winning the exact-key outcome."""
+    st = at.fresh_state()
+    st["open_slips"].append({"date": "2026-08-27", "staked_pct": 50.0, "accas": [
+        {"odds": 1.87, "stake_pct": 50.0, "legs": [
+            {"match": "Pafos vs Dinamo Tirana", "pick": "HOME", "odds": 1.30, "prob": 0.62},
+            {"match": "MC Alger vs MC Oran", "pick": "HOME", "odds": 1.44, "prob": 0.62},
+        ]},
+    ]})
+    settled = {("2026-08-27", norm_team("Pafos"), norm_team("Dinamo Tirana")): "draw"}
+    entries = {"2026-08-27": [
+        {"home": "Pafos", "away": "Dinamo Tirana", "outcome": "draw"},
+        {"home": "Pafos", "away": "KS Dinamo Tirana", "outcome": "home"},
+    ]}
+    archives = [
+        {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.30, "avg_p": 62.0},
+        {"date": "2026-08-27", "home": "MC Alger", "away": "MC Oran", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.44, "avg_p": 62.0},
+    ]
+    lines = at.settle_open_slips(st, settled, archives=archives, entries_by_date=entries)
+    assert st["bank"] == pytest.approx(100.0)          # no settlement happened
+    assert len(st["open_slips"]) == 1
+    assert any("conflict" in ln for ln in lines)
+    assert st["open_slips"][0]["accas"][0]["results"][0] == "conflict"
