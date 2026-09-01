@@ -1,8 +1,8 @@
 {
   "by_bucket": {
     "CAUTION": {
-      "avg_implied_prob_delta": -0.00091,
-      "avg_raw_odds_delta": 0.004409,
+      "avg_implied_prob_delta": -0.001731,
+      "avg_raw_odds_delta": 0.007419,
       "beat_later_price_n": 93,
       "beat_later_price_rate": 0.139785,
       "total_picks": 101,
@@ -17,12 +17,12 @@
       "with_two_prices": 44
     },
     "SKIPPED_VETO": {
-      "avg_implied_prob_delta": 0.000469,
-      "avg_raw_odds_delta": -0.000555,
-      "beat_later_price_n": 328,
-      "beat_later_price_rate": 0.176829,
+      "avg_implied_prob_delta": 0.000483,
+      "avg_raw_odds_delta": -0.000644,
+      "beat_later_price_n": 329,
+      "beat_later_price_rate": 0.176292,
       "total_picks": 343,
-      "with_two_prices": 328
+      "with_two_prices": 329
     },
     "WATCHLIST_NO_ODDS": {
       "avg_implied_prob_delta": null,
@@ -91,12 +91,12 @@
       "with_two_prices": 26
     },
     "ml-meta avg_p>=55": {
-      "avg_implied_prob_delta": 0.000827,
-      "avg_raw_odds_delta": -0.000105,
-      "beat_later_price_n": 286,
-      "beat_later_price_rate": 0.192308,
+      "avg_implied_prob_delta": 0.000576,
+      "avg_raw_odds_delta": 0.000767,
+      "beat_later_price_n": 287,
+      "beat_later_price_rate": 0.191638,
       "total_picks": 309,
-      "with_two_prices": 286
+      "with_two_prices": 287
     },
     "ml-meta avg_p>=60": {
       "avg_implied_prob_delta": -0.015119,
@@ -149,16 +149,16 @@
   },
   "end": "2026-09-01",
   "meta": {
-    "insufficient_snapshots": 30,
+    "insufficient_snapshots": 29,
     "unmatched_picks": 38
   },
   "overall": {
-    "avg_implied_prob_delta": -0.000565,
-    "avg_raw_odds_delta": 0.005164,
-    "beat_later_price_n": 584,
-    "beat_later_price_rate": 0.152397,
+    "avg_implied_prob_delta": -0.000686,
+    "avg_raw_odds_delta": 0.005583,
+    "beat_later_price_n": 585,
+    "beat_later_price_rate": 0.152137,
     "total_picks": 652,
-    "with_two_prices": 584
+    "with_two_prices": 585
   },
   "start": "2026-08-02"
 }

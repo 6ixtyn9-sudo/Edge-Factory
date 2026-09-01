@@ -3,13 +3,13 @@
 ## Overall
 
 - total unique picks: 652
-- picks with at least two prices: 584
-- average raw odds delta: 0.005164
-- average implied-probability delta: -0.000565
-- beat-later-price rate: 0.152397
-- beat-later-price sample: 584
+- picks with at least two prices: 585
+- average raw odds delta: 0.005583
+- average implied-probability delta: -0.000686
+- beat-later-price rate: 0.152137
+- beat-later-price sample: 585
 - unmatched picks: 38
-- picks with fewer than two snapshots: 30
+- picks with fewer than two snapshots: 29
 
 ## By rule
 
@@ -17,7 +17,7 @@
 - `2way-unanimous avg_p>=70`: n=171, two_prices=151, avg_raw=0.000556, avg_ip=-0.000363, beat_rate=0.139073
 - `2way-unanimous min_p>=60 avg_p>=65`: n=11, two_prices=8, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `3way-unanimous avg_p>=65`: n=27, two_prices=26, avg_raw=-0.001154, avg_ip=-0.000109, beat_rate=0.038462
-- `ml-meta avg_p>=55`: n=309, two_prices=286, avg_raw=-0.000105, avg_ip=0.000827, beat_rate=0.192308
+- `ml-meta avg_p>=55`: n=309, two_prices=287, avg_raw=0.000767, avg_ip=0.000576, beat_rate=0.191638
 - `ml-meta avg_p>=60`: n=48, two_prices=40, avg_raw=0.0796, avg_ip=-0.015119, beat_rate=0.025
 - `ml-meta avg_p>=65`: n=15, two_prices=9, avg_raw=-0.001333, avg_ip=0.002037, beat_rate=0.222222
 - `ml-meta avg_p>=70`: n=15, two_prices=12, avg_raw=0.0175, avg_ip=-0.00874, beat_rate=0.083333
@@ -27,9 +27,9 @@
 
 ## By bucket
 
-- `CAUTION`: n=101, two_prices=93, avg_raw=0.004409, avg_ip=-0.00091, beat_rate=0.139785
+- `CAUTION`: n=101, two_prices=93, avg_raw=0.007419, avg_ip=-0.001731, beat_rate=0.139785
 - `CERTIFIED_CLEAN`: n=46, two_prices=44, avg_raw=0.064045, avg_ip=-0.009948, beat_rate=0.227273
-- `SKIPPED_VETO`: n=343, two_prices=328, avg_raw=-0.000555, avg_ip=0.000469, beat_rate=0.176829
+- `SKIPPED_VETO`: n=343, two_prices=329, avg_raw=-0.000644, avg_ip=0.000483, beat_rate=0.176292
 - `WATCHLIST_NO_ODDS`: n=35, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
 - `WATCHLIST_SUSPECT_PRICE`: n=8, two_prices=6, avg_raw=-0.006667, avg_ip=0.005316, beat_rate=0.166667
 - `WATCHLIST_UNCORROBORATED_PRICE`: n=97, two_prices=92, avg_raw=-0.001196, avg_ip=0.000883, beat_rate=0.076087
