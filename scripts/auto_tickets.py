@@ -140,16 +140,83 @@ def load_archived_picks():
     return out
 
 
-def load_settled():
+# Settled-donor priority order — mirrors audit_recent_picks.load_results_index.
+# BetExplorer is the widest-league donor (lowest priority): it fills fixtures
+# the probability sources never captured, but loses to them on a conflict.
+_SETTLED_SOURCES = [
+    (1, "forebet_settled"),
+    (2, "bettingclosed_settled"),
+    (3, "zulubet_settled"),
+    (4, "statarea_settled"),
+    (5, "scoutingstats_settled"),
+    (6, "vitibet_settled"),
+    (7, "betexplorer_settled"),
+]
+
+
+def _load_warehouse_settled() -> dict:
+    """Settled outcomes from the warehouse settled views (audit parity).
+
+    auto-ticket grading previously read only the shared overlay, so a fixture
+    settled by a warehouse donor (e.g. BetExplorer on a league the probability
+    sources never captured) stayed unresolved here even though the audit
+    settled it. Warehouse wins on conflict; the overlay only fills gaps.
+    Returns {} when duckdb or the warehouse is unavailable.
+    """
     from edgefactory.util import norm_team
+
+    wh = LOCALDATA / "warehouse.duckdb"
+    if not wh.exists():
+        return {}
+    try:
+        import duckdb
+    except Exception:
+        return {}
+    out: dict = {}
+    con = None
+    try:
+        con = duckdb.connect(str(wh), read_only=True)
+        tables = {row[0] for row in con.execute("SHOW TABLES").fetchall()}
+    except Exception:
+        return {}
+    try:
+        for _prio, name in _SETTLED_SOURCES:
+            if name not in tables:
+                continue
+            try:
+                rows = con.execute(
+                    f"SELECT date, home, away, outcome FROM {name} "
+                    "WHERE hs IS NOT NULL AND gs IS NOT NULL"
+                ).fetchall()
+            except Exception:
+                continue
+            for day, home, away, outcome in rows:
+                out.setdefault(
+                    (str(day)[:10], norm_team(home), norm_team(away)),
+                    str(outcome),
+                )
+    finally:
+        if con is not None:
+            con.close()
+    return out
+
+
+def load_settled():
+    """Settled outcomes: warehouse donors first, shared overlay fills gaps.
+
+    Keeps auto-ticket grading on the same result facts as the audit instead
+    of overlay-only, so BetExplorer-settled fixtures grade here too.
+    """
+    from edgefactory.util import norm_team
+
+    out = _load_warehouse_settled()
     try:
         data = json.loads((LOCALDATA / "settled_results.json").read_text())
     except Exception:
-        return {}
-    out = {}
+        return out
     for r in data.get("rows", []):
         key = (str(r.get("date") or "")[:10], norm_team(r.get("home") or ""), norm_team(r.get("away") or ""))
-        out[key] = r.get("outcome")
+        out.setdefault(key, r.get("outcome"))
     return out
 
 
@@ -159,6 +226,12 @@ def _fold(s):
                    if unicodedata.category(c) != "Mn").lower().strip()
 
 
+# Rescheduled fallback window — mirrors the audit's ±3-day rescheduled scan.
+# A fixture that moved 2 days (Hønefoss W 08-29 -> 08-31) still grades here;
+# ±1 day missed it and froze the acca on a result the audit had already seen.
+RESCHEDULE_WINDOW_DAYS = 3
+
+
 def _lookup_fallback(settled, day, home, away):
     from datetime import timedelta as _td
     from difflib import SequenceMatcher
@@ -166,7 +239,8 @@ def _lookup_fallback(settled, day, home, away):
         base = datetime.strptime(day, "%Y-%m-%d").date()
     except ValueError:
         return None
-    cands = [day, str(base - _td(days=1)), str(base + _td(days=1))]
+    cands = {str(base + _td(days=o))
+             for o in range(-RESCHEDULE_WINDOW_DAYS, RESCHEDULE_WINDOW_DAYS + 1)}
     fh, fa = _fold(home), _fold(away)
     best, best_oc = 0.0, None
     for (d, h, a), oc in settled.items():
@@ -322,8 +396,37 @@ def _apply_settlement(st, ret_pct, staked_pct, when):
     return events
 
 
+def _record_acca_settlement(st, slip_date, acca):
+    """Append/update a per-day history entry for one settled acca.
+
+    Per-acca settlement means a day's accas can settle across several runs (a
+    stuck leg no longer freezes the whole day's stake). History stays grouped
+    by date so the performance report still reads one line per bet-day.
+    """
+    won = bool(acca["won"])
+    ret = round(acca["stake_pct"] * acca["odds"] if won else 0.0, 4)
+    for h in st["history"]:
+        if h["date"] == slip_date:
+            h["staked_pct"] = round(h["staked_pct"] + acca["stake_pct"], 4)
+            h["returned_pct"] = round(h["returned_pct"] + ret, 4)
+            h["accas"].append({"odds": acca["odds"], "won": won})
+            h["bank_pct"] = round(st["bank"], 4)
+            return
+    st["history"].append({
+        "date": slip_date,
+        "staked_pct": round(acca["stake_pct"], 4),
+        "returned_pct": ret,
+        "accas": [{"odds": acca["odds"], "won": won}],
+        "bank_pct": round(st["bank"], 4),
+    })
+
+
 def settle_open_slips(st, settled, archives=None):
-    """Grade every open slip whose legs are all settled. Returns event lines."""
+    """Grade every acca whose legs are all settled; the bank moves per acca.
+
+    An acca settles as soon as all its legs resolve — a single stuck leg no
+    longer freezes the whole day's stake. Returns event lines.
+    """
     if archives is None:
         archives = load_archived_picks()
     index = {}
@@ -332,7 +435,7 @@ def settle_open_slips(st, settled, archives=None):
         index[(day, f"{p.get('home')} vs {p.get('away')}", str(p.get("pick") or "").upper())] = p
     lines, still_open = [], []
     for slip in st["open_slips"]:
-        accas = []
+        open_accas = []
         for a in slip["accas"]:
             legres = []
             for l in a["legs"]:
@@ -354,17 +457,18 @@ def settle_open_slips(st, settled, archives=None):
                     a["odds"] = round(math.prod(l["odds"] for l in live), 2)  # book-style: void drops out
             else:
                 a["won"] = None
-            accas.append(a)
-        if accas and all(a["won"] is not None for a in accas):
-            ret = sum(a["stake_pct"] * a["odds"] for a in accas if a["won"])
-            ev = _apply_settlement(st, ret, slip["staked_pct"], slip["date"])
-            st["history"].append({"date": slip["date"], "staked_pct": round(slip["staked_pct"], 4),
-                                  "returned_pct": round(ret, 4),
-                                  "accas": [{"odds": a["odds"], "won": a["won"]} for a in accas],
-                                  "bank_pct": round(st["bank"], 4)})
-            lines.append(f"settled {slip['date']}: bank {st['bank']:.1f}%"
+            if a["won"] is None:
+                open_accas.append(a)
+                continue
+            ret = a["stake_pct"] * a["odds"] if a["won"] else 0.0
+            ev = _apply_settlement(st, ret, a["stake_pct"], slip["date"])
+            _record_acca_settlement(st, slip["date"], a)
+            lines.append(f"settled {slip['date']} acca @{a['odds']:.2f}: bank {st['bank']:.1f}%"
                          + ((" | " + " | ".join(ev)) if ev else ""))
-        else:
+        if open_accas:
+            slip = dict(slip)
+            slip["accas"] = open_accas
+            slip["staked_pct"] = round(sum(a["stake_pct"] for a in open_accas), 4)
             still_open.append(slip)
     st["open_slips"] = still_open
     save_state(st)

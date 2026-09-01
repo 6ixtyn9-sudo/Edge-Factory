@@ -174,3 +174,90 @@ def test_backfill_end_to_end(tmp_path, monkeypatch):
     # day2: stake = 50% of 150 = 75%, acca loses -> bank 75%
     assert st["history"][1]["bank_pct"] == pytest.approx(75.0, abs=0.05)
     assert st["cycle_base"] == pytest.approx(100.0)  # unchanged — no notification fired
+
+
+# ---------------- settlement unification + rescheduled fallback + per-acca ----------------
+
+def test_load_settled_reads_warehouse_and_overlay_fills_gaps(tmp_path):
+    """auto-ticket grading must see the same result facts as the audit:
+    warehouse donors (incl. BetExplorer) first, overlay fills gaps, and the
+    warehouse wins on conflict."""
+    import duckdb
+    import json
+
+    wh = at.LOCALDATA / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-29','Viking','Aalesund',2,1,'home')")
+    con.execute("CREATE TABLE betexplorer_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO betexplorer_settled VALUES ('2026-08-27','MC Alger','MC Oran',2,1,'home')")
+    con.close()
+
+    (at.LOCALDATA / "settled_results.json").write_text(json.dumps({"rows": [
+        {"date": "2026-07-11", "home": "South Hobart", "away": "Ulverstone",
+         "hs": 2, "gs": 0, "outcome": "home", "src": "forebet_settled"},
+        {"date": "2026-08-29", "home": "Viking", "away": "Aalesund",
+         "hs": 9, "gs": 9, "outcome": "draw", "src": "zulubet_settled"},
+    ]}))
+
+    settled = at.load_settled()
+    # BetExplorer donor now grades the Algerian fixture
+    assert settled[("2026-08-27", norm_team("MC Alger"), norm_team("MC Oran"))] == "home"
+    # overlay fills a fixture the warehouse never saw
+    assert settled[("2026-07-11", norm_team("South Hobart"), norm_team("Ulverstone"))] == "home"
+    # warehouse wins on conflict (2-1 home, not the overlay's 9-9 draw)
+    assert settled[("2026-08-29", norm_team("Viking"), norm_team("Aalesund"))] == "home"
+
+
+def test_lookup_fallback_reaches_two_day_reschedule_but_not_four():
+    """The ±3-day rescheduled window grades a fixture moved +2 days
+    (Hønefoss W 08-29 -> 08-31) but refuses a +4-day look-alike."""
+    home, away = norm_team("Viking"), norm_team("Aalesund")
+    settled = {("2026-08-31", home, away): "away"}
+    assert at._lookup_fallback(settled, "2026-08-29", home, away) == "away"
+
+    far = {("2026-09-02", home, away): "home"}   # +4 days: outside the window
+    assert at._lookup_fallback(far, "2026-08-29", home, away) is None
+
+
+def test_settle_per_acca_does_not_freeze_bank_on_one_stuck_leg():
+    """One unresolved leg no longer freezes the whole day's stake: a resolved
+    acca moves the bank, the stuck acca stays open with its own stake."""
+    st = at.fresh_state()  # bank 100%
+    slip = {"date": "2026-08-29", "staked_pct": 50.0, "accas": [
+        {"odds": 1.69, "stake_pct": 25.0, "legs": [
+            {"match": "Viking vs Aalesund", "pick": "HOME", "odds": 1.3, "prob": 0.76},
+            {"match": "Celtic vs Falkirk", "pick": "HOME", "odds": 1.3, "prob": 0.75},
+        ]},
+        {"odds": 1.70, "stake_pct": 25.0, "legs": [
+            {"match": "Pafos vs Tirana", "pick": "HOME", "odds": 1.3, "prob": 0.74},
+            {"match": "Minsk vs Baranovichi", "pick": "HOME", "odds": 1.3, "prob": 0.73},
+        ]},
+    ]}
+    st["open_slips"].append(slip)
+    settled = {
+        ("2026-08-29", norm_team("Viking"), norm_team("Aalesund")): "home",
+        ("2026-08-29", norm_team("Celtic"), norm_team("Falkirk")): "home",
+        ("2026-08-29", norm_team("Pafos"), norm_team("Tirana")): "home",
+        # Minsk vs Baranovichi intentionally unresolved
+    }
+    archives = [
+        {"date": "2026-08-29", "home": h, "away": a, "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.3, "avg_p": 74.0}
+        for h, a in [("Viking", "Aalesund"), ("Celtic", "Falkirk"),
+                     ("Pafos", "Tirana"), ("Minsk", "Baranovichi")]
+    ]
+    lines = at.settle_open_slips(st, settled, archives=archives)
+
+    # acca 1 wins @1.69 -> bank 100 - 25 + 25*1.69 = 117.25
+    assert st["bank"] == pytest.approx(100.0 - 25.0 + 25.0 * 1.69, abs=1e-6)
+    # acca 2 remains open, holding only its own 25% stake
+    assert len(st["open_slips"]) == 1
+    assert st["open_slips"][0]["date"] == "2026-08-29"
+    assert len(st["open_slips"][0]["accas"]) == 1
+    assert st["open_slips"][0]["staked_pct"] == pytest.approx(25.0)
+    assert at.effective_bank(st) == pytest.approx(st["bank"] - 25.0)
+    assert len(lines) == 1
+    assert [a for h in st["history"] for a in h["accas"]] == [{"odds": 1.69, "won": True}]
