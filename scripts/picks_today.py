@@ -2471,11 +2471,22 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
                 continue
             sel = yes_no[0] if p >= 0.5 else yes_no[1]
             sels.append(sel)
-            confs.append(p if sel == yes_no[0] else 1.0 - p)
+            # Primary-side probability (matches the miner's avg_p definition);
+            # the complementary side is rejected by the directional guard below.
+            confs.append(p)
             used.append(s)
         if len(used) < 2:
             continue
         if len(set(sels)) > 1:
+            continue
+        # Directional-certification guard (2026-09-01): binary edges are
+        # walk-forward certified on the PRIMARY side only. The miner's avg_p is
+        # the primary-side probability (p_over / p_gg), so ``avg_p >= thr`` can
+        # only ever be satisfied by over/yes — the complement (under/no) has no
+        # sample under this rule. Firing it would bet a population the
+        # certification never tested (the OU25 unders were doing exactly this).
+        # Re-enable only after a symmetric rule is mined and certified.
+        if sels[0] != yes_no[0]:
             continue
 
         comp_type = classify_competition(anchor := next(data[s][k] for s in used if k in data.get(s, {})))
