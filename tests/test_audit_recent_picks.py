@@ -1440,3 +1440,29 @@ def test_rescheduled_result_ignores_same_date_and_out_of_range():
                                  "home": "MC Alger", "away": "MC Oran", "origin": "warehouse"},
     }
     assert _find_rescheduled_result(pick, "2026-08-29", results) is None
+
+
+def test_alias_candidate_results_catches_cross_spelling_conflict():
+    """A fixture filed under several spellings with differing outcomes must
+    surface as a conflict (Pafos vs Dinamo Tirana 2-2 vs 4-2)."""
+    from scripts.audit_recent_picks import _alias_candidate_results
+
+    results_by_date = {"2026-08-27": [
+        {"home": "Pafos", "away": "Dinamo Tirana", "hs": 2, "gs": 2, "outcome": "draw"},
+        {"home": "Pafos", "away": "KS Dinamo Tirana", "hs": 4, "gs": 2, "outcome": "home"},
+    ]}
+    got = _alias_candidate_results("Pafos", "Dinamo Tirana", "2026-08-27", results_by_date)
+    assert {r["outcome"] for r in got} == {"draw", "home"}
+
+
+def test_alias_candidate_results_rejects_womens_key_collision():
+    """norm_team() strips the W suffix, so the women's fixture shares a key
+    with the men's. The per-side floor must reject it, not false-flag."""
+    from scripts.audit_recent_picks import _alias_candidate_results
+
+    results_by_date = {"2026-08-23": [
+        {"home": "Universitatea Craiova", "away": "Voluntari", "hs": 3, "gs": 1, "outcome": "home"},
+        {"home": "Universitatea Craiova W", "away": "Ol. Cluj W", "hs": 2, "gs": 6, "outcome": "away"},
+    ]}
+    got = _alias_candidate_results("Universitatea Craiova", "FC Voluntari", "2026-08-23", results_by_date)
+    assert {r["outcome"] for r in got} == {"home"}

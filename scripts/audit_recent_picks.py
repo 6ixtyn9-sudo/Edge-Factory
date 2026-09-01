@@ -606,28 +606,100 @@ def load_results_index(warehouse_path: Path) -> tuple[dict[tuple[str, str, str],
 # legitimate name bridges (Clarence Zebras -> Hobart Zebras) still pass.
 # Failing to match is honest (pending/unmatched) — a wrong settlement is not.
 _FUZZY_MIN_SIM = 0.40
+# Per-side floor for alias-conflict candidates. Below this, a "shared" team is
+# a key collision, not a spelling variant: norm_team() strips the W suffix, so
+# "Universitatea Craiova" (men) and "Universitatea Craiova W" (women) share a
+# key, and the combined bigram score is dominated by the long home name. The
+# away side ("FC Voluntari" vs "Ol. Cluj W", ~0.14) must also clear this floor
+# or the women's fixture would false-flag a conflict.
+_ALIAS_SIDE_MIN_SIM = 0.30
+
+
+def _orientation_ok(pick_home: str, pick_away: str, res_h: str, res_a: str) -> bool:
+    """Orientation guard: each pick side must match ITS result side better than
+    the opposite side. Rejects swapped-fixture wrong settlements."""
+    sim_hh = char_ngram_similarity(pick_home, res_h, n=2)
+    sim_ha = char_ngram_similarity(pick_home, res_a, n=2)
+    sim_ah = char_ngram_similarity(pick_away, res_h, n=2)
+    sim_aa = char_ngram_similarity(pick_away, res_a, n=2)
+    return sim_hh > sim_ha and sim_aa > sim_ah
+
+
+def find_fuzzy_result_matches(
+    pick_home: str,
+    pick_away: str,
+    results_on_date: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    """Every orientation-checked bigram match on the date (alias-aware).
+
+    ``find_fuzzy_result_match`` returns only the best match; this returns all
+    of them so callers can detect cross-spelling outcome conflicts instead of
+    silently taking one spelling's result.
+    """
+    out: list[dict[str, Any]] = []
+    for res in results_on_date:
+        res_h = str(res.get("home", ""))
+        res_a = str(res.get("away", ""))
+        if not _orientation_ok(pick_home, pick_away, res_h, res_a):
+            continue
+        combined = char_ngram_similarity(f"{pick_home} {pick_away}", f"{res_h} {res_a}", n=2)
+        if combined >= _FUZZY_MIN_SIM:
+            out.append(res)
+    return out
 
 
 def find_fuzzy_result_match(pick_home: str, pick_away: str, results_on_date: list[dict[str, Any]]) -> dict[str, Any] | None:
     """Orientation-checked bigram fallback when key mapping fails."""
     best_match = None
     best_sim = 0.0
-    for res in results_on_date:
-        res_h = str(res.get("home", ""))
-        res_a = str(res.get("away", ""))
-        sim_hh = char_ngram_similarity(pick_home, res_h, n=2)
-        sim_ha = char_ngram_similarity(pick_home, res_a, n=2)
-        sim_ah = char_ngram_similarity(pick_away, res_h, n=2)
-        sim_aa = char_ngram_similarity(pick_away, res_a, n=2)
-        # Orientation guard: each pick side must match ITS result side better
-        # than the opposite side. Rejects swapped-fixture wrong settlements.
-        if not (sim_hh > sim_ha and sim_aa > sim_ah):
-            continue
-        combined = char_ngram_similarity(f"{pick_home} {pick_away}", f"{res_h} {res_a}", n=2)
-        if combined >= _FUZZY_MIN_SIM and combined > best_sim:
+    for res in find_fuzzy_result_matches(pick_home, pick_away, results_on_date):
+        combined = char_ngram_similarity(
+            f"{pick_home} {pick_away}",
+            f"{res.get('home', '')} {res.get('away', '')}",
+            n=2,
+        )
+        if combined > best_sim:
             best_sim = combined
             best_match = res
     return best_match
+
+
+def _alias_candidate_results(
+    pick_home: str,
+    pick_away: str,
+    pick_date: str,
+    results_by_date: dict[str, list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    """Results on the pick's date sharing a normalized team key with the pick.
+
+    Cheap pre-filter for alias-conflict detection: a fixture filed under
+    several spellings (``Pafos vs Dinamo Tirana`` 2-2 vs ``Pafos vs KS Dinamo
+    Tirana`` 4-2) shares the home key while the away spelling differs, so the
+    exact key lookup hits only one spelling. We pull every result sharing
+    either team key and keep those that bigram-match both sides with correct
+    orientation — genuinely different fixtures sharing a key fragment are
+    dropped by the combined-similarity threshold.
+    """
+    home_keys = set(audit_team_key_candidates(pick_home))
+    away_keys = set(audit_team_key_candidates(pick_away))
+    out: list[dict[str, Any]] = []
+    for r in results_by_date.get(pick_date, []):
+        rh = str(r.get("home", ""))
+        ra = str(r.get("away", ""))
+        hk = norm_team(rh)
+        ak = norm_team(ra)
+        if not (hk in home_keys or ak in away_keys or hk in away_keys or ak in home_keys):
+            continue
+        sim_hh = char_ngram_similarity(pick_home, rh, n=2)
+        sim_aa = char_ngram_similarity(pick_away, ra, n=2)
+        if min(sim_hh, sim_aa) < _ALIAS_SIDE_MIN_SIM:
+            continue
+        if not _orientation_ok(pick_home, pick_away, rh, ra):
+            continue
+        combined = char_ngram_similarity(f"{pick_home} {pick_away}", f"{rh} {ra}", n=2)
+        if combined >= _FUZZY_MIN_SIM:
+            out.append(r)
+    return out
 
 
 def _find_rescheduled_result(
@@ -1607,23 +1679,36 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         eligible_prior_picks += 1
 
         result = None
-        matched_keys: list[tuple[str, str, str]] = []
+        pick_home = str(pick.get("home") or "")
+        pick_away = str(pick.get("away") or "")
+
+        # Exact/candidate-key hits (priority-deduped warehouse + overlay).
+        exact_matches: list[dict[str, Any]] = []
         for hk in audit_team_key_candidates(pick.get("home")):
             for ak in audit_team_key_candidates(pick.get("away")):
-                key = (pick_date, hk, ak)
-                candidate = results.get(key)
-                if candidate is not None:
-                    result = candidate
-                    matched_keys.append(key)
+                candidate = results.get((pick_date, hk, ak))
+                if candidate is not None and candidate not in exact_matches:
+                    exact_matches.append(candidate)
 
-        if len(matched_keys) > 1:
-            seen = set()
-            for key in matched_keys:
-                r = results.get(key) or {}
-                seen.add((r.get("hs"), r.get("gs"), r.get("outcome")))
-            if len(seen) > 1:
-                ambiguous_result_examples.append(_pick_diag(pick, "ambiguous_alias_result"))
-                continue
+        # Alias-conflict scan (cross-spelling, orientation-checked): a fixture
+        # filed under several spellings with differing outcomes (Pafos vs
+        # Dinamo Tirana 2-2 draw vs Pafos vs KS Dinamo Tirana 4-2 home) must
+        # surface as ambiguous, not silently first-win the exact-key spelling.
+        alias_matches = _alias_candidate_results(pick_home, pick_away, pick_date, results_by_date)
+
+        candidates: list[dict[str, Any]] = []
+        for r in exact_matches + alias_matches:
+            if r not in candidates:
+                candidates.append(r)
+
+        distinct_scores = {(r.get("hs"), r.get("gs"), r.get("outcome")) for r in candidates}
+        if len(distinct_scores) > 1:
+            ambiguous_result_examples.append(_pick_diag(pick, "ambiguous_alias_result"))
+            continue
+
+        if candidates:
+            # Prefer the exact-key hit for provenance; all outcomes agree here.
+            result = exact_matches[0] if exact_matches else candidates[0]
 
         if result is None:
             # Event dispositions are deliberately exact-only. A false void is
@@ -1651,9 +1736,20 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                 ambiguous_disposition_examples.append(diag)
 
             results_on_date = results_by_date.get(pick_date, [])
-            fuzzy_candidate = find_fuzzy_result_match(pick.get("home", ""), pick.get("away", ""), results_on_date)
-            if fuzzy_candidate is not None:
-                result = fuzzy_candidate
+            fuzzy_matches = find_fuzzy_result_matches(pick_home, pick_away, results_on_date)
+            fuzzy_scores = {(r.get("hs"), r.get("gs"), r.get("outcome")) for r in fuzzy_matches}
+            if len(fuzzy_scores) > 1:
+                ambiguous_result_examples.append(_pick_diag(pick, "ambiguous_alias_result"))
+                continue
+            if fuzzy_matches:
+                result = max(
+                    fuzzy_matches,
+                    key=lambda r: char_ngram_similarity(
+                        f"{pick_home} {pick_away}",
+                        f"{r.get('home', '')} {r.get('away', '')}",
+                        n=2,
+                    ),
+                )
             else:
                 rescheduled = _find_rescheduled_result(pick, pick_date, results)
                 if rescheduled is not None:
