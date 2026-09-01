@@ -1400,3 +1400,43 @@ def test_build_report_scores_ou_and_btts_picks(tmp_path, monkeypatch):
     assert ledger["Uxbridge vs Wimborne Town"]["won"] is False  # 0-0 -> under
     assert ledger["Fortaleza vs Operário PR"]["won"] is True    # 1-1 -> under
     assert ledger["Benfica vs Estoril"]["outcome"] == "no"      # 4-0 -> BTTS no
+
+
+def test_rescheduled_result_detected_on_nearby_date():
+    """A pick pending on its own date but settled ±3d is a rescheduled
+    fixture, not a missing result — reported, never auto-settled."""
+    from scripts.audit_recent_picks import _find_rescheduled_result
+    from edgefactory.util import norm_team
+
+    pick = {"date": "2026-08-29", "home": "Viking", "away": "Aalesund",
+            "match": "Viking vs Aalesund", "league": "Eliteserien",
+            "bucket": "WATCHLIST_UNCORROBORATED_PRICE", "pick": "home", "odds": 1.3}
+    results = {
+        ("2026-08-30", norm_team("Viking"), norm_team("Aalesund")): {
+            "hs": 2, "gs": 1, "outcome": "home",
+            "home": "Viking", "away": "Aalesund", "origin": "warehouse"},
+    }
+    diag = _find_rescheduled_result(pick, "2026-08-29", results)
+    assert diag is not None
+    assert diag["reason"] == "rescheduled"
+    assert diag["rescheduled_to"] == "2026-08-30"
+    assert diag["rescheduled_hs"] == 2 and diag["rescheduled_gs"] == 1
+    assert diag["rescheduled_outcome"] == "home"
+
+
+def test_rescheduled_result_ignores_same_date_and_out_of_range():
+    from scripts.audit_recent_picks import _find_rescheduled_result
+    from edgefactory.util import norm_team
+
+    pick = {"date": "2026-08-29", "home": "MC Alger", "away": "MC Oran",
+            "match": "MC Alger vs MC Oran", "league": "Ligue 1",
+            "bucket": "SKIPPED_VETO", "pick": "home", "odds": 1.45}
+    hk, ak = norm_team("MC Alger"), norm_team("MC Oran")
+    results = {
+        # same date (offset 0) is excluded, and a far-out date is out of range
+        ("2026-08-29", hk, ak): {"hs": 1, "gs": 0, "outcome": "home",
+                                 "home": "MC Alger", "away": "MC Oran", "origin": "warehouse"},
+        ("2026-08-10", hk, ak): {"hs": 2, "gs": 2, "outcome": "draw",
+                                 "home": "MC Alger", "away": "MC Oran", "origin": "warehouse"},
+    }
+    assert _find_rescheduled_result(pick, "2026-08-29", results) is None

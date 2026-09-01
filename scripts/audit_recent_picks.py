@@ -630,6 +630,55 @@ def find_fuzzy_result_match(pick_home: str, pick_away: str, results_on_date: lis
     return best_match
 
 
+def _find_rescheduled_result(
+    pick: dict[str, Any],
+    pick_date: str,
+    results: dict[tuple[str, str, str], dict[str, Any]],
+    days: int = 3,
+) -> dict[str, Any] | None:
+    """Scan nearby calendar days for the same team pair.
+
+    A pick that is pending on its own date but whose exact team pair settled
+    within ±``days`` is a rescheduled fixture, not a missing result — the pick
+    fired against a schedule that later moved (Viking 08-29 -> 08-30, Hønefoss
+    W 08-29 -> 08-31). Report it as such instead of burying it under
+    "pending/unmatched". Diagnostic-only: the pick is neither settled nor
+    voided here, so there is no false-settlement risk.
+    """
+    try:
+        d0 = datetime.strptime(pick_date, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+    hc = audit_team_key_candidates(pick.get("home"))
+    ac = audit_team_key_candidates(pick.get("away"))
+    nearest: tuple[int, str, dict[str, Any]] | None = None  # (dist, date, hit)
+    for offset in range(-days, days + 1):
+        if offset == 0:
+            continue
+        nd = (d0 + timedelta(days=offset)).isoformat()
+        for hk in hc:
+            for ak in ac:
+                hit = results.get((nd, hk, ak))
+                if hit is not None:
+                    dist = abs(offset)
+                    if nearest is None or dist < nearest[0]:
+                        nearest = (dist, nd, hit)
+    if nearest is None:
+        return None
+    _, nd, hit = nearest
+    diag = _pick_diag(pick, "rescheduled")
+    diag.update({
+        "rescheduled_to": nd,
+        "rescheduled_home": hit.get("home"),
+        "rescheduled_away": hit.get("away"),
+        "rescheduled_hs": hit.get("hs"),
+        "rescheduled_gs": hit.get("gs"),
+        "rescheduled_outcome": hit.get("outcome"),
+        "rescheduled_origin": hit.get("origin"),
+    })
+    return diag
+
+
 def _price_evidence_from_pick(pick: dict[str, Any]) -> tuple[str, str]:
     """Return archived price-evidence fields, deriving an honest legacy label.
 
@@ -1494,6 +1543,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
     same_day_excluded = 0
     eligible_prior_picks = 0
     unmatched_result_examples: list[dict[str, Any]] = []
+    rescheduled_result_examples: list[dict[str, Any]] = []
     voided_event_examples: list[dict[str, Any]] = []
     ambiguous_disposition_examples: list[dict[str, Any]] = []
     voided_by_disposition: Counter[str] = Counter()
@@ -1605,6 +1655,10 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
             if fuzzy_candidate is not None:
                 result = fuzzy_candidate
             else:
+                rescheduled = _find_rescheduled_result(pick, pick_date, results)
+                if rescheduled is not None:
+                    rescheduled_result_examples.append(rescheduled)
+                    continue
                 unmatched_result_examples.append(_pick_diag(pick, "pending_or_unmatched_result"))
                 continue
 
@@ -1817,6 +1871,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "eligible_prior_picks": eligible_prior_picks,
         "unmatched_result_picks": len(unmatched_result_examples),
         "pending_result_picks": len(unmatched_result_examples),
+        "rescheduled_result_picks": len(rescheduled_result_examples),
         "voided_event_picks": len(voided_event_examples),
         "by_event_disposition": dict(sorted(voided_by_disposition.items())),
         "voided_event_examples": voided_event_examples[:50],
@@ -1825,6 +1880,7 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
         "settled_via_overlay_picks": overlay_rescued,
         "ambiguous_result_picks": len(ambiguous_result_examples),
         "unmatched_examples": unmatched_result_examples[:50],
+        "rescheduled_examples": rescheduled_result_examples[:50],
         "ambiguous_examples": ambiguous_result_examples[:50],
         "overall": summarize_scored(settled_rows),
         "by_rule": summarize_by(settled_rows, "rule_name"),
@@ -1886,6 +1942,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
         f"- settled picks: {overall.get('settled_picks', 0)}",
         f"- eligible prior picks: {report.get('eligible_prior_picks', 0)}",
         f"- pending/unmatched result picks: {report.get('pending_result_picks', report.get('unmatched_result_picks', 0))}",
+        f"- rescheduled result picks (settled ±3d): {report.get('rescheduled_result_picks', 0)}",
         f"- voided postponed/cancelled/abandoned events: {report.get('voided_event_picks', 0)}",
         f"- ambiguous event-disposition rows: {report.get('ambiguous_disposition_picks', 0)}",
         f"- settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)}",
@@ -2187,6 +2244,20 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
             f"{item.get('match')} ({item.get('origin')}); excluded from win/loss/ROI"
         )
 
+    lines.extend(["", "## Rescheduled Fixture Examples", ""])
+    rescheduled = report.get("rescheduled_examples", [])
+    if not rescheduled:
+        lines.append("- none")
+    else:
+        for ex in rescheduled[:25]:
+            lines.append(
+                f"- {ex.get('date')} `{ex.get('bucket')}` `{ex.get('rule')}` — {ex.get('match')} "
+                f"-> {str(ex.get('pick')).upper()} @ {ex.get('odds')} (rescheduled → "
+                f"{ex.get('rescheduled_to')}; actual {ex.get('rescheduled_home')} "
+                f"{ex.get('rescheduled_hs')}-{ex.get('rescheduled_gs')} "
+                f"{ex.get('rescheduled_away')} [{ex.get('rescheduled_outcome')}])"
+            )
+
     lines.extend(["", "## Pending / Unmatched Result Examples", ""])
     examples = report.get("unmatched_examples", [])
     if not examples:
@@ -2244,6 +2315,7 @@ def main() -> int:
     print(f" eligible prior picks: {report.get('eligible_prior_picks', 0)}")
     print(f" settled picks: {overall.get('settled_picks', 0)}")
     print(f" pending/unmatched result picks: {report.get('pending_result_picks', report.get('unmatched_result_picks', 0))}")
+    print(f" rescheduled result picks (settled ±3d): {report.get('rescheduled_result_picks', 0)}")
     print(f" voided event picks: {report.get('voided_event_picks', 0)}")
     print(f" settled via shared overlay facts: {report.get('settled_via_overlay_picks', 0)}")
     print(f" ambiguous result picks: {report.get('ambiguous_result_picks', 0)}")
