@@ -287,3 +287,94 @@ def test_different_pick_side_does_not_collapse():
     assert len(out) == 2
 
 
+
+
+def test_eval_binary_fires_primary_side_only():
+    """Binary (OU/BTTS) edges are certified on the primary side only.
+
+    The miner's avg_p is the primary-side probability (p_over / p_gg), so a
+    rule certified as ``avg_p >= thr`` has only ever sampled over/yes. The
+    live evaluator must not fire the complement (under/no) on a population the
+    walk-forward never tested.
+    """
+    from picks_today import BTTS_COL, OU_COL, SOURCES_BTTS, SOURCES_OU, eval_binary
+
+    edge = {
+        "n_way": 2,
+        "threshold": 70.0,
+        "rule": "ou25-unanimous-2way-sa avg_p>=70",
+        "display_rule": "OU25-UNANIMOUS-2WAY\u226570",
+    }
+
+    def row(home, away, p, odd_over=1.8, odd_under=1.9):
+        # Both primary-side columns so forebet (p_over) and statarea (p_o25)
+        # read the same value.
+        return {
+            "home": home, "away": away, "league": "SPL",
+            "p_over": p, "p_o25": p,
+            "odd_over": odd_over, "odd_under": odd_under,
+        }
+
+    key = ("uxbridge", "wimbornetown")
+    ou_outcome_odds = {"over": "odd_over", "under": "odd_under"}
+
+    # 1) Both sources agree OVER at >= threshold -> fires "over" as before.
+    data = {
+        "forebet": {key: row("Uxbridge", "Wimborne Town", 0.75)},
+        "statarea": {key: row("Uxbridge", "Wimborne Town", 0.72)},
+    }
+    picks = eval_binary("2026-08-31", data, "ou_2.5", SOURCES_OU, OU_COL, edge,
+                        ("over", "under"), ou_outcome_odds)
+    assert [p["pick"] for p in picks] == ["over"]
+    assert picks[0]["avg_p"] == 73.5
+
+    # 2) Both sources agree UNDER at high confidence: the pre-guard code would
+    #    have fired "under" (~76.5% selected-side), but the under leg has no
+    #    certified sample -> nothing fires now.
+    data = {
+        "forebet": {key: row("Uxbridge", "Wimborne Town", 0.25)},
+        "statarea": {key: row("Uxbridge", "Wimborne Town", 0.22)},
+    }
+    picks = eval_binary("2026-08-31", data, "ou_2.5", SOURCES_OU, OU_COL, edge,
+                        ("over", "under"), ou_outcome_odds)
+    assert picks == []
+
+    # 3) Disagreement still vetoes the fixture (unchanged behaviour).
+    data = {
+        "forebet": {key: row("Uxbridge", "Wimborne Town", 0.75)},
+        "statarea": {key: row("Uxbridge", "Wimborne Town", 0.25)},
+    }
+    picks = eval_binary("2026-08-31", data, "ou_2.5", SOURCES_OU, OU_COL, edge,
+                        ("over", "under"), ou_outcome_odds)
+    assert picks == []
+
+    # 4) BTTS follows the same rule: the primary side is "yes" (p_gg).
+    btts_edge = {
+        "n_way": 2,
+        "threshold": 70.0,
+        "rule": "btts-unanimous-2way-ss avg_p>=70",
+        "display_rule": "BTTS-UNANIMOUS-2WAY\u226570",
+    }
+
+    def btts_row(home, away, p_gg, odd_gg=1.9, odd_ng=1.8):
+        return {
+            "home": home, "away": away, "league": "SPL",
+            "p_gg": p_gg, "odd_gg": odd_gg, "odd_ng": odd_ng,
+        }
+
+    btts_outcome_odds = {"yes": "odd_gg", "no": "odd_ng"}
+    data = {
+        "forebet": {key: btts_row("Uxbridge", "Wimborne Town", 0.75)},
+        "scoutingstats": {key: btts_row("Uxbridge", "Wimborne Town", 0.72)},
+    }
+    picks = eval_binary("2026-08-31", data, "btts", SOURCES_BTTS, BTTS_COL, btts_edge,
+                        ("yes", "no"), btts_outcome_odds)
+    assert [p["pick"] for p in picks] == ["yes"]
+
+    data = {
+        "forebet": {key: btts_row("Uxbridge", "Wimborne Town", 0.25)},
+        "scoutingstats": {key: btts_row("Uxbridge", "Wimborne Town", 0.22)},
+    }
+    picks = eval_binary("2026-08-31", data, "btts", SOURCES_BTTS, BTTS_COL, btts_edge,
+                        ("yes", "no"), btts_outcome_odds)
+    assert picks == []
