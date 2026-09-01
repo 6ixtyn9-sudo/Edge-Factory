@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from datetime import date, datetime
 
 # Historical miner/source join noise tokens. Keep byte-compatible in spirit with
 # the certified backtests.
@@ -173,6 +174,83 @@ def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
     if not g1 or not g2:
         return 0.0
     return len(g1 & g2) / len(g1 | g2)
+
+
+_KO_ISO_DATE_RE = re.compile(r"(\d{4})-(\d{2})-(\d{2})")
+_KO_DMY_RE = re.compile(
+    r"^(\d{1,2})[./\-](\d{1,2})(?:[./\-](\d{2,4}))?(?:[ ,T]+\d{1,2}:\d{2}(?::\d{2})?)?\s*$"
+)
+
+
+def _kickoff_year(fallback_date: str | None) -> int:
+    if fallback_date:
+        try:
+            return int(str(fallback_date)[:4])
+        except (TypeError, ValueError):
+            pass
+    return datetime.now().year
+
+
+def _safe_date(year: int, month: int, day: int) -> date | None:
+    try:
+        return date(year, month, day)
+    except ValueError:
+        return None
+
+
+def kickoff_date(value: object, fallback_date: str | None = None) -> str | None:
+    """Resolve the calendar date of a raw source kickoff string, or None.
+
+    Source kickoffs arrive in a format zoo. This resolves ONLY the calendar
+    date (the archive/audit layers file rows by date, and must never invent a
+    date for a bare time):
+
+      - ISO ``YYYY-MM-DD[ T]HH:MM[:SS][±HH:MM|Z]``  → its date part (searched
+        anywhere, matching the legacy archive behaviour)
+      - ``DD-MM[, HH:MM]`` / ``DD.MM[.YYYY]`` / ``DD/MM[/YYYY]`` → day+month,
+        with the year taken from an explicit 4-digit token or inferred from
+        ``fallback_date`` (rollover-aware across Dec/Jan)
+      - bare ``HH:MM`` or anything else              → ``None``
+
+    ``fallback_date`` (``YYYY-MM-DD``) anchors year inference for the day-month
+    forms. Callers that still need a date after ``None`` fall back to the pick's
+    own ``date`` field — a bare time cannot name a calendar day.
+    """
+    text = str(value or "").strip()
+    if not text:
+        return None
+
+    iso = _KO_ISO_DATE_RE.search(text)
+    if iso:
+        return f"{iso.group(1)}-{iso.group(2)}-{iso.group(3)}"
+
+    m = _KO_DMY_RE.match(text)
+    if not m:
+        return None
+    dd, mm = int(m.group(1)), int(m.group(2))
+    if not (1 <= dd <= 31 and 1 <= mm <= 12):
+        return None
+
+    year_token = m.group(3)
+    if year_token:
+        year = int(year_token) + (2000 if len(year_token) == 2 else 0)
+        return _safe_date(year, mm, dd).isoformat() if _safe_date(year, mm, dd) else None
+
+    year = _kickoff_year(fallback_date)
+    cand = _safe_date(year, mm, dd)
+    if cand is None:
+        return None
+    if fallback_date:
+        try:
+            fb = date.fromisoformat(str(fallback_date)[:10])
+            delta = (cand - fb).days
+            if delta < -180:
+                cand = _safe_date(year + 1, mm, dd) or cand
+            elif delta > 180:
+                cand = _safe_date(year - 1, mm, dd) or cand
+        except (ValueError, TypeError):
+            pass
+    return cand.isoformat()
 
 
 # ---------------------------------------------------------------------------

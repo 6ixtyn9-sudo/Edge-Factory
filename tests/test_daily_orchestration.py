@@ -253,6 +253,43 @@ def test_stack_dispatch_never_drops_prior_bets(tmp_path):
         assert cska["odds"] == 1.31, "prior bet must be retained exactly as emitted"
 
 
+def test_get_actual_kickoff_date_parses_european_dmy():
+    """Forebet serves 'DD-MM, HH:MM' kickoffs; the archive must resolve the
+    real calendar date instead of filing the pick on the scan day."""
+    pick = {"date": "2026-08-29", "kickoff": "30-08, 16:00"}
+    assert daily.get_actual_kickoff_date(pick, "2026-08-29") == "2026-08-30"
+
+
+def test_get_actual_kickoff_date_bare_time_falls_back_to_pick_date():
+    """A bare 'HH:MM' kickoff names no calendar day — fail closed to the
+    pick's own date field rather than inventing one."""
+    pick = {"date": "2026-08-29", "kickoff": "11:00"}
+    assert daily.get_actual_kickoff_date(pick, "2026-08-29") == "2026-08-29"
+
+
+def test_archive_picks_by_kickoff_redates_row_to_kickoff_date(tmp_path):
+    """A pick scanned 08-29 for a 08-30 fixture (kickoff '30-08, 16:00') must
+    be filed under 08-30 with its date field rewritten, so the audit settles it
+    on the day the result donor uses."""
+    with patch.object(daily, "REPORT_DIR", tmp_path):
+        pick = {
+            "date": "2026-08-29",
+            "home": "Viking", "away": "Aalesund",
+            "match": "Viking vs Aalesund",
+            "market": "1x2", "pick": "home",
+            "kickoff": "30-08, 16:00",
+            "bucket": "CAUTION", "odds": 1.30,
+        }
+        daily.archive_picks_by_kickoff([pick], "2026-08-29")
+
+        moved = json.loads(daily.archived_picks_file("2026-08-30").read_text())
+        assert len(moved) == 1
+        assert moved[0]["date"] == "2026-08-30"
+        assert moved[0]["home"] == "Viking"
+        # The scan-day archive was not created for this row.
+        assert not daily.archived_picks_file("2026-08-29").exists()
+
+
 def test_match_market_key_folds_accents():
     """Accent variants of the same team must collapse to one ledger key, so a
     re-scrape spelling the fixture differently cannot double-enter the stack."""
