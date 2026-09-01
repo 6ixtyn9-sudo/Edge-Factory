@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "purpose": "Operator-verified final scores that outrank every result donor and the shared settled overlay. Used by audit_recent_picks and auto_tickets so a single bad donor row (wrong score or wrong spelling) can never hold a pick as an alias-outcome conflict. These rows never affect source voting, picks, prices, certification, or notifications.",
+  "rows": [
+    {
+      "date": "2026-08-27",
+      "home": "Pafos",
+      "away": "Dinamo Tirana",
+      "hs": 4,
+      "gs": 2,
+      "outcome": "home",
+      "src": "operator_verified",
+      "verified_at": "2026-09-01",
+      "evidence": "Operator confirmed 4-2 final score (2026-08-27 Conference League second leg). forebet filed 2-2 draw; bettingclosed and scoutingstats both filed 4-2 home."
+    }
+  ]
+}

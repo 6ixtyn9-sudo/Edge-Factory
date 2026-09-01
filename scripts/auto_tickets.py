@@ -213,6 +213,21 @@ def _collect_settled_facts() -> tuple[dict, dict]:
                 entries.setdefault(d, []).append(
                     {"home": str(home), "away": str(away), "outcome": str(r.get("outcome"))}
                 )
+    # Operator-verified scores outrank every donor and the overlay. Overwrite
+    # the key and purge the conflicting normalized pair from the alias scan so
+    # a bad donor row cannot hold a leg as a conflict.
+    from edgefactory.settlement import load_verified_results
+    for v in load_verified_results():
+        d = v["date"]
+        h9, a9 = norm_team(v["home"]), norm_team(v["away"])
+        key_to[(d, h9, a9)] = v["outcome"]
+        entries[d] = [
+            e for e in entries.get(d, [])
+            if not (norm_team(e.get("home")) == h9 and norm_team(e.get("away")) == a9)
+        ]
+        entries.setdefault(d, []).append(
+            {"home": v["home"], "away": v["away"], "outcome": v["outcome"]}
+        )
     return key_to, entries
 
 
