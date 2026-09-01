@@ -341,3 +341,34 @@ def test_verified_results_override_conflicting_donors(tmp_path, monkeypatch):
     entries = at.load_settled_entries()
     pick = {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana"}
     assert at.alias_outcome_conflict(pick, entries) is False
+
+
+def test_verified_results_purge_alternate_spelling(tmp_path, monkeypatch):
+    """A verified score must purge the fixture under EVERY donor spelling,
+    including diacritic variants (Fenerbahçe vs Fenerbahce) that normalize to
+    different team keys — the old exact-pair purge would leave the wrong-score
+    row behind and re-open the alias conflict."""
+    import duckdb
+
+    import edgefactory.settlement as settlement_mod
+
+    wh = at.LOCALDATA / "warehouse.duckdb"   # autouse fixture points LOCALDATA at tmp_path
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-22','Fenerbahce','Konyaspor',2,1,'home')")
+    con.execute("CREATE TABLE bettingclosed_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO bettingclosed_settled VALUES ('2026-08-22','Fenerbahçe','Konyaspor',4,2,'home')")
+    con.close()
+
+    verified = [{"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor",
+                 "hs": 4, "gs": 2, "outcome": "home", "src": "source_verified"}]
+    monkeypatch.setattr(settlement_mod, "load_verified_results", lambda: verified)
+
+    settled = at.load_settled()
+    assert settled[("2026-08-22", norm_team("Fenerbahçe"), norm_team("Konyaspor"))] == "home"
+
+    entries = at.load_settled_entries()
+    pick = {"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor"}
+    assert at.alias_outcome_conflict(pick, entries) is False

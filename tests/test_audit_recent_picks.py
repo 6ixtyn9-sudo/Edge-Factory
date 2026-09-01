@@ -1506,3 +1506,42 @@ def test_verified_result_overrides_conflicting_donors(tmp_path, monkeypatch):
     assert report["ambiguous_result_picks"] == 0
     assert report["overall"]["settled_picks"] == 1
     assert report["overall"]["wins"] == 1
+
+
+def test_verified_result_purges_alternate_spelling(tmp_path, monkeypatch):
+    """A verified score must purge the fixture under EVERY donor spelling,
+    including diacritic variants (Fenerbahçe vs Fenerbahce) that normalize to
+    different team keys — the old exact-pair purge would leave the wrong-score
+    row behind and re-open the alias conflict."""
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    (localdata / "picks_2026-08-22.json").write_text(json.dumps([
+        {"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor",
+         "match": "Fenerbahçe vs Konyaspor", "league": "Super Lig",
+         "market": "1x2", "pick": "home", "odds": 1.30,
+         "edge_rule": "2way-unanimous avg_p>=70", "bucket": "SKIPPED_VETO"},
+    ]))
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-22','Fenerbahce','Konyaspor',2,1,'home')")
+    con.execute("CREATE TABLE bettingclosed_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO bettingclosed_settled VALUES ('2026-08-22','Fenerbahçe','Konyaspor',4,2,'home')")
+    con.close()
+
+    verified = [{"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor",
+                 "hs": 4, "gs": 2, "outcome": "home", "src": "source_verified"}]
+    monkeypatch.setattr(audit_mod, "load_verified_results", lambda: verified)
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+
+    report = audit_mod.build_report("2026-08-22", "2026-08-22", wh)
+    assert report["ambiguous_result_picks"] == 0
+    assert report["overall"]["settled_picks"] == 1
+    assert report["overall"]["wins"] == 1

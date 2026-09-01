@@ -214,17 +214,21 @@ def _collect_settled_facts() -> tuple[dict, dict]:
                     {"home": str(home), "away": str(away), "outcome": str(r.get("outcome"))}
                 )
     # Operator-verified scores outrank every donor and the overlay. Overwrite
-    # the key and purge the conflicting normalized pair from the alias scan so
-    # a bad donor row cannot hold a leg as a conflict.
+    # the key and purge every alias-matching entry (any spelling) from the
+    # alias scan so a bad donor row filed under an alternate spelling cannot
+    # hold a leg as a conflict.
     from edgefactory.settlement import load_verified_results
     for v in load_verified_results():
         d = v["date"]
         h9, a9 = norm_team(v["home"]), norm_team(v["away"])
         key_to[(d, h9, a9)] = v["outcome"]
-        entries[d] = [
-            e for e in entries.get(d, [])
-            if not (norm_team(e.get("home")) == h9 and norm_team(e.get("away")) == a9)
-        ]
+        alias_ids = {
+            id(e)
+            for e in _alias_candidate_entries(
+                {"date": d, "home": v["home"], "away": v["away"]}, entries
+            )
+        }
+        entries[d] = [e for e in entries.get(d, []) if id(e) not in alias_ids]
         entries.setdefault(d, []).append(
             {"home": v["home"], "away": v["away"], "outcome": v["outcome"]}
         )
@@ -315,15 +319,11 @@ _ALIAS_MIN_SIM = 0.40  # matches the audit's _FUZZY_MIN_SIM
 _ALIAS_SIDE_MIN_SIM = 0.30  # per-side floor: key collisions (W-suffix teams) are not aliases
 
 
-def alias_outcome_conflict(pick, entries_by_date) -> bool:
-    """True when the fixture is filed under several spellings on its date with
-    differing outcomes (Pafos vs Dinamo Tirana 2-2 draw vs 4-2 home).
-
-    Fail-closed: a conflict keeps the leg unresolved instead of silently
-    first-winning one spelling. Pre-filtered by shared team key, then
-    orientation-checked by bigram similarity so genuinely different fixtures
-    sharing a key fragment do not trigger a conflict.
-    """
+def _alias_candidate_entries(pick, entries_by_date) -> list[dict]:
+    """Entries on the pick's date that alias-match both sides (orientation-
+    checked). Mirrors the audit's ``_alias_candidate_results`` so the verified
+    override can purge every spelling of a fixture, not just one normalized
+    pair."""
     from edgefactory.util import norm_team
 
     day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
@@ -331,7 +331,7 @@ def alias_outcome_conflict(pick, entries_by_date) -> bool:
     away = str(pick.get("away") or "")
     home_keys = {norm_team(home)}
     away_keys = {norm_team(away)}
-    outcomes: set[str] = set()
+    out: list[dict] = []
     for e in entries_by_date.get(day, []):
         rh = str(e.get("home") or "")
         ra = str(e.get("away") or "")
@@ -347,9 +347,24 @@ def alias_outcome_conflict(pick, entries_by_date) -> bool:
             continue
         if _ngram_sim(f"{home} {away}", f"{rh} {ra}") < _ALIAS_MIN_SIM:
             continue
-        oc = str(e.get("outcome") or "")
-        if oc in ("home", "away", "draw"):
-            outcomes.add(oc)
+        out.append(e)
+    return out
+
+
+def alias_outcome_conflict(pick, entries_by_date) -> bool:
+    """True when the fixture is filed under several spellings on its date with
+    differing outcomes (Pafos vs Dinamo Tirana 2-2 draw vs 4-2 home).
+
+    Fail-closed: a conflict keeps the leg unresolved instead of silently
+    first-winning one spelling. Pre-filtered by shared team key, then
+    orientation-checked by bigram similarity so genuinely different fixtures
+    sharing a key fragment do not trigger a conflict.
+    """
+    outcomes = {
+        str(e.get("outcome") or "")
+        for e in _alias_candidate_entries(pick, entries_by_date)
+        if str(e.get("outcome") or "") in ("home", "away", "draw")
+    }
     return len(outcomes) > 1
 
 
