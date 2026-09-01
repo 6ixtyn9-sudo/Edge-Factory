@@ -46,6 +46,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.util import (  # noqa: E402
+    kickoff_date,
     ledger_team_key,
     honest_display_label,
     heal_ledger_labels,
@@ -138,20 +139,31 @@ def archived_picks_file(target_date: str) -> Path:
 
 
 def get_actual_kickoff_date(pick: dict[str, Any], fallback: str) -> str:
-    """Extract the real match date from kickoff time, fallback to provided date."""
+    """Extract the real match date from kickoff time, fallback to provided date.
+
+    Resolves ISO ``YYYY-MM-DD...`` and European ``DD-MM[, HH:MM]`` /
+    ``DD.MM[.YYYY]`` kickoffs to a calendar date (year inferred from the
+    fallback). Bare ``HH:MM`` kickoffs carry no date and fall back to the
+    pick's own date field — a bare time cannot name a calendar day.
+    """
     for key in ("kickoff", "time", "start_time", "ko"):
         val = pick.get(key)
-        if val and isinstance(val, str) and len(val) >= 10:
-            # Try to find something that looks like YYYY-MM-DD
-            import re
-            match = re.search(r"(\d{4}-\d{2}-\d{2})", val)
-            if match:
-                return match.group(1)
+        if val not in (None, ""):
+            resolved = kickoff_date(val, fallback_date=fallback)
+            if resolved:
+                return resolved
     return _pick_date(pick, fallback)
 
 
 def archive_picks_by_kickoff(picks: list[dict[str, Any]], fallback_date: str) -> None:
-    """Distribute picks to archives based on their actual kickoff date."""
+    """Distribute picks to archives based on their actual kickoff date.
+
+    Each archived row is re-dated to its resolved kickoff date so the archive
+    filename, the row's ``date`` field, and the audit's exact-date settlement
+    all agree on one calendar day. Without this, a pick scanned a day early
+    for a next-day fixture (kickoff ``DD-MM``) stays filed under the scan day
+    and can never match the result donor's date.
+    """
     if not picks:
         return
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
@@ -160,7 +172,9 @@ def archive_picks_by_kickoff(picks: list[dict[str, Any]], fallback_date: str) ->
     by_date: dict[str, list[dict[str, Any]]] = {}
     for p in picks:
         d = get_actual_kickoff_date(p, fallback_date)
-        by_date.setdefault(d, []).append(p)
+        row = dict(p)
+        row["date"] = d
+        by_date.setdefault(d, []).append(row)
 
     for d, date_picks in by_date.items():
         archive_path = archived_picks_file(d)

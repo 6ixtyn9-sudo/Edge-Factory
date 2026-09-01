@@ -25,6 +25,7 @@ from edgefactory.util import (
     compact_key,
     norm_team,
     fold_ascii,
+    kickoff_date,
     ledger_team_key,
     display_rule_label,
     honest_display_label,
@@ -2545,6 +2546,14 @@ def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = Non
     picks += eval_binary(day, data, "btts", SOURCES_BTTS, BTTS_COL, btts_edge,
                          ("yes", "no"),
                          {"yes": "odd_gg", "no": "odd_ng"})
+    # File each pick under its true match date when the kickoff carries one
+    # (ISO or DD-MM), rather than the scan day, so the per-day archive and the
+    # audit settle it on the calendar day the result donor uses. Bare "HH:MM"
+    # kickoffs keep the scan day (fail-closed: a bare time names no date).
+    for p in picks:
+        resolved = kickoff_date(p.get("kickoff") or p.get("time"), fallback_date=day)
+        if resolved:
+            p["date"] = resolved
     picks.sort(key=lambda r: (-r.get("w_score", 0.0), -r.get("avg_p", 0)))
     return picks, vetoes, n_up, data
 
