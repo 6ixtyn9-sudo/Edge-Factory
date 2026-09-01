@@ -312,3 +312,32 @@ def test_settle_holds_acca_on_alias_conflict():
     assert len(st["open_slips"]) == 1
     assert any("conflict" in ln for ln in lines)
     assert st["open_slips"][0]["accas"][0]["results"][0] == "conflict"
+
+
+def test_verified_results_override_conflicting_donors(tmp_path, monkeypatch):
+    """A verified 4-2 overrides a wrong forebet 2-2 in the auto-ticket grader:
+    the leg grades win and the alias conflict disappears."""
+    import duckdb
+
+    import edgefactory.settlement as settlement_mod
+
+    wh = at.LOCALDATA / "warehouse.duckdb"   # autouse fixture points LOCALDATA at tmp_path
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-27','Pafos','Dinamo Tirana',2,2,'draw')")
+    con.execute("CREATE TABLE bettingclosed_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO bettingclosed_settled VALUES ('2026-08-27','Pafos','KS Dinamo Tirana',4,2,'home')")
+    con.close()
+
+    verified = [{"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana",
+                 "hs": 4, "gs": 2, "outcome": "home", "src": "operator_verified"}]
+    monkeypatch.setattr(settlement_mod, "load_verified_results", lambda: verified)
+
+    settled = at.load_settled()
+    assert settled[("2026-08-27", norm_team("Pafos"), norm_team("Dinamo Tirana"))] == "home"
+
+    entries = at.load_settled_entries()
+    pick = {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana"}
+    assert at.alias_outcome_conflict(pick, entries) is False

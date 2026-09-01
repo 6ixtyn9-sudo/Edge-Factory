@@ -655,6 +655,7 @@ def _overlay_setup(tmp_path, monkeypatch):
     con.execute("INSERT INTO forebet_settled VALUES ('2026-08-03','Celtic','Dundee',1,0,'home')")
     con.close()
     monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+    monkeypatch.setattr(audit_mod, "load_verified_results", lambda: [])
     return audit_mod, localdata, wh
 
 
@@ -724,6 +725,7 @@ def test_betexplorer_settled_fills_fixture_absent_from_other_donors(tmp_path, mo
         "INSERT INTO betexplorer_settled VALUES ('2026-08-27','MC Alger','MC Oran',2,1,'home')"
     )
     con.close()
+    monkeypatch.setattr(audit_mod, "load_verified_results", lambda: [])
 
     index, by_date = audit_mod.load_results_index(wh)
     key = ("2026-08-27", norm_team("MC Alger"), norm_team("MC Oran"))
@@ -753,6 +755,7 @@ def test_betexplorer_settled_does_not_override_priority_donors(tmp_path, monkeyp
     )
     con.execute("INSERT INTO betexplorer_settled VALUES ('2026-08-29','Viking','Aalesund',9,9,'draw')")
     con.close()
+    monkeypatch.setattr(audit_mod, "load_verified_results", lambda: [])
 
     index, _ = audit_mod.load_results_index(wh)
     entry = index[("2026-08-29", norm_team("Viking"), norm_team("Aalesund"))]
@@ -1466,3 +1469,40 @@ def test_alias_candidate_results_rejects_womens_key_collision():
     ]}
     got = _alias_candidate_results("Universitatea Craiova", "FC Voluntari", "2026-08-23", results_by_date)
     assert {r["outcome"] for r in got} == {"home"}
+
+
+def test_verified_result_overrides_conflicting_donors(tmp_path, monkeypatch):
+    """Operator-verified 4-2 outranks a wrong forebet 2-2: the pick settles as
+    a win instead of staying an alias-outcome conflict."""
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    (localdata / "picks_2026-08-27.json").write_text(json.dumps([
+        {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana",
+         "match": "Pafos vs Dinamo Tirana", "league": "Conference League",
+         "market": "1x2", "pick": "home", "odds": 1.30,
+         "edge_rule": "2way-unanimous avg_p>=70", "bucket": "SKIPPED_VETO"},
+    ]))
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute("CREATE TABLE forebet_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-27','Pafos','Dinamo Tirana',2,2,'draw')")
+    con.execute("CREATE TABLE bettingclosed_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO bettingclosed_settled VALUES ('2026-08-27','Pafos','KS Dinamo Tirana',4,2,'home')")
+    con.close()
+
+    verified = [{"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana",
+                 "hs": 4, "gs": 2, "outcome": "home", "src": "operator_verified"}]
+    monkeypatch.setattr(audit_mod, "load_verified_results", lambda: verified)
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+
+    report = audit_mod.build_report("2026-08-27", "2026-08-27", wh)
+    assert report["ambiguous_result_picks"] == 0
+    assert report["overall"]["settled_picks"] == 1
+    assert report["overall"]["wins"] == 1
