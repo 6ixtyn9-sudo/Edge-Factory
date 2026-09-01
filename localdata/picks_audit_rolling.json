@@ -93,11 +93,11 @@
       "wins": 4
     },
     "WATCHLIST_UNCORROBORATED_PRICE": {
-      "hit_rate": 0.666667,
+      "hit_rate": 0.680556,
       "priced_picks": 72,
-      "roi": -0.037361,
+      "roi": -0.015139,
       "settled_picks": 72,
-      "wins": 48
+      "wins": 49
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.882353,
@@ -126,11 +126,11 @@
       "wins": 106
     },
     "exact": {
-      "hit_rate": 0.668103,
+      "hit_rate": 0.672414,
       "priced_picks": 232,
-      "roi": -0.033922,
+      "roi": -0.027026,
       "settled_picks": 232,
-      "wins": 155
+      "wins": 156
     },
     "fallback": {
       "hit_rate": 0.766667,
@@ -177,11 +177,11 @@
       "wins": 23
     },
     "scoutingstats_odds": {
-      "hit_rate": 0.679245,
+      "hit_rate": 0.685535,
       "priced_picks": 159,
-      "roi": -0.029811,
+      "roi": -0.019748,
       "settled_picks": 159,
-      "wins": 108
+      "wins": 109
     },
     "zulubet": {
       "hit_rate": 1.0,
@@ -207,11 +207,11 @@
       "wins": 47
     },
     "SCOUTINGSTATS_SOLE": {
-      "hit_rate": 0.679245,
+      "hit_rate": 0.685535,
       "priced_picks": 159,
-      "roi": -0.029811,
+      "roi": -0.019748,
       "settled_picks": 159,
-      "wins": 108
+      "wins": 109
     },
     "SOURCE_FALLBACK": {
       "hit_rate": 0.766667,
@@ -256,12 +256,12 @@
     },
     "scoutingstats_sole_source": {
       "avg_suspect_price": null,
-      "hit_rate": 0.679245,
+      "hit_rate": 0.685535,
       "priced_picks": 159,
-      "roi": -0.029811,
+      "roi": -0.019748,
       "settled_picks": 159,
       "suspect_price_captures": 0,
-      "wins": 108
+      "wins": 109
     }
   },
   "by_rule": {
@@ -294,11 +294,11 @@
       "wins": 17
     },
     "ml-meta avg_p>=55": {
-      "hit_rate": 0.614286,
+      "hit_rate": 0.619048,
       "priced_picks": 200,
-      "roi": -0.0796,
+      "roi": -0.0716,
       "settled_picks": 210,
-      "wins": 129
+      "wins": 130
     },
     "ml-meta avg_p>=60": {
       "hit_rate": 0.8,
@@ -1215,19 +1215,102 @@
   "include_same_day": false,
   "morning_baseline_rows": 354,
   "overall": {
-    "hit_rate": 0.686275,
+    "hit_rate": 0.688453,
     "priced_picks": 430,
-    "roi": -0.020791,
+    "roi": -0.01707,
     "settled_picks": 459,
-    "wins": 315
+    "wins": 316
   },
-  "pending_result_picks": 8,
+  "pending_result_picks": 5,
   "regular_only_rows": 115,
+  "rescheduled_examples": [
+    {
+      "away": "Miami FC II",
+      "away_key_candidates": [
+        "miami",
+        "miamiii"
+      ],
+      "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
+      "date": "2026-08-22",
+      "home": "Charleston Battery",
+      "home_key_candidates": [
+        "charlesto"
+      ],
+      "league": "Us2",
+      "match": "Charleston Battery vs Miami FC II",
+      "odds": 1.42,
+      "pick": "home",
+      "reason": "rescheduled",
+      "rescheduled_away": "Miami FC II",
+      "rescheduled_gs": 0,
+      "rescheduled_home": "Charleston Battery",
+      "rescheduled_hs": 5,
+      "rescheduled_origin": "warehouse",
+      "rescheduled_outcome": "home",
+      "rescheduled_to": "2026-08-24",
+      "rule": "ml-meta avg_p>=55"
+    },
+    {
+      "away": "Fortuna \u00c5lesund W",
+      "away_key_candidates": [
+        "fortunale",
+        "fortunaal"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-08-29",
+      "home": "H\u00f8nefoss W",
+      "home_key_candidates": [
+        "hnefoss",
+        "honefossw"
+      ],
+      "league": "NoW",
+      "match": "H\u00f8nefoss W vs Fortuna \u00c5lesund W",
+      "odds": 1.2,
+      "pick": "away",
+      "reason": "rescheduled",
+      "rescheduled_away": "Fortuna \u00c5lesund W",
+      "rescheduled_gs": 1,
+      "rescheduled_home": "H\u00f8nefoss W",
+      "rescheduled_hs": 0,
+      "rescheduled_origin": "warehouse",
+      "rescheduled_outcome": "away",
+      "rescheduled_to": "2026-08-31",
+      "rule": "2way-unanimous avg_p>=70"
+    },
+    {
+      "away": "Aalesund",
+      "away_key_candidates": [
+        "aalesund",
+        "aalesundf"
+      ],
+      "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
+      "date": "2026-08-29",
+      "home": "Viking",
+      "home_key_candidates": [
+        "viking",
+        "vikingfk"
+      ],
+      "league": "Norway,Eliteserien",
+      "match": "Viking vs Aalesund",
+      "odds": 1.3,
+      "pick": "home",
+      "reason": "rescheduled",
+      "rescheduled_away": "Aalesund",
+      "rescheduled_gs": 1,
+      "rescheduled_home": "Viking",
+      "rescheduled_hs": 2,
+      "rescheduled_origin": "warehouse",
+      "rescheduled_outcome": "home",
+      "rescheduled_to": "2026-08-30",
+      "rule": "2way-unanimous avg_p>=70"
+    }
+  ],
+  "rescheduled_result_picks": 3,
   "same_day_cutoff": "2026-09-01",
   "same_day_excluded": 5,
   "secondary_stats": {
     "btts_total": 450,
-    "btts_wins": 245,
+    "btts_wins": 244,
     "over25_total": 450,
     "over25_wins": 288,
     "team_o15_total": 450,
@@ -31580,7 +31663,7 @@
     {
       "avg_p": 64.0,
       "date": "2026-08-28",
-      "gs": 1,
+      "gs": 0,
       "hs": 1,
       "market": "1x2",
       "match": "Pen-y-Bont FC vs Flint Town Utd",
@@ -31629,12 +31712,12 @@
       "odds": 1.6,
       "odds_match_method": "exact",
       "odds_source": "scoutingstats_odds",
-      "outcome": "draw",
+      "outcome": "home",
       "parsed_stats": {
         "away_o15_expected": 0.099,
         "away_o15_hit": true,
         "btts_expected": 0.40700000000000003,
-        "btts_hit": false,
+        "btts_hit": true,
         "home_o15_expected": 0.84,
         "home_o15_hit": false,
         "over25_expected": 0.6629999999999999,
@@ -31645,7 +31728,7 @@
       "price_quarantine_reason": "scoutingstats_sole_source",
       "selection": "home",
       "suspect_price": null,
-      "won": false
+      "won": true
     },
     {
       "avg_p": 57.2,
@@ -37654,9 +37737,9 @@
   "start": "2026-08-03",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.223497,
-      "mae": 1.533875,
-      "mean_actual": 3.351893,
+      "bias": -0.225724,
+      "mae": 1.536102,
+      "mean_actual": 3.349666,
       "mean_promised": 3.57539,
       "n": 449
     },
@@ -37670,12 +37753,12 @@
         "realized": 0.360802
       },
       "btts": {
-        "brier": 0.26629,
-        "delta": 0.131806,
-        "hits": 245,
+        "brier": 0.265876,
+        "delta": 0.129579,
+        "hits": 244,
         "mean_promised": 0.413851,
         "n": 449,
-        "realized": 0.545657
+        "realized": 0.54343
       },
       "home_o15": {
         "brier": 0.237846,
@@ -37741,13 +37824,13 @@
         "realized": 0.570093
       },
       {
-        "brier": 0.259014,
+        "brier": 0.258461,
         "bucket": "0.4-0.5",
-        "delta": 0.108363,
-        "hits": 181,
+        "delta": 0.105387,
+        "hits": 180,
         "mean_promised": 0.430327,
         "n": 336,
-        "realized": 0.53869
+        "realized": 0.535714
       },
       {
         "brier": 0.243378,
@@ -37788,25 +37871,6 @@
     ]
   },
   "unmatched_examples": [
-    {
-      "away": "Miami FC II",
-      "away_key_candidates": [
-        "miami",
-        "miamiii"
-      ],
-      "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-      "date": "2026-08-22",
-      "home": "Charleston Battery",
-      "home_key_candidates": [
-        "charlesto"
-      ],
-      "league": "Us2",
-      "match": "Charleston Battery vs Miami FC II",
-      "odds": 1.42,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "ml-meta avg_p>=55"
-    },
     {
       "away": "CSKA-Sofia",
       "away_key_candidates": [
@@ -37880,26 +37944,6 @@
       "rule": "ml-meta avg_p>=55"
     },
     {
-      "away": "Fortuna \u00c5lesund W",
-      "away_key_candidates": [
-        "fortunale",
-        "fortunaal"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-08-29",
-      "home": "H\u00f8nefoss W",
-      "home_key_candidates": [
-        "hnefoss",
-        "honefossw"
-      ],
-      "league": "NoW",
-      "match": "H\u00f8nefoss W vs Fortuna \u00c5lesund W",
-      "odds": 1.2,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
-    },
-    {
       "away": "Bod\u00f8 / Glimt W",
       "away_key_candidates": [
         "bodglimt",
@@ -37917,29 +37961,9 @@
       "pick": "home",
       "reason": "pending_or_unmatched_result",
       "rule": "2way-unanimous avg_p>=70"
-    },
-    {
-      "away": "Aalesund",
-      "away_key_candidates": [
-        "aalesund",
-        "aalesundf"
-      ],
-      "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-      "date": "2026-08-29",
-      "home": "Viking",
-      "home_key_candidates": [
-        "viking",
-        "vikingfk"
-      ],
-      "league": "Norway,Eliteserien",
-      "match": "Viking vs Aalesund",
-      "odds": 1.3,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way-unanimous avg_p>=70"
     }
   ],
-  "unmatched_result_picks": 8,
+  "unmatched_result_picks": 5,
   "unsafe_regular_ledger_dates": [
     "2026-08-14",
     "2026-08-20",
