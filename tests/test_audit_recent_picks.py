@@ -1249,3 +1249,95 @@ def test_nonempty_superset_ledger_not_flagged(tmp_path, monkeypatch):
     assert len(rows) == 2
     assert receipt["verified_late_additions"] == 1
     assert receipt["empty_regular_ledger_dates"] == []
+
+
+# --- OU/BTTS market settlement (2026-09-01): the audit must grade non-1X2 ---------
+# picks too, not silently drop them before result matching. -------------------------
+
+def test_settle_pick_scores_ou_and_btts_markets():
+    # Over 2.5 settles from the scoreline, not the 1X2 outcome.
+    ou_over = settle_pick(
+        {"market": "ou_2.5", "pick": "over", "odds": 1.55,
+         "edge_rule": "ou25-unanimous-2way-sa avg_p>=70", "bucket": "CAUTION"},
+        {"hs": 2, "gs": 1, "outcome": "home"},
+    )
+    assert ou_over is not None and ou_over.won is True and ou_over.pnl == 0.55
+    ou_under = settle_pick(
+        {"market": "ou_2.5", "pick": "under", "odds": 1.68,
+         "edge_rule": "ou25-unanimous-2way-sa avg_p>=70", "bucket": "CAUTION"},
+        {"hs": 1, "gs": 2, "outcome": "away"},
+    )
+    assert ou_under is not None and ou_under.won is False and ou_under.pnl == -1.0
+
+    # BTTS settles from the scoreline too.
+    btts_yes = settle_pick(
+        {"market": "btts", "pick": "yes", "odds": 1.80,
+         "edge_rule": "btts-unanimous-2way-ss avg_p>=70", "bucket": "CAUTION"},
+        {"hs": 1, "gs": 1, "outcome": "draw"},
+    )
+    assert btts_yes is not None and btts_yes.won is True and btts_yes.pnl == 0.8
+    btts_no = settle_pick(
+        {"market": "btts", "pick": "no", "odds": 1.90,
+         "edge_rule": "btts-unanimous-2way-ss avg_p>=70", "bucket": "CAUTION"},
+        {"hs": 2, "gs": 0, "outcome": "home"},
+    )
+    assert btts_no is not None and btts_no.won is True
+
+    # Unknown markets and missing scorelines still fail closed.
+    assert settle_pick({"market": "corners", "pick": "over", "odds": 2.0},
+                       {"hs": 1, "gs": 1, "outcome": "draw"}) is None
+    assert settle_pick({"market": "ou_2.5", "pick": "over", "odds": 1.55},
+                       {"outcome": "home"}) is None
+
+
+def test_build_report_scores_ou_and_btts_picks(tmp_path, monkeypatch):
+    """Non-1X2 picks must appear graded in by_rule / by_bucket / settled_ledger."""
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    day = "2026-08-31"
+    picks = [
+        {"date": day, "home": "Uxbridge", "away": "Wimborne Town",
+         "match": "Uxbridge vs Wimborne Town", "league": "SPL",
+         "market": "ou_2.5", "pick": "over", "odds": 1.55,
+         "edge_rule": "ou25-unanimous-2way-sa avg_p>=70", "bucket": "CAUTION"},
+        {"date": day, "home": "Fortaleza", "away": "Operário PR",
+         "match": "Fortaleza vs Operário PR", "league": "BRL",
+         "market": "ou_2.5", "pick": "under", "odds": 1.68,
+         "edge_rule": "ou25-unanimous-2way-sa avg_p>=70", "bucket": "CAUTION"},
+        {"date": day, "home": "Benfica", "away": "Estoril",
+         "match": "Benfica vs Estoril", "league": "PRL",
+         "market": "btts", "pick": "yes", "odds": 1.80,
+         "edge_rule": "btts-unanimous-2way-ss avg_p>=70", "bucket": "CAUTION"},
+    ]
+    (localdata / f"picks_{day}.json").write_text(json.dumps(picks))
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute(
+        "CREATE TABLE forebet_settled (date VARCHAR, home VARCHAR, away VARCHAR, "
+        "hs INTEGER, gs INTEGER, outcome VARCHAR)"
+    )
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-31','Uxbridge','Wimborne Town',0,0,'draw')")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-31','Fortaleza','Operário PR',1,1,'draw')")
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-31','Benfica','Estoril',4,0,'home')")
+    con.close()
+    monkeypatch.setattr(audit_mod, "ROOT", tmp_path)
+    monkeypatch.setattr(audit_mod, "LOCALDATA", localdata)
+
+    report = audit_mod.build_report(day, day, wh)
+
+    assert report["overall"]["settled_picks"] == 3
+    ou = report["by_rule"]["ou25-unanimous-2way-sa avg_p>=70"]
+    assert ou["settled_picks"] == 2 and ou["wins"] == 1
+    btts = report["by_rule"]["btts-unanimous-2way-ss avg_p>=70"]
+    assert btts["settled_picks"] == 1 and btts["wins"] == 0
+
+    ledger = {item["match"]: item for item in report["settled_ledger"]}
+    assert ledger["Uxbridge vs Wimborne Town"]["market"] == "ou_2.5"
+    assert ledger["Uxbridge vs Wimborne Town"]["outcome"] == "under"
+    assert ledger["Uxbridge vs Wimborne Town"]["won"] is False  # 0-0 -> under
+    assert ledger["Fortaleza vs Operário PR"]["won"] is True    # 1-1 -> under
+    assert ledger["Benfica vs Estoril"]["outcome"] == "no"      # 4-0 -> BTTS no
