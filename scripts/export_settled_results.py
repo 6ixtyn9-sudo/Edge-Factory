@@ -50,6 +50,7 @@ SETTLED_SOURCES = [
     (4, "statarea_settled"),
     (5, "scoutingstats_settled"),
     (6, "vitibet_settled"),
+    (7, "betexplorer_settled"),
 ]
 
 # Same raw status tables as audit_recent_picks.load_event_disposition_index.

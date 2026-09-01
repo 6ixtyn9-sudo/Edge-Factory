@@ -27,6 +27,7 @@ TABLES = [
     "scoutingstats_settled",
     "bettingclosed_settled",
     "vitibet_settled",
+    "betexplorer_settled",
     # raw (unsettled) sources – still materialize for fast picks
     "vitibet",
     "betclan",
