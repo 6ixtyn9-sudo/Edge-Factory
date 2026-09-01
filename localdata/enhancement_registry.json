@@ -98,10 +98,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 100,
-   "inv_price_sum": 94.69340022461449,
+   "hits": 101,
+   "inv_price_sum": 95.49340022461449,
    "multi_n": 16,
-   "n": 150,
+   "n": 151,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -252,9 +252,10 @@
     "2026-08-31|Benfica vs Estoril|match_over_25@v1",
     "2026-08-31|Barcelona vs Rayo Vallecano|match_over_25@v1",
     "2026-08-31|Monterrey vs Atletico San Luis|match_over_25@v1",
-    "2026-08-31|Breidablik vs Stjarnan FC|match_over_25@v1"
+    "2026-08-31|Breidablik vs Stjarnan FC|match_over_25@v1",
+    "2026-09-01|Z\u00fcrich vs Young Boys|match_over_25@v1"
    ],
-   "profit": 6.11,
+   "profit": 6.36,
    "records": [
     {
      "date": "2026-08-01",
@@ -1450,6 +1451,14 @@
      "date": "2026-08-31",
      "hit": false,
      "match": "Breidablik vs Stjarnan FC",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-01",
+     "hit": true,
+     "match": "Z\u00fcrich vs Young Boys",
      "multi_source": false,
      "price": 1.25,
      "source": "scoutingstats"
