@@ -845,7 +845,7 @@ def run_pipeline(
             "auto_tickets_grade (settle past slips)",
         )
         run_soft(
-            "PYTHONPATH=src python3 scripts/o25_tracker.py",
+            "PYTHONPATH=src python3 scripts/o25_tracker.py 2>&1 | tee localdata/o25_tracker_report.txt",
             "o25_tracker (goals surface + checkpoint gate)",
         )
         sync_official_archive(target_date, "sync_supabase")
@@ -973,7 +973,7 @@ def run_pipeline(
             "auto_tickets_grade (settle past slips)",
         )
         run_soft(
-            "PYTHONPATH=src python3 scripts/o25_tracker.py",
+            "PYTHONPATH=src python3 scripts/o25_tracker.py 2>&1 | tee localdata/o25_tracker_report.txt",
             "o25_tracker (goals surface + checkpoint gate)",
         )
         print(f"\n=== Autonomous Intraday Service Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
