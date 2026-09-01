@@ -525,6 +525,7 @@ def load_results_index(warehouse_path: Path) -> tuple[dict[tuple[str, str, str],
         (4, "statarea_settled"),
         (5, "scoutingstats_settled"),
         (6, "vitibet_settled"),
+        (7, "betexplorer_settled"),
     ]
     active = [(prio, name) for prio, name in candidates if name in tables]
     if not active:

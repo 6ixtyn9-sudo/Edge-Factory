@@ -700,6 +700,65 @@ def test_missing_overlay_file_is_noop(tmp_path, monkeypatch):
     assert all(e["origin"] == "warehouse" for e in index.values())
 
 
+def test_betexplorer_settled_fills_fixture_absent_from_other_donors(tmp_path, monkeypatch):
+    """BetExplorer is the widest-league results donor: a fixture none of the
+    probability sources captured (e.g. Algerian Ligue 1) must still enter the
+    settlement index via betexplorer_settled (lowest priority)."""
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+    from edgefactory.util import norm_team
+
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute(
+        "CREATE TABLE forebet_settled (date VARCHAR, home VARCHAR, away VARCHAR, "
+        "hs INTEGER, gs INTEGER, outcome VARCHAR)"
+    )
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-23','Rennes','PSG',2,2,'draw')")
+    con.execute(
+        "CREATE TABLE betexplorer_settled (date VARCHAR, home VARCHAR, away VARCHAR, "
+        "hs INTEGER, gs INTEGER, outcome VARCHAR)"
+    )
+    con.execute(
+        "INSERT INTO betexplorer_settled VALUES ('2026-08-27','MC Alger','MC Oran',2,1,'home')"
+    )
+    con.close()
+
+    index, by_date = audit_mod.load_results_index(wh)
+    key = ("2026-08-27", norm_team("MC Alger"), norm_team("MC Oran"))
+    assert key in index
+    assert index[key]["hs"] == 2
+    assert any(e["home"] == "MC Alger" for e in by_date["2026-08-27"])
+
+
+def test_betexplorer_settled_does_not_override_priority_donors(tmp_path, monkeypatch):
+    """On a score conflict the probability donors win; betexplorer only fills
+    gaps (priority 7 vs forebet priority 1)."""
+    import duckdb
+
+    import scripts.audit_recent_picks as audit_mod
+    from edgefactory.util import norm_team
+
+    wh = tmp_path / "warehouse.duckdb"
+    con = duckdb.connect(str(wh))
+    con.execute(
+        "CREATE TABLE forebet_settled (date VARCHAR, home VARCHAR, away VARCHAR, "
+        "hs INTEGER, gs INTEGER, outcome VARCHAR)"
+    )
+    con.execute("INSERT INTO forebet_settled VALUES ('2026-08-29','Viking','Aalesund',2,1,'home')")
+    con.execute(
+        "CREATE TABLE betexplorer_settled (date VARCHAR, home VARCHAR, away VARCHAR, "
+        "hs INTEGER, gs INTEGER, outcome VARCHAR)"
+    )
+    con.execute("INSERT INTO betexplorer_settled VALUES ('2026-08-29','Viking','Aalesund',9,9,'draw')")
+    con.close()
+
+    index, _ = audit_mod.load_results_index(wh)
+    entry = index[("2026-08-29", norm_team("Viking"), norm_team("Aalesund"))]
+    assert entry["hs"] == 2 and entry["outcome"] == "home"
+
+
 def test_build_report_rescues_pick_via_overlay_fuzzy(tmp_path, monkeypatch):
     # The real 2026-08-02 case: pick source said "Clarence Zebras"; forebet
     # served the same club as "Hobart Zebras". Overlay supplies the row the

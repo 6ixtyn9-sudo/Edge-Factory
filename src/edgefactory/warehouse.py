@@ -166,6 +166,27 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
               AND p2 IS NOT NULL
         """)
 
+    # betexplorer: results-only donor (no probabilities). Settled by its own
+    # hs/gs columns — the widest-league coverage of any donor, so it fills
+    # fixtures the probability sources never captured (Bulgarian/Greek/
+    # Algerian/Norwegian-women's leagues). Lowest settlement priority.
+    if _glob.glob(f"{LOCALDATA}/betexplorer_results_*.csv.gz"):
+        _src_view(
+            con, "betexplorer", f"{LOCALDATA}/betexplorer_results_*.csv.gz",
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, "
+            "TRY_CAST(hs AS INT) AS hs, TRY_CAST(gs AS INT) AS gs, "
+            "country, league, kickoff, match_url, event_id",
+        )
+        con.execute("""
+            CREATE OR REPLACE VIEW betexplorer_settled AS
+            SELECT *,
+                   CASE WHEN hs > gs THEN 'home' WHEN hs < gs THEN 'away'
+                        ELSE 'draw' END AS outcome
+            FROM betexplorer
+            WHERE hs IS NOT NULL AND gs IS NOT NULL
+              AND length(hkey) >= 4 AND length(akey) >= 4
+        """)
+
     if _glob.glob(f"{LOCALDATA}/bettingclosed_*.csv.gz"):
         _src_view(
             con, "bettingclosed", f"{LOCALDATA}/bettingclosed_*.csv.gz",
