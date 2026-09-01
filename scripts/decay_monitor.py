@@ -395,6 +395,61 @@ def recreate_views(con) -> set[str]:
             except Exception:
                 pass
 
+    # OU2.5 / BTTS consensus views under the EXACT names mine_consensus.py
+    # stores in each edge's `view` field (consensus_ou_dense /
+    # consensus_btts_sparse). The `consensus_ou`/`consensus_btts` views above
+    # are the base (selected-side) views used by assay_purity; the certified
+    # edges reference the dense/sparse variants, which must mirror the miner's
+    # certification contract — PRIMARY-side probability only — so the decay
+    # monitor grades the SAME population the walk-forward certified (over/yes),
+    # never the complement (under/no). Without this name+semantics match the
+    # OU/BTTS edges were reported UNKNOWN ("view unavailable"), i.e. no decay
+    # oversight at all.
+    if has["forebet_settled"] and has["statarea_settled"]:
+        sfb, ssa = scales["forebet_settled"], scales["statarea_settled"]
+        try:
+            con.execute(f"""
+                CREATE OR REPLACE TEMP VIEW consensus_ou_dense AS
+                WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) *,
+                                   CASE WHEN p_over/{sfb} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou
+                            FROM forebet_settled),
+                     sa AS (SELECT DISTINCT ON (date, hkey, akey) *,
+                                   CASE WHEN p_o25/{ssa} >= 0.5 THEN 'over' ELSE 'under' END AS pick_ou
+                            FROM statarea_settled)
+                SELECT fb.date, fb.home, fb.away,
+                       CASE WHEN fb.hs + fb.gs >= 3 THEN 'over' ELSE 'under' END AS outcome,
+                       fb.pick_ou AS fb_pick_ou, sa.pick_ou AS sa_pick_ou,
+                       fb.pick_ou AS pick,
+                       CASE fb.pick_ou WHEN 'over' THEN fb.odd_over ELSE fb.odd_under END AS pick_odds,
+                       ((fb.p_over/{sfb} + sa.p_o25/{ssa})/2)*100 AS avg_p
+                FROM fb JOIN sa USING (date, hkey, akey)
+            """)
+            avail.add("consensus_ou_dense")
+        except Exception:
+            pass
+
+    if has["forebet_settled"] and has["scoutingstats_settled"]:
+        sfb, sss = scales["forebet_settled"], scales["scoutingstats_settled"]
+        try:
+            con.execute(f"""
+                CREATE OR REPLACE TEMP VIEW consensus_btts_sparse AS
+                WITH fb AS (SELECT DISTINCT ON (date, hkey, akey) *,
+                                   CASE WHEN p_gg/{sfb} >= 0.5 THEN 'yes' ELSE 'no' END AS pick_btts
+                            FROM forebet_settled),
+                     ss AS (SELECT DISTINCT ON (date, hkey, akey) *,
+                                   CASE WHEN p_gg/{sss} >= 0.5 THEN 'yes' ELSE 'no' END AS pick_btts
+                            FROM scoutingstats_settled)
+                SELECT fb.date,
+                       CASE WHEN fb.hs > 0 AND fb.gs > 0 THEN 'yes' ELSE 'no' END AS outcome,
+                       fb.pick_btts AS pick,
+                       CASE fb.pick_btts WHEN 'yes' THEN fb.odd_gg ELSE fb.odd_ng END AS pick_odds,
+                       ((fb.p_gg/{sfb} + ss.p_gg/{sss})/2)*100 AS avg_p
+                FROM fb JOIN ss USING (date, hkey, akey)
+            """)
+            avail.add("consensus_btts_sparse")
+        except Exception:
+            pass
+
     # Recreate ML Meta view if predictions exist on disk (Handover Rule L1 View Graph)
     ML_PREDS_PATH = ROOT / "localdata" / "ml_meta_predictions.csv.gz"
     if ML_PREDS_PATH.exists() and _table_exists(con, "consensus3"):
