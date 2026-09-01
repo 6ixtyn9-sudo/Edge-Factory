@@ -599,24 +599,25 @@ def load_results_index(warehouse_path: Path) -> tuple[dict[tuple[str, str, str],
             results_by_date[d].append(entry)
 
     # Operator-verified scores outrank every donor and the overlay. A human
-    # confirmed the score, so competing donor spellings for the same normalized
-    # pair must not re-open the fixture as an alias-outcome conflict: overwrite
-    # the index and purge the conflicting pair from the per-date alias scan.
+    # confirmed the score, so competing donor spellings must not re-open the
+    # fixture as an alias-outcome conflict: overwrite the index and purge every
+    # alias-matching result (any spelling) from the per-date alias scan. The
+    # exact normalized pair alone is not enough — a donor filing the wrong
+    # score under an alternate spelling (Fenerbahce vs Fenerbahçe) would
+    # otherwise survive and keep the pick held.
     for v in load_verified_results():
         entry = {
             "hs": v["hs"], "gs": v["gs"], "outcome": v["outcome"],
             "home": v["home"], "away": v["away"], "origin": "verified",
         }
         d = v["date"]
-        h9, a9 = norm_team(v["home"]), norm_team(v["away"])
-        h14, a14 = norm_team(v["home"], 14), norm_team(v["away"], 14)
-        index[(d, h9, a9)] = entry
-        if (h14, a14) != (h9, a9):
-            index[(d, h14, a14)] = entry
-        results_by_date[d] = [
-            e for e in results_by_date.get(d, [])
-            if not (norm_team(e.get("home")) == h9 and norm_team(e.get("away")) == a9)
-        ]
+        for hk in audit_team_key_candidates(v["home"]):
+            for ak in audit_team_key_candidates(v["away"]):
+                index[(d, hk, ak)] = entry
+        alias_ids = {
+            id(r) for r in _alias_candidate_results(v["home"], v["away"], d, results_by_date)
+        }
+        results_by_date[d] = [e for e in results_by_date.get(d, []) if id(e) not in alias_ids]
         results_by_date[d].append(entry)
 
     return index, results_by_date
