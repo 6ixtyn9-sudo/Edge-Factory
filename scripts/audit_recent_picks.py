@@ -661,12 +661,32 @@ def settle_pick(pick: dict[str, Any], result: dict[str, Any] | None) -> SettledP
         return None
     market = str(pick.get("market") or "")
     selection = str(pick.get("pick") or "")
-    outcome = str(result.get("outcome") or "")
-    if market != "1x2":
+    if market == "1x2":
+        if selection not in {"home", "draw", "away"}:
+            return None
+        outcome = str(result.get("outcome") or "")
+        won = selection == outcome
+    elif market == "ou_2.5":
+        # Over/Under 2.5 is settled from the final scoreline, not the 1X2
+        # outcome. The consensus miner expresses the selection as over/under.
+        if selection not in {"over", "under"}:
+            return None
+        hs, gs = result.get("hs"), result.get("gs")
+        if hs is None or gs is None:
+            return None
+        outcome = "over" if (hs + gs) >= 3 else "under"
+        won = selection == outcome
+    elif market == "btts":
+        # Both Teams to Score is settled from the final scoreline as well.
+        if selection not in {"yes", "no"}:
+            return None
+        hs, gs = result.get("hs"), result.get("gs")
+        if hs is None or gs is None:
+            return None
+        outcome = "yes" if (hs > 0 and gs > 0) else "no"
+        won = selection == outcome
+    else:
         return None
-    if selection not in {"home", "draw", "away"}:
-        return None
-    won = selection == outcome
     odds_value = pick.get("odds")
     try:
         odds = float(odds_value) if odds_value not in (None, "") else None
@@ -1526,7 +1546,12 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
             continue
         market = str(pick.get("market") or "")
         selection = str(pick.get("pick") or "")
-        if market != "1x2" or selection not in {"home", "draw", "away"}:
+        valid_selections = {
+            "1x2": {"home", "draw", "away"},
+            "ou_2.5": {"over", "under"},
+            "btts": {"yes", "no"},
+        }.get(market)
+        if valid_selections is None or selection not in valid_selections:
             continue
         eligible_prior_picks += 1
 
@@ -1589,26 +1614,30 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
             settled_rows.append(settled)
             settled_pairs.append((settled, pick))
 
-            # Score secondary markets on this settled match
+            # Score secondary markets on this settled match. This realized-rates
+            # table is measured on the 1X2 consensus slate only: an OU/BTTS row
+            # is a *separate pick on the same fixture*, so counting it here would
+            # double-count fixtures that carry both a 1X2 and an OU/BTTS pick.
             hs = result.get("hs")
             gs = result.get("gs")
             if hs is not None and gs is not None:
-                # 1. Over 2.5 goals
-                sec_stats["over25_total"] += 1
-                if hs + gs >= 3:
-                    sec_stats["over25_wins"] += 1
-                    
-                # 2. Both teams to score
-                sec_stats["btts_total"] += 1
-                if hs > 0 and gs > 0:
-                    sec_stats["btts_wins"] += 1
-                    
-                # 3. Selected team over 1.5 goals
-                if selection in ("home", "away"):
-                    sec_stats["team_o15_total"] += 1
-                    selected_goals = hs if selection == "home" else gs
-                    if selected_goals >= 2:
-                        sec_stats["team_o15_wins"] += 1
+                if market == "1x2":
+                    # 1. Over 2.5 goals
+                    sec_stats["over25_total"] += 1
+                    if hs + gs >= 3:
+                        sec_stats["over25_wins"] += 1
+
+                    # 2. Both teams to score
+                    sec_stats["btts_total"] += 1
+                    if hs > 0 and gs > 0:
+                        sec_stats["btts_wins"] += 1
+
+                    # 3. Selected team over 1.5 goals
+                    if selection in ("home", "away"):
+                        sec_stats["team_o15_total"] += 1
+                        selected_goals = hs if selection == "home" else gs
+                        if selected_goals >= 2:
+                            sec_stats["team_o15_wins"] += 1
 
                 # 4. Recommended enhancement hit check
                 enh_type = pick.get("recommended_enhancement")
@@ -1694,16 +1723,16 @@ def build_report(start: str, end: str, warehouse_path: Path, *, include_same_day
                         "hit": hit
                     })
                     
-                actual_outcome = result.get("outcome") or ""
                 settled_ledger.append({
                     "date": pick_date,
                     "match": pick.get("match") or f"{pick.get('home')} vs {pick.get('away')}",
+                    "market": market,
                     "selection": selection,
                     "avg_p": pick.get("avg_p") or 0.0,
                     "hs": hs,
                     "gs": gs,
-                    "outcome": actual_outcome,
-                    "won": selection == actual_outcome,
+                    "outcome": settled.outcome,
+                    "won": settled.won,
                     "odds": pick.get("odds"),
                     "odds_source": settled.odds_source,
                     "odds_match_method": settled.odds_match_method,
@@ -1854,7 +1883,7 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
             else ""
         ),
         f"- settled picks: {overall.get('settled_picks', 0)}",
-        f"- eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}",
+        f"- eligible prior picks: {report.get('eligible_prior_picks', 0)}",
         f"- pending/unmatched result picks: {report.get('pending_result_picks', report.get('unmatched_result_picks', 0))}",
         f"- voided postponed/cancelled/abandoned events: {report.get('voided_event_picks', 0)}",
         f"- ambiguous event-disposition rows: {report.get('ambiguous_disposition_picks', 0)}",
@@ -2084,7 +2113,12 @@ def write_markdown(path: Path, report: dict[str, Any]) -> None:
 
             status = "🟢 WON" if item["won"] else "🔴 LOST"
             lines.append(f"### {item['date']}: {item['match']} (Actual Score: **{item['hs']}-{item['gs']}**)")
-            lines.append(f"- **1X2 Pick**: Selected `{item['selection'].upper()}` @ {item['odds'] or 'n/a'} -> {status} (Expected prob: {item['avg_p']:.1f}%)")
+            market_label = {
+                "1x2": "1X2 Pick",
+                "ou_2.5": "Over/Under 2.5 Pick",
+                "btts": "BTTS Pick",
+            }.get(item.get("market"), "Pick")
+            lines.append(f"- **{market_label}**: Selected `{item['selection'].upper()}` @ {item['odds'] or 'n/a'} -> {status} (Expected prob: {item['avg_p']:.1f}%)")
             
             stats = item["parsed_stats"]
             if stats["over25_expected"] is not None:
@@ -2206,7 +2240,7 @@ def main() -> int:
     print(f" archived pick rows: {report.get('archived_pick_rows', 0)}")
     print(f" archived pick dates: {len(report.get('archived_pick_dates', []))}")
     print(f" same-day rows excluded: {report.get('same_day_excluded', 0)}")
-    print(f" eligible prior 1x2 picks: {report.get('eligible_prior_picks', 0)}")
+    print(f" eligible prior picks: {report.get('eligible_prior_picks', 0)}")
     print(f" settled picks: {overall.get('settled_picks', 0)}")
     print(f" pending/unmatched result picks: {report.get('pending_result_picks', report.get('unmatched_result_picks', 0))}")
     print(f" voided event picks: {report.get('voided_event_picks', 0)}")
