@@ -378,3 +378,72 @@ def test_eval_binary_fires_primary_side_only():
     picks = eval_binary("2026-08-31", data, "btts", SOURCES_BTTS, BTTS_COL, btts_edge,
                         ("yes", "no"), btts_outcome_odds)
     assert picks == []
+
+
+def test_fixture_schedule_unstable_detects_cross_source_date_disagreement():
+    """Dated sources disagreeing on a kickoff date by >1 day = moving schedule.
+
+    This is the pick-time signal for the stale/phantom pick class (Viking
+    08-29 -> 08-30, Hønefoss W 08-29 -> 08-31). The guard must suppress the
+    pick while tolerating a one-day timezone artefact and ignoring bare times.
+    """
+    from picks_today import fixture_schedule_unstable
+
+    fb = {"kickoff": "2026-08-29 13:00:00"}
+    bz = {"kickoff": "2026-08-31 18:00:00"}
+    unstable, dates = fixture_schedule_unstable(fb, bz)
+    assert unstable is True
+    assert dates == {"2026-08-29", "2026-08-31"}
+
+    # one-day spread is tolerated (23:00 vs 01:00 timezone artefact)
+    assert fixture_schedule_unstable(fb, {"kickoff": "2026-08-30 01:00:00"})[0] is False
+    # same date across sources is stable
+    assert fixture_schedule_unstable(fb, {"kickoff": "2026-08-29 15:00:00"})[0] is False
+    # bare times cannot name a day -> no instability signal
+    assert fixture_schedule_unstable({"kickoff": "17:00"}, {"kickoff": "11:00"})[0] is False
+    # a single dated source is not evidence of a move
+    assert fixture_schedule_unstable(fb, {})[0] is False
+
+
+def test_eval_binary_suppresses_fixture_with_cross_source_kickoff_move():
+    """A fixture whose kickoff DATE moved >1 day across dated sources must not
+    fire, even when the probabilities agree."""
+    from picks_today import OU_COL, SOURCES_OU, eval_binary
+
+    edge = {
+        "n_way": 2,
+        "threshold": 70.0,
+        "rule": "ou25-unanimous-2way-sa avg_p>=70",
+        "display_rule": "OU25-UNANIMOUS-2WAY\u226570",
+    }
+
+    def row(home, away, p, kickoff, odd_over=1.8, odd_under=1.9):
+        return {
+            "home": home, "away": away, "league": "SPL",
+            "p_over": p, "p_o25": p,
+            "odd_over": odd_over, "odd_under": odd_under,
+            "kickoff": kickoff,
+        }
+
+    key = ("uxbridge", "wimbornetown")
+    ou_outcome_odds = {"over": "odd_over", "under": "odd_under"}
+
+    # forebet says 08-29, bzzoiro says 08-31 -> schedule still moving.
+    data = {
+        "forebet": {key: row("Uxbridge", "Wimborne Town", 0.75, "2026-08-29 13:00:00")},
+        "statarea": {key: row("Uxbridge", "Wimborne Town", 0.72, "2026-08-29 13:00:00")},
+        "bzzoiro": {key: row("Uxbridge", "Wimborne Town", 0.75, "2026-08-31 18:00:00")},
+    }
+    picks = eval_binary("2026-08-29", data, "ou_2.5", SOURCES_OU, OU_COL, edge,
+                        ("over", "under"), ou_outcome_odds)
+    assert picks == []
+
+    # same kickoff date across sources -> fires normally.
+    data2 = {
+        "forebet": {key: row("Uxbridge", "Wimborne Town", 0.75, "2026-08-29 13:00:00")},
+        "statarea": {key: row("Uxbridge", "Wimborne Town", 0.72, "2026-08-29 13:00:00")},
+        "bzzoiro": {key: row("Uxbridge", "Wimborne Town", 0.75, "2026-08-29 15:00:00")},
+    }
+    picks2 = eval_binary("2026-08-29", data2, "ou_2.5", SOURCES_OU, OU_COL, edge,
+                         ("over", "under"), ou_outcome_odds)
+    assert [p["pick"] for p in picks2] == ["over"]

@@ -2166,6 +2166,41 @@ def top_pick(p1, px, p2):
     return ("home" if best == p1 else ("draw" if best == px else "away")), best
 
 
+def _fixture_kickoff_dates(*rows: dict) -> set[str]:
+    """Kickoff dates reported for one fixture across the sources that saw it.
+
+    Only dated kickoffs contribute; a bare "HH:MM" cannot name a match day and
+    is ignored (fail-closed). Forebet and bzzoiro are the only sources that
+    carry a dated kickoff, so this set normally has 0-2 members.
+    """
+    dates: set[str] = set()
+    for row in rows:
+        if not row:
+            continue
+        kd = kickoff_date(row.get("kickoff"))
+        if kd:
+            dates.add(kd)
+    return dates
+
+
+def fixture_schedule_unstable(*rows: dict) -> tuple[bool, set[str]]:
+    """True when two dated sources disagree on a fixture's kickoff DATE by more
+    than one day.
+
+    Schedule-move guard: the stale/phantom pick class (Viking 08-29 -> 08-30,
+    Hønefoss W 08-29 -> 08-31) fires because the pick is placed against a
+    schedule that is still moving. When the dated sources disagree on the match
+    day by more than a day, the fixture is moving and we suppress rather than
+    bet on it. A one-day spread is tolerated because a 23:00 vs 01:00
+    cross-source timezone artefact is not a reschedule.
+    """
+    dates = _fixture_kickoff_dates(*rows)
+    if len(dates) < 2:
+        return False, dates
+    parsed = sorted(datetime.strptime(d, "%Y-%m-%d").date() for d in dates)
+    return (parsed[-1] - parsed[0]).days > 1, dates
+
+
 # --------------------------------------------------------------- consensus --
 def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
     picks, vetoes = [], 0
@@ -2204,6 +2239,18 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
         vb = data.get("vitibet", {}).get(k) or {}
         anchor = fb or zb or sa or next(data[s][k] for s in used if k in data.get(s, {}))
         
+        # Fixture-stability guard: a schedule still moving between dated
+        # sources is not a bet we want (stale/phantom pick class). Fail-closed.
+        unstable, ko_dates = fixture_schedule_unstable(fb, bz)
+        if unstable:
+            print(
+                f"fixture-stability guard {day}: skip "
+                f"{anchor.get('home')} vs {anchor.get('away')} "
+                f"(kickoff dates differ across sources: {sorted(ko_dates)})",
+                file=sys.stderr,
+            )
+            continue
+
         # --- Evaluate ML Rules ---
         if ml_rules and ml_model and (fb or zb or sa):
             fb_probs = probs_1x2(fb) if fb else None
@@ -2509,6 +2556,15 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
         fb = data.get("forebet", {}).get(k) or {}
         bz = data.get("bzzoiro", {}).get(k) or {}
         anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
+        unstable, ko_dates = fixture_schedule_unstable(fb, bz)
+        if unstable:
+            print(
+                f"fixture-stability guard {day}: skip "
+                f"{anchor.get('home')} vs {anchor.get('away')} "
+                f"(kickoff dates differ across sources: {sorted(ko_dates)})",
+                file=sys.stderr,
+            )
+            continue
         sel = sels[0]
         odds = _f(fb.get(outcome_odds[sel])) if fb else None
         home = canonical_display_team(anchor.get("home"))
