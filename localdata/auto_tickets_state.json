@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 133.160209,
+  "bank": 129.165397,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -27,62 +27,12 @@
           "stake_pct": 11.0967,
           "results": [
             null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Nestos Chrisoupolis vs AEK Athens FC",
-              "pick": "AWAY",
-              "prob": 0.7240000000000001,
-              "odds": 1.12,
-              "result": null
-            },
-            {
-              "match": "Floriana FC vs Gzira United",
-              "pick": "HOME",
-              "prob": 0.64,
-              "odds": 1.46,
-              "result": null
-            }
-          ],
-          "odds": 1.64,
-          "stake_pct": 11.0967,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Grasshoppers vs St Gallen",
-              "pick": "AWAY",
-              "prob": 0.598,
-              "odds": 1.72,
-              "result": null
-            },
-            {
-              "match": "Falkirk FC vs Rangers",
-              "pick": "AWAY",
-              "prob": 0.585,
-              "odds": 1.61,
-              "result": null
-            }
-          ],
-          "odds": 2.77,
-          "stake_pct": 11.0967,
-          "results": [
-            null,
-            null
+            "win"
           ],
           "won": null
         }
       ],
-      "staked_pct": 33.2901
+      "staked_pct": 11.0967
     }
   ],
   "history": [
@@ -205,6 +155,22 @@
         }
       ],
       "bank_pct": 133.1602
+    },
+    {
+      "date": "2026-09-02",
+      "staked_pct": 22.1934,
+      "returned_pct": 18.1986,
+      "accas": [
+        {
+          "odds": 1.64,
+          "won": true
+        },
+        {
+          "odds": 2.77,
+          "won": false
+        }
+      ],
+      "bank_pct": 129.1654
     }
   ],
   "events": []
