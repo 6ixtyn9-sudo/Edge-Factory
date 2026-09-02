@@ -1,14 +1,10 @@
 Edge Factory Picks — 2026-09-02
 ============================================================
-Generated at: 2026-09-02 18:05:54
+Generated at: 2026-09-02 20:16:46
 
 
 CERTIFIED CLEAN PICKS
 ============================================================
-  [ML-META≥60] Charlotte Independence vs Portland Hearts  KO 2026-09-03 01:30:00 -> HOME   avg 64%  w=0.56 @1.42
-     bucket=CERTIFIED_CLEAN  league=us4:UNKNOWN  odds_band=1.35-1.50:ALLOW
-     📊 Realized Stats on Home Win (n=1135): Avg Goals: 3.39 | Over 2.5: 66.1% | BTTS: 40.7% | Home Over 1.5 Goals: 83.9% | Away Over 1.5 Goals: 10.1%
-     🔥 Possible Events: Match Over 1.5: 86.9% | Home Team Over 0.5: 84.3% | Away Team Under 3.5: 98.5% | Away Team Under 2.5: 94.1% | Match Over 2.5: 44.7% | Match Over 4.5: 20.6%
   [ML-META≥55] Vukovar '91 vs Dinamo Zagreb B             KO 2026-09-02 15:30:00 -> HOME   avg 57%  w=1.00 @1.63
      bucket=CERTIFIED_CLEAN  league=hr2:UNKNOWN  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Home Win (n=1415): Avg Goals: 3.23 | Over 2.5: 65.4% | BTTS: 44.1% | Home Over 1.5 Goals: 82.0% | Away Over 1.5 Goals: 10.0%
@@ -24,6 +20,10 @@ CAUTION PICKS
      bucket=CAUTION  league=arr:UNKNOWN  odds_band=1.50-1.75:ALLOW
      📊 Realized Stats on Home Win (n=626): Avg Goals: 3.75 | Over 2.5: 74.0% | BTTS: 42.5% | Home Over 1.5 Goals: 87.5% | Away Over 1.5 Goals: 9.9%
      🔥 Possible Events: Match Over 1.5: 89.0% | Match Over 2.5: 49.3% | Home Team Over 0.5: 85.6% | Away Team Under 3.5: 98.3% | Away Team Under 2.5: 95.0% | Away Team Under 1.5: 80.0% | Match Over 4.5: 28.1%
+  [ML-META≥55] Charlotte Independence vs Portland Hearts  KO 2026-09-03 01:30:00 -> HOME   avg 57%  w=0.28 @1.42
+     bucket=CAUTION  league=us4:UNKNOWN  odds_band=1.35-1.50:CAUTION
+     📊 Realized Stats on Home Win (n=1417): Avg Goals: 3.24 | Over 2.5: 65.8% | BTTS: 45.1% | Home Over 1.5 Goals: 81.8% | Away Over 1.5 Goals: 10.2%
+     🔥 Possible Events: Match Over 1.5: 84.5% | Home Team Over 0.5: 80.5% | Away Team Under 3.5: 97.9% | Away Team Under 2.5: 92.0% | Match Over 2.5: 43.0%
 
 WATCHLIST — NO MATCHED ODDS
 ============================================================
@@ -47,8 +47,8 @@ WATCHLIST — SUSPECT FUZZY PRICE MATCH
   [OU25-UNANIMOUS-2WAY≥70] Flora Tallinn vs Tammeka Tartu             KO 2026-09-02 18:00:00 -> OVER   avg 72% @1.38
      bucket=WATCHLIST_SUSPECT_PRICE  league=estonia meistriliiga:UNKNOWN  odds_band=1.35-1.50:UNKNOWN
      🔥 Possible Events: Match Over 1.5: 89.5% | Match Over 2.5: 52.2% | Away Team Under 3.5: 93.7% | Away Team Under 2.5: 86.7% | Match Over 4.5: 26.9%
-  [OU25-UNANIMOUS-2WAY≥70] VfL Osnabruck vs Bayern Munich             KO 2026-09-02 20:45:00 -> OVER   avg 72% @1.11
-     bucket=WATCHLIST_SUSPECT_PRICE  league=dfb:UNKNOWN  odds_band=1.10-1.20:UNKNOWN
+  [OU25-UNANIMOUS-2WAY≥70] VfL Osnabruck vs Bayern Munich             KO 2026-09-02 20:45:00 -> OVER   avg 72% @1.09
+     bucket=WATCHLIST_SUSPECT_PRICE  league=dfb:UNKNOWN  odds_band=1.00-1.10:UNKNOWN
      🔥 Possible Events: Match Over 1.5: 86.5% | Home Team Under 3.5: 95.3% | Match Over 2.5: 43.4% | Match Over 4.5: 18.9%
   [ML-META≥55] Flora Tallinn vs Tammeka Tartu             KO 2026-09-02 18:00:00 -> HOME   avg 59%  w=0.35 @1.53
      bucket=WATCHLIST_SUSPECT_PRICE  league=estonia meistriliiga:UNKNOWN  odds_band=1.50-1.75:BOOST
@@ -61,9 +61,8 @@ WATCHLIST — UNKNOWN CONTEXT
 
 SKIPPED — VETO CONTEXT
 ============================================================
-  [ML-META≥70] VfL Osnabruck vs Bayern Munich             KO 2026-09-02 20:45:00 -> AWAY   avg 76%  w=1.17 @1.05
+  [ML-META≥70] VfL Osnabruck vs Bayern Munich             KO 2026-09-02 20:45:00 -> AWAY   avg 80%  w=1.38 @1.05
      bucket=SKIPPED_VETO  league=dfb:VETO  odds_band=1.00-1.10:VETO
-     📊 Realized Stats on Away Win (n=20): Avg Goals: 4.00 | Over 2.5: 75.0% | BTTS: 10.0% | Home Over 1.5 Goals: 5.0% | Away Over 1.5 Goals: 90.0%
      🔥 Possible Events: Match Over 1.5: 86.5% | Home Team Under 3.5: 95.3% | Match Over 2.5: 43.4% | Match Over 4.5: 18.9%
   [ML-META≥55] Celtic vs Aberdeen                         KO 2026-09-02 20:45:00 -> HOME   avg 73%  w=1.00 @1.22
      bucket=SKIPPED_VETO  league=scotland premiership:ALLOW  odds_band=1.20-1.35:VETO
@@ -77,12 +76,12 @@ SKIPPED — VETO CONTEXT
      bucket=SKIPPED_VETO  league=bg1:VETO  odds_band=1.20-1.35:VETO
      📊 Realized Stats on Away Win (n=200): Avg Goals: 3.58 | Over 2.5: 66.0% | BTTS: 33.0% | Home Over 1.5 Goals: 7.0% | Away Over 1.5 Goals: 84.5%
      🔥 Possible Events: Match Over 1.5: 83.2% | Home Team Under 3.5: 99.0% | Home Team Under 2.5: 90.8% | Match Over 2.5: 42.9% | Match Over 4.5: 23.5%
-  [ML-META≥55] Falkirk FC vs Rangers                      KO 2026-09-02 21:00:00 -> AWAY   avg 62%  w=1.00 @1.57
+  [ML-META≥55] Falkirk FC vs Rangers                      KO 2026-09-02 21:00:00 -> AWAY   avg 62%  w=1.00 @1.55
      bucket=SKIPPED_VETO  league=scotland premiership:VETO  odds_band=1.50-1.75:BOOST
      📊 Realized Stats on Away Win (n=488): Avg Goals: 3.41 | Over 2.5: 68.4% | BTTS: 41.0% | Home Over 1.5 Goals: 9.8% | Away Over 1.5 Goals: 86.3%
      🔥 Possible Events: Match Over 1.5: 89.9% | Match Over 2.5: 47.1% | Home Team Under 3.5: 99.0% | Home Team Under 2.5: 89.8% | Match Over 4.5: 23.0%
-  [ML-META≥55] Floriana FC vs Gzira United                KO 2026-09-02 21:00:00 -> HOME   avg 60%  w=1.00 @1.51
-     bucket=SKIPPED_VETO  league=mt1:ALLOW  odds_band=1.50-1.75:BOOST
+  [ML-META≥55] Floriana FC vs Gzira United                KO 2026-09-02 21:00:00 -> HOME   avg 60%  w=1.00 @1.49
+     bucket=SKIPPED_VETO  league=mt1:ALLOW  odds_band=1.35-1.50:CAUTION
      📊 Realized Stats on Home Win (n=1330): Avg Goals: 3.30 | Over 2.5: 65.5% | BTTS: 42.7% | Home Over 1.5 Goals: 82.9% | Away Over 1.5 Goals: 10.3%
      🔥 Possible Events: Match Over 1.5: 86.0% | Home Team Over 0.5: 82.4% | Away Team Under 3.5: 98.4% | Away Team Under 2.5: 93.9% | Match Over 2.5: 43.2% | Match Over 4.5: 18.9%
   [ML-META≥55] Grasshoppers vs St Gallen                  KO 2026-09-02 20:30:00 -> AWAY   avg 59%  w=1.00 @1.72
