@@ -49,7 +49,11 @@ LOCALDATA = ROOT / "localdata"
 
 # ---------------- cadence (unchanged from production) ----------------
 GENERATE_HOUR_START = 6    # local time — slips may START building on/after this hour
-FREEZE_HOUR = 12           # local time — the slip FREEZES on/after this hour
+FREEZE_HOUR = 9            # local time — the slip FREEZES on/after this hour.
+                             # Measured 2026-09-02: 09:00 freeze covers ~94% of leg
+                             # kickoffs (noon ~86%, de-facto-14:00 ~76%); morning slate
+                             # median-complete by 09:00; external cron's 09:00 SAST run
+                             # lands the marker ~09:23, ahead of every observed bet time.
 TZ = ZoneInfo("Africa/Johannesburg")
 PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
 
