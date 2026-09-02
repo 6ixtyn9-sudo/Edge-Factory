@@ -25,29 +25,29 @@
     },
     {
       "decay": "HEALTHY",
-      "last_fired": "2026-09-02",
-      "n_last_window": 60,
+      "last_fired": "2026-08-31",
+      "n_last_window": 57,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
     {
       "decay": "HEALTHY",
       "last_fired": "2026-09-02",
-      "n_last_window": 6,
+      "n_last_window": 9,
       "rule": "ml-meta avg_p>=65",
       "silent": false
     },
     {
       "decay": "HEALTHY",
       "last_fired": "2026-09-02",
-      "n_last_window": 17,
+      "n_last_window": 20,
       "rule": "ml-meta avg_p>=70",
       "silent": false
     },
     {
       "decay": "WATCH",
-      "last_fired": "2026-09-02",
-      "n_last_window": 6,
+      "last_fired": "2026-08-23",
+      "n_last_window": 3,
       "rule": "ml-meta avg_p>=80",
       "silent": false
     },
@@ -59,7 +59,7 @@
       "silent": false
     }
   ],
-  "generated_at": "2026-09-02T09:27:07",
+  "generated_at": "2026-09-02T12:24:32",
   "ignored_non_operational_rules": [
     "2way-unanimous min_p>=60 avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=70",
