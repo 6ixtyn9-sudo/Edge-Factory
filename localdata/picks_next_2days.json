@@ -2088,7 +2088,7 @@
     "vitibet_index": null
   },
   {
-    "as_of": "2026-09-02T15:00:49+02:00",
+    "as_of": "2026-09-02T21:00:48+02:00",
     "avg_p": 74.7,
     "away": "Mirassol",
     "bookmaker": "scoutingstats_odds",
@@ -2130,7 +2130,8 @@
     ],
     "duplicate_rows_collapsed": 1,
     "duplicate_rules_collapsed": [
-      "ML-META\u226555"
+      "ML-META\u226555",
+      "ML-META\u226560"
     ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
@@ -2205,7 +2206,7 @@
       }
     ],
     "home": "Flamengo",
-    "kickoff": "17:30",
+    "kickoff": "23:30",
     "league": "Brazil,Serie A",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
@@ -2215,7 +2216,7 @@
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
     "n_way": 3,
-    "odds": 1.18,
+    "odds": 1.16,
     "odds_captured_at": "2026-09-02T22:30:00Z",
     "odds_league": "Serie A",
     "odds_match_method": "exact",
@@ -2514,10 +2515,10 @@
     "vitibet_index": null
   },
   {
-    "as_of": "2026-09-02T20:11:22+02:00",
+    "as_of": "2026-09-02T21:00:48+02:00",
     "avg_p": 55.3,
     "away": "Lille",
-    "bookmaker": "betexplorer_best",
+    "bookmaker": "1xbet",
     "bucket": "CAUTION",
     "confidence": null,
     "ctx": {
@@ -2529,7 +2530,7 @@
       "league_key": "france ligue 1",
       "league_raw": "Fr1",
       "niche": "ALLOW",
-      "odds_band": "ALLOW",
+      "odds_band": "BOOST",
       "odds_band_name": "2.00-2.50",
       "resolution_original_verdict": "CAUTION",
       "resolution_path": "native",
@@ -2617,19 +2618,19 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 2.21,
-    "odds_captured_at": "2026-09-02T18:24:12.360513+00:00",
-    "odds_league": "France: Ligue 1",
-    "odds_match_method": "betexplorer",
+    "odds": 2.24,
+    "odds_captured_at": "2026-09-02T19:10:45.083497+00:00",
+    "odds_league": "Ligue 1",
+    "odds_match_method": "exact",
     "odds_match_status": "matched",
     "odds_replaced": {
       "odds": 2.15,
       "source": "forebet_best"
     },
-    "odds_source": "betexplorer_odds",
+    "odds_source": "bzzoiro_odds",
     "odds_tier": "low",
     "pick": "away",
-    "price_evidence": "BETEXPLORER_RESCUE",
+    "price_evidence": "BZZOIRO_PRIMARY",
     "price_push_eligible": true,
     "recommended_enhancement": "match_over_15",
     "recommended_market": "avoid_raw_1x2",
@@ -2646,8 +2647,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-02T20:11:22+02:00",
-    "avg_p": 56.9,
+    "as_of": "2026-09-02T21:00:48+02:00",
+    "avg_p": 57.1,
     "away": "Portland Hearts of Pine",
     "bookmaker": "betexplorer_best",
     "bucket": "CAUTION",
@@ -2688,54 +2689,54 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.8445,
-    "enhancement_reason": "Mathematical expectation is 77.5%",
+    "enhancement_probability": 0.8469,
+    "enhancement_reason": "Mathematical expectation is 77.8%",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 2278,
+        "cohort_n": 2252,
         "engine": "hybrid_cohort",
         "label": "Match Over 1.5 Goals",
         "market": "match_over_15",
-        "probability": 0.8445353407524461,
-        "raw_probability": 0.7754045369618783,
-        "reason": "Mathematical expectation is 77.5%"
+        "probability": 0.8468753080128805,
+        "raw_probability": 0.7775529624244131,
+        "reason": "Mathematical expectation is 77.8%"
       },
       {
-        "cohort_n": 2278,
+        "cohort_n": 2252,
         "engine": "hybrid_cohort",
         "label": "Home Team Over 0.5 Goals",
         "market": "home_over_05",
-        "probability": 0.8046281762546073,
-        "raw_probability": 0.8536249225508042,
-        "reason": "Home scoring rate is 80.4% (ML-calibrated 86.5%->90.3%, n=331) (Performance feedback: HR=90.8%, Adjusted Prob: 80.5%)"
+        "probability": 0.807843792767484,
+        "raw_probability": 0.857036349689156,
+        "reason": "Home scoring rate is 80.4% (ML-calibrated 86.5%->90.3%, n=331) (Performance feedback: HR=90.8%, Adjusted Prob: 80.8%)"
       },
       {
-        "cohort_n": 2278,
+        "cohort_n": 2252,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9790675943583365,
-        "raw_probability": 0.9824048235439151,
+        "probability": 0.9788777856378188,
+        "raw_probability": 0.9822143678453896,
         "reason": "Combined Under 3.5 is 98.2% (ML-calibrated 98.0%->97.7%, n=348)"
       },
       {
-        "cohort_n": 2278,
+        "cohort_n": 2252,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9196217723766137,
-        "raw_probability": 0.9240377487780238,
+        "probability": 0.9196321229518809,
+        "raw_probability": 0.9240481490562206,
         "reason": "Combined Under 2.5 is 92.4% (ML-calibrated 94.1%->93.7%, n=331)"
       },
       {
-        "cohort_n": 2278,
+        "cohort_n": 2252,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4298844264817207,
-        "raw_probability": 0.5539007377486179,
-        "reason": "Mathematical expectation is 55.4% (ML-calibrated 46.5%->64.1%, n=404) (Performance feedback: HR=66.0%, Adjusted Prob: 43.0%)"
+        "probability": 0.43098344983764025,
+        "raw_probability": 0.5553168156759551,
+        "reason": "Mathematical expectation is 55.5% (ML-calibrated 46.5%->64.1%, n=404) (Performance feedback: HR=66.0%, Adjusted Prob: 43.1%)"
       }
     ],
     "home": "Charlotte Independence",
@@ -2747,11 +2748,11 @@
     "market_type": "1x2",
     "match": "Charlotte Independence vs Portland Hearts of Pine",
     "min_lead_minutes": 30,
-    "ml_p": 0.5686,
+    "ml_p": 0.571,
     "model_version": null,
     "n_way": 3,
     "odds": 1.42,
-    "odds_captured_at": "2026-09-02T18:16:02.314381+00:00",
+    "odds_captured_at": "2026-09-02T19:04:57.483811+00:00",
     "odds_league": "USA: USL League One",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -2774,9 +2775,9 @@
       "statarea"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1417): Avg Goals: 3.24 | Over 2.5: 65.8% | BTTS: 45.1% | Home Over 1.5 Goals: 81.8% | Away Over 1.5 Goals: 10.2%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1415): Avg Goals: 3.23 | Over 2.5: 65.4% | BTTS: 44.1% | Home Over 1.5 Goals: 82.0% | Away Over 1.5 Goals: 10.0%",
     "vitibet_index": null,
-    "w_score": 0.2762
+    "w_score": 0.2859
   },
   {
     "as_of": "2026-09-02T12:00:52+02:00",
@@ -2905,7 +2906,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-02T20:11:22+02:00",
+    "as_of": "2026-09-02T21:00:48+02:00",
     "avg_p": 73.5,
     "away": "OH Leuven",
     "bookmaker": "scoutingstats_odds",
@@ -3047,10 +3048,10 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-02T20:11:22+02:00",
+    "as_of": "2026-09-02T21:00:48+02:00",
     "avg_p": 61.0,
     "away": "Servette",
-    "bookmaker": "scoutingstats_odds",
+    "bookmaker": "interwetten",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
@@ -3063,7 +3064,7 @@
       "league_raw": "Ch1",
       "niche": "BOOST",
       "odds_band": "BOOST",
-      "odds_band_name": "1.75-2.00",
+      "odds_band_name": "2.00-2.50",
       "resolution_original_verdict": "ALLOW",
       "resolution_path": "native",
       "resolution_pool_n": null,
@@ -3159,21 +3160,20 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.95,
-    "odds_captured_at": "2026-09-03T18:30:00Z",
+    "odds": 2.1,
+    "odds_captured_at": "2026-09-02T19:10:57.306686+00:00",
     "odds_league": "Super League",
     "odds_match_method": "exact",
-    "odds_match_status": "uncorroborated",
+    "odds_match_status": "matched",
     "odds_replaced": {
       "odds": 2.0,
       "source": "forebet_best"
     },
-    "odds_source": "scoutingstats_odds",
+    "odds_source": "bzzoiro_odds",
     "odds_tier": "low",
     "pick": "home",
-    "price_evidence": "SCOUTINGSTATS_SOLE",
-    "price_push_eligible": false,
-    "price_quarantine_reason": "scoutingstats_sole_source",
+    "price_evidence": "BZZOIRO_PRIMARY",
+    "price_push_eligible": true,
     "recommended_enhancement": "match_over_15",
     "recommended_market": "avoid_raw_1x2",
     "rule": "ml-meta avg_p>=55",
@@ -3190,7 +3190,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-02T20:11:22+02:00",
+    "as_of": "2026-09-02T21:00:48+02:00",
     "avg_p": 59.0,
     "away": "Istanbulspor AS",
     "bookmaker": "scoutingstats_odds",
