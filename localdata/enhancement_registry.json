@@ -77,19 +77,73 @@
    "status_since": "2026-08-04"
   },
   "match_over_15@v1": {
-   "hits": 1,
-   "inv_price_sum": 0.9523809523809523,
-   "n": 1,
+   "hits": 7,
+   "inv_price_sum": 6.187549156299156,
+   "n": 7,
    "processed": [
-    "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1"
+    "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
+    "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
+    "2026-09-02|Slavia Sofia vs Levski Sofia|match_over_15@v1",
+    "2026-09-02|Grasshoppers vs St Gallen|match_over_15@v1",
+    "2026-09-02|Falkirk FC vs Rangers|match_over_15@v1",
+    "2026-09-02|Flora Tallinn vs Tammeka Tartu|match_over_15@v1",
+    "2026-09-02|FC Luzern vs FC Vaduz|match_over_15@v1"
    ],
-   "profit": 0.05,
+   "profit": 0.95,
    "records": [
     {
      "date": "2026-08-04",
      "hit": true,
      "match": "BG Pathum United vs Aston Villa",
      "price": 1.05,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-02",
+     "hit": true,
+     "match": "Celtic vs Aberdeen",
+     "multi_source": false,
+     "price": 1.11,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-02",
+     "hit": true,
+     "match": "Slavia Sofia vs Levski Sofia",
+     "multi_source": false,
+     "price": 1.28,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-02",
+     "hit": true,
+     "match": "Grasshoppers vs St Gallen",
+     "multi_source": false,
+     "price": 1.12,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-02",
+     "hit": true,
+     "match": "Falkirk FC vs Rangers",
+     "multi_source": false,
+     "price": 1.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-02",
+     "hit": true,
+     "match": "Flora Tallinn vs Tammeka Tartu",
+     "multi_source": false,
+     "price": 1.11,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-02",
+     "hit": true,
+     "match": "FC Luzern vs FC Vaduz",
+     "multi_source": false,
+     "price": 1.08,
      "source": "scoutingstats"
     }
    ],
@@ -98,10 +152,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 101,
-   "inv_price_sum": 95.49340022461449,
+   "hits": 102,
+   "inv_price_sum": 96.2076859389002,
    "multi_n": 16,
-   "n": 151,
+   "n": 152,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -253,9 +307,10 @@
     "2026-08-31|Barcelona vs Rayo Vallecano|match_over_25@v1",
     "2026-08-31|Monterrey vs Atletico San Luis|match_over_25@v1",
     "2026-08-31|Breidablik vs Stjarnan FC|match_over_25@v1",
-    "2026-09-01|Z\u00fcrich vs Young Boys|match_over_25@v1"
+    "2026-09-01|Z\u00fcrich vs Young Boys|match_over_25@v1",
+    "2026-09-02|Flora Tallinn vs Tammeka Tartu|match_over_25@v1"
    ],
-   "profit": 6.36,
+   "profit": 6.76,
    "records": [
     {
      "date": "2026-08-01",
@@ -1461,6 +1516,14 @@
      "match": "Z\u00fcrich vs Young Boys",
      "multi_source": false,
      "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-02",
+     "hit": true,
+     "match": "Flora Tallinn vs Tammeka Tartu",
+     "multi_source": false,
+     "price": 1.4,
      "source": "scoutingstats"
     }
    ],
