@@ -431,6 +431,12 @@ def playable_legs(rows, day=None, settled=None):
             odds = 0.0
         if odds <= 1.0 or not ap:
             continue
+        # Min leg odds floor (2026-09-02: Bayern @1.05 rode slot 1 pre-freeze).
+        # Sub-1.10 legs cap their acca's payout below the recipe's economics:
+        # the pairing math needs avg ~1.4+ per leg; a 1.05 leg makes slot 1
+        # the worst-paying ticket by construction.
+        if odds < 1.10:
+            continue
         res = pick_result(p, settled) if settled is not None else None
         out.append({"match": f"{p.get('home')} vs {p.get('away')}",
                     "pick": str(p.get("pick") or "").upper(),
