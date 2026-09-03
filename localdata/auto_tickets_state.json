@@ -1,90 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 134.93568100000002,
+  "bank": 143.144239,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-09-03",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Viimsi vs FC Tallinn",
-              "pick": "HOME",
-              "prob": 0.8,
-              "odds": 1.2,
-              "result": null
-            },
-            {
-              "match": "Al Ahly vs Smouha SC",
-              "pick": "HOME",
-              "prob": 0.7,
-              "odds": 1.3,
-              "result": null
-            }
-          ],
-          "odds": 1.56,
-          "stake_pct": 11.2446,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Gent vs OH Leuven",
-              "pick": "HOME",
-              "prob": 0.6579999999999999,
-              "odds": 1.66,
-              "result": null
-            },
-            {
-              "match": "Bursaspor vs Istanbulspor AS",
-              "pick": "HOME",
-              "prob": 0.615,
-              "odds": 1.4,
-              "result": null
-            }
-          ],
-          "odds": 2.32,
-          "stake_pct": 11.2446,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Thisted FC vs Sonderjyske",
-              "pick": "AWAY",
-              "prob": 0.603,
-              "odds": 1.26,
-              "result": null
-            },
-            {
-              "match": "Panathinaikos vs Niki Volos",
-              "pick": "HOME",
-              "prob": 0.603,
-              "odds": 1.12,
-              "result": null
-            }
-          ],
-          "odds": 1.41,
-          "stake_pct": 11.2446,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 33.7338
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -225,6 +143,26 @@
         }
       ],
       "bank_pct": 134.9357
+    },
+    {
+      "date": "2026-09-03",
+      "staked_pct": 33.7338,
+      "returned_pct": 41.9424,
+      "accas": [
+        {
+          "odds": 1.56,
+          "won": false
+        },
+        {
+          "odds": 2.32,
+          "won": true
+        },
+        {
+          "odds": 1.41,
+          "won": true
+        }
+      ],
+      "bank_pct": 143.1442
     }
   ],
   "events": []
