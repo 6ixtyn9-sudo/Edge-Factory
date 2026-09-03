@@ -1,40 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 129.165397,
+  "bank": 134.93568100000002,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-09-02",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Flamengo vs Mirassol",
-              "pick": "HOME",
-              "prob": 0.742,
-              "odds": 1.22,
-              "result": null
-            },
-            {
-              "match": "Celtic vs Aberdeen",
-              "pick": "HOME",
-              "prob": 0.74,
-              "odds": 1.25,
-              "result": null
-            }
-          ],
-          "odds": 1.52,
-          "stake_pct": 11.0967,
-          "results": [
-            null,
-            "win"
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 11.0967
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -158,8 +126,8 @@
     },
     {
       "date": "2026-09-02",
-      "staked_pct": 22.1934,
-      "returned_pct": 18.1986,
+      "staked_pct": 33.2901,
+      "returned_pct": 35.0656,
       "accas": [
         {
           "odds": 1.64,
@@ -168,9 +136,13 @@
         {
           "odds": 2.77,
           "won": false
+        },
+        {
+          "odds": 1.52,
+          "won": true
         }
       ],
-      "bank_pct": 129.1654
+      "bank_pct": 134.9357
     }
   ],
   "events": []
