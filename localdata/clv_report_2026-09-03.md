@@ -3,13 +3,13 @@
 ## Overall
 
 - total unique picks: 675
-- picks with at least two prices: 604
-- average raw odds delta: 0.005424
-- average implied-probability delta: -0.000732
-- beat-later-price rate: 0.153974
-- beat-later-price sample: 604
+- picks with at least two prices: 605
+- average raw odds delta: 0.005498
+- average implied-probability delta: -0.000791
+- beat-later-price rate: 0.153719
+- beat-later-price sample: 605
 - unmatched picks: 38
-- picks with fewer than two snapshots: 33
+- picks with fewer than two snapshots: 32
 
 ## By rule
 
@@ -17,7 +17,7 @@
 - `2way-unanimous avg_p>=70`: n=168, two_prices=147, avg_raw=0.000571, avg_ip=-0.000354, beat_rate=0.142857
 - `2way-unanimous min_p>=60 avg_p>=65`: n=11, two_prices=8, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `3way-unanimous avg_p>=65`: n=20, two_prices=19, avg_raw=0.002632, avg_ip=-0.001494, beat_rate=0.0
-- `ml-meta avg_p>=55`: n=330, two_prices=307, avg_raw=0.000814, avg_ip=0.000357, beat_rate=0.192182
+- `ml-meta avg_p>=55`: n=330, two_prices=308, avg_raw=0.000974, avg_ip=0.000238, beat_rate=0.191558
 - `ml-meta avg_p>=60`: n=50, two_prices=41, avg_raw=0.077902, avg_ip=-0.014872, beat_rate=0.02439
 - `ml-meta avg_p>=65`: n=17, two_prices=10, avg_raw=-0.0132, avg_ip=0.006587, beat_rate=0.3
 - `ml-meta avg_p>=70`: n=17, two_prices=14, avg_raw=0.015, avg_ip=-0.007491, beat_rate=0.071429
@@ -29,7 +29,7 @@
 
 - `CAUTION`: n=99, two_prices=90, avg_raw=0.008667, avg_ip=-0.002129, beat_rate=0.133333
 - `CERTIFIED_CLEAN`: n=51, two_prices=48, avg_raw=0.058292, avg_ip=-0.009009, beat_rate=0.229167
-- `SKIPPED_VETO`: n=356, two_prices=341, avg_raw=-0.000416, avg_ip=0.000258, beat_rate=0.175953
+- `SKIPPED_VETO`: n=356, two_prices=342, avg_raw=-0.000269, avg_ip=0.000151, beat_rate=0.175439
 - `WATCHLIST_NO_ODDS`: n=35, two_prices=0, avg_raw=None, avg_ip=None, beat_rate=None
 - `WATCHLIST_SUSPECT_PRICE`: n=12, two_prices=9, avg_raw=-0.017778, avg_ip=0.008826, beat_rate=0.222222
 - `WATCHLIST_UNCORROBORATED_PRICE`: n=102, two_prices=97, avg_raw=-0.001237, avg_ip=0.000915, beat_rate=0.082474
