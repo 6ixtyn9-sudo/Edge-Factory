@@ -6251,3 +6251,103 @@ TICKETS_DIAGNOSIS_2026-08-27.md, deleted from the working tree 2026-08-28
 at operator request. Receipts remain in git history
 (git show 21d8047:TICKETS_DIAGNOSIS_2026-08-27.md) and the key numbers are
 inlined in the 2026-08-27/28 addenda.
+
+## Addendum — 2026-09-04: the tuning era — floors, freeze, replay harness, experiment ledger
+
+**Live-record status at writing:** engine bank 143.1% (8 bet-days, 16W-8L),
+operator roll R86.69 on R60 deposited (+44.5%), 7 consecutive 2-1 days.
+Walk-forward day 8 of 30. Twitter gate: Oct 1. Scaling gate: end Oct.
+
+### Parameter changes this era (all evidence-linked, all pre-freeze)
+
+1. **MIN_LEG_ODDS floor: none → 1.10 → 1.15 → 1.20 (Sep 2-4).** Bayern @1.05
+   case triggered 1.10; band decomposition raised it twice more. Evidence:
+   sub-1.20 legs = 46 settled, ~80% hit, ~-7.5% flat ROI (slow squeeze — win
+   often, pay tiny, full stake per death); breakeven at 1.18 needs 84.7% vs
+   82.4% realized. Displacement argument: short legs crowd 1.4+ legs out of
+   top-6 on saturated days. REPLAY A/B (live data, 52d): floor 1.10 → 40%
+   final vs 1.20 → 563%, P(1.20 higher)=76% (bootstrap spans zero —
+   luck-shaped tails, but 3 independent argument lines agree). Floor cliff:
+   1.25 → 20%, 1.30 → 7% in replay — 1.20 sits at the sweet-spot edge; do
+   NOT raise further without 30d live adjudication.
+   **THE FLOOR IS A LIVE A/B:** sub-floor legs still archive; the counterfactual
+   is computable daily. Day-30 gate rule: revert iff live 1.20-cards
+   underperform the archived counterfactual over the fresh window.
+2. **FREEZE_HOUR 12 → 9 (Sep 2, measured).** Bot runs SAST-even hours via
+   external cron 09:00/12:00/15:00/18:00/21:00 (cron-job.org). Old de-facto
+   freeze was 14:00 (no run at noon SAST); 09:00 freeze covers 94% of leg
+   kickoffs vs 86% (noon). Marker lands ~09:23. Betting window: any time after
+   marker, before each leg's kickoff. Operator bets ~09:30.
+   **Process rule learned Sep 4: parameter patches must land before the
+   ~08:55 SAST run-start or they miss that day's freeze** (a freeze takes the
+   settings of the commit the run STARTED on; the 06:05 draft on main may be
+   stale and must not be judged pre-marker).
+
+### New instrument: scripts/replay_harness.py
+
+Counterfactual replays on LIVE data with LIVE guards. Commands: bare (status),
+--ab FLOOR_A FLOOR_B (bootstrap confidence), --all (floor/acca/stake/prob
+sweeps), --today (draft-time preview — pre-freeze it shows a partial pool;
+the frozen card is the truth). DOCTRINE printed on every run: replays are
+for RELATIVE comparisons only; absolute replay numbers disagree with engine
+history (40-563% replay vs 143% actual — different eras/guards/voids);
+engine ledger is the only record of what happened; cells n<30 are noise.
+Known-bug-fixed Sep 4: universe builder had the live floor pre-applied
+(lower-floor A/Bs were no-ops) — the harness's first live output caught its
+own author's bug. If a variant shows IDENTICAL results across floors, suspect
+this class of bug first.
+
+### Experiment ledger — VALIDATED, do not re-run or revert without new 30d+ live data
+
+- **Stake >50%/day: REJECTED, repeatedly.** Replay: 75% → 27%. Sims: 100%
+  busted everywhere. 50% cap is doctrine. Not an open question.
+- **Always-on stated-prob floor (>=65% every day): REJECTED (4 sightings).**
+  Latest live replay: 65% → 57% vs baseline 563%. Thin-day diversity beats
+  purity. Only remaining form: >=65% on saturated days (live since Aug) —
+  keep.
+- **Slot-weighted stakes (descending/ascending): REJECTED.** Descending
+  destroys 35-60% of final bank (ledger test); ascending only looked good on
+  slot-3's n=21 heater. Equal thirds is minimum-variance at equal EV.
+- **Blanket low-odds exclusion beyond 1.20: REJECTED.** Floor 1.25/1.30
+  replays collapse (20%/7%). The 1.20 cut is at the cliff edge.
+- **Conviction-less shorts cut (<1.20 AND <70% stated): DEFERRED to gate.**
+  n=14 at -28.5% — below actionable n. Checkpoint ② unchanged.
+- **4 accas/day on heavy days: PENDING, favorable 3rd sighting.** Live
+  replay: 4→989%, 6→871%, 3→563% (single-path, luck-shaped). Prior: 5-beats-3
+  in 80% of saturated-day resamples (8 ledger heavy days). Checkpoint ①
+  decides at day-30: flip to 4-5 iff it wins median AND p10 on accumulated
+  heavy days.
+- **Overs/O2.5 as a bet stream: FAILING on substance.** Tracker (daily,
+  localdata/o25_tracker_report.txt): 50-60% band n=104, hit 67% (<70% bar),
+  ROI -5.8% — gate now fails on numbers, not sample size. OU25-unanimous rule
+  (miner-certified at +0.4% valid ROI): n=12, 42% hit, -28.7%. Deep warehouse
+  predicted ~65%/break-even — arriving on schedule. One green cell: overs on
+  the factory's own 1X2-selected matches +4.6% (n=148) — a match
+  characteristic, not a stream. Expect checkpoint ③ to close this honestly.
+- **ml-meta>=55 demotion: evidence compounding.** -7.3% live at n=210+; the
+  veto-bucket decomposition traced the bucket's first negative flip to its
+  medium-odds (1.50-2.00) ml-meta legs (-7.1% band) while <1.50 stays +1.2%.
+  Checkpoint ⑤ (raise floor 55→60) increasingly likely.
+
+### Portfolio note (context for successors)
+
+A second system exists: 6ixtyn9-sudo/Slumdog (underdog-upset research, own
+constitution, AGENTS.md/STATE.md discipline, shadow-only, 654k-row census).
+It shares ONE dependency with Edge Factory: Forebet. Correlated risk — when
+Edge profits fund APIs, buy a second prediction surface first (fixes
+Slumdog's single-source constitution AND Edge's ml-meta concentration).
+Cross-review protocol in effect: agents may read each other's repos; owner
+authorizes scope; this agent (Edge Factory session, merged PR #1) audits
+live main via raw.githubusercontent.
+
+### Operator doctrine additions this era
+
+- Deposits ledger: log every deposit (date, amount) at deposit time —
+  operator ledger reconciliation depends on it (two double-count errors
+  caught and corrected this week).
+- The red-day rule (pre-committed): a 0-3 day is scheduled variance, costs
+  ~50% of bank, NOT evidence about any parameter; next morning's card bets
+  exactly as written. Parameter changes only at gates, on evidence, never
+  adrenaline.
+- Beer-money doctrine: only vice-money/scheduled deposits; never rent money,
+  never loss-chasing top-ups; December harvest = profits above deposits.
