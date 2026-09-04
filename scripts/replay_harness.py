@@ -1,8 +1,10 @@
 """Edge Factory replay harness — counterfactual engine replays on LIVE localdata.
 
-Answers "what would the engine have done if X?" using the REAL current ledgers,
-the REAL current guards (imported from scripts/auto_tickets.py on main), and
-the REAL state history. Unlike my sandbox snapshots, this sees everything.
+Answers "what would the engine have done if X?" using the REAL current ledgers
+and THE LIVE SELECTION CODE ITSELF (`auto_tickets.select_accas`, called with
+overrides). There is no re-implementation of the recipe in this file — the
+2026-09-04 audit found two parity bugs and one no-op A/B caused by exactly
+that duplication. One code path, or the harness lies.
 
 DOCTRINE (read before trusting any output):
   - Replays are for RELATIVE comparisons (variant A vs variant B on the same
@@ -12,27 +14,41 @@ DOCTRINE (read before trusting any output):
     settlements lag). Trust the actual engine ledger for "what happened";
     trust replays only for "how do two policies differ on identical inputs."
   - Every output prints n. Cells with n < 30 are flagged as noise.
-  - Bootstrap confidence is printed for any A-vs-B difference. If the 10th
-    percentile of the difference spans 0, the difference is luck-shaped.
+  - The primary metric is MEAN LOG GROWTH PER BET-DAY, not final bank. Daily
+    growth is bank-independent (stake is always STAKE_FRAC of bank split
+    evenly), so final bank = product of daily factors — one lucky treble
+    dominates it. Log growth is the same information without the fireworks.
+  - A/B differences are PAIRED-bootstrapped: the same resampled day indices
+    are scored under both variants. An unpaired bootstrap (the 2026-09-04
+    bug) prints a +-22,000% interval for two IDENTICAL variants.
+  - Before any A/B, the harness diffs the two cards day by day. If the
+    variants pick the same legs, it says NO-OP and refuses to bootstrap.
 
-Usage (Codespace, from repo root):
-  PYTHONPATH=src python3 scripts/replay_harness.py                     # status + last-30d audit
-  PYTHONPATH=src python3 scripts/replay_harness.py --floor 1.10        # replay at a floor
-  PYTHONPATH=src python3 scripts/replay_harness.py --ab 1.10 1.20      # A/B two floors + bootstrap
-  PYTHONPATH=src python3 scripts/replay_harness.py --max-accas 5       # replay with 5 accas/day
-  PYTHONPATH=src python3 scripts/replay_harness.py --stake 0.25        # replay at 25%/day
-  PYTHONPATH=src python3 scripts/replay_harness.py --min-prob 0.65     # always-on prob floor
-  PYTHONPATH=src python3 scripts/replay_harness.py --today             # today's card at live settings
-  PYTHONPATH=src python3 scripts/replay_harness.py --all               # the full battery
+Variant spec syntax (anywhere a SPEC is accepted):
+  "floor=1.25"                     bare number also works: "1.25" == floor=1.25
+  "gate_mode=acca,volume_min=0.70" comma-separated key=value
+  keys: floor, rank(prob|ev), pairing(consecutive|barbell), max_accas,
+        saturated_accas, volume_pool, volume_min, gate_mode(off|pool|acca),
+        fallback(0|1), stake_frac, min_prob (harness-only always-on prob floor)
+
+Usage (from repo root):
+  PYTHONPATH=src python3 scripts/replay_harness.py                  # status + live baseline
+  PYTHONPATH=src python3 scripts/replay_harness.py --ab 1.15 1.20   # paired A/B + bootstrap
+  PYTHONPATH=src python3 scripts/replay_harness.py --ab live "gate_mode=acca"
+  PYTHONPATH=src python3 scripts/replay_harness.py --variant "saturated_accas=5"
+  PYTHONPATH=src python3 scripts/replay_harness.py --battery        # the full sweep vs live
+  PYTHONPATH=src python3 scripts/replay_harness.py --kelly          # stake sizing curve
+  PYTHONPATH=src python3 scripts/replay_harness.py --legs           # stated-prob band table
+  PYTHONPATH=src python3 scripts/replay_harness.py --today          # today's card, live settings
 """
 from __future__ import annotations
 
 import argparse
 import json
+import math
 import random
 import sys
-from collections import defaultdict
-from datetime import date, datetime
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -43,149 +59,121 @@ import auto_tickets as at  # the live engine — guards, floors, constants  # no
 
 LOCALDATA = ROOT / "localdata"
 
+# knobs forwarded to at.select_accas (everything else is harness-level)
+ENGINE_KEYS = {"floor", "rank", "pairing", "max_accas", "legs_per_acca",
+               "volume_pool", "volume_min", "gate_mode", "fallback",
+               "saturated_accas"}
+FLOAT_KEYS = {"floor", "volume_min", "stake_frac", "min_prob"}
+INT_KEYS = {"max_accas", "legs_per_acca", "volume_pool", "saturated_accas"}
+BOOL_KEYS = {"fallback"}
+
 
 # --------------------------------------------------------------------------
-# config
+# variant specs
 # --------------------------------------------------------------------------
-def load_settings():
-    p = LOCALDATA / "auto_tickets_state.json"
+def parse_spec(text):
+    """"1.25" | "floor=1.25,gate_mode=acca" | "live" -> dict of overrides."""
+    spec = {}
+    text = (text or "").strip()
+    if not text or text == "live":
+        return spec
     try:
-        return json.loads(p.read_text())
-    except Exception:
-        return {}
+        return {"floor": float(text)}          # back-compat: --ab 1.10 1.20
+    except ValueError:
+        pass
+    for part in text.split(","):
+        part = part.strip()
+        if not part:
+            continue
+        if "=" not in part:
+            raise SystemExit(f"bad spec fragment {part!r} (want key=value)")
+        k, v = (s.strip() for s in part.split("=", 1))
+        if k in BOOL_KEYS:
+            spec[k] = v.lower() not in ("0", "false", "no", "off")
+        elif k in INT_KEYS:
+            spec[k] = int(v)
+        elif k in FLOAT_KEYS:
+            spec[k] = float(v)
+        else:
+            spec[k] = v
+    unknown = set(spec) - ENGINE_KEYS - {"stake_frac", "min_prob"}
+    if unknown:
+        raise SystemExit(f"unknown spec key(s): {sorted(unknown)}")
+    return spec
+
+
+def label_of(spec):
+    return "live settings" if not spec else ",".join(f"{k}={v}" for k, v in sorted(spec.items()))
 
 
 # --------------------------------------------------------------------------
-# build the day-by-day candidate universe ONCE from the real archive,
-# honoring every live guard, then re-filter per variant below.
+# universe: every archived day's settled playable legs, floor NOT applied
+# (variants apply their own floor via the live selector)
 # --------------------------------------------------------------------------
-def _playable_legs_nofloor():
-    """Live playable_legs source with ONLY the min-odds floor stripped, so the
-    harness can test floors BELOW the live one (fix 2026-09-04: the universe
-    was pre-filtered by the live floor, making lower-floor A/Bs no-ops)."""
-    import inspect, re
-    src = inspect.getsource(at.playable_legs)
-    src = re.sub(r"[ \t]*# Min leg odds floor.*?\n(?:[ \t]*#.*\n)*[ \t]*if odds < [0-9.]+:\n[ \t]*continue\n", "", src, flags=re.S)
-    if "if odds <" in src:  # fallback: strip any bare floor line
-        src = re.sub(r"[ \t]*if odds < [0-9.]+:\n[ \t]*continue\n", "", src)
-    ns = dict(at.__dict__)
-    exec(src, ns)
-    return ns["playable_legs"]
-
-
 def build_universe(archives, settled):
-    """For each archive day: playable legs (ALL live guards EXCEPT the odds
-    floor, so variant floors are testable) with settled results, prob-desc."""
-    legs_nf = _playable_legs_nofloor()
     days = sorted({str(p.get("date") or p.get("_archive_day") or "")[:10] for p in archives})
     universe = {}
     for d in days:
-        pool = legs_nf(archives, day=d, settled=settled)
-        pool = [l for l in pool if l["result"]]          # settled only (replay can't grade pending)
+        pool = at.playable_legs(archives, day=d, settled=settled, floor=0.0)
+        pool = [l for l in pool if l["result"]]      # settled only (replay can't grade pending)
         if len(pool) >= at.LEGS_PER_ACCA:
-            universe[d] = sorted(pool, key=lambda l: (l["prob"], l["odds"]), reverse=True)
+            universe[d] = pool
     return universe
 
 
-def plan_for_day(pool, *, floor, max_accas, min_prob, volume_pool, volume_min,
-                 fallback=True):
-    """plan_day re-implemented with overridable knobs (mirrors live logic,
-    including the card-completeness fallback of 2026-09-04)."""
-    pool = [l for l in pool if l["odds"] >= floor]
-    if min_prob is not None:
-        pool = [l for l in pool if l["prob"] >= min_prob]
-    if len(pool) >= volume_pool:
-        gated = [l for l in pool if l["prob"] >= volume_min]
-        if len(gated) >= max_accas * 2 or not fallback:
-            pool = gated
-        # else: starved -> keep full floored pool (completeness fallback)
-    legs = pool[: max_accas * 2]
-    pairs = [legs[i : i + 2] for i in range(0, len(legs) - 1, 2)][:max_accas]
-    return [p for p in pairs if len(p) == 2]
+def card_for_day(pool, spec):
+    """The live selector, driven by a variant spec. Returns list of accas."""
+    kw = {k: v for k, v in spec.items() if k in ENGINE_KEYS}
+    mp = spec.get("min_prob")
+    if mp is not None:
+        pool = [l for l in pool if l["prob"] >= mp]
+    return at.select_accas(pool, **kw)
 
 
-def leg_bands(universe, volume_pool=12):
-    """Stated-prob band performance of legs ON SATURATED days (the volume
-    gate's jurisdiction), floor applied upstream by the universe builder."""
-    bands = {"<0.55": [0, 0, 0.0], "0.55-0.60": [0, 0, 0.0], "0.60-0.65": [0, 0, 0.0],
-             "0.65-0.70": [0, 0, 0.0], "0.70-0.75": [0, 0, 0.0], "0.75+": [0, 0, 0.0]}
-    for d, pool in universe.items():
-        if len(pool) < volume_pool:
-            continue
-        for l in pool:
-            pr = l["prob"]
-            b = ("<0.55" if pr < 0.55 else "0.55-0.60" if pr < 0.60 else
-                 "0.60-0.65" if pr < 0.65 else "0.65-0.70" if pr < 0.70 else
-                 "0.70-0.75" if pr < 0.75 else "0.75+")
-            bands[b][0] += 1
-            if l["result"] == "win":
-                bands[b][1] += 1
-                bands[b][2] += l["odds"]
-    return bands
+def day_growth(accas, stake_frac):
+    """Bank-multiplier for one bet-day. Bank-independent: stake is
+    stake_frac of bank split evenly, so growth = 1 + f*(mean(odds*win) - 1)."""
+    n = len(accas)
+    ret = 0.0
+    for a in accas:
+        if all(l["result"] == "win" for l in a):
+            prod = 1.0
+            for l in a:
+                prod *= l["odds"]
+            ret += prod
+    return 1.0 + stake_frac * (ret / n - 1.0)
 
 
-def replay(universe, *, floor, max_accas, min_prob, stake_frac,
-           volume_pool=None, volume_min=None, start_bank=100.0, fallback=True):
-    """Compound replay. Returns (final_bank, per-day list)."""
-    volume_pool = at.VOLUME_POOL if volume_pool is None else volume_pool
-    volume_min = at.VOLUME_MIN_PROB if volume_min is None else volume_min
-    bank = start_bank
-    days = []
+def replay(universe, spec):
+    """Per-day record for a variant. Order-independent by construction."""
+    stake_frac = spec.get("stake_frac", at.STAKE_FRAC)
+    out = {}
     for d in sorted(universe):
-        pairs = plan_for_day(universe[d], floor=floor, max_accas=max_accas,
-                             min_prob=min_prob, volume_pool=volume_pool,
-                             volume_min=volume_min, fallback=fallback)
-        if not pairs:
+        accas = card_for_day(universe[d], spec)
+        if not accas:
             continue
-        stake = bank * stake_frac / len(pairs)
-        ret = 0.0
-        for a in pairs:
-            if a[0]["result"] == "win" and a[1]["result"] == "win":
-                ret += stake * a[0]["odds"] * a[1]["odds"]
-        bank += ret - stake * len(pairs)
-        days.append({
-            "date": d,
-            "accas": [(round(a[0]["odds"] * a[1]["odds"], 2),
-                       a[0]["result"] == "win" and a[1]["result"] == "win") for a in pairs],
-            "bank": round(bank, 2),
-        })
-    return bank, days
+        out[d] = {
+            "growth": day_growth(accas, stake_frac),
+            "accas": [(round(math.prod(l["odds"] for l in a), 4),
+                       all(l["result"] == "win" for l in a)) for a in accas],
+            "legs": [tuple(l["match"] for l in a) for a in accas],
+        }
+    return out
 
 
-def acca_rate(days):
-    """Per-day list-of-acca-outcomes for bootstrap sampling."""
-    return [(d["date"], d["accas"]) for d in days]
-
-
-def bootstrap_ab(univ, a_kw, b_kw, n=3000, seed=2026):
-    """Bootstrap the difference in final bank between two variants."""
-    random.seed(seed)
-    _, days_a = replay(univ, **a_kw)
-    _, days_b = replay(univ, **b_kw)
-    la, lb = acca_rate(days_a), acca_rate(days_b)
-    if not la or not lb:
-        return None
-    def compound(sample):
-        bank = 100.0
-        for _, accas in sample:
-            stake = bank * 0.5 / len(accas)
-            ret = 0.0
-            for o, w in accas:
-                if w:
-                    ret += stake * o
-            bank += ret - stake * len(accas)
-        return bank
-    diffs = []
-    for _ in range(n):
-        sa = random.choices(la, k=len(la))
-        sb = random.choices(lb, k=len(lb))
-        diffs.append(compound(sb) - compound(sa))
-    diffs.sort()
-    q = lambda p: diffs[int(len(diffs) * p)]  # noqa: E731
+def summarise(days):
+    g = [d["growth"] for d in days.values()]
+    accas = [a for d in days.values() for a in d["accas"]]
+    wins = sum(1 for _, w in accas if w)
+    logs = [math.log(x) for x in g if x > 0]
+    final = 100.0 * math.exp(sum(logs))
     return {
-        "median": q(0.5), "p10": q(0.1), "p90": q(0.9),
-        "p_b_higher": sum(1 for x in diffs if x > 0) / len(diffs),
-        "n_days_a": len(la), "n_days_b": len(lb),
+        "days": len(g), "accas": len(accas),
+        "hit": wins / len(accas) if accas else 0.0,
+        "mean_log": sum(logs) / len(logs) if logs else 0.0,
+        "final": final,
+        "worst": min(g) if g else 1.0,
+        "leg_odds": accas,
     }
 
 
@@ -193,20 +181,96 @@ def noise_flag(n):
     return "  ⚠ small-n" if n < 30 else ""
 
 
+def effect_concentration(universe, spec_a, spec_b):
+    """How much of an A/B difference rides on a handful of days?
+
+    A 52-day replay can hand you a 99%-confident bootstrap that is really one
+    treble. For every day, recompute the effect with that day removed; report
+    the most influential day and the leave-one-out effect. If dropping ONE day
+    flips or halves the effect, it is an anecdote, not a policy.
+    """
+    da, db = replay(universe, spec_a), replay(universe, spec_b)
+    la = {d: math.log(v["growth"]) for d, v in da.items() if v["growth"] > 0}
+    lb = {d: math.log(v["growth"]) for d, v in db.items() if v["growth"] > 0}
+    if not la or not lb:
+        return None
+    full = sum(lb.values()) / len(lb) - sum(la.values()) / len(la)
+    contrib = []
+    for d in sorted(set(la) | set(lb)):
+        ka = {x: v for x, v in la.items() if x != d}
+        kb = {x: v for x, v in lb.items() if x != d}
+        if not ka or not kb:
+            continue
+        without = sum(kb.values()) / len(kb) - sum(ka.values()) / len(ka)
+        contrib.append((full - without, d))
+    if not contrib:
+        return None
+    contrib.sort(key=lambda t: -abs(t[0]))
+    top, top_day = contrib[0]
+    return {"full": full, "top_day": top_day, "top_share": abs(top) / abs(full) if full else 0.0,
+            "drop_one": full - top, "flips": (full > 0) != ((full - top) > 0)}
+
+
+# --------------------------------------------------------------------------
+# paired bootstrap on mean log growth
+# --------------------------------------------------------------------------
+def card_diff_days(universe, spec_a, spec_b):
+    """Days on which the two variants pick a different card (the no-op guard)."""
+    diff = 0
+    for d, pool in universe.items():
+        ca = [tuple(l["match"] for l in a) for a in card_for_day(pool, spec_a)]
+        cb = [tuple(l["match"] for l in a) for a in card_for_day(pool, spec_b)]
+        if ca != cb:
+            diff += 1
+    return diff
+
+
+def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
+    """Resample DAYS once per iteration and score both variants on the SAME
+    days (paired). Returns the distribution of (B - A) mean log growth."""
+    random.seed(seed)
+    da, db = replay(universe, spec_a), replay(universe, spec_b)
+    days = sorted(set(da) | set(db))
+    if not days:
+        return None
+    ga = {d: math.log(da[d]["growth"]) for d in da if da[d]["growth"] > 0}
+    gb = {d: math.log(db[d]["growth"]) for d in db if db[d]["growth"] > 0}
+    diffs = []
+    for _ in range(n):
+        sample = random.choices(days, k=len(days))
+        la = [ga[d] for d in sample if d in ga]
+        lb = [gb[d] for d in sample if d in gb]
+        if not la or not lb:
+            continue
+        diffs.append(sum(lb) / len(lb) - sum(la) / len(la))
+    if not diffs:
+        return None
+    diffs.sort()
+    q = lambda p: diffs[min(len(diffs) - 1, int(len(diffs) * p))]   # noqa: E731
+    horizon = len(days)
+    return {"median": q(0.5), "p10": q(0.1), "p90": q(0.9),
+            "p_b_higher": sum(1 for x in diffs if x > 0) / len(diffs),
+            "horizon": horizon,
+            "median_mult": math.exp(q(0.5) * horizon),
+            "p10_mult": math.exp(q(0.1) * horizon),
+            "p90_mult": math.exp(q(0.9) * horizon)}
+
+
 # --------------------------------------------------------------------------
 # reports
 # --------------------------------------------------------------------------
 def engine_status():
-    st = load_settings()
-    if not st:
-        print("no engine state found")
+    try:
+        st = json.loads((LOCALDATA / "auto_tickets_state.json").read_text())
+    except Exception:
+        print("no engine state found\n")
         return
     accas = [a for h in st.get("history", []) for a in h["accas"]]
     w = sum(1 for a in accas if a["won"])
     rate = f"{w/len(accas):.0%}" if accas else "n/a"
-    print("=" * 70)
+    print("=" * 74)
     print("ENGINE ACTUAL (the only source of 'what happened')")
-    print("=" * 70)
+    print("=" * 74)
     print(f"bank {st.get('bank', 0):.1f}%  ·  bet-days {len(st.get('history', []))}  ·  "
           f"accas {w}W/{len(accas)-w}L ({rate})  ·  open slips {len(st.get('open_slips', []))}")
     for h in st.get("history", [])[-8:]:
@@ -216,153 +280,280 @@ def engine_status():
 
 
 def live_settings():
-    print("=" * 70)
-    print("LIVE SETTINGS (from scripts/auto_tickets.py on this checkout)")
-    print("=" * 70)
-    src = (ROOT / "scripts" / "auto_tickets.py").read_text()
-    import re
-    for const in ("STAKE_FRAC", "MAX_ACCAS", "LEGS_PER_ACCA", "VOLUME_POOL",
-                  "VOLUME_MIN_PROB", "FREEZE_HOUR"):
-        m = re.search(rf"^{const}\s*=\s*([0-9.]+)", src, re.M)
-        if m:
-            print(f"  {const:18s} {m.group(1)}")
-    m = re.search(r"if odds < ([0-9.]+):", src)
-    print(f"  {'MIN_LEG_ODDS':18s} {m.group(1) if m else 'none found'}")
+    print("=" * 74)
+    print("LIVE SETTINGS (imported from scripts/auto_tickets.py — not grepped)")
+    print("=" * 74)
+    for const in ("STAKE_FRAC", "MAX_ACCAS", "LEGS_PER_ACCA", "MIN_LEG_ODDS",
+                  "VOLUME_POOL", "VOLUME_MIN_PROB", "GATE_MODE", "FREEZE_HOUR"):
+        print(f"  {const:18s} {getattr(at, const)}")
     print()
 
 
-def variant_replay(universe, label, **kw):
-    floor = kw.get("floor", 1.20)
-    max_accas = kw.get("max_accas", at.MAX_ACCAS)
-    stake = kw.get("stake_frac", at.STAKE_FRAC)
-    min_prob = kw.get("min_prob")
-    bank, days = replay(universe, **kw)
-    n_accas = sum(len(d["accas"]) for d in days)
-    w = sum(1 for d in days for _, win in d["accas"] if win)
-    print(f"{label:44s} final {bank:7.0f}%  days {len(days):2d}  accas {n_accas:3d}  "
-          f"hit {w/n_accas:5.0%}{noise_flag(n_accas)}")
-    return bank, days
+def print_variant(universe, spec, label=None, baseline=None):
+    s = summarise(replay(universe, spec))
+    lbl = label or label_of(spec)
+    mark = ""
+    if baseline is not None:
+        d = s["mean_log"] - baseline["mean_log"]
+        mark = f"  Δlog/day {d:+.4f}"
+    print(f"{lbl:42s} log/day {s['mean_log']:+.4f}  final {s['final']:8.0f}%  "
+          f"days {s['days']:2d}  accas {s['accas']:3d}  hit {s['hit']:5.0%}  "
+          f"worst-day {s['worst']:.2f}{mark}{noise_flag(s['accas'])}")
+    return s
+
+
+def ab_report(universe, spec_a, spec_b):
+    la, lb = label_of(spec_a), label_of(spec_b)
+    print(f"A/B (paired):  A = {la}   vs   B = {lb}\n")
+    sa = print_variant(universe, spec_a, f"A: {la}")
+    print_variant(universe, spec_b, f"B: {lb}", baseline=sa)
+    ndiff = card_diff_days(universe, spec_a, spec_b)
+    print(f"\ncards differ on {ndiff}/{len(universe)} days")
+    if ndiff == 0:
+        print("NO-OP: the two variants select IDENTICAL cards on every day.")
+        print("There is nothing to bootstrap — the knob does not reach the card.")
+        print("(This is the 2026-09-04 failure mode: bootstrapping identical arms")
+        print(" prints a wide interval and a ~50% coin-flip that means nothing.)")
+        return
+    r = paired_bootstrap(universe, spec_a, spec_b)
+    if not r:
+        return
+    print("paired bootstrap, B minus A, mean log growth per bet-day (5000 resamples):")
+    print(f"  median {r['median']:+.4f}   p10 {r['p10']:+.4f}   p90 {r['p90']:+.4f}")
+    print(f"  compounded over {r['horizon']} bet-days: median ×{r['median_mult']:.2f}  "
+          f"(p10 ×{r['p10_mult']:.2f}, p90 ×{r['p90_mult']:.2f})")
+    print(f"  P(B better) = {r['p_b_higher']:.0%}", end="  ")
+    if r["p10"] < 0 < r["p90"]:
+        print("— interval spans zero: luck-shaped, do NOT ship on this alone")
+    else:
+        print("— interval one-sided (still only 52 replay days; confirm live)")
+
+    e = effect_concentration(universe, spec_a, spec_b)
+    if e:
+        print(f"\neffect concentration: worst-case single day {e['top_day']} carries "
+              f"{e['top_share']:.0%} of the difference")
+        print(f"  leave-one-day-out effect: {e['drop_one']:+.4f} log/day "
+              f"(full {e['full']:+.4f})", end="  ")
+        if e["flips"]:
+            print("— SIGN FLIPS: this is one day, not a policy")
+        elif e["top_share"] > 0.4:
+            print("— fragile: one day carries most of it")
+        else:
+            print("— broad-based")
+        if ndiff < 10:
+            print(f"  ⚠ only {ndiff} days differ at all — any 'confidence' here is "
+                  f"about {ndiff} coin flips")
+
+
+def leg_bands(universe, floor=None, volume_pool=None):
+    """Stated-prob band performance of legs on SATURATED days, with the LIVE
+    floor applied and the LIVE saturation definition (both on the floored
+    pool). The 2026-09-04 version applied neither and mislabelled the table."""
+    floor = at.MIN_LEG_ODDS if floor is None else floor
+    volume_pool = at.VOLUME_POOL if volume_pool is None else volume_pool
+    edges = [(0.55, "<0.55"), (0.60, "0.55-0.60"), (0.65, "0.60-0.65"),
+             (0.70, "0.65-0.70"), (0.75, "0.70-0.75"), (9.9, "0.75+")]
+    bands = {name: [0, 0, 0.0] for _, name in edges}
+    sat_days = 0
+    for pool in universe.values():
+        floored = [l for l in pool if l["odds"] >= floor]
+        if len(floored) < volume_pool:
+            continue
+        sat_days += 1
+        for l in floored:
+            name = next(n for hi, n in edges if l["prob"] < hi)
+            bands[name][0] += 1
+            if l["result"] == "win":
+                bands[name][1] += 1
+                bands[name][2] += l["odds"]
+    return bands, sat_days
+
+
+def cmd_today(universe, settled):
+    today = date.today().isoformat()
+    pool = universe.get(today)
+    if pool is None:
+        pool = at.playable_legs(json.loads((LOCALDATA / "picks_today.json").read_text()),
+                                day=today, settled=settled, floor=0.0)
+    accas = at.select_accas(pool)                    # LIVE settings, live code
+    print(f"today ({today}) at live settings — {len(accas)} accas "
+          f"(pre-freeze this is a PARTIAL pool; the frozen card is the truth):")
+    for i, a in enumerate(accas, 1):
+        prod = math.prod(l["odds"] for l in a)
+        print(f"  ACCA #{i} @{prod:.2f}: " + " x ".join(
+            f"{l['match']} ({l['pick']} @{l['odds']:.2f}, stated {l['prob']:.0%})" for l in a))
+
+
+def cmd_kelly(universe, spec=None):
+    """Growth-vs-risk curve over the stake fraction, on identical cards.
+
+    Sizing is the one lever that changes NOTHING about selection, so its
+    evidence is far cleaner than any leg-filter A/B: the same days, the same
+    accas, only the fraction of bank deployed. Prints the growth-optimal f
+    (full-Kelly-equivalent for this card distribution) and how stable it is.
+    """
+    spec = dict(spec or {})
+    days = replay(universe, {k: v for k, v in spec.items() if k != "stake_frac"})
+    # per-day acca-return multiple: mean(odds * won) over the day's accas
+    R = [sum(o for o, w in rec["accas"] if w) / len(rec["accas"])
+         for rec in days.values()]
+    if not R:
+        print("no bet-days")
+        return
+    grid = [i / 100 for i in range(5, 96, 5)]
+
+    def growth(f, sample=None):
+        s = R if sample is None else sample
+        return sum(math.log(1 + f * (r - 1)) for r in s) / len(s)
+
+    def maxdd(f):
+        bank = peak = 1.0
+        worst = 0.0
+        for d in sorted(days):
+            rec = days[d]
+            r = sum(o for o, w in rec["accas"] if w) / len(rec["accas"])
+            bank *= 1 + f * (r - 1)
+            peak = max(peak, bank)
+            worst = max(worst, 1 - bank / peak)
+        return worst
+
+    print(f"stake sizing on {len(R)} bet-days ({sum(1 for r in R if r == 0)} total-loss days)")
+    print("cards are IDENTICAL across rows — only the fraction of bank changes\n")
+    print(f"{'stake f':>8s} {'log/day':>9s} {'final%':>9s} {'maxDD':>7s}")
+    best = max(grid, key=growth)
+    for f in grid:
+        star = "   <- growth-optimal" if f == best else ""
+        if abs(f - at.STAKE_FRAC) < 0.025:
+            star += "   <- LIVE"
+        print(f"{f:8.0%} {growth(f):+9.4f} {100*math.exp(growth(f)*len(R)):9.0f} "
+              f"{maxdd(f):7.0%}{star}")
+    random.seed(2026)
+    opts = []
+    for _ in range(2000):
+        sample = random.choices(R, k=len(R))          # ONE resample per iteration
+        opts.append(max(grid, key=lambda f: growth(f, sample)))
+    opts.sort()
+    print(f"\ngrowth-optimal f on this path: {best:.0%} (log/day {growth(best):+.4f}, "
+          f"maxDD {maxdd(best):.0%})")
+    print(f"bootstrapped f*: median {opts[len(opts)//2]:.0%}  p10 {opts[int(.1*len(opts))]:.0%}  "
+          f"p90 {opts[int(.9*len(opts))]:.0%}")
+    print(f"P(f* < live {at.STAKE_FRAC:.0%}) = {sum(1 for o in opts if o < at.STAKE_FRAC)/len(opts):.0%}")
+    print("\nKelly doctrine: the growth curve is asymmetric — overbetting past f*")
+    print("loses growth AND multiplies drawdown, underbetting only costs growth")
+    print("slowly. With f* this uncertain, size BELOW the point estimate.")
+
+
+def cmd_battery(universe):
+    base = {}
+    print("--- baseline ---")
+    b = print_variant(universe, base, "live settings")
+    print("\n--- min leg odds floor ---")
+    for f in (1.10, 1.15, 1.20, 1.25, 1.30):
+        print_variant(universe, {"floor": f}, f"floor {f:.2f}", baseline=b)
+    print("\n--- accas per day (checkpoint ①) ---")
+    for k in (3, 4, 5, 6):
+        print_variant(universe, {"max_accas": k}, f"max {k} accas/day", baseline=b)
+    print("\n--- accas per day, SATURATED days only (checkpoint ① proper) ---")
+    for k in (4, 5, 6):
+        print_variant(universe, {"saturated_accas": k}, f"{k} accas on saturated days", baseline=b)
+    print("\n--- volume gate that actually bites (per-acca conviction) ---")
+    for vm in (0.55, 0.60, 0.65, 0.70):
+        print_variant(universe, {"gate_mode": "acca", "volume_min": vm},
+                      f"acca-gate >= {vm:.0%}", baseline=b)
+    print_variant(universe, {"gate_mode": "acca", "volume_min": 0.65, "fallback": False},
+                  "acca-gate >=65%, no fallback", baseline=b)
+    print_variant(universe, {"gate_mode": "pool", "fallback": False},
+                  "legacy strict pool gate", baseline=b)
+    print_variant(universe, {"gate_mode": "off"}, "gate off (== live, see audit)", baseline=b)
+    print("\n--- ranking / pairing shape ---")
+    print_variant(universe, {"rank": "ev"}, "rank by stated EV", baseline=b)
+    print_variant(universe, {"pairing": "barbell"}, "barbell pairing (1+6,2+5,3+4)", baseline=b)
+    print("\n--- stake fraction (doctrine: 50% cap) ---")
+    for s in (0.25, 0.33, 0.50, 0.75):
+        print_variant(universe, {"stake_frac": s}, f"stake {s:.0%}/day", baseline=b)
+    print("\n--- always-on stated-prob floor (REJECTED 4x — kept as a tripwire) ---")
+    for mp in (0.60, 0.65, 0.70):
+        print_variant(universe, {"min_prob": mp}, f"always-on prob >= {mp:.0%}", baseline=b)
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument("--floor", type=float, default=None, help="replay with a min leg odds floor")
-    ap.add_argument("--max-accas", type=int, default=None, help="replay with N accas/day")
-    ap.add_argument("--stake", type=float, default=None, help="replay with X fraction of bank/day")
-    ap.add_argument("--min-prob", type=float, default=None, help="always-on stated-prob floor")
-    ap.add_argument("--volume-pool", type=int, default=None, help="saturation threshold")
-    ap.add_argument("--volume-min", type=float, default=None,
-                    help="stated-prob gate on saturated days (default: live 0.65)")
-    ap.add_argument("--no-fallback", action="store_true",
-                    help="disable the card-completeness fallback (strict gate)")
-    ap.add_argument("--gate-ab", nargs=2, type=float, metavar=("VM_A", "VM_B"),
-                    help="A/B two volume-gate thresholds with bootstrap confidence")
-    ap.add_argument("--legs", action="store_true",
-                    help="print stated-prob band table for saturated-day legs")
-    ap.add_argument("--ab", nargs=2, type=float, metavar=("FLOOR_A", "FLOOR_B"),
-                    help="A/B two floors with bootstrap confidence")
-    ap.add_argument("--today", action="store_true", help="print today's card at LIVE settings")
-    ap.add_argument("--all", action="store_true", help="the full battery")
+    ap.add_argument("--variant", action="append", metavar="SPEC",
+                    help="replay a variant spec (repeatable)")
+    ap.add_argument("--ab", nargs=2, metavar=("SPEC_A", "SPEC_B"),
+                    help="paired A/B of two specs, with no-op guard + bootstrap")
+    ap.add_argument("--battery", action="store_true", help="the full sweep vs live baseline")
+    ap.add_argument("--legs", action="store_true", help="stated-prob band table, saturated days")
+    ap.add_argument("--kelly", action="store_true",
+                    help="stake-fraction growth/drawdown curve + growth-optimal f")
+    ap.add_argument("--today", action="store_true", help="today's card at LIVE settings")
+    # legacy single-knob flags (kept: HANDOVER documents them)
+    ap.add_argument("--floor", type=float)
+    ap.add_argument("--max-accas", type=int)
+    ap.add_argument("--stake", type=float)
+    ap.add_argument("--min-prob", type=float)
+    ap.add_argument("--volume-min", type=float)
+    ap.add_argument("--volume-pool", type=int)
+    ap.add_argument("--gate-mode", choices=("off", "pool", "acca"))
+    ap.add_argument("--no-fallback", action="store_true")
     args = ap.parse_args()
 
     settled = at.load_settled()
-    archives = at.load_archived_picks()
-    universe = build_universe(archives, settled)
+    universe = build_universe(at.load_archived_picks(), settled)
 
     engine_status()
     live_settings()
-
-    print("=" * 70)
+    print("=" * 74)
     print(f"REPLAY UNIVERSE: {len(universe)} bet-days with settled playable legs")
-    print("=" * 70)
-    print("doctrine: trust RELATIVE differences + bootstrap, not absolute numbers\n")
-
-    base_kw = dict(floor=1.20, max_accas=at.MAX_ACCAS, min_prob=None, stake_frac=at.STAKE_FRAC)
-    live_kw = dict(floor=1.20, max_accas=at.MAX_ACCAS, min_prob=None, stake_frac=at.STAKE_FRAC)
+    print("=" * 74)
+    print("doctrine: RELATIVE differences + paired bootstrap. Primary metric is")
+    print("mean LOG GROWTH per bet-day; final bank is one lucky path, not evidence.\n")
 
     if args.today:
-        today = date.today().isoformat()
-        pool = universe.get(today) or at.playable_legs(
-            json.loads((LOCALDATA / "picks_today.json").read_text()),
-            day=today, settled=settled)
-        pool = sorted([l for l in pool if l["result"] is None or l["result"]],
-                      key=lambda l: (l["prob"], l["odds"]), reverse=True)
-        pairs = plan_for_day(pool, floor=1.20, max_accas=at.MAX_ACCAS,
-                             min_prob=None, volume_pool=at.VOLUME_POOL, volume_min=at.VOLUME_MIN_PROB)
-        print(f"today ({today}) at live settings — {len(pairs)} accas:")
-        for i, a in enumerate(pairs, 1):
-            prod = a[0]["odds"] * a[1]["odds"]
-            print(f"  ACCA #{i} @{prod:.2f}: {a[0]['match']} ({a[0]['pick']} @{a[0]['odds']:.2f}) "
-                  f"x {a[1]['match']} ({a[1]['pick']} @{a[1]['odds']:.2f})")
+        cmd_today(universe, settled)
+        return 0
+
+    if args.kelly:
+        cmd_kelly(universe)
         return 0
 
     if args.legs:
-        print("=== stated-prob band performance: legs on SATURATED days ===")
-        print("(the volume gate's jurisdiction; floor applied; n<30 = noise)\n")
-        bands = leg_bands(universe)
+        bands, sat_days = leg_bands(universe)
+        print(f"=== stated-prob bands: legs on SATURATED days "
+              f"({sat_days} days, floor {at.MIN_LEG_ODDS} APPLIED) ===\n")
         print(f"{'band':10s} {'n':>4s} {'hit':>6s} {'flatROI':>8s}")
         for b, (n, w, ret) in bands.items():
             if n:
-                flag = "  << small-n" if n < 30 else ""
-                print(f"{b:10s} {n:4d} {w/n:6.1%} {(ret-n)/n:+8.1%}{flag}")
-        return 0
-
-    if args.gate_ab:
-        va, vb = args.gate_ab
-        print(f"A/B: volume gate >={va:.0%} vs >={vb:.0%} (identical everything else, "
-              f"completeness fallback LIVE)\n")
-        for vm in (va, vb):
-            variant_replay(universe, f"gate >= {vm:.0%}", **{**base_kw, "volume_min": vm})
-        r = bootstrap_ab(universe, {**base_kw, "volume_min": va},
-                         {**base_kw, "volume_min": vb})
-        if r:
-            print(f"\nbootstrap (B minus A, final bank): median {r['median']:+.0f}%  "
-                  f"10th {r['p10']:+.0f}%  90th {r['p90']:+.0f}%")
-            print(f"P(gate {vb:.0%} higher) = {r['p_b_higher']:.0%}  "
-                  f"(spans zero = luck-shaped; decide on 30d+ real data)")
+                print(f"{b:10s} {n:4d} {w/n:6.1%} {(ret-n)/n:+8.1%}"
+                      f"{'  << small-n' if n < 30 else ''}")
         return 0
 
     if args.ab:
-        fa, fb = args.ab
-        print(f"A/B: floor {fa} vs floor {fb} (identical everything else)\n")
-        variant_replay(universe, f"floor {fa}", **{**base_kw, "floor": fa})
-        variant_replay(universe, f"floor {fb}", **{**base_kw, "floor": fb})
-        r = bootstrap_ab(universe, {**base_kw, "floor": fa}, {**base_kw, "floor": fb})
-        if r:
-            print(f"\nbootstrap (B minus A, final bank): median {r['median']:+.0f}%  "
-                  f"10th {r['p10']:+.0f}%  90th {r['p90']:+.0f}%")
-            print(f"P(floor {fb} higher) = {r['p_b_higher']:.0%}  "
-                  f"(spans zero = luck-shaped; decide on 30d+ real data)")
+        ab_report(universe, parse_spec(args.ab[0]), parse_spec(args.ab[1]))
         return 0
 
-    if args.all:
-        print("--- floor sweep ---")
-        for f in (1.10, 1.15, 1.20, 1.25, 1.30):
-            variant_replay(universe, f"floor {f:.2f}", **{**base_kw, "floor": f})
-        print("\n--- accas-per-day sweep (heavy-day question) ---")
-        for k in (3, 4, 5, 6):
-            variant_replay(universe, f"max {k} accas/day", **{**base_kw, "max_accas": k})
-        print("\n--- stake sweep ---")
-        for s in (0.25, 0.33, 0.50, 0.75):
-            variant_replay(universe, f"stake {s:.0%}/day", **{**base_kw, "stake_frac": s})
-        print("\n--- always-on prob floor (your B-spec from Sept) ---")
-        for mp in (0.60, 0.65, 0.70):
-            variant_replay(universe, f"min stated-prob {mp:.0%}", **{**base_kw, "min_prob": mp})
+    if args.battery:
+        cmd_battery(universe)
         return 0
 
-    # default: single replay at requested (or live) settings
-    kw = dict(base_kw)
-    if args.floor is not None: kw["floor"] = args.floor
-    if args.max_accas is not None: kw["max_accas"] = args.max_accas
-    if args.stake is not None: kw["stake_frac"] = args.stake
-    if args.min_prob is not None: kw["min_prob"] = args.min_prob
-    if args.volume_pool is not None: kw["volume_pool"] = args.volume_pool
-    if args.volume_min is not None: kw["volume_min"] = args.volume_min
-    if args.no_fallback: kw["fallback"] = False
-    variant_replay(universe, "requested variant", **kw)
-    variant_replay(universe, "live settings (reference)", **live_kw)
+    specs = [parse_spec(s) for s in (args.variant or [])]
+    legacy = {}
+    for key, val in (("floor", args.floor), ("max_accas", args.max_accas),
+                     ("stake_frac", args.stake), ("min_prob", args.min_prob),
+                     ("volume_min", args.volume_min), ("volume_pool", args.volume_pool),
+                     ("gate_mode", args.gate_mode)):
+        if val is not None:
+            legacy[key] = val
+    if args.no_fallback:
+        legacy["fallback"] = False
+    if legacy:
+        specs.append(legacy)
+
+    base = print_variant(universe, {}, "live settings (reference)")
+    for spec in specs:
+        print_variant(universe, spec, baseline=base)
     return 0
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

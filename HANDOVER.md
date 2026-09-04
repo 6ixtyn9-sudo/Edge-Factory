@@ -6351,3 +6351,144 @@ live main via raw.githubusercontent.
   adrenaline.
 - Beer-money doctrine: only vice-money/scheduled deposits; never rent money,
   never loss-chasing top-ups; December harvest = profits above deposits.
+
+## Addendum — 2026-09-04 (late): harness v2 post-mortem, the dead volume gate,
+## and stake sizing (the first change with a structural argument)
+
+**Context.** A Codespace session shipped "harness v2" (2f75641: `--gate-ab`,
+`--legs`, `--no-fallback`, completeness-fallback parity) and ran three volume-
+gate A/Bs. Every run printed byte-identical arms — `859% / 52 days / 115 accas
+/ 60%` — and an identical bootstrap (`median +8%, p10 -22575%, p90 +22364%,
+P=51%`), and the identity was reported as a 51% coin-flip rather than as the
+bug the harness's own docstring warns about. This addendum is the review, the
+repair, and the resulting engine changes. Everything below is reproducible on
+main with `scripts/replay_harness.py`.
+
+### Findings (receipts, in order of consequence)
+
+1. **THE VOLUME REGIME IS DEAD CODE — and had already stopped selecting
+   anything before that.** `plan_day` sorts prob-descending, so a
+   `prob >= VOLUME_MIN_PROB` filter can only trim a SUFFIX; the top-6 is
+   untouched whenever >=6 legs survive, and when fewer survive the 2026-09-04
+   completeness fallback restores the full pool. Both branches return the same
+   card. Measured on the live selector over the whole archive:
+   `VOLUME_MIN_PROB 0.00 / 0.50 / 0.55 / 0.60 / 0.70 / 0.75 / 0.80 / 0.95 vs
+   0.65 -> 0 days differ out of 57`. Even pre-fallback the gate never changed
+   WHICH legs rode — it only shrank the card (and because stake is
+   `STAKE_FRAC / len(accas)`, a shorter card is not less risk, it is less
+   diversification). The recipe line "pool >= 12 -> only >=65% rides" has been
+   false since the fallback landed. **Now honest: `GATE_MODE = "off"`.**
+2. **The bootstrap was UNPAIRED.** `random.choices(la)` and `random.choices(lb)`
+   drew independent day samples, so two identical arms produced a +-22,000%
+   interval and P=51%. Reproduced exactly on the retired code. Fixed: one
+   resample of day indices, scored under both arms, on **mean log growth per
+   bet-day** (final bank is a single path — one treble owns it).
+3. **The `--legs` band table applied no floor** despite its header. 33/305
+   legs (11%) were sub-1.20 — **16 of the 38 legs in the `0.75+` cell**. It
+   also called days saturated using the unfloored pool. Corrected table
+   (floor applied, live saturation, 11 saturated days): `0.55-0.60 n=90
+   -2.4% · 0.60-0.65 n=45 +7.8% · 0.65-0.70 n=35 +3.3% · 0.70-0.75 n=52
+   -3.1% · 0.75+ n=22 +4.5%`. There is no cliff at 0.65; the best cell sits
+   just BELOW the old gate. Every cell n<=90: decide nothing on it.
+4. Smaller: `--gate-ab` ignored `--no-fallback`/`--volume-pool` (the only
+   combination that could have produced signal was unreachable); the
+   bootstrap's `compound()` hardcoded `stake * 0.5`; the harness re-implemented
+   `plan_day` and had drifted (live gate threshold `MAX_LEGS*2`, harness
+   `max_accas*2`); it regex-stripped the floor out of live source with
+   `inspect.getsource` + `exec` — the exact mechanism behind the earlier
+   no-op bug; zero tests covered any of it; HANDOVER was not updated.
+
+### What shipped (this addendum)
+
+**Engine (`scripts/auto_tickets.py`) — one selection path, knobs not copies:**
+- `MIN_LEG_ODDS = 1.20` promoted to a constant; `playable_legs(..., floor=)`.
+- New `rank_legs` / `pair_legs` / `select_accas(...)`: every recipe knob
+  (floor, rank, pairing, max_accas, saturated_accas, volume_pool, volume_min,
+  gate_mode, fallback) is a parameter defaulting to the validated live value.
+  `plan_day(pool, bank_pct, **overrides)` forwards them. The harness now calls
+  THIS function — a parity test fails if it ever diverges again.
+- `GATE_MODE = "off"` (honest no-op removal, zero behaviour change).
+  `"acca"` implements the only shape that can bite: on saturated days an acca
+  rides only if BOTH legs clear the threshold. Pre-registered, not live.
+- **`STAKE_FRAC 0.50 -> 1/3`** — see below. Selection is untouched: verified
+  leg-for-leg identical cards on all 80 archived days, only `stake_pct`
+  changes (16.67% -> 11.11% per acca on a 3-acca card).
+
+**Harness (`scripts/replay_harness.py`) — rewritten:** live-selector driven,
+variant specs (`--ab live "gate_mode=acca,volume_min=0.70"`, bare numbers still
+mean floors), paired bootstrap on log growth, **no-op guard** (diffs the cards
+first and refuses to bootstrap identical arms), **effect concentration**
+(leave-one-day-out: reports the share carried by the single most influential
+day and whether the sign flips), corrected `--legs`, new `--kelly` sizing
+curve, `--battery`. **`tests/test_replay_harness.py` (11 cases)** pins all of
+it, including "identical arms bootstrap to exactly zero" and "no
+`inspect.getsource`, no second copy of the recipe". Full suite: **334 passed**,
+pyflakes clean.
+
+### Stake sizing — the one lever with a structural argument
+
+Sizing changes no selection, so its evidence is far cleaner than any leg
+filter. Same 52 bet-days, same cards, only the fraction deployed
+(`--kelly`):
+
+| f | log/day | final | maxDD |
+|---|---|---|---|
+| 20% | +0.0324 | 540% | 44% |
+| 25% | +0.0374 | 699% | 53% |
+| 30% | +0.0410 | 845% | 62% |
+| **33%** | **+0.0426** | **916%** | **67%** |
+| 40% | +0.0443 | 999% | 76% |
+| 50% | +0.0414 | 859% | 87% |
+| 75% | -0.0069 | 70% | 99% |
+
+The growth-optimal fraction on this path is **~40%**, so **50% was already
+past the peak: lower growth AND higher drawdown — strictly dominated**. The
+curve is flat from 30-50% while maxDD climbs 62% -> 87%. Bootstrapped f*:
+median 40%, p10 15%, p90 65% — uncertain enough that Kelly doctrine says size
+BELOW the estimate (overbetting punishes asymmetrically). **1/3 keeps 96% of
+peak growth at 67% maxDD.** Revert = one constant. If the operator wants more
+protection, 25% costs ~10% of growth and halves drawdown to 53%.
+
+### Experiment ledger — updates
+
+- **Floor 1.20: CONFIRMED (upgraded evidence).** Paired bootstrap vs 1.20:
+  floor 1.15 P(better)=6% (p90 -0.0071 — one-sided), floor 1.25 P=8%
+  (p90 -0.0064). 17 and 32 days differ, so this is broad-based, not an
+  anecdote. Do not move it.
+- **Volume gate (pool form): DELETED as a no-op.** Not "rejected on
+  evidence" — it never had jurisdiction. Anyone reinstating a saturated-day
+  quality gate must use the per-acca shape and prove it on cards, not pools.
+- **Stake >50%: still REJECTED. Stake <50%: ADOPTED at 1/3** (above).
+- **4 accas/day: DOWNGRADED — checkpoint ① correction.** Replay Δ +0.0090
+  log/day looks favourable, but leave-one-day-out is **-0.0015 (sign flips)**:
+  **117% of the effect is a single 4.90 treble on 2026-08-25**. Earlier
+  sightings (4->989% etc.) were the same artifact viewed through final bank.
+  Do NOT flip to 4-5 accas at day-30 unless the effect survives
+  leave-one-day-out on the accumulated live heavy days.
+- **Rank by stated EV: REJECTED** (-0.0099 log/day). **Barbell pairing
+  (1+6,2+5,3+4): REJECTED** (-0.0137). Probability order + consecutive pairs
+  stands.
+- **Always-on stated-prob floor: REJECTED, 5th sighting** (60% -0.0068,
+  65% -0.0535, 70% -0.0339).
+- **NEW checkpoint ⑥ — per-acca conviction gate (pre-registered, NOT live).**
+  `GATE_MODE="acca", VOLUME_MIN_PROB=0.70` shows Δ +0.0172 log/day, P=99%,
+  interval one-sided — but **only 4 days differ**, one carries 42%, and the
+  mechanism is "the sub-70% acca lost 4/4 times". That is a 1-in-16 coin-flip
+  run, not a policy. **Decision rule, fixed now:** adopt only when >=12
+  differing days have accumulated live AND the leave-one-day-out effect is
+  still positive AND p10 > 0. Until then it stays a parameter, not a default.
+
+### Doctrine added
+
+- **A knob that cannot change the card is not a policy.** Every A/B prints
+  how many days actually differ; the harness refuses to bootstrap identical
+  arms. If two variants tie exactly, that is a bug report, not a result.
+- **Report leave-one-day-out with every replay claim.** On a 52-day ledger a
+  99% bootstrap can be four coin flips.
+- **Prefer levers that do not touch selection** (sizing, cadence, price
+  capture): their counterfactuals are exact rather than inferred.
+
+**Replacement paths:** `scripts/auto_tickets.py`, `scripts/replay_harness.py`,
+`tests/test_auto_tickets_rolling.py` (gate tests rewritten — the old volume
+test passed with the gate deleted, it asserted a property of the sort),
+`tests/test_replay_harness.py` (new), this HANDOVER entry.
