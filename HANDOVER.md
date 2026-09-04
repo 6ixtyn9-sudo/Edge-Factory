@@ -6503,6 +6503,33 @@ luck-shaped — the case for 1/3 is maxDD 67% vs 87%, not growth). Every
 variant line now prints maxDD, and `--kelly` puts the live fraction ON the
 grid instead of marking the nearest 5% step.
 
+### Checkpoint ① — RESOLVED AS UNRESOLVABLE (2026-09-04, new instrument)
+
+`--slots` asks the marginal-acca question at leg scale instead of day scale.
+Verdict: **the data cannot answer it yet, and will not by day 30.**
+
+- Day-level A/B (operator run, f=1/3): 4 accas Δ +0.0059 log/day, P(better)
+  69%, interval spans zero (p10 -0.0073) over **19 differing days** — and
+  leave-one-day-out is **-0.0011, sign flipped**: 2026-08-25 (a 4.90 treble
+  in slot 4) carries **118%** of the effect.
+- Leg-level, like-for-like (only the **19** archived days that offer 8+
+  playable legs, so every slot is drawn from the same days): every cell is
+  n=19. Acca 1 (slots 1+2) -1.8%, acca 2 (3+4) +13.4%, acca 3 (5+6) -19.8%,
+  acca 4 (7+8) +18.5%. No monotone decay, no signal — just noise with a
+  sign.
+- Mechanism worth knowing: a 4th acca does NOT reduce risk. Total stake is
+  fixed at STAKE_FRAC and split further, so extra accas reshape the payout
+  distribution (more small wins, fewer full-loss days) without changing
+  exposure. maxDD is identical (67%) for 3 and 4 accas on this ledger.
+- **Decision rule, fixed now (supersedes the "5 beats 3 in 80% of
+  resamples" prior, which was the same 8-day artifact seen through final
+  bank):** MAX_ACCAS stays 3 until there are **>=30 bet-days offering 8+
+  playable legs** AND the 4-acca variant wins median AND p10 AND survives
+  leave-one-day-out. At the current rate (19 such days in ~3 months of
+  archive) that is a Q1-2027 question, not a September one. Do not spend
+  another session on it before the counter reaches 30 — `--slots` prints
+  the counter.
+
 **Reading the battery at f=1/3.** All Δlog/day magnitudes in the sweep are
 smaller than the f=0.50 numbers quoted above, because log growth scales with
 leverage; the ORDERING is unchanged (floor 1.20 still dominant, EV rank and

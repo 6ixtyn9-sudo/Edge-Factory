@@ -37,6 +37,7 @@ Usage (from repo root):
   PYTHONPATH=src python3 scripts/replay_harness.py --ab live "gate_mode=acca"
   PYTHONPATH=src python3 scripts/replay_harness.py --variant "saturated_accas=5"
   PYTHONPATH=src python3 scripts/replay_harness.py --battery        # the full sweep vs live
+  PYTHONPATH=src python3 scripts/replay_harness.py --slots          # quality by rank slot
   PYTHONPATH=src python3 scripts/replay_harness.py --kelly          # stake sizing curve
   PYTHONPATH=src python3 scripts/replay_harness.py --legs           # stated-prob band table
   PYTHONPATH=src python3 scripts/replay_harness.py --today          # today's card, live settings
@@ -462,6 +463,70 @@ def cmd_kelly(universe, spec=None):
     print("slowly. With f* this uncertain, size BELOW the point estimate.")
 
 
+def slot_table(universe, floor=None, max_slots=12, min_pool=None):
+    """Leg quality by RANK SLOT, and acca quality by slot pair.
+
+    Checkpoint ① ("should a 4th/5th acca exist?") asked as a day-level A/B is
+    a 19-day question that one treble can own. Asked as "are the legs ranked
+    7-8 as good as the legs ranked 1-6?" it is a several-hundred-leg question.
+    Same ledger, far more signal: if slots 7-10 hold their ROI, more accas is
+    a structural yes; if they decay, the extra accas are variance, not edge.
+    """
+    floor = at.MIN_LEG_ODDS if floor is None else floor
+    slots = {i: [0, 0, 0.0] for i in range(1, max_slots + 1)}
+    accas = {i: [0, 0, 0.0] for i in range(1, max_slots // 2 + 1)}
+    n_days = 0
+    for pool in universe.values():
+        ranked = at.rank_legs([l for l in pool if l["odds"] >= floor])
+        if min_pool is not None and len(ranked) < min_pool:
+            continue        # like-for-like: every slot drawn from the SAME days
+        n_days += 1
+        ranked = ranked[:max_slots]
+        for i, leg in enumerate(ranked, 1):
+            slots[i][0] += 1
+            if leg["result"] == "win":
+                slots[i][1] += 1
+                slots[i][2] += leg["odds"]
+        for j in range(0, len(ranked) - 1, 2):
+            a, b = ranked[j], ranked[j + 1]
+            idx = j // 2 + 1
+            accas[idx][0] += 1
+            if a["result"] == "win" and b["result"] == "win":
+                accas[idx][1] += 1
+                accas[idx][2] += a["odds"] * b["odds"]
+    return slots, accas, n_days
+
+
+def _print_slots(slots, accas, n_days, header):
+    print(header)
+    print(f"{'slot':>4s} {'n':>4s} {'hit':>7s} {'flatROI':>9s}")
+    for i, (n, w, ret) in slots.items():
+        if n:
+            print(f"{i:4d} {n:4d} {w/n:7.1%} {(ret-n)/n:+9.1%}"
+                  f"{'  << small-n' if n < 30 else ''}")
+    print(f"\n{'acca':>4s} {'legs':>7s} {'n':>4s} {'hit':>7s} {'flatROI':>9s}")
+    for i, (n, w, ret) in accas.items():
+        if n:
+            print(f"{i:4d} {f'{2*i-1}+{2*i}':>7s} {n:4d} {w/n:7.1%} {(ret-n)/n:+9.1%}"
+                  f"{'  << small-n' if n < 30 else ''}")
+
+
+def cmd_slots(universe):
+    slots, accas, n_days = slot_table(universe)
+    _print_slots(slots, accas, n_days,
+                 "=== ALL DAYS — leg/acca quality by rank slot (floor applied) ===\n"
+                 "CONFOUNDED: slot 1 is drawn from every day, slot 8 only from the\n"
+                 "big-pool days. Use it for shape, not for comparisons.\n")
+    slots8, accas8, n8 = slot_table(universe, min_pool=8)
+    print(f"\n=== LIKE-FOR-LIKE — only the {n8} days that offer 8+ legs ===")
+    print("every slot below is drawn from the SAME days: this is the honest")
+    print("answer to 'is the 4th acca as good as the first three?'\n")
+    _print_slots(slots8, accas8, n8, "")
+    print("\nread: a 4th acca is worth adding only if the slot-7+8 row pays like")
+    print("the rows above it ON THESE DAYS. Adding accas does NOT reduce risk —")
+    print("total stake is fixed at STAKE_FRAC and merely split further.")
+
+
 def cmd_battery(universe):
     base = {}
     print("--- baseline ---")
@@ -503,6 +568,8 @@ def main():
                     help="paired A/B of two specs, with no-op guard + bootstrap")
     ap.add_argument("--battery", action="store_true", help="the full sweep vs live baseline")
     ap.add_argument("--legs", action="store_true", help="stated-prob band table, saturated days")
+    ap.add_argument("--slots", action="store_true",
+                    help="leg/acca quality by rank slot (checkpoint ① at leg scale)")
     ap.add_argument("--kelly", action="store_true",
                     help="stake-fraction growth/drawdown curve + growth-optimal f")
     ap.add_argument("--today", action="store_true", help="today's card at LIVE settings")
@@ -530,6 +597,10 @@ def main():
 
     if args.today:
         cmd_today(universe, settled)
+        return 0
+
+    if args.slots:
+        cmd_slots(universe)
         return 0
 
     if args.kelly:

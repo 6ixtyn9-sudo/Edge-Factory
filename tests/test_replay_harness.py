@@ -164,3 +164,25 @@ def test_effect_concentration_flags_a_one_day_effect():
     assert e is not None
     assert e["top_day"] == day
     assert e["top_share"] > 0.4
+
+
+# ---------------- slot table (checkpoint ① at leg scale) --------------------
+
+def test_slot_table_like_for_like_uses_only_days_that_reach_the_slot():
+    """Slot 1 pooled over every day vs slot 8 pooled over big days only is a
+    confounded comparison. min_pool restricts to days that offer every slot."""
+    u = {"2026-08-01": at.rank_legs([_leg(f"a{i}", 0.80 - i / 100, 1.50) for i in range(4)]),
+         "2026-08-02": at.rank_legs([_leg(f"b{i}", 0.80 - i / 100, 1.50) for i in range(10)])}
+    slots_all, _, days_all = rh.slot_table(u)
+    slots_8, _, days_8 = rh.slot_table(u, min_pool=8)
+    assert days_all == 2 and days_8 == 1
+    assert slots_all[1][0] == 2                       # both days reach slot 1
+    assert slots_8[1][0] == slots_8[8][0] == 1        # like-for-like: same day count
+
+
+def test_slot_table_respects_the_floor_and_the_rank_order():
+    u = {"2026-08-01": at.rank_legs(
+        [_leg("sub", 0.90, 1.05)] + [_leg(f"ok{i}", 0.80 - i / 100, 1.50) for i in range(4)])}
+    slots, accas, _ = rh.slot_table(u)
+    assert slots[1][0] == 1 and slots[5][0] == 0      # sub-floor leg excluded
+    assert accas[1][0] == 1 and accas[3][0] == 0
