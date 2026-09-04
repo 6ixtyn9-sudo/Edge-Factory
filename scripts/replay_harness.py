@@ -59,13 +59,28 @@ def load_settings():
 # build the day-by-day candidate universe ONCE from the real archive,
 # honoring every live guard, then re-filter per variant below.
 # --------------------------------------------------------------------------
+def _playable_legs_nofloor():
+    """Live playable_legs source with ONLY the min-odds floor stripped, so the
+    harness can test floors BELOW the live one (fix 2026-09-04: the universe
+    was pre-filtered by the live floor, making lower-floor A/Bs no-ops)."""
+    import inspect, re
+    src = inspect.getsource(at.playable_legs)
+    src = re.sub(r"[ \t]*# Min leg odds floor.*?\n(?:[ \t]*#.*\n)*[ \t]*if odds < [0-9.]+:\n[ \t]*continue\n", "", src, flags=re.S)
+    if "if odds <" in src:  # fallback: strip any bare floor line
+        src = re.sub(r"[ \t]*if odds < [0-9.]+:\n[ \t]*continue\n", "", src)
+    ns = dict(at.__dict__)
+    exec(src, ns)
+    return ns["playable_legs"]
+
+
 def build_universe(archives, settled):
-    """For each archive day: playable legs (live guards) with settled results,
-    sorted prob-desc — exactly what plan_day sees."""
+    """For each archive day: playable legs (ALL live guards EXCEPT the odds
+    floor, so variant floors are testable) with settled results, prob-desc."""
+    legs_nf = _playable_legs_nofloor()
     days = sorted({str(p.get("date") or p.get("_archive_day") or "")[:10] for p in archives})
     universe = {}
     for d in days:
-        pool = at.playable_legs(archives, day=d, settled=settled)
+        pool = legs_nf(archives, day=d, settled=settled)
         pool = [l for l in pool if l["result"]]          # settled only (replay can't grade pending)
         if len(pool) >= at.LEGS_PER_ACCA:
             universe[d] = sorted(pool, key=lambda l: (l["prob"], l["odds"]), reverse=True)
