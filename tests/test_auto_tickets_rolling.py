@@ -1,10 +1,10 @@
 """Contract tests for the ROLLING auto-tickets engine — PERCENT-ONLY edition.
 
 Pins: no-filter playable legs, top-6 by stated prob, consecutive 2-leg accas
-(max 3), 50% of bank per day (stakes in % of capital), volume regime
-(>=12 legs -> prob>=65% only), committed-stake accounting, settlement moves
-the bank in %, and the TAKE-PROFIT NOTIFICATION (performance-based: fires at
-+100% per cycle, moves no amounts, resets the cycle baseline).
+(max 3), one-third of bank per day (stakes in % of capital), default-off
+research controls, committed-stake accounting, settlement moves the bank in
+%, and the TAKE-PROFIT NOTIFICATION (performance-based: fires at +100% per
+cycle, moves no amounts, resets the cycle baseline).
 """
 import sys
 from pathlib import Path
@@ -44,11 +44,63 @@ def test_plan_day_top6_consecutive_pairs_and_stake_pct():
     assert len(plan) == at.MAX_ACCAS
     assert all(len(a["legs"]) == at.LEGS_PER_ACCA for a in plan)
     assert plan[0]["legs"][0]["prob"] >= plan[0]["legs"][1]["prob"] >= plan[1]["legs"][0]["prob"]
-    # stake = 50% of bank split across 3 accas -> 16.67% of capital each
+    # STAKE_FRAC of bank split across 3 accas.
     assert plan[0]["stake_pct"] == pytest.approx(100.0 * at.STAKE_FRAC / at.MAX_ACCAS, abs=1e-3)
     assert plan[0]["odds"] == pytest.approx(
         plan[0]["legs"][0]["odds"] * plan[0]["legs"][1]["odds"], abs=0.01)
     assert "stake" not in plan[0] and "stake_pct" in plan[0]   # percent-only contract
+
+
+def test_new_knob_defaults_pin_the_live_recipe_byte_for_byte():
+    assert at.STAKE_MODE == "per_day"
+    assert at.STAKE_PER_ACCA is None
+    assert at.MIN_ACCAS == 1
+    assert at.STAKE_WEIGHTS is None
+    pool = [_leg(i, 0.70 - i / 100, 1.30 + i / 10) for i in range(8)]
+    assert at.select_accas(pool) == at.select_accas(pool, min_accas=1)
+    assert at.plan_day(pool, 123.456) == at.plan_day(
+        pool, 123.456, stake_frac=at.STAKE_FRAC, stake_mode="per_day",
+        stake_per_acca=None, weights=None, min_accas=1,
+    )
+
+
+def test_per_acca_stake_is_fixed_until_the_day_cap_bites():
+    pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(6)]
+    two = at.plan_day(pool[:4], 100.0, stake_mode="per_acca")
+    assert [a["stake_pct"] for a in two] == pytest.approx(
+        [100.0 * at.STAKE_FRAC / at.MAX_ACCAS] * 2, abs=1e-4)
+    # An oversized ticket fraction is scaled down rather than breaching the
+    # absolute STAKE_FRAC day cap.
+    capped = at.plan_day(pool, 100.0, stake_mode="per_acca", stake_per_acca=0.20)
+    assert sum(a["stake_pct"] for a in capped) == pytest.approx(100.0 * at.STAKE_FRAC, abs=1e-3)
+
+
+def test_min_accas_turns_smaller_cards_into_no_bet():
+    pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(4)]
+    assert len(at.select_accas(pool)) == 2
+    assert at.select_accas(pool, min_accas=3) == []
+    assert at.plan_day(pool, 100.0, min_accas=3) == []
+
+
+def test_stake_weights_change_stakes_not_selection():
+    pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(6)]
+    equal = at.plan_day(pool, 100.0)
+    weighted = at.plan_day(pool, 100.0, weights="3,2,1")
+    assert [a["legs"] for a in weighted] == [a["legs"] for a in equal]
+    assert [a["stake_pct"] for a in weighted] == pytest.approx(
+        [100.0 * at.STAKE_FRAC * w / 6 for w in (3, 2, 1)], abs=1e-4)
+    assert sum(a["stake_pct"] for a in weighted) <= round(100.0 * at.STAKE_FRAC, 4)
+    assert sum(a["stake_pct"] for a in weighted) == pytest.approx(100.0 * at.STAKE_FRAC, abs=1e-3)
+
+
+def test_invalid_staking_knobs_fail_closed():
+    pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(6)]
+    with pytest.raises(ValueError, match="stake_mode"):
+        at.plan_day(pool, 100.0, stake_mode="martingale")
+    with pytest.raises(ValueError, match="at least 3"):
+        at.plan_day(pool, 100.0, weights="3,2")
+    with pytest.raises(ValueError, match="greater than zero"):
+        at.plan_day(pool, 100.0, weights="3,0,1")
 
 
 def test_legacy_pool_gate_is_a_proven_no_op():

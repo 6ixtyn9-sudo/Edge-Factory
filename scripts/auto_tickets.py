@@ -78,7 +78,13 @@ STAKE_FRAC = 1.0 / 3.0     # of bank per day. 2026-09-04 sizing audit (52-day
                            # = 66%, so size BELOW the estimate (overbetting is
                            # punished far harder than underbetting).
                            # 75% and 100% still bust everywhere. Revert = 0.50.
+STAKE_MODE = "per_day"     # "per_day" preserves the validated fixed day risk;
+                           # "per_acca" risks a fixed fraction per ticket while
+                           # capping the day's total at STAKE_FRAC. Research only.
+STAKE_PER_ACCA = None      # None -> STAKE_FRAC / MAX_ACCAS
+STAKE_WEIGHTS = None       # None -> equal; e.g. "3,2,1" changes sizing, never selection
 MAX_ACCAS = 3              # concurrent accas per day
+MIN_ACCAS = 1              # cards with fewer accas are NO BET (1 preserves live)
 LEGS_PER_ACCA = 2          # 2-leg beat 3-leg out-of-sample
 MAX_LEGS = MAX_ACCAS * LEGS_PER_ACCA
 MIN_LEG_ODDS = 1.20        # min odds per leg (2026-09-02..04 band evidence; the
@@ -515,15 +521,17 @@ def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
 def select_accas(pool, *, floor=None, rank="prob", pairing="consecutive",
                  max_accas=None, legs_per_acca=None, volume_pool=None,
                  volume_min=None, gate_mode=None, fallback=True,
-                 saturated_accas=None):
+                 saturated_accas=None, min_accas=None):
     """THE selection recipe — one code path for live and for the replay harness.
 
     Every knob defaults to the validated live value; the harness passes
     overrides. Returns a list of accas (each a list of legs), no staking.
+    `min_accas` is a card-level gate: a smaller card is NO BET.
     """
     floor = MIN_LEG_ODDS if floor is None else floor
     k = LEGS_PER_ACCA if legs_per_acca is None else legs_per_acca
     max_accas = MAX_ACCAS if max_accas is None else max_accas
+    min_accas = MIN_ACCAS if min_accas is None else min_accas
     volume_pool = VOLUME_POOL if volume_pool is None else volume_pool
     volume_min = VOLUME_MIN_PROB if volume_min is None else volume_min
     gate_mode = GATE_MODE if gate_mode is None else gate_mode
@@ -552,27 +560,91 @@ def select_accas(pool, *, floor=None, rank="prob", pairing="consecutive",
         if kept or not fallback:
             accas = kept
         # else: card-completeness fallback — an empty card is not an opinion.
+    if len(accas) < min_accas:
+        return []
     return accas
 
 
-def plan_day(pool, bank_pct, **overrides):
-    """Selection -> accas -> STAKE_FRAC of bank split evenly (% of capital).
+def _stake_weights(weights, n):
+    """Return `n` positive numeric weights without touching card selection."""
+    if weights is None:
+        return None
+    if isinstance(weights, str):
+        try:
+            parsed = [float(v.strip()) for v in weights.split(",") if v.strip()]
+        except ValueError as exc:
+            raise ValueError("stake weights must be comma-separated numbers") from exc
+    else:
+        try:
+            parsed = [float(v) for v in weights]
+        except (TypeError, ValueError) as exc:
+            raise ValueError("stake weights must be a sequence of numbers") from exc
+    if len(parsed) < n:
+        raise ValueError(f"need at least {n} stake weights, got {len(parsed)}")
+    parsed = parsed[:n]
+    if any(not math.isfinite(v) or v <= 0 for v in parsed):
+        raise ValueError("stake weights must be finite and greater than zero")
+    return parsed
 
-    `overrides` are forwarded to select_accas (replay harness only; live
-    callers pass none, so the validated recipe applies).
+
+def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
+             stake_per_acca=None, weights=None, **overrides):
+    """Select a card and size it in one production/replay code path.
+
+    ``per_day`` (live default) deploys STAKE_FRAC across however many accas
+    were selected. ``per_acca`` deploys STAKE_PER_ACCA for each ticket, while
+    never exceeding STAKE_FRAC in total. Optional weights redistribute that
+    mode's total across accas; they cannot affect which legs are selected.
+    Selection overrides are forwarded to :func:`select_accas`.
     """
+    stake_frac = STAKE_FRAC if stake_frac is None else float(stake_frac)
+    stake_mode = STAKE_MODE if stake_mode is None else stake_mode
+    weights = STAKE_WEIGHTS if weights is None else weights
+    if stake_per_acca is None:
+        stake_per_acca = STAKE_PER_ACCA
+    if stake_per_acca is None:
+        stake_per_acca = stake_frac / MAX_ACCAS
+    stake_per_acca = float(stake_per_acca)
+    if stake_mode not in ("per_day", "per_acca"):
+        raise ValueError("stake_mode must be 'per_day' or 'per_acca'")
+    if not math.isfinite(stake_frac) or stake_frac < 0:
+        raise ValueError("stake_frac must be finite and non-negative")
+    if not math.isfinite(stake_per_acca) or stake_per_acca < 0:
+        raise ValueError("stake_per_acca must be finite and non-negative")
+
     accas = select_accas(pool, **overrides)
     if not accas or bank_pct <= 0:
         return []
-    stake_pct = bank_pct * STAKE_FRAC / len(accas)
+
+    if stake_mode == "per_day":
+        total_frac = stake_frac
+    else:
+        total_frac = min(stake_frac, stake_per_acca * len(accas))
+    parsed_weights = _stake_weights(weights, len(accas))
+    if parsed_weights is None:
+        # Keep the live-default arithmetic byte-for-byte compatible with the
+        # old plan_day implementation.
+        stake_pcts = [bank_pct * total_frac / len(accas)] * len(accas)
+    else:
+        weight_total = sum(parsed_weights)
+        stake_pcts = [bank_pct * total_frac * w / weight_total for w in parsed_weights]
+
+    # Ticket stakes ship at four decimals. Independent rounding of a weighted
+    # card can otherwise put it 0.0001 above the promised hard day cap.
+    stake_pcts = [round(v, 4) for v in stake_pcts]
+    rounded_cap = round(bank_pct * total_frac, 4)
+    excess = round(sum(stake_pcts) - rounded_cap, 4)
+    if excess > 0:
+        stake_pcts[-1] = round(stake_pcts[-1] - excess, 4)
+
     plan = []
-    for a in accas:
+    for a, stake_pct in zip(accas, stake_pcts):
         prod = 1.0
         for l in a:
             prod *= l["odds"]
         plan.append({"legs": [{**{k: l[k] for k in ("match", "pick", "prob", "odds")},
                                "result": l.get("result")} for l in a],
-                     "odds": round(prod, 2), "stake_pct": round(stake_pct, 4)})
+                     "odds": round(prod, 2), "stake_pct": stake_pct})
     return plan
 
 

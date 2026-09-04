@@ -6578,3 +6578,161 @@ leverage; the ORDERING is unchanged (floor 1.20 still dominant, EV rank and
 barbell still negative, 4-accas still one-day fragile). Compare variants
 against the baseline printed in the same run, never against a number from an
 older run at a different stake fraction.
+
+## Addendum — 2026-09-04 (late): checkpoints ⑧–⑩ rebuilt — sizing knobs, ruin truth, and the in-season ledger
+
+This rebuild closes the code-loss gap after the prior analysis session. **No
+live policy changed.** Every new knob defaults to the pre-existing recipe, the
+80 archived days have zero default-output differences from `origin/main`, and
+no candidate below clears the operator's shipping rule:
+
+> Ship only when paired-bootstrap p10 is above zero, the sign survives every
+> leave-one-day-out removal, and max drawdown does not exceed live. Extra
+> growth bought with a deeper hole is not growth we can spend.
+
+### Checkpoint ⑧ — one planner owns selection and sizing; bankruptcy is bankruptcy
+
+`scripts/auto_tickets.py` now exposes research controls without changing the
+live defaults:
+
+- `STAKE_MODE="per_day"` is the live/default behaviour: the day's fixed
+  `STAKE_FRAC` is split over the selected tickets.
+- `STAKE_MODE="per_acca"` fixes risk per ticket and caps total day risk at
+  `STAKE_FRAC`. `STAKE_PER_ACCA=None` resolves to
+  `STAKE_FRAC / MAX_ACCAS`; on a one- or two-acca card this therefore leaves
+  capital unexposed instead of levering the smaller card back to a full day.
+- `MIN_ACCAS=1`; setting 2 or 3 turns smaller cards into NO BET.
+- `STAKE_WEIGHTS=None`; a value such as `"3,2,1"` redistributes the selected
+  card's stake without changing one leg or one pairing.
+- `plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
+  stake_per_acca=None, weights=None, **overrides)` is the single planner.
+  `select_accas(..., min_accas=None)` owns the card gate.
+
+`scripts/replay_harness.py` no longer calculates stakes itself. `replay()`
+calls `auto_tickets.plan_day()` with a 100% reference bank and derives each
+day's bank factor from the returned, production-rounded `stake_pct` and acca
+odds. The parser accepts `stake_mode`, `stake_per_acca`, `min_accas`, and
+comma-valued weights (`weights=3,2,1`). `--since`/`--until` make the regime
+boundary reproducible, for example:
+
+```
+PYTHONPATH=src python3 scripts/replay_harness.py \
+  --since 2026-08-01 --ab live "max_accas=4"
+```
+
+**Ruin bug fixed.** The former `summarise()` discarded every non-positive day
+before taking logs. That let a 100%-stake policy go bankrupt and still print
+`+0.5698 log/day` and a final `80,941,606,995%` from only the days it survived.
+`summarise()` now returns `ruin`; any ruin forces `mean_log=-inf`, `final=0`,
+and `maxdd=1`. A/B bootstrap stops, variant sweeps label the arm RUIN and skip
+it, and the Kelly grid now shows 100% as `RUIN ... SKIPPED`. In money terms:
+once the bank reaches zero there is no later winning ticket and no giant final
+bank — the strategy is finished.
+
+Verification receipt:
+
+- Compared the rebuilt engine with `origin/main` at `e702f89` on all **80**
+  archived dates: `playable_legs` **0 diffs**, default `plan_day` **0 diffs**.
+- New contract tests pin all four defaults, fixed-per-acca risk and its cap,
+  minimum-card NO BET, weights changing stakes but not selection, replay's
+  call through `plan_day`, parser coverage, and ruin handling.
+- Required command (the suite does not import correctly without
+  `PYTHONPATH=src`): `PYTHONPATH=src python3 -m pytest -q` -> **345 passed**.
+  `py_compile` and `git diff --check` are clean.
+
+### Checkpoint ⑨ — thin cards and the alleged weak third ticket
+
+Re-derived from the current 52 settled bet-days, through the rebuilt planner:
+
+| card built | days | mean log/day | money consequence from a 100% start |
+|---|---:|---:|---:|
+| 1 acca | 16 | **+0.0820** | 371% within those days |
+| 2 accas | 9 | **+0.1285** | 318% within those days |
+| 3 accas | 27 | **−0.0091** | 78% within those days |
+
+That split does **not** validate skipping busy cards: card size is entangled
+with the football calendar, and the cells are different regimes rather than
+random assignments.
+
+The direct thin-day gate loses money:
+
+- `min_accas=2`: 16 days are skipped; mean growth falls from +0.0428 to
+  +0.0253 (**Δ −0.0174/day**) and the replay bank falls from **924% to 249%**.
+- `min_accas=3`: only 27 days remain, mean growth is **−0.0091/day**, and the
+  bank shrinks to **78%**. This is a negative-edge policy, not selectivity.
+
+The strongest-looking single ticket (ranked leg slots 1+2, i.e.
+`max_accas=1`) was also priced across every 1% stake fraction. Its best point
+is only **+0.0354 log/day at f=29%**, final 629%, with **89% maxDD**. No stake
+on that one-ticket curve reaches the live three-ticket shape's **+0.0443 at
+f=41%**, final about 1,000%. At the useful comparison, the one-ticket policy
+and current f=1/3 policy make almost the same average daily bank move (+6.84%
+vs +7.14%), but the one-ticket move is wider (24.7% vs 23.6% standard
+deviation) and its maxDD is 89% instead of 67%. Plain English: the third acca
+is ballast, not extra risk to cut; removing the ballast makes the ride rougher
+without paying more. Checkpoint ⑦'s risk-matched `max_accas=2` wash remains
+closed.
+
+### Checkpoint ⑩ — the archive crosses a season boundary
+
+The volume break begins in **ISO week 32**. Before it, the floored settled pool
+is roughly three qualifying legs a day (3.6 on the 19 actual Jun–Jul bet-days);
+from August it averages **11.5**, with ordinary resumed-season slates commonly
+in the **12–18** range and larger weekend spikes. The engine bets 5.2 of those
+legs and leaves 6.4 unused because `MAX_ACCAS=3`.
+
+| regime | settled bet-days | mean log/day | final from 100% | maxDD |
+|---|---:|---:|---:|---:|
+| off-season, Jun–Jul | 19 | **+0.0458** | 239% | 67% |
+| in-season, Aug–Sep | 33 | **+0.0410** | 387% | **63%** |
+
+On the 170 selected in-season legs, actual wins exceed their average stated
+probability by about **+5.4 percentage points**; a leg-resampled lower decile
+is about **+1.0pp**. That says the resumed-season legs have not exposed an
+obvious calibration deficit, but it does not turn 33 path-dependent days into
+permission to tune.
+
+Every older whole-archive headline blends these regimes. **Use +0.0410/day and
+63% maxDD as the forward in-season expectation, and run future A/Bs on dates
+>= 2026-08-01.** In this archive, “thin slate” and “off-season” are the same
+calendar variable for decision purposes. A slate-size-aware cap is therefore
+not an independently validated lead; do not rediscover this confounding as a
+“slate size effect” and ship it.
+
+### Only open lead — a fourth in-season acca; NOT adopted
+
+The old whole-archive “do not ship `max_accas=4`” conclusion was formed when a
+fourth acca rarely existed. The resumed season changes its jurisdiction, so
+that old verdict is void. The correctly scoped run is n=33 in-season days:
+
+| arm | log/day | final from 100% | maxDD | accas |
+|---|---:|---:|---:|---:|
+| live, max 3 | **+0.0410** | 387% | 63% | 85 |
+| max 4 | **+0.0483** | 493% | **60%** | 103 |
+
+Cards differ on 18/33 days. The extra historical growth and slightly shallower
+hole are attractive in cash terms (493% rather than 387% on this path), but
+they are **not dependable**: paired-bootstrap p10 is **−0.0134/day**, and the
+leave-one-day-out range is −0.0037 to +0.0111 with the sign flipping on two
+removals. August 25 alone carries 151% of the measured improvement. It fails
+two legs of the shipping bar, so `MAX_ACCAS` stays 3.
+
+**Pre-registered adoption rule (supersedes the old sparse-era checkpoint):**
+re-run only at **n >= 60 in-season days**. Adopt only if paired-bootstrap p10
+is above zero, every leave-one-day-out result keeps the positive sign, and
+maxDD remains no higher than live. Those additional days must be genuinely
+new days the scan did not see. At most one candidate may be adopted from this
+research family.
+
+Lower-priority `weights=3,2,1` reproduces the full-archive observation: zero
+cards change, log/day rises +0.0042, and every leave-one-day-out result stays
+positive, but p10 is **−0.0064** and maxDD worsens **67% -> 73%**. Scoped to the
+forward in-season regime it is weaker still (p10 −0.0151 and LOO sign flips).
+The historical final-bank jump (924% -> 1,152%) is bought with a deeper hole
+and a luck-shaped interval, so it cannot ship.
+
+About **25 variants have already been scanned**. Anything else that merely
+looks profitable is a new hypothesis, not a result. Do not re-open
+`max_accas=2` risk-matched (wash), `acca-gate >=70%`, or thin-day skipping.
+The only live candidate still earning future observation is the in-season
+fourth acca under the fixed n>=60 / p10 / all-LOO / no-extra-drawdown rule.
