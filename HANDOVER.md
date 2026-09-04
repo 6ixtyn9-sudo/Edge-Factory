@@ -6530,6 +6530,33 @@ Verdict: **the data cannot answer it yet, and will not by day 30.**
   another session on it before the counter reaches 30 — `--slots` prints
   the counter.
 
+### NEW checkpoint ⑦ — the THIRD acca, not the fourth (pre-registered)
+
+The slot table pointed the opposite way to every previous acca-count debate.
+Pooled over the whole archive, acca 1 (slots 1+2) is +23.6% flat ROI (n=52)
+and acca 2 (3+4) is +18.6% (n=36), but **acca 3 (slots 5+6) is -8.7%
+(n=27)** — the weakest cell on the card, and slot 6 alone is -21.8%. The
+sweep had never tested FEWER accas; every prior session only asked for more.
+
+`--ab live "max_accas=2"`: Δ **+0.0047** log/day, P(better) 63%, interval
+spans zero (p10 -0.0148), **27 differing days** (the broadest sample of any
+candidate), hit 65% vs 60%, and leave-one-day-out is **+0.0115** — the most
+influential day works AGAINST the 2-acca variant, so the effect survives
+removal rather than depending on it. That is the healthiest shape any
+candidate has shown.
+
+**It is still not shippable, and the reason is risk, not growth:**
+maxDD 78% (2 accas) vs 67% (3 accas). Concentrating the same fixed stake on
+fewer accas is leverage by another name — the same trade the sizing audit
+just bought down. Adopting it would partly undo the STAKE_FRAC change.
+
+**Decision rule, fixed now:** revisit at day 30. Adopt 2 accas ONLY if
+(a) p10 > 0 on the accumulated live+archive days, AND (b) leave-one-day-out
+stays positive, AND (c) it is paired with a stake reduction that holds maxDD
+at or below the 3-acca level (the harness can price the pair directly:
+`--ab live "max_accas=2,stake_frac=0.25"`). Growth bought with drawdown is
+not growth.
+
 **Reading the battery at f=1/3.** All Δlog/day magnitudes in the sweep are
 smaller than the f=0.50 numbers quoted above, because log growth scales with
 leverage; the ORDERING is unchanged (floor 1.20 still dominant, EV rank and

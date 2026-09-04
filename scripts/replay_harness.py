@@ -216,7 +216,9 @@ def effect_concentration(universe, spec_a, spec_b):
     contrib.sort(key=lambda t: -abs(t[0]))
     top, top_day = contrib[0]
     return {"full": full, "top_day": top_day, "top_share": abs(top) / abs(full) if full else 0.0,
-            "drop_one": full - top, "flips": (full > 0) != ((full - top) > 0)}
+            "drop_one": full - top, "flips": (full > 0) != ((full - top) > 0),
+            # does the most influential day INFLATE the effect or MASK it?
+            "inflates": (top > 0) == (full > 0)}
 
 
 # --------------------------------------------------------------------------
@@ -355,8 +357,10 @@ def ab_report(universe, spec_a, spec_b):
               f"(full {e['full']:+.4f})", end="  ")
         if e["flips"]:
             print("— SIGN FLIPS: this is one day, not a policy")
+        elif not e["inflates"]:
+            print("— the top day works AGAINST B; the effect is stronger without it")
         elif e["top_share"] > 0.4:
-            print("— fragile: one day carries most of it")
+            print("— fragile: one day inflates most of it")
         else:
             print("— broad-based")
         if 0 < ndiff < 10:
@@ -517,10 +521,10 @@ def cmd_slots(universe):
                  "=== ALL DAYS — leg/acca quality by rank slot (floor applied) ===\n"
                  "CONFOUNDED: slot 1 is drawn from every day, slot 8 only from the\n"
                  "big-pool days. Use it for shape, not for comparisons.\n")
-    slots8, accas8, n8 = slot_table(universe, min_pool=8)
+    slots8, accas8, n8 = slot_table(universe, min_pool=8, max_slots=8)
     print(f"\n=== LIKE-FOR-LIKE — only the {n8} days that offer 8+ legs ===")
-    print("every slot below is drawn from the SAME days: this is the honest")
-    print("answer to 'is the 4th acca as good as the first three?'\n")
+    print("every slot below is drawn from the SAME days (table stops at slot 8 —")
+    print("beyond it the day counts fall again and the comparison re-confounds).\n")
     _print_slots(slots8, accas8, n8, "")
     print("\nread: a 4th acca is worth adding only if the slot-7+8 row pays like")
     print("the rows above it ON THESE DAYS. Adding accas does NOT reduce risk —")
