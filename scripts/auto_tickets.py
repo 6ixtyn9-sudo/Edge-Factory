@@ -13,14 +13,26 @@ TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
   LEGS      all playable-bucket picks with a price — NO further filtering.
   ORDER     highest stated probability first (ties by odds).
   ACCAS     2 legs each, consecutive pairs of the top 6, up to 3 per day.
-  STAKE     50% of the bank per day, split across the accas built.
+  STAKE     1/3 of the bank per day, split across the accas built
+            (2026-09-04 sizing audit: on the 52-day replay the growth-optimal
+            fraction is ~40%, and the growth curve is FLAT from 30-50% while
+            max drawdown climbs 62% -> 87%. 50% was past the peak: LOWER
+            growth AND higher risk. 1/3 keeps 96% of peak growth at 67% DD.
+            Raising the fraction stays rejected — 75% and 100% bust.)
   PROFIT    no amounts are ever "withdrawn". Performance is tracked in %,
             and a TAKE-PROFIT NOTIFICATION fires when the bank reaches
             +100% above the cycle baseline (default): a loud 🔔 event is
             printed on every subsequent run, recorded in state/performance,
             and written to a persisted marker file. The cycle baseline then
             resets to the current bank so the next target is +100% again.
-  VOLUME    pool >= 12 legs -> only stated-prob >= 65% legs ride.
+  VOLUME    OFF. The saturated-day stated-prob gate was audited on
+            2026-09-04 and proven to be a NO-OP in every configuration
+            (0/57 days changed for any threshold 0.00-0.95): the pool is
+            prob-sorted, so a prob filter only trims a suffix the top-6 never
+            reached, and the completeness fallback restored it anyway. The
+            machinery survives as GATE_MODE="acca" (per-acca conviction
+            gate, the only shape that can bite) and is PRE-REGISTERED, not
+            live — see the 2026-09-04 addendum, checkpoint ⑥.
 
 Slip lifecycle matches the production cadence: builds from 06:00 SAST,
 FREEZES at 12:00 (later runs re-print), settles as results land. State
@@ -58,12 +70,32 @@ TZ = ZoneInfo("Africa/Johannesburg")
 PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
 
 # ---------------- the validated recipe (receipts, not knobs) ----------------
-STAKE_FRAC = 0.50          # of bank per day (100% busted in every tested config)
+STAKE_FRAC = 1.0 / 3.0     # of bank per day. 2026-09-04 sizing audit (52-day
+                           # replay, SAME cards — sizing only): growth-optimal
+                           # f ~= 40%, curve flat 30-50%, maxDD 62%->87% across
+                           # it. f=1/3 keeps 96% of peak growth at 67% DD;
+                           # f=0.50 gave 93% at 87%. Bootstrapped P(f* < 50%)
+                           # = 66%, so size BELOW the estimate (overbetting is
+                           # punished far harder than underbetting).
+                           # 75% and 100% still bust everywhere. Revert = 0.50.
 MAX_ACCAS = 3              # concurrent accas per day
 LEGS_PER_ACCA = 2          # 2-leg beat 3-leg out-of-sample
 MAX_LEGS = MAX_ACCAS * LEGS_PER_ACCA
-VOLUME_POOL = 12           # pool >= this -> volume regime
-VOLUME_MIN_PROB = 0.65     # only prob >= this rides at volume
+MIN_LEG_ODDS = 1.20        # min odds per leg (2026-09-02..04 band evidence; the
+                           # replay harness A/Bs this knob — never inline the number)
+VOLUME_POOL = 12           # pool >= this -> volume regime (saturated day)
+VOLUME_MIN_PROB = 0.65     # stated-prob threshold used by the volume regime
+GATE_MODE = "off"          # how the volume regime bites on saturated days:
+                           #   "off"  - no gate
+                           #   "pool" - LEGACY pool-prefix filter. PROVEN NO-OP:
+                           #            the pool is prob-sorted, so the filter only
+                           #            ever trims a suffix, and the completeness
+                           #            fallback restores it. 0/57 days differ for
+                           #            ANY threshold 0.00-0.95 (audit 2026-09-04).
+                           #   "acca" - per-acca gate: on saturated days an acca
+                           #            rides only if BOTH legs clear VOLUME_MIN_PROB.
+                           #            Same 50% total risk, spread over fewer,
+                           #            higher-conviction accas. This one bites.
 TAKE_PROFIT_GAIN = 1.00    # bank reaches baseline + 100% -> TAKE-PROFIT NOTIFICATION
 BASE_PCT = 100.0           # capital starts at 100 (%) — everything is a percentage
 
@@ -408,8 +440,16 @@ def take_profit_target(st) -> float:
 
 
 # ---------------- selection / planning ----------------
-def playable_legs(rows, day=None, settled=None):
-    """Playable, priced legs — the NO-FILTER set (validated)."""
+def playable_legs(rows, day=None, settled=None, floor=None):
+    """Playable, priced legs — the NO-FILTER set (validated).
+
+    `floor` overrides MIN_LEG_ODDS (replay harness only — live callers pass
+    nothing so the validated floor applies). Never inline the number: the
+    2026-09-04 audit found the harness had to regex-strip a hardcoded floor
+    out of this function's source, which silently made lower-floor A/Bs
+    no-ops. One constant, one code path.
+    """
+    floor = MIN_LEG_ODDS if floor is None else floor
     out = []
     for p in rows:
         if day is not None and str(p.get("date") or p.get("_archive_day") or "")[:10] != day:
@@ -438,8 +478,8 @@ def playable_legs(rows, day=None, settled=None):
         # Min leg odds floor (2026-09-02: Bayern @1.05 rode slot 1 pre-freeze).
         # Sub-1.10 legs cap their acca's payout below the recipe's economics:
         # the pairing math needs avg ~1.4+ per leg; a 1.05 leg makes slot 1
-        # the worst-paying ticket by construction.
-        if odds < 1.20:
+        # the worst-paying ticket by construction. Value lives in MIN_LEG_ODDS.
+        if odds < floor:
             continue
         res = pick_result(p, settled) if settled is not None else None
         out.append({"match": f"{p.get('home')} vs {p.get('away')}",
@@ -450,25 +490,78 @@ def playable_legs(rows, day=None, settled=None):
     return out
 
 
-def plan_day(pool, bank_pct):
-    """Top legs by stated prob -> consecutive 2-leg accas -> 50% of bank split
-    (stakes returned as % of capital). Volume regime applies at >= VOLUME_POOL."""
-    pool = sorted(pool, key=lambda l: (l["prob"], l["odds"]), reverse=True)
-    if len(pool) >= VOLUME_POOL:
-        gated = [l for l in pool if l["prob"] >= VOLUME_MIN_PROB]
-        # Card-completeness rule (2026-09-04): the floor removed the high-prob
-        # shorts that used to carry saturated pools through the >=65% gate --
-        # 4 of 7 saturated days starve the card to <6 legs, silently switching
-        # to an UNTESTED 2-acca x 25% risk shape. If the gate starves the card,
-        # fall back to top-6 of the floored pool: the floor (validated) stays;
-        # the 3-acca x 16.7% structure (validated) is restored. Adjudicated at
-        # the day-30 gate like every other change.
-        if len(gated) >= MAX_LEGS * 2:
+def rank_legs(pool, rank="prob"):
+    """Order the pool. "prob" = live (stated probability, odds as tiebreak);
+    "ev" = stated expected value (prob * odds) — an A/B candidate only."""
+    if rank == "ev":
+        key = lambda l: (l["prob"] * l["odds"], l["prob"], l["odds"])   # noqa: E731
+    else:
+        key = lambda l: (l["prob"], l["odds"])                          # noqa: E731
+    return sorted(pool, key=key, reverse=True)
+
+
+def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
+    """Group ranked legs into accas. "consecutive" = live (1+2, 3+4, 5+6);
+    "barbell" pairs strongest with weakest (1+6, 2+5, 3+4) to equalise acca
+    odds — an A/B candidate only."""
+    k = LEGS_PER_ACCA if legs_per_acca is None else legs_per_acca
+    if pairing == "barbell" and k == 2:
+        n = len(legs) - len(legs) % 2
+        return [[legs[i], legs[n - 1 - i]] for i in range(n // 2)]
+    accas = [legs[i:i + k] for i in range(0, len(legs), k)]
+    return [a for a in accas if len(a) == k]
+
+
+def select_accas(pool, *, floor=None, rank="prob", pairing="consecutive",
+                 max_accas=None, legs_per_acca=None, volume_pool=None,
+                 volume_min=None, gate_mode=None, fallback=True,
+                 saturated_accas=None):
+    """THE selection recipe — one code path for live and for the replay harness.
+
+    Every knob defaults to the validated live value; the harness passes
+    overrides. Returns a list of accas (each a list of legs), no staking.
+    """
+    floor = MIN_LEG_ODDS if floor is None else floor
+    k = LEGS_PER_ACCA if legs_per_acca is None else legs_per_acca
+    max_accas = MAX_ACCAS if max_accas is None else max_accas
+    volume_pool = VOLUME_POOL if volume_pool is None else volume_pool
+    volume_min = VOLUME_MIN_PROB if volume_min is None else volume_min
+    gate_mode = GATE_MODE if gate_mode is None else gate_mode
+
+    pool = rank_legs([l for l in pool if l["odds"] >= floor], rank)
+    saturated = len(pool) >= volume_pool
+    if saturated and saturated_accas:
+        max_accas = saturated_accas
+    max_legs = max_accas * k
+
+    if saturated and gate_mode == "pool":
+        # LEGACY (pre-2026-09-04 threshold was MAX_LEGS*2, also a no-op).
+        # Documented no-op — kept only so the harness can reproduce
+        # pre-2026-09-04 behaviour with fallback=False (which does bite).
+        gated = [l for l in pool if l["prob"] >= volume_min]
+        if len(gated) >= max_legs or not fallback:
             pool = gated
-        # else: keep the full floored pool (top-6 by prob below)
-    legs = pool[:MAX_LEGS]
-    accas = [legs[i:i + LEGS_PER_ACCA] for i in range(0, len(legs) - 1, LEGS_PER_ACCA)][:MAX_ACCAS]
-    accas = [a for a in accas if len(a) == LEGS_PER_ACCA]
+
+    accas = pair_legs(pool[:max_legs], pairing, k)
+
+    if saturated and gate_mode == "acca":
+        # Per-acca conviction gate: an acca rides only if EVERY leg clears the
+        # threshold. Total risk is unchanged (STAKE_FRAC is split across the
+        # surviving accas) — this trades diversification for conviction.
+        kept = [a for a in accas if all(l["prob"] >= volume_min for l in a)]
+        if kept or not fallback:
+            accas = kept
+        # else: card-completeness fallback — an empty card is not an opinion.
+    return accas
+
+
+def plan_day(pool, bank_pct, **overrides):
+    """Selection -> accas -> STAKE_FRAC of bank split evenly (% of capital).
+
+    `overrides` are forwarded to select_accas (replay harness only; live
+    callers pass none, so the validated recipe applies).
+    """
+    accas = select_accas(pool, **overrides)
     if not accas or bank_pct <= 0:
         return []
     stake_pct = bank_pct * STAKE_FRAC / len(accas)
