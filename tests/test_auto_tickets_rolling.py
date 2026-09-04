@@ -51,12 +51,53 @@ def test_plan_day_top6_consecutive_pairs_and_stake_pct():
     assert "stake" not in plan[0] and "stake_pct" in plan[0]   # percent-only contract
 
 
-def test_plan_day_volume_regime_filters_low_prob():
+def test_legacy_pool_gate_is_a_proven_no_op():
+    """2026-09-04 audit: the pool-prefix volume gate CANNOT change a card.
+
+    The pool is prob-sorted, so a prob filter only ever trims a suffix the
+    top-6 never reached; when it does bite, the completeness fallback puts
+    the pool straight back. The old test for this gate passed with the gate
+    deleted entirely — it asserted a property of the SORT. This test pins the
+    real finding instead, so nobody re-adopts the dead knob believing it works.
+    """
     pool = [_leg(f"lo{i}", 0.55, 1.9) for i in range(6)] + \
-           [_leg(f"hi{i}", 0.72, 1.3) for i in range(8)]      # 14 legs -> volume regime
-    plan = at.plan_day(pool, bank_pct=100.0)
-    legs = [l for a in plan for l in a["legs"]]
-    assert legs and all(l["prob"] >= at.VOLUME_MIN_PROB for l in legs)
+           [_leg(f"hi{i}", 0.72, 1.3) for i in range(8)]      # 14 legs -> saturated
+    ref = at.select_accas(pool, gate_mode="pool", volume_min=0.65)
+    for vm in (0.0, 0.50, 0.60, 0.70, 0.80, 0.95):
+        assert at.select_accas(pool, gate_mode="pool", volume_min=vm) == ref, \
+            f"pool gate at {vm} changed the card — audit assumption broken, re-run it"
+    assert at.select_accas(pool, gate_mode="off") == ref
+    assert at.GATE_MODE == "off", "live gate mode must stay honest about the no-op"
+
+
+def test_acca_gate_actually_bites_and_is_not_live():
+    """GATE_MODE='acca' is the only shape that can change a card: an acca
+    rides only if BOTH legs clear the threshold. Pre-registered, NOT live."""
+    pool = [_leg("hi0", 0.72, 1.40), _leg("hi1", 0.71, 1.45),
+            _leg("mid0", 0.62, 1.50), _leg("mid1", 0.61, 1.55),
+            _leg("mid2", 0.60, 1.60), _leg("mid3", 0.59, 1.65)] + \
+           [_leg(f"pad{i}", 0.56, 1.70) for i in range(8)]     # 14 legs -> saturated
+    ungated = at.select_accas(pool, gate_mode="off")
+    gated = at.select_accas(pool, gate_mode="acca", volume_min=0.65)
+    assert len(ungated) == 3
+    assert len(gated) == 1, "only the all->=65% acca may ride"
+    assert all(l["prob"] >= 0.65 for a in gated for l in a)
+    # fallback: an empty card is not an opinion -> full card returns
+    assert at.select_accas(pool, gate_mode="acca", volume_min=0.99) == ungated
+    assert at.select_accas(pool, gate_mode="acca", volume_min=0.99,
+                           fallback=False) == []
+
+
+def test_selection_knobs_are_overridable_for_the_harness():
+    """One code path: the replay harness drives THIS function with overrides
+    (2026-09-04: it used to re-implement the recipe and drifted twice)."""
+    pool = [_leg(i, 0.60 + i / 100, 1.10 + i / 10) for i in range(9)]
+    assert all(l["odds"] >= 1.30 for a in at.select_accas(pool, floor=1.30) for l in a)
+    assert len(at.select_accas(pool, max_accas=4)) == 4
+    ev = at.select_accas(pool, rank="ev")
+    assert ev[0][0]["odds"] * ev[0][0]["prob"] >= ev[-1][-1]["odds"] * ev[-1][-1]["prob"]
+    barbell = at.select_accas(pool, pairing="barbell")
+    assert barbell[0][0]["prob"] > barbell[0][1]["prob"]      # strongest with weakest
 
 
 def test_plan_day_too_few_legs_or_busted_bank():
@@ -168,11 +209,13 @@ def test_backfill_end_to_end(tmp_path, monkeypatch):
     at.cmd_backfill(args, at.load_state())
     st = at.load_state()
     assert len(st["history"]) == 2
-    # day1: one acca @2.00 (1.25*1.6), stake 50% -> bank 100-50+100 = 150%
-    assert st["history"][0]["bank_pct"] == pytest.approx(150.0, abs=0.01)
-    assert st["events"] == []                       # 150% < 200% target
-    # day2: stake = 50% of 150 = 75%, acca loses -> bank 75%
-    assert st["history"][1]["bank_pct"] == pytest.approx(75.0, abs=0.05)
+    # day1: one acca @2.00 (1.25*1.6), stake = STAKE_FRAC of bank, it wins
+    f = at.STAKE_FRAC
+    day1 = 100.0 * (1 + f)                          # 100 - 100f + 100f*2.00
+    assert st["history"][0]["bank_pct"] == pytest.approx(day1, abs=0.01)
+    assert st["events"] == []                       # < 200% target
+    # day2: stake = STAKE_FRAC of day1 bank, acca loses
+    assert st["history"][1]["bank_pct"] == pytest.approx(day1 * (1 - f), abs=0.05)
     assert st["cycle_base"] == pytest.approx(100.0)  # unchanged — no notification fired
 
 
@@ -377,7 +420,9 @@ def test_card_completeness_on_starved_saturated_days():
     """2026-09-04: floor + volume gate compound -- 4 of 7 saturated days starve
     the card below 6 legs, silently switching to an untested 2-acca x 25% risk
     shape. The completeness rule falls back to top-6 of the floored pool so the
-    validated 3-acca x 16.7% structure survives. Floor still applies."""
+    validated 3-acca structure survives. Floor still applies. (2026-09-04
+    audit: with GATE_MODE='off' this is now unconditional — the property is
+    still pinned so a future gate cannot silently reintroduce starved cards.)"""
     # 13-leg pool (saturated), only 2 legs >= 65%, all odds >= 1.20 (floor-safe)
     pool = []
     for i in range(2):
@@ -389,8 +434,8 @@ def test_card_completeness_on_starved_saturated_days():
     plan = at.plan_day(pool, bank_pct=100.0)
     assert len(plan) == 3, f"starved card must still build 3 accas, got {len(plan)}"
     assert all(len(a["legs"]) == 2 for a in plan)
-    # stakes: 3 accas from 50% of bank -> ~16.7 each, NOT 25
-    assert abs(plan[0]["stake_pct"] - 100.0 * 0.5 / 3) < 0.01
+    # stakes: STAKE_FRAC of bank split 3 ways, NOT the 2-acca shape
+    assert abs(plan[0]["stake_pct"] - 100.0 * at.STAKE_FRAC / 3) < 0.01
 
     # control: a saturated pool WITH >=6 gated legs still applies the gate
     pool2 = []
@@ -401,9 +446,8 @@ def test_card_completeness_on_starved_saturated_days():
         pool2.append({"match": f"M{i} vs W", "pick": "HOME", "prob": 0.58,
                       "odds": 1.50 + i * 0.05, "result": None})
     plan2 = at.plan_day(pool2, bank_pct=100.0)
-    # all 8 gated legs are >=65%: top-6 must all be 0.70 prob (gate held)
-    assert all(l["prob"] == 0.70 for a in plan2 for l in a["legs"]), \
-        "when the gate leaves >=6 legs, gated pool must win (no fallback)"
+    # top-6 by prob are the eight 0.70 legs' best six — with or without a gate
+    assert all(l["prob"] == 0.70 for a in plan2 for l in a["legs"])
 
     # control 2: sub-floor legs never ride regardless of starvation
     pool3 = [
