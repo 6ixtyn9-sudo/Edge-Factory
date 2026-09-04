@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "generated_at": "2026-09-04T03:01:29",
+ "generated_at": "2026-09-04T03:37:18",
  "window_days": 90,
  "rows": [
   {
@@ -1301,11 +1301,11 @@
   },
   {
    "date": "2026-06-06",
-   "home": "Brisbane City",
-   "away": "Queensland Lions",
-   "hs": 0,
-   "gs": 4,
-   "outcome": "away",
+   "home": "Brisbane City W",
+   "away": "Queensland Lions W",
+   "hs": 1,
+   "gs": 1,
+   "outcome": "draw",
    "src": "betexplorer_settled"
   },
   {
@@ -8960,21 +8960,21 @@
   },
   {
    "date": "2026-06-06",
-   "home": "WS Wanderers U20",
-   "away": "Sydney Utd U20",
-   "hs": 1,
-   "gs": 5,
-   "outcome": "away",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-06-06",
    "home": "WS Wanderers U21",
    "away": "Sydney United",
    "hs": 0,
    "gs": 2,
    "outcome": "away",
    "src": "bettingclosed_settled"
+  },
+  {
+   "date": "2026-06-06",
+   "home": "WS Wanderers U21",
+   "away": "Sydney Utd",
+   "hs": 0,
+   "gs": 2,
+   "outcome": "away",
+   "src": "betexplorer_settled"
   },
   {
    "date": "2026-06-06",
@@ -26276,10 +26276,10 @@
   },
   {
    "date": "2026-06-12",
-   "home": "Manly Utd U20",
-   "away": "Sydney Utd U20",
-   "hs": 2,
-   "gs": 2,
+   "home": "Manly Utd",
+   "away": "Sydney Utd",
+   "hs": 1,
+   "gs": 1,
    "outcome": "draw",
    "src": "betexplorer_settled"
   },
@@ -35231,11 +35231,11 @@
   },
   {
    "date": "2026-06-13",
-   "home": "Sutherland Sharks U20",
-   "away": "Blacktown City U20",
-   "hs": 6,
-   "gs": 1,
-   "outcome": "home",
+   "home": "Sutherland Sharks",
+   "away": "Blacktown City",
+   "hs": 1,
+   "gs": 2,
+   "outcome": "away",
    "src": "betexplorer_settled"
   },
   {
@@ -35727,20 +35727,20 @@
   {
    "date": "2026-06-13",
    "home": "UNSW",
+   "away": "St George Saints",
+   "hs": 1,
+   "gs": 4,
+   "outcome": "away",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-06-13",
+   "home": "UNSW",
    "away": "St. George Saint",
    "hs": 1,
    "gs": 4,
    "outcome": "away",
    "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-06-13",
-   "home": "UNSW U20",
-   "away": "St George Saints U20",
-   "hs": 6,
-   "gs": 0,
-   "outcome": "home",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-06-13",
@@ -36329,11 +36329,11 @@
   },
   {
    "date": "2026-06-13",
-   "home": "WS Wanderers U21",
-   "away": "St. George City",
-   "hs": 1,
-   "gs": 1,
-   "outcome": "draw",
+   "home": "WS Wanderers U20",
+   "away": "St. George City U20",
+   "hs": 0,
+   "gs": 2,
+   "outcome": "away",
    "src": "betexplorer_settled"
   },
   {
@@ -45860,15 +45860,6 @@
   },
   {
    "date": "2026-06-16",
-   "home": "Rochedale",
-   "away": "Moreton City Excelsior",
-   "hs": 2,
-   "gs": 5,
-   "outcome": "away",
-   "src": "betexplorer_settled"
-  },
-  {
-   "date": "2026-06-16",
    "home": "Rochedale Rovers",
    "away": "Moreton Bay United",
    "hs": 2,
@@ -45884,6 +45875,15 @@
    "gs": 5,
    "outcome": "away",
    "src": "zulubet_settled"
+  },
+  {
+   "date": "2026-06-16",
+   "home": "Rochedale U23",
+   "away": "Moreton City Excelsior U23",
+   "hs": 2,
+   "gs": 5,
+   "outcome": "away",
+   "src": "betexplorer_settled"
   },
   {
    "date": "2026-06-16",
@@ -307211,10 +307211,10 @@
   },
   {
    "date": "2026-08-22",
-   "home": "Corum U19",
-   "away": "Kasimpasa U19",
-   "hs": 1,
-   "gs": 4,
+   "home": "Corum",
+   "away": "Kasimpasa",
+   "hs": 0,
+   "gs": 1,
    "outcome": "away",
    "src": "betexplorer_settled"
   },
@@ -397221,6 +397221,15 @@
   {
    "date": "2026-08-30",
    "home": "Blacktown City",
+   "away": "WS Wanderers U21",
+   "hs": 1,
+   "gs": 3,
+   "outcome": "away",
+   "src": "betexplorer_settled"
+  },
+  {
+   "date": "2026-08-30",
+   "home": "Blacktown City",
    "away": "WS Wanderers Youth",
    "hs": 1,
    "gs": 3,
@@ -397235,15 +397244,6 @@
    "gs": 3,
    "outcome": "away",
    "src": "bettingclosed_settled"
-  },
-  {
-   "date": "2026-08-30",
-   "home": "Blacktown City U20",
-   "away": "WS Wanderers U20",
-   "hs": 3,
-   "gs": 1,
-   "outcome": "home",
-   "src": "betexplorer_settled"
   },
   {
    "date": "2026-08-30",
@@ -410603,10 +410603,10 @@
   },
   {
    "date": "2026-08-30",
-   "home": "Sydney Utd U20",
-   "away": "St George Saints U20",
-   "hs": 8,
-   "gs": 4,
+   "home": "Sydney Utd",
+   "away": "St George Saints",
+   "hs": 6,
+   "gs": 0,
    "outcome": "home",
    "src": "betexplorer_settled"
   },
