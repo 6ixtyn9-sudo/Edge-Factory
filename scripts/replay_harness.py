@@ -162,16 +162,23 @@ def replay(universe, spec):
 
 
 def summarise(days):
-    g = [d["growth"] for d in days.values()]
+    g = [days[d]["growth"] for d in sorted(days)]        # date order (drawdown is a path)
     accas = [a for d in days.values() for a in d["accas"]]
     wins = sum(1 for _, w in accas if w)
     logs = [math.log(x) for x in g if x > 0]
     final = 100.0 * math.exp(sum(logs))
+    bank = peak = 1.0
+    maxdd = 0.0
+    for x in g:
+        bank *= x
+        peak = max(peak, bank)
+        maxdd = max(maxdd, 1 - bank / peak)
     return {
         "days": len(g), "accas": len(accas),
         "hit": wins / len(accas) if accas else 0.0,
         "mean_log": sum(logs) / len(logs) if logs else 0.0,
         "final": final,
+        "maxdd": maxdd,
         "worst": min(g) if g else 1.0,
         "leg_odds": accas,
     }
@@ -298,7 +305,8 @@ def print_variant(universe, spec, label=None, baseline=None):
         mark = f"  Δlog/day {d:+.4f}"
     print(f"{lbl:42s} log/day {s['mean_log']:+.4f}  final {s['final']:8.0f}%  "
           f"days {s['days']:2d}  accas {s['accas']:3d}  hit {s['hit']:5.0%}  "
-          f"worst-day {s['worst']:.2f}{mark}{noise_flag(s['accas'])}")
+          f"maxDD {s['maxdd']:4.0%}  worst-day {s['worst']:.2f}"
+          f"{mark}{noise_flag(s['accas'])}")
     return s
 
 
@@ -309,12 +317,22 @@ def ab_report(universe, spec_a, spec_b):
     print_variant(universe, spec_b, f"B: {lb}", baseline=sa)
     ndiff = card_diff_days(universe, spec_a, spec_b)
     print(f"\ncards differ on {ndiff}/{len(universe)} days")
-    if ndiff == 0:
-        print("NO-OP: the two variants select IDENTICAL cards on every day.")
-        print("There is nothing to bootstrap — the knob does not reach the card.")
-        print("(This is the 2026-09-04 failure mode: bootstrapping identical arms")
-        print(" prints a wide interval and a ~50% coin-flip that means nothing.)")
+    da, db = replay(universe, spec_a), replay(universe, spec_b)
+    same_outcome = (sorted(da) == sorted(db) and
+                    all(abs(da[d]["growth"] - db[d]["growth"]) < 1e-12 for d in da))
+    if same_outcome:
+        print("NO-OP: the two variants produce IDENTICAL cards AND identical daily")
+        print("growth on every day. There is nothing to bootstrap — the knob does")
+        print("not reach the result. (The 2026-09-04 failure mode: bootstrapping")
+        print(" identical arms prints a wide interval and a meaningless ~50%.)")
         return
+    if ndiff == 0:
+        print("SIZING-ONLY A/B: identical cards, identical legs, identical results —")
+        print("only the fraction of bank deployed differs. This is the CLEANEST")
+        print("comparison the harness can make: no selection noise, no lucky legs.")
+        print("Judge it on RISK, not growth: across 30-50% the growth curve is flat")
+        print("(differences here will read as luck-shaped, correctly), while maxDD")
+        print("moves a lot. See --kelly for the whole curve.")
     r = paired_bootstrap(universe, spec_a, spec_b)
     if not r:
         return
@@ -340,7 +358,7 @@ def ab_report(universe, spec_a, spec_b):
             print("— fragile: one day carries most of it")
         else:
             print("— broad-based")
-        if ndiff < 10:
+        if 0 < ndiff < 10:
             print(f"  ⚠ only {ndiff} days differ at all — any 'confidence' here is "
                   f"about {ndiff} coin flips")
 
@@ -400,7 +418,7 @@ def cmd_kelly(universe, spec=None):
     if not R:
         print("no bet-days")
         return
-    grid = [i / 100 for i in range(5, 96, 5)]
+    grid = sorted(set([i / 100 for i in range(5, 96, 5)] + [round(at.STAKE_FRAC, 4)]))
 
     def growth(f, sample=None):
         s = R if sample is None else sample
@@ -421,9 +439,10 @@ def cmd_kelly(universe, spec=None):
     print("cards are IDENTICAL across rows — only the fraction of bank changes\n")
     print(f"{'stake f':>8s} {'log/day':>9s} {'final%':>9s} {'maxDD':>7s}")
     best = max(grid, key=growth)
+    live_f = round(at.STAKE_FRAC, 4)
     for f in grid:
         star = "   <- growth-optimal" if f == best else ""
-        if abs(f - at.STAKE_FRAC) < 0.025:
+        if f == live_f:
             star += "   <- LIVE"
         print(f"{f:8.0%} {growth(f):+9.4f} {100*math.exp(growth(f)*len(R)):9.0f} "
               f"{maxdd(f):7.0%}{star}")

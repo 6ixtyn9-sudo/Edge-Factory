@@ -6492,3 +6492,20 @@ protection, 25% costs ~10% of growth and halves drawdown to 53%.
 `tests/test_auto_tickets_rolling.py` (gate tests rewritten — the old volume
 test passed with the gate deleted, it asserted a property of the sort),
 `tests/test_replay_harness.py` (new), this HANDOVER entry.
+
+**Follow-up fixes (same day, from the operator's first run of the tool):**
+the no-op guard keyed on cards alone, so a SIZING-only A/B (identical cards,
+different stake) was refused as a no-op — it now keys on identical cards AND
+identical daily growth, and labels sizing comparisons as the cleanest kind
+available, with the standing warning to judge them on drawdown rather than
+growth (the growth curve is flat across 30-50%, so those Δs correctly read as
+luck-shaped — the case for 1/3 is maxDD 67% vs 87%, not growth). Every
+variant line now prints maxDD, and `--kelly` puts the live fraction ON the
+grid instead of marking the nearest 5% step.
+
+**Reading the battery at f=1/3.** All Δlog/day magnitudes in the sweep are
+smaller than the f=0.50 numbers quoted above, because log growth scales with
+leverage; the ORDERING is unchanged (floor 1.20 still dominant, EV rank and
+barbell still negative, 4-accas still one-day fragile). Compare variants
+against the baseline printed in the same run, never against a number from an
+older run at a different stake fraction.
