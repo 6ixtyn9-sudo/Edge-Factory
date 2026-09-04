@@ -87,20 +87,45 @@ def build_universe(archives, settled):
     return universe
 
 
-def plan_for_day(pool, *, floor, max_accas, min_prob, volume_pool, volume_min):
-    """plan_day re-implemented with overridable knobs (mirrors live logic)."""
+def plan_for_day(pool, *, floor, max_accas, min_prob, volume_pool, volume_min,
+                 fallback=True):
+    """plan_day re-implemented with overridable knobs (mirrors live logic,
+    including the card-completeness fallback of 2026-09-04)."""
     pool = [l for l in pool if l["odds"] >= floor]
     if min_prob is not None:
         pool = [l for l in pool if l["prob"] >= min_prob]
     if len(pool) >= volume_pool:
-        pool = [l for l in pool if l["prob"] >= volume_min]
+        gated = [l for l in pool if l["prob"] >= volume_min]
+        if len(gated) >= max_accas * 2 or not fallback:
+            pool = gated
+        # else: starved -> keep full floored pool (completeness fallback)
     legs = pool[: max_accas * 2]
     pairs = [legs[i : i + 2] for i in range(0, len(legs) - 1, 2)][:max_accas]
     return [p for p in pairs if len(p) == 2]
 
 
+def leg_bands(universe, volume_pool=12):
+    """Stated-prob band performance of legs ON SATURATED days (the volume
+    gate's jurisdiction), floor applied upstream by the universe builder."""
+    bands = {"<0.55": [0, 0, 0.0], "0.55-0.60": [0, 0, 0.0], "0.60-0.65": [0, 0, 0.0],
+             "0.65-0.70": [0, 0, 0.0], "0.70-0.75": [0, 0, 0.0], "0.75+": [0, 0, 0.0]}
+    for d, pool in universe.items():
+        if len(pool) < volume_pool:
+            continue
+        for l in pool:
+            pr = l["prob"]
+            b = ("<0.55" if pr < 0.55 else "0.55-0.60" if pr < 0.60 else
+                 "0.60-0.65" if pr < 0.65 else "0.65-0.70" if pr < 0.70 else
+                 "0.70-0.75" if pr < 0.75 else "0.75+")
+            bands[b][0] += 1
+            if l["result"] == "win":
+                bands[b][1] += 1
+                bands[b][2] += l["odds"]
+    return bands
+
+
 def replay(universe, *, floor, max_accas, min_prob, stake_frac,
-           volume_pool=None, volume_min=None, start_bank=100.0):
+           volume_pool=None, volume_min=None, start_bank=100.0, fallback=True):
     """Compound replay. Returns (final_bank, per-day list)."""
     volume_pool = at.VOLUME_POOL if volume_pool is None else volume_pool
     volume_min = at.VOLUME_MIN_PROB if volume_min is None else volume_min
@@ -108,7 +133,8 @@ def replay(universe, *, floor, max_accas, min_prob, stake_frac,
     days = []
     for d in sorted(universe):
         pairs = plan_for_day(universe[d], floor=floor, max_accas=max_accas,
-                             min_prob=min_prob, volume_pool=volume_pool, volume_min=volume_min)
+                             min_prob=min_prob, volume_pool=volume_pool,
+                             volume_min=volume_min, fallback=fallback)
         if not pairs:
             continue
         stake = bank * stake_frac / len(pairs)
@@ -225,6 +251,14 @@ def main():
     ap.add_argument("--stake", type=float, default=None, help="replay with X fraction of bank/day")
     ap.add_argument("--min-prob", type=float, default=None, help="always-on stated-prob floor")
     ap.add_argument("--volume-pool", type=int, default=None, help="saturation threshold")
+    ap.add_argument("--volume-min", type=float, default=None,
+                    help="stated-prob gate on saturated days (default: live 0.65)")
+    ap.add_argument("--no-fallback", action="store_true",
+                    help="disable the card-completeness fallback (strict gate)")
+    ap.add_argument("--gate-ab", nargs=2, type=float, metavar=("VM_A", "VM_B"),
+                    help="A/B two volume-gate thresholds with bootstrap confidence")
+    ap.add_argument("--legs", action="store_true",
+                    help="print stated-prob band table for saturated-day legs")
     ap.add_argument("--ab", nargs=2, type=float, metavar=("FLOOR_A", "FLOOR_B"),
                     help="A/B two floors with bootstrap confidence")
     ap.add_argument("--today", action="store_true", help="print today's card at LIVE settings")
@@ -262,6 +296,32 @@ def main():
                   f"x {a[1]['match']} ({a[1]['pick']} @{a[1]['odds']:.2f})")
         return 0
 
+    if args.legs:
+        print("=== stated-prob band performance: legs on SATURATED days ===")
+        print("(the volume gate's jurisdiction; floor applied; n<30 = noise)\n")
+        bands = leg_bands(universe)
+        print(f"{'band':10s} {'n':>4s} {'hit':>6s} {'flatROI':>8s}")
+        for b, (n, w, ret) in bands.items():
+            if n:
+                flag = "  << small-n" if n < 30 else ""
+                print(f"{b:10s} {n:4d} {w/n:6.1%} {(ret-n)/n:+8.1%}{flag}")
+        return 0
+
+    if args.gate_ab:
+        va, vb = args.gate_ab
+        print(f"A/B: volume gate >={va:.0%} vs >={vb:.0%} (identical everything else, "
+              f"completeness fallback LIVE)\n")
+        for vm in (va, vb):
+            variant_replay(universe, f"gate >= {vm:.0%}", **{**base_kw, "volume_min": vm})
+        r = bootstrap_ab(universe, {**base_kw, "volume_min": va},
+                         {**base_kw, "volume_min": vb})
+        if r:
+            print(f"\nbootstrap (B minus A, final bank): median {r['median']:+.0f}%  "
+                  f"10th {r['p10']:+.0f}%  90th {r['p90']:+.0f}%")
+            print(f"P(gate {vb:.0%} higher) = {r['p_b_higher']:.0%}  "
+                  f"(spans zero = luck-shaped; decide on 30d+ real data)")
+        return 0
+
     if args.ab:
         fa, fb = args.ab
         print(f"A/B: floor {fa} vs floor {fb} (identical everything else)\n")
@@ -297,6 +357,8 @@ def main():
     if args.stake is not None: kw["stake_frac"] = args.stake
     if args.min_prob is not None: kw["min_prob"] = args.min_prob
     if args.volume_pool is not None: kw["volume_pool"] = args.volume_pool
+    if args.volume_min is not None: kw["volume_min"] = args.volume_min
+    if args.no_fallback: kw["fallback"] = False
     variant_replay(universe, "requested variant", **kw)
     variant_replay(universe, "live settings (reference)", **live_kw)
     return 0
