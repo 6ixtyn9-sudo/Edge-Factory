@@ -372,3 +372,45 @@ def test_verified_results_purge_alternate_spelling(tmp_path, monkeypatch):
     entries = at.load_settled_entries()
     pick = {"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor"}
     assert at.alias_outcome_conflict(pick, entries) is False
+
+def test_card_completeness_on_starved_saturated_days():
+    """2026-09-04: floor + volume gate compound -- 4 of 7 saturated days starve
+    the card below 6 legs, silently switching to an untested 2-acca x 25% risk
+    shape. The completeness rule falls back to top-6 of the floored pool so the
+    validated 3-acca x 16.7% structure survives. Floor still applies."""
+    # 13-leg pool (saturated), only 2 legs >= 65%, all odds >= 1.20 (floor-safe)
+    pool = []
+    for i in range(2):
+        pool.append({"match": f"Hi{i} vs X", "pick": "HOME", "prob": 0.72,
+                     "odds": 1.40 + i * 0.1, "result": None})
+    for i in range(11):
+        pool.append({"match": f"Mid{i} vs Y", "pick": "HOME", "prob": 0.60,
+                     "odds": 1.45 + i * 0.05, "result": None})
+    plan = at.plan_day(pool, bank_pct=100.0)
+    assert len(plan) == 3, f"starved card must still build 3 accas, got {len(plan)}"
+    assert all(len(a["legs"]) == 2 for a in plan)
+    # stakes: 3 accas from 50% of bank -> ~16.7 each, NOT 25
+    assert abs(plan[0]["stake_pct"] - 100.0 * 0.5 / 3) < 0.01
+
+    # control: a saturated pool WITH >=6 gated legs still applies the gate
+    pool2 = []
+    for i in range(8):
+        pool2.append({"match": f"G{i} vs Z", "pick": "HOME", "prob": 0.70,
+                      "odds": 1.35 + i * 0.05, "result": None})
+    for i in range(6):
+        pool2.append({"match": f"M{i} vs W", "pick": "HOME", "prob": 0.58,
+                      "odds": 1.50 + i * 0.05, "result": None})
+    plan2 = at.plan_day(pool2, bank_pct=100.0)
+    # all 8 gated legs are >=65%: top-6 must all be 0.70 prob (gate held)
+    assert all(l["prob"] == 0.70 for a in plan2 for l in a["legs"]), \
+        "when the gate leaves >=6 legs, gated pool must win (no fallback)"
+
+    # control 2: sub-floor legs never ride regardless of starvation
+    pool3 = [
+        {"match": "Short vs A", "pick": "HOME", "prob": 0.80, "odds": 1.11, "result": None},
+        {"match": "Ok1 vs B", "pick": "HOME", "prob": 0.60, "odds": 1.45, "result": None},
+    ]
+    legs = at.playable_legs([dict(r, bucket="SKIPPED_VETO", quarantine="none",
+                                  date="2026-09-05") for r in pool3],
+                            day="2026-09-05")
+    assert all(l["odds"] >= 1.20 for l in legs), "floor must still exclude sub-1.20 legs"

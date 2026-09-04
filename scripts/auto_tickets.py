@@ -455,7 +455,17 @@ def plan_day(pool, bank_pct):
     (stakes returned as % of capital). Volume regime applies at >= VOLUME_POOL."""
     pool = sorted(pool, key=lambda l: (l["prob"], l["odds"]), reverse=True)
     if len(pool) >= VOLUME_POOL:
-        pool = [l for l in pool if l["prob"] >= VOLUME_MIN_PROB]
+        gated = [l for l in pool if l["prob"] >= VOLUME_MIN_PROB]
+        # Card-completeness rule (2026-09-04): the floor removed the high-prob
+        # shorts that used to carry saturated pools through the >=65% gate --
+        # 4 of 7 saturated days starve the card to <6 legs, silently switching
+        # to an UNTESTED 2-acca x 25% risk shape. If the gate starves the card,
+        # fall back to top-6 of the floored pool: the floor (validated) stays;
+        # the 3-acca x 16.7% structure (validated) is restored. Adjudicated at
+        # the day-30 gate like every other change.
+        if len(gated) >= MAX_LEGS * 2:
+            pool = gated
+        # else: keep the full floored pool (top-6 by prob below)
     legs = pool[:MAX_LEGS]
     accas = [legs[i:i + LEGS_PER_ACCA] for i in range(0, len(legs) - 1, LEGS_PER_ACCA)][:MAX_ACCAS]
     accas = [a for a in accas if len(a) == LEGS_PER_ACCA]
