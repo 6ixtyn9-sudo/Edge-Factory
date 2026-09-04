@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-02T04:23:48.712453+00:00",
+  "fetched_at": "2026-09-04T01:33:13.852367+00:00",
   "sports": [
     {
       "key": "soccer_argentina_primera_division",
@@ -58,14 +58,6 @@
       "has_outrights": false
     },
     {
-      "key": "soccer_concacaf_leagues_cup",
-      "group": "Soccer",
-      "title": "Leagues Cup",
-      "description": "CONCACAF Leagues Cup",
-      "active": true,
-      "has_outrights": false
-    },
-    {
       "key": "soccer_conmebol_copa_libertadores",
       "group": "Soccer",
       "title": "Copa Libertadores",
@@ -98,6 +90,14 @@
       "has_outrights": false
     },
     {
+      "key": "soccer_england_efl_cup",
+      "group": "Soccer",
+      "title": "EFL Cup",
+      "description": "League Cup",
+      "active": true,
+      "has_outrights": false
+    },
+    {
       "key": "soccer_england_league1",
       "group": "Soccer",
       "title": "League 1",
@@ -118,6 +118,14 @@
       "group": "Soccer",
       "title": "EPL",
       "description": "English Premier League",
+      "active": true,
+      "has_outrights": false
+    },
+    {
+      "key": "soccer_finland_veikkausliiga",
+      "group": "Soccer",
+      "title": "Veikkausliiga - Finland",
+      "description": "Finnish  Soccer",
       "active": true,
       "has_outrights": false
     },
@@ -154,9 +162,9 @@
       "has_outrights": false
     },
     {
-      "key": "soccer_germany_dfb_pokal",
+      "key": "soccer_germany_bundesliga_women",
       "group": "Soccer",
-      "title": "DFB-Pokal",
+      "title": "Frauen-Bundesliga",
       "description": "German Soccer",
       "active": true,
       "has_outrights": false
@@ -174,14 +182,6 @@
       "group": "Soccer",
       "title": "Super League - Greece",
       "description": "Greek Soccer",
-      "active": true,
-      "has_outrights": false
-    },
-    {
-      "key": "soccer_italy_coppa_italia",
-      "group": "Soccer",
-      "title": "Coppa Italia",
-      "description": "Italian Soccer",
       "active": true,
       "has_outrights": false
     },
@@ -342,14 +342,6 @@
       "group": "Soccer",
       "title": "UEFA Champions League",
       "description": "European Champions League",
-      "active": true,
-      "has_outrights": false
-    },
-    {
-      "key": "soccer_uefa_champs_league_women",
-      "group": "Soccer",
-      "title": "UEFA Champions League Women",
-      "description": "European Champions League Women",
       "active": true,
       "has_outrights": false
     },
