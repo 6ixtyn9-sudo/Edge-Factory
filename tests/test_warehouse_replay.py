@@ -1,0 +1,254 @@
+"""Tests for the warehouse-reconstruction feasibility auditor + engine parity.
+
+Two jobs:
+
+1. Pin the research knob OFF and keep it off the live path. Nothing in this
+   family may ever be reachable from ``scripts/auto_tickets.py``.
+2. Assert engine parity the way the 2026-09-04 post-merge correction says it
+   must be asserted: ZERO leg-selection differences against the previous main
+   on every archived day, and total staked within 0.01pp. Byte-equality is the
+   wrong test — stakes round to 4 decimals and the day cap redistributes the
+   remainder, so a strict byte check cries wolf on a good change.
+"""
+from __future__ import annotations
+
+import importlib.util
+import json
+import sys
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "src"))
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from edgefactory import warehouse_replay as wr  # noqa: E402
+
+BASELINE = ROOT / "tests" / "data" / "engine_parity_baseline.json"
+
+
+def _load(path: Path, name: str):
+    spec = importlib.util.spec_from_file_location(name, path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@pytest.fixture(scope="module")
+def at():
+    return _load(ROOT / "scripts" / "auto_tickets.py", "at_under_test")
+
+
+# --------------------------------------------------------------------------
+# 1. the research knob defaults OFF and stays off the live path
+# --------------------------------------------------------------------------
+def test_feasibility_audit_defaults_off():
+    assert wr.ENABLED_BY_DEFAULT is False
+
+
+def test_auto_tickets_does_not_import_the_research_module():
+    src = (ROOT / "scripts" / "auto_tickets.py").read_text()
+    assert "warehouse_replay" not in src
+
+
+def test_daily_pipeline_does_not_invoke_the_audit():
+    for name in ("daily.py", "auto_tickets.py", "picks_today.py"):
+        src = (ROOT / "scripts" / name).read_text()
+        assert "--warehouse-replay" not in src
+
+
+def test_audit_flag_is_opt_in_only():
+    src = (ROOT / "scripts" / "replay_harness.py").read_text()
+    # present as a flag...
+    assert '"--warehouse-replay"' in src
+    # ...and guarded by an explicit truthiness check, never a default branch
+    assert "if args.warehouse_replay:" in src
+
+
+def test_live_recipe_constants_unchanged(at):
+    """The feasibility work must not have moved a single live setting."""
+    assert at.STAKE_FRAC == pytest.approx(1.0 / 3.0)
+    assert at.STAKE_MODE == "per_day"
+    assert at.STAKE_PER_ACCA is None
+    assert at.STAKE_WEIGHTS is None
+    assert at.MAX_ACCAS == 3
+    assert at.MIN_ACCAS == 1
+    assert at.LEGS_PER_ACCA == 2
+    assert at.MIN_LEG_ODDS == 1.20
+    assert at.VOLUME_POOL == 12
+    assert at.VOLUME_MIN_PROB == 0.65
+    assert at.GATE_MODE == "off"
+
+
+# --------------------------------------------------------------------------
+# 2. engine parity — the assertion the post-merge correction demands
+# --------------------------------------------------------------------------
+def _snapshot(mod, archives, days):
+    out = {}
+    for d in days:
+        pool = mod.playable_legs(archives, day=d)
+        plan = mod.plan_day(pool, 100.0)
+        out[d] = {
+            "legs": [[[l["match"], l["pick"], round(l["odds"], 4)] for l in a["legs"]]
+                     for a in plan],
+            "staked": round(sum(a["stake_pct"] for a in plan), 6),
+        }
+    return out
+
+
+@pytest.fixture(scope="module")
+def parity(at):
+    baseline = json.loads(BASELINE.read_text())
+    archives = at.load_archived_picks()
+    days = sorted(baseline["days"])
+    return baseline, _snapshot(at, archives, days), days
+
+
+def test_parity_baseline_covers_the_whole_archive(parity):
+    baseline, _, days = parity
+    assert len(days) == 80, "the archive is 80 days; baseline must cover all of them"
+    assert baseline["base_commit"]
+
+
+def test_zero_leg_selection_differences_vs_previous_main(parity):
+    baseline, current, days = parity
+    diffs = [d for d in days if current[d]["legs"] != baseline["days"][d]["legs"]]
+    assert diffs == [], (
+        f"{len(diffs)} archived day(s) changed leg selection: {diffs[:5]}. "
+        "Live behaviour must be identical; selection is not a research knob.")
+
+
+def test_total_staked_within_one_hundredth_of_a_percentage_point(parity):
+    baseline, current, days = parity
+    worst_day, worst = None, 0.0
+    for d in days:
+        delta = abs(current[d]["staked"] - baseline["days"][d]["staked"])
+        if delta > worst:
+            worst_day, worst = d, delta
+    assert worst <= 0.01, (
+        f"total staked moved {worst:.6f}pp on {worst_day}; the parity tolerance "
+        "is 0.01pp (one cent on a R100 bank).")
+
+
+# --------------------------------------------------------------------------
+# 3. the auditor's own logic
+# --------------------------------------------------------------------------
+def test_missing_sources_are_named_not_assumed():
+    assert "vitibet" in wr.MISSING_PREDICTION_SOURCES
+    assert "vitibet" not in wr.ON_DISK_PREDICTION_SOURCES
+    assert "scoutingstats_odds" in wr.MISSING_ODDS_SOURCES
+
+
+def test_closing_odds_are_not_treated_as_bet_time_prices():
+    """BetExplorer is closing; the engine bets ~30+ min before kickoff."""
+    assert "betexplorer_odds" in wr.CLOSING_ONLY_ODDS_SOURCES
+    assert "betexplorer_odds" not in wr.ON_DISK_ODDS_SOURCES
+
+
+def test_half_time_score_features_are_flagged_post_kickoff():
+    assert wr.ML_META_FEATURE_AVAILABILITY["ht_diff"] == "post_kickoff"
+    assert wr.ML_META_FEATURE_AVAILABILITY["ht_total"] == "post_kickoff"
+
+
+def test_leak_swing_is_positive_for_a_home_half_time_lead():
+    feats = wr.classify_ml_features(
+        ["ht_diff", "ht_total", "is_home"], [0.2395, 0.1910, 0.7791])
+    swing = wr.leak_logit_swing(feats, ht_diff=2.0, ht_total=2.0)
+    assert swing == pytest.approx(0.861, abs=1e-3)
+    # a pre-kickoff feature must never contribute to the leak estimate
+    assert wr.leak_logit_swing(
+        wr.classify_ml_features(["is_home"], [0.7791])) == 0.0
+
+
+def test_dependency_census_counts_the_ceiling_conjunctively():
+    legs = [
+        # reconstructable: source vote, on-disk sources, historical odds
+        {"row": {"rule": "2way-unanimous avg_p>=70",
+                 "sources_used": ["forebet", "zulubet"],
+                 "odds_source": "forebet_best"}},
+        # ml-meta: excluded even though its inputs are on disk
+        {"row": {"rule": "ml-meta avg_p>=55",
+                 "sources_used": ["forebet", "statarea"],
+                 "odds_source": "forebet_best"}},
+        # missing source
+        {"row": {"rule": "2way-unanimous avg_p>=70",
+                 "sources_used": ["statarea", "vitibet"],
+                 "odds_source": "forebet_best"}},
+        # missing odds history
+        {"row": {"rule": "2way-unanimous avg_p>=70",
+                 "sources_used": ["forebet", "zulubet"],
+                 "odds_source": "scoutingstats_odds"}},
+    ]
+    c = wr.dependency_census(legs)
+    assert c.legs == 4
+    assert c.source_vote == 3
+    assert c.on_disk_sources == 3
+    assert c.historical_odds == 3
+    assert c.ceiling == 1
+    assert c.source_hits["vitibet"] == 1
+
+
+def test_gate_verdict_fails_on_absent_inputs():
+    cov = {"coverage_frac": 0.0}
+    gate = {"recall": 0.0, "precision": 0.0, "odds_mismatch_frac": None}
+    ok, reasons = wr.gate_verdict(cov, gate)
+    assert ok is False
+    assert any("input coverage" in r for r in reasons)
+    assert any("recall" in r for r in reasons)
+
+
+def test_gate_verdict_passes_only_on_a_clean_sweep():
+    cov = {"coverage_frac": 1.0}
+    gate = {"recall": 0.97, "precision": 0.96, "odds_mismatch_frac": 0.01}
+    ok, reasons = wr.gate_verdict(cov, gate)
+    assert ok is True
+    assert reasons == ["all bar criteria met"]
+
+
+def test_gate_verdict_fails_on_odds_mismatch_alone():
+    cov = {"coverage_frac": 1.0}
+    gate = {"recall": 0.99, "precision": 0.99, "odds_mismatch_frac": 0.30}
+    ok, reasons = wr.gate_verdict(cov, gate)
+    assert ok is False
+    assert any("odds mismatch" in r for r in reasons)
+
+
+def test_validation_gate_scores_a_synthetic_perfect_recovery():
+    from edgefactory.util import norm_team
+
+    class FakeCon:
+        def execute(self, sql, params=None):
+            self._sql = sql
+            return self
+
+        def fetchall(self):
+            if "consensus2" in self._sql:
+                return [("Alpha FC", "Beta United", "home", 74.0, 1.45)]
+            return []
+
+    live = {"2026-01-01": [{"match": "Alpha FC vs Beta United",
+                            "pick": "HOME", "prob": 0.74, "odds": 1.45}]}
+    res = wr.validation_gate(FakeCon(), live, 1.20, norm_team)
+    assert res["tp"] == 1 and res["fp"] == 0 and res["fn"] == 0
+    assert res["recall"] == 1.0 and res["precision"] == 1.0
+    assert res["odds_mismatch_frac"] == 0.0
+
+
+def test_validation_gate_counts_a_side_flip_as_a_miss():
+    from edgefactory.util import norm_team
+
+    class FakeCon:
+        def execute(self, sql, params=None):
+            self._sql = sql
+            return self
+
+        def fetchall(self):
+            if "consensus2" in self._sql:
+                return [("Alpha FC", "Beta United", "away", 74.0, 1.45)]
+            return []
+
+    live = {"2026-01-01": [{"match": "Alpha FC vs Beta United",
+                            "pick": "HOME", "prob": 0.74, "odds": 1.45}]}
+    res = wr.validation_gate(FakeCon(), live, 1.20, norm_team)
+    assert res["tp"] == 0 and res["fp"] == 1 and res["fn"] == 1

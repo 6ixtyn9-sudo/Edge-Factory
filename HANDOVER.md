@@ -6756,3 +6756,253 @@ fold into the test suite so it runs on every PR:
 
 Byte-equality is the wrong test for floating-point stakes and will keep crying
 wolf until someone reverts a good change.
+
+## Addendum — 2026-09-04 (late): checkpoint ⑪ — can the warehouse date the edge?
+## FEASIBILITY VERDICT: NO. Reconstruction is impossible with the data on hand.
+
+**What was asked.** The live evidence base is thin — 80 archived days, 52
+bet-days, 33 in-season — and at that size the engine's edge cannot be proven
+(bootstrap p10 on in-season daily log growth ≈ −0.007; p10 > 0 needs roughly
+180 bet-days, i.e. February 2027). The question was whether the warehouse could
+answer it sooner, by reconstructing what the engine would have picked over
+2024–2026 and replaying it. Phase 1 was a hard gate: reconstruct the 80
+archived days from warehouse data alone, score the recovery against
+`auto_tickets.load_archived_picks()`, and stop if it fails.
+
+**It fails, on four independent grounds, any one of which is fatal.** No
+Phase-2 numbers exist and none should be manufactured. **No live setting
+changed**; leg selection is identical to `2d7d909` on all 80 archived days and
+total staked moves 0.000000pp.
+
+### The instrument
+
+`PYTHONPATH=src python3 scripts/replay_harness.py --warehouse-replay`
+
+A reusable, opt-in command (`src/edgefactory/warehouse_replay.py`,
+`ENABLED_BY_DEFAULT = False`, pinned by test). Prints, in order: warehouse
+inventory, what the live legs actually depended on, per-rule feasibility, the
+look-ahead audit, the validation gate, and a PASS/FAIL against a bar stated
+*before* the numbers. Exit code 1 on FAIL. Nothing on the live path imports it.
+
+### Ground 1 — the prediction sources stop before the archive starts
+
+| table | rows | span |
+|---|---:|---|
+| `forebet_settled` | 323,524 | 2024-01-01 → **2026-06-12** |
+| `zulubet_settled` | 66,808 | 2024-01-01 → **2026-06-12** |
+| `statarea_settled` | 481,537 | 2017-01-01 → **2026-06-12** |
+| archived picks | 891 | **2026-06-19** → 2026-09-06 |
+
+**The overlap is zero days.** `forebet`, `zulubet` and `statarea` have
+**0 rows** on any of the 80 days the engine actually bet. The validation gate
+is not merely failed, it is *unrunnable as specified*: there are no inputs on
+the days where ground truth exists. Any future attempt must first close a
+seven-day-plus capture gap, and then wait for new bet-days on top.
+
+### Ground 2 — the sources that decide the picks are not on disk
+
+Across the 536 playable legs in the archive, the sources cited are:
+
+| source | legs citing it | history file |
+|---|---:|---|
+| **vitibet** | **438 (82%)** | **none** |
+| statarea | 333 | yes |
+| forebet | 298 | yes |
+| zulubet | 182 | yes |
+| **bzzoiro** | **156** | **none** |
+| **betclan** | **116** | **none** |
+
+There is no `vitibet*.csv.gz`, `bzzoiro_*.csv.gz` or `betclan_*.csv.gz` in
+`localdata/`, so `vitibet_settled`, `bzzoiro`, `betclan` and `consensus4` all
+build as ABSENT. `consensus2` joins forebet+zulubet only. **Every reconstruction
+built on the existing views is blind to the source present in four out of five
+live legs.**
+
+### Ground 3 — the prices are not on disk either, and the ones that are, are wrong
+
+The odds actually used to price live legs:
+
+| odds source | legs | availability |
+|---|---:|---|
+| `scoutingstats_odds` | 240 (45%) | **no history file** |
+| `betexplorer_odds` | 177 (33%) | 2026-01→06 only, and **CLOSING** |
+| `bzzoiro_odds` | 75 (14%) | **no history file** |
+| `forebet_best` | 33 (6%) | yes, bet-time family |
+| `zulubet` | 11 (2%) | yes |
+
+The engine bets ~30+ minutes before kickoff at `forebet_best`. BetExplorer is a
+closing price. Substituting one for the other is not an approximation, it is a
+different bet, and the harness refuses to mix them.
+
+**The addressability funnel — the single most important table in this
+checkpoint:**
+
+| necessary condition | legs | share |
+|---|---:|---:|
+| all playable legs | 536 | 100.0% |
+| rule is a source vote (not the ml-meta model) | 223 | 41.6% |
+| every cited source has a history file | 29 | 5.4% |
+| priced from an odds source with history | 44 | 8.2% |
+| **ALL THREE — the reconstruction ceiling** | **1** | **0.2%** |
+
+Even granting perfect code, perfect team-name matching and a closed date gap,
+**one leg out of 536 is faithfully reconstructable.** That is the ceiling, not
+the achieved result. A "backtest" built on it would describe a strategy the
+engine has never run for a single day.
+
+### Ground 4 — the ml-meta model cannot be replayed without look-ahead, and this is structural
+
+`ml-meta avg_p>=55` is the plurality rule (279 of 536 playable legs, 52%).
+Its feature vector, read from the certified model in
+`localdata/edges_consensus.json`, contains:
+
+```
+ht_diff   +0.2395   POST-KICKOFF   actual half-time goal difference
+ht_total  +0.1910   POST-KICKOFF   actual half-time goals scored
+```
+
+`train_ml_meta_classifier` in `scripts/mine_consensus.py` reads `ht_hs`/`ht_gs`
+straight off the settled `consensus3` row. **These are the half-time scores of
+the match the model is being asked to predict.** A warehouse replay would feed
+them: a 2-0 half-time lead alone shifts the logit by **+0.861**, which turns a
+55% pick into roughly a 72% one. That is not an edge, it is the scoreboard.
+The reconstructor therefore **excludes every ml-meta leg by policy** rather
+than guessing, exactly as the brief required — and that exclusion alone caps
+recall at 42%.
+
+Note the live side of the same fact: `picks_today.py` has no scores at bet time
+and feeds `ht_diff = ht_total = 0`. So the model is *trained* on a feature
+distribution it never sees in production. That is a live modelling defect, not
+a replay artefact. **It is not fixed here** (fixing it changes live pick
+generation and must go through its own gate) but it is now on the record, and
+it is the strongest argument yet for the standing `ml-meta>=55` demotion
+evidence in checkpoint ⑤.
+
+### Ground 4b — there is no pre-kickoff snapshot in the file at all
+
+`forebet.csv.gz` status census: **FT 98.4%, Pen. 0.9%, AET 0.4%, Awarded 0.2%**
+— every row carries a terminal status and a final score, and the file has **no
+capture-timestamp column**. The same is true of `statarea.csv.gz` and
+`zulubet.csv.gz`. So the archive is a post-match scrape and there is no
+evidence that any stored probability or price is the pre-kickoff one. Even the
+1-in-536 reconstructable leg would have to be reported as an **upper bound**.
+
+### The gate, as run
+
+```
+live legs/day       6.70          reconstructed/day   0.00
+true positives         0          false positives        0
+false negatives      535          recall 0.0%   precision 0.0%
+days with any match  0 / 80
+```
+
+**Mechanism check** (so the zero cannot be dismissed as a broken query): the
+same reconstructor, pointed at the most recent 60 days that *do* have inputs
+(2026-04-14 → 2026-06-12), returns **26 legs over 60 days = 0.43 legs/day**
+against a live in-season **11.5**. The code runs. It simply models a far
+narrower strategy than the engine does. The prior session's ~1.3 legs/day
+figure over 2.5 years, and the −0.0233 log/day it produced, are of the same
+family: **both describe a proxy, not the engine. Do not quote either number,
+including the ones in this paragraph, as engine performance.**
+
+### One Phase-2 claim was refuted in passing, and its cause identified
+
+The inherited claim — "forebet-only, 220,062 settled matches, stated 73.6% vs
+realised 69.9%, overconfident by 3.7pp but +4.3% flat ROI" — **does not
+reproduce.** Measured over all 224,184 settled forebet matches carrying a
+price:
+
+| measure | honest whole-population | with the draw removed |
+|---|---:|---:|
+| stated probability of the top pick | **46.7%** | 66.2% (draw normalised out) |
+| realised hit rate | **45.7%** | 67.2% (draw games *dropped*) |
+| flat ROI at forebet's own odds | **−5.1%** | +24.4% |
+
+The favourable-looking numbers are what you get by treating the draw as though
+it were not a loss — the exact trap named in the brief. **Forebet's raw top
+pick, priced at forebet's own odds, loses 5.1% flat across 224k matches**, and
+because those odds may have been revised post-match that figure is an upper
+bound: the truth is no better. Calibration is close (−1.0pp), so the loss is
+the margin, not overconfidence. Whatever edge the live engine has, it is *not*
+"forebet is well-calibrated" — and any successor who rediscovers +4.3% has
+dropped the draws. Check that first.
+
+### What it means in money
+
+Nothing changes today. The bank keeps compounding on the live recipe at
+`STAKE_FRAC = 1/3`, `MAX_ACCAS = 3`, floor 1.20, in-season expectation
+**+0.0410 log/day at 63% maxDD**. The warehouse **cannot** shorten the wait for
+proof. **February 2027 (~180 bet-days) remains the honest date on which the
+edge becomes provable**, and the only thing that moves it earlier is *more live
+bet-days*, not more SQL. Anyone who arrives with an 800-day backtest of this
+engine built from `localdata/` is holding fiction; ask them for their recall
+against the 80 archived days before you look at their growth number.
+
+The Phase-2 questions therefore remain **open and unmeasured**: leg-level
+calibration by source and consensus depth; whether the edge comes from
+multi-source agreement, the 1.20 floor, the purity gates, or nothing; and
+whether 2-leg accas at 33%/day survive 800 days. The earlier proxy ruined the
+bank on every variant, which is a warning worth holding, but it is **not**
+evidence about the live shape and must not be cited as if it were.
+
+### What must not be re-opened
+
+- **Do not rebuild a reconstruction on `consensus2`/`consensus3`.** It is
+  missing vitibet (82% of legs), bzzoiro and betclan, it cannot price 92% of
+  legs, and it produces 0.43 legs/day against a live 11.5. Three sessions have
+  now hit this. The verdict is settled.
+- **Do not replay ml-meta from the warehouse under any circumstances** until
+  `ht_diff`/`ht_total` are removed from the feature set and the model is
+  retrained walk-forward. The half-time score is in the model. Any ml-meta
+  replay result is contaminated by construction.
+- **Do not substitute BetExplorer closing odds for `forebet_best`.**
+- **Do not quote** −0.0233 log/day, 93% maxDD, 1.3 legs/day, 0.43 legs/day, or
+  "+4.3% forebet ROI". The first three are proxy artefacts; the last is a
+  draw-handling error.
+- The dedup trap turned out to be **small**: `DISTINCT ON (date, hkey, akey)`
+  drops only 0.1% of rows in each settled view (170 / 68 / 404). The real loss
+  is the *join*: forebet ∩ zulubet = 27,368 rows, 41% of the smaller side;
+  three-way = 15,749. Coverage, not dedup, is what kills the views.
+
+### What it would take to make this answerable later
+
+In order of size, and all of it is *capture*, not analysis:
+
+1. **vitibet history** — the single missing source cited by 438 of 536 legs.
+2. **Bet-time odds history** for `scoutingstats_odds` and `bzzoiro_odds`, the
+   two pricing sources behind 59% of live legs.
+3. **Timestamped, point-in-time prediction snapshots** captured *before*
+   kickoff, so pre-kickoff state can be proven rather than assumed. Every
+   current source file is a post-match scrape with no capture column. This is
+   the one that also makes all *future* research trustworthy, and it is cheap:
+   it is a column, written at capture time.
+4. **An ml-meta feature set without the half-time score**, retrained
+   walk-forward, before a single ml-meta leg is replayed.
+5. Close the 2026-06-12 → present capture gap in forebet/zulubet/statarea.
+
+Items 1–3 are worth doing for their own sake regardless of this checkpoint:
+they are the difference between a system that can be audited and one that can
+only be trusted.
+
+### Verification receipt
+
+- `PYTHONPATH=src python3 -m pytest -q` → **363 passed** (345 pre-existing +
+  18 new). `py_compile` and `git diff --check` clean.
+- Engine parity, asserted in CI by `tests/test_warehouse_replay.py` against
+  the committed snapshot `tests/data/engine_parity_baseline.json` and verified
+  against `2d7d909:scripts/auto_tickets.py`: **0 leg-selection differences on
+  all 80 archived days**, worst total-staked deviation **0.000000pp** (bar:
+  0.01pp). This is the correct parity assertion from the post-merge correction,
+  now automated so it runs on every PR.
+- `--battery` baseline unchanged: live **+0.0428 log/day, final 924%, 52 days,
+  115 accas, 60% hit, 67% maxDD**.
+- New defaults pinned OFF by test; `auto_tickets.py` does not reference
+  `warehouse_replay`, and no daily-pipeline script invokes `--warehouse-replay`.
+
+### The one open lead is unchanged
+
+In-season `max_accas=4` still needs **n ≥ 60 genuinely new in-season bet-days**
+under the full bar (paired-bootstrap p10 > 0, sign survives every
+leave-one-day-out, maxDD no higher than live). This checkpoint produced **no
+new in-season days** and therefore **no movement** on it — the warehouse cannot
+manufacture them. At most one candidate may still be adopted from that family.
