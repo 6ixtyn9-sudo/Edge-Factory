@@ -6550,12 +6550,27 @@ maxDD 78% (2 accas) vs 67% (3 accas). Concentrating the same fixed stake on
 fewer accas is leverage by another name — the same trade the sizing audit
 just bought down. Adopting it would partly undo the STAKE_FRAC change.
 
-**Decision rule, fixed now:** revisit at day 30. Adopt 2 accas ONLY if
-(a) p10 > 0 on the accumulated live+archive days, AND (b) leave-one-day-out
-stays positive, AND (c) it is paired with a stake reduction that holds maxDD
-at or below the 3-acca level (the harness can price the pair directly:
-`--ab live "max_accas=2,stake_frac=0.25"`). Growth bought with drawdown is
-not growth.
+**Priced immediately — checkpoint ⑦ CLOSED, no action.** The risk-matched
+pair was run the same day:
+`--ab live "max_accas=2,stake_frac=0.25"` -> Δ **-0.0010** log/day,
+P(better) 46%, maxDD **66% vs 67%**, worst single day 0.75 vs 0.67, hit 65%
+vs 60%, and the -0.0010 itself sign-flips on leave-one-day-out (one day
+carries 485%). Once the extra concentration of 2 accas is paid for with the
+stake cut it requires, the two configurations are **indistinguishable on
+every axis**. The third acca's diversification is worth almost exactly the
+8pp of stake you must surrender to keep drawdown flat.
+
+**Doctrine that follows (the important part).** After the STAKE_FRAC move
+the engine sits ON its efficient frontier for this card distribution:
+`accas x stake` combinations trade growth against drawdown at a fair rate,
+so they are moves ALONG the frontier, not up it. That is why every remaining
+structural candidate prices as a wash or a fragile one-day artifact. The
+only lever that moved the frontier itself was total stake — and only because
+50% was over-Kelly. **Successors: stop searching for structure inside the
+card. The frontier now moves only through better legs (price capture,
+a second prediction surface) or more capital, not through re-arranging six
+legs into different shapes.** Re-open ⑦ only if the slot-5+6 cell is still
+negative at n>=60.
 
 **Reading the battery at f=1/3.** All Δlog/day magnitudes in the sweep are
 smaller than the f=0.50 numbers quoted above, because log growth scales with
