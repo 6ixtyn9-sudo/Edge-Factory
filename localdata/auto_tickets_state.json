@@ -1,40 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 143.144239,
+  "bank": 125.251239,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-09-04",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "GAP Connah's Quay vs Haverfordwest",
-              "pick": "HOME",
-              "prob": 0.725,
-              "odds": 1.36,
-              "result": null
-            },
-            {
-              "match": "Almere City vs Jong Ajax",
-              "pick": "HOME",
-              "prob": 0.66,
-              "odds": 1.48,
-              "result": null
-            }
-          ],
-          "odds": 2.01,
-          "stake_pct": 17.893,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 17.893
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -195,6 +163,18 @@
         }
       ],
       "bank_pct": 143.1442
+    },
+    {
+      "date": "2026-09-04",
+      "staked_pct": 17.893,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.01,
+          "won": false
+        }
+      ],
+      "bank_pct": 125.2512
     }
   ],
   "events": []
