@@ -82,6 +82,87 @@
   },
   {
     "date": "2026-09-04",
+    "kickoff": "13:00",
+    "home": "Al-Ahli Jeddah",
+    "away": "Al-Riyadh",
+    "league": "Saudi Arabia,Saudi Pro League",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "alahlijeddah",
+    "away_key": "alriyadh",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Paju Citizen",
+        "away": "Daegu",
+        "league": "K League 2",
+        "kickoff": "2026-09-04T10:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "pajucitizen",
+        "away_key": "daegu",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Cheongju",
+        "away": "Seoul E.",
+        "league": "K League 2",
+        "kickoff": "2026-09-04T10:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "cheongju",
+        "away_key": "seoule",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Chornomorets",
+        "away": "Livyi Bereh",
+        "league": "Premier League",
+        "kickoff": "2026-09-04T10:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.1,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "chornomorets",
+        "away_key": "livyibereh",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Kalba",
+        "away": "Al Ain",
+        "league": "UAE Pro League",
+        "kickoff": "2026-09-04T13:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 13.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "kalba",
+        "away_key": "alain",
+        "kickoff_delta_minutes": 165
+      },
+      {
+        "home": "Al Shamal SC",
+        "away": "Al Shahaniya",
+        "league": "Stars League",
+        "kickoff": "2026-09-04T14:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.72,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alshamalsc",
+        "away_key": "alshahaniya",
+        "kickoff_delta_minutes": 180
+      }
+    ]
+  },
+  {
+    "date": "2026-09-04",
     "kickoff": "2026-09-04 19:00:00",
     "home": "FC Rosengard",
     "away": "Laholms FK",
@@ -487,6 +568,87 @@
   },
   {
     "date": "2026-09-04",
+    "kickoff": "12:00",
+    "home": "Viborg",
+    "away": "Lyngby",
+    "league": "Denmark,Superligaen",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=55",
+    "match_method": "fallback",
+    "home_key": "viborg",
+    "away_key": "lyngby",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Paju Citizen",
+        "away": "Daegu",
+        "league": "K League 2",
+        "kickoff": "2026-09-04T10:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "pajucitizen",
+        "away_key": "daegu",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Cheongju",
+        "away": "Seoul E.",
+        "league": "K League 2",
+        "kickoff": "2026-09-04T10:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "cheongju",
+        "away_key": "seoule",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Kalba",
+        "away": "Al Ain",
+        "league": "UAE Pro League",
+        "kickoff": "2026-09-04T13:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 13.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "kalba",
+        "away_key": "alain",
+        "kickoff_delta_minutes": 225
+      },
+      {
+        "home": "Al Shamal SC",
+        "away": "Al Shahaniya",
+        "league": "Stars League",
+        "kickoff": "2026-09-04T14:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.72,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alshamalsc",
+        "away_key": "alshahaniya",
+        "kickoff_delta_minutes": 240
+      },
+      {
+        "home": "Polissya Zhytomyr",
+        "away": "Kudrivka",
+        "league": "Premier League",
+        "kickoff": "2026-09-04T15:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "polissyazhytomyr",
+        "away_key": "kudrivka",
+        "kickoff_delta_minutes": 300
+      }
+    ]
+  },
+  {
+    "date": "2026-09-04",
     "kickoff": "2026-09-04 18:30:00",
     "home": "Tekstilshchik Iv.",
     "away": "Torpedo Moscow",
@@ -568,7 +730,7 @@
   },
   {
     "date": "2026-09-04",
-    "kickoff": "11:00",
+    "kickoff": "13:00",
     "home": "NK Varazdin",
     "away": "Istra 1961",
     "league": "Croatia,Hnl",
@@ -580,6 +742,32 @@
     "away_key": "istra1961",
     "nearby_bzzoiro_candidates": [],
     "nearby_scoutingstats_candidates": [
+      {
+        "home": "Paju Citizen",
+        "away": "Daegu",
+        "league": "K League 2",
+        "kickoff": "2026-09-04T10:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "pajucitizen",
+        "away_key": "daegu",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Cheongju",
+        "away": "Seoul E.",
+        "league": "K League 2",
+        "kickoff": "2026-09-04T10:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "cheongju",
+        "away_key": "seoule",
+        "kickoff_delta_minutes": 30
+      },
       {
         "home": "Chornomorets",
         "away": "Livyi Bereh",
@@ -594,32 +782,6 @@
         "kickoff_delta_minutes": 60
       },
       {
-        "home": "Paju Citizen",
-        "away": "Daegu",
-        "league": "K League 2",
-        "kickoff": "2026-09-04T10:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "pajucitizen",
-        "away_key": "daegu",
-        "kickoff_delta_minutes": 90
-      },
-      {
-        "home": "Cheongju",
-        "away": "Seoul E.",
-        "league": "K League 2",
-        "kickoff": "2026-09-04T10:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.0,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "cheongju",
-        "away_key": "seoule",
-        "kickoff_delta_minutes": 90
-      },
-      {
         "home": "Kalba",
         "away": "Al Ain",
         "league": "UAE Pro League",
@@ -630,7 +792,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "kalba",
         "away_key": "alain",
-        "kickoff_delta_minutes": 285
+        "kickoff_delta_minutes": 165
       },
       {
         "home": "Al Shamal SC",
@@ -643,7 +805,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "alshamalsc",
         "away_key": "alshahaniya",
-        "kickoff_delta_minutes": 300
+        "kickoff_delta_minutes": 180
       }
     ]
   },
@@ -806,87 +968,6 @@
         "home_key": "cfrcluj",
         "away_key": "farulconstanta",
         "kickoff_delta_minutes": 30
-      }
-    ]
-  },
-  {
-    "date": "2026-09-04",
-    "kickoff": "11:00",
-    "home": "Al-Ahli Jeddah",
-    "away": "Al-Riyadh",
-    "league": "Saudi Arabia,Saudi Pro League",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "ml-meta avg_p>=55",
-    "match_method": "fallback",
-    "home_key": "alahlijeddah",
-    "away_key": "alriyadh",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Chornomorets",
-        "away": "Livyi Bereh",
-        "league": "Premier League",
-        "kickoff": "2026-09-04T10:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.1,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "chornomorets",
-        "away_key": "livyibereh",
-        "kickoff_delta_minutes": 60
-      },
-      {
-        "home": "Paju Citizen",
-        "away": "Daegu",
-        "league": "K League 2",
-        "kickoff": "2026-09-04T10:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "pajucitizen",
-        "away_key": "daegu",
-        "kickoff_delta_minutes": 90
-      },
-      {
-        "home": "Cheongju",
-        "away": "Seoul E.",
-        "league": "K League 2",
-        "kickoff": "2026-09-04T10:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.0,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "cheongju",
-        "away_key": "seoule",
-        "kickoff_delta_minutes": 90
-      },
-      {
-        "home": "Kalba",
-        "away": "Al Ain",
-        "league": "UAE Pro League",
-        "kickoff": "2026-09-04T13:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 13.0,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "kalba",
-        "away_key": "alain",
-        "kickoff_delta_minutes": 285
-      },
-      {
-        "home": "Al Shamal SC",
-        "away": "Al Shahaniya",
-        "league": "Stars League",
-        "kickoff": "2026-09-04T14:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.72,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "alshamalsc",
-        "away_key": "alshahaniya",
-        "kickoff_delta_minutes": 300
       }
     ]
   },
