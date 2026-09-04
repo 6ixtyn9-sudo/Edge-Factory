@@ -62,7 +62,10 @@ def test_parse_spec_forms():
     assert rh.parse_spec("gate_mode=acca,volume_min=0.7") == {
         "gate_mode": "acca", "volume_min": 0.7}
     assert rh.parse_spec("fallback=0")["fallback"] is False
-    assert rh.parse_spec("max_accas=4")["max_accas"] == 4
+    assert rh.parse_spec("max_accas=4,min_accas=2")["min_accas"] == 2
+    assert rh.parse_spec("stake_mode=per_acca,stake_per_acca=0.1") == {
+        "stake_mode": "per_acca", "stake_per_acca": 0.1}
+    assert rh.parse_spec("weights=3,2,1") == {"weights": "3,2,1"}
     with pytest.raises(SystemExit):
         rh.parse_spec("nonsense_key=3")
 
@@ -101,15 +104,28 @@ def test_paired_bootstrap_detects_a_real_difference():
 
 # ---------------- metrics ----------------------------------------------------
 
-def test_day_growth_is_bank_independent_and_matches_the_engine():
-    accas = [[_leg("a", 0.7, 2.0, "win"), _leg("b", 0.7, 1.5, "win")],
-             [_leg("c", 0.7, 1.5, "loss"), _leg("d", 0.7, 1.5, "win")]]
-    # one acca @3.0 wins, one loses; stake f/2 each
-    assert rh.day_growth(accas, 0.5) == pytest.approx(1 + 0.5 * (3.0 / 2 - 1))
-    # engine cross-check: same numbers through plan_day's staking
-    plan = [{"odds": 3.0, "stake_pct": 25.0}, {"odds": 2.25, "stake_pct": 25.0}]
-    bank = 100.0 - sum(p["stake_pct"] for p in plan) + plan[0]["stake_pct"] * 3.0
-    assert bank / 100.0 == pytest.approx(rh.day_growth(accas, 0.5))
+def test_day_growth_comes_from_the_engine_plan_stakes():
+    pool = [_leg("a", 0.74, 2.0, "win"), _leg("b", 0.73, 1.5, "win"),
+            _leg("c", 0.72, 1.5, "loss"), _leg("d", 0.71, 1.5, "win")]
+    plan = at.plan_day(pool, 100.0, stake_frac=0.5)
+    # one acca @3.0 wins, one loses; plan_day stakes 25% on each
+    assert [a["stake_pct"] for a in plan] == [25.0, 25.0]
+    assert rh.day_growth(plan) == pytest.approx(1 + 0.5 * (3.0 / 2 - 1))
+
+
+def test_replay_routes_sizing_through_plan_day(monkeypatch):
+    u = _universe(1)
+    real = at.plan_day
+    calls = []
+
+    def recording_plan(pool, bank_pct, **kwargs):
+        calls.append((bank_pct, kwargs))
+        return real(pool, bank_pct, **kwargs)
+
+    monkeypatch.setattr(at, "plan_day", recording_plan)
+    days = rh.replay(u, {"stake_mode": "per_acca", "stake_per_acca": 0.07})
+    assert calls == [(100.0, {"stake_mode": "per_acca", "stake_per_acca": 0.07})]
+    assert days["2026-08-01"]["stake_pct"] == [7.0, 7.0, 7.0]
 
 
 def test_summarise_final_bank_is_the_product_of_daily_growth():
@@ -120,6 +136,36 @@ def test_summarise_final_bank_is_the_product_of_daily_growth():
     for d in days.values():
         prod *= d["growth"]
     assert s["final"] == pytest.approx(prod, rel=1e-9)
+    assert s["ruin"] == 0
+
+
+def test_summarise_bankruptcy_is_ruin_not_a_dropped_day():
+    days = {
+        "2026-08-01": {"growth": 2.0, "accas": [(2.0, True)]},
+        "2026-08-02": {"growth": 0.0, "accas": [(2.0, False)]},
+        "2026-08-03": {"growth": 5.0, "accas": [(5.0, True)]},
+    }
+    s = rh.summarise(days)
+    assert s["ruin"] == 1
+    assert s["mean_log"] == -float("inf")
+    assert s["final"] == 0.0
+    assert s["maxdd"] == 1.0
+
+
+def test_ruin_variant_is_not_bootstrapped():
+    u = {"2026-08-01": at.rank_legs([
+        _leg("a", 0.8, 1.5, "loss"), _leg("b", 0.7, 1.5, "loss")])}
+    assert rh.summarise(rh.replay(u, {"stake_frac": 1.0}))["ruin"] == 1
+    assert rh.paired_bootstrap(u, {}, {"stake_frac": 1.0}, n=20) is None
+
+
+def test_kelly_sweep_skips_ruin_cells(capsys):
+    u = {"2026-08-01": at.rank_legs([
+        _leg("a", 0.8, 1.5, "loss"), _leg("b", 0.7, 1.5, "loss")])}
+    rh.cmd_kelly(u)
+    output = capsys.readouterr().out
+    assert "100%      RUIN" in output
+    assert "<- SKIPPED" in output
 
 
 # ---------------- band table -------------------------------------------------

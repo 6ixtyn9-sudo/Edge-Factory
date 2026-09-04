@@ -28,13 +28,16 @@ Variant spec syntax (anywhere a SPEC is accepted):
   "floor=1.25"                     bare number also works: "1.25" == floor=1.25
   "gate_mode=acca,volume_min=0.70" comma-separated key=value
   keys: floor, rank(prob|ev), pairing(consecutive|barbell), max_accas,
-        saturated_accas, volume_pool, volume_min, gate_mode(off|pool|acca),
-        fallback(0|1), stake_frac, min_prob (harness-only always-on prob floor)
+        min_accas, saturated_accas, volume_pool, volume_min,
+        gate_mode(off|pool|acca), fallback(0|1), stake_frac,
+        stake_mode(per_day|per_acca), stake_per_acca, weights (e.g. 3,2,1),
+        min_prob (harness-only always-on prob floor)
 
 Usage (from repo root):
   PYTHONPATH=src python3 scripts/replay_harness.py                  # status + live baseline
   PYTHONPATH=src python3 scripts/replay_harness.py --ab 1.15 1.20   # paired A/B + bootstrap
   PYTHONPATH=src python3 scripts/replay_harness.py --ab live "gate_mode=acca"
+  PYTHONPATH=src python3 scripts/replay_harness.py --since 2026-08-01 --ab live "max_accas=4"
   PYTHONPATH=src python3 scripts/replay_harness.py --variant "saturated_accas=5"
   PYTHONPATH=src python3 scripts/replay_harness.py --battery        # the full sweep vs live
   PYTHONPATH=src python3 scripts/replay_harness.py --slots          # quality by rank slot
@@ -60,12 +63,15 @@ import auto_tickets as at  # the live engine — guards, floors, constants  # no
 
 LOCALDATA = ROOT / "localdata"
 
-# knobs forwarded to at.select_accas (everything else is harness-level)
-ENGINE_KEYS = {"floor", "rank", "pairing", "max_accas", "legs_per_acca",
-               "volume_pool", "volume_min", "gate_mode", "fallback",
-               "saturated_accas"}
-FLOAT_KEYS = {"floor", "volume_min", "stake_frac", "min_prob"}
-INT_KEYS = {"max_accas", "legs_per_acca", "volume_pool", "saturated_accas"}
+# Knobs forwarded to the engine. replay() calls at.plan_day(), not a harness
+# copy of either selection or sizing.
+SELECTION_KEYS = {"floor", "rank", "pairing", "max_accas", "min_accas",
+                  "legs_per_acca", "volume_pool", "volume_min", "gate_mode",
+                  "fallback", "saturated_accas"}
+SIZING_KEYS = {"stake_frac", "stake_mode", "stake_per_acca", "weights"}
+ENGINE_KEYS = SELECTION_KEYS | SIZING_KEYS
+FLOAT_KEYS = {"floor", "volume_min", "stake_frac", "stake_per_acca", "min_prob"}
+INT_KEYS = {"max_accas", "min_accas", "legs_per_acca", "volume_pool", "saturated_accas"}
 BOOL_KEYS = {"fallback"}
 
 
@@ -82,13 +88,22 @@ def parse_spec(text):
         return {"floor": float(text)}          # back-compat: --ab 1.10 1.20
     except ValueError:
         pass
-    for part in text.split(","):
+    parts = text.split(",")
+    parsed_parts = []
+    for part in parts:
         part = part.strip()
         if not part:
             continue
+        # A weight list deliberately uses commas too: weights=3,2,1. Bare
+        # fragments immediately following weights belong to that value until
+        # the next key=value fragment.
+        if "=" not in part and parsed_parts and parsed_parts[-1][0] == "weights":
+            parsed_parts[-1] = ("weights", f"{parsed_parts[-1][1]},{part}")
+            continue
         if "=" not in part:
             raise SystemExit(f"bad spec fragment {part!r} (want key=value)")
-        k, v = (s.strip() for s in part.split("=", 1))
+        parsed_parts.append(tuple(s.strip() for s in part.split("=", 1)))
+    for k, v in parsed_parts:
         if k in BOOL_KEYS:
             spec[k] = v.lower() not in ("0", "false", "no", "off")
         elif k in INT_KEYS:
@@ -97,7 +112,7 @@ def parse_spec(text):
             spec[k] = float(v)
         else:
             spec[k] = v
-    unknown = set(spec) - ENGINE_KEYS - {"stake_frac", "min_prob"}
+    unknown = set(spec) - ENGINE_KEYS - {"min_prob"}
     if unknown:
         raise SystemExit(f"unknown spec key(s): {sorted(unknown)}")
     return spec
@@ -122,42 +137,49 @@ def build_universe(archives, settled):
     return universe
 
 
-def card_for_day(pool, spec):
-    """The live selector, driven by a variant spec. Returns list of accas."""
-    kw = {k: v for k, v in spec.items() if k in ENGINE_KEYS}
+def _filtered_pool(pool, spec):
+    """Apply the one harness-only filter before entering the live engine."""
     mp = spec.get("min_prob")
-    if mp is not None:
-        pool = [l for l in pool if l["prob"] >= mp]
-    return at.select_accas(pool, **kw)
+    if mp is None:
+        return pool
+    return [l for l in pool if l["prob"] >= mp]
 
 
-def day_growth(accas, stake_frac):
-    """Bank-multiplier for one bet-day. Bank-independent: stake is
-    stake_frac of bank split evenly, so growth = 1 + f*(mean(odds*win) - 1)."""
-    n = len(accas)
-    ret = 0.0
-    for a in accas:
-        if all(l["result"] == "win" for l in a):
-            prod = 1.0
-            for l in a:
-                prod *= l["odds"]
-            ret += prod
-    return 1.0 + stake_frac * (ret / n - 1.0)
+def card_for_day(pool, spec):
+    """The live selector, driven by selection-only variant overrides."""
+    kw = {k: v for k, v in spec.items() if k in SELECTION_KEYS}
+    return at.select_accas(_filtered_pool(pool, spec), **kw)
+
+
+def day_growth(plan, bank_pct=100.0):
+    """Bank multiplier derived from plan_day's returned production stakes.
+
+    This intentionally uses the rounded ``stake_pct`` and acca odds that the
+    engine ships. The harness has no separate sizing formula to drift.
+    """
+    staked = sum(a["stake_pct"] for a in plan)
+    returned = sum(a["stake_pct"] * a["odds"] for a in plan
+                   if all(l.get("result") == "win" for l in a["legs"]))
+    return (bank_pct - staked + returned) / bank_pct
 
 
 def replay(universe, spec):
-    """Per-day record for a variant. Order-independent by construction."""
-    stake_frac = spec.get("stake_frac", at.STAKE_FRAC)
+    """Per-day record for a variant, routed through the production planner."""
     out = {}
+    kw = {k: v for k, v in spec.items() if k in ENGINE_KEYS}
     for d in sorted(universe):
-        accas = card_for_day(universe[d], spec)
-        if not accas:
+        # A 100%-of-capital reference bank keeps growth bank-independent while
+        # exercising plan_day's exact stake rounding and cap logic.
+        bank_pct = 100.0
+        plan = at.plan_day(_filtered_pool(universe[d], spec), bank_pct, **kw)
+        if not plan:
             continue
         out[d] = {
-            "growth": day_growth(accas, stake_frac),
-            "accas": [(round(math.prod(l["odds"] for l in a), 4),
-                       all(l["result"] == "win" for l in a)) for a in accas],
-            "legs": [tuple(l["match"] for l in a) for a in accas],
+            "growth": day_growth(plan, bank_pct),
+            "accas": [(a["odds"], all(l.get("result") == "win" for l in a["legs"]))
+                      for a in plan],
+            "legs": [tuple(l["match"] for l in a["legs"]) for a in plan],
+            "stake_pct": [a["stake_pct"] for a in plan],
         }
     return out
 
@@ -166,21 +188,29 @@ def summarise(days):
     g = [days[d]["growth"] for d in sorted(days)]        # date order (drawdown is a path)
     accas = [a for d in days.values() for a in d["accas"]]
     wins = sum(1 for _, w in accas if w)
-    logs = [math.log(x) for x in g if x > 0]
-    final = 100.0 * math.exp(sum(logs))
-    bank = peak = 1.0
-    maxdd = 0.0
-    for x in g:
-        bank *= x
-        peak = max(peak, bank)
-        maxdd = max(maxdd, 1 - bank / peak)
+    ruin = sum(1 for x in g if x <= 0)
+    logs = [math.log(x) for x in g] if not ruin else []
+    if ruin:
+        mean_log = -math.inf
+        final = 0.0
+        maxdd = 1.0
+    else:
+        mean_log = sum(logs) / len(logs) if logs else 0.0
+        final = 100.0 * math.exp(sum(logs))
+        bank = peak = 1.0
+        maxdd = 0.0
+        for x in g:
+            bank *= x
+            peak = max(peak, bank)
+            maxdd = max(maxdd, 1 - bank / peak)
     return {
         "days": len(g), "accas": len(accas),
         "hit": wins / len(accas) if accas else 0.0,
-        "mean_log": sum(logs) / len(logs) if logs else 0.0,
+        "mean_log": mean_log,
         "final": final,
         "maxdd": maxdd,
         "worst": min(g) if g else 1.0,
+        "ruin": ruin,
         "leg_odds": accas,
     }
 
@@ -198,8 +228,10 @@ def effect_concentration(universe, spec_a, spec_b):
     flips or halves the effect, it is an anecdote, not a policy.
     """
     da, db = replay(universe, spec_a), replay(universe, spec_b)
-    la = {d: math.log(v["growth"]) for d, v in da.items() if v["growth"] > 0}
-    lb = {d: math.log(v["growth"]) for d, v in db.items() if v["growth"] > 0}
+    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
+        return None
+    la = {d: math.log(v["growth"]) for d, v in da.items()}
+    lb = {d: math.log(v["growth"]) for d, v in db.items()}
     if not la or not lb:
         return None
     full = sum(lb.values()) / len(lb) - sum(la.values()) / len(la)
@@ -210,13 +242,18 @@ def effect_concentration(universe, spec_a, spec_b):
         if not ka or not kb:
             continue
         without = sum(kb.values()) / len(kb) - sum(ka.values()) / len(ka)
-        contrib.append((full - without, d))
+        contrib.append((full - without, d, without))
     if not contrib:
         return None
     contrib.sort(key=lambda t: -abs(t[0]))
-    top, top_day = contrib[0]
-    return {"full": full, "top_day": top_day, "top_share": abs(top) / abs(full) if full else 0.0,
-            "drop_one": full - top, "flips": (full > 0) != ((full - top) > 0),
+    top, top_day, top_without = contrib[0]
+    flip_days = [d for _, d, without in contrib
+                 if full != 0 and (full > 0) != (without > 0)]
+    loo = [without for _, _, without in contrib]
+    return {"full": full, "top_day": top_day,
+            "top_share": abs(top) / abs(full) if full else 0.0,
+            "drop_one": top_without, "flips": bool(flip_days),
+            "flip_days": flip_days, "loo_min": min(loo), "loo_max": max(loo),
             # does the most influential day INFLATE the effect or MASK it?
             "inflates": (top > 0) == (full > 0)}
 
@@ -243,8 +280,12 @@ def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
     days = sorted(set(da) | set(db))
     if not days:
         return None
-    ga = {d: math.log(da[d]["growth"]) for d in da if da[d]["growth"] > 0}
-    gb = {d: math.log(db[d]["growth"]) for d in db if db[d]["growth"] > 0}
+    # A ruined policy is not made healthy by silently deleting its bankruptcy
+    # day. It is ineligible for bootstrap comparison.
+    if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
+        return None
+    ga = {d: math.log(da[d]["growth"]) for d in da}
+    gb = {d: math.log(db[d]["growth"]) for d in db}
     diffs = []
     for _ in range(n):
         sample = random.choices(days, k=len(days))
@@ -293,7 +334,8 @@ def live_settings():
     print("=" * 74)
     print("LIVE SETTINGS (imported from scripts/auto_tickets.py — not grepped)")
     print("=" * 74)
-    for const in ("STAKE_FRAC", "MAX_ACCAS", "LEGS_PER_ACCA", "MIN_LEG_ODDS",
+    for const in ("STAKE_FRAC", "STAKE_MODE", "STAKE_PER_ACCA", "STAKE_WEIGHTS",
+                  "MAX_ACCAS", "MIN_ACCAS", "LEGS_PER_ACCA", "MIN_LEG_ODDS",
                   "VOLUME_POOL", "VOLUME_MIN_PROB", "GATE_MODE", "FREEZE_HOUR"):
         print(f"  {const:18s} {getattr(at, const)}")
     print()
@@ -302,8 +344,12 @@ def live_settings():
 def print_variant(universe, spec, label=None, baseline=None):
     s = summarise(replay(universe, spec))
     lbl = label or label_of(spec)
+    if s["ruin"]:
+        print(f"{lbl:42s} RUIN on {s['ruin']} day(s) — final 0%, maxDD 100%; "
+              "SKIPPED (bankruptcy is not an edge)")
+        return s
     mark = ""
-    if baseline is not None:
+    if baseline is not None and not baseline["ruin"]:
         d = s["mean_log"] - baseline["mean_log"]
         mark = f"  Δlog/day {d:+.4f}"
     print(f"{lbl:42s} log/day {s['mean_log']:+.4f}  final {s['final']:8.0f}%  "
@@ -317,7 +363,10 @@ def ab_report(universe, spec_a, spec_b):
     la, lb = label_of(spec_a), label_of(spec_b)
     print(f"A/B (paired):  A = {la}   vs   B = {lb}\n")
     sa = print_variant(universe, spec_a, f"A: {la}")
-    print_variant(universe, spec_b, f"B: {lb}", baseline=sa)
+    sb = print_variant(universe, spec_b, f"B: {lb}", baseline=sa)
+    if sa["ruin"] or sb["ruin"]:
+        print("\nA/B SKIPPED: at least one arm ruins the bank on the observed path.")
+        return
     ndiff = card_diff_days(universe, spec_a, spec_b)
     print(f"\ncards differ on {ndiff}/{len(universe)} days")
     da, db = replay(universe, spec_a), replay(universe, spec_b)
@@ -353,10 +402,11 @@ def ab_report(universe, spec_a, spec_b):
     if e:
         print(f"\neffect concentration: worst-case single day {e['top_day']} carries "
               f"{e['top_share']:.0%} of the difference")
-        print(f"  leave-one-day-out effect: {e['drop_one']:+.4f} log/day "
-              f"(full {e['full']:+.4f})", end="  ")
+        print(f"  leave-one-day-out range: {e['loo_min']:+.4f} to {e['loo_max']:+.4f} "
+              f"log/day (top-day removal {e['drop_one']:+.4f}; full {e['full']:+.4f})",
+              end="  ")
         if e["flips"]:
-            print("— SIGN FLIPS: this is one day, not a policy")
+            print(f"— SIGN FLIPS on {len(e['flip_days'])} removal(s): not a policy")
         elif not e["inflates"]:
             print("— the top day works AGAINST B; the effect is stronger without it")
         elif e["top_share"] > 0.4:
@@ -408,60 +458,60 @@ def cmd_today(universe, settled):
 
 
 def cmd_kelly(universe, spec=None):
-    """Growth-vs-risk curve over the stake fraction, on identical cards.
+    """Growth-vs-risk curve over stake fraction, through ``plan_day`` only.
 
-    Sizing is the one lever that changes NOTHING about selection, so its
-    evidence is far cleaner than any leg-filter A/B: the same days, the same
-    accas, only the fraction of bank deployed. Prints the growth-optimal f
-    (full-Kelly-equivalent for this card distribution) and how stable it is.
+    Sizing changes NOTHING about selection, so its evidence is cleaner than a
+    leg-filter A/B. Every grid cell is still a production-planner replay: this
+    command owns no second stake formula that can drift from shipped tickets.
     """
-    spec = dict(spec or {})
-    days = replay(universe, {k: v for k, v in spec.items() if k != "stake_frac"})
-    # per-day acca-return multiple: mean(odds * won) over the day's accas
-    R = [sum(o for o, w in rec["accas"] if w) / len(rec["accas"])
-         for rec in days.values()]
-    if not R:
+    spec = {k: v for k, v in dict(spec or {}).items() if k != "stake_frac"}
+    grid = sorted(set([i / 100 for i in range(5, 101, 5)] + [at.STAKE_FRAC]))
+    curves = {f: replay(universe, {**spec, "stake_frac": f}) for f in grid}
+    stats = {f: summarise(days) for f, days in curves.items()}
+    reference = curves[at.STAKE_FRAC]
+    if not reference:
         print("no bet-days")
         return
-    grid = sorted(set([i / 100 for i in range(5, 96, 5)] + [round(at.STAKE_FRAC, 4)]))
+    total_losses = sum(not any(w for _, w in rec["accas"]) for rec in reference.values())
 
-    def growth(f, sample=None):
-        s = R if sample is None else sample
-        return sum(math.log(1 + f * (r - 1)) for r in s) / len(s)
-
-    def maxdd(f):
-        bank = peak = 1.0
-        worst = 0.0
-        for d in sorted(days):
-            rec = days[d]
-            r = sum(o for o, w in rec["accas"] if w) / len(rec["accas"])
-            bank *= 1 + f * (r - 1)
-            peak = max(peak, bank)
-            worst = max(worst, 1 - bank / peak)
-        return worst
-
-    print(f"stake sizing on {len(R)} bet-days ({sum(1 for r in R if r == 0)} total-loss days)")
+    print(f"stake sizing on {len(reference)} bet-days ({total_losses} total-loss days)")
     print("cards are IDENTICAL across rows — only the fraction of bank changes\n")
     print(f"{'stake f':>8s} {'log/day':>9s} {'final%':>9s} {'maxDD':>7s}")
-    best = max(grid, key=growth)
-    live_f = round(at.STAKE_FRAC, 4)
+    valid_grid = [f for f in grid if not stats[f]["ruin"]]
+    if not valid_grid:
+        print("every stake on the grid ruins the bank")
+        return
+    best = max(valid_grid, key=lambda f: stats[f]["mean_log"])
     for f in grid:
+        s = stats[f]
+        if s["ruin"]:
+            print(f"{f:8.0%} {'RUIN':>9s} {0:9.0f} {1:7.0%}   <- SKIPPED")
+            continue
         star = "   <- growth-optimal" if f == best else ""
-        if f == live_f:
+        if f == at.STAKE_FRAC:
             star += "   <- LIVE"
-        print(f"{f:8.0%} {growth(f):+9.4f} {100*math.exp(growth(f)*len(R)):9.0f} "
-              f"{maxdd(f):7.0%}{star}")
+        print(f"{f:8.0%} {s['mean_log']:+9.4f} {s['final']:9.0f} {s['maxdd']:7.0%}{star}")
+
+    # Paired resampling: one day sample scores every globally non-ruin grid
+    # cell. A sample cannot rehabilitate a fraction known to bankrupt the
+    # observed path.
+    days = sorted(reference)
+    logs = {f: {d: math.log(curves[f][d]["growth"]) for d in days}
+            for f in valid_grid}
     random.seed(2026)
     opts = []
     for _ in range(2000):
-        sample = random.choices(R, k=len(R))          # ONE resample per iteration
-        opts.append(max(grid, key=lambda f: growth(f, sample)))
+        sample = random.choices(days, k=len(days))
+        opts.append(max(valid_grid,
+                        key=lambda f: sum(logs[f][d] for d in sample) / len(sample)))
     opts.sort()
-    print(f"\ngrowth-optimal f on this path: {best:.0%} (log/day {growth(best):+.4f}, "
-          f"maxDD {maxdd(best):.0%})")
-    print(f"bootstrapped f*: median {opts[len(opts)//2]:.0%}  p10 {opts[int(.1*len(opts))]:.0%}  "
-          f"p90 {opts[int(.9*len(opts))]:.0%}")
-    print(f"P(f* < live {at.STAKE_FRAC:.0%}) = {sum(1 for o in opts if o < at.STAKE_FRAC)/len(opts):.0%}")
+    best_s = stats[best]
+    print(f"\ngrowth-optimal f on this path: {best:.0%} "
+          f"(log/day {best_s['mean_log']:+.4f}, maxDD {best_s['maxdd']:.0%})")
+    print(f"bootstrapped f*: median {opts[len(opts)//2]:.0%}  "
+          f"p10 {opts[int(.1*len(opts))]:.0%}  p90 {opts[int(.9*len(opts))]:.0%}")
+    below = sum(1 for o in opts if o < at.STAKE_FRAC) / len(opts)
+    print(f"P(f* < live {at.STAKE_FRAC:.0%}) = {below:.0%}")
     print("\nKelly doctrine: the growth curve is asymmetric — overbetting past f*")
     print("loses growth AND multiplies drawdown, underbetting only costs growth")
     print("slowly. With f* this uncertain, size BELOW the point estimate.")
@@ -577,6 +627,10 @@ def main():
     ap.add_argument("--kelly", action="store_true",
                     help="stake-fraction growth/drawdown curve + growth-optimal f")
     ap.add_argument("--today", action="store_true", help="today's card at LIVE settings")
+    ap.add_argument("--since", metavar="YYYY-MM-DD",
+                    help="restrict replay universe to this date or later")
+    ap.add_argument("--until", metavar="YYYY-MM-DD",
+                    help="restrict replay universe to this date or earlier")
     # legacy single-knob flags (kept: HANDOVER documents them)
     ap.add_argument("--floor", type=float)
     ap.add_argument("--max-accas", type=int)
@@ -590,6 +644,10 @@ def main():
 
     settled = at.load_settled()
     universe = build_universe(at.load_archived_picks(), settled)
+    if args.since:
+        universe = {d: pool for d, pool in universe.items() if d >= args.since}
+    if args.until:
+        universe = {d: pool for d, pool in universe.items() if d <= args.until}
 
     engine_status()
     live_settings()
