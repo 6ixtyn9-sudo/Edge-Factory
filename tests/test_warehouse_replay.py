@@ -303,3 +303,86 @@ def test_leg_stats_flags_overconfidence_negatively(rh):
 
 def test_leg_stats_handles_the_empty_family(rh):
     assert rh._leg_stats([]) is None
+
+
+# --------------------------------------------------------------------------
+# 5. checkpoint ⑫ tripwire — the ml-meta serve-time contract
+# --------------------------------------------------------------------------
+@pytest.fixture(scope="module")
+def pt():
+    return _load(ROOT / "scripts" / "picks_today.py", "pt_under_test")
+
+
+def test_contract_features_are_the_two_post_kickoff_ones(pt):
+    assert pt.ML_META_CONSTANT_FEATURES == ("ht_diff", "ht_total")
+
+
+def test_contract_holds_silently_for_normal_pre_kickoff_picks(pt):
+    """The all-zero case is every run to date: no breach, no noise."""
+    picks = [
+        {"rule": "ml-meta avg_p>=55", "match": "A vs B",
+         "ml_ht_diff": 0, "ml_ht_total": 0},
+        {"rule": "ml-meta avg_p>=60", "match": "C vs D",
+         "ml_ht_diff": 0.0, "ml_ht_total": 0.0},
+        {"rule": "2way-unanimous avg_p>=70", "match": "E vs F"},
+    ]
+    assert pt.ml_meta_contract_breaches(picks) == []
+
+
+def test_contract_catches_an_in_match_score_reaching_the_model(pt):
+    picks = [{"rule": "ml-meta avg_p>=55", "match": "A vs B", "date": "2026-09-05",
+              "ml_ht_diff": 2, "ml_ht_total": 2}]
+    breaches = pt.ml_meta_contract_breaches(picks)
+    assert len(breaches) == 1
+    assert breaches[0]["match"] == "A vs B"
+    assert breaches[0]["features"] == {"ht_diff": 2, "ht_total": 2}
+
+
+def test_contract_catches_a_lone_nonzero_total(pt):
+    """A 1-1 half-time has ht_diff 0 but ht_total 2 — must still trip."""
+    picks = [{"rule": "ml-meta avg_p>=55", "match": "A vs B",
+              "ml_ht_diff": 0, "ml_ht_total": 2}]
+    breaches = pt.ml_meta_contract_breaches(picks)
+    assert len(breaches) == 1
+    assert breaches[0]["features"] == {"ht_total": 2}
+
+
+def test_contract_ignores_non_ml_meta_rules(pt):
+    """Only the ml-meta operating point depends on the constant."""
+    picks = [{"rule": "2way-unanimous avg_p>=70", "match": "A vs B",
+              "ml_ht_diff": 3, "ml_ht_total": 5}]
+    assert pt.ml_meta_contract_breaches(picks) == []
+
+
+def test_contract_is_checked_after_the_pre_match_guard(pt):
+    """Checked earlier it would fire daily on already-kicked-off fixtures."""
+    src = (ROOT / "scripts" / "picks_today.py").read_text()
+    guard = src.index("filter_operational_pre_match_picks(\n            picks,")
+    check = src.index("_breaches = ml_meta_contract_breaches(picks)")
+    assert guard < check, "the tripwire must run on bettable picks only"
+
+
+def test_breached_picks_are_withheld_not_merely_logged():
+    src = (ROOT / "scripts" / "picks_today.py").read_text()
+    body = src[src.index("_breaches = ml_meta_contract_breaches(picks)"):]
+    assert "picks = [p for p in picks" in body[:600], "must fail closed"
+
+
+# --------------------------------------------------------------------------
+# 6. checkpoint ⑬ — the 3way research rank defaults OFF
+# --------------------------------------------------------------------------
+def test_rule3way_rank_is_not_the_default(at):
+    legs = [
+        {"prob": 0.80, "odds": 1.50, "row": {"rule": "ml-meta avg_p>=55"}},
+        {"prob": 0.60, "odds": 2.00, "row": {"rule": "3way-unanimous avg_p>=65"}},
+    ]
+    # live ranking is by stated probability — the ml-meta leg leads
+    assert at.rank_legs(legs)[0]["prob"] == 0.80
+    assert at.rank_legs(legs, "prob")[0]["prob"] == 0.80
+    # only the explicit research rank promotes the 3way leg
+    assert at.rank_legs(legs, "rule3way")[0]["prob"] == 0.60
+
+
+def test_rule3way_rank_tolerates_legs_without_an_archived_row(at):
+    legs = [{"prob": 0.70, "odds": 1.40}, {"prob": 0.60, "odds": 2.00}]
+    assert [l["prob"] for l in at.rank_legs(legs, "rule3way")] == [0.70, 0.60]
