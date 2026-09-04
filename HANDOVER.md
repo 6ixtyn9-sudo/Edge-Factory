@@ -7095,11 +7095,27 @@ wins more often than it claims.
 | 2way-unanimous | 79 | 74.0% | 70.9% | −3.1pp | −9.8pp | **−6.0%** | −14.5% | +2.8% |
 | 3way-unanimous | 10 | 70.3% | 100.0% | +29.7pp | +28.1pp | +38.7% | +32.0% | +45.6% ⚠ n<30 |
 
-**ml-meta does not underperform the honest consensus rules. It outperforms
-them.** On the legs that rode in-season it is the best-performing family with a
-usable n (+7.0% flat vs 2way's −6.0%), and it hits 75.3% against a stated
-64.5%. Neither family clears p10>0 on ROI, so neither is *proven* — but the
-sign is the opposite of the hypothesis, and nothing here supports a demotion.
+**AMENDED AFTER REVIEW — do not restate this as "ml-meta outperforms."** The
+correct sentence, and the one a successor should inherit, is:
+
+> **ml-meta and 2way-unanimous are statistically indistinguishable on this
+> sample. There is no evidence ml-meta is worse, and a hint that it is
+> better.**
+
+The intervals overlap heavily and neither clears zero: ml-meta is +7.0% flat
+with **p10 −2.2%**; 2way-unanimous is −6.0% with **p90 +2.8%**. On 81 and 79
+legs those two cannot be separated. An independent replication measured
+ml-meta n=80 / 75.0% / +6.8% (p10 −2.8%) and 2way n=75 / 73.3% / −2.6% (p90
++6.0%) — same direction, same non-separation; the small deltas are
+leg-attribution edge cases.
+
+What the measurement **does** establish is enough to close the question that
+was asked: the hypothesis that prompted this checkpoint — that the
+leaked-feature model *underperforms* the honest consensus rules — is not
+supported. The sign is the opposite of the hypothesis. That is sufficient to
+reject a demotion; it is **not** sufficient to claim superiority, and the
+demotion is separately rejected on the paired replay below, which is the
+stronger evidence.
 
 ### Why the leak does not hurt — the mechanism, which matters more than the table
 
@@ -7226,3 +7242,128 @@ half-fix it.
   67% maxDD**. `--rules` is read-only and changes no default.
 - Both forebet ROI populations reproduced (224,194 / −5.1% and 3,170 / +4.2%),
   bootstrap on the filtered slice p10 **+2.0%**, P(ROI>0) **99.4%**.
+
+## Addendum — 2026-09-04 (late): checkpoint ⑫ tripwire shipped, and checkpoint ⑬
+## opened — the 3way-unanimous family
+
+Three review amendments to checkpoint ⑫, all landed. **No live setting changed;
+parity re-verified at 0 leg-selection differences / 80 archived days, worst
+total-staked deviation 0.000000pp.**
+
+### Amendment 1 — the ml-meta claim is downgraded to its honest strength
+
+See the amended paragraph in checkpoint ⑫. Short version: **"statistically
+indistinguishable, no evidence ml-meta is worse, a hint it is better"** — never
+"ml-meta outperforms". ml-meta +7.0% (p10 −2.2%), 2way −6.0% (p90 +2.8%), n=81
+and n=79. The demotion is rejected on the **paired replay**, which is the
+stronger evidence, not on this table.
+
+### Amendment 2 — the accidental conservatism now has a contract, not a note
+
+The load-bearing fact from checkpoint ⑫ is that `ht_diff`/`ht_total` are a
+**constant 0** at serve time, so the `>=55` operating point sits on a shifted
+probability scale. That conservatism is **unstable**: it survives only while
+nobody retrains, refits or changes the feature pipeline. A routine model
+refresh would remove the margin silently, with no alarm. A comment in a
+handover file is not a safeguard.
+
+**Shipped in `scripts/picks_today.py`:**
+
+- `ML_META_CONSTANT_FEATURES = ("ht_diff", "ht_total")`
+- each emitted ml-meta pick now records `ml_ht_diff` / `ml_ht_total`
+- `ml_meta_contract_breaches(picks)` returns any ml-meta pick whose recorded
+  constants are non-zero
+- on breach: the affected picks are **withheld** (fail-closed), a 🚨 line goes
+  to stderr, and `localdata/ml_meta_contract_breach_<day>.json` is written
+
+**Placement matters and was got wrong first.** The obvious spot — inside the
+ML scoring loop — fires on fixtures that already kicked off, because
+`run_day()` scores the whole slate *before*
+`filter_operational_pre_match_picks()` discards started matches, and Forebet
+returns a real half-time score for those. That tripwire would have screamed on
+every afternoon run about picks the engine was never going to bet. **A tripwire
+that cries wolf gets ignored, which is worse than no tripwire.** It is
+therefore checked *after* the pre-match guard, on the picks that could actually
+be bet. A test pins that ordering.
+
+Behaviour today is unchanged: for a genuinely pre-kickoff fixture Forebet
+returns no half-time score, `_f()` yields `None`, and `(None or 0)` is 0, so no
+branch fires. **Caveat on that claim:** it is established by code path and unit
+test, not by a live `picks_today.py` run — this session had no live slate to
+execute against. The first real run should be watched for a 🚨 line.
+
+### Amendment 3 — checkpoint ⑬: the 3way-unanimous family. OPENED, NOT ADOPTED.
+
+It was fair to say nobody had looked at this. `3way-unanimous` is the only rule
+family whose lower bound clears zero:
+
+| scope | n | hit | flat ROI | roi p10 |
+|---|---:|---:|---:|---:|
+| all settled playable legs | 71 | 80.3% | **+14.4%** | **+5.3%** |
+| legs the engine actually rode | 41 | 85.4% | **+20.0%** | **+9.0%** |
+
+Leave-one-day-out on the pool legs: ROI range +9.6% to +17.6% across the 36
+days it fires, **0 sign flips out of 36**. On leg quality alone this is the
+strongest family in the archive.
+
+**But it is mostly an off-season artefact, and that is decisive.** Of the 36
+days on which a 3way leg exists, only **9 are in-season**. Checkpoint ⑩
+established that pre-August days came from soft summer leagues and are not
+representative. So ~75% of the evidence for the best-looking family sits in the
+regime the ledger already says not to generalise from. In-season it is 25 pool
+legs over 9 days (10 ridden legs, all winners — n=10 decides nothing).
+
+**It is also rare.** Distribution of settled playable 3way legs per day: 44
+days with none, 22 with exactly one, 14 with two or more. On most days there is
+nothing to lean on, and on more than half the firing days there is not even
+enough for one all-3way acca.
+
+**The obvious way to exploit it was priced and it LOSES.** A new research rank
+`rank="rule3way"` (3way legs first, then stated probability) was added to
+`auto_tickets.rank_legs`, **defaulting off** and pinned off by test:
+
+| scope | arm | log/day | final | bet-days | maxDD |
+|---|---|---:|---:|---:|---:|
+| whole archive | live `rank=prob` | **+0.0428** | 924% | 52 | 67% |
+| whole archive | `rank=rule3way` | +0.0343 | 596% | 52 | 65% |
+| in-season | live `rank=prob` | **+0.0410** | 387% | 33 | 63% |
+| in-season | `rank=rule3way` | +0.0298 | 267% | 33 | **48%** |
+
+Paired Δ −0.0084/day whole-archive (p10 −0.0322) and −0.0112/day in-season
+(p10 −0.0449); cards differ on 14/52 and 7/33 days; leave-one-day-out flips the
+sign on 51/52 and 32/33 removals. **In money: 387% becomes 267%.**
+
+Note the honest tension: max drawdown improves markedly in-season, 63% → 48%.
+That is a **slide along the frontier**, not a move of it — less growth bought
+with less risk — and it is the same shape as the risk-matched `max_accas=2`
+wash closed in checkpoint ⑦. It is not a free lunch and it does not clear the
+bar.
+
+**Why promoting good legs loses money** (worth understanding before the next
+person re-opens it): the recipe pairs *consecutive* ranked legs into 2-leg
+accas. Promoting 3way legs does not add them — they were already in the top 6
+on most firing days — it **re-partitions the pairings**, and a 2-leg acca dies
+if either leg dies. Reordering a pool without changing its membership is a
+pairing change, not a selection improvement.
+
+**Pre-registered rule for checkpoint ⑬.** The 3way *leg* edge is real and
+worth watching; no exploitation of it has been found. Re-open only at
+**n >= 30 in-season 3way legs across >= 20 in-season firing days** (currently
+25 legs / 9 days). Adopt only under the full bar: paired-bootstrap p10 above
+zero, sign holds under every leave-one-day-out, maxDD no higher than live.
+`rank=rule3way` is **rejected** and must not be re-run as a fresh idea — it is
+now a scanned variant. Remember the standing limit: about 27 variants have been
+scanned; **at most one candidate may ever be adopted**, and the in-season
+fourth acca is still the leading claimant.
+
+### Verification receipt
+
+- `PYTHONPATH=src python3 -m pytest -q` → **377 passed** (345 pre-existing + 32
+  new). `py_compile` and `git diff --check` clean.
+- Engine parity after touching BOTH `auto_tickets.py` (new rank option) and
+  `picks_today.py` (tripwire): **0 leg-selection differences on all 80 archived
+  days**, worst total-staked deviation **0.000000pp**.
+- Bare/`--battery` baseline unchanged: **+0.0428 log/day, 924%, 52 days, 67%
+  maxDD**. `--warehouse-replay` still exits 1 (FAIL), as it must.
+- New knobs pinned OFF: `rank="rule3way"` is never the default; the tripwire is
+  silent while the contract holds.

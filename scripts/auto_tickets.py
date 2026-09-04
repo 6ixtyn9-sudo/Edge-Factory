@@ -496,11 +496,21 @@ def playable_legs(rows, day=None, settled=None, floor=None):
     return out
 
 
+def _rule_of(leg):
+    """The miner rule behind a leg, when the archived row is still attached."""
+    return str((leg.get("row") or {}).get("rule") or "")
+
+
 def rank_legs(pool, rank="prob"):
     """Order the pool. "prob" = live (stated probability, odds as tiebreak);
-    "ev" = stated expected value (prob * odds) — an A/B candidate only."""
+    "ev" = stated expected value (prob * odds) — an A/B candidate only;
+    "rule3way" = 3-way-unanimous legs first, then stated probability — the
+    checkpoint ⑬ research candidate, NOT live and not adopted."""
     if rank == "ev":
         key = lambda l: (l["prob"] * l["odds"], l["prob"], l["odds"])   # noqa: E731
+    elif rank == "rule3way":
+        key = lambda l: (_rule_of(l).startswith("3way"),                # noqa: E731
+                         l["prob"], l["odds"])
     else:
         key = lambda l: (l["prob"], l["odds"])                          # noqa: E731
     return sorted(pool, key=key, reverse=True)
