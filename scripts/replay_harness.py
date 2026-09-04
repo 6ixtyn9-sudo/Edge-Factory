@@ -43,6 +43,7 @@ Usage (from repo root):
   PYTHONPATH=src python3 scripts/replay_harness.py --slots          # quality by rank slot
   PYTHONPATH=src python3 scripts/replay_harness.py --kelly          # stake sizing curve
   PYTHONPATH=src python3 scripts/replay_harness.py --legs           # stated-prob band table
+  PYTHONPATH=src python3 scripts/replay_harness.py --rules          # quality by rule family
   PYTHONPATH=src python3 scripts/replay_harness.py --today          # today's card, live settings
   PYTHONPATH=src python3 scripts/replay_harness.py --warehouse-replay  # feasibility audit
 """
@@ -582,6 +583,126 @@ def cmd_slots(universe):
     print("total stake is fixed at STAKE_FRAC and merely split further.")
 
 
+def rule_family(rule):
+    """Group a miner rule into the family the ledger reasons about."""
+    r = str(rule or "")
+    if r.startswith("ml-meta"):
+        return "ml-meta"
+    if r.startswith("2way"):
+        return "2way-unanimous"
+    if r.startswith("3way"):
+        return "3way-unanimous"
+    return "other"
+
+
+def _leg_stats(legs, seed=2026):
+    """n, hit rate, flat ROI and calibration gap with bootstrap deciles."""
+    if not legs:
+        return None
+    rnd = random.Random(seed)
+    ret = [(l["odds"] - 1.0) if l["result"] == "win" else -1.0 for l in legs]
+    gap = [(1.0 if l["result"] == "win" else 0.0) - l["prob"] for l in legs]
+    n = len(legs)
+    roi_bs = sorted(sum(rnd.choices(ret, k=n)) / n for _ in range(5000))
+    gap_bs = sorted(sum(rnd.choices(gap, k=n)) / n for _ in range(5000))
+    return {
+        "n": n,
+        "hit": sum(1 for l in legs if l["result"] == "win") / n,
+        "stated": sum(l["prob"] for l in legs) / n,
+        "roi": sum(ret) / n,
+        "roi_p10": roi_bs[500], "roi_p90": roi_bs[4500],
+        "gap": sum(gap) / n,
+        "gap_p10": gap_bs[500], "gap_p90": gap_bs[4500],
+    }
+
+
+def _ridden_legs(universe):
+    """The legs that actually rode a card, tagged with their rule."""
+    out = []
+    for d in sorted(universe):
+        pool = universe[d]
+        for acca in at.plan_day(pool, 100.0):
+            for leg in acca["legs"]:
+                src = next((x for x in pool if x["match"] == leg["match"]
+                            and x["pick"] == leg["pick"]), None)
+                if src and leg.get("result") in ("win", "loss"):
+                    out.append({**leg, "_day": d, "row": src["row"]})
+    return out
+
+
+def _rule_table(legs, title):
+    print(f"\n{title}  (n={len(legs)})")
+    print(f"  {'family':16s} {'n':>4s} {'stated':>7s} {'realised':>8s} "
+          f"{'gap':>7s} {'gapP10':>7s} {'flatROI':>8s} {'roiP10':>8s} {'roiP90':>8s}")
+    buckets = {}
+    for l in legs:
+        buckets.setdefault(rule_family(l["row"].get("rule")), []).append(l)
+    for fam in ("ml-meta", "2way-unanimous", "3way-unanimous", "other"):
+        s = _leg_stats(buckets.get(fam) or [])
+        if not s:
+            continue
+        print(f"  {fam:16s} {s['n']:4d} {s['stated']:7.1%} {s['hit']:8.1%} "
+              f"{100*s['gap']:+6.1f}p {100*s['gap_p10']:+6.1f}p {s['roi']:+8.1%} "
+              f"{s['roi_p10']:+8.1%} {s['roi_p90']:+8.1%}{noise_flag(s['n'])}")
+
+
+def cmd_rules(universe):
+    """Checkpoint ⑫: is the ml-meta family carrying its weight, or costing?
+
+    The escalation that prompted this asked whether the leaked-feature model
+    UNDERPERFORMS the honest consensus rules. The table answers that directly,
+    and the paired removal replay prices the only live change that follows.
+    """
+    print("=" * 74)
+    print("RULE-FAMILY QUALITY (checkpoint ⑫)")
+    print("=" * 74)
+    print("'gap' is realised minus stated: POSITIVE means the rule is")
+    print("UNDER-confident (it wins more often than it claims).\n")
+
+    pool = [l for d in sorted(universe) for l in universe[d]
+            if l["result"] in ("win", "loss")]
+    _rule_table(pool, "every settled playable leg")
+    _rule_table(_ridden_legs(universe), "legs the engine actually rode")
+
+    ml_days = sorted({d for d in universe
+                      for l in universe[d]
+                      if rule_family(l["row"].get("rule")) == "ml-meta"})
+    if ml_days:
+        print(f"\nml-meta legs first appear {ml_days[0]} and run to {ml_days[-1]} "
+              f"({len(ml_days)} days).")
+        print("Any comparison against a family that also fired pre-August is")
+        print("confounded by the season boundary — compare in-season only.")
+
+    # The only live change this could justify: stop letting ml-meta legs ride.
+    print("\n" + "-" * 74)
+    print("PAIRED REMOVAL REPLAY — what happens if ml-meta legs cannot ride")
+    print("-" * 74)
+    drop = {d: [l for l in pool_ if rule_family(l["row"].get("rule")) != "ml-meta"]
+            for d, pool_ in universe.items()}
+    live_days = replay(universe, {})
+    drop_days = replay(drop, {})
+    a, b = summarise(live_days), summarise(drop_days)
+    print(f"  live (ml-meta eligible)  log/day {a['mean_log']:+.4f}  "
+          f"final {a['final']:6.0f}%  days {a['days']:3d}  maxDD {a['maxdd']:.0%}")
+    print(f"  ml-meta legs REMOVED     log/day {b['mean_log']:+.4f}  "
+          f"final {b['final']:6.0f}%  days {b['days']:3d}  maxDD {b['maxdd']:.0%}")
+    common = sorted(set(live_days) & set(drop_days))
+    if common:
+        diff = [math.log(drop_days[d]["growth"]) - math.log(live_days[d]["growth"])
+                for d in common]
+        rnd = random.Random(2026)
+        bs = sorted(sum(rnd.choices(diff, k=len(diff))) / len(diff)
+                    for _ in range(5000))
+        changed = sum(1 for d in common if abs(drop_days[d]["growth"]
+                                               - live_days[d]["growth"]) > 1e-9)
+        print(f"  paired Δ(removed − live) {sum(diff)/len(diff):+.4f}/day  "
+              f"p10 {bs[500]:+.4f}  p90 {bs[4500]:+.4f}  "
+              f"cards differ {changed}/{len(common)} days")
+        print("\n  Removing the family also removes the days where it was the only")
+        print("  card. Read the day counts, not just the growth number.")
+    return 0
+
+
 def cmd_battery(universe):
     base = {}
     print("--- baseline ---")
@@ -869,6 +990,9 @@ def main():
     ap.add_argument("--kelly", action="store_true",
                     help="stake-fraction growth/drawdown curve + growth-optimal f")
     ap.add_argument("--today", action="store_true", help="today's card at LIVE settings")
+    ap.add_argument("--rules", action="store_true",
+                    help="leg quality + calibration by rule family, and the "
+                         "paired cost of removing the ml-meta family")
     ap.add_argument("--warehouse-replay", action="store_true",
                     help="Phase-1 feasibility audit: can the live picks be "
                          "reconstructed from localdata at all? (research only)")
@@ -912,6 +1036,10 @@ def main():
 
     if args.today:
         cmd_today(universe, settled)
+        return 0
+
+    if args.rules:
+        cmd_rules(universe)
         return 0
 
     if args.slots:

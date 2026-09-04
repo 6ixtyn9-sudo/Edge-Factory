@@ -252,3 +252,54 @@ def test_validation_gate_counts_a_side_flip_as_a_miss():
                             "pick": "HOME", "prob": 0.74, "odds": 1.45}]}
     res = wr.validation_gate(FakeCon(), live, 1.20, norm_team)
     assert res["tp"] == 0 and res["fp"] == 1 and res["fn"] == 1
+
+
+# --------------------------------------------------------------------------
+# 4. checkpoint ⑫ — the rule-family report is read-only research
+# --------------------------------------------------------------------------
+@pytest.fixture(scope="module")
+def rh():
+    return _load(ROOT / "scripts" / "replay_harness.py", "rh_under_test")
+
+
+def test_rules_command_is_opt_in_and_changes_no_default():
+    src = (ROOT / "scripts" / "replay_harness.py").read_text()
+    assert '"--rules"' in src
+    assert "if args.rules:" in src
+    for name in ("daily.py", "auto_tickets.py", "picks_today.py"):
+        assert "--rules" not in (ROOT / "scripts" / name).read_text()
+
+
+def test_rule_family_grouping(rh):
+    assert rh.rule_family("ml-meta avg_p>=55") == "ml-meta"
+    assert rh.rule_family("ml-meta avg_p>=60") == "ml-meta"
+    assert rh.rule_family("2way-unanimous avg_p>=70") == "2way-unanimous"
+    assert rh.rule_family("2way+bc-confirms avg_p>=60") == "2way-unanimous"
+    assert rh.rule_family("3way-unanimous home-only avg_p>=65") == "3way-unanimous"
+    assert rh.rule_family("ou25-unanimous-2way-sa avg_p>=70") == "other"
+    assert rh.rule_family(None) == "other"
+
+
+def test_leg_stats_reports_underconfidence_with_the_right_sign(rh):
+    """gap = realised - stated; POSITIVE must mean 'wins more than it claims'."""
+    legs = [{"prob": 0.60, "odds": 2.0, "result": "win"} for _ in range(80)]
+    legs += [{"prob": 0.60, "odds": 2.0, "result": "loss"} for _ in range(20)]
+    s = rh._leg_stats(legs)
+    assert s["n"] == 100
+    assert s["hit"] == pytest.approx(0.80)
+    assert s["stated"] == pytest.approx(0.60)
+    assert s["gap"] == pytest.approx(0.20)      # under-confident by 20pp
+    assert s["gap_p10"] > 0
+    assert s["roi"] == pytest.approx(0.60)      # 80 * 1.0 - 20 * 1.0 over 100
+
+
+def test_leg_stats_flags_overconfidence_negatively(rh):
+    legs = [{"prob": 0.90, "odds": 1.10, "result": "win"} for _ in range(50)]
+    legs += [{"prob": 0.90, "odds": 1.10, "result": "loss"} for _ in range(50)]
+    s = rh._leg_stats(legs)
+    assert s["gap"] == pytest.approx(-0.40)
+    assert s["roi"] < 0
+
+
+def test_leg_stats_handles_the_empty_family(rh):
+    assert rh._leg_stats([]) is None
