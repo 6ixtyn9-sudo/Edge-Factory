@@ -6736,3 +6736,23 @@ looks profitable is a new hypothesis, not a result. Do not re-open
 `max_accas=2` risk-matched (wash), `acca-gate >=70%`, or thin-day skipping.
 The only live candidate still earning future observation is the in-season
 fourth acca under the fixed n>=60 / p10 / all-LOO / no-extra-drawdown rule.
+
+### Correction to the ⑧ verification receipt (2026-09-04, post-merge)
+
+"Default `plan_day` 0 diffs" is true of leg SELECTION, not of bytes. The new
+hard day cap subtracts the rounding excess from the last ticket, so on 2-acca
+days the old planner emitted 16.6667 + 16.6667 = 33.3334 (0.0001pp above the
+33.3333% rule) and the new one emits 16.6667 + 16.6666 = 33.3333 exactly.
+That is 12 of 80 archived days, worst deviation 0.0001pp — a hundredth of a
+cent on a R100 bank, always in the underbetting direction. Leg selection is
+identical on all 80 days and --battery is unchanged (live +0.0428, 924%).
+
+A strict byte-parity check therefore reports "12 diffs" and reads as a
+regression. It is not one. The correct engine-parity assertion, and the one to
+fold into the test suite so it runs on every PR:
+
+  * ZERO leg-selection differences vs the previous main on every archived day
+  * total staked within 0.01pp (1c on a R100 bank)
+
+Byte-equality is the wrong test for floating-point stakes and will keep crying
+wolf until someone reverts a good change.
