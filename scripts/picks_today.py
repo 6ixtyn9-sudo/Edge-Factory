@@ -1163,6 +1163,45 @@ def load_thresholds():
     return t1x2, ou_best, btts_best, not bool(edges)
 
 
+# --------------------------------------------------------------------------
+# Checkpoint ⑫ tripwire: the ml-meta operating point depends on a CONSTANT.
+#
+# The meta-model was trained with `ht_diff`/`ht_total` (the match's actual
+# half-time score) in its feature vector. At serve time no match has kicked
+# off, so both are 0 for every live prediction. A constant contributes a fixed
+# logit offset: it cannot reorder picks, it only shifts the probability SCALE.
+# The live `avg_p>=55` threshold has been sitting on that shifted scale for the
+# entire live record, and the resulting under-confidence (+5.2pp measured, see
+# HANDOVER checkpoint ⑫) is load-bearing conservatism.
+#
+# That conservatism is UNSTABLE: it survives only while nobody retrains,
+# refits, or changes the feature pipeline. One routine model refresh would
+# silently remove the margin with no alarm. This assertion converts an
+# invisible dependency into a visible contract. It changes nothing while the
+# contract holds — which is every run to date.
+ML_META_CONSTANT_FEATURES = ("ht_diff", "ht_total")
+
+
+def ml_meta_contract_breaches(picks: list[dict]) -> list[dict]:
+    """ml-meta picks whose serve-time constant features were NOT zero.
+
+    Checked AFTER the pre-match guard, on the picks that could actually be
+    bet. Checking earlier would fire every afternoon on fixtures that already
+    kicked off and are discarded anyway — a tripwire that cries wolf gets
+    ignored, which is worse than no tripwire.
+    """
+    out = []
+    for pick in picks:
+        if not str(pick.get("rule") or "").startswith("ml-meta"):
+            continue
+        bad = {k: pick.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES
+               if pick.get(f"ml_{k}")}
+        if bad:
+            out.append({"match": pick.get("match"), "date": pick.get("date"),
+                        "features": bad})
+    return out
+
+
 def load_ml_rules_and_model() -> tuple[list[dict], dict | None]:
     try:
         data = json.loads(EDGES_PATH.read_text())
@@ -2412,6 +2451,12 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                         "sources_used": used,
                         "source_weights": source_weights or {},
                         "ml_p": round(ml_p, 4),
+                        # checkpoint ⑫ contract: these MUST be 0 for any pick
+                        # that survives the pre-match guard. Recorded so the
+                        # assertion below has evidence, and so the archive can
+                        # be audited after the fact.
+                        "ml_ht_diff": ht_diff_feat,
+                        "ml_ht_total": ht_total_feat,
                     })
 
         if len(set(sels)) > 1:
@@ -3061,6 +3106,33 @@ def main():
         if pre_match_skips:
             details = ", ".join(f"{k}={v}" for k, v in sorted(pre_match_skips.items()))
             print(f"pre-match guard {day}: skipped {sum(pre_match_skips.values())} ({details})", file=sys.stderr)
+
+        # Checkpoint ⑫ tripwire. Fail-closed and LOUD: the >=55 operating point
+        # is calibrated against an all-zero ht_diff/ht_total scale, so a
+        # non-zero value on a bettable pick means the engine is scoring on a
+        # scale its threshold was never tuned for.
+        _breaches = ml_meta_contract_breaches(picks)
+        if _breaches:
+            picks = [p for p in picks
+                     if not str(p.get("rule") or "").startswith("ml-meta")
+                     or not any(p.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES)]
+            print(
+                f"\U0001f6a8 ML-META CONTRACT BROKEN on {day}: "
+                f"{len(_breaches)} bettable pick(s) had a non-zero "
+                f"{'/'.join(ML_META_CONSTANT_FEATURES)} and were WITHHELD. "
+                "Those features are 0 for every legitimate pre-kickoff "
+                "prediction; the avg_p threshold is calibrated against that "
+                "all-zero scale. Do not bet ml-meta legs until this is "
+                "explained. See HANDOVER checkpoint 12.",
+                file=sys.stderr,
+            )
+            try:
+                (LOCALDATA / f"ml_meta_contract_breach_{day}.json").write_text(
+                    json.dumps({"date": day, "withheld": len(_breaches),
+                                "features": list(ML_META_CONSTANT_FEATURES),
+                                "picks": _breaches}, indent=2))
+            except Exception:
+                pass
 
         bzz_stats: dict = {}
         scouting_stats: dict = {}

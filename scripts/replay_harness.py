@@ -43,7 +43,9 @@ Usage (from repo root):
   PYTHONPATH=src python3 scripts/replay_harness.py --slots          # quality by rank slot
   PYTHONPATH=src python3 scripts/replay_harness.py --kelly          # stake sizing curve
   PYTHONPATH=src python3 scripts/replay_harness.py --legs           # stated-prob band table
+  PYTHONPATH=src python3 scripts/replay_harness.py --rules          # quality by rule family
   PYTHONPATH=src python3 scripts/replay_harness.py --today          # today's card, live settings
+  PYTHONPATH=src python3 scripts/replay_harness.py --warehouse-replay  # feasibility audit
 """
 from __future__ import annotations
 
@@ -581,6 +583,126 @@ def cmd_slots(universe):
     print("total stake is fixed at STAKE_FRAC and merely split further.")
 
 
+def rule_family(rule):
+    """Group a miner rule into the family the ledger reasons about."""
+    r = str(rule or "")
+    if r.startswith("ml-meta"):
+        return "ml-meta"
+    if r.startswith("2way"):
+        return "2way-unanimous"
+    if r.startswith("3way"):
+        return "3way-unanimous"
+    return "other"
+
+
+def _leg_stats(legs, seed=2026):
+    """n, hit rate, flat ROI and calibration gap with bootstrap deciles."""
+    if not legs:
+        return None
+    rnd = random.Random(seed)
+    ret = [(l["odds"] - 1.0) if l["result"] == "win" else -1.0 for l in legs]
+    gap = [(1.0 if l["result"] == "win" else 0.0) - l["prob"] for l in legs]
+    n = len(legs)
+    roi_bs = sorted(sum(rnd.choices(ret, k=n)) / n for _ in range(5000))
+    gap_bs = sorted(sum(rnd.choices(gap, k=n)) / n for _ in range(5000))
+    return {
+        "n": n,
+        "hit": sum(1 for l in legs if l["result"] == "win") / n,
+        "stated": sum(l["prob"] for l in legs) / n,
+        "roi": sum(ret) / n,
+        "roi_p10": roi_bs[500], "roi_p90": roi_bs[4500],
+        "gap": sum(gap) / n,
+        "gap_p10": gap_bs[500], "gap_p90": gap_bs[4500],
+    }
+
+
+def _ridden_legs(universe):
+    """The legs that actually rode a card, tagged with their rule."""
+    out = []
+    for d in sorted(universe):
+        pool = universe[d]
+        for acca in at.plan_day(pool, 100.0):
+            for leg in acca["legs"]:
+                src = next((x for x in pool if x["match"] == leg["match"]
+                            and x["pick"] == leg["pick"]), None)
+                if src and leg.get("result") in ("win", "loss"):
+                    out.append({**leg, "_day": d, "row": src["row"]})
+    return out
+
+
+def _rule_table(legs, title):
+    print(f"\n{title}  (n={len(legs)})")
+    print(f"  {'family':16s} {'n':>4s} {'stated':>7s} {'realised':>8s} "
+          f"{'gap':>7s} {'gapP10':>7s} {'flatROI':>8s} {'roiP10':>8s} {'roiP90':>8s}")
+    buckets = {}
+    for l in legs:
+        buckets.setdefault(rule_family(l["row"].get("rule")), []).append(l)
+    for fam in ("ml-meta", "2way-unanimous", "3way-unanimous", "other"):
+        s = _leg_stats(buckets.get(fam) or [])
+        if not s:
+            continue
+        print(f"  {fam:16s} {s['n']:4d} {s['stated']:7.1%} {s['hit']:8.1%} "
+              f"{100*s['gap']:+6.1f}p {100*s['gap_p10']:+6.1f}p {s['roi']:+8.1%} "
+              f"{s['roi_p10']:+8.1%} {s['roi_p90']:+8.1%}{noise_flag(s['n'])}")
+
+
+def cmd_rules(universe):
+    """Checkpoint ⑫: is the ml-meta family carrying its weight, or costing?
+
+    The escalation that prompted this asked whether the leaked-feature model
+    UNDERPERFORMS the honest consensus rules. The table answers that directly,
+    and the paired removal replay prices the only live change that follows.
+    """
+    print("=" * 74)
+    print("RULE-FAMILY QUALITY (checkpoint ⑫)")
+    print("=" * 74)
+    print("'gap' is realised minus stated: POSITIVE means the rule is")
+    print("UNDER-confident (it wins more often than it claims).\n")
+
+    pool = [l for d in sorted(universe) for l in universe[d]
+            if l["result"] in ("win", "loss")]
+    _rule_table(pool, "every settled playable leg")
+    _rule_table(_ridden_legs(universe), "legs the engine actually rode")
+
+    ml_days = sorted({d for d in universe
+                      for l in universe[d]
+                      if rule_family(l["row"].get("rule")) == "ml-meta"})
+    if ml_days:
+        print(f"\nml-meta legs first appear {ml_days[0]} and run to {ml_days[-1]} "
+              f"({len(ml_days)} days).")
+        print("Any comparison against a family that also fired pre-August is")
+        print("confounded by the season boundary — compare in-season only.")
+
+    # The only live change this could justify: stop letting ml-meta legs ride.
+    print("\n" + "-" * 74)
+    print("PAIRED REMOVAL REPLAY — what happens if ml-meta legs cannot ride")
+    print("-" * 74)
+    drop = {d: [l for l in pool_ if rule_family(l["row"].get("rule")) != "ml-meta"]
+            for d, pool_ in universe.items()}
+    live_days = replay(universe, {})
+    drop_days = replay(drop, {})
+    a, b = summarise(live_days), summarise(drop_days)
+    print(f"  live (ml-meta eligible)  log/day {a['mean_log']:+.4f}  "
+          f"final {a['final']:6.0f}%  days {a['days']:3d}  maxDD {a['maxdd']:.0%}")
+    print(f"  ml-meta legs REMOVED     log/day {b['mean_log']:+.4f}  "
+          f"final {b['final']:6.0f}%  days {b['days']:3d}  maxDD {b['maxdd']:.0%}")
+    common = sorted(set(live_days) & set(drop_days))
+    if common:
+        diff = [math.log(drop_days[d]["growth"]) - math.log(live_days[d]["growth"])
+                for d in common]
+        rnd = random.Random(2026)
+        bs = sorted(sum(rnd.choices(diff, k=len(diff))) / len(diff)
+                    for _ in range(5000))
+        changed = sum(1 for d in common if abs(drop_days[d]["growth"]
+                                               - live_days[d]["growth"]) > 1e-9)
+        print(f"  paired Δ(removed − live) {sum(diff)/len(diff):+.4f}/day  "
+              f"p10 {bs[500]:+.4f}  p90 {bs[4500]:+.4f}  "
+              f"cards differ {changed}/{len(common)} days")
+        print("\n  Removing the family also removes the days where it was the only")
+        print("  card. Read the day counts, not just the growth number.")
+    return 0
+
+
 def cmd_battery(universe):
     base = {}
     print("--- baseline ---")
@@ -614,6 +736,247 @@ def cmd_battery(universe):
         print_variant(universe, {"min_prob": mp}, f"always-on prob >= {mp:.0%}", baseline=b)
 
 
+# --------------------------------------------------------------------------
+# --warehouse-replay: FEASIBILITY audit (Phase 1). Research only, opt-in.
+# --------------------------------------------------------------------------
+def _wr_open():
+    """Open the warehouse read-only, preferring the materialised file."""
+    import duckdb
+    db = LOCALDATA / "warehouse.duckdb"
+    if db.exists():
+        return duckdb.connect(str(db), read_only=True), str(db)
+    from edgefactory.warehouse import connect as _connect
+    return _connect(), "in-memory views over localdata/*.csv.gz"
+
+
+def cmd_warehouse_replay(archives, settled, since=None, until=None):
+    """Answer 'can the live engine be reconstructed from the warehouse?'
+
+    Prints, in order: what is on disk, what the live picks depended on,
+    per-rule feasibility, the look-ahead audit, the validation gate, and a
+    PASS/FAIL verdict against a bar stated before the numbers.
+    """
+    from edgefactory import warehouse_replay as wr
+    from edgefactory.util import norm_team
+
+    con, src = _wr_open()
+    days = sorted({str(p.get("date") or p.get("_archive_day") or "")[:10]
+                   for p in archives})
+    days = [d for d in days if d and (not since or d >= since)
+            and (not until or d <= until)]
+
+    print("=" * 74)
+    print("WAREHOUSE RECONSTRUCTION — PHASE 1 FEASIBILITY AUDIT")
+    print("=" * 74)
+    print(f"warehouse: {src}")
+    print(f"live archive: {len(days)} days, {days[0]} -> {days[-1]}")
+    print("This command does NOT produce a backtest. It measures whether one")
+    print("could be trusted. A reconstruction that recovers a biased slice of")
+    print("the live picks is a different strategy, not a cheaper engine.\n")
+
+    # ---------------- 1. inventory ----------------
+    print("-" * 74)
+    print("1. WAREHOUSE INVENTORY (what history actually exists on disk)")
+    print("-" * 74)
+    print(f"{'table':24s} {'rows':>10s}  {'first':10s} {'last':10s}")
+    for row in wr.warehouse_inventory(con):
+        if not row["present"]:
+            print(f"{row['table']:24s} {'ABSENT':>10s}  {'-':10s} {'-':10s}")
+            continue
+        print(f"{row['table']:24s} {row['rows']:10,d}  "
+              f"{row['first'] or '-':10s} {row['last'] or '-':10s}")
+    print()
+
+    cov = wr.input_coverage(con, days)
+    print("prediction-source rows landing inside the archive window:")
+    for name, n in cov["per_source"].items():
+        print(f"  {name:10s} {n:3d} / {len(days)} archived days")
+    print(f"  ANY source: {cov['days_with_any_input']} / {len(days)} days "
+          f"({cov['coverage_frac']:.0%})\n")
+
+    # ---------------- 2. dependency census ----------------
+    legs = []
+    for d in days:
+        legs.extend(at.playable_legs(archives, day=d, settled=settled))
+    census = wr.dependency_census(legs)
+
+    print("-" * 74)
+    print("2. WHAT THE LIVE LEGS DEPENDED ON")
+    print("-" * 74)
+    print(f"playable legs across the archive: {census.legs}")
+    print("\nprediction sources cited by those legs:")
+    for s, n in sorted(census.source_hits.items(), key=lambda t: -t[1]):
+        tag = "ON DISK" if s in wr.ON_DISK_PREDICTION_SOURCES else "NO HISTORY FILE"
+        print(f"  {s:14s} {n:4d} legs   [{tag}]")
+    print("\nodds sources used to price those legs:")
+    for s, n in sorted(census.by_odds_source.items(), key=lambda t: -t[1]):
+        if s in wr.ON_DISK_ODDS_SOURCES:
+            tag = "historical, bet-time"
+        elif s in wr.CLOSING_ONLY_ODDS_SOURCES:
+            tag = "historical but CLOSING (wrong price)"
+        else:
+            tag = "NO HISTORY FILE"
+        print(f"  {s:20s} {n:4d} legs   [{tag}]")
+
+    n = max(census.legs, 1)
+    print("\naddressability funnel (each line is a necessary condition):")
+    print(f"  {'all playable legs':52s} {census.legs:4d} {100:5.1f}%")
+    print(f"  {'rule is a source vote (not the ml-meta model)':52s} "
+          f"{census.source_vote:4d} {100*census.source_vote/n:5.1f}%")
+    print(f"  {'every cited source has a history file':52s} "
+          f"{census.on_disk_sources:4d} {100*census.on_disk_sources/n:5.1f}%")
+    print(f"  {'priced from an odds source with history':52s} "
+          f"{census.historical_odds:4d} {100*census.historical_odds/n:5.1f}%")
+    print(f"  {'ALL THREE (the reconstruction ceiling)':52s} "
+          f"{census.ceiling:4d} {100*census.ceiling/n:5.1f}%")
+    print()
+
+    # ---------------- 3. per-rule verdict ----------------
+    print("-" * 74)
+    print("3. PER-RULE FEASIBILITY")
+    print("-" * 74)
+    inv = {r["table"]: r for r in wr.warehouse_inventory(con)}
+    for spec in wr.RULE_SPECS:
+        got = census.by_rule.get(spec.rule, 0)
+        view = inv.get(spec.view or "", {})
+        span = (f"{view.get('first')} -> {view.get('last')}"
+                if view.get("present") else "view ABSENT")
+        missing = [s for s in spec.needs_sources
+                   if s not in wr.ON_DISK_PREDICTION_SOURCES]
+        print(f"\n  {spec.rule}   ({got} playable legs in archive)")
+        print(f"    kind          {spec.kind}")
+        print(f"    view          {spec.view} [{span}]")
+        print(f"    needs         {', '.join(spec.needs_sources)}"
+              + (f"   MISSING: {', '.join(missing)}" if missing else ""))
+        print(f"    caveat        {spec.note}")
+        if spec.kind == "ml-meta":
+            print("    VERDICT       NOT RECONSTRUCTABLE — post-kickoff features "
+                  "(see section 4)")
+        elif view.get("present") and view.get("last", "") >= days[0]:
+            print("    VERDICT       reconstructable in principle over the view's span")
+        else:
+            print("    VERDICT       NOT RECONSTRUCTABLE on archived days — "
+                  "view has no rows there")
+    print()
+
+    # ---------------- 4. look-ahead audit ----------------
+    print("-" * 74)
+    print("4. LOOK-AHEAD AUDIT")
+    print("-" * 74)
+    try:
+        import json as _json
+        edges = _json.loads((LOCALDATA / "edges_consensus.json").read_text())
+        model = edges.get("ml_model") or {}
+        feats = wr.classify_ml_features(model.get("feature_cols", []),
+                                        model.get("coef", []))
+    except Exception:
+        feats = []
+    if feats:
+        bad = [f for f in feats if f["availability"] == "post_kickoff"]
+        print("ml-meta feature vector, by when the value becomes knowable:")
+        for f in feats[:10]:
+            print(f"  {f['feature']:18s} {f['coef']:+8.4f}  {f['availability']}")
+        print("  ...")
+        for f in bad:
+            if f not in feats[:10]:
+                print(f"  {f['feature']:18s} {f['coef']:+8.4f}  {f['availability']}")
+        if bad:
+            swing = wr.leak_logit_swing(feats)
+            print(f"\n  {len(bad)} POST-KICKOFF feature(s): "
+                  f"{', '.join(f['feature'] for f in bad)}")
+            print("  These are the actual half-time scores of the match being")
+            print("  predicted. Live inference has no scores yet and feeds 0.")
+            print("  A warehouse replay reads them from the settled row, so a")
+            print(f"  2-0 half-time lead alone shifts the logit by {swing:+.3f}")
+            print("  — an 'edge' that did not exist at bet time.")
+    else:
+        print("no ml_model payload found in localdata/edges_consensus.json")
+
+    try:
+        stat = con.execute(
+            "SELECT status, count(*) FROM forebet_settled GROUP BY 1 "
+            "ORDER BY 2 DESC LIMIT 6").fetchall()
+        total = sum(c for _, c in stat)
+        print("\nforebet.csv.gz row status census (is any row pre-kickoff?):")
+        for s, c in stat:
+            print(f"  {str(s):12s} {c:8,d}  {100*c/total:5.1f}%")
+        print("  Every row carries a TERMINAL status and a final score, and the")
+        print("  file has no capture timestamp column. There is therefore no")
+        print("  evidence any stored probability or price is the pre-kickoff")
+        print("  one. Treat every forebet-priced replay result as an UPPER BOUND.")
+    except Exception:
+        pass
+    print()
+
+    # ---------------- 5. the gate ----------------
+    print("-" * 74)
+    print("5. VALIDATION GATE — reconstruct the archived days, score the recovery")
+    print("-" * 74)
+    print(f"bar stated before measuring: recall >= {wr.GATE_MIN_LEG_RECALL:.0%}, "
+          f"precision >= {wr.GATE_MIN_LEG_PRECISION:.0%},")
+    print(f"odds mismatch <= {wr.GATE_MAX_ODDS_MISMATCH:.0%} of matched legs, "
+          f"input coverage >= {wr.GATE_MIN_COVERED_DAYS:.0%} of days.\n")
+
+    by_day = {d: at.playable_legs(archives, day=d, settled=settled) for d in days}
+    gate = wr.validation_gate(con, by_day, at.MIN_LEG_ODDS, norm_team)
+    print(f"live legs/day       {gate['live_legs_per_day']:6.2f}")
+    print(f"reconstructed/day   {gate['recon_legs_per_day']:6.2f}")
+    print(f"true positives      {gate['tp']:6d}")
+    print(f"false positives     {gate['fp']:6d}   (reconstruction invented these)")
+    print(f"false negatives     {gate['fn']:6d}   (live legs never recovered)")
+    print(f"leg recall          {gate['recall']:6.1%}")
+    print(f"leg precision       {gate['precision']:6.1%}")
+    if gate["odds_diffs"]:
+        print(f"odds diff median    {gate['odds_diff_median']:+6.2%}")
+        print(f"odds mismatch >1%   {gate['odds_mismatch_frac']:6.1%} of matched legs")
+    else:
+        print("odds diff           n/a — no leg matched, so no price to compare")
+    nonzero = [d for d in gate["per_day"] if d["matched"]]
+    print(f"days with any match {len(nonzero)} / {len(gate['per_day'])}")
+
+    # Distinguish "the reconstruction code is broken" from "the data is absent"
+    # by pointing the SAME function at the last window where inputs do exist.
+    probe_days = con.execute(
+        "SELECT date, count(*) FROM consensus2 GROUP BY 1 ORDER BY 1 DESC LIMIT 60"
+    ).fetchall()
+    if probe_days:
+        pd_list = sorted(str(d)[:10] for d, _ in probe_days)
+        found = [len(wr.reconstruct_legs(con, d, at.MIN_LEG_ODDS)) for d in pd_list]
+        got = sum(found)
+        print(f"\nmechanism check — same reconstructor, last {len(pd_list)} days that")
+        print(f"DO have inputs ({pd_list[0]} -> {pd_list[-1]}):")
+        print(f"  {got} legs over {len(pd_list)} days = "
+              f"{got/len(pd_list):.2f} legs/day")
+        print(f"  live engine sees {gate['live_legs_per_day']:.2f} legs/day across the")
+        print("  archive (~11.5/day in-season). The reconstructor runs; it simply")
+        print("  models a much narrower strategy than the engine does. That gap is")
+        print("  the finding — it is not a tuning problem.")
+    print()
+
+    ok, reasons = wr.gate_verdict(cov, gate)
+    print("=" * 74)
+    print(f"PHASE 1 VERDICT: {'PASS' if ok else 'FAIL'}")
+    print("=" * 74)
+    for r in reasons:
+        print(f"  - {r}")
+    if not ok:
+        print("\nPhase 2 (the 2024-2026 replay) is NOT unlocked. Any growth,")
+        print("drawdown or ruin number produced through this reconstruction")
+        print("would describe a strategy the engine never ran. Do not quote one.")
+        print("\nWhat would unlock it, in order of size:")
+        print("  1. vitibet history — cited by "
+              f"{census.source_hits.get('vitibet', 0)} of {census.legs} playable legs.")
+        print("  2. bet-time odds history for scoutingstats_odds / bzzoiro_odds"
+              " — the two")
+        print("     pricing sources behind the plurality of live legs.")
+        print("  3. Point-in-time, timestamped prediction snapshots (captured")
+        print("     BEFORE kickoff) rather than post-match scrapes.")
+        print("  4. An ml-meta feature set with the half-time score removed,")
+        print("     retrained walk-forward, before any ml-meta leg is replayed.")
+    con.close()
+    return 0 if ok else 1
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--variant", action="append", metavar="SPEC",
@@ -627,6 +990,12 @@ def main():
     ap.add_argument("--kelly", action="store_true",
                     help="stake-fraction growth/drawdown curve + growth-optimal f")
     ap.add_argument("--today", action="store_true", help="today's card at LIVE settings")
+    ap.add_argument("--rules", action="store_true",
+                    help="leg quality + calibration by rule family, and the "
+                         "paired cost of removing the ml-meta family")
+    ap.add_argument("--warehouse-replay", action="store_true",
+                    help="Phase-1 feasibility audit: can the live picks be "
+                         "reconstructed from localdata at all? (research only)")
     ap.add_argument("--since", metavar="YYYY-MM-DD",
                     help="restrict replay universe to this date or later")
     ap.add_argument("--until", metavar="YYYY-MM-DD",
@@ -643,7 +1012,15 @@ def main():
     args = ap.parse_args()
 
     settled = at.load_settled()
-    universe = build_universe(at.load_archived_picks(), settled)
+    archives = at.load_archived_picks()
+
+    if args.warehouse_replay:
+        # Runs against the RAW archive (not the settled-only replay universe):
+        # feasibility is about whether inputs exist, not whether legs graded.
+        return cmd_warehouse_replay(archives, settled,
+                                    since=args.since, until=args.until)
+
+    universe = build_universe(archives, settled)
     if args.since:
         universe = {d: pool for d, pool in universe.items() if d >= args.since}
     if args.until:
@@ -659,6 +1036,10 @@ def main():
 
     if args.today:
         cmd_today(universe, settled)
+        return 0
+
+    if args.rules:
+        cmd_rules(universe)
         return 0
 
     if args.slots:
