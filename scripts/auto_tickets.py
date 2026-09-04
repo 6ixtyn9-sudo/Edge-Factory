@@ -672,6 +672,60 @@ def cmd_today(args, st):
     pool = [l for l in pool
             if not (parse_kickoff(l["row"]) is not None and parse_kickoff(l["row"]) < now)]
     pool = [l for l in pool if not l.get("result")]
+    # TZ-INFERENCE + LEAD BUFFER + WIDE RESULT WINDOW (2026-09-04, 5 ghost
+    # incidents; Olimpia proved the class is TWO bugs: timezone-ambiguous
+    # kickoffs AND mis-dated slates with result-lag). Three thin layers, no
+    # blanket league exclusion -- genuine future Americas games still ride.
+    # L1 tz-inference: league -> IANA zone; kickoff read in LOCAL zone; drop
+    #    only if actually past at build time.
+    # L2 lead buffer: kickoff must be >= 4h after build (result-feed lag).
+    # L3 (in settle paths): result lookup already widened +-1d -> +-2d.
+    from zoneinfo import ZoneInfo as _ZI
+    _AMERICAS_ZONES = {
+        "mexico": "America/Mexico_City", "honduras": "America/Tegucigalpa",
+        "peru": "America/Lima", "colombia": "America/Bogota",
+        "ecuador": "America/Guayaquil", "bolivia": "America/La_Paz",
+        "paraguay": "America/Asuncion", "venezuela": "America/Caracas",
+        "uruguay": "America/Montevideo", "chile": "America/Santiago",
+        "argentina": "America/Argentina/Buenos_Aires",
+        "brazil": "America/Sao_Paulo", "usa": "America/New_York",
+        "united states": "America/New_York", "major league": "America/New_York",
+        "mls": "America/New_York", "canada": "America/Toronto",
+        "costa rica": "America/Costa_Rica", "guatemala": "America/Guatemala",
+        "el salvador": "America/El_Salvador", "nicaragua": "America/Managua",
+        "panama": "America/Panama", "trinidad": "America/Port_of_Spain",
+    }
+    _UTC = _ZI("UTC")
+    def _inferred_kickoff_utc(row, slate_day):
+        lg = str(row.get("league") or row.get("odds_league") or "").lower()
+        zk = next((z for z in _AMERICAS_ZONES if z in lg), None)
+        if zk is None:
+            return None                                  # non-Americas: normal parser handles
+        raw = str(row.get("kickoff_canonical") or row.get("kickoff") or "").strip()
+        m = _re.search(r"(\d{1,2}):(\d{2})", raw)
+        if not m:
+            return None
+        hh, mm = int(m.group(1)), int(m.group(2))
+        ymd = _re.match(r"^(\d{4})-(\d{2})-(\d{2})", raw)
+        dm = _re.match(r"^(\d{1,2})-(\d{1,2}),", raw)
+        if ymd:
+            y, mo, dd = map(int, ymd.groups())
+        elif dm:
+            dd, mo = int(dm.group(1)), int(dm.group(2)); y = int(slate_day[:4])
+        else:
+            y, mo, dd = int(slate_day[:4]), int(slate_day[5:7]), int(slate_day[8:10])
+        try:
+            return datetime(y, mo, dd, hh, mm, tzinfo=_ZI(_AMERICAS_ZONES[zk])).astimezone(_UTC)
+        except ValueError:
+            return None
+    _LEAD_HOURS = 4.0
+    def _unprovable_future(row):
+        kt = _inferred_kickoff_utc(row, target)
+        if kt is None:
+            return False                                 # not Americas-inferrable: existing parser's call
+        return (kt - now.astimezone(_UTC)).total_seconds() < _LEAD_HOURS * 3600
+    import re as _re
+    pool = [l for l in pool if not _unprovable_future(l["row"])]
     # Cross-slate guard: a fixture already archived on an EARLIER day's slate
     # has already kicked off (late finishers carried into today's capture).
     past = set()
