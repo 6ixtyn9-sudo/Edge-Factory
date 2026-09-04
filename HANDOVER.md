@@ -6756,3 +6756,614 @@ fold into the test suite so it runs on every PR:
 
 Byte-equality is the wrong test for floating-point stakes and will keep crying
 wolf until someone reverts a good change.
+
+## Addendum — 2026-09-04 (late): checkpoint ⑪ — can the warehouse date the edge?
+## FEASIBILITY VERDICT: NO. Reconstruction is impossible with the data on hand.
+
+**What was asked.** The live evidence base is thin — 80 archived days, 52
+bet-days, 33 in-season — and at that size the engine's edge cannot be proven
+(bootstrap p10 on in-season daily log growth ≈ −0.007; p10 > 0 needs roughly
+180 bet-days, i.e. February 2027). The question was whether the warehouse could
+answer it sooner, by reconstructing what the engine would have picked over
+2024–2026 and replaying it. Phase 1 was a hard gate: reconstruct the 80
+archived days from warehouse data alone, score the recovery against
+`auto_tickets.load_archived_picks()`, and stop if it fails.
+
+**It fails, on four independent grounds, any one of which is fatal.** No
+Phase-2 numbers exist and none should be manufactured. **No live setting
+changed**; leg selection is identical to `2d7d909` on all 80 archived days and
+total staked moves 0.000000pp.
+
+### The instrument
+
+`PYTHONPATH=src python3 scripts/replay_harness.py --warehouse-replay`
+
+A reusable, opt-in command (`src/edgefactory/warehouse_replay.py`,
+`ENABLED_BY_DEFAULT = False`, pinned by test). Prints, in order: warehouse
+inventory, what the live legs actually depended on, per-rule feasibility, the
+look-ahead audit, the validation gate, and a PASS/FAIL against a bar stated
+*before* the numbers. Exit code 1 on FAIL. Nothing on the live path imports it.
+
+### Ground 1 — the prediction sources stop before the archive starts
+
+| table | rows | span |
+|---|---:|---|
+| `forebet_settled` | 323,524 | 2024-01-01 → **2026-06-12** |
+| `zulubet_settled` | 66,808 | 2024-01-01 → **2026-06-12** |
+| `statarea_settled` | 481,537 | 2017-01-01 → **2026-06-12** |
+| archived picks | 891 | **2026-06-19** → 2026-09-06 |
+
+**The overlap is zero days.** `forebet`, `zulubet` and `statarea` have
+**0 rows** on any of the 80 days the engine actually bet. The validation gate
+is not merely failed, it is *unrunnable as specified*: there are no inputs on
+the days where ground truth exists. Any future attempt must first close a
+seven-day-plus capture gap, and then wait for new bet-days on top.
+
+### Ground 2 — the sources that decide the picks are not on disk
+
+Across the 536 playable legs in the archive, the sources cited are:
+
+| source | legs citing it | history file |
+|---|---:|---|
+| **vitibet** | **438 (82%)** | **none** |
+| statarea | 333 | yes |
+| forebet | 298 | yes |
+| zulubet | 182 | yes |
+| **bzzoiro** | **156** | **none** |
+| **betclan** | **116** | **none** |
+
+There is no `vitibet*.csv.gz`, `bzzoiro_*.csv.gz` or `betclan_*.csv.gz` in
+`localdata/`, so `vitibet_settled`, `bzzoiro`, `betclan` and `consensus4` all
+build as ABSENT. `consensus2` joins forebet+zulubet only. **Every reconstruction
+built on the existing views is blind to the source present in four out of five
+live legs.**
+
+### Ground 3 — the prices are not on disk either, and the ones that are, are wrong
+
+The odds actually used to price live legs:
+
+| odds source | legs | availability |
+|---|---:|---|
+| `scoutingstats_odds` | 240 (45%) | **no history file** |
+| `betexplorer_odds` | 177 (33%) | 2026-01→06 only, and **CLOSING** |
+| `bzzoiro_odds` | 75 (14%) | **no history file** |
+| `forebet_best` | 33 (6%) | yes, bet-time family |
+| `zulubet` | 11 (2%) | yes |
+
+The engine bets ~30+ minutes before kickoff at `forebet_best`. BetExplorer is a
+closing price. Substituting one for the other is not an approximation, it is a
+different bet, and the harness refuses to mix them.
+
+**The addressability funnel — the single most important table in this
+checkpoint:**
+
+| necessary condition | legs | share |
+|---|---:|---:|
+| all playable legs | 536 | 100.0% |
+| rule is a source vote (not the ml-meta model) | 223 | 41.6% |
+| every cited source has a history file | 29 | 5.4% |
+| priced from an odds source with history | 44 | 8.2% |
+| **ALL THREE — the reconstruction ceiling** | **1** | **0.2%** |
+
+Even granting perfect code, perfect team-name matching and a closed date gap,
+**one leg out of 536 is faithfully reconstructable.** That is the ceiling, not
+the achieved result. A "backtest" built on it would describe a strategy the
+engine has never run for a single day.
+
+### Ground 4 — the ml-meta model cannot be replayed without look-ahead, and this is structural
+
+`ml-meta avg_p>=55` is the plurality rule (279 of 536 playable legs, 52%).
+Its feature vector, read from the certified model in
+`localdata/edges_consensus.json`, contains:
+
+```
+ht_diff   +0.2395   POST-KICKOFF   actual half-time goal difference
+ht_total  +0.1910   POST-KICKOFF   actual half-time goals scored
+```
+
+`train_ml_meta_classifier` in `scripts/mine_consensus.py` reads `ht_hs`/`ht_gs`
+straight off the settled `consensus3` row. **These are the half-time scores of
+the match the model is being asked to predict.** A warehouse replay would feed
+them: a 2-0 half-time lead alone shifts the logit by **+0.861**, which turns a
+55% pick into roughly a 72% one. That is not an edge, it is the scoreboard.
+The reconstructor therefore **excludes every ml-meta leg by policy** rather
+than guessing, exactly as the brief required — and that exclusion alone caps
+recall at 42%.
+
+Note the live side of the same fact: `picks_today.py` has no scores at bet time
+and feeds `ht_diff = ht_total = 0`. So the model is *trained* on a feature
+distribution it never sees in production. That is a live modelling defect, not
+a replay artefact. **It is not fixed here** (fixing it changes live pick
+generation and must go through its own gate) but it is now on the record, and
+it is the strongest argument yet for the standing `ml-meta>=55` demotion
+evidence in checkpoint ⑤.
+
+### Ground 4b — there is no pre-kickoff snapshot in the file at all
+
+`forebet.csv.gz` status census: **FT 98.4%, Pen. 0.9%, AET 0.4%, Awarded 0.2%**
+— every row carries a terminal status and a final score, and the file has **no
+capture-timestamp column**. The same is true of `statarea.csv.gz` and
+`zulubet.csv.gz`. So the archive is a post-match scrape and there is no
+evidence that any stored probability or price is the pre-kickoff one. Even the
+1-in-536 reconstructable leg would have to be reported as an **upper bound**.
+
+### The gate, as run
+
+```
+live legs/day       6.70          reconstructed/day   0.00
+true positives         0          false positives        0
+false negatives      535          recall 0.0%   precision 0.0%
+days with any match  0 / 80
+```
+
+**Mechanism check** (so the zero cannot be dismissed as a broken query): the
+same reconstructor, pointed at the most recent 60 days that *do* have inputs
+(2026-04-14 → 2026-06-12), returns **26 legs over 60 days = 0.43 legs/day**
+against a live in-season **11.5**. The code runs. It simply models a far
+narrower strategy than the engine does. The prior session's ~1.3 legs/day
+figure over 2.5 years, and the −0.0233 log/day it produced, are of the same
+family: **both describe a proxy, not the engine. Do not quote either number,
+including the ones in this paragraph, as engine performance.**
+
+### The forebet ROI question, stated correctly — the filter is doing real work
+
+**CORRECTED 2026-09-04 (same day, after review). The first version of this
+section was wrong and is superseded.** It compared two different populations
+and reported the difference as if it were two answers to one question. It also
+attributed the favourable figure to the draw-dropping trap. That attribution is
+false: the +4.3% figure counts draws as losses.
+
+Both figures reproduce exactly against `localdata/forebet.csv.gz`:
+
+| population | n | stated | realised | flat ROI |
+|---|---:|---:|---:|---:|
+| every match, top pick across 1/X/2 | 224,194 | 46.7% | 45.7% | **−5.1%** |
+| the slice the engine bets: home/away, raw p>=70, odds>=1.20 | 3,170 | 73.6% | 69.7% | **+4.2%** |
+
+(Independently quoted as 221,062 / −5.3% and 3,149 / +4.3%; the small deltas
+are dedup and odds-null handling. The reading is identical.)
+
+**Both rows count a draw as a loss.** `won = (hs>gs)` for a home pick,
+`(gs>hs)` for away — a draw pays nothing in either row. The draw-normalised
+pass that inflated a 58% pick into a "78% chance" was a *different*, earlier
+attempt and was discarded. It is not the source of the +4.2%.
+
+**The gap between the two rows is the engine's entire premise.** Filtering to
+high-confidence picks priced above 1.20 moves flat ROI by **+9.3 percentage
+points**, from losing to winning, on 3,170 legs spread over 685 distinct
+match-days. Bootstrapped on those legs: **p10 +2.0%, median +4.1%, 95% CI
+[+0.9%, +7.6%], P(ROI>0) = 99.4%.** That is the strongest single-population
+evidence in this repository, and it clears the p10>0 leg of the bar on its own
+terms.
+
+Two caveats stay attached and must be carried forward with the number:
+
+1. These are **forebet's own, possibly post-revision odds** with no capture
+   timestamp (Ground 4b). If the stored price drifted toward the truth after
+   kickoff, +4.2% is an **upper bound**.
+2. It is **forebet-only**, a single source. The live engine is multi-source
+   with purity gates, a decay monitor and an ml-meta model on top. This row
+   is evidence that *a* confidence-plus-price filter separates winners from
+   the pool; it is not a measurement of the live engine.
+
+**Read it this way:** "forebet's raw top pick loses money" is true of the
+*pool* and says nothing about the *filter* — and the filter is what the engine
+is. Do not let a future session read this section as "the approach is dead."
+The selection rule is doing real work. What remains unproven is the size of
+that work once the live engine's other layers are applied, and that is still
+gated on live bet-days, not on SQL.
+
+### What it means in money
+
+Nothing changes today. The bank keeps compounding on the live recipe at
+`STAKE_FRAC = 1/3`, `MAX_ACCAS = 3`, floor 1.20, in-season expectation
+**+0.0410 log/day at 63% maxDD**. The warehouse **cannot** shorten the wait for
+proof. **February 2027 (~180 bet-days) remains the honest date on which the
+edge becomes provable**, and the only thing that moves it earlier is *more live
+bet-days*, not more SQL. Anyone who arrives with an 800-day backtest of this
+engine built from `localdata/` is holding fiction; ask them for their recall
+against the 80 archived days before you look at their growth number.
+
+The Phase-2 questions therefore remain **open and unmeasured**: leg-level
+calibration by source and consensus depth; whether the edge comes from
+multi-source agreement, the 1.20 floor, the purity gates, or nothing; and
+whether 2-leg accas at 33%/day survive 800 days. The earlier proxy ruined the
+bank on every variant, which is a warning worth holding, but it is **not**
+evidence about the live shape and must not be cited as if it were.
+
+### What must not be re-opened
+
+- **Do not rebuild a reconstruction on `consensus2`/`consensus3`.** It is
+  missing vitibet (82% of legs), bzzoiro and betclan, it cannot price 92% of
+  legs, and it produces 0.43 legs/day against a live 11.5. Three sessions have
+  now hit this. The verdict is settled.
+- **Do not replay ml-meta from the warehouse under any circumstances** until
+  `ht_diff`/`ht_total` are removed from the feature set and the model is
+  retrained walk-forward. The half-time score is in the model. Any ml-meta
+  replay result is contaminated by construction. (The *live* consequence of
+  the same defect is now checkpoint ⑫ below — and it points the opposite way
+  to the intuition. Read it before touching the model.)
+- **Do not substitute BetExplorer closing odds for `forebet_best`.**
+- **Do not quote** −0.0233 log/day, 93% maxDD, 1.3 legs/day or 0.43 legs/day
+  as engine performance. All four are reconstruction-proxy artefacts.
+  ("+4.2% forebet ROI" is NOT in this list — see the corrected ROI section
+  above; it is a real measurement of a real filter, with two caveats.)
+- The dedup trap turned out to be **small**: `DISTINCT ON (date, hkey, akey)`
+  drops only 0.1% of rows in each settled view (170 / 68 / 404). The real loss
+  is the *join*: forebet ∩ zulubet = 27,368 rows, 41% of the smaller side;
+  three-way = 15,749. Coverage, not dedup, is what kills the views.
+
+### What it would take to make this answerable later
+
+In order of size, and all of it is *capture*, not analysis:
+
+1. **vitibet history** — the single missing source cited by 438 of 536 legs.
+2. **Bet-time odds history** for `scoutingstats_odds` and `bzzoiro_odds`, the
+   two pricing sources behind 59% of live legs.
+3. **Timestamped, point-in-time prediction snapshots** captured *before*
+   kickoff, so pre-kickoff state can be proven rather than assumed. Every
+   current source file is a post-match scrape with no capture column. This is
+   the one that also makes all *future* research trustworthy, and it is cheap:
+   it is a column, written at capture time.
+4. **An ml-meta feature set without the half-time score**, retrained
+   walk-forward, before a single ml-meta leg is replayed.
+5. Close the 2026-06-12 → present capture gap in forebet/zulubet/statarea.
+
+Items 1–3 are worth doing for their own sake regardless of this checkpoint:
+they are the difference between a system that can be audited and one that can
+only be trusted.
+
+### Verification receipt
+
+- `PYTHONPATH=src python3 -m pytest -q` → **363 passed** (345 pre-existing +
+  18 new). `py_compile` and `git diff --check` clean.
+- Engine parity, asserted in CI by `tests/test_warehouse_replay.py` against
+  the committed snapshot `tests/data/engine_parity_baseline.json` and verified
+  against `2d7d909:scripts/auto_tickets.py`: **0 leg-selection differences on
+  all 80 archived days**, worst total-staked deviation **0.000000pp** (bar:
+  0.01pp). This is the correct parity assertion from the post-merge correction,
+  now automated so it runs on every PR.
+- `--battery` baseline unchanged: live **+0.0428 log/day, final 924%, 52 days,
+  115 accas, 60% hit, 67% maxDD**.
+- New defaults pinned OFF by test; `auto_tickets.py` does not reference
+  `warehouse_replay`, and no daily-pipeline script invokes `--warehouse-replay`.
+
+### The one open lead is unchanged
+
+In-season `max_accas=4` still needs **n ≥ 60 genuinely new in-season bet-days**
+under the full bar (paired-bootstrap p10 > 0, sign survives every
+leave-one-day-out, maxDD no higher than live). This checkpoint produced **no
+new in-season days** and therefore **no movement** on it — the warehouse cannot
+manufacture them. At most one candidate may still be adopted from that family.
+
+## Addendum — 2026-09-04 (late): checkpoint ⑫ — the ml-meta train/serve mismatch
+## MEASURED. Verdict: real defect, benign direction, DO NOT "fix" it blind.
+
+**What was asked.** Checkpoint ⑪ found that the ml-meta model is trained on the
+actual half-time score of the match it predicts. This was escalated out of that
+reconstruction task and given its own checkpoint, with a decision attached,
+because **41% of live picks come from `ml-meta avg_p>=55`** — a model being fed
+a value at serve time it never saw in training. The pre-registered first
+measurement: win rate and flat ROI of `ml-meta` legs versus `2way-unanimous`
+and `3way-unanimous` legs on the archived bet-days, with bootstrap intervals
+and the in-season split.
+
+**The hypothesis was that the leaked-feature model underperforms the honest
+consensus rules. It does not. The measurement refutes it.** No live change
+follows. Nothing in production moved.
+
+### The defect, confirmed line by line
+
+- `scripts/mine_consensus.py:525-526` derives `ht_diff` / `ht_total` from
+  `ht_hs` / `ht_gs` — the half-time score of the match being predicted.
+- Both are in the certified feature list in `localdata/edges_consensus.json`,
+  at `ht_diff +0.2395` and `ht_total +0.1910`.
+- `scripts/picks_today.py:2324-2325` computes them live as
+  `(_ht_hs or 0) - (_ht_gs or 0)`, which is **0** before kickoff.
+
+The model learned "two goals up at half-time usually wins" and in production is
+told **every match is 0–0**. That is a genuine train/serve mismatch, not a
+backtest artefact.
+
+### The instrument
+
+`PYTHONPATH=src python3 scripts/replay_harness.py --rules`
+(add `--since 2026-08-01` for the in-season scope)
+
+Reusable, read-only, changes no default. Prints leg quality and **calibration**
+by rule family for the whole playable pool and for the legs that actually rode,
+plus the paired cost of the only live change this could justify.
+
+### What the numbers say
+
+`gap` is realised minus stated. **Positive means UNDER-confident** — the rule
+wins more often than it claims.
+
+**Every settled playable leg, in-season (>= 2026-08-01):**
+
+| family | n | stated | realised | gap | gap p10 | flat ROI | roi p10 | roi p90 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| ml-meta | 277 | 62.0% | 67.1% | **+5.2pp** | +1.7pp | +0.0% | −5.8% | +5.9% |
+| 2way-unanimous | 132 | 73.3% | 75.8% | +2.5pp | −2.4pp | −1.5% | −8.1% | +4.9% |
+| 3way-unanimous | 25 | 69.3% | 80.0% | +10.7pp | −0.2pp | +10.4% | −4.4% | +24.8% ⚠ n<30 |
+
+**Legs the engine actually rode, in-season:**
+
+| family | n | stated | realised | gap | gap p10 | flat ROI | roi p10 | roi p90 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| ml-meta | 81 | 64.5% | **75.3%** | **+10.8pp** | +4.7pp | **+7.0%** | −2.2% | +16.1% |
+| 2way-unanimous | 79 | 74.0% | 70.9% | −3.1pp | −9.8pp | **−6.0%** | −14.5% | +2.8% |
+| 3way-unanimous | 10 | 70.3% | 100.0% | +29.7pp | +28.1pp | +38.7% | +32.0% | +45.6% ⚠ n<30 |
+
+**AMENDED AFTER REVIEW — do not restate this as "ml-meta outperforms."** The
+correct sentence, and the one a successor should inherit, is:
+
+> **ml-meta and 2way-unanimous are statistically indistinguishable on this
+> sample. There is no evidence ml-meta is worse, and a hint that it is
+> better.**
+
+The intervals overlap heavily and neither clears zero: ml-meta is +7.0% flat
+with **p10 −2.2%**; 2way-unanimous is −6.0% with **p90 +2.8%**. On 81 and 79
+legs those two cannot be separated. An independent replication measured
+ml-meta n=80 / 75.0% / +6.8% (p10 −2.8%) and 2way n=75 / 73.3% / −2.6% (p90
++6.0%) — same direction, same non-separation; the small deltas are
+leg-attribution edge cases.
+
+What the measurement **does** establish is enough to close the question that
+was asked: the hypothesis that prompted this checkpoint — that the
+leaked-feature model *underperforms* the honest consensus rules — is not
+supported. The sign is the opposite of the hypothesis. That is sufficient to
+reject a demotion; it is **not** sufficient to claim superiority, and the
+demotion is separately rejected on the paired replay below, which is the
+stronger evidence.
+
+### Why the leak does not hurt — the mechanism, which matters more than the table
+
+`ht_diff` and `ht_total` are **zero for every live prediction**. They are not
+noise and they are not adversarial: they are a *constant*. Their coefficients
+simply drop out of the live logit, leaving the other 24 features to carry the
+ranking. What the mismatch damages is not ranking but **calibration** — the
+model was fitted expecting half-time information and, denied it, systematically
+**understates** its own probability.
+
+That is exactly what is measured: **ml-meta is under-confident by +5.2pp
+(bootstrap p10 +1.7pp, so the under-confidence itself is solid)**, and the
+under-confidence grows with the stated number:
+
+| stated band | n | realised | gap |
+|---|---:|---:|---:|
+| 55–60% | 134 | 59.0% | +1.8pp |
+| 60–65% | 62 | 69.4% | +7.2pp |
+| 65–70% | 37 | 75.7% | +8.8pp |
+| 70%+ | 23 | 87.0% | +14.4pp ⚠ n<30 |
+
+**The money consequence, and the trap.** The `>=55` threshold is applied to an
+*under-stated* probability, so in practice the rule is admitting matches whose
+true win rate is ~67%, not 55%. The leak is making the model **more selective
+than it was configured to be** — it is buying conservatism by accident.
+
+Which produces the counter-intuitive and important conclusion:
+
+> **Removing `ht_diff`/`ht_total` and retraining, without re-tuning the
+> threshold, would most likely make live performance WORSE.** A correctly
+> calibrated model would raise its stated probabilities to match reality, and
+> `>=55` would then admit a wider, weaker set of matches than it does today.
+> The honest fix is a two-part change — retrain *and* re-derive the threshold —
+> and it must be priced as one change, through the full bar, before anything
+> ships.
+
+This is the opposite of the natural instinct ("remove the broken input"). The
+input is broken. The breakage is currently load-bearing.
+
+### Pricing the only live change this measurement could justify
+
+Stop letting ml-meta legs ride at all (`--rules` prints this paired replay):
+
+| scope | arm | log/day | final | bet-days | maxDD |
+|---|---|---:|---:|---:|---:|
+| whole archive | live | **+0.0428** | 924% | 52 | **67%** |
+| whole archive | ml-meta removed | +0.0402 | 611% | 45 | 74% |
+| in-season | live | **+0.0410** | 387% | 33 | **63%** |
+| in-season | ml-meta removed | +0.0362 | 256% | 26 | 74% |
+
+Paired Δ(removed − live): **−0.0090/day** whole-archive (p10 −0.0433, p90
++0.0250) and **−0.0156/day** in-season (p10 −0.0750, p90 +0.0435); cards differ
+on 15 of 26 in-season days.
+
+**Demotion fails the bar in both directions at once:** it loses growth on the
+measured path *and* it deepens max drawdown from 63% to 74%. It also costs
+**7 bet-days** — days where an ml-meta leg was the only card, so the engine
+would simply not have bet. In plain money: cutting the family would have turned
+387% into 256% while making the ride rougher. `ml-meta>=55` stays exactly as it
+is.
+
+### Correction to checkpoint ⑤
+
+The standing note "ml-meta>=55 demotion: evidence compounding, −7.3% live at
+n=210+" is **stale and should not be actioned**. Re-measured across every
+settled archived ml-meta pick (no floor, no bucket filter): **n=341, flat ROI
++0.7%**. On the floored, playable set it is +0.0%, and on the legs that rode
+in-season it is +7.0%. The bucket moved from negative to roughly break-even as
+n grew — which is what a small-sample negative usually does. **Checkpoint ⑤ is
+closed as NOT ACTIONABLE**, superseded by this checkpoint.
+
+Note also the scope trap: **ml-meta legs first appear 2026-08-11**. Every
+ml-meta number is in-season by construction. Any comparison against a family
+that also fired in June–July is confounded by the season boundary — always
+compare with `--since 2026-08-01`.
+
+### Why this one is different in kind, and why that changes nothing today
+
+Every prior candidate in this ledger was a stake-shape or card-shape tweak,
+trading growth against drawdown along the same frontier. This one is
+**removing a broken input** — the class of change that can move the frontier
+rather than slide along it. That is precisely why it earned its own checkpoint
+rather than a closing remark.
+
+It still gets no exemption. The full bar applies: paired-bootstrap p10 > 0,
+sign holds under every leave-one-day-out, maxDD no worse than live. On today's
+evidence the *demotion* fails it outright, and the *retrain* has not been
+attempted because it cannot be evaluated honestly yet — the warehouse cannot
+replay ml-meta at all (checkpoint ⑪, Ground 4), so a retrained model can only
+be judged on **new live bet-days**.
+
+### Pre-registered next step, and the standing prohibitions
+
+**Do not** patch `picks_today.py` to fabricate half-time features. Feeding a
+guessed or averaged half-time score would convert a constant into noise and
+make things genuinely worse.
+
+**Do not** retrain silently. A retrain without a threshold re-derivation is a
+live behaviour change disguised as a bug fix.
+
+**Do** the following, in order, when someone has the appetite:
+
+1. Retrain the meta-model with `ht_diff`/`ht_total` **removed** from
+   `feature_cols`, walk-forward, split unchanged.
+2. Re-derive the firing threshold on the retrained model so that the *admitted
+   set* is comparable — not the nominal number. The current `>=55` corresponds
+   to a realised ~67%; the new threshold must target the same realised rate.
+3. Shadow it. Emit both models' picks for **n >= 60 in-season bet-days**, bet
+   neither differently, and compare admitted sets and realised hit rates.
+4. Only then price it through the full bar.
+
+Until step 4 completes, `ml-meta avg_p>=55` is **live and unchanged**, and the
+half-time features stay in the trained model precisely because removing them is
+a live change that has not been earned. Document the defect; do not
+half-fix it.
+
+### Verification receipt
+
+- `PYTHONPATH=src python3 -m pytest -q` → **368 passed** (345 pre-existing + 23 new). `py_compile` and
+  `git diff --check` clean.
+- Engine parity re-asserted: **0 leg-selection differences on all 80 archived
+  days**, worst total-staked deviation **0.000000pp**.
+- `--battery` / bare baseline unchanged: live **+0.0428 log/day, 924%, 52 days,
+  67% maxDD**. `--rules` is read-only and changes no default.
+- Both forebet ROI populations reproduced (224,194 / −5.1% and 3,170 / +4.2%),
+  bootstrap on the filtered slice p10 **+2.0%**, P(ROI>0) **99.4%**.
+
+## Addendum — 2026-09-04 (late): checkpoint ⑫ tripwire shipped, and checkpoint ⑬
+## opened — the 3way-unanimous family
+
+Three review amendments to checkpoint ⑫, all landed. **No live setting changed;
+parity re-verified at 0 leg-selection differences / 80 archived days, worst
+total-staked deviation 0.000000pp.**
+
+### Amendment 1 — the ml-meta claim is downgraded to its honest strength
+
+See the amended paragraph in checkpoint ⑫. Short version: **"statistically
+indistinguishable, no evidence ml-meta is worse, a hint it is better"** — never
+"ml-meta outperforms". ml-meta +7.0% (p10 −2.2%), 2way −6.0% (p90 +2.8%), n=81
+and n=79. The demotion is rejected on the **paired replay**, which is the
+stronger evidence, not on this table.
+
+### Amendment 2 — the accidental conservatism now has a contract, not a note
+
+The load-bearing fact from checkpoint ⑫ is that `ht_diff`/`ht_total` are a
+**constant 0** at serve time, so the `>=55` operating point sits on a shifted
+probability scale. That conservatism is **unstable**: it survives only while
+nobody retrains, refits or changes the feature pipeline. A routine model
+refresh would remove the margin silently, with no alarm. A comment in a
+handover file is not a safeguard.
+
+**Shipped in `scripts/picks_today.py`:**
+
+- `ML_META_CONSTANT_FEATURES = ("ht_diff", "ht_total")`
+- each emitted ml-meta pick now records `ml_ht_diff` / `ml_ht_total`
+- `ml_meta_contract_breaches(picks)` returns any ml-meta pick whose recorded
+  constants are non-zero
+- on breach: the affected picks are **withheld** (fail-closed), a 🚨 line goes
+  to stderr, and `localdata/ml_meta_contract_breach_<day>.json` is written
+
+**Placement matters and was got wrong first.** The obvious spot — inside the
+ML scoring loop — fires on fixtures that already kicked off, because
+`run_day()` scores the whole slate *before*
+`filter_operational_pre_match_picks()` discards started matches, and Forebet
+returns a real half-time score for those. That tripwire would have screamed on
+every afternoon run about picks the engine was never going to bet. **A tripwire
+that cries wolf gets ignored, which is worse than no tripwire.** It is
+therefore checked *after* the pre-match guard, on the picks that could actually
+be bet. A test pins that ordering.
+
+Behaviour today is unchanged: for a genuinely pre-kickoff fixture Forebet
+returns no half-time score, `_f()` yields `None`, and `(None or 0)` is 0, so no
+branch fires. **Caveat on that claim:** it is established by code path and unit
+test, not by a live `picks_today.py` run — this session had no live slate to
+execute against. The first real run should be watched for a 🚨 line.
+
+### Amendment 3 — checkpoint ⑬: the 3way-unanimous family. OPENED, NOT ADOPTED.
+
+It was fair to say nobody had looked at this. `3way-unanimous` is the only rule
+family whose lower bound clears zero:
+
+| scope | n | hit | flat ROI | roi p10 |
+|---|---:|---:|---:|---:|
+| all settled playable legs | 71 | 80.3% | **+14.4%** | **+5.3%** |
+| legs the engine actually rode | 41 | 85.4% | **+20.0%** | **+9.0%** |
+
+Leave-one-day-out on the pool legs: ROI range +9.6% to +17.6% across the 36
+days it fires, **0 sign flips out of 36**. On leg quality alone this is the
+strongest family in the archive.
+
+**But it is mostly an off-season artefact, and that is decisive.** Of the 36
+days on which a 3way leg exists, only **9 are in-season**. Checkpoint ⑩
+established that pre-August days came from soft summer leagues and are not
+representative. So ~75% of the evidence for the best-looking family sits in the
+regime the ledger already says not to generalise from. In-season it is 25 pool
+legs over 9 days (10 ridden legs, all winners — n=10 decides nothing).
+
+**It is also rare.** Distribution of settled playable 3way legs per day: 44
+days with none, 22 with exactly one, 14 with two or more. On most days there is
+nothing to lean on, and on more than half the firing days there is not even
+enough for one all-3way acca.
+
+**The obvious way to exploit it was priced and it LOSES.** A new research rank
+`rank="rule3way"` (3way legs first, then stated probability) was added to
+`auto_tickets.rank_legs`, **defaulting off** and pinned off by test:
+
+| scope | arm | log/day | final | bet-days | maxDD |
+|---|---|---:|---:|---:|---:|
+| whole archive | live `rank=prob` | **+0.0428** | 924% | 52 | 67% |
+| whole archive | `rank=rule3way` | +0.0343 | 596% | 52 | 65% |
+| in-season | live `rank=prob` | **+0.0410** | 387% | 33 | 63% |
+| in-season | `rank=rule3way` | +0.0298 | 267% | 33 | **48%** |
+
+Paired Δ −0.0084/day whole-archive (p10 −0.0322) and −0.0112/day in-season
+(p10 −0.0449); cards differ on 14/52 and 7/33 days; leave-one-day-out flips the
+sign on 51/52 and 32/33 removals. **In money: 387% becomes 267%.**
+
+Note the honest tension: max drawdown improves markedly in-season, 63% → 48%.
+That is a **slide along the frontier**, not a move of it — less growth bought
+with less risk — and it is the same shape as the risk-matched `max_accas=2`
+wash closed in checkpoint ⑦. It is not a free lunch and it does not clear the
+bar.
+
+**Why promoting good legs loses money** (worth understanding before the next
+person re-opens it): the recipe pairs *consecutive* ranked legs into 2-leg
+accas. Promoting 3way legs does not add them — they were already in the top 6
+on most firing days — it **re-partitions the pairings**, and a 2-leg acca dies
+if either leg dies. Reordering a pool without changing its membership is a
+pairing change, not a selection improvement.
+
+**Pre-registered rule for checkpoint ⑬.** The 3way *leg* edge is real and
+worth watching; no exploitation of it has been found. Re-open only at
+**n >= 30 in-season 3way legs across >= 20 in-season firing days** (currently
+25 legs / 9 days). Adopt only under the full bar: paired-bootstrap p10 above
+zero, sign holds under every leave-one-day-out, maxDD no higher than live.
+`rank=rule3way` is **rejected** and must not be re-run as a fresh idea — it is
+now a scanned variant. Remember the standing limit: about 27 variants have been
+scanned; **at most one candidate may ever be adopted**, and the in-season
+fourth acca is still the leading claimant.
+
+### Verification receipt
+
+- `PYTHONPATH=src python3 -m pytest -q` → **377 passed** (345 pre-existing + 32
+  new). `py_compile` and `git diff --check` clean.
+- Engine parity after touching BOTH `auto_tickets.py` (new rank option) and
+  `picks_today.py` (tripwire): **0 leg-selection differences on all 80 archived
+  days**, worst total-staked deviation **0.000000pp**.
+- Bare/`--battery` baseline unchanged: **+0.0428 log/day, 924%, 52 days, 67%
+  maxDD**. `--warehouse-replay` still exits 1 (FAIL), as it must.
+- New knobs pinned OFF: `rank="rule3way"` is never the default; the tripwire is
+  silent while the contract holds.
