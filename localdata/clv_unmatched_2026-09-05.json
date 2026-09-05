@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-09-05",
+    "kickoff": "2026-09-05T17:00:00+02:00",
+    "home": "Ararat",
+    "away": "Ararat-Armenia",
+    "league": "Armenia: Premier League",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "ararat",
+    "away_key": "araratarmenia",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Lens",
+        "away": "Lorient",
+        "league": "Ligue 1",
+        "kickoff": "2026-09-05T15:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 7.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "lens",
+        "away_key": "lorient",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Ascoli",
+        "away": "Benevento",
+        "league": "Serie B",
+        "kickoff": "2026-09-05T15:15:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "ascoli",
+        "away_key": "benevento",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Mirand\u00e9s",
+        "away": "UD Ourense",
+        "league": "Primera Division RFEF: Group 1",
+        "kickoff": "2026-09-05T14:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 5.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "mirandes",
+        "away_key": "udourense",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "UTA Arad",
+        "away": "Csikszereda",
+        "league": "Superliga",
+        "kickoff": "2026-09-05T14:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 5.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "utaarad",
+        "away_key": "csikszereda",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Rot-Weiss Essen",
+        "away": "Viktoria K\u00f6ln",
+        "league": "3. Liga",
+        "kickoff": "2026-09-05T14:30:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "rotweissessen",
+        "away_key": "viktoriakoln",
+        "kickoff_delta_minutes": 30
+      }
+    ]
+  },
+  {
+    "date": "2026-09-05",
     "kickoff": "14:00",
     "home": "AEK Athens",
     "away": "Aris Thessalonikis",
@@ -563,87 +644,6 @@
         "home_key": "sinttruiden",
         "away_key": "lalouviere",
         "kickoff_delta_minutes": 15
-      }
-    ]
-  },
-  {
-    "date": "2026-09-05",
-    "kickoff": "2026-09-05T17:00:00+02:00",
-    "home": "Ararat",
-    "away": "Ararat-Armenia",
-    "league": "Armenia: Premier League",
-    "market": "1x2",
-    "pick": "away",
-    "rule_name": "2way-unanimous avg_p>=70",
-    "match_method": "fallback",
-    "home_key": "ararat",
-    "away_key": "araratarmenia",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Lens",
-        "away": "Lorient",
-        "league": "Ligue 1",
-        "kickoff": "2026-09-05T15:15:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 7.0,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "lens",
-        "away_key": "lorient",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Ascoli",
-        "away": "Benevento",
-        "league": "Serie B",
-        "kickoff": "2026-09-05T15:15:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 3.2,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "ascoli",
-        "away_key": "benevento",
-        "kickoff_delta_minutes": 15
-      },
-      {
-        "home": "Mirand\u00e9s",
-        "away": "UD Ourense",
-        "league": "Primera Division RFEF: Group 1",
-        "kickoff": "2026-09-05T14:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 5.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "mirandes",
-        "away_key": "udourense",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "UTA Arad",
-        "away": "Csikszereda",
-        "league": "Superliga",
-        "kickoff": "2026-09-05T14:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 5.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "utaarad",
-        "away_key": "csikszereda",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Rot-Weiss Essen",
-        "away": "Viktoria K\u00f6ln",
-        "league": "3. Liga",
-        "kickoff": "2026-09-05T14:30:00Z",
-        "market": "1x2",
-        "selection": "away",
-        "odds": 3.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "rotweissessen",
-        "away_key": "viktoriakoln",
-        "kickoff_delta_minutes": 30
       }
     ]
   },
