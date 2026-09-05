@@ -82,87 +82,6 @@
   },
   {
     "date": "2026-09-05",
-    "kickoff": "11:00",
-    "home": "AEK Athens",
-    "away": "Aris Thessalonikis",
-    "league": "Greece,Super League",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "ml-meta avg_p>=55",
-    "match_method": "fallback",
-    "home_key": "aekathens",
-    "away_key": "aristhessalonikis",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Fujieda MYFC",
-        "away": "Vanraure Hachinohe",
-        "league": "J2-League",
-        "kickoff": "2026-09-05T09:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.15,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "fujiedamyfc",
-        "away_key": "vanraurehachinohe",
-        "kickoff_delta_minutes": 30
-      },
-      {
-        "home": "Bucheon 1995",
-        "away": "Daejeon Citizen",
-        "league": "K League 1",
-        "kickoff": "2026-09-05T10:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.75,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "bucheon1995",
-        "away_key": "daejeoncitizen",
-        "kickoff_delta_minutes": 60
-      },
-      {
-        "home": "Yongin City",
-        "away": "Suwon",
-        "league": "K League 2",
-        "kickoff": "2026-09-05T10:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.6,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "yongincity",
-        "away_key": "suwon",
-        "kickoff_delta_minutes": 60
-      },
-      {
-        "home": "Cheonan City",
-        "away": "Hwaseong",
-        "league": "K League 2",
-        "kickoff": "2026-09-05T10:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.4,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "cheonancity",
-        "away_key": "hwaseong",
-        "kickoff_delta_minutes": 60
-      },
-      {
-        "home": "Kryvbas Kryvyi Rih",
-        "away": "Kolos Kovalivka",
-        "league": "Premier League",
-        "kickoff": "2026-09-05T10:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.9,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "kryvbaskryvyirih",
-        "away_key": "koloskovalivka",
-        "kickoff_delta_minutes": 60
-      }
-    ]
-  },
-  {
-    "date": "2026-09-05",
     "kickoff": "2026-09-05 16:00:00",
     "home": "Grotta",
     "away": "Volsungur",
@@ -239,6 +158,87 @@
         "home_key": "paderborn",
         "away_key": "scfreiburg",
         "kickoff_delta_minutes": 30
+      }
+    ]
+  },
+  {
+    "date": "2026-09-05",
+    "kickoff": "11:35",
+    "home": "Al-Kuwait",
+    "away": "Al-Jahra",
+    "league": "Kuwait,Premier League",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "alkuwait",
+    "away_key": "aljahra",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Fujieda MYFC",
+        "away": "Vanraure Hachinohe",
+        "league": "J2-League",
+        "kickoff": "2026-09-05T09:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "fujiedamyfc",
+        "away_key": "vanraurehachinohe",
+        "kickoff_delta_minutes": 5
+      },
+      {
+        "home": "Bucheon 1995",
+        "away": "Daejeon Citizen",
+        "league": "K League 1",
+        "kickoff": "2026-09-05T10:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "bucheon1995",
+        "away_key": "daejeoncitizen",
+        "kickoff_delta_minutes": 25
+      },
+      {
+        "home": "Yongin City",
+        "away": "Suwon",
+        "league": "K League 2",
+        "kickoff": "2026-09-05T10:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.6,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "yongincity",
+        "away_key": "suwon",
+        "kickoff_delta_minutes": 25
+      },
+      {
+        "home": "Cheonan City",
+        "away": "Hwaseong",
+        "league": "K League 2",
+        "kickoff": "2026-09-05T10:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.4,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "cheonancity",
+        "away_key": "hwaseong",
+        "kickoff_delta_minutes": 25
+      },
+      {
+        "home": "Kryvbas Kryvyi Rih",
+        "away": "Kolos Kovalivka",
+        "league": "Premier League",
+        "kickoff": "2026-09-05T10:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.9,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "kryvbaskryvyirih",
+        "away_key": "koloskovalivka",
+        "kickoff_delta_minutes": 25
       }
     ]
   },
@@ -487,6 +487,87 @@
   },
   {
     "date": "2026-09-05",
+    "kickoff": "13:30",
+    "home": "Al-Hussein SC",
+    "away": "Al-Jazeera Amman",
+    "league": "Jordan,Pro League",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=65",
+    "match_method": "fallback",
+    "home_key": "alhusseinsc",
+    "away_key": "aljazeeraamman",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Shanghai Port",
+        "away": "Beijing Guoan",
+        "league": "Super League",
+        "kickoff": "2026-09-05T11:35:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "shanghaiport",
+        "away_key": "beijingguoan",
+        "kickoff_delta_minutes": 5
+      },
+      {
+        "home": "Dalian Yingbo",
+        "away": "Qingdao Hainiu",
+        "league": "Super League",
+        "kickoff": "2026-09-05T11:35:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.38,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "dalianyingbo",
+        "away_key": "qingdaohainiu",
+        "kickoff_delta_minutes": 5
+      },
+      {
+        "home": "Holstein Kiel",
+        "away": "N\u00fcrnberg",
+        "league": "2. Bundesliga",
+        "kickoff": "2026-09-05T11:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.4,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "holsteinkiel",
+        "away_key": "nurnberg",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Wuxi Wugou",
+        "away": "Yanbian Longding",
+        "league": "League One",
+        "kickoff": "2026-09-05T11:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.37,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "wuxiwugou",
+        "away_key": "yanbianlongding",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "V\u00e4rnamo",
+        "away": "Varberg BoIS",
+        "league": "Superettan",
+        "kickoff": "2026-09-05T11:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.25,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "varnamo",
+        "away_key": "varbergbois",
+        "kickoff_delta_minutes": 30
+      }
+    ]
+  },
+  {
+    "date": "2026-09-05",
     "kickoff": "2026-09-05T17:00:00+02:00",
     "home": "Ararat",
     "away": "Ararat-Armenia",
@@ -649,7 +730,7 @@
   },
   {
     "date": "2026-09-05",
-    "kickoff": "09:00",
+    "kickoff": "12:00",
     "home": "BSC Young Boys",
     "away": "FC Luzern",
     "league": "Switzerland,Super League",
@@ -662,6 +743,19 @@
     "nearby_bzzoiro_candidates": [],
     "nearby_scoutingstats_candidates": [
       {
+        "home": "Fujieda MYFC",
+        "away": "Vanraure Hachinohe",
+        "league": "J2-League",
+        "kickoff": "2026-09-05T09:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "fujiedamyfc",
+        "away_key": "vanraurehachinohe",
+        "kickoff_delta_minutes": 30
+      },
+      {
         "home": "Kamatamare Sanuki",
         "away": "Rayluck Shiga",
         "league": "J3-League",
@@ -672,7 +766,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "kamatamaresanuki",
         "away_key": "rayluckshiga",
-        "kickoff_delta_minutes": 120
+        "kickoff_delta_minutes": 60
       },
       {
         "home": "Matsumoto Yamaga",
@@ -685,7 +779,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "matsumotoyamaga",
         "away_key": "osaka",
-        "kickoff_delta_minutes": 120
+        "kickoff_delta_minutes": 60
       },
       {
         "home": "Gifu",
@@ -698,7 +792,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "gifu",
         "away_key": "zweigenkanazawa",
-        "kickoff_delta_minutes": 120
+        "kickoff_delta_minutes": 60
       },
       {
         "home": "Sagamihara",
@@ -711,20 +805,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "sagamihara",
         "away_key": "parceironagano",
-        "kickoff_delta_minutes": 120
-      },
-      {
-        "home": "Fujieda MYFC",
-        "away": "Vanraure Hachinohe",
-        "league": "J2-League",
-        "kickoff": "2026-09-05T09:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.15,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "fujiedamyfc",
-        "away_key": "vanraurehachinohe",
-        "kickoff_delta_minutes": 150
+        "kickoff_delta_minutes": 60
       }
     ]
   },
@@ -1217,6 +1298,249 @@
   {
     "date": "2026-09-05",
     "kickoff": "09:00",
+    "home": "Sotra",
+    "away": "Vidar",
+    "league": "Norway,2. Division Avdeling 1",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "none",
+    "home_key": "sotra",
+    "away_key": "vidar",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Kamatamare Sanuki",
+        "away": "Rayluck Shiga",
+        "league": "J3-League",
+        "kickoff": "2026-09-05T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.55,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "kamatamaresanuki",
+        "away_key": "rayluckshiga",
+        "kickoff_delta_minutes": 120
+      },
+      {
+        "home": "Matsumoto Yamaga",
+        "away": "Osaka",
+        "league": "J3-League",
+        "kickoff": "2026-09-05T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.1,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "matsumotoyamaga",
+        "away_key": "osaka",
+        "kickoff_delta_minutes": 120
+      },
+      {
+        "home": "Gifu",
+        "away": "Zweigen Kanazawa",
+        "league": "J3-League",
+        "kickoff": "2026-09-05T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.83,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "gifu",
+        "away_key": "zweigenkanazawa",
+        "kickoff_delta_minutes": 120
+      },
+      {
+        "home": "Sagamihara",
+        "away": "Parceiro Nagano",
+        "league": "J3-League",
+        "kickoff": "2026-09-05T09:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.66,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "sagamihara",
+        "away_key": "parceironagano",
+        "kickoff_delta_minutes": 120
+      },
+      {
+        "home": "Fujieda MYFC",
+        "away": "Vanraure Hachinohe",
+        "league": "J2-League",
+        "kickoff": "2026-09-05T09:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "fujiedamyfc",
+        "away_key": "vanraurehachinohe",
+        "kickoff_delta_minutes": 150
+      }
+    ]
+  },
+  {
+    "date": "2026-09-05",
+    "kickoff": "14:00",
+    "home": "AEK Athens",
+    "away": "Aris Thessalonikis",
+    "league": "Greece,Super League",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=55",
+    "match_method": "none",
+    "home_key": "aekathens",
+    "away_key": "aristhessalonikis",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Shanghai Port",
+        "away": "Beijing Guoan",
+        "league": "Super League",
+        "kickoff": "2026-09-05T11:35:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "shanghaiport",
+        "away_key": "beijingguoan",
+        "kickoff_delta_minutes": 25
+      },
+      {
+        "home": "Dalian Yingbo",
+        "away": "Qingdao Hainiu",
+        "league": "Super League",
+        "kickoff": "2026-09-05T11:35:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.38,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "dalianyingbo",
+        "away_key": "qingdaohainiu",
+        "kickoff_delta_minutes": 25
+      },
+      {
+        "home": "Lincoln City",
+        "away": "Southampton",
+        "league": "Championship",
+        "kickoff": "2026-09-05T11:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "lincolncity",
+        "away_key": "southampton",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Peterborough United",
+        "away": "Sheffield Wednesday",
+        "league": "League One",
+        "kickoff": "2026-09-05T11:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.1,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "peterboroughunited",
+        "away_key": "sheffieldwednesday",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Wigan Athletic",
+        "away": "Stockport County",
+        "league": "League One",
+        "kickoff": "2026-09-05T11:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "wiganathletic",
+        "away_key": "stockportcounty",
+        "kickoff_delta_minutes": 30
+      }
+    ]
+  },
+  {
+    "date": "2026-09-05",
+    "kickoff": "2026-09-05 20:30:00",
+    "home": "Sevilla W",
+    "away": "Barcelona W",
+    "league": "EsW",
+    "market": "ou_2.5",
+    "pick": "over",
+    "rule_name": "ou25-unanimous-2way-sa avg_p>=70",
+    "match_method": "none",
+    "home_key": "sevillaw",
+    "away_key": "barcelonaw",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Levski Sofia",
+        "away": "CSKA 1948 Sofia",
+        "league": "First League",
+        "kickoff": "2026-09-05T18:15:00Z",
+        "market": "ou_2.5",
+        "selection": "over",
+        "odds": 1.85,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "levskisofia",
+        "away_key": "cska1948sofia",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Olimpija",
+        "away": "Grosuplje",
+        "league": "1. SNL",
+        "kickoff": "2026-09-05T18:15:00Z",
+        "market": "ou_2.5",
+        "selection": "over",
+        "odds": 1.8,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "olimpija",
+        "away_key": "grosuplje",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Motor Lublin",
+        "away": "Legia Warszawa",
+        "league": "Ekstraklasa",
+        "kickoff": "2026-09-05T18:15:00Z",
+        "market": "ou_2.5",
+        "selection": "over",
+        "odds": 1.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "motorlublin",
+        "away_key": "legiawarszawa",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Le Havre",
+        "away": "Brest",
+        "league": "Ligue 1",
+        "kickoff": "2026-09-05T18:45:00Z",
+        "market": "ou_2.5",
+        "selection": "over",
+        "odds": 2.1,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "lehavre",
+        "away_key": "brest",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Roma",
+        "away": "Atalanta",
+        "league": "Serie A",
+        "kickoff": "2026-09-05T18:45:00Z",
+        "market": "ou_2.5",
+        "selection": "over",
+        "odds": 1.9,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "roma",
+        "away_key": "atalanta",
+        "kickoff_delta_minutes": 15
+      }
+    ]
+  },
+  {
+    "date": "2026-09-05",
+    "kickoff": "12:00",
     "home": "BSC Young Boys",
     "away": "FC Luzern",
     "league": "Switzerland,Super League",
@@ -1229,6 +1553,19 @@
     "nearby_bzzoiro_candidates": [],
     "nearby_scoutingstats_candidates": [
       {
+        "home": "Fujieda MYFC",
+        "away": "Vanraure Hachinohe",
+        "league": "J2-League",
+        "kickoff": "2026-09-05T09:30:00Z",
+        "market": "ou_2.5",
+        "selection": "over",
+        "odds": 2.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "fujiedamyfc",
+        "away_key": "vanraurehachinohe",
+        "kickoff_delta_minutes": 30
+      },
+      {
         "home": "Kamatamare Sanuki",
         "away": "Rayluck Shiga",
         "league": "J3-League",
@@ -1239,7 +1576,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "kamatamaresanuki",
         "away_key": "rayluckshiga",
-        "kickoff_delta_minutes": 120
+        "kickoff_delta_minutes": 60
       },
       {
         "home": "Sagamihara",
@@ -1252,7 +1589,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "sagamihara",
         "away_key": "parceironagano",
-        "kickoff_delta_minutes": 120
+        "kickoff_delta_minutes": 60
       },
       {
         "home": "Matsumoto Yamaga",
@@ -1265,7 +1602,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "matsumotoyamaga",
         "away_key": "osaka",
-        "kickoff_delta_minutes": 120
+        "kickoff_delta_minutes": 60
       },
       {
         "home": "Gifu",
@@ -1278,20 +1615,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "gifu",
         "away_key": "zweigenkanazawa",
-        "kickoff_delta_minutes": 120
-      },
-      {
-        "home": "Fujieda MYFC",
-        "away": "Vanraure Hachinohe",
-        "league": "J2-League",
-        "kickoff": "2026-09-05T09:30:00Z",
-        "market": "ou_2.5",
-        "selection": "over",
-        "odds": 2.2,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "fujiedamyfc",
-        "away_key": "vanraurehachinohe",
-        "kickoff_delta_minutes": 150
+        "kickoff_delta_minutes": 60
       }
     ]
   },
@@ -1318,7 +1642,7 @@
     "league": "Us2",
     "market": "1x2",
     "pick": "home",
-    "rule_name": "ml-meta avg_p>=65",
+    "rule_name": "ml-meta avg_p>=60",
     "match_method": "none",
     "home_key": "tampabayrowdies",
     "away_key": "brooklynfc",
