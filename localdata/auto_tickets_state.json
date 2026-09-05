@@ -1,90 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 125.251239,
+  "bank": 97.417639,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-09-05",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Kongsvinger vs Raufoss",
-              "pick": "HOME",
-              "prob": 0.76,
-              "odds": 1.22,
-              "result": null
-            },
-            {
-              "match": "Stabaek vs Moss",
-              "pick": "HOME",
-              "prob": 0.745,
-              "odds": 1.33,
-              "result": null
-            }
-          ],
-          "odds": 1.62,
-          "stake_pct": 9.2779,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Chelsea W vs Aston Villa W",
-              "pick": "HOME",
-              "prob": 0.743,
-              "odds": 1.25,
-              "result": null
-            },
-            {
-              "match": "Ararat vs Ararat-Armenia",
-              "pick": "AWAY",
-              "prob": 0.73,
-              "odds": 1.26,
-              "result": null
-            }
-          ],
-          "odds": 1.57,
-          "stake_pct": 9.2779,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Haugesund vs Sogndal",
-              "pick": "HOME",
-              "prob": 0.687,
-              "odds": 1.28,
-              "result": null
-            },
-            {
-              "match": "Spartak Varna vs CSKA-Sofia",
-              "pick": "AWAY",
-              "prob": 0.68,
-              "odds": 1.53,
-              "result": null
-            }
-          ],
-          "odds": 1.96,
-          "stake_pct": 9.2778,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 27.8336
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -257,6 +175,26 @@
         }
       ],
       "bank_pct": 125.2512
+    },
+    {
+      "date": "2026-09-05",
+      "staked_pct": 27.8336,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.62,
+          "won": false
+        },
+        {
+          "odds": 1.57,
+          "won": false
+        },
+        {
+          "odds": 1.96,
+          "won": false
+        }
+      ],
+      "bank_pct": 97.4176
     }
   ],
   "events": []

@@ -77,9 +77,9 @@
    "status_since": "2026-08-04"
   },
   "match_over_15@v1": {
-   "hits": 16,
-   "inv_price_sum": 18.283697877699723,
-   "n": 21,
+   "hits": 19,
+   "inv_price_sum": 23.663087007088855,
+   "n": 27,
    "processed": [
     "2026-08-04|BG Pathum United vs Aston Villa|match_over_15@v1",
     "2026-09-02|Celtic vs Aberdeen|match_over_15@v1",
@@ -101,9 +101,15 @@
     "2026-09-04|Porto vs Moreirense FC|match_over_15@v1",
     "2026-09-04|Caernarfon Town vs Flint Town Utd|match_over_15@v1",
     "2026-09-04|Polissya Zhy vs Kudrivka|match_over_15@v1",
-    "2026-09-04|Almere City vs Jong Ajax|match_over_15@v1"
+    "2026-09-04|Almere City vs Jong Ajax|match_over_15@v1",
+    "2026-09-05|Manchester City vs Coventry|match_over_15@v1",
+    "2026-09-05|West Ham vs Derby|match_over_15@v1",
+    "2026-09-05|FC Fredericia vs Esbjerg|match_over_15@v1",
+    "2026-09-05|VfL Wolfsburg vs Energie Cottbus|match_over_15@v1",
+    "2026-09-05|The New Saints vs Barry Town|match_over_15@v1",
+    "2026-09-05|Borussia M'gladbach vs SV Elversberg|match_over_15@v1"
    ],
-   "profit": -2.67,
+   "profit": -5.25,
    "records": [
     {
      "date": "2026-08-04",
@@ -271,6 +277,54 @@
      "multi_source": false,
      "price": 1.06,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "Manchester City vs Coventry",
+     "multi_source": false,
+     "price": 1.1,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "West Ham vs Derby",
+     "multi_source": false,
+     "price": 1.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "FC Fredericia vs Esbjerg",
+     "multi_source": false,
+     "price": 1.08,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "VfL Wolfsburg vs Energie Cottbus",
+     "multi_source": false,
+     "price": 1.1,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "The New Saints vs Barry Town",
+     "multi_source": false,
+     "price": 1.1,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "Borussia M'gladbach vs SV Elversberg",
+     "multi_source": false,
+     "price": 1.12,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
@@ -278,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 102,
-   "inv_price_sum": 96.2076859389002,
-   "multi_n": 16,
-   "n": 152,
+   "hits": 112,
+   "inv_price_sum": 110.29995449803059,
+   "multi_n": 17,
+   "n": 172,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -434,9 +488,29 @@
     "2026-08-31|Monterrey vs Atletico San Luis|match_over_25@v1",
     "2026-08-31|Breidablik vs Stjarnan FC|match_over_25@v1",
     "2026-09-01|Z\u00fcrich vs Young Boys|match_over_25@v1",
-    "2026-09-02|Flora Tallinn vs Tammeka Tartu|match_over_25@v1"
+    "2026-09-02|Flora Tallinn vs Tammeka Tartu|match_over_25@v1",
+    "2026-09-05|AEK Athens vs Aris Thessalonikis|match_over_25@v1",
+    "2026-09-05|FC Schalke 04 vs Bayern M\u00fcnchen|match_over_25@v1",
+    "2026-09-05|Dinamo Zagreb vs HNK Gorica|match_over_25@v1",
+    "2026-09-05|Chelsea W vs Aston Villa W|match_over_25@v1",
+    "2026-09-05|Manchester City vs Coventry City|match_over_25@v1",
+    "2026-09-05|Haugesund vs Sogndal|match_over_25@v1",
+    "2026-09-05|BSC Young Boys vs FC Luzern|match_over_25@v1",
+    "2026-09-05|East Fife vs Ross County|match_over_25@v1",
+    "2026-09-05|Hansa Rostock vs SV Wehen|match_over_25@v1",
+    "2026-09-05|St Mirren vs Celtic|match_over_25@v1",
+    "2026-09-05|Werder Bremen vs RB Leipzig|match_over_25@v1",
+    "2026-09-05|Motor Lublin vs Legia Warszawa|match_over_25@v1",
+    "2026-09-05|Kongsvinger vs Raufoss|match_over_25@v1",
+    "2026-09-05|CA Bizertin vs Olympique B\u00e9ja|match_over_25@v1",
+    "2026-09-05|Koninklijke HFC vs Jong Sparta Rotterdam|match_over_25@v1",
+    "2026-09-05|Young Boys vs FC Luzern|match_over_25@v1",
+    "2026-09-05|Schalke 04 vs FC Bayern M\u00fcnchen|match_over_25@v1",
+    "2026-09-05|FC Fredericia vs Esbjerg|match_over_25@v1",
+    "2026-09-05|Sandnes ULF vs Ranheim|match_over_25@v1",
+    "2026-09-05|Holstein Kiel vs N\u00fcrnberg|match_over_25@v1"
    ],
-   "profit": 6.76,
+   "profit": 1.58,
    "records": [
     {
      "date": "2026-08-01",
@@ -1650,6 +1724,166 @@
      "match": "Flora Tallinn vs Tammeka Tartu",
      "multi_source": false,
      "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "AEK Athens vs Aris Thessalonikis",
+     "multi_source": false,
+     "price": 1.78,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "FC Schalke 04 vs Bayern M\u00fcnchen",
+     "multi_source": false,
+     "price": 1.22,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "Dinamo Zagreb vs HNK Gorica",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "Chelsea W vs Aston Villa W",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "Manchester City vs Coventry City",
+     "multi_source": true,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "Haugesund vs Sogndal",
+     "multi_source": false,
+     "price": 1.18,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "BSC Young Boys vs FC Luzern",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "East Fife vs Ross County",
+     "multi_source": false,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "Hansa Rostock vs SV Wehen",
+     "multi_source": false,
+     "price": 1.57,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "St Mirren vs Celtic",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "Werder Bremen vs RB Leipzig",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "Motor Lublin vs Legia Warszawa",
+     "multi_source": false,
+     "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "Kongsvinger vs Raufoss",
+     "multi_source": false,
+     "price": 1.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "CA Bizertin vs Olympique B\u00e9ja",
+     "multi_source": false,
+     "price": 2.62,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "Koninklijke HFC vs Jong Sparta Rotterdam",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "Young Boys vs FC Luzern",
+     "multi_source": false,
+     "price": 1.22,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "Schalke 04 vs FC Bayern M\u00fcnchen",
+     "multi_source": false,
+     "price": 1.22,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "FC Fredericia vs Esbjerg",
+     "multi_source": false,
+     "price": 1.33,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": false,
+     "match": "Sandnes ULF vs Ranheim",
+     "multi_source": false,
+     "price": 1.28,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-05",
+     "hit": true,
+     "match": "Holstein Kiel vs N\u00fcrnberg",
+     "multi_source": false,
+     "price": 1.53,
      "source": "scoutingstats"
     }
    ],
