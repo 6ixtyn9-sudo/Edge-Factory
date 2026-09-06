@@ -6717,12 +6717,21 @@ leave-one-day-out range is −0.0037 to +0.0111 with the sign flipping on two
 removals. August 25 alone carries 151% of the measured improvement. It fails
 two legs of the shipping bar, so `MAX_ACCAS` stays 3.
 
-**Pre-registered adoption rule (supersedes the old sparse-era checkpoint):**
-re-run only at **n >= 60 in-season days**. Adopt only if paired-bootstrap p10
-is above zero, every leave-one-day-out result keeps the positive sign, and
-maxDD remains no higher than live. Those additional days must be genuinely
-new days the scan did not see. At most one candidate may be adopted from this
-research family.
+**Pre-registered adoption rule — REWRITTEN 2026-09-06 (Task 2.3; supersedes the
+paragraph below and every older "flip at day-30" wording).** Two — and only two —
+questions may be asked of genuinely NEW in-season bet-days, each at
+**n >= 60 in-season bet-days** (reached ~Oct 2026 counting from 08-01), each
+under the full standing bar (paired-bootstrap p10 above zero, every
+leave-one-day-out result keeps the positive sign, maxDD no higher than live):
+Q1 `max_accas=4`; Q2 the live `floor=1.20` (question: does the 1.20 floor earn
+its keep out-of-sample, or was it the in-sample winner of a ~27-variant
+search?). Both are in-sample artefacts today — the 09-06 analysis shows a
+13-variant search on pure noise manufactures a "+edge" of the same size as the
+headline, and 1.20 is a lone spike between two holes. So the expectation is
+set in advance: **testing them is right, expecting them to win is not.** At
+most one candidate may ever be adopted from this research family; if both
+pass, the one with the higher p10 wins. The additional days must be genuinely
+new days the scan did not see.
 
 Lower-priority `weights=3,2,1` reproduces the full-archive observation: zero
 cards change, log/day rises +0.0042, and every leave-one-day-out result stays
@@ -7367,3 +7376,246 @@ fourth acca is still the leading claimant.
   maxDD**. `--warehouse-replay` still exits 1 (FAIL), as it must.
 - New knobs pinned OFF: `rank="rule3way"` is never the default; the tripwire is
   silent while the contract holds.
+
+## Addendum — 2026-09-06: incident #6 — the KICKOFF GUARDS (Task 1, revised after review), deployment-gap measurement (Task 2.1), and the search-bias reproduction (Task 2.2)
+
+> This replaces the same-day addendum written before the row audit. The
+> fail-closed KICKOFF PROOF CONTRACT described there was reviewed and found
+> worse than the bug (573 legs dropped to catch one started match; 46 of 59
+> bet-days destroyed) and is NOT the live rule. What ships is below.
+
+### What happened (incident #6)
+
+On 2026-09-06 the engine staked ACCA #3 on **Vancouver Whitecaps vs St.
+Louis City** at 09:13 SAST. The match had kicked off at **2026-09-05 22:30
+EDT = 02:30 UTC = 04:30 SAST** — over 4h45m before the ticket printed. Sixth
+ghost incident; the 09-04 patch (five incidents) was a league-substring ->
+IANA zone table plus a 4h lead buffer; it is deleted, not extended.
+
+### The diagnostic the brief asked for — the raw Vancouver record
+
+`localdata/picks_today.json` row 38 of 57 (verbatim key fields):
+
+```
+kickoff:            "22:30"                          <- bare time: NO date,
+                                                         NO offset, NO zone
+date:               "2026-09-06"                     <- slate day (SAST day of
+                                                         the real kickoff)
+match:              "Vancouver Whitecaps vs St. Louis City"
+league:             "USA,Major League Soccer"
+odds_source:        "scoutingstats_odds"   (bookmaker scoutingstats_odds)
+price_evidence:     "SCOUTINGSTATS_SOLE"   (bucket WATCHLIST_UNCORROBORATED_PRICE,
+                                            price_quarantine scoutingstats_sole_source)
+odds_captured_at:   "2026-09-06T02:30:00Z"           <- the kickoff instant
+as_of:              "2026-09-06T03:00:47+02:00"
+```
+
+What the row shows: the kickoff field is the **bare US-local wall time**
+("22:30" EDT) with no date of its own and no zone. The 09-04 chain failed
+open on it twice: the SAST-default parser stamped slate-day 22:30 SAST (18h
+late), and the zone table stamped America/New_York on the slate day (also
+late, by a different route). The correct fix is not a seventh layer of the
+same shape — it is to refuse rows that cannot say when they start.
+
+Shape census of the same file (57 rows): **45 naive-with-date, 9 bare-time,
+3 explicit offset/Z**. Inter Miami (also MLS) came through as
+`2026-09-06T01:30:00+02:00` — the feed renders dated rows on a UTC+2 clock
+when it can. Bare-time rows span betexplorer/scoutingstats/None sources, so
+source alone does not separate them; **no date means no comparison is
+possible**, which is the incident class.
+
+### What shipped — TWO layers (after the review)
+
+1. **LIVE KICKOFF GUARD** (`auto_tickets.live_kickoff_guard`, wired into
+   `cmd_today`; runs on every build): a leg drops when its row carries **no
+   usable kickoff date** — bare "HH:MM", missing, garbage (the Vancouver
+   class) — or when its dated kickoff is **already at/past build time**
+   (dated rows compared on the feeds' UTC+2 rendering via `parse_kickoff`).
+   Every run prints the skip census ("KICKOFF GUARD — kept/total qualifying
+   legs kept; dropped: ..."). No 4h lead buffer live, no zone table, no
+   proof-standard filtering: the dated majority rides.
+2. **AUDIT CONTRACT** (`auto_tickets.kickoff_contract`;
+   `replay_harness.py --kickoff-contract`, **off by default, never the live
+   rule**): the fail-closed proof-or-drop standard (explicit offset/Z or
+   row-carried `kickoff_tz`, >= 4h ahead of the canonical 09:00 SAST build).
+   It is the measurement instrument for the data-side kickoff gap — not a
+   betting rule. Its output is structurally labelled AUDIT ONLY.
+
+Deleted and barred: `_AMERICAS_ZONES` / `_inferred_kickoff_utc` /
+`_unprovable_future` (Toronto-for-Vancouver class), SAST defaulting for bare
+times, and fail-open "cannot parse -> ride". `parse_kickoff` survives for
+settlement bookkeeping and dated-row comparison and is explicitly NOT a
+zone proof (test-pinned).
+
+### Cost of the live guard on history (honest number, per regime)
+
+Measured on the refreshed parity baseline (playable pools + the engine's
+historical ridden cards, current archive):
+
+- playable-pool kickoff shapes across 57 day-pools (>= 2 legs): 347
+  dated-naive, 66 day-month-yearless, 35 explicit-offset, **114 bare**.
+- **ridden-leg shapes: of the 256 legs in the historical cards (refreshed
+  baseline, current archive), 52 (20%) were bare-time rows with no usable
+  kickoff date** (122 dated-naive, 52 day-month, 30 offset, 52 bare). Those
+  52 rode on **22 of 56 bet-days**; in-season (>= 2026-08-01) 21 of 36
+  bet-days, off-season 1 of 20 (2026-07-26).
+- The incident-day card: 6 legs, 2 bare (Rudes 16:00 — a harmless UTC+2
+  day-time kickoff that the guard still cannot verify; Vancouver 22:30 —
+  the ghost). The guard drops both.
+
+Owner translation: this is **not** the handful of legs the pre-diagnosis
+estimate assumed — about a fifth of ridden legs are undatable, and roughly a
+third of bet-days carried one. But undatable rows are exactly the class that
+cannot be checked, and one of them was the ghost. The guard refuses them;
+volume returns when the data side emits a usable kickoff per row (the
+Inter-Miami row proves the upstream can). Thin-day doctrine stands: days
+whose card shrinks below a comfortable 2-3 accas should scale the stake or
+abstain.
+
+### Do the two serve-time guards cover each other? (asked in Task 1)
+
+No, and they should not be merged. The ml-meta serve-time tripwire in
+`picks_today.py` inspects half-time feature leakage in ml-meta rows; the
+kickoff guard inspects kickoff usability at build time. Different layers,
+different data, disjoint failure classes — the Vancouver leg never passed
+through the ml-meta scorer's feature path, so the tripwire could not have
+seen it, and the kickoff guard cannot see feature leakage. Both fail closed
+and both stay. Operational overlap only: a tripwire firing is an abstain
+day, and a guard-wide no-date day is also an abstain day (NO BET) — the same
+posture for the same reason.
+
+### Parity baseline — restored from git, then drift-refreshed with a receipt
+
+The regenerated strict baseline is **reverted**: `git checkout HEAD --`
+tests/data/engine_parity_baseline.json + tests/test_warehouse_replay.py
+(`_snapshot` back to playable -> plan_day). A baseline that pins a strategy
+that does not bet can no longer catch unintended drift, and it was
+regenerated without a saved receipt.
+
+The git copy predates archive growth, so the file was then refreshed against
+the current archive with a written receipt: the ONLY diffs vs the git
+baseline are **2026-09-05** (card content/odds refreshed by later captures;
+same total staked) and **2026-09-06** (git snapshot empty; archived rows now
+build the day's 3-acca card, staked 0 -> 33.3333). No other day moved.
+`generated_note` in the file carries the receipt; suite is 399 passed. The
+kickoff layers are deliberately NOT part of the parity file — they live in
+`cmd_today` and the audit tooling and are pinned by
+tests/test_kickoff_contract.py (22 tests incl. the end-to-end incident-slate
+regression).
+
+### Task 3 — bank labels
+
+The slip no longer uses "bank" with two denominators. Header prints **total
+bank = free bank + committed** (all % of capital); stake and deploy lines
+say **free bank**; the day's total is printed as % of capital. Owner-visible
+on the next ticket.
+
+### Task 2.1 — the deployment gap is real and now measured
+
+The replay model settles each day's stake the same day; live money stays
+committed across runs, so the live engine stakes 1/3 of *free* bank, not 1/3
+of bank. Committed % of capital from the 11 real ticket headers (27 Aug ->
+6 Sep) gives **true mean deployment = 20.7% of total bank** (not 33.3%):
+
+| era | days | deployment of total bank |
+|---|---:|---:|
+| 50%-era (08-27 -> 09-03) | 8 | 25.0 / 12.5 / 20.3 / 10.2 / 14.8 / 34.1 / 25.0 / 25.0 % |
+| 33%-era (09-04 -> 09-06) | 3 | 16.7 / 22.2 / 22.2 % |
+
+Re-running the in-season replay at the measured 20.7% (same cards, same
+days): log/day **+0.0209** (was +0.0244 at 33%), final **208%**, maxDD
+**43%** (was 63%), and daily log-volatility drops from **0.2240 to 0.1384**,
+landing on the live machine's measured 0.1299 — the 33%-replay volatility
+gap was the committed-capital gap all along. No setting changed; this
+corrects how the ledger numbers are read.
+
+The 80-day committed-capital reconstruction is **not fully recoverable**:
+historical result donors are stored post-hoc with no per-result landing
+time, so per-day open-slip overlap before 08-27 cannot be dated. The
+live-ledger measurement above is the search-free ground truth; the 20.7%
+figure and the volatility match stand as the honest correction.
+
+### Task 2.2 — the headline number is a search artefact (reproduced), and there is no honest forward number yet
+
+Reproduction on today's 35 in-season days with the 13 documented variant
+rows (floor 1.01...1.30, max_accas 4/5/6, saturated_accas 4/5/6): demean
+every variant to zero true edge, resample days jointly 20,000 times, keep
+the winner each time:
+
+| statistic | this run (35-day data) | brief's figure (33-day data) |
+|---|---:|---:|
+| winner under pure-noise null, median | **+0.0290/day** | +0.0372/day |
+| p90 | +0.0740/day | +0.0885/day |
+| P(noise >= +0.0410) | **36%** | 46% |
+
+Same conclusion either way: a search this size run on nothing manufactures
+an apparent edge the size of the headline. On **today's** settled archive
+the live settings replay is **+0.0244/day (35 days, maxDD 63%)**, not
++0.0410: the two extra in-season days that settled after the 09-04 receipt
+(09-04 and 09-05, both losing cards) pulled the number down. The live ledger
+agrees with the null: 10 real bet-days, **-0.0026 log/day**, 16W/12L, bank
+97.4% (32% below its 143.1% peak), bootstrap P(edge > 0) = **48%**.
+
+**There is no honest forward number yet.** Every replay number on these days
+is in-sample for a ~27-variant search; the only search-free estimator is the
+live ledger, which is 10 days old and statistically empty. The path to a
+number is the rewritten pre-registration below, on genuinely new days, under
+the standing bar. Until then the defensible statement is: the engine's
+expected edge is **not distinguishable from zero**, its live volatility is
+~0.13/day, and its live deployment is ~21% of bank.
+
+### Task 2.3 — pre-registered out-of-sample tests rewritten
+
+The pre-registration in checkpoint ⑩ now names **two** questions on
+genuinely new in-season days at **n >= 60** (approximately early Oct
+counting from 08-01), both under the standing bar (paired-bootstrap p10 > 0,
+every leave-one-day-out keeps the sign, maxDD <= live): **Q1 max_accas=4**
+and **Q2 the live floor=1.20**. Expectation set in advance: both are
+in-sample artefacts today (Q1 is the largest noise artefact in the 09-04
+table; Q2 is a lone spike between two holes, and a pure-noise search
+manufactures its magnitude ~40-50% of the time). Testing them is right;
+expecting them to win is not. At most one adoption from the family ever.
+
+### Verification receipts
+
+- `PYTHONPATH=src python3 -m pytest -q` -> **399 passed** (377 pre-existing
+  incl. both parity tests green against the drift-refreshed baseline + 22
+  kickoff-guard tests).
+- `py_compile` clean; `git diff --check` clean.
+- Constants: `grep -n "^MAX_ACCAS\|^STAKE_FRAC\|^MIN_LEG_ODDS"` ->
+  `MAX_ACCAS = 3`, `STAKE_FRAC = 1.0 / 3.0`, `MIN_LEG_ODDS = 1.20`.
+- Battery live row unchanged by this change (+0.0319 log/day, 560%, 54
+  days, maxDD 67% on today's data; identical before and after under stash
+  A/B); the drift vs the 09-04 receipts (+0.0428/924%/52 days) is archive
+  growth (settled 09-04/09-05 cards), not an engine change.
+- Audit instrument: `replay_harness.py --kickoff-contract` (off by
+  default) — structurally labelled AUDIT ONLY.
+- Incident shape pinned both layers: the Vancouver row drops under the live
+  guard (no usable date) and under the audit contract; a naive-with-date row
+  rides live (UTC+2 feed rendering) and drops under audit; the e2e
+  incident-slate run prints the census and builds the honest one-acca card.
+
+### Today's frozen slip (operator instruction)
+
+The 2026-09-06 slip was already frozen at 09:13 with the ghost in ACCA #3
+before any code could change. **Bet ACCA #1 and ACCA #2 only.** The guard
+ships for the next build; the first live run under it should print the
+census line.
+
+### Open items for the next session
+
+1. **Data-side kickoff proof** — make the pipeline emit a usable kickoff
+   (date-carrying, offset-carrying, or row-carried `kickoff_tz`) on every
+   playable row; the Inter-Miami row proves it is possible. Volume follows
+   the data.
+2. **Watch the first live run under the guard** — the census line should
+   print on the next 06:05/09:13 build; confirm it reads sensibly on a real
+   slate.
+3. **Residual risk, stated** — dated rows are trusted on the feeds' UTC+2
+   rendering (tested, and consistent with every dated row on the incident
+   day). A future upstream rendering change — or dated rows from east of
+   UTC+2 — would need a re-audit; rerun `--kickoff-contract` periodically to
+   watch the unprovable population.
+4. **Thin-day doctrine** — under the guard, days whose card relied on bare
+   legs will shrink; scale the stake or abstain (pre-registered rule, not a
+   live tune).

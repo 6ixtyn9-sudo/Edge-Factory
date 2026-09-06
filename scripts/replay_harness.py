@@ -736,6 +736,108 @@ def cmd_battery(universe):
         print_variant(universe, {"min_prob": mp}, f"always-on prob >= {mp:.0%}", baseline=b)
 
 
+def _day_scope(universe, since=None, until=None):
+    return {d: pool for d, pool in sorted(universe.items())
+            if (not since or d >= since) and (not until or d <= until)}
+
+
+def cmd_kickoff_contract(universe, since=None, until=None):
+    """AUDIT INSTRUMENT (off by default): the fail-closed kickoff standard
+    on HISTORY — it sizes the data-side kickoff-proof gap.
+
+    Re-runs the archive with the strict standard — every leg's kickoff must
+    be PROVEN by the row itself (explicit offset/Z, or naive + row-carried
+    zone) and at least KICKOFF_MIN_LEAD_HOURS ahead of the canonical 09:00
+    SAST build instant — so the data-side fix's size is visible. This is NOT
+    the live betting rule (the 2026-09-06 review: proof-or-drop threw away
+    the dated majority that renders UTC+2; live drops only undatable and
+    already-started legs via auto_tickets.live_kickoff_guard). It prints,
+    per regime:
+
+      - legs dropped per day and why (aggregate census),
+      - every day whose card would have changed, with the dropped legs,
+      - bet-days lost (cards that fall below 2 provable legs),
+      - growth / final / maxDD under the strict standard, in-season and
+        whole archive, versus the unguarded replay on the same days.
+    """
+    scope = _day_scope(universe, since, until)
+    print("=" * 74)
+    print("KICKOFF PROOF CONTRACT — AUDIT ONLY (off by default; NOT the live rule)")
+    print("=" * 74)
+    print(f"scope: {len(scope)} settled-playable bet-days "
+          f"({next(iter(scope), '-')} -> {list(scope)[-1] if scope else '-'}); "
+          f"build instant per day: {at.FREEZE_HOUR:02d}:00 SAST (canonical freeze run)")
+    print("(audit standard: a leg rides only if its kickoff is PROVEN by the row and >= "
+          f"{at.KICKOFF_MIN_LEAD_HOURS:g}h ahead of build)\n")
+
+    strict, census, lost = {}, {}, 0
+    changed = []
+    for d, pool in scope.items():
+        build_at = at.canonical_build_instant(d)
+        kept, drops = at.kickoff_contract(pool, build_at=build_at)
+        for reason, names in drops.items():
+            census.setdefault(reason, []).extend(f"{d} {n}" for n in names)
+        default_accas = [tuple(l["match"] for l in a)
+                         for a in at.select_accas(pool)]
+        if len(kept) >= at.LEGS_PER_ACCA:
+            strict[d] = kept
+            strict_accas = [tuple(l["match"] for l in a)
+                            for a in at.select_accas(kept)]
+            if default_accas and strict_accas != default_accas:
+                flat = [n for v in drops.values() for n in v]
+                changed.append((d, default_accas, strict_accas, flat))
+        else:
+            if default_accas:
+                lost += 1
+                flat = [n for v in drops.values() for n in v]
+                changed.append((d, default_accas, [], flat))
+
+    n_drop = sum(len(v) for v in census.values())
+    print(f"aggregate: {n_drop} legs dropped over {len(scope)} bet-days "
+          f"({n_drop / max(len(scope), 1):.2f}/day) — "
+          f"{len(scope) - lost} days still build a card, "
+          f"{lost} bet-days LOST (card falls below {at.LEGS_PER_ACCA} provable legs)")
+    for reason in sorted(census):
+        names = census[reason]
+        print(f"  • {len(names)} {reason.lower()}  "
+              f"(e.g. {names[0] if names else '-'}{f' — +{len(names)-1} more' if len(names) > 1 else ''})")
+
+    print("\ndays whose card changes (default -> strict):")
+    for d, ca, cb, drops in changed:
+        if cb:
+            print(f"  {d}: {len(ca)} accas -> {len(cb)} accas  dropped: "
+                  f"{'; '.join(sorted(set(drops))[:4])}")
+        else:
+            print(f"  {d}: {len(ca)} accas -> NO BET  (fewer than "
+                  f"{at.LEGS_PER_ACCA} provable legs)")
+
+    print("\n" + "-" * 74)
+    print("GROWTH UNDER THE CONTRACT (replay, live stake rules)")
+    print("-" * 74)
+    for label, days in (("whole archive", scope),
+                        ("in-season (>= 2026-08-01)", _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        base_rec, strict_rec = replay(days, {}), replay(strict, {})
+        a, b = summarise(base_rec), summarise(strict_rec)
+        print(f"  {label} — default {a['days']:2d} bet-days  "
+              f"log/day {a['mean_log']:+.4f}  final {a['final']:7.0f}%  "
+              f"maxDD {a['maxdd']:4.0%}")
+        if b["days"]:
+            print(f"  {label} — strict  {b['days']:2d} bet-days  "
+                  f"log/day {b['mean_log']:+.4f}  final {b['final']:7.0f}%  "
+                  f"maxDD {b['maxdd']:4.0%}  (days below 2 provable legs are NO BET)")
+        else:
+            print(f"  {label} — strict:  NO BET-DAYS REMAIN (zero provable "
+                  "cards in the archive)")
+        print()
+    print("read: every dropped leg is a bet the engine CANNOT PROVE is still")
+    print("in the future. The trade is volume for certainty — the count above")
+    print("is what the data side must recover before volume returns (carry a")
+    print("timezone in the row, e.g. betexplorer-style +02:00 kickoffs).")
+    return 0
+
+
 # --------------------------------------------------------------------------
 # --warehouse-replay: FEASIBILITY audit (Phase 1). Research only, opt-in.
 # --------------------------------------------------------------------------
@@ -996,6 +1098,11 @@ def main():
     ap.add_argument("--warehouse-replay", action="store_true",
                     help="Phase-1 feasibility audit: can the live picks be "
                          "reconstructed from localdata at all? (research only)")
+    ap.add_argument("--kickoff-contract", action="store_true",
+                    help="AUDIT ONLY (off by default, never the live rule): "
+                         "replay history under the fail-closed kickoff-proof "
+                         "standard at each day's 09:00 SAST build, to size "
+                         "the data-side kickoff gap (incident #6)")
     ap.add_argument("--since", metavar="YYYY-MM-DD",
                     help="restrict replay universe to this date or later")
     ap.add_argument("--until", metavar="YYYY-MM-DD",
@@ -1025,6 +1132,10 @@ def main():
         universe = {d: pool for d, pool in universe.items() if d >= args.since}
     if args.until:
         universe = {d: pool for d, pool in universe.items() if d <= args.until}
+
+    if args.kickoff_contract:
+        return cmd_kickoff_contract(universe,
+                                    since=args.since, until=args.until)
 
     engine_status()
     live_settings()
