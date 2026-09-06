@@ -8013,7 +8013,13 @@ the gap D1 closes going forward.
 
 ### D1 — shipped: owner-actual-price capture (pays from the next slip)
 
-What ships (`scripts/audit_clv.py`, no engine change):
+**SUPERSEDED SAME DAY (round 4, Task F): the `record` path below was
+removed — no manual price entry exists anywhere.** Schema columns remain,
+never filled; the automatic build-time `price_board` capture
+(`localdata/price_board_<yyyy-mm>.jsonl`) replaces this section. What
+follows is the historical record of what first shipped.
+
+What shipped (`scripts/audit_clv.py`, no engine change):
 
 - **`record`** — the operator's channel. After placing a slip, enter the
   decimal odds the bookmaker actually offered, next to the printed leg:
@@ -8036,13 +8042,17 @@ What ships (`scripts/audit_clv.py`, no engine change):
   the standing instruction is to record ACCA #1 and ACCA #2 slips for the
   next week (the two slips the owner places every day).
 
-Standing instruction (one week, operator): when placing ACCA #1 and ACCA #2,
+~~Standing instruction (one week, operator): when placing ACCA #1 and ACCA #2,
 write the odds the bookmaker actually offers next to the odds on the slip
 and record them with `audit_clv record` the same day. If they match the
 printed prices, the worry dies; if the slip is consistently longer than the
 printed price, that is where the edge went — and D2/D3's n=7 will grow
 until the archive question is answered by real slip data instead of
-inference.
+inference.~~ **WITHDRAWN by Task F (round 4, same day): never type a number
+into this system. The automatic build-time price-board capture answers the
+same question with no human in the loop; the operator's observation that
+the quoted odds were obtainable at his bookmaker is recorded in the round-4
+addendum.**
 
 ### Verification receipts (Task D closeout)
 
@@ -8054,3 +8064,203 @@ inference.
 - No engine file changed for Task D except the measurement flags in
   `replay_harness.py`; parity baseline file byte-identical; full suite
   receipt appended in the closeout commit message.
+
+## Addendum — 2026-09-06 (round 4): Task E repick sizing fix · Task F automatic price capture · Task G record corrections · Task H ledger rebuild
+
+### Live record: the guard's first real slate — 8 of 28 qualifying legs dropped
+
+The 2026-09-06 build ran under the shipped kickoff guard for the first time
+and dropped **8 of 28 qualifying legs**:
+
+- **5 already started** (dated kickoff at/past build): Vissel Kobe, Cerezo
+  Osaka, Universitario, +2 more — five already-started matches on a SINGLE
+  ordinary day, against seven such legs across the whole two-month history
+  in the Task-A closeout. The historical seven understated this class.
+- **3 clock-only in a remote-clock region**: Vancouver Whitecaps (again —
+  the incident fixture), Deportivo Garcilaso, Kashiwa Reysol.
+
+The card rebuilt to three accas and was placed (final 09-06 slip at
+32.47% of capital, state commit `5296ef4`). Vancouver dropped on the real
+slate even after ingest normalisation shipped — its zoned witness was not
+present at that build; the guard is the seatbelt for exactly this case.
+
+### Task E — force-repick under-stakes (fixed); repeated repicks converge to bank/4
+
+Root cause, confirmed with state evidence: on a repick the engine sized on
+`effective_bank(st)` — which counted the day's OWN existing slip (its
+morning draft, 3 × 7.2161% = 21.6%) as committed capital — while
+`upsert_slip` then deleted and replaced that same slip as though it had
+never existed. The two behaviours contradict each other. Today's incident:
+printed free bank **75.8%** vs true free bank **97.4176%**; printed per-acca
+**8.42%** vs doctrine **10.82%**; successive force-runs converge to
+**bank/4, not bank/3** (8.42 → 8.02 → 8.15 → 8.11 → 24.35% total). The
+operator cleared the slip from state by hand to place the corrected card —
+that must never be necessary again, and is not.
+
+Fix (`scripts/auto_tickets.py`): `effective_bank(st, exclude_date=...)`;
+`cmd_today` sizes the target date on bank minus ALL open slips EXCEPT the
+target date's own slip (it is about to be replaced). Stakes on other dates
+stay committed — they are genuinely live. When a slip for the date already
+exists, the ticket now prints a **REPICK** block naming per acca which
+legs changed / stayed / were dropped, and the total-stake movement, so the
+operator knows what has and has not already been placed.
+
+Regression coverage (3 new tests): the repick path specifically — an
+existing same-day slip in state with bank 100 → stakes size on
+(100 − other-date 10)/3 per acca = 10.00, NOT (100 − own-draft 21.6 −
+10)/3 = 7.60; a first run of the day cannot expose this bug, so the test
+plants the same-day slip. Other-date slips remain committed in both
+paths. Replacement-block lines tested for CHANGED / UNCHANGED / DROPPED.
+
+The replay does not exercise the repick path (it settles each day
+immediately), so the battery live row is untouched by the fix.
+
+### Task F — the D1 operator-input path is cancelled; automatic build-time capture replaces it
+
+**No manual price entry exists anywhere now.** `audit_clv record` and its
+prompts are deleted (`scripts/audit_clv.py`); the D1 standing instruction
+below is superseded and must not be followed. The two snapshot columns
+(`actual_odds`, `actual_odds_recorded_at`) stay as empty schema, at zero
+cost. Operator observation recorded for the ledger: at live placement the
+engine's quoted odds were obtainable at his bookmaker — weaker than a
+logged comparison, which is exactly what the automatic capture now
+produces.
+
+What ships instead (no human in the loop):
+
+- `scripts/picks_today.py` `enrich_with_live_odds` now persists, on every
+  pick at build time, a **`price_board`**: every price every source is
+  showing for that fixture and selection (bzzoiro rows per bookmaker AND
+  the scoutingstats secondary that previously was discarded after
+  `PRICE_EVIDENCE_SCOUTINGSTATS_SOLE` was stamped), each with source name,
+  bookmaker, value, raw `captured_at` (no timestamp claims — scoutingstats
+  rows carry kickoff-as-captured_at by construction), and the chosen row
+  flagged. Re-derived on every run (no stale boards). The engine's chosen
+  price is untouched — the board is written alongside it.
+- `scripts/auto_tickets.py` `cmd_today` appends **one JSON line per printed
+  leg per run** to `localdata/price_board_<yyyy-mm>.jsonl` (append-only,
+  never overwritten): date, printed_at, acca number, match, pick, the
+  engine's printed odds and odds_source, and the full board. The
+  actual-vs-quoted comparison therefore needs no archive and no typing.
+- Every ticket prints a **PRICE BOARD** line: board persisted for n of m
+  printed legs, corroborating sources on the card, and the expected
+  coverage on the next slate — **100% of printed legs with an odds source**
+  (a slate that runs without any odds bundle is the only zero case).
+
+Effect on the P0 price question: D2's archive coverage was 7 of 81 ridden
+scoutingstats legs (8.6%); forward coverage is 100% by construction from
+the next printed slip, because the build-time boards are persisted before
+the slip is written. No engine price, selection or staking changes; parity
+baseline untouched; battery live row unchanged (+0.0319 log/day, 560%, 54
+days, maxDD 67%).
+
+### Task G — two record corrections
+
+**G1 — the two "without those legs" tables are the SAME mechanism and DIFFERENT populations; the comparison sentence is withdrawn.** Both exclusion
+arms in the Task-A asterisk ledger remove legs from the day's pool BEFORE
+selection, and the engine re-pairs and re-plans from what remains —
+mechanism: leg-drop with re-pairing. The region guard's row is not a
+second mechanism ("leg-and-acca removal") but a different population: the
+guard's rule drops the started legs AND every other leg its classes remove
+(started-at-build others, remote-clock-only, missing/unparseable kickoffs,
+cross-slate fixtures, already-settled), losing a bet-day where the default
+does not. Measured contrast on the in-season default universe (35 days,
+IN-SAMPLE):
+
+| arm | mechanism | bet-days | log/day | final | maxDD |
+|---|---|---|---:|---:|---:|
+| shipped default | — | 35 | +0.0244 | 235% | 63% |
+| minus the five | leg-drop + re-pairing | 35 | +0.0027 | 110% | 80% |
+| minus the five | whole-acca removal, no re-pairing | 34 | −0.0068 | 79% | 86% (1 day fully dropped) |
+
+Guard rows (272% shipped, 279% guard-minus-Weston) answer "the guard's own
+population minus the legs it can drop", not "the default book without the
+five"; the two tables must not be read as competing answers. The 110% row
+stands, labelled default-universe leg-drop-with-re-pairing; the
+cross-table sentence inviting the 2.5× reading is withdrawn.
+
+**G2 — the sign reversal, one sentence.** Round 2's "the guard costs
+−0.0070/day" (in-season) compared the guard against a started-only baseline
+that RODE five already-started legs, four of which won; measured
+like-for-like (perfect-clock exclusion of the five from both arms) the
+guard LEADS the started-only arm (+0.0302 vs +0.0133 log/day, 279% vs
+159%, both IN-SAMPLE, both within one-bet-day noise) — the earlier
+conclusion was a contamination artefact of the won starters, and the
+"guard costs money" reading is withdrawn; the guard's true cost remains
+unmeasured until genuinely new days accrue.
+
+### Task H — the ledger rebuild (reproduced; numbers below are the current archive's)
+
+**Reproduce first.** On today's archive (35 settled in-season days ≥
+2026-08-01) the 13 documented variant rows (floors 1.01…1.30,
+`max_accas` 4/5/6, `saturated_accas` 4/5/6) were each demeaned to zero
+true edge and days resampled jointly 20,000 times (seed 20260906), keeping
+the winner per run (`scripts/search_noise.py`):
+
+| statistic | today's archive (35 days) | brief's figure (33-day vintage) |
+|---|---:|---:|
+| winner under pure-noise null, median | **+0.0289/day** | +0.0372/day |
+| p90 | +0.0744/day | +0.0885/day |
+| P(noise ≥ +0.0410 headline) | **36%** | 46% |
+
+Method, stated before the number: 13 variants run over identical settled
+in-season days; each variant's own mean log/day subtracted (every variant
+has exactly zero true edge); 20,000 joint day-resamples; per resample the
+best variant's mean log/day is recorded. The winner distribution is what a
+search this size manufactures from nothing — and the headline +0.0410 is
+inside it. On today's archive the live-settings row is +0.0244/day (35
+days, maxDD 63%), i.e. the headline itself has moved with two losing days.
+
+**H1 — deployment gap.** Live daily log-volatility 0.1299 vs the 33%-replay
+0.2240, because the engine stakes `effective_bank()` (open slips commit
+capital) while the replay bets a fraction of full bank. Committed capital
+from the 11 real ticket headers 08-27 → 09-06 (now including the
+corrected 09-06 repick at 32.4726/97.4176 = 33.3% of bank): mean
+deployment **21.7% of bank** (was 20.7% before the correction). In-season
+replay at the measured fractions (same cards, same days, IN-SAMPLE):
+33.3% → +0.0244/day, 235%, maxDD 63%, vol 0.2240; 20.7% → +0.0209/day,
+208%, maxDD 43%, vol 0.1384; 21.7% → +0.0215/day, 212%, maxDD 45%, vol
+0.1450. At live deployment the replay's volatility lands on the live
+machine's 0.1299; the 33%-replay volatility gap WAS the committed-capital
+gap. No setting changed. Pre-08-27 committed-capital reconstruction stays
+unrecoverable (historical result donors carry no per-result landing time —
+prior receipt stands); the 11-header measurement is the search-free ground
+truth.
+
+**H2 — honest forward number.** **There is no honest forward number yet.**
+Every replay number on these days is in-sample for a ~27-variant search;
+the only search-free estimator is the live ledger (10 real bet-days,
+−0.0026 log/day, 16W/12L, bank 97.4% vs the 143.1% peak, bootstrap
+P(edge>0) = 48% — statistically empty). The defensible statement until the
+pre-registered tests accrue: expected edge is not distinguishable from
+zero; live daily volatility ~0.13; live deployment ~21–22% of bank.
+
+**H3 — the October pre-registration, re-stated on today's numbers.** The
+rewritten slot (Task 2.3) stands: two questions on genuinely new in-season
+days at n ≥ 60 under the standing bar (paired-bootstrap p10 > 0 AND every
+leave-one-day-out keeps the sign AND maxDD ≤ live). Q1 `max_accas=4` — the
+largest noise artefact in the 09-04 table (+0.0483 on that vintage's whole
+archive; +0.0360/day in-season on today's 35 days) and exactly what a
+winner-of-13 looks like. Q2 the live 1.20 odds floor — the lone spike:
+floor=1.10 +0.0144, 1.15 −0.0132, **1.20 +0.0244**, 1.25 −0.0054, 1.30
++0.0032 on today's archive (the brief's −0.0065@1.15 / +0.0003@1.25 are
+the 33-day vintage of the same spike). Expectation set in advance: both
+are in-sample artefacts; testing them is right, expecting them to win is
+not. At most one adoption from the family ever.
+
+### Verification receipts (round 4)
+
+- Suite: **425 passed** (416 prior + 3 Task-E repick tests + 6 Task-F
+  price-board tests, minus 5 removed D1 record tests); `py_compile` and
+  `git diff --check` clean.
+- Constants: `MAX_ACCAS = 3`, `STAKE_FRAC = 1.0 / 3.0`,
+  `MIN_LEG_ODDS = 1.20`, `MIN_ACCAS = 1`, `LEGS_PER_ACCA = 2` — unchanged.
+- Battery live row unchanged: gate-off == live row +0.0319 log/day, 560%,
+  54 days, maxDD 67% — identical to the pre-change receipt.
+- `scripts/search_noise.py` receipts: winner median +0.0289, p90 +0.0744,
+  P(noise ≥ +0.0410) = 36% (20,000 runs, seed 20260906); deployment mean
+  21.7% over 11 real ticket headers; replay rows at 33.3/20.7/21.7% as in
+  H1; G1 arms as in the G1 table.
+- No engine file changed for sizing/selection: Task E touches only the
+  repick sizing path (date-exclusion) plus the ticket warning; Task F adds
+  append-only board fields; parity baseline file byte-identical.
