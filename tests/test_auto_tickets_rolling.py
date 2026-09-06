@@ -510,3 +510,105 @@ def test_card_completeness_on_starved_saturated_days():
                                   date="2026-09-05") for r in pool3],
                             day="2026-09-05")
     assert all(l["odds"] >= 1.20 for l in legs), "floor must still exclude sub-1.20 legs"
+
+
+# ---------------- Task E (2026-09-06): force-repick sizing ----------------
+# The 09-06 incident: on a force-repick the engine counted its own morning
+# draft as committed capital (effective_bank ran before upsert_slip deleted
+# it) and sized to bank/4 instead of bank/3; successive force-runs converge
+# to bank/4. A first run of the day can never expose this — the regression
+# must exercise the repick path with an existing same-day slip in state.
+
+class _RepickClock(at.datetime):
+    """Noon SAST — past the freeze hour, so the 09:00 build gates are open."""
+    @classmethod
+    def now(cls, tz=None):
+        return at.datetime(2026, 9, 6, 12, 0, tzinfo=tz or at.TZ)
+
+
+def _six_leg_slate_rows():
+    rows = []
+    for i, (home, away, ko) in enumerate([
+            ("Sporting CP", "Portimonense", "2026-09-06T20:30:00+02:00"),
+            ("Benfica", "Gil Vicente", "2026-09-06T20:45:00+02:00"),
+            ("Porto", "Estoril Praia", "2026-09-06T21:00:00+02:00"),
+            ("Braga", "Rio Ave", "2026-09-06T21:15:00+02:00"),
+            ("Vitoria SC", "Moreirense", "2026-09-06T21:30:00+02:00"),
+            ("Arouca", "Boavista", "2026-09-06T21:45:00+02:00"),
+    ]):
+        rows.append({"date": "2026-09-06", "home": home, "away": away,
+                     "kickoff": ko, "league": "Portugal,Primeira Liga",
+                     "bucket": "CERTIFIED_CLEAN", "market": "1x2", "pick": "home",
+                     "avg_p": 70.0 - i, "odds": 1.30 + i * 0.02,
+                     "quarantine": "none", "edge_rule": "ml-consensus"})
+    return rows
+
+
+def _slip(date, staked, stakes):
+    return {"date": date, "staked_pct": staked,
+            "accas": [{"odds": 2.0, "stake_pct": s, "legs": []} for s in stakes]}
+
+
+def test_force_repick_sizes_on_bank_net_of_other_dates_not_own_draft(tmp_path, monkeypatch):
+    """The repick path: an existing same-day slip must NOT count as committed
+    capital (it is about to be replaced), while other open dates stay
+    committed. bank 100, own draft 21.6, other-day slip 10 ->
+    free bank 90 -> 3 x 10.0, NOT (100-21.6-10)/3 = 7.6 (pre-fix)."""
+    import json
+    monkeypatch.setattr(at, "datetime", _RepickClock)
+    (at.LOCALDATA / "picks_today.json").write_text(json.dumps(_six_leg_slate_rows()))
+    st = at.fresh_state()
+    st["bank"] = 100.0
+    st["open_slips"] = [_slip("2026-09-06", 21.6, [7.2, 7.2, 7.2]),   # own morning draft
+                        _slip("2026-09-05", 10.0, [10.0])]           # genuinely live
+    args = SimpleNamespace(date="2026-09-06", force=True)
+    assert at.cmd_today(args, st) == 0
+    slip = next(s for s in st["open_slips"] if s["date"] == "2026-09-06")
+    assert slip["staked_pct"] == pytest.approx(30.0, abs=0.02)       # 90 * 1/3
+    assert [a["stake_pct"] for a in slip["accas"]] == pytest.approx([10.0] * 3, abs=0.02)
+    assert len(st["open_slips"]) == 2          # other-date slip untouched, own replaced
+    txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
+    assert "REPICK" in txt
+    assert "free bank 90.0%" in txt
+
+
+def test_first_run_of_day_sizes_on_bank_net_of_other_dates_and_prints_no_warning(tmp_path, monkeypatch):
+    """A first run of the day cannot expose the bug: no same-day slip exists,
+    so nothing is excluded by the date rule — other dates still count."""
+    import json
+    monkeypatch.setattr(at, "datetime", _RepickClock)
+    (at.LOCALDATA / "picks_today.json").write_text(json.dumps(_six_leg_slate_rows()))
+    st = at.fresh_state()
+    st["bank"] = 100.0
+    st["open_slips"] = [_slip("2026-09-05", 10.0, [10.0])]
+    args = SimpleNamespace(date="2026-09-06", force=True)
+    assert at.cmd_today(args, st) == 0
+    slip = next(s for s in st["open_slips"] if s["date"] == "2026-09-06")
+    assert slip["staked_pct"] == pytest.approx(30.0, abs=0.02)
+    txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
+    assert "REPICK" not in txt
+
+
+def _pacca(match, pick, odds, stake):
+    return {"odds": odds, "stake_pct": stake,
+            "legs": [{"match": match, "pick": pick, "odds": odds}]}
+
+
+def test_replacement_lines_name_changed_unchanged_and_dropped_accas():
+    prior = {"date": "2026-09-06", "staked_pct": 20.0,
+             "accas": [_pacca("A vs B", "HOME", 1.9, 10.0),
+                       _pacca("C vs D", "AWAY", 1.8, 10.0)]}
+    plan = [_pacca("A vs B", "HOME", 1.9, 11.0),     # same legs -> stake-only change
+            _pacca("E vs F", "HOME", 2.1, 11.0)]     # replaced
+    lines = at._replacement_lines(prior, plan)
+    assert any("acca #1" in l and "legs unchanged, stake changed" in l for l in lines)
+    assert any("acca #2" in l and "CHANGED" in l for l in lines)
+    dropped = at._replacement_lines(
+        {"date": "2026-09-06", "staked_pct": 10.0, "accas": [prior["accas"][0]]}, [])
+    assert any("DROPPED" in l for l in dropped)
+    same = at._replacement_lines(
+        {"date": "2026-09-06", "staked_pct": 20.0,
+         "accas": [_pacca("A vs B", "HOME", 1.9, 10.0), _pacca("C vs D", "AWAY", 1.8, 10.0)]},
+        [_pacca("A vs B", "HOME", 1.9, 10.0), _pacca("C vs D", "AWAY", 1.8, 10.0)])
+    acca_lines = [l for l in same if not l.startswith("  total stake")]
+    assert acca_lines and all("UNCHANGED" in l for l in acca_lines)

@@ -60,6 +60,7 @@ import json
 import math
 import re
 import sys
+from collections import Counter
 from datetime import date, datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -818,9 +819,22 @@ def fresh_state() -> dict:
             "open_slips": [], "history": [], "events": []}
 
 
-def effective_bank(st) -> float:
-    """Bank minus committed (open) stakes — in % of capital."""
-    return st["bank"] - sum(s["staked_pct"] for s in st.get("open_slips", []))
+def effective_bank(st, exclude_date=None) -> float:
+    """Bank minus committed (open) stakes — in % of capital.
+
+    `exclude_date`: when sizing a date's own slip, that date's existing
+    entry must NOT count as committed capital — upsert_slip deletes and
+    replaces it (Task E, 2026-09-06: a force-repick counted its own morning
+    draft as live money and converged to bank/4 instead of bank/3). Stakes
+    on OTHER dates stay committed: they are genuinely live and settlement
+    has not yet returned them.
+    """
+    committed = 0.0
+    for s in st.get("open_slips", []):
+        if exclude_date is not None and str(s.get("date") or "")[:10] == str(exclude_date)[:10]:
+            continue
+        committed += s.get("staked_pct", 0.0)
+    return st["bank"] - committed
 
 
 def take_profit_target(st) -> float:
@@ -1204,6 +1218,118 @@ def upsert_slip(st, target, plan):
     save_state(st)
 
 
+def _leg_key(l) -> tuple[str, str]:
+    return (str(l.get("match") or ""), str(l.get("pick") or "").upper())
+
+
+def _acca_label(acca) -> str:
+    legs = "; ".join(f"{m} {p}@{o:.2f}" for m, p, o in
+                     ((l.get("match"), l.get("pick"), l.get("odds")) for l in acca.get("legs", [])))
+    return f"@{acca.get('odds', 0.0):.2f} ({legs})"
+
+
+def _replacement_lines(prior, plan) -> list[str]:
+    """Task E: per-acca changed/unchanged comparison of an existing slip
+    against the replacement card (same acca index = same position on the
+    card; a leg is identical only when match AND pick side both match)."""
+    old_accas = prior.get("accas", [])
+    n = max(len(old_accas), len(plan))
+    lines = []
+    for i in range(n):
+        o = old_accas[i] if i < len(old_accas) else None
+        p = plan[i] if i < len(plan) else None
+        if o is None:
+            lines.append(f"  acca #{i + 1}: NEW (was none) → {_acca_label(p)}")
+        elif p is None:
+            lines.append(f"  acca #{i + 1}: DROPPED {_acca_label(o)} → no replacement")
+        else:
+            ok = ([_leg_key(l) for l in o.get("legs", [])]
+                  == [_leg_key(l) for l in p.get("legs", [])])
+            same_stake = abs(float(o.get("stake_pct") or 0.0) - float(p.get("stake_pct") or 0.0)) < 1e-9
+            if ok and same_stake:
+                lines.append(f"  acca #{i + 1}: UNCHANGED {_acca_label(p)}")
+            else:
+                what = "legs unchanged, stake changed" if ok else "legs CHANGED"
+                lines.append(f"  acca #{i + 1}: {what}\n      was  {_acca_label(o)}\n      now  {_acca_label(p)}")
+    old_staked = float(prior.get("staked_pct") or sum(a.get("stake_pct", 0.0) for a in old_accas))
+    new_staked = sum(a["stake_pct"] for a in plan)
+    lines.append(f"  total stake {old_staked:.4f}% of capital → {new_staked:.4f}% of capital")
+    return lines
+
+
+def _printable_price_board(l, pool_by_key) -> list[dict]:
+    """The pick row behind a printed leg (plan accas carry only the four
+    printed keys; the pool leg holds the full enriched row)."""
+    leg = pool_by_key.get(_leg_key(l))
+    if leg is None:
+        return []
+    return (leg.get("row") or {}).get("price_board") or []
+
+
+def _log_printed_price_boards(target: str, plan: list[dict],
+                              pool_by_key: dict) -> int:
+    """Task F (2026-09-06): append-only persistence of every price every
+    source was showing at build time for every PRINTED leg, with source name
+    and value. One JSON line per printed leg per run — never overwritten, no
+    manual entry anywhere. Lines carry the engine's own printed odds/source
+    beside the board so the actual-vs-quoted comparison needs no archive.
+    Returns the number of legs logged."""
+    records = []
+    for i, a in enumerate(plan, 1):
+        for l in a.get("legs", []):
+            leg = pool_by_key.get(_leg_key(l))
+            row = (leg or {}).get("row") or {}
+            records.append({
+                "date": str(target)[:10],
+                "printed_at": datetime.now(TZ).replace(microsecond=0).isoformat(),
+                "acca": i,
+                "match": l.get("match"),
+                "pick": str(l.get("pick") or "").upper(),
+                "engine_odds": l.get("odds"),
+                "odds_source": row.get("odds_source"),
+                "price_evidence": row.get("price_evidence"),
+                "price_board": row.get("price_board") or [],
+            })
+    if not records:
+        return 0
+    month = str(target)[:7]
+    path = LOCALDATA / f"price_board_{month}.jsonl"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("a", encoding="utf-8") as fh:
+        for r in records:
+            fh.write(json.dumps(r, default=str) + "\n")
+    return len(records)
+
+
+def _board_coverage_lines(target: str, plan: list[dict],
+                          pool_by_key: dict) -> list[str]:
+    """Task F: what the next-slate capture should cover. Every printed leg
+    whose pick row was enriched at build carries its full price board, so on
+    live slates coverage is 100% by construction — this prints the actual
+    count for the card being written and the expectation for future slates."""
+    n_legs = sum(len(a.get("legs", [])) for a in plan)
+    if not n_legs:
+        return []
+    boards = [_printable_price_board(l, pool_by_key)
+              for a in plan for l in a.get("legs", [])]
+    covered = sum(1 for b in boards if b)
+    sources: Counter = Counter()
+    for b in boards:
+        for e in b:
+            s = str(e.get("source") or "unknown")
+            if s and not e.get("chosen"):
+                sources[s] += 1
+    src_txt = ", ".join(f"{s} {n}" for s, n in sources.most_common()) or "none (only the engine's own price)"
+    month = str(target)[:7]
+    return [
+        f"PRICE BOARD (automatic capture, Task F): build-time board persisted "
+        f"for {covered} of {n_legs} printed legs",
+        *([f"  corroborating sources on the card: {src_txt}"] if covered else []),
+        f"  record: localdata/price_board_{month}.jsonl — expected coverage on "
+        f"the next slate: 100% of printed legs with an odds source",
+    ]
+
+
 def cmd_today(args, st):
     settled = load_settled()
     now = datetime.now(TZ)
@@ -1269,18 +1395,33 @@ def cmd_today(args, st):
         print(f"NO BET TODAY — {len(pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
         print("(bank stays unbet)")
         return 0
-    bank_eff = effective_bank(st)
+    bank_eff = effective_bank(st, exclude_date=target)
     plan = plan_day(pool, bank_eff)
     if not plan:
         print("\n".join(census_lines))
         print("NO BET TODAY — plan empty")
         return 0
+    # Task E (2026-09-06): a force-repick REPLACES the target date's own
+    # existing slip (upsert below deletes it) — so its stake was excluded
+    # from committed capital above. Say so, naming what changes and what
+    # does not; the operator must never have to clear state by hand.
+    prior = next((s for s in st["open_slips"] if str(s.get("date") or "")[:10] == str(target)[:10]), None)
+    if prior is not None:
+        repl_lines = _replacement_lines(prior, plan)
+    else:
+        repl_lines = None
     upsert_slip(st, target, plan)
+    pool_by_key = {_leg_key(l): l for l in pool}
+    _log_printed_price_boards(target, plan, pool_by_key)   # Task F, append-only
     committed = st["bank"] - bank_eff
     lines = [f"AUTO TICKETS (ROLLING) — {target}", "=" * 62,
              f"PERFORMANCE: total bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) = "
              f"free bank {bank_eff:.1f}% + committed {committed:.1f}% · "
              f"next take-profit notification at {take_profit_target(st):.1f}%"]
+    if repl_lines is not None:
+        lines.append("")
+        lines.append("⚠️  REPICK — an earlier slip for this date is being REPLACED by this run:")
+        lines.extend(repl_lines)
     for i, a in enumerate(plan, 1):
         lines.append(f"\n[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
                      f"({a['stake_pct']/bank_eff:.1%} of free bank)")
@@ -1294,6 +1435,8 @@ def cmd_today(args, st):
                  "Bet only what you can afford to lose.")
     lines.append("")
     lines.extend(census_lines)
+    lines.append("")
+    lines.extend(_board_coverage_lines(target, plan, pool_by_key))
     txt = "\n".join(lines)
     print(txt)
     slip_txt.write_text(txt)
