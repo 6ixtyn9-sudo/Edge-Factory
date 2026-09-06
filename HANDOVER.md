@@ -7424,16 +7424,26 @@ when it can. Bare-time rows span betexplorer/scoutingstats/None sources, so
 source alone does not separate them; **no date means no comparison is
 possible**, which is the incident class.
 
-### What shipped — TWO layers (after the review)
+### What shipped — TWO layers (round 2: narrowed after the region audit)
 
 1. **LIVE KICKOFF GUARD** (`auto_tickets.live_kickoff_guard`, wired into
-   `cmd_today`; runs on every build): a leg drops when its row carries **no
-   usable kickoff date** — bare "HH:MM", missing, garbage (the Vancouver
-   class) — or when its dated kickoff is **already at/past build time**
-   (dated rows compared on the feeds' UTC+2 rendering via `parse_kickoff`).
-   Every run prints the skip census ("KICKOFF GUARD — kept/total qualifying
-   legs kept; dropped: ..."). No 4h lead buffer live, no zone table, no
-   proof-standard filtering: the dated majority rides.
+   `cmd_today`; runs on every build). A leg drops when:
+   - its kickoff is **missing / unparseable**, or
+   - its kickoff is **clock-only** — bare "HH:MM" or yearless "DD-MM, HH:MM"
+     — **and its league region's clock is far from SAST** (Americas /
+     Asia-Pacific, matched on the row's own league text): a bare "22:30"
+     MLS clock read on the slate day is the incident class, up to 18h wrong
+     in the fatal direction. The region list is BOOLEAN-ONLY — it answers
+     "is the SAST reading of this clock trustworthy?", it never computes or
+     infers a kickoff instant, so a mis-hit drops a leg that could have
+     been bet (no-bet), it cannot fabricate a wrong time (the distinction
+     from the deleted `_AMERICAS_ZONES` table, which *computed* kickoffs),
+     or
+   - its dated kickoff is **already at/past build time** (dated rows are
+     compared on the feeds' UTC+2 rendering via `parse_kickoff`).
+   Clock-only rows from Europe/Africa ride on the SAST reading (clocks
+   within ~1-2h of SAST; historical errors are hour-scale, in the safe
+   direction). Every run prints the skip census. No 4h lead buffer live.
 2. **AUDIT CONTRACT** (`auto_tickets.kickoff_contract`;
    `replay_harness.py --kickoff-contract`, **off by default, never the live
    rule**): the fail-closed proof-or-drop standard (explicit offset/Z or
@@ -7441,35 +7451,62 @@ possible**, which is the incident class.
    It is the measurement instrument for the data-side kickoff gap — not a
    betting rule. Its output is structurally labelled AUDIT ONLY.
 
+**The 134 no-year "DD-MM, HH:MM" rows — classified, not assumed.** All
+archive rows of this shape come from day-first sources (zulubet, bzzoiro,
+betexplorer, scoutingstats — e.g. "24-06, 18:00" for a 24 June Swedish
+match; "01-07, 17:00" for the 1 July World Cup fixture) and `parse_kickoff`
+reads them day-first with the year resolved to the slate date (+-1 year);
+the ridden sample checks out against real fixtures (Sweden in June, the
+July World Cup), and the day-month order is pinned by a test. The guard
+gives these rows the SAME region treatment as bare times (they are
+clock-only: no year, no zone): Europe/Africa rows are kept and parsed;
+Americas/Asia-Pacific rows drop. Ridden split below.
+
 Deleted and barred: `_AMERICAS_ZONES` / `_inferred_kickoff_utc` /
 `_unprovable_future` (Toronto-for-Vancouver class), SAST defaulting for bare
-times, and fail-open "cannot parse -> ride". `parse_kickoff` survives for
-settlement bookkeeping and dated-row comparison and is explicitly NOT a
-zone proof (test-pinned).
+times in remote-clock regions, and fail-open "cannot parse -> ride".
+`parse_kickoff` survives for settlement bookkeeping and dated-row comparison
+and is explicitly NOT a zone proof (test-pinned).
 
 ### Cost of the live guard on history (honest number, per regime)
 
 Measured on the refreshed parity baseline (playable pools + the engine's
-historical ridden cards, current archive):
+historical ridden cards, current archive; classifier = the shipped code):
 
-- playable-pool kickoff shapes across 57 day-pools (>= 2 legs): 347
-  dated-naive, 66 day-month-yearless, 35 explicit-offset, **114 bare**.
-- **ridden-leg shapes: of the 256 legs in the historical cards (refreshed
-  baseline, current archive), 52 (20%) were bare-time rows with no usable
-  kickoff date** (122 dated-naive, 52 day-month, 30 offset, 52 bare). Those
-  52 rode on **22 of 56 bet-days**; in-season (>= 2026-08-01) 21 of 36
-  bet-days, off-season 1 of 20 (2026-07-26).
-- The incident-day card: 6 legs, 2 bare (Rudes 16:00 — a harmless UTC+2
-  day-time kickoff that the guard still cannot verify; Vancouver 22:30 —
-  the ghost). The guard drops both.
+- Ridden clock-only legs (bare + no-year day-month): **104 of 256 legs**.
+  - **dropped (remote-clock regions): 25 legs — 15 bare on 12 bet-days
+    (Suwon 08-07, Junior 08-11, Palmeiras 08-12, Bolivar 08-12, Deportivo
+    Moron 08-15, Broadmeadow 08-16, Penarol 08-16, Bucaramanga 08-17,
+    Deportes Tolima 08-19, LDU Quito 08-20, Seattle 08-20, Sporting KC
+    08-30, Toluca 08-31, Olimpia 09-04, Vancouver 09-06) + 10 yearless
+    day-month on 8 bet-days (Australia/Argentina/Bolivia/Ecuador/Peru
+    rows)** — every row the round-1 audit named is inside this set.
+  - **kept (Europe/Africa + unclassified-international): 79 legs** (37
+    bare + 42 day-month) — the round-1 audit's "39 European bare legs" are
+    here; a Croatian "16:00" is right to ~1h and rides.
+- Money cost (`replay_harness.py --kickoff-guard`; canonical 09:00 SAST
+  builds; live stake rules; whole archive and in-season):
 
-Owner translation: this is **not** the handful of legs the pre-diagnosis
-estimate assumed — about a fifth of ridden legs are undatable, and roughly a
-third of bet-days carried one. But undatable rows are exactly the class that
-cannot be checked, and one of them was the ghost. The guard refuses them;
-volume returns when the data side emits a usable kickoff per row (the
-Inter-Miami row proves the upstream can). Thin-day doctrine stands: days
-whose card shrinks below a comfortable 2-3 accas should scale the stake or
+  | arm | whole archive | in-season (>= 08-01) |
+  |---|---|---|
+  | default (battery universe) | 54 bet-days, +0.0319 log/day, final 560%, maxDD 67% | 35 bet-days, +0.0244, 235%, 63% |
+  | started-only (engine's historical live path) | 54 bet-days, +0.0397, 852%, 67% | 35 bet-days, +0.0363, 357%, 63% |
+  | region guard (shipped) | 52 bet-days, +0.0477, 1196%, 64% | 34 bet-days, +0.0294, 272%, 64% |
+  | guard minus started (marginal) | +0.0080 log/day, maxDD 67% -> 64% | **-0.0070 log/day, maxDD 63% -> 64%, 1 bet-day lost (2026-08-04)** |
+
+  In-sample history does not punish the guard — the remote-clock class was
+  disproportionately losing legs — but that is hindsight, not evidence of
+  edge; the rule exists to stop the incident-#6 family and its true price
+  shows up on genuinely new days. The in-season marginal cost reads as:
+  one bet-day in 35 lost (08-04, whose card relied on a Carabobo-Venezuela
+  no-year row), maxDD +1pp, -0.007 log/day on the days that remain. That is
+  the honest money number for the seatbelt, and it is in this commit.
+
+- The incident-day card: 6 legs — Vancouver 22:30 (MLS, dropped), Rudes
+  16:00 (Croatia, kept — right to ~1h), Miami 01:30 (started, dropped),
+  Hearts/Gresford/Zrinjski (dated, kept).
+
+Thin-day doctrine stands: days whose card shrinks should scale the stake or
 abstain.
 
 ### Do the two serve-time guards cover each other? (asked in Task 1)
@@ -7578,8 +7615,8 @@ expecting them to win is not. At most one adoption from the family ever.
 
 ### Verification receipts
 
-- `PYTHONPATH=src python3 -m pytest -q` -> **399 passed** (377 pre-existing
-  incl. both parity tests green against the drift-refreshed baseline + 22
+- `PYTHONPATH=src python3 -m pytest -q` -> **403 passed** (377 pre-existing
+  incl. both parity tests green against the drift-refreshed baseline + 26
   kickoff-guard tests).
 - `py_compile` clean; `git diff --check` clean.
 - Constants: `grep -n "^MAX_ACCAS\|^STAKE_FRAC\|^MIN_LEG_ODDS"` ->
@@ -7588,12 +7625,17 @@ expecting them to win is not. At most one adoption from the family ever.
   days, maxDD 67% on today's data; identical before and after under stash
   A/B); the drift vs the 09-04 receipts (+0.0428/924%/52 days) is archive
   growth (settled 09-04/09-05 cards), not an engine change.
-- Audit instrument: `replay_harness.py --kickoff-contract` (off by
-  default) — structurally labelled AUDIT ONLY.
-- Incident shape pinned both layers: the Vancouver row drops under the live
-  guard (no usable date) and under the audit contract; a naive-with-date row
-  rides live (UTC+2 feed rendering) and drops under audit; the e2e
-  incident-slate run prints the census and builds the honest one-acca card.
+- Audit instruments (both off by default, structurally labelled):
+  `replay_harness.py --kickoff-contract` (fail-closed proof standard) and
+  `replay_harness.py --kickoff-guard` (money cost of the live region
+  guard — log/day, maxDD, bet-days lost, in-season beside the live arms).
+- Region classifier pinned boolean-only by tests (it never computes a
+  kickoff); Vancouver drops under the live guard (clock-only, remote
+  region) AND under the audit contract; a Croatian bare row rides live and
+  a Korean/MLS/Mexican/Uruguayan/Australian one drops; no-year day-month
+  rows parse day-first (test-pinned); the e2e incident-slate run prints the
+  census and builds the two-acca card (Vancouver and started Miami out,
+  Rudes/Gresford/Hearts/Zrinjski in).
 
 ### Today's frozen slip (operator instruction)
 
@@ -7604,18 +7646,26 @@ census line.
 
 ### Open items for the next session
 
-1. **Data-side kickoff proof** — make the pipeline emit a usable kickoff
-   (date-carrying, offset-carrying, or row-carried `kickoff_tz`) on every
-   playable row; the Inter-Miami row proves it is possible. Volume follows
-   the data.
+1. **THE REAL FIX — normalise kickoffs at ingest in `picks_today.py`** (or
+   the upstream scrape): emit a usable kickoff per row (offset-carrying,
+   or date-carrying with a row-level zone). The Inter-Miami row
+   (`2026-09-06T01:30:00+02:00`) proves the feed can render MLS fixtures in
+   UTC+2 — it just failed for the one `scoutingstats_odds` row, which was
+   ALSO already flagged `WATCHLIST_UNCORROBORATED_PRICE` /
+   `scoutingstats_sole_source` for pricing and bet anyway (that pricing
+   corroboration question is separate and untouched here). Fixing ingest
+   turns the guard's ~20% clock-only leg loss into roughly zero; the guard
+   stays as the seatbelt either way. Separate item, opened, not done here.
 2. **Watch the first live run under the guard** — the census line should
    print on the next 06:05/09:13 build; confirm it reads sensibly on a real
    slate.
 3. **Residual risk, stated** — dated rows are trusted on the feeds' UTC+2
    rendering (tested, and consistent with every dated row on the incident
    day). A future upstream rendering change — or dated rows from east of
-   UTC+2 — would need a re-audit; rerun `--kickoff-contract` periodically to
-   watch the unprovable population.
-4. **Thin-day doctrine** — under the guard, days whose card relied on bare
-   legs will shrink; scale the stake or abstain (pre-registered rule, not a
-   live tune).
+   UTC+2 — would need a re-audit; rerun `--kickoff-contract` and
+   `--kickoff-guard` periodically to watch the unprovable and remote-clock
+   populations.
+4. **Thin-day doctrine** — under the guard, days whose card relied on
+   remote-clock rows will shrink (08-04 was the one historical in-season
+   card lost); scale the stake or abstain (pre-registered rule, not a live
+   tune).
