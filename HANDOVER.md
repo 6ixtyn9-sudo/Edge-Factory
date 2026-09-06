@@ -8264,3 +8264,50 @@ not. At most one adoption from the family ever.
 - No engine file changed for sizing/selection: Task E touches only the
   repick sizing path (date-exclusion) plus the ticket warning; Task F adds
   append-only board fields; parity baseline file byte-identical.
+
+## Addendum — 2026-09-06 (round 4 closeout): the estimate fell 40% on two days; growth at true deployment; one sentence on the exclusion figures
+
+### The most important sentence in this ledger
+
+The in-season replay estimate moved **+0.0410 → +0.0244** on the addition
+of two bet-days (09-04 ×0.876, 09-05 ×0.777 — two ordinary losing days) — a
+**40% fall from two observations**. Not a revision, not a bug: just two
+more observations. On today's archive the same cut measures the 33-day
+subset at +0.0387/day and the full 35 days at +0.0244/day; the operator's
+cross-check arithmetic (33 × 0.0410 − 0.385 = 35 × 0.0277) is the same
+mechanism, and the small residual is replay-vs-live card differences on
+those two days. Our own noise null on those same 35 days gives a median
+winner from a PURE-NOISE 13-variant search of **+0.0289/day**. Therefore:
+
+**The measured in-season figure (+0.0244/day) is now below the noise floor
+of the search that produced the configuration.** That is the strongest
+single piece of evidence that the headline was never an edge measurement.
+
+### Growth at true deployment (the reason the deployment gap was opened)
+
+Item 1 of the closeout: growth and maxDD at the measured deployment, not
+just volatility. In-season replay, live settings (IN-SAMPLE):
+
+| stake | log/day | final | maxDD | daily log-vol |
+|---|---:|---:|---:|---:|
+| 33.3%/day (replay default) | +0.0244 | 235% | 63% | 0.2240 |
+| **21.7%/day (true mean deployment, 11 real tickets)** | **+0.0215** | **212%** | **45%** | **0.1450** (live 0.1299) |
+
+Direction was never in doubt — lower deployment means lower growth — and
+the deployment-corrected figure is **materially below +0.0244**. This
++0.0215/day at 21.7% deployment is the only remaining candidate for an
+honest forward figure, and it is NOT one: it is the same in-sample history
+at the fraction the engine actually stakes. Nothing forward ships until
+the pre-registered October questions reach n ≥ 60 in-season bet-days.
+
+### One sentence on the six exclusion figures
+
+235% / 110% / 79% / 272% / 279% / 159% — **none of these figures is
+forward-valid; each measures which pairs happened to form under a given
+exclusion, not engine performance, and cross-quoting any of them is an
+error.**
+
+No code changed this round (ledger only). Suite and constants unchanged
+since the round-4 receipt: 425 passed; MAX_ACCAS=3, STAKE_FRAC=1.0/3.0,
+MIN_LEG_ODDS=1.20; state file untouched at bank 97.417639 with the single
+open 09-06 slip at 32.4725% (3 accas) until tonight's settlement.
