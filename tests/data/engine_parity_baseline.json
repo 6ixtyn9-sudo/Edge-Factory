@@ -1,7 +1,6 @@
 {
- "base_commit": "2d7d9094e545d1e497d2831fb68bb7c6e684ae16",
- "generated_note": "selection+staking snapshot of the live engine; regenerate ONLY with a written parity receipt",
  "bank_pct": 100.0,
+ "base_commit": "80ad2aa",
  "days": {
   "2026-06-19": {
    "legs": [],
@@ -1839,44 +1838,82 @@
      [
       "Kongsvinger vs Raufoss",
       "HOME",
-      1.2
+      1.22
      ],
      [
       "Stabaek vs Moss",
       "HOME",
-      1.36
+      1.33
      ]
     ],
     [
+     [
+      "Chelsea W vs Aston Villa W",
+      "HOME",
+      1.2
+     ],
+     [
+      "Maccabi Haifa vs Hapoel Petah Tikva",
+      "HOME",
+      1.48
+     ]
+    ],
+    [
+     [
+      "Lens vs Lorient",
+      "HOME",
+      1.55
+     ],
      [
       "Haugesund vs Sogndal",
       "HOME",
-      1.33
-     ],
-     [
-      "AEK Athens vs Aris Thessalonikis",
-      "HOME",
-      1.38
-     ]
-    ],
-    [
-     [
-      "East Fife vs Ross County",
-      "AWAY",
-      1.42
-     ],
-     [
-      "Apollon Limassol vs Anorthosis FC",
-      "HOME",
-      1.5
+      1.27
      ]
     ]
    ],
    "staked": 33.3333
   },
   "2026-09-06": {
-   "legs": [],
-   "staked": 0
+   "legs": [
+    [
+     [
+      "Zrinjski vs Siroki Brijeg",
+      "HOME",
+      1.26
+     ],
+     [
+      "Heart of Midlothian vs Dundee",
+      "HOME",
+      1.47
+     ]
+    ],
+    [
+     [
+      "Rudes vs HNK Hajduk Split",
+      "AWAY",
+      1.29
+     ],
+     [
+      "Valencia vs Barcelona",
+      "AWAY",
+      1.25
+     ]
+    ],
+    [
+     [
+      "Vancouver Whitecaps vs St. Louis City",
+      "HOME",
+      1.45
+     ],
+     [
+      "Vit\u00f3ria vs Casa Pia AC",
+      "HOME",
+      1.5
+     ]
+    ]
+   ],
+   "staked": 33.3333
   }
- }
+ },
+ "generated_note": "selection+staking snapshot of the live engine (playable -> plan_day; the kickoff guards live in cmd_today/audit tooling and are deliberately NOT part of this parity file - see tests/test_kickoff_contract.py). Refreshed 2026-09-06 after the Task-1 review restored the git baseline: the ONLY diffs vs the previous snapshot are archive-growth drift on 2026-09-05 (card/odds refreshed by later captures) and 2026-09-06 (old snapshot empty; archived rows now build the day's card). No engine-behaviour change; parity receipt in the commit message."
 }

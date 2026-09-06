@@ -6,7 +6,9 @@ multiple. There are no units, no rand amounts, no stakes in currency — the
 operator maps percentages to money themselves.
 
 Performance model: capital starts at 100 (%) and rolls. Settlements move the
-bank percentage. Stakes are expressed as % of bank (and % of capital).
+bank percentage. A stake's printed denominator is always stated next to the
+number ("% of capital", "% of free bank"); "bank" alone means total bank,
+"free bank" = total bank minus committed (open) stakes.
 
 THE RECIPE (constants carry their validation receipts — see
 TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
@@ -35,8 +37,14 @@ TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
             live — see the 2026-09-04 addendum, checkpoint ⑥.
 
 Slip lifecycle matches the production cadence: builds from 06:00 SAST,
-FREEZES at 12:00 (later runs re-print), settles as results land. State
-persists in localdata/auto_tickets_state.json (gitignore exception exists).
+FREEZES at 09:00 (FREEZE_HOUR; later runs re-print), settles as results
+land. Every build runs the LIVE KICKOFF GUARD: a leg whose row carries no
+usable kickoff date (bare "HH:MM", missing, garbage — the incident-#6
+Vancouver class) or whose dated kickoff is already past at build time drops,
+and each run prints the skip census. The fail-closed KICKOFF PROOF CONTRACT
+exists as an OFF-by-default audit tool (replay_harness.py --kickoff-contract)
+— it is not the live rule. State persists in localdata/auto_tickets_state.json
+(gitignore exception exists).
 
 Usage (daily.py runs this bare — same entry point as always):
   PYTHONPATH=src python3 scripts/auto_tickets.py            # settle + build/reprint today
@@ -67,10 +75,53 @@ FREEZE_HOUR = 9            # local time — the slip FREEZES on/after this hour.
                              # median-complete by 09:00; external cron's 09:00 SAST run
                              # lands the marker ~09:23, ahead of every observed bet time.
 TZ = ZoneInfo("Africa/Johannesburg")
+_UTC = ZoneInfo("UTC")
 PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
 
+# ---------------------------------------------------------------------------
+# KICKOFF GUARDS (incident #6 — 2026-09-06, Vancouver Whitecaps).
+#
+# On 2026-09-06 the engine staked ACCA #3 on "Vancouver Whitecaps vs St.
+# Louis City" at 09:13 SAST. The match had kicked off at 2026-09-05 22:30 EDT
+# = 02:30 UTC = 04:30 SAST — over ~4h45m before the ticket printed. Sixth
+# ghost incident. The Vancouver row's kickoff field is the bare string
+# "22:30" — no date, no offset, no zone (odds_source scoutingstats_odds,
+# sole/uncorroborated). A row like that cannot say when the match starts, yet
+# the 2026-09-04 patch (league-substring -> IANA zone table + SAST-default
+# parsing) let it ride: it failed open on unprovable kickoffs AND mis-zoned
+# west-coast fixtures even when its lookup "succeeded". Deleted, not extended.
+#
+# TWO layers, deliberately different in strength:
+#
+# 1. LIVE guard (cmd_today, this file): a leg with NO usable kickoff date in
+#    the row — bare "HH:MM", missing, garbage — is undatable and drops,
+#    counted in the run's skip census. Rows carrying a full calendar date
+#    (naive "YYYY-MM-DD HH:MM", "DD-MM, HH:MM", or an explicit-offset
+#    instant) are compared with parse_kickoff and drop when already started
+#    at build time. The feeds render dated rows on a UTC+2 clock (Inter
+#    Miami's explicit +02:00 row, the Europe/Americas wall-clock evidence in
+#    the 2026-09-06 HANDOVER addendum): that rendering is the feed contract,
+#    it is TESTED, and it is never re-guessed from a league table. No 4h lead
+#    buffer on the live path.
+# 2. AUDIT contract (kickoff_contract; replay_harness.py --kickoff-contract,
+#    OFF by default): the fail-closed standard — a leg rides only when its
+#    kickoff is PROVEN by the row itself (explicit UTC offset/Z, or naive +
+#    row-carried kickoff_tz) and is at least KICKOFF_MIN_LEAD_HOURS ahead.
+#    This is the measurement instrument for the data-side fix (how many legs
+#    cannot prove themselves today), NOT the live betting rule.
+# ---------------------------------------------------------------------------
+KICKOFF_MIN_LEAD_HOURS = 4.0    # AUDIT-ONLY lead. Proven kickoffs must clear
+                                # this many hours or the audit contract drops
+                                # them (result feeds lag). Never the live
+                                # rule (2026-09-06 review).
+KO_SKIP_NO_DATE = "no usable kickoff date (bare time / missing / unparseable)"
+KO_SKIP_UNPROVEN = "unprovable kickoff (no explicit offset or row-carried zone)"
+KO_SKIP_STARTED = "already started (dated kickoff at/past build time)"
+KO_SKIP_TOO_CLOSE = f"audit: kickoff under {KICKOFF_MIN_LEAD_HOURS:g}h away or already started (provable)"
+
 # ---------------- the validated recipe (receipts, not knobs) ----------------
-STAKE_FRAC = 1.0 / 3.0     # of bank per day. 2026-09-04 sizing audit (52-day
+STAKE_FRAC = 1.0 / 3.0     # of free bank (total bank minus open stakes) per
+                           # day. 2026-09-04 sizing audit (52-day
                            # replay, SAME cards — sizing only): growth-optimal
                            # f ~= 40%, curve flat 30-50%, maxDD 62%->87% across
                            # it. f=1/3 keeps 96% of peak growth at 67% DD;
@@ -127,6 +178,16 @@ def wilson_lb(wins, n, z=1.645):
 
 
 def parse_kickoff(pick):
+    """SETTLEMENT parser + dated-row comparison for the live guard. NOT a bet-time proof.
+
+    Used for settlement bookkeeping (void-age) and by the LIVE kickoff guard
+    to compare rows whose kickoff carries a full calendar date: the feeds
+    render dated kickoffs on a UTC+2 clock (== Africa/Johannesburg), and the
+    guard drops legs already started at build time. It defaults naive
+    timestamps to Africa/Johannesburg and therefore must NEVER be used as a
+    zone *proof* — a bare time-only kickoff ("22:30", the incident-#6 class)
+    has no date, and no zone may be assumed for it. Proven-instant logic
+    lives in `parse_kickoff_proven` (audit contract only)."""
     raw = pick.get("kickoff_canonical") or pick.get("kickoff") or ""
     day = str(pick.get("date") or "")[:10]
     for fmt in ("%Y-%m-%dT%H:%M:%S%z", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M",
@@ -163,6 +224,160 @@ def parse_kickoff(pick):
         except ValueError:
             continue
     return None
+
+
+def kickoff_has_usable_date(pick) -> bool:
+    """Does the row's kickoff carry a usable calendar date at all?
+
+    True for a full ISO/naive date ("2026-09-06T20:15:00+02:00",
+    "2026-09-06 15:30:00") or a day-month listing ("05-09, 22:30").
+    False for bare clock times ("22:30" — the incident-#6 Vancouver shape),
+    missing kickoffs, and garbage: those rows cannot say WHEN the match
+    starts, so no comparison against build time is possible.
+    """
+    raw = str(pick.get("kickoff_canonical") or pick.get("kickoff") or "").strip()
+    if not raw:
+        return False
+    return bool(re.match(r"^\d{4}-\d{2}-\d{2}", raw)
+                or re.match(r"^\d{1,2}-\d{1,2},\s*\d{1,2}:\d{2}", raw))
+
+
+def live_kickoff_guard(pool, now):
+    """The LIVE kickoff guard (incident #6 fix, revised after the row audit).
+
+    1. Drops legs whose row carries NO usable kickoff date (bare "HH:MM",
+       missing, garbage) — undatable legs are exactly the Vancouver class;
+       they ride only if someone upstream supplies a real date/zone.
+    2. Drops dated legs whose kickoff is already at/past build time (dated
+       rows are compared on the feeds' UTC+2 rendering via parse_kickoff).
+
+    Returns ``(kept_legs, drops)`` where drops maps reason -> fixture names.
+    This is deliberately NOT the fail-closed proof standard — that lives in
+    ``kickoff_contract`` as the off-by-default audit instrument and must not
+    gate the live path (2026-09-06 review: the proof standard dropped 573
+    legs to catch one started match; the dated majority renders UTC+2 and
+    rides).
+    """
+    drops: dict[str, list[str]] = {}
+    dated, kept = [], []
+    for leg in pool:
+        pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+        if not kickoff_has_usable_date(pick):
+            drops.setdefault(KO_SKIP_NO_DATE, []).append(leg["match"])
+            continue
+        dated.append(leg)
+    started = []
+    for leg in dated:
+        pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+        kt = parse_kickoff(pick)
+        if kt is not None and kt.astimezone(TZ) < now.astimezone(TZ):
+            started.append(leg)
+        else:
+            kept.append(leg)
+    if started:
+        drops[KO_SKIP_STARTED] = [l["match"] for l in started]
+    return kept, drops
+
+
+def parse_kickoff_proven(pick) -> datetime | None:
+    """A kickoff PROVEN by the row itself, as UTC — or None. Never infers.
+
+    Accepts only two shapes:
+      - an ISO instant with an explicit offset or Z ("2026-09-06T20:15:00+02:00"
+        is 20:15 SAST; "…T02:30:00Z" is 02:30 UTC), or
+      - a naive datetime that ALSO names a timezone as data in the row
+        (`pick["kickoff_tz"]`, an IANA zone such as "America/Vancouver").
+
+    Naive timestamps without an explicit zone return None: the source's zone
+    is not known, and the old default of stamping Africa/Johannesburg is
+    precisely the fault that let a 04:30 SAST kickoff look like 22:30 SAST.
+    A zone that belongs to a stadium/league belongs in the data — never in a
+    hand-maintained league-substring table. `parse_kickoff` (SAST-defaulting)
+    exists for settlement bookkeeping only and is unusable for this proof.
+    """
+    raw = str(pick.get("kickoff_canonical") or pick.get("kickoff") or "").strip()
+    if not raw:
+        return None
+    text = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        # Naive. Provable only when (a) the string names a full calendar date
+        # and (b) the row carries its own timezone. No assumptions otherwise.
+        if not re.match(r"^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}", text):
+            return None
+        zname = str(pick.get("kickoff_tz") or "").strip()
+        if not zname:
+            return None
+        try:
+            dt = dt.replace(tzinfo=ZoneInfo(zname))
+        except Exception:
+            return None
+    return dt.astimezone(_UTC)
+
+
+def kickoff_contract(pool, build_at, *, min_lead_hours=None):
+    """AUDIT-ONLY fail-closed kickoff standard (incident #6); NOT the live rule.
+
+    Used by ``replay_harness.py --kickoff-contract`` to measure how much of
+    history could NOT prove its kickoffs (the data-side fix's size). A leg
+    rides only if its kickoff can be PROVEN (an absolute instant
+    carried by the row) to be at least ``min_lead_hours`` (default
+    KICKOFF_MIN_LEAD_HOURS) after ``build_at``. Cannot prove it -> the leg is
+    dropped and counted, with up to three fixture names per reason.
+
+    Returns ``(kept_legs, census)`` where census maps reason -> fixture list.
+    No league dict, no substring lookup, no defaulted timezone anywhere.
+    The LIVE path uses ``live_kickoff_guard`` instead — deliberately weaker
+    in exactly the way the 2026-09-06 review demanded (dated rows ride on
+    the feeds' UTC+2 rendering; only undatable and already-started legs
+    drop).
+    """
+    min_lead = KICKOFF_MIN_LEAD_HOURS if min_lead_hours is None else float(min_lead_hours)
+    build_utc = build_at.astimezone(_UTC)
+    kept, dropped = [], {}
+    for leg in pool:
+        pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+        kt = parse_kickoff_proven(pick)
+        if kt is None:
+            dropped.setdefault(KO_SKIP_UNPROVEN, []).append(leg["match"])
+            continue
+        lead_h = (kt - build_utc).total_seconds() / 3600.0
+        if lead_h < min_lead:
+            dropped.setdefault(KO_SKIP_TOO_CLOSE, []).append(
+                f"{leg['match']} (proven {kt.astimezone(TZ).strftime('%Y-%m-%d %H:%M %Z')})")
+            continue
+        kept.append(leg)
+    return kept, dropped
+
+
+def canonical_build_instant(day: str) -> datetime:
+    """The archive's canonical bet-build instant for a date: FREEZE_HOUR:00
+    SAST — the ~09:0x cron freeze run that produced each day's final slip.
+    History is evaluated at ONE well-defined instant (parity snapshot and
+    strict-contract replays), never at cron jitter.
+    """
+    base = datetime.strptime(str(day)[:10], "%Y-%m-%d")
+    return base.replace(hour=FREEZE_HOUR, minute=0, second=0, microsecond=0, tzinfo=TZ)
+
+
+def format_skip_census(total_in, kept, census, *, title="KICKOFF GUARD") -> list[str]:
+    """One printed block per run: how many legs were dropped from the build
+    pool, and why (the live guard's skip census; the audit contract passes
+    its own title)."""
+    n_dropped = sum(len(v) for v in census.values())
+    out = [f"{title} — {kept}/{total_in} qualifying legs kept; "
+           f"{n_dropped} dropped:"]
+    for reason in sorted(census):
+        names = census[reason]
+        more = f" (+{len(names) - 3} more)" if len(names) > 3 else ""
+        shown = ", ".join(names[:3])
+        out.append(f"  • {len(names)} {reason.lower()}: {shown}{more}")
+    if not census:
+        out.append("  • none — every qualifying leg carries a provable kickoff.")
+    return out
 
 
 def load_archived_picks():
@@ -844,63 +1059,26 @@ def cmd_today(args, st):
         print(f"cannot read picks_today.json: {e}")
         return 1
     pool = playable_legs(slate, day=target, settled=settled)
-    pool = [l for l in pool
-            if not (parse_kickoff(l["row"]) is not None and parse_kickoff(l["row"]) < now)]
+    total_in = len(pool)
+    census: dict[str, list[str]] = {}
+    # LIVE KICKOFF GUARD (incident #6, revised 2026-09-06 after the row
+    # audit): the Vancouver row's kickoff was the bare string "22:30" — no
+    # date, no offset, no zone — and the deleted 2026-09-04 chain (SAST-
+    # defaulted parse_kickoff + a league-substring -> IANA zone table) failed
+    # OPEN on it: unparseable/unprovable meant "let it ride", and even a
+    # successful "usa" lookup read Vancouver on New York time. The guard
+    # drops legs with NO usable kickoff date (undatable -> cannot be checked)
+    # and dated legs already started at build time; it never assumes a zone
+    # for a bare time, and the fail-closed proof contract is NOT applied here
+    # (it is the off-by-default --kickoff-contract audit instrument).
+    pool, ko_drops = live_kickoff_guard(pool, now)
+    for reason, names in ko_drops.items():
+        census.setdefault(reason, []).extend(names)
+    # Already-settled legs are finished matches: result known -> not a bet.
+    settled_drops = [l["match"] for l in pool if l.get("result")]
     pool = [l for l in pool if not l.get("result")]
-    # TZ-INFERENCE + LEAD BUFFER + WIDE RESULT WINDOW (2026-09-04, 5 ghost
-    # incidents; Olimpia proved the class is TWO bugs: timezone-ambiguous
-    # kickoffs AND mis-dated slates with result-lag). Three thin layers, no
-    # blanket league exclusion -- genuine future Americas games still ride.
-    # L1 tz-inference: league -> IANA zone; kickoff read in LOCAL zone; drop
-    #    only if actually past at build time.
-    # L2 lead buffer: kickoff must be >= 4h after build (result-feed lag).
-    # L3 (in settle paths): result lookup already widened +-1d -> +-2d.
-    from zoneinfo import ZoneInfo as _ZI
-    _AMERICAS_ZONES = {
-        "mexico": "America/Mexico_City", "honduras": "America/Tegucigalpa",
-        "peru": "America/Lima", "colombia": "America/Bogota",
-        "ecuador": "America/Guayaquil", "bolivia": "America/La_Paz",
-        "paraguay": "America/Asuncion", "venezuela": "America/Caracas",
-        "uruguay": "America/Montevideo", "chile": "America/Santiago",
-        "argentina": "America/Argentina/Buenos_Aires",
-        "brazil": "America/Sao_Paulo", "usa": "America/New_York",
-        "united states": "America/New_York", "major league": "America/New_York",
-        "mls": "America/New_York", "canada": "America/Toronto",
-        "costa rica": "America/Costa_Rica", "guatemala": "America/Guatemala",
-        "el salvador": "America/El_Salvador", "nicaragua": "America/Managua",
-        "panama": "America/Panama", "trinidad": "America/Port_of_Spain",
-    }
-    _UTC = _ZI("UTC")
-    def _inferred_kickoff_utc(row, slate_day):
-        lg = str(row.get("league") or row.get("odds_league") or "").lower()
-        zk = next((z for z in _AMERICAS_ZONES if z in lg), None)
-        if zk is None:
-            return None                                  # non-Americas: normal parser handles
-        raw = str(row.get("kickoff_canonical") or row.get("kickoff") or "").strip()
-        m = _re.search(r"(\d{1,2}):(\d{2})", raw)
-        if not m:
-            return None
-        hh, mm = int(m.group(1)), int(m.group(2))
-        ymd = _re.match(r"^(\d{4})-(\d{2})-(\d{2})", raw)
-        dm = _re.match(r"^(\d{1,2})-(\d{1,2}),", raw)
-        if ymd:
-            y, mo, dd = map(int, ymd.groups())
-        elif dm:
-            dd, mo = int(dm.group(1)), int(dm.group(2)); y = int(slate_day[:4])
-        else:
-            y, mo, dd = int(slate_day[:4]), int(slate_day[5:7]), int(slate_day[8:10])
-        try:
-            return datetime(y, mo, dd, hh, mm, tzinfo=_ZI(_AMERICAS_ZONES[zk])).astimezone(_UTC)
-        except ValueError:
-            return None
-    _LEAD_HOURS = 4.0
-    def _unprovable_future(row):
-        kt = _inferred_kickoff_utc(row, target)
-        if kt is None:
-            return False                                 # not Americas-inferrable: existing parser's call
-        return (kt - now.astimezone(_UTC)).total_seconds() < _LEAD_HOURS * 3600
-    import re as _re
-    pool = [l for l in pool if not _unprovable_future(l["row"])]
+    if settled_drops:
+        census["already settled (result known)"] = settled_drops
     # Cross-slate guard: a fixture already archived on an EARLIER day's slate
     # has already kicked off (late finishers carried into today's capture).
     past = set()
@@ -908,31 +1086,45 @@ def cmd_today(args, st):
         if str(a.get("date") or a.get("_archive_day") or "")[:10] < target:
             past.add((str(a.get("home") or "").strip().lower(),
                       str(a.get("away") or "").strip().lower()))
+    cross_drops = [l["match"] for l in pool
+                   if (str(l["row"].get("home") or "").strip().lower(),
+                       str(l["row"].get("away") or "").strip().lower()) in past]
     pool = [l for l in pool
             if (str(l["row"].get("home") or "").strip().lower(),
                 str(l["row"].get("away") or "").strip().lower()) not in past]
+    if cross_drops:
+        census["fixture already on an earlier day's slate (kicked off)"] = cross_drops
+    census_lines = format_skip_census(total_in, len(pool), census)
     if len(pool) < LEGS_PER_ACCA:
+        print("\n".join(census_lines))
         print(f"NO BET TODAY — {len(pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
         print("(bank stays unbet)")
         return 0
     bank_eff = effective_bank(st)
     plan = plan_day(pool, bank_eff)
     if not plan:
+        print("\n".join(census_lines))
         print("NO BET TODAY — plan empty")
         return 0
     upsert_slip(st, target, plan)
+    committed = st["bank"] - bank_eff
     lines = [f"AUTO TICKETS (ROLLING) — {target}", "=" * 62,
-             f"PERFORMANCE: bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) · "
-             f"committed {st['bank']-bank_eff:.1f}% · next take-profit notification at {take_profit_target(st):.1f}%"]
+             f"PERFORMANCE: total bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) = "
+             f"free bank {bank_eff:.1f}% + committed {committed:.1f}% · "
+             f"next take-profit notification at {take_profit_target(st):.1f}%"]
     for i, a in enumerate(plan, 1):
         lines.append(f"\n[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
-                     f"({a['stake_pct']/bank_eff:.1%} of bank)")
+                     f"({a['stake_pct']/bank_eff:.1%} of free bank)")
         for l in a["legs"]:
             lines.append(f"   {l['match']:46s} {l['pick']:5s} @ {l['odds']:.2f}  (stated {l['prob']:.0%})")
-    lines.append(f"\ndeploying {STAKE_FRAC:.0%} of bank today · take-profit NOTIFICATION at "
+    day_staked = sum(a["stake_pct"] for a in plan)
+    lines.append(f"\ndeploying {STAKE_FRAC:.0%} of free bank today "
+                 f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
                  f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
     lines.append("All figures are percentages of capital. Round to your bookmaker's minimum stake. "
                  "Bet only what you can afford to lose.")
+    lines.append("")
+    lines.extend(census_lines)
     txt = "\n".join(lines)
     print(txt)
     slip_txt.write_text(txt)
