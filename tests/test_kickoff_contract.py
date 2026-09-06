@@ -482,6 +482,211 @@ def test_cmd_today_live_guard_regression(tmp_path, monkeypatch):
     assert "total bank" in txt
 
 
+# ---------------- Task A: ingest normalisation (kickoff_utc) ----------------
+# picks_today.py emits kickoff_utc / kickoff_source / kickoff_witness per pick
+# from explicit zone-bearing witnesses ONLY. No guesses, no SAST defaulting.
+
+import picks_today as pt  # noqa: E402
+
+_UTC_STR = "2026-09-06T02:30:00+00:00"
+
+
+def _ss_row(home="Vancouver Whitecaps", away="St. Louis City", kickoff="2026-09-06T02:30:00Z"):
+    """A fetch-time scoutingstats row for the Vancouver fixture (the real
+    incident witness: starting_at carries the kickoff with a zone)."""
+    return {"home": home, "away": away, "kickoff": kickoff, "league": "USA,Major League Soccer"}
+
+
+def _fixture_data(*rows):
+    by_key = {}
+    for r in rows:
+        k = (pt.source_team_key(r["home"]), pt.source_team_key(r["away"]))
+        by_key[k] = r
+    return {"scoutingstats": by_key, "statarea": by_key}  # eval-style fetch_all dict
+
+
+def test_zoned_kickoff_to_utc_accepts_only_zone_bearing_strings():
+    assert pt.zoned_kickoff_to_utc("2026-09-06T02:30:00Z") == _UTC_STR
+    assert pt.zoned_kickoff_to_utc("2026-09-06T02:30:00+00:00") == _UTC_STR
+    assert pt.zoned_kickoff_to_utc("2026-09-06T20:15:00+02:00") == "2026-09-06T18:15:00+00:00"
+    # no-colon offset tolerated
+    assert pt.zoned_kickoff_to_utc("2026-09-06T20:15:00+0200") == "2026-09-06T18:15:00+00:00"
+    # naive strings name no zone -> None, never SAST-defaulted (incident class)
+    assert pt.zoned_kickoff_to_utc("22:30") is None
+    assert pt.zoned_kickoff_to_utc("06-09, 22:30") is None
+    assert pt.zoned_kickoff_to_utc("2026-09-06 22:30") is None
+    assert pt.zoned_kickoff_to_utc("2026-09-06T22:30:00") is None
+    assert pt.zoned_kickoff_to_utc("") is None
+    assert pt.zoned_kickoff_to_utc("not a time") is None
+    assert pt.zoned_kickoff_to_utc(None) is None
+
+
+def test_resolve_own_offset_kickoff_passthrough():
+    pick = _vancouver_leg()["row"]
+    pick["kickoff"] = "2026-09-06T20:15:00+02:00"      # Inter-Miami shape
+    pt.resolve_kickoff_utc(pick, data={})
+    assert pick["kickoff_utc"] == "2026-09-06T18:15:00+00:00"
+    assert pick["kickoff_source"] == pt.KICKOFF_SRC_OFFSET
+    assert "own kickoff" in pick["kickoff_witness"]
+    assert pick["kickoff"] == "2026-09-06T20:15:00+02:00"   # raw never overwritten
+
+
+def test_resolve_bare_time_without_witness_stays_unresolved():
+    """The incident row alone ('22:30', MLS) has no zone witness -> unresolved.
+    Crucially it must NOT be SAST-stamped into a kickoff_utc."""
+    pick = _vancouver_leg()["row"]
+    pt.resolve_kickoff_utc(pick, data={})
+    assert pick["kickoff_utc"] is None
+    assert pick["kickoff_source"] == pt.KICKOFF_SRC_UNRESOLVED
+    assert pick["kickoff"] == "22:30"
+
+
+def test_resolve_derives_from_zoned_sibling_source_row():
+    """The Vancouver fix: the SAME fixture's scoutingstats row carried
+    starting_at '2026-09-06T02:30:00Z' at fetch time. Normalisation uses it."""
+    pick = _vancouver_leg()["row"]
+    pt.resolve_kickoff_utc(pick, data=_fixture_data(_ss_row()))
+    assert pick["kickoff_utc"] == _UTC_STR
+    assert pick["kickoff_source"] == pt.KICKOFF_SRC_SIBLING
+    assert "scoutingstats" in pick["kickoff_witness"]
+    assert "02:30:00Z" in pick["kickoff_witness"]
+
+
+def test_resolve_derives_from_matched_odds_row_at_enrichment():
+    """Enrichment-time hook: odds rows fetched after the run-day scan can
+    still carry a zoned kickoff (scoutingstats rows do)."""
+    pick = _vancouver_leg()["row"]
+    odds_row = {"home": "Vancouver Whitecaps", "away": "St. Louis City",
+                "kickoff": "2026-09-06T02:30:00Z", "odds": 1.45,
+                "captured_at": "2026-09-06T02:30:00Z"}
+    pt.resolve_kickoff_utc(pick, data={}, odds_row=odds_row,
+                           odds_provider="scoutingstats_odds")
+    assert pick["kickoff_utc"] == _UTC_STR
+    assert pick["kickoff_source"] == pt.KICKOFF_SRC_ODDS_ROW
+
+
+def test_resolve_never_uses_a_capture_timestamp_as_a_kickoff_witness():
+    """bzzoiro/betexplorer/theoddsapi odds rows carry TRUE capture timestamps
+    (odds_captured_at / captured_at). Only the row's kickoff/time key may
+    witness a kickoff — a capture instant is not a kickoff instant."""
+    pick = _vancouver_leg()["row"]
+    odds_row = {"home": "Vancouver Whitecaps", "away": "St. Louis City",
+                "odds": 1.45, "captured_at": "2026-09-06T02:30:00+00:00",
+                "bookmaker": "betexplorer"}          # no kickoff/time key
+    pt.resolve_kickoff_utc(pick, data={}, odds_row=odds_row,
+                           odds_provider="betexplorer_odds")
+    assert pick["kickoff_utc"] is None
+    assert pick["kickoff_source"] == pt.KICKOFF_SRC_UNRESOLVED
+
+
+def test_resolve_conflicting_zoned_witnesses_stays_unresolved():
+    """Two different absolute instants for one fixture (a rescheduled match,
+    one stale row) -> unresolved; guessing which witness is right is the
+    fault class. The guard's region fallback still covers the row."""
+    pick = _vancouver_leg()["row"]
+    key = (pt.source_team_key("Vancouver Whitecaps"),
+           pt.source_team_key("St. Louis City"))
+    data = {"scoutingstats": {key: _ss_row(kickoff="2026-09-06T02:30:00Z")},
+            "vitibet": {key: _ss_row(kickoff="2026-09-06T03:30:00Z")}}
+    pt.resolve_kickoff_utc(pick, data=data)
+    assert pick["kickoff_utc"] is None
+    assert pick["kickoff_source"] == pt.KICKOFF_SRC_UNRESOLVED
+    assert "conflict" in pick["kickoff_witness"]
+
+
+def test_resolve_is_idempotent_and_never_overwrites():
+    pick = _vancouver_leg()["row"]
+    pick["kickoff_utc"] = _UTC_STR
+    pick["kickoff_source"] = pt.KICKOFF_SRC_SIBLING
+    pick["kickoff_witness"] = "already set"
+    # a later enrichment call must not overwrite the run-day verdict
+    odds_row = {"home": "Vancouver Whitecaps", "away": "St. Louis City",
+                "kickoff": "2026-09-06T09:00:00Z", "odds": 1.45}
+    pt.resolve_kickoff_utc(pick, data=_fixture_data(), odds_row=odds_row,
+                           odds_provider="scoutingstats_odds")
+    assert pick["kickoff_utc"] == _UTC_STR
+    assert pick["kickoff_source"] == pt.KICKOFF_SRC_SIBLING
+
+
+# ---------------- Task A: guard keyed to kickoff_utc, region rule as fallback
+
+def test_guard_rides_resolved_future_row_regardless_of_remote_clock():
+    """A clock-only-region row (the Vancouver incident shape) that ingest
+    normalisation resolved to a FUTURE absolute instant rides: the guard
+    judges only the instant, no region guess."""
+    leg = _vancouver_leg()
+    leg["row"]["kickoff_utc"] = "2026-09-06T12:00:00+00:00"     # 14:00 SAST
+    leg["row"]["kickoff_source"] = pt.KICKOFF_SRC_SIBLING
+    kept, drops = at.live_kickoff_guard([leg], _build09())
+    assert [l["match"] for l in kept] == ["Vancouver Whitecaps vs St. Louis City"]
+    assert drops == {}
+
+
+def test_guard_drops_resolved_row_only_if_already_started():
+    """Vancouver's real instant (02:30 UTC = 04:30 SAST) is before the 09:00
+    build: normalisation does not resurrect it — it drops as STARTED (the
+    true reason), never as a remote-clock guess."""
+    leg = _vancouver_leg()
+    leg["row"]["kickoff_utc"] = _UTC_STR
+    leg["row"]["kickoff_source"] = pt.KICKOFF_SRC_SIBLING
+    kept, drops = at.live_kickoff_guard([leg], _build09())
+    assert kept == []
+    assert at.KO_SKIP_STARTED in drops
+    assert at.KO_SKIP_REMOTE_CLOCK not in drops
+
+
+def test_guard_falls_back_to_region_rule_for_unresolved_rows():
+    """No kickoff_utc (normalisation could not resolve) -> the previous
+    region rule still applies to the incident shape. Behaviour unchanged
+    for unresolved rows."""
+    leg = _vancouver_leg()
+    leg["row"]["kickoff_utc"] = None
+    leg["row"]["kickoff_source"] = pt.KICKOFF_SRC_UNRESOLVED
+    kept, drops = at.live_kickoff_guard([leg], _build09())
+    assert kept == []
+    assert drops[at.KO_SKIP_REMOTE_CLOCK] == ["Vancouver Whitecaps vs St. Louis City"]
+
+
+def test_proven_parse_prefers_kickoff_utc_over_the_raw_string():
+    """The audit contract reads the normalised absolute instant first: a row
+    whose raw kickoff is the bare '22:30' but whose kickoff_utc is resolved
+    IS provable (proven from the witness, not from the raw rendering)."""
+    row = _vancouver_leg()["row"]
+    row["kickoff_utc"] = _UTC_STR
+    row["kickoff_source"] = pt.KICKOFF_SRC_SIBLING
+    kt = at.parse_kickoff_proven(row)
+    assert kt == datetime(2026, 9, 6, 2, 30, tzinfo=at._UTC)
+
+
+def test_kickoff_utc_from_archived_row_accepts_only_archive_witnesses():
+    """Replay-side reconstruction (replay_harness normalised arm)."""
+    # own zoned ISO kickoff -> offset passthrough
+    row = _vancouver_leg()["row"]
+    row["kickoff"] = "2026-09-06T20:15:00+02:00"
+    ku, src = at.kickoff_utc_from_archived_row(row)
+    assert ku == "2026-09-06T18:15:00+00:00" and src == "offset_passthrough"
+    # scoutingstats odds row: odds_captured_at IS the fixture's starting_at
+    # (the adapter stores the kickoff string into captured_at)
+    row2 = _vancouver_leg()["row"]
+    row2["odds_source"] = "scoutingstats_odds"
+    row2["odds_captured_at"] = "2026-09-06T02:30:00Z"
+    ku2, src2 = at.kickoff_utc_from_archived_row(row2)
+    assert ku2 == _UTC_STR and src2 == "derived_odds_row"
+    # bzzoiro/betexplorer odds rows: captured_at is a TRUE capture stamp,
+    # never a kickoff witness (Vancouver's own row had a betexplorer-style
+    # match fallback in history — this pins the refusal).
+    row3 = _vancouver_leg()["row"]
+    row3["odds_source"] = "betexplorer_odds"
+    row3["odds_captured_at"] = "2026-09-06T19:18:30.970025+00:00"
+    ku3, src3 = at.kickoff_utc_from_archived_row(row3)
+    assert ku3 is None and src3 is None
+    # naive strings never resolve
+    row4 = _vancouver_leg()["row"]
+    row4["odds_source"] = "scoutingstats_odds"
+    row4["odds_captured_at"] = "22:30"
+    assert at.kickoff_utc_from_archived_row(row4) == (None, None)
+
+
 import json as _json  # noqa: E402
 
 

@@ -7481,6 +7481,13 @@ historical ridden cards, current archive; classifier = the shipped code):
     08-30, Toluca 08-31, Olimpia 09-04, Vancouver 09-06) + 10 yearless
     day-month on 8 bet-days (Australia/Argentina/Bolivia/Ecuador/Peru
     rows)** — every row the round-1 audit named is inside this set.
+    (Two measurements, both correct: the reviewer's **8 legs / 7 bet-days**
+    are the near-miss rows **verified against real kickoffs**; this
+    **25 legs / 18 bet-days** census is *every* Americas/Asia-Pacific
+    clock-only ridden row, verified or not. The 25 are the conservative
+    number to guard against; the two bet-days shared by the bare and
+    yearless sets (08-07, 08-19) are why "12 + 8 bet-days" sums to 18
+    distinct days.)
   - **kept (Europe/Africa + unclassified-international): 79 legs** (37
     bare + 42 day-month) — the round-1 audit's "39 European bare legs" are
     here; a Croatian "16:00" is right to ~1h and rides.
@@ -7492,15 +7499,32 @@ historical ridden cards, current archive; classifier = the shipped code):
   | default (battery universe) | 54 bet-days, +0.0319 log/day, final 560%, maxDD 67% | 35 bet-days, +0.0244, 235%, 63% |
   | started-only (engine's historical live path) | 54 bet-days, +0.0397, 852%, 67% | 35 bet-days, +0.0363, 357%, 63% |
   | region guard (shipped) | 52 bet-days, +0.0477, 1196%, 64% | 34 bet-days, +0.0294, 272%, 64% |
-  | guard minus started (marginal) | +0.0080 log/day, maxDD 67% -> 64% | **-0.0070 log/day, maxDD 63% -> 64%, 1 bet-day lost (2026-08-04)** |
+  | guard minus started (marginal) | +0.0080 log/day, maxDD 67% -> 64% | **-0.0070 log/day, maxDD 63% -> 64%** — the in-season guard-vs-started gap is **ONE bet-day: 2026-08-04 — and that day WON** |
 
   In-sample history does not punish the guard — the remote-clock class was
   disproportionately losing legs — but that is hindsight, not evidence of
   edge; the rule exists to stop the incident-#6 family and its true price
-  shows up on genuinely new days. The in-season marginal cost reads as:
-  one bet-day in 35 lost (08-04, whose card relied on a Carabobo-Venezuela
-  no-year row), maxDD +1pp, -0.007 log/day on the days that remain. That is
-  the honest money number for the seatbelt, and it is in this commit.
+  shows up on genuinely new days. **COST CAVEAT (amended 2026-09-06, Task
+  C1): the in-season guard-vs-started gap is ONE observation — the single
+  bet-day 2026-08-04 (whose started-only card relied on a
+  Carabobo-Venezuela no-year row) — and that day WON** (35 started-only
+  days total log +1.2705 → 357%; guard 34 days +0.9996 → 272%; Δ −0.2709 =
+  exactly that one day's ×1.311 factor). In noise terms that gap is ~0.19
+  SE of a single day's log growth (daily sd ≈0.21–0.23, n=35) and
+  default-vs-started is ~0.33 SE — indistinguishable from zero, and had
+  08-04 lost, the same guard would read as a GAIN. **The cost of the guard
+  is therefore UNMEASURED, not small: neither arm has earned a number, and
+  −0.0070 (in-season) or +0.0080 (whole archive) must never be quoted as
+  the price of the guard.** The same caveat applies wherever started-only
+  looks better than default (its in-season edge over default is the same
+  single winning day plus the pre-existing started filter's noise — not a
+  measured property of the filter).
+  Whole-archive read, explicitly (Task C2): 560% (default) → 852%
+  (started-only) → 1196% (region guard). Most of that span is the
+  PRE-EXISTING started filter (560% → 852%); the guard's own increment
+  (+0.0080 log/day, 852% → 1196%, whole archive) is in-sample hindsight on
+  a class that happened to lose, carries the same one-day noise problem,
+  and is not an achievement claim either.
 
 - The incident-day card: 6 legs — Vancouver 22:30 (MLS, dropped), Rudes
   16:00 (Croatia, kept — right to ~1h), Miami 01:30 (started, dropped),
@@ -7669,3 +7693,162 @@ census line.
    remote-clock rows will shrink (08-04 was the one historical in-season
    card lost); scale the stake or abstain (pre-registered rule, not a live
    tune).
+
+## Addendum — 2026-09-06 (follow-up session): ingest normalisation (Task A), quarantine measurement (Task B)
+
+New session brief, three parts. Tasks A and B below; the C1/C2 record
+corrections are amended in place in the round-2 addendum above (money table
+and the "honest money number" paragraph).
+
+### Task A — kickoffs normalised at ingest (`kickoff_utc`), never guessed
+
+**What ships (picks_today.py + auto_tickets.py; no selection/staking change):**
+
+- Every pick emitted by `run_day` now carries three append-only fields:
+  `kickoff_utc` (ISO-8601 UTC instant or `None`), `kickoff_source` (how it
+  was resolved) and `kickoff_witness` (which source row's raw string). The
+  feed's raw `kickoff` text is NEVER overwritten.
+- Resolution is strictly witness-based, in order: (a) the pick's own
+  kickoff string when it carries an explicit offset/Z (`offset_passthrough`);
+  (b) a zone-bearing kickoff on ANOTHER source row of the SAME fixture in
+  the fetch-time data (`derived_sibling_row` — the Vancouver incident's
+  scoutingstats row carried `starting_at 2026-09-06T02:30:00Z`); (c) the
+  matched odds row's own kickoff at enrichment time (`derived_odds_row`,
+  idempotent — never overwrites the run-day verdict). Two+ zoned witnesses
+  that DISAGREE → `kickoff_utc = None` with a conflict note; guessing which
+  witness is right is the fault class. Naive renderings ("HH:MM",
+  "DD-MM, HH:MM", "YYYY-MM-DD HH:MM:SS") name no zone and stay
+  `unresolved` — no SAST defaulting anywhere.
+- The live guard (`auto_tickets.live_kickoff_guard`) now judges any row
+  carrying a resolved `kickoff_utc` ONLY on that absolute instant
+  (started at build → drop; still ahead → ride, regardless of region). The
+  Americas/Asia-Pacific clock-only region rule is now the FALLBACK for rows
+  normalisation could not resolve — unchanged behaviour for them
+  (test-pinned). `parse_kickoff_proven` reads `kickoff_utc` first.
+- Archived replay (`replay_harness.py --kickoff-guard` normalised arm)
+  reconstructs only the two witnesses preserved in the archives: the row's
+  own zoned kickoff, or — for `scoutingstats_odds` rows — `odds_captured_at`
+  (below). Sibling prediction rows existed only at fetch time, so the
+  archived arm is a LOWER BOUND on live recovery.
+
+**The `odds_captured_at` question (asked explicitly): does it equal the
+kickoff generally, or is Vancouver a coincidence?**
+
+Structural, for ONE source only: the scoutingstats odds adapter
+(`picks_today._scoutingstats_rows_to_odds`) has no capture timestamp — it
+stores the fixture's `starting_at` kickoff string INTO `captured_at`. So for
+scoutingstats rows `odds_captured_at == kickoff` BY CONSTRUCTION, not by
+coincidence. Verified on the whole archive: 241 scoutingstats rows whose own
+kickoff was full-dated all agree with `odds_captured_at` (0 disagreements
+>2h), and all 89 clock-only scoutingstats rows carry a zoned
+`odds_captured_at` (the rescue witness). It is NOT coincidence — and it is
+NOT independent corroboration either: the column just re-exposes the same
+starting_at string.
+
+For every other odds provider it is a TRUE capture timestamp, never a
+kickoff: bzzoiro rows capture 3–20h before kickoff (44 of 47 dated rows),
+betexplorer rows 4–17h before (129 of 193), and ZERO rows of either source
+show capture after kickoff. The code therefore accepts `odds_captured_at`
+as a kickoff witness for scoutingstats rows only, and never reads
+`captured_at`/`odds_captured_at` of bzzoiro/betexplorer/theoddsapi as one.
+A future adapter that adds a real capture column to scoutingstats rows must
+carry the kickoff in the row's own key, not reuse captured_at.
+
+**Recovery rate on the 25 ridden legs the guard drops (the deliverable):**
+
+Measured on the parity baseline's ridden cards (56 staked bet-days; the
+25 = 15 bare clock-only on 12 bet-days + 10 yearless day-month on 8
+bet-days, 18 distinct days; every leg the round-2 record names is in the
+set). Archived-witness lower bound:
+
+- **12 of 25 resolve to an absolute instant — all 12 via the scoutingstats
+  odds row (`derived_odds_row`)**. Of those: **6 were already started at the
+  09:00 SAST build and still drop — now for the TRUE reason** (Junior vs
+  Pereira 08-11 01:05Z, Bolivar 08-12 00:30Z, Deportes Tolima 08-19 00:30Z,
+  Sao Paulo 08-19 00:30Z, Toluca 08-31 00:00Z, and Vancouver itself
+  09-06 02:30Z — normalisation CONFIRMS the Vancouver drop); **6 are still
+  future and ride again** (Independiente del Valle 08-02 18:00Z, Suwon
+  08-07 10:30Z, Deportivo Moron 08-15 18:00Z, Penarol 08-16 21:30Z,
+  Bucaramanga 08-17 21:05Z, LDU Quito 08-20 22:00Z).
+- **13 of 25 remain unresolvable in the archive** — every one matched a
+  bzzoiro/betexplorer/zulubet odds or anchor row whose own kickoff string is
+  NOT archived (only the true capture time is): 07-04 Lions/Olympic,
+  07-10 Arsenal Sarandi + Peninsula Power, 07-16 Real Potosí, 08-07
+  Adelaide City + Lions/Brisbane Roar II, 08-12 Palmeiras, 08-16
+  Broadmeadow, 08-20 Seattle, 08-24 Universitario, 08-27 Real Potosí,
+  08-30 Sporting KC, 09-04 Olimpia. These stay under the region fallback.
+  Live recovery is expected HIGHER: those providers' zoned kickoff strings
+  existed at fetch time (betexplorer's +02:00 rendering is present on
+  other archived rows) but are not preserved, so history cannot replay them.
+
+Money path (four-arm table above; canonical 09:00 SAST builds): vs the
+shipped guard, normalisation returns the one in-season bet-day lost
+(08-04 — via BG Pathum, whose true instant 12:30Z is future; its naive
+"08:30" had been misread as started, and its bare clock made the guard
+drop it as remote). In-season normalised-vs-started shows −0.0175 log/day
+on the same 35 bet-days — that is the in-sample reshuffle from CORRECT
+started-drops removing legs that historically won, the same one-day noise
+class as C1; it is not a reason to keep mis-dated rows. Parity baseline
+file: unchanged by this work (normalisation adds fields and changes only
+what the cmd_today guard drops; plan_day inputs are byte-identical —
+suite receipt below).
+
+### Task B — quarantine census on ridden legs (measure only, no gate change)
+
+Vancouver rode with `WATCHLIST_UNCORROBORATED_PRICE` /
+`SCOUTINGSTATS_SOLE` / `scoutingstats_sole_source` on the row. Measurement
+(ridden = default replay arm's cards; flagged = WATCHLIST_* bucket or
+`price_quarantine_reason`, counted once; `replay_harness.py --quarantine`):
+
+| regime | ridden legs | flagged | hit (flag / unflag) | flat ROI (flag / unflag) |
+|---|---:|---:|---:|---:|
+| whole archive | 242 | 98 (40%) on 35/54 days | 78.6% / 74.3% | +4.5% / +5.1% |
+| in-season ≥ 08-01 | 182 | 93 (51%) on 32/35 days | 77.4% / 69.7% | +3.5% / −1.1% |
+| off-season < 08-01 | 60 | 5 (8%) on 3/19 days | 100% / 81.8% | +22.0% / +15.0% |
+
+Flag breakdown (whole archive / in-season): price_evidence
+SCOUTINGSTATS_SOLE 74 (all in-season) + BETEXPLORER_RESCUE 12 + SOURCE_
+FALLBACK 2 + BZZOIRO_PRIMARY 1; quarantine_reason `scoutingstats_sole_
+source` 74; buckets WATCHLIST_UNCORROBORATED_PRICE 27, WATCHLIST_UNKNOWN_
+CTX 24 (19 in-season), SKIPPED_VETO 47 (bucket label present on ridden
+rows; no gate reads it for this measurement).
+
+Day-block bootstrap (4000 draws, paired days, seed 20260906): whole-archive
+ΔROI(flagged−unflagged) p10 −5.2%, 90% CI [−8.0%, +18.5%] (32 paired days);
+in-season p10 −6.3%, CI [−9.3%, +19.0%] (29 days); off-season is 3 days —
+nothing. In-sample would-blank if flagged legs were excluded: whole archive
+−0.0304 log/day, final 22%, maxDD 97%, 4 days blanked (07-22, 08-04,
+08-06, 08-19); in-season −0.0596 log/day, final 15%, maxDD 97%, 3 days
+blanked (08-04, 08-06, 08-19).
+
+**Reading (this is a measurement, not a finding): flagged legs do NOT look
+worse — in-season they look better (hit +7.7pp, flat ROI +4.6pp), with wide
+intervals that cross zero either way; excluding them would have destroyed
+the in-sample bank (final 235% → 15%). The flag is a PRICING caution
+designed for a different purpose (sole-source price risk), not a betting
+signal, and nothing here makes it one. No gate change ships; no October
+candidate is opened by this table.** If a future flag-based gate is ever
+tested, it must be the pre-registered October slot under the standing bar
+(paired-bootstrap p10 > 0 AND leave-one-day-out keeps sign AND maxDD ≤
+live, at n ≥ 60 genuinely new in-season bet-days), never this in-sample
+history. The one operational note that stands: the single leg that caused
+incident #6 was already flagged and rode anyway — the kickoff layer now
+handles that row regardless of price evidence.
+
+### Verification receipts (follow-up session)
+
+- `PYTHONPATH=src python3 -m pytest -q` → **416 passed** (377 pre-existing
+  + 26 round-2 kickoff tests + 13 new Task-A tests: zone-only parsing,
+  sibling/odds-row derivation, conflict refusal, capture-time refusal,
+  idempotency, guard keyed to kickoff_utc, archived-row witness rules).
+- `py_compile` clean; `git diff --check` clean. Constants unchanged
+  (`MAX_ACCAS=3`, `STAKE_FRAC=1/3`, `MIN_LEG_ODDS=1.20`).
+- Parity: normalisation emits append-only fields; the parity baseline file
+  is byte-identical to the previous commit's (no test moved).
+- Investigative receipts: scoutingstats `odds_captured_at` == kickoff by
+  construction (adapter copies starting_at into captured_at; 241/241 dated
+  rows agree, 89/89 clock-only rows zoned); bzzoiro/betexplorer
+  `odds_captured_at` are true capture stamps (44/47 and 129/193 dated rows
+  captured before kickoff; 0 after) — never usable as kickoff witnesses.
+- Four-arm `--kickoff-guard` table and `--quarantine` table regenerated
+  above in this addendum.

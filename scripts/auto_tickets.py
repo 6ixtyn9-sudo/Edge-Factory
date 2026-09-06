@@ -95,25 +95,32 @@ PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
 # TWO layers, deliberately different in strength:
 #
 # 1. LIVE guard (cmd_today, this file), narrowed 2026-09-06 round 2 after the
-#    region audit: a leg is dropped when its kickoff is CLOCK-ONLY (bare
-#    "HH:MM" or yearless "DD-MM, HH:MM") AND its league region's clock is far
-#    from SAST (Americas / Asia-Pacific — a bare "22:30" MLS clock read on the
-#    slate day is the incident class, off by up to 18h in the fatal
-#    direction), or when the kickoff is missing/garbage, or when the dated
-#    kickoff is already at/past build time. Clock-only rows from Europe /
-#    Africa ride on the SAST reading (their clocks are within ~1-2h of SAST;
-#    a wrong read errs by an hour or two, in the safe direction on the
-#    historical evidence) — 39 of the 47 historical bare legs, on 12
-#    bet-days. The region list ONLY answers "is the SAST reading of this
-#    clock trustworthy?" — it never computes a kickoff instant, so a
-#    mis-hit drops a leg that could have been bet (no-bet, harmless
-#    direction); it cannot fabricate a wrong time. Rows carrying a full
-#    calendar date with a year (naive "YYYY-MM-DD HH:MM" or an explicit-
-#    offset instant) are compared with parse_kickoff and drop when already
-#    started: the feeds render dated rows on a UTC+2 clock (Inter Miami's
-#    explicit +02:00 row; the wall-clock evidence in the 2026-09-06 HANDOVER
-#    addendum). That rendering is the feed contract — tested, never
-#    re-guessed from a league table. No 4h lead buffer on the live path.
+#    region audit, and keyed to ingest normalisation from the 2026-09-06
+#    follow-up session (Task A): when the row carries a resolved
+#    `kickoff_utc` (an absolute instant emitted by picks_today.py — from the
+#    pick's own offset/Z string or from a same-fixture source row that
+#    declared one, e.g. scoutingstats "...Z" or vitibet "+02:00"; see
+#    picks_today.attach_kickoff_normalisation), the guard judges ONLY that
+#    instant: started at build -> drop (KO_SKIP_STARTED), still ahead -> ride.
+#    The region rule is the FALLBACK for rows whose kickoff is CLOCK-ONLY
+#    (bare "HH:MM" or yearless "DD-MM, HH:MM") AND whose league region's
+#    clock is far from SAST (Americas / Asia-Pacific — a bare "22:30" MLS
+#    clock read on the slate day is the incident class, off by up to 18h in
+#    the fatal direction) and which normalisation could NOT resolve, or when
+#    the kickoff is missing/garbage, or when the dated kickoff is already
+#    at/past build time. Clock-only rows from Europe / Africa ride on the
+#    SAST reading (their clocks are within ~1-2h of SAST; a wrong read errs
+#    by an hour or two, in the safe direction on the historical evidence).
+#    The region list ONLY answers "is the SAST reading of this clock
+#    trustworthy?" — it never computes a kickoff instant, so a mis-hit drops
+#    a leg that could have been bet (no-bet, harmless direction); it cannot
+#    fabricate a wrong time. Rows carrying a full calendar date with a year
+#    (naive "YYYY-MM-DD HH:MM" or an explicit-offset instant) are compared
+#    with parse_kickoff and drop when already started: the feeds render dated
+#    rows on a UTC+2 clock (Inter Miami's explicit +02:00 row; the wall-clock
+#    evidence in the 2026-09-06 HANDOVER addendum). That rendering is the
+#    feed contract — tested, never re-guessed from a league table. No 4h
+#    lead buffer on the live path.
 # 2. AUDIT contract (kickoff_contract; replay_harness.py --kickoff-contract,
 #    OFF by default): the fail-closed standard — a leg rides only when its
 #    kickoff is PROVEN by the row itself (explicit UTC offset/Z, or naive +
@@ -307,10 +314,80 @@ def _kickoff_is_clock_only(raw: str) -> bool:
                 or re.match(r"^\d{1,2}-\d{1,2},\s*\d{1,2}:\d{2}", raw))
 
 
+_ZONED_ISO_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?\s*(Z|[+-]\d{2}:?\d{2})$"
+)
+
+
+def _zoned_instant_utc(value) -> datetime | None:
+    """UTC datetime from an EXPLICIT zone-bearing ISO string (offset or Z).
+
+    None for anything naive or unparseable — a naive rendering names no zone,
+    and defaulting one to Africa/Johannesburg is the incident-#6 fault class.
+    """
+    raw = str(value or "").strip()
+    if not raw or not _ZONED_ISO_RE.match(raw):
+        return None
+    text = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+    # tolerate "+0200" (no colon) if a source ever emits it
+    text = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", text)
+    if "+" not in text and "-" not in text[10:]:
+        return None
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        return None
+    return dt.astimezone(_UTC)
+
+
+def kickoff_utc_from_archived_row(row) -> tuple[str | None, str | None]:
+    """Reconstruct what ingest normalisation WOULD have emitted for an
+    ARCHIVED row (replay/audit only — picks_today.py emits the real fields
+    live). Returns ``(kickoff_utc_iso, source)`` or ``(None, None)``.
+
+    Two and only two archive-preserved witnesses are accepted:
+      - the row's own kickoff string is a zoned ISO instant
+        (source "offset_passthrough"); or
+      - the row's price came from the scoutingstats feed and its
+        odds_captured_at is a zoned ISO instant. The scoutingstats odds
+        adapter has NO capture timestamp: it stores the fixture's starting_at
+        kickoff string INTO captured_at (picks_today._scoutingstats_rows_to_odds
+        sets captured_at = row kickoff), so for this one provider the archived
+        odds_captured_at IS the odds row's kickoff — the same string ingest
+        normalisation sees in data["scoutingstats"] at fetch time (source
+        "derived_odds_row").
+
+    Anything else is NOT resolved here: bzzoiro / betexplorer / theoddsapi
+    odds_captured_at values are true capture timestamps (never kickoffs), and
+    sibling prediction rows (vitibet "+02:00", bzzoiro event_date) are not
+    archived — their witness existed only in the fetch-time data dict, so the
+    live normalisation rescues those legs but history cannot replay them.
+    """
+    raw = str(row.get("kickoff_canonical") or row.get("kickoff") or "").strip()
+    if raw:
+        dt = _zoned_instant_utc(raw)
+        if dt is not None:
+            return dt.isoformat(), "offset_passthrough"
+    if str(row.get("odds_source") or "") == "scoutingstats_odds":
+        captured = str(row.get("odds_captured_at") or "").strip()
+        if captured:
+            dt = _zoned_instant_utc(captured)
+            if dt is not None:
+                return dt.isoformat(), "derived_odds_row"
+    return None, None
+
+
 def live_kickoff_guard(pool, now):
     """The LIVE kickoff guard (incident #6 fix; region-narrowed after the
-    2026-09-06 round-2 audit).
+    2026-09-06 round-2 audit, then keyed to ingest normalisation in Task A).
 
+    0. A row carrying a resolved ``kickoff_utc`` (emitted by picks_today's
+       ingest normalisation from an explicit zone-bearing witness) is judged
+       ONLY on that absolute instant: already at/past build time -> drop as
+       started; still ahead -> ride. No region guess is needed for it.
+    Then, for rows normalisation could NOT resolve:
     1. Drops legs with a missing/garbage kickoff.
     2. Drops CLOCK-ONLY kickoffs (bare "HH:MM", yearless "DD-MM, HH:MM")
        whose league region's clock is far from SAST (Americas / Asia-
@@ -330,6 +407,13 @@ def live_kickoff_guard(pool, now):
     rideable, kept = [], []
     for leg in pool:
         pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+        ku = _zoned_instant_utc(pick.get("kickoff_utc"))
+        if ku is not None:
+            if ku.astimezone(TZ) < now.astimezone(TZ):
+                drops.setdefault(KO_SKIP_STARTED, []).append(leg["match"])
+            else:
+                kept.append(leg)
+            continue
         raw = str(pick.get("kickoff_canonical") or pick.get("kickoff") or "").strip()
         if not raw or (not kickoff_has_usable_date(pick) and not _kickoff_is_clock_only(raw)):
             drops.setdefault(KO_SKIP_NO_DATE, []).append(leg["match"])
@@ -354,9 +438,15 @@ def live_kickoff_guard(pool, now):
 def parse_kickoff_proven(pick) -> datetime | None:
     """A kickoff PROVEN by the row itself, as UTC — or None. Never infers.
 
-    Accepts only two shapes:
-      - an ISO instant with an explicit offset or Z ("2026-09-06T20:15:00+02:00"
-        is 20:15 SAST; "…T02:30:00Z" is 02:30 UTC), or
+    Accepts, in order:
+      - ``pick["kickoff_utc"]`` — an absolute instant that ingest
+        normalisation emitted from an explicit zone-bearing witness
+        (the pick's own offset/Z string, or a same-fixture source row that
+        declared one; provenance is recorded in ``kickoff_source`` /
+        ``kickoff_witness``, so the proof is reproducible from the row);
+      - an ISO instant with an explicit offset or Z in the kickoff itself
+        ("2026-09-06T20:15:00+02:00" is 20:15 SAST; "…T02:30:00Z" is
+        02:30 UTC); or
       - a naive datetime that ALSO names a timezone as data in the row
         (`pick["kickoff_tz"]`, an IANA zone such as "America/Vancouver").
 
@@ -367,6 +457,11 @@ def parse_kickoff_proven(pick) -> datetime | None:
     hand-maintained league-substring table. `parse_kickoff` (SAST-defaulting)
     exists for settlement bookkeeping only and is unusable for this proof.
     """
+    ku = str(pick.get("kickoff_utc") or "").strip()
+    if ku:
+        dt = _zoned_instant_utc(ku)
+        if dt is not None:
+            return dt
     raw = str(pick.get("kickoff_canonical") or pick.get("kickoff") or "").strip()
     if not raw:
         return None
