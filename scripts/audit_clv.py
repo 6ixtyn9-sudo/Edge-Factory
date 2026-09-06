@@ -50,35 +50,13 @@ SNAPSHOT_FIELDS = [
     "live_odds_matched",
     "used_input_odds_fallback",
     "odds_match_method",
-    # Task D1 (2026-09-06): the price the owner actually got for a printed
-    # leg, entered by hand next to the slip (recorded_at = when it was
-    # entered). Empty until the owner records it; never inferred.
+    # Task F (2026-09-06): schema-only columns from the superseded D1
+    # owner-input capture. Kept at zero cost; NEVER filled — no manual
+    # operator input exists by design. Actual-vs-quoted comparison now comes
+    # from the automatic build-time price-board capture (Task F).
     "actual_odds",
     "actual_odds_recorded_at",
 ]
-
-
-def _actual_odds_path(run_date: str) -> Path:
-    return LOCALDATA / f"actual_odds_{str(run_date)[:10]}.json"
-
-
-def _read_actual_odds(run_date: str) -> list[dict[str, Any]]:
-    """Owner-recorded actual prices for a run date (Task D1).
-
-    File format (localdata/actual_odds_<date>.json):
-        [{"match": "Vancouver Whitecaps vs St. Louis City", "pick": "HOME",
-          "actual_odds": 1.44, "recorded_at": "2026-09-06T09:45:00+02:00"}, ...]
-    Only legs that appear on a printed slip for that date count; the capture
-    attaches them to the matching picks and warns loudly about entries that
-    match nothing.
-    """
-    path = _actual_odds_path(run_date)
-    if not path.exists():
-        return []
-    data = json.loads(path.read_text())
-    if not isinstance(data, list):
-        raise ValueError(f"expected a JSON list in {path}")
-    return [row for row in data if isinstance(row, dict)]
 
 
 def _load_picks_today_module():
@@ -123,92 +101,6 @@ def _write_snapshot_rows(path: Path, rows: list[dict[str, Any]]) -> None:
         for row in rows:
             writer.writerow({field: row.get(field, "") for field in SNAPSHOT_FIELDS})
 
-
-
-def _fold_name(name: Any) -> str:
-    """Exact-match normalisation for owner slip entries (accent/case/space
-    insensitive; deliberately NOT fuzzy)."""
-    import unicodedata
-    out = unicodedata.normalize("NFKD", str(name or ""))
-    out = "".join(ch for ch in out if not unicodedata.combining(ch))
-    return " ".join(out.casefold().split())
-
-
-def _pick_matches_entry(pick: dict[str, Any], entry: dict[str, Any]) -> bool:
-    """Does an input pick row correspond to the owner's slip entry?
-
-    The owner writes the match string and pick side exactly as printed on
-    the slip; the pick row may carry match and/or home/away. Market is not
-    required in the entry (slips are 1x2 legs); the pick side must agree.
-    """
-    pick_side = str(pick.get("pick") or "").casefold()
-    entry_side = str(entry.get("pick") or "").casefold()
-    if pick_side != entry_side:
-        return False
-    em = _fold_name(entry.get("match") or "")
-    if not em:
-        return False
-    if em == _fold_name(pick.get("match") or ""):
-        return True
-    # the printed match string is "{home} vs {away}" on the slips; accept
-    # that shape from the pick's own home/away fields, either orientation
-    ph = _fold_name(pick.get("home") or "")
-    pa = _fold_name(pick.get("away") or "")
-    if ph and pa and em in (f"{ph} vs {pa}", f"{pa} vs {ph}"):
-        return True
-    # structured entry with explicit home/away
-    eh = _fold_name(entry.get("home") or "")
-    ea = _fold_name(entry.get("away") or "")
-    if (eh and ea) and {eh, ea} == {ph, pa}:
-        return True
-    return False
-
-
-def _attach_actual_odds(
-    merged: dict[tuple[str, str, str], dict[str, Any]],
-    run_date: str,
-    picks: list[dict[str, Any]],
-) -> tuple[int, int]:
-    """Attach owner-recorded actual prices (Task D1) to every snapshot row
-    of the matching pick on the run date. Idempotent: rerunning capture after
-    the owner records prices updates the rows that were already written.
-
-    Returns (rows_updated, unmatched_entries).
-    """
-    entries = _read_actual_odds(run_date)
-    if not entries:
-        return 0, 0
-    updated = 0
-    unmatched = 0
-    for entry in entries:
-        recorded_at = str(entry.get("recorded_at") or "")
-        try:
-            actual = float(entry.get("actual_odds") or "")
-        except (TypeError, ValueError):
-            actual = None
-        if actual is None or actual <= 1.0:
-            unmatched += 1
-            continue
-        matched_picks = [pk for pk in picks if _pick_matches_entry(pk, entry)]
-        if not matched_picks:
-            unmatched += 1
-            continue
-        for pk in matched_picks:
-            match_date = str(pk.get("date") or run_date)[:10]
-            rule_name = _pick_rule_name(pk)
-            pick_id = build_pick_id(
-                match_date, pk.get("home"), pk.get("away"), pk.get("market"),
-                pk.get("pick"), rule_name,
-            )
-            for row in merged.values():
-                if str(row.get("pick_id") or "") != pick_id:
-                    continue
-                if str(row.get("source_run_date") or "")[:10] != str(run_date)[:10]:
-                    continue
-                row["actual_odds"] = f"{actual:.6g}"
-                row["actual_odds_recorded_at"] = recorded_at
-                updated += 1
-    return updated, unmatched
 
 
 def _dedupe_key(row: dict[str, Any]) -> tuple[str, str, str]:
@@ -407,9 +299,6 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
         merged[key] = row
         written += 1
 
-    picks = _read_json_list(input_path)
-    actual_updated, actual_unmatched = _attach_actual_odds(merged, run_date, picks)
-
     ordered = sorted(
         merged.values(),
         key=lambda r: (
@@ -436,12 +325,6 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
     print(f"  rows written: {written}")
     print(f"  duplicates skipped: {duplicates}")
     print(f"  unmatched diagnostics: {stats['unmatched_count']} -> {stats['unmatched_file']}")
-    if actual_updated or actual_unmatched:
-        print(f"  ACTUAL PRICES (D1, owner-recorded): snapshot rows updated "
-              f"{actual_updated}; entries matching no pick: {actual_unmatched}")
-    else:
-        print("  actual prices (D1): none recorded for this date yet — the "
-              "owner enters them next to the slip (audit_clv record)")
     print(f"  snapshot file: {path}")
     return 0
 
@@ -523,7 +406,7 @@ def _write_report_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True))
 
 
-def _write_report_md(path: Path, start: str, end: str, overall: dict[str, Any], by_rule: dict[str, dict], by_bucket: dict[str, dict], meta: dict[str, int], actual_price: dict[str, Any] | None = None) -> None:
+def _write_report_md(path: Path, start: str, end: str, overall: dict[str, Any], by_rule: dict[str, dict], by_bucket: dict[str, dict], meta: dict[str, int]) -> None:
     lines = [
         f"# Edge Factory — CLV report ({start} to {end})",
         "",
@@ -564,82 +447,8 @@ def _write_report_md(path: Path, start: str, end: str, overall: dict[str, Any], 
                 f"avg_ip={summary.get('avg_implied_prob_delta')}, "
                 f"beat_rate={summary.get('beat_later_price_rate')}"
             )
-    ap = actual_price or {}
-    lines.extend(["", "## Actual price vs engine quote (owner slips, D1)", ""])
-    if not ap.get("entries"):
-        lines.append("- no owner actual-price entries recorded yet (D1 capture "
-                     "ships from the next slip; `audit_clv record` writes an "
-                     "entry, `capture` attaches it, this report measures it)")
-    else:
-        lines.append(f"- owner entries: {ap.get('n_entries', 0)}")
-        lines.append(f"- entries with an engine quote to compare: "
-                     f"{ap.get('n_with_quote', 0)}")
-        lines.append(f"- mean actual-minus-engine-quote: {ap.get('mean_delta')} "
-                     f"(positive = the owner got a LONGER price than the "
-                     f"engine printed)")
-        lines.append(f"- entries longer than the engine quote: "
-                     f"{ap.get('longer_than_quote', 0)}; shorter: "
-                     f"{ap.get('shorter_than_quote', 0)}")
-        for e in ap.get("entries", []):
-            delta = e.get("delta_actual_minus_quote")
-            dtxt = (f"delta {delta:+.6g}" if delta is not None
-                    else "no engine quote yet")
-            lines.append(
-                f"- {e.get('source_run_date')} {e.get('home')} vs "
-                f"{e.get('away')} {e.get('pick')}: engine "
-                f"{e.get('engine_quote')} vs actual {e.get('actual_odds')} "
-                f"({dtxt}) [recorded {e.get('recorded_at')}]"
-            )
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text("\n".join(lines) + "\n")
-
-
-def _actual_price_summary(snapshot_rows: list[dict[str, str]]) -> dict[str, Any]:
-    """Task D1: owner actual prices vs the engine's pick_time quote.
-
-    Keys on (source_run_date, match_date, home, away, pick); the engine
-    quote is the pick_time row's observed_odds (fallback: any row's).
-    delta = actual − engine quote; positive = the owner got a LONGER price
-    than the engine printed (the slip beat the quote); negative = shorter.
-    """
-    by_pick: dict[tuple, dict[str, Any]] = {}
-    for row in snapshot_rows:
-        actual = _coerce_float(row.get("actual_odds"))
-        if actual is None:
-            continue
-        key = (str(row.get("source_run_date") or "")[:10],
-               str(row.get("match_date") or "")[:10],
-               str(row.get("home") or ""), str(row.get("away") or ""),
-               str(row.get("pick") or ""))
-        cur = by_pick.setdefault(key, {"actual": actual,
-                                       "recorded_at": str(row.get("actual_odds_recorded_at") or ""),
-                                       "quote": None, "quote_label": ""})
-        if str(row.get("snapshot_label") or "") == "pick_time" and cur["quote"] is None:
-            cur["quote"] = _coerce_float(row.get("observed_odds"))
-            cur["quote_label"] = "pick_time"
-    out = []
-    for key, cur in by_pick.items():
-        quote = cur["quote"]
-        out.append({
-            "source_run_date": key[0], "match_date": key[1], "home": key[2],
-            "away": key[3], "pick": key[4],
-            "engine_quote": quote, "quote_label": cur["quote_label"],
-            "actual_odds": cur["actual"],
-            "recorded_at": cur["recorded_at"],
-            "delta_actual_minus_quote": None if quote is None else round(cur["actual"] - quote, 6),
-        })
-    out.sort(key=lambda e: (e["source_run_date"], e["match_date"], e["home"]))
-    n = len(out)
-    deltas = [e["delta_actual_minus_quote"] for e in out
-              if e["delta_actual_minus_quote"] is not None]
-    return {
-        "n_entries": n,
-        "n_with_quote": len(deltas),
-        "mean_delta": round(sum(deltas) / len(deltas), 6) if deltas else None,
-        "longer_than_quote": sum(1 for d in deltas if d > 0) if deltas else 0,
-        "shorter_than_quote": sum(1 for d in deltas if d < 0) if deltas else 0,
-        "entries": out,
-    }
 
 
 def report(start: str, end: str) -> int:
@@ -648,7 +457,6 @@ def report(start: str, end: str) -> int:
     overall = summarize_clv(comparisons)
     by_rule = summarize_by(comparisons, "rule_name")
     by_bucket = summarize_by(comparisons, "bucket")
-    actual_price = _actual_price_summary(snapshot_rows)
 
     payload = {
         "start": start,
@@ -657,14 +465,12 @@ def report(start: str, end: str) -> int:
         "by_rule": by_rule,
         "by_bucket": by_bucket,
         "meta": meta,
-        "actual_price": actual_price,
     }
 
     json_path = LOCALDATA / "clv_report_rolling.json"
     md_path = LOCALDATA / f"clv_report_{end}.md"
     _write_report_json(json_path, payload)
-    _write_report_md(md_path, start, end, overall, by_rule, by_bucket, meta,
-                     actual_price)
+    _write_report_md(md_path, start, end, overall, by_rule, by_bucket, meta)
 
     print(f"CLV report — {start} to {end}")
     print(f"  total unique picks: {overall.get('total_picks', 0)}")
@@ -672,40 +478,8 @@ def report(start: str, end: str) -> int:
     print(f"  picks with fewer than two snapshots: {meta.get('insufficient_snapshots', 0)}")
     print(f"  average implied-probability delta: {overall.get('avg_implied_prob_delta')}")
     print(f"  beat-later-price rate: {overall.get('beat_later_price_rate')}")
-    ap = actual_price
-    print(f"  ACTUAL PRICES (D1): {ap.get('n_entries', 0)} owner entries; "
-          f"{ap.get('n_with_quote', 0)} with an engine quote; "
-          f"mean actual-minus-quote {ap.get('mean_delta')}")
     print(f"  json: {json_path}")
     print(f"  markdown: {md_path}")
-    return 0
-
-
-def record(run_date: str, match: str, pick: str, actual_odds: float,
-          recorded_at: str | None = None) -> int:
-    """Task D1: record the price the owner actually got for a printed leg.
-
-    Writes/updates localdata/actual_odds_<date>.json. The capture command
-    then attaches the entry to the matching snapshot rows (engine quote
-    stays in observed_odds, side by side). Validates the odds (>1.0) and
-    dedupes on (match, pick)."""
-    try:
-        odds = float(actual_odds)
-    except (TypeError, ValueError) as exc:
-        raise SystemExit(f"actual_odds must be a number, got {actual_odds!r}") from exc
-    if odds <= 1.0:
-        raise SystemExit(f"actual_odds must be > 1.0 (decimal odds), got {odds}")
-    stamp = recorded_at or datetime.now(UTC).replace(microsecond=0).isoformat()
-    path = _actual_odds_path(run_date)
-    entries = _read_actual_odds(run_date)
-    key = (_fold_name(match), str(pick).casefold())
-    kept = [e for e in entries if ( _fold_name(e.get("match") or ""), str(e.get("pick") or "").casefold()) != key]
-    kept.append({"match": match, "pick": str(pick), "actual_odds": odds,
-                 "recorded_at": stamp})
-    kept.sort(key=lambda e: (str(e.get("match") or ""), str(e.get("pick") or "")))
-    path.write_text(json.dumps(kept, indent=2) + "\n")
-    print(f"actual price recorded — {run_date} | {match} | {pick} | {odds:.6g} @ {stamp}")
-    print(f"  file: {path} ({len(kept)} entries; capture will attach on its next run)")
     return 0
 
 
@@ -726,27 +500,11 @@ def main() -> int:
     rep.add_argument("--start", required=True, help="Start run date (YYYY-MM-DD).")
     rep.add_argument("--end", required=True, help="End run date (YYYY-MM-DD).")
 
-    rec = sub.add_parser(
-        "record",
-        help="Task D1: record the price the owner actually got for a printed "
-             "leg (bookmaker's offer next to the slip).",
-    )
-    rec.add_argument("--date", required=True, help="Run date (YYYY-MM-DD).")
-    rec.add_argument("--match", required=True, help="Match string as printed on the slip.")
-    rec.add_argument("--pick", required=True, help="Pick side (HOME/AWAY/DRAW).")
-    rec.add_argument("--odds", required=True, type=float,
-                     help="Decimal odds the bookmaker actually offered.")
-    rec.add_argument("--recorded-at", default=None,
-                     help="Override the recorded_at stamp (ISO-8601).")
-
     args = parser.parse_args()
     if args.cmd == "capture":
         return capture(args.date, args.label, Path(args.input))
     if args.cmd == "report":
         return report(args.start, args.end)
-    if args.cmd == "record":
-        return record(args.date, args.match, args.pick, args.odds,
-                      recorded_at=args.recorded_at)
     parser.error("unknown command")
     return 2
 

@@ -2205,6 +2205,103 @@ def nearby_odds_candidates(pick: dict, odds_data: dict, *, limit: int = 5) -> li
     return out
 
 
+def _price_board_entry(source: str, row: dict) -> dict:
+    """One build-time price the source showed for this fixture+selection."""
+    return {
+        "source": source,
+        "bookmaker": row.get("bookmaker"),
+        "odds": row.get("odds"),
+        "captured_at": row.get("captured_at"),   # raw source stamp, no claims
+        "league": row.get("league"),
+        "kickoff": row.get("kickoff"),
+        "market": row.get("market"),
+        "selection": row.get("selection"),
+        "home": row.get("home"),
+        "away": row.get("away"),
+    }
+
+
+def _collect_price_board(pick: dict, *bundles: dict) -> list[dict]:
+    """Task F (2026-09-06): every price every source is showing for this
+    fixture and selection at build time, with source name and value.
+
+    Previously the second-source lookup's result was discarded after
+    PRICE_EVIDENCE_SCOUTINGSTATS_SOLE was stamped; now the full board is
+    persisted on the pick so printed legs carry it into the archive. This
+    NEVER changes which price the engine uses — the board is written
+    alongside, after the chosen odds are set. Rows are the bundles'
+    market_candidates for (date, market, selection) narrowed to this
+    fixture by the engine's own normalized team keys; plain index bundles
+    (no market_candidates) contribute their exact row. Deduped by
+    (source, bookmaker, odds, captured_at); sorted source, odds desc.
+    """
+    out: list[dict] = []
+    day = str(pick.get("date") or "")
+    market = str(pick.get("market") or "")
+    selection = str(pick.get("pick") or "")
+    hk = odds_match_team_key(str(pick.get("home") or ""))
+    ak = odds_match_team_key(str(pick.get("away") or ""))
+    seen: set[tuple] = set()
+    for bundle in bundles:
+        if not bundle:
+            continue
+        bundle_source = str(bundle.get("provider") or "")
+        rows: list[dict] = []
+        if "exact" in bundle:  # full bundle shape (build-time path)
+            cands = ((bundle.get("market_candidates") or {})
+                     .get((day, market, selection), []))
+            for row in cands:
+                if not row:
+                    continue
+                if (odds_match_team_key(str(row.get("home") or "")),
+                        odds_match_team_key(str(row.get("away") or ""))) != (hk, ak):
+                    continue
+                rows.append(row)
+        else:  # plain index shape (audit refresh path): the exact row only
+            key = (day, odds_team_key(str(pick.get("home") or "")),
+                   odds_team_key(str(pick.get("away") or "")), market, selection)
+            row = bundle.get(key)
+            if row:
+                rows.append(row)
+        for row in rows:
+            source = str(row.get("provider") or bundle_source or "")
+            key = (source, str(row.get("bookmaker") or ""),
+                   row.get("odds"), str(row.get("captured_at") or ""))
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(_price_board_entry(source, row))
+    out.sort(key=lambda e: (str(e.get("source") or ""), -(float(e.get("odds") or 0.0))))
+    return out
+
+
+def _stamp_price_board(pick: dict, bundles, chosen_row=None, chosen_source=None,
+                       chosen_method=None) -> None:
+    """Attach pick['price_board'] = _collect_price_board(...), marking the
+    engine's chosen price when the chosen row is among the collected rows."""
+    board = _collect_price_board(pick, *bundles)
+    if chosen_row is not None:
+        match = None
+        for e in board:
+            if (str(e.get("source") or "") == str(chosen_source or "")
+                    and float(e.get("odds") or 0.0)
+                        == float(chosen_row.get("odds") or 0.0)
+                    and str(e.get("bookmaker") or "")
+                        == str(chosen_row.get("bookmaker") or "")):
+                match = e
+                break
+        if match is None:
+            # chosen row not in an index (hand-built/monkeypatched bundle):
+            # still archive it — the engine-printed price must always appear
+            match = _price_board_entry(str(chosen_source or ""), chosen_row)
+            board.append(match)
+            board.sort(key=lambda e: (str(e.get("source") or ""),
+                                      -(float(e.get("odds") or 0.0))))
+        match["chosen"] = True
+        match["match_method"] = chosen_method
+    pick["price_board"] = board
+
+
 def enrich_with_live_odds(
     picks: list[dict],
     primary_odds: dict,
@@ -2227,6 +2324,7 @@ def enrich_with_live_odds(
             "price_push_eligible",
             "price_quarantine_reason",
             "suspect_price",
+            "price_board",
         ):
             pick.pop(field, None)
 
@@ -2245,6 +2343,7 @@ def enrich_with_live_odds(
         previous_league = pick.get("odds_league")
 
         if not row:
+            _stamp_price_board(pick, (primary_odds, secondary_odds))
             if previous_odds is not None:
                 pick.setdefault("odds_source", "forebet_best")
                 pick["odds_match_method"] = "fallback"
@@ -2272,6 +2371,9 @@ def enrich_with_live_odds(
             # odds”. Preserve any prior source price, otherwise leave odds n/a;
             # archive the candidate separately so the audit can grade this
             # failure mode rather than erase it.
+            _stamp_price_board(pick, (primary_odds, secondary_odds),
+                               chosen_row=row, chosen_source=provider,
+                               chosen_method=method)
             pick["odds_match_method"] = method
             pick["price_evidence"] = PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY
             pick["price_push_eligible"] = False
@@ -2321,6 +2423,9 @@ def enrich_with_live_odds(
         else:
             pick["price_evidence"] = PRICE_EVIDENCE_BZZOIRO_PRIMARY
             pick["price_push_eligible"] = True
+        _stamp_price_board(pick, (primary_odds, secondary_odds),
+                           chosen_row=row, chosen_source=provider,
+                           chosen_method=method)
         enriched += 1
     return enriched
 
