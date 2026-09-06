@@ -7821,13 +7821,25 @@ nothing. In-sample would-blank if flagged legs were excluded: whole archive
 08-06, 08-19); in-season −0.0596 log/day, final 15%, maxDD 97%, 3 days
 blanked (08-04, 08-06, 08-19).
 
-**Reading (this is a measurement, not a finding): flagged legs do NOT look
-worse — in-season they look better (hit +7.7pp, flat ROI +4.6pp), with wide
-intervals that cross zero either way; excluding them would have destroyed
-the in-sample bank (final 235% → 15%). The flag is a PRICING caution
-designed for a different purpose (sole-source price risk), not a betting
-signal, and nothing here makes it one. No gate change ships; no October
-candidate is opened by this table.** If a future flag-based gate is ever
+**Reading (amended 2026-09-06 closeout — the framing below supersedes the
+original wording; this is a measurement, not a finding): in-season the flag
+is currently ANTI-PREDICTIVE — flagged legs BEAT unflagged (77.4% hit /
++3.5% flat ROI vs 69.7% / −1.1%), so the price-quarantine flag today
+identifies the BETTER legs, direction unexplained.** Day-block bootstrap
+(4000 draws, seed 20260906, 29 paired in-season days): p10 −6.3%, 90% CI
+[−9.3%, +19.0%] — wide, crosses zero, so it is not evidence either way;
+the whole archive mirrors it (98/242 flagged: 78.6% / +4.5% vs unflagged
+74.3% / +5.1%; bootstrap p10 −5.2%, CI [−8.0%, +18.5%], 32 paired days)
+and off-season is 5 flagged legs on 3 days (100% / +22.0% vs 81.8% /
++15.0% — nothing). Excluding flagged legs would have destroyed the
+in-sample bank (whole archive −0.0304 log/day, final 22%, maxDD 97%, 4 days
+blanked; in-season −0.0596 log/day, final 15%, maxDD 97%, 3 days blanked).
+The flag is a PRICING caution designed for a different purpose (sole-source
+price risk), not a betting signal; that its in-season history is currently
+anti-predictive has no identified explanation and nothing here makes the
+flag a gate. No gate change ships; no October candidate is opened by this
+table; if a flag-based gate is ever tested it must be the pre-registered
+October slot under the standing bar, never this in-sample history.** If a future flag-based gate is ever
 tested, it must be the pre-registered October slot under the standing bar
 (paired-bootstrap p10 > 0 AND leave-one-day-out keeps sign AND maxDD ≤
 live, at n ≥ 60 genuinely new in-season bet-days), never this in-sample
@@ -7852,3 +7864,193 @@ handles that row regardless of price evidence.
   captured before kickoff; 0 after) — never usable as kickoff witnesses.
 - Four-arm `--kickoff-guard` table and `--quarantine` table regenerated
   above in this addendum.
+
+## Addendum — 2026-09-06 (closeout): Task A asterisk verdict on the seven known-started ridden legs
+
+Closeout of the follow-up session's Task A. The seven ridden legs now known
+to have already started at build, with the engine slip odds at ride time
+(parity-baseline cards, byte-identical to the shipped slips):
+
+| date | leg | pick | odds at ride | settled outcome |
+|---|---|---|---|---|
+| 2026-08-11 | Junior vs Pereira | HOME | 1.33 | pending (not yet settled) |
+| 2026-08-12 | Bolivar vs Sao Paulo | HOME | 1.80 | LOSS |
+| 2026-08-12 | Weston Bears vs Adamstown Rosebuds | HOME | 1.40 | WIN |
+| 2026-08-19 | Deportes Tolima vs Independiente Del Valle | AWAY | 2.45 | WIN |
+| 2026-08-19 | Sao Paulo vs Bolívar | HOME | 1.44 | WIN |
+| 2026-08-31 | Toluca vs FC Juarez | HOME | 1.36 | WIN |
+| 2026-09-06 | Vancouver Whitecaps vs St. Louis City | HOME | 1.45 | pending (not yet settled) |
+
+Settled: 4 won of 5 (Bolivar lost; Weston/Tolima/São Paulo/Toluca won).
+
+### Do the in-season figures need an asterisk? Verdict: YES — on the two arms that rode pre-guard history; the shipped arms are clean.
+
+Recomputed via `replay_harness.py --kickoff-guard --exclude-started-ridden
+tests/data/started_ridden_legs.json` (the seven excluded from every arm's
+pool at each day's canonical 09:00 SAST build; replanned through the same
+engine; measurement only). Five of the seven are inside the settled replay
+scope — Junior (08-11) and Vancouver (09-06) have no settled result and
+never entered any growth figure. Pre-exclusion ridden counts per arm:
+default rode 5 of 5 in-scope legs, started-only rode 4 (Bolivar, Weston,
+Tolima, Toluca), region guard and normalised rode 1 (Weston — they already
+drop the other six, now for the true reason).
+
+In-season (>= 2026-08-01), shipped → perfect-clock:
+
+| arm | shipped | minus the five in-scope started legs |
+|---|---|---|
+| default (battery universe) | 35 days, +0.0244 log/day, 235%, maxDD 63% | 35 days, **+0.0027, 110%, maxDD 80%** |
+| started-only (historical live path) | 35 days, +0.0363, 357%, 63% | 35 days, **+0.0133, 159%, 73%** |
+| region guard (shipped) | 34 days, +0.0294, 272%, 64% | 34 days, +0.0302, 279%, 63% |
+| normalised | 35 days, +0.0188, 193%, 64% | 35 days, +0.0196, 198%, 64% |
+
+Whole-archive analog: default 560% → 262%, started-only 852% → 380%;
+region guard and normalised move under one percentage point of log/day.
+
+**Asterisk statement (this is the sentence to keep):** the in-season
+default figure (235%, and the +0.0244 log/day quoted as the live-settings
+headline in Task 2.2) and the started-only figure (357%) were partly earned
+by legs a correct clock would have dropped before build; excluding the five
+settled in-scope legs cuts default to **110%** and started-only to **159%**
+(in-sample), with maxDD 63% → 80% / 73%. The shipped region-guard (272%)
+and normalised (193%) in-season figures do NOT need the asterisk — they
+already exclude six of the seven for the correct reason, and removing the
+one they rode (Weston, per the brief's classification) moves them to
+279%/198%, within in-sample reshuffle noise. Every number here is
+in-sample; no arm here ships.
+
+Boundary note, so nobody has to rediscover it: excluding only the four
+normalisation-CONFIRMED started legs (Bolivar, Tolima, São Paulo, Toluca —
+all with the scoutingstats witness), without Weston, still cuts default
+235% → **150%** (+0.0116) and started-only 357% → **218%** (+0.0222), and
+leaves the guard and normalised arms EXACTLY unchanged (they rode none of
+the four). The verdict therefore does not hinge on Weston's classification.
+Weston's own archived kickoff renders dated-future (2026-08-12T12:00:00+02:00
+= 10:00Z, after the 07:00Z build) — it is excluded here because the brief
+classifies it as started, and the ledger records that its removal moves the
+shipped arms by less than noise either way. Task 2.1's deploy-33% figure
+(+0.0209/day, 208%) rides the same default-arm cards, so the same asterisk
+applies to it proportionally.
+
+## Addendum — 2026-09-06 (closeout): Task D — ARE THE PRICES OBTAINABLE? (D1 shipped, D2 archive gap, D3 in-sample reprice)
+
+P0 question: the engine's prices on `scoutingstats_odds` legs (41% of the
+in-season ridden bank; no true capture timestamp — `captured_at` == kickoff
+by construction, Task A receipt) may not be prices the owner could actually
+get. Three deliverables below; all measurement, no gate, no selection or
+staking change (`MAX_ACCAS=3`, `STAKE_FRAC=1/3`, `MIN_LEG_ODDS=1.20`
+unchanged; parity baseline untouched).
+
+Measurement surface (same as Task B): ridden legs of the default replay
+arm. `scoutingstats_odds` ridden legs: **81 whole archive (77 in-season ≥
+2026-08-01, 4 off-season)** — re-run `replay_harness.py --price-obtainability`.
+
+### D2 — archive-side gap (measured now)
+
+Corroboration is defined narrowly on purpose: a SECOND provider's price on
+the same fixture+selection that day WITH a true capture timestamp — (a) CLV
+snapshot rows where a later refresh matched bzzoiro/betexplorer exactly
+(`clv_snapshots_*.csv.gz`), (b) theoddsapi per-bookmaker rows
+(`theoddsapi_odds_2026-08/09.csv.gz`). Raw forebet/zulubet/statarea rows
+are NOT used as witnesses: they carry no capture timestamp, the same
+weakness class as scoutingstats itself.
+
+Coverage: **7 of 81 ridden scoutingstats legs corroborated (8.6%) — 7 of 77
+in-season, 0 of 4 off-season.** Off-season is unmeasurable: the oddsapi
+archive starts 2026-08-03 and the betexplorer odds archive ends 2026-06, and
+the CLV refreshes never found a bzzoiro row for the four July fixtures.
+
+Gap per corroborated leg (harness output; "engine (pool)" = the price the
+in-sample replay assumes; "engine (pick_time)" = the CLV snapshot at ride
+time where one exists; delta = corr − engine, positive = engine SHORTER
+than the best stamped price that day):
+
+| date | leg | pick | engine (pool) | engine (pick_time) | best stamped corr | delta (corr−pool) |
+|---|---|---|---|---|---|---|
+| 08-12 | Bolivar vs Sao Paulo | HOME | 1.80 | 1.82 (bzzoiro) | 1.82 bzzoiro 08-11T13:42Z | +0.02 |
+| 08-16 | Feyenoord vs Go Ahead Eagles | HOME | 1.33 | n/a | 1.40 theoddsapi 08-16T00:38Z | +0.07 |
+| 08-21 | Arsenal vs Coventry City | HOME | 1.20 | 1.18 | 1.21 theoddsapi 08-21T01:01Z | +0.01 |
+| 08-25 | Al-Ettifaq vs Al-Nassr | AWAY | 1.22 | 1.25 | 1.30 theoddsapi 08-25T00:58Z | +0.08 |
+| 08-25 | Watford vs Peterborough | HOME | 1.85 | 1.65 | 1.66 bzzoiro 08-25T09:46Z | **−0.19** |
+| 09-02 | Celtic vs Aberdeen | HOME | 1.22 | 1.25 | 1.29 bzzoiro 09-01T22:31Z | +0.07 |
+| 09-02 | Falkirk FC vs Rangers | AWAY | 1.55 | 1.60 | 1.61 bzzoiro 09-01T22:31Z | +0.06 |
+
+Reading: on the pool basis, 6 of 7 engine prices are ≤ the best stamped
+same-day alternative; the one longer price (Watford, 1.85 vs 1.66) is a
+same-day best-of-cache artifact — its ride-time (pick_time) price was 1.65,
+≤ 1.66. **On the ride-time basis, all seven checkable legs show the engine
+price at or BELOW what another provider offered that day — no systematic
+inflation is visible in the archive.** But n=7 is 9% of the population:
+the archive simply cannot certify the other 74 in-season scoutingstats
+prices, and cannot certify ANY of the 4 off-season ones. That coverage
+statement IS the D2 finding — it is why D1 must start now, and why no
+retroactive price fix is possible from local files.
+
+### D3 — obtainability-constrained replay (IN-SAMPLE; label required when quoted)
+
+Every `scoutingstats_odds` pool leg is either repriced to its best stamped
+corroboration or — when none exists — dropped; the engine replans from the
+reduced pools. (Re-run: `replay_harness.py --price-obtainability`.)
+
+| arm | bet-days | legs/day | log/day | final | maxDD | pool legs |
+|---|---|---|---|---|---|---|
+| whole archive — default | 54 | 2.2 | +0.0319 | 560% | 67% | — |
+| whole archive — constrained | 50 | 2.1 | +0.0133 | 194% | **96%** | 236 dropped, 18 repriced |
+| in-season — default | 35 | 2.6 | +0.0244 | 235% | 63% | — |
+| in-season — constrained | 33 | 2.4 | **−0.0440** | **23%** | **96%** | 227 dropped, 18 repriced |
+
+(7 of the 18 repriced legs are ridden legs — the D2 table; the rest are
+non-ridden pool candidates sharing their witnesses. All numbers in this
+block are IN-SAMPLE.)
+
+Reading: the obtainability-constrained replay cannot keep the in-season
+bank alive (235% → 23%; consistent with Task B's would-blank 15% when the
+whole flagged class is excluded) — because the archive cannot certify 74 of
+77 in-season scoutingstats prices. Where the archive CAN check, the engine's
+price was not longer than the market's. This is a statement about the
+ARCHIVE's certification power, not a verdict on the engine; it is exactly
+the gap D1 closes going forward.
+
+### D1 — shipped: owner-actual-price capture (pays from the next slip)
+
+What ships (`scripts/audit_clv.py`, no engine change):
+
+- **`record`** — the operator's channel. After placing a slip, enter the
+  decimal odds the bookmaker actually offered, next to the printed leg:
+  `python3 scripts/audit_clv.py record --date 2026-09-06 --match "Vancouver Whitecaps vs St. Louis City" --pick HOME --odds 1.44`
+  (writes/updates `localdata/actual_odds_<date>.json`; dedupes on
+  match+pick; rejects odds ≤ 1.0).
+- **`capture`** — attaches recorded prices to the snapshot rows of the
+  matching pick for that run date: new snapshot columns `actual_odds` and
+  `actual_odds_recorded_at` sit next to the engine's `observed_odds`.
+  Idempotent: recording after a capture run and re-running capture updates
+  the rows already written. Entries that match no pick of the day are
+  reported loudly, never silently dropped.
+- **`report`** — new "Actual price vs engine quote" section (JSON + markdown
+  + console): per entry engine quote vs actual, delta (positive = the owner
+  got a LONGER price than the engine printed), means, and a
+  longer/shorter count. Before the first entries it prints the D1 status
+  line, so the daily report shows the capture is live.
+- The input is ALWAYS the owner's written record — the code never infers an
+  actual price. Slip legs, not candidates, are what the operator records;
+  the standing instruction is to record ACCA #1 and ACCA #2 slips for the
+  next week (the two slips the owner places every day).
+
+Standing instruction (one week, operator): when placing ACCA #1 and ACCA #2,
+write the odds the bookmaker actually offers next to the odds on the slip
+and record them with `audit_clv record` the same day. If they match the
+printed prices, the worry dies; if the slip is consistently longer than the
+printed price, that is where the edge went — and D2/D3's n=7 will grow
+until the archive question is answered by real slip data instead of
+inference.
+
+### Verification receipts (Task D closeout)
+
+- D1 tests: 7 new in `tests/test_audit_clv.py` (record write/dedupe/reject,
+  capture attach + idempotent re-run, unmatched-entry warning, report
+  section with delta) — all pass.
+- `replay_harness.py --price-obtainability` regenerated for the tables
+  above (receipt: coverage 7/81 = 8.6%, 7/77 in-season, 0/4 off-season).
+- No engine file changed for Task D except the measurement flags in
+  `replay_harness.py`; parity baseline file byte-identical; full suite
+  receipt appended in the closeout commit message.
