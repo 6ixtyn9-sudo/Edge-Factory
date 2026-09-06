@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 97.417639,
+  "bank": 93.19630099999999,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -26,63 +26,13 @@
           "odds": 1.85,
           "stake_pct": 10.8242,
           "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Rudes vs HNK Hajduk Split",
-              "pick": "AWAY",
-              "prob": 0.7,
-              "odds": 1.29,
-              "result": null
-            },
-            {
-              "match": "Valencia vs Barcelona",
-              "pick": "AWAY",
-              "prob": 0.6990000000000001,
-              "odds": 1.25,
-              "result": null
-            }
-          ],
-          "odds": 1.61,
-          "stake_pct": 10.8242,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Vit\u00f3ria vs Casa Pia AC",
-              "pick": "HOME",
-              "prob": 0.644,
-              "odds": 1.5,
-              "result": null
-            },
-            {
-              "match": "Lokomotiv Sofia vs Ludogorets",
-              "pick": "AWAY",
-              "prob": 0.63,
-              "odds": 1.53,
-              "result": null
-            }
-          ],
-          "odds": 2.29,
-          "stake_pct": 10.8241,
-          "results": [
-            null,
+            "win",
             null
           ],
           "won": null
         }
       ],
-      "staked_pct": 32.4725
+      "staked_pct": 10.8242
     }
   ],
   "history": [
@@ -277,6 +227,22 @@
         }
       ],
       "bank_pct": 97.4176
+    },
+    {
+      "date": "2026-09-06",
+      "staked_pct": 21.6483,
+      "returned_pct": 17.427,
+      "accas": [
+        {
+          "odds": 1.61,
+          "won": true
+        },
+        {
+          "odds": 2.29,
+          "won": false
+        }
+      ],
+      "bank_pct": 93.1963
     }
   ],
   "events": []
