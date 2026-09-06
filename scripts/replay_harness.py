@@ -50,10 +50,13 @@ Usage (from repo root):
 from __future__ import annotations
 
 import argparse
+import csv
+import gzip
 import json
 import math
 import random
 import sys
+import unicodedata
 from datetime import date
 from pathlib import Path
 
@@ -741,6 +744,97 @@ def _day_scope(universe, since=None, until=None):
             if (not since or d >= since) and (not until or d <= until)}
 
 
+def _fold_name(name: str) -> str:
+    """Accent/diacritic-insensitive, case-insensitive name key for exact
+    fixture matching. Deliberately NOT fuzzy: a fixture either matches a
+    recorded name after trivial normalisation or it does not."""
+    out = unicodedata.normalize("NFKD", str(name))
+    out = "".join(ch for ch in out if not unicodedata.combining(ch))
+    return " ".join(out.casefold().split())
+
+
+def _exclusion_set(path: Path) -> set[tuple[str, str]]:
+    """Load [{"date": YYYY-MM-DD, "match": "Home vs Away"}] into
+    (date, folded-match) pairs."""
+    raw = json.loads(Path(path).read_text())
+    out = set()
+    for row in raw:
+        d = str(row.get("date") or "")[:10]
+        m = _fold_name(str(row.get("match") or ""))
+        if d and m:
+            out.add((d, m))
+    return out
+
+
+def _perfect_clock_block(scope, exclude: set[tuple[str, str]]) -> None:
+    """Task A closeout (2026-09-06): re-run the four --kickoff-guard arms
+    with the known-started ridden legs excluded from every pool (a perfect
+    clock would have dropped them at build). Prints which exclusions were
+    actually ridden by each arm and the ex-rows beside the shipped rows.
+
+    MEASUREMENT ONLY — no selection or staking change ships from this.
+    """
+    def rode(day_map):
+        out = set()
+        for d, rec in day_map.items():
+            for acca_legs in rec["legs"]:
+                for m in acca_legs:
+                    if (d, _fold_name(m)) in exclude:
+                        out.add((d, m))
+        return out
+
+    shipped_so, shipped_g, shipped_n = _kickoff_arms(scope)
+    rode_default = rode(replay(scope, {}))
+    rode_so = rode(replay(shipped_so, {}))
+    rode_g = rode(replay(shipped_g, {}))
+    rode_n = rode(replay(shipped_n, {}))
+
+    ex_scope = {d: [leg for leg in pool if (d, _fold_name(leg["match"])) not in exclude]
+                for d, pool in scope.items()}
+    ex_scope = {d: p for d, p in ex_scope.items() if len(p) >= at.LEGS_PER_ACCA}
+    ex_so, ex_g, ex_n = _kickoff_arms(ex_scope)
+
+    print()
+    print("=" * 74)
+    print("PERFECT CLOCK (Task A closeout) — known-started ridden legs excluded")
+    print("=" * 74)
+    print(f"exclusion file: {len(exclude)} (date, match) pairs; present in scope pools: "
+          f"{sum(1 for (d, m) in exclude if any((d, _fold_name(l['match'])) == (d, m) for pool in scope.values() for l in pool))}")
+    for label, bits in (("default", rode_default), ("started-only", rode_so),
+                        ("region guard", rode_g), ("normalised", rode_n)):
+        print(f"  ridden by {label:12s} arm pre-exclusion: {len(bits)} of {len(exclude)}"
+              + (f" — {', '.join(sorted(f'{d} {m}' for d, m in bits))}" if bits else ""))
+
+    for label, days in (("whole archive", scope), ("in-season (>= 2026-08-01)",
+                        _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        sub = {d: days[d] for d in days}
+        sub_x = {d: ex_scope[d] for d in days if d in ex_scope}
+        if not sub_x:
+            continue
+        sx_so = {d: ex_so[d] for d in days if d in ex_so}
+        sx_g = {d: ex_g[d] for d in days if d in ex_g}
+        sx_n = {d: ex_n[d] for d in days if d in ex_n}
+        a, b, c, n = (summarise(x) for x in (replay(sub, {}), replay({d: shipped_so[d] for d in days if d in shipped_so}, {}),
+                       replay({d: shipped_g[d] for d in days if d in shipped_g}, {}),
+                       replay({d: shipped_n[d] for d in days if d in shipped_n}, {})))
+        ax, bx, cx, nx = (summarise(x) for x in (replay(sub_x, {}), replay(sx_so, {}), replay(sx_g, {}), replay(sx_n, {})))
+        print(f"  {label} — shipped→ex  (bet-days, log/day, final, maxDD)")
+        for tag, s, sx in (("default     ", a, ax), ("started-only", b, bx),
+                           ("region guard", c, cx), ("normalised  ", n, nx)):
+            same = s["days"] == sx["days"]
+            print(f"    {tag}  {s['days']:2d} → {sx['days']:2d}  "
+                  f"{s['mean_log']:+.4f} → {sx['mean_log']:+.4f}  "
+                  f"{s['final']:7.0f}% → {sx['final']:7.0f}%  "
+                  f"maxDD {s['maxdd']:4.0%} → {sx['maxdd']:4.0%}"
+                  f"{'' if same else '  (bet-day lost)'}")
+    print("read: this is the contamination check — how much of each shipped")
+    print("in-season growth was earned by legs a perfect clock would have")
+    print("dropped. Measurement only; no arm here ships.")
+
+
+
 def cmd_kickoff_contract(universe, since=None, until=None):
     """AUDIT INSTRUMENT (off by default): the fail-closed kickoff standard
     on HISTORY — it sizes the data-side kickoff-proof gap.
@@ -838,7 +932,54 @@ def cmd_kickoff_contract(universe, since=None, until=None):
     return 0
 
 
-def cmd_kickoff_guard(universe, since=None, until=None):
+def _kickoff_arms(scope):
+    """Compute the started-only / region-guard / normalised arm pools for a
+    scope of days, at each day's canonical 09:00 SAST build instant.
+
+    - started-only: rows whose parseable kickoff is already at/past build
+      time drop (the engine's historical live path approximation);
+    - region guard: auto_tickets.live_kickoff_guard (started + clock-only
+      rows in remote-clock regions + missing/garbage);
+    - normalised: the same guard after archived-witness ingest
+      normalisation (kickoff_utc resolved where an archived witness exists).
+    Returns (started_only, guarded, normalised) day->pool dicts.
+    """
+    started_only: dict = {}
+    guarded: dict = {}
+    normalised: dict = {}
+    for d, pool in scope.items():
+        build_at = at.canonical_build_instant(d)
+        # arm 2: the historical live engine's started check (parseable past)
+        so = []
+        for leg in pool:
+            pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+            kt = at.parse_kickoff(pick)
+            if kt is None or kt.astimezone(at.TZ) >= build_at:
+                so.append(leg)
+        started_only[d] = so
+        # arm 3: the full live guard
+        kept, _drops = at.live_kickoff_guard(pool, build_at)
+        guarded[d] = kept
+        # arm 4: normalised ingest (archived-witness lower bound)
+        norm_pool = []
+        for leg in pool:
+            pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+            ku, src = at.kickoff_utc_from_archived_row(pick)
+            if ku is None:
+                norm_pool.append(leg)
+                continue
+            leg2 = dict(leg)
+            row2 = dict(pick)
+            row2["kickoff_utc"] = ku
+            row2["kickoff_source"] = src
+            leg2["row"] = row2
+            norm_pool.append(leg2)
+        n_kept, _n_drops = at.live_kickoff_guard(norm_pool, build_at)
+        normalised[d] = n_kept
+    return started_only, guarded, normalised
+
+
+def cmd_kickoff_guard(universe, since=None, until=None, exclude: set | None = None):
     """MONEY COST of the LIVE kickoff guard (region rule) on HISTORY, plus
     the Task-A normalisation-recovery estimate (ingest kickoff_utc).
 
@@ -982,6 +1123,8 @@ def cmd_kickoff_guard(universe, since=None, until=None):
     print("archived vitibet-anchored row) existed at fetch time for most of")
     print("the remaining clock-only legs (sources_used proves presence) but")
     print("their kickoff strings are not archived, so live recovery is higher.")
+    if exclude:
+        _perfect_clock_block(scope, exclude)
     return 0
 
 
@@ -1170,6 +1313,290 @@ def cmd_quarantine(universe, since=None, until=None):
 # --------------------------------------------------------------------------
 # --warehouse-replay: FEASIBILITY audit (Phase 1). Research only, opt-in.
 # --------------------------------------------------------------------------
+def _pick_rule_name(row: dict) -> str:
+    return str(row.get("edge_rule") or row.get("rule")
+               or row.get("display_rule") or "unknown-rule")
+
+
+def _clv_witnesses(run_date: str, pick_id: str) -> list[dict]:
+    """Same-day second-provider price rows from the CLV snapshot files.
+
+    Returns rows for the pick whose odds_provider is a real second source
+    (bzzoiro/betexplorer) with a true capture timestamp and an exact or
+    alias-time/unique/betexplorer match method — i.e. the same fixture was
+    priced by another provider that day, at a stamped time.
+    """
+    out: list[dict] = []
+    for f in sorted(LOCALDATA.glob("clv_snapshots_*.csv.gz")):
+        with gzip.open(f, "rt", newline="") as fh:
+            for r in csv.DictReader(fh):
+                if str(r.get("source_run_date") or "")[:10] != run_date:
+                    continue
+                if str(r.get("pick_id") or "") != pick_id:
+                    continue
+                prov = str(r.get("odds_provider") or "")
+                meth = str(r.get("odds_match_method") or "")
+                if prov in ("scoutingstats_odds", "", "forebet_best", "zulubet"):
+                    continue
+                if meth not in ("exact", "alias_time", "alias_unique", "betexplorer"):
+                    continue
+                try:
+                    o = float(r.get("observed_odds") or "")
+                except ValueError:
+                    continue
+                if o <= 1.0 or not str(r.get("captured_at_utc") or ""):
+                    continue
+                out.append({"provider": prov, "odds": o,
+                            "captured_at": str(r.get("captured_at_utc") or ""),
+                            "method": meth, "label": str(r.get("snapshot_label") or "")})
+    return out
+
+
+def _theoddsapi_witnesses(day: str, home: str, away: str, sel: str) -> list[dict]:
+    """Same-fixture per-bookmaker prices from theoddsapi monthly files."""
+    import picks_today as pt
+    out: list[dict] = []
+    hk = pt.odds_match_team_key(str(home or ""))
+    ak = pt.odds_match_team_key(str(away or ""))
+    for f in sorted(LOCALDATA.glob("theoddsapi_odds_*.csv.gz")):
+        with gzip.open(f, "rt", newline="") as fh:
+            for r in csv.DictReader(fh):
+                if str(r.get("date") or "")[:10] != day:
+                    continue
+                if r.get("market") != "1x2":
+                    continue
+                rhk = pt.odds_match_team_key(str(r.get("home") or ""))
+                rak = pt.odds_match_team_key(str(r.get("away") or ""))
+                if (rhk, rak) not in ((hk, ak), (ak, hk)):
+                    continue
+                if str(r.get("selection") or "").lower() != sel.lower():
+                    continue
+                try:
+                    o = float(r.get("odds") or "")
+                except ValueError:
+                    continue
+                if o <= 1.0 or not str(r.get("captured_at") or ""):
+                    continue
+                out.append({"provider": "theoddsapi:" + str(r.get("bookmaker") or ""),
+                            "odds": o,
+                            "captured_at": str(r.get("captured_at") or ""),
+                            "method": "exact", "label": "theoddsapi"})
+    return out
+
+
+def _stamped_witnesses(leg) -> list[dict]:
+    row = leg.get("row") or {}
+    from edgefactory.clv import build_pick_id
+    pid = build_pick_id(str(leg.get("_day") or row.get("date") or "")[:10],
+                        row.get("home"), row.get("away"), row.get("market"),
+                        row.get("pick"), _pick_rule_name(row))
+    out = _clv_witnesses(str(leg.get("_day"))[:10], pid)
+    out += _theoddsapi_witnesses(str(leg.get("_day"))[:10], row.get("home"),
+                                 row.get("away"), str(leg.get("pick") or ""))
+    # best price per distinct provider class (avoid double-counting
+    # bookmaker duplicates of one source snapshot)
+    best: dict[str, dict] = {}
+    for w in out:
+        key = w["provider"].split(":")[0] + ":" + (w["captured_at"][:10] if w["captured_at"] else "")
+        if key not in best or w["odds"] > best[key]["odds"]:
+            best[key] = w
+    return sorted(best.values(), key=lambda w: -w["odds"])
+
+
+def _pick_time_engine_price(leg) -> tuple[float | None, str | None]:
+    """The nearest record to ride time: the CLV pick_time snapshot row's own
+    observed odds (its odds_provider is the price the slate carried then).
+    Returns None when no pick_time row exists for the pick."""
+    row = leg.get("row") or {}
+    from edgefactory.clv import build_pick_id
+    pid = build_pick_id(str(leg.get("_day") or "")[:10],
+                        row.get("home"), row.get("away"), row.get("market"),
+                        row.get("pick"), _pick_rule_name(row))
+    for f in sorted(LOCALDATA.glob("clv_snapshots_*.csv.gz")):
+        with gzip.open(f, "rt", newline="") as fh:
+            for r in csv.DictReader(fh):
+                if str(r.get("source_run_date") or "")[:10] != str(leg.get("_day"))[:10]:
+                    continue
+                if str(r.get("pick_id") or "") != pid:
+                    continue
+                if str(r.get("snapshot_label") or "") != "pick_time":
+                    continue
+                try:
+                    o = float(r.get("observed_odds") or "")
+                except ValueError:
+                    continue
+                if o <= 1.0:
+                    return None, None
+                return o, str(r.get("odds_provider") or "")
+    return None, None
+
+
+def cmd_price_obtainability(universe, since=None, until=None):
+    """Task D (2026-09-06) — P0: are the recorded prices obtainable?
+
+    MEASUREMENT ONLY; no gate, no selection or staking change.
+
+    The engine's prices on scoutingstats legs are sole-source by
+    construction (the primary bundle had no row), so nothing in the archive
+    says whether the owner could actually have got them. This command
+    measures the archive-side gap (D2) and the obtainability-constrained
+    replay (D3, labelled in-sample):
+
+    D2 — for ridden scoutingstats legs where a SECOND provider priced the
+    same fixture+selection that day with a true capture timestamp (CLV
+    snapshots' bzzoiro/betexplorer rows, or theoddsapi per-bookmaker rows),
+    how far is the engine's assumed price from the corroborating price?
+    Split in-season / off-season. If the engine price is SYSTEMATICALLY
+    LONGER than corroboration, the recorded ROI is inflated by that much.
+
+    D3 — replay the same settled-playable universe with every scoutingstats
+    leg either (a) repriced to its best stamped corroboration or (b) dropped
+    when none exists. IN-SAMPLE: the corroborated prices come from the same
+    period's archive, so the result is a lower-bound consistency check on
+    the recorded growth, not a forward estimate.
+
+    Caveat printed with the numbers: scoutingstats odds carry no true
+    capture timestamp (captured_at == kickoff by construction), so the
+    engine price's own availability moment is unknown — exactly what the D1
+    owner-actual-price capture (audit_clv) measures going forward.
+    """
+    scope = _day_scope(universe, since, until)
+    ridden = _ridden_legs(scope)
+    ss = [l for l in ridden
+          if str((l.get("row") or {}).get("odds_source")) == "scoutingstats_odds"]
+    in_season = [l for l in ss if l["_day"] >= "2026-08-01"]
+    off_season = [l for l in ss if l["_day"] < "2026-08-01"]
+
+    print("=" * 74)
+    print("PRICE OBTAINABILITY (Task D) — scoutingstats-odds ridden legs")
+    print("=" * 74)
+    print("engine price = the price the in-sample replay assumes (pool odds")
+    print("today); scoutingstats rows have NO true capture stamp (captured_at")
+    print("== kickoff by construction), so their availability moment is")
+    print("unknown — the D1 owner-actual capture (audit_clv) is the forward")
+    print("measure. Corroboration = a SECOND provider's stamped price for the")
+    print("same fixture+selection that day (CLV bzzoiro/betexplorer exact")
+    print("rows, theoddsapi per-bookmaker rows).")
+
+    cens = {}
+    rows_all = []
+    rows_by_leg: dict[str, dict] = {}
+    for l in ss:
+        wits = _stamped_witnesses(l)
+        rows_all.append({
+            "day": l["_day"], "match": l["match"], "pick": l["pick"],
+            "engine": float(l["odds"] or 0.0),
+            "wits": wits,
+        })
+        rows_by_leg[l["_day"] + "|" + l["match"] + "|" + l["pick"]] = l
+    for label, group in (("whole archive", ss), ("in-season", in_season),
+                         ("off-season", off_season)):
+        n = len(group)
+        with_w = sum(1 for l in group if _stamped_witnesses(l))
+        cens[label] = (n, with_w)
+    print()
+    print("D2 — coverage (ridden scoutingstats legs with any stamped same-day")
+    print("     second-provider price):")
+    for label, (n, w) in cens.items():
+        print(f"    {label:12s} {w:3d} of {n:3d} legs corroborated")
+
+    rows_all = [r for r in rows_all if r["wits"]]
+    print()
+    print("D2 — gap, leg by leg. 'engine (pool)' = the price the in-sample")
+    print("     replay assumes today (the ROI basis); 'engine (pick_time)' =")
+    print("     the CLV snapshot at ride time when one exists; corr = best")
+    print("     stamped second-provider price that day (negative delta = the")
+    print("     engine price is SHORTER than what the other provider offered):")
+    for r in sorted(rows_all, key=lambda r: r["day"]):
+        pt_o, pt_p = _pick_time_engine_price(rows_by_leg[r["day"] + "|" + r["match"] + "|" + r["pick"]])
+        best = r["wits"][0]
+        for w in r["wits"]:
+            print(f"    {r['day']} {r['match'][:44]:44s} {r['pick']:4s} "
+                  f"engine(pool) {r['engine']:5.2f}  corr {w['odds']:5.2f} "
+                  f"({w['provider'][:20]:20s} cap {w['captured_at'][:19]})")
+        pt_txt = f"engine(pick_time) {pt_o:.2f} ({pt_p})" if pt_o else "engine(pick_time) n/a"
+        print(f"        delta(pool-corr) {best['odds'] - r['engine']:+.2f}  "
+              f"{pt_txt}")
+    if rows_all:
+        deltas = [r["wits"][0]["odds"] - r["engine"] for r in rows_all]
+        print(f"    n={len(deltas)}  mean delta(pool-corr) "
+              f"{sum(deltas)/len(deltas):+.3f}  min {min(deltas):+.2f}  "
+              f"max {max(deltas):+.2f}  pool-longer-than-best: "
+              f"{sum(1 for d in deltas if d < 0)} of {len(deltas)}")
+    else:
+        print("    (no corroborated legs)")
+    print()
+
+    # D3 — constrained replay (IN-SAMPLE)
+    def constrain(scope_days):
+        out = {}
+        dropped = 0
+        repriced = 0
+        for d, pool in scope_days.items():
+            npool = []
+            for leg in pool:
+                row = leg.get("row") or {}
+                if str(row.get("odds_source")) != "scoutingstats_odds":
+                    npool.append(leg)
+                    continue
+                wits = _stamped_witnesses({**leg, "_day": d})
+                if not wits:
+                    dropped += 1
+                    continue
+                leg2 = dict(leg)
+                row2 = dict(row)
+                new_odds = wits[0]["odds"]
+                row2["odds"] = new_odds
+                row2["_repriced_from"] = float(leg.get("odds") or 0.0)
+                row2["_repriced_to"] = new_odds
+                row2["_repriced_witness"] = wits[0]["provider"]
+                leg2["row"] = row2
+                if leg.get("odds") is not None:
+                    leg2["odds"] = new_odds
+                npool.append(leg2)
+                repriced += 1
+            if len(npool) >= at.LEGS_PER_ACCA:
+                out[d] = npool
+        return out, dropped, repriced
+
+    print("D3 — obtainability-constrained replay (IN-SAMPLE; measurement")
+    print("     only, nothing ships). scoutingstats legs with a stamped")
+    print("     second-provider price ride at that price; legs without one")
+    print("     are dropped:")
+    for label, days in (("whole archive", scope),
+                        ("in-season (>= 2026-08-01)", _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        base_rec = replay(days, {})
+        con, dropped, repriced = constrain(days)
+        s0 = summarise(base_rec)
+        if not con:
+            print(f"  {label}: constrained replay has NO bet-days "
+                  f"(dropped {dropped}, repriced {repriced})")
+            continue
+        s1 = summarise(replay(con, {}))
+        n_base = sum(len(v["legs"]) for v in base_rec.values())
+        n_con = sum(len(v["legs"]) for v in replay(con, {}).values())
+        print(f"  {label} — default      {s0['days']:2d} bet-days  "
+              f"legs/day {n_base/max(s0['days'],1):4.1f}  "
+              f"log/day {s0['mean_log']:+.4f}  final {s0['final']:7.0f}%  "
+              f"maxDD {s0['maxdd']:4.0%}")
+        print(f"  {label} — constrained {s1['days']:2d} bet-days  "
+              f"legs/day {n_con/max(s1['days'],1):4.1f}  "
+              f"log/day {s1['mean_log']:+.4f}  final {s1['final']:7.0f}%  "
+              f"maxDD {s1['maxdd']:4.0%}   (legs dropped {dropped}, "
+              f"repriced {repriced})")
+    print()
+    print("read: D2's n is tiny because scoutingstats legs are sole-source by")
+    print("construction — that is the finding, not an accident of sampling.")
+    print("The D3 constrained arm is the replay's own answer to 'could those")
+    print("prices have been got?': where the archive can check, the engine")
+    print("price was not longer than what other providers offered that day;")
+    print("where the archive cannot check, the leg is dropped because the")
+    print("price is not certifiable. Both halves are IN-SAMPLE.")
+    return 0
+
+
 def _wr_open():
     """Open the warehouse read-only, preferring the materialised file."""
     import duckdb
@@ -1443,6 +1870,17 @@ def main():
                          "census, hit rate + flat ROI (day-block bootstrap), "
                          "would-blank days and growth consequence, split "
                          "in-season/off-season. No gate change (Task B).")
+    ap.add_argument("--exclude-started-ridden", metavar="FILE",
+                    help="with --kickoff-guard: PERFECT-CLOCK CHECK (Task A "
+                         "closeout) — drop the known-started ridden legs in "
+                         "FILE ([{\"date\": ..., \"match\": ...}]) from every "
+                         "arm's pools and print ex-rows beside the shipped "
+                         "arms (contamination measurement; nothing ships)")
+    ap.add_argument("--price-obtainability", action="store_true",
+                    help="MEASURE ONLY (Task D): ridden scoutingstats legs — "
+                         "D2 census/gap vs same-day stamped second-provider "
+                         "prices, D3 obtainability-constrained replay "
+                         "(IN-SAMPLE; repriced or dropped, never shipped)")
     ap.add_argument("--since", metavar="YYYY-MM-DD",
                     help="restrict replay universe to this date or later")
     ap.add_argument("--until", metavar="YYYY-MM-DD",
@@ -1477,8 +1915,15 @@ def main():
         return cmd_kickoff_contract(universe,
                                     since=args.since, until=args.until)
     if args.kickoff_guard:
+        exclude = None
+        if args.exclude_started_ridden:
+            exclude = _exclusion_set(Path(args.exclude_started_ridden))
         return cmd_kickoff_guard(universe,
-                                 since=args.since, until=args.until)
+                                 since=args.since, until=args.until,
+                                 exclude=exclude)
+    if args.price_obtainability:
+        return cmd_price_obtainability(universe,
+                                       since=args.since, until=args.until)
     if args.quarantine:
         return cmd_quarantine(universe,
                               since=args.since, until=args.until)
