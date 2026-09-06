@@ -839,26 +839,40 @@ def cmd_kickoff_contract(universe, since=None, until=None):
 
 
 def cmd_kickoff_guard(universe, since=None, until=None):
-    """MONEY COST of the LIVE kickoff guard (region rule) on HISTORY.
+    """MONEY COST of the LIVE kickoff guard (region rule) on HISTORY, plus
+    the Task-A normalisation-recovery estimate (ingest kickoff_utc).
 
     Applies auto_tickets.live_kickoff_guard at each day's canonical 09:00
-    SAST build instant, then replays three arms through the same planner
+    SAST build instant, then replays four arms through the same planner
     with the same live stake rules:
       - default: the raw replay universe (what the harness battery calls
         "live" — no era guard modeled);
       - started-only: the engine's historical live path approximated
         (parseable legs already started at the build instant drop);
       - region guard: full live_kickoff_guard (started + clock-only rows in
-        remote-clock regions + missing/garbage).
+        remote-clock regions + missing/garbage);
+      - normalised: the same guard AFTER ingest normalisation — every pool
+        row that an archived witness can resolve (own zoned kickoff, or the
+        scoutingstats starting_at preserved as odds_captured_at) carries
+        kickoff_utc, and the guard judges only that instant. Sibling-row
+        witnesses that existed only at fetch time (vitibet "+02:00" rows)
+        are NOT in the archives, so this arm is a LOWER bound on recovery.
     Prints per regime (whole archive and in-season >= 2026-08-01): log/day,
     final, maxDD and bet-days. The guard's MARGINAL money cost is the
     region-guard arm minus the started-only arm; the default arm is shown
-    only for continuity with the battery row. Leg/day counts alone are not
-    a cost (2026-09-06 review).
+    only for continuity with the battery row.
+
+    CAVEAT (2026-09-06 follow-up review, Task C1): the in-season guard-vs-
+    started gap is ONE bet-day (2026-08-04, which won). The gap is therefore
+    unmeasured, not small: in noise terms it is well under a tenth of a
+    standard deviation of daily log growth, and had that one day lost, the
+    same guard would show a gain. Neither arm has earned a number. Do not
+    quote the in-season -0.0070 (or the whole-archive +0.0080) as a price.
     """
     scope = _day_scope(universe, since, until)
-    started_only, guarded = {}, {}
+    started_only, guarded, normalised = {}, {}, {}
     census: dict[str, list[str]] = {}
+    norm_census: dict[str, list[str]] = {}
     for d, pool in scope.items():
         build_at = at.canonical_build_instant(d)
         # arm 2: the historical live engine's started check (parseable past)
@@ -874,6 +888,24 @@ def cmd_kickoff_guard(universe, since=None, until=None):
         for reason, names in drops.items():
             census.setdefault(reason, []).extend(f"{d} {n}" for n in names)
         guarded[d] = kept
+        # arm 4: normalised ingest (archived-witness lower bound)
+        norm_pool = []
+        for leg in pool:
+            pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+            ku, src = at.kickoff_utc_from_archived_row(pick)
+            if ku is None:
+                norm_pool.append(leg)
+                continue
+            leg2 = dict(leg)
+            row2 = dict(pick)
+            row2["kickoff_utc"] = ku
+            row2["kickoff_source"] = src
+            leg2["row"] = row2
+            norm_pool.append(leg2)
+        n_kept, n_drops = at.live_kickoff_guard(norm_pool, build_at)
+        for reason, names in n_drops.items():
+            norm_census.setdefault(reason, []).extend(f"{d} {n}" for n in names)
+        normalised[d] = n_kept
 
     n_drop = sum(len(v) for v in census.values())
     print("=" * 74)
@@ -887,9 +919,16 @@ def cmd_kickoff_guard(universe, since=None, until=None):
         names = census[reason]
         print(f"  • {len(names)} {reason.lower()}  "
               f"(e.g. {names[0] if names else '-'}{f' — +{len(names)-1} more' if len(names) > 1 else ''})")
+    n_rescued = n_drop - sum(len(v) for v in norm_census.values())
+    print(f"after normalisation (archived-witness lower bound): {n_rescued} of those "
+          f"{n_drop} legs carry a resolvable kickoff_utc; "
+          f"{sum(len(v) for v in norm_census.values())} still dropped:")
+    for reason in sorted(norm_census):
+        names = norm_census[reason]
+        print(f"  • {len(names)} {reason.lower()}  "
+              f"(e.g. {names[0] if names else '-'}{f' — +{len(names)-1} more' if len(names) > 1 else ''})")
 
     print()
-    rows = {}
     for label, days in (("whole archive", scope),
                         ("in-season (>= 2026-08-01)", _day_scope(scope, "2026-08-01"))):
         if not days:
@@ -897,34 +936,234 @@ def cmd_kickoff_guard(universe, since=None, until=None):
         sub = {d: days[d] for d in days}
         sub_so = {d: started_only[d] for d in days}
         sub_g = {d: guarded[d] for d in days}
+        sub_n = {d: normalised[d] for d in days}
         a = replay(sub, {})
         b = replay(sub_so, {})
         c = replay(sub_g, {})
+        n = replay(sub_n, {})
+        sa, sb, sc, sn = (summarise(x) for x in (a, b, c, n))
         lost_vs_default = sorted(set(a) - set(c))
         lost_vs_started = sorted(set(b) - set(c))
         print(f"  {label} — default      {len(a):2d} bet-days  "
-              f"log/day {summarise(a)['mean_log']:+.4f}  "
-              f"final {summarise(a)['final']:7.0f}%  maxDD {summarise(a)['maxdd']:4.0%}")
+              f"log/day {sa['mean_log']:+.4f}  final {sa['final']:7.0f}%  maxDD {sa['maxdd']:4.0%}")
         print(f"  {label} — started-only {len(b):2d} bet-days  "
-              f"log/day {summarise(b)['mean_log']:+.4f}  "
-              f"final {summarise(b)['final']:7.0f}%  maxDD {summarise(b)['maxdd']:4.0%}")
+              f"log/day {sb['mean_log']:+.4f}  final {sb['final']:7.0f}%  maxDD {sb['maxdd']:4.0%}")
         print(f"  {label} — region guard {len(c):2d} bet-days  "
-              f"log/day {summarise(c)['mean_log']:+.4f}  "
-              f"final {summarise(c)['final']:7.0f}%  maxDD {summarise(c)['maxdd']:4.0%}")
+              f"log/day {sc['mean_log']:+.4f}  final {sc['final']:7.0f}%  maxDD {sc['maxdd']:4.0%}")
+        print(f"  {label} — normalised   {len(n):2d} bet-days  "
+              f"log/day {sn['mean_log']:+.4f}  final {sn['final']:7.0f}%  maxDD {sn['maxdd']:4.0%}")
         if b and c:
             print(f"             marginal Δlog/day (guard − started) "
-                  f"{summarise(c)['mean_log'] - summarise(b)['mean_log']:+.4f}  "
-                  f"maxDD {summarise(b)['maxdd']:4.0%} -> {summarise(c)['maxdd']:4.0%}")
+                  f"{sc['mean_log'] - sb['mean_log']:+.4f}  "
+                  f"maxDD {sb['maxdd']:4.0%} -> {sc['maxdd']:4.0%}   "
+                  f"(normalised − started: {sn['mean_log'] - sb['mean_log']:+.4f})")
         print(f"             bet-days lost by the guard (vs started-only arm): "
               f"{len(lost_vs_started)} — {', '.join(lost_vs_started) or 'none'}")
-        rows[label] = (a, b, c)
         print()
     print("read: in-sample history does not punish the guard (the region class")
     print("was disproportionately losing legs) — but that is hindsight, not")
     print("evidence of edge: the rule exists to stop the incident-#6 family,")
-    print("and its true price shows up on genuinely new days. The upstream fix")
-    print("(normalise kickoffs in picks_today.py) removes most of that price;")
-    print("the guard stays as the seatbelt either way.")
+    print("and its true price shows up on genuinely new days.")
+    print()
+    print("COST CAVEAT (2026-09-06 follow-up review, C1): the in-season")
+    print("guard-vs-started gap is ONE bet-day (2026-08-04), and that day WON.")
+    print("With n=35, sd of daily log growth ~0.21, the gap is ~0.2 standard")
+    print("errors of a single day's noise — indistinguishable from zero, and")
+    print("the same guard would look like a GAIN had that one day lost. The")
+    print("cost of the guard is UNMEASURED, not small; the started-only arm")
+    print("is not 'better than default' either (0.3 s.e.). Do not quote")
+    print("-0.0070 (in-season) or +0.0080 (whole archive) as a price.")
+    print()
+    print("NORMALISATION RECOVERY (Task A; details in the HANDOVER addendum):")
+    print("the 'normalised' arm above is the LOWER bound — it resolves only")
+    print("witnesses preserved in the archives (own zoned kickoff; the")
+    print("scoutingstats starting_at string, which the odds adapter stores as")
+    print("odds_captured_at). Same-fixture vitibet rows ('+02:00' in every")
+    print("archived vitibet-anchored row) existed at fetch time for most of")
+    print("the remaining clock-only legs (sources_used proves presence) but")
+    print("their kickoff strings are not archived, so live recovery is higher.")
+    return 0
+
+
+def _row_flag(row: dict) -> tuple[bool, str]:
+    """Is an archived row QUARANTINE-FLAGGED, and under which label?
+
+    Flagged = WATCHLIST_* bucket or a price_quarantine_reason. The two
+    coincide by construction for scoutingstats-sole prices
+    (WATCHLIST_UNCORROBORATED_PRICE / scoutingstats_sole_source) and for
+    suspect fuzzy prices (WATCHLIST_SUSPECT_PRICE / alias_fuzzy); they are
+    counted once. The engine bets these legs anyway: playable_legs only
+    excludes alias_fuzzy suspects that were never rescued.
+    """
+    bucket = str(row.get("bucket") or "")
+    reason = str(row.get("price_quarantine_reason") or row.get("quarantine") or "")
+    if bucket.startswith("WATCHLIST") or reason not in ("", "none"):
+        label = reason or bucket
+        return True, label
+    return False, ""
+
+
+def cmd_quarantine(universe, since=None, until=None):
+    """MEASURE ONLY (Task B, 2026-09-06 follow-up): what are the ridden
+    WATCHLIST / quarantine legs worth? No gate changes.
+
+    Ridden = legs on the DEFAULT replay arm's cards (the unguarded engine's
+    live selection on the settled-playable pools). FLAGGED = archived row
+    carries a WATCHLIST_* bucket or a price_quarantine_reason. Always split
+    in-season (>= 2026-08-01) vs off-season — a mixed figure is the ⑩
+    confound.
+
+    Flat ROI = 1 flat unit per leg at the odds the engine bet: win -> odds-1,
+    void -> 0, loss -> -1. Hit rate = wins / non-void legs. Differences are
+    day-block bootstrapped (the same resampled day indices score both
+    populations).
+
+    This is a MEASUREMENT, not a gate: if flagged legs look worse, that is a
+    pre-registered candidate for the October slot under the standing bar
+    (paired-bootstrap p10 > 0 AND every leave-one-day-out keeps the sign AND
+    maxDD <= live, at n >= 60 genuinely new in-season bet-days), never an
+    adoption here.
+    """
+    scope = _day_scope(universe, since, until)
+    print("=" * 74)
+    print("QUARANTINE-GATE CENSUS — RIDDEN LEGS (measure only; no gate change)")
+    print("=" * 74)
+    print(f"scope: {len(scope)} settled-playable bet-days; ridden = default "
+          f"replay arm's cards (live selection, floor {at.MIN_LEG_ODDS});")
+    print("flagged = WATCHLIST_* bucket or price_quarantine_reason on the row.\n")
+
+    # ---- ridden legs per day with per-leg facts ----
+    ridden: dict[str, list[dict]] = {}
+    for d, pool in scope.items():
+        accas = at.select_accas(pool)
+        chosen = [l["match"] for a in accas for l in a]
+        for leg in pool:
+            if leg["match"] in chosen and leg["match"] not in {x["match"] for x in ridden.get(d, [])}:
+                row = leg.get("row") or {}
+                flagged, label = _row_flag(row)
+                ridden.setdefault(d, []).append({
+                    "match": leg["match"], "result": leg["result"],
+                    "odds": float(leg["odds"] or 0.0), "flagged": flagged,
+                    "label": label, "row": row,
+                })
+
+    def _split(days):
+        return ({d: v for d, v in days.items() if d >= "2026-08-01"},
+                {d: v for d, v in days.items() if d < "2026-08-01"})
+
+    regimes = (("whole archive", ridden),
+               ("in-season (>= 2026-08-01)", _split(ridden)[0]),
+               ("off-season (< 2026-08-01)", _split(ridden)[1]))
+
+    for label, days in regimes:
+        legs = [l for d in days for l in days[d]]
+        n_flag = sum(1 for l in legs if l["flagged"])
+        print(f"  {label}: {len(legs)} ridden legs, {n_flag} flagged "
+              f"({n_flag / max(len(legs), 1):.0%}) across "
+              f"{sum(1 for d in days if any(l['flagged'] for l in days[d]))} of "
+              f"{len(days)} bet-days touched by a flagged leg")
+        if n_flag:
+            by_ev: dict[str, list] = {}
+            by_reason: dict[str, list] = {}
+            by_bucket: dict[str, list] = {}
+            for l in legs:
+                if not l["flagged"]:
+                    continue
+                row = l["row"]
+                by_ev.setdefault(str(row.get("price_evidence") or "none"), []).append(l)
+                by_reason.setdefault(str(row.get("price_quarantine_reason") or "none"), []).append(l)
+                by_bucket.setdefault(str(row.get("bucket") or "none"), []).append(l)
+            for name, table in (("price_evidence", by_ev),
+                                ("quarantine_reason", by_reason),
+                                ("bucket", by_bucket)):
+                bits = ", ".join(f"{k} {len(v)}" for k, v in sorted(table.items()))
+                print(f"      by {name}: {bits}")
+
+    def _flat_roi(l):
+        if l["result"] == "win":
+            return float(l["odds"]) - 1.0
+        if l["result"] == "void":
+            return 0.0
+        return -1.0
+
+    def _stats(legs):
+        n = len(legs)
+        non_void = [l for l in legs if l["result"] != "void"]
+        wins = sum(1 for l in legs if l["result"] == "win")
+        roi = sum(_flat_roi(l) for l in legs)
+        return {"n": n, "wins": wins, "nv": len(non_void),
+                "hit": wins / len(non_void) if non_void else float("nan"),
+                "roi": roi / n if n else 0.0}
+
+    print()
+    for label, days in regimes:
+        legs = [l for d in days for l in days[d]]
+        flagged = [l for l in legs if l["flagged"]]
+        unflagged = [l for l in legs if not l["flagged"]]
+        sf, su = _stats(flagged), _stats(unflagged)
+        print(f"  {label} — flagged   n={sf['n']:3d}  hit {sf['hit']:6.1%}  "
+              f"flat ROI {sf['roi']:+7.1%}")
+        print(f"  {label} — unflagged n={su['n']:3d}  hit {su['hit']:6.1%}  "
+              f"flat ROI {su['roi']:+7.1%}")
+
+        # day-block bootstrap of the per-day difference (paired day indices)
+        def _day_mean(days_, flag):
+            out = {}
+            for d, ls in days_.items():
+                sub = [l for l in ls if l["flagged"] == flag]
+                if sub:
+                    out[d] = sum(_flat_roi(l) for l in sub) / len(sub)
+            return out
+
+        mf = _day_mean(days, True)
+        mu = _day_mean(days, False)
+        paired = sorted(set(mf) & set(mu))
+        if paired:
+            rng = __import__("random").Random(20260906)
+            diffs = []
+            for _ in range(4000):
+                idx = [rng.choice(paired) for _ in paired]
+                diffs.append(sum(mf[i] - mu[i] for i in idx) / len(idx))
+            diffs.sort()
+            p10 = diffs[400]
+            lo, hi = diffs[200], diffs[3800]
+            flag = "  ⚠ small-n" if len(paired) < 30 else ""
+            print(f"      paired day-bootstrap ΔROI (flagged−unflagged), "
+                  f"{len(paired)} days with both: "
+                  f"p10 {p10:+.1%}, 90% CI [{lo:+.1%}, {hi:+.1%}]{flag}")
+        print()
+
+    # ---- would-blank days + growth consequence (IN-SAMPLE) ----
+    filtered = {}
+    for d, pool in scope.items():
+        kept = [l for l in pool if not _row_flag(l.get("row") or {})[0]]
+        filtered[d] = kept
+    print("WOULD-BLANK + GROWTH IF FLAGGED LEGS WERE EXCLUDED (IN-SAMPLE;")
+    print("not a policy — measurement only)")
+    for label, days in (("whole archive", scope),
+                        ("in-season (>= 2026-08-01)", _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        sub = {d: days[d] for d in days}
+        fsub = {d: v for d, v in filtered.items() if d in days}
+        ra, rb = replay(sub, {}), replay(fsub, {})
+        rs_a, rs_b = summarise(ra), summarise(rb)
+        lost = sorted(set(ra) - set(rb))
+        print(f"  {label} — default {rs_a['days']:2d} bet-days  "
+              f"log/day {rs_a['mean_log']:+.4f}  final {rs_a['final']:7.0f}%  "
+              f"maxDD {rs_a['maxdd']:4.0%}")
+        print(f"  {label} — exclude-flagged {rs_b['days']:2d} bet-days  "
+              f"log/day {rs_b['mean_log']:+.4f}  final {rs_b['final']:7.0f}%  "
+              f"maxDD {rs_b['maxdd']:4.0%}  "
+              f"(days blanked: {len(lost)} — {', '.join(lost) or 'none'})")
+    print()
+    print("read: these are in-sample descriptions of the flag's history, not")
+    print("evidence. Whatever the flag's legs did, the flag was designed as a")
+    print("PRICING caution, not a betting signal; measuring it does not make it")
+    print("one. If the flagged population is worse, the pre-registered October")
+    print("slot owns that test (standing bar: paired-bootstrap p10 > 0 AND")
+    print("leave-one-day-out sign holds AND maxDD <= live, at n >= 60 genuinely")
+    print("new in-season bet-days). No adoption here, ever.")
     return 0
 
 
@@ -1197,7 +1436,13 @@ def main():
                     help="MONEY COST of the LIVE kickoff guard (region rule): "
                          "replay history with auto_tickets.live_kickoff_guard "
                          "at each day's 09:00 SAST build; log/day, maxDD and "
-                         "bet-days lost vs the unguarded replay")
+                         "bet-days lost vs the unguarded replay, plus the "
+                         "ingest-normalisation recovery lower bound")
+    ap.add_argument("--quarantine", action="store_true",
+                    help="MEASURE ONLY: ridden WATCHLIST/quarantine legs — "
+                         "census, hit rate + flat ROI (day-block bootstrap), "
+                         "would-blank days and growth consequence, split "
+                         "in-season/off-season. No gate change (Task B).")
     ap.add_argument("--since", metavar="YYYY-MM-DD",
                     help="restrict replay universe to this date or later")
     ap.add_argument("--until", metavar="YYYY-MM-DD",
@@ -1234,6 +1479,9 @@ def main():
     if args.kickoff_guard:
         return cmd_kickoff_guard(universe,
                                  since=args.since, until=args.until)
+    if args.quarantine:
+        return cmd_quarantine(universe,
+                              since=args.since, until=args.until)
 
     engine_status()
     live_settings()

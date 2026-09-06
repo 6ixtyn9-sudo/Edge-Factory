@@ -12,7 +12,7 @@ import re
 import sys
 import math
 from collections import Counter
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 from zoneinfo import ZoneInfo
 from pathlib import Path
 from statistics import mean
@@ -1689,6 +1689,149 @@ def _kickoff_delta_minutes(a: object, b: object) -> int | None:
     return abs(a_min - b_min)
 
 
+# ---------------------------------------------------------------------------
+# KICKOFF NORMALISATION AT INGEST (incident #6 — the REAL fix, Task A).
+#
+# The guard drops legs whose kickoff cannot be trusted. This is the data-side
+# fix: every pick emitted by this pipeline now carries
+#     kickoff_utc      ISO-8601 UTC instant, or None
+#     kickoff_source   HOW it was resolved (constants below)
+#     kickoff_witness  provenance note (which source row's raw string)
+# `kickoff` (the feed's raw text) is NEVER overwritten — the guard and the
+# audit keep reading the original rendering.
+#
+# Resolution rule (no guesses, no SAST defaulting — the incident fault):
+#   kickoff_utc is set ONLY from an explicit zone-bearing instant found at
+#   ingest time in (a) the pick's own kickoff string (offset/Z passthrough),
+#   or (b) another source row for the SAME fixture in the fetch-time data —
+#   scoutingstats starting_at ("…T02:30:00Z"), vitibet data-time
+#   ("…T20:15:00+02:00"), bzzoiro event_date, etc. If two zoned witnesses
+#   DISAGREE, the row is left unresolved (do not guess which is right).
+#   Naive renderings ("HH:MM", "DD-MM, HH:MM", "YYYY-MM-DD HH:MM:SS") name
+#   no zone and are marked unresolved even when they carry a date: the
+#   2026-09-06 Vancouver row's "22:30" was exactly such a wall clock read on
+#   a remote-league slate, and stamping it SAST was the bug.
+#
+# 2026-09-06 evidence: the Vancouver fixture's own pick anchor (statarea)
+# rendered the bare "22:30", but the SAME slate carried a scoutingstats row
+# for the fixture with starting_at "2026-09-06T02:30:00Z" (the true kickoff —
+# it is preserved on the archived row as odds_captured_at because the
+# scoutingstats odds adapter stores the starting_at string in captured_at).
+# Inter Miami's row on the same slate came through "+02:00" via vitibet/
+# betexplorer. The pipeline CAN emit a zoned instant — it just picked the
+# wrong (anchor) kickoff string. Normalisation scans every source row of the
+# fixture, not just the anchor.
+# ---------------------------------------------------------------------------
+KICKOFF_SRC_OFFSET = "offset_passthrough"     # pick's own kickoff carried offset/Z
+KICKOFF_SRC_SIBLING = "derived_sibling_row"   # same-fixture source row at ingest carried one
+KICKOFF_SRC_ODDS_ROW = "derived_odds_row"     # matched odds row carried one (enrichment-time)
+KICKOFF_SRC_UNRESOLVED = "unresolved"
+
+_ZONED_KICKOFF_RE = re.compile(
+    r"^\d{4}-\d{2}-\d{2}[T ]\d{1,2}:\d{2}(:\d{2}(\.\d+)?)?\s*(Z|[+-]\d{2}:?\d{2})$"
+)
+
+
+def zoned_kickoff_to_utc(value: object) -> str | None:
+    """UTC ISO string from an explicit zone-bearing ISO kickoff, else None.
+
+    Accepts only strings that carry their own offset/Z — a naive string names
+    no zone and returns None (no SAST defaulting anywhere in normalisation).
+    """
+    raw = str(value or "").strip()
+    if not raw or not _ZONED_KICKOFF_RE.match(raw):
+        return None
+    text = raw[:-1] + "+00:00" if raw.endswith("Z") else raw
+    text = re.sub(r"([+-]\d{2})(\d{2})$", r"\1:\2", text)
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        return None
+    return dt.astimezone(timezone.utc).isoformat()
+
+
+def _fixture_sibling_rows(pick: dict, data: dict[str, dict]) -> list[tuple[str, dict]]:
+    """Every ingest row for the same fixture across all sources (data is the
+    fetch_all() dict: source name -> {(home_key, away_key): row})."""
+    key = (source_team_key(pick.get("home") or ""), source_team_key(pick.get("away") or ""))
+    out: list[tuple[str, dict]] = []
+    for name in sorted(data or {}):
+        rows = data[name]
+        if not isinstance(rows, dict):
+            continue
+        row = rows.get(key)
+        if row:
+            out.append((str(name), row))
+    return out
+
+
+def resolve_kickoff_utc(
+    pick: dict,
+    *,
+    data: dict[str, dict] | None = None,
+    odds_row: dict | None = None,
+    odds_provider: str | None = None,
+) -> None:
+    """Attach kickoff_utc / kickoff_source / kickoff_witness to a pick.
+
+    Idempotent: never overwrites an existing kickoff_utc (the run_day
+    sibling scan runs before enrichment; enrichment only fills rows the scan
+    could not see, e.g. live-fetched bzzoiro odds rows).
+    """
+    if pick.get("kickoff_utc"):
+        return
+    own_raw = _kickoff_value(pick) or ""
+    own_utc = zoned_kickoff_to_utc(own_raw) if own_raw else None
+    if own_utc:
+        pick["kickoff_utc"] = own_utc
+        pick["kickoff_source"] = KICKOFF_SRC_OFFSET
+        pick["kickoff_witness"] = f"own kickoff {own_raw!r}"
+        return
+
+    candidates: list[tuple[str, str, str, bool]] = []  # (utc, source_name, raw, is_odds_row)
+    for sname, srow in _fixture_sibling_rows(pick, data or {}):
+        sraw = _kickoff_value(srow)
+        sutc = zoned_kickoff_to_utc(sraw) if sraw else None
+        if sutc:
+            candidates.append((sutc, sname, str(sraw), False))
+    if odds_row is not None:
+        oraw = _kickoff_value(odds_row)
+        outc = zoned_kickoff_to_utc(oraw) if oraw else None
+        if outc:
+            candidates.append((outc, str(odds_provider or "odds_row"), str(oraw), True))
+
+    if not candidates:
+        pick["kickoff_utc"] = None
+        pick["kickoff_source"] = KICKOFF_SRC_UNRESOLVED
+        return
+    distinct = {c[0] for c in candidates}
+    if len(distinct) > 1:
+        # Conflicting zoned witnesses (e.g. a rescheduled fixture mid-slate):
+        # leaving it unresolved is the only non-guessing answer. The live
+        # guard's region fallback still covers it.
+        pick["kickoff_utc"] = None
+        pick["kickoff_source"] = KICKOFF_SRC_UNRESOLVED
+        pick["kickoff_witness"] = (
+            f"conflicting zoned witnesses: "
+            + "; ".join(f"{n} {r!r}" for _, n, r, _ in candidates[:4]))
+        return
+    utc, sname, sraw, is_odds = candidates[0]
+    pick["kickoff_utc"] = utc
+    pick["kickoff_source"] = KICKOFF_SRC_ODDS_ROW if is_odds else KICKOFF_SRC_SIBLING
+    pick["kickoff_witness"] = f"{sname} kickoff {sraw!r}"
+
+
+def attach_kickoff_normalisation(picks: list[dict], data: dict[str, dict]) -> None:
+    """run_day hook: after picks are built and date-filed, resolve every
+    pick's kickoff from the fetch-time data (all sources of the same
+    fixture). Enrichment-time odds rows are attached separately where the
+    run-day scan cannot see them (see enrich_with_live_odds)."""
+    for p in picks:
+        resolve_kickoff_utc(p, data=data)
+
+
 def operational_pick_eligibility(
     pick: dict,
     *,
@@ -2164,6 +2307,10 @@ def enrich_with_live_odds(
         pick["odds_league"] = row.get("league")
         if previous_odds is not None and previous_source != pick["odds_source"]:
             pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+        # Incident-#6 normalisation: the matched odds row may carry a zoned
+        # kickoff the run-day sibling scan could not see (live-fetched
+        # bzzoiro rows). Idempotent — never overwrites the run-day verdict.
+        resolve_kickoff_utc(pick, odds_row=row, odds_provider=provider)
 
         if pick["odds_source"] == SCOUTINGSTATS_ODDS_SOURCE:
             # The secondary fallback matched, but the primary provider had no
@@ -2655,6 +2802,11 @@ def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = Non
         resolved = kickoff_date(p.get("kickoff") or p.get("time"), fallback_date=day)
         if resolved:
             p["date"] = resolved
+    # Incident-#6 real fix (Task A): resolve kickoff_utc at ingest from the
+    # fetch-time rows of the same fixture (scoutingstats "...Z", vitibet
+    # "+02:00", ...). Never overwrites kickoff; naive-only fixtures stay
+    # unresolved and the live guard's region fallback covers them.
+    attach_kickoff_normalisation(picks, data)
     picks.sort(key=lambda r: (-r.get("w_score", 0.0), -r.get("avg_p", 0)))
     return picks, vetoes, n_up, data
 
@@ -3033,6 +3185,9 @@ def enrich_unmatched_with_betexplorer(
         pick.pop("suspect_price", None)
         if previous_odds is not None and previous_source != pick["odds_source"]:
             pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+        # Idempotent normalisation hook (betexplorer rows are bare "HH:MM"
+        # today, so this is a no-op until the adapter emits a zoned kickoff).
+        resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=_BE_SOURCE)
         enriched += 1
 
     return enriched
