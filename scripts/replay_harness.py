@@ -838,6 +838,96 @@ def cmd_kickoff_contract(universe, since=None, until=None):
     return 0
 
 
+def cmd_kickoff_guard(universe, since=None, until=None):
+    """MONEY COST of the LIVE kickoff guard (region rule) on HISTORY.
+
+    Applies auto_tickets.live_kickoff_guard at each day's canonical 09:00
+    SAST build instant, then replays three arms through the same planner
+    with the same live stake rules:
+      - default: the raw replay universe (what the harness battery calls
+        "live" — no era guard modeled);
+      - started-only: the engine's historical live path approximated
+        (parseable legs already started at the build instant drop);
+      - region guard: full live_kickoff_guard (started + clock-only rows in
+        remote-clock regions + missing/garbage).
+    Prints per regime (whole archive and in-season >= 2026-08-01): log/day,
+    final, maxDD and bet-days. The guard's MARGINAL money cost is the
+    region-guard arm minus the started-only arm; the default arm is shown
+    only for continuity with the battery row. Leg/day counts alone are not
+    a cost (2026-09-06 review).
+    """
+    scope = _day_scope(universe, since, until)
+    started_only, guarded = {}, {}
+    census: dict[str, list[str]] = {}
+    for d, pool in scope.items():
+        build_at = at.canonical_build_instant(d)
+        # arm 2: the historical live engine's started check (parseable past)
+        so = []
+        for leg in pool:
+            pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
+            kt = at.parse_kickoff(pick)
+            if kt is None or kt.astimezone(at.TZ) >= build_at:
+                so.append(leg)
+        started_only[d] = so
+        # arm 3: the full live guard
+        kept, drops = at.live_kickoff_guard(pool, build_at)
+        for reason, names in drops.items():
+            census.setdefault(reason, []).extend(f"{d} {n}" for n in names)
+        guarded[d] = kept
+
+    n_drop = sum(len(v) for v in census.values())
+    print("=" * 74)
+    print("LIVE KICKOFF GUARD (region rule) — MONEY COST ON HISTORY")
+    print("=" * 74)
+    print(f"scope: {len(scope)} settled-playable bet-days "
+          f"({next(iter(scope), '-')} -> {list(scope)[-1] if scope else '-'}); "
+          f"build instant per day: {at.FREEZE_HOUR:02d}:00 SAST (canonical freeze run)")
+    print(f"guard drops (pool-level): {n_drop} legs total:")
+    for reason in sorted(census):
+        names = census[reason]
+        print(f"  • {len(names)} {reason.lower()}  "
+              f"(e.g. {names[0] if names else '-'}{f' — +{len(names)-1} more' if len(names) > 1 else ''})")
+
+    print()
+    rows = {}
+    for label, days in (("whole archive", scope),
+                        ("in-season (>= 2026-08-01)", _day_scope(scope, "2026-08-01"))):
+        if not days:
+            continue
+        sub = {d: days[d] for d in days}
+        sub_so = {d: started_only[d] for d in days}
+        sub_g = {d: guarded[d] for d in days}
+        a = replay(sub, {})
+        b = replay(sub_so, {})
+        c = replay(sub_g, {})
+        lost_vs_default = sorted(set(a) - set(c))
+        lost_vs_started = sorted(set(b) - set(c))
+        print(f"  {label} — default      {len(a):2d} bet-days  "
+              f"log/day {summarise(a)['mean_log']:+.4f}  "
+              f"final {summarise(a)['final']:7.0f}%  maxDD {summarise(a)['maxdd']:4.0%}")
+        print(f"  {label} — started-only {len(b):2d} bet-days  "
+              f"log/day {summarise(b)['mean_log']:+.4f}  "
+              f"final {summarise(b)['final']:7.0f}%  maxDD {summarise(b)['maxdd']:4.0%}")
+        print(f"  {label} — region guard {len(c):2d} bet-days  "
+              f"log/day {summarise(c)['mean_log']:+.4f}  "
+              f"final {summarise(c)['final']:7.0f}%  maxDD {summarise(c)['maxdd']:4.0%}")
+        if b and c:
+            print(f"             marginal Δlog/day (guard − started) "
+                  f"{summarise(c)['mean_log'] - summarise(b)['mean_log']:+.4f}  "
+                  f"maxDD {summarise(b)['maxdd']:4.0%} -> {summarise(c)['maxdd']:4.0%}")
+        print(f"             bet-days lost by the guard (vs started-only arm): "
+              f"{len(lost_vs_started)} — {', '.join(lost_vs_started) or 'none'}")
+        rows[label] = (a, b, c)
+        print()
+    print("read: in-sample history does not punish the guard (the region class")
+    print("was disproportionately losing legs) — but that is hindsight, not")
+    print("evidence of edge: the rule exists to stop the incident-#6 family,")
+    print("and its true price shows up on genuinely new days. The upstream fix")
+    print("(normalise kickoffs in picks_today.py) removes most of that price;")
+    print("the guard stays as the seatbelt either way.")
+    return 0
+
+
 # --------------------------------------------------------------------------
 # --warehouse-replay: FEASIBILITY audit (Phase 1). Research only, opt-in.
 # --------------------------------------------------------------------------
@@ -1103,6 +1193,11 @@ def main():
                          "replay history under the fail-closed kickoff-proof "
                          "standard at each day's 09:00 SAST build, to size "
                          "the data-side kickoff gap (incident #6)")
+    ap.add_argument("--kickoff-guard", action="store_true",
+                    help="MONEY COST of the LIVE kickoff guard (region rule): "
+                         "replay history with auto_tickets.live_kickoff_guard "
+                         "at each day's 09:00 SAST build; log/day, maxDD and "
+                         "bet-days lost vs the unguarded replay")
     ap.add_argument("--since", metavar="YYYY-MM-DD",
                     help="restrict replay universe to this date or later")
     ap.add_argument("--until", metavar="YYYY-MM-DD",
@@ -1136,6 +1231,9 @@ def main():
     if args.kickoff_contract:
         return cmd_kickoff_contract(universe,
                                     since=args.since, until=args.until)
+    if args.kickoff_guard:
+        return cmd_kickoff_guard(universe,
+                                 since=args.since, until=args.until)
 
     engine_status()
     live_settings()

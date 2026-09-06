@@ -3,12 +3,14 @@
 The 2026-09-06 review split the original one-layer rewrite into:
 
 1. LIVE guard (`auto_tickets.live_kickoff_guard`, wired into cmd_today): a
-   leg rides only when its kickoff is usable AND not already started. A row
-   with NO usable kickoff date — bare "22:30" (the Vancouver incident row),
-   missing, garbage — is undatable and DROPS, counted in the run's skip
-   census. Rows carrying a full calendar date (naive "2026-09-06 15:30:00",
-   "05-09, 22:30", or an explicit offset/Z instant) are compared on the
-   feeds' UTC+2 rendering via parse_kickoff, and started legs drop too.
+   leg rides only when its kickoff is usable AND not already started. Drops,
+   in order: missing/garbage kickoffs; CLOCK-ONLY kickoffs (bare "22:30" —
+   the Vancouver incident row — or no-year "05-09, 22:30") whose league
+   region's clock is far from SAST (Americas / Asia-Pacific — the region
+   list never computes a kickoff, it only judges whether the SAST reading of
+   the clock is trustworthy); and dated legs already started at build time
+   (compared on the feeds' UTC+2 rendering via parse_kickoff). Clock-only
+   rows from Europe/Africa ride.
 2. AUDIT contract (`auto_tickets.kickoff_contract`, reached only from
    `replay_harness.py --kickoff-contract`, off by default): the fail-closed
    proof standard — a leg rides only when its kickoff is PROVEN by the row
@@ -139,7 +141,7 @@ def test_proven_parse_uses_a_zone_carried_in_the_row_as_data():
 def test_kickoff_has_usable_date_classifies_the_shapes():
     assert at.kickoff_has_usable_date(_leg("a", kickoff="2026-09-06T20:15:00+02:00")["row"])
     assert at.kickoff_has_usable_date(_leg("b", kickoff="2026-09-06 15:30:00")["row"])
-    assert at.kickoff_has_usable_date(_leg("c", kickoff="05-09, 22:30")["row"])
+    assert at.kickoff_has_usable_date(_leg("c", kickoff="05-09, 22:30")["row"])  # day-month
     # bare time-only, missing, garbage: no usable date
     assert not at.kickoff_has_usable_date(_vancouver_leg()["row"])       # "22:30"
     assert not at.kickoff_has_usable_date(_leg("d", kickoff="13:00")["row"])
@@ -150,14 +152,72 @@ def test_kickoff_has_usable_date_classifies_the_shapes():
     assert not at.kickoff_has_usable_date(_leg("g", kickoff="not a time")["row"])
 
 
+def test_remote_clock_region_classifier_is_boolean_only():
+    """The region list answers ONE question — is SAST rendering of this
+    clock trustworthy? — and never computes a kickoff instant."""
+    assert at.kickoff_clock_region_is_remote(
+        _vancouver_leg()["row"])                                     # USA, MLS
+    assert at.kickoff_clock_region_is_remote(
+        _leg("sea", league="USA: MLS")["row"])
+    assert at.kickoff_clock_region_is_remote(
+        _leg("k", league_raw="South Korea,K-league 2")["row"])
+    assert at.kickoff_clock_region_is_remote(
+        _leg("aus", league_raw="Australia,Northern New South Wales")["row"])
+    assert at.kickoff_clock_region_is_remote(
+        _leg("mx", league="Mexico,Liga Mx Apertura")["row"])
+    assert at.kickoff_clock_region_is_remote(
+        _leg("sa", league_raw="International,Copa Sudamericana Knockout Stage")["row"])
+    # Europe / Africa and unclassified-international rows are NOT remote
+    assert not at.kickoff_clock_region_is_remote(
+        _leg("hr", league_raw="Croatia,Hnl")["row"])
+    assert not at.kickoff_clock_region_is_remote(
+        _leg("eng", league_raw="England,National League")["row"])
+    assert not at.kickoff_clock_region_is_remote(
+        _leg("cl", league_raw="International,Champions League Playoff Round")["row"])
+
+
 def test_live_guard_drops_the_vancouver_incident_row():
-    """The exact incident shape ('22:30', no date) is undatable -> the live
-    guard drops it before any comparison can go wrong."""
+    """The exact incident shape ('22:30', no date, MLS) is a clock-only
+    kickoff in a remote-clock region -> the live guard drops it before any
+    comparison can go wrong."""
     pool = [_vancouver_leg()]
     kept, drops = at.live_kickoff_guard(pool, _build09())
     assert kept == []
-    assert at.KO_SKIP_NO_DATE in drops
-    assert drops[at.KO_SKIP_NO_DATE] == ["Vancouver Whitecaps vs St. Louis City"]
+    assert at.KO_SKIP_REMOTE_CLOCK in drops
+    assert drops[at.KO_SKIP_REMOTE_CLOCK] == ["Vancouver Whitecaps vs St. Louis City"]
+
+
+def test_live_guard_keeps_european_clock_only_rows():
+    """A bare '16:00' Croatian clock read on the SAST slate day is right to
+    within ~1h and historically safe (39 of 47 bare legs); it rides."""
+    build = _build09()
+    pool = [_leg("rudes", kickoff="16:00", league_raw="Croatia,Hnl"),
+            _leg("dane", kickoff="15:00", league_raw="Denmark,Superligaen"),
+            _leg("eng", kickoff="13:00", league_raw="England,National League")]
+    kept, drops = at.live_kickoff_guard(pool, build)
+    assert len(kept) == 3 and drops == {}
+    # ...unless that European clock is ALREADY past at build time
+    early = [_leg("no", kickoff="08:00", league_raw="Norway,1. Division")]
+    kept2, drops2 = at.live_kickoff_guard(early, build)
+    assert kept2 == [] and at.KO_SKIP_STARTED in drops2
+
+
+def test_live_guard_drops_remote_region_clock_only_rows():
+    """The eight named near-miss rows + the class: remote-region clock-only
+    rows drop regardless of how 'future' the SAST reading looks."""
+    build = _build09()
+    cases = [
+        ("Suwon Bluewings vs Gimhae City", "04:00", "South Korea,K-league 2"),
+        ("Seattle Sounders vs Austin FC", "21:30", "USA,Major League Soccer"),
+        ("Penarol vs Central Espanol", "22:30", "Uruguay,Liga Auf Clausura"),
+        ("Toluca vs FC Juarez", "20:00", "Mexico,Liga Mx Apertura"),
+        ("Broadmeadow Magic vs Charlestown Azzurri", "21:00",
+         "Australia,Northern New South Wales"),
+    ]
+    pool = [_leg("x", kickoff=ko, league_raw=lg) for _, ko, lg in cases]
+    kept, drops = at.live_kickoff_guard(pool, build)
+    assert kept == []
+    assert len(drops[at.KO_SKIP_REMOTE_CLOCK]) == len(cases)
 
 
 def test_live_guard_keeps_dated_naive_and_offset_future_rows():
@@ -167,6 +227,22 @@ def test_live_guard_keeps_dated_naive_and_offset_future_rows():
             _leg("off", kickoff="2026-09-06T20:15:00+02:00")]   # provable +11h
     kept, drops = at.live_kickoff_guard(pool, build)
     assert len(kept) == 3 and drops == {}
+
+
+def test_live_guard_drops_remote_region_yearless_day_month_rows():
+    """Yearless 'DD-MM, HH:MM' in a remote-clock region is the same hazard as
+    a bare clock (no year, no zone; clock read on the SAST slate day). In
+    Europe it parses day-first (source convention) with the slate year."""
+    build = _build09()
+    aus = [_leg("aus", kickoff="04-07, 10:30", league_raw="Australia Queensland NPL")]
+    kept, drops = at.live_kickoff_guard(aus, build)
+    assert kept == [] and at.KO_SKIP_REMOTE_CLOCK in drops
+    # Europe day-month rows ride and parse day-first: '06-09, 15:30' = 6 Sep.
+    eur = [_leg("swe", kickoff="06-09, 15:30", league_raw="Sweden Allsvenskan")]
+    kept2, drops2 = at.live_kickoff_guard(eur, build)
+    assert len(kept2) == 1 and drops2 == {}
+    parsed = at.parse_kickoff(kept2[0]["row"])
+    assert parsed is not None and parsed.day == 6 and parsed.month == 9
 
 
 def test_live_guard_drops_started_dated_rows():
@@ -339,7 +415,11 @@ def test_guard_source_has_no_zone_table_and_live_path_uses_the_live_guard():
     assert "kickoff_contract(pool" not in body
     guard_src = src[src.index("def live_kickoff_guard"):src.index("def parse_kickoff_proven")]
     assert "KO_SKIP_NO_DATE" in guard_src
+    assert "KO_SKIP_REMOTE_CLOCK" in guard_src
     assert "KO_SKIP_STARTED" in guard_src
+    # the region classifier is boolean-only: present, and used by the guard
+    assert "_REMOTE_CLOCK_REGION_HINTS" in src
+    assert "kickoff_clock_region_is_remote" in guard_src
 
 
 # ---------------- end-to-end: cmd_today on the incident-day shape ----------------
@@ -356,26 +436,27 @@ def _slate_rows():
     tz-aware (Miami, started; Zrinjski + Hearts, future), naive-with-date
     (Wales 2), no-date (Rudes), and the Vancouver incident row."""
     rows = []
-    for home, away, ko, odds in [
-            ("Inter Miami", "Atlanta United FC", "2026-09-06T01:30:00+02:00", 1.33),
-            ("Zrinjski", "Siroki Brijeg", "2026-09-06T20:15:00+02:00", 1.26),
-            ("Heart of Midlothian", "Dundee", "2026-09-06T16:00:00+02:00", 1.47),
-            ("Gresford Athletic", "Mold Alexandra", "2026-09-06 15:30:00", 1.45),
-            ("Rudes", "HNK Hajduk Split", "16:00", 1.29),
-            ("Vancouver Whitecaps", "St. Louis City", "22:30", 1.45),
+    for home, away, ko, odds, league in [
+            ("Inter Miami", "Atlanta United FC", "2026-09-06T01:30:00+02:00", 1.33, "x"),
+            ("Zrinjski", "Siroki Brijeg", "2026-09-06T20:15:00+02:00", 1.26, "x"),
+            ("Heart of Midlothian", "Dundee", "2026-09-06T16:00:00+02:00", 1.47, "x"),
+            ("Gresford Athletic", "Mold Alexandra", "2026-09-06 15:30:00", 1.45, "x"),
+            ("Rudes", "HNK Hajduk Split", "16:00", 1.29, "Croatia,Hnl"),
+            ("Vancouver Whitecaps", "St. Louis City", "22:30", 1.45,
+             "USA,Major League Soccer"),
     ]:
         rows.append({"date": "2026-09-06", "home": home, "away": away,
-                     "kickoff": ko, "league": "x", "bucket": "CERTIFIED_CLEAN",
+                     "kickoff": ko, "league": league, "bucket": "CERTIFIED_CLEAN",
                      "market": "1x2", "pick": "home", "avg_p": 70.0, "odds": odds,
                      "quarantine": "none"})
     return rows
 
 
 def test_cmd_today_live_guard_regression(tmp_path, monkeypatch):
-    """cmd_today on the incident-day slate must drop Vancouver (bare, no
-    usable date) and Rudes (bare), drop started Miami, KEEP the dated rows
-    (Gresford rides — the naive-with-date majority is the feed's UTC+2
-    rendering), print the census, and build the honest one-acca card."""
+    """cmd_today on the incident-day slate must drop Vancouver (clock-only,
+    MLS — remote-clock region) and started Miami, KEEP Rudes (clock-only but
+    Croatia — Europe rides) and the dated rows (Gresford rides), print the
+    census, and build the two-acca card from the four surviving legs."""
     monkeypatch.setattr(at, "datetime", _Clock)
     (at.LOCALDATA / "picks_today.json").write_text(
         json_dumps(_slate_rows()))
@@ -386,14 +467,14 @@ def test_cmd_today_live_guard_regression(tmp_path, monkeypatch):
     txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
     ticket = txt.split("KICKOFF GUARD")[0]
     assert "Vancouver Whitecaps vs St. Louis City" not in ticket
-    assert "Rudes vs HNK Hajduk Split" not in ticket
+    assert "Inter Miami vs Atlanta United FC" not in ticket  # started at 01:30 SAST
     assert "Heart of Midlothian vs Dundee" in ticket      # ranked 1
     assert "Gresford Athletic vs Mold Alexandra" in ticket  # dated-naive rides
-    assert "Inter Miami vs Atlanta United FC" not in ticket  # started at 01:30 SAST
-    assert "no usable kickoff date" in txt                # census: Vancouver+Rudes
+    assert "Rudes vs HNK Hajduk Split" in ticket          # Croatia clock-only rides
+    assert "far from sast" in txt                         # census: Vancouver
     assert "already started" in txt                       # census: Miami
-    # two kept legs pair into one acca; a single-ticket day risk
-    assert "[ACCA #1]" in txt and "[ACCA #2]" not in txt
+    # four kept legs pair into two accas (single-ticket-day risk split)
+    assert "[ACCA #1]" in txt and "[ACCA #2]" in txt and "[ACCA #3]" not in txt
     # the 09:13 run is at/after the freeze hour -> the FINAL marker lands
     assert (at.LOCALDATA / "auto_tickets_2026-09-06.frozen").exists()
     # labels: the free-bank wording of Task 3 is on the ticket

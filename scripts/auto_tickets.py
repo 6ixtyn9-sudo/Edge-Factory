@@ -38,10 +38,11 @@ TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
 
 Slip lifecycle matches the production cadence: builds from 06:00 SAST,
 FREEZES at 09:00 (FREEZE_HOUR; later runs re-print), settles as results
-land. Every build runs the LIVE KICKOFF GUARD: a leg whose row carries no
-usable kickoff date (bare "HH:MM", missing, garbage — the incident-#6
-Vancouver class) or whose dated kickoff is already past at build time drops,
-and each run prints the skip census. The fail-closed KICKOFF PROOF CONTRACT
+land. Every build runs the LIVE KICKOFF GUARD: a leg whose kickoff is
+missing/garbage, or clock-only (bare "HH:MM" or no-year day-month) in a
+league region whose clock is far from SAST (Americas / Asia-Pacific — the
+incident-#6 Vancouver class), or already started at build time, drops, and
+each run prints the skip census. The fail-closed KICKOFF PROOF CONTRACT
 exists as an OFF-by-default audit tool (replay_harness.py --kickoff-contract)
 — it is not the live rule. State persists in localdata/auto_tickets_state.json
 (gitignore exception exists).
@@ -93,16 +94,26 @@ PICK_RE = re.compile(r"^picks_(\d{4}-\d{2}-\d{2})\.json$")
 #
 # TWO layers, deliberately different in strength:
 #
-# 1. LIVE guard (cmd_today, this file): a leg with NO usable kickoff date in
-#    the row — bare "HH:MM", missing, garbage — is undatable and drops,
-#    counted in the run's skip census. Rows carrying a full calendar date
-#    (naive "YYYY-MM-DD HH:MM", "DD-MM, HH:MM", or an explicit-offset
-#    instant) are compared with parse_kickoff and drop when already started
-#    at build time. The feeds render dated rows on a UTC+2 clock (Inter
-#    Miami's explicit +02:00 row, the Europe/Americas wall-clock evidence in
-#    the 2026-09-06 HANDOVER addendum): that rendering is the feed contract,
-#    it is TESTED, and it is never re-guessed from a league table. No 4h lead
-#    buffer on the live path.
+# 1. LIVE guard (cmd_today, this file), narrowed 2026-09-06 round 2 after the
+#    region audit: a leg is dropped when its kickoff is CLOCK-ONLY (bare
+#    "HH:MM" or yearless "DD-MM, HH:MM") AND its league region's clock is far
+#    from SAST (Americas / Asia-Pacific — a bare "22:30" MLS clock read on the
+#    slate day is the incident class, off by up to 18h in the fatal
+#    direction), or when the kickoff is missing/garbage, or when the dated
+#    kickoff is already at/past build time. Clock-only rows from Europe /
+#    Africa ride on the SAST reading (their clocks are within ~1-2h of SAST;
+#    a wrong read errs by an hour or two, in the safe direction on the
+#    historical evidence) — 39 of the 47 historical bare legs, on 12
+#    bet-days. The region list ONLY answers "is the SAST reading of this
+#    clock trustworthy?" — it never computes a kickoff instant, so a
+#    mis-hit drops a leg that could have been bet (no-bet, harmless
+#    direction); it cannot fabricate a wrong time. Rows carrying a full
+#    calendar date with a year (naive "YYYY-MM-DD HH:MM" or an explicit-
+#    offset instant) are compared with parse_kickoff and drop when already
+#    started: the feeds render dated rows on a UTC+2 clock (Inter Miami's
+#    explicit +02:00 row; the wall-clock evidence in the 2026-09-06 HANDOVER
+#    addendum). That rendering is the feed contract — tested, never
+#    re-guessed from a league table. No 4h lead buffer on the live path.
 # 2. AUDIT contract (kickoff_contract; replay_harness.py --kickoff-contract,
 #    OFF by default): the fail-closed standard — a leg rides only when its
 #    kickoff is PROVEN by the row itself (explicit UTC offset/Z, or naive +
@@ -114,7 +125,9 @@ KICKOFF_MIN_LEAD_HOURS = 4.0    # AUDIT-ONLY lead. Proven kickoffs must clear
                                 # this many hours or the audit contract drops
                                 # them (result feeds lag). Never the live
                                 # rule (2026-09-06 review).
-KO_SKIP_NO_DATE = "no usable kickoff date (bare time / missing / unparseable)"
+KO_SKIP_NO_DATE = "missing / unparseable kickoff"
+KO_SKIP_REMOTE_CLOCK = ("clock-only kickoff (bare time or no-year day-month) in a "
+                        "league region far from SAST — SAST rendering untrusted")
 KO_SKIP_UNPROVEN = "unprovable kickoff (no explicit offset or row-carried zone)"
 KO_SKIP_STARTED = "already started (dated kickoff at/past build time)"
 KO_SKIP_TOO_CLOSE = f"audit: kickoff under {KICKOFF_MIN_LEAD_HOURS:g}h away or already started (provable)"
@@ -230,10 +243,10 @@ def kickoff_has_usable_date(pick) -> bool:
     """Does the row's kickoff carry a usable calendar date at all?
 
     True for a full ISO/naive date ("2026-09-06T20:15:00+02:00",
-    "2026-09-06 15:30:00") or a day-month listing ("05-09, 22:30").
-    False for bare clock times ("22:30" — the incident-#6 Vancouver shape),
-    missing kickoffs, and garbage: those rows cannot say WHEN the match
-    starts, so no comparison against build time is possible.
+    "2026-09-06 15:30:00"). A yearless day-month listing ("05-09, 22:30")
+    also counts as dated for parsing purposes — its region trust is decided
+    separately (see kickoff_clock_region_is_remote). False for bare clock
+    times ("22:30"), missing kickoffs and garbage.
     """
     raw = str(pick.get("kickoff_canonical") or pick.get("kickoff") or "").strip()
     if not raw:
@@ -242,32 +255,91 @@ def kickoff_has_usable_date(pick) -> bool:
                 or re.match(r"^\d{1,2}-\d{1,2},\s*\d{1,2}:\d{2}", raw))
 
 
-def live_kickoff_guard(pool, now):
-    """The LIVE kickoff guard (incident #6 fix, revised after the row audit).
+# Clock-only kickoff rows (bare "HH:MM", yearless "DD-MM, HH:MM") carry no
+# date/zone of their own: the engine reads the clock on the slate day in
+# SAST. That reading is trustworthy only when the league's local clock is
+# close to SAST. This list is NOT a kickoff-time computation — it only
+# answers "is the SAST rendering of this clock safe to trust?" and a wrong
+# answer drops a leg that could have been bet (harmless direction), it can
+# never fabricate a wrong kickoff instant. Scope: Americas (clocks 4-11h
+# west of SAST; a bare evening clock read on the slate day is the incident
+# #6 failure, e.g. 22:30 EDT = 04:30 SAST next day) and Asia-Pacific (clocks
+# 5-9h east of SAST; a bare evening clock reads up to 9h late). Europe /
+# Africa clocks sit within ~1-2h of SAST and are trusted. The 2026-09-06
+# region audit: 8 of 47 historical bare ridden legs were in this class and
+# carry every historical near-miss (Suwon 08-07, Bolivar 08-12, Deportivo
+# Moron 08-15, Broadmeadow 08-16, Penarol 08-16, Seattle 08-20, Sporting KC
+# 08-30, Toluca 08-31 — plus Vancouver 09-06 itself).
+_REMOTE_CLOCK_REGION_HINTS = (
+    # Americas
+    "usa", "united states", "mls", "major league soccer", "canada",
+    "mexico", "liga mx", "honduras", "costa rica", "guatemala",
+    "el salvador", "panama", "nicaragua", "peru", "colombia", "ecuador",
+    "bolivia", "paraguay", "uruguay", "chile", "argentina", "brazil",
+    "venezuela", "sudamericana", "libertadores",
+    # Asia-Pacific
+    "japan", "j-league", "south korea", "korea", "k-league", "china",
+    "australia", "new zealand", "thailand", "vietnam", "indonesia",
+    "malaysia", "philippines", "singapore", "india", "hong kong", "taiwan",
+)
 
-    1. Drops legs whose row carries NO usable kickoff date (bare "HH:MM",
-       missing, garbage) — undatable legs are exactly the Vancouver class;
-       they ride only if someone upstream supplies a real date/zone.
-    2. Drops dated legs whose kickoff is already at/past build time (dated
-       rows are compared on the feeds' UTC+2 rendering via parse_kickoff).
+
+def kickoff_clock_region_is_remote(pick) -> bool:
+    """Is this row's league region one whose local clock is far from SAST?
+
+    Boolean only — it never computes or infers a kickoff time. Region text
+    comes from the row's own league fields (league / league_raw /
+    odds_league, incl. ctx). International cup strings (Champions League,
+    friendlies, ...) without a region signal return False (kept; their bare
+    clocks have only ~1-2h class error and the audit command lists every
+    kept clock-only row for review).
+    """
+    vals = [pick.get("league"), pick.get("league_raw"), pick.get("odds_league")]
+    ctx = pick.get("ctx") or {}
+    vals += [ctx.get("league"), ctx.get("league_raw")]
+    text = " ".join(str(v or "") for v in vals).lower()
+    return any(hint in text for hint in _REMOTE_CLOCK_REGION_HINTS)
+
+
+def _kickoff_is_clock_only(raw: str) -> bool:
+    """bare 'HH:MM' or yearless day-month 'DD-MM, HH:MM' — no year, no zone."""
+    return bool(re.match(r"^\d{1,2}:\d{2}(:\d{2})?$", raw)
+                or re.match(r"^\d{1,2}-\d{1,2},\s*\d{1,2}:\d{2}", raw))
+
+
+def live_kickoff_guard(pool, now):
+    """The LIVE kickoff guard (incident #6 fix; region-narrowed after the
+    2026-09-06 round-2 audit).
+
+    1. Drops legs with a missing/garbage kickoff.
+    2. Drops CLOCK-ONLY kickoffs (bare "HH:MM", yearless "DD-MM, HH:MM")
+       whose league region's clock is far from SAST (Americas / Asia-
+       Pacific): a bare "22:30" MLS clock read on the slate day is the
+       Vancouver incident class. Clock-only rows from Europe/Africa ride
+       (their clocks are within ~1-2h of SAST).
+    3. Drops dated legs already at/past build time (dated rows compared on
+       the feeds' UTC+2 rendering via parse_kickoff).
 
     Returns ``(kept_legs, drops)`` where drops maps reason -> fixture names.
-    This is deliberately NOT the fail-closed proof standard — that lives in
-    ``kickoff_contract`` as the off-by-default audit instrument and must not
-    gate the live path (2026-09-06 review: the proof standard dropped 573
-    legs to catch one started match; the dated majority renders UTC+2 and
-    rides).
+    The region list NEVER computes a kickoff — a mis-hit drops a bettable
+    leg (harmless), it cannot fabricate a wrong time. This is deliberately
+    NOT the fail-closed proof standard — that lives in ``kickoff_contract``
+    as the off-by-default audit instrument.
     """
     drops: dict[str, list[str]] = {}
-    dated, kept = [], []
+    rideable, kept = [], []
     for leg in pool:
         pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
-        if not kickoff_has_usable_date(pick):
+        raw = str(pick.get("kickoff_canonical") or pick.get("kickoff") or "").strip()
+        if not raw or (not kickoff_has_usable_date(pick) and not _kickoff_is_clock_only(raw)):
             drops.setdefault(KO_SKIP_NO_DATE, []).append(leg["match"])
             continue
-        dated.append(leg)
+        if _kickoff_is_clock_only(raw) and kickoff_clock_region_is_remote(pick):
+            drops.setdefault(KO_SKIP_REMOTE_CLOCK, []).append(leg["match"])
+            continue
+        rideable.append(leg)
     started = []
-    for leg in dated:
+    for leg in rideable:
         pick = leg.get("row") if isinstance(leg, dict) and leg.get("row") else leg
         kt = parse_kickoff(pick)
         if kt is not None and kt.astimezone(TZ) < now.astimezone(TZ):
@@ -1061,16 +1133,18 @@ def cmd_today(args, st):
     pool = playable_legs(slate, day=target, settled=settled)
     total_in = len(pool)
     census: dict[str, list[str]] = {}
-    # LIVE KICKOFF GUARD (incident #6, revised 2026-09-06 after the row
-    # audit): the Vancouver row's kickoff was the bare string "22:30" — no
-    # date, no offset, no zone — and the deleted 2026-09-04 chain (SAST-
-    # defaulted parse_kickoff + a league-substring -> IANA zone table) failed
-    # OPEN on it: unparseable/unprovable meant "let it ride", and even a
-    # successful "usa" lookup read Vancouver on New York time. The guard
-    # drops legs with NO usable kickoff date (undatable -> cannot be checked)
-    # and dated legs already started at build time; it never assumes a zone
-    # for a bare time, and the fail-closed proof contract is NOT applied here
-    # (it is the off-by-default --kickoff-contract audit instrument).
+    # LIVE KICKOFF GUARD (incident #6, revised 2026-09-06 round 2 after the
+    # region audit): the Vancouver row's kickoff was the bare string "22:30"
+    # — no date, no offset, no zone — in an MLS league whose local clock is
+    # far from SAST; the deleted 2026-09-04 chain (SAST-defaulted parse +
+    # league-substring -> IANA zone table) failed OPEN on it. The guard drops
+    # missing/garbage kickoffs, clock-only kickoffs (bare or no-year
+    # day-month) from remote-clock regions (Americas/Asia-Pacific — the
+    # Vancouver class; Europe/Africa clock-only rows ride, their clocks are
+    # within ~1-2h of SAST), and dated legs already started at build time.
+    # It never assumes a zone for a remote clock and never computes a kickoff
+    # from the region list; the fail-closed proof contract is NOT applied
+    # here (it is the off-by-default --kickoff-contract audit instrument).
     pool, ko_drops = live_kickoff_guard(pool, now)
     for reason, names in ko_drops.items():
         census.setdefault(reason, []).extend(names)
