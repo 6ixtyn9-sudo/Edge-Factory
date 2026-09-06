@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 112,
-   "inv_price_sum": 110.29995449803059,
+   "hits": 118,
+   "inv_price_sum": 115.45425080212168,
    "multi_n": 17,
-   "n": 172,
+   "n": 180,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -508,9 +508,17 @@
     "2026-09-05|Schalke 04 vs FC Bayern M\u00fcnchen|match_over_25@v1",
     "2026-09-05|FC Fredericia vs Esbjerg|match_over_25@v1",
     "2026-09-05|Sandnes ULF vs Ranheim|match_over_25@v1",
-    "2026-09-05|Holstein Kiel vs N\u00fcrnberg|match_over_25@v1"
+    "2026-09-05|Holstein Kiel vs N\u00fcrnberg|match_over_25@v1",
+    "2026-09-06|Vit\u00f3ria vs Casa Pia AC|match_over_25@v1",
+    "2026-09-06|Lokomotiv Sofia vs Ludogorets|match_over_25@v1",
+    "2026-09-06|Nagoya Grampus vs Machida Zelvia|match_over_25@v1",
+    "2026-09-06|Vancouver Whitecaps vs St. Louis City|match_over_25@v1",
+    "2026-09-06|KA Akureyri vs Breidablik|match_over_25@v1",
+    "2026-09-06|FC Sion vs FC Thun|match_over_25@v1",
+    "2026-09-06|Kristiansund BK vs Tromso|match_over_25@v1",
+    "2026-09-06|SC Telstar vs Cambuur|match_over_25@v1"
    ],
-   "profit": 1.58,
+   "profit": 2.59,
    "records": [
     {
      "date": "2026-08-01",
@@ -1884,6 +1892,70 @@
      "match": "Holstein Kiel vs N\u00fcrnberg",
      "multi_source": false,
      "price": 1.53,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": false,
+     "match": "Vit\u00f3ria vs Casa Pia AC",
+     "multi_source": false,
+     "price": 1.95,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": true,
+     "match": "Lokomotiv Sofia vs Ludogorets",
+     "multi_source": false,
+     "price": 1.75,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": true,
+     "match": "Nagoya Grampus vs Machida Zelvia",
+     "multi_source": false,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": true,
+     "match": "Vancouver Whitecaps vs St. Louis City",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": true,
+     "match": "KA Akureyri vs Breidablik",
+     "multi_source": false,
+     "price": 1.3,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": true,
+     "match": "FC Sion vs FC Thun",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": false,
+     "match": "Kristiansund BK vs Tromso",
+     "multi_source": false,
+     "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": true,
+     "match": "SC Telstar vs Cambuur",
+     "multi_source": false,
+     "price": 1.4,
      "source": "scoutingstats"
     }
    ],
