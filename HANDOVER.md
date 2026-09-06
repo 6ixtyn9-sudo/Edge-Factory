@@ -8046,9 +8046,9 @@ inference.
 
 ### Verification receipts (Task D closeout)
 
-- D1 tests: 7 new in `tests/test_audit_clv.py` (record write/dedupe/reject,
+- D1 tests: 5 new in `tests/test_audit_clv.py` (record write/dedupe/reject,
   capture attach + idempotent re-run, unmatched-entry warning, report
-  section with delta) — all pass.
+  section with delta) — all pass (suite: 416 → 421).
 - `replay_harness.py --price-obtainability` regenerated for the tables
   above (receipt: coverage 7/81 = 8.6%, 7/77 in-season, 0/4 off-season).
 - No engine file changed for Task D except the measurement flags in
