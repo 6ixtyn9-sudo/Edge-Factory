@@ -1,65 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 102.39687099999999,
+  "bank": 68.26467099999999,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-09-07",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Riga FC vs BFC Daugavpils",
-              "pick": "HOME",
-              "prob": 0.72,
-              "odds": 1.26,
-              "result": null
-            },
-            {
-              "match": "Hapoel Tel Aviv vs Hapoel Ramat Gan",
-              "pick": "HOME",
-              "prob": 0.647,
-              "odds": 1.4,
-              "result": null
-            }
-          ],
-          "odds": 1.76,
-          "stake_pct": 17.0661,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Fratria vs Chernomorets 1919",
-              "pick": "HOME",
-              "prob": 0.617,
-              "odds": 1.62,
-              "result": null
-            },
-            {
-              "match": "HFX Wanderers vs Cavalry FC",
-              "pick": "AWAY",
-              "prob": 0.583,
-              "odds": 1.76,
-              "result": null
-            }
-          ],
-          "odds": 2.85,
-          "stake_pct": 17.0661,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 34.1322
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -272,6 +215,22 @@
         }
       ],
       "bank_pct": 102.3969
+    },
+    {
+      "date": "2026-09-07",
+      "staked_pct": 34.1322,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.76,
+          "won": false
+        },
+        {
+          "odds": 2.85,
+          "won": false
+        }
+      ],
+      "bank_pct": 68.2647
     }
   ],
   "events": []
