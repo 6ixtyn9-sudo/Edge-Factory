@@ -686,6 +686,38 @@ def _fold(s):
 RESCHEDULE_WINDOW_DAYS = 3
 
 
+_ALIAS_INDEX = None
+
+
+def _alias_index() -> dict:
+    """Curated team-name aliases, normalised into norm_team key space.
+
+    Data, not fuzz: a wrong entry can only fail to find a result, never
+    silently change one, because the exact lookup in pick_result runs first
+    and this is consulted only after it returns None. Edit
+    localdata/team_aliases.json to add a group.
+    """
+    global _ALIAS_INDEX
+    if _ALIAS_INDEX is None:
+        from edgefactory.util import norm_team
+        try:
+            groups = json.loads((LOCALDATA / "team_aliases.json").read_text())
+        except Exception:
+            groups = []
+        idx: dict = {}
+        for g in groups:
+            keys = {norm_team(str(n)) for n in g if str(n).strip()}
+            keys.discard("")
+            for k in keys:
+                idx.setdefault(k, set()).update(keys)
+        _ALIAS_INDEX = idx
+    return _ALIAS_INDEX
+
+
+def _alias_variants(key: str) -> set:
+    return set(_alias_index().get(key, ())) | {key}
+
+
 def _lookup_fallback(settled, day, home, away):
     from datetime import timedelta as _td
     from difflib import SequenceMatcher
@@ -695,6 +727,17 @@ def _lookup_fallback(settled, day, home, away):
         return None
     cands = {str(base + _td(days=o))
              for o in range(-RESCHEDULE_WINDOW_DAYS, RESCHEDULE_WINDOW_DAYS + 1)}
+    # Curated aliases before fuzzy: "Hearts" and "Heart of Midlothian" score
+    # ~0.44 on SequenceMatcher and never clear the 0.8 bar (2026-09-06: a
+    # winning acca sat unresolved and was 5 days from auto-voiding).
+    hv, av = _alias_variants(home), _alias_variants(away)
+    if len(hv) > 1 or len(av) > 1:
+        for d in sorted(cands):
+            for h2 in hv:
+                for a2 in av:
+                    oc = settled.get((d, h2, a2))
+                    if oc is not None:
+                        return oc
     fh, fa = _fold(home), _fold(away)
     best, best_oc = 0.0, None
     for (d, h, a), oc in settled.items():
@@ -1229,32 +1272,44 @@ def _acca_label(acca) -> str:
 
 
 def _replacement_lines(prior, plan) -> list[str]:
-    """Task E: per-acca changed/unchanged comparison of an existing slip
-    against the replacement card (same acca index = same position on the
-    card; a leg is identical only when match AND pick side both match)."""
+    """Leg-level diff of a slip being replaced.
+
+    Returns [] when the card is materially identical — same legs, same acca
+    positions, same stake. A silent repick prints nothing and the ticket
+    reads exactly like any other day. Only real changes are announced, and
+    only the parts that changed.
+    """
+    def index(accas):
+        return {(l["match"], l["pick"]): (i, l["odds"])
+                for i, a in enumerate(accas, 1) for l in a.get("legs", [])}
     old_accas = prior.get("accas", [])
-    n = max(len(old_accas), len(plan))
-    lines = []
-    for i in range(n):
-        o = old_accas[i] if i < len(old_accas) else None
-        p = plan[i] if i < len(plan) else None
-        if o is None:
-            lines.append(f"  acca #{i + 1}: NEW (was none) → {_acca_label(p)}")
-        elif p is None:
-            lines.append(f"  acca #{i + 1}: DROPPED {_acca_label(o)} → no replacement")
-        else:
-            ok = ([_leg_key(l) for l in o.get("legs", [])]
-                  == [_leg_key(l) for l in p.get("legs", [])])
-            same_stake = abs(float(o.get("stake_pct") or 0.0) - float(p.get("stake_pct") or 0.0)) < 1e-9
-            if ok and same_stake:
-                lines.append(f"  acca #{i + 1}: UNCHANGED {_acca_label(p)}")
-            else:
-                what = "legs unchanged, stake changed" if ok else "legs CHANGED"
-                lines.append(f"  acca #{i + 1}: {what}\n      was  {_acca_label(o)}\n      now  {_acca_label(p)}")
-    old_staked = float(prior.get("staked_pct") or sum(a.get("stake_pct", 0.0) for a in old_accas))
-    new_staked = sum(a["stake_pct"] for a in plan)
-    lines.append(f"  total stake {old_staked:.4f}% of capital → {new_staked:.4f}% of capital")
-    return lines
+    old, new = index(old_accas), index(plan)
+    dropped = [k for k in old if k not in new]
+    added = [k for k in new if k not in old]
+    moved = [k for k in new if k in old and old[k][0] != new[k][0]]
+    old_tot = round(float(prior.get("staked_pct")
+                          or sum(a.get("stake_pct", 0.0) for a in old_accas)), 4)
+    new_tot = round(sum(a["stake_pct"] for a in plan), 4)
+    stake_moved = abs(new_tot - old_tot) >= 5e-5
+    if not (dropped or added or moved or stake_moved):
+        return []
+    L = []
+    if dropped:
+        L.append(f"  DROPPED ({len(dropped)}) — if you already placed these, the engine will NOT grade them")
+        for m, pk in dropped:
+            L.append(f"      {m:44s} {pk:5s} @{old[(m, pk)][1]:.2f}")
+    if added:
+        L.append(f"  ADDED ({len(added)})")
+        for m, pk in added:
+            L.append(f"      {m:44s} {pk:5s} @{new[(m, pk)][1]:.2f}")
+    if moved:
+        L.append(f"  MOVED ({len(moved)}) — same bet, different acca")
+        for m, pk in moved:
+            L.append(f"      {m:44s} {pk:5s} @{new[(m, pk)][1]:.2f}"
+                     f"   acca {old[(m, pk)][0]} → {new[(m, pk)][0]}")
+    if stake_moved:
+        L.append(f"  total stake {old_tot:.4f}% → {new_tot:.4f}% of capital")
+    return L
 
 
 def _printable_price_board(l, pool_by_key) -> list[dict]:
@@ -1390,6 +1445,9 @@ def cmd_today(args, st):
     if cross_drops:
         census["fixture already on an earlier day's slate (kicked off)"] = cross_drops
     census_lines = format_skip_census(total_in, len(pool), census)
+    # Nothing was dropped: say nothing. A clean slate reads like a clean slate.
+    if not any(census.values()):
+        census_lines = []
     if len(pool) < LEGS_PER_ACCA:
         print("\n".join(census_lines))
         print(f"NO BET TODAY — {len(pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
@@ -1418,9 +1476,11 @@ def cmd_today(args, st):
              f"PERFORMANCE: total bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) = "
              f"free bank {bank_eff:.1f}% + committed {committed:.1f}% · "
              f"next take-profit notification at {take_profit_target(st):.1f}%"]
-    if repl_lines is not None:
+    if repl_lines:
         lines.append("")
-        lines.append("⚠️  REPICK — an earlier slip for this date is being REPLACED by this run:")
+        stake_only = all(l.lstrip().startswith("total stake") for l in repl_lines)
+        lines.append("ℹ️  RESIZED — same card, restaked on a corrected bank:" if stake_only
+                     else "⚠️  REPICK — the card for this date has CHANGED since the last run:")
         lines.extend(repl_lines)
     for i, a in enumerate(plan, 1):
         lines.append(f"\n[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
@@ -1433,8 +1493,9 @@ def cmd_today(args, st):
                  f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
     lines.append("All figures are percentages of capital. Round to your bookmaker's minimum stake. "
                  "Bet only what you can afford to lose.")
-    lines.append("")
-    lines.extend(census_lines)
+    if census_lines:
+        lines.append("")
+        lines.extend(census_lines)
     lines.append("")
     lines.extend(_board_coverage_lines(target, plan, pool_by_key))
     txt = "\n".join(lines)

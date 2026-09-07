@@ -595,20 +595,29 @@ def _pacca(match, pick, odds, stake):
 
 
 def test_replacement_lines_name_changed_unchanged_and_dropped_accas():
-    prior = {"date": "2026-09-06", "staked_pct": 20.0,
-             "accas": [_pacca("A vs B", "HOME", 1.9, 10.0),
-                       _pacca("C vs D", "AWAY", 1.8, 10.0)]}
-    plan = [_pacca("A vs B", "HOME", 1.9, 11.0),     # same legs -> stake-only change
-            _pacca("E vs F", "HOME", 2.1, 11.0)]     # replaced
-    lines = at._replacement_lines(prior, plan)
-    assert any("acca #1" in l and "legs unchanged, stake changed" in l for l in lines)
-    assert any("acca #2" in l and "CHANGED" in l for l in lines)
-    dropped = at._replacement_lines(
-        {"date": "2026-09-06", "staked_pct": 10.0, "accas": [prior["accas"][0]]}, [])
-    assert any("DROPPED" in l for l in dropped)
-    same = at._replacement_lines(
-        {"date": "2026-09-06", "staked_pct": 20.0,
-         "accas": [_pacca("A vs B", "HOME", 1.9, 10.0), _pacca("C vs D", "AWAY", 1.8, 10.0)]},
-        [_pacca("A vs B", "HOME", 1.9, 10.0), _pacca("C vs D", "AWAY", 1.8, 10.0)])
-    acca_lines = [l for l in same if not l.startswith("  total stake")]
-    assert acca_lines and all("UNCHANGED" in l for l in acca_lines)
+    """A silent repick prints nothing; only real changes are announced."""
+    def acca(stake, *legs):
+        return {"stake_pct": stake,
+                "legs": [{"match": m, "pick": pk, "odds": o} for m, pk, o in legs]}
+    A = ("A vs B", "HOME", 1.30)
+    B = ("C vs D", "AWAY", 1.50)
+    C = ("E vs F", "HOME", 1.70)
+
+    same = [acca(10.0, A, B)]
+    prior = {"staked_pct": 10.0, "accas": [acca(10.0, A, B)]}
+    assert at._replacement_lines(prior, same) == []
+
+    out = "\n".join(at._replacement_lines(prior, [acca(10.0, A, C)]))
+    assert "DROPPED (1)" in out and "C vs D" in out
+    assert "ADDED (1)" in out and "E vs F" in out
+    assert "MOVED" not in out
+
+    two_old = {"staked_pct": 20.0, "accas": [acca(10.0, A, B), acca(10.0, C, A)]}
+    out = "\n".join(at._replacement_lines(two_old, [acca(10.0, C, A), acca(10.0, A, B)]))
+    assert "MOVED" in out and "acca 1 \u2192 2" in out
+    assert "DROPPED" not in out and "ADDED" not in out
+
+    out = "\n".join(at._replacement_lines(prior, [acca(12.0, A, B)]))
+    assert "total stake 10.0000% \u2192 12.0000% of capital" in out
+
+
