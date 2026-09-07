@@ -220,18 +220,20 @@ def test_every_printed_leg_is_logged_append_only_with_its_board(tmp_path, monkey
     lines2 = [json.loads(x) for x in log.read_text().splitlines()]
     assert len(lines2) == 12
     txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
-    assert "PRICE BOARD (automatic capture, Task F): build-time board persisted for 6 of 6 printed legs" in txt
-    assert "expected coverage on the next slate: 100%" in txt
 
 
-def test_coverage_line_reports_zero_when_slate_has_no_boards(tmp_path, monkeypatch):
-    monkeypatch.setattr(at, "datetime", _NoonClock)
-    rows = _slate_rows_with_boards()
-    for r in rows:
-        r.pop("price_board", None)
-    (at.LOCALDATA / "picks_today.json").write_text(json.dumps(rows))
-    st = at.fresh_state()
-    args = SimpleNamespace(date="2026-09-06", force=True)
-    assert at.cmd_today(args, st) == 0
-    txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
-    assert "persisted for 0 of 6 printed legs" in txt
+def test_board_coverage_lines_available_for_audit_but_not_printed():
+    """The ticket no longer prints the board block (operator: bloat), but the
+    helper stays callable so coverage can be audited out of band."""
+    plan = [{"odds": 1.50, "stake_pct": 10.0,
+             "legs": [{"match": "A vs B", "pick": "HOME", "odds": 1.50, "prob": 0.60}]}]
+    with_board = {("A vs B", "HOME"): {"row": {"price_board": [
+        {"source": "engine", "odds": 1.50, "chosen": True},
+        {"source": "other", "odds": 1.48}]}}}
+    lines = at._board_coverage_lines("2026-09-07", plan, with_board)
+    assert any("1 of 1 printed legs" in l for l in lines)
+    assert any("other 1" in l for l in lines)
+
+    no_board = {("A vs B", "HOME"): {"row": {}}}
+    lines = at._board_coverage_lines("2026-09-07", plan, no_board)
+    assert any("0 of 1 printed legs" in l for l in lines)
