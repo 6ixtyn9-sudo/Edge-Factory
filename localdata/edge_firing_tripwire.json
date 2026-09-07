@@ -2,8 +2,8 @@
   "ceilings": [
     {
       "ceiling": true,
-      "gap_pp": 21.8,
-      "live_max_ml_p": 58.2,
+      "gap_pp": 18.6,
+      "live_max_ml_p": 61.4,
       "lowest_threshold": 80.0,
       "rule": "ml-meta avg_p>=80",
       "threshold": 80.0
@@ -28,7 +28,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-09-07",
-      "n_last_window": 465,
+      "n_last_window": 468,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
@@ -61,7 +61,7 @@
       "silent": true
     }
   ],
-  "generated_at": "2026-09-07T03:24:09",
+  "generated_at": "2026-09-07T06:25:34",
   "ignored_non_operational_rules": [
     "2way-unanimous min_p>=60 avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=70",
