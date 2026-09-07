@@ -1496,8 +1496,7 @@ def cmd_today(args, st):
     if census_lines:
         lines.append("")
         lines.extend(census_lines)
-    lines.append("")
-    lines.extend(_board_coverage_lines(target, plan, pool_by_key))
+
     txt = "\n".join(lines)
     print(txt)
     slip_txt.write_text(txt)
