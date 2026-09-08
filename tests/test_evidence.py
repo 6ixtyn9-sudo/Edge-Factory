@@ -63,12 +63,37 @@ def test_out_of_sample_date_is_explicit(ev):
 # --------------------------------------------------------------------------
 # 2. it measures, it does not adopt
 # --------------------------------------------------------------------------
-def test_evidence_never_writes_to_the_engine():
+def test_evidence_never_writes_to_the_engine(ev):
+    """Functional, not a source grep.
+
+    Section 4 legitimately widens BUCKETS for the length of one gather so
+    that EXCLUDED buckets can be measured -- you cannot audit a filter
+    using only the rows it let through. What matters is that the engine is
+    handed back exactly as it was found, including when the report raises.
+    """
+    at = ev._load_engine()
+    before = ev.engine_fingerprint(at)
+    ev.report(at, "2099-01-01", None, "EMPTY")
+    assert ev.engine_fingerprint(at) == before
+
+    with ev._all_buckets(at) as live:
+        assert set(at.BUCKETS) >= set(live), "filter should widen, not narrow"
+    assert ev.engine_fingerprint(at) == before, "BUCKETS not restored"
+
+    class Boom(Exception):
+        pass
+    with pytest.raises(Boom):
+        with ev._all_buckets(at):
+            raise Boom()
+    assert ev.engine_fingerprint(at) == before, "not restored after an exception"
+
+
+def test_no_live_constant_is_reassigned_outside_the_bucket_window():
     src = (ROOT / "scripts" / "evidence.py").read_text()
-    for const in ("STAKE_FRAC", "STAKE_MODE", "BUCKETS", "MAX_ACCAS",
-                  "MIN_LEG_ODDS"):
+    for const in ("STAKE_FRAC", "STAKE_MODE", "MAX_ACCAS", "MIN_LEG_ODDS",
+                  "MIN_ACCAS", "LEGS_PER_ACCA"):
         assert f"at.{const} =" not in src, f"evidence.py assigns to {const}"
-        assert f"setattr(at, \"{const}\"" not in src
+        assert f'setattr(at, "{const}"' not in src
 
 
 def test_daily_pipeline_does_not_invoke_the_evidence_report():

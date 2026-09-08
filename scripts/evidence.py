@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import argparse
 import collections
+import contextlib
 import datetime as _dt
 import hashlib
 import importlib.util
@@ -100,6 +101,25 @@ def fmt_ci(b):
         return "n too small"
     return (f"{b['roi']:+.1f}%  (80% {b['p10']:+.1f}% to {b['p90']:+.1f}%, "
             f"P(<=0) {b['p_le_zero']:.0f}%)")
+
+
+@contextlib.contextmanager
+def _all_buckets(at):
+    """Temporarily widen the bucket filter, then always put it back.
+
+    Section 4 has to report on the full JUDGED population, not just the
+    legs that rode. Measuring a subgroup only among legs you already
+    accepted tells you nothing about the ones you rejected -- and "which
+    buckets are we excluding, and were we right to?" is exactly the
+    question the exclusions themselves make unanswerable.
+    """
+    original = list(at.BUCKETS)
+    found = {r.get("bucket") for r in at.load_archived_picks() if r.get("bucket")}
+    try:
+        setattr(at, "BUCKETS", sorted(set(original) | found))
+        yield original
+    finally:
+        setattr(at, "BUCKETS", original)
 
 
 # ------------------------------------------------------------------ the pool
@@ -194,9 +214,11 @@ def section_ranking(pools, lines, blob):
 
 
 # --------------------------------------------------------------- the buckets
-def section_buckets(pools, lines, blob, min_n=20):
+def section_buckets(full_pools, live_buckets, lines, blob, min_n=20):
     lines.append("\n4. THE BUCKETS — do the labels separate anything?")
-    legs = [l for r in pools.values() for l in r]
+    lines.append("   measured on the FULL judged population, bucket filter OFF,")
+    lines.append("   so excluded buckets are visible and can be checked.")
+    legs = [l for r in full_pools.values() for l in r]
     tagged = [(l, (l.get("row") or {}).get("bucket") or "UNLABELLED") for l in legs]
     groups = collections.defaultdict(list)
     for l, b in tagged:
@@ -205,13 +227,14 @@ def section_buckets(pools, lines, blob, min_n=20):
     if len(big) < 2:
         lines.append(f"   fewer than 2 buckets with n>={min_n}; nothing to compare")
         return
-    lines.append(f"   {'bucket':>34}{'n':>6}{'ROI':>9}   80% interval")
+    lines.append(f"   {'bucket':>34}{'in?':>5}{'n':>6}{'ROI':>9}   80% interval")
     rows = {}
     for name in sorted(big, key=lambda k: -roi_of(big[k])):
         b = bootstrap_roi(big[name])
-        lines.append(f"   {name:>34}{len(big[name]):6}{b['roi']:+8.1f}%   "
+        mark = "IN" if name in live_buckets else "out"
+        lines.append(f"   {name:>34}{mark:>5}{len(big[name]):6}{b['roi']:+8.1f}%   "
                      f"{b['p10']:+.1f}% to {b['p90']:+.1f}%")
-        rows[name] = {"n": len(big[name]), **b}
+        rows[name] = {"n": len(big[name]), "admitted": name in live_buckets, **b}
 
     # Permutation null: shuffle the bucket labels and see how often chance
     # alone manufactures a spread this wide. This is the only honest way to
@@ -230,6 +253,16 @@ def section_buckets(pools, lines, blob, min_n=20):
         if max(vals) - min(vals) >= obs_spread:
             hits += 1
     p = hits / (BOOTSTRAP // 4) * 100
+    small = {k: v for k, v in groups.items() if len(v) < min_n}
+    if small:
+        lines.append("   below the n>=%d floor, shown but not tested:" % min_n)
+        for k in sorted(small, key=lambda k: -len(small[k])):
+            mark = "IN" if k in live_buckets else "out"
+            lines.append(f"   {k:>34}{mark:>5}{len(small[k]):6}"
+                         f"{roi_of(small[k]):+8.1f}%")
+    missing = [b for b in live_buckets if b not in groups]
+    if missing:
+        lines.append(f"   admitted but absent from this window: {missing}")
     lines.append(f"\n   best-minus-worst spread: {obs_spread:.1f}%")
     lines.append(f"   shuffling the labels reproduces it {p:.1f}% of the time")
     lines.append("   VERDICT: " + ("buckets are not distinguishable from random labels"
@@ -274,6 +307,36 @@ def section_engine(at, pools, lines, blob):
     if b["n_needed"]:
         lines.append(f"   legs needed to prove it: {b['n_needed']:,} "
                      f"(have {len(sel_legs):,})")
+
+    # The direct test of "the sauce is in the ranking": against random
+    # draws of the SAME SIZE from the SAME pools on the SAME days. Section
+    # 2 compares only the top 2; the engine bets up to MAX_ACCAS*LEGS.
+    per_day = {}
+    for d in sorted(pools):
+        k = sum(len(a["legs"]) for a in at.plan_day(pools[d], 100.0))
+        if k:
+            per_day[d] = k
+    if per_day:
+        rng = random.Random(SEED)
+        sims = []
+        for _ in range(BOOTSTRAP // 4):
+            draw = []
+            for d, k in per_day.items():
+                draw.extend(rng.sample(pools[d], min(k, len(pools[d]))))
+            sims.append(roi_of(draw))
+        sims.sort()
+        obs = b["roi"]
+        beat = sum(x >= obs for x in sims) / len(sims) * 100
+        lines.append(f"\n   engine selection : ROI {obs:+.1f}% on {len(sel_legs)} legs")
+        lines.append(f"   random same-size : ROI {statistics.mean(sims):+.1f}%  "
+                     f"(80% {sims[int(.1 * len(sims))]:+.1f}% to "
+                     f"{sims[int(.9 * len(sims))]:+.1f}%)")
+        lines.append(f"   -> random matches or beats the ranking {beat:.1f}% of the time")
+        lines.append("   VERDICT: " + (
+            "the ranking does not beat a coin toss at this n" if beat > 10
+            else "the ranking BEATS a same-size random draw"))
+        blob["selection_vs_random"] = {"p_random_beats": beat,
+                                       "random_mean": statistics.mean(sims)}
 
     # Per acca slot. This prices "three accas are a must" rather than
     # arguing about it: slot #3 is the marginal ticket, and if it cannot
@@ -366,7 +429,9 @@ def report(at, lo, hi, label):
     section_pool(pools, lines, blob)
     section_ranking(pools, lines, blob)
     section_engine(at, pools, lines, blob)
-    section_buckets(pools, lines, blob)
+    with _all_buckets(at) as live_buckets:
+        full_pools = gather(at, lo, hi)
+    section_buckets(full_pools, live_buckets, lines, blob)
     section_money(at, pools, lines, blob)
     return "\n".join(lines), blob
 
