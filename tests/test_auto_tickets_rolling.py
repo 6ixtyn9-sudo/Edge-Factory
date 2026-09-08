@@ -52,14 +52,14 @@ def test_plan_day_top6_consecutive_pairs_and_stake_pct():
 
 
 def test_new_knob_defaults_pin_the_live_recipe_byte_for_byte():
-    assert at.STAKE_MODE == "per_day"
+    assert at.STAKE_MODE == "per_acca"
     assert at.STAKE_PER_ACCA is None
     assert at.MIN_ACCAS == 1
     assert at.STAKE_WEIGHTS is None
     pool = [_leg(i, 0.70 - i / 100, 1.30 + i / 10) for i in range(8)]
     assert at.select_accas(pool) == at.select_accas(pool, min_accas=1)
     assert at.plan_day(pool, 123.456) == at.plan_day(
-        pool, 123.456, stake_frac=at.STAKE_FRAC, stake_mode="per_day",
+        pool, 123.456, stake_frac=at.STAKE_FRAC, stake_mode="per_acca",
         stake_per_acca=None, weights=None, min_accas=1,
     )
 
@@ -261,12 +261,13 @@ def test_backfill_end_to_end(tmp_path, monkeypatch):
     at.cmd_backfill(args, at.load_state())
     st = at.load_state()
     assert len(st["history"]) == 2
-    # day1: one acca @2.00 (1.25*1.6), stake = STAKE_FRAC of bank, it wins
-    f = at.STAKE_FRAC
+    # day1: one acca @2.00 (1.25*1.6), it wins. Under STAKE_MODE="per_acca" a
+    # single-acca card stakes STAKE_FRAC/MAX_ACCAS, not the whole day fraction.
+    f = at.STAKE_FRAC / at.MAX_ACCAS
     day1 = 100.0 * (1 + f)                          # 100 - 100f + 100f*2.00
     assert st["history"][0]["bank_pct"] == pytest.approx(day1, abs=0.01)
     assert st["events"] == []                       # < 200% target
-    # day2: stake = STAKE_FRAC of day1 bank, acca loses
+    # day2: stake = the same per-acca fraction of day1 bank, acca loses
     assert st["history"][1]["bank_pct"] == pytest.approx(day1 * (1 - f), abs=0.05)
     assert st["cycle_base"] == pytest.approx(100.0)  # unchanged — no notification fired
 

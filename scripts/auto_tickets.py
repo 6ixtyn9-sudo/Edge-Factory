@@ -150,7 +150,7 @@ STAKE_FRAC = 1.0 / 3.0     # of free bank (total bank minus open stakes) per
                            # = 66%, so size BELOW the estimate (overbetting is
                            # punished far harder than underbetting).
                            # 75% and 100% still bust everywhere. Revert = 0.50.
-STAKE_MODE = "per_day"     # "per_day" preserves the validated fixed day risk;
+STAKE_MODE = "per_acca"     # "per_day" preserves the validated fixed day risk;
                            # "per_acca" risks a fixed fraction per ticket while
                            # capping the day's total at STAKE_FRAC. Research only.
 STAKE_PER_ACCA = None      # None -> STAKE_FRAC / MAX_ACCAS

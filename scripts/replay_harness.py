@@ -469,9 +469,22 @@ def cmd_kelly(universe, spec=None):
     leg-filter A/B. Every grid cell is still a production-planner replay: this
     command owns no second stake formula that can drift from shipped tickets.
     """
-    spec = {k: v for k, v in dict(spec or {}).items() if k != "stake_frac"}
+    # BOTH sizing knobs are swept, so neither may be pinned by the caller: a
+    # stake_per_acca left in the spec would hold the real stake constant
+    # across every grid cell and flatten the curve into a straight line.
+    spec = {k: v for k, v in dict(spec or {}).items()
+            if k not in ("stake_frac", "stake_per_acca")}
+    mode = spec.get("stake_mode") or at.STAKE_MODE
     grid = sorted(set([i / 100 for i in range(5, 101, 5)] + [at.STAKE_FRAC]))
-    curves = {f: replay(universe, {**spec, "stake_frac": f}) for f in grid}
+    # In per_acca mode the swept f is the FULL-CARD risk: each ticket stakes
+    # f/MAX_ACCAS, so a 3-acca day risks f and thinner days risk
+    # proportionally less. Deriving it here keeps the sweep honest even if
+    # the module-level STAKE_PER_ACCA is ever given a value.
+    def _cell(f):
+        if mode == "per_acca":
+            return {**spec, "stake_frac": f, "stake_per_acca": f / at.MAX_ACCAS}
+        return {**spec, "stake_frac": f}
+    curves = {f: replay(universe, _cell(f)) for f in grid}
     stats = {f: summarise(days) for f, days in curves.items()}
     reference = curves[at.STAKE_FRAC]
     if not reference:
@@ -480,6 +493,11 @@ def cmd_kelly(universe, spec=None):
     total_losses = sum(not any(w for _, w in rec["accas"]) for rec in reference.values())
 
     print(f"stake sizing on {len(reference)} bet-days ({total_losses} total-loss days)")
+    if mode == "per_acca":
+        print(f"mode per_acca: f is the full-card risk; each ticket stakes "
+              f"f/{at.MAX_ACCAS}, so thinner cards risk less than f")
+    else:
+        print("mode per_day: every card risks f in total, however thin")
     print("cards are IDENTICAL across rows — only the fraction of bank changes\n")
     print(f"{'stake f':>8s} {'log/day':>9s} {'final%':>9s} {'maxDD':>7s}")
     valid_grid = [f for f in grid if not stats[f]["ruin"]]
