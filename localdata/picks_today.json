@@ -157,8 +157,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
-    "avg_p": 59.9,
+    "as_of": "2026-09-08T12:00:48+02:00",
+    "avg_p": 59.8,
     "away": "Dover",
     "bookmaker": "betexplorer_best",
     "bucket": "CAUTION",
@@ -241,7 +241,7 @@
       }
     ],
     "home": "Dagenham and Redbridge",
-    "kickoff": "11:45",
+    "kickoff": "14:45",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-09-08T18:45:00+00:00",
     "kickoff_witness": "vitibet kickoff '2026-09-08T20:45:00+02:00'",
@@ -254,11 +254,11 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.599,
+    "ml_p": 0.5981,
     "model_version": null,
     "n_way": 3,
     "odds": 1.46,
-    "odds_captured_at": "2026-09-08T07:04:49.501155+00:00",
+    "odds_captured_at": "2026-09-08T10:04:10.393909+00:00",
     "odds_league": "England: National League South",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -279,7 +279,7 @@
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1362): Avg Goals: 3.31 | Over 2.5: 65.6% | BTTS: 43.4% | Home Over 1.5 Goals: 83.1% | Away Over 1.5 Goals: 10.7%",
     "vitibet_index": 2.36,
-    "w_score": 0.4012
+    "w_score": 0.3974
   },
   {
     "as_of": "2026-09-08T09:01:01+02:00",
@@ -402,7 +402,7 @@
     "w_score": 0.2059
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 64.7,
     "away": "FF Jaro",
     "bookmaker": "betexplorer_best",
@@ -453,8 +453,8 @@
         "engine": "hybrid_cohort",
         "label": "Match Over 3.5 Goals",
         "market": "match_over_35",
-        "probability": 0.30369888104514986,
-        "raw_probability": 0.3730110479538357,
+        "probability": 0.3037194763117981,
+        "raw_probability": 0.3730363436084292,
         "reason": "Poisson expected hit rate is 37.3%"
       },
       {
@@ -480,8 +480,8 @@
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4497241593750527,
-        "raw_probability": 0.5940475846331019,
+        "probability": 0.4498004708703674,
+        "raw_probability": 0.5941483856653045,
         "reason": "Mathematical expectation is 59.4% (ML-calibrated 47.3%->63.6%, n=506) (Performance feedback: HR=65.1%, Adjusted Prob: 45.0%)"
       },
       {
@@ -489,8 +489,8 @@
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.22304302994698733,
-        "raw_probability": 0.21303201640028857,
+        "probability": 0.22306381402709183,
+        "raw_probability": 0.21305186761238312,
         "reason": "Poisson expected hit rate is 21.3% (ML-calibrated 24.0%->28.7%, n=373)"
       }
     ],
@@ -507,9 +507,9 @@
     "match": "Ilves vs FF Jaro",
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
-    "n_way": 5,
+    "n_way": 6,
     "odds": 1.63,
-    "odds_captured_at": "2026-09-08T07:04:44.003446+00:00",
+    "odds_captured_at": "2026-09-08T10:04:04.512310+00:00",
     "odds_league": "Finland: Veikkausliiga",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -547,6 +547,7 @@
       "zulubet",
       "statarea",
       "vitibet",
+      "betclan",
       "bzzoiro"
     ],
     "sport": "soccer",
@@ -671,7 +672,7 @@
     "w_score": 0.2442
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 71.0,
     "away": "Geita Gold",
     "bookmaker": null,
@@ -975,7 +976,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 67.3,
     "away": "Slough Town",
     "bookmaker": "scoutingstats_odds",
@@ -1102,7 +1103,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.45,
+      "odds": 1.3,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -1143,7 +1144,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 63.3,
     "away": "Bangor FC",
     "bookmaker": "scoutingstats_odds",
@@ -1168,7 +1169,7 @@
       "resolution_verdict": "ALLOW",
       "side_role": "home",
       "team_a": "VETO",
-      "team_h": "ALLOW"
+      "team_h": "UNKNOWN"
     },
     "date": "2026-09-08",
     "decay_verdict": "HEALTHY",
@@ -1246,7 +1247,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.22,
+      "odds": 1.16,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -1554,7 +1555,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 57.4,
     "away": "Inter",
     "bookmaker": "scoutingstats_odds",
@@ -1648,7 +1649,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.61,
+      "odds": 1.57,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -1821,7 +1822,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 56.5,
     "away": "Scarborough",
     "bookmaker": "scoutingstats_odds",
@@ -2101,7 +2102,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 55.6,
     "away": "Villarreal",
     "bookmaker": "scoutingstats_odds",
@@ -2189,7 +2190,7 @@
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
     "n_way": 4,
-    "odds": 2.1,
+    "odds": 2.0,
     "odds_captured_at": "2026-09-08T14:00:00Z",
     "odds_league": "UEFA Youth League",
     "odds_match_method": "exact",
@@ -2212,7 +2213,7 @@
         "league": "UEFA Youth League",
         "market": "1x2",
         "match_method": "exact",
-        "odds": 2.1,
+        "odds": 2.0,
         "selection": "home",
         "source": "scoutingstats_odds"
       }
@@ -2237,7 +2238,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 55.0,
     "away": "Stuttgarter Kickers",
     "bookmaker": null,
@@ -2359,8 +2360,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
-    "avg_p": 73.5,
+    "as_of": "2026-09-08T12:00:48+02:00",
+    "avg_p": 72.8,
     "away": "Flora Tallinn",
     "bookmaker": null,
     "bucket": "WATCHLIST_SUSPECT_PRICE",
@@ -2408,7 +2409,7 @@
     "edge_rule": "ml-meta avg_p>=70",
     "edge_status": "certified",
     "enhancement_breakeven": 0.6211,
-    "enhancement_edge_sample": -0.2243,
+    "enhancement_edge_sample": -0.2208,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
@@ -2417,36 +2418,45 @@
     "enhancement_price_book": null,
     "enhancement_price_source": "scoutingstats",
     "enhancement_priced": true,
-    "enhancement_probability": 0.4818,
-    "enhancement_reason": "Mathematical expectation is 63.6% (ML-calibrated 47.3%->63.6%, n=506) (Performance feedback: HR=65.1%, Adjusted Prob: 48.2%)",
+    "enhancement_probability": 0.484,
+    "enhancement_reason": "Mathematical expectation is 63.9% (ML-calibrated 47.3%->63.6%, n=506) (Performance feedback: HR=65.1%, Adjusted Prob: 48.4%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": null,
-        "engine": "model",
+        "cohort_n": 101,
+        "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4818127537171681,
-        "raw_probability": 0.6364339042599911,
-        "reason": "Mathematical expectation is 63.6% (ML-calibrated 47.3%->63.6%, n=506) (Performance feedback: HR=65.1%, Adjusted Prob: 48.2%)"
+        "probability": 0.4839849031938854,
+        "raw_probability": 0.6393031300358514,
+        "reason": "Mathematical expectation is 63.9% (ML-calibrated 47.3%->63.6%, n=506) (Performance feedback: HR=65.1%, Adjusted Prob: 48.4%)"
       },
       {
-        "cohort_n": null,
-        "engine": "model",
+        "cohort_n": 101,
+        "engine": "hybrid_cohort",
         "label": "Match Over 3.5 Goals",
         "market": "match_over_35",
-        "probability": 0.3376382481079352,
-        "raw_probability": 0.4146962817993215,
-        "reason": "Poisson expected hit rate is 41.5%"
+        "probability": 0.36276885100327755,
+        "raw_probability": 0.44556235706915354,
+        "reason": "Poisson expected hit rate is 44.6%"
       },
       {
-        "cohort_n": null,
-        "engine": "model",
+        "cohort_n": 101,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9278663308505111,
+        "raw_probability": 0.9009758069172585,
+        "reason": "Combined Under 3.5 is 90.1% (ML-calibrated 95.6%->98.6%, n=142)"
+      },
+      {
+        "cohort_n": 101,
+        "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.244291748164141,
-        "raw_probability": 0.23332701189419702,
-        "reason": "Poisson expected hit rate is 23.3% (ML-calibrated 24.0%->28.7%, n=373)"
+        "probability": 0.2760623350016886,
+        "raw_probability": 0.2636716148070604,
+        "reason": "Poisson expected hit rate is 26.4% (ML-calibrated 24.0%->28.7%, n=373)"
       }
     ],
     "home": "Trans Narva",
@@ -2463,10 +2473,10 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.735,
+    "ml_p": 0.728,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.55,
+    "odds": 1.57,
     "odds_captured_at": null,
     "odds_league": null,
     "odds_match_method": "alias_fuzzy",
@@ -2485,7 +2495,7 @@
         "league": "Meistriliiga",
         "market": "1x2",
         "match_method": "alias_fuzzy",
-        "odds": 1.57,
+        "odds": 1.5,
         "selection": "away",
         "source": "scoutingstats_odds"
       }
@@ -2501,23 +2511,24 @@
       "forebet",
       "zulubet",
       "statarea",
-      "vitibet"
+      "vitibet",
+      "betclan"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=58): Avg Goals: 3.71 | Over 2.5: 67.2% | BTTS: 22.4% | Home Over 1.5 Goals: 6.9% | Away Over 1.5 Goals: 86.2%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=84): Avg Goals: 3.63 | Over 2.5: 66.7% | BTTS: 26.2% | Home Over 1.5 Goals: 7.1% | Away Over 1.5 Goals: 88.1%",
     "suspect_price": {
       "bookmaker": "scoutingstats_odds",
       "captured_at": "2026-09-08T14:30:00Z",
       "league": "Meistriliiga",
       "match_method": "alias_fuzzy",
-      "odds": 1.57,
+      "odds": 1.5,
       "source": "scoutingstats_odds"
     },
     "vitibet_index": -3.35,
-    "w_score": 1.02
+    "w_score": 0.9844
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 61.0,
     "away": "Marine",
     "bookmaker": "scoutingstats_odds",
@@ -2614,13 +2625,13 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 4,
-    "odds": 1.48,
+    "odds": 1.45,
     "odds_captured_at": "2026-09-08T18:45:00Z",
     "odds_league": "Enterprise National League North",
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.48,
+      "odds": 1.45,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -2637,7 +2648,7 @@
         "league": "Enterprise National League North",
         "market": "1x2",
         "match_method": "exact",
-        "odds": 1.48,
+        "odds": 1.45,
         "selection": "home",
         "source": "scoutingstats_odds"
       }
@@ -2661,7 +2672,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-08T09:01:01+02:00",
+    "as_of": "2026-09-08T12:00:48+02:00",
     "avg_p": 58.5,
     "away": "IFK Mariehamn",
     "bookmaker": "scoutingstats_odds",
