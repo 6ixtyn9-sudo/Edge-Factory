@@ -107,7 +107,8 @@ def test_paired_bootstrap_detects_a_real_difference():
 def test_day_growth_comes_from_the_engine_plan_stakes():
     pool = [_leg("a", 0.74, 2.0, "win"), _leg("b", 0.73, 1.5, "win"),
             _leg("c", 0.72, 1.5, "loss"), _leg("d", 0.71, 1.5, "win")]
-    plan = at.plan_day(pool, 100.0, stake_frac=0.5)
+    # pins per_day: this test is about day_growth arithmetic, not stake mode
+    plan = at.plan_day(pool, 100.0, stake_frac=0.5, stake_mode="per_day")
     # one acca @3.0 wins, one loses; plan_day stakes 25% on each
     assert [a["stake_pct"] for a in plan] == [25.0, 25.0]
     assert rh.day_growth(plan) == pytest.approx(1 + 0.5 * (3.0 / 2 - 1))
@@ -155,14 +156,20 @@ def test_summarise_bankruptcy_is_ruin_not_a_dropped_day():
 def test_ruin_variant_is_not_bootstrapped():
     u = {"2026-08-01": at.rank_legs([
         _leg("a", 0.8, 1.5, "loss"), _leg("b", 0.7, 1.5, "loss")])}
-    assert rh.summarise(rh.replay(u, {"stake_frac": 1.0}))["ruin"] == 1
-    assert rh.paired_bootstrap(u, {}, {"stake_frac": 1.0}, n=20) is None
+    # a total-loss day only exists if the whole bank is staked, so this
+    # scenario pins per_day explicitly rather than inheriting the live default
+    ruinous = {"stake_frac": 1.0, "stake_mode": "per_day"}
+    assert rh.summarise(rh.replay(u, ruinous))["ruin"] == 1
+    assert rh.paired_bootstrap(u, {}, ruinous, n=20) is None
 
 
 def test_kelly_sweep_skips_ruin_cells(capsys):
     u = {"2026-08-01": at.rank_legs([
         _leg("a", 0.8, 1.5, "loss"), _leg("b", 0.7, 1.5, "loss")])}
-    rh.cmd_kelly(u)
+    # A one-acca day can only be a RUIN cell under per_day; per_acca caps it
+    # at STAKE_FRAC/MAX_ACCAS by design. This test is about the sweep
+    # SKIPPING ruin cells, so it pins the mode that can produce one.
+    rh.cmd_kelly(u, {"stake_mode": "per_day"})
     output = capsys.readouterr().out
     assert "100%      RUIN" in output
     assert "<- SKIPPED" in output

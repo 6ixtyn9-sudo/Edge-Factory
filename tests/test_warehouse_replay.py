@@ -69,7 +69,7 @@ def test_audit_flag_is_opt_in_only():
 def test_live_recipe_constants_unchanged(at):
     """The feasibility work must not have moved a single live setting."""
     assert at.STAKE_FRAC == pytest.approx(1.0 / 3.0)
-    assert at.STAKE_MODE == "per_day"
+    assert at.STAKE_MODE == "per_acca"
     assert at.STAKE_PER_ACCA is None
     assert at.STAKE_WEIGHTS is None
     assert at.MAX_ACCAS == 3
