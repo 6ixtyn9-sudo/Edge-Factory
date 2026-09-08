@@ -240,7 +240,14 @@ def test_playable_legs_bucket_and_quarantine_and_price_filters():
          "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": None, "avg_p": 75.0},
     ]
     legs = at.playable_legs(rows, day="2026-08-20")
-    assert [l["match"] for l in legs] == ["A vs B"]
+    # CAUTION was admitted 2026-09-08 (operator decision), so C vs D now
+    # rides. The quarantined leg and the price-less leg must still be
+    # dropped: those are DATA faults, not merely weak edges.
+    assert [l["match"] for l in legs] == ["A vs B", "C vs D"]
+    assert "CAUTION" in at.BUCKETS
+    for excluded in ("WATCHLIST_SUSPECT_PRICE", "WATCHLIST_NO_ODDS"):
+        assert excluded not in at.BUCKETS, (
+            f"{excluded} flags bad data, not a weak edge; it must stay out")
 
 
 # ---------------- backfill end-to-end (percent arithmetic) ----------------
