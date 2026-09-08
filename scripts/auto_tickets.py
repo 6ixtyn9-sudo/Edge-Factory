@@ -182,6 +182,12 @@ BUCKETS = {
     "SKIPPED_VETO",
     "WATCHLIST_UNKNOWN_CTX",
     "WATCHLIST_UNCORROBORATED_PRICE",
+    # 2026-09-08 operator decision, taken against the evidence.
+    # In-season n=91, ROI -0.6%, 80% interval -11.3%..+9.8%. The
+    # bucket spread is reproduced by label-shuffling ~85-98% of the
+    # time depending on window. SUSPECT_PRICE and NO_ODDS stay OUT:
+    # they flag bad DATA, not weak edges.
+    "CAUTION",
 }
 BAD_QUARANTINE = {"alias_fuzzy", "suspect", "suspect_alias_fuzzy"}
 
