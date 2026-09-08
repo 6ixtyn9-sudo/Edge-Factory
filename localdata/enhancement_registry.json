@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 120,
-   "inv_price_sum": 117.68183035853441,
+   "hits": 122,
+   "inv_price_sum": 119.66012775740131,
    "multi_n": 17,
-   "n": 183,
+   "n": 186,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -519,9 +519,12 @@
     "2026-09-06|SC Telstar vs Cambuur|match_over_25@v1",
     "2026-09-06|Inter Miami vs Atlanta United FC|match_over_25@v1",
     "2026-09-06|Inter Miami CF vs Atlanta United|match_over_25@v1",
-    "2026-09-07|Kalmar FF vs Djurg\u00e5rdens|match_over_25@v1"
+    "2026-09-07|Kalmar FF vs Djurg\u00e5rdens|match_over_25@v1",
+    "2026-09-08|Trans Narva vs Flora Tallinn|match_over_25@v1",
+    "2026-09-08|Salisbury City vs Slough Town|match_over_25@v1",
+    "2026-09-08|AFC Telford Utd vs Oxford City|match_over_25@v1"
    ],
-   "profit": 2.03,
+   "profit": 2.04,
    "records": [
     {
      "date": "2026-08-01",
@@ -1983,6 +1986,30 @@
      "match": "Kalmar FF vs Djurg\u00e5rdens",
      "multi_source": false,
      "price": 1.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-08",
+     "hit": true,
+     "match": "Trans Narva vs Flora Tallinn",
+     "multi_source": false,
+     "price": 1.65,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-08",
+     "hit": true,
+     "match": "Salisbury City vs Slough Town",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-08",
+     "hit": false,
+     "match": "AFC Telford Utd vs Oxford City",
+     "multi_source": false,
+     "price": 1.57,
      "source": "scoutingstats"
     }
    ],
