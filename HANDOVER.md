@@ -8696,3 +8696,47 @@ de-duplicated at archive load.
 
 Receipt: 460 passed (458 + 2 new); `ruff` findings unchanged on both touched
 files (10 / 3); no engine constant or state file changed.
+
+---
+
+## Addendum — 2026-09-09: the October bar could have been passed by losing more slowly
+
+`--october` is the command that will decide October, and until now **every one
+of its criteria compared the candidate against live** — p10 > 0,
+leave-one-day-out, maxDD ≤ live. Live is negative, so an arm that merely loses
+more slowly would have cleared all of them and printed ADOPT-ELIGIBLE. That is
+the same bias `--sweep`'s second scoreboard was added to catch, sitting in the
+one command that actually ships things.
+
+Two criteria added, both stake-honest:
+
+1. **`grows on its own`** — the arm's own mean log growth on the new days must
+   be > 0, live out of the picture.
+2. **`optimism penalty <= live's`** — the drop from settled to pessimistic
+   grading must cost the arm no more than it costs live.
+
+The second is deliberately **relative**. On genuinely new data most legs are
+still unsettled, so grading them all as losses drags every arm down; an
+absolute pessimistic threshold would auto-fail in October and the bar could
+never adopt anything. What matters is whether the arm leans on unsettled legs
+*harder than live does* — that is scale-fair, and it is the thing that turns
+`barbell, 2 accas` from +0.0215 into +0.0032.
+
+### Effect on the two pre-registered arms
+
+| cut-off | new days | barbell x2 | singles x3 |
+|---|---|---|---|
+| 2026-06-19 (fully mined — **hindsight, not evidence**) | 75 | ADOPT-ELIGIBLE (6/6) | ADOPT-ELIGIBLE (6/6) |
+| 2026-08-01 | 39 | NOT ADOPTABLE (n) | NOT ADOPTABLE (n) |
+| 2026-08-15 | 25 | NOT ADOPTABLE (p10, lodo, n) | NOT ADOPTABLE (p10, n) |
+| 2026-09-10 (the real default) | 0 | "no new bet-days yet — do not judge early" | — |
+
+Optimism penalty at 2026-06-19: barbell +0.0183 and singles +0.0148, both
+below live's +0.0293. At 2026-08-01: +0.0225 and +0.0242 vs live +0.0440.
+
+Both arms clear all six on the mined universe, which proves nothing — it is the
+data the arms were found in. The default `--new-since 2026-09-10` correctly
+refuses to judge.
+
+Receipt: 462 passed (460 + 2 new); `ruff` findings unchanged on both touched
+files (10 / 3); no engine constant or state file changed.
