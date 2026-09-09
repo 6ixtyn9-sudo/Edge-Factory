@@ -565,3 +565,37 @@ def test_rules_split_fits_on_the_tuning_half_only(monkeypatch):
     assert "bad" not in res["forward"]["keep"]
     assert "good" in res["forward"]["keep"]
     assert res["forward"]["blind"]["mean_log"] != res["forward"]["in_sample"]["mean_log"]
+
+
+# ------- a no-bet day is FLAT, not absent from the comparison -------------
+
+def test_no_bet_day_is_flat_not_absent_from_the_comparison(monkeypatch):
+    """Regression 2026-09-09: both comparison helpers averaged each arm over
+    its OWN day set. For an arm that changes WHICH days are bet — every rule
+    filter, min_prob, min_accas — that is not a paired difference at all, and
+    it silently drops the days one arm skipped. A day an arm does not bet
+    leaves its bank flat, so it belongs in both averages as log growth 0."""
+    import math
+
+    a_days = {"d1": {"growth": 1.10}, "d2": {"growth": 0.90}, "d3": {"growth": 1.05}}
+    b_days = {"d1": {"growth": 1.10}, "d3": {"growth": 0.80}}     # stands aside on d2
+
+    def fake_replay(u, spec):
+        return b_days if spec else a_days
+
+    monkeypatch.setattr(rh, "replay", fake_replay)
+    ec = rh.effect_concentration({}, {}, {"rules": "anything"})
+    want_a = (math.log(1.10) + math.log(0.90) + math.log(1.05)) / 3
+    want_b = (math.log(1.10) + 0.0 + math.log(0.80)) / 3
+    assert abs(ec["full"] - (want_b - want_a)) < 1e-9
+    # the dropped-day-only reading would have said B was BETTER than A here
+    assert ec["full"] < 0
+
+
+def test_both_comparison_helpers_use_the_union_of_bet_days():
+    src = (ROOT / "scripts" / "replay_harness.py").read_text()
+    for fn in ("def effect_concentration", "def paired_bootstrap"):
+        body = src[src.index(fn):src.index(fn) + 2200]
+        assert "set(da) | set(db)" in body, f"{fn} must compare on the same days"
+        assert "if d in ga else 0.0" in body or "if d in da else 0.0" in body, \
+            f"{fn} must score a no-bet day as flat"
