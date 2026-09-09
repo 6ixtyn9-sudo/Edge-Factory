@@ -599,3 +599,49 @@ def test_both_comparison_helpers_use_the_union_of_bet_days():
         assert "set(da) | set(db)" in body, f"{fn} must compare on the same days"
         assert "if d in ga else 0.0" in body or "if d in da else 0.0" in body, \
             f"{fn} must score a no-bet day as flat"
+
+
+# ------- the October bar must not be passable by losing more slowly -------
+
+def _flat(days, growth, bets=1):
+    return {d: {"growth": growth, "accas": [(2.0, growth > 1)] * bets,
+                "stake_pct": [10.0] * bets} for d in days}
+
+
+def test_october_bar_rejects_an_arm_that_only_loses_more_slowly(monkeypatch, capsys):
+    """Every other criterion in --october compares against live, and live is
+    negative — so an arm that merely loses more slowly would pass all of them.
+    The own-growth criterion exists to stop exactly that."""
+    days = [f"2026-09-{i:02d}" for i in range(10, 20)]
+    u = {d: ["OK"] for d in days}
+    monkeypatch.setattr(rh, "replay",
+                        lambda uu, spec: _flat(days, 0.99 if spec else 0.90))
+    rh.cmd_october(u, [{"max_accas": 2}], since="2026-09-01", min_days=5)
+    out = capsys.readouterr().out
+    assert "[PASS] bootstrap p10 > 0" in out          # it does beat live
+    assert "[FAIL] grows on its own" in out           # ...and it still loses
+    assert "NOT ADOPTABLE" in out
+
+
+def test_october_bar_catches_an_arm_that_leans_on_unsettled_legs(monkeypatch, capsys):
+    """The optimism-penalty criterion: settled -> pessimistic may cost an arm
+    no more than it costs live. This is relative on purpose — on genuinely new
+    data most legs are unsettled, so an absolute pessimistic threshold would
+    auto-fail in October and nothing could ever be adopted."""
+    days = [f"2026-09-{i:02d}" for i in range(10, 20)]
+    u = {d: ["OK"] for d in days}
+    pes = {d: ["PES"] for d in days}
+
+    def fake_replay(uu, spec):
+        is_pes = bool(uu) and next(iter(uu.values())) == ["PES"]
+        if is_pes:
+            return _flat(days, 0.70 if spec else 0.985)   # arm collapses
+        return _flat(days, 1.05 if spec else 0.90)
+
+    monkeypatch.setattr(rh, "replay", fake_replay)
+    rh.cmd_october(u, [{"max_accas": 2}], since="2026-09-01", min_days=5,
+                   pes_universe=pes)
+    out = capsys.readouterr().out
+    assert "[PASS] grows on its own" in out
+    assert "[FAIL] optimism penalty <= live's" in out
+    assert "NOT ADOPTABLE" in out

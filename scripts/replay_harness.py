@@ -2267,10 +2267,21 @@ def cmd_target(universe, spec, capital, target=1_000_000.0):
 # holds AND maxDD <= live, at n >= 60 genuinely new bet-days"); this judges it
 # instead of leaving it to be argued about after the fact.
 # --------------------------------------------------------------------------
-def cmd_october(universe, specs, since, min_days=60):
+def cmd_october(universe, specs, since, min_days=60, pes_universe=None):
+    """The pre-registered adoption bar, scored on genuinely new bet-days.
+
+    ``pes_universe`` is the same window with unsettled legs graded as losses.
+    It is required, not optional: every criterion that compares against live
+    can be passed by being LESS BAD than live, and on fresh data live is
+    usually losing. Without an own-growth criterion the bar would adopt an arm
+    that never grows — the exact mistake --sweep's second scoreboard exists to
+    catch (2026-09-09: max_accas=2 scores 3/4 against live and 2/5 on its own).
+    """
     specs = list(specs) or [{"pairing": "barbell", "max_accas": 2},
                             {"legs_per_acca": 1}]
     new = {d: p for d, p in universe.items() if d >= since}
+    new_pes = ({d: p for d, p in pes_universe.items() if d >= since}
+               if pes_universe else {})
     print("=" * 74)
     print(f"PRE-REGISTERED BAR — bet-days on/after {since}: {len(new)} "
           f"(bar needs >= {min_days})")
@@ -2293,7 +2304,23 @@ def cmd_october(universe, specs, since, min_days=60):
         c_lodo = bool(ec and not ec["flips"] and ec["loo_min"] * ec["full"] > 0)
         c_dd = b["maxdd"] <= live["maxdd"] + 1e-9
         c_n = enough
-        verdict = all((c_p10, c_lodo, c_dd, c_n))
+        # The stake-honest pair: does this arm grow on its OWN, with live out
+        # of the picture, on both the settled and the pessimistic grading?
+        c_own = b["mean_log"] > 0
+        # OPTIMISM PENALTY, not an absolute pessimistic threshold. On genuinely
+        # new data most legs are still unsettled, so grading them all as losses
+        # drags EVERY arm down — an absolute "> 0 under pessimistic grading"
+        # test would auto-fail in October and the bar could never adopt
+        # anything. What actually matters is whether THIS arm leans on
+        # unsettled legs harder than live does. That is scale-fair and it is
+        # the thing that turns +0.0215 into +0.0032.
+        pb = arm_stats(new_pes, spec) if new_pes else None
+        lp = arm_stats(new_pes, {}) if new_pes else None
+        pen_arm = b["mean_log"] - pb["mean_log"] if pb else None
+        pen_live = live["mean_log"] - lp["mean_log"] if lp else None
+        c_opt = (pen_arm is not None and pen_live is not None
+                 and pen_arm <= pen_live + 1e-9)
+        verdict = all((c_p10, c_lodo, c_dd, c_n, c_own, c_opt))
         print(f"{label_of(spec)}")
         print(f"  log/day {b['mean_log']:+.4f} (live {live['mean_log']:+.4f}) · "
               f"maxDD {b['maxdd'] * 100:.0f}% · bets {b['accas']}")
@@ -2305,6 +2332,16 @@ def cmd_october(universe, specs, since, min_days=60):
         print(f"  [{'PASS' if c_lodo else 'FAIL'}] leave-one-day-out sign holds{ec_note}")
         print(f"  [{'PASS' if c_dd else 'FAIL'}] maxDD <= live ({b['maxdd'] * 100:.0f}% vs {live['maxdd'] * 100:.0f}%)")
         print(f"  [{'PASS' if c_n else 'FAIL'}] n >= {min_days} new bet-days ({len(new)})")
+        print(f"  [{'PASS' if c_own else 'FAIL'}] grows on its own, live out of the "
+              f"picture ({b['mean_log']:+.4f} log/day)")
+        if pb is None:
+            print("  [????] optimism penalty no worse than live's "
+                  "(no pessimistic universe supplied)")
+        else:
+            print(f"  [{'PASS' if c_opt else 'FAIL'}] optimism penalty <= live's: "
+                  f"settled->pessimistic costs this arm {pen_arm:+.4f} "
+                  f"({b['mean_log']:+.4f}->{pb['mean_log']:+.4f}) vs live "
+                  f"{pen_live:+.4f} ({live['mean_log']:+.4f}->{lp['mean_log']:+.4f})")
         print(f"  => {'ADOPT-ELIGIBLE' if verdict else 'NOT ADOPTABLE'}\n")
     print("Adoption is a separate decision from eligibility. Nothing here ships "
           "itself.")
@@ -2699,7 +2736,8 @@ def main():
 
     if args.october is not None:
         return cmd_october(universe, [parse_spec(x) for x in args.october],
-                           since=args.new_since)
+                           since=args.new_since,
+                           pes_universe=build_universe(archives, settled, unresolved="loss"))
 
     if args.clv:
         spec = parse_spec(args.variant[0]) if args.variant else {}
