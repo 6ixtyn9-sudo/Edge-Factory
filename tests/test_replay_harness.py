@@ -116,6 +116,10 @@ def test_day_growth_comes_from_the_engine_plan_stakes():
 
 def test_replay_routes_sizing_through_plan_day(monkeypatch):
     u = _universe(1)
+    # This test pins the per_acca CAP arithmetic (total = min(f, per_acca*n)),
+    # so it freezes f rather than inheriting whatever live is: the numbers
+    # below are only meaningful at a known fraction.
+    monkeypatch.setattr(at, "STAKE_FRAC", 1.0 / 3.0)
     real = at.plan_day
     calls = []
 

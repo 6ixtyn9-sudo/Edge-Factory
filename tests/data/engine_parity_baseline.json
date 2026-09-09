@@ -2250,5 +2250,7 @@
       "staked": 33.3333
     }
   },
-  "generated_note": "Folds in three deliberate changes made 2026-09-08: (1) the team-alias fallback, which recovered the 2026-09-06 @1.85 leg; (2) STAKE_MODE per_day -> per_acca, which moved total staked on 27 thin-card days by exactly -22.2222pp (1 acca) or -11.1111pp (2 accas); (3) admitting the CAUTION bucket, an operator decision taken against the measured evidence, which re-partitions leg selection on ~39 of 80 days. No unexplained movement was folded in."
+  "generated_note": "Folds in three deliberate changes made 2026-09-08: (1) the team-alias fallback, which recovered the 2026-09-06 @1.85 leg; (2) STAKE_MODE per_day -> per_acca, which moved total staked on 27 thin-card days by exactly -22.2222pp (1 acca) or -11.1111pp (2 accas); (3) admitting the CAUTION bucket, an operator decision taken against the measured evidence, which re-partitions leg selection on ~39 of 80 days. No unexplained movement was folded in.",
+  "stake_frac": 0.3333333333333333,
+  "stake_frac_note": "STAKE_FRAC at base_commit, recorded 2026-09-09 so the staked parity check can scale across a deliberate STAKE_FRAC change. Day values are NOT regenerated."
 }

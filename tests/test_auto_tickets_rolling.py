@@ -572,8 +572,12 @@ def test_force_repick_sizes_on_bank_net_of_other_dates_not_own_draft(tmp_path, m
     args = SimpleNamespace(date="2026-09-06", force=True)
     assert at.cmd_today(args, st) == 0
     slip = next(s for s in st["open_slips"] if s["date"] == "2026-09-06")
-    assert slip["staked_pct"] == pytest.approx(30.0, abs=0.02)       # 90 * 1/3
-    assert [a["stake_pct"] for a in slip["accas"]] == pytest.approx([10.0] * 3, abs=0.02)
+    # derived from the live constant, not hardcoded: a deliberate STAKE_FRAC
+    # change must not silently invalidate the free-bank sizing contract
+    want = 90.0 * at.STAKE_FRAC
+    assert slip["staked_pct"] == pytest.approx(want, abs=0.02)
+    assert [a["stake_pct"] for a in slip["accas"]] == pytest.approx(
+        [want / 3] * 3, abs=0.02)
     assert len(st["open_slips"]) == 2          # other-date slip untouched, own replaced
     txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
     # 2026-09-09: the slip no longer carries the REPICK/RESIZED diff block —
@@ -595,7 +599,7 @@ def test_first_run_of_day_sizes_on_bank_net_of_other_dates_and_prints_no_warning
     args = SimpleNamespace(date="2026-09-06", force=True)
     assert at.cmd_today(args, st) == 0
     slip = next(s for s in st["open_slips"] if s["date"] == "2026-09-06")
-    assert slip["staked_pct"] == pytest.approx(30.0, abs=0.02)
+    assert slip["staked_pct"] == pytest.approx(90.0 * at.STAKE_FRAC, abs=0.02)
     txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
     assert "REPICK" not in txt
 

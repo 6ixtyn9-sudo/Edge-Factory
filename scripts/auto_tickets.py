@@ -141,15 +141,24 @@ KO_SKIP_STARTED = "already started (dated kickoff at/past build time)"
 KO_SKIP_TOO_CLOSE = f"audit: kickoff under {KICKOFF_MIN_LEAD_HOURS:g}h away or already started (provable)"
 
 # ---------------- the validated recipe (receipts, not knobs) ----------------
-STAKE_FRAC = 1.0 / 3.0     # of free bank (total bank minus open stakes) per
-                           # day. 2026-09-04 sizing audit (52-day
-                           # replay, SAME cards — sizing only): growth-optimal
-                           # f ~= 40%, curve flat 30-50%, maxDD 62%->87% across
-                           # it. f=1/3 keeps 96% of peak growth at 67% DD;
-                           # f=0.50 gave 93% at 87%. Bootstrapped P(f* < 50%)
-                           # = 66%, so size BELOW the estimate (overbetting is
-                           # punished far harder than underbetting).
-                           # 75% and 100% still bust everywhere. Revert = 0.50.
+STAKE_FRAC = 1.0 / 10.0    # of free bank (total bank minus open stakes) per
+                           # day. Changed 2026-09-09 from 1/3: the 2026-09-04
+                           # audit that justified 1/3 (f=33% -> +0.0426 log/day,
+                           # f* ~40%, 52 bet-days) NO LONGER REPRODUCES. The
+                           # same --kelly code path on the first 52 bet-days of
+                           # the current archive returns -0.0155 at f=33%, and
+                           # f* reads 5%/10%/10% on every window that can be
+                           # re-run (52/60/69 days). Bootstrapped f*: median
+                           # 10%, p10 5%, P(f* < 33%) = 80% settled and 98%
+                           # under pessimistic grading.
+                           # This is RISK CONTROL, not edge: on the current
+                           # card the arm is negative at every f under
+                           # pessimistic grading, so a smaller stake loses
+                           # slower rather than winning. Revert = 1.0 / 3.0.
+                           # NOTE f is a property of the CARD. If the October
+                           # bar adopts a different pairing, re-derive f from
+                           # --kelly on the new bet-days; do not carry 1/10
+                           # over (barbell x2 reads f* 25% pessimistic).
 STAKE_MODE = "per_acca"     # "per_day" preserves the validated fixed day risk;
                            # "per_acca" risks a fixed fraction per ticket while
                            # capping the day's total at STAKE_FRAC. Research only.

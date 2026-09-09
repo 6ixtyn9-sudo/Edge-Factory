@@ -67,8 +67,15 @@ def test_audit_flag_is_opt_in_only():
 
 
 def test_live_recipe_constants_unchanged(at):
-    """The feasibility work must not have moved a single live setting."""
-    assert at.STAKE_FRAC == pytest.approx(1.0 / 3.0)
+    """The feasibility work must not have moved a single live setting.
+
+    STAKE_FRAC moved 1/3 -> 1/10 on 2026-09-09 as a deliberate, separate
+    decision (Kelly: f* reads 5-10% on every window that can be re-run, and
+    the 2026-09-04 audit that justified 1/3 no longer reproduces). Every other
+    constant here is still pinned — this test still fails if the feasibility
+    work, or anything else, moves one.
+    """
+    assert at.STAKE_FRAC == pytest.approx(1.0 / 10.0)
     assert at.STAKE_MODE == "per_acca"
     assert at.STAKE_PER_ACCA is None
     assert at.STAKE_WEIGHTS is None
@@ -119,16 +126,24 @@ def test_zero_leg_selection_differences_vs_previous_main(parity):
         "Live behaviour must be identical; selection is not a research knob.")
 
 
-def test_total_staked_within_one_hundredth_of_a_percentage_point(parity):
+def test_total_staked_within_one_hundredth_of_a_percentage_point(parity, at):
+    """Total staked per day against the recorded baseline, scaled by the
+    deliberate STAKE_FRAC change. Total stake is LINEAR in STAKE_FRAC
+    (total_frac = min(f, f/MAX_ACCAS * n_accas)), so the ratio must be the
+    same on every day — a day that does not scale is a genuine divergence and
+    still fails at the 0.01pp tolerance."""
     baseline, current, days = parity
+    ratio = at.STAKE_FRAC / baseline["stake_frac"]
     worst_day, worst = None, 0.0
     for d in days:
-        delta = abs(current[d]["staked"] - baseline["days"][d]["staked"])
+        want = baseline["days"][d]["staked"] * ratio
+        delta = abs(current[d]["staked"] - want)
         if delta > worst:
             worst_day, worst = d, delta
     assert worst <= 0.01, (
-        f"total staked moved {worst:.6f}pp on {worst_day}; the parity tolerance "
-        "is 0.01pp (one cent on a R100 bank).")
+        f"total staked moved {worst:.6f}pp on {worst_day} after scaling the "
+        f"baseline by {ratio:.6f} (STAKE_FRAC {baseline['stake_frac']:.6f} -> "
+        f"{at.STAKE_FRAC:.6f}); the parity tolerance is 0.01pp.")
 
 
 # --------------------------------------------------------------------------
