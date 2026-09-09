@@ -315,9 +315,17 @@ def effect_concentration(universe, spec_a, spec_b):
     da, db = replay(universe, spec_a), replay(universe, spec_b)
     if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
         return None
-    la = {d: math.log(v["growth"]) for d, v in da.items()}
-    lb = {d: math.log(v["growth"]) for d, v in db.items()}
-    if not la or not lb:
+    # A day one arm does not bet is a day that arm's bank is FLAT, not a day
+    # that disappears from the comparison. Averaging each arm over its OWN day
+    # set (the old behaviour) is not a paired difference at all: for an arm
+    # that changes which days are bet — every rule filter, min_prob, min_accas
+    # — it can keep the leave-one-day-out sign positive while the paired
+    # difference is negative (measured 2026-09-09 on rules=!ml-meta avg_p>=55:
+    # unpaired +0.0012 "holds", paired on common days -0.0052).
+    days = sorted(set(da) | set(db))
+    la = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
+    lb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
+    if not days:
         return None
     full = sum(lb.values()) / len(lb) - sum(la.values()) / len(la)
     contrib = []
@@ -369,15 +377,17 @@ def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
     # day. It is ineligible for bootstrap comparison.
     if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
         return None
-    ga = {d: math.log(da[d]["growth"]) for d in da}
-    gb = {d: math.log(db[d]["growth"]) for d in db}
+    # A no-bet day is log growth 0 for that arm, and BOTH arms are scored on
+    # the SAME sampled days — otherwise the resampling is paired but the
+    # averaging is not, and an arm that skips days is compared against a
+    # different denominator on every draw.
+    ga = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
+    gb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
     diffs = []
     for _ in range(n):
         sample = random.choices(days, k=len(days))
-        la = [ga[d] for d in sample if d in ga]
-        lb = [gb[d] for d in sample if d in gb]
-        if not la or not lb:
-            continue
+        la = [ga[d] for d in sample]
+        lb = [gb[d] for d in sample]
         diffs.append(sum(lb) / len(lb) - sum(la) / len(la))
     if not diffs:
         return None

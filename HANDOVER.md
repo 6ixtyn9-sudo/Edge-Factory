@@ -8635,3 +8635,64 @@ post-floor pool (today: Kairat 1.30 + Boca 1.90 = 2.47, Chelsea 1.65 + Twente
 `max_accas=3`. The two dropped legs (Viktoria, Stuttgart) are not ridden at all.
 
 Receipt: 458 passed (unchanged); no code or constant changed by this addendum.
+
+---
+
+## Addendum — 2026-09-09: a no-bet day was being deleted from the comparison
+
+`--ab live 'rules=!ml-meta avg_p>=55'` printed "fragile: one day inflates most
+of it". Pulling that day apart exposed a bug in both comparison helpers.
+
+### The bug
+
+`paired_bootstrap` and `effect_concentration` each averaged arm A over the days
+**A** bet and arm B over the days **B** bet. For an arm that changes *which*
+days are bet — every `rules=` filter, `min_prob`, `min_accas` — that is not a
+paired difference: the resampling was paired but the averaging was not, and the
+days one arm skipped vanished instead of counting as a flat bank.
+
+Both now score a no-bet day as **log growth 0.0** and compare over the
+**union** of bet-days, so both arms always share one denominator.
+
+### What it changed, and what it did not
+
+| arm | day set vs live (69) | bar before → after | grows on its own |
+|---|---|---|---|
+| `barbell, 2 accas` | same 69 | **4/4 → 4/4** | 5/5 |
+| `singles x3` | **+6 days (75)** | **4/4 → 4/4** | 5/5 |
+| `max_accas=2` / `=4` / `=5` / `=6` | same 69 | unchanged | unchanged |
+| `stake_frac` arms | same 69 | unchanged | unchanged |
+| `2way-unan avg_p>=70 only` | −29 days (40) | 1/4 → 2/4 | 1/5 |
+| `2way-unanimous, all bands` | −? | 1/4 → 2/4 | 1/5 |
+| `drop ml-meta avg_p>=55` | −5 days (64) | 1/4 → 1/4 | 2/5 |
+
+No headline candidate moved. The two 4/4 · 5/5 arms are unchanged, including
+`singles x3`, which was the one at risk: it bets **6 days live does not**
+(`legs_per_acca=1` only needs one qualifying leg), and those 6 days are a net
+**−0.3680 log** (2 wins, 4 losses). On the 69 common days it reads +0.0235 vs
+the +0.0167 the unpaired average reported — so the old convention was
+*understating* it, not flattering it.
+
+For `rules=!ml-meta avg_p>=55` the corrected `--ab` barely moves (median
++0.0081 → +0.0079, p10 −0.0078 → −0.0075, leave-one-day-out +0.0012 → +0.0010,
+top-day share 86% → 87%) because it only skips 5 days. It still says
+**do NOT ship**.
+
+### The one day that carries the filter
+
+Paired over the 64 common days, `rules=!ml-meta avg_p>=55` beats live by
++0.0026/day. **Excluding 2026-09-07 it is −0.0052/day — worse than live.**
+On 2026-09-07 live rode three accas and lost all three (@2.10, @1.46, @1.88);
+the filtered card rode a single acca @1.81 and it won. The whole "edge" is one
+day on which the filter happened to leave a winner.
+
+### A data defect found on the same day
+
+`Cruz Azul vs Santos Laguna` HOME @1.41 `ml-meta avg_p>=55` appears **twice**
+in the 2026-09-07 playable pool — the only duplicate in all 841 legs across the
+75-day universe. The engine can therefore ride the same match in two tickets.
+One occurrence, so it is not driving anything above, but it should be
+de-duplicated at archive load.
+
+Receipt: 460 passed (458 + 2 new); `ruff` findings unchanged on both touched
+files (10 / 3); no engine constant or state file changed.
