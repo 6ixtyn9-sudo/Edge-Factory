@@ -239,3 +239,177 @@ def test_slot_table_respects_the_floor_and_the_rank_order():
     slots, accas, _ = rh.slot_table(u)
     assert slots[1][0] == 1 and slots[5][0] == 0      # sub-floor leg excluded
     assert accas[1][0] == 1 and accas[3][0] == 0
+
+
+# ---------------- leagues= (harness-only concentration filter) --------------
+
+def test_parse_spec_accepts_leagues_and_still_rejects_unknown_keys():
+    assert rh.parse_spec("leagues=EPL|Sc1") == {"leagues": "EPL|Sc1"}
+    assert rh.parse_spec("floor=1.3,leagues=EPL") == {"floor": 1.3, "leagues": "EPL"}
+    with pytest.raises(SystemExit):
+        rh.parse_spec("nonsense=1")
+
+
+def test_leagues_filter_shrinks_the_pool_before_the_live_selector_sees_it():
+    def leg(tag, lg):
+        return {"match": f"T{tag} vs O{tag}", "pick": "HOME", "prob": 0.75,
+                "odds": 1.30, "result": "win", "row": {"league": lg}}
+    pool = at.rank_legs([leg("a", "England, Premier League"),
+                         leg("b", "Scotland, Premiership"),
+                         leg("c", "England, League Two")])
+    kept = rh._filtered_pool(pool, {"leagues": "england"})
+    assert sorted(l["match"] for l in kept) == ["Ta vs Oa", "Tc vs Oc"]
+    assert [l["match"] for l in rh._filtered_pool(pool, {"leagues": "premiership"})] == ["Tb vs Ob"]
+    assert rh._filtered_pool(pool, {}) is pool          # no spec, no copy, no filter
+    assert rh._filtered_pool(pool, {"min_prob": 0.8}) == []
+
+
+# ---------------- holdout: the search must pay for its own selection --------
+
+def test_split_universe_partitions_at_the_median_day():
+    u = _universe(9)
+    older, newer, cut = rh.split_universe(u)
+    assert cut == sorted(u)[len(u) // 2]
+    assert set(older) | set(newer) == set(u) and not (set(older) & set(newer))
+    assert all(d < cut for d in older) and all(d >= cut for d in newer)
+
+
+def test_holdout_window_ranks_on_the_tuning_half_and_scores_blind():
+    u = _universe(10)
+    older, newer, _ = rh.split_universe(u)
+    r = rh.holdout_window(older, newer, [{}, {"max_accas": 2}, {"max_accas": 4}],
+                          min_days=2, min_bets=2)
+    assert r["viable"] >= 1 and r["chosen"] is not None
+    # the chosen arm is the tuning-half best, by construction
+    tuning = {rh.label_of(sp): rh.arm_stats(older, sp)["mean_log"]
+              for sp in [{}, {"max_accas": 2}, {"max_accas": 4}]}
+    assert r["tune"]["mean_log"] == max(tuning.values())
+    # the accounting is internally consistent
+    assert 1 <= r["blind_rank"] <= r["blind_n"] == r["viable"]
+    assert r["blind_ceiling"] >= r["blind"]["mean_log"]
+    assert 0 <= r["top_survive"] <= r["top_n"]
+
+
+def test_holdout_window_reports_no_viable_arm_instead_of_guessing():
+    u = _universe(4)
+    older, newer, _ = rh.split_universe(u)
+    r = rh.holdout_window(older, newer, [{}], min_days=99)
+    assert r["viable"] == 0 and r["chosen"] is None
+
+
+def test_arm_stats_roi_is_stake_weighted_not_hit_times_odds():
+    u = _universe(6)
+    s = rh.arm_stats(u, {})
+    days = rh.replay(u, {})
+    staked = sum(sum(d["stake_pct"]) for d in days.values())
+    ret = sum(sum(sp * o for (o, w), sp in zip(d["accas"], d["stake_pct"]) if w)
+              for d in days.values())
+    assert s["roi"] == pytest.approx((ret - staked) / staked)
+
+
+# ---------------- pessimistic universe: unsettled legs cost money -----------
+
+def test_pessimistic_universe_grades_unsettled_legs_as_losses(monkeypatch):
+    legs = [{"match": "A vs B", "pick": "HOME", "prob": 0.8, "odds": 1.3,
+             "result": "win", "row": {}},
+            {"match": "C vs D", "pick": "HOME", "prob": 0.7, "odds": 1.3,
+             "result": None, "row": {}},          # never settled
+            {"match": "E vs F", "pick": "HOME", "prob": 0.6, "odds": 1.3,
+             "result": "loss", "row": {}}]
+    monkeypatch.setattr(rh.at, "playable_legs",
+                        lambda *a, **k: [dict(l) for l in legs])
+    opt = rh.build_universe([{"date": "2026-08-01"}], {})
+    pes = rh.build_universe([{"date": "2026-08-01"}], {}, unresolved="loss")
+    assert len(opt["2026-08-01"]) == 2                       # default: dropped
+    assert len(pes["2026-08-01"]) == 3                       # pessimistic: kept
+    assert [l["result"] for l in pes["2026-08-01"] if l["match"] == "C vs D"] == ["loss"]
+
+
+# ---------------- CLV join: the harness must use the audit's own definition --
+
+def _write_clv_ledger(tmp_path, rows):
+    import csv as _csv
+    import gzip as _gz
+    p = tmp_path / "clv_snapshots_2026-09.csv.gz"
+    with _gz.open(p, "wt", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=["pick_id", "observed_odds", "captured_at_utc",
+                                            "league", "odds_provider", "bookmaker",
+                                            "snapshot_label"])
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+    return p
+
+
+def test_clv_index_beat_rate_matches_the_audit_definition(tmp_path, monkeypatch):
+    _write_clv_ledger(tmp_path, [
+        # beat: first 2.00 -> last 1.80 (the close shortened: good CLV)
+        {"pick_id": "p-beat", "observed_odds": "2.00", "captured_at_utc": "2026-09-01T08:00:00",
+         "league": "EPL", "odds_provider": "betexplorer_odds", "bookmaker": "b1",
+         "snapshot_label": "pick_time"},
+        {"pick_id": "p-beat", "observed_odds": "1.80", "captured_at_utc": "2026-09-01T16:00:00",
+         "league": "EPL", "odds_provider": "betexplorer_odds", "bookmaker": "b1",
+         "snapshot_label": "end_of_run"},
+        # drift out: first 1.80 -> last 2.10 (the close beat us)
+        {"pick_id": "p-drift", "observed_odds": "1.80", "captured_at_utc": "2026-09-01T08:00:00",
+         "league": "Sc1", "odds_provider": "scoutingstats_odds", "bookmaker": "b2",
+         "snapshot_label": "pick_time"},
+        {"pick_id": "p-drift", "observed_odds": "2.10", "captured_at_utc": "2026-09-01T16:00:00",
+         "league": "Sc1", "odds_provider": "scoutingstats_odds", "bookmaker": "b2",
+         "snapshot_label": "end_of_run"},
+        # single price: must be ignored (no CLV measurable)
+        {"pick_id": "p-one", "observed_odds": "1.90", "captured_at_utc": "2026-09-01T08:00:00",
+         "league": "EPL", "odds_provider": "x", "bookmaker": "b3", "snapshot_label": "pick_time"},
+    ])
+    monkeypatch.setattr(rh, "LOCALDATA", tmp_path)
+    idx = rh.clv_index()
+    assert set(idx) == {"p-beat", "p-drift"}
+    assert idx["p-beat"]["beat"] is True and idx["p-drift"]["beat"] is False
+    assert idx["p-beat"]["raw_delta"] == pytest.approx(-0.20)
+    assert idx["p-drift"]["raw_delta"] == pytest.approx(+0.30)
+
+
+def test_clv_cells_split_by_a_field(tmp_path, monkeypatch):
+    _write_clv_ledger(tmp_path, [
+        {"pick_id": f"p{i}", "observed_odds": o1, "captured_at_utc": "2026-09-01T08:00:00",
+         "league": lg, "odds_provider": "x", "bookmaker": "b", "snapshot_label": "pick_time"}
+        for i, (o1, lg) in enumerate([("2.00", "EPL"), ("2.00", "EPL"), ("1.80", "Sc1")])
+    ] + [
+        {"pick_id": f"p{i}", "observed_odds": o2, "captured_at_utc": "2026-09-01T16:00:00",
+         "league": lg, "odds_provider": "x", "bookmaker": "b", "snapshot_label": "end_of_run"}
+        for i, (o2, lg) in enumerate([("1.90", "EPL"), ("1.95", "EPL"), ("2.20", "Sc1")])
+    ])
+    monkeypatch.setattr(rh, "LOCALDATA", tmp_path)
+    idx = rh.clv_index()
+
+    class FakeLeg(dict):
+        pass
+
+    def fake_pick_id(day, leg):
+        return leg["pid"]
+    monkeypatch.setattr(rh, "leg_pick_id", fake_pick_id)
+    legs = {"2026-09-01": [FakeLeg(pid="p0"), FakeLeg(pid="p1"), FakeLeg(pid="p2")]}
+    assert rh._clv_cells(legs, idx)["ALL"]["n"] == 3
+    by = rh._clv_cells(legs, idx, split="league")
+    assert by["EPL"]["n"] == 2 and by["Sc1"]["n"] == 1
+    assert by["EPL"]["beat_rate"] == 1.0 and by["Sc1"]["beat_rate"] == 0.0
+
+
+# ---------------- the pre-registered bar must refuse to judge early ---------
+
+def test_october_bar_refuses_to_adopt_below_the_n_floor(capsys):
+    u = _universe(6)
+    rc = rh.cmd_october(u, [{"max_accas": 2}], since="2026-01-01", min_days=60)
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "NOT YET" in out and "MUST NOT adopt" in out
+    assert "[FAIL] n >= 60" in out and "NOT ADOPTABLE" in out
+
+
+def test_target_projection_prints_the_p10_plan_beside_the_median(capsys):
+    u = _universe(10)
+    rc = rh.cmd_target(u, {"max_accas": 2}, capital=100_000, target=1_000_000)
+    out = capsys.readouterr().out
+    assert rc in (0, 1)
+    assert "p10  (plan on this)" in out and "do not plan on it" in out
+    assert "not a promise about money" in out

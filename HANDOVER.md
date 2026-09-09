@@ -8311,3 +8311,67 @@ No code changed this round (ledger only). Suite and constants unchanged
 since the round-4 receipt: 425 passed; MAX_ACCAS=3, STAKE_FRAC=1.0/3.0,
 MIN_LEG_ODDS=1.20; state file untouched at bank 97.417639 with the single
 open 09-06 slip at 32.4725% (3 accas) until tonight's settlement.
+
+## Addendum — 2026-09-09: the harness learns to price its own optimism (holdout, search, CLV join, pessimistic bound, target, October bar)
+
+Nothing shipped to the engine. `MAX_ACCAS=3`, `STAKE_FRAC=1.0/3.0`,
+`LEGS_PER_ACCA=2`, `MIN_LEG_ODDS=1.20`, `GATE_MODE=off` are all unchanged;
+the live card is untouched. This round only added instruments, because the
+pre-registered October slot needs tools that cannot flatter it.
+
+### Why
+
+A 2,304-variant sweep on the 75-day replay universe produced in-sample
+winners at +0.033 to +0.069 log/day. Every one of those numbers is free:
+with a few hundred variants over 75 bet-days, the winner is largely an
+artefact of having looked. Measured directly — the in-sample winner ranked
+**125/396** out-of-sample, and in the reverse direction the tuning winner
+(+0.0688) fell to **−0.0163** blind, ranked **828/996**, with **0/10** of
+the top-10 tuning arms staying positive. The harness had no way to show
+that tax, so it could only ever show the flattering number.
+
+### New commands (all opt-in, all research-only)
+
+| command | what it is for |
+|---|---|
+| `--holdout [SPEC ...]` | tune on one half of the universe, score the choice **blind** on the other, **both directions**; prints shrinkage, blind rank, hindsight ceiling, top-N survival, and which number to plan on |
+| `--search` | the full `SEARCH_AXES` grid (2,304 variants over 8 knobs) through `--holdout` |
+| `--clv [--clv-split league\|provider\|bookmaker\|label]` | join the committed closed-line ledger to the legs a variant actually rides, using `edgefactory.clv` so the definition of beating a price cannot drift from the audit |
+| `--pessimistic` | grade unsettled legs as **losses** instead of dropping them — the bound on every other number in this file |
+| `--target CAPITAL [--goal AMOUNT]` | project capital at the variant's own bootstrap p10 / median / p90, with the p10 labelled "plan on this" |
+| `--october [SPEC ...] [--new-since DATE]` | judge the pre-registered adoption bar already stated in this file's source (p10 > 0, leave-one-day-out sign holds, maxDD ≤ live, n ≥ 60 new bet-days) and print PASS/FAIL per criterion |
+| `leagues=A\|B` spec key | harness-only pool filter (like `min_prob`) for concentration experiments |
+
+`build_universe()` gained `unresolved=None|"loss"`; the default is
+byte-identical to before, so every previously published replay figure still
+means what it meant.
+
+### What the new instruments said on 2026-09-09 data
+
+* `--search`: the two directions disagree on the winner. Forward blind
+  **+0.0122**, reverse blind **−0.0163**. The command's own conclusion: plan
+  on the lower, i.e. treat the search as having found nothing.
+* `--holdout` on the two candidate policies: forward chose
+  `pairing=barbell,max_accas=2` (+0.0328 tuned → **+0.0122** blind, flat ROI
+  +8.67%); reverse chose `legs_per_acca=1` (+0.0211 tuned → **+0.0122**
+  blind). Different winners, the same blind number.
+* `--clv`: the pool beats the later price **13.2%** of the time (n=785) and
+  the ridden card **12.3%** (n=285) — selection is not adding CLV. Split by
+  the provider that supplied the price: `betexplorer_odds` 17.5% (n=80),
+  `bzzoiro_odds` 21.2% (n=52), **`scoutingstats_odds` 3.9% (n=51)**,
+  `forebet_best` 0.0% (n=22). The price source, not the rule, is where the
+  closing-line damage sits.
+* `--pessimistic`: grading unsettled legs as losses moves
+  `pairing=barbell,max_accas=2` from +0.0215 to **+0.0032** log/day. The
+  settled-only universe was flattering the absolute number by ~85%; the
+  arm still beats live by +0.0375 (P=100%), so the *ranking* survives and
+  the *level* does not.
+
+### Standing interpretation
+
+Growth ranks policies. CLV says whether the prices were any good, on ~20×
+the sample, before settlement. Where they disagree, CLV has the sample. No
+figure in this addendum is forward-valid, and nothing here adopts itself.
+
+Receipt: 449 passed (438 + 11 new harness tests); `ruff` findings unchanged
+on both touched files (10 / 3); engine constants and state file untouched.
