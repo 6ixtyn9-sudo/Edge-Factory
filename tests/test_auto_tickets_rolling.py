@@ -576,7 +576,10 @@ def test_force_repick_sizes_on_bank_net_of_other_dates_not_own_draft(tmp_path, m
     assert [a["stake_pct"] for a in slip["accas"]] == pytest.approx([10.0] * 3, abs=0.02)
     assert len(st["open_slips"]) == 2          # other-date slip untouched, own replaced
     txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
-    assert "REPICK" in txt
+    # 2026-09-09: the slip no longer carries the REPICK/RESIZED diff block —
+    # it prints the clean card only. The sizing contract above still pins
+    # that the replaced draft was excluded from committed capital.
+    assert "REPICK" not in txt and "RESIZED" not in txt
     assert "free bank 90.0%" in txt
 
 

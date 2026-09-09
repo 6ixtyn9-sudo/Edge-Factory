@@ -455,8 +455,9 @@ def _slate_rows():
 def test_cmd_today_live_guard_regression(tmp_path, monkeypatch):
     """cmd_today on the incident-day slate must drop Vancouver (clock-only,
     MLS — remote-clock region) and started Miami, KEEP Rudes (clock-only but
-    Croatia — Europe rides) and the dated rows (Gresford rides), print the
-    census, and build the two-acca card from the four surviving legs."""
+    Croatia — Europe rides) and the dated rows (Gresford rides), keep the skip
+    census OFF the slip, and build the two-acca card from the four surviving
+    legs."""
     monkeypatch.setattr(at, "datetime", _Clock)
     (at.LOCALDATA / "picks_today.json").write_text(
         json_dumps(_slate_rows()))
@@ -471,8 +472,13 @@ def test_cmd_today_live_guard_regression(tmp_path, monkeypatch):
     assert "Heart of Midlothian vs Dundee" in ticket      # ranked 1
     assert "Gresford Athletic vs Mold Alexandra" in ticket  # dated-naive rides
     assert "Rudes vs HNK Hajduk Split" in ticket          # Croatia clock-only rides
-    assert "far from sast" in txt                         # census: Vancouver
-    assert "already started" in txt                       # census: Miami
+    # 2026-09-09: the skip census no longer rides on the slip (clean card only).
+    # The guard's drop behaviour is still pinned by the "not in ticket" checks
+    # above — and with the census gone, "ticket" is the whole slip, so those
+    # now prove the dropped fixtures appear nowhere in the operator's output.
+    assert "KICKOFF GUARD" not in txt
+    assert "far from sast" not in txt                     # census: Vancouver
+    assert "already started" not in txt                   # census: Miami
     # four kept legs pair into two accas (single-ticket-day risk split)
     assert "[ACCA #1]" in txt and "[ACCA #2]" in txt and "[ACCA #3]" not in txt
     # the 09:13 run is at/after the freeze hour -> the FINAL marker lands

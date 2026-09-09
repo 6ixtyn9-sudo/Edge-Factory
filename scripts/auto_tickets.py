@@ -1482,12 +1482,6 @@ def cmd_today(args, st):
              f"PERFORMANCE: total bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) = "
              f"free bank {bank_eff:.1f}% + committed {committed:.1f}% · "
              f"next take-profit notification at {take_profit_target(st):.1f}%"]
-    if repl_lines:
-        lines.append("")
-        stake_only = all(l.lstrip().startswith("total stake") for l in repl_lines)
-        lines.append("ℹ️  RESIZED — same card, restaked on a corrected bank:" if stake_only
-                     else "⚠️  REPICK — the card for this date has CHANGED since the last run:")
-        lines.extend(repl_lines)
     for i, a in enumerate(plan, 1):
         lines.append(f"\n[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
                      f"({a['stake_pct']/bank_eff:.1%} of free bank)")
@@ -1499,9 +1493,7 @@ def cmd_today(args, st):
                  f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
     lines.append("All figures are percentages of capital. Round to your bookmaker's minimum stake. "
                  "Bet only what you can afford to lose.")
-    if census_lines:
-        lines.append("")
-        lines.extend(census_lines)
+
 
     txt = "\n".join(lines)
     print(txt)
