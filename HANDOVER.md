@@ -8574,3 +8574,64 @@ compounding goal. For comparison `barbell, 2 accas` and `singles x3` are 4/4 ·
 
 Receipt: 458 passed (455 + 3 new); `ruff` findings unchanged on both touched
 files (10 / 3); no engine constant or state file changed.
+
+---
+
+## Addendum — 2026-09-09: the stake is arm-specific, and f/3 is not f/n_accas
+
+Read back as "1/10 of capital, 5% per acca, two barbell accas a day", two
+things need correcting.
+
+### 1. With STAKE_PER_ACCA=None, per ticket = f / MAX_ACCAS — always /3
+
+`plan_day` sets `stake_per_acca = stake_frac / MAX_ACCAS` using the **module
+constant** (3), not the number of accas the card actually has, then caps the
+day at `min(stake_frac, stake_per_acca × n_accas)`. Verified through
+`plan_day` on the 2026-09-09 pool (free bank 64.3205):
+
+| config | tickets | per ticket | % of free bank | % of bank |
+|---|---|---|---|---|
+| LIVE (3 consecutive, f=1/3) | 3 | 7.15 pts = 11.11% | 33.33% | 22.22% |
+| **barbell x2, f=1/10** | 2 | **2.14 pts = 3.33%** | **6.67%** | 4.44% |
+| barbell x2, f=1/10 + `stake_per_acca=0.05` | 2 | 3.22 pts = 5.00% | 10.00% | 6.67% |
+| barbell x3 / singles x3, f=1/10 | 3 | 2.14 pts = 3.33% | 10.00% | 6.67% |
+
+So `barbell x2 @ 1/10` risks **6.67% of free bank, not 10%** — and the
+`barbell x2 @ 1/10 stake` row in the sweep scoreboard (+0.0080, maxDD 15%) was
+simulated at that 3.33%/ticket. Getting 5% per ticket requires setting
+`STAKE_PER_ACCA = 0.05` explicitly.
+
+### 2. Kelly f* is a property of the CARD, not a universal number
+
+`cmd_kelly` accepts a selection spec, so f* can be re-derived per arm. It moves
+by an order of magnitude between arms, and the settled-vs-pessimistic grading
+moves it further:
+
+| card | f\* settled | f\* pessimistic | pessimistic log/day at f\* |
+|---|---|---|---|
+| live (3 consecutive) | 10% | **5%** | **−0.0030** (negative at every f) |
+| barbell x2 | 60% | **25%** | +0.0040 |
+| singles x3 | 50% | **20%** | +0.0035 |
+
+Consequences, stated plainly:
+
+- **f=1/10 is the right stake for the card that actually ships today** (the
+  live 3-consecutive card). It is not a universal optimum, and under
+  pessimistic grading the live card is negative at *every* stake — 5–10%
+  loses slower, it does not grow. `P(f* < live 33%) = 98%`.
+- **If barbell x2 were adopted, 1/10 would be UNDER-betting it** (f\* = 25%
+  pessimistic / 60% settled). The stake would be re-derived then, on new days.
+  Quoting one number for both cards was wrong.
+- The settled-grading f\* of 60% for barbell is hindsight: the pessimistic
+  grading cuts that arm's growth from +0.0215 to +0.0032, and f\* falls 60% →
+  25% with it.
+
+### 3. `max_accas=2` truncates BEFORE pairing
+
+`select_accas` slices `pool[:max_accas × legs_per_acca]` and *then* calls
+`pair_legs`, so barbell at `max_accas=2` pairs ranks **1+4 and 2+3** of the
+post-floor pool (today: Kairat 1.30 + Boca 1.90 = 2.47, Chelsea 1.65 + Twente
+1.28 = 2.11), not 1+6 and 2+5. The 1+6/2+5/3+4 pattern only exists at
+`max_accas=3`. The two dropped legs (Viktoria, Stuttgart) are not ridden at all.
+
+Receipt: 458 passed (unchanged); no code or constant changed by this addendum.
