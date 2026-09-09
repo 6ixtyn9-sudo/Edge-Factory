@@ -1467,13 +1467,7 @@ def cmd_today(args, st):
         return 0
     # Task E (2026-09-06): a force-repick REPLACES the target date's own
     # existing slip (upsert below deletes it) — so its stake was excluded
-    # from committed capital above. Say so, naming what changes and what
-    # does not; the operator must never have to clear state by hand.
-    prior = next((s for s in st["open_slips"] if str(s.get("date") or "")[:10] == str(target)[:10]), None)
-    if prior is not None:
-        repl_lines = _replacement_lines(prior, plan)
-    else:
-        repl_lines = None
+    # from committed capital above. The slip prints the card as-is.
     upsert_slip(st, target, plan)
     pool_by_key = {_leg_key(l): l for l in pool}
     _log_printed_price_boards(target, plan, pool_by_key)   # Task F, append-only
