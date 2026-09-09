@@ -159,6 +159,17 @@ MAX_ACCAS = 3              # concurrent accas per day
 MIN_ACCAS = 1              # cards with fewer accas are NO BET (1 preserves live)
 LEGS_PER_ACCA = 2          # 2-leg beat 3-leg out-of-sample
 MAX_LEGS = MAX_ACCAS * LEGS_PER_ACCA
+PAIRING = "consecutive"    # how ranked legs are grouped into accas:
+                           # "consecutive" (LIVE, unchanged behaviour) pairs
+                           # adjacent ranks 1+2, 3+4, 5+6; "barbell" pairs
+                           # strongest with weakest 1+6, 2+5, 3+4 (needs
+                           # LEGS_PER_ACCA=2). Added 2026-09-09 so that the
+                           # pre-registered October arm is a ONE-CONSTANT
+                           # flip instead of a code change. It does not adopt
+                           # barbell: barbell scored 4/4 and 5/5 on the mined
+                           # archive but must clear --october on >=60 genuinely
+                           # new bet-days first, and it was REJECTED on the
+                           # 2026-09-04 vintage (-0.0137).
 MIN_LEG_ODDS = 1.20        # min odds per leg (2026-09-02..04 band evidence; the
                            # replay harness A/Bs this knob — never inline the number)
 VOLUME_POOL = 12           # pool >= this -> volume regime (saturated day)
@@ -973,7 +984,7 @@ def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
     return [a for a in accas if len(a) == k]
 
 
-def select_accas(pool, *, floor=None, rank="prob", pairing="consecutive",
+def select_accas(pool, *, floor=None, rank="prob", pairing=None,
                  max_accas=None, legs_per_acca=None, volume_pool=None,
                  volume_min=None, gate_mode=None, fallback=True,
                  saturated_accas=None, min_accas=None):
@@ -987,6 +998,7 @@ def select_accas(pool, *, floor=None, rank="prob", pairing="consecutive",
     k = LEGS_PER_ACCA if legs_per_acca is None else legs_per_acca
     max_accas = MAX_ACCAS if max_accas is None else max_accas
     min_accas = MIN_ACCAS if min_accas is None else min_accas
+    pairing = PAIRING if pairing is None else pairing
     volume_pool = VOLUME_POOL if volume_pool is None else volume_pool
     volume_min = VOLUME_MIN_PROB if volume_min is None else volume_min
     gate_mode = GATE_MODE if gate_mode is None else gate_mode

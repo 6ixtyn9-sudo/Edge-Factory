@@ -632,3 +632,20 @@ def test_replacement_lines_name_changed_unchanged_and_dropped_accas():
     assert "total stake 10.0000% \u2192 12.0000% of capital" in out
 
 
+
+
+def test_pairing_constant_defaults_to_live_consecutive_and_is_a_no_op():
+    """PAIRING was added 2026-09-09 so the pre-registered October arm is a
+    one-constant flip. Adding it must not CHANGE anything: the default has to
+    resolve to the same grouping the engine has always used, and select_accas
+    with no pairing argument has to return exactly what it did before."""
+    import auto_tickets as at
+
+    assert at.PAIRING == "consecutive"
+    legs = [{"match": f"T{i} vs O{i}", "pick": "HOME", "prob": 0.8 - i * 0.03,
+             "odds": 1.25 + i * 0.1, "result": "win", "row": {}} for i in range(6)]
+    ranked = at.rank_legs(legs)
+    default = at.select_accas(ranked)
+    assert default == at.select_accas(ranked, pairing="consecutive")
+    assert default != at.select_accas(ranked, pairing="barbell"), (
+        "barbell must actually differ, or the October flip would be a no-op")

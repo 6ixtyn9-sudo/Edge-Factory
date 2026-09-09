@@ -430,7 +430,8 @@ def live_settings():
     print("LIVE SETTINGS (imported from scripts/auto_tickets.py — not grepped)")
     print("=" * 74)
     for const in ("STAKE_FRAC", "STAKE_MODE", "STAKE_PER_ACCA", "STAKE_WEIGHTS",
-                  "MAX_ACCAS", "MIN_ACCAS", "LEGS_PER_ACCA", "MIN_LEG_ODDS",
+                  "MAX_ACCAS", "MIN_ACCAS", "LEGS_PER_ACCA", "PAIRING",
+                  "MIN_LEG_ODDS",
                   "VOLUME_POOL", "VOLUME_MIN_PROB", "GATE_MODE", "FREEZE_HOUR"):
         print(f"  {const:18s} {getattr(at, const)}")
     print()
