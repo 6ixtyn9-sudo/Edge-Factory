@@ -67,12 +67,18 @@ def test_audit_flag_is_opt_in_only():
 
 
 def test_live_recipe_constants_unchanged(at):
-    """The feasibility work must not have moved a single live setting."""
-    assert at.STAKE_FRAC == pytest.approx(1.0 / 3.0)
+    """Pins every live setting.
+
+    ARMED 2026-09-09: PAIRING/MAX_ACCAS/STAKE_FRAC were moved deliberately to
+    barbell x2 @ 1/4 -- an operator decision taken against the pre-registered
+    October bar, on in-sample evidence only. Every other setting is untouched.
+    """
+    assert at.PAIRING == "barbell"
+    assert at.STAKE_FRAC == pytest.approx(1.0 / 4.0)
     assert at.STAKE_MODE == "per_acca"
     assert at.STAKE_PER_ACCA is None
     assert at.STAKE_WEIGHTS is None
-    assert at.MAX_ACCAS == 3
+    assert at.MAX_ACCAS == 2
     assert at.MIN_ACCAS == 1
     assert at.LEGS_PER_ACCA == 2
     assert at.MIN_LEG_ODDS == 1.20

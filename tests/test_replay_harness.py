@@ -123,7 +123,8 @@ def test_replay_routes_sizing_through_plan_day(monkeypatch):
         calls.append((bank_pct, kwargs))
         return real(pool, bank_pct, **kwargs)
 
-    monkeypatch.setattr(at, "plan_day", recording_plan)
+    monkeypatch.setattr(at, "MAX_ACCAS", 3)   # this test pins the per_acca
+    monkeypatch.setattr(at, "plan_day", recording_plan)   # cap arithmetic
     days = rh.replay(u, {"stake_mode": "per_acca", "stake_per_acca": 0.07})
     assert calls == [(100.0, {"stake_mode": "per_acca", "stake_per_acca": 0.07})]
     assert days["2026-08-01"]["stake_pct"] == [7.0, 7.0, 7.0]

@@ -40,11 +40,11 @@ def _leg(tag, prob, odds, result=None):
 
 def test_plan_day_top6_consecutive_pairs_and_stake_pct():
     pool = [_leg(i, 0.60 + i / 100, 1.10 + i / 10) for i in range(9)]
-    plan = at.plan_day(pool, bank_pct=100.0)
+    plan = at.plan_day(pool, bank_pct=100.0, pairing="consecutive")
     assert len(plan) == at.MAX_ACCAS
     assert all(len(a["legs"]) == at.LEGS_PER_ACCA for a in plan)
     assert plan[0]["legs"][0]["prob"] >= plan[0]["legs"][1]["prob"] >= plan[1]["legs"][0]["prob"]
-    # STAKE_FRAC of bank split across 3 accas.
+    # STAKE_FRAC of bank split across MAX_ACCAS accas.
     assert plan[0]["stake_pct"] == pytest.approx(100.0 * at.STAKE_FRAC / at.MAX_ACCAS, abs=1e-3)
     assert plan[0]["odds"] == pytest.approx(
         plan[0]["legs"][0]["odds"] * plan[0]["legs"][1]["odds"], abs=0.01)
@@ -85,10 +85,11 @@ def test_min_accas_turns_smaller_cards_into_no_bet():
 def test_stake_weights_change_stakes_not_selection():
     pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(6)]
     equal = at.plan_day(pool, 100.0)
-    weighted = at.plan_day(pool, 100.0, weights="3,2,1")
+    ws = [at.MAX_ACCAS - i for i in range(at.MAX_ACCAS)]
+    weighted = at.plan_day(pool, 100.0, weights=",".join(map(str, ws)))
     assert [a["legs"] for a in weighted] == [a["legs"] for a in equal]
     assert [a["stake_pct"] for a in weighted] == pytest.approx(
-        [100.0 * at.STAKE_FRAC * w / 6 for w in (3, 2, 1)], abs=1e-4)
+        [100.0 * at.STAKE_FRAC * w / sum(ws) for w in ws], abs=1e-4)
     assert sum(a["stake_pct"] for a in weighted) <= round(100.0 * at.STAKE_FRAC, 4)
     assert sum(a["stake_pct"] for a in weighted) == pytest.approx(100.0 * at.STAKE_FRAC, abs=1e-3)
 
@@ -97,8 +98,8 @@ def test_invalid_staking_knobs_fail_closed():
     pool = [_leg(i, 0.75 - i / 100, 1.30) for i in range(6)]
     with pytest.raises(ValueError, match="stake_mode"):
         at.plan_day(pool, 100.0, stake_mode="martingale")
-    with pytest.raises(ValueError, match="at least 3"):
-        at.plan_day(pool, 100.0, weights="3,2")
+    with pytest.raises(ValueError, match=f"need at least {at.MAX_ACCAS}"):
+        at.plan_day(pool, 100.0, weights=",".join("1" for _ in range(at.MAX_ACCAS - 1)))
     with pytest.raises(ValueError, match="greater than zero"):
         at.plan_day(pool, 100.0, weights="3,0,1")
 
@@ -129,15 +130,18 @@ def test_acca_gate_actually_bites_and_is_not_live():
             _leg("mid0", 0.62, 1.50), _leg("mid1", 0.61, 1.55),
             _leg("mid2", 0.60, 1.60), _leg("mid3", 0.59, 1.65)] + \
            [_leg(f"pad{i}", 0.56, 1.70) for i in range(8)]     # 14 legs -> saturated
-    ungated = at.select_accas(pool, gate_mode="off")
-    gated = at.select_accas(pool, gate_mode="acca", volume_min=0.65)
-    assert len(ungated) == 3
+    # pairing pinned: this test prices GATE_MODE, not the live pairing
+    ungated = at.select_accas(pool, gate_mode="off", pairing="consecutive")
+    gated = at.select_accas(pool, gate_mode="acca", volume_min=0.65,
+                            pairing="consecutive")
+    assert len(ungated) == at.MAX_ACCAS
     assert len(gated) == 1, "only the all->=65% acca may ride"
     assert all(l["prob"] >= 0.65 for a in gated for l in a)
     # fallback: an empty card is not an opinion -> full card returns
-    assert at.select_accas(pool, gate_mode="acca", volume_min=0.99) == ungated
     assert at.select_accas(pool, gate_mode="acca", volume_min=0.99,
-                           fallback=False) == []
+                           pairing="consecutive") == ungated
+    assert at.select_accas(pool, gate_mode="acca", volume_min=0.99,
+                           pairing="consecutive", fallback=False) == []
 
 
 def test_selection_knobs_are_overridable_for_the_harness():
@@ -492,10 +496,11 @@ def test_card_completeness_on_starved_saturated_days():
         pool.append({"match": f"Mid{i} vs Y", "pick": "HOME", "prob": 0.60,
                      "odds": 1.45 + i * 0.05, "result": None})
     plan = at.plan_day(pool, bank_pct=100.0)
-    assert len(plan) == 3, f"starved card must still build 3 accas, got {len(plan)}"
+    assert len(plan) == at.MAX_ACCAS, (
+        f"starved card must still build {at.MAX_ACCAS} accas, got {len(plan)}")
     assert all(len(a["legs"]) == 2 for a in plan)
-    # stakes: STAKE_FRAC of bank split 3 ways, NOT the 2-acca shape
-    assert abs(plan[0]["stake_pct"] - 100.0 * at.STAKE_FRAC / 3) < 0.01
+    # stakes: STAKE_FRAC split across MAX_ACCAS whatever the card shape
+    assert abs(plan[0]["stake_pct"] - 100.0 * at.STAKE_FRAC / at.MAX_ACCAS) < 0.01
 
     # control: a saturated pool WITH >=6 gated legs still applies the gate
     pool2 = []
@@ -572,8 +577,10 @@ def test_force_repick_sizes_on_bank_net_of_other_dates_not_own_draft(tmp_path, m
     args = SimpleNamespace(date="2026-09-06", force=True)
     assert at.cmd_today(args, st) == 0
     slip = next(s for s in st["open_slips"] if s["date"] == "2026-09-06")
-    assert slip["staked_pct"] == pytest.approx(30.0, abs=0.02)       # 90 * 1/3
-    assert [a["stake_pct"] for a in slip["accas"]] == pytest.approx([10.0] * 3, abs=0.02)
+    want = 90.0 * at.STAKE_FRAC
+    assert slip["staked_pct"] == pytest.approx(want, abs=0.02)
+    assert [a["stake_pct"] for a in slip["accas"]] == pytest.approx(
+        [want / at.MAX_ACCAS] * at.MAX_ACCAS, abs=0.02)
     assert len(st["open_slips"]) == 2          # other-date slip untouched, own replaced
     txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
     # 2026-09-09: the slip no longer carries the REPICK/RESIZED diff block —
@@ -595,7 +602,7 @@ def test_first_run_of_day_sizes_on_bank_net_of_other_dates_and_prints_no_warning
     args = SimpleNamespace(date="2026-09-06", force=True)
     assert at.cmd_today(args, st) == 0
     slip = next(s for s in st["open_slips"] if s["date"] == "2026-09-06")
-    assert slip["staked_pct"] == pytest.approx(30.0, abs=0.02)
+    assert slip["staked_pct"] == pytest.approx(90.0 * at.STAKE_FRAC, abs=0.02)
     txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
     assert "REPICK" not in txt
 

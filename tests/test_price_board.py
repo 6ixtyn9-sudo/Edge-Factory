@@ -208,8 +208,9 @@ def test_every_printed_leg_is_logged_append_only_with_its_board(tmp_path, monkey
     log = at.LOCALDATA / "price_board_2026-09.jsonl"
     assert log.exists()
     lines = [json.loads(x) for x in log.read_text().splitlines()]
-    assert len(lines) == 6                       # six printed legs
-    assert len({ln["match"] for ln in lines}) == 6
+    n_legs = at.MAX_ACCAS * at.LEGS_PER_ACCA
+    assert len(lines) == n_legs                  # one line per printed leg
+    assert len({ln["match"] for ln in lines}) == n_legs
     assert all(ln["date"] == "2026-09-06" and ln["engine_odds"] for ln in lines)
     assert all(ln["price_board"] for ln in lines)
     # engine odds/source appear next to the board (no archive needed later)
@@ -218,7 +219,7 @@ def test_every_printed_leg_is_logged_append_only_with_its_board(tmp_path, monkey
     # a second run appends, never overwrites
     assert at.cmd_today(args, st) == 0
     lines2 = [json.loads(x) for x in log.read_text().splitlines()]
-    assert len(lines2) == 12
+    assert len(lines2) == 2 * n_legs      # appended, not overwritten
     txt = (at.LOCALDATA / "auto_tickets_2026-09-06.txt").read_text()
 
 
