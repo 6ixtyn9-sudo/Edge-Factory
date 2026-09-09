@@ -423,7 +423,7 @@ def test_clv_split_says_what_an_empty_table_means(tmp_path, monkeypatch, capsys)
     # one priced pick per ridden leg, each in its own league -> every cell n=1
     rows = []
     i = 0
-    for day, pool in u.items():
+    for pool in u.values():
         for leg in pool:
             pid = leg["match"]
             for odds, when in (("2.00", "2026-09-01T08:00:00"), ("1.90", "2026-09-01T16:00:00")):
@@ -439,3 +439,35 @@ def test_clv_split_says_what_an_empty_table_means(tmp_path, monkeypatch, capsys)
     assert "NO cell reached n>=15" in out
     assert "That dispersion is the finding" in out
     assert "Largest cells anyway" in out
+
+
+# ---------------- --sweep: the scoreboard must not be able to no-op ---------
+
+def test_sweep_families_only_use_known_engine_keys():
+    """A typo'd knob in the sweep table would silently replay the live
+    settings and print a no-op comparison — the exact bug the 2026-09-04
+    audit found in --ab. An empty spec would A/B live against live."""
+    allowed = rh.ENGINE_KEYS | {"min_prob", "leagues"}
+    for fam, arms in rh.SWEEP_FAMILIES.items():
+        assert arms, f"{fam} has no arms"
+        for label, spec in arms:
+            assert spec, f"{fam}/{label}: empty spec = live vs live (a no-op)"
+            unknown = set(spec) - allowed
+            assert not unknown, f"{fam}/{label}: unknown knob(s) {sorted(unknown)} would no-op"
+
+
+def test_sweep_row_prints_the_arm_and_returns_the_bar(capsys):
+    got = rh._sweep_row(_universe(8), {"max_accas": 2}, "test arm")
+    out = capsys.readouterr().out
+    assert isinstance(got, bool)
+    assert "test arm" in out and ("PASS" in out or "fail" in out)
+
+
+def test_sweep_blind_halves_score_the_arm_not_the_holdout_winner():
+    """Regression: the blind-half section once reported whichever arm won the
+    tuning half, so every stake_frac arm printed live's identical number."""
+    src = (ROOT / "scripts" / "replay_harness.py").read_text()
+    i = src.index("BLIND HALVES (tune on one half")
+    body = src[i:i + 1400]
+    assert "holdout_window(" not in body, "blind halves must score the arm itself"
+    assert "arm_stats(newer, spec)" in body and "arm_stats(older, spec)" in body

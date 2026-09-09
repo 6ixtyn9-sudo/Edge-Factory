@@ -2243,6 +2243,100 @@ def cmd_october(universe, specs, since, min_days=60):
           "itself.")
     return 0
 
+
+# --------------------------------------------------------------------------
+# --sweep: one knob family across three universes and both blind halves.
+#
+# A single A/B answers "is B better than A on this data". It cannot answer
+# "is B better in a way that survives the archive changing", which is the only
+# question that should move a live constant. So the sweep scores every arm on
+# the full universe, on the heavy days the repo's own MAX_ACCAS gate counts,
+# and under the pessimistic grading — then checks both blind halves. An arm
+# that does not pass in all of them is not a candidate, however good the A/B.
+# --------------------------------------------------------------------------
+SWEEP_FAMILIES = {
+    "max_accas": [("max_accas=2", {"max_accas": 2}),
+                  ("max_accas=4  <-- pre-registered Q1", {"max_accas": 4}),
+                  ("max_accas=5", {"max_accas": 5}),
+                  ("max_accas=6", {"max_accas": 6})],
+    "pairing": [("barbell, 2 accas", {"pairing": "barbell", "max_accas": 2}),
+                ("barbell, 3 accas", {"pairing": "barbell"}),
+                ("barbell, 4 accas", {"pairing": "barbell", "max_accas": 4})],
+    "legs": [("singles x3", {"legs_per_acca": 1}),
+             ("singles x2", {"legs_per_acca": 1, "max_accas": 2}),
+             ("singles x4", {"legs_per_acca": 1, "max_accas": 4})],
+    "stake": [("stake_frac=0.1667", {"stake_frac": 0.1667}),
+              ("stake_frac=0.10", {"stake_frac": 0.10}),
+              ("stake_frac=0.25", {"stake_frac": 0.25})],
+}
+
+
+def _sweep_row(u, spec, label):
+    s = arm_stats(u, spec)
+    bs = paired_bootstrap(u, {}, spec)
+    ec = effect_concentration(u, {}, spec)
+    p10 = bs["p10"] if bs else float("nan")
+    pb = bs["p_b_higher"] if bs else float("nan")
+    lo = f"{ec['loo_min']:+.4f}..{ec['loo_max']:+.4f}" if ec else "n/a"
+    sign = "FLIPS" if (ec and ec["flips"]) else "holds"
+    bar = bool(bs and bs["p10"] > 0) and not (ec and ec["flips"])
+    print(f"{label:34s} {s['mean_log']:+8.4f} {s['final']:7.0f}% {s['maxdd'] * 100:5.0f}% "
+          f"{s['accas']:5d} {p10:+8.4f} {pb:7.0%} {lo:>18s} {sign:>6s} "
+          f"{'PASS' if bar else 'fail'}")
+    return bar
+
+
+def cmd_sweep(archives, settled, families=None):
+    """The standing comparison: full universe, heavy days, pessimistic, blind."""
+    full = build_universe(archives, settled)
+    heavy = {d: p for d, p in full.items() if len(p) >= 8}
+    pes = build_universe(archives, settled, unresolved="loss")
+    names = families or sorted(SWEEP_FAMILIES)
+    arms = [a for n in names for a in SWEEP_FAMILIES.get(n, [])]
+    hdr = (f"{'arm':34s} {'log/day':>8s} {'final':>7s} {'maxDD':>5s} {'bets':>5s} "
+           f"{'p10':>8s} {'P>better':>8s} {'leave-one-day-out':>18s} {'sign':>6s} {'bar':>5s}")
+    tally: dict[str, int] = {label: 0 for label, _ in arms}
+    for title, u in ((f"FULL UNIVERSE ({len(full)} bet-days)", full),
+                     (f"HEAVY DAYS ({len(heavy)} offering 8+ legs) — the MAX_ACCAS gate", heavy),
+                     ("PESSIMISTIC (unsettled legs graded as losses)", pes)):
+        print("\n" + "=" * 108)
+        print(title)
+        print("=" * 108)
+        print(hdr)
+        ref = arm_stats(u, {})
+        print(f"{'live reference':34s} {ref['mean_log']:+8.4f} {ref['final']:7.0f}% "
+              f"{ref['maxdd'] * 100:5.0f}% {ref['accas']:5d}")
+        for label, spec in arms:
+            if _sweep_row(u, spec, label):
+                tally[label] += 1
+    print("\n" + "=" * 108)
+    print("BLIND HALVES (tune on one half, score on the other)")
+    print("=" * 108)
+    older, newer, _ = split_universe(full)
+    for label, spec in arms:
+        # This arm's OWN growth on each half — not the holdout winner's. A
+        # two-arm holdout reports whichever arm won the tuning half, so using
+        # it here would silently print live's number for arms that lose the
+        # tuning half (found 2026-09-09: every stake_frac arm printed the
+        # identical -0.0178, which was live, not the arm).
+        fb = arm_stats(newer, spec)["mean_log"]
+        rb = arm_stats(older, spec)["mean_log"]
+        both = fb > 0 and rb > 0
+        if both:
+            tally[label] += 1
+        print(f"{label:34s} forward-blind {fb:+8.4f}   reverse-blind {rb:+8.4f}"
+              f"   {'both positive' if both else 'inconsistent'}")
+    print("\n" + "=" * 108)
+    print("STANDING BAR: p10>0 AND leave-one-day-out sign holds, in all three")
+    print("universes, AND positive in both blind halves  =  4/4")
+    print("=" * 108)
+    for label, _ in arms:
+        print(f"  {label:34s} {tally[label]}/4")
+    print("\nA 4/4 arm is a CANDIDATE for the pre-registered slot on genuinely")
+    print("new bet-days. It is not a reason to change a live constant today.")
+    return 0
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--variant", action="append", metavar="SPEC",
@@ -2293,6 +2387,11 @@ def main():
                     help="tune the given specs (or the full grid) on one half "
                          "of the universe and score the choice BLIND on the "
                          "other, both directions, with the selection-bias tax")
+    ap.add_argument("--sweep", nargs="*", metavar="FAMILY",
+                    choices=sorted(SWEEP_FAMILIES),
+                    help="score a knob family across the full universe, the "
+                         "heavy days and the pessimistic grading, plus both "
+                         "blind halves; prints how many of the four an arm passes")
     ap.add_argument("--search", action="store_true",
                     help="the full SEARCH_AXES grid, through --holdout")
     ap.add_argument("--clv", action="store_true",
@@ -2372,6 +2471,9 @@ def main():
     print("=" * 74)
     print("doctrine: RELATIVE differences + paired bootstrap. Primary metric is")
     print("mean LOG GROWTH per bet-day; final bank is one lucky path, not evidence.\n")
+
+    if args.sweep is not None:
+        return cmd_sweep(archives, settled, args.sweep or None)
 
     if args.holdout is not None:
         return cmd_holdout(universe, [parse_spec(x) for x in args.holdout])
