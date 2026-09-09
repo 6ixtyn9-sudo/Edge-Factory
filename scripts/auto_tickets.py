@@ -141,24 +141,23 @@ KO_SKIP_STARTED = "already started (dated kickoff at/past build time)"
 KO_SKIP_TOO_CLOSE = f"audit: kickoff under {KICKOFF_MIN_LEAD_HOURS:g}h away or already started (provable)"
 
 # ---------------- the validated recipe (receipts, not knobs) ----------------
-STAKE_FRAC = 1.0 / 3.0     # of free bank (total bank minus open stakes) per
-                           # day. 2026-09-04 sizing audit (52-day
-                           # replay, SAME cards — sizing only): growth-optimal
-                           # f ~= 40%, curve flat 30-50%, maxDD 62%->87% across
-                           # it. f=1/3 keeps 96% of peak growth at 67% DD;
-                           # f=0.50 gave 93% at 87%. Bootstrapped P(f* < 50%)
-                           # = 66%, so size BELOW the estimate (overbetting is
-                           # punished far harder than underbetting).
-                           # 75% and 100% still bust everywhere. Revert = 0.50.
+STAKE_FRAC = 1.0 / 4.0     # ARMED 2026-09-09 with PAIRING=barbell, MAX_ACCAS=2.
+                           # Deliberate override of the pre-registered October bar
+                           # on IN-SAMPLE evidence: 4/4 and 5/5 on the mined 75
+                           # bet-days (full +0.0231, heavy +0.0113, pessimistic
+                           # +0.0023 log/day; maxDD 73%->49%; both blind halves
+                           # positive). ~90% of the settled level is optimism;
+                           # ridden legs beat the close only 12.3%. Revert = 1.0/10.0.
 STAKE_MODE = "per_acca"     # "per_day" preserves the validated fixed day risk;
                            # "per_acca" risks a fixed fraction per ticket while
                            # capping the day's total at STAKE_FRAC. Research only.
 STAKE_PER_ACCA = None      # None -> STAKE_FRAC / MAX_ACCAS
 STAKE_WEIGHTS = None       # None -> equal; e.g. "3,2,1" changes sizing, never selection
-MAX_ACCAS = 3              # concurrent accas per day
+MAX_ACCAS = 2              # ARMED 2026-09-09 (barbell x2). Revert = 3.
 MIN_ACCAS = 1              # cards with fewer accas are NO BET (1 preserves live)
 LEGS_PER_ACCA = 2          # 2-leg beat 3-leg out-of-sample
 MAX_LEGS = MAX_ACCAS * LEGS_PER_ACCA
+PAIRING = "barbell"        # ARMED 2026-09-09. Revert = "consecutive".
 MIN_LEG_ODDS = 1.20        # min odds per leg (2026-09-02..04 band evidence; the
                            # replay harness A/Bs this knob — never inline the number)
 VOLUME_POOL = 12           # pool >= this -> volume regime (saturated day)
@@ -973,7 +972,7 @@ def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
     return [a for a in accas if len(a) == k]
 
 
-def select_accas(pool, *, floor=None, rank="prob", pairing="consecutive",
+def select_accas(pool, *, floor=None, rank="prob", pairing=None,
                  max_accas=None, legs_per_acca=None, volume_pool=None,
                  volume_min=None, gate_mode=None, fallback=True,
                  saturated_accas=None, min_accas=None):
@@ -987,6 +986,7 @@ def select_accas(pool, *, floor=None, rank="prob", pairing="consecutive",
     k = LEGS_PER_ACCA if legs_per_acca is None else legs_per_acca
     max_accas = MAX_ACCAS if max_accas is None else max_accas
     min_accas = MIN_ACCAS if min_accas is None else min_accas
+    pairing = PAIRING if pairing is None else pairing
     volume_pool = VOLUME_POOL if volume_pool is None else volume_pool
     volume_min = VOLUME_MIN_PROB if volume_min is None else volume_min
     gate_mode = GATE_MODE if gate_mode is None else gate_mode
