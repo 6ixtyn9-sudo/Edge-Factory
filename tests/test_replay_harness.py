@@ -413,3 +413,29 @@ def test_target_projection_prints_the_p10_plan_beside_the_median(capsys):
     assert rc in (0, 1)
     assert "p10  (plan on this)" in out and "do not plan on it" in out
     assert "not a promise about money" in out
+
+
+def test_clv_split_says_what_an_empty_table_means(tmp_path, monkeypatch, capsys):
+    """A split where no cell reaches the noise floor must report the
+    dispersion, not print a header and nothing (2026-09-09: the league split
+    printed an empty table and looked like a crash)."""
+    u = _universe(2)
+    # one priced pick per ridden leg, each in its own league -> every cell n=1
+    rows = []
+    i = 0
+    for day, pool in u.items():
+        for leg in pool:
+            pid = leg["match"]
+            for odds, when in (("2.00", "2026-09-01T08:00:00"), ("1.90", "2026-09-01T16:00:00")):
+                rows.append({"pick_id": pid, "observed_odds": odds, "captured_at_utc": when,
+                             "league": f"LG{i}", "odds_provider": "x", "bookmaker": "b",
+                             "snapshot_label": "pick_time"})
+            i += 1
+    _write_clv_ledger(tmp_path, rows)
+    monkeypatch.setattr(rh, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(rh, "leg_pick_id", lambda day, leg: leg["match"])
+    rh.cmd_clv(u, {}, split="league")
+    out = capsys.readouterr().out
+    assert "NO cell reached n>=15" in out
+    assert "That dispersion is the finding" in out
+    assert "Largest cells anyway" in out
