@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 122,
-   "inv_price_sum": 119.66012775740131,
-   "multi_n": 17,
-   "n": 186,
+   "hits": 125,
+   "inv_price_sum": 123.4922690973259,
+   "multi_n": 18,
+   "n": 191,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -522,9 +522,14 @@
     "2026-09-07|Kalmar FF vs Djurg\u00e5rdens|match_over_25@v1",
     "2026-09-08|Trans Narva vs Flora Tallinn|match_over_25@v1",
     "2026-09-08|Salisbury City vs Slough Town|match_over_25@v1",
-    "2026-09-08|AFC Telford Utd vs Oxford City|match_over_25@v1"
+    "2026-09-08|AFC Telford Utd vs Oxford City|match_over_25@v1",
+    "2026-09-09|Barcelona vs Feyenoord|match_over_25@v1",
+    "2026-09-09|Twente vs SC Telstar|match_over_25@v1",
+    "2026-09-09|Levadia Tallinn vs FC Kuressaare|match_over_25@v1",
+    "2026-09-09|St Johnstone vs Celtic|match_over_25@v1",
+    "2026-09-09|Al Nassr vs Abha Club|match_over_25@v1"
    ],
-   "profit": 2.04,
+   "profit": 0.78,
    "records": [
     {
      "date": "2026-08-01",
@@ -2010,6 +2015,46 @@
      "match": "AFC Telford Utd vs Oxford City",
      "multi_source": false,
      "price": 1.57,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-09",
+     "hit": true,
+     "match": "Barcelona vs Feyenoord",
+     "multi_source": true,
+     "price": 1.16,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-09",
+     "hit": false,
+     "match": "Twente vs SC Telstar",
+     "multi_source": false,
+     "price": 1.28,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-09",
+     "hit": true,
+     "match": "Levadia Tallinn vs FC Kuressaare",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-09",
+     "hit": false,
+     "match": "St Johnstone vs Celtic",
+     "multi_source": false,
+     "price": 1.57,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-09",
+     "hit": true,
+     "match": "Al Nassr vs Abha Club",
+     "multi_source": false,
+     "price": 1.33,
      "source": "scoutingstats"
     }
    ],

@@ -1,20 +1,20 @@
 {
-  "generated_at": "2026-09-09T21:34:17",
+  "generated_at": "2026-09-10T00:42:02",
   "unit": "percent_of_capital",
   "base_pct": 100.0,
-  "bank_pct": 96.480722,
-  "multiple": 0.96480722,
+  "bank_pct": 111.167259,
+  "multiple": 1.11167259,
   "cycle_base_pct": 100.0,
   "next_take_profit_pct": 200.0,
-  "bet_days": 13,
+  "bet_days": 14,
   "accas": {
-    "wins": 21,
+    "wins": 23,
     "losses": 15
   },
   "open_slips": [
     {
       "date": "2026-09-09",
-      "staked_pct": 32.1602
+      "staked_pct": 10.72
     }
   ],
   "events": [],
@@ -266,6 +266,22 @@
         }
       ],
       "bank_pct": 96.4807
+    },
+    {
+      "date": "2026-09-09",
+      "staked_pct": 21.4402,
+      "returned_pct": 36.1268,
+      "accas": [
+        {
+          "odds": 1.69,
+          "won": true
+        },
+        {
+          "odds": 1.68,
+          "won": true
+        }
+      ],
+      "bank_pct": 111.1673
     }
   ]
 }
