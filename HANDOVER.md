@@ -8512,3 +8512,65 @@ a wash (spread 1.61–2.43 vs 1.62–2.43) because the 1.20 floor had already
 removed the very short odds. The claim holds, weakly, on most days.
 
 Receipt: 455 passed (unchanged); no code or constant changed by this addendum.
+
+---
+
+## Addendum — 2026-09-09: betting only the positive-ROI rules, priced honestly
+
+The question: the picks audit's "By rule" table shows `ml-meta avg_p>=55` at
+ROI −8.8% (n=307) and `2way-unanimous avg_p>=70` at +10.1% (n=106), so *if we
+had bet only the positive rules, how would we be doing?* Two new harness
+features answer it: a `rules=` spec filter, and `--rules-split`.
+
+### The table cannot be bet as printed
+
+That "By rule" ROI is computed on the same settled rows the selection would be
+made from, so a positive row is a description of the past, not a policy. So
+`--rules-split` fits the whitelist on one half of the bet-days and scores it
+**blind** on the other, both directions, with the in-sample number printed
+beside it:
+
+| direction | rules kept | in-sample log/day | **blind log/day** | live on that blind half | blind edge |
+|---|---|---|---|---|---|
+| forward (fit older, score newer) | 3 of 5 | +0.0142 | **+0.0067** | −0.0178 | **+0.0245** |
+| reverse (fit newer, score older) | 4 of 6 | +0.0053 | **−0.0138** | +0.0104 | **−0.0243** |
+
+**The sign flips with the direction** (+0.0245 / −0.0243, mean ≈ 0). The
+whole-universe fit — 5 of 9 rules positive — reads +0.0072 log/day vs live
+−0.0051, i.e. **+0.0123 of pure hindsight**, and it is the number that would
+have been quoted without the split.
+
+The two halves also disagree about *which* rules: only
+`2way-unanimous avg_p>=70` is positive in both. `ml-meta avg_p>=60` and
+`avg_p>=70` are kept by the reverse fit only; `3way-unanimous home-only
+avg_p>=65` and `3way-unanimous min_p>=60 avg_p>=60` by the forward fit only.
+
+### Scored on the standing bar, no rule filter is a candidate
+
+`--sweep rules` (same four universes + both blind halves as every other arm):
+
+| arm | bar | grows on its own | bets (live = 159) |
+|---|---|---|---|
+| `2way-unan avg_p>=70 only` | 1/4 | 1/5 | 61 |
+| `2way-unanimous, all bands` | 0/4 | 1/5 | 70 |
+| `drop ml-meta avg_p>=55` | 1/4 | 2/5 | 121 |
+| `drop ml-meta entirely` | 1/4 | 2/5 | 111 |
+
+Every one fails p10 and/or leave-one-day-out, is inconsistent across blind
+halves, and **cuts bet volume by 26–62%** — which matters directly for a
+compounding goal. For comparison `barbell, 2 accas` and `singles x3` are 4/4 ·
+5/5 at 119 and 204 bets. Rule-level selection is not where the edge is.
+
+### What was added
+
+- `rules=` spec key: `|`-separated tokens, bare = exact rule name, `fam:` =
+  rule family, leading `!` = exclude; includes apply before excludes. It
+  shrinks the pool *before* the live selector, so selection and sizing stay one
+  code path. Rule names contain no commas, so the spec syntax survives them.
+  A typo'd name produces an empty card rather than a silent no-op (tested).
+- `rule_roi_table()` uses the same flat-stake `sum(pnl)/n` definition as
+  `audit_recent_picks.summarize_scored`, so harness and audit reconcile.
+- `--rules-split [MIN_LEGS]` (default 10); `--sweep rules` family.
+
+Receipt: 458 passed (455 + 3 new); `ruff` findings unchanged on both touched
+files (10 / 3); no engine constant or state file changed.

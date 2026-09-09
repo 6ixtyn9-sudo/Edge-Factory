@@ -118,7 +118,7 @@ def parse_spec(text):
             spec[k] = float(v)
         else:
             spec[k] = v
-    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues"}
+    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules"}
     if unknown:
         raise SystemExit(f"unknown spec key(s): {sorted(unknown)}")
     return spec
@@ -154,13 +154,58 @@ def build_universe(archives, settled, unresolved=None):
     return universe
 
 
+def _rule_matcher(tok):
+    """One ``rules=`` token -> (is_exclusion, predicate over legs)."""
+    neg = tok.startswith("!")
+    body = tok[1:].strip() if neg else tok
+
+    if body.startswith("fam:"):
+        fam = body[4:].strip()
+
+        def hit(leg):
+            return rule_family((leg.get("row") or {}).get("rule")) == fam
+    else:
+        def hit(leg):
+            return at._rule_of(leg) == body
+    return neg, hit
+
+
+def rule_roi_table(u, min_legs=0):
+    """Flat-stake ROI per miner rule over the settled legs of one window.
+
+    Same definition as ``audit_recent_picks.summarize_scored`` (sum of pnl on a
+    unit stake / n), so these numbers reconcile with the picks audit's
+    "By rule" table instead of being a second, slightly different ROI.
+    """
+    acc: dict[str, list] = {}
+    for d in sorted(u):
+        for l in u[d]:
+            r = l.get("result")
+            if r not in ("win", "loss"):
+                continue
+            e = acc.setdefault(at._rule_of(l), [0, 0, 0.0])
+            e[0] += 1
+            if r == "win":
+                e[1] += 1
+                e[2] += l["odds"] - 1.0
+            else:
+                e[2] -= 1.0
+    return {r: {"n": v[0], "wins": v[1], "roi": v[2] / v[0]}
+            for r, v in acc.items() if v[0] >= min_legs}
+
+
 def _filtered_pool(pool, spec):
     """Apply the harness-only filters before entering the live engine.
 
-    ``min_prob`` and ``leagues`` never reach the engine: they shrink the pool
-    the LIVE selector then sees, so selection and sizing stay one code path.
-    ``leagues`` is a |-separated list of case-insensitive substrings matched
-    against the archived row's league tag (concentration experiments).
+    ``min_prob``, ``leagues`` and ``rules`` never reach the engine: they shrink
+    the pool the LIVE selector then sees, so selection and sizing stay one code
+    path. ``leagues`` is a |-separated list of case-insensitive substrings
+    matched against the archived row's league tag (concentration experiments).
+    ``rules`` is a |-separated list of miner-rule tokens: a bare token matches
+    a rule name exactly ("ml-meta avg_p>=55"), ``fam:`` matches a rule family
+    ("fam:ml-meta"), and a leading ``!`` excludes instead of includes. Include
+    tokens apply first, then excludes. Rule names contain no commas, so the
+    comma-separated spec syntax survives them.
     """
     mp = spec.get("min_prob")
     if mp is not None:
@@ -170,6 +215,18 @@ def _filtered_pool(pool, spec):
         toks = [t.strip().lower() for t in str(want).split("|") if t.strip()]
         pool = [l for l in pool
                 if any(t in str((l.get("row") or {}).get("league") or "").lower() for t in toks)]
+    want = spec.get("rules")
+    if want:
+        inc, exc = [], []
+        for tok in str(want).split("|"):
+            tok = tok.strip()
+            if tok:
+                neg, hit = _rule_matcher(tok)
+                (exc if neg else inc).append(hit)
+        if inc:
+            pool = [l for l in pool if any(h(l) for h in inc)]
+        if exc:
+            pool = [l for l in pool if not any(h(l) for h in exc)]
     return pool
 
 
@@ -2272,6 +2329,15 @@ SWEEP_FAMILIES = {
     # shipped. One-knob families answer "is this knob better"; only a combo
     # answers "is this CONFIG better", and the two can disagree (2026-09-09:
     # barbell,2 scores 4/4 and stake_frac=0.1667 scores 2/4 on their own).
+    # Miner-rule filters. The picks audit's "By rule" table makes rule-level
+    # selection look like free edge, but its ROI is measured on the same rows
+    # the selection was made from (--rules-split prices that). These arms are
+    # the only rule filters worth scoring on the standing bar: the one rule
+    # positive in BOTH blind halves, and the two biggest negative-ROI rules.
+    "rules": [("2way-unan avg_p>=70 only", {"rules": "2way-unanimous avg_p>=70"}),
+              ("2way-unanimous, all bands", {"rules": "fam:2way-unanimous"}),
+              ("drop ml-meta avg_p>=55", {"rules": "!ml-meta avg_p>=55"}),
+              ("drop ml-meta entirely", {"rules": "!fam:ml-meta"})],
     "combo": [("barbell x2 @ 1/6 stake", {"pairing": "barbell", "max_accas": 2,
                                           "stake_frac": 0.1667}),
               ("barbell x2 @ 1/10 stake", {"pairing": "barbell", "max_accas": 2,
@@ -2367,6 +2433,106 @@ def cmd_sweep(archives, settled, families=None):
     return 0
 
 
+# --------------------------------------------------------------------------
+# --rules-split: "if we had bet only the positive-ROI rules, how would we be
+# doing?" — answered the only way that means anything.
+#
+# The picks audit's "By rule" table is computed on the SAME settled rows the
+# answer would be scored on, so every rule in it with ROI > 0 was selected
+# AFTER seeing the result. Betting the positive rows of that table is not a
+# policy, it is a description of the past. So this fits the whitelist on one
+# half of the bet-days, scores it BLIND on the other, in both directions, and
+# prints the in-sample number beside the blind one so the shrinkage is visible
+# rather than inferred.
+# --------------------------------------------------------------------------
+def _rules_arm(keep):
+    """The spec that rides only the whitelisted rules (None = nothing survived)."""
+    return {"rules": "|".join(sorted(keep))} if keep else None
+
+
+def cmd_rules_split(archives, settled, min_legs=10):
+    """Fit a positive-ROI rule whitelist blind, both directions.
+
+    Returns the accounting (per-direction whitelist, in-sample and blind
+    figures) so tests can assert on the numbers rather than on printed text.
+    """
+    full = build_universe(archives, settled)
+    older, newer, cut = split_universe(full)
+    print("=" * 108)
+    print(f"RULE WHITELIST — fitted on one half, scored BLIND on the other "
+          f"(min_legs={min_legs}, cut {cut})")
+    print("=" * 108)
+    print("ROI here is flat-stake per leg, the same definition the picks audit's")
+    print('"By rule" table uses. Betting the positive rows of THAT table is not')
+    print("a policy: the rules were chosen after seeing the results.")
+
+    out = {}
+    for name, tune, score in (("forward  (fit older, score newer)", older, newer),
+                              ("reverse  (fit newer, score older)", newer, older)):
+        tbl = rule_roi_table(tune, min_legs)
+        keep = sorted(r for r, v in tbl.items() if v["roi"] > 0)
+        print("\n" + "-" * 108)
+        print(name)
+        print("-" * 108)
+        print(f"  {'rule':44s} {'tune n':>7s} {'tuneROI':>8s} {'blind n':>8s} "
+              f"{'blindROI':>9s}  {'':s}")
+        blind_tbl = rule_roi_table(score)
+        for r in sorted(tbl, key=lambda x: -tbl[x]["roi"]):
+            v, b = tbl[r], blind_tbl.get(r)
+            tag = "KEEP" if v["roi"] > 0 else "drop"
+            if tag == "KEEP":
+                print(f"  {r:44s} {v['n']:7d} {v['roi']:+8.1%} "
+                      f"{(b['n'] if b else 0):8d} {(b['roi'] if b else float('nan')):+9.1%}"
+                      f"  {tag}")
+        print(f"  {len(keep)} of {len(tbl)} rules had tuning ROI > 0")
+
+        arm = _rules_arm(keep)
+        if arm is None:
+            print("  no rule survived — nothing to score blind")
+            out[name.split()[0]] = {"keep": [], "in_sample": None, "blind": None,
+                                    "blind_live": arm_stats(score, {})}
+            continue
+        is_ = arm_stats(tune, arm)
+        bl = arm_stats(score, arm)
+        bl_live = arm_stats(score, {})
+        print(f"\n  IN-SAMPLE on the fitting half : log/day {is_['mean_log']:+.4f}  "
+              f"final {is_['final']:6.0f}%  days {is_['days']:3d}  bets {is_['accas']:4d}")
+        print(f"  BLIND on the other half       : log/day {bl['mean_log']:+.4f}  "
+              f"final {bl['final']:6.0f}%  days {bl['days']:3d}  bets {bl['accas']:4d}")
+        print(f"  live on that same blind half  : log/day {bl_live['mean_log']:+.4f}  "
+              f"final {bl_live['final']:6.0f}%  days {bl_live['days']:3d}  "
+              f"bets {bl_live['accas']:4d}")
+        d = bl["mean_log"] - bl_live["mean_log"]
+        print(f"  => blind edge over live {d:+.4f} log/day"
+              f"{'   (a POSITIVE-ROI whitelist that loses to live blind)' if d < 0 else ''}")
+        out[name.split()[0]] = {"keep": keep, "in_sample": is_, "blind": bl,
+                                "blind_live": bl_live}
+
+    # The number the question actually asks for, labelled for what it is.
+    whole = rule_roi_table(full, min_legs)
+    keep_all = sorted(r for r, v in whole.items() if v["roi"] > 0)
+    arm = _rules_arm(keep_all)
+    print("\n" + "=" * 108)
+    print(f"WHOLE-UNIVERSE FIT ({len(keep_all)} of {len(whole)} rules positive, "
+          f"n>={min_legs}) — THIS ONE IS IN-SAMPLE AND PROVES NOTHING")
+    print("=" * 108)
+    if arm is None:
+        print("  no rule reached the minimum sample with positive ROI")
+        out["in_sample_all"] = None
+    else:
+        a = arm_stats(full, arm)
+        lv = arm_stats(full, {})
+        print(f"  whitelist : {', '.join(keep_all)}")
+        print(f"  whitelist : log/day {a['mean_log']:+.4f}  final {a['final']:6.0f}%  "
+              f"maxDD {a['maxdd']:.0%}  days {a['days']:3d}  bets {a['accas']:4d}")
+        print(f"  live      : log/day {lv['mean_log']:+.4f}  final {lv['final']:6.0f}%  "
+              f"maxDD {lv['maxdd']:.0%}  days {lv['days']:3d}  bets {lv['accas']:4d}")
+        print(f"  => {a['mean_log'] - lv['mean_log']:+.4f} log/day of pure hindsight. "
+              f"Compare it with the blind rows above: the gap is the price of looking.")
+        out["in_sample_all"] = a
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--variant", action="append", metavar="SPEC",
@@ -2422,6 +2588,12 @@ def main():
                     help="score a knob family across the full universe, the "
                          "heavy days and the pessimistic grading, plus both "
                          "blind halves; prints how many of the four an arm passes")
+    ap.add_argument("--rules-split", nargs="?", metavar="MIN_LEGS", const=10,
+                    type=int, default=None,
+                    help="fit a positive-ROI miner-rule whitelist on one half "
+                         "of the bet-days and score it BLIND on the other, "
+                         "both directions; also prints the whole-universe fit "
+                         "labelled as hindsight (default min_legs=10)")
     ap.add_argument("--search", action="store_true",
                     help="the full SEARCH_AXES grid, through --holdout")
     ap.add_argument("--clv", action="store_true",
@@ -2504,6 +2676,10 @@ def main():
 
     if args.sweep is not None:
         return cmd_sweep(archives, settled, args.sweep or None)
+
+    if args.rules_split is not None:
+        cmd_rules_split(archives, settled, args.rules_split)
+        return 0
 
     if args.holdout is not None:
         return cmd_holdout(universe, [parse_spec(x) for x in args.holdout])

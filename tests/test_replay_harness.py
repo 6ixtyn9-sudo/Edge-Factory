@@ -447,7 +447,7 @@ def test_sweep_families_only_use_known_engine_keys():
     """A typo'd knob in the sweep table would silently replay the live
     settings and print a no-op comparison — the exact bug the 2026-09-04
     audit found in --ab. An empty spec would A/B live against live."""
-    allowed = rh.ENGINE_KEYS | {"min_prob", "leagues"}
+    allowed = rh.ENGINE_KEYS | {"min_prob", "leagues", "rules"}
     for fam, arms in rh.SWEEP_FAMILIES.items():
         assert arms, f"{fam} has no arms"
         for label, spec in arms:
@@ -500,3 +500,68 @@ def test_sweep_blind_halves_score_the_arm_not_the_holdout_winner():
     body = src[i:i + 1400]
     assert "holdout_window(" not in body, "blind halves must score the arm itself"
     assert "arm_stats(newer, spec)" in body and "arm_stats(older, spec)" in body
+
+
+# ---------------- --rules-split / rules= : rule filters -------------------
+
+def _rleg(tag, rule, odds=2.0, result="win", prob=0.75):
+    leg = _leg(tag, prob, odds, result)
+    leg["row"] = {"rule": rule, "league": "LG"}
+    return leg
+
+
+def test_rule_roi_table_uses_the_picks_audit_definition():
+    """Flat stake, sum(pnl)/n — the same arithmetic as
+    audit_recent_picks.summarize_scored, so the harness table reconciles with
+    the 'By rule' section of the picks audit instead of disagreeing with it."""
+    u = {"2026-08-01": [_rleg("a", "r1", 3.0, "win"),
+                        _rleg("b", "r1", 2.0, "loss"),
+                        _rleg("c", "r2", 1.5, "win"),
+                        _rleg("d", "r2", 1.5, "pending")]}
+    t = rh.rule_roi_table(u)
+    assert t["r1"]["n"] == 2 and t["r1"]["wins"] == 1
+    assert abs(t["r1"]["roi"] - ((3.0 - 1) - 1) / 2) < 1e-9
+    # unsettled legs are excluded, not counted as losses
+    assert t["r2"] == {"n": 1, "wins": 1, "roi": 0.5}
+    assert rh.rule_roi_table(u, min_legs=2) == {k: v for k, v in t.items() if k == "r1"}
+
+
+def test_rules_spec_filters_the_pool_three_ways():
+    pool = [_rleg("a", "ml-meta avg_p>=55"),
+            _rleg("b", "ml-meta avg_p>=60"),
+            _rleg("c", "2way-unanimous avg_p>=70"),
+            _rleg("d", "3way-unanimous avg_p>=65")]
+    names = lambda spec: sorted(at._rule_of(x) for x in rh._filtered_pool(pool, spec))
+    assert names({"rules": "2way-unanimous avg_p>=70"}) == ["2way-unanimous avg_p>=70"]
+    assert names({"rules": "fam:ml-meta"}) == ["ml-meta avg_p>=55", "ml-meta avg_p>=60"]
+    assert names({"rules": "!fam:ml-meta"}) == ["2way-unanimous avg_p>=70",
+                                               "3way-unanimous avg_p>=65"]
+    assert names({"rules": "ml-meta avg_p>=55|!ml-meta avg_p>=55"}) == []
+    assert names({}) == sorted(at._rule_of(x) for x in pool)  # no filter = untouched
+    # a typo'd rule name must be LOUD (empty card), never a silent no-op
+    assert names({"rules": "ml-meta avg_p>=5"}) == []
+    assert rh.card_for_day(pool, {"rules": "ml-meta avg_p>=5"}) == []
+    # a rule name survives the comma-separated spec syntax untouched
+    assert rh.parse_spec("rules=fam:ml-meta,max_accas=2") == {
+        "rules": "fam:ml-meta", "max_accas": 2}
+
+
+def test_rules_split_fits_on_the_tuning_half_only(monkeypatch):
+    """The whole point of the command: a rule that is positive ONLY on the
+    half being scored must never enter the whitelist, and the blind figure
+    must not be the in-sample figure."""
+    older = {"2026-07-01": [_rleg(f"a{i}", "good", 2.0, "win") for i in range(6)],
+             "2026-07-02": [_rleg(f"b{i}", "bad", 1.5, "loss") for i in range(6)]}
+    newer = {"2026-08-01": [_rleg(f"c{i}", "bad", 2.5, "win") for i in range(6)],
+             "2026-08-02": [_rleg(f"d{i}", "good", 1.4, "loss") for i in range(6)]}
+    u = {**older, **newer}
+    monkeypatch.setattr(rh, "build_universe", lambda a, st, **kw: u)
+    monkeypatch.setattr(rh, "split_universe",
+                        lambda uu, cut=None: (older, newer, "2026-08-01"))
+    res = rh.cmd_rules_split(None, None, min_legs=3)
+    # 'bad' is +66% on the newer half and -100% on the older one: fitting on
+    # the older half must exclude it even though scoring on the newer would
+    # have loved it.
+    assert "bad" not in res["forward"]["keep"]
+    assert "good" in res["forward"]["keep"]
+    assert res["forward"]["blind"]["mean_log"] != res["forward"]["in_sample"]["mean_log"]
