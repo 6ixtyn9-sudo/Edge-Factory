@@ -8375,3 +8375,87 @@ figure in this addendum is forward-valid, and nothing here adopts itself.
 
 Receipt: 449 passed (438 + 11 new harness tests); `ruff` findings unchanged
 on both touched files (10 / 3); engine constants and state file untouched.
+
+---
+
+## Addendum — 2026-09-09: which live settings are optimal, and why the scoreboard needed a second column
+
+Trigger: "i thought 4 accas was the goal … are you sure about these numbers, i
+want to run more simulations, and then i need you to tell me which live
+settings would be optimal." Three runs answered it: `--sweep` (shipped
+`b796886`), a new `combo` family, and `--kelly`.
+
+### Q1 (`max_accas=4`) fails both criteria, in every universe
+
+The gate counter reached its threshold — `--slots` now reads "only the 30 days
+that offer 8+ legs" (36 days offer them before the floor). So the question was
+ripe, and the answer is no:
+
+| arm | standing bar | grows on its own (5 windows) |
+|---|---|---|
+| `barbell, 2 accas` | **4/4** | **5/5** |
+| `singles x3` (`legs_per_acca=1`) | **4/4** | **5/5** |
+| `barbell x2 @ 1/6 stake` | 3/4 | **5/5** |
+| `singles x3 @ 1/6 stake` | 3/4 | **5/5** |
+| `max_accas=2` | 3/4 | **2/5** |
+| `barbell, 3 accas` | 3/4 | 3/5 |
+| `stake_frac` 0.1667 / 0.10 / 0.25 | 2/4 | 2/5 · 2/5 · 1/5 |
+| **`max_accas=4` (pre-registered Q1)** | **0/4** | **1/5** |
+| `max_accas=5` / `=6` / `barbell, 4 accas` | 0/4 | 1/5 · 1/5 · 2/5 |
+
+`max_accas=4` has p10 < 0 and a leave-one-day-out sign flip in all three
+universes (full −0.0035 / heavy −0.0448 / pessimistic −0.0335 log/day), and it
+is inconsistent across blind halves. Same for 5 and 6. This is consistent with
+the 2026-09-04 finding ("117% of the effect is a single 4.90 treble").
+
+### The standing bar is biased toward staking harder — a second column is required
+
+`p10` and `P>better` are measured **against live, and live is negative**. So an
+arm can win the comparison by being *less bad*, and shrinking the stake shrinks
+the difference distribution until p10 goes negative even when the arm grows.
+Proof from one pairing, stake being the only change: `barbell, 2 accas` at
+1/3 stake → full-universe p10 **+0.0093**, bar 4/4; the same pairing at 1/6
+stake → p10 **−0.0014**, bar 3/4 — while growing on its own in **5/5** windows.
+
+So `--sweep` now prints a second scoreboard, **STANDS ON ITS OWN**: the count
+of the five windows (full / heavy / pessimistic / forward-blind / reverse-blind)
+where the arm's *own* mean log growth is > 0, with no comparison to live.
+`max_accas=2` is the arm this exposes — 3/4 on the relative bar, **2/5** on its
+own. A candidate must pass both columns.
+
+### `pairing=barbell` is not shippable by a constant — do not describe it as a setting
+
+`grep -c "^PAIRING" scripts/auto_tickets.py` → **0**. `pair_legs()` takes
+`pairing="consecutive"` and its own docstring calls barbell "an A/B candidate
+only"; there is no module constant and the live call path never passes it. The
+top arm is therefore a **code change**, not a settings change.
+
+`LEGS_PER_ACCA = 1` *is* a constant, but it is not shippable as-measured
+either: the NO-BET gate is `if len(pool) < LEGS_PER_ACCA` (`auto_tickets.py`
+lines 1241 and 1457), and `build_universe` filters bet-days on
+`len(pool) >= at.LEGS_PER_ACCA` (`replay_harness.py` line 152) using the **live**
+value of 2. A live switch to 1 would start betting single-leg days the replay
+never scored, so `singles x3` is 4/4 on a universe that shipping it would change.
+
+### What that leaves, against the stated goal of a million as fast as possible
+
+`--kelly`: growth-optimal f is **10%** (log/day +0.0013, maxDD 27%); live **33%**
+sits well past the peak (−0.0051, maxDD 73%). Bootstrapped f\* median 10%,
+p10 5%, p90 40%, `P(f* < live 33%) = 80%`. Time to 10× on mean log growth:
+
+| arm | log/day | 100k → 1M |
+|---|---|---|
+| live @ 33% (current) | −0.0051 | never (bank declines) |
+| live @ 1/6 stake, pessimistic grading | −0.0128 | never — staking down cuts the loss rate 63%, it does not create edge |
+| live @ 10% stake | +0.0013 | ~1 771 bet-days ≈ 4.9 years |
+| `barbell x2 @ 1/6 stake` (needs code) | +0.0126 settled / +0.0038 pessimistic | ~183 days / ~606 days ≈ 1.7 years |
+
+Speed to a million is set by the **edge**, not the stake. No live constant
+delivers it; the only arms that grow in all five windows need a code change or
+add untested days, and even those are ~6 months in-sample, ~1.7 years under
+pessimistic grading. The lever that would actually move it is still the price
+source (ridden legs beat the close 12.3% overall; `scoutingstats_odds` 4.2%,
+`forebet_best` 0.0%).
+
+Receipt: 455 passed (453 + 2 new); `ruff` findings unchanged on both touched
+files (10 / 3); no engine constant or state file changed.

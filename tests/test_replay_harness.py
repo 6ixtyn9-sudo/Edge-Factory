@@ -457,10 +457,39 @@ def test_sweep_families_only_use_known_engine_keys():
 
 
 def test_sweep_row_prints_the_arm_and_returns_the_bar(capsys):
-    got = rh._sweep_row(_universe(8), {"max_accas": 2}, "test arm")
+    u = _universe(8)
+    bar, log = rh._sweep_row(u, {"max_accas": 2}, "test arm")
     out = capsys.readouterr().out
-    assert isinstance(got, bool)
+    assert isinstance(bar, bool)
     assert "test arm" in out and ("PASS" in out or "fail" in out)
+    # the number it prints must be the arm's own growth, or the section that
+    # counts "grows on its own" would be counting something else
+    assert log == rh.arm_stats(u, {"max_accas": 2})["mean_log"]
+
+
+def test_sweep_combo_family_holds_real_setting_tuples():
+    """The one-knob families answer 'is this knob better'. Only the combo
+    family answers 'is this CONFIG better', so it must contain at least one
+    arm that moves more than one knob at once."""
+    arms = rh.SWEEP_FAMILIES["combo"]
+    assert any(len(spec) >= 2 for _, spec in arms)
+    labels = [lb for lb, _ in arms]
+    assert len(labels) == len(set(labels)), "duplicate labels collapse in the tally"
+
+
+def test_sweep_reports_arms_that_grow_without_comparing_to_live(capsys, monkeypatch):
+    """p10/P>better are measured against live, and live is negative — so a
+    smaller stake wins that comparison while still losing money. The
+    scoreboard must also say, per arm, how many windows it grew in on its
+    own, or the stake arms look like winners they are not."""
+    u = _universe(8)
+    monkeypatch.setattr(rh, "build_universe", lambda a, st, **kw: u)
+    rh.cmd_sweep(None, None, families=["combo"])
+    out = capsys.readouterr().out
+    assert "STANDS ON ITS OWN" in out
+    assert "/5" in out
+    for label, _ in rh.SWEEP_FAMILIES["combo"]:
+        assert label in out, f"{label} missing from the scoreboard"
 
 
 def test_sweep_blind_halves_score_the_arm_not_the_holdout_winner():

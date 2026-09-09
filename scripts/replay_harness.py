@@ -2268,6 +2268,18 @@ SWEEP_FAMILIES = {
     "stake": [("stake_frac=0.1667", {"stake_frac": 0.1667}),
               ("stake_frac=0.10", {"stake_frac": 0.10}),
               ("stake_frac=0.25", {"stake_frac": 0.25})],
+    # Whole setting tuples, not one knob at a time — what would actually be
+    # shipped. One-knob families answer "is this knob better"; only a combo
+    # answers "is this CONFIG better", and the two can disagree (2026-09-09:
+    # barbell,2 scores 4/4 and stake_frac=0.1667 scores 2/4 on their own).
+    "combo": [("barbell x2 @ 1/6 stake", {"pairing": "barbell", "max_accas": 2,
+                                          "stake_frac": 0.1667}),
+              ("barbell x2 @ 1/10 stake", {"pairing": "barbell", "max_accas": 2,
+                                           "stake_frac": 0.10}),
+              ("barbell x3 @ 1/6 stake", {"pairing": "barbell", "stake_frac": 0.1667}),
+              ("singles x3 @ 1/6 stake", {"legs_per_acca": 1, "stake_frac": 0.1667}),
+              ("live @ 1/6 stake", {"stake_frac": 0.1667}),
+              ("max_accas=4 @ 1/6 stake", {"max_accas": 4, "stake_frac": 0.1667})],
 }
 
 
@@ -2283,7 +2295,7 @@ def _sweep_row(u, spec, label):
     print(f"{label:34s} {s['mean_log']:+8.4f} {s['final']:7.0f}% {s['maxdd'] * 100:5.0f}% "
           f"{s['accas']:5d} {p10:+8.4f} {pb:7.0%} {lo:>18s} {sign:>6s} "
           f"{'PASS' if bar else 'fail'}")
-    return bar
+    return bar, s["mean_log"]
 
 
 def cmd_sweep(archives, settled, families=None):
@@ -2296,6 +2308,7 @@ def cmd_sweep(archives, settled, families=None):
     hdr = (f"{'arm':34s} {'log/day':>8s} {'final':>7s} {'maxDD':>5s} {'bets':>5s} "
            f"{'p10':>8s} {'P>better':>8s} {'leave-one-day-out':>18s} {'sign':>6s} {'bar':>5s}")
     tally: dict[str, int] = {label: 0 for label, _ in arms}
+    own: dict[str, int] = {label: 0 for label, _ in arms}
     for title, u in ((f"FULL UNIVERSE ({len(full)} bet-days)", full),
                      (f"HEAVY DAYS ({len(heavy)} offering 8+ legs) — the MAX_ACCAS gate", heavy),
                      ("PESSIMISTIC (unsettled legs graded as losses)", pes)):
@@ -2307,8 +2320,11 @@ def cmd_sweep(archives, settled, families=None):
         print(f"{'live reference':34s} {ref['mean_log']:+8.4f} {ref['final']:7.0f}% "
               f"{ref['maxdd'] * 100:5.0f}% {ref['accas']:5d}")
         for label, spec in arms:
-            if _sweep_row(u, spec, label):
+            bar, log = _sweep_row(u, spec, label)
+            if bar:
                 tally[label] += 1
+            if log > 0:
+                own[label] += 1
     print("\n" + "=" * 108)
     print("BLIND HALVES (tune on one half, score on the other)")
     print("=" * 108)
@@ -2324,6 +2340,7 @@ def cmd_sweep(archives, settled, families=None):
         both = fb > 0 and rb > 0
         if both:
             tally[label] += 1
+        own[label] += (fb > 0) + (rb > 0)
         print(f"{label:34s} forward-blind {fb:+8.4f}   reverse-blind {rb:+8.4f}"
               f"   {'both positive' if both else 'inconsistent'}")
     print("\n" + "=" * 108)
@@ -2332,6 +2349,19 @@ def cmd_sweep(archives, settled, families=None):
     print("=" * 108)
     for label, _ in arms:
         print(f"  {label:34s} {tally[label]}/4")
+    # p10 and P>better are measured AGAINST LIVE, and live is negative — so
+    # shrinking the stake always looks better, and can win that comparison
+    # while still losing money. This section drops the comparison entirely and
+    # asks the stake-honest question: does the arm grow on its own, in every
+    # window? Five windows: full, heavy, pessimistic, forward-blind, reverse.
+    print("\n" + "=" * 108)
+    print("STANDS ON ITS OWN — windows where the arm's OWN log growth is > 0")
+    print("(no comparison to live, so a smaller stake cannot win by being")
+    print(" less bad. A stake arm can score high above and still fail here.)")
+    print("=" * 108)
+    for label, _ in arms:
+        print(f"  {label:34s} {own[label]}/5"
+              f"{'   <-- grows on its own everywhere' if own[label] == 5 else ''}")
     print("\nA 4/4 arm is a CANDIDATE for the pre-registered slot on genuinely")
     print("new bet-days. It is not a reason to change a live constant today.")
     return 0
