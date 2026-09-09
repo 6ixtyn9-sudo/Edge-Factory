@@ -2131,13 +2131,26 @@ def cmd_clv(universe, spec=None, split=None):
           "you;\n   no growth number survives that for long, and CLV has the "
           "bigger sample)")
     if split:
-        print(f"\n--- ridden legs split by {split} (cells with n>=15) ---")
         agg = _clv_cells(ridden, idx, split=split)
+        rows = sorted(agg.items(), key=lambda kv: -kv[1]["n"])
+        shown = [(k, a) for k, a in rows if a["n"] >= 15]
+        print(f"\n--- ridden legs split by {split} (cells with n>=15) ---")
+        if not shown:
+            # An empty table is not an answer. Say what the emptiness IS: the
+            # action is spread so thin that no cell can support a conclusion,
+            # which is itself the finding — then show the largest cells anyway.
+            total = sum(a["n"] for _, a in rows)
+            biggest = rows[0][1]["n"] if rows else 0
+            print(f"  NO cell reached n>=15: {len(rows)} distinct {split} values "
+                  f"over {total} priced legs, largest cell n={biggest}.")
+            print("  That dispersion is the finding — at this spread no cell can "
+                  "support a conclusion, in either direction.")
+            print("  Largest cells anyway, all below the noise floor:")
+            shown = rows[:10]
         print(f"{'cell':30s} {'n':>5s} {'beat%':>7s} {'raw drift':>10s}")
-        for k, a in sorted(agg.items(), key=lambda kv: -kv[1]["n"]):
-            if a["n"] >= 15:
-                print(f"{k[:30]:30s} {a['n']:5d} {a['beat_rate']:7.1%} "
-                      f"{a['mean_raw']:+10.4f}{noise_flag(a['n'])}")
+        for k, a in shown:
+            print(f"{k[:30]:30s} {a['n']:5d} {a['beat_rate']:7.1%} "
+                  f"{a['mean_raw']:+10.4f}{noise_flag(a['n'])}")
     return 0
 
 
