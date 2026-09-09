@@ -52,6 +52,7 @@ from __future__ import annotations
 import argparse
 import csv
 import gzip
+import itertools
 import json
 import math
 import random
@@ -117,7 +118,7 @@ def parse_spec(text):
             spec[k] = float(v)
         else:
             spec[k] = v
-    unknown = set(spec) - ENGINE_KEYS - {"min_prob"}
+    unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules"}
     if unknown:
         raise SystemExit(f"unknown spec key(s): {sorted(unknown)}")
     return spec
@@ -131,23 +132,102 @@ def label_of(spec):
 # universe: every archived day's settled playable legs, floor NOT applied
 # (variants apply their own floor via the live selector)
 # --------------------------------------------------------------------------
-def build_universe(archives, settled):
+def build_universe(archives, settled, unresolved=None):
+    """Settled playable legs per day.
+
+    ``unresolved=None`` (default, and every shipped number so far) drops legs
+    that never graded, because a replay cannot score a pending result. That is
+    also a flattering assumption: voids and never-settled legs disappear
+    instead of costing money. ``unresolved="loss"`` keeps them and grades them
+    as losses, which is the pessimistic bound on every number in this file.
+    """
     days = sorted({str(p.get("date") or p.get("_archive_day") or "")[:10] for p in archives})
     universe = {}
     for d in days:
         pool = at.playable_legs(archives, day=d, settled=settled, floor=0.0)
-        pool = [l for l in pool if l["result"]]      # settled only (replay can't grade pending)
+        if unresolved == "loss":
+            pool = [dict(l, result=l["result"] or "loss") for l in pool]
+        else:
+            pool = [l for l in pool if l["result"]]  # settled only
         if len(pool) >= at.LEGS_PER_ACCA:
             universe[d] = pool
     return universe
 
 
+def _rule_matcher(tok):
+    """One ``rules=`` token -> (is_exclusion, predicate over legs)."""
+    neg = tok.startswith("!")
+    body = tok[1:].strip() if neg else tok
+
+    if body.startswith("fam:"):
+        fam = body[4:].strip()
+
+        def hit(leg):
+            return rule_family((leg.get("row") or {}).get("rule")) == fam
+    else:
+        def hit(leg):
+            return at._rule_of(leg) == body
+    return neg, hit
+
+
+def rule_roi_table(u, min_legs=0):
+    """Flat-stake ROI per miner rule over the settled legs of one window.
+
+    Same definition as ``audit_recent_picks.summarize_scored`` (sum of pnl on a
+    unit stake / n), so these numbers reconcile with the picks audit's
+    "By rule" table instead of being a second, slightly different ROI.
+    """
+    acc: dict[str, list] = {}
+    for d in sorted(u):
+        for l in u[d]:
+            r = l.get("result")
+            if r not in ("win", "loss"):
+                continue
+            e = acc.setdefault(at._rule_of(l), [0, 0, 0.0])
+            e[0] += 1
+            if r == "win":
+                e[1] += 1
+                e[2] += l["odds"] - 1.0
+            else:
+                e[2] -= 1.0
+    return {r: {"n": v[0], "wins": v[1], "roi": v[2] / v[0]}
+            for r, v in acc.items() if v[0] >= min_legs}
+
+
 def _filtered_pool(pool, spec):
-    """Apply the one harness-only filter before entering the live engine."""
+    """Apply the harness-only filters before entering the live engine.
+
+    ``min_prob``, ``leagues`` and ``rules`` never reach the engine: they shrink
+    the pool the LIVE selector then sees, so selection and sizing stay one code
+    path. ``leagues`` is a |-separated list of case-insensitive substrings
+    matched against the archived row's league tag (concentration experiments).
+    ``rules`` is a |-separated list of miner-rule tokens: a bare token matches
+    a rule name exactly ("ml-meta avg_p>=55"), ``fam:`` matches a rule family
+    ("fam:ml-meta"), and a leading ``!`` excludes instead of includes. Include
+    tokens apply first, then excludes. Rule names contain no commas, so the
+    comma-separated spec syntax survives them.
+    """
     mp = spec.get("min_prob")
-    if mp is None:
-        return pool
-    return [l for l in pool if l["prob"] >= mp]
+    if mp is not None:
+        pool = [l for l in pool if l["prob"] >= mp]
+    want = spec.get("leagues")
+    if want:
+        toks = [t.strip().lower() for t in str(want).split("|") if t.strip()]
+        pool = [l for l in pool
+                if any(t in str((l.get("row") or {}).get("league") or "").lower() for t in toks)]
+    want = spec.get("rules")
+    if want:
+        inc, exc = [], []
+        for tok in str(want).split("|"):
+            tok = tok.strip()
+            if tok:
+                neg, hit = _rule_matcher(tok)
+                (exc if neg else inc).append(hit)
+        if inc:
+            pool = [l for l in pool if any(h(l) for h in inc)]
+        if exc:
+            pool = [l for l in pool if not any(h(l) for h in exc)]
+    return pool
 
 
 def card_for_day(pool, spec):
@@ -235,9 +315,17 @@ def effect_concentration(universe, spec_a, spec_b):
     da, db = replay(universe, spec_a), replay(universe, spec_b)
     if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
         return None
-    la = {d: math.log(v["growth"]) for d, v in da.items()}
-    lb = {d: math.log(v["growth"]) for d, v in db.items()}
-    if not la or not lb:
+    # A day one arm does not bet is a day that arm's bank is FLAT, not a day
+    # that disappears from the comparison. Averaging each arm over its OWN day
+    # set (the old behaviour) is not a paired difference at all: for an arm
+    # that changes which days are bet — every rule filter, min_prob, min_accas
+    # — it can keep the leave-one-day-out sign positive while the paired
+    # difference is negative (measured 2026-09-09 on rules=!ml-meta avg_p>=55:
+    # unpaired +0.0012 "holds", paired on common days -0.0052).
+    days = sorted(set(da) | set(db))
+    la = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
+    lb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
+    if not days:
         return None
     full = sum(lb.values()) / len(lb) - sum(la.values()) / len(la)
     contrib = []
@@ -289,15 +377,17 @@ def paired_bootstrap(universe, spec_a, spec_b, n=5000, seed=2026):
     # day. It is ineligible for bootstrap comparison.
     if any(v["growth"] <= 0 for v in da.values()) or any(v["growth"] <= 0 for v in db.values()):
         return None
-    ga = {d: math.log(da[d]["growth"]) for d in da}
-    gb = {d: math.log(db[d]["growth"]) for d in db}
+    # A no-bet day is log growth 0 for that arm, and BOTH arms are scored on
+    # the SAME sampled days — otherwise the resampling is paired but the
+    # averaging is not, and an arm that skips days is compared against a
+    # different denominator on every draw.
+    ga = {d: math.log(da[d]["growth"]) if d in da else 0.0 for d in days}
+    gb = {d: math.log(db[d]["growth"]) if d in db else 0.0 for d in days}
     diffs = []
     for _ in range(n):
         sample = random.choices(days, k=len(days))
-        la = [ga[d] for d in sample if d in ga]
-        lb = [gb[d] for d in sample if d in gb]
-        if not la or not lb:
-            continue
+        la = [ga[d] for d in sample]
+        lb = [gb[d] for d in sample]
         diffs.append(sum(lb) / len(lb) - sum(la) / len(la))
     if not diffs:
         return None
@@ -1853,6 +1943,643 @@ def cmd_warehouse_replay(archives, settled, since=None, until=None):
     return 0 if ok else 1
 
 
+# --------------------------------------------------------------------------
+# --holdout / --search: a knob search that pays for its own selection bias.
+#
+# Picking the best replay number on a single window is free and worthless:
+# with a few hundred variants over ~75 bet-days the winner is largely an
+# artefact of having looked (measured 2026-09-09: the in-sample winner ranked
+# 125/396 out-of-sample, and the reverse split chose a different arm entirely).
+# So the search chooses on one half, scores that choice BLIND on the other, in
+# both directions, and prints the shrinkage, the out-of-sample rank and the
+# hindsight ceiling beside it. Doctrine is unchanged: relative differences on
+# identical inputs, never a forecast.
+# --------------------------------------------------------------------------
+SEARCH_AXES = {
+    "legs_per_acca": (1, 2),
+    "max_accas": (2, 3, 4, 6),
+    "floor": (1.2, 1.35, 1.5, 1.7),
+    "rank": ("prob", "ev"),
+    "pairing": ("consecutive", "barbell"),
+    "stake_frac": (0.3333, 0.1667, 0.10),
+    "min_prob": (None, 0.68, 0.74),
+    "min_accas": (1, 2),
+}
+
+
+def default_grid():
+    """Every combination of SEARCH_AXES (None = leave the live value alone)."""
+    keys = sorted(SEARCH_AXES)
+    return [{k: v for k, v in zip(keys, combo) if v is not None}
+            for combo in itertools.product(*(SEARCH_AXES[k] for k in keys))]
+
+
+def split_universe(universe, cut=None):
+    """(before, after, cut) — the cut defaults to the median bet-day."""
+    days = sorted(universe)
+    if not days:
+        return {}, {}, None
+    cut = cut or days[len(days) // 2]
+    return ({d: universe[d] for d in days if d < cut},
+            {d: universe[d] for d in days if d >= cut}, cut)
+
+
+def arm_stats(sub, spec):
+    """summarise() plus the stake-weighted flat ROI for one arm on one window."""
+    days = replay(sub, spec)
+    s = summarise(days)
+    staked = sum(sum(d["stake_pct"]) for d in days.values())
+    ret = sum(sum(sp * o for (o, w), sp in zip(d["accas"], d["stake_pct"]) if w)
+              for d in days.values())
+    s["roi"] = (ret - staked) / staked if staked else float("nan")
+    return s
+
+
+def holdout_window(is_u, oos_u, specs, min_days=20, min_bets=40, top=10):
+    """Tune on ``is_u``, score blind on ``oos_u``. Returns the accounting as a
+    dict so tests can assert on the numbers instead of on printed text."""
+    viable = []
+    for sp in specs:
+        t = arm_stats(is_u, sp)
+        if t["days"] >= min_days and t["accas"] >= min_bets:
+            viable.append(sp)
+    if not viable:
+        return {"viable": 0, "chosen": None}
+    ranked = sorted(viable, key=lambda sp: -arm_stats(is_u, sp)["mean_log"])
+    blind = {id(sp): arm_stats(oos_u, sp) for sp in viable}
+    order = sorted((blind[id(sp)]["mean_log"] for sp in viable), reverse=True)
+    chosen = ranked[0]
+    tune, blind_chosen = arm_stats(is_u, chosen), blind[id(chosen)]
+    return {
+        "viable": len(viable), "chosen": chosen,
+        "tune": tune, "blind": blind_chosen,
+        "blind_rank": 1 + sum(1 for v in order if v > blind_chosen["mean_log"]),
+        "blind_n": len(order), "blind_ceiling": order[0],
+        "blind_median": order[len(order) // 2],
+        "shrinkage": (blind_chosen["mean_log"] / tune["mean_log"])
+        if tune["mean_log"] else float("nan"),
+        "top_survive": sum(1 for sp in ranked[:top] if blind[id(sp)]["mean_log"] > 0),
+        "top_n": min(top, len(ranked)),
+    }
+
+
+def cmd_holdout(universe, specs, top=10):
+    specs = list(specs) or default_grid()
+    older, newer, cut = split_universe(universe)
+    if not older or not newer:
+        print("not enough bet-days to split — a holdout needs both halves.")
+        return 1
+    lo, ln = arm_stats(older, {}), arm_stats(newer, {})
+    print("=" * 74)
+    print(f"HOLDOUT: {len(specs)} variants · tuned in-sample, scored BLIND "
+          f"out-of-sample, both directions")
+    print("=" * 74)
+    print(f"universe {len(universe)} bet-days, cut at {cut} · live "
+          f"{lo['mean_log']:+.4f} log/day on the older half, "
+          f"{ln['mean_log']:+.4f} on the newer")
+    print("doctrine: a blind-half number still ranks policies; it does not "
+          "forecast a bank.\n")
+    results = {}
+    for title, is_u, oos_u in (("FORWARD  (tune on the older half)", older, newer),
+                               ("REVERSE  (tune on the newer half)", newer, older)):
+        r = holdout_window(is_u, oos_u, specs, top=top)
+        results[title[:7]] = r
+        if not r["viable"]:
+            print(f"--- {title}: no viable variant met the n floor ---\n")
+            continue
+        t, b = r["tune"], r["blind"]
+        print(f"--- {title} ---")
+        print(f"  chosen while tuning : {label_of(r['chosen'])}")
+        print(f"    tuning half : log/day {t['mean_log']:+.4f}  final {t['final']:6.0f}%  "
+              f"maxDD {t['maxdd'] * 100:3.0f}%  bets {t['accas']}")
+        print(f"    BLIND half  : log/day {b['mean_log']:+.4f}  final {b['final']:6.0f}%  "
+              f"flatROI {b['roi']:+.2%}  maxDD {b['maxdd'] * 100:3.0f}%  "
+              f"days {b['days']}{noise_flag(b['accas'])}")
+        print(f"    {r['shrinkage']:.0%} of the tuning-half number survived · "
+              f"blind rank {r['blind_rank']}/{r['blind_n']} · hindsight ceiling "
+              f"{r['blind_ceiling']:+.4f} · median arm {r['blind_median']:+.4f}")
+        print(f"    top-{r['top_n']} tuning arms still positive blind: "
+              f"{r['top_survive']}/{r['top_n']}\n")
+    fw, rv = results.get("FORWARD"), results.get("REVERSE")
+    if fw and rv and fw["viable"] and rv["viable"]:
+        same = fw["chosen"] == rv["chosen"]
+        print(f"the two directions {'AGREE' if same else 'DISAGREE'} on the winner — "
+              f"{'the choice is stable' if same else 'the search is unstable, so plan on the LOWER blind number'}")
+        print(f"  forward blind {fw['blind']['mean_log']:+.4f} · reverse blind "
+              f"{rv['blind']['mean_log']:+.4f} · plan on "
+              f"{min(fw['blind']['mean_log'], rv['blind']['mean_log']):+.4f} log/day")
+    return 0
+
+
+def cmd_search(universe, top=10):
+    grid = default_grid()
+    print(f"search grid: {len(grid)} variants over {len(SEARCH_AXES)} knobs "
+          f"({', '.join(sorted(SEARCH_AXES))})\n")
+    return cmd_holdout(universe, grid, top=top)
+
+
+# --------------------------------------------------------------------------
+# --clv: attach the closing-line ledger to the legs a variant actually rides.
+#
+# Growth says whether a policy compounded on 75 replayed days. CLV says
+# whether the PRICES were any good, on ~20x the sample, before settlement.
+# When the two disagree, CLV is the one with the sample — so the harness must
+# be able to print them side by side, and split them by the fields that
+# explain a stale first price (provider / bookmaker / league / snapshot).
+# --------------------------------------------------------------------------
+def clv_index():
+    """pick_id -> first/last observed price + the split fields, from the
+    committed snapshot ledger. Uses edgefactory.clv for the comparisons, so
+    the harness cannot drift from the audit's definition of beating a price."""
+    from edgefactory.clv import beat_later_price, implied_prob_delta
+    rows: dict[str, list] = {}
+    for f in sorted(LOCALDATA.glob("clv_snapshots_*.csv.gz")):
+        with gzip.open(f, "rt", newline="") as fh:
+            for r in csv.DictReader(fh):
+                pid = str(r.get("pick_id") or "")
+                if not pid:
+                    continue
+                try:
+                    o = float(r.get("observed_odds") or "")
+                except ValueError:
+                    continue
+                if o <= 1.0:
+                    continue
+                rows.setdefault(pid, []).append((str(r.get("captured_at_utc") or ""), o, r))
+    out = {}
+    for pid, rs in rows.items():
+        if len(rs) < 2:
+            continue
+        rs.sort(key=lambda t: t[0])
+        first, last, meta = rs[0][1], rs[-1][1], rs[0][2]
+        out[pid] = {
+            "first": first, "last": last, "n_prices": len(rs),
+            "beat": beat_later_price(first, last),
+            "ip_delta": implied_prob_delta(first, last),
+            "raw_delta": last - first,
+            "league": str(meta.get("league") or "?"),
+            "provider": str(meta.get("odds_provider") or "?"),
+            "bookmaker": str(meta.get("bookmaker") or "?"),
+            "label": str(meta.get("snapshot_label") or "?"),
+        }
+    return out
+
+
+def leg_pick_id(day, leg):
+    from edgefactory.clv import build_pick_id
+    row = leg.get("row") or {}
+    return build_pick_id(str(day)[:10], row.get("home"), row.get("away"),
+                         row.get("market"), row.get("pick"), _pick_rule_name(row))
+
+
+def _clv_cells(legs_by_day, idx, split=None):
+    """legs_by_day: {day: [leg, ...]} -> aggregate CLV, optionally per cell."""
+    cells: dict[str, list] = {}
+    for day, legs in legs_by_day.items():
+        for leg in legs:
+            rec = idx.get(leg_pick_id(day, leg))
+            if not rec or rec["beat"] is None:
+                continue
+            key = str(rec.get(split) or "?") if split else "ALL"
+            cells.setdefault(key, []).append(rec)
+    out = {}
+    for key, recs in cells.items():
+        out[key] = {
+            "n": len(recs),
+            "beat_rate": sum(1 for r in recs if r["beat"]) / len(recs),
+            "mean_raw": sum(r["raw_delta"] for r in recs) / len(recs),
+            "mean_ip": sum(r["ip_delta"] for r in recs
+                           if r["ip_delta"] is not None) / max(
+                               1, sum(1 for r in recs if r["ip_delta"] is not None)),
+        }
+    return out
+
+
+def _ridden_legs_by_day(universe, spec):
+    """The legs a variant actually rides, as full leg dicts (replay() keeps
+    only match strings), matched back through the same filtered pool."""
+    out = {}
+    for d in sorted(universe):
+        pool = _filtered_pool(universe[d], spec)
+        by_match = {l["match"]: l for l in pool}
+        kw = {k: v for k, v in spec.items() if k in ENGINE_KEYS}
+        plan = at.plan_day(pool, 100.0, **kw)
+        legs = [by_match[l["match"]] for a in plan for l in a["legs"]
+                if l["match"] in by_match]
+        if legs:
+            out[d] = legs
+    return out
+
+
+def cmd_clv(universe, spec=None, split=None):
+    spec = dict(spec or {})
+    idx = clv_index()
+    print("=" * 74)
+    print(f"CLOSED-LINE LEDGER vs THE RIDDEN CARD — variant: {label_of(spec)}")
+    print("=" * 74)
+    if not idx:
+        print("no clv_snapshots_*.csv.gz ledger in localdata — nothing to join.")
+        return 1
+    print(f"ledger: {len(idx)} picks with >=2 priced snapshots\n")
+    pool_cells = _clv_cells({d: _filtered_pool(p, spec) for d, p in universe.items()}, idx)
+    ridden = _ridden_legs_by_day(universe, spec)
+    ridden_cells = _clv_cells(ridden, idx)
+    for name, agg in (("every playable leg in the pool", pool_cells),
+                      ("legs this variant actually RIDES", ridden_cells)):
+        a = agg.get("ALL")
+        if not a:
+            print(f"{name}: no priced overlap with the ledger")
+            continue
+        print(f"{name}:")
+        print(f"  n={a['n']}  beat-later-price {a['beat_rate']:.1%}  "
+              f"mean raw drift {a['mean_raw']:+.4f}  mean implied-prob delta "
+              f"{a['mean_ip']:+.6f}")
+    print("  (beat% far below 50% with a positive raw drift = the close beats "
+          "you;\n   no growth number survives that for long, and CLV has the "
+          "bigger sample)")
+    if split:
+        agg = _clv_cells(ridden, idx, split=split)
+        rows = sorted(agg.items(), key=lambda kv: -kv[1]["n"])
+        shown = [(k, a) for k, a in rows if a["n"] >= 15]
+        print(f"\n--- ridden legs split by {split} (cells with n>=15) ---")
+        if not shown:
+            # An empty table is not an answer. Say what the emptiness IS: the
+            # action is spread so thin that no cell can support a conclusion,
+            # which is itself the finding — then show the largest cells anyway.
+            total = sum(a["n"] for _, a in rows)
+            biggest = rows[0][1]["n"] if rows else 0
+            print(f"  NO cell reached n>=15: {len(rows)} distinct {split} values "
+                  f"over {total} priced legs, largest cell n={biggest}.")
+            print("  That dispersion is the finding — at this spread no cell can "
+                  "support a conclusion, in either direction.")
+            print("  Largest cells anyway, all below the noise floor:")
+            shown = rows[:10]
+        print(f"{'cell':30s} {'n':>5s} {'beat%':>7s} {'raw drift':>10s}")
+        for k, a in shown:
+            print(f"{k[:30]:30s} {a['n']:5d} {a['beat_rate']:7.1%} "
+                  f"{a['mean_raw']:+10.4f}{noise_flag(a['n'])}")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --target: what a growth estimate is worth in money, at its own confidence
+# bounds. Prints the p10 plan beside the median so a good month cannot be
+# mistaken for a plan.
+# --------------------------------------------------------------------------
+def cmd_target(universe, spec, capital, target=1_000_000.0):
+    spec = dict(spec or {})
+    live = summarise(replay(universe, {}))
+    arm = summarise(replay(universe, spec))
+    bs = paired_bootstrap(universe, {}, spec)
+    print("=" * 74)
+    print(f"CAPITAL PROJECTION — variant: {label_of(spec)}")
+    print("=" * 74)
+    print(f"live log/day {live['mean_log']:+.4f} · this arm {arm['mean_log']:+.4f} "
+          f"· maxDD {arm['maxdd'] * 100:.0f}%")
+    if bs is None:
+        print("\nno bootstrap: an arm that can bankrupt a bet-day is not "
+              "projectable, at any stake.")
+        return 1
+    print(f"paired bootstrap vs live: p10 {bs['p10']:+.4f} · median "
+          f"{bs['median']:+.4f} · p90 {bs['p90']:+.4f} · P(better) "
+          f"{bs['p_b_higher']:.0%} on {bs['horizon']} replay days\n")
+    print(f"{'estimate':26s} {'g/day':>9s} {'-> ' + format(int(target), ','):>14s} {'years':>7s}")
+    for name, delta in (("p10  (plan on this)", bs["p10"]),
+                        ("median", bs["median"]),
+                        ("p90  (do not plan on it)", bs["p90"])):
+        g = live["mean_log"] + delta
+        if g <= 0:
+            print(f"{name:26s} {g:+9.4f} {'never':>14s} {'-':>7s}")
+            continue
+        need = math.log(target / capital) / g
+        print(f"{name:26s} {g:+9.4f} {need:13,.0f}d {need / 365:6.1f}y")
+    print(f"\nassumes: one bet-day/day, no withdrawals, edge constant, and a "
+          f"bank that survives a {arm['maxdd'] * 100:.0f}% drawdown without "
+          f"you resizing it.")
+    print("A replay growth rate is a ranking of policies. It is not a promise "
+          "about money, and the CLV ledger outranks it if they disagree.")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --october: the pre-registered adoption bar, automated. The engine source
+# already states the bar ("paired-bootstrap p10 > 0 AND leave-one-day-out sign
+# holds AND maxDD <= live, at n >= 60 genuinely new bet-days"); this judges it
+# instead of leaving it to be argued about after the fact.
+# --------------------------------------------------------------------------
+def cmd_october(universe, specs, since, min_days=60, pes_universe=None):
+    """The pre-registered adoption bar, scored on genuinely new bet-days.
+
+    ``pes_universe`` is the same window with unsettled legs graded as losses.
+    It is required, not optional: every criterion that compares against live
+    can be passed by being LESS BAD than live, and on fresh data live is
+    usually losing. Without an own-growth criterion the bar would adopt an arm
+    that never grows — the exact mistake --sweep's second scoreboard exists to
+    catch (2026-09-09: max_accas=2 scores 3/4 against live and 2/5 on its own).
+    """
+    specs = list(specs) or [{"pairing": "barbell", "max_accas": 2},
+                            {"legs_per_acca": 1}]
+    new = {d: p for d, p in universe.items() if d >= since}
+    new_pes = ({d: p for d, p in pes_universe.items() if d >= since}
+               if pes_universe else {})
+    print("=" * 74)
+    print(f"PRE-REGISTERED BAR — bet-days on/after {since}: {len(new)} "
+          f"(bar needs >= {min_days})")
+    print("=" * 74)
+    if not new:
+        print("no new bet-days yet. Nothing to judge; do not judge early.")
+        return 1
+    live = arm_stats(new, {})
+    print(f"live on the new days: log/day {live['mean_log']:+.4f} · maxDD "
+          f"{live['maxdd'] * 100:.0f}% · bets {live['accas']}\n")
+    enough = len(new) >= min_days
+    if not enough:
+        print(f"NOT YET: {len(new)} new bet-days < {min_days}. Numbers below "
+              f"are provisional and MUST NOT adopt anything.\n")
+    for spec in specs:
+        b = arm_stats(new, spec)
+        bs = paired_bootstrap(new, {}, spec)
+        ec = effect_concentration(new, {}, spec)
+        c_p10 = bool(bs and bs["p10"] > 0)
+        c_lodo = bool(ec and not ec["flips"] and ec["loo_min"] * ec["full"] > 0)
+        c_dd = b["maxdd"] <= live["maxdd"] + 1e-9
+        c_n = enough
+        # The stake-honest pair: does this arm grow on its OWN, with live out
+        # of the picture, on both the settled and the pessimistic grading?
+        c_own = b["mean_log"] > 0
+        # OPTIMISM PENALTY, not an absolute pessimistic threshold. On genuinely
+        # new data most legs are still unsettled, so grading them all as losses
+        # drags EVERY arm down — an absolute "> 0 under pessimistic grading"
+        # test would auto-fail in October and the bar could never adopt
+        # anything. What actually matters is whether THIS arm leans on
+        # unsettled legs harder than live does. That is scale-fair and it is
+        # the thing that turns +0.0215 into +0.0032.
+        pb = arm_stats(new_pes, spec) if new_pes else None
+        lp = arm_stats(new_pes, {}) if new_pes else None
+        pen_arm = b["mean_log"] - pb["mean_log"] if pb else None
+        pen_live = live["mean_log"] - lp["mean_log"] if lp else None
+        c_opt = (pen_arm is not None and pen_live is not None
+                 and pen_arm <= pen_live + 1e-9)
+        verdict = all((c_p10, c_lodo, c_dd, c_n, c_own, c_opt))
+        print(f"{label_of(spec)}")
+        print(f"  log/day {b['mean_log']:+.4f} (live {live['mean_log']:+.4f}) · "
+              f"maxDD {b['maxdd'] * 100:.0f}% · bets {b['accas']}")
+        bs_note = "" if not bs else "  (p10 {:+.4f}, P(better) {:.0%})".format(
+            bs["p10"], bs["p_b_higher"])
+        ec_note = "" if not ec else "  (range {:+.4f}..{:+.4f}, top day {:.0%})".format(
+            ec["loo_min"], ec["loo_max"], ec["top_share"])
+        print(f"  [{'PASS' if c_p10 else 'FAIL'}] bootstrap p10 > 0{bs_note}")
+        print(f"  [{'PASS' if c_lodo else 'FAIL'}] leave-one-day-out sign holds{ec_note}")
+        print(f"  [{'PASS' if c_dd else 'FAIL'}] maxDD <= live ({b['maxdd'] * 100:.0f}% vs {live['maxdd'] * 100:.0f}%)")
+        print(f"  [{'PASS' if c_n else 'FAIL'}] n >= {min_days} new bet-days ({len(new)})")
+        print(f"  [{'PASS' if c_own else 'FAIL'}] grows on its own, live out of the "
+              f"picture ({b['mean_log']:+.4f} log/day)")
+        if pb is None:
+            print("  [????] optimism penalty no worse than live's "
+                  "(no pessimistic universe supplied)")
+        else:
+            print(f"  [{'PASS' if c_opt else 'FAIL'}] optimism penalty <= live's: "
+                  f"settled->pessimistic costs this arm {pen_arm:+.4f} "
+                  f"({b['mean_log']:+.4f}->{pb['mean_log']:+.4f}) vs live "
+                  f"{pen_live:+.4f} ({live['mean_log']:+.4f}->{lp['mean_log']:+.4f})")
+        print(f"  => {'ADOPT-ELIGIBLE' if verdict else 'NOT ADOPTABLE'}\n")
+    print("Adoption is a separate decision from eligibility. Nothing here ships "
+          "itself.")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --sweep: one knob family across three universes and both blind halves.
+#
+# A single A/B answers "is B better than A on this data". It cannot answer
+# "is B better in a way that survives the archive changing", which is the only
+# question that should move a live constant. So the sweep scores every arm on
+# the full universe, on the heavy days the repo's own MAX_ACCAS gate counts,
+# and under the pessimistic grading — then checks both blind halves. An arm
+# that does not pass in all of them is not a candidate, however good the A/B.
+# --------------------------------------------------------------------------
+SWEEP_FAMILIES = {
+    "max_accas": [("max_accas=2", {"max_accas": 2}),
+                  ("max_accas=4  <-- pre-registered Q1", {"max_accas": 4}),
+                  ("max_accas=5", {"max_accas": 5}),
+                  ("max_accas=6", {"max_accas": 6})],
+    "pairing": [("barbell, 2 accas", {"pairing": "barbell", "max_accas": 2}),
+                ("barbell, 3 accas", {"pairing": "barbell"}),
+                ("barbell, 4 accas", {"pairing": "barbell", "max_accas": 4})],
+    "legs": [("singles x3", {"legs_per_acca": 1}),
+             ("singles x2", {"legs_per_acca": 1, "max_accas": 2}),
+             ("singles x4", {"legs_per_acca": 1, "max_accas": 4})],
+    "stake": [("stake_frac=0.1667", {"stake_frac": 0.1667}),
+              ("stake_frac=0.10", {"stake_frac": 0.10}),
+              ("stake_frac=0.25", {"stake_frac": 0.25})],
+    # Whole setting tuples, not one knob at a time — what would actually be
+    # shipped. One-knob families answer "is this knob better"; only a combo
+    # answers "is this CONFIG better", and the two can disagree (2026-09-09:
+    # barbell,2 scores 4/4 and stake_frac=0.1667 scores 2/4 on their own).
+    # Miner-rule filters. The picks audit's "By rule" table makes rule-level
+    # selection look like free edge, but its ROI is measured on the same rows
+    # the selection was made from (--rules-split prices that). These arms are
+    # the only rule filters worth scoring on the standing bar: the one rule
+    # positive in BOTH blind halves, and the two biggest negative-ROI rules.
+    "rules": [("2way-unan avg_p>=70 only", {"rules": "2way-unanimous avg_p>=70"}),
+              ("2way-unanimous, all bands", {"rules": "fam:2way-unanimous"}),
+              ("drop ml-meta avg_p>=55", {"rules": "!ml-meta avg_p>=55"}),
+              ("drop ml-meta entirely", {"rules": "!fam:ml-meta"})],
+    "combo": [("barbell x2 @ 1/6 stake", {"pairing": "barbell", "max_accas": 2,
+                                          "stake_frac": 0.1667}),
+              ("barbell x2 @ 1/10 stake", {"pairing": "barbell", "max_accas": 2,
+                                           "stake_frac": 0.10}),
+              ("barbell x3 @ 1/6 stake", {"pairing": "barbell", "stake_frac": 0.1667}),
+              ("singles x3 @ 1/6 stake", {"legs_per_acca": 1, "stake_frac": 0.1667}),
+              ("live @ 1/6 stake", {"stake_frac": 0.1667}),
+              ("max_accas=4 @ 1/6 stake", {"max_accas": 4, "stake_frac": 0.1667})],
+}
+
+
+def _sweep_row(u, spec, label):
+    s = arm_stats(u, spec)
+    bs = paired_bootstrap(u, {}, spec)
+    ec = effect_concentration(u, {}, spec)
+    p10 = bs["p10"] if bs else float("nan")
+    pb = bs["p_b_higher"] if bs else float("nan")
+    lo = f"{ec['loo_min']:+.4f}..{ec['loo_max']:+.4f}" if ec else "n/a"
+    sign = "FLIPS" if (ec and ec["flips"]) else "holds"
+    bar = bool(bs and bs["p10"] > 0) and not (ec and ec["flips"])
+    print(f"{label:34s} {s['mean_log']:+8.4f} {s['final']:7.0f}% {s['maxdd'] * 100:5.0f}% "
+          f"{s['accas']:5d} {p10:+8.4f} {pb:7.0%} {lo:>18s} {sign:>6s} "
+          f"{'PASS' if bar else 'fail'}")
+    return bar, s["mean_log"]
+
+
+def cmd_sweep(archives, settled, families=None):
+    """The standing comparison: full universe, heavy days, pessimistic, blind."""
+    full = build_universe(archives, settled)
+    heavy = {d: p for d, p in full.items() if len(p) >= 8}
+    pes = build_universe(archives, settled, unresolved="loss")
+    names = families or sorted(SWEEP_FAMILIES)
+    arms = [a for n in names for a in SWEEP_FAMILIES.get(n, [])]
+    hdr = (f"{'arm':34s} {'log/day':>8s} {'final':>7s} {'maxDD':>5s} {'bets':>5s} "
+           f"{'p10':>8s} {'P>better':>8s} {'leave-one-day-out':>18s} {'sign':>6s} {'bar':>5s}")
+    tally: dict[str, int] = {label: 0 for label, _ in arms}
+    own: dict[str, int] = {label: 0 for label, _ in arms}
+    for title, u in ((f"FULL UNIVERSE ({len(full)} bet-days)", full),
+                     (f"HEAVY DAYS ({len(heavy)} offering 8+ legs) — the MAX_ACCAS gate", heavy),
+                     ("PESSIMISTIC (unsettled legs graded as losses)", pes)):
+        print("\n" + "=" * 108)
+        print(title)
+        print("=" * 108)
+        print(hdr)
+        ref = arm_stats(u, {})
+        print(f"{'live reference':34s} {ref['mean_log']:+8.4f} {ref['final']:7.0f}% "
+              f"{ref['maxdd'] * 100:5.0f}% {ref['accas']:5d}")
+        for label, spec in arms:
+            bar, log = _sweep_row(u, spec, label)
+            if bar:
+                tally[label] += 1
+            if log > 0:
+                own[label] += 1
+    print("\n" + "=" * 108)
+    print("BLIND HALVES (tune on one half, score on the other)")
+    print("=" * 108)
+    older, newer, _ = split_universe(full)
+    for label, spec in arms:
+        # This arm's OWN growth on each half — not the holdout winner's. A
+        # two-arm holdout reports whichever arm won the tuning half, so using
+        # it here would silently print live's number for arms that lose the
+        # tuning half (found 2026-09-09: every stake_frac arm printed the
+        # identical -0.0178, which was live, not the arm).
+        fb = arm_stats(newer, spec)["mean_log"]
+        rb = arm_stats(older, spec)["mean_log"]
+        both = fb > 0 and rb > 0
+        if both:
+            tally[label] += 1
+        own[label] += (fb > 0) + (rb > 0)
+        print(f"{label:34s} forward-blind {fb:+8.4f}   reverse-blind {rb:+8.4f}"
+              f"   {'both positive' if both else 'inconsistent'}")
+    print("\n" + "=" * 108)
+    print("STANDING BAR: p10>0 AND leave-one-day-out sign holds, in all three")
+    print("universes, AND positive in both blind halves  =  4/4")
+    print("=" * 108)
+    for label, _ in arms:
+        print(f"  {label:34s} {tally[label]}/4")
+    # p10 and P>better are measured AGAINST LIVE, and live is negative — so
+    # shrinking the stake always looks better, and can win that comparison
+    # while still losing money. This section drops the comparison entirely and
+    # asks the stake-honest question: does the arm grow on its own, in every
+    # window? Five windows: full, heavy, pessimistic, forward-blind, reverse.
+    print("\n" + "=" * 108)
+    print("STANDS ON ITS OWN — windows where the arm's OWN log growth is > 0")
+    print("(no comparison to live, so a smaller stake cannot win by being")
+    print(" less bad. A stake arm can score high above and still fail here.)")
+    print("=" * 108)
+    for label, _ in arms:
+        print(f"  {label:34s} {own[label]}/5"
+              f"{'   <-- grows on its own everywhere' if own[label] == 5 else ''}")
+    print("\nA 4/4 arm is a CANDIDATE for the pre-registered slot on genuinely")
+    print("new bet-days. It is not a reason to change a live constant today.")
+    return 0
+
+
+# --------------------------------------------------------------------------
+# --rules-split: "if we had bet only the positive-ROI rules, how would we be
+# doing?" — answered the only way that means anything.
+#
+# The picks audit's "By rule" table is computed on the SAME settled rows the
+# answer would be scored on, so every rule in it with ROI > 0 was selected
+# AFTER seeing the result. Betting the positive rows of that table is not a
+# policy, it is a description of the past. So this fits the whitelist on one
+# half of the bet-days, scores it BLIND on the other, in both directions, and
+# prints the in-sample number beside the blind one so the shrinkage is visible
+# rather than inferred.
+# --------------------------------------------------------------------------
+def _rules_arm(keep):
+    """The spec that rides only the whitelisted rules (None = nothing survived)."""
+    return {"rules": "|".join(sorted(keep))} if keep else None
+
+
+def cmd_rules_split(archives, settled, min_legs=10):
+    """Fit a positive-ROI rule whitelist blind, both directions.
+
+    Returns the accounting (per-direction whitelist, in-sample and blind
+    figures) so tests can assert on the numbers rather than on printed text.
+    """
+    full = build_universe(archives, settled)
+    older, newer, cut = split_universe(full)
+    print("=" * 108)
+    print(f"RULE WHITELIST — fitted on one half, scored BLIND on the other "
+          f"(min_legs={min_legs}, cut {cut})")
+    print("=" * 108)
+    print("ROI here is flat-stake per leg, the same definition the picks audit's")
+    print('"By rule" table uses. Betting the positive rows of THAT table is not')
+    print("a policy: the rules were chosen after seeing the results.")
+
+    out = {}
+    for name, tune, score in (("forward  (fit older, score newer)", older, newer),
+                              ("reverse  (fit newer, score older)", newer, older)):
+        tbl = rule_roi_table(tune, min_legs)
+        keep = sorted(r for r, v in tbl.items() if v["roi"] > 0)
+        print("\n" + "-" * 108)
+        print(name)
+        print("-" * 108)
+        print(f"  {'rule':44s} {'tune n':>7s} {'tuneROI':>8s} {'blind n':>8s} "
+              f"{'blindROI':>9s}  {'':s}")
+        blind_tbl = rule_roi_table(score)
+        for r in sorted(tbl, key=lambda x: -tbl[x]["roi"]):
+            v, b = tbl[r], blind_tbl.get(r)
+            tag = "KEEP" if v["roi"] > 0 else "drop"
+            if tag == "KEEP":
+                print(f"  {r:44s} {v['n']:7d} {v['roi']:+8.1%} "
+                      f"{(b['n'] if b else 0):8d} {(b['roi'] if b else float('nan')):+9.1%}"
+                      f"  {tag}")
+        print(f"  {len(keep)} of {len(tbl)} rules had tuning ROI > 0")
+
+        arm = _rules_arm(keep)
+        if arm is None:
+            print("  no rule survived — nothing to score blind")
+            out[name.split()[0]] = {"keep": [], "in_sample": None, "blind": None,
+                                    "blind_live": arm_stats(score, {})}
+            continue
+        is_ = arm_stats(tune, arm)
+        bl = arm_stats(score, arm)
+        bl_live = arm_stats(score, {})
+        print(f"\n  IN-SAMPLE on the fitting half : log/day {is_['mean_log']:+.4f}  "
+              f"final {is_['final']:6.0f}%  days {is_['days']:3d}  bets {is_['accas']:4d}")
+        print(f"  BLIND on the other half       : log/day {bl['mean_log']:+.4f}  "
+              f"final {bl['final']:6.0f}%  days {bl['days']:3d}  bets {bl['accas']:4d}")
+        print(f"  live on that same blind half  : log/day {bl_live['mean_log']:+.4f}  "
+              f"final {bl_live['final']:6.0f}%  days {bl_live['days']:3d}  "
+              f"bets {bl_live['accas']:4d}")
+        d = bl["mean_log"] - bl_live["mean_log"]
+        print(f"  => blind edge over live {d:+.4f} log/day"
+              f"{'   (a POSITIVE-ROI whitelist that loses to live blind)' if d < 0 else ''}")
+        out[name.split()[0]] = {"keep": keep, "in_sample": is_, "blind": bl,
+                                "blind_live": bl_live}
+
+    # The number the question actually asks for, labelled for what it is.
+    whole = rule_roi_table(full, min_legs)
+    keep_all = sorted(r for r, v in whole.items() if v["roi"] > 0)
+    arm = _rules_arm(keep_all)
+    print("\n" + "=" * 108)
+    print(f"WHOLE-UNIVERSE FIT ({len(keep_all)} of {len(whole)} rules positive, "
+          f"n>={min_legs}) — THIS ONE IS IN-SAMPLE AND PROVES NOTHING")
+    print("=" * 108)
+    if arm is None:
+        print("  no rule reached the minimum sample with positive ROI")
+        out["in_sample_all"] = None
+    else:
+        a = arm_stats(full, arm)
+        lv = arm_stats(full, {})
+        print(f"  whitelist : {', '.join(keep_all)}")
+        print(f"  whitelist : log/day {a['mean_log']:+.4f}  final {a['final']:6.0f}%  "
+              f"maxDD {a['maxdd']:.0%}  days {a['days']:3d}  bets {a['accas']:4d}")
+        print(f"  live      : log/day {lv['mean_log']:+.4f}  final {lv['final']:6.0f}%  "
+              f"maxDD {lv['maxdd']:.0%}  days {lv['days']:3d}  bets {lv['accas']:4d}")
+        print(f"  => {a['mean_log'] - lv['mean_log']:+.4f} log/day of pure hindsight. "
+              f"Compare it with the blind rows above: the gap is the price of looking.")
+        out["in_sample_all"] = a
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--variant", action="append", metavar="SPEC",
@@ -1899,6 +2626,42 @@ def main():
                          "D2 census/gap vs same-day stamped second-provider "
                          "prices, D3 obtainability-constrained replay "
                          "(IN-SAMPLE; repriced or dropped, never shipped)")
+    ap.add_argument("--holdout", nargs="*", metavar="SPEC",
+                    help="tune the given specs (or the full grid) on one half "
+                         "of the universe and score the choice BLIND on the "
+                         "other, both directions, with the selection-bias tax")
+    ap.add_argument("--sweep", nargs="*", metavar="FAMILY",
+                    choices=sorted(SWEEP_FAMILIES),
+                    help="score a knob family across the full universe, the "
+                         "heavy days and the pessimistic grading, plus both "
+                         "blind halves; prints how many of the four an arm passes")
+    ap.add_argument("--rules-split", nargs="?", metavar="MIN_LEGS", const=10,
+                    type=int, default=None,
+                    help="fit a positive-ROI miner-rule whitelist on one half "
+                         "of the bet-days and score it BLIND on the other, "
+                         "both directions; also prints the whole-universe fit "
+                         "labelled as hindsight (default min_legs=10)")
+    ap.add_argument("--search", action="store_true",
+                    help="the full SEARCH_AXES grid, through --holdout")
+    ap.add_argument("--clv", action="store_true",
+                    help="join the closed-line ledger to the legs a variant "
+                         "rides (uses --variant[0] when given, else live)")
+    ap.add_argument("--clv-split", choices=("league", "provider", "bookmaker", "label"),
+                    help="with --clv: split the ridden legs' CLV by this field")
+    ap.add_argument("--pessimistic", action="store_true",
+                    help="grade unsettled legs as LOSSES instead of dropping "
+                         "them (the pessimistic bound on every other number)")
+    ap.add_argument("--target", type=float, metavar="CAPITAL",
+                    help="project CAPITAL to the target at the variant's own "
+                         "bootstrap p10/median/p90 (with --variant[0])")
+    ap.add_argument("--goal", type=float, default=1_000_000.0, metavar="AMOUNT",
+                    help="with --target: the amount to reach (default 1000000)")
+    ap.add_argument("--october", nargs="*", metavar="SPEC",
+                    help="judge the pre-registered adoption bar (p10>0, "
+                         "leave-one-day-out sign, maxDD<=live, n>=60 new days) "
+                         "on bet-days since --new-since")
+    ap.add_argument("--new-since", metavar="YYYY-MM-DD", default="2026-09-10",
+                    help="with --october: first day that counts as NEW data")
     ap.add_argument("--since", metavar="YYYY-MM-DD",
                     help="restrict replay universe to this date or later")
     ap.add_argument("--until", metavar="YYYY-MM-DD",
@@ -1923,7 +2686,11 @@ def main():
         return cmd_warehouse_replay(archives, settled,
                                     since=args.since, until=args.until)
 
-    universe = build_universe(archives, settled)
+    universe = build_universe(archives, settled,
+                              unresolved="loss" if args.pessimistic else None)
+    if args.pessimistic:
+        print("PESSIMISTIC MODE: unsettled legs graded as losses "
+              "(the bound, not the estimate)")
     if args.since:
         universe = {d: pool for d, pool in universe.items() if d >= args.since}
     if args.until:
@@ -1953,6 +2720,32 @@ def main():
     print("=" * 74)
     print("doctrine: RELATIVE differences + paired bootstrap. Primary metric is")
     print("mean LOG GROWTH per bet-day; final bank is one lucky path, not evidence.\n")
+
+    if args.sweep is not None:
+        return cmd_sweep(archives, settled, args.sweep or None)
+
+    if args.rules_split is not None:
+        cmd_rules_split(archives, settled, args.rules_split)
+        return 0
+
+    if args.holdout is not None:
+        return cmd_holdout(universe, [parse_spec(x) for x in args.holdout])
+
+    if args.search:
+        return cmd_search(universe)
+
+    if args.october is not None:
+        return cmd_october(universe, [parse_spec(x) for x in args.october],
+                           since=args.new_since,
+                           pes_universe=build_universe(archives, settled, unresolved="loss"))
+
+    if args.clv:
+        spec = parse_spec(args.variant[0]) if args.variant else {}
+        return cmd_clv(universe, spec, split=args.clv_split)
+
+    if args.target:
+        spec = parse_spec(args.variant[0]) if args.variant else {}
+        return cmd_target(universe, spec, args.target, target=args.goal)
 
     if args.today:
         cmd_today(universe, settled)

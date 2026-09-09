@@ -239,3 +239,409 @@ def test_slot_table_respects_the_floor_and_the_rank_order():
     slots, accas, _ = rh.slot_table(u)
     assert slots[1][0] == 1 and slots[5][0] == 0      # sub-floor leg excluded
     assert accas[1][0] == 1 and accas[3][0] == 0
+
+
+# ---------------- leagues= (harness-only concentration filter) --------------
+
+def test_parse_spec_accepts_leagues_and_still_rejects_unknown_keys():
+    assert rh.parse_spec("leagues=EPL|Sc1") == {"leagues": "EPL|Sc1"}
+    assert rh.parse_spec("floor=1.3,leagues=EPL") == {"floor": 1.3, "leagues": "EPL"}
+    with pytest.raises(SystemExit):
+        rh.parse_spec("nonsense=1")
+
+
+def test_leagues_filter_shrinks_the_pool_before_the_live_selector_sees_it():
+    def leg(tag, lg):
+        return {"match": f"T{tag} vs O{tag}", "pick": "HOME", "prob": 0.75,
+                "odds": 1.30, "result": "win", "row": {"league": lg}}
+    pool = at.rank_legs([leg("a", "England, Premier League"),
+                         leg("b", "Scotland, Premiership"),
+                         leg("c", "England, League Two")])
+    kept = rh._filtered_pool(pool, {"leagues": "england"})
+    assert sorted(l["match"] for l in kept) == ["Ta vs Oa", "Tc vs Oc"]
+    assert [l["match"] for l in rh._filtered_pool(pool, {"leagues": "premiership"})] == ["Tb vs Ob"]
+    assert rh._filtered_pool(pool, {}) is pool          # no spec, no copy, no filter
+    assert rh._filtered_pool(pool, {"min_prob": 0.8}) == []
+
+
+# ---------------- holdout: the search must pay for its own selection --------
+
+def test_split_universe_partitions_at_the_median_day():
+    u = _universe(9)
+    older, newer, cut = rh.split_universe(u)
+    assert cut == sorted(u)[len(u) // 2]
+    assert set(older) | set(newer) == set(u) and not (set(older) & set(newer))
+    assert all(d < cut for d in older) and all(d >= cut for d in newer)
+
+
+def test_holdout_window_ranks_on_the_tuning_half_and_scores_blind():
+    u = _universe(10)
+    older, newer, _ = rh.split_universe(u)
+    r = rh.holdout_window(older, newer, [{}, {"max_accas": 2}, {"max_accas": 4}],
+                          min_days=2, min_bets=2)
+    assert r["viable"] >= 1 and r["chosen"] is not None
+    # the chosen arm is the tuning-half best, by construction
+    tuning = {rh.label_of(sp): rh.arm_stats(older, sp)["mean_log"]
+              for sp in [{}, {"max_accas": 2}, {"max_accas": 4}]}
+    assert r["tune"]["mean_log"] == max(tuning.values())
+    # the accounting is internally consistent
+    assert 1 <= r["blind_rank"] <= r["blind_n"] == r["viable"]
+    assert r["blind_ceiling"] >= r["blind"]["mean_log"]
+    assert 0 <= r["top_survive"] <= r["top_n"]
+
+
+def test_holdout_window_reports_no_viable_arm_instead_of_guessing():
+    u = _universe(4)
+    older, newer, _ = rh.split_universe(u)
+    r = rh.holdout_window(older, newer, [{}], min_days=99)
+    assert r["viable"] == 0 and r["chosen"] is None
+
+
+def test_arm_stats_roi_is_stake_weighted_not_hit_times_odds():
+    u = _universe(6)
+    s = rh.arm_stats(u, {})
+    days = rh.replay(u, {})
+    staked = sum(sum(d["stake_pct"]) for d in days.values())
+    ret = sum(sum(sp * o for (o, w), sp in zip(d["accas"], d["stake_pct"]) if w)
+              for d in days.values())
+    assert s["roi"] == pytest.approx((ret - staked) / staked)
+
+
+# ---------------- pessimistic universe: unsettled legs cost money -----------
+
+def test_pessimistic_universe_grades_unsettled_legs_as_losses(monkeypatch):
+    legs = [{"match": "A vs B", "pick": "HOME", "prob": 0.8, "odds": 1.3,
+             "result": "win", "row": {}},
+            {"match": "C vs D", "pick": "HOME", "prob": 0.7, "odds": 1.3,
+             "result": None, "row": {}},          # never settled
+            {"match": "E vs F", "pick": "HOME", "prob": 0.6, "odds": 1.3,
+             "result": "loss", "row": {}}]
+    monkeypatch.setattr(rh.at, "playable_legs",
+                        lambda *a, **k: [dict(l) for l in legs])
+    opt = rh.build_universe([{"date": "2026-08-01"}], {})
+    pes = rh.build_universe([{"date": "2026-08-01"}], {}, unresolved="loss")
+    assert len(opt["2026-08-01"]) == 2                       # default: dropped
+    assert len(pes["2026-08-01"]) == 3                       # pessimistic: kept
+    assert [l["result"] for l in pes["2026-08-01"] if l["match"] == "C vs D"] == ["loss"]
+
+
+# ---------------- CLV join: the harness must use the audit's own definition --
+
+def _write_clv_ledger(tmp_path, rows):
+    import csv as _csv
+    import gzip as _gz
+    p = tmp_path / "clv_snapshots_2026-09.csv.gz"
+    with _gz.open(p, "wt", newline="") as fh:
+        w = _csv.DictWriter(fh, fieldnames=["pick_id", "observed_odds", "captured_at_utc",
+                                            "league", "odds_provider", "bookmaker",
+                                            "snapshot_label"])
+        w.writeheader()
+        for r in rows:
+            w.writerow(r)
+    return p
+
+
+def test_clv_index_beat_rate_matches_the_audit_definition(tmp_path, monkeypatch):
+    _write_clv_ledger(tmp_path, [
+        # beat: first 2.00 -> last 1.80 (the close shortened: good CLV)
+        {"pick_id": "p-beat", "observed_odds": "2.00", "captured_at_utc": "2026-09-01T08:00:00",
+         "league": "EPL", "odds_provider": "betexplorer_odds", "bookmaker": "b1",
+         "snapshot_label": "pick_time"},
+        {"pick_id": "p-beat", "observed_odds": "1.80", "captured_at_utc": "2026-09-01T16:00:00",
+         "league": "EPL", "odds_provider": "betexplorer_odds", "bookmaker": "b1",
+         "snapshot_label": "end_of_run"},
+        # drift out: first 1.80 -> last 2.10 (the close beat us)
+        {"pick_id": "p-drift", "observed_odds": "1.80", "captured_at_utc": "2026-09-01T08:00:00",
+         "league": "Sc1", "odds_provider": "scoutingstats_odds", "bookmaker": "b2",
+         "snapshot_label": "pick_time"},
+        {"pick_id": "p-drift", "observed_odds": "2.10", "captured_at_utc": "2026-09-01T16:00:00",
+         "league": "Sc1", "odds_provider": "scoutingstats_odds", "bookmaker": "b2",
+         "snapshot_label": "end_of_run"},
+        # single price: must be ignored (no CLV measurable)
+        {"pick_id": "p-one", "observed_odds": "1.90", "captured_at_utc": "2026-09-01T08:00:00",
+         "league": "EPL", "odds_provider": "x", "bookmaker": "b3", "snapshot_label": "pick_time"},
+    ])
+    monkeypatch.setattr(rh, "LOCALDATA", tmp_path)
+    idx = rh.clv_index()
+    assert set(idx) == {"p-beat", "p-drift"}
+    assert idx["p-beat"]["beat"] is True and idx["p-drift"]["beat"] is False
+    assert idx["p-beat"]["raw_delta"] == pytest.approx(-0.20)
+    assert idx["p-drift"]["raw_delta"] == pytest.approx(+0.30)
+
+
+def test_clv_cells_split_by_a_field(tmp_path, monkeypatch):
+    _write_clv_ledger(tmp_path, [
+        {"pick_id": f"p{i}", "observed_odds": o1, "captured_at_utc": "2026-09-01T08:00:00",
+         "league": lg, "odds_provider": "x", "bookmaker": "b", "snapshot_label": "pick_time"}
+        for i, (o1, lg) in enumerate([("2.00", "EPL"), ("2.00", "EPL"), ("1.80", "Sc1")])
+    ] + [
+        {"pick_id": f"p{i}", "observed_odds": o2, "captured_at_utc": "2026-09-01T16:00:00",
+         "league": lg, "odds_provider": "x", "bookmaker": "b", "snapshot_label": "end_of_run"}
+        for i, (o2, lg) in enumerate([("1.90", "EPL"), ("1.95", "EPL"), ("2.20", "Sc1")])
+    ])
+    monkeypatch.setattr(rh, "LOCALDATA", tmp_path)
+    idx = rh.clv_index()
+
+    class FakeLeg(dict):
+        pass
+
+    def fake_pick_id(day, leg):
+        return leg["pid"]
+    monkeypatch.setattr(rh, "leg_pick_id", fake_pick_id)
+    legs = {"2026-09-01": [FakeLeg(pid="p0"), FakeLeg(pid="p1"), FakeLeg(pid="p2")]}
+    assert rh._clv_cells(legs, idx)["ALL"]["n"] == 3
+    by = rh._clv_cells(legs, idx, split="league")
+    assert by["EPL"]["n"] == 2 and by["Sc1"]["n"] == 1
+    assert by["EPL"]["beat_rate"] == 1.0 and by["Sc1"]["beat_rate"] == 0.0
+
+
+# ---------------- the pre-registered bar must refuse to judge early ---------
+
+def test_october_bar_refuses_to_adopt_below_the_n_floor(capsys):
+    u = _universe(6)
+    rc = rh.cmd_october(u, [{"max_accas": 2}], since="2026-01-01", min_days=60)
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "NOT YET" in out and "MUST NOT adopt" in out
+    assert "[FAIL] n >= 60" in out and "NOT ADOPTABLE" in out
+
+
+def test_target_projection_prints_the_p10_plan_beside_the_median(capsys):
+    u = _universe(10)
+    rc = rh.cmd_target(u, {"max_accas": 2}, capital=100_000, target=1_000_000)
+    out = capsys.readouterr().out
+    assert rc in (0, 1)
+    assert "p10  (plan on this)" in out and "do not plan on it" in out
+    assert "not a promise about money" in out
+
+
+def test_clv_split_says_what_an_empty_table_means(tmp_path, monkeypatch, capsys):
+    """A split where no cell reaches the noise floor must report the
+    dispersion, not print a header and nothing (2026-09-09: the league split
+    printed an empty table and looked like a crash)."""
+    u = _universe(2)
+    # one priced pick per ridden leg, each in its own league -> every cell n=1
+    rows = []
+    i = 0
+    for pool in u.values():
+        for leg in pool:
+            pid = leg["match"]
+            for odds, when in (("2.00", "2026-09-01T08:00:00"), ("1.90", "2026-09-01T16:00:00")):
+                rows.append({"pick_id": pid, "observed_odds": odds, "captured_at_utc": when,
+                             "league": f"LG{i}", "odds_provider": "x", "bookmaker": "b",
+                             "snapshot_label": "pick_time"})
+            i += 1
+    _write_clv_ledger(tmp_path, rows)
+    monkeypatch.setattr(rh, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(rh, "leg_pick_id", lambda day, leg: leg["match"])
+    rh.cmd_clv(u, {}, split="league")
+    out = capsys.readouterr().out
+    assert "NO cell reached n>=15" in out
+    assert "That dispersion is the finding" in out
+    assert "Largest cells anyway" in out
+
+
+# ---------------- --sweep: the scoreboard must not be able to no-op ---------
+
+def test_sweep_families_only_use_known_engine_keys():
+    """A typo'd knob in the sweep table would silently replay the live
+    settings and print a no-op comparison — the exact bug the 2026-09-04
+    audit found in --ab. An empty spec would A/B live against live."""
+    allowed = rh.ENGINE_KEYS | {"min_prob", "leagues", "rules"}
+    for fam, arms in rh.SWEEP_FAMILIES.items():
+        assert arms, f"{fam} has no arms"
+        for label, spec in arms:
+            assert spec, f"{fam}/{label}: empty spec = live vs live (a no-op)"
+            unknown = set(spec) - allowed
+            assert not unknown, f"{fam}/{label}: unknown knob(s) {sorted(unknown)} would no-op"
+
+
+def test_sweep_row_prints_the_arm_and_returns_the_bar(capsys):
+    u = _universe(8)
+    bar, log = rh._sweep_row(u, {"max_accas": 2}, "test arm")
+    out = capsys.readouterr().out
+    assert isinstance(bar, bool)
+    assert "test arm" in out and ("PASS" in out or "fail" in out)
+    # the number it prints must be the arm's own growth, or the section that
+    # counts "grows on its own" would be counting something else
+    assert log == rh.arm_stats(u, {"max_accas": 2})["mean_log"]
+
+
+def test_sweep_combo_family_holds_real_setting_tuples():
+    """The one-knob families answer 'is this knob better'. Only the combo
+    family answers 'is this CONFIG better', so it must contain at least one
+    arm that moves more than one knob at once."""
+    arms = rh.SWEEP_FAMILIES["combo"]
+    assert any(len(spec) >= 2 for _, spec in arms)
+    labels = [lb for lb, _ in arms]
+    assert len(labels) == len(set(labels)), "duplicate labels collapse in the tally"
+
+
+def test_sweep_reports_arms_that_grow_without_comparing_to_live(capsys, monkeypatch):
+    """p10/P>better are measured against live, and live is negative — so a
+    smaller stake wins that comparison while still losing money. The
+    scoreboard must also say, per arm, how many windows it grew in on its
+    own, or the stake arms look like winners they are not."""
+    u = _universe(8)
+    monkeypatch.setattr(rh, "build_universe", lambda a, st, **kw: u)
+    rh.cmd_sweep(None, None, families=["combo"])
+    out = capsys.readouterr().out
+    assert "STANDS ON ITS OWN" in out
+    assert "/5" in out
+    for label, _ in rh.SWEEP_FAMILIES["combo"]:
+        assert label in out, f"{label} missing from the scoreboard"
+
+
+def test_sweep_blind_halves_score_the_arm_not_the_holdout_winner():
+    """Regression: the blind-half section once reported whichever arm won the
+    tuning half, so every stake_frac arm printed live's identical number."""
+    src = (ROOT / "scripts" / "replay_harness.py").read_text()
+    i = src.index("BLIND HALVES (tune on one half")
+    body = src[i:i + 1400]
+    assert "holdout_window(" not in body, "blind halves must score the arm itself"
+    assert "arm_stats(newer, spec)" in body and "arm_stats(older, spec)" in body
+
+
+# ---------------- --rules-split / rules= : rule filters -------------------
+
+def _rleg(tag, rule, odds=2.0, result="win", prob=0.75):
+    leg = _leg(tag, prob, odds, result)
+    leg["row"] = {"rule": rule, "league": "LG"}
+    return leg
+
+
+def test_rule_roi_table_uses_the_picks_audit_definition():
+    """Flat stake, sum(pnl)/n — the same arithmetic as
+    audit_recent_picks.summarize_scored, so the harness table reconciles with
+    the 'By rule' section of the picks audit instead of disagreeing with it."""
+    u = {"2026-08-01": [_rleg("a", "r1", 3.0, "win"),
+                        _rleg("b", "r1", 2.0, "loss"),
+                        _rleg("c", "r2", 1.5, "win"),
+                        _rleg("d", "r2", 1.5, "pending")]}
+    t = rh.rule_roi_table(u)
+    assert t["r1"]["n"] == 2 and t["r1"]["wins"] == 1
+    assert abs(t["r1"]["roi"] - ((3.0 - 1) - 1) / 2) < 1e-9
+    # unsettled legs are excluded, not counted as losses
+    assert t["r2"] == {"n": 1, "wins": 1, "roi": 0.5}
+    assert rh.rule_roi_table(u, min_legs=2) == {k: v for k, v in t.items() if k == "r1"}
+
+
+def test_rules_spec_filters_the_pool_three_ways():
+    pool = [_rleg("a", "ml-meta avg_p>=55"),
+            _rleg("b", "ml-meta avg_p>=60"),
+            _rleg("c", "2way-unanimous avg_p>=70"),
+            _rleg("d", "3way-unanimous avg_p>=65")]
+    names = lambda spec: sorted(at._rule_of(x) for x in rh._filtered_pool(pool, spec))
+    assert names({"rules": "2way-unanimous avg_p>=70"}) == ["2way-unanimous avg_p>=70"]
+    assert names({"rules": "fam:ml-meta"}) == ["ml-meta avg_p>=55", "ml-meta avg_p>=60"]
+    assert names({"rules": "!fam:ml-meta"}) == ["2way-unanimous avg_p>=70",
+                                               "3way-unanimous avg_p>=65"]
+    assert names({"rules": "ml-meta avg_p>=55|!ml-meta avg_p>=55"}) == []
+    assert names({}) == sorted(at._rule_of(x) for x in pool)  # no filter = untouched
+    # a typo'd rule name must be LOUD (empty card), never a silent no-op
+    assert names({"rules": "ml-meta avg_p>=5"}) == []
+    assert rh.card_for_day(pool, {"rules": "ml-meta avg_p>=5"}) == []
+    # a rule name survives the comma-separated spec syntax untouched
+    assert rh.parse_spec("rules=fam:ml-meta,max_accas=2") == {
+        "rules": "fam:ml-meta", "max_accas": 2}
+
+
+def test_rules_split_fits_on_the_tuning_half_only(monkeypatch):
+    """The whole point of the command: a rule that is positive ONLY on the
+    half being scored must never enter the whitelist, and the blind figure
+    must not be the in-sample figure."""
+    older = {"2026-07-01": [_rleg(f"a{i}", "good", 2.0, "win") for i in range(6)],
+             "2026-07-02": [_rleg(f"b{i}", "bad", 1.5, "loss") for i in range(6)]}
+    newer = {"2026-08-01": [_rleg(f"c{i}", "bad", 2.5, "win") for i in range(6)],
+             "2026-08-02": [_rleg(f"d{i}", "good", 1.4, "loss") for i in range(6)]}
+    u = {**older, **newer}
+    monkeypatch.setattr(rh, "build_universe", lambda a, st, **kw: u)
+    monkeypatch.setattr(rh, "split_universe",
+                        lambda uu, cut=None: (older, newer, "2026-08-01"))
+    res = rh.cmd_rules_split(None, None, min_legs=3)
+    # 'bad' is +66% on the newer half and -100% on the older one: fitting on
+    # the older half must exclude it even though scoring on the newer would
+    # have loved it.
+    assert "bad" not in res["forward"]["keep"]
+    assert "good" in res["forward"]["keep"]
+    assert res["forward"]["blind"]["mean_log"] != res["forward"]["in_sample"]["mean_log"]
+
+
+# ------- a no-bet day is FLAT, not absent from the comparison -------------
+
+def test_no_bet_day_is_flat_not_absent_from_the_comparison(monkeypatch):
+    """Regression 2026-09-09: both comparison helpers averaged each arm over
+    its OWN day set. For an arm that changes WHICH days are bet — every rule
+    filter, min_prob, min_accas — that is not a paired difference at all, and
+    it silently drops the days one arm skipped. A day an arm does not bet
+    leaves its bank flat, so it belongs in both averages as log growth 0."""
+    import math
+
+    a_days = {"d1": {"growth": 1.10}, "d2": {"growth": 0.90}, "d3": {"growth": 1.05}}
+    b_days = {"d1": {"growth": 1.10}, "d3": {"growth": 0.80}}     # stands aside on d2
+
+    def fake_replay(u, spec):
+        return b_days if spec else a_days
+
+    monkeypatch.setattr(rh, "replay", fake_replay)
+    ec = rh.effect_concentration({}, {}, {"rules": "anything"})
+    want_a = (math.log(1.10) + math.log(0.90) + math.log(1.05)) / 3
+    want_b = (math.log(1.10) + 0.0 + math.log(0.80)) / 3
+    assert abs(ec["full"] - (want_b - want_a)) < 1e-9
+    # the dropped-day-only reading would have said B was BETTER than A here
+    assert ec["full"] < 0
+
+
+def test_both_comparison_helpers_use_the_union_of_bet_days():
+    src = (ROOT / "scripts" / "replay_harness.py").read_text()
+    for fn in ("def effect_concentration", "def paired_bootstrap"):
+        body = src[src.index(fn):src.index(fn) + 2200]
+        assert "set(da) | set(db)" in body, f"{fn} must compare on the same days"
+        assert "if d in ga else 0.0" in body or "if d in da else 0.0" in body, \
+            f"{fn} must score a no-bet day as flat"
+
+
+# ------- the October bar must not be passable by losing more slowly -------
+
+def _flat(days, growth, bets=1):
+    return {d: {"growth": growth, "accas": [(2.0, growth > 1)] * bets,
+                "stake_pct": [10.0] * bets} for d in days}
+
+
+def test_october_bar_rejects_an_arm_that_only_loses_more_slowly(monkeypatch, capsys):
+    """Every other criterion in --october compares against live, and live is
+    negative — so an arm that merely loses more slowly would pass all of them.
+    The own-growth criterion exists to stop exactly that."""
+    days = [f"2026-09-{i:02d}" for i in range(10, 20)]
+    u = {d: ["OK"] for d in days}
+    monkeypatch.setattr(rh, "replay",
+                        lambda uu, spec: _flat(days, 0.99 if spec else 0.90))
+    rh.cmd_october(u, [{"max_accas": 2}], since="2026-09-01", min_days=5)
+    out = capsys.readouterr().out
+    assert "[PASS] bootstrap p10 > 0" in out          # it does beat live
+    assert "[FAIL] grows on its own" in out           # ...and it still loses
+    assert "NOT ADOPTABLE" in out
+
+
+def test_october_bar_catches_an_arm_that_leans_on_unsettled_legs(monkeypatch, capsys):
+    """The optimism-penalty criterion: settled -> pessimistic may cost an arm
+    no more than it costs live. This is relative on purpose — on genuinely new
+    data most legs are unsettled, so an absolute pessimistic threshold would
+    auto-fail in October and nothing could ever be adopted."""
+    days = [f"2026-09-{i:02d}" for i in range(10, 20)]
+    u = {d: ["OK"] for d in days}
+    pes = {d: ["PES"] for d in days}
+
+    def fake_replay(uu, spec):
+        is_pes = bool(uu) and next(iter(uu.values())) == ["PES"]
+        if is_pes:
+            return _flat(days, 0.70 if spec else 0.985)   # arm collapses
+        return _flat(days, 1.05 if spec else 0.90)
+
+    monkeypatch.setattr(rh, "replay", fake_replay)
+    rh.cmd_october(u, [{"max_accas": 2}], since="2026-09-01", min_days=5,
+                   pes_universe=pes)
+    out = capsys.readouterr().out
+    assert "[PASS] grows on its own" in out
+    assert "[FAIL] optimism penalty <= live's" in out
+    assert "NOT ADOPTABLE" in out

@@ -8311,3 +8311,432 @@ No code changed this round (ledger only). Suite and constants unchanged
 since the round-4 receipt: 425 passed; MAX_ACCAS=3, STAKE_FRAC=1.0/3.0,
 MIN_LEG_ODDS=1.20; state file untouched at bank 97.417639 with the single
 open 09-06 slip at 32.4725% (3 accas) until tonight's settlement.
+
+## Addendum — 2026-09-09: the harness learns to price its own optimism (holdout, search, CLV join, pessimistic bound, target, October bar)
+
+Nothing shipped to the engine. `MAX_ACCAS=3`, `STAKE_FRAC=1.0/3.0`,
+`LEGS_PER_ACCA=2`, `MIN_LEG_ODDS=1.20`, `GATE_MODE=off` are all unchanged;
+the live card is untouched. This round only added instruments, because the
+pre-registered October slot needs tools that cannot flatter it.
+
+### Why
+
+A 2,304-variant sweep on the 75-day replay universe produced in-sample
+winners at +0.033 to +0.069 log/day. Every one of those numbers is free:
+with a few hundred variants over 75 bet-days, the winner is largely an
+artefact of having looked. Measured directly — the in-sample winner ranked
+**125/396** out-of-sample, and in the reverse direction the tuning winner
+(+0.0688) fell to **−0.0163** blind, ranked **828/996**, with **0/10** of
+the top-10 tuning arms staying positive. The harness had no way to show
+that tax, so it could only ever show the flattering number.
+
+### New commands (all opt-in, all research-only)
+
+| command | what it is for |
+|---|---|
+| `--holdout [SPEC ...]` | tune on one half of the universe, score the choice **blind** on the other, **both directions**; prints shrinkage, blind rank, hindsight ceiling, top-N survival, and which number to plan on |
+| `--search` | the full `SEARCH_AXES` grid (2,304 variants over 8 knobs) through `--holdout` |
+| `--clv [--clv-split league\|provider\|bookmaker\|label]` | join the committed closed-line ledger to the legs a variant actually rides, using `edgefactory.clv` so the definition of beating a price cannot drift from the audit |
+| `--pessimistic` | grade unsettled legs as **losses** instead of dropping them — the bound on every other number in this file |
+| `--target CAPITAL [--goal AMOUNT]` | project capital at the variant's own bootstrap p10 / median / p90, with the p10 labelled "plan on this" |
+| `--october [SPEC ...] [--new-since DATE]` | judge the pre-registered adoption bar already stated in this file's source (p10 > 0, leave-one-day-out sign holds, maxDD ≤ live, n ≥ 60 new bet-days) and print PASS/FAIL per criterion |
+| `leagues=A\|B` spec key | harness-only pool filter (like `min_prob`) for concentration experiments |
+
+`build_universe()` gained `unresolved=None|"loss"`; the default is
+byte-identical to before, so every previously published replay figure still
+means what it meant.
+
+### What the new instruments said on 2026-09-09 data
+
+* `--search`: the two directions disagree on the winner. Forward blind
+  **+0.0122**, reverse blind **−0.0163**. The command's own conclusion: plan
+  on the lower, i.e. treat the search as having found nothing.
+* `--holdout` on the two candidate policies: forward chose
+  `pairing=barbell,max_accas=2` (+0.0328 tuned → **+0.0122** blind, flat ROI
+  +8.67%); reverse chose `legs_per_acca=1` (+0.0211 tuned → **+0.0122**
+  blind). Different winners, the same blind number.
+* `--clv`: the pool beats the later price **13.2%** of the time (n=785) and
+  the ridden card **12.3%** (n=285) — selection is not adding CLV. Split by
+  the provider that supplied the price: `betexplorer_odds` 17.5% (n=80),
+  `bzzoiro_odds` 21.2% (n=52), **`scoutingstats_odds` 3.9% (n=51)**,
+  `forebet_best` 0.0% (n=22). The price source, not the rule, is where the
+  closing-line damage sits.
+* `--pessimistic`: grading unsettled legs as losses moves
+  `pairing=barbell,max_accas=2` from +0.0215 to **+0.0032** log/day. The
+  settled-only universe was flattering the absolute number by ~85%; the
+  arm still beats live by +0.0375 (P=100%), so the *ranking* survives and
+  the *level* does not.
+
+### Standing interpretation
+
+Growth ranks policies. CLV says whether the prices were any good, on ~20×
+the sample, before settlement. Where they disagree, CLV has the sample. No
+figure in this addendum is forward-valid, and nothing here adopts itself.
+
+Receipt: 449 passed (438 + 11 new harness tests); `ruff` findings unchanged
+on both touched files (10 / 3); engine constants and state file untouched.
+
+---
+
+## Addendum — 2026-09-09: which live settings are optimal, and why the scoreboard needed a second column
+
+Trigger: "i thought 4 accas was the goal … are you sure about these numbers, i
+want to run more simulations, and then i need you to tell me which live
+settings would be optimal." Three runs answered it: `--sweep` (shipped
+`b796886`), a new `combo` family, and `--kelly`.
+
+### Q1 (`max_accas=4`) fails both criteria, in every universe
+
+The gate counter reached its threshold — `--slots` now reads "only the 30 days
+that offer 8+ legs" (36 days offer them before the floor). So the question was
+ripe, and the answer is no:
+
+| arm | standing bar | grows on its own (5 windows) |
+|---|---|---|
+| `barbell, 2 accas` | **4/4** | **5/5** |
+| `singles x3` (`legs_per_acca=1`) | **4/4** | **5/5** |
+| `barbell x2 @ 1/6 stake` | 3/4 | **5/5** |
+| `singles x3 @ 1/6 stake` | 3/4 | **5/5** |
+| `max_accas=2` | 3/4 | **2/5** |
+| `barbell, 3 accas` | 3/4 | 3/5 |
+| `stake_frac` 0.1667 / 0.10 / 0.25 | 2/4 | 2/5 · 2/5 · 1/5 |
+| **`max_accas=4` (pre-registered Q1)** | **0/4** | **1/5** |
+| `max_accas=5` / `=6` / `barbell, 4 accas` | 0/4 | 1/5 · 1/5 · 2/5 |
+
+`max_accas=4` has p10 < 0 and a leave-one-day-out sign flip in all three
+universes (full −0.0035 / heavy −0.0448 / pessimistic −0.0335 log/day), and it
+is inconsistent across blind halves. Same for 5 and 6. This is consistent with
+the 2026-09-04 finding ("117% of the effect is a single 4.90 treble").
+
+### The standing bar is biased toward staking harder — a second column is required
+
+`p10` and `P>better` are measured **against live, and live is negative**. So an
+arm can win the comparison by being *less bad*, and shrinking the stake shrinks
+the difference distribution until p10 goes negative even when the arm grows.
+Proof from one pairing, stake being the only change: `barbell, 2 accas` at
+1/3 stake → full-universe p10 **+0.0093**, bar 4/4; the same pairing at 1/6
+stake → p10 **−0.0014**, bar 3/4 — while growing on its own in **5/5** windows.
+
+So `--sweep` now prints a second scoreboard, **STANDS ON ITS OWN**: the count
+of the five windows (full / heavy / pessimistic / forward-blind / reverse-blind)
+where the arm's *own* mean log growth is > 0, with no comparison to live.
+`max_accas=2` is the arm this exposes — 3/4 on the relative bar, **2/5** on its
+own. A candidate must pass both columns.
+
+### `pairing=barbell` is not shippable by a constant — do not describe it as a setting
+
+`grep -c "^PAIRING" scripts/auto_tickets.py` → **0**. `pair_legs()` takes
+`pairing="consecutive"` and its own docstring calls barbell "an A/B candidate
+only"; there is no module constant and the live call path never passes it. The
+top arm is therefore a **code change**, not a settings change.
+
+`LEGS_PER_ACCA = 1` *is* a constant, but it is not shippable as-measured
+either: the NO-BET gate is `if len(pool) < LEGS_PER_ACCA` (`auto_tickets.py`
+lines 1241 and 1457), and `build_universe` filters bet-days on
+`len(pool) >= at.LEGS_PER_ACCA` (`replay_harness.py` line 152) using the **live**
+value of 2. A live switch to 1 would start betting single-leg days the replay
+never scored, so `singles x3` is 4/4 on a universe that shipping it would change.
+
+### What that leaves, against the stated goal of a million as fast as possible
+
+`--kelly`: growth-optimal f is **10%** (log/day +0.0013, maxDD 27%); live **33%**
+sits well past the peak (−0.0051, maxDD 73%). Bootstrapped f\* median 10%,
+p10 5%, p90 40%, `P(f* < live 33%) = 80%`. Time to 10× on mean log growth:
+
+| arm | log/day | 100k → 1M |
+|---|---|---|
+| live @ 33% (current) | −0.0051 | never (bank declines) |
+| live @ 1/6 stake, pessimistic grading | −0.0128 | never — staking down cuts the loss rate 63%, it does not create edge |
+| live @ 10% stake | +0.0013 | ~1 771 bet-days ≈ 4.9 years |
+| `barbell x2 @ 1/6 stake` (needs code) | +0.0126 settled / +0.0038 pessimistic | ~183 days / ~606 days ≈ 1.7 years |
+
+Speed to a million is set by the **edge**, not the stake. No live constant
+delivers it; the only arms that grow in all five windows need a code change or
+add untested days, and even those are ~6 months in-sample, ~1.7 years under
+pessimistic grading. The lever that would actually move it is still the price
+source (ridden legs beat the close 12.3% overall; `scoutingstats_odds` 4.2%,
+`forebet_best` 0.0%).
+
+Receipt: 455 passed (453 + 2 new); `ruff` findings unchanged on both touched
+files (10 / 3); no engine constant or state file changed.
+
+---
+
+## Addendum — 2026-09-09: STAKE_FRAC's own justification no longer reproduces
+
+Asked "what is the staking proportion of capital", the arithmetic was checked
+against the live state file rather than the comment:
+
+- `STAKE_FRAC = 1/3` is **of free bank** (`effective_bank()`, `auto_tickets.py:871`
+  = bank minus committed open stakes), not of total bank.
+- `STAKE_MODE="per_acca"` + `STAKE_PER_ACCA=None` ⇒ per ticket = `STAKE_FRAC /
+  MAX_ACCAS` = **1/9 = 11.11% of free bank**; `total_frac = min(f, f/3 × n_accas)`
+  ⇒ a 1-acca day risks 11.11%, a 2-acca day 22.22%, a 3-acca day 33.33%.
+- On 2026-09-09: bank 96.4807, committed 32.1602, free 64.3205 ⇒ a 3-acca card
+  stakes **21.4402 pts = 33.33% of free bank = 22.22% of total bank**, 7.1467 pts
+  (7.41% of bank) per ticket.
+
+### The finding
+
+`STAKE_FRAC`'s comment (lines 144–152) justifies 1/3 from the 2026-09-04
+52-day sizing audit, which recorded **f=33% → +0.0426 log/day, growth-optimal
+f ≈ 40%** (HANDOVER line 6433–6444). Re-running the same `--kelly` code path on
+the **first 52 bet-days of the current archive** (2026-06-19 .. 2026-08-16)
+returns **f=33% → −0.0155 log/day, growth-optimal 5%** (and negative at every
+f above it). The same command on 60 and 69 bet-days gives f\* = 10% both times.
+
+So the constant's stated justification is not reproducible on today's data, and
+the growth-optimal fraction is itself unstable across windows: 40% (09-04
+record) / 5% (first 52 days now) / 10% (60 and 69 days now). **Cause not
+established** — this clone is shallow, so `localdata` history cannot be diffed
+here; the 2026-09-06 record corrections and ledger rebuild are a plausible
+explanation and that is a hypothesis, not a measurement.
+
+Consequence for the sizing decision: the Kelly argument for moving 1/3 → ~1/10
+does not rest on 1/3 having been *wrong* in September, only on f\* now reading
+5–10% on every window that can be re-run, with `P(f* < 33%) = 80%`. The comment
+at `auto_tickets.py:144` should not be read as current.
+
+### What "barbell" means, measured
+
+`pair_legs()` (`auto_tickets.py:964`) — "consecutive" (live) pairs adjacent
+ranks 1+2, 3+4, 5+6; "barbell" pairs strongest with weakest, 1+6, 2+5, 3+4, and
+is implemented only for `k == 2`. It re-groups the same legs into the same
+number of tickets at the same total stake, so it cannot create edge.
+
+Its docstring claims it "equalise[s] acca odds". Measured over the 50 bet-days
+with 2+ tickets under both pairings: ticket-odds max/min ratio median 1.356
+(consecutive) vs **1.201** (barbell); CV median 0.126 vs **0.081**; barbell
+tighter on **30/50 days (60%)**, a no-op on 3/50. On 2026-09-09 it was close to
+a wash (spread 1.61–2.43 vs 1.62–2.43) because the 1.20 floor had already
+removed the very short odds. The claim holds, weakly, on most days.
+
+Receipt: 455 passed (unchanged); no code or constant changed by this addendum.
+
+---
+
+## Addendum — 2026-09-09: betting only the positive-ROI rules, priced honestly
+
+The question: the picks audit's "By rule" table shows `ml-meta avg_p>=55` at
+ROI −8.8% (n=307) and `2way-unanimous avg_p>=70` at +10.1% (n=106), so *if we
+had bet only the positive rules, how would we be doing?* Two new harness
+features answer it: a `rules=` spec filter, and `--rules-split`.
+
+### The table cannot be bet as printed
+
+That "By rule" ROI is computed on the same settled rows the selection would be
+made from, so a positive row is a description of the past, not a policy. So
+`--rules-split` fits the whitelist on one half of the bet-days and scores it
+**blind** on the other, both directions, with the in-sample number printed
+beside it:
+
+| direction | rules kept | in-sample log/day | **blind log/day** | live on that blind half | blind edge |
+|---|---|---|---|---|---|
+| forward (fit older, score newer) | 3 of 5 | +0.0142 | **+0.0067** | −0.0178 | **+0.0245** |
+| reverse (fit newer, score older) | 4 of 6 | +0.0053 | **−0.0138** | +0.0104 | **−0.0243** |
+
+**The sign flips with the direction** (+0.0245 / −0.0243, mean ≈ 0). The
+whole-universe fit — 5 of 9 rules positive — reads +0.0072 log/day vs live
+−0.0051, i.e. **+0.0123 of pure hindsight**, and it is the number that would
+have been quoted without the split.
+
+The two halves also disagree about *which* rules: only
+`2way-unanimous avg_p>=70` is positive in both. `ml-meta avg_p>=60` and
+`avg_p>=70` are kept by the reverse fit only; `3way-unanimous home-only
+avg_p>=65` and `3way-unanimous min_p>=60 avg_p>=60` by the forward fit only.
+
+### Scored on the standing bar, no rule filter is a candidate
+
+`--sweep rules` (same four universes + both blind halves as every other arm):
+
+| arm | bar | grows on its own | bets (live = 159) |
+|---|---|---|---|
+| `2way-unan avg_p>=70 only` | 1/4 | 1/5 | 61 |
+| `2way-unanimous, all bands` | 0/4 | 1/5 | 70 |
+| `drop ml-meta avg_p>=55` | 1/4 | 2/5 | 121 |
+| `drop ml-meta entirely` | 1/4 | 2/5 | 111 |
+
+Every one fails p10 and/or leave-one-day-out, is inconsistent across blind
+halves, and **cuts bet volume by 26–62%** — which matters directly for a
+compounding goal. For comparison `barbell, 2 accas` and `singles x3` are 4/4 ·
+5/5 at 119 and 204 bets. Rule-level selection is not where the edge is.
+
+### What was added
+
+- `rules=` spec key: `|`-separated tokens, bare = exact rule name, `fam:` =
+  rule family, leading `!` = exclude; includes apply before excludes. It
+  shrinks the pool *before* the live selector, so selection and sizing stay one
+  code path. Rule names contain no commas, so the spec syntax survives them.
+  A typo'd name produces an empty card rather than a silent no-op (tested).
+- `rule_roi_table()` uses the same flat-stake `sum(pnl)/n` definition as
+  `audit_recent_picks.summarize_scored`, so harness and audit reconcile.
+- `--rules-split [MIN_LEGS]` (default 10); `--sweep rules` family.
+
+Receipt: 458 passed (455 + 3 new); `ruff` findings unchanged on both touched
+files (10 / 3); no engine constant or state file changed.
+
+---
+
+## Addendum — 2026-09-09: the stake is arm-specific, and f/3 is not f/n_accas
+
+Read back as "1/10 of capital, 5% per acca, two barbell accas a day", two
+things need correcting.
+
+### 1. With STAKE_PER_ACCA=None, per ticket = f / MAX_ACCAS — always /3
+
+`plan_day` sets `stake_per_acca = stake_frac / MAX_ACCAS` using the **module
+constant** (3), not the number of accas the card actually has, then caps the
+day at `min(stake_frac, stake_per_acca × n_accas)`. Verified through
+`plan_day` on the 2026-09-09 pool (free bank 64.3205):
+
+| config | tickets | per ticket | % of free bank | % of bank |
+|---|---|---|---|---|
+| LIVE (3 consecutive, f=1/3) | 3 | 7.15 pts = 11.11% | 33.33% | 22.22% |
+| **barbell x2, f=1/10** | 2 | **2.14 pts = 3.33%** | **6.67%** | 4.44% |
+| barbell x2, f=1/10 + `stake_per_acca=0.05` | 2 | 3.22 pts = 5.00% | 10.00% | 6.67% |
+| barbell x3 / singles x3, f=1/10 | 3 | 2.14 pts = 3.33% | 10.00% | 6.67% |
+
+So `barbell x2 @ 1/10` risks **6.67% of free bank, not 10%** — and the
+`barbell x2 @ 1/10 stake` row in the sweep scoreboard (+0.0080, maxDD 15%) was
+simulated at that 3.33%/ticket. Getting 5% per ticket requires setting
+`STAKE_PER_ACCA = 0.05` explicitly.
+
+### 2. Kelly f* is a property of the CARD, not a universal number
+
+`cmd_kelly` accepts a selection spec, so f* can be re-derived per arm. It moves
+by an order of magnitude between arms, and the settled-vs-pessimistic grading
+moves it further:
+
+| card | f\* settled | f\* pessimistic | pessimistic log/day at f\* |
+|---|---|---|---|
+| live (3 consecutive) | 10% | **5%** | **−0.0030** (negative at every f) |
+| barbell x2 | 60% | **25%** | +0.0040 |
+| singles x3 | 50% | **20%** | +0.0035 |
+
+Consequences, stated plainly:
+
+- **f=1/10 is the right stake for the card that actually ships today** (the
+  live 3-consecutive card). It is not a universal optimum, and under
+  pessimistic grading the live card is negative at *every* stake — 5–10%
+  loses slower, it does not grow. `P(f* < live 33%) = 98%`.
+- **If barbell x2 were adopted, 1/10 would be UNDER-betting it** (f\* = 25%
+  pessimistic / 60% settled). The stake would be re-derived then, on new days.
+  Quoting one number for both cards was wrong.
+- The settled-grading f\* of 60% for barbell is hindsight: the pessimistic
+  grading cuts that arm's growth from +0.0215 to +0.0032, and f\* falls 60% →
+  25% with it.
+
+### 3. `max_accas=2` truncates BEFORE pairing
+
+`select_accas` slices `pool[:max_accas × legs_per_acca]` and *then* calls
+`pair_legs`, so barbell at `max_accas=2` pairs ranks **1+4 and 2+3** of the
+post-floor pool (today: Kairat 1.30 + Boca 1.90 = 2.47, Chelsea 1.65 + Twente
+1.28 = 2.11), not 1+6 and 2+5. The 1+6/2+5/3+4 pattern only exists at
+`max_accas=3`. The two dropped legs (Viktoria, Stuttgart) are not ridden at all.
+
+Receipt: 458 passed (unchanged); no code or constant changed by this addendum.
+
+---
+
+## Addendum — 2026-09-09: a no-bet day was being deleted from the comparison
+
+`--ab live 'rules=!ml-meta avg_p>=55'` printed "fragile: one day inflates most
+of it". Pulling that day apart exposed a bug in both comparison helpers.
+
+### The bug
+
+`paired_bootstrap` and `effect_concentration` each averaged arm A over the days
+**A** bet and arm B over the days **B** bet. For an arm that changes *which*
+days are bet — every `rules=` filter, `min_prob`, `min_accas` — that is not a
+paired difference: the resampling was paired but the averaging was not, and the
+days one arm skipped vanished instead of counting as a flat bank.
+
+Both now score a no-bet day as **log growth 0.0** and compare over the
+**union** of bet-days, so both arms always share one denominator.
+
+### What it changed, and what it did not
+
+| arm | day set vs live (69) | bar before → after | grows on its own |
+|---|---|---|---|
+| `barbell, 2 accas` | same 69 | **4/4 → 4/4** | 5/5 |
+| `singles x3` | **+6 days (75)** | **4/4 → 4/4** | 5/5 |
+| `max_accas=2` / `=4` / `=5` / `=6` | same 69 | unchanged | unchanged |
+| `stake_frac` arms | same 69 | unchanged | unchanged |
+| `2way-unan avg_p>=70 only` | −29 days (40) | 1/4 → 2/4 | 1/5 |
+| `2way-unanimous, all bands` | −? | 1/4 → 2/4 | 1/5 |
+| `drop ml-meta avg_p>=55` | −5 days (64) | 1/4 → 1/4 | 2/5 |
+
+No headline candidate moved. The two 4/4 · 5/5 arms are unchanged, including
+`singles x3`, which was the one at risk: it bets **6 days live does not**
+(`legs_per_acca=1` only needs one qualifying leg), and those 6 days are a net
+**−0.3680 log** (2 wins, 4 losses). On the 69 common days it reads +0.0235 vs
+the +0.0167 the unpaired average reported — so the old convention was
+*understating* it, not flattering it.
+
+For `rules=!ml-meta avg_p>=55` the corrected `--ab` barely moves (median
++0.0081 → +0.0079, p10 −0.0078 → −0.0075, leave-one-day-out +0.0012 → +0.0010,
+top-day share 86% → 87%) because it only skips 5 days. It still says
+**do NOT ship**.
+
+### The one day that carries the filter
+
+Paired over the 64 common days, `rules=!ml-meta avg_p>=55` beats live by
++0.0026/day. **Excluding 2026-09-07 it is −0.0052/day — worse than live.**
+On 2026-09-07 live rode three accas and lost all three (@2.10, @1.46, @1.88);
+the filtered card rode a single acca @1.81 and it won. The whole "edge" is one
+day on which the filter happened to leave a winner.
+
+### A data defect found on the same day
+
+`Cruz Azul vs Santos Laguna` HOME @1.41 `ml-meta avg_p>=55` appears **twice**
+in the 2026-09-07 playable pool — the only duplicate in all 841 legs across the
+75-day universe. The engine can therefore ride the same match in two tickets.
+One occurrence, so it is not driving anything above, but it should be
+de-duplicated at archive load.
+
+Receipt: 460 passed (458 + 2 new); `ruff` findings unchanged on both touched
+files (10 / 3); no engine constant or state file changed.
+
+---
+
+## Addendum — 2026-09-09: the October bar could have been passed by losing more slowly
+
+`--october` is the command that will decide October, and until now **every one
+of its criteria compared the candidate against live** — p10 > 0,
+leave-one-day-out, maxDD ≤ live. Live is negative, so an arm that merely loses
+more slowly would have cleared all of them and printed ADOPT-ELIGIBLE. That is
+the same bias `--sweep`'s second scoreboard was added to catch, sitting in the
+one command that actually ships things.
+
+Two criteria added, both stake-honest:
+
+1. **`grows on its own`** — the arm's own mean log growth on the new days must
+   be > 0, live out of the picture.
+2. **`optimism penalty <= live's`** — the drop from settled to pessimistic
+   grading must cost the arm no more than it costs live.
+
+The second is deliberately **relative**. On genuinely new data most legs are
+still unsettled, so grading them all as losses drags every arm down; an
+absolute pessimistic threshold would auto-fail in October and the bar could
+never adopt anything. What matters is whether the arm leans on unsettled legs
+*harder than live does* — that is scale-fair, and it is the thing that turns
+`barbell, 2 accas` from +0.0215 into +0.0032.
+
+### Effect on the two pre-registered arms
+
+| cut-off | new days | barbell x2 | singles x3 |
+|---|---|---|---|
+| 2026-06-19 (fully mined — **hindsight, not evidence**) | 75 | ADOPT-ELIGIBLE (6/6) | ADOPT-ELIGIBLE (6/6) |
+| 2026-08-01 | 39 | NOT ADOPTABLE (n) | NOT ADOPTABLE (n) |
+| 2026-08-15 | 25 | NOT ADOPTABLE (p10, lodo, n) | NOT ADOPTABLE (p10, n) |
+| 2026-09-10 (the real default) | 0 | "no new bet-days yet — do not judge early" | — |
+
+Optimism penalty at 2026-06-19: barbell +0.0183 and singles +0.0148, both
+below live's +0.0293. At 2026-08-01: +0.0225 and +0.0242 vs live +0.0440.
+
+Both arms clear all six on the mined universe, which proves nothing — it is the
+data the arms were found in. The default `--new-since 2026-09-10` correctly
+refuses to judge.
+
+Receipt: 462 passed (460 + 2 new); `ruff` findings unchanged on both touched
+files (10 / 3); no engine constant or state file changed.
