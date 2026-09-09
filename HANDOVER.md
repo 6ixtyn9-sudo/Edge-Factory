@@ -8459,3 +8459,56 @@ source (ridden legs beat the close 12.3% overall; `scoutingstats_odds` 4.2%,
 
 Receipt: 455 passed (453 + 2 new); `ruff` findings unchanged on both touched
 files (10 / 3); no engine constant or state file changed.
+
+---
+
+## Addendum — 2026-09-09: STAKE_FRAC's own justification no longer reproduces
+
+Asked "what is the staking proportion of capital", the arithmetic was checked
+against the live state file rather than the comment:
+
+- `STAKE_FRAC = 1/3` is **of free bank** (`effective_bank()`, `auto_tickets.py:871`
+  = bank minus committed open stakes), not of total bank.
+- `STAKE_MODE="per_acca"` + `STAKE_PER_ACCA=None` ⇒ per ticket = `STAKE_FRAC /
+  MAX_ACCAS` = **1/9 = 11.11% of free bank**; `total_frac = min(f, f/3 × n_accas)`
+  ⇒ a 1-acca day risks 11.11%, a 2-acca day 22.22%, a 3-acca day 33.33%.
+- On 2026-09-09: bank 96.4807, committed 32.1602, free 64.3205 ⇒ a 3-acca card
+  stakes **21.4402 pts = 33.33% of free bank = 22.22% of total bank**, 7.1467 pts
+  (7.41% of bank) per ticket.
+
+### The finding
+
+`STAKE_FRAC`'s comment (lines 144–152) justifies 1/3 from the 2026-09-04
+52-day sizing audit, which recorded **f=33% → +0.0426 log/day, growth-optimal
+f ≈ 40%** (HANDOVER line 6433–6444). Re-running the same `--kelly` code path on
+the **first 52 bet-days of the current archive** (2026-06-19 .. 2026-08-16)
+returns **f=33% → −0.0155 log/day, growth-optimal 5%** (and negative at every
+f above it). The same command on 60 and 69 bet-days gives f\* = 10% both times.
+
+So the constant's stated justification is not reproducible on today's data, and
+the growth-optimal fraction is itself unstable across windows: 40% (09-04
+record) / 5% (first 52 days now) / 10% (60 and 69 days now). **Cause not
+established** — this clone is shallow, so `localdata` history cannot be diffed
+here; the 2026-09-06 record corrections and ledger rebuild are a plausible
+explanation and that is a hypothesis, not a measurement.
+
+Consequence for the sizing decision: the Kelly argument for moving 1/3 → ~1/10
+does not rest on 1/3 having been *wrong* in September, only on f\* now reading
+5–10% on every window that can be re-run, with `P(f* < 33%) = 80%`. The comment
+at `auto_tickets.py:144` should not be read as current.
+
+### What "barbell" means, measured
+
+`pair_legs()` (`auto_tickets.py:964`) — "consecutive" (live) pairs adjacent
+ranks 1+2, 3+4, 5+6; "barbell" pairs strongest with weakest, 1+6, 2+5, 3+4, and
+is implemented only for `k == 2`. It re-groups the same legs into the same
+number of tickets at the same total stake, so it cannot create edge.
+
+Its docstring claims it "equalise[s] acca odds". Measured over the 50 bet-days
+with 2+ tickets under both pairings: ticket-odds max/min ratio median 1.356
+(consecutive) vs **1.201** (barbell); CV median 0.126 vs **0.081**; barbell
+tighter on **30/50 days (60%)**, a no-op on 3/50. On 2026-09-09 it was close to
+a wash (spread 1.61–2.43 vs 1.62–2.43) because the 1.20 floor had already
+removed the very short odds. The claim holds, weakly, on most days.
+
+Receipt: 455 passed (unchanged); no code or constant changed by this addendum.
