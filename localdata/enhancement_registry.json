@@ -2063,10 +2063,10 @@
    "status_since": "2026-08-03"
   },
   "match_over_35@v1": {
-   "hits": 1,
-   "inv_price_sum": 2.3966641078967665,
+   "hits": 2,
+   "inv_price_sum": 3.251209562442221,
    "multi_n": 0,
-   "n": 7,
+   "n": 9,
    "processed": [
     "2026-08-09|Benfica vs Academico Viseu|match_over_35@v1",
     "2026-08-09|Malm\u00f6 FF vs Degerfors IF|match_over_35@v1",
@@ -2074,9 +2074,11 @@
     "2026-08-09|Septemvri Sofia vs CSKA-Sofia|match_over_35@v1",
     "2026-08-09|S\u00e3o Paulo W vs RB Bragantino W|match_over_35@v1",
     "2026-08-10|FC Boto\u0219ani vs Corvinul Hunedoara|match_over_35@v1",
-    "2026-08-10|Sepsi OSK Sfantu Gheorghe vs FCSB|match_over_35@v1"
+    "2026-08-10|Sepsi OSK Sfantu Gheorghe vs FCSB|match_over_35@v1",
+    "2026-09-10|Panathinaikos vs Kifisia|match_over_35@v1",
+    "2026-09-10|Radnik Surdulica vs Crvena Zvezda|match_over_35@v1"
    ],
-   "profit": -5.1,
+   "profit": -4.6,
    "records": [
     {
      "date": "2026-08-09",
@@ -2132,6 +2134,22 @@
      "match": "Sepsi OSK Sfantu Gheorghe vs FCSB",
      "multi_source": false,
      "price": 3.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-10",
+     "hit": true,
+     "match": "Panathinaikos vs Kifisia",
+     "multi_source": false,
+     "price": 2.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-10",
+     "hit": false,
+     "match": "Radnik Surdulica vs Crvena Zvezda",
+     "multi_source": false,
+     "price": 2.2,
      "source": "scoutingstats"
     }
    ],
