@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 124.888859,
+  "bank": 109.277759,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -27,37 +27,12 @@
           "stake_pct": 15.6111,
           "results": [
             null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Dinamo Tbilisi vs Meshakhte Tkibuli",
-              "pick": "HOME",
-              "prob": 0.6579999999999999,
-              "odds": 1.35,
-              "result": null
-            },
-            {
-              "match": "USM Alger vs JS El Biar",
-              "pick": "HOME",
-              "prob": 0.603,
-              "odds": 1.3,
-              "result": null
-            }
-          ],
-          "odds": 1.76,
-          "stake_pct": 15.6111,
-          "results": [
-            null,
-            null
+            "loss"
           ],
           "won": null
         }
       ],
-      "staked_pct": 31.2222
+      "staked_pct": 15.6111
     }
   ],
   "history": [
@@ -328,6 +303,18 @@
         }
       ],
       "bank_pct": 124.8889
+    },
+    {
+      "date": "2026-09-10",
+      "staked_pct": 15.6111,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.76,
+          "won": false
+        }
+      ],
+      "bank_pct": 109.2778
     }
   ],
   "events": []
