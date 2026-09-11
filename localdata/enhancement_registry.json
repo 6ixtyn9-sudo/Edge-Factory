@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 125,
-   "inv_price_sum": 123.4922690973259,
+   "hits": 126,
+   "inv_price_sum": 124.89870415457028,
    "multi_n": 18,
-   "n": 191,
+   "n": 193,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -527,9 +527,11 @@
     "2026-09-09|Twente vs SC Telstar|match_over_25@v1",
     "2026-09-09|Levadia Tallinn vs FC Kuressaare|match_over_25@v1",
     "2026-09-09|St Johnstone vs Celtic|match_over_25@v1",
-    "2026-09-09|Al Nassr vs Abha Club|match_over_25@v1"
+    "2026-09-09|Al Nassr vs Abha Club|match_over_25@v1",
+    "2026-09-11|FC Copenhagen vs AC Horsens|match_over_25@v1",
+    "2026-09-11|Emmen vs De Graafschap|match_over_25@v1"
    ],
-   "profit": 0.78,
+   "profit": 0.14,
    "records": [
     {
      "date": "2026-08-01",
@@ -2056,6 +2058,22 @@
      "multi_source": false,
      "price": 1.33,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-11",
+     "hit": false,
+     "match": "FC Copenhagen vs AC Horsens",
+     "multi_source": false,
+     "price": 1.49,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-11",
+     "hit": true,
+     "match": "Emmen vs De Graafschap",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
@@ -2063,10 +2081,10 @@
    "status_since": "2026-08-03"
   },
   "match_over_35@v1": {
-   "hits": 2,
-   "inv_price_sum": 3.251209562442221,
+   "hits": 5,
+   "inv_price_sum": 5.1649990803732395,
    "multi_n": 0,
-   "n": 9,
+   "n": 14,
    "processed": [
     "2026-08-09|Benfica vs Academico Viseu|match_over_35@v1",
     "2026-08-09|Malm\u00f6 FF vs Degerfors IF|match_over_35@v1",
@@ -2076,9 +2094,14 @@
     "2026-08-10|FC Boto\u0219ani vs Corvinul Hunedoara|match_over_35@v1",
     "2026-08-10|Sepsi OSK Sfantu Gheorghe vs FCSB|match_over_35@v1",
     "2026-09-10|Panathinaikos vs Kifisia|match_over_35@v1",
-    "2026-09-10|Radnik Surdulica vs Crvena Zvezda|match_over_35@v1"
+    "2026-09-10|Radnik Surdulica vs Crvena Zvezda|match_over_35@v1",
+    "2026-09-11|Burgos CF vs AD Ceuta|match_over_35@v1",
+    "2026-09-11|Ammanford vs Caernarfon Town|match_over_35@v1",
+    "2026-09-11|Sport Recife vs Ponte Preta|match_over_35@v1",
+    "2026-09-11|AC Pisa vs Virtus Entella|match_over_35@v1",
+    "2026-09-11|Cienciano vs Montevideo City Torque|match_over_35@v1"
    ],
-   "profit": -4.6,
+   "profit": -0.2,
    "records": [
     {
      "date": "2026-08-09",
@@ -2150,6 +2173,46 @@
      "match": "Radnik Surdulica vs Crvena Zvezda",
      "multi_source": false,
      "price": 2.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-11",
+     "hit": true,
+     "match": "Burgos CF vs AD Ceuta",
+     "multi_source": false,
+     "price": 3.75,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-11",
+     "hit": true,
+     "match": "Ammanford vs Caernarfon Town",
+     "multi_source": false,
+     "price": 1.9,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-11",
+     "hit": false,
+     "match": "Sport Recife vs Ponte Preta",
+     "multi_source": false,
+     "price": 1.83,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-11",
+     "hit": true,
+     "match": "AC Pisa vs Virtus Entella",
+     "multi_source": false,
+     "price": 3.75,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-11",
+     "hit": false,
+     "match": "Cienciano vs Montevideo City Torque",
+     "multi_source": false,
+     "price": 3.25,
      "source": "scoutingstats"
     }
    ],
