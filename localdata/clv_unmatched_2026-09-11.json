@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-09-11",
+    "kickoff": "10:00",
+    "home": "FC Copenhagen",
+    "away": "AC Horsens",
+    "league": "Denmark,Superligaen",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "fccopenhagen",
+    "away_key": "achorsens",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Kyoto Sanga",
+        "away": "Kashiwa Reysol",
+        "league": "J1 League",
+        "kickoff": "2026-09-11T10:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "kyotosanga",
+        "away_key": "kashiwareysol",
+        "kickoff_delta_minutes": 120
+      },
+      {
+        "home": "Vissel Kobe",
+        "away": "Kashima Antlers",
+        "league": "J1 League",
+        "kickoff": "2026-09-11T10:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "visselkobe",
+        "away_key": "kashimaantlers",
+        "kickoff_delta_minutes": 120
+      },
+      {
+        "home": "SHB \u0110\u00e0 N\u1eb5ng",
+        "away": "Th\u00e9p Xanh Nam \u0110\u1ecbnh",
+        "league": "V-League",
+        "kickoff": "2026-09-11T11:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.7,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "shbdanang",
+        "away_key": "thepxanhnamdinh",
+        "kickoff_delta_minutes": 180
+      },
+      {
+        "home": "Port FC",
+        "away": "Lamphun Warrior",
+        "league": "Thai Premier League",
+        "kickoff": "2026-09-11T11:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.3,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "portfc",
+        "away_key": "lamphunwarrior",
+        "kickoff_delta_minutes": 210
+      },
+      {
+        "home": "Ratchaburi Mitrphol FC",
+        "away": "True Bangkok United",
+        "league": "Thai Premier League",
+        "kickoff": "2026-09-11T12:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.3,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "ratchaburimitrpholfc",
+        "away_key": "truebangkokunited",
+        "kickoff_delta_minutes": 240
+      }
+    ]
+  },
+  {
+    "date": "2026-09-11",
     "kickoff": "2026-09-11 17:00:00",
     "home": "Ararat-Armenia",
     "away": "Syunik",
@@ -158,87 +239,6 @@
         "home_key": "amstetten",
         "away_key": "austriawienii",
         "kickoff_delta_minutes": 30
-      }
-    ]
-  },
-  {
-    "date": "2026-09-11",
-    "kickoff": "12:00",
-    "home": "FC Copenhagen",
-    "away": "AC Horsens",
-    "league": "Denmark,Superligaen",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "ml-meta avg_p>=65",
-    "match_method": "fallback",
-    "home_key": "fccopenhagen",
-    "away_key": "achorsens",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "SHB \u0110\u00e0 N\u1eb5ng",
-        "away": "Th\u00e9p Xanh Nam \u0110\u1ecbnh",
-        "league": "V-League",
-        "kickoff": "2026-09-11T11:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.7,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "shbdanang",
-        "away_key": "thepxanhnamdinh",
-        "kickoff_delta_minutes": 60
-      },
-      {
-        "home": "Port FC",
-        "away": "Lamphun Warrior",
-        "league": "Thai Premier League",
-        "kickoff": "2026-09-11T11:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.3,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "portfc",
-        "away_key": "lamphunwarrior",
-        "kickoff_delta_minutes": 90
-      },
-      {
-        "home": "Ratchaburi Mitrphol FC",
-        "away": "True Bangkok United",
-        "league": "Thai Premier League",
-        "kickoff": "2026-09-11T12:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.3,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "ratchaburimitrpholfc",
-        "away_key": "truebangkokunited",
-        "kickoff_delta_minutes": 120
-      },
-      {
-        "home": "Kolos Kovalivka",
-        "away": "Karpaty",
-        "league": "Premier League",
-        "kickoff": "2026-09-11T12:30:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.1,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "koloskovalivka",
-        "away_key": "karpaty",
-        "kickoff_delta_minutes": 150
-      },
-      {
-        "home": "Hatta",
-        "away": "Al Dhafra",
-        "league": "UAE Pro League",
-        "kickoff": "2026-09-11T13:40:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 2.9,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "hatta",
-        "away_key": "aldhafra",
-        "kickoff_delta_minutes": 220
       }
     ]
   },
