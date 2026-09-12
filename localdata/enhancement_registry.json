@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 126,
-   "inv_price_sum": 124.89870415457028,
-   "multi_n": 18,
-   "n": 193,
+   "hits": 129,
+   "inv_price_sum": 130.19664640839488,
+   "multi_n": 19,
+   "n": 201,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -529,9 +529,17 @@
     "2026-09-09|St Johnstone vs Celtic|match_over_25@v1",
     "2026-09-09|Al Nassr vs Abha Club|match_over_25@v1",
     "2026-09-11|FC Copenhagen vs AC Horsens|match_over_25@v1",
-    "2026-09-11|Emmen vs De Graafschap|match_over_25@v1"
+    "2026-09-11|Emmen vs De Graafschap|match_over_25@v1",
+    "2026-09-12|Chelsea vs Hull City|match_over_25@v1",
+    "2026-09-12|Borussia Dortmund vs Paderborn|match_over_25@v1",
+    "2026-09-12|Glentoran Belfast vs Bangor FC|match_over_25@v1",
+    "2026-09-12|Liverpool vs Fulham|match_over_25@v1",
+    "2026-09-12|Sunderland vs Arsenal|match_over_25@v1",
+    "2026-09-12|Crusaders Belfast vs Limavady United|match_over_25@v1",
+    "2026-09-12|Al Khaleej Club vs Al Nassr|match_over_25@v1",
+    "2026-09-12|Twente vs ADO Den Haag|match_over_25@v1"
    ],
-   "profit": 0.14,
+   "profit": -3.4,
    "records": [
     {
      "date": "2026-08-01",
@@ -2073,6 +2081,70 @@
      "match": "Emmen vs De Graafschap",
      "multi_source": false,
      "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": true,
+     "match": "Chelsea vs Hull City",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": true,
+     "match": "Borussia Dortmund vs Paderborn",
+     "multi_source": true,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": false,
+     "match": "Glentoran Belfast vs Bangor FC",
+     "multi_source": false,
+     "price": 1.53,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": false,
+     "match": "Liverpool vs Fulham",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": false,
+     "match": "Sunderland vs Arsenal",
+     "multi_source": false,
+     "price": 2.1,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": true,
+     "match": "Crusaders Belfast vs Limavady United",
+     "multi_source": false,
+     "price": 1.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": false,
+     "match": "Al Khaleej Club vs Al Nassr",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": false,
+     "match": "Twente vs ADO Den Haag",
+     "multi_source": false,
+     "price": 1.3,
      "source": "scoutingstats"
     }
    ],
