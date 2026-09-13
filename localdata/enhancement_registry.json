@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 129,
-   "inv_price_sum": 130.19664640839488,
+   "hits": 135,
+   "inv_price_sum": 134.69269736527403,
    "multi_n": 19,
-   "n": 201,
+   "n": 207,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -537,9 +537,15 @@
     "2026-09-12|Sunderland vs Arsenal|match_over_25@v1",
     "2026-09-12|Crusaders Belfast vs Limavady United|match_over_25@v1",
     "2026-09-12|Al Khaleej Club vs Al Nassr|match_over_25@v1",
-    "2026-09-12|Twente vs ADO Den Haag|match_over_25@v1"
+    "2026-09-12|Twente vs ADO Den Haag|match_over_25@v1",
+    "2026-09-13|Levante vs Barcelona|match_over_25@v1",
+    "2026-09-13|Benfica vs Gil Vicente|match_over_25@v1",
+    "2026-09-13|RB Leipzig vs Hamburger SV|match_over_25@v1",
+    "2026-09-13|Viking FK vs Kristiansund BK|match_over_25@v1",
+    "2026-09-13|PEC Zwolle vs Feyenoord|match_over_25@v1",
+    "2026-09-13|Viking vs Kristiansund BK|match_over_25@v1"
    ],
-   "profit": -3.4,
+   "profit": -1.38,
    "records": [
     {
      "date": "2026-08-01",
@@ -2145,6 +2151,54 @@
      "match": "Twente vs ADO Den Haag",
      "multi_source": false,
      "price": 1.3,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-13",
+     "hit": true,
+     "match": "Levante vs Barcelona",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-13",
+     "hit": true,
+     "match": "Benfica vs Gil Vicente",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-13",
+     "hit": true,
+     "match": "RB Leipzig vs Hamburger SV",
+     "multi_source": false,
+     "price": 1.28,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-13",
+     "hit": true,
+     "match": "Viking FK vs Kristiansund BK",
+     "multi_source": false,
+     "price": 1.37,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-13",
+     "hit": true,
+     "match": "PEC Zwolle vs Feyenoord",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-13",
+     "hit": true,
+     "match": "Viking vs Kristiansund BK",
+     "multi_source": false,
+     "price": 1.36,
      "source": "scoutingstats"
     }
    ],
