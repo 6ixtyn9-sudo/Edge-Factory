@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 81.198227,
+  "bank": 79.31259500000002,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -33,62 +33,6 @@
         }
       ],
       "staked_pct": 15.6111
-    },
-    {
-      "date": "2026-09-14",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Como vs Parma",
-              "pick": "HOME",
-              "prob": 0.742,
-              "odds": 1.22,
-              "result": null
-            },
-            {
-              "match": "Gaziantep vs Fenerbah\u00e7e",
-              "pick": "AWAY",
-              "prob": 0.622,
-              "odds": 1.5,
-              "result": null
-            }
-          ],
-          "odds": 1.83,
-          "stake_pct": 8.1984,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Inter vs Udinese",
-              "pick": "HOME",
-              "prob": 0.6970000000000001,
-              "odds": 1.25,
-              "result": null
-            },
-            {
-              "match": "Kayserispor vs Istanbulspor AS",
-              "pick": "HOME",
-              "prob": 0.687,
-              "odds": 1.42,
-              "result": null
-            }
-          ],
-          "odds": 1.77,
-          "stake_pct": 8.1984,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 16.3968
     }
   ],
   "history": [
@@ -419,6 +363,22 @@
         }
       ],
       "bank_pct": 81.1982
+    },
+    {
+      "date": "2026-09-14",
+      "staked_pct": 16.3968,
+      "returned_pct": 14.5112,
+      "accas": [
+        {
+          "odds": 1.83,
+          "won": false
+        },
+        {
+          "odds": 1.77,
+          "won": true
+        }
+      ],
+      "bank_pct": 79.3126
     }
   ],
   "events": []
