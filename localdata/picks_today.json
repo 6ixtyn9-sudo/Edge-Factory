@@ -386,7 +386,7 @@
     "w_score": 0.2535
   },
   {
-    "as_of": "2026-09-14T06:00:51+02:00",
+    "as_of": "2026-09-14T09:01:27+02:00",
     "avg_p": 74.5,
     "away": "Septemvri Sofia",
     "bookmaker": "scoutingstats_odds",
@@ -688,7 +688,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-14T06:00:51+02:00",
+    "as_of": "2026-09-14T09:01:27+02:00",
     "avg_p": 73.0,
     "away": "Sandefjord",
     "bookmaker": "scoutingstats_odds",
@@ -846,7 +846,169 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-14T06:00:51+02:00",
+    "as_of": "2026-09-14T09:01:27+02:00",
+    "avg_p": 69.7,
+    "away": "Udinese",
+    "bookmaker": "scoutingstats_odds",
+    "bucket": "SKIPPED_VETO",
+    "confidence": 0.7571,
+    "ctx": {
+      "away_norm": "udinese",
+      "comp_type_name": "league",
+      "competition_type": "BOOST",
+      "duplicate_alias_collapse": "true",
+      "duplicate_bucket_sources": "WATCHLIST_UNCORROBORATED_PRICE,SKIPPED_VETO",
+      "duplicate_event_keys": "inter vs udinese",
+      "home_norm": "inter",
+      "league": "BOOST",
+      "league_key": "italy serie a",
+      "league_raw": "It1",
+      "niche": "VETO",
+      "odds_band": "CAUTION",
+      "odds_band_name": "1.20-1.35",
+      "resolution_original_verdict": "BOOST",
+      "resolution_path": "native",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "native verdict BOOST unchanged (only UNKNOWN is resolvable)",
+      "resolution_verdict": "BOOST",
+      "side_role": "home",
+      "team_a": "ALLOW",
+      "team_h": "ALLOW"
+    },
+    "date": "2026-09-14",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "ML-META\u226560",
+    "draw_risk_flag": "HIGH",
+    "duplicate_bucket_sources": [
+      "WATCHLIST_UNCORROBORATED_PRICE",
+      "SKIPPED_VETO"
+    ],
+    "duplicate_matches_collapsed": [
+      "Inter vs Udinese"
+    ],
+    "duplicate_rows_collapsed": 1,
+    "duplicate_rules_collapsed": [
+      "ML-META\u226560",
+      "ML-META\u226565"
+    ],
+    "edge_n_way": 3,
+    "edge_rule": "ml-meta avg_p>=60",
+    "edge_status": "certified",
+    "enhancement_breakeven": 0.6536,
+    "enhancement_edge_sample": -0.2567,
+    "enhancement_label": "Match Over 2.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": 1.53,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": "scoutingstats",
+    "enhancement_priced": true,
+    "enhancement_probability": 0.4858,
+    "enhancement_reason": "Mathematical expectation is 65.2% (ML-calibrated 47.5%->63.4%, n=552) (Performance feedback: HR=64.2%, Adjusted Prob: 48.6%)",
+    "enhancement_state": "PAPER",
+    "event_notes": [
+      {
+        "cohort_n": 788,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.48577551817164427,
+        "raw_probability": 0.6524337060212009,
+        "reason": "Mathematical expectation is 65.2% (ML-calibrated 47.5%->63.4%, n=552) (Performance feedback: HR=64.2%, Adjusted Prob: 48.6%)"
+      },
+      {
+        "cohort_n": 788,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.9405722613778962,
+        "raw_probability": 0.9522747659769875,
+        "reason": "Combined Under 2.5 is 95.2% (ML-calibrated 93.6%->92.4%, n=380)"
+      },
+      {
+        "cohort_n": 788,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9363844424581118,
+        "raw_probability": 0.9876142971084684,
+        "reason": "Combined Under 3.5 is 98.8% (ML-calibrated 97.8%->96.8%, n=411) (Performance feedback: HR=95.7%, Adjusted Prob: 93.6%)"
+      },
+      {
+        "cohort_n": 788,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.28236199193504635,
+        "raw_probability": 0.268368710625606,
+        "reason": "Poisson expected hit rate is 26.8% (ML-calibrated 23.8%->29.0%, n=403)"
+      }
+    ],
+    "home": "Inter",
+    "kickoff": "2026-09-14 20:45:00",
+    "kickoff_source": "derived_sibling_row",
+    "kickoff_utc": "2026-09-14T18:45:00+00:00",
+    "kickoff_witness": "bzzoiro kickoff '2026-09-14T18:45:00Z'",
+    "league": "It1",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "historically unstable out of sample above 1.25",
+    "market_type": "1x2",
+    "match": "Inter vs Udinese",
+    "min_lead_minutes": 30,
+    "model_version": "dc-blend-v1",
+    "n_way": 4,
+    "odds": 1.25,
+    "odds_captured_at": "2026-09-14T18:45:00Z",
+    "odds_league": "Serie A",
+    "odds_match_method": "exact",
+    "odds_match_status": "uncorroborated",
+    "odds_replaced": {
+      "odds": 1.25,
+      "source": "forebet_best"
+    },
+    "odds_source": "scoutingstats_odds",
+    "odds_tier": "low",
+    "pick": "home",
+    "price_board": [
+      {
+        "away": "Udinese",
+        "bookmaker": "scoutingstats_odds",
+        "captured_at": "2026-09-14T18:45:00Z",
+        "chosen": true,
+        "home": "Inter",
+        "kickoff": "2026-09-14T18:45:00Z",
+        "league": "Serie A",
+        "market": "1x2",
+        "match_method": "exact",
+        "odds": 1.25,
+        "selection": "home",
+        "source": "scoutingstats_odds"
+      }
+    ],
+    "price_evidence": "SCOUTINGSTATS_SOLE",
+    "price_push_eligible": false,
+    "price_quarantine_reason": "scoutingstats_sole_source",
+    "recommended_enhancement": "match_over_25",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "ml-meta avg_p>=60",
+    "source_weights": {},
+    "sources_used": [
+      "forebet",
+      "zulubet",
+      "statarea",
+      "bzzoiro"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=626): Avg Goals: 3.72 | Over 2.5: 72.5% | BTTS: 39.6% | Home Over 1.5 Goals: 87.1% | Away Over 1.5 Goals: 10.2%",
+    "veto_reason": "context VETO in ['niche']",
+    "vitibet_index": null,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-09-14T09:01:27+02:00",
     "avg_p": 68.7,
     "away": "Istanbulspor AS",
     "bookmaker": "scoutingstats_odds",
@@ -945,7 +1107,7 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.4,
+    "odds": 1.42,
     "odds_captured_at": "2026-09-14T17:00:00Z",
     "odds_league": "1. Lig",
     "odds_match_method": "exact",
@@ -968,7 +1130,7 @@
         "league": "1. Lig",
         "market": "1x2",
         "match_method": "exact",
-        "odds": 1.4,
+        "odds": 1.42,
         "selection": "home",
         "source": "scoutingstats_odds"
       }
@@ -989,163 +1151,6 @@
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=727): Avg Goals: 3.65 | Over 2.5: 71.3% | BTTS: 40.0% | Home Over 1.5 Goals: 86.8% | Away Over 1.5 Goals: 10.2%",
     "veto_reason": "context VETO in ['team_a']",
     "vitibet_index": 5.82,
-    "w_score": 1.0
-  },
-  {
-    "as_of": "2026-09-14T06:00:51+02:00",
-    "avg_p": 64.6,
-    "away": "Udinese",
-    "bookmaker": "scoutingstats_odds",
-    "bucket": "SKIPPED_VETO",
-    "confidence": 0.7571,
-    "ctx": {
-      "away_norm": "udinese",
-      "comp_type_name": "league",
-      "competition_type": "BOOST",
-      "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "SKIPPED_VETO",
-      "duplicate_event_keys": "inter vs udinese",
-      "home_norm": "inter",
-      "league": "BOOST",
-      "league_key": "italy serie a",
-      "league_raw": "It1",
-      "niche": "VETO",
-      "odds_band": "CAUTION",
-      "odds_band_name": "1.20-1.35",
-      "resolution_original_verdict": "BOOST",
-      "resolution_path": "native",
-      "resolution_pool_n": null,
-      "resolution_pool_roi": null,
-      "resolution_reason": "native verdict BOOST unchanged (only UNKNOWN is resolvable)",
-      "resolution_verdict": "BOOST",
-      "side_role": "home",
-      "team_a": "ALLOW",
-      "team_h": "ALLOW"
-    },
-    "date": "2026-09-14",
-    "decay_verdict": "HEALTHY",
-    "display_rule": "ML-META\u226560",
-    "draw_risk_flag": "HIGH",
-    "duplicate_bucket_sources": [
-      "SKIPPED_VETO"
-    ],
-    "duplicate_matches_collapsed": [
-      "Inter vs Udinese"
-    ],
-    "duplicate_rows_collapsed": 1,
-    "duplicate_rules_collapsed": [
-      "ML-META\u226560"
-    ],
-    "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=60",
-    "edge_status": "certified",
-    "enhancement_label": "Away Team Under 2.5 Goals",
-    "enhancement_mapped": true,
-    "enhancement_multi_source": false,
-    "enhancement_price": null,
-    "enhancement_price_at": null,
-    "enhancement_price_book": null,
-    "enhancement_price_source": null,
-    "enhancement_priced": false,
-    "enhancement_probability": 0.9438,
-    "enhancement_reason": "Combined Under 2.5 is 95.6% (ML-calibrated 93.6%->92.4%, n=380)",
-    "enhancement_state": "SHADOW",
-    "event_notes": [
-      {
-        "cohort_n": 1511,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 2.5 Goals",
-        "market": "away_under_25",
-        "probability": 0.9438460055222555,
-        "raw_probability": 0.955589241713675,
-        "reason": "Combined Under 2.5 is 95.6% (ML-calibrated 93.6%->92.4%, n=380)"
-      },
-      {
-        "cohort_n": 1511,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 3.5 Goals",
-        "market": "away_under_35",
-        "probability": 0.9375003123450553,
-        "raw_probability": 0.9887912165489123,
-        "reason": "Combined Under 3.5 is 98.9% (ML-calibrated 97.8%->96.8%, n=411) (Performance feedback: HR=95.7%, Adjusted Prob: 93.8%)"
-      },
-      {
-        "cohort_n": 1511,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.43794192897324646,
-        "raw_probability": 0.5881895341648925,
-        "reason": "Mathematical expectation is 58.8% (ML-calibrated 47.5%->63.4%, n=552) (Performance feedback: HR=64.2%, Adjusted Prob: 43.8%)"
-      },
-      {
-        "cohort_n": 1511,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.21680915739313872,
-        "raw_probability": 0.2060645401411014,
-        "reason": "Poisson expected hit rate is 20.6% (ML-calibrated 23.8%->29.0%, n=403)"
-      }
-    ],
-    "home": "Inter",
-    "kickoff": "2026-09-14 20:45:00",
-    "kickoff_source": "derived_sibling_row",
-    "kickoff_utc": "2026-09-14T18:45:00+00:00",
-    "kickoff_witness": "bzzoiro kickoff '2026-09-14T18:45:00Z'",
-    "league": "It1",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "historically unstable out of sample above 1.25",
-    "market_type": "1x2",
-    "match": "Inter vs Udinese",
-    "min_lead_minutes": 30,
-    "model_version": "dc-blend-v1",
-    "n_way": 3,
-    "odds": 1.25,
-    "odds_captured_at": "2026-09-14T18:45:00Z",
-    "odds_league": "Serie A",
-    "odds_match_method": "exact",
-    "odds_match_status": "uncorroborated",
-    "odds_replaced": {
-      "odds": 1.25,
-      "source": "forebet_best"
-    },
-    "odds_source": "scoutingstats_odds",
-    "odds_tier": "low",
-    "pick": "home",
-    "price_board": [
-      {
-        "away": "Udinese",
-        "bookmaker": "scoutingstats_odds",
-        "captured_at": "2026-09-14T18:45:00Z",
-        "chosen": true,
-        "home": "Inter",
-        "kickoff": "2026-09-14T18:45:00Z",
-        "league": "Serie A",
-        "market": "1x2",
-        "match_method": "exact",
-        "odds": 1.25,
-        "selection": "home",
-        "source": "scoutingstats_odds"
-      }
-    ],
-    "price_evidence": "SCOUTINGSTATS_SOLE",
-    "price_push_eligible": false,
-    "price_quarantine_reason": "scoutingstats_sole_source",
-    "recommended_enhancement": "away_under_25",
-    "recommended_market": "avoid_raw_1x2",
-    "rule": "ml-meta avg_p>=60",
-    "source_weights": {},
-    "sources_used": [
-      "forebet",
-      "statarea",
-      "bzzoiro"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1111): Avg Goals: 3.41 | Over 2.5: 66.9% | BTTS: 40.1% | Home Over 1.5 Goals: 84.7% | Away Over 1.5 Goals: 9.7%",
-    "veto_reason": "context VETO in ['niche']",
-    "vitibet_index": null,
     "w_score": 1.0
   },
   {
@@ -1307,7 +1312,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-14T06:00:51+02:00",
+    "as_of": "2026-09-14T09:01:27+02:00",
     "avg_p": 62.2,
     "away": "Fenerbah\u00e7e",
     "bookmaker": "scoutingstats_odds",
@@ -1413,7 +1418,7 @@
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
     "n_way": 3,
-    "odds": 1.53,
+    "odds": 1.5,
     "odds_captured_at": "2026-09-14T17:00:00Z",
     "odds_league": "Super Lig",
     "odds_match_method": "exact",
@@ -1436,7 +1441,7 @@
         "league": "Super Lig",
         "market": "1x2",
         "match_method": "exact",
-        "odds": 1.53,
+        "odds": 1.5,
         "selection": "away",
         "source": "scoutingstats_odds"
       }
@@ -1460,7 +1465,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-14T06:00:51+02:00",
+    "as_of": "2026-09-14T09:01:27+02:00",
     "avg_p": 78.7,
     "away": "Keflavik",
     "bookmaker": "scoutingstats_odds",
@@ -1882,8 +1887,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-14T06:00:51+02:00",
-    "avg_p": 66.3,
+    "as_of": "2026-09-14T09:01:27+02:00",
+    "avg_p": 60.4,
     "away": "Estoril",
     "bookmaker": "scoutingstats_odds",
     "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
@@ -1897,7 +1902,7 @@
       "league_key": "pt1",
       "league_raw": "Portugal,Liga Portugal",
       "niche": "UNKNOWN",
-      "odds_band": "BOOST",
+      "odds_band": "ALLOW",
       "odds_band_name": "1.35-1.50",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O2-competition_type",
@@ -1911,60 +1916,58 @@
     },
     "date": "2026-09-14",
     "decay_verdict": "HEALTHY",
-    "display_rule": "ML-META\u226565",
+    "display_rule": "ML-META\u226560",
     "draw_risk_flag": "HIGH",
     "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=65",
+    "edge_rule": "ml-meta avg_p>=60",
     "edge_status": "certified",
-    "enhancement_breakeven": 0.5814,
-    "enhancement_edge_sample": -0.2245,
-    "enhancement_label": "Match Over 2.5 Goals",
+    "enhancement_label": "Away Team Under 3.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
-    "enhancement_price": 1.72,
+    "enhancement_price": null,
     "enhancement_price_at": null,
     "enhancement_price_book": null,
-    "enhancement_price_source": "scoutingstats",
-    "enhancement_priced": true,
-    "enhancement_probability": 0.4509,
-    "enhancement_reason": "Mathematical expectation is 60.6% (ML-calibrated 47.5%->63.4%, n=552) (Performance feedback: HR=64.2%, Adjusted Prob: 45.1%)",
-    "enhancement_state": "PAPER",
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.9388,
+    "enhancement_reason": "Combined Under 3.5 is 99.0% (ML-calibrated 97.8%->96.8%, n=411) (Performance feedback: HR=95.7%, Adjusted Prob: 93.9%)",
+    "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 1270,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.450943416914606,
-        "raw_probability": 0.6056515277072964,
-        "reason": "Mathematical expectation is 60.6% (ML-calibrated 47.5%->63.4%, n=552) (Performance feedback: HR=64.2%, Adjusted Prob: 45.1%)"
-      },
-      {
-        "cohort_n": 1270,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 2.5 Goals",
-        "market": "away_under_25",
-        "probability": 0.9447175088028168,
-        "raw_probability": 0.9564715881495872,
-        "reason": "Combined Under 2.5 is 95.6% (ML-calibrated 93.6%->92.4%, n=380)"
-      },
-      {
-        "cohort_n": 1270,
+        "cohort_n": 1973,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9381744797531121,
-        "raw_probability": 0.9895022678443542,
-        "reason": "Combined Under 3.5 is 99.0% (ML-calibrated 97.8%->96.8%, n=411) (Performance feedback: HR=95.7%, Adjusted Prob: 93.8%)"
+        "probability": 0.9387907429567923,
+        "raw_probability": 0.9901522469802087,
+        "reason": "Combined Under 3.5 is 99.0% (ML-calibrated 97.8%->96.8%, n=411) (Performance feedback: HR=95.7%, Adjusted Prob: 93.9%)"
       },
       {
-        "cohort_n": 1270,
+        "cohort_n": 1973,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.9324353125294395,
+        "raw_probability": 0.9440365780369354,
+        "reason": "Combined Under 2.5 is 94.4% (ML-calibrated 93.6%->92.4%, n=380)"
+      },
+      {
+        "cohort_n": 1973,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.4194590406028848,
+        "raw_probability": 0.5633656002564111,
+        "reason": "Mathematical expectation is 56.3% (ML-calibrated 47.5%->63.4%, n=552) (Performance feedback: HR=64.2%, Adjusted Prob: 41.9%)"
+      },
+      {
+        "cohort_n": 1973,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.2405426167038196,
-        "raw_probability": 0.22862181787612282,
-        "reason": "Poisson expected hit rate is 22.9% (ML-calibrated 23.8%->29.0%, n=403)"
+        "probability": 0.19415005888241718,
+        "raw_probability": 0.1845283800878752,
+        "reason": "Poisson expected hit rate is 18.5% (ML-calibrated 23.8%->29.0%, n=403)"
       }
     ],
     "home": "SC Braga",
@@ -1981,10 +1984,10 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.663,
+    "ml_p": 0.6044,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.44,
+    "odds": 1.42,
     "odds_captured_at": "2026-09-14T19:45:00Z",
     "odds_league": "Liga Portugal",
     "odds_match_method": "exact",
@@ -2003,7 +2006,7 @@
         "league": "Liga Portugal",
         "market": "1x2",
         "match_method": "exact",
-        "odds": 1.44,
+        "odds": 1.42,
         "selection": "home",
         "source": "scoutingstats_odds"
       }
@@ -2011,17 +2014,17 @@
     "price_evidence": "SCOUTINGSTATS_SOLE",
     "price_push_eligible": false,
     "price_quarantine_reason": "scoutingstats_sole_source",
-    "recommended_enhancement": "match_over_25",
+    "recommended_enhancement": "away_under_35",
     "recommended_market": "avoid_raw_1x2",
-    "rule": "ml-meta avg_p>=65",
+    "rule": "ml-meta avg_p>=60",
     "source_weights": {},
     "sources_used": [
       "statarea",
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=966): Avg Goals: 3.50 | Over 2.5: 67.8% | BTTS: 39.5% | Home Over 1.5 Goals: 85.4% | Away Over 1.5 Goals: 9.7%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1341): Avg Goals: 3.29 | Over 2.5: 65.4% | BTTS: 42.5% | Home Over 1.5 Goals: 82.9% | Away Over 1.5 Goals: 10.3%",
     "vitibet_index": 2.41,
-    "w_score": 0.6766
+    "w_score": 0.4238
   }
 ]
