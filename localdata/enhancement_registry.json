@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 135,
-   "inv_price_sum": 134.69269736527403,
-   "multi_n": 19,
-   "n": 207,
+   "hits": 138,
+   "inv_price_sum": 136.48596293152625,
+   "multi_n": 20,
+   "n": 210,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -543,9 +543,12 @@
     "2026-09-13|RB Leipzig vs Hamburger SV|match_over_25@v1",
     "2026-09-13|Viking FK vs Kristiansund BK|match_over_25@v1",
     "2026-09-13|PEC Zwolle vs Feyenoord|match_over_25@v1",
-    "2026-09-13|Viking vs Kristiansund BK|match_over_25@v1"
+    "2026-09-13|Viking vs Kristiansund BK|match_over_25@v1",
+    "2026-09-14|Ludogorets vs Septemvri Sofia|match_over_25@v1",
+    "2026-09-14|Como vs Parma|match_over_25@v1",
+    "2026-09-14|Kayserispor vs Istanbulspor AS|match_over_25@v1"
    ],
-   "profit": -1.38,
+   "profit": 0.64,
    "records": [
     {
      "date": "2026-08-01",
@@ -2199,6 +2202,30 @@
      "match": "Viking vs Kristiansund BK",
      "multi_source": false,
      "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-14",
+     "hit": true,
+     "match": "Ludogorets vs Septemvri Sofia",
+     "multi_source": false,
+     "price": 1.65,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-14",
+     "hit": true,
+     "match": "Como vs Parma",
+     "multi_source": true,
+     "price": 1.71,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-14",
+     "hit": true,
+     "match": "Kayserispor vs Istanbulspor AS",
+     "multi_source": false,
+     "price": 1.66,
      "source": "scoutingstats"
     }
    ],
