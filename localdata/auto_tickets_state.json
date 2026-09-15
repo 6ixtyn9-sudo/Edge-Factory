@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 79.31259500000002,
+  "bank": 88.46970000000002,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -33,62 +33,6 @@
         }
       ],
       "staked_pct": 15.6111
-    },
-    {
-      "date": "2026-09-15",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Al Ahly vs Abu Qair Semad",
-              "pick": "HOME",
-              "prob": 0.77,
-              "odds": 1.2,
-              "result": null
-            },
-            {
-              "match": "MSV Duisburg vs TSV Havelse",
-              "pick": "HOME",
-              "prob": 0.72,
-              "odds": 1.3,
-              "result": null
-            }
-          ],
-          "odds": 1.56,
-          "stake_pct": 7.9627,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Ross County vs Queen of the South",
-              "pick": "HOME",
-              "prob": 0.73,
-              "odds": 1.3,
-              "result": null
-            },
-            {
-              "match": "Elche vs Real Madrid",
-              "pick": "AWAY",
-              "prob": 0.728,
-              "odds": 1.22,
-              "result": null
-            }
-          ],
-          "odds": 1.59,
-          "stake_pct": 7.9627,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 15.9254
     }
   ],
   "history": [
@@ -435,6 +379,22 @@
         }
       ],
       "bank_pct": 79.3126
+    },
+    {
+      "date": "2026-09-15",
+      "staked_pct": 15.9254,
+      "returned_pct": 25.0825,
+      "accas": [
+        {
+          "odds": 1.56,
+          "won": true
+        },
+        {
+          "odds": 1.59,
+          "won": true
+        }
+      ],
+      "bank_pct": 88.4697
     }
   ],
   "events": []

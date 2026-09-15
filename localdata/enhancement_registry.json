@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 138,
-   "inv_price_sum": 136.48596293152625,
+   "hits": 145,
+   "inv_price_sum": 141.21507747211623,
    "multi_n": 20,
-   "n": 210,
+   "n": 217,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -546,9 +546,16 @@
     "2026-09-13|Viking vs Kristiansund BK|match_over_25@v1",
     "2026-09-14|Ludogorets vs Septemvri Sofia|match_over_25@v1",
     "2026-09-14|Como vs Parma|match_over_25@v1",
-    "2026-09-14|Kayserispor vs Istanbulspor AS|match_over_25@v1"
+    "2026-09-14|Kayserispor vs Istanbulspor AS|match_over_25@v1",
+    "2026-09-15|MSV Duisburg vs TSV Havelse|match_over_25@v1",
+    "2026-09-15|The New Saints vs Flint Town Utd|match_over_25@v1",
+    "2026-09-15|Barry Town vs Ammanford|match_over_25@v1",
+    "2026-09-15|Holywell Town vs Colwyn Bay|match_over_25@v1",
+    "2026-09-15|Ross County vs Queen of the South|match_over_25@v1",
+    "2026-09-15|Instituto C\u00f3rdoba vs Estudiantes R\u00edo Cuarto|match_over_25@v1",
+    "2026-09-15|Reading vs Brentford|match_over_25@v1"
    ],
-   "profit": 0.64,
+   "profit": 4.64,
    "records": [
     {
      "date": "2026-08-01",
@@ -2226,6 +2233,62 @@
      "match": "Kayserispor vs Istanbulspor AS",
      "multi_source": false,
      "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-15",
+     "hit": true,
+     "match": "MSV Duisburg vs TSV Havelse",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-15",
+     "hit": true,
+     "match": "The New Saints vs Flint Town Utd",
+     "multi_source": false,
+     "price": 1.22,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-15",
+     "hit": true,
+     "match": "Barry Town vs Ammanford",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-15",
+     "hit": true,
+     "match": "Holywell Town vs Colwyn Bay",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-15",
+     "hit": true,
+     "match": "Ross County vs Queen of the South",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-15",
+     "hit": true,
+     "match": "Instituto C\u00f3rdoba vs Estudiantes R\u00edo Cuarto",
+     "multi_source": false,
+     "price": 2.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-15",
+     "hit": true,
+     "match": "Reading vs Brentford",
+     "multi_source": false,
+     "price": 1.3,
      "source": "scoutingstats"
     }
    ],
