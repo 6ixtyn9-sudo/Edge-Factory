@@ -1,28 +1,28 @@
 {
   "by_bucket": {
     "CAUTION": {
-      "avg_implied_prob_delta": -0.001097,
-      "avg_raw_odds_delta": 0.005392,
-      "beat_later_price_n": 102,
-      "beat_later_price_rate": 0.147059,
+      "avg_implied_prob_delta": -0.001243,
+      "avg_raw_odds_delta": 0.005577,
+      "beat_later_price_n": 104,
+      "beat_later_price_rate": 0.144231,
       "total_picks": 115,
-      "with_two_prices": 102
+      "with_two_prices": 104
     },
     "CERTIFIED_CLEAN": {
-      "avg_implied_prob_delta": -0.00778,
-      "avg_raw_odds_delta": 0.045455,
-      "beat_later_price_n": 66,
-      "beat_later_price_rate": 0.19697,
-      "total_picks": 81,
-      "with_two_prices": 66
+      "avg_implied_prob_delta": -0.007664,
+      "avg_raw_odds_delta": 0.044776,
+      "beat_later_price_n": 67,
+      "beat_later_price_rate": 0.19403,
+      "total_picks": 82,
+      "with_two_prices": 67
     },
     "SKIPPED_VETO": {
-      "avg_implied_prob_delta": 0.001559,
-      "avg_raw_odds_delta": -0.003015,
-      "beat_later_price_n": 461,
-      "beat_later_price_rate": 0.186551,
-      "total_picks": 499,
-      "with_two_prices": 461
+      "avg_implied_prob_delta": 0.001552,
+      "avg_raw_odds_delta": -0.003002,
+      "beat_later_price_n": 463,
+      "beat_later_price_rate": 0.185745,
+      "total_picks": 501,
+      "with_two_prices": 463
     },
     "WATCHLIST_NO_ODDS": {
       "avg_implied_prob_delta": null,
@@ -49,22 +49,22 @@
       "with_two_prices": 185
     },
     "WATCHLIST_UNKNOWN_CTX": {
-      "avg_implied_prob_delta": -0.006779,
-      "avg_raw_odds_delta": 0.010833,
-      "beat_later_price_n": 12,
-      "beat_later_price_rate": 0.0,
+      "avg_implied_prob_delta": -0.005727,
+      "avg_raw_odds_delta": 0.009231,
+      "beat_later_price_n": 13,
+      "beat_later_price_rate": 0.076923,
       "total_picks": 14,
-      "with_two_prices": 12
+      "with_two_prices": 13
     }
   },
   "by_rule": {
     "2way-unanimous avg_p>=70": {
-      "avg_implied_prob_delta": 0.000289,
-      "avg_raw_odds_delta": 0.0,
-      "beat_later_price_n": 151,
-      "beat_later_price_rate": 0.152318,
+      "avg_implied_prob_delta": 0.000332,
+      "avg_raw_odds_delta": -6.6e-05,
+      "beat_later_price_n": 152,
+      "beat_later_price_rate": 0.157895,
       "total_picks": 193,
-      "with_two_prices": 151
+      "with_two_prices": 152
     },
     "ml-meta avg_p>=55": {
       "avg_implied_prob_delta": 0.001542,
@@ -75,19 +75,19 @@
       "with_two_prices": 521
     },
     "ml-meta avg_p>=60": {
-      "avg_implied_prob_delta": -0.007726,
-      "avg_raw_odds_delta": 0.042297,
-      "beat_later_price_n": 74,
-      "beat_later_price_rate": 0.067568,
-      "total_picks": 97,
-      "with_two_prices": 74
+      "avg_implied_prob_delta": -0.007457,
+      "avg_raw_odds_delta": 0.04,
+      "beat_later_price_n": 79,
+      "beat_later_price_rate": 0.063291,
+      "total_picks": 98,
+      "with_two_prices": 79
     },
     "ml-meta avg_p>=65": {
       "avg_implied_prob_delta": 0.00275,
       "avg_raw_odds_delta": -0.0075,
       "beat_later_price_n": 16,
       "beat_later_price_rate": 0.125,
-      "total_picks": 27,
+      "total_picks": 28,
       "with_two_prices": 16
     },
     "ml-meta avg_p>=70": {
@@ -95,7 +95,7 @@
       "avg_raw_odds_delta": 0.0095,
       "beat_later_price_n": 20,
       "beat_later_price_rate": 0.1,
-      "total_picks": 30,
+      "total_picks": 31,
       "with_two_prices": 20
     },
     "ml-meta avg_p>=75": {
@@ -125,16 +125,16 @@
   },
   "end": "2026-09-15",
   "meta": {
-    "insufficient_snapshots": 80,
+    "insufficient_snapshots": 77,
     "unmatched_picks": 67
   },
   "overall": {
-    "avg_implied_prob_delta": 0.000293,
-    "avg_raw_odds_delta": 0.002062,
-    "beat_later_price_n": 844,
-    "beat_later_price_rate": 0.149289,
-    "total_picks": 990,
-    "with_two_prices": 844
+    "avg_implied_prob_delta": 0.000279,
+    "avg_raw_odds_delta": 0.002071,
+    "beat_later_price_n": 850,
+    "beat_later_price_rate": 0.149412,
+    "total_picks": 993,
+    "with_two_prices": 850
   },
   "start": "2026-08-16"
 }
