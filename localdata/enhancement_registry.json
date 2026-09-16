@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 145,
-   "inv_price_sum": 141.21507747211623,
+   "hits": 146,
+   "inv_price_sum": 142.9506146621989,
    "multi_n": 20,
-   "n": 217,
+   "n": 219,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -553,9 +553,11 @@
     "2026-09-15|Holywell Town vs Colwyn Bay|match_over_25@v1",
     "2026-09-15|Ross County vs Queen of the South|match_over_25@v1",
     "2026-09-15|Instituto C\u00f3rdoba vs Estudiantes R\u00edo Cuarto|match_over_25@v1",
-    "2026-09-15|Reading vs Brentford|match_over_25@v1"
+    "2026-09-15|Reading vs Brentford|match_over_25@v1",
+    "2026-09-16|Bayer Leverkusen vs NK Celje|match_over_25@v1",
+    "2026-09-16|Barcelona vs Racing Santander|match_over_25@v1"
    ],
-   "profit": 4.64,
+   "profit": 3.74,
    "records": [
     {
      "date": "2026-08-01",
@@ -2289,6 +2291,22 @@
      "match": "Reading vs Brentford",
      "multi_source": false,
      "price": 1.3,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-16",
+     "hit": false,
+     "match": "Bayer Leverkusen vs NK Celje",
+     "multi_source": false,
+     "price": 1.21,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-16",
+     "hit": true,
+     "match": "Barcelona vs Racing Santander",
+     "multi_source": false,
+     "price": 1.1,
      "source": "scoutingstats"
     }
    ],
