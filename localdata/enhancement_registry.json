@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 146,
-   "inv_price_sum": 142.9506146621989,
-   "multi_n": 20,
-   "n": 219,
+   "hits": 148,
+   "inv_price_sum": 144.39512863800198,
+   "multi_n": 21,
+   "n": 221,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -555,9 +555,11 @@
     "2026-09-15|Instituto C\u00f3rdoba vs Estudiantes R\u00edo Cuarto|match_over_25@v1",
     "2026-09-15|Reading vs Brentford|match_over_25@v1",
     "2026-09-16|Bayer Leverkusen vs NK Celje|match_over_25@v1",
-    "2026-09-16|Barcelona vs Racing Santander|match_over_25@v1"
+    "2026-09-16|Barcelona vs Racing Santander|match_over_25@v1",
+    "2026-09-17|Manchester City vs Norwich City|match_over_25@v1",
+    "2026-09-17|Juventus FC vs NEC Nijmegen|match_over_25@v1"
    ],
-   "profit": 3.74,
+   "profit": 4.51,
    "records": [
     {
      "date": "2026-08-01",
@@ -2308,6 +2310,22 @@
      "multi_source": false,
      "price": 1.1,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-17",
+     "hit": true,
+     "match": "Manchester City vs Norwich City",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-17",
+     "hit": true,
+     "match": "Juventus FC vs NEC Nijmegen",
+     "multi_source": true,
+     "price": 1.41,
+     "source": "theoddsapi"
     }
    ],
    "status": "PAPER",
