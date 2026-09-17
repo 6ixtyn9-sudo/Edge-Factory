@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 103.40567200000002,
+  "bank": 114.05074300000003,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -40,31 +40,6 @@
         {
           "legs": [
             {
-              "match": "Al Zawra'a vs Gharraf",
-              "pick": "HOME",
-              "prob": 0.735,
-              "odds": 1.45,
-              "result": null
-            },
-            {
-              "match": "Crystal Palace vs Lech Poznan",
-              "pick": "HOME",
-              "prob": 0.693,
-              "odds": 1.36,
-              "result": null
-            }
-          ],
-          "odds": 1.97,
-          "stake_pct": 10.9743,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
               "match": "FC Nizhny Novgorod vs Leningradets",
               "pick": "HOME",
               "prob": 0.715,
@@ -83,12 +58,12 @@
           "stake_pct": 10.9743,
           "results": [
             null,
-            null
+            "win"
           ],
           "won": null
         }
       ],
-      "staked_pct": 21.9486
+      "staked_pct": 10.9743
     }
   ],
   "history": [
@@ -467,6 +442,18 @@
         }
       ],
       "bank_pct": 103.4057
+    },
+    {
+      "date": "2026-09-17",
+      "staked_pct": 10.9743,
+      "returned_pct": 21.6194,
+      "accas": [
+        {
+          "odds": 1.97,
+          "won": true
+        }
+      ],
+      "bank_pct": 114.0507
     }
   ],
   "events": []
