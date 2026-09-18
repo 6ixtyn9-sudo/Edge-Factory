@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 148,
-   "inv_price_sum": 144.39512863800198,
+   "hits": 151,
+   "inv_price_sum": 146.5292428897633,
    "multi_n": 21,
-   "n": 221,
+   "n": 224,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -557,9 +557,12 @@
     "2026-09-16|Bayer Leverkusen vs NK Celje|match_over_25@v1",
     "2026-09-16|Barcelona vs Racing Santander|match_over_25@v1",
     "2026-09-17|Manchester City vs Norwich City|match_over_25@v1",
-    "2026-09-17|Juventus FC vs NEC Nijmegen|match_over_25@v1"
+    "2026-09-17|Juventus FC vs NEC Nijmegen|match_over_25@v1",
+    "2026-09-18|Bayern M\u00fcnchen vs Union Berlin|match_over_25@v1",
+    "2026-09-18|Ammanford vs Pen-y-Bont FC|match_over_25@v1",
+    "2026-09-18|Manchester City (w) vs Liverpool (w)|match_over_25@v1"
    ],
-   "profit": 4.51,
+   "profit": 5.89,
    "records": [
     {
      "date": "2026-08-01",
@@ -2326,6 +2329,30 @@
      "multi_source": true,
      "price": 1.41,
      "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-18",
+     "hit": true,
+     "match": "Bayern M\u00fcnchen vs Union Berlin",
+     "multi_source": false,
+     "price": 1.1,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-18",
+     "hit": true,
+     "match": "Ammanford vs Pen-y-Bont FC",
+     "multi_source": false,
+     "price": 1.75,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-18",
+     "hit": true,
+     "match": "Manchester City (w) vs Liverpool (w)",
+     "multi_source": false,
+     "price": 1.53,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
