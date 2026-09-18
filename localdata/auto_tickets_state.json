@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 114.05074300000003,
+  "bank": 121.95223900000002,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -33,37 +33,6 @@
         }
       ],
       "staked_pct": 15.6111
-    },
-    {
-      "date": "2026-09-17",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "FC Nizhny Novgorod vs Leningradets",
-              "pick": "HOME",
-              "prob": 0.715,
-              "odds": 1.43,
-              "result": null
-            },
-            {
-              "match": "Juventus FC vs NEC Nijmegen",
-              "pick": "HOME",
-              "prob": 0.706,
-              "odds": 1.2,
-              "result": null
-            }
-          ],
-          "odds": 1.72,
-          "stake_pct": 10.9743,
-          "results": [
-            null,
-            "win"
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 10.9743
     }
   ],
   "history": [
@@ -445,15 +414,19 @@
     },
     {
       "date": "2026-09-17",
-      "staked_pct": 10.9743,
-      "returned_pct": 21.6194,
+      "staked_pct": 21.9486,
+      "returned_pct": 40.4952,
       "accas": [
         {
           "odds": 1.97,
           "won": true
+        },
+        {
+          "odds": 1.72,
+          "won": true
         }
       ],
-      "bank_pct": 114.0507
+      "bank_pct": 121.9522
     }
   ],
   "events": []
