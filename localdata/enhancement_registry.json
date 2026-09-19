@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 151,
-   "inv_price_sum": 146.5292428897633,
-   "multi_n": 21,
-   "n": 224,
+   "hits": 157,
+   "inv_price_sum": 151.572351061994,
+   "multi_n": 23,
+   "n": 231,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -560,9 +560,16 @@
     "2026-09-17|Juventus FC vs NEC Nijmegen|match_over_25@v1",
     "2026-09-18|Bayern M\u00fcnchen vs Union Berlin|match_over_25@v1",
     "2026-09-18|Ammanford vs Pen-y-Bont FC|match_over_25@v1",
-    "2026-09-18|Manchester City (w) vs Liverpool (w)|match_over_25@v1"
+    "2026-09-18|Manchester City (w) vs Liverpool (w)|match_over_25@v1",
+    "2026-09-19|Grimsby vs Crawley Town|match_over_25@v1",
+    "2026-09-19|Maccabi Netanya vs Maccabi Tel Aviv|match_over_25@v1",
+    "2026-09-19|Rijnsburgse Boys vs Quick Boys|match_over_25@v1",
+    "2026-09-19|Hamilton Academical vs Queen of the South|match_over_25@v1",
+    "2026-09-19|Molde vs Aalesund|match_over_25@v1",
+    "2026-09-19|The New Saints vs Llandudno|match_over_25@v1",
+    "2026-09-19|Kristiansund BK vs Rosenborg BK|match_over_25@v1"
    ],
-   "profit": 5.89,
+   "profit": 7.17,
    "records": [
     {
      "date": "2026-08-01",
@@ -2352,6 +2359,62 @@
      "match": "Manchester City (w) vs Liverpool (w)",
      "multi_source": false,
      "price": 1.53,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-19",
+     "hit": false,
+     "match": "Grimsby vs Crawley Town",
+     "multi_source": true,
+     "price": 1.5,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-19",
+     "hit": true,
+     "match": "Maccabi Netanya vs Maccabi Tel Aviv",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-19",
+     "hit": true,
+     "match": "Rijnsburgse Boys vs Quick Boys",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-19",
+     "hit": true,
+     "match": "Hamilton Academical vs Queen of the South",
+     "multi_source": false,
+     "price": 1.53,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-19",
+     "hit": true,
+     "match": "Molde vs Aalesund",
+     "multi_source": true,
+     "price": 1.22,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-19",
+     "hit": true,
+     "match": "The New Saints vs Llandudno",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-19",
+     "hit": true,
+     "match": "Kristiansund BK vs Rosenborg BK",
+     "multi_source": false,
+     "price": 1.4,
      "source": "scoutingstats"
     }
    ],
