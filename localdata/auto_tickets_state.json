@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 142.82162100000002,
+  "bank": 135.82504900000004,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -33,62 +33,6 @@
         }
       ],
       "staked_pct": 15.6111
-    },
-    {
-      "date": "2026-09-19",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Hamilton Academical vs Queen of the South",
-              "pick": "HOME",
-              "prob": 0.755,
-              "odds": 1.28,
-              "result": null
-            },
-            {
-              "match": "Sevilla vs Barcelona",
-              "pick": "AWAY",
-              "prob": 0.722,
-              "odds": 1.22,
-              "result": null
-            }
-          ],
-          "odds": 1.56,
-          "stake_pct": 15.9013,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Slavia Mozyr vs Naftan",
-              "pick": "HOME",
-              "prob": 0.75,
-              "odds": 1.31,
-              "result": null
-            },
-            {
-              "match": "Molde vs Aalesund",
-              "pick": "HOME",
-              "prob": 0.73,
-              "odds": 1.38,
-              "result": null
-            }
-          ],
-          "odds": 1.81,
-          "stake_pct": 15.9013,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 31.8026
     }
   ],
   "history": [
@@ -499,6 +443,22 @@
         }
       ],
       "bank_pct": 142.8216
+    },
+    {
+      "date": "2026-09-19",
+      "staked_pct": 31.8026,
+      "returned_pct": 24.806,
+      "accas": [
+        {
+          "odds": 1.56,
+          "won": true
+        },
+        {
+          "odds": 1.81,
+          "won": false
+        }
+      ],
+      "bank_pct": 135.825
     }
   ],
   "events": []
