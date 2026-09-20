@@ -46,13 +46,20 @@
     },
     {
       "decay": "WATCH",
+      "last_fired": "2026-09-02",
+      "n_last_window": 0,
+      "rule": "ml-meta avg_p>=75",
+      "silent": true
+    },
+    {
+      "decay": "WATCH",
       "last_fired": "2026-09-19",
       "n_last_window": 7,
       "rule": "ml-meta avg_p>=80",
       "silent": false
     }
   ],
-  "generated_at": "2026-09-20T09:17:11",
+  "generated_at": "2026-09-20T12:18:35",
   "ignored_non_operational_rules": [
     "2way-unanimous min_p>=60 avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=70",
@@ -147,5 +154,5 @@
       "stale": false
     }
   ],
-  "warn_count": 1
+  "warn_count": 2
 }
