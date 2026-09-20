@@ -271,6 +271,23 @@ def sync_official_archive(target_date: str, label: str = "sync_supabase") -> Non
     )
 
 
+def ml_fade_research_maintenance(target_date: str) -> None:
+    """ML-fade research accrual step (RESEARCH-ONLY).
+
+    Settles the tracked research ledger against the tracked settled-results
+    facts, prints visible accrual/monitoring lines, and runs the frozen
+    checkpoint evaluation when the predeclared cadence says one is due. It
+    never touches picks, tickets, notifications, or the edge registry.
+    Soft-fail like the other side-band maintenance steps: the research ledger
+    is committed state, so a failed run never loses evidence — the next run
+    re-settles idempotently.
+    """
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --today {target_date}",
+        "ml_fade_research (settle + monitor + checkpoint)",
+    )
+
+
 def capture_theodds_snapshot(target_date: str, trigger: str) -> None:
     """The Odds API price snapshot for the frozen shortlist (audit-only CLV).
 
@@ -872,6 +889,7 @@ def run_pipeline(
             "PYTHONPATH=src python3 scripts/o25_tracker.py 2>&1 | tee localdata/o25_tracker_report.txt",
             "o25_tracker (goals surface + checkpoint gate)",
         )
+        ml_fade_research_maintenance(target_date)
         sync_official_archive(target_date, "sync_supabase")
         _notify(target_date, "notify (Smart Dispatch + empty-slate heartbeat)")
         if not picks_only:
@@ -1000,6 +1018,7 @@ def run_pipeline(
             "PYTHONPATH=src python3 scripts/o25_tracker.py 2>&1 | tee localdata/o25_tracker_report.txt",
             "o25_tracker (goals surface + checkpoint gate)",
         )
+        ml_fade_research_maintenance(target_date)
         print(f"\n=== Autonomous Intraday Service Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "forecast":

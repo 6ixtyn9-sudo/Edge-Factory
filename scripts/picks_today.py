@@ -41,6 +41,14 @@ from edgefactory.fade import (
     fade_odds_column,
     fade_avg_p,
 )
+from edgefactory.ml_fade_research import (
+    LEDGER_NAME as RESEARCH_LEDGER_NAME,
+    FadeResearchCollector,
+    detect_model_drift,
+    load_ledger as load_research_ledger,
+    merge_candidates as merge_research_candidates,
+    save_ledger as save_research_ledger,
+)
 from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_debias_hr
 from edgefactory.veto_resolution import apply_resolution_to_ctx, build_pool_table
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
@@ -2524,12 +2532,13 @@ def fixture_schedule_unstable(*rows: dict) -> tuple[bool, set[str]]:
 
 
 # --------------------------------------------------------------- consensus --
-def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
+def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
+             research_collector: FadeResearchCollector | None = None):
     picks, vetoes = [], 0
     keys = set()
     for s in SOURCES_1X2:
         keys |= set(data.get(s, {}))
-        
+
     # --- Load ML rules and model ---
     ml_rules, ml_model = load_ml_rules_and_model()
     # ml-fade: certified inverse-selection rules derived from ml-meta. They
@@ -2539,7 +2548,12 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
     ml_max_p = 0.0
     ml_scored = 0
     ml_fade_draw_skipped = 0
-    if (ml_rules or ml_fade_rules) and ml_model:
+    # Research capture is certification-INDEPENDENT: model inference (and the
+    # research ledger rows derived from it) must run even when no ml-meta /
+    # ml-fade rule is currently certified. Only certified EMISSION is gated on
+    # the rules lists — an empty rules list naturally emits nothing because
+    # the threshold loops below no-op without rules.
+    if ml_model:
         rolling_hit_rate = get_rolling_hit_rate_last_14d(day)
 
     for k in keys:
@@ -2578,7 +2592,10 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             continue
 
         # --- Evaluate ML Rules ---
-        if (ml_rules or ml_fade_rules) and ml_model and (fb or zb or sa):
+        # Model inference runs whenever a serving model exists (see the
+        # certification-independence note above); certified rule LOOPS inside
+        # decide emission. Research capture hooks in after ml_p is computed.
+        if ml_model and (fb or zb or sa):
             fb_probs = probs_1x2(fb) if fb else None
             zb_probs = probs_1x2(zb) if zb else None
             sa_probs = probs_1x2(sa) if sa else None
@@ -2698,7 +2715,21 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                 ml_p = 1.0 / (1.0 + math.exp(-z))
                 ml_scored += 1
                 ml_max_p = max(ml_max_p, ml_p)
-                
+
+                # Research capture (certification-independent): record the
+                # parent selection + deterministic fade candidate with their
+                # own opposing-side source quotes. Goes ONLY to the research
+                # ledger via the collector — never into `picks`, so the
+                # operational slate, collapse, archives and notifications are
+                # structurally untouched by this hook.
+                if research_collector is not None:
+                    research_collector.record(
+                        day=day, anchor=anchor, fb=fb, zb=zb, used=used,
+                        majority_pick=majority_pick, ml_p=ml_p, z_score=z,
+                        model=ml_model,
+                        ml_ht_diff=ht_diff_feat, ml_ht_total=ht_total_feat,
+                    )
+
                 # Check certified ML rules
                 # Emit ONE pick at the HIGHEST qualifying threshold. A fixture
                 # clearing 60 also clears 55 — emitting both duplicated rows
@@ -3009,10 +3040,12 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
 
 
 # --------------------------------------------------------------------- run --
-def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = None):
+def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = None,
+            research_collector: FadeResearchCollector | None = None):
     data = fetch_all(day)
     picks, vetoes, n_up = eval_1x2(day, data, t1x2,
-                                   source_weights=source_weights_1x2 or {})
+                                   source_weights=source_weights_1x2 or {},
+                                   research_collector=research_collector)
     picks += eval_binary(day, data, "ou_2.5", SOURCES_OU, OU_COL, ou_edge,
                          ("over", "under"),
                          {"over": "odd_over", "under": "odd_under"})
@@ -3464,7 +3497,12 @@ def main():
     all_picks: list = []
     total_vetoes = 0
     total_upcoming = 0
-    
+
+    # ML-fade research capture: certification-independent collection of every
+    # model-scored fixture (parent + deterministic fade candidate) into the
+    # tracked research ledger. Research rows NEVER join all_picks.
+    research_collector = FadeResearchCollector()
+
     # Open warehouse connection to dynamically query historical realized stats
     con = None
     try:
@@ -3475,7 +3513,8 @@ def main():
 
     for day in days:
         picks, vetoes, n_up, data = run_day(day, t1x2, ou_edge, btts_edge,
-                                            source_weights_1x2=source_weights_1x2)
+                                            source_weights_1x2=source_weights_1x2,
+                                            research_collector=research_collector)
         total_vetoes += vetoes
         total_upcoming += n_up
         picks, pre_match_skips = filter_operational_pre_match_picks(
@@ -3651,6 +3690,65 @@ def main():
             _day_archive.write_text(json.dumps(_merged_rows, indent=2, sort_keys=True))
         except OSError:
             print(f"warn: could not write day archive {_day_archive}", file=sys.stderr)
+
+    # ------------------------------------------------------------------
+    # ML-fade research capture: merge this run's scored fixtures into the
+    # tracked research ledger. This path is deliberately OUTSIDE the
+    # operational pipeline above: no bucket assignment, no archive/notify,
+    # no auto-ticket, no registry contact. FIRST-seen rows are frozen
+    # (bet-time quote, model key, prediction); re-observation only refreshes
+    # latest quotes. Fail-closed guards:
+    #   - the same operational pre-match guard (kickoff trusted, >= min lead)
+    #     is applied to research candidates, so nothing kicks off mid-bet;
+    #   - a missing purity registry (the frozen veto-context surface the
+    #     research rules are declared AGAINST) disables the ledger write with
+    #     a loud warning rather than storing research out of context;
+    #   - serving-model drift vs the frozen method prints a visible warning
+    #     (recorded fully by the checkpoint evaluation).
+    research_candidates = research_collector.finalize()
+    if research_candidates:
+        kept_research, research_skips = filter_operational_pre_match_picks(
+            [dict(r) for r in research_candidates],
+            as_of=as_of, min_lead=lead_minutes,
+        )
+        if research_skips:
+            print(f"research capture pre-match guard: skipped "
+                  f"{sum(research_skips.values())} ({research_skips})",
+                  file=sys.stderr)
+        if purity_missing:
+            print(
+                "🚨 ML-FADE RESEARCH CAPTURE DISABLED this run: "
+                "purity_registry.json missing — the frozen veto-context "
+                "surface the research rules are declared against is absent, "
+                "so the ledger is NOT written (fail-closed)",
+                file=sys.stderr,
+            )
+        elif kept_research:
+            _ledger_path = ROOT / "localdata" / RESEARCH_LEDGER_NAME
+            _now_iso = as_of.isoformat(timespec="seconds")
+            try:
+                _ledger = load_research_ledger(_ledger_path)
+            except Exception as exc:
+                print(f"🚨 research ledger unreadable ({exc}) — refusing to "
+                      "merge this run (fail-closed; no partial writes)",
+                      file=sys.stderr)
+            else:
+                _r_rules, _r_model = load_ml_rules_and_model()
+                drift = detect_model_drift(_r_model)
+                if drift["drifted"]:
+                    print("🚨 ML-FADE RESEARCH MODEL DRIFT: "
+                          + "; ".join(drift["reasons"]), file=sys.stderr)
+                merge_stats = merge_research_candidates(
+                    _ledger, kept_research, now=_now_iso,
+                    expected_model_key=drift["model_key"])
+                save_research_ledger(_ledger_path, _ledger, now=_now_iso)
+                ms = merge_stats.as_dict()
+                print(f"ml-fade research capture: +{ms['added_parent']} parent / "
+                      f"+{ms['added_fade']} fade rows "
+                      f"(scored {research_collector.scored}, draws excluded "
+                      f"{research_collector.draw_excluded}, identity-skipped "
+                      f"{research_collector.identity_skipped}, repriced "
+                      f"{ms['repriced']}, observed {ms['observed_only']})")
 
     if con:
         try:
