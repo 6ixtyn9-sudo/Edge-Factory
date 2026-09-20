@@ -292,6 +292,8 @@ def display_rule_label(market: str, n_way: int, threshold: float, rule: str = ""
             toks.append("ODDS")
         if toks:
             qual = "+" + "+".join(toks)
+    if "ml-fade" in market.lower() or "ml-fade" in rule.lower():
+        return f"ML-FADE≥{threshold:.0f}"
     if "ml-meta" in market.lower() or "ml-meta" in rule.lower() or n_way == 0:
         return f"ML-META≥{threshold:.0f}"
     if market == "1x2":
@@ -306,8 +308,11 @@ def display_rule_label(market: str, n_way: int, threshold: float, rule: str = ""
 def honest_display_label(pick: dict) -> str:
     """Render a pick's rule label from the EXACT rule string.
 
-    Falls back to the stored display/rule for unparseable rules (ml-meta,
-    legacy display-string rows) — never worse than the stored label.
+    Falls back to the stored display/rule for unparseable rules (legacy
+    display-string rows) — never worse than the stored label. Model families
+    without an N-way token (ml-meta and its derived ml-fade slice) derive
+    from their exact threshold the same way: a stored display that disagrees
+    with the family's rule string is rewritten by heal_ledger_labels.
     """
     rule = str(pick.get("edge_rule") or pick.get("rule") or "").strip()
     market = pick.get("market") or "1x2"
@@ -318,6 +323,14 @@ def honest_display_label(pick: dict) -> str:
                 return display_rule_label(market, int(mn.group(1)), float(mt.group(1)), rule)
             except (TypeError, ValueError):
                 pass
+        rl = rule.lower()
+        if rl.startswith(("ml-fade", "ml-meta")):
+            mt = _RULE_THR_RE.search(rule)
+            if mt:
+                try:
+                    return display_rule_label(market, 0, float(mt.group(1)), rule)
+                except (TypeError, ValueError):
+                    pass
     return pick.get("display_rule") or rule or "?"
 
 

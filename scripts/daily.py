@@ -630,6 +630,13 @@ def match_market_key(pick: dict[str, Any]) -> tuple[str, str, str, str]:
     
     To prevent 'midnight crossing' (same game appearing on two different dates),
     we ignore the explicit date field and rely on the match identity.
+
+    Rows stamped with an explicit ``edge_family`` (e.g. the ml-fade derived
+    slice) carry it in the key: the ml-fade row and its ml-meta parent are
+    DIFFERENT ledger entries for the same fixture (opposite selections,
+    opposite odds), and the "fresh row supersedes archived row" doctrine must
+    never let one family replace the other. Rows without the stamp keep the
+    exact historical key.
     """
     # The operational ledger key folds accents without changing the legacy
     # normalization used by certified miner joins.
@@ -639,9 +646,12 @@ def match_market_key(pick: dict[str, Any]) -> tuple[str, str, str, str]:
         match_str = str(pick.get("match") or "").lower().strip()
         home, away = match_str, match_str
     market = str(pick.get("market") or "1x2").lower()
-    
-    # We use a constant 'MATCH_DATE' placeholder because for the purpose of 
-    # intraday/future merging, the identity of the teams + market is the 
+    family = str(pick.get("edge_family") or "").strip().lower()
+    if family:
+        market = f"{market}:{family}"
+
+    # We use a constant 'MATCH_DATE' placeholder because for the purpose of
+    # intraday/future merging, the identity of the teams + market is the
     # primary unique identifier.
     return ("EVENT_ID", home, away, market)
 

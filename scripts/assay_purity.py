@@ -55,6 +55,7 @@ from edgefactory.assay import (  # noqa: E402
     context_verdict_niche,
 )
 from edgefactory.entities import canonical_league, canonical_team, classify_competition  # noqa: E402
+from edgefactory.fade import FADE_VIEW, ml_fade_settled_sql  # noqa: E402
 
 DB = ROOT / "localdata" / "warehouse.duckdb"
 REG = ROOT / "localdata" / "edges_consensus.json"
@@ -502,6 +503,16 @@ def recreate_views(con) -> set[str]:
             avail.add("ml_meta_settled")
         except Exception:
             pass
+
+        # ml-fade: the inverse-selection sibling family — assayed on its own
+        # selection and its own opposing-side odds so its purity/context
+        # verdicts never share the ml-meta parent's contexts.
+        if _table_exists(con, "forebet_settled"):
+            try:
+                con.execute(ml_fade_settled_sql("ml_meta_raw"))
+                avail.add(FADE_VIEW)
+            except Exception:
+                pass
 
     return avail
 

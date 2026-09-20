@@ -128,7 +128,10 @@ def _operational_edge_rules(edges: list[dict[str, Any]]) -> tuple[list[dict[str,
         market = str(edge.get("market") or "1x2")
         if not rule:
             continue
-        if "ml-meta" in rule.lower():
+        if "ml-meta" in rule.lower() or "ml-fade" in rule.lower():
+            # ml-meta and its derived inverse family (ml-fade) are both
+            # operational model rules: the picker can emit them, so the
+            # tripwire must monitor their firing too.
             ml_rules.append(edge)
             continue
         if _is_qualified(rule):
@@ -237,7 +240,7 @@ def _ml_ceiling_check(ld: Path, findings_edges: list[dict[str, Any]]) -> list[di
     ceilings: list[dict[str, Any]] = []
     for finding in findings_edges:
         rule = str(finding.get("rule") or "")
-        if "ml-meta" not in rule or not finding.get("silent"):
+        if ("ml-meta" not in rule and "ml-fade" not in rule) or not finding.get("silent"):
             continue
         match = RULE_THRESHOLD.search(rule)
         if not match:

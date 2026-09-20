@@ -42,6 +42,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.assay import decay_verdict, should_bench, wilson_lb  # noqa: E402
 from edgefactory.config import GATES  # noqa: E402
+from edgefactory.fade import FADE_VIEW, ml_fade_settled_sql  # noqa: E402
 
 DB = ROOT / "localdata" / "warehouse.duckdb"
 REG = ROOT / "localdata" / "edges_consensus.json"
@@ -470,6 +471,17 @@ def recreate_views(con) -> set[str]:
             avail.add("ml_meta_settled")
         except Exception:
             pass
+
+        # ml-fade: the inverse-selection sibling family (ml-meta home<->away,
+        # draws excluded). Same L1 view graph, same recency accounting — the
+        # fade is an independent rule family whose decay is tracked on its
+        # OWN selection and its OWN (opposing-side) odds.
+        if has["forebet_settled"]:
+            try:
+                con.execute(ml_fade_settled_sql("ml_meta_raw"))
+                avail.add(FADE_VIEW)
+            except Exception:
+                pass
 
     return avail
 

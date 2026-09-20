@@ -93,6 +93,15 @@ RULE_SPECS: tuple[RuleSpec, ...] = (
     RuleSpec("ml-meta avg_p>=60", "ml-meta", ("forebet", "zulubet", "statarea"),
              "consensus3",
              "same model, higher threshold"),
+    RuleSpec("ml-fade avg_p>=55", "ml-fade", ("forebet", "zulubet", "statarea"),
+             "ml_fade_settled",
+             "inverse of the ml-meta selection (home<->away, draws excluded) "
+             "at the opposing side's own odds; same model, same post-kickoff "
+             "feature caveat as ml-meta"),
+    RuleSpec("ml-fade avg_p>=60", "ml-fade", ("forebet", "zulubet", "statarea"),
+             "ml_fade_settled",
+             "same inverse-selection derivation, higher parent-confidence "
+             "threshold"),
 )
 
 
@@ -257,7 +266,7 @@ def dependency_census(legs) -> Census:
         used = set(p.get("sources_used") or [])
         for s in used:
             c.source_hits[s] = c.source_hits.get(s, 0) + 1
-        is_vote = not rule.startswith("ml-meta")
+        is_vote = not rule.startswith(("ml-meta", "ml-fade"))
         on_disk = bool(used) and used <= ON_DISK_PREDICTION_SOURCES
         hist_odds = osrc in ON_DISK_ODDS_SOURCES
         c.source_vote += int(is_vote)
