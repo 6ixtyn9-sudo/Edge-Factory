@@ -1,11 +1,30 @@
 {
  "checkpoint_frozen_at": "2026-09-20",
- "eval_count": 0,
- "history": [],
- "last_eval_active_day": null,
- "last_eval_at": null,
- "last_eval_settled_fade": 0,
- "model_drift": null,
+ "eval_count": 1,
+ "history": [
+  {
+   "due_reasons": [
+    "bootstrap (no checkpoint has ever run)"
+   ],
+   "eval_at": "2026-09-21T00:19:31+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-09-21.md",
+   "rule_candidate": "observing",
+   "settled_fade": 5,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-09-21.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-21.txt"
+   },
+   "warnings": []
+  }
+ ],
+ "last_eval_active_day": "2026-09-21",
+ "last_eval_at": "2026-09-21T00:19:31+02:00",
+ "last_eval_settled_fade": 5,
+ "model_drift": {
+  "drifted": false,
+  "model_key": "75384507e4ef",
+  "reasons": []
+ },
  "policy": {
   "active_day_increment": 30,
   "monthly": true,

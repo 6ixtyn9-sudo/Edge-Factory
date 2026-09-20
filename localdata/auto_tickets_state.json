@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 135.82504900000004,
+  "bank": 158.06456500000004,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -33,62 +33,6 @@
         }
       ],
       "staked_pct": 15.6111
-    },
-    {
-      "date": "2026-09-20",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Haugesund vs Strommen",
-              "pick": "HOME",
-              "prob": 0.74,
-              "odds": 1.38,
-              "result": null
-            },
-            {
-              "match": "Raufoss vs Stromsgodset",
-              "pick": "AWAY",
-              "prob": 0.725,
-              "odds": 1.28,
-              "result": null
-            }
-          ],
-          "odds": 1.77,
-          "stake_pct": 15.0267,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "AZ Alkmaar vs SC Telstar",
-              "pick": "HOME",
-              "prob": 0.738,
-              "odds": 1.26,
-              "result": null
-            },
-            {
-              "match": "Marumo Gallants vs Orlando Pirates",
-              "pick": "AWAY",
-              "prob": 0.725,
-              "odds": 1.36,
-              "result": null
-            }
-          ],
-          "odds": 1.71,
-          "stake_pct": 15.0267,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 30.0534
     }
   ],
   "history": [
@@ -515,6 +459,22 @@
         }
       ],
       "bank_pct": 135.825
+    },
+    {
+      "date": "2026-09-20",
+      "staked_pct": 30.0534,
+      "returned_pct": 52.293,
+      "accas": [
+        {
+          "odds": 1.77,
+          "won": true
+        },
+        {
+          "odds": 1.71,
+          "won": true
+        }
+      ],
+      "bank_pct": 158.0646
     }
   ],
   "events": []

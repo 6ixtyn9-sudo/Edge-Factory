@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 157,
-   "inv_price_sum": 151.572351061994,
+   "hits": 162,
+   "inv_price_sum": 156.96411005986766,
    "multi_n": 23,
-   "n": 231,
+   "n": 239,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -567,9 +567,17 @@
     "2026-09-19|Hamilton Academical vs Queen of the South|match_over_25@v1",
     "2026-09-19|Molde vs Aalesund|match_over_25@v1",
     "2026-09-19|The New Saints vs Llandudno|match_over_25@v1",
-    "2026-09-19|Kristiansund BK vs Rosenborg BK|match_over_25@v1"
+    "2026-09-19|Kristiansund BK vs Rosenborg BK|match_over_25@v1",
+    "2026-09-20|Trans Narva vs Levadia Tallinn|match_over_25@v1",
+    "2026-09-20|AZ Alkmaar vs SC Telstar|match_over_25@v1",
+    "2026-09-20|Fenerbah\u00e7e vs Ey\u00fcpspor|match_over_25@v1",
+    "2026-09-20|Jeonbuk Motors vs Gwangju FC|match_over_25@v1",
+    "2026-09-20|Manchester City vs Sunderland|match_over_25@v1",
+    "2026-09-20|Feyenoord vs Utrecht|match_over_25@v1",
+    "2026-09-20|Dender vs Patro Eisden|match_over_25@v1",
+    "2026-09-20|Lech Poznan vs Radomiak Radom|match_over_25@v1"
    ],
-   "profit": 7.17,
+   "profit": 6.67,
    "records": [
     {
      "date": "2026-08-01",
@@ -2413,6 +2421,70 @@
      "date": "2026-09-19",
      "hit": true,
      "match": "Kristiansund BK vs Rosenborg BK",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": false,
+     "match": "Trans Narva vs Levadia Tallinn",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": false,
+     "match": "AZ Alkmaar vs SC Telstar",
+     "multi_source": false,
+     "price": 1.26,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Fenerbah\u00e7e vs Ey\u00fcpspor",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Jeonbuk Motors vs Gwangju FC",
+     "multi_source": false,
+     "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Manchester City vs Sunderland",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Feyenoord vs Utrecht",
+     "multi_source": false,
+     "price": 1.33,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": false,
+     "match": "Dender vs Patro Eisden",
+     "multi_source": false,
+     "price": 1.85,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Lech Poznan vs Radomiak Radom",
      "multi_source": false,
      "price": 1.4,
      "source": "scoutingstats"
