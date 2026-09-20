@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-20T13:17:08.326878+00:00",
+  "fetched_at": "2026-09-20T16:18:21.152650+00:00",
   "sports": [
     {
       "key": "soccer_argentina_primera_division",
@@ -106,6 +106,14 @@
       "has_outrights": false
     },
     {
+      "key": "soccer_fa_cup",
+      "group": "Soccer",
+      "title": "FA Cup",
+      "description": "Football Association Challenge Cup",
+      "active": true,
+      "has_outrights": false
+    },
+    {
       "key": "soccer_france_ligue_one",
       "group": "Soccer",
       "title": "Ligue 1 - France",
@@ -117,14 +125,6 @@
       "key": "soccer_germany_bundesliga",
       "group": "Soccer",
       "title": "Bundesliga - Germany",
-      "description": "German Soccer",
-      "active": true,
-      "has_outrights": false
-    },
-    {
-      "key": "soccer_germany_bundesliga2",
-      "group": "Soccer",
-      "title": "Bundesliga 2 - Germany",
       "description": "German Soccer",
       "active": true,
       "has_outrights": false
@@ -250,25 +250,9 @@
       "has_outrights": false
     },
     {
-      "key": "soccer_spl",
-      "group": "Soccer",
-      "title": "Premiership - Scotland",
-      "description": "Scottish Premiership",
-      "active": true,
-      "has_outrights": false
-    },
-    {
       "key": "soccer_sweden_allsvenskan",
       "group": "Soccer",
       "title": "Allsvenskan - Sweden",
-      "description": "Swedish Soccer",
-      "active": true,
-      "has_outrights": false
-    },
-    {
-      "key": "soccer_sweden_superettan",
-      "group": "Soccer",
-      "title": "Superettan - Sweden",
       "description": "Swedish Soccer",
       "active": true,
       "has_outrights": false
