@@ -24,6 +24,9 @@ import duckdb  # noqa: E402
 from edgefactory.assay import wilson_lb, weighted_consensus_score  # noqa: E402
 from edgefactory.entities import classify_competition  # noqa: E402
 from edgefactory.config import GATES  # noqa: E402
+from edgefactory.fade import (  # noqa: E402
+    FADE_VIEW, fade_edge_metadata, ml_fade_settled_sql,
+)
 
 DB = ROOT / "localdata" / "warehouse.duckdb"
 OUT = ROOT / "localdata" / "edges_consensus.json"
@@ -815,6 +818,26 @@ def main():
             results.append(evaluate(
                 con, f"ml-meta avg_p>={thr}", "ml_meta_settled",
                 f"ml_p*100 >= {thr}", args.split))
+
+        # ---- ml-fade: the inverse-selection sibling family ------------------
+        # Derive the fade slice from the SAME eligible ml-meta selections
+        # (binary 1X2 home<->away; draws excluded — no honest binary inverse),
+        # priced at the FADE selection's own odds (fb.odd1/odd2 — never the
+        # parent pick's price), then grade it through the identical
+        # walk-forward gates as every other slice. The fade edges carry their
+        # own rule names so certification, decay monitoring, purity assays and
+        # the ledger all treat them as an independent family derived from
+        # ml-meta, not as part of it.
+        try:
+            con.execute(ml_fade_settled_sql("ml_meta_raw_df"))
+            for thr in (55, 60, 65, 70, 75, 80, 85):
+                fade_edge = evaluate(
+                    con, f"ml-fade avg_p>={thr}", FADE_VIEW,
+                    f"ml_p*100 >= {thr}", args.split)
+                fade_edge.update(fade_edge_metadata(thr))
+                results.append(fade_edge)
+        except Exception as exc:
+            print(f"ml-fade mining skipped (failed view query): {exc}")
 
     if has_fb and has_zb:
         con.execute("""

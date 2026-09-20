@@ -699,6 +699,8 @@ def rule_family(rule):
     r = str(rule or "")
     if r.startswith("ml-meta"):
         return "ml-meta"
+    if r.startswith("ml-fade"):
+        return "ml-fade"
     if r.startswith("2way"):
         return "2way-unanimous"
     if r.startswith("3way"):
@@ -748,7 +750,7 @@ def _rule_table(legs, title):
     buckets = {}
     for l in legs:
         buckets.setdefault(rule_family(l["row"].get("rule")), []).append(l)
-    for fam in ("ml-meta", "2way-unanimous", "3way-unanimous", "other"):
+    for fam in ("ml-meta", "ml-fade", "2way-unanimous", "3way-unanimous", "other"):
         s = _leg_stats(buckets.get(fam) or [])
         if not s:
             continue
@@ -1815,7 +1817,7 @@ def cmd_warehouse_replay(archives, settled, since=None, until=None):
         print(f"    needs         {', '.join(spec.needs_sources)}"
               + (f"   MISSING: {', '.join(missing)}" if missing else ""))
         print(f"    caveat        {spec.note}")
-        if spec.kind == "ml-meta":
+        if spec.kind in ("ml-meta", "ml-fade"):
             print("    VERDICT       NOT RECONSTRUCTABLE — post-kickoff features "
                   "(see section 4)")
         elif view.get("present") and view.get("last", "") >= days[0]:

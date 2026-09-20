@@ -33,6 +33,14 @@ from edgefactory.util import (
 )
 from edgefactory.market_registry import get_odds_tier
 from edgefactory.assay import weighted_consensus_score
+from edgefactory.fade import (
+    FADE_FAMILY,
+    PARENT_FAMILY,
+    DERIVATION,
+    inverse_selection,
+    fade_odds_column,
+    fade_avg_p,
+)
 from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_debias_hr
 from edgefactory.veto_resolution import apply_resolution_to_ctx, build_pool_table
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
@@ -1183,16 +1191,21 @@ ML_META_CONSTANT_FEATURES = ("ht_diff", "ht_total")
 
 
 def ml_meta_contract_breaches(picks: list[dict]) -> list[dict]:
-    """ml-meta picks whose serve-time constant features were NOT zero.
+    """ml-meta (and derived ml-fade) picks whose serve-time constant features
+    were NOT zero.
 
     Checked AFTER the pre-match guard, on the picks that could actually be
     bet. Checking earlier would fire every afternoon on fixtures that already
     kicked off and are discarded anyway — a tripwire that cries wolf gets
     ignored, which is worse than no tripwire.
+
+    ml-fade rows inherit the parent's operating point (they are derived from
+    the same inference), so the identical constant-feature contract applies to
+    them.
     """
     out = []
     for pick in picks:
-        if not str(pick.get("rule") or "").startswith("ml-meta"):
+        if not str(pick.get("rule") or "").startswith(("ml-meta", "ml-fade")):
             continue
         bad = {k: pick.get(f"ml_{k}") for k in ML_META_CONSTANT_FEATURES
                if pick.get(f"ml_{k}")}
@@ -1211,6 +1224,24 @@ def load_ml_rules_and_model() -> tuple[list[dict], dict | None]:
         return rules, model
     except Exception:
         return [], None
+
+
+def load_ml_fade_rules() -> list[dict]:
+    """Certified ml-fade rules from the same registry the ml-meta family reads.
+
+    ml-fade rules are their own family (derived inverse of ml-meta selections)
+    so they are matched by exact family prefix, and carry their own
+    walk-forward certification — a fade row may only be emitted from a rule
+    the miner certified and the decay monitor has not benched.
+    """
+    try:
+        data = json.loads(EDGES_PATH.read_text())
+        edges = data.get("edges", [])
+        return [e for e in edges
+                if e.get("status") == "certified"
+                and str(e.get("rule", "")).startswith(f"{FADE_FAMILY} ")]
+    except Exception:
+        return []
 
 
 def get_rolling_hit_rate_last_14d(target_date_str: str) -> float:
@@ -2501,10 +2532,14 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
         
     # --- Load ML rules and model ---
     ml_rules, ml_model = load_ml_rules_and_model()
+    # ml-fade: certified inverse-selection rules derived from ml-meta. They
+    # need the same model inference but grade their OWN side at its OWN odds.
+    ml_fade_rules = load_ml_fade_rules()
     rolling_hit_rate = None
     ml_max_p = 0.0
     ml_scored = 0
-    if ml_rules and ml_model:
+    ml_fade_draw_skipped = 0
+    if (ml_rules or ml_fade_rules) and ml_model:
         rolling_hit_rate = get_rolling_hit_rate_last_14d(day)
 
     for k in keys:
@@ -2543,7 +2578,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             continue
 
         # --- Evaluate ML Rules ---
-        if ml_rules and ml_model and (fb or zb or sa):
+        if (ml_rules or ml_fade_rules) and ml_model and (fb or zb or sa):
             fb_probs = probs_1x2(fb) if fb else None
             zb_probs = probs_1x2(zb) if zb else None
             sa_probs = probs_1x2(sa) if sa else None
@@ -2711,6 +2746,83 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
                         "ml_ht_total": ht_total_feat,
                     })
 
+                # --- ml-fade: certified inverse-selection sibling family ---
+                # Derive the fade from the SAME eligible ml-meta selection:
+                # binary 1X2 home<->away, scored at the FADE side's own odds
+                # (the opposing column of the same book — never the parent
+                # pick's price). Draw selections have no honest binary
+                # inverse: they are excluded EXPLICITLY (counted + reported),
+                # never silently mapped to anything. The fade fires on its own
+                # certified thresholds, independently of whether the parent
+                # ml-meta rule fired.
+                fade_best = None
+                for fade_rule in ml_fade_rules:
+                    fm = re.search(r">=\s*([\d.]+)", fade_rule["rule"])
+                    if not fm:
+                        continue
+                    fthr = float(fm.group(1))
+                    if ml_p * 100.0 >= fthr and (fade_best is None or fthr > fade_best[0]):
+                        fade_best = (fthr, fade_rule)
+                if fade_best is not None:
+                    fade_sel = inverse_selection(majority_pick)
+                    if fade_sel is None:
+                        ml_fade_draw_skipped += 1
+                    else:
+                        fthr, fade_rule = fade_best
+                        _fade_col = fade_odds_column(majority_pick)
+                        fade_odds = _f(fb.get(_fade_col)) or _f(zb.get(_fade_col)) or None
+                        home = canonical_display_team(anchor.get("home"))
+                        away = canonical_display_team(anchor.get("away"))
+                        picks.append({
+                            "date": day, "market": "1x2",
+                            "match": f"{home} vs {away}",
+                            "home": home, "away": away,
+                            "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                            "sport": anchor.get("sport", "soccer"),
+                            "league": anchor.get("league"),
+                            "pick": fade_sel,
+                            "avg_p": fade_avg_p(ml_p),
+                            "w_score": round(z, 4),
+                            # The fade is ALWAYS priced at the fade selection's
+                            # own odds. The parent's price is recorded under
+                            # derived_from for audit only and is never scored.
+                            "odds": fade_odds,
+                            "odds_source": (
+                                "forebet_best" if _f(fb.get(_fade_col)) is not None
+                                else "zulubet" if _f(zb.get(_fade_col)) is not None else None),
+                            "bookmaker": None,
+                            "rule": fade_rule["rule"],
+                            "edge_rule": fade_rule["rule"],
+                            "display_rule": (
+                                fade_rule.get("display_rule") or f"ML-FADE≥{fthr:.0f}"),
+                            # Independent identity + explicit derivation provenance
+                            "edge_family": FADE_FAMILY,
+                            "parent_family": PARENT_FAMILY,
+                            "derivation": DERIVATION,
+                            "inverse_of": majority_pick,
+                            "derived_from": {
+                                "family": PARENT_FAMILY,
+                                "rule": (fade_rule.get("parent_rule")
+                                         or f"ml-meta avg_p>={fthr:g}"),
+                                "pick": majority_pick,
+                                "odds": _f(fb.get(_col)) or _f(zb.get(_col)) or None,
+                                "ml_p": round(ml_p, 4),
+                            },
+                            "n_way": 3, "edge_n_way": 3,
+                            "confidence": _f(bz.get("confidence")) if bz else None,
+                            "model_version": bz.get("model_version") if bz else None,
+                            "vitibet_index": _f(vb.get("index")) if vb else None,
+                            "sources_used": used,
+                            "source_weights": source_weights or {},
+                            "ml_p": round(ml_p, 4),
+                            # checkpoint ⑫ contract fields — the fade inherits
+                            # the parent operating point, so the same constant
+                            # -feature evidence MUST be zero (tripwire covers
+                            # the ml-fade family too).
+                            "ml_ht_diff": ht_diff_feat,
+                            "ml_ht_total": ht_total_feat,
+                        })
+
         if len(set(sels)) > 1:
             vetoes += 1
             continue
@@ -2771,14 +2883,22 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None):
             "sources_used": used,
             "source_weights": source_weights or {},
         })
-    if ml_rules and ml_model and ml_scored:
+    if (ml_rules or ml_fade_rules) and ml_model and ml_scored:
         thr_list = sorted(
             {float(m.group(1)) for r in ml_rules if (m := re.search(r">=\s*([\d.]+)", r.get("rule", "")))}
+        )
+        n_ml = sum(1 for p in picks if p.get("rule", "").startswith("ml-meta"))
+        n_fade = sum(1 for p in picks if p.get("rule", "").startswith("ml-fade"))
+        fade_note = (
+            f", ml-fade {n_fade} pick(s)"
+            + (f", {ml_fade_draw_skipped} draw-selection(s) excluded (no inverse)"
+               if ml_fade_draw_skipped else "")
+            if ml_fade_rules else ""
         )
         print(
             f"ML-meta {day}: scored {ml_scored} fixture(s), max ml_p = {ml_max_p * 100.0:.1f}% "
             f"(certified thresholds: {', '.join(f'{t:.0f}' for t in thr_list)}) "
-            f"-> {sum(1 for p in picks if p.get('rule', '').startswith('ml-meta'))} pick(s)",
+            f"-> {n_ml} pick(s){fade_note}",
             file=sys.stderr,
         )
         # Persist for the tripwire's ceiling check — but ONLY for the primary
