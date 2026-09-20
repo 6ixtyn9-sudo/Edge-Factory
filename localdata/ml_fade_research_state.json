@@ -1,0 +1,21 @@
+{
+ "checkpoint_frozen_at": "2026-09-20",
+ "eval_count": 0,
+ "history": [],
+ "last_eval_active_day": null,
+ "last_eval_at": null,
+ "last_eval_settled_fade": 0,
+ "model_drift": null,
+ "policy": {
+  "active_day_increment": 30,
+  "monthly": true,
+  "rule_candidate_gates": {
+   "min_priced_per_book": 150,
+   "min_roi": 0.0,
+   "min_settled_fade": 200,
+   "min_wilson_lb": 0.55
+  },
+  "settled_increment": 50
+ },
+ "schema": 1
+}

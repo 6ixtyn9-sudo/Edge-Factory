@@ -38,6 +38,13 @@
       "silent": false
     },
     {
+      "decay": "HEALTHY",
+      "last_fired": "2026-09-16",
+      "n_last_window": 9,
+      "rule": "ml-meta avg_p>=70",
+      "silent": false
+    },
+    {
       "decay": "WATCH",
       "last_fired": "2026-09-19",
       "n_last_window": 7,
@@ -45,7 +52,7 @@
       "silent": false
     }
   ],
-  "generated_at": "2026-09-20T18:19:18",
+  "generated_at": "2026-09-20T20:40:01",
   "ignored_non_operational_rules": [
     "2way-unanimous min_p>=60 avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=70",
