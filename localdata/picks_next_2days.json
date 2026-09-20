@@ -787,7 +787,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-20T20:27:09+02:00",
+    "as_of": "2026-09-20T21:00:51+02:00",
     "avg_p": 57.3,
     "away": "Metropolitanos",
     "bookmaker": "betexplorer_best",
@@ -802,13 +802,13 @@
       "league_key": "primera division",
       "league_raw": "Ve1",
       "niche": "UNKNOWN",
-      "odds_band": "ALLOW",
-      "odds_band_name": "2.00-2.50",
+      "odds_band": "BOOST",
+      "odds_band_name": "1.50-1.75",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O1-pool",
-      "resolution_pool_n": 31,
-      "resolution_pool_roi": -0.5179290322580644,
-      "resolution_reason": "O1 pool n=31 w_roi=-0.5179 -> VETO",
+      "resolution_pool_n": 33,
+      "resolution_pool_roi": -0.5047242424242424,
+      "resolution_reason": "O1 pool n=33 w_roi=-0.5047 -> VETO",
       "resolution_verdict": "VETO",
       "side_role": "away",
       "team_a": "UNKNOWN",
@@ -880,14 +880,14 @@
     "league": "Ve1",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "price vs hit-rate math broken for 1X2",
+    "market_recommendation_reason": "high draw risk and weak signal for raw 1X2",
     "market_type": "1x2",
     "match": "Zamora vs Metropolitanos",
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 2.12,
-    "odds_captured_at": "2026-09-20T18:31:30.644290+00:00",
+    "odds": 1.74,
+    "odds_captured_at": "2026-09-20T19:04:52.432270+00:00",
     "odds_league": "Venezuela: Liga FUTVE",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -910,7 +910,7 @@
         "league": "Primera Division",
         "market": "1x2",
         "match_method": "alias_fuzzy",
-        "odds": 2.05,
+        "odds": 1.66,
         "selection": "away",
         "source": "scoutingstats_odds"
       }
@@ -8778,8 +8778,8 @@
     "w_score": 0.2084
   },
   {
-    "as_of": "2026-09-20T20:27:09+02:00",
-    "avg_p": 62.2,
+    "as_of": "2026-09-20T21:00:51+02:00",
+    "avg_p": 62.1,
     "away": "Avangard Kursk",
     "bookmaker": null,
     "bucket": "CERTIFIED_CLEAN",
@@ -8874,7 +8874,7 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.6221,
+    "ml_p": 0.621,
     "model_version": null,
     "n_way": 3,
     "odds": 1.41,
@@ -8897,10 +8897,10 @@
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=482): Avg Goals: 3.43 | Over 2.5: 68.7% | BTTS: 41.9% | Home Over 1.5 Goals: 10.4% | Away Over 1.5 Goals: 85.7%",
     "vitibet_index": null,
-    "w_score": 0.4986
+    "w_score": 0.4937
   },
   {
-    "as_of": "2026-09-20T20:27:09+02:00",
+    "as_of": "2026-09-20T21:00:51+02:00",
     "avg_p": 77.5,
     "away": "Vis Pesaro",
     "bookmaker": "scoutingstats_odds",
@@ -8998,7 +8998,7 @@
       }
     ],
     "home": "Spezia",
-    "kickoff": "14:30",
+    "kickoff": "13:30",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-09-21T18:30:00+00:00",
     "kickoff_witness": "scoutingstats kickoff '2026-09-21T18:30:00Z'",
@@ -9053,10 +9053,10 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-20T20:27:09+02:00",
+    "as_of": "2026-09-20T21:00:51+02:00",
     "avg_p": 74.3,
     "away": "Santos Laguna",
-    "bookmaker": "bwin",
+    "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
@@ -9064,7 +9064,7 @@
       "comp_type_name": "league",
       "competition_type": "BOOST",
       "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "CERTIFIED_CLEAN,SKIPPED_VETO",
+      "duplicate_bucket_sources": "WATCHLIST_UNCORROBORATED_PRICE,SKIPPED_VETO",
       "duplicate_event_keys": "deportivotoluca vs santoslaguna",
       "home_norm": "toluca",
       "league": "ALLOW",
@@ -9088,7 +9088,7 @@
     "display_rule": "ML-META\u226555",
     "draw_risk_flag": "HIGH",
     "duplicate_bucket_sources": [
-      "CERTIFIED_CLEAN",
+      "WATCHLIST_UNCORROBORATED_PRICE",
       "SKIPPED_VETO"
     ],
     "duplicate_matches_collapsed": [
@@ -9174,36 +9174,37 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.29,
-    "odds_captured_at": "2026-09-20T18:33:17.605533+00:00",
-    "odds_league": "Liga MX Apertura",
+    "odds": 1.25,
+    "odds_captured_at": "2026-09-21T00:00:00Z",
+    "odds_league": "Liga MX",
     "odds_match_method": "exact",
-    "odds_match_status": "matched",
+    "odds_match_status": "uncorroborated",
     "odds_replaced": {
       "odds": 1.28,
       "source": "forebet_best"
     },
-    "odds_source": "bzzoiro_odds",
+    "odds_source": "scoutingstats_odds",
     "odds_tier": "low",
     "pick": "home",
     "price_board": [
       {
         "away": "Santos Laguna",
-        "bookmaker": "bwin",
-        "captured_at": "2026-09-20T18:33:17.605533+00:00",
+        "bookmaker": "scoutingstats_odds",
+        "captured_at": "2026-09-21T00:00:00Z",
         "chosen": true,
-        "home": "CD Toluca",
+        "home": "Toluca",
         "kickoff": "2026-09-21T00:00:00Z",
-        "league": "Liga MX Apertura",
+        "league": "Liga MX",
         "market": "1x2",
         "match_method": "exact",
-        "odds": 1.29,
+        "odds": 1.25,
         "selection": "home",
-        "source": "bzzoiro_odds"
+        "source": "scoutingstats_odds"
       }
     ],
-    "price_evidence": "BZZOIRO_PRIMARY",
-    "price_push_eligible": true,
+    "price_evidence": "SCOUTINGSTATS_SOLE",
+    "price_push_eligible": false,
+    "price_quarantine_reason": "scoutingstats_sole_source",
     "recommended_enhancement": "match_over_25",
     "recommended_market": "avoid_raw_1x2",
     "rule": "ml-meta avg_p>=55",
