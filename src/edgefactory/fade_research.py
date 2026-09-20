@@ -880,3 +880,163 @@ def wilson_gate_analysis(hit: float, n: int, threshold: float = 0.5) -> dict:
     result["required_n"] = lo
     result["impossible_reason"] = None
     return result
+
+
+# --------------------------------------------------------------------------
+# Strength classification of a researched slice (audit/diagnosis layer).
+#
+# Maps the robustness battery to exactly one of five labels. This exists so
+# the classification is a TESTABLE, PREDECLARED decision rule rather than a
+# narrative judgment. It classifies research strength only; it never gates
+# picks and never touches production certification.
+# --------------------------------------------------------------------------
+SIGNAL_LABELS: tuple[str, ...] = (
+    "ROBUST RESEARCH SIGNAL",
+    "PRICE-DEPENDENT SIGNAL",
+    "OUTLIER-DEPENDENT SIGNAL",
+    "INSUFFICIENT EVIDENCE",
+    "REJECTED",
+)
+
+ROBUST_MIN_P_POSITIVE: float = 0.95
+"""Bootstrap P(roi > 0) required in BOTH untouched windows for `robust`."""
+
+ROBUST_TOP3_MIN_ROI: float = 0.05
+"""ROI after removing the top-3 winning profits, both untouched windows."""
+
+ROBUST_MIN_MONTH_SHARE_POSITIVE: float = 0.5
+"""Share of JUDGED months (n >= MIN_MONTH_N priced) that must be positive in
+each untouched window; fewer than 3 judged months cannot demonstrate
+persistence at all."""
+
+ROBUST_MIN_JUDGED_MONTHS: int = 3
+
+PRICE_TEST_SOURCES: tuple[str, ...] = ("zb", "worst")
+"""The honest-price checks: the independent capture and the min of available
+quotes. A signal that only appears at the favourable quote is
+price-dependent."""
+
+SIGNAL_MIN_CONFIRM_PRICED: int = CONFIRM_MIN_N
+"""Confirmation-window priced rows needed before any label is meaningful."""
+
+REJECT_MIN_OOS_PRICED: int = 50
+"""Priced rows needed before an OOS-negative result counts as decisive."""
+
+
+def classify_signal_strength(
+    *,
+    valid: dict,
+    confirm: dict,
+    concentration_valid: dict,
+    concentration_confirm: dict,
+    bootstrap_valid: dict,
+    bootstrap_confirm: dict,
+    persistence_valid: dict,
+    persistence_confirm: dict,
+    price_variants: dict[str, dict],
+) -> tuple[str, list[str]]:
+    """Classify the research strength of a slice from its robustness battery.
+
+    Inputs are the same dicts the study already produces:
+    - ``valid``/``confirm``: pnl_stats window output (uses ``roi``, ``n_priced``);
+    - ``concentration_*``: uses ``roi_wo_top3``;
+    - ``bootstrap_*``: uses ``ci_lo``, ``p_positive``;
+    - ``persistence_*``: uses ``months_judged``, ``months_judged_positive``;
+    - ``price_variants``: {source: {"valid": roi, "confirm": roi}} for
+      PRICE_TEST_SOURCES.
+
+    Decision order is fixed and documented (a failing slice is blamed on the
+    FIRST applicable cause):
+      1. evidence floors       -> INSUFFICIENT EVIDENCE (too thin to judge);
+      2. decisively negative   -> REJECTED (OOS roi <= 0 with enough rows);
+      3. honest-price failure  -> PRICE-DEPENDENT SIGNAL (zb/worst <= 0);
+      4. top-3 failure         -> OUTLIER-DEPENDENT SIGNAL (prices fine,
+         profit vanishes without three bets);
+      5. every robust axis     -> ROBUST RESEARCH SIGNAL;
+      6. anything else         -> INSUFFICIENT EVIDENCE (positive but unproven).
+    """
+    reasons: list[str] = []
+
+    # 1. evidence floors ---------------------------------------------------
+    if valid["n_priced"] < GATES.min_n_valid:
+        reasons.append(f"valid priced {valid['n_priced']} < {GATES.min_n_valid}: too thin to judge")
+    if confirm["n_priced"] < SIGNAL_MIN_CONFIRM_PRICED:
+        reasons.append(
+            f"confirm priced {confirm['n_priced']} < {SIGNAL_MIN_CONFIRM_PRICED}: "
+            "confirmation floor not met"
+        )
+    if reasons:
+        return "INSUFFICIENT EVIDENCE", reasons
+
+    # 2. decisively negative out-of-sample ---------------------------------
+    for wname, w in (("valid", valid), ("confirm", confirm)):
+        if (w["roi"] is not None and w["roi"] <= 0) and w["n_priced"] >= REJECT_MIN_OOS_PRICED:
+            reasons.append(
+                f"{wname} roi {w['roi']:+.2%} <= 0 with n_priced {w['n_priced']}: "
+                "decisively negative out of sample"
+            )
+            return "REJECTED", reasons
+
+    def _ratio(pv: dict) -> float | None:
+        if pv["months_judged"] == 0:
+            return None
+        return pv["months_judged_positive"] / pv["months_judged"]
+
+    robust_fail: list[str] = []
+
+    # 3. honest-price failure ----------------------------------------------
+    price_ok = True
+    for src in PRICE_TEST_SOURCES:
+        v = (price_variants.get(src) or {}).get("valid")
+        c = (price_variants.get(src) or {}).get("confirm")
+        for wname, roi in (("valid", v), ("confirm", c)):
+            if roi is None or roi <= 0:
+                price_ok = False
+                roi_s = "n/a" if roi is None else f"{roi:+.2%}"
+                reasons.append(f"{src} price {wname} roi {roi_s} <= 0")
+    if not price_ok:
+        return "PRICE-DEPENDENT SIGNAL", [
+            "positive only at favourable quotes: " + "; ".join(reasons)
+        ]
+
+    # 4. outlier failure (prices fine; profit vanishes without top bets) ---
+    outlier_fail = []
+    for wname, conc in (("valid", concentration_valid), ("confirm", concentration_confirm)):
+        r3 = conc["roi_wo_top3"]
+        r3_s = "n/a" if r3 is None else f"{r3:+.2%}"
+        if r3 is None or r3 <= 0:
+            outlier_fail.append(f"{wname} roi without top-3 winners {r3_s} <= 0")
+        if r3 is None or r3 < ROBUST_TOP3_MIN_ROI:
+            robust_fail.append(f"{wname} top-3-removed roi {r3_s} < {ROBUST_TOP3_MIN_ROI:+.0%}")
+    if outlier_fail:
+        return "OUTLIER-DEPENDENT SIGNAL", outlier_fail
+
+    # 5. the full robust bar ------------------------------------------------
+    for wname, boot in (("valid", bootstrap_valid), ("confirm", bootstrap_confirm)):
+        lo = boot["ci_lo"]
+        lo_s = "n/a" if lo is None else f"{lo:+.2%}"
+        if lo is None or lo <= 0:
+            robust_fail.append(f"{wname} bootstrap ci_lo {lo_s} <= 0")
+        p = boot["p_positive"]
+        p_s = "n/a" if p is None else f"{p:.3f}"
+        if p is None or p < ROBUST_MIN_P_POSITIVE:
+            robust_fail.append(f"{wname} bootstrap P(roi>0) {p_s} < {ROBUST_MIN_P_POSITIVE}")
+    for wname, pv in (("valid", persistence_valid), ("confirm", persistence_confirm)):
+        if pv["months_judged"] < ROBUST_MIN_JUDGED_MONTHS:
+            robust_fail.append(
+                f"{wname} judged months {pv['months_judged']} < {ROBUST_MIN_JUDGED_MONTHS}"
+            )
+        else:
+            ratio = _ratio(pv)
+            ratio_s = "n/a" if ratio is None else f"{ratio:.2f}"
+            if ratio is None or ratio < ROBUST_MIN_MONTH_SHARE_POSITIVE:
+                robust_fail.append(
+                    f"{wname} judged-month positive share {ratio_s} "
+                    f"< {ROBUST_MIN_MONTH_SHARE_POSITIVE}"
+                )
+    if not robust_fail:
+        return "ROBUST RESEARCH SIGNAL", ["every predeclared robust axis cleared"]
+    return "INSUFFICIENT EVIDENCE", [
+        "encouraging raw/or price-resilient evidence, but robustness axes failed: "
+        + "; ".join(robust_fail)
+    ]
