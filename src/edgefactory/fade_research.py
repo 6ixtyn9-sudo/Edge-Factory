@@ -37,6 +37,7 @@ exploratory until independently re-mined through the production path.
 from __future__ import annotations
 
 import math
+import statistics
 from dataclasses import dataclass
 
 from .assay import wilson_lb
@@ -497,3 +498,385 @@ def dedupe_by_evidence(results: list[dict]) -> tuple[list[dict], list[dict]]:
                 rem["deduped_into"] = best["candidate"]
         removed.append(worst | {"deduped_into": best["candidate"]})
     return others + list(kept.values()), removed
+
+
+# --------------------------------------------------------------------------
+# Price robustness, concentration & persistence study (EXPLORATORY ONLY).
+#
+# Deep-dive on the one structurally interesting finding of the context scan
+# (the home-fade ladder). Nothing here changes any gate or grading contract:
+# the same condition-matched rows are simply re-priced under EXPLICIT,
+# recorded transformations, and stress-tested for concentration/persistence.
+# Every variant records exactly which price it used; unpriced rows never
+# silently inherit a price.
+# --------------------------------------------------------------------------
+PRICE_STUDY_THRESHOLDS: tuple[int, ...] = (55, 60, 65, 70, 75, 80)
+"""The home-fade ladder subjects (predeclared from the context scan)."""
+
+PRIMARY_STUDY_THRESHOLD: int = 65
+"""Focus candidate: largest persistent sample of the honest ladder."""
+
+HOME_FADE_CONDITION = Condition("fade_side", "fade_side", "home")
+
+# Predeclared odds bands for the robustness pass (per task spec).
+PRICE_STUDY_BANDS: tuple[tuple[float, float], ...] = (
+    (1.20, 2.00),
+    (2.00, 3.00),
+    (3.00, 5.00),
+    (5.00, 10.00),
+    (10.00, 1e9),
+)
+
+# Predeclared price transforms.
+CONSERVATIVE_ROI_SCALE: float = 0.25
+"""Harsher than the repo's 0.5 haircut: keep only a quarter of raw ROI."""
+
+PRICE_ADJUST_K: float = 0.5
+"""Price-space haircut: winners pay o' = 1 + (o - 1) * 0.5 (halved profit odds)."""
+
+ODDS_CAPS: tuple[float, ...] = (5.0, 10.0, 20.0)
+"""Maximum-odds caps: rows priced above the cap are dropped."""
+
+PRICE_SOURCES: tuple[str, ...] = ("fb", "zb", "best", "worst", "mid")
+"""fb = forebet (production fade price), zb = zulubet (independent capture),
+best/worst = max/min of available quotes, mid = harmonic mean of available
+quotes (average of implied probabilities)."""
+
+BOOTSTRAP_SEED: int = 42
+BOOTSTRAP_N: int = 10_000
+MIN_MONTH_N: int = 10
+"""Months below this many priced rows are reported but not 'judged'."""
+
+
+def price_of(row: dict, source: str) -> float | None:
+    """The quoted fade price from a named source (explicit; None when absent).
+
+    - ``fb``: the production fade price — the settled view's ``pick_odds``
+      IS the forebet odd1/odd2 quote; ``fb_odds`` is the same thing when the
+      price-study loader carries it explicitly.
+    - ``zb``: the independent zulubet odd1/odd2 capture.
+    - ``best``/``worst``: max/min of the quotes actually available on the row.
+    - ``mid``: harmonic mean of available quotes — the average of the implied
+      probabilities, the honest "representative" combining two books.
+    """
+    fb = _price(row.get("fb_odds"))
+    if fb is None:
+        fb = _price(row.get("pick_odds"))
+    zb = _price(row.get("zb_odds"))
+    if source == "fb":
+        return fb
+    if source == "zb":
+        return zb
+    quotes = [q for q in (fb, zb) if q is not None]
+    if not quotes:
+        return None
+    if source == "best":
+        return max(quotes)
+    if source == "worst":
+        return min(quotes)
+    if source == "mid":
+        return len(quotes) / sum(1.0 / q for q in quotes)
+    raise ValueError(f"unknown price source: {source!r}")
+
+
+def pnl_stats(
+    rows: list[dict],
+    source: str,
+    *,
+    adjust_k: float = 1.0,
+    cap: float | None = None,
+    band: tuple[float, float] | None = None,
+    roi_scale: float = 1.0,
+) -> dict:
+    """ROI/hit stats for condition-MATCHED `rows` priced per `source`.
+
+    All transforms are explicit and recorded in the result's ``price`` block:
+    - ``cap``: rows priced above `cap` are DROPPED (counted in n_filtered);
+    - ``band``: rows priced outside [lo, hi) are DROPPED (n_filtered);
+    - ``adjust_k``: winners are paid at o' = 1 + (o - 1) * adjust_k
+      (price-space haircut; losers still lose 1);
+    - ``roi_scale``: final roi multiplied (repo's x0.5 haircut convention, or
+      the harsher x0.25 conservative scale).
+    ``n`` counts all rows surviving the odds filters; unpriced rows count in
+    n/n_days/hit but never in ROI — identical to production accounting.
+    """
+    n = wins = n_priced = n_unpriced = n_filtered = 0
+    pnl = 0.0
+    odds_quotes: list[float] = []
+    pnl_win_odds: list[float] = []
+    pnl_loss_odds: list[float] = []
+    days: set[str] = set()
+    rows_priced: list[tuple[dict, float, float]] = []
+    for r in rows:
+        o = price_of(r, source)
+        if o is not None and (
+            (cap is not None and o > cap) or (band is not None and not (band[0] <= o < band[1]))
+        ):
+            n_filtered += 1
+            continue
+        n += 1
+        days.add(str(r.get("date"))[:10])
+        win = r.get("pick") == r.get("outcome")
+        if win:
+            wins += 1
+        if o is None:
+            n_unpriced += 1
+            continue
+        n_priced += 1
+        odds_quotes.append(o)
+        bet_pnl = ((o - 1.0) * adjust_k) if win else -1.0
+        pnl += bet_pnl
+        rows_priced.append((r, o, bet_pnl))
+        (pnl_win_odds if win else pnl_loss_odds).append(o)
+
+    quotes_sorted = sorted(odds_quotes)
+    roi_raw = pnl / n_priced if n_priced else None
+    roi = roi_raw * roi_scale if roi_raw is not None else None
+    return {
+        "n": n,
+        "wins": wins,
+        "n_priced": n_priced,
+        "n_unpriced": n_unpriced,
+        "n_filtered": n_filtered,
+        "n_days": len(days),
+        "hit": round(wins / n, 4) if n else 0.0,
+        "wilson_lb": round(wilson_lb(wins, n), 4),
+        "pnl": round(pnl, 4),
+        "roi": round(roi, 4) if roi is not None else None,
+        "roi_raw": round(roi_raw, 4) if roi_raw is not None else None,
+        "avg_odds": round(sum(odds_quotes) / n_priced, 3) if n_priced else None,
+        "median_odds": round(statistics.median(quotes_sorted), 3) if n_priced else None,
+        "winner_odds": {
+            "n": len(pnl_win_odds),
+            "avg": round(sum(pnl_win_odds) / len(pnl_win_odds), 3) if pnl_win_odds else None,
+            "max": max(pnl_win_odds) if pnl_win_odds else None,
+        },
+        "loser_odds": {
+            "n": len(pnl_loss_odds),
+            "avg": round(sum(pnl_loss_odds) / len(pnl_loss_odds), 3) if pnl_loss_odds else None,
+        },
+        "rows_priced": rows_priced,
+        "price": {
+            "source": source,
+            "adjust_k": adjust_k,
+            "cap": cap,
+            "band": list(band) if band else None,
+            "roi_scale": roi_scale,
+        },
+    }
+
+
+def by_window(
+    matched_rows: list[dict],
+    source: str,
+    split: str,
+    confirm_start: str = DEFAULT_CONFIRM_START,
+    **kw,
+) -> dict:
+    """pnl_stats per walk-forward window (same boundaries as grade_rows)."""
+    out = {}
+    for wname in ("train", "valid", "confirm"):
+        sel = [
+            r
+            for r in matched_rows
+            if _window(str(r.get("date"))[:10], split, confirm_start) == wname
+        ]
+        out[wname] = pnl_stats(sel, source, **kw)
+    return out
+
+
+def concentration(rows_priced: list[tuple[dict, float, float]]) -> dict:
+    """Outlier-dependence of a priced slice: remove the largest winning
+    returns (top 1/2/3 by profit, winners only affect pnl) and recompute."""
+    n = len(rows_priced)
+    pnls = sorted((p for _, _, p in rows_priced), reverse=True)
+    total = sum(pnls)
+
+    def roi_after_drop(k: int) -> float | None:
+        if n <= k:
+            return None
+        return round((total - sum(pnls[:k])) / (n - k), 4)
+
+    winners = [(r, o, p) for r, o, p in rows_priced if p > 0]
+    median = statistics.median(pnls) if n else None
+    return {
+        "n_priced": n,
+        "pnl_total": round(total, 4),
+        "roi": round(total / n, 4) if n else None,
+        "median_bet_return": round(median, 4) if median is not None else None,
+        "roi_wo_top1": roi_after_drop(1),
+        "roi_wo_top2": roi_after_drop(2),
+        "roi_wo_top3": roi_after_drop(3),
+        "top_wins": [round(p, 3) for p in pnls if p > 0][:5],
+        "n_winners": len(winners),
+        "distinct_win_events": len(
+            {(str(r.get("date"))[:10], r.get("home"), r.get("away")) for r, _, _ in winners}
+        ),
+        "distinct_leagues": len(
+            {
+                r.get("league_canonical") or canonical_league(r.get("league"))
+                for r, _, _ in rows_priced
+            }
+        ),
+        "distinct_win_leagues": len(
+            {r.get("league_canonical") or canonical_league(r.get("league")) for r, _, _ in winners}
+        ),
+    }
+
+
+def contribution_by(rows_priced: list[tuple[dict, float, float]], keyfn) -> list[dict]:
+    """Profit contribution grouped by `keyfn(row)` (odds band / league / month /
+    quarter). Sorted by descending pnl; shares sum to 1.0 over the group."""
+    groups: dict[str, dict] = {}
+    total = 0.0
+    for r, o, p in rows_priced:
+        k = str(keyfn(r, o))
+        g = groups.setdefault(
+            k, {"n_priced": 0, "wins": 0, "pnl": 0.0, "days": set(), "odds_sum": 0.0}
+        )
+        g["n_priced"] += 1
+        g["days"].add(str(r.get("date"))[:10])
+        g["pnl"] += p
+        g["odds_sum"] += o
+        total += p
+        if r.get("pick") == r.get("outcome"):
+            g["wins"] += 1
+    out = []
+    for k, g in groups.items():
+        out.append(
+            {
+                "key": k,
+                "n_priced": g["n_priced"],
+                "wins": g["wins"],
+                "avg_odds": round(g["odds_sum"] / g["n_priced"], 3),
+                "pnl": round(g["pnl"], 4),
+                "roi": round(g["pnl"] / g["n_priced"], 4),
+                "pnl_share": round(g["pnl"] / total, 4) if total else None,
+                "n_days": len(g["days"]),
+            }
+        )
+    out.sort(key=lambda d: -d["pnl"])
+    return out
+
+
+def month_key(r: dict, _o: float) -> str:
+    return str(r.get("date"))[:7]
+
+
+def quarter_key(r: dict, _o: float) -> str:
+    d = str(r.get("date"))[:10]
+    y, m = int(d[:4]), int(d[5:7])
+    return f"{y}Q{(m - 1) // 3 + 1}"
+
+
+def league_key(r: dict, _o: float) -> str:
+    return str(r.get("league_canonical") or canonical_league(r.get("league")) or "UNKNOWN")
+
+
+def band_key(bands: tuple[tuple[float, float], ...] = PRICE_STUDY_BANDS):
+    def key(r: dict, o: float) -> str:
+        for lo, hi in bands:
+            if lo <= o < hi:
+                hi_s = "+" if hi >= 1e9 else f"-{hi:g}"
+                return f"{lo:g}{hi_s}"
+        return f"<{bands[0][0]:g}"
+
+    return key
+
+
+def bootstrap_roi_ci(
+    pnls: list[float], n_boot: int = BOOTSTRAP_N, seed: int = BOOTSTRAP_SEED
+) -> dict:
+    """Percentile bootstrap CI for mean per-bet pnl (the roi), seeded and
+    recorded. numpy is a declared repo dependency; imported lazily so this
+    module stays stdlib-only at import time."""
+    import numpy as np
+
+    if not pnls:
+        return {
+            "point": None,
+            "ci_lo": None,
+            "ci_hi": None,
+            "p_positive": None,
+            "n_boot": n_boot,
+            "seed": seed,
+        }
+    arr = np.asarray(pnls, dtype=float)
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, arr.size, size=(n_boot, arr.size))
+    means = arr[idx].mean(axis=1)
+    lo, hi = np.percentile(means, [2.5, 97.5])
+    return {
+        "point": round(float(arr.mean()), 4),
+        "ci_lo": round(float(lo), 4),
+        "ci_hi": round(float(hi), 4),
+        "p_positive": round(float((means > 0).mean()), 4),
+        "n_boot": n_boot,
+        "seed": seed,
+    }
+
+
+def implied_baseline(rows_priced: list[tuple[dict, float, float]]) -> dict:
+    """Simple implied-probability market baseline: the break-even hit rate the
+    quotes imply vs the observed hit. Overround is computed by the driver
+    (needs the full 1X2 book)."""
+    n = len(rows_priced)
+    implied = [1.0 / o for _, o, _ in rows_priced]
+    wins = sum(1 for r, _, _ in rows_priced if r.get("pick") == r.get("outcome"))
+    avg_implied = sum(implied) / n if n else None
+    hit = wins / n if n else None
+    return {
+        "n_priced": n,
+        "avg_implied_prob": round(avg_implied, 4) if avg_implied is not None else None,
+        "observed_hit": round(hit, 4) if hit is not None else None,
+        "hit_minus_implied": round(hit - avg_implied, 4)
+        if (hit is not None and avg_implied is not None)
+        else None,
+    }
+
+
+def wilson_gate_analysis(hit: float, n: int, threshold: float = 0.5) -> dict:
+    """Why the Wilson gate can never let a longshot slice through.
+
+    wilson_lb IS strictly increasing in n towards p_hat. Therefore, when the
+    observed hit rate is at or below the threshold, NO finite sample size
+    clears it — `required_n` is None by proof, not by omission. When hit >
+    threshold the required n is found exactly (exponential + binary search).
+    Also reported: the minimum hit rate that would clear the gate at THIS n,
+    and the fair-price ceiling that implies (1 / required_hit): the gate only
+    admits slices priced short of ~2.0.
+    """
+    p_hat = hit
+    result = {
+        "hit": round(p_hat, 4),
+        "n": n,
+        "threshold": threshold,
+        "wilson_lb": round(wilson_lb(round(p_hat * n), n), 4),
+    }
+    required_hit = None
+    if n:
+        w = next((w for w in range(n + 1) if wilson_lb(w, n) >= threshold), None)
+        if w is not None:
+            required_hit = w / n
+    result["required_hit_at_n"] = round(required_hit, 4) if required_hit is not None else None
+    result["fair_odds_ceiling_for_gate"] = round(1.0 / required_hit, 3) if required_hit else None
+
+    if p_hat <= threshold:
+        result["required_n"] = None
+        result["impossible_reason"] = (
+            f"hit {p_hat:.4f} <= threshold {threshold}: the lower bound "
+            "monotonically approaches p_hat from below, so no finite n clears it"
+        )
+        return result
+    lo, hi = 1, 1
+    while wilson_lb(round(p_hat * hi), hi) < threshold and hi < 1 << 40:
+        lo, hi = hi + 1, hi * 2
+    while lo < hi:
+        mid = (lo + hi) // 2
+        if wilson_lb(round(p_hat * mid), mid) >= threshold:
+            hi = mid
+        else:
+            lo = mid + 1
+    result["required_n"] = lo
+    result["impossible_reason"] = None
+    return result
