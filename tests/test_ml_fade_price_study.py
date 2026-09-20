@@ -358,3 +358,114 @@ def test_predeclared_search_parameters():
     names = [c.name() for c in ladder]
     assert names[2] == "ml-fade home-fade avg_p>=65"
     assert len(set(names)) == 6
+
+
+# --------------------------------------------------------------------------
+# 9. Strength classification — the predeclared decision rule
+# --------------------------------------------------------------------------
+def _win(roi=0.30, n_priced=200):
+    return {"roi": roi, "roi_raw": roi, "n_priced": n_priced}
+
+
+def _boot(ci_lo=0.10, p=0.99):
+    return {"ci_lo": ci_lo, "ci_hi": 0.60, "p_positive": p, "point": 0.3}
+
+
+def _conc(r3=0.15):
+    return {"roi_wo_top3": r3}
+
+
+def _pers(pos=5, judged=7):
+    return {
+        "months_judged": judged,
+        "months_judged_positive": pos,
+        "months_total": judged,
+        "months_any_positive": pos,
+        "n_days": 100,
+    }
+
+
+def _price_vars(zb_v=0.18, zb_c=0.20, w_v=0.21, w_c=0.22):
+    return {"zb": {"valid": zb_v, "confirm": zb_c}, "worst": {"valid": w_v, "confirm": w_c}}
+
+
+def _battery(**kw):
+    m = {
+        "valid": _win(0.3945, 173),
+        "confirm": _win(0.3535, 91),
+        "concentration_valid": _conc(0.1602),
+        "concentration_confirm": _conc(0.0474),
+        "bootstrap_valid": _boot(-0.019, 0.9686),
+        "bootstrap_confirm": _boot(-0.1601, 0.902),
+        "persistence_valid": _pers(5, 7),
+        "persistence_confirm": _pers(2, 5),
+        "price_variants": _price_vars(0.1818, 0.2427, 0.2153, 0.354),
+    }
+    m.update(kw)
+    return m
+
+
+def test_reproduced_primary_metrics_classify_insufficient_evidence():
+    """The exact battery from the real study (thr 65 home-fade) must classify
+    as INSUFFICIENT EVIDENCE — wide CIs, weak confirm months, marginal top-3."""
+    label, reasons = fr.classify_signal_strength(**_battery())
+    assert label == "INSUFFICIENT EVIDENCE"
+    joined = " ".join(reasons)
+    assert "ci_lo" in joined and "P(roi>0)" in joined
+    assert "judged-month positive share" in joined
+    assert "top-3-removed" in joined
+
+
+def test_every_axis_cleared_is_robust():
+    m = _battery(
+        bootstrap_valid=_boot(0.05, 0.97),
+        bootstrap_confirm=_boot(0.02, 0.95),
+        concentration_confirm=_conc(0.06),
+        persistence_confirm=_pers(3, 5),
+    )
+    label, reasons = fr.classify_signal_strength(**m)
+    assert label == "ROBUST RESEARCH SIGNAL" and reasons
+
+
+def test_too_thin_is_insufficient_not_robust():
+    label, _ = fr.classify_signal_strength(**_battery(valid=_win(0.5, 119)))
+    assert label == "INSUFFICIENT EVIDENCE"
+    label, _ = fr.classify_signal_strength(**_battery(confirm=_win(0.5, 29)))
+    assert label == "INSUFFICIENT EVIDENCE"
+
+
+def test_decisively_negative_is_rejected():
+    label, reasons = fr.classify_signal_strength(**_battery(confirm=_win(-0.05, 60)))
+    assert label == "REJECTED" and "confirm" in reasons[0]
+
+
+def test_failing_honest_prices_is_price_dependent():
+    label, reasons = fr.classify_signal_strength(**_battery(price_variants=_price_vars(zb_v=-0.02)))
+    assert label == "PRICE-DEPENDENT SIGNAL" and "zb" in reasons[0]
+
+
+def test_failing_top3_with_fine_prices_is_outlier_dependent():
+    label, reasons = fr.classify_signal_strength(**_battery(concentration_confirm=_conc(-0.02)))
+    assert label == "OUTLIER-DEPENDENT SIGNAL" and "top-3" in reasons[0]
+
+
+def test_decision_order_price_blame_precedes_outlier_blame():
+    label, _ = fr.classify_signal_strength(
+        **_battery(price_variants=_price_vars(w_v=-0.01), concentration_confirm=_conc(-0.01))
+    )
+    assert label == "PRICE-DEPENDENT SIGNAL"
+
+
+def test_classification_rule_constants_pinned():
+    assert fr.SIGNAL_LABELS == (
+        "ROBUST RESEARCH SIGNAL",
+        "PRICE-DEPENDENT SIGNAL",
+        "OUTLIER-DEPENDENT SIGNAL",
+        "INSUFFICIENT EVIDENCE",
+        "REJECTED",
+    )
+    assert fr.PRICE_TEST_SOURCES == ("zb", "worst")
+    assert fr.ROBUST_MIN_P_POSITIVE == 0.95
+    assert fr.ROBUST_TOP3_MIN_ROI == 0.05
+    assert fr.ROBUST_MIN_JUDGED_MONTHS == 3
+    assert fr.SIGNAL_MIN_CONFIRM_PRICED == fr.CONFIRM_MIN_N

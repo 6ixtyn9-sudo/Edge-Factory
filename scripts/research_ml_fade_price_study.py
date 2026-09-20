@@ -333,6 +333,37 @@ def main() -> int:
         v = out["baseline_fb"][str(thr)]["valid"]
         out["wilson"][str(thr)] = fr.wilson_gate_analysis(v["hit"], v["n"])
 
+    # ---- 7b. strength classification (predeclared decision rule) ----------
+    price_variants = {
+        src: {w: out["sources"][str(primary)][src][w]["roi"] for w in ("valid", "confirm")}
+        for src in fr.PRICE_TEST_SOURCES
+    }
+    label, reasons = fr.classify_signal_strength(
+        valid=out["baseline_fb"][str(primary)]["valid"],
+        confirm=out["baseline_fb"][str(primary)]["confirm"],
+        concentration_valid=out["concentration"][str(primary)]["valid"],
+        concentration_confirm=out["concentration"][str(primary)]["confirm"],
+        bootstrap_valid=out["bootstrap"][str(primary)]["valid"],
+        bootstrap_confirm=out["bootstrap"][str(primary)]["confirm"],
+        persistence_valid=out["persistence"][str(primary)]["valid"],
+        persistence_confirm=out["persistence"][str(primary)]["confirm"],
+        price_variants=price_variants,
+    )
+    out["audit"] = {
+        "subject": ladder[primary].name(),
+        "classification": label,
+        "reasons": reasons,
+        "price_variant_inputs": price_variants,
+        "robust_thresholds": {
+            "min_p_positive": fr.ROBUST_MIN_P_POSITIVE,
+            "top3_min_roi": fr.ROBUST_TOP3_MIN_ROI,
+            "min_month_share_positive": fr.ROBUST_MIN_MONTH_SHARE_POSITIVE,
+            "min_judged_months": fr.ROBUST_MIN_JUDGED_MONTHS,
+            "price_test_sources": list(fr.PRICE_TEST_SOURCES),
+        },
+        "note": "research-strength classification only; production certification is untouched",
+    }
+
     # ---- 8. meta ------------------------------------------------------------
     out["meta"].update(
         {
@@ -376,6 +407,7 @@ def main() -> int:
     Path(args.out_md).write_text(md)
     print(f"rows: {len(rows)}, subject ladder: {list(fr.PRICE_STUDY_THRESHOLDS)}")
     print(f"variants graded: {VARIANTS_GRADED}")
+    print(f"audit classification: {out['audit']['classification']}")
     print(f"wrote {args.out_json} and {args.out_md}")
     return 0
 
@@ -398,6 +430,13 @@ def render_md(out: dict, primary: int):
         f"thr {thr_l}); variants graded: {out['meta']['variants_graded']}"
     )
     m.append("- production gates UNCHANGED; nothing certified, emitted or integrated\n")
+    m.append(
+        f"**Strength classification (predeclared decision rule, "
+        f"`fade_research.classify_signal_strength`): {out['audit']['classification']}**"
+    )
+    for r in out["audit"]["reasons"]:
+        m.append(f"- {r}")
+    m.append("")
 
     m.append("## 1. Baseline reproduction (production price source: forebet)\n")
     m.append(
