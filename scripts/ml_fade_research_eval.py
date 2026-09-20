@@ -184,6 +184,14 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--no-settle", action="store_true", help="capture-only run: skip the settlement pass"
     )
+    ap.add_argument(
+        "--settle-monitor-only",
+        action="store_true",
+        help="settle + accrual + monitoring only: if checkpoint conditions "
+        "are met, the evaluation is DEFERRED to the official 09:00 SAST "
+        "freeze (policy section 3) — due-ness is NOT consumed, the next "
+        "official run evaluates. Used by autonomous intraday runs.",
+    )
     args = ap.parse_args(argv)
 
     today = _today(args.today)
@@ -247,6 +255,20 @@ def main(argv: list[str] | None = None) -> int:
             "ml-fade research: no checkpoint due "
             f"(next: monthly / +{ckpt.SETTLED_INCREMENT} settled fade / "
             f"{ckpt.ACTIVE_DAY_INCREMENT} active days)"
+        )
+        ckpt.save_state(args.state, state)
+        return 0
+    if args.settle_monitor_only and not args.force_checkpoint:
+        # Official-freeze doctrine (policy section 3, operator direction
+        # 2026-09-20): evaluations anchor to the 09:00 SAST official freeze —
+        # an explicit manual --force-checkpoint remains the human override.
+        # the same cut the auto-bets use. Intraday due-ness is reported but
+        # NOT consumed here; state is left untouched so the next official run
+        # evaluates with the same predeclared reasons.
+        print(
+            f"ml-fade research: checkpoint conditions met ({'; '.join(reasons)}) "
+            "— evaluation DEFERRED to the next official 09:00 SAST freeze "
+            "(settle/monitoring finished normally)"
         )
         ckpt.save_state(args.state, state)
         return 0

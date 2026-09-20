@@ -271,21 +271,33 @@ def sync_official_archive(target_date: str, label: str = "sync_supabase") -> Non
     )
 
 
-def ml_fade_research_maintenance(target_date: str) -> None:
-    """ML-fade research accrual step (RESEARCH-ONLY).
+def ml_fade_research_cmd(target_date: str, *, official_run: bool) -> str:
+    """Command for the ML-fade research maintenance step (RESEARCH-ONLY).
 
-    Settles the tracked research ledger against the tracked settled-results
-    facts, prints visible accrual/monitoring lines, and runs the frozen
-    checkpoint evaluation when the predeclared cadence says one is due. It
-    never touches picks, tickets, notifications, or the edge registry.
-    Soft-fail like the other side-band maintenance steps: the research ledger
-    is committed state, so a failed run never loses evidence — the next run
-    re-settles idempotently.
+    Settlement/monitoring/capture run on EVERY service run (accrual wants
+    continuous freshness: late-slate captures and newly settled facts are
+    never "unfair", only late). Checkpoint EVALUATION anchors to the official
+    09:00 SAST freeze — the same cut the auto-bets freeze on (operator
+    direction 2026-09-20, ML_FADE_RESEARCH_POLICY.md section 3): intraday
+    runs get --settle-monitor-only so a due checkpoint defers to the morning
+    official run without consuming its due-ness.
     """
-    run_soft(
-        f"PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --today {target_date}",
-        "ml_fade_research (settle + monitor + checkpoint)",
+    cmd = f"PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --today {target_date}"
+    return cmd if official_run else cmd + " --settle-monitor-only"
+
+
+def ml_fade_research_maintenance(target_date: str, *, official_run: bool) -> None:
+    """Settle the tracked research ledger, print accrual/monitoring lines,
+    and — on official runs only — evaluate a due checkpoint. Soft-fail like
+    the other side-band maintenance steps: the ledger is committed state, so
+    a failed run never loses evidence; the next run re-settles idempotently.
+    """
+    label = (
+        "ml_fade_research (settle + monitor + checkpoint)"
+        if official_run
+        else "ml_fade_research (settle + monitor; checkpoint deferred to official freeze)"
     )
+    run_soft(ml_fade_research_cmd(target_date, official_run=official_run), label)
 
 
 def capture_theodds_snapshot(target_date: str, trigger: str) -> None:
@@ -889,7 +901,7 @@ def run_pipeline(
             "PYTHONPATH=src python3 scripts/o25_tracker.py 2>&1 | tee localdata/o25_tracker_report.txt",
             "o25_tracker (goals surface + checkpoint gate)",
         )
-        ml_fade_research_maintenance(target_date)
+        ml_fade_research_maintenance(target_date, official_run=True)
         sync_official_archive(target_date, "sync_supabase")
         _notify(target_date, "notify (Smart Dispatch + empty-slate heartbeat)")
         if not picks_only:
@@ -1018,7 +1030,7 @@ def run_pipeline(
             "PYTHONPATH=src python3 scripts/o25_tracker.py 2>&1 | tee localdata/o25_tracker_report.txt",
             "o25_tracker (goals surface + checkpoint gate)",
         )
-        ml_fade_research_maintenance(target_date)
+        ml_fade_research_maintenance(target_date, official_run=False)
         print(f"\n=== Autonomous Intraday Service Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "forecast":

@@ -72,8 +72,20 @@ A checkpoint is **due** when **any** holds:
 4. **Active days** — **>= 30** distinct capture days passed since the last
    checkpoint.
 
-At each due checkpoint (`scripts/ml_fade_research_eval.py`, invoked by
-`scripts/daily.py` in both autonomous modes):
+**Execution anchor (operator direction 2026-09-20):** due checkpoints are
+*evaluated* only at the **official 09:00 SAST freeze** — the same daily cut
+the auto-bets and the official record freeze on (`official_run` mode, one
+per calendar day). Every service run (09/12/15/18/21 SAST) still captures,
+settles, and prints accrual/monitoring — evidence accrual must be continuous
+because late-slate fixtures and newly settled facts are only ever *late*,
+never *unfair* — but the evaluation/report fires once, at the morning freeze,
+so every checkpoint is cut against comparable official state. Intraday
+due-ness is logged and **not consumed**: the next official run evaluates
+with the same predeclared reasons.
+
+At each evaluated checkpoint (`scripts/ml_fade_research_eval.py`, invoked by
+`scripts/daily.py` in both autonomous modes — full evaluation in the
+official mode, `--settle-monitor-only` intraday):
 
 - the **fixed price variants** (`zb-only`, `fb-only` on first-seen quotes)
   are recomputed for the parent and fade populations;
@@ -116,10 +128,13 @@ walk-forward machinery (`mine_consensus.evaluate`) with its existing gates,
 ## 6. Manual operation
 
 ```bash
-# settle + monitor only (no checkpoint unless due):
+# settle + monitor + evaluate any due checkpoint (official-freeze behavior):
 PYTHONPATH=src python3 scripts/ml_fade_research_eval.py
 
-# force a checkpoint without the heavy frozen studies:
+# intraday behavior — settle + monitor, defer due checkpoints to 09:00:
+PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --settle-monitor-only
+
+# force a checkpoint without the heavy frozen studies (human override):
 PYTHONPATH=src python3 scripts/ml_fade_research_eval.py \
     --force-checkpoint --skip-studies
 ```

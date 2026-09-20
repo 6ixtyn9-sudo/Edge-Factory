@@ -10,6 +10,11 @@ Checkpoints are DUE when any of these fixed conditions holds:
   4. ACTIVE DAYS: at least ACTIVE_DAY_INCREMENT distinct capture days passed
      since the last checkpoint.
 
+Due checkpoints are EVALUATED only at the official 09:00 SAST freeze — the
+same cut the auto-bets use (operator direction 2026-09-20): autonomous
+intraday runs settle + monitor + log due-ness without consuming it, and the
+next official run evaluates with the same reasons.
+
 At a checkpoint the evaluation is FROZEN:
   - the same fixed price variants (zb-only / fb-only on FIRST-seen bet-time
     quotes) are computed for the ml-meta parent and the ml-fade populations;

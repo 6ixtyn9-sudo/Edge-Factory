@@ -324,6 +324,63 @@ def test_cli_settle_checkpoint_and_idempotency(tmp_path):
     assert len(json.loads(ledger_path.read_text())["rows"]) == len(rows_after)
 
 
+def test_cli_intraday_defers_checkpoint_without_consuming(tmp_path):
+    """Official-freeze doctrine: intraday runs never evaluate a due
+    checkpoint and never consume due-ness; the official run evaluates."""
+    ledger_path = tmp_path / "ledger.json"
+    ledger_path.write_text(json.dumps(_ledger([])))
+    (tmp_path / "settled.json").write_text(json.dumps({"schema": 1, "rows": []}))
+    env = _cli_env(tmp_path, ledger_path)
+
+    # Intraday run: bootstrap due-ness exists, but evaluation is deferred.
+    r1 = _run_eval(env, "--settle-monitor-only")
+    assert r1.returncode == 0, r1.stderr
+    assert "DEFERRED to the next official 09:00 SAST freeze" in r1.stdout
+    st1 = json.loads((tmp_path / "state.json").read_text())
+    assert st1["eval_count"] == 0 and st1["history"] == []
+    assert not list(tmp_path.glob("ml_fade_research_report_*.md"))
+
+    # A second intraday run: still deferred (due-ness unconsumed, not reset).
+    r2 = _run_eval(env, "--settle-monitor-only")
+    assert "DEFERRED" in r2.stdout and json.loads(
+        (tmp_path / "state.json").read_text())["eval_count"] == 0
+
+    # The official 09:00 run evaluates the SAME predeclared due-ness.
+    r3 = _run_eval(env)
+    assert r3.returncode == 0, r3.stderr
+    assert "checkpoint DUE (bootstrap" in r3.stdout
+    st3 = json.loads((tmp_path / "state.json").read_text())
+    assert st3["eval_count"] == 1 and len(st3["history"]) == 1
+    assert (tmp_path / f"ml_fade_research_report_{TODAY.isoformat()}.md").exists()
+
+
+def test_cli_force_checkpoint_overrides_deferral_flag_when_absent(tmp_path):
+    """Manual human override work both ways: forced evaluation even when the
+    deferral flag is present is still honoured (explicit operator act)."""
+    ledger_path = tmp_path / "ledger.json"
+    ledger_path.write_text(json.dumps(_ledger([])))
+    (tmp_path / "settled.json").write_text(json.dumps({"schema": 1, "rows": []}))
+    env = _cli_env(tmp_path, ledger_path)
+    r = _run_eval(env, "--settle-monitor-only", "--force-checkpoint")
+    assert r.returncode == 0
+    assert json.loads((tmp_path / "state.json").read_text())["eval_count"] == 1
+
+
+def test_daily_cmd_wiring_official_vs_intraday():
+    """The pipeline's two autonomous modes must map to the anchor policy:
+    official run evaluates; intraday defers via --settle-monitor-only."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import daily
+
+    official = daily.ml_fade_research_cmd("2026-09-21", official_run=True)
+    intraday = daily.ml_fade_research_cmd("2026-09-21", official_run=False)
+    assert "--settle-monitor-only" not in official
+    assert intraday.endswith("--settle-monitor-only")
+    assert official.startswith(
+        "PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --today 2026-09-21")
+    assert intraday.startswith(official)
+
+
 def test_cli_force_checkpoint_appends_history(tmp_path):
     ledger_path = tmp_path / "ledger.json"
     ledger_path.write_text(json.dumps(_ledger([])))
