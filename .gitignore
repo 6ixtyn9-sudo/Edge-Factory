@@ -90,11 +90,14 @@ dist/
 # Curated team-name aliases for settlement lookup (hand-maintained, not generated)
 !localdata/team_aliases.json
 
-# ML-fade research capture ledger + checkpoint state (bot-owned, tracked so
-# certification-independent evidence survives cache eviction — the pipeline's
-# "persist pipeline state to git" step commits it every run). The research
-# REPORTS (ml_fade_research_report_*.md / ml_fade_checkpoint_*.txt) stay
-# ignored like other local analysis artifacts and are also uploaded as
-# run artifacts by the workflow.
+# ML-fade research capture ledger + checkpoint state + checkpoint REPORTS
+# (bot-owned, tracked so certification-independent evidence survives cache
+# eviction — the pipeline's "persist pipeline state to git" step commits them
+# every run). Reports moved from artifact-only to git-tracked per operator
+# direction 2026-09-21 (audit trail like the CLV reports). One report set is
+# written only when a checkpoint actually evaluates, never per-run.
 !localdata/ml_fade_research_ledger.json
 !localdata/ml_fade_research_state.json
+!localdata/ml_fade_research_report_*.md
+!localdata/ml_fade_checkpoint_contexts_*.txt
+!localdata/ml_fade_checkpoint_price_study_*.txt
