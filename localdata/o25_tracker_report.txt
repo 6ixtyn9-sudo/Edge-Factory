@@ -1,18 +1,18 @@
-O2.5 TRACKER — graded 516/546 listed overs (window 2026-07-31..2026-09-21)
+O2.5 TRACKER — graded 518/548 listed overs (window 2026-07-31..2026-09-22)
 
 cut                                   n    hit  stated     ROI
-ALL priced                          483    65%     51%   -5.1%
+ALL priced                          484    65%     51%   -4.9%
 band 50-60%                         169    67%     53%   -6.2%
-band <50%                           295    64%     47%   -3.5%
+band <50%                           296    64%     47%   -3.2%
 band >=60%                           19    63%     90%  -19.9%
 SHARP-priced (theoddsapi/betexpl)   153    65%     50%   -7.7%
-SOFT-priced (scoutingstats)         199    65%     50%   -2.1%
+SOFT-priced (scoutingstats)         200    66%     50%   -1.6%
 
 --- goals surface by rule ---
 rule 2way-unanimous avg_p>=70       134    67%     51%   -7.6%
 rule 2way-unanimous min_p>=60 avg_p>=65    1   100%     45%  +36.0%
 rule 3way-unanimous avg_p>=65         4    75%     52%   +9.7%
-rule ml-meta avg_p>=55              221    64%     48%   -1.9%
+rule ml-meta avg_p>=55              222    64%     48%   -1.5%
 rule ml-meta avg_p>=60               40    65%     48%   +4.9%
 rule ml-meta avg_p>=65               11    82%     48%   +4.1%
 rule ml-meta avg_p>=70               13    85%     50%   +7.4%
@@ -21,7 +21,7 @@ rule ml-meta avg_p>=80                4    75%     49%  -22.5%
 rule ou25-unanimous-2way-sa avg_p>=70   54    56%     63%  -25.1%
 --- goals surface by bucket ---
 bucket CAUTION                       62    65%     50%   +4.7%
-bucket CERTIFIED_CLEAN               22    50%     48%  -16.6%
+bucket CERTIFIED_CLEAN               23    52%     48%  -11.8%
 bucket SKIPPED_VETO                 258    69%     49%   -2.4%
 bucket WATCHLIST_NO_ODDS              4    50%     51%  -28.2%
 bucket WATCHLIST_SUSPECT_PRICE       17    65%     59%  -10.2%
@@ -33,14 +33,14 @@ CHECKPOINT 3 GATE (50-60% band, priced):
    band 50-60% priced               169    67%     53%   -6.2%
    STATUS: PENDING — hit 67% < 70%, ROI -6.2% <= 0
 
-pending priced overs (results not yet filed): 26
-   2026-09-11 45% @ 1.03 (zulubet)
+pending priced overs (results not yet filed): 27
    2026-09-12 50% @ 1.4 (betexplorer_odds)
    2026-09-13 49% @ 1.41 (betexplorer_odds)
    2026-09-18 47% @ 1.5 (betexplorer_odds)
    2026-09-19 49% @ 1.31 (betexplorer_odds)
-   2026-09-20 45% @ 1.95 (scoutingstats)
-   2026-09-21 46% @ 1.42 (forebet_best)
+   2026-09-21 47% @ 1.42 (forebet_best)
    2026-09-21 55% @ 1.57 (scoutingstats)
    2026-09-21 54% @ 1.33 (scoutingstats)
    2026-09-21 53% @ 1.4 (betexplorer_odds)
+   2026-09-22 47% @ 1.15 (betexplorer_odds)
+   2026-09-22 47% @ 1.14 (betexplorer_odds)
