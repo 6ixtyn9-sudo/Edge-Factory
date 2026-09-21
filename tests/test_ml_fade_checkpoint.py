@@ -367,8 +367,10 @@ def test_cli_force_checkpoint_overrides_deferral_flag_when_absent(tmp_path):
 
 
 def test_daily_cmd_wiring_official_vs_intraday():
-    """The pipeline's two autonomous modes must map to the anchor policy:
-    official run evaluates; intraday defers via --settle-monitor-only."""
+    """The eval command builder maps the permission flag 1:1: permitted
+    runs evaluate; off-window runs defer via --settle-monitor-only. The
+    pipeline decides which variant to build via checkpoint_eval_window_open
+    (pinned below)."""
     sys.path.insert(0, str(ROOT / "scripts"))
     import daily
 
@@ -379,6 +381,86 @@ def test_daily_cmd_wiring_official_vs_intraday():
     assert official.startswith(
         "PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --today 2026-09-21")
     assert intraday.startswith(official)
+
+
+def _sast(day: int, hour: int, minute: int = 0):
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    return datetime(2026, 9, day, hour, minute, tzinfo=ZoneInfo("Africa/Johannesburg"))
+
+
+def test_checkpoint_eval_window_open_clock_gate():
+    """Evaluation permission is a wall-clock cut at the 09:00 SAST freeze —
+    independent of which pipeline mode is running the step. Overnight heavy
+    'official' builds (00:00 SAST cadence) must NOT evaluate: the regression
+    this pins is the 2026-09-21T00:19 SAST bootstrap consumption (operator
+    correction 2026-09-21)."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import daily
+
+    assert daily.checkpoint_eval_window_open("2026-09-21", _sast(21, 0, 19)) is False
+    assert daily.checkpoint_eval_window_open("2026-09-21", _sast(21, 6, 59)) is False
+    assert daily.checkpoint_eval_window_open("2026-09-21", _sast(21, 8, 59)) is False
+    assert daily.checkpoint_eval_window_open("2026-09-21", _sast(21, 9, 0)) is True
+    assert daily.checkpoint_eval_window_open("2026-09-21", _sast(21, 13, 0)) is True
+    assert daily.checkpoint_eval_window_open("2026-09-21", _sast(21, 21, 0)) is True
+
+
+def test_checkpoint_eval_window_open_fail_closed():
+    """Anything but 'today, post-freeze' fails CLOSED: backfill/forecast
+    target dates (past or future) never evaluate automatically, and a clock
+    failure defers instead of permitting."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import daily
+
+    assert daily.checkpoint_eval_window_open("2026-09-20", _sast(21, 9, 30)) is False
+    assert daily.checkpoint_eval_window_open("2026-09-22", _sast(21, 9, 30)) is False
+
+    class Boom:
+        def date(self):
+            raise RuntimeError("clock fault")
+
+    assert daily.checkpoint_eval_window_open("2026-09-21", Boom()) is False
+
+
+def test_daily_maintenance_defers_before_freeze_and_evaluates_after(monkeypatch):
+    """Both autonomous call sites run the same maintenance entry point, which
+    must build the flagged command off-window and the evaluating command
+    on-window. run_soft is captured, never executed."""
+    sys.path.insert(0, str(ROOT / "scripts"))
+    import daily
+
+    captured = []
+
+    def fake_run_soft(cmd, label):
+        captured.append((cmd, label))
+
+    monkeypatch.setattr(daily, "run_soft", fake_run_soft)
+
+    monkeypatch.setattr(daily, "checkpoint_eval_window_open", lambda target_date: False)
+    daily.ml_fade_research_maintenance("2026-09-21")
+    assert captured[-1][0].endswith("--settle-monitor-only")
+    assert "deferred to official freeze" in captured[-1][1]
+
+    monkeypatch.setattr(daily, "checkpoint_eval_window_open", lambda target_date: True)
+    daily.ml_fade_research_maintenance("2026-09-21")
+    assert captured[-1][0] == (
+        "PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --today 2026-09-21"
+    )
+    assert "settle + monitor + checkpoint" in captured[-1][1]
+
+
+def test_daily_call_sites_routed_through_window_gate():
+    """Every pipeline call site must use the gate-internal maintenance entry
+    point (no hand-passed permission kwargs that can drift out of sync with
+    the freeze anchor, which is what consumed the bootstrap checkpoint at
+    00:19 SAST on 2026-09-21)."""
+    src = (ROOT / "scripts" / "daily.py").read_text()
+    assert src.count("ml_fade_research_maintenance(target_date)") == 2
+    assert "ml_fade_research_maintenance(target_date, official_run=" not in src
+    maintenance_body = src.split("def ml_fade_research_maintenance")[1].split("\ndef ")[0]
+    assert "checkpoint_eval_window_open(target_date)" in maintenance_body
 
 
 def test_cli_force_checkpoint_appends_history(tmp_path):

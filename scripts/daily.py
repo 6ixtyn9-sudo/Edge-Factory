@@ -271,6 +271,30 @@ def sync_official_archive(target_date: str, label: str = "sync_supabase") -> Non
     )
 
 
+OFFICIAL_FREEZE_HOUR_LOCAL = 9  # 09:00 SAST — the auto-bets / official-record freeze
+
+
+def checkpoint_eval_window_open(target_date: str, now: datetime | None = None) -> bool:
+    """True only once today's official 09:00 SAST freeze has been *reached*.
+
+    The checkpoint evaluation anchor is a wall-clock cut, NOT the pipeline's
+    first heavy "official" build: under the overnight cadence that build fires
+    at 00:00 SAST (it writes the official-run marker for the day), and letting
+    it evaluate consumed the bootstrap checkpoint at 00:19 SAST on 2026-09-21
+    (operator correction 2026-09-21, ML_FADE_RESEARCH_POLICY.md section 3).
+    A clock/parse failure must FAIL CLOSED — defer evaluation; settlement and
+    monitoring still run, and --force-checkpoint remains the manual override.
+    """
+    try:
+        moment = now if now is not None else datetime.now(local_tz())
+        return (
+            moment.date().isoformat() == target_date
+            and moment.hour >= OFFICIAL_FREEZE_HOUR_LOCAL
+        )
+    except Exception:
+        return False
+
+
 def ml_fade_research_cmd(target_date: str, *, official_run: bool) -> str:
     """Command for the ML-fade research maintenance step (RESEARCH-ONLY).
 
@@ -278,20 +302,25 @@ def ml_fade_research_cmd(target_date: str, *, official_run: bool) -> str:
     continuous freshness: late-slate captures and newly settled facts are
     never "unfair", only late). Checkpoint EVALUATION anchors to the official
     09:00 SAST freeze — the same cut the auto-bets freeze on (operator
-    direction 2026-09-20, ML_FADE_RESEARCH_POLICY.md section 3): intraday
-    runs get --settle-monitor-only so a due checkpoint defers to the morning
-    official run without consuming its due-ness.
+    direction 2026-09-20, gated by checkpoint_eval_window_open since
+    2026-09-21, ML_FADE_RESEARCH_POLICY.md section 3): off-window runs get
+    --settle-monitor-only so a due checkpoint defers to the freeze without
+    consuming its due-ness.
     """
     cmd = f"PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --today {target_date}"
     return cmd if official_run else cmd + " --settle-monitor-only"
 
 
-def ml_fade_research_maintenance(target_date: str, *, official_run: bool) -> None:
+def ml_fade_research_maintenance(target_date: str) -> None:
     """Settle the tracked research ledger, print accrual/monitoring lines,
-    and — on official runs only — evaluate a due checkpoint. Soft-fail like
-    the other side-band maintenance steps: the ledger is committed state, so
-    a failed run never loses evidence; the next run re-settles idempotently.
+    and — only after the day's 09:00 SAST freeze is reached — evaluate a due
+    checkpoint. Soft-fail like the other side-band maintenance steps: the
+    ledger is committed state, so a failed run never loses evidence; the next
+    run re-settles idempotently. Evaluation permission comes solely from
+    checkpoint_eval_window_open so BOTH autonomous modes (the overnight heavy
+    official build and intraday runs) obey the same freeze anchor.
     """
+    official_run = checkpoint_eval_window_open(target_date)
     label = (
         "ml_fade_research (settle + monitor + checkpoint)"
         if official_run
@@ -901,7 +930,7 @@ def run_pipeline(
             "PYTHONPATH=src python3 scripts/o25_tracker.py 2>&1 | tee localdata/o25_tracker_report.txt",
             "o25_tracker (goals surface + checkpoint gate)",
         )
-        ml_fade_research_maintenance(target_date, official_run=True)
+        ml_fade_research_maintenance(target_date)
         sync_official_archive(target_date, "sync_supabase")
         _notify(target_date, "notify (Smart Dispatch + empty-slate heartbeat)")
         if not picks_only:
@@ -1030,7 +1059,7 @@ def run_pipeline(
             "PYTHONPATH=src python3 scripts/o25_tracker.py 2>&1 | tee localdata/o25_tracker_report.txt",
             "o25_tracker (goals surface + checkpoint gate)",
         )
-        ml_fade_research_maintenance(target_date, official_run=False)
+        ml_fade_research_maintenance(target_date)
         print(f"\n=== Autonomous Intraday Service Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 
     elif mode == "forecast":
