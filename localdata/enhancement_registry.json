@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 162,
-   "inv_price_sum": 156.96411005986766,
+   "hits": 164,
+   "inv_price_sum": 158.4000074957651,
    "multi_n": 23,
-   "n": 239,
+   "n": 241,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -575,9 +575,11 @@
     "2026-09-20|Manchester City vs Sunderland|match_over_25@v1",
     "2026-09-20|Feyenoord vs Utrecht|match_over_25@v1",
     "2026-09-20|Dender vs Patro Eisden|match_over_25@v1",
-    "2026-09-20|Lech Poznan vs Radomiak Radom|match_over_25@v1"
+    "2026-09-20|Lech Poznan vs Radomiak Radom|match_over_25@v1",
+    "2026-09-21|Spezia vs Vis Pesaro|match_over_25@v1",
+    "2026-09-21|Deportivo Toluca vs Santos Laguna|match_over_25@v1"
    ],
-   "profit": 6.67,
+   "profit": 7.47,
    "records": [
     {
      "date": "2026-08-01",
@@ -2487,6 +2489,22 @@
      "match": "Lech Poznan vs Radomiak Radom",
      "multi_source": false,
      "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-21",
+     "hit": true,
+     "match": "Spezia vs Vis Pesaro",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-21",
+     "hit": true,
+     "match": "Deportivo Toluca vs Santos Laguna",
+     "multi_source": false,
+     "price": 1.3,
      "source": "scoutingstats"
     }
    ],
