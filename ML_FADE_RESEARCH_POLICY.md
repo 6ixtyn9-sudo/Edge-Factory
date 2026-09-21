@@ -72,20 +72,28 @@ A checkpoint is **due** when **any** holds:
 4. **Active days** — **>= 30** distinct capture days passed since the last
    checkpoint.
 
-**Execution anchor (operator direction 2026-09-20):** due checkpoints are
-*evaluated* only at the **official 09:00 SAST freeze** — the same daily cut
-the auto-bets and the official record freeze on (`official_run` mode, one
-per calendar day). Every service run (09/12/15/18/21 SAST) still captures,
-settles, and prints accrual/monitoring — evidence accrual must be continuous
-because late-slate fixtures and newly settled facts are only ever *late*,
-never *unfair* — but the evaluation/report fires once, at the morning freeze,
-so every checkpoint is cut against comparable official state. Intraday
-due-ness is logged and **not consumed**: the next official run evaluates
-with the same predeclared reasons.
+**Execution anchor (operator direction 2026-09-20, refined 2026-09-21):** due
+checkpoints are *evaluated* only once the day's **official 09:00 SAST freeze**
+has been reached — a **wall-clock** cut, the same cut the auto-bets and the
+official record freeze on (`checkpoint_eval_window_open` in
+`scripts/daily.py`). "Official" here means the clock, not the pipeline's
+first heavy *official* build: under the overnight cadence that build fires at
+00:00 SAST and writes the daily official-run marker, and it must **not**
+consume checkpoint due-ness. (Observed once before this refinement: the
+00:00 SAST build consumed the bootstrap checkpoint at 2026-09-21T00:19 SAST —
+timing-only deviation; the evaluation used real settled evidence, produced no
+production effect, and is retained in the checkpoint history.) Every service
+run (00/03/06/09/12/15/18/21 SAST) still captures, settles, and prints
+accrual/monitoring — evidence accrual must be continuous because late-slate
+fixtures and newly settled facts are only ever *late*, never *unfair* — but
+the evaluation/report fires at the first post-freeze run, so every checkpoint
+is cut against comparable official state. Off-window due-ness is logged and
+**not consumed**: the freeze-window run evaluates with the same predeclared
+reasons. `--force-checkpoint` remains the explicit human override.
 
 At each evaluated checkpoint (`scripts/ml_fade_research_eval.py`, invoked by
-`scripts/daily.py` in both autonomous modes — full evaluation in the
-official mode, `--settle-monitor-only` intraday):
+`scripts/daily.py` from both autonomous modes — evaluation permission comes
+solely from the 09:00 SAST freeze window; `--settle-monitor-only` off-window):
 
 - the **fixed price variants** (`zb-only`, `fb-only` on first-seen quotes)
   are recomputed for the parent and fade populations;
@@ -147,3 +155,18 @@ in a dedicated commit that edits this file, the constants in
 `src/edgefactory/ml_fade_checkpoint.py`, and records the operator direction
 — never in response to interim performance, and never silently. Between
 amendments the definitions are frozen.
+
+Amendments on record:
+
+- **2026-09-20** — execution anchor pinned to the official 09:00 SAST freeze
+  (operator direction): intraday runs settle/monitor/defer without consuming
+  due-ness; `--force-checkpoint` is the documented human override.
+- **2026-09-21** — anchor definition refined from "the pipeline's first heavy
+  *official* run of the day" to the **09:00 SAST wall-clock window**
+  (`checkpoint_eval_window_open` in `scripts/daily.py`), after the overnight
+  00:00 SAST heavy build consumed the bootstrap checkpoint at
+  2026-09-21T00:19:31 SAST instead of the freeze run. Evaluation gating now
+  ignores pipeline mode at BOTH autonomous call sites (fail-closed).
+  Recorded deviation: the 2026-09-21 bootstrap evaluation fired at 00:19 SAST
+  (checkpoint history entry 0 on 5 settled fade rows, verdict "observing") —
+  retained as real evidence; never re-run, never erased.
