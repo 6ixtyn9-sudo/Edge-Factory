@@ -9,8 +9,9 @@ RESEARCH-ONLY. This script never touches production surfaces:
     team-name aliases, and (read-only) the registry's ml_model payload for
     model-drift provenance;
   - writes: the tracked research ledger (settlement updates only) and the
-    tracked checkpoint state, plus IGNORED report artifacts under localdata/
-    (ml_fade_research_report_*.md, ml_fade_checkpoint_*.txt);
+    tracked checkpoint state, plus the tracked checkpoint report artifacts
+    under localdata/ (ml_fade_research_report_*.md, ml_fade_checkpoint_*.txt —
+    git-tracked per operator direction 2026-09-21, like the CLV reports);
   - never: edges_consensus.json, picks archives, notifications, auto-tickets,
     or any certification gate.
 

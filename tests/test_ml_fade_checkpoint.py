@@ -451,6 +451,34 @@ def test_daily_maintenance_defers_before_freeze_and_evaluates_after(monkeypatch)
     assert "settle + monitor + checkpoint" in captured[-1][1]
 
 
+def test_checkpoint_evidence_files_are_git_tracked():
+    """Checkpoint evidence must land in the tracked persist set like the CLV
+    reports (operator direction 2026-09-21): ledger, state, report MD and the
+    two frozen-study TXTs must all survive .gitignore so the workflow's
+    `git add -A localdata/` picks them up. A whitelist regression here would
+    silently drop audit artifacts back to ephemeral CI artifacts."""
+    import shutil
+    import subprocess
+
+    if shutil.which("git") is None:
+        pytest.skip("git unavailable in test environment")
+
+    tracked = [
+        "localdata/ml_fade_research_ledger.json",
+        "localdata/ml_fade_research_state.json",
+        "localdata/ml_fade_research_report_2999-01-01.md",
+        "localdata/ml_fade_checkpoint_contexts_2999-01-01.txt",
+        "localdata/ml_fade_checkpoint_price_study_2999-01-01.txt",
+    ]
+    for path in tracked:
+        r = subprocess.run(
+            ["git", "check-ignore", "-q", path],
+            cwd=ROOT,
+            capture_output=True,
+        )
+        assert r.returncode == 1, f"{path} unexpectedly ignored (rc={r.returncode})"
+
+
 def test_daily_call_sites_routed_through_window_gate():
     """Every pipeline call site must use the gate-internal maintenance entry
     point (no hand-passed permission kwargs that can drift out of sync with
