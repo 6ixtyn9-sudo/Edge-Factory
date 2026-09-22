@@ -21,7 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_league, canonical_team, classify_competition
-from edgefactory.identity import team_identity_words
+from edgefactory.identity import source_team_key as _identity_source_team_key
 from edgefactory.util import (
     compact_key,
     norm_team,
@@ -61,14 +61,10 @@ LOCALDATA = ROOT / "localdata"
 BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 
-# Operational source/odds aliasing stays local to picks_today so certified miners,
-# warehouse joins, and historical backtests remain unchanged.
-SOURCE_TEAM_KEY_ALIASES = {
-    "thunder": "dandenong",   # Forebet: Thunder SC; others: Dandenong Thunder
-    "hobartzeb": "clarencez", # some feeds: Hobart Zebras; others: Clarence Zebras
-    "neftchi": "neftchife",   # Neftchi -> Neftchi Fergana (Uzbekistan)
-    "dila": "dilagori",       # Dila -> Dila Gori (Georgia ECL)
-}
+# Voter-row (source) aliasing lives in edgefactory/identity.py
+# (source_team_key + TEAM_KEY_RAW_ALIASES, width-24 collision-safe keys).
+# The odds-matching alias maps below stay local to picks_today so certified
+# miners, warehouse joins, and historical backtests remain unchanged.
 
 ODDS_EXACT_TEAM_ALIASES = {
     "dila": "dilagori",              # Dila -> Dila Gori (Georgia)
@@ -1624,12 +1620,12 @@ def canonical_display_team(name: object) -> str:
 
 
 def source_team_key(name: object) -> str:
-    # Identity-folded before keying so '&' and 'and' spellings (and
-    # accent variants) of one team collapse to a single voter-row key —
-    # the 2026-09-22 Dagenham duplicate class dies at capture. Legacy
-    # alias map remains authoritative on its own key shapes.
-    key = norm_team(team_identity_words(str(name or "")))
-    return SOURCE_TEAM_KEY_ALIASES.get(key, key)
+    # Delegates to the shared identity key (2026-09-22 red-team fix):
+    # 24-char, club-structure-only noise, '&'<->'and' + accent folding,
+    # and explicit same-club aliases. Kills the legacy width-9 collision
+    # class (Atletico/Real Madrid shared "madrid"; Arsenal == Arsenal W)
+    # that could mis-attach wrong-match evidence for same-day fixtures.
+    return _identity_source_team_key(name)
 
 
 def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:

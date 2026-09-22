@@ -99,10 +99,27 @@ Findings:
    variants: Górnik Zabrze, Rīgas FS, Stabæk, Vålerenga). Same-day
    same-source W-vs-men's fixtures can therefore mis-attach evidence
    where plain-spelled data previously survived only via mojibake keys.
-   Follow-up queued: re-key `source_team_key` on
-   `norm_entity_team(team_identity_words(name), width=24)` — the entity
-   noise list keeps w/ii/b/res tokens, so squads disambiguate — with
-   replay-measured alias re-keying; requires operator direction.
+   FIXED same day (operator-directed "fix all we can now"): the
+   `source_team_key` seam now delegates to the shared 24-char
+   club-structure-only key in `identity.py` (`source_team_key` +
+   `TEAM_KEY_RAW_ALIASES`, raw-name pairs with keys derived through the
+   key function so the table can never drift). `w/ii/b/res` tokens are
+   preserved; honorific stripping (`real`, `atletico`, …) is gone.
+   Corpus audit: collision groups 109 -> 66 and every remaining group
+   is same-club spelling variants (verified line-by-line; the only
+   W-groups are `(w)`/`W` spellings of the same women's squad).
+   Aliases retained + extended: Borussia M'gladbach/Mönchengladbach,
+   Rodina Moscow/Moskva, Tekstil Iv./Ivanovo, Grasshopper-Club/
+   Grasshoppers, Ferencvaros/Ferencvarosi TC, Haverfordwest(/County),
+   Ludogorets(/Razgrad), Broadmeadow(/Magic), Leicester(/City),
+   West Torrens(/Birkalla), Bayern Munich/München, plus Nordic club
+   tokens {sk, if, fk, bk, ik, ff}. Legacy norm_team(9) remains byte-
+   frozen for certified miners (untouched by design).
+   NOT changed, deliberately: `canonical_team` fallback shape — team-ctx
+   pool identities in the registry keyspace were built with
+   `norm_entity_team` honorific stripping; re-shaping the fallback would
+   orphan existing pools (fail-closed through missing verdicts). Any
+   team-ctx re-anchor is its own evidence project.
 3. **Double-alias hole closed in follow-up:** `_registry_lookup` folded
    candidate originally used `canonical_league_key` (alias table applied
    INSIDE a learned-lookup lane). Swapped to `fold_league_identity` — the
