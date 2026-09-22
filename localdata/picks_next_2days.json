@@ -123,12 +123,12 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-22T09:00:58+02:00",
-    "avg_p": 67.1,
+    "as_of": "2026-09-22T12:00:54+02:00",
+    "avg_p": 63.9,
     "away": "Waltham Abbey",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "confidence": 0.7824,
+    "confidence": 0.7165,
     "ctx": {
       "away_norm": "walthamabbey",
       "comp_type_name": "league",
@@ -141,8 +141,8 @@
       "league_key": "fa",
       "league_raw": "FA",
       "niche": "UNKNOWN",
-      "odds_band": "ALLOW",
-      "odds_band_name": "1.20-1.35",
+      "odds_band": "VETO",
+      "odds_band_name": "1.35-1.50",
       "resolution_original_verdict": "ALLOW",
       "resolution_path": "native",
       "resolution_pool_n": null,
@@ -181,45 +181,45 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.4903,
-    "enhancement_reason": "Mathematical expectation is 62.9% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 49.0%)",
+    "enhancement_probability": 0.4632,
+    "enhancement_reason": "Mathematical expectation is 59.5% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 46.3%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 1597,
+        "cohort_n": 2471,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4902977103411415,
-        "raw_probability": 0.6293322927836756,
-        "reason": "Mathematical expectation is 62.9% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 49.0%)"
+        "probability": 0.46323769637761014,
+        "raw_probability": 0.5945988231564598,
+        "reason": "Mathematical expectation is 59.5% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 46.3%)"
       },
       {
-        "cohort_n": 1597,
+        "cohort_n": 2471,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9454472177569453,
-        "raw_probability": 0.9721922051865546,
-        "reason": "Combined Under 3.5 is 97.2% (ML-calibrated 96.4%->97.3%, n=408) (Performance feedback: HR=96.3%, Adjusted Prob: 94.5%)"
+        "probability": 0.9526097357570555,
+        "raw_probability": 0.9795573378332357,
+        "reason": "Combined Under 3.5 is 98.0% (ML-calibrated 96.4%->97.3%, n=408) (Performance feedback: HR=96.3%, Adjusted Prob: 95.3%)"
       },
       {
-        "cohort_n": 1597,
+        "cohort_n": 2471,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8822826772315732,
-        "raw_probability": 0.9293398764201777,
-        "reason": "Combined Under 2.5 is 92.9% (ML-calibrated 93.1%->92.2%, n=370) (Performance feedback: HR=95.8%, Adjusted Prob: 88.2%)"
+        "probability": 0.8887145061220673,
+        "raw_probability": 0.9361147516619803,
+        "reason": "Combined Under 2.5 is 93.6% (ML-calibrated 93.1%->92.2%, n=370) (Performance feedback: HR=95.8%, Adjusted Prob: 88.9%)"
       },
       {
-        "cohort_n": 1597,
+        "cohort_n": 2471,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.26344669510033425,
-        "raw_probability": 0.25302849965551794,
-        "reason": "Poisson expected hit rate is 25.3% (ML-calibrated 23.8%->28.0%, n=440)"
+        "probability": 0.22510224780394505,
+        "raw_probability": 0.21620041203866505,
+        "reason": "Poisson expected hit rate is 21.6% (ML-calibrated 23.8%->28.0%, n=440)"
       }
     ],
     "home": "Dagenham & Redbridge",
@@ -230,19 +230,19 @@
     "league": "FA",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "historically unstable out of sample above 1.25",
+    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
     "market_type": "1x2",
     "match": "Dagenham & Redbridge vs Waltham Abbey",
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
     "n_way": 2,
-    "odds": 1.33,
+    "odds": 1.38,
     "odds_captured_at": "2026-09-22T18:45:00Z",
     "odds_league": "FA Cup",
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.2,
+      "odds": 1.38,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -260,7 +260,7 @@
         "league": "FA Cup",
         "market": "1x2",
         "match_method": "exact",
-        "odds": 1.33,
+        "odds": 1.38,
         "selection": "home",
         "source": "scoutingstats_odds"
       }
@@ -277,13 +277,13 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1187): Avg Goals: 3.65 | Over 2.5: 70.8% | BTTS: 42.3% | Home Over 1.5 Goals: 85.4% | Away Over 1.5 Goals: 9.1%",
-    "veto_reason": "context VETO in ['team_h']",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1756): Avg Goals: 3.51 | Over 2.5: 67.9% | BTTS: 39.6% | Home Over 1.5 Goals: 85.0% | Away Over 1.5 Goals: 8.0%",
+    "veto_reason": "context VETO in ['team_h', 'odds_band']",
     "vitibet_index": null,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-22T09:00:58+02:00",
+    "as_of": "2026-09-22T12:00:54+02:00",
     "avg_p": 63.0,
     "away": "SL Benfica W",
     "bookmaker": "scoutingstats_odds",
@@ -552,7 +552,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-22T09:00:58+02:00",
+    "as_of": "2026-09-22T12:00:54+02:00",
     "avg_p": 60.5,
     "away": "Spartans FC",
     "bookmaker": "betexplorer_best",
@@ -574,9 +574,9 @@
       "odds_band_name": "1.10-1.20",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O1-pool",
-      "resolution_pool_n": 77,
-      "resolution_pool_roi": -0.33895714285714285,
-      "resolution_reason": "O1 pool n=77 w_roi=-0.3390 -> VETO",
+      "resolution_pool_n": 76,
+      "resolution_pool_roi": -0.34956184210526314,
+      "resolution_reason": "O1 pool n=76 w_roi=-0.3496 -> VETO",
       "resolution_verdict": "VETO",
       "side_role": "away",
       "team_a": "VETO",
@@ -664,12 +664,12 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.16,
-    "odds_captured_at": "2026-09-22T07:08:22.988456+00:00",
+    "odds_captured_at": "2026-09-22T10:08:14.387475+00:00",
     "odds_league": "Scotland: Challenge Cup",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.16,
+      "odds": 1.18,
       "source": "forebet_best"
     },
     "odds_source": "betexplorer_odds",
@@ -694,7 +694,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-22T09:00:58+02:00",
+    "as_of": "2026-09-22T12:00:54+02:00",
     "avg_p": 56.7,
     "away": "Ross County",
     "bookmaker": "betexplorer_best",
@@ -716,9 +716,9 @@
       "odds_band_name": "1.10-1.20",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O1-pool",
-      "resolution_pool_n": 77,
-      "resolution_pool_roi": -0.33895714285714285,
-      "resolution_reason": "O1 pool n=77 w_roi=-0.3390 -> VETO",
+      "resolution_pool_n": 76,
+      "resolution_pool_roi": -0.34956184210526314,
+      "resolution_reason": "O1 pool n=76 w_roi=-0.3496 -> VETO",
       "resolution_verdict": "VETO",
       "side_role": "away",
       "team_a": "VETO",
@@ -787,13 +787,13 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.11,
-    "odds_captured_at": "2026-09-22T07:08:39.453787+00:00",
+    "odds": 1.1,
+    "odds_captured_at": "2026-09-22T10:08:20.391665+00:00",
     "odds_league": "Scotland: Challenge Cup",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.1,
+      "odds": 1.12,
       "source": "forebet_best"
     },
     "odds_source": "betexplorer_odds",
@@ -819,8 +819,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-22T06:00:55+02:00",
-    "avg_p": 55.9,
+    "as_of": "2026-09-22T12:00:54+02:00",
+    "avg_p": 55.6,
     "away": "Hibernian Youth",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
@@ -834,8 +834,8 @@
       "league_key": "scc",
       "league_raw": "ScC",
       "niche": "BOOST",
-      "odds_band": "CAUTION",
-      "odds_band_name": "1.20-1.35",
+      "odds_band": "ALLOW",
+      "odds_band_name": "1.10-1.20",
       "resolution_original_verdict": "ALLOW",
       "resolution_path": "native",
       "resolution_pool_n": null,
@@ -849,7 +849,7 @@
     "date": "2026-09-22",
     "decay_verdict": "HEALTHY",
     "display_rule": "ML-META\u226555",
-    "draw_risk_flag": "MEDIUM",
+    "draw_risk_flag": "LOW",
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
@@ -861,36 +861,36 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9564,
-    "enhancement_reason": "Combined Under 3.5 is 98.3% (ML-calibrated 96.4%->97.3%, n=408) (Performance feedback: HR=96.3%, Adjusted Prob: 95.6%)",
+    "enhancement_probability": 0.9566,
+    "enhancement_reason": "Combined Under 3.5 is 98.4% (ML-calibrated 96.4%->97.3%, n=408) (Performance feedback: HR=96.3%, Adjusted Prob: 95.7%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 2331,
+        "cohort_n": 2360,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9563803768090865,
-        "raw_probability": 0.9834346434833999,
-        "reason": "Combined Under 3.5 is 98.3% (ML-calibrated 96.4%->97.3%, n=408) (Performance feedback: HR=96.3%, Adjusted Prob: 95.6%)"
+        "probability": 0.9565665041689094,
+        "raw_probability": 0.9836260360487311,
+        "reason": "Combined Under 3.5 is 98.4% (ML-calibrated 96.4%->97.3%, n=408) (Performance feedback: HR=96.3%, Adjusted Prob: 95.7%)"
       },
       {
-        "cohort_n": 2331,
+        "cohort_n": 2360,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8775720637882317,
-        "raw_probability": 0.9243780189245339,
-        "reason": "Combined Under 2.5 is 92.4% (ML-calibrated 93.1%->92.2%, n=370) (Performance feedback: HR=95.8%, Adjusted Prob: 87.8%)"
+        "probability": 0.8795362421082689,
+        "raw_probability": 0.926446958148115,
+        "reason": "Combined Under 2.5 is 92.6% (ML-calibrated 93.1%->92.2%, n=370) (Performance feedback: HR=95.8%, Adjusted Prob: 88.0%)"
       },
       {
-        "cohort_n": 2331,
+        "cohort_n": 2360,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.42631560831339865,
-        "raw_probability": 0.5472066737628933,
-        "reason": "Mathematical expectation is 54.7% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 42.6%)"
+        "probability": 0.42325238265496823,
+        "raw_probability": 0.5432748038269875,
+        "reason": "Mathematical expectation is 54.3% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 42.3%)"
       }
     ],
     "home": "Alloa Athletic",
@@ -901,17 +901,17 @@
     "league": "ScC",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "upper short-odds zone, narrow surviving niche",
+    "market_recommendation_reason": "short odds, acceptable draw risk",
     "market_type": "1x2",
     "match": "Alloa Athletic vs Hibernian Youth",
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.5589,
+    "ml_p": 0.5562,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.2,
-    "odds_captured_at": "2026-09-22T04:10:06.045428+00:00",
+    "odds": 1.15,
+    "odds_captured_at": "2026-09-22T10:08:55.683728+00:00",
     "odds_league": "Scotland: Challenge Cup",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -935,10 +935,10 @@
       "statarea"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1396): Avg Goals: 3.18 | Over 2.5: 65.2% | BTTS: 45.7% | Home Over 1.5 Goals: 80.9% | Away Over 1.5 Goals: 9.9%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1418): Avg Goals: 3.16 | Over 2.5: 64.7% | BTTS: 45.3% | Home Over 1.5 Goals: 80.6% | Away Over 1.5 Goals: 9.6%",
     "veto_reason": "context VETO in ['team_h']",
     "vitibet_index": null,
-    "w_score": 0.2365
+    "w_score": 0.2257
   },
   {
     "as_of": "2026-09-21T21:01:03+02:00",
@@ -1071,8 +1071,8 @@
     "w_score": 1.0921
   },
   {
-    "as_of": "2026-09-22T09:00:58+02:00",
-    "avg_p": 62.8,
+    "as_of": "2026-09-22T12:00:54+02:00",
+    "avg_p": 66.1,
     "away": "Cowdenbeath",
     "bookmaker": "betexplorer_best",
     "bucket": "CERTIFIED_CLEAN",
@@ -1085,7 +1085,7 @@
       "league": "ALLOW",
       "league_key": "scc",
       "league_raw": "ScC",
-      "niche": "BOOST",
+      "niche": "ALLOW",
       "odds_band": "ALLOW",
       "odds_band_name": "1.10-1.20",
       "resolution_original_verdict": "ALLOW",
@@ -1100,10 +1100,10 @@
     },
     "date": "2026-09-23",
     "decay_verdict": "HEALTHY",
-    "display_rule": "ML-META\u226560",
+    "display_rule": "ML-META\u226565",
     "draw_risk_flag": "LOW",
     "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=60",
+    "edge_rule": "ml-meta avg_p>=65",
     "edge_status": "certified",
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
@@ -1113,45 +1113,45 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.4504,
-    "enhancement_reason": "Mathematical expectation is 57.8% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 45.0%)",
+    "enhancement_probability": 0.4769,
+    "enhancement_reason": "Mathematical expectation is 61.2% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 47.7%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 1745,
+        "cohort_n": 1285,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4503689121596525,
-        "raw_probability": 0.5780808152065743,
-        "reason": "Mathematical expectation is 57.8% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 45.0%)"
+        "probability": 0.4769265421041084,
+        "raw_probability": 0.6121694388964867,
+        "reason": "Mathematical expectation is 61.2% (ML-calibrated 46.2%->63.4%, n=569) (Performance feedback: HR=66.4%, Adjusted Prob: 47.7%)"
       },
       {
-        "cohort_n": 1745,
+        "cohort_n": 1285,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.954712101450549,
-        "raw_probability": 0.98171917564002,
-        "reason": "Combined Under 3.5 is 98.2% (ML-calibrated 96.4%->97.3%, n=408) (Performance feedback: HR=96.3%, Adjusted Prob: 95.5%)"
+        "probability": 0.9510463364347479,
+        "raw_probability": 0.9779497127789811,
+        "reason": "Combined Under 3.5 is 97.8% (ML-calibrated 96.4%->97.3%, n=408) (Performance feedback: HR=96.3%, Adjusted Prob: 95.1%)"
       },
       {
-        "cohort_n": 1745,
+        "cohort_n": 1285,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8930886416861721,
-        "raw_probability": 0.9407221849818156,
-        "reason": "Combined Under 2.5 is 94.1% (ML-calibrated 93.1%->92.2%, n=370) (Performance feedback: HR=95.8%, Adjusted Prob: 89.3%)"
+        "probability": 0.8962193660814551,
+        "raw_probability": 0.9440198888784255,
+        "reason": "Combined Under 2.5 is 94.4% (ML-calibrated 93.1%->92.2%, n=370) (Performance feedback: HR=95.8%, Adjusted Prob: 89.6%)"
       },
       {
-        "cohort_n": 1745,
+        "cohort_n": 1285,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.20245038976423285,
-        "raw_probability": 0.19444433856803267,
-        "reason": "Poisson expected hit rate is 19.4% (ML-calibrated 23.8%->28.0%, n=440)"
+        "probability": 0.2408658029720612,
+        "raw_probability": 0.2313405856965898,
+        "reason": "Poisson expected hit rate is 23.1% (ML-calibrated 23.8%->28.0%, n=440)"
       }
     ],
     "home": "Hamilton Academical",
@@ -1168,11 +1168,11 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.6284,
+    "ml_p": 0.6613,
     "model_version": null,
     "n_way": 3,
     "odds": 1.13,
-    "odds_captured_at": "2026-09-22T07:15:08.835521+00:00",
+    "odds_captured_at": "2026-09-22T10:14:22.338299+00:00",
     "odds_league": "Scotland: Challenge Cup",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -1188,16 +1188,16 @@
     "price_push_eligible": true,
     "recommended_enhancement": "match_over_25",
     "recommended_market": "keep_1x2",
-    "rule": "ml-meta avg_p>=60",
+    "rule": "ml-meta avg_p>=65",
     "source_weights": {},
     "sources_used": [
       "forebet",
       "statarea"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1222): Avg Goals: 3.38 | Over 2.5: 66.2% | BTTS: 41.1% | Home Over 1.5 Goals: 83.8% | Away Over 1.5 Goals: 10.1%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=980): Avg Goals: 3.51 | Over 2.5: 68.0% | BTTS: 39.7% | Home Over 1.5 Goals: 85.4% | Away Over 1.5 Goals: 10.0%",
     "vitibet_index": null,
-    "w_score": 0.5254
+    "w_score": 0.669
   },
   {
     "as_of": "2026-09-22T06:00:55+02:00",
@@ -1320,10 +1320,10 @@
     "w_score": 0.209
   },
   {
-    "as_of": "2026-09-22T09:00:58+02:00",
+    "as_of": "2026-09-22T12:00:54+02:00",
     "avg_p": 71.0,
     "away": "Paris W",
-    "bookmaker": "betexplorer_best",
+    "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
@@ -1418,20 +1418,36 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.02,
-    "odds_captured_at": "2026-09-22T07:14:57.105788+00:00",
-    "odds_league": "Europe: UEFA Champions League Women",
-    "odds_match_method": "betexplorer",
-    "odds_match_status": "matched",
+    "odds_captured_at": "2026-09-23T19:00:00Z",
+    "odds_league": "UEFA Women's Champions League",
+    "odds_match_method": "exact",
+    "odds_match_status": "uncorroborated",
     "odds_replaced": {
       "odds": 2.15,
       "source": "forebet_best"
     },
-    "odds_source": "betexplorer_odds",
+    "odds_source": "scoutingstats_odds",
     "odds_tier": "low",
     "pick": "home",
-    "price_board": [],
-    "price_evidence": "BETEXPLORER_RESCUE",
-    "price_push_eligible": true,
+    "price_board": [
+      {
+        "away": "Paris W",
+        "bookmaker": "scoutingstats_odds",
+        "captured_at": "2026-09-23T19:00:00Z",
+        "chosen": true,
+        "home": "Barcelona W",
+        "kickoff": "2026-09-23T19:00:00Z",
+        "league": "UEFA Women's Champions League",
+        "market": "1x2",
+        "match_method": "exact",
+        "odds": 1.02,
+        "selection": "home",
+        "source": "scoutingstats_odds"
+      }
+    ],
+    "price_evidence": "SCOUTINGSTATS_SOLE",
+    "price_push_eligible": false,
+    "price_quarantine_reason": "scoutingstats_sole_source",
     "recommended_enhancement": "match_over_25",
     "recommended_market": "keep_1x2",
     "rule": "2way-unanimous avg_p>=60",
@@ -1447,7 +1463,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-22T09:00:58+02:00",
+    "as_of": "2026-09-22T12:00:54+02:00",
     "avg_p": 68.5,
     "away": "Austria Wien W",
     "bookmaker": "scoutingstats_odds",
