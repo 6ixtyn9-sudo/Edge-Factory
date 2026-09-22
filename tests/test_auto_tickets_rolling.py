@@ -36,6 +36,75 @@ def _leg(tag, prob, odds, result=None):
             "row": {"home": f"Team {tag}", "away": f"Other {tag}", "pick": "home"}}
 
 
+# ---------------- same-fixture dedup (2026-09-22 Dagenham incident) ----------
+
+
+def _fixture_leg(match, home, away, date, prob, odds):
+    return {"match": match, "pick": "HOME", "prob": prob, "odds": odds,
+            "result": None,
+            "row": {"home": home, "away": away, "date": date}}
+
+
+def _incident_pool():
+    """The real 2026-09-22 FA Cup split: one match, two spellings, one card.
+    Dag-and: betexplorer @1.27 stated 68% · Dag-&: scoutingstats @1.33 67.1%."""
+    return [
+        _fixture_leg("East Kilbride vs Celtic II", "East Kilbride", "Celtic II",
+                     "2026-09-22", 0.75, 1.24),
+        _fixture_leg("Dagenham and Redbridge vs Waltham Abbey",
+                     "Dagenham and Redbridge", "Waltham Abbey",
+                     "2026-09-22", 0.68, 1.27),
+        _fixture_leg("Dagenham & Redbridge vs Waltham Abbey",
+                     "Dagenham & Redbridge", "Waltham Abbey",
+                     "2026-09-22", 0.671, 1.33),
+        _fixture_leg("Juventus W vs SL Benfica W", "Juventus W", "SL Benfica W",
+                     "2026-09-22", 0.63, 1.61),
+    ]
+
+
+def test_fixture_fold_treats_ampersand_as_and():
+    assert at._fixture_fold("Dagenham & Redbridge") == at._fixture_fold(
+        "Dagenham and Redbridge")
+
+
+def test_dedup_fixture_legs_keeps_highest_ranked_twin():
+    kept, dropped = at.dedup_fixture_legs(at.rank_legs(_incident_pool()))
+    assert [l["match"] for l in kept] == [
+        "East Kilbride vs Celtic II",
+        "Dagenham and Redbridge vs Waltham Abbey",
+        "Juventus W vs SL Benfica W",
+    ]
+    assert [l["match"] for l in dropped] == [
+        "Dagenham & Redbridge vs Waltham Abbey"]
+
+
+def test_one_match_never_rides_a_card_twice():
+    """The incident shape: ranked pool [EK .75, Dag-and .68, Dag-& .671, Ju .63]
+    — pre-fix barbell pairing put [EK, Dag-and] and [Dag-&, Ju] on one card.
+    Post-fix: the weaker twin is dropped after ranking and Dag-and rides with
+    EK — one leg per fixture, no correlated exposure."""
+    accas = at.select_accas(_incident_pool())
+    keys = [at._fixture_key(l) for a in accas for l in a]
+    assert len(keys) == len(set(keys))
+    matches = [l["match"] for a in accas for l in a]
+    assert "Dagenham & Redbridge vs Waltham Abbey" not in matches
+    assert accas == [[_incident_pool()[0], _incident_pool()[1]]]
+
+
+def test_dedup_report_names_dropped_matches():
+    report = {}
+    at.select_accas(_incident_pool(), fixture_report=report)
+    assert report["dropped"] == ["Dagenham & Redbridge vs Waltham Abbey"]
+
+
+def test_same_teams_on_different_dates_are_not_dupes():
+    kept, dropped = at.dedup_fixture_legs([
+        _fixture_leg("A vs B", "A", "B", "2026-09-22", 0.70, 1.30),
+        _fixture_leg("A vs B", "A", "B", "2026-09-23", 0.69, 1.31),
+    ])
+    assert dropped == [] and len(kept) == 2
+
+
 # ---------------- planning (percent stakes) ----------------
 
 def test_plan_day_top6_consecutive_pairs_and_stake_pct():
