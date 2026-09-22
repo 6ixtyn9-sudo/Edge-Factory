@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 140.25786500000004,
+  "bank": 109.09626500000005,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -33,62 +33,6 @@
         }
       ],
       "staked_pct": 15.6111
-    },
-    {
-      "date": "2026-09-22",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "East Kilbride vs Celtic II",
-              "pick": "HOME",
-              "prob": 0.7490000000000001,
-              "odds": 1.24,
-              "result": null
-            },
-            {
-              "match": "Alloa Athletic vs Hibernian Youth",
-              "pick": "HOME",
-              "prob": 0.5589999999999999,
-              "odds": 1.2,
-              "result": null
-            }
-          ],
-          "odds": 1.49,
-          "stake_pct": 15.5808,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Dagenham and Redbridge vs Waltham Abbey",
-              "pick": "HOME",
-              "prob": 0.68,
-              "odds": 1.27,
-              "result": null
-            },
-            {
-              "match": "Juventus W vs SL Benfica W",
-              "pick": "HOME",
-              "prob": 0.63,
-              "odds": 1.61,
-              "result": null
-            }
-          ],
-          "odds": 2.04,
-          "stake_pct": 15.5808,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 31.1616
     }
   ],
   "history": [
@@ -543,6 +487,22 @@
         }
       ],
       "bank_pct": 140.2579
+    },
+    {
+      "date": "2026-09-22",
+      "staked_pct": 31.1616,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.49,
+          "won": false
+        },
+        {
+          "odds": 2.04,
+          "won": false
+        }
+      ],
+      "bank_pct": 109.0963
     }
   ],
   "events": []
