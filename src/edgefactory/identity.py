@@ -81,3 +81,66 @@ def canonical_league_key(name: object) -> str:
     """Fold a raw league label, then apply explicit evidence aliases."""
     folded = fold_league_identity(name)
     return LEAGUE_ALIASES.get(folded, folded)
+
+
+# ---------------------------------------------------------------------------
+# Source (voter-row) team key — the width-9-collision fix (2026-09-22
+# red-team follow-up, operator-directed).
+#
+# Legacy norm_team (width 9 + honorific/w/ii/b/res noise stripping) makes
+# unrelated teams collide on one voter key ('atletico madrid' ==
+# 'realmadrid' vs.  'real madrid' == 'madrid' -> Atletico vs Real both
+# "madrid"; "Arsenal" == "Arsenal W"; "FC Porto" == "FC Porto B").
+# Colliding keys mis-attach wrong-match evidence for same-day same-source
+# fixtures. This key keeps 24 chars and every squad distinguisher
+# (w/ii/b/res/youth tokens), strips ONLY pure club-structure tokens, folds
+# '&' <-> 'and' and accents, then applies explicit same-club aliases.
+
+TEAM_STRUCTURE_NOISE = frozenset(
+    {"fc", "cf", "sc", "ac", "cd", "ca", "club",
+     "sk", "if", "fk", "bk", "ik", "ff"}  # Nordic club tokens (corpus-evidenced)
+)
+
+
+def source_team_key_base(name: object, *, width: int = 24) -> str:
+    words = [
+        w for w in team_identity_words(name).split()
+        if w not in TEAM_STRUCTURE_NOISE
+    ]
+    return re.sub(r"[^a-z0-9]", "", " ".join(words))[:width]
+
+
+# Explicit same-club pairs, each proven by corpus evidence or structural
+# argument (abbreviation / transliteration / geographic or nickname suffix
+# of ONE club — never two clubs). Keys/targets are DERIVED through
+# source_team_key_base so the table can never drift from the key function.
+TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
+    # legacy alias map, re-expressed in raw-name space
+    ("Thunder SC", "Dandenong Thunder"),
+    ("Hobart Zebras", "Clarence Zebras"),
+    ("Neftchi", "Neftchi Fergana"),
+    ("Dila", "Dila Gori"),
+    # corpus-audited same-club pairs (2026-09-22 red-team pass)
+    ("Borussia M'gladbach", "Borussia Monchengladbach"),
+    ("Rodina Moscow", "Rodina Moskva"),
+    ("Tekstilshchik Iv.", "Tekstilshtik Ivanovo"),
+    ("Grasshopper-Club", "Grasshoppers"),
+    ("Ferencvaros", "Ferencvarosi TC"),
+    ("Haverfordwest", "Haverfordwest County"),
+    ("Ludogorets", "Ludogorets Razgrad"),
+    ("Broadmeadow", "Broadmeadow Magic"),
+    ("Leicester", "Leicester City"),
+    ("West Torrens", "West Torrens Birkalla"),
+    ("Bayern Munich", "Bayern Munchen"),
+)
+
+TEAM_KEY_ALIASES: dict[str, str] = {
+    source_team_key_base(alias): source_team_key_base(canonical)
+    for alias, canonical in TEAM_KEY_RAW_ALIASES
+}
+
+
+def source_team_key(name: object) -> str:
+    """Identity-folded voter-row team key with alias resolution."""
+    key = source_team_key_base(name)
+    return TEAM_KEY_ALIASES.get(key, key)

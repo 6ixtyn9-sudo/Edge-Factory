@@ -130,8 +130,49 @@ def test_source_team_key_merges_incident_spellings():
 
 def test_source_team_key_alias_map_intact():
     key = _pt_source_team_key()
-    # Existing explicit aliases keep working on their own key shapes.
-    assert key("Thunder SC") == "dandenong"
-    assert key("Dila") == "dilagori"
-    # and clean keys are stable/unified across accent & case variants.
-    assert key("Dandenong Thunder") == key("Thunder SC")
+    # Legacy alias pairs still unify (raw-name space, key-derived).
+    assert key("Thunder SC") == key("Dandenong Thunder")
+    assert key("Dila") == key("Dila Gori")
+    assert key("Neftchi") == key("Neftchi Fergana")
+    assert key("Hobart Zebras") == key("Clarence Zebras")
+    # Accent/case/punctuation variants unify.
+    assert key("FC Zürich") == key("Zurich")
+    assert key("Málaga CF") == key("Malaga")
+
+
+def test_source_team_key_same_club_pairs_from_redteam():
+    # Same-club pairs audited in the 2026-09-22 red-team pass.
+    for a, b in (
+        ("Borussia M'gladbach", "Borussia Mönchengladbach"),
+        ("Rodina Moscow", "Rodina Moskva"),
+        ("Grasshopper-Club", "Grasshoppers"),
+        ("Ferencvaros", "Ferencvarosi TC"),
+        ("Ludogorets", "Ludogorets Razgrad"),
+        ("Bayern Munich", "FC Bayern München"),
+        ("Sandnes ULF", "Sandnes Ulf"),
+        ("Stromsgodset", "Stromsgodset IF"),
+        ("Lillestrom", "Lillestrom SK"),
+    ):
+        assert _pt_source_team_key()(a) == _pt_source_team_key()(b), (a, b)
+
+
+def test_source_team_key_disambiguates_squads():
+    key = _pt_source_team_key()
+    distinct_pairs = [
+        ("Real Madrid", "Atletico Madrid"),
+        ("Arsenal", "Arsenal W"),
+        ("FC Porto", "FC Porto B"),
+        ("Juventus", "Juventus W"),
+        ("Gornik Zabrze", "Gornik Zabrze II"),
+        ("Rigas FS", "Rigas FS II"),
+        ("America W", "Club America"),
+        ("Freiburg", "SC Freiburg II"),
+        ("Manchester City", "Manchester United"),
+        ("Lokomotiv Moscow", "Lokomotiv Sofia"),
+        ("Slavia Praha", "Slavia Praha B"),
+    ]
+    for a, b in distinct_pairs:
+        assert key(a) != key(b), (a, b, key(a))
+    # and every key carries more information than the legacy width-9 —
+    # a 24-char ceiling means near-identical prefixes no longer collapse.
+    assert key("Los Angeles FC") != key("Los Angeles Galaxy")
