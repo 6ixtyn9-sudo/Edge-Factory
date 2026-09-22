@@ -966,12 +966,13 @@ def rank_legs(pool, rank="prob"):
 
 def _fixture_fold(s) -> str:
     """Fold a team name for the intra-card SAME-FIXTURE guard (2026-09-22
-    Dagenham incident): the diacritic/case fold plus '&' -> 'and', so an
-    upstream spelling split ("Dagenham and Redbridge" vs "Dagenham &
-    Redbridge") cannot smuggle one match onto a card as two 'independent'
-    legs. This is NOT the picks-ledger identity — upstream merge keys are
-    untouched; the fold only protects the card."""
-    return " ".join(_fold(s).replace("&", " and ").split())
+    Dagenham incident), delegating to the shared identity module so the
+    card guard and the upstream capture seam use ONE fold definition
+    ('&' -> 'and' -> dropped glue token, accent/case folding). See
+    edgefactory/identity.py."""
+    from edgefactory.identity import team_identity_words
+
+    return team_identity_words(s)
 
 
 def _fixture_key(leg) -> tuple[str, str, str]:
