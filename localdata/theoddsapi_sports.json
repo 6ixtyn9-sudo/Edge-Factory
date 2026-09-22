@@ -1,5 +1,5 @@
 {
-  "fetched_at": "2026-09-22T07:23:53.962851+00:00",
+  "fetched_at": "2026-09-22T13:22:56.329249+00:00",
   "sports": [
     {
       "key": "soccer_argentina_primera_division",
@@ -14,6 +14,14 @@
       "group": "Soccer",
       "title": "Austrian Football Bundesliga",
       "description": "Austrian Soccer",
+      "active": true,
+      "has_outrights": false
+    },
+    {
+      "key": "soccer_belgium_first_div",
+      "group": "Soccer",
+      "title": "Belgium First Div",
+      "description": "Belgian First Division A",
       "active": true,
       "has_outrights": false
     },
@@ -114,6 +122,14 @@
       "has_outrights": false
     },
     {
+      "key": "soccer_finland_veikkausliiga",
+      "group": "Soccer",
+      "title": "Veikkausliiga - Finland",
+      "description": "Finnish  Soccer",
+      "active": true,
+      "has_outrights": false
+    },
+    {
       "key": "soccer_france_ligue_one",
       "group": "Soccer",
       "title": "Ligue 1 - France",
@@ -122,9 +138,25 @@
       "has_outrights": false
     },
     {
+      "key": "soccer_france_ligue_two",
+      "group": "Soccer",
+      "title": "Ligue 2 - France",
+      "description": "French Soccer",
+      "active": true,
+      "has_outrights": false
+    },
+    {
       "key": "soccer_germany_bundesliga",
       "group": "Soccer",
       "title": "Bundesliga - Germany",
+      "description": "German Soccer",
+      "active": true,
+      "has_outrights": false
+    },
+    {
+      "key": "soccer_germany_bundesliga2",
+      "group": "Soccer",
+      "title": "Bundesliga 2 - Germany",
       "description": "German Soccer",
       "active": true,
       "has_outrights": false
@@ -238,6 +270,22 @@
       "group": "Soccer",
       "title": "Premiership - Scotland",
       "description": "Scottish Premiership",
+      "active": true,
+      "has_outrights": false
+    },
+    {
+      "key": "soccer_sweden_allsvenskan",
+      "group": "Soccer",
+      "title": "Allsvenskan - Sweden",
+      "description": "Swedish Soccer",
+      "active": true,
+      "has_outrights": false
+    },
+    {
+      "key": "soccer_sweden_superettan",
+      "group": "Soccer",
+      "title": "Superettan - Sweden",
+      "description": "Swedish Soccer",
       "active": true,
       "has_outrights": false
     },
