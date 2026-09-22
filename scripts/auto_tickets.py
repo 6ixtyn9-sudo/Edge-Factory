@@ -14,6 +14,10 @@ THE RECIPE (constants carry their validation receipts — see
 TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
   LEGS      all playable-bucket picks with a price — NO further filtering.
   ORDER     highest stated probability first (ties by odds).
+  DEDUP     one match, one leg: after ranking, same-fixture duplicates
+            (date + folded side-pair incl. '&'->'and') are dropped and the
+            highest-stated twin survives (2026-09-22 Dagenham-and/& incident;
+            upstream ledger identity untouched — the guard protects the card).
   ACCAS     2 legs each, consecutive pairs of the top 6, up to 3 per day.
   STAKE     1/3 of the bank per day, split across the accas built
             (2026-09-04 sizing audit: on the 52-day replay the growth-optimal
@@ -960,6 +964,46 @@ def rank_legs(pool, rank="prob"):
     return sorted(pool, key=key, reverse=True)
 
 
+def _fixture_fold(s) -> str:
+    """Fold a team name for the intra-card SAME-FIXTURE guard (2026-09-22
+    Dagenham incident): the diacritic/case fold plus '&' -> 'and', so an
+    upstream spelling split ("Dagenham and Redbridge" vs "Dagenham &
+    Redbridge") cannot smuggle one match onto a card as two 'independent'
+    legs. This is NOT the picks-ledger identity — upstream merge keys are
+    untouched; the fold only protects the card."""
+    return " ".join(_fold(s).replace("&", " and ").split())
+
+
+def _fixture_key(leg) -> tuple[str, str, str]:
+    """(date, folded home, folded away) — the guard's fixture identity."""
+    row = leg.get("row") or {}
+    home = row.get("home") or ""
+    away = row.get("away") or ""
+    if not home and not away:
+        parts = str(leg.get("match") or "").split(" vs ", 1)
+        if len(parts) == 2:
+            home, away = parts
+    date = str(row.get("date") or row.get("_archive_day") or "")[:10]
+    return (date, _fixture_fold(home), _fixture_fold(away))
+
+
+def dedup_fixture_legs(ranked_pool) -> tuple[list, list]:
+    """Drop later-ranked legs that share a fixture with an already-kept leg.
+    Deterministic: the HIGHEST-RANKED duplicate survives. Two legs of one
+    match on one card is correlated exposure masquerading as independent
+    bets — a staking error, never an edge."""
+    seen: set[tuple] = set()
+    kept, dropped = [], []
+    for leg in ranked_pool:
+        k = _fixture_key(leg)
+        if k in seen:
+            dropped.append(leg)
+            continue
+        seen.add(k)
+        kept.append(leg)
+    return kept, dropped
+
+
 def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
     """Group ranked legs into accas. "consecutive" = live (1+2, 3+4, 5+6);
     "barbell" pairs strongest with weakest (1+6, 2+5, 3+4) to equalise acca
@@ -975,12 +1019,15 @@ def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
 def select_accas(pool, *, floor=None, rank="prob", pairing=None,
                  max_accas=None, legs_per_acca=None, volume_pool=None,
                  volume_min=None, gate_mode=None, fallback=True,
-                 saturated_accas=None, min_accas=None):
+                 saturated_accas=None, min_accas=None, fixture_report=None):
     """THE selection recipe — one code path for live and for the replay harness.
 
     Every knob defaults to the validated live value; the harness passes
     overrides. Returns a list of accas (each a list of legs), no staking.
-    `min_accas` is a card-level gate: a smaller card is NO BET.
+    `min_accas` is a card-level gate: a smaller card is NO BET. After ranking,
+    same-fixture duplicates are dropped (one match can never ride a card
+    twice, 2026-09-22); callers may pass `fixture_report={}` to receive the
+    dropped matches for the build log.
     """
     floor = MIN_LEG_ODDS if floor is None else floor
     k = LEGS_PER_ACCA if legs_per_acca is None else legs_per_acca
@@ -992,6 +1039,9 @@ def select_accas(pool, *, floor=None, rank="prob", pairing=None,
     gate_mode = GATE_MODE if gate_mode is None else gate_mode
 
     pool = rank_legs([l for l in pool if l["odds"] >= floor], rank)
+    pool, fixture_dupes = dedup_fixture_legs(pool)
+    if fixture_report is not None:
+        fixture_report["dropped"] = [l["match"] for l in fixture_dupes]
     saturated = len(pool) >= volume_pool
     if saturated and saturated_accas:
         max_accas = saturated_accas
@@ -1460,7 +1510,8 @@ def cmd_today(args, st):
         print("(bank stays unbet)")
         return 0
     bank_eff = effective_bank(st, exclude_date=target)
-    plan = plan_day(pool, bank_eff)
+    fixture_report: dict[str, list[str]] = {}
+    plan = plan_day(pool, bank_eff, fixture_report=fixture_report)
     if not plan:
         print("\n".join(census_lines))
         print("NO BET TODAY — plan empty")
@@ -1476,6 +1527,11 @@ def cmd_today(args, st):
              f"PERFORMANCE: total bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) = "
              f"free bank {bank_eff:.1f}% + committed {committed:.1f}% · "
              f"next take-profit notification at {take_profit_target(st):.1f}%"]
+    if fixture_report.get("dropped"):
+        lines.append("SAME-FIXTURE DEDUP: dropped "
+                     + "; ".join(fixture_report["dropped"])
+                     + " (one match entered twice via a name-spelling split; "
+                        "highest-stated twin kept)")
     for i, a in enumerate(plan, 1):
         lines.append(f"\n[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
                      f"({a['stake_pct']/bank_eff:.1%} of free bank)")
