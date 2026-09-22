@@ -88,7 +88,7 @@
     "league": "FA",
     "market": "1x2",
     "pick": "home",
-    "rule_name": "ml-meta avg_p>=60",
+    "rule_name": "ml-meta avg_p>=55",
     "match_method": "fallback",
     "home_key": "dagenhamredbridge",
     "away_key": "walthamabbey",
@@ -250,7 +250,7 @@
     "league": "ScC",
     "market": "1x2",
     "pick": "away",
-    "rule_name": "ml-meta avg_p>=60",
+    "rule_name": "ml-meta avg_p>=55",
     "match_method": "fallback",
     "home_key": "clachnacuddin",
     "away_key": "rosscounty",
@@ -497,7 +497,73 @@
     "match_method": "fallback",
     "home_key": "audaxitaliano",
     "away_key": "colocolo",
-    "nearby_bzzoiro_candidates": [],
+    "nearby_bzzoiro_candidates": [
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.79,
+        "bookmaker": "pinnacle",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.66,
+        "bookmaker": "1xbet",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.6,
+        "bookmaker": "unibet",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.6,
+        "bookmaker": "william-hill",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.6,
+        "bookmaker": "bet365",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      }
+    ],
     "nearby_scoutingstats_candidates": []
   }
 ]
