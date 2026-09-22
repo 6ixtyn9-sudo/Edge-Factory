@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-09-22",
+    "kickoff": "13:45",
+    "home": "Dagenham and Redbridge",
+    "away": "Waltham Abbey",
+    "league": "England,Fa Cup",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "dagenhamandredbridge",
+    "away_key": "walthamabbey",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "US Biskra",
+        "away": "JS Saoura",
+        "league": "Ligue 1",
+        "kickoff": "2026-09-22T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.55,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "usbiskra",
+        "away_key": "jssaoura",
+        "kickoff_delta_minutes": 255
+      },
+      {
+        "home": "Inter Milano W",
+        "away": "H\u00e4cken W",
+        "league": "UEFA Women's Champions League",
+        "kickoff": "2026-09-22T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.2,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "intermilanow",
+        "away_key": "hackenw",
+        "kickoff_delta_minutes": 300
+      },
+      {
+        "home": "Bayern Munich W",
+        "away": "Manchester City W",
+        "league": "UEFA Women's Champions League",
+        "kickoff": "2026-09-22T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.95,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "bayernmunichw",
+        "away_key": "manchestercityw",
+        "kickoff_delta_minutes": 300
+      },
+      {
+        "home": "Groene Ster",
+        "away": "AFC",
+        "league": "KNVB Beker",
+        "kickoff": "2026-09-22T18:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "groenester",
+        "away_key": "afc",
+        "kickoff_delta_minutes": 375
+      },
+      {
+        "home": "Staphorst",
+        "away": "Genemuiden",
+        "league": "KNVB Beker",
+        "kickoff": "2026-09-22T18:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.3,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "staphorst",
+        "away_key": "genemuiden",
+        "kickoff_delta_minutes": 375
+      }
+    ]
+  },
+  {
+    "date": "2026-09-22",
     "kickoff": "2026-09-22 20:45:00",
     "home": "Dagenham & Redbridge",
     "away": "Waltham Abbey",
@@ -244,6 +325,87 @@
   },
   {
     "date": "2026-09-22",
+    "kickoff": "2026-09-22 20:45:00",
+    "home": "Alloa Athletic",
+    "away": "Hibernian Youth",
+    "league": "ScC",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=55",
+    "match_method": "fallback",
+    "home_key": "alloaathletic",
+    "away_key": "hibernianyouth",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Real Madrid W",
+        "away": "Paris SG W",
+        "league": "UEFA Women's Champions League",
+        "kickoff": "2026-09-22T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.75,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "realmadridw",
+        "away_key": "parissgw",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Juventus W",
+        "away": "SL Benfica W",
+        "league": "UEFA Women's Champions League",
+        "kickoff": "2026-09-22T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.61,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "juventusw",
+        "away_key": "slbenficaw",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "MC Alger",
+        "away": "MC Oran",
+        "league": "Ligue 1",
+        "kickoff": "2026-09-22T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.45,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "mcalger",
+        "away_key": "mcoran",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Arsenal W",
+        "away": "K\u00f8ge",
+        "league": "UEFA Women's Champions League",
+        "kickoff": "2026-09-22T19:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.07,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "arsenalw",
+        "away_key": "koge",
+        "kickoff_delta_minutes": 15
+      },
+      {
+        "home": "Groene Ster",
+        "away": "AFC",
+        "league": "KNVB Beker",
+        "kickoff": "2026-09-22T18:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "groenester",
+        "away_key": "afc",
+        "kickoff_delta_minutes": 45
+      }
+    ]
+  },
+  {
+    "date": "2026-09-22",
     "kickoff": "22-09, 19:45",
     "home": "East Kilbride",
     "away": "Celtic II",
@@ -322,5 +484,86 @@
         "kickoff_delta_minutes": null
       }
     ]
+  },
+  {
+    "date": "2026-09-23",
+    "kickoff": "2026-09-23 01:30:00",
+    "home": "Audax Italiano",
+    "away": "Colo Colo",
+    "league": "ClC",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "ml-meta avg_p>=55",
+    "match_method": "fallback",
+    "home_key": "audaxitaliano",
+    "away_key": "colocolo",
+    "nearby_bzzoiro_candidates": [
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.74,
+        "bookmaker": "pinnacle",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.69,
+        "bookmaker": "1xbet",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.6,
+        "bookmaker": "william-hill",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.6,
+        "bookmaker": "bet365",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Independiente Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Categor\u00eda Primera A",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 3.55,
+        "bookmaker": "dafabet",
+        "home_key": "independientesantafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 90
+      }
+    ],
+    "nearby_scoutingstats_candidates": []
   }
 ]
