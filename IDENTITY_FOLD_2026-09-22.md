@@ -76,6 +76,52 @@ folded home/away under both spellings, incl. today's incident fixture).
   not a model input — only competition-type flags); prices/quoting;
   settlement and ledger identity; research fold; `.frozen` semantics.
 
+## Red-team pass (2026-09-22, hostile review of this change)
+
+Method: fold every distinct team name in the 30-day archive corpus
+(1,414 names) and measure collision surfaces pre/post.
+
+Findings:
+
+1. **`norm_team` width-9 truncation collisions are a LARGE PRE-EXISTING
+   class** — 109 legacy keys group >1 raw name (e.g. `atletico madrid`
+   and `real madrid` both key to `madrid` because the noise regex
+   strips `atletico`/`real`; men's and women's/reserve squads collide
+   whenever sources spell without accents). Same-day, same-source,
+   same-key collisions can attach the wrong match's voter evidence.
+   Not introduced by this fold; logged for a dedicated fix.
+2. **This fold adds 12 net collisions** — 10 desired unifications
+   (accent/`&` spellings of the SAME team: Academico/Académico Viseu,
+   Bolívar, Dagenham both spellings, Málaga, Nordsjælland, Potosí,
+   Zürich) — but **~2-7 false varieties** where the accent fold rescues
+   a letter and then the `_NOISE` regex drops the distinguisher
+   (`América W`/`Club America`, `Bodø/Glimt W`, and II/W reserve
+   variants: Górnik Zabrze, Rīgas FS, Stabæk, Vålerenga). Same-day
+   same-source W-vs-men's fixtures can therefore mis-attach evidence
+   where plain-spelled data previously survived only via mojibake keys.
+   Follow-up queued: re-key `source_team_key` on
+   `norm_entity_team(team_identity_words(name), width=24)` — the entity
+   noise list keeps w/ii/b/res tokens, so squads disambiguate — with
+   replay-measured alias re-keying; requires operator direction.
+3. **Double-alias hole closed in follow-up:** `_registry_lookup` folded
+   candidate originally used `canonical_league_key` (alias table applied
+   INSIDE a learned-lookup lane). Swapped to `fold_league_identity` — the
+   alias table now applies only at the final `canonical_league` fallback,
+   so a learned alias_index can never double-apply it.
+4. **Alias-target drift tripwire added:** test asserts every
+   `LEAGUE_ALIAS` target exists in the purity-registry league keyspace;
+   a future sponsor-name rebuild (e.g. NLS renaming) fails loudly in
+   tests instead of silently re-orphaning the alias.
+5. CI references for `localdata/entity_registry.json`: none in
+   `.github/workflows` — the learned-alias lane is dormant in CI today
+   (validated empty locally; build_entity_registry.py is the only
+   writer).
+
+Accepted residual risks (documented, not silent): folded keys are
+deliberately coarser than raw strings; dedup in slips also keys on
+date+home+away; by_key last-wins within one (source, day) is unchanged
+legacy semantics.
+
 ## Authority
 
 Operator direction 2026-09-22 (build ordered after the same-day incident

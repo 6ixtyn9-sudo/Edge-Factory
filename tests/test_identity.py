@@ -93,6 +93,28 @@ def test_alias_keys_are_all_folded_and_idempotent():
         assert canonical_league_key(target) == target
 
 
+def test_alias_targets_exist_in_purity_registry_league_keyspace():
+    """Tripwire (red-team follow-up): alias targets are registry pool keys.
+    If a future registry rebuild renames a sponsored competition (e.g. the
+    "enterprise national league south" sponsor changes), this test fails
+    loudly instead of silently re-orphaning the alias."""
+    import json
+
+    reg_path = ROOT / "localdata" / "purity_registry.json"
+    if not reg_path.exists():
+        return  # fresh clones have no registry state; nothing to guard
+    reg = json.loads(reg_path.read_text())
+    keyspace = {
+        k.split("|")[1]
+        for k in (reg.get("contexts", {}) or {}).get("league", {})
+        if "|" in k
+    }
+    if not keyspace:
+        return
+    for target in LEAGUE_ALIASES.values():
+        assert target in keyspace, f"alias target {target!r} missing from registry"
+
+
 def _pt_source_team_key():
     if "picks_today" not in sys.modules:
         import picks_today  # noqa: F401

@@ -16,7 +16,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
-from .identity import canonical_league_key, team_identity_words
+from .identity import canonical_league_key, fold_league_identity, team_identity_words
 from .util import compact_key, norm_entity_team, norm_league, norm_team
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -69,9 +69,12 @@ def _registry_lookup(kind: str, raw: object) -> str | None:
         return None
     # Legacy candidates first, byte-unchanged; folded identity candidates
     # appended (additive-only coverage, see edgefactory/identity.py).
+    # Registry candidates use the PLAIN fold, not canonical_league_key, so
+    # the curated alias table can never be applied twice through a learned
+    # alias_index.
     candidates = [str(raw or ""), norm_league(raw), compact_key(raw), norm_team(str(raw or ""))]
     if kind == "leagues":
-        candidates.append(canonical_league_key(raw))
+        candidates.append(fold_league_identity(raw))
     else:
         folded_team = team_identity_words(str(raw or ""))
         candidates.append(norm_team(folded_team))
