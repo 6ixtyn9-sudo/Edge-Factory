@@ -16,6 +16,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from .identity import canonical_league_key, team_identity_words
 from .util import compact_key, norm_entity_team, norm_league, norm_team
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -66,7 +67,15 @@ def _registry_lookup(kind: str, raw: object) -> str | None:
     alias_index = registry.get("alias_index", {}).get(kind, {})
     if not isinstance(alias_index, dict):
         return None
+    # Legacy candidates first, byte-unchanged; folded identity candidates
+    # appended (additive-only coverage, see edgefactory/identity.py).
     candidates = [str(raw or ""), norm_league(raw), compact_key(raw), norm_team(str(raw or ""))]
+    if kind == "leagues":
+        candidates.append(canonical_league_key(raw))
+    else:
+        folded_team = team_identity_words(str(raw or ""))
+        candidates.append(norm_team(folded_team))
+        candidates.append(norm_entity_team(folded_team, width=24))
     for key in candidates:
         if key in alias_index:
             return str(alias_index[key])
@@ -81,7 +90,10 @@ def canonical_league(raw: object) -> str:
     learned = _registry_lookup("leagues", raw)
     if learned:
         return norm_league(learned)
-    return norm_league(raw)
+    # Folded identity fallback: identical to norm_league(raw) for clean
+    # names; unifies '&' -> 'and' spellings and applies evidence aliases
+    # (e.g. "England,Fa Cup" -> "fa"). See edgefactory/identity.py.
+    return canonical_league_key(raw) or "unknown"
 
 
 def classify_competition(league_name: object) -> str:
@@ -108,7 +120,9 @@ def canonical_team(raw: object, *, width: int = 24) -> str:
     learned = _registry_lookup("teams", raw)
     if learned:
         return norm_entity_team(learned, width=width)
-    return norm_entity_team(str(raw or ""), width=width)
+    # Folded identity fallback: identical to the legacy form for clean
+    # names; unifies '&' <-> 'and' spellings (Dagenham incident).
+    return norm_entity_team(team_identity_words(str(raw or "")), width=width)
 
 
 def explain_entity(kind: str, raw: object) -> dict[str, Any]:

@@ -21,6 +21,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_league, canonical_team, classify_competition
+from edgefactory.identity import team_identity_words
 from edgefactory.util import (
     compact_key,
     norm_team,
@@ -1623,7 +1624,11 @@ def canonical_display_team(name: object) -> str:
 
 
 def source_team_key(name: object) -> str:
-    key = norm_team(str(name or ""))
+    # Identity-folded before keying so '&' and 'and' spellings (and
+    # accent variants) of one team collapse to a single voter-row key —
+    # the 2026-09-22 Dagenham duplicate class dies at capture. Legacy
+    # alias map remains authoritative on its own key shapes.
+    key = norm_team(team_identity_words(str(name or "")))
     return SOURCE_TEAM_KEY_ALIASES.get(key, key)
 
 
