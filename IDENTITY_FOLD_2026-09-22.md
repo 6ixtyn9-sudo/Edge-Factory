@@ -139,6 +139,47 @@ deliberately coarser than raw strings; dedup in slips also keys on
 date+home+away; by_key last-wins within one (source, day) is unchanged
 legacy semantics.
 
+## Settle-seam postmortem (2026-09-23, stale 2026-09-10 slip)
+
+Third appearance of the identity-split class, different seam. The
+2026-09-10 slip (Muharraq SC vs Manama Club + PSV vs Shakhtar @1.83,
+staked 15.6111%) stayed open 13 days. Diagnosis chain:
+
+1. The MATCH WAS PLAYED (real world: Muharraq 3-1 Manama — the leg was
+   a win) and the aggregated settle facts DID carry the outcome under
+   donor spellings.
+2. The blocker was `settle_open_slips`' exact-string leg<->row index:
+   the slip leg stored "Muharraq SC vs Manama Club" while the archived
+   row named "Muharraq vs Manama". Row not found -> `pick_result` never
+   ran -> the 5-day kickoff-age void never armed (it lives behind the
+   row-found branch) -> frozen forever.
+3. Same-seam adjacency defect: a leg with NO archive row at all had no
+   timer of any kind.
+
+Fix (operator-directed 2026-09-23): settle matching now keys on the
+shared structure-stripped identity fold (`_folded_leg_key`); the 5-day
+void arms on the slip-date fallback when kickoff is unparseable, and on
+the slip-date timer when the archive row is entirely absent. Leg results
+surface in the settle event line (`legs=[...]`); history schema
+unchanged ({odds, won} per acca).
+
+Doctrine consequence (accepted, tests re-pinned with a frozen clock
+inside the horizon): unresolved legs with unparseable kickoffs now
+auto-void on the slip-date timer at >=5 days instead of holding
+indefinitely. Existing contracts for within-horizon behaviour are
+unchanged.
+
+Dry-run proof (read-only, save-state stubbed): the real state settles
+`2026-09-10 acca @1.83 legs=['win', 'loss']` -> day closes staked
+31.2222, returned 0 alongside the earlier @1.76 loss; bank 109.0963 ->
+93.4852, open_slips reduced to [2026-09-23]. No state file was edited;
+the first normal settle run post-merge does the close itself.
+
+Tests: 3 new (stale-slip replay with exact incident shape, missing-row
+timer both sides of 5 days, recent-slip untouched) + 2 re-pinned;
+suite 629 passed; ruff baselines unchanged (auto_tickets 27->27,
+rolling tests 4->4 pre-existing import-block items).
+
 ## Authority
 
 Operator direction 2026-09-22 (build ordered after the same-day incident

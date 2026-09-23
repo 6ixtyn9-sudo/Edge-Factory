@@ -36,7 +36,127 @@ def _leg(tag, prob, odds, result=None):
             "row": {"home": f"Team {tag}", "away": f"Other {tag}", "pick": "home"}}
 
 
-# ---------------- same-fixture dedup (2026-09-22 Dagenham incident) ----------
+# ---------------- stale-slip settle seam (2026-09-10 Muharraq/PSV) ----------
+
+
+class _FakeDateTime(__import__("datetime").datetime):
+    """Freeze settle-time to 2026-09-23 (13 days after the stale slip)."""
+
+    @classmethod
+    def now(cls, tz=None):
+        from datetime import datetime as _dt
+
+        return _dt(2026, 9, 23, 12, 0, tzinfo=tz or at.TZ)
+
+
+def _stale_0910_state():
+    return {
+        "base_pct": 100.0,
+        "bank": 109.0963,
+        "cycle_base": 100.0,
+        "history": [],
+        "events": [],
+        "open_slips": [{
+            "date": "2026-09-10",
+            "staked_pct": 15.6111,
+            "accas": [{
+                "legs": [
+                    {"match": "Muharraq SC vs Manama Club", "pick": "HOME",
+                     "prob": 0.673, "odds": 1.26, "result": None},
+                    {"match": "PSV Eindhoven vs Shakhtar Donetsk", "pick": "HOME",
+                     "prob": 0.591, "odds": 1.45, "result": None},
+                ],
+                "odds": 1.83, "stake_pct": 15.6111, "results": [None, None],
+                "won": None,
+            }],
+        }],
+    }
+
+
+def _archive_row(date, home, away, pick, kickoff=None):
+    row = {"date": date, "home": home, "away": away, "pick": pick}
+    if kickoff:
+        row["kickoff"] = kickoff
+    return row
+
+
+def test_settle_stale_0910_replay(monkeypatch):
+    """Golden replay of the real 2026-09-10 stuck slip: leg names with
+    'SC'/'Club' suffixes never exact-matched the archive rows, so the row
+    lookup, the kickoff-age void and the whole failsafe never armed for
+    13 days. Post-fix the fold matches, the kickoff-age void fires for
+    the donor-gapped Muharraq leg, and the acca grades a loss (PSV leg
+    was a real loss) — bank keeps the committed stake out."""
+    monkeypatch.setattr(at, "datetime", _FakeDateTime)
+    st = _stale_0910_state()
+    archives = [
+        _archive_row("2026-09-10", "Muharraq", "Manama", "home",
+                     kickoff="10-09, 17:00"),
+        _archive_row("2026-09-10", "PSV Eindhoven", "Shakhtar Donetsk", "home"),
+    ]
+    # Donor gap: settled has only the PSV fixture (away => the leg's loss).
+    settled = {("2026-09-10", norm_team("PSV Eindhoven"),
+                norm_team("Shakhtar Donetsk")): "away"}
+    lines = at.settle_open_slips(st, settled, archives=archives,
+                                 entries_by_date={})
+    assert st["open_slips"] == []
+    hist = st["history"][-1]["accas"][0]
+    assert hist["won"] is False
+    # book-style: void leg drops out, PSV leg alone decides as loss.
+    assert hist["odds"] == 1.45
+    # leg-level evidence surfaces in the settle event line.
+    assert any("settled 2026-09-10" in line and "legs=['void', 'loss']" in line
+               for line in lines)
+    # bank holds the stake whole until settlement; the loss subtracts it now.
+    assert st["bank"] == pytest.approx(109.0963 - 15.6111)
+
+
+def test_settle_missing_row_voids_on_slip_timer(monkeypatch):
+    """A leg whose archive row is entirely absent (never matched anywhere)
+    voids on the slip-date timer at >= 5 days; before that it stays open."""
+    from datetime import datetime as _dt
+
+    class EarlyFake(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            return _dt(2026, 9, 13, 12, 0, tzinfo=tz or at.TZ)
+
+    st = _stale_0910_state()
+    monkeypatch.setattr(at, "datetime", EarlyFake)
+    at.settle_open_slips(st, {}, archives=[], entries_by_date={})
+    assert len(st["open_slips"]) == 1  # 3 days old: still open
+
+    st2 = _stale_0910_state()
+    monkeypatch.setattr(at, "datetime", _FakeDateTime)
+    lines2 = at.settle_open_slips(st2, {}, archives=[], entries_by_date={})
+    hist = st2["history"][-1]["accas"][0]
+    assert hist["won"] is True and hist["odds"] == 1.0
+    assert any("legs=['void', 'void']" in line for line in lines2)
+    assert st2["open_slips"] == []
+    # all-void at odds 1.0: ret == stake, bank moves by ret-stake == 0.
+    assert st2["bank"] == pytest.approx(109.0963)
+
+
+def test_settle_recent_slip_untouched(monkeypatch):
+    """A fresh slip (kickoff within the horizon) stays open with real
+    row matching intact: no donor result yet -> leg stays null, no void."""
+    from datetime import datetime as _dt
+
+    class NowFake(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            return _dt(2026, 9, 11, 12, 0, tzinfo=tz or at.TZ)
+
+    st = _stale_0910_state()
+    monkeypatch.setattr(at, "datetime", NowFake)
+    archives = [
+        _archive_row("2026-09-10", "Muharraq", "Manama", "home",
+                     kickoff="10-09, 17:00"),
+        _archive_row("2026-09-10", "PSV Eindhoven", "Shakhtar Donetsk", "home"),
+    ]
+    at.settle_open_slips(st, {}, archives=archives, entries_by_date={})
+    assert len(st["open_slips"]) == 1
+    assert st["open_slips"][0]["accas"][0]["won"] is None
 
 
 def _fixture_leg(match, home, away, date, prob, odds):
@@ -288,7 +408,17 @@ def test_take_profit_notification_fires_moves_no_amounts_and_resets_cycle():
     assert (at.LOCALDATA / "auto_tickets_takeprofit_2026-08-22.json").exists()
 
 
-def test_settle_keeps_unresolved_slips_open_and_stakes_committed():
+def test_settle_keeps_unresolved_slips_open_and_stakes_committed(monkeypatch):
+    # clock pinned INSIDE the 5-day void horizon (doctrine upgrade
+    # 2026-09-23: donorgap legs auto-void on the slip-date timer at >=5d).
+    class _InHorizon(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            from datetime import datetime as _dt
+
+            return _dt(2026, 8, 24, 12, 0, tzinfo=tz or at.TZ)
+
+    monkeypatch.setattr(at, "datetime", _InHorizon)
     st = at.fresh_state()
     spec = [("p", 1.4, None), ("q", 1.43, None)]
     st["open_slips"].append(_one_acca_slip("2026-08-22", spec, 50.0, 2.0))
@@ -398,9 +528,18 @@ def test_lookup_fallback_reaches_two_day_reschedule_but_not_four():
     assert at._lookup_fallback(far, "2026-08-29", home, away) is None
 
 
-def test_settle_per_acca_does_not_freeze_bank_on_one_stuck_leg():
+def test_settle_per_acca_does_not_freeze_bank_on_one_stuck_leg(monkeypatch):
     """One unresolved leg no longer freezes the whole day's stake: a resolved
     acca moves the bank, the stuck acca stays open with its own stake."""
+    # clock pinned inside the void horizon (see doctrine note above).
+    class _InHorizon(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            from datetime import datetime as _dt
+
+            return _dt(2026, 8, 31, 12, 0, tzinfo=tz or at.TZ)
+
+    monkeypatch.setattr(at, "datetime", _InHorizon)
     st = at.fresh_state()  # bank 100%
     slip = {"date": "2026-08-29", "staked_pct": 50.0, "accas": [
         {"odds": 1.69, "stake_pct": 25.0, "legs": [
