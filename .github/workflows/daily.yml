@@ -161,3 +161,11 @@ jobs:
             localdata/*.json
             localdata/*.md
           retention-days: 7
+
+      - name: Regression tests (flag, never gate)
+        # Deliberately LAST: by now the slip is built, frozen, persisted to the
+        # cache and pushed to git, so a red suite can flag a bad landing on main
+        # without ever withholding tonight's tickets. Do not move this earlier.
+        # always() so the verdict is still printed when a step above failed.
+        if: always()
+        run: PYTHONPATH=src python3 -m pytest tests/ -q
