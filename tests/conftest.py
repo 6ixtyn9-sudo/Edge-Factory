@@ -24,6 +24,8 @@ per test, and a test body that calls setenv() (or reloads a module) sets the
 value it needs after both strips.
 """
 import os
+import pathlib
+import sys
 
 import pytest
 
@@ -75,6 +77,26 @@ _ENV_KNOBS = (
 
 for _knob in _ENV_KNOBS:
     os.environ.pop(_knob, None)  # module scope: see the docstring above
+
+# Gitignored runtime state gets neutralized too, for the same reason. The nightly
+# cache step (actions/cache/restore, path: localdata) unpacks
+# localdata/entity_registry.json into the runner's checkout; the "Restore
+# committed data" guard that follows only re-checks-out git-TRACKED localdata
+# files, and `git clean -fd` deliberately spares ignored ones, so an untracked
+# registry built by some earlier run survives into the test run. entities.py
+# consults it before the identity fallback (entities.py:88-99), which is exactly
+# how the two league-canonicalization tests in test_ml_fade_contexts.py flipped on
+# a runner while staying green on every clean checkout. Point the path at a file
+# that never exists: the fallback is what those tests are about.
+_ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(_ROOT / "src"))
+try:
+    from edgefactory import entities as _entities  # noqa: E402
+except Exception:  # pragma: no cover - src not importable at all: nothing to pin
+    pass
+else:
+    _entities.ENTITY_REGISTRY_PATH = _ROOT / "localdata" / "_absent_during_tests_.json"
+    _entities.clear_entity_caches()
 
 
 @pytest.fixture(autouse=True)
