@@ -8821,3 +8821,77 @@ Operator-level options tabled for direction (nothing auto-ships):
 - Untracked working artifacts at repo root (ML_FADE_CONTEXTS_DIAGNOSIS_,
   ML_FADE_PRICE_STUDY_2026-09-20) are not in git and were left in place;
   identity doc deleted as above.
+
+---
+
+## Addendum 2026-09-23 — Bucket P&L tripwire (scripts/auto_tickets.py)
+
+**Why.** The firing tripwire (`scripts/edge_firing_tripwire.py`) only asks
+"is this rule still firing?" (frequency-only). Nothing upstream ever asked
+"is this door still paying?" — rules decaying to DEAD/DECAYING are benched
+and WATCH is flagged (picks_today.py), but a bucket can keep firing while
+losing forever. This closes the arm-level gap.
+
+**Mechanism (in-tree, always-on in `today`).** Every run of
+`auto_tickets.py today` first calls `compute_bucket_pnl(today)`: trailing
+PNL_WINDOW_DAYS=21 calendar-day window of **settled playable legs per
+admitted bucket** (the same population selection can see — `playable_legs`
+of the pick archives; voids and non-graded legs are invisible, never
+auto-loss; legs with no stated prob are excluded so a missing price cannot
+fabricate a fake residual). Per bucket: gap = realized hit − stated prob,
+z = gap / sqrt(Σ p(1-p)/n²). Verdict: INSUFFICIENT (n < PNL_MIN_N=20 —
+fail-open, benches are earned by evidence never by silence), BLEEDING
+(z ≤ PNL_Z_BENCH=−2.0), COLD (gap < 0), PAYING. Streak = consecutive
+CALENDAR DAYS of BLEEDING, advances at most once per day (intraday reruns
+recompute the report but cannot compound; `--force-repick` is safe).
+Weight ladder: streak ≥ PNL_DEMOTE_STREAK=2 → ×0.5 stake; streak ≥
+PNL_BENCH_STREAK=4 → 0.0 (door closed: legs invisible to selection, card
+rebuilds from surviving buckets). Any non-BLEEDING day resets the streak —
+unbench is earned on recovery evidence. Master switch:
+PNL_BENCH_ENABLED=True; setting False returns identity weights while
+keeping the report. Report+streak state:
+`localdata/auto_tickets_bucket_pnl.json` (runtime-created).
+Live-card surface: a census line names benched legs; demoted accas print a
+`[TRIPWIRE-DEMOTED x0.5]` tag and carry a `bench_weight` field on the
+(frozen-slip-schema-safe) plan entry.
+
+**Replay purity.** `plan_day(bucket_weights=...)` defaults to None; the
+replay harness and `cmd_backfill` pass nothing → byte-identical plans
+(canonical contract tests re-verified). Empty-dict weights are also
+identical to None.
+
+**Red-team evidence (synthetic battery, 2026-09-23):** day-1 BLEEDING
+does NOT throttle (streak floor works); same-day rerun cannot compound;
+day-2→×0.5, day-4→×0.0 ladder; recovery resets streak; INSUFFICIENT fails
+open; void/prob≤0 legs excluded; positive bench case rebuilds the card
+from survivors; kill-switch identity.
+
+**Grading semantics decision (documented, deliberate):** the bucket is
+graded door-wide (all settled playable candidate legs), **not** on the
+shipped-slip slice. Shipped legs are not durably archived beyond
+`open_slips` (history squashes accas to {odds,won}), and per-bucket
+shipped n would mostly fail the n≥20 floor in 21d → INSUFFICIENT forever.
+Door-wide grading answers "is this door paying?" directly. Consequence for
+expectations: the 2026-09-23 predicted first verdict "CAUTION=BLEEDING"
+did NOT occur — the deployed-slice CAUTION drip (study: lifetime ROI
+−1.6%, gap −7.4pt, n=63/83d) is a selection-slice effect; door-wide
+settled CAUTION flow in the trailing 21d is n=49, gap +1.7pt, z +0.25 =
+PAYING. Selection-bias analysis (deployed slice vs door-wide) is a
+follow-up research item, deliberately not in this commit.
+
+**First dry-run vs live data (2026-09-23, read-only; no state written until
+first real `today` run):**
+| bucket | n | verdict | weight | gap | z | flat ROI |
+|---|---|---|---|---|---|---|
+| CAUTION | 49 | PAYING | 1.0 | +0.017 | +0.26 | +2.4% |
+| CERTIFIED_CLEAN | 73 | PAYING | 1.0 | +0.045 | +0.79 | +4.0% |
+| SKIPPED_VETO | 253 | PAYING | 1.0 | +0.010 | +0.33 | −6.5% |
+| WATCHLIST_UNCORROBORATED_PRICE | 107 | PAYING | 1.0 | +0.024 | +0.51 | −1.7% |
+| WATCHLIST_UNKNOWN_CTX | 4 | INSUFFICIENT | 1.0 | — | — | — |
+All doors open on day one; the tripwire starts from a clean streak slate.
+Note SKIPPED_VETO's ROI-negative-but-z-positive shape: flat-ROI is odds
+skew, the z verdict grades stated-prob honesty — watch, don't convict.
+
+**Standing watch (unchanged):** harness probes re-run once 09-21–24 legs
+settle; `--october` checkpoint at 60 new bet-days; **artifact 35540311355
+expires 2026-09-27T22:20Z — user download still pending.**
