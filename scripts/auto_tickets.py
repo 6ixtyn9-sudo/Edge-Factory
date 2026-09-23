@@ -77,9 +77,13 @@ LOCALDATA = ROOT / "localdata"
 # private statistic, so this module imports it at the top. The engine's rules
 # are the repo's law: a Wilson lower bound rather than a raw hit rate, ROI
 # always alongside, walk-forward windows only.
+#
+# Never re-add a module-local wilson_lb here. One existed (z=1.645) with no
+# callers at all, and its only live effect was to SHADOW the engine's Z95 bound
+# for anything imported after it -- a floor quietly moved from 95% to 90%.
 from edgefactory.assay import context_verdict_league                # noqa: E402
 from edgefactory.assay import grade as assay_grade                  # noqa: E402
-from edgefactory.assay import wilson_lb as assay_wilson_lb          # noqa: E402
+from edgefactory.assay import wilson_lb                              # noqa: E402
 from edgefactory.config import GATES                                 # noqa: E402
 
 # ---------------- cadence (unchanged from production) ----------------
@@ -262,8 +266,6 @@ SLICE_DEMOTE_SHRINK = 0.95     # generic rank-only fallback for other buckets
 SLICE_ENABLED = True           # kill-switch: evidence still reports, policy identity
 SLICE_LEDGER_FILENAME = "auto_tickets_slice_ledger.jsonl"
 SLICE_TRIPWIRE_FILENAME = "auto_tickets_slice_tripwire.json"
-SLICE_LEDGER_FILE = LOCALDATA / SLICE_LEDGER_FILENAME
-SLICE_TRIPWIRE_FILE = LOCALDATA / SLICE_TRIPWIRE_FILENAME
 
 
 def _assay_roi(wins, n_priced, profit):
@@ -399,7 +401,7 @@ def compute_bucket_pnl(today_text, *, archives=None, settled=None, path=None):
             "verdict": verdict,
             "grade": assay_grade(wins, n) if n else "UNGRADED",
             "hit": round(st["wins"] / n, 4) if n else None,
-            "wilson_lb": round(assay_wilson_lb(wins, n), 4) if n else None,
+            "wilson_lb": round(wilson_lb(wins, n), 4) if n else None,
             "roi": roi,
             "recent_n": st["rn"],
             "recent_roi": recent_roi,
@@ -884,7 +886,7 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
             "recent_n": st["rn"],
             "recent_roi": recent_roi,
             "hit": round(st["wins"] / n, 4) if n else None,
-            "wilson_lb": round(assay_wilson_lb(wins, n), 4) if n else None,
+            "wilson_lb": round(wilson_lb(wins, n), 4) if n else None,
             "stated": round(st["stated"] / n, 4) if n else None,
             # Calibration is evidence about stated probabilities, not a
             # trigger: a bucket can be honest and still lose.
@@ -1011,16 +1013,6 @@ def _slice_shadow_rows(target, pure_plan, pool_by_key, real_keys,
     return [row for row in rows
             if row["bucket"] in diminished_buckets
             and _slice_row_key(row) not in real_keys]
-
-
-def wilson_lb(wins, n, z=1.645):
-    if n == 0:
-        return 0.0
-    p = wins / n
-    denom = 1 + z * z / n
-    centre = p + z * z / (2 * n)
-    half = z * math.sqrt((p * (1 - p) + z * z / (4 * n)) / n)
-    return max(0.0, (centre - half) / denom)
 
 
 def parse_kickoff(pick):

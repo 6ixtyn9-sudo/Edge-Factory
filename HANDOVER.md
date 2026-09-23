@@ -9192,6 +9192,55 @@ buckets. A bucket that genuinely is bleeding re-earns the streak from zero withi
 `PNL_DEMOTE_STREAK` (2) days, and VETO now arrives on ROI rather than never. Pinned
 by `test_pre_engine_state_file_reads_and_re_earns_from_scratch`.
 
+**Can these two levers ever starve the slate to nothing?** Yes — and only the door
+can do it. Enforcement is per bucket, and a bucket leaves the pool only at
+`weight == 0.0`, which requires a *current* VETO read **and** `PNL_BENCH_STREAK`
+(4) consecutive qualifying days; the ladder's caps only reorder, and
+`SLICE_BENCH_ON_VETO=False` means it cannot remove a leg at all. Total silence
+therefore needs all five deployed buckets condemned at once. It cannot come from
+missing data: below the engine's n floor a bucket reads UNKNOWN, which is not
+adverse, so the streak resets and the door stays open — fail-open on poverty is
+deliberate. How far that is today (2026-09-23 archives): `CAUTION` is the closest
+— lifetime ROI −5.11%, already past the −5% VETO bar — held out of VETO only by
+its +5.7% recent window; `SKIPPED_VETO` (−1.28%) and
+`WATCHLIST_UNCORROBORATED_PRICE` (−2.53%) are blocked by the lifetime bar;
+`WATCHLIST_UNKNOWN_CTX` would need −10% at n=32; `CERTIFIED_CLEAN` reads BOOST.
+Forcing all five to 0.0 on a scratch copy of the tree gives `rc=0`,
+`NO BET TODAY — 0 qualifying leg(s), need 2`, `(bank stays unbet)`, no slip file,
+and the ladder table still printed: a halt the operator sees, not a silent crash.
+The ordinary zero-ticket state remains pre-existing scarcity (`LEGS_PER_ACCA=2`,
+`MIN_ACCAS=1`), not policy.
+
+**The replay harness does not know about either tripwire, and one flag in it is a
+trap.** `replay_harness.py` drives the live *engine* (`at.playable_legs`,
+`at.select_accas`, `at.rank_legs`) and forwards only `SELECTION_KEYS` /
+`SIZING_KEYS`; neither `rank_caps` nor `bucket_weights` is in those sets, so the
+harness replays selection, not policy. Consequence one is benign and measured: the
+file has zero references to `compute_bucket_pnl`/`compute_bucket_slice`, so
+nothing shipped today can move a harness number. Consequence two is not: `rank`
+*is* a legal variant key, so `--variant rank=probcap` is accepted, silently
+degrades to plain `prob` order (`rank_caps is None` skips the capped branch) and
+returns cards byte-identical to baseline — an A/B that looks like it measures the
+ladder and measures nothing. Verified on the 12 most recent archive days (251
+legs): `probcap` == `prob`, while the same pool with the caps the ladder really
+emits (`{"CAUTION": 0.70}`) does reorder. Making the harness genuinely
+policy-aware means recomputing both tripwires day by day walk-forward with no
+lookahead — worth doing before either lever is trusted with more money, but it is
+a research decision and is left for the operator to call.
+
+**Loose ends removed rather than accumulated (same day).** A sweep of
+`auto_tickets.py` for module-level names nothing references turned up three, all
+now gone: a module-local `wilson_lb(wins, n, z=1.645)` with **no callers at all**,
+whose only live effect was shadowing the engine's Z95 bound for anything defined
+after it — the trap that had forced the `assay_wilson_lb` alias, so the alias is
+gone too and both tripwires call the engine's function by its real name; and
+`SLICE_LEDGER_FILE` / `SLICE_TRIPWIRE_FILE`, two dead path constants the readers
+never use (they build from the `*_FILENAME` pair), which invited an edit that
+would have done nothing. `ruff --select F811` on this file now passes clean where
+the landed baseline carried one of the four shadow findings. One dead private
+helper predates this work and is deliberately left: `_acca_label` (no references
+in scripts or tests, introduced in `8f99e52`).
+
 **Tests.** `tests/test_auto_tickets_pnl.py` (22 tests) is new — the door had zero
 coverage before. The regression test pins the exact blindness above (40 legs, 30
 wins at 1.30, stated 75% → gap 0.0 and ROI −2.5% → CAUTION; the old z works out to
