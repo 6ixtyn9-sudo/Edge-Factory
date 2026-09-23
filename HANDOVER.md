@@ -9021,3 +9021,78 @@ meet `SLICE_MIN_N`, and that an empty upsert preserves a shipped day while
 `allow_empty=True` still clears it. `ruff` on `auto_tickets.py` is unchanged
 from the landed version. Live `cmd_today` smoke on real `localdata` covers
 both the frozen-rerun and replan paths.
+
+## Addendum — 2026-09-23 — Ladder grading moved onto the shared assay engine
+
+Operator direction: the auto-tickets surface must be graded by **the same assay
+engine that grades edges**, not by a private statistic and not by another
+shadow tracker. This is the third form of the same correction and the one that
+actually removes a parallel system instead of adding a third.
+
+**What was replaced.** `compute_bucket_slice` decided enforcement on its own
+z-test over the calibration residual (`gap = wins - stated`, `z = gap /
+(sqrt(sse)/n)`) with private constants `SLICE_MIN_N=12` and `SLICE_Z_BENCH=-2.0`
+and its own vocabulary PAYING/COLD/BLEEDING/INSUFFICIENT. It accumulated
+`profit` and computed `roi_flat`, then **never used ROI to decide anything**.
+`auto_tickets.py` did not import `edgefactory.assay` at all.
+
+**What grades it now.** A bucket is a selection-role context group, which is
+precisely what `edgefactory.assay.context_verdict_league(n, roi, recent_roi)`
+scores — the same gate that produces the purity verdicts the buckets are built
+from. `n` and `roi` are the bucket's full shipped history and `recent_roi` is
+the trailing window, admitted only once that window itself holds
+`GATES.min_recent_n` (30) settled legs; that is `assay_purity`'s own convention,
+copied rather than reinterpreted. ROI is flat-stake `pnl / n_priced`, again
+matching `assay_purity` and `decay_monitor.recent_stats`, so a bucket ROI and a
+context ROI mean one thing in this repo. Hit rate carries its **Wilson lower
+bound** and its `assay.grade`, per the engine's standing rules. `SLICE_WINDOW_DAYS`
+is now `GATES.recent_window_days` (30) instead of a private 35 that existed only
+to reach n=12, so the ladder moves with the system-wide recency convention.
+Vocabulary is BOOST / ALLOW / UNKNOWN / CAUTION / VETO like every other context.
+`SLICE_MIN_N` and `SLICE_Z_BENCH` are gone; the engine's graduated small-n floors
+do that job. Calibration gap and z are still printed as the stated-probability
+honesty signal, but they no longer gate enforcement.
+
+**Why ROI is the better trigger, measured.** On the 2026-09-23 snapshot
+CAUTION reads calibration gap **-3.9%** (z=-0.26, the old ladder: do nothing)
+against flat **ROI -9.2%** on 9 shipped legs. The old verdict was looking at the
+quantity that matters least, and was the *later* warning. The engine's early gate
+at 12<=n<40 reaches VETO at ROI <= -10% and CAUTION at <= -4%, so CAUTION will
+be judged by the engine as soon as it has 12 shipped legs — sooner and on the
+number that kills bankrolls. Enabling BOOST as a legal reading also matters: the
+ladder can now reward a bucket instead of only punishing one.
+
+**Deliberately kept.** The one-step-per-calendar-day streak guard (intraday reruns
+must not bench), the printed-slip-only enforcement basis, shadow rows inside that
+basis so a demoted bucket can earn its way back, `SLICE_DEMOTE_ON_CAUTION`
+(soft first cycle, replaces `SLICE_DEMOTE_ON_COLD`) and `SLICE_BENCH_ON_VETO=False`
+— a VETO that reaches the bench streak reports `would_bench: true` and does not
+act. Stakes and door mechanics are untouched; the ladder still only reorders.
+
+**Two defects found while building the parity fixtures, both fixed.**
+(1) `write_slice_ledger` serialises with `ensure_ascii=False`, and U+0085 /
+U+2028 / U+2029 are legal *inside* a JSON string while `str.splitlines()` treats
+them as line breaks: a fixture name carrying one split its own record in half and
+the row vanished as a silent `JSONDecodeError` — measured, 40 rows written, 39
+read back. Those three code points are now escaped on write and the reader splits
+on `"\\n"` explicitly. (2) The module already defines `wilson_lb(wins, n, z=1.645)`
+at line 942, which **shadowed the engine import** — the ladder's LB column would
+have silently used a 90% bound where the engine specifies Z95. The import is now
+aliased `assay_wilson_lb` and used explicitly.
+
+**Not changed, and should be next.** The door tripwire
+(`bucket_pnl_verdict` / `compute_bucket_pnl`) still runs the same hand-rolled
+z-on-residual statistic with `PNL_MIN_N`/`PNL_Z_BENCH` and ignores ROI for
+enforcement too. It was left alone because its constants are declared frozen and
+it is a second live surface; unifying it is the obvious follow-up, not part of
+this change.
+
+**Receipts.** `pytest tests/` **654 passed** (629 pre-ladder, 641 after the first
+two review fixes; +13 in the slice suite, 0 regressions elsewhere). `ruff` at
+exact parity with the landed baseline on both files (31 in `auto_tickets.py`, 4
+in the test file; the shadowed-import and f-string findings it raised are fixed).
+Parity is asserted structurally: `test_bucket_verdict_is_the_engine_verdict`
+recomputes every bucket verdict against `context_verdict_league` directly across
+eight n/ROI shapes, so the ladder cannot drift from the engine without a red
+test. Live `cmd_today` smoke on the real tree prints the new table and the
+policy is `rank_caps={}` / `bench_buckets=()` — landing changes no card.
