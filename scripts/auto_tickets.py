@@ -417,13 +417,28 @@ def write_slice_ledger(rows, path=None):
                      + "\n")
 
 
-def upsert_slice_day(rows, target, path=None):
-    """Replace all real and shadow rows for one date, atomically by rewrite."""
+def upsert_slice_day(rows, target, path=None, *, allow_empty=False):
+    """Replace all real and shadow rows for one date, atomically by rewrite.
+
+    An empty replacement set is normally a NO-OP, not a clear (2026-09-23
+    review fix). Callers reach this with nothing to record for two very
+    different reasons: a force-repick that genuinely ships no card, and a
+    slip that failed to parse (unreadable file, or a leg line that no longer
+    matches the frozen print format). Treating both as "this day shipped
+    nothing" let a rerun between shipping and freezing delete the day's only
+    printed-probability evidence — permanently, since ``ensure_slice_seeded``
+    only seeds when the whole ledger is absent. A clear is therefore opt-in
+    via ``allow_empty``, and the callers pass it only when no slip exists for
+    the date at all.
+    """
     target = _slice_day(target)
-    existing = [r for r in read_slice_ledger(path)
-                if _slice_day(r.get("date")) != target]
-    merged = existing + [_slice_clean_row(r) for r in rows
-                         if _slice_day(r.get("date")) == target]
+    ledger = read_slice_ledger(path)
+    fresh = [_slice_clean_row(r) for r in rows
+             if _slice_day(r.get("date")) == target]
+    if not fresh and not allow_empty:
+        return [r for r in ledger if _slice_day(r.get("date")) == target]
+    existing = [r for r in ledger if _slice_day(r.get("date")) != target]
+    merged = existing + fresh
     # Preserve first position while allowing a later real row to replace a
     # same-key shadow row. The caller orders real rows before shadow rows.
     out, positions = [], {}
@@ -631,6 +646,20 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
     ``rank_caps`` and ``bench_buckets`` for the current plan. Every score is
     read through ``pick_result`` at call time, so settlement lag and voids are
     handled exactly like the door tripwire.
+
+    Enforcement basis (2026-09-23 review fix): the verdict that drives
+    demotion/benching is computed ONLY from printed-slip evidence, i.e. rows
+    whose ``prob_stated`` was read off a frozen slip line. The seeded replay
+    rows carry ``prob_stated`` from the mutable archive ``avg_p`` — which the
+    addendum measured as differing from the printed probability by more than
+    0.55pp on 44/134 slips — so they are two different estimands and are
+    reported as context (``n_seeded``/``seed_gap``) instead of being pooled
+    into the verdict. Pooling them flipped CAUTION's in-window gap from
+    -3.9pp to +8.0pp, and because ``SLICE_MIN_N`` exceeds the shipped-only n
+    it was the replay half that could ever have convicted a bucket. Shadow
+    rows remain in the enforcement basis on purpose: a demoted or benched
+    bucket keeps no shipped legs, and counterfactual evidence is the only
+    route back to FULL.
     """
     today_text = _slice_day(today_text)
     settled = load_settled() if settled is None else settled
@@ -639,10 +668,14 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
     # inclusive endpoint convention used by compute_bucket_pnl).
     day_from = (datetime.strptime(today_text, "%Y-%m-%d")
                 - timedelta(days=SLICE_WINDOW_DAYS + 1)).strftime("%Y-%m-%d")
-    stats = {
-        b: {"n": 0, "wins": 0, "stated": 0.0, "sse": 0.0, "profit": 0.0}
-        for b in _SLICE_BUCKET_ORDER
-    }
+    # Two ledgers of record inside one pass: ``stats`` is the enforcement
+    # basis (printed-slip probabilities only) and ``seed_stats`` is the
+    # replay-proxy context, which can never move a verdict.
+    def _blank_stats():
+        return {"n": 0, "wins": 0, "stated": 0.0, "sse": 0.0, "profit": 0.0}
+
+    stats = {b: _blank_stats() for b in _SLICE_BUCKET_ORDER}
+    seed_stats = {b: _blank_stats() for b in _SLICE_BUCKET_ORDER}
     for row in read_slice_ledger(path):
         day = _slice_day(row.get("date"))
         if not (day_from <= day <= today_text):
@@ -661,7 +694,7 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
         bucket = str(row.get("bucket") or "")
         if bucket not in stats:
             continue
-        st = stats[bucket]
+        st = seed_stats[bucket] if row.get("seeded") else stats[bucket]
         hit = 1.0 if result == "win" else 0.0
         st["n"] += 1
         st["wins"] += hit
@@ -683,10 +716,12 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
     verdicts = {}
     for bucket in _SLICE_BUCKET_ORDER:
         st = stats[bucket]
+        sd = seed_stats[bucket]
         n = st["n"]
         gap = (st["wins"] - st["stated"]) / n if n else 0.0
         z = gap / (math.sqrt(st["sse"]) / n) if n and st["sse"] > 0 else None
         verdict = _slice_verdict(n, gap, st["sse"])
+        seed_gap = (sd["wins"] - sd["stated"]) / sd["n"] if sd["n"] else None
         old = prior_buckets.get(bucket) or {}
         demote = max(0, int(old.get("demote_streak") or old.get("streak") or 0))
         bench = max(0, int(old.get("bench_streak") or 0))
@@ -699,6 +734,14 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
                   if SLICE_ENABLED else "FULL")
         verdicts[bucket] = {
             "n": n,
+            # Enforcement basis vs replay-proxy context, kept side by side so
+            # the two estimands stay visible in every artifact.
+            "n_shipped": n,
+            "n_seeded": sd["n"],
+            "n_all": n + sd["n"],
+            "seed_gap": round(seed_gap, 4) if seed_gap is not None else None,
+            "seed_roi_flat": (round(sd["profit"] / sd["n"], 4)
+                              if sd["n"] else None),
             "hit": round(st["wins"] / n, 4) if n else None,
             "stated": round(st["stated"] / n, 4) if n else None,
             "gap": round(gap, 4) if n else None,
@@ -728,6 +771,7 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
         "demote_cap": SLICE_DEMOTE_CAP,
         "demote_shrink": SLICE_DEMOTE_SHRINK,
         "enabled": SLICE_ENABLED,
+        "evidence_basis": "printed-slip only; seeded replay rows are context",
         "buckets": verdicts,
     }
     try:
@@ -741,16 +785,22 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
 
 
 def _slice_table_lines(verdicts):
-    lines = ["SELECTION LADDER SLICE (trailing " + str(SLICE_WINDOW_DAYS)
-             + "d):",
-             "  bucket                                      n       gap       z verdict demote bench action"]
+    header = ("  bucket                                      n       gap       "
+              "z verdict demote bench action")
+    lines = [(f"SELECTION LADDER SLICE (trailing {SLICE_WINDOW_DAYS}d, "
+              "printed-slip evidence only):"),
+             header]
     for bucket in _SLICE_BUCKET_ORDER:
         v = verdicts[bucket]
         gap = "—" if v["gap"] is None else f"{v['gap']:+.1%}"
         z = "—" if v["z"] is None else f"{v['z']:+.2f}"
+        seed = v.get("seed_gap")
+        seed_note = (f"  | replay ctx (excluded): n={v['n_seeded']} "
+                     f"gap={seed:+.1%}" if v.get("n_seeded") and seed is not None
+                     else "  | replay ctx (excluded): none")
         lines.append(f"  {bucket:38s} {v['n']:3d} {gap:>9s} {z:>8s} "
                      f"{v['verdict']:11s} {v['demote_streak']:6d} "
-                     f"{v['bench_streak']:5d} {v['action']}")
+                     f"{v['bench_streak']:5d} {v['action']}{seed_note}")
     return lines
 
 
@@ -2247,8 +2297,10 @@ def cmd_today(args, st):
         census_lines = []
     if len(plan_pool) < LEGS_PER_ACCA:
         # --force-repick replaces prior same-day real+shadow rows even when
-        # the new final plan is empty.
-        upsert_slice_day(shadow_rows, target)
+        # the new final plan is empty — but only if nothing actually shipped
+        # for this date. A printed slip on disk is the frozen record of legs
+        # already at the bookmaker, and that evidence must survive.
+        upsert_slice_day(shadow_rows, target, allow_empty=not slip_txt.exists())
         print("\n".join(census_lines))
         print("\n".join(_slice_action_lines(slice_verdicts)))
         print("\n".join(_slice_table_lines(slice_verdicts)))
@@ -2261,7 +2313,7 @@ def cmd_today(args, st):
                     bucket_weights=pnl_weights,
                     rank_caps=slice_policy.get("rank_caps") or None)
     if not plan:
-        upsert_slice_day(shadow_rows, target)
+        upsert_slice_day(shadow_rows, target, allow_empty=not slip_txt.exists())
         print("\n".join(census_lines))
         print("\n".join(_slice_action_lines(slice_verdicts)))
         print("\n".join(_slice_table_lines(slice_verdicts)))

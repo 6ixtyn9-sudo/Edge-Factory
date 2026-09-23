@@ -26,14 +26,16 @@ def sandbox(tmp_path, monkeypatch):
     return tmp_path
 
 
-def _row(day, bucket, i, prob=0.80, pick="HOME", shadow=False):
+def _row(day, bucket, i, prob=0.80, pick="HOME", shadow=False, seeded=False,
+         src=None):
     home = f"{chr(65 + i)}Home Fixture {bucket}"
     away = f"{chr(97 + i)}Away Fixture {bucket}"
     return {
         "date": day, "home": home, "away": away,
         "match": f"{home} vs {away}", "pick": pick,
         "prob_stated": prob, "odds": 1.50, "bucket": bucket,
-        "src": "slip", "seeded": False, "shadow": shadow,
+        "src": src or ("replay" if seeded else "slip"),
+        "seeded": seeded, "shadow": shadow,
     }
 
 
@@ -227,3 +229,73 @@ def test_benched_bucket_promotes_on_evidence(monkeypatch, sandbox):
     assert verdicts["CAUTION"]["bench_streak"] == 3
     assert verdicts["CAUTION"]["action"] == "FULL"
     assert "CAUTION" not in policy["bench_buckets"]
+
+
+def test_seeded_replay_rows_are_context_and_cannot_flip_a_verdict(sandbox):
+    """Review fix 2026-09-23: two estimands, never pooled into one verdict.
+
+    CAUTION's shipped legs are bleeding on printed probability. The seeded
+    replay block is favourable but carries ``avg_p`` proxies rather than the
+    frozen slip print, so it must widen the report and never decide. On the
+    old pooled basis these same rows scored CAUTION PAYING.
+    """
+    real = [_row("2026-09-22", "CAUTION", i, prob=0.60) for i in range(12)]
+    seed = []
+    for i in range(20):
+        r = _row("2026-09-22", "CAUTION", i, prob=0.50, seeded=True)
+        r["home"], r["away"] = f"S{i}Home CAUTION", f"S{i}Away CAUTION"
+        r["match"] = f"{r['home']} vs {r['away']}"
+        seed.append(r)
+    path, state = sandbox / "ledger.jsonl", sandbox / "state.json"
+    at.write_slice_ledger(real + seed, path)
+    settled = _settled(real + seed, ["away"] * 12 + ["home"] * 20)
+
+    _policy, verdicts = at.compute_bucket_slice(
+        "2026-09-22", path=path, state_path=state, settled=settled,
+    )
+    cau = verdicts["CAUTION"]
+    assert cau["n"] == 12 and cau["n_shipped"] == 12
+    assert cau["n_seeded"] == 20 and cau["n_all"] == 32
+    assert cau["verdict"] == "BLEEDING" and cau["gap"] < 0.0
+    assert cau["seed_gap"] > 0.0
+    # The exact hazard: pooling the replay half flips the sign of the gap.
+    pooled_gap = ((20 - (0.60 * 12 + 0.50 * 20)) / 32)
+    assert pooled_gap > 0.0 > cau["gap"]
+    table = "\n".join(at._slice_table_lines(verdicts))
+    assert "replay ctx (excluded): n=20" in table
+
+
+def test_seeded_rows_alone_cannot_meet_the_min_n_bar(sandbox):
+    """Conviction must be earned by printed evidence, not by the seed."""
+    seed = [_row("2026-09-22", "CAUTION", i, prob=0.30, seeded=True)
+            for i in range(12)]
+    path, state = sandbox / "ledger.jsonl", sandbox / "state.json"
+    at.write_slice_ledger(seed, path)
+    settled = _settled(seed, ["away"] * 12)
+
+    policy, verdicts = at.compute_bucket_slice(
+        "2026-09-22", path=path, state_path=state, settled=settled,
+    )
+    assert verdicts["CAUTION"]["n"] == 0
+    assert verdicts["CAUTION"]["n_seeded"] == 12
+    assert verdicts["CAUTION"]["verdict"] == "INSUFFICIENT"
+    assert verdicts["CAUTION"]["demote_streak"] == 0
+    assert policy["rank_caps"] == {} and policy["bench_buckets"] == ()
+
+
+def test_empty_upsert_preserves_the_day_unless_nothing_shipped(sandbox):
+    """Review fix 2026-09-23: an empty replacement is a no-op, not a clear."""
+    path = sandbox / "ledger.jsonl"
+    today = [_row("2026-09-23", "CAUTION", i) for i in range(3)]
+    prior = [_row("2026-09-22", "CAUTION", 5)]
+    at.write_slice_ledger(today + prior, path)
+
+    # A failed/partial slip parse must never delete the day's evidence.
+    returned = at.upsert_slice_day([], "2026-09-23", path)
+    assert len(returned) == 3
+    assert len(at.read_slice_ledger(path)) == 4
+
+    # A genuine no-bet day that never shipped is still cleared, so stale rows
+    # cannot keep counting as shipped evidence.
+    at.upsert_slice_day([], "2026-09-23", path, allow_empty=True)
+    assert [r["date"] for r in at.read_slice_ledger(path)] == ["2026-09-22"]

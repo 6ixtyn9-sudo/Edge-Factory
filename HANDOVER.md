@@ -8970,3 +8970,54 @@ bench-on-BLEEDING remains disabled for the first cycle.
 
 The ladder does not change any door-level `compute_bucket_pnl` constants or
 state. Artifact **35540311355** expires **2026-09-27T22:20Z**.
+
+## Addendum — 2026-09-23 — Ladder review fixes: enforcement basis and empty-day upsert
+
+Post-merge review of the shipped-slice ladder found two defects. Both are
+fixed here; neither touched frozen door constants, stake mechanics, the slip
+print format, or the ledger schema.
+
+**1. Enforcement basis is now printed-slip evidence only.** The day-one
+receipts in the addendum above (CAUTION **n=17, gap +8.0pp, z=+0.72, PAYING**;
+SKIPPED_VETO **n=103**) were computed on a **pooled** basis and are
+**superseded**: that window mixed 9 real slip rows with 8 replay-proxy rows,
+contradicting this file's own boundary that the replay and real-card slices
+are two estimands which must never be mixed. The mixing was load-bearing, not
+cosmetic — the replay half is what made CAUTION look PAYING while the printed
+evidence said **-3.9pp**, and because `SLICE_MIN_N=12` exceeded the
+shipped-only **n=9**, the mutable-`avg_p` proxies were the *only* rows that
+could ever have carried a bucket to conviction. `compute_bucket_slice` now
+scores verdicts from `seeded=False` rows only; seeded replay rows are reported
+beside them as `n_seeded`/`seed_gap`/`n_all` and as a `replay ctx (excluded)`
+column, so the context stays visible and cannot be silently dropped later.
+Shadow rows remain inside the enforcement basis on purpose: a demoted or
+benched bucket ships no legs, so counterfactual evidence is its only route
+back to FULL. On the 2026-09-23 snapshot the enforcement reading is now
+CAUTION **n=9, gap -3.9pp, z=-0.26, INSUFFICIENT** (seed context: n=8,
+gap +21.3pp) and SKIPPED_VETO **n=89, gap +7.2pp, z=+1.49, PAYING** — which
+reproduces the real-card slice stated above rather than a blend of it with
+replay. Consequence accepted deliberately: early-cycle conviction is harder,
+because `n >= 12` must now be earned from printed slips, consistent with
+"benches are EARNED by evidence, never by silence".
+
+**2. An empty replacement no longer clears a date.** `upsert_slice_day` was
+reachable with nothing to record from two very different places — a
+force-repick that genuinely ships no card, and a frozen slip that failed to
+parse (unreadable file, or a leg line drifting away from the frozen print
+format). Both were treated as "this day shipped nothing". Reproduced on the
+live 2026-09-23 tree: a `--today --force` rerun after the card had already
+shipped took the ledger from **312 to 308 rows**, deleting that date's only
+printed-probability evidence (4 rows) with no re-seed to recover it, since
+`ensure_slice_seeded` only seeds a wholly absent ledger. An empty replacement
+is now a no-op unless the caller opts in with `allow_empty`, and the two
+empty-plan callers pass `allow_empty=not slip_txt.exists()` — a day with no
+slip on disk is still cleared, so stale rows cannot keep posing as shipped
+evidence. Post-fix the same rerun leaves the ledger at **312**.
+
+**Test and lint receipts.** `pytest tests/` **641 passed** (629 on the
+pre-ladder baseline, 638 on the landed ladder, **+3 new, 0 regressions**); the
+new tests assert the sign-flip cannot recur, that seeded rows alone cannot
+meet `SLICE_MIN_N`, and that an empty upsert preserves a shipped day while
+`allow_empty=True` still clears it. `ruff` on `auto_tickets.py` is unchanged
+from the landed version. Live `cmd_today` smoke on real `localdata` covers
+both the frozen-rerun and replan paths.
