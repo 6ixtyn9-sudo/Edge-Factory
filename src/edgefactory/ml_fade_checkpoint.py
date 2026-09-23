@@ -1,7 +1,8 @@
 """ML-fade research checkpoint policy + frozen reference evaluation.
 
 PREDECLARED POLICY (frozen 2026-09-20 — do not edit in response to interim
-performance; see ML_FADE_RESEARCH_POLICY.md for the change procedure):
+performance; see HANDOVER.md, 'ML-FADE RESEARCH GUARDRAIL', for the change
+procedure — the standalone policy file was folded into HANDOVER on 2026-09-24):
 
 Checkpoints are DUE when any of these fixed conditions holds:
   1. BOOTSTRAP: no checkpoint has ever run;
@@ -475,7 +476,7 @@ def render_report_md(report: dict) -> str:
         a(
             f"Frozen studies NOT re-run this checkpoint "
             f"({studies.get('status', 'unknown')}: {studies.get('reason', '')}). "
-            "Manual rerun: see ML_FADE_RESEARCH_POLICY.md."
+            "Manual rerun: see HANDOVER.md, 'ML-FADE RESEARCH GUARDRAIL'."
         )
     a("")
     drift = report["drift"]
@@ -489,7 +490,7 @@ def render_report_md(report: dict) -> str:
         a(f"- stale model keys present in ledger: {sorted(drift['stale_model_keys'])}")
     a("- ledger: `localdata/ml_fade_research_ledger.json` (tracked; bot commits each run)")
     a("- state: `localdata/ml_fade_research_state.json` (tracked; checkpoint history)")
-    a("- policy: `ML_FADE_RESEARCH_POLICY.md`")
+    a("- policy: HANDOVER.md, 'ML-FADE RESEARCH GUARDRAIL' (frozen 2026-09-20)")
     a("")
     return "\n".join(L)
 

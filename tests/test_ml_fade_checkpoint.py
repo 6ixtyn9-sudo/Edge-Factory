@@ -266,9 +266,23 @@ def _cli_env(tmp_path: Path, tmp_ledger: Path) -> dict:
         "state": tmp_path / "state.json",
         "settled": tmp_path / "settled.json",
         "aliases": tmp_path / "aliases.json",
-        "edges": ROOT / "localdata" / "edges_consensus.json",
+        "edges": _fabricate_edges(tmp_path),
         "out": tmp_path,
     }
+
+
+def _fabricate_edges(tmp_path: Path) -> Path:
+    """Frozen stand-in for the registry model the eval script reads for drift
+    provenance (scripts/ml_fade_research_eval.py:202).
+
+    This used to point at the live localdata/edges_consensus.json, which broke the
+    promise in the header above: the nightly job regenerates that file (including
+    ml_model) in the same checkout, minutes before pytest runs, so these CLI tests
+    were asserting against whatever tonight's retrain happened to produce. On CI
+    that is how a deterministic test turns red while staying green everywhere else."""
+    path = tmp_path / "edges_consensus.json"
+    path.write_text(json.dumps({"schema": 1, "edges": [], "ml_model": {"model_key": "test-frozen"}}))
+    return path
 
 
 def _run_eval(env: dict, *extra: str) -> subprocess.CompletedProcess:
