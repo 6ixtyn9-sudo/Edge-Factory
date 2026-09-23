@@ -9369,7 +9369,7 @@ setting the one variable:
 | `test_forebet.py` x2 | `GITHUB_ACTIONS=true` -> `_cloud_fetch_mode()` (sources/forebet.py:45) takes the **relay** path, past both patched transports, asserting against 143 live rows |
 | `test_notify.py` x2 | `TELEGRAM_BOT_TOKEN`+`TELEGRAM_CHAT_ID` mapped from secrets -> a **second delivery family**; the rig models one, so per-family barrier/masking expectations invert |
 | `test_theoddsapi.py` x2 | `ODDS_API_MONTHLY_BUDGET: ${{ secrets... || '480' }}` — a secret of `0` **beats** the fallback, so a full key ring is "inactive" (8 rows, not 9) |
-| `test_ml_fade_*` x2 | not reproduced; see below |
+| `test_ml_fade_contexts.py` x2 | cache-restored `localdata/entity_registry.json` (proof below) |
 
 **Fix 1 — `tests/conftest.py`.** The repo already stripped `_ENV_KNOBS` per test; that is too
 late for two mechanisms, so the strip now also runs at **module scope** and the tuple grew to
@@ -9388,11 +9388,22 @@ it can no longer see state the pipeline generated. `tests/test_ml_fade_checkpoin
 reading the live `localdata/edges_consensus.json` (its header promised tmp-only fixtures and was
 lying; harmless today, unbounded tomorrow).
 
-**Residual, stated plainly:** the 2 `ml_fade` failures are attributed, not proven. The candidate
-mechanism is the same class — tests reading tracked-but-regenerated `localdata` (the purity-
-registry tripwire in `test_identity.py:96` *intends* to read the live registry) — but I could not
-manufacture CI's exact state here, so I am not claiming a fix for them. Isolation removes the
-class by construction; if they survive an isolated run they are real findings and the job's log is
-now ~50 lines instead of a 1.1 MB blob, so they will name themselves. Pushing
-`.github/workflows/*` is still token-blocked, so `daily.yml` (202 lines, PyYAML-validated,
-pipeline section byte-identical except the removed step) was delivered to the operator for paste.
+**The last two, proven on the second pass.** `test_league_condition_uses_canonical_and_precomputed`
+and `test_select_top_leagues_train_only_and_stable` fail if and only if
+`localdata/entity_registry.json` exists. That file is gitignored, built by
+`scripts/build_entity_registry.py` (three call sites in `daily.py`), and carried into the checkout by
+`actions/cache/restore` (`path: localdata`). The "Restore committed data" guard cannot help — it
+re-checks out only *tracked* localdata files — and `git clean -fd` deliberately spares ignored ones, so
+the file survives into the test run while appearing in no commit anywhere. `entities.canonical_league()`
+consults it *before* the identity fallback (entities.py:88-99), so `'epl'` resolves to
+`'english premier league'` and the only two tests that pin the fallback flip. Reproduced by writing that
+one file, and only that file (`2 failed, 31 passed`), then deleting it; no product code is involved, and
+an earlier guess of mine — that regenerated *tracked* state was the cause — was tested against the run's
+own state commit (`f9e209d`, 686 passed) and dropped. Belt: `tests/conftest.py` now points
+`ENTITY_REGISTRY_PATH` at a nonexistent path, so neither a runner's cache nor an operator's local build
+can move those verdicts; the isolated job additionally has no cache restore at all.
+
+Verified after all of it: **686 passed** in a clean tree, *with* a cache-restored registry present, and
+*with* CI's whole job env simulated (secrets, `GITHUB_ACTIONS`, `TZ`) — the state that produced 7 failures.
+Pushing `.github/workflows/*` is still token-blocked, so the workflow ships as a validated file for paste:
+`jobs.regression-tests` in `~/daily.yml`, pipeline section byte-identical apart from the removed step.
