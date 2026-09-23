@@ -1784,6 +1784,16 @@ def rank_legs(pool, rank="prob", rank_caps=None):
     unchanged. This is selection-only: the returned leg dictionaries and
     their raw ``prob`` fields are untouched.
     """
+    if rank == "probcap" and rank_caps is None:
+        # A variant that cannot differ from baseline is a bug, not a result.
+        # Caps apply for rank in ("prob", "probcap"), so probcap with no caps
+        # is byte-identical to plain prob order -- the same silent no-op class
+        # the 2026-09-04 floor-strip audit found in this harness. Refuse the
+        # comparison instead of reporting it.
+        raise ValueError(
+            "rank='probcap' without rank_caps is an identity order: it cannot "
+            "differ from rank='prob'. Pass rank_caps (the ladder's caps) or "
+            "drop the rank.")
     if rank == "ev":
         key = lambda l: (l["prob"] * l["odds"], l["prob"], l["odds"])   # noqa: E731
     elif rank == "rule3way":
@@ -2216,12 +2226,6 @@ def upsert_slip(st, target, plan):
 
 def _leg_key(l) -> tuple[str, str]:
     return (str(l.get("match") or ""), str(l.get("pick") or "").upper())
-
-
-def _acca_label(acca) -> str:
-    legs = "; ".join(f"{m} {p}@{o:.2f}" for m, p, o in
-                     ((l.get("match"), l.get("pick"), l.get("odds")) for l in acca.get("legs", [])))
-    return f"@{acca.get('odds', 0.0):.2f} ({legs})"
 
 
 def _replacement_lines(prior, plan) -> list[str]:
