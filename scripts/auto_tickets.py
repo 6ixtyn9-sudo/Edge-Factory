@@ -65,7 +65,7 @@ import math
 import re
 import sys
 from collections import Counter
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
@@ -195,6 +195,124 @@ BUCKETS = {
 BAD_QUARANTINE = {"alias_fuzzy", "suspect", "suspect_alias_fuzzy"}
 
 STATE_FILE = LOCALDATA / "auto_tickets_state.json"
+
+# ---- bucket P&L tripwire (2026-09-23, operator-directed, red-teamed) ----
+# The firing tripwire only asks "is this rule still firing?" — never "is
+# this door still paying?" This block grades every deployed bucket on its
+# trailing settled leg outcomes and throttles the deployment door
+# accordingly. Constants are policy-level and deliberately visible.
+PNL_WINDOW_DAYS = 21       # trailing calendar-day window of settled legs
+PNL_MIN_N = 20             # below this, no verdict — "INSUFFICIENT", doors open
+PNL_Z_BENCH = -2.0         # design z on mean (hit - stated_prob) residual
+PNL_DEMOTE_STREAK = 2      # consecutive daily BLEEDING verdicts -> half stake
+PNL_BENCH_STREAK = 4       # consecutive daily BLEEDING verdicts -> door closed
+PNL_BENCH_ENABLED = True   # master kill-switch for the enforcement half only
+BUCKET_PNL_FILE = LOCALDATA / "auto_tickets_bucket_pnl.json"
+
+
+def bucket_pnl_verdict(n, resid_mean, resid_var):
+    """One bucket's evidence classification (PURE — trivially replayable).
+
+    INSUFFICIENT: too few settled legs to judge (fail-open for data
+    poverty; benches are EARNED by evidence, never by silence).
+    BLEEDING: realized-vs-stated gap negative at design z <= PNL_Z_BENCH
+    with n >= PNL_MIN_N. COLD: gap negative but not past the bench bar.
+    PAYING otherwise.
+    """
+    if n < PNL_MIN_N or resid_var <= 0:
+        return "INSUFFICIENT"
+    z = resid_mean / math.sqrt(resid_var)
+    if z <= PNL_Z_BENCH:
+        return "BLEEDING"
+    if resid_mean < 0:
+        return "COLD"
+    return "PAYING"
+
+
+def compute_bucket_pnl(today_text, *, archives=None, settled=None, path=None):
+    """Grade trailing settled legs per bucket, advance the BLEEDING streak,
+    persist the report, and return per-bucket deployment weights.
+
+    Streak semantics (red-team requirements baked in):
+    * the streak advances at most once per CALENDAR DAY (same-day reruns
+      recompute the report but cannot compound the streak — intraday
+      pipeline runs must not be able to bench anything);
+    * a BLEEDING verdict increments the streak, anything else resets it;
+    * weight ladder: streak >= PNL_BENCH_STREAK -> 0.0 (door closed);
+      streak >= PNL_DEMOTE_STREAK -> 0.5 (half stake); else 1.0.
+    """
+    path = path or BUCKET_PNL_FILE
+    archives = load_archived_picks() if archives is None else archives
+    settled = load_settled() if settled is None else settled
+    day_from = (datetime.strptime(today_text, "%Y-%m-%d") - timedelta(days=PNL_WINDOW_DAYS)).strftime("%Y-%m-%d")
+    stats: dict[str, dict] = {
+        b: {"n": 0, "wins": 0, "stated": 0.0, "sse_var": 0.0, "profit": 0.0}
+        for b in sorted(BUCKETS)
+    }
+    for row in archives:
+        day = str(row.get("date") or row.get("_archive_day") or "")[:10]
+        if not (day_from <= day <= today_text):
+            continue
+        for leg in playable_legs([row], day=day, settled=settled):
+            res = leg.get("result")
+            if res not in ("win", "loss"):
+                continue   # void/ungraded legs are invisible to P&L, never auto-loss
+            b = str((leg.get("row") or {}).get("bucket") or "")
+            if b not in stats:
+                continue
+            p = float(leg.get("prob") or 0.0)
+            if p <= 0.0:
+                continue   # realized-vs-stated needs a stated rate; a missing
+                           # one would fabricate a fake -1 residual per leg
+            hit = 1.0 if res == "win" else 0.0
+            st = stats[b]
+            st["n"] += 1
+            st["wins"] += hit
+            st["stated"] += p
+            st["sse_var"] += p * (1.0 - p)
+            st["profit"] += (float(leg["odds"]) - 1.0) if hit else -1.0
+    try:
+        prev = json.loads(path.read_text())
+    except (OSError, json.JSONDecodeError):
+        prev = {}
+    prev_eval = str(prev.get("last_eval") or "")
+    prev_b = (prev.get("buckets") or {})
+    verdicts: dict[str, dict] = {}
+    for b, st in stats.items():
+        n = st["n"]
+        resid_mean = (st["wins"] - st["stated"]) / n if n else 0.0
+        resid_var = st["sse_var"] / (n * n) if n else 0.0
+        verdict = bucket_pnl_verdict(n, resid_mean, resid_var)
+        n_streak = int((prev_b.get(b) or {}).get("streak") or 0)
+        if prev_eval < today_text:      # at most one streak step per day
+            n_streak = n_streak + 1 if verdict == "BLEEDING" else 0
+        weight = (0.0 if n_streak >= PNL_BENCH_STREAK else
+                  0.5 if n_streak >= PNL_DEMOTE_STREAK else 1.0)
+        verdicts[b] = {
+            "n": n,
+            "hit": round(st["wins"] / n, 4) if n else None,
+            "stated": round(st["stated"] / n, 4) if n else None,
+            "gap": round(resid_mean, 4) if n else None,
+            "roi_flat": round(st["profit"] / n, 4) if n else None,
+            "z": round(resid_mean / math.sqrt(resid_var), 3) if resid_var > 0 and n else None,
+            "verdict": verdict, "streak": n_streak, "weight": weight,
+        }
+    report = {
+        "generated_at": datetime.now(TZ).isoformat(timespec="seconds"),
+        "last_eval": today_text,
+        "window_days": PNL_WINDOW_DAYS,
+        "window_from": day_from,
+        "min_n": PNL_MIN_N, "z_bench": PNL_Z_BENCH,
+        "demote_streak": PNL_DEMOTE_STREAK, "bench_streak": PNL_BENCH_STREAK,
+        "enabled": PNL_BENCH_ENABLED,
+        "buckets": verdicts,
+    }
+    try:
+        path.write_text(json.dumps(report, indent=2))
+    except OSError:
+        pass
+    return ({b: v["weight"] for b, v in verdicts.items()} if PNL_BENCH_ENABLED
+            else {}), verdicts
 
 
 def wilson_lb(wins, n, z=1.645):
@@ -1094,7 +1212,7 @@ def _stake_weights(weights, n):
 
 
 def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
-             stake_per_acca=None, weights=None, **overrides):
+             stake_per_acca=None, weights=None, bucket_weights=None, **overrides):
     """Select a card and size it in one production/replay code path.
 
     ``per_day`` (live default) deploys STAKE_FRAC across however many accas
@@ -1102,6 +1220,13 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
     never exceeding STAKE_FRAC in total. Optional weights redistribute that
     mode's total across accas; they cannot affect which legs are selected.
     Selection overrides are forwarded to :func:`select_accas`.
+
+    ``bucket_weights`` (optional) is the P&L-tripwire deployment throttle:
+    legs from a fully-benched (0.0) bucket are made invisible to selection
+    (the door is closed — selection composes only from surviving buckets);
+    afterwards acca weight = min over its legs' bucket weights, and a
+    demoted (0.5) acca is staked at half. Empty/None means all doors open —
+    the replay harness passes nothing and therefore replays true to history.
     """
     stake_frac = STAKE_FRAC if stake_frac is None else float(stake_frac)
     stake_mode = STAKE_MODE if stake_mode is None else stake_mode
@@ -1118,7 +1243,23 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
     if not math.isfinite(stake_per_acca) or stake_per_acca < 0:
         raise ValueError("stake_per_acca must be finite and non-negative")
 
+    if bucket_weights:
+        # Door closed before selection ever sees the pool: benching must
+        # rebuild the whole card from surviving buckets, not just veto the
+        # tickets that happened to contain a benched leg post-hoc (that
+        # would throw away perfectly good survivor accas).
+        pool = [l for l in pool
+                if float(bucket_weights.get(
+                    str((l.get("row") or {}).get("bucket") or ""), 1.0)) > 0.0]
     accas = select_accas(pool, **overrides)
+    if bucket_weights:
+        acca_weights = [
+            min(float(bucket_weights.get(
+                str((l.get("row") or {}).get("bucket") or ""), 1.0))
+                for l in a)
+            for a in accas]
+    else:
+        acca_weights = [1.0] * len(accas)
     if not accas or bank_pct <= 0:
         return []
 
@@ -1144,13 +1285,17 @@ def plan_day(pool, bank_pct, *, stake_frac=None, stake_mode=None,
         stake_pcts[-1] = round(stake_pcts[-1] - excess, 4)
 
     plan = []
-    for a, stake_pct in zip(accas, stake_pcts):
+    for a, stake_pct, aw in zip(accas, stake_pcts, acca_weights):
         prod = 1.0
         for l in a:
             prod *= l["odds"]
-        plan.append({"legs": [{**{k: l[k] for k in ("match", "pick", "prob", "odds")},
-                               "result": l.get("result")} for l in a],
-                     "odds": round(prod, 2), "stake_pct": stake_pct})
+        acca = {"legs": [{**{k: l[k] for k in ("match", "pick", "prob", "odds")},
+                          "result": l.get("result")} for l in a],
+                "odds": round(prod, 2),
+                "stake_pct": round(stake_pct * aw, 4) if aw < 1.0 else stake_pct}
+        if aw < 1.0:
+            acca["bench_weight"] = aw
+        plan.append(acca)
     return plan
 
 
@@ -1536,6 +1681,17 @@ def cmd_today(args, st):
                 str(l["row"].get("away") or "").strip().lower()) not in past]
     if cross_drops:
         census["fixture already on an earlier day's slate (kicked off)"] = cross_drops
+    # --- per-bucket P&L tripwire (2026-09-23): demote COLD-streak buckets,
+    # bench BLEEDING-streak buckets, before selection ever sees the pool. ---
+    pnl_weights, pnl_verdicts = compute_bucket_pnl(target)
+    benched_drops = [f"{l['match']} [{l['row'].get('bucket')}]" for l in pool
+                     if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) <= 0.0]
+    if benched_drops:
+        pool = [l for l in pool
+                if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) > 0.0]
+        census["P&L tripwire: bucket benched (BLEEDING streak >= "
+              f"{PNL_BENCH_STREAK} days)"] = sorted(benched_drops)
+    demoted = sorted(b for b, v in pnl_verdicts.items() if v["weight"] == 0.5)
     census_lines = format_skip_census(total_in, len(pool), census)
     # Nothing was dropped: say nothing. A clean slate reads like a clean slate.
     if not any(census.values()):
@@ -1547,7 +1703,8 @@ def cmd_today(args, st):
         return 0
     bank_eff = effective_bank(st, exclude_date=target)
     fixture_report: dict[str, list[str]] = {}
-    plan = plan_day(pool, bank_eff, fixture_report=fixture_report)
+    plan = plan_day(pool, bank_eff, fixture_report=fixture_report,
+                    bucket_weights=pnl_weights)
     if not plan:
         print("\n".join(census_lines))
         print("NO BET TODAY — plan empty")
@@ -1563,14 +1720,28 @@ def cmd_today(args, st):
              f"PERFORMANCE: total bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) = "
              f"free bank {bank_eff:.1f}% + committed {committed:.1f}% · "
              f"next take-profit notification at {take_profit_target(st):.1f}%"]
+    trip = [v for v in pnl_verdicts.values() if v["weight"] < 1.0]
+    if trip:
+        lines.append("P&L TRIPWIRE (trailing " + str(PNL_WINDOW_DAYS)
+                     + "d, streak floors): "
+                     + "; ".join(
+                         f"{v_name} {v['verdict']} streak {v['streak']}"
+                         f" (n={v['n']}, gap {v['gap']}, z {v['z']}) -> "
+                         f"x{v['weight']}"
+                         for v_name, v in sorted(
+                             ((b, v) for b, v in pnl_verdicts.items()
+                              if v['weight'] < 1.0),
+                             key=lambda kv: kv[1]['weight'])))
     if fixture_report.get("dropped"):
         lines.append("SAME-FIXTURE DEDUP: dropped "
                      + "; ".join(fixture_report["dropped"])
                      + " (one match entered twice via a name-spelling split; "
                         "highest-stated twin kept)")
     for i, a in enumerate(plan, 1):
+        demote_tag = (f" [TRIPWIRE-DEMOTED x{a['bench_weight']}]"
+                      if a.get("bench_weight", 1.0) < 1.0 else "")
         lines.append(f"\n[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
-                     f"({a['stake_pct']/bank_eff:.1%} of free bank)")
+                     f"({a['stake_pct']/bank_eff:.1%} of free bank){demote_tag}")
         for l in a["legs"]:
             lines.append(f"   {l['match']:46s} {l['pick']:5s} @ {l['odds']:.2f}  (stated {l['prob']:.0%})")
     day_staked = sum(a["stake_pct"] for a in plan)
