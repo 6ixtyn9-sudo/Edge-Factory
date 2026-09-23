@@ -73,7 +73,11 @@ LOCALDATA = ROOT / "localdata"
 # copy of either selection or sizing.
 SELECTION_KEYS = {"floor", "rank", "pairing", "max_accas", "min_accas",
                   "legs_per_acca", "volume_pool", "volume_min", "gate_mode",
-                  "fallback", "saturated_accas"}
+                  "fallback", "saturated_accas",
+                  # The ladder's rank caps, forwarded as data (`caps=`) so a
+                  # replay can emulate a demoted bucket without the harness
+                  # owning any selection logic of its own.
+                  "rank_caps"}
 SIZING_KEYS = {"stake_frac", "stake_mode", "stake_per_acca", "weights"}
 ENGINE_KEYS = SELECTION_KEYS | SIZING_KEYS
 FLOAT_KEYS = {"floor", "volume_min", "stake_frac", "stake_per_acca", "min_prob"}
@@ -84,6 +88,39 @@ BOOL_KEYS = {"fallback"}
 # --------------------------------------------------------------------------
 # variant specs
 # --------------------------------------------------------------------------
+def _parse_caps(text):
+    """``caps=CAUTION:0.70|SKIPPED_VETO:0.60`` -> ``{bucket: cap}``.
+
+    The one policy input a replay may carry, because it is a *selection* input:
+    the live engine's ``_rank_capped_probability`` defines the clamp and the
+    ``shrink`` form, so this parses names into exactly the shape it expects and
+    adds nothing. Unknown buckets and out-of-range caps are refused here rather
+    than silently ignored downstream.
+    """
+    out = {}
+    for chunk in str(text).split("|"):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        bucket, sep, raw = chunk.partition(":")
+        bucket = bucket.strip().upper()
+        if not sep or not raw.strip():
+            raise SystemExit(f"bad caps fragment {chunk!r} (want BUCKET:0.xx)")
+        if bucket not in at.BUCKETS:
+            raise SystemExit(f"caps: unknown bucket {bucket!r} "
+                             f"(want one of {', '.join(sorted(at.BUCKETS))})")
+        try:
+            cap = float(raw)
+        except ValueError:
+            raise SystemExit(f"caps: {bucket} cap {raw!r} is not a number")
+        if not 0.0 < cap <= 1.0:
+            raise SystemExit(f"caps: {bucket} cap {cap} outside (0, 1]")
+        out[bucket] = cap
+    if not out:
+        raise SystemExit("caps= needs at least one BUCKET:cap pair")
+    return out
+
+
 def parse_spec(text):
     """"1.25" | "floor=1.25,gate_mode=acca" | "live" -> dict of overrides."""
     spec = {}
@@ -110,7 +147,9 @@ def parse_spec(text):
             raise SystemExit(f"bad spec fragment {part!r} (want key=value)")
         parsed_parts.append(tuple(s.strip() for s in part.split("=", 1)))
     for k, v in parsed_parts:
-        if k in BOOL_KEYS:
+        if k == "caps":
+            spec["rank_caps"] = _parse_caps(v)
+        elif k in BOOL_KEYS:
             spec[k] = v.lower() not in ("0", "false", "no", "off")
         elif k in INT_KEYS:
             spec[k] = int(v)
@@ -121,6 +160,16 @@ def parse_spec(text):
     unknown = set(spec) - ENGINE_KEYS - {"min_prob", "leagues", "rules"}
     if unknown:
         raise SystemExit(f"unknown spec key(s): {sorted(unknown)}")
+    # Two no-op pairings, refused rather than reported: caps the chosen rank
+    # never consults, and the capped rank with no caps to consult.
+    rank = str(spec.get("rank", "prob"))
+    if "rank_caps" in spec and rank not in ("prob", "probcap"):
+        raise SystemExit(f"caps= only reaches the selector through "
+                         f"rank=prob/probcap, not rank={rank!r}")
+    if rank == "probcap" and "rank_caps" not in spec:
+        raise SystemExit("rank=probcap without caps= is an identity order — it "
+                         "cannot differ from live. Pass caps=BUCKET:0.70 or "
+                         "drop the rank.")
     return spec
 
 

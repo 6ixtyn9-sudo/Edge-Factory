@@ -9223,10 +9223,7 @@ degrades to plain `prob` order (`rank_caps is None` skips the capped branch) and
 returns cards byte-identical to baseline — an A/B that looks like it measures the
 ladder and measures nothing. Verified on the 12 most recent archive days (251
 legs): `probcap` == `prob`, while the same pool with the caps the ladder really
-emits (`{"CAUTION": 0.70}`) does reorder. Making the harness genuinely
-policy-aware means recomputing both tripwires day by day walk-forward with no
-lookahead — worth doing before either lever is trusted with more money, but it is
-a research decision and is left for the operator to call.
+emits (`{"CAUTION": 0.70}`) does reorder. That gap was closed the same day: caps are now a real harness input and both no-op pairings refuse -- see "HARNESS POLICY INPUT, CI TEST STEP, LAST DEAD CODE" below. Walk-forward recomputation of the two tripwires themselves (no lookahead) remains open, and it is the step to take before either lever is trusted with more money.
 
 **Loose ends removed rather than accumulated (same day).** A sweep of
 `auto_tickets.py` for module-level names nothing references turned up three, all
@@ -9237,9 +9234,8 @@ gone too and both tripwires call the engine's function by its real name; and
 `SLICE_LEDGER_FILE` / `SLICE_TRIPWIRE_FILE`, two dead path constants the readers
 never use (they build from the `*_FILENAME` pair), which invited an edit that
 would have done nothing. `ruff --select F811` on this file now passes clean where
-the landed baseline carried one of the four shadow findings. One dead private
-helper predates this work and is deliberately left: `_acca_label` (no references
-in scripts or tests, introduced in `8f99e52`).
+the landed baseline carried one of the four shadow findings. A third hit,
+`_acca_label` (from `8f99e52`, predating this work), went later the same day -- see below.
 
 **Tests.** `tests/test_auto_tickets_pnl.py` (22 tests) is new — the door had zero
 coverage before. The regression test pins the exact blindness above (40 legs, 30
@@ -9261,3 +9257,66 @@ the pre-change worktree (2 F401, 1 F541, 3 F841, all pre-existing in files this
 change does not touch). Live `cmd_today` smoke in a scratch copy of the tree:
 `rc=0`, the ladder table prints, no tripwire line appears (weights all 1.0, as it
 should be), and a forced trip including a `roi=None` bucket formats without raising.
+## HARNESS POLICY INPUT, CI TEST STEP, LAST DEAD CODE — 2026-09-23 (same day, after review)
+
+**Why.** Three defects named while answering "would we ever get no autobets / does the
+harness know about this / is anything lingering", fixed rather than filed.
+
+**1. The replay harness could not express either lever, and one flag made that a trap.**
+`SELECTION_KEYS`/`SIZING_KEYS` forwarded no `rank_caps`/`bucket_weights`, so the harness
+replayed selection but never policy — which is why nothing shipped today moved a harness
+number (still true, and now asserted). But `rank` *was* a legal key, so
+`--variant rank=probcap` was accepted, silently degraded to plain `prob` order
+(`rank_caps is None` skips the capped branch) and returned cards byte-identical to
+baseline: an A/B that looks like it measures the ladder and measures nothing — the same
+failure class the 2026-09-04 floor-strip audit recorded in `playable_legs`' docstring.
+
+Two-sided fix. Caps are now real input: `caps=CAUTION:0.70|SKIPPED_VETO:0.60` parses to
+the shape `_rank_capped_probability` expects, rides `SELECTION_KEYS` into
+`select_accas`/`plan_day`, and the harness still owns no selection logic of its own (the
+parity test guarding that is untouched). And a comparison that cannot differ is refused:
+`rank=probcap` without caps, and `caps=` with a rank that never consults them, both
+`SystemExit` naming the fix; `rank_legs` raises for every caller, not just the CLI.
+Unknown bucket names and caps outside `(0, 1]` are refused rather than ignored.
+
+Measured through the shipped CLI on the full archive (79 bet-days): `live` +0.0206
+log/day, maxDD 49%, hit 61% versus `rank=probcap,caps=CAUTION:0.70` at **+0.0412
+log/day, maxDD 38%, hit 65%**, cards differing on 23/83 days, paired bootstrap median
++0.0201 (p10 +0.0109, p90 +0.0307), P(B better) 100%, leave-one-day-out +0.0173 to
++0.0211. Same numbers as the research receipts, now reproducible by the operator with one
+command instead of a scratch driver. Still research, still 79 days, still not authority to
+move a stake.
+
+**2. CI runs no tests at all — and this landing could not add one.** `daily.yml` has no
+pytest step, so "the workflow is green" proves the pipeline executes and never that
+behaviour is intact: the door landing could have shipped a regression and run
+`35922175427` would still have passed. The step belongs at the END of the job — after the
+slip is built, frozen, persisted and state-pushed — with `if: always()`, so a red suite
+flags a bad landing on main **without ever withholding tonight's tickets**. That ordering
+is the point; do not move it earlier. `requirements.txt` already carries pytest, so no
+dependency change is needed. It is deliberately not committed here: the agent's GitHub
+token is refused by Actions for `.github/workflows` ("refusing to allow a GitHub App to
+create or update workflow without `workflows` permission"), and committing an unpushable
+workflow edit would only strand `main` against the session branch. Apply it by hand:
+
+```yaml
+      - name: Regression tests (flag, never gate)
+        if: always()
+        run: PYTHONPATH=src python3 -m pytest tests/ -q
+```
+
+**3. Dead code removed.** `_acca_label` (no references anywhere, from `8f99e52`) is gone,
+completing the sweep that already took out the shadowing `wilson_lb` and the two dead
+`SLICE_*_FILE` constants.
+
+**Not fixed, deliberately: the all-close belt.** Zero tickets remains reachable only by
+every bucket sitting at VETO with a 4-day streak, and a forced all-close prints
+`NO BET TODAY — 0 qualifying leg(s), need 2` with `rc=0`, no slip written, and the ladder
+table still printed — a visible halt, not a silent one. A "never close the last bucket
+that holds qualifying legs" floor would make that state unreachable, which changes what
+the system does with money in exactly the scenario the door exists for. It is one line and
+it is the operator's to call.
+
+**Receipts.** `pytest tests/` **686 passed** (676 before, +10 in the harness suite).
+`ruff --select F,E9` on `src scripts tests` at exact parity (2 F401, 1 F541, 3 F841, all
+pre-existing in other files).

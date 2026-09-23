@@ -70,6 +70,63 @@ def test_parse_spec_forms():
         rh.parse_spec("nonsense_key=3")
 
 
+# ---------------- policy inputs: the ladder's caps --------------------------
+# `rank=probcap` used to be accepted, silently degrade to plain prob order and
+# return cards byte-identical to baseline: an A/B that measured nothing while
+# looking like it measured the ladder. Caps are now real input, and a variant
+# that cannot differ from baseline is refused instead of reported.
+
+def _bucketed_pool():
+    """Six legs, two of them in the bucket a demotion would cap."""
+    spec = [("CAUTION", 0.790), ("SKIPPED_VETO", 0.780), ("CAUTION", 0.775),
+            ("SKIPPED_VETO", 0.770), ("CAUTION", 0.760), ("SKIPPED_VETO", 0.755)]
+    return [{"match": f"T{i} vs O{i}", "pick": "HOME", "prob": prob, "odds": 1.30,
+             "result": "win" if i % 2 else "loss",
+             "row": {"bucket": bucket, "home": f"T{i}", "away": f"O{i}"}}
+            for i, (bucket, prob) in enumerate(spec)]
+
+
+def test_caps_spec_reaches_the_live_selector():
+    pool = _bucketed_pool()
+    spec = rh.parse_spec("rank=probcap,caps=CAUTION:0.70")
+    assert spec == {"rank": "probcap", "rank_caps": {"CAUTION": 0.70}}
+    # The harness must land on the engine's own path, not its copy of it.
+    assert rh.card_for_day(pool, spec) == at.select_accas(
+        pool, rank="probcap", rank_caps={"CAUTION": 0.70})
+
+
+def test_caps_variant_actually_changes_the_card():
+    pool = _bucketed_pool()
+    live = rh.card_for_day(pool, {})
+    demoted = rh.card_for_day(pool, rh.parse_spec("caps=CAUTION:0.70"))
+    assert live != demoted, "a cap that cannot reorder is not a test"
+    order = lambda legs: [l["match"] for l in legs]
+    assert order(pool) != order(at.rank_legs(
+        pool, rank_caps={"CAUTION": 0.70}))       # capped 0.790 drops below 0.780
+
+
+@pytest.mark.parametrize("text", [
+    "rank=probcap",                                # no caps -> identity order
+    "rank=ev,caps=CAUTION:0.70",                   # rank never consults caps
+    "caps=NOPE:0.70",                              # not a deployed bucket
+    "caps=CAUTION:1.7", "caps=CAUTION:0",          # outside (0, 1]
+    "caps=CAUTION", "caps=",                       # no BUCKET:cap pair
+])
+def test_no_op_and_malformed_caps_are_refused(text):
+    with pytest.raises(SystemExit):
+        rh.parse_spec(text)
+
+
+def test_engine_alone_refuses_probcap_without_caps():
+    """Every caller is protected, not just the harness CLI."""
+    with pytest.raises(ValueError, match="identity order"):
+        at.rank_legs(_bucketed_pool(), rank="probcap")
+    # The live path is untouched: caps with the plain rank still work, and no
+    # caps at all still means the identity order.
+    assert at.rank_legs(_bucketed_pool()) == at.rank_legs(
+        _bucketed_pool(), rank_caps=None)
+
+
 # ---------------- the no-op guard -------------------------------------------
 
 def test_card_diff_days_flags_the_dead_volume_gate():
