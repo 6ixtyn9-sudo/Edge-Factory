@@ -8895,3 +8895,78 @@ skew, the z verdict grades stated-prob honesty — watch, don't convict.
 **Standing watch (unchanged):** harness probes re-run once 09-21–24 legs
 settle; `--october` checkpoint at 60 new bet-days; **artifact 35540311355
 expires 2026-09-27T22:20Z — user download still pending.**
+
+## Addendum — 2026-09-23 — Selection ladder session-2 receipts and estimand boundary
+
+This addendum records the selection-ladder evidence before the shipped-slice
+ladder is enabled. It does not alter the frozen door constants, edge/purity
+registries, or slip print format.
+
+### Session-2 probcap receipt
+
+The session-2 candidate ranks the CAUTION bucket by
+`min(stated_probability, 0.70)` and leaves stakes unchanged. On the 83-day
+replay universe, the live arm's mean log growth was **+0.020621/day** and its
+maximum drawdown was **48.69%**. The probcap arm was **+0.041205/day** with
+**38.19%** maximum drawdown. The shipped leg slice moved from CAUTION
+**n=63, gap −7.4 percentage points, z=−1.32, flat ROI −1.6%** to **n=54,
+gap −3.6 percentage points, z=−0.60, flat ROI +4.4%**. SKIPPED_VETO remained
+**n=165, gap +7.2 percentage points, flat ROI +7.8%** under the cap arm.
+The paired leave-one-out check found **0/79 card-days** with a non-positive
+CAP-minus-live delta; the replay universe has 83 bet-days, of which 79 ship
+cards. A paired bootstrap with **n=5000, seed=2026** had p10 approximately
+**+0.0109/day** on the 2026-09-23 snapshot. Roughly 30% of the growth delta
+rides on pairing reshuffles rather than direct leg replacement, and the gain
+is newer-half concentrated; these are research receipts, not a guarantee.
+
+The default planner remains the live planner when no selection overrides are
+passed. The ladder therefore uses the existing `plan_day` → `select_accas` →
+`rank_legs` seam and applies rank caps only to the selection ordering. Door
+stakes and the frozen slip schema remain separate concerns.
+
+### Method divergence: replay estimand versus real-card estimand
+
+The replay reconstruction ships **20 CAUTION legs** over 2026-08-27 through
+2026-09-22, while the real archived cards carried **9 CAUTION legs**; only
+**5 fixtures** are common. These are two estimands and must never be mixed.
+The 83-day shipped-slice result above (**n=63, gap −7.4 percentage points,
+z=−1.32, flat ROI −1.6%**) is the **replay estimand**. The real-card slice is
+**n=9, gap −3.9 percentage points, and INSUFFICIENT**. Replay is the
+selection-counterfactual measurement; real cards are the operational
+observation.
+
+### Stated probability is printed evidence, not a mutable archive field
+
+Archived pick rows update in place through `as_of`. In the audited slip set,
+**44/134 (33%)** printed leg probabilities differed from the current archive
+`avg_p` by more than **0.55 percentage points**; the worst spot check was
+Afturelding on 2026-08-29, printed **77%** versus current **69.3%**. Therefore
+any real-card slice ledger must take `prob_stated` from the frozen slip line,
+while bucket, fixture identity, odds, and settlement are resolved from the
+archive/settlement join. The slip leg-line format is frozen evidence:
+`{match} {pick} @ {odds} (stated {prob}%)`. New ladder output is appended as
+new lines; existing ACCA leg lines are not reformatted or reordered.
+
+### Seed caveat and snapshot reproducibility
+
+The replay seed covers **2026-06-25 through 2026-08-26 only** and contributes
+**178 legs**: CAUTION **43**, SKIPPED_VETO **99**, WATCHLIST_UNCORROBORATED_PRICE
+**10**, WATCHLIST_UNKNOWN_CTX **22**, and CERTIFIED_CLEAN **4**. Its
+`prob_stated` is the current `avg_p` proxy because no historical printed
+probability exists for those replay days. Those are pre-09-09-era days and
+are rebuilt under current live constants, including the current card recipe;
+that is the only reproducible option. Real slip days are disjoint and take
+precedence if an overlapping fixture is encountered. Within one archive
+snapshot, rerunning seeding is identical. Across snapshots, replay-seeded
+stated rates can drift with the mutable `avg_p` field by design.
+
+The first ladder window is **35 calendar days** because the 28-day window
+would leave CAUTION at **n=11**, below the **n=12** minimum. On day one, the
+35-day seeded table had CAUTION **n=17, gap +8.0 percentage points, z=+0.72,
+PAYING** and SKIPPED_VETO **n=103, gap +8.3 percentage points, z=+1.86,
+PAYING**; WATCHLIST_UNKNOWN_CTX and CERTIFIED_CLEAN were INSUFFICIENT. No
+bucket was convicted on day one. The soft COLD demotion policy is reversible;
+bench-on-BLEEDING remains disabled for the first cycle.
+
+The ladder does not change any door-level `compute_bucket_pnl` constants or
+state. Artifact **35540311355** expires **2026-09-27T22:20Z**.
