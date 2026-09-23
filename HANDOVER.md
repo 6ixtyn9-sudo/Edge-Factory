@@ -9320,3 +9320,79 @@ it is the operator's to call.
 **Receipts.** `pytest tests/` **686 passed** (676 before, +10 in the harness suite).
 `ruff --select F,E9` on `src scripts tests` at exact parity (2 F401, 1 F541, 3 F841, all
 pre-existing in other files).
+
+
+## ML-FADE RESEARCH GUARDRAIL — folded in from `ML_FADE_RESEARCH_POLICY.md`, 2026-09-24
+
+Standalone file deleted as bloat; the rules never needed their own document, and the
+five code pointers that cited it now land here. **Everything below is unchanged and
+still binding** — full original text: `git show fc6c25b:ML_FADE_RESEARCH_POLICY.md`.
+
+- **Research never promotes itself.** The ml-fade/ml-meta population is
+  certification-independent and the automatic rule-candidate signal is a research
+  heuristic. No run, however convincing, changes operational behaviour; nothing here
+  re-opens the certification question.
+- **Predeclared audit (2026-09-20):** the `ml-fade home-fade avg_p>=65` slice is
+  **INSUFFICIENT EVIDENCE** — "not yet". Disciplined accrual, not label shopping.
+- **Frozen cadence, not tuning knobs** (section 3). A checkpoint is due on any of: none
+  ever run; the SAST calendar month advanced; settled ml-fade rows up by >= 50; or
+  >= 30 distinct capture days since the last. Due checkpoints are *evaluated* only after
+  the **09:00 SAST wall-clock freeze** (`checkpoint_eval_window_open` in
+  `scripts/daily.py`); intraday runs settle/monitor/defer without consuming due-ness.
+  The frozen studies (`scripts/research_ml_fade_contexts.py`,
+  `scripts/research_ml_fade_price_study.py`) are re-run **unmodified**; accumulators are
+  the avg_p 55/60/65/70 grids on both families.
+- **Amendments** (section 7) require an explicit, documented commit editing this section
+  and the constants in `src/edgefactory/ml_fade_checkpoint.py`, recording the operator
+  direction — never in response to interim performance, never silently. On record:
+  2026-09-20 anchor pinned to the freeze; 2026-09-21 refined to the wall-clock window
+  after the 00:19 SAST bootstrap consumed the checkpoint early — that history entry
+  stays as real evidence, never re-run, never erased.
+
+Manual operation (what `--force-checkpoint` exists for):
+
+```bash
+PYTHONPATH=src python3 scripts/ml_fade_research_eval.py                        # freeze behaviour
+PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --settle-monitor-only  # intraday
+PYTHONPATH=src python3 scripts/ml_fade_research_eval.py --force-checkpoint --skip-studies
+```
+
+### 2026-09-24 (later) — the CI test step is now a SEPARATE JOB, and the suite got hermetic
+
+The in-job step (added `0eb2d54`) went red on its first run: **7 failed, 679 passed**, while
+`main` was green locally. No product bug. The suite was only ever hermetic in a *bare*
+environment, and the step ran inside a live pipeline job. Causes, each reproduced locally by
+setting the one variable:
+
+| failure | mechanism |
+| --- | --- |
+| `test_forebet.py` x2 | `GITHUB_ACTIONS=true` -> `_cloud_fetch_mode()` (sources/forebet.py:45) takes the **relay** path, past both patched transports, asserting against 143 live rows |
+| `test_notify.py` x2 | `TELEGRAM_BOT_TOKEN`+`TELEGRAM_CHAT_ID` mapped from secrets -> a **second delivery family**; the rig models one, so per-family barrier/masking expectations invert |
+| `test_theoddsapi.py` x2 | `ODDS_API_MONTHLY_BUDGET: ${{ secrets... || '480' }}` — a secret of `0` **beats** the fallback, so a full key ring is "inactive" (8 rows, not 9) |
+| `test_ml_fade_*` x2 | not reproduced; see below |
+
+**Fix 1 — `tests/conftest.py`.** The repo already stripped `_ENV_KNOBS` per test; that is too
+late for two mechanisms, so the strip now also runs at **module scope** and the tuple grew to
+`GITHUB_ACTIONS`, `EDGE_FACTORY_FOREBET_CLOUD`, the whole delivery-family set
+(TELEGRAM/CALLMEBOT/WHATSAPP/TWILIO) and the Supabase endpoints. Module scope is what makes it
+work: import-time-bound defaults (`theoddsapi.MONTHLY_BUDGET`) are computed after conftest but
+before any fixture, and the ml-fade CLI tests spawn **subprocesses** that inherit this process's
+env. Per-file `monkeypatch.delenv` patches were tried first and reverted — one conftest change
+covers every test, including children, and is the idiom the file already documented. Verified:
+**686 passed** with a clean env *and* with CI's full job env simulated (secrets included).
+
+**Fix 2 — the step moved out of the pipeline job** into `jobs.regression-tests`: its own fresh
+checkout, `permissions: contents: read`, **no `env:` block, no secret mapping, no localdata
+cache**, no `needs`. Still flag-never-gate, now structurally: no pipeline step waits on it, and
+it can no longer see state the pipeline generated. `tests/test_ml_fade_checkpoint.py` also stopped
+reading the live `localdata/edges_consensus.json` (its header promised tmp-only fixtures and was
+lying; harmless today, unbounded tomorrow).
+
+**Residual, stated plainly:** the 2 `ml_fade` failures are attributed, not proven. The candidate
+mechanism is the same class — tests reading tracked-but-regenerated `localdata` (the purity-
+registry tripwire in `test_identity.py:96` *intends* to read the live registry) — but I could not
+manufacture CI's exact state here, so I am not claiming a fix for them. Isolation removes the
+class by construction; if they survive an isolated run they are real findings and the job's log is
+now ~50 lines instead of a 1.1 MB blob, so they will name themselves. Pushing
+`.github/workflows/*` is still token-blocked, so `daily.yml` (202 lines, PyYAML-validated,
+pipeline section byte-identical except the removed step) was delivered to the operator for paste.
