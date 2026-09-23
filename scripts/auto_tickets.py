@@ -1205,6 +1205,30 @@ def _record_acca_settlement(st, slip_date, acca):
     })
 
 
+def _folded_leg_key(day, home, away, pick):
+    """Folded identity key for leg<->archive matching (2026-09-23 stale-slip
+    fix): exact display strings mismatch across naming generations
+    ('Muharraq SC vs Manama Club' vs 'Muharraq vs Manama'), which silently
+    froze the 2026-09-10 slip for 13 days because the 5-day void timer
+    lives behind the row-found branch. Structure-stripped identity keys
+    ('SC', 'Club' tokens out) make the match generation-proof; two
+    same-club fixtures on one date cannot co-occur in one slate."""
+    from edgefactory.identity import source_team_key_base
+
+    return (str(day)[:10], source_team_key_base(home), source_team_key_base(away),
+            str(pick or "").upper())
+
+
+def _slip_day_anchor(slip_date):
+    """Slip-date timestamp used as the 5-day void-timer fallback when a
+    kickoff is missing/unparseable (or the archive row is entirely
+    absent). Slip dates are the fixtures' own day by construction."""
+    try:
+        return datetime.strptime(str(slip_date)[:10], "%Y-%m-%d").replace(tzinfo=TZ)
+    except ValueError:
+        return None
+
+
 def settle_open_slips(st, settled, archives=None, entries_by_date=None):
     """Grade every acca whose legs are all settled; the bank moves per acca.
 
@@ -1220,7 +1244,7 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
     index = {}
     for p in archives:
         day = str(p.get("date") or p.get("_archive_day") or "")[:10]
-        index[(day, f"{p.get('home')} vs {p.get('away')}", str(p.get("pick") or "").upper())] = p
+        index[_folded_leg_key(day, p.get("home"), p.get("away"), p.get("pick"))] = p
     lines, still_open = [], []
     for slip in st["open_slips"]:
         open_accas = []
@@ -1228,9 +1252,19 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
             legres = []
             conflicts = []
             for l in a["legs"]:
-                p = index.get((slip["date"], l["match"], l["pick"]))
+                match = str(l.get("match") or "")
+                parts = match.split(" vs ")
+                if len(parts) == 2:
+                    p = index.get(_folded_leg_key(slip["date"], parts[0], parts[1], l["pick"]))
+                else:
+                    p = None
                 if p is None:
                     r = None
+                    anchor = _slip_day_anchor(slip["date"])
+                    if anchor is not None and (datetime.now(TZ) - anchor).days >= 5:
+                        # Missing archive row AND slip older than the void
+                        # horizon: fail closed on the slip-date timer.
+                        r = "void"
                 elif alias_outcome_conflict(p, entries_by_date):
                     # Fail-closed: donors disagree across spellings. Hold the
                     # leg instead of first-winning the exact-key spelling.
@@ -1240,7 +1274,8 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
                     r = pick_result(p, settled)
                     if r is None:
                         kt = parse_kickoff(p)
-                        if kt is not None and (datetime.now(TZ) - kt).days >= 5:
+                        anchor = kt if kt is not None else _slip_day_anchor(slip["date"])
+                        if anchor is not None and (datetime.now(TZ) - anchor).days >= 5:
                             r = "void"
                 legres.append(r)
             a = dict(a)
@@ -1266,7 +1301,7 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
             ret = a["stake_pct"] * a["odds"] if a["won"] else 0.0
             ev = _apply_settlement(st, ret, a["stake_pct"], slip["date"])
             _record_acca_settlement(st, slip["date"], a)
-            lines.append(f"settled {slip['date']} acca @{a['odds']:.2f}: bank {st['bank']:.1f}%"
+            lines.append(f"settled {slip['date']} acca @{a['odds']:.2f} legs={legres}: bank {st['bank']:.1f}%"
                          + ((" | " + " | ".join(ev)) if ev else ""))
         if open_accas:
             slip = dict(slip)
