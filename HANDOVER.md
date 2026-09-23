@@ -9080,12 +9080,12 @@ at line 942, which **shadowed the engine import** — the ladder's LB column wou
 have silently used a 90% bound where the engine specifies Z95. The import is now
 aliased `assay_wilson_lb` and used explicitly.
 
-**Not changed, and should be next.** The door tripwire
-(`bucket_pnl_verdict` / `compute_bucket_pnl`) still runs the same hand-rolled
-z-on-residual statistic with `PNL_MIN_N`/`PNL_Z_BENCH` and ignores ROI for
+**Not changed in that landing, and named as the next step.** The door tripwire
+(`bucket_pnl_verdict` / `compute_bucket_pnl`) still ran the same hand-rolled
+z-on-residual statistic with `PNL_MIN_N`/`PNL_Z_BENCH` and ignored ROI for
 enforcement too. It was left alone because its constants are declared frozen and
-it is a second live surface; unifying it is the obvious follow-up, not part of
-this change.
+it is a second live surface. **That follow-up landed the same day: see "DOOR ON
+THE SAME ENGINE" below.**
 
 **Receipts.** `pytest tests/` **654 passed** (629 pre-ladder, 641 after the first
 two review fixes; +13 in the slice suite, 0 regressions elsewhere). `ruff` at
@@ -9096,3 +9096,107 @@ recomputes every bucket verdict against `context_verdict_league` directly across
 eight n/ROI shapes, so the ladder cannot drift from the engine without a red
 test. Live `cmd_today` smoke on the real tree prints the new table and the
 policy is `rank_caps={}` / `bench_buckets=()` — landing changes no card.
+
+---
+
+## DOOR ON THE SAME ENGINE — 2026-09-23 (no new mechanism, one shared gate)
+
+**What the operator asked for.** After the ladder moved onto the assay engine, the
+instruction was *"i dont want too many shadows, what i want is the same assay
+engine like i do on edges with other parts of the system such as the one we are
+working on now"* — and then the word to put the **door** on it too. So no new
+instrument was built: the door's hand-rolled statistic is deleted and the door
+calls the same gate the ladder, `assay_purity` and every context grade call use.
+
+**What the door was blind to, measured before touching it.** The door graded the
+*calibration residual* (win rate minus promised probability, z-tested) and used ROI
+only as an afterthought. On the 2026-09-23 archives that meant:
+
+```
+bucket                          n_hist   roi   n_30d  roi30  ENGINE   grade   | OLD DOOR (21d z)
+CAUTION                            178  -5.1%     67  +5.7%  CAUTION  BRONZE  | n= 49 z=+0.26 PAYING
+CERTIFIED_CLEAN                    105  +7.0%     91 +12.0%  BOOST    BRONZE  | n= 73 z=+0.79 PAYING
+SKIPPED_VETO                       566  -1.1%    355  -4.2%  CAUTION  SILVER  | n=253 z=+0.33 PAYING
+WATCHLIST_UNCORROBORATED_PRICE     175  -2.5%    137  -4.8%  CAUTION  BRONZE  | n=107 z=+0.51 PAYING
+WATCHLIST_UNKNOWN_CTX               32  +3.0%      6  +1.2%  ALLOW    SILVER  | n=  4 z=+0.04 INSUFFICIENT
+```
+
+Four judgeable buckets read `PAYING` while the engine graded three of them
+CAUTION. `SKIPPED_VETO` is the emblem: 566 settled legs, **the largest volume in
+the system**, losing 1.1% per unit lifetime and 4.2% recently, and the door said
+PAYING (z=+0.33 on its 21-day slice; +1.67 across the full window, which is worse, not
+better) because a bucket that
+hits *as often as it promised* is, to a residual test, flawless — even when what
+it promises pays badly. `CERTIFIED_CLEAN` was reading +12% recent and the door had
+no vocabulary for "pay this more", because BOOST did not exist in its world. A
+residual z-test cannot see calibrated-but-losing; that is not a tuning gap, it is
+the wrong estimand.
+
+**The rewiring.** `compute_bucket_pnl` accumulates full settled history and the
+trailing window in one pass and grades through
+`context_verdict_league(n, roi, recent_roi)` — `n`/`roi` over everything the
+bucket could ship, `recent_roi` admitted only once that window holds
+`GATES.min_recent_n` (30) settled legs. `PNL_WINDOW_DAYS` is now
+`GATES.recent_window_days` (was a private 21). `PNL_MIN_N`, `PNL_Z_BENCH` and
+`bucket_pnl_verdict` are deleted; the ROI helper is renamed `_assay_roi` and shared
+with the ladder, so both surfaces report `pnl / n_priced` in `assay_purity` terms.
+Verdicts carry `grade` (`assay.grade`) and `wilson_lb`; `gap`/`z` stay in the
+report as evidence about stated probabilities and gate nothing. One engine, one
+vocabulary, two estimands.
+
+**The decision that touches money, taken on evidence and stated plainly.** Grading
+moved onto the engine; the *stakes ladder* stayed conservative:
+`PNL_DEMOTE_ON_CAUTION = False`, so the streak advances on VETO only. Three buckets
+sit at CAUTION on slightly-negative **lifetime** ROI that predates the CERTIFIED
+era, and CAUTION does not lift until lifetime ROI turns positive (the inherited
+engine caveat: `recent_roi` gates VETO and BOOST, not CAUTION). Letting a first
+CAUTION read start walking the door shut would have silently throttled most of the
+slate on evidence that really says "not yet proven". The flag exists, is
+documented at the constant, and is one line to flip if the operator wants CAUTION
+to count. What this change *does* alter is that **VETO is now reachable by ROI** —
+it was effectively unreachable before, since `z <= -2` on the residual almost never
+fires on a calibrated-but-losing bucket. Net: the door sees more, and the extra
+seeing is the part with teeth. Streak semantics are otherwise frozen: at most one
+step per calendar day, any non-adverse verdict resets to zero, `0.5` at
+`PNL_DEMOTE_STREAK` (2), and `0.0` (closed) only at `PNL_BENCH_STREAK` (4) **while
+the current read is still VETO** — a closed door is earned by sustained evidence
+and is never declared by silence.
+
+**Division of labour, now explicit.** Engine CAUTION → the ladder caps a bucket's
+rank inside the slate (soft; it grades what actually shipped). Engine VETO → the
+door closes (hard; it grades the candidate universe). Same statistic, different
+populations, neither surface re-implementing the other's thresholds.
+
+**Zero stake impact today, verified.** Re-running the door on the live archives
+after the change gave `weights = {CAUTION: 1.0, CERTIFIED_CLEAN: 1.0,
+SKIPPED_VETO: 1.0, WATCHLIST_UNCORROBORATED_PRICE: 1.0, WATCHLIST_UNKNOWN_CTX:
+1.0}` — no bucket is at VETO, so nothing is demoted, nothing is closed, no card
+changes. This landing removes blindness; it does not spend money.
+
+**Also fixed while in the print path.** The report line formatted ROI directly, and
+ROI is legitimately `None` for a bucket with settled legs but no prices — a
+TypeError there would have taken down `today` over cosmetics. One `_pct()` helper
+now serves both surfaces and prints `--`. The state path coerces a string
+(`Path(path or BUCKET_PNL_FILE)`) the way the ladder's does, so a caller passing a
+plain path no longer crashes on `read_text`.
+
+**Tests.** `tests/test_auto_tickets_pnl.py` (21 tests) is new — the door had zero
+coverage before. The regression test pins the exact blindness above (40 legs, 30
+wins at 1.30, stated 75% → gap 0.0 and ROI −2.5% → CAUTION; the old z works out to
+0.0 against a −2 floor, spelled out in the docstring so nobody tunes it back);
+parity is asserted structurally across seven n/ROI shapes against
+`context_verdict_league` itself; plus the VETO-streak-to-weight ladder with the
+day-4 close, recent-window admission and withholding, same-day non-compounding,
+reset on a clean read, fail-open below the floor, the bench-tier VETO guard, the
+kill switch, `PNL_DEMOTE_ON_CAUTION`, void/ungraded invisibility, `n_priced`
+accounting, report provenance, and empty state. **Fixture trap worth knowing:**
+`playable_legs` drops any leg without a truthy stated rate, so an all-loss fixture
+silently produced *no* legs at all — the helper floors `avg_p` at 55% and one test
+asserts that floor, or the bug returns.
+
+**Receipts.** `pytest tests/` **675 passed** (654 before, +21 door tests, 0
+regressions). `ruff --select F,E9` on `src scripts tests` at **exact parity** with
+the pre-change worktree (2 F401, 1 F541, 3 F841, all pre-existing in files this
+change does not touch). Live `cmd_today` smoke in a scratch copy of the tree:
+`rc=0`, the ladder table prints, no tripwire line appears (weights all 1.0, as it
+should be), and a forced trip including a `roi=None` bucket formats without raising.

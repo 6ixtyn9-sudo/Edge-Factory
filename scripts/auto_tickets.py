@@ -73,6 +73,15 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 LOCALDATA = ROOT / "localdata"
 
+# Both tripwires below grade buckets with the SHARED assay engine rather than a
+# private statistic, so this module imports it at the top. The engine's rules
+# are the repo's law: a Wilson lower bound rather than a raw hit rate, ROI
+# always alongside, walk-forward windows only.
+from edgefactory.assay import context_verdict_league                # noqa: E402
+from edgefactory.assay import grade as assay_grade                  # noqa: E402
+from edgefactory.assay import wilson_lb as assay_wilson_lb          # noqa: E402
+from edgefactory.config import GATES                                 # noqa: E402
+
 # ---------------- cadence (unchanged from production) ----------------
 GENERATE_HOUR_START = 6    # local time — slips may START building on/after this hour
 FREEZE_HOUR = 9            # local time — the slip FREEZES on/after this hour.
@@ -201,11 +210,27 @@ STATE_FILE = LOCALDATA / "auto_tickets_state.json"
 # this door still paying?" This block grades every deployed bucket on its
 # trailing settled leg outcomes and throttles the deployment door
 # accordingly. Constants are policy-level and deliberately visible.
-PNL_WINDOW_DAYS = 21       # trailing calendar-day window of settled legs
-PNL_MIN_N = 20             # below this, no verdict — "INSUFFICIENT", doors open
-PNL_Z_BENCH = -2.0         # design z on mean (hit - stated_prob) residual
-PNL_DEMOTE_STREAK = 2      # consecutive daily BLEEDING verdicts -> half stake
-PNL_BENCH_STREAK = 4       # consecutive daily BLEEDING verdicts -> door closed
+#
+# GRADING DELEGATED TO THE SHARED ASSAY ENGINE (2026-09-23, operator
+# direction), exactly as for the shipped-slice ladder below. The door used to
+# grade on a private z-test of the mean (hit - stated_prob) residual, which is
+# the wrong question: a bucket can hit exactly as often as it promised and
+# still be a losing door. Measured on the live archives today, every judgeable
+# bucket read PAYING (z = +0.26, +0.79, +0.33, +0.51) while flat-stake ROI was
+# CAUTION-grade negative in three of them -- CAUTION -5.1%, SKIPPED_VETO -1.1%
+# lifetime / -4.2% recent over 566 legs, WATCHLIST_UNCORROBORATED_PRICE -2.5%.
+# A door that cannot see that is not a door.
+#
+# n and roi are the bucket's full settled history; recent_roi is the trailing
+# GATES.recent_window_days window, admitted only at GATES.min_recent_n. One
+# statistic, two populations: the door grades the whole candidate universe,
+# the ladder grades what actually shipped. PNL_MIN_N and PNL_Z_BENCH are
+# retired -- the engine's own graduated small-n floors and ROI bars do that
+# job -- while the weight ladder (1.0 / 0.5 / 0.0) is untouched.
+PNL_WINDOW_DAYS = GATES.recent_window_days  # recent-confirm window (was a private 21d)
+PNL_DEMOTE_STREAK = 2      # consecutive adverse days -> half stake
+PNL_BENCH_STREAK = 4       # consecutive daily VETO verdicts -> door closed
+PNL_DEMOTE_ON_CAUTION = False  # demote tier stays on VETO; flip to let CAUTION half-stake
 PNL_BENCH_ENABLED = True   # master kill-switch for the enforcement half only
 BUCKET_PNL_FILE = LOCALDATA / "auto_tickets_bucket_pnl.json"
 
@@ -227,11 +252,6 @@ BUCKET_PNL_FILE = LOCALDATA / "auto_tickets_bucket_pnl.json"
 # than only punished. Calibration gap and z are still computed and printed --
 # they are the stated-probability honesty signal -- but they no longer decide
 # enforcement, because ROI is the quantity that actually kills a bankroll.
-from edgefactory.assay import context_verdict_league
-from edgefactory.assay import grade as assay_grade
-from edgefactory.assay import wilson_lb as assay_wilson_lb
-from edgefactory.config import GATES
-
 SLICE_WINDOW_DAYS = GATES.recent_window_days  # recent_roi window: tracks the system-wide 30d recency convention
 SLICE_DEMOTE_STREAK = 2        # hysteresis: two qualifying days to demote
 SLICE_BENCH_STREAK = 4         # hysteresis: four VETO days to bench
@@ -246,48 +266,75 @@ SLICE_LEDGER_FILE = LOCALDATA / SLICE_LEDGER_FILENAME
 SLICE_TRIPWIRE_FILE = LOCALDATA / SLICE_TRIPWIRE_FILENAME
 
 
-def bucket_pnl_verdict(n, resid_mean, resid_var):
-    """One bucket's evidence classification (PURE — trivially replayable).
+def _assay_roi(wins, n_priced, profit):
+    """Flat-stake ROI over PRICED legs: ``pnl / n_priced``, never ``pnl / n``.
 
-    INSUFFICIENT: too few settled legs to judge (fail-open for data
-    poverty; benches are EARNED by evidence, never by silence).
-    BLEEDING: realized-vs-stated gap negative at design z <= PNL_Z_BENCH
-    with n >= PNL_MIN_N. COLD: gap negative but not past the bench bar.
-    PAYING otherwise.
+    Shared by both tripwires and deliberately the same accounting as
+    ``assay_purity`` and ``decay_monitor.recent_stats``, so a bucket ROI, a
+    context ROI and an edge ROI mean one thing in this repo.
     """
-    if n < PNL_MIN_N or resid_var <= 0:
-        return "INSUFFICIENT"
-    z = resid_mean / math.sqrt(resid_var)
-    if z <= PNL_Z_BENCH:
-        return "BLEEDING"
-    if resid_mean < 0:
-        return "COLD"
-    return "PAYING"
+    return round(profit / n_priced, 4) if n_priced else None
+
+
+def _pct(value):
+    """Report-facing percent for an ROI/gap that may not exist yet.
+
+    A tripwire line must never be the thing that breaks the daily build, and
+    ``None`` here is a real state (settled legs that carry no price), not a bug.
+    """
+    return "--" if value is None else f"{value:+.1%}"
 
 
 def compute_bucket_pnl(today_text, *, archives=None, settled=None, path=None):
-    """Grade trailing settled legs per bucket, advance the BLEEDING streak,
-    persist the report, and return per-bucket deployment weights.
+    """Grade every deployed bucket with the shared assay engine, advance the
+    VETO streak, persist the report, and return per-bucket deployment weights.
 
-    Streak semantics (red-team requirements baked in):
-    * the streak advances at most once per CALENDAR DAY (same-day reruns
-      recompute the report but cannot compound the streak — intraday
-      pipeline runs must not be able to bench anything);
-    * a BLEEDING verdict increments the streak, anything else resets it;
-    * weight ladder: streak >= PNL_BENCH_STREAK -> 0.0 (door closed);
-      streak >= PNL_DEMOTE_STREAK -> 0.5 (half stake); else 1.0.
+    Population is the whole archived candidate universe per bucket, via
+    ``playable_legs`` — deliberately NOT the shipped slice the ladder below
+    grades. One statistic, two estimands: the door asks whether a bucket's edge
+    is real across everything it could ship, the ladder asks whether the cards
+    that actually went out held up.
+
+    Grading is delegated, not invented. ``n`` and ``roi`` are the bucket's full
+    settled history and ``recent_roi`` is the trailing ``PNL_WINDOW_DAYS``
+    window, admitted only once that window itself holds
+    ``GATES.min_recent_n`` settled legs, through
+    :func:`edgefactory.assay.context_verdict_league` — the same gate that
+    grades every purity context. Hit rate carries its Wilson lower bound and its
+    ``assay.grade``. A leg is counted for win/loss and ROI whether or not it
+    carries a stated probability; the stated probability only feeds the
+    calibration residual, where a missing rate would fabricate a fake -1 per
+    leg. In practice ``playable_legs`` already demands both a price and a rate,
+    so that guard is defensive rather than a behaviour change: what DID change
+    is that the residual no longer gets a vote on the verdict.
+
+    Streak semantics (red-team requirements, unchanged):
+    * the streak advances at most once per CALENDAR DAY, so same-day reruns
+      recompute the report but cannot compound it, and intraday pipeline runs
+      must not be able to bench anything;
+    * a VETO verdict increments the streak and anything else resets it, so a
+      closed door is EARNED by sustained evidence and never declared by
+      silence;
+    * the weight ladder itself is untouched and still frozen: streak >=
+      PNL_BENCH_STREAK while still VETO -> 0.0 (door closed); streak >=
+      PNL_DEMOTE_STREAK -> 0.5 (half stake); else 1.0.
     """
-    path = path or BUCKET_PNL_FILE
+    path = Path(path or BUCKET_PNL_FILE)
     archives = load_archived_picks() if archives is None else archives
     settled = load_settled() if settled is None else settled
-    day_from = (datetime.strptime(today_text, "%Y-%m-%d") - timedelta(days=PNL_WINDOW_DAYS)).strftime("%Y-%m-%d")
-    stats: dict[str, dict] = {
-        b: {"n": 0, "wins": 0, "stated": 0.0, "sse_var": 0.0, "profit": 0.0}
-        for b in sorted(BUCKETS)
-    }
+    today_text = str(today_text)[:10]
+    recent_from = (datetime.strptime(today_text, "%Y-%m-%d")
+                   - timedelta(days=PNL_WINDOW_DAYS)).strftime("%Y-%m-%d")
+
+    def _blank():
+        return {"n": 0, "wins": 0.0, "profit": 0.0, "n_priced": 0,
+                "stated": 0.0, "sse_var": 0.0,
+                "rn": 0, "rwins": 0.0, "rprofit": 0.0, "rn_priced": 0}
+
+    stats: dict[str, dict] = {b: _blank() for b in sorted(BUCKETS)}
     for row in archives:
         day = str(row.get("date") or row.get("_archive_day") or "")[:10]
-        if not (day_from <= day <= today_text):
+        if day > today_text:
             continue
         for leg in playable_legs([row], day=day, settled=settled):
             res = leg.get("result")
@@ -296,50 +343,90 @@ def compute_bucket_pnl(today_text, *, archives=None, settled=None, path=None):
             b = str((leg.get("row") or {}).get("bucket") or "")
             if b not in stats:
                 continue
-            p = float(leg.get("prob") or 0.0)
-            if p <= 0.0:
-                continue   # realized-vs-stated needs a stated rate; a missing
-                           # one would fabricate a fake -1 residual per leg
-            hit = 1.0 if res == "win" else 0.0
             st = stats[b]
+            hit = 1.0 if res == "win" else 0.0
+            try:
+                odds = float(leg.get("odds") or 0.0)
+            except (TypeError, ValueError):
+                odds = 0.0
+            priced = odds > 0.0
+            profit = (odds - 1.0) if hit else -1.0
             st["n"] += 1
             st["wins"] += hit
-            st["stated"] += p
-            st["sse_var"] += p * (1.0 - p)
-            st["profit"] += (float(leg["odds"]) - 1.0) if hit else -1.0
+            if priced:
+                st["n_priced"] += 1
+                st["profit"] += profit
+            p = float(leg.get("prob") or 0.0)
+            if p > 0.0:
+                st["stated"] += p
+                st["sse_var"] += p * (1.0 - p)
+            if day >= recent_from:
+                st["rn"] += 1
+                st["rwins"] += hit
+                if priced:
+                    st["rn_priced"] += 1
+                    st["rprofit"] += profit
+
     try:
         prev = json.loads(path.read_text())
     except (OSError, json.JSONDecodeError):
         prev = {}
-    prev_eval = str(prev.get("last_eval") or "")
+    prev_eval = str(prev.get("last_eval") or "")[:10]
     prev_b = (prev.get("buckets") or {})
     verdicts: dict[str, dict] = {}
     for b, st in stats.items():
         n = st["n"]
+        wins = int(st["wins"])
+        roi = _assay_roi(wins, st["n_priced"], st["profit"])
+        recent_roi = (_assay_roi(int(st["rwins"]), st["rn_priced"], st["rprofit"])
+                      if st["rn"] >= GATES.min_recent_n else None)
+        verdict = context_verdict_league(n, roi, recent_roi)
+        # Calibration is kept as evidence about stated probabilities, but it no
+        # longer gates the door: a bucket can hit exactly as often as promised
+        # and still be a losing door, which is what the old z-test could not see.
         resid_mean = (st["wins"] - st["stated"]) / n if n else 0.0
         resid_var = st["sse_var"] / (n * n) if n else 0.0
-        verdict = bucket_pnl_verdict(n, resid_mean, resid_var)
+        z = (resid_mean / math.sqrt(resid_var)) if resid_var > 0 and n else None
         n_streak = int((prev_b.get(b) or {}).get("streak") or 0)
         if prev_eval < today_text:      # at most one streak step per day
-            n_streak = n_streak + 1 if verdict == "BLEEDING" else 0
-        weight = (0.0 if n_streak >= PNL_BENCH_STREAK else
-                  0.5 if n_streak >= PNL_DEMOTE_STREAK else 1.0)
+            adverse = (verdict == "VETO"
+                       or (PNL_DEMOTE_ON_CAUTION and verdict == "CAUTION"))
+            n_streak = n_streak + 1 if adverse else 0
+        weight = (0.0 if (n_streak >= PNL_BENCH_STREAK and verdict == "VETO")
+                  else 0.5 if n_streak >= PNL_DEMOTE_STREAK else 1.0)
         verdicts[b] = {
             "n": n,
+            "verdict": verdict,
+            "grade": assay_grade(wins, n) if n else "UNGRADED",
             "hit": round(st["wins"] / n, 4) if n else None,
+            "wilson_lb": round(assay_wilson_lb(wins, n), 4) if n else None,
+            "roi": roi,
+            "recent_n": st["rn"],
+            "recent_roi": recent_roi,
             "stated": round(st["stated"] / n, 4) if n else None,
             "gap": round(resid_mean, 4) if n else None,
+            "z": round(z, 3) if z is not None else None,
+            # roi_flat is profit per SETTLED leg (an unpriced leg charges -1);
+            # "roi" above is per PRICED leg, the assay_purity convention the
+            # engine is calibrated on. Playable legs always carry a price, so
+            # they agree in practice — both are reported so a price-data gap
+            # cannot hide inside the enforcement number.
             "roi_flat": round(st["profit"] / n, 4) if n else None,
-            "z": round(resid_mean / math.sqrt(resid_var), 3) if resid_var > 0 and n else None,
-            "verdict": verdict, "streak": n_streak, "weight": weight,
+            "would_bench": (not PNL_BENCH_ENABLED and verdict == "VETO"
+                            and n_streak >= PNL_BENCH_STREAK),
+            "streak": n_streak, "weight": weight,
         }
     report = {
         "generated_at": datetime.now(TZ).isoformat(timespec="seconds"),
         "last_eval": today_text,
+        "engine": "edgefactory.assay.context_verdict_league",
+        "grade_engine": "edgefactory.assay.grade",
+        "population": "all playable archived legs (candidate universe)",
         "window_days": PNL_WINDOW_DAYS,
-        "window_from": day_from,
-        "min_n": PNL_MIN_N, "z_bench": PNL_Z_BENCH,
+        "window_from": recent_from,
+        "recent_min_n": GATES.min_recent_n,
         "demote_streak": PNL_DEMOTE_STREAK, "bench_streak": PNL_BENCH_STREAK,
+        "demote_on_caution": PNL_DEMOTE_ON_CAUTION,
         "enabled": PNL_BENCH_ENABLED,
         "buckets": verdicts,
     }
@@ -631,16 +718,6 @@ def ensure_slice_seeded(today_text):
     return seed_slice_ledger(today_text=today_text, path=path)
 
 
-def _slice_roi(wins, n_priced, profit):
-    """Flat-stake ROI over PRICED legs: ``pnl / n_priced``, never ``pnl / n``.
-
-    This is deliberately the same accounting as ``assay_purity`` and
-    ``decay_monitor.recent_stats``, so a bucket ROI and a context ROI in this
-    repo mean one thing.
-    """
-    return round(profit / n_priced, 4) if n_priced else None
-
-
 def _slice_adverse(verdict):
     """Which assay verdicts advance the demotion streak.
 
@@ -777,8 +854,8 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
         sd = seed_stats[bucket]
         n = st["n"]
         wins = int(st["wins"])
-        roi = _slice_roi(wins, st["n_priced"], st["profit"])
-        recent_roi = (_slice_roi(int(st["rwins"]), st["rn_priced"], st["rprofit"])
+        roi = _assay_roi(wins, st["n_priced"], st["profit"])
+        recent_roi = (_assay_roi(int(st["rwins"]), st["rn_priced"], st["rprofit"])
                       if st["rn"] >= GATES.min_recent_n else None)
         verdict = context_verdict_league(n, roi, recent_roi)
         gap = (st["wins"] - st["stated"]) / n if n else 0.0
@@ -800,7 +877,7 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
             "n_seeded": sd["n"],
             "n_all": n + sd["n"],
             "seed_gap": round(seed_gap, 4) if seed_gap is not None else None,
-            "seed_roi": _slice_roi(int(sd["wins"]), sd["n_priced"], sd["profit"]),
+            "seed_roi": _assay_roi(int(sd["wins"]), sd["n_priced"], sd["profit"]),
             "verdict": verdict,
             "grade": assay_grade(wins, n) if n else "UNGRADED",
             "roi": roi,
@@ -865,13 +942,12 @@ def _slice_table_lines(verdicts):
     ]
     for bucket in _SLICE_BUCKET_ORDER:
         v = verdicts[bucket]
-        roi = "--" if v.get("roi") is None else f"{v['roi']:+.1%}"
-        recent = "--" if v.get("recent_roi") is None else f"{v['recent_roi']:+.1%}"
+        roi, recent = _pct(v.get("roi")), _pct(v.get("recent_roi"))
+        gap = _pct(v.get("gap"))
         lb = "--" if v.get("wilson_lb") is None else f"{v['wilson_lb']:.3f}"
-        gap = "--" if v.get("gap") is None else f"{v['gap']:+.1%}"
         seed = v.get("seed_roi")
         seed_note = (f"  | replay ctx (excluded): n={v['n_seeded']} "
-                     f"roi={seed:+.1%} gap={v['seed_gap']:+.1%}"
+                     f"roi={_pct(seed)} gap={_pct(v.get('seed_gap'))}"
                      if v.get("n_seeded") and seed is not None
                      else "  | replay ctx (excluded): none")
         lines.append(f"  {bucket:38s} {v['n']:3d} {roi:>9s} {recent:>8s} "
@@ -900,10 +976,7 @@ def _slice_action_lines(verdicts):
         lines.append(
             f"SELECTION LADDER: {bucket} {v['action'].lower()} | {detail} | "
             f"slice streak {v['demote_streak']} | assay verdict {v['verdict']} "
-            f"(grade {v.get('grade')}, roi {v['roi']:+.1%}) | n {v['n']}"
-            if v.get("roi") is not None else
-            f"SELECTION LADDER: {bucket} {v['action'].lower()} | {detail} | "
-            f"slice streak {v['demote_streak']} | assay verdict {v['verdict']} "
+            f"(grade {v.get('grade', 'UNGRADED')}, roi {_pct(v.get('roi'))}) "
             f"| n {v['n']}"
         )
     return lines
@@ -2354,7 +2427,7 @@ def cmd_today(args, st):
     if benched_drops:
         door_pool = [l for l in door_pool
                      if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) > 0.0]
-        census["P&L tripwire: bucket benched (BLEEDING streak >= "
+        census["P&L tripwire: bucket benched (VETO streak >= "
               f"{PNL_BENCH_STREAK} days)"] = sorted(benched_drops)
 
     slice_benched = set(slice_policy.get("bench_buckets") or ())
@@ -2423,18 +2496,18 @@ def cmd_today(args, st):
              f"PERFORMANCE: total bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) = "
              f"free bank {bank_eff:.1f}% + committed {committed:.1f}% · "
              f"next take-profit notification at {take_profit_target(st):.1f}%"]
-    trip = [v for v in pnl_verdicts.values() if v["weight"] < 1.0]
+    trip = sorted(((b, v) for b, v in pnl_verdicts.items() if v["weight"] < 1.0),
+                  key=lambda kv: kv[1]["weight"])
     if trip:
-        lines.append("P&L TRIPWIRE (trailing " + str(PNL_WINDOW_DAYS)
-                     + "d, streak floors): "
-                     + "; ".join(
-                         f"{v_name} {v['verdict']} streak {v['streak']}"
-                         f" (n={v['n']}, gap {v['gap']}, z {v['z']}) -> "
-                         f"x{v['weight']}"
-                         for v_name, v in sorted(
-                             ((b, v) for b, v in pnl_verdicts.items()
-                              if v['weight'] < 1.0),
-                             key=lambda kv: kv[1]['weight'])))
+        parts = []
+        for b, v in trip:
+            z = "--" if v["z"] is None else f"{v['z']:+.2f}"
+            parts.append(f"{b} {v['verdict']} streak {v['streak']} (n={v['n']}, "
+                         f"roi {_pct(v['roi'])}, grade {v['grade']}; "
+                         f"calib gap {_pct(v['gap'])}, z {z}) -> x{v['weight']}")
+        lines.append("P&L TRIPWIRE (assay context_verdict_league on all playable "
+                     f"legs, recent {PNL_WINDOW_DAYS}d, streak floors): "
+                     + "; ".join(parts))
     lines.extend(_slice_action_lines(slice_verdicts))
     lines.extend(_slice_table_lines(slice_verdicts))
     if shadow_rows:
