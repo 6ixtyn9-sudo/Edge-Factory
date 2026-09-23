@@ -210,18 +210,36 @@ PNL_BENCH_ENABLED = True   # master kill-switch for the enforcement half only
 BUCKET_PNL_FILE = LOCALDATA / "auto_tickets_bucket_pnl.json"
 
 # ---- shipped-slice selection ladder (2026-09-23, operator-directed) ----
-# These are deliberately separate from the door-level PNL tripwire above:
+# These are deliberately separate from the door-level P&L tripwire above:
 # the ladder changes ordering/filtering only; stakes remain the door's job.
-SLICE_WINDOW_DAYS = 35       # 28d leaves CAUTION at n=11; 35d reaches n=17
-SLICE_MIN_N = 12              # evidence floor; below it the ladder fails open
-SLICE_Z_BENCH = -2.0           # strict bleeding bar; unchanged from door z
+#
+# GRADING IS DELEGATED TO THE SHARED ASSAY ENGINE (2026-09-23, operator
+# direction: use "the same assay engine like i do on edges" on this surface
+# too). A bucket is a selection-role context group, which is exactly what
+# edgefactory.assay.context_verdict_league scores, so the ladder no longer
+# runs a private z-on-calibration-residual verdict. It speaks BOOST / ALLOW /
+# UNKNOWN / CAUTION / VETO on flat-stake ROI with the same graduated small-n
+# floors every other context in the system obeys, and it carries the hit
+# rate's Wilson lower bound and assay grade alongside as evidence.
+# Intended consequences: the engine's own n<12 floor replaces a private
+# SLICE_MIN_N; the recent-vs-full-history split replaces a fixed window that
+# existed only to reach n=12; and a bucket can now be REWARDED (BOOST) rather
+# than only punished. Calibration gap and z are still computed and printed --
+# they are the stated-probability honesty signal -- but they no longer decide
+# enforcement, because ROI is the quantity that actually kills a bankroll.
+from edgefactory.assay import context_verdict_league
+from edgefactory.assay import grade as assay_grade
+from edgefactory.assay import wilson_lb as assay_wilson_lb
+from edgefactory.config import GATES
+
+SLICE_WINDOW_DAYS = GATES.recent_window_days  # recent_roi window: tracks the system-wide 30d recency convention
 SLICE_DEMOTE_STREAK = 2        # hysteresis: two qualifying days to demote
-SLICE_BENCH_STREAK = 4         # hysteresis: four BLEEDING days to bench
-SLICE_DEMOTE_ON_COLD = True    # soft first-cycle policy: COLD can demote
-SLICE_BENCH_ON_BLEED = False   # conservative first cycle: no slice benches
+SLICE_BENCH_STREAK = 4         # hysteresis: four VETO days to bench
+SLICE_DEMOTE_ON_CAUTION = True # soft first-cycle policy: CAUTION can demote, not only VETO
+SLICE_BENCH_ON_VETO = False    # conservative first cycle: no slice benches
 SLICE_DEMOTE_CAP = {"CAUTION": 0.70}  # only studied bucket/band cap
 SLICE_DEMOTE_SHRINK = 0.95     # generic rank-only fallback for other buckets
-SLICE_ENABLED = True            # kill-switch: evidence still reports, policy identity
+SLICE_ENABLED = True           # kill-switch: evidence still reports, policy identity
 SLICE_LEDGER_FILENAME = "auto_tickets_slice_ledger.jsonl"
 SLICE_TRIPWIRE_FILENAME = "auto_tickets_slice_tripwire.json"
 SLICE_LEDGER_FILE = LOCALDATA / SLICE_LEDGER_FILENAME
@@ -336,6 +354,7 @@ def compute_bucket_pnl(today_text, *, archives=None, settled=None, path=None):
 _SLICE_BUCKET_ORDER = tuple(sorted(BUCKETS))
 _SLICE_ROW_FIELDS = ("date", "home", "away", "match", "pick", "prob_stated",
                      "odds", "bucket", "src", "seeded", "shadow")
+_SLICE_LINE_UNSAFE_RE = re.compile("[\u0085\u2028\u2029]")
 _SLIP_LEG_RE = re.compile(
     r"^\s{3}(?P<match>.+?)\s+(?P<pick>[A-Za-z]+)\s+@\s+"
     r"(?P<odds>[0-9]+(?:\.[0-9]+)?)\s+\(stated\s+"
@@ -391,7 +410,10 @@ def read_slice_ledger(path=None):
     except OSError:
         return []
     rows = []
-    for line in text.splitlines():
+    # split("\n") not splitlines(): the writer emits only \n as a record
+    # separator, and splitlines() would also cut on U+0085/U+2028/U+2029 that
+    # survive in a row written by an older build.
+    for line in text.split("\n"):
         if not line.strip():
             continue
         try:
@@ -406,6 +428,10 @@ def read_slice_ledger(path=None):
     return rows
 
 
+def _slice_line_escape(match):
+    return f"\\u{ord(match.group(0)):04x}"
+
+
 def write_slice_ledger(rows, path=None):
     """Write one canonical JSON object per line, with no score/result field."""
     ledger = _slice_ledger_path(path)
@@ -413,8 +439,13 @@ def write_slice_ledger(rows, path=None):
     clean = [_slice_clean_row(row) for row in rows]
     with ledger.open("w", encoding="utf-8") as fh:
         for row in clean:
-            fh.write(json.dumps(row, separators=(",", ":"), ensure_ascii=False)
-                     + "\n")
+            # ensure_ascii=False keeps the display spelling legible, but U+0085
+            # and U+2028/U+2029 are legal *inside* a JSON string while Python's
+            # str.splitlines() treats them as line breaks — a name carrying one
+            # would split its own record in two and the row would vanish as a
+            # silent JSON error. Escape exactly those, leave everything else raw.
+            blob = json.dumps(row, separators=(",", ":"), ensure_ascii=False)
+            fh.write(_SLICE_LINE_UNSAFE_RE.sub(_slice_line_escape, blob) + "\n")
 
 
 def upsert_slice_day(rows, target, path=None, *, allow_empty=False):
@@ -600,21 +631,33 @@ def ensure_slice_seeded(today_text):
     return seed_slice_ledger(today_text=today_text, path=path)
 
 
-def _slice_verdict(n, gap, sse):
-    if n < SLICE_MIN_N or sse <= 0.0:
-        return "INSUFFICIENT"
-    z = gap / (math.sqrt(sse) / n)
-    if z <= SLICE_Z_BENCH:
-        return "BLEEDING"
-    if gap < 0.0:
-        return "COLD"
-    return "PAYING"
+def _slice_roi(wins, n_priced, profit):
+    """Flat-stake ROI over PRICED legs: ``pnl / n_priced``, never ``pnl / n``.
+
+    This is deliberately the same accounting as ``assay_purity`` and
+    ``decay_monitor.recent_stats``, so a bucket ROI and a context ROI in this
+    repo mean one thing.
+    """
+    return round(profit / n_priced, 4) if n_priced else None
+
+
+def _slice_adverse(verdict):
+    """Which assay verdicts advance the demotion streak.
+
+    VETO always does. CAUTION does while the soft first-cycle policy is on,
+    which mirrors the ladder's earlier demote-on-COLD intent: rank a losing
+    bucket lower, do not shut it.
+    """
+    if SLICE_DEMOTE_ON_CAUTION:
+        return verdict in ("CAUTION", "VETO")
+    return verdict == "VETO"
 
 
 def _slice_action(bucket, verdict, demote_streak, bench_streak):
-    benched = (SLICE_BENCH_ON_BLEED
+    """Ladder action from the assay verdict plus hysteresis streaks."""
+    benched = (SLICE_BENCH_ON_VETO
                and bench_streak >= SLICE_BENCH_STREAK
-               and verdict == "BLEEDING")
+               and verdict == "VETO")
     demoted = demote_streak >= SLICE_DEMOTE_STREAK
     if benched:
         return "BENCHED"
@@ -640,45 +683,50 @@ def _slice_rank_caps(verdicts):
 
 def compute_bucket_slice(today_text, *, path=None, state_path=None,
                          settled=None):
-    """Score the result-free shipped-slice ledger and advance ladder state.
+    """Grade each bucket's shipped slice with the shared assay engine.
 
-    The return value is ``(policy, verdicts)``. ``policy`` contains
+    The return value is ``(policy, verdicts)``. ``policy`` carries
     ``rank_caps`` and ``bench_buckets`` for the current plan. Every score is
     read through ``pick_result`` at call time, so settlement lag and voids are
     handled exactly like the door tripwire.
 
-    Enforcement basis (2026-09-23 review fix): the verdict that drives
-    demotion/benching is computed ONLY from printed-slip evidence, i.e. rows
-    whose ``prob_stated`` was read off a frozen slip line. The seeded replay
-    rows carry ``prob_stated`` from the mutable archive ``avg_p`` — which the
-    addendum measured as differing from the printed probability by more than
-    0.55pp on 44/134 slips — so they are two different estimands and are
-    reported as context (``n_seeded``/``seed_gap``) instead of being pooled
-    into the verdict. Pooling them flipped CAUTION's in-window gap from
-    -3.9pp to +8.0pp, and because ``SLICE_MIN_N`` exceeds the shipped-only n
-    it was the replay half that could ever have convicted a bucket. Shadow
-    rows remain in the enforcement basis on purpose: a demoted or benched
-    bucket keeps no shipped legs, and counterfactual evidence is the only
-    route back to FULL.
+    Grading is not invented here. ``n`` and ``roi`` are the bucket's full
+    shipped history, ``recent_roi`` is the trailing ``SLICE_WINDOW_DAYS``
+    window admitted only once that window itself holds
+    ``GATES.min_recent_n`` settled legs, and the three go through
+    :func:`edgefactory.assay.context_verdict_league` — the same selection-role
+    context gate that produces the purity verdicts these buckets are built
+    from. The hit rate travels with its Wilson lower bound and its assay
+    grade, which is the engine's standing rule: a Wilson bound rather than a
+    raw hit rate, and ROI always alongside. So the ladder fails open below
+    n=12, needs a real loss rate to reach VETO, and can now report BOOST on a
+    bucket that deserves it.
+
+    Enforcement basis: printed-slip evidence only. Seeded replay rows carry an
+    ``avg_p`` proxy instead of the frozen slip print, so the two are different
+    estimands and replay is reported as context (``n_seeded``/``seed_gap``)
+    rather than pooled into a verdict — pooling flipped CAUTION's gap sign
+    from -3.9pp to +8.0pp. Shadow rows stay in the basis deliberately: a
+    demoted or benched bucket ships no legs, and counterfactual evidence is its
+    only route back to FULL.
     """
     today_text = _slice_day(today_text)
     settled = load_settled() if settled is None else settled
-    # Match the existing rolling-tripwire convention: a ``35d`` window is
-    # the 35 preceding calendar days plus the evaluation day (the same
-    # inclusive endpoint convention used by compute_bucket_pnl).
-    day_from = (datetime.strptime(today_text, "%Y-%m-%d")
-                - timedelta(days=SLICE_WINDOW_DAYS + 1)).strftime("%Y-%m-%d")
-    # Two ledgers of record inside one pass: ``stats`` is the enforcement
-    # basis (printed-slip probabilities only) and ``seed_stats`` is the
-    # replay-proxy context, which can never move a verdict.
-    def _blank_stats():
-        return {"n": 0, "wins": 0, "stated": 0.0, "sse": 0.0, "profit": 0.0}
+    recent_from = (datetime.strptime(today_text, "%Y-%m-%d")
+                   - timedelta(days=SLICE_WINDOW_DAYS)).strftime("%Y-%m-%d")
 
+    def _blank_stats():
+        return {"n": 0, "wins": 0.0, "stated": 0.0, "sse": 0.0,
+                "profit": 0.0, "n_priced": 0,
+                "rn": 0, "rwins": 0.0, "rprofit": 0.0, "rn_priced": 0}
+
+    # ``stats`` is the enforcement basis (printed-slip rows only);
+    # ``seed_stats`` is replay-proxy context, which can never move a verdict.
     stats = {b: _blank_stats() for b in _SLICE_BUCKET_ORDER}
     seed_stats = {b: _blank_stats() for b in _SLICE_BUCKET_ORDER}
     for row in read_slice_ledger(path):
         day = _slice_day(row.get("date"))
-        if not (day_from <= day <= today_text):
+        if day > today_text:
             continue
         try:
             prob = float(row.get("prob_stated") or 0.0)
@@ -696,15 +744,25 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
             continue
         st = seed_stats[bucket] if row.get("seeded") else stats[bucket]
         hit = 1.0 if result == "win" else 0.0
-        st["n"] += 1
-        st["wins"] += hit
-        st["stated"] += prob
-        st["sse"] += prob * (1.0 - prob)
         try:
             odds = float(row.get("odds") or 0.0)
         except (TypeError, ValueError):
             odds = 0.0
-        st["profit"] += (odds - 1.0) if hit else -1.0
+        priced = odds > 0.0
+        profit = (odds - 1.0) if hit else -1.0
+        st["n"] += 1
+        st["wins"] += hit
+        st["stated"] += prob
+        st["sse"] += prob * (1.0 - prob)
+        if priced:
+            st["n_priced"] += 1
+            st["profit"] += profit
+        if day >= recent_from:
+            st["rn"] += 1
+            st["rwins"] += hit
+            if priced:
+                st["rn_priced"] += 1
+                st["rprofit"] += profit
 
     state_file = _slice_state_path(state_path)
     try:
@@ -718,40 +776,49 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
         st = stats[bucket]
         sd = seed_stats[bucket]
         n = st["n"]
+        wins = int(st["wins"])
+        roi = _slice_roi(wins, st["n_priced"], st["profit"])
+        recent_roi = (_slice_roi(int(st["rwins"]), st["rn_priced"], st["rprofit"])
+                      if st["rn"] >= GATES.min_recent_n else None)
+        verdict = context_verdict_league(n, roi, recent_roi)
         gap = (st["wins"] - st["stated"]) / n if n else 0.0
         z = gap / (math.sqrt(st["sse"]) / n) if n and st["sse"] > 0 else None
-        verdict = _slice_verdict(n, gap, st["sse"])
         seed_gap = (sd["wins"] - sd["stated"]) / sd["n"] if sd["n"] else None
         old = prior_buckets.get(bucket) or {}
         demote = max(0, int(old.get("demote_streak") or old.get("streak") or 0))
         bench = max(0, int(old.get("bench_streak") or 0))
-        if prior_eval < today_text:
-            demote_delta = (verdict in ("COLD", "BLEEDING")
-                            if SLICE_DEMOTE_ON_COLD else verdict == "BLEEDING")
-            demote = max(0, demote + (1 if demote_delta else -1))
-            bench = max(0, bench + (1 if verdict == "BLEEDING" else -1))
+        if prior_eval < today_text:      # at most one streak step per day
+            demote = max(0, demote + (1 if _slice_adverse(verdict) else -1))
+            bench = max(0, bench + (1 if verdict == "VETO" else -1))
         action = (_slice_action(bucket, verdict, demote, bench)
                   if SLICE_ENABLED else "FULL")
         verdicts[bucket] = {
             "n": n,
-            # Enforcement basis vs replay-proxy context, kept side by side so
-            # the two estimands stay visible in every artifact.
+            # Enforcement basis vs replay-proxy context, side by side so the
+            # two estimands stay visible in every artifact.
             "n_shipped": n,
             "n_seeded": sd["n"],
             "n_all": n + sd["n"],
             "seed_gap": round(seed_gap, 4) if seed_gap is not None else None,
-            "seed_roi_flat": (round(sd["profit"] / sd["n"], 4)
-                              if sd["n"] else None),
+            "seed_roi": _slice_roi(int(sd["wins"]), sd["n_priced"], sd["profit"]),
+            "verdict": verdict,
+            "grade": assay_grade(wins, n) if n else "UNGRADED",
+            "roi": roi,
+            "recent_n": st["rn"],
+            "recent_roi": recent_roi,
             "hit": round(st["wins"] / n, 4) if n else None,
+            "wilson_lb": round(assay_wilson_lb(wins, n), 4) if n else None,
             "stated": round(st["stated"] / n, 4) if n else None,
+            # Calibration is evidence about stated probabilities, not a
+            # trigger: a bucket can be honest and still lose.
             "gap": round(gap, 4) if n else None,
             "z": round(z, 3) if z is not None else None,
-            "roi_flat": round(st["profit"] / n, 4) if n else None,
-            "verdict": verdict,
             "demote_streak": demote,
             "bench_streak": bench,
             "streak": demote,
             "action": action,
+            "would_bench": (not SLICE_BENCH_ON_VETO and verdict == "VETO"
+                            and bench >= SLICE_BENCH_STREAK),
             "rank_cap": (float(SLICE_DEMOTE_CAP[bucket])
                           if action == "DEMOTED" and bucket in SLICE_DEMOTE_CAP
                           else None),
@@ -760,14 +827,15 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
     report = {
         "generated_at": datetime.now(TZ).isoformat(timespec="seconds"),
         "last_eval": today_text,
-        "window_days": SLICE_WINDOW_DAYS,
-        "window_from": day_from,
-        "min_n": SLICE_MIN_N,
-        "z_bench": SLICE_Z_BENCH,
+        "engine": "edgefactory.assay.context_verdict_league",
+        "grade_engine": "edgefactory.assay.grade",
+        "recent_window_days": SLICE_WINDOW_DAYS,
+        "recent_from": recent_from,
+        "recent_min_n": GATES.min_recent_n,
         "demote_streak": SLICE_DEMOTE_STREAK,
         "bench_streak": SLICE_BENCH_STREAK,
-        "demote_on_cold": SLICE_DEMOTE_ON_COLD,
-        "bench_on_bleed": SLICE_BENCH_ON_BLEED,
+        "demote_on_caution": SLICE_DEMOTE_ON_CAUTION,
+        "bench_on_veto": SLICE_BENCH_ON_VETO,
         "demote_cap": SLICE_DEMOTE_CAP,
         "demote_shrink": SLICE_DEMOTE_SHRINK,
         "enabled": SLICE_ENABLED,
@@ -785,22 +853,35 @@ def compute_bucket_slice(today_text, *, path=None, state_path=None,
 
 
 def _slice_table_lines(verdicts):
-    header = ("  bucket                                      n       gap       "
-              "z verdict demote bench action")
-    lines = [(f"SELECTION LADDER SLICE (trailing {SLICE_WINDOW_DAYS}d, "
-              "printed-slip evidence only):"),
-             header]
+    """Render the ladder's assay reading: engine columns first, calibration
+    evidence last, and the excluded replay block beside every line so what the
+    engine did NOT score stays visible."""
+    header = (f"SELECTION LADDER SLICE (assay context_verdict_league, "
+              f"recent {SLICE_WINDOW_DAYS}d, printed-slip evidence only):")
+    lines = [
+        header,
+        ("  bucket                                      n       roi    recent"
+         "      LB     grade  verdict demote bench action"),
+    ]
     for bucket in _SLICE_BUCKET_ORDER:
         v = verdicts[bucket]
-        gap = "—" if v["gap"] is None else f"{v['gap']:+.1%}"
-        z = "—" if v["z"] is None else f"{v['z']:+.2f}"
-        seed = v.get("seed_gap")
+        roi = "--" if v.get("roi") is None else f"{v['roi']:+.1%}"
+        recent = "--" if v.get("recent_roi") is None else f"{v['recent_roi']:+.1%}"
+        lb = "--" if v.get("wilson_lb") is None else f"{v['wilson_lb']:.3f}"
+        gap = "--" if v.get("gap") is None else f"{v['gap']:+.1%}"
+        seed = v.get("seed_roi")
         seed_note = (f"  | replay ctx (excluded): n={v['n_seeded']} "
-                     f"gap={seed:+.1%}" if v.get("n_seeded") and seed is not None
+                     f"roi={seed:+.1%} gap={v['seed_gap']:+.1%}"
+                     if v.get("n_seeded") and seed is not None
                      else "  | replay ctx (excluded): none")
-        lines.append(f"  {bucket:38s} {v['n']:3d} {gap:>9s} {z:>8s} "
-                     f"{v['verdict']:11s} {v['demote_streak']:6d} "
-                     f"{v['bench_streak']:5d} {v['action']}{seed_note}")
+        lines.append(f"  {bucket:38s} {v['n']:3d} {roi:>9s} {recent:>8s} "
+                     f"{lb:>7s} {v.get('grade', 'UNGRADED'):>8s} "
+                     f"{v['verdict']:8s} {v['demote_streak']:6d} "
+                     f"{v['bench_streak']:5d} {v['action']}"
+                     f"  [calib gap {gap}]{seed_note}")
+    if any(v.get("would_bench") for v in verdicts.values()):
+        lines.append("  NOTE: bench-on-VETO is switched off this cycle; the "
+                     "buckets above would have been benched on VETO streak.")
     return lines
 
 
@@ -818,7 +899,12 @@ def _slice_action_lines(verdicts):
             detail = "door bench"
         lines.append(
             f"SELECTION LADDER: {bucket} {v['action'].lower()} | {detail} | "
-            f"slice streak {v['demote_streak']} | verdict {v['verdict']} | n {v['n']}"
+            f"slice streak {v['demote_streak']} | assay verdict {v['verdict']} "
+            f"(grade {v.get('grade')}, roi {v['roi']:+.1%}) | n {v['n']}"
+            if v.get("roi") is not None else
+            f"SELECTION LADDER: {bucket} {v['action'].lower()} | {detail} | "
+            f"slice streak {v['demote_streak']} | assay verdict {v['verdict']} "
+            f"| n {v['n']}"
         )
     return lines
 
