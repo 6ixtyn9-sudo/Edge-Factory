@@ -1,6 +1,6 @@
 {
  "checkpoint_frozen_at": "2026-09-20",
- "eval_count": 1,
+ "eval_count": 2,
  "history": [
   {
    "due_reasons": [
@@ -15,14 +15,31 @@
     "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-21.txt"
    },
    "warnings": []
+  },
+  {
+   "due_reasons": [
+    "settled fade rows grew by 82 (>= 50)"
+   ],
+   "eval_at": "2026-09-23T09:22:28+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-09-23.md",
+   "rule_candidate": "observing",
+   "settled_fade": 87,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-09-23.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-09-23.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 14% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 70% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)"
+   ]
   }
  ],
- "last_eval_active_day": "2026-09-21",
- "last_eval_at": "2026-09-21T00:19:31+02:00",
- "last_eval_settled_fade": 5,
+ "last_eval_active_day": "2026-09-23",
+ "last_eval_at": "2026-09-23T09:22:28+02:00",
+ "last_eval_settled_fade": 87,
  "model_drift": {
   "drifted": false,
-  "model_key": "75384507e4ef",
+  "model_key": "a584ef59212a",
   "reasons": []
  },
  "policy": {
