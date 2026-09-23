@@ -9180,7 +9180,19 @@ now serves both surfaces and prints `--`. The state path coerces a string
 (`Path(path or BUCKET_PNL_FILE)`) the way the ladder's does, so a caller passing a
 plain path no longer crashes on `read_text`.
 
-**Tests.** `tests/test_auto_tickets_pnl.py` (21 tests) is new — the door had zero
+**Deploying onto existing state.** The reader takes only `last_eval` and each
+bucket's `streak` from `auto_tickets_bucket_pnl.json`, so a machine holding the
+pre-engine report (private `min_n`/`z_bench`, PAYING/BLEEDING vocabulary) loads
+without error and is rewritten in the engine shape on the first run. One
+consequence, deliberately not smoothed over: a `BLEEDING`-era streak already in
+progress is **forgiven** on that first run and its weight returns to 1.0, because
+that streak was earned by the retired residual test — honouring it would mean
+enforcing a rule we just deleted for being unable to see losing-but-calibrated
+buckets. A bucket that genuinely is bleeding re-earns the streak from zero within
+`PNL_DEMOTE_STREAK` (2) days, and VETO now arrives on ROI rather than never. Pinned
+by `test_pre_engine_state_file_reads_and_re_earns_from_scratch`.
+
+**Tests.** `tests/test_auto_tickets_pnl.py` (22 tests) is new — the door had zero
 coverage before. The regression test pins the exact blindness above (40 legs, 30
 wins at 1.30, stated 75% → gap 0.0 and ROI −2.5% → CAUTION; the old z works out to
 0.0 against a −2 floor, spelled out in the docstring so nobody tunes it back);
@@ -9194,7 +9206,7 @@ accounting, report provenance, and empty state. **Fixture trap worth knowing:**
 silently produced *no* legs at all — the helper floors `avg_p` at 55% and one test
 asserts that floor, or the bug returns.
 
-**Receipts.** `pytest tests/` **675 passed** (654 before, +21 door tests, 0
+**Receipts.** `pytest tests/` **676 passed** (654 before, +22 door tests, 0
 regressions). `ruff --select F,E9` on `src scripts tests` at **exact parity** with
 the pre-change worktree (2 F401, 1 F541, 3 F841, all pre-existing in files this
 change does not touch). Live `cmd_today` smoke in a scratch copy of the tree:
