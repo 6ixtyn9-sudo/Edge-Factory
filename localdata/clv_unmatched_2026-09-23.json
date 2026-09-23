@@ -169,7 +169,7 @@
     "league": "ScC",
     "market": "1x2",
     "pick": "home",
-    "rule_name": "ml-meta avg_p>=60",
+    "rule_name": "ml-meta avg_p>=55",
     "match_method": "fallback",
     "home_key": "hamiltonacademical",
     "away_key": "cowdenbeath",
@@ -244,7 +244,7 @@
   },
   {
     "date": "2026-09-23",
-    "kickoff": "12:00",
+    "kickoff": "11:00",
     "home": "Azerbaijan",
     "away": "Tajikistan",
     "league": "International,Friendlies",
@@ -267,7 +267,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "birminghamlegion",
         "away_key": "brooklynfc",
-        "kickoff_delta_minutes": 360
+        "kickoff_delta_minutes": 420
       },
       {
         "home": "Servette Ch\u00eanois W",
@@ -280,7 +280,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "servettechenoisw",
         "away_key": "ollyonnesw",
-        "kickoff_delta_minutes": 405
+        "kickoff_delta_minutes": 465
       },
       {
         "home": "OH Leuven W",
@@ -293,7 +293,20 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "ohleuvenw",
         "away_key": "romaw",
-        "kickoff_delta_minutes": 405
+        "kickoff_delta_minutes": 465
+      },
+      {
+        "home": "Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Liga BetPlay",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.95,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "santafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 480
       },
       {
         "home": "TOGB",
@@ -306,20 +319,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "togb",
         "away_key": "rohdaraalte",
-        "kickoff_delta_minutes": 480
-      },
-      {
-        "home": "JOS Watergraafsmeer",
-        "away": "TEC",
-        "league": "KNVB Beker",
-        "kickoff": "2026-09-23T18:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.33,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "joswatergraafsmeer",
-        "away_key": "tec",
-        "kickoff_delta_minutes": 480
+        "kickoff_delta_minutes": 540
       }
     ]
   },
@@ -487,87 +487,6 @@
   },
   {
     "date": "2026-09-23",
-    "kickoff": "12:00",
-    "home": "Gibraltar",
-    "away": "Sao Tome and Principe",
-    "league": "International,Friendlies",
-    "market": "1x2",
-    "pick": "home",
-    "rule_name": "2way-unanimous avg_p>=60",
-    "match_method": "fallback",
-    "home_key": "gibraltar",
-    "away_key": "saotomeandprincipe",
-    "nearby_bzzoiro_candidates": [],
-    "nearby_scoutingstats_candidates": [
-      {
-        "home": "Birmingham Legion",
-        "away": "Brooklyn FC",
-        "league": "USL Championship",
-        "kickoff": "2026-09-23T16:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 1.72,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "birminghamlegion",
-        "away_key": "brooklynfc",
-        "kickoff_delta_minutes": 360
-      },
-      {
-        "home": "Servette Ch\u00eanois W",
-        "away": "OL Lyonnes W",
-        "league": "UEFA Women's Champions League",
-        "kickoff": "2026-09-23T16:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 51.0,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "servettechenoisw",
-        "away_key": "ollyonnesw",
-        "kickoff_delta_minutes": 405
-      },
-      {
-        "home": "OH Leuven W",
-        "away": "Roma W",
-        "league": "UEFA Women's Champions League",
-        "kickoff": "2026-09-23T16:45:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.9,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "ohleuvenw",
-        "away_key": "romaw",
-        "kickoff_delta_minutes": 405
-      },
-      {
-        "home": "TOGB",
-        "away": "ROHDA Raalte",
-        "league": "KNVB Beker",
-        "kickoff": "2026-09-23T18:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "togb",
-        "away_key": "rohdaraalte",
-        "kickoff_delta_minutes": 480
-      },
-      {
-        "home": "JOS Watergraafsmeer",
-        "away": "TEC",
-        "league": "KNVB Beker",
-        "kickoff": "2026-09-23T18:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 4.33,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "joswatergraafsmeer",
-        "away_key": "tec",
-        "kickoff_delta_minutes": 480
-      }
-    ]
-  },
-  {
-    "date": "2026-09-23",
     "kickoff": "2026-09-23 17:00:00",
     "home": "Enugu Rangers",
     "away": "Ranchers Bees",
@@ -644,6 +563,87 @@
         "home_key": "joswatergraafsmeer",
         "away_key": "tec",
         "kickoff_delta_minutes": 180
+      }
+    ]
+  },
+  {
+    "date": "2026-09-23",
+    "kickoff": "11:00",
+    "home": "Gibraltar",
+    "away": "Sao Tome and Principe",
+    "league": "International,Friendlies",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "gibraltar",
+    "away_key": "saotomeandprincipe",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Birmingham Legion",
+        "away": "Brooklyn FC",
+        "league": "USL Championship",
+        "kickoff": "2026-09-23T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.72,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "birminghamlegion",
+        "away_key": "brooklynfc",
+        "kickoff_delta_minutes": 420
+      },
+      {
+        "home": "Servette Ch\u00eanois W",
+        "away": "OL Lyonnes W",
+        "league": "UEFA Women's Champions League",
+        "kickoff": "2026-09-23T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 51.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "servettechenoisw",
+        "away_key": "ollyonnesw",
+        "kickoff_delta_minutes": 465
+      },
+      {
+        "home": "OH Leuven W",
+        "away": "Roma W",
+        "league": "UEFA Women's Champions League",
+        "kickoff": "2026-09-23T16:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.9,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "ohleuvenw",
+        "away_key": "romaw",
+        "kickoff_delta_minutes": 465
+      },
+      {
+        "home": "Santa Fe",
+        "away": "Deportivo Cali",
+        "league": "Liga BetPlay",
+        "kickoff": "2026-09-23T01:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.95,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "santafe",
+        "away_key": "deportivocali",
+        "kickoff_delta_minutes": 480
+      },
+      {
+        "home": "TOGB",
+        "away": "ROHDA Raalte",
+        "league": "KNVB Beker",
+        "kickoff": "2026-09-23T18:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 4.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "togb",
+        "away_key": "rohdaraalte",
+        "kickoff_delta_minutes": 540
       }
     ]
   },
