@@ -79,6 +79,7 @@ dist/
 
 # Rolling auto-tickets state and slips (must persist across bot runs)
 !localdata/auto_tickets_state.json
+!localdata/auto_tickets_slice_ledger.jsonl
 !localdata/auto_tickets_20*.txt
 !localdata/auto_tickets_20*.json
 !localdata/auto_tickets_performance.txt

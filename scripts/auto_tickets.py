@@ -209,6 +209,24 @@ PNL_BENCH_STREAK = 4       # consecutive daily BLEEDING verdicts -> door closed
 PNL_BENCH_ENABLED = True   # master kill-switch for the enforcement half only
 BUCKET_PNL_FILE = LOCALDATA / "auto_tickets_bucket_pnl.json"
 
+# ---- shipped-slice selection ladder (2026-09-23, operator-directed) ----
+# These are deliberately separate from the door-level PNL tripwire above:
+# the ladder changes ordering/filtering only; stakes remain the door's job.
+SLICE_WINDOW_DAYS = 35       # 28d leaves CAUTION at n=11; 35d reaches n=17
+SLICE_MIN_N = 12              # evidence floor; below it the ladder fails open
+SLICE_Z_BENCH = -2.0           # strict bleeding bar; unchanged from door z
+SLICE_DEMOTE_STREAK = 2        # hysteresis: two qualifying days to demote
+SLICE_BENCH_STREAK = 4         # hysteresis: four BLEEDING days to bench
+SLICE_DEMOTE_ON_COLD = True    # soft first-cycle policy: COLD can demote
+SLICE_BENCH_ON_BLEED = False   # conservative first cycle: no slice benches
+SLICE_DEMOTE_CAP = {"CAUTION": 0.70}  # only studied bucket/band cap
+SLICE_DEMOTE_SHRINK = 0.95     # generic rank-only fallback for other buckets
+SLICE_ENABLED = True            # kill-switch: evidence still reports, policy identity
+SLICE_LEDGER_FILENAME = "auto_tickets_slice_ledger.jsonl"
+SLICE_TRIPWIRE_FILENAME = "auto_tickets_slice_tripwire.json"
+SLICE_LEDGER_FILE = LOCALDATA / SLICE_LEDGER_FILENAME
+SLICE_TRIPWIRE_FILE = LOCALDATA / SLICE_TRIPWIRE_FILENAME
+
 
 def bucket_pnl_verdict(n, resid_mean, resid_var):
     """One bucket's evidence classification (PURE — trivially replayable).
@@ -313,6 +331,477 @@ def compute_bucket_pnl(today_text, *, archives=None, settled=None, path=None):
         pass
     return ({b: v["weight"] for b, v in verdicts.items()} if PNL_BENCH_ENABLED
             else {}), verdicts
+
+
+_SLICE_BUCKET_ORDER = tuple(sorted(BUCKETS))
+_SLICE_ROW_FIELDS = ("date", "home", "away", "match", "pick", "prob_stated",
+                     "odds", "bucket", "src", "seeded", "shadow")
+_SLIP_LEG_RE = re.compile(
+    r"^\s{3}(?P<match>.+?)\s+(?P<pick>[A-Za-z]+)\s+@\s+"
+    r"(?P<odds>[0-9]+(?:\.[0-9]+)?)\s+\(stated\s+"
+    r"(?P<prob>[0-9]+(?:\.[0-9]+)?)%\)"
+)
+
+
+def _slice_ledger_path(path=None):
+    return Path(path) if path is not None else LOCALDATA / SLICE_LEDGER_FILENAME
+
+
+def _slice_state_path(path=None):
+    return Path(path) if path is not None else LOCALDATA / SLICE_TRIPWIRE_FILENAME
+
+
+def _slice_day(value):
+    return str(value or "")[:10]
+
+
+def _slice_row_key(row):
+    """Identity for ledger replacement/double-count prevention.
+
+    The key deliberately follows the same structure-only fold as settlement
+    and card dedup. Raw display spelling is evidence, not fixture identity.
+    """
+    return _folded_leg_key(_slice_day(row.get("date")), row.get("home"),
+                           row.get("away"), row.get("pick"))
+
+
+def _slice_clean_row(row):
+    """Return exactly the frozen ledger schema; never persist a result."""
+    out = {
+        "date": _slice_day(row.get("date")),
+        "home": str(row.get("home") or ""),
+        "away": str(row.get("away") or ""),
+        "match": str(row.get("match") or ""),
+        "pick": str(row.get("pick") or "").upper(),
+        "prob_stated": float(row.get("prob_stated") or 0.0),
+        "odds": float(row.get("odds") or 0.0),
+        "bucket": str(row.get("bucket") or ""),
+        "src": str(row.get("src") or ""),
+        "seeded": bool(row.get("seeded")),
+        "shadow": bool(row.get("shadow")),
+    }
+    return out
+
+
+def read_slice_ledger(path=None):
+    """Read the result-free ledger. Settlement is intentionally not cached."""
+    ledger = _slice_ledger_path(path)
+    try:
+        text = ledger.read_text(encoding="utf-8")
+    except OSError:
+        return []
+    rows = []
+    for line in text.splitlines():
+        if not line.strip():
+            continue
+        try:
+            row = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if not isinstance(row, dict) or "result" in row:
+            continue
+        if any(k not in row for k in _SLICE_ROW_FIELDS):
+            continue
+        rows.append(_slice_clean_row(row))
+    return rows
+
+
+def write_slice_ledger(rows, path=None):
+    """Write one canonical JSON object per line, with no score/result field."""
+    ledger = _slice_ledger_path(path)
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    clean = [_slice_clean_row(row) for row in rows]
+    with ledger.open("w", encoding="utf-8") as fh:
+        for row in clean:
+            fh.write(json.dumps(row, separators=(",", ":"), ensure_ascii=False)
+                     + "\n")
+
+
+def upsert_slice_day(rows, target, path=None):
+    """Replace all real and shadow rows for one date, atomically by rewrite."""
+    target = _slice_day(target)
+    existing = [r for r in read_slice_ledger(path)
+                if _slice_day(r.get("date")) != target]
+    merged = existing + [_slice_clean_row(r) for r in rows
+                         if _slice_day(r.get("date")) == target]
+    # Preserve first position while allowing a later real row to replace a
+    # same-key shadow row. The caller orders real rows before shadow rows.
+    out, positions = [], {}
+    for row in merged:
+        key = _slice_row_key(row)
+        if key in positions:
+            out[positions[key]] = row
+        else:
+            positions[key] = len(out)
+            out.append(row)
+    write_slice_ledger(out, path)
+    return out
+
+
+def _printed_prob_value(prob):
+    """Probability represented by the frozen ``.0%`` slip print."""
+    return float(f"{float(prob):.0%}".rstrip("%")) / 100.0
+
+
+def _archive_index_for_slice(archives):
+    """Identity-fold archive join; highest (avg_p, odds) wins a twin."""
+    index = {}
+    for row in archives:
+        day = _slice_day(row.get("date") or row.get("_archive_day"))
+        if not day:
+            continue
+        key = _folded_leg_key(day, row.get("home"), row.get("away"),
+                              row.get("pick"))
+        try:
+            score = (float(row.get("avg_p") or 0.0),
+                     float(row.get("odds") or 0.0))
+        except (TypeError, ValueError):
+            score = (0.0, 0.0)
+        prior = index.get(key)
+        if prior is None or score > prior[0]:
+            index[key] = (score, row)
+    return {key: row for key, (_score, row) in index.items()}
+
+
+def _slice_row_from_archive(day, printed_match, pick, prob, odds, archive_row,
+                            *, src="slip", seeded=False, shadow=False):
+    home = str(archive_row.get("home") or printed_match.split(" vs ", 1)[0])
+    away = str(archive_row.get("away") or printed_match.split(" vs ", 1)[-1])
+    return {
+        "date": day, "home": home, "away": away,
+        "match": f"{home} vs {away}", "pick": str(pick).upper(),
+        "prob_stated": float(prob), "odds": float(odds),
+        "bucket": str(archive_row.get("bucket") or ""), "src": src,
+        "seeded": bool(seeded), "shadow": bool(shadow),
+    }
+
+
+def parse_slip_slice_rows(slip_path, archive_index):
+    """Parse frozen evidence and resolve bucket/result identity separately."""
+    # The filename is auto_tickets_YYYY-MM-DD.txt; avoid trusting a line's
+    # display date because the leg line itself intentionally has no date.
+    name_match = re.search(r"(\d{4}-\d{2}-\d{2})", Path(slip_path).name)
+    day = name_match.group(1) if name_match else ""
+    rows, unresolved = [], []
+    try:
+        lines = Path(slip_path).read_text(encoding="utf-8").splitlines()
+    except OSError:
+        return rows, unresolved
+    for line_no, line in enumerate(lines, 1):
+        m = _SLIP_LEG_RE.match(line)
+        if not m:
+            continue
+        printed_match = m.group("match").strip()
+        parts = printed_match.split(" vs ", 1)
+        if len(parts) != 2:
+            unresolved.append({"file": str(slip_path), "line": line_no,
+                               "match": printed_match})
+            continue
+        home, away = parts
+        pick = m.group("pick").upper()
+        key = _folded_leg_key(day, home, away, pick)
+        archive_row = archive_index.get(key)
+        if archive_row is None:
+            unresolved.append({"file": str(slip_path), "line": line_no,
+                               "match": printed_match, "pick": pick})
+            continue
+        rows.append(_slice_row_from_archive(
+            day, printed_match, pick, float(m.group("prob")) / 100.0,
+            float(m.group("odds")), archive_row,
+        ))
+    return rows, unresolved
+
+
+def _replay_seed_rows(archives, settled, real_keys):
+    """Rebuild the pre-slip seed through today's planner, not a new selector."""
+    rows = []
+    days = sorted({_slice_day(p.get("date") or p.get("_archive_day"))
+                   for p in archives})
+    for day in days:
+        if not ("2026-06-25" <= day <= "2026-08-26"):
+            continue
+        pool = playable_legs(archives, day=day, settled=settled, floor=0.0)
+        # This is the replay harness's settled-universe convention: unresolved
+        # and void rows are not wager legs in the growth reconstruction.
+        pool = [leg for leg in pool if leg.get("result")]
+        if len(pool) < LEGS_PER_ACCA:
+            continue
+        plan = plan_day(pool, 100.0)
+        pool_by_key = {_leg_key(leg): leg for leg in pool}
+        for acca in plan:
+            for leg in acca.get("legs", []):
+                source = pool_by_key.get(_leg_key(leg))
+                if source is None:
+                    continue
+                row = source.get("row") or {}
+                item = _slice_row_from_archive(
+                    day, leg.get("match") or "", leg.get("pick"),
+                    float(leg.get("prob") or 0.0), float(leg.get("odds") or 0.0), row,
+                    src="replay", seeded=True,
+                )
+                if _slice_row_key(item) in real_keys:
+                    continue
+                rows.append(item)
+    return rows
+
+
+def seed_slice_ledger(*, archives=None, settled=None, path=None,
+                      localdata=None, today_text=None):
+    """Create the deterministic replay+slip seed and return rows/unresolved.
+
+    Real rows use only frozen slip probabilities. Replay rows use current
+    ``avg_p`` through the live planner and are explicitly marked as a proxy.
+    """
+    archives = load_archived_picks() if archives is None else archives
+    settled = load_settled() if settled is None else settled
+    data_dir = LOCALDATA if localdata is None else Path(localdata)
+    archive_index = _archive_index_for_slice(archives)
+    real_rows, unresolved = [], []
+    for slip in sorted(data_dir.glob("auto_tickets_*.txt")):
+        day_match = re.search(r"(\d{4}-\d{2}-\d{2})", slip.name)
+        if not day_match:
+            continue
+        day = day_match.group(1)
+        if not ("2026-08-27" <= day <= (today_text or "9999-12-31")):
+            continue
+        rows, missing = parse_slip_slice_rows(slip, archive_index)
+        real_rows.extend(rows)
+        unresolved.extend(missing)
+    real_keys = {_slice_row_key(row) for row in real_rows}
+    replay_rows = _replay_seed_rows(archives, settled, real_keys)
+    rows = sorted(replay_rows + real_rows,
+                  key=lambda r: (_slice_day(r["date"]), r["src"],
+                                 r["home"], r["away"], r["pick"]))
+    if path is not None or not _slice_ledger_path().exists():
+        write_slice_ledger(rows, path)
+    return rows, unresolved
+
+
+def ensure_slice_seeded(today_text):
+    """Seed only when the result-free ledger is absent/empty."""
+    path = _slice_ledger_path()
+    if read_slice_ledger(path):
+        return read_slice_ledger(path), []
+    return seed_slice_ledger(today_text=today_text, path=path)
+
+
+def _slice_verdict(n, gap, sse):
+    if n < SLICE_MIN_N or sse <= 0.0:
+        return "INSUFFICIENT"
+    z = gap / (math.sqrt(sse) / n)
+    if z <= SLICE_Z_BENCH:
+        return "BLEEDING"
+    if gap < 0.0:
+        return "COLD"
+    return "PAYING"
+
+
+def _slice_action(bucket, verdict, demote_streak, bench_streak):
+    benched = (SLICE_BENCH_ON_BLEED
+               and bench_streak >= SLICE_BENCH_STREAK
+               and verdict == "BLEEDING")
+    demoted = demote_streak >= SLICE_DEMOTE_STREAK
+    if benched:
+        return "BENCHED"
+    if demoted:
+        return "DEMOTED"
+    return "FULL"
+
+
+def _slice_rank_caps(verdicts):
+    caps, benches = {}, set()
+    if not SLICE_ENABLED:
+        return caps, benches
+    for bucket, verdict in verdicts.items():
+        if verdict.get("action") == "BENCHED":
+            benches.add(bucket)
+        elif verdict.get("action") == "DEMOTED":
+            if bucket in SLICE_DEMOTE_CAP:
+                caps[bucket] = float(SLICE_DEMOTE_CAP[bucket])
+            else:
+                caps[bucket] = {"shrink": float(SLICE_DEMOTE_SHRINK)}
+    return caps, benches
+
+
+def compute_bucket_slice(today_text, *, path=None, state_path=None,
+                         settled=None):
+    """Score the result-free shipped-slice ledger and advance ladder state.
+
+    The return value is ``(policy, verdicts)``. ``policy`` contains
+    ``rank_caps`` and ``bench_buckets`` for the current plan. Every score is
+    read through ``pick_result`` at call time, so settlement lag and voids are
+    handled exactly like the door tripwire.
+    """
+    today_text = _slice_day(today_text)
+    settled = load_settled() if settled is None else settled
+    # Match the existing rolling-tripwire convention: a ``35d`` window is
+    # the 35 preceding calendar days plus the evaluation day (the same
+    # inclusive endpoint convention used by compute_bucket_pnl).
+    day_from = (datetime.strptime(today_text, "%Y-%m-%d")
+                - timedelta(days=SLICE_WINDOW_DAYS + 1)).strftime("%Y-%m-%d")
+    stats = {
+        b: {"n": 0, "wins": 0, "stated": 0.0, "sse": 0.0, "profit": 0.0}
+        for b in _SLICE_BUCKET_ORDER
+    }
+    for row in read_slice_ledger(path):
+        day = _slice_day(row.get("date"))
+        if not (day_from <= day <= today_text):
+            continue
+        try:
+            prob = float(row.get("prob_stated") or 0.0)
+        except (TypeError, ValueError):
+            continue
+        if prob <= 0.0:
+            continue
+        result = pick_result({"date": day, "home": row.get("home"),
+                              "away": row.get("away"),
+                              "pick": row.get("pick")}, settled)
+        if result not in ("win", "loss"):
+            continue
+        bucket = str(row.get("bucket") or "")
+        if bucket not in stats:
+            continue
+        st = stats[bucket]
+        hit = 1.0 if result == "win" else 0.0
+        st["n"] += 1
+        st["wins"] += hit
+        st["stated"] += prob
+        st["sse"] += prob * (1.0 - prob)
+        try:
+            odds = float(row.get("odds") or 0.0)
+        except (TypeError, ValueError):
+            odds = 0.0
+        st["profit"] += (odds - 1.0) if hit else -1.0
+
+    state_file = _slice_state_path(state_path)
+    try:
+        prior = json.loads(state_file.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        prior = {}
+    prior_eval = _slice_day(prior.get("last_eval"))
+    prior_buckets = prior.get("buckets") or {}
+    verdicts = {}
+    for bucket in _SLICE_BUCKET_ORDER:
+        st = stats[bucket]
+        n = st["n"]
+        gap = (st["wins"] - st["stated"]) / n if n else 0.0
+        z = gap / (math.sqrt(st["sse"]) / n) if n and st["sse"] > 0 else None
+        verdict = _slice_verdict(n, gap, st["sse"])
+        old = prior_buckets.get(bucket) or {}
+        demote = max(0, int(old.get("demote_streak") or old.get("streak") or 0))
+        bench = max(0, int(old.get("bench_streak") or 0))
+        if prior_eval < today_text:
+            demote_delta = (verdict in ("COLD", "BLEEDING")
+                            if SLICE_DEMOTE_ON_COLD else verdict == "BLEEDING")
+            demote = max(0, demote + (1 if demote_delta else -1))
+            bench = max(0, bench + (1 if verdict == "BLEEDING" else -1))
+        action = (_slice_action(bucket, verdict, demote, bench)
+                  if SLICE_ENABLED else "FULL")
+        verdicts[bucket] = {
+            "n": n,
+            "hit": round(st["wins"] / n, 4) if n else None,
+            "stated": round(st["stated"] / n, 4) if n else None,
+            "gap": round(gap, 4) if n else None,
+            "z": round(z, 3) if z is not None else None,
+            "roi_flat": round(st["profit"] / n, 4) if n else None,
+            "verdict": verdict,
+            "demote_streak": demote,
+            "bench_streak": bench,
+            "streak": demote,
+            "action": action,
+            "rank_cap": (float(SLICE_DEMOTE_CAP[bucket])
+                          if action == "DEMOTED" and bucket in SLICE_DEMOTE_CAP
+                          else None),
+        }
+    rank_caps, bench_buckets = _slice_rank_caps(verdicts)
+    report = {
+        "generated_at": datetime.now(TZ).isoformat(timespec="seconds"),
+        "last_eval": today_text,
+        "window_days": SLICE_WINDOW_DAYS,
+        "window_from": day_from,
+        "min_n": SLICE_MIN_N,
+        "z_bench": SLICE_Z_BENCH,
+        "demote_streak": SLICE_DEMOTE_STREAK,
+        "bench_streak": SLICE_BENCH_STREAK,
+        "demote_on_cold": SLICE_DEMOTE_ON_COLD,
+        "bench_on_bleed": SLICE_BENCH_ON_BLEED,
+        "demote_cap": SLICE_DEMOTE_CAP,
+        "demote_shrink": SLICE_DEMOTE_SHRINK,
+        "enabled": SLICE_ENABLED,
+        "buckets": verdicts,
+    }
+    try:
+        state_file.parent.mkdir(parents=True, exist_ok=True)
+        state_file.write_text(json.dumps(report, indent=2), encoding="utf-8")
+    except OSError:
+        pass
+    return ({"rank_caps": rank_caps,
+             "bench_buckets": tuple(sorted(bench_buckets)),
+             "enabled": SLICE_ENABLED}, verdicts)
+
+
+def _slice_table_lines(verdicts):
+    lines = ["SELECTION LADDER SLICE (trailing " + str(SLICE_WINDOW_DAYS)
+             + "d):",
+             "  bucket                                      n       gap       z verdict demote bench action"]
+    for bucket in _SLICE_BUCKET_ORDER:
+        v = verdicts[bucket]
+        gap = "—" if v["gap"] is None else f"{v['gap']:+.1%}"
+        z = "—" if v["z"] is None else f"{v['z']:+.2f}"
+        lines.append(f"  {bucket:38s} {v['n']:3d} {gap:>9s} {z:>8s} "
+                     f"{v['verdict']:11s} {v['demote_streak']:6d} "
+                     f"{v['bench_streak']:5d} {v['action']}")
+    return lines
+
+
+def _slice_action_lines(verdicts):
+    lines = []
+    for bucket in _SLICE_BUCKET_ORDER:
+        v = verdicts[bucket]
+        if v["action"] == "FULL":
+            continue
+        if v["action"] == "DEMOTED":
+            detail = (f"rank cap {v['rank_cap']:.2f}"
+                      if v.get("rank_cap") is not None
+                      else f"rank shrink x{SLICE_DEMOTE_SHRINK:.2f}")
+        else:
+            detail = "door bench"
+        lines.append(
+            f"SELECTION LADDER: {bucket} {v['action'].lower()} | {detail} | "
+            f"slice streak {v['demote_streak']} | verdict {v['verdict']} | n {v['n']}"
+        )
+    return lines
+
+
+def _slice_plan_rows(target, plan, pool_by_key, *, shadow=False):
+    rows = []
+    for acca in plan:
+        for leg in acca.get("legs", []):
+            source = pool_by_key.get(_leg_key(leg))
+            if source is None:
+                continue
+            source_row = source.get("row") or {}
+            home = str(source_row.get("home") or "")
+            away = str(source_row.get("away") or "")
+            rows.append({
+                "date": _slice_day(target),
+                "home": home, "away": away,
+                "match": f"{home} vs {away}",
+                "pick": str(leg.get("pick") or "").upper(),
+                "prob_stated": _printed_prob_value(leg.get("prob") or 0.0),
+                "odds": float(leg.get("odds") or 0.0),
+                "bucket": str(source_row.get("bucket") or ""),
+                "src": "slip", "seeded": False, "shadow": bool(shadow),
+            })
+    return rows
+
+
+def _slice_shadow_rows(target, pure_plan, pool_by_key, real_keys,
+                       diminished_buckets):
+    rows = _slice_plan_rows(target, pure_plan, pool_by_key, shadow=True)
+    return [row for row in rows
+            if row["bucket"] in diminished_buckets
+            and _slice_row_key(row) not in real_keys]
 
 
 def wilson_lb(wins, n, z=1.645):
@@ -1067,15 +1556,40 @@ def _rule_of(leg):
     return str((leg.get("row") or {}).get("rule") or "")
 
 
-def rank_legs(pool, rank="prob"):
-    """Order the pool. "prob" = live (stated probability, odds as tiebreak);
-    "ev" = stated expected value (prob * odds) — an A/B candidate only;
-    "rule3way" = 3-way-unanimous legs first, then stated probability — the
-    checkpoint ⑬ research candidate, NOT live and not adopted."""
+def _rank_capped_probability(leg, rank_caps):
+    """Effective ordering probability for the selection ladder.
+
+    Numeric values are hard caps (the studied CAUTION 0.70 cap). A mapping
+    ``{"shrink": factor}`` is the generic rank-only fallback for a bucket
+    without a studied cap. The raw probability remains the first tiebreaker,
+    so a cap never changes the printed evidence or score.
+    """
+    raw = float(leg["prob"])
+    bucket = str((leg.get("row") or {}).get("bucket") or "")
+    if bucket not in rank_caps:
+        return raw
+    spec = rank_caps[bucket]
+    if isinstance(spec, dict) and "shrink" in spec:
+        return raw * float(spec["shrink"])
+    return min(raw, float(spec))
+
+
+def rank_legs(pool, rank="prob", rank_caps=None):
+    """Order the pool. ``rank_caps=None`` is the live identity path.
+
+    ``prob`` remains the live stated-probability order. When ``rank_caps`` is
+    supplied, only its effective ordering key changes; ``(raw prob, odds)``
+    preserves deterministic ordering among capped ties. Other rank modes are
+    unchanged. This is selection-only: the returned leg dictionaries and
+    their raw ``prob`` fields are untouched.
+    """
     if rank == "ev":
         key = lambda l: (l["prob"] * l["odds"], l["prob"], l["odds"])   # noqa: E731
     elif rank == "rule3way":
         key = lambda l: (_rule_of(l).startswith("3way"),                # noqa: E731
+                         l["prob"], l["odds"])
+    elif rank_caps is not None and rank in ("prob", "probcap"):
+        key = lambda l: (_rank_capped_probability(l, rank_caps),         # noqa: E731
                          l["prob"], l["odds"])
     else:
         key = lambda l: (l["prob"], l["odds"])                          # noqa: E731
@@ -1135,7 +1649,7 @@ def pair_legs(legs, pairing="consecutive", legs_per_acca=None):
     return [a for a in accas if len(a) == k]
 
 
-def select_accas(pool, *, floor=None, rank="prob", pairing=None,
+def select_accas(pool, *, floor=None, rank="prob", rank_caps=None, pairing=None,
                  max_accas=None, legs_per_acca=None, volume_pool=None,
                  volume_min=None, gate_mode=None, fallback=True,
                  saturated_accas=None, min_accas=None, fixture_report=None):
@@ -1157,7 +1671,8 @@ def select_accas(pool, *, floor=None, rank="prob", pairing=None,
     volume_min = VOLUME_MIN_PROB if volume_min is None else volume_min
     gate_mode = GATE_MODE if gate_mode is None else gate_mode
 
-    pool = rank_legs([l for l in pool if l["odds"] >= floor], rank)
+    pool = rank_legs([l for l in pool if l["odds"] >= floor], rank,
+                     rank_caps=rank_caps)
     pool, fixture_dupes = dedup_fixture_legs(pool)
     if fixture_report is not None:
         fixture_report["dropped"] = [l["match"] for l in fixture_dupes]
@@ -1629,6 +2144,13 @@ def cmd_today(args, st):
     frozen = LOCALDATA / f"auto_tickets_{target}.frozen"
     slip_txt = LOCALDATA / f"auto_tickets_{target}.txt"
     if frozen.exists() and not args.force:
+        # A frozen rerun must not move ladder streaks, but it still upserts
+        # today's real evidence row from the frozen slip. No line in the slip
+        # is rewritten; the parser consumes the frozen leg print verbatim.
+        ensure_slice_seeded(target)
+        archive_index = _archive_index_for_slice(load_archived_picks())
+        frozen_rows, _unresolved = parse_slip_slice_rows(slip_txt, archive_index)
+        upsert_slice_day(frozen_rows, target)
         print(f"TICKETS FROZEN — final slip for {target}. Re-printing saved slip:")
         print("=" * 62)
         if slip_txt.exists():
@@ -1681,39 +2203,82 @@ def cmd_today(args, st):
                 str(l["row"].get("away") or "").strip().lower()) not in past]
     if cross_drops:
         census["fixture already on an earlier day's slate (kicked off)"] = cross_drops
-    # --- per-bucket P&L tripwire (2026-09-23): demote COLD-streak buckets,
-    # bench BLEEDING-streak buckets, before selection ever sees the pool. ---
+    # --- selection ladder + door P&L tripwires --------------------------
+    # Door-level P&L remains the first policy call. Its bench filter and
+    # stake weighting remain separate from the slice ladder's rank-only cap.
     pnl_weights, pnl_verdicts = compute_bucket_pnl(target)
-    benched_drops = [f"{l['match']} [{l['row'].get('bucket')}]" for l in pool
+    # Seed/read the result-free slice before scoring. Settlement is always a
+    # read-time join, so an unsettled row never becomes an automatic loss.
+    ensure_slice_seeded(target)
+    slice_policy, slice_verdicts = compute_bucket_slice(target)
+    base_pool = list(pool)  # shadow planning strips BOTH ladder and door policy
+    door_pool = list(base_pool)
+    benched_drops = [f"{l['match']} [{l['row'].get('bucket')}]" for l in door_pool
                      if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) <= 0.0]
     if benched_drops:
-        pool = [l for l in pool
-                if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) > 0.0]
+        door_pool = [l for l in door_pool
+                     if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) > 0.0]
         census["P&L tripwire: bucket benched (BLEEDING streak >= "
               f"{PNL_BENCH_STREAK} days)"] = sorted(benched_drops)
-    demoted = sorted(b for b, v in pnl_verdicts.items() if v["weight"] == 0.5)
-    census_lines = format_skip_census(total_in, len(pool), census)
-    # Nothing was dropped: say nothing. A clean slate reads like a clean slate.
+
+    slice_benched = set(slice_policy.get("bench_buckets") or ())
+    slice_bench_drops = [f"{l['match']} [{l['row'].get('bucket')}]" for l in door_pool
+                         if str(l["row"].get("bucket") or "") in slice_benched]
+    plan_pool = [l for l in door_pool
+                 if str(l["row"].get("bucket") or "") not in slice_benched]
+    if slice_bench_drops:
+        census["SELECTION LADDER: slice bucket benched"] = sorted(slice_bench_drops)
+
+    # The shadow plan is a second pure call. It deliberately strips both the
+    # slice caps and the door bench/weights, then keeps only diminished-bucket
+    # legs and removes any key already represented by today's real plan.
+    diminished = {b for b, v in slice_verdicts.items()
+                  if v.get("action") in ("DEMOTED", "BENCHED")}
+    bank_eff = effective_bank(st, exclude_date=target)
+    shadow_rows = []
+    pure_shadow_plan = None
+    base_pool_by_key = {_leg_key(l): l for l in base_pool}
+    if diminished and len(base_pool) >= LEGS_PER_ACCA:
+        pure_shadow_plan = plan_day(list(base_pool), bank_eff,
+                                    fixture_report={})
+
+    census_lines = format_skip_census(total_in, len(plan_pool), census)
     if not any(census.values()):
         census_lines = []
-    if len(pool) < LEGS_PER_ACCA:
+    if len(plan_pool) < LEGS_PER_ACCA:
+        # --force-repick replaces prior same-day real+shadow rows even when
+        # the new final plan is empty.
+        upsert_slice_day(shadow_rows, target)
         print("\n".join(census_lines))
-        print(f"NO BET TODAY — {len(pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
+        print("\n".join(_slice_action_lines(slice_verdicts)))
+        print("\n".join(_slice_table_lines(slice_verdicts)))
+        print(f"NO BET TODAY — {len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
         print("(bank stays unbet)")
         return 0
-    bank_eff = effective_bank(st, exclude_date=target)
+
     fixture_report: dict[str, list[str]] = {}
-    plan = plan_day(pool, bank_eff, fixture_report=fixture_report,
-                    bucket_weights=pnl_weights)
+    plan = plan_day(plan_pool, bank_eff, fixture_report=fixture_report,
+                    bucket_weights=pnl_weights,
+                    rank_caps=slice_policy.get("rank_caps") or None)
     if not plan:
+        upsert_slice_day(shadow_rows, target)
         print("\n".join(census_lines))
+        print("\n".join(_slice_action_lines(slice_verdicts)))
+        print("\n".join(_slice_table_lines(slice_verdicts)))
         print("NO BET TODAY — plan empty")
         return 0
     # Task E (2026-09-06): a force-repick REPLACES the target date's own
     # existing slip (upsert below deletes it) — so its stake was excluded
     # from committed capital above. The slip prints the card as-is.
+    pool_by_key = base_pool_by_key
+    real_rows = _slice_plan_rows(target, plan, pool_by_key)
+    real_keys = {_slice_row_key(row) for row in real_rows}
+    if pure_shadow_plan is not None:
+        shadow_rows = _slice_shadow_rows(
+            target, pure_shadow_plan, pool_by_key, real_keys, diminished,
+        )
+    upsert_slice_day(real_rows + shadow_rows, target)
     upsert_slip(st, target, plan)
-    pool_by_key = {_leg_key(l): l for l in pool}
     _log_printed_price_boards(target, plan, pool_by_key)   # Task F, append-only
     committed = st["bank"] - bank_eff
     lines = [f"AUTO TICKETS (ROLLING) — {target}", "=" * 62,
@@ -1732,6 +2297,10 @@ def cmd_today(args, st):
                              ((b, v) for b, v in pnl_verdicts.items()
                               if v['weight'] < 1.0),
                              key=lambda kv: kv[1]['weight'])))
+    lines.extend(_slice_action_lines(slice_verdicts))
+    lines.extend(_slice_table_lines(slice_verdicts))
+    if shadow_rows:
+        lines.append(f"SELECTION LADDER SHADOW: {len(shadow_rows)} diminished-bucket leg(s) logged")
     if fixture_report.get("dropped"):
         lines.append("SAME-FIXTURE DEDUP: dropped "
                      + "; ".join(fixture_report["dropped"])
