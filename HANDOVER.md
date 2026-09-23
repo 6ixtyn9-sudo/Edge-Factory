@@ -8740,3 +8740,84 @@ refuses to judge.
 
 Receipt: 462 passed (460 + 2 new); `ruff` findings unchanged on both touched
 files (10 / 3); no engine constant or state file changed.
+
+## Addendum — 2026-09-23: identity fold across three seams + settle postmortem; autobets performance taken seriously
+
+Doc consolidation note: this addendum REPLACES the standalone
+IDENTITY_FOLD_2026-09-22.md (deleted in the same commit) per operator
+direction — identity postmortems live here from now on.
+
+### 1. The identity-split defect class, evicted from three seams in ~24h
+
+Root cause under everything below: one fixture arriving under two
+spellings ("Dagenham & Redbridge" vs "Dagenham and Redbridge";
+"England,Fa Cup" vs "FA") was treated as two fixtures. Three seams
+shared the same class; three commits closed it:
+
+- **Capture + canonicalisation (c011cae, 7e10cbe)**: new shared
+  `edgefactory/identity.py` (deterministic folds, no fuzz; explicit
+  evidence-seeded alias tables). `source_team_key`, `canonical_league`,
+  `canonical_team` fallbacks, and the slip-card dedup fold all delegate
+  to it. Replay over 1,413 archived rows: exactly the 2 Dagenham
+  incidents collapse, 400/402 league canonicals unchanged, 0 regressions.
+- **Width-9 voter key retired (24d8ea7)**: red-team found the legacy
+  `norm_team(9)` space already collided 109 ways (Atletico/Real Madrid
+  both keyed "madrid"; Arsenal == Arsenal W) and the fold widened it by
+  ~12 (accent rescue + noise dropping w/ii/b/res). New 24-char
+  club-structure-only key + raw-name alias pairs derived through the key
+  function: collision groups 109 -> 66, every survivor same-club
+  spelling variants. canonical_team fallback and miners' norm_team
+  untouched (team-ctx pool keyspace dependency recorded).
+- **Settle seam (6558e54)**: the 2026-09-10 slip sat frozen 13 days —
+  legs "Muharraq SC vs Manama Club" never exact-matched archive rows
+  "Muharraq vs Manama", so the grading AND the 5-day kickoff-age void
+  never armed. Settle matching now uses the folded key; void timers arm
+  on slip-date when kickoff unparseable or row entirely absent at >=5d.
+  Settle lines carry legs=[...] evidence. Read-only dry-run: the close
+  reproduces exactly as `legs=['win','loss']` (the win was gradeable all
+  along once matched; real world 3-1), day closes 31.2222 staked / 0
+  returned, bank 109.0963 -> 93.4852 with NO state surgery.
+
+Doctrine updates pinned in tests: donor-gapped legs with unparseable
+kickoffs auto-void on the slip-date timer at >=5d (was: hold forever).
+Watchdogs: alias targets must exist in the purity-registry keyspace
+(fails loudly on sponsor-name drift). Suite 629 passed; all touched-file
+ruff baselines flat.
+
+### 2. Autobets performance review (operator asked "are we doing the
+right thing?" — facts first)
+
+Live state replay (state history, 27 settled bet-days, 63 accas):
+
+| period | staked | returned | P&L | note |
+|---|---|---|---|---|
+| lifetime through 2026-09-22 | 682.93 | 692.03 | **+9.10% capital (+1.3% ROI)** | 38W/25L = 60% acca hit |
+| peak 09-20 |  |  | bank 158.1 |  |
+| last 3 settles (09-21, 09-22, 09-10 close) | −31.16, −31.16, −15.61 | 0 | **−31% from peak -> bank ~93.5** | 4 straight 0-return days |
+
+`--october --new-since 2026-09-10` official gate, 13 new bet-days:
+**live −0.0337 log/day**, maxDD 40%, NOT ADOPTABLE (needs 60 new days).
+Singles arm (legs_per_acca=1): **−0.0171 log/day — half the bleed**,
+P(better) 65%, optimism penalty lower (+0.0361 vs +0.0441). Also NOT
+ADOPTABLE (also negative).
+
+Read: selection quality is real but thin (60% hits @ ~1.8 avg price ≈
+marginally positive with enormous error bars at n=63); **the parlay
+structure doubles the bleed vs singles**; staking (~31% of capital/day
+late, ~rough-Kelly for an UNPROVEN edge) turned variance into the -31%
+drawdown. At the current 13-day trajectory (-0.0337 log/day), bank
+halves in ~20 days; the gate refuses to adopt anything, as designed.
+
+Operator-level options tabled for direction (nothing auto-ships):
+
+1. ride it out: the bar keeps the wheels honest but live keeps bleeding;
+2. deployment cap now (risk cut without touching strategy — e.g.,
+   fewer accas/day or lower stake_pct ceiling);
+3. pause autobets, keep research+ranking running, resume only when
+   `--october` has 60 new days and an arm clears all six criteria.
+
+### 3. Housekeeping
+
+- Untracked working artifacts at repo root (ML_FADE_CONTEXTS_DIAGNOSIS_,
+  ML_FADE_PRICE_STUDY_2026-09-20) are not in git and were left in place;
+  identity doc deleted as above.
