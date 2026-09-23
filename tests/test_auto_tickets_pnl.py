@@ -252,6 +252,36 @@ def test_roi_is_priced_leg_accounting_not_pnl_over_n(state):
     assert v["roi_flat"] == pytest.approx(v["roi"], rel=1e-9)  # all priced here
 
 
+def test_pre_engine_state_file_reads_and_re_earns_from_scratch(state):
+    """Deploying onto a machine holding the OLD report shape must not crash.
+
+    The state file written before this change carried private `min_n`/`z_bench`
+    keys and a PAYING/BLEEDING vocabulary, with streaks earned under a statistic
+    that no longer exists. The reader takes only `last_eval` and the per-bucket
+    streak, so it loads, rewrites in the engine shape, and drops the stale keys.
+    A stored BLEEDING-era streak is therefore forgiven on the first new run: it
+    was earned by a rule that could not see calibrated-but-losing, so honouring
+    it would mean enforcing a dead test. A bucket that really is bleeding re-earns
+    the streak from zero within PNL_DEMOTE_STREAK days.
+    """
+    state.write_text(json.dumps({
+        "generated_at": "2026-09-22T11:00:00+02:00", "last_eval": "2026-09-22",
+        "window_days": 21, "min_n": 20, "z_bench": -2.0, "enabled": True,
+        "buckets": {"CAUTION": {"n": 49, "verdict": "BLEEDING", "streak": 2,
+                                "weight": 0.5}},
+    }))
+    rows, settled = _rows(40, wins=30, bucket="CAUTION", odds=1.30)
+    weights, verdicts = at.compute_bucket_pnl(
+        TODAY, archives=rows, settled=settled, path=state)
+    v = verdicts["CAUTION"]
+    assert v["verdict"] == "CAUTION" and v["streak"] == 0
+    assert v["weight"] == pytest.approx(1.0)
+    assert weights["CAUTION"] == pytest.approx(1.0)
+    report = json.loads(state.read_text())
+    assert "min_n" not in report and "z_bench" not in report   # rewritten, not merged
+    assert report["engine"].endswith("context_verdict_league")
+
+
 def test_report_records_which_engine_graded_the_door(state):
     rows, settled = _rows(40, wins=20, bucket="CAUTION", odds=1.50)
     at.compute_bucket_pnl(TODAY, archives=rows, settled=settled, path=state)
