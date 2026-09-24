@@ -9407,3 +9407,52 @@ Verified after all of it: **686 passed** in a clean tree, *with* a cache-restore
 *with* CI's whole job env simulated (secrets, `GITHUB_ACTIONS`, `TZ`) — the state that produced 7 failures.
 Pushing `.github/workflows/*` is still token-blocked, so the workflow ships as a validated file for paste:
 `jobs.regression-tests` in `~/daily.yml`, pipeline section byte-identical apart from the removed step.
+
+## PICK LABELS ARE THE OPERATING FLOOR, NOT THE PICK'S TIER — 2026-09-24
+
+Raised while answering "if a ml-meta tier gets benched, does the leg disappear from auto-bets?"
+Answer required reading the machinery, and the machinery is counter-intuitive enough to write down.
+
+`load_thresholds()` collapses the entire certified registry into **one entry per `n_way`**
+(`t1x2`), chosen by `_prefer_entry()` (picks_today.py:1111): unqualified names beat qualified
+ones, then **the LOOSEST threshold wins**, then the shortest rule string. `thr_for()` then
+hands that single entry to every candidate with that source count, and it is used for two
+different jobs at once:
+
+  * its `threshold` is the candidate's **eligibility floor** (cups +5.0, friendlies +10.0);
+  * its `rule` / `display_rule` become the **label stamped on the archived row**.
+
+So a 74.3% fixture labelled `ml-meta avg_p>=55` is not a bug and not the model's tier — 55 is
+simply who owns the 3-way slot. Same reason a 76.0% leg reads `2way-unanimous avg_p>=60`. The
+live model-scoring path (picks_today.py:2735) *does* label honestly, at the highest qualifying
+certified threshold ("one pick, strongest label"), and it is identifiable in the archive because
+it stamps `ml_p`; the consensus path stamps `ml_p: null`. Two emitters, two labelling semantics.
+
+**Do not "fix" the label.** `heal_ledger_labels()` (edgefactory/util.py) re-derives `display_rule`
+from the exact `rule` string on every run, so a display-only correction is silently reverted —
+`scripts/heal_pick_labels.py` exists precisely to enforce that invariant. The only way to store an
+honest per-pick tier is to change `rule`, and `rule` is the floor: raising it re-gates *every* pick
+of that source count and would quietly shrink the slate. That is a money decision wearing a
+cosmetic ticket, which is why it is recorded here instead of done.
+
+**The bench asymmetry, which is the operationally useful part.** `decay_monitor.py` flips a
+certified edge to `status: "benched"` on DEAD/DECAYING (or recent ROI < -5% at n >= 30), and
+`picks_today` only loads `status == "certified"`. But because the loosest rule owns each slot,
+**benching a tier that does not own the slot changes nothing at all** — on 2026-09-24 the monitor
+benched `ml-meta avg_p>=70` and `>=75` and no leg, label or floor moved. Only benching the
+floor-holder (`avg_p>=55` for 3-way) bites, by lifting the floor to the next loosest certified
+rule. Consequences to keep in mind:
+
+  * "0 benched this run" is not evidence of no decay, and a green bench count is not risk reduced;
+    the circuit breaker aims at thin, decaying high tiers, which is exactly what the slot ignores.
+  * `bucket_pick()` routes a benched or DEAD/DECAYING edge to `SKIPPED_DEAD_EDGE`, which is not a
+    playable bucket in auto_tickets — that is where a leg actually disappears.
+  * Per-rule firing counts must be computed from thresholds, never from `pick["rule"]`.
+    `localdata/edge_firing_tripwire.json` already does this right (it showed `>=60` at n=82 and
+    `>=65` at n=22, both fired 2026-09-23, while every archived row was labelled `>=55`).
+
+Pinned by `tests/test_picks_today.py` section 3 (slot ownership, inert non-slot bench, floor rise
+on holder bench, qualifier preference, and the self-heal trap). No production behaviour changed.
+Side observation, not acted on: `3way-unanimous avg_p>=65` is certified, `WATCH`,
+`n_last_window: 0`, last fired 2026-08-10 — inert weight in the registry, worth a look at the
+next maintenance pass.

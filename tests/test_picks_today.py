@@ -6,6 +6,14 @@ Contracts pinned here, all live-pipeline-critical:
      addendum 27.18; 2026-08-05 silent-coverage-loss fix).
   2. collapse_final_operational_picks (the operational duplicate
      collapse; 2026-06-18 "AC Oulu vs IFK Mariehamn" leak).
+  3. Registry -> operating floor (load_thresholds / _prefer_entry / thr_for):
+     the rule stamped on an archived row is the n_way SLOT's threshold, which
+     is the LOOSEST certified rule in that family, not the pick's own tier.
+     Pinned because it is a floor, not a label: anyone "fixing" the understated
+     label by making the slot prefer a higher tier would raise the eligibility
+     floor for every pick of that source count and silently throttle the slate.
+     (Investigated 2026-09-24, after two ml-meta tiers were auto-benched and
+     the board did not move.)
 
 The former Contract 2 (v4 grader stakes_frac display) and Contract 4
 (load_pause_state) were removed with the v4 combo-gate slipper itself on
@@ -23,6 +31,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts"))
 
+import picks_today  # noqa: E402  (module handle: tests patch its EDGES_PATH)
 from picks_today import (  # noqa: E402
     BUCKET_CERTIFIED,
     BUCKET_CAUTION,
@@ -447,3 +456,113 @@ def test_eval_binary_suppresses_fixture_with_cross_source_kickoff_move():
     picks2 = eval_binary("2026-08-29", data2, "ou_2.5", SOURCES_OU, OU_COL, edge,
                          ("over", "under"), ou_outcome_odds)
     assert [p["pick"] for p in picks2] == ["over"]
+# --------------------------------------------------------------------------
+# 3. Registry -> operating floor: one certified rule per n_way, the loosest.
+#    2026-09-24: the decay monitor benched `ml-meta avg_p>=70` and `>=75`
+#    (both DECAYING) and zero legs moved. That is not luck, it is this
+#    machinery, and it is the reason a label must never be "corrected" here.
+# --------------------------------------------------------------------------
+
+# Certified registry as it stood on 2026-09-24 (thresholds nested: a fixture
+# at 74.3% clears 55, 60, 65 and 70 -- only one of them can own the slot).
+_REGISTRY = {
+    "ml-meta avg_p>=55": "certified",
+    "ml-meta avg_p>=60": "certified",
+    "ml-meta avg_p>=65": "certified",
+    "ml-meta avg_p>=70": "certified",
+    "ml-meta avg_p>=75": "certified",
+    "ml-meta avg_p>=80": "certified",
+    "2way-unanimous avg_p>=60": "certified",
+    "2way-unanimous avg_p>=70": "certified",
+    "3way-unanimous min_p>=60 avg_p>=60": "certified",
+}
+
+
+def _registry(monkeypatch, tmp_path, statuses):
+    """Fabricate edges_consensus.json and point the module at it."""
+    import json
+
+    edges = [
+        {
+            "rule": rule,
+            "market": "1x2",
+            "status": status,
+            "train": {"n": 100, "hit": 0.70},
+            "valid": {"n": 60, "hit": 0.72, "wilson_lb": 0.60, "roi": 0.20},
+        }
+        for rule, status in statuses.items()
+    ]
+    path = tmp_path / "edges_consensus.json"
+    path.write_text(json.dumps({"edges": edges, "gates": {}, "ml_model": {"model_key": "t"}}))
+    monkeypatch.setattr(picks_today, "EDGES_PATH", path)
+    return picks_today.load_thresholds()
+
+
+def test_slot_holds_the_loosest_certified_threshold_per_n_way(monkeypatch, tmp_path):
+    t1x2, _ou, _btts, is_fallback = _registry(monkeypatch, tmp_path, _REGISTRY)
+    assert not is_fallback, "a registry with certified edges must not take the fallback path"
+    # 3-way: every ml-meta tier competes for one slot and 55 wins it.
+    assert t1x2[3]["rule"] == "ml-meta avg_p>=55"
+    assert t1x2[3]["threshold"] == 55.0
+    # 2-way: same rule, and it is why a 76.0% leg reads ">=60" on the board.
+    assert t1x2[2]["rule"] == "2way-unanimous avg_p>=60"
+    # A pick is gated by the slot it draws, so thr_for must hand back that entry.
+    assert picks_today.thr_for(3, t1x2) is t1x2[3]
+
+
+def test_benching_a_tier_that_does_not_own_the_slot_changes_nothing(monkeypatch, tmp_path):
+    """The 2026-09-24 case, executable: two DECAYING tiers benched, no leg moves."""
+    before, _, _, _ = _registry(monkeypatch, tmp_path, _REGISTRY)
+    benched = dict(_REGISTRY, **{"ml-meta avg_p>=70": "benched", "ml-meta avg_p>=75": "benched"})
+    after, _, _, _ = _registry(monkeypatch, tmp_path, benched)
+    assert after[3]["rule"] == before[3]["rule"] == "ml-meta avg_p>=55"
+    assert after[2]["rule"] == before[2]["rule"]
+    assert after[3]["threshold"] == before[3]["threshold"]
+
+
+def test_benching_the_slot_holder_raises_the_floor_for_every_pick(monkeypatch, tmp_path):
+    """The asymmetry that matters: only the floor-holder's bench bites.
+
+    Benching >=55 hands the 3-way slot to the next loosest eligible rule, so the
+    qualifying floor for EVERY 3-source candidate moves 55 -> 60 -- fixtures in
+    that band stop being picks at all. The label looks like the thing that
+    changed; the floor is the thing that changed.
+    """
+    benched = dict(_REGISTRY, **{"ml-meta avg_p>=55": "benched"})
+    t1x2, _, _, _ = _registry(monkeypatch, tmp_path, benched)
+    assert t1x2[3]["rule"] == "ml-meta avg_p>=60"
+    assert t1x2[3]["threshold"] == 60.0
+
+
+def test_qualifier_prefers_the_plain_rule_name(monkeypatch, tmp_path):
+    """Unqualified names win their slot (picks_today._is_qualified): a variant
+    carrying min_p / home-only / bc-confirms tokens must not become the
+    operating floor for the plain family it was derived from."""
+    only_qualified = {
+        "ml-meta avg_p>=55": "benched",
+        "2way-unanimous avg_p>=60": "certified",
+        "3way-unanimous min_p>=60 avg_p>=55": "certified",
+    }
+    t1x2, _, _, _ = _registry(monkeypatch, tmp_path, only_qualified)
+    assert t1x2[3]["rule"] == "3way-unanimous min_p>=60 avg_p>=55"
+
+
+def test_display_rule_cannot_be_relabelled_without_fighting_the_self_heal():
+    """Why the honest-label fix is NOT a display fix.
+
+    The tempting correction -- stamp the tier the model actually cleared into
+    display_rule -- is undone by the ledger self-heal, which derives
+    display_rule from the exact rule string on every run. So the label is only
+    fixable by changing `rule`, and `rule` is the operating floor. That is the
+    whole trap this section pins.
+    """
+    from edgefactory.util import heal_ledger_labels
+
+    row = {
+        "market": "1x2",
+        "rule": "ml-meta avg_p>=55",
+        "edge_rule": "ml-meta avg_p>=55",
+        "display_rule": "ML-META\u226565",   # the "honest" tier a picker would want
+    }
+    assert heal_ledger_labels([row]) == 1
+    assert row["display_rule"] == "ML-META\u226555"
