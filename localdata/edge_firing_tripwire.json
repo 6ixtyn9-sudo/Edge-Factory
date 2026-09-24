@@ -19,7 +19,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-09-24",
-      "n_last_window": 439,
+      "n_last_window": 447,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
@@ -45,7 +45,7 @@
       "silent": false
     }
   ],
-  "generated_at": "2026-09-24T00:36:18",
+  "generated_at": "2026-09-24T02:13:31",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
@@ -94,7 +94,7 @@
     },
     {
       "name": "predictz",
-      "newest_date": "2026-09-23",
+      "newest_date": "2026-09-24",
       "newest_file": "predictz_2026-09.csv.gz",
       "role": "shadow",
       "stale": false
