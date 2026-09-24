@@ -741,8 +741,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-24T09:00:51+02:00",
-    "avg_p": 66.3,
+    "as_of": "2026-09-24T18:00:57+02:00",
+    "avg_p": 65.3,
     "away": "Comoros",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
@@ -775,55 +775,53 @@
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
-    "enhancement_breakeven": 0.4878,
-    "enhancement_edge_sample": -0.065,
-    "enhancement_label": "Match Over 2.5 Goals",
+    "enhancement_label": "Away Team Under 3.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
-    "enhancement_price": 2.05,
+    "enhancement_price": null,
     "enhancement_price_at": null,
     "enhancement_price_book": null,
-    "enhancement_price_source": "scoutingstats",
-    "enhancement_priced": true,
-    "enhancement_probability": 0.4561,
-    "enhancement_reason": "Mathematical expectation is 59.8% (ML-calibrated 46.2%->62.9%, n=568) (Performance feedback: HR=65.4%, Adjusted Prob: 45.6%)",
-    "enhancement_state": "PAPER",
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.9623,
+    "enhancement_reason": "Combined Under 3.5 is 98.5% (ML-calibrated 96.3%->97.6%, n=409) (Performance feedback: HR=96.5%, Adjusted Prob: 96.2%)",
+    "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 1287,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.45610119484121775,
-        "raw_probability": 0.5979503783409111,
-        "reason": "Mathematical expectation is 59.8% (ML-calibrated 46.2%->62.9%, n=568) (Performance feedback: HR=65.4%, Adjusted Prob: 45.6%)"
-      },
-      {
-        "cohort_n": 1287,
+        "cohort_n": 1416,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9616326973365501,
-        "raw_probability": 0.9840683544164528,
-        "reason": "Combined Under 3.5 is 98.4% (ML-calibrated 96.3%->97.6%, n=409) (Performance feedback: HR=96.5%, Adjusted Prob: 96.2%)"
+        "probability": 0.9622911426145074,
+        "raw_probability": 0.9847421617474091,
+        "reason": "Combined Under 3.5 is 98.5% (ML-calibrated 96.3%->97.6%, n=409) (Performance feedback: HR=96.5%, Adjusted Prob: 96.2%)"
       },
       {
-        "cohort_n": 1287,
+        "cohort_n": 1416,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9071793534465482,
-        "raw_probability": 0.9566121641210141,
-        "reason": "Combined Under 2.5 is 95.7% (ML-calibrated 93.0%->91.9%, n=371) (Performance feedback: HR=95.8%, Adjusted Prob: 90.7%)"
+        "probability": 0.906329755157964,
+        "raw_probability": 0.9557162706525525,
+        "reason": "Combined Under 2.5 is 95.6% (ML-calibrated 93.0%->91.9%, n=371) (Performance feedback: HR=95.8%, Adjusted Prob: 90.6%)"
       },
       {
-        "cohort_n": 1287,
+        "cohort_n": 1416,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.4492159638035121,
+        "raw_probability": 0.5889238146078476,
+        "reason": "Mathematical expectation is 58.9% (ML-calibrated 46.2%->62.9%, n=568) (Performance feedback: HR=65.4%, Adjusted Prob: 44.9%)"
+      },
+      {
+        "cohort_n": 1416,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.23980376730491934,
-        "raw_probability": 0.2305151589740596,
-        "reason": "Poisson expected hit rate is 23.1% (ML-calibrated 23.9%->27.9%, n=441)"
+        "probability": 0.2285373495132706,
+        "raw_probability": 0.2196851369210374,
+        "reason": "Poisson expected hit rate is 22.0% (ML-calibrated 23.9%->27.9%, n=441)"
       }
     ],
     "home": "Cameroon",
@@ -871,17 +869,17 @@
     "price_evidence": "SCOUTINGSTATS_SOLE",
     "price_push_eligible": false,
     "price_quarantine_reason": "scoutingstats_sole_source",
-    "recommended_enhancement": "match_over_25",
+    "recommended_enhancement": "away_under_35",
     "recommended_market": "avoid_raw_1x2",
     "rule": "ml-meta avg_p>=55",
     "source_weights": {},
     "sources_used": [
       "forebet",
-      "vitibet",
-      "betclan"
+      "zulubet",
+      "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=982): Avg Goals: 3.51 | Over 2.5: 67.9% | BTTS: 39.7% | Home Over 1.5 Goals: 85.3% | Away Over 1.5 Goals: 10.1%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1060): Avg Goals: 3.47 | Over 2.5: 67.3% | BTTS: 39.5% | Home Over 1.5 Goals: 85.0% | Away Over 1.5 Goals: 10.5%",
     "veto_reason": "context VETO in ['odds_band']",
     "vitibet_index": 2.5,
     "w_score": 1.0
@@ -1438,7 +1436,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-24T15:00:58+02:00",
+    "as_of": "2026-09-24T18:00:57+02:00",
     "avg_p": 67.9,
     "away": "Israel",
     "bookmaker": "scoutingstats_odds",
@@ -1556,7 +1554,7 @@
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.44,
+      "odds": 1.45,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -1599,7 +1597,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-24T15:00:58+02:00",
+    "as_of": "2026-09-24T18:00:57+02:00",
     "avg_p": 62.0,
     "away": "Uganda",
     "bookmaker": "scoutingstats_odds",
@@ -1696,13 +1694,13 @@
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.38,
+    "odds": 1.36,
     "odds_captured_at": "2026-09-24T19:00:00Z",
     "odds_league": "Africa Cup of Nations Qualifications",
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
     "odds_replaced": {
-      "odds": 1.44,
+      "odds": 1.38,
       "source": "forebet_best"
     },
     "odds_source": "scoutingstats_odds",
@@ -1719,7 +1717,7 @@
         "league": "Africa Cup of Nations Qualifications",
         "market": "1x2",
         "match_method": "exact",
-        "odds": 1.38,
+        "odds": 1.36,
         "selection": "home",
         "source": "scoutingstats_odds"
       }
