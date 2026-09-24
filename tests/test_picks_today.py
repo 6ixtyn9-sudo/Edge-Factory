@@ -480,8 +480,6 @@ _REGISTRY = {
 
 def _registry(monkeypatch, tmp_path, statuses):
     """Fabricate edges_consensus.json and point the module at it."""
-    import json
-
     edges = [
         {
             "rule": rule,
