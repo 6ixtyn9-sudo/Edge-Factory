@@ -17682,7 +17682,7 @@
    "first_odds_forebet": 4.75,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-23T00:00:57+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Alianza FC",
    "kickoff": "2026-09-24 03:00:00",
    "last_seen_at": "2026-09-24T06:00:59+02:00",
@@ -17711,18 +17711,22 @@
    "odds_forebet": 4.75,
    "odds_source": "forebet_best",
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "draw",
    "parent_avg_p": 51.2,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.5122,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "forebet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 2,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "forebet"
    ],
@@ -17732,7 +17736,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.0489
   },
   {
@@ -17748,7 +17752,7 @@
    "first_odds_forebet": 1.57,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-23T00:00:57+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Alianza FC",
    "kickoff": "2026-09-24 03:00:00",
    "last_seen_at": "2026-09-24T06:00:59+02:00",
@@ -17777,15 +17781,19 @@
    "odds_forebet": 1.57,
    "odds_source": "forebet_best",
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "draw",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "forebet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 2,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "forebet"
    ],
@@ -17795,7 +17803,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.0489
   },
   {
@@ -17811,7 +17819,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 5.34,
    "first_seen_at": "2026-09-23T21:00:58+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "America de Cali",
    "kickoff": "24-09, 01:30",
    "last_seen_at": "2026-09-23T23:24:38+02:00",
@@ -17831,18 +17839,22 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 5.34,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 31.9,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.3188,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -17851,7 +17863,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.7591
   },
   {
@@ -17867,7 +17879,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 1.61,
    "first_seen_at": "2026-09-23T21:00:58+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "America de Cali",
    "kickoff": "24-09, 01:30",
    "last_seen_at": "2026-09-23T23:24:38+02:00",
@@ -17887,15 +17899,19 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 1.61,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -17904,7 +17920,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.7591
   },
   {
@@ -17923,9 +17939,9 @@
    "graduation": null,
    "home": "Andorra",
    "kickoff": "11:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.5,
-   "latest_odds_zulubet": 3.48,
+   "latest_odds_zulubet": 3.59,
    "league": "International,Uefa Nations League D Grp. 1",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -17940,7 +17956,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -17982,9 +17999,9 @@
    "graduation": null,
    "home": "Andorra",
    "kickoff": "2026-09-24 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.37,
-   "latest_odds_zulubet": 2.37,
+   "latest_odds_zulubet": 2.33,
    "league": "UNL",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -18005,7 +18022,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.75,
    "odds_source": "forebet_best",
@@ -18047,7 +18065,7 @@
    "graduation": null,
    "home": "Austria",
    "kickoff": "2026-09-24 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 6.5,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -18071,7 +18089,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 6.5,
    "odds_source": "forebet_best",
@@ -18116,7 +18135,7 @@
    "graduation": null,
    "home": "Austria",
    "kickoff": "2026-09-24 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.42,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -18140,7 +18159,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.42,
    "odds_source": "forebet_best",
@@ -18182,7 +18202,7 @@
    "graduation": null,
    "home": "Cameroon",
    "kickoff": "2026-09-24 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 7.0,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -18201,7 +18221,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -18245,7 +18266,7 @@
    "graduation": null,
    "home": "Cameroon",
    "kickoff": "2026-09-24 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.33,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -18264,7 +18285,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -18305,7 +18327,7 @@
    "graduation": null,
    "home": "DR Congo",
    "kickoff": "2026-09-24 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 11.0,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -18324,7 +18346,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -18368,7 +18391,7 @@
    "graduation": null,
    "home": "DR Congo",
    "kickoff": "2026-09-24 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.27,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -18387,7 +18410,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -18425,7 +18449,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 6.26,
    "first_seen_at": "2026-09-23T21:00:58+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Firpo",
    "kickoff": "24-09, 02:00",
    "last_seen_at": "2026-09-23T23:24:38+02:00",
@@ -18445,18 +18469,22 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 6.26,
-   "outcome": null,
+   "outcome": "draw",
    "parent_avg_p": 37.1,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.371,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 0
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -18465,7 +18493,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.5281
   },
   {
@@ -18481,7 +18509,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 1.42,
    "first_seen_at": "2026-09-23T21:00:58+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Firpo",
    "kickoff": "24-09, 02:00",
    "last_seen_at": "2026-09-23T23:24:38+02:00",
@@ -18501,15 +18529,19 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 1.42,
-   "outcome": null,
+   "outcome": "draw",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 0
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -18518,7 +18550,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.5281
   },
   {
@@ -18537,7 +18569,7 @@
    "graduation": null,
    "home": "Hapoel Acre",
    "kickoff": "2026-09-24 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.6,
    "latest_odds_zulubet": null,
    "league": "Il2",
@@ -18559,7 +18591,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -18603,7 +18636,7 @@
    "graduation": null,
    "home": "Hapoel Acre",
    "kickoff": "2026-09-24 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.8,
    "latest_odds_zulubet": null,
    "league": "Il2",
@@ -18625,7 +18658,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -18775,7 +18809,7 @@
    "graduation": null,
    "home": "Ironi Modi'in",
    "kickoff": "2026-09-24 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 4.75,
    "latest_odds_zulubet": null,
    "league": "Il2",
@@ -18797,7 +18831,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -18841,7 +18876,7 @@
    "graduation": null,
    "home": "Ironi Modi'in",
    "kickoff": "2026-09-24 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.65,
    "latest_odds_zulubet": null,
    "league": "Il2",
@@ -18863,7 +18898,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -18904,9 +18940,9 @@
    "graduation": null,
    "home": "Ivory Coast",
    "kickoff": "2026-09-24 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.7,
-   "latest_odds_zulubet": null,
+   "latest_odds_zulubet": 3.61,
    "league": "NCQ",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -18923,7 +18959,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -19015,9 +19052,9 @@
    "graduation": null,
    "home": "Kahraba Ismailia",
    "kickoff": "2026-09-24 15:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.8,
-   "latest_odds_zulubet": 2.83,
+   "latest_odds_zulubet": 2.82,
    "league": "Eg2",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -19028,7 +19065,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.8,
    "odds_source": "forebet_best",
@@ -19069,7 +19107,7 @@
    "graduation": null,
    "home": "Kosovo",
    "kickoff": "2026-09-24 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.1,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -19083,7 +19121,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.1,
    "odds_source": "forebet_best",
@@ -19127,7 +19166,7 @@
    "graduation": null,
    "home": "Kosovo",
    "kickoff": "2026-09-24 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.4,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -19141,7 +19180,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.4,
    "odds_source": "forebet_best",
@@ -19182,9 +19222,9 @@
    "graduation": null,
    "home": "Libya",
    "kickoff": "2026-09-24 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.25,
-   "latest_odds_zulubet": 3.33,
+   "latest_odds_zulubet": 3.29,
    "league": "NCQ",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -19201,7 +19241,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -19296,7 +19337,7 @@
    "graduation": null,
    "home": "Liechtenstein",
    "kickoff": "2026-09-24 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 4.75,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -19320,7 +19361,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 4.75,
    "odds_source": "forebet_best",
@@ -19359,7 +19401,7 @@
    "first_odds_forebet": 4.75,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-23T00:00:57+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Lu\u00eds \u00c1ngel Firpo",
    "kickoff": "2026-09-24 03:00:00",
    "last_seen_at": "2026-09-24T00:09:18+02:00",
@@ -19386,18 +19428,22 @@
    "odds_forebet": 4.75,
    "odds_source": "forebet_best",
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "draw",
    "parent_avg_p": 55.1,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.5508,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "bettingclosed_settled|forebet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 0
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "forebet"
    ],
@@ -19406,7 +19452,7 @@
     "statarea"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.2039
   },
   {
@@ -19422,7 +19468,7 @@
    "first_odds_forebet": 1.57,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-23T00:00:57+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Lu\u00eds \u00c1ngel Firpo",
    "kickoff": "2026-09-24 03:00:00",
    "last_seen_at": "2026-09-24T00:09:18+02:00",
@@ -19449,15 +19495,19 @@
    "odds_forebet": 1.57,
    "odds_source": "forebet_best",
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "draw",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "bettingclosed_settled|forebet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 0
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "forebet"
    ],
@@ -19466,7 +19516,7 @@
     "statarea"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.2039
   },
   {
@@ -19485,7 +19535,7 @@
    "graduation": null,
    "home": "Maccabi Herzliya",
    "kickoff": "2026-09-24 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.4,
    "latest_odds_zulubet": null,
    "league": "Il2",
@@ -19507,7 +19557,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -19548,7 +19599,7 @@
    "graduation": null,
    "home": "Masar",
    "kickoff": "2026-09-24 15:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 5.5,
    "latest_odds_zulubet": null,
    "league": "Eg2",
@@ -19561,7 +19612,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 5.75,
    "odds_source": "forebet_best",
@@ -19605,7 +19657,7 @@
    "graduation": null,
    "home": "Masar",
    "kickoff": "2026-09-24 15:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.62,
    "latest_odds_zulubet": null,
    "league": "Eg2",
@@ -19618,7 +19670,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.57,
    "odds_source": "forebet_best",
@@ -19659,7 +19712,7 @@
    "graduation": null,
    "home": "Namibia",
    "kickoff": "2026-09-24 15:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.87,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -19678,7 +19731,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -19773,7 +19827,7 @@
    "graduation": null,
    "home": "Netherlands",
    "kickoff": "2026-09-24 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.75,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -19797,7 +19851,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.8,
    "odds_source": "forebet_best",
@@ -19893,7 +19948,7 @@
    "graduation": null,
    "home": "Norway",
    "kickoff": "2026-09-24 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 4.0,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -19917,7 +19972,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 4.1,
    "odds_source": "forebet_best",
@@ -19959,7 +20015,7 @@
    "graduation": null,
    "home": "O Higgins",
    "kickoff": "2026-09-24 23:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.9,
    "latest_odds_zulubet": null,
    "league": "ClC",
@@ -19972,7 +20028,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.8,
    "odds_source": "forebet_best",
@@ -20067,7 +20124,7 @@
    "graduation": null,
    "home": "Portugal",
    "kickoff": "2026-09-24 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 7.0,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -20091,7 +20148,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 6.5,
    "odds_source": "forebet_best",
@@ -20133,9 +20191,9 @@
    "graduation": null,
    "home": "Puerto Rico",
    "kickoff": "2026-09-24 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.87,
-   "latest_odds_zulubet": 2.2,
+   "latest_odds_zulubet": 2.66,
    "league": "CNL",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -20147,7 +20205,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.37,
    "odds_source": "forebet_best",
@@ -20191,9 +20250,9 @@
    "graduation": null,
    "home": "Puerto Rico",
    "kickoff": "2026-09-24 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.25,
-   "latest_odds_zulubet": 3.2,
+   "latest_odds_zulubet": 2.46,
    "league": "CNL",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -20205,7 +20264,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.7,
    "odds_source": "forebet_best",
@@ -20354,7 +20414,7 @@
    "first_odds_forebet": 3.8,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-23T00:00:57+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Seattle Sounders",
    "kickoff": "2026-09-24 03:30:00",
    "last_seen_at": "2026-09-24T06:00:59+02:00",
@@ -20384,18 +20444,22 @@
    "odds_forebet": 3.8,
    "odds_source": "forebet_best",
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 49.6,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.4955,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "forebet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "forebet"
    ],
@@ -20405,7 +20469,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.0179
   },
   {
@@ -20421,7 +20485,7 @@
    "first_odds_forebet": 1.85,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-23T00:00:57+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Seattle Sounders",
    "kickoff": "2026-09-24 03:30:00",
    "last_seen_at": "2026-09-24T06:00:59+02:00",
@@ -20451,15 +20515,19 @@
    "odds_forebet": 1.85,
    "odds_source": "forebet_best",
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "forebet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "forebet"
    ],
@@ -20469,7 +20537,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.0179
   },
   {
@@ -20542,7 +20610,7 @@
    "graduation": null,
    "home": "Serbia",
    "kickoff": "2026-09-24 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.4,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -20566,7 +20634,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.3,
    "odds_source": "forebet_best",
@@ -20608,7 +20677,7 @@
    "graduation": null,
    "home": "Sierra Leone",
    "kickoff": "2026-09-24 22:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.7,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -20627,7 +20696,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -20720,9 +20790,9 @@
    "graduation": null,
    "home": "Tunisia",
    "kickoff": "2026-09-24 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 7.5,
-   "latest_odds_zulubet": null,
+   "latest_odds_zulubet": 7.26,
    "league": "NCQ",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -20739,7 +20809,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -20783,9 +20854,9 @@
    "graduation": null,
    "home": "Tunisia",
    "kickoff": "2026-09-24 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.44,
-   "latest_odds_zulubet": null,
+   "latest_odds_zulubet": 1.43,
    "league": "NCQ",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -20802,7 +20873,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -20950,7 +21022,7 @@
    "graduation": null,
    "home": "Uzbekistan",
    "kickoff": "07:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "International,Friendlies",
@@ -20965,7 +21037,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -21007,7 +21080,7 @@
    "graduation": null,
    "home": "Uzbekistan",
    "kickoff": "07:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "International,Friendlies",
@@ -21022,7 +21095,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -21058,7 +21132,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 1.84,
    "first_seen_at": "2026-09-23T23:24:38+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Vancouver FC",
    "kickoff": "24-09, 03:00",
    "last_seen_at": "2026-09-23T23:24:38+02:00",
@@ -21077,18 +21151,22 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 1.84,
-   "outcome": null,
+   "outcome": "draw",
    "parent_avg_p": 33.2,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.3315,
    "parent_pick": "away",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 3
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -21097,7 +21175,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.7012
   },
   {
@@ -21113,7 +21191,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 3.48,
    "first_seen_at": "2026-09-23T23:24:38+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Vancouver FC",
    "kickoff": "24-09, 03:00",
    "last_seen_at": "2026-09-23T23:24:38+02:00",
@@ -21132,15 +21210,19 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 3.48,
-   "outcome": null,
+   "outcome": "draw",
    "parent_family": "ml-meta",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 3
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -21149,7 +21231,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.7012
   },
   {
@@ -21165,7 +21247,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-23T15:00:54+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Xelaju",
    "kickoff": "19:00",
    "last_seen_at": "2026-09-24T06:00:59+02:00",
@@ -21191,25 +21273,29 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 32.7,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.3268,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "statarea_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 4
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.7228
   },
   {
@@ -21225,7 +21311,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-23T15:00:54+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Xelaju",
    "kickoff": "19:00",
    "last_seen_at": "2026-09-24T06:00:59+02:00",
@@ -21251,22 +21337,26 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-24",
+   "result_source": "statarea_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 4
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-24T07:50:53+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.7228
   },
   {
@@ -21285,7 +21375,7 @@
    "graduation": null,
    "home": "Algeria",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 9.5,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -21299,7 +21389,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 9.0,
    "odds_source": "forebet_best",
@@ -21343,7 +21434,7 @@
    "graduation": null,
    "home": "Algeria",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.22,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -21357,7 +21448,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.25,
    "odds_source": "forebet_best",
@@ -21398,7 +21490,7 @@
    "graduation": null,
    "home": "Arbroath FC",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.8,
    "latest_odds_zulubet": null,
    "league": "Sc2",
@@ -21413,7 +21505,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.8,
    "odds_source": "forebet_best",
@@ -21458,7 +21551,7 @@
    "graduation": null,
    "home": "Arbroath FC",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.8,
    "latest_odds_zulubet": null,
    "league": "Sc2",
@@ -21473,7 +21566,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.8,
    "odds_source": "forebet_best",
@@ -21515,7 +21609,7 @@
    "graduation": null,
    "home": "Armenia",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 5.0,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -21530,7 +21624,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 5.0,
    "odds_source": "forebet_best",
@@ -21575,7 +21670,7 @@
    "graduation": null,
    "home": "Armenia",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.7,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -21590,7 +21685,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.7,
    "odds_source": "forebet_best",
@@ -21632,7 +21728,7 @@
    "graduation": null,
    "home": "Astoria Walldorf",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "De4",
@@ -21646,7 +21742,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -21690,7 +21787,7 @@
    "graduation": null,
    "home": "Astoria Walldorf",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "De4",
@@ -21704,7 +21801,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -21745,7 +21843,7 @@
    "graduation": null,
    "home": "Ayr Utd",
    "kickoff": "11:45",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Scotland,Championship",
@@ -21760,7 +21858,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -21802,7 +21901,7 @@
    "graduation": null,
    "home": "Ayr Utd",
    "kickoff": "11:45",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Scotland,Championship",
@@ -21817,7 +21916,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -21856,7 +21956,7 @@
    "graduation": null,
    "home": "Ba\u0165ov",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.3,
    "latest_odds_zulubet": null,
    "league": "Cz4",
@@ -21870,7 +21970,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -21914,7 +22015,7 @@
    "graduation": null,
    "home": "Ba\u0165ov",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.8,
    "latest_odds_zulubet": null,
    "league": "Cz4",
@@ -21928,7 +22029,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -21969,7 +22071,7 @@
    "graduation": null,
    "home": "Bayern Munchen II",
    "kickoff": "2026-09-25 18:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "De4",
@@ -21983,7 +22085,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -22027,7 +22130,7 @@
    "graduation": null,
    "home": "Bayern Munchen II",
    "kickoff": "2026-09-25 18:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "De4",
@@ -22041,7 +22144,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -22082,7 +22186,7 @@
    "graduation": null,
    "home": "BFC Dynamo",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "De4",
@@ -22096,7 +22200,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -22137,7 +22242,7 @@
    "graduation": null,
    "home": "Bod\u00f8 / Glimt W",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.8,
    "latest_odds_zulubet": null,
    "league": "NoW",
@@ -22151,7 +22256,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.8,
    "odds_source": "forebet_best",
@@ -22192,7 +22298,7 @@
    "graduation": null,
    "home": "Burkina Faso",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 6.0,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -22206,7 +22312,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 5.0,
    "odds_source": "forebet_best",
@@ -22250,7 +22357,7 @@
    "graduation": null,
    "home": "Burkina Faso",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.44,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -22264,7 +22371,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.57,
    "odds_source": "forebet_best",
@@ -22305,7 +22413,7 @@
    "graduation": null,
    "home": "Chomutov",
    "kickoff": "2026-09-25 18:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Cz4",
@@ -22318,7 +22426,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -22362,7 +22471,7 @@
    "graduation": null,
    "home": "Chomutov",
    "kickoff": "2026-09-25 18:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Cz4",
@@ -22375,7 +22484,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -22416,7 +22526,7 @@
    "graduation": null,
    "home": "Cobh Ramblers",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.35,
    "latest_odds_zulubet": null,
    "league": "Ie2",
@@ -22431,7 +22541,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.35,
    "odds_source": "forebet_best",
@@ -22476,7 +22587,7 @@
    "graduation": null,
    "home": "Cobh Ramblers",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.62,
    "latest_odds_zulubet": null,
    "league": "Ie2",
@@ -22491,7 +22602,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.62,
    "odds_source": "forebet_best",
@@ -22533,7 +22645,7 @@
    "graduation": null,
    "home": "FC Dordrecht",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.9,
    "latest_odds_zulubet": null,
    "league": "Nl2",
@@ -22547,7 +22659,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.9,
    "odds_source": "forebet_best",
@@ -22591,7 +22704,7 @@
    "graduation": null,
    "home": "FC Dordrecht",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.1,
    "latest_odds_zulubet": null,
    "league": "Nl2",
@@ -22605,7 +22718,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.1,
    "odds_source": "forebet_best",
@@ -22646,7 +22760,7 @@
    "graduation": null,
    "home": "Egypt",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 8.0,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -22660,7 +22774,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 8.0,
    "odds_source": "forebet_best",
@@ -22704,7 +22819,7 @@
    "graduation": null,
    "home": "Egypt",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.42,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -22718,7 +22833,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.42,
    "odds_source": "forebet_best",
@@ -22759,7 +22875,7 @@
    "graduation": null,
    "home": "FK Pohronie",
    "kickoff": "2026-09-25 16:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.9,
    "latest_odds_zulubet": null,
    "league": "Sk2",
@@ -22773,7 +22889,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.9,
    "odds_source": "forebet_best",
@@ -22817,7 +22934,7 @@
    "graduation": null,
    "home": "FK Pohronie",
    "kickoff": "2026-09-25 16:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.15,
    "latest_odds_zulubet": null,
    "league": "Sk2",
@@ -22831,7 +22948,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.15,
    "odds_source": "forebet_best",
@@ -22872,7 +22990,7 @@
    "graduation": null,
    "home": "Galway United",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.4,
    "latest_odds_zulubet": null,
    "league": "Ie1",
@@ -22887,7 +23005,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.4,
    "odds_source": "forebet_best",
@@ -22929,7 +23048,7 @@
    "graduation": null,
    "home": "Gambia",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 6.5,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -22943,7 +23062,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 6.25,
    "odds_source": "forebet_best",
@@ -22984,7 +23104,7 @@
    "graduation": null,
    "home": "Georgia",
    "kickoff": "09:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "International,Uefa Nations League B Grp. 2",
@@ -22999,7 +23119,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -23041,7 +23162,7 @@
    "graduation": null,
    "home": "Georgia",
    "kickoff": "09:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "International,Uefa Nations League B Grp. 2",
@@ -23056,7 +23177,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -23095,7 +23217,7 @@
    "graduation": null,
    "home": "Girona",
    "kickoff": "11:30",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -23110,7 +23232,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -23152,7 +23275,7 @@
    "graduation": null,
    "home": "Girona",
    "kickoff": "11:30",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -23167,7 +23290,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -23206,9 +23330,9 @@
    "graduation": null,
    "home": "Haiti",
    "kickoff": "2026-09-25 02:20:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 4.33,
-   "latest_odds_zulubet": 5.1,
+   "latest_odds_zulubet": 5.33,
    "league": "CNL",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -23218,7 +23342,8 @@
    "model_key": "d2a004e29202",
    "model_keys_seen": [
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 4.33,
    "odds_source": "forebet_best",
@@ -23263,9 +23388,9 @@
    "graduation": null,
    "home": "Haiti",
    "kickoff": "2026-09-25 02:20:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.57,
-   "latest_odds_zulubet": 1.63,
+   "latest_odds_zulubet": 1.58,
    "league": "CNL",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -23275,7 +23400,8 @@
    "model_key": "d2a004e29202",
    "model_keys_seen": [
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.57,
    "odds_source": "forebet_best",
@@ -23317,7 +23443,7 @@
    "graduation": null,
    "home": "Hartford Athletic",
    "kickoff": "2026-09-26 01:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.0,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -23331,7 +23457,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.0,
    "odds_source": "forebet_best",
@@ -23375,7 +23502,7 @@
    "graduation": null,
    "home": "Hartford Athletic",
    "kickoff": "2026-09-26 01:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.0,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -23389,7 +23516,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.0,
    "odds_source": "forebet_best",
@@ -23485,7 +23613,7 @@
    "graduation": null,
    "home": "Hungary",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.25,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -23500,7 +23628,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.25,
    "odds_source": "forebet_best",
@@ -23542,7 +23671,7 @@
    "graduation": null,
    "home": "Inverness CT",
    "kickoff": "11:45",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Scotland,Championship",
@@ -23557,7 +23686,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -23599,7 +23729,7 @@
    "graduation": null,
    "home": "Inverness CT",
    "kickoff": "11:45",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Scotland,Championship",
@@ -23614,7 +23744,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -23708,7 +23839,7 @@
    "graduation": null,
    "home": "Italy",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.5,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -23723,7 +23854,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.5,
    "odds_source": "forebet_best",
@@ -23765,7 +23897,7 @@
    "graduation": null,
    "home": "K\u00e4Pa Helsinki",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 5.0,
    "latest_odds_zulubet": null,
    "league": "Fi2",
@@ -23779,7 +23911,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 5.0,
    "odds_source": "forebet_best",
@@ -23823,7 +23956,7 @@
    "graduation": null,
    "home": "K\u00e4Pa Helsinki",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.48,
    "latest_odds_zulubet": null,
    "league": "Fi2",
@@ -23837,7 +23970,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.48,
    "odds_source": "forebet_best",
@@ -23878,7 +24012,7 @@
    "graduation": null,
    "home": "Karvina II",
    "kickoff": "2026-09-25 15:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Cz3",
@@ -23892,7 +24026,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -23936,7 +24071,7 @@
    "graduation": null,
    "home": "Karvina II",
    "kickoff": "2026-09-25 15:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Cz3",
@@ -23950,7 +24085,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -23991,7 +24127,7 @@
    "graduation": null,
    "home": "Atl\u00e9tico Madrid B",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.15,
    "latest_odds_zulubet": null,
    "league": "Es3",
@@ -24004,7 +24140,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -24048,7 +24185,7 @@
    "graduation": null,
    "home": "Atl\u00e9tico Madrid B",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.0,
    "latest_odds_zulubet": null,
    "league": "Es3",
@@ -24061,7 +24198,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -24102,7 +24240,7 @@
    "graduation": null,
    "home": "Malawi",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 5.5,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24116,7 +24254,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 4.5,
    "odds_source": "forebet_best",
@@ -24160,7 +24299,7 @@
    "graduation": null,
    "home": "Malawi",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.61,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24174,7 +24313,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.75,
    "odds_source": "forebet_best",
@@ -24215,7 +24355,7 @@
    "graduation": null,
    "home": "Mali",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 4.1,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24229,7 +24369,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 4.1,
    "odds_source": "forebet_best",
@@ -24273,7 +24414,7 @@
    "graduation": null,
    "home": "Mali",
    "kickoff": "2026-09-25 21:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.9,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24287,7 +24428,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.9,
    "odds_source": "forebet_best",
@@ -24328,7 +24470,7 @@
    "graduation": null,
    "home": "Montenegro",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 4.5,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -24343,7 +24485,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 4.5,
    "odds_source": "forebet_best",
@@ -24388,7 +24531,7 @@
    "graduation": null,
    "home": "Montenegro",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.72,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -24403,7 +24546,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.72,
    "odds_source": "forebet_best",
@@ -24445,7 +24589,7 @@
    "graduation": null,
    "home": "Morocco",
    "kickoff": "2026-09-25 22:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 15.0,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24459,7 +24603,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 15.0,
    "odds_source": "forebet_best",
@@ -24503,7 +24648,7 @@
    "graduation": null,
    "home": "Morocco",
    "kickoff": "2026-09-25 22:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.18,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24517,7 +24662,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.18,
    "odds_source": "forebet_best",
@@ -24558,7 +24704,7 @@
    "graduation": null,
    "home": "Mozambique",
    "kickoff": "2026-09-25 15:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 7.5,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24569,7 +24715,8 @@
    "ml_p": 0.6913,
    "model_key": "7672bc23a439",
    "model_keys_seen": [
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 7.5,
    "odds_source": "forebet_best",
@@ -24613,7 +24760,7 @@
    "graduation": null,
    "home": "Mozambique",
    "kickoff": "2026-09-25 15:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.36,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24624,7 +24771,8 @@
    "ml_p": 0.3087,
    "model_key": "7672bc23a439",
    "model_keys_seen": [
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.36,
    "odds_source": "forebet_best",
@@ -24720,7 +24868,7 @@
    "graduation": null,
    "home": "Atl\u00e9tico Nacional",
    "kickoff": "2026-09-25 02:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.6,
    "latest_odds_zulubet": null,
    "league": "Co1",
@@ -24735,7 +24883,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.6,
    "odds_source": "forebet_best",
@@ -24777,7 +24926,7 @@
    "graduation": null,
    "home": "Nigeria",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 13.0,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24791,7 +24940,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 13.0,
    "odds_source": "forebet_best",
@@ -24835,7 +24985,7 @@
    "graduation": null,
    "home": "Nigeria",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.2,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24849,7 +24999,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.2,
    "odds_source": "forebet_best",
@@ -24890,7 +25041,7 @@
    "graduation": null,
    "home": "Niger",
    "kickoff": "2026-09-25 17:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 5.75,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24904,7 +25055,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 5.0,
    "odds_source": "forebet_best",
@@ -24948,7 +25100,7 @@
    "graduation": null,
    "home": "Niger",
    "kickoff": "2026-09-25 17:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.53,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -24962,7 +25114,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.6,
    "odds_source": "forebet_best",
@@ -25003,7 +25156,7 @@
    "graduation": null,
    "home": "Parndorf",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "AtE",
@@ -25017,7 +25170,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -25061,7 +25215,7 @@
    "graduation": null,
    "home": "Parndorf",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "AtE",
@@ -25075,7 +25229,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -25116,7 +25271,7 @@
    "graduation": null,
    "home": "Poland",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 5.0,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -25131,7 +25286,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 5.0,
    "odds_source": "forebet_best",
@@ -25176,7 +25332,7 @@
    "graduation": null,
    "home": "Poland",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.66,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -25191,7 +25347,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.66,
    "odds_source": "forebet_best",
@@ -25233,7 +25390,7 @@
    "graduation": null,
    "home": "Raith Rovers",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.8,
    "latest_odds_zulubet": null,
    "league": "Sc2",
@@ -25248,7 +25405,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.8,
    "odds_source": "forebet_best",
@@ -25293,7 +25451,7 @@
    "graduation": null,
    "home": "Raith Rovers",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.25,
    "latest_odds_zulubet": null,
    "league": "Sc2",
@@ -25308,7 +25466,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.25,
    "odds_source": "forebet_best",
@@ -25350,7 +25509,7 @@
    "graduation": null,
    "home": "Rwanda",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.2,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -25364,7 +25523,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.2,
    "odds_source": "forebet_best",
@@ -25405,7 +25565,7 @@
    "graduation": null,
    "home": "Sch\u00f6ningen",
    "kickoff": "2026-09-25 19:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "De4",
@@ -25419,7 +25579,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -25463,7 +25624,7 @@
    "graduation": null,
    "home": "Sch\u00f6ningen",
    "kickoff": "2026-09-25 19:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "De4",
@@ -25477,7 +25638,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -25518,7 +25680,7 @@
    "graduation": null,
    "home": "Slavoj Vysehrad",
    "kickoff": "2026-09-25 16:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 6.0,
    "latest_odds_zulubet": null,
    "league": "Cz4",
@@ -25531,7 +25693,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -25575,7 +25738,7 @@
    "graduation": null,
    "home": "Slavoj Vysehrad",
    "kickoff": "2026-09-25 16:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.33,
    "latest_odds_zulubet": null,
    "league": "Cz4",
@@ -25588,7 +25751,8 @@
    "model_keys_seen": [
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -25629,7 +25793,7 @@
    "graduation": null,
    "home": "Sparta Praha U19",
    "kickoff": "2026-09-25 11:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.0,
    "latest_odds_zulubet": null,
    "league": "CzU",
@@ -25643,7 +25807,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -25687,7 +25852,7 @@
    "graduation": null,
    "home": "Sparta Praha U19",
    "kickoff": "2026-09-25 11:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.75,
    "latest_odds_zulubet": null,
    "league": "CzU",
@@ -25701,7 +25866,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -25742,7 +25908,7 @@
    "graduation": null,
    "home": "Sportivo Luqueno",
    "kickoff": "2026-09-25 21:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.1,
    "latest_odds_zulubet": null,
    "league": "Py1",
@@ -25756,7 +25922,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.1,
    "odds_source": "forebet_best",
@@ -25797,7 +25964,7 @@
    "graduation": null,
    "home": "Sudan",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.1,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -25811,7 +25978,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.1,
    "odds_source": "forebet_best",
@@ -25852,7 +26020,7 @@
    "graduation": null,
    "home": "Sweden",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 5.75,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -25867,7 +26035,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 5.75,
    "odds_source": "forebet_best",
@@ -25912,7 +26081,7 @@
    "graduation": null,
    "home": "Sweden",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.48,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -25927,7 +26096,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.48,
    "odds_source": "forebet_best",
@@ -25969,7 +26139,7 @@
    "graduation": null,
    "home": "Tanzania",
    "kickoff": "2026-09-25 15:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.9,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -25983,7 +26153,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.9,
    "odds_source": "forebet_best",
@@ -26024,7 +26195,7 @@
    "graduation": null,
    "home": "Tasmania Berlin",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "De4",
@@ -26038,7 +26209,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -26082,7 +26254,7 @@
    "graduation": null,
    "home": "Tasmania Berlin",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "De4",
@@ -26096,7 +26268,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -26137,7 +26310,7 @@
    "graduation": null,
    "home": "Togo",
    "kickoff": "2026-09-25 18:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.3,
    "latest_odds_zulubet": null,
    "league": "NCQ",
@@ -26151,7 +26324,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.3,
    "odds_source": "forebet_best",
@@ -26192,7 +26366,7 @@
    "graduation": null,
    "home": "Treaty United",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 4.2,
    "latest_odds_zulubet": null,
    "league": "Ie2",
@@ -26207,7 +26381,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 4.5,
    "odds_source": "forebet_best",
@@ -26252,7 +26427,7 @@
    "graduation": null,
    "home": "Treaty United",
    "kickoff": "2026-09-25 20:45:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.7,
    "latest_odds_zulubet": null,
    "league": "Ie2",
@@ -26267,7 +26442,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.65,
    "odds_source": "forebet_best",
@@ -26309,7 +26485,7 @@
    "graduation": null,
    "home": "TSV Havelse",
    "kickoff": "2026-09-25 19:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.4,
    "latest_odds_zulubet": null,
    "league": "De3",
@@ -26323,7 +26499,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.4,
    "odds_source": "forebet_best",
@@ -26364,7 +26541,7 @@
    "graduation": null,
    "home": "Turkey",
    "kickoff": "11:45",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "International,Uefa Nations League A Grp. 1",
@@ -26379,7 +26556,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -26421,7 +26599,7 @@
    "graduation": null,
    "home": "Turkey",
    "kickoff": "11:45",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "International,Uefa Nations League A Grp. 1",
@@ -26436,7 +26614,8 @@
     "533a9a4932b6",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -26475,7 +26654,7 @@
    "graduation": null,
    "home": "Vila Nova FC",
    "kickoff": "2026-09-26 01:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 6.0,
    "latest_odds_zulubet": null,
    "league": "Br2",
@@ -26489,7 +26668,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 6.0,
    "odds_source": "forebet_best",
@@ -26533,7 +26713,7 @@
    "graduation": null,
    "home": "Vila Nova FC",
    "kickoff": "2026-09-26 01:30:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 1.57,
    "latest_odds_zulubet": null,
    "league": "Br2",
@@ -26547,7 +26727,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 1.57,
    "odds_source": "forebet_best",
@@ -26588,7 +26769,7 @@
    "graduation": null,
    "home": "Wuxi Wugou",
    "kickoff": "2026-09-25 13:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 2.05,
    "latest_odds_zulubet": null,
    "league": "Cn2",
@@ -26602,7 +26783,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 2.05,
    "odds_source": "forebet_best",
@@ -26646,7 +26828,7 @@
    "graduation": null,
    "home": "Wuxi Wugou",
    "kickoff": "2026-09-25 13:00:00",
-   "last_seen_at": "2026-09-24T06:53:58+02:00",
+   "last_seen_at": "2026-09-24T07:22:56+02:00",
    "latest_odds_forebet": 3.1,
    "latest_odds_zulubet": null,
    "league": "Cn2",
@@ -26660,7 +26842,8 @@
     "0ab793d02c02",
     "99ecaeba1b8f",
     "d2a004e29202",
-    "7672bc23a439"
+    "7672bc23a439",
+    "7b7a7d43aa97"
    ],
    "odds_forebet": 3.1,
    "odds_source": "forebet_best",
@@ -26687,5 +26870,5 @@
   }
  ],
  "schema": 1,
- "updated_at": "2026-09-24T06:53:58+02:00"
+ "updated_at": "2026-09-24T07:50:53+02:00"
 }
