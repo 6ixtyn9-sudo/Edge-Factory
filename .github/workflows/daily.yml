@@ -162,10 +162,46 @@ jobs:
             localdata/*.md
           retention-days: 7
 
-      - name: Regression tests (flag, never gate)
-        # Deliberately LAST: by now the slip is built, frozen, persisted to the
-        # cache and pushed to git, so a red suite can flag a bad landing on main
-        # without ever withholding tonight's tickets. Do not move this earlier.
-        # always() so the verdict is still printed when a step above failed.
-        if: always()
+  regression-tests:
+    # Flag, never gate -- and deliberately its OWN job, not a step at the end of the
+    # pipeline job. The first run of the in-job step failed 7 tests that all pass on a
+    # clean checkout: every one traced to the runner's AMBIENT state, not to code.
+    #   * secrets mapped into the job env: ODDS_API_MONTHLY_BUDGET=0 (a secret beats
+    #     the || '480' fallback) makes a full key ring read as budget-exhausted, and
+    #     TELEGRAM_* grows a second delivery family that inverts notify's per-family
+    #     barrier expectations;
+    #   * GITHUB_ACTIONS=true reroutes forebet's transport ladder onto the relay path, so
+    #     the patched transports are skipped and assertions run against live rows;
+    #   * actions/cache/restore unpacks localdata/entity_registry.json -- built by the
+    #     pipeline, gitignored, so neither the "Restore committed data" guard (tracked
+    #     files only) nor `git clean -fd` (spares ignored) removes it. entities.py reads
+    #     it before its identity fallback, which flips league-canonicalization tests.
+    # A fresh checkout with no env block, no secrets and no cache removes all three at
+    # once. The original promise stands: this job can never withhold tonight's slip -- a
+    # failure marks the run red and nothing more, and no pipeline step waits on it.
+    name: Regression tests (flag, never gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        # Exactly what a reviewer of main sees: tracked files only, no generated state,
+        # no credentials. tests/conftest.py separately strips ambient env knobs and the
+        # gitignored entity registry, so a developer's .env or local build cannot move
+        # the verdict either.
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: pytest
         run: PYTHONPATH=src python3 -m pytest tests/ -q
