@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 165,
-   "inv_price_sum": 160.20547268769744,
+   "hits": 167,
+   "inv_price_sum": 162.4813522694446,
    "multi_n": 23,
-   "n": 243,
+   "n": 247,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -579,9 +579,13 @@
     "2026-09-21|Spezia vs Vis Pesaro|match_over_25@v1",
     "2026-09-21|Deportivo Toluca vs Santos Laguna|match_over_25@v1",
     "2026-09-23|Chelsea W vs Austria Wien W|match_over_25@v1",
-    "2026-09-23|Barcelona W vs Paris W|match_over_25@v1"
+    "2026-09-23|Barcelona W vs Paris W|match_over_25@v1",
+    "2026-09-24|Cameroon vs Comoros|match_over_25@v1",
+    "2026-09-24|Portugal vs Wales|match_over_25@v1",
+    "2026-09-24|Liechtenstein vs Lithuania|match_over_25@v1",
+    "2026-09-24|Austria vs Israel|match_over_25@v1"
    ],
-   "profit": 6.53,
+   "profit": 6.25,
    "records": [
     {
      "date": "2026-08-01",
@@ -2523,6 +2527,38 @@
      "match": "Barcelona W vs Paris W",
      "multi_source": false,
      "price": 1.06,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-24",
+     "hit": true,
+     "match": "Cameroon vs Comoros",
+     "multi_source": false,
+     "price": 2.15,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-24",
+     "hit": false,
+     "match": "Portugal vs Wales",
+     "multi_source": false,
+     "price": 1.33,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-24",
+     "hit": false,
+     "match": "Liechtenstein vs Lithuania",
+     "multi_source": false,
+     "price": 2.37,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-24",
+     "hit": true,
+     "match": "Austria vs Israel",
+     "multi_source": false,
+     "price": 1.57,
      "source": "scoutingstats"
     }
    ],
