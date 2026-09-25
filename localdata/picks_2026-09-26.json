@@ -4445,8 +4445,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-25T03:00:58+02:00",
-    "avg_p": 70.6,
+    "as_of": "2026-09-25T06:00:48+02:00",
+    "avg_p": 70.3,
     "away": "Santos Laguna W",
     "bookmaker": "betexplorer_best",
     "bucket": "CERTIFIED_CLEAN",
@@ -4460,7 +4460,7 @@
       "league_key": "mxw",
       "league_raw": "MxW",
       "niche": "UNKNOWN",
-      "odds_band": "BOOST",
+      "odds_band": "ALLOW",
       "odds_band_name": "1.10-1.20",
       "resolution_original_verdict": "ALLOW",
       "resolution_path": "native",
@@ -4487,45 +4487,45 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.4858,
-    "enhancement_reason": "Mathematical expectation is 65.1% (ML-calibrated 46.2%->61.8%, n=576) (Performance feedback: HR=64.5%, Adjusted Prob: 48.6%)",
+    "enhancement_probability": 0.4823,
+    "enhancement_reason": "Mathematical expectation is 64.7% (ML-calibrated 46.2%->61.8%, n=576) (Performance feedback: HR=64.5%, Adjusted Prob: 48.2%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 725,
+        "cohort_n": 756,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.48576801193933716,
-        "raw_probability": 0.6514285714285715,
-        "reason": "Mathematical expectation is 65.1% (ML-calibrated 46.2%->61.8%, n=576) (Performance feedback: HR=64.5%, Adjusted Prob: 48.6%)"
+        "probability": 0.4823158439291567,
+        "raw_probability": 0.6467991169977925,
+        "reason": "Mathematical expectation is 64.7% (ML-calibrated 46.2%->61.8%, n=576) (Performance feedback: HR=64.5%, Adjusted Prob: 48.2%)"
       },
       {
-        "cohort_n": 725,
+        "cohort_n": 756,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9652613532454286,
-        "raw_probability": 0.9857142857142858,
-        "reason": "Combined Under 3.5 is 98.6% (ML-calibrated 96.2%->97.6%, n=415) (Performance feedback: HR=96.6%, Adjusted Prob: 96.5%)"
+        "probability": 0.9646591650511589,
+        "raw_probability": 0.9850993377483444,
+        "reason": "Combined Under 3.5 is 98.5% (ML-calibrated 96.2%->97.6%, n=415) (Performance feedback: HR=96.6%, Adjusted Prob: 96.5%)"
       },
       {
-        "cohort_n": 725,
+        "cohort_n": 756,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8981708475926399,
-        "raw_probability": 0.944,
+        "probability": 0.8978936032519869,
+        "raw_probability": 0.9437086092715232,
         "reason": "Combined Under 2.5 is 94.4% (ML-calibrated 92.8%->92.0%, n=377) (Performance feedback: HR=95.8%, Adjusted Prob: 89.8%)"
       },
       {
-        "cohort_n": 725,
+        "cohort_n": 756,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.2852186107611868,
-        "raw_probability": 0.27862903410461276,
-        "reason": "Poisson expected hit rate is 27.9% (ML-calibrated 23.9%->26.3%, n=449)"
+        "probability": 0.2829270599477038,
+        "raw_probability": 0.2763904263641907,
+        "reason": "Poisson expected hit rate is 27.6% (ML-calibrated 23.9%->26.3%, n=449)"
       }
     ],
     "home": "Pachuca W",
@@ -4541,11 +4541,11 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.7063,
+    "ml_p": 0.7034,
     "model_version": null,
     "n_way": 3,
     "odds": 1.19,
-    "odds_captured_at": "2026-09-25T01:28:34.247048+00:00",
+    "odds_captured_at": "2026-09-25T04:25:53.027123+00:00",
     "odds_league": "Mexico: Liga MX Women",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -4568,8 +4568,8 @@
       "statarea"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=581): Avg Goals: 3.82 | Over 2.5: 74.4% | BTTS: 40.4% | Home Over 1.5 Goals: 88.0% | Away Over 1.5 Goals: 10.3%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=607): Avg Goals: 3.78 | Over 2.5: 73.5% | BTTS: 40.2% | Home Over 1.5 Goals: 87.8% | Away Over 1.5 Goals: 10.5%",
     "vitibet_index": null,
-    "w_score": 0.8775
+    "w_score": 0.8638
   }
 ]
