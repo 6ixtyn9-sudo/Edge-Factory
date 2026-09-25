@@ -613,12 +613,30 @@ def _slice_row_from_archive(day, printed_match, pick, prob, odds, archive_row,
     }
 
 
-def parse_slip_slice_rows(slip_path, archive_index):
-    """Parse frozen evidence and resolve bucket/result identity separately."""
+def parse_slip_slice_rows(slip_path, archive_index, existing_rows=None):
+    """Parse frozen evidence and resolve bucket/result identity separately.
+
+    ``existing_rows`` is used only by the frozen-rerun path. A real ledger row
+    is the print-time record, so it is copied before consulting the mutable
+    archive. Shadow rows are deliberately not eligible for that preservation:
+    when a real frozen leg is present, the archive-backed real row replaces the
+    shadow row through the normal upsert ordering.
+    """
     # The filename is auto_tickets_YYYY-MM-DD.txt; avoid trusting a line's
     # display date because the leg line itself intentionally has no date.
     name_match = re.search(r"(\d{4}-\d{2}-\d{2})", Path(slip_path).name)
     day = name_match.group(1) if name_match else ""
+    existing_by_key = {}
+    for row in existing_rows or ():
+        if _slice_day(row.get("date")) != day:
+            continue
+        key = _slice_row_key(row)
+        prior = existing_by_key.get(key)
+        # Prefer a real row if a hand-edited/legacy ledger contains both a
+        # shadow and a real row for the same fixture.
+        if prior is None or (prior.get("shadow") and not row.get("shadow")):
+            existing_by_key[key] = row
+
     rows, unresolved = [], []
     try:
         lines = Path(slip_path).read_text(encoding="utf-8").splitlines()
@@ -637,6 +655,13 @@ def parse_slip_slice_rows(slip_path, archive_index):
         home, away = parts
         pick = m.group("pick").upper()
         key = _folded_leg_key(day, home, away, pick)
+        existing = existing_by_key.get(key)
+        if existing is not None and not existing.get("shadow"):
+            # Do not even look up this key in the current archive. The bucket,
+            # odds, stated probability, spelling, source and flags are all
+            # print-time fields and must remain frozen together.
+            rows.append(_slice_clean_row(existing))
+            continue
         archive_row = archive_index.get(key)
         if archive_row is None:
             unresolved.append({"file": str(slip_path), "line": line_no,
@@ -2374,7 +2399,9 @@ def cmd_today(args, st):
         # is rewritten; the parser consumes the frozen leg print verbatim.
         ensure_slice_seeded(target)
         archive_index = _archive_index_for_slice(load_archived_picks())
-        frozen_rows, _unresolved = parse_slip_slice_rows(slip_txt, archive_index)
+        frozen_rows, _unresolved = parse_slip_slice_rows(
+            slip_txt, archive_index, existing_rows=read_slice_ledger(),
+        )
         upsert_slice_day(frozen_rows, target)
         print(f"TICKETS FROZEN — final slip for {target}. Re-printing saved slip:")
         print("=" * 62)
