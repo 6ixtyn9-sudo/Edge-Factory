@@ -52,6 +52,7 @@ import auto_tickets as at  # noqa: E402
 def _sandbox_state(tmp_path, monkeypatch):
     monkeypatch.setattr(at, "STATE_FILE", tmp_path / "state.json")
     monkeypatch.setattr(at, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(at, "BUCKET_PNL_FILE", tmp_path / "auto_tickets_bucket_pnl.json")
 
 
 def _leg(tag, odds=1.50, prob=0.65, **row_extra):

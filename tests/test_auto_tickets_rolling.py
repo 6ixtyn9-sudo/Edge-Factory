@@ -28,6 +28,10 @@ def _sandbox_state(tmp_path, monkeypatch):
     localdata/auto_tickets_state.json)."""
     monkeypatch.setattr(at, "STATE_FILE", tmp_path / "state.json")
     monkeypatch.setattr(at, "LOCALDATA", tmp_path)
+    # Bound at import time like STATE_FILE; cmd_today writes it, so it must be
+    # sandboxed too (it used to leak into the real localdata/ and then seed
+    # the live bucket-P&L streak state with test data).
+    monkeypatch.setattr(at, "BUCKET_PNL_FILE", tmp_path / "auto_tickets_bucket_pnl.json")
 
 
 def _leg(tag, prob, odds, result=None):
@@ -451,6 +455,27 @@ def test_playable_legs_bucket_and_quarantine_and_price_filters():
     for excluded in ("WATCHLIST_SUSPECT_PRICE", "WATCHLIST_NO_ODDS"):
         assert excluded not in at.BUCKETS, (
             f"{excluded} flags bad data, not a weak edge; it must stay out")
+
+
+def test_playable_legs_excludes_unverified_secondary_price():
+    row = {
+        "date": "2026-09-25", "home": "FC Dordrecht", "away": "Almere City",
+        "pick": "away", "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
+        "odds": 2.00, "avg_p": 74.0, "market": "1x2",
+        "odds_source": "scoutingstats_odds",
+        "price_evidence": "SCOUTINGSTATS_SOLE",
+        "price_push_eligible": False,
+    }
+    # Historical replay keeps its frozen parity pool; only live ticket
+    # construction turns the explicit quarantine into a hard stop.
+    assert len(at.playable_legs([row], day="2026-09-25")) == 1
+    assert at.playable_legs([row], day="2026-09-25", execution_safe=True) == []
+
+    # A corroborated primary quote is still eligible at the same odds/family.
+    row["odds_source"] = "bzzoiro_odds"
+    row["price_evidence"] = "BZZOIRO_PRIMARY"
+    row["price_push_eligible"] = True
+    assert len(at.playable_legs([row], day="2026-09-25", execution_safe=True)) == 1
 
 
 # ---------------- backfill end-to-end (percent arithmetic) ----------------

@@ -2151,6 +2151,47 @@ def bzzoiro_odds_index(
     return bzzoiro_odds_bundle(day, live=live, stats=stats)["exact"]
 
 
+def _fixture_orientation_agrees(pick: dict, row: dict) -> bool:
+    """True when ``row`` lists the pick's fixture home-vs-away, not reversed.
+
+    Compares per-side similarity (home~home + away~away) against the swapped
+    pairing. A tie is ambiguous and fails closed: a side-keyed 1X2 price is
+    only meaningful when we know which team the source calls home.
+    """
+    ph, pa = str(pick.get("home") or ""), str(pick.get("away") or "")
+    rh, ra = str(row.get("home") or ""), str(row.get("away") or "")
+    straight = char_ngram_similarity(ph, rh) + char_ngram_similarity(pa, ra)
+    swapped = char_ngram_similarity(ph, ra) + char_ngram_similarity(pa, rh)
+    return straight > swapped
+
+
+def _row_matches_selection(pick: dict, row: dict | None) -> bool:
+    """Selection-identity invariant for any matched price row.
+
+    Every lookup key already includes the selection, so this never rejects a
+    correct join. It is a hard backstop: a row explicitly labelled for another
+    side/market (e.g. the HOME quote offered for an AWAY pick) must never
+    become the pick's price, whatever produced it.
+    """
+    if not row:
+        return False
+    row_sel = row.get("selection")
+    if row_sel not in (None, "") and str(row_sel) != str(pick.get("pick") or ""):
+        return False
+    row_market = row.get("market")
+    if row_market not in (None, "") and str(row_market) != str(pick.get("market") or ""):
+        return False
+    return True
+
+
+def find_side_keyed_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
+    """``find_odds_row`` plus the selection-identity backstop."""
+    row, method = find_odds_row(pick, odds_data)
+    if row is not None and not _row_matches_selection(pick, row):
+        return None, None
+    return row, method
+
+
 def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
     if "exact" not in odds_data:
         key = (
@@ -2200,7 +2241,14 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
         for row in raw_list:
             if str(row.get("market")) != str(pick.get("market")) or str(row.get("selection")) != str(pick.get("pick")):
                 continue
-                
+            # The event-string similarity below is bigram-set based and so
+            # blind to word order: "A B" and a reversed "B A" listing score
+            # ~1.0. For a side-keyed selection that would hand the pick the
+            # OTHER team's price (the reversed row's "away" is our home
+            # team). Require the fixture orientation to agree side-by-side.
+            if not _fixture_orientation_agrees(pick, row):
+                continue
+
             delta = _kickoff_delta_minutes(pick_kickoff, _kickoff_value(row))
             if delta is not None and delta <= 90:
                 res_str = f"{row.get('home', '')} {row.get('away', '')}"
@@ -2261,19 +2309,41 @@ def _price_board_entry(source: str, row: dict) -> dict:
     }
 
 
+_ONE_X_TWO_SELECTIONS = ("home", "draw", "away")
+
+
+def _board_selections(market: str, selection: str) -> tuple[str, ...]:
+    """Side keys captured on the board: the full 1X2 book, else the pick."""
+    if market == "1x2":
+        return _ONE_X_TWO_SELECTIONS
+    return (selection,)
+
+
+def _price_board_sort_key(entry: dict) -> tuple:
+    order = {sel: i for i, sel in enumerate(_ONE_X_TWO_SELECTIONS)}
+    return (
+        str(entry.get("source") or ""),
+        order.get(str(entry.get("selection") or ""), 9),
+        -(float(entry.get("odds") or 0.0)),
+    )
+
+
 def _collect_price_board(pick: dict, *bundles: dict) -> list[dict]:
     """Task F (2026-09-06): every price every source is showing for this
-    fixture and selection at build time, with source name and value.
+    fixture and market at build time, with source name and value.
 
     Previously the second-source lookup's result was discarded after
     PRICE_EVIDENCE_SCOUTINGSTATS_SOLE was stamped; now the full board is
-    persisted on the pick so printed legs carry it into the archive. This
+    persisted on the pick so printed legs carry it into the archive. For a
+    1X2 fixture that means all three side-keyed quotes (home/draw/away), not
+    just the selected side. That makes a home/away positional mix-up visible
+    and prevents a stale home quote being mistaken for an away price. This
     NEVER changes which price the engine uses — the board is written
-    alongside, after the chosen odds are set. Rows are the bundles'
-    market_candidates for (date, market, selection) narrowed to this
+    alongside, after the chosen odds are set. Rows are narrowed to this
     fixture by the engine's own normalized team keys; plain index bundles
     (no market_candidates) contribute their exact row. Deduped by
-    (source, bookmaker, odds, captured_at); sorted source, odds desc.
+    (source, bookmaker, selection, odds, captured_at); sorted source,
+    selection, odds.
     """
     out: list[dict] = []
     day = str(pick.get("date") or "")
@@ -2288,8 +2358,16 @@ def _collect_price_board(pick: dict, *bundles: dict) -> list[dict]:
         bundle_source = str(bundle.get("provider") or "")
         rows: list[dict] = []
         if "exact" in bundle:  # full bundle shape (build-time path)
-            cands = ((bundle.get("market_candidates") or {})
-                     .get((day, market, selection), []))
+            market_candidates = bundle.get("market_candidates") or {}
+            # For 1X2 keep the complete three-way book together, each quote
+            # under its own side key. Looking only at the selected side is
+            # how a positional home/away regression can survive unnoticed in
+            # an otherwise plausible price.
+            cands = [
+                row
+                for board_selection in _board_selections(market, selection)
+                for row in market_candidates.get((day, market, board_selection), [])
+            ]
             for row in cands:
                 if not row:
                     continue
@@ -2297,21 +2375,24 @@ def _collect_price_board(pick: dict, *bundles: dict) -> list[dict]:
                         odds_match_team_key(str(row.get("away") or ""))) != (hk, ak):
                     continue
                 rows.append(row)
-        else:  # plain index shape (audit refresh path): the exact row only
-            key = (day, odds_team_key(str(pick.get("home") or "")),
-                   odds_team_key(str(pick.get("away") or "")), market, selection)
-            row = bundle.get(key)
-            if row:
-                rows.append(row)
+        else:  # plain index shape (audit refresh path): exact side-keyed rows
+            for board_selection in _board_selections(market, selection):
+                key = (day, odds_team_key(str(pick.get("home") or "")),
+                       odds_team_key(str(pick.get("away") or "")), market,
+                       board_selection)
+                row = bundle.get(key)
+                if row:
+                    rows.append(row)
         for row in rows:
             source = str(row.get("provider") or bundle_source or "")
             key = (source, str(row.get("bookmaker") or ""),
-                   row.get("odds"), str(row.get("captured_at") or ""))
+                   str(row.get("selection") or ""), row.get("odds"),
+                   str(row.get("captured_at") or ""))
             if key in seen:
                 continue
             seen.add(key)
             out.append(_price_board_entry(source, row))
-    out.sort(key=lambda e: (str(e.get("source") or ""), -(float(e.get("odds") or 0.0))))
+    out.sort(key=_price_board_sort_key)
     return out
 
 
@@ -2327,7 +2408,9 @@ def _stamp_price_board(pick: dict, bundles, chosen_row=None, chosen_source=None,
                     and float(e.get("odds") or 0.0)
                         == float(chosen_row.get("odds") or 0.0)
                     and str(e.get("bookmaker") or "")
-                        == str(chosen_row.get("bookmaker") or "")):
+                        == str(chosen_row.get("bookmaker") or "")
+                    and str(e.get("selection") or "")
+                        == str(chosen_row.get("selection") or "")):
                 match = e
                 break
         if match is None:
@@ -2335,8 +2418,7 @@ def _stamp_price_board(pick: dict, bundles, chosen_row=None, chosen_source=None,
             # still archive it — the engine-printed price must always appear
             match = _price_board_entry(str(chosen_source or ""), chosen_row)
             board.append(match)
-            board.sort(key=lambda e: (str(e.get("source") or ""),
-                                      -(float(e.get("odds") or 0.0))))
+            board.sort(key=_price_board_sort_key)
         match["chosen"] = True
         match["match_method"] = chosen_method
     pick["price_board"] = board
@@ -2368,10 +2450,10 @@ def enrich_with_live_odds(
         ):
             pick.pop(field, None)
 
-        row, match_method = find_odds_row(pick, primary_odds)
+        row, match_method = find_side_keyed_odds_row(pick, primary_odds)
         provider = primary_odds.get("provider", BZZOIRO_ODDS_SOURCE) if row else None
         if not row and secondary_odds is not None:
-            row, match_method = find_odds_row(pick, secondary_odds)
+            row, match_method = find_side_keyed_odds_row(pick, secondary_odds)
             provider = secondary_odds.get("provider", SCOUTINGSTATS_ODDS_SOURCE) if row else None
 
         previous_odds = pick.get("odds")

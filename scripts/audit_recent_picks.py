@@ -116,13 +116,23 @@ def _same_frozen_payload(left: dict[str, Any], right: dict[str, Any]) -> bool:
     )
 
 
-def load_archived_picks_with_receipt(start: str, end: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def load_archived_picks_with_receipt(
+    start: str,
+    end: str,
+    *,
+    localdata: Path | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Load immutable morning picks plus verified official late-slate additions.
 
     The regular daily ledger may contain valid intraday discoveries, but it can
     be replaced by a forecast refresh. Its new rows are accepted only when it is
     a payload-identical superset of every morning baseline row.
+
+    ``localdata`` defaults to the repository ledger directory; retention
+    tooling passes a scratch directory to prove a morning file is redundant
+    (its removal leaves this loader's output byte-identical) before pruning.
     """
+    ld = LOCALDATA if localdata is None else Path(localdata)
     out: list[dict[str, Any]] = []
     receipt: dict[str, Any] = {
         "morning_baseline_rows": 0,
@@ -132,8 +142,8 @@ def load_archived_picks_with_receipt(start: str, end: str) -> tuple[list[dict[st
         "empty_regular_ledger_dates": [],
     }
     for day in daterange(start, end):
-        morning_path = LOCALDATA / f"picks_morning_{day}.json"
-        regular_path = LOCALDATA / f"picks_{day}.json"
+        morning_path = ld / f"picks_morning_{day}.json"
+        regular_path = ld / f"picks_{day}.json"
         morning = _load_archive_rows(morning_path, day) if morning_path.exists() else []
         regular = _load_archive_rows(regular_path, day) if regular_path.exists() else []
 
