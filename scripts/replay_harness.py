@@ -590,8 +590,11 @@ def cmd_today(universe, settled):
     today = date.today().isoformat()
     pool = universe.get(today)
     if pool is None:
+        # Preview of the LIVE slip: apply the live price-integrity gate so a
+        # quarantined (price_push_eligible=False) quote never appears here.
         pool = at.playable_legs(json.loads((LOCALDATA / "picks_today.json").read_text()),
-                                day=today, settled=settled, floor=0.0)
+                                day=today, settled=settled, floor=0.0,
+                                execution_safe=True)
     accas = at.select_accas(pool)                    # LIVE settings, live code
     print(f"today ({today}) at live settings — {len(accas)} accas "
           f"(pre-freeze this is a PARTIAL pool; the frozen card is the truth):")

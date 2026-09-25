@@ -105,6 +105,26 @@ def test_board_records_every_source_row_and_marks_the_chosen_price(monkeypatch):
     assert chosen[0]["match_method"] == "exact"
 
 
+def test_board_keeps_complete_side_keyed_1x2_book(monkeypatch):
+    pick = _pick(odds=None, odds_source=None, pick="away")
+    rows = [
+        _row(odds=2.05, bookmaker="BookOne", selection="home"),
+        _row(odds=3.00, bookmaker="BookOne", selection="draw"),
+        _row(odds=1.03, bookmaker="BookOne", selection="away"),
+    ]
+    bundle = _full_bundle(pt.BZZOIRO_ODDS_SOURCE, rows)
+    monkeypatch.setattr(pt, "find_odds_row", lambda _pick, _bundle: (rows[2], "exact"))
+
+    assert pt.enrich_with_live_odds([pick], bundle) == 1
+    board = pick["price_board"]
+    assert {(e["selection"], e["odds"]) for e in board} == {
+        ("home", 2.05), ("draw", 3.00), ("away", 1.03)
+    }
+    chosen = [e for e in board if e.get("chosen")]
+    assert len(chosen) == 1
+    assert chosen[0]["selection"] == "away" and chosen[0]["odds"] == 1.03
+
+
 def test_board_real_join_marks_the_exact_row_and_keeps_engine_price():
     """No monkeypatch: real find_odds_row through a real bundle. The chosen
     (best-bookmaker) row is flagged; every row the source showed remains."""
@@ -165,6 +185,7 @@ def test_board_is_re_derived_each_run_no_stale_rows(monkeypatch):
 def _sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(at, "STATE_FILE", tmp_path / "state.json")
     monkeypatch.setattr(at, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(at, "BUCKET_PNL_FILE", tmp_path / "auto_tickets_bucket_pnl.json")
 
 
 class _NoonClock(at.datetime):

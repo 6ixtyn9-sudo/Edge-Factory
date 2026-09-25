@@ -45,6 +45,34 @@ def _row(**extra):
     return out
 
 
+def test_scoutingstats_1x2_columns_remain_side_keyed():
+    # Regression fixture matching the reported market: 1=home, X=draw,
+    # 2=away.  The away lookup must never receive the home quote merely
+    # because the source row was flattened into a list.
+    source_row = {
+        "date": "2026-09-25",
+        "kickoff": "2026-09-25T19:00:00Z",
+        "league": "Eerste Divisie",
+        "home": "FC Dordrecht",
+        "away": "Almere City",
+        "hs": "",
+        "odd1": 2.05,
+        "oddx": 3.00,
+        "odd2": 1.03,
+    }
+    rows = pt._scoutingstats_rows_to_odds([source_row])
+    prices = {r["selection"]: r["odds"] for r in rows if r["market"] == "1x2"}
+    assert prices == {"home": 2.05, "draw": 3.00, "away": 1.03}
+
+    bundle = pt._odds_bundle_from_rows(rows, provider=pt.SCOUTINGSTATS_ODDS_SOURCE)
+    row, method = pt.find_odds_row({
+        "date": "2026-09-25", "home": "FC Dordrecht", "away": "Almere City",
+        "market": "1x2", "pick": "away",
+    }, bundle)
+    assert method == "exact"
+    assert row is not None and row["odds"] == 1.03
+
+
 def test_primary_bzzoiro_price_remains_push_eligible(monkeypatch):
     pick = _pick()
     primary = {"provider": pt.BZZOIRO_ODDS_SOURCE}

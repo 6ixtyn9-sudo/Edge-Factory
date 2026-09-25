@@ -808,6 +808,17 @@ def run_pipeline(
 ) -> None:
     """Execute the pipeline according to the requested operational mode."""
     sync_repo_state()
+    # Keep the committed state bounded (GitHub lists at most 1,000 entries per
+    # directory). Runs before this pipeline writes anything and therefore
+    # before the workflow's `git add -A localdata/` persist step. Only known
+    # dated telemetry older than 30 days is pruned; picks_DATE.json archives,
+    # printed auto_tickets slips, rolling ledgers/state and monthly archives
+    # are retained, and a morning baseline goes only when the audit loader
+    # proves it redundant. Soft: a cleanup failure must never block a run.
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/clean_localdata.py --keep-days 30 --today {target_date}",
+        "clean_localdata (bounded telemetry retention)",
+    )
     if mode == "clv_only":
         label = clv_label or "monitoring"
         run_soft(
