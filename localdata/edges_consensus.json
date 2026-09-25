@@ -6,22 +6,22 @@
       "sport": "soccer",
       "status": "certified",
       "train": {
-        "avg_odds": 1.924,
-        "hit": 0.6877,
+        "avg_odds": 1.922,
+        "hit": 0.687,
         "n": 3939,
-        "n_priced": 3823,
-        "roi": 0.2987,
-        "wilson_lb": 0.6731,
-        "wins": 2709
+        "n_priced": 3824,
+        "roi": 0.2967,
+        "wilson_lb": 0.6723,
+        "wins": 2706
       },
       "valid": {
-        "avg_odds": 1.894,
-        "hit": 0.7195,
-        "n": 2246,
-        "n_priced": 2127,
-        "roi": 0.3162,
-        "wilson_lb": 0.7006,
-        "wins": 1616
+        "avg_odds": 1.897,
+        "hit": 0.7189,
+        "n": 2245,
+        "n_priced": 2126,
+        "roi": 0.3171,
+        "wilson_lb": 0.7,
+        "wins": 1614
       },
       "view": "ml_meta_settled",
       "where": "ml_p*100 >= 55",
@@ -36,7 +36,7 @@
           "wilson_lb": 0.6349,
           "roi": 0.6759
         },
-        "baseline_lb": 0.7006,
+        "baseline_lb": 0.7,
         "recent_lb": 0.6349,
         "recent_ub": 0.7859
       }
@@ -47,22 +47,22 @@
       "sport": "soccer",
       "status": "certified",
       "train": {
-        "avg_odds": 1.862,
+        "avg_odds": 1.861,
         "hit": 0.7254,
-        "n": 2982,
-        "n_priced": 2893,
-        "roi": 0.3449,
+        "n": 2979,
+        "n_priced": 2890,
+        "roi": 0.3441,
         "wilson_lb": 0.7091,
-        "wins": 2163
+        "wins": 2161
       },
       "valid": {
-        "avg_odds": 1.818,
-        "hit": 0.7573,
-        "n": 1735,
-        "n_priced": 1638,
-        "roi": 0.337,
-        "wilson_lb": 0.7366,
-        "wins": 1314
+        "avg_odds": 1.822,
+        "hit": 0.7585,
+        "n": 1739,
+        "n_priced": 1642,
+        "roi": 0.343,
+        "wilson_lb": 0.7378,
+        "wins": 1319
       },
       "view": "ml_meta_settled",
       "where": "ml_p*100 >= 60",
@@ -71,15 +71,15 @@
         "window_days": 30,
         "checked_at": "2026-09-25",
         "recent": {
-          "n": 104,
-          "wins": 80,
-          "hit": 0.7692,
-          "wilson_lb": 0.6795,
-          "roi": 0.7749
+          "n": 106,
+          "wins": 82,
+          "hit": 0.7736,
+          "wilson_lb": 0.6852,
+          "roi": 0.8178
         },
-        "baseline_lb": 0.7366,
-        "recent_lb": 0.6795,
-        "recent_ub": 0.8397
+        "baseline_lb": 0.7378,
+        "recent_lb": 0.6852,
+        "recent_ub": 0.8429
       }
     },
     {
@@ -88,22 +88,22 @@
       "sport": "soccer",
       "status": "certified",
       "train": {
-        "avg_odds": 1.807,
-        "hit": 0.7707,
-        "n": 2124,
-        "n_priced": 2056,
-        "roi": 0.3939,
-        "wilson_lb": 0.7524,
-        "wins": 1637
+        "avg_odds": 1.805,
+        "hit": 0.7723,
+        "n": 2126,
+        "n_priced": 2057,
+        "roi": 0.398,
+        "wilson_lb": 0.754,
+        "wins": 1642
       },
       "valid": {
-        "avg_odds": 1.759,
-        "hit": 0.8058,
-        "n": 1272,
-        "n_priced": 1200,
-        "roi": 0.3839,
-        "wilson_lb": 0.7832,
-        "wins": 1025
+        "avg_odds": 1.76,
+        "hit": 0.805,
+        "n": 1277,
+        "n_priced": 1205,
+        "roi": 0.3837,
+        "wilson_lb": 0.7824,
+        "wins": 1028
       },
       "view": "ml_meta_settled",
       "where": "ml_p*100 >= 65",
@@ -112,15 +112,15 @@
         "window_days": 30,
         "checked_at": "2026-09-25",
         "recent": {
-          "n": 82,
-          "wins": 66,
-          "hit": 0.8049,
-          "wilson_lb": 0.7063,
-          "roi": 0.8213
+          "n": 83,
+          "wins": 67,
+          "hit": 0.8072,
+          "wilson_lb": 0.7096,
+          "roi": 0.8131
         },
-        "baseline_lb": 0.7832,
-        "recent_lb": 0.7063,
-        "recent_ub": 0.8762
+        "baseline_lb": 0.7824,
+        "recent_lb": 0.7096,
+        "recent_ub": 0.8777
       }
     },
     {
@@ -130,21 +130,21 @@
       "status": "benched",
       "train": {
         "avg_odds": 1.753,
-        "hit": 0.8089,
-        "n": 1444,
-        "n_priced": 1391,
-        "roi": 0.437,
-        "wilson_lb": 0.7878,
-        "wins": 1168
+        "hit": 0.8086,
+        "n": 1447,
+        "n_priced": 1394,
+        "roi": 0.4375,
+        "wilson_lb": 0.7875,
+        "wins": 1170
       },
       "valid": {
-        "avg_odds": 1.675,
-        "hit": 0.8457,
+        "avg_odds": 1.678,
+        "hit": 0.8469,
         "n": 875,
-        "n_priced": 820,
-        "roi": 0.3936,
-        "wilson_lb": 0.8203,
-        "wins": 740
+        "n_priced": 821,
+        "roi": 0.3971,
+        "wilson_lb": 0.8215,
+        "wins": 741
       },
       "view": "ml_meta_settled",
       "where": "ml_p*100 >= 70",
@@ -159,7 +159,7 @@
           "wilson_lb": 0.6764,
           "roi": 0.7593
         },
-        "baseline_lb": 0.8203,
+        "baseline_lb": 0.8215,
         "recent_lb": 0.6764,
         "recent_ub": 0.8845
       },
@@ -171,22 +171,22 @@
       "sport": "soccer",
       "status": "benched",
       "train": {
-        "avg_odds": 1.736,
-        "hit": 0.8534,
-        "n": 887,
-        "n_priced": 849,
-        "roi": 0.5039,
-        "wilson_lb": 0.8286,
-        "wins": 757
+        "avg_odds": 1.741,
+        "hit": 0.8507,
+        "n": 891,
+        "n_priced": 852,
+        "roi": 0.4987,
+        "wilson_lb": 0.8258,
+        "wins": 758
       },
       "valid": {
         "avg_odds": 1.61,
-        "hit": 0.8849,
-        "n": 556,
-        "n_priced": 520,
-        "roi": 0.3899,
-        "wilson_lb": 0.8557,
-        "wins": 492
+        "hit": 0.8851,
+        "n": 557,
+        "n_priced": 521,
+        "roi": 0.39,
+        "wilson_lb": 0.8559,
+        "wins": 493
       },
       "view": "ml_meta_settled",
       "where": "ml_p*100 >= 75",
@@ -195,15 +195,15 @@
         "window_days": 30,
         "checked_at": "2026-09-25",
         "recent": {
-          "n": 35,
+          "n": 36,
           "wins": 29,
-          "hit": 0.8286,
-          "wilson_lb": 0.6732,
-          "roi": 0.476
+          "hit": 0.8056,
+          "wilson_lb": 0.6497,
+          "roi": 0.435
         },
-        "baseline_lb": 0.8557,
-        "recent_lb": 0.6732,
-        "recent_ub": 0.919
+        "baseline_lb": 0.8559,
+        "recent_lb": 0.6497,
+        "recent_ub": 0.9025
       },
       "benched_at": "2026-09-25"
     },
@@ -214,21 +214,21 @@
       "status": "certified",
       "train": {
         "avg_odds": 1.802,
-        "hit": 0.9073,
-        "n": 507,
-        "n_priced": 481,
-        "roi": 0.6639,
-        "wilson_lb": 0.8789,
-        "wins": 460
+        "hit": 0.9051,
+        "n": 506,
+        "n_priced": 480,
+        "roi": 0.6615,
+        "wilson_lb": 0.8765,
+        "wins": 458
       },
       "valid": {
         "avg_odds": 1.566,
-        "hit": 0.9116,
-        "n": 294,
-        "n_priced": 275,
-        "roi": 0.3646,
-        "wilson_lb": 0.8736,
-        "wins": 268
+        "hit": 0.9091,
+        "n": 297,
+        "n_priced": 276,
+        "roi": 0.3653,
+        "wilson_lb": 0.871,
+        "wins": 270
       },
       "view": "ml_meta_settled",
       "where": "ml_p*100 >= 80",
@@ -243,7 +243,7 @@
           "wilson_lb": 0.7109,
           "roi": 0.3724
         },
-        "baseline_lb": 0.8736,
+        "baseline_lb": 0.871,
         "recent_lb": 0.7109,
         "recent_ub": 0.9735
       }
@@ -254,13 +254,13 @@
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": 1.993,
-        "hit": 0.9388,
-        "n": 245,
-        "n_priced": 228,
-        "roi": 0.916,
-        "wilson_lb": 0.9015,
-        "wins": 230
+        "avg_odds": 1.999,
+        "hit": 0.9383,
+        "n": 243,
+        "n_priced": 226,
+        "roi": 0.9218,
+        "wilson_lb": 0.9007,
+        "wins": 228
       },
       "valid": {
         "avg_odds": 1.48,
@@ -285,21 +285,21 @@
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": 7.544,
-        "hit": 0.1442,
+        "avg_odds": 7.546,
+        "hit": 0.1445,
         "n": 3917,
-        "n_priced": 3801,
-        "roi": -0.2189,
-        "wilson_lb": 0.1336,
-        "wins": 565
+        "n_priced": 3802,
+        "roi": -0.2172,
+        "wilson_lb": 0.1338,
+        "wins": 566
       },
       "valid": {
-        "avg_odds": 8.549,
-        "hit": 0.1146,
-        "n": 2225,
-        "n_priced": 2110,
-        "roi": -0.385,
-        "wilson_lb": 0.102,
+        "avg_odds": 8.55,
+        "hit": 0.1147,
+        "n": 2223,
+        "n_priced": 2108,
+        "roi": -0.3838,
+        "wilson_lb": 0.1021,
         "wins": 255
       },
       "view": "ml_fade_settled",
@@ -316,22 +316,22 @@
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": 8.401,
-        "hit": 0.1264,
-        "n": 2975,
-        "n_priced": 2886,
-        "roi": -0.2438,
-        "wilson_lb": 0.1149,
-        "wins": 376
+        "avg_odds": 8.406,
+        "hit": 0.1262,
+        "n": 2972,
+        "n_priced": 2883,
+        "roi": -0.2443,
+        "wilson_lb": 0.1147,
+        "wins": 375
       },
       "valid": {
-        "avg_odds": 9.471,
-        "hit": 0.1026,
-        "n": 1725,
-        "n_priced": 1631,
-        "roi": -0.4066,
-        "wilson_lb": 0.0892,
-        "wins": 177
+        "avg_odds": 9.457,
+        "hit": 0.1018,
+        "n": 1729,
+        "n_priced": 1635,
+        "roi": -0.4116,
+        "wilson_lb": 0.0884,
+        "wins": 176
       },
       "view": "ml_fade_settled",
       "where": "ml_p*100 >= 60"
@@ -347,21 +347,21 @@
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": 9.462,
-        "hit": 0.1042,
-        "n": 2121,
-        "n_priced": 2053,
-        "roi": -0.3095,
-        "wilson_lb": 0.0919,
-        "wins": 221
+        "avg_odds": 9.465,
+        "hit": 0.1022,
+        "n": 2123,
+        "n_priced": 2054,
+        "roi": -0.3169,
+        "wilson_lb": 0.09,
+        "wins": 217
       },
       "valid": {
-        "avg_odds": 10.744,
-        "hit": 0.0836,
-        "n": 1268,
-        "n_priced": 1198,
-        "roi": -0.4872,
-        "wilson_lb": 0.0696,
+        "avg_odds": 10.724,
+        "hit": 0.0833,
+        "n": 1273,
+        "n_priced": 1203,
+        "roi": -0.4893,
+        "wilson_lb": 0.0693,
         "wins": 106
       },
       "view": "ml_fade_settled",
@@ -378,22 +378,22 @@
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": 10.678,
-        "hit": 0.0901,
-        "n": 1443,
-        "n_priced": 1390,
-        "roi": -0.2854,
-        "wilson_lb": 0.0764,
-        "wins": 130
+        "avg_odds": 10.679,
+        "hit": 0.0892,
+        "n": 1446,
+        "n_priced": 1393,
+        "roi": -0.2895,
+        "wilson_lb": 0.0756,
+        "wins": 129
       },
       "valid": {
-        "avg_odds": 12.144,
-        "hit": 0.0664,
+        "avg_odds": 12.18,
+        "hit": 0.0653,
         "n": 873,
-        "n_priced": 820,
-        "roi": -0.5654,
-        "wilson_lb": 0.0517,
-        "wins": 58
+        "n_priced": 821,
+        "roi": -0.5709,
+        "wilson_lb": 0.0507,
+        "wins": 57
       },
       "view": "ml_fade_settled",
       "where": "ml_p*100 >= 70"
@@ -409,22 +409,22 @@
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": 12.339,
-        "hit": 0.0711,
-        "n": 886,
-        "n_priced": 848,
-        "roi": -0.3874,
-        "wilson_lb": 0.056,
-        "wins": 63
+        "avg_odds": 12.321,
+        "hit": 0.073,
+        "n": 890,
+        "n_priced": 851,
+        "roi": -0.3684,
+        "wilson_lb": 0.0577,
+        "wins": 65
       },
       "valid": {
-        "avg_odds": 14.195,
-        "hit": 0.0505,
-        "n": 555,
-        "n_priced": 521,
-        "roi": -0.6216,
-        "wilson_lb": 0.0351,
-        "wins": 28
+        "avg_odds": 14.179,
+        "hit": 0.0522,
+        "n": 556,
+        "n_priced": 522,
+        "roi": -0.6127,
+        "wilson_lb": 0.0366,
+        "wins": 29
       },
       "view": "ml_fade_settled",
       "where": "ml_p*100 >= 75"
@@ -440,21 +440,21 @@
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": 14.309,
-        "hit": 0.0434,
-        "n": 507,
-        "n_priced": 481,
-        "roi": -0.5894,
-        "wilson_lb": 0.0288,
+        "avg_odds": 14.324,
+        "hit": 0.0435,
+        "n": 506,
+        "n_priced": 480,
+        "roi": -0.5886,
+        "wilson_lb": 0.0289,
         "wins": 22
       },
       "valid": {
-        "avg_odds": 17.103,
-        "hit": 0.034,
-        "n": 294,
-        "n_priced": 276,
-        "roi": -0.6279,
-        "wilson_lb": 0.0186,
+        "avg_odds": 16.924,
+        "hit": 0.0337,
+        "n": 297,
+        "n_priced": 277,
+        "roi": -0.6292,
+        "wilson_lb": 0.0184,
         "wins": 10
       },
       "view": "ml_fade_settled",
@@ -471,12 +471,12 @@
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": 17.359,
-        "hit": 0.0245,
-        "n": 245,
-        "n_priced": 228,
-        "roi": -0.705,
-        "wilson_lb": 0.0113,
+        "avg_odds": 17.406,
+        "hit": 0.0247,
+        "n": 243,
+        "n_priced": 226,
+        "roi": -0.7024,
+        "wilson_lb": 0.0114,
         "wins": 6
       },
       "valid": {
@@ -1386,32 +1386,32 @@
   },
   "ml_model": {
     "coef": [
-      0.1741378203541814,
-      0.20585258802493853,
-      2.0540797893744642,
-      0.8113567325845122,
-      0.17480897952880128,
-      -0.14361009721974508,
-      0.05452668443299691,
-      0.7744525948098131,
-      0.8490878643456199,
+      0.14906037703151487,
+      0.20496662527272583,
+      2.0424671861358714,
+      0.7988313961467194,
+      0.18751518572249398,
+      -0.08289406229694646,
+      0.052652273214419475,
+      0.7768779523547577,
+      0.8542394186926323,
       0.0,
       0.0,
       0.0,
       0.0,
-      -0.1263429570827028,
-      -0.04821568157430904,
-      -0.0631714785413514,
-      0.23975804007044715,
-      0.1911957917023803,
-      -1.1999299277424211,
-      0.023582629341345075,
-      -0.076867790224282,
-      0.052896286419512516,
-      -0.011945189338129637,
-      0.06280042578951342,
-      2.835770906226488,
-      -0.4011644427132885
+      -0.22866710897303702,
+      -0.15789065214659556,
+      -0.11433355448651851,
+      0.23921776762783906,
+      0.19127352858123892,
+      -1.1789191409258035,
+      0.022910142154722438,
+      -0.07641724365359687,
+      0.03843455208465325,
+      -0.050758078286875,
+      -0.0031283609684733863,
+      2.889315964341179,
+      -0.43074264724704964
     ],
     "feature_cols": [
       "fb_p",
@@ -1441,7 +1441,7 @@
       "sa_ht_p",
       "p_gg"
     ],
-    "intercept": -3.544796528975616
+    "intercept": -3.26186692143931
   },
   "split": "2025-06-01"
 }
