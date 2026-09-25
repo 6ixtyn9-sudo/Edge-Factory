@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 167,
-   "inv_price_sum": 162.4813522694446,
-   "multi_n": 23,
-   "n": 247,
+   "hits": 170,
+   "inv_price_sum": 166.60149737097836,
+   "multi_n": 24,
+   "n": 254,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -583,9 +583,16 @@
     "2026-09-24|Cameroon vs Comoros|match_over_25@v1",
     "2026-09-24|Portugal vs Wales|match_over_25@v1",
     "2026-09-24|Liechtenstein vs Lithuania|match_over_25@v1",
-    "2026-09-24|Austria vs Israel|match_over_25@v1"
+    "2026-09-24|Austria vs Israel|match_over_25@v1",
+    "2026-09-25|Burkina Faso vs Benin|match_over_25@v1",
+    "2026-09-25|Inverness CT vs Morton|match_over_25@v1",
+    "2026-09-25|Haiti vs Trinidad & Tobago|match_over_25@v1",
+    "2026-09-25|FC Dordrecht vs Almere City|match_over_25@v1",
+    "2026-09-25|Morocco vs Gabon|match_over_25@v1",
+    "2026-09-25|Girona vs Albacete|match_over_25@v1",
+    "2026-09-25|Nigeria vs Madagascar|match_over_25@v1"
    ],
-   "profit": 6.25,
+   "profit": 4.14,
    "records": [
     {
      "date": "2026-08-01",
@@ -2559,6 +2566,62 @@
      "match": "Austria vs Israel",
      "multi_source": false,
      "price": 1.57,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-25",
+     "hit": false,
+     "match": "Burkina Faso vs Benin",
+     "multi_source": false,
+     "price": 2.35,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-25",
+     "hit": false,
+     "match": "Inverness CT vs Morton",
+     "multi_source": false,
+     "price": 1.75,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-25",
+     "hit": true,
+     "match": "Haiti vs Trinidad & Tobago",
+     "multi_source": false,
+     "price": 1.75,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-25",
+     "hit": true,
+     "match": "FC Dordrecht vs Almere City",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-25",
+     "hit": false,
+     "match": "Morocco vs Gabon",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-25",
+     "hit": false,
+     "match": "Girona vs Albacete",
+     "multi_source": true,
+     "price": 1.66,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-09-25",
+     "hit": true,
+     "match": "Nigeria vs Madagascar",
+     "multi_source": false,
+     "price": 1.7,
      "source": "scoutingstats"
     }
    ],
