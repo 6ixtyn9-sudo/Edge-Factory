@@ -2263,17 +2263,20 @@ def _price_board_entry(source: str, row: dict) -> dict:
 
 def _collect_price_board(pick: dict, *bundles: dict) -> list[dict]:
     """Task F (2026-09-06): every price every source is showing for this
-    fixture and selection at build time, with source name and value.
+    fixture and market at build time, with source name and value.
 
     Previously the second-source lookup's result was discarded after
     PRICE_EVIDENCE_SCOUTINGSTATS_SOLE was stamped; now the full board is
-    persisted on the pick so printed legs carry it into the archive. This
+    persisted on the pick so printed legs carry it into the archive. For a
+    1X2 fixture that means all three side-keyed quotes (home/draw/away), not
+    just the selected side. That makes a home/away positional mix-up visible
+    and prevents a stale home quote being mistaken for an away price. This
     NEVER changes which price the engine uses — the board is written
-    alongside, after the chosen odds are set. Rows are the bundles'
-    market_candidates for (date, market, selection) narrowed to this
+    alongside, after the chosen odds are set. Rows are narrowed to this
     fixture by the engine's own normalized team keys; plain index bundles
     (no market_candidates) contribute their exact row. Deduped by
-    (source, bookmaker, odds, captured_at); sorted source, odds desc.
+    (source, bookmaker, selection, odds, captured_at); sorted source,
+    selection, odds.
     """
     out: list[dict] = []
     day = str(pick.get("date") or "")
@@ -2288,8 +2291,20 @@ def _collect_price_board(pick: dict, *bundles: dict) -> list[dict]:
         bundle_source = str(bundle.get("provider") or "")
         rows: list[dict] = []
         if "exact" in bundle:  # full bundle shape (build-time path)
-            cands = ((bundle.get("market_candidates") or {})
-                     .get((day, market, selection), []))
+            market_candidates = bundle.get("market_candidates") or {}
+            if market == "1x2":
+                # Keep the complete three-way book together. Looking only at
+                # the selected side is how a positional home/away regression
+                # can survive unnoticed in an otherwise plausible price.
+                cands = [
+                    row
+                    for (candidate_day, candidate_market, candidate_selection), rows in market_candidates.items()
+                    if (candidate_day, candidate_market) == (day, market)
+                    and candidate_selection in {"home", "draw", "away"}
+                    for row in rows
+                ]
+            else:
+                cands = market_candidates.get((day, market, selection), [])
             for row in cands:
                 if not row:
                     continue
@@ -2306,12 +2321,18 @@ def _collect_price_board(pick: dict, *bundles: dict) -> list[dict]:
         for row in rows:
             source = str(row.get("provider") or bundle_source or "")
             key = (source, str(row.get("bookmaker") or ""),
-                   row.get("odds"), str(row.get("captured_at") or ""))
+                   str(row.get("selection") or ""), row.get("odds"),
+                   str(row.get("captured_at") or ""))
             if key in seen:
                 continue
             seen.add(key)
             out.append(_price_board_entry(source, row))
-    out.sort(key=lambda e: (str(e.get("source") or ""), -(float(e.get("odds") or 0.0))))
+    selection_order = {"home": 0, "draw": 1, "away": 2}
+    out.sort(key=lambda e: (
+        str(e.get("source") or ""),
+        selection_order.get(str(e.get("selection") or ""), 9),
+        -(float(e.get("odds") or 0.0)),
+    ))
     return out
 
 
@@ -2327,7 +2348,9 @@ def _stamp_price_board(pick: dict, bundles, chosen_row=None, chosen_source=None,
                     and float(e.get("odds") or 0.0)
                         == float(chosen_row.get("odds") or 0.0)
                     and str(e.get("bookmaker") or "")
-                        == str(chosen_row.get("bookmaker") or "")):
+                        == str(chosen_row.get("bookmaker") or "")
+                    and str(e.get("selection") or "")
+                        == str(chosen_row.get("selection") or "")):
                 match = e
                 break
         if match is None:

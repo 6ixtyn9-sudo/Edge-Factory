@@ -12,7 +12,9 @@ number ("% of capital", "% of free bank"); "bank" alone means total bank,
 
 THE RECIPE (constants carry their validation receipts — see
 TICKETS_DIAGNOSIS_2026-08-27.md and the 2026-08-27 HANDOVER addenda):
-  LEGS      all playable-bucket picks with a price — NO further filtering.
+  LEGS      all playable-bucket picks with a verified execution price; the
+            explicit price_push_eligible safety bit is a data-integrity gate,
+            not an edge/bucket filter.
   ORDER     highest stated probability first (ties by odds).
   DEDUP     one match, one leg: after ranking, same-fixture duplicates
             (date + folded side-pair incl. '&'->'and') are dropped and the
@@ -1702,8 +1704,14 @@ def take_profit_target(st) -> float:
 
 
 # ---------------- selection / planning ----------------
-def playable_legs(rows, day=None, settled=None, floor=None):
-    """Playable, priced legs — the NO-FILTER set (validated).
+def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=False):
+    """Return the validated priced leg pool.
+
+    Bucket policy remains deliberately broad.  ``execution_safe=True`` is
+    used by the live ticket builder to apply the explicit price-integrity
+    quarantine: an audit-only quote must not become a ticket.  Replay and
+    historical audit callers keep the legacy default so this operational
+    safety correction cannot rewrite the frozen parity baseline.
 
     `floor` overrides MIN_LEG_ODDS (replay harness only — live callers pass
     nothing so the validated floor applies). Never inline the number: the
@@ -1722,6 +1730,17 @@ def playable_legs(rows, day=None, settled=None, floor=None):
         if q in BAD_QUARANTINE and not p.get("odds_replaced"):
             continue   # suspect price unless betexplorer-rescued (rescue pops the reason)
         if str(p.get("price_evidence") or "").upper() == "SUSPECT_ALIAS_FUZZY" and not p.get("odds_replaced"):
+            continue
+        # A secondary ScoutingStats quote is retained on the pick for audit,
+        # but it is not a bookmaker-verified execution price.  It must never
+        # reach an automatic ticket: the 2026-09-25 Dordrecht/Almere incident
+        # rode a stale home-like quote (2.00) on the AWAY side while the book
+        # board showed AWAY 1.03.  The enrichment layer already stamps this
+        # boolean; legacy archives without the field remain comparable,
+        # while every newly built slate is safe.  Do not infer this from the
+        # provider string: historical fixtures and synthetic replay rows can
+        # carry an older label.  The enrichment boundary is the authority.
+        if execution_safe and p.get("price_push_eligible") is False:
             continue
         # Market guard: the validated recipe is 1X2 ONLY. Goals/OU picks
         # (first seen 2026-08-31, "Breidablik OVER") stay out until the
@@ -2370,7 +2389,7 @@ def cmd_today(args, st):
     except Exception as e:
         print(f"cannot read picks_today.json: {e}")
         return 1
-    pool = playable_legs(slate, day=target, settled=settled)
+    pool = playable_legs(slate, day=target, settled=settled, execution_safe=True)
     total_in = len(pool)
     census: dict[str, list[str]] = {}
     # LIVE KICKOFF GUARD (incident #6, revised 2026-09-06 round 2 after the

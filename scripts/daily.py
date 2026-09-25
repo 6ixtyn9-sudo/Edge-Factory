@@ -808,6 +808,15 @@ def run_pipeline(
 ) -> None:
     """Execute the pipeline according to the requested operational mode."""
     sync_repo_state()
+    # Keep the committed state bounded before this run adds fresh telemetry.
+    # The cleanup script retains replay/audit pick JSON and rolling/monthly
+    # state while pruning only dated secondary reports. Keeping this call in
+    # the orchestrator (rather than requiring a workflow-file permission) also
+    # applies to manual and local runs.
+    run_soft(
+        "PYTHONPATH=src python3 scripts/clean_localdata.py --keep-days 30",
+        "clean_localdata (bounded telemetry retention)",
+    )
     if mode == "clv_only":
         label = clv_label or "monitoring"
         run_soft(

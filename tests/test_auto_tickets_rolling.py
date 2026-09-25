@@ -453,6 +453,27 @@ def test_playable_legs_bucket_and_quarantine_and_price_filters():
             f"{excluded} flags bad data, not a weak edge; it must stay out")
 
 
+def test_playable_legs_excludes_unverified_secondary_price():
+    row = {
+        "date": "2026-09-25", "home": "FC Dordrecht", "away": "Almere City",
+        "pick": "away", "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
+        "odds": 2.00, "avg_p": 74.0, "market": "1x2",
+        "odds_source": "scoutingstats_odds",
+        "price_evidence": "SCOUTINGSTATS_SOLE",
+        "price_push_eligible": False,
+    }
+    # Historical replay keeps its frozen parity pool; only live ticket
+    # construction turns the explicit quarantine into a hard stop.
+    assert len(at.playable_legs([row], day="2026-09-25")) == 1
+    assert at.playable_legs([row], day="2026-09-25", execution_safe=True) == []
+
+    # A corroborated primary quote is still eligible at the same odds/family.
+    row["odds_source"] = "bzzoiro_odds"
+    row["price_evidence"] = "BZZOIRO_PRIMARY"
+    row["price_push_eligible"] = True
+    assert len(at.playable_legs([row], day="2026-09-25", execution_safe=True)) == 1
+
+
 # ---------------- backfill end-to-end (percent arithmetic) ----------------
 
 def test_backfill_end_to_end(tmp_path, monkeypatch):

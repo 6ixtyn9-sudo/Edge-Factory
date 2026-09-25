@@ -52,6 +52,8 @@ If it already exists → lightweight intraday late-slate scan: append only brand
 
 Wakes every 3h (00:00, 03:00, 06:00, 09:00, 12:00, 15:00, 18:00, 21:00 UTC)
 actions/cache persists the localdata/ DuckDB warehouse, pick ledgers, CLV snapshots, and the WhatsApp sent ledger across runs
+
+`localdata/` also contains generated per-day telemetry. The Actions persist step runs `scripts/clean_localdata.py --keep-days 30` before committing, pruning only old CLV/notification/attempt/manifest ledgers. Pick archives, rolling summaries, monthly source archives, and durable state are retained for replay and audit, keeping the GitHub directory below its 1,000-entry display limit without discarding training history.
 Uploads pick reports (.txt) and ledgers as downloadable artifacts
 Runs sync_supabase then notify as the final steps
 Git workflow (collision-safe)
@@ -245,7 +247,7 @@ Use that key as CALLMEBOT_APIKEY. The active implementation uses `whatsapp.php`,
 
 Only CERTIFIED_CLEAN and CAUTION buckets are pushed **as bets** (main slate). Dedup ledger localdata/whatsapp_sent_ledger_YYYY-MM-DD.json means ~one morning message/day plus late-slate alerts only when new fixtures appear.
 
-Price evidence is independently gated from model/context quality (Addendum 26): a Bzzoiro primary price may remain push-eligible; a ScoutingStats-only fallback price is quarantined to WATCHLIST_UNCORROBORATED_PRICE; an `alias_fuzzy` candidate is saved as `suspect_price` and never replaces operational best odds, landing in WATCHLIST_SUSPECT_PRICE. Both remain archived and scored in the rolling audit.
+Price evidence is independently gated from model/context quality (Addendum 26): a Bzzoiro primary price may remain push-eligible; a ScoutingStats-only fallback price is quarantined to WATCHLIST_UNCORROBORATED_PRICE; an `alias_fuzzy` candidate is saved as `suspect_price` and never replaces operational best odds, landing in WATCHLIST_SUSPECT_PRICE. Both remain archived and scored in the rolling audit. The automatic ticket builder now consumes only rows with `price_push_eligible=true`; quarantined prices stay visible for audit/shadow review but can never be printed as executable legs.
 
 Shadow slate (Addenda 24–26, default ON — kill with EDGE_FACTORY_NOTIFY_SHADOW=0): a SECOND daily message carries all non-pushed streams — SKIPPED_VETO, WATCHLIST_NO_ODDS, WATCHLIST_UNKNOWN_CTX, WATCHLIST_UNCORROBORATED_PRICE, and WATCHLIST_SUSPECT_PRICE — each labeled with that stream's rolling 30d audit record (from localdata/picks_audit_rolling.json). Independent dedup ledger localdata/whatsapp_shadow_sent_ledger_YYYY-MM-DD.json means main and shadow sends never suppress each other. Shown for transparency, not pushed as bets; weight the streams by their records.
 
