@@ -11,6 +11,7 @@ that the bucket verdict cannot drift away from the verdict the edges get.
 import json
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -27,6 +28,11 @@ from edgefactory.util import norm_team  # noqa: E402
 @pytest.fixture
 def sandbox(tmp_path, monkeypatch):
     monkeypatch.setattr(at, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(at, "STATE_FILE", tmp_path / "state.json")
+    monkeypatch.setattr(at, "BUCKET_PNL_FILE", tmp_path / "bucket_pnl.json")
+    # Keep every default slice-ledger/state write in the tmp_path sandbox too.
+    monkeypatch.setattr(at, "SLICE_LEDGER_FILENAME", "slice-ledger.jsonl")
+    monkeypatch.setattr(at, "SLICE_TRIPWIRE_FILENAME", "slice-tripwire.json")
     monkeypatch.setattr(at, "SLICE_ENABLED", True)
     monkeypatch.setattr(at, "SLICE_BENCH_ON_VETO", False)
     monkeypatch.setattr(at, "SLICE_DEMOTE_ON_CAUTION", True)
@@ -80,6 +86,29 @@ def _settled(rows, outcomes):
     }
 
 
+def _run_frozen_rerun(sandbox, monkeypatch, rows, archive_rows):
+    """Run the real frozen cmd_today seam against a tmp_path slip/archive."""
+    day = rows[0]["date"]
+    slip = sandbox / f"auto_tickets_{day}.txt"
+    slip.write_text("\n".join(
+        f"   {row['home']} vs {row['away']} {row['pick']} @ "
+        f"{row['odds']:.2f} (stated {row['prob_stated']:.0%})"
+        for row in rows
+    ) + "\n", encoding="utf-8")
+    (sandbox / f"auto_tickets_{day}.frozen").write_text("", encoding="utf-8")
+    monkeypatch.setattr(at, "load_archived_picks", lambda: archive_rows)
+    assert at.cmd_today(
+        SimpleNamespace(date=day, force=False), at.fresh_state(),
+    ) == 0
+    return at.read_slice_ledger()
+
+
+def _archive_for(row, bucket, *, odds=1.99):
+    return {"date": row["date"], "home": row["home"], "away": row["away"],
+            "pick": row["pick"], "bucket": bucket, "avg_p": 0.99,
+            "odds": odds}
+
+
 def _grade(rows, outcomes):
     """Independent expected ROI for the same rows, same accounting as the code."""
     pnl = sum((r["odds"] - 1.0) if o == "home" else -1.0
@@ -122,6 +151,77 @@ def test_empty_upsert_preserves_the_day_unless_nothing_shipped(sandbox):
     # cannot keep counting as shipped evidence.
     at.upsert_slice_day([], "2026-09-23", path, allow_empty=True)
     assert [r["date"] for r in at.read_slice_ledger(path)] == ["2026-09-22"]
+
+
+def test_frozen_rerun_keeps_all_print_time_fields_when_archive_bucket_changes(
+        sandbox, monkeypatch):
+    day = "2026-09-25"
+    row = _row(day, "CERTIFIED_CLEAN", 1, prob=0.68, odds=1.42,
+               src="slip", seeded=False, name="Printed")
+    path = at._slice_ledger_path()
+    at.write_slice_ledger([row], path)
+
+    archive = _archive_for(row, "SKIPPED_VETO", odds=1.08)
+    rows = _run_frozen_rerun(sandbox, monkeypatch, [row], [archive])
+
+    got = next(r for r in rows if r["date"] == day)
+    assert got == row
+    assert got["bucket"] == "CERTIFIED_CLEAN"
+
+
+def test_frozen_rerun_uses_archive_for_a_leg_missing_from_ledger(
+        sandbox, monkeypatch):
+    day = "2026-09-25"
+    # A non-empty ledger prevents ensure_slice_seeded from constructing the
+    # target row first; this proves the frozen parser's missing-key branch.
+    prior = _row("2026-09-24", "CAUTION", 9)
+    row = _row(day, "WATCHLIST_UNKNOWN_CTX", 1, prob=0.67, odds=1.43,
+               name="New")
+    at.write_slice_ledger([prior], at._slice_ledger_path())
+
+    archive = _archive_for(row, "CERTIFIED_CLEAN")
+    rows = _run_frozen_rerun(sandbox, monkeypatch, [row], [archive])
+
+    got = next(r for r in rows if r["date"] == day)
+    assert got["bucket"] == "CERTIFIED_CLEAN"
+    assert got["prob_stated"] == row["prob_stated"]
+    assert got["odds"] == row["odds"]
+
+
+def test_frozen_rerun_does_not_advance_ladder_streak_again(sandbox, monkeypatch):
+    day = "2026-09-25"
+    rows = _rows_with_roi("CAUTION", 12, 0, 1.50, day=day)
+    path, state = at._slice_ledger_path(), sandbox / "ladder-state.json"
+    at.write_slice_ledger(rows, path)
+    settled = _settled(rows, ["away"] * len(rows))
+
+    _policy, before = at.compute_bucket_slice(
+        day, path=path, state_path=state, settled=settled,
+    )
+    assert before["CAUTION"]["verdict"] == "VETO"
+    assert before["CAUTION"]["demote_streak"] == 1
+
+    archive = [_archive_for(row, "WATCHLIST_UNKNOWN_CTX") for row in rows]
+    _run_frozen_rerun(sandbox, monkeypatch, rows, archive)
+    _policy, after = at.compute_bucket_slice(
+        day, path=path, state_path=state, settled=settled,
+    )
+    assert after["CAUTION"]["demote_streak"] == 1
+    assert after["CAUTION"]["bench_streak"] == 1
+
+
+def test_shadow_row_is_replaced_by_real_frozen_row(sandbox, monkeypatch):
+    day = "2026-09-25"
+    shadow = _row(day, "CAUTION", 1, shadow=True, src="shadow")
+    at.write_slice_ledger([shadow], at._slice_ledger_path())
+
+    archive = _archive_for(shadow, "CERTIFIED_CLEAN")
+    rows = _run_frozen_rerun(sandbox, monkeypatch, [shadow], [archive])
+
+    got = next(r for r in rows if r["date"] == day)
+    assert got["bucket"] == "CERTIFIED_CLEAN"
+    assert got["shadow"] is False
+    assert got["src"] == "slip"
 
 
 def test_ledger_scores_late_settlement_without_mutating_rows(sandbox):
