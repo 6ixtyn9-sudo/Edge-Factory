@@ -568,7 +568,7 @@
   },
   {
     "date": "2026-09-26",
-    "kickoff": "09:00",
+    "kickoff": "07:00",
     "home": "Southend",
     "away": "Barrow",
     "league": "England,National League",
@@ -580,6 +580,19 @@
     "away_key": "barrow",
     "nearby_bzzoiro_candidates": [],
     "nearby_scoutingstats_candidates": [
+      {
+        "home": "Zweigen Kanazawa",
+        "away": "Gainare Tottori",
+        "league": "J3-League",
+        "kickoff": "2026-09-26T04:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.66,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "zweigenkanazawa",
+        "away_key": "gainaretottori",
+        "kickoff_delta_minutes": 60
+      },
       {
         "home": "Nara Club",
         "away": "Rayluck Shiga",
@@ -594,6 +607,32 @@
         "kickoff_delta_minutes": 60
       },
       {
+        "home": "Tijuana",
+        "away": "Atlas",
+        "league": "Liga MX",
+        "kickoff": "2026-09-26T03:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.1,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "tijuana",
+        "away_key": "atlas",
+        "kickoff_delta_minutes": 120
+      },
+      {
+        "home": "El Salvador",
+        "away": "Martinique",
+        "league": "CONCACAF Nations League",
+        "kickoff": "2026-09-26T03:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.7,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "elsalvador",
+        "away_key": "martinique",
+        "kickoff_delta_minutes": 120
+      },
+      {
         "home": "Giravanz Kitakyushu",
         "away": "Kagoshima United",
         "league": "J3-League",
@@ -604,46 +643,7 @@
         "bookmaker": "scoutingstats_odds",
         "home_key": "giravanzkitakyushu",
         "away_key": "kagoshimaunited",
-        "kickoff_delta_minutes": 60
-      },
-      {
-        "home": "Kamatamare Sanuki",
-        "away": "Gifu",
-        "league": "J3-League",
-        "kickoff": "2026-09-26T08:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.6,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "kamatamaresanuki",
-        "away_key": "gifu",
-        "kickoff_delta_minutes": 60
-      },
-      {
-        "home": "Iwaki",
-        "away": "Vegalta Sendai",
-        "league": "J2-League",
-        "kickoff": "2026-09-26T08:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "iwaki",
-        "away_key": "vegaltasendai",
-        "kickoff_delta_minutes": 60
-      },
-      {
-        "home": "Ry\u016bky\u016b",
-        "away": "Ehime",
-        "league": "J3-League",
-        "kickoff": "2026-09-26T08:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 3.25,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "ryukyu",
-        "away_key": "ehime",
-        "kickoff_delta_minutes": 60
+        "kickoff_delta_minutes": 180
       }
     ]
   },
@@ -1874,7 +1874,154 @@
     "match_method": "fallback",
     "home_key": "pachucaw",
     "away_key": "santoslagunaw",
-    "nearby_bzzoiro_candidates": [],
+    "nearby_bzzoiro_candidates": [
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 8.0,
+        "bookmaker": "bet365",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      },
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.55,
+        "bookmaker": "1xbet",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      },
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.5,
+        "bookmaker": "betfair",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      },
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.48,
+        "bookmaker": "pinnacle",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      },
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.2,
+        "bookmaker": "dafabet",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      }
+    ],
+    "nearby_scoutingstats_candidates": []
+  },
+  {
+    "date": "2026-09-27",
+    "kickoff": "2026-09-27 01:00:00",
+    "home": "Antigua & Barbuda",
+    "away": "Anguilla",
+    "league": "CNL",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "antiguabarbuda",
+    "away_key": "anguilla",
+    "nearby_bzzoiro_candidates": [
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 8.0,
+        "bookmaker": "bet365",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      },
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.55,
+        "bookmaker": "1xbet",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      },
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.5,
+        "bookmaker": "betfair",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      },
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.48,
+        "bookmaker": "pinnacle",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      },
+      {
+        "home": "Serbia",
+        "away": "Netherlands",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-09-27T16:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.2,
+        "bookmaker": "dafabet",
+        "home_key": "serbia",
+        "away_key": "netherlands",
+        "kickoff_delta_minutes": 1020
+      }
+    ],
     "nearby_scoutingstats_candidates": []
   }
 ]
