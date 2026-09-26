@@ -1,39 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 97.56548800000007,
+  "bank": 110.38835600000007,
   "cycle_base": 100.0,
   "open_slips": [
-    {
-      "date": "2026-09-25",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Parndorf vs Favoritner AC",
-              "pick": "HOME",
-              "prob": 0.68,
-              "odds": 1.42,
-              "result": null
-            },
-            {
-              "match": "Inverness CT vs Morton",
-              "pick": "HOME",
-              "prob": 0.68,
-              "odds": 1.35,
-              "result": null
-            }
-          ],
-          "odds": 1.92,
-          "stake_pct": 13.9379,
-          "results": [
-            "win",
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 13.9379
-    },
     {
       "date": "2026-09-26",
       "accas": [
@@ -598,15 +567,19 @@
     },
     {
       "date": "2026-09-25",
-      "staked_pct": 13.9379,
-      "returned_pct": 0.0,
+      "staked_pct": 27.8758,
+      "returned_pct": 26.7608,
       "accas": [
         {
           "odds": 2.18,
           "won": false
+        },
+        {
+          "odds": 1.92,
+          "won": true
         }
       ],
-      "bank_pct": 97.5655
+      "bank_pct": 110.3884
     }
   ],
   "events": []
