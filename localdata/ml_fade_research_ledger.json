@@ -26343,7 +26343,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-24T00:09:18+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Inverness CT",
    "kickoff": "11:45",
    "last_seen_at": "2026-09-25T18:00:47+02:00",
@@ -26379,25 +26379,29 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 56.8,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.5682,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-25",
+   "result_source": "statarea_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-26T12:34:40+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.2745
   },
   {
@@ -26413,7 +26417,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-24T00:09:18+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Inverness CT",
    "kickoff": "11:45",
    "last_seen_at": "2026-09-25T18:00:47+02:00",
@@ -26449,22 +26453,26 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-25",
+   "result_source": "statarea_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-26T12:34:40+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.2745
   },
   {
@@ -32922,6 +32930,59 @@
    "w_score": -1.9686
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 68.6,
+   "away": "New York City FC",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-26",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-26|atlantaun|newyorkci|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Atlanta United FC",
+   "kickoff": "19:30",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "USA,Major League Soccer",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.6864,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 31.4,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.3136,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "bzzoiro"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.7832
+  },
+  {
    "as_of": "2026-09-25T03:00:58+02:00",
    "avg_p": 15.4,
    "away": "New York City FC",
@@ -32937,7 +32998,7 @@
    "graduation": null,
    "home": "Atlanta United",
    "kickoff": "2026-09-27 01:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.6,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -32958,7 +33019,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.6,
    "odds_source": "forebet_best",
@@ -34383,7 +34445,7 @@
    "graduation": null,
    "home": "Botafogo PB",
    "kickoff": "13:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Brasileiro Serie C Main Group B",
@@ -34395,7 +34457,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -34437,7 +34500,7 @@
    "graduation": null,
    "home": "Botafogo PB",
    "kickoff": "13:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Brasileiro Serie C Main Group B",
@@ -34449,7 +34512,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -34488,7 +34552,7 @@
    "graduation": null,
    "home": "Bourg-en-Bresse 01",
    "kickoff": "13:45",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "France,National",
@@ -34511,7 +34575,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -34553,7 +34618,7 @@
    "graduation": null,
    "home": "Bourg-en-Bresse 01",
    "kickoff": "13:45",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "France,National",
@@ -34576,7 +34641,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -35282,7 +35348,7 @@
    "graduation": null,
    "home": "Canada",
    "kickoff": "16:00",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "International,Friendlies",
@@ -35294,7 +35360,8 @@
    "model_key": "42516a50a15b",
    "model_keys_seen": [
     "42516a50a15b",
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -35336,7 +35403,7 @@
    "graduation": null,
    "home": "Canada",
    "kickoff": "16:00",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "International,Friendlies",
@@ -35348,7 +35415,8 @@
    "model_key": "42516a50a15b",
    "model_keys_seen": [
     "42516a50a15b",
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -35871,7 +35939,7 @@
    "graduation": null,
    "home": "Cavese",
    "kickoff": "11:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Italy,Serie C Grp. C",
@@ -35883,7 +35951,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -35925,7 +35994,7 @@
    "graduation": null,
    "home": "Cavese",
    "kickoff": "11:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Italy,Serie C Grp. C",
@@ -35937,7 +36006,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -35976,7 +36046,7 @@
    "graduation": null,
    "home": "Charleston Battery",
    "kickoff": "2026-09-27 01:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.1,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -35997,7 +36067,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.1,
    "odds_source": "forebet_best",
@@ -36041,7 +36112,7 @@
    "graduation": null,
    "home": "Charleston Battery",
    "kickoff": "2026-09-27 01:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.0,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -36062,7 +36133,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.0,
    "odds_source": "forebet_best",
@@ -36088,6 +36160,59 @@
    "w_score": -0.3083
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 59.7,
+   "away": "Chicago Fire",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-26",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-26|charlotte|chicagofi|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Charlotte",
+   "kickoff": "19:30",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "USA,Major League Soccer",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.5969,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 40.3,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.4031,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "bzzoiro"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.3927
+  },
+  {
    "as_of": "2026-09-25T03:00:58+02:00",
    "avg_p": 16.2,
    "away": "Chicago Fire",
@@ -36103,7 +36228,7 @@
    "graduation": null,
    "home": "Charlotte FC",
    "kickoff": "2026-09-27 01:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.8,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -36124,7 +36249,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.8,
    "odds_source": "forebet_best",
@@ -36897,7 +37023,7 @@
    "graduation": null,
    "home": "Cittadella",
    "kickoff": "11:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Italy,Serie C Grp. A",
@@ -36909,7 +37035,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -36951,7 +37078,7 @@
    "graduation": null,
    "home": "Cittadella",
    "kickoff": "11:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Italy,Serie C Grp. A",
@@ -36963,7 +37090,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -36987,6 +37115,60 @@
    "w_score": -0.0288
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 48.7,
+   "away": "Santiago Wanderers",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-26",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-26|cobreloa|santiagow|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Cobreloa",
+   "kickoff": "14:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "Chile,Primera B",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.4865,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 51.3,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.5135,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "vitibet",
+    "betclan"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": 0.054
+  },
+  {
    "as_of": "2026-09-25T03:00:58+02:00",
    "avg_p": 12.8,
    "away": "Santiago Wanderers",
@@ -37002,7 +37184,7 @@
    "graduation": null,
    "home": "Cobreloa",
    "kickoff": "2026-09-26 20:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.4,
    "latest_odds_zulubet": null,
    "league": "Cl2",
@@ -37023,7 +37205,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -37721,7 +37904,7 @@
    "graduation": null,
    "home": "Cruz Azul",
    "kickoff": "15:50",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Mexico,Liga Mx Apertura",
@@ -37733,7 +37916,8 @@
    "model_key": "42516a50a15b",
    "model_keys_seen": [
     "42516a50a15b",
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -37775,7 +37959,7 @@
    "graduation": null,
    "home": "Cruz Azul",
    "kickoff": "15:50",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Mexico,Liga Mx Apertura",
@@ -37787,7 +37971,8 @@
    "model_key": "42516a50a15b",
    "model_keys_seen": [
     "42516a50a15b",
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -37826,7 +38011,7 @@
    "graduation": null,
    "home": "Czech Republic",
    "kickoff": "2026-09-26 20:45:00",
-   "last_seen_at": "2026-09-25T12:00:48+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -37838,7 +38023,8 @@
    "model_key": "0485aef21613",
    "model_keys_seen": [
     "0485aef21613",
-    "a6c7db2fcf23"
+    "a6c7db2fcf23",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -37882,7 +38068,7 @@
    "graduation": null,
    "home": "Czech Republic",
    "kickoff": "2026-09-26 20:45:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.5,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -37905,7 +38091,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -40779,7 +40966,7 @@
    "graduation": null,
    "home": "Floresta",
    "kickoff": "13:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Brasileiro Serie C Main Group B",
@@ -40791,7 +40978,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -40833,7 +41021,7 @@
    "graduation": null,
    "home": "Floresta",
    "kickoff": "13:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Brasileiro Serie C Main Group B",
@@ -40845,7 +41033,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -41471,7 +41660,7 @@
    "graduation": null,
    "home": "Goias",
    "kickoff": "16:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Serie B",
@@ -41494,7 +41683,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -41536,7 +41726,7 @@
    "graduation": null,
    "home": "Goias",
    "kickoff": "16:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Serie B",
@@ -41559,7 +41749,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -44249,7 +44440,7 @@
    "graduation": null,
    "home": "Indy Eleven",
    "kickoff": "16:00",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Usl Championship Eastern Conference",
@@ -44261,7 +44452,8 @@
    "model_key": "42516a50a15b",
    "model_keys_seen": [
     "42516a50a15b",
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -44303,7 +44495,7 @@
    "graduation": null,
    "home": "Indy Eleven",
    "kickoff": "16:00",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Usl Championship Eastern Conference",
@@ -44315,7 +44507,8 @@
    "model_key": "42516a50a15b",
    "model_keys_seen": [
     "42516a50a15b",
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -44354,7 +44547,7 @@
    "graduation": null,
    "home": "Inter De Limeira",
    "kickoff": "15:30",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Brasileiro Serie C Main Group C",
@@ -44365,7 +44558,8 @@
    "ml_p": 0.6686,
    "model_key": "7b717377ba79",
    "model_keys_seen": [
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -44407,7 +44601,7 @@
    "graduation": null,
    "home": "Inter De Limeira",
    "kickoff": "15:30",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Brasileiro Serie C Main Group C",
@@ -44418,7 +44612,8 @@
    "ml_p": 0.3314,
    "model_key": "7b717377ba79",
    "model_keys_seen": [
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -47450,7 +47645,7 @@
    "graduation": null,
    "home": "Longford Town",
    "kickoff": "2026-09-26 20:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 4.0,
    "latest_odds_zulubet": null,
    "league": "Ie2",
@@ -47473,7 +47668,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -47517,7 +47713,7 @@
    "graduation": null,
    "home": "Longford Town",
    "kickoff": "2026-09-26 20:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.72,
    "latest_odds_zulubet": null,
    "league": "Ie2",
@@ -47540,7 +47736,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -48999,7 +49196,7 @@
    "graduation": null,
    "home": "Nautico Recife",
    "kickoff": "12:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Serie B",
@@ -49011,7 +49208,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -49053,7 +49251,7 @@
    "graduation": null,
    "home": "Nautico Recife",
    "kickoff": "12:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Serie B",
@@ -49065,7 +49263,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -49507,7 +49706,7 @@
    "graduation": null,
    "home": "New York Red Bulls",
    "kickoff": "16:30",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Major League Soccer",
@@ -49519,7 +49718,8 @@
    "model_key": "42516a50a15b",
    "model_keys_seen": [
     "42516a50a15b",
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -49561,7 +49761,7 @@
    "graduation": null,
    "home": "New York Red Bulls",
    "kickoff": "16:30",
-   "last_seen_at": "2026-09-26T06:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Major League Soccer",
@@ -49573,7 +49773,8 @@
    "model_key": "42516a50a15b",
    "model_keys_seen": [
     "42516a50a15b",
-    "7b717377ba79"
+    "7b717377ba79",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -49739,7 +49940,7 @@
    "graduation": null,
    "home": "North Macedonia",
    "kickoff": "2026-09-26 20:45:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.4,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -49760,7 +49961,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.38,
    "odds_source": "forebet_best",
@@ -49804,7 +50006,7 @@
    "graduation": null,
    "home": "North Macedonia",
    "kickoff": "2026-09-26 20:45:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 7.0,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -49825,7 +50027,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 7.5,
    "odds_source": "forebet_best",
@@ -50965,7 +51168,7 @@
    "graduation": null,
    "home": "Oper\u00e1rio PR",
    "kickoff": "2026-09-26 21:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.6,
    "latest_odds_zulubet": null,
    "league": "Br2",
@@ -50986,7 +51189,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.6,
    "odds_source": "forebet_best",
@@ -51030,7 +51234,7 @@
    "graduation": null,
    "home": "Oper\u00e1rio PR",
    "kickoff": "2026-09-26 21:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.1,
    "latest_odds_zulubet": null,
    "league": "Br2",
@@ -51051,7 +51255,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.1,
    "odds_source": "forebet_best",
@@ -51219,7 +51424,7 @@
    "graduation": null,
    "home": "Orleans",
    "kickoff": "13:45",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "France,National",
@@ -51242,7 +51447,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -51284,7 +51490,7 @@
    "graduation": null,
    "home": "Orleans",
    "kickoff": "13:45",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "France,National",
@@ -51307,7 +51513,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -51600,7 +51807,7 @@
    "graduation": null,
    "home": "Penarol",
    "kickoff": "16:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 6.25,
    "latest_odds_zulubet": null,
    "league": "Uruguay,Liga Auf Clausura",
@@ -51623,7 +51830,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -51665,7 +51873,7 @@
    "graduation": null,
    "home": "Penarol",
    "kickoff": "16:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.4,
    "latest_odds_zulubet": null,
    "league": "Uruguay,Liga Auf Clausura",
@@ -51688,7 +51896,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -52290,6 +52499,59 @@
    "w_score": -1.293
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 43.6,
+   "away": "Orlando City SC",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-26",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-26|philadelp|orlandoci|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Philadelphia Union",
+   "kickoff": "19:30",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "USA,Major League Soccer",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.4358,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 56.4,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.5642,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "bzzoiro"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": 0.2583
+  },
+  {
    "as_of": "2026-09-25T03:00:58+02:00",
    "avg_p": 12.5,
    "away": "Orlando City SC",
@@ -52305,7 +52567,7 @@
    "graduation": null,
    "home": "Philadelphia Union",
    "kickoff": "2026-09-27 01:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 5.0,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -52326,7 +52588,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 4.75,
    "odds_source": "forebet_best",
@@ -52835,7 +53098,7 @@
    "graduation": null,
    "home": "Portland Hearts of Pine",
    "kickoff": "2026-09-26 23:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.25,
    "latest_odds_zulubet": null,
    "league": "Us4",
@@ -52856,7 +53119,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.93,
    "odds_source": "forebet_best",
@@ -52900,7 +53164,7 @@
    "graduation": null,
    "home": "Portland Hearts of Pine",
    "kickoff": "2026-09-26 23:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.6,
    "latest_odds_zulubet": null,
    "league": "Us4",
@@ -52921,7 +53185,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.35,
    "odds_source": "forebet_best",
@@ -53698,7 +53963,7 @@
    "graduation": null,
    "home": "Quevilly",
    "kickoff": "13:45",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "France,National",
@@ -53721,7 +53986,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -55093,7 +55359,7 @@
    "graduation": null,
    "home": "Sambenedettese",
    "kickoff": "2026-09-26 20:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.6,
    "latest_odds_zulubet": null,
    "league": "It3",
@@ -55114,7 +55380,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.6,
    "odds_source": "forebet_best",
@@ -55158,7 +55425,7 @@
    "graduation": null,
    "home": "Sambenedettese",
    "kickoff": "2026-09-26 20:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.5,
    "latest_odds_zulubet": null,
    "league": "It3",
@@ -55179,7 +55446,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.5,
    "odds_source": "forebet_best",
@@ -56337,7 +56605,7 @@
    "graduation": null,
    "home": "Slovakia",
    "kickoff": "2026-09-26 20:45:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 15.0,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -56360,7 +56628,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -56404,7 +56673,7 @@
    "graduation": null,
    "home": "Slovakia",
    "kickoff": "2026-09-26 20:45:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.16,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -56427,7 +56696,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -64452,7 +64722,7 @@
    "graduation": null,
    "home": "Austin FC",
    "kickoff": "2026-09-27 02:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.7,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -64466,7 +64736,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.7,
    "odds_source": "forebet_best",
@@ -64511,7 +64782,7 @@
    "graduation": null,
    "home": "Austin FC",
    "kickoff": "2026-09-27 02:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.45,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -64525,7 +64796,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.45,
    "odds_source": "forebet_best",
@@ -64567,7 +64839,7 @@
    "graduation": null,
    "home": "Austria",
    "kickoff": "2026-09-27 18:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 5.5,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -64581,7 +64853,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 6.0,
    "odds_source": "forebet_best",
@@ -64626,7 +64899,7 @@
    "graduation": null,
    "home": "Austria",
    "kickoff": "2026-09-27 18:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.57,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -64640,7 +64913,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.53,
    "odds_source": "forebet_best",
@@ -64850,7 +65124,7 @@
    "graduation": null,
    "home": "Bay FC (w)",
    "kickoff": "16:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Nwsl",
@@ -64864,7 +65138,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -64906,7 +65181,7 @@
    "graduation": null,
    "home": "Bay FC (w)",
    "kickoff": "16:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Nwsl",
@@ -64920,7 +65195,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -65127,7 +65403,7 @@
    "graduation": null,
    "home": "Burgos CF",
    "kickoff": "2026-09-27 18:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 4.2,
    "latest_odds_zulubet": null,
    "league": "Es2",
@@ -65141,7 +65417,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 4.2,
    "odds_source": "forebet_best",
@@ -65186,7 +65463,7 @@
    "graduation": null,
    "home": "Burgos CF",
    "kickoff": "2026-09-27 18:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.9,
    "latest_odds_zulubet": null,
    "league": "Es2",
@@ -65200,7 +65477,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.9,
    "odds_source": "forebet_best",
@@ -65636,7 +65914,7 @@
    "graduation": null,
    "home": "Central Espanol",
    "kickoff": "09:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Uruguay,Liga Auf Clausura",
@@ -65650,7 +65928,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -65692,7 +65971,7 @@
    "graduation": null,
    "home": "Central Espanol",
    "kickoff": "09:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Uruguay,Liga Auf Clausura",
@@ -65706,7 +65985,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -65745,7 +66025,7 @@
    "graduation": null,
    "home": "Chelsea (w)",
    "kickoff": "08:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "England,Wsl",
@@ -65757,7 +66037,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -65799,7 +66080,7 @@
    "graduation": null,
    "home": "Chelsea (w)",
    "kickoff": "08:30",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "England,Wsl",
@@ -65811,7 +66092,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -66287,6 +66569,59 @@
    "w_score": -0.8727
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 60.5,
+   "away": "Los Angeles FC",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-27",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-27|dallas|losangele|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "FC Dallas",
+   "kickoff": "20:30",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "USA,Major League Soccer",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.6048,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 39.5,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.3952,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.4257
+  },
+  {
    "as_of": "2026-09-26T00:00:53+02:00",
    "avg_p": 17.6,
    "away": "Los Angeles FC",
@@ -66302,7 +66637,7 @@
    "graduation": null,
    "home": "FC Dallas",
    "kickoff": "2026-09-27 02:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.75,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -66316,7 +66651,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.75,
    "odds_source": "forebet_best",
@@ -66398,6 +66734,59 @@
    "w_score": -1.7519
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 67.9,
+   "away": "Danubio",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-27",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-27|defensor|danubio|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Defensor Sporting",
+   "kickoff": "17:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "Uruguay,Liga Auf Clausura",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.6792,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 32.1,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.3208,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.7502
+  },
+  {
    "as_of": "2026-09-26T00:00:53+02:00",
    "avg_p": 20.5,
    "away": "Danubio FC",
@@ -66413,7 +66802,7 @@
    "graduation": null,
    "home": "Defensor Sporting",
    "kickoff": "2026-09-27 23:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.9,
    "latest_odds_zulubet": null,
    "league": "Uy1",
@@ -66427,7 +66816,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.9,
    "odds_source": "forebet_best",
@@ -66620,6 +67010,59 @@
    "w_score": -1.6722
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 37.3,
+   "away": "Wales",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-27",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-27|denmark|wales|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Denmark",
+   "kickoff": "12:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "International,Uefa Nations League A Grp. 4",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.3727,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 62.7,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.6273,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": 0.5207
+  },
+  {
    "as_of": "2026-09-26T00:00:53+02:00",
    "avg_p": 12.5,
    "away": "Wales",
@@ -66635,7 +67078,7 @@
    "graduation": null,
    "home": "Denmark",
    "kickoff": "2026-09-27 18:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 4.5,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -66649,7 +67092,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 4.5,
    "odds_source": "forebet_best",
@@ -66691,7 +67135,7 @@
    "graduation": null,
    "home": "Eibar",
    "kickoff": "2026-09-27 18:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 4.0,
    "latest_odds_zulubet": null,
    "league": "Es2",
@@ -66705,7 +67149,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 4.0,
    "odds_source": "forebet_best",
@@ -66750,7 +67195,7 @@
    "graduation": null,
    "home": "Eibar",
    "kickoff": "2026-09-27 18:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.95,
    "latest_odds_zulubet": null,
    "league": "Es2",
@@ -66764,7 +67209,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.95,
    "odds_source": "forebet_best",
@@ -67371,7 +67817,7 @@
    "graduation": null,
    "home": "Gangwon FC",
    "kickoff": "2026-09-27 12:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.0,
    "latest_odds_zulubet": null,
    "league": "Kr1",
@@ -67385,7 +67831,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.0,
    "odds_source": "forebet_best",
@@ -67430,7 +67877,7 @@
    "graduation": null,
    "home": "Gangwon FC",
    "kickoff": "2026-09-27 12:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.37,
    "latest_odds_zulubet": null,
    "league": "Kr1",
@@ -67444,7 +67891,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.37,
    "odds_source": "forebet_best",
@@ -67599,7 +68047,7 @@
    "graduation": null,
    "home": "Germany",
    "kickoff": "2026-09-27 20:45:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 7.5,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -67613,7 +68061,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 7.5,
    "odds_source": "forebet_best",
@@ -67658,7 +68107,7 @@
    "graduation": null,
    "home": "Germany",
    "kickoff": "2026-09-27 20:45:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.4,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -67672,7 +68121,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.4,
    "odds_source": "forebet_best",
@@ -67699,6 +68149,59 @@
    "w_score": 0.5204
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 73.1,
+   "away": "Andorra",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-27",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-27|gibraltar|andorra|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Gibraltar",
+   "kickoff": "12:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "International,Uefa Nations League D Grp. 1",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.7307,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 26.9,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.2693,
+   "parent_pick": "away",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.9982
+  },
+  {
    "as_of": "2026-09-26T00:00:53+02:00",
    "avg_p": 21.3,
    "away": "Andorra",
@@ -67714,7 +68217,7 @@
    "graduation": null,
    "home": "Gibraltar",
    "kickoff": "2026-09-27 18:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.9,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -67728,7 +68231,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.9,
    "odds_source": "forebet_best",
@@ -68335,7 +68839,7 @@
    "graduation": null,
    "home": "Houston Dynamo",
    "kickoff": "2026-09-27 02:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 5.75,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -68349,7 +68853,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 5.75,
    "odds_source": "forebet_best",
@@ -68394,7 +68899,7 @@
    "graduation": null,
    "home": "Houston Dynamo",
    "kickoff": "2026-09-27 02:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.5,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -68408,7 +68913,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.5,
    "odds_source": "forebet_best",
@@ -68844,7 +69350,7 @@
    "graduation": null,
    "home": "Junior",
    "kickoff": "20:20",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Colombia,Primera A Apertura Finalizacion",
@@ -68858,7 +69364,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -68900,7 +69407,7 @@
    "graduation": null,
    "home": "Junior",
    "kickoff": "20:20",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Colombia,Primera A Apertura Finalizacion",
@@ -68914,7 +69421,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -68953,7 +69461,7 @@
    "graduation": null,
    "home": "Juventud",
    "kickoff": "13:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Uruguay,Liga Auf Clausura",
@@ -68967,7 +69475,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -69009,7 +69518,7 @@
    "graduation": null,
    "home": "Juventud",
    "kickoff": "13:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Uruguay,Liga Auf Clausura",
@@ -69023,7 +69532,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -69510,7 +70020,7 @@
    "graduation": null,
    "home": "Lithuania",
    "kickoff": "2026-09-27 15:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.87,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -69524,7 +70034,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.8,
    "odds_source": "forebet_best",
@@ -69569,7 +70080,7 @@
    "graduation": null,
    "home": "Lithuania",
    "kickoff": "2026-09-27 15:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.45,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -69583,7 +70094,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.5,
    "odds_source": "forebet_best",
@@ -69680,7 +70192,7 @@
    "graduation": null,
    "home": "Los Angeles Galaxy",
    "kickoff": "2026-09-27 04:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.9,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -69694,7 +70206,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.9,
    "odds_source": "forebet_best",
@@ -69739,7 +70252,7 @@
    "graduation": null,
    "home": "Los Angeles Galaxy",
    "kickoff": "2026-09-27 04:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.2,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -69753,7 +70266,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.2,
    "odds_source": "forebet_best",
@@ -70021,7 +70535,7 @@
    "graduation": null,
    "home": "Mallorca",
    "kickoff": "09:15",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -70035,7 +70549,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -70077,7 +70592,7 @@
    "graduation": null,
    "home": "Mallorca",
    "kickoff": "09:15",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -70091,7 +70606,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -70130,7 +70646,7 @@
    "graduation": null,
    "home": "Manchester United Women",
    "kickoff": "05:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "England,Wsl",
@@ -70142,7 +70658,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -70184,7 +70701,7 @@
    "graduation": null,
    "home": "Manchester United Women",
    "kickoff": "05:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "England,Wsl",
@@ -70196,7 +70713,8 @@
    "model_key": "7b717377ba79",
    "model_keys_seen": [
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -70516,7 +71034,7 @@
    "graduation": null,
    "home": "Monterey Bay",
    "kickoff": "2026-09-27 04:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.9,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -70530,7 +71048,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.9,
    "odds_source": "forebet_best",
@@ -70575,7 +71094,7 @@
    "graduation": null,
    "home": "Monterey Bay",
    "kickoff": "2026-09-27 04:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.1,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -70589,7 +71108,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.1,
    "odds_source": "forebet_best",
@@ -70912,7 +71432,7 @@
    "graduation": null,
    "home": "Norway",
    "kickoff": "2026-09-27 20:45:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.62,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -70926,7 +71446,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.7,
    "odds_source": "forebet_best",
@@ -70971,7 +71492,7 @@
    "graduation": null,
    "home": "Norway",
    "kickoff": "2026-09-27 20:45:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.5,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -70985,7 +71506,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.5,
    "odds_source": "forebet_best",
@@ -71027,7 +71549,7 @@
    "graduation": null,
    "home": "Oakland Roots",
    "kickoff": "2026-09-27 04:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.3,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -71041,7 +71563,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.3,
    "odds_source": "forebet_best",
@@ -71083,7 +71606,7 @@
    "graduation": null,
    "home": "Orange County SC",
    "kickoff": "2026-09-27 04:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.25,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -71097,7 +71620,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.25,
    "odds_source": "forebet_best",
@@ -71142,7 +71666,7 @@
    "graduation": null,
    "home": "Orange County SC",
    "kickoff": "2026-09-27 04:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.8,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -71156,7 +71680,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.8,
    "odds_source": "forebet_best",
@@ -71198,7 +71723,7 @@
    "graduation": null,
    "home": "Oviedo",
    "kickoff": "14:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -71212,7 +71737,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -71254,7 +71780,7 @@
    "graduation": null,
    "home": "Oviedo",
    "kickoff": "14:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -71268,7 +71794,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -71759,7 +72286,7 @@
    "graduation": null,
    "home": "Portland Thorns (w)",
    "kickoff": "19:45",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Nwsl",
@@ -71773,7 +72300,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -71815,7 +72343,7 @@
    "graduation": null,
    "home": "Portland Thorns (w)",
    "kickoff": "19:45",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Nwsl",
@@ -71829,7 +72357,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -72360,6 +72889,109 @@
    "w_score": -0.7613
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 58.3,
+   "away": "Pitea IF (w)",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-27",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-27|rosengard|piteaif|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Rosengard (w)",
+   "kickoff": "07:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "Sweden,Damallsvenskan",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.5831,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 41.7,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.4169,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.3356
+  },
+  {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 41.7,
+   "away": "Pitea IF (w)",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-27",
+   "derivation": null,
+   "edge_family": "ml-meta",
+   "event_key": "2026-09-27|rosengard|piteaif|ml-meta|1x2",
+   "family": "ml-meta",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Rosengard (w)",
+   "kickoff": "07:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "Sweden,Damallsvenskan",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.4169,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_family": "ml-meta",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.3356
+  },
+  {
    "as_of": "2026-09-26T00:00:53+02:00",
    "avg_p": 19.7,
    "away": "Pitea W",
@@ -72431,7 +73063,7 @@
    "graduation": null,
    "home": "Real Salt Lake",
    "kickoff": "2026-09-27 03:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.7,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -72445,7 +73077,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.7,
    "odds_source": "forebet_best",
@@ -72490,7 +73123,7 @@
    "graduation": null,
    "home": "Real Salt Lake",
    "kickoff": "2026-09-27 03:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.5,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -72504,7 +73137,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.5,
    "odds_source": "forebet_best",
@@ -72531,6 +73165,59 @@
    "w_score": -0.6681
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 60.2,
+   "away": "Tampa Bay Rowdies",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-27",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-27|sanantoni|tampabayr|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "San Antonio FC",
+   "kickoff": "20:30",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "USA,Usl Championship Western Conference",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.6016,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 39.8,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.3984,
+   "parent_pick": "away",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.4123
+  },
+  {
    "as_of": "2026-09-26T00:00:53+02:00",
    "avg_p": 15.3,
    "away": "Tampa Bay Rowdies",
@@ -72546,7 +73233,7 @@
    "graduation": null,
    "home": "San Antonio FC",
    "kickoff": "2026-09-27 02:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.4,
    "latest_odds_zulubet": null,
    "league": "Us2",
@@ -72560,7 +73247,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.4,
    "odds_source": "forebet_best",
@@ -72602,7 +73290,7 @@
    "graduation": null,
    "home": "San Jose Earthquakes",
    "kickoff": "2026-09-27 04:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.05,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -72616,7 +73304,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.05,
    "odds_source": "forebet_best",
@@ -72661,7 +73350,7 @@
    "graduation": null,
    "home": "San Jose Earthquakes",
    "kickoff": "2026-09-27 04:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.02,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -72675,7 +73364,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.02,
    "odds_source": "forebet_best",
@@ -72830,7 +73520,7 @@
    "graduation": null,
    "home": "Santos Laguna",
    "kickoff": "2026-09-27 05:05:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.3,
    "latest_odds_zulubet": null,
    "league": "Mx1",
@@ -72844,7 +73534,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.3,
    "odds_source": "forebet_best",
@@ -72889,7 +73580,7 @@
    "graduation": null,
    "home": "Santos Laguna",
    "kickoff": "2026-09-27 05:05:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.15,
    "latest_odds_zulubet": null,
    "league": "Mx1",
@@ -72903,7 +73594,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.15,
    "odds_source": "forebet_best",
@@ -73055,7 +73747,7 @@
    "graduation": null,
    "home": "Seattle Sounders",
    "kickoff": "2026-09-27 02:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.0,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -73069,7 +73761,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.0,
    "odds_source": "forebet_best",
@@ -73114,7 +73807,7 @@
    "graduation": null,
    "home": "Seattle Sounders",
    "kickoff": "2026-09-27 02:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.25,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -73128,7 +73821,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.25,
    "odds_source": "forebet_best",
@@ -73155,6 +73849,59 @@
    "w_score": -0.491
   },
   {
+   "as_of": "2026-09-26T12:00:48+02:00",
+   "avg_p": 38.2,
+   "away": "Netherlands",
+   "captured_at": "2026-09-26T12:00:48+02:00",
+   "date": "2026-09-27",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-27|serbia|netherlan|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": null,
+   "first_seen_at": "2026-09-26T12:00:48+02:00",
+   "graduation": null,
+   "home": "Serbia",
+   "kickoff": "12:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": null,
+   "league": "International,Uefa Nations League A Grp. 2",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.3825,
+   "model_key": "40e00cc32eba",
+   "model_keys_seen": [
+    "40e00cc32eba"
+   ],
+   "odds_forebet": null,
+   "odds_source": null,
+   "odds_zulubet": null,
+   "outcome": null,
+   "parent_avg_p": 61.8,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.6175,
+   "parent_pick": "away",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [],
+   "sources_used": [
+    "statarea",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": 0.479
+  },
+  {
    "as_of": "2026-09-26T00:00:53+02:00",
    "avg_p": 10.1,
    "away": "Netherlands",
@@ -73170,7 +73917,7 @@
    "graduation": null,
    "home": "Serbia",
    "kickoff": "2026-09-27 18:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 4.5,
    "latest_odds_zulubet": null,
    "league": "UNL",
@@ -73184,7 +73931,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 4.5,
    "odds_source": "forebet_best",
@@ -73339,7 +74087,7 @@
    "graduation": null,
    "home": "Sevilla W",
    "kickoff": "2026-09-27 16:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 2.15,
    "latest_odds_zulubet": null,
    "league": "EsW",
@@ -73353,7 +74101,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 2.15,
    "odds_source": "forebet_best",
@@ -73397,7 +74146,7 @@
    "graduation": null,
    "home": "Sevilla W",
    "kickoff": "2026-09-27 16:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.1,
    "latest_odds_zulubet": null,
    "league": "EsW",
@@ -73411,7 +74160,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.1,
    "odds_source": "forebet_best",
@@ -74295,7 +75045,7 @@
    "graduation": null,
    "home": "Trelleborgs FF",
    "kickoff": "2026-09-27 13:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 8.0,
    "latest_odds_zulubet": null,
    "league": "Se4",
@@ -74309,7 +75059,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 8.0,
    "odds_source": "forebet_best",
@@ -74354,7 +75105,7 @@
    "graduation": null,
    "home": "Trelleborgs FF",
    "kickoff": "2026-09-27 13:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.3,
    "latest_odds_zulubet": null,
    "league": "Se4",
@@ -74368,7 +75119,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.3,
    "odds_source": "forebet_best",
@@ -74575,7 +75327,7 @@
    "graduation": null,
    "home": "UNAM Pumas",
    "kickoff": "2026-09-27 20:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 3.9,
    "latest_odds_zulubet": null,
    "league": "Mx1",
@@ -74589,7 +75341,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 3.9,
    "odds_source": "forebet_best",
@@ -74634,7 +75387,7 @@
    "graduation": null,
    "home": "UNAM Pumas",
    "kickoff": "2026-09-27 20:00:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.95,
    "latest_odds_zulubet": null,
    "league": "Mx1",
@@ -74648,7 +75401,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.95,
    "odds_source": "forebet_best",
@@ -74803,7 +75557,7 @@
    "graduation": null,
    "home": "Uni\u00f3n Comercio",
    "kickoff": "2026-09-27 22:15:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 7.5,
    "latest_odds_zulubet": null,
    "league": "Pe2",
@@ -74817,7 +75571,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 7.5,
    "odds_source": "forebet_best",
@@ -74862,7 +75617,7 @@
    "graduation": null,
    "home": "Uni\u00f3n Comercio",
    "kickoff": "2026-09-27 22:15:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.33,
    "latest_odds_zulubet": null,
    "league": "Pe2",
@@ -74876,7 +75631,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.33,
    "odds_source": "forebet_best",
@@ -74918,7 +75674,7 @@
    "graduation": null,
    "home": "Valladolid",
    "kickoff": "07:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -74932,7 +75688,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -74974,7 +75731,7 @@
    "graduation": null,
    "home": "Valladolid",
    "kickoff": "07:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -74988,7 +75745,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -75027,7 +75785,7 @@
    "graduation": null,
    "home": "Vancouver Whitecaps",
    "kickoff": "2026-09-27 04:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 9.0,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -75041,7 +75799,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 9.0,
    "odds_source": "forebet_best",
@@ -75086,7 +75845,7 @@
    "graduation": null,
    "home": "Vancouver Whitecaps",
    "kickoff": "2026-09-27 04:30:00",
-   "last_seen_at": "2026-09-26T09:00:52+02:00",
+   "last_seen_at": "2026-09-26T12:00:48+02:00",
    "latest_odds_forebet": 1.25,
    "latest_odds_zulubet": null,
    "league": "Us1",
@@ -75100,7 +75859,8 @@
     "817a56b94bbd",
     "42516a50a15b",
     "7b717377ba79",
-    "41972eca6848"
+    "41972eca6848",
+    "40e00cc32eba"
    ],
    "odds_forebet": 1.25,
    "odds_source": "forebet_best",
@@ -75464,5 +76224,5 @@
   }
  ],
  "schema": 1,
- "updated_at": "2026-09-26T09:39:44+02:00"
+ "updated_at": "2026-09-26T12:34:40+02:00"
 }
