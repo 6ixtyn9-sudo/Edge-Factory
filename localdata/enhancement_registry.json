@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 170,
-   "inv_price_sum": 166.60149737097836,
+   "hits": 172,
+   "inv_price_sum": 168.5380053074863,
    "multi_n": 24,
-   "n": 254,
+   "n": 257,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -590,9 +590,12 @@
     "2026-09-25|FC Dordrecht vs Almere City|match_over_25@v1",
     "2026-09-25|Morocco vs Gabon|match_over_25@v1",
     "2026-09-25|Girona vs Albacete|match_over_25@v1",
-    "2026-09-25|Nigeria vs Madagascar|match_over_25@v1"
+    "2026-09-25|Nigeria vs Madagascar|match_over_25@v1",
+    "2026-09-26|Stockport County vs Peterborough|match_over_25@v1",
+    "2026-09-26|Pe\u00f1arol vs Boston River|match_over_25@v1",
+    "2026-09-26|San Marino vs Finland|match_over_25@v1"
    ],
-   "profit": 4.14,
+   "profit": 4.44,
    "records": [
     {
      "date": "2026-08-01",
@@ -2622,6 +2625,30 @@
      "match": "Nigeria vs Madagascar",
      "multi_source": false,
      "price": 1.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-26",
+     "hit": false,
+     "match": "Stockport County vs Peterborough",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-26",
+     "hit": true,
+     "match": "Pe\u00f1arol vs Boston River",
+     "multi_source": false,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-26",
+     "hit": true,
+     "match": "San Marino vs Finland",
+     "multi_source": false,
+     "price": 1.5,
      "source": "scoutingstats"
     }
    ],

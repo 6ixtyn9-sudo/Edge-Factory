@@ -3,24 +3,6 @@
   "ambiguous_disposition_picks": 0,
   "ambiguous_examples": [
     {
-      "away": "Flint Town Utd",
-      "away_key_candidates": [
-        "flinttown"
-      ],
-      "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-      "date": "2026-08-28",
-      "home": "Pen-y-Bont FC",
-      "home_key_candidates": [
-        "penybont"
-      ],
-      "league": "Wl1",
-      "match": "Pen-y-Bont FC vs Flint Town Utd",
-      "odds": 1.6,
-      "pick": "home",
-      "reason": "ambiguous_alias_result",
-      "rule": "ml-meta avg_p>=55"
-    },
-    {
       "away": "Viking",
       "away_key_candidates": [
         "viking",
@@ -58,9 +40,8 @@
       "rule": "ml-meta avg_p>=70"
     }
   ],
-  "ambiguous_result_picks": 3,
+  "ambiguous_result_picks": 2,
   "archived_pick_dates": [
-    "2026-08-28",
     "2026-08-29",
     "2026-08-30",
     "2026-08-31",
@@ -89,37 +70,38 @@
     "2026-09-23",
     "2026-09-24",
     "2026-09-25",
-    "2026-09-26"
+    "2026-09-26",
+    "2026-09-27"
   ],
-  "archived_pick_rows": 649,
+  "archived_pick_rows": 660,
   "by_bucket": {
     "CAUTION": {
-      "hit_rate": 0.6875,
-      "priced_picks": 48,
-      "roi": 0.041042,
-      "settled_picks": 48,
-      "wins": 33
+      "hit_rate": 0.648148,
+      "priced_picks": 54,
+      "roi": -0.016852,
+      "settled_picks": 54,
+      "wins": 35
     },
     "CERTIFIED_CLEAN": {
-      "hit_rate": 0.722222,
-      "priced_picks": 54,
-      "roi": 0.123333,
-      "settled_picks": 54,
-      "wins": 39
+      "hit_rate": 0.690909,
+      "priced_picks": 55,
+      "roi": 0.078,
+      "settled_picks": 55,
+      "wins": 38
     },
     "SKIPPED_VETO": {
-      "hit_rate": 0.638596,
-      "priced_picks": 276,
-      "roi": -0.091522,
+      "hit_rate": 0.645614,
+      "priced_picks": 275,
+      "roi": -0.084109,
       "settled_picks": 285,
-      "wins": 182
+      "wins": 184
     },
     "WATCHLIST_NO_ODDS": {
-      "hit_rate": 0.636364,
+      "hit_rate": 0.638889,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 33,
-      "wins": 21
+      "settled_picks": 36,
+      "wins": 23
     },
     "WATCHLIST_SUSPECT_PRICE": {
       "hit_rate": 0.705882,
@@ -129,18 +111,18 @@
       "wins": 12
     },
     "WATCHLIST_UNCORROBORATED_PRICE": {
-      "hit_rate": 0.670968,
-      "priced_picks": 155,
-      "roi": -0.034839,
-      "settled_picks": 155,
-      "wins": 104
+      "hit_rate": 0.666667,
+      "priced_picks": 159,
+      "roi": -0.044465,
+      "settled_picks": 159,
+      "wins": 106
     },
     "WATCHLIST_UNKNOWN_CTX": {
-      "hit_rate": 0.75,
-      "priced_picks": 4,
-      "roi": -0.07,
-      "settled_picks": 4,
-      "wins": 3
+      "hit_rate": 0.8,
+      "priced_picks": 5,
+      "roi": -0.016,
+      "settled_picks": 5,
+      "wins": 4
     }
   },
   "by_event_disposition": {},
@@ -148,51 +130,51 @@
     "alias_fuzzy": {
       "hit_rate": 0.730769,
       "priced_picks": 23,
-      "roi": 0.09,
+      "roi": 0.067826,
       "settled_picks": 26,
       "wins": 19
     },
     "betexplorer": {
       "hit_rate": 0.651899,
       "priced_picks": 158,
-      "roi": -0.064367,
+      "roi": -0.062468,
       "settled_picks": 158,
       "wins": 103
     },
     "exact": {
-      "hit_rate": 0.654434,
-      "priced_picks": 327,
-      "roi": -0.056575,
-      "settled_picks": 327,
-      "wins": 214
+      "hit_rate": 0.652308,
+      "priced_picks": 325,
+      "roi": -0.059477,
+      "settled_picks": 325,
+      "wins": 212
     },
     "fallback": {
-      "hit_rate": 0.75,
-      "priced_picks": 44,
-      "roi": 0.1375,
-      "settled_picks": 44,
-      "wins": 33
+      "hit_rate": 0.701754,
+      "priced_picks": 57,
+      "roi": 0.04386,
+      "settled_picks": 57,
+      "wins": 40
     },
     "none": {
-      "hit_rate": 0.609756,
+      "hit_rate": 0.622222,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 41,
-      "wins": 25
+      "settled_picks": 45,
+      "wins": 28
     }
   },
   "by_odds_source": {
     "UNKNOWN": {
-      "hit_rate": 0.613636,
+      "hit_rate": 0.625,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 44,
-      "wins": 27
+      "settled_picks": 48,
+      "wins": 30
     },
     "betexplorer_odds": {
       "hit_rate": 0.651899,
       "priced_picks": 158,
-      "roi": -0.064367,
+      "roi": -0.062468,
       "settled_picks": 158,
       "wins": 103
     },
@@ -204,18 +186,18 @@
       "wins": 4
     },
     "forebet_best": {
-      "hit_rate": 0.738462,
-      "priced_picks": 65,
-      "roi": 0.114615,
-      "settled_picks": 65,
-      "wins": 48
+      "hit_rate": 0.705128,
+      "priced_picks": 78,
+      "roi": 0.043462,
+      "settled_picks": 78,
+      "wins": 55
     },
     "scoutingstats_odds": {
-      "hit_rate": 0.652174,
-      "priced_picks": 322,
-      "roi": -0.060559,
-      "settled_picks": 322,
-      "wins": 210
+      "hit_rate": 0.65,
+      "priced_picks": 320,
+      "roi": -0.063531,
+      "settled_picks": 320,
+      "wins": 208
     },
     "zulubet": {
       "hit_rate": 1.0,
@@ -229,7 +211,7 @@
     "BETEXPLORER_RESCUE": {
       "hit_rate": 0.651899,
       "priced_picks": 158,
-      "roi": -0.064367,
+      "roi": -0.062468,
       "settled_picks": 158,
       "wins": 103
     },
@@ -241,105 +223,105 @@
       "wins": 4
     },
     "SCOUTINGSTATS_SOLE": {
-      "hit_rate": 0.652174,
-      "priced_picks": 322,
-      "roi": -0.060559,
-      "settled_picks": 322,
-      "wins": 210
+      "hit_rate": 0.65,
+      "priced_picks": 320,
+      "roi": -0.063531,
+      "settled_picks": 320,
+      "wins": 208
     },
     "SOURCE_FALLBACK": {
-      "hit_rate": 0.75,
-      "priced_picks": 44,
-      "roi": 0.1375,
-      "settled_picks": 44,
-      "wins": 33
+      "hit_rate": 0.701754,
+      "priced_picks": 57,
+      "roi": 0.04386,
+      "settled_picks": 57,
+      "wins": 40
     },
     "SUSPECT_ALIAS_FUZZY": {
       "hit_rate": 0.730769,
       "priced_picks": 23,
-      "roi": 0.09,
+      "roi": 0.067826,
       "settled_picks": 26,
       "wins": 19
     },
     "UNMATCHED": {
-      "hit_rate": 0.609756,
+      "hit_rate": 0.622222,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 41,
-      "wins": 25
+      "settled_picks": 45,
+      "wins": 28
     }
   },
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.665323,
-      "priced_picks": 207,
-      "roi": -0.015072,
-      "settled_picks": 248,
+      "hit_rate": 0.660377,
+      "priced_picks": 220,
+      "roi": -0.028955,
+      "settled_picks": 265,
       "suspect_price_captures": 0,
-      "wins": 165
+      "wins": 175
     },
     "alias_fuzzy": {
-      "avg_suspect_price": 1.569231,
+      "avg_suspect_price": 1.549615,
       "hit_rate": 0.730769,
       "priced_picks": 23,
-      "roi": 0.09,
+      "roi": 0.067826,
       "settled_picks": 26,
       "suspect_price_captures": 26,
       "wins": 19
     },
     "scoutingstats_sole_source": {
       "avg_suspect_price": null,
-      "hit_rate": 0.652174,
-      "priced_picks": 322,
-      "roi": -0.060559,
-      "settled_picks": 322,
+      "hit_rate": 0.65,
+      "priced_picks": 320,
+      "roi": -0.063531,
+      "settled_picks": 320,
       "suspect_price_captures": 0,
-      "wins": 210
+      "wins": 208
     }
   },
   "by_rule": {
     "2way-unanimous avg_p>=60": {
-      "hit_rate": 0.678571,
-      "priced_picks": 21,
-      "roi": -0.032381,
-      "settled_picks": 28,
-      "wins": 19
+      "hit_rate": 0.641509,
+      "priced_picks": 42,
+      "roi": -0.110476,
+      "settled_picks": 53,
+      "wins": 34
     },
     "2way-unanimous avg_p>=70": {
-      "hit_rate": 0.730435,
-      "priced_picks": 92,
-      "roi": -0.00413,
-      "settled_picks": 115,
-      "wins": 84
+      "hit_rate": 0.723214,
+      "priced_picks": 89,
+      "roi": -0.015506,
+      "settled_picks": 112,
+      "wins": 81
     },
     "ml-meta avg_p>=55": {
-      "hit_rate": 0.60597,
-      "priced_picks": 322,
-      "roi": -0.06618,
-      "settled_picks": 335,
-      "wins": 203
+      "hit_rate": 0.606061,
+      "priced_picks": 317,
+      "roi": -0.065489,
+      "settled_picks": 330,
+      "wins": 200
     },
     "ml-meta avg_p>=60": {
-      "hit_rate": 0.830189,
-      "priced_picks": 53,
-      "roi": 0.139623,
-      "settled_picks": 53,
-      "wins": 44
+      "hit_rate": 0.843137,
+      "priced_picks": 51,
+      "roi": 0.157451,
+      "settled_picks": 51,
+      "wins": 43
     },
     "ml-meta avg_p>=65": {
-      "hit_rate": 0.777778,
-      "priced_picks": 9,
-      "roi": 0.074444,
-      "settled_picks": 9,
-      "wins": 7
+      "hit_rate": 0.8,
+      "priced_picks": 10,
+      "roi": 0.05,
+      "settled_picks": 10,
+      "wins": 8
     },
     "ml-meta avg_p>=70": {
-      "hit_rate": 0.833333,
-      "priced_picks": 6,
-      "roi": 0.016667,
-      "settled_picks": 6,
-      "wins": 5
+      "hit_rate": 0.8,
+      "priced_picks": 5,
+      "roi": -0.108,
+      "settled_picks": 5,
+      "wins": 4
     },
     "ml-meta avg_p>=75": {
       "hit_rate": 1.0,
@@ -363,9 +345,9 @@
       "wins": 28
     }
   },
-  "eligible_prior_picks": 612,
+  "eligible_prior_picks": 628,
   "empty_regular_ledger_dates": [],
-  "end": "2026-09-26",
+  "end": "2026-09-27",
   "enhancement_registry": {
     "btts_yes": "PAPER",
     "match_over_15": "PAPER",
@@ -391,12 +373,12 @@
         "recommended": 24
       },
       "away_under_35": {
-        "hit_rate": 0.966942,
-        "hits": 117,
+        "hit_rate": 0.964029,
+        "hits": 134,
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 121
+        "recommended": 139
       },
       "home_over_05": {
         "hit_rate": 0.740741,
@@ -415,12 +397,12 @@
         "recommended": 33
       },
       "home_under_35": {
-        "hit_rate": 0.923077,
-        "hits": 12,
+        "hit_rate": 0.952381,
+        "hits": 20,
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 13
+        "recommended": 21
       },
       "match_over_15": {
         "hit_rate": 0.790698,
@@ -431,12 +413,12 @@
         "recommended": 43
       },
       "match_over_25": {
-        "hit_rate": 0.638796,
-        "hits": 191,
-        "priced_hits": 111,
-        "priced_n": 166,
-        "priced_roi": -0.010723,
-        "recommended": 299
+        "hit_rate": 0.631944,
+        "hits": 182,
+        "priced_hits": 101,
+        "priced_n": 155,
+        "priced_roi": -0.037548,
+        "recommended": 288
       },
       "match_over_35": {
         "hit_rate": 0.444444,
@@ -447,62 +429,62 @@
         "recommended": 18
       }
     },
-    "hit_rate": 0.758389,
-    "total_hits": 452,
-    "total_recommended": 596
+    "hit_rate": 0.765957,
+    "total_hits": 468,
+    "total_recommended": 611
   },
   "event_notes_audit": {
     "by_engine": {
       "hybrid_cohort": {
-        "brier": 0.135926,
-        "delta": 0.042417,
-        "hits": 1585,
-        "mean_promised": 0.680008,
-        "n": 2194,
-        "realized": 0.722425
+        "brier": 0.135685,
+        "delta": 0.041753,
+        "hits": 1606,
+        "mean_promised": 0.676494,
+        "n": 2236,
+        "realized": 0.718247
       },
       "model": {
-        "brier": 0.171799,
-        "delta": 0.069991,
-        "hits": 182,
-        "mean_promised": 0.63818,
-        "n": 257,
-        "realized": 0.708171
+        "brier": 0.17344,
+        "delta": 0.071318,
+        "hits": 181,
+        "mean_promised": 0.638486,
+        "n": 255,
+        "realized": 0.709804
       }
     },
     "by_engine_by_market": {
       "hybrid_cohort": {
         "away_over_05": {
-          "brier": 0.093413,
-          "delta": 0.009677,
-          "hits": 25,
-          "mean_promised": 0.88318,
-          "n": 28,
-          "realized": 0.892857
+          "brier": 0.089685,
+          "delta": 0.021939,
+          "hits": 27,
+          "mean_promised": 0.878061,
+          "n": 30,
+          "realized": 0.9
         },
         "away_under_15": {
-          "brier": 0.194155,
-          "delta": -0.057969,
-          "hits": 18,
-          "mean_promised": 0.807969,
-          "n": 24,
-          "realized": 0.75
+          "brier": 0.22534,
+          "delta": -0.108665,
+          "hits": 14,
+          "mean_promised": 0.808665,
+          "n": 20,
+          "realized": 0.7
         },
         "away_under_25": {
-          "brier": 0.079081,
-          "delta": -0.014435,
-          "hits": 330,
-          "mean_promised": 0.928562,
-          "n": 361,
-          "realized": 0.914127
+          "brier": 0.081403,
+          "delta": -0.015374,
+          "hits": 337,
+          "mean_promised": 0.926185,
+          "n": 370,
+          "realized": 0.910811
         },
         "away_under_35": {
-          "brier": 0.016931,
-          "delta": 0.019544,
-          "hits": 368,
-          "mean_promised": 0.964414,
-          "n": 374,
-          "realized": 0.983957
+          "brier": 0.019017,
+          "delta": 0.017818,
+          "hits": 376,
+          "mean_promised": 0.963905,
+          "n": 383,
+          "realized": 0.981723
         },
         "double_chance": {
           "brier": 0.257185,
@@ -513,36 +495,36 @@
           "realized": 0.666667
         },
         "home_over_05": {
-          "brier": 0.103405,
-          "delta": 0.045694,
-          "hits": 131,
-          "mean_promised": 0.839441,
-          "n": 148,
-          "realized": 0.885135
+          "brier": 0.105695,
+          "delta": 0.042983,
+          "hits": 120,
+          "mean_promised": 0.83937,
+          "n": 136,
+          "realized": 0.882353
         },
         "home_under_15": {
-          "brier": 0.232587,
-          "delta": -0.121975,
-          "hits": 9,
-          "mean_promised": 0.814282,
-          "n": 13,
-          "realized": 0.692308
+          "brier": 0.248844,
+          "delta": -0.148275,
+          "hits": 8,
+          "mean_promised": 0.814942,
+          "n": 12,
+          "realized": 0.666667
         },
         "home_under_25": {
-          "brier": 0.088179,
-          "delta": -0.014862,
-          "hits": 118,
-          "mean_promised": 0.915626,
-          "n": 131,
-          "realized": 0.900763
+          "brier": 0.074777,
+          "delta": 0.008129,
+          "hits": 124,
+          "mean_promised": 0.910389,
+          "n": 135,
+          "realized": 0.918519
         },
         "home_under_35": {
-          "brier": 0.01077,
-          "delta": 0.04391,
-          "hits": 126,
-          "mean_promised": 0.948216,
-          "n": 127,
-          "realized": 0.992126
+          "brier": 0.010853,
+          "delta": 0.048345,
+          "hits": 132,
+          "mean_promised": 0.944137,
+          "n": 133,
+          "realized": 0.992481
         },
         "match_over_15": {
           "brier": 0.19769,
@@ -553,12 +535,12 @@
           "realized": 0.75
         },
         "match_over_25": {
-          "brier": 0.258993,
-          "delta": 0.15125,
-          "hits": 317,
-          "mean_promised": 0.460719,
-          "n": 518,
-          "realized": 0.611969
+          "brier": 0.259719,
+          "delta": 0.151128,
+          "hits": 325,
+          "mean_promised": 0.458628,
+          "n": 533,
+          "realized": 0.609756
         },
         "match_over_35": {
           "brier": 0.274949,
@@ -569,12 +551,12 @@
           "realized": 0.466667
         },
         "match_over_45": {
-          "brier": 0.185965,
-          "delta": 0.014497,
+          "brier": 0.181663,
+          "delta": 0.006051,
           "hits": 103,
-          "mean_promised": 0.239824,
-          "n": 405,
-          "realized": 0.254321
+          "mean_promised": 0.239773,
+          "n": 419,
+          "realized": 0.245823
         }
       },
       "model": {
@@ -595,10 +577,10 @@
           "realized": 0.95
         },
         "away_under_35": {
-          "brier": 0.097837,
-          "delta": -0.052793,
+          "brier": 0.097747,
+          "delta": -0.053344,
           "hits": 40,
-          "mean_promised": 0.941682,
+          "mean_promised": 0.942233,
           "n": 45,
           "realized": 0.888889
         },
@@ -627,12 +609,12 @@
           "realized": 1.0
         },
         "home_under_35": {
-          "brier": 0.075447,
-          "delta": -0.023652,
-          "hits": 34,
-          "mean_promised": 0.942571,
-          "n": 37,
-          "realized": 0.918919
+          "brier": 0.077363,
+          "delta": -0.026543,
+          "hits": 33,
+          "mean_promised": 0.94321,
+          "n": 36,
+          "realized": 0.916667
         },
         "match_over_15": {
           "brier": 0.080132,
@@ -643,10 +625,10 @@
           "realized": 0.909091
         },
         "match_over_25": {
-          "brier": 0.26965,
-          "delta": 0.183814,
+          "brier": 0.271393,
+          "delta": 0.185335,
           "hits": 46,
-          "mean_promised": 0.464073,
+          "mean_promised": 0.462552,
           "n": 71,
           "realized": 0.647887
         },
@@ -659,51 +641,51 @@
           "realized": 0.333333
         },
         "match_over_45": {
-          "brier": 0.245597,
-          "delta": 0.114162,
+          "brier": 0.249437,
+          "delta": 0.119897,
           "hits": 19,
-          "mean_promised": 0.231293,
-          "n": 55,
-          "realized": 0.345455
+          "mean_promised": 0.231955,
+          "n": 54,
+          "realized": 0.351852
         }
       }
     },
     "by_market": {
       "away_over_05": {
-        "brier": 0.088004,
-        "delta": 0.015512,
-        "hits": 27,
-        "mean_promised": 0.884488,
-        "n": 30,
-        "notes": 30,
-        "realized": 0.9
+        "brier": 0.084847,
+        "delta": 0.026642,
+        "hits": 29,
+        "mean_promised": 0.879608,
+        "n": 32,
+        "notes": 32,
+        "realized": 0.90625
       },
       "away_under_15": {
-        "brier": 0.194155,
-        "delta": -0.057969,
-        "hits": 18,
-        "mean_promised": 0.807969,
-        "n": 24,
-        "notes": 24,
-        "realized": 0.75
+        "brier": 0.22534,
+        "delta": -0.108665,
+        "hits": 14,
+        "mean_promised": 0.808665,
+        "n": 20,
+        "notes": 20,
+        "realized": 0.7
       },
       "away_under_25": {
-        "brier": 0.07748,
-        "delta": -0.010369,
-        "hits": 349,
-        "mean_promised": 0.92638,
-        "n": 381,
-        "notes": 381,
-        "realized": 0.91601
+        "brier": 0.07972,
+        "delta": -0.011355,
+        "hits": 356,
+        "mean_promised": 0.924175,
+        "n": 390,
+        "notes": 390,
+        "realized": 0.912821
       },
       "away_under_35": {
-        "brier": 0.02562,
-        "delta": 0.011775,
-        "hits": 408,
-        "mean_promised": 0.961972,
-        "n": 419,
-        "notes": 419,
-        "realized": 0.973747
+        "brier": 0.027295,
+        "delta": 0.010336,
+        "hits": 416,
+        "mean_promised": 0.961627,
+        "n": 428,
+        "notes": 428,
+        "realized": 0.971963
       },
       "double_chance": {
         "brier": 0.257185,
@@ -715,40 +697,40 @@
         "realized": 0.666667
       },
       "home_over_05": {
-        "brier": 0.107996,
-        "delta": 0.040049,
-        "hits": 138,
-        "mean_promised": 0.838932,
-        "n": 157,
-        "notes": 157,
-        "realized": 0.878981
+        "brier": 0.110524,
+        "delta": 0.037039,
+        "hits": 127,
+        "mean_promised": 0.838823,
+        "n": 145,
+        "notes": 145,
+        "realized": 0.875862
       },
       "home_under_15": {
-        "brier": 0.218222,
-        "delta": -0.100588,
-        "hits": 10,
-        "mean_promised": 0.814874,
-        "n": 14,
-        "notes": 14,
-        "realized": 0.714286
+        "brier": 0.232124,
+        "delta": -0.12322,
+        "hits": 9,
+        "mean_promised": 0.815528,
+        "n": 13,
+        "notes": 13,
+        "realized": 0.692308
       },
       "home_under_25": {
-        "brier": 0.086535,
-        "delta": -0.011825,
-        "hits": 121,
-        "mean_promised": 0.91481,
-        "n": 134,
-        "notes": 134,
-        "realized": 0.902985
+        "brier": 0.073471,
+        "delta": 0.010579,
+        "hits": 127,
+        "mean_promised": 0.909711,
+        "n": 138,
+        "notes": 138,
+        "realized": 0.92029
       },
       "home_under_35": {
-        "brier": 0.025362,
-        "delta": 0.028667,
-        "hits": 160,
-        "mean_promised": 0.946943,
-        "n": 164,
-        "notes": 164,
-        "realized": 0.97561
+        "brier": 0.025021,
+        "delta": 0.032392,
+        "hits": 165,
+        "mean_promised": 0.943939,
+        "n": 169,
+        "notes": 169,
+        "realized": 0.976331
       },
       "match_over_15": {
         "brier": 0.167617,
@@ -760,13 +742,13 @@
         "realized": 0.790698
       },
       "match_over_25": {
-        "brier": 0.260277,
-        "delta": 0.155176,
-        "hits": 363,
-        "mean_promised": 0.461123,
-        "n": 589,
-        "notes": 589,
-        "realized": 0.616299
+        "brier": 0.261091,
+        "delta": 0.155149,
+        "hits": 371,
+        "mean_promised": 0.459089,
+        "n": 604,
+        "notes": 604,
+        "realized": 0.614238
       },
       "match_over_35": {
         "brier": 0.271169,
@@ -778,96 +760,96 @@
         "realized": 0.454545
       },
       "match_over_45": {
-        "brier": 0.193095,
-        "delta": 0.026413,
+        "brier": 0.189401,
+        "delta": 0.019048,
         "hits": 122,
-        "mean_promised": 0.238804,
-        "n": 460,
-        "notes": 460,
-        "realized": 0.265217
+        "mean_promised": 0.23888,
+        "n": 473,
+        "notes": 473,
+        "realized": 0.257928
       }
     },
     "definition": "plain-market: a note hits iff its market lands in the final score (selection-independent for match totals and BTTS; the 1X2 selection only picks the team for team totals and the double-chance leg)",
     "promised_buckets": [
       {
-        "brier": 0.158952,
+        "brier": 0.155916,
         "bucket": "0.1-0.2",
-        "delta": 0.006392,
-        "hits": 25,
-        "mean_promised": 0.192021,
-        "n": 126,
-        "realized": 0.198413
+        "delta": 0.001573,
+        "hits": 24,
+        "mean_promised": 0.191976,
+        "n": 124,
+        "realized": 0.193548
       },
       {
-        "brier": 0.198178,
+        "brier": 0.193397,
         "bucket": "0.2-0.3",
-        "delta": 0.024445,
-        "hits": 76,
-        "mean_promised": 0.245059,
-        "n": 282,
-        "realized": 0.269504
+        "delta": 0.015797,
+        "hits": 77,
+        "mean_promised": 0.244338,
+        "n": 296,
+        "realized": 0.260135
       },
       {
-        "brier": 0.262918,
+        "brier": 0.26252,
         "bucket": "0.3-0.4",
-        "delta": 0.138495,
-        "hits": 40,
-        "mean_promised": 0.332093,
-        "n": 85,
-        "realized": 0.470588
+        "delta": 0.138924,
+        "hits": 41,
+        "mean_promised": 0.33234,
+        "n": 87,
+        "realized": 0.471264
       },
       {
-        "brier": 0.262906,
+        "brier": 0.263479,
         "bucket": "0.4-0.5",
-        "delta": 0.15994,
-        "hits": 291,
-        "mean_promised": 0.447576,
-        "n": 479,
-        "realized": 0.607516
+        "delta": 0.158024,
+        "hits": 301,
+        "mean_promised": 0.446393,
+        "n": 498,
+        "realized": 0.604418
       },
       {
-        "brier": 0.244374,
+        "brier": 0.24384,
         "bucket": "0.5-0.6",
-        "delta": 0.091742,
-        "hits": 68,
-        "mean_promised": 0.526439,
-        "n": 110,
-        "realized": 0.618182
+        "delta": 0.092296,
+        "hits": 65,
+        "mean_promised": 0.526751,
+        "n": 105,
+        "realized": 0.619048
       },
       {
-        "brier": 0.121276,
+        "brier": 0.11881,
         "bucket": "0.8-0.9",
-        "delta": 0.008907,
-        "hits": 294,
-        "mean_promised": 0.848236,
-        "n": 343,
-        "realized": 0.857143
+        "delta": 0.009481,
+        "hits": 302,
+        "mean_promised": 0.850917,
+        "n": 351,
+        "realized": 0.860399
       },
       {
-        "brier": 0.048442,
+        "brier": 0.048236,
         "bucket": "0.9-1.0",
-        "delta": 0.001775,
-        "hits": 973,
-        "mean_promised": 0.946568,
-        "n": 1026,
-        "realized": 0.948343
+        "delta": 0.002789,
+        "hits": 977,
+        "mean_promised": 0.945755,
+        "n": 1030,
+        "realized": 0.948544
       }
     ],
     "promised_missing": 0,
-    "scored": 2451,
-    "total_notes": 2451,
+    "scored": 2491,
+    "total_notes": 2491,
     "unscorable": {}
   },
   "include_same_day": false,
-  "morning_baseline_rows": 649,
+  "morning_baseline_rows": 660,
   "overall": {
-    "hit_rate": 0.661074,
-    "priced_picks": 552,
-    "roi": -0.037228,
-    "settled_picks": 596,
-    "wins": 394
+    "hit_rate": 0.657938,
+    "priced_picks": 563,
+    "roi": -0.044654,
+    "settled_picks": 611,
+    "wins": 402
   },
-  "pending_result_picks": 5,
+  "pending_result_picks": 6,
   "regular_only_rows": 0,
   "rescheduled_examples": [
     {
@@ -1074,1372 +1056,45 @@
       "rescheduled_outcome": "draw",
       "rescheduled_to": "2026-09-20",
       "rule": "2way-unanimous avg_p>=70"
+    },
+    {
+      "away": "Londrina",
+      "away_key_candidates": [
+        "londrina"
+      ],
+      "bucket": "CAUTION",
+      "date": "2026-09-26",
+      "home": "Vila Nova FC",
+      "home_key_candidates": [
+        "vilanova"
+      ],
+      "league": "Br2",
+      "match": "Vila Nova FC vs Londrina",
+      "odds": 1.58,
+      "pick": "home",
+      "reason": "rescheduled",
+      "rescheduled_away": "Londrina",
+      "rescheduled_gs": 0,
+      "rescheduled_home": "Vila Nova FC",
+      "rescheduled_hs": 2,
+      "rescheduled_origin": "warehouse",
+      "rescheduled_outcome": "home",
+      "rescheduled_to": "2026-09-25",
+      "rule": "2way-unanimous avg_p>=60"
     }
   ],
-  "rescheduled_result_picks": 8,
-  "same_day_cutoff": "2026-09-26",
-  "same_day_excluded": 37,
+  "rescheduled_result_picks": 9,
+  "same_day_cutoff": "2026-09-27",
+  "same_day_excluded": 32,
   "secondary_stats": {
-    "btts_total": 550,
-    "btts_wins": 310,
-    "over25_total": 550,
-    "over25_wins": 340,
-    "team_o15_total": 550,
-    "team_o15_wins": 355
+    "btts_total": 565,
+    "btts_wins": 314,
+    "over25_total": 565,
+    "over25_wins": 348,
+    "team_o15_total": 565,
+    "team_o15_wins": 361
   },
   "settled_ledger": [
-    {
-      "avg_p": 61.0,
-      "date": "2026-08-28",
-      "gs": 1,
-      "hs": 3,
-      "market": "1x2",
-      "match": "Fylkir FC vs Grotta",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.47351299489354026,
-          "raw_promised": 0.5767081504204925
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8426711930670894,
-          "raw_promised": 0.8863098990611381
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9816005371986626,
-          "raw_promised": 0.9858040054780208
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9431229044462789,
-          "raw_promised": 0.937731883846048
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.19305036684951024,
-          "raw_promised": 0.18536655251467204
-        }
-      ],
-      "odds": 1.35,
-      "odds_match_method": "betexplorer",
-      "odds_source": "betexplorer_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.1,
-        "away_o15_hit": true,
-        "btts_expected": 0.42700000000000005,
-        "btts_hit": false,
-        "home_o15_expected": 0.831,
-        "home_o15_hit": true,
-        "over25_expected": 0.6609999999999999,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "BETEXPLORER_RESCUE",
-      "price_quarantine_reason": "NONE",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 73.1,
-      "date": "2026-08-28",
-      "gs": 2,
-      "hs": 1,
-      "market": "1x2",
-      "match": "Torns IF vs IFK Trelleborg",
-      "notes_audit": [
-        {
-          "engine": "model",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4808224846791147,
-          "raw_promised": 0.585610635421361
-        },
-        {
-          "engine": "model",
-          "hit": true,
-          "label": "Home Team Under 3.5 Goals",
-          "market": "home_under_35",
-          "promised": 0.9195641668372081,
-          "raw_promised": 0.9151340031280651
-        },
-        {
-          "engine": "model",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9054780734384859,
-          "raw_promised": 0.9093555655700766
-        },
-        {
-          "engine": "model",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.19552461118909498,
-          "raw_promised": 0.18774231667815222
-        }
-      ],
-      "odds": 1.64,
-      "odds_match_method": "fallback",
-      "odds_source": "forebet_best",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.853,
-        "away_o15_hit": true,
-        "btts_expected": 0.235,
-        "btts_hit": false,
-        "home_o15_expected": 0.07400000000000001,
-        "home_o15_hit": true,
-        "over25_expected": 0.647,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SOURCE_FALLBACK",
-      "price_quarantine_reason": "NONE",
-      "selection": "away",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 63.9,
-      "date": "2026-08-28",
-      "gs": 0,
-      "hs": 2,
-      "market": "1x2",
-      "match": "Cork City vs Wexford Youths",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.472670876328141,
-          "raw_promised": 0.5756825045659466
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8458712766467605,
-          "raw_promised": 0.8896757026839751
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9844963947015124,
-          "raw_promised": 0.9887122637943314
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9538417753418988,
-          "raw_promised": 0.9483894841972489
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 1.5 Goals",
-          "market": "away_under_15",
-          "promised": 0.8036259363331114,
-          "raw_promised": 0.8007951255642418
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.20766861760098304,
-          "raw_promised": 0.1994029658601482
-        }
-      ],
-      "odds": 1.37,
-      "odds_match_method": "betexplorer",
-      "odds_source": "betexplorer_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.1,
-        "away_o15_hit": true,
-        "btts_expected": 0.409,
-        "btts_hit": true,
-        "home_o15_expected": 0.8390000000000001,
-        "home_o15_hit": true,
-        "over25_expected": 0.6629999999999999,
-        "over25_hit": false,
-        "top_scores": []
-      },
-      "price_evidence": "BETEXPLORER_RESCUE",
-      "price_quarantine_reason": "NONE",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 62.2,
-      "date": "2026-08-28",
-      "gs": 2,
-      "hs": 2,
-      "market": "1x2",
-      "match": "Akron Togliatti vs CSKA Moscow",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4883220849203316,
-          "raw_promised": 0.5947446626405669
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 3.5 Goals",
-          "market": "home_under_35",
-          "promised": 0.9889735255932943,
-          "raw_promised": 0.9842089699696711
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 2.5 Goals",
-          "market": "home_under_25",
-          "promised": 0.9586914000709379,
-          "raw_promised": 0.9355432533532191
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.23351582554193864,
-          "raw_promised": 0.22422140006638677
-        }
-      ],
-      "odds": 1.67,
-      "odds_match_method": "betexplorer",
-      "odds_source": "betexplorer_odds",
-      "outcome": "draw",
-      "parsed_stats": {
-        "away_o15_expected": 0.86,
-        "away_o15_hit": true,
-        "btts_expected": 0.41700000000000004,
-        "btts_hit": false,
-        "home_o15_expected": 0.102,
-        "home_o15_hit": false,
-        "over25_expected": 0.6859999999999999,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "BETEXPLORER_RESCUE",
-      "price_quarantine_reason": "NONE",
-      "selection": "away",
-      "suspect_price": null,
-      "won": false
-    },
-    {
-      "avg_p": 74.5,
-      "date": "2026-08-28",
-      "gs": 0,
-      "hs": 2,
-      "market": "1x2",
-      "match": "CSKA 1948 vs Lokomotiv Plovdiv",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.5296770725722171,
-          "raw_promised": 0.6451123583460318
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8531979558212509,
-          "raw_promised": 0.8973818024450937
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9723293731156688,
-          "raw_promised": 0.9764931398640491
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9416268799751244,
-          "raw_promised": 0.9362444108571069
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.29196646710855567,
-          "raw_promised": 0.28034558204176063
-        }
-      ],
-      "odds": 1.55,
-      "odds_match_method": "alias_fuzzy",
-      "odds_source": "forebet_best",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.092,
-        "away_o15_hit": true,
-        "btts_expected": 0.42100000000000004,
-        "btts_hit": true,
-        "home_o15_expected": 0.878,
-        "home_o15_hit": true,
-        "over25_expected": 0.75,
-        "over25_hit": false,
-        "top_scores": []
-      },
-      "price_evidence": "SUSPECT_ALIAS_FUZZY",
-      "price_quarantine_reason": "alias_fuzzy",
-      "selection": "home",
-      "suspect_price": 1.55,
-      "won": true
-    },
-    {
-      "avg_p": 72.3,
-      "date": "2026-08-28",
-      "gs": 5,
-      "hs": 1,
-      "market": "1x2",
-      "match": "Al Khaleej Club vs Al Hilal",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4958253173545672,
-          "raw_promised": 0.6038831136355517
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 3.5 Goals",
-          "market": "home_under_35",
-          "promised": 0.9629493922123388,
-          "raw_promised": 0.9583102124737534
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 2.5 Goals",
-          "market": "home_under_25",
-          "promised": 0.9362871917241216,
-          "raw_promised": 0.9136800073034131
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 1.5 Goals",
-          "market": "home_under_15",
-          "promised": 0.8063672525986655,
-          "raw_promised": 0.7888313348178314
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.24667151129657772,
-          "raw_promised": 0.2368534616060824
-        }
-      ],
-      "odds": 1.2,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.851,
-        "away_o15_hit": true,
-        "btts_expected": 0.326,
-        "btts_hit": false,
-        "home_o15_expected": 0.05,
-        "home_o15_hit": true,
-        "over25_expected": 0.6940000000000001,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "away",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 70.0,
-      "date": "2026-08-28",
-      "gs": 0,
-      "hs": 2,
-      "market": "1x2",
-      "match": "Milan vs Venezia",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.5334047508644856,
-          "raw_promised": 0.6496524290019177
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8724147331921963,
-          "raw_promised": 0.9175937429410436
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9802224152696942,
-          "raw_promised": 0.9844199820732545
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.955123249445196,
-          "raw_promised": 0.9496636332178268
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.2798707663442833,
-          "raw_promised": 0.2687313158400803
-        }
-      ],
-      "odds": 1.36,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.10300000000000001,
-        "away_o15_hit": true,
-        "btts_expected": 0.391,
-        "btts_hit": true,
-        "home_o15_expected": 0.87,
-        "home_o15_hit": true,
-        "over25_expected": 0.722,
-        "over25_hit": false,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 66.3,
-      "date": "2026-08-28",
-      "gs": 1,
-      "hs": 5,
-      "market": "1x2",
-      "match": "The New Saints vs Colwyn Bay",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.5005695030560924,
-          "raw_promised": 0.6096612244597183
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8614334352576649,
-          "raw_promised": 0.9060437657447304
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9746843903524609,
-          "raw_promised": 0.978858241895905
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.953609812104375,
-          "raw_promised": 0.9481588468935838
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 1.5 Goals",
-          "market": "away_under_15",
-          "promised": 0.8019598172111154,
-          "raw_promised": 0.7991348754264829
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.23934706158825317,
-          "raw_promised": 0.22982054054171788
-        }
-      ],
-      "odds": 1.27,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.09699999999999999,
-        "away_o15_hit": true,
-        "btts_expected": 0.395,
-        "btts_hit": false,
-        "home_o15_expected": 0.852,
-        "home_o15_hit": true,
-        "over25_expected": 0.679,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 64.4,
-      "date": "2026-08-28",
-      "gs": 4,
-      "hs": 1,
-      "market": "1x2",
-      "match": "Crystal Palace vs Manchester City",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4977769208037458,
-          "raw_promised": 0.6062600401986402
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 3.5 Goals",
-          "market": "home_under_35",
-          "promised": 0.9787610019073335,
-          "raw_promised": 0.9740456469305427
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 2.5 Goals",
-          "market": "home_under_25",
-          "promised": 0.9453826282145693,
-          "raw_promised": 0.9225558293294701
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.2351019206004354,
-          "raw_promised": 0.22574436517519328
-        }
-      ],
-      "odds": 1.66,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.867,
-        "away_o15_hit": true,
-        "btts_expected": 0.40299999999999997,
-        "btts_hit": false,
-        "home_o15_expected": 0.095,
-        "home_o15_hit": true,
-        "over25_expected": 0.684,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "away",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 63.7,
-      "date": "2026-08-28",
-      "gs": 0,
-      "hs": 3,
-      "market": "1x2",
-      "match": "Bohemians FC vs Sligo Rovers",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4715446009585262,
-          "raw_promised": 0.5743107741334571
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8447495089730412,
-          "raw_promised": 0.8884958429690067
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9863698153474161,
-          "raw_promised": 0.990593706913696
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9609945127792755,
-          "raw_promised": 0.9555013356009059
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 1.5 Goals",
-          "market": "away_under_15",
-          "promised": 0.8076308573093686,
-          "raw_promised": 0.8047859390149508
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.20762763214563162,
-          "raw_promised": 0.19936361171290815
-        }
-      ],
-      "odds": 1.3,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.1,
-        "away_o15_hit": true,
-        "btts_expected": 0.409,
-        "btts_hit": true,
-        "home_o15_expected": 0.8390000000000001,
-        "home_o15_hit": true,
-        "over25_expected": 0.6629999999999999,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 60.0,
-      "date": "2026-08-28",
-      "gs": 3,
-      "hs": 2,
-      "market": "1x2",
-      "match": "CD Comerciantes vs FC Cajamarca",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4578069694756317,
-          "raw_promised": 0.5575792290035507
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8324519485633308,
-          "raw_promised": 0.875561439117182
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9841131748185306,
-          "raw_promised": 0.9883274028643441
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9461809345373382,
-          "raw_promised": 0.9407724338153338
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.19074556363402428,
-          "raw_promised": 0.1831534853589261
-        }
-      ],
-      "odds": 1.57,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.106,
-        "away_o15_hit": false,
-        "btts_expected": 0.436,
-        "btts_hit": false,
-        "home_o15_expected": 0.8290000000000001,
-        "home_o15_hit": true,
-        "over25_expected": 0.659,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "home",
-      "suspect_price": null,
-      "won": false
-    },
-    {
-      "avg_p": 59.3,
-      "date": "2026-08-28",
-      "gs": 1,
-      "hs": 3,
-      "market": "1x2",
-      "match": "Aldershot Town vs Harrogate Town",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.47948958146297005,
-          "raw_promised": 0.5839872456585413
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 3.5 Goals",
-          "market": "home_under_35",
-          "promised": 0.9834500997704045,
-          "raw_promised": 0.9787121542317686
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Home Team Under 2.5 Goals",
-          "market": "home_under_25",
-          "promised": 0.939624504495514,
-          "raw_promised": 0.916936738768173
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.20159786156584628,
-          "raw_promised": 0.1935738387999123
-        }
-      ],
-      "odds": 1.9,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.8540000000000001,
-        "away_o15_hit": false,
-        "btts_expected": 0.431,
-        "btts_hit": false,
-        "home_o15_expected": 0.09699999999999999,
-        "home_o15_hit": false,
-        "over25_expected": 0.6940000000000001,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "away",
-      "suspect_price": null,
-      "won": false
-    },
-    {
-      "avg_p": 59.3,
-      "date": "2026-08-28",
-      "gs": 2,
-      "hs": 1,
-      "market": "1x2",
-      "match": "Ansan Greeners vs Daegu FC",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.47984050226697206,
-          "raw_promised": 0.5844146444628034
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 3.5 Goals",
-          "market": "home_under_35",
-          "promised": 0.99,
-          "raw_promised": 0.9878176018463434
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 2.5 Goals",
-          "market": "home_under_25",
-          "promised": 0.9580954929344837,
-          "raw_promised": 0.9349617347320095
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.20122989803591262,
-          "raw_promised": 0.19322052099944367
-        }
-      ],
-      "odds": 1.4,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.8540000000000001,
-        "away_o15_hit": true,
-        "btts_expected": 0.431,
-        "btts_hit": false,
-        "home_o15_expected": 0.09699999999999999,
-        "home_o15_hit": true,
-        "over25_expected": 0.6940000000000001,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "away",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 58.1,
-      "date": "2026-08-28",
-      "gs": 3,
-      "hs": 2,
-      "market": "1x2",
-      "match": "Universitatea Cluj vs Petrolul Ploiesti",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.45252070666474303,
-          "raw_promised": 0.5511409033795841
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8186380688976079,
-          "raw_promised": 0.8610321916563699
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9830990873565346,
-          "raw_promised": 0.9873089728166247
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9450325330021826,
-          "raw_promised": 0.9396305967017443
-        }
-      ],
-      "odds": 2.11,
-      "odds_match_method": "betexplorer",
-      "odds_source": "betexplorer_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.098,
-        "away_o15_hit": false,
-        "btts_expected": 0.44299999999999995,
-        "btts_hit": false,
-        "home_o15_expected": 0.8240000000000001,
-        "home_o15_hit": true,
-        "over25_expected": 0.6579999999999999,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "BETEXPLORER_RESCUE",
-      "price_quarantine_reason": "NONE",
-      "selection": "home",
-      "suspect_price": null,
-      "won": false
-    },
-    {
-      "avg_p": 56.7,
-      "date": "2026-08-28",
-      "gs": 2,
-      "hs": 0,
-      "market": "1x2",
-      "match": "St Patricks Dublin vs Waterford United",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.4523245881157096,
-          "raw_promised": 0.5509020436927414
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8093425422900922,
-          "raw_promised": 0.851255285412262
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.980332942473573,
-          "raw_promised": 0.9845309825833082
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9353687191587385,
-          "raw_promised": 0.9300220225510923
-        }
-      ],
-      "odds": 1.3,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.10099999999999999,
-        "away_o15_hit": false,
-        "btts_expected": 0.45399999999999996,
-        "btts_hit": true,
-        "home_o15_expected": 0.818,
-        "home_o15_hit": false,
-        "over25_expected": 0.659,
-        "over25_hit": false,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "home",
-      "suspect_price": null,
-      "won": false
-    },
-    {
-      "avg_p": 68.1,
-      "date": "2026-08-28",
-      "gs": 5,
-      "hs": 3,
-      "market": "1x2",
-      "match": "Holywell Town vs Caernarfon Town",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.49744771958134926,
-          "raw_promised": 0.6058590944376328
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 3.5 Goals",
-          "market": "home_under_35",
-          "promised": 0.9174904421613935,
-          "raw_promised": 0.9130702689892167
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Home Team Under 2.5 Goals",
-          "market": "home_under_25",
-          "promised": 0.874000499680057,
-          "raw_promised": 0.8528972627088518
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.24692513581045172,
-          "raw_promised": 0.23709699132600612
-        }
-      ],
-      "odds": 1.28,
-      "odds_match_method": "betexplorer",
-      "odds_source": "betexplorer_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.848,
-        "away_o15_hit": true,
-        "btts_expected": 0.354,
-        "btts_hit": false,
-        "home_o15_expected": 0.076,
-        "home_o15_hit": false,
-        "over25_expected": 0.664,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "BETEXPLORER_RESCUE",
-      "price_quarantine_reason": "NONE",
-      "selection": "away",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 57.1,
-      "date": "2026-08-28",
-      "gs": 6,
-      "hs": 2,
-      "market": "1x2",
-      "match": "Qatar SC vs Al Sadd SC",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.5035337267277843,
-          "raw_promised": 0.6132714568494723
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 3.5 Goals",
-          "market": "home_under_35",
-          "promised": 0.981572477674302,
-          "raw_promised": 0.9768435779136222
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Under 2.5 Goals",
-          "market": "home_under_25",
-          "promised": 0.9323655515413102,
-          "raw_promised": 0.9098530573434609
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.20219963392686277,
-          "raw_promised": 0.1941516593437458
-        }
-      ],
-      "odds": 1.42,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "away",
-      "parsed_stats": {
-        "away_o15_expected": 0.852,
-        "away_o15_hit": true,
-        "btts_expected": 0.436,
-        "btts_hit": false,
-        "home_o15_expected": 0.105,
-        "home_o15_hit": false,
-        "over25_expected": 0.695,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "away",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 79.0,
-      "date": "2026-08-28",
-      "gs": 1,
-      "hs": 5,
-      "market": "1x2",
-      "match": "Bayern M\u00fcnchen vs VfB Stuttgart",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.5331676655581762,
-          "raw_promised": 0.6493636744588153
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8259289241592177,
-          "raw_promised": 0.8687006123216913
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9816922154825027,
-          "raw_promised": 0.9858960763520679
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9190414903053212,
-          "raw_promised": 0.9137881223897029
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.29530689744793065,
-          "raw_promised": 0.28355305616382764
-        }
-      ],
-      "odds": 1.25,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.08800000000000001,
-        "away_o15_hit": true,
-        "btts_expected": 0.419,
-        "btts_hit": false,
-        "home_o15_expected": 0.912,
-        "home_o15_hit": true,
-        "over25_expected": 0.779,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
-    {
-      "avg_p": 66.7,
-      "date": "2026-08-28",
-      "gs": 1,
-      "hs": 1,
-      "market": "1x2",
-      "match": "Legia Warszawa vs Slask Wroclaw",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.5029628024754381,
-          "raw_promised": 0.6125761080984317
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8615622178979561,
-          "raw_promised": 0.9061792175435535
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9784444248727102,
-          "raw_promised": 0.9826343778599048
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9560644991535908,
-          "raw_promised": 0.9505995026130682
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 1.5 Goals",
-          "market": "away_under_15",
-          "promised": 0.804720346069063,
-          "raw_promised": 0.8018856801895928
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": false,
-          "label": "Match Over 4.5 Goals",
-          "market": "match_over_45",
-          "promised": 0.23698982883271483,
-          "raw_promised": 0.22755713065289118
-        }
-      ],
-      "odds": 1.48,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "draw",
-      "parsed_stats": {
-        "away_o15_expected": 0.09699999999999999,
-        "away_o15_hit": true,
-        "btts_expected": 0.39799999999999996,
-        "btts_hit": false,
-        "home_o15_expected": 0.856,
-        "home_o15_hit": false,
-        "over25_expected": 0.687,
-        "over25_hit": false,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "home",
-      "suspect_price": null,
-      "won": false
-    },
-    {
-      "avg_p": 57.2,
-      "date": "2026-08-28",
-      "gs": 1,
-      "hs": 3,
-      "market": "1x2",
-      "match": "Scunthorpe Utd vs Solihull Moors",
-      "notes_audit": [
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Match Over 2.5 Goals",
-          "market": "match_over_25",
-          "promised": 0.45372577472155096,
-          "raw_promised": 0.5526085982003541
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Home Team Over 0.5 Goals",
-          "market": "home_over_05",
-          "promised": 0.8147018955044278,
-          "raw_promised": 0.8568921789545011
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 3.5 Goals",
-          "market": "away_under_35",
-          "promised": 0.9787308862920059,
-          "raw_promised": 0.9829220659813503
-        },
-        {
-          "engine": "hybrid_cohort",
-          "hit": true,
-          "label": "Away Team Under 2.5 Goals",
-          "market": "away_under_25",
-          "promised": 0.9324429662614743,
-          "raw_promised": 0.9271129936609177
-        }
-      ],
-      "odds": 1.7,
-      "odds_match_method": "exact",
-      "odds_source": "scoutingstats_odds",
-      "outcome": "home",
-      "parsed_stats": {
-        "away_o15_expected": 0.098,
-        "away_o15_hit": true,
-        "btts_expected": 0.444,
-        "btts_hit": false,
-        "home_o15_expected": 0.82,
-        "home_o15_hit": true,
-        "over25_expected": 0.655,
-        "over25_hit": true,
-        "top_scores": []
-      },
-      "price_evidence": "SCOUTINGSTATS_SOLE",
-      "price_quarantine_reason": "scoutingstats_sole_source",
-      "selection": "home",
-      "suspect_price": null,
-      "won": true
-    },
     {
       "avg_p": 72.0,
       "date": "2026-08-29",
@@ -38575,98 +37230,2220 @@
       "selection": "home",
       "suspect_price": null,
       "won": true
+    },
+    {
+      "avg_p": 73.5,
+      "date": "2026-09-26",
+      "gs": 2,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Sollentuna FK vs Stockholm Internazionale",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.451250925175243,
+          "raw_promised": 0.6051401869158879
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9150505894628376,
+          "raw_promised": 0.9731308411214953
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8528383246338318,
+          "raw_promised": 0.9158878504672897
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.252973412229386,
+          "raw_promised": 0.24712881573720122
+        }
+      ],
+      "odds": 1.5,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.868,
+        "away_o15_hit": true,
+        "btts_expected": 0.34700000000000003,
+        "btts_hit": false,
+        "home_o15_expected": 0.055,
+        "home_o15_hit": true,
+        "over25_expected": 0.731,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 70.0,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 1,
+      "market": "1x2",
+      "match": "\u00dast\u00ed nad Labem II vs \u00dajezd Praha 4",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9212842070138164,
+          "raw_promised": 0.97976011994003
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8683383082593403,
+          "raw_promised": 0.9325337331334332
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.44160437972206895,
+          "raw_promised": 0.5922038980509745
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.23076061957896774,
+          "raw_promised": 0.22542921856002318
+        }
+      ],
+      "odds": 1.6,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.847,
+        "away_o15_hit": false,
+        "btts_expected": 0.366,
+        "btts_hit": false,
+        "home_o15_expected": 0.068,
+        "home_o15_hit": true,
+        "over25_expected": 0.696,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 69.0,
+      "date": "2026-09-26",
+      "gs": 2,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Banik Sokolov vs Ostrov",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4834286494632836,
+          "raw_promised": 0.6482914205286076
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9593822372880992,
+          "raw_promised": 0.9797105971101312
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8996799984496964,
+          "raw_promised": 0.9455861552541809
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2744836782512563,
+          "raw_promised": 0.26814211717995046
+        }
+      ],
+      "odds": 1.33,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.095,
+        "away_o15_hit": false,
+        "btts_expected": 0.428,
+        "btts_hit": false,
+        "home_o15_expected": 0.868,
+        "home_o15_hit": false,
+        "over25_expected": 0.726,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 66.5,
+      "date": "2026-09-26",
+      "gs": 3,
+      "hs": 1,
+      "market": "1x2",
+      "match": "V\u00e4nersborgs FK vs Husqvarna FF",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4616216557818112,
+          "raw_promised": 0.6190476284469514
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Over 0.5 Goals",
+          "market": "away_over_05",
+          "promised": 0.8031719221272878,
+          "raw_promised": 0.8931770773295098
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9132622763120013,
+          "raw_promised": 0.9712290198443967
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8596936796867092,
+          "raw_promised": 0.9232500153961063
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.23818303374925787,
+          "raw_promised": 0.23268014824330374
+        }
+      ],
+      "odds": 1.52,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.8490000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.39799999999999996,
+        "btts_hit": false,
+        "home_o15_expected": 0.092,
+        "home_o15_hit": true,
+        "over25_expected": 0.6940000000000001,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 65.5,
+      "date": "2026-09-26",
+      "gs": 0,
+      "hs": 3,
+      "market": "1x2",
+      "match": "AIK W vs V\u00e4xj\u00f6 W",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9646128027418415,
+          "raw_promised": 0.985051993067591
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.9015710111500086,
+          "raw_promised": 0.9475736568457539
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.44425160339666375,
+          "raw_promised": 0.5957538994800693
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.23667416562888352,
+          "raw_promised": 0.2312061404082289
+        }
+      ],
+      "odds": 1.57,
+      "odds_match_method": "betexplorer",
+      "odds_source": "betexplorer_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.084,
+        "away_o15_hit": true,
+        "btts_expected": 0.401,
+        "btts_hit": true,
+        "home_o15_expected": 0.847,
+        "home_o15_hit": true,
+        "over25_expected": 0.6809999999999999,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "BETEXPLORER_RESCUE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 65.5,
+      "date": "2026-09-26",
+      "gs": 0,
+      "hs": 6,
+      "market": "1x2",
+      "match": "Cavalry FC vs Supra du Qu\u00e9bec",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9656805641121246,
+          "raw_promised": 0.9861423792442292
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.905100396502801,
+          "raw_promised": 0.9512831290268717
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.44667855084524083,
+          "raw_promised": 0.5990085042924509
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.23684519002570587,
+          "raw_promised": 0.23137321352582021
+        }
+      ],
+      "odds": 1.52,
+      "odds_match_method": "betexplorer",
+      "odds_source": "betexplorer_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.084,
+        "away_o15_hit": true,
+        "btts_expected": 0.401,
+        "btts_hit": true,
+        "home_o15_expected": 0.847,
+        "home_o15_hit": true,
+        "over25_expected": 0.6809999999999999,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "BETEXPLORER_RESCUE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 65.0,
+      "date": "2026-09-26",
+      "gs": 3,
+      "hs": 3,
+      "market": "1x2",
+      "match": "Opava U19 vs Slovacko U19",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9648558664345716,
+          "raw_promised": 0.9853002070393375
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.9018111863264348,
+          "raw_promised": 0.9478260869565217
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4440213584851047,
+          "raw_promised": 0.5954451345755694
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2302295285284983,
+          "raw_promised": 0.22491039762467474
+        }
+      ],
+      "odds": 1.72,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.083,
+        "away_o15_hit": false,
+        "btts_expected": 0.40399999999999997,
+        "btts_hit": false,
+        "home_o15_expected": 0.8490000000000001,
+        "home_o15_hit": true,
+        "over25_expected": 0.6829999999999999,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 62.5,
+      "date": "2026-09-26",
+      "gs": 4,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Southend vs Barrow",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9647278631828391,
+          "raw_promised": 0.9851694915254238
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8978011829950131,
+          "raw_promised": 0.9436114732724902
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4355567617745606,
+          "raw_promised": 0.5840938722294654
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.21909562706773222,
+          "raw_promised": 0.21403372936817489
+        }
+      ],
+      "odds": 1.71,
+      "odds_match_method": "betexplorer",
+      "odds_source": "betexplorer_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.08900000000000001,
+        "away_o15_hit": false,
+        "btts_expected": 0.40299999999999997,
+        "btts_hit": false,
+        "home_o15_expected": 0.85,
+        "home_o15_hit": true,
+        "over25_expected": 0.677,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "BETEXPLORER_RESCUE",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 62.7,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Brabrand IF vs Nyk\u00f8bing FC",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4823575475869379,
+          "raw_promised": 0.6468550427762382
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Over 0.5 Goals",
+          "market": "away_over_05",
+          "promised": 0.8096215279341452,
+          "raw_promised": 0.900349439691529
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9278525698083308,
+          "raw_promised": 0.9867453910109651
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8772473929770351,
+          "raw_promised": 0.9421014580069887
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.23749846132906735,
+          "raw_promised": 0.23201139191038672
+        }
+      ],
+      "odds": 1.65,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.853,
+        "away_o15_hit": false,
+        "btts_expected": 0.423,
+        "btts_hit": false,
+        "home_o15_expected": 0.105,
+        "home_o15_hit": true,
+        "over25_expected": 0.695,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 58.7,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Volga Ulyanovsk vs FK Leningradets",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9670581434256488,
+          "raw_promised": 0.9875491480996068
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8936750386539974,
+          "raw_promised": 0.9392747924858017
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4153617517186108,
+          "raw_promised": 0.5570117955439057
+        }
+      ],
+      "odds": 1.76,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.10300000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.436,
+        "btts_hit": true,
+        "home_o15_expected": 0.8290000000000001,
+        "home_o15_hit": false,
+        "over25_expected": 0.657,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 56.0,
+      "date": "2026-09-26",
+      "gs": 3,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Skellefte\u00e5 FF vs Gottne IF",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9621214603875354,
+          "raw_promised": 0.9825078616352201
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8800184566816746,
+          "raw_promised": 0.9249213836477987
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.407436379041997,
+          "raw_promised": 0.5463836477987423
+        }
+      ],
+      "odds": 1.56,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.10099999999999999,
+        "away_o15_hit": false,
+        "btts_expected": 0.45399999999999996,
+        "btts_hit": true,
+        "home_o15_expected": 0.8109999999999999,
+        "home_o15_hit": false,
+        "over25_expected": 0.653,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 75.4,
+      "date": "2026-09-26",
+      "gs": 3,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Trefelin BGC vs The New Saints",
+      "notes_audit": [
+        {
+          "engine": "model",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9302881158090001,
+          "raw_promised": 0.95
+        },
+        {
+          "engine": "model",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.372848254778,
+          "raw_promised": 0.5
+        }
+      ],
+      "odds": 1.04,
+      "odds_match_method": "alias_fuzzy",
+      "odds_source": "forebet_best",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.893,
+        "away_o15_hit": true,
+        "btts_expected": 0.179,
+        "btts_hit": false,
+        "home_o15_expected": 0.036000000000000004,
+        "home_o15_hit": true,
+        "over25_expected": 0.75,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SUSPECT_ALIAS_FUZZY",
+      "price_quarantine_reason": "alias_fuzzy",
+      "selection": "away",
+      "suspect_price": 1.04,
+      "won": true
+    },
+    {
+      "avg_p": 77.0,
+      "date": "2026-09-26",
+      "gs": 6,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Norrk\u00f6ping W vs Hacken W",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.909809653835937,
+          "raw_promised": 0.9675572519083969
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.44400250187303814,
+          "raw_promised": 0.5954198473282443
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.24993977134358342,
+          "raw_promised": 0.24416526287655294
+        }
+      ],
+      "odds": 1.21,
+      "odds_match_method": "betexplorer",
+      "odds_source": "betexplorer_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.9329999999999999,
+        "away_o15_hit": true,
+        "btts_expected": 0.344,
+        "btts_hit": true,
+        "home_o15_expected": 0.055999999999999994,
+        "home_o15_hit": true,
+        "over25_expected": 0.8,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "BETEXPLORER_RESCUE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 70.3,
+      "date": "2026-09-26",
+      "gs": 3,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Solihull Moors vs Boreham Wood",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9147200951611848,
+          "raw_promised": 0.9727793696275071
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4294699095150601,
+          "raw_promised": 0.5759312320916905
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.24916067592925986,
+          "raw_promised": 0.2434041673709372
+        }
+      ],
+      "odds": 1.5,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.853,
+        "away_o15_hit": true,
+        "btts_expected": 0.319,
+        "btts_hit": true,
+        "home_o15_expected": 0.086,
+        "home_o15_hit": true,
+        "over25_expected": 0.669,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 67.5,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Stab\u00e6k W vs Brann W",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9232851199056734,
+          "raw_promised": 0.9818880351262349
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8728988152556093,
+          "raw_promised": 0.9374313940724479
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4436525885613084,
+          "raw_promised": 0.5949506037321625
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2327063650854633,
+          "raw_promised": 0.227330010340901
+        }
+      ],
+      "odds": 1.27,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.845,
+        "away_o15_hit": false,
+        "btts_expected": 0.38799999999999996,
+        "btts_hit": true,
+        "home_o15_expected": 0.092,
+        "home_o15_hit": true,
+        "over25_expected": 0.688,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 66.5,
+      "date": "2026-09-26",
+      "gs": 3,
+      "hs": 1,
+      "market": "1x2",
+      "match": "FK Vidar vs Mjondalen IF",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.45845760473003233,
+          "raw_promised": 0.6148045469637582
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9145264507617178,
+          "raw_promised": 0.9725734341967214
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8603872475854651,
+          "raw_promised": 0.9239948581096622
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.23777154907382675,
+          "raw_promised": 0.23227817034516363
+        }
+      ],
+      "odds": 1.45,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.8490000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.39799999999999996,
+        "btts_hit": false,
+        "home_o15_expected": 0.092,
+        "home_o15_hit": true,
+        "over25_expected": 0.6940000000000001,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 66.5,
+      "date": "2026-09-26",
+      "gs": 0,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Stockport County vs Peterborough",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.45446039121489623,
+          "raw_promised": 0.6094441711756026
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.963596124822484,
+          "raw_promised": 0.9840137727496311
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.9004397310730152,
+          "raw_promised": 0.9463846532218396
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.24723831358492018,
+          "raw_promised": 0.2415262185169933
+        }
+      ],
+      "odds": 1.3,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.091,
+        "away_o15_hit": true,
+        "btts_expected": 0.413,
+        "btts_hit": true,
+        "home_o15_expected": 0.852,
+        "home_o15_hit": false,
+        "over25_expected": 0.6990000000000001,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 64.5,
+      "date": "2026-09-26",
+      "gs": 2,
+      "hs": 3,
+      "market": "1x2",
+      "match": "Sotra SK vs Pors Grenland",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9667257973474498,
+          "raw_promised": 0.9872097599370326
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.9016516423047933,
+          "raw_promised": 0.9476584022038568
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4419594424995419,
+          "raw_promised": 0.5926800472255017
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.22308237011021545,
+          "raw_promised": 0.21792836429464704
+        }
+      ],
+      "odds": 1.4,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.083,
+        "away_o15_hit": false,
+        "btts_expected": 0.4,
+        "btts_hit": false,
+        "home_o15_expected": 0.852,
+        "home_o15_hit": true,
+        "over25_expected": 0.68,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 64.0,
+      "date": "2026-09-26",
+      "gs": 2,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Cardiff Met vs Caernarfon Town",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9248480001376216,
+          "raw_promised": 0.9835501147666411
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8649032110713543,
+          "raw_promised": 0.9288446824789595
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4370340675745187,
+          "raw_promised": 0.5860749808722264
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.22669567950840913,
+          "raw_promised": 0.2214581932383228
+        }
+      ],
+      "odds": 1.9,
+      "odds_match_method": "betexplorer",
+      "odds_source": "betexplorer_odds",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.8440000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.41200000000000003,
+        "btts_hit": false,
+        "home_o15_expected": 0.099,
+        "home_o15_hit": false,
+        "over25_expected": 0.68,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "BETEXPLORER_RESCUE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 63.5,
+      "date": "2026-09-26",
+      "gs": 4,
+      "hs": 0,
+      "market": "1x2",
+      "match": "RSV Eintracht vs Chemnitzer FC",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9241511847198138,
+          "raw_promised": 0.9828090709583028
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8650866632913681,
+          "raw_promised": 0.9290416971470373
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.44021732495368837,
+          "raw_promised": 0.590343818580834
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.22666287281366745,
+          "raw_promised": 0.22142614449632927
+        }
+      ],
+      "odds": null,
+      "odds_match_method": "none",
+      "odds_source": "UNKNOWN",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.845,
+        "away_o15_hit": true,
+        "btts_expected": 0.41,
+        "btts_hit": true,
+        "home_o15_expected": 0.10099999999999999,
+        "home_o15_hit": true,
+        "over25_expected": 0.6859999999999999,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "UNMATCHED",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 61.5,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Cambridge United vs AFC Wimbledon",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9651681759855313,
+          "raw_promised": 0.9856191341204965
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8970094018930791,
+          "raw_promised": 0.9427792915531336
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.42985351322876897,
+          "raw_promised": 0.576445655464729
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2131251665224616,
+          "raw_promised": 0.20820120795434144
+        }
+      ],
+      "odds": 1.8,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.08800000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.4,
+        "btts_hit": false,
+        "home_o15_expected": 0.8440000000000001,
+        "home_o15_hit": false,
+        "over25_expected": 0.67,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 60.0,
+      "date": "2026-09-26",
+      "gs": 3,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Wienerberg vs Scheiblingkirchen",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9223111182201513,
+          "raw_promised": 0.9808522114347357
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.85582362489178,
+          "raw_promised": 0.919093851132686
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.43438631624621354,
+          "raw_promised": 0.5825242718446602
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.21942810943289132,
+          "raw_promised": 0.21435853019380777
+        }
+      ],
+      "odds": 1.45,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.8290000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.43799999999999994,
+        "btts_hit": false,
+        "home_o15_expected": 0.11900000000000001,
+        "home_o15_hit": true,
+        "over25_expected": 0.68,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 56.7,
+      "date": "2026-09-26",
+      "gs": 0,
+      "hs": 4,
+      "market": "1x2",
+      "match": "Wealdstone vs Gateshead",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9612818291255616,
+          "raw_promised": 0.9816504394180381
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8809753394494377,
+          "raw_promised": 0.9259270913427095
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4139825377659484,
+          "raw_promised": 0.55516223082825
+        }
+      ],
+      "odds": 1.65,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.10300000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.449,
+        "btts_hit": true,
+        "home_o15_expected": 0.8170000000000001,
+        "home_o15_hit": true,
+        "over25_expected": 0.6559999999999999,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 58.3,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 4,
+      "market": "1x2",
+      "match": "M\u0160K Pova\u017esk\u00e1 Bystrica vs MFK Byt\u010da",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9637299807186264,
+          "raw_promised": 0.9841504649196957
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8871105177288081,
+          "raw_promised": 0.9323753169907016
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4131902468418918,
+          "raw_promised": 0.5540997464074388
+        }
+      ],
+      "odds": 1.3,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.1,
+        "away_o15_hit": true,
+        "btts_expected": 0.43700000000000006,
+        "btts_hit": false,
+        "home_o15_expected": 0.823,
+        "home_o15_hit": true,
+        "over25_expected": 0.655,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 64.0,
+      "date": "2026-09-26",
+      "gs": 0,
+      "hs": 4,
+      "market": "1x2",
+      "match": "FC Kitzb\u00fchel vs Rheindorf Altach II",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9659287515893514,
+          "raw_promised": 0.9863958255683936
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.9000319064756914,
+          "raw_promised": 0.9459560193812896
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4410810140385285,
+          "raw_promised": 0.5915020499440924
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.22190873422071886,
+          "raw_promised": 0.21678184361912653
+        }
+      ],
+      "odds": null,
+      "odds_match_method": "none",
+      "odds_source": "UNKNOWN",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.08199999999999999,
+        "away_o15_hit": true,
+        "btts_expected": 0.397,
+        "btts_hit": true,
+        "home_o15_expected": 0.851,
+        "home_o15_hit": true,
+        "over25_expected": 0.682,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "UNMATCHED",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 63.5,
+      "date": "2026-09-26",
+      "gs": 0,
+      "hs": 3,
+      "market": "1x2",
+      "match": "SC Imst vs Lochau",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9643963883804345,
+          "raw_promised": 0.9848309931001155
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8991301475682272,
+          "raw_promised": 0.9450082482407234
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.44543522763881754,
+          "raw_promised": 0.5973411728908816
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.22181377251682463,
+          "raw_promised": 0.2166890758724414
+        }
+      ],
+      "odds": null,
+      "odds_match_method": "none",
+      "odds_source": "UNKNOWN",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.087,
+        "away_o15_hit": true,
+        "btts_expected": 0.402,
+        "btts_hit": true,
+        "home_o15_expected": 0.85,
+        "home_o15_hit": true,
+        "over25_expected": 0.679,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "UNMATCHED",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 61.0,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Holesov vs FK Kozlovice",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9183959275092469,
+          "raw_promised": 0.9766885150516864
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8507235941630689,
+          "raw_promised": 0.9136167799850664
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4481617471312333,
+          "raw_promised": 0.6009975122427168
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2241355871944916,
+          "raw_promised": 0.21895724827283894
+        }
+      ],
+      "odds": null,
+      "odds_match_method": "none",
+      "odds_source": "UNKNOWN",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.836,
+        "away_o15_hit": false,
+        "btts_expected": 0.44,
+        "btts_hit": false,
+        "home_o15_expected": 0.11900000000000001,
+        "home_o15_hit": true,
+        "over25_expected": 0.6829999999999999,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "UNMATCHED",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 68.7,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Pe\u00f1arol vs Boston River",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4563481672830177,
+          "raw_promised": 0.6119757319968346
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9669123419040192,
+          "raw_promised": 0.987400257188077
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.9119900252603316,
+          "raw_promised": 0.9585243009759958
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2620656433950107,
+          "raw_promised": 0.2560109836321113
+        }
+      ],
+      "odds": 1.4,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.106,
+        "away_o15_hit": true,
+        "btts_expected": 0.405,
+        "btts_hit": false,
+        "home_o15_expected": 0.87,
+        "home_o15_hit": true,
+        "over25_expected": 0.718,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 62.0,
+      "date": "2026-09-26",
+      "gs": 3,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Granada vs FC Andorra",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9660593953663655,
+          "raw_promised": 0.9865292375577055
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.9019103739449743,
+          "raw_promised": 0.9479303356216306
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.42994939991515646,
+          "raw_promised": 0.5765742422090127
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.21759242897291825,
+          "raw_promised": 0.21256526056065866
+        }
+      ],
+      "odds": 2.2,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.08900000000000001,
+        "away_o15_hit": false,
+        "btts_expected": 0.4,
+        "btts_hit": false,
+        "home_o15_expected": 0.845,
+        "home_o15_hit": true,
+        "over25_expected": 0.67,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 62.0,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Kozakken Boys vs Koninklijke HFC",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9652657441101413,
+          "raw_promised": 0.9857187696170747
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8976978092261017,
+          "raw_promised": 0.943502824858757
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4315958454555129,
+          "raw_promised": 0.578782172002511
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.21760589929189902,
+          "raw_promised": 0.21257841966677968
+        }
+      ],
+      "odds": 1.7,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.08900000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.4,
+        "btts_hit": false,
+        "home_o15_expected": 0.845,
+        "home_o15_hit": false,
+        "over25_expected": 0.67,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 61.0,
+      "date": "2026-09-26",
+      "gs": 0,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Ballymena United vs Portadown FC",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9645323121837972,
+          "raw_promised": 0.9849697969943072
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8956649145140629,
+          "raw_promised": 0.9413662017281932
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4315216703064135,
+          "raw_promised": 0.5786827010405997
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2104081033509171,
+          "raw_promised": 0.20554691872311542
+        }
+      ],
+      "odds": 1.65,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.08900000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.40299999999999997,
+        "btts_hit": true,
+        "home_o15_expected": 0.843,
+        "home_o15_hit": true,
+        "over25_expected": 0.669,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 60.0,
+      "date": "2026-09-26",
+      "gs": 1,
+      "hs": 1,
+      "market": "1x2",
+      "match": "Iceland vs Estonia",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9620779029341514,
+          "raw_promised": 0.9845239470153961
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8915375467441186,
+          "raw_promised": 0.9401180248931691
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.44349543763642746,
+          "raw_promised": 0.5814241833317046
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.20950743302484334,
+          "raw_promised": 0.20139232912283855
+        }
+      ],
+      "odds": 1.28,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.092,
+        "away_o15_hit": true,
+        "btts_expected": 0.40700000000000003,
+        "btts_hit": false,
+        "home_o15_expected": 0.8370000000000001,
+        "home_o15_hit": false,
+        "over25_expected": 0.662,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 59.7,
+      "date": "2026-09-26",
+      "gs": 0,
+      "hs": 2,
+      "market": "1x2",
+      "match": "Slovakia vs Moldova",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9677143922826551,
+          "raw_promised": 0.9882193022202084
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.899449940744249,
+          "raw_promised": 0.9453443588581785
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4202145118841992,
+          "raw_promised": 0.5635194834617128
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.18963358453306886,
+          "raw_promised": 0.18525236607538598
+        }
+      ],
+      "odds": 1.16,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.107,
+        "away_o15_hit": true,
+        "btts_expected": 0.433,
+        "btts_hit": true,
+        "home_o15_expected": 0.83,
+        "home_o15_hit": true,
+        "over25_expected": 0.655,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 72.4,
+      "date": "2026-09-26",
+      "gs": 7,
+      "hs": 0,
+      "market": "1x2",
+      "match": "San Marino vs Finland",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4665495086204511,
+          "raw_promised": 0.6256560177521046
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9203998012088606,
+          "raw_promised": 0.9788195789745576
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8721133739442956,
+          "raw_promised": 0.9365878858323647
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2758737868363973,
+          "raw_promised": 0.26950010925257395
+        }
+      ],
+      "odds": 1.07,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.878,
+        "away_o15_hit": true,
+        "btts_expected": 0.29600000000000004,
+        "btts_hit": true,
+        "home_o15_expected": 0.102,
+        "home_o15_hit": true,
+        "over25_expected": 0.684,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 76.0,
+      "date": "2026-09-26",
+      "gs": 0,
+      "hs": 1,
+      "market": "1x2",
+      "match": "FK Krimice vs Jiskra Doma\u017elice II",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.5038881268456077,
+          "raw_promised": 0.6757281553398058
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9592853437417281,
+          "raw_promised": 0.9796116504854369
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8757054915231844,
+          "raw_promised": 0.920388349514563
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.31283436077336296,
+          "raw_promised": 0.30560676087858446
+        }
+      ],
+      "odds": 1.2,
+      "odds_match_method": "fallback",
+      "odds_source": "forebet_best",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.10400000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.44299999999999995,
+        "btts_hit": true,
+        "home_o15_expected": 0.912,
+        "home_o15_hit": false,
+        "over25_expected": 0.795,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "SOURCE_FALLBACK",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
     }
   ],
   "settled_via_overlay_picks": 0,
-  "start": "2026-08-28",
+  "start": "2026-08-29",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.232873,
-      "mae": 1.601127,
-      "mean_actual": 3.281818,
-      "mean_promised": 3.514691,
-      "n": 550
+      "bias": -0.260885,
+      "mae": 1.584779,
+      "mean_actual": 3.256637,
+      "mean_promised": 3.517522,
+      "n": 565
     },
     "by_metric": {
       "away_o15": {
-        "brier": 0.238012,
-        "delta": 0.049902,
-        "hits": 197,
-        "mean_promised": 0.30828,
-        "n": 550,
-        "realized": 0.358182
+        "brier": 0.240136,
+        "delta": 0.048662,
+        "hits": 203,
+        "mean_promised": 0.31063,
+        "n": 565,
+        "realized": 0.359292
       },
       "btts": {
-        "brier": 0.267939,
-        "delta": 0.145405,
-        "hits": 310,
-        "mean_promised": 0.418231,
-        "n": 550,
-        "realized": 0.563636
+        "brier": 0.266661,
+        "delta": 0.138368,
+        "hits": 314,
+        "mean_promised": 0.417384,
+        "n": 565,
+        "realized": 0.555752
       },
       "home_o15": {
-        "brier": 0.25471,
-        "delta": -0.088538,
+        "brier": 0.251626,
+        "delta": -0.100577,
         "hits": 304,
-        "mean_promised": 0.641265,
-        "n": 550,
-        "realized": 0.552727
+        "mean_promised": 0.63863,
+        "n": 565,
+        "realized": 0.538053
       },
       "over25": {
-        "brier": 0.241553,
-        "delta": -0.077787,
-        "hits": 340,
-        "mean_promised": 0.695969,
-        "n": 550,
-        "realized": 0.618182
+        "brier": 0.242063,
+        "delta": -0.080067,
+        "hits": 348,
+        "mean_promised": 0.695996,
+        "n": 565,
+        "realized": 0.615929
       }
     },
     "definition": "each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) \u2014 calibration, not a direction call; the retired exact-score field remains in machine history only",
     "promised_buckets": [
       {
-        "brier": 0.224057,
+        "brier": 0.224335,
         "bucket": "0.0-0.1",
-        "delta": 0.174345,
-        "hits": 61,
-        "mean_promised": 0.088586,
-        "n": 232,
-        "realized": 0.262931
+        "delta": 0.175333,
+        "hits": 64,
+        "mean_promised": 0.088041,
+        "n": 243,
+        "realized": 0.263374
       },
       {
-        "brier": 0.224174,
+        "brier": 0.215626,
         "bucket": "0.1-0.2",
-        "delta": 0.166028,
-        "hits": 86,
-        "mean_promised": 0.103564,
-        "n": 319,
-        "realized": 0.269592
+        "delta": 0.155343,
+        "hits": 84,
+        "mean_promised": 0.103917,
+        "n": 324,
+        "realized": 0.259259
       },
       {
-        "brier": 0.433664,
+        "brier": 0.362577,
         "bucket": "0.2-0.3",
-        "delta": 0.476571,
-        "hits": 5,
-        "mean_promised": 0.237714,
+        "delta": 0.325,
+        "hits": 4,
+        "mean_promised": 0.246429,
         "n": 7,
-        "realized": 0.714286
+        "realized": 0.571429
       },
       {
-        "brier": 0.279786,
+        "brier": 0.27452,
         "bucket": "0.3-0.4",
-        "delta": 0.19084,
+        "delta": 0.17367,
         "hits": 53,
-        "mean_promised": 0.372989,
-        "n": 94,
-        "realized": 0.56383
+        "mean_promised": 0.372722,
+        "n": 97,
+        "realized": 0.546392
       },
       {
-        "brier": 0.262064,
+        "brier": 0.261866,
         "bucket": "0.4-0.5",
-        "delta": 0.130492,
-        "hits": 251,
-        "mean_promised": 0.431029,
-        "n": 447,
-        "realized": 0.561521
+        "delta": 0.126349,
+        "hits": 255,
+        "mean_promised": 0.430419,
+        "n": 458,
+        "realized": 0.556769
       },
       {
         "brier": 0.25,
@@ -38678,40 +39455,40 @@
         "realized": 0.0
       },
       {
-        "brier": 0.240191,
+        "brier": 0.243308,
         "bucket": "0.6-0.7",
-        "delta": -0.056657,
-        "hits": 228,
-        "mean_promised": 0.667917,
-        "n": 373,
-        "realized": 0.61126
+        "delta": -0.065764,
+        "hits": 232,
+        "mean_promised": 0.668361,
+        "n": 385,
+        "realized": 0.602597
       },
       {
-        "brier": 0.246057,
+        "brier": 0.241689,
         "bucket": "0.7-0.8",
-        "delta": -0.123503,
-        "hits": 99,
-        "mean_promised": 0.746145,
-        "n": 159,
-        "realized": 0.622642
+        "delta": -0.11246,
+        "hits": 102,
+        "mean_promised": 0.746,
+        "n": 161,
+        "realized": 0.63354
       },
       {
-        "brier": 0.27067,
+        "brier": 0.274017,
         "bucket": "0.8-0.9",
-        "delta": -0.204729,
-        "hits": 333,
-        "mean_promised": 0.845113,
-        "n": 520,
-        "realized": 0.640385
+        "delta": -0.209557,
+        "hits": 340,
+        "mean_promised": 0.845071,
+        "n": 535,
+        "realized": 0.635514
       },
       {
-        "brier": 0.240289,
+        "brier": 0.252293,
         "bucket": "0.9-1.0",
-        "delta": -0.194729,
+        "delta": -0.209796,
         "hits": 35,
-        "mean_promised": 0.923896,
-        "n": 48,
-        "realized": 0.729167
+        "mean_promised": 0.924082,
+        "n": 49,
+        "realized": 0.714286
       }
     ]
   },
@@ -38805,11 +39582,28 @@
       "pick": "home",
       "reason": "pending_or_unmatched_result",
       "rule": "2way-unanimous avg_p>=60"
+    },
+    {
+      "away": "Barnet",
+      "away_key_candidates": [
+        "barnet"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-09-26",
+      "home": "Crawley Town",
+      "home_key_candidates": [
+        "crawleyto"
+      ],
+      "league": "L2",
+      "match": "Crawley Town vs Barnet",
+      "odds": 1.66,
+      "pick": "away",
+      "reason": "pending_or_unmatched_result",
+      "rule": "ml-meta avg_p>=55"
     }
   ],
-  "unmatched_result_picks": 5,
+  "unmatched_result_picks": 6,
   "unsafe_regular_ledger_dates": [
-    "2026-08-28",
     "2026-08-29",
     "2026-08-30",
     "2026-08-31",
@@ -38846,37 +39640,37 @@
       "1.50-2.00": {
         "hit_rate": 0.5,
         "priced_picks": 108,
-        "roi": -0.166204,
+        "roi": -0.166759,
         "settled_picks": 108,
         "wins": 54
       },
       "2.00-3.00": {
-        "hit_rate": 0.625,
-        "priced_picks": 8,
-        "roi": 0.35625,
-        "settled_picks": 8,
+        "hit_rate": 0.714286,
+        "priced_picks": 7,
+        "roi": 0.55,
+        "settled_picks": 7,
         "wins": 5
       },
       "<1.50": {
-        "hit_rate": 0.7375,
+        "hit_rate": 0.74375,
         "priced_picks": 160,
-        "roi": -0.0635,
+        "roi": -0.056063,
         "settled_picks": 160,
-        "wins": 118
+        "wins": 119
       },
       "unpriced": {
-        "hit_rate": 0.555556,
+        "hit_rate": 0.6,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 9,
-        "wins": 5
+        "settled_picks": 10,
+        "wins": 6
       }
     },
     "by_price_evidence": {
       "BETEXPLORER_RESCUE": {
         "hit_rate": 0.607143,
         "priced_picks": 84,
-        "roi": -0.169048,
+        "roi": -0.169881,
         "settled_picks": 84,
         "wins": 51
       },
@@ -38888,32 +39682,32 @@
         "wins": 3
       },
       "SCOUTINGSTATS_SOLE": {
-        "hit_rate": 0.634731,
-        "priced_picks": 167,
-        "roi": -0.084431,
-        "settled_picks": 167,
-        "wins": 106
+        "hit_rate": 0.63354,
+        "priced_picks": 161,
+        "roi": -0.08236,
+        "settled_picks": 161,
+        "wins": 102
       },
       "SOURCE_FALLBACK": {
-        "hit_rate": 0.785714,
-        "priced_picks": 14,
-        "roi": 0.087857,
-        "settled_picks": 14,
-        "wins": 11
+        "hit_rate": 0.842105,
+        "priced_picks": 19,
+        "roi": 0.163158,
+        "settled_picks": 19,
+        "wins": 16
       },
       "SUSPECT_ALIAS_FUZZY": {
         "hit_rate": 0.777778,
         "priced_picks": 8,
-        "roi": 0.03875,
+        "roi": -0.025,
         "settled_picks": 9,
         "wins": 7
       },
       "UNMATCHED": {
-        "hit_rate": 0.5,
+        "hit_rate": 0.555556,
         "priced_picks": 0,
         "roi": null,
-        "settled_picks": 8,
-        "wins": 4
+        "settled_picks": 9,
+        "wins": 5
       }
     },
     "by_veto_reason": {
@@ -38946,11 +39740,11 @@
         "wins": 1
       },
       "context VETO in ['league', 'team_a']": {
-        "hit_rate": 0.285714,
-        "priced_picks": 7,
-        "roi": -0.58,
-        "settled_picks": 7,
-        "wins": 2
+        "hit_rate": 0.2,
+        "priced_picks": 5,
+        "roi": -0.668,
+        "settled_picks": 5,
+        "wins": 1
       },
       "context VETO in ['league', 'team_h', 'niche']": {
         "hit_rate": 0.666667,
@@ -38960,11 +39754,11 @@
         "wins": 2
       },
       "context VETO in ['league', 'team_h', 'team_a', 'niche']": {
-        "hit_rate": 0.5,
-        "priced_picks": 4,
-        "roi": -0.2025,
-        "settled_picks": 4,
-        "wins": 2
+        "hit_rate": 0.333333,
+        "priced_picks": 3,
+        "roi": -0.49,
+        "settled_picks": 3,
+        "wins": 1
       },
       "context VETO in ['league', 'team_h', 'team_a', 'odds_band', 'niche']": {
         "hit_rate": 1.0,
@@ -38988,11 +39782,11 @@
         "wins": 9
       },
       "context VETO in ['league']": {
-        "hit_rate": 0.777778,
-        "priced_picks": 13,
-        "roi": 0.314615,
-        "settled_picks": 18,
-        "wins": 14
+        "hit_rate": 0.818182,
+        "priced_picks": 16,
+        "roi": 0.308125,
+        "settled_picks": 22,
+        "wins": 18
       },
       "context VETO in ['niche']": {
         "hit_rate": 0.777778,
@@ -39009,11 +39803,11 @@
         "wins": 3
       },
       "context VETO in ['odds_band']": {
-        "hit_rate": 0.673469,
-        "priced_picks": 49,
-        "roi": -0.152041,
-        "settled_picks": 49,
-        "wins": 33
+        "hit_rate": 0.686275,
+        "priced_picks": 51,
+        "roi": -0.12451,
+        "settled_picks": 51,
+        "wins": 35
       },
       "context VETO in ['team_a', 'niche']": {
         "hit_rate": 0.666667,
@@ -39030,18 +39824,18 @@
         "wins": 2
       },
       "context VETO in ['team_a', 'odds_band']": {
-        "hit_rate": 0.666667,
-        "priced_picks": 9,
-        "roi": -0.17,
-        "settled_picks": 9,
+        "hit_rate": 0.6,
+        "priced_picks": 10,
+        "roi": -0.253,
+        "settled_picks": 10,
         "wins": 6
       },
       "context VETO in ['team_a']": {
-        "hit_rate": 0.509804,
-        "priced_picks": 49,
-        "roi": -0.19898,
-        "settled_picks": 51,
-        "wins": 26
+        "hit_rate": 0.5,
+        "priced_picks": 46,
+        "roi": -0.21087,
+        "settled_picks": 48,
+        "wins": 24
       },
       "context VETO in ['team_h', 'niche']": {
         "hit_rate": 0.5,
@@ -39051,11 +39845,11 @@
         "wins": 2
       },
       "context VETO in ['team_h', 'odds_band']": {
-        "hit_rate": 0.888889,
-        "priced_picks": 9,
-        "roi": 0.196667,
-        "settled_picks": 9,
-        "wins": 8
+        "hit_rate": 1.0,
+        "priced_picks": 7,
+        "roi": 0.357143,
+        "settled_picks": 7,
+        "wins": 7
       },
       "context VETO in ['team_h', 'team_a', 'niche']": {
         "hit_rate": 0.666667,
@@ -39072,10 +39866,10 @@
         "wins": 1
       },
       "context VETO in ['team_h', 'team_a', 'odds_band']": {
-        "hit_rate": 0.833333,
-        "priced_picks": 6,
-        "roi": 0.103333,
-        "settled_picks": 6,
+        "hit_rate": 0.714286,
+        "priced_picks": 7,
+        "roi": -0.054286,
+        "settled_picks": 7,
         "wins": 5
       },
       "context VETO in ['team_h', 'team_a']": {
@@ -39086,11 +39880,11 @@
         "wins": 7
       },
       "context VETO in ['team_h']": {
-        "hit_rate": 0.586207,
-        "priced_picks": 57,
-        "roi": -0.102456,
-        "settled_picks": 58,
-        "wins": 34
+        "hit_rate": 0.589286,
+        "priced_picks": 55,
+        "roi": -0.090364,
+        "settled_picks": 56,
+        "wins": 33
       },
       "short-odds away favourite 1.12": {
         "hit_rate": 1.0,
@@ -39113,6 +39907,20 @@
         "settled_picks": 1,
         "wins": 1
       },
+      "short-odds away favourite 1.21": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.21,
+        "settled_picks": 1,
+        "wins": 1
+      },
+      "short-odds away favourite 1.27": {
+        "hit_rate": 1.0,
+        "priced_picks": 1,
+        "roi": 0.27,
+        "settled_picks": 1,
+        "wins": 1
+      },
       "short-odds away favourite 1.28": {
         "hit_rate": 1.0,
         "priced_picks": 1,
@@ -39124,11 +39932,11 @@
     "contrast_bucket": "CAUTION",
     "contrast_by_price_evidence": {
       "BETEXPLORER_RESCUE": {
-        "hit_rate": 0.714286,
-        "priced_picks": 28,
-        "roi": 0.031786,
-        "settled_picks": 28,
-        "wins": 20
+        "hit_rate": 0.7,
+        "priced_picks": 30,
+        "roi": 0.021,
+        "settled_picks": 30,
+        "wins": 21
       },
       "BZZOIRO_PRIMARY": {
         "hit_rate": 0.0,
@@ -39138,20 +39946,20 @@
         "wins": 0
       },
       "SOURCE_FALLBACK": {
-        "hit_rate": 0.684211,
-        "priced_picks": 19,
-        "roi": 0.109474,
-        "settled_picks": 19,
-        "wins": 13
+        "hit_rate": 0.608696,
+        "priced_picks": 23,
+        "roi": -0.023478,
+        "settled_picks": 23,
+        "wins": 14
       }
     },
     "focus_bucket": "SKIPPED_VETO",
     "overall": {
-      "hit_rate": 0.638596,
-      "priced_picks": 276,
-      "roi": -0.091522,
+      "hit_rate": 0.645614,
+      "priced_picks": 275,
+      "roi": -0.084109,
       "settled_picks": 285,
-      "wins": 182
+      "wins": 184
     },
     "soft_evidence_labels": [
       "SCOUTINGSTATS_SOLE",
@@ -39160,16 +39968,16 @@
       "UNMATCHED"
     ],
     "soft_evidence_only": {
-      "hit_rate": 0.646465,
-      "priced_picks": 189,
-      "roi": -0.066455,
+      "hit_rate": 0.656566,
+      "priced_picks": 188,
+      "roi": -0.055106,
       "settled_picks": 198,
-      "wins": 128
+      "wins": 130
     },
     "trusted_evidence_only": {
       "hit_rate": 0.62069,
       "priced_picks": 87,
-      "roi": -0.145977,
+      "roi": -0.146782,
       "settled_picks": 87,
       "wins": 54
     }
