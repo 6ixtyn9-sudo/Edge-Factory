@@ -5,7 +5,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-09-27",
-      "n_last_window": 209,
+      "n_last_window": 203,
       "rule": "2way-unanimous avg_p>=60",
       "silent": false
     },
@@ -19,7 +19,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-09-27",
-      "n_last_window": 396,
+      "n_last_window": 402,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
@@ -45,7 +45,7 @@
       "silent": false
     }
   ],
-  "generated_at": "2026-09-27T18:22:51",
+  "generated_at": "2026-09-27T21:19:11",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
