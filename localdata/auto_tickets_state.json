@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 124.29137800000008,
+  "bank": 136.09904200000008,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -26,38 +26,13 @@
           "odds": 2.22,
           "stake_pct": 15.5364,
           "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Trelleborgs FF vs \u00c4ngelholms FF",
-              "pick": "HOME",
-              "prob": 0.703,
-              "odds": 1.44,
-              "result": null
-            },
-            {
-              "match": "Fratria vs Spartak Pleven",
-              "pick": "HOME",
-              "prob": 0.677,
-              "odds": 1.22,
-              "result": null
-            }
-          ],
-          "odds": 1.76,
-          "stake_pct": 15.5364,
-          "results": [
-            null,
+            "loss",
             null
           ],
           "won": null
         }
       ],
-      "staked_pct": 31.0728
+      "staked_pct": 15.5364
     }
   ],
   "history": [
@@ -596,6 +571,18 @@
         }
       ],
       "bank_pct": 124.2914
+    },
+    {
+      "date": "2026-09-27",
+      "staked_pct": 15.5364,
+      "returned_pct": 27.3441,
+      "accas": [
+        {
+          "odds": 1.76,
+          "won": true
+        }
+      ],
+      "bank_pct": 136.099
     }
   ],
   "events": []
