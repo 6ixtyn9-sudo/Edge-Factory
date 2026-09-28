@@ -258,7 +258,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-28T12:00:49+02:00",
+    "as_of": "2026-09-28T18:00:51+02:00",
     "avg_p": 67.2,
     "away": "Bonaire",
     "bookmaker": "betexplorer_best",
@@ -356,12 +356,12 @@
     "model_version": "dc-blend-v1",
     "n_way": 4,
     "odds": 1.13,
-    "odds_captured_at": "2026-09-28T10:04:23.061451+00:00",
+    "odds_captured_at": "2026-09-28T16:04:19.693464+00:00",
     "odds_league": "North & Central America: CONCACAF Nations League",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
     "odds_replaced": {
-      "odds": 1.11,
+      "odds": 1.14,
       "source": "forebet_best"
     },
     "odds_source": "betexplorer_odds",
@@ -1013,7 +1013,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-28T12:00:49+02:00",
+    "as_of": "2026-09-28T18:00:51+02:00",
     "avg_p": 66.5,
     "away": "Am\u00e9rica W",
     "bookmaker": null,
@@ -1046,7 +1046,7 @@
     "date": "2026-09-29",
     "decay_verdict": "HEALTHY",
     "display_rule": "2WAY-UNANIMOUS\u226560",
-    "draw_risk_flag": "MEDIUM",
+    "draw_risk_flag": "HIGH",
     "duplicate_bucket_sources": [
       "SKIPPED_VETO"
     ],
@@ -1117,13 +1117,13 @@
     "league": "MxW",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "upper short-odds zone, narrow surviving niche",
+    "market_recommendation_reason": "historically unstable out of sample above 1.25",
     "market_type": "1x2",
     "match": "Le\u00f3n W vs Am\u00e9rica W",
     "min_lead_minutes": 30,
     "model_version": null,
     "n_way": 2,
-    "odds": 1.22,
+    "odds": 1.25,
     "odds_match_method": "fallback",
     "odds_match_status": "matched",
     "odds_source": "forebet_best",
@@ -1133,7 +1133,7 @@
     "price_evidence": "SOURCE_FALLBACK",
     "price_push_eligible": true,
     "recommended_enhancement": "match_over_25",
-    "recommended_market": "keep_1x2",
+    "recommended_market": "avoid_raw_1x2",
     "rule": "2way-unanimous avg_p>=60",
     "source_weights": {},
     "sources_used": [
