@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 136.09904200000008,
+  "bank": 159.45800700000007,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -33,37 +33,6 @@
         }
       ],
       "staked_pct": 15.5364
-    },
-    {
-      "date": "2026-09-28",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Hapoel Kfar Saba vs Bnei Yehuda",
-              "pick": "AWAY",
-              "prob": 0.6729999999999999,
-              "odds": 1.5,
-              "result": null
-            },
-            {
-              "match": "Hapoel Kfar Shalem vs Maccabi Kabilio Jaffa",
-              "pick": "HOME",
-              "prob": 0.58,
-              "odds": 1.7,
-              "result": null
-            }
-          ],
-          "odds": 2.55,
-          "stake_pct": 15.0703,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 15.0703
     }
   ],
   "history": [
@@ -614,6 +583,18 @@
         }
       ],
       "bank_pct": 136.099
+    },
+    {
+      "date": "2026-09-28",
+      "staked_pct": 15.0703,
+      "returned_pct": 38.4293,
+      "accas": [
+        {
+          "odds": 2.55,
+          "won": true
+        }
+      ],
+      "bank_pct": 159.458
     }
   ],
   "events": []
