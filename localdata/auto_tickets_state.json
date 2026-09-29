@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 159.45800700000007,
+  "bank": 171.33153900000008,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -40,31 +40,6 @@
         {
           "legs": [
             {
-              "match": "Spain vs Croatia",
-              "pick": "HOME",
-              "prob": 0.752,
-              "odds": 1.22,
-              "result": null
-            },
-            {
-              "match": "Australia vs Brazil",
-              "pick": "AWAY",
-              "prob": 0.662,
-              "odds": 1.36,
-              "result": null
-            }
-          ],
-          "odds": 1.66,
-          "stake_pct": 17.9902,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
               "match": "Botafogo SP vs Ponte Preta",
               "pick": "HOME",
               "prob": 0.746,
@@ -83,12 +58,12 @@
           "stake_pct": 17.9902,
           "results": [
             null,
-            null
+            "win"
           ],
           "won": null
         }
       ],
-      "staked_pct": 35.9804
+      "staked_pct": 17.9902
     }
   ],
   "history": [
@@ -651,6 +626,18 @@
         }
       ],
       "bank_pct": 159.458
+    },
+    {
+      "date": "2026-09-29",
+      "staked_pct": 17.9902,
+      "returned_pct": 29.8637,
+      "accas": [
+        {
+          "odds": 1.66,
+          "won": true
+        }
+      ],
+      "bank_pct": 171.3315
     }
   ],
   "events": []
