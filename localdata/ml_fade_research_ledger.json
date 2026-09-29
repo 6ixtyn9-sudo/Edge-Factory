@@ -88909,7 +88909,7 @@
    "first_odds_forebet": 15.0,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-28T12:00:49+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Tunisia",
    "kickoff": "2026-09-28 21:00:00",
    "last_seen_at": "2026-09-28T18:00:51+02:00",
@@ -88929,18 +88929,22 @@
    "odds_forebet": 15.0,
    "odds_source": "forebet_best",
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "draw",
    "parent_avg_p": 23.2,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.2322,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-28",
+   "result_source": "bettingclosed_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 2,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-29T15:15:32+02:00",
    "sources_present": [
     "forebet"
    ],
@@ -88949,7 +88953,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -1.1959
   },
   {
@@ -88965,7 +88969,7 @@
    "first_odds_forebet": 1.18,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-28T12:00:49+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Tunisia",
    "kickoff": "2026-09-28 21:00:00",
    "last_seen_at": "2026-09-28T18:00:51+02:00",
@@ -88985,15 +88989,19 @@
    "odds_forebet": 1.18,
    "odds_source": "forebet_best",
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "draw",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-28",
+   "result_source": "bettingclosed_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 2,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-09-29T15:15:32+02:00",
    "sources_present": [
     "forebet"
    ],
@@ -89002,7 +89010,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -1.1959
   },
   {
@@ -90300,7 +90308,7 @@
    "graduation": null,
    "home": "Botafogo SP",
    "kickoff": "2026-09-30 00:30:00",
-   "last_seen_at": "2026-09-29T12:00:53+02:00",
+   "last_seen_at": "2026-09-29T15:00:52+02:00",
    "latest_odds_forebet": 9.5,
    "latest_odds_zulubet": null,
    "league": "Br2",
@@ -90318,7 +90326,8 @@
     "966cc28a600a",
     "27f1e9ebab85",
     "c614bd726cdd",
-    "363e7bfaa219"
+    "363e7bfaa219",
+    "29f20ae26d96"
    ],
    "odds_forebet": 10.0,
    "odds_source": "forebet_best",
@@ -90362,7 +90371,7 @@
    "graduation": null,
    "home": "Botafogo SP",
    "kickoff": "2026-09-30 00:30:00",
-   "last_seen_at": "2026-09-29T12:00:53+02:00",
+   "last_seen_at": "2026-09-29T15:00:52+02:00",
    "latest_odds_forebet": 1.22,
    "latest_odds_zulubet": null,
    "league": "Br2",
@@ -90380,7 +90389,8 @@
     "966cc28a600a",
     "27f1e9ebab85",
     "c614bd726cdd",
-    "363e7bfaa219"
+    "363e7bfaa219",
+    "29f20ae26d96"
    ],
    "odds_forebet": 1.22,
    "odds_source": "forebet_best",
@@ -94399,7 +94409,7 @@
    "graduation": null,
    "home": "Independiente Medellin",
    "kickoff": "20:05",
-   "last_seen_at": "2026-09-29T12:00:53+02:00",
+   "last_seen_at": "2026-09-29T15:00:52+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Colombia,Primera A Apertura Finalizacion",
@@ -94414,7 +94424,8 @@
     "966cc28a600a",
     "27f1e9ebab85",
     "c614bd726cdd",
-    "363e7bfaa219"
+    "363e7bfaa219",
+    "29f20ae26d96"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -94456,7 +94467,7 @@
    "graduation": null,
    "home": "Independiente Medellin",
    "kickoff": "20:05",
-   "last_seen_at": "2026-09-29T12:00:53+02:00",
+   "last_seen_at": "2026-09-29T15:00:52+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Colombia,Primera A Apertura Finalizacion",
@@ -94471,7 +94482,8 @@
     "966cc28a600a",
     "27f1e9ebab85",
     "c614bd726cdd",
-    "363e7bfaa219"
+    "363e7bfaa219",
+    "29f20ae26d96"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -94496,5 +94508,5 @@
   }
  ],
  "schema": 1,
- "updated_at": "2026-09-29T12:16:13+02:00"
+ "updated_at": "2026-09-29T15:15:32+02:00"
 }
