@@ -94394,6 +94394,113 @@
    "w_score": -1.0711
   },
   {
+   "as_of": "2026-09-29T21:00:53+02:00",
+   "avg_p": 68.5,
+   "away": "Ponte Preta",
+   "captured_at": "2026-09-29T21:00:53+02:00",
+   "date": "2026-09-30",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-09-30|botafogos|pontepret|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 12.36,
+   "first_seen_at": "2026-09-29T21:00:53+02:00",
+   "graduation": null,
+   "home": "Botafogo SP",
+   "kickoff": "29-09, 23:30",
+   "last_seen_at": "2026-09-29T21:00:53+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 12.36,
+   "league": "Brazil Serie B",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.6852,
+   "model_key": "ad967c7878dd",
+   "model_keys_seen": [
+    "ad967c7878dd"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 12.36,
+   "outcome": null,
+   "parent_avg_p": 31.5,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.3148,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.7775
+  },
+  {
+   "as_of": "2026-09-29T21:00:53+02:00",
+   "avg_p": 31.5,
+   "away": "Ponte Preta",
+   "captured_at": "2026-09-29T21:00:53+02:00",
+   "date": "2026-09-30",
+   "derivation": null,
+   "edge_family": "ml-meta",
+   "event_key": "2026-09-30|botafogos|pontepret|ml-meta|1x2",
+   "family": "ml-meta",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 1.24,
+   "first_seen_at": "2026-09-29T21:00:53+02:00",
+   "graduation": null,
+   "home": "Botafogo SP",
+   "kickoff": "29-09, 23:30",
+   "last_seen_at": "2026-09-29T21:00:53+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 1.24,
+   "league": "Brazil Serie B",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.3148,
+   "model_key": "ad967c7878dd",
+   "model_keys_seen": [
+    "ad967c7878dd"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 1.24,
+   "outcome": null,
+   "parent_family": "ml-meta",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.7775
+  },
+  {
    "as_of": "2026-09-29T00:00:53+02:00",
    "avg_p": 67.3,
    "away": "Millonarios",
@@ -94409,7 +94516,7 @@
    "graduation": null,
    "home": "Independiente Medellin",
    "kickoff": "20:05",
-   "last_seen_at": "2026-09-29T18:00:52+02:00",
+   "last_seen_at": "2026-09-29T21:00:53+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Colombia,Primera A Apertura Finalizacion",
@@ -94426,7 +94533,8 @@
     "c614bd726cdd",
     "363e7bfaa219",
     "29f20ae26d96",
-    "0e5362528d7b"
+    "0e5362528d7b",
+    "ad967c7878dd"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -94468,7 +94576,7 @@
    "graduation": null,
    "home": "Independiente Medellin",
    "kickoff": "20:05",
-   "last_seen_at": "2026-09-29T18:00:52+02:00",
+   "last_seen_at": "2026-09-29T21:00:53+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Colombia,Primera A Apertura Finalizacion",
@@ -94485,7 +94593,8 @@
     "c614bd726cdd",
     "363e7bfaa219",
     "29f20ae26d96",
-    "0e5362528d7b"
+    "0e5362528d7b",
+    "ad967c7878dd"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -94510,5 +94619,5 @@
   }
  ],
  "schema": 1,
- "updated_at": "2026-09-29T18:15:13+02:00"
+ "updated_at": "2026-09-29T21:15:59+02:00"
 }
