@@ -1,0 +1,27 @@
+{
+  "roles": {
+    "afootballreport": "shadow_fresh_production_voter",
+    "betclan": "fresh_production_live_voter",
+    "betexplorer_odds": "pricing_provider",
+    "betexplorer_results": "result_donor",
+    "bettingclosed": "result_donor",
+    "bzzoiro": "fresh_production_live_voter",
+    "bzzoiro_odds": "pricing_provider",
+    "forebet": "blocked_predictor",
+    "freesupertips": "shadow_fresh_production_voter",
+    "oddspapi_odds": "pricing_provider",
+    "predictz": "shadow_fresh_production_voter",
+    "prosoccer": "shadow_fresh_production_voter",
+    "scoutingstats": "timing_provider",
+    "soccervista": "shadow_fresh_production_voter",
+    "statarea": "fresh_production_live_voter",
+    "theoddsapi_odds": "pricing_provider",
+    "vitibet": "fresh_production_live_voter",
+    "windrawwin": "shadow_fresh_production_voter",
+    "zulubet": "fresh_production_live_voter"
+  },
+  "warnings": [
+    "SOURCE_HEALTH: parked/degraded predictor(s) excluded from the fresh lane: forebet",
+    "SOURCE_HEALTH: fresh_production produced no dispatchable picks \u2014 see the blocker table for the objective reason"
+  ]
+}

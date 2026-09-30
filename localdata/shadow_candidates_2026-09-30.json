@@ -1,0 +1,139 @@
+{
+  "blocker_counts": {
+    "inside_30m_lead_or_started": 3,
+    "no_ml_feature_provider_on_fixture": 2,
+    "shadow_sources_not_settlement_validated": 5
+  },
+  "candidate_count": 5,
+  "candidates": [
+    {
+      "blockers": [
+        "shadow_sources_not_settlement_validated:prosoccer"
+      ],
+      "date": "2026-09-30",
+      "dispatchable": false,
+      "fixture": "Bahrain vs Yemen",
+      "kickoff": "2026-09-30T19:30:00+02:00",
+      "kickoff_donors": [
+        "vitibet",
+        "prosoccer"
+      ],
+      "live_voters": [
+        "zulubet",
+        "betclan"
+      ],
+      "shadow_voters": [
+        "prosoccer"
+      ]
+    },
+    {
+      "blockers": [
+        "shadow_sources_not_settlement_validated:prosoccer"
+      ],
+      "date": "2026-09-30",
+      "dispatchable": false,
+      "fixture": "Eastleigh vs Southend",
+      "kickoff": "2026-09-30T20:45:00+02:00",
+      "kickoff_donors": [
+        "vitibet",
+        "prosoccer"
+      ],
+      "live_voters": [
+        "zulubet",
+        "vitibet",
+        "betclan"
+      ],
+      "shadow_voters": [
+        "prosoccer"
+      ]
+    },
+    {
+      "blockers": [
+        "inside_30m_lead_or_started",
+        "shadow_sources_not_settlement_validated:prosoccer"
+      ],
+      "date": "2026-09-30",
+      "dispatchable": false,
+      "fixture": "Lithuania vs Andorra",
+      "kickoff": "09:00",
+      "kickoff_donors": [
+        "statarea",
+        "scoutingstats",
+        "bzzoiro",
+        "prosoccer"
+      ],
+      "live_voters": [
+        "zulubet",
+        "statarea",
+        "betclan",
+        "bzzoiro"
+      ],
+      "shadow_voters": [
+        "prosoccer"
+      ]
+    },
+    {
+      "blockers": [
+        "no_ml_feature_provider_on_fixture",
+        "inside_30m_lead_or_started",
+        "shadow_sources_not_settlement_validated:prosoccer"
+      ],
+      "date": "2026-09-30",
+      "dispatchable": false,
+      "fixture": "Mexico vs Peru",
+      "kickoff": "2026-09-30T01:00:00Z",
+      "kickoff_donors": [
+        "bzzoiro",
+        "prosoccer"
+      ],
+      "live_voters": [
+        "betclan",
+        "bzzoiro"
+      ],
+      "shadow_voters": [
+        "prosoccer"
+      ]
+    },
+    {
+      "blockers": [
+        "no_ml_feature_provider_on_fixture",
+        "inside_30m_lead_or_started",
+        "shadow_sources_not_settlement_validated:prosoccer"
+      ],
+      "date": "2026-09-30",
+      "dispatchable": false,
+      "fixture": "Seychelles vs Sri Lanka",
+      "kickoff": "2026-09-30T13:00:00Z",
+      "kickoff_donors": [
+        "bzzoiro",
+        "prosoccer"
+      ],
+      "live_voters": [
+        "betclan",
+        "bzzoiro"
+      ],
+      "shadow_voters": [
+        "prosoccer"
+      ]
+    }
+  ],
+  "date": "2026-09-30",
+  "dispatchable": false,
+  "live_voter_sources": [
+    "forebet",
+    "zulubet",
+    "statarea",
+    "vitibet",
+    "betclan",
+    "bzzoiro"
+  ],
+  "note": "Shadow evaluation only. These rows are NEVER dispatched, never become CLEAN/CAUTION picks, and are not read by the pick engine. Promotion requires settlement-coverage evidence plus operator sign-off.",
+  "shadow_voter_sources": [
+    "predictz",
+    "windrawwin",
+    "freesupertips",
+    "afootballreport",
+    "prosoccer",
+    "soccervista"
+  ]
+}

@@ -1,24 +1,24 @@
 # Source settlement coverage — 2026-07-02..2026-09-30
 
 Prediction->final-score matching quality per source. Row counts alone are NOT validation.
-Donor rows indexed: 257975 across 24 donor labels.
+Donor rows indexed: 258012 across 24 donor labels.
 Guarded alias tier: enabled (edgefactory.identity fold).
 
 | source | fixtures | own_score | exact | alias | matched | agree | conflict | donor_conf | unmatched | ambig | rev | rev_unexp | cov% | confl% | verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | forebet | 28203 | 27149 | 9267 | 2465 | 11732 | 11644 | 42 | 25 | 15906 | 540 | 1 | 1 | 41.6 | 0.36 | unproven |
-| zulubet | 4400 | 4318 | 4062 | 40 | 4102 | 4095 | 5 | 18 | 258 | 22 | 1 | 1 | 93.23 | 0.12 | review_required |
-| statarea | 7877 | 7620 | 4887 | 817 | 5704 | 5645 | 15 | 6 | 1959 | 208 | 2 | 2 | 72.41 | 0.27 | partial |
-| vitibet | 31331 | 11434 | 13173 | 3719 | 16892 | 11400 | 1 | 41 | 13637 | 761 | 13 | 13 | 53.91 | 0.01 | unproven |
+| zulubet | 4403 | 4323 | 4067 | 40 | 4107 | 4100 | 5 | 18 | 256 | 22 | 1 | 1 | 93.28 | 0.12 | review_required |
+| statarea | 7877 | 7621 | 4887 | 818 | 5705 | 5645 | 15 | 6 | 1958 | 208 | 2 | 2 | 72.43 | 0.27 | partial |
+| vitibet | 31331 | 11440 | 13180 | 3720 | 16900 | 11407 | 1 | 40 | 13630 | 761 | 13 | 13 | 53.94 | 0.01 | unproven |
 | scoutingstats | 8670 | 8461 | 4145 | 1185 | 5330 | 5296 | 33 | 8 | 2910 | 422 | 3 | 3 | 61.48 | 0.62 | partial |
 | predictz | 2014 | 0 | 1232 | 157 | 1389 | 0 | 0 | 0 | 579 | 46 | 1 | 1 | 68.97 | 0.0 | partial |
 | windrawwin | 1089 | 0 | 61 | 4 | 65 | 0 | 0 | 0 | 1024 | 0 | 0 | 0 | 5.97 | 0.0 | unproven |
 | prosoccer | 43 | 25 | 27 | 0 | 27 | 22 | 1 | 0 | 16 | 0 | 0 | 0 | 62.79 | 4.35 | partial |
 | soccervista | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | no_data |
-| bettingclosed | 14746 | 14355 | 5489 | 899 | 6388 | 6359 | 28 | 10 | 8025 | 323 | 4 | 4 | 43.32 | 0.44 | unproven |
-| betclan | 1386 | 0 | 121 | 10 | 131 | 0 | 0 | 0 | 1254 | 1 | 0 | 0 | 9.45 | 0.0 | unproven |
+| bettingclosed | 14746 | 14357 | 5490 | 899 | 6389 | 6360 | 28 | 10 | 8024 | 323 | 4 | 4 | 43.33 | 0.44 | unproven |
+| betclan | 1386 | 0 | 123 | 10 | 133 | 0 | 0 | 0 | 1252 | 1 | 0 | 0 | 9.6 | 0.0 | unproven |
 | freesupertips | 16 | 0 | 14 | 0 | 14 | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 87.5 | 0.0 | unproven |
-| afootballreport | 7905 | 0 | 352 | 135 | 487 | 0 | 0 | 0 | 7384 | 34 | 1 | 1 | 6.16 | 0.0 | unproven |
+| afootballreport | 7907 | 0 | 352 | 135 | 487 | 0 | 0 | 0 | 7386 | 34 | 1 | 1 | 6.16 | 0.0 | unproven |
 | bzzoiro | 2268 | 0 | 1269 | 224 | 1493 | 0 | 0 | 2 | 640 | 133 | 1 | 1 | 65.83 | 0.0 | partial |
 | bzzoiro_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
 | theoddsapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
@@ -28,7 +28,7 @@ Guarded alias tier: enabled (edgefactory.identity fold).
 - **forebet** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 25 donor-conflicted fixtures; 540 ambiguous rejected; insufficient matched settlement evidence
 - **zulubet** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 18 donor-conflicted fixtures; 22 ambiguous rejected; validated on coverage/conflict but 1 unexplained reversed home/away candidate(s) - sign off in Config/reversal_reviews.json
 - **statarea** (prediction): orientation risk on 2 fixtures (2 unexplained, 0 reviewed); 6 donor-conflicted fixtures; 208 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
-- **vitibet** (prediction): orientation risk on 13 fixtures (13 unexplained, 0 reviewed); 41 donor-conflicted fixtures; 761 ambiguous rejected; insufficient matched settlement evidence
+- **vitibet** (prediction): orientation risk on 13 fixtures (13 unexplained, 0 reviewed); 40 donor-conflicted fixtures; 761 ambiguous rejected; insufficient matched settlement evidence
 - **scoutingstats** (prediction): orientation risk on 3 fixtures (3 unexplained, 0 reviewed); 8 donor-conflicted fixtures; 422 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
 - **predictz** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 46 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
 - **windrawwin** (prediction): insufficient matched settlement evidence

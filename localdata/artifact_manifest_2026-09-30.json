@@ -1,0 +1,37 @@
+{
+  "bytes_removed": 0,
+  "dry_run": false,
+  "entries": [],
+  "files_removed": 0,
+  "generated": "2026-09-30",
+  "keep_days": 30,
+  "keep_latest": 3,
+  "known_prefixes": [
+    "fresh_production_walkforward",
+    "fresh_production_certified_edges",
+    "fresh_production_candidate_picks",
+    "fresh_production_dispatchable_picks",
+    "source_health",
+    "model_health",
+    "source_funnel",
+    "shadow_candidates",
+    "source_settlement_coverage",
+    "artifact_manifest"
+  ],
+  "policy": "fresh_production",
+  "protected": [
+    ".git/",
+    "source code",
+    "tests",
+    "Config/",
+    "HANDOVER.md",
+    "raw captures (*.csv.gz)",
+    "settled overlays",
+    "warehouse inputs",
+    "alias/entity registries",
+    "audit scripts",
+    "current-day artifacts",
+    "any file not matching a known generated prefix"
+  ],
+  "schema": 1
+}
