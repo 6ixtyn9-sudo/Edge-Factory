@@ -158,6 +158,17 @@ def _clv_selection_key(row) -> tuple:
     )
 
 
+# Snapshot labels in the order a run produces them. Two snapshots can
+# share a captured_at_utc, so the label -- not file order -- decides
+# which one supersedes the other.
+_SNAPSHOT_ORDER = ("pick_time", "dispatch", "build", "end_of_run")
+
+
+def _snapshot_rank(row) -> int:
+    label = str(row.get("snapshot_label") or "").strip().lower()
+    return _SNAPSHOT_ORDER.index(label) if label in _SNAPSHOT_ORDER else -1
+
+
 def clv_latest_rows(rows) -> list[dict[str, Any]]:
     """The most recent snapshot per logical selection.
 
@@ -176,8 +187,9 @@ def clv_latest_rows(rows) -> list[dict[str, Any]]:
         if current is None:
             latest[key], order[key] = row, index
             continue
-        if (stamp, index) >= (str(current.get("captured_at_utc") or ""),
-                              order[key]):
+        if ((stamp, _snapshot_rank(row), index)
+                >= (str(current.get("captured_at_utc") or ""),
+                    _snapshot_rank(current), order[key])):
             latest[key], order[key] = row, index
     return list(latest.values())
 
@@ -260,13 +272,21 @@ def notification_coverage(plan: dict, notification: dict,
         if status:
             reasons[status] = reasons.get(status, 0) + 1
 
+    not_notified = max((same_day + future) - notices, 0)
+    # Only attribute reasons when the unannounced selections were
+    # actually identified. If the snapshot rows could not be matched
+    # against the future-dated picks, the per-status detail would
+    # describe the wrong cohort, so it is dropped rather than guessed.
+    if sum(reasons.values()) != not_notified:
+        reasons = {}
+
     return {
         "total_selections": same_day + future,
         "future_selections": future,
         "same_day_selections": same_day,
         "notified": notices,
         "notify_outcome": outcome,
-        "not_notified": max((same_day + future) - notices, 0),
+        "not_notified": not_notified,
         "same_day_reasons": reasons,
     }
 

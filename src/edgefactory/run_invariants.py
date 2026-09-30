@@ -44,6 +44,7 @@ V_NOTIFY_COVERAGE = "summary_does_not_account_for_every_selection"
 V_VOTER_MISLABELLED = "production_eligible_voter_labelled_non_dispatchable"
 V_PRICE_ORIGIN = "embedded_price_does_not_name_its_origin_source"
 V_SELECTION_DETAIL = "summary_selection_lines_disagree_with_selection_count"
+V_SUPABASE_NO_BREAKDOWN = "multi_date_publish_has_no_per_date_breakdown"
 
 # A pick may delegate staking; it may never size it.
 _STAKE_MARKERS = ("stake_units", "stake_u", "units")
@@ -166,7 +167,8 @@ def check_supabase(summary_published: dict[str, int] | None,
 
 
 def check_supabase_dates(summary_published: dict[str, int] | None,
-                         manifest: dict | None) -> list[dict]:
+                         manifest: dict | None,
+                         event_dates: Iterable[str] | None = None) -> list[dict]:
     """The per-date breakdown must match the one the sync recorded.
 
     A manifest named for the run date covers future-dated selections
@@ -176,8 +178,20 @@ def check_supabase_dates(summary_published: dict[str, int] | None,
     out: list[dict] = []
     if summary_published is None or not manifest:
         return out
+    event_dates = list(event_dates or ())
     breakdown = manifest.get("row_counts_by_event_date")
     if not isinstance(breakdown, dict) or not breakdown:
+        # Without a breakdown a multi-date publish can only be reported
+        # against one date, which misstates where the rows went. This is
+        # a warning: the figure is unproven, not proven wrong.
+        if len(summary_published) == 1 and len(event_dates or ()) > 1:
+            out.append(_violation(
+                V_SUPABASE_NO_BREAKDOWN,
+                f"the run published across {len(event_dates)} event dates "
+                f"but the sync manifest records no per-date breakdown, so "
+                f"the whole total is attributed to "
+                f"{next(iter(summary_published))}",
+                severity=WARNING))
         return out
     recorded = {}
     for day, count in breakdown.items():
@@ -452,7 +466,9 @@ def check_run(*, plan: dict | None = None,
     violations += check_census_agrees_with_plan(census, plan)
     violations += check_census_status_provenance(
         census, ran_before_auto_tickets=census_ran_before_auto_tickets)
-    violations += check_supabase_dates(summary_published, sync_manifest)
+    violations += check_supabase_dates(
+        summary_published, sync_manifest,
+        (plan or {}).get("event_dates"))
     violations += check_clv_latest_status(
         clv_rows, summary_clv_status_counts,
         (int((plan or {}).get("same_day_pick_count") or 0)

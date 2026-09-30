@@ -779,3 +779,56 @@ def test_coverage_totals_reconcile_with_the_selection_count():
 def test_no_coverage_line_when_there_were_no_selections():
     assert ps.render_notification_coverage(
         ps.notification_coverage({}, {}, [])) == []
+
+
+def test_unmatched_snapshots_do_not_attribute_the_wrong_reason():
+    """The notified picks must never be listed as not sent.
+
+    When the snapshot rows cannot be matched to the future-dated picks,
+    every status lands in the unannounced bucket, which reported the
+    selections that WERE announced as pending.
+    """
+    plan = {"same_day_pick_count": 2, "horizon_pick_count": 2,
+            "horizon_picks": [{"home": "Belgium", "away": "Turkey"},
+                              {"home": "Hungary", "away": "Georgia"}]}
+    cov = ps.notification_coverage(
+        plan, {"outcome": ps.NOTIFY_SENT_THIS_RUN, "future_notices": 2},
+        ps.clv_latest_rows(_snapshots()))
+
+    assert cov["not_notified"] == 2
+    assert cov["same_day_reasons"] == {}
+    text = "\n".join(ps.render_notification_coverage(cov))
+    assert "ticket_created" not in text
+    assert "same-day selections: 2 not sent" in text
+
+
+def test_the_snapshot_label_breaks_a_timestamp_tie():
+    """Two snapshots of one selection can share a captured_at_utc.
+
+    Guinea vs Kenya in run 36783344791 captured pick_time and
+    end_of_run at the same second, and file order let the earlier
+    pick_time row win, leaving the selection reading pending after the
+    run had already deferred it.
+    """
+    rows = [
+        {"pick_id": "g", "snapshot_label": "end_of_run",
+         "captured_at_utc": "2026-10-01T16:00:00Z",
+         "ticket_status": "deferred_before_build_hour"},
+        {"pick_id": "g", "snapshot_label": "pick_time",
+         "captured_at_utc": "2026-10-01T16:00:00Z",
+         "ticket_status": "pending_auto_tickets"},
+    ]
+
+    assert ps.clv_latest_status_counts(rows) == {
+        "deferred_before_build_hour": 1}
+
+
+def test_a_later_timestamp_still_wins_over_an_earlier_label():
+    rows = [
+        {"pick_id": "g", "snapshot_label": "end_of_run",
+         "captured_at_utc": "2026-10-01T10:00:00Z", "ticket_status": "stale"},
+        {"pick_id": "g", "snapshot_label": "pick_time",
+         "captured_at_utc": "2026-10-01T18:00:00Z", "ticket_status": "fresh"},
+    ]
+
+    assert ps.clv_latest_status_counts(rows) == {"fresh": 1}

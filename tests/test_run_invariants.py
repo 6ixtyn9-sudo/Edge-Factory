@@ -544,3 +544,18 @@ def test_the_defective_clv_and_coverage_accounting_is_caught_end_to_end(tmp_path
     assert ri.V_CLV_INFLATED in codes
     assert ri.V_NOTIFY_COVERAGE in codes
     assert ri.V_SELECTION_DETAIL in codes
+
+
+def test_a_multi_date_publish_without_a_breakdown_is_flagged():
+    """Unproven, not proven wrong: a warning, so the run is not blocked."""
+    violations = ri.check_supabase_dates(
+        {"2026-10-01": 4}, {"row_count": 4},
+        ["2026-10-01", "2026-10-02"])
+
+    assert _codes(violations) == {ri.V_SUPABASE_NO_BREAKDOWN}
+    assert not ri.has_errors(violations)
+
+
+def test_a_single_date_publish_without_a_breakdown_is_fine():
+    assert ri.check_supabase_dates(
+        {"2026-10-01": 4}, {"row_count": 4}, ["2026-10-01"]) == []
