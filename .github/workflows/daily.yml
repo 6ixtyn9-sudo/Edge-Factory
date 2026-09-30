@@ -44,6 +44,11 @@ jobs:
       EDGE_FACTORY_RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
       EDGE_FACTORY_RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
 
+      # Forebet Browser Run is deployed and contract-verified, but Forebet returned
+      # 403 HTML/non-JSON for getrs.php. Keep it off in production so the daily
+      # pipeline does not spend scarce Browser Run quota.
+      EDGE_FACTORY_FOREBET_BROWSER: "off"
+
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
 
