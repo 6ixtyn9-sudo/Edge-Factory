@@ -932,6 +932,19 @@ def run_pipeline(
 
             save_morning_baseline(target_date, target_picks_text, overwrite=force_repick)
 
+        # Same-day funnel diagnostics. Runs right after picks so the capture
+        # caches and the pick outcome describe the same slate: it explains why
+        # today's match surface became today's pick count (voter quorum,
+        # identity overlap, kickoff trust, odds overlap, backfill depth).
+        # Read-only and non-dispatch — it can never create or promote a pick.
+        # Soft: never blocks a run.
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/audit_source_funnel.py --date {target_date} "
+            f"--output-json localdata/source_funnel_{target_date}.json "
+            f"--output-md localdata/source_funnel_{target_date}.md",
+            f"audit_source_funnel {target_date}",
+        )
+
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
             f"audit_clv capture {target_date} [pick_time]",

@@ -10460,3 +10460,143 @@ coverage + low conflict + `rev=0` -> `settlement_validated`; the same with
 per fixture, never per source; a review without an explanation is ignored; the
 shipped config is empty; low fixture count -> `unproven`; high conflict ->
 `partial`/`unproven`. Full suite: 806 passed.
+
+## Addendum — 2026-09-30: same-day funnel audit — why 448 matches became 0 fresh picks
+
+### The collapse
+
+```text
+448 match surface -> 21 ML-meta scored -> 5 candidate picks
+-> pre-match guard skipped 8 (missing_kickoff_same_day=8)
+-> live odds enrichment enriched=0 -> fresh run yielded 0 (5 frozen rows preserved)
+```
+
+Capture looked healthy. The picks chain did not. `audit_source_availability`
+(rows) and `audit_source_settlement_coverage` (historical settlement) cannot
+see this; both answer other questions.
+
+### New: `scripts/audit_source_funnel.py`
+
+Read-only, network-free same-day walk of the real chain. It does **not**
+re-implement the gates — it imports `scripts/picks_today.py` and calls the live
+`source_team_key`, `probs_1x2`, `parse_kickoff_dt`, `operational_pick_eligibility`
+and the live `SOURCES_1X2` / `ALL_SOURCES` / `OU_COL` / `BTTS_COL` tables, so the
+reported funnel cannot drift from the executed one. Sections:
+
+- **A** per-source same-day availability (raw rows, unique fixtures, kickoff
+  present/trusted, pre-match eligible, 1X2/OU/BTTS signal, in-consensus,
+  consumed-by-engine, warehouse present);
+- **B** cross-source identity overlap (single/two/three-plus-source groups,
+  reversed home/away risk groups, examples);
+- **C** consensus funnel (match surface -> >=2 voters -> ML-anchored -> pre-match
+  eligible) with per-drop counts and examples;
+- **D** kickoff/timing funnel per source (missing vs untrusted vs eligible);
+- **E0** shadow voter expansion — **diagnostic, NON-DISPATCH**;
+- **E** odds/pricing funnel (cached rows, fixtures, overlap with the 1X2 surface,
+  unpriced examples);
+- **F** backfill depth (first/latest local date, capture window, capture-forward-only
+  flag, missing D30 dates, retryable failure dates, whether deeper backfill is
+  even possible).
+
+Wired as a soft step in `scripts/daily.py` official mode immediately after
+picks generation. No workflow change. `official_morning` writes
+`localdata/source_funnel_<date>.{json,md}`, which the existing persist step
+commits (gitignore negation), and prints the tables to the Actions log.
+`clean_localdata` prunes both shapes on the 30-day telemetry retention.
+
+### Exact reason 448 became 0 — three structural causes, not a crash
+
+**1. The voter pool never recovered from Forebet. (root cause)**
+`picks_today.ALL_SOURCES` is `forebet, zulubet, statarea, vitibet, betclan,
+bzzoiro, scoutingstats`, and `SOURCES_1X2` is `forebet, zulubet, statarea,
+vitibet, betclan, bzzoiro`. The entire PR #17 resilience group —
+**predictz, windrawwin, freesupertips, afootballreport, prosoccer, soccervista,
+bettingclosed** — is captured, warehoused and audited, but **is not consumed by
+the picks engine at all**. It cannot vote. Restoring capture after Forebet's
+403 therefore restored *data*, not *quorum*. `eval_1x2` requires `len(used) >= 2`
+voters carrying 1X2 probabilities on one identity key, so most of the 448
+surface dies here.
+
+Local reproduction on a committed-history day (2026-06-12, three core sources
+only): **179 surface -> 25 with >=2 voters**, 154 dropped as
+`fewer_than_2_voters_with_1x2`. Same mechanism, same shape as 448 -> 21.
+
+**2. ML-meta is hard-anchored to the three legacy sources.**
+`eval_1x2` gates model inference on `if ml_model and (fb or zb or sa)` — Forebet,
+Zulubet or Statarea must be present on the fixture. With Forebet returning no
+usable rows (`skip forebet: ... no usable rows`), the anchor pool is two sources.
+Vitibet/BetClan/Bzzoiro agreement alone can reach a quorum and still never be
+scored. The audit reports this as the `no_ml_anchor_source_present` drop.
+
+**3. Kickoff trust. `missing_kickoff_same_day=8` (and 30 in research capture).**
+For the target date the guard fails closed without a parseable kickoff. Several
+same-day adapters emit no kickoff field at all (`betclan`, `predictz`,
+`windrawwin` carry no kickoff column; `statarea` uses `time`). Any candidate
+anchored on a kickoff-less row is dropped. Section D reports this per source.
+
+Then `enriched=0` is a **consequence, not an independent failure**: only 5
+candidates survived scoring and 8 were dropped by the guard, so there was almost
+nothing left to price. `bzz_cached=89 / bzz_live=0` means enrichment ran off
+cache only. Whether Bzzoiro live odds are genuinely zero or silently
+zero-succeeding is still open — section E now measures odds-fixture overlap with
+the 1X2 surface directly, which separates "no candidates" from "price identity
+broken".
+
+### Bugs vs intended conservative gates
+
+| finding | class |
+|---|---|
+| resilience sources captured but absent from `ALL_SOURCES`/`SOURCES_1X2` | **design gap** — capture and consumption were never reconnected after PR #17 |
+| ML-meta anchored on `fb or zb or sa` | **latent bug / stale assumption** — hardcodes the pre-Forebet-outage source trio |
+| `len(used) >= 2` quorum | intended gate, correct |
+| `missing_kickoff_same_day` fail-closed | intended gate, correct |
+| `inside_30m_lead_or_started` | intended gate, correct |
+| `enriched=0` | consequence of the above, not a separate defect |
+| no certified weighted edge -> uniform weights | intended, expected |
+| frozen-row preservation when fresh yields 0 | intended, correct |
+
+**Nothing was changed in the engine.** Admitting a source to `SOURCES_1X2` or
+broadening the ML anchor is a certification decision that needs settlement
+evidence (PR #18) plus operator sign-off — exactly what must not be done
+silently to make picks reappear. Section E0 quantifies the upside without
+enabling it, and is explicitly marked `dispatchable: false`.
+
+### Which sources are usable today
+
+- **Can vote today:** zulubet, statarea, vitibet, betclan, bzzoiro (+ scoutingstats
+  for OU/BTTS). Forebet is in the list but returns no usable rows.
+- **Blocked by not being wired in:** predictz, windrawwin, freesupertips,
+  afootballreport, prosoccer, soccervista, bettingclosed.
+- **Blocked by missing kickoff:** betclan, predictz, windrawwin (no kickoff
+  column at all) — these can never satisfy the same-day guard as anchors.
+- **Blocked by certification evidence:** everything outside the legacy trio; see
+  the PR #18 coverage table (only Zulubet is near validation, and it is
+  `review_required` on an unexplained reversal).
+- **Backfill depth:** section F reports per source whether deeper history is even
+  retrievable. `windrawwin, afootballreport, betclan, freesupertips, bzzoiro,
+  soccervista` are **capture-forward only** in `capture_daily.JOBS` (window
+  starts today), so their thin D30 coverage is a structural property of the
+  adapter, not a missed backfill. `forebet, zulubet, statarea, vitibet,
+  scoutingstats, predictz, bettingclosed` have D30 windows where gaps ARE
+  retryable.
+
+### Next work (not done here, deliberately)
+
+1. Decide — with evidence and sign-off — whether to widen `SOURCES_1X2` and the
+   ML anchor set. The funnel audit's E0 section and PR #18's coverage table are
+   the inputs. Do not widen on capture rows.
+2. Give kickoff-less adapters a kickoff field, or mark them explicitly
+   non-anchoring so they can support a quorum without owning the timing gate.
+3. Resolve the Zulubet 2026-08-08 Man Utd vs PSG reversal (PR #18).
+4. Investigate Bzzoiro `live_rows=0` once candidates exist to price.
+
+Forebet remains parked, `EDGE_FACTORY_FOREBET_BROWSER=off`. **Forebet Browser
+Run probes spent in this pass: 0.** No `probe=forebet_getrs`, no
+`probe=page_access`.
+
+Tests: `tests/test_audit_source_funnel.py`, 18 cases (no kickoff, kickoff
+eligible, started, exact overlap, alias overlap, singleton, reversed group,
+no-signal source, settled rows excluded, ML-anchor drop, missing-kickoff
+candidate drop, odds match vs missing odds, captured-but-unused source,
+shadow expansion non-dispatch, backfill gaps, retryable failures, CLI
+artifacts, read-only guarantee). Full suite: **824 passed**.

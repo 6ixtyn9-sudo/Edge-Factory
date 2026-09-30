@@ -87,6 +87,8 @@ TELEMETRY_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
         rf"^picks_audit_{_DATE}\.md$",
         rf"^source_settlement_coverage_{_DATE}\.json$",
         rf"^source_settlement_coverage_{_DATE}\.md$",
+        rf"^source_funnel_{_DATE}\.json$",
+        rf"^source_funnel_{_DATE}\.md$",
     )
 )
 
