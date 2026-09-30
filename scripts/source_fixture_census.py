@@ -23,7 +23,10 @@ LOCALDATA = ROOT / "localdata"
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory import selection_evidence  # noqa: E402
 from edgefactory import source_census  # noqa: E402
+from edgefactory import source_registry  # noqa: E402
+from edgefactory import source_utilisation  # noqa: E402
 
 TZ = ZoneInfo("Africa/Johannesburg")
 
@@ -114,6 +117,20 @@ def main(argv: list[str] | None = None) -> int:
         as_of=as_of, horizon_days=args.horizon_days, min_lead=args.min_lead,
         dispatch_plan=plan, ticket_outcomes=outcomes)
 
+    # Why is each source in the role it is in? Same rows, different
+    # question: the census says what a source saw, this says whether the
+    # pipeline is using what it saw.
+    try:
+        first_day = census["dates"][0]
+        census["utilisation"] = source_utilisation.build_utilisation(
+            census["per_date"][first_day]["sources"],
+            validation_states=source_registry.load_validation_states(
+                args.localdata),
+            eligible_voters=selection_evidence.eligible_1x2_voters(
+                source_registry.names()))
+    except Exception as exc:  # pragma: no cover - diagnostics never break
+        census["utilisation"] = {"error": str(exc)}
+
     written = write_census(census, localdata=args.localdata,
                            run_date=args.date, write_csv=not args.no_csv)
 
@@ -126,6 +143,12 @@ def main(argv: list[str] | None = None) -> int:
                                 if path.is_relative_to(ROOT) else str(path)
                                 for path in written]):
             print(line)
+        utilisation = census.get("utilisation") or {}
+        if utilisation.get("sources"):
+            print("")
+            for line in source_utilisation.render_utilisation_lines(
+                    utilisation):
+                print(line)
     else:
         print("source fixture census: "
               + ", ".join(path.name for path in written))
