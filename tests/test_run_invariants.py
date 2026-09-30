@@ -461,3 +461,86 @@ def test_a_detail_line_per_selection_passes():
 def test_an_unsupplied_detail_count_asserts_nothing():
     assert ri.check_selection_detail_count(
         {"same_day_pick_count": 2, "horizon_pick_count": 2}, None) == []
+
+
+# ===========================================================================
+# End to end: the run-36783344791 shape, corrected
+# ===========================================================================
+
+
+def _run_36783344791(tmp_path):
+    """The four selections that run actually produced."""
+    picks = [
+        {"home": "Panama", "away": "New Zealand", "event_date": "2026-10-01",
+         "pick": "HOME", "odds": 2.05, "pricing_source": "source_embedded_odds",
+         "bookmaker": "prosoccer_embedded",
+         "source_voters": ["bzzoiro", "prosoccer"], "rule_id": _pick()["rule_id"]},
+        {"home": "Ecuador", "away": "Canada", "event_date": "2026-10-01",
+         "pick": "HOME", "odds": 1.95, "pricing_source": "source_embedded_odds",
+         "bookmaker": "prosoccer_embedded",
+         "source_voters": ["bzzoiro", "prosoccer"], "rule_id": _pick()["rule_id"]},
+        {"home": "Belgium", "away": "Turkey", "event_date": "2026-10-02",
+         "pick": "HOME", "odds": 1.75, "pricing_source": "source_embedded_odds",
+         "bookmaker": "prosoccer_embedded",
+         "source_voters": ["bzzoiro", "prosoccer"], "rule_id": _pick()["rule_id"]},
+        {"home": "Hungary", "away": "Georgia", "event_date": "2026-10-02",
+         "pick": "HOME", "odds": 1.85, "pricing_source": "source_embedded_odds",
+         "bookmaker": "prosoccer_embedded",
+         "source_voters": ["bzzoiro", "prosoccer"], "rule_id": _pick()["rule_id"]},
+    ]
+    for pick in picks:
+        pick["evidence_lineage"] = se.build_lineage(pick)
+    plan = {"run_date": RUN_DATE,
+            "same_day_picks": picks[:2], "horizon_picks": picks[2:],
+            "same_day_pick_count": 2, "horizon_pick_count": 2,
+            "event_dates": ["2026-10-01", "2026-10-02"]}
+    (tmp_path / f"fresh_production_dispatch_plan_{RUN_DATE}.json").write_text(
+        json.dumps(plan))
+    return plan
+
+
+def test_the_corrected_run_shape_has_no_contradictions(tmp_path):
+    _run_36783344791(tmp_path)
+    (tmp_path / f"supabase_sync_manifest_{RUN_DATE}.json").write_text(
+        json.dumps({"target_date": RUN_DATE, "row_count": 4,
+                    "row_counts_by_event_date": {"2026-10-01": 2,
+                                                 "2026-10-02": 2}}))
+
+    violations = ri.check_run_from_localdata(RUN_DATE, tmp_path)
+
+    assert violations == [], violations
+
+
+def test_the_defective_publish_attribution_is_caught_end_to_end(tmp_path):
+    """The exact wrong figure the run printed: 4 (2026-10-01=4)."""
+    plan = _run_36783344791(tmp_path)
+
+    violations = ri.check_run(
+        plan=plan,
+        summary_published={"2026-10-01": 4},
+        sync_manifest={"row_count": 4,
+                       "row_counts_by_event_date": {"2026-10-01": 2,
+                                                    "2026-10-02": 2}},
+        summary_selection_detail_count=4)
+
+    assert ri.V_SUPABASE_DATES in _codes(violations)
+
+
+def test_the_defective_clv_and_coverage_accounting_is_caught_end_to_end(tmp_path):
+    plan = _run_36783344791(tmp_path)
+
+    violations = ri.check_run(
+        plan=plan,
+        clv_rows=_clv_snapshots(),
+        summary_clv_status_counts={"deferred_before_build_hour": 2,
+                                   "pending_auto_tickets": 4,
+                                   "ticket_created": 2},
+        notification_coverage={"total_selections": 4, "notified": 2,
+                               "not_notified": 0},
+        summary_selection_detail_count=2)
+
+    codes = _codes(violations)
+    assert ri.V_CLV_STALE_STATUS in codes
+    assert ri.V_CLV_INFLATED in codes
+    assert ri.V_NOTIFY_COVERAGE in codes
+    assert ri.V_SELECTION_DETAIL in codes
