@@ -1,0 +1,140 @@
+name: Forebet Browser Run getrs probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Forebet in= date (YYYY-MM-DD)'
+        required: true
+        default: '2026-09-30'
+      tp:
+        description: 'Forebet market tp'
+        required: true
+        default: '1x2'
+        type: choice
+        options:
+          - 1x2
+          - uo
+          - bts
+          - ht
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    name: One Forebet getrs Browser Run production probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
+      RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
+      PROBE_DATE: ${{ inputs.date }}
+      PROBE_TP: ${{ inputs.tp }}
+    steps:
+      - name: Send exactly one forebet_getrs Browser Run POST
+        shell: bash
+        run: |
+          set +x
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.error
+          import urllib.parse
+          import urllib.request
+
+          relay_urls = os.environ.get("RELAY_URLS", "")
+          token = os.environ.get("RELAY_TOKEN", "")
+          worker_url = relay_urls.split(",", 1)[0].strip()
+          day = os.environ.get("PROBE_DATE", "")
+          tp = os.environ.get("PROBE_TP", "")
+          if not worker_url or not token:
+              print(json.dumps({"classification": "workflow_secret_configuration_error"}))
+              sys.exit(1)
+          if tp not in {"1x2", "uo", "bts", "ht"}:
+              print(json.dumps({"classification": "bad_market"}))
+              sys.exit(1)
+
+          query = urllib.parse.urlencode({
+              "ln": "en",
+              "tp": tp,
+              "in": day,
+              "ord": "0",
+              "tz": "0",
+              "tzs": "",
+              "tze": "",
+              "output": "1",
+          })
+          source_url = "https://www.forebet.com/scripts/getrs.php?" + query
+          payload = json.dumps({
+              "token": token,
+              "operation": "forebet_getrs",
+              "url": source_url,
+          }).encode("utf-8")
+
+          request = urllib.request.Request(
+              worker_url,
+              data=payload,
+              method="POST",
+              headers={
+                  "Content-Type": "application/json",
+                  "User-Agent": "EdgeFactory-ForebetGetrsProbe/1.0",
+              },
+          )
+          status = None
+          raw = b""
+          try:
+              with urllib.request.urlopen(request, timeout=75) as response:
+                  status = response.status
+                  raw = response.read(65537)
+          except urllib.error.HTTPError as error:
+              status = error.code
+              raw = error.read(65537)
+          except Exception as error:
+              print(json.dumps({
+                  "classification": "workflow_transport_error",
+                  "error_type": type(error).__name__,
+              }))
+              sys.exit(1)
+
+          if len(raw) > 65536:
+              print(json.dumps({
+                  "http_response_status": status,
+                  "classification": "workflow_response_size_overflow",
+              }))
+              sys.exit(1)
+
+          try:
+              envelope = json.loads(raw.decode("utf-8", "replace"))
+          except Exception:
+              print(json.dumps({
+                  "http_response_status": status,
+                  "classification": "workflow_non_json_response",
+              }))
+              sys.exit(1)
+
+          row_count = None
+          body_shape = None
+          if isinstance(envelope, dict) and isinstance(envelope.get("body"), str):
+              try:
+                  parsed = json.loads(envelope["body"])
+                  body_shape = "forebet_getrs" if isinstance(parsed, list) and parsed and isinstance(parsed[0], list) else "unexpected"
+                  row_count = len(parsed[0]) if body_shape == "forebet_getrs" else None
+              except Exception:
+                  body_shape = "non_json_body"
+
+          receipt = {
+              "http_response_status": status,
+              "source_url": source_url,
+              "relay_status": envelope.get("status") if isinstance(envelope, dict) else None,
+              "body_shape": body_shape,
+              "row_count": row_count,
+              "ok": status == 200 and body_shape == "forebet_getrs" and (row_count or 0) > 0,
+          }
+          if isinstance(envelope, dict) and envelope.get("error"):
+              receipt["error"] = envelope.get("error")
+          print(json.dumps(receipt, sort_keys=True))
+          if not receipt["ok"]:
+              sys.exit(1)
+          PY
