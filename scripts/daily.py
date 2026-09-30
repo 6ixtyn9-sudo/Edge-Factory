@@ -1048,6 +1048,18 @@ def run_pipeline(
 
         run_fresh_production_lane(target_date)
 
+        # Read-only visibility: which fixtures each source sees on the run
+        # date and across the horizon, and why the production lane cannot
+        # use them. Runs after fresh_production so the census can annotate
+        # itself with the dispatch plan. It writes only its own artifacts
+        # and can neither dispatch nor promote anything.
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/source_census.py "
+            f"--date {target_date} --horizon-days {future_days}"
+            + (f" --as-of {run_as_of}" if run_as_of else ""),
+            f"source_census {target_date} (diagnostic, read-only)",
+        )
+
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
             f"audit_clv capture {target_date} [pick_time]",
