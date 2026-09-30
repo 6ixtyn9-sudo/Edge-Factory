@@ -1,0 +1,103 @@
+name: Forebet Browser Run diagnostic
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  diagnostic:
+    name: One bounded Forebet Browser Run probe
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    env:
+      # The existing relay secret is an ordered comma-separated list. The
+      # Cloudflare Worker must remain first; this workflow never falls through
+      # to another relay and never retries.
+      RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
+      RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
+    steps:
+      - name: Send exactly one diagnostic POST
+        shell: bash
+        run: |
+          set +x
+          python3 - <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.error
+          import urllib.request
+
+          relay_urls = os.environ.get("RELAY_URLS", "")
+          token = os.environ.get("RELAY_TOKEN", "")
+          worker_url = relay_urls.split(",", 1)[0].strip()
+          if not worker_url or not token:
+              print(json.dumps({
+                  "classification": "workflow_secret_configuration_error",
+                  "detail": "The first relay URL or relay token secret is missing",
+              }))
+              sys.exit(1)
+
+          payload = json.dumps({
+              "token": token,
+              "operation": "forebet_browser_diagnostic",
+          }).encode("utf-8")
+
+          request = urllib.request.Request(
+              worker_url,
+              data=payload,
+              method="POST",
+              headers={
+                  "Content-Type": "application/json",
+                  "User-Agent": "EdgeFactory-BrowserDiagnostic/1.0",
+              },
+          )
+
+          status = None
+          raw = b""
+          try:
+              with urllib.request.urlopen(request, timeout=75) as response:
+                  status = response.status
+                  raw = response.read(65537)
+          except urllib.error.HTTPError as error:
+              status = error.code
+              raw = error.read(65537)
+          except Exception as error:
+              print(json.dumps({
+                  "classification": "workflow_transport_error",
+                  "error_type": type(error).__name__,
+              }))
+              sys.exit(1)
+
+          if len(raw) > 65536:
+              print(json.dumps({
+                  "http_response_status": status,
+                  "classification": "workflow_response_size_overflow",
+              }))
+              sys.exit(1)
+
+          try:
+              diagnostic = json.loads(raw.decode("utf-8", "replace"))
+          except Exception:
+              print(json.dumps({
+                  "http_response_status": status,
+                  "classification": "workflow_non_json_response",
+              }))
+              sys.exit(1)
+
+          # The Worker diagnostic is already bounded and redacts sensitive data.
+          # Print only that JSON object; the relay token is never interpolated
+          # into a shell command, URL, artifact, or log line.
+          print(json.dumps({
+              "http_response_status": status,
+              "diagnostic": diagnostic,
+          }, sort_keys=True))
+
+          if (
+              status != 200 or
+              not isinstance(diagnostic, dict) or
+              diagnostic.get("classification") != "genuine_forebet_prediction_content"
+          ):
+              sys.exit(1)
+          PY
