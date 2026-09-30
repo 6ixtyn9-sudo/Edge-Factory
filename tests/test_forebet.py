@@ -34,6 +34,11 @@ def test_decode_payload_rejects_challenge_or_wrong_shape(raw):
         forebet._decode_payload(raw)
 
 
+def test_decode_payload_rejects_malformed_forebet_rows():
+    with pytest.raises(ValueError, match="row shape"):
+        forebet._decode_payload(_raw([_row(), "not a match row"]))
+
+
 def test_get_falls_back_to_browser_transport(monkeypatch):
     calls = []
 
