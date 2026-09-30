@@ -1,1 +1,47 @@
-[]
+[
+  {
+    "date": "2026-09-30",
+    "kickoff": "19:00",
+    "home": "Defensor Sporting",
+    "away": "Plaza Colonia",
+    "league": "Uruguay,Copa Uruguay Group B",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=55",
+    "match_method": "fallback",
+    "home_key": "defensorsporting",
+    "away_key": "plazacolonia",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": []
+  },
+  {
+    "date": "2026-09-30",
+    "kickoff": "15:00",
+    "home": "Enyimba",
+    "away": "Shooting Stars",
+    "league": "Nigeria,Npfl",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "ml-meta avg_p>=55",
+    "match_method": "fallback",
+    "home_key": "enyimba",
+    "away_key": "shootingstars",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": []
+  },
+  {
+    "date": "2026-09-30",
+    "kickoff": "2026-09-30T18:00:00+02:00",
+    "home": "Eritrea",
+    "away": "South Africa",
+    "league": "World: Africa Cup of Nations - Qualification",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "2way-unanimous avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "eritrea",
+    "away_key": "southafrica",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": []
+  }
+]
