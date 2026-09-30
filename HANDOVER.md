@@ -9965,10 +9965,11 @@ Follow-up hardening:
   `classification=forebet_getrs_browser_rows`,
   `worker_supports_browser_getrs=true`, `transport=cloudflare_browser_rendering`,
   `body_shape=forebet_getrs`, and `row_count > 0`.
-- Correction to earlier notes: workflow files are present on the PR branch,
-  and `.github/workflows/daily.yml` carries default-off Playwright wiring. This
-  follow-up's probe-workflow classification upgrade is mirrored under
-  `docs/operator/` for manual replacement because the App token cannot push
+- Correction to earlier notes: workflow files were present on the old PR branch,
+  but this continuation branch intentionally does not modify `.github/workflows/*`.
+  Main already has the upgraded `forebet-getrs-probe.yml`; the default-off
+  Playwright daily wiring remains a proposed manual artifact at
+  `docs/operator/daily.yml.proposed` because the App token may not push
   workflow-file edits.
 
 Verification after this hardening: `PYTHONPATH=src /home/user/venv/bin/python -m

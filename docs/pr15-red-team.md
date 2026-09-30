@@ -44,10 +44,9 @@ non-claim:
   legacy generic relay fetch path or an undeployed Worker update, not a proven
   Browser Run success. The pushed code now requires explicit
   `operation=forebet_getrs` and `transport=cloudflare_browser_rendering` markers
-  in Browser Run envelopes, and the copy/paste workflow replacement under
-  `docs/operator/forebet-getrs-probe.yml.proposed` requires those markers before
-  it can pass. The actual `.github/workflows/forebet-getrs-probe.yml` file must
-  be replaced by an operator with workflow-file permission.
+  in Browser Run envelopes. Main's live `.github/workflows/forebet-getrs-probe.yml`
+  now carries equivalent marker checks; `docs/operator/forebet-getrs-probe.yml.proposed`
+  is kept only as a copy/paste mirror for future manual refreshes.
 - Manual Browser Run diagnostic: the Worker launched one browser session and
   returned `classification=unresolved_cloudflare_challenge`, page title
   `Just a moment...`, Cloudflare challenge markers, Turnstile source markers,

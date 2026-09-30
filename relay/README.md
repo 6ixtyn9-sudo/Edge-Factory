@@ -144,7 +144,7 @@ required for this route.
 #### A. Merge the repository change in GitHub
 
 1. Open the repository on GitHub.
-2. Open the pull request for branch `arena/01a0f1cf-edge-factory`.
+2. Open the current source-recovery pull request / continuation branch (for this session: `arena/01a0f226-edge-factory`).
 3. Review and merge it into the repository's production branch, normally `main`.
 4. Do not run the normal daily workflow for this diagnostic.
 
@@ -437,7 +437,7 @@ Security invariants are unchanged:
 
 `src/edgefactory/sources/forebet.py` uses this Browser Run operation above ordinary relays only for recent live dates in GitHub Actions auto mode. Operators can set `EDGE_FACTORY_FOREBET_BROWSER=off` to disable it or `=on` to force it for a targeted backfill. The bounded default avoids spending managed-browser launches on the intact historical Forebet archive.
 
-If Browser Run is deployed and still fails a live challenge, `forebet.py` also contains an opt-in Actions-runner Playwright fallback. It is dormant unless `EDGE_FACTORY_FOREBET_PLAYWRIGHT=1` is present and the runner has installed Playwright/Chromium; only then does `forebet.py` try Playwright for recent live dates before falling back to ordinary relays. This keeps the fallback behind explicit operator sign-off and adds no paid solver. `.github/workflows/daily.yml` includes default-off Playwright wiring; leave it off unless the operator deliberately enables the environment flag.
+If Browser Run is deployed and still fails a live challenge, `forebet.py` also contains an opt-in Actions-runner Playwright fallback. It is dormant unless `EDGE_FACTORY_FOREBET_PLAYWRIGHT=1` is present and the runner has installed Playwright/Chromium; only then does `forebet.py` try Playwright for recent live dates before falling back to ordinary relays. This keeps the fallback behind explicit operator sign-off and adds no paid solver. Because this continuation branch does not modify `.github/workflows/`, the default-off workflow wiring is provided as `docs/operator/daily.yml.proposed` for manual operator application if needed.
 
 To probe the production Browser Run path after Worker deployment, run the manual `Forebet Browser Run getrs probe` workflow after replacing it with the full proposed version in `docs/operator/forebet-getrs-probe.yml.proposed` if the repository workflow has not yet been updated. A passing receipt must show `classification=forebet_getrs_browser_rows`, `worker_supports_browser_getrs=true`, `operation=forebet_getrs`, `transport=cloudflare_browser_rendering`, `body_shape=forebet_getrs`, and `row_count > 0`. If the receipt says `legacy_generic_relay_or_worker_not_deployed`, the first relay URL is still serving the old generic fetch path or a non-updated deployment; deploy the Worker from this branch and rerun exactly once.
 
