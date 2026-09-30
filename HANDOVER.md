@@ -10044,3 +10044,167 @@ return `classification=forebet_getrs_browser_rows`,
 `worker_supports_browser_getrs=true`, `operation=forebet_getrs`,
 `transport=cloudflare_browser_rendering`, `body_shape=forebet_getrs`, and
 `row_count > 0`.
+
+## Addendum — 2026-09-30: post-Forebet resilience and non-Forebet recovery pass
+
+### Operational stance (supersedes any earlier retry instruction)
+
+Forebet Browser Run is **parked, not deleted**. The deployed Worker operation is
+contract-verified, but the latest operator-authorized `forebet_getrs` receipt was
+source-blocked: Forebet returned HTTP 403 HTML/non-JSON, classified as
+`browser_run_returned_non_getrs_json`. This is upstream source denial, not a
+workflow or Worker deployment failure.
+
+Daily production has `EDGE_FACTORY_FOREBET_BROWSER: "off"`. No `page_access` or
+`forebet_getrs` probe was run during this work, and no Browser Run quota was
+spent. Do not run another Browser Run probe without a new code/config hypothesis
+and explicit operator authorization.
+
+### Production resilience changes
+
+- Main's `.github/workflows/daily.yml` retains
+  `EDGE_FACTORY_FOREBET_BROWSER: "off"`. The GitHub App lacks `workflows`
+  permission and rejected this branch push when the additional workflow mapping
+  was present, so the full replacement is staged at
+  `docs/operator/daily.yml.proposed`. It also exposes
+  `BZZOIRO_ODDS_MAX_EVENTS` with a default of `20` so a sparse per-event fallback
+  cannot consume the whole capture budget. The operator must copy that full file
+  (or at minimum its three-line Bzzoiro block) through a workflow-authorized path.
+- `scripts/capture_daily.py` now has
+  `--source-group forebet-resilience`. The group contains ProSoccer,
+  SoccerVista, PredictZ, WinDrawWin, ScoutingStats, Vitibet, Zulubet, Statarea,
+  BettingClosed, FreeSuperTips, BetClan, aFootballReport, Bzzoiro, and
+  Bzzoiro odds. It explicitly excludes Forebet. A group and `--sources` combine
+  additively; unknown sources/groups fail clearly.
+- The official heavy path in `scripts/daily.py` now uses that non-Forebet group.
+  Individual source failures are summarized and remain retryable, but do not
+  prevent healthy sources from reaching the warehouse. Result repair is soft:
+  an empty donor window no longer aborts a rebuild, while unsettled rows remain
+  excluded by the existing mining/certification gates.
+- `scripts/local_backfill.py` now persists retryable per-date failure hints and
+  exits non-zero when a transport/parser date failed. It never adds such a date
+  to `done`. `capture_daily.py` converts those results into truthful per-source
+  summaries, continues by default for resilience, and supports `--strict` for
+  diagnostics/CI.
+- Missing `BZZOIRO_TOKEN` is now a retryable adapter failure in both `bzzoiro`
+  and `bzzoiro_odds`; it is no longer recorded as a successful empty day.
+- The warehouse now materializes a prioritized `results_donor` relation. It
+  preserves Forebet as first priority where historical scores exist, then falls
+  back to BettingClosed, Statarea, Zulubet, Vitibet, ScoutingStats, ProSoccer,
+  and BetExplorer. PredictZ, WinDrawWin, SoccerVista, BetClan, and Bzzoiro can
+  therefore settle against independent score donors rather than requiring new
+  Forebet rows.
+- Weighted consensus now accepts probability-only voters such as Statarea and
+  Vitibet (missing odds reduce price coverage rather than breaking the entire
+  query), and it requires at least two votes on each fixture. All resulting
+  rules still pass the unchanged walk-forward, Wilson-LB, ROI, and certification
+  gates. No source was manually certified or hardcoded into picks.
+- `scripts/audit_source_availability.py` was added and is run softly after the
+  official warehouse rebuild. It reports exact source files, capture-job
+  membership, latest date, target rows, rolling D30 rows, retryable failure
+  state, warehouse presence, and the source's current consensus role. Exact
+  filename matching prevents `bzzoiro` from accidentally counting
+  `bzzoiro_odds` files.
+
+### Local non-Forebet recovery attempt
+
+Environment used:
+
+```text
+EDGE_FACTORY_FOREBET_BROWSER=off
+BZZOIRO_ODDS_MAX_EVENTS=20
+```
+
+All 14 sources in `forebet-resilience` were attempted in three bounded batches.
+This sandbox had no `EDGE_FACTORY_RELAY_URLS`, `EDGE_FACTORY_RELAY_TOKEN`,
+`BZZOIRO_TOKEN`, or `ODDS_API_KEYS`. Its outbound requests consistently failed
+with TLS EOF/SSL/URL transport errors. These are transport/environment failures,
+not honest empty slates; failed dates stayed open in state.
+
+Final local classifications:
+
+| Source | Attempt result | Classification / evidence |
+|---|---:|---|
+| prosoccer | failed | Three requested dates; direct/curl transports failed across calendar aliases; no relay credentials; retryable |
+| soccervista | failed | Homepage urllib/curl SSL transport failure; retryable |
+| predictz | failed | D30 pass reached the 240-second cap after 27 failed dates; direct transport unavailable and no relay credentials; retryable |
+| windrawwin | failed | Today/tomorrow direct transport failures and no relay credentials; retryable |
+| scoutingstats | failed | D30 pass reached the cap after 26 failed dates; direct and relay transports reported URL errors; retryable |
+| vitibet | failed | All 32 requested archive/live dates failed TLS EOF; no rows written and no dates marked done |
+| zulubet | failed | All 31 D30 dates failed TLS EOF; retryable |
+| statarea | failed | All 31 D30 dates failed TLS EOF; retryable |
+| bettingclosed | failed | D30 pass reached the cap after 27 SSL failures; retryable |
+| freesupertips | failed | Today/tomorrow TLS EOF; retryable |
+| betclan | failed | Listing endpoint SSL failure; retryable |
+| afootballreport | failed | Today TLS EOF; retryable |
+| bzzoiro | failed | `BZZOIRO_TOKEN` missing; now fail-closed/retryable |
+| bzzoiro_odds | failed | `BZZOIRO_TOKEN` missing; now fail-closed/retryable (not a successful zero-row day) |
+| theoddsapi odds | not called | `ODDS_API_KEYS` missing locally; existing cache has 5,402 rows in the inclusive D30 lookback, latest date 2026-09-29, zero target-date rows |
+| oddspapi odds | not called | No local configuration/files; it remains flag-gated |
+
+### Availability and rebuild receipts
+
+The post-attempt audit for target `2026-09-30`, D30 showed:
+
+- Forebet, Zulubet, and Statarea historical committed files were present, latest
+  date `2026-06-12`; each had zero target/D30 rows.
+- Every attempted non-Forebet prediction adapter had zero target rows in this
+  sandbox and a visible retryable failure or missing-auth reason.
+- The Odds API cache had 5,402 price rows in the inclusive D30 lookback through `2026-09-29`.
+- No local Vitibet monthly file could be produced because every request failed
+  at TLS transport. Vitibet is already correctly wired into capture,
+  `vitibet`/`vitibet_settled` warehouse views, source Wilson-LB weighting, and
+  pick-time source lists. Its archive supplies results but usually wipes
+  probabilities after settlement, so useful probability history is primarily
+  capture-forward. It remains eligible only if its rows mature through normal
+  gates; nothing was force-certified.
+
+`backfill_results.py --days 30` reported no recent donor data in this cold local
+cache and returned 1. The now-soft production orchestration would continue.
+`build_warehouse.py` succeeded from preserved committed history and materialized:
+
+```text
+forebet_settled  323,524
+zulubet_settled   66,808
+statarea_settled 481,537
+results_donor    811,221
+betexplorer_settled 84,592
+consensus2        27,368
+consensus3        15,749
+```
+
+Export, entity registry, consensus mining, decay monitoring, purity assay, and
+`picks_today.py 2026-09-30` all completed. The local picks pass captured no fresh
+matches because every live prediction transport failed; it preserved the five
+previously frozen rows and emitted zero new picks. Generated tracked registries,
+picks, purity, and settlement outputs were restored afterward rather than
+committing cold-cache-derived operational state. Existing history was not
+removed or reset.
+
+A focused weighted-miner validation after the probability-only odds fix produced
+a gated `weighted-1x2` rule from existing history. This was validation only; the
+generated registry was restored so production remains the authority on the next
+credentialed heavy run.
+
+### Verification
+
+- Python suite: `785 passed in 28.54s`.
+- Cloudflare Worker suite: `47 passed`.
+- Every Worker JavaScript file passed `node --check`.
+- New scripts passed `py_compile`.
+- `git diff --check`: clean.
+- Forebet Browser Run probes used: **0**.
+
+### Next operator action
+
+Before merge, copy `docs/operator/daily.yml.proposed` over
+`.github/workflows/daily.yml` through GitHub's browser editor or another identity
+with `workflows` permission (the only delta from current main is the bounded
+Bzzoiro env mapping). Then run one normal credentialed production
+**Autonomous Edge Factory 3-Hour Service → official_morning** execution. Confirm
+that the log invokes `forebet-resilience`, contains no Forebet Browser Run, and
+save the source-summary/audit block here. Production has the relay and Bzzoiro /
+Odds API secrets absent from this sandbox, so that run—not these TLS-limited
+local attempts—must establish which non-Forebet endpoints currently recover
+rows. Fix any remaining adapter/allowlist failure indicated by that report; do
+not force certification and do not spend another Forebet Browser Run probe.

@@ -84,6 +84,8 @@ def fetch_day(date: str) -> list[dict]:
     from datetime import date as _d
     if date != _d.today().isoformat():
         return []
+    if not TOKEN:
+        raise RuntimeError("bzzoiro: BZZOIRO_TOKEN missing")
     return fetch_all()
 
 COLUMNS = ["date", "kickoff", "captured_at", "league", "home", "away",

@@ -36,16 +36,9 @@ jobs:
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
-
-      # Bound the expensive per-event comparison fallback so bzzoiro_odds cannot
-      # consume the whole source-capture budget when best-odds endpoints return 0.
-      # Override with repository secret BZZOIRO_ODDS_MAX_EVENTS if needed.
+      # Bound the per-event odds fallback so one sparse Bzzoiro response cannot
+      # consume the whole multi-source capture budget.
       BZZOIRO_ODDS_MAX_EVENTS: ${{ secrets.BZZOIRO_ODDS_MAX_EVENTS || '20' }}
-
-      # Optional Forebet fallback: set repository secret
-      # EDGE_FACTORY_FOREBET_PLAYWRIGHT=1 only after operator sign-off.
-      # When unset, no Playwright browser is installed or used.
-      EDGE_FACTORY_FOREBET_PLAYWRIGHT: ${{ secrets.EDGE_FACTORY_FOREBET_PLAYWRIGHT || '' }}
 
       # Free multi-egress source relays.
       # EDGE_FACTORY_RELAY_URLS order:
@@ -53,6 +46,11 @@ jobs:
       #   2. Google Apps Script
       EDGE_FACTORY_RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
       EDGE_FACTORY_RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
+
+      # Forebet Browser Run is deployed and contract-verified, but Forebet returned
+      # 403 HTML/non-JSON for getrs.php. Keep it off in production so the daily
+      # pipeline does not spend scarce Browser Run quota.
+      EDGE_FACTORY_FOREBET_BROWSER: "off"
 
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
@@ -86,12 +84,6 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install "supabase>=2.4,<3"
-
-      - name: Install optional Forebet Playwright fallback
-        if: ${{ env.EDGE_FACTORY_FOREBET_PLAYWRIGHT == '1' }}
-        run: |
-          python -m pip install "playwright>=1.48,<2"
-          python -m playwright install --with-deps chromium
 
       - name: Restore localdata State (Cache)
         uses: actions/cache/restore@v4
