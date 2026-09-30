@@ -103,7 +103,11 @@ def _localdata(tmp_path, picks=None):
     d = tmp_path / "localdata"
     d.mkdir(exist_ok=True)
     (d / f"fresh_production_production_picks_{RUN_DATE}.json").write_text("[]")
-    pl.dispatch_plan_path(RUN_DATE, d).write_text(json.dumps(_plan(picks)))
+    plan = json.dumps(_plan(picks))
+    pl.dispatch_plan_path(RUN_DATE, d).write_text(plan)
+    # The ticket engine cards its own target date only, so an event-date
+    # card is an explicit --date run and reads that date's plan.
+    pl.dispatch_plan_path(EVENT_DATE, d).write_text(plan)
     return d
 
 
@@ -111,7 +115,8 @@ def _run_auto_tickets(localdata):
     """Drive the real ticket engine over the plan, as the pipeline does."""
 
     class Args:
-        date = RUN_DATE
+        # Explicit --date: the daily run never cards a future date by itself.
+        date = EVENT_DATE
         force = True
 
     state = at.fresh_state()
@@ -122,6 +127,14 @@ def _run_auto_tickets(localdata):
          patch.object(at, "load_archived_picks", lambda *a, **k: []), \
          patch.object(at, "datetime", _FrozenDatetime(_NOW)):
         at.cmd_today(Args(), state)
+        # cmd_today records outcomes under the date it carded. These
+        # fixtures then ask the summary for RUN_DATE, so mirror them
+        # there, which is what the pipeline sees when the run date and
+        # the carded date coincide.
+        src = localdata / f"auto_ticket_outcomes_{EVENT_DATE}.json"
+        dst = localdata / f"auto_ticket_outcomes_{RUN_DATE}.json"
+        if src.exists() and not dst.exists():
+            dst.write_text(src.read_text())
     return state
 
 

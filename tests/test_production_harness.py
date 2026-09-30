@@ -12,6 +12,7 @@ kickoff parser that reads day-first from the fixture's own calendar.
 from __future__ import annotations
 
 import importlib.util
+import contextlib
 import json
 import os
 import sys
@@ -253,7 +254,7 @@ def test_clv_follows_the_dispatch_plan_when_the_same_day_file_is_empty(tmp_path)
     """An empty same-day file must not suppress future CLV capture."""
     localdata = tmp_path / "localdata"
     localdata.mkdir()
-    (localdata / f"fresh_production_production_picks_{RUN_DATE}.json").write_text("[]")
+    (localdata / f"fresh_production_production_picks_{EVENT_DATE}.json").write_text("[]")
     pl.dispatch_plan_path(RUN_DATE, localdata).write_text(json.dumps(_plan()))
 
     with patch.object(clv, "LOCALDATA", localdata):
@@ -280,14 +281,30 @@ def test_clv_never_falls_back_to_legacy_when_a_plan_exists(tmp_path):
 
 
 def _run_tickets(tmp_path, picks, *, run_date=RUN_DATE, force=True,
-                 now=None, settled=None, monkey=None):
-    """Drive the real auto-ticket engine over a dispatch plan."""
+                 now=None, settled=None, monkey=None, target=None):
+    """Drive the real auto-ticket engine over a dispatch plan.
+
+    ``target`` is the date the engine is asked to card, i.e. what
+    ``--date`` supplies. It defaults to the event date of the dispatched
+    selections, because the daily run cards only its own target date:
+    asking for an event date is an explicit operator invocation.
+    """
     localdata = tmp_path / "localdata"
     localdata.mkdir(exist_ok=True)
     pl.dispatch_plan_path(run_date, localdata).write_text(json.dumps(_plan(picks)))
 
+    if target is None:
+        event_dates = {str(p.get("event_date") or p.get("date") or "")[:10]
+                       for p in (picks or [])}
+        event_dates.discard("")
+        target = sorted(event_dates)[0] if event_dates else run_date
+    if target != run_date:
+        # An explicit --date run reads the plan for that date.
+        pl.dispatch_plan_path(target, localdata).write_text(
+            json.dumps(_plan(picks)))
+
     class Args:
-        date = run_date
+        date = target
         force = True
 
     state = at.fresh_state()
@@ -299,7 +316,7 @@ def _run_tickets(tmp_path, picks, *, run_date=RUN_DATE, force=True,
          patch.object(at, "load_archived_picks", lambda *a, **k: []), \
          patch.object(at, "datetime", _FrozenDatetime(now or _DEFAULT_NOW)):
         at.cmd_today(Args(), state)
-        outcomes = at.load_ticket_outcomes(run_date, localdata)
+        outcomes = at.load_ticket_outcomes(target, localdata)
     return outcomes, state, localdata
 
 
@@ -408,11 +425,11 @@ def test_a_pnl_benched_bucket_cannot_become_a_ticket(tmp_path):
     second = _pick(home="Guatemala", away="Suriname", odds=1.95)
     localdata = tmp_path / "localdata"
     localdata.mkdir()
-    pl.dispatch_plan_path(RUN_DATE, localdata).write_text(
+    pl.dispatch_plan_path(EVENT_DATE, localdata).write_text(
         json.dumps(_plan([_pick(), second])))
 
     class Args:
-        date = RUN_DATE
+        date = EVENT_DATE
         force = True
 
     benched = ({fp.BUCKET_CERTIFIED_CLEAN: 0.0},
@@ -427,7 +444,7 @@ def test_a_pnl_benched_bucket_cannot_become_a_ticket(tmp_path):
          patch.object(at, "compute_bucket_pnl", lambda *a, **k: benched), \
          patch.object(at, "datetime", _FrozenDatetime(_DEFAULT_NOW)):
         at.cmd_today(Args(), state)
-        outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
+        outcomes = at.load_ticket_outcomes(EVENT_DATE, localdata)
 
     assert outcomes[EVENT_DATE]["status"] == at.DECLINED_BUCKET_PNL_BENCHED
     assert fp.BUCKET_CERTIFIED_CLEAN in outcomes[EVENT_DATE]["benched_buckets"]
@@ -440,11 +457,11 @@ def test_a_selection_ladder_benched_bucket_cannot_become_a_ticket(tmp_path):
     second = _pick(home="Guatemala", away="Suriname", odds=1.95)
     localdata = tmp_path / "localdata"
     localdata.mkdir()
-    pl.dispatch_plan_path(RUN_DATE, localdata).write_text(
+    pl.dispatch_plan_path(EVENT_DATE, localdata).write_text(
         json.dumps(_plan([_pick(), second])))
 
     class Args:
-        date = RUN_DATE
+        date = EVENT_DATE
         force = True
 
     state = at.fresh_state()
@@ -463,7 +480,7 @@ def test_a_selection_ladder_benched_bucket_cannot_become_a_ticket(tmp_path):
                            for b in at.BUCKETS})), \
          patch.object(at, "datetime", _FrozenDatetime(_DEFAULT_NOW)):
         at.cmd_today(Args(), state)
-        outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
+        outcomes = at.load_ticket_outcomes(EVENT_DATE, localdata)
 
     assert outcomes[EVENT_DATE]["status"] == at.DECLINED_SELECTION_LADDER_BENCHED
     harness.assert_benching_state_respected(outcomes[EVENT_DATE])
@@ -512,11 +529,11 @@ def test_an_empty_same_day_file_never_prints_a_bare_no_bet_today(tmp_path, capsy
     """The exact defect from the live run."""
     localdata = tmp_path / "localdata"
     localdata.mkdir()
-    (localdata / f"fresh_production_production_picks_{RUN_DATE}.json").write_text("[]")
-    pl.dispatch_plan_path(RUN_DATE, localdata).write_text(json.dumps(_plan()))
+    (localdata / f"fresh_production_production_picks_{EVENT_DATE}.json").write_text("[]")
+    pl.dispatch_plan_path(EVENT_DATE, localdata).write_text(json.dumps(_plan()))
 
     class Args:
-        date = RUN_DATE
+        date = EVENT_DATE
         force = True
 
     with patch.object(at, "LOCALDATA", localdata), \
@@ -732,3 +749,105 @@ def test_handover_documents_the_current_production_reality():
     text = (ROOT / "HANDOVER.md").read_text()
     assert "handled_by_auto_tickets" in text
     assert "1x2_two_source" in text
+
+
+# ===========================================================================
+# The daily run cards its own target date only
+#
+# The 2026-10-01 run produced no auto_tickets_2026-10-01.txt but did write
+# auto_tickets_2026-10-02.txt. Cause: both timing gates are written as
+# `target == today`, so a future event-date card skips the build-hour gate
+# and can never freeze. At 00:37 SAST today deferred (correctly, before the
+# 06:00 build hour) while tomorrow built a permanent draft.
+# ===========================================================================
+
+
+def _drive(localdata, *, target, now, policy=None):
+    class Args:
+        date = target
+        force = False
+
+    patches = [
+        patch.object(at, "LOCALDATA", localdata),
+        patch.object(at, "STATE_FILE", localdata / "state.json"),
+        patch.object(at, "BUCKET_PNL_FILE", localdata / "pnl.json"),
+        patch.object(at, "load_settled", lambda *a, **k: {}),
+        patch.object(at, "load_archived_picks", lambda *a, **k: []),
+        patch.object(at, "datetime", _FrozenDatetime(now)),
+    ]
+    if policy is not None:
+        patches.append(patch.object(at, "HORIZON_TICKET_POLICY", policy))
+    with contextlib.ExitStack() as stack:
+        for pch in patches:
+            stack.enter_context(pch)
+        at.cmd_today(Args(), at.fresh_state())
+
+
+def _sast(y, m, d, hh, mm=0):
+    return datetime(y, m, d, hh, mm, tzinfo=timezone(timedelta(hours=2)))
+
+
+def test_the_daily_run_writes_no_future_slip(tmp_path):
+    """A horizon selection must not become tomorrow's slip by itself."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    future = _pick(date="2026-10-02", event_date="2026-10-02")
+    pl.dispatch_plan_path("2026-10-01", localdata).write_text(
+        json.dumps(_plan([_pick(), future])))
+
+    _drive(localdata, target="2026-10-01", now=_sast(2026, 10, 1, 10))
+
+    assert not (localdata / "auto_tickets_2026-10-02.txt").exists(), \
+        "the daily run created a future slip nobody asked for"
+
+
+def test_before_the_build_hour_neither_today_nor_tomorrow_is_written(tmp_path):
+    """The exact 00:37 SAST shape of the 2026-10-01 run."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    future = _pick(date="2026-10-02", event_date="2026-10-02")
+    pl.dispatch_plan_path("2026-10-01", localdata).write_text(
+        json.dumps(_plan([_pick(), future])))
+
+    _drive(localdata, target="2026-10-01", now=_sast(2026, 10, 1, 0, 37))
+
+    assert not (localdata / "auto_tickets_2026-10-01.txt").exists()
+    # The bug: this one WAS written, because the build-hour gate only
+    # applies when target == today.
+    assert not (localdata / "auto_tickets_2026-10-02.txt").exists()
+    outcomes = at.load_ticket_outcomes("2026-10-01", localdata)
+    assert outcomes["2026-10-01"]["status"] == "deferred_before_build_hour"
+
+
+def test_today_still_freezes_at_the_freeze_hour(tmp_path):
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    pl.dispatch_plan_path("2026-10-01", localdata).write_text(
+        json.dumps(_plan([
+            _pick(date="2026-10-01", event_date="2026-10-01",
+                  kickoff="2026-10-01 20:00"),
+            _pick(home="Guatemala", away="Suriname", odds=1.95,
+                  date="2026-10-01", event_date="2026-10-01",
+                  kickoff="2026-10-01 20:30")])))
+
+    _drive(localdata, target="2026-10-01", now=_sast(2026, 10, 1, 9, 5))
+
+    assert (localdata / "auto_tickets_2026-10-01.frozen").exists(), \
+        "today's slip must still freeze at/after the freeze hour"
+
+
+def test_an_explicit_date_still_cards_that_day(tmp_path):
+    """The operator keeps the explicit escape hatch."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    pl.dispatch_plan_path("2026-10-02", localdata).write_text(
+        json.dumps(_plan([
+            _pick(date="2026-10-02", event_date="2026-10-02",
+                  kickoff="2026-10-02 20:00"),
+            _pick(home="Guatemala", away="Suriname", odds=1.95,
+                  date="2026-10-02", event_date="2026-10-02",
+                  kickoff="2026-10-02 20:30")])))
+
+    _drive(localdata, target="2026-10-02", now=_sast(2026, 10, 1, 10))
+
+    assert (localdata / "auto_tickets_2026-10-02.txt").exists()

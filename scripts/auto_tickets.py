@@ -246,7 +246,22 @@ _DECLINE_BY_CENSUS = (
 # Horizon policy. "event_date_cards" evaluates a future event date's
 # selections through the ordinary engine and books the slip under the EVENT
 # date. "same_day_only" declines them with an explicit reason.
-HORIZON_TICKET_POLICY = "event_date_cards"
+#
+# same_day_only is the default because the two timing gates below are both
+# written as `target == today`:
+#
+#   build hour: if target == today and now.hour < GENERATE_HOUR_START: defer
+#   freeze:     if target == today and now.hour >= FREEZE_HOUR:        freeze
+#
+# A future event date satisfies neither, so an event-date card skips the
+# build-hour gate and can never freeze. On the 2026-10-01 run at 00:37 SAST
+# that is exactly what happened: today's card correctly deferred before the
+# 06:00 build hour and wrote no slip, while tomorrow's card built a slip at
+# 00:37 and stayed a permanent draft. The daily run must not produce a
+# future slip the operator never asked for, so horizon selections are
+# reported and declined by name here. An operator who wants that card runs
+# auto_tickets.py --date YYYY-MM-DD explicitly.
+HORIZON_TICKET_POLICY = "same_day_only"
 
 
 STATE_FILE = LOCALDATA / "auto_tickets_state.json"
