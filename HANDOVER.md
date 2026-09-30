@@ -9957,20 +9957,22 @@ Follow-up hardening:
 - `src/edgefactory/sources/forebet.py` now rejects Browser Run envelopes that do
   not carry those operation/transport markers, so a legacy generic relay response
   cannot be mistaken for a Browser Run success.
-- `docs/operator/forebet-getrs-probe.yml.proposed` now contains the full
-  replacement workflow that classifies missing markers as
-  `legacy_generic_relay_or_worker_not_deployed`. The actual `.github/workflows`
-  file still requires an operator/manual update because the GitHub App token
-  rejected workflow-file edits. A passing production probe must show
-  `classification=forebet_getrs_browser_rows`,
+- Per operator direction, the Forebet manual probes should consolidate onto the
+  proven `.github/workflows/forebet-browser-diagnostic.yml` workflow. Direct
+  workflow-file push is blocked by the Arena/GitHub App token, so the exact
+  replacement is stored at `docs/operator/forebet-browser-diagnostic.yml.proposed`.
+  It has `probe=forebet_getrs` for JSON endpoint proof and `probe=page_access`
+  for the original fixed-page diagnostic. After applying it manually, delete the
+  separate `.github/workflows/forebet-getrs-probe.yml` workflow. A passing
+  production getrs probe must show `classification=forebet_getrs_browser_rows`,
   `worker_supports_browser_getrs=true`, `transport=cloudflare_browser_rendering`,
   `body_shape=forebet_getrs`, and `row_count > 0`.
-- Correction to earlier notes: workflow files were present on the old PR branch,
-  but this continuation branch intentionally does not modify `.github/workflows/*`.
-  Main already has the upgraded `forebet-getrs-probe.yml`; the default-off
-  Playwright daily wiring remains a proposed manual artifact at
-  `docs/operator/daily.yml.proposed` because the App token may not push
-  workflow-file edits.
+- Correction to earlier notes: workflow files were present on the old PR branch.
+  This continuation prepares the requested consolidation under
+  `docs/operator/forebet-browser-diagnostic.yml.proposed` because the App token
+  cannot push workflow-file edits. The default-off Playwright daily wiring remains
+  a proposed manual artifact at `docs/operator/daily.yml.proposed` for the same
+  reason.
 
 Verification after this hardening: `PYTHONPATH=src /home/user/venv/bin/python -m
 pytest tests/ -q` → 773 passed in 11.99s; `cd relay/cloudflare-worker && npm
@@ -9982,7 +9984,8 @@ test` → 47 tests passed; Worker JavaScript `node --check` passed; `git diff
 Current continuation branch: `arena/01a0f226-edge-factory`, based on main `30aa2ad`.
 
 The operator-run main workflow **Forebet Browser Run getrs probe** run `36708782624`
-failed in the expected legacy/undeployed shape: `classification=legacy_generic_relay_or_worker_not_deployed`,
+failed in the expected legacy/undeployed shape before the workflow consolidation:
+`classification=legacy_generic_relay_or_worker_not_deployed`,
 `http_response_status=502`, `relay_status=403`, no `operation`, no `transport`,
 `body_shape=non_json_body`, and `row_count=null`. That receipt proves the live
 worker endpoint did not return the new Browser Run `forebet_getrs` contract; it
@@ -9990,11 +9993,12 @@ is not evidence of a Forebet data-shape problem in the Python parser.
 
 Continuation action taken here:
 
-- Ported the non-workflow PR #15 source-recovery commits onto the fresh branch
-  from current main, preserving the manually applied main probe workflow.
-- Did not edit `.github/workflows/*` in this branch, because workflow artifacts
-  are still being applied manually by the operator due the Arena App permission
-  boundary.
+- Ported the PR #15 source-recovery commits onto the fresh branch from current
+  main.
+- Prepared the requested manual Forebet Browser Run workflow consolidation as
+  `docs/operator/forebet-browser-diagnostic.yml.proposed`: replace the live
+  `.github/workflows/forebet-browser-diagnostic.yml` with it, then delete the
+  separate `.github/workflows/forebet-getrs-probe.yml` manually.
 - Added/kept the Worker `forebet_getrs` operation with explicit
   `operation=forebet_getrs` and `transport=cloudflare_browser_rendering`
   markers, exact `getrs.php` allowlisting, challenge/non-JSON failure receipts,
@@ -10020,3 +10024,34 @@ one `forebet_getrs` probe. Passing proof must show
 `classification=forebet_getrs_browser_rows`, `worker_supports_browser_getrs=true`,
 `operation=forebet_getrs`, `transport=cloudflare_browser_rendering`,
 `body_shape=forebet_getrs`, and `row_count > 0`.
+
+## Addendum — 2026-09-30: proposed workflow consolidation onto Forebet Browser Run diagnostic
+
+Operator direction: use the existing working `Forebet Browser Run diagnostic`
+workflow as the single manual Forebet Browser Run surface, and remove the separate
+`Forebet Browser Run getrs probe` workflow.
+
+Direct `.github/workflows/*` edits could not be pushed from Arena: GitHub rejected
+the push with `refusing to allow a GitHub App to create or update workflow ...
+without workflows permission`. Therefore this branch carries the exact manual
+replacement at `docs/operator/forebet-browser-diagnostic.yml.proposed`.
+
+Manual operator application:
+
+1. Replace `.github/workflows/forebet-browser-diagnostic.yml` with
+   `docs/operator/forebet-browser-diagnostic.yml.proposed`.
+2. Delete `.github/workflows/forebet-getrs-probe.yml`.
+3. Run **Forebet Browser Run diagnostic** with `probe=forebet_getrs` for the JSON
+   endpoint proof, or `probe=page_access` for the original fixed-page diagnostic.
+
+The proposed consolidated diagnostic workflow sends exactly one Worker POST per
+run. The `forebet_getrs` mode sends `operation=forebet_getrs` with an exact
+allowlisted `getrs.php` URL and emits the same proof receipt fields as the deleted
+standalone getrs probe. The `page_access` mode preserves the original
+`operation=forebet_browser_diagnostic` POST.
+
+The success gate for source recovery is unchanged: `probe=forebet_getrs` must
+return `classification=forebet_getrs_browser_rows`,
+`worker_supports_browser_getrs=true`, `operation=forebet_getrs`,
+`transport=cloudflare_browser_rendering`, `body_shape=forebet_getrs`, and
+`row_count > 0`.
