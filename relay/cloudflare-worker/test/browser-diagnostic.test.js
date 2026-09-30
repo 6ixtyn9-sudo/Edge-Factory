@@ -71,7 +71,7 @@ function makePage({
   title = "Today | Forebet",
   domState = {
     visible_turnstile_widget: false,
-    visible_turnstile_categories: [],
+    visible_turnstile_selector_categories: [],
     visible_human_verification_text: false,
     visible_human_verification_markers: [],
   },
@@ -150,7 +150,7 @@ function pollingPage(ticks) {
       }
       return {
         visible_turnstile_widget: false,
-        visible_turnstile_categories: [],
+        visible_turnstile_selector_categories: [],
         visible_human_verification_text: false,
         visible_human_verification_markers: [],
       };
@@ -173,6 +173,7 @@ test("classifies genuine rendered Forebet prediction content", () => {
   assert.equal(result.response_bytes > 0, true);
   assert.equal(result.turnstile_source_marker, false);
   assert.equal(result.visible_turnstile_widget, false);
+  assert.deepEqual(result.visible_turnstile_selector_categories, []);
   assert.equal(result.visible_human_verification_text, false);
   assert.equal(result.interactive_human_verification_required, false);
 });
@@ -214,6 +215,7 @@ test("source-only Turnstile text does not classify as CAPTCHA from HTML alone", 
   assert.equal(result.turnstile_source_marker, true);
   assert.deepEqual(result.turnstile_source_markers, ["turnstile", "challenge_script"]);
   assert.equal(result.visible_turnstile_widget, false);
+  assert.deepEqual(result.visible_turnstile_selector_categories, []);
   assert.equal(result.visible_human_verification_text, false);
   assert.equal(result.interactive_human_verification_required, false);
   assert.equal(result.captcha_or_turnstile, false);
@@ -224,13 +226,13 @@ test("visible Turnstile iframe classifies as captcha_or_turnstile_required", () 
     httpStatus: 200,
     body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
     visibleTurnstileWidget: true,
-    visibleTurnstileCategories: ["turnstile_iframe"],
+    visibleTurnstileSelectorCategories: ["turnstile_iframe"],
     visibleHumanVerificationText: false,
   });
   assert.equal(result.classification, CLASSIFICATIONS.CAPTCHA);
   assert.equal(result.turnstile_source_marker, true);
   assert.equal(result.visible_turnstile_widget, true);
-  assert.deepEqual(result.visible_turnstile_categories, ["turnstile_iframe"]);
+  assert.deepEqual(result.visible_turnstile_selector_categories, ["turnstile_iframe"]);
   assert.equal(result.interactive_human_verification_required, true);
   assert.equal(result.captcha_or_turnstile, true);
 });
@@ -240,12 +242,12 @@ test("visible Turnstile container classifies as captcha_or_turnstile_required", 
     httpStatus: 200,
     body: CHALLENGE_HTML,
     visibleTurnstileWidget: true,
-    visibleTurnstileCategories: ["turnstile_container"],
+    visibleTurnstileSelectorCategories: ["turnstile_container"],
     visibleHumanVerificationText: false,
   });
   assert.equal(result.classification, CLASSIFICATIONS.CAPTCHA);
   assert.equal(result.visible_turnstile_widget, true);
-  assert.deepEqual(result.visible_turnstile_categories, ["turnstile_container"]);
+  assert.deepEqual(result.visible_turnstile_selector_categories, ["turnstile_container"]);
   assert.equal(result.interactive_human_verification_required, true);
 });
 
@@ -254,12 +256,12 @@ test("visible [data-sitekey] container classifies as captcha_or_turnstile_requir
     httpStatus: 200,
     body: CHALLENGE_HTML,
     visibleTurnstileWidget: true,
-    visibleTurnstileCategories: ["sitekey_container"],
+    visibleTurnstileSelectorCategories: ["sitekey_container"],
     visibleHumanVerificationText: false,
   });
   assert.equal(result.classification, CLASSIFICATIONS.CAPTCHA);
   assert.equal(result.visible_turnstile_widget, true);
-  assert.deepEqual(result.visible_turnstile_categories, ["sitekey_container"]);
+  assert.deepEqual(result.visible_turnstile_selector_categories, ["sitekey_container"]);
   assert.equal(result.interactive_human_verification_required, true);
 });
 
@@ -268,11 +270,12 @@ test("hidden Turnstile candidate does not trigger CAPTCHA classification", () =>
     httpStatus: 200,
     body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
     visibleTurnstileWidget: false,
-    visibleTurnstileCategories: [],
+    visibleTurnstileSelectorCategories: [],
     visibleHumanVerificationText: false,
   });
   assert.equal(result.classification, CLASSIFICATIONS.CHALLENGE);
   assert.equal(result.visible_turnstile_widget, false);
+  assert.deepEqual(result.visible_turnstile_selector_categories, []);
   assert.equal(result.interactive_human_verification_required, false);
 });
 
@@ -281,11 +284,12 @@ test("generic visible challenge iframe is not treated as interactive Turnstile",
     httpStatus: 200,
     body: CHALLENGE_HTML,
     visibleTurnstileWidget: false,
-    visibleTurnstileCategories: [],
+    visibleTurnstileSelectorCategories: [],
     visibleHumanVerificationText: false,
   });
   assert.equal(result.classification, CLASSIFICATIONS.CHALLENGE);
   assert.equal(result.visible_turnstile_widget, false);
+  assert.deepEqual(result.visible_turnstile_selector_categories, []);
   assert.equal(result.interactive_human_verification_required, false);
 });
 
@@ -363,7 +367,7 @@ test("waits for a transitional challenge to become concrete Forebet content (con
   assert.deepEqual(sleeps, [1_500, 1_500]);
 });
 
-test("source-only Turnstile marker followed by concrete content continues observation and succeeds", async () => {
+test("sequence: poll 1 source marker -> poll 2 source marker -> poll 3+ source marker -> deadline with observation_deadline_exceeded=true", async () => {
   let clock = 0;
   const sleeps = [];
   const result = await observeForebetPage(pollingPage([
@@ -371,7 +375,105 @@ test("source-only Turnstile marker followed by concrete content continues observ
       body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
       domState: {
         visible_turnstile_widget: false,
-        visible_turnstile_categories: [],
+        visible_turnstile_selector_categories: [],
+        visible_human_verification_text: false,
+        visible_human_verification_markers: [],
+      },
+    },
+    {
+      body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
+      domState: {
+        visible_turnstile_widget: false,
+        visible_turnstile_selector_categories: [],
+        visible_human_verification_text: false,
+        visible_human_verification_markers: [],
+      },
+    },
+    {
+      body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
+      domState: {
+        visible_turnstile_widget: false,
+        visible_turnstile_selector_categories: [],
+        visible_human_verification_text: false,
+        visible_human_verification_markers: [],
+      },
+    },
+  ]), {
+    initialResponse: observationResponse(),
+    deadlineAt: 3_000,
+    startedAt: 0,
+    now: () => clock,
+    sleep: async milliseconds => {
+      sleeps.push(milliseconds);
+      clock += milliseconds;
+    },
+  });
+
+  assert.equal(result.classification, CLASSIFICATIONS.CHALLENGE);
+  assert.equal(result.turnstile_source_marker, true);
+  assert.equal(result.visible_turnstile_widget, false);
+  assert.deepEqual(result.visible_turnstile_selector_categories, []);
+  assert.equal(result.visible_human_verification_text, false);
+  assert.equal(result.interactive_human_verification_required, false);
+  assert.equal(result.observation_deadline_exceeded, true);
+  assert.equal(result.observation_count, 3);
+  assert.equal(result.observation_elapsed_ms, 3_000);
+  assert.deepEqual(sleeps, [1_500, 1_500]);
+});
+
+test("sequence: poll 1 source-only marker -> poll 2 visible Turnstile widget -> stops with captcha_or_turnstile_required", async () => {
+  let clock = 0;
+  const sleeps = [];
+  const result = await observeForebetPage(pollingPage([
+    {
+      body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
+      domState: {
+        visible_turnstile_widget: false,
+        visible_turnstile_selector_categories: [],
+        visible_human_verification_text: false,
+        visible_human_verification_markers: [],
+      },
+    },
+    {
+      body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
+      domState: {
+        visible_turnstile_widget: true,
+        visible_turnstile_selector_categories: ["turnstile_iframe"],
+        visible_human_verification_text: false,
+        visible_human_verification_markers: [],
+      },
+    },
+  ]), {
+    initialResponse: observationResponse(),
+    deadlineAt: 5_000,
+    startedAt: 0,
+    now: () => clock,
+    sleep: async milliseconds => {
+      sleeps.push(milliseconds);
+      clock += milliseconds;
+    },
+  });
+
+  assert.equal(result.classification, CLASSIFICATIONS.CAPTCHA);
+  assert.equal(result.turnstile_source_marker, true);
+  assert.equal(result.visible_turnstile_widget, true);
+  assert.deepEqual(result.visible_turnstile_selector_categories, ["turnstile_iframe"]);
+  assert.equal(result.interactive_human_verification_required, true);
+  assert.equal(result.observation_count, 2);
+  assert.equal(result.observation_elapsed_ms, 1_500);
+  assert.equal(result.observation_deadline_exceeded, false);
+  assert.deepEqual(sleeps, [1_500]);
+});
+
+test("sequence: poll 1 source-only marker -> poll 2 concrete Forebet fixture evidence -> resolves to genuine content", async () => {
+  let clock = 0;
+  const sleeps = [];
+  const result = await observeForebetPage(pollingPage([
+    {
+      body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
+      domState: {
+        visible_turnstile_widget: false,
+        visible_turnstile_selector_categories: [],
         visible_human_verification_text: false,
         visible_human_verification_markers: [],
       },
@@ -380,7 +482,7 @@ test("source-only Turnstile marker followed by concrete content continues observ
       body: FOREBET_HTML,
       domState: {
         visible_turnstile_widget: false,
-        visible_turnstile_categories: [],
+        visible_turnstile_selector_categories: [],
         visible_human_verification_text: false,
         visible_human_verification_markers: [],
       },
@@ -398,50 +500,64 @@ test("source-only Turnstile marker followed by concrete content continues observ
 
   assert.equal(result.classification, CLASSIFICATIONS.CONTENT);
   assert.equal(result.success, true);
+  assert.equal(result.concrete_fixture_row_evidence, true);
   assert.equal(result.observation_count, 2);
+  assert.equal(result.observation_elapsed_ms, 1_500);
   assert.equal(result.observation_deadline_exceeded, false);
   assert.deepEqual(sleeps, [1_500]);
 });
 
-test("source-only Turnstile marker remaining until observation deadline reports unresolved challenge", async () => {
+test("sequence: poll 1 source-only marker -> poll 2 visible human-verification instruction -> stops immediately", async () => {
   let clock = 0;
+  const sleeps = [];
   const result = await observeForebetPage(pollingPage([
     {
       body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
       domState: {
         visible_turnstile_widget: false,
-        visible_turnstile_categories: [],
+        visible_turnstile_selector_categories: [],
         visible_human_verification_text: false,
         visible_human_verification_markers: [],
       },
     },
+    {
+      body: CHALLENGE_HTML,
+      domState: {
+        visible_turnstile_widget: false,
+        visible_turnstile_selector_categories: [],
+        visible_human_verification_text: true,
+        visible_human_verification_markers: ["verify_you_are_human"],
+      },
+    },
   ]), {
     initialResponse: observationResponse(),
-    deadlineAt: 3_000,
+    deadlineAt: 5_000,
     startedAt: 0,
     now: () => clock,
     sleep: async milliseconds => {
+      sleeps.push(milliseconds);
       clock += milliseconds;
     },
   });
 
-  assert.equal(result.classification, CLASSIFICATIONS.CHALLENGE);
-  assert.equal(result.turnstile_source_marker, true);
-  assert.equal(result.visible_turnstile_widget, false);
-  assert.equal(result.visible_human_verification_text, false);
-  assert.equal(result.interactive_human_verification_required, false);
-  assert.equal(result.observation_deadline_exceeded, true);
-  assert.equal(result.observation_count, 3);
+  assert.equal(result.classification, CLASSIFICATIONS.CAPTCHA);
+  assert.equal(result.interactive_human_verification_required, true);
+  assert.equal(result.visible_human_verification_text, true);
+  assert.deepEqual(result.visible_human_verification_markers, ["verify_you_are_human"]);
+  assert.equal(result.observation_count, 2);
+  assert.equal(result.observation_elapsed_ms, 1_500);
+  assert.equal(result.observation_deadline_exceeded, false);
+  assert.deepEqual(sleeps, [1_500]);
 });
 
-test("stops immediately on visible Turnstile widget", async () => {
+test("stops immediately on visible Turnstile widget at poll 1", async () => {
   let sleepCalls = 0;
   const result = await observeForebetPage(pollingPage([
     {
       body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
       domState: {
         visible_turnstile_widget: true,
-        visible_turnstile_categories: ["turnstile_iframe"],
+        visible_turnstile_selector_categories: ["turnstile_iframe"],
         visible_human_verification_text: false,
         visible_human_verification_markers: [],
       },
@@ -459,18 +575,19 @@ test("stops immediately on visible Turnstile widget", async () => {
   assert.equal(result.classification, CLASSIFICATIONS.CAPTCHA);
   assert.equal(result.interactive_human_verification_required, true);
   assert.equal(result.visible_turnstile_widget, true);
+  assert.deepEqual(result.visible_turnstile_selector_categories, ["turnstile_iframe"]);
   assert.equal(result.observation_count, 1);
   assert.equal(sleepCalls, 0);
 });
 
-test("stops immediately on visible human-verification instruction", async () => {
+test("stops immediately on visible human-verification instruction at poll 1", async () => {
   let sleepCalls = 0;
   const result = await observeForebetPage(pollingPage([
     {
       body: CHALLENGE_HTML,
       domState: {
         visible_turnstile_widget: false,
-        visible_turnstile_categories: [],
+        visible_turnstile_selector_categories: [],
         visible_human_verification_text: true,
         visible_human_verification_markers: ["verify_you_are_human"],
       },
@@ -500,7 +617,7 @@ test("hidden Turnstile candidate does not stop observation early", async () => {
       body: CHALLENGE_WITH_TURNSTILE_SCRIPT_HTML,
       domState: {
         visible_turnstile_widget: false,
-        visible_turnstile_categories: [],
+        visible_turnstile_selector_categories: [],
         visible_human_verification_text: false,
         visible_human_verification_markers: [],
       },
@@ -509,7 +626,7 @@ test("hidden Turnstile candidate does not stop observation early", async () => {
       body: FOREBET_HTML,
       domState: {
         visible_turnstile_widget: false,
-        visible_turnstile_categories: [],
+        visible_turnstile_selector_categories: [],
         visible_human_verification_text: false,
         visible_human_verification_markers: [],
       },
@@ -573,6 +690,7 @@ test("uses one launch and closes the managed browser after genuine content", asy
   assert.equal(result.page_title, "Today | Forebet");
   assert.equal(result.turnstile_source_marker, false);
   assert.equal(result.visible_turnstile_widget, false);
+  assert.deepEqual(result.visible_turnstile_selector_categories, []);
   assert.equal(result.visible_human_verification_text, false);
   assert.equal(result.interactive_human_verification_required, false);
   assert.deepEqual(events, ["launch", "newPage", "close"]);
@@ -792,7 +910,7 @@ test("inspectPageDom evaluates DOM visibility, Turnstile candidate iframes, cont
 
     const res1 = inspectPageDom();
     assert.equal(res1.visible_turnstile_widget, true);
-    assert.deepEqual(res1.visible_turnstile_categories, ["turnstile_iframe"]);
+    assert.deepEqual(res1.visible_turnstile_selector_categories, ["turnstile_iframe"]);
     assert.equal(res1.visible_human_verification_text, false);
 
     // 2. Generic visible challenge iframe (NOT Turnstile candidate)
@@ -804,6 +922,7 @@ test("inspectPageDom evaluates DOM visibility, Turnstile candidate iframes, cont
     globalThis.document.querySelectorAll = (sel) => sel === "iframe" ? [genericIframe] : [];
     const res2 = inspectPageDom();
     assert.equal(res2.visible_turnstile_widget, false);
+    assert.deepEqual(res2.visible_turnstile_selector_categories, []);
     assert.equal(res2.visible_human_verification_text, false);
 
     // 3. Visible human verification text phrases
@@ -818,6 +937,7 @@ test("inspectPageDom evaluates DOM visibility, Turnstile candidate iframes, cont
       globalThis.document.body.innerText = phrase;
       const res = inspectPageDom();
       assert.equal(res.visible_turnstile_widget, false);
+      assert.deepEqual(res.visible_turnstile_selector_categories, []);
       assert.equal(res.visible_human_verification_text, true);
       assert.ok(res.visible_human_verification_markers.includes(expectedMarker));
     }
@@ -833,6 +953,7 @@ test("inspectPageDom evaluates DOM visibility, Turnstile candidate iframes, cont
     globalThis.document.body.innerText = "Just a moment...";
     const res4 = inspectPageDom();
     assert.equal(res4.visible_turnstile_widget, false);
+    assert.deepEqual(res4.visible_turnstile_selector_categories, []);
     assert.equal(res4.visible_human_verification_text, false);
 
     // 5. Hidden parent element makes child Turnstile container hidden
@@ -848,6 +969,7 @@ test("inspectPageDom evaluates DOM visibility, Turnstile candidate iframes, cont
     globalThis.document.querySelectorAll = (sel) => sel.includes(".cf-turnstile") ? [childContainer] : [];
     const res5 = inspectPageDom();
     assert.equal(res5.visible_turnstile_widget, false);
+    assert.deepEqual(res5.visible_turnstile_selector_categories, []);
 
     // 6. Visible [data-sitekey] container
     const sitekeyContainer = new MockElement({
@@ -858,7 +980,7 @@ test("inspectPageDom evaluates DOM visibility, Turnstile candidate iframes, cont
     globalThis.document.querySelectorAll = (sel) => sel.includes("[data-sitekey]") ? [sitekeyContainer] : [];
     const res6 = inspectPageDom();
     assert.equal(res6.visible_turnstile_widget, true);
-    assert.deepEqual(res6.visible_turnstile_categories, ["sitekey_container"]);
+    assert.deepEqual(res6.visible_turnstile_selector_categories, ["sitekey_container"]);
   } finally {
     globalThis.document = originalDoc;
     globalThis.window = originalWin;
