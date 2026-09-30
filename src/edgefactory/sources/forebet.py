@@ -11,8 +11,10 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+from datetime import date as _date
 
 from edgefactory.sources import public_relay
 
@@ -31,6 +33,13 @@ DEFAULT_MARKETS = ("1x2", "uo", "bts")  # ht is certified charcoal; opt-in only
 
 CFFI_IMPERSONATIONS = ("safari17_0", "firefox133")
 CLOUD_RETRY_ENV = "EDGE_FACTORY_FOREBET_CLOUD"
+BROWSER_ENV = "EDGE_FACTORY_FOREBET_BROWSER"
+PLAYWRIGHT_ENV = "EDGE_FACTORY_FOREBET_PLAYWRIGHT"
+BROWSER_OPERATION = "forebet_getrs"
+BROWSER_TIMEOUT_SECONDS = 75
+PLAYWRIGHT_TIMEOUT_MS = 45_000
+BROWSER_AUTO_PAST_DAYS = 2
+BROWSER_AUTO_FUTURE_DAYS = 1
 RELAY_BASE = "https://r.jina.ai/"
 RELAY_TIMEOUT_SECONDS = 25
 RELAY_MARKER = "Markdown Content:\n"
@@ -52,6 +61,109 @@ def _cloud_fetch_mode() -> str:
     if value in {"1", "true", "yes", "on", "direct"}:
         return "direct"
     return "relay"
+
+
+def _today() -> _date:
+    return _date.today()
+
+
+def _browser_mode() -> str:
+    value = os.environ.get(BROWSER_ENV, "auto").strip().lower()
+    if value in {"0", "false", "no", "off", "disabled"}:
+        return "off"
+    if value in {"1", "true", "yes", "on", "force"}:
+        return "on"
+    return "auto"
+
+
+def _browser_enabled_for_date(date: str) -> bool:
+    """Bound the production Browser Run ladder to live capture dates.
+
+    The history file is intact, while Browser Run is a scarce managed-browser
+    path.  In default auto mode only GitHub Actions recent/tomorrow dates use
+    it; operators can force or disable it with EDGE_FACTORY_FOREBET_BROWSER.
+    """
+    mode = _browser_mode()
+    if mode == "off" or not public_relay.configured():
+        return False
+    if mode == "on":
+        return True
+    if os.environ.get("GITHUB_ACTIONS", "").strip().lower() != "true":
+        return False
+    try:
+        delta = (_date.fromisoformat(date) - _today()).days
+    except ValueError:
+        return False
+    return -BROWSER_AUTO_PAST_DAYS <= delta <= BROWSER_AUTO_FUTURE_DAYS
+
+
+def _playwright_enabled_for_date(date: str) -> bool:
+    value = os.environ.get(PLAYWRIGHT_ENV, "").strip().lower()
+    if value not in {"1", "true", "yes", "on"}:
+        return False
+    try:
+        delta = (_date.fromisoformat(date) - _today()).days
+    except ValueError:
+        return False
+    return -BROWSER_AUTO_PAST_DAYS <= delta <= BROWSER_AUTO_FUTURE_DAYS
+
+
+def _first_relay_url() -> str | None:
+    return next((url.strip() for url in os.environ.get(public_relay.URLS_ENV, "").split(",") if url.strip()), None)
+
+
+def _browser_get(url: str) -> bytes:
+    """Fetch Forebet getrs through the Cloudflare Worker Browser Run operation."""
+    relay_url = _first_relay_url()
+    token = os.environ.get(public_relay.TOKEN_ENV, "").strip()
+    if not relay_url or not token:
+        raise RuntimeError("Forebet Browser Run relay is not configured")
+    payload = json.dumps({"token": token, "operation": BROWSER_OPERATION, "url": url}).encode()
+    request = urllib.request.Request(
+        relay_url,
+        data=payload,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "User-Agent": "EdgeFactory-ForebetBrowser/1.0",
+        },
+    )
+    raw = b""
+    try:
+        with urllib.request.urlopen(request, timeout=BROWSER_TIMEOUT_SECONDS) as response:
+            raw = response.read(public_relay.MAX_RESPONSE_BYTES + 1)
+    except urllib.error.HTTPError as error:
+        raw = error.read(public_relay.MAX_RESPONSE_BYTES + 1)
+        raise RuntimeError(f"browser relay HTTP {error.code}: {raw[:200]!r}") from error
+    if len(raw) > public_relay.MAX_RESPONSE_BYTES:
+        raise ValueError("browser relay response exceeds size limit")
+    envelope = json.loads(raw.decode("utf-8", "replace"))
+    if not isinstance(envelope, dict) or envelope.get("source_url") != url:
+        raise ValueError("browser relay source URL mismatch")
+    if int(envelope.get("status", 0)) != 200 or not isinstance(envelope.get("body"), str):
+        raise ValueError("browser relay upstream failure")
+    return envelope["body"].encode()
+
+
+def _playwright_get(url: str) -> bytes:
+    """Optional Actions-runner headless fallback; disabled unless env-gated."""
+    from playwright.sync_api import sync_playwright
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        try:
+            page = browser.new_page(
+                user_agent=HEADERS["User-Agent"],
+                extra_http_headers={k: v for k, v in HEADERS.items() if k.lower() != "user-agent"},
+            )
+            response = page.goto(url, wait_until="domcontentloaded", timeout=PLAYWRIGHT_TIMEOUT_MS)
+            status = response.status if response is not None else 0
+            if status != 200:
+                raise RuntimeError(f"HTTP {status}")
+            body = page.locator("body").inner_text(timeout=PLAYWRIGHT_TIMEOUT_MS).strip()
+            return body.encode("utf-8")
+        finally:
+            browser.close()
 
 
 def _decode_payload(raw: bytes | str) -> list[dict]:
@@ -138,10 +250,21 @@ def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
     mode = _cloud_fetch_mode()
     if mode == "disabled":
         raise RuntimeError("Forebet cloud fetch explicitly disabled")
+    browser_error = None
+    if _browser_enabled_for_date(date):
+        try:
+            return _decode_payload(_browser_get(url))
+        except Exception as exc:  # noqa: BLE001 - production browser may still see a challenge
+            browser_error = f"browser={type(exc).__name__}"
+    playwright_error = None
+    if _playwright_enabled_for_date(date):
+        try:
+            return _decode_payload(_playwright_get(url))
+        except Exception as exc:  # noqa: BLE001 - optional fallback must fail closed
+            playwright_error = f"playwright={type(exc).__name__}"
     # Operator-owned free relays (Cloudflare Worker, then Apps Script) are
-    # independent egress paths. Try them BEFORE the now-challenged public Jina
-    # path; the 2026-08-20 incident proved that repeatedly timing out a known
-    # bad cloud route can consume the whole workflow budget.
+    # independent egress paths. Try them before public/direct datacenter paths;
+    # Python re-validates every echoed URL and every JSON payload shape.
     operator_errors = []
     for relay_name, raw in public_relay.fetches(url):
         try:
@@ -158,13 +281,25 @@ def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
             # challenge HTML can never be mistaken for an empty slate.
             relay_error = f"relay={type(exc).__name__}"
 
-    # Local/default, deliberate cloud direct-probe, or automatic relay rescue.
+    errors = (
+        ([browser_error] if browser_error else [])
+        + ([playwright_error] if playwright_error else [])
+        + ([relay_error] if relay_error else [])
+        + operator_errors
+    )
+    if mode == "relay" and os.environ.get("GITHUB_ACTIONS", "").strip().lower() == "true":
+        raise RuntimeError(
+            f"Forebet {tp} {date} failed across relays/browser paths: "
+            f"{', '.join(errors) or 'no relay configured'}; "
+            "GitHub direct transport skipped (Cloudflare managed challenge)"
+        )
+
+    # Local/default or deliberate cloud direct-probe.
     transports = [("urllib", lambda: _urllib_get(url))]
     transports.extend(
         (f"curl_cffi:{identity}", lambda identity=identity: _cffi_get(url, identity))
         for identity in CFFI_IMPERSONATIONS
     )
-    errors = ([relay_error] if relay_error else []) + operator_errors
     attempt_limit = max(1, min(int(retries), len(transports)))
     for attempt, (name, request) in enumerate(transports[:attempt_limit]):
         try:
@@ -206,7 +341,12 @@ def _fetch_market_payloads(
     """
     payloads: dict[str, list[dict]] = {}
     failures: list[str] = []
-    if _cloud_fetch_mode() == "relay" and len(markets) > 1:
+    if (
+        _cloud_fetch_mode() == "relay"
+        and not _browser_enabled_for_date(date)
+        and not _playwright_enabled_for_date(date)
+        and len(markets) > 1
+    ):
         with ThreadPoolExecutor(max_workers=min(4, len(markets))) as executor:
             futures = {market: executor.submit(_get, market, date) for market in markets}
             for market in markets:

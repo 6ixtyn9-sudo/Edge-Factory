@@ -92,13 +92,11 @@ and never runs the normal pipeline.
 > **Status (2026-09-30, operator decision):** the earlier "phase-1 diagnostic-only /
 > do-not-modify-forebet.py" limitation is **lifted**. The operator may now wire
 > production extraction into `forebet.py`, relay endpoints, and pipeline scripts.
-> That said, the live diagnostic below observed Forebet returning a
-> `captcha_or_turnstile_required` interactive managed challenge that Browser Run
-> did not pass, so — rather than standing up paid solving or heavy browser
-> infrastructure — the production consensus engine now grows through accessible
-> alternative sources (ProSoccer, SoccerVista) ingested via the ordinary relay
-> and direct transports. Browser Run remains a bounded manual diagnostic only;
-> nothing below makes it part of the daily pipeline.
+> The 2026-09-30 recovery pass adds a bounded production Browser Run operation
+> for the Forebet `getrs.php` JSON endpoint while keeping this older diagnostic
+> workflow available. The production operation is documented in section 5 and is
+> allowlisted to exact `getrs.php` URLs; the diagnostic below remains a separate
+> manual page-render probe.
 
 Cloudflare renamed Browser Rendering to **Browser Run** in the current
 2026 documentation. This repository uses the documented Workers binding and
@@ -413,3 +411,51 @@ workflow:
 
 A relay error must leave the day retryable. It must never be represented as a
 valid empty provider payload.
+
+## 5. 2026-09-30 production source-recovery changes
+
+### Forebet Browser Run production operation
+
+The Cloudflare Worker now supports a production Browser Run operation:
+
+```json
+{"token":"<relay token>","operation":"forebet_getrs","url":"https://www.forebet.com/scripts/getrs.php?ln=en&tp=1x2&in=2026-09-30&ord=0&tz=0&tzs=&tze=&output=1"}
+```
+
+Security invariants are unchanged:
+
+- POST only.
+- `RELAY_TOKEN` authentication is required.
+- The browser path accepts only `https://www.forebet.com/scripts/getrs.php`.
+- Query parameters are exact: `ln=en`, whitelisted `tp` (`1x2`, `uo`, `bts`, `ht`), ISO `in=YYYY-MM-DD`, `ord=0`, `tz=0`, blank `tzs` and `tze`, and optional `output=1` only.
+- The Worker launches the existing `BROWSER` binding, extracts the rendered body text, validates Forebet's `[rows, meta]` JSON shape, and returns the same envelope as the ordinary relay: `source_url`, `status`, `fetched_at`, `body`.
+- Python re-validates the echoed URL and Forebet JSON shape before parsing rows.
+
+`src/edgefactory/sources/forebet.py` uses this Browser Run operation above ordinary relays only for recent live dates in GitHub Actions auto mode. Operators can set `EDGE_FACTORY_FOREBET_BROWSER=off` to disable it or `=on` to force it for a targeted backfill. The bounded default avoids spending managed-browser launches on the intact historical Forebet archive.
+
+If Browser Run is deployed and still fails a live challenge, `forebet.py` also contains an opt-in Actions-runner Playwright fallback. It is dormant unless `EDGE_FACTORY_FOREBET_PLAYWRIGHT=1` is present and the runner has installed Playwright/Chromium; only then does `forebet.py` try Playwright for recent live dates before falling back to ordinary relays. This keeps the fallback behind explicit operator sign-off and adds no paid solver. This branch does not modify `.github/workflows/daily.yml` because GitHub rejected workflow-file changes from the Arena App token; add the install/env step manually only if the Browser Run probe fails.
+
+To probe the production Browser Run path after Worker deployment, POST a single authenticated `forebet_getrs` request to the first relay URL and verify the returned body is Forebet `[rows, meta]` JSON with `row_count > 0`. The PR body includes a copy-paste-safe Python snippet.
+
+### New ordinary relay allowlists
+
+The ordinary Worker and GAS relay allowlists now include:
+
+- PredictZ: `https://www.predictz.com/predictions/YYYYMMDD/` only.
+- WinDrawWin: `https://www.windrawwin.com/predictions/today/` and `/predictions/tomorrow/` only.
+
+No event-detail pages, future WinDrawWin pages, arbitrary query strings, alternate hosts, or HTTP URLs are allowed.
+
+### SoccerVista anti-shell escalation
+
+SoccerVista remains homepage-only. The Python adapter now treats a branded but table-less page as a transport failure and escalates through urllib, curl_cffi, Worker, and GAS before raising. Worker and GAS requests include browser-like accept/language/referrer headers and non-auth consent hints. A page with an actual table but zero fixtures remains an honest empty slate.
+
+### GAS redeploy required
+
+`relay/google-apps-script/Code.gs` changed. Apps Script does not deploy from Git automatically, so after merge:
+
+1. Open the existing Apps Script project.
+2. Replace the whole `Code.gs` file with the repository version.
+3. Confirm Script Property `RELAY_TOKEN` is still set.
+4. Deploy a new Web App version with the same access settings as before.
+5. Keep the `/exec` URL in `EDGE_FACTORY_RELAY_URLS` after the Worker URL.

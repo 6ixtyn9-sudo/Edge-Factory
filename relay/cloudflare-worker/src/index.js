@@ -1,5 +1,6 @@
 import puppeteer from "@cloudflare/puppeteer";
 import {runForebetBrowserDiagnostic} from "./browser-diagnostic.js";
+import {FOREBET_GETRS_OPERATION, runForebetGetrsBrowser} from "./forebet-browser.js";
 import {allowed, headersFor} from "./allowlist.js";
 
 const MAX_BODY = 12 * 1024 * 1024;
@@ -25,11 +26,14 @@ export default {
     }
     if (!env.RELAY_TOKEN || input.token !== env.RELAY_TOKEN) return reply({error: "auth"}, 403);
 
-    // Phase 1 only: a fixed, authenticated, one-URL Browser Run diagnostic.
-    // There is intentionally no caller-provided URL or production adapter path.
     if (input.operation === "forebet_browser_diagnostic") {
       const result = await runForebetBrowserDiagnostic(env, puppeteer);
       return reply(result, result.http_response_status || 200);
+    }
+
+    if (input.operation === FOREBET_GETRS_OPERATION) {
+      const result = await runForebetGetrsBrowser(env, puppeteer, input);
+      return reply(result.payload, result.httpResponseStatus || 200);
     }
 
     let source;

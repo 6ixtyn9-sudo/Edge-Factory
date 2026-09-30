@@ -965,6 +965,10 @@ def run_pipeline(
             f"refresh result donors ({refresh_day})",
         )
         run_soft(
+            "python3 scripts/capture_daily.py --skip-build --sources prosoccer",
+            "capture_daily prosoccer intraday recapture",
+        )
+        run_soft(
             f"python3 scripts/backfill_results.py --days {backfill_days}",
             f"backfill_results (D{backfill_days})",
         )

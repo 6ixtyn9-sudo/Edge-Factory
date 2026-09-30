@@ -131,7 +131,26 @@ def test_fetch_day_rejects_h1_mismatch(monkeypatch):
     tomorrow = (_date.today() + timedelta(days=1))
     served = tomorrow.strftime("%A %d %B %Y")
     monkeypatch.setattr(prosoccer, "_get", lambda url, retries=3: _page(served, TABLE))
-    assert prosoccer.fetch_day(_date.today().isoformat()) == []
+    with pytest.raises(prosoccer.NotServedYet, match="no candidate page serves"):
+        prosoccer.fetch_day(_date.today().isoformat())
+
+
+def test_fetch_day_tries_tomorrow_alias_during_utc_lag(monkeypatch):
+    today = _date.today()
+    yesterday = today - timedelta(days=1)
+    calls = []
+
+    def get(url, retries=3):
+        calls.append(url)
+        if url.endswith("tomorrow.html"):
+            return _page(today.strftime("%A %d %B %Y"), TABLE)
+        return _page(yesterday.strftime("%A %d %B %Y"), TABLE)
+
+    monkeypatch.setattr(prosoccer, "_get", get)
+    rows = prosoccer.fetch_day(today.isoformat())
+    assert len(rows) == 3
+    assert calls[0] == prosoccer.BASE
+    assert calls[1].endswith("tomorrow.html")
 
 
 def test_fetch_day_happy_path(monkeypatch):
