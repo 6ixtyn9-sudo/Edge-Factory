@@ -212,10 +212,13 @@ def _cffi_get(url: str, impersonate: str) -> str | None:
     return r.text
 
 
-def _get(url: str, retries: int = 3) -> str | None:
-    """urllib -> curl_cffi ladder, then operator relays (the same validated
-    envelope used by forebet/scoutingstats; relays only echo exact allowlisted
-    URLs, so a challenged datacenter IP cannot poison the payload)."""
+def _get(url: str, retries: int = 3) -> str:
+    """urllib -> curl_cffi ladder, then operator relays.
+
+    Only returns a page that already has the SoccerVista brand marker and at
+    least one HTML table. Branded consent/anti-bot shells are transport
+    failures here, before fetch_day parses date or rows.
+    """
     from . import cffi_http
 
     transports: list[tuple[str, object]] = [("urllib", lambda: _urllib_get(url))]
@@ -248,12 +251,6 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
     if date != _date.today().isoformat():
         return []
     html = _get(URL, retries=retries)
-    if not html:
-        return []
-    if "soccervista" not in html.lower():
-        # Cloudflare challenge or redirect body — a transport failure, not an
-        # empty slate (keeps the day retryable and logs loudly).
-        raise RuntimeError("soccervista: brand marker missing (challenge page?)")
     served = served_day(html)
     if served is not None and served != (_date.fromisoformat(date).month,
                                          _date.fromisoformat(date).day):
@@ -266,10 +263,7 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
             flush=True,
         )
         return []
-    rows = _parse(html, date)
-    if not rows and "<table" not in html.lower():
-        raise RuntimeError("soccervista: predictions table not found in page")
-    return rows
+    return _parse(html, date)
 
 
 COLUMNS = [
