@@ -586,9 +586,11 @@ def test_honest_labels_for_fade_rules():
     assert honest_display_label(row) == "ML-FADE≥55"
     ledger = [row]
     assert heal_ledger_labels(ledger) == 0  # nothing to rewrite
-    # a damaged stored display self-heals from the exact rule string
+    # a damaged stored display self-heals from the exact rule string.
+    # The previous assertion ended in "or True", so it passed no matter
+    # what the function returned and proved nothing.
     stale = {"rule": "ml-fade avg_p>=55", "display_rule": "???", "market": "1x2"}
-    assert honest_display_label(stale) == "???" or True
+    assert honest_display_label(stale) == "ML-FADE≥55"
     healed = [dict(stale, display_rule="ML-META≥55")]
     heal_ledger_labels(healed)  # must never relabel a fade as ml-meta
     assert healed[0]["display_rule"] != "ML-META≥55"
@@ -672,3 +674,52 @@ def test_tripwire_ceiling_check_covers_fade_rules(tmp_path):
         tmp_path, [{"rule": "ml-fade avg_p>=85", "silent": True},
                    {"rule": "ml-fade avg_p>=55", "silent": True}])
     assert [c["rule"] for c in ceilings] == ["ml-fade avg_p>=85"]
+
+
+# ===========================================================================
+# Operator-facing rule display
+#
+# A report showing ML-META≥60 beside 2WAY-UNANIMOUS≥60 is not ambiguity:
+# those are different picks under different active rules. What would be
+# ambiguous is a stale stored label winning over the exact rule string, or
+# one selection presenting two competing active rules.
+# ===========================================================================
+
+
+def test_the_exact_rule_always_beats_a_stale_stored_label():
+    for rule, stale, expected in [
+            ("2way-unanimous avg_p>=60", "ML-META≥55", "2WAY-UNANIMOUS≥60"),
+            ("ml-meta avg_p>=55", "2WAY-UNANIMOUS≥60", "ML-META≥55"),
+            ("ml-fade avg_p>=55", "ML-META≥55", "ML-FADE≥55"),
+    ]:
+        label = honest_display_label(
+            {"edge_rule": rule, "display_rule": stale, "market": "1x2"})
+        assert label == expected, f"{rule} + stale {stale} -> {label}"
+
+
+def test_a_selection_presents_exactly_one_primary_rule():
+    """Matching several rule families must not yield competing labels."""
+    pick = {"edge_rule": "2way-unanimous avg_p>=60",
+            "market": "1x2", "pick": "home",
+            # lineage: other families that also matched
+            "also_matched": ["ml-meta avg_p>=55"]}
+
+    label = honest_display_label(pick)
+
+    assert label == "2WAY-UNANIMOUS≥60"
+    assert "ML-META" not in label
+    # lineage is preserved, just not presented as a competing active rule
+    assert pick["also_matched"] == ["ml-meta avg_p>=55"]
+
+
+def test_a_qualifier_variant_cannot_hide_behind_the_plain_name():
+    assert honest_display_label(
+        {"edge_rule": "2way-unanimous+bc-confirms avg_p>=60",
+         "display_rule": "2WAY-UNANIMOUS≥60", "market": "1x2"}
+    ) == "2WAY-UNANIMOUS+BC-CONFIRMS≥60"
+
+
+def test_an_unparseable_rule_falls_back_rather_than_guessing():
+    assert honest_display_label(
+        {"edge_rule": "legacy-freeform-rule",
+         "display_rule": "LEGACY", "market": "1x2"}) == "LEGACY"
