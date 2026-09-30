@@ -1,0 +1,10 @@
+Apply this to .github/workflows/daily.yml under jobs.run-autonomous-agent.env:
+
+      # Free, operator-owned source relays. Comma order is failover order:
+      # Cloudflare Worker first, Google Apps Script second.
+      EDGE_FACTORY_RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
+      EDGE_FACTORY_RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
+
+The GitHub App used by this repository cannot push workflow changes without the
+workflows permission. Add these two lines in GitHub's web editor after creating
+the matching Actions secrets.
