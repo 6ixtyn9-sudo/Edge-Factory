@@ -4,17 +4,9 @@ compatibility_date = "2026-09-30"
 compatibility_flags = ["nodejs_compat_v2"]
 workers_dev = true
 
-# Browser Run uses Cloudflare's managed Chromium. No API token is needed for
-# the Worker binding. The diagnostic is dormant until this binding is available.
 [browser]
 binding = "BROWSER"
 
-# The diagnostic also requires a free Workers KV namespace for its one-launch
-# UTC-day budget gate. Create the namespace and add its generated id here only
-# when running the smoke test; ordinary relay traffic does not require it.
 [[kv_namespaces]]
 binding = "BROWSER_DIAGNOSTIC_KV"
-id = "edge-factory-browser-diagnostic"
-
-# Set the relay secret with:
-#   npx wrangler secret put RELAY_TOKEN
+id = "74e36c3254554e609988fe25d04237fd"
