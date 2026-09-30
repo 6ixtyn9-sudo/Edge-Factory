@@ -343,13 +343,52 @@ def write_sync_manifest(*, target_date: str, picks_path: Path, raw_text: str, pi
     return out
 
 
+def dispatch_plan_rows(plan: dict) -> list[dict]:
+    """Every pick the plan wants published, each under its own event date."""
+    rows: list[dict] = []
+    for row in list(plan.get("same_day_picks") or []) + \
+               list(plan.get("horizon_picks") or []):
+        row = dict(row)
+        # The event date is authoritative. A future-dated pick published
+        # under the run date would appear on the dashboard as a bet on a
+        # match that is not played that day.
+        row["date"] = row.get("event_date") or row.get("date")
+        rows.append(row)
+    return rows
+
+
+def dates_safe_to_replace(plan: dict, *, already_dispatched: set[str]) -> list[str]:
+    """Which event dates this run may delete before re-publishing.
+
+    The run date is always authoritative for itself. A future date may only
+    be replaced when this run actually produced picks for it — otherwise an
+    empty same-day slate would silently delete a future pick that was
+    already dispatched and possibly already staked.
+    """
+    run_date = plan.get("run_date")
+    produced = set(plan.get("future_event_dates") or [])
+    safe = {run_date} if run_date else set()
+    safe |= produced
+    # Never delete a future date we previously dispatched but did not
+    # reproduce in this run.
+    protected = already_dispatched - produced - ({run_date} if run_date else set())
+    return sorted(d for d in safe if d and d not in protected)
+
+
 def main() -> None:
     p = argparse.ArgumentParser(description="Sync certified edges and an explicit picks ledger to Supabase")
     p.add_argument("--picks", default=str(DEFAULT_PICKS), help="Path to source picks JSON.")
     p.add_argument("--target-date", default=None, help="Authoritative target date (YYYY-MM-DD).")
     p.add_argument("--replace-date", action="store_true", help="Delete existing rows for target date before upserting.")
     p.add_argument("--dry-run", action="store_true")
+    p.add_argument("--dispatch-plan", default=None,
+                   help="Path to a fresh_production dispatch plan. Publishes "
+                        "same-day and future-dated picks under their event "
+                        "dates, replacing only the dates this run produced.")
     args = p.parse_args()
+
+    if args.dispatch_plan:
+        return sync_dispatch_plan(Path(args.dispatch_plan), dry_run=args.dry_run)
 
     picks_path = Path(args.picks)
     raw_text = picks_path.read_text() if picks_path.exists() else "[]"
@@ -424,6 +463,119 @@ def main() -> None:
     except Exception as e:
         print("Sync failed:", e)
         sys.exit(1)
+
+
+def sync_dispatch_plan(plan_path: Path, *, dry_run: bool) -> None:
+    """Publish a fresh_production dispatch plan across its event dates."""
+    from edgefactory import production_lane
+
+    try:
+        plan = json.loads(plan_path.read_text())
+    except Exception as exc:
+        print(f"Sync failed: cannot read dispatch plan {plan_path}: {exc}")
+        sys.exit(1)
+
+    run_date = plan.get("run_date") or date.today().isoformat()
+    rows = dispatch_plan_rows(plan)
+    replace_dates = dates_safe_to_replace(
+        plan, already_dispatched=previously_dispatched_dates(run_date))
+    edges = load_edges(run_date)
+    aliases = build_rule_aliases(edges)
+
+    print(f"Production lane: {production_lane.active_lane()}")
+    print(f"Dispatch plan: {plan_path}")
+    print(f"Run date: {run_date}")
+    print(f"Same-day picks: {plan.get('same_day_pick_count', 0)}")
+    print(f"Future-dated horizon picks: {plan.get('horizon_pick_count', 0)}")
+    print(f"Event dates to publish: {', '.join(plan.get('event_dates') or []) or 'none'}")
+    print(f"Dates to replace: {', '.join(replace_dates) or 'none'}")
+
+    if dry_run:
+        print("DRY RUN")
+        return
+
+    try:
+        client = get_client()
+        if edges:
+            upsert_edges(client, edges)
+        edge_ids = fetch_edge_ids(client, [e["name"] for e in edges])
+        event_ids = upsert_events(client, rows)
+
+        by_date: dict[str, list[dict]] = {}
+        for row in rows:
+            by_date.setdefault(str(row.get("date")), []).append(row)
+
+        prepared: dict[str, list[dict]] = {}
+        for event_date, date_rows in by_date.items():
+            pick_rows, skipped = build_pick_rows(
+                date_rows, edge_ids, event_ids, aliases,
+                target_date=event_date, picks_path=plan_path)
+            if date_rows and not pick_rows:
+                raise RuntimeError(
+                    f"refusing to publish {event_date}: {len(date_rows)} plan "
+                    f"row(s) produced zero syncable picks ({len(skipped)} skipped)")
+            prepared[event_date] = pick_rows
+
+        # Delete only the dates this run is authoritative for, then publish.
+        for event_date in replace_dates:
+            delete_picks_for_date(client, event_date)
+            print(f"  replaced date: {event_date}")
+        for event_date, pick_rows in sorted(prepared.items()):
+            if pick_rows:
+                upsert_picks(client, pick_rows)
+                print(f"  published {len(pick_rows)} pick(s) for {event_date}")
+
+        record_dispatched_dates(run_date, plan)
+        manifest = write_sync_manifest(
+            target_date=run_date, picks_path=plan_path,
+            raw_text=plan_path.read_text(),
+            pick_rows=[r for rows_ in prepared.values() for r in rows_],
+            replace_date=True)
+        print(f"Sync manifest written: {manifest}")
+        print("Supabase sync done.")
+    except Exception as e:
+        print("Sync failed:", e)
+        sys.exit(1)
+
+
+def _dispatch_ledger_path() -> Path:
+    return LOCALDATA / "fresh_production_dispatched_dates.json"
+
+
+def previously_dispatched_dates(run_date: str) -> set[str]:
+    """Event dates this lane has already published picks for.
+
+    Used to protect an already-dispatched future pick from being deleted by
+    a later run that produced nothing for that date.
+    """
+    try:
+        data = json.loads(_dispatch_ledger_path().read_text())
+    except Exception:
+        return set()
+    if not isinstance(data, dict):
+        return set()
+    return {d for d, count in data.items()
+            if isinstance(count, int) and count > 0 and d >= run_date}
+
+
+def record_dispatched_dates(run_date: str, plan: dict) -> None:
+    """Append this run's published event dates to the dispatch ledger."""
+    try:
+        data = json.loads(_dispatch_ledger_path().read_text())
+        if not isinstance(data, dict):
+            data = {}
+    except Exception:
+        data = {}
+    counts: dict[str, int] = {}
+    for row in dispatch_plan_rows(plan):
+        key = str(row.get("date"))
+        counts[key] = counts.get(key, 0) + 1
+    for event_date in plan.get("event_dates") or []:
+        data[event_date] = counts.get(event_date, 0)
+    try:
+        _dispatch_ledger_path().write_text(json.dumps(data, indent=2, sort_keys=True))
+    except OSError:
+        pass
 
 
 if __name__ == "__main__":

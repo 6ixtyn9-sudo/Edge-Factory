@@ -109,6 +109,7 @@ FRESH_PRODUCTION_PREFIXES: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("fresh_production_dispatchable_picks", ("json", "md")),
     ("fresh_production_production_picks", ("json",)),
     ("fresh_production_horizon_picks", ("json", "md")),
+    ("fresh_production_dispatch_plan", ("json", "md")),
     ("source_health", ("json", "md")),
     ("model_health", ("json", "md")),
     ("artifact_manifest", ("json", "md")),

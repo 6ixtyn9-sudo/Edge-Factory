@@ -272,7 +272,7 @@ class _StubEngine:
     """Minimal timing engine: kickoffs are 'YYYY-MM-DD HH:MM' in local time."""
 
     @staticmethod
-    def parse_kickoff_dt(raw: str):
+    def parse_kickoff_dt(raw: str, reference=None):
         try:
             return datetime.strptime(raw, "%Y-%m-%d %H:%M").replace(tzinfo=TZ)
         except (TypeError, ValueError):
@@ -405,7 +405,7 @@ def test_timing_blockers_are_classified_precisely():
         _timing_group([{"source": "betclan", "raw": f"{DAY} 18:00",
                         "timing_capable": False, "parsed": True}]),
         guard_reason=None)
-    assert untrusted["classification"] == fp.TIMING_UNTRUSTED_SOURCE
+    assert untrusted["classification"] == fp.TIMING_NON_TIMING_SOURCE
 
     fine = fp.diagnose_timing(
         _timing_group([{"source": "zulubet", "raw": f"{DAY} 18:00",

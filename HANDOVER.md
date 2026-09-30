@@ -11177,3 +11177,98 @@ diagnostics, parked sources excluded from fresh sections, the no-picks top
 action item, retention ordering and zero-deletion evidence preservation.
 
 **PR #18 is NOT merged.**
+
+---
+
+## Addendum — 2026-09-30 (fourth pass: kickoff parser defect, future-dated horizon dispatch)
+
+### Root cause found: the kickoff parser had day and month swapped
+
+`picks_today.parse_kickoff_dt` matched `DD-MM, HH:MM` but unpacked the groups as
+`mm, dd`. The feeds publish day first — zulubet writes `2024-07-24` as
+`"24-07, 14:00"`. Consequences, both now fixed:
+
+| input | fixture | old result | new result |
+|---|---|---|---|
+| `"30-09, 08:10"` | 30 Sep | **`None`** (month 30 invalid) | 2026-09-30 08:10 |
+| `"01-10, 06:10"` | 1 Oct | **10 January** (9 months wrong) | 2026-10-01 06:10 |
+| `"12-06, 19:45"` | 12 Jun | **6 December** | 2026-06-12 19:45 |
+
+This is the whole explanation for `missing_trusted_kickoff` on 2026-09-30:
+**every kickoff on a day after the 12th of the month failed to parse**, and the
+target date was the 30th.
+
+It was also a **safety hole**, not only a coverage gap. A fixture that had
+already started, e.g. `"12-06, 07:00"` at 08:00, parsed as 6 December — months
+away — so the pre-match guard *passed* it. Correct parsing now rejects it as
+`inside_30m_lead_or_started`. The local 2026-06-12 run shows `kickoff_guard: 1`
+where it previously showed 0, because the guard can finally evaluate the time.
+
+Two related defects fixed in the same function:
+
+- the year came from the wall clock, so a 31 December run read a 1 January
+  fixture as the *previous* January. It now derives from the fixture's own date
+  and rolls forward across the year boundary.
+- a bare `"HH:MM"` was stamped with *today's* date, which would have mis-dated
+  every future fixture in the horizon planner. It now uses the fixture's date.
+
+`parse_kickoff_dt(value, reference_date=None)` is backward compatible; callers
+in `fresh_production.py` and `operational_pick_eligibility` now pass the
+fixture date.
+
+### Timing blocker naming corrected
+
+`kickoff_present_from_source_not_allowed_as_timing_provider` is renamed
+`kickoff_present_from_non_timing_source`. The blocker message no longer
+hardcodes "from non-timing sources": it now reports the real split, naming the
+timing providers and the non-timing sources that were actually observed.
+
+### Future-dated horizon dispatch
+
+New artifacts `fresh_production_dispatch_plan_<run_date>.{json,md}` and the
+ledger `fresh_production_dispatched_dates.json`.
+
+- `build_dispatch_plan()` separates `same_day_picks` from `horizon_picks`, and
+  every pick carries `run_date`, `event_date`, kickoff, selection, rule,
+  probability, odds, implied probability, edge, pricing/timing source, voters,
+  dispatch method, stake and risk label.
+- A horizon pick whose event date equals the run date is folded into the
+  same-day list, never double-published.
+- `sync_supabase.py --dispatch-plan` publishes each pick **under its event
+  date**, grouping rows per date and validating the whole batch before deleting
+  anything.
+- **Replace safety:** a run always replaces its own run date, and a future date
+  **only** when this run produced picks for it. An empty same-day slate can
+  therefore never delete a future pick that was already dispatched and staked.
+- `notify.py --dispatch-plan` announces `FRESH PRODUCTION PICK — event date
+  YYYY-MM-DD` instead of a bare heartbeat when the same-day slate is empty but
+  a future pick exists. A future fixture is never announced as today's bet.
+- The horizon planner now enforces the **minimum** lead itself as well as the
+  maximum, rather than trusting an upstream flag, because this is the path that
+  places money.
+
+### Operator summary
+
+Every official run now prints `FRESH PRODUCTION DISPATCH PLAN` with same-day
+picks, horizon picks, event dates, sync dates, notification action, each future
+pick in full, and the top blockers when there is nothing to dispatch.
+
+### Retention
+
+`fresh_production_dispatch_plan` added to the prefix table and `.gitignore`.
+Verified: **0 removed, 466 considered, 253 unmatched left alone**, manifest
+explains the correct zero-deletion. Raw evidence intact (23 csv.gz, 30 picks
+archives, 35 ticket slips).
+
+### Tests
+
+**Full suite: 1001 passed.** New `tests/test_horizon_dispatch.py` (36 tests):
+day-first kickoff parsing, every day 13–30 parsing, bare-time and year-boundary
+handling, started-fixture rejection, non-timing-source vs parser-missed
+classification, future-dated dispatch with all required fields, event-date
+keying, replace safety in both directions, future-pick notification, all
+horizon gates (rule, odds, suspect price, inside-lead, maximum horizon),
+dispatch-plan routing, no legacy/parked labels in plan artifacts, and the
+operator summary.
+
+**PR #18 is NOT merged.**

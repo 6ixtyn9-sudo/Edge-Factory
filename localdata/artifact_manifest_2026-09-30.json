@@ -1,13 +1,13 @@
 {
   "bytes_deleted": 0,
   "dry_run": false,
-  "files_considered": 564,
+  "files_considered": 466,
   "files_deleted": 0,
   "generated": "2026-09-30",
   "keep_days": 30,
   "keep_latest": 3,
   "kept_reason_counts": {
-    "current_target_date": 35,
+    "current_target_date": 32,
     "within_last_30_days": 134,
     "within_last_7_days": 20,
     "within_newest_3_for_prefix": 27
@@ -19,6 +19,7 @@
     "fresh_production_dispatchable_picks",
     "fresh_production_production_picks",
     "fresh_production_horizon_picks",
+    "fresh_production_dispatch_plan",
     "source_health",
     "model_health",
     "artifact_manifest",
@@ -41,10 +42,6 @@
     "discovery_sent_ledger"
   ],
   "largest_generated_files": [
-    {
-      "bytes": 212713,
-      "file": "fresh_production_candidate_picks_2026-09-30.json"
-    },
     {
       "bytes": 106558,
       "file": "source_settlement_coverage_2026-09-30.json"
@@ -80,6 +77,10 @@
     {
       "bytes": 48615,
       "file": "picks_audit_2026-09-21.md"
+    },
+    {
+      "bytes": 46779,
+      "file": "source_funnel_2026-09-30.json"
     }
   ],
   "largest_generated_prefixes": [
@@ -96,10 +97,6 @@
       "prefix": "clv_unmatched"
     },
     {
-      "bytes": 252358,
-      "prefix": "fresh_production_candidate_picks"
-    },
-    {
       "bytes": 159312,
       "prefix": "source_settlement_coverage"
     },
@@ -112,16 +109,20 @@
       "prefix": "clv_report"
     },
     {
-      "bytes": 34266,
-      "prefix": "fresh_production_walkforward"
+      "bytes": 39645,
+      "prefix": "fresh_production_candidate_picks"
     },
     {
       "bytes": 34068,
       "prefix": "artifact_manifest"
     },
     {
-      "bytes": 33261,
-      "prefix": "fresh_production_certified_edges"
+      "bytes": 29310,
+      "prefix": "ml_fade_research_report"
+    },
+    {
+      "bytes": 21147,
+      "prefix": "shadow_sent_ledger"
     }
   ],
   "no_files_removed_explanation": "Nothing was old enough: every matched generated artifact is either the current target date, inside the newest-per-prefix window, or within the retention window. Unmatched files are never eligible.",
@@ -140,7 +141,7 @@
   ],
   "schema": 2,
   "target_date": "2026-09-30",
-  "unmatched_files_left_alone": 348,
+  "unmatched_files_left_alone": 253,
   "why_each_deleted": [],
   "why_each_kept": [
     {
@@ -339,18 +340,8 @@
       "reason": "current_target_date"
     },
     {
-      "file": "fresh_production_candidate_picks_2026-09-30.json",
-      "prefix": "fresh_production_candidate_picks",
-      "reason": "current_target_date"
-    },
-    {
       "file": "fresh_production_candidate_picks_2026-09-30.md",
       "prefix": "fresh_production_candidate_picks",
-      "reason": "current_target_date"
-    },
-    {
-      "file": "fresh_production_certified_edges_2026-09-30.json",
-      "prefix": "fresh_production_certified_edges",
       "reason": "current_target_date"
     },
     {
@@ -381,11 +372,6 @@
     {
       "file": "fresh_production_production_picks_2026-09-30.json",
       "prefix": "fresh_production_production_picks",
-      "reason": "current_target_date"
-    },
-    {
-      "file": "fresh_production_walkforward_2026-09-30.json",
-      "prefix": "fresh_production_walkforward",
       "reason": "current_target_date"
     },
     {

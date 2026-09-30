@@ -1684,7 +1684,7 @@ def _kickoff_minutes(value: object) -> int | None:
     return dt.hour * 60 + dt.minute
 
 
-def parse_kickoff_dt(value: object) -> datetime | None:
+def parse_kickoff_dt(value: object, reference_date: object = None) -> datetime | None:
     """Return the kickoff as an Africa/Johannesburg datetime, or None.
 
     Accepts:
@@ -1692,6 +1692,18 @@ def parse_kickoff_dt(value: object) -> datetime | None:
       - Zulu ("2026-08-08T19:00:00Z")
       - Naive "DD-MM, HH:MM" and "HH:MM" (assumed SAST)
     Rejects unparseable or out-of-range values.
+
+    ``reference_date`` is the fixture's own date ("YYYY-MM-DD" or a date).
+    The day-month forms carry no year, and the bare "HH:MM" form carries no
+    date at all, so the calendar context must come from the fixture rather
+    than from the wall clock: a run on the 30th must not stamp tomorrow's
+    fixture with today's date, and a run on 31 December must not regress a
+    1 January fixture by a full year.
+
+    Field order is DD-MM, matching the feeds: zulubet publishes
+    ``2024-07-24`` as ``"24-07, 14:00"``. Reading that as MM-DD silently
+    moves a fixture by months, or fails outright whenever the day exceeds
+    12 — which is why kickoffs went missing on the 30th of the month.
     """
     text = str(value or "").strip()
     if not text:
@@ -1706,24 +1718,47 @@ def parse_kickoff_dt(value: object) -> datetime | None:
         return dt.astimezone(tz)
     except ValueError:
         pass
+
+    ref = _kickoff_reference_date(reference_date, tz)
+
     # "DD-MM, HH:MM" or "DD-MM HH:MM"
     m = re.match(r"^(\d{1,2})-(\d{1,2})[ ,]+(\d{1,2}):(\d{2})\s*$", text)
     if m:
-        mm, dd, hh, mi = map(int, m.groups())
+        dd, mm, hh, mi = map(int, m.groups())
         if 0 <= hh <= 23 and 0 <= mi <= 59:
-            year = datetime.now(tz).year
+            # The reference year is the fixture's own year. A December run
+            # reading a January fixture rolls forward rather than back.
+            year = ref.year
+            if ref.month == 12 and mm == 1:
+                year += 1
+            elif ref.month == 1 and mm == 12:
+                year -= 1
             try:
                 return datetime(year, mm, dd, hh, mi, tzinfo=tz)
             except ValueError:
                 return None
-    # bare "HH:MM" — date supplied by caller via pick["date"]; return today
+    # bare "HH:MM" — the calendar day comes from the fixture's own date.
     m = re.match(r"^(\d{1,2}):(\d{2})\s*$", text)
     if m:
         hh, mi = map(int, m.groups())
         if 0 <= hh <= 23 and 0 <= mi <= 59:
-            today = datetime.now(tz).date()
-            return datetime(today.year, today.month, today.day, hh, mi, tzinfo=tz)
+            return datetime(ref.year, ref.month, ref.day, hh, mi, tzinfo=tz)
     return None
+
+
+def _kickoff_reference_date(reference_date: object, tz) -> date:
+    """The calendar context for a kickoff string that carries none."""
+    if isinstance(reference_date, datetime):
+        return reference_date.date()
+    if isinstance(reference_date, date):
+        return reference_date
+    text = str(reference_date or "").strip()[:10]
+    if text:
+        try:
+            return date.fromisoformat(text)
+        except ValueError:
+            pass
+    return datetime.now(tz).date()
 
 
 def _kickoff_delta_minutes(a: object, b: object) -> int | None:
@@ -1895,7 +1930,7 @@ def operational_pick_eligibility(
     if pick_date > as_of_date:
         return True, None
 
-    ko = parse_kickoff_dt(_kickoff_value(pick))
+    ko = parse_kickoff_dt(_kickoff_value(pick), pick.get("date"))
     if ko is None:
         return False, "missing_kickoff_same_day"
     if ko.tzinfo is None:

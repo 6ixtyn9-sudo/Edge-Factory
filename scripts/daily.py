@@ -301,6 +301,22 @@ def sync_official_archive(target_date: str, label: str = "sync_supabase") -> Non
     if not production_lane.legacy_dispatch_allowed():
         print("    legacy_baseline dispatch is disabled: comparison reports only, "
               "no production sync, no production notification, no fallback.")
+
+    # When the fresh lane produced a dispatch plan, publish through it: the
+    # plan carries future-dated horizon picks under their own event dates,
+    # and it decides which dates this run is allowed to replace.
+    plan_path = production_lane.dispatch_plan_path(target_date, REPORT_DIR)
+    if production_lane.fresh_production_is_active() and plan_path.exists():
+        plan = production_lane.load_dispatch_plan(target_date, REPORT_DIR)
+        print(f"    dispatch plan: {plan.get('same_day_pick_count', 0)} same-day, "
+              f"{plan.get('horizon_pick_count', 0)} future-dated pick(s); "
+              f"event dates {', '.join(plan.get('event_dates') or []) or 'none'}")
+        run_soft(
+            f"python3 scripts/sync_supabase.py "
+            f"--dispatch-plan {shlex.quote(str(plan_path))}",
+            label,
+        )
+        return
     run_soft(
         f"python3 scripts/sync_supabase.py --picks {shlex.quote(str(picks_path))} "
         f"--target-date {target_date} --replace-date",
@@ -1319,9 +1335,13 @@ def _notify(target_date: str, label: str) -> None:
     from edgefactory import production_lane
 
     picks_path = production_lane.ensure_production_picks_file(target_date, REPORT_DIR)
+    plan_path = production_lane.dispatch_plan_path(target_date, REPORT_DIR)
+    plan_arg = (f"--dispatch-plan {shlex.quote(str(plan_path))} "
+                if production_lane.fresh_production_is_active()
+                and plan_path.exists() else "")
     run_soft(
         f"python3 scripts/notify.py --date {target_date} "
-        f"--picks {shlex.quote(str(picks_path))} --heartbeat",
+        f"--picks {shlex.quote(str(picks_path))} {plan_arg}--heartbeat",
         label,
     )
     day = datetime.now(local_tz()).strftime("%Y-%m-%d")

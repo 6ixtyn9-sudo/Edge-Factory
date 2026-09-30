@@ -77,6 +77,44 @@ def production_edges_path(target_date: str, localdata: Path) -> Path:
     return localdata / "edges_consensus.json"
 
 
+def dispatch_plan_path(target_date: str, localdata: Path) -> Path:
+    return Path(localdata) / f"fresh_production_dispatch_plan_{target_date}.json"
+
+
+def load_dispatch_plan(target_date: str, localdata: Path) -> dict:
+    """The run's dispatch plan, or an explicit empty plan.
+
+    An empty plan is a real answer, not a failure: it says this lane has
+    nothing to publish. Callers must treat it as authoritative rather than
+    looking elsewhere for picks.
+    """
+    path = dispatch_plan_path(target_date, localdata)
+    if not fresh_production_is_active() or not path.exists():
+        return {
+            "run_date": target_date,
+            "same_day_picks": [],
+            "horizon_picks": [],
+            "same_day_pick_count": 0,
+            "horizon_pick_count": 0,
+            "event_dates": [],
+            "future_event_dates": [],
+            "sync_dates": [target_date],
+            "replaceable_dates": [target_date],
+            "notification_action": "empty_slate",
+        }
+    try:
+        plan = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return {
+            "run_date": target_date, "same_day_picks": [], "horizon_picks": [],
+            "same_day_pick_count": 0, "horizon_pick_count": 0,
+            "event_dates": [], "future_event_dates": [],
+            "sync_dates": [target_date], "replaceable_dates": [target_date],
+            "notification_action": "empty_slate",
+        }
+    return plan if isinstance(plan, dict) else {}
+
+
 def horizon_picks_path(target_date: str, localdata: Path) -> Path:
     return Path(localdata) / f"fresh_production_horizon_picks_{target_date}.json"
 
@@ -140,14 +178,21 @@ def production_payload(target_date: str, localdata: Path, *,
     """
     lane = active_lane()
     rows = load_production_picks(target_date, localdata)
+    plan = load_dispatch_plan(target_date, localdata)
     return {
         "production_lane": lane,
         "production_pick_file": str(production_picks_path(target_date, localdata)),
         "production_edge_file": str(production_edges_path(target_date, localdata)),
         "production_pick_count": len(rows),
         "production_date": target_date,
-        "production_horizon": horizon_days,
+        "production_horizon": horizon_days or plan.get("horizon_pick_count", 0),
         "comparison_only_files": comparison_only_files(target_date, localdata),
+        "dispatch_plan_file": str(dispatch_plan_path(target_date, localdata)),
+        "horizon_pick_count": plan.get("horizon_pick_count", 0),
+        "event_dates": plan.get("event_dates", []),
+        "sync_dates": plan.get("sync_dates", [target_date]),
+        "replaceable_dates": plan.get("replaceable_dates", [target_date]),
+        "notification_action": plan.get("notification_action", "empty_slate"),
         "legacy_dispatch_allowed": legacy_dispatch_allowed(),
         "fallback_to_other_lane": False,
     }

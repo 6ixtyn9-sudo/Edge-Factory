@@ -284,7 +284,7 @@ def load_fixture_groups(
                     # this the blocker cannot distinguish "nobody published a
                     # kickoff" from "we refused the one that was published".
                     trusted = cap is not None and cap.provides_kickoff
-                    parsed = (engine.parse_kickoff_dt(raw) is not None
+                    parsed = (engine.parse_kickoff_dt(raw, day) is not None
                               if engine is not None else None)
                     group.kickoff_observations.append(
                         {"source": source, "raw": raw,
@@ -778,7 +778,7 @@ TIMING_OK = "trusted_kickoff_present"
 TIMING_STARTED = "already_started_or_inside_lead"
 TIMING_NO_SOURCE = "missing_kickoff_in_all_sources"
 TIMING_PARSE_FAILED = "kickoff_present_but_parser_missed"
-TIMING_UNTRUSTED_SOURCE = "kickoff_present_from_source_not_allowed_as_timing_provider"
+TIMING_NON_TIMING_SOURCE = "kickoff_present_from_non_timing_source"
 
 
 def diagnose_timing(group: FixtureGroup, *, guard_reason: str | None) -> dict:
@@ -803,7 +803,7 @@ def diagnose_timing(group: FixtureGroup, *, guard_reason: str | None) -> dict:
     elif any(o["timing_capable"] and o["parsed"] is False for o in observations):
         classification = TIMING_PARSE_FAILED
     elif any(not o["timing_capable"] for o in observations):
-        classification = TIMING_UNTRUSTED_SOURCE
+        classification = TIMING_NON_TIMING_SOURCE
     else:
         classification = TIMING_NO_SOURCE
     return {
@@ -1086,10 +1086,17 @@ def build_candidates(
         timing = diagnose_timing(group, guard_reason=guard_reason)
         cand.timing_diagnosis = timing
         if not group.kickoff:
+            trusted_obs = [o for o in timing["observations"] if o["timing_capable"]]
+            untrusted_obs = [o for o in timing["observations"]
+                             if not o["timing_capable"]]
             blockers.append(
                 f"{BLOCKER_MISSING_KICKOFF}: {timing['classification']} "
-                f"({len(timing['observations'])} kickoff observation(s) "
-                "from non-timing sources)")
+                f"({len(trusted_obs)} observation(s) from timing providers"
+                + (f" [{','.join(sorted({o['source'] for o in trusted_obs}))}]"
+                   if trusted_obs else "")
+                + f", {len(untrusted_obs)} from non-timing sources"
+                + (f" [{','.join(sorted({o['source'] for o in untrusted_obs}))}]"
+                   if untrusted_obs else "") + ")")
         elif guard_reason:
             blockers.append(
                 f"{BLOCKER_KICKOFF_GUARD}: {guard_reason} "
@@ -1574,7 +1581,35 @@ def render_summary(report: dict) -> str:
         lines.append("  FRESH PRODUCTION — NO PICKS")
         lines.append("")
         lines += no_picks_diagnosis(report)
+    plan = report.get("dispatch_plan")
+    if plan:
+        lines += [""] + render_dispatch_plan_summary(plan, report)
     return "\n".join(lines)
+
+
+def render_dispatch_plan_summary(plan: dict, report: dict) -> list[str]:
+    """Operator-facing statement of what will actually be published."""
+    counts = report.get("blocker_counts", {})
+    lines = [
+        "FRESH PRODUCTION DISPATCH PLAN",
+        f"  same-day dispatchable picks:   {plan['same_day_pick_count']}",
+        f"  horizon dispatchable picks:    {plan['horizon_pick_count']}",
+        f"  event dates:                   "
+        f"{', '.join(plan['event_dates']) or 'none'}",
+        f"  sync dates:                    {', '.join(plan['sync_dates'])}",
+        f"  notification action:           {plan['notification_action']}",
+    ]
+    for row in plan["horizon_picks"]:
+        lines.append(
+            f"    FUTURE {row['event_date']} {row.get('kickoff') or '-'} "
+            f"{row['home']} vs {row['away']} | {row.get('pick')} | "
+            f"odds={row.get('odds')} | edge={(row.get('edge') or 0):+.4f} | "
+            f"{row.get('edge_rule')} | stake={row.get('stake_units')}u")
+    if not plan["same_day_pick_count"] and not plan["horizon_pick_count"]:
+        lines.append("  top blockers if none:")
+        lines += [f"    {name}: {count}" for name, count in counts.items()] or \
+                 ["    none"]
+    return lines
 
 
 def no_picks_diagnosis(report: dict) -> list[str]:
@@ -1663,6 +1698,164 @@ def no_picks_diagnosis(report: dict) -> list[str]:
 # --------------------------------------------------------------------------
 
 
+def horizon_pick_rows(horizon: dict) -> list[dict]:
+    """Shape eligible horizon picks for production dispatch.
+
+    A horizon pick has already passed every same-day gate plus the lead
+    bounds, so the only thing that distinguishes it from a same-day pick is
+    that its event date is in the future. It is dated by its EVENT date, not
+    by the run date, so the warehouse and the dashboard place the bet on the
+    day it is actually played.
+    """
+    rows = []
+    for pick in horizon.get("picks", []):
+        if not pick.get("dispatchable"):
+            continue
+        row = {
+            "run_date": horizon.get("generated_for"),
+            "event_date": pick["date"],
+            "date": pick["date"],          # event date: what the warehouse keys on
+            "kickoff": pick.get("kickoff"),
+            "league": pick.get("league"),
+            "home": pick["home"],
+            "away": pick["away"],
+            "market": "1x2",
+            "pick": pick["selection"],
+            "selection": pick["selection"],
+            "odds": pick.get("odds"),
+            "probability": pick.get("probability"),
+            "avg_p": round((pick.get("probability") or 0) * 100, 2),
+            "implied_probability": pick.get("implied_probability"),
+            "edge": pick.get("edge"),
+            "bucket": "FRESH_PRODUCTION_CERTIFIED",
+            "edge_rule": pick.get("rule_id"),
+            "rule_id": pick.get("rule_id"),
+            "display_rule": f"{pick.get('dispatch_method')}:{pick.get('rule_id')}",
+            "edge_status": "certified",
+            "lane": "fresh_production",
+            "horizon_pick": True,
+            "dispatch_method": pick.get("dispatch_method"),
+            "odds_source": pick.get("pricing_source"),
+            "pricing_source": pick.get("pricing_source"),
+            "timing_source": pick.get("timing_source"),
+            "bookmaker": pick.get("bookmaker"),
+            "odds_match_method": pick.get("price_match_method"),
+            "price_tier": pick.get("price_tier"),
+            "stake_units": pick.get("stake_units"),
+            "stake": pick.get("stake_units"),
+            "risk_label": pick.get("risk_label"),
+            "model_version": pick.get("model_version"),
+            "feature_schema_version": pick.get("feature_schema_version"),
+            "source_voters": pick.get("source_voters"),
+            "walkforward_evidence": pick.get("walkforward_evidence"),
+        }
+        rows.append(row)
+    return rows
+
+
+def build_dispatch_plan(*, run_date: str, same_day_rows: list[dict],
+                        horizon_rows: list[dict], horizon: dict) -> dict:
+    """The single statement of what production should publish and announce.
+
+    Same-day and future-dated picks are kept in separate lists because they
+    have different replace semantics: the run date's slate is authoritative
+    for that date, whereas a future date must only be touched when this run
+    actually produced picks for it.
+    """
+    for row in same_day_rows:
+        row.setdefault("run_date", run_date)
+        row.setdefault("event_date", row.get("date"))
+        row.setdefault("horizon_pick", False)
+
+    future_rows = [r for r in horizon_rows if r["event_date"] != run_date]
+    # A horizon pick whose event date IS the run date is simply a same-day
+    # pick; it must not be double-counted.
+    same_day_keys = {(r.get("date"), r.get("home"), r.get("away"), r.get("pick"))
+                     for r in same_day_rows}
+    for row in horizon_rows:
+        if row["event_date"] == run_date:
+            key = (row.get("date"), row.get("home"), row.get("away"), row.get("pick"))
+            if key not in same_day_keys:
+                same_day_rows.append(row)
+                same_day_keys.add(key)
+
+    event_dates = sorted({r["event_date"] for r in same_day_rows + future_rows})
+    future_dates = sorted({r["event_date"] for r in future_rows})
+
+    if same_day_rows:
+        action = "same_day_pick"
+    elif future_rows:
+        action = "future_pick"
+    else:
+        action = "empty_slate"
+
+    return {
+        "schema": 1,
+        "lane": "fresh_production",
+        "run_date": run_date,
+        "same_day_picks": same_day_rows,
+        "horizon_picks": future_rows,
+        "same_day_pick_count": len(same_day_rows),
+        "horizon_pick_count": len(future_rows),
+        "event_dates": event_dates,
+        "future_event_dates": future_dates,
+        # The run date is always authoritative for itself, so it is always
+        # replaceable. A future date is replaceable only because this run
+        # produced picks for it.
+        "sync_dates": sorted({run_date} | set(event_dates)),
+        "replaceable_dates": sorted({run_date} | set(future_dates)),
+        "notification_action": action,
+        "horizon_window": {
+            "horizon_end": horizon.get("horizon_end"),
+            "min_lead_minutes": horizon.get("min_lead_minutes"),
+            "max_lead_hours": horizon.get("max_lead_hours"),
+        },
+        "note": (
+            "Future-dated picks are dispatched under their EVENT date. A run "
+            "replaces its own run date unconditionally and a future date only "
+            "when that date appears in this plan, so an empty same-day slate "
+            "can never delete an already-dispatched future pick."
+        ),
+    }
+
+
+def render_dispatch_plan_md(plan: dict) -> str:
+    lines = [
+        f"# FRESH PRODUCTION DISPATCH PLAN — run date {plan['run_date']}",
+        "",
+        f"- same-day dispatchable picks: {plan['same_day_pick_count']}",
+        f"- horizon dispatchable picks: {plan['horizon_pick_count']}",
+        f"- event dates: {', '.join(plan['event_dates']) or 'none'}",
+        f"- sync dates: {', '.join(plan['sync_dates'])}",
+        f"- notification action: {plan['notification_action']}",
+        "",
+    ]
+    for title, rows in (("Same-day picks", plan["same_day_picks"]),
+                        ("Future-dated horizon picks", plan["horizon_picks"])):
+        lines += [f"## {title}", ""]
+        if not rows:
+            lines += ["None.", ""]
+            continue
+        lines += ["| event date | kickoff | fixture | selection | prob | odds | "
+                  "implied | edge | rule | stake |",
+                  "|---|---|---|---|---:|---:|---:|---:|---|---:|"]
+        for r in rows:
+            prob = r.get("probability")
+            if prob is None and r.get("avg_p") is not None:
+                prob = r["avg_p"] / 100
+            lines.append(
+                f"| {r['event_date']} | {r.get('kickoff') or '-'} | "
+                f"{r['home']} vs {r['away']} | {r.get('pick')} | "
+                f"{prob if prob is None else format(prob, '.3f')} | "
+                f"{r.get('odds') or '-'} | "
+                f"{r.get('implied_probability') or '-'} | "
+                f"{(r.get('edge') or 0):+.4f} | {r.get('edge_rule') or '-'} | "
+                f"{r.get('stake_units') or 0} |")
+        lines.append("")
+    lines += [plan["note"], ""]
+    return "\n".join(lines)
+
+
 def production_pick_rows(candidates: list[Candidate]) -> list[dict]:
     """Shape dispatchable picks for the production sync/notify path.
 
@@ -1746,7 +1939,7 @@ def plan_horizon(
         for cand in day_candidates:
             if not cand.dispatchable:
                 continue
-            kickoff_dt = (engine.parse_kickoff_dt(cand.kickoff)
+            kickoff_dt = (engine.parse_kickoff_dt(cand.kickoff, cand.date)
                           if cand.kickoff else None)
             if kickoff_dt is None:
                 cand.dispatchable = False
@@ -1755,6 +1948,18 @@ def plan_horizon(
                     "parseable trusted kickoff")
                 continue
             lead = kickoff_dt - as_of
+            # Re-check the lower bound here as well. build_candidates already
+            # applies the pre-match guard, but this is the path that puts
+            # money on a future fixture, so it verifies both bounds itself
+            # rather than trusting an upstream flag.
+            if lead < timedelta(minutes=min_lead):
+                cand.dispatchable = False
+                cand.stake_units = 0.0
+                cand.blockers.append(
+                    f"{BLOCKER_KICKOFF_GUARD}: kickoff is "
+                    f"{lead.total_seconds() / 60:.0f} minute(s) away, inside "
+                    f"the {min_lead}-minute minimum lead")
+                continue
             if lead > max_lead:
                 cand.dispatchable = False
                 cand.blockers.append(
@@ -1887,6 +2092,12 @@ def run(
         localdata=localdata, day=day, as_of=as_of, horizon_days=horizon_days,
         voters=voters, min_lead=min_lead)
 
+    dispatch_plan = build_dispatch_plan(
+        run_date=day,
+        same_day_rows=production_pick_rows(candidates),
+        horizon_rows=horizon_pick_rows(horizon),
+        horizon=horizon)
+
     buckets = rule_lifecycle(evidence)
     feature_names = [f["feature_name"] for f in FEATURE_SCHEMA]
     model_warnings = model_health_checks(
@@ -1940,6 +2151,7 @@ def run(
         "candidates": [asdict(c) for c in candidates],
         "dispatchable_picks": [asdict(c) for c in dispatchable],
         "production_pick_rows": production_pick_rows(candidates),
+        "dispatch_plan": dispatch_plan,
         "_evidence": evidence,
         "_certified_payload": certified_payload,
     }
@@ -1978,7 +2190,13 @@ def run(
         write_artifact(out / f"fresh_production_horizon_picks_{day}.md",
                        render_horizon_md(horizon))
         write_artifact(out / f"fresh_production_production_picks_{day}.json",
-                       dumps(report["production_pick_rows"]))
+                       dumps(dispatch_plan["same_day_picks"]))
+        # The dispatch plan is the hand-off for future-dated dispatch: it
+        # carries each pick under its own event date.
+        write_artifact(out / f"fresh_production_dispatch_plan_{day}.json",
+                       dumps(dispatch_plan))
+        write_artifact(out / f"fresh_production_dispatch_plan_{day}.md",
+                       render_dispatch_plan_md(dispatch_plan))
         write_artifact(out / f"model_health_{day}.json",
                        dumps({"warnings": model_warnings, "envelope": envelope,
                               "model_version": MODEL_VERSION,

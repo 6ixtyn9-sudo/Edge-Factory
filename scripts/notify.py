@@ -87,6 +87,43 @@ def _load_json_list(path: Path) -> list[dict[str, Any]]:
 
 
 HEARTBEAT_MARKER_PREFIX = "__heartbeat__|"
+def format_future_pick_message(plan_path: object, target_date: str) -> str | None:
+    """Announce eligible future-dated picks, labelled by their event date.
+
+    Returns None when the plan holds no future picks, so the caller falls
+    back to the ordinary empty-slate heartbeat.
+    """
+    try:
+        plan = json.loads(Path(str(plan_path)).read_text())
+    except Exception:
+        return None
+    if not isinstance(plan, dict):
+        return None
+    rows = plan.get("horizon_picks") or []
+    if not rows:
+        return None
+
+    lines: list[str] = []
+    if not plan.get("same_day_pick_count"):
+        lines.append(f"No same-day picks for {target_date}.")
+    lines.append(f"{len(rows)} future-dated fresh production pick(s) in the "
+                 f"dispatch plan:")
+    for row in rows:
+        edge = row.get("edge")
+        edge_text = f"{edge:+.4f}" if isinstance(edge, (int, float)) else "unknown"
+        lines.append("")
+        lines.append(f"FRESH PRODUCTION PICK — event date {row.get('event_date')}")
+        lines.append(f"  {row.get('home')} vs {row.get('away')}")
+        lines.append(f"  kickoff: {row.get('kickoff') or 'unknown'}")
+        lines.append(f"  selection: {row.get('pick')} @ {row.get('odds')}")
+        lines.append(f"  edge: {edge_text}")
+        if row.get("edge_rule"):
+            lines.append(f"  rule: {row['edge_rule']}")
+        if row.get("stake_units"):
+            lines.append(f"  stake: {row['stake_units']}u")
+    return "\n".join(lines)
+
+
 HEARTBEAT_TEXT = (
     "📭 Edge Factory — no certified picks today.\n"
     "System ran normally; the slate is simply empty. Tracking continues automatically."
@@ -357,6 +394,10 @@ def main() -> int:
                          "Read-bypass only: never authorizes a ledger write after a failed "
                          "dispatch, never masks a failure in the exit status (25.1.1).")
     ap.add_argument("--late-slate-only", action="store_true", help="Strict intraday scan mode.")
+    ap.add_argument("--dispatch-plan", default=None,
+                    help="fresh_production dispatch plan. When the same-day "
+                         "slate is empty but the plan holds a future-dated "
+                         "pick, announce that instead of a bare heartbeat.")
     ap.add_argument("--heartbeat", action="store_true",
                     help="Send one 'no certified picks today' ping when the slate is empty "
                          "(morning official pass only; deduped via the sent ledger).")
@@ -453,18 +494,31 @@ def main() -> int:
                 target_date, shadow_picks, stats=_load_rolling_bucket_stats()
             )
 
+    # A future-dated pick must never be announced as a same-day pick, and an
+    # empty same-day slate that hides an eligible future pick must never be
+    # reported as a plain "nothing today".
+    future_message = None
+    if not notifiable_picks and getattr(args, "dispatch_plan", None):
+        future_message = format_future_pick_message(args.dispatch_plan, target_date)
+
     heartbeat_message = None
     if (args.heartbeat
             and os.environ.get("EDGE_FACTORY_HEARTBEAT", "1").strip().lower() not in {"0", "false", "no", "off"}
             and not notifiable_picks
             and not discovery_message
             and not shadow_message
+            and not future_message
             and _heartbeat_pending(sent_keys, target_date)):
         # One quiet ping per empty day: distinguishes 'no picks' from 'system dead'
         # for hands-off tracking. Marked in the same dedup ledger, so max 1/day.
         heartbeat_message = f"Date: {target_date}\n{HEARTBEAT_TEXT}"
 
-    if not normal_message and not discovery_message and not shadow_message and not heartbeat_message:
+    if future_message:
+        logging.info("\n>>> Dispatching future-dated fresh production pick notice...")
+        print(future_message)
+
+    if (not normal_message and not discovery_message and not shadow_message
+            and not heartbeat_message and not future_message):
         if not normal_silent_logged:
             logging.info("  [WhatsApp] Nothing new to send. Staying silent.")
         return 0
