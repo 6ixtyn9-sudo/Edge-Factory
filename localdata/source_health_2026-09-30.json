@@ -45,29 +45,29 @@
     },
     "source_embedded": {
       "market_candidate_keys": 3,
-      "raw_rows": 247,
-      "time_match_keys": 215,
-      "valid_keys": 212,
-      "valid_rows": 244
+      "raw_rows": 256,
+      "time_match_keys": 224,
+      "valid_keys": 221,
+      "valid_rows": 253
     }
   },
   "pricing_health": {
-    "candidate_count_alias_price": 2,
-    "candidate_count_before_pricing": 29,
+    "candidate_count_alias_price": 5,
+    "candidate_count_before_pricing": 30,
     "candidate_count_exact_price": 22,
-    "candidate_count_missing_price": 5,
-    "candidate_count_suspect_price_rejected": 2,
-    "candidate_count_with_any_price": 24,
-    "candidate_count_with_negative_edge": 18,
+    "candidate_count_missing_price": 3,
+    "candidate_count_suspect_price_rejected": 5,
+    "candidate_count_with_any_price": 27,
+    "candidate_count_with_negative_edge": 21,
     "candidate_count_with_positive_edge": 6,
     "price_tiers_used": {
-      "dedicated_pricing_feed": 8,
-      "source_embedded_price": 16
+      "dedicated_pricing_feed": 10,
+      "source_embedded_price": 17
     }
   },
   "warnings": [
-    "SOURCE_HEALTH: 5 of 29 scored candidate(s) had no captured 1X2 price",
-    "SOURCE_HEALTH: 2 candidate(s) matched a price only through a fuzzy fixture join and were rejected for dispatch",
+    "SOURCE_HEALTH: 3 of 30 scored candidate(s) had no captured 1X2 price",
+    "SOURCE_HEALTH: 5 candidate(s) matched a price only through a fuzzy fixture join and were rejected for dispatch",
     "SOURCE_HEALTH: fresh_production produced no dispatchable picks \u2014 see the blocker table for the objective reason"
   ]
 }

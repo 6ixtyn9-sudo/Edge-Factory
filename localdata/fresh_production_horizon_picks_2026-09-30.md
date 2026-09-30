@@ -1,11 +1,11 @@
 # FRESH PRODUCTION HORIZON PLAN — 2026-09-30 through 2026-10-02
 
-As of: 2026-09-30T20:07:39+02:00
+As of: 2026-09-30T20:43:42+02:00
 Lead window: 30 minutes to 48 hours before kickoff.
 
 | date | candidates | eligible |
 |---|---:|---:|
-| 2026-09-30 | 142 | 0 |
+| 2026-09-30 | 144 | 0 |
 | 2026-10-01 | 60 | 1 |
 | 2026-10-02 | 29 | 0 |
 
