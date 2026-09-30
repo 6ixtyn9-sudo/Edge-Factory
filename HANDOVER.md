@@ -9456,3 +9456,48 @@ on holder bench, qualifier preference, and the self-heal trap). No production be
 Side observation, not acted on: `3way-unanimous avg_p>=65` is certified, `WATCH`,
 `n_last_window: 0`, last fired 2026-08-10 — inert weight in the registry, worth a look at the
 next maintenance pass.
+
+
+---
+
+## Addendum — 2026-09-30: free multi-egress source recovery (no residential dependency)
+
+### Incident and repeated-failure audit
+
+The official 2026-09-30 ledger was empty after the scoreable fixture surface
+collapsed from 47 fixtures on 09-29 to 7 on 09-30. Forebet had no 09-30 capture
+and ScoutingStats stopped at 09-26. This was transport degradation, not a true
+empty football slate. The prior 2026-08-20 incidents already established four
+constraints that this repair preserves: challenge HTML must never become a
+valid zero-row day; GitHub direct/browser retries must not consume the workflow
+time budget; a relay must prove exact source provenance; and no replacement
+provider may masquerade as Forebet or ScoutingStats.
+
+### Free failover shipped
+
+1. Forebet requests add the currently readable, payload-compatible `output=1`
+   cache/WAF variant. In Actions the order is operator relays (Cloudflare then
+   Apps Script), public Jina, then bounded direct/browser transports. Every
+   body still must satisfy Forebet's strict `[rows, meta]` schema.
+2. ScoutingStats uses operator relays first in Actions, then the validated Jina
+   route. Local execution retains direct-first behavior. Both fixtures and odds
+   endpoints use the same path.
+3. `public_relay.py` defines one authenticated POST envelope. The token stays
+   out of URLs; exact echoed source URL, HTTP status, body type and 12 MiB limit
+   are enforced.
+4. Deployable allowlisted implementations live under `relay/`: a Cloudflare
+   Worker and Google Apps Script web app. Neither is an open proxy. Both accept
+   only exact public Forebet and ScoutingStats endpoint shapes.
+5. The daily workflow maps `EDGE_FACTORY_RELAY_URLS` and
+   `EDGE_FACTORY_RELAY_TOKEN`; `.env.example` and `relay/README.md` document
+   one-time deployment. External account authorization remains deliberately
+   outside the repository—no Cloudflare or Google credential is committed.
+
+### Verification and operational boundary
+
+Full suite: 730 passed; focused source/picker/price suites: 57 passed. Python
+compilation, JavaScript Worker syntax and diff checks are clean. The external relays cannot be deployed
+or production-smoked until their owners authorize Cloudflare/Google and add the
+two GitHub secrets. A green workflow alone is not proof: confirm target-day
+monthly rows and named source votes. No source substitution, threshold, source
+weight, bucket, staking, ticket, or notification behavior changed.
