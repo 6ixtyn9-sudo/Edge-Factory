@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
-import {FOREBET_GETRS_OPERATION, runForebetGetrsBrowser} from "../src/forebet-browser.js";
+import {FOREBET_GETRS_OPERATION, FOREBET_GETRS_TRANSPORT, runForebetGetrsBrowser} from "../src/forebet-browser.js";
 
 const SOURCE = "https://www.forebet.com/scripts/getrs.php?ln=en&tp=1x2&in=2026-09-30&ord=0&tz=0&tzs=&tze=&output=1";
 const BODY = JSON.stringify([[{id: "1", HOST_NAME: "Alpha", GUEST_NAME: "Beta"}], {ok: true}]);
@@ -63,8 +63,9 @@ function browserClient({body = BODY, status = 200, events = []} = {}) {
   };
 }
 
-test("forebet browser operation name is stable", () => {
+test("forebet browser operation markers are stable", () => {
   assert.equal(FOREBET_GETRS_OPERATION, "forebet_getrs");
+  assert.equal(FOREBET_GETRS_TRANSPORT, "cloudflare_browser_rendering");
 });
 
 test("browser getrs operation validates exact source and returns relay contract", async () => {
@@ -72,8 +73,12 @@ test("browser getrs operation validates exact source and returns relay contract"
   const result = await runForebetGetrsBrowser(env(), browserClient({events}), {url: SOURCE});
 
   assert.equal(result.httpResponseStatus, 200);
+  assert.equal(result.payload.operation, FOREBET_GETRS_OPERATION);
+  assert.equal(result.payload.transport, FOREBET_GETRS_TRANSPORT);
   assert.equal(result.payload.source_url, SOURCE);
   assert.equal(result.payload.status, 200);
+  assert.equal(result.payload.body_shape, "forebet_getrs");
+  assert.equal(result.payload.row_count, 1);
   assert.equal(result.payload.body, BODY);
   assert.match(result.payload.fetched_at, /^\d{4}-\d{2}-\d{2}T/);
   assert.deepEqual(events, ["launch", "newPage", "ua", "headers", "goto", "evaluate", "close"]);
@@ -88,7 +93,11 @@ test("browser getrs operation refuses non-allowlisted urls before launch", async
   );
 
   assert.equal(result.httpResponseStatus, 403);
-  assert.deepEqual(result.payload, {error: "source_not_allowed"});
+  assert.deepEqual(result.payload, {
+    operation: FOREBET_GETRS_OPERATION,
+    transport: FOREBET_GETRS_TRANSPORT,
+    error: "source_not_allowed",
+  });
   assert.deepEqual(events, []);
 });
 
@@ -101,7 +110,10 @@ test("browser getrs operation rejects challenge html shape and closes browser", 
   );
 
   assert.equal(result.httpResponseStatus, 502);
-  assert.equal(result.payload.error, "browser_fetch");
+  assert.equal(result.payload.operation, FOREBET_GETRS_OPERATION);
+  assert.equal(result.payload.transport, FOREBET_GETRS_TRANSPORT);
+  assert.equal(result.payload.error, "browser_response_not_forebet_getrs_json");
+  assert.equal(result.payload.body_shape, "non_json_body");
   assert.equal(result.payload.source_url, SOURCE);
   assert.ok(events.includes("close"));
 });
@@ -114,5 +126,20 @@ test("browser getrs operation respects binding limits", async () => {
   );
 
   assert.equal(result.httpResponseStatus, 429);
-  assert.deepEqual(result.payload, {error: "browser_quota_exhausted"});
+  assert.deepEqual(result.payload, {
+    operation: FOREBET_GETRS_OPERATION,
+    transport: FOREBET_GETRS_TRANSPORT,
+    error: "browser_quota_exhausted",
+  });
+});
+
+test("browser getrs operation identifies itself on binding errors", async () => {
+  const result = await runForebetGetrsBrowser({}, browserClient(), {url: SOURCE});
+
+  assert.equal(result.httpResponseStatus, 503);
+  assert.deepEqual(result.payload, {
+    operation: FOREBET_GETRS_OPERATION,
+    transport: FOREBET_GETRS_TRANSPORT,
+    error: "missing_browser_binding",
+  });
 });

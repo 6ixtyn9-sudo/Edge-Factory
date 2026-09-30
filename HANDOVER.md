@@ -9928,3 +9928,50 @@ Operational notes:
 - Google Apps Script deploy is still manual. After merging, paste the full updated `relay/google-apps-script/Code.gs` into the Apps Script project and redeploy the web app so PredictZ/WinDrawWin and stricter Forebet allowlists are live on the GAS fallback.
 - `.github/workflows/daily.yml` still does not enumerate sources; no daily workflow source list change was required. The only schedule-impacting code change is inside `scripts/daily.py`, where intraday mode invokes the new bounded ProSoccer capture pass.
 - Do not add ProSoccer or SoccerVista to `picks_today.py` live voting lists. They remain data sources subject to the existing walk-forward certification gates.
+
+## Addendum — 2026-09-30: PR15 probe receipts and Browser Run proof markers
+
+Operator-supplied post-update logs were reviewed after the Forebet probe workflow
+became available on the PR branch. The `forebet_getrs` workflow YAML executed with
+secrets present, but its receipt was `http_response_status=502`,
+`relay_status=403`, `body_shape=non_json_body`, `row_count=null`, `ok=false` for
+the exact public `getrs.php` URL. That is a failed production probe, not proof of
+Forebet rows. The observed envelope also matches the legacy generic relay fetch
+shape or a non-updated Worker deployment, so this follow-up hardens the proof
+contract instead of claiming success.
+
+The separately run Browser Run diagnostic launched one browser session and
+returned `classification=unresolved_cloudflare_challenge`, page title
+`Just a moment...`, Cloudflare challenge markers, Turnstile source markers, and
+`success=false`. Forebet Browser Run therefore remains unproven in production;
+there is still no deployed Worker receipt showing Forebet `[rows, meta]` JSON
+with positive `row_count`.
+
+Follow-up hardening:
+
+- `relay/cloudflare-worker/src/forebet-browser.js` now stamps every
+  `forebet_getrs` response with `operation=forebet_getrs` and
+  `transport=cloudflare_browser_rendering`. Success receipts also include
+  `body_shape=forebet_getrs` and `row_count`; failure receipts omit raw challenge
+  HTML but keep enough metadata for diagnosis.
+- `src/edgefactory/sources/forebet.py` now rejects Browser Run envelopes that do
+  not carry those operation/transport markers, so a legacy generic relay response
+  cannot be mistaken for a Browser Run success.
+- `docs/operator/forebet-getrs-probe.yml.proposed` now contains the full
+  replacement workflow that classifies missing markers as
+  `legacy_generic_relay_or_worker_not_deployed`. The actual `.github/workflows`
+  file still requires an operator/manual update because the GitHub App token
+  rejected workflow-file edits. A passing production probe must show
+  `classification=forebet_getrs_browser_rows`,
+  `worker_supports_browser_getrs=true`, `transport=cloudflare_browser_rendering`,
+  `body_shape=forebet_getrs`, and `row_count > 0`.
+- Correction to earlier notes: workflow files are present on the PR branch,
+  and `.github/workflows/daily.yml` carries default-off Playwright wiring. This
+  follow-up's probe-workflow classification upgrade is mirrored under
+  `docs/operator/` for manual replacement because the App token cannot push
+  workflow-file edits.
+
+Verification after this hardening: `PYTHONPATH=src /home/user/venv/bin/python -m
+pytest tests/ -q` → 773 passed in 11.99s; `cd relay/cloudflare-worker && npm
+test` → 47 tests passed; Worker JavaScript `node --check` passed; `git diff
+--check` was clean.

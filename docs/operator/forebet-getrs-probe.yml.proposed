@@ -44,6 +44,9 @@ jobs:
           import urllib.parse
           import urllib.request
 
+          EXPECTED_OPERATION = "forebet_getrs"
+          EXPECTED_TRANSPORT = "cloudflare_browser_rendering"
+
           relay_urls = os.environ.get("RELAY_URLS", "")
           token = os.environ.get("RELAY_TOKEN", "")
           worker_url = relay_urls.split(",", 1)[0].strip()
@@ -69,7 +72,7 @@ jobs:
           source_url = "https://www.forebet.com/scripts/getrs.php?" + query
           payload = json.dumps({
               "token": token,
-              "operation": "forebet_getrs",
+              "operation": EXPECTED_OPERATION,
               "url": source_url,
           }).encode("utf-8")
 
@@ -114,9 +117,22 @@ jobs:
               }))
               sys.exit(1)
 
-          row_count = None
-          body_shape = None
-          if isinstance(envelope, dict) and isinstance(envelope.get("body"), str):
+          if not isinstance(envelope, dict):
+              print(json.dumps({
+                  "http_response_status": status,
+                  "classification": "workflow_unexpected_json_response",
+              }))
+              sys.exit(1)
+
+          operation = envelope.get("operation")
+          transport = envelope.get("transport")
+          worker_supports_browser_getrs = (
+              operation == EXPECTED_OPERATION and transport == EXPECTED_TRANSPORT
+          )
+          relay_status = envelope.get("status")
+          body_shape = envelope.get("body_shape")
+          row_count = envelope.get("row_count")
+          if isinstance(envelope.get("body"), str):
               try:
                   parsed = json.loads(envelope["body"])
                   body_shape = "forebet_getrs" if isinstance(parsed, list) and parsed and isinstance(parsed[0], list) else "unexpected"
@@ -124,17 +140,43 @@ jobs:
               except Exception:
                   body_shape = "non_json_body"
 
+          ok = (
+              status == 200
+              and worker_supports_browser_getrs
+              and relay_status == 200
+              and body_shape == "forebet_getrs"
+              and (row_count or 0) > 0
+          )
+          if ok:
+              classification = "forebet_getrs_browser_rows"
+          elif not worker_supports_browser_getrs and isinstance(envelope.get("body"), str):
+              classification = "legacy_generic_relay_or_worker_not_deployed"
+          elif not worker_supports_browser_getrs:
+              classification = "unexpected_relay_contract_or_worker_not_deployed"
+          elif envelope.get("error") == "browser_response_not_forebet_getrs_json":
+              classification = "browser_run_returned_non_getrs_json"
+          elif envelope.get("error"):
+              classification = "browser_run_" + str(envelope.get("error"))
+          else:
+              classification = "forebet_getrs_probe_failed"
+
           receipt = {
+              "classification": classification,
               "http_response_status": status,
               "source_url": source_url,
-              "relay_status": envelope.get("status") if isinstance(envelope, dict) else None,
+              "operation": operation,
+              "transport": transport,
+              "worker_supports_browser_getrs": worker_supports_browser_getrs,
+              "relay_status": relay_status,
               "body_shape": body_shape,
               "row_count": row_count,
-              "ok": status == 200 and body_shape == "forebet_getrs" and (row_count or 0) > 0,
+              "ok": ok,
           }
-          if isinstance(envelope, dict) and envelope.get("error"):
-              receipt["error"] = envelope.get("error")
+          if envelope.get("error"):
+              receipt["relay_error"] = envelope.get("error")
+          if envelope.get("content_type"):
+              receipt["content_type"] = envelope.get("content_type")
           print(json.dumps(receipt, sort_keys=True))
-          if not receipt["ok"]:
+          if not ok:
               sys.exit(1)
           PY

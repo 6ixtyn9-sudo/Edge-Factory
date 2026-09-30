@@ -1,6 +1,7 @@
 import {allowedForebetGetrs, headersFor, BROWSER_UA} from "./allowlist.js";
 
 export const FOREBET_GETRS_OPERATION = "forebet_getrs";
+export const FOREBET_GETRS_TRANSPORT = "cloudflare_browser_rendering";
 export const FOREBET_BROWSER_TIMEOUT_MS = 45_000;
 export const FOREBET_BROWSER_MAX_BODY = 12 * 1024 * 1024;
 
@@ -38,11 +39,25 @@ function safeError(error) {
   );
 }
 
-function validateJsonBody(body) {
-  const parsed = JSON.parse(body);
-  if (!Array.isArray(parsed) || !Array.isArray(parsed[0])) {
-    throw new Error("unexpected Forebet getrs payload shape");
+function basePayload(fields = {}) {
+  return {
+    operation: FOREBET_GETRS_OPERATION,
+    transport: FOREBET_GETRS_TRANSPORT,
+    ...fields,
+  };
+}
+
+function inspectJsonBody(body) {
+  let parsed;
+  try {
+    parsed = JSON.parse(body);
+  } catch {
+    return {ok: false, body_shape: "non_json_body"};
   }
+  if (!Array.isArray(parsed) || !Array.isArray(parsed[0])) {
+    return {ok: false, body_shape: "unexpected_json_shape"};
+  }
+  return {ok: true, body_shape: "forebet_getrs", row_count: parsed[0].length};
 }
 
 async function extractBodyText(page) {
@@ -63,13 +78,13 @@ export async function runForebetGetrsBrowser(env, browserClient, input = {}) {
   try {
     source = new URL(input.url);
   } catch {
-    return {payload: {error: "url"}, httpResponseStatus: 400};
+    return {payload: basePayload({error: "url"}), httpResponseStatus: 400};
   }
   if (!allowedForebetGetrs(source)) {
-    return {payload: {error: "source_not_allowed"}, httpResponseStatus: 403};
+    return {payload: basePayload({error: "source_not_allowed"}), httpResponseStatus: 403};
   }
   if (!env?.BROWSER) {
-    return {payload: {error: "missing_browser_binding"}, httpResponseStatus: 503};
+    return {payload: basePayload({error: "missing_browser_binding"}), httpResponseStatus: 503};
   }
 
   try {
@@ -78,12 +93,12 @@ export async function runForebetGetrsBrowser(env, browserClient, input = {}) {
       const active = Array.isArray(limits?.activeSessions) ? limits.activeSessions.length : 0;
       const maximum = Number(limits?.maxConcurrentSessions);
       if (limits?.allowedBrowserAcquisitions === 0 || (maximum > 0 && active >= maximum)) {
-        return {payload: {error: "browser_quota_exhausted"}, httpResponseStatus: 429};
+        return {payload: basePayload({error: "browser_quota_exhausted"}), httpResponseStatus: 429};
       }
     }
   } catch (error) {
     return {
-      payload: {error: "browser_limits", detail: safeError(error)},
+      payload: basePayload({error: "browser_limits", detail: safeError(error)}),
       httpResponseStatus: 503,
     };
   }
@@ -110,24 +125,54 @@ export async function runForebetGetrsBrowser(env, browserClient, input = {}) {
     });
     const status = responseStatus(response);
     const body = String(await extractBodyText(page) || "").trim();
+    const fetchedAt = new Date().toISOString();
     if (byteLength(body) > FOREBET_BROWSER_MAX_BODY) {
-      return {payload: {error: "too_large"}, httpResponseStatus: 502};
+      return {
+        payload: basePayload({
+          error: "too_large",
+          source_url: source.toString(),
+          status,
+          fetched_at: fetchedAt,
+        }),
+        httpResponseStatus: 502,
+      };
     }
     // Keep the relay honest: a solved browser run must expose the JSON endpoint
-    // body, not challenge HTML rendered inside a 200 page.
-    validateJsonBody(body);
+    // body, not challenge HTML rendered inside a 200 page. The failure envelope
+    // is deliberately metadata-only so logs can distinguish a deployed Browser
+    // Run operation from the legacy generic relay without leaking challenge HTML.
+    const inspected = inspectJsonBody(body);
+    if (!inspected.ok) {
+      return {
+        payload: basePayload({
+          error: "browser_response_not_forebet_getrs_json",
+          source_url: source.toString(),
+          status,
+          content_type: responseHeader(response, "content-type"),
+          body_shape: inspected.body_shape,
+          fetched_at: fetchedAt,
+        }),
+        httpResponseStatus: 502,
+      };
+    }
     return {
-      payload: {
+      payload: basePayload({
         source_url: source.toString(),
         status,
-        fetched_at: new Date().toISOString(),
+        fetched_at: fetchedAt,
+        body_shape: inspected.body_shape,
+        row_count: inspected.row_count,
         body,
-      },
+      }),
       httpResponseStatus: status >= 200 && status < 300 ? 200 : 502,
     };
   } catch (error) {
     return {
-      payload: {error: "browser_fetch", detail: safeError(error), source_url: source.toString()},
+      payload: basePayload({
+        error: "browser_fetch",
+        detail: safeError(error),
+        source_url: source.toString(),
+      }),
       httpResponseStatus: 502,
     };
   } finally {
