@@ -9670,3 +9670,69 @@ The current state remains **implemented and locally tested, not deployed,
 live-smoke-tested, or production-validated**. No real Browser Run browser time was
 consumed. Phase 2 and production integration remain blocked on one successful live
 page-access diagnostic.
+
+## Addendum — 2026-09-30: Turnstile source marker vs interactive widget review follow-up
+
+### Background and problem statement
+
+The first live diagnostic run on `https://www.forebet.com/en/football-tips-and-predictions-for-today`
+returned:
+- `browser_launches: 1`
+- `navigation_attempts: 1`
+- `http_status: 200`
+- `page_title: "Just a moment..."`
+- `observation_count: 2`
+- `observation_elapsed_ms: ~3937`
+- `Cloudflare challenge markers present`
+- `turnstile` source marker present
+- `classification: captcha_or_turnstile_required`
+
+The previous regex-based detection checked full page HTML (`page.content()`) and
+classified any occurrence of `turnstile` in source scripts as an interactive
+human-verification requirement, aborting observation immediately before the
+transitional Cloudflare challenge could resolve.
+
+### Changes implemented
+
+1. **Do not classify CAPTCHA/Turnstile from HTML regex alone**:
+   - `turnstile_source_marker`: Set to true when `turnstile`, `cf-turnstile`, or
+     challenge script URLs appear in page HTML. This is retained as diagnostic evidence
+     only and never stops observation on its own.
+2. **Require visible rendered elements for interactive verification**:
+   - `visible_turnstile_widget`: Determined via `page.evaluate()` by checking candidate
+     Turnstile iframes/containers (e.g. Turnstile iframe, Turnstile container,
+     `[data-sitekey]` container) for computed visibility (`display !== 'none'`,
+     `visibility !== 'hidden'`, `opacity > 0`) and nonzero bounding rectangle.
+     Generic visible challenge iframes are not counted as Turnstile unless they are
+     clear Turnstile candidates.
+   - `visible_human_verification_text`: Evaluated on rendered `document.body.innerText`
+     (not full HTML) for phrases such as “Verify you are human”, “human verification”,
+     “complete the security check”, “click to verify”, and “press and hold to verify”.
+   - `interactive_human_verification_required`: True only when `visible_turnstile_widget`
+     or `visible_human_verification_text` is true. Only this condition triggers
+     `captcha_or_turnstile_required`.
+3. **Safe, bounded DOM inspection**:
+   - `page.evaluate()` is restricted to computed style and bounding box inspection.
+   - No challenge interaction, clicking, solving, or circumvention is attempted.
+   - No evasion code, header modifications, or fingerprint altering is added.
+   - No tokens, cookies, iframe query parameters, session IDs, or full page text
+     are read, logged, or returned.
+   - Bounded booleans and category names are returned.
+4. **Observation lifecycle**:
+   - Transitional challenges with source-only Turnstile markers continue bounded polling
+     at 1.5-second intervals.
+   - Polling stops immediately on concrete Forebet fixture evidence, visible interactive
+     human-verification widgets/instructions, explicit access denial, or generic non-challenge content.
+   - Chromium is strictly closed in `finally` across all outcomes, including DOM-inspection
+     and polling errors.
+5. **Phase 1 diagnostic boundary**:
+   - This diagnostic remains strictly Phase 1 diagnostic-only.
+   - No production Forebet adapter (`forebet.py`), ScoutingStats adapter, daily pipeline,
+     or betting logic is modified.
+   - No live Browser Run was performed in this session.
+
+### Verification receipts
+
+- Cloudflare Worker JavaScript syntax: clean with `node --check` across all Worker files.
+- Mocked Worker test suite: 32 tests, 32 passed.
+- `git diff --check`: clean.

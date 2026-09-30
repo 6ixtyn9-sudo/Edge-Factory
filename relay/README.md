@@ -237,10 +237,12 @@ have been separately proven.
 
 ### Failure signatures and safe interpretation
 
-- `unresolved_cloudflare_challenge`: challenge HTML was returned, including when
-  the upstream status is HTTP 200 or HTTP 403.
-- `captcha_or_turnstile_required`: the page requires an interaction this route
-  does not perform.
+- `unresolved_cloudflare_challenge`: challenge HTML or challenge scripts were
+  returned (including when source-only Turnstile markers are present), upstream
+  status is HTTP 200 or HTTP 403, and the challenge has not resolved.
+- `captcha_or_turnstile_required`: a visible Turnstile iframe/container or visible
+  human-verification instruction text is visibly rendered in the DOM (`interactive_human_verification_required = true`).
+  The diagnostic never solves or bypasses Turnstile.
 - `explicit_access_denial`: a non-challenge denial or access-denied response.
 - `navigation_timeout`: navigation exceeded the hard timeout.
 - `unresolved_cloudflare_challenge` with `observation_deadline_exceeded=true`:
@@ -252,6 +254,34 @@ have been separately proven.
   missing `BROWSER_DIAGNOSTIC_KV`, or a Browser Run binding/API failure.
 - `other`: malformed/unexpected content, an unexpected final host, or the bounded
   response-size guard. HTTP 200 alone is never success.
+
+### Turnstile classification contract: source markers vs visible interaction
+
+1. **Source-only Turnstile text is not proof of human interaction**:
+   - `turnstile_source_marker`: Set to true when HTML source contains `turnstile`,
+     `cf-turnstile`, or `challenges.cloudflare.com`. This is diagnostic evidence only
+     and does not stop observation by itself.
+   - Background challenge scripts in source do not imply an interactive human-verification
+     widget is displayed to the user.
+2. **Visible rendered widget/text is required for `captcha_or_turnstile_required`**:
+   - `visible_turnstile_widget`: True only when a candidate Turnstile iframe or container
+     is visibly rendered in the DOM (verified via computed style and a nonzero bounding rectangle).
+     Generic visible challenge iframes are not treated as interactive Turnstile unless
+     they are clearly Turnstile candidates.
+   - `visible_human_verification_text`: True only when rendered `document.body.innerText`
+     contains explicit phrases such as “Verify you are human”, “human verification”,
+     “complete the security check”, “click to verify”, or “press and hold to verify”.
+   - `interactive_human_verification_required`: True only when `visible_turnstile_widget`
+     or `visible_human_verification_text` is true. Only this condition produces
+     `captcha_or_turnstile_required`.
+3. **No CAPTCHA solving or evasion**:
+   - The diagnostic never solves, interacts with, circumvents, or bypasses Turnstile or Cloudflare challenges.
+   - DOM inspection uses `page.evaluate()` purely to check rendered element visibility and innerText.
+   - It does not inject evasion code, alter browser fingerprints, or read/replay tokens, cookies, or session IDs.
+4. **Phase 1 diagnostic-only boundary**:
+   - This diagnostic remains strictly Phase 1 and standalone.
+   - No production Forebet adapter (`forebet.py`), ScoutingStats adapter, daily pipeline,
+     or betting logic change is allowed or introduced.
 
 The current diagnostic budget is one launch per UTC day. A claimed day is not
 manually retried. If an operator must reset a test claim, use the Cloudflare KV

@@ -35,10 +35,10 @@ const CHALLENGE_MARKERS = Object.freeze([
   ["performing_security_verification", /performing security verification/i],
 ]);
 
-const CAPTCHA_MARKERS = Object.freeze([
-  ["captcha", /\bcaptcha\b/i],
+const TURNSTILE_SOURCE_MARKERS = Object.freeze([
   ["turnstile", /\bturnstile\b/i],
-  ["verify_human", /verify you are human|human verification/i],
+  ["cf_turnstile", /cf-turnstile/i],
+  ["challenge_script", /challenges\.cloudflare\.com/i],
 ]);
 
 const ACCESS_DENIAL_MARKERS = Object.freeze([
@@ -146,6 +146,133 @@ export function predictionMarkupEvidence(body) {
   };
 }
 
+export function inspectPageDom() {
+  function isElementVisible(el) {
+    if (!el || !(el instanceof Element)) return false;
+    try {
+      let current = el;
+      while (current && current !== document.documentElement) {
+        const style = window.getComputedStyle(current);
+        if (!style) return false;
+        if (style.display === "none") return false;
+        if (style.visibility === "hidden" || style.visibility === "collapse") return false;
+        if (parseFloat(style.opacity || "1") === 0) return false;
+        current = current.parentElement;
+      }
+      const rect = el.getBoundingClientRect();
+      if (!rect || rect.width <= 0 || rect.height <= 0) return false;
+      return true;
+    } catch {
+      return false;
+    }
+  }
+
+  const matchedCategories = [];
+
+  const iframes = Array.from(document.querySelectorAll("iframe"));
+  for (const iframe of iframes) {
+    try {
+      const src = (iframe.getAttribute("src") || "").toLowerCase();
+      const title = (iframe.getAttribute("title") || "").toLowerCase();
+      const id = (iframe.getAttribute("id") || "").toLowerCase();
+      const name = (iframe.getAttribute("name") || "").toLowerCase();
+
+      const isTurnstileSrc = src.includes("challenges.cloudflare.com") ||
+        src.includes("turnstile") ||
+        src.includes("/cf-turnstile/");
+      const isTurnstileTitle = title.includes("turnstile") ||
+        title.includes("cloudflare security challenge") ||
+        title.includes("widget containing a cloudflare security challenge") ||
+        title.includes("security challenge");
+      const isTurnstileIdOrName = id.includes("cf-turnstile") ||
+        id.includes("turnstile") ||
+        name.includes("cf-turnstile") ||
+        name.includes("turnstile");
+
+      const insideTurnstileContainer = Boolean(
+        iframe.closest(".cf-turnstile, [data-turnstile], [data-sitekey], #turnstile-wrapper, .turnstile-container")
+      );
+
+      const isTurnstileCandidate = isTurnstileSrc || isTurnstileTitle || isTurnstileIdOrName || insideTurnstileContainer;
+
+      if (isTurnstileCandidate && isElementVisible(iframe)) {
+        if ((isTurnstileSrc || isTurnstileTitle || isTurnstileIdOrName) && !matchedCategories.includes("turnstile_iframe")) {
+          matchedCategories.push("turnstile_iframe");
+        }
+        if (insideTurnstileContainer && !matchedCategories.includes("turnstile_container")) {
+          matchedCategories.push("turnstile_container");
+        }
+      }
+    } catch {}
+  }
+
+  const containers = Array.from(document.querySelectorAll(".cf-turnstile, [data-turnstile], #turnstile-wrapper, .turnstile-container"));
+  for (const container of containers) {
+    try {
+      if (isElementVisible(container) && !matchedCategories.includes("turnstile_container")) {
+        matchedCategories.push("turnstile_container");
+      }
+    } catch {}
+  }
+
+  const sitekeyContainers = Array.from(document.querySelectorAll("[data-sitekey]"));
+  for (const container of sitekeyContainers) {
+    try {
+      if (isElementVisible(container) && !matchedCategories.includes("sitekey_container")) {
+        matchedCategories.push("sitekey_container");
+      }
+    } catch {}
+  }
+
+  const innerText = (document.body && typeof document.body.innerText === "string")
+    ? document.body.innerText
+    : "";
+
+  const textPatterns = [
+    ["verify_you_are_human", /verify you are human/i],
+    ["human_verification", /human verification/i],
+    ["complete_the_security_check", /complete the security check/i],
+    ["click_to_verify", /click to verify/i],
+    ["press_and_hold_to_verify", /press and hold to verify/i],
+  ];
+
+  const matchedTextMarkers = [];
+  for (const [name, pattern] of textPatterns) {
+    if (pattern.test(innerText)) {
+      matchedTextMarkers.push(name);
+    }
+  }
+
+  return {
+    visible_turnstile_widget: matchedCategories.length > 0,
+    visible_turnstile_categories: matchedCategories,
+    visible_human_verification_text: matchedTextMarkers.length > 0,
+    visible_human_verification_markers: matchedTextMarkers,
+  };
+}
+
+export async function inspectRenderedDom(page) {
+  if (typeof page?.evaluate !== "function") {
+    return {
+      visible_turnstile_widget: false,
+      visible_turnstile_categories: [],
+      visible_human_verification_text: false,
+      visible_human_verification_markers: [],
+    };
+  }
+  const result = await page.evaluate(inspectPageDom);
+  return {
+    visible_turnstile_widget: Boolean(result?.visible_turnstile_widget),
+    visible_turnstile_categories: Array.isArray(result?.visible_turnstile_categories)
+      ? result.visible_turnstile_categories
+      : [],
+    visible_human_verification_text: Boolean(result?.visible_human_verification_text),
+    visible_human_verification_markers: Array.isArray(result?.visible_human_verification_markers)
+      ? result.visible_human_verification_markers
+      : [],
+  };
+}
+
 export function classifyRenderedForebet({
   httpStatus = null,
   contentType = null,
@@ -154,21 +281,30 @@ export function classifyRenderedForebet({
   responseBytes = null,
   navigationTimedOut = false,
   responseSizeOverflow = false,
+  visibleTurnstileWidget = false,
+  visibleTurnstileCategories = [],
+  visibleHumanVerificationText = false,
+  visibleHumanVerificationMarkers = [],
 }) {
   const text = String(body || "");
   const challengeMarkers = hasAnyMarker(text, CHALLENGE_MARKERS);
-  const captchaMarkers = hasAnyMarker(text, CAPTCHA_MARKERS);
+  const turnstileSourceMarkers = hasAnyMarker(text, TURNSTILE_SOURCE_MARKERS);
   const denialMarkers = hasAnyMarker(text, ACCESS_DENIAL_MARKERS);
   const markup = predictionMarkupEvidence(text);
   const status = Number(httpStatus);
   const statusDenial = [401, 403, 451].includes(status);
 
+  const turnstileSourceMarker = turnstileSourceMarkers.length > 0;
+  const visibleWidget = Boolean(visibleTurnstileWidget);
+  const visibleText = Boolean(visibleHumanVerificationText);
+  const interactiveHumanVerificationRequired = visibleWidget || visibleText;
+
   let classification = CLASSIFICATIONS.OTHER;
   if (navigationTimedOut) {
     classification = CLASSIFICATIONS.TIMEOUT;
-  } else if (captchaMarkers.length > 0) {
+  } else if (interactiveHumanVerificationRequired) {
     classification = CLASSIFICATIONS.CAPTCHA;
-  } else if (challengeMarkers.length > 0) {
+  } else if (challengeMarkers.length > 0 || turnstileSourceMarker) {
     classification = CLASSIFICATIONS.CHALLENGE;
   } else if (statusDenial || denialMarkers.length > 0) {
     classification = CLASSIFICATIONS.ACCESS_DENIED;
@@ -184,6 +320,11 @@ export function classifyRenderedForebet({
     classification = CLASSIFICATIONS.OTHER;
   }
 
+  const captchaMarkers = [
+    ...visibleTurnstileCategories,
+    ...visibleHumanVerificationMarkers,
+  ];
+
   return {
     classification,
     success: classification === CLASSIFICATIONS.CONTENT,
@@ -192,15 +333,26 @@ export function classifyRenderedForebet({
     content_type: truncate(contentType, 160) || null,
     response_bytes: responseBytes ?? byteLength(text),
     page_title: null,
-    contains_cloudflare_challenge: challengeMarkers.length > 0,
+    contains_cloudflare_challenge: challengeMarkers.length > 0 || turnstileSourceMarker,
     cloudflare_challenge_markers: challengeMarkers,
+    turnstile_source_marker: turnstileSourceMarker,
+    turnstile_source_markers: turnstileSourceMarkers,
+    visible_turnstile_widget: visibleWidget,
+    visible_turnstile_categories: Array.isArray(visibleTurnstileCategories)
+      ? visibleTurnstileCategories
+      : [],
+    visible_human_verification_text: visibleText,
+    visible_human_verification_markers: Array.isArray(visibleHumanVerificationMarkers)
+      ? visibleHumanVerificationMarkers
+      : [],
+    interactive_human_verification_required: interactiveHumanVerificationRequired,
     contains_forebet_prediction_markup: markup.generic,
     candidate_prediction_content: markup.candidate,
     concrete_fixture_row_evidence: markup.concrete,
     prediction_markup_markers: markup.matched,
     fixture_evidence_markers: markup.fixture_matched,
     navigation_timed_out: Boolean(navigationTimedOut),
-    captcha_or_turnstile: captchaMarkers.length > 0,
+    captcha_or_turnstile: interactiveHumanVerificationRequired,
     captcha_markers: captchaMarkers,
     access_denied: statusDenial || denialMarkers.length > 0,
     access_denial_markers: denialMarkers,
@@ -221,12 +373,24 @@ function baseResult(overrides = {}) {
     response_bytes: 0,
     page_title: null,
     contains_cloudflare_challenge: false,
+    cloudflare_challenge_markers: [],
+    turnstile_source_marker: false,
+    turnstile_source_markers: [],
+    visible_turnstile_widget: false,
+    visible_turnstile_categories: [],
+    visible_human_verification_text: false,
+    visible_human_verification_markers: [],
+    interactive_human_verification_required: false,
     contains_forebet_prediction_markup: false,
     candidate_prediction_content: false,
     concrete_fixture_row_evidence: false,
+    prediction_markup_markers: [],
+    fixture_evidence_markers: [],
     navigation_timed_out: false,
     captcha_or_turnstile: false,
+    captcha_markers: [],
     access_denied: false,
+    access_denial_markers: [],
     response_size_overflow: false,
     observation_count: 0,
     observation_elapsed_ms: 0,
@@ -313,6 +477,16 @@ export async function observeForebetPage(page, {
     const body = await page.content();
     const response = documentResponse() || initialResponse;
     const responseBytes = byteLength(body);
+
+    const domInspection = typeof page?.evaluate === "function"
+      ? await inspectRenderedDom(page)
+      : {
+          visible_turnstile_widget: false,
+          visible_turnstile_categories: [],
+          visible_human_verification_text: false,
+          visible_human_verification_markers: [],
+        };
+
     observation = classifyRenderedForebet({
       httpStatus: responseStatus(response),
       contentType: responseHeader(response, "content-type"),
@@ -320,6 +494,10 @@ export async function observeForebetPage(page, {
       body,
       responseBytes,
       responseSizeOverflow: responseBytes > MAX_DIAGNOSTIC_HTML_BYTES,
+      visibleTurnstileWidget: domInspection.visible_turnstile_widget,
+      visibleTurnstileCategories: domInspection.visible_turnstile_categories,
+      visibleHumanVerificationText: domInspection.visible_human_verification_text,
+      visibleHumanVerificationMarkers: domInspection.visible_human_verification_markers,
     });
     observation.page_title = title;
     observation.observation_count = observationCount;
