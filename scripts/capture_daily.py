@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-"""Daily capture for ALL sources — run once per day (cron/Actions).
-Backfillable sources append yesterday+today (results settle), capture-forward
-sources snapshot today+tomorrow (predictions before they're wiped).
-    python3 scripts/capture_daily.py
+"""Daily capture for source adapters — run once per day (cron/Actions).
+
+Backfillable sources append yesterday+today (results settle), while
+capture-forward sources snapshot today+tomorrow (predictions before they are
+wiped). The ``forebet-resilience`` group deliberately parks Forebet and is the
+production recovery path::
+
+    python3 scripts/capture_daily.py --source-group forebet-resilience
 """
 
 from __future__ import annotations
+
 import argparse
+import json
 import subprocess
 import sys
 from datetime import date, timedelta
@@ -35,7 +41,7 @@ JOBS = [
     ("betclan", TODAY, TODAY),
     ("freesupertips", TODAY, TOMORROW),
     ("bzzoiro", TODAY, TODAY),           # snapshots ALL upcoming (~7 weeks ahead)
-    ("bzzoiro_odds", TODAY, TOMORROW),    # live real-book odds for pick enrichment
+    ("bzzoiro_odds", TODAY, TOMORROW),   # live real-book odds for pick enrichment
     ("bettingclosed", D30, TODAY),
     # rolling prediction week only (yesterday settles + today/tomorrow probs);
     # weekday pages beyond tomorrow are out of the picks horizon.
@@ -44,18 +50,80 @@ JOBS = [
     ("soccervista", TODAY, TODAY),
 ]
 
+FOREBET_RESILIENCE_SOURCES = (
+    "prosoccer",
+    "soccervista",
+    "predictz",
+    "windrawwin",
+    "scoutingstats",
+    "vitibet",
+    "zulubet",
+    "statarea",
+    "bettingclosed",
+    "freesupertips",
+    "betclan",
+    "afootballreport",
+    "bzzoiro",
+    "bzzoiro_odds",
+)
+
+SOURCE_GROUPS = {
+    "forebet-resilience": FOREBET_RESILIENCE_SOURCES,
+}
+
+
+def _csv_sources(value: str | None) -> set[str]:
+    return {part.strip() for part in (value or "").split(",") if part.strip()}
+
+
+def resolve_selected_sources(
+    sources: str | None,
+    source_groups: list[str] | None,
+) -> set[str] | None:
+    """Resolve explicit sources and named groups into one union.
+
+    ``None`` means the legacy all-source plan. Supplying both options is
+    intentionally additive, so operators can start with a safe group and add a
+    bounded explicit adapter without silently replacing the group.
+    """
+    if not sources and not source_groups:
+        return None
+
+    known = {job[0] for job in JOBS}
+    selected = _csv_sources(sources)
+    unknown_groups = sorted(set(source_groups or []) - set(SOURCE_GROUPS))
+    if unknown_groups:
+        raise ValueError(f"unknown capture source group(s): {', '.join(unknown_groups)}")
+
+    for group in source_groups or []:
+        selected.update(SOURCE_GROUPS[group])
+
+    unknown_sources = sorted(selected - known)
+    if unknown_sources:
+        raise ValueError(f"unknown capture source(s): {', '.join(unknown_sources)}")
+    if not selected:
+        raise ValueError("no capture sources selected")
+    return selected
+
+
 def reset_recent_state(source: str, days: list[str]) -> None:
     """Drop recent days from state so they re-fetch (results settle late)."""
-    import json
     p = ROOT / "localdata" / f"state_{source}.json"
     if not p.exists():
         return
-    st = json.loads(p.read_text())
-    st["done"] = [d for d in st["done"] if d not in days]
-    p.write_text(json.dumps(st))
+    try:
+        st = json.loads(p.read_text())
+    except (OSError, json.JSONDecodeError):
+        return
+    st["done"] = [d for d in st.get("done", []) if d not in days]
+    failures = st.get("failures")
+    if isinstance(failures, dict):
+        st["failures"] = {d: msg for d, msg in failures.items() if d not in days}
+    p.write_text(json.dumps(st, sort_keys=True))
+
 
 def main() -> None:
-    ap = argparse.ArgumentParser(description="Daily capture for all sources")
+    ap = argparse.ArgumentParser(description="Daily capture for source adapters")
     ap.add_argument(
         "--skip-build",
         action="store_true",
@@ -63,29 +131,54 @@ def main() -> None:
     )
     ap.add_argument(
         "--sources",
-        help="optional comma-separated source keys for bounded intraday recaptures",
+        help="optional comma-separated source keys for bounded recaptures",
+    )
+    ap.add_argument(
+        "--source-group",
+        action="append",
+        dest="source_groups",
+        help=(
+            "named source group (repeatable); known groups: "
+            + ", ".join(sorted(SOURCE_GROUPS))
+            + "; combines with --sources"
+        ),
+    )
+    ap.add_argument(
+        "--strict",
+        action="store_true",
+        help="exit non-zero after all adapters run if any source failed",
     )
     args = ap.parse_args()
 
-    selected = None
-    if args.sources:
-        selected = {part.strip() for part in args.sources.split(",") if part.strip()}
-    jobs = [job for job in JOBS if selected is None or job[0] in selected]
-    if selected:
-        known = {job[0] for job in JOBS}
-        unknown = sorted(selected - known)
-        if unknown:
-            print(f"ERROR: unknown capture source(s): {', '.join(unknown)}", file=sys.stderr)
-            sys.exit(2)
+    try:
+        selected = resolve_selected_sources(args.sources, args.source_groups)
+    except ValueError as exc:
+        ap.error(str(exc))
 
-    window = [D30, YESTERDAY, (date.today() - timedelta(days=2)).isoformat(),
-              TODAY, TOMORROW]
+    jobs = [job for job in JOBS if selected is None or job[0] in selected]
+
+    window = [
+        D30,
+        YESTERDAY,
+        (date.today() - timedelta(days=2)).isoformat(),
+        TODAY,
+        TOMORROW,
+    ]
     failures = []
     summaries = []
     for source, start, end in jobs:
         reset_recent_state(source, window)
-        cmd = [sys.executable, str(ROOT / "scripts" / "local_backfill.py"),
-               source, start, end, "--max-seconds", "240", "--workers", "4"]
+        cmd = [
+            sys.executable,
+            str(ROOT / "scripts" / "local_backfill.py"),
+            source,
+            start,
+            end,
+            "--max-seconds",
+            "240",
+            "--workers",
+            "4",
+        ]
         print(f"\n=== {source} {start}..{end} ===", flush=True)
         rc = subprocess.run(cmd, cwd=ROOT).returncode
         status = "ok" if rc == 0 else f"failed(rc={rc})"
@@ -103,16 +196,22 @@ def main() -> None:
         print("\nSkipping warehouse rebuild (--skip-build); caller must run build_warehouse.py next.")
     else:
         print("\nRebuilding warehouse...")
-        rc = subprocess.run([sys.executable, str(ROOT / "scripts" / "build_warehouse.py")],
-                       cwd=ROOT).returncode
+        rc = subprocess.run(
+            [sys.executable, str(ROOT / "scripts" / "build_warehouse.py")],
+            cwd=ROOT,
+        ).returncode
         if rc != 0:
             print("Warehouse build failed")
             sys.exit(1)
 
     if failures:
-        print("FAILED:", failures)
-        sys.exit(1)
-    print("capture complete ✅")
+        print(f"CAPTURE PARTIAL: {', '.join(failures)} failed and remain retryable")
+        if args.strict:
+            sys.exit(1)
+        print("Continuing in resilience mode; successful sources remain usable.")
+    else:
+        print("capture complete ✅")
+
 
 if __name__ == "__main__":
     main()

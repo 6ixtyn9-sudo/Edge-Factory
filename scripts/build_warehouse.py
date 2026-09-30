@@ -23,6 +23,7 @@ TABLES = [
     "forebet_settled",
     "zulubet_settled",
     "statarea_settled",
+    "results_donor",
     "predictz_settled",
     "scoutingstats_settled",
     "bettingclosed_settled",

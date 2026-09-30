@@ -90,9 +90,16 @@ def main():
 
     state_path = LOCALDATA / f"state_{source_key}.json"
     done = set()
+    failures: dict[str, str] = {}
     if state_path.exists():
         try:
-            done = set(json.loads(state_path.read_text()).get("done", []))
+            state = json.loads(state_path.read_text())
+            done = set(state.get("done", []))
+            if isinstance(state.get("failures"), dict):
+                failures = {
+                    str(day): str(message)
+                    for day, message in state["failures"].items()
+                }
         except Exception:
             pass
 
@@ -134,12 +141,18 @@ def main():
                     # "dict contains fields not in fieldnames". Drop extras.
                     w.writerow({col: row.get(col, "") for col in file_columns})
         buf.clear()
-        state_path.write_text(json.dumps({"done": sorted(done)}))
+        state_path.write_text(json.dumps({
+            "done": sorted(done),
+            "failures": dict(sorted(failures.items())),
+        }))
 
+    failed_this_run: dict[str, str] = {}
+    budget_hit = False
     try:
         for d in todo:
             if time.time() - t0 > max_seconds:
-                print("time budget hit — flushing (resumable)")
+                budget_hit = True
+                print("time budget hit — flushing (resumable; remaining dates stay open)")
                 break
             try:
                 rows = mod.fetch_day(d.isoformat())
@@ -154,6 +167,7 @@ def main():
                 elif source_key.endswith("_odds"):
                     print(f"  {d} | 0 rows")
                 done.add(d.isoformat())
+                failures.pop(d.isoformat(), None)
                 n += 1
                 if n % 10 == 0:
                     flush()
@@ -161,17 +175,27 @@ def main():
                     print(f"  {d} | {n}/{len(todo)} | {el:.0f}s | ~{el/n:.1f}s/day")
             except Exception as e:
                 msg = repr(e)
-                # permanently gone?
+                # Permanently unavailable historical pages are an honest absence.
                 if "410" in msg or "404" in msg or "Gone" in msg:
                     done.add(d.isoformat())
+                    failures.pop(d.isoformat(), None)
                 else:
-                    print(f"  {d} FAILED: {e}")
-                    # don't mark done, retry next run
+                    concise = str(e).replace("\n", " ")[:500] or type(e).__name__
+                    print(f"  {d} FAILED: {concise}")
+                    failures[d.isoformat()] = concise
+                    failed_this_run[d.isoformat()] = concise
+                    # Do not mark done: challenge/layout/transport failures retry.
         flush()
     finally:
         pass
 
     print(f"done this run: {n} days, {n_rows} rows in {time.time()-t0:.0f}s; total {len(done)}")
+    if failed_this_run or budget_hit:
+        if failed_this_run:
+            print(f"FAILED this run: {len(failed_this_run)} day(s); state remains retryable")
+        if budget_hit:
+            print("INCOMPLETE this run: time budget reached; unattempted dates remain retryable")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
