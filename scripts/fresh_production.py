@@ -56,6 +56,7 @@ LOCALDATA = ROOT / "localdata"
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory import selection_evidence
 from edgefactory import source_registry  # noqa: E402
 
 MODEL_DIR_NAME = "models/fresh_production"
@@ -73,7 +74,8 @@ LEGACY_ONLY_FEATURES: frozenset[str] = frozenset({
 
 # Sources whose live prediction path is parked/degraded: usable as historical
 # reference only, never as a fresh-production voter.
-PARKED_PREDICTORS: frozenset[str] = frozenset({"forebet"})
+# Single source of truth lives in the capability registry.
+PARKED_PREDICTORS: frozenset[str] = source_registry.PARKED_PREDICTORS
 
 MIN_VOTERS = 2
 DEFAULT_TRAIN_DAYS = 180
@@ -1648,6 +1650,19 @@ def render_summary(report: dict) -> str:
     plan = report.get("dispatch_plan")
     if plan:
         lines += [""] + render_dispatch_plan_summary(plan, report)
+        # Show the evidence behind every selection, and every selection
+        # withheld because its rule claim could not be reconstructed.
+        lines += [""] + selection_evidence.render_lineage_lines(
+            [p["evidence_lineage"] for p in
+             (plan.get("same_day_picks") or []) + (plan.get("horizon_picks") or [])
+             if p.get("evidence_lineage")])
+        for blocked in plan.get("blocked_selections") or []:
+            lines.append(
+                f"  WITHHELD {blocked.get('event_date')} "
+                f"{blocked.get('home')} vs {blocked.get('away')} | "
+                f"{blocked.get('dispatch_blocked_reason')}")
+            for detail in blocked.get("dispatch_blocked_detail") or []:
+                lines.append(f"    {detail}")
     return "\n".join(lines)
 
 
@@ -1850,6 +1865,30 @@ def build_dispatch_plan(*, run_date: str, same_day_rows: list[dict],
     for that date, whereas a future date must only be touched when this run
     actually produced picks for it.
     """
+    # A rule_id makes a claim about its own evidence. Before anything is
+    # published, check that the claim can be reconstructed from
+    # production-eligible voters; a selection that cannot support its own
+    # rule name is withheld rather than dispatched with a false label.
+    blocked_selections: list[dict] = []
+
+    def _admissible(rows: list[dict]) -> list[dict]:
+        kept = []
+        for row in rows:
+            lineage = selection_evidence.build_lineage(row)
+            if lineage["status"] in selection_evidence.BLOCKING_STATUSES:
+                blocked = dict(row)
+                blocked["dispatch_blocked_reason"] = lineage["status"]
+                blocked["dispatch_blocked_detail"] = lineage["reasons"]
+                blocked["evidence_lineage"] = lineage
+                blocked_selections.append(blocked)
+                continue
+            row["evidence_lineage"] = lineage
+            kept.append(row)
+        return kept
+
+    same_day_rows = _admissible(list(same_day_rows))
+    horizon_rows = _admissible(list(horizon_rows))
+
     for row in same_day_rows:
         row.setdefault("run_date", run_date)
         row.setdefault("event_date", row.get("date"))
@@ -1881,6 +1920,8 @@ def build_dispatch_plan(*, run_date: str, same_day_rows: list[dict],
         "schema": 1,
         "lane": "fresh_production",
         "run_date": run_date,
+        "blocked_selections": blocked_selections,
+        "blocked_selection_count": len(blocked_selections),
         "same_day_picks": same_day_rows,
         "horizon_picks": future_rows,
         "same_day_pick_count": len(same_day_rows),

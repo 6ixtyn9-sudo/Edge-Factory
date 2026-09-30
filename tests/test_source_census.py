@@ -275,16 +275,34 @@ def test_voter_count_and_quorum_are_computed_per_fixture(tmp_path):
     assert sc.D_SINGLE_SOURCE in lonely["blockers"]
 
 
-def test_shadow_rows_do_not_count_toward_the_live_quorum(tmp_path):
-    """Two sources is not two voters if one of them cannot vote."""
+def test_shadow_rows_count_toward_quorum_but_stay_visible(tmp_path):
+    """The census counts what the production lane counts.
+
+    A shadow 1X2 predictor votes, so two sources are two voters; the
+    shadow share is still reported separately so a quorum that leans on
+    shadow evidence is never mistaken for a fully live one.
+    """
     _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
     _write_source(tmp_path, "predictz", [_row("Panama", "New Zealand")])
     group = _build(tmp_path, horizon_days=0)["per_date"][DAY]["fixture_groups"][0]
 
     assert group["sources"] == ["predictz", "zulubet"]
-    assert group["voter_count_1x2"] == 1
-    assert group["quorum_met"] is False
+    assert group["production_eligible_1x2_voters"] == ["predictz", "zulubet"]
+    assert group["voter_count_1x2"] == 2
+    assert group["quorum_met"] is True
+    assert group["live_1x2_voters"] == ["zulubet"]
+    assert group["live_voter_count_1x2"] == 1
     assert group["shadow_sources"] == ["predictz"]
+
+
+def test_a_donor_row_does_not_create_a_voter(tmp_path):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    _write_source(tmp_path, "bettingclosed", [_row("Panama", "New Zealand")])
+    group = _build(tmp_path, horizon_days=0)["per_date"][DAY]["fixture_groups"][0]
+
+    assert "bettingclosed" in group["sources"]
+    assert group["production_eligible_1x2_voters"] == ["zulubet"]
+    assert group["quorum_met"] is False
 
 
 def test_ml_anchor_presence_comes_from_the_registry(tmp_path):

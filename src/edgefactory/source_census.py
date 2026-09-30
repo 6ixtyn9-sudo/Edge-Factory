@@ -25,6 +25,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Any, Iterator
 
+from . import selection_evidence
 from . import source_registry
 
 # ---------------------------------------------------------------------------
@@ -407,6 +408,7 @@ def build_overlap(day_summaries: list[dict], *, day: str,
                 "fixture": f"{fx['raw_home']} vs {fx['raw_away']}",
                 "league": fx.get("league"),
                 "sources": [],
+                "production_eligible_1x2_voters": [],
                 "live_1x2_voters": [],
                 "shadow_sources": [],
                 "kickoff_sources": [],
@@ -414,8 +416,15 @@ def build_overlap(day_summaries: list[dict], *, day: str,
                 "kickoffs": [],
             })
             group["sources"].append(summary["source"])
-            if role == ROLE_LIVE_VOTER and fx["has_1x2"]:
-                group["live_1x2_voters"].append(summary["source"])
+            # Quorum counts what the production lane counts: live and
+            # shadow 1X2 predictors alike. live_1x2_voters is kept as a
+            # subset so the shadow share of any quorum stays visible.
+            if fx["has_1x2"] and selection_evidence.eligible_1x2_voters(
+                    [summary["source"]]):
+                group["production_eligible_1x2_voters"].append(
+                    summary["source"])
+                if role == ROLE_LIVE_VOTER:
+                    group["live_1x2_voters"].append(summary["source"])
             if role in (ROLE_SHADOW_VOTER, ROLE_NOT_A_VOTER, ROLE_BLOCKED):
                 group["shadow_sources"].append(summary["source"])
             if fx["kickoff_trusted"]:
@@ -431,7 +440,11 @@ def build_overlap(day_summaries: list[dict], *, day: str,
         for key in ("sources", "live_1x2_voters", "shadow_sources",
                     "kickoff_sources", "odds_sources"):
             group[key] = sorted(set(group[key]))
-        group["voter_count_1x2"] = len(group["live_1x2_voters"])
+        group["production_eligible_1x2_voters"] = sorted(set(
+            group["production_eligible_1x2_voters"]))
+        group["voter_count_1x2"] = len(
+            group["production_eligible_1x2_voters"])
+        group["live_voter_count_1x2"] = len(group["live_1x2_voters"])
         group["quorum_met"] = group["voter_count_1x2"] >= 2
         group["ml_anchor_present"] = source_registry.has_ml_feature_support(
             group["sources"])

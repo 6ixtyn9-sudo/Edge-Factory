@@ -87,6 +87,12 @@ class SourceCapability:
 # list — it is a real model-input requirement. It is expressed here as a
 # capability so the engine stops hardcoding source names, and so retraining on
 # a wider feature set only needs this flag flipped.
+# Predictors that are captured for history but must not vote in the
+# current production lane. Parked is an availability decision, not a
+# quality verdict, and it is kept here so every consumer reads one list.
+PARKED_PREDICTORS: frozenset[str] = frozenset({"forebet"})
+
+
 REGISTRY: tuple[SourceCapability, ...] = (
     SourceCapability(
         "forebet", TIER_LIVE, ("1x2", "ou", "btts", "results"),
