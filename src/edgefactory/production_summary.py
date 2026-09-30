@@ -126,19 +126,48 @@ def clv_ticket_status_counts(rows) -> dict[str, int]:
     return counts
 
 
+NOTIFY_SENT_THIS_RUN = "sent_this_run"
+NOTIFY_DEDUPED = "deduped_already_sent"
+NOTIFY_SKIPPED_NO_PICKS = "skipped_no_picks"
+NOTIFY_FAILED = "failed"
+NOTIFY_DID_NOT_RUN = "did_not_run"
+
+
 def read_notification_result(run_date: str, localdata: Path) -> dict:
-    """Whether the future-selection notice was sent and ledgered."""
+    """What the notifier actually did this run.
+
+    notify writes an explicit outcome, because the sent ledger is
+    cumulative: it can show a notice exists without showing whether this
+    run sent it, which made a suppressed notice read as a fresh send.
+    """
+    explicit = _read_manifest(
+        Path(localdata) / f"notification_result_{run_date}.json")
+    if explicit is not None:
+        outcome = str(explicit.get("outcome") or "").strip() or NOTIFY_DID_NOT_RUN
+        return {
+            "ran": outcome != NOTIFY_DID_NOT_RUN,
+            "outcome": outcome,
+            "future_notices": int(explicit.get("future_notices") or 0),
+            "detail": str(explicit.get("detail") or ""),
+        }
+
     path = Path(localdata) / f"sent_ledger_{run_date}.json"
     if not path.exists():
-        return {"ran": False, "future_notices": 0}
+        return {"ran": False, "outcome": NOTIFY_DID_NOT_RUN,
+                "future_notices": 0}
     try:
         keys = json.loads(path.read_text())
     except (OSError, ValueError):
-        return {"ran": False, "future_notices": 0}
+        return {"ran": False, "outcome": NOTIFY_DID_NOT_RUN,
+                "future_notices": 0}
     if isinstance(keys, dict):
         keys = list(keys.get("keys") or keys.keys())
     future = [k for k in keys if str(k).startswith(FUTURE_PICK_MARKER_PREFIX)]
-    return {"ran": True, "future_notices": len(future), "keys": sorted(future)}
+    # Fallback only: a ledger entry proves a notice exists, not that this
+    # run sent it, so the outcome is reported as indeterminate rather
+    # than claimed as a send.
+    return {"ran": True, "outcome": "ledgered_run_unknown",
+            "future_notices": len(future), "keys": sorted(future)}
 
 
 # ---------------------------------------------------------------------------
@@ -234,11 +263,29 @@ def render_final_summary(status: dict) -> list[str]:
     clv_counts = status.get("clv_ticket_status_counts") or {}
     notification = status.get("notification") or {}
 
-    if not notification.get("ran"):
+    # The outcome is reported as the notifier recorded it. A notice this
+    # run suppressed as already-sent must never read as one it sent.
+    outcome = str(notification.get("outcome") or "").strip()
+    notices = int(notification.get("future_notices") or 0)
+    if not notification.get("ran") or outcome == NOTIFY_DID_NOT_RUN:
         notify_line = "did not run"
-    elif notification.get("future_notices"):
-        notify_line = (f"PRODUCTION SELECTION notice sent and ledgered "
-                       f"({notification['future_notices']} pick(s))")
+    elif outcome == NOTIFY_SENT_THIS_RUN:
+        notify_line = (f"sent_this_run — PRODUCTION SELECTION notice "
+                       f"dispatched and ledgered ({notices} pick(s))"
+                       if notices else
+                       "sent_this_run — notice dispatched and ledgered")
+    elif outcome == NOTIFY_DEDUPED:
+        notify_line = ("deduped_already_sent — nothing dispatched by this "
+                       "run; the notice was already in the sent ledger")
+    elif outcome == NOTIFY_SKIPPED_NO_PICKS:
+        notify_line = "skipped_no_picks — there was nothing to announce"
+    elif outcome == NOTIFY_FAILED:
+        notify_line = ("failed — one or more channels did not deliver; "
+                       "do not assume the message arrived")
+    elif notices:
+        notify_line = (f"ledgered_run_unknown — {notices} future notice(s) "
+                       f"in the ledger; this run's own action was not "
+                       f"recorded")
     else:
         notify_line = "no future-selection notice (empty-slate heartbeat path)"
 

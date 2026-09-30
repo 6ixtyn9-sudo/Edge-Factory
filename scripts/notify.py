@@ -229,6 +229,38 @@ def _heartbeat_pending(sent_keys: set[str], target_date: str) -> bool:
     return _heartbeat_key(target_date) not in sent_keys
 
 
+# Notification outcomes, kept distinct so a summary can never report a
+# deduped notice as one this run sent.
+NOTIFY_SENT_THIS_RUN = "sent_this_run"
+NOTIFY_DEDUPED = "deduped_already_sent"
+NOTIFY_SKIPPED_NO_PICKS = "skipped_no_picks"
+NOTIFY_FAILED = "failed"
+
+
+def write_notification_result(target_date: str, outcome: str, *,
+                              future_notices: int = 0,
+                              detail: str = "") -> Path | None:
+    """Record what this run actually did, for the final summary.
+
+    The sent ledger is cumulative, so it can say a notice exists but not
+    whether this run sent it. Without that distinction a deduped notice
+    reads as a fresh send.
+    """
+    payload = {
+        "run_date": target_date,
+        "outcome": outcome,
+        "future_notices": int(future_notices),
+        "detail": detail,
+    }
+    path = LOCALDATA / f"notification_result_{target_date}.json"
+    try:
+        path.write_text(json.dumps(payload, indent=2, sort_keys=True))
+    except OSError as exc:  # pragma: no cover - reporting must not break sends
+        logging.warning(f"could not write notification result: {exc}")
+        return None
+    return path
+
+
 def _load_sent_ledger(path: Path) -> set[str]:
     if not path.exists():
         return set()
@@ -600,6 +632,17 @@ def main() -> int:
             and not heartbeat_message and not future_message):
         if not normal_silent_logged:
             logging.info("  [WhatsApp] Nothing new to send. Staying silent.")
+        # Silence has two very different causes. Say which one this was
+        # so the final summary cannot call a suppressed notice a send.
+        # Something existed to announce, but every candidate was already
+        # in a ledger: that is suppression, not an empty slate.
+        had_candidates = bool(raw_picks) or bool(future_pick_keys)
+        write_notification_result(
+            target_date,
+            NOTIFY_DEDUPED if had_candidates else NOTIFY_SKIPPED_NO_PICKS,
+            future_notices=len(future_pick_keys),
+            detail=("every candidate notice was already in the sent ledger"
+                    if had_candidates else "there were no picks to announce"))
         return 0
 
     # Addendum 25.1.1: track FAILURES, not successes. A failed message/burst in
@@ -776,6 +819,15 @@ def main() -> int:
         print("\n❌ NOTIFICATION DELIVERY FAILURE — one or more channels failed.")
         print(f"   Failure ledger: {ledger}")
         print("   A green pipeline run does NOT mean this message arrived.")
+
+    # Reaching here means this run actually attempted a dispatch, so the
+    # outcome is a real send or a real failure -- never a dedupe.
+    write_notification_result(
+        target_date,
+        NOTIFY_FAILED if any_failed else NOTIFY_SENT_THIS_RUN,
+        future_notices=len(future_pick_keys),
+        detail=("one or more channels failed" if any_failed
+                else "dispatched by this run"))
     return 1 if any_failed else 0
 
 

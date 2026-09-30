@@ -113,6 +113,15 @@ def _write_snapshot_rows(path: Path, rows: list[dict[str, Any]]) -> None:
 
 
 
+# Status written at capture time, before auto_tickets has decided.
+PENDING_TICKET_STATUS = "pending_auto_tickets"
+
+# Fields that may legitimately change after a row is first written. A
+# later capture must be able to correct these without creating a second
+# row for the same logical observation.
+MUTABLE_FIELDS = ("ticket_status",)
+
+
 def _dedupe_key(row: dict[str, Any]) -> tuple[str, str, str]:
     return (
         str(row.get("pick_id") or ""),
@@ -295,6 +304,12 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
             "pricing_source": live_pick.get("odds_source") or "",
             "dispatch_plan_id": pick.get("dispatch_plan_id")
                                 or pick.get("run_date") or run_date,
+            # The ticket engine's verdict is the audit link between a
+            # captured price and whether it ever became a bet. It was
+            # declared in FIELDS but never written, so every row
+            # persisted blank and every report read "unknown".
+            "ticket_status": str(pick.get("ticket_status") or "").strip()
+                             or PENDING_TICKET_STATUS,
             "horizon_pick": "1" if pick.get("horizon_pick") else "0",
         }
         rows.append(row)
@@ -357,7 +372,7 @@ def _dispatch_plan_picks(run_date: str) -> list[dict[str, Any]] | None:
         # staked ticket from a declined candidate.
         entry.setdefault("ticket_status",
                          (ticket_outcomes.get(str(entry.get("event_date") or ""))
-                          or {}).get("status") or "unknown")
+                          or {}).get("status") or PENDING_TICKET_STATUS)
         picks.append(entry)
     return picks
 
@@ -389,11 +404,31 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
         merged[_dedupe_key(row)] = row
 
     duplicates = 0
+    updated = 0
     written = 0
     for row in rows:
         key = _dedupe_key(row)
-        if key in merged:
-            duplicates += 1
+        existing_row = merged.get(key)
+        if existing_row is not None:
+            # Deduplication must not freeze a row's status. The price
+            # observation is unchanged, but auto_tickets may have decided
+            # since it was written, and that verdict belongs on the
+            # existing row rather than on a duplicate of it.
+            changed = False
+            for field in MUTABLE_FIELDS:
+                new_value = str(row.get(field) or "").strip()
+                old_value = str(existing_row.get(field) or "").strip()
+                if not new_value or new_value == old_value:
+                    continue
+                if new_value == PENDING_TICKET_STATUS and old_value:
+                    # Never regress a settled verdict back to pending.
+                    continue
+                existing_row[field] = new_value
+                changed = True
+            if changed:
+                updated += 1
+            else:
+                duplicates += 1
             continue
         merged[key] = row
         written += 1
@@ -422,13 +457,18 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
     print(f"  input fallback used: {stats['used_input_odds_fallback']}")
     print(f"  missing odds: {stats['missing_odds']}")
     print(f"  rows written: {written}")
-    print(f"  duplicates skipped: {duplicates}")
+    print(f"  rows updated: {updated}")
+    print(f"  duplicates unchanged: {duplicates}")
     print(f"  unmatched diagnostics: {stats['unmatched_count']} -> {stats['unmatched_file']}")
     # Ticket status is the audit link between a captured production
     # selection and whether it ever became a bet. A selection auto_tickets
     # declined is still captured -- the price is real evidence either way --
     # so the counts must be visible rather than implied.
-    status_counts = ticket_status_counts(rows)
+    # Count the persisted rows for this run, not just the ones this
+    # invocation happened to add: a status the run already settled must
+    # show up here even when no new row was written.
+    status_counts = ticket_status_counts(
+        [r for r in ordered if str(r.get("run_date") or "") == run_date])
     if status_counts:
         print("  CLV ticket_status counts: "
               + ", ".join(f"{k}={v}" for k, v in sorted(status_counts.items())))

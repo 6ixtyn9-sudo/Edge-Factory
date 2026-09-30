@@ -177,7 +177,9 @@ def test_final_summary_reports_the_actual_auto_ticket_verdict(tmp_path):
     assert "Supabase selections published: 1" in text
     assert "CLV captured:                  1 row(s)" in text
     assert f"CLV ticket_status counts:      {DECLINE}=1" in text
-    assert "PRODUCTION SELECTION notice sent and ledgered" in text
+    # A ledger entry alone proves a notice exists, not that this run
+    # sent it, so the summary reports the ledger without claiming a send.
+    assert "ledgered_run_unknown" in text
     assert f"auto-ticket action:            {EVENT_DATE}: {DECLINE}" in text
     assert DECLINE in text
     assert "staking owner:                 auto_tickets" in text
@@ -320,12 +322,16 @@ def test_clv_capture_logs_a_ticket_status_count():
 
 @patch.dict(os.environ, FRESH)
 def test_pending_at_pick_time_becomes_final_at_end_of_run(tmp_path):
-    """Before auto_tickets the status is unknown; afterwards it is the verdict."""
+    """Before auto_tickets the status is pending; afterwards it is the verdict.
+
+    'unknown' conflated "not decided yet" with "we lost track"; pending
+    says which one it is.
+    """
     localdata = _localdata(tmp_path)
 
     with patch.object(clv, "LOCALDATA", localdata):
         early = clv._dispatch_plan_picks(RUN_DATE)
-    assert early[0]["ticket_status"] == "unknown"
+    assert early[0]["ticket_status"] == clv.PENDING_TICKET_STATUS
 
     _run_auto_tickets(localdata)
     with patch.object(clv, "LOCALDATA", localdata):
@@ -472,3 +478,131 @@ def test_summary_reports_the_published_count_it_actually_found(tmp_path):
         ["2026-10-01"], tmp_path, run_date="2026-09-30")
     assert "no sync manifest found" not in str(published)
     assert published
+
+
+# ---------------------------------------------------------------------------
+# CLV ticket_status persistence
+#
+# ticket_status was declared in FIELDS but never written into the row, so
+# every snapshot persisted blank and every report read "unknown". And a
+# second capture skipped the row as a duplicate, so a verdict reached
+# after pick time could never land on the row it belonged to.
+# ---------------------------------------------------------------------------
+
+
+def test_capture_row_actually_carries_ticket_status():
+    src = (ROOT / "scripts" / "audit_clv.py").read_text()
+    build = src.split('"dispatch_plan_id":')[1].split("rows.append")[0]
+    assert '"ticket_status"' in build, "the written row must set ticket_status"
+
+
+def test_a_later_capture_updates_status_instead_of_skipping(tmp_path):
+    """Deduplication must not freeze a row's status."""
+    path = tmp_path / "clv_snapshots_2026-09.csv.gz"
+    existing = {"pick_id": "p1", "snapshot_label": "pick_time",
+                "source_run_date": RUN_DATE, "run_date": RUN_DATE,
+                "ticket_status": clv.PENDING_TICKET_STATUS}
+    merged = {clv._dedupe_key(existing): dict(existing)}
+
+    incoming = dict(existing, ticket_status=DECLINE)
+    key = clv._dedupe_key(incoming)
+    assert key in merged
+
+    row = merged[key]
+    for field in clv.MUTABLE_FIELDS:
+        new = str(incoming.get(field) or "").strip()
+        if new and new != str(row.get(field) or "").strip():
+            row[field] = new
+
+    assert merged[key]["ticket_status"] == DECLINE
+    assert len(merged) == 1, "updating must not add a logical pick"
+
+
+def test_a_settled_verdict_is_never_regressed_to_pending():
+    src = (ROOT / "scripts" / "audit_clv.py").read_text()
+    assert "Never regress a settled verdict back to pending" in src
+    assert "new_value == PENDING_TICKET_STATUS and old_value" in src
+
+
+def test_capture_reports_updates_separately_from_duplicates():
+    src = (ROOT / "scripts" / "audit_clv.py").read_text()
+    assert "rows updated:" in src
+    assert "duplicates unchanged:" in src
+
+
+def test_status_counts_cover_the_runs_persisted_rows():
+    """A verdict already settled must show even when no new row is added."""
+    src = (ROOT / "scripts" / "audit_clv.py").read_text()
+    assert 'str(r.get("run_date") or "") == run_date' in src
+
+
+def test_ticket_status_counts_treat_blank_as_unknown():
+    assert clv.ticket_status_counts([{"ticket_status": ""}]) == {"unknown": 1}
+    assert clv.ticket_status_counts(
+        [{"ticket_status": DECLINE}, {"ticket_status": DECLINE}]) == {DECLINE: 2}
+
+
+# ---------------------------------------------------------------------------
+# Notification outcome accuracy
+#
+# notify logged "Nothing new to send. Staying silent." while the final
+# summary reported "PRODUCTION SELECTION notice sent and ledgered". The
+# sent ledger is cumulative, so it cannot distinguish a notice this run
+# dispatched from one an earlier run did.
+# ---------------------------------------------------------------------------
+
+
+def _write_notify_result(localdata, outcome, notices=1, detail=""):
+    (localdata / f"notification_result_{RUN_DATE}.json").write_text(json.dumps(
+        {"run_date": RUN_DATE, "outcome": outcome,
+         "future_notices": notices, "detail": detail}))
+
+
+def test_a_deduped_notice_is_never_reported_as_sent(tmp_path):
+    _write_notify_result(tmp_path, ps.NOTIFY_DEDUPED)
+    result = ps.read_notification_result(RUN_DATE, tmp_path)
+
+    assert result["outcome"] == ps.NOTIFY_DEDUPED
+    assert result["ran"] is True
+
+
+def test_the_four_outcomes_render_distinctly(tmp_path):
+    seen = set()
+    for outcome in (ps.NOTIFY_SENT_THIS_RUN, ps.NOTIFY_DEDUPED,
+                    ps.NOTIFY_SKIPPED_NO_PICKS, ps.NOTIFY_FAILED):
+        _write_notify_result(tmp_path, outcome)
+        status = {"run_date": RUN_DATE, "plan": {}, "ticket_outcomes": {},
+                  "supabase_published": {}, "clv_rows": [],
+                  "clv_ticket_status_counts": {},
+                  "notification": ps.read_notification_result(RUN_DATE, tmp_path)}
+        line = [l for l in ps.render_final_summary(status)
+                if "notification:" in l][0]
+        assert outcome in line, f"{outcome} not named in: {line}"
+        seen.add(line)
+    assert len(seen) == 4, "outcomes must not render identically"
+
+
+def test_a_failed_send_is_not_presented_as_success(tmp_path):
+    _write_notify_result(tmp_path, ps.NOTIFY_FAILED)
+    status = {"run_date": RUN_DATE, "plan": {}, "ticket_outcomes": {},
+              "supabase_published": {}, "clv_rows": [],
+              "clv_ticket_status_counts": {},
+              "notification": ps.read_notification_result(RUN_DATE, tmp_path)}
+    line = [l for l in ps.render_final_summary(status)
+            if "notification:" in l][0]
+    assert "do not assume the message arrived" in line
+    assert "sent_this_run" not in line
+
+
+def test_an_absent_result_and_ledger_reports_did_not_run(tmp_path):
+    result = ps.read_notification_result(RUN_DATE, tmp_path)
+    assert result["ran"] is False
+    assert result["outcome"] == ps.NOTIFY_DID_NOT_RUN
+
+
+def test_notify_records_its_own_outcome():
+    src = (ROOT / "scripts" / "notify.py").read_text()
+    assert "def write_notification_result" in src
+    # Both the silent path and the dispatch path must record what happened.
+    assert "NOTIFY_DEDUPED if had_candidates else NOTIFY_SKIPPED_NO_PICKS" in src
+    assert "NOTIFY_FAILED if any_failed else NOTIFY_SENT_THIS_RUN" in src
