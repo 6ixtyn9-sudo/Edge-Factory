@@ -9501,3 +9501,172 @@ or production-smoked until their owners authorize Cloudflare/Google and add the
 two GitHub secrets. A green workflow alone is not proof: confirm target-day
 monthly rows and named source votes. No source substitution, threshold, source
 weight, bucket, staking, ticket, or notification behavior changed.
+
+## Addendum — 2026-09-30: Browser Run phase-1 diagnostic, not yet a Forebet repair
+
+### What was implemented
+
+The existing authenticated Cloudflare Worker relay now contains an explicitly named
+`forebet_browser_diagnostic` operation. It is intentionally not wired into
+`src/edgefactory/sources/forebet.py`, `scripts/local_backfill.py`, `scripts/daily.py`,
+or the normal production workflow. A separate manual-only diagnostic workflow is
+provided for browser-only operators. ScoutingStats continues to use the ordinary
+authenticated relay transport exactly as before.
+
+The diagnostic uses Cloudflare's current Workers Browser Run binding and the
+Documented `@cloudflare/puppeteer` Worker API. It derives exactly one URL:
+`https://www.forebet.com/en/football-tips-and-predictions-for-today`. The caller
+cannot provide a destination URL, date, query string, cookies, headers, scripts, or
+an alternate host. It performs one `BROWSER.limits()` check, at most one browser
+launch, one `page.goto()` with a 45-second timeout, and an explicit `browser.close()`
+from a success/failure cleanup path. After `DOMContentLoaded`, it polls title, URL,
+and in-memory markers every 1.5 seconds while an ordinary Cloudflare challenge may
+still be transitional. The observation window is capped at 20 seconds and the
+overall deadline at 55 seconds. A free Workers KV namespace provides a
+best-effort one-launch-per-UTC-day gate; its get-then-put sequence is not atomic.
+The diagnostic is authenticated and manual-only, so the operator must invoke it
+once. Binding/limit checks happen before consuming the gate.
+
+The response is a bounded JSON diagnostic only. It reports the upstream status,
+final URL, content type, byte count, title, challenge/CAPTCHA/access-denial flags,
+generic/candidate/concrete fixture evidence, observation count and elapsed time,
+timeout state, launch/navigation counts, and one of the required classifications.
+It never returns complete HTML, cookies, authorization headers, browser session IDs,
+or secrets. HTTP 200 is not a success criterion.
+
+### Documentation check and free-plan boundary
+
+On 2026-09-30 the official Cloudflare documentation calls the product Browser Run
+(formerly Browser Rendering). The current Workers Free limits page was last updated
+2026-09-26 and lists 10 browser minutes/day, three concurrent Browser Sessions, one
+new Browser Session every 20 seconds, and a 60-second inactivity timeout. Quick
+Actions have a separate one-request-per-10-seconds limit, but this diagnostic uses a
+Browser Session, not Quick Actions or the REST API. The Workers Free plan includes
+100,000 Worker requests/day. Workers KV is included on Free; its current documented
+limits are 100,000 reads/day, 1,000 writes/day, 1 GB storage, with daily reset at
+00:00 UTC. The diagnostic consumes at most one KV read and one KV write for an
+attempted day.
+
+Official references are recorded in `relay/README.md`, including:
+
+- https://developers.cloudflare.com/browser-run/get-started/
+- https://developers.cloudflare.com/browser-run/puppeteer/
+- https://developers.cloudflare.com/browser-run/reference/wrangler/
+- https://developers.cloudflare.com/browser-run/limits/
+- https://developers.cloudflare.com/browser-run/pricing/
+- https://developers.cloudflare.com/kv/get-started/
+- https://developers.cloudflare.com/kv/platform/limits/
+- https://developers.cloudflare.com/kv/platform/pricing/
+
+No REST API token, account ID, paid plan, paid proxy, residential runner, or
+credit-dependent service was introduced.
+
+### Live status and acceptance boundary
+
+No live Browser Run smoke test was performed in this session. Cloudflare credentials
+and a deployed worker URL were not present in the local environment, and no attempt
+was made to print or recover them. Therefore the current result is **implemented and
+locally tested, but not deployed, live-smoke-tested, or production-validated**.
+There is no observed Forebet classification, no claim of genuine Forebet content,
+no measured browser time, and no validated 1X2/over-under/BTTS capture. Phase 1 must
+be run by an operator after adding the browser binding and free KV namespace, and
+must stop after one bounded attempt if it returns a challenge, denial, timeout,
+quota/plan error, or configuration error.
+
+Do not proceed to Phase 2 or a heavy workflow until the response explicitly reports
+`genuine_forebet_prediction_content` with non-challenge content on `www.forebet.com`.
+Even then, the rendered-page smoke test does not prove the JSON endpoint, target-date
+correctness, or all three markets. Those remain unimplemented and require separate
+validation before any production integration.
+
+### Verification receipts
+
+- Cloudflare Worker JavaScript syntax: clean with `node --check` on all Worker and
+  diagnostic test files.
+- Mocked Browser Run unit tests: 19 tests, 19 passed. Coverage includes genuine
+  content, HTTP-200 and HTTP-403 challenge HTML, CAPTCHA/Turnstile, explicit denial,
+  concrete fixture evidence, transitional challenge polling, observation deadline,
+  response overflow, timeout, missing bindings, Browser Run API/configuration error,
+  quota and daily-budget exhaustion, one-launch/no-retry behavior, final-host
+  validation, polling errors, and browser cleanup.
+- `git diff --check`: clean at the time of this addendum.
+- The production workflow was not changed. The Forebet decoder was strengthened to
+  reject non-mapping rows, with one focused regression test added. The full Python
+  suite after that change was **731 passed** (the prior baseline was 730);
+  rerun `PYTHONPATH=.:src .venv/bin/pytest -q` after any future integration change.
+
+### Manual smoke-test and rollback boundary
+
+A browser-only deployment route is documented in `relay/README.md`: merge through
+the GitHub web UI, connect the existing Worker to Cloudflare Workers Builds with
+root directory `relay/cloudflare-worker` and deploy command `npx wrangler deploy`,
+create/bind the free KV namespace `BROWSER_DIAGNOSTIC_KV` in the Cloudflare
+Dashboard, and preserve `RELAY_TOKEN` as an encrypted Worker secret. The repository
+also includes a manual-only `workflow_dispatch` workflow that reads the existing
+Worker URL and relay token from GitHub Actions secrets, sends exactly one POST, and
+prints only the bounded diagnostic. It has no schedule, retry, artifact, or normal
+pipeline dependency. The operator must run it only once per UTC day.
+
+To roll back, remove the browser binding, optional KV binding, and diagnostic code,
+then redeploy the ordinary Worker relay. This leaves ScoutingStats and the current
+POST authentication/allowlist contract intact. A failed diagnostic must not be
+represented as an empty Forebet day, and a successful browser launch must not be
+repeated intraday.
+
+## Addendum — 2026-09-30: Browser Run review follow-up
+
+The review found that an immediate post-`DOMContentLoaded` capture could classify
+Cloudflare's first challenge document before its JavaScript verification completed.
+That flaw is fixed without adding challenge circumvention. The Worker now performs
+one initial navigation, then observes title, URL, and in-memory page HTML markers at
+1.5-second intervals only while the page still looks like a normal transitional
+Cloudflare challenge. It stops immediately for concrete fixture evidence,
+CAPTCHA/Turnstile, explicit denial, generic non-challenge content, or a polling
+error. The observation window is capped at 20 seconds and the overall request
+budget at 55 seconds, below the documented 60-second Browser Run inactivity limit.
+No `networkidle` wait, CAPTCHA solving, extra navigation, or unbounded retry was
+added. Chromium remains closed in `finally`.
+
+The evidence detector now distinguishes generic Forebet labels, candidate prediction
+content, and concrete fixture-row evidence. A successful Phase-1 classification
+requires a Forebet page with Home team/Away team/prediction labels plus a rendered
+date, a probability triplet, and a scoreline. This is still only page-access
+evidence; it is not a replacement for the existing JSON schema, target-date, or
+three-market validators.
+
+The KV gate is documented as **best effort and non-atomic**. Binding and
+`BROWSER.limits()` checks now happen before consuming the daily gate whenever they
+do not consume browser time. A launch/navigation failure still consumes the attempt
+by design. No Durable Object or potentially paid stateful product was introduced.
+The authenticated manual operator must click the diagnostic only once per UTC day.
+
+A browser-only route is now documented. Workers Builds can connect the public GitHub
+repository from **Workers & Pages → Settings → Builds**, use root directory
+`relay/cloudflare-worker`, blank build command, and `npx wrangler deploy` as deploy
+command. The free KV namespace and `BROWSER_DIAGNOSTIC_KV` binding can be created in
+the Cloudflare Dashboard. A new manual-only workflow,
+`.github/workflows/forebet-browser-diagnostic.yml`, uses only `workflow_dispatch`,
+`contents: read`, a three-minute timeout, the existing relay URL/token secrets, and
+one standard-library Python POST. It does not print tokens, upload artifacts, retry,
+schedule, or run the normal pipeline. If workflow push permission is unavailable,
+the exact file can be created with GitHub's browser editor. The push was attempted;
+the GitHub App was refused because it lacks the `workflows` permission. The non-workflow
+follow-up is pushed as commit `11aaf5e`; the complete workflow remains at
+`.github/workflows/forebet-browser-diagnostic.yml` in the working tree for browser-editor
+creation.
+
+The npm audit was reviewed rather than force-fixed. With
+`npm audit --omit=dev --json`, the three high findings are the direct
+`@cloudflare/puppeteer@1.4.0` package's dependency path
+`@puppeteer/browsers@2.2.4 → extract-zip@2.0.1`, with advisories
+`GHSA-jmr9-qjv8-65gv` and `GHSA-7pqw-9j4j-h8q3` on `extract-zip`. The vulnerable
+archive extraction path is in Puppeteer's Node browser-download modules, not the
+Cloudflare Worker entry point imported by this Worker. The Wrangler dry-run bundle
+was checked and contains neither `extract-zip` nor `@puppeteer/browsers`. npm's
+current `latest` for `@cloudflare/puppeteer` remains 1.4.0, so no newer compatible
+Cloudflare release was available during this review and no forced upgrade was made.
+
+The current state remains **implemented and locally tested, not deployed,
+live-smoke-tested, or production-validated**. No real Browser Run browser time was
+consumed. Phase 2 and production integration remain blocked on one successful live
+page-access diagnostic.
