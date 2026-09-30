@@ -1109,6 +1109,15 @@ def run_pipeline(
         # is the only block entitled to state the dispatch verdict. The
         # pick engine's earlier block is preliminary by construction.
         print_final_production_summary(target_date)
+
+        # Cross-artifact contradiction check, after every stage including
+        # the summary has reported: it compares what each stage claimed
+        # against what the others actually wrote. Read-only.
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/check_run_invariants.py "
+            f"--date {target_date}",
+            f"check_run_invariants {target_date}",
+        )
         if not picks_only:
             # This marker, rather than picks_YYYY-MM-DD.json, proves that the
             # heavy capture/build/mine path completed.  Future forecast
