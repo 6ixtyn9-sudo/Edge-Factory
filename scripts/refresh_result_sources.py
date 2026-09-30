@@ -33,6 +33,8 @@ RESULT_SOURCES = (
     "vitibet",
     "scoutingstats",
     "bettingclosed",
+    # prosoccer's yesterday page fills final scores as matches settle
+    "prosoccer",
 )
 SCORE_FIELDS = ("hs", "gs", "ht_hs", "ht_gs")
 

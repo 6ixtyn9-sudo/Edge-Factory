@@ -28,6 +28,7 @@ TABLES = [
     "bettingclosed_settled",
     "vitibet_settled",
     "betexplorer_settled",
+    "prosoccer_settled",
     # raw (unsettled) sources – still materialize for fast picks
     "vitibet",
     "betclan",
@@ -35,6 +36,8 @@ TABLES = [
     "freesupertips",
     "afootballreport",
     "windrawwin",
+    "prosoccer",
+    "soccervista",
     "consensus2",
     "consensus3",
     "consensus4",
