@@ -1,0 +1,7 @@
+name = "edge-factory-source-relay"
+main = "src/index.js"
+compatibility_date = "2026-09-30"
+workers_dev = true
+
+# Set the shared secret with:
+#   npx wrangler secret put RELAY_TOKEN

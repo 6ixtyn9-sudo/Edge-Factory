@@ -110,7 +110,7 @@ def test_relay_wrapper_requires_exact_source_and_single_marker():
         forebet._unwrap_relay(b"no wrapper", source)
 
 
-def test_github_actions_uses_relay_without_direct_transport(monkeypatch):
+def test_github_actions_uses_relay_before_direct_transport(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.delenv(forebet.CLOUD_RETRY_ENV, raising=False)
     calls = []
@@ -128,6 +128,28 @@ def test_github_actions_uses_relay_without_direct_transport(monkeypatch):
     rows = forebet._get("1x2", "2026-08-20")
     assert len(rows) == 1
     assert calls and calls[0].startswith(forebet.BASE)
+    assert "output=1" in calls[0]
+
+
+def test_github_actions_falls_back_when_relay_is_challenged(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.delenv(forebet.CLOUD_RETRY_ENV, raising=False)
+    direct = []
+    monkeypatch.setattr(
+        forebet,
+        "_relay_get",
+        lambda _url: (_ for _ in ()).throw(ValueError("challenge")),
+    )
+    monkeypatch.setattr(
+        forebet,
+        "_urllib_get",
+        lambda url: direct.append(url) or _raw([_row()]),
+    )
+
+    rows = forebet._get("1x2", "2026-08-20")
+    assert len(rows) == 1
+    assert len(direct) == 1
+    assert "output=1" in direct[0]
 
 
 def test_github_relay_fetches_independent_markets_concurrently(monkeypatch):
