@@ -2412,11 +2412,23 @@ def cmd_today(args, st):
         print(f"NOT YET — TICKETS START BUILDING AT {GENERATE_HOUR_START:02d}:00, FREEZE AT {FREEZE_HOUR:02d}:00")
         print(f"(now {now.strftime('%H:%M')} local)")
         return 0
+    # Tickets are a betting artefact, so they must come from whichever lane
+    # is production. In fresh_production mode an empty fresh slate means no
+    # tickets — it must never silently fall back to the legacy ledger.
+    from edgefactory import production_lane
+
+    slate_path = production_lane.production_picks_path(str(target), LOCALDATA)
+    if production_lane.fresh_production_is_active() and not slate_path.exists():
+        print(f"no {slate_path.name}: fresh_production published no slate for "
+              f"{target}; generating no tickets (legacy picks are comparison-only)")
+        return 0
     try:
-        slate = json.loads((LOCALDATA / "picks_today.json").read_text())
+        slate = json.loads(slate_path.read_text())
     except Exception as e:
-        print(f"cannot read picks_today.json: {e}")
+        print(f"cannot read {slate_path.name}: {e}")
         return 1
+    print(f"ticket slate source: {slate_path.name} "
+          f"(lane {production_lane.active_lane()}, {len(slate)} row(s))")
     pool = playable_legs(slate, day=target, settled=settled, execution_safe=True)
     total_in = len(pool)
     census: dict[str, list[str]] = {}

@@ -595,19 +595,40 @@ def _pick_date(pick: dict[str, Any], fallback: str) -> str:
 
 def write_future_outputs(all_picks: list[dict[str, Any]], days: int, snapshot_as_of: str) -> None:
     """Write the aggregate machine-readable future-picks file plus forecast manifest."""
+    from edgefactory import production_lane
+
     REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    comparison_only = production_lane.fresh_production_is_active()
 
     json_file = REPORT_DIR / f"picks_next_{days}days.json"
+    if comparison_only:
+        # The planner runs the legacy engine. While fresh_production is the
+        # production lane its forward view is a comparison forecast, so every
+        # row is stamped as such and the manifest says plainly that these are
+        # not production picks.
+        all_picks = [{**pick, "lane": "legacy_baseline", "comparison_only": True,
+                      "production": False} for pick in all_picks]
     json_file.write_text(json.dumps(all_picks, indent=2, sort_keys=True))
     manifest_file = REPORT_DIR / f"picks_next_{days}days_manifest.json"
     manifest = {
-        "ledger_kind": "forecast",
+        "ledger_kind": "legacy_baseline_comparison_forecast" if comparison_only
+                       else "forecast",
+        "lane": production_lane.active_lane(),
+        "comparison_only": comparison_only,
+        "production": not comparison_only,
+        "note": (
+            "legacy_baseline forward view, published for comparison only. "
+            "Production future picks come from the fresh_production horizon "
+            "planner."
+        ) if comparison_only else None,
         "snapshot_as_of": snapshot_as_of,
         "days": days,
         "row_count": len(all_picks),
     }
     manifest_file.write_text(json.dumps(manifest, indent=2, sort_keys=True))
-    print(f"Future planner wrote: {json_file}")
+    print(f"Future planner wrote: {json_file}"
+          + (" [legacy_baseline comparison-only, not production]"
+             if comparison_only else ""))
     print(f"Future planner manifest: {manifest_file}")
 
 
@@ -1273,6 +1294,18 @@ def run_smart_auto(future_days: int, backfill_days: int, force_repick: bool = Fa
     run_soft(
         "PYTHONPATH=src python3 scripts/edge_firing_tripwire.py",
         "edge firing tripwire (silence detector)",
+    )
+
+    # Final retention pass. This runs AFTER every artefact this pipeline
+    # writes and BEFORE the workflow's `git add -A localdata/` persist step,
+    # so the large internal artefacts produced by this run are pruned in the
+    # same run that created them rather than one run late. The manifest
+    # records what was removed and why, including a correct zero-deletion.
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/clean_localdata.py "
+        f"--policy fresh_production --keep-days 30 --keep-latest 3 "
+        f"--write-manifest --today {target_date} --target-date {target_date}",
+        "clean_localdata (fresh_production retention, pre-persist)",
     )
 
 

@@ -231,6 +231,7 @@ class FixtureGroup:
     votes: dict[str, tuple[float, float, float]] = field(default_factory=dict)
     kickoff: str = ""
     kickoff_source: str = ""
+    kickoff_observations: list[dict] = field(default_factory=list)
     ambiguous: bool = False
     reversed_risk: bool = False
     raw_variants: dict[str, set[tuple[str, str]]] = field(default_factory=dict)
@@ -243,10 +244,13 @@ def load_fixture_groups(
     end: str,
     voters: tuple[str, ...],
     engine=None,
+    record_timing_from: str | None = None,
 ) -> dict[tuple[str, tuple[str, str]], FixtureGroup]:
     """Group current-source prediction rows into fixtures. No fabrication."""
     groups: dict[tuple[str, tuple[str, str]], FixtureGroup] = {}
-    kickoff_capable = set(source_registry.kickoff_providers())
+    # Timing observations are only kept for the dates we might bet on:
+    # recording them across the whole training history would be noise.
+    timing_from = record_timing_from or end
     for source in voters:
         cap = source_registry.get(source)
         for path in source_files(localdata, source):
@@ -273,12 +277,21 @@ def load_fixture_groups(
                 if source in group.votes and group.votes[source] != probs:
                     group.ambiguous = True
                 group.votes[source] = probs
-                if not group.kickoff and cap is not None and cap.provides_kickoff:
-                    raw = row.get("kickoff") or row.get("time") or ""
-                    if str(raw).strip() and engine is not None:
-                        if engine.parse_kickoff_dt(str(raw)) is not None:
-                            group.kickoff = str(raw).strip()
-                            group.kickoff_source = source
+                raw = str(row.get("kickoff") or row.get("time") or "").strip()
+                if raw and day >= timing_from:
+                    # Record every kickoff any source offered for the target
+                    # date, whether or not we are allowed to trust it. Without
+                    # this the blocker cannot distinguish "nobody published a
+                    # kickoff" from "we refused the one that was published".
+                    trusted = cap is not None and cap.provides_kickoff
+                    parsed = (engine.parse_kickoff_dt(raw) is not None
+                              if engine is not None else None)
+                    group.kickoff_observations.append(
+                        {"source": source, "raw": raw,
+                         "timing_capable": bool(trusted), "parsed": parsed})
+                    if trusted and parsed and not group.kickoff:
+                        group.kickoff = raw
+                        group.kickoff_source = source
 
     # Orientation and identity safety.
     for (day, key), group in groups.items():
@@ -760,6 +773,89 @@ def _collect_cached_bundles(engine, day: str, board: list, stats: dict) -> None:
             stats.setdefault(name, {})["error"] = str(exc)
 
 
+# Timing blocker taxonomy. Each value names a distinct, actionable cause.
+TIMING_OK = "trusted_kickoff_present"
+TIMING_STARTED = "already_started_or_inside_lead"
+TIMING_NO_SOURCE = "missing_kickoff_in_all_sources"
+TIMING_PARSE_FAILED = "kickoff_present_but_parser_missed"
+TIMING_UNTRUSTED_SOURCE = "kickoff_present_from_source_not_allowed_as_timing_provider"
+
+
+def diagnose_timing(group: FixtureGroup, *, guard_reason: str | None) -> dict:
+    """Why this fixture does or does not have usable timing.
+
+    Distinguishes the four causes that need different responses: a late run
+    (run earlier), no published kickoff anywhere (source coverage), a
+    published kickoff the parser could not read (a defect to repair), and a
+    kickoff published only by a source not trusted for timing (policy).
+    """
+    observations = group.kickoff_observations
+    if group.kickoff:
+        return {
+            "classification": TIMING_STARTED if guard_reason else TIMING_OK,
+            "kickoff": group.kickoff,
+            "kickoff_source": group.kickoff_source,
+            "guard_reason": guard_reason,
+            "observations": observations,
+        }
+    if not observations:
+        classification = TIMING_NO_SOURCE
+    elif any(o["timing_capable"] and o["parsed"] is False for o in observations):
+        classification = TIMING_PARSE_FAILED
+    elif any(not o["timing_capable"] for o in observations):
+        classification = TIMING_UNTRUSTED_SOURCE
+    else:
+        classification = TIMING_NO_SOURCE
+    return {
+        "classification": classification,
+        "kickoff": None,
+        "kickoff_source": None,
+        "guard_reason": None,
+        "observations": observations,
+    }
+
+
+def diagnose_price(engine, board: dict, *, day: str, home: str, away: str,
+                   kickoff: str, selection: str) -> dict:
+    """Full record of the price search for one selection.
+
+    Written for every candidate, priced or not, so a ``missing_odds`` blocker
+    can be read without guessing which bundles were consulted or which join
+    stage failed.
+    """
+    pick = {"date": day, "home": home, "away": away, "kickoff": kickoff,
+            "market": "1x2", "pick": selection}
+    searched: list[dict] = []
+    for provider, tier, bundle in board["bundles"]:
+        row, method = engine.find_side_keyed_odds_row(pick, bundle)
+        odds = engine._valid_decimal_odds(row.get("odds")) if row else None
+        searched.append({
+            "bundle": provider,
+            "tier": tier,
+            "rows_in_bundle": len(bundle.get("exact", {})),
+            "matched": bool(row),
+            "match_method": method,
+            "usable_odds": odds,
+            "rejected_as_fuzzy": method == "alias_fuzzy",
+        })
+    any_exact = any(b["match_method"] == "exact" for b in searched)
+    any_alias = any(b["match_method"] in ("alias_time", "alias_unique")
+                    for b in searched)
+    any_fuzzy = any(b["rejected_as_fuzzy"] for b in searched)
+    embedded = any(b["tier"] == PRICE_TIER_SOURCE_EMBEDDED and b["matched"]
+                   for b in searched)
+    return {
+        "bundles_searched": [b["bundle"] for b in searched],
+        "detail": searched,
+        "exact_match_found": any_exact,
+        "alias_match_found": any_alias,
+        "fuzzy_match_found_and_rejected": any_fuzzy and not (any_exact or any_alias),
+        "embedded_source_price_found": embedded,
+        "outcome": ("exact" if any_exact else "alias" if any_alias
+                    else "fuzzy_rejected" if any_fuzzy else "no_match"),
+    }
+
+
 def price_for_candidate(engine, board: dict, *, day: str, home: str, away: str,
                         kickoff: str, selection: str) -> dict:
     """Best available price for one selection, with its provenance.
@@ -813,6 +909,9 @@ class Candidate:
     walkforward_evidence: dict = field(default_factory=dict)
     dispatchable: bool = False
     blockers: list[str] = field(default_factory=list)
+    timing_diagnosis: dict = field(default_factory=dict)
+    price_diagnosis: dict = field(default_factory=dict)
+    would_have_qualified_before_kickoff: bool = False
     stake_units: float = 0.0
     risk_label: str = "fresh_production_flat_stake"
 
@@ -976,20 +1075,31 @@ def build_candidates(
                 for reason in out_of_distribution_reasons(features, envelope):
                     blockers.append(reason)
 
-        # --- kickoff.
-        if not group.kickoff:
-            blockers.append(
-                f"{BLOCKER_MISSING_KICKOFF}: no timing-capable source supplied a "
-                "kickoff for this fixture group")
-        else:
-            ok, reason = engine.operational_pick_eligibility(
+        # --- kickoff. The gate is unchanged; only the explanation improves.
+        guard_reason = None
+        if group.kickoff:
+            ok, guard_reason = engine.operational_pick_eligibility(
                 {"date": day, "kickoff": group.kickoff}, as_of=as_of, min_lead=min_lead
             )
-            if not ok:
-                blockers.append(f"{BLOCKER_KICKOFF_GUARD}: {reason}")
+            if ok:
+                guard_reason = None
+        timing = diagnose_timing(group, guard_reason=guard_reason)
+        cand.timing_diagnosis = timing
+        if not group.kickoff:
+            blockers.append(
+                f"{BLOCKER_MISSING_KICKOFF}: {timing['classification']} "
+                f"({len(timing['observations'])} kickoff observation(s) "
+                "from non-timing sources)")
+        elif guard_reason:
+            blockers.append(
+                f"{BLOCKER_KICKOFF_GUARD}: {guard_reason} "
+                f"[{timing['classification']}]")
 
         # --- price.
         pricing["candidate_count_before_pricing"] += 1
+        cand.price_diagnosis = diagnose_price(
+            engine, board, day=day, home=group.home, away=group.away,
+            kickoff=group.kickoff or "", selection=features["top_outcome"])
         priced = price_for_candidate(
             engine, board, day=day, home=group.home, away=group.away,
             kickoff=group.kickoff or "", selection=features["top_outcome"])
@@ -1027,12 +1137,24 @@ def build_candidates(
                     f"threshold {MIN_EDGE_TO_DISPATCH}")
         else:
             pricing["candidate_count_missing_price"] += 1
+            diag = cand.price_diagnosis
             blockers.append(
-                f"{BLOCKER_MISSING_ODDS}: no captured 1X2 price for this "
-                f"selection from {len(board['bundles'])} pricing bundle(s)")
+                f"{BLOCKER_MISSING_ODDS}: no usable 1X2 price for this "
+                f"selection; bundles searched="
+                f"{','.join(diag['bundles_searched']) or 'none'}; "
+                f"exact={diag['exact_match_found']} "
+                f"alias={diag['alias_match_found']} "
+                f"fuzzy_rejected={diag['fuzzy_match_found_and_rejected']} "
+                f"embedded_source_price={diag['embedded_source_price_found']}")
 
         cand.blockers = blockers
         cand.dispatchable = not blockers
+        # A pick that failed ONLY on timing was a real edge we were too late
+        # to take. Reported separately so a late run is never mistaken for a
+        # weak slate.
+        timing_families = (BLOCKER_KICKOFF_GUARD, BLOCKER_MISSING_KICKOFF)
+        cand.would_have_qualified_before_kickoff = bool(
+            blockers and all(b.startswith(timing_families) for b in blockers))
         cand.model_health_status = "scored" if features is not None else "not_scored"
         if cand.dispatchable:
             cand.stake_units = FLAT_STAKE_UNITS
@@ -1423,6 +1545,8 @@ def render_summary(report: dict) -> str:
         f"  candidates matching a rule:    {report['rule_matched_count']}",
         f"  positive-edge candidates:      {pricing['candidate_count_with_positive_edge']}",
         f"  dispatchable picks:            {report['dispatchable_count']}",
+        f"  eligible horizon picks:        {report.get('horizon_eligible_count', 0)}"
+        f" through {(report.get('horizon') or {}).get('horizon_end', '-')}",
         "  top blockers:",
     ]
     counts = report["blocker_counts"]
@@ -1448,7 +1572,90 @@ def render_summary(report: dict) -> str:
                 f"edge={c['edge'] if c['edge'] is not None else '-'} | "
                 f"{c['blockers'][0] if c['blockers'] else '-'}")
         lines.append("  FRESH PRODUCTION — NO PICKS")
+        lines.append("")
+        lines += no_picks_diagnosis(report)
     return "\n".join(lines)
+
+
+def no_picks_diagnosis(report: dict) -> list[str]:
+    """Explain a zero-pick day precisely enough to act on it.
+
+    Abstention is a valid outcome, but "no picks" on its own is not an
+    answer. This states which stage the slate died at and what the operator
+    should change.
+    """
+    pricing = report["pricing"]
+    candidates = report["candidates"]
+    horizon = report.get("horizon") or {}
+
+    def blocked_on(family: str) -> list[dict]:
+        return [c for c in candidates
+                if (c.get("edge") or 0) > 0
+                and any(b.startswith(family) for b in c["blockers"])]
+
+    timing = blocked_on(BLOCKER_KICKOFF_GUARD)
+    no_kickoff = blocked_on(BLOCKER_MISSING_KICKOFF)
+    price = blocked_on(BLOCKER_MISSING_ODDS) + blocked_on(BLOCKER_SUSPECT_PRICE)
+    no_rule = blocked_on(BLOCKER_NO_RULE)
+    edge_short = blocked_on(BLOCKER_INSUFFICIENT_EDGE)
+    would_have = [c for c in candidates
+                  if c.get("would_have_qualified_before_kickoff")]
+
+    lines = [
+        "FRESH PRODUCTION NO-PICKS DIAGNOSIS",
+        f"  certified dispatchable rules:            {report['certified_rule_count']}",
+        f"  candidates scored:                       {pricing['candidate_count_before_pricing']}",
+        f"  candidates priced:                       {pricing['candidate_count_with_any_price']}",
+        f"  candidates with positive edge:           {pricing['candidate_count_with_positive_edge']}",
+        f"  positive-edge blocked by timing guard:   {len(timing)}",
+        f"  positive-edge blocked by missing kickoff:{len(no_kickoff)}",
+        f"  positive-edge blocked by price quality:  {len(price)}",
+        f"  positive-edge below edge threshold:      {len(edge_short)}",
+        f"  positive-edge with no certified rule:    {len(no_rule)}",
+        f"  would have qualified before kickoff:     {len(would_have)}",
+    ]
+    if horizon:
+        lines.append(
+            f"  next eligible horizon candidates:        "
+            f"{horizon.get('eligible_pick_count', 0)} "
+            f"through {horizon.get('horizon_end', '-')}")
+        for pick in horizon.get("picks", [])[:5]:
+            lines.append(
+                f"    {pick['date']} {pick.get('kickoff') or '-'} "
+                f"{pick['home']} vs {pick['away']} | {pick['selection']} | "
+                f"edge={(pick.get('edge') or 0):+.4f}")
+
+    # A single top action item, chosen by which stage lost the most edge.
+    if would_have:
+        action = ("No same-day dispatch because the qualifying fixtures had "
+                  "already started or were inside the lead window. Run "
+                  "earlier, or take these from the fresh-production horizon "
+                  "planner on the preceding day.")
+    elif no_kickoff:
+        action = ("No dispatch because positive-edge fixtures had no trusted "
+                  "kickoff. Extend timing-provider coverage for these "
+                  "competitions; do not relax the kickoff gate.")
+    elif price:
+        action = ("No dispatch because positive-edge candidates could not be "
+                  "priced from a trusted exact or alias join. Widen pricing "
+                  "capture coverage; fuzzy joins stay rejected.")
+    elif edge_short:
+        action = ("No dispatch because priced certified candidates did not "
+                  "clear the edge threshold. This is a correct abstention — "
+                  "the market was not mispriced enough.")
+    elif no_rule:
+        action = ("No dispatch because priced candidates matched no certified "
+                  "dispatchable rule. Certification needs more settled "
+                  "samples, not a lower bar.")
+    elif not pricing["candidate_count_with_any_price"]:
+        action = ("No dispatch because no candidate could be priced at all. "
+                  "Check that same-day pricing capture ran before this lane.")
+    else:
+        action = ("No dispatch because no candidate reached the scoring stage "
+                  "with a quorum of current sources. Source coverage, not the "
+                  "gates, is the limit.")
+    lines += ["", f"  TOP ACTION ITEM: {action}"]
+    return lines
 
 
 # --------------------------------------------------------------------------
@@ -1499,6 +1706,138 @@ def production_pick_rows(candidates: list[Candidate]) -> list[dict]:
     return rows
 
 
+# Horizon planning. Conservative by construction: a bet may only be taken
+# between MIN_LEAD (too close to kickoff to trust the price) and MAX_LEAD
+# (too far out for today's evidence to still describe the fixture).
+HORIZON_MIN_LEAD_MINUTES = 30
+HORIZON_MAX_LEAD_HOURS = 48
+DEFAULT_HORIZON_DAYS = 2
+
+
+def plan_horizon(
+    *, groups, evidence, envelope, engine, localdata: Path, day: str,
+    as_of: datetime, horizon_days: int = DEFAULT_HORIZON_DAYS,
+    voters: tuple[str, ...] = (), min_lead: int = HORIZON_MIN_LEAD_MINUTES,
+    max_lead_hours: int = HORIZON_MAX_LEAD_HOURS,
+) -> dict:
+    """Eligible bets on upcoming dates, not only the target date.
+
+    Same gates as same-day dispatch — trusted kickoff, captured odds, a
+    certified dispatchable rule, positive edge above threshold, stake caps —
+    plus a maximum lead so we never price a fixture the current evidence is
+    too old to describe.
+    """
+    target = date.fromisoformat(day)
+    horizon_end = (target + timedelta(days=max(0, horizon_days))).isoformat()
+    max_lead = timedelta(hours=max_lead_hours)
+    per_day: list[dict] = []
+    picks: list[Candidate] = []
+    candidates_all: list[Candidate] = []
+
+    for offset in range(0, max(1, horizon_days + 1)):
+        this_day = (target + timedelta(days=offset)).isoformat()
+        board = build_price_board(engine, localdata, this_day, voters)
+        day_candidates, _pricing = build_candidates(
+            groups, day=this_day, evidence=evidence, envelope=envelope,
+            engine=engine, board=board, as_of=as_of, min_lead=min_lead)
+        candidates_all.extend(day_candidates)
+
+        eligible: list[Candidate] = []
+        for cand in day_candidates:
+            if not cand.dispatchable:
+                continue
+            kickoff_dt = (engine.parse_kickoff_dt(cand.kickoff)
+                          if cand.kickoff else None)
+            if kickoff_dt is None:
+                cand.dispatchable = False
+                cand.blockers.append(
+                    f"{BLOCKER_MISSING_KICKOFF}: horizon planning requires a "
+                    "parseable trusted kickoff")
+                continue
+            lead = kickoff_dt - as_of
+            if lead > max_lead:
+                cand.dispatchable = False
+                cand.blockers.append(
+                    f"{BLOCKER_KICKOFF_GUARD}: kickoff is "
+                    f"{lead.total_seconds() / 3600:.1f}h away, beyond the "
+                    f"{max_lead_hours}h horizon limit")
+                continue
+            cand.notes.append(
+                f"horizon lead {lead.total_seconds() / 3600:.1f}h")
+            eligible.append(cand)
+
+        per_day.append({"date": this_day, "candidates": len(day_candidates),
+                        "eligible": len(eligible)})
+        picks.extend(eligible)
+
+    picks.sort(key=lambda c: (-(c.edge or 0.0), c.date, -c.probability))
+    cap = min(MAX_DISPATCH_PICKS_PER_DAY,
+              int(MAX_TOTAL_EXPOSURE_UNITS // FLAT_STAKE_UNITS))
+    for extra in picks[cap:]:
+        extra.dispatchable = False
+        extra.stake_units = 0.0
+        extra.blockers.append(f"{BLOCKER_CAP}: {cap} pick(s) across the horizon")
+    picks = picks[:cap]
+
+    return {
+        "schema": 1,
+        "lane": "fresh_production_horizon",
+        "generated_for": day,
+        "horizon_end": horizon_end,
+        "horizon_days": horizon_days,
+        "as_of": as_of.isoformat(timespec="seconds"),
+        "min_lead_minutes": min_lead,
+        "max_lead_hours": max_lead_hours,
+        "per_day": per_day,
+        "eligible_pick_count": len(picks),
+        "picks": [asdict(c) for c in picks],
+        "note": (
+            "Horizon picks satisfy every same-day dispatch gate plus a "
+            f"{min_lead}-minute minimum and {max_lead_hours}-hour maximum "
+            "lead. They are published as dated candidates: dispatch happens "
+            "on each fixture's own run date, because the downstream sync and "
+            "notification path publishes one target date at a time and does "
+            "not yet accept future-dated rows."
+        ),
+    }
+
+
+def render_horizon_md(payload: dict) -> str:
+    lines = [
+        f"# FRESH PRODUCTION HORIZON PLAN — {payload['generated_for']} "
+        f"through {payload['horizon_end']}",
+        "",
+        f"As of: {payload['as_of']}",
+        f"Lead window: {payload['min_lead_minutes']} minutes to "
+        f"{payload['max_lead_hours']} hours before kickoff.",
+        "",
+        "| date | candidates | eligible |",
+        "|---|---:|---:|",
+    ]
+    for row in payload["per_day"]:
+        lines.append(f"| {row['date']} | {row['candidates']} | {row['eligible']} |")
+    lines.append("")
+    picks = payload["picks"]
+    if not picks:
+        lines += ["## No eligible horizon picks", "",
+                  "No upcoming fixture cleared every dispatch gate inside the "
+                  "lead window.", ""]
+    else:
+        lines += [f"## {len(picks)} eligible horizon pick(s)", "",
+                  "| date | kickoff | fixture | selection | prob | odds | edge | rule | stake |",
+                  "|---|---|---|---|---:|---:|---:|---|---:|"]
+        for pick in picks:
+            lines.append(
+                f"| {pick['date']} | {pick.get('kickoff') or '-'} | "
+                f"{pick['home']} vs {pick['away']} | {pick['selection']} | "
+                f"{pick['probability']:.3f} | {pick.get('odds') or '-'} | "
+                f"{(pick.get('edge') or 0):+.4f} | {pick.get('rule_id') or '-'} | "
+                f"{pick.get('stake_units') or 0} |")
+        lines.append("")
+    lines += [payload["note"], ""]
+    return "\n".join(lines)
+
+
 def run(
     *,
     localdata: Path,
@@ -1509,6 +1848,7 @@ def run(
     as_of: datetime | None = None,
     min_lead: int = 30,
     write: bool = True,
+    horizon_days: int = DEFAULT_HORIZON_DAYS,
 ) -> dict:
     engine = load_engine()
     if engine is None:  # pragma: no cover
@@ -1523,8 +1863,13 @@ def run(
 
     voters = fresh_production_voters()
     roles = classify_source_roles()
-    groups = load_fixture_groups(localdata, start=history_start, end=day,
-                                 voters=voters, engine=engine)
+    # Load through the end of the horizon so upcoming fixtures are available
+    # to the horizon planner, and keep timing observations from the target
+    # date onward.
+    horizon_end = (target + timedelta(days=max(0, horizon_days))).isoformat()
+    groups = load_fixture_groups(localdata, start=history_start,
+                                 end=horizon_end, voters=voters, engine=engine,
+                                 record_timing_from=day)
     labels = load_settlement_labels(localdata, start=history_start, end=day)
 
     evidence, summary = walk_forward(
@@ -1536,6 +1881,11 @@ def run(
     candidates, pricing = build_candidates(
         groups, day=day, evidence=evidence, envelope=envelope, engine=engine,
         board=board, as_of=as_of, min_lead=min_lead)
+
+    horizon = plan_horizon(
+        groups=groups, evidence=evidence, envelope=envelope, engine=engine,
+        localdata=localdata, day=day, as_of=as_of, horizon_days=horizon_days,
+        voters=voters, min_lead=min_lead)
 
     buckets = rule_lifecycle(evidence)
     feature_names = [f["feature_name"] for f in FEATURE_SCHEMA]
@@ -1579,6 +1929,8 @@ def run(
         "candidate_count": len(candidates),
         "rule_matched_count": sum(1 for c in candidates if c.rule_id),
         "dispatchable_count": len(dispatchable),
+        "horizon": horizon,
+        "horizon_eligible_count": horizon["eligible_pick_count"],
         "pricing": pricing,
         "pricing_bundle_stats": board["stats"],
         "blocker_counts": blocker_counts(candidates),
@@ -1621,6 +1973,10 @@ def run(
                                        pricing=pricing))
         # The production hand-off file. Always written, even when empty: an
         # explicit zero-row slate is what stops any other lane backfilling it.
+        write_artifact(out / f"fresh_production_horizon_picks_{day}.json",
+                       json.dumps(horizon, indent=2, sort_keys=True))
+        write_artifact(out / f"fresh_production_horizon_picks_{day}.md",
+                       render_horizon_md(horizon))
         write_artifact(out / f"fresh_production_production_picks_{day}.json",
                        dumps(report["production_pick_rows"]))
         write_artifact(out / f"model_health_{day}.json",
@@ -1674,7 +2030,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--train-days", type=int, default=DEFAULT_TRAIN_DAYS)
     parser.add_argument("--eval-days", type=int, default=DEFAULT_EVAL_DAYS)
     parser.add_argument("--as-of")
-    parser.add_argument("--min-lead", type=int, default=30)
+    parser.add_argument("--min-lead", type=int, default=HORIZON_MIN_LEAD_MINUTES)
+    parser.add_argument("--horizon-days", type=int, default=DEFAULT_HORIZON_DAYS,
+                        help="Plan eligible bets this many days beyond --date.")
     parser.add_argument("--no-write", action="store_true")
     args = parser.parse_args(argv)
 
@@ -1691,7 +2049,8 @@ def main(argv: list[str] | None = None) -> int:
 
     report = run(localdata=args.localdata, day=day, output_dir=args.output_dir,
                  train_days=args.train_days, eval_days=args.eval_days, as_of=as_of,
-                 min_lead=args.min_lead, write=not args.no_write)
+                 min_lead=args.min_lead, write=not args.no_write,
+                 horizon_days=args.horizon_days)
     if "error" in report:
         print(report["error"], file=sys.stderr)
         return 1

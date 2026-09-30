@@ -11061,3 +11061,119 @@ localdata/artifact_manifest_<date>.md                     # retention: deleted/k
 Expect `Daily picks to sync` to reflect the **fresh** lane only. Parked
 browser-dependent sources stay off; **Browser Run probes spent: 0.**
 Tests: **935 passed**. PR #18 remains open and unmerged.
+
+---
+
+## Addendum — 2026-09-30 (third pass: production-lane routing, horizon planning, precise blockers)
+
+### Production lane
+
+**fresh_production is the only production lane.** Nothing else may sync, notify,
+ticket, CLV-capture or spend odds credits.
+
+`src/edgefactory/production_lane.py` now exposes one canonical payload,
+`production_payload(date, localdata, horizon_days=)`, with the fields
+`production_lane`, `production_pick_file`, `production_edge_file`,
+`production_pick_count`, `production_date`, `production_horizon` and
+`comparison_only_files`.
+
+### All downstream consumers route through the payload
+
+| consumer | reads | legacy fallback |
+|---|---|---|
+| Supabase pick sync | `fresh_production_production_picks_<date>.json` | none |
+| Supabase edge/rule sync | `fresh_production_certified_edges_<date>.json` | legacy published as `comparison_only` only |
+| notification / heartbeat | production pick file | none (empty-slate heartbeat) |
+| CLV capture | production pick file (`resolve_capture_input`) | none |
+| odds capture shortlist | production pick file (`theoddsapi._shortlist_file`) | none — no fresh slate means zero credits spent |
+| auto ticket generate/freeze | production pick file | none — no fresh slate means no tickets |
+| future planner | legacy engine, output stamped `comparison_only: true` | n/a, never production |
+
+**Legacy is comparison-only everywhere.** `picks_<date>.json`,
+`picks_today.json`, `edges_consensus.json` and `picks_next_Ndays.json` are
+listed in `comparison_only_files` and never drive a production action.
+
+Rule sync carries `lane`, `rule_source`, `dispatchable` and `comparison_only`
+inside the `rule` payload (the warehouse schema has no lane column). Research
+rules are published with `dispatchable: false`.
+
+### Horizon planner
+
+New `fresh_production_horizon_picks_<date>.{json,md}`. Default horizon 2 days
+(`--horizon-days`), lead window **30 minutes to 48 hours**. Horizon picks must
+pass every same-day gate — trusted parseable kickoff, captured odds, certified
+dispatchable rule, positive edge above threshold, stake/exposure caps — plus
+the lead bounds. They are published as dated candidates and dispatched on each
+fixture's own run date, because the sync/notify path publishes one target date
+at a time and does not yet accept future-dated rows.
+
+### Timing blockers (the gate was NOT weakened)
+
+Every fixture now records `kickoff_observations` and a `timing_diagnosis`
+classified as one of `trusted_kickoff_present`, `already_started_or_inside_lead`,
+`missing_kickoff_in_all_sources`, `kickoff_present_but_parser_missed`,
+`kickoff_present_from_source_not_allowed_as_timing_provider`. Candidates that
+fail *only* on timing are flagged `would_have_qualified_before_kickoff` and
+counted separately from actual dispatchability.
+
+### Pricing diagnostics
+
+Every candidate carries a `price_diagnosis`: bundles searched, rows per bundle,
+match method per bundle, whether an embedded source price existed, and whether a
+fuzzy candidate was found and rejected. **Fuzzy-only prices are never
+dispatched.**
+
+### No-picks output
+
+`FRESH PRODUCTION NO-PICKS DIAGNOSIS` prints rule counts, scored/priced/
+positive-edge counts, positive-edge losses split by timing / missing kickoff /
+price quality / edge threshold / no certified rule, the next eligible horizon
+candidates, and a single **TOP ACTION ITEM** naming the stage that lost the edge.
+
+### Retention
+
+A second retention pass now runs at the end of `run_smart_auto`, after every
+artefact this run writes and **before** the workflow's `git add -A localdata`
+persist step:
+`clean_localdata.py --policy fresh_production --keep-days 30 --keep-latest 3 --write-manifest`.
+`fresh_production_horizon_picks` was added to the known-prefix table and to
+`.gitignore` (compact JSON/MD committed, scratch excluded). Verified run:
+**0 files removed, 464 considered, 253 unmatched left alone**, with the manifest
+explaining the correct zero-deletion (the previous pass had already pruned).
+Raw evidence intact: 23 csv.gz, 30 `picks_2026-09-*.json`, 35 `auto_tickets_*.txt`.
+
+### Counts (last CI run, 2026-09-30 — the baseline this pass addresses)
+
+Labelled fixtures 5126; certified dispatchable rules 14; research rules 10;
+blocked 0; candidates 140; priced 22 of 28 scored; matching a rule 11;
+positive-edge 6; dispatchable picks 0. Blockers: `insufficient_voter_quorum`
+112, `insufficient_edge_versus_price` 16, `kickoff_guard` 17,
+`no_certified_fresh_production_rule_matched` 17, `missing_trusted_kickoff` 8,
+`missing_odds` 6, `suspect_price` 2.
+
+**Exact blocker:** the three positive-edge candidates (Mexico vs Peru +0.0684,
+Bahrain vs Yemen +0.0651, Uzbekistan U23 vs Japan U23 +0.037) were lost to
+timing, not to weak evidence. **Top action item: run earlier, or take these from
+the horizon planner on the preceding day.** The next CI run will print the
+precise timing classification for the 8 `missing_trusted_kickoff` fixtures, which
+distinguishes a coverage gap from a parser defect.
+
+### Artifacts to inspect
+
+`localdata/fresh_production_horizon_picks_2026-09-30.md`,
+`fresh_production_dispatchable_picks_2026-09-30.md`,
+`fresh_production_candidate_picks_2026-09-30.json` (per-candidate
+`timing_diagnosis` / `price_diagnosis`), `source_health_2026-09-30.md`,
+`artifact_manifest_2026-09-30.md`.
+
+### Tests
+
+**Full suite: 965 passed.** New module `tests/test_production_routing.py`
+(29 tests) covers payload completeness, every consumer's routing, legacy
+comparison-only marking, fresh edge sync, research rules never dispatchable,
+horizon dispatch/rejection/kickoff/odds requirements, the five timing
+classifications, parser recovery, fuzzy-price rejection, missing-price
+diagnostics, parked sources excluded from fresh sections, the no-picks top
+action item, retention ordering and zero-deletion evidence preservation.
+
+**PR #18 is NOT merged.**

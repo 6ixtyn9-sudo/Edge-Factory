@@ -61,6 +61,42 @@ def legacy_dispatch_allowed(env: dict[str, str] | None = None) -> bool:
     return active_lane(env) == LANE_LEGACY_BASELINE
 
 
+def production_edges_path(target_date: str, localdata: Path) -> Path:
+    """The certified-rule registry the production edge sync must publish.
+
+    In ``fresh_production`` mode this is the fresh lane's own registry. The
+    legacy ``edges_consensus.json`` describes rules certified against a source
+    universe that no longer produces same-day rows, so publishing it as
+    production-active would tell a dashboard that retired rules are live.
+    """
+    localdata = Path(localdata)
+    if fresh_production_is_active():
+        dated = localdata / f"fresh_production_certified_edges_{target_date}.json"
+        return dated if dated.exists() else (
+            localdata / "fresh_production_certified_edges.json")
+    return localdata / "edges_consensus.json"
+
+
+def horizon_picks_path(target_date: str, localdata: Path) -> Path:
+    return Path(localdata) / f"fresh_production_horizon_picks_{target_date}.json"
+
+
+def comparison_only_files(target_date: str, localdata: Path) -> list[str]:
+    """Artifacts that exist for comparison and must never drive production."""
+    localdata = Path(localdata)
+    if not fresh_production_is_active():
+        return []
+    names = [
+        f"picks_{target_date}.json",
+        f"picks_morning_{target_date}.json",
+        "picks_today.json",
+        "edges_consensus.json",
+        "picks_next_2days.json",
+        "picks_next_3days.json",
+    ]
+    return [str(localdata / name) for name in names]
+
+
 def production_picks_path(target_date: str, localdata: Path) -> Path:
     """The file the production sync/notify step must read for ``target_date``."""
     if fresh_production_is_active():
@@ -94,20 +130,38 @@ def load_production_picks(target_date: str, localdata: Path) -> list[dict]:
     return payload if isinstance(payload, list) else []
 
 
-def describe(target_date: str, localdata: Path) -> dict:
-    """Auditable snapshot of the lane decision, for logs and artifacts."""
+def production_payload(target_date: str, localdata: Path, *,
+                       horizon_days: int = 0) -> dict:
+    """The one description of production every downstream consumer must read.
+
+    Nothing downstream should hardcode a pick file. They ask here, so that
+    switching lanes switches every consumer at once and no component can
+    quietly keep reading the other lane's output.
+    """
     lane = active_lane()
     rows = load_production_picks(target_date, localdata)
     return {
         "production_lane": lane,
-        "legacy_dispatch_allowed": legacy_dispatch_allowed(),
-        "production_picks_file": str(production_picks_path(target_date, localdata)),
+        "production_pick_file": str(production_picks_path(target_date, localdata)),
+        "production_edge_file": str(production_edges_path(target_date, localdata)),
         "production_pick_count": len(rows),
+        "production_date": target_date,
+        "production_horizon": horizon_days,
+        "comparison_only_files": comparison_only_files(target_date, localdata),
+        "legacy_dispatch_allowed": legacy_dispatch_allowed(),
         "fallback_to_other_lane": False,
-        "note": (
-            "legacy_baseline reports still run for comparison; they are not "
-            "synced or notified as production while fresh_production is active."
-        ) if lane == LANE_FRESH_PRODUCTION else (
-            "legacy_baseline is the active production lane."
-        ),
     }
+
+
+def describe(target_date: str, localdata: Path) -> dict:
+    """Auditable snapshot of the lane decision, for logs and artifacts."""
+    payload = production_payload(target_date, localdata)
+    payload["production_picks_file"] = payload["production_pick_file"]
+    payload["note"] = (
+        "legacy_baseline reports still run for comparison; they are not "
+        "synced, notified, ticketed, CLV-captured or published as production "
+        "while fresh_production is active."
+    ) if payload["production_lane"] == LANE_FRESH_PRODUCTION else (
+        "legacy_baseline is the active production lane."
+    )
+    return payload

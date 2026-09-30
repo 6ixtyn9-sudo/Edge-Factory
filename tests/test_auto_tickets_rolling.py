@@ -802,7 +802,9 @@ def test_force_repick_sizes_on_bank_net_of_other_dates_not_own_draft(tmp_path, m
     free bank 90 -> 3 x 10.0, NOT (100-21.6-10)/3 = 7.6 (pre-fix)."""
     import json
     monkeypatch.setattr(at, "datetime", _RepickClock)
-    (at.LOCALDATA / "picks_today.json").write_text(json.dumps(_six_leg_slate_rows()))
+    # Tickets read the ACTIVE production lane, so the slate goes to the
+    # fresh_production pick file rather than the legacy ledger.
+    (at.LOCALDATA / "fresh_production_production_picks_2026-09-06.json").write_text(json.dumps(_six_leg_slate_rows()))
     st = at.fresh_state()
     st["bank"] = 100.0
     st["open_slips"] = [_slip("2026-09-06", 21.6, [7.2, 7.2, 7.2]),   # own morning draft
@@ -828,7 +830,9 @@ def test_first_run_of_day_sizes_on_bank_net_of_other_dates_and_prints_no_warning
     so nothing is excluded by the date rule — other dates still count."""
     import json
     monkeypatch.setattr(at, "datetime", _RepickClock)
-    (at.LOCALDATA / "picks_today.json").write_text(json.dumps(_six_leg_slate_rows()))
+    # Tickets read the ACTIVE production lane, so the slate goes to the
+    # fresh_production pick file rather than the legacy ledger.
+    (at.LOCALDATA / "fresh_production_production_picks_2026-09-06.json").write_text(json.dumps(_six_leg_slate_rows()))
     st = at.fresh_state()
     st["bank"] = 100.0
     st["open_slips"] = [_slip("2026-09-05", 10.0, [10.0])]

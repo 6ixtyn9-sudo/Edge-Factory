@@ -22,7 +22,8 @@ sys.path.insert(0, str(ROOT / "src"))
 from edgefactory.db import delete_picks_for_date, get_client, upsert_edges, upsert_picks  # noqa: E402
 from edgefactory.util import ledger_team_key  # noqa: E402
 
-EDGES = ROOT / "localdata" / "edges_consensus.json"
+LOCALDATA = ROOT / "localdata"
+EDGES = LOCALDATA / "edges_consensus.json"
 DEFAULT_PICKS = ROOT / "localdata" / "picks_today.json"
 
 SPORT_ID = 1  # sports.key='soccer'
@@ -51,7 +52,25 @@ def _display_rule_from_name(name: str, market: str = "1x2") -> str | None:
     return f"{n_way}WAY-UNANIMOUS≥{thr:.0f}"
 
 
-def load_edges() -> list[dict]:
+def _lane_marks(rule_source: str, *, dispatchable: bool, comparison_only: bool) -> dict:
+    """Lane provenance carried on every synced rule.
+
+    The warehouse schema has no lane column, so the marks live inside the
+    ``rule`` payload. A dashboard reading ``comparison_only`` therefore cannot
+    mistake a retired legacy rule for a live production rule.
+    """
+    from edgefactory import production_lane
+
+    return {
+        "lane": production_lane.active_lane(),
+        "rule_source": rule_source,
+        "dispatchable": dispatchable,
+        "comparison_only": comparison_only,
+    }
+
+
+def load_legacy_edges(*, comparison_only: bool) -> list[dict]:
+    """Legacy certified edges. Marked comparison-only outside legacy mode."""
     try:
         data = json.loads(EDGES.read_text())
     except Exception:
@@ -62,17 +81,76 @@ def load_edges() -> list[dict]:
         if e.get("status") != "certified":
             continue
         decay = e.get("decay", {}) if isinstance(e.get("decay"), dict) else {}
+        marks = _lane_marks("legacy_baseline", dispatchable=not comparison_only,
+                            comparison_only=comparison_only)
         out.append({
             "name": e["rule"],
             "sport_id": SPORT_ID,
             "source_id": SOURCE_ID,
-            "rule": e,
-            "status": "certified",
+            "rule": {**e, **marks},
+            "status": "comparison_only" if comparison_only else "certified",
             "train_stats": e.get("train", {}),
             "valid_stats": e.get("valid", {}),
             "decay_verdict": decay.get("verdict", "unknown"),
         })
     return out
+
+
+def load_fresh_production_edges(path: Path) -> list[dict]:
+    """Fresh-production rules. Only dispatchable ones are production-active.
+
+    Research rules are published so the dashboard can see them, but they are
+    explicitly ``dispatchable: false`` — they are being tracked, not traded.
+    """
+    try:
+        data = json.loads(path.read_text())
+    except Exception:
+        return []
+
+    out = []
+    for bucket, dispatchable in (("certified_dispatchable_rules", True),
+                                 ("research_rules", False)):
+        for rule in data.get(bucket, []) or []:
+            name = rule.get("rule_id")
+            if not name:
+                continue
+            marks = _lane_marks("fresh_production", dispatchable=dispatchable,
+                                comparison_only=False)
+            out.append({
+                "name": name,
+                "sport_id": SPORT_ID,
+                "source_id": SOURCE_ID,
+                "rule": {**rule, **marks,
+                         "model_version": data.get("model_version"),
+                         "feature_schema_version": data.get("feature_schema_version")},
+                "status": "certified" if dispatchable else "research",
+                "train_stats": {"walkforward_sample": rule.get("sample"),
+                                "hit_rate": rule.get("hit_rate"),
+                                "hit_rate_lower_bound": rule.get("hit_rate_lb")},
+                "valid_stats": {"recent_sample": rule.get("recent_sample"),
+                                "brier": rule.get("brier"),
+                                "base_rate": rule.get("base_rate")},
+                "decay_verdict": rule.get("status", "unknown"),
+            })
+    return out
+
+
+def load_edges(target_date: str | None = None) -> list[dict]:
+    """Certified rules for the ACTIVE production lane.
+
+    In ``fresh_production`` mode the fresh registry supplies the production
+    rules and the legacy registry is published as comparison-only, so no
+    retired rule is ever shown as production-active.
+    """
+    from edgefactory import production_lane
+
+    if not production_lane.fresh_production_is_active():
+        return load_legacy_edges(comparison_only=False)
+
+    day = target_date or date.today().isoformat()
+    fresh = load_fresh_production_edges(
+        production_lane.production_edges_path(day, LOCALDATA))
+    return fresh + load_legacy_edges(comparison_only=True)
 
 
 def load_picks_raw(path: Path) -> list[dict]:
@@ -275,12 +353,19 @@ def main() -> None:
 
     picks_path = Path(args.picks)
     raw_text = picks_path.read_text() if picks_path.exists() else "[]"
-    edges = load_edges()
     raw_picks = load_picks_raw(picks_path)
     target_date = infer_target_date(raw_picks, args.target_date)
+    edges = load_edges(target_date)
     aliases = build_rule_aliases(edges)
 
-    print(f"Certified edges to sync: {len(edges)}")
+    from edgefactory import production_lane
+
+    production = sum(1 for e in edges
+                     if e["rule"].get("dispatchable") and not e["rule"].get("comparison_only"))
+    comparison = len(edges) - production
+    print(f"Production lane: {production_lane.active_lane()}")
+    print(f"Certified edges to sync: {len(edges)} "
+          f"({production} production-active, {comparison} comparison-only/research)")
     print(f"Daily picks to sync: {len(raw_picks)}")
     print(f"Sync source file: {picks_path}")
     print(f"Target date: {target_date}")

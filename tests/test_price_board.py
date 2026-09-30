@@ -221,7 +221,7 @@ def _slate_rows_with_boards():
 
 def test_every_printed_leg_is_logged_append_only_with_its_board(tmp_path, monkeypatch):
     monkeypatch.setattr(at, "datetime", _NoonClock)
-    (at.LOCALDATA / "picks_today.json").write_text(
+    (at.LOCALDATA / "fresh_production_production_picks_2026-09-06.json").write_text(
         json.dumps(_slate_rows_with_boards()))
     st = at.fresh_state()
     args = SimpleNamespace(date="2026-09-06", force=True)

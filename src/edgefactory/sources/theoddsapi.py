@@ -624,6 +624,18 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
 
 
 def _shortlist_file(date: str) -> Path | None:
+    """The pick file whose fixtures we are willing to spend credits pricing.
+
+    This follows the active production lane. Under ``fresh_production`` an
+    absent or empty fresh slate means there is nothing worth pricing, and we
+    must NOT fall back to the legacy archive: that would spend paid API
+    credits capturing closing lines for fixtures we never intend to bet.
+    """
+    from edgefactory import production_lane
+
+    if production_lane.fresh_production_is_active():
+        path = production_lane.production_picks_path(date, LOCALDATA)
+        return path if path.exists() else None
     for name in (f"picks_{date}.json", f"picks_morning_{date}.json"):
         path = LOCALDATA / name
         if path.exists():

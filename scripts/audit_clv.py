@@ -281,6 +281,24 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
     }
 
 
+def resolve_capture_input(run_date: str, explicit: str | None) -> Path:
+    """Which picks CLV should measure.
+
+    CLV exists to score the prices we actually took, so it must follow the
+    production lane. In ``fresh_production`` mode an absent or empty fresh
+    slate means there is nothing to measure — capturing the legacy ledger
+    instead would attribute closing-line value to bets we never placed.
+    """
+    if explicit:
+        return Path(explicit)
+    from edgefactory import production_lane
+
+    path = production_lane.production_picks_path(run_date, LOCALDATA)
+    print(f"clv capture source: {path.name} "
+          f"(lane {production_lane.active_lane()})")
+    return path
+
+
 def capture(run_date: str, label: str, input_path: Path) -> int:
     rows, stats = _capture_rows(run_date, label, input_path)
     path = _snapshot_path(run_date)
@@ -492,8 +510,9 @@ def main() -> int:
     cap.add_argument("--label", required=True, help="Snapshot label, e.g. pick_time or latest.")
     cap.add_argument(
         "--input",
-        default=str(LOCALDATA / "picks_today.json"),
-        help="Path to input picks JSON (default: localdata/picks_today.json).",
+        default=None,
+        help="Path to input picks JSON (default: the active production lane's "
+             "pick file, so CLV measures the picks we actually bet).",
     )
 
     rep = sub.add_parser("report", help="Build a CLV report from snapshot files.")
@@ -502,7 +521,7 @@ def main() -> int:
 
     args = parser.parse_args()
     if args.cmd == "capture":
-        return capture(args.date, args.label, Path(args.input))
+        return capture(args.date, args.label, resolve_capture_input(args.date, args.input))
     if args.cmd == "report":
         return report(args.start, args.end)
     parser.error("unknown command")

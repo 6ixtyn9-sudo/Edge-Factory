@@ -460,7 +460,7 @@ def test_cmd_today_live_guard_regression(tmp_path, monkeypatch):
     census OFF the slip, and build the two-acca card from the four surviving
     legs."""
     monkeypatch.setattr(at, "datetime", _Clock)
-    (at.LOCALDATA / "picks_today.json").write_text(
+    (at.LOCALDATA / "fresh_production_production_picks_2026-09-06.json").write_text(
         json_dumps(_slate_rows()))
     st = at.fresh_state()
     args = SimpleNamespace(date="2026-09-06", force=False)

@@ -147,7 +147,9 @@ def test_budget_stop_marks_active_key_unusable(tmp_path, monkeypatch):
 
 
 def test_shortlist_reads_frozen_archive(tmp_path, monkeypatch):
-    (tmp_path / "picks_2026-08-03.json").write_text(json.dumps([
+    # The shortlist follows the active production lane, so the frozen slate
+    # is written to the fresh_production pick file.
+    (tmp_path / "fresh_production_production_picks_2026-08-03.json").write_text(json.dumps([
         {"home": "Halmstad", "away": "Sirius", "league": "Sweden Allsvenskan",
          "date": "2026-08-03", "kickoff": "03-08, 18:00"},
         {"home": "Halmstad", "away": "Sirius", "league": "Sweden Allsvenskan",
@@ -159,6 +161,25 @@ def test_shortlist_reads_frozen_archive(tmp_path, monkeypatch):
     assert len(fixtures) == 1
     assert fixtures[0]["home"] == "Halmstad"
     assert theoddsapi.shortlist("2026-01-01") == []
+
+
+def test_shortlist_never_falls_back_to_the_legacy_archive(tmp_path, monkeypatch):
+    """No fresh slate means no paid odds capture, even if legacy picks exist.
+
+    Falling back would spend The Odds API credits pricing fixtures the
+    production lane has already declined to bet.
+    """
+    (tmp_path / "picks_2026-08-03.json").write_text(json.dumps([
+        {"home": "Halmstad", "away": "Sirius", "league": "Sweden Allsvenskan",
+         "date": "2026-08-03", "kickoff": "03-08, 18:00"},
+    ]))
+    monkeypatch.setattr(theoddsapi, "LOCALDATA", tmp_path)
+    monkeypatch.setenv("EDGE_FACTORY_PRODUCTION_LANE", "fresh_production")
+    assert theoddsapi.shortlist("2026-08-03") == []
+
+    # Under the legacy lane the same archive is still the correct source.
+    monkeypatch.setenv("EDGE_FACTORY_PRODUCTION_LANE", "legacy_baseline")
+    assert len(theoddsapi.shortlist("2026-08-03")) == 1
 
 
 def test_cost_model(monkeypatch):
@@ -293,7 +314,7 @@ def test_shortlist_reads_vetoed_picks_from_forecast_archive(tmp_path, monkeypatc
     localdata.mkdir()
     monkeypatch.setattr(theoddsapi, "LOCALDATA", localdata)
 
-    archive = localdata / "picks_2026-08-06.json"
+    archive = localdata / "fresh_production_production_picks_2026-08-06.json"
     archive.write_text(_json.dumps([
         {"date": "2026-08-06", "home": "Paide", "away": "Rapid Vienna",
          "kickoff": "2026-08-06T17:00:00Z", "bucket": "SKIPPED_VETO",
