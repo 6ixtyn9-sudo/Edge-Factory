@@ -1,6 +1,10 @@
 {
+  "comparison_only": true,
   "days": 2,
-  "ledger_kind": "forecast",
+  "lane": "fresh_production",
+  "ledger_kind": "legacy_baseline_comparison_forecast",
+  "note": "legacy_baseline forward view, published for comparison only. Production future picks come from the fresh_production horizon planner.",
+  "production": false,
   "row_count": 12,
-  "snapshot_as_of": "2026-09-30T19:04:25+02:00"
+  "snapshot_as_of": "2026-09-30T19:57:35+02:00"
 }

@@ -9,14 +9,14 @@ dispatchable: **False**. Shadow evaluation only. These rows are NEVER dispatched
 Blockers:
 
 - inside_30m_lead_or_started: 4
-- no_ml_feature_provider_on_fixture: 2
+- no_ml_feature_provider_on_fixture: 3
 - shadow_sources_not_settlement_validated: 5
 
 | fixture | live voters | shadow voters | kickoff | blockers |
 |---|---|---|---|---|
-| Bahrain vs Yemen | zulubet,betclan | prosoccer | 2026-09-30T19:30:00+02:00 | inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
+| Bahrain vs Yemen | zulubet,betclan | prosoccer | 18:30 | inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
 | Eastleigh vs Southend | zulubet,vitibet,betclan | prosoccer | 2026-09-30T20:45:00+02:00 | shadow_sources_not_settlement_validated:prosoccer |
-| Lithuania vs Andorra | zulubet,statarea,betclan,bzzoiro | prosoccer | 09:00 | inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
+| Lithuania vs Andorra | betclan,bzzoiro | prosoccer | 2026-09-30T16:00:00Z | no_ml_feature_provider_on_fixture; inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
 | Mexico vs Peru | betclan,bzzoiro | prosoccer | 2026-09-30T01:00:00Z | no_ml_feature_provider_on_fixture; inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
 | Seychelles vs Sri Lanka | betclan,bzzoiro | prosoccer | 2026-09-30T13:00:00Z | no_ml_feature_provider_on_fixture; inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
 

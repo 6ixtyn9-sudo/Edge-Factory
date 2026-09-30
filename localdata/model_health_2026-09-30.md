@@ -92,7 +92,7 @@
 
 ## model_health_checks
 
-- MODEL_HEALTH: 112 fixture(s) had too few current-source voters to score — source coverage, not a model or schema fault
+- MODEL_HEALTH: 113 fixture(s) had too few current-source voters to score — source coverage, not a model or schema fault
 - MODEL_HEALTH: 10 rule(s) are research-only and can never dispatch; they are not counted as certified
 - MODEL_HEALTH: candidates were scored but none cleared dispatch gates
 
