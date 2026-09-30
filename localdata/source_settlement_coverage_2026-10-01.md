@@ -1,0 +1,446 @@
+# Source settlement coverage — 2026-07-03..2026-10-01
+
+Prediction->final-score matching quality per source. Row counts alone are NOT validation.
+Donor rows indexed: 258160 across 24 donor labels.
+Guarded alias tier: enabled (edgefactory.identity fold).
+
+| source | fixtures | own_score | exact | alias | matched | agree | conflict | donor_conf | unmatched | ambig | rev | rev_unexp | cov% | confl% | verdict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| forebet | 28203 | 27149 | 9267 | 2465 | 11732 | 11644 | 42 | 25 | 15906 | 540 | 1 | 1 | 41.6 | 0.36 | unproven |
+| zulubet | 4438 | 4347 | 4091 | 41 | 4132 | 4123 | 5 | 18 | 266 | 22 | 1 | 1 | 93.11 | 0.12 | review_required |
+| statarea | 7877 | 7624 | 4890 | 818 | 5708 | 5648 | 15 | 6 | 1955 | 208 | 2 | 2 | 72.46 | 0.26 | partial |
+| vitibet | 31465 | 11466 | 13210 | 3727 | 16937 | 11433 | 1 | 40 | 13727 | 761 | 13 | 13 | 53.83 | 0.01 | unproven |
+| scoutingstats | 8715 | 8481 | 4157 | 1185 | 5342 | 5308 | 33 | 8 | 2942 | 423 | 3 | 3 | 61.3 | 0.62 | partial |
+| predictz | 2046 | 0 | 1237 | 157 | 1394 | 0 | 0 | 0 | 606 | 46 | 1 | 1 | 68.13 | 0.0 | partial |
+| windrawwin | 1114 | 0 | 64 | 4 | 68 | 0 | 0 | 0 | 1046 | 0 | 0 | 0 | 6.1 | 0.0 | unproven |
+| prosoccer | 68 | 25 | 29 | 0 | 29 | 22 | 1 | 0 | 39 | 0 | 0 | 0 | 42.65 | 4.35 | unproven |
+| soccervista | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | no_data |
+| bettingclosed | 14820 | 14395 | 5510 | 899 | 6409 | 6380 | 28 | 10 | 8077 | 324 | 4 | 4 | 43.25 | 0.44 | unproven |
+| betclan | 1415 | 0 | 129 | 11 | 140 | 0 | 0 | 0 | 1274 | 1 | 0 | 0 | 9.89 | 0.0 | unproven |
+| freesupertips | 16 | 0 | 15 | 0 | 15 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 93.75 | 0.0 | unproven |
+| afootballreport | 8135 | 0 | 353 | 137 | 490 | 0 | 0 | 0 | 7610 | 35 | 1 | 1 | 6.02 | 0.0 | unproven |
+| bzzoiro | 2290 | 0 | 1275 | 225 | 1500 | 0 | 0 | 2 | 655 | 133 | 1 | 1 | 65.5 | 0.0 | partial |
+| bzzoiro_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
+| theoddsapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
+| oddspapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
+
+## Notes
+- **forebet** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 25 donor-conflicted fixtures; 540 ambiguous rejected; insufficient matched settlement evidence
+- **zulubet** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 18 donor-conflicted fixtures; 22 ambiguous rejected; validated on coverage/conflict but 1 unexplained reversed home/away candidate(s) - sign off in Config/reversal_reviews.json
+- **statarea** (prediction): orientation risk on 2 fixtures (2 unexplained, 0 reviewed); 6 donor-conflicted fixtures; 208 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
+- **vitibet** (prediction): orientation risk on 13 fixtures (13 unexplained, 0 reviewed); 40 donor-conflicted fixtures; 761 ambiguous rejected; insufficient matched settlement evidence
+- **scoutingstats** (prediction): orientation risk on 3 fixtures (3 unexplained, 0 reviewed); 8 donor-conflicted fixtures; 423 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
+- **predictz** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 46 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
+- **windrawwin** (prediction): insufficient matched settlement evidence
+- **prosoccer** (prediction): insufficient matched settlement evidence
+- **soccervista** (prediction): no completed-window prediction rows in localdata
+- **bettingclosed** (prediction): orientation risk on 4 fixtures (4 unexplained, 0 reviewed); 10 donor-conflicted fixtures; 324 ambiguous rejected; insufficient matched settlement evidence
+- **betclan** (prediction): 1 ambiguous rejected; insufficient matched settlement evidence
+- **freesupertips** (prediction): insufficient matched settlement evidence
+- **afootballreport** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 35 ambiguous rejected; insufficient matched settlement evidence
+- **bzzoiro** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 2 donor-conflicted fixtures; 133 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
+- **bzzoiro_odds** (pricing-only): pricing-only source; excluded from prediction->score coverage
+- **theoddsapi_odds** (pricing-only): pricing-only source; excluded from prediction->score coverage
+- **oddspapi_odds** (pricing-only): pricing-only source; excluded from prediction->score coverage
+
+## Examples (max 10 per class per source)
+### forebet
+- ambiguous:
+  - 2026-07-30 Anderlecht vs Hammarby IF — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 FC Koper vs NSÍ Runavík — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 FC Nordsjælland vs GAIS — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 FK Karlskrona vs Nosaby — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Grêmio vs Bolívar — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Levadia Tallinn vs IFK Göteborg — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Talleres Córdoba vs Vélez Sársfield — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Bodo/Glimt vs Lillestrom SK — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Rodina Moscow vs FK Rostov — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Atlético San Luis vs Club Tijuana — reason=multiple alias donor candidates, candidates=2
+- conflict:
+  - 2026-08-05 Odder IGF vs Skive IK — reason=source score != donor score, source_score=1-1, donor_score=2-3, donors=bettingclosed_csv,wh:bettingclosed_settled
+  - 2026-08-05 Olimpia Grudziadz vs Swit Skolwin — reason=source score != donor score, source_score=3-3, donor_score=5-3, donors=statarea_csv,wh:statarea_settled
+  - 2026-08-08 Orlando Pirates vs Durban City — reason=source score != donor score, source_score=1-1, donor_score=2-1, donors=statarea_csv,wh:statarea_settled
+  - 2026-08-08 St. Polten W vs Sporting W — reason=source score != donor score, source_score=0-0, donor_score=1-1, donors=scoutingstats_csv,wh:scoutingstats_settled
+  - 2026-08-08 Vllaznia W vs Apollon W — reason=source score != donor score, source_score=1-1, donor_score=1-2, donors=scoutingstats_csv,wh:scoutingstats_settled
+  - 2026-08-11 Bashley vs Shepton Mallet — reason=source score != donor score, source_score=2-2, donor_score=2-3, donors=scoutingstats_csv
+  - 2026-08-11 Downham Town vs Cornard United FC — reason=source score != donor score, source_score=0-0, donor_score=0-2, donors=scoutingstats_csv
+  - 2026-08-11 Ossett United vs Abbey Hey — reason=source score != donor score, source_score=1-0, donor_score=3-0, donors=scoutingstats_csv
+  - 2026-08-11 Potton United vs Cockfosters — reason=source score != donor score, source_score=3-3, donor_score=3-4, donors=scoutingstats_csv
+  - 2026-08-12 Hutton FC vs Northwood FC — reason=source score != donor score, source_score=2-0, donor_score=2-1, donors=scoutingstats_csv
+- donor_conflict:
+  - 2026-07-30 Ilves vs Stjarnan FC — reason=independent donors disagree, donor_scores=scoutingstats_csv=2-1; vitibet_csv=1-0; wh:scoutingstats_settled=2-1; wh:vitibet_settled=1-0; wh:zulubet_settled=1-0; zulubet_csv=1-0
+  - 2026-08-05 ŽNK Mura W vs Farul Constanţa W — reason=independent donors disagree, donor_scores=scoutingstats_csv=1-3; vitibet_csv=1-1; wh:scoutingstats_settled=1-3; wh:zulubet_settled=1-1; zulubet_csv=1-1
+  - 2026-08-07 Sonderjyske vs Viborg FF — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-0; bettingclosed_settled=0-0; statarea_csv=0-0; vitibet_csv=0-0; wh:bettingclosed_settled=0-0; wh:statarea_settled=0-0; wh:vitibet_settled=0-0; wh:zulubet_settled=0-1; zulubet_csv=0-1
+  - 2026-08-08 Juventus W vs Hammarby W — reason=independent donors disagree, donor_scores=scoutingstats_csv=3-1; vitibet_csv=1-1; wh:scoutingstats_settled=3-1
+  - 2026-08-11 Apollon Limassol vs Brann — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-4; wh:bettingclosed_settled=2-4; wh:zulubet_settled=1-2; zulubet_csv=1-2
+  - 2026-08-11 CSKA 1948 vs Panathinaikos — reason=independent donors disagree, donor_scores=bettingclosed_csv=1-2; vitibet_csv=1-1; wh:bettingclosed_settled=1-2; wh:vitibet_settled=1-1; wh:zulubet_settled=1-1; zulubet_csv=1-1
+  - 2026-08-11 Gangwon FC vs Gamba Osaka — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-1; vitibet_csv=0-0; wh:bettingclosed_settled=0-1; wh:zulubet_settled=0-0; zulubet_csv=0-0
+  - 2026-08-19 ABM Galaxy vs Central Coast — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-3; scoutingstats_csv=2-3; vitibet_csv=2-2; wh:bettingclosed_settled=2-3
+  - 2026-08-19 Gainare Tottori vs Roasso Kumamoto — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-2; vitibet_csv=1-1; wh:bettingclosed_settled=2-2; wh:zulubet_settled=1-1; zulubet_csv=1-1
+  - 2026-08-24 Ellas Syros vs Marko — reason=independent donors disagree, donor_scores=vitibet_csv=1-1; wh:zulubet_settled=1-2; zulubet_csv=1-2; zulubet_settled=1-2
+- reversed_candidate_unexplained:
+  - 2026-08-22 Kolos Kovalivka vs UCSA — reason=donor has reversed home/away, donor_score=0-3, donors=betexplorer_results_csv,statarea_csv,vitibet_csv,wh:betexplorer_settled,wh:statarea_settled, review=UNEXPLAINED - blocks validation
+- unmatched:
+  - 2026-07-29 Argentinos Juniors vs Estudiantes Río Cuarto — reason=no independent donor row, source_score=3-0
+  - 2026-07-29 Atlético Barinas vs Real Frontera SC — reason=no independent donor row, source_score=3-1
+  - 2026-07-29 Atlético El Vigía vs Deportivo Lara — reason=no independent donor row, source_score=2-1
+  - 2026-07-29 Atlético Mineiro vs RB Bragantino — reason=no independent donor row, source_score=
+  - 2026-07-29 Auckland City vs Bay Olympic — reason=no independent donor row, source_score=5-1
+  - 2026-07-29 Baía de Pemba vs Sofala — reason=no independent donor row, source_score=0-0
+  - 2026-07-29 Ballymena Allstars W vs Craigavon City W — reason=no independent donor row, source_score=3-1
+  - 2026-07-29 Ballymoney W vs St. James' Swifts W — reason=no independent donor row, source_score=3-1
+  - 2026-07-29 Bangor Ladies W vs Greenisland W — reason=no independent donor row, source_score=3-1
+  - 2026-07-29 Barranquilla FC vs Junior Barranquilla — reason=no independent donor row, source_score=3-3
+### zulubet
+- ambiguous:
+  - 2026-07-29 FK Crvena Zvezda vs Larne — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-03 Djurgardens IF vs Vasteras SK FK — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-05 Spartak Moscow vs FC Orenburg — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-06 Pakhtakor vs Buxoro — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-07 Rubio NU vs Deportivo Recoleta — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-08 FK Crvena Zvezda vs Novi Pazar — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-09 Spartak Moscow vs FC Krasnodar — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-10 Vasteras SK FK vs Djurgardens IF — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-14 Ruch Chorzów vs Lechia Gdansk — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-16 Chapecoense vs sc - Bahia — reason=multiple alias donor candidates, candidates=2
+- conflict:
+  - 2026-08-07 Sonderjyske vs Viborg — reason=source score != donor score, source_score=0-1, donor_score=0-0, donors=bettingclosed_csv,bettingclosed_settled,statarea_csv,vitibet_csv,wh:bettingclosed_settled,wh:statarea_settled,wh:vitibet_settled
+  - 2026-08-11 Bodo/Glimt vs Union St. Gilloise — reason=source score != donor score, source_score=2-2, donor_score=3-2, donors=statarea_csv,wh:statarea_settled
+  - 2026-08-11 NEC Nijmegen vs Olympiakos Piraeus — reason=source score != donor score, source_score=1-1, donor_score=2-1, donors=statarea_csv,wh:statarea_settled
+  - 2026-08-22 Birmingham vs Bristol City — reason=source score != donor score, source_score=1-1, donor_score=2-2, donors=betexplorer_results_csv,bettingclosed_csv,bettingclosed_settled,statarea_csv,wh:betexplorer_settled,wh:bettingclosed_settled,wh:statarea_settled
+  - 2026-08-24 Ellas Syros vs Marko — reason=source score != donor score, source_score=1-2, donor_score=1-1, donors=forebet_csv,vitibet_csv
+- donor_conflict:
+  - 2026-07-30 Ilves vs Stjarnan — reason=independent donors disagree, donor_scores=scoutingstats_csv=2-1; vitibet_csv=1-0; wh:scoutingstats_settled=2-1; wh:vitibet_settled=1-0
+  - 2026-08-01 VfB Stuttgart vs Paris FC — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-2; bettingclosed_settled=2-2; vitibet_csv=2-1; wh:bettingclosed_settled=2-2
+  - 2026-08-05 ŽNK Mura W vs Farul Constanţa W — reason=independent donors disagree, donor_scores=forebet_csv=1-1; forebet_settled=1-1; scoutingstats_csv=1-3; vitibet_csv=1-1; wh:forebet_settled=1-1; wh:scoutingstats_settled=1-3
+  - 2026-08-11 Apollon Limassol vs Brann — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-4; forebet_csv=1-2; forebet_settled=1-2; wh:bettingclosed_settled=2-4; wh:forebet_settled=1-2
+  - 2026-08-11 CSKA 1948 vs Panathinaikos — reason=independent donors disagree, donor_scores=bettingclosed_csv=1-2; forebet_csv=1-1; forebet_settled=1-1; vitibet_csv=1-1; wh:bettingclosed_settled=1-2; wh:forebet_settled=1-1; wh:vitibet_settled=1-1
+  - 2026-08-11 Gangwon FC vs Gamba Osaka — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-1; forebet_csv=0-0; forebet_settled=0-0; vitibet_csv=0-0; wh:bettingclosed_settled=0-1; wh:forebet_settled=0-0
+  - 2026-08-13 ML Vitebsk vs Borac Banja Luka — reason=independent donors disagree, donor_scores=scoutingstats_csv=2-1; vitibet_csv=1-0; wh:scoutingstats_settled=2-1; wh:vitibet_settled=1-0
+  - 2026-08-19 Gainare Tottori vs Roasso Kumamoto — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-2; forebet_csv=1-1; forebet_settled=1-1; vitibet_csv=1-1; wh:bettingclosed_settled=2-2; wh:forebet_settled=1-1
+  - 2026-08-23 Shams Azar Qazvin vs Aluminium Arak — reason=independent donors disagree, donor_scores=betexplorer_results_csv=1-2; scoutingstats_csv=1-2; vitibet_csv=2-2; wh:betexplorer_settled=1-2; wh:vitibet_settled=2-2
+  - 2026-08-24 Altglienicke vs VfL Wolfsburg — reason=independent donors disagree, donor_scores=scoutingstats_csv=3-3; vitibet_csv=2-2; wh:scoutingstats_settled=3-3
+- reversed_candidate_unexplained:
+  - 2026-08-08 Manchester United vs Paris Saint Germain — reason=donor has reversed home/away, donor_score=1-1, donors=scoutingstats_csv,wh:scoutingstats_settled, review=UNEXPLAINED - blocks validation
+- unmatched:
+  - 2026-07-29 MP vs KäPa — reason=no independent donor row, source_score=2-1
+  - 2026-07-30 Internacional vs Flamengo — reason=no independent donor row, source_score=1-1
+  - 2026-07-31 Club Deportivo Los Chankas vs Comerciantes Unidos — reason=no independent donor row, source_score=3-2
+  - 2026-07-31 Corinthians vs Atletico Paranaense — reason=no independent donor row, source_score=0-0
+  - 2026-07-31 Torquay vs Exeter City — reason=no independent donor row, source_score=2-1
+  - 2026-08-01 1. FC Nürnberg vs Oviedo — reason=no independent donor row, source_score=2-1
+  - 2026-08-01 Dumbrăviţa vs AFC Hermannstadt — reason=no independent donor row, source_score=
+  - 2026-08-01 Oxford United vs Ipswich — reason=no independent donor row, source_score=2-0
+  - 2026-08-01 Radnik Surdulica vs FK Crvena Zvezda — reason=no independent donor row, source_score=
+  - 2026-08-01 Universitatea Craiova vs Petrolul Ploiesti — reason=no independent donor row, source_score=4-0
+### statarea
+- ambiguous:
+  - 2026-07-30 FK Karlskrona vs Nosaby IF — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Gremio vs Bolivar — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Gangwon FC vs Bucheon 1995 — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Gornik Leczna vs Avia Swidnik — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Hacken vs Kalmar FF — reason=multiple alias donor candidates, candidates=3
+  - 2026-08-01 Leixoes vs Casa Pia — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Lorenskog vs Honefoss — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Stjordals Blink vs Rana FK — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Wieczysta Krakow vs Lech Poznan — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-02 Club Guarani vs Libertad — reason=multiple alias donor candidates, candidates=3
+- conflict:
+  - 2026-07-30 Pafos FC vs HNK Hajduk Split — reason=source score != donor score, source_score=4-0, donor_score=2-0, donors=vitibet_csv,wh:vitibet_settled,wh:zulubet_settled,zulubet_csv,zulubet_settled
+  - 2026-08-01 FC Rustavi vs Spaeri — reason=source score != donor score, source_score=3-1, donor_score=1-1, donors=vitibet_csv,wh:zulubet_settled,zulubet_csv,zulubet_settled
+  - 2026-08-05 Olimpia Grudziadz vs Swit Skolwin — reason=source score != donor score, source_score=5-3, donor_score=3-3, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-08 Orlando Pirates vs Durban City — reason=source score != donor score, source_score=2-1, donor_score=1-1, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-11 Bodo/Glimt vs Union St. Gilloise — reason=source score != donor score, source_score=3-2, donor_score=2-2, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled
+  - 2026-08-11 NEC Nijmegen vs Olympiakos Piraeus — reason=source score != donor score, source_score=2-1, donor_score=1-1, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled
+  - 2026-08-19 CSM Slatina vs Sepsi OSK — reason=source score != donor score, source_score=0-2, donor_score=0-0, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-22 Basingstoke vs Bath City — reason=source score != donor score, source_score=1-0, donor_score=1-1, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-26 Iwaki FC vs Oita Trinita — reason=source score != donor score, source_score=2-0, donor_score=0-0, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-26 Jubilo Iwata vs Tegevajaro Miyazaki — reason=source score != donor score, source_score=0-1, donor_score=0-0, donors=forebet_csv,forebet_settled,vitibet_csv,wh:forebet_settled,wh:zulubet_settled,zulubet_csv
+- donor_conflict:
+  - 2026-08-07 SonderjyskE vs Viborg — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-0; bettingclosed_settled=0-0; vitibet_csv=0-0; wh:bettingclosed_settled=0-0; wh:vitibet_settled=0-0; wh:zulubet_settled=0-1; zulubet_csv=0-1
+  - 2026-08-16 Liverpool vs Como — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-0; bettingclosed_settled=0-0; scoutingstats_csv=2-0; wh:bettingclosed_settled=0-0
+  - 2026-08-21 Waldhof Mannheim vs FC Kaiserslautern — reason=independent donors disagree, donor_scores=forebet_csv=0-0; forebet_settled=0-0; scoutingstats_csv=0-1; wh:forebet_settled=0-0; wh:scoutingstats_settled=0-1
+  - 2026-08-22 Birmingham vs Bristol City — reason=independent donors disagree, donor_scores=betexplorer_results_csv=2-2; bettingclosed_csv=2-2; bettingclosed_settled=2-2; wh:betexplorer_settled=2-2; wh:bettingclosed_settled=2-2; wh:zulubet_settled=1-1; zulubet_csv=1-1
+  - 2026-09-02 Gornik Leczna vs Stal Mielec — reason=independent donors disagree, donor_scores=bettingclosed_csv=3-3; bettingclosed_settled=3-3; forebet_csv=2-2; wh:bettingclosed_settled=3-3
+  - 2026-09-10 Como vs RB Leipzig — reason=independent donors disagree, donor_scores=bettingclosed_csv=4-1; scoutingstats_csv=4-1; wh:bettingclosed_settled=4-1; wh:predictz_settled=1-1; wh:scoutingstats_settled=4-1; wh:zulubet_settled=4-1; zulubet_csv=4-1
+- reversed_candidate_unexplained:
+  - 2026-08-08 FC Rostov vs CSKA Moscow — reason=donor has reversed home/away, donor_score=0-0, donors=vitibet_csv,wh:vitibet_settled,wh:zulubet_settled,zulubet_csv,zulubet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-23 Paris Saint Germain vs Rennes — reason=donor has reversed home/away, donor_score=2-2, donors=scoutingstats_csv,wh:scoutingstats_settled, review=UNEXPLAINED - blocks validation
+- unmatched:
+  - 2026-07-29 Betis vs Lyon — reason=no independent donor row, source_score=4-0
+  - 2026-07-29 Boston Utd vs Grimsby — reason=no independent donor row, source_score=0-0
+  - 2026-07-29 Bristol City vs Newcastle — reason=no independent donor row, source_score=4-1
+  - 2026-07-29 Club Nacional vs Olimpia — reason=no independent donor row, source_score=2-0
+  - 2026-07-29 C-Osaka vs Borussia Dortmund — reason=no independent donor row, source_score=1-0
+  - 2026-07-29 Forest Green vs Bristol City — reason=no independent donor row, source_score=3-2
+  - 2026-07-29 Greenville Triumph SC vs Boise — reason=no independent donor row, source_score=3-2
+  - 2026-07-29 Kairat Almaty vs Omonia — reason=no independent donor row, source_score=1-0
+  - 2026-07-29 Sangju Sangmu FC vs Suwon City FC — reason=no independent donor row, source_score=2-1
+  - 2026-07-29 SSD Palermo vs Iraklis 1908 FC — reason=no independent donor row, source_score=1-1
+### vitibet
+- ambiguous:
+  - 2026-07-29 Cavalry FC vs Supra du Quebec — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-29 Hapoel Beer Sheva FC vs Vikingur Reykjavik — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-29 Tondela vs São João Ver — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 FC Andorra vs Europa Fc — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Claypole vs Lujan — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Dundalk vs Sligo Rovers FC — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Oddevold vs Norrby IF — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Rodina Moskva vs FC Rostov — reason=multiple alias donor candidates, candidates=3
+  - 2026-07-31 Slavoj Vyšehrad vs Sokol Hostouň — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Viktoria Žižkov vs Prostějov — reason=multiple alias donor candidates, candidates=2
+- conflict:
+  - 2026-09-15 Luckenwalde vs BFC Preussen — reason=source score != donor score, source_score=0-2, donor_score=0-1, donors=forebet_csv,forebet_settled,wh:forebet_settled
+- donor_conflict:
+  - 2026-07-30 Ilves vs Stjarnan — reason=independent donors disagree, donor_scores=scoutingstats_csv=2-1; wh:scoutingstats_settled=2-1; wh:zulubet_settled=1-0; zulubet_csv=1-0
+  - 2026-08-01 VfB Stuttgart vs Paris FC — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-2; bettingclosed_settled=2-2; wh:bettingclosed_settled=2-2; wh:zulubet_settled=2-1; zulubet_csv=2-1
+  - 2026-08-05 ŽNK Mura W vs Farul Constanţa W — reason=independent donors disagree, donor_scores=forebet_csv=1-1; forebet_settled=1-1; scoutingstats_csv=1-3; wh:forebet_settled=1-1; wh:scoutingstats_settled=1-3; wh:zulubet_settled=1-1; zulubet_csv=1-1
+  - 2026-08-07 Sonderjyske vs Viborg — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-0; bettingclosed_settled=0-0; statarea_csv=0-0; wh:bettingclosed_settled=0-0; wh:statarea_settled=0-0; wh:zulubet_settled=0-1; zulubet_csv=0-1
+  - 2026-08-08 Juventus W vs Hammarby W — reason=independent donors disagree, donor_scores=forebet_csv=1-1; forebet_settled=1-1; scoutingstats_csv=3-1; wh:forebet_settled=1-1; wh:scoutingstats_settled=3-1
+  - 2026-08-08 Orlando Pirates FC vs Durban City FC — reason=independent donors disagree, donor_scores=forebet_csv=1-1; forebet_settled=1-1; statarea_csv=2-1; wh:forebet_settled=1-1; wh:statarea_settled=2-1
+  - 2026-08-11 Apollon Limassol FC vs Brann — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-4; forebet_csv=1-2; forebet_settled=1-2; wh:bettingclosed_settled=2-4; wh:forebet_settled=1-2; wh:zulubet_settled=1-2; zulubet_csv=1-2
+  - 2026-08-11 CSKA 1948 vs Panathinaikos — reason=independent donors disagree, donor_scores=bettingclosed_csv=1-2; forebet_csv=1-1; forebet_settled=1-1; wh:bettingclosed_settled=1-2; wh:forebet_settled=1-1; wh:zulubet_settled=1-1; zulubet_csv=1-1
+  - 2026-08-11 Gangwon FC vs Gamba Osaka — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-1; forebet_csv=0-0; forebet_settled=0-0; wh:bettingclosed_settled=0-1; wh:forebet_settled=0-0; wh:zulubet_settled=0-0; zulubet_csv=0-0
+  - 2026-08-13 ML Vitebsk vs Borac Banja Luka — reason=independent donors disagree, donor_scores=scoutingstats_csv=2-1; wh:scoutingstats_settled=2-1; wh:zulubet_settled=1-0; zulubet_csv=1-0; zulubet_settled=1-0
+- reversed_candidate_unexplained:
+  - 2026-07-29 Gimpo Citizen vs Incheon United — reason=donor has reversed home/away, donor_score=0-1, donors=forebet_csv,forebet_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-02 Sporty vs Al Jazira — reason=donor has reversed home/away, donor_score=3-0, donors=forebet_csv,forebet_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-02 Yarmouk vs Shamiya — reason=donor has reversed home/away, donor_score=0-3, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-26 Aksakovo vs Ludogorets III — reason=donor has reversed home/away, donor_score=6-1, donors=betexplorer_results_csv,forebet_csv,forebet_settled,wh:betexplorer_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-29 Johvi Phoenix vs Tartu Kalev — reason=donor has reversed home/away, donor_score=0-3, donors=betexplorer_results_csv,betexplorer_settled,wh:betexplorer_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-06 Werder Bremen II vs Phönix Lübeck — reason=donor has reversed home/away, donor_score=0-2, donors=forebet_csv,forebet_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-12 Melaka vs Kuching FA — reason=donor has reversed home/away, donor_score=1-2, donors=bettingclosed_csv,forebet_csv,forebet_settled,wh:bettingclosed_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-20 Santa Amalia vs Atlético Pueblonuevo — reason=donor has reversed home/away, donor_score=1-1, donors=forebet_csv,forebet_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-25 Gualaceo SC vs Independiente del Valle — reason=donor has reversed home/away, donor_score=0-2, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-25 Senegal vs Mozambique — reason=donor has reversed home/away, donor_score=1-1, donors=bettingclosed_csv,forebet_csv,forebet_settled,scoutingstats_csv,wh:bettingclosed_settled,wh:forebet_settled,wh:scoutingstats_settled, review=UNEXPLAINED - blocks validation
+- unmatched:
+  - 2026-07-29 Aerostar Bacau vs CSM FC Vaslui — reason=no independent donor row, source_score=
+  - 2026-07-29 AFC Toronto W vs Calgary Wild W — reason=no independent donor row, source_score=
+  - 2026-07-29 Agigea vs Axiopolis — reason=no independent donor row, source_score=
+  - 2026-07-29 Al-Hilal Saudi FC vs MC Alger — reason=no independent donor row, source_score=
+  - 2026-07-29 Al Sahel vs Khaitan — reason=no independent donor row, source_score=
+  - 2026-07-29 Al Sulaibikhat vs Shamiya — reason=no independent donor row, source_score=
+  - 2026-07-29 Alverca vs Academica — reason=no independent donor row, source_score=
+  - 2026-07-29 Atletico-MG vs RB Bragantino — reason=no independent donor row, source_score=
+  - 2026-07-29 Banfield vs Sarmiento Junin — reason=no independent donor row, source_score=
+  - 2026-07-29 Beith vs Cumnock Juniors — reason=no independent donor row, source_score=
+### scoutingstats
+- ambiguous:
+  - 2026-07-29 Górnik Zabrze vs Fenerbahçe — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Grêmio vs Club Bolívar — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Hradec Králové vs Tromsø — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Nordsjælland vs GAIS — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Talleres Córdoba vs Vélez Sarsfield — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Bodø / Glimt vs Lillestrøm — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Rodina Moskva vs Rostov — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Albion vs Danubio — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Atlético San Luis vs Tijuana — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Bryne vs Strømsgodset — reason=multiple alias donor candidates, candidates=2
+- conflict:
+  - 2026-07-30 Ilves vs Stjarnan — reason=source score != donor score, source_score=2-1, donor_score=1-0, donors=vitibet_csv,wh:vitibet_settled,wh:zulubet_settled,zulubet_csv
+  - 2026-07-30 Pafos FC vs Hajduk Split — reason=source score != donor score, source_score=4-0, donor_score=2-0, donors=bettingclosed_csv,forebet_csv,forebet_settled,wh:bettingclosed_settled,wh:forebet_settled
+  - 2026-08-05 ŽNK Mura W vs Farul Constanţa W — reason=source score != donor score, source_score=1-3, donor_score=1-1, donors=forebet_csv,forebet_settled,vitibet_csv,wh:forebet_settled,wh:zulubet_settled,zulubet_csv
+  - 2026-08-08 Juventus W vs Hammarby W — reason=source score != donor score, source_score=3-1, donor_score=1-1, donors=forebet_csv,forebet_settled,vitibet_csv,wh:forebet_settled
+  - 2026-08-08 St. Polten W vs Sporting W — reason=source score != donor score, source_score=1-1, donor_score=0-0, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-08 Vllaznia W vs Apollon W — reason=source score != donor score, source_score=1-2, donor_score=1-1, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-11 Bashley vs Shepton Mallet — reason=source score != donor score, source_score=2-3, donor_score=2-2, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-11 Bodø / Glimt vs Union Saint-Gilloise — reason=source score != donor score, source_score=3-2, donor_score=2-2, donors=forebet_csv,forebet_settled,vitibet_csv,wh:forebet_settled,wh:vitibet_settled
+  - 2026-08-11 Downham Town vs Cornard United FC — reason=source score != donor score, source_score=0-2, donor_score=0-0, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-11 Ossett United vs Abbey Hey — reason=source score != donor score, source_score=3-0, donor_score=1-0, donors=forebet_csv,forebet_settled,wh:forebet_settled
+- donor_conflict:
+  - 2026-08-01 VfB Stuttgart vs Paris — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-2; bettingclosed_settled=2-2; vitibet_csv=2-1; wh:bettingclosed_settled=2-2; wh:zulubet_settled=2-1; zulubet_csv=2-1
+  - 2026-08-11 Gangwon vs Gamba Osaka — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-1; forebet_csv=0-0; forebet_settled=0-0; vitibet_csv=0-0; wh:bettingclosed_settled=0-1; wh:forebet_settled=0-0; wh:zulubet_settled=0-0; zulubet_csv=0-0
+  - 2026-08-16 Liverpool vs Como — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-0; bettingclosed_settled=0-0; statarea_csv=2-0; wh:bettingclosed_settled=0-0; wh:statarea_settled=2-0
+  - 2026-08-19 ABM Galaxy vs Central Coast — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-3; forebet_csv=2-2; forebet_settled=2-2; vitibet_csv=2-2; wh:bettingclosed_settled=2-3; wh:forebet_settled=2-2
+  - 2026-08-23 Shams Azar Qazvin vs Aluminium Arak — reason=independent donors disagree, donor_scores=betexplorer_results_csv=1-2; vitibet_csv=2-2; wh:betexplorer_settled=1-2; wh:vitibet_settled=2-2; wh:zulubet_settled=2-2; zulubet_csv=2-2; zulubet_settled=2-2
+  - 2026-08-24 Hallescher FC vs Schalke 04 — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-5; bettingclosed_settled=2-5; forebet_csv=2-2; wh:bettingclosed_settled=2-5
+  - 2026-09-08 Portishead Town vs Wimborne Town — reason=independent donors disagree, donor_scores=bettingclosed_csv=1-3; bettingclosed_settled=1-3; forebet_csv=1-1; vitibet_csv=1-1; wh:bettingclosed_settled=1-3
+  - 2026-09-10 Como vs RB Leipzig — reason=independent donors disagree, donor_scores=bettingclosed_csv=4-1; statarea_csv=4-1; wh:bettingclosed_settled=4-1; wh:predictz_settled=1-1; wh:statarea_settled=4-1; wh:zulubet_settled=4-1; zulubet_csv=4-1
+- reversed_candidate_unexplained:
+  - 2026-08-01 Lincoln City vs Barnsley — reason=donor has reversed home/away, donor_score=3-0, donors=bettingclosed_csv,bettingclosed_settled,wh:bettingclosed_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-02 Sunderland vs Wrexham — reason=donor has reversed home/away, donor_score=0-1, donors=bettingclosed_csv,bettingclosed_settled,vitibet_csv,wh:bettingclosed_settled,wh:zulubet_settled,zulubet_csv, review=UNEXPLAINED - blocks validation
+  - 2026-08-08 Paris Saint Germain vs Manchester United — reason=donor has reversed home/away, donor_score=1-1, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled, review=UNEXPLAINED - blocks validation
+- unmatched:
+  - 2026-07-29 Al Ula vs Villarreal — reason=no independent donor row, source_score=0-3
+  - 2026-07-29 Alverca vs Académica — reason=no independent donor row, source_score=
+  - 2026-07-29 Argentinos Juniors vs Estudiantes de Río Cuarto — reason=no independent donor row, source_score=3-0
+  - 2026-07-29 Atlético Mineiro vs Bragantino — reason=no independent donor row, source_score=
+  - 2026-07-29 Bayer 04 Leverkusen vs Genk — reason=no independent donor row, source_score=4-0
+  - 2026-07-29 Botafogo vs Grêmio — reason=no independent donor row, source_score=
+  - 2026-07-29 Bradford City vs Preston North End — reason=no independent donor row, source_score=3-2
+  - 2026-07-29 Celta de Vigo vs Academico Viseu — reason=no independent donor row, source_score=
+  - 2026-07-29 Cerezo Osaka vs Borussia Dortmund — reason=no independent donor row, source_score=1-0
+  - 2026-07-29 Chapecoense vs Vasco da Gama — reason=no independent donor row, source_score=
+### predictz
+- ambiguous:
+  - 2026-08-29 Deportivo Riestra vs Velez Sarsfield — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-30 Gremio vs Chapecoense — reason=multiple alias donor candidates, candidates=3
+  - 2026-08-31 Harborough Town vs Marine FC — reason=multiple alias donor candidates, candidates=2
+  - 2026-09-01 Delfin vs Tecnico Universitario — reason=multiple alias donor candidates, candidates=2
+  - 2026-09-01 Neuchatel Xamax vs Yverdon Sport — reason=multiple alias donor candidates, candidates=3
+  - 2026-09-02 Macara vs Manta — reason=multiple alias donor candidates, candidates=3
+  - 2026-09-03 Banga vs FK Panevezys — reason=multiple alias donor candidates, candidates=2
+  - 2026-09-03 CF America vs Monterrey — reason=multiple alias donor candidates, candidates=2
+  - 2026-09-04 Aalesund vs IK Start — reason=multiple alias donor candidates, candidates=3
+  - 2026-09-04 Belgrano vs Huracan — reason=multiple alias donor candidates, candidates=2
+- reversed_candidate_unexplained:
+  - 2026-09-28 Botswana vs Tunisia — reason=donor has reversed home/away, donor_score=2-2, donors=bettingclosed_csv,bettingclosed_settled,scoutingstats_csv,vitibet_csv,wh:bettingclosed_settled,wh:results_donor,wh:scoutingstats_settled,wh:vitibet_settled, review=UNEXPLAINED - blocks validation
+- unmatched:
+  - 2026-08-08 Boston Utd vs Aldershot — reason=no independent donor row, source_score=
+  - 2026-08-08 Cardiff vs Swindon — reason=no independent donor row, source_score=
+  - 2026-08-08 Colchester vs Southampton — reason=no independent donor row, source_score=
+  - 2026-08-08 Crewe vs Accrington Stanley — reason=no independent donor row, source_score=
+  - 2026-08-08 Derby vs Lincoln City — reason=no independent donor row, source_score=
+  - 2026-08-08 Estrela Amadora vs Sporting Lisbon — reason=no independent donor row, source_score=
+  - 2026-08-08 Grimsby vs Blackpool — reason=no independent donor row, source_score=
+  - 2026-08-08 Leyton Orient vs Oxford Utd — reason=no independent donor row, source_score=
+  - 2026-08-08 Maidstone Utd vs Farnborough Town — reason=no independent donor row, source_score=
+  - 2026-08-08 Maritimo vs Casa Pia Atletico — reason=no independent donor row, source_score=
+### windrawwin
+- unmatched:
+  - 2026-08-29 AC Milan vs Venezia — reason=no independent donor row, source_score=
+  - 2026-08-29 AFC Fylde vs Forest Green — reason=no independent donor row, source_score=
+  - 2026-08-29 Alaves vs Villarreal — reason=no independent donor row, source_score=
+  - 2026-08-29 Aldershot vs Harrogate Town — reason=no independent donor row, source_score=
+  - 2026-08-29 Barrow vs Yeovil — reason=no independent donor row, source_score=
+  - 2026-08-29 Bohemians vs Sligo — reason=no independent donor row, source_score=
+  - 2026-08-29 Cobresal vs Palestino — reason=no independent donor row, source_score=
+  - 2026-08-29 Crystal Palace vs Man City — reason=no independent donor row, source_score=
+  - 2026-08-29 Galway Utd vs Shelbourne — reason=no independent donor row, source_score=
+  - 2026-08-29 Goias vs Sao Bernardo — reason=no independent donor row, source_score=
+### prosoccer
+- conflict:
+  - 2026-09-29 SAGAN TOSU vs TOKYO VERDY — reason=source score != donor score, source_score=1-1, donor_score=2-1, donors=bettingclosed_csv,bettingclosed_settled,vitibet_csv,wh:bettingclosed_settled,wh:results_donor
+- unmatched:
+  - 2026-09-29 DEPORTIVO PEREIRA vs INDEP. SANTA FE — reason=no independent donor row, source_score=
+  - 2026-09-29 HARTLEPOOL vs HARROGATE — reason=no independent donor row, source_score=0-1
+  - 2026-09-29 JAGIELLONIA vs SUDUVA — reason=no independent donor row, source_score=5-0
+  - 2026-09-30 BELIZE vs ST. VINCENT & G — reason=no independent donor row, source_score=
+  - 2026-09-30 EASTLEIGH vs SOUTHEND — reason=no independent donor row, source_score=
+  - 2026-09-30 EAST TIMOR vs CAMBODIA — reason=no independent donor row, source_score=
+  - 2026-09-30 ENYIMBA INTERNATIO vs SHOOTING STARS — reason=no independent donor row, source_score=
+  - 2026-09-30 HONEFOSS vs KFUM KAMERATENE — reason=no independent donor row, source_score=
+  - 2026-09-30 INDEP. MEDELLIN vs LOS MILLONARIOS — reason=no independent donor row, source_score=
+  - 2026-09-30 KATSINA vs RIVERS UNITED — reason=no independent donor row, source_score=
+### bettingclosed
+- ambiguous:
+  - 2026-07-29 Crvena Zvezda vs Larne FC — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 FC Koper vs NSI Runavik — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Levadia Tallinn vs IFK Goteborg — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-30 Talleres Cordoba vs Velez Sarsfield — reason=multiple alias donor candidates, candidates=2
+  - 2026-07-31 Rodina Moscow vs Rostov FK — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Albion vs Danubio FC — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 FC Zurich vs Servette — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Hacken vs Kalmar — reason=multiple alias donor candidates, candidates=3
+  - 2026-08-01 Kolding FC vs Hvidovre IF — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-01 Lorenskog vs Honefoss BK — reason=multiple alias donor candidates, candidates=2
+- conflict:
+  - 2026-08-01 VfB Stuttgart vs Paris FC — reason=source score != donor score, source_score=2-2, donor_score=2-1, donors=vitibet_csv,wh:zulubet_settled,zulubet_csv
+  - 2026-08-05 Odder IGF vs Skive IK — reason=source score != donor score, source_score=2-3, donor_score=1-1, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-11 Apollon Limassol vs Brann — reason=source score != donor score, source_score=2-4, donor_score=1-2, donors=forebet_csv,forebet_settled,wh:forebet_settled,wh:zulubet_settled,zulubet_csv
+  - 2026-08-11 CSKA 1948 vs Panathinaikos — reason=source score != donor score, source_score=1-2, donor_score=1-1, donors=forebet_csv,forebet_settled,vitibet_csv,wh:forebet_settled,wh:vitibet_settled,wh:zulubet_settled,zulubet_csv
+  - 2026-08-11 Gangwon FC vs Gamba Osaka — reason=source score != donor score, source_score=0-1, donor_score=0-0, donors=forebet_csv,forebet_settled,vitibet_csv,wh:forebet_settled,wh:zulubet_settled,zulubet_csv
+  - 2026-08-16 Biel Bienne vs Aarau — reason=source score != donor score, source_score=3-3, donor_score=2-2, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-16 Liverpool vs Como — reason=source score != donor score, source_score=0-0, donor_score=2-0, donors=scoutingstats_csv,statarea_csv,wh:statarea_settled
+  - 2026-08-18 AFC Eskilstuna ( vs IK Oddevold — reason=source score != donor score, source_score=4-4, donor_score=3-3, donors=forebet_csv,forebet_settled,wh:forebet_settled
+  - 2026-08-19 Gainare Tottori vs Roasso Kumamoto — reason=source score != donor score, source_score=2-2, donor_score=1-1, donors=forebet_csv,forebet_settled,vitibet_csv,wh:forebet_settled,wh:zulubet_settled,zulubet_csv
+  - 2026-08-20 Hassleholms IF vs Landskrona BoIS — reason=source score != donor score, source_score=0-1, donor_score=0-0, donors=forebet_csv,forebet_settled,vitibet_csv,wh:forebet_settled
+- donor_conflict:
+  - 2026-08-07 Sonderjyske vs Viborg — reason=independent donors disagree, donor_scores=statarea_csv=0-0; vitibet_csv=0-0; wh:statarea_settled=0-0; wh:vitibet_settled=0-0; wh:zulubet_settled=0-1; zulubet_csv=0-1
+  - 2026-08-19 ABM Galaxy vs Central Coast — reason=independent donors disagree, donor_scores=forebet_csv=2-2; forebet_settled=2-2; scoutingstats_csv=2-3; vitibet_csv=2-2; wh:forebet_settled=2-2
+  - 2026-08-22 Birmingham vs Bristol City — reason=independent donors disagree, donor_scores=betexplorer_results_csv=2-2; statarea_csv=2-2; wh:betexplorer_settled=2-2; wh:statarea_settled=2-2; wh:zulubet_settled=1-1; zulubet_csv=1-1
+  - 2026-08-24 Hallescher FC vs Schalke 04 — reason=independent donors disagree, donor_scores=forebet_csv=2-2; scoutingstats_csv=2-5; wh:scoutingstats_settled=2-5
+  - 2026-08-25 LASK Linz vs Celtic FC — reason=independent donors disagree, donor_scores=forebet_csv=4-1; forebet_settled=4-1; scoutingstats_csv=5-1; vitibet_csv=4-1; wh:forebet_settled=4-1; wh:scoutingstats_settled=5-1; wh:vitibet_settled=4-1; wh:zulubet_settled=4-1; zulubet_csv=4-1
+  - 2026-09-02 Gornik Leczna vs Stal Mielec — reason=independent donors disagree, donor_scores=forebet_csv=2-2; statarea_csv=3-3; wh:statarea_settled=3-3
+  - 2026-09-08 Portishead Town vs Wimborne Town — reason=independent donors disagree, donor_scores=forebet_csv=1-1; scoutingstats_csv=1-3; vitibet_csv=1-1
+  - 2026-09-10 Como vs RB Leipzig — reason=independent donors disagree, donor_scores=scoutingstats_csv=4-1; statarea_csv=4-1; wh:predictz_settled=1-1; wh:scoutingstats_settled=4-1; wh:statarea_settled=4-1; wh:zulubet_settled=4-1; zulubet_csv=4-1
+  - 2026-09-20 Serpa vs Louletano — reason=independent donors disagree, donor_scores=forebet_csv=1-1; forebet_settled=1-1; scoutingstats_csv=1-2; vitibet_csv=1-1; wh:forebet_settled=1-1; wh:scoutingstats_settled=1-2
+  - 2026-09-29 Sagan Tosu vs Tokyo Verdy — reason=independent donors disagree, donor_scores=vitibet_csv=2-1; wh:prosoccer_settled=1-1
+- reversed_candidate_unexplained:
+  - 2026-08-01 Barnsley vs Lincoln City — reason=donor has reversed home/away, donor_score=0-3, donors=scoutingstats_csv, review=UNEXPLAINED - blocks validation
+  - 2026-08-23 Siena vs San Donato — reason=donor has reversed home/away, donor_score=1-1, donors=betexplorer_results_csv,betexplorer_settled,wh:betexplorer_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-28 Botswana vs Tunisia — reason=donor has reversed home/away, donor_score=2-2, donors=scoutingstats_csv,vitibet_csv,wh:scoutingstats_settled,wh:vitibet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-28 Indonesia vs Malaysia — reason=donor has reversed home/away, donor_score=0-0, donors=vitibet_csv, review=UNEXPLAINED - blocks validation
+- unmatched:
+  - 2026-07-29 AEK vs Samsunspor — reason=no independent donor row, source_score=1-2
+  - 2026-07-29 Al vs Hilal - MC Alger — reason=no independent donor row, source_score=0-2
+  - 2026-07-29 Argentinos junio vs Estudiantes Rio — reason=no independent donor row, source_score=3-0
+  - 2026-07-29 Atletico El Vigi vs Deportivo Lara — reason=no independent donor row, source_score=2-1
+  - 2026-07-29 Barracas Central vs Aldosivi Mar del — reason=no independent donor row, source_score=1-0
+  - 2026-07-29 Barranquilla FC vs Atletico Junior — reason=no independent donor row, source_score=3-3
+  - 2026-07-29 Bayer Leverkusen vs Racing Genk — reason=no independent donor row, source_score=4-0
+  - 2026-07-29 Beijing Technolo vs Nantong Haimen — reason=no independent donor row, source_score=1-2
+  - 2026-07-29 Belasica vs Kozuv Gevgelija — reason=no independent donor row, source_score=
+  - 2026-07-29 Bradford City vs Preston North En — reason=no independent donor row, source_score=3-2
+### betclan
+- ambiguous:
+  - 2026-09-01 Instituto Ac Cordoba vs San Lorenzo — reason=multiple alias donor candidates, candidates=2
+- unmatched:
+  - 2026-08-28 22 De Julio vs Santo Domingo — reason=no independent donor row, source_score=
+  - 2026-08-28 Al Najma Manama vs Khalidiya — reason=no independent donor row, source_score=
+  - 2026-08-28 Al Tadhamon vs Kazma — reason=no independent donor row, source_score=
+  - 2026-08-28 Always Ready vs Club Aurora — reason=no independent donor row, source_score=
+  - 2026-08-28 America De Cali vs Junior — reason=no independent donor row, source_score=
+  - 2026-08-28 Atletico Nacional vs Deportivo Cali — reason=no independent donor row, source_score=
+  - 2026-08-28 Blooming vs Real Oruro — reason=no independent donor row, source_score=
+  - 2026-08-28 Boreham Wood vs Boston Utd — reason=no independent donor row, source_score=
+  - 2026-08-28 Central Norte vs Cd Moron — reason=no independent donor row, source_score=
+  - 2026-08-28 Chelsea vs Luton — reason=no independent donor row, source_score=
+### freesupertips
+- unmatched:
+  - 2026-09-30 Eastleigh vs Southend — reason=no independent donor row, source_score=
+### afootballreport
+- ambiguous:
+  - 2026-08-30 Hønefoss vs Follo — reason=multiple alias donor candidates, candidates=3
+  - 2026-08-30 Nashville vs Cincinnati — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-30 SC Röthis vs Kufstein — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-31 FC Wil vs Aarau — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-31 Sohar vs Ibri Club — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-31 Sumqayıt vs Qarabağ — reason=multiple alias donor candidates, candidates=2
+  - 2026-09-01 Al Shamal SC vs Al-Rayyan — reason=multiple alias donor candidates, candidates=2
+  - 2026-09-03 América vs Monterrey — reason=multiple alias donor candidates, candidates=3
+  - 2026-09-03 Diyala SC vs Al Karma — reason=multiple alias donor candidates, candidates=2
+  - 2026-09-03 FK Arys vs Ekibastuz — reason=multiple alias donor candidates, candidates=2
+- reversed_candidate_unexplained:
+  - 2026-09-10 Al-Wakrah vs Al Shamal SC — reason=donor has reversed home/away, donor_score=1-1, donors=scoutingstats_csv,wh:scoutingstats_settled, review=UNEXPLAINED - blocks validation
+- unmatched:
+  - 2026-08-28 ACE vs TPV 2 — reason=no independent donor row, source_score=
+  - 2026-08-28 Alabama Crimson Tide vs Troy Trojans — reason=no independent donor row, source_score=
+  - 2026-08-28 AO Xanthi B vs Apollon Polysitou — reason=no independent donor row, source_score=
+  - 2026-08-28 Arbaer vs Knattspyrnufelagid Asvellir — reason=no independent donor row, source_score=
+  - 2026-08-28 Ards vs Queens University — reason=no independent donor row, source_score=
+  - 2026-08-28 Arizona State Sun Devils vs LSU Tigers — reason=no independent donor row, source_score=
+  - 2026-08-28 Arkansas Razorbacks vs Clemson Tigers — reason=no independent donor row, source_score=
+  - 2026-08-28 Arkansas State Red Wolves vs Stephen F. Austin Ladyjacks — reason=no independent donor row, source_score=
+  - 2026-08-28 Army Black Knights vs Monmouth Hawks — reason=no independent donor row, source_score=
+  - 2026-08-28 Atlantis vs HIFK/2 — reason=no independent donor row, source_score=
+### bzzoiro
+- ambiguous:
+  - 2026-08-28 CD Tenerife vs Sporting Gijón — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-28 Shooting Stars vs Inter Lagos FC — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-29 Académico Viseu FC vs FC Porto — reason=multiple alias donor candidates, candidates=3
+  - 2026-08-29 Atlas FC vs Querétaro FC — reason=multiple alias donor candidates, candidates=3
+  - 2026-08-29 BK Häcken vs Västerås SK — reason=multiple alias donor candidates, candidates=4
+  - 2026-08-29 Boca Juniors vs CA Lanús — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-29 FC Corvinul Hunedoara vs FC Dinamo București — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-29 FC Lausanne-Sport vs FC Zürich — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-29 Inter Miami CF vs CF Montréal — reason=multiple alias donor candidates, candidates=2
+  - 2026-08-29 Leganés vs CD Eldense — reason=multiple alias donor candidates, candidates=3
+- donor_conflict:
+  - 2026-09-02 Górnik Łęczna vs Stal Mielec — reason=independent donors disagree, donor_scores=bettingclosed_csv=3-3; bettingclosed_settled=3-3; forebet_csv=2-2; statarea_csv=3-3; wh:bettingclosed_settled=3-3; wh:results_donor=2-2; wh:statarea_settled=3-3
+  - 2026-09-10 Como vs RB Leipzig — reason=independent donors disagree, donor_scores=bettingclosed_csv=4-1; scoutingstats_csv=4-1; statarea_csv=4-1; wh:bettingclosed_settled=4-1; wh:predictz_settled=1-1; wh:scoutingstats_settled=4-1; wh:statarea_settled=4-1; wh:zulubet_settled=4-1; zulubet_csv=4-1
+- reversed_candidate_unexplained:
+  - 2026-08-30 Pohang Steelers vs Gangwon FC — reason=donor has reversed home/away, donor_score=0-0, donors=bettingclosed_csv,forebet_csv,forebet_settled,statarea_csv,vitibet_csv,wh:bettingclosed_settled,wh:forebet_settled,wh:results_donor,wh:statarea_settled,wh:vitibet_settled, review=UNEXPLAINED - blocks validation
+- unmatched:
+  - 2026-08-28 AFC Fylde vs Forest Green Rovers — reason=no independent donor row, source_score=
+  - 2026-08-28 Club Atlético Unión de Santa Fe vs Sarmiento — reason=no independent donor row, source_score=
+  - 2026-08-28 Grêmio Novorizontino vs Sport Recife — reason=no independent donor row, source_score=
+  - 2026-08-28 KRC Genk vs SK Beveren — reason=no independent donor row, source_score=
+  - 2026-08-28 Montpellier vs US Boulogne Côte-d'Opale — reason=no independent donor row, source_score=
+  - 2026-08-28 Real Racing Club vs Elche — reason=no independent donor row, source_score=
+  - 2026-08-28 Rodez AF vs Pau FC — reason=no independent donor row, source_score=
+  - 2026-08-28 Stade Lavallois vs Grenoble Foot 38 — reason=no independent donor row, source_score=
+  - 2026-08-28 Wisła Płock vs MKS Korona Kielce — reason=no independent donor row, source_score=
+  - 2026-08-29 1. FC Köln vs TSG Hoffenheim — reason=no independent donor row, source_score=
+
+Verdicts are EVIDENCE, not certification. No source graduates from shadow/candidate on this report alone; operator sign-off is required. A source with ANY unexplained reversed home/away candidate caps at `review_required` - explain the fixture in Config/reversal_reviews.json or treat the orientation as unproven.
