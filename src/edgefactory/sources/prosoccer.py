@@ -30,6 +30,11 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 BASE = "https://www.prosoccer.gr/en/football/predictions/"
 WINDOW_DAYS = 6  # weekday pages cover roughly this far ahead/behind today
 
+
+class NotServedYet(RuntimeError):
+    """The rolling page is reachable but still serves a different date."""
+
+
 _MONTHS = {m.lower(): i for i, m in enumerate(
     ["January", "February", "March", "April", "May", "June", "July",
      "August", "September", "October", "November", "December"], start=1)}
@@ -242,26 +247,67 @@ def _get(url: str, retries: int = 3) -> str | None:
     raise RuntimeError(f"ProSoccer GET failed {url}: {', '.join(errors)}")
 
 
+def candidate_urls(date: str, today: str | None = None) -> list[str]:
+    """Ordered URLs that may serve ``date`` during ProSoccer's UTC lag.
+
+    The site can keep the plain "today" page on yesterday for hours after UTC
+    midnight while already exposing the requested UTC day via ``tomorrow.html``
+    or the weekday page.  Try the deterministic URL first, then calendar
+    aliases, and dedupe so ordinary in-sync days still make one request.
+    """
+    primary = url_for(date, today=today)
+    if primary is None:
+        return []
+    target = _dt.date.fromisoformat(date)
+    ordered: list[str] = []
+    for url in (
+        primary,
+        BASE + "tomorrow.html",
+        BASE + "yesterday.html",
+        BASE + target.strftime("%A") + ".html",
+        BASE,
+        BASE + "index.html",
+    ):
+        if url and url not in ordered:
+            ordered.append(url)
+    return ordered
+
+
 def fetch_day(date: str, retries: int = 3) -> list[dict]:
     """Fetch one calendar day inside the rolling prediction week.
 
-    Returns [] for out-of-coverage dates (no network) and for dates whose
-    served page asserts a different H1 date (guards pipeline determinism when
-    the site re-routes stale weekday pages back to today).
+    Returns [] for out-of-coverage dates (no network).  If the rolling week is
+    reachable but none of its candidate pages assert the requested date, raises
+    NotServedYet so local_backfill keeps the date open for later intraday
+    capture instead of marking a successful empty day.
     """
-    url = url_for(date)
-    if url is None:
+    urls = candidate_urls(date)
+    if not urls:
         return []
-    html = _get(url, retries=retries)
-    if not html:
-        return []
-    served = page_date(html)
-    if served is None:
-        raise RuntimeError("prosoccer: page H1 date missing (layout shift)")
-    if served != date:
-        # e.g. a weekday page outside the prediction week falls back to today
-        return []
-    return _parse(html, date)
+    errors: list[str] = []
+    last_served = None
+    for url in urls:
+        try:
+            html = _get(url, retries=retries)
+        except Exception as exc:  # noqa: BLE001 - try another alias before failing
+            errors.append(f"{url}={type(exc).__name__}")
+            continue
+        if not html:
+            errors.append(f"{url}=empty")
+            continue
+        served = page_date(html)
+        if served is None:
+            raise RuntimeError("prosoccer: page H1 date missing (layout shift)")
+        last_served = served
+        if served == date:
+            return _parse(html, date)
+        errors.append(f"{url}->H1={served}")
+    if last_served is not None:
+        raise NotServedYet(
+            f"prosoccer: no candidate page serves {date} yet "
+            f"(last H1 date {last_served}; tried {len(urls)})"
+        )
+    raise RuntimeError(f"prosoccer {date} failed across candidate URLs: {', '.join(errors)}")
 
 
 COLUMNS = [

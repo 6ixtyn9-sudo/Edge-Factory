@@ -5,7 +5,7 @@ import threading
 
 import pytest
 
-from edgefactory.sources import forebet
+from edgefactory.sources import forebet, public_relay
 
 
 def _raw(rows):
@@ -115,8 +115,141 @@ def test_relay_wrapper_requires_exact_source_and_single_marker():
         forebet._unwrap_relay(b"no wrapper", source)
 
 
+
+def _browser_envelope(source_url, **fields):
+    payload = {
+        "operation": forebet.BROWSER_OPERATION,
+        "transport": forebet.BROWSER_TRANSPORT,
+        "source_url": source_url,
+        "status": 200,
+        "body_shape": "forebet_getrs",
+        "body": _raw([_row()]).decode(),
+    }
+    payload.update(fields)
+    return json.dumps(payload).encode()
+
+
+class _RelayResponse:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_exc):
+        return False
+
+    def read(self, _limit):
+        return self._payload
+
+
+def test_browser_get_accepts_only_identified_browser_run_envelope(monkeypatch):
+    source = "https://www.forebet.com/scripts/getrs.php?ln=en&tp=1x2&in=2026-09-30&ord=0&tz=0&tzs=&tze=&output=1"
+    monkeypatch.setenv(public_relay.URLS_ENV, "https://worker")
+    monkeypatch.setenv(public_relay.TOKEN_ENV, "secret")
+    monkeypatch.setattr(
+        forebet.urllib.request,
+        "urlopen",
+        lambda _request, timeout: _RelayResponse(_browser_envelope(source)),
+    )
+
+    assert forebet._browser_get(source) == _raw([_row()])
+
+
+def test_browser_get_rejects_legacy_generic_relay_envelope(monkeypatch):
+    source = "https://www.forebet.com/scripts/getrs.php?ln=en&tp=1x2&in=2026-09-30&ord=0&tz=0&tzs=&tze=&output=1"
+    legacy = json.dumps({
+        "source_url": source,
+        "status": 200,
+        "body": _raw([_row()]).decode(),
+    }).encode()
+    monkeypatch.setenv(public_relay.URLS_ENV, "https://worker")
+    monkeypatch.setenv(public_relay.TOKEN_ENV, "secret")
+    monkeypatch.setattr(
+        forebet.urllib.request,
+        "urlopen",
+        lambda _request, timeout: _RelayResponse(legacy),
+    )
+
+    with pytest.raises(ValueError, match="operation marker mismatch"):
+        forebet._browser_get(source)
+
+def test_browser_run_operation_sits_above_plain_relays_when_enabled(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv(forebet.BROWSER_ENV, "on")
+    monkeypatch.setenv(public_relay.URLS_ENV, "https://worker")
+    monkeypatch.setenv(public_relay.TOKEN_ENV, "secret")
+    calls = []
+    monkeypatch.setattr(
+        forebet,
+        "_browser_get",
+        lambda url: calls.append(("browser", url)) or _raw([_row()]),
+    )
+    monkeypatch.setattr(
+        public_relay,
+        "fetches",
+        lambda _url: (_ for _ in ()).throw(AssertionError("plain relay called")),
+    )
+
+    rows = forebet._get("1x2", "2026-08-20")
+    assert len(rows) == 1
+    assert calls and calls[0][0] == "browser"
+    assert "output=1" in calls[0][1]
+
+
+def test_browser_run_failure_falls_back_to_plain_relay(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv(forebet.BROWSER_ENV, "on")
+    monkeypatch.setenv(public_relay.URLS_ENV, "https://worker")
+    monkeypatch.setenv(public_relay.TOKEN_ENV, "secret")
+    monkeypatch.setattr(
+        forebet,
+        "_browser_get",
+        lambda _url: (_ for _ in ()).throw(ValueError("challenge")),
+    )
+    monkeypatch.setattr(
+        public_relay,
+        "fetches",
+        lambda url: iter([("https://worker", _raw([_row("relay")]))]),
+    )
+
+    rows = forebet._get("1x2", "2026-08-20")
+    assert len(rows) == 1
+    assert rows[0]["id"] == "relay"
+
+
+def test_optional_playwright_fallback_sits_between_browser_and_plain_relays(monkeypatch):
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv(forebet.BROWSER_ENV, "on")
+    monkeypatch.setenv(forebet.PLAYWRIGHT_ENV, "1")
+    monkeypatch.setenv(public_relay.URLS_ENV, "https://worker")
+    monkeypatch.setenv(public_relay.TOKEN_ENV, "secret")
+    calls = []
+    monkeypatch.setattr(
+        forebet,
+        "_browser_get",
+        lambda _url: calls.append("browser") or (_ for _ in ()).throw(ValueError("challenge")),
+    )
+    monkeypatch.setattr(
+        forebet,
+        "_playwright_get",
+        lambda _url: calls.append("playwright") or _raw([_row("pw")]),
+    )
+    monkeypatch.setattr(
+        public_relay,
+        "fetches",
+        lambda _url: (_ for _ in ()).throw(AssertionError("plain relay called")),
+    )
+
+    rows = forebet._get("1x2", forebet._today().isoformat())
+    assert len(rows) == 1
+    assert rows[0]["id"] == "pw"
+    assert calls == ["browser", "playwright"]
+
+
 def test_github_actions_uses_relay_before_direct_transport(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv(forebet.BROWSER_ENV, "off")
     monkeypatch.delenv(forebet.CLOUD_RETRY_ENV, raising=False)
     calls = []
     monkeypatch.setattr(
@@ -136,8 +269,9 @@ def test_github_actions_uses_relay_before_direct_transport(monkeypatch):
     assert "output=1" in calls[0]
 
 
-def test_github_actions_falls_back_when_relay_is_challenged(monkeypatch):
+def test_github_actions_skips_known_dead_direct_transport_when_relay_is_challenged(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    monkeypatch.setenv(forebet.BROWSER_ENV, "off")
     monkeypatch.delenv(forebet.CLOUD_RETRY_ENV, raising=False)
     direct = []
     monkeypatch.setattr(
@@ -151,10 +285,9 @@ def test_github_actions_falls_back_when_relay_is_challenged(monkeypatch):
         lambda url: direct.append(url) or _raw([_row()]),
     )
 
-    rows = forebet._get("1x2", "2026-08-20")
-    assert len(rows) == 1
-    assert len(direct) == 1
-    assert "output=1" in direct[0]
+    with pytest.raises(RuntimeError, match="GitHub direct transport skipped"):
+        forebet._get("1x2", "2026-08-20")
+    assert direct == []
 
 
 def test_github_relay_fetches_independent_markets_concurrently(monkeypatch):

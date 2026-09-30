@@ -30,7 +30,19 @@ from datetime import date as _date
 
 from edgefactory.sources import public_relay
 
-HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
+    "Referer": "https://www.soccervista.com/",
+    # Non-auth consent hints only; never sends identity/session cookies.
+    "Cookie": "cookieconsent_status=dismiss; cookie_consent=accepted",
+}
 URL = "https://www.soccervista.com/"
 
 _ROW = re.compile(r"<tr[^>]*>(.*?)</tr>", re.I | re.S)
@@ -52,6 +64,21 @@ _DAY_MARKER = re.compile(
     r"Matches by date.{0,400}?([A-Z][a-z]{2})[^A-Za-z0-9]{0,20}(\d{1,2})", re.I | re.S)
 
 MAX_MATCHES = 400  # sanity bound: daily slates are well below this
+
+
+class TransportValidationError(RuntimeError):
+    """A transport returned a shell/challenge instead of the predictions page."""
+
+
+def _validate_transport_html(html: str | None) -> str:
+    if html is None:
+        raise TransportValidationError("empty response")
+    lower = html.lower()
+    if "soccervista" not in lower:
+        raise TransportValidationError("brand marker missing")
+    if "<table" not in lower:
+        raise TransportValidationError("predictions table not found")
+    return html
 
 
 def served_day(html: str) -> tuple[int, int] | None:
@@ -176,8 +203,8 @@ def _urllib_get(url: str) -> str | None:
 def _cffi_get(url: str, impersonate: str) -> str | None:
     from curl_cffi import requests as cr
 
-    r = cr.get(url, impersonate=impersonate, timeout=30,
-               headers={"Accept-Language": "en-US,en;q=0.9"})
+    headers = {key: value for key, value in HEADERS.items() if key.lower() != "user-agent"}
+    r = cr.get(url, impersonate=impersonate, timeout=30, headers=headers)
     if r.status_code in (404, 410):
         return None
     if r.status_code != 200:
@@ -185,10 +212,13 @@ def _cffi_get(url: str, impersonate: str) -> str | None:
     return r.text
 
 
-def _get(url: str, retries: int = 3) -> str | None:
-    """urllib -> curl_cffi ladder, then operator relays (the same validated
-    envelope used by forebet/scoutingstats; relays only echo exact allowlisted
-    URLs, so a challenged datacenter IP cannot poison the payload)."""
+def _get(url: str, retries: int = 3) -> str:
+    """urllib -> curl_cffi ladder, then operator relays.
+
+    Only returns a page that already has the SoccerVista brand marker and at
+    least one HTML table. Branded consent/anti-bot shells are transport
+    failures here, before fetch_day parses date or rows.
+    """
     from . import cffi_http
 
     transports: list[tuple[str, object]] = [("urllib", lambda: _urllib_get(url))]
@@ -200,7 +230,7 @@ def _get(url: str, retries: int = 3) -> str | None:
     attempt_limit = max(1, min(int(retries), len(transports)))
     for attempt, (name, request) in enumerate(transports[:attempt_limit]):
         try:
-            return request()
+            return _validate_transport_html(request())
         except Exception as exc:  # noqa: BLE001 - retry with a distinct transport
             errors.append(f"{name}={type(exc).__name__}")
             if attempt + 1 < attempt_limit:
@@ -208,9 +238,7 @@ def _get(url: str, retries: int = 3) -> str | None:
     for relay_name, raw in public_relay.fetches(url):
         try:
             text = raw.decode("utf-8", "replace")
-            if "soccervista" in text.lower():
-                return text
-            errors.append(f"operator:{relay_name}=unvalidated")
+            return _validate_transport_html(text)
         except Exception as exc:  # noqa: BLE001 - try the next independent relay
             errors.append(f"operator:{relay_name}={type(exc).__name__}")
     raise RuntimeError(f"SoccerVista GET failed {url}: {', '.join(errors)}")
@@ -223,12 +251,6 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
     if date != _date.today().isoformat():
         return []
     html = _get(URL, retries=retries)
-    if not html:
-        return []
-    if "soccervista" not in html.lower():
-        # Cloudflare challenge or redirect body — a transport failure, not an
-        # empty slate (keeps the day retryable and logs loudly).
-        raise RuntimeError("soccervista: brand marker missing (challenge page?)")
     served = served_day(html)
     if served is not None and served != (_date.fromisoformat(date).month,
                                          _date.fromisoformat(date).day):
@@ -241,10 +263,7 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
             flush=True,
         )
         return []
-    rows = _parse(html, date)
-    if not rows and "<table" not in html.lower():
-        raise RuntimeError("soccervista: predictions table not found in page")
-    return rows
+    return _parse(html, date)
 
 
 COLUMNS = [
