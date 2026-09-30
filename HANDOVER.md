@@ -9975,3 +9975,47 @@ Verification after this hardening: `PYTHONPATH=src /home/user/venv/bin/python -m
 pytest tests/ -q` → 773 passed in 11.99s; `cd relay/cloudflare-worker && npm
 test` → 47 tests passed; Worker JavaScript `node --check` passed; `git diff
 --check` was clean.
+
+## Addendum — 2026-09-30: continuation after main `forebet_getrs` probe failure
+
+Current continuation branch: `arena/01a0f226-edge-factory`, based on main `30aa2ad`.
+
+The operator-run main workflow **Forebet Browser Run getrs probe** run `36708782624`
+failed in the expected legacy/undeployed shape: `classification=legacy_generic_relay_or_worker_not_deployed`,
+`http_response_status=502`, `relay_status=403`, no `operation`, no `transport`,
+`body_shape=non_json_body`, and `row_count=null`. That receipt proves the live
+worker endpoint did not return the new Browser Run `forebet_getrs` contract; it
+is not evidence of a Forebet data-shape problem in the Python parser.
+
+Continuation action taken here:
+
+- Ported the non-workflow PR #15 source-recovery commits onto the fresh branch
+  from current main, preserving the manually applied main probe workflow.
+- Did not edit `.github/workflows/*` in this branch, because workflow artifacts
+  are still being applied manually by the operator due the Arena App permission
+  boundary.
+- Added/kept the Worker `forebet_getrs` operation with explicit
+  `operation=forebet_getrs` and `transport=cloudflare_browser_rendering`
+  markers, exact `getrs.php` allowlisting, challenge/non-JSON failure receipts,
+  and row-count/body-shape proof fields on success.
+- Kept the Python Forebet adapter fail-closed: it rejects legacy generic relay
+  envelopes and treats missing Browser Run markers as failure, so run logs cannot
+  mistake the old generic relay path for a Browser Run success.
+- Preserved the alternative-source recovery pieces: SoccerVista per-transport
+  validation/escalation, ProSoccer calendar aliases and retryable `NotServedYet`,
+  PredictZ/WinDrawWin exact relay allowlists and shape validation, Bzzoiro odds
+  fallback bounding, and capture summaries.
+
+Verification on this continuation branch:
+
+- `PYTHONPATH=src .venv/bin/python -m pytest tests/ -q` → `773 passed in 12.61s`.
+- `cd relay/cloudflare-worker && npm test` → `47` tests passed.
+- `find relay/cloudflare-worker -path '*/node_modules' -prune -o -name '*.js' -print -exec node --check {} \;` → all Worker JavaScript parsed.
+- `git diff --check origin/main..HEAD` → clean after this addendum/doc whitespace cleanup.
+
+Next operator gate remains unchanged: merge only after red-team/operator sign-off,
+deploy the Cloudflare Worker from `relay/cloudflare-worker`, then rerun exactly
+one `forebet_getrs` probe. Passing proof must show
+`classification=forebet_getrs_browser_rows`, `worker_supports_browser_getrs=true`,
+`operation=forebet_getrs`, `transport=cloudflare_browser_rendering`,
+`body_shape=forebet_getrs`, and `row_count > 0`.

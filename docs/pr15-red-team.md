@@ -1,7 +1,7 @@
 # PR #15 red-team report — source availability recovery
 
-Date: 2026-09-30  
-Branch: `arena/01a0f1cf-edge-factory`  
+Date: 2026-09-30
+Original PR branch: `arena/01a0f1cf-edge-factory`; continuation branch: `arena/01a0f226-edge-factory`
 Scope: hardening review for Forebet, SoccerVista, ProSoccer, PredictZ, WinDrawWin, Bzzoiro odds, relay security, and operator workflow artifacts.
 
 ## Explicit non-claims
@@ -28,8 +28,8 @@ Forebet production capture is **not proven fixed** until the operator deploys th
 | R5 no recurring cost | pass | No paid services added. Playwright path is disabled unless `EDGE_FACTORY_FOREBET_PLAYWRIGHT=1` and runner dependencies are manually installed. Code gate: `src/edgefactory/sources/forebet.py:100-109`. |
 | R5 Browser Run bounded | pass | Default Browser Run only recent live dates in GHA auto mode: `src/edgefactory/sources/forebet.py:79-98`; serialized per-market when browser/playwright is enabled: `src/edgefactory/sources/forebet.py:326-342`. |
 | R5 relay POST/token/allowlist | pass | Python relay uses POST token body and echoed URL validation: `src/edgefactory/sources/public_relay.py:33-53`. Worker entrypoint rejects non-POST/auth failure and checks allowlist: `relay/cloudflare-worker/src/index.js:15-43`. |
-| R6 tests/contracts | pass | `PYTHONPATH=src /home/user/venv/bin/python -m pytest tests/ -q` → `773 passed in 11.99s`; `cd relay/cloudflare-worker && npm test` → `47` tests passed; `node --check` all Worker JS passed; `git diff --check` clean. |
-| R7 operator actions accurate | fixed / manual workflow follow-up | Workflow files are present in `.github/workflows/`, and this follow-up keeps the upgraded `forebet-getrs-probe.yml` replacement under `docs/operator/forebet-getrs-probe.yml.proposed` because this GitHub App token cannot push workflow-file edits. GAS full file remains in PR body; `relay/google-apps-script/Code.gs` is the source of truth. |
+| R6 tests/contracts | pass | Continuation branch verification: `PYTHONPATH=src .venv/bin/python -m pytest tests/ -q` → `773 passed in 12.61s`; `cd relay/cloudflare-worker && npm test` → `47` tests passed; `node --check` all Worker JS passed; `git diff --check` clean after doc whitespace cleanup. |
+| R7 operator actions accurate | fixed / manual workflow follow-up | Main already has `.github/workflows/forebet-getrs-probe.yml` from manual operator application. This continuation branch does **not** modify `.github/workflows/`; it keeps mirror replacements under `docs/operator/` because this Arena/GitHub App path may lack workflow-file permission. GAS full file remains in PR body/docs; `relay/google-apps-script/Code.gs` is the source of truth. |
 
 
 ## Operator-supplied probe receipts after workflow update
@@ -56,18 +56,16 @@ non-claim:
 
 ## Workflow artifacts
 
-The branch now carries the workflow changes directly, and also keeps copy/paste mirrors under `docs/operator/` for operator review:
+Main already contains the manually applied `.github/workflows/forebet-getrs-probe.yml` and the latest operator run failed with `legacy_generic_relay_or_worker_not_deployed`. This continuation branch intentionally avoids changing `.github/workflows/` so it can be pushed by the Arena integration; it carries copy/paste mirrors under `docs/operator/` for operator review:
 
-- `.github/workflows/daily.yml` — daily workflow with optional Playwright install and bounded `BZZOIRO_ODDS_MAX_EVENTS` default.
-- `.github/workflows/forebet-getrs-probe.yml` — existing optional manual `workflow_dispatch` probe for one Forebet date/market.
-- `docs/operator/daily.yml.proposed` — complete replacement daily workflow mirror.
-- `docs/operator/forebet-getrs-probe.yml.proposed` — upgraded manual probe workflow mirror with explicit Browser Run operation/transport-marker classifications. Use this full-file replacement via GitHub web editor or a token with workflow permission.
+- `docs/operator/daily.yml.proposed` — complete replacement daily workflow mirror with optional Playwright install and bounded `BZZOIRO_ODDS_MAX_EVENTS` default.
+- `docs/operator/forebet-getrs-probe.yml.proposed` — upgraded manual probe workflow mirror with explicit Browser Run operation/transport-marker classifications. Use this full-file replacement via GitHub web editor or a token with workflow permission only if the live workflow needs to be refreshed.
 
 ## Verification commands run
 
 ```text
-PYTHONPATH=src /home/user/venv/bin/python -m pytest tests/ -q
-773 passed in 11.99s
+PYTHONPATH=src .venv/bin/python -m pytest tests/ -q
+773 passed in 12.61s
 ```
 
 ```text
