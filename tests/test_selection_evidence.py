@@ -284,3 +284,83 @@ def test_the_module_does_not_size_stakes_or_form_tickets():
     for forbidden in ("stake_units", "bankroll", "kelly", "select_accas",
                       "compute_bucket", "1u"):
         assert forbidden not in src
+
+
+# ===========================================================================
+# Price coverage taxonomy
+#
+# "no price" was doing too much work. A fixture nobody quotes, one priced
+# only by a shadow source, and one whose feed cannot be joined are three
+# different problems, and only some bear on execution safety.
+# ===========================================================================
+
+
+def test_a_missing_price_with_no_source_is_no_eligible_source():
+    result = se.classify_price(_pick(odds=None, pricing_source=None))
+    assert se.P_NO_ELIGIBLE_SOURCE in result["states"]
+    assert result["execution_safe"] is False
+
+
+def test_a_missing_price_with_a_named_source_is_a_join_failure():
+    result = se.classify_price(_pick(odds=None,
+                                     pricing_source="betexplorer_odds"))
+    assert se.P_JOIN_FAILED in result["states"]
+    assert result["execution_safe"] is False
+
+
+def test_an_identity_less_feed_makes_price_unknown_not_absent():
+    """Unknown and absent are different claims."""
+    result = se.classify_price(_pick(odds=None), price_join_available=False)
+    assert se.P_ODDS_ONLY_NO_IDENTITY in result["states"]
+    assert se.P_UNKNOWN in result["states"]
+    assert se.P_NO_ELIGIBLE_SOURCE not in result["states"]
+
+
+def test_an_embedded_shadow_price_is_named_as_such():
+    """The real shape: pricing_source is generic, bookmaker is not."""
+    result = se.classify_price(_pick(
+        odds=2.25, pricing_source="source_embedded_odds",
+        bookmaker="prosoccer_embedded"))
+
+    assert result["price_owner"] == "prosoccer"
+    assert se.P_EMBEDDED in result["states"]
+    assert se.P_SHADOW_SOURCE in result["states"]
+
+
+def test_a_live_source_price_is_not_flagged_shadow():
+    result = se.classify_price(_pick(odds=2.25,
+                                     pricing_source="bzzoiro_odds"))
+    assert se.P_SHADOW_SOURCE not in result["states"]
+    assert se.P_SAFE in result["states"]
+
+
+def test_a_quarantined_price_is_never_execution_safe():
+    result = se.classify_price(_pick(
+        odds=2.25, price_quarantine_reason="outlier_vs_consensus"))
+    assert se.P_QUARANTINED in result["states"]
+    assert se.P_SAFE not in result["states"]
+    assert result["execution_safe"] is False
+
+
+def test_a_suspect_price_is_never_execution_safe():
+    result = se.classify_price(_pick(odds=2.25, price_suspect=True))
+    assert se.P_SUSPECT in result["states"]
+    assert result["execution_safe"] is False
+
+
+def test_price_states_are_attached_to_the_lineage():
+    lineage = se.build_lineage(_pick(
+        odds=2.25, pricing_source="source_embedded_odds",
+        bookmaker="prosoccer_embedded"))
+    assert lineage["price"]["price_owner"] == "prosoccer"
+    text = "\n".join(se.render_lineage_lines([lineage]))
+    assert "price_states:" in text
+    assert "execution_safe: yes" in text
+    assert se.P_SHADOW_SOURCE in text
+
+
+def test_an_unsafe_price_renders_as_unsafe():
+    lineage = se.build_lineage(_pick(
+        odds=2.25, price_quarantine_reason="outlier_vs_consensus"))
+    text = "\n".join(se.render_lineage_lines([lineage]))
+    assert "execution_safe: no" in text

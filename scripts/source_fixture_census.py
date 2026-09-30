@@ -23,6 +23,7 @@ LOCALDATA = ROOT / "localdata"
 if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
+from edgefactory import fixture_reconciliation  # noqa: E402
 from edgefactory import selection_evidence  # noqa: E402
 from edgefactory import source_census  # noqa: E402
 from edgefactory import source_registry  # noqa: E402
@@ -131,6 +132,15 @@ def main(argv: list[str] | None = None) -> int:
     except Exception as exc:  # pragma: no cover - diagnostics never break
         census["utilisation"] = {"error": str(exc)}
 
+    # Which "single-source" fixtures are actually alias failures?
+    try:
+        census["fixture_reconciliation"] = {
+            day: fixture_reconciliation.build_reconciliation(
+                census["per_date"][day]["fixture_groups"])
+            for day in census["dates"]}
+    except Exception as exc:  # pragma: no cover - diagnostics never break
+        census["fixture_reconciliation"] = {"error": str(exc)}
+
     written = write_census(census, localdata=args.localdata,
                            run_date=args.date, write_csv=not args.no_csv)
 
@@ -148,6 +158,16 @@ def main(argv: list[str] | None = None) -> int:
             print("")
             for line in source_utilisation.render_utilisation_lines(
                     utilisation):
+                print(line)
+        for day, reconciliation in (
+                census.get("fixture_reconciliation") or {}).items():
+            if not isinstance(reconciliation, dict) or \
+                    "single_source_fixtures" not in reconciliation:
+                continue
+            print("")
+            print(f"-- {day}")
+            for line in fixture_reconciliation.render_reconciliation_lines(
+                    reconciliation):
                 print(line)
     else:
         print("source fixture census: "

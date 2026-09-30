@@ -171,6 +171,7 @@ def build_lineage(pick: dict[str, Any]) -> dict[str, Any]:
                        f"carries no eligible 1X2 vote")
         reasons.append(detail)
 
+    lineage["price"] = classify_price(pick)
     lineage["status"] = status
     lineage["reasons"] = reasons
     return lineage
@@ -208,10 +209,118 @@ def render_lineage_lines(lineages: list[dict]) -> list[str]:
         out.append(f"    ml_anchor_sources: "
                    f"{', '.join(lineage['ml_anchor_sources']) or '-'}")
         out.append(f"    kickoff_source: {lineage['kickoff_source'] or '-'}")
-        out.append(f"    price_source: {lineage['price_source'] or '-'} | "
-                   f"odds={lineage['odds'] if lineage['odds'] is not None else '-'} | "
-                   f"quarantine={lineage['price_quarantine_reason'] or '-'}")
+        out.extend(render_price_lines(lineage["price"]))
         out.append(f"    status: {lineage['status']}")
         for reason in lineage["reasons"]:
             out.append(f"    reason: {reason}")
     return out
+
+
+# ---------------------------------------------------------------------------
+# price coverage
+#
+# "no price" was doing too much work. A fixture nobody quotes, a fixture
+# priced only by a shadow source, and a fixture whose price feed cannot
+# be joined are three different problems with three different fixes, and
+# only some of them bear on whether a price is safe to bet.
+# ---------------------------------------------------------------------------
+
+P_NO_ELIGIBLE_SOURCE = "no_eligible_price_source"
+P_SHADOW_SOURCE = "price_present_from_shadow_source"
+P_EMBEDDED = "price_present_from_embedded_source"
+P_JOIN_FAILED = "price_join_failed"
+P_ODDS_ONLY_NO_IDENTITY = "odds_only_source_has_no_fixture_identity"
+P_UNKNOWN = "price_unknown"
+P_QUARANTINED = "price_quarantined"
+P_SUSPECT = "price_suspect"
+P_SAFE = "price_safe_for_execution"
+
+_EMBEDDED_MARKERS = ("embedded", "source_embedded")
+
+
+def _price_owner(label: str) -> str | None:
+    """The registered source a price label refers to, if any."""
+    cleaned = str(label or "").lower().strip()
+    for suffix in ("_embedded_odds", "_embedded", "_odds"):
+        if cleaned.endswith(suffix):
+            cleaned = cleaned[: -len(suffix)]
+            break
+    return cleaned if source_registry.get(cleaned) is not None else None
+
+
+def classify_price(pick: dict[str, Any], *,
+                   price_join_available: bool | None = None) -> dict[str, Any]:
+    """Describe a selection's price provenance and execution safety.
+
+    Execution safety is not inferred from the presence of a number. A
+    price is only called safe when it exists, is not quarantined, is not
+    flagged suspect, and comes from a path the price-integrity policy
+    already permits.
+    """
+    odds = pick.get("odds")
+    source = str(pick.get("pricing_source") or pick.get("odds_source") or "")
+    quarantine = pick.get("price_quarantine_reason")
+    evidence = pick.get("price_evidence")
+
+    classification: dict[str, Any] = {
+        "odds": odds,
+        "price_source": source or None,
+        "price_evidence": evidence,
+        "price_quarantine_reason": quarantine,
+        "odds_replaced": pick.get("odds_replaced"),
+        "price_push_eligible": pick.get("price_push_eligible"),
+        "price_tier": pick.get("price_tier"),
+    }
+
+    states: list[str] = []
+    if odds in (None, "", 0):
+        if price_join_available is False:
+            states.append(P_ODDS_ONLY_NO_IDENTITY)
+            states.append(P_UNKNOWN)
+        elif source:
+            states.append(P_JOIN_FAILED)
+        else:
+            states.append(P_NO_ELIGIBLE_SOURCE)
+        classification["states"] = states
+        classification["execution_safe"] = False
+        return classification
+
+    # pricing_source is often generic ("source_embedded_odds"), so the
+    # bookmaker field is consulted too: it names the predictor the quote
+    # actually came from, which is what decides whether the price is
+    # leaning on a shadow-tier source.
+    bookmaker = str(pick.get("bookmaker") or "")
+    embedded = any(marker in text.lower()
+                   for text in (source, bookmaker)
+                   for marker in _EMBEDDED_MARKERS)
+    if embedded:
+        states.append(P_EMBEDDED)
+    owner = _price_owner(bookmaker) or _price_owner(source)
+    if owner:
+        classification["price_owner"] = owner
+        cap = source_registry.get(owner)
+        if cap is not None and cap.tier == source_registry.TIER_SHADOW:
+            states.append(P_SHADOW_SOURCE)
+
+    if quarantine:
+        states.append(P_QUARANTINED)
+    if pick.get("price_suspect"):
+        states.append(P_SUSPECT)
+
+    safe = not quarantine and not pick.get("price_suspect")
+    if safe:
+        states.append(P_SAFE)
+    classification["states"] = states
+    classification["execution_safe"] = safe
+    return classification
+
+
+def render_price_lines(classification: dict) -> list[str]:
+    return [
+        f"    price: {classification['odds'] if classification['odds'] is not None else '-'}"
+        f" | source={classification['price_source'] or '-'}"
+        f" | tier={classification['price_tier'] or '-'}",
+        f"    price_states: {', '.join(classification['states']) or '-'}",
+        f"    execution_safe: "
+        f"{'yes' if classification['execution_safe'] else 'no'}",
+    ]
