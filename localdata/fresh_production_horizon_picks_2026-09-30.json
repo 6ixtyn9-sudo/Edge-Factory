@@ -92,15 +92,15 @@
       "price_tier": "source_embedded_price",
       "pricing_source": "source_embedded_odds",
       "probability": 0.5847,
-      "risk_label": "fresh_production_flat_stake",
-      "rule_id": "fresh_1x2_v2_p55_unanimous",
+      "rule_id": "1x2_two_source_p55_unanimous",
       "selection": "home",
       "settlement_label_source": null,
       "source_voters": [
         "bzzoiro",
         "prosoccer"
       ],
-      "stake_units": 1.0,
+      "staking_owner": "auto_tickets",
+      "staking_policy": "handled_by_auto_tickets",
       "timing_diagnosis": {
         "classification": "trusted_kickoff_present",
         "guard_reason": null,

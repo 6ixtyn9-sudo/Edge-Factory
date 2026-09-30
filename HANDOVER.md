@@ -11272,3 +11272,85 @@ dispatch-plan routing, no legacy/parked labels in plan artifacts, and the
 operator summary.
 
 **PR #18 is NOT merged.**
+
+---
+
+## Addendum — 2026-09-30 (fifth pass: rule-ID naming, staking ownership, dispatch-plan routing, harness)
+
+### Rule identifiers renamed
+
+`v2`/`v3` were never versions — they were the **required voter count** — and
+the `fresh_` prefix distinguished the lane from nothing now that it *is* the
+production lane.
+
+| retired | current |
+|---|---|
+| `fresh_1x2_v2_p55_unanimous` | `1x2_two_source_p55_unanimous` |
+| `fresh_1x2_v3_p65_majority` | `1x2_three_source_p65_majority` |
+| `fresh_1x2_v2_p70_majority` | `1x2_two_source_p70_majority` |
+
+`rule_identifier(voters, threshold, unanimous)` is the single generator.
+`deprecated_rule_aliases()` maps every retired ID to its current one, and
+`resolve_rule_id()` resolves reads. The Supabase alias table loads the same
+map, so historical warehouse rows still join. **Retired IDs are read-only
+compatibility and are never written or displayed.** The ten committed
+artifacts that still carried old IDs were migrated in place through the
+bijective alias map (rule identity unchanged; only the label).
+
+### Staking now belongs to auto-tickets
+
+The pick engine no longer sizes bets. Each dispatched pick carries:
+
+```
+staking_policy: handled_by_auto_tickets
+staking_owner:  auto_tickets
+```
+
+`stake_units` / `stake` / `risk_label` are **gone** from pick output.
+`internal_stake_units` survives inside the `Candidate` dataclass purely to
+compute the exposure cap and to order picks; it is never published or
+displayed. `auto_tickets.apply_ticket_staking()` is the only place a stake
+size is attached, and it stamps `staked_by: auto_tickets`.
+
+No user-facing text shows `1.0u`, `1u` or `stake: 1` anywhere — reports,
+summaries, dispatch plan and notifications all say `handled_by_auto_tickets`.
+
+### Dispatch plan is authoritative for every consumer
+
+- **CLV** reads the dispatch plan when one exists, so a future pick dispatched
+  today has its price captured **today** rather than on event day. Snapshot
+  rows gained `run_date`, `event_date`, `rule_id`, `pricing_source`,
+  `dispatch_plan_id`, `horizon_pick`.
+- **auto-tickets** reads the plan via `load_ticket_slate()`, returning
+  `(slate, source, deferred)`. Future picks appear in `deferred` and the run
+  prints *"future-dated production pick exists, but auto-tickets are
+  same-day-only"* plus `NO SAME-DAY BET`, instead of a misleading
+  `NO BET TODAY`.
+- **notification** builds the future-pick notice from the plan, sends it
+  through the real dispatcher, logs success or failure, and writes one dedupe
+  key per pick (`__future_pick__|event_date|home|away|pick`) so a rerun stays
+  silent. The empty-slate heartbeat is suppressed when a future notice goes.
+
+### Harness
+
+New `src/edgefactory/production_harness.py` with reusable assertions:
+`assert_no_forbidden_version_labels`, `assert_no_fresh_prefix_in_rule_ids`,
+`assert_pick_engine_does_not_emit_stake_size`,
+`assert_no_stake_notation_in_text`, `assert_staking_delegated_to_auto_tickets`,
+`assert_dispatch_plan_authoritative`, `assert_future_picks_event_dated`,
+`assert_legacy_baseline_comparison_only`,
+`assert_kickoff_parser_dd_mm_reference_date`, `assert_no_browser_probe_paths`,
+and the composite `check_production_artifact`. They run against JSON
+payloads, Markdown, notification text, sync payloads, CLV rows, ticket
+payloads, the committed artifacts in `localdata/` and this handover.
+
+Negative tests assert each guard actually fires on an offending value — a
+guard rail that never fires is not a guard rail.
+
+### Tests
+
+**Full suite: see below.** New `tests/test_production_harness.py` (33 tests)
+covering naming, staking ownership, dispatch-plan authority, CLV/ticket/
+notification routing, dedupe, and the kickoff-parser regression set.
+
+**PR #18 is NOT merged.**

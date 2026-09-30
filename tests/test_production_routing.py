@@ -188,10 +188,10 @@ def test_fresh_certified_edges_are_synced_separately_from_legacy(lane_dir: Path)
     (lane_dir / f"fresh_production_certified_edges_{DAY}.json").write_text(json.dumps({
         "model_version": "v2", "feature_schema_version": "s1",
         "certified_dispatchable_rules": [
-            {"rule_id": "fresh_1x2_v2_p60_majority", "sample": 331,
+            {"rule_id": "1x2_two_source_p60_majority", "sample": 331,
              "hit_rate": 0.716, "hit_rate_lb": 0.665, "status": "certified"}],
         "research_rules": [
-            {"rule_id": "fresh_1x2_v2_p70_unanimous", "sample": 71,
+            {"rule_id": "1x2_two_source_p70_unanimous", "sample": 71,
              "hit_rate": 0.80, "hit_rate_lb": 0.60, "status": "research"}],
     }))
     assert pl.production_edges_path(DAY, lane_dir).name == \
@@ -203,7 +203,7 @@ def test_fresh_certified_edges_are_synced_separately_from_legacy(lane_dir: Path)
         edges = sync.load_edges(DAY)
 
     by_name = {e["name"]: e for e in edges}
-    fresh = by_name["fresh_1x2_v2_p60_majority"]
+    fresh = by_name["1x2_two_source_p60_majority"]
     assert fresh["rule"]["lane"] == "fresh_production"
     assert fresh["rule"]["rule_source"] == "fresh_production"
     assert fresh["rule"]["dispatchable"] is True
@@ -214,14 +214,14 @@ def test_fresh_certified_edges_are_synced_separately_from_legacy(lane_dir: Path)
 def test_research_rules_are_never_marked_dispatchable(lane_dir: Path):
     (lane_dir / f"fresh_production_certified_edges_{DAY}.json").write_text(json.dumps({
         "certified_dispatchable_rules": [],
-        "research_rules": [{"rule_id": "fresh_1x2_v2_p70_unanimous",
+        "research_rules": [{"rule_id": "1x2_two_source_p70_unanimous",
                             "sample": 71, "status": "research"}],
     }))
     sync = sys.modules["sync_supabase_routing_under_test"]
     with patch.object(sync, "LOCALDATA", lane_dir), \
          patch.object(sync, "EDGES", lane_dir / "edges_consensus.json"):
         edges = sync.load_edges(DAY)
-    research = [e for e in edges if e["name"] == "fresh_1x2_v2_p70_unanimous"]
+    research = [e for e in edges if e["name"] == "1x2_two_source_p70_unanimous"]
     assert research and research[0]["rule"]["dispatchable"] is False
     assert research[0]["status"] == "research"
 
@@ -290,9 +290,9 @@ class _StubEngine:
 def _horizon_candidate(day: str, kickoff: str, *, edge: float = 0.05):
     cand = fp.Candidate(
         date=day, kickoff=kickoff, league="Test League", home="Alpha Town",
-        away="Beta City", selection="home", rule_id="fresh_1x2_v2_p60_majority",
+        away="Beta City", selection="home", rule_id="1x2_two_source_p60_majority",
         probability=0.65, odds=1.8, edge=edge, dispatchable=True,
-        stake_units=fp.FLAT_STAKE_UNITS)
+        internal_stake_units=fp.FLAT_STAKE_UNITS)
     return cand
 
 
@@ -319,8 +319,8 @@ def test_horizon_planner_dispatches_an_eligible_future_pick():
     assert payload["eligible_pick_count"] == 1
     pick = payload["picks"][0]
     assert pick["date"] == tomorrow
-    assert pick["rule_id"] == "fresh_1x2_v2_p60_majority"
-    assert pick["stake_units"] == fp.FLAT_STAKE_UNITS
+    assert pick["rule_id"] == "1x2_two_source_p60_majority"
+    assert pick["internal_stake_units"] == fp.FLAT_STAKE_UNITS
     assert payload["horizon_end"] == \
         (date.fromisoformat(DAY) + timedelta(days=2)).isoformat()
 
@@ -542,7 +542,7 @@ def _report(**overrides):
 
 def _blocked_candidate(blocker, *, edge=0.06, would_have=False):
     return {"home": "Alpha Town", "away": "Beta City", "selection": "home",
-            "rule_id": "fresh_1x2_v2_p60_majority", "probability": 0.65,
+            "rule_id": "1x2_two_source_p60_majority", "probability": 0.65,
             "odds": 1.8, "edge": edge, "blockers": [blocker],
             "would_have_qualified_before_kickoff": would_have}
 

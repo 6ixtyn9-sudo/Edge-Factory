@@ -173,6 +173,9 @@ def infer_target_date(picks: list[dict], fallback: str | None = None) -> str | N
 
 def build_rule_aliases(edges: list[dict]) -> dict[str, str]:
     aliases: dict[str, str] = {}
+    # Retired rule IDs resolve to their current name so historical rows and
+    # artifacts written before the rename still join. Nothing writes them.
+    aliases.update(deprecated_production_rule_aliases())
     for e in edges:
         name = e.get("name")
         if not name:
@@ -182,6 +185,18 @@ def build_rule_aliases(edges: list[dict]) -> dict[str, str]:
         display = _display_rule_from_name(name, rule.get("market", "1x2"))
         if display:
             aliases[display] = name
+    return aliases
+
+
+def deprecated_production_rule_aliases() -> dict[str, str]:
+    """Retired production rule ID -> current ID (internal compatibility)."""
+    aliases: dict[str, str] = {}
+    words = {2: "two", 3: "three", 4: "four"}
+    for voters, word in words.items():
+        for threshold in (55, 60, 65, 70):
+            for kind in ("majority", "unanimous"):
+                aliases[f"fresh_1x2_v{voters}_p{threshold}_{kind}"] = \
+                    f"1x2_{word}_source_p{threshold}_{kind}"
     return aliases
 
 

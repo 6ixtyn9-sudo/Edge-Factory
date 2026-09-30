@@ -56,6 +56,15 @@ SNAPSHOT_FIELDS = [
     # from the automatic build-time price-board capture (Task F).
     "actual_odds",
     "actual_odds_recorded_at",
+    # Future-dated dispatch: a bet placed today may be played on a later
+    # date, so the run date and the event date are recorded separately and
+    # the dispatching plan is identified.
+    "run_date",
+    "event_date",
+    "rule_id",
+    "pricing_source",
+    "dispatch_plan_id",
+    "horizon_pick",
 ]
 
 
@@ -131,7 +140,16 @@ def _pick_rule_name(pick: dict[str, Any]) -> str:
 
 
 def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dict[str, Any]], dict[str, int]]:
-    picks = _read_json_list(input_path)
+    # An empty same-day file must not hide a future-dated pick that was
+    # dispatched today: CLV follows the dispatch plan when there is one.
+    plan_picks = _dispatch_plan_picks(run_date)
+    if plan_picks is None:
+        picks = _read_json_list(input_path)
+    else:
+        picks = plan_picks
+        print(f"clv capture source: dispatch plan ({len(picks)} pick(s), "
+              f"event dates "
+              f"{', '.join(sorted({str(p.get('date')) for p in picks})) or 'none'})")
     picks_today = _load_picks_today_module()
 
     should_refresh = label != "pick_time"
@@ -258,6 +276,16 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
             "live_odds_matched": "1" if live_odds_matched else "0",
             "used_input_odds_fallback": "1" if (observed_odds is not None and match_method == "fallback" and original_odds is not None) else "0",
             "odds_match_method": match_method,
+            # Future-dated dispatch: the bet is placed on the run date but
+            # played on the event date, so CLV must record both. Waiting for
+            # event day would lose the price we actually took.
+            "run_date": run_date,
+            "event_date": match_date,
+            "rule_id": rule_name,
+            "pricing_source": live_pick.get("odds_source") or "",
+            "dispatch_plan_id": pick.get("dispatch_plan_id")
+                                or pick.get("run_date") or run_date,
+            "horizon_pick": "1" if pick.get("horizon_pick") else "0",
         }
         rows.append(row)
 
@@ -279,6 +307,31 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
         "unmatched_file": str(unmatched_path),
         "unmatched_count": len(unmatched_details),
     }
+
+
+def _dispatch_plan_picks(run_date: str) -> list[dict[str, Any]] | None:
+    """All picks dispatched by this run, same-day and future-dated.
+
+    Returns None when there is no plan, so the caller falls back to the
+    ordinary production pick file.
+    """
+    from edgefactory import production_lane
+
+    if not production_lane.fresh_production_is_active():
+        return None
+    plan_path = production_lane.dispatch_plan_path(run_date, LOCALDATA)
+    if not plan_path.exists():
+        return None
+    plan = production_lane.load_dispatch_plan(run_date, LOCALDATA)
+    picks: list[dict[str, Any]] = []
+    for row in list(plan.get("same_day_picks") or []) + \
+               list(plan.get("horizon_picks") or []):
+        entry = dict(row)
+        # Price the fixture on its own event date.
+        entry["date"] = entry.get("event_date") or entry.get("date")
+        entry.setdefault("dispatch_plan_id", plan.get("run_date") or run_date)
+        picks.append(entry)
+    return picks
 
 
 def resolve_capture_input(run_date: str, explicit: str | None) -> Path:

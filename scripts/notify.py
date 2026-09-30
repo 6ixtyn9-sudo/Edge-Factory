@@ -87,17 +87,40 @@ def _load_json_list(path: Path) -> list[dict[str, Any]]:
 
 
 HEARTBEAT_MARKER_PREFIX = "__heartbeat__|"
-def format_future_pick_message(plan_path: object, target_date: str) -> str | None:
-    """Announce eligible future-dated picks, labelled by their event date.
-
-    Returns None when the plan holds no future picks, so the caller falls
-    back to the ordinary empty-slate heartbeat.
-    """
+def _read_dispatch_plan(plan_path: object) -> dict:
+    """Load a dispatch plan, or an empty plan when it cannot be read."""
     try:
         plan = json.loads(Path(str(plan_path)).read_text())
     except Exception:
-        return None
-    if not isinstance(plan, dict):
+        return {}
+    return plan if isinstance(plan, dict) else {}
+
+
+def _unsent_future_picks(plan: dict, sent_keys: set) -> dict:
+    """The plan restricted to future picks not already announced."""
+    if not plan:
+        return {}
+    keep = []
+    for row in plan.get("horizon_picks") or []:
+        key = (f"{FUTURE_PICK_MARKER_PREFIX}{row.get('event_date')}|"
+               f"{row.get('home')}|{row.get('away')}|{row.get('pick')}")
+        if key not in sent_keys:
+            keep.append(row)
+    trimmed = dict(plan)
+    trimmed["horizon_picks"] = keep
+    return trimmed
+
+
+def format_future_pick_message_from_plan(plan: dict, target_date: str) -> str | None:
+    """Announce eligible future-dated picks, labelled by their event date.
+
+    Returns None when there is nothing new to announce, so the caller falls
+    back to the ordinary empty-slate heartbeat.
+
+    Staking is deliberately absent: auto_tickets owns bankroll and stake
+    sizing, so the notice states the selection and its evidence only.
+    """
+    if not plan:
         return None
     rows = plan.get("horizon_picks") or []
     if not rows:
@@ -106,22 +129,30 @@ def format_future_pick_message(plan_path: object, target_date: str) -> str | Non
     lines: list[str] = []
     if not plan.get("same_day_pick_count"):
         lines.append(f"No same-day picks for {target_date}.")
-    lines.append(f"{len(rows)} future-dated fresh production pick(s) in the "
-                 f"dispatch plan:")
+    lines.append(f"{len(rows)} future-dated production pick(s) dispatched:")
     for row in rows:
         edge = row.get("edge")
         edge_text = f"{edge:+.4f}" if isinstance(edge, (int, float)) else "unknown"
+        probability = row.get("probability")
         lines.append("")
         lines.append(f"FRESH PRODUCTION PICK — event date {row.get('event_date')}")
         lines.append(f"  {row.get('home')} vs {row.get('away')}")
         lines.append(f"  kickoff: {row.get('kickoff') or 'unknown'}")
         lines.append(f"  selection: {row.get('pick')} @ {row.get('odds')}")
+        if isinstance(probability, (int, float)):
+            lines.append(f"  probability: {probability:.3f}")
         lines.append(f"  edge: {edge_text}")
         if row.get("edge_rule"):
             lines.append(f"  rule: {row['edge_rule']}")
-        if row.get("stake_units"):
-            lines.append(f"  stake: {row['stake_units']}u")
+    lines.append("")
+    lines.append("staking: handled by auto-tickets")
     return "\n".join(lines)
+
+
+def format_future_pick_message(plan_path: object, target_date: str) -> str | None:
+    """Convenience wrapper: read a plan from disk and format it."""
+    return format_future_pick_message_from_plan(
+        _read_dispatch_plan(plan_path), target_date)
 
 
 HEARTBEAT_TEXT = (
@@ -145,6 +176,19 @@ def _filter_discoveries(candidates: list[dict[str, Any]], target_date: str,
             continue
         out.append(p)
     return out
+
+
+FUTURE_PICK_MARKER_PREFIX = "__future_pick__|"
+
+
+def _future_pick_keys(plan: dict) -> list[str]:
+    """One dedupe key per future-dated pick, so a rerun stays silent."""
+    keys = []
+    for row in plan.get("horizon_picks") or []:
+        keys.append(
+            f"{FUTURE_PICK_MARKER_PREFIX}{row.get('event_date')}|"
+            f"{row.get('home')}|{row.get('away')}|{row.get('pick')}")
+    return keys
 
 
 def _heartbeat_key(target_date: str) -> str:
@@ -498,8 +542,14 @@ def main() -> int:
     # empty same-day slate that hides an eligible future pick must never be
     # reported as a plain "nothing today".
     future_message = None
+    future_pick_keys: list[str] = []
     if not notifiable_picks and getattr(args, "dispatch_plan", None):
-        future_message = format_future_pick_message(args.dispatch_plan, target_date)
+        future_plan = _read_dispatch_plan(args.dispatch_plan)
+        unsent_plan = _unsent_future_picks(
+            future_plan, set() if args.force else sent_keys)
+        future_pick_keys = _future_pick_keys(unsent_plan)
+        future_message = format_future_pick_message_from_plan(
+            unsent_plan, target_date)
 
     heartbeat_message = None
     if (args.heartbeat
@@ -512,10 +562,6 @@ def main() -> int:
         # One quiet ping per empty day: distinguishes 'no picks' from 'system dead'
         # for hands-off tracking. Marked in the same dedup ledger, so max 1/day.
         heartbeat_message = f"Date: {target_date}\n{HEARTBEAT_TEXT}"
-
-    if future_message:
-        logging.info("\n>>> Dispatching future-dated fresh production pick notice...")
-        print(future_message)
 
     if (not normal_message and not discovery_message and not shadow_message
             and not heartbeat_message and not future_message):
@@ -634,6 +680,33 @@ def main() -> int:
                 shadow_sent_keys.add(_build_match_dedupe_key(p, target_date))
             _save_sent_ledger(shadow_sent_ledger_file, shadow_sent_keys)
             logging.info(f"✅ Shadow-slate dedupe ledger updated: {len(shadow_sent_keys)} items in {shadow_sent_ledger_file}")
+        any_failed = any_failed or not dispatched
+
+    if future_message:
+        logging.info("\n>>> Dispatching future-dated production pick notice...")
+        print(future_message)
+        dispatched = _dispatch_message(
+            message_text=future_message,
+            meta_token=meta_token,
+            meta_phone_id=meta_phone_id,
+            meta_recipient=meta_recipient,
+            meta_template=None,
+            twilio_sid=twilio_sid,
+            twilio_token=twilio_token,
+            twilio_number=twilio_number,
+            telegram_token=telegram_token,
+            telegram_chat_id=telegram_chat_id,
+            callmebot_key=callmebot_key,
+            callmebot_phone=callmebot_phone,
+        )
+        if dispatched:
+            sent_keys.update(future_pick_keys)
+            _save_sent_ledger(sent_ledger_file, sent_keys)
+            logging.info(
+                f"✅ Future-dated pick notice sent and ledgered "
+                f"({len(future_pick_keys)} pick(s) in {sent_ledger_file})")
+        else:
+            logging.error("❌ Future-dated pick notice FAILED to dispatch")
         any_failed = any_failed or not dispatched
 
     if heartbeat_message:

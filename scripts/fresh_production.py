@@ -130,6 +130,9 @@ RULE_BLOCKED = "blocked"
 PRICE_TIER_DEDICATED = "dedicated_pricing_feed"
 PRICE_TIER_SOURCE_EMBEDDED = "source_embedded_price"
 FLAT_STAKE_UNITS = 1.0
+# The pick engine states who owns staking rather than sizing a bet itself.
+STAKING_POLICY = "handled_by_auto_tickets"
+STAKING_OWNER = "auto_tickets"
 
 
 # --------------------------------------------------------------------------
@@ -484,14 +487,58 @@ class Rule:
         return True
 
 
+# Rule identifiers describe the rule, not a release. The old ``v2``/``v3``
+# suffix was never a version: it was the required voter count, which reads as
+# a version number and invites the wrong question ("is v3 newer than v2?").
+# The lane is also the production lane now, so a ``fresh_`` prefix
+# distinguishes it from nothing.
+VOTER_COUNT_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five"}
+
+
+def rule_identifier(voters: int, threshold: float, unanimous: bool) -> str:
+    """Canonical production rule ID, e.g. ``1x2_two_source_p55_unanimous``."""
+    word = VOTER_COUNT_WORDS.get(voters, f"{voters}")
+    return (f"1x2_{word}_source_p{int(round(threshold * 100))}"
+            f"_{'unanimous' if unanimous else 'majority'}")
+
+
+def legacy_rule_identifier(voters: int, threshold: float, unanimous: bool) -> str:
+    """The retired identifier, kept only to read artifacts written before the
+    rename. Never written to a new artifact and never displayed."""
+    return (f"fresh_1x2_v{voters}_p{int(round(threshold * 100))}"
+            f"_{'unanimous' if unanimous else 'majority'}")
+
+
+def deprecated_rule_aliases() -> dict[str, str]:
+    """Retired rule ID -> current rule ID.
+
+    Internal compatibility only: it lets a stored artifact or warehouse row
+    written before the rename resolve to the rule it actually means. Nothing
+    reading this map may surface the retired identifier to an operator.
+    """
+    aliases = {}
+    for voters in (2, 3, 4):
+        for threshold in (0.55, 0.60, 0.65, 0.70):
+            for unanimous in (False, True):
+                aliases[legacy_rule_identifier(voters, threshold, unanimous)] = \
+                    rule_identifier(voters, threshold, unanimous)
+    return aliases
+
+
+def resolve_rule_id(rule_id: str | None) -> str | None:
+    """Map a possibly-retired rule ID onto the current one."""
+    if not rule_id:
+        return rule_id
+    return deprecated_rule_aliases().get(rule_id, rule_id)
+
+
 def candidate_rules() -> tuple[Rule, ...]:
     rules = []
     for voters in (2, 3, 4):
         for threshold in (0.55, 0.60, 0.65, 0.70):
             for unanimous in (False, True):
                 rules.append(Rule(
-                    rule_id=(f"fresh_1x2_v{voters}_p{int(threshold * 100)}"
-                             f"_{'unanimous' if unanimous else 'majority'}"),
+                    rule_id=rule_identifier(voters, threshold, unanimous),
                     min_voters=voters,
                     min_top_probability=threshold,
                     require_unanimous=unanimous,
@@ -912,8 +959,13 @@ class Candidate:
     timing_diagnosis: dict = field(default_factory=dict)
     price_diagnosis: dict = field(default_factory=dict)
     would_have_qualified_before_kickoff: bool = False
-    stake_units: float = 0.0
-    risk_label: str = "fresh_production_flat_stake"
+    # Staking is NOT the pick engine's job. auto_tickets owns bankroll and
+    # stake sizing, so a pick carries the delegation marker and nothing else.
+    # ``internal_stake_units`` exists only to compute the exposure cap and to
+    # order picks; it is never displayed and never published as a stake.
+    internal_stake_units: float = 0.0
+    staking_policy: str = STAKING_POLICY
+    staking_owner: str = STAKING_OWNER
 
 
 def training_envelope(evidence: dict[str, RuleEvidence], groups, labels, *,
@@ -1164,7 +1216,7 @@ def build_candidates(
             blockers and all(b.startswith(timing_families) for b in blockers))
         cand.model_health_status = "scored" if features is not None else "not_scored"
         if cand.dispatchable:
-            cand.stake_units = FLAT_STAKE_UNITS
+            cand.internal_stake_units = FLAT_STAKE_UNITS
         out.append(cand)
 
     dispatchable = [c for c in out if c.dispatchable]
@@ -1172,7 +1224,7 @@ def build_candidates(
     cap = min(MAX_DISPATCH_PICKS_PER_DAY, int(MAX_TOTAL_EXPOSURE_UNITS // FLAT_STAKE_UNITS))
     for extra in dispatchable[cap:]:
         extra.dispatchable = False
-        extra.stake_units = 0.0
+        extra.internal_stake_units = 0.0
         extra.blockers.append(f"{BLOCKER_CAP}: {cap} pick(s)/day")
     return out, pricing
 
@@ -1417,7 +1469,7 @@ def render_picks_md(day: str, candidates: list[Candidate], *, dispatch_only: boo
         return "\n".join(out)
 
     out += ["| fixture | league | kickoff | selection | prob | odds | implied | edge | "
-            "dispatch | rule | voters | timing | pricing | price tier | match | stake | "
+            "dispatch | rule | voters | timing | pricing | price tier | match | "
             "model health | blockers |",
             "|---|---|---|---|---:|---:|---:|---:|---|---|---|---|---|---|---|---:|---|---|"]
     for c in rows:
@@ -1428,12 +1480,12 @@ def render_picks_md(day: str, candidates: list[Candidate], *, dispatch_only: boo
             f"{c.dispatch_method or '-'} | {c.rule_id or '-'} | "
             f"{','.join(c.source_voters) or '-'} | {c.timing_source or '-'} | "
             f"{c.pricing_source or '-'} | {c.price_tier or '-'} | "
-            f"{c.price_match_method or '-'} | {c.stake_units} | {c.model_health_status} | "
+            f"{c.price_match_method or '-'} | {c.model_health_status} | "
             f"{'; '.join(c.blockers) or '-'} |")
-    out += ["", f"Stake policy: flat {FLAT_STAKE_UNITS} unit, max "
-            f"{MAX_DISPATCH_PICKS_PER_DAY} picks/day, max "
-            f"{MAX_TOTAL_EXPOSURE_UNITS} units total exposure, fresh_production lane "
-            "(NOT legacy_baseline).", ""]
+    out += ["", f"Staking: {STAKING_POLICY} (owner: {STAKING_OWNER}). The pick "
+                f"engine sizes nothing. Dispatch cap: at most "
+                f"{MAX_DISPATCH_PICKS_PER_DAY} pick(s) per day, production lane "
+                "only (never legacy_baseline).", ""]
     return "\n".join(out)
 
 
@@ -1566,7 +1618,7 @@ def render_summary(report: dict) -> str:
                 f"    {pick['home']} vs {pick['away']} | {pick['selection']} | "
                 f"{pick['rule_id']} | p={pick['probability']} | "
                 f"odds={pick['odds']} ({pick['pricing_source']}) | "
-                f"edge={pick['edge']:+.4f} | stake={pick['stake_units']}u")
+                f"edge={pick['edge']:+.4f} | staking={STAKING_POLICY}")
     else:
         lines.append("  top rejected candidates:")
         ranked = sorted(report["candidates"],
@@ -1590,21 +1642,31 @@ def render_summary(report: dict) -> str:
 def render_dispatch_plan_summary(plan: dict, report: dict) -> list[str]:
     """Operator-facing statement of what will actually be published."""
     counts = report.get("blocker_counts", {})
+    total = plan["same_day_pick_count"] + plan["horizon_pick_count"]
     lines = [
-        "FRESH PRODUCTION DISPATCH PLAN",
-        f"  same-day dispatchable picks:   {plan['same_day_pick_count']}",
-        f"  horizon dispatchable picks:    {plan['horizon_pick_count']}",
-        f"  event dates:                   "
-        f"{', '.join(plan['event_dates']) or 'none'}",
-        f"  sync dates:                    {', '.join(plan['sync_dates'])}",
+        "PRODUCTION DISPATCH PLAN",
+        f"  same-day picks:                {plan['same_day_pick_count']}",
+        f"  future-dated picks:            {plan['horizon_pick_count']}",
+        f"  future event dates:            "
+        f"{', '.join(plan['future_event_dates']) or 'none'}",
+        f"  supabase rows to publish:      {total} "
+        f"across {', '.join(plan['event_dates']) or 'no'} date(s)",
         f"  notification action:           {plan['notification_action']}",
+        f"  clv capture:                   {total} pick(s) at dispatch time",
+        f"  auto-ticket action:            "
+        + ("stake same-day picks" if plan["same_day_pick_count"]
+           else f"hold {plan['horizon_pick_count']} future-dated pick(s) "
+                "for their own event date" if plan["horizon_pick_count"]
+           else "nothing to stake"),
+        f"  staking:                       {STAKING_POLICY} "
+        f"(owner: {STAKING_OWNER})",
     ]
     for row in plan["horizon_picks"]:
         lines.append(
             f"    FUTURE {row['event_date']} {row.get('kickoff') or '-'} "
             f"{row['home']} vs {row['away']} | {row.get('pick')} | "
             f"odds={row.get('odds')} | edge={(row.get('edge') or 0):+.4f} | "
-            f"{row.get('edge_rule')} | stake={row.get('stake_units')}u")
+            f"{row.get('edge_rule')} | staking={STAKING_POLICY}")
     if not plan["same_day_pick_count"] and not plan["horizon_pick_count"]:
         lines.append("  top blockers if none:")
         lines += [f"    {name}: {count}" for name, count in counts.items()] or \
@@ -1741,9 +1803,8 @@ def horizon_pick_rows(horizon: dict) -> list[dict]:
             "bookmaker": pick.get("bookmaker"),
             "odds_match_method": pick.get("price_match_method"),
             "price_tier": pick.get("price_tier"),
-            "stake_units": pick.get("stake_units"),
-            "stake": pick.get("stake_units"),
-            "risk_label": pick.get("risk_label"),
+            "staking_policy": pick.get("staking_policy") or STAKING_POLICY,
+            "staking_owner": pick.get("staking_owner") or STAKING_OWNER,
             "model_version": pick.get("model_version"),
             "feature_schema_version": pick.get("feature_schema_version"),
             "source_voters": pick.get("source_voters"),
@@ -1837,8 +1898,8 @@ def render_dispatch_plan_md(plan: dict) -> str:
             lines += ["None.", ""]
             continue
         lines += ["| event date | kickoff | fixture | selection | prob | odds | "
-                  "implied | edge | rule | stake |",
-                  "|---|---|---|---|---:|---:|---:|---:|---|---:|"]
+                  "implied | edge | rule | staking |",
+                  "|---|---|---|---|---:|---:|---:|---:|---|---|"]
         for r in rows:
             prob = r.get("probability")
             if prob is None and r.get("avg_p") is not None:
@@ -1850,7 +1911,7 @@ def render_dispatch_plan_md(plan: dict) -> str:
                 f"{r.get('odds') or '-'} | "
                 f"{r.get('implied_probability') or '-'} | "
                 f"{(r.get('edge') or 0):+.4f} | {r.get('edge_rule') or '-'} | "
-                f"{r.get('stake_units') or 0} |")
+                f"{r.get('staking_policy') or STAKING_POLICY} |")
         lines.append("")
     lines += [plan["note"], ""]
     return "\n".join(lines)
@@ -1889,8 +1950,8 @@ def production_pick_rows(candidates: list[Candidate]) -> list[dict]:
             "bookmaker": c.bookmaker,
             "odds_match_method": c.price_match_method,
             "price_tier": c.price_tier,
-            "stake_units": c.stake_units,
-            "risk_label": c.risk_label,
+            "staking_policy": c.staking_policy,
+            "staking_owner": c.staking_owner,
             "model_version": c.model_version,
             "feature_schema_version": c.feature_schema_version,
             "source_voters": c.source_voters,
@@ -1954,7 +2015,7 @@ def plan_horizon(
             # rather than trusting an upstream flag.
             if lead < timedelta(minutes=min_lead):
                 cand.dispatchable = False
-                cand.stake_units = 0.0
+                cand.internal_stake_units = 0.0
                 cand.blockers.append(
                     f"{BLOCKER_KICKOFF_GUARD}: kickoff is "
                     f"{lead.total_seconds() / 60:.0f} minute(s) away, inside "
@@ -1980,7 +2041,7 @@ def plan_horizon(
               int(MAX_TOTAL_EXPOSURE_UNITS // FLAT_STAKE_UNITS))
     for extra in picks[cap:]:
         extra.dispatchable = False
-        extra.stake_units = 0.0
+        extra.internal_stake_units = 0.0
         extra.blockers.append(f"{BLOCKER_CAP}: {cap} pick(s) across the horizon")
     picks = picks[:cap]
 
@@ -2029,15 +2090,15 @@ def render_horizon_md(payload: dict) -> str:
                   "lead window.", ""]
     else:
         lines += [f"## {len(picks)} eligible horizon pick(s)", "",
-                  "| date | kickoff | fixture | selection | prob | odds | edge | rule | stake |",
-                  "|---|---|---|---|---:|---:|---:|---|---:|"]
+                  "| date | kickoff | fixture | selection | prob | odds | edge | rule | staking |",
+                  "|---|---|---|---|---:|---:|---:|---|---|"]
         for pick in picks:
             lines.append(
                 f"| {pick['date']} | {pick.get('kickoff') or '-'} | "
                 f"{pick['home']} vs {pick['away']} | {pick['selection']} | "
                 f"{pick['probability']:.3f} | {pick.get('odds') or '-'} | "
                 f"{(pick.get('edge') or 0):+.4f} | {pick.get('rule_id') or '-'} | "
-                f"{pick.get('stake_units') or 0} |")
+                f"{pick.get('staking_policy') or STAKING_POLICY} |")
         lines.append("")
     lines += [payload["note"], ""]
     return "\n".join(lines)

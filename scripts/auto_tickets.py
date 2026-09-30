@@ -2417,18 +2417,28 @@ def cmd_today(args, st):
     # tickets — it must never silently fall back to the legacy ledger.
     from edgefactory import production_lane
 
-    slate_path = production_lane.production_picks_path(str(target), LOCALDATA)
-    if production_lane.fresh_production_is_active() and not slate_path.exists():
-        print(f"no {slate_path.name}: fresh_production published no slate for "
-              f"{target}; generating no tickets (legacy picks are comparison-only)")
-        return 0
-    try:
-        slate = json.loads(slate_path.read_text())
-    except Exception as e:
-        print(f"cannot read {slate_path.name}: {e}")
+    # The dispatch plan is authoritative: it holds same-day picks AND any
+    # future-dated picks dispatched today. Reading only the same-day file
+    # would report "no bet" while a future pick sits dispatched.
+    slate, slate_path, deferred = load_ticket_slate(str(target))
+    if slate is None:
         return 1
     print(f"ticket slate source: {slate_path.name} "
           f"(lane {production_lane.active_lane()}, {len(slate)} row(s))")
+    for row in deferred:
+        print(f"future-dated production pick exists, but auto-tickets are "
+              f"same-day-only: {row.get('home')} vs {row.get('away')} on "
+              f"{row.get('event_date')} "
+              f"({row.get('edge_rule') or row.get('rule_id')}) is held for its "
+              f"own event date")
+    if not slate and deferred:
+        print(f"NO SAME-DAY BET — {len(deferred)} future-dated production "
+              f"pick(s) already dispatched for a later event date")
+        return 0
+    if production_lane.fresh_production_is_active() and not slate and not deferred:
+        print(f"no production picks for {target}; generating no tickets "
+              "(legacy picks are comparison-only)")
+        return 0
     pool = playable_legs(slate, day=target, settled=settled, execution_safe=True)
     total_in = len(pool)
     census: dict[str, list[str]] = {}
@@ -2613,6 +2623,59 @@ def print_status(st):
     for h in st["history"][-10:]:
         acc = " ".join(f"@{a['odds']:.2f}{'W' if a['won'] else 'L'}" for a in h["accas"])
         print(f"  {h['date']}  {acc:40s} bank {h['bank_pct']:7.1f}%")
+
+
+def load_ticket_slate(target: str):
+    """Rows this ticket run may stake, plus future picks it must not.
+
+    Returns ``(slate, source_path, deferred)``. ``deferred`` holds
+    future-dated production picks: they are already dispatched, so the run
+    must acknowledge them rather than print a bare "no bet today", but
+    auto-tickets stakes the current day only.
+    """
+    from edgefactory import production_lane
+
+    if not production_lane.fresh_production_is_active():
+        path = production_lane.production_picks_path(target, LOCALDATA)
+        try:
+            return (json.loads(path.read_text()) if path.exists() else []), path, []
+        except Exception as exc:
+            print(f"cannot read {path.name}: {exc}")
+            return None, path, []
+
+    plan_path = production_lane.dispatch_plan_path(target, LOCALDATA)
+    if plan_path.exists():
+        plan = production_lane.load_dispatch_plan(target, LOCALDATA)
+        same_day = list(plan.get("same_day_picks") or [])
+        deferred = [r for r in (plan.get("horizon_picks") or [])
+                    if str(r.get("event_date")) != target]
+        return same_day, plan_path, deferred
+
+    path = production_lane.production_picks_path(target, LOCALDATA)
+    if not path.exists():
+        return [], path, []
+    try:
+        return json.loads(path.read_text()), path, []
+    except Exception as exc:
+        print(f"cannot read {path.name}: {exc}")
+        return None, path, []
+
+
+def apply_ticket_staking(rows: list[dict], *, stake_per_leg: float) -> list[dict]:
+    """Attach stake sizing to production picks.
+
+    Staking belongs here, not in the pick engine: bankroll, open exposure
+    and slip structure are all ticket-layer concerns. The pick engine hands
+    over a selection with its evidence and a delegation marker; this is the
+    layer allowed to turn that into money.
+    """
+    staked = []
+    for row in rows:
+        entry = dict(row)
+        entry["stake_units"] = stake_per_leg
+        entry["staked_by"] = "auto_tickets"
+        staked.append(entry)
+    return staked
 
 
 def main():

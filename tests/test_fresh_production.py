@@ -318,7 +318,10 @@ def test_legacy_certified_edges_never_certify_fresh_production(tmp_path):
         {"certified": [{"rule_id": "legacy_rule", "certified": True}]}))
     report = _run(localdata, tmp_path, write=False)
     assert report["certified_rule_count"] == 0
-    assert all(ev.rule_id.startswith("fresh_") for ev in report["_evidence"].values())
+    # No legacy rule may appear in the production lane's evidence, and every
+    # production rule uses the canonical identifier form.
+    assert "legacy_rule" not in report["_evidence"]
+    assert all(ev.rule_id.startswith("1x2_") for ev in report["_evidence"].values())
 
 
 def test_certification_registry_is_written_to_its_own_file(tmp_path):
@@ -366,14 +369,16 @@ def test_a_supported_candidate_becomes_a_dispatchable_pick(tmp_path):
     assert len(picks) == 1
     pick = picks[0]
     assert pick["selection"] == "home"
-    assert pick["rule_id"].startswith("fresh_1x2_")
+    # Rule IDs describe the rule, not a release, and carry no lane prefix.
+    assert pick["rule_id"].startswith("1x2_")
+    assert not pick["rule_id"].startswith("fresh_")
     assert pick["odds"] == 2.50
     assert pick["edge"] > 0
     assert pick["pricing_source"]
     assert pick["dispatch_method"] == fp.DISPATCH_RULE
     assert pick["price_tier"] in (fp.PRICE_TIER_DEDICATED,
                                   fp.PRICE_TIER_SOURCE_EMBEDDED)
-    assert pick["stake_units"] == fp.FLAT_STAKE_UNITS
+    assert pick["internal_stake_units"] == fp.FLAT_STAKE_UNITS
     assert pick["model_health_status"] == "scored"
     assert pick["feature_schema_version"] == fp.FEATURE_SCHEMA_VERSION
     assert pick["blockers"] == []
@@ -489,7 +494,9 @@ def test_picks_markdown_is_headed_fresh_production_picks(tmp_path):
     _run(localdata, tmp_path, write=True)
     text = (tmp_path / "out" / f"fresh_production_dispatchable_picks_{DAY}.md").read_text()
     assert text.startswith("# FRESH PRODUCTION PICKS")
-    assert "NOT legacy_baseline" in text
+    assert "never legacy_baseline" in text
+    # Staking is the ticket layer's job; the pick report must not size bets.
+    assert fp.STAKING_POLICY in text
 
 
 def test_run_is_deterministic(tmp_path):
@@ -870,7 +877,8 @@ def test_official_summary_lists_picks_when_they_exist(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "dispatchable picks:            1" in out
     assert "Home Team 00 vs Away Team 00" in out
-    assert "stake=1.0u" in out
+    assert "staking=handled_by_auto_tickets" in out
+    assert "stake=1.0u" not in out
 
 
 # ------------------------------------------------- 17. report cleanliness

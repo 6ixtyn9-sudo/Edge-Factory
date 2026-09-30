@@ -180,10 +180,9 @@ def _eligible_pick(event_date=EVENT_DATE, **overrides):
         "date": event_date, "kickoff": f"{event_date} 08:10",
         "league": "World Cup Qualification", "home": "Panama",
         "away": "New Zealand", "selection": "home",
-        "rule_id": "fresh_1x2_v2_p60_majority", "probability": 0.72,
+        "rule_id": "1x2_two_source_p60_majority", "probability": 0.72,
         "odds": 1.75, "implied_probability": 0.5714, "edge": 0.1403,
-        "dispatchable": True, "stake_units": 1.0,
-        "risk_label": "fresh_production_flat_stake",
+        "dispatchable": True, "internal_stake_units": 1.0,
         "dispatch_method": "certified_rule", "pricing_source": "bzzoiro",
         "timing_source": "zulubet", "source_voters": ["zulubet", "vitibet"],
         "price_match_method": "exact", "price_tier": "dedicated_pricing_feed",
@@ -207,8 +206,12 @@ def test_eligible_horizon_pick_becomes_a_future_dated_production_pick():
                   "selection", "rule_id", "probability", "odds",
                   "implied_probability", "edge", "pricing_source",
                   "timing_source", "source_voters", "dispatch_method",
-                  "stake", "risk_label"):
+                  "staking_policy", "staking_owner"):
         assert field in row, f"dispatched pick is missing {field}"
+    # Staking is delegated, never sized here.
+    assert row["staking_policy"] == "handled_by_auto_tickets"
+    assert row["staking_owner"] == "auto_tickets"
+    assert "stake" not in row and "stake_units" not in row
     assert row["run_date"] == RUN_DATE
     assert row["event_date"] == EVENT_DATE
     assert row["lane"] == "fresh_production"
@@ -352,8 +355,8 @@ def _candidate(event_date, kickoff, **overrides):
     fields = dict(
         date=event_date, kickoff=kickoff, league="Test League", home="Panama",
         away="New Zealand", selection="home",
-        rule_id="fresh_1x2_v2_p60_majority", probability=0.72, odds=1.75,
-        edge=0.1403, dispatchable=True, stake_units=fp.FLAT_STAKE_UNITS)
+        rule_id="1x2_two_source_p60_majority", probability=0.72, odds=1.75,
+        edge=0.1403, dispatchable=True, internal_stake_units=fp.FLAT_STAKE_UNITS)
     fields.update(overrides)
     return fp.Candidate(**fields)
 
@@ -405,7 +408,7 @@ def test_horizon_pick_rejects_started_or_inside_lead_events():
     assert payload["eligible_pick_count"] == 0
     for cand in (started, inside):
         assert any(b.startswith(fp.BLOCKER_KICKOFF_GUARD) for b in cand.blockers)
-        assert cand.stake_units == 0.0
+        assert cand.internal_stake_units == 0.0
 
 
 def test_horizon_pick_respects_the_maximum_horizon():
@@ -479,9 +482,11 @@ def test_operator_summary_makes_a_future_pick_obvious():
                                   horizon_rows=fp.horizon_pick_rows(horizon),
                                   horizon=horizon)
     text = "\n".join(fp.render_dispatch_plan_summary(plan, {"blocker_counts": {}}))
-    assert "FRESH PRODUCTION DISPATCH PLAN" in text
-    assert "same-day dispatchable picks:   0" in text
-    assert "horizon dispatchable picks:    1" in text
+    assert "PRODUCTION DISPATCH PLAN" in text
+    assert "same-day picks:                0" in text
+    assert "future-dated picks:            1" in text
+    assert "auto-ticket action:" in text
+    assert "staking:                       handled_by_auto_tickets" in text
     assert f"FUTURE {EVENT_DATE}" in text
     assert "Panama vs New Zealand" in text
     assert "notification action:           future_pick" in text

@@ -33,11 +33,11 @@ Price tiers used: `source_embedded_price` × 17, `dedicated_pricing_feed` × 10
 
 | fixture | selection | prob | odds | implied | edge | rule | blockers |
 |---|---|---:|---:|---:|---:|---|---|
-| Mexico vs Peru | home | 0.714 | 1.55 | 0.6452 | 0.0684 | fresh_1x2_v2_p70_majority | kickoff_guard: inside_30m_lead_or_started [already_started_or_inside_lead] |
-| Bahrain vs Yemen | home | 0.653 | 1.7 | 0.5882 | 0.0651 | fresh_1x2_v3_p65_majority | kickoff_guard: inside_30m_lead_or_started [already_started_or_inside_lead] |
-| Lithuania vs Andorra | home | 0.646 | 1.7 | 0.5882 | 0.0578 | fresh_1x2_v2_p60_unanimous | kickoff_guard: inside_30m_lead_or_started [already_started_or_inside_lead] |
-| Uzbekistan U23 vs Japan U23 | away | 0.615 | 1.73 | 0.578 | 0.037 | fresh_1x2_v2_p60_unanimous | kickoff_guard: inside_30m_lead_or_started [already_started_or_inside_lead] |
-| Union San Felipe vs San Luis | away | 0.590 | - | - | - | fresh_1x2_v2_p55_unanimous | missing_odds: no usable 1X2 price for this selection; bundles searched=bzzoiro_odds,scoutingstats_odds,source_embedded_odds; exact=False alias=False fuzzy_rejected=False embedded_source_price=False |
+| Mexico vs Peru | home | 0.714 | 1.55 | 0.6452 | 0.0684 | 1x2_two_source_p70_majority | kickoff_guard: inside_30m_lead_or_started [already_started_or_inside_lead] |
+| Bahrain vs Yemen | home | 0.653 | 1.7 | 0.5882 | 0.0651 | 1x2_three_source_p65_majority | kickoff_guard: inside_30m_lead_or_started [already_started_or_inside_lead] |
+| Lithuania vs Andorra | home | 0.646 | 1.7 | 0.5882 | 0.0578 | 1x2_two_source_p60_unanimous | kickoff_guard: inside_30m_lead_or_started [already_started_or_inside_lead] |
+| Uzbekistan U23 vs Japan U23 | away | 0.615 | 1.73 | 0.578 | 0.037 | 1x2_two_source_p60_unanimous | kickoff_guard: inside_30m_lead_or_started [already_started_or_inside_lead] |
+| Union San Felipe vs San Luis | away | 0.590 | - | - | - | 1x2_two_source_p55_unanimous | missing_odds: no usable 1X2 price for this selection; bundles searched=bzzoiro_odds,scoutingstats_odds,source_embedded_odds; exact=False alias=False fuzzy_rejected=False embedded_source_price=False |
 | Afc Fylde vs Carlisle | - | 0.000 | - | - | - | - | insufficient_voter_quorum: 1 current-source 1X2 voter(s), 2 required (betclan) |
 | Águila vs Inter | - | 0.000 | - | - | - | - | insufficient_voter_quorum: 1 current-source 1X2 voter(s), 2 required (vitibet) |
 | Aktobe W vs Ajax W | - | 0.000 | - | - | - | - | insufficient_voter_quorum: 1 current-source 1X2 voter(s), 2 required (zulubet) |
