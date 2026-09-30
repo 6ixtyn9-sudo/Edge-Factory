@@ -1,0 +1,22 @@
+{
+  "_doc": [
+    "Operator-signed explanations for reversed home/away candidates found by",
+    "scripts/audit_source_settlement_coverage.py.",
+    "",
+    "A reversed candidate means an independent donor holds the SAME fixture with",
+    "home and away swapped. That is an identity/orientation defect until a human",
+    "explains it. Any source with one or more UNEXPLAINED reversals is capped at",
+    "verdict `review_required` and can never be `settlement_validated`.",
+    "",
+    "Each entry must name one exact fixture and carry a written explanation.",
+    "There is no wildcard, no per-source blanket waiver, and an entry without an",
+    "explanation string is ignored. Adding an entry is an operator decision and",
+    "should be justified in HANDOVER.md.",
+    "",
+    "Entry shape:",
+    "{ \"source\": \"zulubet\", \"date\": \"2026-08-08\", \"home\": \"Manchester United\",",
+    "  \"away\": \"Paris Saint Germain\", \"explanation\": \"why this reversal is benign\",",
+    "  \"reviewed_by\": \"operator\", \"reviewed_on\": \"YYYY-MM-DD\" }"
+  ],
+  "reviewed": []
+}

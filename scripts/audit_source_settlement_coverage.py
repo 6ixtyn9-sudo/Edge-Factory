@@ -16,7 +16,8 @@ This audit answers, per source, over COMPLETED fixtures only:
   * how many match only through the guarded entity/alias identity fold
   * how many are unmatched
   * how many are ambiguous (key collision) and therefore REJECTED
-  * how many have a reversed home/away candidate (orientation risk)
+  * how many have a reversed home/away candidate (orientation risk), split
+    into operator-reviewed (explained) and unexplained
   * how many have conflicting donor scores (donors disagree)
   * how many have source score agreeing / conflicting with donor score
   * settlement coverage % and conflict %
@@ -28,6 +29,8 @@ Design rules:
   * alias matching only uses the already-verified guarded identity fold in
     ``edgefactory.identity`` (folds + explicit evidence aliases, no fuzz);
   * read-only: nothing here mutates localdata source files or the warehouse;
+  * a source with ANY unexplained reversed home/away candidate can never be
+    ``settlement_validated`` — it caps at ``review_required``;
   * pricing-only sources are listed but excluded from coverage scoring;
   * no network, no Forebet Browser Run, no probes.
 
@@ -83,6 +86,13 @@ PRICING_ONLY_SOURCES: tuple[str, ...] = (
     "oddspapi_odds",
 )
 
+# Operator-reviewed reversed home/away explanations. Each entry is a single
+# fixture a human looked at and signed off (e.g. a donor's orientation is known
+# wrong, or the fixture is a two-legged tie whose legs share a date). ONLY
+# fixtures listed here stop counting as unexplained orientation risk. There is
+# no wildcard and no per-source blanket waiver by design.
+REVERSAL_REVIEW_PATH = ROOT / "Config" / "reversal_reviews.json"
+
 # Independent score donors available without a warehouse (raw cache files).
 CSV_DONOR_SOURCES: tuple[str, ...] = (
     "betexplorer_results",
@@ -119,10 +129,35 @@ RESULTS_DONOR_FEEDERS = frozenset(
 
 _NON_ALNUM = re.compile(r"[^a-z0-9]+")
 
+
+def load_reversal_reviews(path: Path | None = None) -> dict[tuple[str, str, str, str], str]:
+    """Load signed-off reversal explanations keyed by (source, date, hkey, akey)."""
+    target = path or REVERSAL_REVIEW_PATH
+    try:
+        payload = json.loads(target.read_text())
+    except (OSError, json.JSONDecodeError):
+        return {}
+    reviews: dict[tuple[str, str, str, str], str] = {}
+    for entry in payload.get("reviewed") or []:
+        if not isinstance(entry, dict):
+            continue
+        day = _day(entry.get("date"))
+        source = str(entry.get("source") or "").strip().lower()
+        explanation = str(entry.get("explanation") or "").strip()
+        home, away = norm_key(entry.get("home")), norm_key(entry.get("away"))
+        # A review without a written explanation is not a review.
+        if not (day and source and home and away and explanation):
+            continue
+        reviews[(source, day, home, away)] = explanation
+    return reviews
+
 # Verdict thresholds. Deliberately strict: a source only becomes
 # "settlement-validated" with real completed-fixture volume, high independent
 # coverage, and low donor conflict. Graduation from shadow/candidate still
 # requires operator sign-off; this audit only supplies evidence.
+# ``settlement_validated`` additionally requires ZERO unexplained reversed
+# home/away candidates (operator review, 2026-09-30: Zulubet hit 93.2% coverage
+# with rev=1 and was wrongly called validated).
 MIN_FIXTURES_VALIDATED = 200
 MIN_COVERAGE_VALIDATED = 90.0
 MAX_CONFLICT_VALIDATED = 2.0
@@ -353,6 +388,8 @@ class SourceCoverage:
     unmatched: int = 0
     ambiguous: int = 0
     reversed_candidates: int = 0
+    reversed_reviewed: int = 0
+    reversed_unexplained: int = 0
     coverage_pct: float = 0.0
     self_score_pct: float = 0.0
     conflict_pct: float = 0.0
@@ -374,9 +411,11 @@ def audit_source(
     start: str,
     end: str,
     examples_limit: int = 10,
+    reversal_reviews: dict[tuple[str, str, str, str], str] | None = None,
 ) -> SourceCoverage:
     """Audit one prediction source's prediction->score matching quality."""
     result = SourceCoverage(source=source)
+    reviews = reversal_reviews if reversal_reviews is not None else load_reversal_reviews()
     files = source_files(localdata, source)
     result.files = len(files)
 
@@ -461,9 +500,17 @@ def audit_source(
             if rev:
                 result.reversed_candidates += 1
                 rhs, rgs = next(iter(rev.values()))
-                _add_example(ex["reversed_candidate"],
+                explanation = reviews.get((source, day, hkey, akey))
+                if explanation:
+                    result.reversed_reviewed += 1
+                    bucket = "reversed_candidate_reviewed"
+                else:
+                    result.reversed_unexplained += 1
+                    bucket = "reversed_candidate_unexplained"
+                _add_example(ex[bucket],
                              {**base, "reason": "donor has reversed home/away",
-                              "donor_score": f"{rhs}-{rgs}", "donors": ",".join(sorted(rev))},
+                              "donor_score": f"{rhs}-{rgs}", "donors": ",".join(sorted(rev)),
+                              "review": explanation or "UNEXPLAINED - blocks validation"},
                              examples_limit)
             result.unmatched += 1
             _add_example(ex["unmatched"],
@@ -518,7 +565,10 @@ def classify(row: SourceCoverage) -> tuple[str, str]:
         return "no_data", "no completed-window prediction rows"
     notes: list[str] = []
     if row.reversed_candidates:
-        notes.append(f"orientation risk on {row.reversed_candidates} fixtures")
+        notes.append(
+            f"orientation risk on {row.reversed_candidates} fixtures "
+            f"({row.reversed_unexplained} unexplained, {row.reversed_reviewed} reviewed)"
+        )
     if row.donor_score_conflicts:
         notes.append(f"{row.donor_score_conflicts} donor-conflicted fixtures")
     if row.ambiguous:
@@ -528,7 +578,18 @@ def classify(row: SourceCoverage) -> tuple[str, str]:
         and row.coverage_pct >= MIN_COVERAGE_VALIDATED
         and row.conflict_pct <= MAX_CONFLICT_VALIDATED
     ):
-        verdict = "settlement_validated"
+        if row.reversed_unexplained:
+            # Coverage/conflict are at the validated bar, but an unexplained
+            # home/away reversal means identity orientation is not proven.
+            # Conservative cap: a human must sign the fixture off in
+            # Config/reversal_reviews.json before this can go green.
+            verdict = "review_required"
+            notes.append(
+                f"validated on coverage/conflict but {row.reversed_unexplained} unexplained "
+                "reversed home/away candidate(s) - sign off in Config/reversal_reviews.json"
+            )
+        else:
+            verdict = "settlement_validated"
     elif (
         row.prediction_fixtures >= MIN_FIXTURES_PARTIAL
         and row.coverage_pct >= MIN_COVERAGE_PARTIAL
@@ -559,6 +620,7 @@ _COLUMNS = (
     ("unmatched", "unmatched"),
     ("ambig", "ambiguous"),
     ("rev", "reversed_candidates"),
+    ("rev_unexp", "reversed_unexplained"),
     ("cov%", "coverage_pct"),
     ("confl%", "conflict_pct"),
     ("verdict", "verdict"),
@@ -597,7 +659,10 @@ def render_markdown(rows: list[SourceCoverage], *, start: str, end: str, donors:
     out.append("")
     out.append(
         "Verdicts are EVIDENCE, not certification. No source graduates from "
-        "shadow/candidate on this report alone; operator sign-off is required."
+        "shadow/candidate on this report alone; operator sign-off is required. "
+        "A source with ANY unexplained reversed home/away candidate caps at "
+        "`review_required` - explain the fixture in Config/reversal_reviews.json "
+        "or treat the orientation as unproven."
     )
     return "\n".join(out) + "\n"
 
@@ -621,6 +686,7 @@ def run_audit(
     start = (end_date - timedelta(days=days)).isoformat()
     end = end_date.isoformat()
     donors = build_donor_index(localdata, start, end, use_warehouse=use_warehouse)
+    reviews = load_reversal_reviews()
     rows = [
         audit_source(
             source,
@@ -629,6 +695,7 @@ def run_audit(
             start=start,
             end=end,
             examples_limit=examples_limit,
+            reversal_reviews=reviews,
         )
         for source in sources
     ]
@@ -639,6 +706,7 @@ def run_audit(
         "window_end": end,
         "window_days": days,
         "alias_tier": alias_available(),
+        "reversal_reviews_loaded": len(reviews),
         "donor_rows": donors.rows_loaded,
         "donor_labels": sorted(donors.donors_seen),
         "thresholds": {
@@ -646,6 +714,7 @@ def run_audit(
                 "min_fixtures": MIN_FIXTURES_VALIDATED,
                 "min_coverage_pct": MIN_COVERAGE_VALIDATED,
                 "max_conflict_pct": MAX_CONFLICT_VALIDATED,
+                "max_unexplained_reversals": 0,
             },
             "partial": {
                 "min_fixtures": MIN_FIXTURES_PARTIAL,

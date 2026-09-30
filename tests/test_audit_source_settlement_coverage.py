@@ -37,13 +37,22 @@ def _overlay(localdata: Path, rows: list[dict]) -> None:
     (localdata / "settled_results.json").write_text(json.dumps({"schema": 1, "rows": rows}))
 
 
-def _audit(localdata: Path, source: str, *, end="2026-09-30", days=30):
+def _reviews(localdata: Path, entries: list[dict]) -> dict:
+    path = localdata / "reversal_reviews.json"
+    path.write_text(json.dumps({"reviewed": entries}))
+    return audit.load_reversal_reviews(path)
+
+
+def _audit(localdata: Path, source: str, *, end="2026-09-30", days=30, reversal_reviews=None):
     donors = audit.build_donor_index(
         localdata, (date.fromisoformat(end) - __import__("datetime").timedelta(days=days)).isoformat(),
         end, use_warehouse=False,
     )
     start = (date.fromisoformat(end) - __import__("datetime").timedelta(days=days)).isoformat()
-    return audit.audit_source(source, localdata=localdata, donors=donors, start=start, end=end)
+    return audit.audit_source(
+        source, localdata=localdata, donors=donors, start=start, end=end,
+        reversal_reviews=reversal_reviews if reversal_reviews is not None else {},
+    )
 
 
 def test_exact_match_and_source_score_agreement(tmp_path):
@@ -122,9 +131,39 @@ def test_reversed_home_away_candidate_flagged(tmp_path):
     ])
     row = _audit(tmp_path, "soccervista")
     assert row.reversed_candidates == 1
+    assert row.reversed_unexplained == 1
+    assert row.reversed_reviewed == 0
     assert row.unmatched == 1
     assert row.matched_total == 0
-    assert row.examples["reversed_candidate"][0]["donor_score"] == "1-1"
+    assert row.examples["reversed_candidate_unexplained"][0]["donor_score"] == "1-1"
+
+
+def test_reviewed_reversal_is_explained_and_not_unexplained(tmp_path):
+    _write(tmp_path / "soccervista_2026-09.csv.gz", [
+        {"date": "2026-09-13", "home": "Marsaxlokk", "away": "Hamrun Spartans", "hs": "", "gs": ""},
+    ])
+    _overlay(tmp_path, [
+        {"date": "2026-09-13", "home": "Hamrun Spartans", "away": "Marsaxlokk", "hs": 1, "gs": 1,
+         "src": "forebet_settled"},
+    ])
+    reviews = _reviews(tmp_path, [{
+        "source": "soccervista", "date": "2026-09-13", "home": "Marsaxlokk",
+        "away": "Hamrun Spartans", "explanation": "donor orientation known wrong",
+    }])
+    row = _audit(tmp_path, "soccervista", reversal_reviews=reviews)
+    assert row.reversed_candidates == 1
+    assert row.reversed_reviewed == 1
+    assert row.reversed_unexplained == 0
+    assert "reversed_candidate_unexplained" not in row.examples
+    assert row.examples["reversed_candidate_reviewed"][0]["review"] == "donor orientation known wrong"
+
+
+def test_review_entry_without_explanation_is_ignored(tmp_path):
+    reviews = _reviews(tmp_path, [
+        {"source": "zulubet", "date": "2026-09-13", "home": "A", "away": "B"},
+        {"source": "zulubet", "date": "2026-09-13", "home": "A", "away": "B", "explanation": ""},
+    ])
+    assert reviews == {}
 
 
 def test_conflicting_donor_scores_are_not_settlement_evidence(tmp_path):
@@ -238,6 +277,7 @@ def test_verdict_thresholds_require_volume_and_low_conflict():
     strong = audit.SourceCoverage(
         source="x", prediction_fixtures=500, matched_total=480, coverage_pct=96.0,
         source_score_matches_donor=470, source_score_conflicts_donor=5, conflict_pct=1.05,
+        reversed_candidates=0, reversed_unexplained=0,
     )
     assert audit.classify(strong)[0] == "settlement_validated"
     thin = audit.SourceCoverage(
@@ -248,3 +288,76 @@ def test_verdict_thresholds_require_volume_and_low_conflict():
         source="z", prediction_fixtures=500, matched_total=100, coverage_pct=20.0, conflict_pct=0.0,
     )
     assert audit.classify(weak)[0] == "unproven"
+
+
+def test_unexplained_reversal_blocks_settlement_validated():
+    """Operator review 2026-09-30: Zulubet hit 93.2% coverage with rev=1 and was
+    wrongly marked validated. Orientation risk must cap the verdict."""
+    row = audit.SourceCoverage(
+        source="zulubet", prediction_fixtures=4400, matched_total=4101, coverage_pct=93.2,
+        source_score_matches_donor=4094, source_score_conflicts_donor=5, conflict_pct=0.12,
+        reversed_candidates=1, reversed_unexplained=1,
+    )
+    verdict, notes = audit.classify(row)
+    assert verdict == "review_required"
+    assert verdict != "settlement_validated"
+    assert "unexplained" in notes
+    assert "reversal_reviews.json" in notes
+
+
+def test_reviewed_reversal_allows_settlement_validated():
+    row = audit.SourceCoverage(
+        source="zulubet", prediction_fixtures=4400, matched_total=4101, coverage_pct=93.2,
+        source_score_matches_donor=4094, source_score_conflicts_donor=5, conflict_pct=0.12,
+        reversed_candidates=1, reversed_reviewed=1, reversed_unexplained=0,
+    )
+    assert audit.classify(row)[0] == "settlement_validated"
+
+
+def test_low_fixture_count_is_unproven_even_at_high_coverage():
+    # FreeSuperTips production shape: 87.5% coverage on only 16 fixtures.
+    row = audit.SourceCoverage(
+        source="freesupertips", prediction_fixtures=16, matched_total=14, coverage_pct=87.5,
+        conflict_pct=0.0,
+    )
+    assert audit.classify(row)[0] == "unproven"
+
+
+def test_high_conflict_cannot_be_validated():
+    at_volume = audit.SourceCoverage(
+        source="x", prediction_fixtures=500, matched_total=480, coverage_pct=96.0,
+        source_score_matches_donor=400, source_score_conflicts_donor=80, conflict_pct=8.0,
+    )
+    assert audit.classify(at_volume)[0] == "partial"
+    severe = audit.SourceCoverage(
+        source="y", prediction_fixtures=500, matched_total=480, coverage_pct=96.0,
+        source_score_matches_donor=300, source_score_conflicts_donor=180, conflict_pct=37.5,
+    )
+    assert audit.classify(severe)[0] == "unproven"
+
+
+def test_reversal_reviews_are_per_fixture_not_per_source(tmp_path):
+    _write(tmp_path / "soccervista_2026-09.csv.gz", [
+        {"date": "2026-09-13", "home": "Marsaxlokk", "away": "Hamrun Spartans", "hs": "", "gs": ""},
+        {"date": "2026-09-14", "home": "Alpha", "away": "Beta", "hs": "", "gs": ""},
+    ])
+    _overlay(tmp_path, [
+        {"date": "2026-09-13", "home": "Hamrun Spartans", "away": "Marsaxlokk", "hs": 1, "gs": 1,
+         "src": "forebet_settled"},
+        {"date": "2026-09-14", "home": "Beta", "away": "Alpha", "hs": 0, "gs": 2,
+         "src": "forebet_settled"},
+    ])
+    reviews = _reviews(tmp_path, [{
+        "source": "soccervista", "date": "2026-09-13", "home": "Marsaxlokk",
+        "away": "Hamrun Spartans", "explanation": "donor orientation known wrong",
+    }])
+    row = _audit(tmp_path, "soccervista", reversal_reviews=reviews)
+    assert row.reversed_candidates == 2
+    assert row.reversed_reviewed == 1
+    assert row.reversed_unexplained == 1
+
+
+def test_shipped_reversal_review_config_is_loadable_and_empty_by_default():
+    reviews = audit.load_reversal_reviews()
+    assert isinstance(reviews, dict)
+    assert reviews == {}, "no reversal may ship pre-waived; each needs operator sign-off"

@@ -10256,6 +10256,7 @@ Per source it reports:
 | `unmatched` | no independent donor row at all |
 | `ambiguous` | key collision, self-inconsistent source scores, or multiple alias candidates — **rejected, never resolved** |
 | `reversed_candidates` | donor holds the reversed home/away pairing (orientation risk) |
+| `reversed_reviewed` / `reversed_unexplained` | reversals with / without an operator-signed explanation in `Config/reversal_reviews.json` |
 | `coverage_pct`, `conflict_pct` | matched / fixtures, and conflicts / judged fixtures |
 | `examples` | up to N real unmatched / conflict / ambiguous / reversed / donor-conflict cases |
 
@@ -10267,16 +10268,23 @@ Conservatism rules baked in:
 - Donor-conflicted fixtures do not count as coverage.
 - Alias matching is an additive *second tier* only; exact matching is never
   replaced. It accepts a fold match only when exactly one donor fixture resolves.
-- Verdicts (`settlement_validated` / `partial` / `unproven` / `no_data` /
-  `excluded_pricing_only`) are **evidence, not certification**. No certification
+- **Any unexplained reversed home/away candidate caps the verdict at
+  `review_required`.** A source can never be `settlement_validated` while its
+  orientation is unproven, however good its coverage is. The only way to clear
+  one is a per-fixture, written, operator-signed entry in
+  `Config/reversal_reviews.json` (no wildcards, no per-source blanket waiver,
+  an entry without an explanation string is ignored).
+- Verdicts (`settlement_validated` / `review_required` / `partial` /
+  `unproven` / `no_data` / `excluded_pricing_only`) are **evidence, not
+  certification**. No certification
   gate reads this file; nothing graduates from shadow/candidate automatically.
 
 Pricing-only sources (`bzzoiro_odds`, `theoddsapi_odds`, `oddspapi_odds`) are
 listed and explicitly marked non-prediction, excluded from coverage scoring.
 
 Thresholds (deliberately strict): validated needs >= 200 completed fixtures,
->= 90% coverage, <= 2% source-vs-donor conflict; partial needs >= 30 fixtures,
->= 60% coverage, <= 10% conflict.
+>= 90% coverage, <= 2% source-vs-donor conflict **and zero unexplained
+reversals**; partial needs >= 30 fixtures, >= 60% coverage, <= 10% conflict.
 
 ### How the operator runs it (browser only)
 
@@ -10362,3 +10370,93 @@ ambiguous duplicate donor, reversed home/away, source-vs-donor conflict,
 source-vs-donor agreement, self-donor exclusion, future dates excluded,
 pricing-only exclusion, filename bleed (`bzzoiro` vs `bzzoiro_odds`), CLI
 artifact writing, threshold classification. Full suite: 798 passed.
+
+## Addendum — 2026-09-30: production audit results + reversal-gate fix (PR #18 review)
+
+### Production run
+
+`official_morning` on the PR #18 branch ran the audit in Actions and persisted
+`localdata/source_settlement_coverage_2026-09-30.{json,md}` (commit `aff159f`).
+Confirmed in the job log: `EDGE_FACTORY_FOREBET_BROWSER=off`,
+`BZZOIRO_ODDS_MAX_EVENTS=20`, guarded alias tier enabled, **257,948 donor rows
+across 24 donor labels**, and **zero Forebet Browser Run probes**.
+
+### First real replacement-source truth table (2026-07-02..2026-09-30)
+
+| source | fixtures | matched | cov% | confl% | rev | verdict (after fix) |
+|---|---:|---:|---:|---:|---:|---|
+| zulubet | 4400 | 4101 | 93.20 | 0.12 | 1 | **review_required** |
+| statarea | 7877 | 5704 | 72.41 | 0.27 | 2 | partial |
+| predictz | 2014 | 1389 | 68.97 | 0.00 | 1 | partial |
+| bzzoiro | 2268 | 1492 | 65.78 | 0.00 | 1 | partial |
+| scoutingstats | 8670 | 5329 | 61.46 | 0.62 | 3 | partial |
+| prosoccer | 43 | 26 | 60.47 | 4.35 | 0 | partial |
+| vitibet | 31331 | 16890 | 53.91 | 0.01 | 13 | unproven |
+| bettingclosed | 14746 | 6386 | 43.31 | 0.44 | 4 | unproven |
+| forebet | 28203 | 11732 | 41.60 | 0.36 | 1 | unproven |
+| freesupertips | 16 | 14 | 87.50 | 0.00 | 0 | unproven (sample far too small) |
+| betclan | 1386 | 129 | 9.31 | 0.00 | 0 | unproven |
+| afootballreport | 7904 | 487 | 6.16 | 0.00 | 1 | unproven |
+| windrawwin | 1089 | 65 | 5.97 | 0.00 | 0 | unproven |
+| soccervista | 0 | 0 | 0.00 | — | 0 | no_data |
+| bzzoiro_odds, theoddsapi_odds, oddspapi_odds | — | — | — | — | — | excluded_pricing_only |
+
+### The fix applied after operator review
+
+The first production run marked **Zulubet `settlement_validated` while `rev=1`**,
+which contradicted the stated graduation bar ("zero unexplained reversals").
+That inconsistency is now impossible:
+
+- `reversed_candidates` is split into `reversed_reviewed` / `reversed_unexplained`;
+- `reversed_unexplained > 0` caps the verdict at the new **`review_required`**
+  state, no matter how good coverage and conflict are;
+- the only escape is a per-fixture written operator sign-off in
+  `Config/reversal_reviews.json` (ships empty — nothing is pre-waived);
+- the coverage table gains a `rev_unexp` column and the report separates
+  `reversed_candidate_reviewed` from `reversed_candidate_unexplained` examples.
+
+Re-classifying the persisted production JSON under the new logic changes exactly
+one verdict: **zulubet `settlement_validated` -> `review_required`**. Every other
+source keeps its verdict.
+
+### The Zulubet reversal that must be reviewed
+
+```text
+2026-08-08  Manchester United vs Paris Saint Germain
+donor holds it reversed (PSG home), donor_score=1-1
+donors: scoutingstats_csv, wh:scoutingstats_settled
+```
+
+Not yet explained, so it is NOT waived. The operator must establish which side
+is correct (this shape — a high-profile neutral/pre-season fixture — is exactly
+where donor orientation goes wrong) and either record the explanation in
+`Config/reversal_reviews.json` or treat Zulubet's orientation as unproven.
+
+### Posture to state publicly
+
+Do **not** say "the replacement sources work". Say:
+
+> The resilience plumbing works, and source settlement quality is now
+> measurable. Only Zulubet is near validation, and it still has a reversal
+> candidate to review. Most replacement sources remain partial or unproven.
+
+- **Near validation, blocked on review:** Zulubet.
+- **Partial, not certified replacements:** Statarea, ScoutingStats, PredictZ,
+  ProSoccer (tiny sample), Bzzoiro.
+- **Integrated but not validated:** Vitibet (53.9%, 13 reversals — the worst
+  orientation signal in the corpus), BettingClosed, Forebet.
+- **Not matching well enough:** WinDrawWin, BetClan, aFootballReport.
+- **No usable data:** SoccerVista.
+- **Sample too small:** FreeSuperTips (16 fixtures).
+- **Parked:** Forebet Browser Run, `off`, zero probes spent in this pass.
+
+Nothing graduated. No certification gate reads this report.
+
+### Tests
+
+`tests/test_audit_source_settlement_coverage.py` now 21 cases, adding: high
+coverage + low conflict + `rev=0` -> `settlement_validated`; the same with
+`rev>0` -> `review_required`; reviewed reversal restores validation; reviews are
+per fixture, never per source; a review without an explanation is ignored; the
+shipped config is empty; low fixture count -> `unproven`; high conflict ->
+`partial`/`unproven`. Full suite: 806 passed.
