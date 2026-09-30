@@ -494,7 +494,7 @@ def test_operator_summary_makes_a_future_pick_obvious():
     # the ticket verdict. Those fields belong to the final summary.
     assert "auto-ticket action:            pending" in text
     for downstream in ("ticket status:", "assayer action:", "benching action:",
-                       "staking assigned:", "CLV captured:",
+                       "staking assigned:", "CLV snapshots captured:",
                        "Supabase selections published:"):
         assert downstream not in text, (
             f"the pre-ticket block must not report {downstream!r}")

@@ -467,11 +467,27 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
     # Count the persisted rows for this run, not just the ones this
     # invocation happened to add: a status the run already settled must
     # show up here even when no new row was written.
-    status_counts = ticket_status_counts(
-        [r for r in ordered if str(r.get("run_date") or "") == run_date])
+    run_rows = [r for r in ordered if str(r.get("run_date") or "") == run_date]
+    status_counts = ticket_status_counts(run_rows)
+    # A selection is snapshotted several times per run and its status
+    # advances between snapshots. The per-selection latest status is the
+    # statement about where picks ended up; the raw snapshot tally is
+    # kept but labelled so it is never read as a pick count.
+    try:
+        from edgefactory import production_summary as _ps
+        latest_rows = _ps.clv_latest_rows(run_rows)
+    except Exception:
+        latest_rows = []
+    if latest_rows:
+        latest_counts = ticket_status_counts(latest_rows)
+        print(f"  CLV latest production selections: {len(latest_rows)}")
+        print("  CLV latest ticket_status: "
+              + ", ".join(f"{k}={v}" for k, v in sorted(latest_counts.items())))
     if status_counts:
-        print("  CLV ticket_status counts: "
-              + ", ".join(f"{k}={v}" for k, v in sorted(status_counts.items())))
+        print(f"  CLV snapshots captured: {len(run_rows)}")
+        print("  CLV snapshot ticket_status: "
+              + ", ".join(f"{k}={v}" for k, v in sorted(status_counts.items()))
+              + " (across all snapshots, not a pick count)")
     print(f"  snapshot file: {path}")
     return 0
 

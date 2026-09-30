@@ -94,8 +94,21 @@ def read_supabase_published(event_dates, localdata: Path,
         total = int(manifest.get("row_count") or 0)
     except (TypeError, ValueError):
         return published
-    # The run-date manifest is a single total, not a per-date breakdown.
-    # Attribute it to the run rather than inventing a split across dates.
+    # Prefer the breakdown the sync recorded. Attributing the whole
+    # total to the run date reports "4 (2026-10-01=4)" for a run that
+    # published 2 for 2026-10-01 and 2 for 2026-10-02.
+    breakdown = manifest.get("row_counts_by_event_date")
+    if isinstance(breakdown, dict) and breakdown:
+        for day, count in breakdown.items():
+            try:
+                published[str(day)[:10]] = int(count)
+            except (TypeError, ValueError):
+                continue
+        if published:
+            return published
+
+    # No breakdown recorded (older manifest). A single total is not a
+    # per-date split, so do not invent one.
     published[str(manifest.get("target_date") or run_date)] = total
     return published
 
@@ -118,12 +131,60 @@ def read_clv_rows(run_date: str, localdata: Path) -> list[dict[str, Any]]:
 
 
 def clv_ticket_status_counts(rows) -> dict[str, int]:
-    """How many captured CLV rows ended in each ticket status."""
+    """How many captured CLV *snapshot rows* ended in each ticket status.
+
+    This counts rows, not selections. A selection is snapshotted more
+    than once per run, so these counts must never be presented as a
+    count of picks.
+    """
     counts: dict[str, int] = {}
     for row in rows or ():
         status = str(row.get("ticket_status") or "").strip() or "unknown"
         counts[status] = counts.get(status, 0) + 1
     return counts
+
+
+def _clv_selection_key(row) -> tuple:
+    """Identify the logical selection a snapshot row belongs to."""
+    pick_id = str(row.get("pick_id") or "").strip()
+    if pick_id:
+        return ("pick_id", pick_id)
+    return (
+        "fixture",
+        str(row.get("match_date") or row.get("event_date") or "").strip(),
+        str(row.get("home") or "").strip().casefold(),
+        str(row.get("away") or "").strip().casefold(),
+        str(row.get("pick") or row.get("selection") or "").strip().casefold(),
+    )
+
+
+def clv_latest_rows(rows) -> list[dict[str, Any]]:
+    """The most recent snapshot per logical selection.
+
+    A selection is captured at several points in a run, and its
+    ticket_status changes as the ticket engine works. Counting every
+    snapshot reports superseded states — a pick that became
+    ticket_created still shows its earlier pending row — and inflates
+    the apparent number of picks.
+    """
+    latest: dict[tuple, dict[str, Any]] = {}
+    order: dict[tuple, int] = {}
+    for index, row in enumerate(rows or ()):
+        key = _clv_selection_key(row)
+        stamp = str(row.get("captured_at_utc") or "")
+        current = latest.get(key)
+        if current is None:
+            latest[key], order[key] = row, index
+            continue
+        if (stamp, index) >= (str(current.get("captured_at_utc") or ""),
+                              order[key]):
+            latest[key], order[key] = row, index
+    return list(latest.values())
+
+
+def clv_latest_status_counts(rows) -> dict[str, int]:
+    """Ticket status per logical selection, using each one's latest row."""
+    return clv_ticket_status_counts(clv_latest_rows(rows))
 
 
 NOTIFY_SENT_THIS_RUN = "sent_this_run"
@@ -189,6 +250,8 @@ def collect_production_status(run_date: str, localdata: Path | str) -> dict:
             event_dates, localdata, run_date=run_date),
         "clv_rows": clv_rows,
         "clv_ticket_status_counts": clv_ticket_status_counts(clv_rows),
+        "clv_latest_rows": clv_latest_rows(clv_rows),
+        "clv_latest_status_counts": clv_latest_status_counts(clv_rows),
         "notification": read_notification_result(run_date, localdata),
     }
 
@@ -261,6 +324,11 @@ def render_final_summary(status: dict) -> list[str]:
     published_total = sum(published.values())
     clv_rows = status.get("clv_rows") or []
     clv_counts = status.get("clv_ticket_status_counts") or {}
+    clv_latest = status.get("clv_latest_rows")
+    if clv_latest is None:
+        clv_latest = clv_latest_rows(clv_rows)
+    clv_latest_counts = (status.get("clv_latest_status_counts")
+                         or clv_latest_status_counts(clv_rows))
     notification = status.get("notification") or {}
 
     # The outcome is reported as the notifier recorded it. A notice this
@@ -299,11 +367,20 @@ def render_final_summary(status: dict) -> list[str]:
         f"  Supabase selections published: {published_total}"
         + (f" ({', '.join(f'{d}={n}' for d, n in sorted(published.items()))})"
            if published else " (no sync manifest found)"),
-        f"  CLV captured:                  {len(clv_rows)} row(s)",
+        f"  CLV snapshots captured:        {len(clv_rows)} row(s)",
+        f"  CLV latest production selections: {len(clv_latest)}",
     ]
+    # Snapshot counts and selection counts are different quantities and
+    # are labelled as such. Only the latest status per selection is a
+    # statement about where a pick actually ended up.
+    if clv_latest_counts:
+        lines.append("  CLV latest ticket_status:      "
+                     + ", ".join(f"{k}={v}"
+                                 for k, v in sorted(clv_latest_counts.items())))
     if clv_counts:
-        lines.append("  CLV ticket_status counts:      "
-                     + ", ".join(f"{k}={v}" for k, v in sorted(clv_counts.items())))
+        lines.append("  CLV snapshot ticket_status:    "
+                     + ", ".join(f"{k}={v}" for k, v in sorted(clv_counts.items()))
+                     + " (across all snapshots, not a pick count)")
     lines.append(f"  notification:                  {notify_line}")
     lines += _ticket_lines(plan, status.get("ticket_outcomes"))
     lines += [

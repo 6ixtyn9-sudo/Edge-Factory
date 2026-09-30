@@ -344,11 +344,27 @@ def build_pick_rows(
     return rows, skipped
 
 
-def write_sync_manifest(*, target_date: str, picks_path: Path, raw_text: str, pick_rows: list[dict], replace_date: bool) -> Path:
+def write_sync_manifest(*, target_date: str, picks_path: Path, raw_text: str,
+                        pick_rows: list[dict], replace_date: bool,
+                        rows_by_event_date: dict[str, int] | None = None) -> Path:
+    """Record the publish, including its per-event-date breakdown.
+
+    A run publishes future-dated selections alongside same-day ones, but
+    the manifest is named for the run date. Without the breakdown the
+    whole total is attributed to the run date, so a summary reads
+    "4 (2026-10-01=4)" for a run that published 2 and 2 across two
+    event dates.
+    """
+    if rows_by_event_date is None:
+        rows_by_event_date = {}
+        for row in pick_rows:
+            day = str(row.get("picked_for") or target_date)[:10]
+            rows_by_event_date[day] = rows_by_event_date.get(day, 0) + 1
     manifest = {
         "target_date": target_date,
         "picks_path": str(picks_path),
         "row_count": len(pick_rows),
+        "row_counts_by_event_date": dict(sorted(rows_by_event_date.items())),
         "sha1": hashlib.sha1(raw_text.encode()).hexdigest(),
         "sync_mode": "authoritative_replace" if replace_date else "upsert_only",
         "written_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z"),
@@ -562,7 +578,8 @@ def sync_dispatch_plan(plan_path: Path, *, dry_run: bool) -> None:
             target_date=run_date, picks_path=plan_path,
             raw_text=plan_path.read_text(),
             pick_rows=[r for rows_ in prepared.values() for r in rows_],
-            replace_date=True)
+            replace_date=True,
+            rows_by_event_date={d: len(r) for d, r in prepared.items() if r})
         print(f"Sync manifest written: {manifest}")
         print("Supabase sync done.")
     except Exception as e:

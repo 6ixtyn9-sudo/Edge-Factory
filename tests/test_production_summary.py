@@ -175,8 +175,9 @@ def test_final_summary_reports_the_actual_auto_ticket_verdict(tmp_path):
     assert "production selections:         1" in text
     assert f"event dates:                   {EVENT_DATE}" in text
     assert "Supabase selections published: 1" in text
-    assert "CLV captured:                  1 row(s)" in text
-    assert f"CLV ticket_status counts:      {DECLINE}=1" in text
+    assert "CLV snapshots captured:        1 row(s)" in text
+    assert "CLV latest production selections: 1" in text
+    assert f"CLV latest ticket_status:      {DECLINE}=1" in text
     # A ledger entry alone proves a notice exists, not that this run
     # sent it, so the summary reports the ledger without claiming a send.
     assert "ledgered_run_unknown" in text
@@ -261,7 +262,7 @@ def test_pre_ticket_block_omits_every_downstream_result_field():
     plan = _plan()
     text = "\n".join(fp.render_dispatch_plan_summary(plan, {"blocker_counts": {}}))
     for field in ("ticket status:", "assayer action:", "benching action:",
-                  "staking assigned:", "CLV captured:",
+                  "staking assigned:", "CLV snapshots captured:",
                   "Supabase selections published:"):
         assert field not in text, f"pre-ticket block must not report {field!r}"
 
@@ -317,7 +318,7 @@ def test_clv_ticket_status_counts_are_computed():
 
 def test_clv_capture_logs_a_ticket_status_count():
     src = (ROOT / "scripts" / "audit_clv.py").read_text()
-    assert "CLV ticket_status counts: " in src
+    assert "CLV latest ticket_status: " in src
 
 
 @patch.dict(os.environ, FRESH)
@@ -606,3 +607,128 @@ def test_notify_records_its_own_outcome():
     # Both the silent path and the dispatch path must record what happened.
     assert "NOTIFY_DEDUPED if had_candidates else NOTIFY_SKIPPED_NO_PICKS" in src
     assert "NOTIFY_FAILED if any_failed else NOTIFY_SENT_THIS_RUN" in src
+
+
+# ===========================================================================
+# Supabase per-event-date attribution
+#
+# A run publishes future-dated selections alongside same-day ones under a
+# manifest named for the run date. Reporting the total against the run
+# date alone claims every selection was for that date.
+# ===========================================================================
+
+
+def test_publish_breakdown_follows_the_event_dates_the_sync_recorded(tmp_path):
+    localdata = _localdata(tmp_path)
+    (localdata / f"supabase_sync_manifest_{RUN_DATE}.json").write_text(
+        json.dumps({"target_date": RUN_DATE, "row_count": 4,
+                    "row_counts_by_event_date": {"2026-10-01": 2,
+                                                 "2026-10-02": 2},
+                    "sync_mode": "authoritative_replace"}))
+
+    published = ps.read_supabase_published(
+        ["2026-10-01", "2026-10-02"], localdata, run_date=RUN_DATE)
+
+    assert published == {"2026-10-01": 2, "2026-10-02": 2}
+    assert sum(published.values()) == 4
+
+
+def test_the_summary_prints_every_event_date_it_published_to(tmp_path):
+    localdata = _localdata(tmp_path)
+    (localdata / f"supabase_sync_manifest_{RUN_DATE}.json").write_text(
+        json.dumps({"target_date": RUN_DATE, "row_count": 4,
+                    "row_counts_by_event_date": {"2026-10-01": 2,
+                                                 "2026-10-02": 2}}))
+
+    line = next(ln for ln in ps.render_final_summary({
+        "run_date": RUN_DATE,
+        "plan": {"same_day_pick_count": 2, "horizon_pick_count": 2,
+                 "event_dates": ["2026-10-01", "2026-10-02"]},
+        "supabase_published": ps.read_supabase_published(
+            ["2026-10-01", "2026-10-02"], localdata, run_date=RUN_DATE),
+    }) if "Supabase selections published" in ln)
+
+    assert "4 (2026-10-01=2, 2026-10-02=2)" in line
+
+
+def test_a_total_without_a_breakdown_is_not_split_across_dates(tmp_path):
+    """An old manifest states a total only; inventing a split would lie."""
+    localdata = _localdata(tmp_path)
+    (localdata / f"supabase_sync_manifest_{RUN_DATE}.json").write_text(
+        json.dumps({"target_date": RUN_DATE, "row_count": 4}))
+
+    published = ps.read_supabase_published(
+        ["2026-10-01", "2026-10-02"], localdata, run_date=RUN_DATE)
+
+    assert published == {RUN_DATE: 4}
+
+
+# ===========================================================================
+# CLV latest status vs raw snapshots
+#
+# Run 36783344791 captured 8 snapshots for 4 selections and reported
+# deferred_before_build_hour=2, pending_auto_tickets=4, ticket_created=2
+# — superseded states presented as final, over an inflated pick count.
+# ===========================================================================
+
+
+def _snapshots():
+    rows = []
+    for i, (home, away, final) in enumerate([
+            ("Panama", "New Zealand", "deferred_before_build_hour"),
+            ("Ecuador", "Canada", "deferred_before_build_hour"),
+            ("Belgium", "Turkey", "ticket_created"),
+            ("Hungary", "Georgia", "ticket_created")]):
+        rows.append({"pick_id": f"p{i}", "home": home, "away": away,
+                     "captured_at_utc": "2026-10-01T06:00:00Z",
+                     "snapshot_label": "dispatch",
+                     "ticket_status": "pending_auto_tickets"})
+        rows.append({"pick_id": f"p{i}", "home": home, "away": away,
+                     "captured_at_utc": "2026-10-01T09:00:00Z",
+                     "snapshot_label": "build", "ticket_status": final})
+    return rows
+
+
+def test_latest_status_replaces_superseded_pending_rows():
+    rows = _snapshots()
+    assert ps.clv_ticket_status_counts(rows) == {
+        "pending_auto_tickets": 4, "deferred_before_build_hour": 2,
+        "ticket_created": 2}
+    assert ps.clv_latest_status_counts(rows) == {
+        "deferred_before_build_hour": 2, "ticket_created": 2}
+
+
+def test_latest_status_does_not_inflate_the_selection_count():
+    rows = _snapshots()
+    assert len(rows) == 8
+    assert len(ps.clv_latest_rows(rows)) == 4
+    assert sum(ps.clv_latest_status_counts(rows).values()) == 4
+
+
+def test_the_summary_separates_snapshots_from_selections():
+    text = "\n".join(ps.render_final_summary({
+        "run_date": RUN_DATE,
+        "plan": {"same_day_pick_count": 2, "horizon_pick_count": 2},
+        "clv_rows": _snapshots(),
+    }))
+
+    assert "CLV snapshots captured:        8 row(s)" in text
+    assert "CLV latest production selections: 4" in text
+    assert ("CLV latest ticket_status:      "
+            "deferred_before_build_hour=2, ticket_created=2") in text
+    # The stale pending state must never be presented as a final status.
+    latest = next(ln for ln in text.splitlines()
+                  if "CLV latest ticket_status" in ln)
+    assert "pending_auto_tickets" not in latest
+
+
+def test_a_selection_without_a_pick_id_is_still_collapsed_by_fixture():
+    rows = [
+        {"match_date": "2026-10-02", "home": "Belgium", "away": "Turkey",
+         "pick": "HOME", "captured_at_utc": "2026-10-01T06:00:00Z",
+         "ticket_status": "pending_auto_tickets"},
+        {"match_date": "2026-10-02", "home": "Belgium", "away": "Turkey",
+         "pick": "HOME", "captured_at_utc": "2026-10-01T09:00:00Z",
+         "ticket_status": "ticket_created"},
+    ]
+    assert ps.clv_latest_status_counts(rows) == {"ticket_created": 1}
