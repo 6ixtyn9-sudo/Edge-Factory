@@ -34,6 +34,8 @@ def _load(name: str, filename: str):
 fp = _load("fresh_production_under_test", "fresh_production.py")
 cl = _load("clean_localdata_under_test", "clean_localdata.py")
 
+from edgefactory import production_lane as pl  # noqa: E402
+
 DAY = "2026-06-12"
 AS_OF = datetime(2026, 6, 12, 8, 0, tzinfo=timezone(timedelta(hours=2)))
 
@@ -106,11 +108,18 @@ def _history(tmp_path: Path, *, days: int = 120, per_day: int = 12,
 
 
 def _add_today(localdata: Path, *, with_odds: bool = True, odds: float = 2.50):
-    """Append a today-dated fixture (and optionally its price) to the fixture set."""
+    """Append a today-dated fixture, optionally with a captured price.
+
+    The price is written into the predictor rows themselves (``odd1``/
+    ``oddx``/``odd2``), which is exactly how several existing sources
+    publish it, so this exercises the ``source_embedded_price`` tier.
+    """
+    price = {"odd1": odds, "oddx": 3.4, "odd2": 4.2} if with_odds else {}
     for name, fields, row in (
         ("zulubet.csv.gz",
-         ["date", "kickoff", "league", "home", "away", "p1", "px", "p2"],
-         _pred_rows(DAY, "Home Team 00", "Away Team 00", 70.0, 18.0, 12.0)),
+         ["date", "kickoff", "league", "home", "away", "p1", "px", "p2",
+          "odd1", "oddx", "odd2"],
+         {**_pred_rows(DAY, "Home Team 00", "Away Team 00", 70.0, 18.0, 12.0), **price}),
         ("statarea.csv.gz",
          ["date", "time", "league", "home", "away", "p1", "px", "p2"],
          {"date": DAY, "time": "18:00", "league": "Test League",
@@ -121,24 +130,14 @@ def _add_today(localdata: Path, *, with_odds: bool = True, odds: float = 2.50):
         existing = list(fp.iter_rows(path))
         _write_csv(path, fields, existing + [row])
 
-    results_path = localdata / "betexplorer_results_2026-06.csv.gz"
-    existing = list(fp.iter_rows(results_path))
-    fields = list(existing[0]) if existing else []
-    existing.append({**{k: "" for k in fields}, "date": DAY, "home": "Home Team 00",
-                     "away": "Away Team 00", "event_id": "today-00",
-                     "league": "Test League", "kickoff": "18:00"})
-    _write_csv(results_path, fields, existing)
-
-    if with_odds:
-        _write_csv(localdata / "betexplorer_odds_2026-06.csv.gz",
-                   ["date", "event_id", "match_url", "odd1", "oddx", "odd2"],
-                   [{"date": DAY, "event_id": "today-00", "match_url": "",
-                     "odd1": odds, "oddx": 3.4, "odd2": 4.2}])
-
 
 def _run(localdata: Path, tmp_path: Path, **kwargs):
     return fp.run(localdata=localdata, day=DAY, output_dir=tmp_path / "out",
                   as_of=AS_OF, eval_days=90, train_days=30, **kwargs)
+
+
+def _blockers(report) -> list[str]:
+    return [b for c in report["candidates"] for b in c["blockers"]]
 
 
 # ------------------------------------------------- 1. source universe
@@ -327,7 +326,9 @@ def test_certification_registry_is_written_to_its_own_file(tmp_path):
     _run(localdata, tmp_path, write=True)
     registry = json.loads((tmp_path / "out" / "fresh_production_certified_edges.json").read_text())
     assert registry["model_version"] == fp.MODEL_VERSION
-    assert "legacy" not in json.dumps(registry["certified_rules"]).lower()
+    assert "legacy" not in json.dumps(registry["certified_dispatchable_rules"]).lower()
+    for bucket in ("certified_dispatchable_rules", "research_rules", "blocked_rules"):
+        assert bucket in registry
 
 
 # ------------------------------------------------- 6. out-of-distribution
@@ -368,7 +369,10 @@ def test_a_supported_candidate_becomes_a_dispatchable_pick(tmp_path):
     assert pick["rule_id"].startswith("fresh_1x2_")
     assert pick["odds"] == 2.50
     assert pick["edge"] > 0
-    assert pick["pricing_source"] == "betexplorer_odds"
+    assert pick["pricing_source"]
+    assert pick["dispatch_method"] == fp.DISPATCH_RULE
+    assert pick["price_tier"] in (fp.PRICE_TIER_DEDICATED,
+                                  fp.PRICE_TIER_SOURCE_EMBEDDED)
     assert pick["stake_units"] == fp.FLAT_STAKE_UNITS
     assert pick["model_health_status"] == "scored"
     assert pick["feature_schema_version"] == fp.FEATURE_SCHEMA_VERSION
@@ -380,8 +384,8 @@ def test_a_candidate_without_a_price_is_not_dispatchable(tmp_path):
     _add_today(localdata, with_odds=False)
     report = _run(localdata, tmp_path, write=False)
     assert report["dispatchable_count"] == 0
-    blockers = [b for c in report["candidates"] for b in c["blockers"]]
-    assert "missing_odds" in blockers
+    assert any(b.startswith(fp.BLOCKER_MISSING_ODDS)
+               for c in report["candidates"] for b in c["blockers"])
 
 
 def test_a_short_price_blocks_dispatch_on_insufficient_edge(tmp_path):
@@ -389,7 +393,7 @@ def test_a_short_price_blocks_dispatch_on_insufficient_edge(tmp_path):
     _add_today(localdata, odds=1.05)
     report = _run(localdata, tmp_path, write=False)
     assert report["dispatchable_count"] == 0
-    assert any(b.startswith("insufficient_edge_versus_price")
+    assert any(b.startswith(fp.BLOCKER_INSUFFICIENT_EDGE)
                for c in report["candidates"] for b in c["blockers"])
 
 
@@ -403,7 +407,9 @@ def test_a_single_voter_fixture_is_blocked_not_imputed(tmp_path):
     lonely = [c for c in report["candidates"] if c["home"] == "Lonely United"]
     assert len(lonely) == 1
     assert lonely[0]["probability"] == 0.0
-    assert any(b.startswith("blocked_missing_required_feature") for b in lonely[0]["blockers"])
+    assert any(b.startswith(fp.BLOCKER_VOTER_QUORUM) for b in lonely[0]["blockers"])
+    assert not any(b.startswith(fp.BLOCKER_MISSING_FEATURE)
+                   for b in lonely[0]["blockers"])
     assert lonely[0]["dispatchable"] is False
 
 
@@ -436,7 +442,7 @@ def test_model_health_flags_a_legacy_feature_leak():
 
 def test_source_health_warns_when_nothing_is_dispatchable(tmp_path):
     warnings = fp.source_health_checks(
-        groups={}, day=DAY, candidates=[], evidence={}, odds_index={},
+        groups={}, day=DAY, candidates=[], evidence={}, pricing={},
         roles=fp.classify_source_roles())
     assert any("no dispatchable picks" in w for w in warnings)
     assert all(w.startswith("SOURCE_HEALTH:") for w in warnings)
@@ -564,7 +570,7 @@ def test_retention_manifest_records_files_and_bytes(tmp_path, capsys):
                     "--localdata", str(root), "--today", "2026-09-30"])
     assert code == 0
     manifest = json.loads((root / "artifact_manifest_2026-09-30.json").read_text())
-    assert manifest["files_removed"] == 1 and manifest["bytes_removed"] == 100
+    assert manifest["files_deleted"] == 1 and manifest["bytes_deleted"] == 100
     assert not (root / "model_health_2020-01-01.json").exists()
     assert (root / "artifact_manifest_2026-09-30.md").read_text().startswith(
         "# artifact_manifest")
@@ -587,3 +593,393 @@ def test_default_telemetry_policy_is_unchanged(tmp_path):
     (root / "zulubet.csv.gz").write_text("x")
     stale = cl.files_to_prune(root, keep_days=30, today=date(2026, 9, 30))
     assert [p.name for p in stale] == ["clv_report_2020-01-01.md"]
+
+
+# ------------------------------------------------- 11. production lane
+
+
+def test_fresh_production_is_the_default_production_lane():
+    assert pl.active_lane({}) == pl.LANE_FRESH_PRODUCTION
+    assert pl.fresh_production_is_active({})
+    assert pl.legacy_dispatch_allowed({}) is False
+
+
+def test_lane_can_be_switched_back_to_legacy_baseline():
+    env = {pl.ENV_VAR: "legacy_baseline"}
+    assert pl.active_lane(env) == pl.LANE_LEGACY_BASELINE
+    assert pl.legacy_dispatch_allowed(env) is True
+
+
+def test_an_unknown_lane_value_falls_back_to_the_safe_default():
+    assert pl.active_lane({pl.ENV_VAR: "nonsense"}) == pl.LANE_FRESH_PRODUCTION
+
+
+def test_production_picks_path_points_at_the_fresh_lane(tmp_path, monkeypatch):
+    monkeypatch.setenv(pl.ENV_VAR, "fresh_production")
+    path = pl.production_picks_path(DAY, tmp_path)
+    assert path.name == f"fresh_production_production_picks_{DAY}.json"
+
+
+def test_legacy_picks_are_never_the_production_source_in_fresh_mode(tmp_path, monkeypatch):
+    monkeypatch.setenv(pl.ENV_VAR, "fresh_production")
+    (tmp_path / f"picks_{DAY}.json").write_text(json.dumps(
+        [{"date": DAY, "home": "Legacy Home", "away": "Legacy Away", "pick": "home"}]))
+    assert pl.load_production_picks(DAY, tmp_path) == []
+    info = pl.describe(DAY, tmp_path)
+    assert info["production_lane"] == "fresh_production"
+    assert info["production_pick_count"] == 0
+    assert info["fallback_to_other_lane"] is False
+
+
+def test_zero_fresh_picks_publishes_an_explicit_empty_slate(tmp_path, monkeypatch):
+    monkeypatch.setenv(pl.ENV_VAR, "fresh_production")
+    (tmp_path / f"picks_{DAY}.json").write_text(json.dumps([{"date": DAY}]))
+    path = pl.ensure_production_picks_file(DAY, tmp_path)
+    assert path.exists() and json.loads(path.read_text()) == []
+
+
+def test_fresh_dispatchable_picks_are_the_production_rows(tmp_path, monkeypatch):
+    monkeypatch.setenv(pl.ENV_VAR, "fresh_production")
+    localdata = _history(tmp_path)
+    _add_today(localdata, odds=2.50)
+    _run(localdata, tmp_path, write=True)
+    rows = pl.load_production_picks(DAY, tmp_path / "out")
+    assert len(rows) == 1
+    assert rows[0]["lane"] == "fresh_production"
+    assert rows[0]["home"] == "Home Team 00"
+    assert rows[0]["bucket"] == "FRESH_PRODUCTION_CERTIFIED"
+
+
+def test_production_pick_rows_are_written_even_when_empty(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata, with_odds=False)
+    _run(localdata, tmp_path, write=True)
+    path = tmp_path / "out" / f"fresh_production_production_picks_{DAY}.json"
+    assert json.loads(path.read_text()) == []
+
+
+# ------------------------------------------------- 12. blocker precision
+
+
+def test_missing_price_is_reported_as_missing_odds_not_missing_feature(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata, with_odds=False)
+    report = _run(localdata, tmp_path, write=False)
+    target = [c for c in report["candidates"] if c["home"] == "Home Team 00"][0]
+    assert any(b.startswith(fp.BLOCKER_MISSING_ODDS) for b in target["blockers"])
+    assert not any(b.startswith(fp.BLOCKER_MISSING_FEATURE) for b in target["blockers"])
+
+
+def test_missing_kickoff_is_reported_as_missing_trusted_kickoff(tmp_path):
+    localdata = _history(tmp_path)
+    for name, fields, row in (
+        ("zulubet.csv.gz",
+         ["date", "kickoff", "league", "home", "away", "p1", "px", "p2"],
+         {**_pred_rows(DAY, "Timeless United", "Clockless City", 70.0, 18.0, 12.0),
+          "kickoff": ""}),
+        ("statarea.csv.gz",
+         ["date", "time", "league", "home", "away", "p1", "px", "p2"],
+         {"date": DAY, "time": "", "league": "L", "home": "Timeless United",
+          "away": "Clockless City", "p1": 68.0, "px": 20.0, "p2": 12.0}),
+    ):
+        path = localdata / name
+        _write_csv(path, fields, list(fp.iter_rows(path)) + [row])
+    report = _run(localdata, tmp_path, write=False)
+    target = [c for c in report["candidates"] if c["home"] == "Timeless United"][0]
+    assert any(b.startswith(fp.BLOCKER_MISSING_KICKOFF) for b in target["blockers"])
+    assert not any(b.startswith(fp.BLOCKER_MISSING_FEATURE) for b in target["blockers"])
+
+
+def test_ambiguous_identity_is_reported_as_an_identity_blocker(tmp_path):
+    localdata = _history(tmp_path)
+    path = localdata / "zulubet.csv.gz"
+    fields = ["date", "kickoff", "league", "home", "away", "p1", "px", "p2"]
+    _write_csv(path, fields, list(fp.iter_rows(path)) + [
+        _pred_rows(DAY, "Mirror Town", "Glass City", 70, 20, 10),
+        _pred_rows(DAY, "Mirror Town FC", "Glass City", 40, 30, 30)])
+    report = _run(localdata, tmp_path, write=False)
+    target = [c for c in report["candidates"] if c["home"].startswith("Mirror Town")][0]
+    assert any(b.startswith(fp.BLOCKER_IDENTITY) for b in target["blockers"])
+
+
+def test_voter_quorum_blocker_is_not_a_missing_feature_blocker(tmp_path):
+    localdata = _history(tmp_path)
+    path = localdata / "zulubet.csv.gz"
+    _write_csv(path, ["date", "kickoff", "league", "home", "away", "p1", "px", "p2"],
+               list(fp.iter_rows(path)) + [
+                   _pred_rows(DAY, "Solo Rangers", "Silent Athletic", 80, 12, 8)])
+    report = _run(localdata, tmp_path, write=False)
+    target = [c for c in report["candidates"] if c["home"] == "Solo Rangers"][0]
+    blocker = [b for b in target["blockers"] if b.startswith(fp.BLOCKER_VOTER_QUORUM)][0]
+    assert "1 current-source 1X2 voter(s), 2 required" in blocker
+    assert "zulubet" in blocker
+
+
+def test_missing_required_feature_blocker_names_the_exact_features():
+    features = fp.build_features(_group({
+        "zulubet": (0.7, 0.2, 0.1), "statarea": (0.6, 0.25, 0.15)}))
+    features["top_probability"] = None
+    assert fp.schema_violations(features) == ["top_probability"]
+
+
+def test_insufficient_edge_blocker_states_odds_implied_probability_and_edge(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata, odds=1.05)
+    report = _run(localdata, tmp_path, write=False)
+    target = [c for c in report["candidates"] if c["home"] == "Home Team 00"][0]
+    blocker = [b for b in target["blockers"]
+               if b.startswith(fp.BLOCKER_INSUFFICIENT_EDGE)][0]
+    for fragment in ("probability", "implied", "odds 1.05", "edge", "threshold"):
+        assert fragment in blocker
+    assert target["odds"] == 1.05
+    assert target["implied_probability"] is not None
+    assert target["edge"] is not None
+
+
+# ------------------------------------------------- 13. dispatch paths
+
+
+def test_rule_dispatch_does_not_require_model_only_features(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata, odds=2.50)
+    report = _run(localdata, tmp_path, write=False)
+    pick = report["dispatchable_picks"][0]
+    assert pick["dispatch_method"] == fp.DISPATCH_RULE
+    # The rule needs strictly fewer features than the model schema.
+    assert set(fp.RULE_INPUT_FEATURES) < set(fp.REQUIRED_FEATURES)
+
+
+def test_a_rule_candidate_is_not_blocked_by_an_unseen_source_combination(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata, odds=2.50)
+    report = _run(localdata, tmp_path, write=False)
+    pick = report["dispatchable_picks"][0]
+    assert not any(b.startswith(fp.BLOCKER_OOD) for b in pick["blockers"])
+    assert "unseen_source_combo" not in pick["blockers"]
+
+
+def test_model_dispatch_still_enforces_the_full_feature_schema():
+    features = fp.build_features(_group({
+        "zulubet": (0.7, 0.2, 0.1), "statarea": (0.6, 0.25, 0.15)}))
+    features["probability_entropy"] = None
+    assert "probability_entropy" in fp.schema_violations(features)
+
+
+def test_artifacts_label_the_dispatch_method(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata, odds=2.50)
+    _run(localdata, tmp_path, write=True)
+    text = (tmp_path / "out" / f"fresh_production_dispatchable_picks_{DAY}.md").read_text()
+    assert fp.DISPATCH_RULE in text
+
+
+# ------------------------------------------------- 14. rule lifecycle
+
+
+def test_rules_are_split_into_dispatchable_research_and_blocked(tmp_path):
+    localdata = _history(tmp_path)
+    report = _run(localdata, tmp_path, write=False)
+    buckets = fp.rule_lifecycle(report["_evidence"])
+    assert set(buckets) == {fp.RULE_CERTIFIED, fp.RULE_RESEARCH, fp.RULE_BLOCKED}
+    total = sum(len(v) for v in buckets.values())
+    assert total == len(report["_evidence"])
+    assert report["certified_rule_count"] == len(buckets[fp.RULE_CERTIFIED])
+
+
+def test_certified_means_dispatch_eligible(tmp_path):
+    localdata = _history(tmp_path)
+    report = _run(localdata, tmp_path, write=False)
+    for ev in fp.rule_lifecycle(report["_evidence"])[fp.RULE_CERTIFIED]:
+        assert ev.certified and not ev.blockers
+
+
+def test_calibration_gates_the_model_path_not_the_rule_path():
+    ev = fp.RuleEvidence(rule_id="r", sample=500, wins=340, recent_sample=60,
+                         hit_rate=0.68, hit_rate_lb=0.64, base_rate=0.5, lift=0.18,
+                         calibration=[{"bucket": "60-70%", "sample": 5,
+                                       "mean_predicted": 0.65,
+                                       "observed_hit_rate": 0.68,
+                                       "sufficient_sample": False}])
+    assert fp.rule_certification_blockers(ev, 100, 0) == []
+    assert not any(b.startswith(fp.BLOCKER_CALIBRATION)
+                   for b in fp.rule_certification_blockers(ev, 100, 0))
+
+
+def test_a_rule_that_can_never_dispatch_is_not_counted_as_certified(tmp_path):
+    localdata = _history(tmp_path, days=5, per_day=2)
+    report = _run(localdata, tmp_path, write=False)
+    assert report["certified_rule_count"] == 0
+    registry = report["_certified_payload"]
+    assert registry["certified_dispatchable_rules"] == []
+
+
+# ------------------------------------------------- 15. pricing diagnostics
+
+
+def test_pricing_diagnostics_count_candidates_before_and_after_pricing(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata, odds=2.50)
+    report = _run(localdata, tmp_path, write=False)
+    pricing = report["pricing"]
+    assert pricing["candidate_count_before_pricing"] >= 1
+    assert pricing["candidate_count_with_any_price"] >= 1
+    assert pricing["candidate_count_with_positive_edge"] >= 1
+    assert pricing["price_tiers_used"]
+
+
+def test_pricing_diagnostics_count_missing_prices(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata, with_odds=False)
+    report = _run(localdata, tmp_path, write=False)
+    assert report["pricing"]["candidate_count_missing_price"] >= 1
+    assert report["pricing"]["candidate_count_with_any_price"] == 0
+
+
+def test_source_embedded_prices_are_labelled_as_such(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata, odds=2.50)
+    report = _run(localdata, tmp_path, write=False)
+    pick = report["dispatchable_picks"][0]
+    assert pick["price_tier"] == fp.PRICE_TIER_SOURCE_EMBEDDED
+    assert pick["pricing_source"] == "source_embedded_odds"
+
+
+# ------------------------------------------------- 16. summary output
+
+
+def test_official_summary_prints_counts_and_top_blockers(tmp_path, capsys):
+    localdata = _history(tmp_path)
+    _add_today(localdata, with_odds=False)
+    fp.main(["--date", DAY, "--output-dir", str(tmp_path / "out"),
+             "--localdata", str(localdata), "--as-of", AS_OF.isoformat()])
+    out = capsys.readouterr().out
+    assert "FRESH PRODUCTION SUMMARY" in out
+    assert "certified dispatchable rules:" in out
+    assert "research rules:" in out
+    assert "priced candidates:" in out
+    assert "top blockers:" in out
+    assert fp.BLOCKER_MISSING_ODDS in out
+    assert "FRESH PRODUCTION — NO PICKS" in out
+
+
+def test_official_summary_lists_picks_when_they_exist(tmp_path, capsys):
+    localdata = _history(tmp_path)
+    _add_today(localdata, odds=2.50)
+    fp.main(["--date", DAY, "--output-dir", str(tmp_path / "out"),
+             "--localdata", str(localdata), "--as-of", AS_OF.isoformat()])
+    out = capsys.readouterr().out
+    assert "dispatchable picks:            1" in out
+    assert "Home Team 00 vs Away Team 00" in out
+    assert "stake=1.0u" in out
+
+
+# ------------------------------------------------- 17. report cleanliness
+
+
+def test_fresh_reports_do_not_present_parked_sources_as_live(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata)
+    _run(localdata, tmp_path, write=True)
+    out = tmp_path / "out"
+    health = (out / f"source_health_{DAY}.md").read_text()
+    production_section = health.split("## legacy_baseline / historical_reference")[0]
+    for parked in fp.PARKED_PREDICTORS:
+        assert parked not in production_section
+    payload = json.loads((out / f"source_health_{DAY}.json").read_text())
+    for parked in fp.PARKED_PREDICTORS:
+        assert parked not in payload["current_production_roles"]
+        assert parked in payload["historical_reference"]
+
+
+def test_model_card_does_not_name_parked_sources_in_the_universe(tmp_path):
+    localdata = _history(tmp_path)
+    _run(localdata, tmp_path, write=True)
+    card = (tmp_path / "out" / fp.MODEL_DIR_NAME / f"model_card_{DAY}.md").read_text()
+    universe = [line for line in card.splitlines() if line.startswith("- source universe:")]
+    assert universe
+    for parked in fp.PARKED_PREDICTORS:
+        assert parked not in universe[0]
+
+
+def test_no_legacy_only_feature_name_appears_in_fresh_artifacts(tmp_path):
+    localdata = _history(tmp_path)
+    _add_today(localdata)
+    _run(localdata, tmp_path, write=True)
+    out = tmp_path / "out"
+    for name in (f"fresh_production_candidate_picks_{DAY}.md",
+                 f"fresh_production_dispatchable_picks_{DAY}.md",
+                 f"model_health_{DAY}.md"):
+        text = (out / name).read_text()
+        for legacy in ("goalsavg", "pred_total", "sa_ht_p", "fb_p"):
+            assert legacy not in text, f"{legacy} leaked into {name}"
+
+
+# ------------------------------------------------- 18. retention reasons
+
+
+def test_retention_manifest_records_a_reason_for_every_decision(tmp_path):
+    root = tmp_path / "localdata"
+    root.mkdir()
+    for day in ("2020-01-01", "2020-01-02", "2020-01-03", "2020-01-04"):
+        (root / f"model_health_{day}.json").write_text("x" * 10)
+    (root / "zulubet.csv.gz").write_text("raw")
+    plan = cl.fresh_production_retention_plan(root, keep_days=30, keep_latest=3,
+                                              today=date(2026, 9, 30))
+    assert all(entry["reason"] for entry in plan["delete"] + plan["keep"])
+    assert plan["unmatched_files_left_alone"] == 1
+    cl.write_artifact_manifest(plan, root=root, dry_run=True)
+    manifest = json.loads((root / "artifact_manifest_2026-09-30.json").read_text())
+    assert manifest["why_each_deleted"] and manifest["why_each_kept"]
+    assert manifest["raw_evidence_preserved"]
+    assert manifest["largest_generated_prefixes"]
+
+
+def test_retention_manifest_explains_a_zero_removal_run(tmp_path):
+    root = tmp_path / "localdata"
+    root.mkdir()
+    (root / f"model_health_{DAY}.json").write_text("x")
+    plan = cl.fresh_production_retention_plan(root, keep_days=30, keep_latest=3,
+                                              today=date.fromisoformat(DAY))
+    cl.write_artifact_manifest(plan, root=root, dry_run=False)
+    manifest = json.loads((root / f"artifact_manifest_{DAY}.json").read_text())
+    assert manifest["files_deleted"] == 0
+    assert manifest["no_files_removed_explanation"]
+
+
+def test_retention_prunes_stale_daily_reports(tmp_path):
+    root = tmp_path / "localdata"
+    root.mkdir()
+    for day in ("2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04"):
+        for name in (f"clv_report_{day}.md", f"official_run_{day}.json",
+                     f"supabase_sync_manifest_{day}.json", f"picks_{day}.txt"):
+            (root / name).write_text("x")
+    stale = [p.name for p in cl.fresh_production_files_to_prune(
+        root, keep_days=30, keep_latest=3, today=date(2026, 9, 30))]
+    assert "clv_report_2026-01-01.md" in stale
+    assert "official_run_2026-01-01.json" in stale
+    assert "picks_2026-01-01.txt" in stale
+
+
+def test_retention_never_touches_durable_pick_archives_or_ticket_slips(tmp_path):
+    root = tmp_path / "localdata"
+    root.mkdir()
+    for day in ("2026-01-01", "2026-01-02", "2026-01-03", "2026-01-04"):
+        (root / f"picks_{day}.json").write_text("x")
+        (root / f"picks_morning_{day}.json").write_text("x")
+        (root / f"auto_tickets_{day}.txt").write_text("x")
+    assert cl.fresh_production_files_to_prune(
+        root, keep_days=30, keep_latest=3, today=date(2026, 9, 30)) == []
+
+
+def test_short_window_prefixes_are_pruned_sooner(tmp_path):
+    root = tmp_path / "localdata"
+    root.mkdir()
+    today = date(2026, 9, 30)
+    for offset in range(1, 12):
+        day = (today - timedelta(days=offset)).isoformat()
+        (root / f"theoddsapi_attempts_{day}.json").write_text("x")
+        (root / f"clv_report_{day}.md").write_text("x")
+    stale = [p.name for p in cl.fresh_production_files_to_prune(
+        root, keep_days=30, keep_latest=3, today=today)]
+    assert any(n.startswith("theoddsapi_attempts") for n in stale)
+    assert not any(n.startswith("clv_report") for n in stale)

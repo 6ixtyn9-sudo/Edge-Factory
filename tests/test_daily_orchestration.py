@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -102,8 +103,36 @@ def test_promote_forecast(mock_picks_today_file, mock_archived_file, mock_gen_re
     mock_archive_dest.write_text.assert_called_once_with(expected)
     mock_picks_today_file.write_text.assert_called_once_with(expected)
     mock_gen_report.assert_called_once_with("2026-06-18")
-    mock_run_soft.assert_called()
+    # The archive is still written and reported. Sync/notify are NOT called:
+    # fresh_production is the active production lane, so a legacy_baseline
+    # forecast may be promoted locally but never dispatched as production.
+    assert not any("sync_supabase" in call[0][0]
+                   for call in mock_run_soft.call_args_list)
+    assert not any("notify.py" in call[0][0]
+                   for call in mock_run_soft.call_args_list)
+
+
+@patch.dict(os.environ, {"EDGE_FACTORY_PRODUCTION_LANE": "legacy_baseline"})
+@patch("daily.run_soft")
+@patch("daily.run")
+@patch("daily.generate_daily_report")
+@patch("daily.archived_picks_file")
+@patch("daily.PICKS_TODAY_FILE")
+def test_promote_forecast_syncs_when_legacy_baseline_is_the_production_lane(
+    mock_picks_today_file, mock_archived_file, mock_gen_report, mock_run,
+    mock_run_soft, tmp_path,
+):
+    """Switching the lane back restores the original promotion behaviour."""
+    forecast_file = tmp_path / "forecast_2026-06-18_1100.json"
+    forecast_file.write_text(json.dumps(
+        [{"date": "2026-06-18T12:00:00", "home": "Team A", "away": "Team B",
+          "pick": "1"}]))
+    mock_archived_file.return_value = MagicMock()
+
+    daily.promote_forecast(str(forecast_file), "2026-06-18")
+
     assert any("sync_supabase" in call[0][0] for call in mock_run_soft.call_args_list)
+    assert any("notify.py" in call[0][0] for call in mock_run_soft.call_args_list)
 
 
 def test_result_refresh_command_targets_yesterday_only():

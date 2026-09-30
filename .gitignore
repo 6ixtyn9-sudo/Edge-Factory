@@ -39,14 +39,26 @@ localdata/*
 # Shadow (non-dispatch) candidate slate.
 !localdata/shadow_candidates_*
 # fresh_production lane: browser-readable evidence for the operator.
-!localdata/fresh_production_walkforward_*
-!localdata/fresh_production_certified_edges*
-!localdata/fresh_production_candidate_picks_*
-!localdata/fresh_production_dispatchable_picks_*
-!localdata/source_health_*
-!localdata/model_health_*
-!localdata/artifact_manifest_*
+# Markdown is committed (that is what a human reads and what diffs cheaply).
+# The bulky per-date JSON dumps stay out of git and travel as workflow
+# artifacts instead; the small durable ones are committed.
+!localdata/fresh_production_walkforward_*.md
+!localdata/fresh_production_certified_edges_*.md
+!localdata/fresh_production_candidate_picks_*.md
+!localdata/fresh_production_dispatchable_picks_*.md
+!localdata/source_health_*.md
+!localdata/model_health_*.md
+!localdata/artifact_manifest_*.md
+# Small, durable, and read by other steps: these are committed as JSON too.
+!localdata/fresh_production_certified_edges.json
+!localdata/fresh_production_dispatchable_picks_*.json
+!localdata/fresh_production_production_picks_*.json
+!localdata/model_health_*.json
+!localdata/source_health_*.json
+!localdata/artifact_manifest_*.json
 # fresh_production model directory: schema and card only, never scratch weights.
+!localdata/models/
+!localdata/models/fresh_production/
 localdata/models/fresh_production/*
 !localdata/models/fresh_production/feature_schema.json
 !localdata/models/fresh_production/model_card_*.md

@@ -92,6 +92,43 @@ GATES = {
 MAX_DISPATCH_PICKS_PER_DAY = 5
 MAX_TOTAL_EXPOSURE_UNITS = 5.0
 MIN_EDGE_TO_DISPATCH = 0.02
+
+# Dispatch paths. A certified *rule* is a deterministic consensus threshold: it
+# needs the inputs the rule itself reads, and nothing more. Requiring the full
+# model feature vector from a rule-based pick was blocking candidates on
+# evidence the rule never consults, so the two paths are now separate.
+DISPATCH_RULE = "certified_rule"
+DISPATCH_MODEL = "certified_model"
+
+# The rule inputs. Only these are mandatory for certified_rule_dispatch.
+RULE_INPUT_FEATURES: tuple[str, ...] = (
+    "number_of_1x2_voters", "top_outcome", "top_probability", "unanimous_outcome",
+)
+
+# Blocker vocabulary. Every blocker string starts with one of these so the
+# summary can count them and the operator never sees a generic reason.
+BLOCKER_VOTER_QUORUM = "insufficient_voter_quorum"
+BLOCKER_MISSING_FEATURE = "blocked_missing_required_feature"
+BLOCKER_MISSING_ODDS = "missing_odds"
+BLOCKER_SUSPECT_PRICE = "suspect_price"
+BLOCKER_INSUFFICIENT_EDGE = "insufficient_edge_versus_price"
+BLOCKER_MISSING_KICKOFF = "missing_trusted_kickoff"
+BLOCKER_KICKOFF_GUARD = "kickoff_guard"
+BLOCKER_IDENTITY = "ambiguous_or_missing_identity"
+BLOCKER_ORIENTATION = "reversed_orientation_risk"
+BLOCKER_NO_RULE = "no_certified_fresh_production_rule_matched"
+BLOCKER_OOD = "blocked_out_of_distribution"
+BLOCKER_CALIBRATION = "blocked_insufficient_calibration_sample"
+BLOCKER_CAP = "daily_pick_cap_reached"
+
+# Rule lifecycle. "certified" in the headline means dispatch-eligible.
+RULE_CERTIFIED = "certified_dispatchable"
+RULE_RESEARCH = "research"
+RULE_BLOCKED = "blocked"
+
+# Pricing tiers, most authoritative first.
+PRICE_TIER_DEDICATED = "dedicated_pricing_feed"
+PRICE_TIER_SOURCE_EMBEDDED = "source_embedded_price"
 FLAT_STAKE_UNITS = 1.0
 
 
@@ -472,8 +509,12 @@ class RuleEvidence:
     lift: float = 0.0
     brier: float = 0.0
     calibration: list[dict] = field(default_factory=list)
-    certified: bool = False
+    calibration_sample: int = 0
+    status: str = RULE_BLOCKED
+    certified: bool = False          # dispatch-eligible for certified_rule
+    model_eligible: bool = False     # additionally passes the calibration gate
     blockers: list[str] = field(default_factory=list)
+    model_blockers: list[str] = field(default_factory=list)
 
 
 def walk_forward(
@@ -557,8 +598,16 @@ def walk_forward(
                 }
                 for name, items in sorted(buckets.items())
             ]
-        ev.blockers = certification_blockers(ev, scored_rows, conflicted)
+        ev.calibration_sample = max((b["sample"] for b in ev.calibration), default=0)
+        ev.blockers = rule_certification_blockers(ev, scored_rows, conflicted)
+        ev.model_blockers = list(ev.blockers)
+        if not any(b["sufficient_sample"] for b in ev.calibration):
+            ev.model_blockers.append(
+                f"{BLOCKER_CALIBRATION} (largest bucket {ev.calibration_sample} < "
+                f"{GATES['min_calibration_bucket_sample']})")
         ev.certified = not ev.blockers
+        ev.model_eligible = not ev.model_blockers
+        ev.status = classify_rule(ev)
 
     summary = {
         "evaluation_window": f"{eval_start}..{eval_end}",
@@ -577,7 +626,32 @@ def walk_forward(
     return evidence, summary
 
 
-def certification_blockers(ev: RuleEvidence, scored_rows: int, conflicted: int) -> list[str]:
+def classify_rule(ev: RuleEvidence) -> str:
+    """Honest three-way lifecycle.
+
+    ``certified_dispatchable`` means the rule may produce a real bet today,
+    subject only to candidate-specific gates (price, kickoff, identity).
+    ``research`` means it shows promise but has not cleared every gate, so it
+    is reported and tracked but can never dispatch. ``blocked`` means it has
+    no usable evidence. A rule that can never dispatch is never counted as
+    certified.
+    """
+    if ev.certified:
+        return RULE_CERTIFIED
+    if ev.sample and ev.lift > 0 and ev.hit_rate_lb > ev.base_rate:
+        return RULE_RESEARCH
+    return RULE_BLOCKED
+
+
+def rule_certification_blockers(ev: RuleEvidence, scored_rows: int,
+                                conflicted: int) -> list[str]:
+    """Gates for certified_rule dispatch.
+
+    The calibration-bucket gate is deliberately NOT here: a threshold rule
+    emits a decision, not a calibrated probability, so a thin probability
+    bucket cannot invalidate it. That gate lives in ``model_blockers`` and
+    governs certified_model dispatch only.
+    """
     blockers: list[str] = []
     if ev.sample < GATES["min_walkforward_sample"]:
         blockers.append(
@@ -593,8 +667,6 @@ def certification_blockers(ev: RuleEvidence, scored_rows: int, conflicted: int) 
         blockers.append(
             f"insufficient_lift_over_base_rate ({ev.lift:.3f} < "
             f"{GATES['min_lift_over_base_rate']})")
-    if not any(b["sufficient_sample"] for b in ev.calibration):
-        blockers.append("blocked_insufficient_calibration_sample")
     total = scored_rows + conflicted
     if total and conflicted / total > GATES["max_ambiguity_rate"]:
         blockers.append("ambiguity_rate_above_gate")
@@ -606,60 +678,110 @@ def certification_blockers(ev: RuleEvidence, scored_rows: int, conflicted: int) 
 # --------------------------------------------------------------------------
 
 
-def load_event_identity(localdata: Path, day: str) -> dict[str, tuple[str, str]]:
-    """event_id -> team key, from the result donor. Used to key donor prices.
+def _source_embedded_price_rows(localdata: Path, day: str,
+                                voters: tuple[str, ...]) -> list[dict]:
+    """1X2 prices already present inside captured predictor rows.
 
-    Some pricing feeds carry only an event identifier, no team names. Joining
-    through the donor's own fixture list is an exact key join, never a fuzzy
-    name match, so it cannot invent a fixture.
+    Several predictor sources publish the bookmaker price next to their
+    forecast (``odd1``/``oddx``/``odd2``). That is a real captured price from
+    an existing source — not a new feed, not a fetch, not a fabrication — so
+    it is offered as a lower-priority pricing tier behind the dedicated feeds
+    and is always labelled ``source_embedded_price`` on the pick.
     """
-    identity: dict[str, tuple[str, str]] = {}
-    for path in source_files(localdata, "betexplorer_results"):
-        for row in iter_rows(path):
-            if _day(row.get("date")) != day:
-                continue
-            event_id = str(row.get("event_id") or "").strip()
-            if not event_id:
-                continue
-            key = (team_key(row.get("home")), team_key(row.get("away")))
-            if len(key[0]) < 4 or len(key[1]) < 4:
-                continue
-            identity[event_id] = key
-    return identity
-
-
-def load_odds_index(localdata: Path, day: str) -> dict[tuple[str, str], dict]:
-    """Prices for the target date from existing pricing sources only.
-
-    No price is ever synthesised: a fixture without a captured row simply has
-    no entry, and the candidate is blocked on ``missing_odds``.
-    """
-    index: dict[tuple[str, str], dict] = {}
-    identity = load_event_identity(localdata, day)
-    for source in source_registry.names(source_registry.TIER_PRICING):
+    rows: list[dict] = []
+    for source in voters:
         for path in source_files(localdata, source):
             for row in iter_rows(path):
                 if _day(row.get("date")) != day:
                     continue
-                home, away = row.get("home"), row.get("away")
-                if home and away:
-                    key = (team_key(home), team_key(away))
-                    method = "team_key"
-                else:
-                    key = identity.get(str(row.get("event_id") or "").strip())  # type: ignore[assignment]
-                    method = "donor_event_id"
-                if not key or len(key[0]) < 4 or len(key[1]) < 4:
+                if not row.get("home") or not row.get("away"):
                     continue
-                index.setdefault(key, {"source": source, "row": row, "match_method": method})
-    return index
+                base = {
+                    "date": day,
+                    "kickoff": row.get("kickoff") or row.get("time") or "",
+                    "league": row.get("league") or "",
+                    "home": row.get("home"), "away": row.get("away"),
+                    "captured_at": "", "bookmaker": f"{source}_embedded",
+                }
+                for selection, column in (("home", "odd1"), ("draw", "oddx"),
+                                          ("away", "odd2")):
+                    value = _num(row.get(column))
+                    if value is None or value <= 1.0:
+                        continue
+                    rows.append({**base, "market": "1x2", "selection": selection,
+                                 "odds": value})
+    return rows
 
 
-def pick_odds(row: dict, outcome: str) -> float | None:
-    column = {"home": "odd1", "draw": "oddx", "away": "odd2"}[outcome]
-    value = _num(row.get(column))
-    if value is None or value <= 1.0:
-        return None
-    return value
+def build_price_board(engine, localdata: Path, day: str,
+                      voters: tuple[str, ...]) -> dict:
+    """Assemble every existing price source into engine-shaped bundles.
+
+    Reuses the pick engine's own audited join (exact key, alias-time,
+    orientation-checked fuzzy) rather than reimplementing matching. Nothing
+    here fetches: only rows already captured on disk are read.
+    """
+    board: list[tuple[str, str, dict]] = []
+    stats: dict[str, dict] = {}
+
+    # The engine reads its caches from its own module-level LOCALDATA. Point
+    # it at the directory this run was given so ``--localdata`` is honoured
+    # and tests stay isolated from the real repository data.
+    previous_localdata = getattr(engine, "LOCALDATA", None)
+    try:
+        engine.LOCALDATA = Path(localdata)
+        _collect_cached_bundles(engine, day, board, stats)
+    finally:
+        if previous_localdata is not None:
+            engine.LOCALDATA = previous_localdata
+
+    embedded = _source_embedded_price_rows(localdata, day, voters)
+    stats["source_embedded"] = {"raw_rows": len(embedded)}
+    if embedded:
+        board.append((
+            "source_embedded_odds", PRICE_TIER_SOURCE_EMBEDDED,
+            engine._odds_bundle_from_rows(embedded, provider="source_embedded_odds",
+                                          stats=stats["source_embedded"]),
+        ))
+    return {"bundles": board, "stats": stats}
+
+
+def _collect_cached_bundles(engine, day: str, board: list, stats: dict) -> None:
+    """Cached dedicated pricing feeds. Never fetches."""
+    for name, builder in (
+        ("bzzoiro_odds", lambda: engine.bzzoiro_odds_bundle(day, live=False,
+                                                            stats=stats.setdefault("bzzoiro_odds", {}))),
+        ("scoutingstats_odds", lambda: engine.scoutingstats_odds_bundle(
+            day, stats=stats.setdefault("scoutingstats_odds", {}))),
+    ):
+        try:
+            board.append((name, PRICE_TIER_DEDICATED, builder()))
+        except Exception as exc:  # a missing cache must never abort the lane
+            stats.setdefault(name, {})["error"] = str(exc)
+
+
+def price_for_candidate(engine, board: dict, *, day: str, home: str, away: str,
+                        kickoff: str, selection: str) -> dict:
+    """Best available price for one selection, with its provenance.
+
+    Returns the tier, provider, match method and odds, or an empty result.
+    A fuzzy (``alias_fuzzy``) join is retained but marked suspect: it is
+    evidence, not a licence to bet.
+    """
+    pick = {"date": day, "home": home, "away": away, "kickoff": kickoff,
+            "market": "1x2", "pick": selection}
+    for provider, tier, bundle in board["bundles"]:
+        row, method = engine.find_side_keyed_odds_row(pick, bundle)
+        if not row:
+            continue
+        odds = engine._valid_decimal_odds(row.get("odds"))
+        if odds is None:
+            continue
+        return {"odds": odds, "provider": row.get("provider") or provider,
+                "tier": tier, "match_method": method or "exact",
+                "bookmaker": row.get("bookmaker"),
+                "suspect": method == "alias_fuzzy"}
+    return {}
 
 
 @dataclass
@@ -672,7 +794,11 @@ class Candidate:
     selection: str
     rule_id: str | None
     probability: float
+    dispatch_method: str | None = None
     odds: float | None = None
+    price_tier: str | None = None
+    price_match_method: str | None = None
+    bookmaker: str | None = None
     implied_probability: float | None = None
     edge: float | None = None
     source_voters: list[str] = field(default_factory=list)
@@ -683,6 +809,7 @@ class Candidate:
     feature_schema_version: str = FEATURE_SCHEMA_VERSION
     model_version: str = MODEL_VERSION
     model_health_status: str = "unknown"
+    notes: list[str] = field(default_factory=list)
     walkforward_evidence: dict = field(default_factory=dict)
     dispatchable: bool = False
     blockers: list[str] = field(default_factory=list)
@@ -741,13 +868,33 @@ def build_candidates(
     day: str,
     evidence: dict[str, RuleEvidence],
     envelope: dict,
-    odds_index: dict[tuple[str, str], dict],
     engine,
+    board: dict,
     as_of: datetime,
     min_lead: int,
-    require_odds: bool = True,
-) -> list[Candidate]:
-    certified = [r for r in candidate_rules() if evidence.get(r.rule_id, RuleEvidence("")).certified]
+) -> tuple[list[Candidate], dict]:
+    """Turn today's fixture groups into candidates with exact blockers.
+
+    Two dispatch paths. ``certified_rule`` needs the rule's own inputs plus
+    the operational gates (identity, kickoff, price, value). ``certified_model``
+    additionally needs the full feature schema, the distribution envelope and
+    a calibrated probability bucket. A rule-based pick is never blocked by a
+    model-only requirement.
+    """
+    rules = candidate_rules()
+    certified_rules = [r for r in rules
+                       if evidence.get(r.rule_id, RuleEvidence("")).certified]
+    pricing = {
+        "candidate_count_before_pricing": 0,
+        "candidate_count_with_any_price": 0,
+        "candidate_count_exact_price": 0,
+        "candidate_count_alias_price": 0,
+        "candidate_count_suspect_price_rejected": 0,
+        "candidate_count_missing_price": 0,
+        "candidate_count_with_positive_edge": 0,
+        "candidate_count_with_negative_edge": 0,
+        "price_tiers_used": {},
+    }
     out: list[Candidate] = []
 
     for (gday, _key), group in sorted(groups.items()):
@@ -763,71 +910,130 @@ def build_candidates(
         )
         blockers: list[str] = []
 
+        # --- identity first: an unsafe fixture is not a candidate at all.
+        if group.ambiguous:
+            blockers.append(
+                f"{BLOCKER_IDENTITY}: the same source contributed two different "
+                "fixtures to this identity group")
+        if group.reversed_risk:
+            blockers.append(
+                f"{BLOCKER_ORIENTATION}: a mirrored home/away listing exists for "
+                "this fixture on the same date")
+
+        # --- voter quorum. This is a source-coverage fact, not a schema fault.
         if features is None:
-            blockers.append("blocked_missing_required_feature: fewer than "
-                            f"{MIN_VOTERS} current-source 1X2 voters")
+            blockers.append(
+                f"{BLOCKER_VOTER_QUORUM}: {len(group.votes)} current-source 1X2 "
+                f"voter(s), {MIN_VOTERS} required "
+                f"({','.join(sorted(group.votes)) or 'none'})")
             cand.blockers = blockers
-            cand.model_health_status = "abstained"
+            cand.model_health_status = "not_scored"
             out.append(cand)
             continue
-
-        missing = schema_violations(features)
-        if missing:
-            blockers.append(f"blocked_missing_required_feature: {','.join(missing)}")
 
         cand.selection = features["top_outcome"]
         cand.probability = round(features["top_probability"], 4)
 
-        if group.ambiguous:
-            blockers.append("ambiguous_identity")
-        if group.reversed_risk:
-            blockers.append("reversed_orientation_risk")
+        # --- rule inputs are the only mandatory schema for rule dispatch.
+        missing_rule_inputs = [name for name in RULE_INPUT_FEATURES
+                               if features.get(name) is None]
+        if missing_rule_inputs:
+            blockers.append(
+                f"{BLOCKER_MISSING_FEATURE}: {','.join(missing_rule_inputs)}")
 
-        blockers.extend(out_of_distribution_reasons(features, envelope))
-
-        matching = [r for r in certified if r.matches(features)]
+        matching = [r for r in certified_rules if r.matches(features)]
         if matching:
             best = max(matching, key=lambda r: evidence[r.rule_id].hit_rate_lb)
-            cand.rule_id = best.rule_id
             ev = evidence[best.rule_id]
+            cand.rule_id = best.rule_id
+            cand.dispatch_method = DISPATCH_RULE
             cand.walkforward_evidence = {
                 "sample": ev.sample, "hit_rate": round(ev.hit_rate, 4),
                 "hit_rate_lower_bound": round(ev.hit_rate_lb, 4),
                 "recent_sample": ev.recent_sample, "brier": round(ev.brier, 4),
-                "base_rate": round(ev.base_rate, 4),
+                "base_rate": round(ev.base_rate, 4), "status": ev.status,
+                "model_eligible": ev.model_eligible,
             }
+            # Out-of-distribution is a model concern. For a rule it is a note:
+            # the rule's own thresholds already bound its inputs.
+            for reason in out_of_distribution_reasons(features, envelope):
+                cand.notes.append(f"{reason} (advisory for {DISPATCH_RULE})")
+            if not ev.model_eligible:
+                cand.notes.append(
+                    f"{BLOCKER_CALIBRATION} — rule dispatched on its hit rate, "
+                    "not on a calibrated probability")
         else:
-            blockers.append("no_certified_fresh_production_rule_matched")
+            blockers.append(
+                f"{BLOCKER_NO_RULE}: {len(certified_rules)} certified rule(s), "
+                f"none matched voters={features['number_of_1x2_voters']} "
+                f"top_probability={features['top_probability']:.3f} "
+                f"unanimous={features['unanimous_outcome']}")
+            # Could the model path have rescued it? Only if fully supported.
+            missing_all = schema_violations(features)
+            if missing_all:
+                blockers.append(f"{BLOCKER_MISSING_FEATURE}: {','.join(missing_all)}")
+            else:
+                for reason in out_of_distribution_reasons(features, envelope):
+                    blockers.append(reason)
 
+        # --- kickoff.
         if not group.kickoff:
-            blockers.append("missing_trusted_kickoff")
+            blockers.append(
+                f"{BLOCKER_MISSING_KICKOFF}: no timing-capable source supplied a "
+                "kickoff for this fixture group")
         else:
             ok, reason = engine.operational_pick_eligibility(
                 {"date": day, "kickoff": group.kickoff}, as_of=as_of, min_lead=min_lead
             )
             if not ok:
-                blockers.append(reason or "kickoff_guard")
+                blockers.append(f"{BLOCKER_KICKOFF_GUARD}: {reason}")
 
-        priced = odds_index.get(group.key)
+        # --- price.
+        pricing["candidate_count_before_pricing"] += 1
+        priced = price_for_candidate(
+            engine, board, day=day, home=group.home, away=group.away,
+            kickoff=group.kickoff or "", selection=features["top_outcome"])
         if priced:
-            odds = pick_odds(priced["row"], features["top_outcome"])
-            if odds:
-                cand.odds = odds
-                cand.pricing_source = priced["source"]
-                cand.implied_probability = round(1.0 / odds, 4)
-                cand.edge = round(features["top_probability"] - 1.0 / odds, 4)
-                if cand.edge < MIN_EDGE_TO_DISPATCH:
-                    blockers.append(
-                        f"insufficient_edge_versus_price ({cand.edge:+.4f} < "
-                        f"{MIN_EDGE_TO_DISPATCH})")
+            pricing["candidate_count_with_any_price"] += 1
+            tier = priced["tier"]
+            pricing["price_tiers_used"][tier] = \
+                pricing["price_tiers_used"].get(tier, 0) + 1
+            if priced["match_method"] == "exact":
+                pricing["candidate_count_exact_price"] += 1
             else:
-                blockers.append("missing_odds: no usable price for the selection")
-        elif require_odds:
-            blockers.append("missing_odds")
+                pricing["candidate_count_alias_price"] += 1
+            cand.odds = priced["odds"]
+            cand.pricing_source = priced["provider"]
+            cand.price_tier = tier
+            cand.price_match_method = priced["match_method"]
+            cand.bookmaker = priced.get("bookmaker")
+            cand.implied_probability = round(1.0 / priced["odds"], 4)
+            cand.edge = round(features["top_probability"] - cand.implied_probability, 4)
+            if cand.edge > 0:
+                pricing["candidate_count_with_positive_edge"] += 1
+            else:
+                pricing["candidate_count_with_negative_edge"] += 1
+            if priced["suspect"]:
+                pricing["candidate_count_suspect_price_rejected"] += 1
+                blockers.append(
+                    f"{BLOCKER_SUSPECT_PRICE}: fuzzy fixture join "
+                    f"({priced['provider']}), price kept as evidence only")
+            elif cand.edge < MIN_EDGE_TO_DISPATCH:
+                blockers.append(
+                    f"{BLOCKER_INSUFFICIENT_EDGE}: probability "
+                    f"{features['top_probability']:.4f} vs implied "
+                    f"{cand.implied_probability:.4f} at odds {priced['odds']} "
+                    f"({priced['provider']}) gives edge {cand.edge:+.4f}, "
+                    f"threshold {MIN_EDGE_TO_DISPATCH}")
+        else:
+            pricing["candidate_count_missing_price"] += 1
+            blockers.append(
+                f"{BLOCKER_MISSING_ODDS}: no captured 1X2 price for this "
+                f"selection from {len(board['bundles'])} pricing bundle(s)")
 
         cand.blockers = blockers
         cand.dispatchable = not blockers
-        cand.model_health_status = "scored" if not blockers else "abstained"
+        cand.model_health_status = "scored" if features is not None else "not_scored"
         if cand.dispatchable:
             cand.stake_units = FLAT_STAKE_UNITS
         out.append(cand)
@@ -838,8 +1044,23 @@ def build_candidates(
     for extra in dispatchable[cap:]:
         extra.dispatchable = False
         extra.stake_units = 0.0
-        extra.blockers.append("daily_pick_cap_reached")
-    return out
+        extra.blockers.append(f"{BLOCKER_CAP}: {cap} pick(s)/day")
+    return out, pricing
+
+
+def blocker_counts(candidates: list[Candidate]) -> dict[str, int]:
+    """Count candidates per blocker family, in a stable reporting order."""
+    families = (BLOCKER_VOTER_QUORUM, BLOCKER_MISSING_ODDS, BLOCKER_INSUFFICIENT_EDGE,
+                BLOCKER_MISSING_KICKOFF, BLOCKER_KICKOFF_GUARD, BLOCKER_NO_RULE,
+                BLOCKER_MISSING_FEATURE, BLOCKER_IDENTITY, BLOCKER_ORIENTATION,
+                BLOCKER_OOD, BLOCKER_SUSPECT_PRICE, BLOCKER_CALIBRATION,
+                BLOCKER_CAP)
+    counts = {family: 0 for family in families}
+    for candidate in candidates:
+        for family in families:
+            if any(b.startswith(family) for b in candidate.blockers):
+                counts[family] += 1
+    return {k: v for k, v in counts.items() if v}
 
 
 # --------------------------------------------------------------------------
@@ -859,23 +1080,38 @@ def model_health_checks(
     if envelope.get("empty"):
         warnings.append("MODEL_HEALTH: no training envelope — every candidate is out of distribution")
     scored = [c for c in candidates if c.model_health_status == "scored"]
-    ood = [c for c in candidates if any(b.startswith("blocked_out_of_distribution") for b in c.blockers)]
+    ood = [c for c in candidates if any(b.startswith(BLOCKER_OOD) for b in c.blockers)]
     if ood:
         warnings.append(
             f"MODEL_HEALTH: {len(ood)} candidate(s) were out of distribution and were not dispatched")
     missing_feat = [c for c in candidates
-                    if any(b.startswith("blocked_missing_required_feature") for b in c.blockers)]
+                    if any(b.startswith(BLOCKER_MISSING_FEATURE) for b in c.blockers)]
     if missing_feat:
         warnings.append(
-            f"MODEL_HEALTH: {len(missing_feat)} candidate(s) lacked required features and were not scored")
-    if not any(ev.certified for ev in evidence.values()):
+            f"MODEL_HEALTH: {len(missing_feat)} candidate(s) were missing a required "
+            "feature; the exact feature names are on each candidate's blocker")
+    quorum = [c for c in candidates
+              if any(b.startswith(BLOCKER_VOTER_QUORUM) for b in c.blockers)]
+    if quorum:
         warnings.append(
-            "MODEL_HEALTH: no fresh_production rule is certified — the lane abstains by design")
-    thin = [ev.rule_id for ev in evidence.values()
-            if ev.sample and "blocked_insufficient_calibration_sample" in ev.blockers]
+            f"MODEL_HEALTH: {len(quorum)} fixture(s) had too few current-source voters "
+            "to score — source coverage, not a model or schema fault")
+    buckets = rule_lifecycle(evidence) if evidence else {
+        RULE_CERTIFIED: [], RULE_RESEARCH: [], RULE_BLOCKED: []}
+    if not buckets[RULE_CERTIFIED]:
+        warnings.append(
+            "MODEL_HEALTH: no fresh_production rule is certified dispatchable — "
+            "the lane abstains by design")
+    if buckets[RULE_RESEARCH]:
+        warnings.append(
+            f"MODEL_HEALTH: {len(buckets[RULE_RESEARCH])} rule(s) are research-only and "
+            "can never dispatch; they are not counted as certified")
+    thin = [ev.rule_id for ev in buckets[RULE_CERTIFIED] if not ev.model_eligible]
     if thin:
         warnings.append(
-            f"MODEL_HEALTH: {len(thin)} rule(s) blocked on insufficient calibration sample")
+            f"MODEL_HEALTH: {len(thin)} certified rule(s) lack a sufficient calibration "
+            f"bucket, so they dispatch via {DISPATCH_RULE} on hit rate and are not "
+            f"eligible for {DISPATCH_MODEL}")
     if scored and not any(c.dispatchable for c in candidates):
         warnings.append("MODEL_HEALTH: candidates were scored but none cleared dispatch gates")
     return warnings
@@ -883,7 +1119,7 @@ def model_health_checks(
 
 def source_health_checks(
     *, groups, day: str, candidates: list[Candidate], evidence: dict[str, RuleEvidence],
-    odds_index: dict, roles: dict[str, str],
+    pricing: dict, roles: dict[str, str],
 ) -> list[str]:
     warnings: list[str] = []
     today = [g for (d, _k), g in groups.items() if d == day]
@@ -903,15 +1139,21 @@ def source_health_checks(
         warnings.append(
             "SOURCE_HEALTH: certified fresh_production rules exist but no current candidate "
             "reaches them")
-    if with_quorum and not odds_index:
+    scored = pricing.get("candidate_count_before_pricing", 0)
+    priced = pricing.get("candidate_count_with_any_price", 0)
+    if scored and not priced:
         warnings.append(
-            "SOURCE_HEALTH: fresh_production candidates exist but no pricing rows were captured "
-            "for the target date")
-    blocked = [name for name, role in roles.items() if role == "blocked_predictor"]
-    if blocked:
+            f"SOURCE_HEALTH: {scored} scored candidate(s) but zero captured prices — "
+            "pricing coverage is the binding constraint, not the model")
+    elif scored and priced < scored:
         warnings.append(
-            f"SOURCE_HEALTH: parked/degraded predictor(s) excluded from the fresh lane: "
-            f"{','.join(sorted(blocked))}")
+            f"SOURCE_HEALTH: {scored - priced} of {scored} scored candidate(s) had no "
+            "captured 1X2 price")
+    if pricing.get("candidate_count_suspect_price_rejected"):
+        warnings.append(
+            f"SOURCE_HEALTH: {pricing['candidate_count_suspect_price_rejected']} "
+            "candidate(s) matched a price only through a fuzzy fixture join and were "
+            "rejected for dispatch")
     if dispatchable == 0:
         warnings.append(
             "SOURCE_HEALTH: fresh_production produced no dispatchable picks — see the blocker "
@@ -922,6 +1164,23 @@ def source_health_checks(
 # --------------------------------------------------------------------------
 # Artifacts
 # --------------------------------------------------------------------------
+
+
+CURRENT_PRODUCTION_ROLES = frozenset({
+    "fresh_production_live_voter", "shadow_fresh_production_voter",
+    "pricing_provider", "result_donor", "timing_provider",
+})
+
+
+def rule_lifecycle(evidence: dict[str, RuleEvidence]) -> dict[str, list[RuleEvidence]]:
+    """Group rules by their honest lifecycle status."""
+    buckets: dict[str, list[RuleEvidence]] = {
+        RULE_CERTIFIED: [], RULE_RESEARCH: [], RULE_BLOCKED: []}
+    for ev in evidence.values():
+        buckets[ev.status].append(ev)
+    for items in buckets.values():
+        items.sort(key=lambda e: (-e.sample, e.rule_id))
+    return buckets
 
 
 def load_engine():
@@ -946,6 +1205,7 @@ def write_artifact(path: Path, payload: str) -> None:
 
 
 def render_walkforward_md(summary: dict, evidence: dict[str, RuleEvidence]) -> str:
+    buckets = rule_lifecycle(evidence)
     out = [
         f"# fresh_production walk-forward — {summary['evaluation_window']}",
         "",
@@ -958,54 +1218,88 @@ def render_walkforward_md(summary: dict, evidence: dict[str, RuleEvidence]) -> s
         f"- model version: `{summary['model_version']}`, feature schema "
         f"`{summary['feature_schema_version']}`, seed {summary['random_seed']}",
         "",
+        "## Rule lifecycle",
+        "",
+        f"- **certified dispatchable rules: {len(buckets[RULE_CERTIFIED])}** "
+        "(may produce a real bet today, subject to candidate gates)",
+        f"- research rules: {len(buckets[RULE_RESEARCH])} "
+        "(promising, tracked, never dispatched)",
+        f"- blocked rules: {len(buckets[RULE_BLOCKED])} (no usable evidence)",
+        "",
+        "A rule is only called *certified* when it is genuinely dispatch-eligible.",
+        "",
         "## Certification gates",
         "",
     ]
     out += [f"- `{k}`: {v}" for k, v in summary["gates"].items()]
-    out += ["", "## Rule evidence", "",
-            "| rule | sample | recent | hit rate | Wilson LB | lift | Brier | certified | blockers |",
-            "|---|---:|---:|---:|---:|---:|---:|---|---|"]
+    out += ["",
+            "`min_calibration_bucket_sample` gates certified_model dispatch only: a "
+            "threshold rule emits a decision, not a calibrated probability.",
+            "", "## Rule evidence", "",
+            "| rule | status | model eligible | sample | recent | calib. n | hit rate | "
+            "Wilson LB | lift | Brier | blockers |",
+            "|---|---|---|---:|---:|---:|---:|---:|---:|---:|---|"]
     for ev in sorted(evidence.values(), key=lambda e: (-e.sample, e.rule_id)):
         if not ev.sample:
             continue
         out.append(
-            f"| {ev.rule_id} | {ev.sample} | {ev.recent_sample} | {ev.hit_rate:.3f} | "
-            f"{ev.hit_rate_lb:.3f} | {ev.lift:+.3f} | {ev.brier:.4f} | "
-            f"{'yes' if ev.certified else 'no'} | {'; '.join(ev.blockers) or '-'} |"
+            f"| {ev.rule_id} | {ev.status} | {'yes' if ev.model_eligible else 'no'} | "
+            f"{ev.sample} | {ev.recent_sample} | {ev.calibration_sample} | "
+            f"{ev.hit_rate:.3f} | {ev.hit_rate_lb:.3f} | {ev.lift:+.3f} | "
+            f"{ev.brier:.4f} | {'; '.join(ev.blockers) or '-'} |"
         )
     out += ["", "Legacy certified edges are NOT authority here: this lane certifies "
             "independently on its own walk-forward evidence.", ""]
     return "\n".join(out)
 
 
-def render_picks_md(day: str, candidates: list[Candidate], *, dispatch_only: bool) -> str:
+def render_picks_md(day: str, candidates: list[Candidate], *, dispatch_only: bool,
+                    pricing: dict | None = None) -> str:
     rows = [c for c in candidates if c.dispatchable] if dispatch_only else candidates
     title = "FRESH PRODUCTION PICKS" if dispatch_only else "FRESH PRODUCTION CANDIDATES"
     out = [f"# {title} — {day}", ""]
+
     if dispatch_only and not rows:
+        counts = blocker_counts(candidates)
         out += ["## FRESH PRODUCTION — NO PICKS", "",
-                "The lane abstained. Top rejected candidates and their exact blockers:", ""]
+                "The lane abstained. Blocker counts across "
+                f"{len(candidates)} candidate(s):", ""]
+        out += ["| blocker | candidates |", "|---|---:|"]
+        out += [f"| `{name}` | {count} |" for name, count in counts.items()]
+        if pricing:
+            out += ["", "### Candidate-to-bet conversion", "",
+                    "| stage | count |", "|---|---:|"]
+            out += [f"| {k} | {v} |" for k, v in pricing.items()
+                    if not isinstance(v, dict)]
+            if pricing.get("price_tiers_used"):
+                out += ["", "Price tiers used: " + ", ".join(
+                    f"`{k}` × {v}" for k, v in pricing["price_tiers_used"].items())]
+        out += ["", "### Top rejected candidates", "",
+                "| fixture | selection | prob | odds | implied | edge | rule | blockers |",
+                "|---|---|---:|---:|---:|---:|---|---|"]
         ranked = sorted(candidates, key=lambda c: (len(c.blockers), -c.probability))[:10]
-        out += ["| fixture | selection | prob | voters | kickoff | blockers |",
-                "|---|---|---:|---|---|---|"]
         for c in ranked:
             out.append(
                 f"| {c.home} vs {c.away} | {c.selection or '-'} | {c.probability:.3f} | "
-                f"{','.join(c.source_voters) or '-'} | {c.kickoff or '-'} | "
+                f"{c.odds or '-'} | {c.implied_probability or '-'} | "
+                f"{c.edge if c.edge is not None else '-'} | {c.rule_id or '-'} | "
                 f"{'; '.join(c.blockers)} |")
         out += ["", "Abstention is the correct outcome when evidence is insufficient.", ""]
         return "\n".join(out)
 
-    out += ["| fixture | league | kickoff | selection | prob | odds | implied | edge | rule | "
-            "voters | timing | pricing | stake | model health | blockers |",
-            "|---|---|---|---|---:|---:|---:|---:|---|---|---|---|---:|---|---|"]
+    out += ["| fixture | league | kickoff | selection | prob | odds | implied | edge | "
+            "dispatch | rule | voters | timing | pricing | price tier | match | stake | "
+            "model health | blockers |",
+            "|---|---|---|---|---:|---:|---:|---:|---|---|---|---|---|---|---|---:|---|---|"]
     for c in rows:
         out.append(
             f"| {c.home} vs {c.away} | {c.league or '-'} | {c.kickoff or '-'} | "
             f"{c.selection or '-'} | {c.probability:.3f} | {c.odds or '-'} | "
             f"{c.implied_probability or '-'} | {c.edge if c.edge is not None else '-'} | "
-            f"{c.rule_id or '-'} | {','.join(c.source_voters) or '-'} | {c.timing_source or '-'} | "
-            f"{c.pricing_source or '-'} | {c.stake_units} | {c.model_health_status} | "
+            f"{c.dispatch_method or '-'} | {c.rule_id or '-'} | "
+            f"{','.join(c.source_voters) or '-'} | {c.timing_source or '-'} | "
+            f"{c.pricing_source or '-'} | {c.price_tier or '-'} | "
+            f"{c.price_match_method or '-'} | {c.stake_units} | {c.model_health_status} | "
             f"{'; '.join(c.blockers) or '-'} |")
     out += ["", f"Stake policy: flat {FLAT_STAKE_UNITS} unit, max "
             f"{MAX_DISPATCH_PICKS_PER_DAY} picks/day, max "
@@ -1016,7 +1310,8 @@ def render_picks_md(day: str, candidates: list[Candidate], *, dispatch_only: boo
 
 def render_model_health_md(day: str, summary: dict, warnings: list[str],
                            evidence: dict[str, RuleEvidence], envelope: dict) -> str:
-    certified = [ev for ev in evidence.values() if ev.certified]
+    buckets = rule_lifecycle(evidence)
+    certified = buckets[RULE_CERTIFIED]
     out = [
         f"# model_health — fresh_production — {day}",
         "",
@@ -1026,18 +1321,30 @@ def render_model_health_md(day: str, summary: dict, warnings: list[str],
         f"- feature schema: `{FEATURE_SCHEMA_VERSION}`",
         f"- random seed: {RANDOM_SEED} (deterministic; no generative component)",
         f"- source universe: {', '.join(fresh_production_voters())}",
-        f"- parked/degraded predictors excluded: {', '.join(sorted(PARKED_PREDICTORS))}",
         f"- evaluation window: {summary['evaluation_window']}",
         f"- training window: {summary['training_window_days']} days",
         f"- features: {', '.join(f['feature_name'] for f in FEATURE_SCHEMA)}",
         f"- certification gates: {json.dumps(summary['gates'])}",
-        f"- certified rules: {len(certified)}",
+        f"- certified dispatchable rules: {len(certified)}",
+        f"- research rules: {len(buckets[RULE_RESEARCH])}",
+        f"- blocked rules: {len(buckets[RULE_BLOCKED])}",
+        "",
+        "## Dispatch paths",
+        "",
+        f"- `{DISPATCH_RULE}`: requires "
+        f"{', '.join(f'`{n}`' for n in RULE_INPUT_FEATURES)} plus identity, kickoff, "
+        "price and value gates. Model-only evidence is advisory here.",
+        f"- `{DISPATCH_MODEL}`: additionally requires the full feature schema, the "
+        "distribution envelope and a sufficient calibration bucket.",
         "",
         "## Distribution envelope",
         "",
-        f"```json\n{json.dumps({k: v for k, v in envelope.items() if k != 'source_combinations'}, indent=2)}\n```",
+        "```json",
+        json.dumps({k: v for k, v in envelope.items()
+                    if k != "source_combinations"}, indent=2, sort_keys=True),
+        "```",
         "",
-        "## Calibration (certified rules)",
+        "## Calibration (certified dispatchable rules)",
         "",
     ]
     if certified:
@@ -1050,7 +1357,7 @@ def render_model_health_md(day: str, summary: dict, warnings: list[str],
                     f"{bucket['mean_predicted']} | {bucket['observed_hit_rate']} | "
                     f"{'yes' if bucket['sufficient_sample'] else 'no'} |")
     else:
-        out.append("No certified rule: no probability is used for dispatch.")
+        out.append("No certified dispatchable rule: no probability is used for dispatch.")
     out += ["", "## model_health_checks", ""]
     out += [f"- {w}" for w in warnings] or ["- none"]
     out += ["", "No generative model is used anywhere in this lane. Every number above "
@@ -1059,8 +1366,10 @@ def render_model_health_md(day: str, summary: dict, warnings: list[str],
 
 
 def render_source_health_md(day: str, roles: dict[str, str], warnings: list[str],
-                            groups, odds_index: dict) -> str:
+                            groups, pricing: dict, board_stats: dict) -> str:
     today = [g for (d, _k), g in groups.items() if d == day]
+    live = {n: r for n, r in roles.items() if r in CURRENT_PRODUCTION_ROLES}
+    reference = {n: r for n, r in roles.items() if r not in CURRENT_PRODUCTION_ROLES}
     out = [
         f"# source_health — fresh_production — {day}",
         "",
@@ -1069,24 +1378,125 @@ def render_source_health_md(day: str, roles: dict[str, str], warnings: list[str]
         f"{sum(1 for g in today if len(g.votes) >= MIN_VOTERS)}",
         f"- groups with a trusted kickoff: {sum(1 for g in today if g.kickoff)}",
         f"- groups flagged ambiguous: {sum(1 for g in today if g.ambiguous)}",
-        f"- groups flagged reversed-orientation risk: {sum(1 for g in today if g.reversed_risk)}",
-        f"- priced fixtures available: {len(odds_index)}",
+        f"- groups flagged reversed-orientation risk: "
+        f"{sum(1 for g in today if g.reversed_risk)}",
         "",
-        "## Source roles",
+        "## Current production source universe",
         "",
         "| source | role |",
         "|---|---|",
     ]
-    out += [f"| {name} | {role} |" for name, role in sorted(roles.items())]
+    out += [f"| {name} | {role} |" for name, role in sorted(live.items())]
+    out += ["", "## pricing_health", "", "| stage | count |", "|---|---:|"]
+    out += [f"| {k} | {v} |" for k, v in pricing.items() if not isinstance(v, dict)]
+    if pricing.get("price_tiers_used"):
+        out += ["", "Price tiers used: " + ", ".join(
+            f"`{k}` × {v}" for k, v in pricing["price_tiers_used"].items())]
+    out += ["", "| pricing bundle | rows |", "|---|---:|"]
+    out += [f"| {name} | {stats.get('raw_rows', stats.get('valid_rows', 0))} |"
+            for name, stats in sorted(board_stats.items())]
     out += ["", "## source_health_warnings", ""]
     out += [f"- {w}" for w in warnings] or ["- none"]
+    out += ["", "## legacy_baseline / historical_reference", "",
+            "Sources below are NOT part of the fresh production universe. They are "
+            "listed only so their exclusion is auditable.", "",
+            "| source | classification |", "|---|---|"]
+    out += [f"| {name} | {role} |" for name, role in sorted(reference.items())]
     out.append("")
     return "\n".join(out)
+
+
+def render_summary(report: dict) -> str:
+    """The concise official-run block. The operator should need nothing else."""
+    wf = report["walkforward"]
+    pricing = report["pricing"]
+    lines = [
+        "FRESH PRODUCTION SUMMARY",
+        f"  date:                          {report['date']}",
+        f"  labelled fixtures:             {wf['fixtures_labelled']}",
+        f"  certified dispatchable rules:  {report['certified_rule_count']}",
+        f"  research rules:                {report['research_rule_count']}",
+        f"  blocked rules:                 {report['blocked_rule_count']}",
+        f"  candidates:                    {report['candidate_count']}",
+        f"  priced candidates:             {pricing['candidate_count_with_any_price']}"
+        f" of {pricing['candidate_count_before_pricing']} scored",
+        f"  candidates matching a rule:    {report['rule_matched_count']}",
+        f"  positive-edge candidates:      {pricing['candidate_count_with_positive_edge']}",
+        f"  dispatchable picks:            {report['dispatchable_count']}",
+        "  top blockers:",
+    ]
+    counts = report["blocker_counts"]
+    lines += [f"    {name}: {count}" for name, count in counts.items()] or \
+             ["    none"]
+    if report["dispatchable_count"]:
+        lines.append("  picks:")
+        for pick in report["dispatchable_picks"]:
+            lines.append(
+                f"    {pick['home']} vs {pick['away']} | {pick['selection']} | "
+                f"{pick['rule_id']} | p={pick['probability']} | "
+                f"odds={pick['odds']} ({pick['pricing_source']}) | "
+                f"edge={pick['edge']:+.4f} | stake={pick['stake_units']}u")
+    else:
+        lines.append("  top rejected candidates:")
+        ranked = sorted(report["candidates"],
+                        key=lambda c: (len(c["blockers"]), -c["probability"]))[:5]
+        for c in ranked:
+            lines.append(
+                f"    {c['home']} vs {c['away']} | {c['selection'] or '-'} | "
+                f"{c['rule_id'] or 'no rule'} | p={c['probability']} | "
+                f"odds={c['odds'] or '-'} | "
+                f"edge={c['edge'] if c['edge'] is not None else '-'} | "
+                f"{c['blockers'][0] if c['blockers'] else '-'}")
+        lines.append("  FRESH PRODUCTION — NO PICKS")
+    return "\n".join(lines)
 
 
 # --------------------------------------------------------------------------
 # Entry point
 # --------------------------------------------------------------------------
+
+
+def production_pick_rows(candidates: list[Candidate]) -> list[dict]:
+    """Shape dispatchable picks for the production sync/notify path.
+
+    Only ``fresh_production`` dispatchable picks ever reach this function.
+    An empty list is a legitimate, explicit result: it tells the sync step to
+    publish zero rows rather than fall back to another lane.
+    """
+    rows = []
+    for c in candidates:
+        if not c.dispatchable:
+            continue
+        rows.append({
+            "date": c.date,
+            "kickoff": c.kickoff,
+            "league": c.league,
+            "home": c.home,
+            "away": c.away,
+            "market": "1x2",
+            "pick": c.selection,
+            "odds": c.odds,
+            "avg_p": round(c.probability * 100, 2),
+            "implied_probability": c.implied_probability,
+            "edge": c.edge,
+            "bucket": "FRESH_PRODUCTION_CERTIFIED",
+            "edge_rule": c.rule_id,
+            "display_rule": f"{c.dispatch_method}:{c.rule_id}",
+            "edge_status": "certified",
+            "lane": "fresh_production",
+            "dispatch_method": c.dispatch_method,
+            "odds_source": c.pricing_source,
+            "bookmaker": c.bookmaker,
+            "odds_match_method": c.price_match_method,
+            "price_tier": c.price_tier,
+            "stake_units": c.stake_units,
+            "risk_label": c.risk_label,
+            "model_version": c.model_version,
+            "feature_schema_version": c.feature_schema_version,
+            "source_voters": c.source_voters,
+            "walkforward_evidence": c.walkforward_evidence,
+        })
+    return rows
 
 
 def run(
@@ -1109,6 +1519,7 @@ def run(
     target = date.fromisoformat(day)
     eval_start = (target - timedelta(days=eval_days)).isoformat()
     history_start = (target - timedelta(days=eval_days + train_days)).isoformat()
+    eval_end = (target - timedelta(days=1)).isoformat()
 
     voters = fresh_production_voters()
     roles = classify_source_roles()
@@ -1117,60 +1528,66 @@ def run(
     labels = load_settlement_labels(localdata, start=history_start, end=day)
 
     evidence, summary = walk_forward(
-        groups, labels, eval_start=eval_start,
-        eval_end=(target - timedelta(days=1)).isoformat(), train_days=train_days,
-    )
+        groups, labels, eval_start=eval_start, eval_end=eval_end, train_days=train_days)
     envelope = training_envelope(
-        evidence, groups, labels, eval_start=eval_start,
-        eval_end=(target - timedelta(days=1)).isoformat(),
-    )
-    odds_index = load_odds_index(localdata, day)
-    candidates = build_candidates(
-        groups, day=day, evidence=evidence, envelope=envelope, odds_index=odds_index,
-        engine=engine, as_of=as_of, min_lead=min_lead,
-    )
+        evidence, groups, labels, eval_start=eval_start, eval_end=eval_end)
 
+    board = build_price_board(engine, localdata, day, voters)
+    candidates, pricing = build_candidates(
+        groups, day=day, evidence=evidence, envelope=envelope, engine=engine,
+        board=board, as_of=as_of, min_lead=min_lead)
+
+    buckets = rule_lifecycle(evidence)
     feature_names = [f["feature_name"] for f in FEATURE_SCHEMA]
     model_warnings = model_health_checks(
-        candidates=candidates, evidence=evidence, envelope=envelope, feature_names=feature_names)
+        candidates=candidates, evidence=evidence, envelope=envelope,
+        feature_names=feature_names)
     src_warnings = source_health_checks(
         groups=groups, day=day, candidates=candidates, evidence=evidence,
-        odds_index=odds_index, roles=roles)
+        pricing=pricing, roles=roles)
 
     certified_payload = {
-        "schema": 1,
+        "schema": 2,
         "generated_for": day,
         "model_version": MODEL_VERSION,
         "feature_schema_version": FEATURE_SCHEMA_VERSION,
         "note": (
             "fresh_production certification registry. Independent of the legacy "
-            "certified-edges registry; legacy certification is never inherited."
+            "certified-edges registry; legacy certification is never inherited. "
+            "'certified_dispatchable_rules' are the only rules allowed to bet."
         ),
         "gates": GATES,
-        "certified_rules": [asdict(ev) for ev in evidence.values() if ev.certified],
-        "rejected_rules": [asdict(ev) for ev in evidence.values()
-                           if ev.sample and not ev.certified],
+        "certified_dispatchable_rules": [asdict(ev) for ev in buckets[RULE_CERTIFIED]],
+        "research_rules": [asdict(ev) for ev in buckets[RULE_RESEARCH]],
+        "blocked_rules": [asdict(ev) for ev in buckets[RULE_BLOCKED] if ev.sample],
     }
     dispatchable = [c for c in candidates if c.dispatchable]
 
     report = {
-        "schema": 1,
+        "schema": 2,
         "lane": "fresh_production",
         "date": day,
         "as_of": as_of.isoformat(timespec="seconds"),
         "source_universe": list(voters),
         "source_roles": roles,
-        "parked_excluded": sorted(PARKED_PREDICTORS),
+        "historical_reference_only": sorted(PARKED_PREDICTORS),
         "walkforward": summary,
         "envelope": envelope,
-        "certified_rule_count": len(certified_payload["certified_rules"]),
+        "certified_rule_count": len(buckets[RULE_CERTIFIED]),
+        "research_rule_count": len(buckets[RULE_RESEARCH]),
+        "blocked_rule_count": len([e for e in buckets[RULE_BLOCKED] if e.sample]),
         "candidate_count": len(candidates),
+        "rule_matched_count": sum(1 for c in candidates if c.rule_id),
         "dispatchable_count": len(dispatchable),
+        "pricing": pricing,
+        "pricing_bundle_stats": board["stats"],
+        "blocker_counts": blocker_counts(candidates),
         "model_health_warnings": model_warnings,
         "source_health_warnings": src_warnings,
         "feature_schema": list(FEATURE_SCHEMA),
         "candidates": [asdict(c) for c in candidates],
         "dispatchable_picks": [asdict(c) for c in dispatchable],
+        "production_pick_rows": production_pick_rows(candidates),
         "_evidence": evidence,
         "_certified_payload": certified_payload,
     }
@@ -1178,47 +1595,72 @@ def run(
     if write:
         out = output_dir
         model_dir = out / MODEL_DIR_NAME
+        dumps = lambda obj: json.dumps(obj, indent=2, sort_keys=True, default=str)
         write_artifact(out / f"fresh_production_walkforward_{day}.json",
-                       json.dumps({"summary": summary,
-                                   "rules": [asdict(e) for e in evidence.values() if e.sample]},
-                                  indent=2, sort_keys=True))
+                       dumps({"summary": summary,
+                              "lifecycle": {k: [e.rule_id for e in v]
+                                            for k, v in buckets.items()},
+                              "rules": [asdict(e) for e in evidence.values() if e.sample]}))
         write_artifact(out / f"fresh_production_walkforward_{day}.md",
                        render_walkforward_md(summary, evidence))
         write_artifact(out / f"fresh_production_certified_edges_{day}.json",
-                       json.dumps(certified_payload, indent=2, sort_keys=True))
+                       dumps(certified_payload))
         write_artifact(out / "fresh_production_certified_edges.json",
-                       json.dumps(certified_payload, indent=2, sort_keys=True))
+                       dumps(certified_payload))
         write_artifact(out / f"fresh_production_certified_edges_{day}.md",
                        render_walkforward_md(summary, evidence))
         write_artifact(out / f"fresh_production_candidate_picks_{day}.json",
-                       json.dumps([asdict(c) for c in candidates], indent=2, sort_keys=True))
+                       dumps([asdict(c) for c in candidates]))
         write_artifact(out / f"fresh_production_candidate_picks_{day}.md",
-                       render_picks_md(day, candidates, dispatch_only=False))
+                       render_picks_md(day, candidates, dispatch_only=False,
+                                       pricing=pricing))
         write_artifact(out / f"fresh_production_dispatchable_picks_{day}.json",
-                       json.dumps([asdict(c) for c in dispatchable], indent=2, sort_keys=True))
+                       dumps([asdict(c) for c in dispatchable]))
         write_artifact(out / f"fresh_production_dispatchable_picks_{day}.md",
-                       render_picks_md(day, candidates, dispatch_only=True))
+                       render_picks_md(day, candidates, dispatch_only=True,
+                                       pricing=pricing))
+        # The production hand-off file. Always written, even when empty: an
+        # explicit zero-row slate is what stops any other lane backfilling it.
+        write_artifact(out / f"fresh_production_production_picks_{day}.json",
+                       dumps(report["production_pick_rows"]))
         write_artifact(out / f"model_health_{day}.json",
-                       json.dumps({"warnings": model_warnings, "envelope": envelope,
-                                   "model_version": MODEL_VERSION,
-                                   "feature_schema_version": FEATURE_SCHEMA_VERSION,
-                                   "random_seed": RANDOM_SEED,
-                                   "source_universe": list(voters),
-                                   "gates": GATES}, indent=2, sort_keys=True))
+                       dumps({"warnings": model_warnings, "envelope": envelope,
+                              "model_version": MODEL_VERSION,
+                              "feature_schema_version": FEATURE_SCHEMA_VERSION,
+                              "random_seed": RANDOM_SEED,
+                              "source_universe": list(voters),
+                              "dispatch_paths": {
+                                  DISPATCH_RULE: list(RULE_INPUT_FEATURES),
+                                  DISPATCH_MODEL: list(REQUIRED_FEATURES)},
+                              "certified_dispatchable_rules": len(buckets[RULE_CERTIFIED]),
+                              "research_rules": len(buckets[RULE_RESEARCH]),
+                              "blocked_rules": len(buckets[RULE_BLOCKED]),
+                              "gates": GATES}))
         write_artifact(out / f"model_health_{day}.md",
-                       render_model_health_md(day, summary, model_warnings, evidence, envelope))
+                       render_model_health_md(day, summary, model_warnings,
+                                              evidence, envelope))
         write_artifact(out / f"source_health_{day}.json",
-                       json.dumps({"roles": roles, "warnings": src_warnings}, indent=2,
-                                  sort_keys=True))
+                       dumps({"current_production_roles":
+                              {n: r for n, r in roles.items()
+                               if r in CURRENT_PRODUCTION_ROLES},
+                              "historical_reference":
+                              {n: r for n, r in roles.items()
+                               if r not in CURRENT_PRODUCTION_ROLES},
+                              "pricing_health": pricing,
+                              "pricing_bundles": board["stats"],
+                              "warnings": src_warnings}))
         write_artifact(out / f"source_health_{day}.md",
-                       render_source_health_md(day, roles, src_warnings, groups, odds_index))
+                       render_source_health_md(day, roles, src_warnings, groups,
+                                               pricing, board["stats"]))
         write_artifact(model_dir / "feature_schema.json",
-                       json.dumps({"version": FEATURE_SCHEMA_VERSION,
-                                   "features": list(FEATURE_SCHEMA),
-                                   "legacy_only_denylist": sorted(LEGACY_ONLY_FEATURES)},
-                                  indent=2, sort_keys=True))
+                       dumps({"version": FEATURE_SCHEMA_VERSION,
+                              "features": list(FEATURE_SCHEMA),
+                              "rule_dispatch_required": list(RULE_INPUT_FEATURES),
+                              "model_dispatch_required": list(REQUIRED_FEATURES),
+                              "legacy_only_denylist": sorted(LEGACY_ONLY_FEATURES)}))
         write_artifact(model_dir / f"model_card_{day}.md",
-                       render_model_health_md(day, summary, model_warnings, evidence, envelope))
+                       render_model_health_md(day, summary, model_warnings,
+                                              evidence, envelope))
     return report
 
 
@@ -1254,15 +1696,9 @@ def main(argv: list[str] | None = None) -> int:
         print(report["error"], file=sys.stderr)
         return 1
 
-    print(f"fresh_production {day}: source universe = {', '.join(report['source_universe'])}")
-    print(f"  walk-forward: {report['walkforward']['fixtures_labelled']} labelled fixtures, "
-          f"{report['certified_rule_count']} certified rule(s)")
-    print(f"  candidates: {report['candidate_count']}, dispatchable: "
-          f"{report['dispatchable_count']}")
+    print(render_summary(report))
     for warning in report["source_health_warnings"] + report["model_health_warnings"]:
         print(f"  {warning}", file=sys.stderr)
-    if report["dispatchable_count"] == 0:
-        print("  FRESH PRODUCTION — NO PICKS (see the candidate artifact for exact blockers)")
     return 0
 
 

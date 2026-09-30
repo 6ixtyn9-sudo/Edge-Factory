@@ -10871,3 +10871,193 @@ unchanged: both new steps are soft and read-only with respect to it.
 Parked browser-dependent sources remain off (`EDGE_FACTORY_FOREBET_BROWSER=off`)
 and are excluded from the fresh lane by construction. **Browser Run probes
 spent: 0.** Tests: **899 passed**. PR #18 remains open and unmerged.
+
+
+---
+
+## Addendum — 2026-09-30 (second pass): fresh_production becomes the production lane
+
+The first pass built the lane but left it blocked. This pass fixes the
+blockers, makes the lane authoritative, and makes retention actually reduce
+bloat. PR #18 remains open and unmerged.
+
+### 1. fresh_production is now the production lane
+
+`src/edgefactory/production_lane.py` is the single place that decides which
+lane may publish. `EDGE_FACTORY_PRODUCTION_LANE` selects it; the default is
+`fresh_production`.
+
+While `fresh_production` is active:
+
+- `legacy_baseline` still runs and still writes `picks_<date>.json` and its
+  reports — for **comparison only**;
+- `sync_supabase` and `notify` read
+  `localdata/fresh_production_production_picks_<date>.json`, never the legacy
+  archive;
+- `promote_forecast` writes the archive locally but does **not** sync or
+  notify;
+- if the fresh lane produced nothing, an explicit `[]` slate is synced with
+  `--replace-date`. **There is no fallback to legacy_baseline.** "The other
+  lane had something" is not evidence that today's fresh evidence supported a
+  bet.
+
+Setting `EDGE_FACTORY_PRODUCTION_LANE=legacy_baseline` restores the previous
+behaviour exactly; a test covers both directions.
+
+### 2. What the 110 "missing required feature" blockers actually were
+
+Reading `fresh_production_candidate_picks_2026-09-30.json` from the run:
+
+| blocker | candidates | true cause |
+|---|---:|---|
+| `blocked_missing_required_feature` | 110 | **mislabelled.** All 110 were single-voter fixtures — a source-coverage fact, not a schema fault |
+| `missing_odds` | 28 | **real, and the binding constraint.** Every one of the 28 quorum candidates |
+| `inside_30m_lead_or_started` | 20 | correct: a late-afternoon run |
+| `no_certified_..._rule_matched` | 17 | correct |
+
+Classification and fixes:
+
+- 110 × `not_available_from_current_sources` → renamed to
+  `insufficient_voter_quorum`, which now names the voter count and the sources
+  that did vote. Not a feature problem, and no imputation was or is applied.
+- 28 × `pricing_missing` → **a real bug in the fresh lane.** It rebuilt its own
+  odds index and joined dedicated feeds through the result donor's
+  `event_id` — which does not exist for unplayed fixtures. The legacy lane
+  meanwhile priced its picks fine. Fixed by reusing the engine's own audited
+  pricing stack (`bzzoiro_odds_bundle`, `scoutingstats_odds_bundle`,
+  `find_side_keyed_odds_row`, with its exact / alias-time /
+  orientation-checked-fuzzy joins), plus a new `source_embedded_price` tier
+  that reads the `odd1`/`oddx`/`odd2` columns already present in captured
+  predictor rows. No new feed, no fetch, no fabrication.
+
+On the local reproduction date the pricing fix takes coverage from **0/10 to
+10/10**, and `missing_odds` disappears entirely.
+
+Generic blockers are gone. Every blocker now names its cause: `missing_odds`,
+`insufficient_edge_versus_price` (with probability, odds, implied probability,
+edge and threshold), `missing_trusted_kickoff`, `kickoff_guard`,
+`ambiguous_or_missing_identity`, `reversed_orientation_risk`,
+`insufficient_voter_quorum`, `blocked_missing_required_feature` (with exact
+feature names), `suspect_price`, `daily_pick_cap_reached`.
+
+### 3. Rule dispatch is separate from model dispatch
+
+`certified_rule` requires only the rule's own inputs
+(`number_of_1x2_voters`, `top_outcome`, `top_probability`,
+`unanimous_outcome`) plus identity, kickoff, price and value gates.
+`certified_model` additionally requires the full feature schema, the
+distribution envelope and a sufficient calibration bucket. A rule-based pick
+is never blocked by model-only evidence; out-of-distribution findings are
+recorded as advisory notes on the candidate instead. Every candidate carries
+`dispatch_method`.
+
+### 4. Honest certification counts
+
+Rules are now `certified_dispatchable`, `research` or `blocked`. The
+calibration-bucket gate moved to the model path only — a threshold rule emits
+a decision, not a calibrated probability, so a thin probability bucket cannot
+invalidate it, but it does make the rule ineligible for `certified_model`.
+"Certified" in the headline now means genuinely dispatch-eligible. The
+registry exposes `certified_dispatchable_rules`, `research_rules` and
+`blocked_rules` with sample, recent sample, calibration sample and blockers.
+
+The previous run's "14 certified rules, 8 blocked on calibration" would now
+report as certified dispatchable vs research, with no ambiguity.
+
+### 5. pricing_health
+
+Reported every run: `candidate_count_before_pricing`, `_with_any_price`,
+`_exact_price`, `_alias_price`, `_suspect_price_rejected`, `_missing_price`,
+`_with_positive_edge`, `_with_negative_edge`, plus the tiers used and the row
+count of every pricing bundle. A fuzzy join is retained as evidence but
+blocked from dispatch as `suspect_price`.
+
+### 6. Concise official-run summary
+
+`FRESH PRODUCTION SUMMARY` now prints labelled fixtures, certified
+dispatchable / research / blocked rule counts, candidates, priced candidates,
+rule matches, positive-edge candidates, dispatchable picks, a blocker
+histogram, and either the picks or the top rejected candidates with their
+first blocker. The operator should not need to open JSON.
+
+### 7. data_retention now reduces bloat
+
+Known generated prefixes were extended to the stale daily reports
+(`clv_report`, `clv_unmatched`, `official_run`, `supabase_sync_manifest`,
+`theoddsapi_attempts`, `notify_delivery_failures`, `picks_DATE.txt`,
+`picks_audit`, `ml_fade_*`, the notification dedupe ledgers, and the
+fresh-lane artifacts). Pure per-day diagnostics that no reader consults after
+their own date get a 7-day window; everything else keeps 30 days, plus the
+newest 3 dates per prefix and the current target date.
+
+`auto_tickets_DATE.txt` is **deliberately excluded**: `seed_slice_ledger()`
+rebuilds the selection-ladder evidence from those slips, so they are evidence,
+not reports. `picks_DATE.json` and `picks_morning_DATE.json` remain protected.
+
+Run on the current tree: **97 files, 895,403 bytes removed**; 563 files
+considered; 253 unmatched files left alone; raw captures, overlays, registries,
+durable archives and ticket slips all untouched. The manifest now records
+`files_considered`, `files_deleted`, `bytes_deleted`, `why_each_deleted`,
+`why_each_kept`, `raw_evidence_preserved`, `unmatched_files_left_alone`,
+`largest_generated_files`, `largest_generated_prefixes`, and — when nothing is
+removed — an explicit explanation of why.
+
+### 8. Branch bloat
+
+The bulky per-date JSON dumps
+(`fresh_production_candidate_picks_*.json`, `fresh_production_walkforward_*.json`,
+`fresh_production_certified_edges_<date>.json`) are no longer committed; they
+travel as workflow artifacts. The Markdown, the durable registry, the
+production hand-off file, `model_health_*.json`, `source_health_*.json` and
+the manifests are still committed.
+
+### 9. Report cleanliness
+
+`source_health_<date>.md/.json` now splits **Current production source
+universe** from **legacy_baseline / historical_reference**. Parked/degraded
+browser-dependent sources appear only in the reference section, never as live
+predictors, and tests fail if they leak into a production section or if a
+legacy-only feature name appears in a fresh artifact.
+
+### Result on the local reproduction date (2026-06-12)
+
+```text
+labelled fixtures:             1421
+certified dispatchable rules:  4
+research rules:                4
+candidates:                    53
+priced candidates:             10 of 10 scored
+positive-edge candidates:      6
+dispatchable picks:            0
+top blockers:
+  insufficient_voter_quorum: 43
+  no_certified_fresh_production_rule_matched: 8
+  insufficient_edge_versus_price: 6
+```
+
+Zero picks, and the reason is now exact and objective: the two candidates that
+matched a certified rule were priced *shorter* than the consensus
+(edge -0.0219 and -0.1094), and the six positive-edge candidates sat below the
+certified probability thresholds (top probability 0.42–0.52 against a
+certified floor of 0.55). No structural blocker remains; the constraint is the
+market and the evidence.
+
+### Next operator action
+
+Run **Actions → Autonomous Edge Factory 3-Hour Service → `official_morning`**
+on `arena/01a0f2b3-edge-factory`, then check the log for
+`FRESH PRODUCTION SUMMARY`, the `production lane: fresh_production` line before
+the sync step, and the `data_retention` totals. Inspect:
+
+```text
+localdata/fresh_production_dispatchable_picks_<date>.md   # picks, or NO PICKS + blocker table
+localdata/fresh_production_candidate_picks_<date>.md      # every candidate, every blocker
+localdata/fresh_production_walkforward_<date>.md          # rule lifecycle + gates
+localdata/source_health_<date>.md                         # pricing_health + source roles
+localdata/model_health_<date>.md                          # model card, dispatch paths, calibration
+localdata/artifact_manifest_<date>.md                     # retention: deleted/kept + reasons
+```
+
+Expect `Daily picks to sync` to reflect the **fresh** lane only. Parked
+browser-dependent sources stay off; **Browser Run probes spent: 0.**
+Tests: **935 passed**. PR #18 remains open and unmerged.

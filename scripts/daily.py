@@ -263,10 +263,47 @@ def sync_repo_state() -> None:
         print(f">>> git state sync skipped (non-fatal): {exc}")
 
 
-def sync_official_archive(target_date: str, label: str = "sync_supabase") -> None:
-    archive = archived_picks_file(target_date)
+def run_fresh_production_lane(target_date: str) -> None:
+    """Run the fresh_production lane, then prune stale generated artifacts.
+
+    Both steps are soft: neither may abort the pipeline. The lane is read-only
+    with respect to legacy_baseline picks — it writes its own artifacts and
+    its own production hand-off file.
+    """
     run_soft(
-        f"python3 scripts/sync_supabase.py --picks {shlex.quote(str(archive))} --target-date {target_date} --replace-date",
+        f"PYTHONPATH=src python3 scripts/fresh_production.py --date {target_date} "
+        f"--mode official --output-dir localdata",
+        f"fresh_production {target_date}",
+    )
+    run_soft(
+        "PYTHONPATH=src python3 scripts/clean_localdata.py "
+        "--policy fresh_production --keep-days 30 --keep-latest 3 "
+        f"--write-manifest --target-date {target_date}",
+        f"data_retention fresh_production {target_date}",
+    )
+
+
+def sync_official_archive(target_date: str, label: str = "sync_supabase") -> None:
+    """Publish the ACTIVE production lane's picks — never another lane's.
+
+    While ``fresh_production`` is the production lane, the legacy archive is
+    still written and reported, but it is not what gets upserted. If the fresh
+    lane produced nothing, an explicit empty slate is synced with
+    ``--replace-date`` so the warehouse ends the day with zero rows rather
+    than yesterday's or another lane's.
+    """
+    from edgefactory import production_lane
+
+    picks_path = production_lane.ensure_production_picks_file(target_date, REPORT_DIR)
+    info = production_lane.describe(target_date, REPORT_DIR)
+    print(f">>> production lane: {info['production_lane']} "
+          f"({info['production_pick_count']} pick(s) from {picks_path.name})")
+    if not production_lane.legacy_dispatch_allowed():
+        print("    legacy_baseline dispatch is disabled: comparison reports only, "
+              "no production sync, no production notification, no fallback.")
+    run_soft(
+        f"python3 scripts/sync_supabase.py --picks {shlex.quote(str(picks_path))} "
+        f"--target-date {target_date} --replace-date",
         label,
     )
 
@@ -679,8 +716,17 @@ def promote_forecast(forecast_arg: str, default_date: str) -> None:
 
     generate_daily_report(target_date)
 
-    run_soft("python3 scripts/sync_supabase.py", "sync_supabase (Promoted Official Record)")
-    run_soft(f"python3 scripts/notify.py --force --date {target_date}", "notify (Promoted Official Record)")
+    from edgefactory import production_lane
+
+    if production_lane.legacy_dispatch_allowed():
+        run_soft("python3 scripts/sync_supabase.py",
+                 "sync_supabase (Promoted Official Record)")
+        run_soft(f"python3 scripts/notify.py --force --date {target_date}",
+                 "notify (Promoted Official Record)")
+    else:
+        print("  legacy_baseline promotion recorded locally only: "
+              f"{production_lane.active_lane()} is the production lane, so this "
+              "forecast is not synced or notified as a production pick.")
     print(f"✅ Forecast {path.name} successfully promoted to official record for {target_date}.")
 
 
@@ -947,26 +993,7 @@ def run_pipeline(
             f"audit_source_funnel {target_date}",
         )
 
-        # fresh_production: an independent betting lane built only on the
-        # current source universe, walk-forward certified on its own evidence.
-        # It never reads the legacy certified-edges registry and never routes
-        # its candidates through the legacy model. Soft and read-only: it
-        # writes its own artifacts and cannot alter legacy_baseline picks.
-        run_soft(
-            f"PYTHONPATH=src python3 scripts/fresh_production.py --date {target_date} "
-            f"--mode official --output-dir localdata",
-            f"fresh_production {target_date}",
-        )
-
-        # data_retention: prune provably-stale generated artifacts under known
-        # prefixes only, and record exactly what went. Raw evidence, registries
-        # and unmatched files are structurally unreachable by this policy.
-        run_soft(
-            "PYTHONPATH=src python3 scripts/clean_localdata.py "
-            "--policy fresh_production --keep-days 30 --keep-latest 3 "
-            f"--write-manifest --target-date {target_date}",
-            f"data_retention fresh_production {target_date}",
-        )
+        run_fresh_production_lane(target_date)
 
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
@@ -1100,6 +1127,7 @@ def run_pipeline(
             restore_target_picks(target_archive.read_text())
             _notify(target_date, "notify (Silent Check)")
 
+        run_fresh_production_lane(target_date)
         sync_official_archive(target_date, "sync_supabase (Autonomous Accumulating Record)")
         try:
             current_target_picks = json.loads(target_archive.read_text())
@@ -1255,7 +1283,14 @@ def _notify(target_date: str, label: str) -> None:
     pipeline alive (a notify failure must not block state commits), but a
     failure ledger written today gets a prominent banner here so a green run
     can never silently mean 'message did not arrive'."""
-    run_soft(f"python3 scripts/notify.py --date {target_date}", label)
+    from edgefactory import production_lane
+
+    picks_path = production_lane.ensure_production_picks_file(target_date, REPORT_DIR)
+    run_soft(
+        f"python3 scripts/notify.py --date {target_date} "
+        f"--picks {shlex.quote(str(picks_path))} --heartbeat",
+        label,
+    )
     day = datetime.now(local_tz()).strftime("%Y-%m-%d")
     ledger = REPORT_DIR / f"notify_delivery_failures_{day}.json"
     if ledger.exists():
