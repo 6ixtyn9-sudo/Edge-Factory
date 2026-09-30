@@ -29,7 +29,7 @@ Forebet production capture is **not proven fixed** until the operator deploys th
 | R5 Browser Run bounded | pass | Default Browser Run only recent live dates in GHA auto mode: `src/edgefactory/sources/forebet.py:79-98`; serialized per-market when browser/playwright is enabled: `src/edgefactory/sources/forebet.py:326-342`. |
 | R5 relay POST/token/allowlist | pass | Python relay uses POST token body and echoed URL validation: `src/edgefactory/sources/public_relay.py:33-53`. Worker entrypoint rejects non-POST/auth failure and checks allowlist: `relay/cloudflare-worker/src/index.js:15-43`. |
 | R6 tests/contracts | pass | Continuation branch verification: `PYTHONPATH=src .venv/bin/python -m pytest tests/ -q` → `773 passed in 12.61s`; `cd relay/cloudflare-worker && npm test` → `47` tests passed; `node --check` all Worker JS passed; `git diff --check` clean after doc whitespace cleanup. |
-| R7 operator actions accurate | fixed / manual workflow follow-up | Main already has `.github/workflows/forebet-getrs-probe.yml` from manual operator application. This continuation branch does **not** modify `.github/workflows/`; it keeps mirror replacements under `docs/operator/` because this Arena/GitHub App path may lack workflow-file permission. GAS full file remains in PR body/docs; `relay/google-apps-script/Code.gs` is the source of truth. |
+| R7 operator actions accurate | proposed workflow consolidation | The Arena/GitHub App token rejected direct `.github/workflows/*` changes. This continuation therefore keeps the exact consolidated replacement at `docs/operator/forebet-browser-diagnostic.yml.proposed`: one working `Forebet Browser Run diagnostic` workflow with `probe=forebet_getrs` for JSON endpoint proof and `probe=page_access` for the original fixed-page diagnostic. The operator should apply that file manually and delete `.github/workflows/forebet-getrs-probe.yml`. GAS full file remains in PR body/docs; `relay/google-apps-script/Code.gs` is the source of truth. |
 
 
 ## Operator-supplied probe receipts after workflow update
@@ -44,9 +44,12 @@ non-claim:
   legacy generic relay fetch path or an undeployed Worker update, not a proven
   Browser Run success. The pushed code now requires explicit
   `operation=forebet_getrs` and `transport=cloudflare_browser_rendering` markers
-  in Browser Run envelopes. Main's live `.github/workflows/forebet-getrs-probe.yml`
-  now carries equivalent marker checks; `docs/operator/forebet-getrs-probe.yml.proposed`
-  is kept only as a copy/paste mirror for future manual refreshes.
+  in Browser Run envelopes. Because workflow-file pushes are permission-blocked,
+  this continuation provides a full replacement at
+  `docs/operator/forebet-browser-diagnostic.yml.proposed` that folds the
+  `forebet_getrs` JSON endpoint proof into the known working diagnostic workflow
+  as the `forebet_getrs` probe mode and removes the need for a separate getrs
+  workflow once applied manually.
 - Manual Browser Run diagnostic: the Worker launched one browser session and
   returned `classification=unresolved_cloudflare_challenge`, page title
   `Just a moment...`, Cloudflare challenge markers, Turnstile source markers,
@@ -55,10 +58,10 @@ non-claim:
 
 ## Workflow artifacts
 
-Main already contains the manually applied `.github/workflows/forebet-getrs-probe.yml` and the latest operator run failed with `legacy_generic_relay_or_worker_not_deployed`. This continuation branch intentionally avoids changing `.github/workflows/` so it can be pushed by the Arena integration; it carries copy/paste mirrors under `docs/operator/` for operator review:
+Main contains a manually applied separate `.github/workflows/forebet-getrs-probe.yml`, and the latest operator run failed with `legacy_generic_relay_or_worker_not_deployed`. The requested consolidation cannot be pushed directly by this App token, so this branch carries copy/paste mirrors under `docs/operator/` for operator review/manual application:
 
 - `docs/operator/daily.yml.proposed` — complete replacement daily workflow mirror with optional Playwright install and bounded `BZZOIRO_ODDS_MAX_EVENTS` default.
-- `docs/operator/forebet-getrs-probe.yml.proposed` — upgraded manual probe workflow mirror with explicit Browser Run operation/transport-marker classifications. Use this full-file replacement via GitHub web editor or a token with workflow permission only if the live workflow needs to be refreshed.
+- `docs/operator/forebet-browser-diagnostic.yml.proposed` — consolidated manual Browser Run workflow replacement with `probe=forebet_getrs` and `probe=page_access` modes. Apply this to `.github/workflows/forebet-browser-diagnostic.yml`, then delete `.github/workflows/forebet-getrs-probe.yml` manually.
 
 ## Verification commands run
 
