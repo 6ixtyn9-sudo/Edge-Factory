@@ -654,7 +654,10 @@ def test_fresh_dispatchable_picks_are_the_production_rows(tmp_path, monkeypatch)
     assert len(rows) == 1
     assert rows[0]["lane"] == "fresh_production"
     assert rows[0]["home"] == "Home Team 00"
-    assert rows[0]["bucket"] == fp.PRODUCTION_BUCKET == "PRODUCTION_CERTIFIED"
+    # Production identity is metadata; the bucket stays canonical.
+    assert rows[0]["bucket"] == fp.BUCKET_CERTIFIED_CLEAN == "CERTIFIED_CLEAN"
+    assert rows[0]["selection_scope"] == fp.PRODUCTION_SCOPE
+    assert rows[0]["production_certified"] is True
 
 
 def test_production_pick_rows_are_written_even_when_empty(tmp_path):
@@ -991,3 +994,62 @@ def test_short_window_prefixes_are_pruned_sooner(tmp_path):
         root, keep_days=30, keep_latest=3, today=today)]
     assert any(n.startswith("theoddsapi_attempts") for n in stale)
     assert not any(n.startswith("clv_report") for n in stale)
+
+
+# ===========================================================================
+# Canonical bucket taxonomy
+#
+# PR #18 minted a lane-specific bucket (PRODUCTION_CERTIFIED) and registered
+# it in the auto-ticket allowlist. It had no settlement history, graded
+# against nothing, and appeared as its own n=0 row in the printed selection
+# ladder, splitting bucket P&L and every audit comparison.
+# ===========================================================================
+
+
+CANONICAL_BUCKETS = {
+    "CERTIFIED_CLEAN",
+    "CAUTION",
+    "WATCHLIST_NO_ODDS",
+    "WATCHLIST_UNCORROBORATED_PRICE",
+    "WATCHLIST_SUSPECT_PRICE",
+    "WATCHLIST_UNKNOWN_CTX",
+    "SKIPPED_VETO",
+    "SKIPPED_DEAD_EDGE",
+}
+
+
+def test_the_lane_never_mints_a_bucket_of_its_own():
+    import scripts.auto_tickets as at
+
+    assert at.BUCKETS <= CANONICAL_BUCKETS
+    assert not any(str(b).upper().startswith("PRODUCTION") for b in at.BUCKETS)
+
+
+def test_the_canonical_bucket_matches_the_engine_taxonomy():
+    for bucket in (fp.BUCKET_CERTIFIED_CLEAN, fp.BUCKET_WATCHLIST_NO_ODDS,
+                   fp.BUCKET_WATCHLIST_SUSPECT_PRICE,
+                   fp.BUCKET_WATCHLIST_UNCORROBORATED_PRICE):
+        assert bucket in CANONICAL_BUCKETS
+
+
+def test_price_integrity_decides_the_bucket():
+    """Same precedence the engine's bucket_pick applies."""
+    assert fp.canonical_bucket(odds=2.0) == "CERTIFIED_CLEAN"
+    assert fp.canonical_bucket(odds=None) == "WATCHLIST_NO_ODDS"
+    assert fp.canonical_bucket(
+        odds=2.0, price_quarantine_reason="alias_fuzzy") \
+        == "WATCHLIST_SUSPECT_PRICE"
+    assert fp.canonical_bucket(
+        odds=2.0, price_evidence="SCOUTINGSTATS_SOLE") \
+        == "WATCHLIST_UNCORROBORATED_PRICE"
+
+
+def test_a_suspect_price_outranks_missing_odds():
+    assert fp.canonical_bucket(
+        odds=None, price_quarantine_reason="alias_fuzzy") \
+        == "WATCHLIST_SUSPECT_PRICE"
+
+
+def test_production_identity_survives_without_a_bucket():
+    """Removing the bucket must not make production selections invisible."""
+    assert fp.PRODUCTION_SCOPE == "production"

@@ -186,9 +186,9 @@ def test_auto_tickets_is_the_only_staking_engine():
 def test_auto_ticket_stakes_stay_percentage_of_capital():
     """main's contract is percent of capital, never unit notation."""
     pool = [{"match": "A vs B", "pick": "HOME", "prob": 0.72, "odds": 2.25,
-             "row": {"bucket": fp.PRODUCTION_BUCKET}},
+             "row": {"bucket": fp.BUCKET_CERTIFIED_CLEAN}},
             {"match": "C vs D", "pick": "HOME", "prob": 0.68, "odds": 1.90,
-             "row": {"bucket": fp.PRODUCTION_BUCKET}}]
+             "row": {"bucket": fp.BUCKET_CERTIFIED_CLEAN}}]
     plan = at.plan_day(pool, 100.0)
     assert plan, "two qualifying legs should form a card"
     staked = sum(a["stake_pct"] for a in plan)
@@ -415,8 +415,8 @@ def test_a_pnl_benched_bucket_cannot_become_a_ticket(tmp_path):
         date = RUN_DATE
         force = True
 
-    benched = ({fp.PRODUCTION_BUCKET: 0.0},
-               {fp.PRODUCTION_BUCKET: {"verdict": "VETO", "weight": 0.0,
+    benched = ({fp.BUCKET_CERTIFIED_CLEAN: 0.0},
+               {fp.BUCKET_CERTIFIED_CLEAN: {"verdict": "VETO", "weight": 0.0,
                                        "streak": 4, "n": 40, "roi": -0.2,
                                        "grade": "F", "gap": 0.1, "z": -2.0}})
     state = at.fresh_state()
@@ -430,7 +430,7 @@ def test_a_pnl_benched_bucket_cannot_become_a_ticket(tmp_path):
         outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
 
     assert outcomes[EVENT_DATE]["status"] == at.DECLINED_BUCKET_PNL_BENCHED
-    assert fp.PRODUCTION_BUCKET in outcomes[EVENT_DATE]["benched_buckets"]
+    assert fp.BUCKET_CERTIFIED_CLEAN in outcomes[EVENT_DATE]["benched_buckets"]
     harness.assert_benching_state_respected(outcomes[EVENT_DATE])
     assert not state["open_slips"]
 
@@ -454,7 +454,7 @@ def test_a_selection_ladder_benched_bucket_cannot_become_a_ticket(tmp_path):
          patch.object(at, "load_archived_picks", lambda *a, **k: []), \
          patch.object(at, "compute_bucket_slice",
                       lambda *a, **k: (
-                          {"bench_buckets": [fp.PRODUCTION_BUCKET],
+                          {"bench_buckets": [fp.BUCKET_CERTIFIED_CLEAN],
                            "rank_caps": {}},
                           {b: {"verdict": "VETO", "action": "BENCHED",
                                "n": 30, "roi": -0.3, "recent_roi": -0.3,
@@ -476,10 +476,12 @@ def test_the_assayer_is_on_the_production_ticket_path():
 
 def test_the_production_bucket_is_a_scored_door():
     """An unregistered bucket is invisible to playable_legs and to benching."""
-    assert fp.PRODUCTION_BUCKET in at.BUCKETS, (
+    assert fp.BUCKET_CERTIFIED_CLEAN in at.BUCKETS, (
         "production selections must belong to a bucket the assayer scores, "
         "otherwise benching can never apply to them")
-    assert not fp.PRODUCTION_BUCKET.lower().startswith("fresh_")
+    assert not fp.BUCKET_CERTIFIED_CLEAN.lower().startswith("fresh_")
+    # The lane must never mint a bucket of its own.
+    assert not any(b.startswith("PRODUCTION") for b in at.BUCKETS)
 
 
 @patch.dict(os.environ, FRESH)

@@ -206,12 +206,11 @@ BUCKETS = {
     # time depending on window. SUSPECT_PRICE and NO_ODDS stay OUT:
     # they flag bad DATA, not weak edges.
     "CAUTION",
-    # The production lane's certified selections are a door like any other:
-    # registering the bucket is what subjects them to the P&L tripwire and
-    # the selection ladder. An unregistered bucket is invisible to
-    # playable_legs(), which would silently drop every production selection
-    # while appearing to work.
-    "PRODUCTION_CERTIFIED",
+    # The production lane's selections carry a canonical bucket and are
+    # graded under it, so they need no bucket of their own. A lane-specific
+    # bucket has no settlement history, grades against nothing, and splits
+    # bucket P&L, the selection ladder and every audit comparison.
+    # Production identity travels as metadata on the row instead.
 }
 BAD_QUARANTINE = {"alias_fuzzy", "suspect", "suspect_alias_fuzzy"}
 

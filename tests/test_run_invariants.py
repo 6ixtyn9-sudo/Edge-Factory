@@ -559,3 +559,52 @@ def test_a_multi_date_publish_without_a_breakdown_is_flagged():
 def test_a_single_date_publish_without_a_breakdown_is_fine():
     assert ri.check_supabase_dates(
         {"2026-10-01": 4}, {"row_count": 4}, ["2026-10-01"]) == []
+
+
+# ===========================================================================
+# Future-dated tickets and bucket canonicality
+# ===========================================================================
+
+
+def test_a_future_dated_ticket_backed_by_a_horizon_pick_is_intended():
+    """Run 36783344791 carded 2026-10-02 from two real horizon picks."""
+    plan = {"same_day_picks": [{"event_date": "2026-10-01"}],
+            "horizon_picks": [{"event_date": "2026-10-02",
+                               "home": "Belgium", "away": "Turkey"},
+                              {"event_date": "2026-10-02",
+                               "home": "Hungary", "away": "Georgia"}]}
+
+    assert ri.check_ticket_dates(
+        plan, {"2026-10-01": {"status": "deferred_before_build_hour"},
+               "2026-10-02": {"status": "ticket_created"}}) == []
+
+
+def test_a_ticket_for_a_date_with_no_selection_is_caught():
+    """What planner output leaking into the slate would look like."""
+    plan = {"same_day_picks": [{"event_date": "2026-10-01"}],
+            "horizon_picks": []}
+
+    violations = ri.check_ticket_dates(
+        plan, {"2026-10-02": {"status": "ticket_created"}})
+
+    assert _codes(violations) == {ri.V_TICKET_DATE_UNBACKED}
+
+
+def test_a_lane_specific_bucket_is_caught():
+    violations = ri.check_buckets_are_canonical(
+        {"horizon_picks": [{"home": "Belgium", "away": "Turkey",
+                            "bucket": "PRODUCTION_CERTIFIED"}]})
+
+    assert _codes(violations) == {ri.V_NON_CANONICAL_BUCKET}
+
+
+def test_canonical_buckets_pass():
+    assert ri.check_buckets_are_canonical(
+        {"same_day_picks": [{"bucket": "CERTIFIED_CLEAN"}],
+         "horizon_picks": [{"bucket": "WATCHLIST_SUSPECT_PRICE"}]}) == []
+
+
+def test_the_invariant_taxonomy_matches_the_auto_ticket_allowlist():
+    import scripts.auto_tickets as at
+
+    assert at.BUCKETS <= ri.CANONICAL_BUCKETS

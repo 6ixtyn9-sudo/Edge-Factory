@@ -419,7 +419,7 @@ def test_final_summary_uses_clean_rule_ids(tmp_path):
 
 
 def test_production_certified_stays_registered_for_assay_and_bench():
-    assert fp.PRODUCTION_BUCKET in at.BUCKETS
+    assert fp.BUCKET_CERTIFIED_CLEAN in at.BUCKETS
 
 
 def test_a_single_selection_still_declines_under_the_two_leg_contract(tmp_path):

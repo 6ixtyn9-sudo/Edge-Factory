@@ -133,7 +133,51 @@ PRICE_TIER_DEDICATED = "dedicated_pricing_feed"
 PRICE_TIER_SOURCE_EMBEDDED = "source_embedded_price"
 FLAT_STAKE_UNITS = 1.0
 # The pick engine states who owns staking rather than sizing a bet itself.
-PRODUCTION_BUCKET = "PRODUCTION_CERTIFIED"
+#
+# Buckets are the canonical taxonomy from the established engine. They key
+# audits, CLV grouping, assayer context, bucket P&L, the selection ladder
+# and historical comparability, so the production lane must not mint one of
+# its own: a lane-specific bucket has no history, grades against nothing and
+# splits every downstream comparison. Production identity travels in its own
+# fields instead (see PRODUCTION_SCOPE below).
+BUCKET_CERTIFIED_CLEAN = "CERTIFIED_CLEAN"
+BUCKET_WATCHLIST_NO_ODDS = "WATCHLIST_NO_ODDS"
+BUCKET_WATCHLIST_UNCORROBORATED_PRICE = "WATCHLIST_UNCORROBORATED_PRICE"
+BUCKET_WATCHLIST_SUSPECT_PRICE = "WATCHLIST_SUSPECT_PRICE"
+
+# What the lane records instead of a bucket, so a production selection stays
+# identifiable everywhere without disturbing the taxonomy.
+PRODUCTION_SCOPE = "production"
+
+
+def canonical_bucket(*, odds, price_evidence=None,
+                     price_quarantine_reason=None) -> str:
+    """The canonical bucket for a production selection.
+
+    This reproduces the price-integrity precedence of the engine's
+    ``bucket_pick`` -- suspect fuzzy price, then sole-source price, then
+    missing odds -- using only fields the production lane actually has.
+
+    Documented limitation: the production lane computes no context
+    (``ctx``), so the context-dependent outcomes of ``bucket_pick``
+    (``CAUTION``, ``WATCHLIST_UNKNOWN_CTX``, ``SKIPPED_VETO``,
+    ``SKIPPED_DEAD_EDGE``) cannot be reached from here. A selection that
+    clears the lane's own gates and carries a clean price is therefore
+    ``CERTIFIED_CLEAN``. Wiring the context resolver into this lane would
+    change gating and is deliberately out of scope; until then this
+    function must not be described as a full reimplementation of
+    ``bucket_pick``.
+    """
+    reason = str(price_quarantine_reason or "")
+    evidence = str(price_evidence or "")
+    if reason == "alias_fuzzy" or evidence == "SUSPECT_ALIAS_FUZZY":
+        return BUCKET_WATCHLIST_SUSPECT_PRICE
+    if reason == "scoutingstats_sole_source" or \
+            evidence == "SCOUTINGSTATS_SOLE":
+        return BUCKET_WATCHLIST_UNCORROBORATED_PRICE
+    if odds is None:
+        return BUCKET_WATCHLIST_NO_ODDS
+    return BUCKET_CERTIFIED_CLEAN
 STAKING_POLICY = "handled_by_auto_tickets"
 STAKING_OWNER = "auto_tickets"
 
@@ -1823,7 +1867,14 @@ def horizon_pick_rows(horizon: dict) -> list[dict]:
             "avg_p": round((pick.get("probability") or 0) * 100, 2),
             "implied_probability": pick.get("implied_probability"),
             "edge": pick.get("edge"),
-            "bucket": PRODUCTION_BUCKET,
+            "bucket": canonical_bucket(
+                odds=pick.get("odds"),
+                price_evidence=pick.get("price_evidence"),
+                price_quarantine_reason=pick.get("price_quarantine_reason")),
+            # Production identity as metadata, never as a bucket.
+            "selection_scope": PRODUCTION_SCOPE,
+            "production_certified": True,
+            "production_lane": True,
             # Price-integrity provenance must travel with the selection.
             # auto_tickets' execution-safe gate reads these fields; if the
             # row builder drops them the gate silently cannot fire and a
@@ -2008,7 +2059,14 @@ def production_pick_rows(candidates: list[Candidate]) -> list[dict]:
             "avg_p": round(c.probability * 100, 2),
             "implied_probability": c.implied_probability,
             "edge": c.edge,
-            "bucket": PRODUCTION_BUCKET,
+            "bucket": canonical_bucket(
+                odds=c.odds,
+                price_evidence=c.price_evidence,
+                price_quarantine_reason=c.price_quarantine_reason),
+            # Production identity as metadata, never as a bucket.
+            "selection_scope": PRODUCTION_SCOPE,
+            "production_certified": True,
+            "production_lane": True,
             # Price-integrity provenance must travel with the selection.
             # auto_tickets' execution-safe gate reads these fields; if the
             # row builder drops them the gate silently cannot fire and a

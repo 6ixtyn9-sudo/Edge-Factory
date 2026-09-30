@@ -45,6 +45,17 @@ V_VOTER_MISLABELLED = "production_eligible_voter_labelled_non_dispatchable"
 V_PRICE_ORIGIN = "embedded_price_does_not_name_its_origin_source"
 V_SELECTION_DETAIL = "summary_selection_lines_disagree_with_selection_count"
 V_SUPABASE_NO_BREAKDOWN = "multi_date_publish_has_no_per_date_breakdown"
+V_TICKET_DATE_UNBACKED = "auto_ticket_date_has_no_production_selection"
+V_NON_CANONICAL_BUCKET = "non_canonical_bucket_on_an_audit_surface"
+
+# The taxonomy every audit, CLV grouping, assayer context, bucket P&L and
+# ladder comparison keys on. A lane-specific bucket has no history and
+# splits all of them.
+CANONICAL_BUCKETS = frozenset({
+    "CERTIFIED_CLEAN", "CAUTION", "WATCHLIST_NO_ODDS",
+    "WATCHLIST_UNCORROBORATED_PRICE", "WATCHLIST_SUSPECT_PRICE",
+    "WATCHLIST_UNKNOWN_CTX", "SKIPPED_VETO", "SKIPPED_DEAD_EDGE",
+})
 
 # A pick may delegate staking; it may never size it.
 _STAKE_MARKERS = ("stake_units", "stake_u", "units")
@@ -163,6 +174,56 @@ def check_supabase(summary_published: dict[str, int] | None,
             V_SUPABASE,
             f"the summary reports {reported} published row(s) but the sync "
             f"manifest records {actual}"))
+    return out
+
+
+def check_ticket_dates(plan: dict | None,
+                       ticket_outcomes: dict | None) -> list[dict]:
+    """A ticket may only exist for a date the plan actually dispatched.
+
+    Future-dated tickets are intended: the lane dispatches horizon
+    selections and auto_tickets cards them by their own event date. What
+    must never happen is a ticket for a date carrying no production
+    selection, which is what planner output leaking into the slate would
+    look like.
+    """
+    out: list[dict] = []
+    if not plan or not ticket_outcomes:
+        return out
+    dispatched = {
+        str(row.get("event_date") or row.get("date") or "")[:10]
+        for row in (list(plan.get("same_day_picks") or [])
+                    + list(plan.get("horizon_picks") or []))
+    }
+    dispatched.discard("")
+    if not dispatched:
+        return out
+    for day in ticket_outcomes:
+        if str(day)[:10] not in dispatched:
+            out.append(_violation(
+                V_TICKET_DATE_UNBACKED,
+                f"auto_tickets produced an outcome for {day} but the "
+                f"dispatch plan carries no production selection for that "
+                f"date (dispatched: {', '.join(sorted(dispatched))})",
+                where=str(day)))
+    return out
+
+
+def check_buckets_are_canonical(plan: dict | None) -> list[dict]:
+    """No selection may carry a bucket outside the canonical taxonomy."""
+    out: list[dict] = []
+    if not plan:
+        return out
+    for row in (list(plan.get("same_day_picks") or [])
+                + list(plan.get("horizon_picks") or [])):
+        bucket = str(row.get("bucket") or "").strip()
+        if bucket and bucket not in CANONICAL_BUCKETS:
+            out.append(_violation(
+                V_NON_CANONICAL_BUCKET,
+                f"bucket '{bucket}' is outside the canonical taxonomy, so "
+                f"it grades against no history and splits bucket P&L, the "
+                f"selection ladder and every audit comparison",
+                where=f"{row.get('home')} vs {row.get('away')}"))
     return out
 
 
@@ -478,6 +539,8 @@ def check_run(*, plan: dict | None = None,
     violations += check_price_origin(plan)
     violations += check_selection_detail_count(
         plan, summary_selection_detail_count)
+    violations += check_ticket_dates(plan, ticket_outcomes)
+    violations += check_buckets_are_canonical(plan)
     return violations
 
 
