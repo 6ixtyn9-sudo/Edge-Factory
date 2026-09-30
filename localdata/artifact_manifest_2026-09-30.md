@@ -1,10 +1,10 @@
 # artifact_manifest — data_retention — 2026-09-30
 
 - policy: `fresh_production` (keep-days 30, keep-latest 3, target date 2026-09-30)
-- files considered: 461
+- files considered: 568
 - files deleted: 0
 - bytes deleted: 0
-- unmatched files left alone: 255
+- unmatched files left alone: 350
 - dry run: no
 
 ## Why nothing was removed
@@ -15,7 +15,7 @@ Nothing was old enough: every matched generated artifact is either the current t
 
 | reason | files |
 |---|---:|
-| current_target_date | 25 |
+| current_target_date | 37 |
 | within_last_30_days | 134 |
 | within_last_7_days | 20 |
 | within_newest_3_for_prefix | 27 |
@@ -26,14 +26,14 @@ Nothing was old enough: every matched generated artifact is either the current t
 |---|---:|
 | picks_audit | 992906 |
 | picks | 446001 |
-| clv_unmatched | 285198 |
-| source_settlement_coverage | 159312 |
-| source_funnel | 61784 |
-| clv_report | 59509 |
-| artifact_manifest | 33875 |
-| ml_fade_research_report | 29310 |
-| shadow_sent_ledger | 21147 |
-| theoddsapi_attempts | 15556 |
+| clv_unmatched | 285624 |
+| fresh_production_candidate_picks | 282861 |
+| source_settlement_coverage | 159327 |
+| source_funnel | 61798 |
+| clv_report | 59683 |
+| fresh_production_walkforward | 34482 |
+| artifact_manifest | 34434 |
+| fresh_production_certified_edges | 33405 |
 
 ## Never eligible for deletion
 

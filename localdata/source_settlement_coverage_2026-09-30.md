@@ -1,25 +1,25 @@
 # Source settlement coverage — 2026-07-02..2026-09-30
 
 Prediction->final-score matching quality per source. Row counts alone are NOT validation.
-Donor rows indexed: 258120 across 24 donor labels.
+Donor rows indexed: 258195 across 24 donor labels.
 Guarded alias tier: enabled (edgefactory.identity fold).
 
 | source | fixtures | own_score | exact | alias | matched | agree | conflict | donor_conf | unmatched | ambig | rev | rev_unexp | cov% | confl% | verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | forebet | 28203 | 27149 | 9267 | 2465 | 11732 | 11644 | 42 | 25 | 15906 | 540 | 1 | 1 | 41.6 | 0.36 | unproven |
-| zulubet | 4412 | 4330 | 4075 | 40 | 4115 | 4107 | 5 | 18 | 257 | 22 | 1 | 1 | 93.27 | 0.12 | review_required |
-| statarea | 7877 | 7623 | 4889 | 818 | 5707 | 5647 | 15 | 6 | 1956 | 208 | 2 | 2 | 72.45 | 0.26 | partial |
-| vitibet | 31331 | 11447 | 13188 | 3724 | 16912 | 11414 | 1 | 40 | 13618 | 761 | 13 | 13 | 53.98 | 0.01 | unproven |
-| scoutingstats | 8670 | 8464 | 4147 | 1186 | 5333 | 5299 | 33 | 8 | 2907 | 422 | 3 | 3 | 61.51 | 0.62 | partial |
-| predictz | 2014 | 0 | 1235 | 157 | 1392 | 0 | 0 | 0 | 576 | 46 | 1 | 1 | 69.12 | 0.0 | partial |
-| windrawwin | 1089 | 0 | 62 | 4 | 66 | 0 | 0 | 0 | 1023 | 0 | 0 | 0 | 6.06 | 0.0 | unproven |
-| prosoccer | 43 | 25 | 28 | 0 | 28 | 22 | 1 | 0 | 15 | 0 | 0 | 0 | 65.12 | 4.35 | partial |
+| zulubet | 4413 | 4344 | 4088 | 41 | 4129 | 4120 | 5 | 18 | 244 | 22 | 1 | 1 | 93.56 | 0.12 | review_required |
+| statarea | 7877 | 7624 | 4890 | 818 | 5708 | 5648 | 15 | 6 | 1955 | 208 | 2 | 2 | 72.46 | 0.26 | partial |
+| vitibet | 31331 | 11460 | 13201 | 3726 | 16927 | 11427 | 1 | 40 | 13603 | 761 | 13 | 13 | 54.03 | 0.01 | unproven |
+| scoutingstats | 8670 | 8467 | 4149 | 1185 | 5334 | 5300 | 33 | 8 | 2906 | 422 | 3 | 3 | 61.52 | 0.62 | partial |
+| predictz | 2014 | 0 | 1237 | 157 | 1394 | 0 | 0 | 0 | 574 | 46 | 1 | 1 | 69.22 | 0.0 | partial |
+| windrawwin | 1089 | 0 | 64 | 4 | 68 | 0 | 0 | 0 | 1021 | 0 | 0 | 0 | 6.24 | 0.0 | unproven |
+| prosoccer | 43 | 25 | 29 | 0 | 29 | 22 | 1 | 0 | 14 | 0 | 0 | 0 | 67.44 | 4.35 | partial |
 | soccervista | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | no_data |
-| bettingclosed | 14746 | 14373 | 5498 | 900 | 6398 | 6369 | 28 | 10 | 8015 | 323 | 4 | 4 | 43.39 | 0.44 | unproven |
-| betclan | 1386 | 0 | 126 | 10 | 136 | 0 | 0 | 0 | 1249 | 1 | 0 | 0 | 9.81 | 0.0 | unproven |
+| bettingclosed | 14746 | 14377 | 5500 | 900 | 6400 | 6371 | 28 | 10 | 8013 | 323 | 4 | 4 | 43.4 | 0.44 | unproven |
+| betclan | 1386 | 0 | 129 | 10 | 139 | 0 | 0 | 0 | 1246 | 1 | 0 | 0 | 10.03 | 0.0 | unproven |
 | freesupertips | 16 | 0 | 14 | 0 | 14 | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 87.5 | 0.0 | unproven |
-| afootballreport | 7934 | 0 | 352 | 137 | 489 | 0 | 0 | 0 | 7411 | 34 | 1 | 1 | 6.16 | 0.0 | unproven |
-| bzzoiro | 2268 | 0 | 1271 | 225 | 1496 | 0 | 0 | 2 | 637 | 133 | 1 | 1 | 65.96 | 0.0 | partial |
+| afootballreport | 7950 | 0 | 352 | 137 | 489 | 0 | 0 | 0 | 7427 | 34 | 1 | 1 | 6.15 | 0.0 | unproven |
+| bzzoiro | 2268 | 0 | 1272 | 225 | 1497 | 0 | 0 | 2 | 636 | 133 | 1 | 1 | 66.01 | 0.0 | partial |
 | bzzoiro_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
 | theoddsapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
 | oddspapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
@@ -315,13 +315,13 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-09-29 DEPORTIVO PEREIRA vs INDEP. SANTA FE — reason=no independent donor row, source_score=
   - 2026-09-29 HARTLEPOOL vs HARROGATE — reason=no independent donor row, source_score=0-1
   - 2026-09-29 JAGIELLONIA vs SUDUVA — reason=no independent donor row, source_score=5-0
-  - 2026-09-30 BAHRAIN vs YEMEN — reason=no independent donor row, source_score=
   - 2026-09-30 BELIZE vs ST. VINCENT & G — reason=no independent donor row, source_score=
   - 2026-09-30 EASTLEIGH vs SOUTHEND — reason=no independent donor row, source_score=
   - 2026-09-30 EAST TIMOR vs CAMBODIA — reason=no independent donor row, source_score=
   - 2026-09-30 ENYIMBA INTERNATIO vs SHOOTING STARS — reason=no independent donor row, source_score=
   - 2026-09-30 HONEFOSS vs KFUM KAMERATENE — reason=no independent donor row, source_score=
   - 2026-09-30 INDEP. MEDELLIN vs LOS MILLONARIOS — reason=no independent donor row, source_score=
+  - 2026-09-30 KATSINA vs RIVERS UNITED — reason=no independent donor row, source_score=
 ### bettingclosed
 - ambiguous:
   - 2026-07-29 Crvena Zvezda vs Larne FC — reason=multiple alias donor candidates, candidates=2

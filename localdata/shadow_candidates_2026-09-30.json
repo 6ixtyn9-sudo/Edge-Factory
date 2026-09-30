@@ -1,13 +1,16 @@
 {
   "blocker_counts": {
+    "fewer_than_2_live_voters": 1,
     "inside_30m_lead_or_started": 5,
-    "no_ml_feature_provider_on_fixture": 3,
+    "no_ml_feature_provider_on_fixture": 4,
     "shadow_sources_not_settlement_validated": 5
   },
   "candidate_count": 5,
   "candidates": [
     {
       "blockers": [
+        "fewer_than_2_live_voters",
+        "no_ml_feature_provider_on_fixture",
         "inside_30m_lead_or_started",
         "shadow_sources_not_settlement_validated:prosoccer"
       ],
@@ -19,7 +22,6 @@
         "prosoccer"
       ],
       "live_voters": [
-        "zulubet",
         "betclan"
       ],
       "shadow_voters": [
@@ -34,10 +36,8 @@
       "date": "2026-09-30",
       "dispatchable": false,
       "fixture": "Eastleigh vs Southend",
-      "kickoff": "30-09, 19:45",
+      "kickoff": "19:45",
       "kickoff_donors": [
-        "zulubet",
-        "vitibet",
         "prosoccer"
       ],
       "live_voters": [

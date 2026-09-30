@@ -1,0 +1,84 @@
+{
+  "event_dates": [
+    "2026-10-01"
+  ],
+  "future_event_dates": [
+    "2026-10-01"
+  ],
+  "horizon_pick_count": 1,
+  "horizon_picks": [
+    {
+      "avg_p": 58.47,
+      "away": "New Zealand",
+      "bookmaker": "prosoccer_embedded",
+      "bucket": "PRODUCTION_CERTIFIED",
+      "date": "2026-10-01",
+      "dispatch_method": "certified_rule",
+      "display_rule": "certified_rule:1x2_two_source_p55_unanimous",
+      "edge": 0.1403,
+      "edge_rule": "1x2_two_source_p55_unanimous",
+      "edge_status": "certified",
+      "event_date": "2026-10-01",
+      "feature_schema_version": "fresh_production_features_v1",
+      "home": "Panama",
+      "horizon_pick": true,
+      "implied_probability": 0.4444,
+      "kickoff": "2026-10-01T06:10:00Z",
+      "lane": "fresh_production",
+      "league": "International Friendly Games",
+      "market": "1x2",
+      "model_version": "fresh_production_rules_v1",
+      "odds": 2.25,
+      "odds_match_method": "exact",
+      "odds_replaced": false,
+      "odds_source": "source_embedded_odds",
+      "pick": "home",
+      "price_evidence": null,
+      "price_push_eligible": true,
+      "price_quarantine_reason": null,
+      "price_tier": "source_embedded_price",
+      "pricing_source": "source_embedded_odds",
+      "probability": 0.5847,
+      "rule_id": "1x2_two_source_p55_unanimous",
+      "run_date": "2026-09-30",
+      "selection": "home",
+      "source_voters": [
+        "bzzoiro",
+        "prosoccer"
+      ],
+      "staking_owner": "auto_tickets",
+      "staking_policy": "handled_by_auto_tickets",
+      "timing_source": "bzzoiro",
+      "walkforward_evidence": {
+        "base_rate": 0.5173,
+        "brier": 0.2169,
+        "hit_rate": 0.6599,
+        "hit_rate_lower_bound": 0.6382,
+        "model_eligible": true,
+        "recent_sample": 1023,
+        "sample": 1879,
+        "status": "certified_dispatchable"
+      }
+    }
+  ],
+  "horizon_window": {
+    "horizon_end": "2026-10-02",
+    "max_lead_hours": 48,
+    "min_lead_minutes": 30
+  },
+  "lane": "fresh_production",
+  "note": "Future-dated picks are dispatched under their EVENT date. A run replaces its own run date unconditionally and a future date only when that date appears in this plan, so an empty same-day slate can never delete an already-dispatched future pick.",
+  "notification_action": "future_pick",
+  "replaceable_dates": [
+    "2026-09-30",
+    "2026-10-01"
+  ],
+  "run_date": "2026-09-30",
+  "same_day_pick_count": 0,
+  "same_day_picks": [],
+  "schema": 1,
+  "sync_dates": [
+    "2026-09-30",
+    "2026-10-01"
+  ]
+}
