@@ -37,6 +37,16 @@ jobs:
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
 
+      # Bound the expensive per-event comparison fallback so bzzoiro_odds cannot
+      # consume the whole source-capture budget when best-odds endpoints return 0.
+      # Override with repository secret BZZOIRO_ODDS_MAX_EVENTS if needed.
+      BZZOIRO_ODDS_MAX_EVENTS: ${{ secrets.BZZOIRO_ODDS_MAX_EVENTS || '15' }}
+
+      # Optional Forebet fallback: set repository secret
+      # EDGE_FACTORY_FOREBET_PLAYWRIGHT=1 only after operator sign-off.
+      # When unset, no Playwright browser is installed or used.
+      EDGE_FACTORY_FOREBET_PLAYWRIGHT: ${{ secrets.EDGE_FACTORY_FOREBET_PLAYWRIGHT || '' }}
+
       # Free multi-egress source relays.
       # EDGE_FACTORY_RELAY_URLS order:
       #   1. Cloudflare Worker
@@ -76,6 +86,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install "supabase>=2.4,<3"
+
+      - name: Install optional Forebet Playwright fallback
+        if: ${{ env.EDGE_FACTORY_FOREBET_PLAYWRIGHT == '1' }}
+        run: |
+          python -m pip install "playwright>=1.48,<2"
+          python -m playwright install --with-deps chromium
 
       - name: Restore localdata State (Cache)
         uses: actions/cache/restore@v4
