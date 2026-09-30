@@ -20,6 +20,9 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 
 ## 1. Ordinary Cloudflare Worker relay
 
+The commands below are an optional CLI route. A browser-only GitHub/Cloudflare
+Dashboard route is documented in section 4 and does not require these commands.
+
 From `relay/cloudflare-worker`:
 
 ```bash
@@ -61,10 +64,9 @@ EDGE_FACTORY_RELAY_URLS=https://WORKER.workers.dev,https://script.google.com/mac
 EDGE_FACTORY_RELAY_TOKEN=<same random token>
 ```
 
-Order matters: the Worker is attempted first and Apps Script second. The daily
-workflow already maps both secrets into the pipeline environment. No workflow
-change is made for Browser Run until a one-URL smoke test has returned genuine
-Forebet content.
+Order matters: the Worker is attempted first and Apps Script second. The daily workflow already maps both secrets into the pipeline environment. The
+separate `Forebet Browser Run diagnostic` workflow is manual-only, has no schedule,
+and never runs the normal pipeline.
 
 ## 4. Cloudflare Browser Run: phase-1 diagnostic only
 
@@ -90,60 +92,129 @@ The operation is deliberately bounded:
   are not accepted by this operation.
 - It checks `BROWSER.limits()` before acquisition, launches at most one managed
   browser, performs one navigation with a 45-second timeout, and never retries.
-- `browser.close()` runs on success and failure.
-- A free Workers KV namespace is used as a one-launch-per-UTC-day gate. It is
-  intentionally consumed before navigation, so a failed attempt cannot create a
-  retry storm. Ordinary relay traffic never reads or writes this namespace.
+- After `DOMContentLoaded`, it polls title, URL, and in-memory page markers every
+  1.5 seconds while a normal Cloudflare challenge remains transitional. It stops
+  immediately on concrete fixture evidence, CAPTCHA/Turnstile, denial, generic
+  non-challenge content, or the hard deadline.
+- The post-navigation observation window is at most 20 seconds and the overall
+  deadline is 55 seconds, below the documented 60-second Browser Run inactivity
+  timeout. `browser.close()` runs on success and failure.
+- A free Workers KV namespace is used as a best-effort one-launch-per-UTC-day gate.
+  The `get` followed by `put` is **not atomic**; this is not described as a lock.
+  The diagnostic is authenticated and manual-only, so the operator must invoke it
+  once. Ordinary relay traffic never reads or writes this namespace.
 
-### One-time Browser Run setup
+### Browser-only deployment through GitHub and Cloudflare dashboards
 
-The browser binding itself needs no API token. From `relay/cloudflare-worker`:
+No terminal, npm, Wrangler, curl, jq, Codespaces, or always-on computer is
+required for this route.
 
-```bash
-npm install
-npx wrangler login
-npx wrangler kv namespace create BROWSER_DIAGNOSTIC_KV
-```
+#### A. Merge the repository change in GitHub
 
-Copy the generated namespace ID into `wrangler.toml` by uncommenting and filling
-this block; do not commit credentials or account identifiers beyond the generated
-binding ID if the operator's deployment convention permits it:
+1. Open the repository on GitHub.
+2. Open the pull request for branch `arena/01a0f031-edge-factory`.
+3. Review and merge it into the repository's production branch, normally `main`.
+4. Do not run the normal daily workflow for this diagnostic.
 
-```toml
-[[kv_namespaces]]
-binding = "BROWSER_DIAGNOSTIC_KV"
-id = "<BINDING_ID>"
-```
+If the workflow file cannot be pushed by the GitHub App because of missing
+`workflows` permission, create `.github/workflows/forebet-browser-diagnostic.yml`
+with the version in this commit using GitHub's **Add file → Create new file** web
+editor, commit it to the production branch, and then continue. The workflow has
+only `workflow_dispatch`, `contents: read`, a three-minute job timeout, one POST,
+and no retry or artifact step.
 
-Then deploy the worker with the existing secret:
+#### B. Connect the existing Worker to Workers Builds
 
-```bash
-npx wrangler secret put RELAY_TOKEN
-npx wrangler deploy
-```
+Cloudflare's current dashboard path is:
+
+1. Open **Workers & Pages** and select the existing ordinary relay Worker.
+2. Open **Settings → Builds → Connect**.
+3. Authorize the public GitHub repository `6ixtyn9-sudo/Edge-Factory`.
+4. Select the production branch (`main` after the merge).
+5. Set **Root directory** to `relay/cloudflare-worker`.
+6. Leave **Build command** blank; `package.json` dependencies are installed for
+   the project and no compile step is required.
+7. Set **Deploy command** to `npx wrangler deploy`.
+8. Save the build settings and use **Deploy** or push the merged commit.
+
+Workers Builds uses the repository's `wrangler.toml`, including the managed
+Browser Run binding and `nodejs_compat_v2` flag. The Browser Run binding does not
+need an API token. Cloudflare may generate and manage the build authorization
+itself; do not paste a Cloudflare API token into the repository or GitHub Actions.
+
+Official dashboard documentation:
+
+- <https://developers.cloudflare.com/workers/ci-cd/builds/>
+- <https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/>
+- <https://developers.cloudflare.com/workers/ci-cd/builds/configuration/>
+
+#### C. Create and bind the free KV namespace in Cloudflare
+
+1. In Cloudflare, open **Workers & Pages → KV**.
+2. Select **Create namespace** and name it something like
+   `edge-factory-browser-diagnostic`.
+3. Open the relay Worker and go to **Settings → Variables and Secrets** or
+   **Bindings**.
+4. Add a **KV namespace binding** with variable name exactly
+   `BROWSER_DIAGNOSTIC_KV`.
+5. Select the namespace created above and save/deploy the binding.
+6. Confirm the Worker also has the Browser Run binding named exactly `BROWSER`.
+   It is declared in `wrangler.toml`; if the dashboard presents it under
+   **Bindings**, add/select the managed Browser Run binding with that name.
+
+If Workers Builds requires all bindings to be present in the Wrangler file, use
+GitHub's web editor to uncomment the existing `[[kv_namespaces]]` block in
+`relay/cloudflare-worker/wrangler.toml` and enter only the KV namespace ID shown
+by the Cloudflare dashboard. This ID is not a secret, but do not paste account
+IDs or tokens into source.
+
+#### D. Preserve the existing relay secret
+
+In the Worker dashboard's **Settings → Variables and Secrets**, confirm the
+encrypted secret named `RELAY_TOKEN` still exists. If it does not, add the same
+value already used by the existing relay. Do not reveal it in an issue, pull
+request, workflow input, URL, or chat.
+
+In the GitHub repository, confirm these existing encrypted Actions secrets are
+present under **Settings → Secrets and variables → Actions**:
+
+- `EDGE_FACTORY_RELAY_URLS`, with the Cloudflare Worker URL first;
+- `EDGE_FACTORY_RELAY_TOKEN`, with the same relay token.
+
+The diagnostic workflow reads these secrets only at runtime. It does not print
+them, construct a URL containing the token, upload artifacts, or dump its
+environment. ScoutingStats continues to use the ordinary relay path.
 
 The free KV namespace is only for the diagnostic gate. Current Cloudflare KV
 documentation lists 100,000 reads/day, 1,000 writes/day, 1 GB storage, and
 resets at 00:00 UTC on the Workers Free plan. The diagnostic uses at most one
-read and one write per attempted day.
+read and one write per attempted day. The get-then-put gate is not atomic, so
+invoke the workflow only once and treat the Browser Run account limit as the
+final quota backstop.
 
-### One-URL smoke test
+### One-URL smoke test without a terminal
 
-Run this once, manually, against the deployed Worker. Substitute the already
-configured relay URL and secret in the shell; never paste either value into
-source, logs, or chat:
+Use the GitHub web UI rather than a third-party request tester:
 
-```bash
-curl --fail-with-body -sS -X POST "$WORKER_URL" \
-  -H 'content-type: application/json' \
-  --data '{"token":"<RELAY_TOKEN>","operation":"forebet_browser_diagnostic"}'
-```
+1. Open the repository's **Actions** tab.
+2. Select **Forebet Browser Run diagnostic**.
+3. Select **Run workflow** on the production branch.
+4. Do not enter any token or URL as an input; this workflow has no inputs.
+5. Open the single job and read its one bounded JSON diagnostic output.
+6. Do not click **Run workflow** a second time on the same UTC day, including after
+   a configuration failure. Configuration checks now happen before the KV claim,
+   but a launch or navigation failure consumes the attempt deliberately.
+
+The workflow uses Python's standard library on the hosted runner. It performs
+exactly one POST, has a 75-second HTTP timeout and a three-minute job timeout, and
+never uses curl, jq, npm, Wrangler, a shell-expanded token, or an artifact. The
+secret remains in the runner process environment and is never printed.
 
 The response is a bounded JSON diagnostic, not page HTML. It includes upstream
 HTTP status, final URL, content type, response byte count, title, challenge and
-CAPTCHA/Turnstile flags, prediction-markup evidence, timeout state, classification,
-and launch/navigation counts. It never returns cookies, headers, session IDs, or
-complete HTML.
+CAPTCHA/Turnstile flags, generic/candidate/concrete fixture evidence, observation
+count and elapsed time, timeout state, classification, and launch/navigation counts.
+It never returns cookies, headers, session IDs, or complete HTML.
 
 Accept success only when all of these are true:
 
@@ -152,8 +223,11 @@ classification = genuine_forebet_prediction_content
 success = true
 contains_cloudflare_challenge = false
 contains_forebet_prediction_markup = true
+candidate_prediction_content = true
+concrete_fixture_row_evidence = true
 final_url has host www.forebet.com
 http_status is 2xx
+observation_deadline_exceeded = false
 ```
 
 This is only a page-access smoke test. It does **not** certify the JSON endpoint,
@@ -169,6 +243,8 @@ have been separately proven.
   does not perform.
 - `explicit_access_denial`: a non-challenge denial or access-denied response.
 - `navigation_timeout`: navigation exceeded the hard timeout.
+- `unresolved_cloudflare_challenge` with `observation_deadline_exceeded=true`:
+  the challenge remained after the bounded post-navigation observation window.
 - `quota_or_plan_error`: the KV daily claim, Browser Run acquisition limit, or
   free daily browser allowance prevented a run. Do not retry repeatedly; wait for
   the next UTC day after confirming the account's Browser Run usage.
@@ -212,6 +288,30 @@ Official documentation:
 - <https://developers.cloudflare.com/kv/platform/limits/>
 - <https://developers.cloudflare.com/kv/platform/pricing/>
 
+### npm advisory audit for the pinned Puppeteer dependency
+
+As of 2026-09-30, `npm audit --omit=dev --json` reports three high-severity
+findings in the install dependency graph:
+
+- Direct package: `@cloudflare/puppeteer@1.4.0`.
+- Dependency path:
+  `@cloudflare/puppeteer@1.4.0 → @puppeteer/browsers@2.2.4 → extract-zip@2.0.1`.
+- `extract-zip` advisories:
+  - `GHSA-jmr9-qjv8-65gv`, unvalidated symlink path traversal;
+  - `GHSA-7pqw-9j4j-h8q3`, arbitrary file writes through symlink archive entries.
+
+The flagged code belongs to Puppeteer's Node browser-download/archive path. The
+Cloudflare package's Worker entry point imports `PuppeteerWorkers`, not the Node
+launcher modules that use `@puppeteer/browsers`; the Wrangler dry-run bundle was
+checked and contains no `extract-zip` or `@puppeteer/browsers` code. This is still
+an install/build audit finding and should be monitored, but it is not an observed
+runtime path for this Worker. Do not run `npm audit fix --force`: that would change
+the Cloudflare-supported package graph without a tested compatible release.
+
+`npm view @cloudflare/puppeteer` currently reports `1.4.0` as the latest release;
+no newer compatible Cloudflare package was available during this review. Recheck
+before any future dependency update.
+
 ## Rollback and temporary diagnostics
 
 To roll back without touching the working ScoutingStats path, remove the
@@ -225,8 +325,9 @@ After a failed smoke test, keep the bounded classification in the operator's
 run notes and stop. After a successful page smoke test, the temporary diagnostic
 must be retained only while Phase 2 checks the JSON endpoint and the three
 markets; it must be removed or replaced by a separately reviewed, bounded
-production transport after validation. No diagnostic operation is mapped into
-GitHub Actions by this change.
+production transport after validation. The manual diagnostic workflow may remain
+as an operator tool, but it must not be scheduled or connected to the normal
+pipeline.
 
 ## Existing relay smoke test
 
