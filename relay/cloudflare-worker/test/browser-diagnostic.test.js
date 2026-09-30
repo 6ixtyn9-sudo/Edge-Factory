@@ -8,6 +8,7 @@ import {
   MAX_DIAGNOSTIC_HTML_BYTES,
   claimDailyBrowserBudget,
   classifyRenderedForebet,
+  observeForebetPage,
   runForebetBrowserDiagnostic,
 } from "../src/browser-diagnostic.js";
 
@@ -15,7 +16,7 @@ const FOREBET_HTML = `
   <html><head><title>Today | Forebet</title></head>
   <body><h1>Today | 1X2 Predictions</h1>
   <div>Home team Away team Prob. % Prediction Correct score</div>
-  <div>Alpha Beta 30/09/2026 20:00 55 25 20</div></body></html>
+  <div>Alpha Beta 30/09/2026 20:00 55 25 20 1 - 0</div></body></html>
 `;
 
 const CHALLENGE_HTML = `
@@ -155,6 +156,93 @@ test("classifies response-size overflow without accepting the page", () => {
   assert.ok(MAX_DIAGNOSTIC_HTML_BYTES > 0);
 });
 
+function observationResponse(status = 200) {
+  return {
+    status: () => status,
+    headers: () => ({"content-type": "text/html; charset=utf-8"}),
+  };
+}
+
+function pollingPage(bodies) {
+  let index = 0;
+  return {
+    async url() {
+      return FOREBET_DIAGNOSTIC_URL;
+    },
+    async title() {
+      return index < bodies.length - 1 ? "Just a moment..." : "Today | Forebet";
+    },
+    async content() {
+      const body = bodies[Math.min(index, bodies.length - 1)];
+      index += 1;
+      return body;
+    },
+  };
+}
+
+test("waits for a transitional challenge to become concrete Forebet content", async () => {
+  let clock = 0;
+  const sleeps = [];
+  const result = await observeForebetPage(pollingPage([
+    CHALLENGE_HTML,
+    CHALLENGE_HTML,
+    FOREBET_HTML,
+  ]), {
+    initialResponse: observationResponse(),
+    deadlineAt: 5_000,
+    startedAt: 0,
+    now: () => clock,
+    sleep: async milliseconds => {
+      sleeps.push(milliseconds);
+      clock += milliseconds;
+    },
+  });
+
+  assert.equal(result.classification, CLASSIFICATIONS.CONTENT);
+  assert.equal(result.observation_count, 3);
+  assert.equal(result.observation_deadline_exceeded, false);
+  assert.deepEqual(sleeps, [1_500, 1_500]);
+});
+
+test("stops at the observation deadline when challenge never resolves", async () => {
+  let clock = 0;
+  const result = await observeForebetPage(pollingPage([CHALLENGE_HTML]), {
+    initialResponse: observationResponse(),
+    deadlineAt: 3_000,
+    startedAt: 0,
+    now: () => clock,
+    sleep: async milliseconds => {
+      clock += milliseconds;
+    },
+  });
+
+  assert.equal(result.classification, CLASSIFICATIONS.CHALLENGE);
+  assert.equal(result.observation_deadline_exceeded, true);
+  assert.equal(result.observation_count, 3);
+});
+
+test("stops immediately on CAPTCHA, denial, and concrete content", async () => {
+  for (const [body, expected] of [
+    ["<html><div>Turnstile verify you are human</div></html>", CLASSIFICATIONS.CAPTCHA],
+    ["<html><title>Access denied</title></html>", CLASSIFICATIONS.ACCESS_DENIED],
+    [FOREBET_HTML, CLASSIFICATIONS.CONTENT],
+  ]) {
+    let sleepCalls = 0;
+    const result = await observeForebetPage(pollingPage([body]), {
+      initialResponse: observationResponse(expected === CLASSIFICATIONS.ACCESS_DENIED ? 403 : 200),
+      deadlineAt: 5_000,
+      startedAt: 0,
+      now: () => 0,
+      sleep: async () => {
+        sleepCalls += 1;
+      },
+    });
+    assert.equal(result.classification, expected);
+    assert.equal(result.observation_count, 1);
+    assert.equal(sleepCalls, 0);
+  }
+});
+
 test("uses one launch and closes the managed browser after genuine content", async () => {
   const kv = makeKv();
   const events = [];
@@ -206,6 +294,36 @@ test("closes the managed browser when navigation times out and does not retry", 
   assert.deepEqual(events, ["launch", "newPage", "close"]);
 });
 
+test("closes the managed browser after a polling error", async () => {
+  const events = [];
+  const page = {
+    setDefaultNavigationTimeout() {},
+    async goto() {
+      return observationResponse();
+    },
+    async url() {
+      return FOREBET_DIAGNOSTIC_URL;
+    },
+    async title() {
+      return "Just a moment...";
+    },
+    async content() {
+      throw new Error("polling failed");
+    },
+  };
+  const result = await runForebetBrowserDiagnostic(
+    makeEnv(),
+    {launch: async () => {
+      events.push("launch");
+      return makeBrowser(page, events);
+    }},
+    {now: new Date("2026-09-30T08:00:00Z")},
+  );
+
+  assert.equal(result.classification, CLASSIFICATIONS.CONFIGURATION);
+  assert.deepEqual(events, ["launch", "newPage", "close"]);
+});
+
 test("reports missing Browser Run binding without touching the budget", async () => {
   const kv = makeKv();
   const result = await runForebetBrowserDiagnostic(
@@ -226,24 +344,28 @@ test("reports missing daily budget binding without launching", async () => {
   assert.equal(result.error_code, "missing_daily_budget_binding");
 });
 
-test("reports Browser Run API/configuration failures", async () => {
+test("reports Browser Run API/configuration failures before consuming the daily gate", async () => {
+  const kv = makeKv();
   const result = await runForebetBrowserDiagnostic(
-    makeEnv({limits: Object.assign(new Error("binding API unavailable"), {status: 500})}),
+    makeEnv({kv, limits: Object.assign(new Error("binding API unavailable"), {status: 500})}),
     {launch: async () => { throw new Error("must not launch"); }},
   );
   assert.equal(result.classification, CLASSIFICATIONS.CONFIGURATION);
   assert.equal(result.http_response_status, 503);
   assert.equal(result.browser_launch_attempts, 0);
+  assert.equal(kv.calls.length, 0);
 });
 
-test("reports quota exhaustion before launching Chromium", async () => {
+test("reports quota exhaustion before launching Chromium or consuming the gate", async () => {
+  const kv = makeKv();
   const result = await runForebetBrowserDiagnostic(
-    makeEnv({limits: {allowedBrowserAcquisitions: 0, activeSessions: [], maxConcurrentSessions: 3}}),
+    makeEnv({kv, limits: {allowedBrowserAcquisitions: 0, activeSessions: [], maxConcurrentSessions: 3}}),
     {launch: async () => { throw new Error("must not launch"); }},
   );
   assert.equal(result.classification, CLASSIFICATIONS.QUOTA);
   assert.equal(result.http_response_status, 429);
   assert.equal(result.browser_launch_attempts, 0);
+  assert.equal(kv.calls.length, 0);
 });
 
 test("enforces one diagnostic budget claim per UTC day", async () => {
