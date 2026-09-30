@@ -54,25 +54,16 @@ if str(ROOT / "src") not in sys.path:
 # Every source that can produce same-day prediction rows, including the ones
 # the picks engine does NOT currently consume — that gap is a finding, not an
 # omission, so they must appear in the table.
-SAME_DAY_SOURCES: tuple[str, ...] = (
-    "forebet",
-    "zulubet",
-    "statarea",
-    "vitibet",
-    "betclan",
-    "bzzoiro",
-    "scoutingstats",
-    "predictz",
-    "windrawwin",
-    "freesupertips",
-    "afootballreport",
-    "prosoccer",
-    "soccervista",
-    "bettingclosed",
-)
+from edgefactory import source_registry
 
-ODDS_SOURCES: tuple[str, ...] = ("bzzoiro_odds", "theoddsapi_odds", "oddspapi_odds",
-                                 "betexplorer_odds")
+# Derived from the single capability registry so a captured source can never
+# be silently invisible again (see test_source_registry.py).
+SAME_DAY_SOURCES: tuple[str, ...] = tuple(
+    c.name for c in source_registry.REGISTRY
+    if {"1x2", "ou", "btts"} & set(c.markets)
+) + ("bettingclosed",)
+
+ODDS_SOURCES: tuple[str, ...] = tuple(source_registry.names(source_registry.TIER_PRICING))
 
 DEFAULT_MIN_LEAD = 30
 
@@ -335,9 +326,12 @@ def build_consensus_funnel(
         row = next(
             (per_source[s][key] for s in sources_1x2 if key in per_source.get(s, {})), {}
         )
+        # Fixture-group timing: a kickoff-less voter no longer poisons the
+        # group if a timing-capable matched source supplies a trusted kickoff.
+        agg = aggregate_fixture_kickoff(key, per_source, engine=engine)
         probe = {
             "date": str(row.get("date") or "")[:10],
-            "kickoff": row.get("kickoff") or row.get("time") or "",
+            "kickoff": agg["kickoff"],
         }
         ok, reason = engine.operational_pick_eligibility(probe, as_of=as_of, min_lead=min_lead)
         if ok:
@@ -348,6 +342,7 @@ def build_consensus_funnel(
             kickoff_examples[reason or "unknown"].append({
                 "fixture": f"{row.get('home', key[0])} vs {row.get('away', key[1])}",
                 "kickoff_raw": str(probe["kickoff"]) or "(none)",
+                "kickoff_donors": ",".join(agg["kickoff_donors"]) or "none",
                 "sources": ",".join(s for s in sources_1x2 if key in per_source.get(s, {})),
             })
 
@@ -363,6 +358,102 @@ def build_consensus_funnel(
         "kickoff_drops": dict(kickoff_drops),
         "kickoff_drop_examples": {k: v for k, v in kickoff_examples.items()},
     }
+
+
+KICKOFF_CLASSES = (
+    "trusted",            # parsed to a real datetime
+    "clock_only",         # a time string that would not parse -> fail closed
+    "date_only",          # date present, no time component
+    "absent",             # source emits no kickoff/time value at all
+)
+
+
+def classify_kickoff(row: dict, *, engine) -> tuple[str, str]:
+    """Classify one row's kickoff. Fails closed: anything unparseable is unsafe."""
+    raw = row.get("kickoff") or row.get("time") or ""
+    text = str(raw).strip()
+    if not text:
+        return "absent", ""
+    if engine.parse_kickoff_dt(text) is not None:
+        return "trusted", text
+    # Present but unparseable (ambiguous clock, unknown timezone, junk).
+    return ("date_only" if len(text) >= 8 and ":" not in text else "clock_only"), text
+
+
+def aggregate_fixture_kickoff(
+    key: tuple[str, str],
+    per_source: dict[str, dict[tuple[str, str], dict]],
+    *,
+    engine,
+) -> dict:
+    """Fixture-group kickoff: any TIMING-CAPABLE matched source may supply it.
+
+    A source with no kickoff column must not poison an otherwise valid fixture
+    group — but it must not be allowed to supply timing either. Only sources
+    the registry marks ``provides_kickoff`` can donate the timing anchor, and
+    the value still has to parse. No trusted value anywhere => fail closed.
+    """
+    donors: list[str] = []
+    classes: dict[str, str] = {}
+    kickoff_value = ""
+    for source, fixtures in per_source.items():
+        row = fixtures.get(key)
+        if row is None:
+            continue
+        kind, text = classify_kickoff(row, engine=engine)
+        classes[source] = kind
+        cap = source_registry.get(source)
+        if kind == "trusted" and cap is not None and cap.provides_kickoff:
+            donors.append(source)
+            kickoff_value = kickoff_value or text
+    return {
+        "kickoff": kickoff_value,
+        "kickoff_donors": donors,
+        "trusted": bool(donors),
+        "classes": classes,
+    }
+
+
+def classify_voters(
+    per_source: dict[str, dict[tuple[str, str], dict]],
+    rows_by_source: dict[str, "SourceDay"],
+    *,
+    engine,
+) -> dict:
+    """Every source with extractable 1X2 signal is live / shadow / blocked."""
+    out: dict[str, dict] = {}
+    for source, summary in rows_by_source.items():
+        cap = source_registry.get(source)
+        signal_rows = summary.has_1x2_signal
+        if cap is None:
+            role, blocker = "blocked", "not in source capability registry"
+        elif cap.pricing_only:
+            role, blocker = "not_a_voter", "pricing-only source"
+        elif cap.donor_only:
+            role, blocker = "not_a_voter", "settlement/result donor only"
+        elif "1x2" not in cap.markets:
+            role, blocker = "not_a_voter", "adapter exposes no 1X2 probability fields"
+        elif signal_rows == 0:
+            role, blocker = "blocked", (
+                "no same-day rows captured" if summary.raw_rows == 0
+                else "rows captured but no 1X2 probability fields parsed"
+            )
+        elif cap.tier == source_registry.TIER_LIVE:
+            role, blocker = "live_voter", ""
+        else:
+            role, blocker = "shadow_voter", (
+                "source tier is shadow: not settlement-validated for dispatch"
+            )
+        out[source] = {
+            "role": role,
+            "tier": cap.tier if cap else "unregistered",
+            "raw_rows": summary.raw_rows,
+            "normalized_fixtures": summary.unique_fixtures,
+            "rows_with_1x2_signal": signal_rows,
+            "blocker": blocker or "-",
+            "caveats": list(cap.caveats) if cap else ["unregistered source"],
+        }
+    return out
 
 
 def build_shadow_expansion(
@@ -419,6 +510,97 @@ def build_shadow_expansion(
     }
 
 
+def build_shadow_candidates(
+    per_source: dict[str, dict[tuple[str, str], dict]],
+    *,
+    engine,
+    as_of: datetime,
+    min_lead: int,
+    day: str,
+    validation: dict[str, str],
+    limit: int = 200,
+) -> dict:
+    """Non-dispatch shadow slate: what WOULD be evaluable on a wider universe.
+
+    Every row carries ``dispatchable: false`` and an explicit blocker list.
+    Nothing downstream reads this: it is an evidence artifact for the operator,
+    not a pick source. It cannot become a CLEAN or CAUTION pick.
+    """
+    live = list(getattr(engine, "SOURCES_1X2", ()) or ())
+    shadow = [s for s in source_registry.shadow_1x2_sources() if s in per_source]
+
+    keys: set[tuple[str, str]] = set()
+    for source in live + shadow:
+        keys |= set(per_source.get(source, {}))
+
+    rows: list[dict] = []
+    blocker_counts: Counter = Counter()
+    for key in sorted(keys):
+        voters = [
+            s for s in live + shadow
+            if key in per_source.get(s, {})
+            and engine.probs_1x2(per_source[s][key]) is not None
+        ]
+        if len(voters) < 2:
+            continue
+        live_voters = [s for s in voters if s in live]
+        shadow_voters = [s for s in voters if s not in live]
+        if not shadow_voters:
+            continue  # already fully representable in the live funnel
+
+        agg = aggregate_fixture_kickoff(key, per_source, engine=engine)
+        anchor = next(per_source[s][key] for s in voters if key in per_source.get(s, {}))
+
+        blockers: list[str] = []
+        if len(live_voters) < 2:
+            blockers.append("fewer_than_2_live_voters")
+        if not source_registry.has_ml_feature_support(voters):
+            blockers.append("no_ml_feature_provider_on_fixture")
+        if not agg["trusted"]:
+            blockers.append("no_trusted_kickoff_from_a_timing_capable_source")
+        else:
+            ok, reason = engine.operational_pick_eligibility(
+                {"date": day, "kickoff": agg["kickoff"]}, as_of=as_of, min_lead=min_lead
+            )
+            if not ok:
+                blockers.append(reason or "kickoff_guard")
+        unvalidated = sorted(
+            s for s in shadow_voters
+            if validation.get(s, "unknown") not in {"settlement_validated"}
+        )
+        if unvalidated:
+            blockers.append("shadow_sources_not_settlement_validated:" + ",".join(unvalidated))
+        for b in blockers:
+            blocker_counts[b.split(":")[0]] += 1
+
+        rows.append({
+            "date": day,
+            "fixture": f"{anchor.get('home', key[0])} vs {anchor.get('away', key[1])}",
+            "live_voters": live_voters,
+            "shadow_voters": shadow_voters,
+            "kickoff": agg["kickoff"] or None,
+            "kickoff_donors": agg["kickoff_donors"],
+            "dispatchable": False,
+            "blockers": blockers,
+        })
+
+    return {
+        "date": day,
+        "dispatchable": False,
+        "note": (
+            "Shadow evaluation only. These rows are NEVER dispatched, never "
+            "become CLEAN/CAUTION picks, and are not read by the pick engine. "
+            "Promotion requires settlement-coverage evidence plus operator "
+            "sign-off."
+        ),
+        "live_voter_sources": live,
+        "shadow_voter_sources": shadow,
+        "candidate_count": len(rows),
+        "blocker_counts": dict(blocker_counts),
+        "candidates": rows[:limit],
+    }
+
+
 def build_kickoff_funnel(rows_by_source: dict[str, SourceDay]) -> dict:
     return {
         source: {
@@ -441,8 +623,15 @@ def build_odds_funnel(
     *,
     engine,
     examples: int = 10,
+    candidates_before_odds: int | None = None,
 ) -> dict:
-    out: dict = {"sources": {}, "examples": {}}
+    """Odds diagnostics that separate 'no candidates' from 'matching broken'."""
+    out: dict = {
+        "sources": {},
+        "examples": {},
+        "candidates_before_odds": candidates_before_odds,
+        "diagnosis": None,
+    }
     for source in ODDS_SOURCES:
         rows = load_day_rows(localdata, source, day)
         keys: set[tuple[str, str]] = set()
@@ -452,9 +641,20 @@ def build_odds_funnel(
                 continue
             keys.add((engine.source_team_key(home), engine.source_team_key(away)))
         overlap = keys & consensus_keys
+        cap = source_registry.get(source)
+        status = "ok"
+        if not rows:
+            status = "empty_no_rows_today"
+        elif not keys:
+            status = "rows_without_fixture_identity (event-id only feed)"
+        elif not overlap and consensus_keys:
+            status = "rows_present_but_zero_overlap_with_consensus_surface"
         out["sources"][source] = {
             "cached_rows": len(rows),
+            "live_rows": 0 if not rows else None,
             "unique_fixtures": len(keys),
+            "status": status,
+            "backfill": cap.backfill if cap else "unknown",
             "overlap_with_consensus_surface": len(overlap),
             "coverage_pct_of_consensus": (
                 round(100.0 * len(overlap) / len(consensus_keys), 2) if consensus_keys else 0.0
@@ -463,6 +663,23 @@ def build_odds_funnel(
         if consensus_keys:
             missing = sorted(consensus_keys - keys)[:examples]
             out["examples"][source] = [f"{h} vs {a}" for h, a in missing]
+
+    any_price_rows = any(v["cached_rows"] for v in out["sources"].values())
+    any_overlap = any(v["overlap_with_consensus_surface"] for v in out["sources"].values())
+    if candidates_before_odds == 0:
+        out["diagnosis"] = (
+            "no_candidates_to_price — enrichment of 0 is a CONSEQUENCE of an "
+            "empty candidate slate, not evidence that price matching is broken"
+        )
+    elif not any_price_rows:
+        out["diagnosis"] = "no_price_rows_captured_today"
+    elif not any_overlap:
+        out["diagnosis"] = (
+            "price_identity_broken — price rows exist for today but none share "
+            "a fixture identity with the consensus surface"
+        )
+    else:
+        out["diagnosis"] = "price_fixtures_overlap_the_surface"
     return out
 
 
@@ -511,7 +728,20 @@ def build_backfill_depth(localdata: Path, day: str, sources: tuple[str, ...]) ->
         # pipeline can reach: it is capture-forward only and deeper history is
         # NOT retrievable by re-running capture.
         capture_forward_only = start == day or start == "-"
+        cap = source_registry.get(source)
+        declared = cap.backfill if cap else "unknown"
+        gaps = sorted(d30 - days_seen)
+        if declared == source_registry.BACKFILL_FORWARD_ONLY:
+            expectation = "thin history EXPECTED (capture-forward only adapter)"
+        elif gaps and failures:
+            expectation = "gap with retryable failures — retry, then re-audit"
+        elif gaps:
+            expectation = "GAP WITHOUT RECORDED FAILURE — investigate the job/adapter"
+        else:
+            expectation = "complete for D30"
         out[source] = {
+            "declared_backfill_mode": declared,
+            "gap_expectation": expectation,
             "first_local_date": min(days_seen) if days_seen else None,
             "latest_local_date": max(days_seen) if days_seen else None,
             "distinct_local_dates": len(days_seen),
@@ -578,6 +808,7 @@ def run_audit(
         rows_by_source[source] = summary
         per_source[source] = fixtures
 
+    validation = source_registry.load_validation_states(localdata, day)
     overlap = build_overlap(per_source, engine=engine, examples=examples)
     consensus = build_consensus_funnel(
         per_source, engine=engine, as_of=as_of, min_lead=min_lead, examples=examples
@@ -585,6 +816,30 @@ def run_audit(
     consensus_keys: set[tuple[str, str]] = set()
     for source in consensus["sources_1x2"]:
         consensus_keys |= set(per_source.get(source, {}))
+
+    shadow_slate = build_shadow_candidates(
+        per_source, engine=engine, as_of=as_of, min_lead=min_lead, day=day,
+        validation=validation, limit=examples * 20,
+    )
+    voters = classify_voters(per_source, rows_by_source, engine=engine)
+    odds = build_odds_funnel(
+        localdata, day, consensus_keys, engine=engine, examples=examples,
+        candidates_before_odds=consensus["fixtures_ml_scoreable_pre_match_eligible"],
+    )
+    warnings = source_registry.funnel_warnings(
+        match_surface=consensus["match_surface"],
+        scored_fixtures=consensus["fixtures_ml_scoreable"],
+        live_candidates=consensus["fixtures_ml_scoreable_pre_match_eligible"],
+        shadow_candidates=shadow_slate["candidate_count"],
+        sources_with_1x2_rows=[
+            s for s, r in rows_by_source.items() if r.has_1x2_signal
+        ],
+        candidates_before_odds=consensus["fixtures_ml_scoreable_pre_match_eligible"],
+        odds_enriched=sum(
+            v["overlap_with_consensus_surface"] for v in odds["sources"].values()
+        ),
+    )
+    warnings += source_registry.registry_coverage_warnings(capture_windows())
 
     return {
         "schema": 1,
@@ -596,9 +851,11 @@ def run_audit(
         "consensus_funnel": consensus,
         "kickoff_funnel": build_kickoff_funnel(rows_by_source),
         "shadow_expansion": build_shadow_expansion(per_source, engine=engine, examples=examples),
-        "odds_funnel": build_odds_funnel(
-            localdata, day, consensus_keys, engine=engine, examples=examples
-        ),
+        "odds_funnel": odds,
+        "voter_classification": voters,
+        "shadow_candidates": shadow_slate,
+        "source_registry": source_registry.describe(localdata, day),
+        "warnings": warnings,
         "backfill_depth": build_backfill_depth(localdata, day, sources),
         "_rows": rows_by_source,
     }
@@ -689,6 +946,35 @@ def render_markdown(report: dict) -> str:
             out.append(f"Examples — {reason}:")
             out += [f"  - {', '.join(f'{k}={v}' for k, v in item.items())}" for item in items]
 
+    out += ["", "## A2. Voter classification", "",
+            "| source | tier | role | raw | fixtures | 1x2 rows | blocker |",
+            "|---|---|---|---:|---:|---:|---|"]
+    for source, v in report["voter_classification"].items():
+        out.append(
+            f"| {source} | {v['tier']} | {v['role']} | {v['raw_rows']} | "
+            f"{v['normalized_fixtures']} | {v['rows_with_1x2_signal']} | {v['blocker']} |"
+        )
+
+    sc = report["shadow_candidates"]
+    out += [
+        "",
+        "## A3. Shadow candidates (NON-DISPATCH)",
+        "",
+        f"- shadow candidate fixtures: **{sc['candidate_count']}** (dispatchable: "
+        f"{sc['dispatchable']})",
+        f"- shadow voter sources today: {', '.join(sc['shadow_voter_sources']) or 'none'}",
+        "",
+        sc["note"],
+        "",
+    ]
+    if sc["blocker_counts"]:
+        out.append("Blockers:")
+        out += [f"  - {k}: {v}" for k, v in sorted(sc["blocker_counts"].items())]
+
+    if report["warnings"]:
+        out += ["", "## A1. Roach detector warnings", ""]
+        out += [f"- {w}" for w in report["warnings"]]
+
     sh = report["shadow_expansion"]
     out += [
         "",
@@ -715,6 +1001,11 @@ def render_markdown(report: dict) -> str:
             f"| {source} | {o['cached_rows']} | {o['unique_fixtures']} | "
             f"{o['overlap_with_consensus_surface']} | {o['coverage_pct_of_consensus']} |"
         )
+    out += ["", f"Diagnosis: **{report['odds_funnel']['diagnosis']}** "
+            f"(candidates before odds: {report['odds_funnel']['candidates_before_odds']})"]
+    for source, o in report["odds_funnel"]["sources"].items():
+        if o["status"] != "ok":
+            out.append(f"- {source}: {o['status']}")
 
     out += ["", "## F. Backfill depth / retryable gaps", "",
             "| source | first | latest | dates | capture window | fwd-only | missing in D30 | retryable | deeper possible |",
@@ -726,6 +1017,9 @@ def render_markdown(report: dict) -> str:
             f"{'yes' if b['capture_forward_only'] else 'no'} | {b['missing_dates_in_d30_count']} | "
             f"{len(b['retryable_failure_dates'])} | {'yes' if b['deeper_backfill_possible'] else 'no'} |"
         )
+    out += ["", "Gap expectations:"]
+    out += [f"  - {src}: {b['declared_backfill_mode']} — {b['gap_expectation']}"
+            for src, b in report["backfill_depth"].items()]
 
     out += [
         "",
@@ -737,6 +1031,38 @@ def render_markdown(report: dict) -> str:
     return "\n".join(out)
 
 
+def render_shadow_markdown(report: dict) -> str:
+    sc = report["shadow_candidates"]
+    out = [
+        f"# Shadow candidates — {report['date']} (NON-DISPATCH)",
+        "",
+        f"dispatchable: **{sc['dispatchable']}**. {sc['note']}",
+        "",
+        f"- live voter sources: {', '.join(sc['live_voter_sources'])}",
+        f"- shadow voter sources today: {', '.join(sc['shadow_voter_sources']) or 'none'}",
+        f"- shadow candidate fixtures: **{sc['candidate_count']}**",
+        "",
+    ]
+    if sc["blocker_counts"]:
+        out += ["Blockers:", ""]
+        out += [f"- {k}: {v}" for k, v in sorted(sc["blocker_counts"].items())]
+        out.append("")
+    if sc["candidates"]:
+        out += ["| fixture | live voters | shadow voters | kickoff | blockers |",
+                "|---|---|---|---|---|"]
+        for row in sc["candidates"]:
+            out.append(
+                f"| {row['fixture']} | {','.join(row['live_voters']) or '-'} | "
+                f"{','.join(row['shadow_voters'])} | {row['kickoff'] or '-'} | "
+                f"{'; '.join(row['blockers']) or '-'} |"
+            )
+    else:
+        out.append("No shadow candidate reached a two-voter quorum today.")
+    out += ["", "These rows are evidence only. They are never dispatched and the "
+            "pick engine does not read this file."]
+    return "\n".join(out) + "\n"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--date", default=date.today().isoformat(), help="target date YYYY-MM-DD")
@@ -745,6 +1071,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--examples", type=int, default=10)
     parser.add_argument("--output-json", type=Path)
     parser.add_argument("--output-md", type=Path)
+    parser.add_argument("--output-shadow-json", type=Path)
+    parser.add_argument("--output-shadow-md", type=Path)
     parser.add_argument("--localdata", type=Path, default=LOCALDATA, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
 
@@ -771,8 +1099,16 @@ def main(argv: list[str] | None = None) -> int:
     print(markdown)
     report.pop("_rows", None)
 
-    for path, payload in ((args.output_json, json.dumps(report, indent=2, sort_keys=True)),
-                          (args.output_md, markdown)):
+    for warning in report.get("warnings", []):
+        print(warning, file=sys.stderr)
+
+    shadow_md = render_shadow_markdown(report)
+    for path, payload in (
+        (args.output_json, json.dumps(report, indent=2, sort_keys=True)),
+        (args.output_md, markdown),
+        (args.output_shadow_json, json.dumps(report["shadow_candidates"], indent=2, sort_keys=True)),
+        (args.output_shadow_md, shadow_md),
+    ):
         if not path:
             continue
         path.parent.mkdir(parents=True, exist_ok=True)

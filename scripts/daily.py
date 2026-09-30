@@ -941,7 +941,9 @@ def run_pipeline(
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_source_funnel.py --date {target_date} "
             f"--output-json localdata/source_funnel_{target_date}.json "
-            f"--output-md localdata/source_funnel_{target_date}.md",
+            f"--output-md localdata/source_funnel_{target_date}.md "
+            f"--output-shadow-json localdata/shadow_candidates_{target_date}.json "
+            f"--output-shadow-md localdata/shadow_candidates_{target_date}.md",
             f"audit_source_funnel {target_date}",
         )
 

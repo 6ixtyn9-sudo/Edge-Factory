@@ -227,3 +227,174 @@ def test_audit_is_read_only(tmp_path):
     _audit(tmp_path)
     after = {p.name: p.stat().st_mtime_ns for p in tmp_path.iterdir()}
     assert before == after, "the funnel audit must never mutate localdata"
+
+
+# --------------------------------------------------------------------------
+# Fixture-group kickoff aggregation, shadow slate, odds diagnosis
+# --------------------------------------------------------------------------
+
+
+def test_statarea_time_column_is_classified_as_trusted_kickoff(tmp_path):
+    rows = [{"date": DAY, "time": "19:30", "home": "Alpha United", "away": "Beta Rovers",
+             "p1": "60", "px": "25", "p2": "15"}]
+    localdata = tmp_path
+    localdata.mkdir(parents=True, exist_ok=True)
+    with gzip.open(localdata / "statarea_2026-09.csv.gz", "wt", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["date", "time", "home", "away", "p1", "px", "p2"])
+        writer.writeheader()
+        writer.writerows(rows)
+    row = _audit(localdata)["per_source"]["statarea"]
+    assert row["has_kickoff"] == 1
+    assert row["trusted_kickoff"] == 1
+    assert row["pre_match_eligible"] == 1
+
+
+def test_kickoffless_voter_joins_fixture_with_trusted_kickoff_from_another_source(tmp_path):
+    # betclan has no kickoff; zulubet (a timing-capable source) supplies it.
+    _write(tmp_path, "zulubet", [_row("Alpha United", "Beta Rovers", kickoff="19:30")])
+    _write(tmp_path, "betclan", [_row("Alpha United", "Beta Rovers", kickoff="")])
+    cf = _audit(tmp_path)["consensus_funnel"]
+    assert cf["fixtures_with_2plus_voters"] == 1
+    assert cf["fixtures_ml_scoreable"] == 1
+    # the kickoff-less voter no longer poisons the group
+    assert cf["fixtures_ml_scoreable_pre_match_eligible"] == 1
+    assert cf["kickoff_drops"] == {}
+
+
+def test_kickoffless_sources_alone_cannot_make_a_fixture_dispatchable(tmp_path):
+    _write(tmp_path, "betclan", [_row("Alpha United", "Beta Rovers", kickoff="")])
+    _write(tmp_path, "predictz", [_row("Alpha United", "Beta Rovers", kickoff="")])
+    report = _audit(tmp_path)
+    cf = report["consensus_funnel"]
+    # betclan alone is one live voter -> no live quorum at all
+    assert cf["fixtures_ml_scoreable_pre_match_eligible"] == 0
+    shadow = report["shadow_candidates"]
+    assert shadow["candidate_count"] == 1
+    row = shadow["candidates"][0]
+    assert row["dispatchable"] is False
+    assert "no_trusted_kickoff_from_a_timing_capable_source" in row["blockers"]
+
+
+def test_kickoff_donor_must_be_a_timing_capable_source(tmp_path):
+    # predictz carries a clock but the registry says it cannot supply timing.
+    _write(tmp_path, "betclan", [_row("Alpha United", "Beta Rovers", kickoff="")])
+    _write(tmp_path, "predictz", [_row("Alpha United", "Beta Rovers", kickoff="19:30")])
+    agg = funnel.aggregate_fixture_kickoff(
+        ("alphaunited", "betarovers"),
+        {
+            "betclan": {("alphaunited", "betarovers"): {"kickoff": ""}},
+            "predictz": {("alphaunited", "betarovers"): {"kickoff": "19:30"}},
+        },
+        engine=funnel.load_picks_engine(),
+    )
+    assert agg["trusted"] is False
+    assert agg["kickoff_donors"] == []
+
+
+def test_unparseable_kickoff_fails_closed(tmp_path):
+    engine = funnel.load_picks_engine()
+    assert funnel.classify_kickoff({"kickoff": ""}, engine=engine)[0] == "absent"
+    assert funnel.classify_kickoff({"kickoff": "19:30"}, engine=engine)[0] == "trusted"
+    assert funnel.classify_kickoff({"kickoff": "tbd"}, engine=engine)[0] in {
+        "clock_only", "date_only"}
+
+
+def test_shadow_quorum_is_reported_but_never_dispatchable(tmp_path):
+    _write(tmp_path, "predictz", [_row("Alpha United", "Beta Rovers", kickoff="")])
+    _write(tmp_path, "windrawwin", [_row("Alpha United", "Beta Rovers", kickoff="")])
+    report = _audit(tmp_path)
+    shadow = report["shadow_candidates"]
+    assert shadow["dispatchable"] is False
+    assert shadow["candidate_count"] == 1
+    row = shadow["candidates"][0]
+    assert row["live_voters"] == []
+    assert sorted(row["shadow_voters"]) == ["predictz", "windrawwin"]
+    assert "fewer_than_2_live_voters" in row["blockers"]
+    assert "no_ml_feature_provider_on_fixture" in row["blockers"]
+    assert any(b.startswith("shadow_sources_not_settlement_validated") for b in row["blockers"])
+    # the live funnel is untouched by the shadow evaluation
+    assert report["consensus_funnel"]["fixtures_with_2plus_voters"] == 0
+
+
+def test_shadow_candidate_with_live_partner_still_blocked_on_validation(tmp_path):
+    _write(tmp_path, "zulubet", [_row("Alpha United", "Beta Rovers", kickoff="19:30")])
+    _write(tmp_path, "predictz", [_row("Alpha United", "Beta Rovers", kickoff="")])
+    row = _audit(tmp_path)["shadow_candidates"]["candidates"][0]
+    assert row["live_voters"] == ["zulubet"]
+    assert row["kickoff_donors"] == ["zulubet"]
+    assert "fewer_than_2_live_voters" in row["blockers"]
+    assert row["dispatchable"] is False
+
+
+def test_voter_classification_covers_every_role(tmp_path):
+    _write(tmp_path, "zulubet", [_row("Alpha United", "Beta Rovers")])
+    _write(tmp_path, "predictz", [_row("Alpha United", "Beta Rovers")])
+    _write(tmp_path, "bettingclosed", [_row("Alpha United", "Beta Rovers")])
+    voters = _audit(tmp_path)["voter_classification"]
+    assert voters["zulubet"]["role"] == "live_voter"
+    assert voters["predictz"]["role"] == "shadow_voter"
+    assert "not settlement-validated" in voters["predictz"]["blocker"]
+    assert voters["bettingclosed"]["role"] == "not_a_voter"
+    assert voters["soccervista"]["role"] == "blocked"
+    assert voters["soccervista"]["blocker"] == "no same-day rows captured"
+
+
+def test_odds_diagnosis_no_candidates_to_price(tmp_path):
+    _write(tmp_path, "zulubet", [_row("Alpha United", "Beta Rovers", kickoff="")])
+    report = _audit(tmp_path)
+    assert report["consensus_funnel"]["fixtures_ml_scoreable_pre_match_eligible"] == 0
+    assert report["odds_funnel"]["diagnosis"].startswith("no_candidates_to_price")
+
+
+def test_odds_diagnosis_price_identity_broken(tmp_path):
+    _write(tmp_path, "zulubet", [_row("Alpha United", "Beta Rovers")])
+    _write(tmp_path, "statarea", [_row("Alpha United", "Beta Rovers")])
+    _write(tmp_path, "bzzoiro_odds", [_row("Totally Other", "Different Club")])
+    odds = _audit(tmp_path)["odds_funnel"]
+    assert odds["candidates_before_odds"] == 1
+    assert odds["diagnosis"].startswith("price_identity_broken")
+    assert odds["sources"]["bzzoiro_odds"]["status"] == (
+        "rows_present_but_zero_overlap_with_consensus_surface")
+
+
+def test_bzzoiro_zero_live_rows_is_not_reported_as_clean_success(tmp_path):
+    _write(tmp_path, "zulubet", [_row("Alpha United", "Beta Rovers")])
+    _write(tmp_path, "statarea", [_row("Alpha United", "Beta Rovers")])
+    odds = _audit(tmp_path)["odds_funnel"]
+    assert odds["sources"]["bzzoiro_odds"]["cached_rows"] == 0
+    assert odds["sources"]["bzzoiro_odds"]["status"] == "empty_no_rows_today"
+    assert odds["diagnosis"] != "price_fixtures_overlap_the_surface"
+
+
+def test_backfill_gap_expectation_distinguishes_expected_from_bug(tmp_path):
+    _write(tmp_path, "windrawwin", [_row("Alpha United", "Beta Rovers")])
+    _write(tmp_path, "statarea", [_row("Alpha United", "Beta Rovers")])
+    depth = _audit(tmp_path)["backfill_depth"]
+    assert depth["windrawwin"]["declared_backfill_mode"] == "capture_forward_only"
+    assert "EXPECTED" in depth["windrawwin"]["gap_expectation"]
+    assert depth["statarea"]["declared_backfill_mode"] == "d30"
+    assert "GAP WITHOUT RECORDED FAILURE" in depth["statarea"]["gap_expectation"]
+
+
+def test_roach_warnings_are_surfaced_in_the_report(tmp_path):
+    _write(tmp_path, "predictz", [_row("Alpha United", "Beta Rovers")])
+    _write(tmp_path, "windrawwin", [_row("Alpha United", "Beta Rovers")])
+    report = _audit(tmp_path)
+    assert any("0 live candidates" in w for w in report["warnings"])
+    assert "Roach detector warnings" in funnel.render_markdown(report)
+
+
+def test_source_registry_is_embedded_in_the_artifact(tmp_path):
+    report = _audit(tmp_path)
+    rows = {r["source"]: r for r in report["source_registry"]}
+    assert rows["predictz"]["dispatchable"] is False
+    assert rows["zulubet"]["dispatchable"] is True
+
+
+def test_shadow_markdown_is_marked_non_dispatch(tmp_path):
+    _write(tmp_path, "predictz", [_row("Alpha United", "Beta Rovers")])
+    _write(tmp_path, "windrawwin", [_row("Alpha United", "Beta Rovers")])
+    text = funnel.render_shadow_markdown(_audit(tmp_path))
+    assert "NON-DISPATCH" in text
+    assert "dispatchable: **False**" in text
+    assert "never dispatched" in text

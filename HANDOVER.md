@@ -10600,3 +10600,136 @@ no-signal source, settled rows excluded, ML-anchor drop, missing-kickoff
 candidate drop, odds match vs missing odds, captured-but-unused source,
 shadow expansion non-dispatch, backfill gaps, retryable failures, CLI
 artifacts, read-only guarantee). Full suite: **824 passed**.
+
+## Addendum — 2026-09-30: source-chain structural fixes (PR #18, still unmerged)
+
+Fixes stacked on the same PR #18 branch. **Not merged.** Nothing was promoted
+to dispatch; the live slate is byte-identical to before.
+
+### 1. Central source capability registry — `src/edgefactory/source_registry.py`
+
+Source truth was scattered across `picks_today.SOURCES_1X2/SOURCES_OU/
+SOURCES_BTTS/ALL_SOURCES/OU_COL/BTTS_COL`, `capture_daily.JOBS` and several
+audits. That is how the whole PR #17 resilience group stayed invisible. One
+registry now declares per source: tier (`live` / `shadow` / `pricing` /
+`donor`), markets, OU/BTTS column, whether it may supply kickoff, whether it
+may anchor identity, whether it supplies an ML feature, backfill mode, caveats.
+Validation state is overlaid read-only from the settlement coverage artifact.
+
+`picks_today.py` now DERIVES its lists from the registry. A test asserts the
+derived universe is byte-identical to the previous hardcoded lists, so this is
+de-duplication of truth, not a promotion. A regression test fails if
+`capture_daily.JOBS` gains a source the registry does not know.
+
+### 2. ML-meta no longer keys on source names
+
+`if ml_model and (fb or zb or sa)` is gone, replaced by
+`source_registry.has_ml_feature_support(present_sources)`.
+
+**Important finding, and the reason this stays a capability rather than being
+deleted:** the serving model's feature vector is literally `fb_p`, `zb_p`,
+`sa_p` plus Forebet-derived columns (`kelly`, `pred_hs/pred_gs`, `goalsavg`, HT
+probabilities) and Statarea HT probabilities. A fixture with none of those
+sources present would be scored on a zero-filled vector — off the distribution
+the >=55 operating point was calibrated against. So the trio requirement was
+**a real model-input constraint wearing a hardcoded-name costume**. It is now
+declared as `ml_feature_provider` in the registry: retraining on a wider
+feature set requires only flipping that flag, and no source name appears in the
+gate. Scoring behaviour today is unchanged by construction.
+
+### 3. Fixture-group kickoff aggregation
+
+Kickoff is now resolved per fixture group, not per anchor row. Any matched
+source the registry marks `provides_kickoff` may donate a trusted kickoff, so a
+kickoff-less voter (betclan / predictz / windrawwin) no longer poisons an
+otherwise valid group — but it also cannot donate timing, and an unparseable
+value still fails closed. Statarea's `time` column is classified correctly.
+The 30-minute lead / already-started guard is untouched.
+
+### 4. Voter classification and shadow slate
+
+Every source with extractable 1X2 signal is now classified `live_voter` /
+`shadow_voter` / `blocked` / `not_a_voter` with an explicit blocker, and a new
+non-dispatch artifact answers "how many picks would exist on a wider universe,
+and exactly why is each not dispatchable":
+
+```text
+localdata/shadow_candidates_<date>.json
+localdata/shadow_candidates_<date>.md
+```
+
+Every row carries `dispatchable: false` and a blocker list
+(`fewer_than_2_live_voters`, `no_ml_feature_provider_on_fixture`,
+`no_trusted_kickoff_from_a_timing_capable_source`,
+`shadow_sources_not_settlement_validated:<names>`, kickoff-guard reasons).
+Nothing downstream reads it; shadow rows can never become CLEAN or CAUTION.
+
+### 5. Odds diagnostics
+
+The odds funnel now emits an explicit diagnosis:
+`no_candidates_to_price` / `no_price_rows_captured_today` /
+`price_identity_broken` / `price_fixtures_overlap_the_surface`, plus a
+per-source status. A Bzzoiro feed with zero rows is reported as
+`empty_no_rows_today`, never as clean success.
+
+### 6. Backfill depth verdicts
+
+Each source now carries `declared_backfill_mode` and a `gap_expectation`:
+thin history is "EXPECTED (capture-forward only)" for windrawwin /
+afootballreport / betclan / freesupertips / bzzoiro / soccervista, while a D30
+source with gaps and no recorded failure is flagged
+"GAP WITHOUT RECORDED FAILURE — investigate the job/adapter".
+
+### 7. Roach detector
+
+`source_registry.funnel_warnings` / `registry_coverage_warnings` emit warnings
+into the JSON artifact, the Markdown artifact and stderr (Actions log) for:
+high surface with near-zero scoring; a source with 1X2 rows excluded from both
+consensus tiers; an unregistered captured source; zero live candidates with
+non-zero shadow candidates; candidates present but zero odds overlap. Daily
+stays soft — these warn, they do not fail production.
+
+### Is 448 -> 0 fixed?
+
+**Fixed into shadow candidates and explicit blockers, not into dispatchable
+picks — and that is the correct outcome.** The evidence does not support
+widening the live voter pool:
+
+- only Zulubet is near settlement validation, and it is `review_required` on an
+  unexplained reversal;
+- WinDrawWin 5.97%, BetClan 9.31%, aFootballReport 6.16% settlement coverage;
+- the serving ML model cannot score a fixture that has no legacy-source
+  features without being retrained.
+
+So the live slate stays conservative and may still produce zero fresh picks on
+a Forebet-less day. What changed is that the loss is now **measured, attributed
+and visible** instead of silent: the operator can read exactly how many fixtures
+a wider universe would reach and which specific gate blocks each one.
+
+### Source universe
+
+- **Live dispatch voters (1X2):** forebet (parked, no usable rows), zulubet,
+  statarea, vitibet, betclan, bzzoiro. **OU/BTTS also:** scoutingstats.
+- **Shadow voters (non-dispatch):** predictz, windrawwin, freesupertips,
+  afootballreport, prosoccer, soccervista.
+- **Kickoff providers:** forebet, zulubet, statarea, vitibet, bzzoiro,
+  scoutingstats, afootballreport, prosoccer, soccervista.
+- **Pricing:** bzzoiro_odds, theoddsapi_odds, oddspapi_odds, betexplorer_odds.
+- **Result donors:** bettingclosed, betexplorer_results (+ the settled views).
+
+### Next operator action
+
+Run **Actions → Autonomous Edge Factory 3-Hour Service → `official_morning`**
+on the unmerged branch `arena/01a0f2b3-edge-factory`, then inspect:
+
+```text
+localdata/source_funnel_<date>.md              # A2 voters, A3 shadow, A1 roach warnings
+localdata/shadow_candidates_<date>.md          # non-dispatch slate + blockers
+localdata/source_settlement_coverage_<date>.md # settlement evidence per source
+```
+
+In the log, look for: the `ROACH:` lines, the consensus funnel counts, the odds
+`diagnosis`, and confirmation that the live slate is unchanged.
+
+Forebet remains parked, `EDGE_FACTORY_FOREBET_BROWSER=off`. **Forebet Browser
+Run probes spent: 0.** Tests: **856 passed**. PR #18 remains open and unmerged.

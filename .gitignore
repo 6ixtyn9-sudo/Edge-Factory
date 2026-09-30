@@ -36,6 +36,8 @@ localdata/*
 !localdata/source_settlement_coverage_*
 # Same-day funnel diagnostics (browser-readable evidence for the operator).
 !localdata/source_funnel_*
+# Shadow (non-dispatch) candidate slate.
+!localdata/shadow_candidates_*
 !localdata/betexplorer_results_2026-*.csv.gz
 !localdata/betexplorer_odds_2026-*.csv.gz
 !localdata/sent_ledger_20*.json

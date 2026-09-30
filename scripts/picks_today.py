@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.entities import canonical_league, canonical_team, classify_competition
 from edgefactory.identity import source_team_key as _identity_source_team_key
+from edgefactory import source_registry
 from edgefactory.util import (
     compact_key,
     norm_team,
@@ -130,15 +131,19 @@ OPERATIONAL_CLUB_TOKENS = {
 }
 LOW_PRIORITY_BOOKMAKER_TOKENS = ("polymarket", "consensus")
 
-SOURCES_1X2 = ["forebet", "zulubet", "statarea", "vitibet", "betclan", "bzzoiro"]
-SOURCES_OU = ["forebet", "statarea", "scoutingstats", "bzzoiro"]
-SOURCES_BTTS = ["forebet", "scoutingstats", "bzzoiro"]
-ALL_SOURCES = ["forebet", "zulubet", "statarea", "vitibet", "betclan",
-               "bzzoiro", "scoutingstats"]
+# Source universe is DERIVED from the single capability registry
+# (edgefactory/source_registry.py), not re-declared here. Membership below is
+# byte-identical to the previous hardcoded lists — this is a de-duplication of
+# truth, not a promotion. Adding a source to the live tier in the registry is
+# what changes what the engine bets, and that requires settlement evidence and
+# operator sign-off.
+SOURCES_1X2 = list(source_registry.live_1x2_sources())
+SOURCES_OU = list(source_registry.live_market_sources("ou"))
+SOURCES_BTTS = list(source_registry.live_market_sources("btts"))
+ALL_SOURCES = list(source_registry.live_consumed_sources())
 
-OU_COL = {"forebet": "p_over", "statarea": "p_o25",
-          "scoutingstats": "p_o25", "bzzoiro": "p_o25"}
-BTTS_COL = {"forebet": "p_gg", "scoutingstats": "p_gg", "bzzoiro": "p_gg"}
+OU_COL = {k: v for k, v in source_registry.ou_columns().items() if k in ALL_SOURCES}
+BTTS_COL = {k: v for k, v in source_registry.btts_columns().items() if k in ALL_SOURCES}
 
 FALLBACK_1X2 = {2: 70.0, 3: 65.0}
 
@@ -2678,7 +2683,16 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
         # Model inference runs whenever a serving model exists (see the
         # certification-independence note above); certified rule LOOPS inside
         # decide emission. Research capture hooks in after ml_p is computed.
-        if ml_model and (fb or zb or sa):
+        # Capability gate, not a name check (2026-09-30 funnel audit). The
+        # serving model's feature vector is fb_p/zb_p/sa_p plus Forebet- and
+        # Statarea-derived columns, so a fixture with no feature provider would
+        # be scored on a zero-filled vector, off the distribution the >=55
+        # operating point was calibrated on. The requirement is therefore real,
+        # but it is now expressed as `ml_feature_provider` in the source
+        # registry: retraining on a wider feature set only needs that flag
+        # flipped, and no source name is hardcoded here any more.
+        _present_sources = [s for s in SOURCES_1X2 if k in data.get(s, {})]
+        if ml_model and source_registry.has_ml_feature_support(_present_sources):
             fb_probs = probs_1x2(fb) if fb else None
             zb_probs = probs_1x2(zb) if zb else None
             sa_probs = probs_1x2(sa) if sa else None
