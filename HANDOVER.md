@@ -9501,3 +9501,105 @@ or production-smoked until their owners authorize Cloudflare/Google and add the
 two GitHub secrets. A green workflow alone is not proof: confirm target-day
 monthly rows and named source votes. No source substitution, threshold, source
 weight, bucket, staking, ticket, or notification behavior changed.
+
+## Addendum — 2026-09-30: Browser Run phase-1 diagnostic, not yet a Forebet repair
+
+### What was implemented
+
+The existing authenticated Cloudflare Worker relay now contains an explicitly named
+`forebet_browser_diagnostic` operation. It is intentionally not wired into
+`src/edgefactory/sources/forebet.py`, `scripts/local_backfill.py`, `scripts/daily.py`,
+or GitHub Actions. ScoutingStats continues to use the ordinary authenticated relay
+transport exactly as before.
+
+The diagnostic uses Cloudflare's current Workers Browser Run binding and the
+Documented `@cloudflare/puppeteer` Worker API. It derives exactly one URL:
+`https://www.forebet.com/en/football-tips-and-predictions-for-today`. The caller
+cannot provide a destination URL, date, query string, cookies, headers, scripts, or
+an alternate host. It performs one `BROWSER.limits()` check, at most one browser
+launch, one `page.goto()` with a 45-second timeout, and an explicit `browser.close()`
+from a success/failure cleanup path. A free Workers KV namespace provides a
+one-launch-per-UTC-day claim gate; the claim is consumed before navigation so a
+failed attempt cannot turn into retries.
+
+The response is a bounded JSON diagnostic only. It reports the upstream status,
+final URL, content type, byte count, title, challenge/CAPTCHA/access-denial flags,
+prediction-markup evidence, timeout state, launch/navigation counts, and one of the
+required classifications. It never returns complete HTML, cookies, authorization
+headers, browser session IDs, or secrets. HTTP 200 is not a success criterion.
+
+### Documentation check and free-plan boundary
+
+On 2026-09-30 the official Cloudflare documentation calls the product Browser Run
+(formerly Browser Rendering). The current Workers Free limits page was last updated
+2026-09-26 and lists 10 browser minutes/day, three concurrent Browser Sessions, one
+new Browser Session every 20 seconds, and a 60-second inactivity timeout. Quick
+Actions have a separate one-request-per-10-seconds limit, but this diagnostic uses a
+Browser Session, not Quick Actions or the REST API. The Workers Free plan includes
+100,000 Worker requests/day. Workers KV is included on Free; its current documented
+limits are 100,000 reads/day, 1,000 writes/day, 1 GB storage, with daily reset at
+00:00 UTC. The diagnostic consumes at most one KV read and one KV write for an
+attempted day.
+
+Official references are recorded in `relay/README.md`, including:
+
+- https://developers.cloudflare.com/browser-run/get-started/
+- https://developers.cloudflare.com/browser-run/puppeteer/
+- https://developers.cloudflare.com/browser-run/reference/wrangler/
+- https://developers.cloudflare.com/browser-run/limits/
+- https://developers.cloudflare.com/browser-run/pricing/
+- https://developers.cloudflare.com/kv/get-started/
+- https://developers.cloudflare.com/kv/platform/limits/
+- https://developers.cloudflare.com/kv/platform/pricing/
+
+No REST API token, account ID, paid plan, paid proxy, residential runner, or
+credit-dependent service was introduced.
+
+### Live status and acceptance boundary
+
+No live Browser Run smoke test was performed in this session. Cloudflare credentials
+and a deployed worker URL were not present in the local environment, and no attempt
+was made to print or recover them. Therefore the current result is **implemented and
+locally tested, but not deployed, live-smoke-tested, or production-validated**.
+There is no observed Forebet classification, no claim of genuine Forebet content,
+no measured browser time, and no validated 1X2/over-under/BTTS capture. Phase 1 must
+be run by an operator after adding the browser binding and free KV namespace, and
+must stop after one bounded attempt if it returns a challenge, denial, timeout,
+quota/plan error, or configuration error.
+
+Do not proceed to Phase 2 or a heavy workflow until the response explicitly reports
+`genuine_forebet_prediction_content` with non-challenge content on `www.forebet.com`.
+Even then, the rendered-page smoke test does not prove the JSON endpoint, target-date
+correctness, or all three markets. Those remain unimplemented and require separate
+validation before any production integration.
+
+### Verification receipts
+
+- Cloudflare Worker JavaScript syntax: clean with `node --check` on all Worker and
+  diagnostic test files.
+- Mocked Browser Run unit tests: 15 tests, 15 passed. Coverage includes genuine
+  content, HTTP-200 and HTTP-403 challenge HTML, CAPTCHA/Turnstile, explicit denial,
+  response overflow, timeout, missing bindings, Browser Run API/configuration error,
+  quota and daily-budget exhaustion, one-launch/no-retry behavior, final-host
+  validation, and browser cleanup.
+- `git diff --check`: clean at the time of this addendum.
+- The production workflow was not changed. The Forebet decoder was strengthened to
+  reject non-mapping rows, with one focused regression test added. The full Python
+  suite after that change was **731 passed** (the prior baseline was 730);
+  rerun `PYTHONPATH=.:src .venv/bin/pytest -q` after any future integration change.
+
+### Manual smoke-test and rollback boundary
+
+From `relay/cloudflare-worker`, an operator must run `npm install`, create
+`BROWSER_DIAGNOSTIC_KV` with `npx wrangler kv namespace create
+BROWSER_DIAGNOSTIC_KV`, add the generated ID to the commented `[[kv_namespaces]]`
+block in `wrangler.toml`, and deploy with the existing `RELAY_TOKEN` secret. The
+exact one-URL `curl` command and safe success/failure signatures are in
+`relay/README.md`. The operation is not added to GitHub Actions until Phase 1 and
+then Phase 2 succeed.
+
+To roll back, remove the browser binding, optional KV binding, and diagnostic code,
+then redeploy the ordinary Worker relay. This leaves ScoutingStats and the current
+POST authentication/allowlist contract intact. A failed diagnostic must not be
+represented as an empty Forebet day, and a successful browser launch must not be
+repeated intraday.

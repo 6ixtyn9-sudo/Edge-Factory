@@ -65,6 +65,8 @@ def _decode_payload(raw: bytes | str) -> list[dict]:
     data = json.loads(text)
     if not (isinstance(data, list) and data and isinstance(data[0], list)):
         raise ValueError("unexpected payload shape")
+    if not all(isinstance(row, dict) for row in data[0]):
+        raise ValueError("unexpected Forebet row shape")
     return data[0]
 
 

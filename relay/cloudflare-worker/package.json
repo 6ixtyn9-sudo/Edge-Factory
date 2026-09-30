@@ -1,0 +1,11 @@
+{
+  "name": "edge-factory-source-relay",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@cloudflare/puppeteer": "1.4.0"
+  }
+}
