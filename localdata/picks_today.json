@@ -124,7 +124,7 @@
     "w_score": 0.2479
   },
   {
-    "as_of": "2026-09-30T09:00:55+02:00",
+    "as_of": "2026-09-30T11:24:15+02:00",
     "avg_p": 59.1,
     "away": "Shooting Stars",
     "bookmaker": "betexplorer_best",
@@ -217,7 +217,7 @@
       }
     ],
     "home": "Enyimba",
-    "kickoff": "10:00",
+    "kickoff": "15:00",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-09-30T15:00:00+00:00",
     "kickoff_witness": "bzzoiro kickoff '2026-09-30T15:00:00Z'",
@@ -231,7 +231,7 @@
     "model_version": "dc-blend-v1",
     "n_way": 4,
     "odds": 1.56,
-    "odds_captured_at": "2026-09-30T07:04:21.168809+00:00",
+    "odds_captured_at": "2026-09-30T09:35:50.023154+00:00",
     "odds_league": "Nigeria: NPFL",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -390,7 +390,7 @@
     "w_score": 0.6226
   },
   {
-    "as_of": "2026-09-30T09:00:55+02:00",
+    "as_of": "2026-09-30T11:24:15+02:00",
     "avg_p": 74.5,
     "away": "South Africa",
     "bookmaker": "scoutingstats_odds",
@@ -552,7 +552,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-30T09:00:55+02:00",
+    "as_of": "2026-09-30T11:24:15+02:00",
     "avg_p": 59.3,
     "away": "Andorra",
     "bookmaker": "scoutingstats_odds",
@@ -594,7 +594,8 @@
     ],
     "duplicate_rows_collapsed": 1,
     "duplicate_rules_collapsed": [
-      "ML-META\u226555"
+      "ML-META\u226555",
+      "ML-META\u226560"
     ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
@@ -632,7 +633,7 @@
       }
     ],
     "home": "Lithuania",
-    "kickoff": "11:00",
+    "kickoff": "16:00",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-09-30T16:00:00+00:00",
     "kickoff_witness": "bzzoiro kickoff '2026-09-30T16:00:00Z'",
@@ -645,7 +646,7 @@
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
     "n_way": 3,
-    "odds": 1.61,
+    "odds": 1.53,
     "odds_captured_at": "2026-09-30T16:00:00Z",
     "odds_league": "Friendly International",
     "odds_match_method": "exact",
@@ -664,7 +665,7 @@
         "league": "Friendly International",
         "market": "1x2",
         "match_method": "exact",
-        "odds": 1.61,
+        "odds": 1.53,
         "selection": "home",
         "source": "scoutingstats_odds"
       },
@@ -676,7 +677,7 @@
         "kickoff": "2026-09-30T16:00:00Z",
         "league": "Friendly International",
         "market": "1x2",
-        "odds": 3.6,
+        "odds": 3.75,
         "selection": "draw",
         "source": "scoutingstats_odds"
       },
@@ -688,7 +689,7 @@
         "kickoff": "2026-09-30T16:00:00Z",
         "league": "Friendly International",
         "market": "1x2",
-        "odds": 5.5,
+        "odds": 6.25,
         "selection": "away",
         "source": "scoutingstats_odds"
       }
