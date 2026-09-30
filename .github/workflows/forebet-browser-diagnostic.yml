@@ -1,14 +1,34 @@
 name: Forebet Browser Run diagnostic
-
 on:
   workflow_dispatch:
-
+    inputs:
+      probe:
+        description: 'Probe to run with exactly one Worker POST'
+        required: true
+        default: 'forebet_getrs'
+        type: choice
+        options:
+          - forebet_getrs
+          - page_access
+      date:
+        description: 'Forebet getrs in= date (YYYY-MM-DD); used only by forebet_getrs'
+        required: true
+        default: '2026-09-30'
+      tp:
+        description: 'Forebet getrs market tp; used only by forebet_getrs'
+        required: true
+        default: '1x2'
+        type: choice
+        options:
+          - 1x2
+          - uo
+          - bts
+          - ht
 permissions:
   contents: read
-
 jobs:
   diagnostic:
-    name: One bounded Forebet Browser Run probe
+    name: One bounded Forebet Browser Run diagnostic POST
     runs-on: ubuntu-latest
     timeout-minutes: 3
     env:
@@ -17,43 +37,79 @@ jobs:
       # to another relay and never retries.
       RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
       RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
+      PROBE_KIND: ${{ inputs.probe }}
+      PROBE_DATE: ${{ inputs.date }}
+      PROBE_TP: ${{ inputs.tp }}
     steps:
-      - name: Send exactly one diagnostic POST
+      - name: Send exactly one Forebet Browser Run POST
         shell: bash
         run: |
           set +x
           python3 - <<'PY'
           import json
           import os
+          import re
           import sys
           import urllib.error
+          import urllib.parse
           import urllib.request
-
+          EXPECTED_GETRS_OPERATION = "forebet_getrs"
+          EXPECTED_GETRS_TRANSPORT = "cloudflare_browser_rendering"
+          PAGE_DIAGNOSTIC_OPERATION = "forebet_browser_diagnostic"
           relay_urls = os.environ.get("RELAY_URLS", "")
           token = os.environ.get("RELAY_TOKEN", "")
           worker_url = relay_urls.split(",", 1)[0].strip()
+          probe_kind = os.environ.get("PROBE_KIND", "forebet_getrs").strip()
+          day = os.environ.get("PROBE_DATE", "")
+          tp = os.environ.get("PROBE_TP", "")
+          def emit(payload, code=1):
+              print(json.dumps(payload, sort_keys=True))
+              sys.exit(code)
           if not worker_url or not token:
-              print(json.dumps({
+              emit({
                   "classification": "workflow_secret_configuration_error",
                   "detail": "The first relay URL or relay token secret is missing",
-              }))
-              sys.exit(1)
-
-          payload = json.dumps({
-              "token": token,
-              "operation": "forebet_browser_diagnostic",
-          }).encode("utf-8")
-
+              })
+          if probe_kind not in {"forebet_getrs", "page_access"}:
+              emit({"classification": "bad_probe_kind", "probe_kind": probe_kind})
+          if probe_kind == "forebet_getrs":
+              if tp not in {"1x2", "uo", "bts", "ht"}:
+                  emit({"classification": "bad_market", "probe_kind": probe_kind, "tp": tp})
+              if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day or ""):
+                  emit({"classification": "bad_date", "probe_kind": probe_kind, "date": day})
+              query = urllib.parse.urlencode({
+                  "ln": "en",
+                  "tp": tp,
+                  "in": day,
+                  "ord": "0",
+                  "tz": "0",
+                  "tzs": "",
+                  "tze": "",
+                  "output": "1",
+              })
+              source_url = "https://www.forebet.com/scripts/getrs.php?" + query
+              payload = {
+                  "token": token,
+                  "operation": EXPECTED_GETRS_OPERATION,
+                  "url": source_url,
+              }
+              user_agent = "EdgeFactory-ForebetBrowserDiagnosticGetrs/1.0"
+          else:
+              source_url = None
+              payload = {
+                  "token": token,
+                  "operation": PAGE_DIAGNOSTIC_OPERATION,
+              }
+              user_agent = "EdgeFactory-BrowserDiagnostic/1.0"
           request = urllib.request.Request(
               worker_url,
-              data=payload,
+              data=json.dumps(payload).encode("utf-8"),
               method="POST",
               headers={
                   "Content-Type": "application/json",
-                  "User-Agent": "EdgeFactory-BrowserDiagnostic/1.0",
+                  "User-Agent": user_agent,
               },
           )
-
           status = None
           raw = b""
           try:
@@ -64,40 +120,104 @@ jobs:
               status = error.code
               raw = error.read(65537)
           except Exception as error:
-              print(json.dumps({
+              emit({
                   "classification": "workflow_transport_error",
+                  "probe_kind": probe_kind,
                   "error_type": type(error).__name__,
-              }))
-              sys.exit(1)
-
+              })
           if len(raw) > 65536:
-              print(json.dumps({
+              emit({
                   "http_response_status": status,
                   "classification": "workflow_response_size_overflow",
-              }))
-              sys.exit(1)
-
+                  "probe_kind": probe_kind,
+              })
           try:
-              diagnostic = json.loads(raw.decode("utf-8", "replace"))
+              envelope = json.loads(raw.decode("utf-8", "replace"))
           except Exception:
-              print(json.dumps({
+              emit({
                   "http_response_status": status,
                   "classification": "workflow_non_json_response",
-              }))
-              sys.exit(1)
-
-          # The Worker diagnostic is already bounded and redacts sensitive data.
-          # Print only that JSON object; the relay token is never interpolated
-          # into a shell command, URL, artifact, or log line.
-          print(json.dumps({
+                  "probe_kind": probe_kind,
+              })
+          if not isinstance(envelope, dict):
+              emit({
+                  "http_response_status": status,
+                  "classification": "workflow_unexpected_json_response",
+                  "probe_kind": probe_kind,
+              })
+          if probe_kind == "page_access":
+              receipt = {
+                  "classification": envelope.get("classification"),
+                  "http_response_status": status,
+                  "probe_kind": probe_kind,
+                  "ok": (
+                      status == 200
+                      and envelope.get("classification") == "genuine_forebet_prediction_content"
+                      and envelope.get("success") is True
+                  ),
+                  "diagnostic": envelope,
+              }
+              print(json.dumps(receipt, sort_keys=True))
+              if not receipt["ok"]:
+                  sys.exit(1)
+              sys.exit(0)
+          operation = envelope.get("operation")
+          transport = envelope.get("transport")
+          worker_supports_browser_getrs = (
+              operation == EXPECTED_GETRS_OPERATION
+              and transport == EXPECTED_GETRS_TRANSPORT
+          )
+          relay_status = envelope.get("status")
+          body_shape = envelope.get("body_shape")
+          row_count = envelope.get("row_count")
+          if isinstance(envelope.get("body"), str):
+              try:
+                  parsed = json.loads(envelope["body"])
+                  body_shape = (
+                      "forebet_getrs"
+                      if isinstance(parsed, list) and parsed and isinstance(parsed[0], list)
+                      else "unexpected"
+                  )
+                  row_count = len(parsed[0]) if body_shape == "forebet_getrs" else None
+              except Exception:
+                  body_shape = "non_json_body"
+          ok = (
+              status == 200
+              and worker_supports_browser_getrs
+              and relay_status == 200
+              and body_shape == "forebet_getrs"
+              and (row_count or 0) > 0
+          )
+          if ok:
+              classification = "forebet_getrs_browser_rows"
+          elif not worker_supports_browser_getrs and isinstance(envelope.get("body"), str):
+              classification = "legacy_generic_relay_or_worker_not_deployed"
+          elif not worker_supports_browser_getrs:
+              classification = "unexpected_relay_contract_or_worker_not_deployed"
+          elif envelope.get("error") == "browser_response_not_forebet_getrs_json":
+              classification = "browser_run_returned_non_getrs_json"
+          elif envelope.get("error"):
+              classification = "browser_run_" + str(envelope.get("error"))
+          else:
+              classification = "forebet_getrs_probe_failed"
+          receipt = {
+              "classification": classification,
               "http_response_status": status,
-              "diagnostic": diagnostic,
-          }, sort_keys=True))
-
-          if (
-              status != 200 or
-              not isinstance(diagnostic, dict) or
-              diagnostic.get("classification") != "genuine_forebet_prediction_content"
-          ):
+              "probe_kind": probe_kind,
+              "source_url": source_url,
+              "operation": operation,
+              "transport": transport,
+              "worker_supports_browser_getrs": worker_supports_browser_getrs,
+              "relay_status": relay_status,
+              "body_shape": body_shape,
+              "row_count": row_count,
+              "ok": ok,
+          }
+          if envelope.get("error"):
+              receipt["relay_error"] = envelope.get("error")
+          if envelope.get("content_type"):
+              receipt["content_type"] = envelope.get("content_type")
+          print(json.dumps(receipt, sort_keys=True))
+          if not ok:
               sys.exit(1)
           PY
