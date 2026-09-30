@@ -37,7 +37,7 @@ def _load(name: str, filename: str):
 
 
 engine = _load("picks_today_census_under_test", "picks_today.py")
-census_cli = _load("source_census_cli_under_test", "source_census.py")
+census_cli = _load("source_census_cli_under_test", "source_fixture_census.py")
 
 from edgefactory import source_census as sc          # noqa: E402
 from edgefactory import source_registry              # noqa: E402
@@ -547,13 +547,13 @@ def test_json_and_markdown_and_csv_are_written(tmp_path):
 
 def test_the_census_is_wired_into_the_daily_pipeline_read_only():
     src = (ROOT / "scripts" / "daily.py").read_text()
-    assert "scripts/source_census.py" in src
-    assert "diagnostic, read-only" in src
+    assert "scripts/source_fixture_census.py" in src
+    assert "read-only" in src
     # It runs after the funnel and after fresh_production, so it can
     # annotate itself with the dispatch plan.
     order = [src.index("audit_source_funnel.py"),
              src.index("run_fresh_production_lane(target_date)"),
-             src.index("scripts/source_census.py")]
+             src.index("scripts/source_fixture_census.py")]
     assert order == sorted(order)
 
 
@@ -570,3 +570,253 @@ def test_census_annotates_itself_with_the_dispatch_plan(tmp_path):
     assert census["per_date"][NEXT]["production_selections"] == 1
     assert census["per_date"][NEXT]["ticket_status"] == "declined_insufficient_legs"
     assert census["per_date"][DAY]["production_selections"] == 0
+
+
+# ===========================================================================
+# 9. Operator log emission — the evidence must be in the Actions log,
+#    not only in the artifacts.
+# ===========================================================================
+
+
+def _log(tmp_path, **kwargs):
+    return sc.render_log(_build(tmp_path, **kwargs))
+
+
+def test_log_header_states_scope_and_that_it_is_diagnostic(tmp_path):
+    lines = _log(tmp_path, horizon_days=2)
+    text = "\n".join(lines)
+    assert lines[0] == sc.LOG_TITLE
+    assert f"run_date: {DAY}" in text
+    assert "as_of: 2026-09-30T08:00:00+02:00" in text
+    assert "dates covered: 2026-09-30, 2026-10-01, 2026-10-02" in text
+    assert "min_lead: 30 minutes" in text
+    assert "does not create picks or tickets" in text
+
+
+def test_log_shows_the_actual_fixture_names_per_source_and_date(tmp_path):
+    _write_source(tmp_path, "zulubet", [
+        _row("Panama", "New Zealand", date=DAY),
+        _row("Guatemala", "Suriname", date=NEXT, kickoff="01-10, 06:10"),
+    ])
+    lines = _log(tmp_path, horizon_days=1)
+
+    today_group = lines.index("::group::SOURCE FIXTURES 2026-09-30 zulubet"
+                              " (1 fixtures)")
+    next_group = lines.index("::group::SOURCE FIXTURES 2026-10-01 zulubet"
+                             " (1 fixtures)")
+    assert "Panama" in lines[today_group + 1]
+    assert "New Zealand" in lines[today_group + 1]
+    assert "Guatemala" in lines[next_group + 1]
+    # Each fixture appears under its own date, not smeared across both.
+    assert "Guatemala" not in lines[today_group + 1]
+
+
+def test_log_line_carries_the_raw_signal_the_source_supplied(tmp_path):
+    _write_source(tmp_path, "zulubet", [
+        _row("Panama", "New Zealand", league="Friendly", tip="1",
+             odd1="2.25", oddx="3.10", odd2="3.40")])
+    line = [l for l in _log(tmp_path, horizon_days=0)
+            if "Panama" in l][0]
+
+    assert 'ko_raw="30-09, 18:00"' in line
+    assert "ko_parsed=2026-09-30T18:00" in line
+    assert "trusted=true" in line
+    assert 'league="Friendly"' in line
+    assert 'raw="Panama" vs "New Zealand"' in line
+    assert "p=0.55/0.25/0.2" in line
+    assert "tip=1" in line
+    assert "odds=2.25/3.1/3.4" in line
+    assert "consumable=true" in line
+
+
+def test_log_renders_absent_values_as_dashes_never_as_guesses(tmp_path):
+    _write_source(tmp_path, "zulubet",
+                  [_row("Panama", "New Zealand", p1=None, kickoff="")])
+    line = [l for l in _log(tmp_path, horizon_days=0) if "Panama" in l][0]
+
+    assert 'ko_raw="-"' in line
+    assert "ko_parsed=-" in line
+    assert "trusted=false" in line
+    assert "p=-/-/-" in line
+    assert "tip=-" in line
+    assert "odds=-/-/-" in line
+    assert "markets=none" in line
+    assert "consumable=false" in line
+    assert sc.B_NO_1X2 in line
+
+
+def test_log_names_every_zero_row_source_with_its_reason(tmp_path):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    text = "\n".join(_log(tmp_path, horizon_days=0))
+
+    for source in sc.census_sources():
+        assert f"SOURCE FIXTURES {DAY} {source}" in text, f"{source} missing"
+    assert (f"  vitibet | date={DAY} | rows=0 | fixture_count=0 | "
+            f"reason={sc.B_NO_ROWS}") in text
+
+
+def test_log_reports_an_identity_less_price_feed_as_unknown_coverage(tmp_path):
+    """174 rows and no joinable fixture is a finding, not an empty day."""
+    _write_source(tmp_path, "betexplorer_odds", [
+        {"date": DAY, "event_id": f"e{i}", "match_url": f"http://x/{i}",
+         "odd1": "2.1", "oddx": "3.2", "odd2": "3.4"} for i in range(174)])
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    text = "\n".join(_log(tmp_path, horizon_days=0))
+
+    assert (f"  betexplorer_odds | date={DAY} | rows=174 | fixture_count=0 | "
+            f"reason={sc.B_NO_IDENTITY_COLUMNS} | price_coverage=unknown") in text
+    # The join gap must not be charged against every production fixture.
+    assert sc.D_NO_PRICE not in text
+    assert sc.D_PRICE_JOIN_UNAVAILABLE in text
+
+
+def test_log_never_samples_and_accounts_for_every_row(tmp_path):
+    """The operator asked to see exactly what each source said."""
+    rows = [_row(f"Home{i}", f"Away{i}") for i in range(450)]
+    _write_source(tmp_path, "zulubet", rows)
+    lines = _log(tmp_path, horizon_days=0)
+    text = "\n".join(lines)
+
+    assert "  rows_total: 450" in text
+    assert "  rows_emitted: 450" in text
+    assert "  rows_omitted: 0" in text
+    assert "WARNING" not in text
+    for i in range(450):
+        assert f'raw="Home{i}" vs "Away{i}"' in text, f"fixture {i} omitted"
+
+
+def test_long_fixture_lists_are_chunked_with_honest_labels(tmp_path):
+    _write_source(tmp_path, "zulubet",
+                  [_row(f"Home{i}", f"Away{i}") for i in range(450)])
+    lines = _log(tmp_path, horizon_days=0)
+    headings = [l for l in lines if l.startswith("::group::SOURCE FIXTURES")
+                and "zulubet" in l]
+
+    assert headings == [
+        "::group::SOURCE FIXTURES 2026-09-30 zulubet (450 fixtures) [1-200 of 450]",
+        "::group::SOURCE FIXTURES 2026-09-30 zulubet (450 fixtures) [201-400 of 450]",
+        "::group::SOURCE FIXTURES 2026-09-30 zulubet (450 fixtures) [401-450 of 450]",
+    ]
+    assert lines.count("::endgroup::") == sum(
+        1 for l in lines if l.startswith("::group::"))
+
+
+def test_log_per_source_summary_shows_roles_and_blockers(tmp_path):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    _write_source(tmp_path, "prosoccer", [_row("Shadow", "Fixture")])
+    _write_source(tmp_path, "bettingclosed", [_row("Donor", "Fixture")])
+    summary = "\n".join(_log(tmp_path, horizon_days=0)).split(
+        "::group::SOURCE SUMMARY")[1].split("::endgroup::")[0]
+
+    assert "zulubet" in summary and sc.ROLE_LIVE_VOTER in summary
+    assert sc.ROLE_SHADOW_VOTER in summary
+    assert sc.ROLE_DONOR_ONLY in summary
+    assert sc.ROLE_ODDS_ONLY in summary
+    assert sc.ROLE_UNAVAILABLE in summary
+    assert sc.B_TIER_NOT_DISPATCHABLE in summary
+
+
+def test_log_overlap_section_shows_quorum_and_single_source_fixtures(tmp_path):
+    _write_source(tmp_path, "zulubet", [
+        _row("Panama", "New Zealand"), _row("Afc Fylde", "Carlisle")])
+    _write_source(tmp_path, "statarea", [_row("Panama", "New Zealand")])
+    text = "\n".join(_log(tmp_path, horizon_days=0))
+    overlap = text.split("::group::FIXTURE OVERLAP")[1]
+
+    shared = overlap.split("Panama vs New Zealand")[1]
+    assert "live_1x2_voters: statarea,zulubet" in shared
+    assert "voter_count_1x2: 2" in shared
+
+    lonely = overlap.split("Afc Fylde vs Carlisle")[1]
+    assert "voter_count_1x2: 1" in lonely
+    assert "production_status: blocked" in lonely
+    assert f"blocker: {sc.D_FEWER_THAN_2_VOTERS}" in lonely
+
+
+def test_log_diagnosis_states_the_bottleneck_without_weakening_gates(tmp_path):
+    _write_source(tmp_path, "zulubet",
+                  [_row(f"Home{i}", f"Away{i}") for i in range(10)])
+    text = "\n".join(_log(tmp_path, horizon_days=0))
+    diagnosis = text.split(f"THIN-SLATE DIAGNOSIS {DAY}")[1]
+
+    assert "rows were present (10); this was not a total outage" in diagnosis
+    assert sc.D_FEWER_THAN_2_VOTERS in diagnosis
+    assert "production selections: 0" in diagnosis
+    assert "gates are not to be relaxed" in diagnosis
+    for phrase in ("lower the", "relax the gate", "loosen", "force-certify"):
+        assert phrase not in text.lower()
+
+
+def test_log_states_a_total_outage_as_an_outage(tmp_path):
+    text = "\n".join(_log(tmp_path, horizon_days=0))
+    assert "no rows were captured from any source on this date" in text
+
+
+def test_log_reports_the_artifact_paths(tmp_path):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    lines = sc.render_log(_build(tmp_path, horizon_days=0),
+                          artifact_paths=["localdata/a.json",
+                                          "localdata/a.md"])
+    text = "\n".join(lines)
+    assert "  artifacts:" in text
+    assert "    localdata/a.json" in text
+    assert "    localdata/a.md" in text
+
+
+def test_cli_prints_the_census_and_writes_artifacts(tmp_path, capsys):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    rc = census_cli.main(["--date", DAY, "--horizon-days", "0",
+                          "--as-of", "2026-09-30T08:00:00+02:00",
+                          "--localdata", str(tmp_path), "--no-csv"])
+    out = capsys.readouterr().out
+
+    assert rc == 0
+    assert sc.LOG_TITLE in out
+    assert "Panama" in out
+    assert "rows_omitted: 0" in out
+    assert (tmp_path / f"source_fixture_census_{DAY}.json").exists()
+    assert (tmp_path / f"source_fixture_census_{DAY}.md").exists()
+
+
+def test_cli_can_suppress_group_markers(tmp_path, capsys):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    census_cli.main(["--date", DAY, "--horizon-days", "0",
+                     "--as-of", "2026-09-30T08:00:00+02:00",
+                     "--localdata", str(tmp_path), "--no-csv",
+                     "--no-group-markers"])
+    out = capsys.readouterr().out
+    assert "::group::" not in out
+    assert "SOURCE FIXTURES 2026-09-30 zulubet" in out
+
+
+def test_daily_runs_the_census_step_with_the_operator_label():
+    src = (ROOT / "scripts" / "daily.py").read_text()
+    assert "scripts/source_fixture_census.py" in src
+    assert 'f"source_fixture_census {target_date}"' in src
+    # Horizon and as_of come from the same run, not a second opinion.
+    assert "--horizon-days {future_days}" in src
+    assert "--as-of {run_as_of}" in src
+    # run_soft prints ">>> <label>" and tolerates failure, so a diagnostic
+    # can never break the official run.
+    assert "def run_soft" in src
+    order = [src.index("audit_source_funnel.py"),
+             src.index("run_fresh_production_lane(target_date)"),
+             src.index("scripts/source_fixture_census.py"),
+             # rindex: the call site, not the def far above it
+             src.rindex("print_final_production_summary")]
+    assert order == sorted(order)
+
+
+def test_log_emission_does_not_touch_production_state(tmp_path):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    protected = {f"fresh_production_dispatch_plan_{DAY}.json": '{"a": 1}',
+                 f"auto_ticket_outcomes_{DAY}.json": '{"outcomes": {}}',
+                 f"supabase_sync_manifest_{DAY}.json": '{"row_count": 2}',
+                 f"sent_ledger_{DAY}.json": "[]"}
+    for name, body in protected.items():
+        (tmp_path / name).write_text(body)
+
+    sc.render_log(_build(tmp_path, horizon_days=1))
+
+    for name, body in protected.items():
+        assert (tmp_path / name).read_text() == body

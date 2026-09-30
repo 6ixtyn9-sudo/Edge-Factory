@@ -1054,10 +1054,10 @@ def run_pipeline(
         # itself with the dispatch plan. It writes only its own artifacts
         # and can neither dispatch nor promote anything.
         run_soft(
-            f"PYTHONPATH=src python3 scripts/source_census.py "
+            f"PYTHONPATH=src python3 scripts/source_fixture_census.py "
             f"--date {target_date} --horizon-days {future_days}"
             + (f" --as-of {run_as_of}" if run_as_of else ""),
-            f"source_census {target_date} (diagnostic, read-only)",
+            f"source_fixture_census {target_date}",
         )
 
         run_soft(

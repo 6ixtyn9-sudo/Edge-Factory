@@ -220,6 +220,14 @@ def _fixture_record(source: str, row: dict, *, day: str, engine,
         rec.prematch_eligible = (
             (parsed - as_of).total_seconds() / 60.0 >= min_lead)
 
+    # Raw source opinion, reported verbatim and never derived.
+    tip = str(row.get("tip") or row.get("prediction") or row.get("pick")
+              or "").strip()
+    rec.tip = tip or None
+    pred_h, pred_a = row.get("pred_hs"), row.get("pred_gs")
+    if str(pred_h or "").strip() and str(pred_a or "").strip():
+        rec.projected_score = f"{str(pred_h).strip()}-{str(pred_a).strip()}"
+
     probs = engine.probs_1x2(row)
     if probs is not None:
         rec.has_1x2 = True
@@ -228,9 +236,11 @@ def _fixture_record(source: str, row: dict, *, day: str, engine,
     rec.has_ou = bool(ou_col and _has_value(row, ou_col))
     rec.has_btts = bool(btts_col and _has_value(row, btts_col))
 
-    rec.home_odds = _num(row, "odds_home", "o1", "home_odds")
-    rec.draw_odds = _num(row, "odds_draw", "ox", "draw_odds")
-    rec.away_odds = _num(row, "odds_away", "o2", "away_odds")
+    # "odd1/oddx/odd2" is the column spelling the captures actually use
+    # (forebet, zulubet, betexplorer_odds); the others are alternates.
+    rec.home_odds = _num(row, "odd1", "odds_home", "o1", "home_odds")
+    rec.draw_odds = _num(row, "oddx", "odds_draw", "ox", "draw_odds")
+    rec.away_odds = _num(row, "odd2", "odds_away", "o2", "away_odds")
     rec.has_price = any(v is not None for v in
                         (rec.home_odds, rec.draw_odds, rec.away_odds))
     if rec.has_price:
@@ -748,3 +758,263 @@ def render_csv_rows(census: dict) -> list[dict]:
                     fx.get("non_consumable_reasons") or ())
                 rows.append({k: row.get(k, "") for k in CSV_FIELDS})
     return rows
+
+
+# ---------------------------------------------------------------------------
+# operator log rendering
+#
+# The artifacts are complete, but an operator reading a GitHub Actions run
+# should not have to download anything to see what each source said. These
+# helpers emit the same data as a grouped, line-per-fixture log.
+# ---------------------------------------------------------------------------
+
+LOG_TITLE = "SOURCE FIXTURE CENSUS — DIAGNOSTIC ONLY"
+LOG_NOTE = ("read-only source visibility; this report does not create picks "
+            "or tickets")
+CHUNK_LINES = 200
+
+
+def _fmt(value: Any) -> str:
+    """Absent means absent. Never render a guess as a value."""
+    if value is None or value == "" or value == []:
+        return "-"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, float):
+        return f"{value:g}"
+    if isinstance(value, (list, tuple)):
+        return ",".join(str(v) for v in value)
+    return str(value)
+
+
+def _aligned(headers: list[str], rows: list[list[str]]) -> list[str]:
+    widths = [len(h) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            widths[i] = max(widths[i], len(cell))
+    out = ["  ".join(h.ljust(widths[i]) for i, h in enumerate(headers)).rstrip()]
+    for row in rows:
+        out.append("  ".join(c.ljust(widths[i])
+                             for i, c in enumerate(row)).rstrip())
+    return out
+
+
+def fixture_log_line(index: int, fixture: dict) -> str:
+    """One fixture, one line, every field the source actually supplied."""
+    markets = [name for name, key in (("1x2", "has_1x2"), ("ou", "has_ou"),
+                                      ("btts", "has_btts"),
+                                      ("price", "has_price"))
+               if fixture.get(key)]
+    probs = "/".join(_fmt(fixture.get(k)) for k in
+                     ("home_probability", "draw_probability",
+                      "away_probability"))
+    odds = "/".join(_fmt(fixture.get(k)) for k in
+                    ("home_odds", "draw_odds", "away_odds"))
+    parts = [
+        f"{index:03d}",
+        _fmt(fixture.get("event_date")),
+        _fmt(fixture.get("source")),
+        f'ko_raw="{_fmt(fixture.get("kickoff_raw"))}"',
+        f"ko_parsed={_fmt(fixture.get('kickoff_parsed'))}",
+        f"trusted={_fmt(bool(fixture.get('kickoff_trusted')))}",
+        f'league="{_fmt(fixture.get("league"))}"',
+        f'raw="{_fmt(fixture.get("raw_home"))}" vs "{_fmt(fixture.get("raw_away"))}"',
+        f'norm="{_fmt(fixture.get("normalized_home"))}" vs '
+        f'"{_fmt(fixture.get("normalized_away"))}"',
+        f"group={_fmt(fixture.get('fixture_group_key'))}",
+        f"markets={','.join(markets) if markets else 'none'}",
+        f"p={probs}",
+        f"tip={_fmt(fixture.get('tip'))}",
+        f"proj={_fmt(fixture.get('projected_score'))}",
+        f"odds={odds}",
+        f"odds_src={_fmt(fixture.get('odds_source'))}",
+        f"price_ev={_fmt(fixture.get('price_evidence'))}",
+        f"price_quar={_fmt(fixture.get('price_quarantine_reason'))}",
+        f"odds_replaced={_fmt(fixture.get('odds_replaced'))}",
+        f"price_push={_fmt(fixture.get('price_push_eligible'))}",
+        f"consumable={_fmt(bool(fixture.get('production_consumable')))}",
+        f"reasons={_fmt(fixture.get('non_consumable_reasons'))}",
+        f"file={_fmt(fixture.get('source_file'))}",
+    ]
+    return " | ".join(parts)
+
+
+def render_log(census: dict, *, group_markers: bool = True,
+               artifact_paths: list[str] | None = None) -> list[str]:
+    """Render the whole census as operator-readable log lines.
+
+    Every fixture of every source is emitted. Nothing is sampled: the
+    emitted/omitted counters are printed so a truncation could never pass
+    unnoticed.
+    """
+    out: list[str] = []
+    add = out.append
+
+    def group(title: str):
+        if group_markers:
+            add(f"::group::{title}")
+        else:
+            add(title)
+
+    def endgroup():
+        if group_markers:
+            add("::endgroup::")
+
+    # -- 1. header ---------------------------------------------------------
+    add(LOG_TITLE)
+    add(f"run_date: {census['run_date']}")
+    add(f"as_of: {census['as_of']}")
+    add(f"dates covered: {', '.join(census['dates'])}")
+    add(f"min_lead: {census.get('min_lead_minutes', DEFAULT_MIN_LEAD)} minutes")
+    add(f"note: {LOG_NOTE}")
+    add("")
+
+    # -- 2. date summary ---------------------------------------------------
+    add("DATE SUMMARY")
+    headers = ["event_date", "raw_rows", "fixture_groups", "live_groups",
+               "quorum_2plus", "ml_scoreable", "prematch_ml", "selections",
+               "auto_ticket"]
+    rows = []
+    for day in census["dates"]:
+        payload = census["per_date"][day]
+        totals = payload["totals"]
+        rows.append([
+            day,
+            str(sum(s["raw_rows"] for s in payload["sources"])),
+            str(totals["unique_fixture_groups"]),
+            str(totals["live_voter_fixture_groups"]),
+            str(totals["groups_with_quorum"]),
+            str(totals["ml_scoreable_groups"]),
+            str(totals["prematch_eligible_ml_scoreable"]),
+            str(payload.get("production_selections", 0)),
+            _fmt(payload.get("ticket_status")),
+        ])
+    out.extend("  " + line for line in _aligned(headers, rows))
+    add("")
+
+    rows_total = rows_emitted = 0
+
+    for day in census["dates"]:
+        payload = census["per_date"][day]
+
+        # -- 3. per-source summary ----------------------------------------
+        group(f"SOURCE SUMMARY {day}")
+        headers = ["source", "role", "tier", "raw_rows", "fixtures", "1x2",
+                   "ou", "btts", "price", "ko_raw", "ko_parsed", "ko_trusted",
+                   "prematch", "blockers"]
+        srows = []
+        for summary in payload["sources"]:
+            srows.append([
+                summary["source"], summary["production_role"],
+                _fmt(summary.get("tier")),
+                str(summary["raw_rows"]), str(summary["fixture_count"]),
+                str(summary["rows_with_1x2"]), str(summary["rows_with_ou"]),
+                str(summary["rows_with_btts"]),
+                str(summary.get("rows_with_price", 0)),
+                str(summary["rows_with_kickoff_raw"]),
+                str(summary["rows_with_parsed_kickoff"]),
+                str(summary["rows_with_trusted_kickoff"]),
+                str(summary["prematch_eligible_count"]),
+                _fmt(summary["blockers"]),
+            ])
+        out.extend("  " + line for line in _aligned(headers, srows))
+        endgroup()
+
+        # -- 4. full per-source fixture list ------------------------------
+        for summary in payload["sources"]:
+            source = summary["source"]
+            fixtures = summary.get("fixtures") or []
+            rows_total += len(fixtures)
+
+            if not fixtures:
+                # A source with no fixtures is stated outright, with its
+                # reason. Silence is how a coverage gap stays invisible.
+                reason = (summary["blockers"] or ["unknown"])[0]
+                line = (f"  {source} | date={day} | rows="
+                        f"{summary['raw_rows']} | fixture_count=0 | "
+                        f"reason={reason}")
+                if summary.get("rows_without_fixture_identity"):
+                    line += " | price_coverage=unknown"
+                group(f"SOURCE FIXTURES {day} {source} (0 fixtures)")
+                add(line)
+                endgroup()
+                continue
+
+            for start in range(0, len(fixtures), CHUNK_LINES):
+                chunk = fixtures[start:start + CHUNK_LINES]
+                suffix = ""
+                if len(fixtures) > CHUNK_LINES:
+                    suffix = (f" [{start + 1}-{start + len(chunk)} of "
+                              f"{len(fixtures)}]")
+                group(f"SOURCE FIXTURES {day} {source}"
+                      f" ({len(fixtures)} fixtures){suffix}")
+                for offset, fixture in enumerate(chunk):
+                    add("  " + fixture_log_line(start + offset + 1, fixture))
+                    rows_emitted += 1
+                endgroup()
+
+        # -- 5. overlap / quorum ------------------------------------------
+        group(f"FIXTURE OVERLAP {day}")
+        if not payload["fixture_groups"]:
+            add(f"  {day} | no fixture groups on this date")
+        for grp in payload["fixture_groups"]:
+            add(f"  {day} | {grp['fixture']}")
+            add(f"    sources: {_fmt(grp['sources'])}")
+            add(f"    live_1x2_voters: {_fmt(grp['live_1x2_voters'])}")
+            add(f"    shadow_sources: {_fmt(grp.get('shadow_sources'))}")
+            add(f"    odds_sources: {_fmt(grp.get('odds_sources'))}")
+            add(f"    kickoff_sources: {_fmt(grp.get('kickoff_sources'))}")
+            add(f"    voter_count_1x2: {grp['voter_count_1x2']}")
+            add(f"    ml_anchor_present: {_fmt(bool(grp['ml_anchor_present']))}")
+            add(f"    prematch_eligible: "
+                f"{_fmt(bool(grp.get('prematch_eligible')))}")
+            candidate = bool(grp.get("dispatch_candidate"))
+            add(f"    production_candidate: {_fmt(candidate)}")
+            # Status is derived from what the census observed, never
+            # asserted: a candidate is a candidate, not a selection.
+            status = grp.get("production_status")
+            if not status:
+                status = "dispatch_candidate" if candidate else "blocked"
+            add(f"    production_status: {_fmt(status)}")
+            if grp.get("blockers"):
+                add(f"    blocker: {_fmt(grp['blockers'])}")
+            if grp.get("auto_ticket_status"):
+                add(f"    auto_ticket_status: {_fmt(grp['auto_ticket_status'])}")
+        endgroup()
+
+        # -- 6. thin-slate diagnosis --------------------------------------
+        add(f"THIN-SLATE DIAGNOSIS {day}")
+        total_groups = payload["totals"]["unique_fixture_groups"]
+        raw_rows = sum(s["raw_rows"] for s in payload["sources"])
+        if raw_rows == 0:
+            add("  - no rows were captured from any source on this date")
+        else:
+            add(f"  - rows were present ({raw_rows}); "
+                "this was not a total outage")
+        for finding in payload["diagnosis"]:
+            share = (f" ({finding['fixtures_affected'] * 100 // total_groups}%)"
+                     if total_groups else "")
+            add(f"  - {finding['code']}: {finding['fixtures_affected']}"
+                f"/{total_groups}{share} — {finding['detail']}")
+        add(f"  - production selections: "
+            f"{payload.get('production_selections', 0)}")
+        if payload.get("ticket_status"):
+            add(f"  - auto_tickets: {payload['ticket_status']}")
+        add("  - gates are not to be relaxed on the strength of this report; "
+            "it explains coverage, it does not license dispatch")
+        add("")
+
+    # -- completeness accounting ------------------------------------------
+    omitted = rows_total - rows_emitted
+    add("CENSUS COMPLETENESS")
+    add(f"  rows_total: {rows_total}")
+    add(f"  rows_emitted: {rows_emitted}")
+    add(f"  rows_omitted: {omitted}")
+    if omitted:
+        add("  WARNING: fixture rows were omitted from the log; the JSON "
+            "artifact is the complete record")
+    if artifact_paths:
+        add("  artifacts:")
+        for path in artifact_paths:
+            add(f"    {path}")
+    return out

@@ -86,6 +86,10 @@ def main(argv: list[str] | None = None) -> int:
                         help="ISO timestamp used for the pre-match guard")
     parser.add_argument("--localdata", type=Path, default=LOCALDATA)
     parser.add_argument("--no-csv", action="store_true")
+    parser.add_argument("--no-log", action="store_true",
+                        help="write artifacts without printing the log")
+    parser.add_argument("--no-group-markers", action="store_true",
+                        help="plain headings instead of ::group:: markers")
     args = parser.parse_args(argv)
 
     engine = load_picks_engine()
@@ -112,13 +116,19 @@ def main(argv: list[str] | None = None) -> int:
 
     written = write_census(census, localdata=args.localdata,
                            run_date=args.date, write_csv=not args.no_csv)
-    for day, payload in census["per_date"].items():
-        totals = payload["totals"]
-        print(f"census {day}: {totals['unique_fixture_groups']} fixture "
-              f"group(s), {totals['groups_with_quorum']} with >=2 live 1X2 "
-              f"voters, {totals['ml_scoreable_groups']} ML-scoreable, "
-              f"{totals['prematch_eligible_ml_scoreable']} pre-match eligible")
-    print("source census: " + ", ".join(p.name for p in written))
+
+    if not args.no_log:
+        # The artifacts are complete, but the operator reads the Actions
+        # log. Emit every fixture there too, with completeness counters.
+        for line in source_census.render_log(
+                census, group_markers=not args.no_group_markers,
+                artifact_paths=[str(path.relative_to(ROOT))
+                                if path.is_relative_to(ROOT) else str(path)
+                                for path in written]):
+            print(line)
+    else:
+        print("source fixture census: "
+              + ", ".join(path.name for path in written))
     return 0
 
 
