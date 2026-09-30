@@ -191,8 +191,10 @@ def test_roles_are_derived_from_the_capability_registry(tmp_path):
     assert by_source["bzzoiro_odds"]["production_role"] == sc.ROLE_ODDS_ONLY
 
 
-def test_a_shadow_source_is_never_production_consumable(tmp_path):
-    """Capture volume is not promotion. Evidence decides."""
+def test_a_shadow_source_is_a_production_eligible_voter(tmp_path):
+    """Shadow means a settlement record still accruing, not a discarded
+    opinion. The production lane counts these toward quorum, so the
+    census must not describe them as non-dispatchable."""
     _write_source(tmp_path, "afootballreport",
                   [_row(f"Home{i}", f"Away{i}") for i in range(50)])
     summary = [s for s in _build(tmp_path, horizon_days=0)["per_date"][DAY]["sources"]
@@ -200,9 +202,25 @@ def test_a_shadow_source_is_never_production_consumable(tmp_path):
 
     assert summary["fixture_count"] == 50
     assert summary["production_role"] == sc.ROLE_SHADOW_VOTER
-    assert sc.B_TIER_NOT_DISPATCHABLE in summary["blockers"]
+    assert summary["tier_note"] == sc.B_SHADOW_PRODUCTION_ELIGIBLE
+    # Non-dispatchable wording is reserved for parked, donor-only,
+    # odds-only and audit-only sources.
+    assert sc.B_TIER_NOT_DISPATCHABLE not in summary["blockers"]
+    assert all(sc.B_TIER_NOT_DISPATCHABLE not in f["non_consumable_reasons"]
+               for f in summary["fixtures"])
+    assert all(f["tier_note"] == sc.B_SHADOW_PRODUCTION_ELIGIBLE
+               for f in summary["fixtures"])
+
+
+def test_a_shadow_source_still_faces_every_production_gate(tmp_path):
+    """Counting toward quorum is not a bypass."""
+    _write_source(tmp_path, "afootballreport",
+                  [_row("Panama", "New Zealand", p1=None)])
+    summary = [s for s in _build(tmp_path, horizon_days=0)["per_date"][DAY]["sources"]
+               if s["source"] == "afootballreport"][0]
+
     assert all(not f["production_consumable"] for f in summary["fixtures"])
-    assert all(sc.B_TIER_NOT_DISPATCHABLE in f["non_consumable_reasons"]
+    assert all(sc.B_NO_1X2 in f["non_consumable_reasons"]
                for f in summary["fixtures"])
 
 
@@ -503,7 +521,8 @@ def test_diagnosis_names_the_objective_bottleneck(tmp_path):
 
     assert sc.D_FEWER_THAN_2_VOTERS in codes
     assert sc.D_SINGLE_SOURCE in codes
-    assert sc.D_TIER_NOT_DISPATCHABLE in codes
+    assert sc.D_SHADOW_PRODUCTION_ELIGIBLE in codes
+    assert sc.D_TIER_NOT_DISPATCHABLE not in codes
     finding = [f for f in payload["diagnosis"]
                if f["code"] == sc.D_FEWER_THAN_2_VOTERS][0]
     assert finding["fixtures_affected"] == 41
@@ -735,7 +754,8 @@ def test_log_per_source_summary_shows_roles_and_blockers(tmp_path):
     assert sc.ROLE_DONOR_ONLY in summary
     assert sc.ROLE_ODDS_ONLY in summary
     assert sc.ROLE_UNAVAILABLE in summary
-    assert sc.B_TIER_NOT_DISPATCHABLE in summary
+    assert sc.B_SHADOW_PRODUCTION_ELIGIBLE in summary
+    assert sc.B_TIER_NOT_DISPATCHABLE not in summary
 
 
 def test_log_overlap_section_shows_quorum_and_single_source_fixtures(tmp_path):

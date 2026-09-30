@@ -45,7 +45,14 @@ B_NO_ROWS = "no_rows"
 B_NO_1X2 = "no_1x2_probability_fields"
 B_NO_TRUSTED_KICKOFF = "no_trusted_kickoff"
 B_INSIDE_LEAD = "inside_30m_lead_or_started"
+# Reserved for sources production genuinely cannot vote with: parked,
+# donor-only, odds-only and audit-only sources.
 B_TIER_NOT_DISPATCHABLE = "source_tier_not_dispatchable"
+# A shadow-tier 1X2 predictor IS counted toward production quorum --
+# shadow means a settlement record still accruing, not an opinion that
+# is discarded. Calling it non-dispatchable contradicted the lane that
+# was actually voting with it.
+B_SHADOW_PRODUCTION_ELIGIBLE = "shadow_tier_fresh_production_eligible"
 B_NOT_CONSUMED = "source_not_consumed_by_pick_engine"
 B_DONOR = "settlement_donor_only"
 B_ODDS_ONLY = "odds_only"
@@ -61,6 +68,7 @@ D_NO_ML_ANCHOR = "no_ml_anchor_source_present"
 D_MISSING_KICKOFF = "missing_trusted_kickoff"
 D_INSIDE_LEAD = "inside_30m_lead_or_started"
 D_TIER_NOT_DISPATCHABLE = "source_tier_not_dispatchable"
+D_SHADOW_PRODUCTION_ELIGIBLE = "shadow_tier_fresh_production_eligible"
 D_NO_PRICE = "no_price_coverage"
 D_SINGLE_SOURCE = "fixture_seen_by_one_source_only"
 
@@ -184,6 +192,10 @@ class FixtureRecord:
     price_push_eligible: bool | None = None
     prematch_eligible: bool = False
     production_consumable: bool = False
+    # Why this source's tier lets it vote, when it is not a core live
+    # voter. Kept separate from the blocker list: it is a qualification,
+    # not an obstruction.
+    tier_note: str | None = None
     non_consumable_reasons: list[str] = field(default_factory=list)
     fixture_group_key: str = ""
 
@@ -263,13 +275,15 @@ def _fixture_record(source: str, row: dict, *, day: str, engine,
         reasons.append(B_ODDS_ONLY)
     elif role == ROLE_DONOR_ONLY:
         reasons.append(B_DONOR)
-    elif role == ROLE_SHADOW_VOTER:
-        reasons.append(B_TIER_NOT_DISPATCHABLE)
     elif role == ROLE_BLOCKED:
         reasons.append(B_NOT_CONSUMED)
     elif role == ROLE_NOT_A_VOTER:
         reasons.append(B_NO_1X2 if not rec.has_1x2 else B_TIER_NOT_DISPATCHABLE)
-    if role in (ROLE_LIVE_VOTER,):
+    if role == ROLE_SHADOW_VOTER:
+        rec.tier_note = B_SHADOW_PRODUCTION_ELIGIBLE
+    # A shadow voter faces exactly the same gates as a live voter; only
+    # its settlement record differs.
+    if role in (ROLE_LIVE_VOTER, ROLE_SHADOW_VOTER):
         if not rec.has_1x2:
             reasons.append(B_NO_1X2)
         if not rec.kickoff_trusted:
@@ -277,7 +291,8 @@ def _fixture_record(source: str, row: dict, *, day: str, engine,
         elif not rec.prematch_eligible:
             reasons.append(B_INSIDE_LEAD)
     rec.non_consumable_reasons = reasons
-    rec.production_consumable = (role == ROLE_LIVE_VOTER and not reasons)
+    rec.production_consumable = (
+        role in (ROLE_LIVE_VOTER, ROLE_SHADOW_VOTER) and not reasons)
     return rec
 
 
@@ -335,8 +350,6 @@ def census_source_day(source: str, rows: list[dict], *, day: str, engine,
     if records and any(r.kickoff_trusted for r in records) and \
             not any(r.prematch_eligible for r in records):
         blockers.append(B_INSIDE_LEAD)
-    if role == ROLE_SHADOW_VOTER:
-        blockers.append(B_TIER_NOT_DISPATCHABLE)
     if role == ROLE_BLOCKED:
         blockers.append(B_NOT_CONSUMED)
     if role == ROLE_DONOR_ONLY:
@@ -376,6 +389,10 @@ def census_source_day(source: str, rows: list[dict], *, day: str, engine,
         "identity_key_too_short": short_key,
         "rows_without_fixture_identity": no_identity,
         "blockers": sorted(set(blockers)),
+        # A qualification, not an obstruction: it says why this tier is
+        # allowed to vote, so it is never mixed into the blocker list.
+        "tier_note": (B_SHADOW_PRODUCTION_ELIGIBLE
+                      if role == ROLE_SHADOW_VOTER else None),
         "fixtures": [r.as_dict() for r in records],
     }
 
@@ -529,7 +546,7 @@ def diagnose_thin_slate(overlap: list[dict], day_summaries: list[dict]) -> list[
         })
 
     blocked = sorted({s["source"] for s in day_summaries
-                      if s["production_role"] in (ROLE_SHADOW_VOTER, ROLE_BLOCKED)
+                      if s["production_role"] == ROLE_BLOCKED
                       and s["fixture_count"]})
     if blocked:
         findings.append({
@@ -540,6 +557,25 @@ def diagnose_thin_slate(overlap: list[dict], day_summaries: list[dict]) -> list[
             "detail": "rows captured from non-dispatchable tiers "
                       f"({', '.join(blocked)}); evidence decides promotion, "
                       "capture volume does not",
+        })
+
+    # Shadow-tier predictors are reported as the production-eligible
+    # voters they are. Promotion out of shadow still needs settlement
+    # evidence -- this finding describes the voting lane, not a
+    # certification.
+    shadow = sorted({s["source"] for s in day_summaries
+                     if s["production_role"] == ROLE_SHADOW_VOTER
+                     and s["fixture_count"]})
+    if shadow:
+        findings.append({
+            "code": D_SHADOW_PRODUCTION_ELIGIBLE,
+            "fixtures_affected": sum(
+                s["fixture_count"] for s in day_summaries
+                if s["source"] in shadow),
+            "detail": "shadow-tier 1X2 predictors counted toward production "
+                      f"quorum ({', '.join(shadow)}); their settlement record "
+                      "is still accruing, which affects promotion, not "
+                      "whether their opinion is counted",
         })
 
     unavailable = sorted({s["source"] for s in day_summaries
@@ -697,7 +733,9 @@ def render_markdown(census: dict) -> str:
               s["fixture_count"], s["rows_with_1x2"], s["rows_with_ou"],
               s["rows_with_btts"], s["rows_with_trusted_kickoff"],
               s["prematch_eligible_count"], s["rows_with_price"],
-              ", ".join(s["blockers"]) or "-"]
+              ", ".join(list(s["blockers"])
+                        + ([s["tier_note"]] if s.get("tier_note") else []))
+              or "-"]
              for s in payload["sources"]])
 
         groups = payload["fixture_groups"]
@@ -936,7 +974,7 @@ def render_log(census: dict, *, group_markers: bool = True,
         group(f"SOURCE SUMMARY {day}")
         headers = ["source", "role", "tier", "raw_rows", "fixtures", "1x2",
                    "ou", "btts", "price", "ko_raw", "ko_parsed", "ko_trusted",
-                   "prematch", "blockers"]
+                   "prematch", "blockers", "tier_note"]
         srows = []
         for summary in payload["sources"]:
             srows.append([
@@ -951,6 +989,7 @@ def render_log(census: dict, *, group_markers: bool = True,
                 str(summary["rows_with_trusted_kickoff"]),
                 str(summary["prematch_eligible_count"]),
                 _fmt(summary["blockers"]),
+                _fmt(summary.get("tier_note")),
             ])
         out.extend("  " + line for line in _aligned(headers, srows))
         endgroup()

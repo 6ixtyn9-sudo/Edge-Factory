@@ -199,6 +199,12 @@ def render_lineage_lines(lineages: list[dict]) -> list[str]:
                    f"{lineage['required_eligible_voters']}")
         out.append(f"    production_eligible_1x2_voters: "
                    f"{', '.join(lineage['production_eligible_1x2_voters']) or '-'}")
+        # The live subset stays visible alongside the eligible set, so a
+        # quorum carried partly by shadow voters is never mistaken for a
+        # quorum of core live voters.
+        out.append(f"    live_1x2_voters: "
+                   f"{', '.join(lineage.get('live_1x2_voters') or ()) or '-'}"
+                   f" (subset of production_eligible_1x2_voters)")
         out.append(f"    shadow_1x2_sources: "
                    f"{', '.join(lineage['shadow_1x2_sources']) or '-'}")
         out.append(f"    non_voter_sources: "
@@ -298,9 +304,17 @@ def classify_price(pick: dict[str, Any], *,
     owner = _price_owner(bookmaker) or _price_owner(source)
     if owner:
         classification["price_owner"] = owner
+        # Name the origin explicitly. "source_embedded_odds" describes
+        # the mechanism, not who produced the number, so on its own it
+        # hides that the quote came from a shadow-tier predictor.
+        classification["price_origin_source"] = owner
         cap = source_registry.get(owner)
+        classification["price_origin_tier"] = (
+            cap.tier if cap is not None else "unregistered")
         if cap is not None and cap.tier == source_registry.TIER_SHADOW:
             states.append(P_SHADOW_SOURCE)
+    classification["price_mechanism"] = (
+        source or (("source_embedded_odds" if embedded else None)))
 
     if quarantine:
         states.append(P_QUARANTINED)
@@ -320,6 +334,15 @@ def render_price_lines(classification: dict) -> list[str]:
         f"    price: {classification['odds'] if classification['odds'] is not None else '-'}"
         f" | source={classification['price_source'] or '-'}"
         f" | tier={classification['price_tier'] or '-'}",
+        # The origin is printed as its own line because the source
+        # field alone names a mechanism, not the predictor that
+        # produced the quote.
+        f"    price_origin_source: "
+        f"{classification.get('price_origin_source') or '-'}"
+        f" | price_origin_tier: "
+        f"{classification.get('price_origin_tier') or '-'}"
+        f" | price_mechanism: "
+        f"{classification.get('price_mechanism') or '-'}",
         f"    price_states: {', '.join(classification['states']) or '-'}",
         f"    execution_safe: "
         f"{'yes' if classification['execution_safe'] else 'no'}",

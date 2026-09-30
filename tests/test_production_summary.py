@@ -732,3 +732,50 @@ def test_a_selection_without_a_pick_id_is_still_collapsed_by_fixture():
          "ticket_status": "ticket_created"},
     ]
     assert ps.clv_latest_status_counts(rows) == {"ticket_created": 1}
+
+
+# ===========================================================================
+# Notification coverage
+#
+# The notifier announces future-dated selections only. Reporting just
+# the notice count left the same-day selections unexplained.
+# ===========================================================================
+
+
+def _coverage_status():
+    return {
+        "run_date": RUN_DATE,
+        "plan": {
+            "same_day_pick_count": 2, "horizon_pick_count": 2,
+            "horizon_picks": [
+                {"pick_id": "p2", "home": "Belgium", "away": "Turkey"},
+                {"pick_id": "p3", "home": "Hungary", "away": "Georgia"}],
+        },
+        "clv_rows": _snapshots(),
+        "notification": {"ran": True, "outcome": ps.NOTIFY_SENT_THIS_RUN,
+                         "future_notices": 2},
+    }
+
+
+def test_every_production_selection_is_accounted_for():
+    text = "\n".join(ps.render_final_summary(_coverage_status()))
+
+    assert "notification coverage:         4 production selection(s)" in text
+    assert "sent_this_run future ticket notice: 2" in text
+    assert ("deferred_before_build_hour: 2 not sent "
+            "/ pending build window") in text
+
+
+def test_coverage_totals_reconcile_with_the_selection_count():
+    cov = ps.notification_coverage(
+        _coverage_status()["plan"],
+        _coverage_status()["notification"],
+        ps.clv_latest_rows(_snapshots()))
+
+    assert cov["total_selections"] == 4
+    assert cov["notified"] + cov["not_notified"] == cov["total_selections"]
+
+
+def test_no_coverage_line_when_there_were_no_selections():
+    assert ps.render_notification_coverage(
+        ps.notification_coverage({}, {}, [])) == []

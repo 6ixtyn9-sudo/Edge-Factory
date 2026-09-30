@@ -231,6 +231,70 @@ def read_notification_result(run_date: str, localdata: Path) -> dict:
             "future_notices": len(future), "keys": sorted(future)}
 
 
+def notification_coverage(plan: dict, notification: dict,
+                          latest_rows=None) -> dict:
+    """Account for every production selection, notified or not.
+
+    The notifier announces future-dated selections only, so a run with 4
+    selections and 2 future ones reports 2 notices. Reporting the notice
+    count alone leaves the other 2 selections unexplained, which reads
+    as under-delivery rather than as the deliberate same-day path.
+    """
+    plan = plan or {}
+    same_day = int(plan.get("same_day_pick_count") or 0)
+    future = int(plan.get("horizon_pick_count") or 0)
+    notices = int((notification or {}).get("future_notices") or 0)
+    outcome = str((notification or {}).get("outcome") or "").strip()
+
+    # Why the same-day selections were not announced, taken from their
+    # own recorded status rather than assumed.
+    reasons: dict[str, int] = {}
+    future_keys = {
+        _clv_selection_key(row)
+        for row in (plan.get("horizon_picks") or ())
+    }
+    for row in latest_rows or ():
+        if _clv_selection_key(row) in future_keys:
+            continue
+        status = str(row.get("ticket_status") or "").strip()
+        if status:
+            reasons[status] = reasons.get(status, 0) + 1
+
+    return {
+        "total_selections": same_day + future,
+        "future_selections": future,
+        "same_day_selections": same_day,
+        "notified": notices,
+        "notify_outcome": outcome,
+        "not_notified": max((same_day + future) - notices, 0),
+        "same_day_reasons": reasons,
+    }
+
+
+def render_notification_coverage(coverage: dict) -> list[str]:
+    """One line per cohort, so every selection is accounted for."""
+    total = int(coverage.get("total_selections") or 0)
+    if not total:
+        return []
+    notified = int(coverage.get("notified") or 0)
+    outcome = str(coverage.get("notify_outcome") or "") or "no outcome recorded"
+    lines = [f"  notification coverage:         {total} production "
+             f"selection(s)"]
+    if notified:
+        lines.append(f"    {outcome} future ticket notice: {notified}")
+    not_notified = int(coverage.get("not_notified") or 0)
+    if not_notified:
+        reasons = coverage.get("same_day_reasons") or {}
+        if reasons:
+            for status, count in sorted(reasons.items()):
+                lines.append(f"    {status}: {count} not sent "
+                             f"/ pending build window")
+        else:
+            lines.append(f"    same-day selections: {not_notified} not sent "
+                         f"/ pending build window")
+    return lines
+
+
 # ---------------------------------------------------------------------------
 # collection + rendering
 # ---------------------------------------------------------------------------
@@ -382,6 +446,8 @@ def render_final_summary(status: dict) -> list[str]:
                      + ", ".join(f"{k}={v}" for k, v in sorted(clv_counts.items()))
                      + " (across all snapshots, not a pick count)")
     lines.append(f"  notification:                  {notify_line}")
+    lines += render_notification_coverage(
+        notification_coverage(plan, notification, clv_latest))
     lines += _ticket_lines(plan, status.get("ticket_outcomes"))
     lines += [
         f"  staking owner:                 {STAKING_OWNER}",

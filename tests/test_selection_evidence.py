@@ -364,3 +364,51 @@ def test_an_unsafe_price_renders_as_unsafe():
         odds=2.25, price_quarantine_reason="outlier_vs_consensus"))
     text = "\n".join(se.render_lineage_lines([lineage]))
     assert "execution_safe: no" in text
+
+
+# ===========================================================================
+# Price origin attribution
+#
+# pricing_source is a mechanism ("source_embedded_odds"); the predictor
+# that produced the quote is in bookmaker. Reporting only the mechanism
+# hid that the Panama price came from a shadow-tier source.
+# ===========================================================================
+
+
+PANAMA_PRICE = {
+    "home": "Panama", "away": "New Zealand", "selection": "HOME",
+    "odds": 2.05, "pricing_source": "source_embedded_odds",
+    "bookmaker": "prosoccer_embedded",
+}
+
+
+def test_the_price_names_its_origin_source_and_tier():
+    price = se.classify_price(PANAMA_PRICE)
+
+    assert price["price_origin_source"] == "prosoccer"
+    assert price["price_origin_tier"] == source_registry.TIER_SHADOW
+    assert price["price_mechanism"] == "source_embedded_odds"
+    assert price["execution_safe"] is True
+
+
+def test_the_rendered_lineage_prints_the_price_origin():
+    text = "\n".join(se.render_price_lines(se.classify_price(PANAMA_PRICE)))
+
+    assert "price_origin_source: prosoccer" in text
+    assert f"price_origin_tier: {source_registry.TIER_SHADOW}" in text
+    assert "price_mechanism: source_embedded_odds" in text
+
+
+def test_a_missing_price_claims_no_origin():
+    price = se.classify_price({"home": "A", "away": "B"})
+
+    assert price.get("price_origin_source") is None
+    assert price["execution_safe"] is False
+
+
+def test_a_quarantined_price_still_names_its_origin_but_is_not_safe():
+    price = se.classify_price(
+        {**PANAMA_PRICE, "price_quarantine_reason": "implausible_drift"})
+
+    assert price["price_origin_source"] == "prosoccer"
+    assert price["execution_safe"] is False
