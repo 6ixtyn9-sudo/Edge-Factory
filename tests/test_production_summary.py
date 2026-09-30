@@ -423,3 +423,52 @@ def test_a_single_selection_still_declines_under_the_two_leg_contract(tmp_path):
     outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
     assert outcomes[EVENT_DATE]["status"] == DECLINE
     assert not state["open_slips"]
+
+
+# ---------------------------------------------------------------------------
+# Supabase manifest lookup
+#
+# sync_supabase writes ONE manifest, named for the run date, whose
+# row_count covers every pick that run published including future-dated
+# ones. Looking only for a per-event-date manifest found nothing and
+# reported a successful publish as "no sync manifest found".
+# ---------------------------------------------------------------------------
+
+
+def test_run_date_manifest_is_found_for_a_future_event_date(tmp_path):
+    (tmp_path / "supabase_sync_manifest_2026-09-30.json").write_text(json.dumps(
+        {"target_date": "2026-09-30", "row_count": 1,
+         "sync_mode": "authoritative_replace"}))
+
+    published = ps.read_supabase_published(
+        ["2026-10-01"], tmp_path, run_date="2026-09-30")
+
+    assert published == {"2026-09-30": 1}
+    assert sum(published.values()) == 1
+
+
+def test_a_per_event_date_manifest_still_wins_when_present(tmp_path):
+    (tmp_path / "supabase_sync_manifest_2026-10-01.json").write_text(
+        json.dumps({"target_date": "2026-10-01", "row_count": 2}))
+    (tmp_path / "supabase_sync_manifest_2026-09-30.json").write_text(
+        json.dumps({"target_date": "2026-09-30", "row_count": 9}))
+
+    published = ps.read_supabase_published(
+        ["2026-10-01"], tmp_path, run_date="2026-09-30")
+
+    assert published == {"2026-10-01": 2}
+
+
+def test_a_genuinely_absent_manifest_is_still_reported_absent(tmp_path):
+    published = ps.read_supabase_published(
+        ["2026-10-01"], tmp_path, run_date="2026-09-30")
+    assert published == {}
+
+
+def test_summary_reports_the_published_count_it_actually_found(tmp_path):
+    (tmp_path / "supabase_sync_manifest_2026-09-30.json").write_text(
+        json.dumps({"target_date": "2026-09-30", "row_count": 1}))
+    published = ps.read_supabase_published(
+        ["2026-10-01"], tmp_path, run_date="2026-09-30")
+    assert "no sync manifest found" not in str(published)
+    assert published

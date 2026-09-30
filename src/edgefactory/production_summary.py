@@ -53,17 +53,50 @@ def read_ticket_outcomes(run_date: str, localdata: Path) -> dict | None:
         return None
 
 
-def read_supabase_published(event_dates, localdata: Path) -> dict[str, int]:
-    """Rows published per event date, from each date's sync manifest."""
+def _read_manifest(path: Path) -> dict | None:
+    if not path.exists():
+        return None
+    try:
+        return json.loads(path.read_text())
+    except (OSError, ValueError):
+        return None
+
+
+def read_supabase_published(event_dates, localdata: Path,
+                            run_date: str | None = None) -> dict[str, int]:
+    """Rows published, from the sync manifests that actually exist.
+
+    sync_supabase writes a single manifest named for the run date, whose
+    row_count covers every pick published by that run — including
+    future-dated ones. Looking only for a manifest per event date finds
+    nothing and makes a successful publish read as "no manifest found",
+    so the run-date manifest is consulted as well.
+    """
     published: dict[str, int] = {}
     for day in event_dates:
-        path = Path(localdata) / f"supabase_sync_manifest_{day}.json"
-        if not path.exists():
+        manifest = _read_manifest(
+            Path(localdata) / f"supabase_sync_manifest_{day}.json")
+        if manifest is None:
             continue
         try:
-            published[day] = int(json.loads(path.read_text()).get("row_count") or 0)
-        except (OSError, ValueError, TypeError):
+            published[day] = int(manifest.get("row_count") or 0)
+        except (TypeError, ValueError):
             continue
+
+    if published or not run_date:
+        return published
+
+    manifest = _read_manifest(
+        Path(localdata) / f"supabase_sync_manifest_{run_date}.json")
+    if manifest is None:
+        return published
+    try:
+        total = int(manifest.get("row_count") or 0)
+    except (TypeError, ValueError):
+        return published
+    # The run-date manifest is a single total, not a per-date breakdown.
+    # Attribute it to the run rather than inventing a split across dates.
+    published[str(manifest.get("target_date") or run_date)] = total
     return published
 
 
@@ -123,7 +156,8 @@ def collect_production_status(run_date: str, localdata: Path | str) -> dict:
         "run_date": run_date,
         "plan": plan,
         "ticket_outcomes": read_ticket_outcomes(run_date, localdata),
-        "supabase_published": read_supabase_published(event_dates, localdata),
+        "supabase_published": read_supabase_published(
+            event_dates, localdata, run_date=run_date),
         "clv_rows": clv_rows,
         "clv_ticket_status_counts": clv_ticket_status_counts(clv_rows),
         "notification": read_notification_result(run_date, localdata),

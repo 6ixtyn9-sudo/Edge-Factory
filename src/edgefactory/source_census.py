@@ -561,8 +561,14 @@ def build_census(*, run_date: str, localdata: Path, engine,
                  min_lead: int = DEFAULT_MIN_LEAD,
                  sources: tuple[str, ...] | None = None,
                  dispatch_plan: dict | None = None,
-                 ticket_outcomes: dict | None = None) -> dict:
-    """Read-only census of what every source sees on every covered date."""
+                 ticket_outcomes: dict | None = None,
+                 ticket_status_is_current_run: bool = False) -> dict:
+    """Read-only census of what every source sees on every covered date.
+
+    ``ticket_status_is_current_run`` must stay False whenever the census
+    runs ahead of auto_tickets: any status visible then belongs to an
+    earlier run and is labelled as such.
+    """
     localdata = Path(localdata)
     sources = sources or census_sources()
     dates = horizon_dates(run_date, horizon_days)
@@ -613,6 +619,7 @@ def build_census(*, run_date: str, localdata: Path, engine,
 
     return {
         "schema": "source_fixture_census/1",
+        "ticket_status_is_current_run": bool(ticket_status_is_current_run),
         "run_date": run_date,
         "as_of": as_of.isoformat(),
         "min_lead_minutes": min_lead,
@@ -839,6 +846,21 @@ def fixture_log_line(index: int, fixture: dict) -> str:
     return " | ".join(parts)
 
 
+def _ticket_status_label(census: dict, payload: dict) -> str:
+    """Never present a stale status as this run's outcome.
+
+    The census runs before auto_tickets, so any ticket status it can see
+    was written by an earlier run. Reporting it bare would let a previous
+    decline read as the current verdict.
+    """
+    status = payload.get("ticket_status")
+    if not status:
+        return "pending_auto_tickets"
+    if census.get("ticket_status_is_current_run"):
+        return str(status)
+    return f"previous_status:{status}"
+
+
 def render_log(census: dict, *, group_markers: bool = True,
                artifact_paths: list[str] | None = None) -> list[str]:
     """Render the whole census as operator-readable log lines.
@@ -887,7 +909,7 @@ def render_log(census: dict, *, group_markers: bool = True,
             str(totals["ml_scoreable_groups"]),
             str(totals["prematch_eligible_ml_scoreable"]),
             str(payload.get("production_selections", 0)),
-            _fmt(payload.get("ticket_status")),
+            _fmt(_ticket_status_label(census, payload)),
         ])
     out.extend("  " + line for line in _aligned(headers, rows))
     add("")
@@ -979,7 +1001,8 @@ def render_log(census: dict, *, group_markers: bool = True,
             if grp.get("blockers"):
                 add(f"    blocker: {_fmt(grp['blockers'])}")
             if grp.get("auto_ticket_status"):
-                add(f"    auto_ticket_status: {_fmt(grp['auto_ticket_status'])}")
+                add(f"    auto_ticket_status: "
+                    f"{_fmt(_ticket_status_label(census, grp))}")
         endgroup()
 
         # -- 6. thin-slate diagnosis --------------------------------------
@@ -998,8 +1021,7 @@ def render_log(census: dict, *, group_markers: bool = True,
                 f"/{total_groups}{share} — {finding['detail']}")
         add(f"  - production selections: "
             f"{payload.get('production_selections', 0)}")
-        if payload.get("ticket_status"):
-            add(f"  - auto_tickets: {payload['ticket_status']}")
+        add(f"  - auto_tickets: {_ticket_status_label(census, payload)}")
         add("  - gates are not to be relaxed on the strength of this report; "
             "it explains coverage, it does not license dispatch")
         add("")

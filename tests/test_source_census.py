@@ -440,8 +440,12 @@ def test_the_census_cannot_promote_or_certify():
     import ast
 
     tree = ast.parse((SRC / "edgefactory" / "source_census.py").read_text())
-    banned = ("certif", "promote", "graduate", "force_enable", "dispatch",
-              "write", "save", "sync", "notify", "stake", "ticket")
+    # Mutation verbs, not topic words: the census may *describe* tickets
+    # and dispatch, it may not perform them.
+    banned = ("certif", "promote", "graduate", "force_enable",
+              "write", "save", "sync", "notify", "stake",
+              "create_ticket", "place_", "send_", "upsert", "publish",
+              "dispatch_pick", "mkdir", "unlink", "remove", "rmtree")
 
     called, assigned, imported = set(), set(), set()
     for node in ast.walk(tree):
@@ -820,3 +824,55 @@ def test_log_emission_does_not_touch_production_state(tmp_path):
 
     for name, body in protected.items():
         assert (tmp_path / name).read_text() == body
+
+
+# ===========================================================================
+# 10. Pre-ticket status provenance
+#
+# The census runs before auto_tickets. Any ticket status it can see was
+# written by an earlier run, and must never read as this run's verdict.
+# ===========================================================================
+
+
+def test_census_before_auto_tickets_labels_status_as_previous(tmp_path):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    census = sc.build_census(
+        run_date=DAY, localdata=tmp_path, engine=engine, as_of=AS_OF,
+        horizon_days=0,
+        ticket_outcomes={DAY: {"status": "declined_insufficient_legs"}})
+
+    assert census["ticket_status_is_current_run"] is False
+    text = "\n".join(sc.render_log(census))
+    assert "previous_status:declined_insufficient_legs" in text
+    # The bare status must not stand alone as this run's outcome.
+    assert "auto_ticket  \n" not in text
+    for line in text.splitlines():
+        if line.strip().startswith("- auto_tickets:"):
+            assert "previous_status:" in line
+
+
+def test_census_with_no_prior_outcome_says_pending(tmp_path):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    text = "\n".join(sc.render_log(_build(tmp_path, horizon_days=0)))
+    assert "pending_auto_tickets" in text
+
+
+def test_census_after_auto_tickets_may_report_the_current_status(tmp_path):
+    _write_source(tmp_path, "zulubet", [_row("Panama", "New Zealand")])
+    census = sc.build_census(
+        run_date=DAY, localdata=tmp_path, engine=engine, as_of=AS_OF,
+        horizon_days=0,
+        ticket_outcomes={DAY: {"status": "declined_insufficient_legs"}},
+        ticket_status_is_current_run=True)
+    text = "\n".join(sc.render_log(census))
+    assert "previous_status:" not in text
+    assert "declined_insufficient_legs" in text
+
+
+def test_daily_census_step_does_not_claim_current_ticket_status():
+    """daily.py runs the census before auto_tickets, so the default holds."""
+    src = (ROOT / "scripts" / "daily.py").read_text()
+    census_at = src.index("scripts/source_fixture_census.py")
+    tickets_at = src.index("auto_tickets.py")
+    assert census_at < tickets_at
+    assert "ticket-status-is-current" not in src
