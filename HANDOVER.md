@@ -10208,3 +10208,157 @@ Odds API secrets absent from this sandbox, so that run—not these TLS-limited
 local attempts—must establish which non-Forebet endpoints currently recover
 rows. Fix any remaining adapter/allowlist failure indicated by that report; do
 not force certification and do not spend another Forebet Browser Run probe.
+
+## Addendum — 2026-09-30: run #874 was YELLOW; per-source settlement coverage audit added
+
+### Status correction (read this before trusting any source)
+
+Production run
+[#36724529373](https://github.com/6ixtyn9-sudo/Edge-Factory/actions/runs/36724529373)
+(PR #17, persisted as `da5b4f1`) was **yellow, not green**.
+
+What it proved:
+- GitHub Actions completed end to end.
+- `EDGE_FACTORY_FOREBET_BROWSER` stayed `off`; Forebet Browser Run probes spent: **0**.
+- The non-Forebet `forebet-resilience` capture group ran.
+- Partial adapter failures did not abort the remaining sources.
+- Some prediction rows reached the warehouse; some sources had settled rows.
+
+What it did **not** prove:
+- that every replacement source reliably matches predictions to final scores;
+- that captured rows are identity-safe;
+- that source orientations (home/away) are correct;
+- that score donors agree;
+- that WinDrawWin / SoccerVista / BetClan / Bzzoiro / FreeSuperTips /
+  aFootballReport are production-validated;
+- that any new source can replace Forebet in certified picks.
+
+Row counts are capture evidence, not source validation. `audit_source_availability.py`
+answers "did files/rows/tables appear?" — a different question.
+
+### New: `scripts/audit_source_settlement_coverage.py`
+
+A read-only, network-free audit of **prediction → final-score matching quality**
+per source over completed fixtures only (rows with `date <= --end-date`; future
+fixtures never enter the denominator).
+
+Per source it reports:
+
+| field | meaning |
+|---|---|
+| `prediction_fixtures` | unique (date, normalized home, normalized away) prediction fixtures in window |
+| `source_score_present` | fixtures where the source itself supplied `hs`/`gs` |
+| `independent_donor_exact_matches` | matched to an independent donor on the basic normalized key |
+| `alias_matches` | matched only through the guarded `edgefactory.identity` fold (folds + explicit evidence aliases, no fuzz) |
+| `matched_total` | exact + alias |
+| `source_score_matches_donor` / `source_score_conflicts_donor` | own score agrees / disagrees with the independent donor score |
+| `donor_score_conflicts` | independent donors disagree with each other — treated as NOT settlement evidence |
+| `unmatched` | no independent donor row at all |
+| `ambiguous` | key collision, self-inconsistent source scores, or multiple alias candidates — **rejected, never resolved** |
+| `reversed_candidates` | donor holds the reversed home/away pairing (orientation risk) |
+| `coverage_pct`, `conflict_pct` | matched / fixtures, and conflicts / judged fixtures |
+| `examples` | up to N real unmatched / conflict / ambiguous / reversed / donor-conflict cases |
+
+Conservatism rules baked in:
+- **A source is never its own independent donor** (`*_csv`, `*_settled`, and the
+  priority-merged `results_donor` view when the source is one of its feeders are
+  all excluded for that source).
+- Ambiguity is rejected, never guessed.
+- Donor-conflicted fixtures do not count as coverage.
+- Alias matching is an additive *second tier* only; exact matching is never
+  replaced. It accepts a fold match only when exactly one donor fixture resolves.
+- Verdicts (`settlement_validated` / `partial` / `unproven` / `no_data` /
+  `excluded_pricing_only`) are **evidence, not certification**. No certification
+  gate reads this file; nothing graduates from shadow/candidate automatically.
+
+Pricing-only sources (`bzzoiro_odds`, `theoddsapi_odds`, `oddspapi_odds`) are
+listed and explicitly marked non-prediction, excluded from coverage scoring.
+
+Thresholds (deliberately strict): validated needs >= 200 completed fixtures,
+>= 90% coverage, <= 2% source-vs-donor conflict; partial needs >= 30 fixtures,
+>= 60% coverage, <= 10% conflict.
+
+### How the operator runs it (browser only)
+
+No new workflow mode and no workflow-file change were required. The audit is a
+**soft step inside `official` mode** in `scripts/daily.py`, immediately after
+`audit_source_availability`:
+
+1. GitHub → Actions → **Autonomous Edge Factory 3-Hour Service** → *Run workflow*
+   → mode **`official_morning`**.
+2. The run prints the full coverage table in the job log and writes
+   `localdata/source_settlement_coverage_<date>.json` and `.md`.
+3. The existing "Persist pipeline state to git" step commits those artifacts
+   (`.gitignore` negation `!localdata/source_settlement_coverage_*`), so the
+   report is readable in the browser on `main` without any local command.
+4. `clean_localdata.py` prunes those two dated shapes on the standard 30-day
+   telemetry retention; monthly CSVs, state and history are untouched.
+
+Being a `run_soft` step, a failure of the audit can never block a production run.
+
+### Latest audit results
+
+A production-window (`--end-date <target> --days 90`) table will be produced by
+the first `official_morning` run on this branch and must be pasted here.
+
+Dev-clone baseline (committed history only, donors limited to the three core
+CSVs + BetExplorer, `--end-date 2026-06-30 --days 90`) is saved at
+`docs/operator/source_settlement_coverage_baseline_2026-06-30.md`:
+
+| source | fixtures | exact | alias | matched | agree | conflict | donor_conf | unmatched | ambig | rev | cov% | verdict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| forebet | 31429 | 6874 | 5140 | 12014 | 11941 | 27 | 5 | 19005 | 405 | 3 | 38.23 | unproven* |
+| zulubet | 4790 | 2698 | 533 | 3231 | 3207 | 7 | 4 | 1410 | 145 | 1 | 67.45 | partial |
+| statarea | 12199 | 6117 | 1818 | 7935 | 7087 | 34 | 0 | 3909 | 355 | 2 | 65.05 | partial |
+| vitibet, scoutingstats, predictz, windrawwin, prosoccer, soccervista, bettingclosed, betclan, freesupertips, afootballreport, bzzoiro | 0 | — | — | — | — | — | — | — | — | — | 0.0 | no_data |
+| bzzoiro_odds, theoddsapi_odds, oddspapi_odds | — | — | — | — | — | — | — | — | — | — | — | excluded_pricing_only |
+
+\* The baseline is NOT a production verdict. A fresh clone carries only the three
+core history CSVs, so Forebet's slate has almost no independent donor to match
+against, and every replacement source has no local monthly file at all. Read
+verdicts only from the CI run, where the cache holds the full monthly corpus.
+
+Two real defects the baseline already surfaces, both previously invisible:
+- **Donor disagreement exists.** e.g. 2026-05-09 Bodo/Glimt vs Brann —
+  `statarea=3-3` vs `zulubet=2-2`. `results_donor` picks one by priority and
+  hides this; the audit refuses to score it.
+- **Orientation risk exists.** e.g. 2026-05-09 Marsaxlokk vs Hamrun Spartans is
+  held reversed by the donor. Previously silently unmatched.
+
+### Source posture after this pass (unchanged; nothing graduated)
+
+- **Trusted for settlement matching:** none certified by this audit yet. The
+  legacy core (Forebet / Statarea / Zulubet) keeps its existing gate status on
+  historical grounds, not on this audit.
+- **Partially evidenced:** Zulubet, Statarea (coverage 65-67% against a
+  donor-poor baseline corpus).
+- **Unproven — remain shadow/candidate:** WinDrawWin, SoccerVista, BetClan,
+  Bzzoiro, FreeSuperTips, aFootballReport, PredictZ, ProSoccer, ScoutingStats,
+  Vitibet (no completed-window local evidence in this clone).
+- **Parked:** Forebet Browser Run. `EDGE_FACTORY_FOREBET_BROWSER: "off"`.
+  **Zero** Browser Run probes were spent in this pass; no `probe=forebet_getrs`
+  and no `probe=page_access` were run.
+
+**Do not graduate any source from shadow/candidate on capture rows alone.**
+Graduation requires: >= 200 completed fixtures, >= 90% coverage, <= 2% conflict,
+zero unexplained reversed candidates, on a production CI run — plus operator
+sign-off recorded here.
+
+### Known next work
+
+- Result backfill (`scripts/backfill_results.py`) still joins on the basic
+  `date + lower/alnum home + away` key and does not use the guarded alias tier.
+  The audit now measures exactly how much coverage that costs (`alias_matches`
+  column); wiring the guarded fold into backfill is the next candidate change
+  and must be validated against this report before/after.
+- `results_donor` remains a priority pick, not a multi-donor agreement view.
+  `donor_score_conflicts` quantifies the risk; promoting agreement-required
+  settlement is a separate, gated change.
+
+### Tests
+
+`tests/test_audit_source_settlement_coverage.py` — exact match, unmatched,
+ambiguous duplicate donor, reversed home/away, source-vs-donor conflict,
+source-vs-donor agreement, self-donor exclusion, future dates excluded,
+pricing-only exclusion, filename bleed (`bzzoiro` vs `bzzoiro_odds`), CLI
+artifact writing, threshold classification. Full suite: 798 passed.

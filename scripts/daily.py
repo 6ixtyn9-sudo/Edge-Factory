@@ -863,6 +863,19 @@ def run_pipeline(
                 f"--date {target_date} --days {backfill_days}",
                 f"audit_source_availability {target_date} (D{backfill_days})",
             )
+            # Capture counts are NOT source validation (run #874 was yellow).
+            # This audit measures prediction->final-score matching quality per
+            # source (exact/alias/unmatched/ambiguous/reversed/conflict) and
+            # writes browser-readable evidence into localdata, which the
+            # workflow persists to git. Soft: it must never block a run, and
+            # it never certifies a source — the gates stay operator-owned.
+            run_soft(
+                "PYTHONPATH=src python3 scripts/audit_source_settlement_coverage.py "
+                f"--end-date {target_date} --days 90 "
+                f"--output-json localdata/source_settlement_coverage_{target_date}.json "
+                f"--output-md localdata/source_settlement_coverage_{target_date}.md",
+                f"audit_source_settlement_coverage {target_date} (D90)",
+            )
 
         run_soft(
             "PYTHONPATH=src python3 scripts/export_settled_results.py",
