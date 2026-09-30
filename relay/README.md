@@ -29,11 +29,14 @@ python -c "import secrets; print(secrets.token_urlsafe(48))"
 | `scoutingstats.ai` | `/api/fixtures/YYYY-MM-DD`, `/api/odds?fixture_ids=…` | JSON |
 | `www.prosoccer.gr` | `/en/football/predictions/`, `index.html`, `yesterday.html`, `tomorrow.html`, `{Monday..Sunday}.html` — no query string | HTML |
 | `www.soccervista.com` | `/` only — no query string | HTML |
+| `www.predictz.com` | `/predictions/YYYYMMDD/` only — no query string | HTML |
+| `www.windrawwin.com` | `/predictions/today/`, `/predictions/tomorrow/` only — no query string | HTML |
 
 The ProSoccer set covers exactly its rolling prediction week (the only surface
 the adapter requests; the site's deep archive is offline). SoccerVista is
 today-only because its day picker is JavaScript-driven with no plain-GET
-archive URL.
+archive URL. PredictZ is date-archive only; WinDrawWin is capture-forward only
+for today/tomorrow.
 
 ## 1. Ordinary Cloudflare Worker relay
 
@@ -50,11 +53,12 @@ npx wrangler deploy
 ```
 
 Copy the resulting `https://...workers.dev` URL. The ordinary relay uses Worker
-`fetch()` for ScoutingStats, for the existing Forebet transport, and (as of the
-2026-09-30 source expansion) for the ProSoccer and SoccerVista HTML pages;
-it is not a browser and is not expected to pass Forebet's Cloudflare challenge.
-The Browser Run diagnostic described below is a separate, explicitly named
-operation and is not used by the Python adapters yet.
+`fetch()` for ScoutingStats and the non-browser HTML sources. It is not a
+browser and is not expected to pass Forebet's Cloudflare challenge. Forebet
+Browser Run support is a separate, explicitly named `forebet_getrs` operation
+that must be deployed with the Worker before any production probe can prove
+Forebet rows. The older `forebet_browser_diagnostic` operation remains a
+manual page-render diagnostic.
 
 ## 2. Google Apps Script relay (free Google account)
 
@@ -67,9 +71,9 @@ operation and is not used by the Python adapters yet.
 6. Authorize only external requests and copy the `/exec` URL.
 
 Apps Script remains an independent ordinary-HTTP fallback for ScoutingStats,
-ProSoccer, and SoccerVista. Its `UrlFetchApp` path was already tested against
-six Forebet variants and received Cloudflare challenge HTML/403 responses, so
-it is not a Browser Run substitute.
+ProSoccer, SoccerVista, PredictZ, and WinDrawWin. Its `UrlFetchApp` path was
+already tested against six Forebet variants and received Cloudflare challenge
+HTML/403 responses, so it is not a Browser Run substitute.
 
 The source contains an `appsscript.json` manifest for users who prefer `clasp`,
 but no Google credential belongs in this repository.
@@ -92,13 +96,11 @@ and never runs the normal pipeline.
 > **Status (2026-09-30, operator decision):** the earlier "phase-1 diagnostic-only /
 > do-not-modify-forebet.py" limitation is **lifted**. The operator may now wire
 > production extraction into `forebet.py`, relay endpoints, and pipeline scripts.
-> That said, the live diagnostic below observed Forebet returning a
-> `captcha_or_turnstile_required` interactive managed challenge that Browser Run
-> did not pass, so — rather than standing up paid solving or heavy browser
-> infrastructure — the production consensus engine now grows through accessible
-> alternative sources (ProSoccer, SoccerVista) ingested via the ordinary relay
-> and direct transports. Browser Run remains a bounded manual diagnostic only;
-> nothing below makes it part of the daily pipeline.
+> The 2026-09-30 recovery pass adds a bounded production Browser Run operation
+> for the Forebet `getrs.php` JSON endpoint while keeping this older diagnostic
+> workflow available. The production operation is documented in section 5 and is
+> allowlisted to exact `getrs.php` URLs; the diagnostic below remains a separate
+> manual page-render probe.
 
 Cloudflare renamed Browser Rendering to **Browser Run** in the current
 2026 documentation. This repository uses the documented Workers binding and
@@ -142,7 +144,7 @@ required for this route.
 #### A. Merge the repository change in GitHub
 
 1. Open the repository on GitHub.
-2. Open the pull request for branch `arena/01a0f031-edge-factory`.
+2. Open the current source-recovery pull request / continuation branch (for this session: `arena/01a0f226-edge-factory`).
 3. Review and merge it into the repository's production branch, normally `main`.
 4. Do not run the normal daily workflow for this diagnostic.
 
@@ -391,14 +393,14 @@ package, and redeploy the ordinary relay. The POST relay contract, exact
 allowlists, and the Python adapters remain unchanged. Do not remove `BROWSER`
 during a live diagnostic request; wait for it to finish.
 
-After a failed smoke test, keep the bounded classification in the operator's
-run notes and stop. The observed smoke test returned
-`captcha_or_turnstile_required`, which is a failed smoke test by definition —
-so Browser Run is retained only as a manual diagnostic. If a future run ever
-classifies `genuine_forebet_prediction_content`, a production transport may be
-reviewed on its merits under the lifted 2026-09-30 operator authorization; the
-manual diagnostic workflow may remain as an operator tool, but it is not
-scheduled or connected to the normal pipeline.
+After a failed smoke test or production probe, keep the bounded classification
+in the operator's run notes and stop. On 2026-09-30 the operator-run page
+diagnostic returned `unresolved_cloudflare_challenge` with page title
+`Just a moment...`, so Browser Run still has not proven Forebet production
+content. The same day's `forebet_getrs` probe returned a legacy generic-relay
+shape (`http_response_status=502`, `relay_status=403`, `body_shape=non_json_body`)
+before this follow-up added explicit operation/transport markers. Treat that as
+a failed/undeployed production probe, not as proof of Browser Run rows.
 
 ## Existing relay smoke test
 
@@ -413,3 +415,51 @@ workflow:
 
 A relay error must leave the day retryable. It must never be represented as a
 valid empty provider payload.
+
+## 5. 2026-09-30 production source-recovery changes
+
+### Forebet Browser Run production operation
+
+The Cloudflare Worker now supports a production Browser Run operation:
+
+```json
+{"token":"<relay token>","operation":"forebet_getrs","url":"https://www.forebet.com/scripts/getrs.php?ln=en&tp=1x2&in=2026-09-30&ord=0&tz=0&tzs=&tze=&output=1"}
+```
+
+Security invariants are unchanged:
+
+- POST only.
+- `RELAY_TOKEN` authentication is required.
+- The browser path accepts only `https://www.forebet.com/scripts/getrs.php`.
+- Query parameters are exact: `ln=en`, whitelisted `tp` (`1x2`, `uo`, `bts`, `ht`), ISO `in=YYYY-MM-DD`, `ord=0`, `tz=0`, blank `tzs` and `tze`, and optional `output=1` only.
+- The Worker launches the existing `BROWSER` binding, extracts the rendered body text, validates Forebet's `[rows, meta]` JSON shape, and returns an identified Browser Run envelope: `operation=forebet_getrs`, `transport=cloudflare_browser_rendering`, `source_url`, `status`, `fetched_at`, `body_shape`, `row_count`, and `body`. Failure envelopes keep the same operation/transport markers but omit raw challenge HTML.
+- Python re-validates the echoed URL and Forebet JSON shape before parsing rows.
+
+`src/edgefactory/sources/forebet.py` uses this Browser Run operation above ordinary relays only for recent live dates in GitHub Actions auto mode. Operators can set `EDGE_FACTORY_FOREBET_BROWSER=off` to disable it or `=on` to force it for a targeted backfill. The bounded default avoids spending managed-browser launches on the intact historical Forebet archive.
+
+If Browser Run is deployed and still fails a live challenge, `forebet.py` also contains an opt-in Actions-runner Playwright fallback. It is dormant unless `EDGE_FACTORY_FOREBET_PLAYWRIGHT=1` is present and the runner has installed Playwright/Chromium; only then does `forebet.py` try Playwright for recent live dates before falling back to ordinary relays. This keeps the fallback behind explicit operator sign-off and adds no paid solver. Because this continuation branch does not modify `.github/workflows/`, the default-off workflow wiring is provided as `docs/operator/daily.yml.proposed` for manual operator application if needed.
+
+To probe the production Browser Run path after Worker deployment, run the manual `Forebet Browser Run diagnostic` workflow with `probe=forebet_getrs`. The same workflow still supports the original fixed-page diagnostic with `probe=page_access`; the older standalone `.github/workflows/forebet-getrs-probe.yml` workflow has been deleted. A passing getrs receipt must show `classification=forebet_getrs_browser_rows`, `worker_supports_browser_getrs=true`, `operation=forebet_getrs`, `transport=cloudflare_browser_rendering`, `body_shape=forebet_getrs`, and `row_count > 0`. If the receipt says `legacy_generic_relay_or_worker_not_deployed`, the first relay URL is still serving the old generic fetch path or a non-updated deployment; deploy the Worker from this branch and rerun exactly once.
+
+### New ordinary relay allowlists
+
+The ordinary Worker and GAS relay allowlists now include:
+
+- PredictZ: `https://www.predictz.com/predictions/YYYYMMDD/` only.
+- WinDrawWin: `https://www.windrawwin.com/predictions/today/` and `/predictions/tomorrow/` only.
+
+No event-detail pages, future WinDrawWin pages, arbitrary query strings, alternate hosts, or HTTP URLs are allowed.
+
+### SoccerVista anti-shell escalation
+
+SoccerVista remains homepage-only. The Python adapter now treats a branded but table-less page as a transport failure and escalates through urllib, curl_cffi, Worker, and GAS before raising. Worker and GAS requests include browser-like accept/language/referrer headers and non-auth consent hints. A page with an actual table but zero fixtures remains an honest empty slate.
+
+### GAS redeploy required
+
+`relay/google-apps-script/Code.gs` changed. Apps Script does not deploy from Git automatically, so after merge:
+
+1. Open the existing Apps Script project.
+2. Replace the whole `Code.gs` file with the repository version.
+3. Confirm Script Property `RELAY_TOKEN` is still set.
+4. Deploy a new Web App version with the same access settings as before.
+5. Keep the `/exec` URL in `EDGE_FACTORY_RELAY_URLS` after the Worker URL.

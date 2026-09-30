@@ -9906,3 +9906,141 @@ hypothetical skips the match conservatively; no Python-3.13 or lazy-import
 hazards; GitHub Actions workflow needs no changes (no per-source
 enumeration; existing secrets cover the relay transports; Python 3.13).
 Suite after fix: soccer/prosoccer/relay subsets green.
+
+2026-09-30 addendum — first production source-availability recovery
+
+Scope: post-PR14 production degraded Forebet, SoccerVista, ProSoccer, PredictZ, WinDrawWin, and Bzzoiro odds availability while preserving the relay security model and walk-forward certification gates.
+
+Implemented changes:
+
+- Forebet now has a production Cloudflare Worker Browser Run operation named `forebet_getrs`. It is still POST-only and token-authenticated, and it accepts only exact `https://www.forebet.com/scripts/getrs.php` JSON endpoint URLs with whitelisted `tp` values (`1x2`, `uo`, `bts`, `ht`) and ISO `in=` dates. The Worker launches the Browser binding, renders the JSON endpoint, extracts the rendered body text, validates the Forebet `[rows, meta]` JSON shape, and returns the same relay envelope (`source_url`, `status`, `fetched_at`, `body`).
+- `src/edgefactory/sources/forebet.py` tries the Browser Run operation above the ordinary operator relays in GitHub Actions auto mode for live/recent capture dates only (default window: today-2 through tomorrow). This bounds managed-browser use against the intact history archive. `EDGE_FACTORY_FOREBET_BROWSER=off` disables it; `=on` forces it for manual targeted runs. If Browser Run still receives a Cloudflare challenge, payload validation fails closed and the existing relay/Jina/direct ladder remains the fallback. The adapter now also serializes Forebet market fetches when Browser Run is enabled, avoiding three parallel Browser acquisitions for one date.
+- A one-date/one-market Forebet Browser Run production probe can be executed after the Worker is deployed by POSTing `operation=forebet_getrs` to the Worker. This branch does not add a workflow file because the Arena GitHub App for this session lacks `workflows` permission; the PR body includes the exact manual probe payload.
+- SoccerVista transport validation moved into the transport ladder. A branded but table-less shell is now a transport failure, so urllib escalates to curl_cffi, then Worker, then GAS before `fetch_day` raises. The adapter and relays also send browser-like accept/language/referrer headers plus non-auth consent hints. A genuine empty slate with an actual table still returns `[]`.
+- ProSoccer now tries candidate calendar aliases for the requested date (`today`, `tomorrow.html`, `yesterday.html`, weekday page) before declaring rollover lag. This captures the UTC requested date the same day when the plain page still says yesterday but `tomorrow.html` already serves the target. If no candidate H1 matches, it raises `prosoccer.NotServedYet` instead of returning `[]`. `local_backfill.py` therefore leaves that date open and retryable; genuine empty days for other sources still mark done. Intraday autonomous runs now call `capture_daily.py --skip-build --sources prosoccer` before warehouse rebuild so the 12:00/15:00/18:00/21:00 SAST auto-once cadence gets a post-rollover ProSoccer recapture.
+- `capture_daily.py` accepts `--sources` for bounded recaptures and prints a one-line `SOURCE SUMMARY` for each source plus an end-of-capture summary block.
+- PredictZ and WinDrawWin now have exact relay allowlists in both Cloudflare Worker and Google Apps Script. PredictZ allows only `/predictions/YYYYMMDD/`; WinDrawWin allows only `/predictions/today/` and `/predictions/tomorrow/`. Their adapters now use direct curl_cffi first and then operator relays with body provenance/shape validation.
+- Bzzoiro odds was investigated from the production symptom: the adapter already logs `best_results`, per-event comparison counts, and final rows. The observed `best_results=0 comparison_rows=0 rows=0` means both best-odds endpoints and the per-event comparison fallback yielded no parseable odds for the requested date/token during that run. To stop the fallback from consuming the whole capture budget, the default per-event comparison cap is now 20 (operator-overridable via `BZZOIRO_ODDS_MAX_EVENTS`). Use `BZZOIRO_ODDS_VERBOSE=1` on the next operator probe to determine whether the API returned zero event ids, empty comparison markets, or transient endpoint failures.
+
+Operational notes:
+
+- No new paid service was added. Browser Run uses the existing Worker binding and the code path is bounded by default to live/recent Forebet dates. A GitHub Actions Playwright fallback code path exists but is opt-in only: it runs only when `EDGE_FACTORY_FOREBET_PLAYWRIGHT=1` is present and Playwright/Chromium have been installed by the runner. No paid solver is wired. The workflow installation step could not be committed from this sandbox because GitHub rejected workflow-file changes from the App token; if Browser Run fails, add the documented install step manually with operator sign-off.
+- Google Apps Script deploy is still manual. After merging, paste the full updated `relay/google-apps-script/Code.gs` into the Apps Script project and redeploy the web app so PredictZ/WinDrawWin and stricter Forebet allowlists are live on the GAS fallback.
+- `.github/workflows/daily.yml` still does not enumerate sources; no daily workflow source list change was required. The only schedule-impacting code change is inside `scripts/daily.py`, where intraday mode invokes the new bounded ProSoccer capture pass.
+- Do not add ProSoccer or SoccerVista to `picks_today.py` live voting lists. They remain data sources subject to the existing walk-forward certification gates.
+
+## Addendum — 2026-09-30: PR15 probe receipts and Browser Run proof markers
+
+Operator-supplied post-update logs were reviewed after the Forebet probe workflow
+became available on the PR branch. The `forebet_getrs` workflow YAML executed with
+secrets present, but its receipt was `http_response_status=502`,
+`relay_status=403`, `body_shape=non_json_body`, `row_count=null`, `ok=false` for
+the exact public `getrs.php` URL. That is a failed production probe, not proof of
+Forebet rows. The observed envelope also matches the legacy generic relay fetch
+shape or a non-updated Worker deployment, so this follow-up hardens the proof
+contract instead of claiming success.
+
+The separately run Browser Run diagnostic launched one browser session and
+returned `classification=unresolved_cloudflare_challenge`, page title
+`Just a moment...`, Cloudflare challenge markers, Turnstile source markers, and
+`success=false`. Forebet Browser Run therefore remains unproven in production;
+there is still no deployed Worker receipt showing Forebet `[rows, meta]` JSON
+with positive `row_count`.
+
+Follow-up hardening:
+
+- `relay/cloudflare-worker/src/forebet-browser.js` now stamps every
+  `forebet_getrs` response with `operation=forebet_getrs` and
+  `transport=cloudflare_browser_rendering`. Success receipts also include
+  `body_shape=forebet_getrs` and `row_count`; failure receipts omit raw challenge
+  HTML but keep enough metadata for diagnosis.
+- `src/edgefactory/sources/forebet.py` now rejects Browser Run envelopes that do
+  not carry those operation/transport markers, so a legacy generic relay response
+  cannot be mistaken for a Browser Run success.
+- Per operator direction, the Forebet manual probes are consolidated onto the
+  proven `.github/workflows/forebet-browser-diagnostic.yml` workflow on main. It
+  has `probe=forebet_getrs` for JSON endpoint proof and `probe=page_access` for
+  the original fixed-page diagnostic. The separate
+  `.github/workflows/forebet-getrs-probe.yml` workflow has been deleted. A
+  passing production getrs probe must show
+  `classification=forebet_getrs_browser_rows`, `worker_supports_browser_getrs=true`,
+  `transport=cloudflare_browser_rendering`, `body_shape=forebet_getrs`, and
+  `row_count > 0`.
+- Correction to earlier notes: the requested Forebet workflow consolidation has
+  been manually applied on main. The default-off Playwright daily wiring remains
+  a proposed manual artifact at `docs/operator/daily.yml.proposed` because the
+  App token cannot push workflow-file edits.
+
+Verification after this hardening: `PYTHONPATH=src /home/user/venv/bin/python -m
+pytest tests/ -q` → 773 passed in 11.99s; `cd relay/cloudflare-worker && npm
+test` → 47 tests passed; Worker JavaScript `node --check` passed; `git diff
+--check` was clean.
+
+## Addendum — 2026-09-30: continuation after main `forebet_getrs` probe failure
+
+Current continuation branch: `arena/01a0f226-edge-factory`, based on main `30aa2ad`.
+
+The operator-run main workflow **Forebet Browser Run getrs probe** run `36708782624`
+failed in the expected legacy/undeployed shape before the workflow consolidation:
+`classification=legacy_generic_relay_or_worker_not_deployed`,
+`http_response_status=502`, `relay_status=403`, no `operation`, no `transport`,
+`body_shape=non_json_body`, and `row_count=null`. That receipt proves the live
+worker endpoint did not return the new Browser Run `forebet_getrs` contract; it
+is not evidence of a Forebet data-shape problem in the Python parser.
+
+Continuation action taken here:
+
+- Ported the PR #15 source-recovery commits onto the fresh branch from current
+  main.
+- Rebased this branch on main after the operator manually applied the requested
+  workflow consolidation: `.github/workflows/forebet-browser-diagnostic.yml` now
+  has `probe=forebet_getrs` / `probe=page_access`, and the standalone
+  `.github/workflows/forebet-getrs-probe.yml` is gone.
+- Added/kept the Worker `forebet_getrs` operation with explicit
+  `operation=forebet_getrs` and `transport=cloudflare_browser_rendering`
+  markers, exact `getrs.php` allowlisting, challenge/non-JSON failure receipts,
+  and row-count/body-shape proof fields on success.
+- Kept the Python Forebet adapter fail-closed: it rejects legacy generic relay
+  envelopes and treats missing Browser Run markers as failure, so run logs cannot
+  mistake the old generic relay path for a Browser Run success.
+- Preserved the alternative-source recovery pieces: SoccerVista per-transport
+  validation/escalation, ProSoccer calendar aliases and retryable `NotServedYet`,
+  PredictZ/WinDrawWin exact relay allowlists and shape validation, Bzzoiro odds
+  fallback bounding, and capture summaries.
+
+Verification on this continuation branch:
+
+- `PYTHONPATH=src .venv/bin/python -m pytest tests/ -q` → `773 passed in 12.61s`.
+- `cd relay/cloudflare-worker && npm test` → `47` tests passed.
+- `find relay/cloudflare-worker -path '*/node_modules' -prune -o -name '*.js' -print -exec node --check {} \;` → all Worker JavaScript parsed.
+- `git diff --check origin/main..HEAD` → clean after this addendum/doc whitespace cleanup.
+
+Next operator gate remains unchanged: merge only after red-team/operator sign-off,
+deploy the Cloudflare Worker from `relay/cloudflare-worker`, then rerun exactly
+one `forebet_getrs` probe. Passing proof must show
+`classification=forebet_getrs_browser_rows`, `worker_supports_browser_getrs=true`,
+`operation=forebet_getrs`, `transport=cloudflare_browser_rendering`,
+`body_shape=forebet_getrs`, and `row_count > 0`.
+
+## Addendum — 2026-09-30: Forebet Browser Run diagnostic workflow consolidation applied
+
+Operator direction was to use the existing working `Forebet Browser Run diagnostic`
+workflow as the single manual Forebet Browser Run surface, and remove the separate
+`Forebet Browser Run getrs probe` workflow. The operator has now applied that on
+main:
+
+- `.github/workflows/forebet-browser-diagnostic.yml` has a `probe` input:
+  - `forebet_getrs` (default): sends exactly one POST with
+    `operation=forebet_getrs` and an exact allowlisted `getrs.php` URL. It emits
+    the same proof receipt fields as the deleted standalone getrs probe.
+  - `page_access`: preserves the original fixed-page diagnostic POST with
+    `operation=forebet_browser_diagnostic`.
+- `.github/workflows/forebet-getrs-probe.yml` is deleted.
+- `docs/operator/forebet-browser-diagnostic.yml.proposed` remains as a mirror of
+  the consolidated workflow for review/future copy-paste if needed.
+
+The success gate for source recovery is unchanged: `probe=forebet_getrs` must
+return `classification=forebet_getrs_browser_rows`,
+`worker_supports_browser_getrs=true`, `operation=forebet_getrs`,
+`transport=cloudflare_browser_rendering`, `body_shape=forebet_getrs`, and
+`row_count > 0`.

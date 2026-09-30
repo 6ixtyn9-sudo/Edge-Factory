@@ -11,7 +11,9 @@ from __future__ import annotations
 import re
 from datetime import date as _date
 
-from .cffi_http import get
+from edgefactory.sources import public_relay
+
+from .cffi_http import get as cffi_get
 
 _ROW = re.compile(r'(?=<div class="wttr">)')
 _FIX = re.compile(r'class="wtdesklnk">([^<]+?)\s*</a>')
@@ -22,6 +24,29 @@ _SC = re.compile(r'class="wttd wtsc[^"]*">([^<]*)<')
 _LEAGUE = re.compile(r'href="https://www\.windrawwin\.com/predictions/[a-z0-9-]+/"[^>]*>([^<]{3,60})</a>')
 
 PRED_MAP = {"home win": "home", "draw": "draw", "away win": "away"}
+
+
+def _validate_html(html: str | None) -> str | None:
+    if html is None:
+        return None
+    lower = html.lower()
+    if "windrawwin" not in lower and "wttr" not in lower:
+        raise RuntimeError("windrawwin: brand marker missing")
+    return html
+
+
+def _get(url: str) -> str | None:
+    errors: list[str] = []
+    try:
+        return _validate_html(cffi_get(url))
+    except Exception as exc:  # noqa: BLE001 - fall through to independent relays
+        errors.append(f"direct={type(exc).__name__}")
+    for relay_name, raw in public_relay.fetches(url):
+        try:
+            return _validate_html(raw.decode("utf-8", "replace"))
+        except Exception as exc:  # noqa: BLE001 - try next configured relay
+            errors.append(f"operator:{relay_name}={type(exc).__name__}")
+    raise RuntimeError(f"WinDrawWin GET failed {url}: {', '.join(errors)}")
 
 
 def _parse(html: str, date: str) -> list[dict]:
@@ -67,7 +92,7 @@ def fetch_day(date: str) -> list[dict]:
     else:
         urls = [f"https://www.windrawwin.com/predictions/future/{date.replace('-', '')}/"]
     for url in urls:
-        html = get(url)
+        html = _get(url)
         rows = _parse(html, date) if html else []
         if rows:
             return rows

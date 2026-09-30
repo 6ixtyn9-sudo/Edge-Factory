@@ -368,3 +368,34 @@ def test_daily_report_renders_every_ledger_bucket(tmp_path):
     assert "Top Scores" not in text
     assert "2-0 (16.0%)" not in text
     assert "Total archived picks in this report: 2" in text
+
+
+def test_intraday_runs_prosoccer_capture_daily_recapture(tmp_path):
+    archive = tmp_path / "picks_2026-09-30.json"
+    archive.write_text("[]")
+    picks_today = tmp_path / "picks_today.json"
+
+    with patch.object(daily, "REPORT_DIR", tmp_path), \
+         patch.object(daily, "PICKS_TODAY_FILE", picks_today), \
+         patch("daily.sync_repo_state"), \
+         patch("daily.run_soft") as mock_run_soft, \
+         patch("daily.run"), \
+         patch("daily.generate_daily_report"), \
+         patch("daily._notify"), \
+         patch("daily.run_future_planner"), \
+         patch("daily.capture_theodds_snapshot"), \
+         patch("daily.ml_fade_research_maintenance"), \
+         patch("daily.sync_official_archive"):
+        daily.run_pipeline(
+            target_date="2026-09-30",
+            mode="autonomous_intraday",
+            future_days=2,
+            backfill_days=30,
+            force_repick=True,
+            picks_only=True,
+        )
+
+    assert any(
+        "capture_daily.py --skip-build --sources prosoccer" in call.args[0]
+        for call in mock_run_soft.call_args_list
+    )
