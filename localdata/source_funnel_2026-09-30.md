@@ -1,25 +1,25 @@
 # Same-day source funnel — 2026-09-30
 
-as_of `2026-09-30T18:34:21+02:00`, min_lead 30m. Read-only, no network; gates reused from scripts/picks_today.py.
+as_of `2026-09-30T19:19:14+02:00`, min_lead 30m. Read-only, no network; gates reused from scripts/picks_today.py.
 
 ## A. Per-source same-day availability
 
 | source | raw | fixtures | kickoff | ko_ok | prematch | 1x2 | ou | btts | in_1x2 | used | wh |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | forebet | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | True | True | True |
-| zulubet | 58 | 45 | 31 | 0 | 0 | 45 | 0 | 0 | True | True | True |
-| statarea | 22 | 18 | 18 | 18 | 0 | 18 | 18 | 0 | True | True | True |
-| vitibet | 199 | 172 | 151 | 151 | 85 | 18 | 0 | 0 | True | True | True |
-| betclan | 64 | 60 | 0 | 0 | 0 | 60 | 0 | 0 | True | True | True |
+| zulubet | 60 | 46 | 25 | 0 | 0 | 46 | 0 | 0 | True | True | True |
+| statarea | 22 | 17 | 17 | 17 | 0 | 17 | 17 | 0 | True | True | True |
+| vitibet | 199 | 171 | 138 | 138 | 80 | 18 | 0 | 0 | True | True | True |
+| betclan | 63 | 60 | 0 | 0 | 0 | 60 | 0 | 0 | True | True | True |
 | scoutingstats | 28 | 20 | 20 | 20 | 12 | 17 | 17 | 16 | False | True | True |
 | bzzoiro | 18 | 17 | 17 | 17 | 6 | 17 | 17 | 17 | True | True | True |
 | predictz | 19 | 17 | 0 | 0 | 0 | 0 | 0 | 0 | False | False | True |
 | windrawwin | 32 | 31 | 0 | 0 | 0 | 0 | 0 | 0 | False | False | True |
-| freesupertips | 2 | 2 | 2 | 2 | 2 | 0 | 0 | 0 | False | False | True |
-| afootballreport | 332 | 243 | 243 | 243 | 86 | 0 | 0 | 0 | False | False | True |
-| prosoccer | 16 | 15 | 15 | 15 | 2 | 15 | 0 | 0 | False | False | True |
+| freesupertips | 2 | 2 | 2 | 2 | 0 | 0 | 0 | 0 | False | False | True |
+| afootballreport | 340 | 250 | 250 | 250 | 88 | 0 | 0 | 0 | False | False | True |
+| prosoccer | 16 | 15 | 15 | 15 | 0 | 15 | 0 | 0 | False | False | True |
 | soccervista | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | False | False | False |
-| bettingclosed | 73 | 45 | 0 | 0 | 0 | 0 | 0 | 0 | False | False | True |
+| bettingclosed | 73 | 41 | 0 | 0 | 0 | 0 | 0 | 0 | False | False | True |
 
 Notes:
 - **forebet**: no same-day rows captured
@@ -39,23 +39,23 @@ Notes:
 
 ## B. Cross-source identity overlap
 
-- fixture groups: 528
-- single-source groups: 442
-- two-source groups: 47
-- three-plus-source groups: 39
+- fixture groups: 533
+- single-source groups: 445
+- two-source groups: 50
+- three-plus-source groups: 38
 - reversed home/away risk groups: 0
 
 Examples — singletons:
   - fixture=1demarzo vs sportivoiteno, source=afootballreport
+  - fixture=6deenero vs atleticoparanaense, source=afootballreport
   - fixture=abumuslim vs omarzawak, source=afootballreport
   - fixture=adelphipanthers vs franklinpierceravens, source=afootballreport
+  - fixture=affguatemala vs deportivofraijanes, source=afootballreport
   - fixture=aguila vs interformandounatletau20, source=afootballreport
   - fixture=albertusmagnusfalcons vs deanbulldogs, source=afootballreport
   - fixture=albertusmagnusfalcons vs mitchellmariners, source=afootballreport
   - fixture=alettihad vs alistiqlal, source=afootballreport
   - fixture=alianza vs atleticoplatense, source=vitibet
-  - fixture=alianza vs cdplatense, source=afootballreport
-  - fixture=alula vs alhilal, source=afootballreport
 Examples — multi_source:
   - fixture=afcfylde vs carlisle, sources=betclan,windrawwin
   - fixture=aguila vs inter, sources=bettingclosed,vitibet
@@ -70,14 +70,14 @@ Examples — multi_source:
 
 ## C. Consensus funnel
 
-- match surface (union of forebet,zulubet,statarea,vitibet,betclan,bzzoiro): **238**
+- match surface (union of forebet,zulubet,statarea,vitibet,betclan,bzzoiro): **237**
 - fixtures with >=2 voters carrying 1X2 probs: **23**
-- fixtures ML-meta can score (needs one of forebet,zulubet,statarea): **18**
-- of those, pre-match eligible: **4**
+- fixtures ML-meta can score (needs one of forebet,zulubet,statarea): **17**
+- of those, pre-match eligible: **2**
 
 Drops:
-  - fewer_than_2_voters_with_1x2: 215
-  - no_ml_anchor_source_present: 5
+  - fewer_than_2_voters_with_1x2: 214
+  - no_ml_anchor_source_present: 6
 Examples — fewer_than_2_voters_with_1x2:
   - fixture=Afc Fylde vs Carlisle, sources_with_1x2=betclan
   - fixture=Águila vs Inter, sources_with_1x2=vitibet
@@ -94,57 +94,58 @@ Examples — no_ml_anchor_source_present:
   - fixture=Katsina United FC vs Rivers United FC, sources_with_1x2=vitibet,bzzoiro
   - fixture=Mexico vs Peru, sources_with_1x2=betclan,bzzoiro
   - fixture=Seychelles vs Sri Lanka, sources_with_1x2=betclan,bzzoiro
+  - fixture=Sporting Lagos vs Ikorodu City FC, sources_with_1x2=vitibet,betclan,bzzoiro
   - fixture=Union San Felipe vs San Luis, sources_with_1x2=vitibet,betclan
 
 ## D. Kickoff / timing funnel
 
 | source | fixtures | has_kickoff | trusted | missing | untrusted | pre_match |
 |---|---:|---:|---:|---:|---:|---:|
-| zulubet | 45 | 31 | 0 | 14 | 31 | 0 |
-| statarea | 18 | 18 | 18 | 0 | 0 | 0 |
-| vitibet | 172 | 151 | 151 | 21 | 0 | 85 |
+| zulubet | 46 | 25 | 0 | 21 | 25 | 0 |
+| statarea | 17 | 17 | 17 | 0 | 0 | 0 |
+| vitibet | 171 | 138 | 138 | 33 | 0 | 80 |
 | betclan | 60 | 0 | 0 | 60 | 0 | 0 |
 | scoutingstats | 20 | 20 | 20 | 0 | 0 | 12 |
 | bzzoiro | 17 | 17 | 17 | 0 | 0 | 6 |
 | predictz | 17 | 0 | 0 | 17 | 0 | 0 |
 | windrawwin | 31 | 0 | 0 | 31 | 0 | 0 |
-| freesupertips | 2 | 2 | 2 | 0 | 0 | 2 |
-| afootballreport | 243 | 243 | 243 | 0 | 0 | 86 |
-| prosoccer | 15 | 15 | 15 | 0 | 0 | 2 |
-| bettingclosed | 45 | 0 | 0 | 45 | 0 | 0 |
+| freesupertips | 2 | 2 | 2 | 0 | 0 | 0 |
+| afootballreport | 250 | 250 | 250 | 0 | 0 | 88 |
+| prosoccer | 15 | 15 | 15 | 0 | 0 | 0 |
+| bettingclosed | 41 | 0 | 0 | 41 | 0 | 0 |
 
 Same-day guard drops on the ML-scoreable surface:
-  - inside_30m_lead_or_started: 14
+  - inside_30m_lead_or_started: 15
 Examples — inside_30m_lead_or_started:
+  - fixture=Bahrain vs Yemen, kickoff_raw=2026-09-30T19:30:00+02:00, kickoff_donors=vitibet,prosoccer, sources=zulubet,vitibet,betclan
   - fixture=Brooklyn vs Detroit City FC, kickoff_raw=16:00, kickoff_donors=statarea,scoutingstats,bzzoiro, sources=statarea,bzzoiro
   - fixture=Cerro Largo vs Rentistas, kickoff_raw=12:00, kickoff_donors=statarea,vitibet, sources=zulubet,statarea,vitibet,betclan
   - fixture=Cerro Porteno vs Rubio Nu, kickoff_raw=15:30, kickoff_donors=statarea, sources=statarea,betclan
   - fixture=Defensor Sporting vs Plaza Colonia, kickoff_raw=12:00, kickoff_donors=statarea,vitibet, sources=statarea,vitibet,betclan
-  - fixture=Enyimba vs Shooting Stars, kickoff_raw=08:00, kickoff_donors=statarea,bzzoiro, sources=zulubet,statarea,vitibet,betclan,bzzoiro
+  - fixture=Enyimba vs Shooting Stars, kickoff_raw=08:00, kickoff_donors=statarea,vitibet,bzzoiro, sources=zulubet,statarea,vitibet,betclan,bzzoiro
   - fixture=Eritrea vs South Africa, kickoff_raw=2026-09-30T16:00:00Z, kickoff_donors=scoutingstats, sources=zulubet,vitibet,betclan
-  - fixture=Häcken W vs Juventus W, kickoff_raw=2026-09-30T18:45:00+02:00, kickoff_donors=vitibet,scoutingstats, sources=zulubet,vitibet
+  - fixture=Häcken W vs Juventus W, kickoff_raw=2026-09-30T16:45:00Z, kickoff_donors=scoutingstats, sources=zulubet,vitibet
   - fixture=Lithuania vs Andorra, kickoff_raw=09:00, kickoff_donors=statarea,scoutingstats,bzzoiro,prosoccer, sources=zulubet,statarea,vitibet,betclan,bzzoiro
   - fixture=New York Red Bulls vs St. Louis City, kickoff_raw=16:30, kickoff_donors=statarea,bzzoiro, sources=statarea,bzzoiro
-  - fixture=Paris FC W vs Arsenal W, kickoff_raw=2026-09-30T18:45:00+02:00, kickoff_donors=vitibet,scoutingstats, sources=zulubet,vitibet
 
 ## A2. Voter classification
 
 | source | tier | role | raw | fixtures | 1x2 rows | blocker |
 |---|---|---|---:|---:|---:|---|
 | forebet | live | blocked | 0 | 0 | 0 | no same-day rows captured |
-| zulubet | live | live_voter | 58 | 45 | 45 | - |
-| statarea | live | live_voter | 22 | 18 | 18 | - |
-| vitibet | live | live_voter | 199 | 172 | 18 | - |
-| betclan | live | live_voter | 64 | 60 | 60 | - |
+| zulubet | live | live_voter | 60 | 46 | 46 | - |
+| statarea | live | live_voter | 22 | 17 | 17 | - |
+| vitibet | live | live_voter | 199 | 171 | 18 | - |
+| betclan | live | live_voter | 63 | 60 | 60 | - |
 | scoutingstats | live | not_a_voter | 28 | 20 | 17 | adapter exposes no 1X2 probability fields |
 | bzzoiro | live | live_voter | 18 | 17 | 17 | - |
 | predictz | shadow | blocked | 19 | 17 | 0 | rows captured but no 1X2 probability fields parsed |
 | windrawwin | shadow | blocked | 32 | 31 | 0 | rows captured but no 1X2 probability fields parsed |
 | freesupertips | shadow | blocked | 2 | 2 | 0 | rows captured but no 1X2 probability fields parsed |
-| afootballreport | shadow | blocked | 332 | 243 | 0 | rows captured but no 1X2 probability fields parsed |
+| afootballreport | shadow | blocked | 340 | 250 | 0 | rows captured but no 1X2 probability fields parsed |
 | prosoccer | shadow | shadow_voter | 16 | 15 | 15 | source tier is shadow: not settlement-validated for dispatch |
 | soccervista | shadow | blocked | 0 | 0 | 0 | no same-day rows captured |
-| bettingclosed | donor | not_a_voter | 73 | 45 | 0 | settlement/result donor only |
+| bettingclosed | donor | not_a_voter | 73 | 41 | 0 | settlement/result donor only |
 
 ## A3. Shadow candidates (NON-DISPATCH)
 
@@ -154,7 +155,7 @@ Examples — inside_30m_lead_or_started:
 Shadow evaluation only. These rows are NEVER dispatched, never become CLEAN/CAUTION picks, and are not read by the pick engine. Promotion requires settlement-coverage evidence plus operator sign-off.
 
 Blockers:
-  - inside_30m_lead_or_started: 3
+  - inside_30m_lead_or_started: 4
   - no_ml_feature_provider_on_fixture: 2
   - shadow_sources_not_settlement_validated: 5
 
@@ -187,7 +188,7 @@ Examples of fixtures that would gain a quorum:
 | oddspapi_odds | 0 | 0 | 0 | 0.0 |
 | betexplorer_odds | 0 | 0 | 0 | 0.0 |
 
-Diagnosis: **price_fixtures_overlap_the_surface** (candidates before odds: 4)
+Diagnosis: **price_fixtures_overlap_the_surface** (candidates before odds: 2)
 - theoddsapi_odds: empty_no_rows_today
 - oddspapi_odds: empty_no_rows_today
 - betexplorer_odds: empty_no_rows_today

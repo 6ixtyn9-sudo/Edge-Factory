@@ -1,5 +1,5 @@
 {
-  "roles": {
+  "current_production_roles": {
     "afootballreport": "shadow_fresh_production_voter",
     "betclan": "fresh_production_live_voter",
     "betexplorer_odds": "pricing_provider",
@@ -7,7 +7,6 @@
     "bettingclosed": "result_donor",
     "bzzoiro": "fresh_production_live_voter",
     "bzzoiro_odds": "pricing_provider",
-    "forebet": "blocked_predictor",
     "freesupertips": "shadow_fresh_production_voter",
     "oddspapi_odds": "pricing_provider",
     "predictz": "shadow_fresh_production_voter",
@@ -20,8 +19,55 @@
     "windrawwin": "shadow_fresh_production_voter",
     "zulubet": "fresh_production_live_voter"
   },
+  "historical_reference": {
+    "forebet": "blocked_predictor"
+  },
+  "pricing_bundles": {
+    "bzzoiro_odds": {
+      "cached_rows": 89,
+      "live_rows": 0,
+      "market_candidate_keys": 7,
+      "raw_rows": 89,
+      "refreshed": false,
+      "time_match_keys": 7,
+      "valid_keys": 7,
+      "valid_rows": 89
+    },
+    "scoutingstats_odds": {
+      "cached_rows": 20,
+      "live_rows": 0,
+      "market_candidate_keys": 7,
+      "raw_rows": 117,
+      "refreshed": false,
+      "time_match_keys": 117,
+      "valid_keys": 117,
+      "valid_rows": 117
+    },
+    "source_embedded": {
+      "market_candidate_keys": 3,
+      "raw_rows": 235,
+      "time_match_keys": 203,
+      "valid_keys": 200,
+      "valid_rows": 232
+    }
+  },
+  "pricing_health": {
+    "candidate_count_alias_price": 2,
+    "candidate_count_before_pricing": 28,
+    "candidate_count_exact_price": 20,
+    "candidate_count_missing_price": 6,
+    "candidate_count_suspect_price_rejected": 2,
+    "candidate_count_with_any_price": 22,
+    "candidate_count_with_negative_edge": 16,
+    "candidate_count_with_positive_edge": 6,
+    "price_tiers_used": {
+      "dedicated_pricing_feed": 9,
+      "source_embedded_price": 13
+    }
+  },
   "warnings": [
-    "SOURCE_HEALTH: parked/degraded predictor(s) excluded from the fresh lane: forebet",
+    "SOURCE_HEALTH: 6 of 28 scored candidate(s) had no captured 1X2 price",
+    "SOURCE_HEALTH: 2 candidate(s) matched a price only through a fuzzy fixture join and were rejected for dispatch",
     "SOURCE_HEALTH: fresh_production produced no dispatchable picks \u2014 see the blocker table for the objective reason"
   ]
 }

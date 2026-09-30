@@ -1,7 +1,8 @@
 {
-  "certified_rules": [
+  "blocked_rules": [],
+  "certified_dispatchable_rules": [
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.21721969822686374,
       "calibration": [
@@ -41,18 +42,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 926,
       "certified": true,
       "hit_rate": 0.6589595375722543,
       "hit_rate_lb": 0.6373588674473439,
-      "lift": 0.1416979811064849,
+      "lift": 0.1417921555980054,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 1039,
       "recent_wins": 688,
       "rule_id": "fresh_1x2_v2_p55_majority",
       "sample": 1903,
+      "status": "certified_dispatchable",
       "wins": 1254
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.21687363923685501,
       "calibration": [
@@ -92,18 +97,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 924,
       "certified": true,
       "hit_rate": 0.6599254922831294,
       "hit_rate_lb": 0.6381981886611853,
-      "lift": 0.14266393581735992,
+      "lift": 0.14275811030888041,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 1023,
       "recent_wins": 679,
       "rule_id": "fresh_1x2_v2_p55_unanimous",
       "sample": 1879,
+      "status": "certified_dispatchable",
       "wins": 1240
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.2046104449138505,
       "calibration": [
@@ -136,18 +145,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 926,
       "certified": true,
       "hit_rate": 0.7006079027355623,
       "hit_rate_lb": 0.6753082368427873,
-      "lift": 0.18334634626979285,
+      "lift": 0.18344052076131334,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 696,
       "recent_wins": 484,
       "rule_id": "fresh_1x2_v2_p60_majority",
       "sample": 1316,
+      "status": "certified_dispatchable",
       "wins": 922
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.20452823716778246,
       "calibration": [
@@ -180,18 +193,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 924,
       "certified": true,
       "hit_rate": 0.7009132420091324,
       "hit_rate_lb": 0.6756002462555538,
-      "lift": 0.18365168554336297,
+      "lift": 0.18374586003488347,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 694,
       "recent_wins": 483,
       "rule_id": "fresh_1x2_v2_p60_unanimous",
       "sample": 1314,
+      "status": "certified_dispatchable",
       "wins": 921
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.1807548010266986,
       "calibration": [
@@ -224,18 +241,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 402,
       "certified": true,
       "hit_rate": 0.7676767676767676,
       "hit_rate_lb": 0.7370150040797115,
-      "lift": 0.2504152112109982,
+      "lift": 0.2505093857025187,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 414,
       "recent_wins": 316,
       "rule_id": "fresh_1x2_v2_p65_majority",
       "sample": 792,
+      "status": "certified_dispatchable",
       "wins": 608
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.1807548010266986,
       "calibration": [
@@ -268,92 +289,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 402,
       "certified": true,
       "hit_rate": 0.7676767676767676,
       "hit_rate_lb": 0.7370150040797115,
-      "lift": 0.2504152112109982,
+      "lift": 0.2505093857025187,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 414,
       "recent_wins": 316,
       "rule_id": "fresh_1x2_v2_p65_unanimous",
       "sample": 792,
+      "status": "certified_dispatchable",
       "wins": 608
     },
     {
-      "base_rate": 0.5172615564657694,
-      "blockers": [],
-      "brier": 0.16330279115333685,
-      "calibration": [
-        {
-          "bucket": "70-80%",
-          "mean_predicted": 0.7357,
-          "observed_hit_rate": 0.8016,
-          "sample": 373,
-          "sufficient_sample": true
-        },
-        {
-          "bucket": "80-90%",
-          "mean_predicted": 0.8199,
-          "observed_hit_rate": 0.75,
-          "sample": 16,
-          "sufficient_sample": false
-        },
-        {
-          "bucket": "90-100%",
-          "mean_predicted": 0.9,
-          "observed_hit_rate": 1.0,
-          "sample": 1,
-          "sufficient_sample": false
-        }
-      ],
-      "certified": true,
-      "hit_rate": 0.8,
-      "hit_rate_lb": 0.7574602270034273,
-      "lift": 0.2827384435342306,
-      "recent_sample": 201,
-      "recent_wins": 160,
-      "rule_id": "fresh_1x2_v2_p70_majority",
-      "sample": 390,
-      "wins": 312
-    },
-    {
-      "base_rate": 0.5172615564657694,
-      "blockers": [],
-      "brier": 0.16330279115333685,
-      "calibration": [
-        {
-          "bucket": "70-80%",
-          "mean_predicted": 0.7357,
-          "observed_hit_rate": 0.8016,
-          "sample": 373,
-          "sufficient_sample": true
-        },
-        {
-          "bucket": "80-90%",
-          "mean_predicted": 0.8199,
-          "observed_hit_rate": 0.75,
-          "sample": 16,
-          "sufficient_sample": false
-        },
-        {
-          "bucket": "90-100%",
-          "mean_predicted": 0.9,
-          "observed_hit_rate": 1.0,
-          "sample": 1,
-          "sufficient_sample": false
-        }
-      ],
-      "certified": true,
-      "hit_rate": 0.8,
-      "hit_rate_lb": 0.7574602270034273,
-      "lift": 0.2827384435342306,
-      "recent_sample": 201,
-      "recent_wins": 160,
-      "rule_id": "fresh_1x2_v2_p70_unanimous",
-      "sample": 390,
-      "wins": 312
-    },
-    {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.21136575522823678,
       "calibration": [
@@ -386,18 +337,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 270,
       "certified": true,
       "hit_rate": 0.6747663551401869,
       "hit_rate_lb": 0.6339458928650765,
-      "lift": 0.15750479867441747,
+      "lift": 0.15759897316593796,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 344,
       "recent_wins": 228,
       "rule_id": "fresh_1x2_v3_p55_majority",
       "sample": 535,
+      "status": "certified_dispatchable",
       "wins": 361
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.21055736298005825,
       "calibration": [
@@ -430,18 +385,104 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 269,
       "certified": true,
       "hit_rate": 0.6774193548387096,
       "hit_rate_lb": 0.6363477997371119,
-      "lift": 0.1601577983729402,
+      "lift": 0.1602519728644607,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 337,
       "recent_wins": 224,
       "rule_id": "fresh_1x2_v3_p55_unanimous",
       "sample": 527,
+      "status": "certified_dispatchable",
       "wins": 357
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
+      "blockers": [],
+      "brier": 0.16330279115333685,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7357,
+          "observed_hit_rate": 0.8016,
+          "sample": 373,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8199,
+          "observed_hit_rate": 0.75,
+          "sample": 16,
+          "sufficient_sample": false
+        },
+        {
+          "bucket": "90-100%",
+          "mean_predicted": 0.9,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 373,
+      "certified": true,
+      "hit_rate": 0.8,
+      "hit_rate_lb": 0.7574602270034273,
+      "lift": 0.2828326180257511,
+      "model_blockers": [],
+      "model_eligible": true,
+      "recent_sample": 201,
+      "recent_wins": 160,
+      "rule_id": "fresh_1x2_v2_p70_majority",
+      "sample": 390,
+      "status": "certified_dispatchable",
+      "wins": 312
+    },
+    {
+      "base_rate": 0.5171673819742489,
+      "blockers": [],
+      "brier": 0.16330279115333685,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7357,
+          "observed_hit_rate": 0.8016,
+          "sample": 373,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8199,
+          "observed_hit_rate": 0.75,
+          "sample": 16,
+          "sufficient_sample": false
+        },
+        {
+          "bucket": "90-100%",
+          "mean_predicted": 0.9,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 373,
+      "certified": true,
+      "hit_rate": 0.8,
+      "hit_rate_lb": 0.7574602270034273,
+      "lift": 0.2828326180257511,
+      "model_blockers": [],
+      "model_eligible": true,
+      "recent_sample": 201,
+      "recent_wins": 160,
+      "rule_id": "fresh_1x2_v2_p70_unanimous",
+      "sample": 390,
+      "status": "certified_dispatchable",
+      "wins": 312
+    },
+    {
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.19797906721284877,
       "calibration": [
@@ -467,18 +508,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 270,
       "certified": true,
       "hit_rate": 0.7161803713527851,
       "hit_rate_lb": 0.6686662235199087,
-      "lift": 0.19891881488701568,
+      "lift": 0.19901298937853618,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 233,
       "recent_wins": 163,
       "rule_id": "fresh_1x2_v3_p60_majority",
       "sample": 377,
+      "status": "certified_dispatchable",
       "wins": 270
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.19754492412522048,
       "calibration": [
@@ -504,18 +549,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 269,
       "certified": true,
       "hit_rate": 0.7180851063829787,
       "hit_rate_lb": 0.6705774866660987,
-      "lift": 0.2008235499172093,
+      "lift": 0.2009177244087298,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 232,
       "recent_wins": 163,
       "rule_id": "fresh_1x2_v3_p60_unanimous",
       "sample": 376,
+      "status": "certified_dispatchable",
       "wins": 270
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.1699750334082236,
       "calibration": [
@@ -541,18 +590,22 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 124,
       "certified": true,
       "hit_rate": 0.7965367965367965,
       "hit_rate_lb": 0.739968979640078,
-      "lift": 0.2792752400710271,
+      "lift": 0.2793694145625476,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 143,
       "recent_wins": 112,
       "rule_id": "fresh_1x2_v3_p65_majority",
       "sample": 231,
+      "status": "certified_dispatchable",
       "wins": 184
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [],
       "brier": 0.1699750334082236,
       "calibration": [
@@ -578,14 +631,18 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 124,
       "certified": true,
       "hit_rate": 0.7965367965367965,
       "hit_rate_lb": 0.739968979640078,
-      "lift": 0.2792752400710271,
+      "lift": 0.2793694145625476,
+      "model_blockers": [],
+      "model_eligible": true,
       "recent_sample": 143,
       "recent_wins": 112,
       "rule_id": "fresh_1x2_v3_p65_unanimous",
       "sample": 231,
+      "status": "certified_dispatchable",
       "wins": 184
     }
   ],
@@ -600,10 +657,10 @@
   },
   "generated_for": "2026-09-30",
   "model_version": "fresh_production_rules_v1",
-  "note": "fresh_production certification registry. Independent of the legacy certified-edges registry; legacy certification is never inherited.",
-  "rejected_rules": [
+  "note": "fresh_production certification registry. Independent of the legacy certified-edges registry; legacy certification is never inherited. 'certified_dispatchable_rules' are the only rules allowed to bet.",
+  "research_rules": [
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
         "insufficient_walkforward_sample (107 < 200)"
       ],
@@ -624,18 +681,24 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 105,
       "certified": false,
       "hit_rate": 0.8130841121495327,
       "hit_rate_lb": 0.7288499863918515,
-      "lift": 0.29582255568376326,
+      "lift": 0.29591673017528375,
+      "model_blockers": [
+        "insufficient_walkforward_sample (107 < 200)"
+      ],
+      "model_eligible": false,
       "recent_sample": 70,
       "recent_wins": 57,
       "rule_id": "fresh_1x2_v3_p70_majority",
       "sample": 107,
+      "status": "research",
       "wins": 87
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
         "insufficient_walkforward_sample (107 < 200)"
       ],
@@ -656,21 +719,26 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 105,
       "certified": false,
       "hit_rate": 0.8130841121495327,
       "hit_rate_lb": 0.7288499863918515,
-      "lift": 0.29582255568376326,
+      "lift": 0.29591673017528375,
+      "model_blockers": [
+        "insufficient_walkforward_sample (107 < 200)"
+      ],
+      "model_eligible": false,
       "recent_sample": 70,
       "recent_wins": 57,
       "rule_id": "fresh_1x2_v3_p70_unanimous",
       "sample": 107,
+      "status": "research",
       "wins": 87
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
-        "insufficient_walkforward_sample (95 < 200)",
-        "blocked_insufficient_calibration_sample"
+        "insufficient_walkforward_sample (95 < 200)"
       ],
       "brier": 0.18913597596225518,
       "calibration": [
@@ -696,21 +764,27 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 40,
       "certified": false,
       "hit_rate": 0.7368421052631579,
       "hit_rate_lb": 0.6403379066787737,
-      "lift": 0.21958054879738842,
+      "lift": 0.2196747232889089,
+      "model_blockers": [
+        "insufficient_walkforward_sample (95 < 200)",
+        "blocked_insufficient_calibration_sample (largest bucket 40 < 50)"
+      ],
+      "model_eligible": false,
       "recent_sample": 88,
       "recent_wins": 63,
       "rule_id": "fresh_1x2_v4_p55_majority",
       "sample": 95,
+      "status": "research",
       "wins": 70
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
-        "insufficient_walkforward_sample (93 < 200)",
-        "blocked_insufficient_calibration_sample"
+        "insufficient_walkforward_sample (93 < 200)"
       ],
       "brier": 0.1874863475987666,
       "calibration": [
@@ -736,21 +810,27 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 40,
       "certified": false,
       "hit_rate": 0.7419354838709677,
       "hit_rate_lb": 0.6446603321344208,
-      "lift": 0.22467392740519831,
+      "lift": 0.2247681018967188,
+      "model_blockers": [
+        "insufficient_walkforward_sample (93 < 200)",
+        "blocked_insufficient_calibration_sample (largest bucket 40 < 50)"
+      ],
+      "model_eligible": false,
       "recent_sample": 86,
       "recent_wins": 62,
       "rule_id": "fresh_1x2_v4_p55_unanimous",
       "sample": 93,
+      "status": "research",
       "wins": 69
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
-        "insufficient_walkforward_sample (72 < 200)",
-        "blocked_insufficient_calibration_sample"
+        "insufficient_walkforward_sample (72 < 200)"
       ],
       "brier": 0.1743940958733217,
       "calibration": [
@@ -769,21 +849,27 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 40,
       "certified": false,
       "hit_rate": 0.7777777777777778,
       "hit_rate_lb": 0.6690882726433144,
-      "lift": 0.26051622131200836,
+      "lift": 0.26061039580352885,
+      "model_blockers": [
+        "insufficient_walkforward_sample (72 < 200)",
+        "blocked_insufficient_calibration_sample (largest bucket 40 < 50)"
+      ],
+      "model_eligible": false,
       "recent_sample": 65,
       "recent_wins": 49,
       "rule_id": "fresh_1x2_v4_p60_majority",
       "sample": 72,
+      "status": "research",
       "wins": 56
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
-        "insufficient_walkforward_sample (72 < 200)",
-        "blocked_insufficient_calibration_sample"
+        "insufficient_walkforward_sample (72 < 200)"
       ],
       "brier": 0.1743940958733217,
       "calibration": [
@@ -802,21 +888,27 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 40,
       "certified": false,
       "hit_rate": 0.7777777777777778,
       "hit_rate_lb": 0.6690882726433144,
-      "lift": 0.26051622131200836,
+      "lift": 0.26061039580352885,
+      "model_blockers": [
+        "insufficient_walkforward_sample (72 < 200)",
+        "blocked_insufficient_calibration_sample (largest bucket 40 < 50)"
+      ],
+      "model_eligible": false,
       "recent_sample": 65,
       "recent_wins": 49,
       "rule_id": "fresh_1x2_v4_p60_unanimous",
       "sample": 72,
+      "status": "research",
       "wins": 56
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
-        "insufficient_walkforward_sample (52 < 200)",
-        "blocked_insufficient_calibration_sample"
+        "insufficient_walkforward_sample (52 < 200)"
       ],
       "brier": 0.16237747790706372,
       "calibration": [
@@ -835,21 +927,27 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 32,
       "certified": false,
       "hit_rate": 0.7884615384615384,
       "hit_rate_lb": 0.6596763486408991,
-      "lift": 0.271199981995769,
+      "lift": 0.2712941564872895,
+      "model_blockers": [
+        "insufficient_walkforward_sample (52 < 200)",
+        "blocked_insufficient_calibration_sample (largest bucket 32 < 50)"
+      ],
+      "model_eligible": false,
       "recent_sample": 47,
       "recent_wins": 36,
       "rule_id": "fresh_1x2_v4_p65_majority",
       "sample": 52,
+      "status": "research",
       "wins": 41
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
-        "insufficient_walkforward_sample (52 < 200)",
-        "blocked_insufficient_calibration_sample"
+        "insufficient_walkforward_sample (52 < 200)"
       ],
       "brier": 0.16237747790706372,
       "calibration": [
@@ -868,21 +966,27 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 32,
       "certified": false,
       "hit_rate": 0.7884615384615384,
       "hit_rate_lb": 0.6596763486408991,
-      "lift": 0.271199981995769,
+      "lift": 0.2712941564872895,
+      "model_blockers": [
+        "insufficient_walkforward_sample (52 < 200)",
+        "blocked_insufficient_calibration_sample (largest bucket 32 < 50)"
+      ],
+      "model_eligible": false,
       "recent_sample": 47,
       "recent_wins": 36,
       "rule_id": "fresh_1x2_v4_p65_unanimous",
       "sample": 52,
+      "status": "research",
       "wins": 41
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
-        "insufficient_walkforward_sample (32 < 200)",
-        "blocked_insufficient_calibration_sample"
+        "insufficient_walkforward_sample (32 < 200)"
       ],
       "brier": 0.11045887087558835,
       "calibration": [
@@ -894,21 +998,27 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 32,
       "certified": false,
       "hit_rate": 0.90625,
       "hit_rate_lb": 0.7578150066422117,
-      "lift": 0.38898844353423057,
+      "lift": 0.38908261802575106,
+      "model_blockers": [
+        "insufficient_walkforward_sample (32 < 200)",
+        "blocked_insufficient_calibration_sample (largest bucket 32 < 50)"
+      ],
+      "model_eligible": false,
       "recent_sample": 28,
       "recent_wins": 25,
       "rule_id": "fresh_1x2_v4_p70_majority",
       "sample": 32,
+      "status": "research",
       "wins": 29
     },
     {
-      "base_rate": 0.5172615564657694,
+      "base_rate": 0.5171673819742489,
       "blockers": [
-        "insufficient_walkforward_sample (32 < 200)",
-        "blocked_insufficient_calibration_sample"
+        "insufficient_walkforward_sample (32 < 200)"
       ],
       "brier": 0.11045887087558835,
       "calibration": [
@@ -920,16 +1030,23 @@
           "sufficient_sample": false
         }
       ],
+      "calibration_sample": 32,
       "certified": false,
       "hit_rate": 0.90625,
       "hit_rate_lb": 0.7578150066422117,
-      "lift": 0.38898844353423057,
+      "lift": 0.38908261802575106,
+      "model_blockers": [
+        "insufficient_walkforward_sample (32 < 200)",
+        "blocked_insufficient_calibration_sample (largest bucket 32 < 50)"
+      ],
+      "model_eligible": false,
       "recent_sample": 28,
       "recent_wins": 25,
       "rule_id": "fresh_1x2_v4_p70_unanimous",
       "sample": 32,
+      "status": "research",
       "wins": 29
     }
   ],
-  "schema": 1
+  "schema": 2
 }

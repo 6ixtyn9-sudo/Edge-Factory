@@ -1,13 +1,13 @@
 {
-  "bytes_deleted": 895403,
+  "bytes_deleted": 0,
   "dry_run": false,
-  "files_considered": 563,
-  "files_deleted": 97,
+  "files_considered": 562,
+  "files_deleted": 0,
   "generated": "2026-09-30",
   "keep_days": 30,
   "keep_latest": 3,
   "kept_reason_counts": {
-    "current_target_date": 32,
+    "current_target_date": 33,
     "within_last_30_days": 134,
     "within_last_7_days": 20,
     "within_newest_3_for_prefix": 27
@@ -41,35 +41,27 @@
   ],
   "largest_generated_files": [
     {
-      "bytes": 106557,
-      "file": "source_settlement_coverage_2026-09-30.json"
+      "bytes": 147694,
+      "file": "fresh_production_candidate_picks_2026-09-30.json"
     },
     {
-      "bytes": 98426,
-      "file": "clv_unmatched_2026-09-06.json"
+      "bytes": 106558,
+      "file": "source_settlement_coverage_2026-09-30.json"
     },
     {
       "bytes": 82640,
       "file": "clv_unmatched_2026-09-26.json"
     },
     {
-      "bytes": 79891,
-      "file": "clv_unmatched_2026-09-20.json"
-    },
-    {
       "bytes": 78061,
       "file": "clv_unmatched_2026-09-27.json"
-    },
-    {
-      "bytes": 64689,
-      "file": "clv_unmatched_2026-09-05.json"
     },
     {
       "bytes": 63642,
       "file": "picks_audit_2026-09-06.md"
     },
     {
-      "bytes": 52753,
+      "bytes": 52754,
       "file": "source_settlement_coverage_2026-09-30.md"
     },
     {
@@ -77,15 +69,19 @@
       "file": "picks_audit_2026-09-20.md"
     },
     {
+      "bytes": 51498,
+      "file": "artifact_manifest_2026-09-30.json"
+    },
+    {
       "bytes": 50314,
       "file": "picks_audit_2026-09-13.md"
+    },
+    {
+      "bytes": 49933,
+      "file": "picks_audit_2026-09-07.md"
     }
   ],
   "largest_generated_prefixes": [
-    {
-      "bytes": 1119660,
-      "prefix": "clv_unmatched"
-    },
     {
       "bytes": 992906,
       "prefix": "picks_audit"
@@ -95,15 +91,23 @@
       "prefix": "picks"
     },
     {
-      "bytes": 159310,
+      "bytes": 298348,
+      "prefix": "clv_unmatched"
+    },
+    {
+      "bytes": 185520,
+      "prefix": "fresh_production_candidate_picks"
+    },
+    {
+      "bytes": 159312,
       "prefix": "source_settlement_coverage"
     },
     {
-      "bytes": 75232,
-      "prefix": "theoddsapi_attempts"
+      "bytes": 65565,
+      "prefix": "artifact_manifest"
     },
     {
-      "bytes": 60375,
+      "bytes": 60676,
       "prefix": "source_funnel"
     },
     {
@@ -111,19 +115,15 @@
       "prefix": "clv_report"
     },
     {
-      "bytes": 29310,
-      "prefix": "ml_fade_research_report"
+      "bytes": 34266,
+      "prefix": "fresh_production_walkforward"
     },
     {
-      "bytes": 29054,
-      "prefix": "fresh_production_candidate_picks"
-    },
-    {
-      "bytes": 21147,
-      "prefix": "shadow_sent_ledger"
+      "bytes": 33261,
+      "prefix": "fresh_production_certified_edges"
     }
   ],
-  "no_files_removed_explanation": null,
+  "no_files_removed_explanation": "Nothing was old enough: every matched generated artifact is either the current target date, inside the newest-per-prefix window, or within the retention window. Unmatched files are never eligible.",
   "policy": "fresh_production",
   "raw_evidence_preserved": [
     ".git/ and all version history",
@@ -139,591 +139,8 @@
   ],
   "schema": 2,
   "target_date": "2026-09-30",
-  "unmatched_files_left_alone": 253,
-  "why_each_deleted": [
-    {
-      "bytes": 33837,
-      "file": "clv_unmatched_2026-09-01.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 25926,
-      "file": "clv_unmatched_2026-09-02.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 20890,
-      "file": "clv_unmatched_2026-09-03.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 30393,
-      "file": "clv_unmatched_2026-09-04.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 64689,
-      "file": "clv_unmatched_2026-09-05.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 98426,
-      "file": "clv_unmatched_2026-09-06.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 28482,
-      "file": "clv_unmatched_2026-09-07.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 33335,
-      "file": "clv_unmatched_2026-09-08.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 27944,
-      "file": "clv_unmatched_2026-09-09.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 42025,
-      "file": "clv_unmatched_2026-09-10.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 37199,
-      "file": "clv_unmatched_2026-09-11.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 32261,
-      "file": "clv_unmatched_2026-09-12.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 42602,
-      "file": "clv_unmatched_2026-09-13.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 7022,
-      "file": "clv_unmatched_2026-09-14.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 12213,
-      "file": "clv_unmatched_2026-09-15.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 38252,
-      "file": "clv_unmatched_2026-09-16.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 42305,
-      "file": "clv_unmatched_2026-09-17.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 32613,
-      "file": "clv_unmatched_2026-09-18.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 43987,
-      "file": "clv_unmatched_2026-09-19.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 79891,
-      "file": "clv_unmatched_2026-09-20.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 4737,
-      "file": "clv_unmatched_2026-09-21.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 13985,
-      "file": "clv_unmatched_2026-09-22.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 28298,
-      "file": "clv_unmatched_2026-09-23.json",
-      "prefix": "clv_unmatched",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 368,
-      "file": "ml_fade_checkpoint_contexts_2026-09-23.txt",
-      "prefix": "ml_fade_checkpoint_contexts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 284,
-      "file": "ml_fade_checkpoint_price_study_2026-09-23.txt",
-      "prefix": "ml_fade_checkpoint_price_study",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1570,
-      "file": "notify_delivery_failures_2026-09-05.json",
-      "prefix": "notify_delivery_failures",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1570,
-      "file": "notify_delivery_failures_2026-09-06.json",
-      "prefix": "notify_delivery_failures",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 230,
-      "file": "notify_delivery_failures_2026-09-09.json",
-      "prefix": "notify_delivery_failures",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-01.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-02.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-03.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-04.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-05.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-06.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-07.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-08.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-09.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-10.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-11.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-12.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-13.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-14.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-15.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-16.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-17.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-18.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-19.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-20.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-21.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-22.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 171,
-      "file": "official_run_2026-09-23.json",
-      "prefix": "official_run",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-01.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-02.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 280,
-      "file": "supabase_sync_manifest_2026-09-03.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-04.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-05.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-06.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-07.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-08.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-09.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-10.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-11.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-12.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-13.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-14.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-15.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-16.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-17.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-18.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-19.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-20.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 280,
-      "file": "supabase_sync_manifest_2026-09-21.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 280,
-      "file": "supabase_sync_manifest_2026-09-22.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 281,
-      "file": "supabase_sync_manifest_2026-09-23.json",
-      "prefix": "supabase_sync_manifest",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1786,
-      "file": "theoddsapi_attempts_2026-09-01.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1441,
-      "file": "theoddsapi_attempts_2026-09-02.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 925,
-      "file": "theoddsapi_attempts_2026-09-03.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 2489,
-      "file": "theoddsapi_attempts_2026-09-04.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 7289,
-      "file": "theoddsapi_attempts_2026-09-05.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 4773,
-      "file": "theoddsapi_attempts_2026-09-06.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 966,
-      "file": "theoddsapi_attempts_2026-09-07.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1827,
-      "file": "theoddsapi_attempts_2026-09-08.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1691,
-      "file": "theoddsapi_attempts_2026-09-09.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1427,
-      "file": "theoddsapi_attempts_2026-09-10.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 2986,
-      "file": "theoddsapi_attempts_2026-09-11.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 4737,
-      "file": "theoddsapi_attempts_2026-09-12.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 4750,
-      "file": "theoddsapi_attempts_2026-09-13.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1198,
-      "file": "theoddsapi_attempts_2026-09-14.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1921,
-      "file": "theoddsapi_attempts_2026-09-15.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1749,
-      "file": "theoddsapi_attempts_2026-09-16.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1643,
-      "file": "theoddsapi_attempts_2026-09-17.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 3218,
-      "file": "theoddsapi_attempts_2026-09-18.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 4423,
-      "file": "theoddsapi_attempts_2026-09-19.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 5676,
-      "file": "theoddsapi_attempts_2026-09-20.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 518,
-      "file": "theoddsapi_attempts_2026-09-21.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 806,
-      "file": "theoddsapi_attempts_2026-09-22.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    },
-    {
-      "bytes": 1437,
-      "file": "theoddsapi_attempts_2026-09-23.json",
-      "prefix": "theoddsapi_attempts",
-      "reason": "stale_generated_artifact_older_than_7_days_and_outside_newest_3"
-    }
-  ],
+  "unmatched_files_left_alone": 348,
+  "why_each_deleted": [],
   "why_each_kept": [
     {
       "file": "artifact_manifest_2026-09-30.json",
@@ -948,6 +365,11 @@
     {
       "file": "fresh_production_dispatchable_picks_2026-09-30.md",
       "prefix": "fresh_production_dispatchable_picks",
+      "reason": "current_target_date"
+    },
+    {
+      "file": "fresh_production_production_picks_2026-09-30.json",
+      "prefix": "fresh_production_production_picks",
       "reason": "current_target_date"
     },
     {

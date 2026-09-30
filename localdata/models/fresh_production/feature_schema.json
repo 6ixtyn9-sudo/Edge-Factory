@@ -1,0 +1,160 @@
+{
+  "features": [
+    {
+      "allowed_missing": false,
+      "dtype": "int",
+      "feature_name": "number_of_1x2_voters",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "int",
+      "feature_name": "timing_source_count",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "mean_home_prob",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "mean_draw_prob",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "mean_away_prob",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "min_top_prob",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "max_top_prob",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "std_top_prob",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "category",
+      "feature_name": "top_outcome",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "top_probability",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "second_probability",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "margin_top_vs_second",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "bool",
+      "feature_name": "unanimous_outcome",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "agreement_ratio",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "float",
+      "feature_name": "probability_entropy",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    },
+    {
+      "allowed_missing": false,
+      "dtype": "category",
+      "feature_name": "source_combination",
+      "fresh_production_allowed": true,
+      "source": "current_source_consensus"
+    }
+  ],
+  "legacy_only_denylist": [
+    "fb_p",
+    "goalsavg",
+    "ht_diff",
+    "ht_p",
+    "ht_total",
+    "kelly",
+    "p_gg",
+    "p_ng",
+    "p_under",
+    "pred_diff",
+    "pred_gs",
+    "pred_hs",
+    "pred_total",
+    "rolling_hit_rate",
+    "sa_ht_p",
+    "sa_p",
+    "zb_p"
+  ],
+  "model_dispatch_required": [
+    "number_of_1x2_voters",
+    "timing_source_count",
+    "mean_home_prob",
+    "mean_draw_prob",
+    "mean_away_prob",
+    "min_top_prob",
+    "max_top_prob",
+    "std_top_prob",
+    "top_outcome",
+    "top_probability",
+    "second_probability",
+    "margin_top_vs_second",
+    "unanimous_outcome",
+    "agreement_ratio",
+    "probability_entropy",
+    "source_combination"
+  ],
+  "rule_dispatch_required": [
+    "number_of_1x2_voters",
+    "top_outcome",
+    "top_probability",
+    "unanimous_outcome"
+  ],
+  "version": "fresh_production_features_v1"
+}

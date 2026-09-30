@@ -1,6 +1,6 @@
 {
   "blocker_counts": {
-    "inside_30m_lead_or_started": 3,
+    "inside_30m_lead_or_started": 4,
     "no_ml_feature_provider_on_fixture": 2,
     "shadow_sources_not_settlement_validated": 5
   },
@@ -8,6 +8,7 @@
   "candidates": [
     {
       "blockers": [
+        "inside_30m_lead_or_started",
         "shadow_sources_not_settlement_validated:prosoccer"
       ],
       "date": "2026-09-30",

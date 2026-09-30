@@ -1,4 +1,32 @@
 {
+  "blocked_rules": 0,
+  "certified_dispatchable_rules": 14,
+  "dispatch_paths": {
+    "certified_model": [
+      "number_of_1x2_voters",
+      "timing_source_count",
+      "mean_home_prob",
+      "mean_draw_prob",
+      "mean_away_prob",
+      "min_top_prob",
+      "max_top_prob",
+      "std_top_prob",
+      "top_outcome",
+      "top_probability",
+      "second_probability",
+      "margin_top_vs_second",
+      "unanimous_outcome",
+      "agreement_ratio",
+      "probability_entropy",
+      "source_combination"
+    ],
+    "certified_rule": [
+      "number_of_1x2_voters",
+      "top_outcome",
+      "top_probability",
+      "unanimous_outcome"
+    ]
+  },
   "envelope": {
     "agreement_ratio_max": 1.0,
     "agreement_ratio_min": 0.0,
@@ -54,6 +82,7 @@
   },
   "model_version": "fresh_production_rules_v1",
   "random_seed": 20260930,
+  "research_rules": 10,
   "source_universe": [
     "zulubet",
     "statarea",
@@ -68,7 +97,8 @@
     "soccervista"
   ],
   "warnings": [
-    "MODEL_HEALTH: 110 candidate(s) lacked required features and were not scored",
-    "MODEL_HEALTH: 8 rule(s) blocked on insufficient calibration sample"
+    "MODEL_HEALTH: 112 fixture(s) had too few current-source voters to score \u2014 source coverage, not a model or schema fault",
+    "MODEL_HEALTH: 10 rule(s) are research-only and can never dispatch; they are not counted as certified",
+    "MODEL_HEALTH: candidates were scored but none cleared dispatch gates"
   ]
 }
