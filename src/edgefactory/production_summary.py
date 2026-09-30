@@ -453,7 +453,11 @@ def render_final_summary(status: dict) -> list[str]:
         f"  staking owner:                 {STAKING_OWNER}",
         f"  staking policy:                {STAKING_POLICY}",
     ]
-    for row in plan.get("horizon_picks") or ():
+    # Every production selection gets a detail line, same-day ones
+    # included. Printing only the future-dated picks made the detail
+    # block disagree with the selection count above it.
+    for row in (list(plan.get("same_day_picks") or [])
+                + list(plan.get("horizon_picks") or [])):
         outcome = ((status.get("ticket_outcomes") or {})
                    .get(str(row.get("event_date"))) or {})
         verdict = str(outcome.get("status") or "not evaluated")

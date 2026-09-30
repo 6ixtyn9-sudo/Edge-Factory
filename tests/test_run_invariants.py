@@ -325,3 +325,139 @@ def test_the_cli_is_non_fatal_unless_strict(tmp_path, capsys):
 
     assert cli.main(["--date", RUN_DATE, "--localdata", str(tmp_path),
                      "--strict"]) == 1
+
+
+# ===========================================================================
+# Invariants added after run 36783344791
+#
+# That run reported "no contradictions found" while mis-stating its
+# Supabase breakdown, its CLV final statuses, its notification coverage,
+# its voter terminology and its price provenance. Each test below feeds
+# the checker the exact shape it passed, and requires it to fail.
+# ===========================================================================
+
+
+def _clv_snapshots():
+    rows = []
+    for i, final in enumerate(["deferred_before_build_hour",
+                               "deferred_before_build_hour",
+                               "ticket_created", "ticket_created"]):
+        rows.append({"pick_id": f"p{i}", "captured_at_utc": "1",
+                     "ticket_status": "pending_auto_tickets"})
+        rows.append({"pick_id": f"p{i}", "captured_at_utc": "2",
+                     "ticket_status": final})
+    return rows
+
+
+def test_a_publish_attributed_to_the_wrong_date_is_caught():
+    violations = ri.check_supabase_dates(
+        {"2026-10-01": 4},
+        {"row_count": 4,
+         "row_counts_by_event_date": {"2026-10-01": 2, "2026-10-02": 2}})
+
+    assert _codes(violations) == {ri.V_SUPABASE_DATES}
+
+
+def test_a_matching_publish_breakdown_passes():
+    assert ri.check_supabase_dates(
+        {"2026-10-01": 2, "2026-10-02": 2},
+        {"row_count": 4,
+         "row_counts_by_event_date": {"2026-10-01": 2, "2026-10-02": 2}}) == []
+
+
+def test_a_manifest_without_a_breakdown_asserts_nothing():
+    assert ri.check_supabase_dates({"2026-10-01": 4},
+                                   {"row_count": 4}) == []
+
+
+def test_superseded_clv_statuses_reported_as_final_are_caught():
+    violations = ri.check_clv_latest_status(
+        _clv_snapshots(),
+        {"deferred_before_build_hour": 2, "pending_auto_tickets": 4,
+         "ticket_created": 2},
+        4)
+
+    assert ri.V_CLV_STALE_STATUS in _codes(violations)
+    assert ri.V_CLV_INFLATED in _codes(violations)
+
+
+def test_latest_clv_statuses_pass():
+    assert ri.check_clv_latest_status(
+        _clv_snapshots(),
+        {"deferred_before_build_hour": 2, "ticket_created": 2}, 4) == []
+
+
+def test_a_summary_leaving_selections_unaccounted_for_is_caught():
+    violations = ri.check_notification_coverage(
+        {"total_selections": 4, "notified": 2, "not_notified": 0})
+
+    assert _codes(violations) == {ri.V_NOTIFY_COVERAGE}
+
+
+def test_full_notification_coverage_passes():
+    assert ri.check_notification_coverage(
+        {"total_selections": 4, "notified": 2, "not_notified": 2}) == []
+
+
+def test_a_production_voter_called_non_dispatchable_is_caught():
+    from edgefactory import source_census as sc
+
+    violations = ri.check_voter_terminology({"per_date": {EVENT_DATE: {
+        "sources": [{"source": "prosoccer",
+                     "production_role": sc.ROLE_SHADOW_VOTER,
+                     "blockers": [sc.B_TIER_NOT_DISPATCHABLE]}]}}})
+
+    assert _codes(violations) == {ri.V_VOTER_MISLABELLED}
+
+
+def test_a_shadow_voter_labelled_production_eligible_passes():
+    from edgefactory import source_census as sc
+
+    assert ri.check_voter_terminology({"per_date": {EVENT_DATE: {
+        "sources": [{"source": "prosoccer",
+                     "production_role": sc.ROLE_SHADOW_VOTER,
+                     "blockers": [],
+                     "tier_note": sc.B_SHADOW_PRODUCTION_ELIGIBLE}]}}}) == []
+
+
+def test_a_non_voter_may_still_be_called_non_dispatchable():
+    from edgefactory import source_census as sc
+
+    assert ri.check_voter_terminology({"per_date": {EVENT_DATE: {
+        "sources": [{"source": "betexplorer_odds",
+                     "production_role": sc.ROLE_ODDS_ONLY,
+                     "blockers": [sc.B_TIER_NOT_DISPATCHABLE]}]}}}) == []
+
+
+def test_an_embedded_price_without_an_origin_is_caught(monkeypatch):
+    from edgefactory import selection_evidence as se
+
+    monkeypatch.setattr(se, "_price_owner", lambda *_: None)
+    violations = ri.check_price_origin(_plan([{
+        **_pick(), "odds": 2.05, "pricing_source": "source_embedded_odds",
+        "bookmaker": "prosoccer_embedded"}]))
+
+    assert _codes(violations) == {ri.V_PRICE_ORIGIN}
+
+
+def test_an_embedded_price_naming_its_origin_passes():
+    assert ri.check_price_origin(_plan([{
+        **_pick(), "odds": 2.05, "pricing_source": "source_embedded_odds",
+        "bookmaker": "prosoccer_embedded"}])) == []
+
+
+def test_missing_selection_detail_lines_are_caught():
+    violations = ri.check_selection_detail_count(
+        {"same_day_pick_count": 2, "horizon_pick_count": 2}, 2)
+
+    assert _codes(violations) == {ri.V_SELECTION_DETAIL}
+
+
+def test_a_detail_line_per_selection_passes():
+    assert ri.check_selection_detail_count(
+        {"same_day_pick_count": 2, "horizon_pick_count": 2}, 4) == []
+
+
+def test_an_unsupplied_detail_count_asserts_nothing():
+    assert ri.check_selection_detail_count(
+        {"same_day_pick_count": 2, "horizon_pick_count": 2}, None) == []

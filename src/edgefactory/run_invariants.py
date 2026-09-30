@@ -35,6 +35,15 @@ V_CENSUS_BLOCKED = "census_blocks_a_selection_the_plan_dispatched"
 V_CENSUS_PRETICKET = "census_claims_current_run_ticket_status_too_early"
 V_STALE_RULE_ID = "retired_rule_id_prefix_in_use"
 V_PICK_STAKE = "pick_engine_emitted_a_stake_size"
+# Added after a run passed every invariant above while mis-stating its
+# own final accounting. Each of these encodes a defect that shipped.
+V_SUPABASE_DATES = "summary_publish_dates_disagree_with_manifest_breakdown"
+V_CLV_STALE_STATUS = "summary_presents_superseded_clv_status_as_final"
+V_CLV_INFLATED = "clv_status_counts_exceed_the_production_selection_count"
+V_NOTIFY_COVERAGE = "summary_does_not_account_for_every_selection"
+V_VOTER_MISLABELLED = "production_eligible_voter_labelled_non_dispatchable"
+V_PRICE_ORIGIN = "embedded_price_does_not_name_its_origin_source"
+V_SELECTION_DETAIL = "summary_selection_lines_disagree_with_selection_count"
 
 # A pick may delegate staking; it may never size it.
 _STAKE_MARKERS = ("stake_units", "stake_u", "units")
@@ -156,6 +165,168 @@ def check_supabase(summary_published: dict[str, int] | None,
     return out
 
 
+def check_supabase_dates(summary_published: dict[str, int] | None,
+                         manifest: dict | None) -> list[dict]:
+    """The per-date breakdown must match the one the sync recorded.
+
+    A manifest named for the run date covers future-dated selections
+    too. Attributing its total to the run date made a run that published
+    2 for each of two dates report "4 (run_date=4)".
+    """
+    out: list[dict] = []
+    if summary_published is None or not manifest:
+        return out
+    breakdown = manifest.get("row_counts_by_event_date")
+    if not isinstance(breakdown, dict) or not breakdown:
+        return out
+    recorded = {}
+    for day, count in breakdown.items():
+        try:
+            recorded[str(day)[:10]] = int(count)
+        except (TypeError, ValueError):
+            return out
+    reported = {str(k)[:10]: int(v) for k, v in summary_published.items()}
+    if reported != recorded:
+        out.append(_violation(
+            V_SUPABASE_DATES,
+            f"the summary attributes publishes as {reported} but the sync "
+            f"manifest records {recorded}"))
+    return out
+
+
+def check_clv_latest_status(clv_rows: Iterable[dict] | None,
+                            reported_counts: dict[str, int] | None,
+                            selection_count: int | None = None) -> list[dict]:
+    """Final status must be the latest per selection, not every snapshot.
+
+    A selection is snapshotted several times per run and its status
+    advances between captures, so counting rows reported superseded
+    states beside the ones that replaced them, over an inflated pick
+    count.
+    """
+    out: list[dict] = []
+    if reported_counts is None:
+        return out
+    rows = list(clv_rows or [])
+    if not rows:
+        return out
+    from . import production_summary
+    latest = production_summary.clv_ticket_status_counts(
+        production_summary.clv_latest_rows(rows))
+    if dict(reported_counts) != dict(latest):
+        out.append(_violation(
+            V_CLV_STALE_STATUS,
+            f"the summary reports final CLV statuses {dict(reported_counts)} "
+            f"but the latest snapshot per selection gives {latest}"))
+    total = sum(int(v) for v in reported_counts.values())
+    if selection_count is not None and total > int(selection_count):
+        out.append(_violation(
+            V_CLV_INFLATED,
+            f"CLV status counts total {total} over {selection_count} "
+            f"production selection(s)"))
+    return out
+
+
+def check_notification_coverage(coverage: dict | None) -> list[dict]:
+    """Every production selection must be accounted for, sent or not."""
+    out: list[dict] = []
+    if not coverage:
+        return out
+    total = int(coverage.get("total_selections") or 0)
+    if not total:
+        return out
+    accounted = (int(coverage.get("notified") or 0)
+                 + int(coverage.get("not_notified") or 0))
+    if accounted != total:
+        out.append(_violation(
+            V_NOTIFY_COVERAGE,
+            f"{total} production selection(s) but the summary accounts for "
+            f"{accounted}"))
+    return out
+
+
+def check_voter_terminology(census: dict | None) -> list[dict]:
+    """No source production votes with may be called non-dispatchable.
+
+    The census called shadow-tier 1X2 predictors
+    source_tier_not_dispatchable while the production lane counted them
+    toward quorum. Non-dispatchable wording is reserved for parked,
+    donor-only, odds-only and audit-only sources.
+    """
+    out: list[dict] = []
+    if not census:
+        return out
+    from . import source_census
+    for day, payload in (census.get("per_date") or {}).items():
+        for summary in (payload or {}).get("sources") or []:
+            role = str(summary.get("production_role") or "")
+            if role not in (source_census.ROLE_LIVE_VOTER,
+                            source_census.ROLE_SHADOW_VOTER):
+                continue
+            blockers = list(summary.get("blockers") or [])
+            if source_census.B_TIER_NOT_DISPATCHABLE in blockers:
+                out.append(_violation(
+                    V_VOTER_MISLABELLED,
+                    f"{summary.get('source')} votes in production as "
+                    f"'{role}' but the census labels it "
+                    f"'{source_census.B_TIER_NOT_DISPATCHABLE}'",
+                    where=str(day)))
+    return out
+
+
+def check_price_origin(plan: dict | None) -> list[dict]:
+    """An embedded price must name the source that produced it.
+
+    pricing_source is a mechanism; on its own it hides that a quote came
+    from a shadow-tier predictor.
+    """
+    out: list[dict] = []
+    if not plan:
+        return out
+    picks = list(plan.get("same_day_picks") or []) + \
+        list(plan.get("horizon_picks") or [])
+    for pick in picks:
+        if pick.get("odds") in (None, "", 0):
+            continue
+        price = selection_evidence.classify_price(pick)
+        if selection_evidence.P_EMBEDDED not in price.get("states", ()):
+            continue
+        if not price.get("price_origin_source"):
+            out.append(_violation(
+                V_PRICE_ORIGIN,
+                f"this selection carries an embedded price but names no "
+                f"origin source (mechanism "
+                f"'{price.get('price_mechanism') or 'unknown'}')",
+                where=f"{pick.get('home')} vs {pick.get('away')}"))
+        elif not price.get("price_origin_tier"):
+            out.append(_violation(
+                V_PRICE_ORIGIN,
+                f"price origin '{price['price_origin_source']}' carries no "
+                f"tier",
+                where=f"{pick.get('home')} vs {pick.get('away')}"))
+    return out
+
+
+def check_selection_detail_count(plan: dict | None,
+                                 detail_count: int | None) -> list[dict]:
+    """The per-selection lines must reconcile with the selection count."""
+    out: list[dict] = []
+    if not plan or detail_count is None:
+        return out
+    # Prefer the pick lists themselves; the count fields are a summary
+    # of them and an absent count must not assert a zero.
+    listed = (len(plan.get("same_day_picks") or [])
+              + len(plan.get("horizon_picks") or []))
+    total = (int(plan.get("same_day_pick_count") or 0)
+             + int(plan.get("horizon_pick_count") or 0)) or listed
+    if detail_count != total:
+        out.append(_violation(
+            V_SELECTION_DETAIL,
+            f"the summary reports {total} production selection(s) but "
+            f"prints {detail_count} selection detail line(s)"))
+    return out
+
+
 def check_clv_status(clv_rows: Iterable[dict] | None,
                      ticket_outcomes: dict | None,
                      *, pending_status: str = "pending_auto_tickets",
@@ -264,7 +435,10 @@ def check_run(*, plan: dict | None = None,
               summary_notification_outcome: str | None = None,
               notifier_result: dict | None = None,
               census_ran_before_auto_tickets: bool = True,
-              after_auto_tickets: bool = True) -> list[dict]:
+              after_auto_tickets: bool = True,
+              summary_clv_status_counts: dict[str, int] | None = None,
+              notification_coverage: dict | None = None,
+              summary_selection_detail_count: int | None = None) -> list[dict]:
     """Every invariant, against whatever artifacts were supplied."""
     violations: list[dict] = []
     violations += check_selection_evidence(plan)
@@ -278,6 +452,16 @@ def check_run(*, plan: dict | None = None,
     violations += check_census_agrees_with_plan(census, plan)
     violations += check_census_status_provenance(
         census, ran_before_auto_tickets=census_ran_before_auto_tickets)
+    violations += check_supabase_dates(summary_published, sync_manifest)
+    violations += check_clv_latest_status(
+        clv_rows, summary_clv_status_counts,
+        (int((plan or {}).get("same_day_pick_count") or 0)
+         + int((plan or {}).get("horizon_pick_count") or 0)) or None)
+    violations += check_notification_coverage(notification_coverage)
+    violations += check_voter_terminology(census)
+    violations += check_price_origin(plan)
+    violations += check_selection_detail_count(
+        plan, summary_selection_detail_count)
     return violations
 
 
@@ -303,14 +487,31 @@ def check_run_from_localdata(run_date: str, localdata: Path,
     event_dates = list((plan or {}).get("event_dates") or [])
     summary_published = production_summary.read_supabase_published(
         event_dates, localdata, run_date=run_date)
-    summary_notification = production_summary.read_notification_result(
-        run_date, localdata).get("outcome")
+    notification = production_summary.read_notification_result(
+        run_date, localdata)
+    summary_notification = notification.get("outcome")
+
+    # The accounting the summary would actually print, so the checks
+    # compare against the rendered figures rather than assumptions.
+    clv_rows = production_summary.read_clv_rows(run_date, localdata)
+    summary_clv_counts = production_summary.clv_latest_status_counts(clv_rows)
+    coverage = production_summary.notification_coverage(
+        plan or {}, notification,
+        production_summary.clv_latest_rows(clv_rows))
+    detail_count = sum(
+        1 for line in production_summary.render_final_summary(
+            production_summary.collect_production_status(run_date, localdata))
+        if line.strip().startswith("SELECTION "))
 
     kwargs: dict[str, Any] = {
         "summary_published": summary_published,
         "summary_notification_outcome": summary_notification,
         "plan": plan, "census": census, "sync_manifest": manifest,
         "ticket_outcomes": outcomes, "notifier_result": notifier,
+        "clv_rows": clv_rows,
+        "summary_clv_status_counts": summary_clv_counts,
+        "notification_coverage": coverage,
+        "summary_selection_detail_count": detail_count,
     }
     kwargs.update(overrides)
     return check_run(**kwargs)
