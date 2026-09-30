@@ -293,7 +293,7 @@ def describe(localdata: Path | None = None, day: str | None = None) -> list[dict
 
 
 # --------------------------------------------------------------------------
-# Roach detector — invariants that catch silent structural collapse
+# Source health checks — invariants that catch silent structural collapse
 # --------------------------------------------------------------------------
 
 
@@ -301,13 +301,13 @@ def registry_coverage_warnings(captured_sources) -> list[str]:
     """Sources captured by the pipeline but absent from this registry."""
     missing = sorted(set(map(str, captured_sources)) - set(BY_NAME))
     return [
-        f"ROACH: source '{name}' is captured by capture_daily but missing from "
+        f"SOURCE_HEALTH: source '{name}' is captured by capture_daily but missing from "
         "the source capability registry — it is invisible to the pick engine"
         for name in missing
     ]
 
 
-def funnel_warnings(
+def source_health_warnings(
     *,
     match_surface: int,
     scored_fixtures: int,
@@ -321,7 +321,7 @@ def funnel_warnings(
     warnings: list[str] = []
     if match_surface >= 50 and scored_fixtures <= max(1, match_surface // 20):
         warnings.append(
-            f"ROACH: raw same-day surface is {match_surface} but only "
+            f"SOURCE_HEALTH: raw same-day surface is {match_surface} but only "
             f"{scored_fixtures} fixture(s) were scoreable — the voter pool or "
             "identity join is collapsing, not the sources"
         )
@@ -329,22 +329,22 @@ def funnel_warnings(
         cap = get(source)
         if cap is None:
             warnings.append(
-                f"ROACH: '{source}' has 1X2 rows today but is not in the "
+                f"SOURCE_HEALTH: '{source}' has 1X2 rows today but is not in the "
                 "capability registry"
             )
         elif not cap.votes_1x2_shadow:
             warnings.append(
-                f"ROACH: '{source}' has 1X2 rows today but its tier "
+                f"SOURCE_HEALTH: '{source}' has 1X2 rows today but its tier "
                 f"('{cap.tier}') excludes it from both live and shadow consensus"
             )
     if live_candidates == 0 and shadow_candidates > 0:
         warnings.append(
-            f"ROACH: 0 live candidates but {shadow_candidates} shadow candidate(s) — "
+            f"SOURCE_HEALTH: 0 live candidates but {shadow_candidates} shadow candidate(s) — "
             "the dispatchable source universe is the binding constraint today"
         )
     if candidates_before_odds and odds_enriched == 0:
         warnings.append(
-            f"ROACH: {candidates_before_odds} candidate(s) existed but odds "
+            f"SOURCE_HEALTH: {candidates_before_odds} candidate(s) existed but odds "
             "enrichment matched 0 — price identity may be broken (not merely "
             "an empty slate)"
         )

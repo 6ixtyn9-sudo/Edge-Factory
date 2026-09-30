@@ -155,16 +155,16 @@ def test_describe_marks_only_live_tier_dispatchable():
         assert rows[name]["dispatchable"] is False
 
 
-def test_roach_warning_on_high_surface_low_scoring():
-    warnings = reg.funnel_warnings(
+def test_source_health_warning_on_high_surface_low_scoring():
+    warnings = reg.source_health_warnings(
         match_surface=448, scored_fixtures=21, live_candidates=5,
         shadow_candidates=0, sources_with_1x2_rows=["zulubet"],
     )
     assert any("raw same-day surface is 448" in w for w in warnings)
 
 
-def test_roach_warning_when_source_has_rows_but_cannot_vote():
-    warnings = reg.funnel_warnings(
+def test_source_health_warning_when_source_has_rows_but_cannot_vote():
+    warnings = reg.source_health_warnings(
         match_surface=10, scored_fixtures=10, live_candidates=1,
         shadow_candidates=0, sources_with_1x2_rows=["bettingclosed", "mystery_source"],
     )
@@ -172,8 +172,8 @@ def test_roach_warning_when_source_has_rows_but_cannot_vote():
     assert any("mystery_source" in w and "not in the capability registry" in w for w in warnings)
 
 
-def test_roach_warning_live_zero_shadow_nonzero_and_odds_zero():
-    warnings = reg.funnel_warnings(
+def test_source_health_warning_live_zero_shadow_nonzero_and_odds_zero():
+    warnings = reg.source_health_warnings(
         match_surface=10, scored_fixtures=4, live_candidates=0,
         shadow_candidates=7, sources_with_1x2_rows=["zulubet"],
         candidates_before_odds=4, odds_enriched=0,

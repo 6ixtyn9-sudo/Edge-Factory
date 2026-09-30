@@ -10680,7 +10680,7 @@ afootballreport / betclan / freesupertips / bzzoiro / soccervista, while a D30
 source with gaps and no recorded failure is flagged
 "GAP WITHOUT RECORDED FAILURE — investigate the job/adapter".
 
-### 7. Roach detector
+### 7. Source health checks
 
 `source_registry.funnel_warnings` / `registry_coverage_warnings` emit warnings
 into the JSON artifact, the Markdown artifact and stderr (Actions log) for:
@@ -10723,13 +10723,151 @@ Run **Actions → Autonomous Edge Factory 3-Hour Service → `official_morning`*
 on the unmerged branch `arena/01a0f2b3-edge-factory`, then inspect:
 
 ```text
-localdata/source_funnel_<date>.md              # A2 voters, A3 shadow, A1 roach warnings
+localdata/source_funnel_<date>.md              # A2 voters, A3 shadow, A1 source health
 localdata/shadow_candidates_<date>.md          # non-dispatch slate + blockers
 localdata/source_settlement_coverage_<date>.md # settlement evidence per source
 ```
 
-In the log, look for: the `ROACH:` lines, the consensus funnel counts, the odds
+In the log, look for: the `SOURCE_HEALTH:` lines, the consensus funnel counts, the odds
 `diagnosis`, and confirmation that the live slate is unchanged.
 
 Forebet remains parked, `EDGE_FACTORY_FOREBET_BROWSER=off`. **Forebet Browser
 Run probes spent: 0.** Tests: **856 passed**. PR #18 remains open and unmerged.
+
+
+---
+
+## Addendum — 2026-09-30: the `fresh_production` lane, ML hardening, data retention (PR #18, still unmerged)
+
+### Naming convention
+
+Informal wording is gone from the codebase. The `ROACH:` warning prefix is now
+`SOURCE_HEALTH:`, `funnel_warnings()` is `source_health_warnings()`, and the
+report heading is `## A1. Source health warnings`. A test
+(`test_health_warning_names_are_professional`) fails the build if informal
+wording reappears in the new scripts. Approved vocabulary: `fresh_production`,
+`legacy_baseline`, `shadow_fresh_production`, `source_health`, `walkforward`,
+`certified_edges`, `candidate_picks`, `dispatchable_picks`, `pricing_health`,
+`kickoff_health`, `settlement_health`, `model_health`, `data_retention`,
+`artifact_manifest`.
+
+### Why a second lane exists
+
+The legacy serving model's feature vector (`fb_p`, `zb_p`, `sa_p`, `ht_p`,
+`ht_diff`, `ht_total`, `kelly`, `pred_total`, `pred_diff`, `goalsavg`, `p_ng`,
+`p_under`, `p_gg`, `sa_ht_p`) is entirely derived from a source universe that
+no longer produces same-day rows. Scoring current fixtures through it means
+zero-filling most of the vector — unsupported inference presented as
+confidence. So `fresh_production` starts again from the current sources, with
+its own features, its own walk-forward, its own certification registry and its
+own picks. The old model is retained untouched as `legacy_baseline`.
+
+**Old certifications are not authority here.** `fresh_production` never reads
+`edges_consensus.json`, never routes a candidate through the legacy model, and
+never inherits a legacy certified edge. Old raw rows are used purely as
+evidence to be re-evaluated.
+
+### The four lanes, kept strictly apart
+
+| lane | artifact | dispatchable |
+|---|---|---|
+| `legacy_baseline` | `picks_<date>.json` | yes (unchanged) |
+| `shadow_fresh_production` | `shadow_candidates_<date>.*` | never |
+| `fresh_production` candidates | `fresh_production_candidate_picks_<date>.*` | never |
+| `fresh_production` dispatchable | `fresh_production_dispatchable_picks_<date>.*` | yes, if certified |
+
+### Feature set (`fresh_production_features_v1`)
+
+Sixteen features, all derived from current-source 1X2 consensus: voter count,
+timing-source count, mean home/draw/away probability, min/max/std of the
+per-source top probability, top outcome, top and second probability, margin,
+unanimity, agreement ratio, entropy, and the source combination.
+Legacy-only columns, predicted scores, goal averages and browser-source fields
+are on an explicit denylist (`LEGACY_ONLY_FEATURES`) and
+`test_legacy_only_feature_names_are_detected_as_violations` fails if one ever
+appears.
+
+### Anti-hallucination safeguards
+
+- **No imputation.** A partial probability row is discarded, not filled. A
+  fixture with fewer than two real voters yields no feature vector and is
+  reported as `blocked_missing_required_feature`.
+- **Schema enforcement** before scoring (`schema_violations`).
+- **Out-of-distribution guard** on voter count, top probability, agreement
+  ratio and source combination → `blocked_out_of_distribution`,
+  `unseen_source_combo`.
+- **Calibration guard**: bucketed observed hit rates with a minimum per-bucket
+  sample → `blocked_insufficient_calibration_sample`.
+- **Conflict-safe labels**: donors that disagree produce no label at all.
+- **Identity safety**: same-source spelling collisions are `ambiguous_identity`;
+  a mirrored fixture on the same day is `reversed_orientation_risk`. Both are
+  excluded from evidence and from dispatch.
+- **Determinism**: fixed seed 20260930, recorded feature list, training and
+  evaluation ranges, source universe, thresholds and model version, all written
+  into `model_health_<date>.md` and the model card.
+- **No generative component anywhere in the pick path.** Every number comes
+  from deterministic code over captured rows.
+
+### Certification gates
+
+`min_walkforward_sample 200`, `min_recent_sample_30d 25`,
+`min_hit_rate_lower_bound 0.55` (Wilson 95% lower bound),
+`min_lift_over_base_rate 0.03`, `min_calibration_bucket_sample 50`,
+`max_ambiguity_rate 0.05`. Dispatch additionally requires a trusted kickoff
+from a timing-capable source, a captured price, and
+`edge >= 0.02` versus the implied probability. Flat 1 unit per pick, maximum 5
+picks and 5 units of exposure per day.
+
+### Local verification run (2026-06-12, the last date with local history)
+
+2,274 fixtures with features, 1,421 labelled by independent donors, 9 rejected
+for ambiguity or orientation risk. Base rate of the consensus top outcome
+0.522. Four rules certified: `fresh_1x2_v2_p55_majority` /
+`_unanimous` (n=500, hit 0.664, Wilson LB 0.621, lift +0.142) and
+`fresh_1x2_v2_p60_majority` / `_unanimous` (n=331, hit 0.716, LB 0.665, lift
++0.194). Two candidates matched a certified rule on the day, and **both were
+rejected** with `insufficient_edge_versus_price` (-0.061 and -0.100): the
+market was shorter than the consensus, so there was no value. The lane emitted
+`FRESH PRODUCTION — NO PICKS` with the exact blockers. That is the intended
+behaviour — abstention with a reason, not a forced bet.
+
+### data_retention
+
+`scripts/clean_localdata.py --policy fresh_production --keep-days 30
+--keep-latest 3 --write-manifest --target-date <date>` prunes only files whose
+names match a known generated prefix (`fresh_production_*`, `source_health`,
+`model_health`, `source_funnel`, `shadow_candidates`,
+`source_settlement_coverage`, `artifact_manifest`). It keeps the last 30 days,
+the newest three dates per prefix regardless of age, and the current target
+date. **Unmatched files are never deleted**, which structurally protects raw
+captures, settled overlays, warehouse inputs, alias and entity registries,
+audit scripts, `Config/`, tests, source code and `HANDOVER.md`. No `git clean`,
+no `git reset --hard`, no `rm -rf`. Every deletion is recorded in
+`artifact_manifest_<date>.{json,md}` with file names, prefixes and byte counts.
+The first dry run on the current tree matched **0 files, 0 bytes** — nothing in
+`localdata/` is yet old enough to be stale under this policy.
+
+### Next operator action
+
+Run **Actions → Autonomous Edge Factory 3-Hour Service → `official_morning`**
+on the unmerged branch `arena/01a0f2b3-edge-factory`, then inspect:
+
+```text
+localdata/fresh_production_walkforward_<date>.md        # rule table + gates
+localdata/fresh_production_certified_edges_<date>.md    # what certified, and why not
+localdata/fresh_production_candidate_picks_<date>.md    # every candidate + blockers
+localdata/fresh_production_dispatchable_picks_<date>.md # picks, or NO PICKS + reasons
+localdata/model_health_<date>.md                        # model card + calibration
+localdata/source_health_<date>.md                       # roles + source health warnings
+localdata/artifact_manifest_<date>.md                   # what retention removed
+localdata/models/fresh_production/feature_schema.json   # enforced schema
+```
+
+In the log, look for the `fresh_production <date>` step, the `SOURCE_HEALTH:`
+and `MODEL_HEALTH:` lines, the certified-rule count, and the
+`data_retention fresh_production` step. The `legacy_baseline` slate is
+unchanged: both new steps are soft and read-only with respect to it.
+
+Parked browser-dependent sources remain off (`EDGE_FACTORY_FOREBET_BROWSER=off`)
+and are excluded from the fresh lane by construction. **Browser Run probes
+spent: 0.** Tests: **899 passed**. PR #18 remains open and unmerged.

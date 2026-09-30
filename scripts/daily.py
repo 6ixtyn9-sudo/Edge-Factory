@@ -947,6 +947,27 @@ def run_pipeline(
             f"audit_source_funnel {target_date}",
         )
 
+        # fresh_production: an independent betting lane built only on the
+        # current source universe, walk-forward certified on its own evidence.
+        # It never reads the legacy certified-edges registry and never routes
+        # its candidates through the legacy model. Soft and read-only: it
+        # writes its own artifacts and cannot alter legacy_baseline picks.
+        run_soft(
+            f"PYTHONPATH=src python3 scripts/fresh_production.py --date {target_date} "
+            f"--mode official --output-dir localdata",
+            f"fresh_production {target_date}",
+        )
+
+        # data_retention: prune provably-stale generated artifacts under known
+        # prefixes only, and record exactly what went. Raw evidence, registries
+        # and unmatched files are structurally unreachable by this policy.
+        run_soft(
+            "PYTHONPATH=src python3 scripts/clean_localdata.py "
+            "--policy fresh_production --keep-days 30 --keep-latest 3 "
+            f"--write-manifest --target-date {target_date}",
+            f"data_retention fresh_production {target_date}",
+        )
+
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
             f"audit_clv capture {target_date} [pick_time]",

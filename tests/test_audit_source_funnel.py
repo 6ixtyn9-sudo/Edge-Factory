@@ -376,12 +376,12 @@ def test_backfill_gap_expectation_distinguishes_expected_from_bug(tmp_path):
     assert "GAP WITHOUT RECORDED FAILURE" in depth["statarea"]["gap_expectation"]
 
 
-def test_roach_warnings_are_surfaced_in_the_report(tmp_path):
+def test_source_health_warnings_are_surfaced_in_the_report(tmp_path):
     _write(tmp_path, "predictz", [_row("Alpha United", "Beta Rovers")])
     _write(tmp_path, "windrawwin", [_row("Alpha United", "Beta Rovers")])
     report = _audit(tmp_path)
     assert any("0 live candidates" in w for w in report["warnings"])
-    assert "Roach detector warnings" in funnel.render_markdown(report)
+    assert "Source health warnings" in funnel.render_markdown(report)
 
 
 def test_source_registry_is_embedded_in_the_artifact(tmp_path):

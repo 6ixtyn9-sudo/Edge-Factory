@@ -826,7 +826,7 @@ def run_audit(
         localdata, day, consensus_keys, engine=engine, examples=examples,
         candidates_before_odds=consensus["fixtures_ml_scoreable_pre_match_eligible"],
     )
-    warnings = source_registry.funnel_warnings(
+    warnings = source_registry.source_health_warnings(
         match_surface=consensus["match_surface"],
         scored_fixtures=consensus["fixtures_ml_scoreable"],
         live_candidates=consensus["fixtures_ml_scoreable_pre_match_eligible"],
@@ -972,7 +972,7 @@ def render_markdown(report: dict) -> str:
         out += [f"  - {k}: {v}" for k, v in sorted(sc["blocker_counts"].items())]
 
     if report["warnings"]:
-        out += ["", "## A1. Roach detector warnings", ""]
+        out += ["", "## A1. Source health warnings", ""]
         out += [f"- {w}" for w in report["warnings"]]
 
     sh = report["shadow_expansion"]

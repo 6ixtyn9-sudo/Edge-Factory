@@ -38,6 +38,18 @@ localdata/*
 !localdata/source_funnel_*
 # Shadow (non-dispatch) candidate slate.
 !localdata/shadow_candidates_*
+# fresh_production lane: browser-readable evidence for the operator.
+!localdata/fresh_production_walkforward_*
+!localdata/fresh_production_certified_edges*
+!localdata/fresh_production_candidate_picks_*
+!localdata/fresh_production_dispatchable_picks_*
+!localdata/source_health_*
+!localdata/model_health_*
+!localdata/artifact_manifest_*
+# fresh_production model directory: schema and card only, never scratch weights.
+localdata/models/fresh_production/*
+!localdata/models/fresh_production/feature_schema.json
+!localdata/models/fresh_production/model_card_*.md
 !localdata/betexplorer_results_2026-*.csv.gz
 !localdata/betexplorer_odds_2026-*.csv.gz
 !localdata/sent_ledger_20*.json
