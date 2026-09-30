@@ -9,7 +9,9 @@ from __future__ import annotations
 
 import re
 
-from .cffi_http import get
+from edgefactory.sources import public_relay
+
+from .cffi_http import get as cffi_get
 
 MIN_DATE = "2026-01-01"  # archive serves nothing before ~this
 
@@ -28,11 +30,34 @@ def _parse_pred(text: str) -> tuple[str | None, str | None]:
     return m.group(1).lower(), m.group(2) or None
 
 
+def _validate_html(html: str | None) -> str | None:
+    if html is None:
+        return None
+    lower = html.lower()
+    if "predictz" not in lower and "pttr ptcnt" not in lower:
+        raise RuntimeError("predictz: brand marker missing")
+    return html
+
+
+def _get(url: str) -> str | None:
+    errors: list[str] = []
+    try:
+        return _validate_html(cffi_get(url))
+    except Exception as exc:  # noqa: BLE001 - fall through to independent relays
+        errors.append(f"direct={type(exc).__name__}")
+    for relay_name, raw in public_relay.fetches(url):
+        try:
+            return _validate_html(raw.decode("utf-8", "replace"))
+        except Exception as exc:  # noqa: BLE001 - try next configured relay
+            errors.append(f"operator:{relay_name}={type(exc).__name__}")
+    raise RuntimeError(f"PredictZ GET failed {url}: {', '.join(errors)}")
+
+
 def fetch_day(date: str) -> list[dict]:
     if date < MIN_DATE:
         return []
     ymd = date.replace("-", "")
-    html = get(f"https://www.predictz.com/predictions/{ymd}/")
+    html = _get(f"https://www.predictz.com/predictions/{ymd}/")
     if not html:
         return []
     out = []

@@ -33,7 +33,10 @@ BASE_V1 = "https://sports.bzzoiro.com/api"
 # but relying on that made zero-row captures hard to diagnose.
 MARKET_PARAMS = ("1x2", "over_under_25", "btts")
 
-MAX_EVENT_COMPARISON = int(os.environ.get("BZZOIRO_ODDS_MAX_EVENTS", "80"))
+# The per-event comparison fallback is one HTTP call per event. 80-event days
+# blew through the 240s source budget on 2026-09-30 before producing rows, so
+# keep the default bounded; operators can raise it for a manual deep probe.
+MAX_EVENT_COMPARISON = int(os.environ.get("BZZOIRO_ODDS_MAX_EVENTS", "20"))
 
 COLUMNS = [
     "source", "source_type", "sport", "date", "kickoff", "league", "home", "away",
