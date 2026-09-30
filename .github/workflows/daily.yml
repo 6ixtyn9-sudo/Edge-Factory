@@ -37,6 +37,10 @@ jobs:
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
 
+      # Bound the per-event odds fallback so one sparse Bzzoiro response cannot
+      # consume the whole multi-source capture budget.
+      BZZOIRO_ODDS_MAX_EVENTS: ${{ secrets.BZZOIRO_ODDS_MAX_EVENTS || '20' }}
+
       # Free multi-egress source relays.
       # EDGE_FACTORY_RELAY_URLS order:
       #   1. Cloudflare Worker
