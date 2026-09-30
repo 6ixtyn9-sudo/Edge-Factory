@@ -268,6 +268,8 @@ have been separately proven.
      is visibly rendered in the DOM (verified via computed style and a nonzero bounding rectangle).
      Generic visible challenge iframes are not treated as interactive Turnstile unless
      they are clearly Turnstile candidates.
+   - `visible_turnstile_selector_categories`: Array containing matched candidate categories
+     (e.g., `["turnstile_iframe"]`, `["turnstile_container"]`, `["sitekey_container"]`).
    - `visible_human_verification_text`: True only when rendered `document.body.innerText`
      contains explicit phrases such as “Verify you are human”, “human verification”,
      “complete the security check”, “click to verify”, or “press and hold to verify”.

@@ -245,7 +245,7 @@ export function inspectPageDom() {
 
   return {
     visible_turnstile_widget: matchedCategories.length > 0,
-    visible_turnstile_categories: matchedCategories,
+    visible_turnstile_selector_categories: matchedCategories,
     visible_human_verification_text: matchedTextMarkers.length > 0,
     visible_human_verification_markers: matchedTextMarkers,
   };
@@ -255,7 +255,7 @@ export async function inspectRenderedDom(page) {
   if (typeof page?.evaluate !== "function") {
     return {
       visible_turnstile_widget: false,
-      visible_turnstile_categories: [],
+      visible_turnstile_selector_categories: [],
       visible_human_verification_text: false,
       visible_human_verification_markers: [],
     };
@@ -263,9 +263,11 @@ export async function inspectRenderedDom(page) {
   const result = await page.evaluate(inspectPageDom);
   return {
     visible_turnstile_widget: Boolean(result?.visible_turnstile_widget),
-    visible_turnstile_categories: Array.isArray(result?.visible_turnstile_categories)
-      ? result.visible_turnstile_categories
-      : [],
+    visible_turnstile_selector_categories: Array.isArray(result?.visible_turnstile_selector_categories)
+      ? result.visible_turnstile_selector_categories
+      : Array.isArray(result?.visible_turnstile_categories)
+        ? result.visible_turnstile_categories
+        : [],
     visible_human_verification_text: Boolean(result?.visible_human_verification_text),
     visible_human_verification_markers: Array.isArray(result?.visible_human_verification_markers)
       ? result.visible_human_verification_markers
@@ -282,7 +284,8 @@ export function classifyRenderedForebet({
   navigationTimedOut = false,
   responseSizeOverflow = false,
   visibleTurnstileWidget = false,
-  visibleTurnstileCategories = [],
+  visibleTurnstileSelectorCategories = [],
+  visibleTurnstileCategories = undefined,
   visibleHumanVerificationText = false,
   visibleHumanVerificationMarkers = [],
 }) {
@@ -298,6 +301,9 @@ export function classifyRenderedForebet({
   const visibleWidget = Boolean(visibleTurnstileWidget);
   const visibleText = Boolean(visibleHumanVerificationText);
   const interactiveHumanVerificationRequired = visibleWidget || visibleText;
+  const selectorCategories = visibleTurnstileCategories !== undefined
+    ? (Array.isArray(visibleTurnstileCategories) ? visibleTurnstileCategories : [])
+    : (Array.isArray(visibleTurnstileSelectorCategories) ? visibleTurnstileSelectorCategories : []);
 
   let classification = CLASSIFICATIONS.OTHER;
   if (navigationTimedOut) {
@@ -321,7 +327,7 @@ export function classifyRenderedForebet({
   }
 
   const captchaMarkers = [
-    ...visibleTurnstileCategories,
+    ...selectorCategories,
     ...visibleHumanVerificationMarkers,
   ];
 
@@ -338,9 +344,7 @@ export function classifyRenderedForebet({
     turnstile_source_marker: turnstileSourceMarker,
     turnstile_source_markers: turnstileSourceMarkers,
     visible_turnstile_widget: visibleWidget,
-    visible_turnstile_categories: Array.isArray(visibleTurnstileCategories)
-      ? visibleTurnstileCategories
-      : [],
+    visible_turnstile_selector_categories: selectorCategories,
     visible_human_verification_text: visibleText,
     visible_human_verification_markers: Array.isArray(visibleHumanVerificationMarkers)
       ? visibleHumanVerificationMarkers
@@ -377,7 +381,7 @@ function baseResult(overrides = {}) {
     turnstile_source_marker: false,
     turnstile_source_markers: [],
     visible_turnstile_widget: false,
-    visible_turnstile_categories: [],
+    visible_turnstile_selector_categories: [],
     visible_human_verification_text: false,
     visible_human_verification_markers: [],
     interactive_human_verification_required: false,
@@ -482,7 +486,7 @@ export async function observeForebetPage(page, {
       ? await inspectRenderedDom(page)
       : {
           visible_turnstile_widget: false,
-          visible_turnstile_categories: [],
+          visible_turnstile_selector_categories: [],
           visible_human_verification_text: false,
           visible_human_verification_markers: [],
         };
@@ -495,7 +499,7 @@ export async function observeForebetPage(page, {
       responseBytes,
       responseSizeOverflow: responseBytes > MAX_DIAGNOSTIC_HTML_BYTES,
       visibleTurnstileWidget: domInspection.visible_turnstile_widget,
-      visibleTurnstileCategories: domInspection.visible_turnstile_categories,
+      visibleTurnstileSelectorCategories: domInspection.visible_turnstile_selector_categories,
       visibleHumanVerificationText: domInspection.visible_human_verification_text,
       visibleHumanVerificationMarkers: domInspection.visible_human_verification_markers,
     });

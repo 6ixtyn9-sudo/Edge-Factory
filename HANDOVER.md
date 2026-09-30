@@ -9705,6 +9705,8 @@ transitional Cloudflare challenge could resolve.
      `visibility !== 'hidden'`, `opacity > 0`) and nonzero bounding rectangle.
      Generic visible challenge iframes are not counted as Turnstile unless they are
      clear Turnstile candidates.
+   - `visible_turnstile_selector_categories`: Bounded array containing matched candidate
+     categories (e.g. `["turnstile_iframe"]`, `["turnstile_container"]`, `["sitekey_container"]`).
    - `visible_human_verification_text`: Evaluated on rendered `document.body.innerText`
      (not full HTML) for phrases such as “Verify you are human”, “human verification”,
      “complete the security check”, “click to verify”, and “press and hold to verify”.
@@ -9718,21 +9720,25 @@ transitional Cloudflare challenge could resolve.
    - No tokens, cookies, iframe query parameters, session IDs, or full page text
      are read, logged, or returned.
    - Bounded booleans and category names are returned.
-4. **Observation lifecycle**:
+4. **Observation lifecycle and control flow**:
    - Transitional challenges with source-only Turnstile markers continue bounded polling
      at 1.5-second intervals.
-   - Polling stops immediately on concrete Forebet fixture evidence, visible interactive
-     human-verification widgets/instructions, explicit access denial, or generic non-challenge content.
+   - If source-only markers persist across ticks until the observation deadline, the final
+     unresolved result is returned with `observation_deadline_exceeded: true`.
+   - Polling stops immediately upon concrete Forebet fixture evidence, visible interactive
+     human-verification widgets/instructions (`observation_deadline_exceeded: false`),
+     explicit access denial, or generic non-challenge content.
    - Chromium is strictly closed in `finally` across all outcomes, including DOM-inspection
      and polling errors.
 5. **Phase 1 diagnostic boundary**:
    - This diagnostic remains strictly Phase 1 diagnostic-only.
    - No production Forebet adapter (`forebet.py`), ScoutingStats adapter, daily pipeline,
      or betting logic is modified.
-   - No live Browser Run was performed in this session.
+   - No live Browser Run was performed in this session; the initial live run remains
+     inconclusive as to whether `turnstile` occurred solely in source or as a visible widget.
 
 ### Verification receipts
 
 - Cloudflare Worker JavaScript syntax: clean with `node --check` across all Worker files.
-- Mocked Worker test suite: 32 tests, 32 passed.
+- Mocked Worker test suite: 34 tests, 34 passed.
 - `git diff --check`: clean.
