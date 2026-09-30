@@ -46,6 +46,7 @@ V_PRICE_ORIGIN = "embedded_price_does_not_name_its_origin_source"
 V_SELECTION_DETAIL = "summary_selection_lines_disagree_with_selection_count"
 V_SUPABASE_NO_BREAKDOWN = "multi_date_publish_has_no_per_date_breakdown"
 V_TICKET_DATE_UNBACKED = "auto_ticket_date_has_no_production_selection"
+V_TICKET_DATE_NOT_TARGET = "auto_ticket_date_is_not_the_official_target_date"
 V_NON_CANONICAL_BUCKET = "non_canonical_bucket_on_an_audit_surface"
 
 # The taxonomy every audit, CLV grouping, assayer context, bucket P&L and
@@ -178,18 +179,37 @@ def check_supabase(summary_published: dict[str, int] | None,
 
 
 def check_ticket_dates(plan: dict | None,
-                       ticket_outcomes: dict | None) -> list[dict]:
-    """A ticket may only exist for a date the plan actually dispatched.
+                       ticket_outcomes: dict | None,
+                       *, target_date: str | None = None,
+                       future_ticket_mode: bool = False) -> list[dict]:
+    """A ticket may only be carded for the official target date.
 
-    Future-dated tickets are intended: the lane dispatches horizon
-    selections and auto_tickets cards them by their own event date. What
-    must never happen is a ticket for a date carrying no production
-    selection, which is what planner output leaking into the slate would
-    look like.
+    The daily run invokes auto_tickets bare, which targets local today.
+    A future-dated card is a different thing from a future-dated
+    forecast: it skips the build-hour gate and the freeze gate (both are
+    written ``target == today``), and it commits bank as an open slip
+    before the event day. On 2026-10-01 that locked 21.1% of capital
+    behind a draft that could never freeze.
+
+    Future carding is therefore only legitimate when the operator asked
+    for it explicitly, which ``future_ticket_mode`` records. Carrying a
+    real dispatched selection is necessary but not sufficient.
     """
     out: list[dict] = []
     if not plan or not ticket_outcomes:
         return out
+
+    if target_date and not future_ticket_mode:
+        for day in ticket_outcomes:
+            if str(day)[:10] != str(target_date)[:10]:
+                out.append(_violation(
+                    V_TICKET_DATE_NOT_TARGET,
+                    f"auto_tickets carded {day} but the official target "
+                    f"date is {target_date}. A future card bypasses the "
+                    f"build-hour and freeze gates and commits bank before "
+                    f"the event day; it requires an explicit future-ticket "
+                    f"invocation",
+                    where=str(day)))
     dispatched = {
         str(row.get("event_date") or row.get("date") or "")[:10]
         for row in (list(plan.get("same_day_picks") or [])
@@ -513,7 +533,9 @@ def check_run(*, plan: dict | None = None,
               after_auto_tickets: bool = True,
               summary_clv_status_counts: dict[str, int] | None = None,
               notification_coverage: dict | None = None,
-              summary_selection_detail_count: int | None = None) -> list[dict]:
+              summary_selection_detail_count: int | None = None,
+              target_date: str | None = None,
+              future_ticket_mode: bool = False) -> list[dict]:
     """Every invariant, against whatever artifacts were supplied."""
     violations: list[dict] = []
     violations += check_selection_evidence(plan)
@@ -539,7 +561,9 @@ def check_run(*, plan: dict | None = None,
     violations += check_price_origin(plan)
     violations += check_selection_detail_count(
         plan, summary_selection_detail_count)
-    violations += check_ticket_dates(plan, ticket_outcomes)
+    violations += check_ticket_dates(
+        plan, ticket_outcomes, target_date=target_date,
+        future_ticket_mode=future_ticket_mode)
     violations += check_buckets_are_canonical(plan)
     return violations
 
@@ -591,6 +615,9 @@ def check_run_from_localdata(run_date: str, localdata: Path,
         "summary_clv_status_counts": summary_clv_counts,
         "notification_coverage": coverage,
         "summary_selection_detail_count": detail_count,
+        # The daily run's official target date. A card for any other date
+        # must have been asked for explicitly.
+        "target_date": run_date,
     }
     kwargs.update(overrides)
     return check_run(**kwargs)

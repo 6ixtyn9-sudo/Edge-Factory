@@ -608,3 +608,61 @@ def test_the_invariant_taxonomy_matches_the_auto_ticket_allowlist():
     import scripts.auto_tickets as at
 
     assert at.BUCKETS <= ri.CANONICAL_BUCKETS
+
+
+# ===========================================================================
+# The official target date owns the card
+#
+# A future card is not a future forecast. It skips the build-hour and
+# freeze gates (both written target == today) and commits bank as an open
+# slip before the event day: on 2026-10-01 it locked 21.1% of capital
+# behind a draft that could never freeze.
+# ===========================================================================
+
+
+def test_carding_a_future_date_in_the_daily_run_is_caught():
+    plan = {"same_day_picks": [{"event_date": "2026-10-01"}],
+            "horizon_picks": [{"event_date": "2026-10-02",
+                               "home": "Belgium", "away": "Turkey"}]}
+
+    violations = ri.check_ticket_dates(
+        plan,
+        {"2026-10-01": {"status": "deferred_before_build_hour"},
+         "2026-10-02": {"status": "ticket_created"}},
+        target_date="2026-10-01")
+
+    # A real dispatched selection backs it, yet it is still refused.
+    assert _codes(violations) == {ri.V_TICKET_DATE_NOT_TARGET}
+
+
+def test_a_real_horizon_selection_does_not_excuse_a_future_card():
+    """Backing is necessary, not sufficient."""
+    plan = {"horizon_picks": [{"event_date": "2026-10-02"}]}
+
+    assert ri.check_ticket_dates(
+        plan, {"2026-10-02": {"status": "ticket_created"}},
+        target_date="2026-10-01") != []
+
+
+def test_an_explicit_future_ticket_mode_is_allowed():
+    plan = {"horizon_picks": [{"event_date": "2026-10-02"}]}
+
+    assert ri.check_ticket_dates(
+        plan, {"2026-10-02": {"status": "ticket_created"}},
+        target_date="2026-10-01", future_ticket_mode=True) == []
+
+
+def test_carding_only_the_target_date_passes():
+    plan = {"same_day_picks": [{"event_date": "2026-10-01"}],
+            "horizon_picks": [{"event_date": "2026-10-02"}]}
+
+    assert ri.check_ticket_dates(
+        plan, {"2026-10-01": {"status": "deferred_before_build_hour"}},
+        target_date="2026-10-01") == []
+
+
+def test_without_a_target_date_the_check_asserts_nothing_new():
+    plan = {"horizon_picks": [{"event_date": "2026-10-02"}]}
+
+    assert ri.check_ticket_dates(
+        plan, {"2026-10-02": {"status": "ticket_created"}}) == []
