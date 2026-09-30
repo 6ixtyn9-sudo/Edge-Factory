@@ -842,12 +842,27 @@ def run_pipeline(
 
     if mode == "official":
         if not picks_only:
-            run("python3 scripts/capture_daily.py --skip-build", "capture_daily (D30 lookback)")
+            # Forebet's Browser Run path is parked after an upstream 403 HTML
+            # response. Capture every resilient source and let individual
+            # adapter failures remain retryable without starving the rebuild.
             run(
+                "python3 scripts/capture_daily.py --skip-build "
+                "--source-group forebet-resilience",
+                "capture_daily (non-Forebet D30 resilience pass)",
+            )
+            # A temporarily empty donor window must not discard prediction rows
+            # captured from healthy sources. Settlement repair is best-effort;
+            # the warehouse/miner gates remain fail-closed on unsettled rows.
+            run_soft(
                 f"python3 scripts/backfill_results.py --days {backfill_days}",
                 f"backfill_results (D{backfill_days})",
             )
             run("python3 scripts/build_warehouse.py", "build_warehouse")
+            run_soft(
+                f"PYTHONPATH=src python3 scripts/audit_source_availability.py "
+                f"--date {target_date} --days {backfill_days}",
+                f"audit_source_availability {target_date} (D{backfill_days})",
+            )
 
         run_soft(
             "PYTHONPATH=src python3 scripts/export_settled_results.py",

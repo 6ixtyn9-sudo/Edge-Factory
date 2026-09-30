@@ -40,10 +40,13 @@ def test_retryable_not_served_yet_leaves_day_open(monkeypatch, tmp_path, capsys)
         ["local_backfill.py", source, "2026-09-30", "2026-09-30", "--max-seconds", "60"],
     )
 
-    local_backfill.main()
+    with pytest.raises(SystemExit) as exc:
+        local_backfill.main()
 
+    assert exc.value.code == 1
     state = json.loads((tmp_path / f"state_{source}.json").read_text())
     assert state["done"] == []
+    assert state["failures"]["2026-09-30"].startswith("requested 2026-09-30")
     assert "FAILED" in capsys.readouterr().out
 
 
@@ -61,3 +64,26 @@ def test_successful_empty_day_still_marks_done_for_other_sources(monkeypatch, tm
 
     state = json.loads((tmp_path / f"state_{source}.json").read_text())
     assert state["done"] == ["2026-09-30"]
+
+
+def test_time_budget_leaves_unattempted_day_open_and_exits_nonzero(
+    monkeypatch, tmp_path, capsys
+):
+    source = "unit_budget_open"
+    _install_source(monkeypatch, source, lambda day: pytest.fail("must remain unattempted"))
+    monkeypatch.setattr(local_backfill, "LOCALDATA", tmp_path)
+    ticks = iter([0.0, 1.0, 2.0])
+    monkeypatch.setattr(local_backfill.time, "time", lambda: next(ticks))
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["local_backfill.py", source, "2026-09-30", "2026-09-30", "--max-seconds", "0"],
+    )
+
+    with pytest.raises(SystemExit) as exc:
+        local_backfill.main()
+
+    assert exc.value.code == 1
+    state = json.loads((tmp_path / f"state_{source}.json").read_text())
+    assert state["done"] == []
+    assert "INCOMPLETE" in capsys.readouterr().out

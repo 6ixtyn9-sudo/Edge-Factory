@@ -115,31 +115,15 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
                 f"AND p1 IS NOT NULL AND px IS NOT NULL AND p2 IS NOT NULL"
             )
 
-    # predictz: categorical picks + odds (no probs). Settled by joining scores
-    # from forebet (results donor) on (date, hkey, akey).
+    # predictz: categorical picks + odds (no probs). Its settled view is built
+    # below after the multi-source results donor exists; Forebet must not be a
+    # single settlement dependency.
     if _glob.glob(f"{LOCALDATA}/predictz_*.csv.gz"):
         _src_view(
             con, "predictz_raw", f"{LOCALDATA}/predictz_*.csv.gz",
             f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, pick, pred_score,"
             f" {_odds('odd1')} AS odd1, {_odds('oddx')} AS oddx, {_odds('odd2')} AS odd2",
         )
-        # Guard: predictz_settled joins against forebet for results — skip if
-        # forebet data is unavailable (e.g. partial cache restore on CI).
-        if _table_exists(con, "forebet"):
-            con.execute("""
-                CREATE OR REPLACE VIEW predictz_settled AS
-                WITH pz AS (SELECT DISTINCT ON (date, hkey, akey) * FROM predictz_raw
-                            WHERE pick IS NOT NULL),
-                     fb AS (SELECT DISTINCT ON (date, hkey, akey) date, hkey, akey, hs, gs
-                            FROM forebet WHERE hs IS NOT NULL)
-                SELECT pz.*, fb.hs, fb.gs,
-                       CASE WHEN fb.hs > fb.gs THEN 'home'
-                            WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome,
-                       CASE pz.pick WHEN 'home' THEN pz.odd1
-                                    WHEN 'draw' THEN pz.oddx ELSE pz.odd2 END AS pick_odds
-                FROM pz JOIN fb USING (date, hkey, akey)
-                WHERE length(pz.hkey) >= 4 AND length(pz.akey) >= 4
-            """)
 
     if _glob.glob(f"{LOCALDATA}/scoutingstats_*.csv.gz"):
         _src_view(
@@ -331,6 +315,61 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             " event_id, url"
         )
 
+    # Multi-source settlement donor. Forebet stays first priority where its
+    # historical score exists, but current rows can settle from independent
+    # self-scoring sources. This keeps categorical/capture-forward adapters
+    # useful while Forebet is parked.
+    donor_parts = []
+    for priority, source in enumerate((
+        "forebet",
+        "bettingclosed",
+        "statarea",
+        "zulubet",
+        "vitibet",
+        "scoutingstats",
+        "prosoccer",
+        "betexplorer",
+    )):
+        if _table_exists(con, source):
+            donor_parts.append(f"""
+                SELECT date, hkey, akey, home, away, hs, gs,
+                       '{source}' AS result_source, {priority} AS donor_priority
+                FROM {source}
+                WHERE hs IS NOT NULL AND gs IS NOT NULL
+                  AND length(hkey) >= 4 AND length(akey) >= 4
+            """)
+    if donor_parts:
+        con.execute(f"""
+            CREATE OR REPLACE VIEW results_donor AS
+            SELECT date, hkey, akey, home, away, hs, gs, result_source
+            FROM (
+                SELECT *, row_number() OVER (
+                    PARTITION BY date, hkey, akey
+                    ORDER BY donor_priority
+                ) AS donor_rank
+                FROM ({' UNION ALL '.join(donor_parts)})
+            )
+            WHERE donor_rank = 1
+        """)
+
+    if _table_exists(con, "predictz_raw") and _table_exists(con, "results_donor"):
+        con.execute("""
+            CREATE OR REPLACE VIEW predictz_settled AS
+            WITH pz AS (SELECT DISTINCT ON (date, hkey, akey) * FROM predictz_raw
+                        WHERE pick IS NOT NULL),
+                 rd AS (SELECT DISTINCT ON (date, hkey, akey) * FROM results_donor)
+            SELECT pz.*, rd.hs, rd.gs, rd.result_source,
+                   CASE WHEN rd.hs > rd.gs THEN 'home'
+                        WHEN rd.hs < rd.gs THEN 'away' ELSE 'draw' END AS outcome,
+                   CASE pz.pick WHEN 'home' THEN pz.odd1
+                                WHEN 'draw' THEN pz.oddx ELSE pz.odd2 END AS pick_odds
+            FROM pz JOIN rd USING (date, hkey, akey)
+            WHERE length(pz.hkey) >= 4 AND length(pz.akey) >= 4
+        """)
+
+    # Legacy consensus views remain Forebet-anchored for historical rule
+    # continuity. The weighted miner can combine independently settled sources
+    # without requiring Forebet.
     # 2-way consensus: forebet x zulubet
     if _table_exists(con, "forebet_settled") and _table_exists(con, "zulubet_settled"):
         con.execute("""
