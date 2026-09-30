@@ -37,6 +37,11 @@ JOBS = [
     ("bzzoiro", TODAY, TODAY),           # snapshots ALL upcoming (~7 weeks ahead)
     ("bzzoiro_odds", TODAY, TOMORROW),    # live real-book odds for pick enrichment
     ("bettingclosed", D30, TODAY),
+    # rolling prediction week only (yesterday settles + today/tomorrow probs);
+    # weekday pages beyond tomorrow are out of the picks horizon.
+    ("prosoccer", YESTERDAY, TOMORROW),
+    # today-only (JS day picker; no plain-GET archive)
+    ("soccervista", TODAY, TODAY),
 ]
 
 def reset_recent_state(source: str, days: list[str]) -> None:

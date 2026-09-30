@@ -297,6 +297,40 @@ def connect(db: str | None = None) -> duckdb.DuckDBPyConnection:
             "lower(pick) AS pick, stake, pred_score"
         )
 
+    # prosoccer: ML 1X2 probabilities (%) + avg odds + U/O 2.5 probs + final
+    # scores on finished matches (yesterday page doubles as a results donor).
+    # Probs are % (0-100), convert to 0-1 for consistency (vitibet pattern).
+    if _glob.glob(f"{LOCALDATA}/prosoccer_*.csv.gz"):
+        def _p100(col): return f"TRY_CAST({col} AS DOUBLE)/100.0"
+        _src_view(
+            con, "prosoccer", f"{LOCALDATA}/prosoccer_*.csv.gz",
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, kickoff,"
+            " TRY_CAST(hs AS INT) AS hs, TRY_CAST(gs AS INT) AS gs,"
+            f" {_p100('p1')} AS p1, {_p100('px')} AS px, {_p100('p2')} AS p2,"
+            f" {_p100('p_u25')} AS p_u25, {_p100('p_o25')} AS p_o25,"
+            " tip, pred_score1, pred_score2,"
+            f" {_odds('odd1')} AS odd1, {_odds('oddx')} AS oddx, {_odds('odd2')} AS odd2,"
+            " status"
+        )
+        con.execute(f"""
+            CREATE OR REPLACE VIEW prosoccer_settled AS
+            SELECT *, {pick} AS pick, GREATEST(p1, px, p2) AS pmax, {outcome} AS outcome
+            FROM prosoccer WHERE hs IS NOT NULL AND gs IS NOT NULL
+              AND p1 IS NOT NULL AND px IS NOT NULL AND p2 IS NOT NULL
+        """)
+
+    # soccervista: categorical 1X2 pick + avg odds + goals/score tips, no probs
+    # and no scores — settlement joins a results donor in the miner
+    # (windrawwin-style confirmation lever).
+    if _glob.glob(f"{LOCALDATA}/soccervista_*.csv.gz"):
+        _src_view(
+            con, "soccervista", f"{LOCALDATA}/soccervista_*.csv.gz",
+            f"'soccer' AS sport, date, home, away, {nh} AS hkey, {na} AS akey, league, kickoff,"
+            " lower(pick) AS pick, lower(goals_tip) AS goals_tip, pred_score,"
+            f" {_odds('odd1')} AS odd1, {_odds('oddx')} AS oddx, {_odds('odd2')} AS odd2,"
+            " event_id, url"
+        )
+
     # 2-way consensus: forebet x zulubet
     if _table_exists(con, "forebet_settled") and _table_exists(con, "zulubet_settled"):
         con.execute("""
