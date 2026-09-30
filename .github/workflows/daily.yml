@@ -36,11 +36,21 @@ jobs:
       SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
+
+      # Free multi-egress source relays.
+      # EDGE_FACTORY_RELAY_URLS order:
+      #   1. Cloudflare Worker
+      #   2. Google Apps Script
+      EDGE_FACTORY_RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
+      EDGE_FACTORY_RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
+
       TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
       TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+
       # The Odds API multi-key ring (comma-separated). Without this mapping the
       # capture step soft-no-ops on every Actions run (keys never reach env).
       ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}
+
       # Tuning knobs. '||' fallbacks mirror the code defaults (theoddsapi.py /
       # capture_theodds.py) so an unset or EMPTY secret is a no-op; secrets win
       # whenever they are set. (Addendum 20, 2026-08-03)
@@ -86,17 +96,18 @@ jobs:
           for f in $(git ls-files localdata/); do
             git checkout HEAD -- "$f" && echo "restored committed: $f"
           done
+
           # Prune untracked leftovers the cache restore may have unpacked —
-          # files deleted from git must STAY deleted (the 2026-08-27/28
-          # zombie-json resurrections). Untracked-and-not-ignored only;
-          # ignored runtime files are untouched.
+          # files deleted from git must STAY deleted.
           git clean -fd localdata/ || true
+
           echo "certified edges present: $(python3 -c "import json;d=json.load(open('localdata/edges_consensus.json'));print(sum(1 for e in d.get('edges',[]) if e.get('status')=='certified'))" 2>/dev/null || echo n/a)"
 
       - name: Execute Autonomous Smart Schedule
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" != "auto" ]; then
             echo ">>> Executing explicit manual mode: ${{ inputs.mode }}"
+
             if [ "${{ inputs.mode }}" = "official_morning" ]; then
               PYTHONPATH=src python3 scripts/daily.py --force-repick
             elif [ "${{ inputs.mode }}" = "forecast_refresh" ]; then
@@ -105,7 +116,7 @@ jobs:
               PYTHONPATH=src python3 scripts/daily.py --clv-only
             fi
           else
-            # Execute exactly one autonomous iteration of the smart accumulating ledger
+            # Execute exactly one autonomous iteration of the smart accumulating ledger.
             PYTHONPATH=src python3 scripts/daily.py --auto-once
           fi
 
@@ -119,35 +130,35 @@ jobs:
       - name: Persist pipeline state to git (single source of truth)
         # Every iteration commits its exact end state: frozen picks, WhatsApp
         # sent/discovery ledgers, capture attempts, registries. Next run's
-        # 'Restore committed data' step then restores FRESH state — kills the
-        # stale-ledger re-send loop, and lets local machines `git pull` into
-        # identical state (daily.py sync_repo_state).
+        # Restore committed data step restores fresh state.
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A localdata/
+
           if git diff --cached --quiet; then
             echo "no localdata changes to persist"
             exit 0
           fi
+
           git commit -m "chore: persist pipeline state (run ${{ github.run_id }})"
-          # Conflict-proof sync: if the rebase/push collides with a remote
-          # that moved mid-run (e.g. a local Mac pushed localdata while we
-          # ran), DROP the local state commit and stay green — localdata is
-          # fully regenerable, the next run persists fresh state. Never fail
-          # or strand the runner in a conflict.
+
+          # Conflict-proof synchronization. localdata is regenerable, so a
+          # collision must not strand the runner in a failed rebase.
           if ! git pull --rebase --autostash; then
             git rebase --abort 2>/dev/null || true
-            echo "WARN: localdata rebase conflicted (remote moved mid-run); dropping regenerable state commit"
+            echo "WARN: localdata rebase conflicted; dropping regenerable state commit"
             exit 0
           fi
+
           if ! git push; then
             if ! git pull --rebase --autostash; then
               git rebase --abort 2>/dev/null || true
               echo "WARN: push-race conflict; dropping regenerable state commit"
               exit 0
             fi
+
             git push
           fi
 
@@ -163,33 +174,19 @@ jobs:
           retention-days: 7
 
   regression-tests:
-    # Flag, never gate -- and deliberately its OWN job, not a step at the end of the
-    # pipeline job. The first run of the in-job step failed 7 tests that all pass on a
-    # clean checkout: every one traced to the runner's AMBIENT state, not to code.
-    #   * secrets mapped into the job env: ODDS_API_MONTHLY_BUDGET=0 (a secret beats
-    #     the || '480' fallback) makes a full key ring read as budget-exhausted, and
-    #     TELEGRAM_* grows a second delivery family that inverts notify's per-family
-    #     barrier expectations;
-    #   * GITHUB_ACTIONS=true reroutes forebet's transport ladder onto the relay path, so
-    #     the patched transports are skipped and assertions run against live rows;
-    #   * actions/cache/restore unpacks localdata/entity_registry.json -- built by the
-    #     pipeline, gitignored, so neither the "Restore committed data" guard (tracked
-    #     files only) nor `git clean -fd` (spares ignored) removes it. entities.py reads
-    #     it before its identity fallback, which flips league-canonicalization tests.
-    # A fresh checkout with no env block, no secrets and no cache removes all three at
-    # once. The original promise stands: this job can never withhold tonight's slip -- a
-    # failure marks the run red and nothing more, and no pipeline step waits on it.
+    # Flag, never gate — and deliberately its OWN job, not a step at the end of
+    # the pipeline job. A test failure can mark the run red but cannot withhold
+    # the daily pipeline output.
     name: Regression tests (flag, never gate)
     runs-on: ubuntu-latest
     timeout-minutes: 30
+
     permissions:
       contents: read
+
     steps:
       - name: Checkout repository
-        # Exactly what a reviewer of main sees: tracked files only, no generated state,
-        # no credentials. tests/conftest.py separately strips ambient env knobs and the
-        # gitignored entity registry, so a developer's .env or local build cannot move
-        # the verdict either.
+        # Clean checkout: tracked files only, no pipeline cache or credentials.
         uses: actions/checkout@v4
 
       - name: Set up Python
