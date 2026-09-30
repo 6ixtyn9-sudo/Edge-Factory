@@ -9649,7 +9649,11 @@ the Cloudflare Dashboard. A new manual-only workflow,
 `contents: read`, a three-minute timeout, the existing relay URL/token secrets, and
 one standard-library Python POST. It does not print tokens, upload artifacts, retry,
 schedule, or run the normal pipeline. If workflow push permission is unavailable,
-the exact file can be created with GitHub's browser editor.
+the exact file can be created with GitHub's browser editor. The push was attempted;
+the GitHub App was refused because it lacks the `workflows` permission. The non-workflow
+follow-up is pushed as commit `11aaf5e`; the complete workflow remains at
+`.github/workflows/forebet-browser-diagnostic.yml` in the working tree for browser-editor
+creation.
 
 The npm audit was reviewed rather than force-fixed. With
 `npm audit --omit=dev --json`, the three high findings are the direct
