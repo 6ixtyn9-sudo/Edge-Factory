@@ -11,6 +11,8 @@ from . import freesupertips
 from . import bettingclosed
 from . import bzzoiro
 from . import bzzoiro_odds
+from . import prosoccer
+from . import soccervista
 from . import theoddsapi
 
 
@@ -30,5 +32,7 @@ __all__ = [
     "bettingclosed",
     "bzzoiro",
     "bzzoiro_odds",
+    "prosoccer",
+    "soccervista",
     "theoddsapi",
 ]

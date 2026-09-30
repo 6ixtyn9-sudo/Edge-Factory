@@ -1,8 +1,11 @@
 # Free source-relay failover
 
-These relays fetch **public Forebet and ScoutingStats endpoints only**. They are
-not prediction sources and cannot alter source identity. The Python adapters
-require an exact echoed URL and then validate provider JSON/schema.
+These relays fetch **public source endpoints on an exact allowlist** — Forebet's
+JSON endpoint, the ScoutingStats API, and the plain-HTML prediction pages of
+ProSoccer and SoccerVista. They are not prediction sources and cannot alter
+source identity. The Python adapters require an exact echoed URL and then
+validate provider JSON/schema (Forebet/ScoutingStats) or page markers
+(ProSoccer/SoccerVista) before parsing a single byte.
 
 ## Security contract
 
@@ -18,6 +21,20 @@ Generate a token locally or in a trusted shell:
 python -c "import secrets; print(secrets.token_urlsafe(48))"
 ```
 
+## Allowed source endpoints
+
+| Host | Exact paths | Transport |
+| --- | --- | --- |
+| `www.forebet.com` | `/scripts/getrs.php?tp=1x2|uo|bts|ht&in=YYYY-MM-DD` | JSON |
+| `scoutingstats.ai` | `/api/fixtures/YYYY-MM-DD`, `/api/odds?fixture_ids=…` | JSON |
+| `www.prosoccer.gr` | `/en/football/predictions/`, `index.html`, `yesterday.html`, `tomorrow.html`, `{Monday..Sunday}.html` — no query string | HTML |
+| `www.soccervista.com` | `/` only — no query string | HTML |
+
+The ProSoccer set covers exactly its rolling prediction week (the only surface
+the adapter requests; the site's deep archive is offline). SoccerVista is
+today-only because its day picker is JavaScript-driven with no plain-GET
+archive URL.
+
 ## 1. Ordinary Cloudflare Worker relay
 
 The commands below are an optional CLI route. A browser-only GitHub/Cloudflare
@@ -32,8 +49,9 @@ npx wrangler secret put RELAY_TOKEN
 npx wrangler deploy
 ```
 
-Copy the resulting `https://...workers.dev` URL. The ordinary relay continues to
-use Worker `fetch()` for ScoutingStats and for the existing Forebet transport;
+Copy the resulting `https://...workers.dev` URL. The ordinary relay uses Worker
+`fetch()` for ScoutingStats, for the existing Forebet transport, and (as of the
+2026-09-30 source expansion) for the ProSoccer and SoccerVista HTML pages;
 it is not a browser and is not expected to pass Forebet's Cloudflare challenge.
 The Browser Run diagnostic described below is a separate, explicitly named
 operation and is not used by the Python adapters yet.
@@ -48,9 +66,10 @@ operation and is not used by the Python adapters yet.
 5. Execute as **Me**; access **Anyone**.
 6. Authorize only external requests and copy the `/exec` URL.
 
-Apps Script remains an independent ordinary-HTTP fallback for ScoutingStats. Its
-`UrlFetchApp` path was already tested against six Forebet variants and received
-Cloudflare challenge HTML/403 responses, so it is not a Browser Run substitute.
+Apps Script remains an independent ordinary-HTTP fallback for ScoutingStats,
+ProSoccer, and SoccerVista. Its `UrlFetchApp` path was already tested against
+six Forebet variants and received Cloudflare challenge HTML/403 responses, so
+it is not a Browser Run substitute.
 
 The source contains an `appsscript.json` manifest for users who prefer `clasp`,
 but no Google credential belongs in this repository.
@@ -68,7 +87,18 @@ Order matters: the Worker is attempted first and Apps Script second. The daily w
 separate `Forebet Browser Run diagnostic` workflow is manual-only, has no schedule,
 and never runs the normal pipeline.
 
-## 4. Cloudflare Browser Run: phase-1 diagnostic only
+## 4. Cloudflare Browser Run: Forebet challenge diagnostic
+
+> **Status (2026-09-30, operator decision):** the earlier "phase-1 diagnostic-only /
+> do-not-modify-forebet.py" limitation is **lifted**. The operator may now wire
+> production extraction into `forebet.py`, relay endpoints, and pipeline scripts.
+> That said, the live diagnostic below observed Forebet returning a
+> `captcha_or_turnstile_required` interactive managed challenge that Browser Run
+> did not pass, so — rather than standing up paid solving or heavy browser
+> infrastructure — the production consensus engine now grows through accessible
+> alternative sources (ProSoccer, SoccerVista) ingested via the ordinary relay
+> and direct transports. Browser Run remains a bounded manual diagnostic only;
+> nothing below makes it part of the daily pipeline.
 
 Cloudflare renamed Browser Rendering to **Browser Run** in the current
 2026 documentation. This repository uses the documented Workers binding and
@@ -231,9 +261,11 @@ observation_deadline_exceeded = false
 ```
 
 This is only a page-access smoke test. It does **not** certify the JSON endpoint,
-all three markets, target-date correctness, or production ingestion. Do not add
-Browser Run to `forebet.py` or dispatch a heavy workflow until those later phases
-have been separately proven.
+all three markets, target-date correctness, or production ingestion. The previous
+hard prohibition on touching `forebet.py` is lifted (operator decision,
+2026-09-30); any production Browser Run transport simply has to pass the same
+boundedness and validation review as every other relay transport before it joins
+the daily pipeline.
 
 ### Failure signatures and safe interpretation
 
@@ -280,10 +312,15 @@ have been separately proven.
    - The diagnostic never solves, interacts with, circumvents, or bypasses Turnstile or Cloudflare challenges.
    - DOM inspection uses `page.evaluate()` purely to check rendered element visibility and innerText.
    - It does not inject evasion code, alter browser fingerprints, or read/replay tokens, cookies, or session IDs.
-4. **Phase 1 diagnostic-only boundary**:
-   - This diagnostic remains strictly Phase 1 and standalone.
-   - No production Forebet adapter (`forebet.py`), ScoutingStats adapter, daily pipeline,
-     or betting logic change is allowed or introduced.
+4. **Diagnostic boundary (updated 2026-09-30)**:
+   - The former "strictly Phase 1 / no production change allowed" clause is
+     lifted by operator decision. `forebet.py`, the relay allowlists, source
+     adapters, and pipeline scripts may now be modified for production
+     integration (the ProSoccer/SoccerVista adapters and allowlist entries in
+     this revision are exactly that).
+   - The diagnostic itself stays manual, bounded, and standalone simply because
+     its live result was an unresolved interactive challenge — that is the
+     technical reason it is not a production transport, not a policy one.
 
 The current diagnostic budget is one launch per UTC day. A claimed day is not
 manually retried. If an operator must reset a test claim, use the Cloudflare KV
@@ -346,20 +383,22 @@ before any future dependency update.
 
 ## Rollback and temporary diagnostics
 
-To roll back without touching the working ScoutingStats path, remove the
-`[browser]` binding and the optional `[[kv_namespaces]]` block from the operator's
-Worker configuration, remove the `forebet_browser_diagnostic` branch and its
-`browser-diagnostic.js`/Puppeteer package, and redeploy the ordinary relay. The
-POST relay contract, exact allowlists, and both Python adapters remain unchanged.
-Do not remove `BROWSER` during a live diagnostic request; wait for it to finish.
+To roll back without touching the working ScoutingStats / ProSoccer /
+SoccerVista paths, remove the `[browser]` binding and the optional
+`[[kv_namespaces]]` block from the operator's Worker configuration, remove the
+`forebet_browser_diagnostic` branch and its `browser-diagnostic.js`/Puppeteer
+package, and redeploy the ordinary relay. The POST relay contract, exact
+allowlists, and the Python adapters remain unchanged. Do not remove `BROWSER`
+during a live diagnostic request; wait for it to finish.
 
 After a failed smoke test, keep the bounded classification in the operator's
-run notes and stop. After a successful page smoke test, the temporary diagnostic
-must be retained only while Phase 2 checks the JSON endpoint and the three
-markets; it must be removed or replaced by a separately reviewed, bounded
-production transport after validation. The manual diagnostic workflow may remain
-as an operator tool, but it must not be scheduled or connected to the normal
-pipeline.
+run notes and stop. The observed smoke test returned
+`captcha_or_turnstile_required`, which is a failed smoke test by definition —
+so Browser Run is retained only as a manual diagnostic. If a future run ever
+classifies `genuine_forebet_prediction_content`, a production transport may be
+reviewed on its merits under the lifted 2026-09-30 operator authorization; the
+manual diagnostic workflow may remain as an operator tool, but it is not
+scheduled or connected to the normal pipeline.
 
 ## Existing relay smoke test
 
