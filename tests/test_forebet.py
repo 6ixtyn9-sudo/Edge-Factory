@@ -115,6 +115,65 @@ def test_relay_wrapper_requires_exact_source_and_single_marker():
         forebet._unwrap_relay(b"no wrapper", source)
 
 
+
+def _browser_envelope(source_url, **fields):
+    payload = {
+        "operation": forebet.BROWSER_OPERATION,
+        "transport": forebet.BROWSER_TRANSPORT,
+        "source_url": source_url,
+        "status": 200,
+        "body_shape": "forebet_getrs",
+        "body": _raw([_row()]).decode(),
+    }
+    payload.update(fields)
+    return json.dumps(payload).encode()
+
+
+class _RelayResponse:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_exc):
+        return False
+
+    def read(self, _limit):
+        return self._payload
+
+
+def test_browser_get_accepts_only_identified_browser_run_envelope(monkeypatch):
+    source = "https://www.forebet.com/scripts/getrs.php?ln=en&tp=1x2&in=2026-09-30&ord=0&tz=0&tzs=&tze=&output=1"
+    monkeypatch.setenv(public_relay.URLS_ENV, "https://worker")
+    monkeypatch.setenv(public_relay.TOKEN_ENV, "secret")
+    monkeypatch.setattr(
+        forebet.urllib.request,
+        "urlopen",
+        lambda _request, timeout: _RelayResponse(_browser_envelope(source)),
+    )
+
+    assert forebet._browser_get(source) == _raw([_row()])
+
+
+def test_browser_get_rejects_legacy_generic_relay_envelope(monkeypatch):
+    source = "https://www.forebet.com/scripts/getrs.php?ln=en&tp=1x2&in=2026-09-30&ord=0&tz=0&tzs=&tze=&output=1"
+    legacy = json.dumps({
+        "source_url": source,
+        "status": 200,
+        "body": _raw([_row()]).decode(),
+    }).encode()
+    monkeypatch.setenv(public_relay.URLS_ENV, "https://worker")
+    monkeypatch.setenv(public_relay.TOKEN_ENV, "secret")
+    monkeypatch.setattr(
+        forebet.urllib.request,
+        "urlopen",
+        lambda _request, timeout: _RelayResponse(legacy),
+    )
+
+    with pytest.raises(ValueError, match="operation marker mismatch"):
+        forebet._browser_get(source)
+
 def test_browser_run_operation_sits_above_plain_relays_when_enabled(monkeypatch):
     monkeypatch.setenv("GITHUB_ACTIONS", "true")
     monkeypatch.setenv(forebet.BROWSER_ENV, "on")

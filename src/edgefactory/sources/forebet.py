@@ -36,6 +36,7 @@ CLOUD_RETRY_ENV = "EDGE_FACTORY_FOREBET_CLOUD"
 BROWSER_ENV = "EDGE_FACTORY_FOREBET_BROWSER"
 PLAYWRIGHT_ENV = "EDGE_FACTORY_FOREBET_PLAYWRIGHT"
 BROWSER_OPERATION = "forebet_getrs"
+BROWSER_TRANSPORT = "cloudflare_browser_rendering"
 BROWSER_TIMEOUT_SECONDS = 75
 PLAYWRIGHT_TIMEOUT_MS = 45_000
 BROWSER_AUTO_PAST_DAYS = 2
@@ -138,10 +139,21 @@ def _browser_get(url: str) -> bytes:
     if len(raw) > public_relay.MAX_RESPONSE_BYTES:
         raise ValueError("browser relay response exceeds size limit")
     envelope = json.loads(raw.decode("utf-8", "replace"))
-    if not isinstance(envelope, dict) or envelope.get("source_url") != url:
+    if not isinstance(envelope, dict):
+        raise ValueError("browser relay envelope shape")
+    if (
+        envelope.get("operation") != BROWSER_OPERATION
+        or envelope.get("transport") != BROWSER_TRANSPORT
+    ):
+        raise ValueError("browser relay operation marker mismatch")
+    if envelope.get("source_url") != url:
         raise ValueError("browser relay source URL mismatch")
+    if envelope.get("error"):
+        raise ValueError(f"browser relay error: {envelope.get('error')}")
     if int(envelope.get("status", 0)) != 200 or not isinstance(envelope.get("body"), str):
         raise ValueError("browser relay upstream failure")
+    if envelope.get("body_shape") != "forebet_getrs":
+        raise ValueError("browser relay payload marker mismatch")
     return envelope["body"].encode()
 
 
