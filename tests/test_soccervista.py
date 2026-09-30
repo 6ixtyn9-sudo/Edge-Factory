@@ -6,9 +6,13 @@ import pytest
 
 from edgefactory.sources import public_relay, soccervista
 
+TODAY = _date.today().isoformat()
+_TODAY_DD = _date.today()
+_MARKER = _TODAY_DD.strftime("%b") + " " + str(_TODAY_DD.day)
+
 PAGE = """<!doctype html><html><head><title>SoccerVista - Today's Football Betting Predictions &amp; Statistics</title></head>
 <body>
-<div id="calendar">Matches by date Sep 30 September 2026</div>
+<div id="calendar">Matches by date __MARKER__ September 2026</div>
 <table class="main">
 <thead><tr><th></th><th></th><th></th><th></th><th>1</th><th>X</th><th>2</th><th>1X2</th><th>Goals</th><th>Score</th></tr></thead>
 <tbody>
@@ -64,7 +68,9 @@ PAGE = """<!doctype html><html><head><title>SoccerVista - Today's Football Betti
 </table>
 </body></html>"""
 
-TODAY = _date.today().isoformat()
+
+def _page(marker: str = _MARKER) -> str:
+    return PAGE.replace("__MARKER__", marker)
 
 
 def test_parse_extracts_fixtures_and_leagues():
@@ -129,10 +135,30 @@ def test_fetch_day_non_today_never_fetches(monkeypatch):
 
 
 def test_fetch_day_today_happy_path(monkeypatch):
-    monkeypatch.setattr(soccervista, "_get", lambda url, retries=3: PAGE)
+    monkeypatch.setattr(soccervista, "_get", lambda url, retries=3: _page())
     rows = soccervista.fetch_day(TODAY)
     assert len(rows) == 3
     assert {r["date"] for r in rows} == {TODAY}
+
+
+def test_fetch_day_drops_day_rollover_drift(monkeypatch):
+    other = _TODAY_DD + __import__("datetime").timedelta(days=1)
+    drifted = _page(marker=other.strftime("%b") + " " + str(other.day))
+    monkeypatch.setattr(soccervista, "_get", lambda url, retries=3: drifted)
+    assert soccervista.fetch_day(TODAY) == []
+
+
+def test_fetch_day_accepts_missing_day_marker(monkeypatch):
+    markerless = _page().replace("Matches by date " + _MARKER, "Matches")
+    monkeypatch.setattr(soccervista, "_get", lambda url, retries=3: markerless)
+    rows = soccervista.fetch_day(TODAY)
+    assert len(rows) == 3
+
+
+def test_served_day_parses_marker_variants():
+    assert soccervista.served_day(_page()) == (_TODAY_DD.month, _TODAY_DD.day)
+    assert soccervista.served_day(_page("Oct 3")) == (10, 3)
+    assert soccervista.served_day("<html><body>Matches</body></html>") is None
 
 
 def test_fetch_day_raises_on_challenge_markup(monkeypatch):
