@@ -40,7 +40,7 @@ jobs:
       # Bound the expensive per-event comparison fallback so bzzoiro_odds cannot
       # consume the whole source-capture budget when best-odds endpoints return 0.
       # Override with repository secret BZZOIRO_ODDS_MAX_EVENTS if needed.
-      BZZOIRO_ODDS_MAX_EVENTS: ${{ secrets.BZZOIRO_ODDS_MAX_EVENTS || '15' }}
+      BZZOIRO_ODDS_MAX_EVENTS: ${{ secrets.BZZOIRO_ODDS_MAX_EVENTS || '20' }}
 
       # Optional Forebet fallback: set repository secret
       # EDGE_FACTORY_FOREBET_PLAYWRIGHT=1 only after operator sign-off.
