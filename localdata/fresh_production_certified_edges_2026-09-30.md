@@ -1,10 +1,10 @@
 # fresh_production walk-forward — 2026-07-02..2026-09-29
 
 - fixtures with features: 5467
-- fixtures labelled by independent donors: 5127
-- fixtures unlabelled: 340
+- fixtures labelled by independent donors: 5126
+- fixtures unlabelled: 341
 - fixtures rejected (ambiguous/reversed): 116
-- base rate of the consensus top outcome: 0.5173
+- base rate of the consensus top outcome: 0.5172
 - model version: `fresh_production_rules_v1`, feature schema `fresh_production_features_v1`, seed 20260930
 
 ## Rule lifecycle
@@ -34,8 +34,8 @@ A rule is only called *certified* when it is genuinely dispatch-eligible.
 | 1x2_two_source_p55_unanimous | certified_dispatchable | yes | 1879 | 1023 | 924 | 0.660 | 0.638 | +0.143 | 0.2169 | - |
 | 1x2_two_source_p60_majority | certified_dispatchable | yes | 1316 | 696 | 926 | 0.701 | 0.675 | +0.183 | 0.2046 | - |
 | 1x2_two_source_p60_unanimous | certified_dispatchable | yes | 1314 | 694 | 924 | 0.701 | 0.676 | +0.184 | 0.2045 | - |
-| 1x2_two_source_p65_majority | certified_dispatchable | yes | 792 | 414 | 402 | 0.768 | 0.737 | +0.250 | 0.1808 | - |
-| 1x2_two_source_p65_unanimous | certified_dispatchable | yes | 792 | 414 | 402 | 0.768 | 0.737 | +0.250 | 0.1808 | - |
+| 1x2_two_source_p65_majority | certified_dispatchable | yes | 792 | 414 | 402 | 0.768 | 0.737 | +0.251 | 0.1808 | - |
+| 1x2_two_source_p65_unanimous | certified_dispatchable | yes | 792 | 414 | 402 | 0.768 | 0.737 | +0.251 | 0.1808 | - |
 | 1x2_three_source_p55_majority | certified_dispatchable | yes | 535 | 344 | 270 | 0.675 | 0.634 | +0.158 | 0.2114 | - |
 | 1x2_three_source_p55_unanimous | certified_dispatchable | yes | 527 | 337 | 269 | 0.677 | 0.636 | +0.160 | 0.2106 | - |
 | 1x2_two_source_p70_majority | certified_dispatchable | yes | 390 | 201 | 373 | 0.800 | 0.757 | +0.283 | 0.1633 | - |

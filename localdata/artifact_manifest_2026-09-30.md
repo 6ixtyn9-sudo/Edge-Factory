@@ -1,10 +1,10 @@
 # artifact_manifest — data_retention — 2026-09-30
 
 - policy: `fresh_production` (keep-days 30, keep-latest 3, target date 2026-09-30)
-- files considered: 568
+- files considered: 571
 - files deleted: 0
 - bytes deleted: 0
-- unmatched files left alone: 350
+- unmatched files left alone: 353
 - dry run: no
 
 ## Why nothing was removed
@@ -27,9 +27,9 @@ Nothing was old enough: every matched generated artifact is either the current t
 | picks_audit | 992906 |
 | picks | 446001 |
 | clv_unmatched | 285624 |
-| fresh_production_candidate_picks | 282861 |
-| source_settlement_coverage | 159327 |
-| source_funnel | 61798 |
+| fresh_production_candidate_picks | 283477 |
+| source_settlement_coverage | 159031 |
+| source_funnel | 62092 |
 | clv_report | 59683 |
 | fresh_production_walkforward | 34482 |
 | artifact_manifest | 34434 |

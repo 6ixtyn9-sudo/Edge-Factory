@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-09-30T21:51:27+02:00",
+  "as_of": "2026-09-30T22:55:47+02:00",
   "eligible_pick_count": 1,
   "generated_for": "2026-09-30",
   "horizon_days": 2,
@@ -45,7 +45,7 @@
       "model_version": "fresh_production_rules_v1",
       "notes": [
         "unseen_source_combo (advisory for certified_rule)",
-        "horizon lead 10.3h"
+        "horizon lead 9.2h"
       ],
       "odds": 2.25,
       "odds_replaced": false,
@@ -128,7 +128,7 @@
       },
       "timing_source": "bzzoiro",
       "walkforward_evidence": {
-        "base_rate": 0.5173,
+        "base_rate": 0.5172,
         "brier": 0.2169,
         "hit_rate": 0.6599,
         "hit_rate_lower_bound": 0.6382,

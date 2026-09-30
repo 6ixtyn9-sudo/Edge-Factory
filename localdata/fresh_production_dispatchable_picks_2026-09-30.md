@@ -7,27 +7,27 @@ The lane abstained. Blocker counts across 144 candidate(s):
 | blocker | candidates |
 |---|---:|
 | `insufficient_voter_quorum` | 114 |
-| `missing_odds` | 4 |
-| `insufficient_edge_versus_price` | 18 |
-| `missing_trusted_kickoff` | 1 |
-| `kickoff_guard` | 29 |
+| `missing_odds` | 2 |
+| `insufficient_edge_versus_price` | 19 |
+| `missing_trusted_kickoff` | 2 |
+| `kickoff_guard` | 28 |
 | `no_certified_fresh_production_rule_matched` | 19 |
-| `suspect_price` | 2 |
+| `suspect_price` | 3 |
 
 ### Candidate-to-bet conversion
 
 | stage | count |
 |---|---:|
 | candidate_count_before_pricing | 30 |
-| candidate_count_with_any_price | 26 |
-| candidate_count_exact_price | 24 |
-| candidate_count_alias_price | 2 |
-| candidate_count_suspect_price_rejected | 2 |
-| candidate_count_missing_price | 4 |
+| candidate_count_with_any_price | 28 |
+| candidate_count_exact_price | 25 |
+| candidate_count_alias_price | 3 |
+| candidate_count_suspect_price_rejected | 3 |
+| candidate_count_missing_price | 2 |
 | candidate_count_with_positive_edge | 7 |
-| candidate_count_with_negative_edge | 19 |
+| candidate_count_with_negative_edge | 21 |
 
-Price tiers used: `source_embedded_price` × 21, `dedicated_pricing_feed` × 5
+Price tiers used: `source_embedded_price` × 23, `dedicated_pricing_feed` × 5
 
 ### Top rejected candidates
 

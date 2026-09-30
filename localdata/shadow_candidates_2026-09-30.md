@@ -16,7 +16,7 @@ Blockers:
 | fixture | live voters | shadow voters | kickoff | blockers |
 |---|---|---|---|---|
 | Bahrain vs Yemen | betclan | prosoccer | 18:30 | fewer_than_2_live_voters; no_ml_feature_provider_on_fixture; inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
-| Eastleigh vs Southend | zulubet,vitibet,betclan | prosoccer | 19:45 | inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
+| Eastleigh vs Southend | zulubet,vitibet,betclan | prosoccer | 30-09, 19:45 | inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
 | Lithuania vs Andorra | betclan,bzzoiro | prosoccer | 2026-09-30T16:00:00Z | no_ml_feature_provider_on_fixture; inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
 | Mexico vs Peru | betclan,bzzoiro | prosoccer | 2026-09-30T01:00:00Z | no_ml_feature_provider_on_fixture; inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
 | Seychelles vs Sri Lanka | betclan,bzzoiro | prosoccer | 2026-09-30T13:00:00Z | no_ml_feature_provider_on_fixture; inside_30m_lead_or_started; shadow_sources_not_settlement_validated:prosoccer |
