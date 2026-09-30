@@ -1,0 +1,246 @@
+"""The authoritative, operator-facing production summary.
+
+Everything here is read *after* the downstream stages have run. The pick
+engine emits a preliminary planning block while it is still working, and
+that block cannot know what auto_tickets, Supabase, CLV or the notifier
+later did. Reporting a guess there produced a real audit defect: a future
+production selection that auto_tickets had evaluated and declined was
+printed as "auto-ticket action: not evaluated / assayer action: not run".
+
+This module fixes that by deriving every downstream field from the artifact
+the stage actually wrote:
+
+    dispatch plan        fresh_production_dispatch_plan_<run_date>.json
+    ticket verdict       auto_ticket_outcomes_<run_date>.json
+    Supabase publish     supabase_sync_manifest_<event_date>.json
+    CLV capture          clv_snapshots_<YYYY-MM>.csv.gz
+    notification         sent_ledger_<run_date>.json
+
+A stage that did not run is reported as "did not run", never as a verdict.
+"""
+
+from __future__ import annotations
+
+import csv
+import gzip
+import json
+from pathlib import Path
+from typing import Any
+
+from . import production_lane
+
+STAKING_OWNER = "auto_tickets"
+STAKING_POLICY = "handled_by_auto_tickets"
+
+FUTURE_PICK_MARKER_PREFIX = "__future_pick__"
+
+TICKET_CREATED = "ticket_created"
+
+
+# ---------------------------------------------------------------------------
+# readers — each returns evidence, or None when the stage left none
+# ---------------------------------------------------------------------------
+
+
+def read_ticket_outcomes(run_date: str, localdata: Path) -> dict | None:
+    """Per-event-date auto-ticket verdicts, or None if auto_tickets never ran."""
+    path = Path(localdata) / f"auto_ticket_outcomes_{run_date}.json"
+    if not path.exists():
+        return None
+    try:
+        return dict(json.loads(path.read_text()).get("outcomes") or {})
+    except (OSError, ValueError):
+        return None
+
+
+def read_supabase_published(event_dates, localdata: Path) -> dict[str, int]:
+    """Rows published per event date, from each date's sync manifest."""
+    published: dict[str, int] = {}
+    for day in event_dates:
+        path = Path(localdata) / f"supabase_sync_manifest_{day}.json"
+        if not path.exists():
+            continue
+        try:
+            published[day] = int(json.loads(path.read_text()).get("row_count") or 0)
+        except (OSError, ValueError, TypeError):
+            continue
+    return published
+
+
+def read_clv_rows(run_date: str, localdata: Path) -> list[dict[str, Any]]:
+    """CLV snapshot rows captured for this run, keyed by dispatch plan id."""
+    path = Path(localdata) / f"clv_snapshots_{str(run_date)[:7]}.csv.gz"
+    if not path.exists():
+        return []
+    rows: list[dict[str, Any]] = []
+    try:
+        with gzip.open(path, "rt", newline="") as fh:
+            for row in csv.DictReader(fh):
+                if str(row.get("dispatch_plan_id") or "") == run_date or \
+                        str(row.get("run_date") or "") == run_date:
+                    rows.append(row)
+    except (OSError, ValueError):
+        return []
+    return rows
+
+
+def clv_ticket_status_counts(rows) -> dict[str, int]:
+    """How many captured CLV rows ended in each ticket status."""
+    counts: dict[str, int] = {}
+    for row in rows or ():
+        status = str(row.get("ticket_status") or "").strip() or "unknown"
+        counts[status] = counts.get(status, 0) + 1
+    return counts
+
+
+def read_notification_result(run_date: str, localdata: Path) -> dict:
+    """Whether the future-selection notice was sent and ledgered."""
+    path = Path(localdata) / f"sent_ledger_{run_date}.json"
+    if not path.exists():
+        return {"ran": False, "future_notices": 0}
+    try:
+        keys = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return {"ran": False, "future_notices": 0}
+    if isinstance(keys, dict):
+        keys = list(keys.get("keys") or keys.keys())
+    future = [k for k in keys if str(k).startswith(FUTURE_PICK_MARKER_PREFIX)]
+    return {"ran": True, "future_notices": len(future), "keys": sorted(future)}
+
+
+# ---------------------------------------------------------------------------
+# collection + rendering
+# ---------------------------------------------------------------------------
+
+
+def collect_production_status(run_date: str, localdata: Path | str) -> dict:
+    """Gather the real post-run state of every production stage."""
+    localdata = Path(localdata)
+    plan = production_lane.load_dispatch_plan(run_date, localdata) or {}
+    event_dates = list(plan.get("event_dates") or [])
+    clv_rows = read_clv_rows(run_date, localdata)
+    return {
+        "run_date": run_date,
+        "plan": plan,
+        "ticket_outcomes": read_ticket_outcomes(run_date, localdata),
+        "supabase_published": read_supabase_published(event_dates, localdata),
+        "clv_rows": clv_rows,
+        "clv_ticket_status_counts": clv_ticket_status_counts(clv_rows),
+        "notification": read_notification_result(run_date, localdata),
+    }
+
+
+def _ticket_lines(plan: dict, outcomes: dict | None) -> list[str]:
+    """Report the ticket engine's verdict per event date, or that it did not run."""
+    total = int(plan.get("same_day_pick_count") or 0) + \
+        int(plan.get("horizon_pick_count") or 0)
+    if outcomes is None:
+        state = ("did not run" if total
+                 else "did not run (no selections to evaluate)")
+        return [f"  auto-ticket action:            {state}",
+                f"  ticket status:                 no ticket",
+                f"  assayer action:                did not run",
+                f"  benching action:               unknown (assayer did not run)",
+                f"  staking assigned:              no"]
+
+    scored = {d: o for d, o in outcomes.items() if (o or {}).get("selections")}
+    if not scored:
+        return ["  auto-ticket action:            "
+                "nothing to evaluate (no selections reached the ticket engine)",
+                "  ticket status:                 no ticket",
+                "  assayer action:                not run (nothing to assay)",
+                "  benching action:               none",
+                "  staking assigned:              no"]
+
+    actions, statuses = [], []
+    for day in sorted(scored):
+        status = str(scored[day].get("status") or "unknown")
+        actions.append(f"{day}: {status}")
+        statuses.append(status)
+    created = [s for s in statuses if s == TICKET_CREATED]
+
+    benched = sorted({b for o in scored.values()
+                      for b in list(o.get("benched_buckets") or ())
+                      + list(o.get("slice_benched_buckets") or ())})
+    assayed = any(o.get("assayer_ran") for o in scored.values())
+
+    if created:
+        ticket_status = f"{len(created)} ticket(s) created"
+        staking_assigned = "percentage of capital / free bank"
+    else:
+        # Name the decline rather than the absence of a bet.
+        ticket_status = "; ".join(sorted(set(statuses))) + " / no ticket created"
+        staking_assigned = "no"
+
+    return [
+        f"  auto-ticket action:            {'; '.join(actions)}",
+        f"  ticket status:                 {ticket_status}",
+        f"  assayer action:                "
+        + ("ran; no bucket diminished" if assayed and not benched
+           else f"ran; benched {', '.join(benched)}" if benched
+           else "not run (no selection survived the pre-assay gates)"),
+        f"  benching action:               "
+        + (f"{', '.join(benched)} excluded from selection" if benched
+           else "none"),
+        f"  staking assigned:              {staking_assigned}",
+    ]
+
+
+def render_final_summary(status: dict) -> list[str]:
+    """The authoritative operator-facing verdict for a production run."""
+    plan = status.get("plan") or {}
+    same_day = int(plan.get("same_day_pick_count") or 0)
+    future = int(plan.get("horizon_pick_count") or 0)
+    total = same_day + future
+    event_dates = list(plan.get("event_dates") or [])
+
+    published = status.get("supabase_published") or {}
+    published_total = sum(published.values())
+    clv_rows = status.get("clv_rows") or []
+    clv_counts = status.get("clv_ticket_status_counts") or {}
+    notification = status.get("notification") or {}
+
+    if not notification.get("ran"):
+        notify_line = "did not run"
+    elif notification.get("future_notices"):
+        notify_line = (f"PRODUCTION SELECTION notice sent and ledgered "
+                       f"({notification['future_notices']} pick(s))")
+    else:
+        notify_line = "no future-selection notice (empty-slate heartbeat path)"
+
+    lines = [
+        "FINAL PRODUCTION SUMMARY",
+        f"  run date:                      {status.get('run_date')}",
+        f"  production selections:         {total}",
+        f"  same-day selections:           {same_day}",
+        f"  future-dated selections:       {future}",
+        f"  event dates:                   {', '.join(event_dates) or 'none'}",
+        f"  Supabase selections published: {published_total}"
+        + (f" ({', '.join(f'{d}={n}' for d, n in sorted(published.items()))})"
+           if published else " (no sync manifest found)"),
+        f"  CLV captured:                  {len(clv_rows)} row(s)",
+    ]
+    if clv_counts:
+        lines.append("  CLV ticket_status counts:      "
+                     + ", ".join(f"{k}={v}" for k, v in sorted(clv_counts.items())))
+    lines.append(f"  notification:                  {notify_line}")
+    lines += _ticket_lines(plan, status.get("ticket_outcomes"))
+    lines += [
+        f"  staking owner:                 {STAKING_OWNER}",
+        f"  staking policy:                {STAKING_POLICY}",
+    ]
+    for row in plan.get("horizon_picks") or ():
+        outcome = ((status.get("ticket_outcomes") or {})
+                   .get(str(row.get("event_date"))) or {})
+        verdict = str(outcome.get("status") or "not evaluated")
+        lines.append(
+            f"    SELECTION {row.get('event_date')} "
+            f"{row.get('kickoff') or '-'} {row.get('home')} vs {row.get('away')} "
+            f"| {row.get('pick')} | odds={row.get('odds')} "
+            f"| {row.get('edge_rule')} | auto-ticket: {verdict}")
+    return lines
+
+
+def production_final_summary(run_date: str, localdata: Path | str) -> list[str]:
+    """Convenience: collect the run's real state and render the verdict."""
+    return render_final_summary(collect_production_status(run_date, localdata))

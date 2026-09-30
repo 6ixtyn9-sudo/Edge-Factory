@@ -1,0 +1,425 @@
+"""The production summary must report what actually happened.
+
+The defect these tests lock out: a future-dated production selection that
+auto_tickets had evaluated and declined was reported to the operator as
+"auto-ticket action: not evaluated / assayer action: not run (no selections
+reached the ticket engine)". The selection had reached the ticket engine.
+
+The rule is one of authority: a stage's outcome may only be reported from
+the artifact that stage wrote. The pick engine's block is preliminary by
+construction; the final summary is rendered afterwards.
+"""
+
+from __future__ import annotations
+
+import csv
+import gzip
+import importlib.util
+import io
+import json
+import os
+import sys
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
+from unittest.mock import patch
+
+import pytest
+
+ROOT = Path(__file__).resolve().parent.parent
+SRC = ROOT / "src"
+if str(SRC) not in sys.path:
+    sys.path.insert(0, str(SRC))
+
+
+def _load(name: str, filename: str):
+    spec = importlib.util.spec_from_file_location(name, ROOT / "scripts" / filename)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[name] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+fp = _load("fresh_production_summary_under_test", "fresh_production.py")
+at = _load("auto_tickets_summary_under_test", "auto_tickets.py")
+notify = _load("notify_summary_under_test", "notify.py")
+clv = _load("audit_clv_summary_under_test", "audit_clv.py")
+
+from edgefactory import production_lane as pl          # noqa: E402
+from edgefactory import production_summary as ps       # noqa: E402
+
+RUN_DATE = "2026-09-30"
+EVENT_DATE = "2026-10-01"
+RULE = "1x2_two_source_p55_unanimous"
+FRESH = {"EDGE_FACTORY_PRODUCTION_LANE": "fresh_production"}
+DECLINE = "declined_insufficient_legs"
+
+_NOW = datetime(2026, 9, 30, 10, 0, tzinfo=timezone(timedelta(hours=2)))
+
+
+class _FrozenDatetime:
+    """datetime stand-in with a pinned now(), for deterministic build hours."""
+
+    def __init__(self, pinned):
+        self._pinned = pinned
+
+    def now(self, tz=None):
+        return self._pinned if tz is None else self._pinned.astimezone(tz)
+
+    def __getattr__(self, name):
+        return getattr(datetime, name)
+
+
+def _pick(**overrides):
+    row = {
+        "date": EVENT_DATE, "event_date": EVENT_DATE,
+        "kickoff": f"{EVENT_DATE} 08:10", "league": "World Cup Qualification",
+        "home": "Panama", "away": "New Zealand", "selection": "home",
+        "rule_id": RULE, "probability": 0.72, "odds": 2.25,
+        "implied_probability": 0.4444, "edge": 0.1403, "dispatchable": True,
+        "internal_stake_units": 1.0, "dispatch_method": "certified_rule",
+        "pricing_source": "bzzoiro", "timing_source": "zulubet",
+        "source_voters": ["zulubet", "vitibet"], "price_match_method": "exact",
+        "price_tier": "dedicated_pricing_feed", "bookmaker": "bet365",
+        "model_version": "m1", "feature_schema_version": "s1",
+        "walkforward_evidence": {}, "price_push_eligible": True,
+        "staking_policy": fp.STAKING_POLICY, "staking_owner": fp.STAKING_OWNER,
+    }
+    row.update(overrides)
+    return row
+
+
+def _plan(picks=None):
+    picks = [_pick()] if picks is None else picks
+    horizon = {"generated_for": RUN_DATE, "horizon_end": "2026-10-02",
+               "min_lead_minutes": 30, "max_lead_hours": 48,
+               "eligible_pick_count": len(picks), "picks": picks}
+    return fp.build_dispatch_plan(run_date=RUN_DATE, same_day_rows=[],
+                                  horizon_rows=fp.horizon_pick_rows(horizon),
+                                  horizon=horizon)
+
+
+def _localdata(tmp_path, picks=None):
+    """The 2026-09-30 run shape: empty same-day file, one future selection."""
+    d = tmp_path / "localdata"
+    d.mkdir(exist_ok=True)
+    (d / f"fresh_production_production_picks_{RUN_DATE}.json").write_text("[]")
+    pl.dispatch_plan_path(RUN_DATE, d).write_text(json.dumps(_plan(picks)))
+    return d
+
+
+def _run_auto_tickets(localdata):
+    """Drive the real ticket engine over the plan, as the pipeline does."""
+
+    class Args:
+        date = RUN_DATE
+        force = True
+
+    state = at.fresh_state()
+    with patch.object(at, "LOCALDATA", localdata), \
+         patch.object(at, "STATE_FILE", localdata / "state.json"), \
+         patch.object(at, "BUCKET_PNL_FILE", localdata / "pnl.json"), \
+         patch.object(at, "load_settled", lambda *a, **k: {}), \
+         patch.object(at, "load_archived_picks", lambda *a, **k: []), \
+         patch.object(at, "datetime", _FrozenDatetime(_NOW)):
+        at.cmd_today(Args(), state)
+    return state
+
+
+def _write_supabase_manifest(localdata, event_date=EVENT_DATE, rows=1):
+    (localdata / f"supabase_sync_manifest_{event_date}.json").write_text(
+        json.dumps({"target_date": event_date, "row_count": rows,
+                    "sync_mode": "authoritative_replace"}))
+
+
+def _write_clv_snapshot(localdata, ticket_status=DECLINE, rows=1):
+    path = localdata / f"clv_snapshots_{RUN_DATE[:7]}.csv.gz"
+    fields = ["run_date", "event_date", "home", "away", "selection", "odds",
+              "pricing_source", "dispatch_plan_id", "rule_id", "ticket_status"]
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=fields)
+    writer.writeheader()
+    for i in range(rows):
+        writer.writerow({
+            "run_date": RUN_DATE, "event_date": EVENT_DATE,
+            "home": f"Panama{i or ''}", "away": "New Zealand",
+            "selection": "home", "odds": "2.25", "pricing_source": "bzzoiro",
+            "dispatch_plan_id": RUN_DATE, "rule_id": RULE,
+            "ticket_status": ticket_status})
+    with gzip.open(path, "wt", newline="") as fh:
+        fh.write(buf.getvalue())
+    return path
+
+
+def _write_sent_ledger(localdata, keys=None):
+    keys = keys or [f"__future_pick__|{EVENT_DATE}|Panama|New Zealand|home"]
+    (localdata / f"sent_ledger_{RUN_DATE}.json").write_text(json.dumps(keys))
+
+
+# ===========================================================================
+# A. The final summary must reflect the post-auto-ticket state
+# ===========================================================================
+
+
+@patch.dict(os.environ, FRESH)
+def test_final_summary_reports_the_actual_auto_ticket_verdict(tmp_path):
+    """The exact run 36767213800 shape, end to end."""
+    localdata = _localdata(tmp_path)
+    _run_auto_tickets(localdata)
+    _write_supabase_manifest(localdata)
+    _write_clv_snapshot(localdata)
+    _write_sent_ledger(localdata)
+
+    text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
+
+    assert "FINAL PRODUCTION SUMMARY" in text
+    assert "production selections:         1" in text
+    assert f"event dates:                   {EVENT_DATE}" in text
+    assert "Supabase selections published: 1" in text
+    assert "CLV captured:                  1 row(s)" in text
+    assert f"CLV ticket_status counts:      {DECLINE}=1" in text
+    assert "PRODUCTION SELECTION notice sent and ledgered" in text
+    assert f"auto-ticket action:            {EVENT_DATE}: {DECLINE}" in text
+    assert DECLINE in text
+    assert "staking owner:                 auto_tickets" in text
+    assert "staking assigned:              no" in text
+
+
+@patch.dict(os.environ, FRESH)
+def test_final_summary_never_calls_an_evaluated_selection_unevaluated(tmp_path):
+    """The defect itself: the selection did reach the ticket engine."""
+    localdata = _localdata(tmp_path)
+    _run_auto_tickets(localdata)
+    _write_supabase_manifest(localdata)
+    _write_clv_snapshot(localdata)
+    _write_sent_ledger(localdata)
+
+    text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
+
+    assert "auto-ticket action:            not evaluated" not in text
+    assert "not run (no selections reached the ticket engine)" not in text
+    assert "assayer action:                did not run" not in text
+    # It ran, and it says so.
+    assert "assayer action:                ran" in text
+
+
+@patch.dict(os.environ, FRESH)
+def test_final_summary_lists_the_selection_with_its_ticket_verdict(tmp_path):
+    localdata = _localdata(tmp_path)
+    _run_auto_tickets(localdata)
+    text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
+    assert f"SELECTION {EVENT_DATE}" in text
+    assert "Panama vs New Zealand" in text
+    assert f"auto-ticket: {DECLINE}" in text
+    assert RULE in text
+
+
+@patch.dict(os.environ, FRESH)
+def test_final_summary_reports_a_created_ticket_as_created(tmp_path):
+    """Two eligible legs clear the 2-leg contract and the summary says so."""
+    second = _pick(home="Guatemala", away="Suriname", odds=1.95,
+                   probability=0.66)
+    localdata = _localdata(tmp_path, [_pick(), second])
+    _run_auto_tickets(localdata)
+
+    text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
+    assert f"auto-ticket action:            {EVENT_DATE}: ticket_created" in text
+    assert "ticket status:                 1 ticket(s) created" in text
+    assert "staking assigned:              percentage of capital / free bank" in text
+    assert DECLINE not in text
+
+
+def test_final_summary_says_a_stage_did_not_run_rather_than_guessing(tmp_path):
+    """No auto-ticket artifact means no verdict may be invented."""
+    localdata = _localdata(tmp_path)   # auto_tickets deliberately not run
+    text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
+
+    assert "auto-ticket action:            did not run" in text
+    assert "assayer action:                did not run" in text
+    assert "Supabase selections published: 0 (no sync manifest found)" in text
+    assert "notification:                  did not run" in text
+    # "did not run" is an honest absence; "not evaluated" reads as a verdict.
+    assert "nothing to evaluate" not in text
+
+
+# ===========================================================================
+# B. The pre-ticket block must not pose as the verdict
+# ===========================================================================
+
+
+def test_pre_ticket_block_is_labelled_preliminary():
+    plan = _plan()
+    text = "\n".join(fp.render_dispatch_plan_summary(plan, {"blocker_counts": {}}))
+    assert "PRELIMINARY (pre-ticket)" in text
+    assert "auto-ticket action:            pending" in text
+    assert "FINAL PRODUCTION SUMMARY" in text   # points at the real verdict
+
+
+def test_pre_ticket_block_omits_every_downstream_result_field():
+    """It runs before those stages, so it cannot report them."""
+    plan = _plan()
+    text = "\n".join(fp.render_dispatch_plan_summary(plan, {"blocker_counts": {}}))
+    for field in ("ticket status:", "assayer action:", "benching action:",
+                  "staking assigned:", "CLV captured:",
+                  "Supabase selections published:"):
+        assert field not in text, f"pre-ticket block must not report {field!r}"
+
+
+def test_pre_ticket_block_never_says_not_evaluated_or_not_run():
+    plan = _plan()
+    text = "\n".join(fp.render_dispatch_plan_summary(plan, {"blocker_counts": {}}))
+    assert "not evaluated" not in text
+    assert "no selections reached the ticket engine" not in text
+
+
+def test_pre_ticket_block_still_shows_the_selection_and_staking_owner():
+    """Relabelling must not cost the operator the planning information."""
+    text = "\n".join(fp.render_dispatch_plan_summary(_plan(),
+                                                     {"blocker_counts": {}}))
+    assert "production selections:         1" in text
+    assert f"FUTURE {EVENT_DATE}" in text
+    assert "staking owner:                 auto_tickets" in text
+    assert "stake_units" not in text and "1.0u" not in text
+
+
+# ===========================================================================
+# C. CLV ticket_status is captured, counted and auditable
+# ===========================================================================
+
+
+@patch.dict(os.environ, FRESH)
+def test_clv_captures_the_selection_even_when_auto_tickets_declines(tmp_path):
+    localdata = _localdata(tmp_path)
+    _run_auto_tickets(localdata)
+
+    with patch.object(clv, "LOCALDATA", localdata):
+        picks = clv._dispatch_plan_picks(RUN_DATE)
+
+    assert len(picks) == 1, "a declined selection is still captured"
+    assert picks[0]["ticket_status"] == DECLINE
+    assert picks[0]["date"] == EVENT_DATE       # dispatch-time price, event date
+    assert picks[0]["edge_rule"] == RULE
+
+
+def test_clv_ticket_status_is_a_snapshot_column():
+    assert "ticket_status" in clv.SNAPSHOT_FIELDS
+    assert "dispatch_plan_id" in clv.SNAPSHOT_FIELDS
+    assert "event_date" in clv.SNAPSHOT_FIELDS
+
+
+def test_clv_ticket_status_counts_are_computed():
+    rows = [{"ticket_status": DECLINE}, {"ticket_status": DECLINE},
+            {"ticket_status": "ticket_created"}, {"ticket_status": ""}]
+    counts = clv.ticket_status_counts(rows)
+    assert counts == {DECLINE: 2, "ticket_created": 1, "unknown": 1}
+
+
+def test_clv_capture_logs_a_ticket_status_count():
+    src = (ROOT / "scripts" / "audit_clv.py").read_text()
+    assert "CLV ticket_status counts: " in src
+
+
+@patch.dict(os.environ, FRESH)
+def test_pending_at_pick_time_becomes_final_at_end_of_run(tmp_path):
+    """Before auto_tickets the status is unknown; afterwards it is the verdict."""
+    localdata = _localdata(tmp_path)
+
+    with patch.object(clv, "LOCALDATA", localdata):
+        early = clv._dispatch_plan_picks(RUN_DATE)
+    assert early[0]["ticket_status"] == "unknown"
+
+    _run_auto_tickets(localdata)
+    with patch.object(clv, "LOCALDATA", localdata):
+        late = clv._dispatch_plan_picks(RUN_DATE)
+    assert late[0]["ticket_status"] == DECLINE
+
+
+def test_clv_counts_do_not_inflate_unique_selections(tmp_path):
+    """One selection stays one row, whatever its ticket status."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    _write_clv_snapshot(localdata, rows=1)
+    status = ps.collect_production_status(RUN_DATE, localdata)
+    assert len(status["clv_rows"]) == 1
+    assert status["clv_ticket_status_counts"] == {DECLINE: 1}
+
+
+# ===========================================================================
+# D. Notification keeps selection/ticket distinct
+# ===========================================================================
+
+
+def test_notification_says_selection_not_ticket_when_declined():
+    message = notify.format_future_pick_message_from_plan(
+        _plan(), RUN_DATE, {EVENT_DATE: {"status": DECLINE}})
+    assert f"PRODUCTION SELECTION — event date {EVENT_DATE}" in message
+    assert "PRODUCTION TICKET" not in message
+    assert f"auto-ticket action: {DECLINE}" in message
+    assert "staking: not assigned because no ticket was created" in message
+
+
+def test_notification_shows_no_stake_size():
+    message = notify.format_future_pick_message_from_plan(
+        _plan(), RUN_DATE, {EVENT_DATE: {"status": DECLINE}})
+    for forbidden in ("1.0u", "1u", "stake: 1", "stake_units", "stake_size"):
+        assert forbidden not in message
+    assert RULE in message
+    assert "fresh_" not in message
+    for label in ("_v1_", "_v2_", "_v3_"):
+        assert label not in message
+
+
+# ===========================================================================
+# E. The summary must not become a second source of truth
+# ===========================================================================
+
+
+def test_only_the_final_summary_reports_downstream_results():
+    """Exactly one renderer may state the verdict."""
+    engine = (ROOT / "scripts" / "fresh_production.py").read_text()
+    assert "FINAL PRODUCTION SUMMARY" not in engine.replace(
+        "FINAL PRODUCTION SUMMARY after auto_tickets", "")
+    assert "auto-ticket action:            pending" in engine
+
+
+def test_daily_prints_the_final_summary_after_the_downstream_stages():
+    src = (ROOT / "scripts" / "daily.py").read_text()
+    assert "print_final_production_summary(target_date)" in src
+    order = [src.index("auto_tickets (ticket formation, staking, freeze)"),
+             src.index("audit_clv.py capture --date {target_date} --label end_of_run"),
+             src.index('_notify(target_date, "notify (Smart Dispatch'),
+             src.index("print_final_production_summary(target_date)")]
+    assert order == sorted(order), (
+        "the final summary must be printed after auto_tickets, CLV and notify")
+
+
+def test_final_summary_carries_no_stake_size(tmp_path):
+    localdata = _localdata(tmp_path)
+    _run_auto_tickets(localdata)
+    text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
+    for forbidden in ("1.0u", " 1u", "stake_units", "stake_size", "stake: 1"):
+        assert forbidden not in text
+    assert "staking owner:                 auto_tickets" in text
+
+
+def test_final_summary_uses_clean_rule_ids(tmp_path):
+    localdata = _localdata(tmp_path)
+    _run_auto_tickets(localdata)
+    text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
+    assert RULE in text
+    assert "fresh_1x2_" not in text
+    for label in ("_v1_", "_v2_", "_v3_"):
+        assert label not in text
+
+
+def test_production_certified_stays_registered_for_assay_and_bench():
+    assert fp.PRODUCTION_BUCKET in at.BUCKETS
+
+
+def test_a_single_selection_still_declines_under_the_two_leg_contract(tmp_path):
+    """The betting contract is unchanged by the reporting fix."""
+    assert at.LEGS_PER_ACCA == 2
+    localdata = _localdata(tmp_path)
+    state = _run_auto_tickets(localdata)
+    outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
+    assert outcomes[EVENT_DATE]["status"] == DECLINE
+    assert not state["open_slips"]

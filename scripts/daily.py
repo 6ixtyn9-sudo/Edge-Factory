@@ -283,6 +283,22 @@ def run_fresh_production_lane(target_date: str) -> None:
     )
 
 
+def print_final_production_summary(target_date: str) -> None:
+    """Print the authoritative production verdict for this run.
+
+    Must run after auto_tickets, Supabase sync, CLV capture and
+    notification: each field is read from the artifact that stage wrote, so
+    an evaluated selection can never be reported as "not evaluated".
+    """
+    try:
+        from edgefactory.production_summary import production_final_summary
+
+        print("")
+        print("\n".join(production_final_summary(target_date, REPORT_DIR)))
+    except Exception as exc:   # never let reporting break the pipeline
+        print(f"final production summary unavailable: {exc}")
+
+
 def sync_official_archive(target_date: str, label: str = "sync_supabase") -> None:
     """Publish the ACTIVE production lane's picks — never another lane's.
 
@@ -1077,6 +1093,10 @@ def run_pipeline(
         ml_fade_research_maintenance(target_date)
         sync_official_archive(target_date, "sync_supabase")
         _notify(target_date, "notify (Smart Dispatch + empty-slate heartbeat)")
+        # LAST: every downstream stage has now written its artifact, so this
+        # is the only block entitled to state the dispatch verdict. The
+        # pick engine's earlier block is preliminary by construction.
+        print_final_production_summary(target_date)
         if not picks_only:
             # This marker, rather than picks_YYYY-MM-DD.json, proves that the
             # heavy capture/build/mine path completed.  Future forecast

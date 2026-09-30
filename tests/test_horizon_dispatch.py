@@ -482,16 +482,22 @@ def test_operator_summary_makes_a_future_pick_obvious():
                                   horizon_rows=fp.horizon_pick_rows(horizon),
                                   horizon=horizon)
     text = "\n".join(fp.render_dispatch_plan_summary(plan, {"blocker_counts": {}}))
-    assert "PRODUCTION DISPATCH PLAN" in text
+    assert "PRODUCTION DISPATCH PLAN — PRELIMINARY (pre-ticket)" in text
     assert "production selections:         1" in text
     assert "same-day selections:           0" in text
     assert "future-dated selections:       1" in text
-    assert "ticket status:                 no ticket" in text
     assert "staking owner:                 auto_tickets" in text
-    assert "staking assigned:              no" in text
     assert f"FUTURE {EVENT_DATE}" in text
     assert "Panama vs New Zealand" in text
-    assert "notification action:           future_pick" in text
+    assert "planned notification action:   future_pick" in text
+    # This block runs before auto_tickets, so it must not pretend to know
+    # the ticket verdict. Those fields belong to the final summary.
+    assert "auto-ticket action:            pending" in text
+    for downstream in ("ticket status:", "assayer action:", "benching action:",
+                       "staking assigned:", "CLV captured:",
+                       "Supabase selections published:"):
+        assert downstream not in text, (
+            f"the pre-ticket block must not report {downstream!r}")
 
 
 def test_operator_summary_lists_blockers_when_there_is_nothing_to_dispatch():

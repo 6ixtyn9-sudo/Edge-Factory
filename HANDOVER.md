@@ -11275,6 +11275,69 @@ operator summary.
 
 ---
 
+## Addendum — 2026-09-30 (seventh pass: summary authority)
+
+Run 36767213800 proved the betting flow is correct: 0 same-day picks, 1
+future production selection for 2026-10-01, Supabase published 1
+event-dated selection, CLV wrote 1 row, auto-tickets read the dispatch plan
+and correctly declined `declined_insufficient_legs` (1 qualifying leg, needs
+2), notification sent a PRODUCTION SELECTION notice, no stake assigned,
+clean rule ID.
+
+One operator-facing audit defect remained: the run log still contained a
+summary block saying `auto-ticket action: not evaluated` and `assayer
+action: not run (no selections reached the ticket engine)`. The selection
+had reached the ticket engine and had been declined.
+
+**Cause:** the pick engine rendered a block containing downstream-result
+fields *before* auto_tickets, Supabase, CLV and notification had run. It
+could only guess, and it guessed wrong.
+
+**Fix — one rule of authority: a stage's outcome may only be reported from
+the artifact that stage wrote.**
+
+- `fresh_production.render_dispatch_plan_summary()` is now
+  `PRODUCTION DISPATCH PLAN — PRELIMINARY (pre-ticket)`. It reports
+  selections, event dates, staking owner and
+  `auto-ticket action: pending (auto_tickets has not run yet)`, and
+  **omits** ticket status, assayer action, benching action, staking
+  assigned, CLV captured and Supabase published. A test asserts each of
+  those fields is absent.
+- New `src/edgefactory/production_summary.py` renders the authoritative
+  `FINAL PRODUCTION SUMMARY`, deriving every field from real evidence:
+
+  | field | source artifact |
+  |---|---|
+  | selections / event dates | `fresh_production_dispatch_plan_<run>.json` |
+  | ticket verdict, assayer, benching | `auto_ticket_outcomes_<run>.json` |
+  | Supabase published | `supabase_sync_manifest_<event_date>.json` |
+  | CLV captured + ticket_status counts | `clv_snapshots_<YYYY-MM>.csv.gz` |
+  | notification | `sent_ledger_<run>.json` |
+
+  A stage that left no artifact is reported as **"did not run"**, never as
+  a verdict.
+- `scripts/production_summary.py` is the CLI; `daily.py` calls
+  `print_final_production_summary()` **last**, after auto_tickets, CLV and
+  notify. A test asserts that call ordering by source position.
+- `audit_clv.py` gained `ticket_status_counts()` and logs
+  `CLV ticket_status counts: declined_insufficient_legs=1`. A selection
+  declined by auto-tickets is still captured — the dispatch-time price is
+  real evidence either way — and pick_time capture reads `unknown` before
+  the ticket run, the final verdict after it.
+
+Betting logic is untouched: `PRODUCTION_CERTIFIED` stays registered in
+`BUCKETS`, `LEGS_PER_ACCA` stays 2, a single selection still declines
+`declined_insufficient_legs`, staking remains `plan_day()`'s
+percentage-of-capital, and no stake size appears on any production
+selection.
+
+**Tests:** new `tests/test_production_summary.py` (23). Full suite **1073
+passed**.
+
+**PR #18 is NOT merged.**
+
+---
+
 ## Addendum — 2026-09-30 (sixth pass: production lane reconciled with the auto-ticket engine)
 
 ### The correction that mattered

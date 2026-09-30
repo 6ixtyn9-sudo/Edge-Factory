@@ -140,6 +140,15 @@ def _pick_rule_name(pick: dict[str, Any]) -> str:
     )
 
 
+def ticket_status_counts(rows) -> dict[str, int]:
+    """How many captured rows ended in each auto-ticket status."""
+    counts: dict[str, int] = {}
+    for row in rows or ():
+        status = str(row.get("ticket_status") or "").strip() or "unknown"
+        counts[status] = counts.get(status, 0) + 1
+    return counts
+
+
 def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dict[str, Any]], dict[str, int]]:
     # An empty same-day file must not hide a future-dated pick that was
     # dispatched today: CLV follows the dispatch plan when there is one.
@@ -415,6 +424,14 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
     print(f"  rows written: {written}")
     print(f"  duplicates skipped: {duplicates}")
     print(f"  unmatched diagnostics: {stats['unmatched_count']} -> {stats['unmatched_file']}")
+    # Ticket status is the audit link between a captured production
+    # selection and whether it ever became a bet. A selection auto_tickets
+    # declined is still captured -- the price is real evidence either way --
+    # so the counts must be visible rather than implied.
+    status_counts = ticket_status_counts(rows)
+    if status_counts:
+        print("  CLV ticket_status counts: "
+              + ", ".join(f"{k}={v}" for k, v in sorted(status_counts.items())))
     print(f"  snapshot file: {path}")
     return 0
 

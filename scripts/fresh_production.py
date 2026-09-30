@@ -1651,62 +1651,34 @@ def render_summary(report: dict) -> str:
     return "\n".join(lines)
 
 
-def render_dispatch_plan_summary(plan: dict, report: dict,
-                                 ticket_outcomes: dict | None = None
-                                 ) -> list[str]:
-    """Operator-facing statement of what will actually be published.
+def render_dispatch_plan_summary(plan: dict, report: dict) -> list[str]:
+    """PRE-TICKET planning block, emitted while the pick engine is still running.
 
-    ``ticket_outcomes`` maps event date -> the auto-ticket engine's verdict.
-    A production selection is not a bet, so the summary reports the
-    selection and the ticket decision as separate facts.
+    This runs before auto_tickets, Supabase, CLV and notification, so it
+    states only what the pick engine itself knows: which selections were
+    produced and for which event dates. It deliberately carries no
+    auto-ticket action, ticket status, assayer verdict, publish count or
+    capture count — at this point those are unknown, and printing a guess
+    produced an operator-facing audit defect: an evaluated selection was
+    reported as "not evaluated". The authoritative verdict is the final
+    summary rendered by edgefactory.production_summary after the downstream
+    stages have actually run.
     """
     counts = report.get("blocker_counts", {})
     total = plan["same_day_pick_count"] + plan["horizon_pick_count"]
-    # Only dates that actually carried a selection have a verdict worth
-    # reporting; a date with nothing dispatched did not decline anything.
-    outcomes = {d: o for d, o in (ticket_outcomes or {}).items()
-                if (o or {}).get("selections")}
-    statuses = {d: str((o or {}).get("status") or "") for d, o in outcomes.items()}
-    created = [d for d, v in statuses.items() if v == "ticket_created"]
-    declined = sorted(f"{d}: {v}" for d, v in statuses.items()
-                      if v.startswith("declined_"))
-    benched = sorted({b for o in outcomes.values()
-                      for b in (o.get("benched_buckets") or ())
-                      + tuple(o.get("slice_benched_buckets") or ())})
-    if created:
-        ticket_status = f"open slip on {', '.join(sorted(created))}"
-        auto_action = "ticket_created"
-        staking_assigned = "percentage of capital / free bank"
-    elif declined:
-        ticket_status = "no ticket"
-        auto_action = "; ".join(declined)
-        staking_assigned = "no"
-    else:
-        ticket_status = "no ticket"
-        auto_action = "not evaluated" if total else "nothing to evaluate"
-        staking_assigned = "no"
     lines = [
-        "PRODUCTION DISPATCH PLAN",
+        "PRODUCTION DISPATCH PLAN — PRELIMINARY (pre-ticket)",
         f"  production selections:         {total}",
         f"  same-day selections:           {plan['same_day_pick_count']}",
         f"  future-dated selections:       {plan['horizon_pick_count']}",
         f"  event dates:                   "
         f"{', '.join(plan['event_dates']) or 'none'}",
-        f"  Supabase selections published: {total}",
-        f"  CLV captured:                  {total} at dispatch time",
-        f"  notification action:           {plan['notification_action']}",
-        f"  auto-ticket action:            {auto_action}",
-        f"  ticket status:                 {ticket_status}",
-        f"  assayer action:                "
-        + ("ran; no bucket diminished" if outcomes and not benched
-           else f"benched {', '.join(benched)}" if benched
-           else "not run (no selections reached the ticket engine)"),
-        f"  benching action:               "
-        + (f"{', '.join(benched)} excluded from selection" if benched
-           else "none"),
+        f"  planned notification action:   {plan['notification_action']}",
         f"  staking owner:                 {STAKING_OWNER}",
-        f"  staking assigned:              {staking_assigned}",
         f"  staking policy:                {STAKING_POLICY}",
+        "  auto-ticket action:            pending (auto_tickets has not run yet)",
+        "  NOTE: this is planning output, not the dispatch verdict. See the "
+        "FINAL PRODUCTION SUMMARY after auto_tickets/Supabase/CLV/notification.",
     ]
     for row in plan["horizon_picks"]:
         lines.append(
@@ -1714,7 +1686,7 @@ def render_dispatch_plan_summary(plan: dict, report: dict,
             f"{row['home']} vs {row['away']} | {row.get('pick')} | "
             f"odds={row.get('odds')} | edge={(row.get('edge') or 0):+.4f} | "
             f"{row.get('edge_rule')} | staking={STAKING_POLICY}")
-    if not plan["same_day_pick_count"] and not plan["horizon_pick_count"]:
+    if not total:
         lines.append("  top blockers if none:")
         lines += [f"    {name}: {count}" for name, count in counts.items()] or \
                  ["    none"]
