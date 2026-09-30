@@ -1,6 +1,10 @@
+import puppeteer from "@cloudflare/puppeteer";
+import {runForebetBrowserDiagnostic} from "./browser-diagnostic.js";
+
 const FOREBET_HOST = "www.forebet.com";
 const SCOUTING_HOST = "scoutingstats.ai";
 const MAX_BODY = 12 * 1024 * 1024;
+const MAX_REQUEST_BODY = 64 * 1024;
 
 function allowed(url) {
   if (url.protocol !== "https:") return false;
@@ -26,9 +30,22 @@ function reply(payload, status = 200) {
 export default {
   async fetch(request, env) {
     if (request.method !== "POST") return reply({error: "method"}, 405);
+    const contentLength = Number(request.headers.get("content-length") || 0);
+    if (contentLength > MAX_REQUEST_BODY) return reply({error: "request_too_large"}, 413);
+
     let input;
     try { input = await request.json(); } catch { return reply({error: "json"}, 400); }
+    if (!input || typeof input !== "object" || Array.isArray(input)) {
+      return reply({error: "json_shape"}, 400);
+    }
     if (!env.RELAY_TOKEN || input.token !== env.RELAY_TOKEN) return reply({error: "auth"}, 403);
+
+    // Phase 1 only: a fixed, authenticated, one-URL Browser Run diagnostic.
+    // There is intentionally no caller-provided URL or production adapter path.
+    if (input.operation === "forebet_browser_diagnostic") {
+      const result = await runForebetBrowserDiagnostic(env, puppeteer);
+      return reply(result, result.http_response_status || 200);
+    }
 
     let source;
     try { source = new URL(input.url); } catch { return reply({error: "url"}, 400); }
