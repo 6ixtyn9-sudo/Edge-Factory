@@ -14,6 +14,8 @@ import time
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
 
+from edgefactory.sources import public_relay
+
 BASE = "https://www.forebet.com/scripts/getrs.php"
 HEADERS = {
     "User-Agent": (
@@ -83,7 +85,9 @@ def _unwrap_relay(raw: bytes | str, source_url: str) -> bytes:
     if text.count(RELAY_MARKER) != 1:
         raise ValueError("unexpected relay wrapper marker count")
     header, body = text.split(RELAY_MARKER, 1)
-    if f"URL Source: {source_url}" not in header:
+    source_lines = [line.removeprefix("URL Source: ").strip() for line in header.splitlines()
+                    if line.startswith("URL Source: ")]
+    if source_lines != [source_url]:
         raise ValueError("relay source URL mismatch")
     return body.strip().encode("utf-8")
 
@@ -123,20 +127,42 @@ def _cffi_get(url: str, impersonate: str) -> bytes:
 
 def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
     """Fetch one market through the environment-appropriate transport."""
-    url = f"{BASE}?ln=en&tp={tp}&in={date}&ord=0&tz=0&tzs=&tze="
+    # ``output=1`` is deliberately included even though the endpoint currently
+    # returns the same JSON without it.  Forebet's Cloudflare rules/cache key
+    # started challenging the bare endpoint on 2026-09-30 while this variant
+    # remained publicly readable.  It is harmless to the payload and gives the
+    # direct fallback a distinct, working cache/WAF route.
+    url = f"{BASE}?ln=en&tp={tp}&in={date}&ord=0&tz=0&tzs=&tze=&output=1"
     mode = _cloud_fetch_mode()
     if mode == "disabled":
         raise RuntimeError("Forebet cloud fetch explicitly disabled")
-    if mode == "relay":
-        return _decode_payload(_relay_get(url))
+    # Operator-owned free relays (Cloudflare Worker, then Apps Script) are
+    # independent egress paths. Try them BEFORE the now-challenged public Jina
+    # path; the 2026-08-20 incident proved that repeatedly timing out a known
+    # bad cloud route can consume the whole workflow budget.
+    operator_errors = []
+    for relay_name, raw in public_relay.fetches(url):
+        try:
+            return _decode_payload(raw)
+        except Exception as exc:  # noqa: BLE001 - try the next independent relay
+            operator_errors.append(f"operator:{relay_name}={type(exc).__name__}")
 
-    # Local/default and deliberate cloud direct-probe path.
+    relay_error = None
+    if mode == "relay":
+        try:
+            return _decode_payload(_relay_get(url))
+        except Exception as exc:  # noqa: BLE001 - relay itself is now challenged intermittently
+            # Falling through is safe: every response is shape-validated, so
+            # challenge HTML can never be mistaken for an empty slate.
+            relay_error = f"relay={type(exc).__name__}"
+
+    # Local/default, deliberate cloud direct-probe, or automatic relay rescue.
     transports = [("urllib", lambda: _urllib_get(url))]
     transports.extend(
         (f"curl_cffi:{identity}", lambda identity=identity: _cffi_get(url, identity))
         for identity in CFFI_IMPERSONATIONS
     )
-    errors = []
+    errors = ([relay_error] if relay_error else []) + operator_errors
     attempt_limit = max(1, min(int(retries), len(transports)))
     for attempt, (name, request) in enumerate(transports[:attempt_limit]):
         try:

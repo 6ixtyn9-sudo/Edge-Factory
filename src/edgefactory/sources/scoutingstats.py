@@ -10,26 +10,81 @@ History: thin before ~mid-2025 (11 matches on 2024-06-10, 52 on 2025-06-10,
 from __future__ import annotations
 
 import json
+import os
 import time
 import urllib.request
+
+from edgefactory.sources import public_relay
 
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/124.0",
     "Accept": "application/json",
 }
 BASE = "https://scoutingstats.ai/api"
+RELAY_BASE = "https://r.jina.ai/"
+RELAY_MARKER = "Markdown Content:\n"
+
+
+def _decode_json(raw: bytes | str):
+    text = raw.decode("utf-8", "replace") if isinstance(raw, bytes) else raw
+    return json.loads(text)
+
+
+def _direct_json(url: str):
+    req = urllib.request.Request(url, headers=HEADERS)
+    with urllib.request.urlopen(req, timeout=30) as response:
+        return _decode_json(response.read())
+
+
+def _relay_json(url: str):
+    """Read a public API response through Jina, validating exact provenance.
+
+    ScoutingStats abruptly closes TLS from GitHub-hosted runners, while Jina's
+    public reader can still retrieve both API endpoints.  No credentials are
+    involved.  Exact URL and wrapper checks prevent a relay error/challenge
+    page from becoming source data.
+    """
+    req = urllib.request.Request(
+        RELAY_BASE + url,
+        headers={"User-Agent": "EdgeFactory/1.0", "Accept": "text/plain", "X-No-Cache": "true"},
+    )
+    with urllib.request.urlopen(req, timeout=35) as response:
+        text = response.read().decode("utf-8", "replace")
+    if text.count(RELAY_MARKER) != 1:
+        raise ValueError("unexpected ScoutingStats relay wrapper")
+    header, body = text.split(RELAY_MARKER, 1)
+    source_lines = [line.removeprefix("URL Source: ").strip() for line in header.splitlines()
+                    if line.startswith("URL Source: ")]
+    if source_lines != [url]:
+        raise ValueError("ScoutingStats relay source URL mismatch")
+    return _decode_json(body.strip())
 
 
 def _get_json(url: str, retries: int = 3):
-    for attempt in range(retries):
+    errors = []
+    # Direct remains first for local/residential operation.  In Actions the
+    # known-broken TLS route is skipped, avoiding three 30-second stalls.
+    actions = os.environ.get("GITHUB_ACTIONS", "").lower() == "true"
+    transports = [] if actions else [_direct_json]
+
+    # Prefer operator-owned relays in Actions. Cloudflare and Apps Script are
+    # independently deployed and tried in configured order.
+    for relay_name, raw in public_relay.fetches(url):
         try:
-            req = urllib.request.Request(url, headers=HEADERS)
-            with urllib.request.urlopen(req, timeout=30) as r:
-                return json.loads(r.read().decode("utf-8", "replace"))
-        except Exception:
-            if attempt == retries - 1:
-                raise
-            time.sleep(1.5 * (attempt + 1))
+            return _decode_json(raw)
+        except Exception as exc:  # noqa: BLE001 - try the next transport
+            errors.append(f"operator:{relay_name}={type(exc).__name__}")
+
+    transports.append(_relay_json)
+    for request in transports:
+        for attempt in range(retries):
+            try:
+                return request(url)
+            except Exception as exc:  # noqa: BLE001 - move to retry/next transport
+                errors.append(f"{request.__name__}={type(exc).__name__}")
+                if attempt + 1 < retries:
+                    time.sleep(1.5 * (attempt + 1))
+    raise RuntimeError(f"ScoutingStats fetch failed: {', '.join(errors)}")
 
 
 def fetch_day(date: str) -> list[dict]:
