@@ -61,19 +61,43 @@ def main() -> None:
         action="store_true",
         help="capture only; caller will run scripts/build_warehouse.py explicitly",
     )
+    ap.add_argument(
+        "--sources",
+        help="optional comma-separated source keys for bounded intraday recaptures",
+    )
     args = ap.parse_args()
+
+    selected = None
+    if args.sources:
+        selected = {part.strip() for part in args.sources.split(",") if part.strip()}
+    jobs = [job for job in JOBS if selected is None or job[0] in selected]
+    if selected:
+        known = {job[0] for job in JOBS}
+        unknown = sorted(selected - known)
+        if unknown:
+            print(f"ERROR: unknown capture source(s): {', '.join(unknown)}", file=sys.stderr)
+            sys.exit(2)
 
     window = [D30, YESTERDAY, (date.today() - timedelta(days=2)).isoformat(),
               TODAY, TOMORROW]
     failures = []
-    for source, start, end in JOBS:
+    summaries = []
+    for source, start, end in jobs:
         reset_recent_state(source, window)
         cmd = [sys.executable, str(ROOT / "scripts" / "local_backfill.py"),
                source, start, end, "--max-seconds", "240", "--workers", "4"]
         print(f"\n=== {source} {start}..{end} ===", flush=True)
         rc = subprocess.run(cmd, cwd=ROOT).returncode
+        status = "ok" if rc == 0 else f"failed(rc={rc})"
+        summaries.append((source, start, end, status))
+        print(f"SOURCE SUMMARY {source}: {status} range={start}..{end}", flush=True)
         if rc != 0:
             failures.append(source)
+
+    if summaries:
+        print("\nCapture source summaries:")
+        for source, start, end, status in summaries:
+            print(f"  {source}: {status} ({start}..{end})")
 
     if args.skip_build:
         print("\nSkipping warehouse rebuild (--skip-build); caller must run build_warehouse.py next.")

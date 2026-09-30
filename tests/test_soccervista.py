@@ -200,15 +200,49 @@ def test_get_ladders_to_cffi_then_relay(monkeypatch):
         raise OSError("blocked")
 
     def relay(url, *, timeout=40):
-        yield "https://worker-relay", b"<html>soccervista</html>"
+        yield "https://worker-relay", b"<html>soccervista<table></table></html>"
 
     monkeypatch.setattr(soccervista, "_urllib_get", urllib_fail)
     monkeypatch.setattr(soccervista, "_cffi_get", cffi_fail)
     monkeypatch.setattr(soccervista.time, "sleep", lambda *_a: None)
     monkeypatch.setattr(public_relay, "fetches", relay)
     html = soccervista._get(soccervista.URL)
-    assert html == "<html>soccervista</html>"
+    assert html == "<html>soccervista<table></table></html>"
     assert calls[0][0] == "urllib" and calls[1][0].startswith("cffi:")
+
+
+def test_get_escalates_branded_tableless_shell_to_next_transport(monkeypatch):
+    calls = []
+
+    def urllib_shell(url):
+        calls.append(("urllib", url))
+        return "<html><title>SoccerVista</title><body>soccervista consent shell</body></html>"
+
+    def cffi_ok(url, identity):
+        calls.append((f"cffi:{identity}", url))
+        return _page()
+
+    monkeypatch.setattr(soccervista, "_urllib_get", urllib_shell)
+    monkeypatch.setattr(soccervista, "_cffi_get", cffi_ok)
+    monkeypatch.setattr(soccervista.time, "sleep", lambda *_a: None)
+
+    html = soccervista._get(soccervista.URL)
+    assert html == _page()
+    assert [name for name, _url in calls] == ["urllib", "cffi:safari17_0"]
+
+
+def test_get_raises_when_all_transports_return_tableless_shells(monkeypatch):
+    shell = "<html><title>SoccerVista</title><body>soccervista consent shell</body></html>"
+    monkeypatch.setattr(soccervista, "_urllib_get", lambda _u: shell)
+    monkeypatch.setattr(soccervista, "_cffi_get", lambda _u, _i: shell)
+    monkeypatch.setattr(soccervista.time, "sleep", lambda *_a: None)
+    monkeypatch.setattr(
+        public_relay, "fetches",
+        lambda url, *, timeout=40: iter([("https://worker-relay", shell.encode())]),
+    )
+
+    with pytest.raises(RuntimeError, match="TransportValidationError"):
+        soccervista._get(soccervista.URL)
 
 
 def test_get_rejects_unvalidated_relay_body(monkeypatch):
