@@ -26,8 +26,9 @@
     "zulubet_csv",
     "zulubet_settled"
   ],
-  "donor_rows": 257948,
+  "donor_rows": 257975,
   "generated_for": "2026-09-30",
+  "reversal_reviews_loaded": 0,
   "schema": 1,
   "sources": [
     {
@@ -273,14 +274,15 @@
             "reason": "independent donors disagree"
           }
         ],
-        "reversed_candidate": [
+        "reversed_candidate_unexplained": [
           {
             "away": "UCSA",
             "date": "2026-08-22",
             "donor_score": "0-3",
             "donors": "betexplorer_results_csv,statarea_csv,vitibet_csv,wh:betexplorer_settled,wh:statarea_settled",
             "home": "Kolos Kovalivka",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           }
         ],
         "unmatched": [
@@ -359,10 +361,12 @@
       "files": 4,
       "independent_donor_exact_matches": 9267,
       "matched_total": 11732,
-      "notes": "orientation risk on 1 fixtures; 25 donor-conflicted fixtures; 540 ambiguous rejected; insufficient matched settlement evidence",
+      "notes": "orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 25 donor-conflicted fixtures; 540 ambiguous rejected; insufficient matched settlement evidence",
       "prediction_fixtures": 28203,
       "prediction_rows": 28203,
       "reversed_candidates": 1,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 1,
       "role": "prediction",
       "self_score_pct": 96.26,
       "source": "forebet",
@@ -376,7 +380,7 @@
       "alias_matches": 40,
       "ambiguous": 22,
       "conflict_pct": 0.12,
-      "coverage_pct": 93.2,
+      "coverage_pct": 93.23,
       "donor_score_conflicts": 18,
       "examples": {
         "ambiguous": [
@@ -570,14 +574,15 @@
             "reason": "independent donors disagree"
           }
         ],
-        "reversed_candidate": [
+        "reversed_candidate_unexplained": [
           {
             "away": "Paris Saint Germain",
             "date": "2026-08-08",
             "donor_score": "1-1",
             "donors": "scoutingstats_csv,wh:scoutingstats_settled",
             "home": "Manchester United",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           }
         ],
         "unmatched": [
@@ -654,20 +659,22 @@
         ]
       },
       "files": 4,
-      "independent_donor_exact_matches": 4061,
-      "matched_total": 4101,
-      "notes": "orientation risk on 1 fixtures; 18 donor-conflicted fixtures; 22 ambiguous rejected",
+      "independent_donor_exact_matches": 4062,
+      "matched_total": 4102,
+      "notes": "orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 18 donor-conflicted fixtures; 22 ambiguous rejected; validated on coverage/conflict but 1 unexplained reversed home/away candidate(s) - sign off in Config/reversal_reviews.json",
       "prediction_fixtures": 4400,
       "prediction_rows": 4400,
       "reversed_candidates": 1,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 1,
       "role": "prediction",
-      "self_score_pct": 98.11,
+      "self_score_pct": 98.14,
       "source": "zulubet",
       "source_score_conflicts_donor": 5,
-      "source_score_matches_donor": 4094,
-      "source_score_present": 4317,
-      "unmatched": 259,
-      "verdict": "settlement_validated"
+      "source_score_matches_donor": 4095,
+      "source_score_present": 4318,
+      "unmatched": 258,
+      "verdict": "review_required"
     },
     {
       "alias_matches": 817,
@@ -884,14 +891,15 @@
             "reason": "independent donors disagree"
           }
         ],
-        "reversed_candidate": [
+        "reversed_candidate_unexplained": [
           {
             "away": "CSKA Moscow",
             "date": "2026-08-08",
             "donor_score": "0-0",
             "donors": "vitibet_csv,wh:vitibet_settled,wh:zulubet_settled,zulubet_csv,zulubet_settled",
             "home": "FC Rostov",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Rennes",
@@ -899,7 +907,8 @@
             "donor_score": "2-2",
             "donors": "scoutingstats_csv,wh:scoutingstats_settled",
             "home": "Paris Saint Germain",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           }
         ],
         "unmatched": [
@@ -978,10 +987,12 @@
       "files": 4,
       "independent_donor_exact_matches": 4887,
       "matched_total": 5704,
-      "notes": "orientation risk on 2 fixtures; 6 donor-conflicted fixtures; 208 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
+      "notes": "orientation risk on 2 fixtures (2 unexplained, 0 reviewed); 6 donor-conflicted fixtures; 208 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
       "prediction_fixtures": 7877,
       "prediction_rows": 7877,
       "reversed_candidates": 2,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 2,
       "role": "prediction",
       "self_score_pct": 96.74,
       "source": "statarea",
@@ -992,11 +1003,11 @@
       "verdict": "partial"
     },
     {
-      "alias_matches": 3718,
+      "alias_matches": 3719,
       "ambiguous": 761,
       "conflict_pct": 0.01,
       "coverage_pct": 53.91,
-      "donor_score_conflicts": 40,
+      "donor_score_conflicts": 41,
       "examples": {
         "ambiguous": [
           {
@@ -1153,14 +1164,15 @@
             "reason": "independent donors disagree"
           }
         ],
-        "reversed_candidate": [
+        "reversed_candidate_unexplained": [
           {
             "away": "Incheon United",
             "date": "2026-07-29",
             "donor_score": "0-1",
             "donors": "forebet_csv,forebet_settled,wh:forebet_settled",
             "home": "Gimpo Citizen",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Al Jazira",
@@ -1168,7 +1180,8 @@
             "donor_score": "3-0",
             "donors": "forebet_csv,forebet_settled,wh:forebet_settled",
             "home": "Sporty",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Shamiya",
@@ -1176,7 +1189,8 @@
             "donor_score": "0-3",
             "donors": "wh:zulubet_settled,zulubet_csv,zulubet_settled",
             "home": "Yarmouk",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Ludogorets III",
@@ -1184,7 +1198,8 @@
             "donor_score": "6-1",
             "donors": "betexplorer_results_csv,forebet_csv,forebet_settled,wh:betexplorer_settled,wh:forebet_settled",
             "home": "Aksakovo",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Tartu Kalev",
@@ -1192,7 +1207,8 @@
             "donor_score": "0-3",
             "donors": "betexplorer_results_csv,betexplorer_settled,wh:betexplorer_settled",
             "home": "Johvi Phoenix",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Ph\u00f6nix L\u00fcbeck",
@@ -1200,7 +1216,8 @@
             "donor_score": "0-2",
             "donors": "forebet_csv,forebet_settled,wh:forebet_settled",
             "home": "Werder Bremen II",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Kuching FA",
@@ -1208,7 +1225,8 @@
             "donor_score": "1-2",
             "donors": "bettingclosed_csv,forebet_csv,forebet_settled,wh:bettingclosed_settled,wh:forebet_settled",
             "home": "Melaka",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Atl\u00e9tico Pueblonuevo",
@@ -1216,7 +1234,8 @@
             "donor_score": "1-1",
             "donors": "forebet_csv,forebet_settled,wh:forebet_settled",
             "home": "Santa Amalia",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Independiente del Valle",
@@ -1224,7 +1243,8 @@
             "donor_score": "0-2",
             "donors": "wh:zulubet_settled,zulubet_csv,zulubet_settled",
             "home": "Gualaceo SC",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Mozambique",
@@ -1232,7 +1252,8 @@
             "donor_score": "1-1",
             "donors": "bettingclosed_csv,forebet_csv,forebet_settled,scoutingstats_csv,wh:bettingclosed_settled,wh:forebet_settled,wh:scoutingstats_settled",
             "home": "Senegal",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           }
         ],
         "unmatched": [
@@ -1309,26 +1330,28 @@
         ]
       },
       "files": 4,
-      "independent_donor_exact_matches": 13172,
-      "matched_total": 16890,
-      "notes": "orientation risk on 13 fixtures; 40 donor-conflicted fixtures; 761 ambiguous rejected; insufficient matched settlement evidence",
+      "independent_donor_exact_matches": 13173,
+      "matched_total": 16892,
+      "notes": "orientation risk on 13 fixtures (13 unexplained, 0 reviewed); 41 donor-conflicted fixtures; 761 ambiguous rejected; insufficient matched settlement evidence",
       "prediction_fixtures": 31331,
       "prediction_rows": 31331,
       "reversed_candidates": 13,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 13,
       "role": "prediction",
       "self_score_pct": 36.49,
       "source": "vitibet",
       "source_score_conflicts_donor": 1,
-      "source_score_matches_donor": 11399,
-      "source_score_present": 11432,
-      "unmatched": 13640,
+      "source_score_matches_donor": 11400,
+      "source_score_present": 11434,
+      "unmatched": 13637,
       "verdict": "unproven"
     },
     {
       "alias_matches": 1185,
       "ambiguous": 422,
       "conflict_pct": 0.62,
-      "coverage_pct": 61.46,
+      "coverage_pct": 61.48,
       "donor_score_conflicts": 8,
       "examples": {
         "ambiguous": [
@@ -1553,14 +1576,15 @@
             "reason": "independent donors disagree"
           }
         ],
-        "reversed_candidate": [
+        "reversed_candidate_unexplained": [
           {
             "away": "Barnsley",
             "date": "2026-08-01",
             "donor_score": "3-0",
             "donors": "bettingclosed_csv,bettingclosed_settled,wh:bettingclosed_settled",
             "home": "Lincoln City",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Wrexham",
@@ -1568,7 +1592,8 @@
             "donor_score": "0-1",
             "donors": "bettingclosed_csv,bettingclosed_settled,vitibet_csv,wh:bettingclosed_settled,wh:zulubet_settled,zulubet_csv",
             "home": "Sunderland",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Manchester United",
@@ -1576,7 +1601,8 @@
             "donor_score": "1-1",
             "donors": "wh:zulubet_settled,zulubet_csv,zulubet_settled",
             "home": "Paris Saint Germain",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           }
         ],
         "unmatched": [
@@ -1653,19 +1679,21 @@
         ]
       },
       "files": 3,
-      "independent_donor_exact_matches": 4144,
-      "matched_total": 5329,
-      "notes": "orientation risk on 3 fixtures; 8 donor-conflicted fixtures; 422 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
+      "independent_donor_exact_matches": 4145,
+      "matched_total": 5330,
+      "notes": "orientation risk on 3 fixtures (3 unexplained, 0 reviewed); 8 donor-conflicted fixtures; 422 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
       "prediction_fixtures": 8670,
       "prediction_rows": 8670,
       "reversed_candidates": 3,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 3,
       "role": "prediction",
-      "self_score_pct": 97.58,
+      "self_score_pct": 97.59,
       "source": "scoutingstats",
       "source_score_conflicts_donor": 33,
-      "source_score_matches_donor": 5295,
-      "source_score_present": 8460,
-      "unmatched": 2911,
+      "source_score_matches_donor": 5296,
+      "source_score_present": 8461,
+      "unmatched": 2910,
       "verdict": "partial"
     },
     {
@@ -1747,14 +1775,15 @@
             "reason": "multiple alias donor candidates"
           }
         ],
-        "reversed_candidate": [
+        "reversed_candidate_unexplained": [
           {
             "away": "Tunisia",
             "date": "2026-09-28",
             "donor_score": "2-2",
             "donors": "bettingclosed_csv,bettingclosed_settled,scoutingstats_csv,vitibet_csv,wh:bettingclosed_settled,wh:results_donor,wh:scoutingstats_settled,wh:vitibet_settled",
             "home": "Botswana",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           }
         ],
         "unmatched": [
@@ -1833,10 +1862,12 @@
       "files": 2,
       "independent_donor_exact_matches": 1232,
       "matched_total": 1389,
-      "notes": "orientation risk on 1 fixtures; 46 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
+      "notes": "orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 46 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
       "prediction_fixtures": 2014,
       "prediction_rows": 2014,
       "reversed_candidates": 1,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 1,
       "role": "prediction",
       "self_score_pct": 0.0,
       "source": "predictz",
@@ -1933,6 +1964,8 @@
       "prediction_fixtures": 1089,
       "prediction_rows": 1089,
       "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
       "role": "prediction",
       "self_score_pct": 0.0,
       "source": "windrawwin",
@@ -1946,7 +1979,7 @@
       "alias_matches": 0,
       "ambiguous": 0,
       "conflict_pct": 4.35,
-      "coverage_pct": 60.47,
+      "coverage_pct": 62.79,
       "donor_score_conflicts": 0,
       "examples": {
         "conflict": [
@@ -2034,19 +2067,21 @@
         ]
       },
       "files": 2,
-      "independent_donor_exact_matches": 26,
-      "matched_total": 26,
+      "independent_donor_exact_matches": 27,
+      "matched_total": 27,
       "notes": "below validated thresholds (volume/coverage/conflict)",
       "prediction_fixtures": 43,
       "prediction_rows": 43,
       "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
       "role": "prediction",
       "self_score_pct": 58.14,
       "source": "prosoccer",
       "source_score_conflicts_donor": 1,
       "source_score_matches_donor": 22,
       "source_score_present": 25,
-      "unmatched": 17,
+      "unmatched": 16,
       "verdict": "partial"
     },
     {
@@ -2063,6 +2098,8 @@
       "prediction_fixtures": 0,
       "prediction_rows": 0,
       "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
       "role": "prediction",
       "self_score_pct": 0.0,
       "source": "soccervista",
@@ -2076,7 +2113,7 @@
       "alias_matches": 899,
       "ambiguous": 323,
       "conflict_pct": 0.44,
-      "coverage_pct": 43.31,
+      "coverage_pct": 43.32,
       "donor_score_conflicts": 10,
       "examples": {
         "ambiguous": [
@@ -2315,14 +2352,15 @@
             "reason": "independent donors disagree"
           }
         ],
-        "reversed_candidate": [
+        "reversed_candidate_unexplained": [
           {
             "away": "Lincoln City",
             "date": "2026-08-01",
             "donor_score": "0-3",
             "donors": "scoutingstats_csv",
             "home": "Barnsley",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "San Donato",
@@ -2330,7 +2368,8 @@
             "donor_score": "1-1",
             "donors": "betexplorer_results_csv,betexplorer_settled,wh:betexplorer_settled",
             "home": "Siena",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Tunisia",
@@ -2338,7 +2377,8 @@
             "donor_score": "2-2",
             "donors": "scoutingstats_csv,vitibet_csv,wh:scoutingstats_settled,wh:vitibet_settled",
             "home": "Botswana",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           },
           {
             "away": "Malaysia",
@@ -2346,7 +2386,8 @@
             "donor_score": "0-0",
             "donors": "vitibet_csv",
             "home": "Indonesia",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           }
         ],
         "unmatched": [
@@ -2423,26 +2464,28 @@
         ]
       },
       "files": 3,
-      "independent_donor_exact_matches": 5487,
-      "matched_total": 6386,
-      "notes": "orientation risk on 4 fixtures; 10 donor-conflicted fixtures; 323 ambiguous rejected; insufficient matched settlement evidence",
+      "independent_donor_exact_matches": 5489,
+      "matched_total": 6388,
+      "notes": "orientation risk on 4 fixtures (4 unexplained, 0 reviewed); 10 donor-conflicted fixtures; 323 ambiguous rejected; insufficient matched settlement evidence",
       "prediction_fixtures": 14746,
       "prediction_rows": 14746,
       "reversed_candidates": 4,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 4,
       "role": "prediction",
-      "self_score_pct": 97.3,
+      "self_score_pct": 97.35,
       "source": "bettingclosed",
       "source_score_conflicts_donor": 28,
-      "source_score_matches_donor": 6357,
-      "source_score_present": 14348,
-      "unmatched": 8027,
+      "source_score_matches_donor": 6359,
+      "source_score_present": 14355,
+      "unmatched": 8025,
       "verdict": "unproven"
     },
     {
-      "alias_matches": 9,
+      "alias_matches": 10,
       "ambiguous": 1,
       "conflict_pct": 0.0,
-      "coverage_pct": 9.31,
+      "coverage_pct": 9.45,
       "donor_score_conflicts": 0,
       "examples": {
         "ambiguous": [
@@ -2528,19 +2571,21 @@
         ]
       },
       "files": 2,
-      "independent_donor_exact_matches": 120,
-      "matched_total": 129,
+      "independent_donor_exact_matches": 121,
+      "matched_total": 131,
       "notes": "1 ambiguous rejected; insufficient matched settlement evidence",
       "prediction_fixtures": 1386,
       "prediction_rows": 1386,
       "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
       "role": "prediction",
       "self_score_pct": 0.0,
       "source": "betclan",
       "source_score_conflicts_donor": 0,
       "source_score_matches_donor": 0,
       "source_score_present": 0,
-      "unmatched": 1256,
+      "unmatched": 1254,
       "verdict": "unproven"
     },
     {
@@ -2574,6 +2619,8 @@
       "prediction_fixtures": 16,
       "prediction_rows": 16,
       "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
       "role": "prediction",
       "self_score_pct": 0.0,
       "source": "freesupertips",
@@ -2662,14 +2709,15 @@
             "reason": "multiple alias donor candidates"
           }
         ],
-        "reversed_candidate": [
+        "reversed_candidate_unexplained": [
           {
             "away": "Al Shamal SC",
             "date": "2026-09-10",
             "donor_score": "1-1",
             "donors": "scoutingstats_csv,wh:scoutingstats_settled",
             "home": "Al-Wakrah",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           }
         ],
         "unmatched": [
@@ -2748,24 +2796,26 @@
       "files": 2,
       "independent_donor_exact_matches": 352,
       "matched_total": 487,
-      "notes": "orientation risk on 1 fixtures; 34 ambiguous rejected; insufficient matched settlement evidence",
-      "prediction_fixtures": 7904,
-      "prediction_rows": 10046,
+      "notes": "orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 34 ambiguous rejected; insufficient matched settlement evidence",
+      "prediction_fixtures": 7905,
+      "prediction_rows": 10047,
       "reversed_candidates": 1,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 1,
       "role": "prediction",
       "self_score_pct": 0.0,
       "source": "afootballreport",
       "source_score_conflicts_donor": 0,
       "source_score_matches_donor": 0,
       "source_score_present": 0,
-      "unmatched": 7383,
+      "unmatched": 7384,
       "verdict": "unproven"
     },
     {
       "alias_matches": 224,
       "ambiguous": 133,
       "conflict_pct": 0.0,
-      "coverage_pct": 65.78,
+      "coverage_pct": 65.83,
       "donor_score_conflicts": 2,
       "examples": {
         "ambiguous": [
@@ -2856,14 +2906,15 @@
             "reason": "independent donors disagree"
           }
         ],
-        "reversed_candidate": [
+        "reversed_candidate_unexplained": [
           {
             "away": "Gangwon FC",
             "date": "2026-08-30",
             "donor_score": "0-0",
             "donors": "bettingclosed_csv,forebet_csv,forebet_settled,statarea_csv,vitibet_csv,wh:bettingclosed_settled,wh:forebet_settled,wh:results_donor,wh:statarea_settled,wh:vitibet_settled",
             "home": "Pohang Steelers",
-            "reason": "donor has reversed home/away"
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
           }
         ],
         "unmatched": [
@@ -2940,19 +2991,21 @@
         ]
       },
       "files": 2,
-      "independent_donor_exact_matches": 1268,
-      "matched_total": 1492,
-      "notes": "orientation risk on 1 fixtures; 2 donor-conflicted fixtures; 133 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
+      "independent_donor_exact_matches": 1269,
+      "matched_total": 1493,
+      "notes": "orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 2 donor-conflicted fixtures; 133 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
       "prediction_fixtures": 2268,
       "prediction_rows": 2373,
       "reversed_candidates": 1,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 1,
       "role": "prediction",
       "self_score_pct": 0.0,
       "source": "bzzoiro",
       "source_score_conflicts_donor": 0,
       "source_score_matches_donor": 0,
       "source_score_present": 0,
-      "unmatched": 641,
+      "unmatched": 640,
       "verdict": "partial"
     },
     {
@@ -2969,6 +3022,8 @@
       "prediction_fixtures": 0,
       "prediction_rows": 0,
       "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
       "role": "pricing-only",
       "self_score_pct": 0.0,
       "source": "bzzoiro_odds",
@@ -2992,6 +3047,8 @@
       "prediction_fixtures": 0,
       "prediction_rows": 0,
       "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
       "role": "pricing-only",
       "self_score_pct": 0.0,
       "source": "theoddsapi_odds",
@@ -3015,6 +3072,8 @@
       "prediction_fixtures": 0,
       "prediction_rows": 0,
       "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
       "role": "pricing-only",
       "self_score_pct": 0.0,
       "source": "oddspapi_odds",
@@ -3041,7 +3100,7 @@
       "prosoccer",
       "bzzoiro"
     ],
-    "settlement_validated": [
+    "review_required": [
       "zulubet"
     ],
     "unproven": [
@@ -3062,6 +3121,7 @@
     },
     "validated": {
       "max_conflict_pct": 2.0,
+      "max_unexplained_reversals": 0,
       "min_coverage_pct": 90.0,
       "min_fixtures": 200
     }

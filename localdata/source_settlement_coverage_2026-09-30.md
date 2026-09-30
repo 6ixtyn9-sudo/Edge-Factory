@@ -1,44 +1,44 @@
 # Source settlement coverage — 2026-07-02..2026-09-30
 
 Prediction->final-score matching quality per source. Row counts alone are NOT validation.
-Donor rows indexed: 257948 across 24 donor labels.
+Donor rows indexed: 257975 across 24 donor labels.
 Guarded alias tier: enabled (edgefactory.identity fold).
 
-| source | fixtures | own_score | exact | alias | matched | agree | conflict | donor_conf | unmatched | ambig | rev | cov% | confl% | verdict |
-|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
-| forebet | 28203 | 27149 | 9267 | 2465 | 11732 | 11644 | 42 | 25 | 15906 | 540 | 1 | 41.6 | 0.36 | unproven |
-| zulubet | 4400 | 4317 | 4061 | 40 | 4101 | 4094 | 5 | 18 | 259 | 22 | 1 | 93.2 | 0.12 | settlement_validated |
-| statarea | 7877 | 7620 | 4887 | 817 | 5704 | 5645 | 15 | 6 | 1959 | 208 | 2 | 72.41 | 0.27 | partial |
-| vitibet | 31331 | 11432 | 13172 | 3718 | 16890 | 11399 | 1 | 40 | 13640 | 761 | 13 | 53.91 | 0.01 | unproven |
-| scoutingstats | 8670 | 8460 | 4144 | 1185 | 5329 | 5295 | 33 | 8 | 2911 | 422 | 3 | 61.46 | 0.62 | partial |
-| predictz | 2014 | 0 | 1232 | 157 | 1389 | 0 | 0 | 0 | 579 | 46 | 1 | 68.97 | 0.0 | partial |
-| windrawwin | 1089 | 0 | 61 | 4 | 65 | 0 | 0 | 0 | 1024 | 0 | 0 | 5.97 | 0.0 | unproven |
-| prosoccer | 43 | 25 | 26 | 0 | 26 | 22 | 1 | 0 | 17 | 0 | 0 | 60.47 | 4.35 | partial |
-| soccervista | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | no_data |
-| bettingclosed | 14746 | 14348 | 5487 | 899 | 6386 | 6357 | 28 | 10 | 8027 | 323 | 4 | 43.31 | 0.44 | unproven |
-| betclan | 1386 | 0 | 120 | 9 | 129 | 0 | 0 | 0 | 1256 | 1 | 0 | 9.31 | 0.0 | unproven |
-| freesupertips | 16 | 0 | 14 | 0 | 14 | 0 | 0 | 0 | 2 | 0 | 0 | 87.5 | 0.0 | unproven |
-| afootballreport | 7904 | 0 | 352 | 135 | 487 | 0 | 0 | 0 | 7383 | 34 | 1 | 6.16 | 0.0 | unproven |
-| bzzoiro | 2268 | 0 | 1268 | 224 | 1492 | 0 | 0 | 2 | 641 | 133 | 1 | 65.78 | 0.0 | partial |
-| bzzoiro_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
-| theoddsapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
-| oddspapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
+| source | fixtures | own_score | exact | alias | matched | agree | conflict | donor_conf | unmatched | ambig | rev | rev_unexp | cov% | confl% | verdict |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| forebet | 28203 | 27149 | 9267 | 2465 | 11732 | 11644 | 42 | 25 | 15906 | 540 | 1 | 1 | 41.6 | 0.36 | unproven |
+| zulubet | 4400 | 4318 | 4062 | 40 | 4102 | 4095 | 5 | 18 | 258 | 22 | 1 | 1 | 93.23 | 0.12 | review_required |
+| statarea | 7877 | 7620 | 4887 | 817 | 5704 | 5645 | 15 | 6 | 1959 | 208 | 2 | 2 | 72.41 | 0.27 | partial |
+| vitibet | 31331 | 11434 | 13173 | 3719 | 16892 | 11400 | 1 | 41 | 13637 | 761 | 13 | 13 | 53.91 | 0.01 | unproven |
+| scoutingstats | 8670 | 8461 | 4145 | 1185 | 5330 | 5296 | 33 | 8 | 2910 | 422 | 3 | 3 | 61.48 | 0.62 | partial |
+| predictz | 2014 | 0 | 1232 | 157 | 1389 | 0 | 0 | 0 | 579 | 46 | 1 | 1 | 68.97 | 0.0 | partial |
+| windrawwin | 1089 | 0 | 61 | 4 | 65 | 0 | 0 | 0 | 1024 | 0 | 0 | 0 | 5.97 | 0.0 | unproven |
+| prosoccer | 43 | 25 | 27 | 0 | 27 | 22 | 1 | 0 | 16 | 0 | 0 | 0 | 62.79 | 4.35 | partial |
+| soccervista | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | no_data |
+| bettingclosed | 14746 | 14355 | 5489 | 899 | 6388 | 6359 | 28 | 10 | 8025 | 323 | 4 | 4 | 43.32 | 0.44 | unproven |
+| betclan | 1386 | 0 | 121 | 10 | 131 | 0 | 0 | 0 | 1254 | 1 | 0 | 0 | 9.45 | 0.0 | unproven |
+| freesupertips | 16 | 0 | 14 | 0 | 14 | 0 | 0 | 0 | 2 | 0 | 0 | 0 | 87.5 | 0.0 | unproven |
+| afootballreport | 7905 | 0 | 352 | 135 | 487 | 0 | 0 | 0 | 7384 | 34 | 1 | 1 | 6.16 | 0.0 | unproven |
+| bzzoiro | 2268 | 0 | 1269 | 224 | 1493 | 0 | 0 | 2 | 640 | 133 | 1 | 1 | 65.83 | 0.0 | partial |
+| bzzoiro_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
+| theoddsapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
+| oddspapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
 
 ## Notes
-- **forebet** (prediction): orientation risk on 1 fixtures; 25 donor-conflicted fixtures; 540 ambiguous rejected; insufficient matched settlement evidence
-- **zulubet** (prediction): orientation risk on 1 fixtures; 18 donor-conflicted fixtures; 22 ambiguous rejected
-- **statarea** (prediction): orientation risk on 2 fixtures; 6 donor-conflicted fixtures; 208 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
-- **vitibet** (prediction): orientation risk on 13 fixtures; 40 donor-conflicted fixtures; 761 ambiguous rejected; insufficient matched settlement evidence
-- **scoutingstats** (prediction): orientation risk on 3 fixtures; 8 donor-conflicted fixtures; 422 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
-- **predictz** (prediction): orientation risk on 1 fixtures; 46 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
+- **forebet** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 25 donor-conflicted fixtures; 540 ambiguous rejected; insufficient matched settlement evidence
+- **zulubet** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 18 donor-conflicted fixtures; 22 ambiguous rejected; validated on coverage/conflict but 1 unexplained reversed home/away candidate(s) - sign off in Config/reversal_reviews.json
+- **statarea** (prediction): orientation risk on 2 fixtures (2 unexplained, 0 reviewed); 6 donor-conflicted fixtures; 208 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
+- **vitibet** (prediction): orientation risk on 13 fixtures (13 unexplained, 0 reviewed); 41 donor-conflicted fixtures; 761 ambiguous rejected; insufficient matched settlement evidence
+- **scoutingstats** (prediction): orientation risk on 3 fixtures (3 unexplained, 0 reviewed); 8 donor-conflicted fixtures; 422 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
+- **predictz** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 46 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
 - **windrawwin** (prediction): insufficient matched settlement evidence
 - **prosoccer** (prediction): below validated thresholds (volume/coverage/conflict)
 - **soccervista** (prediction): no completed-window prediction rows in localdata
-- **bettingclosed** (prediction): orientation risk on 4 fixtures; 10 donor-conflicted fixtures; 323 ambiguous rejected; insufficient matched settlement evidence
+- **bettingclosed** (prediction): orientation risk on 4 fixtures (4 unexplained, 0 reviewed); 10 donor-conflicted fixtures; 323 ambiguous rejected; insufficient matched settlement evidence
 - **betclan** (prediction): 1 ambiguous rejected; insufficient matched settlement evidence
 - **freesupertips** (prediction): insufficient matched settlement evidence
-- **afootballreport** (prediction): orientation risk on 1 fixtures; 34 ambiguous rejected; insufficient matched settlement evidence
-- **bzzoiro** (prediction): orientation risk on 1 fixtures; 2 donor-conflicted fixtures; 133 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
+- **afootballreport** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 34 ambiguous rejected; insufficient matched settlement evidence
+- **bzzoiro** (prediction): orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 2 donor-conflicted fixtures; 133 ambiguous rejected; below validated thresholds (volume/coverage/conflict)
 - **bzzoiro_odds** (pricing-only): pricing-only source; excluded from prediction->score coverage
 - **theoddsapi_odds** (pricing-only): pricing-only source; excluded from prediction->score coverage
 - **oddspapi_odds** (pricing-only): pricing-only source; excluded from prediction->score coverage
@@ -78,8 +78,8 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-08-19 ABM Galaxy vs Central Coast — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-3; scoutingstats_csv=2-3; vitibet_csv=2-2; wh:bettingclosed_settled=2-3
   - 2026-08-19 Gainare Tottori vs Roasso Kumamoto — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-2; vitibet_csv=1-1; wh:bettingclosed_settled=2-2; wh:zulubet_settled=1-1; zulubet_csv=1-1
   - 2026-08-24 Ellas Syros vs Marko — reason=independent donors disagree, donor_scores=vitibet_csv=1-1; wh:zulubet_settled=1-2; zulubet_csv=1-2; zulubet_settled=1-2
-- reversed_candidate:
-  - 2026-08-22 Kolos Kovalivka vs UCSA — reason=donor has reversed home/away, donor_score=0-3, donors=betexplorer_results_csv,statarea_csv,vitibet_csv,wh:betexplorer_settled,wh:statarea_settled
+- reversed_candidate_unexplained:
+  - 2026-08-22 Kolos Kovalivka vs UCSA — reason=donor has reversed home/away, donor_score=0-3, donors=betexplorer_results_csv,statarea_csv,vitibet_csv,wh:betexplorer_settled,wh:statarea_settled, review=UNEXPLAINED - blocks validation
 - unmatched:
   - 2026-07-29 Argentinos Juniors vs Estudiantes Río Cuarto — reason=no independent donor row, source_score=3-0
   - 2026-07-29 Atlético Barinas vs Real Frontera SC — reason=no independent donor row, source_score=3-1
@@ -120,8 +120,8 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-08-19 Gainare Tottori vs Roasso Kumamoto — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-2; forebet_csv=1-1; forebet_settled=1-1; vitibet_csv=1-1; wh:bettingclosed_settled=2-2; wh:forebet_settled=1-1
   - 2026-08-23 Shams Azar Qazvin vs Aluminium Arak — reason=independent donors disagree, donor_scores=betexplorer_results_csv=1-2; scoutingstats_csv=1-2; vitibet_csv=2-2; wh:betexplorer_settled=1-2; wh:vitibet_settled=2-2
   - 2026-08-24 Altglienicke vs VfL Wolfsburg — reason=independent donors disagree, donor_scores=scoutingstats_csv=3-3; vitibet_csv=2-2; wh:scoutingstats_settled=3-3
-- reversed_candidate:
-  - 2026-08-08 Manchester United vs Paris Saint Germain — reason=donor has reversed home/away, donor_score=1-1, donors=scoutingstats_csv,wh:scoutingstats_settled
+- reversed_candidate_unexplained:
+  - 2026-08-08 Manchester United vs Paris Saint Germain — reason=donor has reversed home/away, donor_score=1-1, donors=scoutingstats_csv,wh:scoutingstats_settled, review=UNEXPLAINED - blocks validation
 - unmatched:
   - 2026-07-29 MP vs KäPa — reason=no independent donor row, source_score=2-1
   - 2026-07-30 Internacional vs Flamengo — reason=no independent donor row, source_score=1-1
@@ -163,9 +163,9 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-08-22 Birmingham vs Bristol City — reason=independent donors disagree, donor_scores=betexplorer_results_csv=2-2; bettingclosed_csv=2-2; bettingclosed_settled=2-2; wh:betexplorer_settled=2-2; wh:bettingclosed_settled=2-2; wh:zulubet_settled=1-1; zulubet_csv=1-1
   - 2026-09-02 Gornik Leczna vs Stal Mielec — reason=independent donors disagree, donor_scores=bettingclosed_csv=3-3; bettingclosed_settled=3-3; forebet_csv=2-2; wh:bettingclosed_settled=3-3
   - 2026-09-10 Como vs RB Leipzig — reason=independent donors disagree, donor_scores=bettingclosed_csv=4-1; scoutingstats_csv=4-1; wh:bettingclosed_settled=4-1; wh:predictz_settled=1-1; wh:scoutingstats_settled=4-1; wh:zulubet_settled=4-1; zulubet_csv=4-1
-- reversed_candidate:
-  - 2026-08-08 FC Rostov vs CSKA Moscow — reason=donor has reversed home/away, donor_score=0-0, donors=vitibet_csv,wh:vitibet_settled,wh:zulubet_settled,zulubet_csv,zulubet_settled
-  - 2026-08-23 Paris Saint Germain vs Rennes — reason=donor has reversed home/away, donor_score=2-2, donors=scoutingstats_csv,wh:scoutingstats_settled
+- reversed_candidate_unexplained:
+  - 2026-08-08 FC Rostov vs CSKA Moscow — reason=donor has reversed home/away, donor_score=0-0, donors=vitibet_csv,wh:vitibet_settled,wh:zulubet_settled,zulubet_csv,zulubet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-23 Paris Saint Germain vs Rennes — reason=donor has reversed home/away, donor_score=2-2, donors=scoutingstats_csv,wh:scoutingstats_settled, review=UNEXPLAINED - blocks validation
 - unmatched:
   - 2026-07-29 Betis vs Lyon — reason=no independent donor row, source_score=4-0
   - 2026-07-29 Boston Utd vs Grimsby — reason=no independent donor row, source_score=0-0
@@ -202,17 +202,17 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-08-11 CSKA 1948 vs Panathinaikos — reason=independent donors disagree, donor_scores=bettingclosed_csv=1-2; forebet_csv=1-1; forebet_settled=1-1; wh:bettingclosed_settled=1-2; wh:forebet_settled=1-1; wh:zulubet_settled=1-1; zulubet_csv=1-1
   - 2026-08-11 Gangwon FC vs Gamba Osaka — reason=independent donors disagree, donor_scores=bettingclosed_csv=0-1; forebet_csv=0-0; forebet_settled=0-0; wh:bettingclosed_settled=0-1; wh:forebet_settled=0-0; wh:zulubet_settled=0-0; zulubet_csv=0-0
   - 2026-08-13 ML Vitebsk vs Borac Banja Luka — reason=independent donors disagree, donor_scores=scoutingstats_csv=2-1; wh:scoutingstats_settled=2-1; wh:zulubet_settled=1-0; zulubet_csv=1-0; zulubet_settled=1-0
-- reversed_candidate:
-  - 2026-07-29 Gimpo Citizen vs Incheon United — reason=donor has reversed home/away, donor_score=0-1, donors=forebet_csv,forebet_settled,wh:forebet_settled
-  - 2026-08-02 Sporty vs Al Jazira — reason=donor has reversed home/away, donor_score=3-0, donors=forebet_csv,forebet_settled,wh:forebet_settled
-  - 2026-08-02 Yarmouk vs Shamiya — reason=donor has reversed home/away, donor_score=0-3, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled
-  - 2026-08-26 Aksakovo vs Ludogorets III — reason=donor has reversed home/away, donor_score=6-1, donors=betexplorer_results_csv,forebet_csv,forebet_settled,wh:betexplorer_settled,wh:forebet_settled
-  - 2026-08-29 Johvi Phoenix vs Tartu Kalev — reason=donor has reversed home/away, donor_score=0-3, donors=betexplorer_results_csv,betexplorer_settled,wh:betexplorer_settled
-  - 2026-09-06 Werder Bremen II vs Phönix Lübeck — reason=donor has reversed home/away, donor_score=0-2, donors=forebet_csv,forebet_settled,wh:forebet_settled
-  - 2026-09-12 Melaka vs Kuching FA — reason=donor has reversed home/away, donor_score=1-2, donors=bettingclosed_csv,forebet_csv,forebet_settled,wh:bettingclosed_settled,wh:forebet_settled
-  - 2026-09-20 Santa Amalia vs Atlético Pueblonuevo — reason=donor has reversed home/away, donor_score=1-1, donors=forebet_csv,forebet_settled,wh:forebet_settled
-  - 2026-09-25 Gualaceo SC vs Independiente del Valle — reason=donor has reversed home/away, donor_score=0-2, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled
-  - 2026-09-25 Senegal vs Mozambique — reason=donor has reversed home/away, donor_score=1-1, donors=bettingclosed_csv,forebet_csv,forebet_settled,scoutingstats_csv,wh:bettingclosed_settled,wh:forebet_settled,wh:scoutingstats_settled
+- reversed_candidate_unexplained:
+  - 2026-07-29 Gimpo Citizen vs Incheon United — reason=donor has reversed home/away, donor_score=0-1, donors=forebet_csv,forebet_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-02 Sporty vs Al Jazira — reason=donor has reversed home/away, donor_score=3-0, donors=forebet_csv,forebet_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-02 Yarmouk vs Shamiya — reason=donor has reversed home/away, donor_score=0-3, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-26 Aksakovo vs Ludogorets III — reason=donor has reversed home/away, donor_score=6-1, donors=betexplorer_results_csv,forebet_csv,forebet_settled,wh:betexplorer_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-29 Johvi Phoenix vs Tartu Kalev — reason=donor has reversed home/away, donor_score=0-3, donors=betexplorer_results_csv,betexplorer_settled,wh:betexplorer_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-06 Werder Bremen II vs Phönix Lübeck — reason=donor has reversed home/away, donor_score=0-2, donors=forebet_csv,forebet_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-12 Melaka vs Kuching FA — reason=donor has reversed home/away, donor_score=1-2, donors=bettingclosed_csv,forebet_csv,forebet_settled,wh:bettingclosed_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-20 Santa Amalia vs Atlético Pueblonuevo — reason=donor has reversed home/away, donor_score=1-1, donors=forebet_csv,forebet_settled,wh:forebet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-25 Gualaceo SC vs Independiente del Valle — reason=donor has reversed home/away, donor_score=0-2, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-25 Senegal vs Mozambique — reason=donor has reversed home/away, donor_score=1-1, donors=bettingclosed_csv,forebet_csv,forebet_settled,scoutingstats_csv,wh:bettingclosed_settled,wh:forebet_settled,wh:scoutingstats_settled, review=UNEXPLAINED - blocks validation
 - unmatched:
   - 2026-07-29 Aerostar Bacau vs CSM FC Vaslui — reason=no independent donor row, source_score=
   - 2026-07-29 AFC Toronto W vs Calgary Wild W — reason=no independent donor row, source_score=
@@ -256,10 +256,10 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-08-24 Hallescher FC vs Schalke 04 — reason=independent donors disagree, donor_scores=bettingclosed_csv=2-5; bettingclosed_settled=2-5; forebet_csv=2-2; wh:bettingclosed_settled=2-5
   - 2026-09-08 Portishead Town vs Wimborne Town — reason=independent donors disagree, donor_scores=bettingclosed_csv=1-3; bettingclosed_settled=1-3; forebet_csv=1-1; vitibet_csv=1-1; wh:bettingclosed_settled=1-3
   - 2026-09-10 Como vs RB Leipzig — reason=independent donors disagree, donor_scores=bettingclosed_csv=4-1; statarea_csv=4-1; wh:bettingclosed_settled=4-1; wh:predictz_settled=1-1; wh:statarea_settled=4-1; wh:zulubet_settled=4-1; zulubet_csv=4-1
-- reversed_candidate:
-  - 2026-08-01 Lincoln City vs Barnsley — reason=donor has reversed home/away, donor_score=3-0, donors=bettingclosed_csv,bettingclosed_settled,wh:bettingclosed_settled
-  - 2026-08-02 Sunderland vs Wrexham — reason=donor has reversed home/away, donor_score=0-1, donors=bettingclosed_csv,bettingclosed_settled,vitibet_csv,wh:bettingclosed_settled,wh:zulubet_settled,zulubet_csv
-  - 2026-08-08 Paris Saint Germain vs Manchester United — reason=donor has reversed home/away, donor_score=1-1, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled
+- reversed_candidate_unexplained:
+  - 2026-08-01 Lincoln City vs Barnsley — reason=donor has reversed home/away, donor_score=3-0, donors=bettingclosed_csv,bettingclosed_settled,wh:bettingclosed_settled, review=UNEXPLAINED - blocks validation
+  - 2026-08-02 Sunderland vs Wrexham — reason=donor has reversed home/away, donor_score=0-1, donors=bettingclosed_csv,bettingclosed_settled,vitibet_csv,wh:bettingclosed_settled,wh:zulubet_settled,zulubet_csv, review=UNEXPLAINED - blocks validation
+  - 2026-08-08 Paris Saint Germain vs Manchester United — reason=donor has reversed home/away, donor_score=1-1, donors=wh:zulubet_settled,zulubet_csv,zulubet_settled, review=UNEXPLAINED - blocks validation
 - unmatched:
   - 2026-07-29 Al Ula vs Villarreal — reason=no independent donor row, source_score=0-3
   - 2026-07-29 Alverca vs Académica — reason=no independent donor row, source_score=
@@ -283,8 +283,8 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-09-03 CF America vs Monterrey — reason=multiple alias donor candidates, candidates=2
   - 2026-09-04 Aalesund vs IK Start — reason=multiple alias donor candidates, candidates=3
   - 2026-09-04 Belgrano vs Huracan — reason=multiple alias donor candidates, candidates=2
-- reversed_candidate:
-  - 2026-09-28 Botswana vs Tunisia — reason=donor has reversed home/away, donor_score=2-2, donors=bettingclosed_csv,bettingclosed_settled,scoutingstats_csv,vitibet_csv,wh:bettingclosed_settled,wh:results_donor,wh:scoutingstats_settled,wh:vitibet_settled
+- reversed_candidate_unexplained:
+  - 2026-09-28 Botswana vs Tunisia — reason=donor has reversed home/away, donor_score=2-2, donors=bettingclosed_csv,bettingclosed_settled,scoutingstats_csv,vitibet_csv,wh:bettingclosed_settled,wh:results_donor,wh:scoutingstats_settled,wh:vitibet_settled, review=UNEXPLAINED - blocks validation
 - unmatched:
   - 2026-08-08 Boston Utd vs Aldershot — reason=no independent donor row, source_score=
   - 2026-08-08 Cardiff vs Swindon — reason=no independent donor row, source_score=
@@ -356,11 +356,11 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-09-10 Como vs RB Leipzig — reason=independent donors disagree, donor_scores=scoutingstats_csv=4-1; statarea_csv=4-1; wh:predictz_settled=1-1; wh:scoutingstats_settled=4-1; wh:statarea_settled=4-1; wh:zulubet_settled=4-1; zulubet_csv=4-1
   - 2026-09-20 Serpa vs Louletano — reason=independent donors disagree, donor_scores=forebet_csv=1-1; forebet_settled=1-1; scoutingstats_csv=1-2; vitibet_csv=1-1; wh:forebet_settled=1-1; wh:scoutingstats_settled=1-2
   - 2026-09-29 Sagan Tosu vs Tokyo Verdy — reason=independent donors disagree, donor_scores=vitibet_csv=2-1; wh:prosoccer_settled=1-1
-- reversed_candidate:
-  - 2026-08-01 Barnsley vs Lincoln City — reason=donor has reversed home/away, donor_score=0-3, donors=scoutingstats_csv
-  - 2026-08-23 Siena vs San Donato — reason=donor has reversed home/away, donor_score=1-1, donors=betexplorer_results_csv,betexplorer_settled,wh:betexplorer_settled
-  - 2026-09-28 Botswana vs Tunisia — reason=donor has reversed home/away, donor_score=2-2, donors=scoutingstats_csv,vitibet_csv,wh:scoutingstats_settled,wh:vitibet_settled
-  - 2026-09-28 Indonesia vs Malaysia — reason=donor has reversed home/away, donor_score=0-0, donors=vitibet_csv
+- reversed_candidate_unexplained:
+  - 2026-08-01 Barnsley vs Lincoln City — reason=donor has reversed home/away, donor_score=0-3, donors=scoutingstats_csv, review=UNEXPLAINED - blocks validation
+  - 2026-08-23 Siena vs San Donato — reason=donor has reversed home/away, donor_score=1-1, donors=betexplorer_results_csv,betexplorer_settled,wh:betexplorer_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-28 Botswana vs Tunisia — reason=donor has reversed home/away, donor_score=2-2, donors=scoutingstats_csv,vitibet_csv,wh:scoutingstats_settled,wh:vitibet_settled, review=UNEXPLAINED - blocks validation
+  - 2026-09-28 Indonesia vs Malaysia — reason=donor has reversed home/away, donor_score=0-0, donors=vitibet_csv, review=UNEXPLAINED - blocks validation
 - unmatched:
   - 2026-07-29 AEK vs Samsunspor — reason=no independent donor row, source_score=1-2
   - 2026-07-29 Al vs Hilal - MC Alger — reason=no independent donor row, source_score=0-2
@@ -402,8 +402,8 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-09-03 América vs Monterrey — reason=multiple alias donor candidates, candidates=3
   - 2026-09-03 Diyala SC vs Al Karma — reason=multiple alias donor candidates, candidates=2
   - 2026-09-03 FK Arys vs Ekibastuz — reason=multiple alias donor candidates, candidates=2
-- reversed_candidate:
-  - 2026-09-10 Al-Wakrah vs Al Shamal SC — reason=donor has reversed home/away, donor_score=1-1, donors=scoutingstats_csv,wh:scoutingstats_settled
+- reversed_candidate_unexplained:
+  - 2026-09-10 Al-Wakrah vs Al Shamal SC — reason=donor has reversed home/away, donor_score=1-1, donors=scoutingstats_csv,wh:scoutingstats_settled, review=UNEXPLAINED - blocks validation
 - unmatched:
   - 2026-08-28 ACE vs TPV 2 — reason=no independent donor row, source_score=
   - 2026-08-28 Alabama Crimson Tide vs Troy Trojans — reason=no independent donor row, source_score=
@@ -430,8 +430,8 @@ Guarded alias tier: enabled (edgefactory.identity fold).
 - donor_conflict:
   - 2026-09-02 Górnik Łęczna vs Stal Mielec — reason=independent donors disagree, donor_scores=bettingclosed_csv=3-3; bettingclosed_settled=3-3; forebet_csv=2-2; statarea_csv=3-3; wh:bettingclosed_settled=3-3; wh:results_donor=2-2; wh:statarea_settled=3-3
   - 2026-09-10 Como vs RB Leipzig — reason=independent donors disagree, donor_scores=bettingclosed_csv=4-1; scoutingstats_csv=4-1; statarea_csv=4-1; wh:bettingclosed_settled=4-1; wh:predictz_settled=1-1; wh:scoutingstats_settled=4-1; wh:statarea_settled=4-1; wh:zulubet_settled=4-1; zulubet_csv=4-1
-- reversed_candidate:
-  - 2026-08-30 Pohang Steelers vs Gangwon FC — reason=donor has reversed home/away, donor_score=0-0, donors=bettingclosed_csv,forebet_csv,forebet_settled,statarea_csv,vitibet_csv,wh:bettingclosed_settled,wh:forebet_settled,wh:results_donor,wh:statarea_settled,wh:vitibet_settled
+- reversed_candidate_unexplained:
+  - 2026-08-30 Pohang Steelers vs Gangwon FC — reason=donor has reversed home/away, donor_score=0-0, donors=bettingclosed_csv,forebet_csv,forebet_settled,statarea_csv,vitibet_csv,wh:bettingclosed_settled,wh:forebet_settled,wh:results_donor,wh:statarea_settled,wh:vitibet_settled, review=UNEXPLAINED - blocks validation
 - unmatched:
   - 2026-08-28 AFC Fylde vs Forest Green Rovers — reason=no independent donor row, source_score=
   - 2026-08-28 Club Atlético Unión de Santa Fe vs Sarmiento — reason=no independent donor row, source_score=
@@ -444,4 +444,4 @@ Guarded alias tier: enabled (edgefactory.identity fold).
   - 2026-08-28 Wisła Płock vs MKS Korona Kielce — reason=no independent donor row, source_score=
   - 2026-08-29 1. FC Köln vs TSG Hoffenheim — reason=no independent donor row, source_score=
 
-Verdicts are EVIDENCE, not certification. No source graduates from shadow/candidate on this report alone; operator sign-off is required.
+Verdicts are EVIDENCE, not certification. No source graduates from shadow/candidate on this report alone; operator sign-off is required. A source with ANY unexplained reversed home/away candidate caps at `review_required` - explain the fixture in Config/reversal_reviews.json or treat the orientation as unproven.
