@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 178,
-   "inv_price_sum": 175.1645983145786,
+   "hits": 180,
+   "inv_price_sum": 177.842398892174,
    "multi_n": 25,
-   "n": 267,
+   "n": 271,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -603,9 +603,13 @@
     "2026-09-29|Australia vs Brazil|match_over_25@v1",
     "2026-09-29|Slovakia vs Kazakhstan|match_over_25@v1",
     "2026-09-29|Woking vs Solihull Moors|match_over_25@v1",
-    "2026-09-29|Gateshead vs Altrincham|match_over_25@v1"
+    "2026-09-29|Gateshead vs Altrincham|match_over_25@v1",
+    "2026-09-27|Vancouver Whitecaps vs DC United|match_over_25@v1",
+    "2026-09-27|Nashville SC vs Toronto FC|match_over_25@v1",
+    "2026-09-27|Germany vs Greece|match_over_25@v1",
+    "2026-09-28|Club Le\u00f3n vs FC Ju\u00e1rez|match_over_25@v1"
    ],
-   "profit": 3.52,
+   "profit": 2.6,
    "records": [
     {
      "date": "2026-08-01",
@@ -2739,6 +2743,38 @@
      "match": "Gateshead vs Altrincham",
      "multi_source": false,
      "price": 1.66,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-27",
+     "hit": true,
+     "match": "Vancouver Whitecaps vs DC United",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-27",
+     "hit": false,
+     "match": "Nashville SC vs Toronto FC",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-27",
+     "hit": false,
+     "match": "Germany vs Greece",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-28",
+     "hit": true,
+     "match": "Club Le\u00f3n vs FC Ju\u00e1rez",
+     "multi_source": false,
+     "price": 1.72,
      "source": "scoutingstats"
     }
    ],

@@ -125,8 +125,8 @@
     "w_score": 0.2015
   },
   {
-    "as_of": "2026-09-30T03:00:53+02:00",
-    "avg_p": 59.1,
+    "as_of": "2026-09-30T03:47:08+02:00",
+    "avg_p": 59.4,
     "away": "Shooting Stars",
     "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
@@ -167,58 +167,58 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9697,
-    "enhancement_reason": "Combined Under 3.5 is 99.0% (ML-calibrated 95.9%->97.2%, n=390) (Performance feedback: HR=96.7%, Adjusted Prob: 97.0%)",
+    "enhancement_probability": 0.9705,
+    "enhancement_reason": "Combined Under 3.5 is 99.1% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 97.0%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 2112,
+        "cohort_n": 2084,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9696530451733718,
-        "raw_probability": 0.9898878044174328,
-        "reason": "Combined Under 3.5 is 99.0% (ML-calibrated 95.9%->97.2%, n=390) (Performance feedback: HR=96.7%, Adjusted Prob: 97.0%)"
+        "probability": 0.970467178878003,
+        "raw_probability": 0.9906563176330497,
+        "reason": "Combined Under 3.5 is 99.1% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 97.0%)"
       },
       {
-        "cohort_n": 2112,
+        "cohort_n": 2084,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9016602760996237,
-        "raw_probability": 0.9493274273990712,
-        "reason": "Combined Under 2.5 is 94.9% (ML-calibrated 91.9%->91.0%, n=357) (Performance feedback: HR=95.8%, Adjusted Prob: 90.2%)"
+        "probability": 0.9026247665466981,
+        "raw_probability": 0.9500352017800802,
+        "reason": "Combined Under 2.5 is 95.0% (ML-calibrated 91.9%->91.1%, n=358) (Performance feedback: HR=95.8%, Adjusted Prob: 90.3%)"
       },
       {
-        "cohort_n": 2112,
+        "cohort_n": 2084,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8717616336003022,
-        "raw_probability": 0.7942022267432378,
-        "reason": "Combined Under 1.5 is 79.4%"
+        "probability": 0.8708957239050508,
+        "raw_probability": 0.7934133558161163,
+        "reason": "Combined Under 1.5 is 79.3%"
       },
       {
-        "cohort_n": 2112,
+        "cohort_n": 2084,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4218680475826007,
-        "raw_probability": 0.5520868206673363,
-        "reason": "Mathematical expectation is 55.2% (ML-calibrated 45.2%->61.9%, n=561) (Performance feedback: HR=65.5%, Adjusted Prob: 42.2%)"
+        "probability": 0.42076132109009157,
+        "raw_probability": 0.5536349097356824,
+        "reason": "Mathematical expectation is 55.4% (ML-calibrated 45.2%->61.7%, n=562) (Performance feedback: HR=65.2%, Adjusted Prob: 42.1%)"
       },
       {
-        "cohort_n": 2112,
+        "cohort_n": 2084,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.18188071179596285,
-        "raw_probability": 0.17653711001297998,
-        "reason": "Poisson expected hit rate is 17.7% (ML-calibrated 23.7%->26.7%, n=445)"
+        "probability": 0.1874586921310167,
+        "raw_probability": 0.18207562624119575,
+        "reason": "Poisson expected hit rate is 18.2% (ML-calibrated 23.7%->26.7%, n=446)"
       }
     ],
     "home": "Enyimba",
-    "kickoff": "15:00",
+    "kickoff": "08:00",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-09-30T15:00:00+00:00",
     "kickoff_witness": "bzzoiro kickoff '2026-09-30T15:00:00Z'",
@@ -231,8 +231,8 @@
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
     "n_way": 3,
-    "odds": 1.53,
-    "odds_captured_at": "2026-09-30T01:09:06.786983+00:00",
+    "odds": 1.56,
+    "odds_captured_at": "2026-09-30T01:58:27.441486+00:00",
     "odds_league": "Nigeria: NPFL",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -252,13 +252,13 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1405): Avg Goals: 3.27 | Over 2.5: 65.6% | BTTS: 43.7% | Home Over 1.5 Goals: 82.8% | Away Over 1.5 Goals: 10.3%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1394): Avg Goals: 3.30 | Over 2.5: 65.8% | BTTS: 43.5% | Home Over 1.5 Goals: 83.3% | Away Over 1.5 Goals: 10.8%",
     "veto_reason": "context VETO in ['team_a']",
     "vitibet_index": null,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-30T03:00:53+02:00",
+    "as_of": "2026-09-30T03:47:08+02:00",
     "avg_p": 79.5,
     "away": "South Africa",
     "bookmaker": "scoutingstats_odds",
@@ -300,8 +300,8 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9535,
-    "enhancement_reason": "Combined Under 3.5 is 97.3% (ML-calibrated 95.9%->97.2%, n=390) (Performance feedback: HR=96.7%, Adjusted Prob: 95.4%)",
+    "enhancement_probability": 0.9536,
+    "enhancement_reason": "Combined Under 3.5 is 97.3% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 95.4%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
@@ -309,9 +309,9 @@
         "engine": "model",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9535064440059574,
+        "probability": 0.9535667059838299,
         "raw_probability": 0.973404255319149,
-        "reason": "Combined Under 3.5 is 97.3% (ML-calibrated 95.9%->97.2%, n=390) (Performance feedback: HR=96.7%, Adjusted Prob: 95.4%)"
+        "reason": "Combined Under 3.5 is 97.3% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 95.4%)"
       },
       {
         "cohort_n": null,
@@ -327,9 +327,9 @@
         "engine": "model",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8740075053944468,
+        "probability": 0.8742905857481117,
         "raw_probability": 0.9202127659574468,
-        "reason": "Combined Under 2.5 is 92.0% (ML-calibrated 91.9%->91.0%, n=357) (Performance feedback: HR=95.8%, Adjusted Prob: 87.4%)"
+        "reason": "Combined Under 2.5 is 92.0% (ML-calibrated 91.9%->91.1%, n=358) (Performance feedback: HR=95.8%, Adjusted Prob: 87.4%)"
       },
       {
         "cohort_n": null,
