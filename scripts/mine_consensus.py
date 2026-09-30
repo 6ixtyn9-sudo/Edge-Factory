@@ -132,6 +132,14 @@ def _table_exists(con, name: str) -> bool:
     except Exception:
         return False
 
+
+def _table_columns(con, name: str) -> set[str]:
+    try:
+        return {str(row[1]) for row in con.execute(f"PRAGMA table_info('{name}')").fetchall()}
+    except Exception:
+        return set()
+
+
 def get_scale(con, view):
     try:
         max_p = con.sql(f"SELECT max(p1) FROM {view}").fetchone()[0]
@@ -337,10 +345,21 @@ def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, flo
             if not _table_exists(con, view):
                 continue
             scale = scales.get(view, 1.0)
+            columns = _table_columns(con, view)
+            if {"odd1", "oddx", "odd2"}.issubset(columns):
+                odds_expr = (
+                    "CASE pick WHEN 'home' THEN odd1 "
+                    "WHEN 'draw' THEN oddx ELSE odd2 END"
+                )
+            else:
+                # Probability-only sources (notably Statarea and Vitibet) are
+                # valid voters. Missing source odds must reduce price coverage,
+                # not make the entire weighted consensus query disappear.
+                odds_expr = "NULL::DOUBLE"
             unions.append(f"""
                 SELECT date, hkey, akey, home, away, outcome, league,
                        pick, pmax/{scale} AS prob,
-                       CASE pick WHEN 'home' THEN odd1 WHEN 'draw' THEN oddx ELSE odd2 END AS pick_odds,
+                       {odds_expr} AS pick_odds,
                        '{src}' AS source
                 FROM (SELECT DISTINCT ON (date, hkey, akey) * FROM {view})
             """)
@@ -388,6 +407,10 @@ def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, flo
                 rule_name = f"weighted-1x2 w_score>={w_thr:.2f}"
                 qualifying: list[dict] = []
                 for match in matches.values():
+                    # Global source availability is not per-fixture consensus:
+                    # require at least two independent votes on this match.
+                    if len(match["votes"]) < 2:
+                        continue
                     winning_pick, w_score, is_unanimous = weighted_consensus_score(match["votes"])
                     if not is_unanimous:
                         continue
@@ -652,20 +675,18 @@ def create_phase_a_confirmation_views(con) -> set[str]:
         except Exception as exc:
             print(f"skipped predictz confirmation views: {exc}")
 
-    if _table_exists(con, "windrawwin") and _table_exists(con, "forebet_settled"):
+    if _table_exists(con, "windrawwin") and _table_exists(con, "results_donor"):
         try:
             con.execute("""
                 CREATE OR REPLACE TEMP VIEW windrawwin_settled AS
                 WITH ww AS (SELECT DISTINCT ON (date, hkey, akey) * FROM windrawwin
                             WHERE pick IN ('home','draw','away')),
-                     fb AS (SELECT DISTINCT ON (date, hkey, akey)
-                                   date, hkey, akey, hs, gs
-                            FROM forebet_settled)
-                SELECT ww.*, fb.hs, fb.gs,
+                     rd AS (SELECT DISTINCT ON (date, hkey, akey) * FROM results_donor)
+                SELECT ww.*, rd.hs, rd.gs, rd.result_source,
                        ww.pick AS ww_pick,
-                       CASE WHEN fb.hs > fb.gs THEN 'home'
-                            WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome
-                FROM ww JOIN fb USING (date, hkey, akey)
+                       CASE WHEN rd.hs > rd.gs THEN 'home'
+                            WHEN rd.hs < rd.gs THEN 'away' ELSE 'draw' END AS outcome
+                FROM ww JOIN rd USING (date, hkey, akey)
             """)
             made.add("windrawwin_settled")
             if _table_exists(con, "v_consensus2"):
@@ -694,22 +715,20 @@ def create_phase_a_confirmation_views(con) -> set[str]:
             print(f"skipped windrawwin confirmation views: {exc}")
 
     # soccervista: same categorical profile as windrawwin (1X2 pick, no probs,
-    # no scores) — settle picks by joining the forebet results donor so the
-    # Phase A confirmation levers grade it with the identical accounting.
-    if _table_exists(con, "soccervista") and _table_exists(con, "forebet_settled"):
+    # no scores). Settle against the prioritized multi-source donor so current
+    # evidence can mature while Forebet is unavailable.
+    if _table_exists(con, "soccervista") and _table_exists(con, "results_donor"):
         try:
             con.execute("""
                 CREATE OR REPLACE TEMP VIEW soccervista_settled AS
                 WITH sv AS (SELECT DISTINCT ON (date, hkey, akey) * FROM soccervista
                             WHERE pick IN ('home','draw','away')),
-                     fb AS (SELECT DISTINCT ON (date, hkey, akey)
-                                   date, hkey, akey, hs, gs
-                            FROM forebet_settled)
-                SELECT sv.*, fb.hs, fb.gs,
+                     rd AS (SELECT DISTINCT ON (date, hkey, akey) * FROM results_donor)
+                SELECT sv.*, rd.hs, rd.gs, rd.result_source,
                        sv.pick AS sv_pick,
-                       CASE WHEN fb.hs > fb.gs THEN 'home'
-                            WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome
-                FROM sv JOIN fb USING (date, hkey, akey)
+                       CASE WHEN rd.hs > rd.gs THEN 'home'
+                            WHEN rd.hs < rd.gs THEN 'away' ELSE 'draw' END AS outcome
+                FROM sv JOIN rd USING (date, hkey, akey)
             """)
             made.add("soccervista_settled")
             if _table_exists(con, "v_consensus2"):
@@ -844,36 +863,36 @@ def main():
         else:
             scales[v] = 1.0
 
-    if has_betclan and has_fb:
+    has_results_donor = _table_exists(con, "results_donor")
+
+    if has_betclan and has_results_donor:
         con.execute("""
             CREATE OR REPLACE TEMP VIEW betclan_settled AS
             WITH bc AS (SELECT DISTINCT ON (date, hkey, akey) * FROM betclan),
-                 fb AS (SELECT DISTINCT ON (date, hkey, akey) date, hkey, akey, hs, gs
-                        FROM forebet_settled)
-            SELECT bc.*, fb.hs, fb.gs,
+                 rd AS (SELECT DISTINCT ON (date, hkey, akey) * FROM results_donor)
+            SELECT bc.*, rd.hs, rd.gs, rd.result_source,
                    CASE WHEN bc.p1 >= bc.px AND bc.p1 >= bc.p2 THEN 'home'
                         WHEN bc.p2 >= bc.px THEN 'away' ELSE 'draw' END AS pick,
                    GREATEST(bc.p1, bc.px, bc.p2) AS pmax,
-                   CASE WHEN fb.hs > fb.gs THEN 'home' WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome
-            FROM bc JOIN fb USING (date, hkey, akey)
+                   CASE WHEN rd.hs > rd.gs THEN 'home' WHEN rd.hs < rd.gs THEN 'away' ELSE 'draw' END AS outcome
+            FROM bc JOIN rd USING (date, hkey, akey)
         """)
         has_betclan_settled = True
         scales["betclan_settled"] = scales["betclan"]
     else:
         has_betclan_settled = False
 
-    if has_bzzoiro and has_fb:
+    if has_bzzoiro and has_results_donor:
         con.execute("""
             CREATE OR REPLACE TEMP VIEW bzzoiro_settled AS
             WITH bz AS (SELECT DISTINCT ON (date, hkey, akey) * FROM bzzoiro),
-                 fb AS (SELECT DISTINCT ON (date, hkey, akey) date, hkey, akey, hs, gs
-                        FROM forebet_settled)
-            SELECT bz.*, fb.hs, fb.gs,
+                 rd AS (SELECT DISTINCT ON (date, hkey, akey) * FROM results_donor)
+            SELECT bz.*, rd.hs, rd.gs, rd.result_source,
                    CASE WHEN bz.p1 >= bz.px AND bz.p1 >= bz.p2 THEN 'home'
                         WHEN bz.p2 >= bz.px THEN 'away' ELSE 'draw' END AS pick,
                    GREATEST(bz.p1, bz.px, bz.p2) AS pmax,
-                   CASE WHEN fb.hs > fb.gs THEN 'home' WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome
-            FROM bz JOIN fb USING (date, hkey, akey)
+                   CASE WHEN rd.hs > rd.gs THEN 'home' WHEN rd.hs < rd.gs THEN 'away' ELSE 'draw' END AS outcome
+            FROM bz JOIN rd USING (date, hkey, akey)
         """)
         has_bzzoiro_settled = True
         scales["bzzoiro_settled"] = scales["bzzoiro"]

@@ -405,8 +405,7 @@ def _event_comparison_rows(day: str) -> list[dict]:
 def fetch_day(date: str) -> list[dict]:
     """Fetch odds for a specific date (today or tomorrow supported)."""
     if not TOKEN:
-        _log("bzzoiro_odds: BZZOIRO_TOKEN missing; 0 rows")
-        return []
+        raise RuntimeError("bzzoiro_odds: BZZOIRO_TOKEN missing")
 
     start = date
     end = (_date.fromisoformat(date) + timedelta(days=1)).isoformat()
