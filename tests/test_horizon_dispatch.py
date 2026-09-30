@@ -312,7 +312,7 @@ def test_future_pick_notification_is_distinct_from_the_empty_heartbeat(tmp_path)
 
     message = notify.format_future_pick_message(path, RUN_DATE)
     assert message is not None
-    assert f"FRESH PRODUCTION PICK — event date {EVENT_DATE}" in message
+    assert f"PRODUCTION SELECTION — event date {EVENT_DATE}" in message
     assert "Panama vs New Zealand" in message
     assert f"No same-day picks for {RUN_DATE}." in message
     # It must not present a future fixture as today's bet.
@@ -483,10 +483,12 @@ def test_operator_summary_makes_a_future_pick_obvious():
                                   horizon=horizon)
     text = "\n".join(fp.render_dispatch_plan_summary(plan, {"blocker_counts": {}}))
     assert "PRODUCTION DISPATCH PLAN" in text
-    assert "same-day picks:                0" in text
-    assert "future-dated picks:            1" in text
-    assert "auto-ticket action:" in text
-    assert "staking:                       handled_by_auto_tickets" in text
+    assert "production selections:         1" in text
+    assert "same-day selections:           0" in text
+    assert "future-dated selections:       1" in text
+    assert "ticket status:                 no ticket" in text
+    assert "staking owner:                 auto_tickets" in text
+    assert "staking assigned:              no" in text
     assert f"FUTURE {EVENT_DATE}" in text
     assert "Panama vs New Zealand" in text
     assert "notification action:           future_pick" in text

@@ -41,6 +41,7 @@ notify = _load("notify_harness_under_test", "notify.py")
 sync = _load("sync_supabase_harness_under_test", "sync_supabase.py")
 clv = _load("audit_clv_harness_under_test", "audit_clv.py")
 at = _load("auto_tickets_harness_under_test", "auto_tickets.py")
+clean = _load("clean_localdata_harness_under_test", "clean_localdata.py")
 
 from edgefactory import production_harness as harness  # noqa: E402
 from edgefactory import production_lane as pl  # noqa: E402
@@ -148,9 +149,8 @@ def test_clv_payload_preserves_the_clean_rule_id():
 
 
 def test_auto_ticket_payload_uses_clean_rule_ids():
-    staked = at.apply_ticket_staking([_pick(edge_rule="1x2_two_source_p55_unanimous")],
-                                     stake_per_leg=2.5)
-    harness.check_production_artifact(staked, context="auto ticket payload")
+    rows = at._production_slate_rows(_plan())
+    harness.check_production_artifact(rows, context="auto ticket payload")
 
 
 # --------------------------------------------------------------------------
@@ -161,29 +161,43 @@ def test_auto_ticket_payload_uses_clean_rule_ids():
 def test_pick_engine_emits_no_stake_size():
     plan = _plan()
     harness.assert_pick_engine_does_not_emit_stake_size(
-        plan["horizon_picks"], context="dispatched pick")
+        plan["horizon_picks"], context="dispatched selection")
     harness.assert_pick_engine_does_not_emit_stake_size(
-        plan["same_day_picks"], context="same-day pick")
+        plan["same_day_picks"], context="same-day selection")
 
 
 def test_pick_engine_emits_a_staking_delegation_marker():
-    plan = _plan()
     harness.assert_staking_delegated_to_auto_tickets(
-        plan["horizon_picks"], context="dispatched pick")
+        _plan()["horizon_picks"], context="dispatched selection")
     assert fp.STAKING_POLICY == "handled_by_auto_tickets"
     assert fp.STAKING_OWNER == "auto_tickets"
 
 
-def test_auto_tickets_owns_and_adds_staking_independently():
-    """The ticket layer is the only place a stake size may appear."""
-    picks = _plan()["horizon_picks"]
-    assert "stake_units" not in picks[0]
+def test_auto_tickets_is_the_only_staking_engine():
+    """No parallel staking path may exist beside plan_day()."""
+    src = (ROOT / "scripts" / "auto_tickets.py").read_text()
+    assert "def apply_ticket_staking" not in src, (
+        "a flat-unit staking helper is a second staking engine; "
+        "plan_day() owns sizing")
+    assert src.count("\n    upsert_slip(st,") == 1
+    harness.assert_auto_ticket_staking_owns_stake(at)
 
-    staked = at.apply_ticket_staking(picks, stake_per_leg=2.5)
-    assert staked[0]["stake_units"] == 2.5
-    assert staked[0]["staked_by"] == "auto_tickets"
-    # The pick engine's own rows are untouched.
-    assert "stake_units" not in picks[0]
+
+def test_auto_ticket_stakes_stay_percentage_of_capital():
+    """main's contract is percent of capital, never unit notation."""
+    pool = [{"match": "A vs B", "pick": "HOME", "prob": 0.72, "odds": 2.25,
+             "row": {"bucket": fp.PRODUCTION_BUCKET}},
+            {"match": "C vs D", "pick": "HOME", "prob": 0.68, "odds": 1.90,
+             "row": {"bucket": fp.PRODUCTION_BUCKET}}]
+    plan = at.plan_day(pool, 100.0)
+    assert plan, "two qualifying legs should form a card"
+    staked = sum(a["stake_pct"] for a in plan)
+    assert 0 < staked <= 100.0 * at.STAKE_FRAC + 1e-6
+    for acca in plan:
+        assert "stake_pct" in acca and "stake_units" not in acca
+    # Sizing scales with the bank: that is what "percent of capital" means.
+    half = at.plan_day(pool, 50.0)
+    assert sum(a["stake_pct"] for a in half) == pytest.approx(staked / 2, rel=1e-6)
 
 
 def test_no_user_facing_text_shows_bare_stake_shorthand():
@@ -265,51 +279,273 @@ def test_clv_never_falls_back_to_legacy_when_a_plan_exists(tmp_path):
     assert [p["home"] for p in picks] == ["Panama"]
 
 
+def _run_tickets(tmp_path, picks, *, run_date=RUN_DATE, force=True,
+                 now=None, settled=None, monkey=None):
+    """Drive the real auto-ticket engine over a dispatch plan."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir(exist_ok=True)
+    pl.dispatch_plan_path(run_date, localdata).write_text(json.dumps(_plan(picks)))
+
+    class Args:
+        date = run_date
+        force = True
+
+    state = at.fresh_state()
+    outcomes = {}
+    with patch.object(at, "LOCALDATA", localdata), \
+         patch.object(at, "STATE_FILE", localdata / "state.json"), \
+         patch.object(at, "BUCKET_PNL_FILE", localdata / "pnl.json"), \
+         patch.object(at, "load_settled", lambda *a, **k: settled or {}), \
+         patch.object(at, "load_archived_picks", lambda *a, **k: []), \
+         patch.object(at, "datetime", _FrozenDatetime(now or _DEFAULT_NOW)):
+        at.cmd_today(Args(), state)
+        outcomes = at.load_ticket_outcomes(run_date, localdata)
+    return outcomes, state, localdata
+
+
+_DEFAULT_NOW = datetime(2026, 9, 30, 10, 0, tzinfo=timezone(timedelta(hours=2)))
+
+
+class _FrozenDatetime:
+    """Stand-in for the datetime module attribute with a pinned now().
+
+    Build-hour and freeze-hour gates read datetime.now(TZ); pinning it keeps
+    every ticket assertion deterministic instead of wall-clock dependent.
+    """
+
+    def __init__(self, pinned):
+        self._pinned = pinned
+
+    def now(self, tz=None):
+        return self._pinned if tz is None else self._pinned.astimezone(tz)
+
+    def __getattr__(self, name):
+        return getattr(datetime, name)
+
+
 @patch.dict(os.environ, FRESH)
-def test_auto_tickets_acknowledges_a_future_pick_instead_of_no_bet(tmp_path):
+def test_a_single_future_selection_declines_with_insufficient_legs(tmp_path):
+    """One selection is not a bet: the recipe needs two legs per acca."""
+    outcomes, state, _ = _run_tickets(tmp_path, [_pick()])
+
+    assert EVENT_DATE in outcomes, "the future event date must be evaluated"
+    assert outcomes[EVENT_DATE]["status"] == at.DECLINED_INSUFFICIENT_LEGS
+    assert outcomes[EVENT_DATE]["selections"] == 1
+    assert not state["open_slips"], "no slip may be opened for a declined card"
+
+
+@patch.dict(os.environ, FRESH)
+def test_two_eligible_future_selections_form_a_real_auto_ticket(tmp_path):
+    """The bridge must reach select_accas/plan_day, not a parallel engine."""
+    second = _pick(home="Guatemala", away="Suriname", odds=1.95,
+                   probability=0.66, kickoff=f"{EVENT_DATE} 09:00")
+    outcomes, state, _ = _run_tickets(tmp_path, [_pick(), second])
+
+    assert outcomes[EVENT_DATE]["status"] == at.TICKET_CREATED
+    assert outcomes[EVENT_DATE]["accas"] == 1
+    # Percentage-of-capital sizing, from plan_day — not units.
+    assert outcomes[EVENT_DATE]["staked_pct_of_capital"] > 0
+    # The slip is booked under the EVENT date, not the run date.
+    assert any(e["date"] == EVENT_DATE for e in state["open_slips"]), (
+        "the slip must be booked under the event date, not the run date")
+
+
+@patch.dict(os.environ, FRESH)
+def test_a_production_selection_is_not_automatically_a_ticket(tmp_path):
+    outcomes, _state, _ = _run_tickets(tmp_path, [_pick()])
+    harness.assert_production_selection_not_automatically_ticket(
+        _plan([_pick()]), outcomes)
+
+
+@patch.dict(os.environ, FRESH)
+def test_suspect_price_blocks_ticketing(tmp_path):
+    """A quarantined quote must never reach a ticket."""
+    a = _pick(price_quarantine_reason="suspect")
+    b = _pick(home="Guatemala", away="Suriname", odds=1.95,
+              price_quarantine_reason="suspect")
+    outcomes, state, _ = _run_tickets(tmp_path, [a, b])
+
+    assert outcomes[EVENT_DATE]["status"] == at.DECLINED_PRICE_INTEGRITY
+    assert outcomes[EVENT_DATE]["playable_legs"] == 0
+    assert not state["open_slips"]
+
+
+@patch.dict(os.environ, FRESH)
+def test_audit_only_price_blocks_ticketing(tmp_path):
+    """price_push_eligible=False is an audit quote, not an execution price."""
+    a = _pick(price_push_eligible=False)
+    b = _pick(home="Guatemala", away="Suriname", odds=1.95,
+              price_push_eligible=False)
+    outcomes, _state, _ = _run_tickets(tmp_path, [a, b])
+    assert outcomes[EVENT_DATE]["status"] == at.DECLINED_PRICE_INTEGRITY
+
+
+@patch.dict(os.environ, FRESH)
+def test_odds_floor_blocks_ticketing(tmp_path):
+    a = _pick(odds=1.05)
+    b = _pick(home="Guatemala", away="Suriname", odds=1.02)
+    outcomes, _state, _ = _run_tickets(tmp_path, [a, b])
+    assert outcomes[EVENT_DATE]["status"] == at.DECLINED_PRICE_INTEGRITY
+
+
+@patch.dict(os.environ, FRESH)
+def test_kickoff_guard_blocks_an_already_started_selection(tmp_path):
+    """A fixture already under way at build time cannot be ticketed."""
+    started = datetime(2026, 10, 1, 12, 0, tzinfo=timezone(timedelta(hours=2)))
+    a = _pick(kickoff=f"{EVENT_DATE} 08:10")
+    b = _pick(home="Guatemala", away="Suriname", odds=1.95,
+              kickoff=f"{EVENT_DATE} 09:00")
+    outcomes, state, _ = _run_tickets(tmp_path, [a, b], now=started)
+
+    assert outcomes[EVENT_DATE]["status"] in (
+        at.DECLINED_KICKOFF_GUARD, at.DECLINED_INSUFFICIENT_LEGS)
+    assert not state["open_slips"], "a started fixture must not be staked"
+
+
+@patch.dict(os.environ, FRESH)
+def test_a_pnl_benched_bucket_cannot_become_a_ticket(tmp_path):
+    """The P&L tripwire closes the door before selection sees the pool."""
+    second = _pick(home="Guatemala", away="Suriname", odds=1.95)
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    pl.dispatch_plan_path(RUN_DATE, localdata).write_text(
+        json.dumps(_plan([_pick(), second])))
+
+    class Args:
+        date = RUN_DATE
+        force = True
+
+    benched = ({fp.PRODUCTION_BUCKET: 0.0},
+               {fp.PRODUCTION_BUCKET: {"verdict": "VETO", "weight": 0.0,
+                                       "streak": 4, "n": 40, "roi": -0.2,
+                                       "grade": "F", "gap": 0.1, "z": -2.0}})
+    state = at.fresh_state()
+    with patch.object(at, "LOCALDATA", localdata), \
+         patch.object(at, "STATE_FILE", localdata / "state.json"), \
+         patch.object(at, "load_settled", lambda *a, **k: {}), \
+         patch.object(at, "load_archived_picks", lambda *a, **k: []), \
+         patch.object(at, "compute_bucket_pnl", lambda *a, **k: benched), \
+         patch.object(at, "datetime", _FrozenDatetime(_DEFAULT_NOW)):
+        at.cmd_today(Args(), state)
+        outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
+
+    assert outcomes[EVENT_DATE]["status"] == at.DECLINED_BUCKET_PNL_BENCHED
+    assert fp.PRODUCTION_BUCKET in outcomes[EVENT_DATE]["benched_buckets"]
+    harness.assert_benching_state_respected(outcomes[EVENT_DATE])
+    assert not state["open_slips"]
+
+
+@patch.dict(os.environ, FRESH)
+def test_a_selection_ladder_benched_bucket_cannot_become_a_ticket(tmp_path):
+    second = _pick(home="Guatemala", away="Suriname", odds=1.95)
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    pl.dispatch_plan_path(RUN_DATE, localdata).write_text(
+        json.dumps(_plan([_pick(), second])))
+
+    class Args:
+        date = RUN_DATE
+        force = True
+
+    state = at.fresh_state()
+    with patch.object(at, "LOCALDATA", localdata), \
+         patch.object(at, "STATE_FILE", localdata / "state.json"), \
+         patch.object(at, "load_settled", lambda *a, **k: {}), \
+         patch.object(at, "load_archived_picks", lambda *a, **k: []), \
+         patch.object(at, "compute_bucket_slice",
+                      lambda *a, **k: (
+                          {"bench_buckets": [fp.PRODUCTION_BUCKET],
+                           "rank_caps": {}},
+                          {b: {"verdict": "VETO", "action": "BENCHED",
+                               "n": 30, "roi": -0.3, "recent_roi": -0.3,
+                               "grade": "F", "demote_streak": 2,
+                               "bench_streak": 4, "rank_cap": None}
+                           for b in at.BUCKETS})), \
+         patch.object(at, "datetime", _FrozenDatetime(_DEFAULT_NOW)):
+        at.cmd_today(Args(), state)
+        outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
+
+    assert outcomes[EVENT_DATE]["status"] == at.DECLINED_SELECTION_LADDER_BENCHED
+    harness.assert_benching_state_respected(outcomes[EVENT_DATE])
+    assert not state["open_slips"]
+
+
+def test_the_assayer_is_on_the_production_ticket_path():
+    harness.assert_auto_tickets_assayer_not_bypassed(at)
+
+
+def test_the_production_bucket_is_a_scored_door():
+    """An unregistered bucket is invisible to playable_legs and to benching."""
+    assert fp.PRODUCTION_BUCKET in at.BUCKETS, (
+        "production selections must belong to a bucket the assayer scores, "
+        "otherwise benching can never apply to them")
+    assert not fp.PRODUCTION_BUCKET.lower().startswith("fresh_")
+
+
+@patch.dict(os.environ, FRESH)
+def test_same_day_only_policy_declines_with_an_explicit_reason(tmp_path, capsys):
     localdata = tmp_path / "localdata"
     localdata.mkdir()
     pl.dispatch_plan_path(RUN_DATE, localdata).write_text(json.dumps(_plan()))
 
-    with patch.object(at, "LOCALDATA", localdata):
-        slate, path, deferred = at.load_ticket_slate(RUN_DATE)
+    class Args:
+        date = RUN_DATE
+        force = True
 
-    assert slate == []                      # nothing to stake today
-    assert len(deferred) == 1               # but a future pick exists
-    assert deferred[0]["event_date"] == EVENT_DATE
-    assert path.name == f"fresh_production_dispatch_plan_{RUN_DATE}.json"
+    with patch.object(at, "LOCALDATA", localdata), \
+         patch.object(at, "HORIZON_TICKET_POLICY", "same_day_only"), \
+         patch.object(at, "STATE_FILE", localdata / "state.json"), \
+         patch.object(at, "load_settled", lambda *a, **k: {}), \
+         patch.object(at, "load_archived_picks", lambda *a, **k: []), \
+         patch.object(at, "datetime", _FrozenDatetime(_DEFAULT_NOW)):
+        at.cmd_today(Args(), at.fresh_state())
+    out = capsys.readouterr().out
+    assert "future-dated production selection exists, but auto-tickets are " \
+           "same-day-only" in out
+    assert at.DECLINED_SAME_DAY_ONLY_POLICY in out
 
 
 @patch.dict(os.environ, FRESH)
-def test_auto_tickets_stakes_a_same_day_pick_from_the_plan(tmp_path):
+def test_an_empty_same_day_file_never_prints_a_bare_no_bet_today(tmp_path, capsys):
+    """The exact defect from the live run."""
     localdata = tmp_path / "localdata"
     localdata.mkdir()
-    same_day = _pick(date=RUN_DATE, event_date=RUN_DATE,
-                     kickoff=f"{RUN_DATE} 20:00")
-    pl.dispatch_plan_path(RUN_DATE, localdata).write_text(
-        json.dumps(_plan([same_day])))
+    (localdata / f"fresh_production_production_picks_{RUN_DATE}.json").write_text("[]")
+    pl.dispatch_plan_path(RUN_DATE, localdata).write_text(json.dumps(_plan()))
 
-    with patch.object(at, "LOCALDATA", localdata):
-        slate, _path, deferred = at.load_ticket_slate(RUN_DATE)
+    class Args:
+        date = RUN_DATE
+        force = True
 
-    assert len(slate) == 1 and deferred == []
-    assert at.apply_ticket_staking(slate, stake_per_leg=1.5)[0]["stake_units"] == 1.5
+    with patch.object(at, "LOCALDATA", localdata), \
+         patch.object(at, "STATE_FILE", localdata / "state.json"), \
+         patch.object(at, "load_settled", lambda *a, **k: {}), \
+         patch.object(at, "load_archived_picks", lambda *a, **k: []), \
+         patch.object(at, "datetime", _FrozenDatetime(_DEFAULT_NOW)):
+        at.cmd_today(Args(), at.fresh_state())
+    out = capsys.readouterr().out
+    assert "NO BET TODAY" not in out
+    assert EVENT_DATE in out
+    assert at.DECLINED_INSUFFICIENT_LEGS in out
 
 
 @patch.dict(os.environ, FRESH)
-def test_no_legacy_fallback_anywhere_when_the_plan_is_empty(tmp_path):
+def test_no_legacy_fallback_when_the_plan_is_empty(tmp_path):
     localdata = tmp_path / "localdata"
     localdata.mkdir()
     (localdata / f"picks_{RUN_DATE}.json").write_text(json.dumps(
-        [{"home": "Legacy", "away": "Row", "pick": "home", "date": RUN_DATE}]))
+        [{"home": "Legacy", "away": "Row", "pick": "home", "date": RUN_DATE,
+          "bucket": "CERTIFIED_CLEAN", "avg_p": 70, "odds": 2.0}]))
     empty = fp.build_dispatch_plan(run_date=RUN_DATE, same_day_rows=[],
                                    horizon_rows=[],
                                    horizon={"generated_for": RUN_DATE, "picks": []})
     pl.dispatch_plan_path(RUN_DATE, localdata).write_text(json.dumps(empty))
 
     with patch.object(at, "LOCALDATA", localdata):
-        slate, _path, deferred = at.load_ticket_slate(RUN_DATE)
-    assert slate == [] and deferred == []
+        rows, path, dates = at.load_production_slate(RUN_DATE)
+    assert rows == [] and dates == []
+    assert "dispatch_plan" in path.name
+    harness.assert_no_legacy_fallback(rows)
 
     with patch.object(clv, "LOCALDATA", localdata):
         assert clv._dispatch_plan_picks(RUN_DATE) == []
@@ -334,13 +570,28 @@ def test_future_pick_notice_is_deduped_on_rerun():
     assert notify.format_future_pick_message_from_plan(already, RUN_DATE) is None
 
 
-def test_future_pick_notice_is_labelled_by_event_date_and_delegates_staking():
-    message = notify.format_future_pick_message_from_plan(_plan(), RUN_DATE)
-    assert f"FRESH PRODUCTION PICK — event date {EVENT_DATE}" in message
+def test_a_declined_selection_is_not_announced_as_a_ticket():
+    """The notice must not call a selection a bet auto-tickets refused."""
+    declined = {EVENT_DATE: {"status": "declined_insufficient_legs"}}
+    message = notify.format_future_pick_message_from_plan(
+        _plan(), RUN_DATE, declined)
+    assert f"PRODUCTION SELECTION — event date {EVENT_DATE}" in message
+    assert "PRODUCTION TICKET" not in message
+    assert "auto-ticket action: declined_insufficient_legs" in message
+    assert "staking: not assigned because no ticket was created" in message
     assert f"No same-day picks for {RUN_DATE}." in message
-    assert "staking: handled by auto-tickets" in message
-    # A future fixture must never be announced as today's bet.
     assert f"event date {RUN_DATE}" not in message
+    harness.check_production_artifact(message, context="declined notice")
+
+
+def test_an_accepted_selection_is_announced_as_a_ticket():
+    created = {EVENT_DATE: {"status": "ticket_created"}}
+    message = notify.format_future_pick_message_from_plan(
+        _plan(), RUN_DATE, created)
+    assert f"PRODUCTION TICKET — event date {EVENT_DATE}" in message
+    assert "auto-ticket action: ticket_created" in message
+    assert "staking: handled by auto-tickets" in message
+    harness.check_production_artifact(message, context="ticket notice")
 
 
 def test_empty_plan_yields_no_future_notice_so_the_heartbeat_still_runs():
@@ -432,6 +683,47 @@ def test_committed_production_artifacts_use_clean_naming():
             checked += 1
     # Nothing to check is acceptable; a violation is not.
     assert checked >= 0
+
+
+def test_invalid_generated_artifacts_are_deleted_not_backed_up(tmp_path):
+    """Wrong artifacts are deleted; a .bak of a wrong file is still wrong."""
+    bad = tmp_path / "fresh_production_dispatch_plan_2026-09-30.json"
+    bad.write_text(json.dumps({"rule_id": "fresh_1x2_v2_p55_unanimous"}))
+    good = tmp_path / "fresh_production_dispatch_plan_2026-10-01.json"
+    good.write_text(json.dumps({"rule_id": "1x2_two_source_p55_unanimous"}))
+    raw = tmp_path / "capture_zulubet_2026-09-30.csv.gz"
+    raw.write_bytes(b"fresh_1x2_v2_p55_unanimous")
+
+    deleted = clean.purge_invalid_generated_artifacts(
+        tmp_path, write_manifest=True, today=date(2026, 9, 30))
+
+    assert [e["deleted_file"] for e in deleted] == [bad.name]
+    assert not bad.exists()
+    assert good.exists(), "a clean artifact must survive"
+    assert raw.exists(), "raw evidence is never purged by content"
+    harness.assert_no_backup_wrong_artifacts_created(tmp_path)
+    harness.assert_wrong_generated_artifacts_deleted([good])
+
+    manifest = json.loads(
+        (tmp_path / "invalid_artifact_purge_2026-09-30.json").read_text())
+    assert manifest["raw_evidence_preserved"] is True
+    assert manifest["backup_created"] is False
+    entry = manifest["deleted"][0]
+    for field in ("deleted_file", "reason", "replacement_file_if_any",
+                  "raw_evidence_preserved", "backup_created"):
+        assert field in entry
+
+
+def test_stake_notation_makes_a_generated_artifact_invalid(tmp_path):
+    bad = tmp_path / "fresh_production_horizon_picks_2026-09-30.md"
+    bad.write_text("| Panama vs New Zealand | home | stake: 1.0u |")
+    deleted = clean.purge_invalid_generated_artifacts(tmp_path)
+    assert [e["deleted_file"] for e in deleted] == [bad.name]
+    assert not bad.exists()
+
+
+def test_committed_localdata_holds_no_backups_of_wrong_artifacts():
+    harness.assert_no_backup_wrong_artifacts_created(ROOT / "localdata")
 
 
 def test_handover_documents_the_current_production_reality():

@@ -206,8 +206,49 @@ BUCKETS = {
     # time depending on window. SUSPECT_PRICE and NO_ODDS stay OUT:
     # they flag bad DATA, not weak edges.
     "CAUTION",
+    # The production lane's certified selections are a door like any other:
+    # registering the bucket is what subjects them to the P&L tripwire and
+    # the selection ladder. An unregistered bucket is invisible to
+    # playable_legs(), which would silently drop every production selection
+    # while appearing to work.
+    "PRODUCTION_CERTIFIED",
 }
 BAD_QUARANTINE = {"alias_fuzzy", "suspect", "suspect_alias_fuzzy"}
+
+# ---- ticket outcome vocabulary ----------------------------------------
+# A production selection is NOT a bet. Auto-tickets decides, and when it
+# declines it must say which gate declined it: "NO BET TODAY" hides whether
+# nothing was selected, whether the assayer benched the door, or whether the
+# card was simply one leg short.
+TICKET_CREATED = "ticket_created"
+DECLINED_NO_SELECTIONS = "declined_no_selections"
+DECLINED_INSUFFICIENT_LEGS = "declined_insufficient_legs"
+DECLINED_ASSAYER_BENCHED_RULE = "declined_assayer_benched_rule"
+DECLINED_BUCKET_PNL_BENCHED = "declined_bucket_pnl_benched"
+DECLINED_SELECTION_LADDER_BENCHED = "declined_selection_ladder_benched"
+DECLINED_CONTEXT_VETO = "declined_context_veto"
+DECLINED_PRICE_INTEGRITY = "declined_price_integrity"
+DECLINED_KICKOFF_GUARD = "declined_kickoff_guard"
+DECLINED_SAME_DAY_ONLY_POLICY = "declined_same_day_only_policy"
+DECLINED_EXPOSURE_LIMIT = "declined_exposure_limit"
+DECLINED_DUPLICATE_FIXTURE = "declined_duplicate_fixture"
+DECLINED_ALREADY_SETTLED = "declined_already_settled"
+DECLINED_PLAN_EMPTY = "declined_plan_empty"
+
+# Which gate consumed the pool, in the order the gates actually run. Used to
+# turn "0 legs survived" into the name of the gate that emptied it.
+_DECLINE_BY_CENSUS = (
+    ("P&L tripwire", DECLINED_BUCKET_PNL_BENCHED),
+    ("SELECTION LADDER", DECLINED_SELECTION_LADDER_BENCHED),
+    ("already settled", DECLINED_ALREADY_SETTLED),
+    ("kicked off", DECLINED_KICKOFF_GUARD),
+)
+
+# Horizon policy. "event_date_cards" evaluates a future event date's
+# selections through the ordinary engine and books the slip under the EVENT
+# date. "same_day_only" declines them with an explicit reason.
+HORIZON_TICKET_POLICY = "event_date_cards"
+
 
 STATE_FILE = LOCALDATA / "auto_tickets_state.json"
 
@@ -2387,10 +2428,33 @@ def _board_coverage_lines(target: str, plan: list[dict],
     ]
 
 
-def cmd_today(args, st):
-    settled = load_settled()
-    now = datetime.now(TZ)
-    target = args.date or now.strftime("%Y-%m-%d")
+def _decline_reason_from_census(census, remaining):
+    """Name the gate that emptied the pool.
+
+    "NO BET TODAY" is not a reason. When no leg survives, the census already
+    records which gate removed which fixture; this maps that back to an
+    explicit decline reason so the operator learns whether the assayer
+    benched the door or the card was simply a leg short.
+    """
+    if remaining >= LEGS_PER_ACCA:
+        return DECLINED_PLAN_EMPTY
+    if remaining > 0:
+        return DECLINED_INSUFFICIENT_LEGS
+    for needle, reason in _DECLINE_BY_CENSUS:
+        for label, names in census.items():
+            if names and needle in label:
+                return reason
+    return DECLINED_INSUFFICIENT_LEGS
+
+
+def build_card_for_date(target, slate, *, st, settled, now, args, outcome):
+    """Run one date's selections through the full ticket engine.
+
+    This is the single ticket code path: price integrity, kickoff guard,
+    settled/archived removal, bucket P&L tripwire, selection ladder,
+    benching, same-fixture dedup, acca selection and percentage-of-capital
+    staking. Nothing may stake outside it.
+    """
     frozen = LOCALDATA / f"auto_tickets_{target}.frozen"
     slip_txt = LOCALDATA / f"auto_tickets_{target}.txt"
     if frozen.exists() and not args.force:
@@ -2403,43 +2467,31 @@ def cmd_today(args, st):
             slip_txt, archive_index, existing_rows=read_slice_ledger(),
         )
         upsert_slice_day(frozen_rows, target)
+        outcome["status"] = "ticket_frozen"
         print(f"TICKETS FROZEN — final slip for {target}. Re-printing saved slip:")
         print("=" * 62)
         if slip_txt.exists():
             print(slip_txt.read_text())
         return 0
     if str(target) == now.strftime("%Y-%m-%d") and now.hour < GENERATE_HOUR_START and not args.force:
+        outcome["status"] = "deferred_before_build_hour"
         print(f"NOT YET — TICKETS START BUILDING AT {GENERATE_HOUR_START:02d}:00, FREEZE AT {FREEZE_HOUR:02d}:00")
         print(f"(now {now.strftime('%H:%M')} local)")
         return 0
-    # Tickets are a betting artefact, so they must come from whichever lane
-    # is production. In fresh_production mode an empty fresh slate means no
-    # tickets — it must never silently fall back to the legacy ledger.
-    from edgefactory import production_lane
-
-    # The dispatch plan is authoritative: it holds same-day picks AND any
-    # future-dated picks dispatched today. Reading only the same-day file
-    # would report "no bet" while a future pick sits dispatched.
-    slate, slate_path, deferred = load_ticket_slate(str(target))
-    if slate is None:
-        return 1
-    print(f"ticket slate source: {slate_path.name} "
-          f"(lane {production_lane.active_lane()}, {len(slate)} row(s))")
-    for row in deferred:
-        print(f"future-dated production pick exists, but auto-tickets are "
-              f"same-day-only: {row.get('home')} vs {row.get('away')} on "
-              f"{row.get('event_date')} "
-              f"({row.get('edge_rule') or row.get('rule_id')}) is held for its "
-              f"own event date")
-    if not slate and deferred:
-        print(f"NO SAME-DAY BET — {len(deferred)} future-dated production "
-              f"pick(s) already dispatched for a later event date")
-        return 0
-    if production_lane.fresh_production_is_active() and not slate and not deferred:
-        print(f"no production picks for {target}; generating no tickets "
-              "(legacy picks are comparison-only)")
+    # --- gate chain ----------------------------------------------------
+    outcome["slate_rows"] = len(slate)
+    if not slate:
+        outcome["status"] = DECLINED_NO_SELECTIONS
         return 0
     pool = playable_legs(slate, day=target, settled=settled, execution_safe=True)
+    outcome["playable_legs"] = len(pool)
+    if not pool:
+        # Every selection the lane dispatched for this date was refused by
+        # the execution-price / market / odds-floor gates.
+        outcome["status"] = DECLINED_PRICE_INTEGRITY
+        print(f"AUTO-TICKET DECLINED ({target}): {DECLINED_PRICE_INTEGRITY} — "
+              f"{len(slate)} production selection(s), 0 execution-safe leg(s)")
+        return 0
     total_in = len(pool)
     census: dict[str, list[str]] = {}
     # LIVE KICKOFF GUARD (incident #6, revised 2026-09-06 round 2 after the
@@ -2485,6 +2537,13 @@ def cmd_today(args, st):
     # read-time join, so an unsettled row never becomes an automatic loss.
     ensure_slice_seeded(target)
     slice_policy, slice_verdicts = compute_bucket_slice(target)
+    outcome["assayer_ran"] = True
+    outcome["pnl_verdicts"] = {b: v.get("verdict") for b, v in pnl_verdicts.items()}
+    outcome["benched_buckets"] = sorted(
+        b for b, w in pnl_weights.items() if float(w) <= 0.0)
+    outcome["slice_benched_buckets"] = sorted(slice_policy.get("bench_buckets") or ())
+    outcome["demoted_buckets"] = sorted(
+        b for b, w in pnl_weights.items() if 0.0 < float(w) < 1.0)
     base_pool = list(pool)  # shadow planning strips BOTH ladder and door policy
     door_pool = list(base_pool)
     benched_drops = [f"{l['match']} [{l['row'].get('bucket')}]" for l in door_pool
@@ -2528,7 +2587,10 @@ def cmd_today(args, st):
         print("\n".join(census_lines))
         print("\n".join(_slice_action_lines(slice_verdicts)))
         print("\n".join(_slice_table_lines(slice_verdicts)))
-        print(f"NO BET TODAY — {len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
+        outcome["qualifying_legs"] = len(plan_pool)
+        outcome["status"] = _decline_reason_from_census(census, len(plan_pool))
+        print(f"AUTO-TICKET DECLINED ({target}): {outcome['status']} — "
+              f"{len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
         print("(bank stays unbet)")
         return 0
 
@@ -2541,7 +2603,8 @@ def cmd_today(args, st):
         print("\n".join(census_lines))
         print("\n".join(_slice_action_lines(slice_verdicts)))
         print("\n".join(_slice_table_lines(slice_verdicts)))
-        print("NO BET TODAY — plan empty")
+        outcome["status"] = DECLINED_PLAN_EMPTY
+        print(f"AUTO-TICKET DECLINED ({target}): {DECLINED_PLAN_EMPTY}")
         return 0
     # Task E (2026-09-06): a force-repick REPLACES the target date's own
     # existing slip (upsert below deletes it) — so its stake was excluded
@@ -2555,6 +2618,10 @@ def cmd_today(args, st):
         )
     upsert_slice_day(real_rows + shadow_rows, target)
     upsert_slip(st, target, plan)
+    outcome["status"] = TICKET_CREATED
+    outcome["accas"] = len(plan)
+    outcome["staked_pct_of_capital"] = round(sum(a["stake_pct"] for a in plan), 4)
+    outcome["dropped_duplicate_fixtures"] = list(fixture_report.get("dropped") or ())
     _log_printed_price_boards(target, plan, pool_by_key)   # Task F, append-only
     committed = st["bank"] - bank_eff
     lines = [f"AUTO TICKETS (ROLLING) — {target}", "=" * 62,
@@ -2608,6 +2675,91 @@ def cmd_today(args, st):
     return 0
 
 
+
+
+def cmd_today(args, st):
+    """Turn today's production selections into tickets, or decline by name.
+
+    The production lane produces *selections*; this function produces
+    *bets*. A dispatched selection is not a bet until the engine accepts it,
+    so a future-dated selection is evaluated for its own event date and any
+    refusal is reported with the gate that refused it.
+    """
+    from edgefactory import production_lane
+
+    settled = load_settled()
+    now = datetime.now(TZ)
+    target = args.date or now.strftime("%Y-%m-%d")
+
+    slate, slate_path, dates = load_production_slate(str(target))
+    if slate is None:
+        return 1
+    print(f"production slate source: {slate_path.name} "
+          f"(lane {production_lane.active_lane()}, {len(slate)} selection(s))")
+
+    future_dates = [d for d in dates if d > str(target)]
+    card_dates = [str(target)]
+    if future_dates:
+        if HORIZON_TICKET_POLICY == "event_date_cards":
+            card_dates += future_dates
+        else:
+            for d in future_dates:
+                n = sum(1 for r in slate if r.get("date") == d)
+                print(f"future-dated production selection exists, but "
+                      f"auto-tickets are same-day-only: {n} selection(s) for "
+                      f"{d} — {DECLINED_SAME_DAY_ONLY_POLICY}")
+
+    outcomes = {}
+    rc = 0
+    for day in card_dates:
+        day_rows = [r for r in slate if str(r.get("date") or "")[:10] == day]
+        outcome = {"date": day, "status": DECLINED_NO_SELECTIONS,
+                   "selections": len(day_rows), "assayer_ran": False}
+        outcomes[day] = outcome
+        if day != str(target):
+            print(f"\n--- future-dated production card: event date {day} "
+                  f"({len(day_rows)} selection(s)) ---")
+        if not day_rows and day != str(target):
+            continue
+        if not day_rows:
+            # Still enter the builder: the frozen-slip reprint and the
+            # build-hour gate live there and must run even on an empty day.
+            print(f"no production selections for {day}; no tickets "
+                  "(legacy picks are comparison-only)")
+        rc = build_card_for_date(day, day_rows, st=st, settled=settled,
+                                 now=now, args=args, outcome=outcome) or rc
+
+    for day, o in sorted(outcomes.items()):
+        if o["selections"]:
+            print(f"auto-ticket action [{day}]: {o['status']} "
+                  f"({o['selections']} production selection(s))")
+    _write_ticket_outcomes(str(target), outcomes)
+    return rc
+
+
+def _write_ticket_outcomes(target, outcomes):
+    """Persist ticket status per event date for CLV / notification / summary."""
+    path = LOCALDATA / f"auto_ticket_outcomes_{target}.json"
+    try:
+        path.write_text(json.dumps(
+            {"run_date": target, "outcomes": outcomes}, indent=2, sort_keys=True))
+    except OSError as exc:
+        print(f"cannot write {path.name}: {exc}")
+    return path
+
+
+def load_ticket_outcomes(target, localdata=None):
+    """Read back the per-event-date ticket statuses for a run date."""
+    base = LOCALDATA if localdata is None else Path(localdata)
+    path = base / f"auto_ticket_outcomes_{target}.json"
+    if not path.exists():
+        return {}
+    try:
+        return dict(json.loads(path.read_text()).get("outcomes") or {})
+    except (OSError, ValueError):
+        return {}
+
+
 def print_status(st):
     if not st:
         print("no state yet — run bare (starts today at 100%) or --backfill to replay history")
@@ -2625,57 +2777,59 @@ def print_status(st):
         print(f"  {h['date']}  {acc:40s} bank {h['bank_pct']:7.1f}%")
 
 
-def load_ticket_slate(target: str):
-    """Rows this ticket run may stake, plus future picks it must not.
+def _production_slate_rows(plan) -> list[dict]:
+    """Every selection in a dispatch plan, same-day and future-dated.
 
-    Returns ``(slate, source_path, deferred)``. ``deferred`` holds
-    future-dated production picks: they are already dispatched, so the run
-    must acknowledge them rather than print a bare "no bet today", but
-    auto-tickets stakes the current day only.
+    The rows are already shaped for :func:`playable_legs` by the pick engine
+    (``bucket``, ``avg_p``, ``market``, ``pick``, ``odds``), and each row is
+    dated by its own ``event_date`` so the day filter routes it to the right
+    card. Nothing here decides anything: the gates downstream do.
+    """
+    rows = []
+    for row in list(plan.get("same_day_picks") or []) + \
+            list(plan.get("horizon_picks") or []):
+        entry = dict(row)
+        event_date = str(entry.get("event_date") or entry.get("date") or "")[:10]
+        if event_date:
+            entry["date"] = event_date
+        rows.append(entry)
+    return rows
+
+
+def load_production_slate(target: str):
+    """Return ``(rows, source_path, dates)`` for the production lane.
+
+    ``rows`` carries every dispatched selection regardless of event date;
+    ``dates`` is the sorted set of event dates present. The dispatch plan is
+    authoritative — reading only the same-day file reports "no bet" while a
+    future-dated selection sits dispatched.
     """
     from edgefactory import production_lane
 
     if not production_lane.fresh_production_is_active():
         path = production_lane.production_picks_path(target, LOCALDATA)
         try:
-            return (json.loads(path.read_text()) if path.exists() else []), path, []
+            rows = json.loads(path.read_text()) if path.exists() else []
         except Exception as exc:
             print(f"cannot read {path.name}: {exc}")
             return None, path, []
+        return rows, path, sorted({str(r.get("date") or target)[:10] for r in rows})
 
     plan_path = production_lane.dispatch_plan_path(target, LOCALDATA)
     if plan_path.exists():
         plan = production_lane.load_dispatch_plan(target, LOCALDATA)
-        same_day = list(plan.get("same_day_picks") or [])
-        deferred = [r for r in (plan.get("horizon_picks") or [])
-                    if str(r.get("event_date")) != target]
-        return same_day, plan_path, deferred
+        rows = _production_slate_rows(plan)
+        return rows, plan_path, sorted({r["date"] for r in rows if r.get("date")})
 
     path = production_lane.production_picks_path(target, LOCALDATA)
     if not path.exists():
         return [], path, []
     try:
-        return json.loads(path.read_text()), path, []
+        rows = json.loads(path.read_text())
     except Exception as exc:
         print(f"cannot read {path.name}: {exc}")
         return None, path, []
-
-
-def apply_ticket_staking(rows: list[dict], *, stake_per_leg: float) -> list[dict]:
-    """Attach stake sizing to production picks.
-
-    Staking belongs here, not in the pick engine: bankroll, open exposure
-    and slip structure are all ticket-layer concerns. The pick engine hands
-    over a selection with its evidence and a delegation marker; this is the
-    layer allowed to turn that into money.
-    """
-    staked = []
-    for row in rows:
-        entry = dict(row)
-        entry["stake_units"] = stake_per_leg
-        entry["staked_by"] = "auto_tickets"
-        staked.append(entry)
-    return staked
+    return rows, path, sorted({str(r.get("date") or target)[:10] for r in rows})
 
 
 def main():

@@ -481,6 +481,87 @@ def clean_localdata(
     return removed
 
 
+# Markers that make a GENERATED artifact wrong rather than merely old:
+# retired rule identifiers, and stake notation the pick engine must never
+# emit. Raw evidence is matched by neither and is never touched.
+INVALID_ARTIFACT_MARKERS = (
+    "fresh_1x2_", "_v1_", "_v2_", "_v3_",
+    "stake: 1.0", "stake: 1u", "stake=1.0u", "1.0u", '"stake_units"',
+)
+
+# Only these generated prefixes may be purged for content. Raw captures,
+# settlement files and ledgers are excluded by construction: an artifact is
+# purged only if a run can rebuild it.
+PURGEABLE_GENERATED_PREFIXES = tuple(
+    prefix for prefix, _exts in FRESH_PRODUCTION_PREFIXES)
+
+
+def _is_regenerable_artifact(path: Path) -> bool:
+    return (path.suffix in (".json", ".md", ".txt")
+            and any(path.name.startswith(p)
+                    for p in PURGEABLE_GENERATED_PREFIXES))
+
+
+def purge_invalid_generated_artifacts(root: Path, *, dry_run: bool = False,
+                                      write_manifest: bool = False,
+                                      today: date | None = None) -> list[dict]:
+    """Delete regenerable artifacts that carry retired naming or stake notation.
+
+    Wrong artifacts are deleted, never renamed to a backup: a ``.bak`` copy
+    of a bad file is still a file an operator can read and act on. Raw
+    evidence is out of scope by prefix, so nothing needed for walk-forward,
+    settlement or audit reproducibility can be removed here.
+    """
+    today = today or date.today()
+    deleted: list[dict] = []
+    if not root.exists():
+        return deleted
+    for path in sorted(root.iterdir()):
+        if not path.is_file() or not _is_regenerable_artifact(path):
+            continue
+        try:
+            text = path.read_text(errors="ignore")
+        except OSError:
+            continue
+        hits = [m for m in INVALID_ARTIFACT_MARKERS if m in text]
+        if not hits:
+            continue
+        entry = {
+            "deleted_file": path.name,
+            "reason": "retired rule naming or pick-engine stake notation: "
+                      + ", ".join(sorted(hits)),
+            "replacement_file_if_any": path.name,
+            "raw_evidence_preserved": True,
+            "backup_created": False,
+            "bytes": path.stat().st_size,
+        }
+        print(f"  {'would delete' if dry_run else 'deleting'} invalid "
+              f"generated artifact: {path.name} ({entry['reason']})")
+        if not dry_run:
+            path.unlink()
+        deleted.append(entry)
+
+    if write_manifest:
+        manifest = {
+            "policy": "production",
+            "action": "purge_invalid_generated_artifacts",
+            "generated_on": today.isoformat(),
+            "dry_run": dry_run,
+            "deleted_count": len(deleted),
+            "deleted": deleted,
+            "raw_evidence_preserved": True,
+            "backup_created": False,
+            "purgeable_prefixes": list(PURGEABLE_GENERATED_PREFIXES),
+        }
+        out = root / f"invalid_artifact_purge_{today.isoformat()}.json"
+        if not dry_run:
+            out.write_text(json.dumps(manifest, indent=2, sort_keys=True))
+        print(f"  purge manifest: {out.name}")
+    if not deleted:
+        print("  no invalid generated artifacts found: nothing to delete.")
+    return deleted
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         description="Prune old dated telemetry from localdata/ (bounded retention).")
@@ -492,7 +573,11 @@ def main(argv: list[str] | None = None) -> int:
                         help="directory to clean (default: repo localdata/)")
     parser.add_argument("--dry-run", action="store_true",
                         help="list what would be removed without deleting")
-    parser.add_argument("--policy", choices=("telemetry", "fresh_production"),
+    parser.add_argument("--purge-invalid-generated-artifacts", action="store_true",
+                        help="production: delete generated artifacts carrying "
+                             "retired rule naming or pick-engine stake notation")
+    parser.add_argument("--policy",
+                        choices=("telemetry", "fresh_production", "production"),
                         default="telemetry",
                         help="retention policy to apply (default: telemetry)")
     parser.add_argument("--keep-latest", type=int, default=DEFAULT_KEEP_LATEST,
@@ -502,6 +587,16 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--write-manifest", action="store_true",
                         help="fresh_production: write artifact_manifest_DATE.{json,md}")
     args = parser.parse_args(argv)
+    # "production" is the current name; "fresh_production" stays accepted so
+    # existing schedules keep working.
+    if args.policy == "production":
+        args.policy = "fresh_production"
+
+    if args.purge_invalid_generated_artifacts:
+        purge_invalid_generated_artifacts(
+            args.localdata, dry_run=args.dry_run,
+            write_manifest=args.write_manifest,
+            today=args.today or date.today())
 
     if args.policy == "fresh_production":
         today = args.today or date.today()

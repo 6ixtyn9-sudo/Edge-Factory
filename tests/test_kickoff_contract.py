@@ -410,10 +410,17 @@ def test_guard_source_has_no_zone_table_and_live_path_uses_the_live_guard():
     assert src.count("from zoneinfo import ZoneInfo") == 1
     assert at.parse_kickoff is not at.parse_kickoff_proven
     assert at.parse_kickoff.__doc__ and "NOT a bet-time proof" in at.parse_kickoff.__doc__
-    # cmd_today wires the live guard; the audit contract is NOT on the live path
-    body = src[src.index("def cmd_today"):src.index("def print_status")]
+    # The live ticket builder wires the live guard; the audit contract is
+    # NOT on the live path. build_card_for_date is that builder (cmd_today
+    # orchestrates one call per event date), so the whole span from the
+    # builder to print_status is the live path.
+    body = src[src.index("def build_card_for_date"):src.index("def print_status")]
     assert "live_kickoff_guard(pool, now)" in body
     assert "kickoff_contract(pool" not in body
+    # Every ticket must come through that one builder: no second staking or
+    # selection path may exist alongside it.
+    assert src.count("\n    upsert_slip(st,") == 1
+    assert src.count("plan_day(plan_pool") == 1
     guard_src = src[src.index("def live_kickoff_guard"):src.index("def parse_kickoff_proven")]
     assert "KO_SKIP_NO_DATE" in guard_src
     assert "KO_SKIP_REMOTE_CLOCK" in guard_src

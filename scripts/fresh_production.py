@@ -131,6 +131,7 @@ PRICE_TIER_DEDICATED = "dedicated_pricing_feed"
 PRICE_TIER_SOURCE_EMBEDDED = "source_embedded_price"
 FLAT_STAKE_UNITS = 1.0
 # The pick engine states who owns staking rather than sizing a bet itself.
+PRODUCTION_BUCKET = "PRODUCTION_CERTIFIED"
 STAKING_POLICY = "handled_by_auto_tickets"
 STAKING_OWNER = "auto_tickets"
 
@@ -958,6 +959,13 @@ class Candidate:
     blockers: list[str] = field(default_factory=list)
     timing_diagnosis: dict = field(default_factory=dict)
     price_diagnosis: dict = field(default_factory=dict)
+    # Price-integrity provenance, carried so the ticket engine's
+    # execution-safe gate can judge the quote. A gate that cannot see the
+    # evidence is a gate that cannot fire.
+    price_quarantine_reason: str | None = None
+    price_evidence: str | None = None
+    odds_replaced: bool = False
+    price_push_eligible: bool = True
     would_have_qualified_before_kickoff: bool = False
     # Staking is NOT the pick engine's job. auto_tickets owns bankroll and
     # stake sizing, so a pick carries the delegation marker and nothing else.
@@ -1176,6 +1184,10 @@ def build_candidates(
             cand.price_tier = tier
             cand.price_match_method = priced["match_method"]
             cand.bookmaker = priced.get("bookmaker")
+            if priced["suspect"]:
+                cand.price_quarantine_reason = "alias_fuzzy"
+                cand.price_evidence = "SUSPECT_ALIAS_FUZZY"
+            cand.price_push_eligible = bool(priced.get("push_eligible", True))
             cand.implied_probability = round(1.0 / priced["odds"], 4)
             cand.edge = round(features["top_probability"] - cand.implied_probability, 4)
             if cand.edge > 0:
@@ -1639,27 +1651,62 @@ def render_summary(report: dict) -> str:
     return "\n".join(lines)
 
 
-def render_dispatch_plan_summary(plan: dict, report: dict) -> list[str]:
-    """Operator-facing statement of what will actually be published."""
+def render_dispatch_plan_summary(plan: dict, report: dict,
+                                 ticket_outcomes: dict | None = None
+                                 ) -> list[str]:
+    """Operator-facing statement of what will actually be published.
+
+    ``ticket_outcomes`` maps event date -> the auto-ticket engine's verdict.
+    A production selection is not a bet, so the summary reports the
+    selection and the ticket decision as separate facts.
+    """
     counts = report.get("blocker_counts", {})
     total = plan["same_day_pick_count"] + plan["horizon_pick_count"]
+    # Only dates that actually carried a selection have a verdict worth
+    # reporting; a date with nothing dispatched did not decline anything.
+    outcomes = {d: o for d, o in (ticket_outcomes or {}).items()
+                if (o or {}).get("selections")}
+    statuses = {d: str((o or {}).get("status") or "") for d, o in outcomes.items()}
+    created = [d for d, v in statuses.items() if v == "ticket_created"]
+    declined = sorted(f"{d}: {v}" for d, v in statuses.items()
+                      if v.startswith("declined_"))
+    benched = sorted({b for o in outcomes.values()
+                      for b in (o.get("benched_buckets") or ())
+                      + tuple(o.get("slice_benched_buckets") or ())})
+    if created:
+        ticket_status = f"open slip on {', '.join(sorted(created))}"
+        auto_action = "ticket_created"
+        staking_assigned = "percentage of capital / free bank"
+    elif declined:
+        ticket_status = "no ticket"
+        auto_action = "; ".join(declined)
+        staking_assigned = "no"
+    else:
+        ticket_status = "no ticket"
+        auto_action = "not evaluated" if total else "nothing to evaluate"
+        staking_assigned = "no"
     lines = [
         "PRODUCTION DISPATCH PLAN",
-        f"  same-day picks:                {plan['same_day_pick_count']}",
-        f"  future-dated picks:            {plan['horizon_pick_count']}",
-        f"  future event dates:            "
-        f"{', '.join(plan['future_event_dates']) or 'none'}",
-        f"  supabase rows to publish:      {total} "
-        f"across {', '.join(plan['event_dates']) or 'no'} date(s)",
+        f"  production selections:         {total}",
+        f"  same-day selections:           {plan['same_day_pick_count']}",
+        f"  future-dated selections:       {plan['horizon_pick_count']}",
+        f"  event dates:                   "
+        f"{', '.join(plan['event_dates']) or 'none'}",
+        f"  Supabase selections published: {total}",
+        f"  CLV captured:                  {total} at dispatch time",
         f"  notification action:           {plan['notification_action']}",
-        f"  clv capture:                   {total} pick(s) at dispatch time",
-        f"  auto-ticket action:            "
-        + ("stake same-day picks" if plan["same_day_pick_count"]
-           else f"hold {plan['horizon_pick_count']} future-dated pick(s) "
-                "for their own event date" if plan["horizon_pick_count"]
-           else "nothing to stake"),
-        f"  staking:                       {STAKING_POLICY} "
-        f"(owner: {STAKING_OWNER})",
+        f"  auto-ticket action:            {auto_action}",
+        f"  ticket status:                 {ticket_status}",
+        f"  assayer action:                "
+        + ("ran; no bucket diminished" if outcomes and not benched
+           else f"benched {', '.join(benched)}" if benched
+           else "not run (no selections reached the ticket engine)"),
+        f"  benching action:               "
+        + (f"{', '.join(benched)} excluded from selection" if benched
+           else "none"),
+        f"  staking owner:                 {STAKING_OWNER}",
+        f"  staking assigned:              {staking_assigned}",
+        f"  staking policy:                {STAKING_POLICY}",
     ]
     for row in plan["horizon_picks"]:
         lines.append(
@@ -1789,7 +1836,15 @@ def horizon_pick_rows(horizon: dict) -> list[dict]:
             "avg_p": round((pick.get("probability") or 0) * 100, 2),
             "implied_probability": pick.get("implied_probability"),
             "edge": pick.get("edge"),
-            "bucket": "FRESH_PRODUCTION_CERTIFIED",
+            "bucket": PRODUCTION_BUCKET,
+            # Price-integrity provenance must travel with the selection.
+            # auto_tickets' execution-safe gate reads these fields; if the
+            # row builder drops them the gate silently cannot fire and a
+            # quarantined or audit-only quote would reach a ticket.
+            "price_quarantine_reason": pick.get("price_quarantine_reason"),
+            "price_evidence": pick.get("price_evidence"),
+            "odds_replaced": pick.get("odds_replaced"),
+            "price_push_eligible": pick.get("price_push_eligible", True),
             "edge_rule": pick.get("rule_id"),
             "rule_id": pick.get("rule_id"),
             "display_rule": f"{pick.get('dispatch_method')}:{pick.get('rule_id')}",
@@ -1940,7 +1995,15 @@ def production_pick_rows(candidates: list[Candidate]) -> list[dict]:
             "avg_p": round(c.probability * 100, 2),
             "implied_probability": c.implied_probability,
             "edge": c.edge,
-            "bucket": "FRESH_PRODUCTION_CERTIFIED",
+            "bucket": PRODUCTION_BUCKET,
+            # Price-integrity provenance must travel with the selection.
+            # auto_tickets' execution-safe gate reads these fields; if the
+            # row builder drops them the gate silently cannot fire and a
+            # quarantined or audit-only quote would reach a ticket.
+            "price_quarantine_reason": c.price_quarantine_reason,
+            "price_evidence": c.price_evidence,
+            "odds_replaced": c.odds_replaced,
+            "price_push_eligible": c.price_push_eligible,
             "edge_rule": c.rule_id,
             "display_rule": f"{c.dispatch_method}:{c.rule_id}",
             "edge_status": "certified",

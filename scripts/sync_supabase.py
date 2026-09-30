@@ -358,8 +358,15 @@ def write_sync_manifest(*, target_date: str, picks_path: Path, raw_text: str, pi
     return out
 
 
-def dispatch_plan_rows(plan: dict) -> list[dict]:
-    """Every pick the plan wants published, each under its own event date."""
+def dispatch_plan_rows(plan: dict, ticket_outcomes: dict | None = None
+                       ) -> list[dict]:
+    """Every selection the plan publishes, each under its own event date.
+
+    Rows are production *selections*. ``ticket_status`` records whether
+    auto-tickets turned each one into a bet; a schema lacking the column
+    simply drops it, which is why the record stays self-describing via
+    ``record_type`` and ``staking_owner`` too.
+    """
     rows: list[dict] = []
     for row in list(plan.get("same_day_picks") or []) + \
                list(plan.get("horizon_picks") or []):
@@ -368,6 +375,16 @@ def dispatch_plan_rows(plan: dict) -> list[dict]:
         # under the run date would appear on the dashboard as a bet on a
         # match that is not played that day.
         row["date"] = row.get("event_date") or row.get("date")
+        row.setdefault("run_date", plan.get("run_date"))
+        # The warehouse must be able to tell a production SELECTION from a
+        # production TICKET. Auto-tickets owns the latter, so the selection
+        # row records the delegation and the ticket verdict separately
+        # rather than implying a bet that may never have been placed.
+        row["record_type"] = "production_selection"
+        row.setdefault("staking_owner", "auto_tickets")
+        row.setdefault("ticket_status",
+                       (ticket_outcomes or {}).get(str(row["date"]), {})
+                       .get("status") or "not_evaluated")
         rows.append(row)
     return rows
 

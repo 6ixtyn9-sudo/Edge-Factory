@@ -212,3 +212,125 @@ def check_production_artifact(payload: Any, *, context: str = "") -> None:
     assert_no_forbidden_version_labels(payload, context=context)
     assert_no_fresh_prefix_in_rule_ids(payload, context=context)
     assert_no_browser_probe_paths(payload, context=context)
+
+
+# ---------------------------------------------------------------------------
+# Production selection vs. bet
+# ---------------------------------------------------------------------------
+# The production lane produces SELECTIONS. auto_tickets produces BETS. The
+# two are not the same thing, and conflating them is how a single dispatched
+# pick gets reported as a staked bet it never was.
+
+TICKET_DECLINE_PREFIX = "declined_"
+
+
+def assert_production_selection_not_automatically_ticket(plan, outcomes,
+                                                         *, context=""):
+    """A dispatched selection is only a bet once auto-tickets accepts it.
+
+    ``outcomes`` maps event date -> auto-ticket outcome. Every event date
+    carrying a selection must have an outcome, and that outcome must either
+    be an accepted ticket or a named decline. Silence is not allowed: an
+    unreported event date is a selection that vanished.
+    """
+    where = context or "dispatch plan"
+    selections = list(plan.get("same_day_picks") or []) + \
+        list(plan.get("horizon_picks") or [])
+    dates = {str(p.get("event_date") or p.get("date") or "")[:10]
+             for p in selections}
+    dates.discard("")
+    for day in sorted(dates):
+        assert day in outcomes, (
+            f"{where}: event date {day} carries a production selection but "
+            f"auto-tickets reported no outcome for it. A selection must be "
+            f"ticketed or explicitly declined, never dropped.")
+        status = str(outcomes[day].get("status") or "")
+        assert status, f"{where}: event date {day} has a blank ticket status"
+        assert status == "ticket_created" or \
+            status.startswith(TICKET_DECLINE_PREFIX) or \
+            status in ("ticket_frozen", "deferred_before_build_hour"), (
+                f"{where}: event date {day} has status {status!r}, which is "
+                f"neither an accepted ticket nor a named decline.")
+        if status.startswith(TICKET_DECLINE_PREFIX):
+            assert not outcomes[day].get("accas"), (
+                f"{where}: event date {day} declined ({status}) yet reports "
+                f"accas — a decline must not also claim a bet.")
+
+
+def assert_auto_tickets_assayer_not_bypassed(auto_tickets_module, *, context=""):
+    """The ticket path must still run the tripwire and the ladder."""
+    where = context or "auto_tickets"
+    import inspect
+
+    src = inspect.getsource(auto_tickets_module.build_card_for_date)
+    for required in ("playable_legs(", "live_kickoff_guard(",
+                     "compute_bucket_pnl(", "compute_bucket_slice(",
+                     "plan_day(", "upsert_slip("):
+        assert required in src, (
+            f"{where}: the live ticket builder no longer calls {required} — "
+            f"the production lane must not bypass it.")
+
+
+def assert_benching_state_respected(outcome, *, context=""):
+    """A benched bucket cannot have produced a ticket."""
+    where = context or "ticket outcome"
+    benched = set(outcome.get("benched_buckets") or ()) | \
+        set(outcome.get("slice_benched_buckets") or ())
+    if benched and outcome.get("status") == "ticket_created":
+        raise AssertionError(
+            f"{where}: a ticket was created while {sorted(benched)} "
+            f"were benched. Benching closes the door before selection.")
+
+
+def assert_auto_ticket_staking_owns_stake(auto_tickets_module, *, context=""):
+    """Staking is percentage-of-capital, inside auto-tickets, and nowhere else."""
+    where = context or "auto_tickets"
+    import inspect
+
+    assert not hasattr(auto_tickets_module, "apply_ticket_staking"), (
+        f"{where}: a flat-unit staking helper exists alongside plan_day(); "
+        f"there must be exactly one staking engine.")
+    src = inspect.getsource(auto_tickets_module.plan_day)
+    assert "stake_pct" in src, (
+        f"{where}: plan_day no longer sizes in percent of capital.")
+    assert "stake_units" not in src, (
+        f"{where}: plan_day emits unit notation; the contract is percent.")
+
+
+def assert_no_legacy_fallback(rows, *, context=""):
+    """No legacy-baseline row may be presented as a production selection."""
+    where = context or "production slate"
+    for row in rows or ():
+        if not isinstance(row, dict):
+            continue
+        for key in ("rule_source", "lane", "edge_status", "bucket"):
+            value = str(row.get(key) or "").lower()
+            assert "legacy_baseline" not in value, (
+                f"{where}: legacy baseline row reached the production slate "
+                f"via {key}={row.get(key)!r}. Legacy is comparison-only.")
+
+
+def assert_wrong_generated_artifacts_deleted(paths, *, context=""):
+    """Artifacts carrying retired naming or stake notation must be gone."""
+    where = context or "localdata"
+    for path in paths or ():
+        p = Path(path)
+        if not p.exists():
+            continue
+        text = p.read_text(errors="ignore")
+        for marker in ("fresh_1x2_", "_v1_", "_v2_", "_v3_"):
+            assert marker not in text, (
+                f"{where}: {p.name} still contains {marker!r}; wrong "
+                f"generated artifacts must be deleted and regenerated.")
+        assert_no_stake_notation_in_text(text, context=p.name)
+
+
+def assert_no_backup_wrong_artifacts_created(directory, *, context=""):
+    """Wrong artifacts are deleted, never parked under a backup suffix."""
+    where = context or str(directory)
+    bad = [p.name for p in Path(directory).glob("*")
+           if p.suffix in (".bak", ".old", ".legacy", ".orig")
+           or ".pre-cleanup" in p.name or p.name.endswith("~")]
+    assert not bad, (
+        f"{where}: backup copies of wrong artifacts exist: {sorted(bad)}. "
+        f"Delete wrong generated artifacts; do not archive them.")

@@ -64,6 +64,7 @@ SNAPSHOT_FIELDS = [
     "rule_id",
     "pricing_source",
     "dispatch_plan_id",
+    "ticket_status",
     "horizon_pick",
 ]
 
@@ -309,6 +310,17 @@ def _capture_rows(run_date: str, label: str, input_path: Path) -> tuple[list[dic
     }
 
 
+def _ticket_outcomes(run_date: str) -> dict:
+    """Per-event-date auto-ticket statuses, if the ticket run has happened."""
+    path = LOCALDATA / f"auto_ticket_outcomes_{run_date}.json"
+    if not path.exists():
+        return {}
+    try:
+        return dict(json.loads(path.read_text()).get("outcomes") or {})
+    except (OSError, ValueError):
+        return {}
+
+
 def _dispatch_plan_picks(run_date: str) -> list[dict[str, Any]] | None:
     """All picks dispatched by this run, same-day and future-dated.
 
@@ -323,6 +335,7 @@ def _dispatch_plan_picks(run_date: str) -> list[dict[str, Any]] | None:
     if not plan_path.exists():
         return None
     plan = production_lane.load_dispatch_plan(run_date, LOCALDATA)
+    ticket_outcomes = _ticket_outcomes(run_date)
     picks: list[dict[str, Any]] = []
     for row in list(plan.get("same_day_picks") or []) + \
                list(plan.get("horizon_picks") or []):
@@ -330,6 +343,12 @@ def _dispatch_plan_picks(run_date: str) -> list[dict[str, Any]] | None:
         # Price the fixture on its own event date.
         entry["date"] = entry.get("event_date") or entry.get("date")
         entry.setdefault("dispatch_plan_id", plan.get("run_date") or run_date)
+        # A production selection is captured whether or not it became a
+        # bet; the ticket engine's verdict rides along so CLV can tell a
+        # staked ticket from a declined candidate.
+        entry.setdefault("ticket_status",
+                         (ticket_outcomes.get(str(entry.get("event_date") or ""))
+                          or {}).get("status") or "unknown")
         picks.append(entry)
     return picks
 

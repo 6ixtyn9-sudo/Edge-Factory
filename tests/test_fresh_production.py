@@ -654,7 +654,7 @@ def test_fresh_dispatchable_picks_are_the_production_rows(tmp_path, monkeypatch)
     assert len(rows) == 1
     assert rows[0]["lane"] == "fresh_production"
     assert rows[0]["home"] == "Home Team 00"
-    assert rows[0]["bucket"] == "FRESH_PRODUCTION_CERTIFIED"
+    assert rows[0]["bucket"] == fp.PRODUCTION_BUCKET == "PRODUCTION_CERTIFIED"
 
 
 def test_production_pick_rows_are_written_even_when_empty(tmp_path):

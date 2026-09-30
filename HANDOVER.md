@@ -11275,6 +11275,111 @@ operator summary.
 
 ---
 
+## Addendum — 2026-09-30 (sixth pass: production lane reconciled with the auto-ticket engine)
+
+### The correction that mattered
+
+The fifth pass treated `auto_tickets.py` as a staking add-on. It is not. It
+is **the final betting engine**: playable-leg filtering, price-integrity
+quarantine, execution-safe pricing, 1X2-only and odds-floor gates, the live
+kickoff guard, settled/archived removal, the bucket P&L tripwire, the
+selection-ladder assay, benching and demotion, same-fixture deduplication,
+2-leg acca formation, percentage-of-capital staking, slip persistence,
+settlement, bank tracking and take-profit notification — all covered by the
+replay harness so live and backtest cannot drift.
+
+**The production lane produces SELECTIONS. auto-tickets produces BETS.**
+
+Three defects were fixed:
+
+1. **A parallel staking engine existed.** `apply_ticket_staking()` attached
+   flat unit stakes outside `plan_day()`. Deleted. `plan_day()` is the only
+   staking path and stays percentage-of-capital.
+2. **The bridge bypassed the engine.** A future-dated selection caused an
+   early return before `playable_legs()` was ever called. Removed: every
+   selection now runs the full gate chain.
+3. **The bridge never actually worked.** Production rows carried
+   `bucket="FRESH_PRODUCTION_CERTIFIED"`, which is not in `BUCKETS`, so
+   `playable_legs()` silently dropped every one of them. The bucket is now
+   `PRODUCTION_CERTIFIED` and **registered in `BUCKETS`** — which is also
+   what subjects production selections to the P&L tripwire and the ladder.
+   An unregistered bucket cannot be benched, because it is never scored.
+
+Related: the pick engine's row builders dropped `price_quarantine_reason`,
+`price_evidence`, `odds_replaced` and `price_push_eligible`, so the
+execution-safe gate could not see the evidence it judges. Those fields are
+now carried on `Candidate` and emitted on every row. Without this, a
+quarantined or audit-only quote could have reached a ticket.
+
+### The bridge
+
+```
+production dispatch plan
+  -> load_production_slate()      (all selections, each dated by event_date)
+  -> playable_legs(execution_safe=True)
+  -> live_kickoff_guard()
+  -> settled / already-archived removal
+  -> compute_bucket_pnl()         (door bench + stake weights)
+  -> compute_bucket_slice()       (selection ladder)
+  -> select_accas()               (rank, dedup fixtures, pair, min card)
+  -> plan_day()                   (percent of capital)
+  -> upsert_slip()  or  a named decline
+```
+
+`build_card_for_date()` is that single path; `cmd_today()` calls it once per
+event date. `HORIZON_TICKET_POLICY = "event_date_cards"` evaluates a future
+event date's selections and books the slip under the **event date**;
+`"same_day_only"` declines them with a stated reason.
+
+### Decline reasons
+
+`NO BET TODAY` is gone from the production path. Every refusal is named:
+`declined_no_selections`, `declined_insufficient_legs`,
+`declined_bucket_pnl_benched`, `declined_selection_ladder_benched`,
+`declined_price_integrity`, `declined_kickoff_guard`,
+`declined_same_day_only_policy`, `declined_duplicate_fixture`,
+`declined_already_settled`, `declined_exposure_limit`, `declined_plan_empty`,
+against `ticket_created`. Written to
+`auto_ticket_outcomes_<run_date>.json` and read by CLV, notification,
+Supabase and the summary.
+
+### Latest future selection
+
+One selection (Panama vs New Zealand, 2026-10-01, home @ 2.25, edge +0.1403,
+`1x2_two_source_p55_unanimous`). Auto-tickets **declined:
+`declined_insufficient_legs`** — the validated recipe needs 2 legs per acca
+and only one qualified. No slip, no stake. With a second eligible selection
+the same path produces a real acca staked at 12.5% of capital.
+
+### Downstream
+
+- **CLV** captures the selection either way and records `ticket_status`.
+- **Notification** says `PRODUCTION TICKET` only when a slip exists,
+  otherwise `PRODUCTION SELECTION` plus the decline reason and
+  `staking: not assigned because no ticket was created`.
+- **Supabase** rows carry `record_type=production_selection`, `run_date`,
+  event `date`, `ticket_status`, `staking_owner`.
+- **daily.py** now runs auto-tickets *before* the end-of-run CLV capture so
+  the verdict is known at capture time.
+
+### Artifacts
+
+`clean_localdata.py --policy production --purge-invalid-generated-artifacts
+--write-manifest` deletes regenerable artifacts containing retired rule
+naming or stake notation, and writes a manifest with `deleted_file`,
+`reason`, `replacement_file_if_any`, `raw_evidence_preserved: true`,
+`backup_created: false`. Only regenerable prefixes are eligible; raw
+captures, settlement files and ledgers are out of scope by construction.
+
+The ten artifacts the fifth pass had *text-migrated* were **deleted**
+instead: a hand-edited generated artifact looks like run output but is not.
+CI regenerates them on the next run. No backups were created. Raw evidence
+untouched (23 capture archives, 30 daily pick files, 35 slips).
+
+**PR #18 is NOT merged.**
+
+---
+
 ## Addendum — 2026-09-30 (fifth pass: rule-ID naming, staking ownership, dispatch-plan routing, harness)
 
 ### Rule identifiers renamed

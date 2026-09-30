@@ -1045,6 +1045,14 @@ def run_pipeline(
         run_future_planner(target_date, future_days, target_picks, run_as_of)
 
         restore_target_picks(target_picks_text)
+        # Auto-tickets runs BEFORE the end-of-run CLV capture so each captured
+        # selection can record the ticket engine's verdict. A production
+        # selection is not a bet until this step accepts it, and CLV needs to
+        # know which it was.
+        run_soft(
+            "PYTHONPATH=src python3 scripts/auto_tickets.py",
+            "auto_tickets (ticket formation, staking, freeze)",
+        )
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label end_of_run",
             f"audit_clv capture {target_date} [end_of_run]",
@@ -1057,10 +1065,6 @@ def run_pipeline(
         run_soft(
             f"PYTHONPATH=src python3 scripts/audit_recent_picks.py --end {target_date} --days 30",
             f"audit_recent_picks {target_date} [30d]",
-        )
-        run_soft(
-            "PYTHONPATH=src python3 scripts/auto_tickets.py",
-            "auto_tickets (generate/freeze)",
         )
         run_soft(
             "PYTHONPATH=src python3 scripts/auto_tickets_grade.py",

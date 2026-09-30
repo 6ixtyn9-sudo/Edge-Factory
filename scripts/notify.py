@@ -111,15 +111,20 @@ def _unsent_future_picks(plan: dict, sent_keys: set) -> dict:
     return trimmed
 
 
-def format_future_pick_message_from_plan(plan: dict, target_date: str) -> str | None:
+def format_future_pick_message_from_plan(plan: dict, target_date: str,
+                                         ticket_outcomes: dict | None = None
+                                         ) -> str | None:
     """Announce eligible future-dated picks, labelled by their event date.
 
     Returns None when there is nothing new to announce, so the caller falls
     back to the ordinary empty-slate heartbeat.
 
-    Staking is deliberately absent: auto_tickets owns bankroll and stake
-    sizing, so the notice states the selection and its evidence only.
+    A dispatched selection is not a bet. When auto-tickets accepted it the
+    notice says TICKET; when auto-tickets declined it says SELECTION and
+    names the decline reason. Stake size never appears here: auto_tickets
+    owns bankroll and sizing.
     """
+    ticket_outcomes = ticket_outcomes or {}
     if not plan:
         return None
     rows = plan.get("horizon_picks") or []
@@ -135,7 +140,11 @@ def format_future_pick_message_from_plan(plan: dict, target_date: str) -> str | 
         edge_text = f"{edge:+.4f}" if isinstance(edge, (int, float)) else "unknown"
         probability = row.get("probability")
         lines.append("")
-        lines.append(f"FRESH PRODUCTION PICK — event date {row.get('event_date')}")
+        event_date = str(row.get("event_date") or "")
+        outcome = ticket_outcomes.get(event_date) or {}
+        status = str(outcome.get("status") or "")
+        kind = "TICKET" if status == "ticket_created" else "SELECTION"
+        lines.append(f"PRODUCTION {kind} — event date {event_date}")
         lines.append(f"  {row.get('home')} vs {row.get('away')}")
         lines.append(f"  kickoff: {row.get('kickoff') or 'unknown'}")
         lines.append(f"  selection: {row.get('pick')} @ {row.get('odds')}")
@@ -144,15 +153,36 @@ def format_future_pick_message_from_plan(plan: dict, target_date: str) -> str | 
         lines.append(f"  edge: {edge_text}")
         if row.get("edge_rule"):
             lines.append(f"  rule: {row['edge_rule']}")
+        if status:
+            lines.append(f"  auto-ticket action: {status}")
     lines.append("")
-    lines.append("staking: handled by auto-tickets")
+    statuses = {str((ticket_outcomes.get(str(r.get("event_date") or "")) or {})
+                    .get("status") or "") for r in rows}
+    if statuses == {"ticket_created"}:
+        lines.append("staking: handled by auto-tickets")
+    elif ticket_outcomes:
+        lines.append("staking: not assigned because no ticket was created")
+    else:
+        lines.append("staking: handled by auto-tickets")
     return "\n".join(lines)
 
 
-def format_future_pick_message(plan_path: object, target_date: str) -> str | None:
+def _load_ticket_outcomes(target_date: str) -> dict:
+    """Per-event-date auto-ticket statuses written by the ticket run."""
+    path = LOCALDATA / f"auto_ticket_outcomes_{target_date}.json"
+    if not path.exists():
+        return {}
+    try:
+        return dict(json.loads(path.read_text()).get("outcomes") or {})
+    except (OSError, ValueError):
+        return {}
+
+
+def format_future_pick_message(plan_path: object, target_date: str,
+                               ticket_outcomes: dict | None = None) -> str | None:
     """Convenience wrapper: read a plan from disk and format it."""
     return format_future_pick_message_from_plan(
-        _read_dispatch_plan(plan_path), target_date)
+        _read_dispatch_plan(plan_path), target_date, ticket_outcomes)
 
 
 HEARTBEAT_TEXT = (
@@ -548,8 +578,11 @@ def main() -> int:
         unsent_plan = _unsent_future_picks(
             future_plan, set() if args.force else sent_keys)
         future_pick_keys = _future_pick_keys(unsent_plan)
+        # The ticket engine's verdict decides whether this is announced as
+        # a TICKET or as a SELECTION that auto-tickets declined.
+        ticket_outcomes = _load_ticket_outcomes(target_date)
         future_message = format_future_pick_message_from_plan(
-            unsent_plan, target_date)
+            unsent_plan, target_date, ticket_outcomes)
 
     heartbeat_message = None
     if (args.heartbeat
