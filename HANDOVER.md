@@ -9742,3 +9742,140 @@ transitional Cloudflare challenge could resolve.
 - Cloudflare Worker JavaScript syntax: clean with `node --check` across all Worker files.
 - Mocked Worker test suite: 34 tests, 34 passed.
 - `git diff --check`: clean.
+
+## Addendum — 2026-09-30: consensus source expansion (ProSoccer + SoccerVista); Phase-1-only restriction lifted
+
+### Operator authorization and scope
+
+The operator explicitly **lifted** the "Phase 1 diagnostic-only /
+do-not-modify-forebet.py" limitation recorded in the two earlier 2026-09-30
+addenda and in `relay/README.md`. Those boundary clauses are superseded by this
+addendum: `forebet.py`, relay endpoints, source adapters, entity configuration,
+and pipeline scripts are all modifiable for production source integration.
+
+The security *architecture* is unchanged on purpose: relays stay POST-only,
+token-authenticated, exact-allowlist transports that can never alter source
+identity; Python adapters still validate echoed URLs and payload shape; the
+walk-forward certification gates still arbitrate which sources earn live votes.
+
+### Forebet status (unchanged diagnosis)
+
+Forebet remains behind Cloudflare's interactive managed challenge
+(`captcha_or_turnstile_required`, "Just a moment...") on direct, relay, and
+Browser Run paths. No paid solver, residential proxy, or stealth layer was
+added. The consensus engine instead gains two accessible, independent
+mathematical sources.
+
+### Candidate probing receipts (live, 2026-09-30 UTC)
+
+**ProSoccer — https://www.prosoccer.gr/en/football/predictions/**
+
+- Server-rendered HTML table `id="tblPredictions"`; columns: League, UTC,
+  Match (`HOME - AWAY`), Predict. Prob% 1/X/2, Tips, Avg. Odds 1/X/2,
+  Pred. Score 1/2, Under 2.5, Over 2.5, Final Score. Pagination is client-side
+  JS ("Displaying 1 - 5 out of 27 soccer matches"; `?show=all` is a no-op), so
+  raw HTML carries every row; a banner row-count tripwire warns on any future
+  shift to server-side paging.
+- Coverage = rolling prediction week only: `/` (today), `yesterday.html`,
+  `tomorrow.html`, `{Monday..Sunday}.html`. `?force_date=` redirects to today
+  for any date; `/en/football/archive/` is offline ("migrating to SSL").
+- Final Score column fills as matches finish (tip codes gain `c`/`f` result
+  prefixes), so the yesterday page doubles as a results donor. Sample rows
+  captured from the live page: `SAGAN TOSU - TOKYO VERDY 31/28/41 tip f21
+  odds 3.20/3.30/2.10 final 1-1`; `JAGIELLONIA - SUDUVA 53/31/16 final 5-0`;
+  `FINLAND - BELARUS 72/20/8 final 0-0 Postp.-aware`; yesterday page carried
+  22 settled rows (`FORTALEZA BOGOTA - DEPORTES TOLIMA 22/28/50 final 2-2`).
+
+**SoccerVista — https://www.soccervista.com/** (newsoccervista.com resolves here)
+
+- Cloudflare-fronted but server-rendered homepage table: league separator rows
+  (`USA: MLS`), then 10-cell match rows (kickoff, home form+name,
+  "View details for HOME vs AWAY", away name+form, 1/X/2 avg odds, 1X2 pick,
+  Goals O/U tip, predicted score). Every row links `/event/<slug>/<event_id>/`
+  providing a stable event id. Sample rows: `New York Red Bulls - St. Louis
+  City pick 2, odds 2.45/3.8/2.35`; `Eritrea - South Africa pick 1, no odds`,
+  `Poland U21 - Sweden U21 pick 1, goals tip O`.
+- Today-only: `soccer_games.php?date=` and `next_matches.php` return
+  "File not found"; `?date=` does not move the page; the day picker is
+  JS-driven with no plain-GET archive URL. Same capture-forward profile as
+  betclan/afootballreport.
+
+Both endpoints were reachable with plain browser-profile GETs (no challenge)
+during probing; the sandbox used for probing had no direct egress, so content
+was verified through the platform fetch tool and GitHub-hosted scraper
+reference implementations (`tblPredictions` table shape, column indices, and
+`c`/`f` tip prefixes cross-confirmed).
+
+### What was implemented
+
+- `src/edgefactory/sources/prosoccer.py` — `fetch_day(date)` + `COLUMNS`
+  (`date, kickoff, league, home, away, p1, px, p2, tip, odd1, oddx, odd2,
+  pred_score1, pred_score2, p_u25, p_o25, hs, gs, status`). Deterministic
+  URL routing inside the prediction week; H1 page-date verification rejects
+  stale/re-routed pages; missing-table and H1-loss raise (layout shift /
+  challenge can never masquerade as a zero-fixture day); transport ladder
+  urllib → curl_cffi (safari17_0/firefox133) → operator relays.
+- `src/edgefactory/sources/soccervista.py` — `fetch_day(date)` today-only,
+  same transport ladder; brand-marker + table-presence validation with the
+  same honest-failure semantics; `COLUMNS` (`date, kickoff, league, home,
+  away, pick, goals_tip, pred_score, odd1, oddx, odd2, event_id, url`).
+- Relay allowlists extended with exact-path rules: ProSoccer prediction-week
+  pages (query-string-rejecting) and the SoccerVista homepage, in both
+  `relay/cloudflare-worker/src/index.js` (via new testable
+  `src/allowlist.js`) and `relay/google-apps-script/Code.gs`, with
+  `text/html` accept headers for the new host class.
+- Pipeline wiring: `sources/__init__.py` exports; `capture_daily.py` jobs
+  (`prosoccer` YESTERDAY..TOMORROW, `soccervista` TODAY..TODAY);
+  `refresh_result_sources.py` donor list gains `prosoccer`;
+  `warehouse.py` raw views for both sources plus `prosoccer_settled`
+  (vitibet-style %→0-1 normalization, entity `hkey`/`akey` via
+  `norm_team_sql`); `build_warehouse.py` TABLES extended.
+- Consensus wiring (`mine_consensus.py`): `prosoccer` added to the weighted
+  1X2/OU2.5 source lists and per-source Wilson-LB specs; `soccervista`
+  gained Phase-A `soccervista_settled` (joins the forebet results donor,
+  windrawwin-style) plus 2way/3way `soccervista-confirms` levers, classified
+  as Phase-A shadow until training-depth gates are met. Every new rule passes
+  the identical walk-forward gates as existing sources — capture-forward rows
+  accrue post-split evidence and cannot fire live votes early.
+- `Config/entity_overrides.json`: high-confidence league aliases verified
+  against the live pages (`US1`/`USA: MLS`→`us1`, `JPL`→`jp1`, `MX1`→`mx1`,
+  `CO1`→`co1`, `AR2`→`ar2` plus their normalized/`: `-joined forms). Team
+  aliases are deliberately left to the learned `entity_registry.json`, per
+  the file's own design note.
+
+### Deliberately unchanged
+
+- `picks_today.py` live voting lists (`SOURCES_1X2/OU/BTTS`, `ALL_SOURCES`)
+  are untouched: new sources must earn certification through walk-forward
+  evidence before influencing pick-time vote weights. The mined
+  `soccervista-confirms` / weighted-prosoccer candidates surface in the miner
+  report as shadow/candidates, exactly like predictz/windrawwin Phase A.
+- The Forebet diagnostic workflow, Browser Run binding, KV gate, and relay
+  token contract are untouched; `relay/README.md` now records the lifted
+  restriction and the failure-driven reason Browser Run stays manual.
+- No source substitution, threshold, staking, ticket, or notification change.
+
+### Verification receipts
+
+- Full pytest suite: **756 passed** (731 baseline + 25 new) — zero regressions
+  across pricing, assay purity, auto-ticket, settlement, and relay suites.
+- New unit tests: `tests/test_prosoccer.py` (schema extraction incl. settled
+  scores, postponed status, malformed/short rows, H1 date guard, routing
+  window, transport ladder incl. relay fallback, banner tripwire) and
+  `tests/test_soccervista.py` (fixture extraction, league propagation,
+  missing-odds→None, details-title fallback, challenge/layout-shift raising,
+  today-only no-network guard, relay provenance validation).
+- Warehouse smoke (synthetic csv.gz rows): `prosoccer` view normalizes probs
+  to 0–1 (`max p1 = 0.72`), junk odds → NULL, hkeys correct;
+  `prosoccer_settled` derives `pick='away'`, `outcome='draw'` correctly;
+  `soccervista` view isolates league/pick/odds/event_id.
+- Miner smoke (in-memory DuckDB): `soccervista_settled` joins correctly,
+  `consensus2_soccervista_confirm` builds, 4 confirmation levers evaluate
+  without SQL errors; missing-data branches skip gracefully.
+- Relay Worker: `node --check` clean on `src/index.js`, `src/allowlist.js`,
+  `src/browser-diagnostic.js`; `npm test` **40 passed** (34 baseline + 6 new
+  allowlist-contract tests covering ProSoccer/SoccerVista exact paths, query
+  rejection, host-suffix spoof rejection, and per-source header contracts).
+- Apps Script relay: `node --check` clean on `Code.gs` (via .js copy, the
+  `.gs` extension is not directly checkable).
+- `git diff --check`: clean.

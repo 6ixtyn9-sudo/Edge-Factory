@@ -260,6 +260,7 @@ def _source_wilson_lbs(con, split: str) -> dict[str, dict[str, float]]:
         ("statarea_settled",   "statarea",   "1x2"),
         ("vitibet_settled",    "vitibet",    "1x2"),
         ("scoutingstats_settled", "scoutingstats", "1x2"),
+        ("prosoccer_settled",  "prosoccer",  "1x2"),
     ]:
         if _table_exists(con, view):
             SINGLE_SOURCE_SPECS.append((view, key, mkt, "pick", "outcome", 1.0))
@@ -275,6 +276,10 @@ def _source_wilson_lbs(con, split: str) -> dict[str, dict[str, float]]:
                                     "CASE WHEN hs+gs >= 3 THEN 'over' ELSE 'under' END", 1.0))
     if _table_exists(con, "scoutingstats_settled"):
         SINGLE_SOURCE_SPECS.append(("scoutingstats_settled", "scoutingstats", "ou_2.5",
+                                    "CASE WHEN p_o25/1.0 >= 0.5 THEN 'over' ELSE 'under' END",
+                                    "CASE WHEN hs+gs >= 3 THEN 'over' ELSE 'under' END", 1.0))
+    if _table_exists(con, "prosoccer_settled"):
+        SINGLE_SOURCE_SPECS.append(("prosoccer_settled", "prosoccer", "ou_2.5",
                                     "CASE WHEN p_o25/1.0 >= 0.5 THEN 'over' ELSE 'under' END",
                                     "CASE WHEN hs+gs >= 3 THEN 'over' ELSE 'under' END", 1.0))
 
@@ -311,8 +316,12 @@ def _source_wilson_lbs(con, split: str) -> dict[str, dict[str, float]]:
 
 # Source weight table used in pick-time weighted consensus (also exported via
 # mine so that picks_today.py can read it from edges_consensus.json).
-_WEIGHTED_SOURCES_1X2   = ["forebet", "zulubet", "statarea", "vitibet", "scoutingstats"]
-_WEIGHTED_SOURCES_OU25  = ["forebet", "statarea", "scoutingstats"]
+# NOTE: capture-forward sources (prosoccer) can only join after their settled
+# history satisfies the same walk-forward gates as every other source; until
+# then the weighted rules surface as shadow candidates and never fire live.
+_WEIGHTED_SOURCES_1X2   = ["forebet", "zulubet", "statarea", "vitibet", "scoutingstats",
+                           "prosoccer"]
+_WEIGHTED_SOURCES_OU25  = ["forebet", "statarea", "scoutingstats", "prosoccer"]
 _WEIGHTED_SOURCES_BTTS  = ["forebet", "scoutingstats"]
 
 
@@ -684,6 +693,50 @@ def create_phase_a_confirmation_views(con) -> set[str]:
         except Exception as exc:
             print(f"skipped windrawwin confirmation views: {exc}")
 
+    # soccervista: same categorical profile as windrawwin (1X2 pick, no probs,
+    # no scores) — settle picks by joining the forebet results donor so the
+    # Phase A confirmation levers grade it with the identical accounting.
+    if _table_exists(con, "soccervista") and _table_exists(con, "forebet_settled"):
+        try:
+            con.execute("""
+                CREATE OR REPLACE TEMP VIEW soccervista_settled AS
+                WITH sv AS (SELECT DISTINCT ON (date, hkey, akey) * FROM soccervista
+                            WHERE pick IN ('home','draw','away')),
+                     fb AS (SELECT DISTINCT ON (date, hkey, akey)
+                                   date, hkey, akey, hs, gs
+                            FROM forebet_settled)
+                SELECT sv.*, fb.hs, fb.gs,
+                       sv.pick AS sv_pick,
+                       CASE WHEN fb.hs > fb.gs THEN 'home'
+                            WHEN fb.hs < fb.gs THEN 'away' ELSE 'draw' END AS outcome
+                FROM sv JOIN fb USING (date, hkey, akey)
+            """)
+            made.add("soccervista_settled")
+            if _table_exists(con, "v_consensus2"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus2_soccervista_confirm AS
+                    WITH c2 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus2),
+                         sv AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, sv_pick
+                                FROM soccervista_settled)
+                    SELECT c2.*, sv.sv_pick
+                    FROM c2 JOIN sv USING (date, home, away)
+                """)
+                made.add("consensus2_soccervista_confirm")
+            if _table_exists(con, "v_consensus3"):
+                con.execute("""
+                    CREATE OR REPLACE TEMP VIEW consensus3_soccervista_confirm AS
+                    WITH c3 AS (SELECT DISTINCT ON (date, home, away) * FROM v_consensus3),
+                         sv AS (SELECT DISTINCT ON (date, home, away)
+                                      date, home, away, sv_pick
+                                FROM soccervista_settled)
+                    SELECT c3.*, sv.sv_pick
+                    FROM c3 JOIN sv USING (date, home, away)
+                """)
+                made.add("consensus3_soccervista_confirm")
+        except Exception as exc:
+            print(f"skipped soccervista confirmation views: {exc}")
+
     return made
 
 
@@ -737,6 +790,27 @@ def run_phase_a_confirmation_levers(con, results: list[dict], split: str,
                 split,
             ))
 
+    if "consensus2_soccervista_confirm" in made:
+        for thr in (60, 65, 70, 75):
+            results.append(evaluate(
+                con, f"2way+soccervista-confirms avg_p>={thr}", "consensus2_soccervista_confirm",
+                f"fb_pick = zb_pick AND fb_pick = sv_pick "
+                f"AND ((fb_p/{sfb} + zb_p/{szb})/2)*100 >= {thr}",
+                split,
+            ))
+    else:
+        if not _table_exists(con, "soccervista"):
+            print("skipped soccervista confirmation: no soccervista data")
+
+    if "consensus3_soccervista_confirm" in made:
+        for thr in (60, 65, 70):
+            results.append(evaluate(
+                con, f"3way+soccervista-confirms avg_p>={thr}", "consensus3_soccervista_confirm",
+                f"fb_pick = zb_pick AND zb_pick = sa_pick AND fb_pick = sv_pick "
+                f"AND ((fb_p/{sfb} + zb_p/{szb} + sa_p/{ssa})/3)*100 >= {thr}",
+                split,
+            ))
+
 
 def main():
     ap = argparse.ArgumentParser()
@@ -764,7 +838,7 @@ def main():
     has_bzzoiro = _table_exists(con, "bzzoiro")
 
     scales = {}
-    for v in ["forebet_settled", "zulubet_settled", "statarea_settled", "vitibet_settled", "scoutingstats_settled", "betclan", "bzzoiro"]:
+    for v in ["forebet_settled", "zulubet_settled", "statarea_settled", "vitibet_settled", "scoutingstats_settled", "prosoccer_settled", "betclan", "bzzoiro"]:
         if _table_exists(con, v):
             scales[v] = get_scale(con, v)
         else:
@@ -1134,7 +1208,8 @@ def main():
 
     phase_a_shadow = [
         r for r in results
-        if ("predictz-confirms" in r.get("rule", "") or "windrawwin-confirms" in r.get("rule", ""))
+        if ("predictz-confirms" in r.get("rule", "") or "windrawwin-confirms" in r.get("rule", "")
+            or "soccervista-confirms" in r.get("rule", ""))
         and r["train"]["n"] < GATES.min_overlap_n
     ]
     if phase_a_shadow:
