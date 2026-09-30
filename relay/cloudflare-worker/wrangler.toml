@@ -12,9 +12,9 @@ binding = "BROWSER"
 # The diagnostic also requires a free Workers KV namespace for its one-launch
 # UTC-day budget gate. Create the namespace and add its generated id here only
 # when running the smoke test; ordinary relay traffic does not require it.
-# [[kv_namespaces]]
-# binding = "BROWSER_DIAGNOSTIC_KV"
-# id = "<namespace id from wrangler kv namespace create>"
+[[kv_namespaces]]
+binding = "BROWSER_DIAGNOSTIC_KV"
+id = "edge-factory-browser-diagnostic"
 
 # Set the relay secret with:
 #   npx wrangler secret put RELAY_TOKEN
