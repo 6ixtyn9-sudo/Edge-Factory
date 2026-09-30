@@ -4,9 +4,9 @@
 
 - archived pick rows: 591
 - archived pick dates: 30
-- immutable morning-baseline rows: 588
+- immutable morning-baseline rows: 591
 - verified official late-slate additions: 0
-- regular-ledger-only legacy rows: 3
+- regular-ledger-only legacy rows: 0
 - unsafe regular ledgers ignored: 29
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 568

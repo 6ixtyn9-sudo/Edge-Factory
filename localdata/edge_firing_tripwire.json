@@ -5,7 +5,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-09-30",
-      "n_last_window": 193,
+      "n_last_window": 194,
       "rule": "2way-unanimous avg_p>=60",
       "silent": false
     },
@@ -19,7 +19,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-09-30",
-      "n_last_window": 309,
+      "n_last_window": 311,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
@@ -36,9 +36,16 @@
       "n_last_window": 25,
       "rule": "ml-meta avg_p>=65",
       "silent": false
+    },
+    {
+      "decay": "WATCH",
+      "last_fired": "2026-09-27",
+      "n_last_window": 6,
+      "rule": "ml-meta avg_p>=80",
+      "silent": false
     }
   ],
-  "generated_at": "2026-09-30T03:23:14",
+  "generated_at": "2026-09-30T04:13:57",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
@@ -67,7 +74,7 @@
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-09-29",
+      "newest_date": "2026-09-30",
       "newest_file": "scoutingstats_2026-09.csv.gz",
       "role": "voter_and_price",
       "stale": false
@@ -116,7 +123,7 @@
     },
     {
       "name": "freesupertips",
-      "newest_date": "2026-09-27",
+      "newest_date": "2026-09-30",
       "newest_file": "freesupertips_2026-09.csv.gz",
       "role": "not_ready",
       "stale": false
