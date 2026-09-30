@@ -161,19 +161,12 @@ def test_served_day_parses_marker_variants():
     assert soccervista.served_day("<html><body>Matches</body></html>") is None
 
 
-def test_fetch_day_raises_on_challenge_markup(monkeypatch):
+def test_fetch_day_propagates_get_transport_failures(monkeypatch):
     monkeypatch.setattr(
         soccervista, "_get",
-        lambda url, retries=3: "<html><head><title>Just a moment...</title></head><body>cf</body></html>",
+        lambda url, retries=3: (_ for _ in ()).throw(RuntimeError("SoccerVista GET failed")),
     )
-    with pytest.raises(RuntimeError):
-        soccervista.fetch_day(TODAY)
-
-
-def test_fetch_day_layout_shift_raises(monkeypatch):
-    branded_but_tableless = "<html><head><title>SoccerVista</title></head><body>soccervista redesign</body></html>"
-    monkeypatch.setattr(soccervista, "_get", lambda url, retries=3: branded_but_tableless)
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match="SoccerVista GET failed"):
         soccervista.fetch_day(TODAY)
 
 
@@ -183,9 +176,14 @@ def test_fetch_day_genuine_empty_slate_ok(monkeypatch):
     assert soccervista.fetch_day(TODAY) == []
 
 
-def test_fetch_day_404_page_returns_empty(monkeypatch):
-    monkeypatch.setattr(soccervista, "_get", lambda url, retries=3: None)
-    assert soccervista.fetch_day(TODAY) == []
+def test_fetch_day_missing_homepage_is_retryable_transport_failure(monkeypatch):
+    monkeypatch.setattr(
+        soccervista,
+        "_get",
+        lambda url, retries=3: (_ for _ in ()).throw(RuntimeError("SoccerVista GET failed")),
+    )
+    with pytest.raises(RuntimeError, match="SoccerVista GET failed"):
+        soccervista.fetch_day(TODAY)
 
 
 def test_get_ladders_to_cffi_then_relay(monkeypatch):
