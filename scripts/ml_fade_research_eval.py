@@ -50,8 +50,19 @@ CONTEXTS_OUT_PREFIX = "ml_fade_checkpoint_contexts_"
 PRICE_OUT_PREFIX = "ml_fade_checkpoint_price_study_"
 
 
-def _now_iso() -> str:
-    return datetime.now(LOCAL_TZ).isoformat(timespec="seconds")
+def _now_iso(anchor: date | None = None) -> str:
+    """Timestamp for this evaluation, anchored to the evaluation date.
+
+    A run told to evaluate a specific date must stamp its state with that
+    date. Stamping the wall-clock date instead leaves last_eval_at in a
+    different month from ``today``, which re-triggers the monthly
+    checkpoint on every subsequent run and destroys idempotency.
+    """
+    now = datetime.now(LOCAL_TZ)
+    if anchor is not None and anchor != now.date():
+        now = now.replace(year=anchor.year, month=anchor.month,
+                          day=anchor.day)
+    return now.isoformat(timespec="seconds")
 
 
 def _today(today_arg: str | None) -> date:
@@ -197,7 +208,7 @@ def main(argv: list[str] | None = None) -> int:
 
     today = _today(args.today)
     today_s = today.isoformat()
-    now = _now_iso()
+    now = _now_iso(today if args.today else None)
 
     registry_model = _load_registry_model(args.edges)
     if registry_model is None:

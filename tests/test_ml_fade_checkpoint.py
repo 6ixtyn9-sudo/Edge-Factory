@@ -515,3 +515,29 @@ def test_cli_force_checkpoint_appends_history(tmp_path):
     assert r1.returncode == 0 and r2.returncode == 0
     st = json.loads((tmp_path / "state.json").read_text())
     assert st["eval_count"] == 2 and len(st["history"]) == 2
+
+
+def test_a_dated_run_stamps_state_with_that_date(tmp_path):
+    """Otherwise the monthly trigger re-fires forever.
+
+    --today sets the evaluation date, but the state timestamp used to
+    come from the wall clock. When the two fell in different months the
+    monthly checkpoint condition was true on every subsequent run, so
+    the idempotency guarantee held only when the suite happened to run
+    in the same month as the fixture date.
+    """
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        "ml_fade_eval_date_anchor", ROOT / "scripts" / "ml_fade_research_eval.py")
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    spec.loader.exec_module(module)
+
+    stamped = module._now_iso(TODAY)
+    assert stamped[:10] == TODAY.isoformat()
+
+    # With no anchor the wall clock is still used, so production is
+    # unaffected.
+    from datetime import datetime as _dt
+    assert module._now_iso()[:10] == _dt.now(module.LOCAL_TZ).date().isoformat()

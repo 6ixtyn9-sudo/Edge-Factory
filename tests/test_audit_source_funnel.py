@@ -7,6 +7,7 @@ odds overlap, backfill depth) rather than re-testing the engine internals.
 from __future__ import annotations
 
 import csv
+import re
 import gzip
 import importlib.util
 import json
@@ -398,3 +399,35 @@ def test_shadow_markdown_is_marked_non_dispatch(tmp_path):
     assert "NON-DISPATCH" in text
     assert "dispatchable: **False**" in text
     assert "never dispatched" in text
+
+
+# ---------------------------------------------------------------------------
+# Kickoff calendar context
+#
+# A bare "HH:MM" carries no date. Parsing it against the wall clock made
+# an already-started fixture read as still upcoming, so this suite passed
+# or failed depending on the real date it ran on.
+# ---------------------------------------------------------------------------
+
+
+def test_started_kickoff_is_not_eligible_whatever_the_real_date(tmp_path):
+    _write(tmp_path, "zulubet", [_row("Alpha United", "Beta Rovers",
+                                      kickoff="07:00")])
+    row = _audit(tmp_path)["per_source"]["zulubet"]
+    assert row["trusted_kickoff"] == 1
+    assert row["pre_match_eligible"] == 0
+
+
+def test_the_funnel_parses_kickoffs_against_the_fixture_date():
+    src = (ROOT / "scripts" / "audit_source_funnel.py").read_text()
+    # Every parse must supply the fixture's own date as the reference.
+    for call in re.findall(r"parse_kickoff_dt\([^)]*\)", src):
+        assert "," in call, f"missing reference date: {call}"
+
+
+def test_a_day_first_kickoff_lands_on_its_own_event_date(tmp_path):
+    _write(tmp_path, "zulubet", [_row("Alpha United", "Beta Rovers",
+                                      kickoff="30-09, 19:30")])
+    row = _audit(tmp_path)["per_source"]["zulubet"]
+    assert row["trusted_kickoff"] == 1
+    assert row["pre_match_eligible"] == 1

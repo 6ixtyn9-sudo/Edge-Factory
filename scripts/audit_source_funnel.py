@@ -148,6 +148,7 @@ def audit_source_day(
     as_of: datetime,
     min_lead: int,
     warehouse_tables: set[str],
+    day: str | None = None,
 ) -> tuple[SourceDay, dict[tuple[str, str], dict]]:
     out = SourceDay(source=source, raw_rows=len(rows))
     out.in_consensus_surface = source in set(getattr(engine, "SOURCES_1X2", ()) or ())
@@ -180,7 +181,10 @@ def audit_source_day(
         ko_raw = row.get("kickoff") or row.get("time")
         if str(ko_raw or "").strip():
             out.has_kickoff += 1
-        ko = engine.parse_kickoff_dt(ko_raw)
+        # The fixture's own date is the calendar context. Without it a
+        # bare "HH:MM" is stamped with the wall-clock date, so a kickoff
+        # that already started reads as still upcoming.
+        ko = engine.parse_kickoff_dt(ko_raw, row.get("date") or day)
         if ko is not None:
             out.trusted_kickoff += 1
             if ko.tzinfo is None:
@@ -368,13 +372,13 @@ KICKOFF_CLASSES = (
 )
 
 
-def classify_kickoff(row: dict, *, engine) -> tuple[str, str]:
+def classify_kickoff(row: dict, *, engine, day: str | None = None) -> tuple[str, str]:
     """Classify one row's kickoff. Fails closed: anything unparseable is unsafe."""
     raw = row.get("kickoff") or row.get("time") or ""
     text = str(raw).strip()
     if not text:
         return "absent", ""
-    if engine.parse_kickoff_dt(text) is not None:
+    if engine.parse_kickoff_dt(text, row.get("date") or day) is not None:
         return "trusted", text
     # Present but unparseable (ambiguous clock, unknown timezone, junk).
     return ("date_only" if len(text) >= 8 and ":" not in text else "clock_only"), text
@@ -803,7 +807,7 @@ def run_audit(
         rows = load_day_rows(localdata, source, day)
         summary, fixtures = audit_source_day(
             source, rows, engine=engine, as_of=as_of, min_lead=min_lead,
-            warehouse_tables=tables,
+            warehouse_tables=tables, day=day,
         )
         rows_by_source[source] = summary
         per_source[source] = fixtures
