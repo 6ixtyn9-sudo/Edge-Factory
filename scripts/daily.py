@@ -957,7 +957,7 @@ def run_pipeline(
     elif mode == "autonomous_intraday":
         # Completely hands-off accumulating ledger run. Capture_daily remains
         # the heavy D30 all-source path, but final scores can arrive after the
-        # morning capture. Refresh yesterday's six existing result donors first,
+        # morning capture. Refresh yesterday's existing result donors first,
         # then backfill/build/export before the audit consumes the facts.
         refresh_day = result_refresh_day(target_date)
         run_soft(

@@ -10,7 +10,10 @@ The homepage is a server-rendered table: league separator rows
 ("USA: MLS") followed by match rows of ten cells — kickoff, home form+name,
 "View details for HOME vs AWAY" link cell, away name+form, 1/X/2 average odds,
 1X2 pick, goals tip (O/U) and a predicted score. Every match cell links to
-/event/<home-away>/<event_id>/ which provides a stable event id.
+/event/<home-away>/<event_id>/ which provides a stable event id. The
+"Matches by date <Mon DD>" calendar stamp is verified against the requested
+date when present, so day-rollover drift can never stamp fixtures against the
+wrong date (integrity), while an absent marker degrades to availability.
 
 No probabilities and no final scores — pick + odds + tips only, so settlement
 joins a results donor in the warehouse layer (windrawwin-style). The site is
@@ -41,8 +44,35 @@ _EVENT_URL = re.compile(r"href=[\"'](/event/[a-z0-9-]+/[A-Za-z0-9]+/)[\"']", re.
 _PICKS = {"1": "home", "x": "draw", "2": "away"}
 _GOALS = {"o": "over", "u": "under"}
 _SCORE = re.compile(r"^\s*(\d+)\s*:\s*(\d+)\s*$")
+_MONTHS = {m: i for i, m in enumerate(
+    ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct",
+     "nov", "dec"], start=1)}
+# The day-picker marker as rendered next to the calendar: "Matches by date Sep 30".
+_DAY_MARKER = re.compile(
+    r"Matches by date.{0,400}?([A-Z][a-z]{2})[^A-Za-z0-9]{0,20}(\d{1,2})", re.I | re.S)
 
 MAX_MATCHES = 400  # sanity bound: daily slates are well below this
+
+
+def served_day(html: str) -> tuple[int, int] | None:
+    """(month, day) the page says it renders, or None when the marker is absent.
+
+    The calendar widget is server-rendered on the current build; when it is,
+    a mismatched stamp means the site is serving a different local day than the
+    requested one (near-midnight drift), so the capture must be dropped rather
+    than stamp fixtures against the wrong date. A missing marker (JS-rendered
+    widget) cannot verify either way and stays fail-open — same posture as the
+    ProSoccer H1 check where absence trips, but here the table itself is the
+    payload, so availability wins on absent evidence and integrity on
+    contradicting evidence.
+    """
+    m = _DAY_MARKER.search(html)
+    if not m:
+        return None
+    month = _MONTHS.get(m.group(1).lower())
+    if month is None:
+        return None
+    return (month, int(m.group(2)))
 
 
 def _clean(cell: str) -> str:
@@ -199,6 +229,18 @@ def fetch_day(date: str, retries: int = 3) -> list[dict]:
         # Cloudflare challenge or redirect body — a transport failure, not an
         # empty slate (keeps the day retryable and logs loudly).
         raise RuntimeError("soccervista: brand marker missing (challenge page?)")
+    served = served_day(html)
+    if served is not None and served != (_date.fromisoformat(date).month,
+                                         _date.fromisoformat(date).day):
+        # The site is mid-day-rollover (its local calendar behind/ahead of the
+        # requested day): stamping these fixtures under ``date`` would corrupt
+        # date-keyed settlement joins. Drop the capture; the next run re-tries.
+        print(
+            f"soccervista: page serves {served} but {date} was requested — "
+            "skipping (day-rollover drift)",
+            flush=True,
+        )
+        return []
     rows = _parse(html, date)
     if not rows and "<table" not in html.lower():
         raise RuntimeError("soccervista: predictions table not found in page")

@@ -9879,3 +9879,30 @@ reference implementations (`tblPredictions` table shape, column indices, and
 - Apps Script relay: `node --check` clean on `Code.gs` (via .js copy, the
   `.gs` extension is not directly checkable).
 - `git diff --check`: clean.
+
+### Red-team follow-up (2026-09-30, pre-merge adversarial pass)
+
+One real integrity gap found and fixed: **SoccerVista date attribution**.
+The homepage is today-only and JS-navigated, so at the site's day-rollover
+edge a fresh page can silently serve *yesterday's* or *tomorrow's* fixtures
+while every honest-failure guard (brand marker, table presence) still
+passes — the rows would be stamped against the requested date and corrupt
+date-keyed settlement joins. Fix: `served_day()` extracts the rendered
+"Matches by date <Mon D>" calendar stamp; when present and mismatched,
+`fetch_day` drops the capture with a logged warning (retryable, integrity
+by intended failure); when absent (re-designed JS calendar) it defers to
+availability, mirroring the ProSoccer H1-guard posture of fail-closed on
+contradicting evidence, fail-open on absent evidence. Fixtures updated to a
+dynamic marker so the guard is exercised (happy path, drift-mismatch drop,
+missing-marker acceptance, marker-variant parsing).
+
+Findings reviewed and deliberately left unchanged: the ProSoccer
+predicted-vs-published banner stays a warning (partial captures self-heal
+via `capture_daily --fallback`'s `reset_recent_state` daily re-fetch, and
+raising would risk a poison-retry day when the banner counts rows the
+parser legitimately skips); SoccerVista cell-position fields degrade to
+`None` (never corruption) on layout shift; the live-score-in-Final-Score
+hypothetical skips the match conservatively; no Python-3.13 or lazy-import
+hazards; GitHub Actions workflow needs no changes (no per-source
+enumeration; existing secrets cover the relay transports; Python 3.13).
+Suite after fix: soccer/prosoccer/relay subsets green.
