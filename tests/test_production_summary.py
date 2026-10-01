@@ -88,8 +88,25 @@ def _pick(**overrides):
     return row
 
 
-def _plan(picks=None):
+def _plan(picks=None, *, same_day=False):
+    """A dispatch plan whose selections are same-day or future-dated.
+
+    same_day=True models the ordinary case the daily run cards: the
+    selections fall on the run date itself.
+    """
     picks = [_pick()] if picks is None else picks
+    if same_day:
+        # Same shaping the lane applies to any dispatch row; only the
+        # event date differs, which is the whole point of the fixture.
+        shaped = fp.horizon_pick_rows(
+            {"generated_for": RUN_DATE, "picks": picks})
+        rows = [dict(r, date=RUN_DATE, event_date=RUN_DATE,
+                     kickoff=f"{RUN_DATE} 20:00") for r in shaped]
+        empty_horizon = {"generated_for": RUN_DATE, "horizon_end": RUN_DATE,
+                         "min_lead_minutes": 30, "max_lead_hours": 48,
+                         "eligible_pick_count": 0, "picks": []}
+        return fp.build_dispatch_plan(run_date=RUN_DATE, same_day_rows=rows,
+                                      horizon_rows=[], horizon=empty_horizon)
     horizon = {"generated_for": RUN_DATE, "horizon_end": "2026-10-02",
                "min_lead_minutes": 30, "max_lead_hours": 48,
                "eligible_pick_count": len(picks), "picks": picks}
@@ -98,16 +115,13 @@ def _plan(picks=None):
                                   horizon=horizon)
 
 
-def _localdata(tmp_path, picks=None):
+def _localdata(tmp_path, picks=None, *, same_day=False):
     """The 2026-09-30 run shape: empty same-day file, one future selection."""
     d = tmp_path / "localdata"
     d.mkdir(exist_ok=True)
     (d / f"fresh_production_production_picks_{RUN_DATE}.json").write_text("[]")
-    plan = json.dumps(_plan(picks))
-    pl.dispatch_plan_path(RUN_DATE, d).write_text(plan)
-    # The ticket engine cards its own target date only, so an event-date
-    # card is an explicit --date run and reads that date's plan.
-    pl.dispatch_plan_path(EVENT_DATE, d).write_text(plan)
+    pl.dispatch_plan_path(RUN_DATE, d).write_text(
+        json.dumps(_plan(picks, same_day=same_day)))
     return d
 
 
@@ -115,8 +129,8 @@ def _run_auto_tickets(localdata):
     """Drive the real ticket engine over the plan, as the pipeline does."""
 
     class Args:
-        # Explicit --date: the daily run never cards a future date by itself.
-        date = EVENT_DATE
+        # The bare daily invocation: auto_tickets targets local today.
+        date = RUN_DATE
         force = True
 
     state = at.fresh_state()
@@ -127,14 +141,6 @@ def _run_auto_tickets(localdata):
          patch.object(at, "load_archived_picks", lambda *a, **k: []), \
          patch.object(at, "datetime", _FrozenDatetime(_NOW)):
         at.cmd_today(Args(), state)
-        # cmd_today records outcomes under the date it carded. These
-        # fixtures then ask the summary for RUN_DATE, so mirror them
-        # there, which is what the pipeline sees when the run date and
-        # the carded date coincide.
-        src = localdata / f"auto_ticket_outcomes_{EVENT_DATE}.json"
-        dst = localdata / f"auto_ticket_outcomes_{RUN_DATE}.json"
-        if src.exists() and not dst.exists():
-            dst.write_text(src.read_text())
     return state
 
 
@@ -144,7 +150,8 @@ def _write_supabase_manifest(localdata, event_date=EVENT_DATE, rows=1):
                     "sync_mode": "authoritative_replace"}))
 
 
-def _write_clv_snapshot(localdata, ticket_status=DECLINE, rows=1):
+def _write_clv_snapshot(localdata, ticket_status=DECLINE, rows=1,
+                        event_date=EVENT_DATE):
     path = localdata / f"clv_snapshots_{RUN_DATE[:7]}.csv.gz"
     fields = ["run_date", "event_date", "home", "away", "selection", "odds",
               "pricing_source", "dispatch_plan_id", "rule_id", "ticket_status"]
@@ -153,7 +160,7 @@ def _write_clv_snapshot(localdata, ticket_status=DECLINE, rows=1):
     writer.writeheader()
     for i in range(rows):
         writer.writerow({
-            "run_date": RUN_DATE, "event_date": EVENT_DATE,
+            "run_date": RUN_DATE, "event_date": event_date,
             "home": f"Panama{i or ''}", "away": "New Zealand",
             "selection": "home", "odds": "2.25", "pricing_source": "bzzoiro",
             "dispatch_plan_id": RUN_DATE, "rule_id": RULE,
@@ -176,17 +183,17 @@ def _write_sent_ledger(localdata, keys=None):
 @patch.dict(os.environ, FRESH)
 def test_final_summary_reports_the_actual_auto_ticket_verdict(tmp_path):
     """The exact run 36767213800 shape, end to end."""
-    localdata = _localdata(tmp_path)
+    localdata = _localdata(tmp_path, same_day=True)
     _run_auto_tickets(localdata)
-    _write_supabase_manifest(localdata)
-    _write_clv_snapshot(localdata)
+    _write_supabase_manifest(localdata, event_date=RUN_DATE)
+    _write_clv_snapshot(localdata, event_date=RUN_DATE)
     _write_sent_ledger(localdata)
 
     text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
 
     assert "FINAL PRODUCTION SUMMARY" in text
     assert "production selections:         1" in text
-    assert f"event dates:                   {EVENT_DATE}" in text
+    assert f"event dates:                   {RUN_DATE}" in text
     assert "Supabase selections published: 1" in text
     assert "CLV snapshots captured:        1 row(s)" in text
     assert "CLV latest production selections: 1" in text
@@ -194,7 +201,7 @@ def test_final_summary_reports_the_actual_auto_ticket_verdict(tmp_path):
     # A ledger entry alone proves a notice exists, not that this run
     # sent it, so the summary reports the ledger without claiming a send.
     assert "ledgered_run_unknown" in text
-    assert f"auto-ticket action:            {EVENT_DATE}: {DECLINE}" in text
+    assert f"auto-ticket action:            {RUN_DATE}: {DECLINE}" in text
     assert DECLINE in text
     assert "staking owner:                 auto_tickets" in text
     assert "staking assigned:              no" in text
@@ -203,10 +210,10 @@ def test_final_summary_reports_the_actual_auto_ticket_verdict(tmp_path):
 @patch.dict(os.environ, FRESH)
 def test_final_summary_never_calls_an_evaluated_selection_unevaluated(tmp_path):
     """The defect itself: the selection did reach the ticket engine."""
-    localdata = _localdata(tmp_path)
+    localdata = _localdata(tmp_path, same_day=True)
     _run_auto_tickets(localdata)
-    _write_supabase_manifest(localdata)
-    _write_clv_snapshot(localdata)
+    _write_supabase_manifest(localdata, event_date=RUN_DATE)
+    _write_clv_snapshot(localdata, event_date=RUN_DATE)
     _write_sent_ledger(localdata)
 
     text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
@@ -220,10 +227,10 @@ def test_final_summary_never_calls_an_evaluated_selection_unevaluated(tmp_path):
 
 @patch.dict(os.environ, FRESH)
 def test_final_summary_lists_the_selection_with_its_ticket_verdict(tmp_path):
-    localdata = _localdata(tmp_path)
+    localdata = _localdata(tmp_path, same_day=True)
     _run_auto_tickets(localdata)
     text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
-    assert f"SELECTION {EVENT_DATE}" in text
+    assert f"SELECTION {RUN_DATE}" in text
     assert "Panama vs New Zealand" in text
     assert f"auto-ticket: {DECLINE}" in text
     assert RULE in text
@@ -234,11 +241,11 @@ def test_final_summary_reports_a_created_ticket_as_created(tmp_path):
     """Two eligible legs clear the 2-leg contract and the summary says so."""
     second = _pick(home="Guatemala", away="Suriname", odds=1.95,
                    probability=0.66)
-    localdata = _localdata(tmp_path, [_pick(), second])
+    localdata = _localdata(tmp_path, [_pick(), second], same_day=True)
     _run_auto_tickets(localdata)
 
     text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
-    assert f"auto-ticket action:            {EVENT_DATE}: ticket_created" in text
+    assert f"auto-ticket action:            {RUN_DATE}: ticket_created" in text
     assert "ticket status:                 1 ticket(s) created" in text
     assert "staking assigned:              percentage of capital / free bank" in text
     assert DECLINE not in text
@@ -304,7 +311,7 @@ def test_pre_ticket_block_still_shows_the_selection_and_staking_owner():
 
 @patch.dict(os.environ, FRESH)
 def test_clv_captures_the_selection_even_when_auto_tickets_declines(tmp_path):
-    localdata = _localdata(tmp_path)
+    localdata = _localdata(tmp_path, same_day=True)
     _run_auto_tickets(localdata)
 
     with patch.object(clv, "LOCALDATA", localdata):
@@ -312,7 +319,7 @@ def test_clv_captures_the_selection_even_when_auto_tickets_declines(tmp_path):
 
     assert len(picks) == 1, "a declined selection is still captured"
     assert picks[0]["ticket_status"] == DECLINE
-    assert picks[0]["date"] == EVENT_DATE       # dispatch-time price, event date
+    assert picks[0]["date"] == RUN_DATE       # dispatch-time price, event date
     assert picks[0]["edge_rule"] == RULE
 
 
@@ -341,7 +348,7 @@ def test_pending_at_pick_time_becomes_final_at_end_of_run(tmp_path):
     'unknown' conflated "not decided yet" with "we lost track"; pending
     says which one it is.
     """
-    localdata = _localdata(tmp_path)
+    localdata = _localdata(tmp_path, same_day=True)
 
     with patch.object(clv, "LOCALDATA", localdata):
         early = clv._dispatch_plan_picks(RUN_DATE)
@@ -438,10 +445,10 @@ def test_production_certified_stays_registered_for_assay_and_bench():
 def test_a_single_selection_still_declines_under_the_two_leg_contract(tmp_path):
     """The betting contract is unchanged by the reporting fix."""
     assert at.LEGS_PER_ACCA == 2
-    localdata = _localdata(tmp_path)
+    localdata = _localdata(tmp_path, same_day=True)
     state = _run_auto_tickets(localdata)
     outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
-    assert outcomes[EVENT_DATE]["status"] == DECLINE
+    assert outcomes[RUN_DATE]["status"] == DECLINE
     assert not state["open_slips"]
 
 
@@ -845,3 +852,48 @@ def test_a_later_timestamp_still_wins_over_an_earlier_label():
     ]
 
     assert ps.clv_latest_status_counts(rows) == {"fresh": 1}
+
+
+# ===========================================================================
+# Future horizon selections: reported, not ticketed
+#
+# The daily run must keep future selections visible in the summary,
+# Supabase and notification coverage while refusing to card them. No
+# run-date outcome file is fabricated for them.
+# ===========================================================================
+
+
+def test_a_future_selection_is_reported_but_not_ticketed(tmp_path):
+    localdata = _localdata(tmp_path)          # horizon-dated by default
+    _run_auto_tickets(localdata)              # bare daily run, targets RUN_DATE
+
+    assert not (localdata / f"auto_tickets_{EVENT_DATE}.txt").exists(), \
+        "the default daily run carded a future date"
+    assert not (localdata / f"auto_tickets_{EVENT_DATE}.frozen").exists()
+
+    text = "\n".join(ps.production_final_summary(RUN_DATE, localdata))
+    # Still reported.
+    assert "production selections:         1" in text
+    assert EVENT_DATE in text
+
+
+def test_no_outcome_file_is_invented_for_the_uncarded_future_date(tmp_path):
+    """The bug class is date attribution, so nothing may be mirrored."""
+    localdata = _localdata(tmp_path)
+    _run_auto_tickets(localdata)
+
+    assert at.load_ticket_outcomes(EVENT_DATE, localdata) == {}
+    outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
+    assert EVENT_DATE not in outcomes, \
+        "a future date must not appear under the run date's outcomes"
+
+
+def test_future_selections_stay_in_notification_coverage(tmp_path):
+    localdata = _localdata(tmp_path)
+    plan = json.loads(pl.dispatch_plan_path(RUN_DATE, localdata).read_text())
+
+    coverage = ps.notification_coverage(
+        plan, {"outcome": ps.NOTIFY_SENT_THIS_RUN, "future_notices": 1})
+
+    assert coverage["total_selections"] == 1
+    assert coverage["future_selections"] == 1
