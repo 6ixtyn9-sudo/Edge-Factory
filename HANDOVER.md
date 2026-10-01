@@ -11275,6 +11275,72 @@ operator summary.
 
 ---
 
+## Addendum — 2026-10-01 (state integrity: freeze marker, purity registry)
+
+### Freeze marker (`9b5b428`)
+
+`.gitignore` ignores `localdata/*` with an allowlist. `auto_tickets_20*.txt`
+and `.json` were allowlisted; `auto_tickets_20*.frozen` was not. The slip
+was committed, the freeze marker was not, so on any cache miss or fresh
+checkout `frozen.exists()` was false and the engine rebuilt a new card
+for a date already frozen and already staked — the operator's placed
+bets rotated under them. The marker is now committed like the slip.
+
+**Main has the same gap.** Its freeze survives only in the Actions cache.
+Main is not more robust here, merely undisturbed: it has run on one cache
+namespace for weeks and has never taken a cold cache.
+
+### Purity registry regression guard (`6597857`)
+
+`6597857` improves the existing purity registry regression guard. The old
+guard only blocked zero-context rebuilds; it missed starved rebuilds
+where total contexts rose but named league contexts collapsed. The new
+guard blocks named-league coverage collapse and preserves the existing
+registry. **This is a self-preservation patch, not a full cold-start-data
+solution.**
+
+Evidence: across five consecutive state commits the registry held 426
+contexts with 90 name-shaped league keys. Run 36872608772 — cold cache
+after the namespace move — wrote 433 contexts with 3, orphaning every
+`LEAGUE_ALIASES` target. Total size rising is false comfort; **named
+league context coverage is the fragile dimension**, because short codes
+come from committed deep history while names need the uncommitted
+monthly capture files.
+
+### Operator design decision (2026-10-01)
+
+Do **not** blindly commit all missing capture history to make cold
+rebuilds rich — that bloats the repo and turns it into a dumping ground
+for raw source state. Instead, treat the purity registry as a **guarded
+derived artifact**:
+
+> A production rebuild must either (1) have sufficient input history to
+> rebuild the registry correctly, or (2) explicitly refuse to overwrite
+> the existing registry and mark the rebuild as degraded.
+
+**Follow-up, not yet built:** a `localdata/purity_registry_manifest.json`
+recording input files used, total contexts, named vs short-code league
+contexts, alias-target coverage, history window, whether the existing
+registry was preserved, and whether the rebuild was full, partial or
+refused. Invariants can then assert that named league contexts do not
+collapse, alias targets do not become orphaned, and a rebuild does not
+claim health when its input history was insufficient.
+
+### Standing verdict: main vs PR #18
+
+- **Engine/state integrity: PR #18 is safer than main.** It has the
+  invariant persist gate, cache namespace isolation, the `.frozen`
+  allowlist, frozen-card membership semantics, and the named-league
+  registry guard. Main can still silently commit a thinned registry
+  after a cold cache, and can still rotate a frozen card.
+- **Bet-card quality: not proven superior.** The fresh-production lane
+  abstained (`insufficient_voter_quorum`); the slip came from 15
+  same-day legacy candidates, explicitly not production-certified.
+- **Betting stance: do not blindly bet either card because a workflow is
+  green.** Compare cards leg by leg before trusting either.
+
+---
+
 ## Addendum — 2026-10-01 (auto-ticket contract, bucket taxonomy, candidate ladder)
 
 PR #18 branch `arena/01a0f2b3-edge-factory`. **Not merged.** `origin/main`
