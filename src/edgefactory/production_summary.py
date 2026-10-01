@@ -256,7 +256,7 @@ def clv_rows_in_plan(rows, plan) -> list[dict[str, Any]]:
     return rows
 
 
-def clv_latest_rows(rows) -> list[dict[str, Any]]:
+def clv_latest_rows(rows, key=None) -> list[dict[str, Any]]:
     """The most recent snapshot per logical selection.
 
     A selection is captured at several points in a run, and its
@@ -265,10 +265,11 @@ def clv_latest_rows(rows) -> list[dict[str, Any]]:
     ticket_created still shows its earlier pending row — and inflates
     the apparent number of picks.
     """
+    key_of = key or _clv_selection_key
     latest: dict[tuple, dict[str, Any]] = {}
     order: dict[tuple, int] = {}
     for index, row in enumerate(rows or ()):
-        key = _clv_selection_key(row)
+        key = key_of(row)
         stamp = str(row.get("captured_at_utc") or "")
         current = latest.get(key)
         if current is None:
@@ -397,6 +398,17 @@ def render_notification_coverage(coverage: dict) -> list[str]:
                 lines.append(f"    {status}: {count} not sent "
                              f"/ pending build window")
         else:
+            # Name each cohort. Calling the whole remainder "same-day"
+            # reported 5 same-day selections on a run with 3 same-day
+            # and 2 future-dated ones.
+            same_day = int(coverage.get("same_day_selections") or 0)
+            future = int(coverage.get("future_selections") or 0)
+            if same_day and future and not_notified == same_day + future:
+                lines.append(f"    same-day selections: {same_day} not sent "
+                             f"/ pending build window")
+                lines.append(f"    future-dated selections: {future} "
+                             f"not sent / no notice recorded this run")
+                return lines
             lines.append(f"    same-day selections: {not_notified} not sent "
                          f"/ pending build window")
     return lines
@@ -421,9 +433,11 @@ def collect_production_status(run_date: str, localdata: Path | str) -> dict:
             event_dates, localdata, run_date=run_date),
         "clv_rows": clv_rows,
         "clv_ticket_status_counts": clv_ticket_status_counts(clv_rows),
-        "clv_latest_rows": clv_latest_rows(clv_rows_in_plan(clv_rows, plan)),
-        "clv_latest_status_counts": clv_latest_status_counts(
-            clv_rows_in_plan(clv_rows, plan)),
+        "clv_latest_rows": clv_latest_rows(
+            clv_rows_in_plan(clv_rows, plan), key=_clv_fixture_key),
+        "clv_latest_status_counts": clv_ticket_status_counts(
+            clv_latest_rows(clv_rows_in_plan(clv_rows, plan),
+                            key=_clv_fixture_key)),
         "notification": read_notification_result(run_date, localdata),
     }
 
@@ -502,9 +516,11 @@ def render_final_summary(status: dict) -> list[str]:
     clv_scoped = clv_rows_in_plan(clv_rows, plan)
     clv_latest = status.get("clv_latest_rows")
     if clv_latest is None:
-        clv_latest = clv_latest_rows(clv_scoped)
+        clv_latest = clv_latest_rows(clv_scoped, key=_clv_fixture_key)
     clv_latest_counts = (status.get("clv_latest_status_counts")
-                         or clv_latest_status_counts(clv_scoped))
+                         or clv_ticket_status_counts(
+                             clv_latest_rows(clv_scoped,
+                                             key=_clv_fixture_key)))
     notification = status.get("notification") or {}
 
     # The outcome is reported as the notifier recorded it. A notice this

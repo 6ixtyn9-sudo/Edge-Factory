@@ -1045,3 +1045,61 @@ def test_clv_latest_matches_the_three_selection_plan():
     assert len(ps.clv_latest_rows(scoped)) == 3
     assert ps.clv_latest_status_counts(scoped) == {
         "ticket_created": 2, "declined_same_day_only_policy": 1}
+
+
+# ===========================================================================
+# Run 36858371487: 3 same-day ticketed + 2 future declined
+#
+# Summary said "CLV latest production selections: 6" against a 5-selection
+# plan, and "same-day selections: 5 not sent" when 3 were same-day and 2
+# were future-dated.
+# ===========================================================================
+
+
+def test_a_fixture_whose_rule_changed_is_one_selection_not_two():
+    """pick_id embeds rule_id, so a re-rated fixture looked like two."""
+    rows = [
+        {"event_date": "2026-10-01", "home": "Wales", "away": "Norway",
+         "selection": "away", "ticket_status": "pending_auto_tickets",
+         "snapshot_label": "pick_time",
+         "captured_at_utc": "2026-10-01T06:00:00Z",
+         "pick_id": "2026-10-01|wales|norway|1x2|away|p55-unanimous"},
+        {"event_date": "2026-10-01", "home": "Wales", "away": "Norway",
+         "selection": "away", "ticket_status": "ticket_created",
+         "snapshot_label": "end_of_run",
+         "captured_at_utc": "2026-10-01T12:00:00Z",
+         "pick_id": "2026-10-01|wales|norway|1x2|away|p60-majority"},
+    ]
+
+    by_pick_id = ps.clv_latest_rows(rows)
+    by_fixture = ps.clv_latest_rows(rows, key=ps._clv_fixture_key)
+
+    assert len(by_pick_id) == 2        # the inflation
+    assert len(by_fixture) == 1
+    assert by_fixture[0]["ticket_status"] == "ticket_created"
+
+
+def test_future_selections_are_not_reported_as_same_day():
+    coverage = {"total_selections": 5, "same_day_selections": 3,
+                "future_selections": 2, "notified": 0,
+                "notify_outcome": "sent_this_run", "not_notified": 5,
+                "same_day_reasons": {}}
+
+    lines = ps.render_notification_coverage(coverage)
+    text = "\n".join(lines)
+
+    assert "same-day selections: 3 not sent" in text
+    assert "future-dated selections: 2 not sent" in text
+    assert "same-day selections: 5" not in text
+
+
+def test_a_single_cohort_still_reads_naturally():
+    coverage = {"total_selections": 2, "same_day_selections": 2,
+                "future_selections": 0, "notified": 0,
+                "notify_outcome": "none", "not_notified": 2,
+                "same_day_reasons": {}}
+
+    text = "\n".join(ps.render_notification_coverage(coverage))
+
+    assert "same-day selections: 2 not sent" in text
+    assert "future-dated" not in text
