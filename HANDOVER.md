@@ -11275,6 +11275,96 @@ operator summary.
 
 ---
 
+## Addendum — 2026-10-01 (auto-ticket contract, bucket taxonomy, candidate ladder)
+
+PR #18 branch `arena/01a0f2b3-edge-factory`. **Not merged.** `origin/main`
+has no common ancestor with this branch; do not try to reconcile them.
+
+### Regressions found and fixed
+
+**Future-dated auto-tickets.** The 2026-10-01 run wrote
+`auto_tickets_2026-10-02.txt` and no same-day slip. Both timing gates are
+written `target == today`, so a future event-date card skipped the
+build-hour gate and could never freeze. At 00:37 SAST today correctly
+deferred while tomorrow built a permanent draft — and that draft entered
+`auto_tickets_state.json` as an open slip staking **21.116% of capital**,
+a day before the event. `HORIZON_TICKET_POLICY` now defaults to
+`same_day_only`; horizon selections are reported and declined by name,
+and `--date YYYY-MM-DD` remains the explicit escape hatch.
+
+**Lane-specific bucket.** `fresh_production` minted `PRODUCTION_CERTIFIED`
+and registered it in the auto-ticket allowlist, where it printed as its
+own n=0 row in the live selection ladder. Selections now carry a canonical
+bucket chosen by the same price-integrity precedence as `bucket_pick`;
+production identity moved to `selection_scope` / `production_certified` /
+`production_lane`. Documented limitation: the lane computes no `ctx`, so
+the context-dependent outcomes of `bucket_pick` are unreachable from
+there and `canonical_bucket` is not a full reimplementation.
+
+**Frozen-card status was date-level.** A frozen slip freezes a *date*.
+When the slate changed afterwards, selections never carded inherited
+`ticket_frozen`. Membership now decides, in both the outcome and CLV:
+on the card → `ticket_frozen`, otherwise
+`declined_frozen_card_already_locked`.
+
+**Reporting contradictions.** Supabase publish breakdown collapsed onto
+the run date; CLV counted the whole monthly snapshot file; CLV compared
+every snapshot rather than the latest per selection; a re-rated fixture
+counted twice because `pick_id` embeds `rule_id`; notification coverage
+labelled future selections as same-day. All fixed with tests.
+
+### Deliberate behaviour changes (operator-approved)
+
+**Edge floor `0.02` → `0.0`.** Negative edge stays an absolute veto; thin
+positive edges now reach the assayer. The old floor was a hidden
+pre-assayer bench — the ladder and P&L tripwire could never learn whether
+a thin-edge bucket pays, and they are the correct judge.
+
+**Candidate ladder.** Replay showed 27 of 27 days carded while the legacy
+slate fed the engine, then 0 of 2 once the production lane became the
+sole ticket source. Same-day legacy certified picks now enter the
+*existing* `auto_tickets` candidate pool when the lane dispatches nothing
+for the carded date, labelled `source_lane=legacy_candidate` and forced
+`production_certified=False`. A production card is never diluted. No
+parallel ticket engine; staking, freeze and ladder are untouched.
+
+### Operational gate
+
+An invariant ERROR now blocks state persistence. `daily.py` runs the
+checker with `--strict` and writes a `.invariant_failure` sentinel; the
+workflow refuses to commit `localdata/` and skips the cache save when it
+exists. Artifact upload stays unconditional. Cache namespace moved to
+`localdata-invariant-clean-` to abandon a poisoned generation. Runs with
+invariant errors no longer print "Official Run Complete".
+
+### Known-bad, scoped not fixed
+
+- **`scoutingstats` is `voter_and_price` and stale since 2026-09-04** — a
+  *price* source. With the floor at 0.0, a thin edge against a month-old
+  line can reach the engine. Highest-priority source issue.
+- **`captured_at` holds the kickoff** for scoutingstats. Three consumers
+  depend on it (`enh_pricing._fresh_row`, the `auto_tickets` provider
+  compensation, `replay_harness`), so it is labelled
+  (`captured_at_is_kickoff_proxy`) rather than changed. Scope in
+  `docs/operator/captured-at-followup.md`.
+- **Source supply is the real constraint on bet volume.** `forebet` dead
+  since 2026-06-12 yet still classified `core_voter`; `predictz` and
+  `windrawwin` have no capture files at all; `soccervista` is unmonitored.
+  Relays *are* configured in CI, so the blocks persist through them.
+  Full brief: `docs/operator/source-transport-investigation-brief.md`.
+  Paste-ready agent brief: `docs/operator/NEW-AGENT-PROMPT-sources.md`.
+- **2026-09-27 open slip** (15.5364%) is a legitimate card whose results
+  never arrived — a settlement gap, not a bad creation. The 5-day void
+  horizon anchors on kickoff and will release it automatically.
+
+### State at handover
+
+Full suite **1414 passing**. Invariant checker clean against committed
+artifacts. The last official run (36858371487) failed on one error since
+fixed in `28909cf`; that fix is **not yet proven by a run**.
+
+---
+
 ## Addendum — 2026-09-30 (seventh pass: summary authority)
 
 Run 36767213800 proved the betting flow is correct: 0 same-day picks, 1
