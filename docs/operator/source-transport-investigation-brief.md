@@ -212,3 +212,75 @@ Do not report a source as recovered on the strength of a single
 successful fetch. Do not claim validation from row counts. If the honest
 answer is "this source is gone and should be retired", that is a good
 outcome — say it plainly.
+
+---
+
+## 9. Operator direction (2026-10-01): cooperative sources first
+
+The operator's position, which outranks anything in section 5:
+
+> "those businesses need to protect themselves from people like me at the
+> end of the day. we can also try to find more sources that work without
+> us having to resort to combative means, which should be our first
+> option"
+
+**Treat non-combative sourcing as the primary strategy and evasion as the
+last resort.** A source that wants to be read is worth more than one that
+has to be outmanoeuvred, because it does not break again next quarter.
+
+### A finding that reframes the problem
+
+`robots.txt` for `predictz.com` and `windrawwin.com` was **unreachable
+from this environment** — not a disallow rule, no response at all.
+`robots.txt` is the one file a site publishes *for* bots. If it cannot be
+fetched, the refusal is happening at the network edge before any crawl
+policy is consulted.
+
+Two consequences:
+
+1. **The robots.txt permission question is moot.** Being permitted by a
+   crawl policy you cannot even download does not help. Verify this
+   independently — if a relay *can* reach `robots.txt`, that is a strong
+   signal the block is egress-IP-based and the relay is the whole fix.
+2. **"Fix one, fix them all" is likely correct, with a caveat.** If the
+   block is edge/IP/fingerprint level, one clean egress path recovers all
+   four at once. If some are parser breaks against changed HTML, those are
+   separate per-source work. Determine which before promising a single fix.
+
+### Preferred direction, in order
+
+1. **A legitimate egress path.** Operator-owned Cloudflare Worker or Apps
+   Script relay (already supported by `public_relay`). This is not
+   evasion: it is the operator's own infrastructure making an ordinary
+   request at an ordinary rate. Combined with honest identification and
+   conservative rate limiting, it is defensible.
+2. **Ask.** Several prediction sites offer feeds, APIs, or will grant
+   access for non-commercial or low-volume use if contacted. Nobody
+   appears to have tried. A single email can outperform months of
+   transport engineering.
+3. **Openly licensed data.** Evaluate free, reuse-permitted sources —
+   e.g. `football-data.co.uk` (historical results and bookmaker odds,
+   published for download), `openfootball`/`football.db` (open licensed
+   fixtures/results), `OpenLigaDB`, `football-data.org` free tier,
+   `TheSportsDB`. **Verify each one's current licence and terms yourself;
+   do not trust this list.** No paid tiers, no recurring cost.
+4. **Derive rather than borrow.** The lane currently depends on other
+   people's *predictions*. Open data gives results, fixtures and closing
+   odds in abundance — far more freely than predictions. A model trained
+   in-repo on openly licensed results would be a permanently cooperative
+   source that cannot be blocked, rate-limited or withdrawn.
+   **It must go through the same walk-forward certification, shadow
+   period and gates as any external source — no shortcuts, no
+   self-certification** — and it must be deterministic, auditable code,
+   not a generative component. This is the strongest long-term answer to
+   a thin donor base and should be costed seriously.
+5. **Retire what is gone.** A hostile source that contributes nothing is
+   a liability in the registry: it inflates the apparent donor base and
+   hides the real constraint. Retiring it honestly is a win, not a defeat.
+
+### What remains forbidden
+
+Evasion for its own sake. No paid solvers, CAPTCHA bypass, residential
+proxies or stealth services. Do not hammer a site that is signalling it
+does not want the traffic. If a source must be fought to be read, the
+correct answer is usually to replace it.
