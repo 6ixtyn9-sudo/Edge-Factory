@@ -84,6 +84,29 @@ def _existing_context_count() -> int:
         return 0
 
 
+def _named_league_contexts(reg: dict) -> set:
+    """League contexts keyed by name rather than short code.
+
+    These are the ones a history-starved rebuild loses first, and the
+    ones LEAGUE_ALIASES targets resolve against.
+    """
+    out = set()
+    for key in ((reg or {}).get("contexts", {}) or {}).get("league", {}):
+        parts = str(key).split("|")
+        if len(parts) > 1 and len(parts[1]) > 6:
+            out.add(parts[1])
+    return out
+
+
+def _existing_named_leagues() -> set:
+    if not OUT.exists():
+        return set()
+    try:
+        return _named_league_contexts(json.loads(OUT.read_text()))
+    except Exception:
+        return set()
+
+
 def write_purity_registry(payload: dict) -> bool:
     """Persist the purity registry with a regression-to-zero circuit breaker.
 
@@ -108,6 +131,28 @@ def write_purity_registry(payload: dict) -> bool:
         print("    Usual cause: cold/evicted warehouse missing consensus views")
         print("    (assay_purity recreates TEMP views that need deep history).")
         print("    Restore: re-run locally with full history and commit purity_registry.json.")
+        print(f"    Preserved file: {OUT}")
+        return False
+
+    # A thin rebuild does not necessarily produce FEWER contexts, so the
+    # zero-guard above is not enough. Run 36872608772 wrote 433 contexts
+    # against an existing 426 while name-shaped league contexts collapsed
+    # from 90 to 3, orphaning every LEAGUE_ALIASES target. Total count
+    # rose, so nothing objected. Judge the dimension that actually
+    # degrades: named league coverage.
+    existing_named = _existing_named_leagues()
+    new_named = _named_league_contexts(payload)
+    if existing_named and len(new_named) < len(existing_named) * 0.5:
+        print(
+            f"\n⚠️  PURITY REGRESSION GUARD: named league contexts fell from "
+            f"{len(existing_named)} to {len(new_named)}."
+        )
+        print("    Keeping the existing registry to avoid orphaning league aliases.")
+        print("    Usual cause: cold/evicted localdata cache, so the rebuild")
+        print("    saw only committed history and certified fewer leagues.")
+        missing = sorted(existing_named - new_named)[:5]
+        if missing:
+            print(f"    Would have lost e.g.: {', '.join(missing)}")
         print(f"    Preserved file: {OUT}")
         return False
 
