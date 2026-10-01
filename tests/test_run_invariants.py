@@ -703,3 +703,56 @@ def test_the_cleaned_state_passes_every_date_check():
                                              "staked_pct": 15.5364}]}
 
     assert ri.check_open_slip_dates(state, target_date="2026-10-01") == []
+
+
+# ===========================================================================
+# Thin edge on a proxy capture timestamp
+#
+# The dispatch floor dropped 0.02 -> 0.0 so the assayer can grade thin
+# selections. That makes freshness decisive: a +0.005 edge on a verified
+# line is not the same bet as one priced off a kickoff-as-captured_at.
+# ===========================================================================
+
+
+def _priced(edge, source="scoutingstats_odds"):
+    return {"home": "Germany", "away": "Serbia", "edge": edge,
+            "odds_source": source}
+
+
+def test_a_thin_edge_on_a_proxy_capture_is_flagged():
+    violations = ri.check_price_capture_proxy([_priced(0.005)])
+
+    assert _codes(violations) == {ri.V_PRICE_CAPTURE_PROXY}
+    assert violations[0]["severity"] == ri.WARNING
+
+
+def test_wales_at_its_actual_edge_is_flagged():
+    assert ri.check_price_capture_proxy([_priced(0.0194)]) != []
+
+
+def test_a_healthy_edge_on_a_proxy_capture_is_not_flagged():
+    """Above the thin band the price timing no longer decides the bet."""
+    assert ri.check_price_capture_proxy([_priced(0.08)]) == []
+
+
+def test_a_thin_edge_on_a_real_capture_is_not_flagged():
+    assert ri.check_price_capture_proxy(
+        [_priced(0.005, source="bzzoiro_odds")]) == []
+
+
+def test_a_negative_edge_is_not_this_checks_business():
+    """Negative edge is vetoed upstream; this check is about freshness."""
+    assert ri.check_price_capture_proxy([_priced(-0.03)]) == []
+
+
+def test_an_unparseable_edge_is_not_guessed():
+    assert ri.check_price_capture_proxy([_priced(None)]) == []
+
+
+def test_the_proxy_source_list_is_documented():
+    doc = (ROOT / "docs" / "operator" / "captured-at-followup.md")
+    assert doc.exists()
+    text = doc.read_text()
+    for source in ri.PROXY_CAPTURE_SOURCES:
+        assert source in text
+    assert "enh_pricing" in text and "replay_harness" in text

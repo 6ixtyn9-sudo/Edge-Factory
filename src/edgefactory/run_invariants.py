@@ -49,6 +49,18 @@ V_TICKET_DATE_UNBACKED = "auto_ticket_date_has_no_production_selection"
 V_TICKET_DATE_NOT_TARGET = "auto_ticket_date_is_not_the_official_target_date"
 V_NON_CANONICAL_BUCKET = "non_canonical_bucket_on_an_audit_surface"
 V_OPEN_SLIP_NOT_TARGET = "open_slip_commits_bank_outside_the_target_date"
+V_PRICE_CAPTURE_PROXY = "thin_edge_rests_on_a_proxy_capture_timestamp"
+
+# Providers whose odds rows carry no true capture instant. The
+# scoutingstats adapter stores the fixture KICKOFF in captured_at
+# (picks_today._scoutingstats_rows_to_odds), so freshness cannot be
+# judged for these prices. See docs/operator/captured-at-followup.md.
+PROXY_CAPTURE_SOURCES = frozenset({"scoutingstats_odds"})
+
+# Below this, a selection's edge is thin enough that price freshness
+# decides whether it is real. Matches the old dispatch floor, which is
+# now an assayer input rather than a veto.
+THIN_EDGE = 0.02
 
 # The taxonomy every audit, CLV grouping, assayer context, bucket P&L and
 # ladder comparison keys on. A lane-specific bucket has no history and
@@ -275,6 +287,37 @@ def check_open_slip_dates(state: dict | None, *, target_date: str | None,
                 f"official target date is {target_date}; the default daily "
                 f"run must not commit bank beyond the date it cards",
                 where=day))
+    return out
+
+
+def check_price_capture_proxy(rows) -> list[dict]:
+    """A thin edge priced on a proxy capture timestamp must be visible.
+
+    The dispatch floor dropped from 0.02 to 0.0 so the assayer and the
+    bucket ladder can grade thin selections instead of the pick engine
+    vetoing them. That makes price freshness decisive: a +0.005 edge on
+    a verified fresh line is not the same bet as a +0.005 edge on a
+    price whose capture time is really the kickoff. Reported as a
+    WARNING so the run states the dependency rather than hiding it.
+    """
+    out: list[dict] = []
+    for row in rows or ():
+        source = str(row.get("odds_source") or row.get("pricing_source") or "")
+        if source not in PROXY_CAPTURE_SOURCES:
+            continue
+        edge = row.get("edge")
+        try:
+            edge = float(edge)
+        except (TypeError, ValueError):
+            continue
+        if 0.0 <= edge < THIN_EDGE:
+            out.append(_violation(
+                V_PRICE_CAPTURE_PROXY,
+                f"edge {edge:+.4f} is below {THIN_EDGE} and its price comes "
+                f"from {source}, which records the kickoff as captured_at, "
+                f"so the line's freshness cannot be verified",
+                where=f"{row.get('home')} vs {row.get('away')}",
+                severity=WARNING))
     return out
 
 
@@ -596,6 +639,9 @@ def check_run(*, plan: dict | None = None,
         plan, ticket_outcomes, target_date=target_date,
         future_ticket_mode=future_ticket_mode)
     violations += check_buckets_are_canonical(plan)
+    violations += check_price_capture_proxy(
+        list((plan or {}).get("same_day_picks") or [])
+        + list((plan or {}).get("horizon_picks") or []))
     return violations
 
 
