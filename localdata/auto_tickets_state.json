@@ -1,6 +1,6 @@
 {
   "base_pct": 100.0,
-  "bank": 184.46438500000008,
+  "bank": 163.34838500000006,
   "cycle_base": 100.0,
   "open_slips": [
     {
@@ -40,31 +40,6 @@
         {
           "legs": [
             {
-              "match": "Germany vs Serbia",
-              "pick": "HOME",
-              "prob": 0.77,
-              "odds": 1.25,
-              "result": null
-            },
-            {
-              "match": "Wales vs Norway",
-              "pick": "AWAY",
-              "prob": 0.6,
-              "odds": 1.53,
-              "result": null
-            }
-          ],
-          "odds": 1.91,
-          "stake_pct": 21.116,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
               "match": "Bnei Yehuda vs Maccabi Kiryat Gat",
               "pick": "HOME",
               "prob": 0.73,
@@ -82,13 +57,13 @@
           "odds": 2.13,
           "stake_pct": 21.116,
           "results": [
-            null,
+            "win",
             null
           ],
           "won": null
         }
       ],
-      "staked_pct": 42.232
+      "staked_pct": 21.116
     }
   ],
   "history": [
@@ -667,6 +642,18 @@
         }
       ],
       "bank_pct": 184.4644
+    },
+    {
+      "date": "2026-10-01",
+      "staked_pct": 21.116,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 1.91,
+          "won": false
+        }
+      ],
+      "bank_pct": 163.3484
     }
   ],
   "events": []
