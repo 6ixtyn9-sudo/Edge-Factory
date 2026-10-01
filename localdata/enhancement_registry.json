@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 180,
-   "inv_price_sum": 177.842398892174,
+   "hits": 181,
+   "inv_price_sum": 178.242398892174,
    "multi_n": 25,
-   "n": 271,
+   "n": 272,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -607,9 +607,10 @@
     "2026-09-27|Vancouver Whitecaps vs DC United|match_over_25@v1",
     "2026-09-27|Nashville SC vs Toronto FC|match_over_25@v1",
     "2026-09-27|Germany vs Greece|match_over_25@v1",
-    "2026-09-28|Club Le\u00f3n vs FC Ju\u00e1rez|match_over_25@v1"
+    "2026-09-28|Club Le\u00f3n vs FC Ju\u00e1rez|match_over_25@v1",
+    "2026-09-30|Lithuania vs Andorra|match_over_25@v1"
    ],
-   "profit": 2.6,
+   "profit": 4.1,
    "records": [
     {
      "date": "2026-08-01",
@@ -2775,6 +2776,14 @@
      "match": "Club Le\u00f3n vs FC Ju\u00e1rez",
      "multi_source": false,
      "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-30",
+     "hit": true,
+     "match": "Lithuania vs Andorra",
+     "multi_source": false,
+     "price": 2.5,
      "source": "scoutingstats"
     }
    ],
