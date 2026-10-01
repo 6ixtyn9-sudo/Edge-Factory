@@ -108,6 +108,33 @@ def test_the_ready_to_paste_workflow_carries_both_guards():
     assert f"[ -f {SENTINEL} ]" in persist.split("git add -A localdata/", 1)[0]
 
 
+def test_the_cache_namespace_abandons_the_poisoned_generation():
+    """A failed run had already saved localdata-v2-, which restores by
+    prefix. The guard stops new poisoned saves; the namespace bump stops
+    the existing one being restored."""
+    assert "localdata-v2-" not in WORKFLOW
+    for line in WORKFLOW.splitlines():
+        if "key:" in line and "localdata" in line:
+            assert "invariant-clean" in line, line
+
+
+def test_restore_and_save_use_the_same_namespace():
+    keys = [l.split("key:")[1].strip() for l in WORKFLOW.splitlines()
+            if "key:" in l and "localdata" in l]
+    restore = [l.strip() for l in WORKFLOW.splitlines()
+               if l.strip().startswith("localdata-")]
+    assert keys and restore
+    prefix = "localdata-invariant-clean-"
+    assert all(k.startswith(prefix) for k in keys), keys
+    assert all(r.startswith(prefix) for r in restore), restore
+
+
+def test_the_paste_file_matches_the_live_workflow():
+    """So the operator is never handed a stale patch."""
+    ready = ROOT / "docs" / "operator" / "daily.yml.READY-TO-PASTE"
+    assert ready.read_text() == WORKFLOW
+
+
 def test_artifacts_are_still_uploaded_for_inspection():
     """Blocking the commit must not hide the evidence."""
     assert "upload-artifact" in WORKFLOW
