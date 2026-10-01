@@ -387,7 +387,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-01T03:27:14+02:00",
+    "as_of": "2026-10-01T06:00:56+02:00",
     "avg_p": 64.0,
     "away": "Orsomarso",
     "bookmaker": "betexplorer_best",
@@ -429,8 +429,8 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9688,
-    "enhancement_reason": "Combined Under 3.5 is 98.9% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 96.9%)",
+    "enhancement_probability": 0.969,
+    "enhancement_reason": "Combined Under 3.5 is 98.9% (ML-calibrated 95.9%->97.2%, n=392) (Performance feedback: HR=96.8%, Adjusted Prob: 96.9%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
@@ -438,25 +438,25 @@
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.968802985426322,
+        "probability": 0.9690468864257212,
         "raw_probability": 0.9889575030903699,
-        "reason": "Combined Under 3.5 is 98.9% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 96.9%)"
+        "reason": "Combined Under 3.5 is 98.9% (ML-calibrated 95.9%->97.2%, n=392) (Performance feedback: HR=96.8%, Adjusted Prob: 96.9%)"
       },
       {
         "cohort_n": 2536,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9061954997200766,
+        "probability": 0.9064834260291147,
         "raw_probability": 0.9537934879878163,
-        "reason": "Combined Under 2.5 is 95.4% (ML-calibrated 91.9%->91.1%, n=358) (Performance feedback: HR=95.8%, Adjusted Prob: 90.6%)"
+        "reason": "Combined Under 2.5 is 95.4% (ML-calibrated 91.9%->91.1%, n=359) (Performance feedback: HR=95.8%, Adjusted Prob: 90.6%)"
       },
       {
         "cohort_n": 2536,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8958026323279088,
+        "probability": 0.8323358306668464,
         "raw_probability": 0.8161043316153487,
         "reason": "Combined Under 1.5 is 81.6%"
       },
@@ -465,18 +465,18 @@
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4416193895522468,
+        "probability": 0.44334539621189895,
         "raw_probability": 0.5810798156039036,
-        "reason": "Mathematical expectation is 58.1% (ML-calibrated 45.2%->61.7%, n=562) (Performance feedback: HR=65.2%, Adjusted Prob: 44.2%)"
+        "reason": "Mathematical expectation is 58.1% (ML-calibrated 45.1%->61.9%, n=562) (Performance feedback: HR=65.3%, Adjusted Prob: 44.3%)"
       },
       {
         "cohort_n": 2536,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.22306964222176803,
+        "probability": 0.22372006746539008,
         "raw_probability": 0.21666397189275863,
-        "reason": "Poisson expected hit rate is 21.7% (ML-calibrated 23.7%->26.7%, n=446)"
+        "reason": "Poisson expected hit rate is 21.7% (ML-calibrated 23.7%->27.0%, n=445)"
       }
     ],
     "home": "Envigado",
@@ -494,7 +494,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.64,
-    "odds_captured_at": "2026-10-01T01:45:22.619067+00:00",
+    "odds_captured_at": "2026-10-01T04:11:24.045978+00:00",
     "odds_league": "Colombia: Primera B",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -1113,7 +1113,7 @@
     "w_score": 1.2067
   },
   {
-    "as_of": "2026-10-01T03:27:14+02:00",
+    "as_of": "2026-10-01T06:00:56+02:00",
     "avg_p": 73.0,
     "away": "Maccabi Kiryat Gat",
     "bookmaker": "betexplorer_best",
@@ -1155,8 +1155,8 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.5082,
-    "enhancement_reason": "Mathematical expectation is 66.9% (ML-calibrated 45.2%->61.7%, n=562) (Performance feedback: HR=65.2%, Adjusted Prob: 50.8%)",
+    "enhancement_probability": 0.5102,
+    "enhancement_reason": "Mathematical expectation is 66.9% (ML-calibrated 45.1%->61.9%, n=562) (Performance feedback: HR=65.3%, Adjusted Prob: 51.0%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
@@ -1164,45 +1164,36 @@
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.5082080387617709,
+        "probability": 0.5101942976990902,
         "raw_probability": 0.6686967113276492,
-        "reason": "Mathematical expectation is 66.9% (ML-calibrated 45.2%->61.7%, n=562) (Performance feedback: HR=65.2%, Adjusted Prob: 50.8%)"
+        "reason": "Mathematical expectation is 66.9% (ML-calibrated 45.1%->61.9%, n=562) (Performance feedback: HR=65.3%, Adjusted Prob: 51.0%)"
       },
       {
         "cohort_n": 671,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9611257799295493,
+        "probability": 0.9613677481540487,
         "raw_probability": 0.9811205846528623,
-        "reason": "Combined Under 3.5 is 98.1% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 96.1%)"
+        "reason": "Combined Under 3.5 is 98.1% (ML-calibrated 95.9%->97.2%, n=392) (Performance feedback: HR=96.8%, Adjusted Prob: 96.1%)"
       },
       {
         "cohort_n": 671,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8841333029096955,
+        "probability": 0.8844142193771498,
         "raw_probability": 0.9305724725943971,
-        "reason": "Combined Under 2.5 is 93.1% (ML-calibrated 91.9%->91.1%, n=358) (Performance feedback: HR=95.8%, Adjusted Prob: 88.4%)"
-      },
-      {
-        "cohort_n": 671,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 1.5 Goals",
-        "market": "away_under_15",
-        "probability": 0.8416261650426309,
-        "raw_probability": 0.7667478684531059,
-        "reason": "Combined Under 1.5 is 76.7%"
+        "reason": "Combined Under 2.5 is 93.1% (ML-calibrated 91.9%->91.1%, n=359) (Performance feedback: HR=95.8%, Adjusted Prob: 88.4%)"
       },
       {
         "cohort_n": 671,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.2929820822626315,
+        "probability": 0.2938363578168242,
         "raw_probability": 0.28456880552721925,
-        "reason": "Poisson expected hit rate is 28.5% (ML-calibrated 23.7%->26.7%, n=446)"
+        "reason": "Poisson expected hit rate is 28.5% (ML-calibrated 23.7%->27.0%, n=445)"
       }
     ],
     "home": "Bnei Yehuda",
@@ -1220,7 +1211,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.3,
-    "odds_captured_at": "2026-10-01T01:45:11.115101+00:00",
+    "odds_captured_at": "2026-10-01T04:11:11.698267+00:00",
     "odds_league": "Israel: Leumit League",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -1392,7 +1383,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-01T03:27:14+02:00",
+    "as_of": "2026-10-01T06:00:56+02:00",
     "avg_p": 64.5,
     "away": "Hapoel Acre",
     "bookmaker": null,
@@ -1434,8 +1425,8 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.4507,
-    "enhancement_reason": "Mathematical expectation is 59.3% (ML-calibrated 45.2%->61.7%, n=562) (Performance feedback: HR=65.2%, Adjusted Prob: 45.1%)",
+    "enhancement_probability": 0.4524,
+    "enhancement_reason": "Mathematical expectation is 59.3% (ML-calibrated 45.1%->61.9%, n=562) (Performance feedback: HR=65.3%, Adjusted Prob: 45.2%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
@@ -1443,34 +1434,34 @@
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4506790024931529,
+        "probability": 0.45244041736322305,
         "raw_probability": 0.593000393236335,
-        "reason": "Mathematical expectation is 59.3% (ML-calibrated 45.2%->61.7%, n=562) (Performance feedback: HR=65.2%, Adjusted Prob: 45.1%)"
+        "reason": "Mathematical expectation is 59.3% (ML-calibrated 45.1%->61.9%, n=562) (Performance feedback: HR=65.3%, Adjusted Prob: 45.2%)"
       },
       {
         "cohort_n": 2393,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9671007146802045,
+        "probability": 0.9673441871244254,
         "raw_probability": 0.9872198191112859,
-        "reason": "Combined Under 3.5 is 98.7% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 96.7%)"
+        "reason": "Combined Under 3.5 is 98.7% (ML-calibrated 95.9%->97.2%, n=392) (Performance feedback: HR=96.8%, Adjusted Prob: 96.7%)"
       },
       {
         "cohort_n": 2393,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9004056894041094,
+        "probability": 0.9006917761115218,
         "raw_probability": 0.9476995674400315,
-        "reason": "Combined Under 2.5 is 94.8% (ML-calibrated 91.9%->91.1%, n=358) (Performance feedback: HR=95.8%, Adjusted Prob: 90.0%)"
+        "reason": "Combined Under 2.5 is 94.8% (ML-calibrated 91.9%->91.1%, n=359) (Performance feedback: HR=95.8%, Adjusted Prob: 90.1%)"
       },
       {
         "cohort_n": 2393,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8885280906409753,
+        "probability": 0.8255766836413685,
         "raw_probability": 0.8094769956744003,
         "reason": "Combined Under 1.5 is 80.9%"
       },
@@ -1479,9 +1470,9 @@
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.22460691115294557,
+        "probability": 0.22526181875691534,
         "raw_probability": 0.21815709659219726,
-        "reason": "Poisson expected hit rate is 21.8% (ML-calibrated 23.7%->26.7%, n=446)"
+        "reason": "Poisson expected hit rate is 21.8% (ML-calibrated 23.7%->27.0%, n=445)"
       }
     ],
     "home": "Maccabi Kabilio Jaffa",
