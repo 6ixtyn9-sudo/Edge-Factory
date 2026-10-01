@@ -2765,6 +2765,22 @@ def cmd_today(args, st):
                       f"{d} — {DECLINED_SAME_DAY_ONLY_POLICY}")
 
     outcomes = {}
+    # Record the same-day-only decline as a real verdict, not just a
+    # printed line. Without an outcome for the future date, CLV has
+    # nothing authoritative to stamp, so a selection's status depends on
+    # which snapshot stage last touched it: run 36895231631 left two
+    # identically-placed future selections reading
+    # declined_same_day_only_policy and pending_auto_tickets.
+    if future_dates and HORIZON_TICKET_POLICY != "event_date_cards":
+        for d in future_dates:
+            day_rows = [r for r in slate
+                        if str(r.get("date") or "")[:10] == d]
+            outcomes[d] = {
+                "date": d,
+                "status": DECLINED_SAME_DAY_ONLY_POLICY,
+                "selections": len(day_rows),
+                "assayer_ran": False,
+            }
     rc = 0
     for day in card_dates:
         day_rows = [r for r in slate if str(r.get("date") or "")[:10] == day]

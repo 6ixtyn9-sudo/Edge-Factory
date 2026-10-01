@@ -877,15 +877,24 @@ def test_a_future_selection_is_reported_but_not_ticketed(tmp_path):
     assert EVENT_DATE in text
 
 
-def test_no_outcome_file_is_invented_for_the_uncarded_future_date(tmp_path):
-    """The bug class is date attribution, so nothing may be mirrored."""
+def test_the_future_date_is_declined_explicitly_not_ticketed(tmp_path):
+    """A decline is a verdict; a ticket would be a fabrication.
+
+    Leaving the future date with no outcome meant CLV had nothing
+    authoritative to stamp, so a selection's status depended on which
+    snapshot stage last touched it -- run 36895231631 left two
+    identically-placed future selections reading
+    declined_same_day_only_policy and pending_auto_tickets. The decline
+    is now recorded, but it must never read as ticketed.
+    """
     localdata = _localdata(tmp_path)
     _run_auto_tickets(localdata)
 
-    assert at.load_ticket_outcomes(EVENT_DATE, localdata) == {}
     outcomes = at.load_ticket_outcomes(RUN_DATE, localdata)
-    assert EVENT_DATE not in outcomes, \
-        "a future date must not appear under the run date's outcomes"
+    recorded = (outcomes.get(EVENT_DATE) or {}).get("status")
+
+    assert recorded == at.DECLINED_SAME_DAY_ONLY_POLICY
+    assert recorded not in ("ticket_created", "ticket_frozen")
 
 
 def test_future_selections_stay_in_notification_coverage(tmp_path):
