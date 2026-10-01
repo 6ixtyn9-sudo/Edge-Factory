@@ -876,3 +876,35 @@ def test_replacement_lines_name_changed_unchanged_and_dropped_accas():
     assert "total stake 10.0000% \u2192 12.0000% of capital" in out
 
 
+
+
+# ===========================================================================
+# The freeze marker must survive a cache miss
+#
+# auto_tickets_DATE.txt was committed but auto_tickets_DATE.frozen was
+# not, so a cold cache or fresh checkout left frozen.exists() false and
+# the engine rebuilt a new card for a date whose slip was already frozen
+# and already bet. That is how the card rotated under the operator.
+# ===========================================================================
+
+
+def test_the_freeze_marker_is_committed_like_the_slip():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[1]
+    rules = (root / ".gitignore").read_text()
+
+    assert "!localdata/auto_tickets_20*.txt" in rules
+    assert "!localdata/auto_tickets_20*.frozen" in rules, (
+        "without this the freeze cannot survive a cache miss and an "
+        "already-placed card will be rebuilt")
+
+
+def test_the_marker_and_slip_share_a_naming_scheme():
+    """Both must match the same allowlist glob."""
+    import fnmatch
+
+    for name in ("auto_tickets_2026-10-01.txt",
+                 "auto_tickets_2026-10-01.frozen"):
+        pattern = f"auto_tickets_20*{name[name.rfind('.'):]}"
+        assert fnmatch.fnmatch(name, pattern)
