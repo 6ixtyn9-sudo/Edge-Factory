@@ -352,3 +352,72 @@ is often glad of the traffic.
 - Each new source enters as shadow/candidate and earns its way through
   walk-forward certification like any other. No shortcuts because it is
   conveniently reachable.
+
+---
+
+## 11. Hard evidence from run 36858371487 (read this before section 2)
+
+The edge-firing tripwire in that run printed per-source cache health.
+It resolves the open caveat in section 2 and adds findings that change
+the picture.
+
+```
+[⚠️ STALE] forebet (core_voter):            newest row 2026-06-12  (forebet.csv.gz)
+[⚠️ STALE] scoutingstats (voter_and_price): newest row 2026-09-04  (scoutingstats_2026-09.csv.gz)
+[..]       predictz (shadow):               no files
+[..]       windrawwin (shadow):             no files
+[ok]       statarea (core_voter):           newest row 2026-10-01
+[ok]       zulubet (core_voter):            newest row 2026-10-01
+[ok]       vitibet (thin_voter):            newest row 2026-10-02
+[ok]       betclan (partial_voter):         newest row 2026-10-01
+[ok]       bzzoiro (model_voter):           newest row 2026-10-08
+[ok]       afootballreport (research):      newest row 2026-10-01
+[ok]       freesupertips (not_ready):       newest row 2026-10-01
+[ok]       bettingclosed (confirmation):    newest row 2026-10-01
+```
+
+**1. The live capture path is monthly files: `<source>_YYYY-MM.csv.gz`.**
+The bare `<source>.csv.gz` files are legacy. Section 2's caveat is
+resolved — file staleness IS meaningful, but only against the monthly
+files. `forebet.csv.gz` has no monthly successor at all.
+
+**2. `predictz` and `windrawwin` have NO FILES, not stale files.** They
+have never successfully written a monthly cache. That is a harder
+failure than forebet's, which at least has historical data.
+`soccervista` does not appear in the tripwire at all — find out why it
+is unmonitored.
+
+**3. `forebet` is still classified `core_voter` while dead since
+2026-06-12.** Nearly four months. This is precisely the misclassification
+section 6 asks you to fix: a dead source occupying a core role inflates
+the apparent donor base.
+
+**4. `scoutingstats` is `voter_and_price` and stale since 2026-09-04.**
+Nearly a month. This is the most serious finding here, because it is a
+PRICE source, not just a voter. Selections priced `SCOUTINGSTATS_SOLE`
+are being valued off a cache that has not updated in weeks, and the
+dispatch floor is now 0.0, so a thin edge computed against a stale line
+can reach the assayer. The `thin_edge_rests_on_a_proxy_capture_timestamp`
+warning partially covers this, but **staleness and capture-time proxying
+are two different defects and both apply to this source.** Treat
+restoring or retiring `scoutingstats` as higher priority than any
+prediction voter.
+
+**5. `bzzoiro` newest row is 2026-10-08 — seven days in the future.**
+Probably legitimate advance fixtures, but verify it is not a date-parsing
+defect. `vitibet` at 2026-10-02 is consistent with ordinary next-day
+fixtures.
+
+**6. Relays ARE configured in CI.** The run env shows
+`EDGE_FACTORY_RELAY_URLS` and `EDGE_FACTORY_RELAY_TOKEN` both set. The
+cheapest hoped-for win in section 5 is therefore already in place and
+the sources are still blocked **through the relay**. Do not re-check
+this; start from it. It means relay egress is itself refused, which
+strengthens the cooperative-source and non-English directions over
+further transport engineering.
+
+**7. There are more registered sources than section 2 listed** —
+`statarea`, `afootballreport`, `freesupertips`, `bettingclosed`. Audit
+roles across the whole registry, not just the nine named earlier.
+`statarea` is a healthy `core_voter` and was never mentioned in the
+earlier analysis.
