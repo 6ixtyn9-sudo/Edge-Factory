@@ -261,6 +261,13 @@ def check_ticket_dates(plan: dict | None,
 
     if target_date and not future_ticket_mode:
         for day in ticket_outcomes:
+            # A DECLINE recorded for a future date is the guardrail
+            # working: the lane dispatched horizon selections and the
+            # same-day-only policy refused them. Only a future date that
+            # was actually CARDED is a violation.
+            status = str((ticket_outcomes.get(day) or {}).get("status") or "")
+            if status and status not in TICKETED_STATUSES:
+                continue
             if str(day)[:10] != str(target_date)[:10]:
                 out.append(_violation(
                     V_TICKET_DATE_NOT_TARGET,

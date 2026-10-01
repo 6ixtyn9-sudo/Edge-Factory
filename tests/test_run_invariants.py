@@ -959,3 +959,40 @@ def test_a_dishonest_per_selection_claim_is_caught():
 
     assert _codes(ri.check_ticketed_selections_are_on_the_card(
         plan, lying)) == {ri.V_FROZEN_STATUS_LEAK}
+
+
+# ===========================================================================
+# Declining a future date is the guardrail working, not a violation
+# ===========================================================================
+
+
+def test_a_declined_future_date_is_not_a_violation():
+    plan = {"same_day_pick_count": 0, "horizon_pick_count": 2,
+            "same_day_picks": [],
+            "horizon_picks": [{"event_date": "2026-10-02"},
+                              {"event_date": "2026-10-02"}]}
+    outcomes = {
+        "2026-10-01": {"status": "ticket_frozen", "frozen_leg_keys": []},
+        "2026-10-02": {"status": "declined_same_day_only_policy",
+                       "selections": 2},
+    }
+
+    assert ri.check_ticket_dates(
+        plan, outcomes, target_date="2026-10-01") == []
+
+
+def test_a_carded_future_date_is_still_a_violation():
+    plan = {"horizon_picks": [{"event_date": "2026-10-02"}]}
+    outcomes = {"2026-10-02": {"status": "ticket_created"}}
+
+    assert _codes(ri.check_ticket_dates(
+        plan, outcomes, target_date="2026-10-01")) == {
+            ri.V_TICKET_DATE_NOT_TARGET}
+
+
+def test_a_frozen_future_date_is_still_a_violation():
+    plan = {"horizon_picks": [{"event_date": "2026-10-02"}]}
+    outcomes = {"2026-10-02": {"status": "ticket_frozen"}}
+
+    assert ri.check_ticket_dates(
+        plan, outcomes, target_date="2026-10-01") != []
