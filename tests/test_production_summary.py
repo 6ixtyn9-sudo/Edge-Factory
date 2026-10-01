@@ -1103,3 +1103,31 @@ def test_a_single_cohort_still_reads_naturally():
 
     assert "same-day selections: 2 not sent" in text
     assert "future-dated" not in text
+
+
+def test_an_abstaining_lane_scopes_clv_to_nothing():
+    """Official run #902.
+
+    The fresh-production lane abstained, so the plan declared zero
+    selections. That was treated as absent knowledge, so every snapshot
+    for the date was compared against the current outcome and stale rows
+    from the 00:37 slate contradicted it. An empty plan is knowledge:
+    there are no production selections, so none of this run's rows exist
+    to compare.
+    """
+    empty_plan = {"same_day_pick_count": 0, "horizon_pick_count": 0,
+                  "same_day_picks": [], "horizon_picks": [],
+                  "event_dates": []}
+    stale = [_snap("2026-10-01", "Guinea", "Kenya",
+                   "deferred_before_build_hour"),
+             _snap("2026-10-01", "Panama", "New Zealand",
+                   "deferred_before_build_hour")]
+
+    assert ps.clv_rows_in_plan(stale, empty_plan) == []
+
+
+def test_no_plan_at_all_is_still_treated_as_unknown():
+    """Absent artifact must not be confused with an abstaining lane."""
+    stale = [_snap("2026-10-01", "Guinea", "Kenya", "ticket_created")]
+
+    assert ps.clv_rows_in_plan(stale, {}) == stale

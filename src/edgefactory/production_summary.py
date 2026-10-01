@@ -237,6 +237,20 @@ def clv_rows_in_plan(rows, plan) -> list[dict[str, Any]]:
     keys = plan_selection_keys(plan)
     rows = list(rows or ())
 
+    # A plan that dispatched nothing is not absent knowledge: it states
+    # that this run has no production selections. Treating it as unknown
+    # and falling through compared every snapshot for the date against
+    # the current outcome, so stale rows from an earlier slate
+    # contradicted it -- official run #902, where the lane abstained and
+    # Guinea and Panama still carried deferred_before_build_hour from
+    # the 00:37 slate while the outcome said
+    # declined_frozen_card_already_locked.
+    looks_like_a_plan = ("same_day_pick_count" in plan
+                         or "horizon_pick_count" in plan
+                         or "event_dates" in plan)
+    if looks_like_a_plan and declared == 0 and available == 0:
+        return []
+
     # Full row-level knowledge: scope to this run's exact selections.
     if keys and available >= declared:
         return [r for r in rows if _clv_fixture_key(r) in keys]
