@@ -333,9 +333,9 @@
   },
   "match_over_25@v1": {
    "hits": 181,
-   "inv_price_sum": 178.242398892174,
-   "multi_n": 25,
-   "n": 272,
+   "inv_price_sum": 179.479715484626,
+   "multi_n": 26,
+   "n": 274,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -608,9 +608,11 @@
     "2026-09-27|Nashville SC vs Toronto FC|match_over_25@v1",
     "2026-09-27|Germany vs Greece|match_over_25@v1",
     "2026-09-28|Club Le\u00f3n vs FC Ju\u00e1rez|match_over_25@v1",
-    "2026-09-30|Lithuania vs Andorra|match_over_25@v1"
+    "2026-09-30|Lithuania vs Andorra|match_over_25@v1",
+    "2026-10-01|Germany vs Serbia|match_over_25@v1",
+    "2026-10-01|Malta vs Gibraltar|match_over_25@v1"
    ],
-   "profit": 4.1,
+   "profit": 2.1,
    "records": [
     {
      "date": "2026-08-01",
@@ -2785,6 +2787,22 @@
      "multi_source": false,
      "price": 2.5,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-01",
+     "hit": false,
+     "match": "Germany vs Serbia",
+     "multi_source": false,
+     "price": 1.33,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-01",
+     "hit": false,
+     "match": "Malta vs Gibraltar",
+     "multi_source": true,
+     "price": 2.06,
+     "source": "theoddsapi"
     }
    ],
    "status": "PAPER",
