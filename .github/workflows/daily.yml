@@ -131,7 +131,11 @@ jobs:
 
       - name: Persist localdata State (Cache)
         uses: actions/cache/save@v4
-        if: always()
+        # Refusing the git commit is not enough on its own: a cache saved
+        # from a contradictory run can be restored by a later run and
+        # reintroduce the same bad state. Artifact upload below stays
+        # unconditional so the evidence is still inspectable.
+        if: ${{ always() && hashFiles('.invariant_failure') == '' }}
         with:
           path: localdata
           key: localdata-v2-${{ github.run_id }}
