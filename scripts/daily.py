@@ -421,13 +421,18 @@ def run(cmd: str, label: str | None = None) -> None:
         sys.exit(result.returncode)
 
 
-def run_soft(cmd: str, label: str | None = None) -> None:
-    """Run a non-critical step and continue on failure."""
+def run_soft(cmd: str, label: str | None = None) -> bool:
+    """Run a non-critical step and continue on failure.
+
+    Returns whether it succeeded, so a caller that must gate on the
+    result can, while the default behaviour stays non-fatal.
+    """
     display = label or cmd
     print(f"\n>>> {display}")
     result = subprocess.run(cmd, shell=True, cwd=ROOT)
     if result.returncode != 0:
         print(f"WARNING: non-critical step failed: {display}")
+    return result.returncode == 0
 
 
 def run_capture(cmd: str, label: str | None = None) -> str:
@@ -1113,17 +1118,24 @@ def run_pipeline(
         # Cross-artifact contradiction check, after every stage including
         # the summary has reported: it compares what each stage claimed
         # against what the others actually wrote. Read-only.
-        run_soft(
+        # --strict: an invariant ERROR means two artifacts contradict
+        # each other, so the run is not trustworthy. It must not be
+        # signed off as a completed official run.
+        invariants_clean = run_soft(
             f"PYTHONPATH=src python3 scripts/check_run_invariants.py "
-            f"--date {target_date}",
+            f"--date {target_date} --strict",
             f"check_run_invariants {target_date}",
         )
-        if not picks_only:
+        if not invariants_clean:
+            print("  INVARIANT ERRORS: this run is NOT signed off as "
+                  "complete. Generated state is left for inspection and "
+                  "the official-run marker is withheld.")
+        if not picks_only and invariants_clean:
             # This marker, rather than picks_YYYY-MM-DD.json, proves that the
             # heavy capture/build/mine path completed.  Future forecast
             # archives can exist without suppressing tomorrow's official run.
             mark_official_run_complete(target_date, run_as_of)
-        else:
+        elif picks_only:
             print("  picks-only official run: heavy-run marker intentionally not written")
         print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
 

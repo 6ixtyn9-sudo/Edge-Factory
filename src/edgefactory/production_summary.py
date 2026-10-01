@@ -169,6 +169,54 @@ def _snapshot_rank(row) -> int:
     return _SNAPSHOT_ORDER.index(label) if label in _SNAPSHOT_ORDER else -1
 
 
+def _clv_fixture_key(row) -> tuple:
+    """Fixture identity, ignoring pick_id.
+
+    Snapshot rows carry a pick_id and dispatch-plan rows do not, so the
+    two sides can only be compared on the fixture itself.
+    """
+    return (
+        str(row.get("match_date") or row.get("event_date") or "").strip(),
+        str(row.get("home") or "").strip().casefold(),
+        str(row.get("away") or "").strip().casefold(),
+        str(row.get("pick") or row.get("selection") or "").strip().casefold(),
+    )
+
+
+def plan_selection_keys(plan) -> set:
+    """The logical selection keys this run actually dispatched.
+
+    CLV snapshots accumulate for a whole month, so a monthly file holds
+    selections from earlier runs. Counting them as "latest production
+    selections" reports more selections than the run has and carries
+    their old ticket statuses forward as if current.
+    """
+    keys = set()
+    for row in (list((plan or {}).get("same_day_picks") or [])
+                + list((plan or {}).get("horizon_picks") or [])):
+        keys.add(_clv_fixture_key(row))
+    return keys
+
+
+def clv_rows_in_plan(rows, plan) -> list[dict[str, Any]]:
+    """Snapshot rows belonging to selections this run dispatched.
+
+    Scoping only happens when the plan carries a row for every
+    selection it claims. A plan that reports counts without rows cannot
+    be used to exclude snapshots: dropping rows on partial knowledge
+    would under-report the run instead of over-reporting it.
+    """
+    plan = plan or {}
+    declared = (int(plan.get("same_day_pick_count") or 0)
+                + int(plan.get("horizon_pick_count") or 0))
+    available = (len(plan.get("same_day_picks") or [])
+                 + len(plan.get("horizon_picks") or []))
+    keys = plan_selection_keys(plan)
+    if not keys or available < declared:
+        return list(rows or ())
+    return [r for r in (rows or ()) if _clv_fixture_key(r) in keys]
+
+
 def clv_latest_rows(rows) -> list[dict[str, Any]]:
     """The most recent snapshot per logical selection.
 
@@ -334,8 +382,9 @@ def collect_production_status(run_date: str, localdata: Path | str) -> dict:
             event_dates, localdata, run_date=run_date),
         "clv_rows": clv_rows,
         "clv_ticket_status_counts": clv_ticket_status_counts(clv_rows),
-        "clv_latest_rows": clv_latest_rows(clv_rows),
-        "clv_latest_status_counts": clv_latest_status_counts(clv_rows),
+        "clv_latest_rows": clv_latest_rows(clv_rows_in_plan(clv_rows, plan)),
+        "clv_latest_status_counts": clv_latest_status_counts(
+            clv_rows_in_plan(clv_rows, plan)),
         "notification": read_notification_result(run_date, localdata),
     }
 
@@ -408,11 +457,15 @@ def render_final_summary(status: dict) -> list[str]:
     published_total = sum(published.values())
     clv_rows = status.get("clv_rows") or []
     clv_counts = status.get("clv_ticket_status_counts") or {}
+    # Scope "latest" to the selections this run dispatched. The monthly
+    # snapshot file also holds earlier runs' selections, whose statuses
+    # are not this run's outcome.
+    clv_scoped = clv_rows_in_plan(clv_rows, plan)
     clv_latest = status.get("clv_latest_rows")
     if clv_latest is None:
-        clv_latest = clv_latest_rows(clv_rows)
+        clv_latest = clv_latest_rows(clv_scoped)
     clv_latest_counts = (status.get("clv_latest_status_counts")
-                         or clv_latest_status_counts(clv_rows))
+                         or clv_latest_status_counts(clv_scoped))
     notification = status.get("notification") or {}
 
     # The outcome is reported as the notifier recorded it. A notice this

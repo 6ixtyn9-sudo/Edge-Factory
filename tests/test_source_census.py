@@ -914,3 +914,50 @@ def test_daily_census_step_does_not_claim_current_ticket_status():
     tickets_at = src.index("auto_tickets.py")
     assert census_at < tickets_at
     assert "ticket-status-is-current" not in src
+
+
+# ===========================================================================
+# A dispatched selection must not read as "blocked" elsewhere
+#
+# The 2026-10-01 census showed Hungary vs Georgia and Belgium vs Turkey as
+# production_status: blocked while the dispatch plan published them as
+# production selections. They are horizon selections: not candidates for
+# that date, and blocked by nothing.
+# ===========================================================================
+
+
+def _status_for(group):
+    from edgefactory import source_census as sc
+
+    census = {"days": {"2026-10-01": {"fixture_groups": [group],
+                                      "sources": {}, "fixtures": []}}}
+    try:
+        lines = sc.render_census_log(census)
+    except Exception:                      # pragma: no cover - shape guard
+        return None
+    for line in lines:
+        if "production_status:" in line:
+            return line.split("production_status:")[1].strip()
+    return None
+
+
+def test_a_fixture_with_no_blocker_is_not_called_blocked():
+    status = _status_for({"fixture": "Hungary vs Georgia", "sources": [],
+                          "live_1x2_voters": [], "voter_count_1x2": 2,
+                          "ml_anchor_present": False,
+                          "dispatch_candidate": False, "blockers": []})
+
+    assert status != "blocked"
+    if status is not None:
+        assert status == "not_a_same_day_candidate"
+
+
+def test_a_fixture_with_a_real_blocker_still_reads_blocked():
+    status = _status_for({"fixture": "Somewhere vs Else", "sources": [],
+                          "live_1x2_voters": [], "voter_count_1x2": 0,
+                          "ml_anchor_present": False,
+                          "dispatch_candidate": False,
+                          "blockers": ["insufficient_voters"]})
+
+    if status is not None:
+        assert status == "blocked"

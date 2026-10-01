@@ -1048,7 +1048,18 @@ def render_log(census: dict, *, group_markers: bool = True,
             # asserted: a candidate is a candidate, not a selection.
             status = grp.get("production_status")
             if not status:
-                status = "dispatch_candidate" if candidate else "blocked"
+                if candidate:
+                    status = "dispatch_candidate"
+                elif grp.get("blockers"):
+                    status = "blocked"
+                else:
+                    # The census judges same-day candidacy. A fixture
+                    # with no recorded blocker was not blocked by
+                    # anything -- it simply is not a candidate for this
+                    # date, which is the normal state of a horizon
+                    # selection. Calling that "blocked" contradicts the
+                    # dispatch plan that selected it.
+                    status = "not_a_same_day_candidate"
             add(f"    production_status: {_fmt(status)}")
             if grp.get("blockers"):
                 add(f"    blocker: {_fmt(grp['blockers'])}")

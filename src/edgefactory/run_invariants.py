@@ -220,6 +220,11 @@ def check_ticket_dates(plan: dict | None,
     if not dispatched:
         return out
     for day in ticket_outcomes:
+        # The target date always enters the builder, even with no
+        # selections: the frozen reprint and the build-hour gate live
+        # there. An outcome for it is not an unbacked card.
+        if target_date and str(day)[:10] == str(target_date)[:10]:
+            continue
         if str(day)[:10] not in dispatched:
             out.append(_violation(
                 V_TICKET_DATE_UNBACKED,
@@ -622,7 +627,10 @@ def check_run_from_localdata(run_date: str, localdata: Path,
 
     # The accounting the summary would actually print, so the checks
     # compare against the rendered figures rather than assumptions.
-    clv_rows = production_summary.read_clv_rows(run_date, localdata)
+    # Scope snapshots to the selections this run dispatched: the monthly
+    # file also holds earlier runs', whose statuses are not this run's.
+    clv_rows = production_summary.clv_rows_in_plan(
+        production_summary.read_clv_rows(run_date, localdata), plan)
     summary_clv_counts = production_summary.clv_latest_status_counts(clv_rows)
     coverage = production_summary.notification_coverage(
         plan or {}, notification,

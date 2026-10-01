@@ -897,3 +897,64 @@ def test_future_selections_stay_in_notification_coverage(tmp_path):
 
     assert coverage["total_selections"] == 1
     assert coverage["future_selections"] == 1
+
+
+# ===========================================================================
+# CLV is scoped to the run's own selections
+#
+# Snapshots accumulate for a whole month. The 2026-10-01 run reported
+# "CLV latest production selections: 4" over 2 selections, carrying two
+# earlier selections' ticket_created statuses forward as if current.
+# ===========================================================================
+
+
+def _snap(event_date, home, away, status, label="end_of_run"):
+    return {"event_date": event_date, "home": home, "away": away,
+            "selection": "home", "ticket_status": status,
+            "snapshot_label": label, "captured_at_utc": f"{event_date}T10:00:00Z",
+            "pick_id": f"{event_date}|{home}|{away}|1x2|home|rule".lower()}
+
+
+def _two_pick_plan():
+    return {"same_day_pick_count": 0, "horizon_pick_count": 2,
+            "same_day_picks": [],
+            "horizon_picks": [
+                {"event_date": "2026-10-02", "home": "Belgium",
+                 "away": "Turkey", "selection": "home"},
+                {"event_date": "2026-10-02", "home": "Hungary",
+                 "away": "Georgia", "selection": "home"}]}
+
+
+def test_stale_snapshots_do_not_inflate_the_selection_count():
+    rows = [_snap("2026-10-01", "Guinea", "Kenya", "ticket_created"),
+            _snap("2026-10-01", "Panama", "New Zealand", "ticket_created"),
+            _snap("2026-10-02", "Belgium", "Turkey", "declined_same_day_only_policy"),
+            _snap("2026-10-02", "Hungary", "Georgia", "declined_same_day_only_policy")]
+
+    scoped = ps.clv_rows_in_plan(rows, _two_pick_plan())
+
+    assert len(ps.clv_latest_rows(scoped)) == 2
+    assert ps.clv_latest_status_counts(scoped) == {
+        "declined_same_day_only_policy": 2}
+
+
+def test_an_earlier_runs_ticket_created_is_not_carried_forward():
+    rows = [_snap("2026-10-01", "Guinea", "Kenya", "ticket_created")]
+
+    assert ps.clv_rows_in_plan(rows, _two_pick_plan()) == []
+
+
+def test_snapshots_match_the_plan_despite_the_pick_id_difference():
+    """Snapshot rows carry pick_id; plan rows do not."""
+    rows = [_snap("2026-10-02", "Belgium", "Turkey", "declined_same_day_only_policy")]
+
+    assert len(ps.clv_rows_in_plan(rows, _two_pick_plan())) == 1
+
+
+def test_a_plan_without_rows_for_its_counts_does_not_scope():
+    """Partial knowledge must not silently drop snapshots."""
+    plan = {"same_day_pick_count": 2, "horizon_pick_count": 2,
+            "horizon_picks": _two_pick_plan()["horizon_picks"]}
+    rows = [_snap("2026-10-01", "Guinea", "Kenya", "ticket_created")]
+
+    assert ps.clv_rows_in_plan(rows, plan) == rows
