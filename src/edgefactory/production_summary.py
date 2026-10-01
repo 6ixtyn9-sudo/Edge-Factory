@@ -72,6 +72,29 @@ def read_supabase_published(event_dates, localdata: Path,
     nothing and makes a successful publish read as "no manifest found",
     so the run-date manifest is consulted as well.
     """
+    # A recorded per-event-date breakdown is authoritative wherever it
+    # appears, and must be consulted BEFORE any single row_count total.
+    # A manifest named for the run date can still carry rows for several
+    # event dates: taking its total first reported "3 (2026-10-01=3)"
+    # for a run that published 2 for 2026-10-01 and 1 for 2026-10-02.
+    candidates = [f"supabase_sync_manifest_{d}.json" for d in event_dates]
+    if run_date:
+        candidates.append(f"supabase_sync_manifest_{run_date}.json")
+    for name in candidates:
+        manifest = _read_manifest(Path(localdata) / name)
+        if manifest is None:
+            continue
+        breakdown = manifest.get("row_counts_by_event_date")
+        if isinstance(breakdown, dict) and breakdown:
+            resolved: dict[str, int] = {}
+            for day, count in breakdown.items():
+                try:
+                    resolved[str(day)[:10]] = int(count)
+                except (TypeError, ValueError):
+                    continue
+            if resolved:
+                return resolved
+
     published: dict[str, int] = {}
     for day in event_dates:
         manifest = _read_manifest(
@@ -212,9 +235,25 @@ def clv_rows_in_plan(rows, plan) -> list[dict[str, Any]]:
     available = (len(plan.get("same_day_picks") or [])
                  + len(plan.get("horizon_picks") or []))
     keys = plan_selection_keys(plan)
-    if not keys or available < declared:
-        return list(rows or ())
-    return [r for r in (rows or ()) if _clv_fixture_key(r) in keys]
+    rows = list(rows or ())
+
+    # Full row-level knowledge: scope to this run's exact selections.
+    if keys and available >= declared:
+        return [r for r in rows if _clv_fixture_key(r) in keys]
+
+    # Partial knowledge (a plan reporting counts without rows). Dropping
+    # by fixture would under-report, but the run's event dates are still
+    # known, so snapshots from earlier runs on OTHER dates must not be
+    # counted as this run's selections. Without this, stale
+    # declined_no_selections and deferred_before_build_hour rows
+    # contradicted current ticket_created outcomes.
+    event_dates = {str(d)[:10] for d in (plan.get("event_dates") or []) if d}
+    event_dates |= {k[0] for k in keys if k and k[0]}
+    if event_dates:
+        return [r for r in rows
+                if str(r.get("match_date") or r.get("event_date")
+                       or "")[:10] in event_dates]
+    return rows
 
 
 def clv_latest_rows(rows) -> list[dict[str, Any]]:

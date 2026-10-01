@@ -1162,7 +1162,12 @@ def run_pipeline(
             mark_official_run_complete(target_date, run_as_of)
         elif picks_only:
             print("  picks-only official run: heavy-run marker intentionally not written")
-        print(f"\n=== Pipeline Official Run Complete — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ===")
+        stamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        if invariants_clean:
+            print(f"\n=== Pipeline Official Run Complete — {stamp} ===")
+        else:
+            print(f"\n=== Pipeline ran to inspection artifact; official "
+                  f"completion WITHHELD due to invariant errors — {stamp} ===")
 
     elif mode == "autonomous_intraday":
         # Completely hands-off accumulating ledger run. Capture_daily remains

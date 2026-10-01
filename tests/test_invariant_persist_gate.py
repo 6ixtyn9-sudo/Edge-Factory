@@ -76,6 +76,38 @@ def test_the_guard_runs_before_any_commit():
     assert step.index(SENTINEL) < step.index("git commit")
 
 
+def _cache_step(text=None):
+    text = WORKFLOW if text is None else text
+    step = text.split("Persist localdata State (Cache)", 1)[1][:400]
+    if SENTINEL not in step:
+        pytest.skip(
+            "cache guard not applied yet - see "
+            "docs/operator/daily.yml.READY-TO-PASTE")
+    return step
+
+
+def test_the_cache_is_not_saved_on_an_invariant_failure_run():
+    """Blocking the commit is not enough on its own.
+
+    Run 736d2d9 saved localdata-v2-... to the Actions cache before the
+    persist step refused the commit, so a later run restoring by prefix
+    could reintroduce the contradictory state.
+    """
+    step = _cache_step()
+    assert "hashFiles('.invariant_failure') == ''" in step
+
+
+def test_the_ready_to_paste_workflow_carries_both_guards():
+    """The agent cannot push workflow files, so the patch must be whole."""
+    ready = ROOT / "docs" / "operator" / "daily.yml.READY-TO-PASTE"
+    assert ready.exists()
+    text = ready.read_text()
+    cache = text.split("Persist localdata State (Cache)", 1)[1][:400]
+    assert "hashFiles('.invariant_failure') == ''" in cache
+    persist = text.split("Persist pipeline state to git", 1)[1]
+    assert f"[ -f {SENTINEL} ]" in persist.split("git add -A localdata/", 1)[0]
+
+
 def test_artifacts_are_still_uploaded_for_inspection():
     """Blocking the commit must not hide the evidence."""
     assert "upload-artifact" in WORKFLOW

@@ -951,10 +951,97 @@ def test_snapshots_match_the_plan_despite_the_pick_id_difference():
     assert len(ps.clv_rows_in_plan(rows, _two_pick_plan())) == 1
 
 
-def test_a_plan_without_rows_for_its_counts_does_not_scope():
-    """Partial knowledge must not silently drop snapshots."""
+def test_partial_plan_knowledge_still_scopes_by_event_date():
+    """Partial knowledge must not drop by fixture, but dates are known.
+
+    A plan reporting counts without rows cannot identify every
+    selection, so fixture-level filtering would under-report. Earlier
+    runs' snapshots on other dates are still excluded -- that is how
+    stale declined_no_selections rows contradicted current
+    ticket_created outcomes.
+    """
     plan = {"same_day_pick_count": 2, "horizon_pick_count": 2,
+            "event_dates": ["2026-10-02"],
             "horizon_picks": _two_pick_plan()["horizon_picks"]}
+    stale = _snap("2026-09-28", "Guinea", "Kenya", "declined_no_selections")
+    current = _snap("2026-10-02", "Belgium", "Turkey", "ticket_created")
+
+    scoped = ps.clv_rows_in_plan([stale, current], plan)
+
+    assert scoped == [current]
+
+
+def test_partial_knowledge_keeps_unidentified_rows_on_a_run_date():
+    """Same-date rows survive: they may belong to the uncounted picks."""
+    plan = {"same_day_pick_count": 2, "horizon_pick_count": 0,
+            "event_dates": ["2026-10-01"]}
     rows = [_snap("2026-10-01", "Guinea", "Kenya", "ticket_created")]
 
     assert ps.clv_rows_in_plan(rows, plan) == rows
+
+
+# ===========================================================================
+# Run 736d2d9 shape: 2 same-day ticketed + 1 future declined
+#
+# The official run printed "Supabase selections published: 3
+# (2026-10-01=3)" while the sync had published 2 for 2026-10-01 and 1 for
+# 2026-10-02, and "CLV latest production selections: 5" against a plan of 3.
+# ===========================================================================
+
+
+def test_publish_breakdown_is_not_collapsed_onto_the_run_date(tmp_path):
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    (localdata / "supabase_sync_manifest_2026-10-01.json").write_text(
+        json.dumps({"target_date": "2026-10-01", "row_count": 3,
+                    "row_counts_by_event_date": {"2026-10-01": 2,
+                                                 "2026-10-02": 1}}))
+
+    published = ps.read_supabase_published(
+        ["2026-10-01", "2026-10-02"], localdata, run_date="2026-10-01")
+
+    assert published == {"2026-10-01": 2, "2026-10-02": 1}
+    assert sum(published.values()) == 3
+
+
+def test_a_per_date_manifest_does_not_hide_the_breakdown(tmp_path):
+    """The run-date manifest short-circuited before the breakdown."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    (localdata / "supabase_sync_manifest_2026-10-01.json").write_text(
+        json.dumps({"target_date": "2026-10-01", "row_count": 3,
+                    "row_counts_by_event_date": {"2026-10-01": 2,
+                                                 "2026-10-02": 1}}))
+
+    assert ps.read_supabase_published(
+        ["2026-10-01"], localdata, run_date="2026-10-01") == {
+            "2026-10-01": 2, "2026-10-02": 1}
+
+
+def test_clv_latest_matches_the_three_selection_plan():
+    plan = {"same_day_pick_count": 2, "horizon_pick_count": 1,
+            "event_dates": ["2026-10-01", "2026-10-02"],
+            "same_day_picks": [
+                {"event_date": "2026-10-01", "home": "Guinea",
+                 "away": "Kenya", "selection": "home"},
+                {"event_date": "2026-10-01", "home": "Maccabi Bnei Raina",
+                 "away": "Hapoel Kfar Shalem", "selection": "home"}],
+            "horizon_picks": [
+                {"event_date": "2026-10-02", "home": "Belgium",
+                 "away": "Turkey", "selection": "home"}]}
+    rows = [
+        # stale rows from earlier runs that contradicted the outcome
+        _snap("2026-09-28", "Old", "Fixture", "declined_no_selections"),
+        _snap("2026-09-29", "Older", "Fixture", "deferred_before_build_hour"),
+        _snap("2026-10-01", "Guinea", "Kenya", "ticket_created"),
+        _snap("2026-10-01", "Maccabi Bnei Raina", "Hapoel Kfar Shalem",
+              "ticket_created"),
+        _snap("2026-10-02", "Belgium", "Turkey",
+              "declined_same_day_only_policy"),
+    ]
+
+    scoped = ps.clv_rows_in_plan(rows, plan)
+
+    assert len(ps.clv_latest_rows(scoped)) == 3
+    assert ps.clv_latest_status_counts(scoped) == {
+        "ticket_created": 2, "declined_same_day_only_policy": 1}
