@@ -2058,7 +2058,16 @@ def _scoutingstats_rows_to_odds(rows: list[dict]) -> list[dict]:
             "league": row.get("league"),
             "home": row.get("home"),
             "away": row.get("away"),
+            # NOT a capture instant: this provider exposes no fetch
+            # time, so the fixture kickoff stands in. The value is kept
+            # because three consumers resolve kickoffs through it
+            # (enh_pricing._fresh_row, the auto_tickets provider
+            # compensation, replay_harness), but it is now labelled so
+            # nothing downstream can present it as an observed price
+            # time. See docs/operator/captured-at-followup.md.
             "captured_at": row.get("kickoff") or row.get("time") or "",
+            "captured_at_is_kickoff_proxy": True,
+            "captured_at_provenance": "kickoff_proxy_no_fetch_time",
             "bookmaker": SCOUTINGSTATS_ODDS_SOURCE,
         }
         for market, mapping in (

@@ -756,3 +756,23 @@ def test_the_proxy_source_list_is_documented():
     for source in ri.PROXY_CAPTURE_SOURCES:
         assert source in text
     assert "enh_pricing" in text and "replay_harness" in text
+
+
+def test_the_proxy_capture_flag_is_emitted_at_the_source():
+    """The value stays (3 consumers need it) but is labelled, not implied."""
+    src = (ROOT / "scripts" / "picks_today.py").read_text()
+    block = src.split("def _scoutingstats_rows_to_odds", 1)[1][:1400]
+    assert '"captured_at_is_kickoff_proxy": True' in block
+    assert '"captured_at_provenance": "kickoff_proxy_no_fetch_time"' in block
+    # It must still carry the kickoff: enh_pricing._fresh_row,
+    # auto_tickets and replay_harness resolve kickoffs through it.
+    assert '"captured_at": row.get("kickoff")' in block
+
+
+def test_a_flagged_row_is_still_caught_by_the_thin_edge_warning():
+    row = {"home": "Germany", "away": "Serbia", "edge": 0.005,
+           "odds_source": "scoutingstats_odds",
+           "captured_at_is_kickoff_proxy": True}
+
+    assert _codes(ri.check_price_capture_proxy([row])) == {
+        ri.V_PRICE_CAPTURE_PROXY}
