@@ -655,8 +655,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-09-30T00:00:44+02:00",
-    "avg_p": 60.8,
+    "as_of": "2026-10-01T09:45:52+02:00",
+    "avg_p": 59.3,
     "away": "Junior",
     "bookmaker": "betexplorer_best",
     "bucket": "CERTIFIED_CLEAN",
@@ -665,13 +665,16 @@
       "away_norm": "juniorbarranquilla",
       "comp_type_name": "league",
       "competition_type": "BOOST",
+      "duplicate_alias_collapse": "true",
+      "duplicate_bucket_sources": "CERTIFIED_CLEAN",
+      "duplicate_event_keys": "atleticonacional vs junior",
       "home_norm": "nacional",
       "league": "UNKNOWN",
       "league_key": "colombia primera a apertura finalizacion",
       "league_raw": "Colombia,Primera A Apertura Finalizacion",
       "niche": "UNKNOWN",
-      "odds_band": "BOOST",
-      "odds_band_name": "1.50-1.75",
+      "odds_band": "ALLOW",
+      "odds_band_name": "1.35-1.50",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O2-competition_type",
       "resolution_pool_n": null,
@@ -684,10 +687,20 @@
     },
     "date": "2026-10-01",
     "decay_verdict": "HEALTHY",
-    "display_rule": "ML-META\u226560",
-    "draw_risk_flag": "EXTREME",
+    "display_rule": "ML-META\u226555",
+    "draw_risk_flag": "HIGH",
+    "duplicate_bucket_sources": [
+      "CERTIFIED_CLEAN"
+    ],
+    "duplicate_matches_collapsed": [
+      "Atletico Nacional vs Junior"
+    ],
+    "duplicate_rows_collapsed": 1,
+    "duplicate_rules_collapsed": [
+      "ML-META\u226555"
+    ],
     "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=60",
+    "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
     "enhancement_label": "Away Team Under 3.5 Goals",
     "enhancement_mapped": true,
@@ -697,66 +710,63 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9712,
-    "enhancement_reason": "Combined Under 3.5 is 98.8% (ML-calibrated 96.0%->97.5%, n=406) (Performance feedback: HR=96.8%, Adjusted Prob: 97.1%)",
+    "enhancement_probability": 0.9671,
+    "enhancement_reason": "Combined Under 3.5 is 98.7% (ML-calibrated 95.9%->97.2%, n=392) (Performance feedback: HR=96.8%, Adjusted Prob: 96.7%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 1961,
+        "cohort_n": 2112,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.971168219494624,
-        "raw_probability": 0.9879204168640455,
-        "reason": "Combined Under 3.5 is 98.8% (ML-calibrated 96.0%->97.5%, n=406) (Performance feedback: HR=96.8%, Adjusted Prob: 97.1%)"
+        "probability": 0.9670880741190583,
+        "raw_probability": 0.9869584438549955,
+        "reason": "Combined Under 3.5 is 98.7% (ML-calibrated 95.9%->97.2%, n=392) (Performance feedback: HR=96.8%, Adjusted Prob: 96.7%)"
       },
       {
-        "cohort_n": 1961,
+        "cohort_n": 2112,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8951411693427939,
-        "raw_probability": 0.9407863571766935,
-        "reason": "Combined Under 2.5 is 94.1% (ML-calibrated 92.0%->91.3%, n=367) (Performance feedback: HR=95.8%, Adjusted Prob: 89.5%)"
+        "probability": 0.8919960034745711,
+        "raw_probability": 0.938549955791335,
+        "reason": "Combined Under 2.5 is 93.9% (ML-calibrated 91.9%->91.1%, n=359) (Performance feedback: HR=95.8%, Adjusted Prob: 89.2%)"
       },
       {
-        "cohort_n": 1961,
+        "cohort_n": 2112,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4179554789577736,
-        "raw_probability": 0.5575556608242539,
-        "reason": "Mathematical expectation is 55.8% (ML-calibrated 45.4%->61.8%, n=570) (Performance feedback: HR=64.4%, Adjusted Prob: 41.8%)"
+        "probability": 0.4276939096283803,
+        "raw_probability": 0.5605658709106985,
+        "reason": "Mathematical expectation is 56.1% (ML-calibrated 45.1%->61.9%, n=562) (Performance feedback: HR=65.3%, Adjusted Prob: 42.8%)"
       },
       {
-        "cohort_n": 1961,
+        "cohort_n": 2112,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.19007763842593056,
-        "raw_probability": 0.1848680565911908,
-        "reason": "Poisson expected hit rate is 18.5% (ML-calibrated 23.8%->26.6%, n=451)"
+        "probability": 0.18247135791595342,
+        "raw_probability": 0.17671624012384032,
+        "reason": "Poisson expected hit rate is 17.7% (ML-calibrated 23.7%->27.0%, n=445)"
       }
     ],
     "home": "Atletico Nacional",
-    "kickoff": "18:00",
+    "kickoff": "20:00",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-01T01:00:00+00:00",
     "kickoff_witness": "vitibet kickoff '2026-10-01T03:00:00+02:00'",
     "league": "Colombia,Primera A Apertura Finalizacion",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "high draw risk and weak signal for raw 1X2",
+    "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
     "market_type": "1x2",
     "match": "Atletico Nacional vs Junior",
     "min_lead_minutes": 30,
-    "ml_ht_diff": 0,
-    "ml_ht_total": 0,
-    "ml_p": 0.608,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.52,
-    "odds_captured_at": "2026-09-29T22:26:51.640400+00:00",
+    "odds": 1.44,
+    "odds_captured_at": "2026-10-01T07:57:31.633027+00:00",
     "odds_league": "Colombia: Primera A",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -768,22 +778,23 @@
     "price_push_eligible": true,
     "recommended_enhancement": "away_under_35",
     "recommended_market": "avoid_raw_1x2",
-    "rule": "ml-meta avg_p>=60",
+    "rule": "ml-meta avg_p>=55",
     "source_weights": {},
     "sources_used": [
       "statarea",
-      "vitibet"
+      "vitibet",
+      "betclan"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1340): Avg Goals: 3.30 | Over 2.5: 65.2% | BTTS: 42.0% | Home Over 1.5 Goals: 82.9% | Away Over 1.5 Goals: 10.2%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1405): Avg Goals: 3.27 | Over 2.5: 65.6% | BTTS: 43.7% | Home Over 1.5 Goals: 82.8% | Away Over 1.5 Goals: 10.3%",
     "vitibet_index": 1.08,
-    "w_score": 0.4391
+    "w_score": 1.0
   },
   {
-    "as_of": "2026-09-30T15:00:55+02:00",
-    "avg_p": 82.8,
+    "as_of": "2026-10-01T09:45:52+02:00",
+    "avg_p": 82.5,
     "away": "Bolivia",
-    "bookmaker": "scoutingstats_odds",
+    "bookmaker": "betexplorer_best",
     "bucket": "SKIPPED_VETO",
     "confidence": null,
     "ctx": {
@@ -795,8 +806,8 @@
       "duplicate_event_keys": "argentina vs bolivia",
       "home_norm": "argentina",
       "league": "UNKNOWN",
-      "league_key": "world friendlies",
-      "league_raw": "World Friendlies",
+      "league_key": "international friendlies",
+      "league_raw": "International,Friendlies",
       "niche": "UNKNOWN",
       "odds_band": "VETO",
       "odds_band_name": "1.00-1.10",
@@ -836,8 +847,8 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9517,
-    "enhancement_reason": "Combined Under 3.5 is 97.2% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 95.2%)",
+    "enhancement_probability": 0.952,
+    "enhancement_reason": "Combined Under 3.5 is 97.2% (ML-calibrated 95.9%->97.2%, n=392) (Performance feedback: HR=96.8%, Adjusted Prob: 95.2%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
@@ -845,53 +856,44 @@
         "engine": "model",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9517419147323952,
+        "probability": 0.951981520521875,
         "raw_probability": 0.9715415019762845,
-        "reason": "Combined Under 3.5 is 97.2% (ML-calibrated 95.9%->97.2%, n=391) (Performance feedback: HR=96.7%, Adjusted Prob: 95.2%)"
+        "reason": "Combined Under 3.5 is 97.2% (ML-calibrated 95.9%->97.2%, n=392) (Performance feedback: HR=96.8%, Adjusted Prob: 95.2%)"
       },
       {
         "cohort_n": null,
         "engine": "model",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8885088689836325,
+        "probability": 0.8887911757036207,
         "raw_probability": 0.9351778656126483,
-        "reason": "Combined Under 2.5 is 93.5% (ML-calibrated 91.9%->91.1%, n=358) (Performance feedback: HR=95.8%, Adjusted Prob: 88.9%)"
-      },
-      {
-        "cohort_n": null,
-        "engine": "model",
-        "label": "Away Team Under 1.5 Goals",
-        "market": "away_under_15",
-        "probability": 0.8548419666666667,
-        "raw_probability": 0.7787878787878788,
-        "reason": "Combined Under 1.5 is 77.9%"
+        "reason": "Combined Under 2.5 is 93.5% (ML-calibrated 91.9%->91.1%, n=359) (Performance feedback: HR=95.8%, Adjusted Prob: 88.9%)"
       },
       {
         "cohort_n": null,
         "engine": "model",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4261201746151614,
+        "probability": 0.42778560479462796,
         "raw_probability": 0.5606860530773574,
-        "reason": "Mathematical expectation is 56.1% (ML-calibrated 45.2%->61.7%, n=562) (Performance feedback: HR=65.2%, Adjusted Prob: 42.6%)"
+        "reason": "Mathematical expectation is 56.1% (ML-calibrated 45.1%->61.9%, n=562) (Performance feedback: HR=65.3%, Adjusted Prob: 42.8%)"
       },
       {
         "cohort_n": null,
         "engine": "model",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.21855600401052994,
+        "probability": 0.21919326841252457,
         "raw_probability": 0.21227994736663536,
-        "reason": "Poisson expected hit rate is 21.2% (ML-calibrated 23.7%->26.7%, n=446)"
+        "reason": "Poisson expected hit rate is 21.2% (ML-calibrated 23.7%->27.0%, n=445)"
       }
     ],
     "home": "Argentina",
-    "kickoff": "01-10, 01:00",
+    "kickoff": "19:00",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-01T00:00:00+00:00",
-    "kickoff_witness": "scoutingstats kickoff '2026-10-01T00:00:00Z'",
-    "league": "World Friendlies",
+    "kickoff_witness": "vitibet kickoff '2026-10-01T02:00:00+02:00'",
+    "league": "International,Friendlies",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
     "market_recommendation_reason": "short odds, acceptable draw risk",
@@ -900,77 +902,33 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.8276,
+    "ml_p": 0.8249,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.08,
-    "odds_captured_at": "2026-10-01T00:00:00Z",
-    "odds_league": "Friendly International",
-    "odds_match_method": "exact",
-    "odds_match_status": "uncorroborated",
-    "odds_replaced": {
-      "odds": 1.07,
-      "source": "zulubet"
-    },
-    "odds_source": "scoutingstats_odds",
+    "odds": 1.07,
+    "odds_captured_at": "2026-10-01T07:56:57.120988+00:00",
+    "odds_league": "World: Friendly International",
+    "odds_match_method": "betexplorer",
+    "odds_match_status": "matched",
+    "odds_source": "betexplorer_odds",
     "odds_tier": "low",
     "pick": "home",
-    "price_board": [
-      {
-        "away": "Bolivia",
-        "bookmaker": "scoutingstats_odds",
-        "captured_at": "2026-10-01T00:00:00Z",
-        "chosen": true,
-        "home": "Argentina",
-        "kickoff": "2026-10-01T00:00:00Z",
-        "league": "Friendly International",
-        "market": "1x2",
-        "match_method": "exact",
-        "odds": 1.08,
-        "selection": "home",
-        "source": "scoutingstats_odds"
-      },
-      {
-        "away": "Bolivia",
-        "bookmaker": "scoutingstats_odds",
-        "captured_at": "2026-10-01T00:00:00Z",
-        "home": "Argentina",
-        "kickoff": "2026-10-01T00:00:00Z",
-        "league": "Friendly International",
-        "market": "1x2",
-        "odds": 9.5,
-        "selection": "draw",
-        "source": "scoutingstats_odds"
-      },
-      {
-        "away": "Bolivia",
-        "bookmaker": "scoutingstats_odds",
-        "captured_at": "2026-10-01T00:00:00Z",
-        "home": "Argentina",
-        "kickoff": "2026-10-01T00:00:00Z",
-        "league": "Friendly International",
-        "market": "1x2",
-        "odds": 23.0,
-        "selection": "away",
-        "source": "scoutingstats_odds"
-      }
-    ],
-    "price_evidence": "SCOUTINGSTATS_SOLE",
-    "price_push_eligible": false,
-    "price_quarantine_reason": "scoutingstats_sole_source",
+    "price_board": [],
+    "price_evidence": "BETEXPLORER_RESCUE",
+    "price_push_eligible": true,
     "recommended_enhancement": "away_under_35",
     "recommended_market": "keep_1x2",
     "rule": "ml-meta avg_p>=80",
     "source_weights": {},
     "sources_used": [
-      "zulubet",
-      "statarea"
+      "statarea",
+      "betclan"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=20): Avg Goals: 4.40 | Over 2.5: 75.0% | BTTS: 40.0% | Home Over 1.5 Goals: 85.0% | Away Over 1.5 Goals: 5.0%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=22): Avg Goals: 4.68 | Over 2.5: 77.3% | BTTS: 36.4% | Home Over 1.5 Goals: 86.4% | Away Over 1.5 Goals: 4.5%",
     "veto_reason": "context VETO in ['odds_band']",
     "vitibet_index": null,
-    "w_score": 1.5688
+    "w_score": 1.5499
   },
   {
     "as_of": "2026-09-30T00:00:44+02:00",
@@ -1113,7 +1071,7 @@
     "w_score": 1.2067
   },
   {
-    "as_of": "2026-10-01T09:00:54+02:00",
+    "as_of": "2026-10-01T09:45:52+02:00",
     "avg_p": 73.0,
     "away": "Maccabi Kiryat Gat",
     "bookmaker": "betexplorer_best",
@@ -1211,7 +1169,7 @@
     "model_version": null,
     "n_way": 2,
     "odds": 1.3,
-    "odds_captured_at": "2026-10-01T07:08:30.298517+00:00",
+    "odds_captured_at": "2026-10-01T07:57:19.386716+00:00",
     "odds_league": "Israel: Leumit League",
     "odds_match_method": "betexplorer",
     "odds_match_status": "matched",
@@ -1383,7 +1341,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-01T09:00:54+02:00",
+    "as_of": "2026-10-01T09:45:52+02:00",
     "avg_p": 64.5,
     "away": "Hapoel Acre",
     "bookmaker": null,
