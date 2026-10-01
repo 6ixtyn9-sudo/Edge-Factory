@@ -1,6 +1,6 @@
 {
  "checkpoint_frozen_at": "2026-09-20",
- "eval_count": 7,
+ "eval_count": 8,
  "history": [
   {
    "due_reasons": [
@@ -127,14 +127,33 @@
     "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
     "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
    ]
+  },
+  {
+   "due_reasons": [
+    "monthly checkpoint (last 2026-09, now 2026-10)"
+   ],
+   "eval_at": "2026-10-01T09:15:36+02:00",
+   "report_file": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_research_report_2026-10-01.md",
+   "rule_candidate": "observing",
+   "settled_fade": 655,
+   "studies": {
+    "contexts": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_contexts_2026-10-01.txt",
+    "price_study": "/home/runner/work/Edge-Factory/Edge-Factory/localdata/ml_fade_checkpoint_price_study_2026-10-01.txt"
+   },
+   "warnings": [
+    "FADE PRICE COVERAGE LOW (zb-only): 8% of settled fade rows carry a first-seen zb-only quote (< 90% threshold)",
+    "FADE PRICE COVERAGE LOW (fb-only): 57% of settled fade rows carry a first-seen fb-only quote (< 90% threshold)",
+    "UNRESOLVED CONFLICTS (ml-meta): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved",
+    "UNRESOLVED CONFLICTS (ml-fade): 1 row(s) hold contradictory result claims \u2014 human review required, never auto-resolved"
+   ]
   }
  ],
- "last_eval_active_day": "2026-09-30",
- "last_eval_at": "2026-09-30T09:18:11+02:00",
- "last_eval_settled_fade": 642,
+ "last_eval_active_day": "2026-10-01",
+ "last_eval_at": "2026-10-01T09:15:36+02:00",
+ "last_eval_settled_fade": 655,
  "model_drift": {
   "drifted": false,
-  "model_key": "6a8cf5e0f006",
+  "model_key": "fcbb07f55a92",
   "reasons": []
  },
  "policy": {
