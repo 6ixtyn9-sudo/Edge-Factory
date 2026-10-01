@@ -549,7 +549,14 @@ def test_an_empty_same_day_file_never_prints_a_bare_no_bet_today(tmp_path, capsy
 
 
 @patch.dict(os.environ, FRESH)
-def test_no_legacy_fallback_when_the_plan_is_empty(tmp_path):
+def test_legacy_candidates_enter_the_gate_chain_when_the_plan_is_empty(tmp_path):
+    """Operator-approved candidate ladder (2026-10-01).
+
+    Previously the day was abandoned before the assayer, the bucket
+    ladder or the P&L tripwire could grade anything. A legacy row is now
+    admitted as a CANDIDATE -- never as a production selection -- and
+    still faces every gate.
+    """
     localdata = tmp_path / "localdata"
     localdata.mkdir()
     (localdata / f"picks_{RUN_DATE}.json").write_text(json.dumps(
@@ -562,10 +569,15 @@ def test_no_legacy_fallback_when_the_plan_is_empty(tmp_path):
 
     with patch.object(at, "LOCALDATA", localdata):
         rows, path, dates = at.load_production_slate(RUN_DATE)
-    assert rows == [] and dates == []
-    assert "dispatch_plan" in path.name
-    harness.assert_no_legacy_fallback(rows)
 
+    assert [r["home"] for r in rows] == ["Legacy"]
+    assert dates == [RUN_DATE]
+    assert "dispatch_plan" in path.name
+    # Admitted as a candidate, never as production.
+    assert rows[0]["source_lane"] == at.LANE_LEGACY_CANDIDATE
+    assert rows[0]["production_certified"] is False
+
+    # CLV still follows the production plan only.
     with patch.object(clv, "LOCALDATA", localdata):
         assert clv._dispatch_plan_picks(RUN_DATE) == []
 
@@ -851,3 +863,125 @@ def test_an_explicit_date_still_cards_that_day(tmp_path):
     _drive(localdata, target="2026-10-02", now=_sast(2026, 10, 1, 10))
 
     assert (localdata / "auto_tickets_2026-10-02.txt").exists()
+
+
+# ===========================================================================
+# Candidate ladder: a legacy candidate is a candidate, not a free pass
+#
+# Replay 2026-09-03..2026-10-01: 27 of 27 days carded while the legacy
+# slate fed the engine, then 0 of 2 once the production lane became the
+# sole source. The ladder restores volume WITHOUT weakening a gate.
+# ===========================================================================
+
+
+def _plan_with_no_selections(localdata, run_date=RUN_DATE):
+    empty = fp.build_dispatch_plan(
+        run_date=run_date, same_day_rows=[], horizon_rows=[],
+        horizon={"generated_for": run_date, "picks": []})
+    pl.dispatch_plan_path(run_date, localdata).write_text(json.dumps(empty))
+
+
+def _legacy(localdata, rows, run_date=RUN_DATE):
+    (localdata / f"picks_{run_date}.json").write_text(json.dumps(rows))
+
+
+def _slate(localdata, run_date=RUN_DATE):
+    with patch.object(at, "LOCALDATA", localdata):
+        return at.load_production_slate(run_date)[0]
+
+
+def _row(**over):
+    row = {"home": "Legacy", "away": "Row", "pick": "home", "date": RUN_DATE,
+           "bucket": "CERTIFIED_CLEAN", "avg_p": 70, "odds": 2.0}
+    row.update(over)
+    return row
+
+
+def test_a_production_card_is_never_diluted_by_legacy_candidates(tmp_path):
+    """The ladder yields only when production dispatched nothing."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    pl.dispatch_plan_path(RUN_DATE, localdata).write_text(json.dumps(
+        _plan([_pick(date=RUN_DATE, event_date=RUN_DATE)])))
+    _legacy(localdata, [_row()])
+
+    rows = _slate(localdata)
+
+    assert "Legacy" not in [r.get("home") for r in rows]
+
+
+def test_a_legacy_candidate_cannot_widen_the_date_scope(tmp_path):
+    """Hard gate: event date must equal the date being carded."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    _plan_with_no_selections(localdata)
+    _legacy(localdata, [_row(date="2026-10-05", home="Tomorrow")])
+
+    assert _slate(localdata) == []
+
+
+def test_a_legacy_candidate_without_a_price_is_refused(tmp_path):
+    """Hard gate: the engine cannot size or grade an unpriced leg."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    _plan_with_no_selections(localdata)
+    _legacy(localdata, [_row(odds=None), _row(odds=0, home="Zero")])
+
+    assert _slate(localdata) == []
+
+
+def test_a_legacy_candidate_never_claims_production_certification(tmp_path):
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    _plan_with_no_selections(localdata)
+    _legacy(localdata, [_row(production_certified=True,
+                             selection_scope="production")])
+
+    row = _slate(localdata)[0]
+
+    assert row["production_certified"] is False
+    assert row["source_lane"] == at.LANE_LEGACY_CANDIDATE
+
+
+def test_a_legacy_candidate_is_graded_under_a_canonical_bucket(tmp_path):
+    """The whole point: the assayer and tripwire get to grade it.
+
+    Bench and P&L decisions key on the bucket, so a candidate carrying a
+    canonical bucket is subject to exactly the same throttling as any
+    production selection.
+    """
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    _plan_with_no_selections(localdata)
+    _legacy(localdata, [_row(), _row(home="Second", odds=1.95)])
+
+    rows = _slate(localdata)
+
+    assert len(rows) == 2
+    for row in rows:
+        assert row["bucket"] in at.BUCKETS, \
+            "an unregistered bucket is invisible to the ladder and bench"
+
+
+def test_a_legacy_candidate_faces_the_price_integrity_quarantine(tmp_path):
+    """execution_safe is what the live builder applies; it still bites."""
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    _plan_with_no_selections(localdata)
+    _legacy(localdata, [_row(price_quarantine_reason="alias_fuzzy",
+                             price_evidence="SUSPECT_ALIAS_FUZZY")])
+
+    rows = _slate(localdata)
+    pool = at.playable_legs(rows, day=RUN_DATE, settled={},
+                            execution_safe=True)
+
+    assert rows, "the candidate was admitted"
+    assert pool == [], "an audit-only quote must not become a ticket"
+
+
+def test_the_ladder_does_not_fire_without_a_legacy_file(tmp_path):
+    localdata = tmp_path / "localdata"
+    localdata.mkdir()
+    _plan_with_no_selections(localdata)
+
+    assert _slate(localdata) == []

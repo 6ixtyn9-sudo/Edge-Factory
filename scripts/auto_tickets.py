@@ -229,6 +229,21 @@ DECLINED_CONTEXT_VETO = "declined_context_veto"
 DECLINED_PRICE_INTEGRITY = "declined_price_integrity"
 DECLINED_KICKOFF_GUARD = "declined_kickoff_guard"
 DECLINED_SAME_DAY_ONLY_POLICY = "declined_same_day_only_policy"
+
+# Candidate lanes. The production lane is the priority source. When it
+# dispatches nothing for the target date, same-day legacy certified picks
+# may still enter THIS engine's candidate pool rather than the day being
+# abandoned before the assayer, the bucket ladder and the P&L tripwire can
+# grade anything. Replay over 2026-09-03..2026-10-01 showed the cost of not
+# doing this: 27 of 27 days carded while the legacy slate fed the engine,
+# then 0 of 2 once the production lane became the sole source.
+#
+# A legacy candidate is NOT production-certified and never claims to be. It
+# is admitted only as a candidate and still faces every gate below:
+# same-day only, pre-kickoff, usable price, price-integrity quarantine,
+# same-fixture dedup, bucket benching, P&L tripwire, exposure and bank.
+LANE_PRODUCTION = "production"
+LANE_LEGACY_CANDIDATE = "legacy_candidate"
 DECLINED_EXPOSURE_LIMIT = "declined_exposure_limit"
 DECLINED_DUPLICATE_FIXTURE = "declined_duplicate_fixture"
 DECLINED_ALREADY_SETTLED = "declined_already_settled"
@@ -2810,6 +2825,44 @@ def _production_slate_rows(plan) -> list[dict]:
     return rows
 
 
+def legacy_candidate_rows(target: str, localdata=None) -> list[dict]:
+    """Same-day legacy certified picks, as candidates for this engine.
+
+    These rows are the engine's own historical input shape -- they already
+    carry a canonical bucket, ctx, edge_status and decay_verdict -- so no
+    translation is invented here. Only admission is decided: the row must
+    be for the target date and must carry a usable price. Everything else
+    is left to the gate chain, which is the point of routing them here
+    instead of ticketing them separately.
+    """
+    base = LOCALDATA if localdata is None else Path(localdata)
+    path = base / f"picks_{target}.json"
+    if not path.exists():
+        return []
+    try:
+        raw = json.loads(path.read_text())
+    except (OSError, ValueError) as exc:
+        print(f"cannot read {path.name}: {exc}")
+        return []
+    if isinstance(raw, dict):
+        raw = [r for v in raw.values() if isinstance(v, list) for r in v]
+    rows = []
+    for row in raw:
+        if not isinstance(row, dict):
+            continue
+        # Hard gate: the event date must be the date being carded. A
+        # legacy candidate may never widen the engine's date scope.
+        if str(row.get("date") or "")[:10] != str(target)[:10]:
+            continue
+        # Hard gate: no price, no candidate. The engine cannot size or
+        # grade a leg it cannot price.
+        if row.get("odds") in (None, "", 0):
+            continue
+        rows.append(dict(row, source_lane=LANE_LEGACY_CANDIDATE,
+                         production_certified=False))
+    return rows
+
+
 def load_production_slate(target: str):
     """Return ``(rows, source_path, dates)`` for the production lane.
 
@@ -2833,6 +2886,18 @@ def load_production_slate(target: str):
     if plan_path.exists():
         plan = production_lane.load_dispatch_plan(target, LOCALDATA)
         rows = _production_slate_rows(plan)
+        for row in rows:
+            row.setdefault("source_lane", LANE_PRODUCTION)
+        # The production lane is the priority source. It only yields the
+        # candidate ladder when it dispatched nothing for THIS date;
+        # a production card is never diluted by legacy candidates.
+        if not [r for r in rows if str(r.get("date") or "")[:10] == str(target)[:10]]:
+            legacy = legacy_candidate_rows(target)
+            if legacy:
+                print(f"production lane dispatched no selection for {target}; "
+                      f"{len(legacy)} same-day legacy candidate(s) enter the "
+                      f"auto-ticket gate chain (not production-certified)")
+                rows = rows + legacy
         return rows, plan_path, sorted({r["date"] for r in rows if r.get("date")})
 
     path = production_lane.production_picks_path(target, LOCALDATA)
