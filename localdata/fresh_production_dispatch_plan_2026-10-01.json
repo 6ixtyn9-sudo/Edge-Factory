@@ -2,7 +2,6 @@
   "blocked_selection_count": 0,
   "blocked_selections": [],
   "event_dates": [
-    "2026-10-01",
     "2026-10-02"
   ],
   "future_event_dates": [
@@ -14,7 +13,7 @@
       "avg_p": 57.97,
       "away": "Georgia",
       "bookmaker": "prosoccer_embedded",
-      "bucket": "PRODUCTION_CERTIFIED",
+      "bucket": "CERTIFIED_CLEAN",
       "date": "2026-10-02",
       "dispatch_method": "certified_rule",
       "display_rule": "certified_rule:1x2_two_source_p55_unanimous",
@@ -42,6 +41,9 @@
           "odds": 1.85,
           "odds_replaced": false,
           "price_evidence": null,
+          "price_mechanism": "source_embedded_odds",
+          "price_origin_source": "prosoccer",
+          "price_origin_tier": "shadow",
           "price_owner": "prosoccer",
           "price_push_eligible": true,
           "price_quarantine_reason": null,
@@ -102,9 +104,12 @@
       "price_tier": "source_embedded_price",
       "pricing_source": "source_embedded_odds",
       "probability": 0.5797,
+      "production_certified": true,
+      "production_lane": true,
       "rule_id": "1x2_two_source_p55_unanimous",
       "run_date": "2026-10-01",
       "selection": "home",
+      "selection_scope": "production",
       "source_voters": [
         "bzzoiro",
         "prosoccer",
@@ -128,7 +133,7 @@
       "avg_p": 72.0,
       "away": "Turkey",
       "bookmaker": "prosoccer_embedded",
-      "bucket": "PRODUCTION_CERTIFIED",
+      "bucket": "CERTIFIED_CLEAN",
       "date": "2026-10-02",
       "dispatch_method": "certified_rule",
       "display_rule": "certified_rule:1x2_two_source_p70_majority",
@@ -155,6 +160,9 @@
           "odds": 1.45,
           "odds_replaced": false,
           "price_evidence": null,
+          "price_mechanism": "source_embedded_odds",
+          "price_origin_source": "prosoccer",
+          "price_origin_tier": "shadow",
           "price_owner": "prosoccer",
           "price_push_eligible": true,
           "price_quarantine_reason": null,
@@ -212,9 +220,12 @@
       "price_tier": "source_embedded_price",
       "pricing_source": "source_embedded_odds",
       "probability": 0.72,
+      "production_certified": true,
+      "production_lane": true,
       "rule_id": "1x2_two_source_p70_majority",
       "run_date": "2026-10-01",
       "selection": "home",
+      "selection_scope": "production",
       "source_voters": [
         "prosoccer",
         "vitibet"
@@ -241,221 +252,14 @@
   },
   "lane": "fresh_production",
   "note": "Future-dated picks are dispatched under their EVENT date. A run replaces its own run date unconditionally and a future date only when that date appears in this plan, so an empty same-day slate can never delete an already-dispatched future pick.",
-  "notification_action": "same_day_pick",
+  "notification_action": "future_pick",
   "replaceable_dates": [
     "2026-10-01",
     "2026-10-02"
   ],
   "run_date": "2026-10-01",
-  "same_day_pick_count": 2,
-  "same_day_picks": [
-    {
-      "avg_p": 63.5,
-      "away": "Kenya",
-      "bookmaker": "scoutingstats_odds",
-      "bucket": "PRODUCTION_CERTIFIED",
-      "date": "2026-10-01",
-      "dispatch_method": "certified_rule",
-      "display_rule": "certified_rule:1x2_two_source_p60_unanimous",
-      "edge": 0.0289,
-      "edge_rule": "1x2_two_source_p60_unanimous",
-      "edge_status": "certified",
-      "event_date": "2026-10-01",
-      "evidence_lineage": {
-        "away": "Kenya",
-        "eligible_voter_count": 2,
-        "event_date": "2026-10-01",
-        "home": "Guinea",
-        "kickoff_source": null,
-        "live_1x2_voters": [
-          "vitibet"
-        ],
-        "ml_anchor_sources": [],
-        "non_voter_sources": [],
-        "odds": 1.65,
-        "odds_replaced": false,
-        "parked_sources": [],
-        "price": {
-          "execution_safe": true,
-          "odds": 1.65,
-          "odds_replaced": false,
-          "price_evidence": null,
-          "price_owner": "scoutingstats",
-          "price_push_eligible": true,
-          "price_quarantine_reason": null,
-          "price_source": "scoutingstats_odds",
-          "price_tier": "dedicated_pricing_feed",
-          "states": [
-            "price_safe_for_execution"
-          ]
-        },
-        "price_evidence": null,
-        "price_push_eligible": true,
-        "price_quarantine_reason": null,
-        "price_source": "scoutingstats_odds",
-        "production_eligible_1x2_voters": [
-          "prosoccer",
-          "vitibet"
-        ],
-        "reasons": [],
-        "required_eligible_voters": 2,
-        "rule_id": "1x2_two_source_p60_unanimous",
-        "selection": "home",
-        "shadow_1x2_sources": [
-          "prosoccer"
-        ],
-        "source_tiers": {
-          "prosoccer": "shadow",
-          "vitibet": "live"
-        },
-        "sources_seen": [
-          "prosoccer",
-          "vitibet"
-        ],
-        "status": "reconciled",
-        "unregistered_sources": []
-      },
-      "feature_schema_version": "fresh_production_features_v1",
-      "home": "Guinea",
-      "horizon_pick": false,
-      "implied_probability": 0.6061,
-      "kickoff": "2026-10-01T18:00:00+02:00",
-      "lane": "fresh_production",
-      "league": "World: Africa Cup of Nations - Qualification",
-      "market": "1x2",
-      "model_version": "fresh_production_rules_v1",
-      "odds": 1.65,
-      "odds_match_method": "exact",
-      "odds_replaced": false,
-      "odds_source": "scoutingstats_odds",
-      "pick": "home",
-      "price_evidence": null,
-      "price_push_eligible": true,
-      "price_quarantine_reason": null,
-      "price_tier": "dedicated_pricing_feed",
-      "run_date": "2026-10-01",
-      "source_voters": [
-        "prosoccer",
-        "vitibet"
-      ],
-      "staking_owner": "auto_tickets",
-      "staking_policy": "handled_by_auto_tickets",
-      "walkforward_evidence": {
-        "base_rate": 0.5173,
-        "brier": 0.2047,
-        "hit_rate": 0.7007,
-        "hit_rate_lower_bound": 0.6755,
-        "model_eligible": true,
-        "recent_sample": 660,
-        "sample": 1323,
-        "status": "certified_dispatchable"
-      }
-    },
-    {
-      "avg_p": 58.47,
-      "away": "New Zealand",
-      "bookmaker": "prosoccer_embedded",
-      "bucket": "PRODUCTION_CERTIFIED",
-      "date": "2026-10-01",
-      "dispatch_method": "certified_rule",
-      "display_rule": "certified_rule:1x2_two_source_p55_unanimous",
-      "edge": 0.1403,
-      "edge_rule": "1x2_two_source_p55_unanimous",
-      "edge_status": "certified",
-      "event_date": "2026-10-01",
-      "evidence_lineage": {
-        "away": "New Zealand",
-        "eligible_voter_count": 2,
-        "event_date": "2026-10-01",
-        "home": "Panama",
-        "kickoff_source": null,
-        "live_1x2_voters": [
-          "bzzoiro"
-        ],
-        "ml_anchor_sources": [],
-        "non_voter_sources": [],
-        "odds": 2.25,
-        "odds_replaced": false,
-        "parked_sources": [],
-        "price": {
-          "execution_safe": true,
-          "odds": 2.25,
-          "odds_replaced": false,
-          "price_evidence": null,
-          "price_owner": "prosoccer",
-          "price_push_eligible": true,
-          "price_quarantine_reason": null,
-          "price_source": "source_embedded_odds",
-          "price_tier": "source_embedded_price",
-          "states": [
-            "price_present_from_embedded_source",
-            "price_present_from_shadow_source",
-            "price_safe_for_execution"
-          ]
-        },
-        "price_evidence": null,
-        "price_push_eligible": true,
-        "price_quarantine_reason": null,
-        "price_source": "source_embedded_odds",
-        "production_eligible_1x2_voters": [
-          "bzzoiro",
-          "prosoccer"
-        ],
-        "reasons": [],
-        "required_eligible_voters": 2,
-        "rule_id": "1x2_two_source_p55_unanimous",
-        "selection": "home",
-        "shadow_1x2_sources": [
-          "prosoccer"
-        ],
-        "source_tiers": {
-          "bzzoiro": "live",
-          "prosoccer": "shadow"
-        },
-        "sources_seen": [
-          "bzzoiro",
-          "prosoccer"
-        ],
-        "status": "reconciled",
-        "unregistered_sources": []
-      },
-      "feature_schema_version": "fresh_production_features_v1",
-      "home": "Panama",
-      "horizon_pick": false,
-      "implied_probability": 0.4444,
-      "kickoff": "2026-10-01T06:10:00Z",
-      "lane": "fresh_production",
-      "league": "International Friendly Games",
-      "market": "1x2",
-      "model_version": "fresh_production_rules_v1",
-      "odds": 2.25,
-      "odds_match_method": "exact",
-      "odds_replaced": false,
-      "odds_source": "source_embedded_odds",
-      "pick": "home",
-      "price_evidence": null,
-      "price_push_eligible": true,
-      "price_quarantine_reason": null,
-      "price_tier": "source_embedded_price",
-      "run_date": "2026-10-01",
-      "source_voters": [
-        "bzzoiro",
-        "prosoccer"
-      ],
-      "staking_owner": "auto_tickets",
-      "staking_policy": "handled_by_auto_tickets",
-      "walkforward_evidence": {
-        "base_rate": 0.5173,
-        "brier": 0.2169,
-        "hit_rate": 0.66,
-        "hit_rate_lower_bound": 0.6383,
-        "model_eligible": true,
-        "recent_sample": 973,
-        "sample": 1888,
-        "status": "certified_dispatchable"
-      }
-    }
-  ],
+  "same_day_pick_count": 0,
+  "same_day_picks": [],
   "schema": 1,
   "sync_dates": [
     "2026-10-01",

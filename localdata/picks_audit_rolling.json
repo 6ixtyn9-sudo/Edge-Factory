@@ -91,7 +91,7 @@
     "2026-09-30",
     "2026-10-01"
   ],
-  "archived_pick_rows": 601,
+  "archived_pick_rows": 604,
   "by_bucket": {
     "CAUTION": {
       "hit_rate": 0.622222,
@@ -101,11 +101,11 @@
       "wins": 28
     },
     "CERTIFIED_CLEAN": {
-      "hit_rate": 0.706897,
-      "priced_picks": 58,
-      "roi": 0.108966,
-      "settled_picks": 58,
-      "wins": 41
+      "hit_rate": 0.711864,
+      "priced_picks": 59,
+      "roi": 0.124576,
+      "settled_picks": 59,
+      "wins": 42
     },
     "SKIPPED_VETO": {
       "hit_rate": 0.663082,
@@ -153,11 +153,11 @@
       "wins": 17
     },
     "betexplorer": {
-      "hit_rate": 0.668712,
-      "priced_picks": 163,
-      "roi": -0.050184,
-      "settled_picks": 163,
-      "wins": 109
+      "hit_rate": 0.670732,
+      "priced_picks": 164,
+      "roi": -0.043598,
+      "settled_picks": 164,
+      "wins": 110
     },
     "exact": {
       "hit_rate": 0.664311,
@@ -190,11 +190,11 @@
       "wins": 31
     },
     "betexplorer_odds": {
-      "hit_rate": 0.668712,
-      "priced_picks": 163,
-      "roi": -0.050184,
-      "settled_picks": 163,
-      "wins": 109
+      "hit_rate": 0.670732,
+      "priced_picks": 164,
+      "roi": -0.043598,
+      "settled_picks": 164,
+      "wins": 110
     },
     "bzzoiro_odds": {
       "hit_rate": 0.875,
@@ -227,11 +227,11 @@
   },
   "by_price_evidence": {
     "BETEXPLORER_RESCUE": {
-      "hit_rate": 0.668712,
-      "priced_picks": 163,
-      "roi": -0.050184,
-      "settled_picks": 163,
-      "wins": 109
+      "hit_rate": 0.670732,
+      "priced_picks": 164,
+      "roi": -0.043598,
+      "settled_picks": 164,
+      "wins": 110
     },
     "BZZOIRO_PRIMARY": {
       "hit_rate": 0.875,
@@ -272,12 +272,12 @@
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.698885,
-      "priced_picks": 230,
-      "roi": -0.003,
-      "settled_picks": 269,
+      "hit_rate": 0.7,
+      "priced_picks": 231,
+      "roi": 0.001472,
+      "settled_picks": 270,
       "suspect_price_captures": 0,
-      "wins": 188
+      "wins": 189
     },
     "alias_fuzzy": {
       "avg_suspect_price": 1.562083,
@@ -314,11 +314,11 @@
       "wins": 62
     },
     "ml-meta avg_p>=55": {
-      "hit_rate": 0.627907,
-      "priced_picks": 290,
-      "roi": -0.037621,
-      "settled_picks": 301,
-      "wins": 189
+      "hit_rate": 0.629139,
+      "priced_picks": 291,
+      "roi": -0.033952,
+      "settled_picks": 302,
+      "wins": 190
     },
     "ml-meta avg_p>=60": {
       "hit_rate": 0.857143,
@@ -415,12 +415,12 @@
         "recommended": 33
       },
       "home_under_35": {
-        "hit_rate": 0.964286,
-        "hits": 27,
+        "hit_rate": 0.965517,
+        "hits": 28,
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 28
+        "recommended": 29
       },
       "match_over_15": {
         "hit_rate": 0.790698,
@@ -447,19 +447,19 @@
         "recommended": 18
       }
     },
-    "hit_rate": 0.797535,
-    "total_hits": 453,
-    "total_recommended": 568
+    "hit_rate": 0.797891,
+    "total_hits": 454,
+    "total_recommended": 569
   },
   "event_notes_audit": {
     "by_engine": {
       "hybrid_cohort": {
-        "brier": 0.136144,
-        "delta": 0.052146,
-        "hits": 1477,
-        "mean_promised": 0.666239,
-        "n": 2056,
-        "realized": 0.718385
+        "brier": 0.136004,
+        "delta": 0.051791,
+        "hits": 1479,
+        "mean_promised": 0.66617,
+        "n": 2060,
+        "realized": 0.717961
       },
       "model": {
         "brier": 0.181139,
@@ -529,20 +529,20 @@
           "realized": 0.666667
         },
         "home_under_25": {
-          "brier": 0.058758,
-          "delta": 0.032494,
-          "hits": 122,
-          "mean_promised": 0.905967,
-          "n": 130,
-          "realized": 0.938462
+          "brier": 0.058404,
+          "delta": 0.033095,
+          "hits": 123,
+          "mean_promised": 0.905836,
+          "n": 131,
+          "realized": 0.938931
         },
         "home_under_35": {
-          "brier": 0.011347,
-          "delta": 0.053027,
-          "hits": 129,
-          "mean_promised": 0.939281,
-          "n": 130,
-          "realized": 0.992308
+          "brier": 0.011264,
+          "delta": 0.052781,
+          "hits": 130,
+          "mean_promised": 0.939586,
+          "n": 131,
+          "realized": 0.992366
         },
         "match_over_15": {
           "brier": 0.19769,
@@ -553,12 +553,12 @@
           "realized": 0.75
         },
         "match_over_25": {
-          "brier": 0.26134,
-          "delta": 0.160856,
+          "brier": 0.261217,
+          "delta": 0.159648,
           "hits": 307,
-          "mean_promised": 0.450698,
-          "n": 502,
-          "realized": 0.611554
+          "mean_promised": 0.45069,
+          "n": 503,
+          "realized": 0.610338
         },
         "match_over_35": {
           "brier": 0.274949,
@@ -569,12 +569,12 @@
           "realized": 0.466667
         },
         "match_over_45": {
-          "brier": 0.187386,
-          "delta": 0.022096,
+          "brier": 0.187027,
+          "delta": 0.021521,
           "hits": 104,
-          "mean_promised": 0.237904,
-          "n": 400,
-          "realized": 0.26
+          "mean_promised": 0.23783,
+          "n": 401,
+          "realized": 0.259352
         }
       },
       "model": {
@@ -733,22 +733,22 @@
         "realized": 0.692308
       },
       "home_under_25": {
-        "brier": 0.057765,
-        "delta": 0.034487,
-        "hits": 125,
-        "mean_promised": 0.905363,
-        "n": 133,
-        "notes": 133,
-        "realized": 0.93985
+        "brier": 0.057426,
+        "delta": 0.035059,
+        "hits": 126,
+        "mean_promised": 0.90524,
+        "n": 134,
+        "notes": 134,
+        "realized": 0.940299
       },
       "home_under_35": {
-        "brier": 0.026361,
-        "delta": 0.035307,
-        "hits": 157,
-        "mean_promised": 0.939848,
-        "n": 161,
-        "notes": 161,
-        "realized": 0.975155
+        "brier": 0.026201,
+        "delta": 0.035217,
+        "hits": 158,
+        "mean_promised": 0.940091,
+        "n": 162,
+        "notes": 162,
+        "realized": 0.975309
       },
       "match_over_15": {
         "brier": 0.167617,
@@ -760,13 +760,13 @@
         "realized": 0.790698
       },
       "match_over_25": {
-        "brier": 0.262907,
-        "delta": 0.167809,
+        "brier": 0.262795,
+        "delta": 0.166718,
         "hits": 348,
-        "mean_promised": 0.451408,
-        "n": 562,
-        "notes": 562,
-        "realized": 0.619217
+        "mean_promised": 0.451399,
+        "n": 563,
+        "notes": 563,
+        "realized": 0.618117
       },
       "match_over_35": {
         "brier": 0.271169,
@@ -778,13 +778,13 @@
         "realized": 0.454545
       },
       "match_over_45": {
-        "brier": 0.193819,
-        "delta": 0.032567,
+        "brier": 0.193482,
+        "delta": 0.032027,
         "hits": 120,
-        "mean_promised": 0.237096,
-        "n": 445,
-        "notes": 445,
-        "realized": 0.269663
+        "mean_promised": 0.237031,
+        "n": 446,
+        "notes": 446,
+        "realized": 0.269058
       }
     },
     "definition": "plain-market: a note hits iff its market lands in the final score (selection-independent for match totals and BTTS; the 1X2 selection only picks the team for team totals and the double-chance leg)",
@@ -799,13 +799,13 @@
         "realized": 0.1875
       },
       {
-        "brier": 0.198887,
+        "brier": 0.198351,
         "bucket": "0.2-0.3",
-        "delta": 0.031044,
+        "delta": 0.030219,
         "hits": 79,
-        "mean_promised": 0.242312,
-        "n": 289,
-        "realized": 0.273356
+        "mean_promised": 0.242195,
+        "n": 290,
+        "realized": 0.272414
       },
       {
         "brier": 0.277277,
@@ -817,13 +817,13 @@
         "realized": 0.518987
       },
       {
-        "brier": 0.264169,
+        "brier": 0.264037,
         "bucket": "0.4-0.5",
-        "delta": 0.160659,
+        "delta": 0.159422,
         "hits": 296,
-        "mean_promised": 0.443422,
-        "n": 490,
-        "realized": 0.604082
+        "mean_promised": 0.443429,
+        "n": 491,
+        "realized": 0.602851
       },
       {
         "brier": 0.243279,
@@ -835,39 +835,39 @@
         "realized": 0.657143
       },
       {
-        "brier": 0.107097,
+        "brier": 0.10679,
         "bucket": "0.8-0.9",
-        "delta": 0.019316,
-        "hits": 270,
-        "mean_promised": 0.857308,
-        "n": 308,
-        "realized": 0.876623
+        "delta": 0.019613,
+        "hits": 271,
+        "mean_promised": 0.85741,
+        "n": 309,
+        "realized": 0.877023
       },
       {
-        "brier": 0.046061,
+        "brier": 0.046012,
         "bucket": "0.9-1.0",
-        "delta": 0.007454,
-        "hits": 875,
-        "mean_promised": 0.943633,
-        "n": 920,
-        "realized": 0.951087
+        "delta": 0.007468,
+        "hits": 876,
+        "mean_promised": 0.943672,
+        "n": 921,
+        "realized": 0.95114
       }
     ],
     "promised_missing": 0,
-    "scored": 2268,
-    "total_notes": 2268,
+    "scored": 2272,
+    "total_notes": 2272,
     "unscorable": {}
   },
   "include_same_day": false,
-  "morning_baseline_rows": 601,
+  "morning_baseline_rows": 604,
   "overall": {
-    "hit_rate": 0.679577,
-    "priced_picks": 526,
-    "roi": -0.029658,
-    "settled_picks": 568,
-    "wins": 386
+    "hit_rate": 0.680141,
+    "priced_picks": 527,
+    "roi": -0.027647,
+    "settled_picks": 569,
+    "wins": 387
   },
-  "pending_result_picks": 11,
+  "pending_result_picks": 10,
   "regular_only_rows": 0,
   "rescheduled_examples": [
     {
@@ -1049,13 +1049,13 @@
   ],
   "rescheduled_result_picks": 7,
   "same_day_cutoff": "2026-10-01",
-  "same_day_excluded": 12,
+  "same_day_excluded": 15,
   "secondary_stats": {
-    "btts_total": 534,
+    "btts_total": 535,
     "btts_wins": 294,
-    "over25_total": 534,
+    "over25_total": 535,
     "over25_wins": 330,
-    "team_o15_total": 534,
+    "team_o15_total": 535,
     "team_o15_wins": 351
   },
   "settled_ledger": [
@@ -36012,6 +36012,68 @@
       "won": true
     },
     {
+      "avg_p": 59.7,
+      "date": "2026-09-30",
+      "gs": 1,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Union San Felipe vs San Luis",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 3.5 Goals",
+          "market": "home_under_35",
+          "promised": 0.9792196953954044,
+          "raw_promised": 0.9824120603015075
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Home Team Under 2.5 Goals",
+          "market": "home_under_25",
+          "promised": 0.8888444290213627,
+          "raw_promised": 0.9216080402010051
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4468328855510653,
+          "raw_promised": 0.5879396984924623
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.20837767083605124,
+          "raw_promised": 0.20239389532088917
+        }
+      ],
+      "odds": 2.03,
+      "odds_match_method": "betexplorer",
+      "odds_source": "betexplorer_odds",
+      "outcome": "away",
+      "parsed_stats": {
+        "away_o15_expected": 0.855,
+        "away_o15_hit": false,
+        "btts_expected": 0.436,
+        "btts_hit": true,
+        "home_o15_expected": 0.105,
+        "home_o15_hit": true,
+        "over25_expected": 0.6940000000000001,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "BETEXPLORER_RESCUE",
+      "price_quarantine_reason": "NONE",
+      "selection": "away",
+      "suspect_price": null,
+      "won": true
+    },
+    {
       "avg_p": 56.2,
       "date": "2026-09-30",
       "gs": 1,
@@ -36248,44 +36310,44 @@
   "start": "2026-09-02",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.229962,
-      "mae": 1.578743,
-      "mean_actual": 3.285178,
-      "mean_promised": 3.515141,
-      "n": 533
+      "bias": -0.233989,
+      "mae": 1.580243,
+      "mean_actual": 3.280899,
+      "mean_promised": 3.514888,
+      "n": 534
     },
     "by_metric": {
       "away_o15": {
-        "brier": 0.224803,
-        "delta": 0.037028,
+        "brier": 0.225751,
+        "delta": 0.035358,
         "hits": 189,
-        "mean_promised": 0.317568,
-        "n": 533,
-        "realized": 0.354597
+        "mean_promised": 0.318575,
+        "n": 534,
+        "realized": 0.353933
       },
       "btts": {
-        "brier": 0.264874,
-        "delta": 0.13357,
+        "brier": 0.264734,
+        "delta": 0.132504,
         "hits": 293,
-        "mean_promised": 0.416148,
-        "n": 533,
-        "realized": 0.549719
+        "mean_promised": 0.416185,
+        "n": 534,
+        "realized": 0.548689
       },
       "home_o15": {
-        "brier": 0.23821,
-        "delta": -0.090477,
+        "brier": 0.237785,
+        "delta": -0.090504,
         "hits": 288,
-        "mean_promised": 0.630814,
-        "n": 533,
-        "realized": 0.540338
+        "mean_promised": 0.62983,
+        "n": 534,
+        "realized": 0.539326
       },
       "over25": {
-        "brier": 0.241219,
-        "delta": -0.07734,
+        "brier": 0.241669,
+        "delta": -0.078494,
         "hits": 329,
-        "mean_promised": 0.6946,
-        "n": 533,
-        "realized": 0.617261
+        "mean_promised": 0.694599,
+        "n": 534,
+        "realized": 0.616105
       }
     },
     "definition": "each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) \u2014 calibration, not a direction call; the retired exact-score field remains in machine history only",
@@ -36300,13 +36362,13 @@
         "realized": 0.235294
       },
       {
-        "brier": 0.204453,
+        "brier": 0.203839,
         "bucket": "0.1-0.2",
-        "delta": 0.141315,
+        "delta": 0.140533,
         "hits": 77,
-        "mean_promised": 0.103908,
-        "n": 314,
-        "realized": 0.245223
+        "mean_promised": 0.103911,
+        "n": 315,
+        "realized": 0.244444
       },
       {
         "brier": 0.362577,
@@ -36327,13 +36389,13 @@
         "realized": 0.510638
       },
       {
-        "brier": 0.262195,
+        "brier": 0.262027,
         "bucket": "0.4-0.5",
-        "delta": 0.127732,
+        "delta": 0.126421,
         "hits": 239,
-        "mean_promised": 0.429378,
-        "n": 429,
-        "realized": 0.55711
+        "mean_promised": 0.429393,
+        "n": 430,
+        "realized": 0.555814
       },
       {
         "brier": 0.25,
@@ -36345,13 +36407,13 @@
         "realized": 0.0
       },
       {
-        "brier": 0.244708,
+        "brier": 0.245345,
         "bucket": "0.6-0.7",
-        "delta": -0.070526,
+        "delta": -0.072202,
         "hits": 222,
-        "mean_promised": 0.668908,
-        "n": 371,
-        "realized": 0.598383
+        "mean_promised": 0.668976,
+        "n": 372,
+        "realized": 0.596774
       },
       {
         "brier": 0.233596,
@@ -36363,13 +36425,13 @@
         "realized": 0.652778
       },
       {
-        "brier": 0.259822,
+        "brier": 0.260748,
         "bucket": "0.8-0.9",
-        "delta": -0.189252,
+        "delta": -0.19056,
         "hits": 333,
-        "mean_promised": 0.844764,
-        "n": 508,
-        "realized": 0.655512
+        "mean_promised": 0.844784,
+        "n": 509,
+        "realized": 0.654224
       },
       {
         "brier": 0.267005,
@@ -36547,24 +36609,6 @@
       "rule": "ml-meta avg_p>=55"
     },
     {
-      "away": "San Luis",
-      "away_key_candidates": [
-        "sanluis"
-      ],
-      "bucket": "CERTIFIED_CLEAN",
-      "date": "2026-09-30",
-      "home": "Union San Felipe",
-      "home_key_candidates": [
-        "unionsanf"
-      ],
-      "league": "Chile Primera B",
-      "match": "Union San Felipe vs San Luis",
-      "odds": 2.03,
-      "pick": "away",
-      "reason": "pending_or_unmatched_result",
-      "rule": "ml-meta avg_p>=55"
-    },
-    {
       "away": "Rubio Nu",
       "away_key_candidates": [
         "rubionu"
@@ -36583,7 +36627,7 @@
       "rule": "ml-meta avg_p>=65"
     }
   ],
-  "unmatched_result_picks": 11,
+  "unmatched_result_picks": 10,
   "unsafe_regular_ledger_dates": [
     "2026-09-02",
     "2026-09-03",

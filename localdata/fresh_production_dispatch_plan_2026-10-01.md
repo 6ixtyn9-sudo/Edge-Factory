@@ -1,17 +1,14 @@
 # FRESH PRODUCTION DISPATCH PLAN — run date 2026-10-01
 
-- same-day dispatchable picks: 2
+- same-day dispatchable picks: 0
 - horizon dispatchable picks: 2
-- event dates: 2026-10-01, 2026-10-02
+- event dates: 2026-10-02
 - sync dates: 2026-10-01, 2026-10-02
-- notification action: same_day_pick
+- notification action: future_pick
 
 ## Same-day picks
 
-| event date | kickoff | fixture | selection | prob | odds | implied | edge | rule | staking |
-|---|---|---|---|---:|---:|---:|---:|---|---|
-| 2026-10-01 | 2026-10-01T18:00:00+02:00 | Guinea vs Kenya | home | 0.635 | 1.65 | 0.6061 | +0.0289 | 1x2_two_source_p60_unanimous | handled_by_auto_tickets |
-| 2026-10-01 | 2026-10-01T06:10:00Z | Panama vs New Zealand | home | 0.585 | 2.25 | 0.4444 | +0.1403 | 1x2_two_source_p55_unanimous | handled_by_auto_tickets |
+None.
 
 ## Future-dated horizon picks
 

@@ -1,6 +1,7 @@
 {
   "blocker_counts": {
-    "fewer_than_2_live_voters": 7,
+    "fewer_than_2_live_voters": 3,
+    "inside_30m_lead_or_started": 1,
     "no_ml_feature_provider_on_fixture": 7,
     "shadow_sources_not_settlement_validated": 15
   },
@@ -8,21 +9,21 @@
   "candidates": [
     {
       "blockers": [
+        "inside_30m_lead_or_started",
         "shadow_sources_not_settlement_validated:prosoccer"
       ],
       "date": "2026-10-01",
       "dispatchable": false,
       "fixture": "Argentina vs Bolivia",
-      "kickoff": "01-10, 01:00",
+      "kickoff": "2026-10-01T00:00:00Z",
       "kickoff_donors": [
-        "zulubet",
-        "vitibet",
         "scoutingstats",
         "bzzoiro",
         "prosoccer"
       ],
       "live_voters": [
         "zulubet",
+        "betclan",
         "bzzoiro"
       ],
       "shadow_voters": [
@@ -79,7 +80,6 @@
     },
     {
       "blockers": [
-        "fewer_than_2_live_voters",
         "no_ml_feature_provider_on_fixture",
         "shadow_sources_not_settlement_validated:prosoccer"
       ],
@@ -94,6 +94,7 @@
         "prosoccer"
       ],
       "live_voters": [
+        "betclan",
         "bzzoiro"
       ],
       "shadow_voters": [
@@ -239,7 +240,6 @@
     },
     {
       "blockers": [
-        "fewer_than_2_live_voters",
         "no_ml_feature_provider_on_fixture",
         "shadow_sources_not_settlement_validated:prosoccer"
       ],
@@ -254,6 +254,7 @@
         "prosoccer"
       ],
       "live_voters": [
+        "betclan",
         "bzzoiro"
       ],
       "shadow_voters": [
@@ -285,7 +286,6 @@
     },
     {
       "blockers": [
-        "fewer_than_2_live_voters",
         "no_ml_feature_provider_on_fixture",
         "shadow_sources_not_settlement_validated:prosoccer"
       ],
@@ -299,6 +299,7 @@
         "prosoccer"
       ],
       "live_voters": [
+        "betclan",
         "bzzoiro"
       ],
       "shadow_voters": [
@@ -307,7 +308,6 @@
     },
     {
       "blockers": [
-        "fewer_than_2_live_voters",
         "no_ml_feature_provider_on_fixture",
         "shadow_sources_not_settlement_validated:prosoccer"
       ],
@@ -322,6 +322,7 @@
         "prosoccer"
       ],
       "live_voters": [
+        "betclan",
         "bzzoiro"
       ],
       "shadow_voters": [
