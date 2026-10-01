@@ -284,3 +284,71 @@ Evasion for its own sake. No paid solvers, CAPTCHA bypass, residential
 proxies or stealth services. Do not hammer a site that is signalling it
 does not want the traffic. If a source must be fought to be read, the
 correct answer is usually to replace it.
+
+---
+
+## 10. Non-English sources (operator direction, 2026-10-01)
+
+> "have we even thought about websites that are not in english that can
+> provide us with votes?"
+
+No, and the existing data suggests that is a mistake. **Split the
+registry by origin:**
+
+| Contributing today | Zero rows today |
+|---|---|
+| `prosoccer.gr` (Greek ccTLD) | `predictz.com` (UK) |
+| `vitibet.com` (Czech) | `windrawwin.com` (UK) |
+| `zulubet.com` | `soccervista.com` |
+| `betclan.com` | `forebet.com` |
+| `sports.bzzoiro.com` | |
+
+Every blocked source is a large English-language site. The clearest
+survivor, `prosoccer.gr`, is a Greek-language site on a national TLD.
+This is an observation from one day's evidence, not a proven law —
+**verify it across the run history before relying on it** — but the
+direction is suggestive and cheap to test.
+
+The likely mechanism is simply economics of defence: large
+English-language prediction sites are the ones being scraped at volume
+by everyone, so they are the ones that bought bot protection. A Greek,
+Czech, Polish, Turkish, Spanish or Brazilian site serving a national
+audience has far less incentive to pay for an aggressive edge layer, and
+is often glad of the traffic.
+
+### Two reasons to pursue this, not one
+
+1. **Availability.** They are reachable, which is the entire problem
+   today.
+2. **Independence — the stronger reason.** A rule like
+   `1x2_two_source_p60_unanimous` is only meaningful if its voters are
+   genuinely independent. Several UK sites working from the same feeds,
+   the same public xG and similar models do not provide independent
+   confirmation; their agreement is partly an artefact of shared inputs,
+   which inflates apparent consensus and makes unanimity cheaper than it
+   looks. A Greek and a Czech predictor agreeing with a Brazilian one is
+   much stronger evidence than three London sites agreeing. **Source
+   diversity by language and region is a modelling improvement, not just
+   a transport workaround.**
+
+### What to do
+
+- Audit the current five for genuine independence, not just count. If
+  several share an upstream data provider, the quorum rules may be
+  weaker than they appear. Report this even if no new source is added.
+- Prospect for national-language 1x2 predictors across several regions —
+  Greek, Czech, Polish, Turkish, Spanish, Portuguese/Brazilian, Italian,
+  Nordic, Balkan. `prosoccer.gr` and `vitibet.com` are the proof of
+  concept and the template.
+- **Normalisation is the real work, and it is where this gets
+  dangerous.** Non-English sites bring non-English team names, local
+  transliterations, different date/time formats and local timezones.
+  Every one of those is an alias-matching and kickoff-parsing risk, and
+  this repo already has scars there: a reversed home/away candidate must
+  never be treated as validated, and squad qualifiers such as women's and
+  youth teams have caused real mismatches. Budget for alias work per
+  source and extend the existing audited normalisation — **do not infer
+  fixture identities, kickoffs or aliases beyond it.**
+- Each new source enters as shadow/candidate and earns its way through
+  walk-forward certification like any other. No shortcuts because it is
+  conveniently reachable.
