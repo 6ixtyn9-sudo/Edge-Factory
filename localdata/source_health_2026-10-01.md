@@ -1,9 +1,9 @@
 # source_health — fresh_production — 2026-10-01
 
-- fixture groups today: 109
+- fixture groups today: 115
 - groups with >= 2 current-source voters: 36
-- groups with a trusted kickoff: 62
-- groups flagged ambiguous: 9
+- groups with a trusted kickoff: 75
+- groups flagged ambiguous: 18
 - groups flagged reversed-orientation risk: 0
 
 ## Current production source universe
@@ -35,25 +35,25 @@
 |---|---:|
 | candidate_count_before_pricing | 36 |
 | candidate_count_with_any_price | 30 |
-| candidate_count_exact_price | 27 |
-| candidate_count_alias_price | 3 |
-| candidate_count_suspect_price_rejected | 3 |
+| candidate_count_exact_price | 28 |
+| candidate_count_alias_price | 2 |
+| candidate_count_suspect_price_rejected | 2 |
 | candidate_count_missing_price | 6 |
-| candidate_count_with_positive_edge | 11 |
-| candidate_count_with_negative_edge | 19 |
+| candidate_count_with_positive_edge | 13 |
+| candidate_count_with_negative_edge | 17 |
 
-Price tiers used: `dedicated_pricing_feed` × 19, `source_embedded_price` × 11
+Price tiers used: `source_embedded_price` × 15, `dedicated_pricing_feed` × 15
 
 | pricing bundle | rows |
 |---|---:|
 | bzzoiro_odds | 0 |
-| scoutingstats_odds | 185 |
-| source_embedded | 190 |
+| scoutingstats_odds | 157 |
+| source_embedded | 211 |
 
 ## source_health_warnings
 
 - SOURCE_HEALTH: 6 of 36 scored candidate(s) had no captured 1X2 price
-- SOURCE_HEALTH: 3 candidate(s) matched a price only through a fuzzy fixture join and were rejected for dispatch
+- SOURCE_HEALTH: 2 candidate(s) matched a price only through a fuzzy fixture join and were rejected for dispatch
 - SOURCE_HEALTH: fresh_production produced no dispatchable picks — see the blocker table for the objective reason
 
 ## legacy_baseline / historical_reference

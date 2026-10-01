@@ -94861,7 +94861,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Brooklyn",
    "kickoff": "16:00",
    "last_seen_at": "2026-09-30T17:13:44+02:00",
@@ -94889,25 +94889,29 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "away",
    "parent_avg_p": 44.3,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.4435,
    "parent_pick": "away",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "scoutingstats_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "bzzoiro"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.2271
   },
   {
@@ -94923,7 +94927,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Brooklyn",
    "kickoff": "16:00",
    "last_seen_at": "2026-09-30T17:13:44+02:00",
@@ -94951,22 +94955,26 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "away",
    "parent_family": "ml-meta",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "scoutingstats_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "bzzoiro"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.2271
   },
   {
@@ -95095,7 +95103,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T06:00:56+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Cerro Porteno",
    "kickoff": "15:30",
    "last_seen_at": "2026-09-30T17:13:44+02:00",
@@ -95120,25 +95128,29 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 65.1,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.6508,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 1,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "betclan"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.6226
   },
   {
@@ -95154,7 +95166,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T06:00:56+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Cerro Porteno",
    "kickoff": "15:30",
    "last_seen_at": "2026-09-30T17:13:44+02:00",
@@ -95179,22 +95191,26 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 1,
+    "hs": 2
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "betclan"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.6226
   },
   {
@@ -95817,7 +95833,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "New York Red Bulls",
    "kickoff": "16:30",
    "last_seen_at": "2026-09-30T17:13:44+02:00",
@@ -95846,25 +95862,29 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "away",
    "parent_avg_p": 43.5,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.4354,
    "parent_pick": "away",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "bettingclosed_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 0
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "bzzoiro"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.2599
   },
   {
@@ -95880,7 +95900,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "New York Red Bulls",
    "kickoff": "16:30",
    "last_seen_at": "2026-09-30T17:13:44+02:00",
@@ -95909,22 +95929,26 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "away",
    "parent_family": "ml-meta",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "bettingclosed_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 0
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "bzzoiro"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.2599
   },
   {
@@ -95940,7 +95964,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Rhode Island",
    "kickoff": "16:30",
    "last_seen_at": "2026-09-30T17:13:44+02:00",
@@ -95969,25 +95993,29 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 41.4,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.4136,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "bettingclosed_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "bzzoiro"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.3491
   },
   {
@@ -96003,7 +96031,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Rhode Island",
    "kickoff": "16:30",
    "last_seen_at": "2026-09-30T17:13:44+02:00",
@@ -96032,22 +96060,26 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "bettingclosed_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "bzzoiro"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.3491
   },
   {
@@ -96172,7 +96204,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 28.3,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Argentina",
    "kickoff": "01-10, 01:00",
    "last_seen_at": "2026-10-01T00:05:37+02:00",
@@ -96201,18 +96233,22 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 28.3,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 82.8,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.8276,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "bettingclosed_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 4
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -96221,7 +96257,7 @@
     "statarea"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 1.5688
   },
   {
@@ -96237,7 +96273,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 1.07,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Argentina",
    "kickoff": "01-10, 01:00",
    "last_seen_at": "2026-10-01T00:05:37+02:00",
@@ -96266,15 +96302,19 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 1.07,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "bettingclosed_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 4
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -96283,7 +96323,7 @@
     "statarea"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 1.5688
   },
   {
@@ -96302,9 +96342,9 @@
    "graduation": null,
    "home": "Ashdod",
    "kickoff": "01-10, 17:00",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 6.13,
+   "latest_odds_zulubet": 1.5,
    "league": "Israel Liga Leumit",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -96315,7 +96355,8 @@
    "model_keys_seen": [
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -96359,9 +96400,9 @@
    "graduation": null,
    "home": "Ashdod",
    "kickoff": "01-10, 17:00",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 1.42,
+   "latest_odds_zulubet": 5.47,
    "league": "Israel Liga Leumit",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -96372,7 +96413,8 @@
    "model_keys_seen": [
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -96413,9 +96455,9 @@
    "graduation": null,
    "home": "Azerbaijan",
    "kickoff": "01-10, 17:00",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 18.95,
+   "latest_odds_zulubet": 21.28,
    "league": "World UEFA Nations League",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -96436,7 +96478,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -96480,9 +96523,9 @@
    "graduation": null,
    "home": "Azerbaijan",
    "kickoff": "01-10, 17:00",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 1.13,
+   "latest_odds_zulubet": 1.12,
    "league": "World UEFA Nations League",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -96503,7 +96546,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -96544,9 +96588,9 @@
    "graduation": null,
    "home": "British Virgin Islands",
    "kickoff": "01-10, 20:00",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 12.59,
+   "latest_odds_zulubet": 13.16,
    "league": "World CONCACAF Nations League",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -96557,7 +96601,8 @@
    "model_keys_seen": [
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -96601,9 +96646,9 @@
    "graduation": null,
    "home": "British Virgin Islands",
    "kickoff": "01-10, 20:00",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 1.19,
+   "latest_odds_zulubet": 1.18,
    "league": "World CONCACAF Nations League",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -96614,7 +96659,8 @@
    "model_keys_seen": [
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -96652,7 +96698,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 3.32,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Brooklyn",
    "kickoff": "01-10, 00:00",
    "last_seen_at": "2026-09-30T22:46:29+02:00",
@@ -96680,18 +96726,22 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 3.32,
-   "outcome": null,
+   "outcome": "away",
    "parent_avg_p": 34.0,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.3405,
    "parent_pick": "away",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "scoutingstats_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -96700,7 +96750,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.6611
   },
   {
@@ -96716,7 +96766,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 2.0,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Brooklyn",
    "kickoff": "01-10, 00:00",
    "last_seen_at": "2026-09-30T22:46:29+02:00",
@@ -96744,15 +96794,19 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 2.0,
-   "outcome": null,
+   "outcome": "away",
    "parent_family": "ml-meta",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "scoutingstats_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -96761,7 +96815,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.6611
   },
   {
@@ -96852,9 +96906,9 @@
    "graduation": null,
    "home": "Denmark",
    "kickoff": "11:45",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 2.04,
+   "latest_odds_zulubet": 3.7,
    "league": "International,Uefa Nations League A Grp. 4",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -96882,7 +96936,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -96921,9 +96976,9 @@
    "graduation": null,
    "home": "Germany",
    "kickoff": "11:45",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 11.83,
+   "latest_odds_zulubet": 13.49,
    "league": "International,Uefa Nations League A Grp. 2",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -96951,7 +97006,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -96993,9 +97049,9 @@
    "graduation": null,
    "home": "Germany",
    "kickoff": "11:45",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 1.23,
+   "latest_odds_zulubet": 1.21,
    "league": "International,Uefa Nations League A Grp. 2",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -97023,7 +97079,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -97062,9 +97119,9 @@
    "graduation": null,
    "home": "Greece",
    "kickoff": "11:45",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 3.37,
+   "latest_odds_zulubet": 3.48,
    "league": "International,Uefa Nations League A Grp. 2",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -97092,7 +97149,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -97134,9 +97192,9 @@
    "graduation": null,
    "home": "Greece",
    "kickoff": "11:45",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 2.07,
+   "latest_odds_zulubet": 2.05,
    "league": "International,Uefa Nations League A Grp. 2",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -97164,7 +97222,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -97203,9 +97262,9 @@
    "graduation": null,
    "home": "Israel",
    "kickoff": "01-10, 19:45",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 3.18,
+   "latest_odds_zulubet": 3.17,
    "league": "World UEFA Nations League",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -97228,7 +97287,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -97272,9 +97332,9 @@
    "graduation": null,
    "home": "Israel",
    "kickoff": "01-10, 19:45",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 2.22,
+   "latest_odds_zulubet": 2.23,
    "league": "World UEFA Nations League",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -97297,7 +97357,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -97338,9 +97399,9 @@
    "graduation": null,
    "home": "Kiryat Yam SC",
    "kickoff": "01-10, 17:00",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 1.6,
+   "latest_odds_zulubet": 1.68,
    "league": "Israel Liga Leumit",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -97351,7 +97412,8 @@
    "model_keys_seen": [
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -97395,9 +97457,9 @@
    "graduation": null,
    "home": "Kiryat Yam SC",
    "kickoff": "01-10, 17:00",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 4.45,
+   "latest_odds_zulubet": 3.94,
    "league": "Israel Liga Leumit",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -97408,7 +97470,8 @@
    "model_keys_seen": [
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": "zulubet",
@@ -97434,6 +97497,117 @@
    "w_score": -0.5568
   },
   {
+   "as_of": "2026-10-01T07:20:16+02:00",
+   "avg_p": 65.9,
+   "away": "Gibraltar",
+   "captured_at": "2026-10-01T07:20:16+02:00",
+   "date": "2026-10-01",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-10-01|malta|gibraltar|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 11.54,
+   "first_seen_at": "2026-10-01T07:20:16+02:00",
+   "graduation": null,
+   "home": "Malta",
+   "kickoff": "01-10, 19:45",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 11.54,
+   "league": "World UEFA Nations League",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.6589,
+   "model_key": "8ed17d7be9da",
+   "model_keys_seen": [
+    "8ed17d7be9da"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 11.54,
+   "outcome": null,
+   "parent_avg_p": 34.1,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.3411,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet",
+    "betclan",
+    "bzzoiro"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.6584
+  },
+  {
+   "as_of": "2026-10-01T07:20:16+02:00",
+   "avg_p": 34.1,
+   "away": "Gibraltar",
+   "captured_at": "2026-10-01T07:20:16+02:00",
+   "date": "2026-10-01",
+   "derivation": null,
+   "edge_family": "ml-meta",
+   "event_key": "2026-10-01|malta|gibraltar|ml-meta|1x2",
+   "family": "ml-meta",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 1.28,
+   "first_seen_at": "2026-10-01T07:20:16+02:00",
+   "graduation": null,
+   "home": "Malta",
+   "kickoff": "01-10, 19:45",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 1.28,
+   "league": "World UEFA Nations League",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.3411,
+   "model_key": "8ed17d7be9da",
+   "model_keys_seen": [
+    "8ed17d7be9da"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 1.28,
+   "outcome": null,
+   "parent_family": "ml-meta",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet",
+    "betclan",
+    "bzzoiro"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.6584
+  },
+  {
    "as_of": "2026-09-30T15:00:55+02:00",
    "avg_p": 66.0,
    "away": "Sporting JAX",
@@ -97446,7 +97620,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 4.41,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Miami FC",
    "kickoff": "01-10, 00:00",
    "last_seen_at": "2026-09-30T22:46:29+02:00",
@@ -97474,18 +97648,22 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 4.41,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 34.0,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.3405,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "scoutingstats_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 1,
+    "hs": 4
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -97494,7 +97672,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.6613
   },
   {
@@ -97510,7 +97688,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 1.62,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Miami FC",
    "kickoff": "01-10, 00:00",
    "last_seen_at": "2026-09-30T22:46:29+02:00",
@@ -97538,8 +97716,67 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 1.62,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_date": "2026-09-30",
+   "result_source": "scoutingstats_settled|zulubet_settled",
+   "schema": 1,
+   "score": {
+    "gs": 1,
+    "hs": 4
+   },
+   "settle_notes": [],
+   "settled_at": "2026-10-01T07:48:51+02:00",
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "settled",
+   "w_score": -0.6613
+  },
+  {
+   "as_of": "2026-10-01T07:20:16+02:00",
+   "avg_p": 65.3,
+   "away": "Kariobangi Sharks",
+   "captured_at": "2026-10-01T07:20:16+02:00",
+   "date": "2026-10-01",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-10-01|mombasael|kariobang|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 2.38,
+   "first_seen_at": "2026-10-01T07:20:16+02:00",
+   "graduation": null,
+   "home": "Mombasa Elite",
+   "kickoff": "01-10, 12:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 2.38,
+   "league": "Kenya FKF Premier League",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.6532,
+   "model_key": "8ed17d7be9da",
+   "model_keys_seen": [
+    "8ed17d7be9da"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 2.38,
+   "outcome": null,
+   "parent_avg_p": 34.7,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.3468,
+   "parent_pick": "away",
    "pick": "home",
    "repriced_count": 0,
    "result_source": null,
@@ -97552,11 +97789,63 @@
    ],
    "sources_used": [
     "zulubet",
-    "vitibet"
+    "betclan"
    ],
    "sport": "soccer",
    "status": "pending",
-   "w_score": -0.6613
+   "w_score": -0.6329
+  },
+  {
+   "as_of": "2026-10-01T07:20:16+02:00",
+   "avg_p": 34.7,
+   "away": "Kariobangi Sharks",
+   "captured_at": "2026-10-01T07:20:16+02:00",
+   "date": "2026-10-01",
+   "derivation": null,
+   "edge_family": "ml-meta",
+   "event_key": "2026-10-01|mombasael|kariobang|ml-meta|1x2",
+   "family": "ml-meta",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 3.03,
+   "first_seen_at": "2026-10-01T07:20:16+02:00",
+   "graduation": null,
+   "home": "Mombasa Elite",
+   "kickoff": "01-10, 12:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 3.03,
+   "league": "Kenya FKF Premier League",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.3468,
+   "model_key": "8ed17d7be9da",
+   "model_keys_seen": [
+    "8ed17d7be9da"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 3.03,
+   "outcome": null,
+   "parent_family": "ml-meta",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "betclan"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.6329
   },
   {
    "as_of": "2026-09-30T00:00:44+02:00",
@@ -97571,7 +97860,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Atletico Nacional",
    "kickoff": "18:00",
    "last_seen_at": "2026-10-01T00:05:37+02:00",
@@ -97607,25 +97896,29 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 60.8,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.608,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "scoutingstats_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 1,
+    "hs": 3
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.4391
   },
   {
@@ -97641,7 +97934,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Atletico Nacional",
    "kickoff": "18:00",
    "last_seen_at": "2026-10-01T00:05:37+02:00",
@@ -97677,22 +97970,26 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "scoutingstats_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 1,
+    "hs": 3
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.4391
   },
   {
@@ -97708,7 +98005,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 3.38,
    "first_seen_at": "2026-09-30T09:00:55+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "New York Red Bulls",
    "kickoff": "01-10, 00:30",
    "last_seen_at": "2026-09-30T22:46:29+02:00",
@@ -97739,18 +98036,22 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 3.38,
-   "outcome": null,
+   "outcome": "away",
    "parent_avg_p": 35.8,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.3582,
    "parent_pick": "away",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "bettingclosed_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 0
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -97759,7 +98060,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.583
   },
   {
@@ -97775,7 +98076,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 1.9,
    "first_seen_at": "2026-09-30T09:00:55+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "New York Red Bulls",
    "kickoff": "01-10, 00:30",
    "last_seen_at": "2026-09-30T22:46:29+02:00",
@@ -97806,15 +98107,19 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 1.9,
-   "outcome": null,
+   "outcome": "away",
    "parent_family": "ml-meta",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-09-30",
+   "result_source": "bettingclosed_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 3,
+    "hs": 0
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -97823,7 +98128,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.583
   },
   {
@@ -97839,7 +98144,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 4.02,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Atl\u00e9tico Ottawa",
    "kickoff": "01-10, 00:00",
    "last_seen_at": "2026-09-30T22:46:29+02:00",
@@ -97867,18 +98172,22 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 4.02,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 35.3,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.3531,
    "parent_pick": "away",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 2,
+    "hs": 3
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -97887,7 +98196,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.6054
   },
   {
@@ -97903,7 +98212,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 1.73,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Atl\u00e9tico Ottawa",
    "kickoff": "01-10, 00:00",
    "last_seen_at": "2026-09-30T22:46:29+02:00",
@@ -97931,6 +98240,118 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 1.73,
+   "outcome": "home",
+   "parent_family": "ml-meta",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_date": "2026-10-01",
+   "result_source": "zulubet_settled",
+   "schema": 1,
+   "score": {
+    "gs": 2,
+    "hs": 3
+   },
+   "settle_notes": [],
+   "settled_at": "2026-10-01T07:48:51+02:00",
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "settled",
+   "w_score": -0.6054
+  },
+  {
+   "as_of": "2026-10-01T07:20:16+02:00",
+   "avg_p": 63.6,
+   "away": "Austria",
+   "captured_at": "2026-10-01T07:20:16+02:00",
+   "date": "2026-10-01",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-10-01|repofirel|austria|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 3.57,
+   "first_seen_at": "2026-10-01T07:20:16+02:00",
+   "graduation": null,
+   "home": "Rep. Of Ireland",
+   "kickoff": "01-10, 19:45",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 3.57,
+   "league": "World UEFA Nations League",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.636,
+   "model_key": "8ed17d7be9da",
+   "model_keys_seen": [
+    "8ed17d7be9da"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 3.57,
+   "outcome": null,
+   "parent_avg_p": 36.4,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.364,
+   "parent_pick": "away",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet",
+    "betclan"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.5581
+  },
+  {
+   "as_of": "2026-10-01T07:20:16+02:00",
+   "avg_p": 36.4,
+   "away": "Austria",
+   "captured_at": "2026-10-01T07:20:16+02:00",
+   "date": "2026-10-01",
+   "derivation": null,
+   "edge_family": "ml-meta",
+   "event_key": "2026-10-01|repofirel|austria|ml-meta|1x2",
+   "family": "ml-meta",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 2.13,
+   "first_seen_at": "2026-10-01T07:20:16+02:00",
+   "graduation": null,
+   "home": "Rep. Of Ireland",
+   "kickoff": "01-10, 19:45",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 2.13,
+   "league": "World UEFA Nations League",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.364,
+   "model_key": "8ed17d7be9da",
+   "model_keys_seen": [
+    "8ed17d7be9da"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 2.13,
    "outcome": null,
    "parent_family": "ml-meta",
    "pick": "away",
@@ -97945,11 +98366,12 @@
    ],
    "sources_used": [
     "zulubet",
-    "vitibet"
+    "vitibet",
+    "betclan"
    ],
    "sport": "soccer",
    "status": "pending",
-   "w_score": -0.6054
+   "w_score": -0.5581
   },
   {
    "as_of": "2026-09-30T00:00:44+02:00",
@@ -97964,7 +98386,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "Sacramento Republic",
    "kickoff": "19:00",
    "last_seen_at": "2026-10-01T02:08:00+02:00",
@@ -98001,25 +98423,29 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 52.1,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.5212,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "bettingclosed_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 2,
+    "hs": 3
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.0847
   },
   {
@@ -98035,7 +98461,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": null,
    "first_seen_at": "2026-09-30T00:00:44+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "Sacramento Republic",
    "kickoff": "19:00",
    "last_seen_at": "2026-10-01T02:08:00+02:00",
@@ -98072,22 +98498,26 @@
    "odds_forebet": null,
    "odds_source": null,
    "odds_zulubet": null,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "bettingclosed_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 2,
+    "hs": 3
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [],
    "sources_used": [
     "statarea",
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": 0.0847
   },
   {
@@ -98236,7 +98666,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 3.36,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "loss",
    "home": "FC Tulsa",
    "kickoff": "01-10, 01:00",
    "last_seen_at": "2026-10-01T00:05:37+02:00",
@@ -98265,18 +98695,22 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 3.36,
-   "outcome": null,
+   "outcome": "home",
    "parent_avg_p": 28.6,
    "parent_family": "ml-meta",
    "parent_ml_p": 0.2859,
    "parent_pick": "home",
    "pick": "away",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "bettingclosed_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -98285,7 +98719,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.9153
   },
   {
@@ -98301,7 +98735,7 @@
    "first_odds_forebet": null,
    "first_odds_zulubet": 1.92,
    "first_seen_at": "2026-09-30T15:00:55+02:00",
-   "graduation": null,
+   "graduation": "win",
    "home": "FC Tulsa",
    "kickoff": "01-10, 01:00",
    "last_seen_at": "2026-10-01T00:05:37+02:00",
@@ -98330,15 +98764,19 @@
    "odds_forebet": null,
    "odds_source": "zulubet",
    "odds_zulubet": 1.92,
-   "outcome": null,
+   "outcome": "home",
    "parent_family": "ml-meta",
    "pick": "home",
    "repriced_count": 0,
-   "result_source": null,
+   "result_date": "2026-10-01",
+   "result_source": "bettingclosed_settled|zulubet_settled",
    "schema": 1,
-   "score": null,
+   "score": {
+    "gs": 0,
+    "hs": 1
+   },
    "settle_notes": [],
-   "settled_at": null,
+   "settled_at": "2026-10-01T07:48:51+02:00",
    "sources_present": [
     "zulubet"
    ],
@@ -98347,7 +98785,7 @@
     "vitibet"
    ],
    "sport": "soccer",
-   "status": "pending",
+   "status": "settled",
    "w_score": -0.9153
   },
   {
@@ -98366,9 +98804,9 @@
    "graduation": null,
    "home": "Wales",
    "kickoff": "11:45",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 5.91,
+   "latest_odds_zulubet": 6.76,
    "league": "International,Uefa Nations League A Grp. 4",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -98396,7 +98834,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98438,9 +98877,9 @@
    "graduation": null,
    "home": "Wales",
    "kickoff": "11:45",
-   "last_seen_at": "2026-10-01T02:57:04+02:00",
+   "last_seen_at": "2026-10-01T07:20:16+02:00",
    "latest_odds_forebet": null,
-   "latest_odds_zulubet": 1.5,
+   "latest_odds_zulubet": 1.43,
    "league": "International,Uefa Nations League A Grp. 4",
    "market": "1x2",
    "min_lead_minutes": 30,
@@ -98468,7 +98907,8 @@
     "b21c5a913543",
     "c5d3e028fe59",
     "31bcbfa4a254",
-    "d1d7a24e87a1"
+    "d1d7a24e87a1",
+    "8ed17d7be9da"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98493,5 +98933,5 @@
   }
  ],
  "schema": 1,
- "updated_at": "2026-10-01T03:25:45+02:00"
+ "updated_at": "2026-10-01T07:48:51+02:00"
 }

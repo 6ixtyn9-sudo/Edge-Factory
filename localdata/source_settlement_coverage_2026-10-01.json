@@ -26,7 +26,7 @@
     "zulubet_csv",
     "zulubet_settled"
   ],
-  "donor_rows": 258188,
+  "donor_rows": 258316,
   "generated_for": "2026-10-01",
   "reversal_reviews_loaded": 0,
   "schema": 1,
@@ -377,10 +377,10 @@
       "verdict": "unproven"
     },
     {
-      "alias_matches": 41,
+      "alias_matches": 42,
       "ambiguous": 22,
       "conflict_pct": 0.12,
-      "coverage_pct": 93.02,
+      "coverage_pct": 93.19,
       "donor_score_conflicts": 18,
       "examples": {
         "ambiguous": [
@@ -659,28 +659,28 @@
         ]
       },
       "files": 5,
-      "independent_donor_exact_matches": 4091,
-      "matched_total": 4132,
+      "independent_donor_exact_matches": 4104,
+      "matched_total": 4146,
       "notes": "orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 18 donor-conflicted fixtures; 22 ambiguous rejected; validated on coverage/conflict but 1 unexplained reversed home/away candidate(s) - sign off in Config/reversal_reviews.json",
-      "prediction_fixtures": 4442,
-      "prediction_rows": 4442,
+      "prediction_fixtures": 4449,
+      "prediction_rows": 4449,
       "reversed_candidates": 1,
       "reversed_reviewed": 0,
       "reversed_unexplained": 1,
       "role": "prediction",
-      "self_score_pct": 97.86,
+      "self_score_pct": 98.04,
       "source": "zulubet",
       "source_score_conflicts_donor": 5,
-      "source_score_matches_donor": 4123,
-      "source_score_present": 4347,
-      "unmatched": 270,
+      "source_score_matches_donor": 4137,
+      "source_score_present": 4362,
+      "unmatched": 263,
       "verdict": "review_required"
     },
     {
-      "alias_matches": 819,
+      "alias_matches": 820,
       "ambiguous": 208,
       "conflict_pct": 0.26,
-      "coverage_pct": 72.48,
+      "coverage_pct": 72.51,
       "donor_score_conflicts": 6,
       "examples": {
         "ambiguous": [
@@ -985,8 +985,8 @@
         ]
       },
       "files": 4,
-      "independent_donor_exact_matches": 4890,
-      "matched_total": 5709,
+      "independent_donor_exact_matches": 4892,
+      "matched_total": 5712,
       "notes": "orientation risk on 2 fixtures (2 unexplained, 0 reviewed); 6 donor-conflicted fixtures; 208 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
       "prediction_fixtures": 7877,
       "prediction_rows": 7877,
@@ -994,19 +994,19 @@
       "reversed_reviewed": 0,
       "reversed_unexplained": 2,
       "role": "prediction",
-      "self_score_pct": 96.79,
+      "self_score_pct": 96.81,
       "source": "statarea",
       "source_score_conflicts_donor": 15,
-      "source_score_matches_donor": 5648,
-      "source_score_present": 7624,
-      "unmatched": 1954,
+      "source_score_matches_donor": 5650,
+      "source_score_present": 7626,
+      "unmatched": 1951,
       "verdict": "partial"
     },
     {
-      "alias_matches": 3727,
+      "alias_matches": 3730,
       "ambiguous": 761,
       "conflict_pct": 0.01,
-      "coverage_pct": 53.83,
+      "coverage_pct": 53.88,
       "donor_score_conflicts": 40,
       "examples": {
         "ambiguous": [
@@ -1330,8 +1330,8 @@
         ]
       },
       "files": 4,
-      "independent_donor_exact_matches": 13211,
-      "matched_total": 16938,
+      "independent_donor_exact_matches": 13224,
+      "matched_total": 16954,
       "notes": "orientation risk on 13 fixtures (13 unexplained, 0 reviewed); 40 donor-conflicted fixtures; 761 ambiguous rejected; insufficient matched settlement evidence",
       "prediction_fixtures": 31465,
       "prediction_rows": 31465,
@@ -1339,19 +1339,19 @@
       "reversed_reviewed": 0,
       "reversed_unexplained": 13,
       "role": "prediction",
-      "self_score_pct": 36.44,
+      "self_score_pct": 36.48,
       "source": "vitibet",
       "source_score_conflicts_donor": 1,
-      "source_score_matches_donor": 11433,
-      "source_score_present": 11466,
-      "unmatched": 13726,
+      "source_score_matches_donor": 11446,
+      "source_score_present": 11479,
+      "unmatched": 13710,
       "verdict": "unproven"
     },
     {
-      "alias_matches": 1186,
+      "alias_matches": 1187,
       "ambiguous": 423,
       "conflict_pct": 0.62,
-      "coverage_pct": 61.31,
+      "coverage_pct": 61.35,
       "donor_score_conflicts": 8,
       "examples": {
         "ambiguous": [
@@ -1679,28 +1679,28 @@
         ]
       },
       "files": 4,
-      "independent_donor_exact_matches": 4157,
-      "matched_total": 5343,
+      "independent_donor_exact_matches": 4160,
+      "matched_total": 5347,
       "notes": "orientation risk on 3 fixtures (3 unexplained, 0 reviewed); 8 donor-conflicted fixtures; 423 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
-      "prediction_fixtures": 8715,
-      "prediction_rows": 8715,
+      "prediction_fixtures": 8716,
+      "prediction_rows": 8716,
       "reversed_candidates": 3,
       "reversed_reviewed": 0,
       "reversed_unexplained": 3,
       "role": "prediction",
-      "self_score_pct": 97.33,
+      "self_score_pct": 97.42,
       "source": "scoutingstats",
       "source_score_conflicts_donor": 33,
-      "source_score_matches_donor": 5309,
-      "source_score_present": 8482,
-      "unmatched": 2941,
+      "source_score_matches_donor": 5313,
+      "source_score_present": 8491,
+      "unmatched": 2938,
       "verdict": "partial"
     },
     {
-      "alias_matches": 157,
+      "alias_matches": 159,
       "ambiguous": 46,
       "conflict_pct": 0.0,
-      "coverage_pct": 68.13,
+      "coverage_pct": 68.33,
       "donor_score_conflicts": 0,
       "examples": {
         "ambiguous": [
@@ -1860,8 +1860,8 @@
         ]
       },
       "files": 3,
-      "independent_donor_exact_matches": 1237,
-      "matched_total": 1394,
+      "independent_donor_exact_matches": 1239,
+      "matched_total": 1398,
       "notes": "orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 46 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
       "prediction_fixtures": 2046,
       "prediction_rows": 2046,
@@ -1874,14 +1874,14 @@
       "source_score_conflicts_donor": 0,
       "source_score_matches_donor": 0,
       "source_score_present": 0,
-      "unmatched": 606,
+      "unmatched": 602,
       "verdict": "partial"
     },
     {
-      "alias_matches": 4,
+      "alias_matches": 5,
       "ambiguous": 0,
       "conflict_pct": 0.0,
-      "coverage_pct": 6.1,
+      "coverage_pct": 6.64,
       "donor_score_conflicts": 0,
       "examples": {
         "unmatched": [
@@ -1958,8 +1958,8 @@
         ]
       },
       "files": 3,
-      "independent_donor_exact_matches": 64,
-      "matched_total": 68,
+      "independent_donor_exact_matches": 69,
+      "matched_total": 74,
       "notes": "insufficient matched settlement evidence",
       "prediction_fixtures": 1114,
       "prediction_rows": 1114,
@@ -1972,14 +1972,14 @@
       "source_score_conflicts_donor": 0,
       "source_score_matches_donor": 0,
       "source_score_present": 0,
-      "unmatched": 1046,
+      "unmatched": 1040,
       "verdict": "unproven"
     },
     {
       "alias_matches": 0,
       "ambiguous": 0,
       "conflict_pct": 4.35,
-      "coverage_pct": 42.65,
+      "coverage_pct": 44.12,
       "donor_score_conflicts": 0,
       "examples": {
         "conflict": [
@@ -2067,8 +2067,8 @@
         ]
       },
       "files": 2,
-      "independent_donor_exact_matches": 29,
-      "matched_total": 29,
+      "independent_donor_exact_matches": 30,
+      "matched_total": 30,
       "notes": "insufficient matched settlement evidence",
       "prediction_fixtures": 68,
       "prediction_rows": 68,
@@ -2081,7 +2081,7 @@
       "source_score_conflicts_donor": 1,
       "source_score_matches_donor": 22,
       "source_score_present": 25,
-      "unmatched": 39,
+      "unmatched": 38,
       "verdict": "unproven"
     },
     {
@@ -2110,10 +2110,10 @@
       "verdict": "no_data"
     },
     {
-      "alias_matches": 899,
+      "alias_matches": 900,
       "ambiguous": 324,
       "conflict_pct": 0.44,
-      "coverage_pct": 43.25,
+      "coverage_pct": 43.29,
       "donor_score_conflicts": 10,
       "examples": {
         "ambiguous": [
@@ -2464,8 +2464,8 @@
         ]
       },
       "files": 4,
-      "independent_donor_exact_matches": 5510,
-      "matched_total": 6409,
+      "independent_donor_exact_matches": 5515,
+      "matched_total": 6415,
       "notes": "orientation risk on 4 fixtures (4 unexplained, 0 reviewed); 10 donor-conflicted fixtures; 324 ambiguous rejected; insufficient matched settlement evidence",
       "prediction_fixtures": 14820,
       "prediction_rows": 14820,
@@ -2473,19 +2473,19 @@
       "reversed_reviewed": 0,
       "reversed_unexplained": 4,
       "role": "prediction",
-      "self_score_pct": 97.16,
+      "self_score_pct": 97.24,
       "source": "bettingclosed",
       "source_score_conflicts_donor": 28,
-      "source_score_matches_donor": 6380,
-      "source_score_present": 14399,
-      "unmatched": 8077,
+      "source_score_matches_donor": 6386,
+      "source_score_present": 14411,
+      "unmatched": 8071,
       "verdict": "unproven"
     },
     {
       "alias_matches": 11,
       "ambiguous": 1,
       "conflict_pct": 0.0,
-      "coverage_pct": 9.63,
+      "coverage_pct": 9.83,
       "donor_score_conflicts": 0,
       "examples": {
         "ambiguous": [
@@ -2571,8 +2571,8 @@
         ]
       },
       "files": 3,
-      "independent_donor_exact_matches": 129,
-      "matched_total": 140,
+      "independent_donor_exact_matches": 132,
+      "matched_total": 143,
       "notes": "1 ambiguous rejected; insufficient matched settlement evidence",
       "prediction_fixtures": 1454,
       "prediction_rows": 1454,
@@ -2585,7 +2585,7 @@
       "source_score_conflicts_donor": 0,
       "source_score_matches_donor": 0,
       "source_score_present": 0,
-      "unmatched": 1313,
+      "unmatched": 1310,
       "verdict": "unproven"
     },
     {
@@ -2662,7 +2662,7 @@
       "alias_matches": 137,
       "ambiguous": 35,
       "conflict_pct": 0.0,
-      "coverage_pct": 5.97,
+      "coverage_pct": 5.93,
       "donor_score_conflicts": 0,
       "examples": {
         "ambiguous": [
@@ -2825,8 +2825,8 @@
       "independent_donor_exact_matches": 353,
       "matched_total": 490,
       "notes": "orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 35 ambiguous rejected; insufficient matched settlement evidence",
-      "prediction_fixtures": 8208,
-      "prediction_rows": 10415,
+      "prediction_fixtures": 8269,
+      "prediction_rows": 10518,
       "reversed_candidates": 1,
       "reversed_reviewed": 0,
       "reversed_unexplained": 1,
@@ -2836,14 +2836,14 @@
       "source_score_conflicts_donor": 0,
       "source_score_matches_donor": 0,
       "source_score_present": 0,
-      "unmatched": 7683,
+      "unmatched": 7744,
       "verdict": "unproven"
     },
     {
-      "alias_matches": 225,
+      "alias_matches": 228,
       "ambiguous": 133,
       "conflict_pct": 0.0,
-      "coverage_pct": 65.5,
+      "coverage_pct": 65.72,
       "donor_score_conflicts": 2,
       "examples": {
         "ambiguous": [
@@ -3019,8 +3019,8 @@
         ]
       },
       "files": 3,
-      "independent_donor_exact_matches": 1275,
-      "matched_total": 1500,
+      "independent_donor_exact_matches": 1277,
+      "matched_total": 1505,
       "notes": "orientation risk on 1 fixtures (1 unexplained, 0 reviewed); 2 donor-conflicted fixtures; 133 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
       "prediction_fixtures": 2290,
       "prediction_rows": 2421,
@@ -3033,7 +3033,7 @@
       "source_score_conflicts_donor": 0,
       "source_score_matches_donor": 0,
       "source_score_present": 0,
-      "unmatched": 655,
+      "unmatched": 650,
       "verdict": "partial"
     },
     {

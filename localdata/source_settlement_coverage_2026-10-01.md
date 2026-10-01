@@ -1,25 +1,25 @@
 # Source settlement coverage — 2026-07-03..2026-10-01
 
 Prediction->final-score matching quality per source. Row counts alone are NOT validation.
-Donor rows indexed: 258188 across 24 donor labels.
+Donor rows indexed: 258316 across 24 donor labels.
 Guarded alias tier: enabled (edgefactory.identity fold).
 
 | source | fixtures | own_score | exact | alias | matched | agree | conflict | donor_conf | unmatched | ambig | rev | rev_unexp | cov% | confl% | verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | forebet | 28203 | 27149 | 9267 | 2465 | 11732 | 11644 | 42 | 25 | 15906 | 540 | 1 | 1 | 41.6 | 0.36 | unproven |
-| zulubet | 4442 | 4347 | 4091 | 41 | 4132 | 4123 | 5 | 18 | 270 | 22 | 1 | 1 | 93.02 | 0.12 | review_required |
-| statarea | 7877 | 7624 | 4890 | 819 | 5709 | 5648 | 15 | 6 | 1954 | 208 | 2 | 2 | 72.48 | 0.26 | partial |
-| vitibet | 31465 | 11466 | 13211 | 3727 | 16938 | 11433 | 1 | 40 | 13726 | 761 | 13 | 13 | 53.83 | 0.01 | unproven |
-| scoutingstats | 8715 | 8482 | 4157 | 1186 | 5343 | 5309 | 33 | 8 | 2941 | 423 | 3 | 3 | 61.31 | 0.62 | partial |
-| predictz | 2046 | 0 | 1237 | 157 | 1394 | 0 | 0 | 0 | 606 | 46 | 1 | 1 | 68.13 | 0.0 | partial |
-| windrawwin | 1114 | 0 | 64 | 4 | 68 | 0 | 0 | 0 | 1046 | 0 | 0 | 0 | 6.1 | 0.0 | unproven |
-| prosoccer | 68 | 25 | 29 | 0 | 29 | 22 | 1 | 0 | 39 | 0 | 0 | 0 | 42.65 | 4.35 | unproven |
+| zulubet | 4449 | 4362 | 4104 | 42 | 4146 | 4137 | 5 | 18 | 263 | 22 | 1 | 1 | 93.19 | 0.12 | review_required |
+| statarea | 7877 | 7626 | 4892 | 820 | 5712 | 5650 | 15 | 6 | 1951 | 208 | 2 | 2 | 72.51 | 0.26 | partial |
+| vitibet | 31465 | 11479 | 13224 | 3730 | 16954 | 11446 | 1 | 40 | 13710 | 761 | 13 | 13 | 53.88 | 0.01 | unproven |
+| scoutingstats | 8716 | 8491 | 4160 | 1187 | 5347 | 5313 | 33 | 8 | 2938 | 423 | 3 | 3 | 61.35 | 0.62 | partial |
+| predictz | 2046 | 0 | 1239 | 159 | 1398 | 0 | 0 | 0 | 602 | 46 | 1 | 1 | 68.33 | 0.0 | partial |
+| windrawwin | 1114 | 0 | 69 | 5 | 74 | 0 | 0 | 0 | 1040 | 0 | 0 | 0 | 6.64 | 0.0 | unproven |
+| prosoccer | 68 | 25 | 30 | 0 | 30 | 22 | 1 | 0 | 38 | 0 | 0 | 0 | 44.12 | 4.35 | unproven |
 | soccervista | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | no_data |
-| bettingclosed | 14820 | 14399 | 5510 | 899 | 6409 | 6380 | 28 | 10 | 8077 | 324 | 4 | 4 | 43.25 | 0.44 | unproven |
-| betclan | 1454 | 0 | 129 | 11 | 140 | 0 | 0 | 0 | 1313 | 1 | 0 | 0 | 9.63 | 0.0 | unproven |
+| bettingclosed | 14820 | 14411 | 5515 | 900 | 6415 | 6386 | 28 | 10 | 8071 | 324 | 4 | 4 | 43.29 | 0.44 | unproven |
+| betclan | 1454 | 0 | 132 | 11 | 143 | 0 | 0 | 0 | 1310 | 1 | 0 | 0 | 9.83 | 0.0 | unproven |
 | freesupertips | 21 | 0 | 15 | 0 | 15 | 0 | 0 | 0 | 6 | 0 | 0 | 0 | 71.43 | 0.0 | unproven |
-| afootballreport | 8208 | 0 | 353 | 137 | 490 | 0 | 0 | 0 | 7683 | 35 | 1 | 1 | 5.97 | 0.0 | unproven |
-| bzzoiro | 2290 | 0 | 1275 | 225 | 1500 | 0 | 0 | 2 | 655 | 133 | 1 | 1 | 65.5 | 0.0 | partial |
+| afootballreport | 8269 | 0 | 353 | 137 | 490 | 0 | 0 | 0 | 7744 | 35 | 1 | 1 | 5.93 | 0.0 | unproven |
+| bzzoiro | 2290 | 0 | 1277 | 228 | 1505 | 0 | 0 | 2 | 650 | 133 | 1 | 1 | 65.72 | 0.0 | partial |
 | bzzoiro_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
 | theoddsapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
 | oddspapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |

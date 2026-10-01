@@ -24,13 +24,13 @@ Nothing was old enough: every matched generated artifact is either the current t
 
 | prefix | bytes |
 |---|---:|
-| picks_audit | 978207 |
-| fresh_production_candidate_picks | 528318 |
-| picks | 442074 |
-| source_settlement_coverage | 319491 |
+| picks_audit | 978215 |
+| fresh_production_candidate_picks | 540782 |
+| picks | 442144 |
+| source_settlement_coverage | 319495 |
 | clv_unmatched | 244423 |
-| source_funnel | 131079 |
-| artifact_manifest | 72800 |
+| source_funnel | 127401 |
+| artifact_manifest | 72796 |
 | fresh_production_walkforward | 69004 |
 | fresh_production_certified_edges | 66850 |
 | clv_report | 59847 |

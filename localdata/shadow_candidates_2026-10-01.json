@@ -9,6 +9,7 @@
   "candidates": [
     {
       "blockers": [
+        "no_ml_feature_provider_on_fixture",
         "inside_30m_lead_or_started",
         "shadow_sources_not_settlement_validated:prosoccer"
       ],
@@ -17,12 +18,10 @@
       "fixture": "Argentina vs Bolivia",
       "kickoff": "2026-10-01T00:00:00Z",
       "kickoff_donors": [
-        "scoutingstats",
         "bzzoiro",
         "prosoccer"
       ],
       "live_voters": [
-        "zulubet",
         "betclan",
         "bzzoiro"
       ],
@@ -268,20 +267,21 @@
     },
     {
       "blockers": [
-        "no_ml_feature_provider_on_fixture",
         "shadow_sources_not_settlement_validated:prosoccer"
       ],
       "date": "2026-10-01",
       "dispatchable": false,
       "fixture": "Malta vs Gibraltar",
-      "kickoff": "2026-10-01T20:45:00+02:00",
+      "kickoff": "01-10, 19:45",
       "kickoff_donors": [
+        "zulubet",
         "vitibet",
         "scoutingstats",
         "bzzoiro",
         "prosoccer"
       ],
       "live_voters": [
+        "zulubet",
         "vitibet",
         "betclan",
         "bzzoiro"

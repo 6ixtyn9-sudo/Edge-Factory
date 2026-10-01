@@ -867,7 +867,7 @@
     "settled_picks": 569,
     "wins": 387
   },
-  "pending_result_picks": 10,
+  "pending_result_picks": 9,
   "regular_only_rows": 0,
   "rescheduled_examples": [
     {
@@ -1045,9 +1045,34 @@
       "rescheduled_outcome": "home",
       "rescheduled_to": "2026-09-26",
       "rule": "ml-meta avg_p>=65"
+    },
+    {
+      "away": "Rubio Nu",
+      "away_key_candidates": [
+        "rubionu"
+      ],
+      "bucket": "SKIPPED_VETO",
+      "date": "2026-09-30",
+      "home": "Cerro Porteno",
+      "home_key_candidates": [
+        "cerroport"
+      ],
+      "league": "Paraguay,Cup",
+      "match": "Cerro Porteno vs Rubio Nu",
+      "odds": null,
+      "pick": "home",
+      "reason": "rescheduled",
+      "rescheduled_away": "Rubio NU",
+      "rescheduled_gs": 1,
+      "rescheduled_home": "Cerro Porteno",
+      "rescheduled_hs": 2,
+      "rescheduled_origin": "warehouse",
+      "rescheduled_outcome": "home",
+      "rescheduled_to": "2026-10-01",
+      "rule": "ml-meta avg_p>=65"
     }
   ],
-  "rescheduled_result_picks": 7,
+  "rescheduled_result_picks": 8,
   "same_day_cutoff": "2026-10-01",
   "same_day_excluded": 15,
   "secondary_stats": {
@@ -36607,27 +36632,9 @@
       "pick": "home",
       "reason": "pending_or_unmatched_result",
       "rule": "ml-meta avg_p>=55"
-    },
-    {
-      "away": "Rubio Nu",
-      "away_key_candidates": [
-        "rubionu"
-      ],
-      "bucket": "SKIPPED_VETO",
-      "date": "2026-09-30",
-      "home": "Cerro Porteno",
-      "home_key_candidates": [
-        "cerroport"
-      ],
-      "league": "Paraguay,Cup",
-      "match": "Cerro Porteno vs Rubio Nu",
-      "odds": null,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "ml-meta avg_p>=65"
     }
   ],
-  "unmatched_result_picks": 10,
+  "unmatched_result_picks": 9,
   "unsafe_regular_ledger_dates": [
     "2026-09-02",
     "2026-09-03",

@@ -11,8 +11,8 @@
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 569
 - eligible prior picks: 589
-- pending/unmatched result picks: 10
-- rescheduled result picks (settled ±3d): 7
+- pending/unmatched result picks: 9
+- rescheduled result picks (settled ±3d): 8
 - voided postponed/cancelled/abandoned events: 0
 - ambiguous event-disposition rows: 0
 - settled via shared overlay facts: 1
@@ -328,6 +328,7 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
 - 2026-09-21 `SKIPPED_VETO` `2way-unanimous avg_p>=70` — Inter Miami vs San Diego -> HOME @ 1.4 (rescheduled → 2026-09-20; actual Inter Miami CF 2-2 San Diego [draw])
 - 2026-09-26 `CAUTION` `2way-unanimous avg_p>=60` — Vila Nova FC vs Londrina -> HOME @ 1.58 (rescheduled → 2026-09-25; actual Vila Nova FC 2-0 Londrina [home])
 - 2026-09-27 `CERTIFIED_CLEAN` `ml-meta avg_p>=65` — Pachuca W vs Santos Laguna W -> HOME @ 1.19 (rescheduled → 2026-09-26; actual Pachuca W 4-1 Santos Laguna W [home])
+- 2026-09-30 `SKIPPED_VETO` `ml-meta avg_p>=65` — Cerro Porteno vs Rubio Nu -> HOME @ None (rescheduled → 2026-10-01; actual Cerro Porteno 2-1 Rubio NU [home])
 
 ## Pending / Unmatched Result Examples
 
@@ -340,7 +341,6 @@ Visual audit of expected historical stats (from the `📊` line) against actual 
 - 2026-09-27 `SKIPPED_VETO` `2way-unanimous avg_p>=60` — Polanka nad Odrou vs Frydek-Mistek -> AWAY @ 1.48 (pending_or_unmatched_result); keys=['polankana']/['frydekmis']
 - 2026-09-27 `SKIPPED_VETO` `2way-unanimous avg_p>=60` — Brommapojkarna W vs Malmö FF W -> AWAY @ 1.4 (pending_or_unmatched_result); keys=['brommapoj']/['malmff', 'malmoffw']
 - 2026-09-27 `SKIPPED_VETO` `ml-meta avg_p>=55` — Plateau United vs Inter Lagos -> HOME @ 1.33 (pending_or_unmatched_result); keys=['plateauun']/['interlago']
-- 2026-09-30 `SKIPPED_VETO` `ml-meta avg_p>=65` — Cerro Porteno vs Rubio Nu -> HOME @ None (pending_or_unmatched_result); keys=['cerroport']/['rubionu']
 
 ## Ambiguous result examples
 

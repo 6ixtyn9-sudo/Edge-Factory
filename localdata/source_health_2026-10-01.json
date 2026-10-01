@@ -34,40 +34,40 @@
       "valid_rows": 0
     },
     "scoutingstats_odds": {
-      "cached_rows": 36,
+      "cached_rows": 33,
       "live_rows": 0,
       "market_candidate_keys": 7,
-      "raw_rows": 185,
+      "raw_rows": 157,
       "refreshed": false,
-      "time_match_keys": 178,
-      "valid_keys": 178,
-      "valid_rows": 178
+      "time_match_keys": 150,
+      "valid_keys": 150,
+      "valid_rows": 150
     },
     "source_embedded": {
       "market_candidate_keys": 3,
-      "raw_rows": 190,
-      "time_match_keys": 141,
-      "valid_keys": 133,
-      "valid_rows": 190
+      "raw_rows": 211,
+      "time_match_keys": 156,
+      "valid_keys": 148,
+      "valid_rows": 211
     }
   },
   "pricing_health": {
-    "candidate_count_alias_price": 3,
+    "candidate_count_alias_price": 2,
     "candidate_count_before_pricing": 36,
-    "candidate_count_exact_price": 27,
+    "candidate_count_exact_price": 28,
     "candidate_count_missing_price": 6,
-    "candidate_count_suspect_price_rejected": 3,
+    "candidate_count_suspect_price_rejected": 2,
     "candidate_count_with_any_price": 30,
-    "candidate_count_with_negative_edge": 19,
-    "candidate_count_with_positive_edge": 11,
+    "candidate_count_with_negative_edge": 17,
+    "candidate_count_with_positive_edge": 13,
     "price_tiers_used": {
-      "dedicated_pricing_feed": 19,
-      "source_embedded_price": 11
+      "dedicated_pricing_feed": 15,
+      "source_embedded_price": 15
     }
   },
   "warnings": [
     "SOURCE_HEALTH: 6 of 36 scored candidate(s) had no captured 1X2 price",
-    "SOURCE_HEALTH: 3 candidate(s) matched a price only through a fuzzy fixture join and were rejected for dispatch",
+    "SOURCE_HEALTH: 2 candidate(s) matched a price only through a fuzzy fixture join and were rejected for dispatch",
     "SOURCE_HEALTH: fresh_production produced no dispatchable picks \u2014 see the blocker table for the objective reason"
   ]
 }

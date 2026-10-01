@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-01T03:15:34+02:00",
+  "as_of": "2026-10-01T07:37:20+02:00",
   "backfill_depth": {
     "afootballreport": {
       "capture_forward_only": true,
@@ -49,7 +49,7 @@
       "capture_window": "2026-10-01..2026-10-01",
       "declared_backfill_mode": "capture_forward_only",
       "deeper_backfill_possible": false,
-      "distinct_local_dates": 43,
+      "distinct_local_dates": 44,
       "first_local_date": "2026-08-27",
       "gap_expectation": "thin history EXPECTED (capture-forward only adapter)",
       "latest_local_date": "2026-10-23",
@@ -129,7 +129,7 @@
       "missing_dates_in_d30_count": 1,
       "retryable_failure_dates": [
         "2026-09-01",
-        "2026-09-29"
+        "2026-09-30"
       ]
     },
     "prosoccer": {
@@ -311,14 +311,6 @@
           "sources_with_1x2": "vitibet"
         },
         {
-          "fixture": "Alianza vs Platense",
-          "sources_with_1x2": "zulubet"
-        },
-        {
-          "fixture": "Alianza Lima vs Palestino",
-          "sources_with_1x2": "-"
-        },
-        {
           "fixture": "Al Musannah vs Ibri",
           "sources_with_1x2": "-"
         },
@@ -341,9 +333,21 @@
         {
           "fixture": "Armenia U21 vs Italy U21",
           "sources_with_1x2": "-"
+        },
+        {
+          "fixture": "Asante Kotoko SC vs Karela",
+          "sources_with_1x2": "vitibet"
+        },
+        {
+          "fixture": "Athletic Club vs Sport Recife",
+          "sources_with_1x2": "bzzoiro"
         }
       ],
       "no_ml_anchor_source_present": [
+        {
+          "fixture": "Argentina vs Bolivia",
+          "sources_with_1x2": "betclan,bzzoiro"
+        },
         {
           "fixture": "Bnei Yehuda vs Maccabi Kiryat Gat",
           "sources_with_1x2": "vitibet,betclan"
@@ -379,91 +383,19 @@
         {
           "fixture": "Maldives vs Lebanon",
           "sources_with_1x2": "betclan,bzzoiro"
-        },
-        {
-          "fixture": "Malta vs Gibraltar",
-          "sources_with_1x2": "vitibet,betclan,bzzoiro"
         }
       ]
     },
     "drops": {
-      "fewer_than_2_voters_with_1x2": 134,
+      "fewer_than_2_voters_with_1x2": 131,
       "no_ml_anchor_source_present": 14
     },
-    "fixtures_ml_scoreable": 19,
-    "fixtures_ml_scoreable_pre_match_eligible": 9,
-    "fixtures_with_2plus_voters": 33,
-    "kickoff_drop_examples": {
-      "inside_30m_lead_or_started": [
-        {
-          "fixture": "Argentina vs Bolivia",
-          "kickoff_donors": "scoutingstats,bzzoiro,prosoccer",
-          "kickoff_raw": "2026-10-01T00:00:00Z",
-          "sources": "zulubet,vitibet,betclan,bzzoiro"
-        },
-        {
-          "fixture": "Atletico Nacional vs Junior",
-          "kickoff_donors": "zulubet,scoutingstats",
-          "kickoff_raw": "01-10, 02:00",
-          "sources": "zulubet,vitibet,betclan"
-        },
-        {
-          "fixture": "Atl\u00e9tico Ottawa vs Cavalry FC",
-          "kickoff_donors": "zulubet",
-          "kickoff_raw": "01-10, 00:00",
-          "sources": "zulubet,vitibet"
-        },
-        {
-          "fixture": "Atletico Torque vs Penarol",
-          "kickoff_donors": "zulubet,vitibet",
-          "kickoff_raw": "01-10, 00:00",
-          "sources": "zulubet,vitibet"
-        },
-        {
-          "fixture": "Brooklyn vs Detroit City",
-          "kickoff_donors": "zulubet,vitibet",
-          "kickoff_raw": "01-10, 00:00",
-          "sources": "zulubet,vitibet"
-        },
-        {
-          "fixture": "Cerro Porteno vs Rubio NU",
-          "kickoff_donors": "zulubet,vitibet",
-          "kickoff_raw": "30-09, 23:30",
-          "sources": "zulubet,vitibet,betclan"
-        },
-        {
-          "fixture": "Miami FC vs Sporting JAX",
-          "kickoff_donors": "zulubet",
-          "kickoff_raw": "01-10, 00:00",
-          "sources": "zulubet,vitibet"
-        },
-        {
-          "fixture": "Sacramento Republic vs Las Vegas Lights",
-          "kickoff_donors": "zulubet,vitibet,scoutingstats,bzzoiro",
-          "kickoff_raw": "01-10, 03:00",
-          "sources": "zulubet,vitibet,bzzoiro"
-        },
-        {
-          "fixture": "FC Tulsa vs New Mexico United",
-          "kickoff_donors": "bzzoiro",
-          "kickoff_raw": "2026-10-01T00:00:00Z",
-          "sources": "zulubet,vitibet,bzzoiro"
-        }
-      ],
-      "missing_kickoff_same_day": [
-        {
-          "fixture": "New York Red Bulls vs St. Louis City",
-          "kickoff_donors": "none",
-          "kickoff_raw": "(none)",
-          "sources": "zulubet,vitibet"
-        }
-      ]
-    },
-    "kickoff_drops": {
-      "inside_30m_lead_or_started": 9,
-      "missing_kickoff_same_day": 1
-    },
-    "match_surface": 167,
+    "fixtures_ml_scoreable": 11,
+    "fixtures_ml_scoreable_pre_match_eligible": 11,
+    "fixtures_with_2plus_voters": 25,
+    "kickoff_drop_examples": {},
+    "kickoff_drops": {},
+    "match_surface": 156,
     "ml_anchor_sources": [
       "forebet",
       "zulubet",
@@ -483,20 +415,12 @@
     "examples": {
       "multi_source": [
         {
-          "fixture": "alianza vs platense",
-          "sources": "bettingclosed,zulubet"
-        },
-        {
-          "fixture": "alianzalima vs palestino",
-          "sources": "bettingclosed,vitibet"
-        },
-        {
           "fixture": "anguilla vs antiguabarbuda",
           "sources": "bzzoiro,scoutingstats"
         },
         {
           "fixture": "argentina vs bolivia",
-          "sources": "betclan,bettingclosed,bzzoiro,predictz,prosoccer,scoutingstats,vitibet,windrawwin,zulubet"
+          "sources": "betclan,bzzoiro,predictz,prosoccer,windrawwin"
         },
         {
           "fixture": "armeniau21 vs italyu21",
@@ -512,15 +436,23 @@
         },
         {
           "fixture": "athletic vs sportrecife",
-          "sources": "bzzoiro,scoutingstats"
+          "sources": "afootballreport,bzzoiro,scoutingstats"
         },
         {
           "fixture": "atleticonacional vs junior",
-          "sources": "betclan,scoutingstats,vitibet,windrawwin,zulubet"
+          "sources": "betclan,windrawwin"
         },
         {
           "fixture": "atleticoottawa vs cavalry",
-          "sources": "predictz,vitibet,windrawwin,zulubet"
+          "sources": "predictz,windrawwin"
+        },
+        {
+          "fixture": "austriawienw vs intermilanow",
+          "sources": "scoutingstats,vitibet"
+        },
+        {
+          "fixture": "azerbaijan vs liechtenstein",
+          "sources": "betclan,bettingclosed,bzzoiro,predictz,prosoccer,scoutingstats,vitibet,windrawwin,zulubet"
         }
       ],
       "reversed_risk": [
@@ -560,6 +492,10 @@
           "source": "afootballreport"
         },
         {
+          "fixture": "acskidstampabrasov vs coronabrasov",
+          "source": "afootballreport"
+        },
+        {
           "fixture": "adalcorcon vs toledo",
           "source": "afootballreport"
         },
@@ -569,6 +505,10 @@
         },
         {
           "fixture": "affguatemala vs deportivofraijanes",
+          "source": "afootballreport"
+        },
+        {
+          "fixture": "aguiadesaopaulo vs gabusinho",
           "source": "afootballreport"
         },
         {
@@ -582,42 +522,34 @@
         {
           "fixture": "albertusmagnusfalcons vs mitchellmariners",
           "source": "afootballreport"
-        },
-        {
-          "fixture": "algharafa vs almesaimeer",
-          "source": "vitibet"
-        },
-        {
-          "fixture": "alianza vs atleticoplatense",
-          "source": "vitibet"
         }
       ]
     },
-    "fixture_groups": 462,
+    "fixture_groups": 506,
     "groups_by_source_count": {
-      "1": 370,
+      "1": 423,
       "10": 3,
-      "2": 50,
-      "3": 15,
-      "4": 10,
-      "5": 3,
+      "2": 43,
+      "3": 17,
+      "4": 6,
+      "5": 4,
       "6": 4,
-      "7": 2,
-      "8": 1,
-      "9": 4
+      "7": 1,
+      "8": 2,
+      "9": 3
     },
     "reversed_risk_groups": 5,
-    "single_source_groups": 370,
-    "three_plus_source_groups": 42,
-    "two_source_groups": 50
+    "single_source_groups": 423,
+    "three_plus_source_groups": 40,
+    "two_source_groups": 43
   },
   "kickoff_funnel": {
     "afootballreport": {
-      "has_kickoff": 244,
+      "has_kickoff": 301,
       "missing_kickoff": 0,
-      "pre_match_eligible": 158,
-      "trusted_kickoff": 244,
-      "unique_fixtures": 244,
+      "pre_match_eligible": 214,
+      "trusted_kickoff": 301,
+      "unique_fixtures": 301,
       "untrusted_kickoff": 0
     },
     "betclan": {
@@ -630,16 +562,16 @@
     },
     "bettingclosed": {
       "has_kickoff": 0,
-      "missing_kickoff": 69,
+      "missing_kickoff": 62,
       "pre_match_eligible": 0,
       "trusted_kickoff": 0,
-      "unique_fixtures": 69,
+      "unique_fixtures": 62,
       "untrusted_kickoff": 0
     },
     "bzzoiro": {
       "has_kickoff": 22,
       "missing_kickoff": 0,
-      "pre_match_eligible": 19,
+      "pre_match_eligible": 18,
       "trusted_kickoff": 22,
       "unique_fixtures": 22,
       "untrusted_kickoff": 0
@@ -663,25 +595,25 @@
     "prosoccer": {
       "has_kickoff": 25,
       "missing_kickoff": 0,
-      "pre_match_eligible": 20,
+      "pre_match_eligible": 19,
       "trusted_kickoff": 25,
       "unique_fixtures": 25,
       "untrusted_kickoff": 0
     },
     "scoutingstats": {
-      "has_kickoff": 36,
+      "has_kickoff": 33,
       "missing_kickoff": 0,
-      "pre_match_eligible": 24,
-      "trusted_kickoff": 36,
-      "unique_fixtures": 36,
+      "pre_match_eligible": 25,
+      "trusted_kickoff": 33,
+      "unique_fixtures": 33,
       "untrusted_kickoff": 0
     },
     "vitibet": {
-      "has_kickoff": 119,
-      "missing_kickoff": 12,
-      "pre_match_eligible": 106,
-      "trusted_kickoff": 119,
-      "unique_fixtures": 131,
+      "has_kickoff": 117,
+      "missing_kickoff": 1,
+      "pre_match_eligible": 103,
+      "trusted_kickoff": 117,
+      "unique_fixtures": 118,
       "untrusted_kickoff": 0
     },
     "windrawwin": {
@@ -693,66 +625,66 @@
       "untrusted_kickoff": 0
     },
     "zulubet": {
-      "has_kickoff": 22,
-      "missing_kickoff": 6,
-      "pre_match_eligible": 13,
-      "trusted_kickoff": 22,
-      "unique_fixtures": 28,
+      "has_kickoff": 20,
+      "missing_kickoff": 0,
+      "pre_match_eligible": 20,
+      "trusted_kickoff": 20,
+      "unique_fixtures": 20,
       "untrusted_kickoff": 0
     }
   },
   "min_lead_minutes": 30,
   "odds_funnel": {
-    "candidates_before_odds": 9,
+    "candidates_before_odds": 11,
     "diagnosis": "no_price_rows_captured_today",
     "examples": {
       "betexplorer_odds": [
         "algharafa vs almesaimeer",
         "alianza vs atleticoplatense",
-        "alianza vs platense",
-        "alianzalima vs palestino",
         "almusannah vs ibri",
         "alnasr vs smail",
         "alshamal vs muaither",
         "alulaw vs alhilalw",
         "anguilla vs antiguabarbuda",
-        "argentina vs bolivia"
+        "argentina vs bolivia",
+        "armeniau21 vs italyu21",
+        "asantekotoko vs karela"
       ],
       "bzzoiro_odds": [
         "algharafa vs almesaimeer",
         "alianza vs atleticoplatense",
-        "alianza vs platense",
-        "alianzalima vs palestino",
         "almusannah vs ibri",
         "alnasr vs smail",
         "alshamal vs muaither",
         "alulaw vs alhilalw",
         "anguilla vs antiguabarbuda",
-        "argentina vs bolivia"
+        "argentina vs bolivia",
+        "armeniau21 vs italyu21",
+        "asantekotoko vs karela"
       ],
       "oddspapi_odds": [
         "algharafa vs almesaimeer",
         "alianza vs atleticoplatense",
-        "alianza vs platense",
-        "alianzalima vs palestino",
         "almusannah vs ibri",
         "alnasr vs smail",
         "alshamal vs muaither",
         "alulaw vs alhilalw",
         "anguilla vs antiguabarbuda",
-        "argentina vs bolivia"
+        "argentina vs bolivia",
+        "armeniau21 vs italyu21",
+        "asantekotoko vs karela"
       ],
       "theoddsapi_odds": [
         "algharafa vs almesaimeer",
         "alianza vs atleticoplatense",
-        "alianza vs platense",
-        "alianzalima vs palestino",
         "almusannah vs ibri",
         "alnasr vs smail",
         "alshamal vs muaither",
         "alulaw vs alhilalw",
         "anguilla vs antiguabarbuda",
-        "argentina vs bolivia"
+        "argentina vs bolivia",
+        "armeniau21 vs italyu21",
+        "asantekotoko vs karela"
       ]
     },
     "sources": {
@@ -800,17 +732,17 @@
       "consumed_by_picks_engine": false,
       "has_1x2_signal": 0,
       "has_btts_signal": 0,
-      "has_home_away_date": 296,
-      "has_kickoff": 244,
+      "has_home_away_date": 399,
+      "has_kickoff": 301,
       "has_ou_signal": 0,
       "in_consensus_surface": false,
-      "key_too_short": 6,
-      "notes": "NOT consumed by picks engine (captured but cannot vote); no 1X2 probability signal; 6 rows dropped by <4-char identity key",
-      "pre_match_eligible": 158,
-      "raw_rows": 296,
+      "key_too_short": 11,
+      "notes": "NOT consumed by picks engine (captured but cannot vote); no 1X2 probability signal; 11 rows dropped by <4-char identity key",
+      "pre_match_eligible": 214,
+      "raw_rows": 399,
       "source": "afootballreport",
-      "trusted_kickoff": 244,
-      "unique_fixtures": 244,
+      "trusted_kickoff": 301,
+      "unique_fixtures": 301,
       "warehouse_table_present": true
     },
     "betclan": {
@@ -832,7 +764,7 @@
       "warehouse_table_present": true
     },
     "bettingclosed": {
-      "already_settled": 0,
+      "already_settled": 7,
       "consumed_by_picks_engine": false,
       "has_1x2_signal": 0,
       "has_btts_signal": 0,
@@ -846,7 +778,7 @@
       "raw_rows": 70,
       "source": "bettingclosed",
       "trusted_kickoff": 0,
-      "unique_fixtures": 69,
+      "unique_fixtures": 62,
       "warehouse_table_present": true
     },
     "bzzoiro": {
@@ -860,7 +792,7 @@
       "in_consensus_surface": true,
       "key_too_short": 0,
       "notes": "-",
-      "pre_match_eligible": 19,
+      "pre_match_eligible": 18,
       "raw_rows": 44,
       "source": "bzzoiro",
       "trusted_kickoff": 22,
@@ -932,7 +864,7 @@
       "in_consensus_surface": false,
       "key_too_short": 0,
       "notes": "NOT consumed by picks engine (captured but cannot vote)",
-      "pre_match_eligible": 20,
+      "pre_match_eligible": 19,
       "raw_rows": 25,
       "source": "prosoccer",
       "trusted_kickoff": 25,
@@ -940,21 +872,21 @@
       "warehouse_table_present": true
     },
     "scoutingstats": {
-      "already_settled": 0,
+      "already_settled": 4,
       "consumed_by_picks_engine": true,
-      "has_1x2_signal": 27,
-      "has_btts_signal": 25,
-      "has_home_away_date": 36,
-      "has_kickoff": 36,
-      "has_ou_signal": 27,
+      "has_1x2_signal": 23,
+      "has_btts_signal": 21,
+      "has_home_away_date": 37,
+      "has_kickoff": 33,
+      "has_ou_signal": 23,
       "in_consensus_surface": false,
       "key_too_short": 0,
       "notes": "consumed for OU/BTTS only, not in SOURCES_1X2",
-      "pre_match_eligible": 24,
-      "raw_rows": 36,
+      "pre_match_eligible": 25,
+      "raw_rows": 37,
       "source": "scoutingstats",
-      "trusted_kickoff": 36,
-      "unique_fixtures": 36,
+      "trusted_kickoff": 33,
+      "unique_fixtures": 33,
       "warehouse_table_present": true
     },
     "soccervista": {
@@ -994,21 +926,21 @@
       "warehouse_table_present": true
     },
     "vitibet": {
-      "already_settled": 0,
+      "already_settled": 13,
       "consumed_by_picks_engine": true,
-      "has_1x2_signal": 36,
+      "has_1x2_signal": 31,
       "has_btts_signal": 0,
       "has_home_away_date": 133,
-      "has_kickoff": 119,
+      "has_kickoff": 117,
       "has_ou_signal": 0,
       "in_consensus_surface": true,
       "key_too_short": 2,
       "notes": "2 rows dropped by <4-char identity key",
-      "pre_match_eligible": 106,
+      "pre_match_eligible": 103,
       "raw_rows": 133,
       "source": "vitibet",
-      "trusted_kickoff": 119,
-      "unique_fixtures": 131,
+      "trusted_kickoff": 117,
+      "unique_fixtures": 118,
       "warehouse_table_present": true
     },
     "windrawwin": {
@@ -1030,21 +962,21 @@
       "warehouse_table_present": true
     },
     "zulubet": {
-      "already_settled": 0,
+      "already_settled": 15,
       "consumed_by_picks_engine": true,
-      "has_1x2_signal": 28,
+      "has_1x2_signal": 20,
       "has_btts_signal": 0,
-      "has_home_away_date": 29,
-      "has_kickoff": 22,
+      "has_home_away_date": 36,
+      "has_kickoff": 20,
       "has_ou_signal": 0,
       "in_consensus_surface": true,
       "key_too_short": 1,
       "notes": "1 rows dropped by <4-char identity key",
-      "pre_match_eligible": 13,
-      "raw_rows": 29,
+      "pre_match_eligible": 20,
+      "raw_rows": 36,
       "source": "zulubet",
-      "trusted_kickoff": 22,
-      "unique_fixtures": 28,
+      "trusted_kickoff": 20,
+      "unique_fixtures": 20,
       "warehouse_table_present": true
     }
   },
@@ -1060,6 +992,7 @@
     "candidates": [
       {
         "blockers": [
+          "no_ml_feature_provider_on_fixture",
           "inside_30m_lead_or_started",
           "shadow_sources_not_settlement_validated:prosoccer"
         ],
@@ -1068,12 +1001,10 @@
         "fixture": "Argentina vs Bolivia",
         "kickoff": "2026-10-01T00:00:00Z",
         "kickoff_donors": [
-          "scoutingstats",
           "bzzoiro",
           "prosoccer"
         ],
         "live_voters": [
-          "zulubet",
           "betclan",
           "bzzoiro"
         ],
@@ -1319,20 +1250,21 @@
       },
       {
         "blockers": [
-          "no_ml_feature_provider_on_fixture",
           "shadow_sources_not_settlement_validated:prosoccer"
         ],
         "date": "2026-10-01",
         "dispatchable": false,
         "fixture": "Malta vs Gibraltar",
-        "kickoff": "2026-10-01T20:45:00+02:00",
+        "kickoff": "01-10, 19:45",
         "kickoff_donors": [
+          "zulubet",
           "vitibet",
           "scoutingstats",
           "bzzoiro",
           "prosoccer"
         ],
         "live_voters": [
+          "zulubet",
           "vitibet",
           "betclan",
           "bzzoiro"
@@ -1474,8 +1406,8 @@
       }
     ],
     "fixtures_gained_if_shadow_admitted": 7,
-    "fixtures_with_2plus_certified_voters": 33,
-    "fixtures_with_2plus_voters_if_shadow_admitted": 40,
+    "fixtures_with_2plus_certified_voters": 25,
+    "fixtures_with_2plus_voters_if_shadow_admitted": 32,
     "note": "Diagnostic only. Admitting a shadow source is a certification decision requiring settlement-coverage evidence and operator sign-off; this audit never promotes anything.",
     "shadow_sources_with_1x2_today": [
       "scoutingstats",
@@ -1799,8 +1731,8 @@
         "6.16% settlement coverage",
         "research tier"
       ],
-      "normalized_fixtures": 244,
-      "raw_rows": 296,
+      "normalized_fixtures": 301,
+      "raw_rows": 399,
       "role": "blocked",
       "rows_with_1x2_signal": 0,
       "tier": "shadow"
@@ -1821,7 +1753,7 @@
       "caveats": [
         "confirmation/results donor, not a prediction voter"
       ],
-      "normalized_fixtures": 69,
+      "normalized_fixtures": 62,
       "raw_rows": 70,
       "role": "not_a_voter",
       "rows_with_1x2_signal": 0,
@@ -1886,10 +1818,10 @@
       "caveats": [
         "no 1X2 vote; OU/BTTS and price corroboration only"
       ],
-      "normalized_fixtures": 36,
-      "raw_rows": 36,
+      "normalized_fixtures": 33,
+      "raw_rows": 37,
       "role": "not_a_voter",
-      "rows_with_1x2_signal": 27,
+      "rows_with_1x2_signal": 23,
       "tier": "live"
     },
     "soccervista": {
@@ -1920,10 +1852,10 @@
       "caveats": [
         "13 reversed-orientation candidates in the D90 audit"
       ],
-      "normalized_fixtures": 131,
+      "normalized_fixtures": 118,
       "raw_rows": 133,
       "role": "live_voter",
-      "rows_with_1x2_signal": 36,
+      "rows_with_1x2_signal": 31,
       "tier": "live"
     },
     "windrawwin": {
@@ -1943,15 +1875,15 @@
       "caveats": [
         "some rows carry no kickoff"
       ],
-      "normalized_fixtures": 28,
-      "raw_rows": 29,
+      "normalized_fixtures": 20,
+      "raw_rows": 36,
       "role": "live_voter",
-      "rows_with_1x2_signal": 28,
+      "rows_with_1x2_signal": 20,
       "tier": "live"
     }
   },
   "warnings": [
     "SOURCE_HEALTH: 'scoutingstats' has 1X2 rows today but its tier ('live') excludes it from both live and shadow consensus",
-    "SOURCE_HEALTH: 9 candidate(s) existed but odds enrichment matched 0 \u2014 price identity may be broken (not merely an empty slate)"
+    "SOURCE_HEALTH: 11 candidate(s) existed but odds enrichment matched 0 \u2014 price identity may be broken (not merely an empty slate)"
   ]
 }
