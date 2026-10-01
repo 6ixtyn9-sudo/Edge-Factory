@@ -142,6 +142,17 @@ jobs:
         # Restore committed data step restores fresh state.
         if: always()
         run: |
+          # An invariant ERROR means two artifacts contradict each other.
+          # Committing that state publishes a run we already know is not
+          # trustworthy, which is how contradictory state shipped before.
+          # Artifacts are still uploaded for inspection by the next step.
+          if [ -f .invariant_failure ]; then
+            echo "INVARIANT ERRORS: refusing to commit generated state."
+            cat .invariant_failure
+            echo "State is in the uploaded artifact for inspection."
+            exit 1
+          fi
+
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A localdata/
