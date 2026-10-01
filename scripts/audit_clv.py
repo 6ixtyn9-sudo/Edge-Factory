@@ -149,6 +149,32 @@ def _pick_rule_name(pick: dict[str, Any]) -> str:
     )
 
 
+DECLINED_FROZEN_CARD = "declined_frozen_card_already_locked"
+_TICKETED = ("ticket_created", "ticket_frozen")
+
+
+def _selection_ticket_status(entry, ticket_outcomes) -> str:
+    """The ticket verdict for THIS selection, not merely for its date.
+
+    A frozen slip freezes a date. When the slate changes afterwards, a
+    selection that was never carded used to inherit the date's
+    ticket_frozen: run 84619f7 recorded Maccabi Bnei Raina that way
+    while the frozen slip held Bnei Yehuda and Envigado. Where the
+    outcome records its legs, membership decides.
+    """
+    outcome = (ticket_outcomes or {}).get(
+        str(entry.get("event_date") or "")) or {}
+    status = outcome.get("status") or PENDING_TICKET_STATUS
+    keys = outcome.get("frozen_leg_keys")
+    if status not in _TICKETED or keys is None:
+        return status
+    key = "|".join((
+        str(entry.get("home") or "").strip().casefold(),
+        str(entry.get("away") or "").strip().casefold(),
+        str(entry.get("pick") or entry.get("selection") or "").strip().casefold()))
+    return status if key in set(keys) else DECLINED_FROZEN_CARD
+
+
 def ticket_status_counts(rows) -> dict[str, int]:
     """How many captured rows ended in each auto-ticket status."""
     counts: dict[str, int] = {}
@@ -371,8 +397,7 @@ def _dispatch_plan_picks(run_date: str) -> list[dict[str, Any]] | None:
         # bet; the ticket engine's verdict rides along so CLV can tell a
         # staked ticket from a declined candidate.
         entry.setdefault("ticket_status",
-                         (ticket_outcomes.get(str(entry.get("event_date") or ""))
-                          or {}).get("status") or PENDING_TICKET_STATUS)
+                         _selection_ticket_status(entry, ticket_outcomes))
         picks.append(entry)
     return picks
 
@@ -473,14 +498,32 @@ def capture(run_date: str, label: str, input_path: Path) -> int:
     # advances between snapshots. The per-selection latest status is the
     # statement about where picks ended up; the raw snapshot tally is
     # kept but labelled so it is never read as a pick count.
+    # Scope to the run's own dispatch plan where one exists. The monthly
+    # snapshot file also holds earlier runs' selections, so counting all
+    # of them printed "CLV latest production selections: 5" against a
+    # plan of 3 and carried their stale statuses forward as current.
+    scoped_rows, scoped = run_rows, False
     try:
         from edgefactory import production_summary as _ps
-        latest_rows = _ps.clv_latest_rows(run_rows)
+        from edgefactory import production_lane as _pl
+        plan = _pl.load_dispatch_plan(run_date, LOCALDATA) or {}
+        if plan:
+            scoped_rows = _ps.clv_rows_in_plan(run_rows, plan)
+            scoped = scoped_rows is not run_rows
+        latest_rows = _ps.clv_latest_rows(scoped_rows)
     except Exception:
         latest_rows = []
     if latest_rows:
         latest_counts = ticket_status_counts(latest_rows)
-        print(f"  CLV latest production selections: {len(latest_rows)}")
+        if scoped:
+            label = "CLV latest production selections"
+        else:
+            # No plan to scope against at this stage: the number is a
+            # snapshot diagnostic and must not claim to be this run's
+            # production selection count.
+            label = ("CLV latest status per selection seen this month "
+                     "(not this run's production selection count)")
+        print(f"  {label}: {len(latest_rows)}")
         print("  CLV latest ticket_status: "
               + ", ".join(f"{k}={v}" for k, v in sorted(latest_counts.items())))
     if status_counts:
