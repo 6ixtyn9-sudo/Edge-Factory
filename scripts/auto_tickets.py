@@ -2509,6 +2509,20 @@ def build_card_for_date(target, slate, *, st, settled, now, args, outcome):
             frozen_leg_key(r.get("home"), r.get("away"),
                            r.get("pick") or r.get("selection"))
             for r in frozen_rows or [])
+        # The ACTION for this date is ticket_frozen, but a per-selection
+        # STATUS must be decided by membership of the frozen card. The
+        # slate can change after the freeze, and a selection that was
+        # never carded must not inherit the date's result. Consumers
+        # read selection_statuses in preference to status.
+        card = set(outcome["frozen_leg_keys"])
+        outcome["selection_statuses"] = {
+            frozen_leg_key(r.get("home"), r.get("away"),
+                           r.get("pick") or r.get("selection")):
+            ("ticket_frozen"
+             if frozen_leg_key(r.get("home"), r.get("away"),
+                               r.get("pick") or r.get("selection")) in card
+             else DECLINED_FROZEN_CARD)
+            for r in slate or []}
         print(f"TICKETS FROZEN — final slip for {target}. Re-printing saved slip:")
         print("=" * 62)
         if slip_txt.exists():

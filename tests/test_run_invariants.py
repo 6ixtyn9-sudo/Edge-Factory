@@ -897,3 +897,65 @@ def test_a_declined_date_is_not_this_checks_business():
 
     assert ri.check_ticketed_selections_are_on_the_card(
         plan, _frozen_outcome(status="declined_insufficient_legs")) == []
+
+
+# ===========================================================================
+# Run 926e99a: CLV was fixed but the outcome object stayed date-level
+#
+# CLV said declined_frozen_card_already_locked, auto_tickets said
+# ticket_frozen, and the two contradicted each other.
+# ===========================================================================
+
+
+LEGS = ["bnei yehuda|maccabi kiryat gat|home", "envigado|orsomarso|home"]
+MACCABI = {"event_date": "2026-10-01", "home": "Maccabi Bnei Raina",
+           "away": "Hapoel Kfar Shalem", "pick": "home",
+           "ticket_status": "declined_frozen_card_already_locked",
+           "snapshot_label": "end_of_run",
+           "captured_at_utc": "2026-10-01T09:30:00Z",
+           "pick_id": "2026-10-01|maccabi-bnei-raina|hapoel|1x2|home|rule"}
+OUTCOME = {"2026-10-01": {
+    "status": "ticket_frozen", "frozen_leg_keys": LEGS,
+    "selection_statuses": {
+        "maccabi bnei raina|hapoel kfar shalem|home":
+            "declined_frozen_card_already_locked",
+        "envigado|orsomarso|home": "ticket_frozen"}}}
+
+
+def test_clv_and_the_outcome_now_agree_for_the_locked_out_selection():
+    assert ri.check_clv_status([MACCABI], OUTCOME) == []
+
+
+def test_the_outcome_reports_the_selection_not_the_date():
+    assert ri.outcome_status_for(MACCABI, OUTCOME["2026-10-01"]) == \
+        "declined_frozen_card_already_locked"
+    on_card = {"home": "Envigado", "away": "Orsomarso", "pick": "home"}
+    assert ri.outcome_status_for(on_card, OUTCOME["2026-10-01"]) == \
+        "ticket_frozen"
+
+
+def test_a_per_selection_status_passes_the_card_membership_check():
+    plan = {"same_day_picks": [MACCABI]}
+    assert ri.check_ticketed_selections_are_on_the_card(plan, OUTCOME) == []
+
+
+def test_a_legacy_date_level_claim_is_still_challenged():
+    """No per-selection record: the date's claim covers the selection."""
+    plan = {"same_day_picks": [MACCABI]}
+    legacy = {"2026-10-01": {"status": "ticket_frozen",
+                             "frozen_leg_keys": LEGS}}
+
+    assert _codes(ri.check_ticketed_selections_are_on_the_card(
+        plan, legacy)) == {ri.V_FROZEN_STATUS_LEAK}
+
+
+def test_a_dishonest_per_selection_claim_is_caught():
+    """Claiming ticketed for a selection absent from the card."""
+    plan = {"same_day_picks": [MACCABI]}
+    lying = {"2026-10-01": {
+        "status": "ticket_frozen", "frozen_leg_keys": LEGS,
+        "selection_statuses": {
+            "maccabi bnei raina|hapoel kfar shalem|home": "ticket_frozen"}}}
+
+    assert _codes(ri.check_ticketed_selections_are_on_the_card(
+        plan, lying)) == {ri.V_FROZEN_STATUS_LEAK}

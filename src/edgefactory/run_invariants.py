@@ -54,6 +54,50 @@ V_FROZEN_STATUS_LEAK = "selection_marked_ticketed_but_absent_from_the_card"
 
 TICKETED_STATUSES = ("ticket_created", "ticket_frozen")
 
+
+def _selection_key(row) -> str:
+    return "|".join((
+        str(row.get("home") or "").strip().casefold(),
+        str(row.get("away") or "").strip().casefold(),
+        str(row.get("pick") or row.get("selection") or "").strip().casefold()))
+
+
+def recorded_status_for(row, outcome) -> str:
+    """The status an artifact actually claims for this selection.
+
+    No membership is inferred here: this is what the run asserted, so
+    the invariant can judge whether that claim is honest.
+    """
+    outcome = outcome or {}
+    per_selection = outcome.get("selection_statuses")
+    if isinstance(per_selection, dict):
+        resolved = per_selection.get(_selection_key(row))
+        if resolved:
+            return str(resolved)
+    return str(outcome.get("status") or "")
+
+
+def outcome_status_for(row, outcome) -> str:
+    """The verdict for THIS selection, not merely for its date.
+
+    A frozen slip freezes a date. The ACTION recorded for that date is
+    ticket_frozen, but a selection added after the freeze was never
+    carded. Where the outcome records per-selection statuses, or the
+    card's legs, membership decides.
+    """
+    outcome = outcome or {}
+    status = str(outcome.get("status") or "")
+    per_selection = outcome.get("selection_statuses")
+    if isinstance(per_selection, dict):
+        resolved = per_selection.get(_selection_key(row))
+        if resolved:
+            return str(resolved)
+    keys = outcome.get("frozen_leg_keys")
+    if status in TICKETED_STATUSES and keys is not None:
+        if _selection_key(row) not in set(keys):
+            return "declined_frozen_card_already_locked"
+    return status
+
 # Providers whose odds rows carry no true capture instant. The
 # scoutingstats adapter stores the fixture KICKOFF in captured_at
 # (picks_today._scoutingstats_rows_to_odds), so freshness cannot be
@@ -342,16 +386,15 @@ def check_ticketed_selections_are_on_the_card(plan: dict | None,
                 + list(plan.get("horizon_picks") or [])):
         day = str(row.get("event_date") or row.get("date") or "")[:10]
         outcome = ticket_outcomes.get(day) or {}
-        if str(outcome.get("status") or "") not in TICKETED_STATUSES:
+        # Judge what the run CLAIMED for this selection. A date-level
+        # ticket_frozen with no per-selection record is still a claim
+        # that this selection was ticketed, and must be challenged.
+        if recorded_status_for(row, outcome) not in TICKETED_STATUSES:
             continue
         keys = outcome.get("frozen_leg_keys")
         if keys is None:
             continue            # no leg record: nothing provable here
-        key = "|".join((
-            str(row.get("home") or "").strip().casefold(),
-            str(row.get("away") or "").strip().casefold(),
-            str(row.get("pick") or row.get("selection") or "").strip().casefold()))
-        if key not in set(keys):
+        if _selection_key(row) not in set(keys):
             out.append(_violation(
                 V_FROZEN_STATUS_LEAK,
                 f"the card for {day} is '{outcome.get('status')}' but this "
@@ -559,7 +602,10 @@ def check_clv_status(clv_rows: Iterable[dict] | None,
         return out
     for row in production_summary.clv_latest_rows(clv_rows or []):
         event_date = str(row.get("event_date") or row.get("match_date") or "")
-        decided = (outcomes.get(event_date) or {}).get("status")
+        # Compare against the verdict for THIS selection. Using the
+        # date's action reported a contradiction when a frozen date
+        # carried a selection that was never on the card.
+        decided = outcome_status_for(row, outcomes.get(event_date) or {})
         if not decided:
             continue
         status = str(row.get("ticket_status") or "").strip()
