@@ -93,7 +93,14 @@ GATES = {
 
 MAX_DISPATCH_PICKS_PER_DAY = 5
 MAX_TOTAL_EXPOSURE_UNITS = 5.0
-MIN_EDGE_TO_DISPATCH = 0.02
+# A selection must not be priced at a loss, but the SIZE of a positive
+# edge is a grading question, not a gate. The old 0.02 floor vetoed
+# thin-but-positive selections upstream, so the assayer, the bucket
+# ladder and the P&L tripwire never saw them and could never learn
+# whether a thin-edge bucket pays. Those mechanisms demote and bench a
+# bucket that loses, which is the correct judge of a thin edge.
+# Operator direction 2026-10-01: reject a negative edge only.
+MIN_EDGE_TO_DISPATCH = 0.0
 
 # Dispatch paths. A certified *rule* is a deterministic consensus threshold: it
 # needs the inputs the rule itself reads, and nothing more. Requiring the full

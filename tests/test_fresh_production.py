@@ -1053,3 +1053,33 @@ def test_a_suspect_price_outranks_missing_odds():
 def test_production_identity_survives_without_a_bucket():
     """Removing the bucket must not make production selections invisible."""
     assert fp.PRODUCTION_SCOPE == "production"
+
+
+# ===========================================================================
+# Edge gate: reject a losing price, grade a thin one
+#
+# The 0.02 floor vetoed thin-but-positive selections before the assayer,
+# the bucket ladder or the P&L tripwire could see them, so those
+# mechanisms could never learn whether a thin-edge bucket pays. A pick
+# that loses degrades its own bucket, which is the correct judge.
+# ===========================================================================
+
+
+def test_only_a_negative_edge_is_vetoed():
+    assert fp.MIN_EDGE_TO_DISPATCH == 0.0
+
+
+def test_a_thin_positive_edge_is_no_longer_vetoed():
+    """Germany vs Serbia +0.005 and Wales vs Norway +0.0194 at main's price."""
+    for edge in (0.005, 0.0194, 0.0199):
+        assert not (edge < fp.MIN_EDGE_TO_DISPATCH)
+
+
+def test_a_break_even_price_is_not_negative():
+    assert not (0.0 < fp.MIN_EDGE_TO_DISPATCH)
+
+
+def test_a_negative_edge_is_still_vetoed():
+    for edge in (-0.0001, -0.0351, -0.0685):
+        assert edge < fp.MIN_EDGE_TO_DISPATCH, \
+            "a selection priced at a loss must never dispatch"
