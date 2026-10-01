@@ -1,6 +1,6 @@
 {
-  "blocked_rules": 0,
-  "certified_dispatchable_rules": 14,
+  "blocked_rules": 24,
+  "certified_dispatchable_rules": 0,
   "dispatch_paths": {
     "certified_model": [
       "number_of_1x2_voters",
@@ -29,50 +29,14 @@
   },
   "envelope": {
     "agreement_ratio_max": 1.0,
-    "agreement_ratio_min": 0.0,
+    "agreement_ratio_min": 0.5,
     "empty": false,
     "source_combinations": [
-      "betclan+bzzoiro",
-      "betclan+bzzoiro+prosoccer+statarea+zulubet",
-      "betclan+bzzoiro+prosoccer+zulubet",
-      "betclan+bzzoiro+statarea",
-      "betclan+bzzoiro+statarea+vitibet",
-      "betclan+bzzoiro+statarea+vitibet+zulubet",
-      "betclan+bzzoiro+statarea+zulubet",
-      "betclan+bzzoiro+vitibet+zulubet",
-      "betclan+bzzoiro+zulubet",
-      "betclan+prosoccer+vitibet+zulubet",
-      "betclan+prosoccer+zulubet",
-      "betclan+statarea",
-      "betclan+statarea+vitibet",
-      "betclan+statarea+vitibet+zulubet",
-      "betclan+statarea+zulubet",
-      "betclan+vitibet",
-      "betclan+vitibet+zulubet",
-      "betclan+zulubet",
-      "bzzoiro+prosoccer+statarea",
-      "bzzoiro+prosoccer+statarea+vitibet",
-      "bzzoiro+prosoccer+statarea+vitibet+zulubet",
-      "bzzoiro+prosoccer+statarea+zulubet",
-      "bzzoiro+prosoccer+vitibet+zulubet",
-      "bzzoiro+statarea",
-      "bzzoiro+statarea+vitibet",
-      "bzzoiro+statarea+vitibet+zulubet",
-      "bzzoiro+statarea+zulubet",
-      "bzzoiro+vitibet",
-      "bzzoiro+vitibet+zulubet",
-      "bzzoiro+zulubet",
-      "prosoccer+statarea",
-      "prosoccer+statarea+vitibet",
-      "prosoccer+zulubet",
-      "statarea+vitibet",
-      "statarea+vitibet+zulubet",
-      "statarea+zulubet",
-      "vitibet+zulubet"
+      "prosoccer+zulubet"
     ],
-    "top_probability_max": 0.8999999999999999,
-    "top_probability_min": 0.337,
-    "voters_max": 5,
+    "top_probability_max": 0.77,
+    "top_probability_min": 0.39603960396039606,
+    "voters_max": 2,
     "voters_min": 2
   },
   "feature_schema_version": "fresh_production_features_v1",
@@ -86,7 +50,7 @@
   },
   "model_version": "fresh_production_rules_v1",
   "random_seed": 20260930,
-  "research_rules": 10,
+  "research_rules": 0,
   "source_universe": [
     "zulubet",
     "statarea",
@@ -101,8 +65,7 @@
     "soccervista"
   ],
   "warnings": [
-    "MODEL_HEALTH: 79 fixture(s) had too few current-source voters to score \u2014 source coverage, not a model or schema fault",
-    "MODEL_HEALTH: 10 rule(s) are research-only and can never dispatch; they are not counted as certified",
-    "MODEL_HEALTH: candidates were scored but none cleared dispatch gates"
+    "MODEL_HEALTH: 25 fixture(s) had too few current-source voters to score \u2014 source coverage, not a model or schema fault",
+    "MODEL_HEALTH: no fresh_production rule is certified dispatchable \u2014 the lane abstains by design"
   ]
 }

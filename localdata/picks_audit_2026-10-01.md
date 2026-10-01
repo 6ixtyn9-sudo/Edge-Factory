@@ -7,7 +7,7 @@
 - immutable morning-baseline rows: 604
 - verified official late-slate additions: 0
 - regular-ledger-only legacy rows: 0
-- unsafe regular ledgers ignored: 28
+- unsafe regular ledgers ignored: 29
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 569
 - eligible prior picks: 589
@@ -15,7 +15,7 @@
 - rescheduled result picks (settled ±3d): 8
 - voided postponed/cancelled/abandoned events: 0
 - ambiguous event-disposition rows: 0
-- settled via shared overlay facts: 1
+- settled via shared overlay facts: 564
 - ambiguous result picks: 3
 - wins: 387
 - hit rate: +68.0%

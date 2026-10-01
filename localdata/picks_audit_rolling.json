@@ -5,8 +5,7 @@
     {
       "away": "Viking",
       "away_key_candidates": [
-        "viking",
-        "vikingfk"
+        "viking"
       ],
       "bucket": "SKIPPED_VETO",
       "date": "2026-09-09",
@@ -425,25 +424,25 @@
       "match_over_15": {
         "hit_rate": 0.790698,
         "hits": 34,
-        "priced_hits": 19,
-        "priced_n": 27,
-        "priced_roi": -0.192222,
+        "priced_hits": 0,
+        "priced_n": 0,
+        "priced_roi": null,
         "recommended": 43
       },
       "match_over_25": {
         "hit_rate": 0.653333,
         "hits": 147,
-        "priced_hits": 82,
-        "priced_n": 125,
-        "priced_roi": -0.03016,
+        "priced_hits": 13,
+        "priced_n": 20,
+        "priced_roi": -0.0335,
         "recommended": 225
       },
       "match_over_35": {
         "hit_rate": 0.444444,
         "hits": 8,
-        "priced_hits": 4,
-        "priced_n": 7,
-        "priced_roi": 0.7,
+        "priced_hits": 0,
+        "priced_n": 0,
+        "priced_roi": null,
         "recommended": 18
       }
     },
@@ -890,7 +889,7 @@
       "rescheduled_gs": 3,
       "rescheduled_home": "FC Utrecht",
       "rescheduled_hs": 3,
-      "rescheduled_origin": "warehouse",
+      "rescheduled_origin": "overlay",
       "rescheduled_outcome": "draw",
       "rescheduled_to": "2026-09-08",
       "rule": "ou25-unanimous-2way-sa avg_p>=70"
@@ -915,7 +914,7 @@
       "rescheduled_gs": 0,
       "rescheduled_home": "Philadelphia Union",
       "rescheduled_hs": 2,
-      "rescheduled_origin": "warehouse",
+      "rescheduled_origin": "overlay",
       "rescheduled_outcome": "home",
       "rescheduled_to": "2026-09-05",
       "rule": "ou25-unanimous-2way-sa avg_p>=70"
@@ -940,7 +939,7 @@
       "rescheduled_gs": 0,
       "rescheduled_home": "Cruz Azul",
       "rescheduled_hs": 1,
-      "rescheduled_origin": "warehouse",
+      "rescheduled_origin": "overlay",
       "rescheduled_outcome": "home",
       "rescheduled_to": "2026-09-06",
       "rule": "ml-meta avg_p>=55"
@@ -965,7 +964,7 @@
       "rescheduled_gs": 2,
       "rescheduled_home": "Vancouver Whitecaps",
       "rescheduled_hs": 1,
-      "rescheduled_origin": "warehouse",
+      "rescheduled_origin": "overlay",
       "rescheduled_outcome": "away",
       "rescheduled_to": "2026-09-13",
       "rule": "ml-meta avg_p>=55"
@@ -990,7 +989,7 @@
       "rescheduled_gs": 2,
       "rescheduled_home": "Inter Miami CF",
       "rescheduled_hs": 2,
-      "rescheduled_origin": "warehouse",
+      "rescheduled_origin": "overlay",
       "rescheduled_outcome": "draw",
       "rescheduled_to": "2026-09-20",
       "rule": "2way-unanimous avg_p>=70"
@@ -1015,7 +1014,7 @@
       "rescheduled_gs": 0,
       "rescheduled_home": "Vila Nova FC",
       "rescheduled_hs": 2,
-      "rescheduled_origin": "warehouse",
+      "rescheduled_origin": "overlay",
       "rescheduled_outcome": "home",
       "rescheduled_to": "2026-09-25",
       "rule": "2way-unanimous avg_p>=60"
@@ -1041,7 +1040,7 @@
       "rescheduled_gs": 1,
       "rescheduled_home": "Pachuca W",
       "rescheduled_hs": 4,
-      "rescheduled_origin": "warehouse",
+      "rescheduled_origin": "overlay",
       "rescheduled_outcome": "home",
       "rescheduled_to": "2026-09-26",
       "rule": "ml-meta avg_p>=65"
@@ -1066,7 +1065,7 @@
       "rescheduled_gs": 1,
       "rescheduled_home": "Cerro Porteno",
       "rescheduled_hs": 2,
-      "rescheduled_origin": "warehouse",
+      "rescheduled_origin": "overlay",
       "rescheduled_outcome": "home",
       "rescheduled_to": "2026-10-01",
       "rule": "ml-meta avg_p>=65"
@@ -36331,7 +36330,7 @@
       "won": true
     }
   ],
-  "settled_via_overlay_picks": 1,
+  "settled_via_overlay_picks": 564,
   "start": "2026-09-02",
   "statline_calibration": {
     "avg_goals": {
@@ -36663,7 +36662,8 @@
     "2026-09-26",
     "2026-09-27",
     "2026-09-28",
-    "2026-09-29"
+    "2026-09-29",
+    "2026-10-01"
   ],
   "verified_late_additions": 0,
   "veto_deep_dive": {

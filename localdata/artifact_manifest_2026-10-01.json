@@ -1,16 +1,16 @@
 {
   "bytes_deleted": 0,
   "dry_run": false,
-  "files_considered": 612,
+  "files_considered": 521,
   "files_deleted": 0,
   "generated": "2026-10-01",
   "keep_days": 30,
   "keep_latest": 3,
   "kept_reason_counts": {
-    "current_target_date": 33,
-    "within_last_30_days": 133,
-    "within_last_7_days": 20,
-    "within_newest_3_for_prefix": 56
+    "current_target_date": 36,
+    "within_last_30_days": 134,
+    "within_last_7_days": 22,
+    "within_newest_3_for_prefix": 50
   },
   "known_prefixes": [
     "fresh_production_walkforward",
@@ -43,14 +43,6 @@
   ],
   "largest_generated_files": [
     {
-      "bytes": 243078,
-      "file": "fresh_production_candidate_picks_2026-09-30.json"
-    },
-    {
-      "bytes": 223228,
-      "file": "fresh_production_candidate_picks_2026-10-01.json"
-    },
-    {
       "bytes": 107368,
       "file": "source_settlement_coverage_2026-10-01.json"
     },
@@ -81,19 +73,23 @@
     {
       "bytes": 51804,
       "file": "picks_audit_2026-09-20.md"
+    },
+    {
+      "bytes": 51723,
+      "file": "source_funnel_2026-10-01.json"
+    },
+    {
+      "bytes": 50314,
+      "file": "picks_audit_2026-09-13.md"
     }
   ],
   "largest_generated_prefixes": [
     {
-      "bytes": 978215,
+      "bytes": 978217,
       "prefix": "picks_audit"
     },
     {
-      "bytes": 540782,
-      "prefix": "fresh_production_candidate_picks"
-    },
-    {
-      "bytes": 442144,
+      "bytes": 442707,
       "prefix": "picks"
     },
     {
@@ -101,7 +97,7 @@
       "prefix": "source_settlement_coverage"
     },
     {
-      "bytes": 244423,
+      "bytes": 243578,
       "prefix": "clv_unmatched"
     },
     {
@@ -109,20 +105,24 @@
       "prefix": "source_funnel"
     },
     {
-      "bytes": 72796,
+      "bytes": 77185,
+      "prefix": "fresh_production_candidate_picks"
+    },
+    {
+      "bytes": 72192,
       "prefix": "artifact_manifest"
-    },
-    {
-      "bytes": 69004,
-      "prefix": "fresh_production_walkforward"
-    },
-    {
-      "bytes": 66850,
-      "prefix": "fresh_production_certified_edges"
     },
     {
       "bytes": 59847,
       "prefix": "clv_report"
+    },
+    {
+      "bytes": 34947,
+      "prefix": "ml_fade_research_report"
+    },
+    {
+      "bytes": 20269,
+      "prefix": "shadow_sent_ledger"
     }
   ],
   "no_files_removed_explanation": "Nothing was old enough: every matched generated artifact is either the current target date, inside the newest-per-prefix window, or within the retention window. Unmatched files are never eligible.",
@@ -141,7 +141,7 @@
   ],
   "schema": 2,
   "target_date": "2026-10-01",
-  "unmatched_files_left_alone": 370,
+  "unmatched_files_left_alone": 279,
   "why_each_deleted": [],
   "why_each_kept": [
     {
@@ -350,11 +350,6 @@
       "reason": "current_target_date"
     },
     {
-      "file": "fresh_production_candidate_picks_2026-09-30.json",
-      "prefix": "fresh_production_candidate_picks",
-      "reason": "within_newest_3_for_prefix"
-    },
-    {
       "file": "fresh_production_candidate_picks_2026-09-30.md",
       "prefix": "fresh_production_candidate_picks",
       "reason": "within_newest_3_for_prefix"
@@ -368,11 +363,6 @@
       "file": "fresh_production_candidate_picks_2026-10-01.md",
       "prefix": "fresh_production_candidate_picks",
       "reason": "current_target_date"
-    },
-    {
-      "file": "fresh_production_certified_edges_2026-09-30.json",
-      "prefix": "fresh_production_certified_edges",
-      "reason": "within_newest_3_for_prefix"
     },
     {
       "file": "fresh_production_certified_edges_2026-09-30.md",
@@ -460,11 +450,6 @@
       "reason": "current_target_date"
     },
     {
-      "file": "fresh_production_walkforward_2026-09-30.json",
-      "prefix": "fresh_production_walkforward",
-      "reason": "within_newest_3_for_prefix"
-    },
-    {
       "file": "fresh_production_walkforward_2026-09-30.md",
       "prefix": "fresh_production_walkforward",
       "reason": "within_newest_3_for_prefix"
@@ -492,7 +477,7 @@
     {
       "file": "ml_fade_checkpoint_contexts_2026-09-27.txt",
       "prefix": "ml_fade_checkpoint_contexts",
-      "reason": "within_newest_3_for_prefix"
+      "reason": "within_last_7_days"
     },
     {
       "file": "ml_fade_checkpoint_contexts_2026-09-28.txt",
@@ -503,6 +488,11 @@
       "file": "ml_fade_checkpoint_contexts_2026-09-30.txt",
       "prefix": "ml_fade_checkpoint_contexts",
       "reason": "within_newest_3_for_prefix"
+    },
+    {
+      "file": "ml_fade_checkpoint_contexts_2026-10-01.txt",
+      "prefix": "ml_fade_checkpoint_contexts",
+      "reason": "current_target_date"
     },
     {
       "file": "ml_fade_checkpoint_price_study_2026-09-25.txt",
@@ -517,7 +507,7 @@
     {
       "file": "ml_fade_checkpoint_price_study_2026-09-27.txt",
       "prefix": "ml_fade_checkpoint_price_study",
-      "reason": "within_newest_3_for_prefix"
+      "reason": "within_last_7_days"
     },
     {
       "file": "ml_fade_checkpoint_price_study_2026-09-28.txt",
@@ -528,6 +518,11 @@
       "file": "ml_fade_checkpoint_price_study_2026-09-30.txt",
       "prefix": "ml_fade_checkpoint_price_study",
       "reason": "within_newest_3_for_prefix"
+    },
+    {
+      "file": "ml_fade_checkpoint_price_study_2026-10-01.txt",
+      "prefix": "ml_fade_checkpoint_price_study",
+      "reason": "current_target_date"
     },
     {
       "file": "ml_fade_research_report_2026-09-23.md",
@@ -547,7 +542,7 @@
     {
       "file": "ml_fade_research_report_2026-09-27.md",
       "prefix": "ml_fade_research_report",
-      "reason": "within_newest_3_for_prefix"
+      "reason": "within_last_30_days"
     },
     {
       "file": "ml_fade_research_report_2026-09-28.md",
@@ -558,6 +553,11 @@
       "file": "ml_fade_research_report_2026-09-30.md",
       "prefix": "ml_fade_research_report",
       "reason": "within_newest_3_for_prefix"
+    },
+    {
+      "file": "ml_fade_research_report_2026-10-01.md",
+      "prefix": "ml_fade_research_report",
+      "reason": "current_target_date"
     },
     {
       "file": "model_health_2026-09-30.json",

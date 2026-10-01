@@ -1,6 +1,6 @@
 {
-  "as_of": "2026-10-01T07:37:32+02:00",
-  "eligible_pick_count": 2,
+  "as_of": "2026-10-01T16:04:57+02:00",
+  "eligible_pick_count": 0,
   "generated_for": "2026-10-01",
   "horizon_days": 2,
   "horizon_end": "2026-10-03",
@@ -10,261 +10,21 @@
   "note": "Horizon picks satisfy every same-day dispatch gate plus a 30-minute minimum and 48-hour maximum lead. They are published as dated candidates: dispatch happens on each fixture's own run date, because the downstream sync and notification path publishes one target date at a time and does not yet accept future-dated rows.",
   "per_day": [
     {
-      "candidates": 115,
+      "candidates": 25,
       "date": "2026-10-01",
       "eligible": 0
     },
     {
-      "candidates": 117,
+      "candidates": 67,
       "date": "2026-10-02",
-      "eligible": 2
+      "eligible": 0
     },
     {
-      "candidates": 122,
+      "candidates": 0,
       "date": "2026-10-03",
       "eligible": 0
     }
   ],
-  "picks": [
-    {
-      "away": "Georgia",
-      "blockers": [],
-      "bookmaker": "prosoccer_embedded",
-      "date": "2026-10-02",
-      "dispatch_method": "certified_rule",
-      "dispatchable": true,
-      "edge": 0.0392,
-      "feature_schema_version": "fresh_production_features_v1",
-      "home": "Hungary",
-      "identity_match_tier": "exact",
-      "implied_probability": 0.5405,
-      "internal_stake_units": 1.0,
-      "kickoff": "2026-10-02T20:45:00+02:00",
-      "league": "World: UEFA Nations League",
-      "model_health_status": "scored",
-      "model_version": "fresh_production_rules_v1",
-      "notes": [
-        "unseen_source_combo (advisory for certified_rule)",
-        "horizon lead 37.1h"
-      ],
-      "odds": 1.85,
-      "odds_replaced": false,
-      "price_diagnosis": {
-        "alias_match_found": false,
-        "bundles_searched": [
-          "bzzoiro_odds",
-          "scoutingstats_odds",
-          "source_embedded_odds"
-        ],
-        "detail": [
-          {
-            "bundle": "bzzoiro_odds",
-            "match_method": null,
-            "matched": false,
-            "rejected_as_fuzzy": false,
-            "rows_in_bundle": 0,
-            "tier": "dedicated_pricing_feed",
-            "usable_odds": null
-          },
-          {
-            "bundle": "scoutingstats_odds",
-            "match_method": null,
-            "matched": false,
-            "rejected_as_fuzzy": false,
-            "rows_in_bundle": 0,
-            "tier": "dedicated_pricing_feed",
-            "usable_odds": null
-          },
-          {
-            "bundle": "source_embedded_odds",
-            "match_method": "exact",
-            "matched": true,
-            "rejected_as_fuzzy": false,
-            "rows_in_bundle": 84,
-            "tier": "source_embedded_price",
-            "usable_odds": 1.85
-          }
-        ],
-        "embedded_source_price_found": true,
-        "exact_match_found": true,
-        "fuzzy_match_found_and_rejected": false,
-        "outcome": "exact"
-      },
-      "price_evidence": null,
-      "price_match_method": "exact",
-      "price_push_eligible": true,
-      "price_quarantine_reason": null,
-      "price_tier": "source_embedded_price",
-      "pricing_source": "source_embedded_odds",
-      "probability": 0.5797,
-      "rule_id": "1x2_two_source_p55_unanimous",
-      "selection": "home",
-      "settlement_label_source": null,
-      "source_voters": [
-        "bzzoiro",
-        "prosoccer",
-        "vitibet"
-      ],
-      "staking_owner": "auto_tickets",
-      "staking_policy": "handled_by_auto_tickets",
-      "timing_diagnosis": {
-        "classification": "trusted_kickoff_present",
-        "guard_reason": null,
-        "kickoff": "2026-10-02T20:45:00+02:00",
-        "kickoff_source": "vitibet",
-        "observations": [
-          {
-            "parsed": true,
-            "raw": "2026-10-02T20:45:00+02:00",
-            "source": "vitibet",
-            "timing_capable": true
-          },
-          {
-            "parsed": true,
-            "raw": "2026-10-02T18:45:00Z",
-            "source": "bzzoiro",
-            "timing_capable": true
-          },
-          {
-            "parsed": true,
-            "raw": "2026-10-02T18:45:00Z",
-            "source": "bzzoiro",
-            "timing_capable": true
-          },
-          {
-            "parsed": true,
-            "raw": "19:45",
-            "source": "prosoccer",
-            "timing_capable": true
-          }
-        ]
-      },
-      "timing_source": "vitibet",
-      "walkforward_evidence": {
-        "base_rate": 0.5173,
-        "brier": 0.2169,
-        "hit_rate": 0.66,
-        "hit_rate_lower_bound": 0.6383,
-        "model_eligible": true,
-        "recent_sample": 973,
-        "sample": 1888,
-        "status": "certified_dispatchable"
-      },
-      "would_have_qualified_before_kickoff": false
-    },
-    {
-      "away": "Turkey",
-      "blockers": [],
-      "bookmaker": "prosoccer_embedded",
-      "date": "2026-10-02",
-      "dispatch_method": "certified_rule",
-      "dispatchable": true,
-      "edge": 0.0303,
-      "feature_schema_version": "fresh_production_features_v1",
-      "home": "Belgium",
-      "identity_match_tier": "exact",
-      "implied_probability": 0.6897,
-      "internal_stake_units": 1.0,
-      "kickoff": "2026-10-02T20:45:00+02:00",
-      "league": "World: UEFA Nations League",
-      "model_health_status": "scored",
-      "model_version": "fresh_production_rules_v1",
-      "notes": [
-        "unseen_source_combo (advisory for certified_rule)",
-        "horizon lead 37.1h"
-      ],
-      "odds": 1.45,
-      "odds_replaced": false,
-      "price_diagnosis": {
-        "alias_match_found": false,
-        "bundles_searched": [
-          "bzzoiro_odds",
-          "scoutingstats_odds",
-          "source_embedded_odds"
-        ],
-        "detail": [
-          {
-            "bundle": "bzzoiro_odds",
-            "match_method": null,
-            "matched": false,
-            "rejected_as_fuzzy": false,
-            "rows_in_bundle": 0,
-            "tier": "dedicated_pricing_feed",
-            "usable_odds": null
-          },
-          {
-            "bundle": "scoutingstats_odds",
-            "match_method": null,
-            "matched": false,
-            "rejected_as_fuzzy": false,
-            "rows_in_bundle": 0,
-            "tier": "dedicated_pricing_feed",
-            "usable_odds": null
-          },
-          {
-            "bundle": "source_embedded_odds",
-            "match_method": "exact",
-            "matched": true,
-            "rejected_as_fuzzy": false,
-            "rows_in_bundle": 84,
-            "tier": "source_embedded_price",
-            "usable_odds": 1.45
-          }
-        ],
-        "embedded_source_price_found": true,
-        "exact_match_found": true,
-        "fuzzy_match_found_and_rejected": false,
-        "outcome": "exact"
-      },
-      "price_evidence": null,
-      "price_match_method": "exact",
-      "price_push_eligible": true,
-      "price_quarantine_reason": null,
-      "price_tier": "source_embedded_price",
-      "pricing_source": "source_embedded_odds",
-      "probability": 0.72,
-      "rule_id": "1x2_two_source_p70_majority",
-      "selection": "home",
-      "settlement_label_source": null,
-      "source_voters": [
-        "prosoccer",
-        "vitibet"
-      ],
-      "staking_owner": "auto_tickets",
-      "staking_policy": "handled_by_auto_tickets",
-      "timing_diagnosis": {
-        "classification": "trusted_kickoff_present",
-        "guard_reason": null,
-        "kickoff": "2026-10-02T20:45:00+02:00",
-        "kickoff_source": "vitibet",
-        "observations": [
-          {
-            "parsed": true,
-            "raw": "2026-10-02T20:45:00+02:00",
-            "source": "vitibet",
-            "timing_capable": true
-          },
-          {
-            "parsed": true,
-            "raw": "19:45",
-            "source": "prosoccer",
-            "timing_capable": true
-          }
-        ]
-      },
-      "timing_source": "vitibet",
-      "walkforward_evidence": {
-        "base_rate": 0.5173,
-        "brier": 0.164,
-        "hit_rate": 0.7985,
-        "hit_rate_lower_bound": 0.7559,
-        "model_eligible": true,
-        "recent_sample": 194,
-        "sample": 392,
-        "status": "certified_dispatchable"
-      },
-      "would_have_qualified_before_kickoff": false
-    }
-  ],
+  "picks": [],
   "schema": 1
 }
