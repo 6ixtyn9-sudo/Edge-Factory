@@ -97881,7 +97881,7 @@
    "graduation": null,
    "home": "Athlone Town",
    "kickoff": "13:45",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Rep. Of Ireland,First Division",
@@ -97894,7 +97894,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -97936,7 +97937,7 @@
    "graduation": null,
    "home": "Athlone Town",
    "kickoff": "13:45",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Rep. Of Ireland,First Division",
@@ -97949,7 +97950,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -97973,6 +97975,113 @@
    "w_score": -0.3222
   },
   {
+   "as_of": "2026-10-01T18:00:57+02:00",
+   "avg_p": 73.0,
+   "away": "Sweden",
+   "captured_at": "2026-10-01T18:00:57+02:00",
+   "date": "2026-10-02",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-10-02|bosniaher|sweden|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 2.93,
+   "first_seen_at": "2026-10-01T18:00:57+02:00",
+   "graduation": null,
+   "home": "Bosnia & Herzegovina",
+   "kickoff": "02-10, 19:45",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 2.93,
+   "league": "World UEFA Nations League",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.7297,
+   "model_key": "b5af4621e122",
+   "model_keys_seen": [
+    "b5af4621e122"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 2.93,
+   "outcome": null,
+   "parent_avg_p": 27.0,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.2703,
+   "parent_pick": "away",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.9932
+  },
+  {
+   "as_of": "2026-10-01T18:00:57+02:00",
+   "avg_p": 27.0,
+   "away": "Sweden",
+   "captured_at": "2026-10-01T18:00:57+02:00",
+   "date": "2026-10-02",
+   "derivation": null,
+   "edge_family": "ml-meta",
+   "event_key": "2026-10-02|bosniaher|sweden|ml-meta|1x2",
+   "family": "ml-meta",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 2.25,
+   "first_seen_at": "2026-10-01T18:00:57+02:00",
+   "graduation": null,
+   "home": "Bosnia & Herzegovina",
+   "kickoff": "02-10, 19:45",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 2.25,
+   "league": "World UEFA Nations League",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.2703,
+   "model_key": "b5af4621e122",
+   "model_keys_seen": [
+    "b5af4621e122"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 2.25,
+   "outcome": null,
+   "parent_family": "ml-meta",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.9932
+  },
+  {
    "as_of": "2026-10-01T09:45:52+02:00",
    "avg_p": 48.7,
    "away": "Cobh Ramblers",
@@ -97988,7 +98097,7 @@
    "graduation": null,
    "home": "Bray Wanderers",
    "kickoff": "13:45",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Rep. Of Ireland,First Division",
@@ -98001,7 +98110,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98043,7 +98153,7 @@
    "graduation": null,
    "home": "Bray Wanderers",
    "kickoff": "13:45",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Rep. Of Ireland,First Division",
@@ -98056,7 +98166,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98095,7 +98206,7 @@
    "graduation": null,
    "home": "Dundalk",
    "kickoff": "13:45",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Rep. Of Ireland,Premier Division",
@@ -98108,7 +98219,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98150,7 +98262,7 @@
    "graduation": null,
    "home": "Dundalk",
    "kickoff": "13:45",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Rep. Of Ireland,Premier Division",
@@ -98163,7 +98275,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98202,7 +98315,7 @@
    "graduation": null,
    "home": "CD Eldense",
    "kickoff": "13:30",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -98215,7 +98328,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98257,7 +98371,7 @@
    "graduation": null,
    "home": "CD Eldense",
    "kickoff": "13:30",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Spain,Laliga2",
@@ -98270,7 +98384,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98309,7 +98424,7 @@
    "graduation": null,
    "home": "Ranheim",
    "kickoff": "12:00",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Norway,1. Division",
@@ -98322,7 +98437,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98364,7 +98480,7 @@
    "graduation": null,
    "home": "Ranheim",
    "kickoff": "12:00",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Norway,1. Division",
@@ -98377,7 +98493,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98416,7 +98533,7 @@
    "graduation": null,
    "home": "Seattle Sounders",
    "kickoff": "20:30",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Major League Soccer Western Conference",
@@ -98429,7 +98546,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98471,7 +98589,7 @@
    "graduation": null,
    "home": "Seattle Sounders",
    "kickoff": "20:30",
-   "last_seen_at": "2026-10-01T15:00:44+02:00",
+   "last_seen_at": "2026-10-01T18:00:57+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "USA,Major League Soccer Western Conference",
@@ -98484,7 +98602,8 @@
    "model_keys_seen": [
     "de52d7cc65ff",
     "37ae4bfdef24",
-    "8cfd9453d765"
+    "8cfd9453d765",
+    "b5af4621e122"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -98509,5 +98628,5 @@
   }
  ],
  "schema": 1,
- "updated_at": "2026-10-01T15:11:43+02:00"
+ "updated_at": "2026-10-01T18:12:31+02:00"
 }
