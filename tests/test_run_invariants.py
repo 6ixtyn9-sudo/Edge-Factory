@@ -666,3 +666,40 @@ def test_without_a_target_date_the_check_asserts_nothing_new():
 
     assert ri.check_ticket_dates(
         plan, {"2026-10-02": {"status": "ticket_created"}}) == []
+
+
+# ===========================================================================
+# An open slip is committed capital, not just a file
+# ===========================================================================
+
+
+def test_a_future_open_slip_committing_bank_is_caught():
+    """The 21.116% the 2026-10-02 draft locked a day early."""
+    state = {"open_slips": [{"date": "2026-09-27", "staked_pct": 15.5364},
+                            {"date": "2026-10-02", "staked_pct": 21.116}]}
+
+    violations = ri.check_open_slip_dates(state, target_date="2026-10-01")
+
+    assert _codes(violations) == {ri.V_OPEN_SLIP_NOT_TARGET}
+    assert "21.116" in violations[0]["detail"]
+
+
+def test_a_past_open_slip_does_not_trip_the_check():
+    state = {"open_slips": [{"date": "2026-09-27", "staked_pct": 15.5364}]}
+
+    assert ri.check_open_slip_dates(state, target_date="2026-10-01") == []
+
+
+def test_an_explicit_future_ticket_run_may_commit_bank():
+    state = {"open_slips": [{"date": "2026-10-02", "staked_pct": 21.116}]}
+
+    assert ri.check_open_slip_dates(
+        state, target_date="2026-10-01", future_ticket_mode=True) == []
+
+
+def test_the_cleaned_state_passes_every_date_check():
+    """The real post-cleanup shape."""
+    state = {"bank": 184.46, "open_slips": [{"date": "2026-09-27",
+                                             "staked_pct": 15.5364}]}
+
+    assert ri.check_open_slip_dates(state, target_date="2026-10-01") == []

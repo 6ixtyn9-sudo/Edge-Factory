@@ -48,6 +48,7 @@ V_SUPABASE_NO_BREAKDOWN = "multi_date_publish_has_no_per_date_breakdown"
 V_TICKET_DATE_UNBACKED = "auto_ticket_date_has_no_production_selection"
 V_TICKET_DATE_NOT_TARGET = "auto_ticket_date_is_not_the_official_target_date"
 V_NON_CANONICAL_BUCKET = "non_canonical_bucket_on_an_audit_surface"
+V_OPEN_SLIP_NOT_TARGET = "open_slip_commits_bank_outside_the_target_date"
 
 # The taxonomy every audit, CLV grouping, assayer context, bucket P&L and
 # ladder comparison keys on. A lane-specific bucket has no history and
@@ -244,6 +245,31 @@ def check_buckets_are_canonical(plan: dict | None) -> list[dict]:
                 f"it grades against no history and splits bucket P&L, the "
                 f"selection ladder and every audit comparison",
                 where=f"{row.get('home')} vs {row.get('away')}"))
+    return out
+
+
+def check_open_slip_dates(state: dict | None, *, target_date: str | None,
+                          future_ticket_mode: bool = False) -> list[dict]:
+    """No open slip may commit bank for a date the run did not card.
+
+    An open slip is committed capital: free_bank is bank minus every
+    open slip's stake regardless of date. The 2026-10-02 draft locked
+    21.116% of capital a day before the event, so a future slip is a
+    financial fact, not just a stray file.
+    """
+    out: list[dict] = []
+    if not state or not target_date or future_ticket_mode:
+        return out
+    for slip in state.get("open_slips") or []:
+        day = str(slip.get("date") or "")[:10]
+        if day and day > str(target_date)[:10]:
+            out.append(_violation(
+                V_OPEN_SLIP_NOT_TARGET,
+                f"an open slip for {day} commits "
+                f"{slip.get('staked_pct', 0.0):.3f}% of capital but the "
+                f"official target date is {target_date}; the default daily "
+                f"run must not commit bank beyond the date it cards",
+                where=day))
     return out
 
 
