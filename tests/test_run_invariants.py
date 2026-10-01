@@ -836,3 +836,64 @@ def test_a_final_row_left_pending_is_still_caught():
         rows, {"2026-10-01": {"status": "ticket_created"}})
 
     assert _codes(violations) == {ri.V_CLV_PENDING}
+
+
+# ===========================================================================
+# A frozen slip freezes a DATE, not every later selection
+#
+# Run 84619f7: the frozen slip held Bnei Yehuda and Envigado, the slate
+# then changed, and Maccabi Bnei Raina -- never carded -- was reported as
+# ticket_frozen purely because the date was frozen.
+# ===========================================================================
+
+
+FROZEN_LEGS = ["bnei yehuda|maccabi kiryat gat|home",
+               "envigado|orsomarso|home"]
+
+
+def _frozen_outcome(status="ticket_frozen", keys=FROZEN_LEGS):
+    out = {"status": status}
+    if keys is not None:
+        out["frozen_leg_keys"] = keys
+    return {"2026-10-01": out}
+
+
+def test_a_selection_absent_from_the_frozen_card_is_caught():
+    plan = {"same_day_picks": [{"event_date": "2026-10-01",
+                                "home": "Maccabi Bnei Raina",
+                                "away": "Hapoel Kfar Shalem",
+                                "selection": "home"}]}
+
+    violations = ri.check_ticketed_selections_are_on_the_card(
+        plan, _frozen_outcome())
+
+    assert _codes(violations) == {ri.V_FROZEN_STATUS_LEAK}
+
+
+def test_a_selection_inside_the_frozen_card_is_fine():
+    plan = {"same_day_picks": [{"event_date": "2026-10-01",
+                                "home": "Envigado", "away": "Orsomarso",
+                                "selection": "home"}]}
+
+    assert ri.check_ticketed_selections_are_on_the_card(
+        plan, _frozen_outcome()) == []
+
+
+def test_an_outcome_without_leg_records_asserts_nothing():
+    """Older artifacts cannot prove membership either way."""
+    plan = {"same_day_picks": [{"event_date": "2026-10-01",
+                                "home": "Anything", "away": "At All",
+                                "selection": "home"}]}
+
+    assert ri.check_ticketed_selections_are_on_the_card(
+        plan, _frozen_outcome(keys=None)) == []
+
+
+def test_a_declined_date_is_not_this_checks_business():
+    plan = {"same_day_picks": [{"event_date": "2026-10-01",
+                                "home": "Maccabi Bnei Raina",
+                                "away": "Hapoel Kfar Shalem",
+                                "selection": "home"}]}
+
+    assert ri.check_ticketed_selections_are_on_the_card(
+        plan, _frozen_outcome(status="declined_insufficient_legs")) == []

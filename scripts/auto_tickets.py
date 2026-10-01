@@ -229,6 +229,9 @@ DECLINED_CONTEXT_VETO = "declined_context_veto"
 DECLINED_PRICE_INTEGRITY = "declined_price_integrity"
 DECLINED_KICKOFF_GUARD = "declined_kickoff_guard"
 DECLINED_SAME_DAY_ONLY_POLICY = "declined_same_day_only_policy"
+# The day's card is already frozen, so a selection that is NOT in that
+# frozen slip was never ticketed and must not inherit the date's status.
+DECLINED_FROZEN_CARD = "declined_frozen_card_already_locked"
 
 # Candidate lanes. The production lane is the priority source. When it
 # dispatches nothing for the target date, same-day legacy certified picks
@@ -2497,6 +2500,15 @@ def build_card_for_date(target, slate, *, st, settled, now, args, outcome):
         )
         upsert_slice_day(frozen_rows, target)
         outcome["status"] = "ticket_frozen"
+        # "This date is frozen" is not "this selection is in the frozen
+        # slip". Recording the frozen leg identities lets every consumer
+        # judge a selection on membership instead of inheriting the
+        # date's status, which marked selections that post-date the
+        # freeze as ticket_frozen although they were never carded.
+        outcome["frozen_leg_keys"] = sorted(
+            frozen_leg_key(r.get("home"), r.get("away"),
+                           r.get("pick") or r.get("selection"))
+            for r in frozen_rows or [])
         print(f"TICKETS FROZEN — final slip for {target}. Re-printing saved slip:")
         print("=" * 62)
         if slip_txt.exists():
@@ -2861,6 +2873,31 @@ def legacy_candidate_rows(target: str, localdata=None) -> list[dict]:
         rows.append(dict(row, source_lane=LANE_LEGACY_CANDIDATE,
                          production_certified=False))
     return rows
+
+
+def frozen_leg_key(home, away, pick) -> str:
+    """Stable identity for a leg inside a frozen slip."""
+    return "|".join((
+        str(home or "").strip().casefold(),
+        str(away or "").strip().casefold(),
+        str(pick or "").strip().casefold()))
+
+
+def selection_status_against_frozen_card(row, outcome) -> str | None:
+    """Status for ``row`` when the date's card is already frozen.
+
+    Returns ``None`` when the date is not frozen, so callers keep their
+    normal status. A selection inside the frozen slip is genuinely
+    ``ticket_frozen``; anything else was locked out, not ticketed.
+    """
+    if not outcome or outcome.get("status") != "ticket_frozen":
+        return None
+    keys = outcome.get("frozen_leg_keys")
+    if keys is None:
+        return None
+    key = frozen_leg_key(row.get("home"), row.get("away"),
+                         row.get("pick") or row.get("selection"))
+    return "ticket_frozen" if key in set(keys) else DECLINED_FROZEN_CARD
 
 
 def load_production_slate(target: str):

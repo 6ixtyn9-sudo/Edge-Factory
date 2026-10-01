@@ -985,3 +985,26 @@ def test_the_ladder_does_not_fire_without_a_legacy_file(tmp_path):
     _plan_with_no_selections(localdata)
 
     assert _slate(localdata) == []
+
+
+def test_frozen_status_is_decided_per_selection_not_per_date():
+    """A frozen DATE must not mark an uncarded selection as ticketed."""
+    outcome = {"status": "ticket_frozen",
+               "frozen_leg_keys": ["bnei yehuda|maccabi kiryat gat|home",
+                                   "envigado|orsomarso|home"]}
+
+    on_card = at.selection_status_against_frozen_card(
+        {"home": "Envigado", "away": "Orsomarso", "pick": "home"}, outcome)
+    locked_out = at.selection_status_against_frozen_card(
+        {"home": "Maccabi Bnei Raina", "away": "Hapoel Kfar Shalem",
+         "pick": "home"}, outcome)
+
+    assert on_card == "ticket_frozen"
+    assert locked_out == at.DECLINED_FROZEN_CARD
+    assert "frozen" in at.DECLINED_FROZEN_CARD and "lock" in at.DECLINED_FROZEN_CARD
+
+
+def test_an_unfrozen_date_keeps_its_normal_status():
+    assert at.selection_status_against_frozen_card(
+        {"home": "A", "away": "B", "pick": "home"},
+        {"status": "ticket_created"}) is None

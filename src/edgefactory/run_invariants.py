@@ -50,6 +50,9 @@ V_TICKET_DATE_NOT_TARGET = "auto_ticket_date_is_not_the_official_target_date"
 V_NON_CANONICAL_BUCKET = "non_canonical_bucket_on_an_audit_surface"
 V_OPEN_SLIP_NOT_TARGET = "open_slip_commits_bank_outside_the_target_date"
 V_PRICE_CAPTURE_PROXY = "thin_edge_rests_on_a_proxy_capture_timestamp"
+V_FROZEN_STATUS_LEAK = "selection_marked_ticketed_but_absent_from_the_card"
+
+TICKETED_STATUSES = ("ticket_created", "ticket_frozen")
 
 # Providers whose odds rows carry no true capture instant. The
 # scoutingstats adapter stores the fixture KICKOFF in captured_at
@@ -318,6 +321,43 @@ def check_price_capture_proxy(rows) -> list[dict]:
                 f"so the line's freshness cannot be verified",
                 where=f"{row.get('home')} vs {row.get('away')}",
                 severity=WARNING))
+    return out
+
+
+def check_ticketed_selections_are_on_the_card(plan: dict | None,
+                                              ticket_outcomes: dict | None
+                                              ) -> list[dict]:
+    """A ticketed status must mean this selection is on the card.
+
+    A frozen slip freezes a DATE. When the slate changes after the
+    freeze, a selection that was never carded inherited the date's
+    ticket_frozen status: run 84619f7 reported Maccabi Bnei Raina as
+    ticket_frozen while the frozen slip held Bnei Yehuda and Envigado.
+    A ticketed status is only honest if the selection is in the card.
+    """
+    out: list[dict] = []
+    if not plan or not ticket_outcomes:
+        return out
+    for row in (list(plan.get("same_day_picks") or [])
+                + list(plan.get("horizon_picks") or [])):
+        day = str(row.get("event_date") or row.get("date") or "")[:10]
+        outcome = ticket_outcomes.get(day) or {}
+        if str(outcome.get("status") or "") not in TICKETED_STATUSES:
+            continue
+        keys = outcome.get("frozen_leg_keys")
+        if keys is None:
+            continue            # no leg record: nothing provable here
+        key = "|".join((
+            str(row.get("home") or "").strip().casefold(),
+            str(row.get("away") or "").strip().casefold(),
+            str(row.get("pick") or row.get("selection") or "").strip().casefold()))
+        if key not in set(keys):
+            out.append(_violation(
+                V_FROZEN_STATUS_LEAK,
+                f"the card for {day} is '{outcome.get('status')}' but this "
+                f"selection is not one of its legs, so it was locked out "
+                f"rather than ticketed",
+                where=f"{row.get('home')} vs {row.get('away')}"))
     return out
 
 
@@ -651,6 +691,8 @@ def check_run(*, plan: dict | None = None,
         plan, ticket_outcomes, target_date=target_date,
         future_ticket_mode=future_ticket_mode)
     violations += check_buckets_are_canonical(plan)
+    violations += check_ticketed_selections_are_on_the_card(
+        plan, ticket_outcomes)
     violations += check_price_capture_proxy(
         list((plan or {}).get("same_day_picks") or [])
         + list((plan or {}).get("horizon_picks") or []))
