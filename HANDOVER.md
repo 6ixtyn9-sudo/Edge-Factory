@@ -11275,6 +11275,46 @@ operator summary.
 
 ---
 
+## Addendum — 2026-10-01 (run #902: an abstaining lane is not unknown)
+
+Official run 36881283039 on `6597857` failed invariant gating and
+correctly refused to persist: no git commit, no cache save, artifact
+`11173508919` preserved, branch head unmoved. Tests were green; the run
+was not. **Local tests passing against committed artifacts is not the
+same as an official run passing — do not report the first as the second.**
+
+Diagnosis, reproduced locally rather than inferred. The `.frozen` marker
+was committed for the first time, so the run took the frozen-reprint
+path. The fresh-production lane abstained
+(`insufficient_voter_quorum`), leaving a dispatch plan declaring zero
+selections. `clv_rows_in_plan` treated that as *absent* knowledge and
+fell through to comparing every snapshot for the date against the
+current outcome. Guinea and Panama still carried
+`deferred_before_build_hour` from the 00:37 slate while the frozen
+card's outcome said `declined_frozen_card_already_locked`, so two stale
+rows contradicted a verdict that was never about them.
+
+Fix (`ca4c872`): an empty plan is knowledge, not its absence — it states
+that the run has no production selections, so none of its rows exist to
+compare. A genuinely missing plan artifact is still treated as unknown.
+Proven load-bearing by reverting the logic in-memory against the same
+regenerated state: **2 errors without, 0 with**.
+
+### Method note for whoever continues
+
+Two near-misses on this fix are worth repeating as warnings:
+
+- The working tree reset mid-edit and silently discarded the change,
+  then a retry no-op'd because the anchor text differed (`rows or ()`
+  not `rows or []`) while still reporting success. **Verify an edit
+  landed (`grep` for it) before concluding anything about its effect.**
+- A scratch reproduction directory was wiped between runs, so the
+  invariant checker found no artifacts and reported "no contradictions".
+  **A clean result on missing inputs is vacuous — assert the inputs
+  exist before trusting the verdict.**
+
+---
+
 ## Addendum — 2026-10-01 (state integrity: freeze marker, purity registry)
 
 ### Freeze marker (`9b5b428`)
