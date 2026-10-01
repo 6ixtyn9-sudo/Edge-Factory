@@ -500,12 +500,24 @@ def check_clv_status(clv_rows: Iterable[dict] | None,
                      ticket_outcomes: dict | None,
                      *, pending_status: str = "pending_auto_tickets",
                      after_auto_tickets: bool = True) -> list[dict]:
-    """A settled ticket verdict must reach the CLV rows it describes."""
+    """A settled ticket verdict must reach the CLV rows it describes.
+
+    Only the LATEST snapshot per selection is compared. A selection is
+    captured several times per run and its ticket_status advances as the
+    engine works, so an earlier pick_time row legitimately reads
+    declined_no_selections while the final row reads ticket_created.
+    Comparing every snapshot reported a selection as contradicting its
+    own later state -- exactly what run 736d2d9 raised for Guinea vs
+    Kenya and Maccabi Bnei Raina. Superseded rows remain visible in the
+    explicitly labelled snapshot diagnostic.
+    """
+    from edgefactory import production_summary
+
     out: list[dict] = []
     outcomes = ticket_outcomes or {}
     if not outcomes or not after_auto_tickets:
         return out
-    for row in clv_rows or []:
+    for row in production_summary.clv_latest_rows(clv_rows or []):
         event_date = str(row.get("event_date") or row.get("match_date") or "")
         decided = (outcomes.get(event_date) or {}).get("status")
         if not decided:

@@ -776,3 +776,63 @@ def test_a_flagged_row_is_still_caught_by_the_thin_edge_warning():
 
     assert _codes(ri.check_price_capture_proxy([row])) == {
         ri.V_PRICE_CAPTURE_PROXY}
+
+
+# ===========================================================================
+# A selection must not contradict its own earlier snapshot
+#
+# Run 736d2d9 raised clv_ticket_status_disagrees_with_auto_ticket_outcome
+# for Guinea vs Kenya and Maccabi Bnei Raina: both were ticketed, but each
+# had an earlier pick_time row reading declined_no_selections. Plan
+# scoping cannot fix this -- both fixtures ARE in the plan.
+# ===========================================================================
+
+
+def _snapshot(home, status, label, stamp):
+    return {"event_date": "2026-10-01", "home": home, "away": "Opponent",
+            "selection": "home", "ticket_status": status,
+            "snapshot_label": label, "captured_at_utc": stamp,
+            "pick_id": f"2026-10-01|{home}|opponent|1x2|home|rule".lower()}
+
+
+def test_an_earlier_snapshot_does_not_contradict_the_final_status():
+    rows = [
+        _snapshot("Guinea", "declined_no_selections", "pick_time",
+                  "2026-10-01T06:00:00Z"),
+        _snapshot("Guinea", "ticket_created", "end_of_run",
+                  "2026-10-01T09:30:00Z"),
+        _snapshot("Maccabi Bnei Raina", "declined_no_selections", "pick_time",
+                  "2026-10-01T06:00:00Z"),
+        _snapshot("Maccabi Bnei Raina", "ticket_created", "end_of_run",
+                  "2026-10-01T09:30:00Z"),
+    ]
+
+    violations = ri.check_clv_status(
+        rows, {"2026-10-01": {"status": "ticket_created"}})
+
+    assert violations == [], \
+        "a selection cannot contradict its own superseded snapshot"
+
+
+def test_a_genuinely_wrong_final_status_is_still_caught():
+    rows = [
+        _snapshot("Guinea", "ticket_created", "pick_time",
+                  "2026-10-01T06:00:00Z"),
+        _snapshot("Guinea", "declined_no_selections", "end_of_run",
+                  "2026-10-01T09:30:00Z"),
+    ]
+
+    violations = ri.check_clv_status(
+        rows, {"2026-10-01": {"status": "ticket_created"}})
+
+    assert _codes(violations) == {ri.V_CLV_STATUS}
+
+
+def test_a_final_row_left_pending_is_still_caught():
+    rows = [_snapshot("Guinea", "pending_auto_tickets", "end_of_run",
+                      "2026-10-01T09:30:00Z")]
+
+    violations = ri.check_clv_status(
+        rows, {"2026-10-01": {"status": "ticket_created"}})
+
+    assert _codes(violations) == {ri.V_CLV_PENDING}
