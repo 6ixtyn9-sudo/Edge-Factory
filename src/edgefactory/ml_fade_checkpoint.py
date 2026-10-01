@@ -149,16 +149,34 @@ def save_state(path: Path | str, state: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
+def last_checkpoint_day(state: dict) -> str | None:
+    """Return the evaluated capture day for cadence windows.
+
+    ``last_eval_at`` is the wall-clock timestamp when the report was written.
+    Tests and operator replays can run a historical ``--today`` on a later
+    calendar month, so using that wall-clock month re-opens the same checkpoint
+    forever.  The checkpoint cadence is about the last evaluated capture day;
+    fall back to older states that predate ``last_eval_active_day``.
+    """
+    last_active = state.get("last_eval_active_day")
+    if last_active:
+        return str(last_active)[:10]
+    last_eval_at = state.get("last_eval_at")
+    if last_eval_at:
+        return str(last_eval_at)[:10]
+    return None
+
+
 def checkpoint_due(state: dict, ledger: dict, *, today: date) -> tuple[bool, list[str]]:
     """Fixed conditions from the predeclared policy; any one is enough."""
     reasons: list[str] = []
-    last_eval_at = state.get("last_eval_at")
-    if not last_eval_at:
+    last_day = last_checkpoint_day(state)
+    if not last_day:
         reasons.append("bootstrap (no checkpoint has ever run)")
     else:
-        last_day = str(last_eval_at)[:10]
-        if last_day[:7] != today.isoformat()[:7]:
-            reasons.append(f"monthly checkpoint (last {last_day[:7]}, now {today.isoformat()[:7]})")
+        today_s = today.isoformat()
+        if last_day[:7] != today_s[:7]:
+            reasons.append(f"monthly checkpoint (last {last_day[:7]}, now {today_s[:7]})")
         fade_settled_now = family_summary(ledger)[FADE_FAMILY]["settled"]
         grew = fade_settled_now - int(state.get("last_eval_settled_fade") or 0)
         if grew >= SETTLED_INCREMENT:
@@ -279,7 +297,7 @@ def monitoring_warnings(
     """Visible monitoring lines; empty list means quiet system (healthy)."""
     warnings: list[str] = []
     summary = family_summary(ledger)
-    last_day = str(state.get("last_eval_at"))[:10] if state.get("last_eval_at") else None
+    last_day = last_checkpoint_day(state)
     today_s = today.isoformat()
 
     new_parents = accrual_between(ledger, PARENT_FAMILY, last_day, today_s)
@@ -351,7 +369,7 @@ def build_report(
             family: accrual_between(
                 ledger,
                 family,
-                (str(state.get("last_eval_at"))[:10] if state.get("last_eval_at") else None),
+                last_checkpoint_day(state),
                 today.isoformat(),
             )
             for family in (PARENT_FAMILY, FADE_FAMILY)

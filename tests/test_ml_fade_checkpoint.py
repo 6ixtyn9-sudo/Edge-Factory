@@ -101,6 +101,15 @@ def test_not_due_when_nothing_crossed():
     assert not due and reasons == []
 
 
+def test_not_due_for_same_active_day_when_wall_clock_month_advanced():
+    state = ckpt.empty_state()
+    state["last_eval_at"] = "2026-10-01T09:00:00+02:00"
+    state["last_eval_settled_fade"] = 0
+    state["last_eval_active_day"] = TODAY.isoformat()
+    due, reasons = ckpt.checkpoint_due(state, _ledger([]), today=TODAY)
+    assert not due and reasons == []
+
+
 def test_settled_increment_checkpoint_due():
     rows = [_row(FADE_FAMILY, TODAY.isoformat(), i, status="settled",
                  graduation="win", first_seen=NOW)
