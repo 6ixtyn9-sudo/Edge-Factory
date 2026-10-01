@@ -176,3 +176,35 @@ def test_source_team_key_disambiguates_squads():
     # and every key carries more information than the legacy width-9 —
     # a 24-char ceiling means near-identical prefixes no longer collapse.
     assert key("Los Angeles FC") != key("Los Angeles Galaxy")
+
+
+def test_the_registry_keyspace_has_not_collapsed():
+    """Guard the regression that orphaned the league aliases.
+
+    Run 36872608772 had a cold localdata cache, so the registry rebuilt
+    from committed data alone -- which excludes the monthly capture
+    files -- and 87 of 90 long-name league contexts disappeared. The
+    thinned registry was then committed as the new baseline, orphaning
+    every name-shaped alias target. Short codes and full names have
+    always coexisted; losing the names is the signature of a rebuild
+    starved of history, not a format change.
+    """
+    import json
+
+    reg_path = ROOT / "localdata" / "purity_registry.json"
+    if not reg_path.exists():
+        return
+    reg = json.loads(reg_path.read_text())
+    keyspace = {
+        k.split("|")[1]
+        for k in (reg.get("contexts", {}) or {}).get("league", {})
+        if "|" in k
+    }
+    if not keyspace:
+        return
+    named = {k for k in keyspace if len(k) > 6}
+    assert len(named) >= 50, (
+        f"only {len(named)} name-shaped league contexts in the registry; "
+        f"a cold-cache rebuild starved of capture history produces this "
+        f"and silently orphans the league aliases"
+    )
