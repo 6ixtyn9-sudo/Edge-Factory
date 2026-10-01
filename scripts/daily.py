@@ -43,6 +43,11 @@ from pathlib import Path
 from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# Written when the run's invariant check reports an ERROR. The persist
+# step reads it and refuses to commit contradictory generated state.
+# Deliberately outside localdata/ so it is never itself committed.
+INVARIANT_FAILURE_SENTINEL = ".invariant_failure"
 sys.path.insert(0, str(ROOT / "src"))
 
 from edgefactory.util import (  # noqa: E402
@@ -419,6 +424,16 @@ def run(cmd: str, label: str | None = None) -> None:
     if result.returncode != 0:
         print(f"\nFAILED: {display}")
         sys.exit(result.returncode)
+
+
+def clear_invariant_sentinel() -> None:
+    """Drop any sentinel from a previous run before this one starts."""
+    try:
+        (ROOT / INVARIANT_FAILURE_SENTINEL).unlink()
+    except FileNotFoundError:
+        pass
+    except OSError as exc:
+        print(f"WARNING: cannot clear invariant sentinel: {exc}")
 
 
 def run_soft(cmd: str, label: str | None = None) -> bool:
@@ -1127,9 +1142,19 @@ def run_pipeline(
             f"check_run_invariants {target_date}",
         )
         if not invariants_clean:
+            # A sentinel OUTSIDE localdata, so the persist step can refuse
+            # to commit contradictory generated state. Withholding the
+            # completion marker alone is not a gate: the persist step runs
+            # with if: always() and would push the bad state regardless.
+            try:
+                (ROOT / INVARIANT_FAILURE_SENTINEL).write_text(
+                    f"invariant errors on {target_date}\n")
+            except OSError as exc:
+                print(f"  cannot write invariant sentinel: {exc}")
             print("  INVARIANT ERRORS: this run is NOT signed off as "
-                  "complete. Generated state is left for inspection and "
-                  "the official-run marker is withheld.")
+                  "complete. Generated state is left for inspection, the "
+                  "official-run marker is withheld, and the persist step "
+                  "will refuse to commit it.")
         if not picks_only and invariants_clean:
             # This marker, rather than picks_YYYY-MM-DD.json, proves that the
             # heavy capture/build/mine path completed.  Future forecast
@@ -1412,6 +1437,8 @@ def _notify(target_date: str, label: str) -> None:
 
 
 def main() -> None:
+    # Only this run's result may gate this run's persistence.
+    clear_invariant_sentinel()
     ap = argparse.ArgumentParser(
         description="Edge Factory single orchestrator for autonomous daily maintenance, smart accumulating ledgers, and human research forecasts.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
