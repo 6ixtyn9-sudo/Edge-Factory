@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-01T02:26:46+02:00",
+  "as_of": "2026-10-01T03:15:46+02:00",
   "eligible_pick_count": 2,
   "generated_for": "2026-10-01",
   "horizon_days": 2,
@@ -10,7 +10,7 @@
   "note": "Horizon picks satisfy every same-day dispatch gate plus a 30-minute minimum and 48-hour maximum lead. They are published as dated candidates: dispatch happens on each fixture's own run date, because the downstream sync and notification path publishes one target date at a time and does not yet accept future-dated rows.",
   "per_day": [
     {
-      "candidates": 106,
+      "candidates": 109,
       "date": "2026-10-01",
       "eligible": 0
     },
@@ -45,7 +45,7 @@
       "model_version": "fresh_production_rules_v1",
       "notes": [
         "unseen_source_combo (advisory for certified_rule)",
-        "horizon lead 42.3h"
+        "horizon lead 41.5h"
       ],
       "odds": 1.85,
       "odds_replaced": false,
@@ -171,7 +171,7 @@
       "model_version": "fresh_production_rules_v1",
       "notes": [
         "unseen_source_combo (advisory for certified_rule)",
-        "horizon lead 42.3h"
+        "horizon lead 41.5h"
       ],
       "odds": 1.45,
       "odds_replaced": false,

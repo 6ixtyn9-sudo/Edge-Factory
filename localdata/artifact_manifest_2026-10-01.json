@@ -1,7 +1,7 @@
 {
   "bytes_deleted": 0,
   "dry_run": false,
-  "files_considered": 611,
+  "files_considered": 612,
   "files_deleted": 0,
   "generated": "2026-10-01",
   "keep_days": 30,
@@ -47,16 +47,16 @@
       "file": "fresh_production_candidate_picks_2026-09-30.json"
     },
     {
-      "bytes": 206080,
+      "bytes": 213101,
       "file": "fresh_production_candidate_picks_2026-10-01.json"
+    },
+    {
+      "bytes": 107366,
+      "file": "source_settlement_coverage_2026-10-01.json"
     },
     {
       "bytes": 106359,
       "file": "source_settlement_coverage_2026-09-30.json"
-    },
-    {
-      "bytes": 106343,
-      "file": "source_settlement_coverage_2026-10-01.json"
     },
     {
       "bytes": 82640,
@@ -71,16 +71,16 @@
       "file": "picks_audit_2026-09-06.md"
     },
     {
-      "bytes": 53239,
+      "bytes": 53944,
       "file": "source_funnel_2026-10-01.json"
+    },
+    {
+      "bytes": 53094,
+      "file": "source_settlement_coverage_2026-10-01.md"
     },
     {
       "bytes": 52672,
       "file": "source_settlement_coverage_2026-09-30.md"
-    },
-    {
-      "bytes": 52656,
-      "file": "source_settlement_coverage_2026-10-01.md"
     }
   ],
   "largest_generated_prefixes": [
@@ -89,15 +89,15 @@
       "prefix": "picks_audit"
     },
     {
-      "bytes": 520367,
+      "bytes": 528318,
       "prefix": "fresh_production_candidate_picks"
     },
     {
-      "bytes": 442192,
+      "bytes": 442074,
       "prefix": "picks"
     },
     {
-      "bytes": 318030,
+      "bytes": 319491,
       "prefix": "source_settlement_coverage"
     },
     {
@@ -105,11 +105,11 @@
       "prefix": "clv_unmatched"
     },
     {
-      "bytes": 130021,
+      "bytes": 131079,
       "prefix": "source_funnel"
     },
     {
-      "bytes": 73787,
+      "bytes": 72800,
       "prefix": "artifact_manifest"
     },
     {
@@ -141,7 +141,7 @@
   ],
   "schema": 2,
   "target_date": "2026-10-01",
-  "unmatched_files_left_alone": 369,
+  "unmatched_files_left_alone": 370,
   "why_each_deleted": [],
   "why_each_kept": [
     {

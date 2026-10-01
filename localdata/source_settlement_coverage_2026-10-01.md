@@ -1,24 +1,24 @@
 # Source settlement coverage — 2026-07-03..2026-10-01
 
 Prediction->final-score matching quality per source. Row counts alone are NOT validation.
-Donor rows indexed: 258176 across 24 donor labels.
+Donor rows indexed: 258188 across 24 donor labels.
 Guarded alias tier: enabled (edgefactory.identity fold).
 
 | source | fixtures | own_score | exact | alias | matched | agree | conflict | donor_conf | unmatched | ambig | rev | rev_unexp | cov% | confl% | verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | forebet | 28203 | 27149 | 9267 | 2465 | 11732 | 11644 | 42 | 25 | 15906 | 540 | 1 | 1 | 41.6 | 0.36 | unproven |
-| zulubet | 4442 | 4348 | 4092 | 40 | 4132 | 4124 | 5 | 18 | 270 | 22 | 1 | 1 | 93.02 | 0.12 | review_required |
-| statarea | 7877 | 7624 | 4890 | 818 | 5708 | 5648 | 15 | 6 | 1955 | 208 | 2 | 2 | 72.46 | 0.26 | partial |
-| vitibet | 31465 | 11467 | 13211 | 3727 | 16938 | 11434 | 1 | 40 | 13726 | 761 | 13 | 13 | 53.83 | 0.01 | unproven |
-| scoutingstats | 8715 | 8481 | 4157 | 1186 | 5343 | 5309 | 33 | 8 | 2941 | 423 | 3 | 3 | 61.31 | 0.62 | partial |
+| zulubet | 4442 | 4347 | 4091 | 41 | 4132 | 4123 | 5 | 18 | 270 | 22 | 1 | 1 | 93.02 | 0.12 | review_required |
+| statarea | 7877 | 7624 | 4890 | 819 | 5709 | 5648 | 15 | 6 | 1954 | 208 | 2 | 2 | 72.48 | 0.26 | partial |
+| vitibet | 31465 | 11466 | 13211 | 3727 | 16938 | 11433 | 1 | 40 | 13726 | 761 | 13 | 13 | 53.83 | 0.01 | unproven |
+| scoutingstats | 8715 | 8482 | 4157 | 1186 | 5343 | 5309 | 33 | 8 | 2941 | 423 | 3 | 3 | 61.31 | 0.62 | partial |
 | predictz | 2046 | 0 | 1237 | 157 | 1394 | 0 | 0 | 0 | 606 | 46 | 1 | 1 | 68.13 | 0.0 | partial |
 | windrawwin | 1114 | 0 | 64 | 4 | 68 | 0 | 0 | 0 | 1046 | 0 | 0 | 0 | 6.1 | 0.0 | unproven |
 | prosoccer | 68 | 25 | 29 | 0 | 29 | 22 | 1 | 0 | 39 | 0 | 0 | 0 | 42.65 | 4.35 | unproven |
 | soccervista | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | no_data |
-| bettingclosed | 14820 | 14396 | 5510 | 899 | 6409 | 6380 | 28 | 10 | 8077 | 324 | 4 | 4 | 43.25 | 0.44 | unproven |
-| betclan | 1443 | 0 | 129 | 11 | 140 | 0 | 0 | 0 | 1302 | 1 | 0 | 0 | 9.7 | 0.0 | unproven |
-| freesupertips | 16 | 0 | 15 | 0 | 15 | 0 | 0 | 0 | 1 | 0 | 0 | 0 | 93.75 | 0.0 | unproven |
-| afootballreport | 8181 | 0 | 353 | 137 | 490 | 0 | 0 | 0 | 7656 | 35 | 1 | 1 | 5.99 | 0.0 | unproven |
+| bettingclosed | 14820 | 14399 | 5510 | 899 | 6409 | 6380 | 28 | 10 | 8077 | 324 | 4 | 4 | 43.25 | 0.44 | unproven |
+| betclan | 1454 | 0 | 129 | 11 | 140 | 0 | 0 | 0 | 1313 | 1 | 0 | 0 | 9.63 | 0.0 | unproven |
+| freesupertips | 21 | 0 | 15 | 0 | 15 | 0 | 0 | 0 | 6 | 0 | 0 | 0 | 71.43 | 0.0 | unproven |
+| afootballreport | 8208 | 0 | 353 | 137 | 490 | 0 | 0 | 0 | 7683 | 35 | 1 | 1 | 5.97 | 0.0 | unproven |
 | bzzoiro | 2290 | 0 | 1275 | 225 | 1500 | 0 | 0 | 2 | 655 | 133 | 1 | 1 | 65.5 | 0.0 | partial |
 | bzzoiro_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
 | theoddsapi_odds | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0.0 | 0.0 | excluded_pricing_only |
@@ -389,6 +389,11 @@ Guarded alias tier: enabled (edgefactory.identity fold).
 ### freesupertips
 - unmatched:
   - 2026-09-30 Eastleigh vs Southend — reason=no independent donor row, source_score=
+  - 2026-10-01 Denmark vs Portugal — reason=no independent donor row, source_score=
+  - 2026-10-01 Germany vs Serbia — reason=no independent donor row, source_score=
+  - 2026-10-01 Greece vs Netherlands — reason=no independent donor row, source_score=
+  - 2026-10-01 Republic Of Ireland vs Austria — reason=no independent donor row, source_score=
+  - 2026-10-01 Wales vs Norway — reason=no independent donor row, source_score=
 ### afootballreport
 - ambiguous:
   - 2026-08-30 Hønefoss vs Follo — reason=multiple alias donor candidates, candidates=3
