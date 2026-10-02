@@ -22,6 +22,9 @@ localdata/*
 !localdata/zulubet.csv.gz
 !localdata/statarea.csv.gz
 
+# B0 gap-aware re-mining coverage inventory (operator review artifact).
+!localdata/coverage_inventory.json
+
 # Picks/performance snapshots intentionally committed for audit/review.
 # Keep the rest of localdata ignored, but allow all generated picks outputs
 # such as daily picks, audit reports, morning snapshots, rolling summaries,
