@@ -10316,3 +10316,41 @@ golden replay (`void, loss` → settled lost) unchanged.
 
 PR: accumulates on #20 (branch `arena/01a0fb18-edge-factory`; batch-merge on operator
 signal).
+
+---
+
+## Addendum 2026-10-02 (item 3): scoutingstats stale-price containment
+
+**Defect** — the scoutingstats odds board stopped refreshing on 2026-09-04 (module
+`src/edgefactory/sources/scoutingstats.py` still fetches fine; the committed cache
+pipeline that produces `localdata/scoutingstats_YYYY-MM.csv.gz` went quiet and
+`actions/cache` keeps re-serving the last file), but the odds adapter FABRICATES
+`captured_at` = the fixture's `starting_at` kickoff (`picks_today._scoutingstats_
+rows_to_odds`), so every downstream freshness check always saw "captured at kickoff".
+Receipt from the committed 10-01 archive: three legs priced `SCOUTINGSTATS_SOLE`
+(Malta vs Gibraltar @1.28 SKIPPED_VETO bucket, Azerbaijan-Liechtenstein @1.12,
+Sacramento-Las Vegas @1.61) off a ≥27-day-old feed; the short prices look exactly
+like the stale-quote class. Feed restore belongs to the outer data pipeline; this
+change CONTAINS the damage on main until it is.
+
+**Fix** — the cache file's mtime is the only honest freshness witness on disk:
+- `scripts/picks_today.py::scoutingstats_odds_bundle`: file older than
+  `SCOUTINGSTATS_ODDS_MAX_AGE_H = 30` → board retired (empty bundle),
+  `ss_retired=True ss_age_h=…` in the run summary + stderr line. Self-healing:
+  a refreshed file carries a current mtime and pricing resumes. Explicitly
+  injected rows (audits/backtests, e.g. `audit_clv`) bypass the gate — callers
+  own injected provenance.
+- `src/edgefactory/enh_pricing.py::_accumulate_scoutingstats`: same 30h gate
+  (`SCOUTINGSTATS_MAX_AGE_H`) on the enhancement overlay's copy of the file.
+Deliberately NOT touched: the kickoff-witness contract
+(`auto_tickets.kickoff_utc_from_archived_row` "derived_odds_row" and
+`resolve_kickoff_utc`'s scoutingstats path) keeps using the odds row's zoned
+`starting_at`; with the board gated to fresh files that witness stays accurate
+and the incident-#6 started-fixture guard keeps working.
+
+**Receipts** — `tests/test_scoutingstats_freshness.py` (6 tests: pick-path retire/
+fresh/inject-bypass/missing-file, enh-path retire/fresh), enh gate verified
+load-bearing. Full suite **835 passed**.
+
+Effect on cards: legs whose only price was the stale board now fall to
+UNMATCHED/uncorroborated handling instead of wearing a stale price as if fresh.

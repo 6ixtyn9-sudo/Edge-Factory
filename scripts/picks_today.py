@@ -2031,6 +2031,29 @@ def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
         return []
 
 
+# Stale-price containment (2026-10-02): the scoutingstats odds board is only
+# as fresh as its cache file — nothing in the row itself says when the price
+# was captured, because the adapter FABRICATES captured_at = the fixture's
+# starting_at kickoff (_scoutingstats_rows_to_odds). That fabrication made
+# every downstream freshness check see "captured at kickoff" while the feed
+# itself had stopped refreshing on 2026-09-04 (10-01 archive: Malta-Gibraltar
+# @1.28 priced SCOUTINGSTATS_SOLE off a >=27-day-old file). The only honest
+# freshness witness on disk is the cache file's mtime, so pricing retires the
+# board past this horizon until the feed is refreshed. Self-healing: the next
+# generated file carries a current mtime and pricing resumes automatically.
+SCOUTINGSTATS_ODDS_MAX_AGE_H = 30.0
+
+
+def _scoutingstats_cache_age_hours(day: str) -> float | None:
+    """Age of the scoutingstats month cache in hours, or None when absent."""
+    path = LOCALDATA / f"scoutingstats_{day[:7]}.csv.gz"
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return None
+    return (datetime.now(timezone.utc).timestamp() - mtime) / 3600.0
+
+
 def _read_cached_scoutingstats(day: str) -> list[dict]:
     month = day[:7]
     path = LOCALDATA / f"scoutingstats_{month}.csv.gz"
@@ -2171,7 +2194,29 @@ def scoutingstats_odds_bundle(
     cached_rows: list[dict] | None = None,
     stats: dict | None = None,
 ) -> dict[str, dict]:
-    source_rows = cached_rows if cached_rows is not None else _read_cached_scoutingstats(day)
+    if cached_rows is not None:
+        # Explicitly injected rows are an audit/backtest constructor; the
+        # caller owns their provenance, so the freshness gate does not apply.
+        source_rows = cached_rows
+    else:
+        age_h = _scoutingstats_cache_age_hours(day)
+        if stats is not None and age_h is not None:
+            stats["cache_age_h"] = round(age_h, 1)
+        if age_h is not None and age_h > SCOUTINGSTATS_ODDS_MAX_AGE_H:
+            # Retire a stale board from pricing entirely (see the constant's
+            # comment): an unmatched price is honest, a weeks-old sole-source
+            # price that LOOKS captured-at-kickoff is not.
+            source_rows: list[dict] = []
+            print(
+                f"scoutingstats odds: RETIRED — cache {age_h / 24:.1f}d old "
+                f"(>{SCOUTINGSTATS_ODDS_MAX_AGE_H:.0f}h); stale feed withheld "
+                f"from pricing until refreshed",
+                file=sys.stderr,
+            )
+            if stats is not None:
+                stats["retired_stale_cache"] = True
+        else:
+            source_rows = _read_cached_scoutingstats(day)
     odds_rows = _scoutingstats_rows_to_odds(source_rows)
     bundle = _odds_bundle_from_rows(odds_rows, provider=SCOUTINGSTATS_ODDS_SOURCE, stats=stats)
     if stats is not None:
@@ -3712,6 +3757,8 @@ def main():
                 f"bzz_alias_keys={bzz_stats.get('time_match_keys', len(odds_bundle.get('time_candidates', {})))} "
                 f"ss_cached={scouting_stats.get('cached_rows', 0)} "
                 f"ss_valid_keys={scouting_stats.get('valid_keys', len(secondary_bundle.get('exact', {})))} "
+                f"ss_retired={bool(scouting_stats.get('retired_stale_cache', False))} "
+                f"ss_age_h={scouting_stats.get('cache_age_h', 'n/a')} "
                 f"enriched={enriched_n} betexplorer={be_enriched} bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
                 f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "
