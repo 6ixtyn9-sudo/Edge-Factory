@@ -58,8 +58,17 @@ def _source_inventory(inventory: dict, source: str) -> dict:
 
 
 def held_days(inventory: dict, source: str) -> set[str]:
-    """Return days already held for a source, regardless of committed/cache state."""
-    return set(_source_inventory(inventory, source).get("per_day_row_counts", {}))
+    """Return row-held and positively empty days for a source.
+
+    A ``no_matches_day`` receipt is a completed source observation and is
+    therefore held just like a non-empty row day. Crawl failures are never
+    included here.
+    """
+    data = _source_inventory(inventory, source)
+    return (
+        set(data.get("per_day_row_counts", {}))
+        | set(data.get("date_range", {}).get("no_matches_days", []))
+    )
 
 
 def gap_days(

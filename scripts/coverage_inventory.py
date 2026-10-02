@@ -187,6 +187,24 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _no_match_days() -> dict[str, set[str]]:
+    """Read only completed no-match receipts; failures never become coverage."""
+    found: dict[str, set[str]] = defaultdict(set)
+    for path in sorted(LOCALDATA.glob("remine_audit_*.jsonl")):
+        try:
+            with path.open() as fh:
+                for line in fh:
+                    try:
+                        row = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+                    if row.get("status") == "no_matches_day" and row.get("source") and row.get("date"):
+                        found[str(row["source"])].add(str(row["date"])[:10])
+        except OSError:
+            continue
+    return found
+
+
 def _nonempty(row: dict, field: str) -> bool:
     value = row.get(field)
     return value is not None and str(value).strip() != ""
@@ -243,9 +261,12 @@ def _empty_date_summary() -> dict:
     }
 
 
-def _date_summary(days: set[str], invalid: int) -> dict:
+def _date_summary(days: set[str], invalid: int, no_matches: set[str] | None = None) -> dict:
     result = _empty_date_summary()
     result["invalid_date_rows"] = invalid
+    no_matches = set(no_matches or ())
+    result["no_matches_days"] = sorted(no_matches)
+    result["no_matches_day_count"] = len(no_matches)
     if not days:
         return result
     ordered = sorted(days)
@@ -256,7 +277,7 @@ def _date_summary(days: set[str], invalid: int) -> dict:
     gaps: list[str] = []
     while cursor <= end:
         iso = cursor.isoformat()
-        if iso not in present:
+        if iso not in present and iso not in no_matches:
             gaps.append(iso)
         cursor += timedelta(days=1)
     result["missing_internal_days"] = gaps
@@ -294,6 +315,7 @@ def _warehouse_snapshot(expected: set[str]) -> dict:
 
 def inventory_one(name: str, spec: dict, tracked: set[str]) -> dict:
     paths = _files(spec["patterns"])
+    no_matches = _no_match_days().get(name, set())
     daily: Counter[str] = Counter()
     markets: Counter[str] = Counter()
     market_days: dict[str, set[str]] = defaultdict(set)
@@ -366,7 +388,7 @@ def inventory_one(name: str, spec: dict, tracked: set[str]) -> dict:
         example.update({"key": key, "rows": count})
         duplicate_examples.append(example)
 
-    date_info = _date_summary(days, invalid_dates)
+    date_info = _date_summary(days, invalid_dates, no_matches)
     return {
         "status": "committed" if committed_rows else ("cache-only" if cache_rows else "absent"),
         "files": file_records,
@@ -434,7 +456,8 @@ def inventory_cache(name: str, spec: dict, tracked: set[str]) -> dict:
             "sha256": _sha256(path),
             "bytes": path.stat().st_size,
         })
-    date_info = _date_summary(days, 0)
+    no_matches = _no_match_days().get(spec.get("alias_of") or name, set())
+    date_info = _date_summary(days, 0, no_matches)
     return {
         "status": "committed" if committed else ("cache-only" if cache else "absent"),
         "alias_of": spec.get("alias_of"),
@@ -529,7 +552,7 @@ def append_plan(path: Path, inventory: dict) -> None:
         "",
         "**Key rule:** `source + date + source_team_key(home) + source_team_key(away) + market`; existing committed rows win collisions. `source_team_key` is the existing alias-aware normalization seam. The `proposed_internal_gap_days` arrays in `localdata/coverage_inventory.json` are the driver input; ranges are display-only.",
         "",
-        "**Budget gate:** proposed counts above are internal missing days only. Empty sources have no crawl range and require an operator-approved boundary/date floor. ZuluBet robots policy and the first Football-Data CSV download remain separately blocked pending operator approval.",
+        "**Budget gate:** proposed counts above are internal missing days only. Empty sources have no crawl range and require an operator-approved boundary/date floor. Operator approval is recorded for the 3 Statarea gap probes, the 62 BetExplorer result gaps, bounded ZuluBet backfill, and one Football-Data CSV; execution remains single-flight, immutable, and hist-only.",
         marker_end,
     ]) + "\n"
     existing = path.read_text() if path.exists() else "# Re-mining plan\n\n"
@@ -576,10 +599,13 @@ def build_inventory(observed_at: str) -> dict:
             name: data.get("crawl_plan", {}) for name, data in sources.items()
         },
         "gates": {
-            "zulubet_robots_policy": "operator approval required",
-            "football_data_first_csv": "operator approval required",
+            "statarea_gap_budget": "approved: 3 dates; no_matches_day is distinct from crawl_failure",
+            "betexplorer_results_gap_budget": "approved: 62 dates; single-flight and abort on 429 cluster",
+            "legalbet_sample": "approved: at most 30 public archive pages; no blocked user/rating/stat paths",
+            "zulubet_robots_policy": "approved: bounded conservative backfill; abort on challenge; robots 404 remains documented",
+            "football_data_first_csv": "approved: exactly one controlled pre-2026 league-season download before expansion",
             "production_champion_weight": "zero",
-            "network_crawl": "not run in B0",
+            "network_crawl": "not run in B0; B1 execution is hist-only",
         },
     }
 
