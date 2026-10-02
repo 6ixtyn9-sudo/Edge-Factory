@@ -11384,7 +11384,16 @@ claim health when its input history was insufficient.
 ## Addendum — 2026-10-01 (auto-ticket contract, bucket taxonomy, candidate ladder)
 
 PR #18 branch `arena/01a0f2b3-edge-factory`. **Not merged.** `origin/main`
-has no common ancestor with this branch; do not try to reconcile them.
+shares merge base `da5b4f1` (2026-09-30) with this branch.
+
+**Correction (2026-10-02):** this file previously stated the two had no
+common ancestor. That was false — `git merge-base` returns empty in a
+shallow clone, which is how the sandbox checks the repo out. After
+`git fetch --unshallow` the merge base resolves to `da5b4f1`, which is
+an ancestor of `origin/main`. The real merge blocker is ~40 diverged
+generated state files — the bank ledger among them, plus binary CLV and
+odds snapshots — a question of which lane's state is authoritative, not
+a git impossibility.
 
 ### Regressions found and fixed
 

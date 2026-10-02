@@ -8,8 +8,17 @@ You are picking up a scoped investigation in `6ixtyn9-sudo/Edge-Factory`
 on branch `arena/01a0f2b3-edge-factory` (PR #18).
 
 **Do not merge. Do not open a replacement PR. Do not push to `main`.**
-`origin/main` has no common ancestor with this branch — do not try to
-reconcile them. Stack your work on this branch.
+Stack your work on this branch.
+
+**Correction (2026-10-02):** an earlier version of this brief said
+`origin/main` has no common ancestor with this branch. That was wrong —
+an artifact of a shallow clone, where `git merge-base` returns empty.
+After `git fetch --unshallow` the real merge base is `da5b4f1`
+(2026-09-30), and it IS an ancestor of `origin/main`. The merge blocker
+is not git history: it is ~40 diverged generated state files, including
+the bank ledger and binary CLV/odds snapshots. That is a policy
+question about which lane's state is authoritative, not an
+impossibility. Do not repeat the original claim.
 
 Read `docs/operator/source-transport-investigation-brief.md` in full
 before touching anything. Read its section 11 first: it is hard evidence
