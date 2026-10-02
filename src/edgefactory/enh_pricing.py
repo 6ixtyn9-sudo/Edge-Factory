@@ -205,12 +205,25 @@ def _accumulate_unified(path: Path, *, day: str, source_tag: str,
         return
 
 
+# Stale-price containment (2026-10-02, mirrors picks_today.SCOUTINGSTATS_ODDS_
+# MAX_AGE_H): scoutingstats rows carry no true capture stamp (the pick-path
+# adapter fabricates captured_at from kickoff), so the month file's mtime is
+# the only honest freshness witness. The feed stopped refreshing on
+# 2026-09-04; past this age the board is retired from enhancement pricing —
+# an unpriced enhancement is honest, a weeks-old price is not. Self-healing:
+# the next refreshed file carries a current mtime and pricing resumes.
+SCOUTINGSTATS_MAX_AGE_H = 30.0
+
+
 def _accumulate_scoutingstats(path: Path, *, day: str, out: dict[str, Any]) -> None:
     """Read the scoutingstats wide fixture file: one row per fixture carrying the
     1.5/2.5/3.5 totals ladder + BTTS odds columns. Fail-soft per row."""
     try:
         if not path.exists():
             return
+        age_h = (datetime.now(timezone.utc).timestamp() - path.stat().st_mtime) / 3600.0
+        if age_h > SCOUTINGSTATS_MAX_AGE_H:
+            return  # retired: stale feed withheld from enhancement pricing
         with gzip.open(path, "rt", newline="", encoding="utf-8") as fh:
             for row in csv.DictReader(fh):
                 if row.get("date") != day:
