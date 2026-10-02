@@ -95,6 +95,9 @@ DAILY_SOURCES = (
     "scoutingstats", "betclan", "bettingclosed", "prosoccer", "predictz",
     "windrawwin", "freesupertips", "afootballreport", "soccervista",
     "betexplorer", "theoddsapi", "oddspapi_odds", "forebet",
+    # Verified shadow-only candidates. They are explicit health rows, but
+    # neither enters consensus weights nor the pick path by default.
+    "futbolpronosticos", "sportytrader_odds",
 )
 
 
@@ -143,13 +146,27 @@ def build_daily_source_health(
             blocker = "not reliably fetched/observed today"
         elif not blocker and rows == 0:
             blocker = "fetch returned zero rows"
-        sources[name] = {
+        row = {
             "can_fetch_today": can_fetch,
             "can_price": can_price,
             "can_vote": can_vote,
             "freshness_h": _freshness_value(obs),
             "blocker": str(blocker) if blocker else None,
         }
+        # Candidate-specific counters are deliberately retained in the daily
+        # contract so an operator can distinguish an empty slate from a parser
+        # mismatch without treating either as a production gate.
+        if name == "futbolpronosticos":
+            row.update({
+                "raw": int(obs.get("raw") or 0),
+                "scored": int(obs.get("scored") or 0),
+            })
+        elif name == "sportytrader_odds":
+            row.update({
+                "st_raw": int(obs.get("st_raw") or 0),
+                "st_matched": int(obs.get("st_matched") or 0),
+            })
+        sources[name] = row
     return {"schema": 1, "date": str(day), "sources": sources}
 
 
@@ -176,8 +193,14 @@ def daily_status_block(day: str) -> str:
     except (OSError, ValueError, TypeError):
         return f"Source health {day}: unavailable (health contract not persisted)"
     tokens = []
-    for name in ("bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet"):
+    for name in ("bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet", "futbolpronosticos", "sportytrader_odds"):
         row = sources.get(name, {})
+        if name == "futbolpronosticos":
+            tokens.append(f"futbolpronosticos=raw{row.get('raw', 0)}/scored{row.get('scored', 0)}")
+            continue
+        if name == "sportytrader_odds":
+            tokens.append(f"sportytrader=st_raw{row.get('st_raw', 0)}/st_matched{row.get('st_matched', 0)}")
+            continue
         if name == "forebet":
             tokens.append(
                 "forebet=historical-only"

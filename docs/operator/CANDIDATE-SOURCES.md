@@ -1,6 +1,10 @@
 # Candidate source scouting — PR #21 / Task B
 
-**Status:** triage only; no adapter or fetcher is proposed here. **Observed 2026-10-02 UTC.**
+**Status:** FutbolPronosticos and SportyTrader are now **verified, shadow-live only**
+with offline fixtures, cooperative adapters, daily ledgers, and source-health
+receipts. Neither source has consensus weight, changes the pick path, or can
+commit a ticket. Other rows below remain scouting/candidate material. **Build
+observed 2026-10-02 UTC.**
 Pages and `robots.txt` were retrieved as single cooperative HTML samples with the
 Arena page fetcher. No solver, proxy, browser challenge bypass, CAPTCHA
 workaround, login, or paid access was used. A successful sample is not a
@@ -64,9 +68,9 @@ price weight.
 | [Bundesligatrend sample](https://www.bundesligatrend.de/mainz-gegen-gladbach-tipp-prognose-bundesliga-quoten-25-10-2024.html) | German | **VERIFIED-from-relay**; raw shell remains HTTP 000 | Relay robots receipt is cooperative for the public article; only site-management paths are disallowed | cooperative HTML, editorial prose | 1X2 and O/U tip, predicted score, named NEO.bet/Bet365/Betano/Oddset quotes with quote timestamp | Article has fixture date and form, but the sample does not contain an immutable final settlement row; would need an append-only article/result join | **editorial/training-only**; not a structured pick feeder and not a production vote source |
 | `https://wettforum.de` / [related Wettforum board](https://www.sportwettenvergleich.net/wettforum/) | German | **VERIFIED-from-relay** for a rendered homepage/related board; raw shell remains HTTP 000 | Relay receipt found no usable robots file for the checked homepage; default-allow is not an endorsement | cooperative HTML, noisy community/forum content | User tips across football and other sports; varying authorship and no stable bookmaker row contract | Posts are mutable/user-attributed and do not provide a stable append-only tip/result ledger in the checked sample | **low-priority vote-source candidate only**, shadow first; no price role, no paid/member access, and no production weight until settlement is proven |
 | [Wettpoint Bundesliga tips](https://fussball.wettpoint.com/en/betting-tips/1-bundesliga_germany.html) | German/English UI | **VERIFIED-from-relay** for the Wettpoint homepage; the exact tips path redirected to a sparse home page; raw shell remains HTTP 000 | No usable robots file was returned for the checked homepage; default-allow is not a production approval | cooperative HTML homepage, but exact historical tips path is not currently reproducible | Search evidence shows 1X2 and O/U tips, historical results, H2H/statistics; no reliable named-book field in the checked evidence | Historical “Result” lines appear beside prior tips in search output, but the exact page contract and immutable joins were not verified | **low-priority vote-source candidate at most**; no price role and no production weight until the exact archive path and settlement rows are proven |
-| [FutbolPronosticos](https://www.futbolpronosticos.com/predicciones-de-futbol) | Spanish | **VERIFIED-from-relay**; raw shell remains HTTP 000 | Relay robots receipt has no `Disallow` lines (EU DSM AI-signals preamble only); no production AI-training permission is inferred beyond that | cooperative HTML, structured daily tables | Daily 1X2, O1.5, U3.5, BTTS, exact score and percentages, including LatAm lower-league coverage; some rows show affiliate-linked odds | Per-match “Pronostico” pages and today/tomorrow/result routes exist; an immutable append-only settled-tip field still needs a shadow audit | **vote-source candidate**, shadow first; likely complementary to the EPL-heavy roster. Price role only when bookmaker identity, selection and timestamp are retained |
+| [FutbolPronosticos](https://www.futbolpronosticos.com/predicciones-de-futbol) | Spanish | **VERIFIED-from-relay**; raw shell remains HTTP 000 | Relay robots receipt has no `Disallow` lines (EU DSM AI-signals preamble only); no production AI-training permission is inferred beyond that | cooperative HTML, structured daily tables | Daily 1X2, O1.5, U3.5, BTTS, exact score and percentages, including LatAm lower-league coverage; some rows show affiliate-linked odds | Per-match “Pronostico” pages and today/tomorrow/result routes exist; an immutable append-only settled-tip field still needs a shadow audit | **VERIFIED shadow-live vote-donor build**; zero consensus weight. Price role only when bookmaker identity, selection and timestamp are retained; settlement grading uses the existing warehouse-score backfill. |
 | [PronosticosFutbol.ai](https://pronosticosfutbol.ai/pronosticos-futbol-manana) | Spanish | **UNVERIFIED** — sandbox HTTP 000 / TLS error | Web-fetched robots: `User-agent: * Allow: /`, `Disallow: /api/`; sandbox robots **UNVERIFIED** | Web fetcher showed cooperative server-side HTML; sandbox class **UNVERIFIED** | 1X2, O/U, BTTS, double chance, Asian handicap, half-time and exact score with percentages; some pages show decimal odds | Dated match pages include finished/upcoming states and community agreement, but append-only settlement semantics need a historical sample | **UNVERIFIED**; vote-source candidate for bounded shadow only after sandbox verification; not a price donor without a named bookmaker per row |
-| [SportyTrader ES sample](https://sportytrader.es/pronosticos/grecia-holanda-375935) | Spanish | **VERIFIED-from-relay**; raw shell remains HTTP 000 | Relay robots is cooperative for core pronostics pages but wholly disallows `/en-gb/`, `/en-za/`, `/en-ng/`, `/en-in/`, `/fr-be/`, `/fr-ca/`, `/es-co/`, `/es-pe/` and `/cdn-cgi/`; restrict harvesting to allowed locales and expect Cloudflare-edge risk | cooperative HTML with affiliate/member prompts; challenge risk remains at the edge | Model 1X2/O/U/BTTS probabilities plus named bookmaker odds (Bet365, Sportium, Luckia, 1xBet, William Hill, Interwetten, etc.), live-results and recent-results links | Public page contains match date, publication/modified time, result links and recent results; preserve the page snapshot because model text can be edited | **dual-utility candidate** after allowed-locale and freshness checks: probabilities are a weak vote shadow; named-book odds can corroborate price. Test overlap with BetExplorer before crediting vote independence |
+| [SportyTrader ES sample](https://sportytrader.es/pronosticos/grecia-holanda-375935) | Spanish | **VERIFIED-from-relay**; raw shell remains HTTP 000 | Relay robots is cooperative for core pronostics pages but wholly disallows `/en-gb/`, `/en-za/`, `/en-ng/`, `/en-in/`, `/fr-be/`, `/fr-ca/`, `/es-co/`, `/es-pe/` and `/cdn-cgi/`; restrict harvesting to allowed locales and expect Cloudflare-edge risk | cooperative HTML with affiliate/member prompts; challenge risk remains at the edge | Model 1X2/O/U/BTTS probabilities plus named bookmaker odds (Bet365, Sportium, Luckia, 1xBet, William Hill, Interwetten, etc.), live-results and recent-results links | Public page contains match date, publication/modified time, result links and recent results; preserve the page snapshot because model text can be edited | **VERIFIED shadow-live price corroborator**; `st_raw`/`st_matched` are audit counters, named-book odds are legitimate price evidence, and vote/consensus weight is zero. Corroboration remains default-off until the offline `test_7pct` evidence report passes operator review |
 | SportyTrader locale set — [ES sample](https://sportytrader.es/pronosticos/grecia-holanda-375935), existing [PT-BR sample](https://www.sportytrader.com/pt-br/palpites/futebol/brasil/brasileirao-serie-a-343/) | Spanish, Portuguese; FR/DE/IT core editions covered by the relay receipt | **VERIFIED-from-relay** for allowed core pronostics editions; the eight listed locale prefixes and `/cdn-cgi/` are wholly disallowed; raw shell HTTP 000 | Cooperative only within allowed locale paths; do not extrapolate policy to disallowed prefixes or unverified expansion paths | cooperative HTML with affiliate/member prompts and possible Cloudflare-edge challenge | Same publisher family: model probabilities, bookmaker-labelled odds, dated fixtures and result links; PT-BR sample also showed account/member prompts and an `Odd 0` hazard | Match pages and live-result links exist, but retain bookmaker, capture timestamp and locale; discard zero/missing odds | **one publisher only**; dual-use price corroboration candidate after exact-locale checks, never independent vote expansion. Further PT-BR expansion remains **UNVERIFIED** |
 
 ### Seed-pass independence and access decisions
@@ -115,9 +119,10 @@ not enough to establish an append-only settled-result ledger. **Settlement:
 UNCONFIRMED.** The next shadow task is one dated fixture batch, followed by a
 join against final scores without rewriting the original prediction snapshot.
 
-**Role:** **depth vote-donor candidate**, shadow-triage next. It is valuable
-because it reaches exactly the women/U21/reserve/deep-LatAm classes where the
-current board can fall to one voice, but depth is not promotion.
+**Role:** **verified shadow-live vote donor with zero consensus weight**. It is
+valuable because it reaches exactly the women/U21/reserve/deep-LatAm classes
+where the current board can fall to one voice, but depth is not promotion;
+settled grading remains owned by the warehouse-score backfill.
 
 ### SportyTrader — rich markets/results, prediction depth still selective
 
@@ -160,11 +165,34 @@ board.
 
 | source | league depth | market depth | results/settlement depth | role after depth probe |
 |---|---|---|---|---|
-| FutbolPronosticos | **Deep** — reserves, women, U21, lower LatAm and lower European leagues | **Deep** — 1X2, O1.5/U3.5, BTTS, exact score per structured fixture | **Unconfirmed** — guessed result/history routes 404; must grade a dated sample | Depth vote-donor candidate; shadow next, no production weight |
-| SportyTrader | **Shallow/selected for predictions**; live-results coverage is broader, but target-league prediction coverage remains unproven | **Deep per available match** — 1X2, O/U, BTTS, corners, exact score, combos, named books | **Confirmed for live-results surfaces** via `/resultados-directo/futbol/`; per-prediction settlement still requires immutable capture | Top/mid-tier price corroborator; weak vote shadow only |
+| FutbolPronosticos | **Deep** — reserves, women, U21, lower LatAm and lower European leagues | **Deep** — 1X2, O1.5/U3.5, BTTS, exact score per structured fixture | **Warehouse/backfill only** — source result/history routes are 404; coverage mismatches are flagged | **Verified shadow-live vote donor; zero consensus weight** |
+| SportyTrader | **Shallow/selected for predictions**; live-results coverage is broader, but target-league prediction coverage remains unproven | **Deep per available match** — 1X2, O/U, BTTS, corners, exact score, combos, named books | **Confirmed for live-results surfaces** via `/resultados-directo/futbol/`; per-prediction settlement still requires immutable capture | **Verified shadow-live named-book price corroborator; zero vote weight; 7% integration default-off** |
 
 Depth is evidence for prioritising shadow mining, not an exemption from the
 post-TR-3 settled-evidence yardstick.
+
+## Shadow-live build receipt — 2026-10-02 UTC
+
+The two verified candidates now have cooperative shadow adapters, saved HTML
+fixtures, offline tests, daily snapshot ledgers, and source-health rows. The
+implementation is documented in [`SPORTYTRADER-SHADOW-BUILD.md`](SPORTYTRADER-SHADOW-BUILD.md).
+The focused receipt is **18 passed in 0.16s**; CI tests never fetch live pages.
+
+- FutbolPronosticos writes `futbolpronosticos_shadow_YYYY-MM-DD.json` and
+  records `raw=N` / `scored=N`. It uses the existing warehouse-score/backfill
+  facts for settlement coverage and flags mismatches; it does not call the
+  source's 404 result/history paths.
+- SportyTrader writes `sportytrader_odds_shadow_YYYY-MM-DD.json` with named
+  bookmaker `fixture/market/selection/odds/book/captured_at` rows and records
+  `st_raw=N` / `st_matched=N`. The nine disallowed prefixes are hard-blocked in
+  code and tests; challenges are training-only.
+- The offline 14-archive price-evidence report is
+  [`SPORTYTRADER-7PCT-REPORT.json`](SPORTYTRADER-7PCT-REPORT.json):
+  `test_7pct eligible=66 gained=0 rate=0.0 max_deviation=7%`. The 7% gate is
+  unchanged and `SPORTYTRADER_CORROBORATOR` remains default-off.
+- Both candidates expose `can_fetch_today`, `can_price`, `can_vote`, and
+  `blocker` in `source_health_YYYY-MM-DD.json`; both `can_vote` values are
+  false and neither enters consensus weights.
 
 ## Triage notes
 
@@ -214,19 +242,24 @@ weaken.
 - A page showing historical scores is not automatically a settlement contract.
   The operator review must require stable fixture identity, timezone/date,
   market semantics, publication timestamp, and a non-mutating settled result.
-- The next implementation step, if approved, is a 30-day **shadow capture**
-  with no change to `SOURCES_*`, no pick-path dependency, and no ticket/staking
-  effect. This document intentionally contains no fetcher code.
+- The implementation step is now complete as a **shadow-live capture**. The
+  30-day observation window still has no change to `SOURCES_*`, no pick-path
+  dependency, and no ticket/staking effect. See the build receipt above and
+  the operator runbook for the offline evidence gate.
 
 ## Operator review checklist
 
-- [ ] Select at most two first shadow candidates, preferably from different
-      publishers/languages.
-- [ ] Confirm robots scope and contact/terms for the exact proposed URL before
-      recurring capture.
-- [ ] Define an append-only capture schema and settlement join receipt.
-- [ ] Run the existing source-independence audit after the shadow window.
-- [ ] Explicitly approve whether each candidate is a vote donor or a
-      bookmaker-labelled price donor; never infer both roles.
-- [ ] Keep Forebet historical-only post-2026-06-12 and leave
+- [x] Select at most two first shadow candidates: FutbolPronosticos and
+      SportyTrader.
+- [x] Confirm robots scope and cooperative exact-locale guards; abort on 429 or
+      challenge rather than escalating access.
+- [x] Define day snapshot ledgers, named-book shadow-board schema, and the
+      warehouse-score settlement coverage receipt.
+- [ ] Run the existing source-independence audit after the shadow window; no
+      candidate receives consensus weight before that review.
+- [x] Explicitly assign FutbolPronosticos the vote-donor shadow role and
+      SportyTrader the named-book price-corroborator shadow role.
+- [ ] Approve `test_7pct` evidence before changing
+      `SPORTYTRADER_CORROBORATOR` from its default `off`.
+- [x] Keep Forebet historical-only post-2026-06-12 and leave
       `EDGE_FACTORY_FOREBET_BROWSER=off` unchanged.

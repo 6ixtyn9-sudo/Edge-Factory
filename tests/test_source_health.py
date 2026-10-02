@@ -63,7 +63,17 @@ def test_bzzoiro_empty_diagnostics_include_cap_and_zero_counters(monkeypatch):
 def test_daily_source_health_schema_is_conservative_and_forebet_is_historical_only():
     payload = source_health.persist_daily_source_health(
         "2026-10-02",
-        {"zulubet": {"fetched": True, "rows": 4, "can_vote": True, "freshness_h": 0}},
+        {
+            "zulubet": {"fetched": True, "rows": 4, "can_vote": True, "freshness_h": 0},
+            "futbolpronosticos": {
+                "fetched": True, "rows": 1, "raw": 2, "scored": 1,
+                "can_fetch_today": True, "can_vote": False,
+            },
+            "sportytrader_odds": {
+                "fetched": True, "rows": 3, "st_raw": 1, "st_matched": 3,
+                "can_fetch_today": True, "can_price": True, "can_vote": False,
+            },
+        },
     )
     assert payload["sources"]["zulubet"] == {
         "can_fetch_today": True,
@@ -79,6 +89,10 @@ def test_daily_source_health_schema_is_conservative_and_forebet_is_historical_on
         "freshness_h": None,
         "blocker": "historical-only post-2026-06-12; no production pricing or weighting",
     }
+    assert payload["sources"]["futbolpronosticos"]["raw"] == 2
+    assert payload["sources"]["futbolpronosticos"]["scored"] == 1
+    assert payload["sources"]["sportytrader_odds"]["st_raw"] == 1
+    assert payload["sources"]["sportytrader_odds"]["st_matched"] == 3
     assert source_health.daily_status_block("2026-10-02").startswith("Source health 2026-10-02:")
 
 

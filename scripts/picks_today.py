@@ -61,6 +61,7 @@ from edgefactory.source_health import (
     persist_daily_source_health,
     record_bzzoiro_run,
 )
+from edgefactory.shadow import append_price_board_rows, read_shadow_rows
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
@@ -2580,6 +2581,61 @@ def _stamp_price_corroboration(picks: list[dict]) -> int:
     return n
 
 
+def _sportytrader_corrob_flag_on() -> bool:
+    """The only switch that lets SportyTrader reach price corroboration."""
+    return os.environ.get("SPORTYTRADER_CORROBORATOR", "off").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
+
+def _append_sportytrader_shadow_board(picks: list[dict], day: str) -> tuple[int, dict]:
+    """Add named bookmaker quotes from the shadow board, never replace odds."""
+    path = LOCALDATA / f"sportytrader_odds_shadow_{day}.json"
+    rows, stats = read_shadow_rows(path)
+    added = 0
+    for pick in picks:
+        added += append_price_board_rows(
+            pick, rows, source="sportytrader_odds", team_key=odds_match_team_key,
+        )
+    return added, stats
+
+
+def _apply_sportytrader_corroborator(picks: list[dict], day: str) -> tuple[int, dict]:
+    """Flag gate: OFF returns the exact input object contents unchanged."""
+    if not _sportytrader_corrob_flag_on():
+        return 0, {}
+    return _append_sportytrader_shadow_board(picks, day)
+
+
+def _capture_shadow_candidates(day: str) -> tuple[dict, dict]:
+    """Capture both verified candidates without touching the production path."""
+    if os.environ.get("EDGE_FACTORY_SHADOW_CAPTURE", "on").strip().lower() in {"0", "off", "false", "no"}:
+        return {"status": "disabled", "raw": 0, "scored": 0}, {"status": "disabled", "st_raw": 0, "st_matched": 0}
+    fp_stats: dict = {"status": "unavailable", "raw": 0, "scored": 0}
+    st_stats: dict = {"status": "unavailable", "st_raw": 0, "st_matched": 0}
+    try:
+        from edgefactory.sources import futbolpronosticos as fp
+        fp_rows, fp_stats = fp.capture_day(day)
+        settled_path = LOCALDATA / "settled_results.json"
+        try:
+            settled_rows = json.loads(settled_path.read_text()).get("rows", [])
+        except (OSError, ValueError, TypeError):
+            settled_rows = []
+        fp_stats["settlement_coverage"] = fp.settlement_coverage(fp_rows, settled_rows)
+        fp.persist_shadow(day, fp_rows, fp_stats, localdata=LOCALDATA)
+    except Exception as exc:
+        fp_stats["status"] = "unavailable"
+        fp_stats["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import sportytrader_odds as st
+        st_rows, st_stats = st.capture_day(day)
+        st.persist_shadow(day, st_rows, st_stats, localdata=LOCALDATA)
+    except Exception as exc:
+        st_stats["status"] = "unavailable"
+        st_stats["blocker"] = str(exc)[:180]
+    return fp_stats, st_stats
+
+
 def enrich_with_live_odds(
     picks: list[dict],
     primary_odds: dict,
@@ -3815,6 +3871,7 @@ def main():
     all_picks: list = []
     total_vetoes = 0
     total_upcoming = 0
+    shadow_totals = {"raw": 0, "scored": 0, "st_raw": 0, "st_matched": 0}
 
     # ML-fade research capture: certification-independent collection of every
     # model-scored fixture (parent + deterministic fade candidate) into the
@@ -3889,6 +3946,24 @@ def main():
         be_enriched = enrich_unmatched_with_betexplorer(
             picks, day, bundles=(odds_bundle, secondary_bundle), stats=be_stats)
 
+        # Candidate capture is shadow-only. It writes its own day ledgers and
+        # never joins data/SOURCES_*; only the explicit, default-off
+        # corroborator flag below can read SportyTrader into the price board.
+        fp_shadow_stats, st_shadow_stats = _capture_shadow_candidates(day)
+        shadow_totals["raw"] += int(fp_shadow_stats.get("raw") or 0)
+        shadow_totals["scored"] += int(fp_shadow_stats.get("scored") or 0)
+        shadow_totals["st_raw"] += int(st_shadow_stats.get("st_raw") or 0)
+        shadow_totals["st_matched"] += int(st_shadow_stats.get("st_matched") or 0)
+        print(
+            f"shadow candidates {day}: raw={fp_shadow_stats.get('raw', 0)} "
+            f"scored={fp_shadow_stats.get('scored', 0)} "
+            f"st_raw={st_shadow_stats.get('st_raw', 0)} "
+            f"st_matched={st_shadow_stats.get('st_matched', 0)} "
+            f"corroborator={'on' if _sportytrader_corrob_flag_on() else 'off'}",
+            file=sys.stderr,
+        )
+        _apply_sportytrader_corroborator(picks, day)
+
         def _rows_have_price(rows: object) -> bool:
             if not isinstance(rows, dict):
                 return False
@@ -3941,6 +4016,33 @@ def main():
                 if be_stats.get("be_cooling_down")
                 else "not requested; no unmatched rescue legs"
                 if not be_observed else None
+            ),
+        }
+        health_observations["futbolpronosticos"] = {
+            "fetched": fp_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(fp_shadow_stats.get("scored") or 0),
+            "raw": int(fp_shadow_stats.get("raw") or 0),
+            "scored": int(fp_shadow_stats.get("scored") or 0),
+            "can_fetch_today": fp_shadow_stats.get("status") in {"ok", "empty"},
+            "can_price": False,
+            "can_vote": False,
+            "freshness_h": 0.0 if fp_shadow_stats.get("status") == "ok" else None,
+            "blocker": fp_shadow_stats.get("blocker") or (
+                "settled-count coverage mismatch: " + str(fp_shadow_stats.get("settlement_coverage"))
+                if (fp_shadow_stats.get("settlement_coverage") or {}).get("mismatch") else None
+            ),
+        }
+        health_observations["sportytrader_odds"] = {
+            "fetched": st_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(st_shadow_stats.get("st_matched") or 0),
+            "st_raw": int(st_shadow_stats.get("st_raw") or 0),
+            "st_matched": int(st_shadow_stats.get("st_matched") or 0),
+            "can_fetch_today": st_shadow_stats.get("status") in {"ok", "empty"},
+            "can_price": int(st_shadow_stats.get("st_matched") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": 0.0 if st_shadow_stats.get("status") == "ok" else None,
+            "blocker": st_shadow_stats.get("blocker") or (
+                "training-only after Cloudflare challenge" if st_shadow_stats.get("training_only") else None
             ),
         }
         persist_daily_source_health(day, health_observations)
@@ -4167,6 +4269,25 @@ def main():
     n_wl_uncorroborated = len(buckets[BUCKET_WL_UNCORROBORATED_PRICE])
     n_wl_suspect = len(buckets[BUCKET_WL_SUSPECT_PRICE])
     n_wl_ctx = len(buckets[BUCKET_WL_CTX])
+    # Evidence is generated offline by report_sportytrader_7pct.py. Echo the
+    # latest receipt into the run log, but never let a missing/stale report
+    # gate picks or alter the 7% constant.
+    for _report_path in (
+        LOCALDATA / "sportytrader_7pct_report.json",
+        ROOT / "docs" / "operator" / "SPORTYTRADER-7PCT-REPORT.json",
+    ):
+        try:
+            _test_7pct = json.loads(_report_path.read_text()).get("test_7pct", {})
+        except (OSError, ValueError, TypeError):
+            continue
+        print(
+            f"test_7pct eligible={_test_7pct.get('eligible', 0)} "
+            f"gained={_test_7pct.get('gained', 0)} "
+            f"rate={_test_7pct.get('rate', 'n/a')} "
+            f"max_deviation={float(_test_7pct.get('max_deviation', PRICE_CORROBORATION_MAX_DEV)):.0%}",
+            file=sys.stderr,
+        )
+        break
     n_skip_veto = len(buckets[BUCKET_SKIP_VETO])
     n_skip_dead = len(buckets[BUCKET_SKIP_DEAD])
     summary = (f"Summary: CLEAN={n_clean} CAUTION={n_caution} "
@@ -4175,6 +4296,8 @@ def main():
                f"WATCHLIST_suspect_price={n_wl_suspect} "
                f"WATCHLIST_ctx={n_wl_ctx} "
                f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
+               f"shadow_fp_raw={shadow_totals['raw']} shadow_fp_scored={shadow_totals['scored']} "
+               f"st_raw={shadow_totals['st_raw']} st_matched={shadow_totals['st_matched']} "
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
     print(f"\n{summary}")
 
