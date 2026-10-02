@@ -162,6 +162,13 @@ Deep evidence retained in [`archive/`](archive/):
   `localdata/backfill_ledger.jsonl`. Hist namespaces only; zero vote-weight
   change. Regenerate the inventory with
   `python3 scripts/coverage_inventory.py --append-plan docs/operator/REMINE-PLAN.md`.
+- [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md) — HUNT-01 exhaustive
+  hunt for free prediction/odds APIs ("like bzzoiro"): search log, 25-candidate
+  inventory, A–H scorecards, shortlist of 3 (**Betminer** voice winner /
+  PredictIQ echo-test / pinnapi Pinnacle prices) and operator probe plans.
+  Seed finding resolved against API-Football: free-plan seasons lag current
+  (2022–2024), so it is backfill-only. Shortlist draft tickets (c)–(e) are in
+  [`TICKETS-OPEN.md`](TICKETS-OPEN.md).
 - Runner: `scripts/remine_backfill.py`, invoked by `scripts/daily.py`. Sandbox
   crawling is closed; the Actions runner is the only place bounded requests
   may be made.
@@ -192,6 +199,11 @@ Proposed workflow artifacts (paste-ready, never pushed by the App):
 - **soccervista restore-or-drop** — all transports including the relay fail;
   recommendation and evidence in [`TICKETS-OPEN.md`](TICKETS-OPEN.md).
   No code change shipped.
+- **HUNT-01 shortlist drafts (c)–(e)** — Betminer shadow voice, PredictIQ
+  echo-test voice, pinnapi Pinnacle price corroborator: operator registers
+  free key → probe → shadow (zero credit) → echo test → promotion only on
+  settled evidence. See [`TICKETS-OPEN.md`](TICKETS-OPEN.md) and
+  [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md).
 
 ---
 
