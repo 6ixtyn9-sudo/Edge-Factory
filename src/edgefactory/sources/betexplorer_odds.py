@@ -71,6 +71,7 @@ _CHALLENGE_MARKERS = (
     "verify you are human",
     "checking your browser",
     "security verification",
+    "access denied",
     "age verification",
     "confirm your age",
     "cf-chl-",
