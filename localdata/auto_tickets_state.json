@@ -1,40 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 126.69598500000008,
+  "bank": 152.1935550000001,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-10-02",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Bayer Leverkusen (w) vs Werder Bremen (w)",
-              "pick": "HOME",
-              "prob": 0.607,
-              "odds": 1.67,
-              "result": null
-            },
-            {
-              "match": "Belgium vs Turkey",
-              "pick": "HOME",
-              "prob": 0.6,
-              "odds": 1.56,
-              "result": null
-            }
-          ],
-          "odds": 2.61,
-          "stake_pct": 15.837,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 15.837
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -631,6 +599,18 @@
         }
       ],
       "bank_pct": 142.2324
+    },
+    {
+      "date": "2026-10-02",
+      "staked_pct": 15.837,
+      "returned_pct": 41.3346,
+      "accas": [
+        {
+          "odds": 2.61,
+          "won": true
+        }
+      ],
+      "bank_pct": 152.1936
     }
   ],
   "events": []
