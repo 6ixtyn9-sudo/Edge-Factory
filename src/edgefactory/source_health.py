@@ -184,6 +184,29 @@ def persist_daily_source_health(
     return payload
 
 
+# Role verdicts for the compact health line (SHADOW-01 T0).
+#
+# The old all-of(fetch, price, vote) check could never pass for role-limited
+# sources: bzzoiro is a tips/vote feed that never prices, while bzzoiro_odds
+# and betexplorer are price feeds that never vote. They printed a constant
+# misleading BLOCKED. A source is healthy on the health line when fetch AND
+# every capability key of *its own role* hold; sources not listed here keep
+# the full three-key contract.
+ROLE_VERDICT_SOURCES: dict[str, tuple[str, ...]] = {
+    "bzzoiro": ("can_vote",),
+    "bzzoiro_odds": ("can_price",),
+    "betexplorer": ("can_price",),
+    "scoutingstats": ("can_price", "can_vote"),
+}
+
+
+def _status_token(name: str, row: dict[str, Any]) -> str:
+    roles = ROLE_VERDICT_SOURCES.get(name, ("can_price", "can_vote"))
+    healthy = bool(row.get("can_fetch_today")) and all(row.get(k) for k in roles)
+    label = "fetch/" + "/".join(role.removeprefix("can_") for role in roles)
+    return f"{name}={label if healthy else 'BLOCKED'}"
+
+
 def daily_status_block(day: str) -> str:
     """One compact, deterministic status line for the card/run log."""
     path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
@@ -208,9 +231,7 @@ def daily_status_block(day: str) -> str:
                 else "forebet=available"
             )
             continue
-        tokens.append(
-            f"{name}={'fetch/price/vote' if all(row.get(k) for k in ('can_fetch_today', 'can_price', 'can_vote')) else 'BLOCKED'}"
-        )
+        tokens.append(_status_token(name, row))
     return f"Source health {day}: " + " ".join(tokens)
 
 

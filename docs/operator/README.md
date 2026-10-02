@@ -110,6 +110,15 @@ The same vocabulary is used across
 | `zero-row done` | a day terminated with zero rows | only legitimate when the day was genuinely empty — not when it was a 403 |
 | tripwire fired | an expected signal stopped firing | read the diagnostics artifact before changing anything |
 
+**Health-line role verdicts (T0):** the compact
+`Source health <date>: …` line judges each source against **its own role**, not
+an all-three check. `bzzoiro` is healthy at `fetch/vote` (it never prices);
+`bzzoiro_odds` and `betexplorer` are healthy at `fetch/price` (they never
+vote); full sources like `scoutingstats` still need `fetch/price/vote`. A
+source whose fetch or role capability fails prints `BLOCKED`. The verdict is
+display-only: the per-day health contract in
+`source_health_YYYY-MM-DD.json` remains the authoritative record.
+
 **Price evidence / quarantine buckets seen on legs:** `CERTIFIED_CLEAN`,
 `CAUTION`, `WATCHLIST_UNCORROBORATED_PRICE`, `WATCHLIST_UNKNOWN_CTX`,
 `SKIPPED_VETO`, `BETEXPLORER_RESCUE`, `SOURCE_FALLBACK`,
