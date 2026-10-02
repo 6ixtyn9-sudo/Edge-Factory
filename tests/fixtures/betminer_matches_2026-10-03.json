@@ -1,0 +1,116 @@
+{
+  "success": true,
+  "data": [
+    {
+      "match_id": 1052483,
+      "fixture_slug": "manchester-united-vs-liverpool",
+      "kickoff": "2026-10-03T15:00:00Z",
+      "status": "NS",
+      "minute": null,
+      "home_team": {
+        "id": 33,
+        "name": "Manchester United",
+        "slug": "manchester-united"
+      },
+      "away_team": {
+        "id": 34,
+        "name": "Liverpool",
+        "slug": "liverpool"
+      },
+      "competition": {
+        "id": 39,
+        "name": "Premier League",
+        "slug": "england/premier-league",
+        "country": "England",
+        "country_code": "GB"
+      },
+      "score": {"home": null, "away": null, "ht_home": null, "ht_away": null},
+      "probabilities": {
+        "home_win": 45,
+        "draw": 23,
+        "away_win": 32,
+        "btts": 68,
+        "over_15": 85,
+        "over_25": 62,
+        "over_35": 38,
+        "fh_over_05": 72,
+        "fh_over_15": 45
+      },
+      "predictions": {
+        "result": "home_win",
+        "correct_score": "2-1",
+        "htft": "HH",
+        "btts": true,
+        "over_25": true
+      },
+      "odds": {
+        "home_win": "2.40",
+        "draw": "3.20",
+        "away_win": "2.80",
+        "btts_yes": "1.85",
+        "btts_no": "1.95",
+        "over_15": "1.30",
+        "over_25": "1.90",
+        "over_35": "3.00",
+        "dc_1x": "1.45",
+        "dc_12": "1.30",
+        "dc_x2": "1.50"
+      },
+      "form": {"home": "WWDLW", "away": "WLDWW", "home_btts": "YYNYN", "away_btts": "YYYNY"}
+    },
+    {
+      "match_id": 2052484,
+      "fixture_slug": "helmond-sport-vs-heracles",
+      "kickoff": "2026-10-03T19:00:00Z",
+      "status": "NS",
+      "minute": null,
+      "home_team": {
+        "id": 941,
+        "name": "Helmond Sport",
+        "slug": "helmond-sport"
+      },
+      "away_team": {
+        "id": 942,
+        "name": "Heracles",
+        "slug": "heracles"
+      },
+      "competition": {
+        "id": 9,
+        "name": "Eerste Divisie",
+        "slug": "netherlands/eerste-divisie",
+        "country": "Netherlands",
+        "country_code": "NL"
+      },
+      "score": {"home": null, "away": null, "ht_home": null, "ht_away": null},
+      "probabilities": {
+        "home_win": 16,
+        "draw": 25,
+        "away_win": 59,
+        "btts": 70,
+        "over_15": 84,
+        "over_25": 61,
+        "over_35": 37,
+        "fh_over_05": 74,
+        "fh_over_15": 44
+      },
+      "predictions": {
+        "result": "away_or_draw",
+        "correct_score": "1-2",
+        "htft": "HA",
+        "btts": true,
+        "over_25": true
+      },
+      "odds": {
+        "home_win": "6.00",
+        "draw": "4.00",
+        "away_win": "1.55",
+        "btts_yes": "1.62",
+        "btts_no": "2.30",
+        "over_25": "1.83",
+        "dc_x2": "1.15"
+      },
+      "form": {"home": "LDLLW", "away": "WWWDW"}
+    }
+  ],
+  "meta": {"count": 2, "cached": false, "generated_at": "2026-10-03T06:00:00Z"}
+}
