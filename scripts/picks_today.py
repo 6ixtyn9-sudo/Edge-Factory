@@ -54,7 +54,12 @@ from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_d
 from edgefactory.veto_resolution import apply_resolution_to_ctx, build_pool_table
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
 from edgefactory.enh_registry import status_for as enh_status_for
-from edgefactory.source_health import bzzoiro_status_line, record_bzzoiro_run
+from edgefactory.source_health import (
+    bzzoiro_status_line,
+    daily_status_block,
+    persist_daily_source_health,
+    record_bzzoiro_run,
+)
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
@@ -3501,6 +3506,8 @@ def print_buckets(buckets: dict, title_date: str = ""):
     unavailable = bzzoiro_status_line()
     if unavailable:
         print(f"⚠️  {unavailable}")
+    health_day = str(title_date).split(", ")[-1] if title_date else date.today().isoformat()
+    print(f"{daily_status_block(health_day)}")
     print()
     for b in BUCKET_ORDER:
         picks = buckets.get(b, [])
@@ -3865,6 +3872,58 @@ def main():
         be_stats: dict = {}
         be_enriched = enrich_unmatched_with_betexplorer(
             picks, day, bundles=(odds_bundle, secondary_bundle), stats=be_stats)
+
+        def _rows_have_price(rows: object) -> bool:
+            if not isinstance(rows, dict):
+                return False
+            price_fields = ("odd1", "oddx", "odd2", "odd_o25", "odd_u25", "odd_gg", "odd_ng")
+            return any(_valid_decimal_odds(row.get(field)) is not None
+                       for row in rows.values() if isinstance(row, dict)
+                       for field in price_fields)
+
+        health_observations: dict[str, dict] = {}
+        for source_name in ALL_SOURCES:
+            source_rows = data.get(source_name, {})
+            source_count = len(source_rows) if isinstance(source_rows, dict) else 0
+            health_observations[source_name] = {
+                "fetched": source_name in data,
+                "rows": source_count,
+                "can_fetch_today": source_name in data,
+                "can_price": _rows_have_price(source_rows),
+                "can_vote": source_name in SOURCES_1X2 + SOURCES_OU + SOURCES_BTTS and source_count > 0,
+                "freshness_h": 0.0 if source_name in data else None,
+            }
+        bzz_status = str(bzz_stats.get("status") or "not_run")
+        health_observations["bzzoiro"] = {
+            "fetched": bzz_status in {"ok", "empty", "auth", "quota", "unavailable"},
+            "rows": int(bzz_stats.get("rows") or 0),
+            "can_fetch_today": bzz_status in {"ok", "empty"},
+            "can_price": False,
+            "can_vote": len(data.get("bzzoiro", {})) > 0,
+            "freshness_h": 0.0 if bzz_status in {"ok", "empty"} else None,
+            "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
+        }
+        health_observations["bzzoiro_odds"] = {
+            "fetched": bzz_status in {"ok", "empty", "auth", "quota", "unavailable"},
+            "rows": int(bzz_stats.get("rows") or bzz_stats.get("cached_rows") or 0),
+            "can_fetch_today": bzz_status in {"ok", "empty"},
+            "can_price": bool(bzz_stats.get("rows") or bzz_stats.get("cached_rows")),
+            "can_vote": False,
+            "freshness_h": 0.0 if bzz_status == "ok" else None,
+            "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
+        }
+        health_observations["betexplorer"] = {
+            "fetched": bool(be_stats.get("be_429", 0) or be_enriched or be_stats.get("be_cached", 0)),
+            "rows": int(be_enriched or 0),
+            "can_fetch_today": not bool(be_stats.get("be_cooling_down", False)),
+            "can_price": bool(be_enriched or be_stats.get("be_cached", 0)),
+            "can_vote": False,
+            "freshness_h": 0.0 if be_enriched else None,
+            "blocker": "run cooling down after 2 HTTP 429 responses" if be_stats.get("be_cooling_down") else None,
+        }
+        persist_daily_source_health(day, health_observations)
+        print(daily_status_block(day), file=sys.stderr)
+
         corroborated_n = _stamp_price_corroboration(picks)
         priced_n = sum(1 for p in picks if p.get("odds") is not None)
 

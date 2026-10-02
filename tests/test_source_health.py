@@ -60,6 +60,28 @@ def test_bzzoiro_empty_diagnostics_include_cap_and_zero_counters(monkeypatch):
     assert diag["quota_hint"] == "none_observed"
 
 
+def test_daily_source_health_schema_is_conservative_and_forebet_is_historical_only():
+    payload = source_health.persist_daily_source_health(
+        "2026-10-02",
+        {"zulubet": {"fetched": True, "rows": 4, "can_vote": True, "freshness_h": 0}},
+    )
+    assert payload["sources"]["zulubet"] == {
+        "can_fetch_today": True,
+        "can_price": False,
+        "can_vote": True,
+        "freshness_h": 0.0,
+        "blocker": None,
+    }
+    assert payload["sources"]["forebet"] == {
+        "can_fetch_today": False,
+        "can_price": False,
+        "can_vote": False,
+        "freshness_h": None,
+        "blocker": "historical-only post-2026-06-12; no production pricing or weighting",
+    }
+    assert source_health.daily_status_block("2026-10-02").startswith("Source health 2026-10-02:")
+
+
 def test_bzzoiro_429_is_recorded_as_rate_limit_quota_hint(monkeypatch):
     bzz._reset_diagnostics()
     monkeypatch.setattr(bzz, "time", type("Clock", (), {"sleep": staticmethod(lambda _s: None)})())

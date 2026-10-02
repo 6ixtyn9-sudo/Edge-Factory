@@ -88,6 +88,109 @@ def bzzoiro_unavailable(*, threshold: int = 3) -> bool:
         return False
 
 
+FOREBET_LIVE_LAST_DAY = "2026-06-12"
+
+DAILY_SOURCES = (
+    "bzzoiro", "bzzoiro_odds", "zulubet", "statarea", "vitibet",
+    "scoutingstats", "betclan", "bettingclosed", "prosoccer", "predictz",
+    "windrawwin", "freesupertips", "afootballreport", "soccervista",
+    "betexplorer", "theoddsapi", "oddspapi_odds", "forebet",
+)
+
+
+def _freshness_value(observation: dict[str, Any]) -> float | None:
+    value = observation.get("freshness_h")
+    if value is None:
+        return None
+    try:
+        return round(float(value), 1)
+    except (TypeError, ValueError):
+        return None
+
+
+def build_daily_source_health(
+    day: str,
+    observations: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Build the hard per-source daily contract from explicit observations.
+
+    Missing observations are conservative: unavailable for today's production
+    use, with a blocker. This prevents an absent health measurement from being
+    mistaken for a healthy source.
+    """
+    observations = observations or {}
+    sources: dict[str, dict[str, Any]] = {}
+    for name in DAILY_SOURCES:
+        obs = dict(observations.get(name) or {})
+        if name == "forebet" and str(day)[:10] > FOREBET_LIVE_LAST_DAY:
+            sources[name] = {
+                "can_fetch_today": False,
+                "can_price": False,
+                "can_vote": False,
+                "freshness_h": None,
+                "blocker": "historical-only post-2026-06-12; no production pricing or weighting",
+            }
+            continue
+        fetched = bool(obs.get("fetched", False))
+        rows = int(obs.get("rows") or 0)
+        can_fetch = bool(obs.get("can_fetch_today", fetched))
+        # Price/vote capability is source-specific; never infer either from a
+        # non-empty response. Adapters must make those claims explicitly.
+        can_price = bool(obs.get("can_price", False))
+        can_vote = bool(obs.get("can_vote", False))
+        blocker = obs.get("blocker")
+        if not blocker and not can_fetch:
+            blocker = "not reliably fetched/observed today"
+        elif not blocker and rows == 0:
+            blocker = "fetch returned zero rows"
+        sources[name] = {
+            "can_fetch_today": can_fetch,
+            "can_price": can_price,
+            "can_vote": can_vote,
+            "freshness_h": _freshness_value(obs),
+            "blocker": str(blocker) if blocker else None,
+        }
+    return {"schema": 1, "date": str(day), "sources": sources}
+
+
+def persist_daily_source_health(
+    day: str,
+    observations: dict[str, dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Persist ``source_health_YYYY-MM-DD.json`` atomically and return it."""
+    payload = build_daily_source_health(day, observations)
+    path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
+    LOCALDATA.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
+    tmp.replace(path)
+    return payload
+
+
+def daily_status_block(day: str) -> str:
+    """One compact, deterministic status line for the card/run log."""
+    path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
+    try:
+        payload = json.loads(path.read_text())
+        sources = payload.get("sources", {})
+    except (OSError, ValueError, TypeError):
+        return f"Source health {day}: unavailable (health contract not persisted)"
+    tokens = []
+    for name in ("bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet"):
+        row = sources.get(name, {})
+        if name == "forebet":
+            tokens.append(
+                "forebet=historical-only"
+                if "historical-only" in str(row.get("blocker") or "")
+                else "forebet=available"
+            )
+            continue
+        tokens.append(
+            f"{name}={'fetch/price/vote' if all(row.get(k) for k in ('can_fetch_today', 'can_price', 'can_vote')) else 'BLOCKED'}"
+        )
+    return f"Source health {day}: " + " ".join(tokens)
+
+
 def bzzoiro_status_line() -> str | None:
     record = load_state().get("sources", {}).get("bzzoiro", {})
     try:
