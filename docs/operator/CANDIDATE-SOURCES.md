@@ -90,6 +90,82 @@ price weight.
   the price donor to be an independent prediction voice. Run the echo check
   before assigning any vote role.
 
+## DEPTH — production-relevant probe (relay, 2026-10-02)
+
+This section is deliberately limited to the three operational axes: league
+coverage, market coverage, and settlement depth. It does not promote either
+source into the pick path.
+
+### FutbolPronosticos — deep league and market coverage; settlement still open
+
+The relay homepage/slate exposed a materially deeper fixture universe than the
+current EPL-heavy donor mix, including:
+
+- Argentina Reserve League, Brazil Carioca B2, Colombia Primera B, Norway
+  Division 3, Paraguay Intermedia, Venezuela Liga FUTVE 2, France Ligue 3,
+  Women's League Cup, Euro U21, AFCON and other lower/reserve/women's matches.
+- Structured per-fixture `/pronostico-...` pages and today/tomorrow/multi-day
+  preview routes.
+- Per-match 1X2, O1.5/U3.5, BTTS and exact-score fields; some rows also carry
+  affiliate-linked odds.
+
+**Settlement probe:** the guessed `/resultados` and `/historial-pronosticos`
+routes returned 404 pages in the relay. The per-match prediction pages were
+not enough to establish an append-only settled-result ledger. **Settlement:
+UNCONFIRMED.** The next shadow task is one dated fixture batch, followed by a
+join against final scores without rewriting the original prediction snapshot.
+
+**Role:** **depth vote-donor candidate**, shadow-triage next. It is valuable
+because it reaches exactly the women/U21/reserve/deep-LatAm classes where the
+current board can fall to one voice, but depth is not promotion.
+
+### SportyTrader — rich markets/results, prediction depth still selective
+
+The current Spanish prediction listing is shallow relative to the required
+obscure-fixture coverage: the observed slate was dominated by Nations League,
+friendlies, LaLiga 2 and other selected top/mid-tier fixtures. It did not
+establish current prediction coverage for Ireland First Division,
+Frauen-Bundesliga or Eerste Divisie.
+
+Per-match depth is strong where a prediction page exists: 1X2, O/U, BTTS,
+corners, exact score and combination markets can carry model percentages and
+named bookmaker odds. The relay also found these relevant coverage signals:
+
+- **Ireland First Division:** a dedicated SportyTrader live-results page lists
+  current fixtures, tables, goals/BTTS statistics and match links. This confirms
+  results/settlement depth for the competition, but not that the Spanish
+  prediction listing produces a corresponding prediction row for each fixture.
+- **Frauen-Bundesliga / women:** current live results include women's fixtures,
+  and historical per-match pages expose Bundesliga Femenina form/results. A
+  current prediction-slate guarantee for every Frauen-Bundesliga fixture is
+  still unconfirmed.
+- **Eerste Divisie:** historical match pages contain Eerste Divisie results and
+  form rows, but current per-match prediction coverage was not established in
+  this probe.
+
+**Settlement path correction:** the current listing links to
+[`/resultados-directo/futbol/`](https://www.sportytrader.es/resultados-directo/futbol/),
+which rendered live fixtures/results. The guessed
+`/es/resultados-vivo/futbol/` route returned a 404 in the relay and must not be
+used as the integration path.
+
+**Role:** **top/mid-tier price-corroborator candidate**, not a general deep
+fixture donor. Use named-book odds for the 7% price-sanity gate only after
+fixture/selection/book/freshness checks. Treat the probability tables as a
+weak vote shadow because they may mirror bookmaker consensus; do not credit
+vote independence without overlap testing against BetExplorer and the existing
+board.
+
+### Depth verdict matrix
+
+| source | league depth | market depth | results/settlement depth | role after depth probe |
+|---|---|---|---|---|
+| FutbolPronosticos | **Deep** — reserves, women, U21, lower LatAm and lower European leagues | **Deep** — 1X2, O1.5/U3.5, BTTS, exact score per structured fixture | **Unconfirmed** — guessed result/history routes 404; must grade a dated sample | Depth vote-donor candidate; shadow next, no production weight |
+| SportyTrader | **Shallow/selected for predictions**; live-results coverage is broader, but target-league prediction coverage remains unproven | **Deep per available match** — 1X2, O/U, BTTS, corners, exact score, combos, named books | **Confirmed for live-results surfaces** via `/resultados-directo/futbol/`; per-prediction settlement still requires immutable capture | Top/mid-tier price corroborator; weak vote shadow only |
+
+Depth is evidence for prioritising shadow mining, not an exemption from the
+post-TR-3 settled-evidence yardstick.
+
 ## Triage notes
 
 ### Best first shadows
