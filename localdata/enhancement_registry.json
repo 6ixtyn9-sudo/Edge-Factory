@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 181,
-   "inv_price_sum": 178.242398892174,
+   "hits": 183,
+   "inv_price_sum": 180.20906555884068,
    "multi_n": 25,
-   "n": 272,
+   "n": 275,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -608,9 +608,12 @@
     "2026-09-27|Nashville SC vs Toronto FC|match_over_25@v1",
     "2026-09-27|Germany vs Greece|match_over_25@v1",
     "2026-09-28|Club Le\u00f3n vs FC Ju\u00e1rez|match_over_25@v1",
-    "2026-09-30|Lithuania vs Andorra|match_over_25@v1"
+    "2026-09-30|Lithuania vs Andorra|match_over_25@v1",
+    "2026-10-01|Argentina vs Bolivia|match_over_25@v1",
+    "2026-10-01|Malta vs Gibraltar|match_over_25@v1",
+    "2026-10-01|Wales vs Norway|match_over_25@v1"
    ],
-   "profit": 4.1,
+   "profit": 3.85,
    "records": [
     {
      "date": "2026-08-01",
@@ -2784,6 +2787,30 @@
      "match": "Lithuania vs Andorra",
      "multi_source": false,
      "price": 2.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-01",
+     "hit": true,
+     "match": "Argentina vs Bolivia",
+     "multi_source": false,
+     "price": 1.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-01",
+     "hit": false,
+     "match": "Malta vs Gibraltar",
+     "multi_source": false,
+     "price": 2.0,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-01",
+     "hit": true,
+     "match": "Wales vs Norway",
+     "multi_source": false,
+     "price": 1.5,
      "source": "scoutingstats"
     }
    ],

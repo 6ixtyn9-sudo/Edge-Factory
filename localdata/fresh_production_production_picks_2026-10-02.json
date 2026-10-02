@@ -1,0 +1,233 @@
+[
+  {
+    "avg_p": 56.72,
+    "away": "Moldova",
+    "bookmaker": "scoutingstats_odds",
+    "bucket": "CERTIFIED_CLEAN",
+    "date": "2026-10-02",
+    "dispatch_method": "certified_rule",
+    "display_rule": "certified_rule:1x2_two_source_p55_majority",
+    "edge": 0.0267,
+    "edge_rule": "1x2_two_source_p55_majority",
+    "edge_status": "certified",
+    "event_date": "2026-10-02",
+    "evidence_lineage": {
+      "away": "Moldova",
+      "eligible_voter_count": 5,
+      "event_date": "2026-10-02",
+      "home": "Kazakhstan",
+      "kickoff_source": null,
+      "live_1x2_voters": [
+        "bzzoiro",
+        "statarea",
+        "vitibet",
+        "zulubet"
+      ],
+      "ml_anchor_sources": [],
+      "non_voter_sources": [],
+      "odds": 1.85,
+      "odds_replaced": false,
+      "parked_sources": [],
+      "price": {
+        "execution_safe": true,
+        "odds": 1.85,
+        "odds_replaced": false,
+        "price_evidence": null,
+        "price_mechanism": "scoutingstats_odds",
+        "price_origin_source": "scoutingstats",
+        "price_origin_tier": "live",
+        "price_owner": "scoutingstats",
+        "price_push_eligible": true,
+        "price_quarantine_reason": null,
+        "price_source": "scoutingstats_odds",
+        "price_tier": "dedicated_pricing_feed",
+        "states": [
+          "price_safe_for_execution"
+        ]
+      },
+      "price_evidence": null,
+      "price_push_eligible": true,
+      "price_quarantine_reason": null,
+      "price_source": "scoutingstats_odds",
+      "production_eligible_1x2_voters": [
+        "bzzoiro",
+        "prosoccer",
+        "statarea",
+        "vitibet",
+        "zulubet"
+      ],
+      "reasons": [],
+      "required_eligible_voters": 2,
+      "rule_id": "1x2_two_source_p55_majority",
+      "selection": "home",
+      "shadow_1x2_sources": [
+        "prosoccer"
+      ],
+      "source_tiers": {
+        "bzzoiro": "live",
+        "prosoccer": "shadow",
+        "statarea": "live",
+        "vitibet": "live",
+        "zulubet": "live"
+      },
+      "sources_seen": [
+        "bzzoiro",
+        "prosoccer",
+        "statarea",
+        "vitibet",
+        "zulubet"
+      ],
+      "status": "reconciled",
+      "unregistered_sources": []
+    },
+    "feature_schema_version": "fresh_production_features_v1",
+    "home": "Kazakhstan",
+    "horizon_pick": false,
+    "implied_probability": 0.5405,
+    "kickoff": "02-10, 15:00",
+    "lane": "fresh_production",
+    "league": "World UEFA Nations League",
+    "market": "1x2",
+    "model_version": "fresh_production_rules_v1",
+    "odds": 1.85,
+    "odds_match_method": "exact",
+    "odds_replaced": false,
+    "odds_source": "scoutingstats_odds",
+    "pick": "home",
+    "price_evidence": null,
+    "price_push_eligible": true,
+    "price_quarantine_reason": null,
+    "price_tier": "dedicated_pricing_feed",
+    "production_certified": true,
+    "production_lane": true,
+    "run_date": "2026-10-02",
+    "selection_scope": "production",
+    "source_voters": [
+      "bzzoiro",
+      "prosoccer",
+      "statarea",
+      "vitibet",
+      "zulubet"
+    ],
+    "staking_owner": "auto_tickets",
+    "staking_policy": "handled_by_auto_tickets",
+    "walkforward_evidence": {
+      "base_rate": 0.5109,
+      "brier": 0.2205,
+      "hit_rate": 0.6585,
+      "hit_rate_lower_bound": 0.6267,
+      "model_eligible": true,
+      "recent_sample": 893,
+      "sample": 893,
+      "status": "certified_dispatchable"
+    }
+  },
+  {
+    "avg_p": 57.0,
+    "away": "Guadeloupe",
+    "bookmaker": "scoutingstats_odds",
+    "bucket": "CERTIFIED_CLEAN",
+    "date": "2026-10-02",
+    "dispatch_method": "certified_rule",
+    "display_rule": "certified_rule:1x2_two_source_p55_unanimous",
+    "edge": 0.1049,
+    "edge_rule": "1x2_two_source_p55_unanimous",
+    "edge_status": "certified",
+    "event_date": "2026-10-02",
+    "evidence_lineage": {
+      "away": "Guadeloupe",
+      "eligible_voter_count": 2,
+      "event_date": "2026-10-02",
+      "home": "St Lucia",
+      "kickoff_source": null,
+      "live_1x2_voters": [
+        "betclan"
+      ],
+      "ml_anchor_sources": [],
+      "non_voter_sources": [],
+      "odds": 2.15,
+      "odds_replaced": false,
+      "parked_sources": [],
+      "price": {
+        "execution_safe": true,
+        "odds": 2.15,
+        "odds_replaced": false,
+        "price_evidence": null,
+        "price_mechanism": "scoutingstats_odds",
+        "price_origin_source": "scoutingstats",
+        "price_origin_tier": "live",
+        "price_owner": "scoutingstats",
+        "price_push_eligible": true,
+        "price_quarantine_reason": null,
+        "price_source": "scoutingstats_odds",
+        "price_tier": "dedicated_pricing_feed",
+        "states": [
+          "price_safe_for_execution"
+        ]
+      },
+      "price_evidence": null,
+      "price_push_eligible": true,
+      "price_quarantine_reason": null,
+      "price_source": "scoutingstats_odds",
+      "production_eligible_1x2_voters": [
+        "betclan",
+        "prosoccer"
+      ],
+      "reasons": [],
+      "required_eligible_voters": 2,
+      "rule_id": "1x2_two_source_p55_unanimous",
+      "selection": "away",
+      "shadow_1x2_sources": [
+        "prosoccer"
+      ],
+      "source_tiers": {
+        "betclan": "live",
+        "prosoccer": "shadow"
+      },
+      "sources_seen": [
+        "betclan",
+        "prosoccer"
+      ],
+      "status": "reconciled",
+      "unregistered_sources": []
+    },
+    "feature_schema_version": "fresh_production_features_v1",
+    "home": "St Lucia",
+    "horizon_pick": false,
+    "implied_probability": 0.4651,
+    "kickoff": "20:00",
+    "lane": "fresh_production",
+    "league": "",
+    "market": "1x2",
+    "model_version": "fresh_production_rules_v1",
+    "odds": 2.15,
+    "odds_match_method": "exact",
+    "odds_replaced": false,
+    "odds_source": "scoutingstats_odds",
+    "pick": "away",
+    "price_evidence": null,
+    "price_push_eligible": true,
+    "price_quarantine_reason": null,
+    "price_tier": "dedicated_pricing_feed",
+    "production_certified": true,
+    "production_lane": true,
+    "run_date": "2026-10-02",
+    "selection_scope": "production",
+    "source_voters": [
+      "betclan",
+      "prosoccer"
+    ],
+    "staking_owner": "auto_tickets",
+    "staking_policy": "handled_by_auto_tickets",
+    "walkforward_evidence": {
+      "base_rate": 0.5109,
+      "brier": 0.2202,
+      "hit_rate": 0.6591,
+      "hit_rate_lower_bound": 0.6271,
+      "model_eligible": true,
+      "recent_sample": 880,
+      "sample": 880,
+      "status": "certified_dispatchable"
+    }
+  }
+]

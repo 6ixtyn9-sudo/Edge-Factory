@@ -1,0 +1,596 @@
+{
+  "as_of": "2026-10-02T06:09:01+02:00",
+  "eligible_pick_count": 5,
+  "generated_for": "2026-10-02",
+  "horizon_days": 2,
+  "horizon_end": "2026-10-04",
+  "lane": "fresh_production_horizon",
+  "max_lead_hours": 48,
+  "min_lead_minutes": 30,
+  "note": "Horizon picks satisfy every same-day dispatch gate plus a 30-minute minimum and 48-hour maximum lead. They are published as dated candidates: dispatch happens on each fixture's own run date, because the downstream sync and notification path publishes one target date at a time and does not yet accept future-dated rows.",
+  "per_day": [
+    {
+      "candidates": 187,
+      "date": "2026-10-02",
+      "eligible": 2
+    },
+    {
+      "candidates": 469,
+      "date": "2026-10-03",
+      "eligible": 5
+    },
+    {
+      "candidates": 58,
+      "date": "2026-10-04",
+      "eligible": 0
+    }
+  ],
+  "picks": [
+    {
+      "away": "Oldham",
+      "blockers": [],
+      "bookmaker": "prosoccer_embedded",
+      "date": "2026-10-03",
+      "dispatch_method": "certified_rule",
+      "dispatchable": true,
+      "edge": 0.2526,
+      "feature_schema_version": "fresh_production_features_v1",
+      "home": "Northampton",
+      "identity_match_tier": "exact",
+      "implied_probability": 0.3774,
+      "internal_stake_units": 1.0,
+      "kickoff": "2026-10-03T16:00:00+02:00",
+      "league": "England: League Two",
+      "model_health_status": "scored",
+      "model_version": "fresh_production_rules_v1",
+      "notes": [
+        "unseen_source_combo (advisory for certified_rule)",
+        "horizon lead 33.8h"
+      ],
+      "odds": 2.65,
+      "odds_replaced": false,
+      "price_diagnosis": {
+        "alias_match_found": false,
+        "bundles_searched": [
+          "bzzoiro_odds",
+          "scoutingstats_odds",
+          "source_embedded_odds"
+        ],
+        "detail": [
+          {
+            "bundle": "bzzoiro_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "scoutingstats_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "source_embedded_odds",
+            "match_method": "exact",
+            "matched": true,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 267,
+            "tier": "source_embedded_price",
+            "usable_odds": 2.65
+          }
+        ],
+        "embedded_source_price_found": true,
+        "exact_match_found": true,
+        "fuzzy_match_found_and_rejected": false,
+        "outcome": "exact"
+      },
+      "price_evidence": null,
+      "price_match_method": "exact",
+      "price_push_eligible": true,
+      "price_quarantine_reason": null,
+      "price_tier": "source_embedded_price",
+      "pricing_source": "source_embedded_odds",
+      "probability": 0.63,
+      "rule_id": "1x2_two_source_p60_majority",
+      "selection": "home",
+      "settlement_label_source": null,
+      "source_voters": [
+        "prosoccer",
+        "vitibet"
+      ],
+      "staking_owner": "auto_tickets",
+      "staking_policy": "handled_by_auto_tickets",
+      "timing_diagnosis": {
+        "classification": "trusted_kickoff_present",
+        "guard_reason": null,
+        "kickoff": "2026-10-03T16:00:00+02:00",
+        "kickoff_source": "vitibet",
+        "observations": [
+          {
+            "parsed": true,
+            "raw": "2026-10-03T16:00:00+02:00",
+            "source": "vitibet",
+            "timing_capable": true
+          },
+          {
+            "parsed": true,
+            "raw": "15:00",
+            "source": "prosoccer",
+            "timing_capable": true
+          }
+        ]
+      },
+      "timing_source": "vitibet",
+      "walkforward_evidence": {
+        "base_rate": 0.5109,
+        "brier": 0.2079,
+        "hit_rate": 0.6992,
+        "hit_rate_lower_bound": 0.6611,
+        "model_eligible": true,
+        "recent_sample": 595,
+        "sample": 595,
+        "status": "certified_dispatchable"
+      },
+      "would_have_qualified_before_kickoff": false
+    },
+    {
+      "away": "Eibar",
+      "blockers": [],
+      "bookmaker": "prosoccer_embedded",
+      "date": "2026-10-03",
+      "dispatch_method": "certified_rule",
+      "dispatchable": true,
+      "edge": 0.2096,
+      "feature_schema_version": "fresh_production_features_v1",
+      "home": "Albacete",
+      "identity_match_tier": "exact",
+      "implied_probability": 0.3704,
+      "internal_stake_units": 1.0,
+      "kickoff": "2026-10-03T14:00:00+02:00",
+      "league": "Spain: Segunda Divisi\u00f3n",
+      "model_health_status": "scored",
+      "model_version": "fresh_production_rules_v1",
+      "notes": [
+        "unseen_source_combo (advisory for certified_rule)",
+        "horizon lead 31.8h"
+      ],
+      "odds": 2.7,
+      "odds_replaced": false,
+      "price_diagnosis": {
+        "alias_match_found": false,
+        "bundles_searched": [
+          "bzzoiro_odds",
+          "scoutingstats_odds",
+          "source_embedded_odds"
+        ],
+        "detail": [
+          {
+            "bundle": "bzzoiro_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "scoutingstats_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "source_embedded_odds",
+            "match_method": "exact",
+            "matched": true,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 267,
+            "tier": "source_embedded_price",
+            "usable_odds": 2.7
+          }
+        ],
+        "embedded_source_price_found": true,
+        "exact_match_found": true,
+        "fuzzy_match_found_and_rejected": false,
+        "outcome": "exact"
+      },
+      "price_evidence": null,
+      "price_match_method": "exact",
+      "price_push_eligible": true,
+      "price_quarantine_reason": null,
+      "price_tier": "source_embedded_price",
+      "pricing_source": "source_embedded_odds",
+      "probability": 0.58,
+      "rule_id": "1x2_two_source_p55_unanimous",
+      "selection": "away",
+      "settlement_label_source": null,
+      "source_voters": [
+        "prosoccer",
+        "vitibet"
+      ],
+      "staking_owner": "auto_tickets",
+      "staking_policy": "handled_by_auto_tickets",
+      "timing_diagnosis": {
+        "classification": "trusted_kickoff_present",
+        "guard_reason": null,
+        "kickoff": "2026-10-03T14:00:00+02:00",
+        "kickoff_source": "vitibet",
+        "observations": [
+          {
+            "parsed": true,
+            "raw": "2026-10-03T14:00:00+02:00",
+            "source": "vitibet",
+            "timing_capable": true
+          },
+          {
+            "parsed": true,
+            "raw": "13:00",
+            "source": "prosoccer",
+            "timing_capable": true
+          }
+        ]
+      },
+      "timing_source": "vitibet",
+      "walkforward_evidence": {
+        "base_rate": 0.5109,
+        "brier": 0.2202,
+        "hit_rate": 0.6591,
+        "hit_rate_lower_bound": 0.6271,
+        "model_eligible": true,
+        "recent_sample": 880,
+        "sample": 880,
+        "status": "certified_dispatchable"
+      },
+      "would_have_qualified_before_kickoff": false
+    },
+    {
+      "away": "Stabaek",
+      "blockers": [],
+      "bookmaker": "prosoccer_embedded",
+      "date": "2026-10-03",
+      "dispatch_method": "certified_rule",
+      "dispatchable": true,
+      "edge": 0.1887,
+      "feature_schema_version": "fresh_production_features_v1",
+      "home": "Haugesund",
+      "identity_match_tier": "exact",
+      "implied_probability": 0.5263,
+      "internal_stake_units": 1.0,
+      "kickoff": "2026-10-03T16:00:00+02:00",
+      "league": "Norway: 1. Division",
+      "model_health_status": "scored",
+      "model_version": "fresh_production_rules_v1",
+      "notes": [
+        "unseen_source_combo (advisory for certified_rule)",
+        "horizon lead 33.8h"
+      ],
+      "odds": 1.9,
+      "odds_replaced": false,
+      "price_diagnosis": {
+        "alias_match_found": false,
+        "bundles_searched": [
+          "bzzoiro_odds",
+          "scoutingstats_odds",
+          "source_embedded_odds"
+        ],
+        "detail": [
+          {
+            "bundle": "bzzoiro_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "scoutingstats_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "source_embedded_odds",
+            "match_method": "exact",
+            "matched": true,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 267,
+            "tier": "source_embedded_price",
+            "usable_odds": 1.9
+          }
+        ],
+        "embedded_source_price_found": true,
+        "exact_match_found": true,
+        "fuzzy_match_found_and_rejected": false,
+        "outcome": "exact"
+      },
+      "price_evidence": null,
+      "price_match_method": "exact",
+      "price_push_eligible": true,
+      "price_quarantine_reason": null,
+      "price_tier": "source_embedded_price",
+      "pricing_source": "source_embedded_odds",
+      "probability": 0.715,
+      "rule_id": "1x2_two_source_p65_majority",
+      "selection": "home",
+      "settlement_label_source": null,
+      "source_voters": [
+        "prosoccer",
+        "vitibet"
+      ],
+      "staking_owner": "auto_tickets",
+      "staking_policy": "handled_by_auto_tickets",
+      "timing_diagnosis": {
+        "classification": "trusted_kickoff_present",
+        "guard_reason": null,
+        "kickoff": "2026-10-03T16:00:00+02:00",
+        "kickoff_source": "vitibet",
+        "observations": [
+          {
+            "parsed": true,
+            "raw": "2026-10-03T16:00:00+02:00",
+            "source": "vitibet",
+            "timing_capable": true
+          },
+          {
+            "parsed": true,
+            "raw": "15:00",
+            "source": "prosoccer",
+            "timing_capable": true
+          }
+        ]
+      },
+      "timing_source": "vitibet",
+      "walkforward_evidence": {
+        "base_rate": 0.5109,
+        "brier": 0.1939,
+        "hit_rate": 0.732,
+        "hit_rate_lower_bound": 0.6842,
+        "model_eligible": true,
+        "recent_sample": 362,
+        "sample": 362,
+        "status": "certified_dispatchable"
+      },
+      "would_have_qualified_before_kickoff": false
+    },
+    {
+      "away": "Wealdstone",
+      "blockers": [],
+      "bookmaker": "prosoccer_embedded",
+      "date": "2026-10-03",
+      "dispatch_method": "certified_rule",
+      "dispatchable": true,
+      "edge": 0.1545,
+      "feature_schema_version": "fresh_production_features_v1",
+      "home": "Barrow",
+      "identity_match_tier": "exact",
+      "implied_probability": 0.5405,
+      "internal_stake_units": 1.0,
+      "kickoff": "2026-10-03T16:00:00+02:00",
+      "league": "England: National League",
+      "model_health_status": "scored",
+      "model_version": "fresh_production_rules_v1",
+      "notes": [
+        "unseen_source_combo (advisory for certified_rule)",
+        "horizon lead 33.8h"
+      ],
+      "odds": 1.85,
+      "odds_replaced": false,
+      "price_diagnosis": {
+        "alias_match_found": false,
+        "bundles_searched": [
+          "bzzoiro_odds",
+          "scoutingstats_odds",
+          "source_embedded_odds"
+        ],
+        "detail": [
+          {
+            "bundle": "bzzoiro_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "scoutingstats_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "source_embedded_odds",
+            "match_method": "exact",
+            "matched": true,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 267,
+            "tier": "source_embedded_price",
+            "usable_odds": 1.85
+          }
+        ],
+        "embedded_source_price_found": true,
+        "exact_match_found": true,
+        "fuzzy_match_found_and_rejected": false,
+        "outcome": "exact"
+      },
+      "price_evidence": null,
+      "price_match_method": "exact",
+      "price_push_eligible": true,
+      "price_quarantine_reason": null,
+      "price_tier": "source_embedded_price",
+      "pricing_source": "source_embedded_odds",
+      "probability": 0.695,
+      "rule_id": "1x2_two_source_p65_majority",
+      "selection": "home",
+      "settlement_label_source": null,
+      "source_voters": [
+        "prosoccer",
+        "vitibet"
+      ],
+      "staking_owner": "auto_tickets",
+      "staking_policy": "handled_by_auto_tickets",
+      "timing_diagnosis": {
+        "classification": "trusted_kickoff_present",
+        "guard_reason": null,
+        "kickoff": "2026-10-03T16:00:00+02:00",
+        "kickoff_source": "vitibet",
+        "observations": [
+          {
+            "parsed": true,
+            "raw": "2026-10-03T16:00:00+02:00",
+            "source": "vitibet",
+            "timing_capable": true
+          },
+          {
+            "parsed": true,
+            "raw": "15:00",
+            "source": "prosoccer",
+            "timing_capable": true
+          }
+        ]
+      },
+      "timing_source": "vitibet",
+      "walkforward_evidence": {
+        "base_rate": 0.5109,
+        "brier": 0.1939,
+        "hit_rate": 0.732,
+        "hit_rate_lower_bound": 0.6842,
+        "model_eligible": true,
+        "recent_sample": 362,
+        "sample": 362,
+        "status": "certified_dispatchable"
+      },
+      "would_have_qualified_before_kickoff": false
+    },
+    {
+      "away": "Bradford",
+      "blockers": [],
+      "bookmaker": "prosoccer_embedded",
+      "date": "2026-10-03",
+      "dispatch_method": "certified_rule",
+      "dispatchable": true,
+      "edge": 0.1356,
+      "feature_schema_version": "fresh_production_features_v1",
+      "home": "Reading",
+      "identity_match_tier": "exact",
+      "implied_probability": 0.4444,
+      "internal_stake_units": 1.0,
+      "kickoff": "2026-10-03T16:00:00+02:00",
+      "league": "England: League One",
+      "model_health_status": "scored",
+      "model_version": "fresh_production_rules_v1",
+      "notes": [
+        "unseen_source_combo (advisory for certified_rule)",
+        "horizon lead 33.8h"
+      ],
+      "odds": 2.25,
+      "odds_replaced": false,
+      "price_diagnosis": {
+        "alias_match_found": false,
+        "bundles_searched": [
+          "bzzoiro_odds",
+          "scoutingstats_odds",
+          "source_embedded_odds"
+        ],
+        "detail": [
+          {
+            "bundle": "bzzoiro_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "scoutingstats_odds",
+            "match_method": null,
+            "matched": false,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 0,
+            "tier": "dedicated_pricing_feed",
+            "usable_odds": null
+          },
+          {
+            "bundle": "source_embedded_odds",
+            "match_method": "exact",
+            "matched": true,
+            "rejected_as_fuzzy": false,
+            "rows_in_bundle": 267,
+            "tier": "source_embedded_price",
+            "usable_odds": 2.25
+          }
+        ],
+        "embedded_source_price_found": true,
+        "exact_match_found": true,
+        "fuzzy_match_found_and_rejected": false,
+        "outcome": "exact"
+      },
+      "price_evidence": null,
+      "price_match_method": "exact",
+      "price_push_eligible": true,
+      "price_quarantine_reason": null,
+      "price_tier": "source_embedded_price",
+      "pricing_source": "source_embedded_odds",
+      "probability": 0.58,
+      "rule_id": "1x2_two_source_p55_unanimous",
+      "selection": "home",
+      "settlement_label_source": null,
+      "source_voters": [
+        "prosoccer",
+        "vitibet"
+      ],
+      "staking_owner": "auto_tickets",
+      "staking_policy": "handled_by_auto_tickets",
+      "timing_diagnosis": {
+        "classification": "trusted_kickoff_present",
+        "guard_reason": null,
+        "kickoff": "2026-10-03T16:00:00+02:00",
+        "kickoff_source": "vitibet",
+        "observations": [
+          {
+            "parsed": true,
+            "raw": "2026-10-03T16:00:00+02:00",
+            "source": "vitibet",
+            "timing_capable": true
+          },
+          {
+            "parsed": true,
+            "raw": "15:00",
+            "source": "prosoccer",
+            "timing_capable": true
+          }
+        ]
+      },
+      "timing_source": "vitibet",
+      "walkforward_evidence": {
+        "base_rate": 0.5109,
+        "brier": 0.2202,
+        "hit_rate": 0.6591,
+        "hit_rate_lower_bound": 0.6271,
+        "model_eligible": true,
+        "recent_sample": 880,
+        "sample": 880,
+        "status": "certified_dispatchable"
+      },
+      "would_have_qualified_before_kickoff": false
+    }
+  ],
+  "schema": 1
+}

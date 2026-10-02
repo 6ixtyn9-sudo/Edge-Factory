@@ -1,337 +1,602 @@
 {
   "blocked_rules": [
     {
-      "base_rate": 0.2,
+      "base_rate": 0.5108885017421603,
       "blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)"
+        "insufficient_walkforward_sample (4 < 200)",
+        "insufficient_recent_sample (4 < 25)",
+        "hit_rate_lower_bound_below_gate (0.150 < 0.55)",
+        "insufficient_lift_over_base_rate (-0.011 < 0.03)"
       ],
-      "brier": 0.376975,
+      "brier": 0.2426297015917557,
       "calibration": [
         {
-          "bucket": "60-70%",
-          "mean_predicted": 0.68,
+          "bucket": "50-60%",
+          "mean_predicted": 0.5925,
           "observed_hit_rate": 0.0,
           "sample": 1,
           "sufficient_sample": false
         },
         {
-          "bucket": "70-80%",
-          "mean_predicted": 0.7475,
+          "bucket": "60-70%",
+          "mean_predicted": 0.6304,
           "observed_hit_rate": 0.5,
           "sample": 2,
-          "sufficient_sample": false
-        }
-      ],
-      "calibration_sample": 2,
-      "certified": false,
-      "hit_rate": 0.3333333333333333,
-      "hit_rate_lb": 0.061490315276160515,
-      "lift": 0.1333333333333333,
-      "model_blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)",
-        "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
-      ],
-      "model_eligible": false,
-      "recent_sample": 3,
-      "recent_wins": 1,
-      "rule_id": "1x2_two_source_p55_majority",
-      "sample": 3,
-      "status": "blocked",
-      "wins": 1
-    },
-    {
-      "base_rate": 0.2,
-      "blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)"
-      ],
-      "brier": 0.376975,
-      "calibration": [
-        {
-          "bucket": "60-70%",
-          "mean_predicted": 0.68,
-          "observed_hit_rate": 0.0,
-          "sample": 1,
           "sufficient_sample": false
         },
         {
           "bucket": "70-80%",
-          "mean_predicted": 0.7475,
-          "observed_hit_rate": 0.5,
-          "sample": 2,
-          "sufficient_sample": false
-        }
-      ],
-      "calibration_sample": 2,
-      "certified": false,
-      "hit_rate": 0.3333333333333333,
-      "hit_rate_lb": 0.061490315276160515,
-      "lift": 0.1333333333333333,
-      "model_blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)",
-        "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
-      ],
-      "model_eligible": false,
-      "recent_sample": 3,
-      "recent_wins": 1,
-      "rule_id": "1x2_two_source_p55_unanimous",
-      "sample": 3,
-      "status": "blocked",
-      "wins": 1
-    },
-    {
-      "base_rate": 0.2,
-      "blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)"
-      ],
-      "brier": 0.376975,
-      "calibration": [
-        {
-          "bucket": "60-70%",
-          "mean_predicted": 0.68,
-          "observed_hit_rate": 0.0,
+          "mean_predicted": 0.775,
+          "observed_hit_rate": 1.0,
           "sample": 1,
-          "sufficient_sample": false
-        },
-        {
-          "bucket": "70-80%",
-          "mean_predicted": 0.7475,
-          "observed_hit_rate": 0.5,
-          "sample": 2,
-          "sufficient_sample": false
-        }
-      ],
-      "calibration_sample": 2,
-      "certified": false,
-      "hit_rate": 0.3333333333333333,
-      "hit_rate_lb": 0.061490315276160515,
-      "lift": 0.1333333333333333,
-      "model_blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)",
-        "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
-      ],
-      "model_eligible": false,
-      "recent_sample": 3,
-      "recent_wins": 1,
-      "rule_id": "1x2_two_source_p60_majority",
-      "sample": 3,
-      "status": "blocked",
-      "wins": 1
-    },
-    {
-      "base_rate": 0.2,
-      "blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)"
-      ],
-      "brier": 0.376975,
-      "calibration": [
-        {
-          "bucket": "60-70%",
-          "mean_predicted": 0.68,
-          "observed_hit_rate": 0.0,
-          "sample": 1,
-          "sufficient_sample": false
-        },
-        {
-          "bucket": "70-80%",
-          "mean_predicted": 0.7475,
-          "observed_hit_rate": 0.5,
-          "sample": 2,
-          "sufficient_sample": false
-        }
-      ],
-      "calibration_sample": 2,
-      "certified": false,
-      "hit_rate": 0.3333333333333333,
-      "hit_rate_lb": 0.061490315276160515,
-      "lift": 0.1333333333333333,
-      "model_blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)",
-        "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
-      ],
-      "model_eligible": false,
-      "recent_sample": 3,
-      "recent_wins": 1,
-      "rule_id": "1x2_two_source_p60_unanimous",
-      "sample": 3,
-      "status": "blocked",
-      "wins": 1
-    },
-    {
-      "base_rate": 0.2,
-      "blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)"
-      ],
-      "brier": 0.376975,
-      "calibration": [
-        {
-          "bucket": "60-70%",
-          "mean_predicted": 0.68,
-          "observed_hit_rate": 0.0,
-          "sample": 1,
-          "sufficient_sample": false
-        },
-        {
-          "bucket": "70-80%",
-          "mean_predicted": 0.7475,
-          "observed_hit_rate": 0.5,
-          "sample": 2,
-          "sufficient_sample": false
-        }
-      ],
-      "calibration_sample": 2,
-      "certified": false,
-      "hit_rate": 0.3333333333333333,
-      "hit_rate_lb": 0.061490315276160515,
-      "lift": 0.1333333333333333,
-      "model_blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)",
-        "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
-      ],
-      "model_eligible": false,
-      "recent_sample": 3,
-      "recent_wins": 1,
-      "rule_id": "1x2_two_source_p65_majority",
-      "sample": 3,
-      "status": "blocked",
-      "wins": 1
-    },
-    {
-      "base_rate": 0.2,
-      "blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)"
-      ],
-      "brier": 0.376975,
-      "calibration": [
-        {
-          "bucket": "60-70%",
-          "mean_predicted": 0.68,
-          "observed_hit_rate": 0.0,
-          "sample": 1,
-          "sufficient_sample": false
-        },
-        {
-          "bucket": "70-80%",
-          "mean_predicted": 0.7475,
-          "observed_hit_rate": 0.5,
-          "sample": 2,
-          "sufficient_sample": false
-        }
-      ],
-      "calibration_sample": 2,
-      "certified": false,
-      "hit_rate": 0.3333333333333333,
-      "hit_rate_lb": 0.061490315276160515,
-      "lift": 0.1333333333333333,
-      "model_blockers": [
-        "insufficient_walkforward_sample (3 < 200)",
-        "insufficient_recent_sample (3 < 25)",
-        "hit_rate_lower_bound_below_gate (0.061 < 0.55)",
-        "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
-      ],
-      "model_eligible": false,
-      "recent_sample": 3,
-      "recent_wins": 1,
-      "rule_id": "1x2_two_source_p65_unanimous",
-      "sample": 3,
-      "status": "blocked",
-      "wins": 1
-    },
-    {
-      "base_rate": 0.2,
-      "blockers": [
-        "insufficient_walkforward_sample (2 < 200)",
-        "insufficient_recent_sample (2 < 25)",
-        "hit_rate_lower_bound_below_gate (0.095 < 0.55)"
-      ],
-      "brier": 0.3342625,
-      "calibration": [
-        {
-          "bucket": "70-80%",
-          "mean_predicted": 0.7475,
-          "observed_hit_rate": 0.5,
-          "sample": 2,
           "sufficient_sample": false
         }
       ],
       "calibration_sample": 2,
       "certified": false,
       "hit_rate": 0.5,
-      "hit_rate_lb": 0.09452865480086611,
-      "lift": 0.3,
+      "hit_rate_lb": 0.15003570882017145,
+      "lift": -0.010888501742160273,
       "model_blockers": [
-        "insufficient_walkforward_sample (2 < 200)",
-        "insufficient_recent_sample (2 < 25)",
-        "hit_rate_lower_bound_below_gate (0.095 < 0.55)",
+        "insufficient_walkforward_sample (4 < 200)",
+        "insufficient_recent_sample (4 < 25)",
+        "hit_rate_lower_bound_below_gate (0.150 < 0.55)",
+        "insufficient_lift_over_base_rate (-0.011 < 0.03)",
         "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
       ],
       "model_eligible": false,
-      "recent_sample": 2,
-      "recent_wins": 1,
-      "rule_id": "1x2_two_source_p70_majority",
-      "sample": 2,
+      "recent_sample": 4,
+      "recent_wins": 2,
+      "rule_id": "1x2_four_source_p55_majority",
+      "sample": 4,
       "status": "blocked",
-      "wins": 1
+      "wins": 2
     },
     {
-      "base_rate": 0.2,
+      "base_rate": 0.5108885017421603,
       "blockers": [
-        "insufficient_walkforward_sample (2 < 200)",
-        "insufficient_recent_sample (2 < 25)",
-        "hit_rate_lower_bound_below_gate (0.095 < 0.55)"
+        "insufficient_walkforward_sample (4 < 200)",
+        "insufficient_recent_sample (4 < 25)",
+        "hit_rate_lower_bound_below_gate (0.150 < 0.55)",
+        "insufficient_lift_over_base_rate (-0.011 < 0.03)"
       ],
-      "brier": 0.3342625,
+      "brier": 0.2426297015917557,
       "calibration": [
         {
-          "bucket": "70-80%",
-          "mean_predicted": 0.7475,
+          "bucket": "50-60%",
+          "mean_predicted": 0.5925,
+          "observed_hit_rate": 0.0,
+          "sample": 1,
+          "sufficient_sample": false
+        },
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6304,
           "observed_hit_rate": 0.5,
           "sample": 2,
+          "sufficient_sample": false
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.775,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
           "sufficient_sample": false
         }
       ],
       "calibration_sample": 2,
       "certified": false,
       "hit_rate": 0.5,
-      "hit_rate_lb": 0.09452865480086611,
-      "lift": 0.3,
+      "hit_rate_lb": 0.15003570882017145,
+      "lift": -0.010888501742160273,
       "model_blockers": [
-        "insufficient_walkforward_sample (2 < 200)",
-        "insufficient_recent_sample (2 < 25)",
-        "hit_rate_lower_bound_below_gate (0.095 < 0.55)",
+        "insufficient_walkforward_sample (4 < 200)",
+        "insufficient_recent_sample (4 < 25)",
+        "hit_rate_lower_bound_below_gate (0.150 < 0.55)",
+        "insufficient_lift_over_base_rate (-0.011 < 0.03)",
         "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
       ],
       "model_eligible": false,
-      "recent_sample": 2,
+      "recent_sample": 4,
+      "recent_wins": 2,
+      "rule_id": "1x2_four_source_p55_unanimous",
+      "sample": 4,
+      "status": "blocked",
+      "wins": 2
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (3 < 200)",
+        "insufficient_recent_sample (3 < 25)",
+        "hit_rate_lower_bound_below_gate (0.208 < 0.55)"
+      ],
+      "brier": 0.20648751878900762,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6304,
+          "observed_hit_rate": 0.5,
+          "sample": 2,
+          "sufficient_sample": false
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.775,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 2,
+      "certified": false,
+      "hit_rate": 0.6666666666666666,
+      "hit_rate_lb": 0.20765495512648788,
+      "lift": 0.15577816492450636,
+      "model_blockers": [
+        "insufficient_walkforward_sample (3 < 200)",
+        "insufficient_recent_sample (3 < 25)",
+        "hit_rate_lower_bound_below_gate (0.208 < 0.55)",
+        "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 3,
+      "recent_wins": 2,
+      "rule_id": "1x2_four_source_p60_majority",
+      "sample": 3,
+      "status": "blocked",
+      "wins": 2
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (3 < 200)",
+        "insufficient_recent_sample (3 < 25)",
+        "hit_rate_lower_bound_below_gate (0.208 < 0.55)"
+      ],
+      "brier": 0.20648751878900762,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6304,
+          "observed_hit_rate": 0.5,
+          "sample": 2,
+          "sufficient_sample": false
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.775,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 2,
+      "certified": false,
+      "hit_rate": 0.6666666666666666,
+      "hit_rate_lb": 0.20765495512648788,
+      "lift": 0.15577816492450636,
+      "model_blockers": [
+        "insufficient_walkforward_sample (3 < 200)",
+        "insufficient_recent_sample (3 < 25)",
+        "hit_rate_lower_bound_below_gate (0.208 < 0.55)",
+        "blocked_insufficient_calibration_sample (largest bucket 2 < 50)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 3,
+      "recent_wins": 2,
+      "rule_id": "1x2_four_source_p60_unanimous",
+      "sample": 3,
+      "status": "blocked",
+      "wins": 2
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (1 < 200)",
+        "insufficient_recent_sample (1 < 25)",
+        "hit_rate_lower_bound_below_gate (0.207 < 0.55)"
+      ],
+      "brier": 0.05062499999999999,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.775,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 1,
+      "certified": false,
+      "hit_rate": 1.0,
+      "hit_rate_lb": 0.20654329147389294,
+      "lift": 0.4891114982578397,
+      "model_blockers": [
+        "insufficient_walkforward_sample (1 < 200)",
+        "insufficient_recent_sample (1 < 25)",
+        "hit_rate_lower_bound_below_gate (0.207 < 0.55)",
+        "blocked_insufficient_calibration_sample (largest bucket 1 < 50)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 1,
       "recent_wins": 1,
-      "rule_id": "1x2_two_source_p70_unanimous",
-      "sample": 2,
+      "rule_id": "1x2_four_source_p65_majority",
+      "sample": 1,
+      "status": "blocked",
+      "wins": 1
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (1 < 200)",
+        "insufficient_recent_sample (1 < 25)",
+        "hit_rate_lower_bound_below_gate (0.207 < 0.55)"
+      ],
+      "brier": 0.05062499999999999,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.775,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 1,
+      "certified": false,
+      "hit_rate": 1.0,
+      "hit_rate_lb": 0.20654329147389294,
+      "lift": 0.4891114982578397,
+      "model_blockers": [
+        "insufficient_walkforward_sample (1 < 200)",
+        "insufficient_recent_sample (1 < 25)",
+        "hit_rate_lower_bound_below_gate (0.207 < 0.55)",
+        "blocked_insufficient_calibration_sample (largest bucket 1 < 50)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 1,
+      "recent_wins": 1,
+      "rule_id": "1x2_four_source_p65_unanimous",
+      "sample": 1,
+      "status": "blocked",
+      "wins": 1
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (1 < 200)",
+        "insufficient_recent_sample (1 < 25)",
+        "hit_rate_lower_bound_below_gate (0.207 < 0.55)"
+      ],
+      "brier": 0.05062499999999999,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.775,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 1,
+      "certified": false,
+      "hit_rate": 1.0,
+      "hit_rate_lb": 0.20654329147389294,
+      "lift": 0.4891114982578397,
+      "model_blockers": [
+        "insufficient_walkforward_sample (1 < 200)",
+        "insufficient_recent_sample (1 < 25)",
+        "hit_rate_lower_bound_below_gate (0.207 < 0.55)",
+        "blocked_insufficient_calibration_sample (largest bucket 1 < 50)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 1,
+      "recent_wins": 1,
+      "rule_id": "1x2_four_source_p70_majority",
+      "sample": 1,
+      "status": "blocked",
+      "wins": 1
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (1 < 200)",
+        "insufficient_recent_sample (1 < 25)",
+        "hit_rate_lower_bound_below_gate (0.207 < 0.55)"
+      ],
+      "brier": 0.05062499999999999,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.775,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 1,
+      "certified": false,
+      "hit_rate": 1.0,
+      "hit_rate_lb": 0.20654329147389294,
+      "lift": 0.4891114982578397,
+      "model_blockers": [
+        "insufficient_walkforward_sample (1 < 200)",
+        "insufficient_recent_sample (1 < 25)",
+        "hit_rate_lower_bound_below_gate (0.207 < 0.55)",
+        "blocked_insufficient_calibration_sample (largest bucket 1 < 50)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 1,
+      "recent_wins": 1,
+      "rule_id": "1x2_four_source_p70_unanimous",
+      "sample": 1,
       "status": "blocked",
       "wins": 1
     }
   ],
-  "certified_dispatchable_rules": [],
+  "certified_dispatchable_rules": [
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [],
+      "brier": 0.22046284026671495,
+      "calibration": [
+        {
+          "bucket": "50-60%",
+          "mean_predicted": 0.5729,
+          "observed_hit_rate": 0.5772,
+          "sample": 298,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6443,
+          "observed_hit_rate": 0.6626,
+          "sample": 412,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7338,
+          "observed_hit_rate": 0.7802,
+          "sample": 182,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 412,
+      "certified": true,
+      "hit_rate": 0.658454647256439,
+      "hit_rate_lb": 0.6267310906960761,
+      "lift": 0.1475661455142787,
+      "model_blockers": [],
+      "model_eligible": true,
+      "recent_sample": 893,
+      "recent_wins": 588,
+      "rule_id": "1x2_two_source_p55_majority",
+      "sample": 893,
+      "status": "certified_dispatchable",
+      "wins": 588
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [],
+      "brier": 0.2202012872047201,
+      "calibration": [
+        {
+          "bucket": "50-60%",
+          "mean_predicted": 0.573,
+          "observed_hit_rate": 0.5784,
+          "sample": 287,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6445,
+          "observed_hit_rate": 0.661,
+          "sample": 410,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7338,
+          "observed_hit_rate": 0.7802,
+          "sample": 182,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 410,
+      "certified": true,
+      "hit_rate": 0.6590909090909091,
+      "hit_rate_lb": 0.6271409984407657,
+      "lift": 0.1482024073487488,
+      "model_blockers": [],
+      "model_eligible": true,
+      "recent_sample": 880,
+      "recent_wins": 580,
+      "rule_id": "1x2_two_source_p55_unanimous",
+      "sample": 880,
+      "status": "certified_dispatchable",
+      "wins": 580
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [],
+      "brier": 0.20789001937876495,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6443,
+          "observed_hit_rate": 0.6626,
+          "sample": 412,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7338,
+          "observed_hit_rate": 0.7802,
+          "sample": 182,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 412,
+      "certified": true,
+      "hit_rate": 0.6991596638655462,
+      "hit_rate_lb": 0.6611268402756171,
+      "lift": 0.1882711621233859,
+      "model_blockers": [],
+      "model_eligible": true,
+      "recent_sample": 595,
+      "recent_wins": 416,
+      "rule_id": "1x2_two_source_p60_majority",
+      "sample": 595,
+      "status": "certified_dispatchable",
+      "wins": 416
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [],
+      "brier": 0.2080582403547473,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6445,
+          "observed_hit_rate": 0.661,
+          "sample": 410,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7338,
+          "observed_hit_rate": 0.7802,
+          "sample": 182,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 410,
+      "certified": true,
+      "hit_rate": 0.6981450252951096,
+      "hit_rate_lb": 0.6600178507174854,
+      "lift": 0.1872565235529493,
+      "model_blockers": [],
+      "model_eligible": true,
+      "recent_sample": 593,
+      "recent_wins": 414,
+      "rule_id": "1x2_two_source_p60_unanimous",
+      "sample": 593,
+      "status": "certified_dispatchable",
+      "wins": 414
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [],
+      "brier": 0.1939147905365999,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6724,
+          "observed_hit_rate": 0.6816,
+          "sample": 179,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7338,
+          "observed_hit_rate": 0.7802,
+          "sample": 182,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 182,
+      "certified": true,
+      "hit_rate": 0.7320441988950276,
+      "hit_rate_lb": 0.6841574750737636,
+      "lift": 0.22115569715286731,
+      "model_blockers": [],
+      "model_eligible": true,
+      "recent_sample": 362,
+      "recent_wins": 265,
+      "rule_id": "1x2_two_source_p65_majority",
+      "sample": 362,
+      "status": "certified_dispatchable",
+      "wins": 265
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [],
+      "brier": 0.1939147905365999,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6724,
+          "observed_hit_rate": 0.6816,
+          "sample": 179,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7338,
+          "observed_hit_rate": 0.7802,
+          "sample": 182,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 182,
+      "certified": true,
+      "hit_rate": 0.7320441988950276,
+      "hit_rate_lb": 0.6841574750737636,
+      "lift": 0.22115569715286731,
+      "model_blockers": [],
+      "model_eligible": true,
+      "recent_sample": 362,
+      "recent_wins": 265,
+      "rule_id": "1x2_two_source_p65_unanimous",
+      "sample": 362,
+      "status": "certified_dispatchable",
+      "wins": 265
+    }
+  ],
   "feature_schema_version": "fresh_production_features_v1",
   "gates": {
     "max_ambiguity_rate": 0.05,
@@ -341,9 +606,390 @@
     "min_recent_sample_30d": 25,
     "min_walkforward_sample": 200
   },
-  "generated_for": "2026-10-01",
+  "generated_for": "2026-10-02",
   "model_version": "fresh_production_rules_v1",
   "note": "fresh_production certification registry. Independent of the legacy certified-edges registry; legacy certification is never inherited. 'certified_dispatchable_rules' are the only rules allowed to bet.",
-  "research_rules": [],
+  "research_rules": [
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (191 < 200)"
+      ],
+      "brier": 0.2141876947420964,
+      "calibration": [
+        {
+          "bucket": "50-60%",
+          "mean_predicted": 0.5752,
+          "observed_hit_rate": 0.6557,
+          "sample": 61,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6444,
+          "observed_hit_rate": 0.6494,
+          "sample": 77,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.732,
+          "observed_hit_rate": 0.7736,
+          "sample": 53,
+          "sufficient_sample": true
+        }
+      ],
+      "calibration_sample": 77,
+      "certified": false,
+      "hit_rate": 0.6858638743455497,
+      "hit_rate_lb": 0.6169195288174274,
+      "lift": 0.17497537260338947,
+      "model_blockers": [
+        "insufficient_walkforward_sample (191 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 191,
+      "recent_wins": 131,
+      "rule_id": "1x2_three_source_p55_majority",
+      "sample": 191,
+      "status": "research",
+      "wins": 131
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (189 < 200)"
+      ],
+      "brier": 0.21435296254377154,
+      "calibration": [
+        {
+          "bucket": "50-60%",
+          "mean_predicted": 0.5759,
+          "observed_hit_rate": 0.6441,
+          "sample": 59,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6444,
+          "observed_hit_rate": 0.6494,
+          "sample": 77,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.732,
+          "observed_hit_rate": 0.7736,
+          "sample": 53,
+          "sufficient_sample": true
+        }
+      ],
+      "calibration_sample": 77,
+      "certified": false,
+      "hit_rate": 0.6825396825396826,
+      "hit_rate_lb": 0.6131028995448682,
+      "lift": 0.17165118079752228,
+      "model_blockers": [
+        "insufficient_walkforward_sample (189 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 189,
+      "recent_wins": 129,
+      "rule_id": "1x2_three_source_p55_unanimous",
+      "sample": 189,
+      "status": "research",
+      "wins": 129
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (183 < 200)"
+      ],
+      "brier": 0.17208959079190161,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7338,
+          "observed_hit_rate": 0.7802,
+          "sample": 182,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 182,
+      "certified": false,
+      "hit_rate": 0.7814207650273224,
+      "hit_rate_lb": 0.716092112471081,
+      "lift": 0.2705322632851621,
+      "model_blockers": [
+        "insufficient_walkforward_sample (183 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 183,
+      "recent_wins": 143,
+      "rule_id": "1x2_two_source_p70_majority",
+      "sample": 183,
+      "status": "research",
+      "wins": 143
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (183 < 200)"
+      ],
+      "brier": 0.17208959079190161,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.7338,
+          "observed_hit_rate": 0.7802,
+          "sample": 182,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "80-90%",
+          "mean_predicted": 0.8,
+          "observed_hit_rate": 1.0,
+          "sample": 1,
+          "sufficient_sample": false
+        }
+      ],
+      "calibration_sample": 182,
+      "certified": false,
+      "hit_rate": 0.7814207650273224,
+      "hit_rate_lb": 0.716092112471081,
+      "lift": 0.2705322632851621,
+      "model_blockers": [
+        "insufficient_walkforward_sample (183 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 183,
+      "recent_wins": 143,
+      "rule_id": "1x2_two_source_p70_unanimous",
+      "sample": 183,
+      "status": "research",
+      "wins": 143
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (130 < 200)"
+      ],
+      "brier": 0.20498847117507799,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6444,
+          "observed_hit_rate": 0.6494,
+          "sample": 77,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.732,
+          "observed_hit_rate": 0.7736,
+          "sample": 53,
+          "sufficient_sample": true
+        }
+      ],
+      "calibration_sample": 77,
+      "certified": false,
+      "hit_rate": 0.7,
+      "hit_rate_lb": 0.6164102918267067,
+      "lift": 0.18911149825783968,
+      "model_blockers": [
+        "insufficient_walkforward_sample (130 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 130,
+      "recent_wins": 91,
+      "rule_id": "1x2_three_source_p60_majority",
+      "sample": 130,
+      "status": "research",
+      "wins": 91
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (130 < 200)"
+      ],
+      "brier": 0.20498847117507799,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6444,
+          "observed_hit_rate": 0.6494,
+          "sample": 77,
+          "sufficient_sample": true
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.732,
+          "observed_hit_rate": 0.7736,
+          "sample": 53,
+          "sufficient_sample": true
+        }
+      ],
+      "calibration_sample": 77,
+      "certified": false,
+      "hit_rate": 0.7,
+      "hit_rate_lb": 0.6164102918267067,
+      "lift": 0.18911149825783968,
+      "model_blockers": [
+        "insufficient_walkforward_sample (130 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 130,
+      "recent_wins": 91,
+      "rule_id": "1x2_three_source_p60_unanimous",
+      "sample": 130,
+      "status": "research",
+      "wins": 91
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (88 < 200)"
+      ],
+      "brier": 0.19267023902107183,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6725,
+          "observed_hit_rate": 0.6571,
+          "sample": 35,
+          "sufficient_sample": false
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.732,
+          "observed_hit_rate": 0.7736,
+          "sample": 53,
+          "sufficient_sample": true
+        }
+      ],
+      "calibration_sample": 53,
+      "certified": false,
+      "hit_rate": 0.7272727272727273,
+      "hit_rate_lb": 0.6261859859635164,
+      "lift": 0.21638422553056702,
+      "model_blockers": [
+        "insufficient_walkforward_sample (88 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 88,
+      "recent_wins": 64,
+      "rule_id": "1x2_three_source_p65_majority",
+      "sample": 88,
+      "status": "research",
+      "wins": 64
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (88 < 200)"
+      ],
+      "brier": 0.19267023902107183,
+      "calibration": [
+        {
+          "bucket": "60-70%",
+          "mean_predicted": 0.6725,
+          "observed_hit_rate": 0.6571,
+          "sample": 35,
+          "sufficient_sample": false
+        },
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.732,
+          "observed_hit_rate": 0.7736,
+          "sample": 53,
+          "sufficient_sample": true
+        }
+      ],
+      "calibration_sample": 53,
+      "certified": false,
+      "hit_rate": 0.7272727272727273,
+      "hit_rate_lb": 0.6261859859635164,
+      "lift": 0.21638422553056702,
+      "model_blockers": [
+        "insufficient_walkforward_sample (88 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 88,
+      "recent_wins": 64,
+      "rule_id": "1x2_three_source_p65_unanimous",
+      "sample": 88,
+      "status": "research",
+      "wins": 64
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (53 < 200)"
+      ],
+      "brier": 0.1721452214254833,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.732,
+          "observed_hit_rate": 0.7736,
+          "sample": 53,
+          "sufficient_sample": true
+        }
+      ],
+      "calibration_sample": 53,
+      "certified": false,
+      "hit_rate": 0.7735849056603774,
+      "hit_rate_lb": 0.6447347199775757,
+      "lift": 0.26269640391821714,
+      "model_blockers": [
+        "insufficient_walkforward_sample (53 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 53,
+      "recent_wins": 41,
+      "rule_id": "1x2_three_source_p70_majority",
+      "sample": 53,
+      "status": "research",
+      "wins": 41
+    },
+    {
+      "base_rate": 0.5108885017421603,
+      "blockers": [
+        "insufficient_walkforward_sample (53 < 200)"
+      ],
+      "brier": 0.1721452214254833,
+      "calibration": [
+        {
+          "bucket": "70-80%",
+          "mean_predicted": 0.732,
+          "observed_hit_rate": 0.7736,
+          "sample": 53,
+          "sufficient_sample": true
+        }
+      ],
+      "calibration_sample": 53,
+      "certified": false,
+      "hit_rate": 0.7735849056603774,
+      "hit_rate_lb": 0.6447347199775757,
+      "lift": 0.26269640391821714,
+      "model_blockers": [
+        "insufficient_walkforward_sample (53 < 200)"
+      ],
+      "model_eligible": false,
+      "recent_sample": 53,
+      "recent_wins": 41,
+      "rule_id": "1x2_three_source_p70_unanimous",
+      "sample": 53,
+      "status": "research",
+      "wins": 41
+    }
+  ],
   "schema": 2
 }

@@ -1,0 +1,72 @@
+{
+  "current_production_roles": {
+    "afootballreport": "shadow_fresh_production_voter",
+    "betclan": "fresh_production_live_voter",
+    "betexplorer_odds": "pricing_provider",
+    "betexplorer_results": "result_donor",
+    "bettingclosed": "result_donor",
+    "bzzoiro": "fresh_production_live_voter",
+    "bzzoiro_odds": "pricing_provider",
+    "freesupertips": "shadow_fresh_production_voter",
+    "oddspapi_odds": "pricing_provider",
+    "predictz": "shadow_fresh_production_voter",
+    "prosoccer": "shadow_fresh_production_voter",
+    "scoutingstats": "timing_provider",
+    "soccervista": "shadow_fresh_production_voter",
+    "statarea": "fresh_production_live_voter",
+    "theoddsapi_odds": "pricing_provider",
+    "vitibet": "fresh_production_live_voter",
+    "windrawwin": "shadow_fresh_production_voter",
+    "zulubet": "fresh_production_live_voter"
+  },
+  "historical_reference": {
+    "forebet": "blocked_predictor"
+  },
+  "pricing_bundles": {
+    "bzzoiro_odds": {
+      "cached_rows": 0,
+      "live_rows": 0,
+      "market_candidate_keys": 0,
+      "raw_rows": 0,
+      "refreshed": false,
+      "time_match_keys": 0,
+      "valid_keys": 0,
+      "valid_rows": 0
+    },
+    "scoutingstats_odds": {
+      "cached_rows": 109,
+      "live_rows": 0,
+      "market_candidate_keys": 7,
+      "raw_rows": 444,
+      "refreshed": false,
+      "time_match_keys": 444,
+      "valid_keys": 444,
+      "valid_rows": 444
+    },
+    "source_embedded": {
+      "market_candidate_keys": 3,
+      "raw_rows": 153,
+      "time_match_keys": 138,
+      "valid_keys": 132,
+      "valid_rows": 147
+    }
+  },
+  "pricing_health": {
+    "candidate_count_alias_price": 2,
+    "candidate_count_before_pricing": 52,
+    "candidate_count_exact_price": 36,
+    "candidate_count_missing_price": 14,
+    "candidate_count_suspect_price_rejected": 2,
+    "candidate_count_with_any_price": 38,
+    "candidate_count_with_negative_edge": 27,
+    "candidate_count_with_positive_edge": 11,
+    "price_tiers_used": {
+      "dedicated_pricing_feed": 26,
+      "source_embedded_price": 12
+    }
+  },
+  "warnings": [
+    "SOURCE_HEALTH: 14 of 52 scored candidate(s) had no captured 1X2 price",
+    "SOURCE_HEALTH: 2 candidate(s) matched a price only through a fuzzy fixture join and were rejected for dispatch"
+  ]
+}

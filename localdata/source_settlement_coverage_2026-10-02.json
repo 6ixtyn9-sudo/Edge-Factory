@@ -1,0 +1,1833 @@
+{
+  "alias_tier": true,
+  "donor_labels": [
+    "betexplorer_results_csv",
+    "betexplorer_settled",
+    "bettingclosed_csv",
+    "bettingclosed_settled",
+    "forebet_settled",
+    "scoutingstats_csv",
+    "scoutingstats_settled",
+    "statarea_csv",
+    "statarea_settled",
+    "vitibet_csv",
+    "vitibet_settled",
+    "wh:betexplorer_settled",
+    "wh:bettingclosed_settled",
+    "wh:results_donor",
+    "wh:scoutingstats_settled",
+    "wh:statarea_settled",
+    "wh:vitibet_settled",
+    "wh:zulubet_settled",
+    "zulubet_csv",
+    "zulubet_settled"
+  ],
+  "donor_rows": 130115,
+  "generated_for": "2026-10-02",
+  "reversal_reviews_loaded": 0,
+  "schema": 1,
+  "sources": [
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {},
+      "files": 1,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "no completed-window prediction rows in localdata",
+      "prediction_fixtures": 0,
+      "prediction_rows": 0,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 0.0,
+      "source": "forebet",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 0,
+      "verdict": "no_data"
+    },
+    {
+      "alias_matches": 14,
+      "ambiguous": 7,
+      "conflict_pct": 0.0,
+      "coverage_pct": 93.22,
+      "donor_score_conflicts": 3,
+      "examples": {
+        "ambiguous": [
+          {
+            "away": "Djurgardens IF",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Mjallby AIF",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "FK Partizan",
+            "candidates": "2",
+            "date": "2026-09-06",
+            "home": "FK Crvena Zvezda",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Djurgardens IF",
+            "candidates": "2",
+            "date": "2026-09-07",
+            "home": "Kalmar FF",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Djurgardens IF",
+            "candidates": "2",
+            "date": "2026-09-10",
+            "home": "Haninge",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "FK Crvena Zvezda",
+            "candidates": "2",
+            "date": "2026-09-17",
+            "home": "\u017delezni\u010dar Pan\u010devo",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Radnicki NIS",
+            "candidates": "2",
+            "date": "2026-09-20",
+            "home": "FK Crvena Zvezda",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Kun Khalifat FC",
+            "candidates": "2",
+            "date": "2026-09-24",
+            "home": "Rivers United",
+            "reason": "multiple alias donor candidates"
+          }
+        ],
+        "donor_conflict": [
+          {
+            "away": "Katwijk",
+            "date": "2026-09-02",
+            "donor_scores": "bettingclosed_csv=3-2; bettingclosed_settled=3-2; scoutingstats_csv=3-2; vitibet_csv=2-2; wh:bettingclosed_settled=3-2; wh:scoutingstats_settled=3-2",
+            "home": "TOGB",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Maardu",
+            "date": "2026-09-10",
+            "donor_scores": "bettingclosed_csv=4-2; bettingclosed_settled=0-0; wh:bettingclosed_settled=4-2",
+            "home": "FC Tallinn",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Bangladesh",
+            "date": "2026-10-01",
+            "donor_scores": "bettingclosed_csv=9-2; vitibet_csv=7-2; wh:bettingclosed_settled=9-2",
+            "home": "Indonesia",
+            "reason": "independent donors disagree"
+          }
+        ],
+        "unmatched": [
+          {
+            "away": "MG - Cruzeiro",
+            "date": "2026-09-02",
+            "home": "Atletico",
+            "reason": "no independent donor row",
+            "source_score": "2-1"
+          },
+          {
+            "away": "Universitetas W - Sturm Graz W",
+            "date": "2026-09-02",
+            "home": "Gintra",
+            "reason": "no independent donor row",
+            "source_score": "3-5"
+          },
+          {
+            "away": "Walter Ferretti",
+            "date": "2026-09-02",
+            "home": "H&H Export",
+            "reason": "no independent donor row",
+            "source_score": "1-1"
+          },
+          {
+            "away": "Orijent 1919",
+            "date": "2026-09-02",
+            "home": "HNK Cibalia",
+            "reason": "no independent donor row",
+            "source_score": "0-0"
+          },
+          {
+            "away": "VfL Wolfsburg W",
+            "date": "2026-09-02",
+            "home": "Inter Milano W",
+            "reason": "no independent donor row",
+            "source_score": "2-0"
+          },
+          {
+            "away": "Stockport County",
+            "date": "2026-09-02",
+            "home": "Luton",
+            "reason": "no independent donor row",
+            "source_score": "2-0"
+          },
+          {
+            "away": "Eintracht Frankfurt W",
+            "date": "2026-09-02",
+            "home": "Paris Saint Germain W",
+            "reason": "no independent donor row",
+            "source_score": "1-1"
+          },
+          {
+            "away": "Union St. Gilloise",
+            "date": "2026-09-02",
+            "home": "St. Truiden",
+            "reason": "no independent donor row",
+            "source_score": "0-3"
+          },
+          {
+            "away": "Fayha - Al Kholood",
+            "date": "2026-09-03",
+            "home": "Al",
+            "reason": "no independent donor row",
+            "source_score": "2-2"
+          },
+          {
+            "away": "Pitbulls Santa Barbara FC",
+            "date": "2026-09-03",
+            "home": "Cariari Pococi",
+            "reason": "no independent donor row",
+            "source_score": ""
+          }
+        ]
+      },
+      "files": 3,
+      "independent_donor_exact_matches": 1952,
+      "matched_total": 1966,
+      "notes": "3 donor-conflicted fixtures; 7 ambiguous rejected",
+      "prediction_fixtures": 2109,
+      "prediction_rows": 2109,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 97.77,
+      "source": "zulubet",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 1961,
+      "source_score_present": 2062,
+      "unmatched": 133,
+      "verdict": "settlement_validated"
+    },
+    {
+      "alias_matches": 430,
+      "ambiguous": 98,
+      "conflict_pct": 0.0,
+      "coverage_pct": 68.77,
+      "donor_score_conflicts": 1,
+      "examples": {
+        "ambiguous": [
+          {
+            "away": "Olimpia Grudziadz",
+            "candidates": "2",
+            "date": "2026-09-02",
+            "home": "Gornik Zabrze II",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "FC St. Gallen",
+            "candidates": "2",
+            "date": "2026-09-02",
+            "home": "Grasshopper-Club",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Bayern Munich",
+            "candidates": "2",
+            "date": "2026-09-02",
+            "home": "VfL Osnabruck",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Club 3 De Noviembre",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Deportivo Capiata",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Manisa FK",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Igdir FK",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Trujillanos FC",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Metropolitanos FC",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Seoul E-Land FC",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Cheongju FC",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Zeleznicar Pancevo",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Novi Pazar",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "AmaZulu",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Richards Bay FC",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Paraguari Ac",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Sportivo Carapegua",
+            "reason": "multiple alias donor candidates"
+          }
+        ],
+        "donor_conflict": [
+          {
+            "away": "MEAP Nisou",
+            "date": "2026-09-18",
+            "donor_scores": "forebet_settled=4-1; vitibet_csv=4-0",
+            "home": "Spartakos Kitiou",
+            "reason": "independent donors disagree"
+          }
+        ],
+        "unmatched": [
+          {
+            "away": "NK Celje",
+            "date": "2026-09-02",
+            "home": "Aluminij",
+            "reason": "no independent donor row",
+            "source_score": "0-2"
+          },
+          {
+            "away": "Dhamk",
+            "date": "2026-09-02",
+            "home": "Al-Wehda Club",
+            "reason": "no independent donor row",
+            "source_score": "2-2"
+          },
+          {
+            "away": "Krylya Sovetov",
+            "date": "2026-09-02",
+            "home": "Baltika",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Portland Hearts Of Pine",
+            "date": "2026-09-02",
+            "home": "Charlotte Independence",
+            "reason": "no independent donor row",
+            "source_score": "3-2"
+          },
+          {
+            "away": "Libertad",
+            "date": "2026-09-02",
+            "home": "Club Nacional",
+            "reason": "no independent donor row",
+            "source_score": "3-0"
+          },
+          {
+            "away": "Kashiwa Reysol",
+            "date": "2026-09-02",
+            "home": "C-Osaka",
+            "reason": "no independent donor row",
+            "source_score": "2-0"
+          },
+          {
+            "away": "Al Mokawloon",
+            "date": "2026-09-02",
+            "home": "El Gouna FC",
+            "reason": "no independent donor row",
+            "source_score": "0-1"
+          },
+          {
+            "away": "Kayserispor",
+            "date": "2026-09-02",
+            "home": "Fatih Karagumruk AS",
+            "reason": "no independent donor row",
+            "source_score": "1-1"
+          },
+          {
+            "away": "FCSB",
+            "date": "2026-09-02",
+            "home": "FC Arges Pitesti",
+            "reason": "no independent donor row",
+            "source_score": "0-5"
+          },
+          {
+            "away": "Tammeka Tartu",
+            "date": "2026-09-02",
+            "home": "Flora Tallinn",
+            "reason": "no independent donor row",
+            "source_score": "3-2"
+          }
+        ]
+      },
+      "files": 3,
+      "independent_donor_exact_matches": 2373,
+      "matched_total": 2803,
+      "notes": "1 donor-conflicted fixtures; 98 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
+      "prediction_fixtures": 4076,
+      "prediction_rows": 4076,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 96.27,
+      "source": "statarea",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 2786,
+      "source_score_present": 3924,
+      "unmatched": 1174,
+      "verdict": "partial"
+    },
+    {
+      "alias_matches": 1753,
+      "ambiguous": 284,
+      "conflict_pct": 0.0,
+      "coverage_pct": 49.33,
+      "donor_score_conflicts": 15,
+      "examples": {
+        "ambiguous": [
+          {
+            "away": "\u0160opor\u0148a",
+            "candidates": "2",
+            "date": "2026-09-02",
+            "home": "Boler\u00e1z",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Milford FC",
+            "candidates": "2",
+            "date": "2026-09-02",
+            "home": "Mamelodi Sundowns FC",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Nublense",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "CD Limache",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Al-Karma",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Diyala SC",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Djurg\u00e5rdens IF",
+            "candidates": "3",
+            "date": "2026-09-03",
+            "home": "Mjallby AIF",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "CA Boca Juniors",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "V\u00e9lez Sarsfield",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "FC Volendam",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Emmen",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Ringsted",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Frem",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Hiller\u00f8d",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "HB Koge",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Polokwane City FC",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Marumo Gallants FC",
+            "reason": "multiple alias donor candidates"
+          }
+        ],
+        "donor_conflict": [
+          {
+            "away": "Kabel Novi Sad",
+            "date": "2026-09-02",
+            "donor_scores": "bettingclosed_csv=1-1; bettingclosed_settled=2-1; wh:bettingclosed_settled=1-1",
+            "home": "Sloven Ruma",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Katwijk",
+            "date": "2026-09-02",
+            "donor_scores": "bettingclosed_csv=3-2; bettingclosed_settled=3-2; scoutingstats_csv=3-2; wh:bettingclosed_settled=3-2; wh:scoutingstats_settled=3-2; wh:zulubet_settled=2-2; zulubet_csv=2-2",
+            "home": "TOGB",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Wolfsberger AC",
+            "date": "2026-09-06",
+            "donor_scores": "bettingclosed_csv=2-2; forebet_settled=1-1; wh:bettingclosed_settled=2-2",
+            "home": "Parndorf",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "AFC Emley",
+            "date": "2026-09-09",
+            "donor_scores": "forebet_settled=0-0; scoutingstats_csv=0-2; wh:scoutingstats_settled=0-2",
+            "home": "Bishop Auckland",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Navalcarnero",
+            "date": "2026-09-09",
+            "donor_scores": "bettingclosed_csv=0-2; forebet_settled=0-0; wh:bettingclosed_settled=0-2",
+            "home": "CF Talavera",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "HNK Gorica",
+            "date": "2026-09-09",
+            "donor_scores": "bettingclosed_csv=1-3; forebet_settled=1-1; wh:bettingclosed_settled=1-3",
+            "home": "Uskok Klis",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Maardu",
+            "date": "2026-09-10",
+            "donor_scores": "bettingclosed_csv=4-2; bettingclosed_settled=0-0; wh:bettingclosed_settled=4-2",
+            "home": "FC Tallinn",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "K\u00f6petdag A\u015fgabat",
+            "date": "2026-09-12",
+            "donor_scores": "bettingclosed_csv=2-2; bettingclosed_settled=0-0; wh:bettingclosed_settled=2-2",
+            "home": "Merw",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Rebel",
+            "date": "2026-09-12",
+            "donor_scores": "bettingclosed_csv=0-1; forebet_settled=1-1; wh:bettingclosed_settled=0-1",
+            "home": "Oleksandria II",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "MEAP Nisou",
+            "date": "2026-09-18",
+            "donor_scores": "forebet_settled=4-1; statarea_csv=4-0; wh:statarea_settled=4-0",
+            "home": "Spartakos Kitiou",
+            "reason": "independent donors disagree"
+          }
+        ],
+        "reversed_candidate_unexplained": [
+          {
+            "away": "Atl\u00e9tico Pueblonuevo",
+            "date": "2026-09-06",
+            "donor_score": "2-2",
+            "donors": "forebet_settled",
+            "home": "Jara\u00edz",
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
+          },
+          {
+            "away": "Ph\u00f6nix L\u00fcbeck",
+            "date": "2026-09-06",
+            "donor_score": "0-2",
+            "donors": "forebet_settled",
+            "home": "Werder Bremen II",
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
+          },
+          {
+            "away": "Kuching FA",
+            "date": "2026-09-12",
+            "donor_score": "1-2",
+            "donors": "bettingclosed_csv,forebet_settled,wh:bettingclosed_settled",
+            "home": "Melaka",
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
+          },
+          {
+            "away": "Olympic Varna",
+            "date": "2026-09-20",
+            "donor_score": "2-0",
+            "donors": "forebet_settled",
+            "home": "Cherno more II",
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
+          },
+          {
+            "away": "Atl\u00e9tico Pueblonuevo",
+            "date": "2026-09-20",
+            "donor_score": "1-1",
+            "donors": "forebet_settled",
+            "home": "Santa Amalia",
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
+          },
+          {
+            "away": "Independiente del Valle",
+            "date": "2026-09-25",
+            "donor_score": "0-2",
+            "donors": "wh:zulubet_settled,zulubet_csv,zulubet_settled",
+            "home": "Gualaceo SC",
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
+          },
+          {
+            "away": "Radnik Bijeljina",
+            "date": "2026-09-26",
+            "donor_score": "3-4",
+            "donors": "scoutingstats_csv",
+            "home": "Borac Banja Luka",
+            "reason": "donor has reversed home/away",
+            "review": "UNEXPLAINED - blocks validation"
+          }
+        ],
+        "unmatched": [
+          {
+            "away": "Minsk W",
+            "date": "2026-09-02",
+            "home": "Agram W",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Brondby U21",
+            "date": "2026-09-02",
+            "home": "Aston Villa U21",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "DVS 33 Ermelo",
+            "date": "2026-09-02",
+            "home": "ATC 65",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Corinthians U17",
+            "date": "2026-09-02",
+            "home": "Athletico PR U17",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Vasco U17",
+            "date": "2026-09-02",
+            "home": "Atletico GO U17",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Cruzeiro",
+            "date": "2026-09-02",
+            "home": "Atletico-MG",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "CA Porto U20",
+            "date": "2026-09-02",
+            "home": "Atletico Torres U20",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Atl\u00e9tico Mineiro U17",
+            "date": "2026-09-02",
+            "home": "Bahia U17",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Krylia Sovetov",
+            "date": "2026-09-02",
+            "home": "Baltika",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Sparta Praha II",
+            "date": "2026-09-02",
+            "home": "Bene\u0161ov",
+            "reason": "no independent donor row",
+            "source_score": ""
+          }
+        ]
+      },
+      "files": 2,
+      "independent_donor_exact_matches": 6009,
+      "matched_total": 7762,
+      "notes": "orientation risk on 7 fixtures (7 unexplained, 0 reviewed); 15 donor-conflicted fixtures; 284 ambiguous rejected; insufficient matched settlement evidence",
+      "prediction_fixtures": 15734,
+      "prediction_rows": 15734,
+      "reversed_candidates": 7,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 7,
+      "role": "prediction",
+      "self_score_pct": 23.79,
+      "source": "vitibet",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 3735,
+      "source_score_present": 3743,
+      "unmatched": 7673,
+      "verdict": "unproven"
+    },
+    {
+      "alias_matches": 579,
+      "ambiguous": 176,
+      "conflict_pct": 0.16,
+      "coverage_pct": 60.75,
+      "donor_score_conflicts": 1,
+      "examples": {
+        "ambiguous": [
+          {
+            "away": "Sion",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Basel",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "G\u00f3rnik Zabrze",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Rak\u00f3w Cz\u0119stochowa",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "\u017delezni\u010dar Pan\u010devo",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Novi Pazar",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Daegu",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Paju Citizen",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Amiens SC",
+            "candidates": "2",
+            "date": "2026-09-05",
+            "home": "Bastia",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Lillestr\u00f8m",
+            "candidates": "2",
+            "date": "2026-09-05",
+            "home": "Brann",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Pe\u00f1arol",
+            "candidates": "3",
+            "date": "2026-09-05",
+            "home": "Danubio",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Z\u00fcrich",
+            "candidates": "3",
+            "date": "2026-09-05",
+            "home": "Grasshopper",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Pachuca",
+            "candidates": "3",
+            "date": "2026-09-05",
+            "home": "Ju\u00e1rez",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Ry\u016bky\u016b",
+            "candidates": "2",
+            "date": "2026-09-05",
+            "home": "Kagoshima United",
+            "reason": "multiple alias donor candidates"
+          }
+        ],
+        "conflict": [
+          {
+            "away": "AFC Emley",
+            "date": "2026-09-09",
+            "donor_score": "0-0",
+            "donors": "forebet_settled",
+            "home": "Bishop Auckland",
+            "reason": "source score != donor score",
+            "source_score": "0-2"
+          },
+          {
+            "away": "Louletano",
+            "date": "2026-09-20",
+            "donor_score": "1-1",
+            "donors": "forebet_settled",
+            "home": "FC Serpa",
+            "reason": "source score != donor score",
+            "source_score": "1-2"
+          },
+          {
+            "away": "Southall",
+            "date": "2026-09-22",
+            "donor_score": "3-3",
+            "donors": "forebet_settled",
+            "home": "Dorking Wanderers",
+            "reason": "source score != donor score",
+            "source_score": "5-4"
+          },
+          {
+            "away": "DOVO",
+            "date": "2026-09-22",
+            "donor_score": "1-1",
+            "donors": "forebet_settled",
+            "home": "Koninklijke HFC",
+            "reason": "source score != donor score",
+            "source_score": "3-1"
+          }
+        ],
+        "donor_conflict": [
+          {
+            "away": "Katwijk",
+            "date": "2026-09-02",
+            "donor_scores": "bettingclosed_csv=3-2; bettingclosed_settled=3-2; vitibet_csv=2-2; wh:bettingclosed_settled=3-2; wh:zulubet_settled=2-2; zulubet_csv=2-2",
+            "home": "TOGB",
+            "reason": "independent donors disagree"
+          }
+        ],
+        "unmatched": [
+          {
+            "away": "Westlandia",
+            "date": "2026-09-02",
+            "home": "ACV",
+            "reason": "no independent donor row",
+            "source_score": "6-1"
+          },
+          {
+            "away": "FC Midtjylland",
+            "date": "2026-09-02",
+            "home": "AGF",
+            "reason": "no independent donor row",
+            "source_score": "0-2"
+          },
+          {
+            "away": "WSG Tirol",
+            "date": "2026-09-02",
+            "home": "Austria Wien",
+            "reason": "no independent donor row",
+            "source_score": "0-1"
+          },
+          {
+            "away": "Urawa Reds",
+            "date": "2026-09-02",
+            "home": "Avispa Fukuoka",
+            "reason": "no independent donor row",
+            "source_score": "2-3"
+          },
+          {
+            "away": "Krylya Sovetov",
+            "date": "2026-09-02",
+            "home": "Baltika Kaliningrad",
+            "reason": "no independent donor row",
+            "source_score": "0-0"
+          },
+          {
+            "away": "Modern Sport FC",
+            "date": "2026-09-02",
+            "home": "Ceramica Cleopatra",
+            "reason": "no independent donor row",
+            "source_score": "2-0"
+          },
+          {
+            "away": "Midland",
+            "date": "2026-09-02",
+            "home": "Colegiales",
+            "reason": "no independent donor row",
+            "source_score": "3-0"
+          },
+          {
+            "away": "Univ. Concepci\u00f3n",
+            "date": "2026-09-02",
+            "home": "Coquimbo Unido",
+            "reason": "no independent donor row",
+            "source_score": "1-0"
+          },
+          {
+            "away": "Al Mokawloon",
+            "date": "2026-09-02",
+            "home": "El Gounah",
+            "reason": "no independent donor row",
+            "source_score": "0-1"
+          },
+          {
+            "away": "Kayserispor",
+            "date": "2026-09-02",
+            "home": "Fatih Karag\u00fcmr\u00fck",
+            "reason": "no independent donor row",
+            "source_score": "1-1"
+          }
+        ]
+      },
+      "files": 2,
+      "independent_donor_exact_matches": 1927,
+      "matched_total": 2506,
+      "notes": "1 donor-conflicted fixtures; 176 ambiguous rejected; below validated thresholds (volume/coverage/conflict)",
+      "prediction_fixtures": 4125,
+      "prediction_rows": 4125,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 96.15,
+      "source": "scoutingstats",
+      "source_score_conflicts_donor": 4,
+      "source_score_matches_donor": 2502,
+      "source_score_present": 3966,
+      "unmatched": 1442,
+      "verdict": "partial"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {},
+      "files": 0,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "no completed-window prediction rows in localdata",
+      "prediction_fixtures": 0,
+      "prediction_rows": 0,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 0.0,
+      "source": "predictz",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 0,
+      "verdict": "no_data"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {},
+      "files": 1,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "no completed-window prediction rows in localdata",
+      "prediction_fixtures": 0,
+      "prediction_rows": 0,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 0.0,
+      "source": "windrawwin",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 0,
+      "verdict": "no_data"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 21.3,
+      "donor_score_conflicts": 1,
+      "examples": {
+        "donor_conflict": [
+          {
+            "away": "BANGLADESH",
+            "date": "2026-10-01",
+            "donor_scores": "bettingclosed_csv=9-2; vitibet_csv=7-2; wh:bettingclosed_settled=9-2; wh:results_donor=9-2; wh:zulubet_settled=7-2; zulubet_csv=7-2",
+            "home": "INDONESIA",
+            "reason": "independent donors disagree"
+          }
+        ],
+        "unmatched": [
+          {
+            "away": "ST. VINCENT & G",
+            "date": "2026-09-30",
+            "home": "BELIZE",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "CAMBODIA",
+            "date": "2026-09-30",
+            "home": "EAST TIMOR",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "SHOOTING STARS",
+            "date": "2026-09-30",
+            "home": "ENYIMBA INTERNATIO",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "KFUM KAMERATENE",
+            "date": "2026-09-30",
+            "home": "HONEFOSS",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "LOS MILLONARIOS",
+            "date": "2026-09-30",
+            "home": "INDEP. MEDELLIN",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "RIVERS UNITED",
+            "date": "2026-09-30",
+            "home": "KATSINA",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "IKORODU UNITED",
+            "date": "2026-09-30",
+            "home": "SPORTING LAGOS",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "SUTTON UNT",
+            "date": "2026-09-30",
+            "home": "TAMWORTH",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "QATAR",
+            "date": "2026-09-30",
+            "home": "U. ARAB EMIRATE",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "ENUGU RANGERS INTE",
+            "date": "2026-09-30",
+            "home": "WARRI WOLVES",
+            "reason": "no independent donor row",
+            "source_score": ""
+          }
+        ]
+      },
+      "files": 2,
+      "independent_donor_exact_matches": 23,
+      "matched_total": 23,
+      "notes": "1 donor-conflicted fixtures; insufficient matched settlement evidence",
+      "prediction_fixtures": 108,
+      "prediction_rows": 108,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 0.0,
+      "source": "prosoccer",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 84,
+      "verdict": "unproven"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {},
+      "files": 0,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "no completed-window prediction rows in localdata",
+      "prediction_fixtures": 0,
+      "prediction_rows": 0,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 0.0,
+      "source": "soccervista",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 0,
+      "verdict": "no_data"
+    },
+    {
+      "alias_matches": 407,
+      "ambiguous": 145,
+      "conflict_pct": 0.1,
+      "coverage_pct": 42.77,
+      "donor_score_conflicts": 6,
+      "examples": {
+        "ambiguous": [
+          {
+            "away": "Bayern Munchen",
+            "candidates": "2",
+            "date": "2026-09-02",
+            "home": "VfL Osnabruck",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Urena SC",
+            "candidates": "2",
+            "date": "2026-09-02",
+            "home": "Yaracuyanos",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "FC Sion",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Basel",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Renate AC",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Cittadella",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Valenciennes",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "FC Rouen",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Manisa",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Igdir",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Djurgardens",
+            "candidates": "2",
+            "date": "2026-09-03",
+            "home": "Mjallby AIF",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Start IK",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Aalesund FK",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "Hvidovre IF",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Hobro",
+            "reason": "multiple alias donor candidates"
+          },
+          {
+            "away": "FC Gandzasar",
+            "candidates": "2",
+            "date": "2026-09-04",
+            "home": "Noah",
+            "reason": "multiple alias donor candidates"
+          }
+        ],
+        "conflict": [
+          {
+            "away": "Navalcarnero",
+            "date": "2026-09-09",
+            "donor_score": "0-0",
+            "donors": "forebet_settled",
+            "home": "Talavera CF",
+            "reason": "source score != donor score",
+            "source_score": "0-2"
+          },
+          {
+            "away": "Binefar",
+            "date": "2026-09-16",
+            "donor_score": "0-0",
+            "donors": "forebet_settled",
+            "home": "Terrassa",
+            "reason": "source score != donor score",
+            "source_score": "4-0"
+          },
+          {
+            "away": "Bangladesh",
+            "date": "2026-10-01",
+            "donor_score": "7-2",
+            "donors": "vitibet_csv,wh:zulubet_settled,zulubet_csv",
+            "home": "Indonesia",
+            "reason": "source score != donor score",
+            "source_score": "9-2"
+          }
+        ],
+        "donor_conflict": [
+          {
+            "away": "Katwijk",
+            "date": "2026-09-02",
+            "donor_scores": "scoutingstats_csv=3-2; vitibet_csv=2-2; wh:scoutingstats_settled=3-2; wh:zulubet_settled=2-2; zulubet_csv=2-2",
+            "home": "TOGB",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Wolfsberger AC",
+            "date": "2026-09-06",
+            "donor_scores": "forebet_settled=1-1; vitibet_csv=2-2",
+            "home": "Parndorf",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "HNK Gorica",
+            "date": "2026-09-09",
+            "donor_scores": "forebet_settled=1-1; vitibet_csv=1-3",
+            "home": "Uskok Klis",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Rebel",
+            "date": "2026-09-12",
+            "donor_scores": "forebet_settled=1-1; vitibet_csv=0-1",
+            "home": "Oleksandria II",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Louletano",
+            "date": "2026-09-20",
+            "donor_scores": "forebet_settled=1-1; scoutingstats_csv=1-2; wh:scoutingstats_settled=1-2",
+            "home": "Serpa",
+            "reason": "independent donors disagree"
+          },
+          {
+            "away": "Francs Borains",
+            "date": "2026-09-26",
+            "donor_scores": "forebet_settled=0-0; vitibet_csv=0-1",
+            "home": "Diegem Sport",
+            "reason": "independent donors disagree"
+          }
+        ],
+        "unmatched": [
+          {
+            "away": "Westlandia",
+            "date": "2026-09-02",
+            "home": "ACV Assen",
+            "reason": "no independent donor row",
+            "source_score": "6-1"
+          },
+          {
+            "away": "Olympiakos",
+            "date": "2026-09-02",
+            "home": "AEL Larissa",
+            "reason": "no independent donor row",
+            "source_score": "0-4"
+          },
+          {
+            "away": "Midtjylland",
+            "date": "2026-09-02",
+            "home": "AGF Aarhus",
+            "reason": "no independent donor row",
+            "source_score": "0-2"
+          },
+          {
+            "away": "Sambenedettese",
+            "date": "2026-09-02",
+            "home": "Altamura",
+            "reason": "no independent donor row",
+            "source_score": "2-2"
+          },
+          {
+            "away": "Damac",
+            "date": "2026-09-02",
+            "home": "Al Wehda(KSA)",
+            "reason": "no independent donor row",
+            "source_score": "2-2"
+          },
+          {
+            "away": "Sportivo Trinide",
+            "date": "2026-09-02",
+            "home": "Ameliano",
+            "reason": "no independent donor row",
+            "source_score": "0-3"
+          },
+          {
+            "away": "Dolomiti Bellune",
+            "date": "2026-09-02",
+            "home": "ArzignanoChiampo",
+            "reason": "no independent donor row",
+            "source_score": "2-2"
+          },
+          {
+            "away": "Cosenza Calcio 1",
+            "date": "2026-09-02",
+            "home": "AS Sorrento Calc",
+            "reason": "no independent donor row",
+            "source_score": "1-0"
+          },
+          {
+            "away": "Pro Vercelli",
+            "date": "2026-09-02",
+            "home": "Ath. Carpi",
+            "reason": "no independent donor row",
+            "source_score": "1-1"
+          },
+          {
+            "away": "Club Atletico Ba",
+            "date": "2026-09-02",
+            "home": "Atletico El Vigi",
+            "reason": "no independent donor row",
+            "source_score": "2-1"
+          }
+        ]
+      },
+      "files": 2,
+      "independent_donor_exact_matches": 2536,
+      "matched_total": 2943,
+      "notes": "6 donor-conflicted fixtures; 145 ambiguous rejected; insufficient matched settlement evidence",
+      "prediction_fixtures": 6881,
+      "prediction_rows": 6881,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 97.91,
+      "source": "bettingclosed",
+      "source_score_conflicts_donor": 3,
+      "source_score_matches_donor": 2940,
+      "source_score_present": 6737,
+      "unmatched": 3787,
+      "verdict": "unproven"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 11.11,
+      "donor_score_conflicts": 0,
+      "examples": {
+        "unmatched": [
+          {
+            "away": "Sport Recife",
+            "date": "2026-10-02",
+            "home": "Athletic Club Mg",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Team",
+            "date": "2026-10-02",
+            "home": "Baladiyyat Al Mehalla",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Msp Batna",
+            "date": "2026-10-02",
+            "home": "Ca Batna",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Palestine",
+            "date": "2026-10-02",
+            "home": "China Pr",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Fk Jablonec",
+            "date": "2026-10-02",
+            "home": "Dukla Praha",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Maleyet Kafr El Zayiat",
+            "date": "2026-10-02",
+            "home": "El Dakhleya",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Deportivo Madryn",
+            "date": "2026-10-02",
+            "home": "Ferro Carril Oeste",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "B 93",
+            "date": "2026-10-02",
+            "home": "Fremad Amager",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Dainava",
+            "date": "2026-10-02",
+            "home": "Garliava",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Heracles",
+            "date": "2026-10-02",
+            "home": "Helmond Sport",
+            "reason": "no independent donor row",
+            "source_score": ""
+          }
+        ]
+      },
+      "files": 1,
+      "independent_donor_exact_matches": 4,
+      "matched_total": 4,
+      "notes": "insufficient matched settlement evidence",
+      "prediction_fixtures": 36,
+      "prediction_rows": 36,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 0.0,
+      "source": "betclan",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 32,
+      "verdict": "unproven"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {
+        "unmatched": [
+          {
+            "away": "Turkiye",
+            "date": "2026-10-02",
+            "home": "Belgium",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Sweden",
+            "date": "2026-10-02",
+            "home": "Bosnia And Herzegovina",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Italy",
+            "date": "2026-10-02",
+            "home": "France",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Romania",
+            "date": "2026-10-02",
+            "home": "Poland",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Northern Ireland",
+            "date": "2026-10-02",
+            "home": "Ukraine",
+            "reason": "no independent donor row",
+            "source_score": ""
+          }
+        ]
+      },
+      "files": 1,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "insufficient matched settlement evidence",
+      "prediction_fixtures": 5,
+      "prediction_rows": 5,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 0.0,
+      "source": "freesupertips",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 5,
+      "verdict": "unproven"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {
+        "unmatched": [
+          {
+            "away": "Young Boys",
+            "date": "2026-10-02",
+            "home": "Aarau",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Corona Bra\u0219ov",
+            "date": "2026-10-02",
+            "home": "ACS Kids Tampa Brasov",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "CD Toledo",
+            "date": "2026-10-02",
+            "home": "AD Alcorcon",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Colorado Mesa Mavericks",
+            "date": "2026-10-02",
+            "home": "Adams State Grizzlies",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "IBKEK",
+            "date": "2026-10-02",
+            "home": "AE Medea",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Vendsyssel FF",
+            "date": "2026-10-02",
+            "home": "AGF",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Al-Nassr",
+            "date": "2026-10-02",
+            "home": "Al-Ahli",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Ajman",
+            "date": "2026-10-02",
+            "home": "Al-Ain",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Baynounah",
+            "date": "2026-10-02",
+            "home": "Al Rams",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Al Ethihad",
+            "date": "2026-10-02",
+            "home": "Al-Sahra",
+            "reason": "no independent donor row",
+            "source_score": ""
+          }
+        ]
+      },
+      "files": 1,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "insufficient matched settlement evidence",
+      "prediction_fixtures": 231,
+      "prediction_rows": 308,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 0.0,
+      "source": "afootballreport",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 231,
+      "verdict": "unproven"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {
+        "unmatched": [
+          {
+            "away": "T\u00fcrkiye",
+            "date": "2026-10-02",
+            "home": "Belgium",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Sweden",
+            "date": "2026-10-02",
+            "home": "Bosnia & Herzegovina",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Instituto De C\u00f3rdoba",
+            "date": "2026-10-02",
+            "home": "CA Independiente",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Real Oviedo",
+            "date": "2026-10-02",
+            "home": "CD Eldense",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Palestine",
+            "date": "2026-10-02",
+            "home": "China",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Turkmenistan",
+            "date": "2026-10-02",
+            "home": "China",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Armenia",
+            "date": "2026-10-02",
+            "home": "Cyprus",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Uganda",
+            "date": "2026-10-02",
+            "home": "DR Congo",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Slovakia",
+            "date": "2026-10-02",
+            "home": "Faroe Islands",
+            "reason": "no independent donor row",
+            "source_score": ""
+          },
+          {
+            "away": "Union Sportive Amal Tiznit",
+            "date": "2026-10-02",
+            "home": "Fath Union Sport",
+            "reason": "no independent donor row",
+            "source_score": ""
+          }
+        ]
+      },
+      "files": 1,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "insufficient matched settlement evidence",
+      "prediction_fixtures": 27,
+      "prediction_rows": 27,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "prediction",
+      "self_score_pct": 0.0,
+      "source": "bzzoiro",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 27,
+      "verdict": "unproven"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {},
+      "files": 0,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "pricing-only source; excluded from prediction->score coverage",
+      "prediction_fixtures": 0,
+      "prediction_rows": 0,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "pricing-only",
+      "self_score_pct": 0.0,
+      "source": "bzzoiro_odds",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 0,
+      "verdict": "excluded_pricing_only"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {},
+      "files": 2,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "pricing-only source; excluded from prediction->score coverage",
+      "prediction_fixtures": 0,
+      "prediction_rows": 0,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "pricing-only",
+      "self_score_pct": 0.0,
+      "source": "theoddsapi_odds",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 0,
+      "verdict": "excluded_pricing_only"
+    },
+    {
+      "alias_matches": 0,
+      "ambiguous": 0,
+      "conflict_pct": 0.0,
+      "coverage_pct": 0.0,
+      "donor_score_conflicts": 0,
+      "examples": {},
+      "files": 0,
+      "independent_donor_exact_matches": 0,
+      "matched_total": 0,
+      "notes": "pricing-only source; excluded from prediction->score coverage",
+      "prediction_fixtures": 0,
+      "prediction_rows": 0,
+      "reversed_candidates": 0,
+      "reversed_reviewed": 0,
+      "reversed_unexplained": 0,
+      "role": "pricing-only",
+      "self_score_pct": 0.0,
+      "source": "oddspapi_odds",
+      "source_score_conflicts_donor": 0,
+      "source_score_matches_donor": 0,
+      "source_score_present": 0,
+      "unmatched": 0,
+      "verdict": "excluded_pricing_only"
+    }
+  ],
+  "summary": {
+    "excluded_pricing_only": [
+      "bzzoiro_odds",
+      "theoddsapi_odds",
+      "oddspapi_odds"
+    ],
+    "no_data": [
+      "forebet",
+      "predictz",
+      "windrawwin",
+      "soccervista"
+    ],
+    "partial": [
+      "statarea",
+      "scoutingstats"
+    ],
+    "settlement_validated": [
+      "zulubet"
+    ],
+    "unproven": [
+      "vitibet",
+      "prosoccer",
+      "bettingclosed",
+      "betclan",
+      "freesupertips",
+      "afootballreport",
+      "bzzoiro"
+    ]
+  },
+  "thresholds": {
+    "partial": {
+      "max_conflict_pct": 10.0,
+      "min_coverage_pct": 60.0,
+      "min_fixtures": 30
+    },
+    "validated": {
+      "max_conflict_pct": 2.0,
+      "max_unexplained_reversals": 0,
+      "min_coverage_pct": 90.0,
+      "min_fixtures": 200
+    }
+  },
+  "window_days": 90,
+  "window_end": "2026-10-02",
+  "window_start": "2026-07-04"
+}
