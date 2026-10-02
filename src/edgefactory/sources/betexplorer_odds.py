@@ -286,7 +286,7 @@ def fetch_day_matches(day: str) -> list[dict]:
                 **_LAST_RESPONSE_META,
             }
             raise BetExplorerChallenge("betexplorer_odds: challenge/verification page")
-        matches = parse_results_page(page)
+        matches = [row for row in parse_results_page(page) if row.get("date") == day]
         http_status = int(_LAST_RESPONSE_META.get("http_status", 200) or 200)
         LAST_RESULTS_RECEIPT = {
             # A 404 is a transport/status failure, not evidence that a
