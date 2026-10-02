@@ -3582,6 +3582,34 @@ def print_buckets(buckets: dict, title_date: str = ""):
 
 # ---------------------------------------------------------------- betexplorer --
 BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
+BE_RESCUE_TARGET_LEGS = 4  # enough to fill the current 2-acca x 2-leg card
+
+
+def _append_betexplorer_board_rows(pick: dict, rows: list[dict], source: str) -> None:
+    """Keep cached/rescue BetExplorer rows as corroboration candidates.
+
+    This is intentionally additive: it never changes the engine's chosen
+    price or chosen marker. The price-corroboration pass can therefore see a
+    second-source 1X2 quote even when rescue was skipped because Bzzoiro or
+    ScoutingStats already priced the fixture.
+    """
+    board = list(pick.get("price_board") or [])
+    seen = {
+        (str(entry.get("source") or ""), str(entry.get("bookmaker") or ""),
+         str(entry.get("selection") or ""), entry.get("odds"),
+         str(entry.get("captured_at") or ""))
+        for entry in board
+    }
+    for row in rows:
+        entry = _price_board_entry(source, row)
+        key = (source, str(entry.get("bookmaker") or ""),
+               str(entry.get("selection") or ""), entry.get("odds"),
+               str(entry.get("captured_at") or ""))
+        if key not in seen:
+            board.append(entry)
+            seen.add(key)
+    board.sort(key=_price_board_sort_key)
+    pick["price_board"] = board
 
 
 def enrich_unmatched_with_betexplorer(
@@ -3590,6 +3618,7 @@ def enrich_unmatched_with_betexplorer(
     *,
     max_fetches: int = 12,
     bundles: tuple | None = None,
+    stats: dict | None = None,
 ) -> int:
     try:
         import importlib.util as _ilu
@@ -3609,15 +3638,37 @@ def enrich_unmatched_with_betexplorer(
     from edgefactory.util import norm_team as _norm_team
 
     reset_fetch_count()
+    _be_mod._MAX_FETCHES_PER_RUN = max(0, int(max_fetches))
     enriched = 0
+    # Existing live-source prices count toward the bounded rescue target, but
+    # are never fetched again. This makes a sparse day cheap without reducing
+    # the primary/secondary corroboration board.
+    priced_before = sum(
+        1 for pick in picks
+        if pick.get("odds") is not None
+        and str(pick.get("odds_source") or "") in {
+            BZZOIRO_ODDS_SOURCE, SCOUTINGSTATS_ODDS_SOURCE,
+            BETEXPLORER_ODDS_SOURCE,
+        }
+    )
+    priced = priced_before
+    target = max(0, int(os.environ.get("EDGE_FACTORY_BE_RESCUE_TARGET_LEGS", str(BE_RESCUE_TARGET_LEGS))))
     for pick in picks:
         method = str(pick.get("odds_match_method") or "")
-        # A BetExplorer row can rescue an alias_fuzzy candidate because the
-        # suspect Bzzoiro/ScoutingStats price was never allowed to overwrite
-        # operational odds. Established BetExplorer matching remains the only
-        # way this function can clear that quarantine.
+
+        # A live source already priced this fixture: do not rescue it. A fresh
+        # same-day BetExplorer cache is still useful as a second-source board
+        # candidate, so reading cache is explicitly network-free.
         if method not in ("fallback", "none", "alias_fuzzy"):
+            cached_rows = _be_mod.cached_odds_rows_for_pick(pick, day)
+            if cached_rows:
+                _append_betexplorer_board_rows(pick, cached_rows, _BE_SOURCE)
             continue
+
+        # The current ticket surface needs at most four priced legs. Once that
+        # bounded supply exists, abstain from further rescue requests.
+        if priced >= target:
+            break
 
         rows = betexplorer_odds_rows_for_pick(pick, day, norm_team_fn=_norm_team)
         if not rows:
@@ -3625,12 +3676,12 @@ def enrich_unmatched_with_betexplorer(
 
         sel = str(pick.get("pick") or "")
         market = str(pick.get("market") or "")
-        matching_row = None
-        for r in rows:
-            if str(r.get("selection") or "") == sel and str(r.get("market") or "") == market:
-                matching_row = r
-                break
-
+        matching_row = next(
+            (r for r in rows
+             if str(r.get("selection") or "") == sel
+             and str(r.get("market") or "") == market),
+            None,
+        )
         if matching_row is None:
             continue
 
@@ -3652,17 +3703,26 @@ def enrich_unmatched_with_betexplorer(
         pick.pop("suspect_price", None)
         if previous_odds is not None and previous_source != pick["odds_source"]:
             pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+        be_bundle = _odds_bundle_from_rows(rows, provider=_BE_SOURCE)
         if bundles is not None:
-            # Keep the archived board complete: the rescued quote becomes the
-            # chosen row next to every other source's candidate, so the
-            # corroboration pass can judge a sole-source rescue honestly.
-            _stamp_price_board(pick, bundles, chosen_row=matching_row,
-                               chosen_source=_BE_SOURCE, chosen_method="betexplorer")
-        # Idempotent normalisation hook (betexplorer rows are bare "HH:MM"
-        # today, so this is a no-op until the adapter emits a zoned kickoff).
+            # Keep every BetExplorer 1X2 row on the board; the selected row is
+            # marked while the other sides remain corroboration candidates.
+            _stamp_price_board(
+                pick, (*bundles, be_bundle), chosen_row=matching_row,
+                chosen_source=_BE_SOURCE, chosen_method="betexplorer",
+            )
+        else:
+            _append_betexplorer_board_rows(pick, rows, _BE_SOURCE)
+        # Idempotent normalisation hook (BetExplorer rows are bare HH:MM today).
         resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=_BE_SOURCE)
         enriched += 1
+        priced += 1
 
+    if stats is not None:
+        stats.update(_be_mod.run_stats())
+        stats["be_priced_before"] = priced_before
+        stats["be_priced_after"] = priced
+        stats["be_target_legs"] = target
     return enriched
 
 
@@ -3779,8 +3839,9 @@ def main():
         prices_index = load_prices_index(ROOT, day)
         enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
 
+        be_stats: dict = {}
         be_enriched = enrich_unmatched_with_betexplorer(
-            picks, day, bundles=(odds_bundle, secondary_bundle))
+            picks, day, bundles=(odds_bundle, secondary_bundle), stats=be_stats)
         corroborated_n = _stamp_price_corroboration(picks)
         priced_n = sum(1 for p in picks if p.get("odds") is not None)
 
@@ -3813,7 +3874,11 @@ def main():
                 f"ss_retired={bool(scouting_stats.get('retired_stale_cache', False))} "
                 f"ss_age_h={scouting_stats.get('cache_age_h', 'n/a')} "
                 f"corroborated={corroborated_n}/{priced_n} "
-                f"enriched={enriched_n} betexplorer={be_enriched} bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
+                f"enriched={enriched_n} betexplorer={be_enriched} "
+                f"be_429={be_stats.get('be_429', 0)} "
+                f"be_cooling_down={bool(be_stats.get('be_cooling_down', False))} "
+                f"be_cached={be_stats.get('be_cached', 0)} "
+                f"bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
                 f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "
                 f"uncorroborated_price={uncorroborated_n} suspect_price={suspect_price_n}",
