@@ -2506,6 +2506,49 @@ def _stamp_price_board(pick: dict, bundles, chosen_row=None, chosen_source=None,
     pick["price_board"] = board
 
 
+# Option C price-quality gate (2026-10-02, operator sign-off): a money leg
+# needs price CORROBORATION — a second, distinct source quoting the same
+# market+selection within this relative deviation of the chosen price.
+# The 10-01 receipt: the whole real-money card rode single-source
+# BETEXPLORER_RESCUE quotes (4/4 legs) after the primary board delivered
+# nothing; a sole-source quote is audit evidence, not execution evidence.
+# 7% is deliberately wider than normal inter-book spread (~2-5%) while far
+# tighter than the stale-quote class (Dordrecht away 1.03 vs 2.00 ≈ 94%).
+PRICE_CORROBORATION_MAX_DEV = 0.07
+
+
+def _stamp_price_corroboration(picks: list[dict]) -> int:
+    """Stamp pick['price_corroborated'] / ['price_corroborators'] from the
+    archived board. Never changes which price the engine uses — the money
+    lane decides what to do with an uncorroborated pick (auto_tickets drops
+    it under execution_safe; paper/audit paths keep full visibility).
+    Returns the count of priced picks that earned corroboration."""
+    n = 0
+    for pick in picks:
+        odds = pick.get("odds")
+        chosen = str(pick.get("odds_source") or "")
+        sel = str(pick.get("pick") or "")
+        market = str(pick.get("market") or "")
+        corroborators: set[str] = set()
+        if isinstance(odds, (int, float)) and odds > 1.0:
+            for entry in pick.get("price_board") or []:
+                src = str(entry.get("source") or "")
+                if not src or src == chosen:
+                    continue
+                if (str(entry.get("market") or "") != market
+                        or str(entry.get("selection") or "") != sel):
+                    continue
+                other = _valid_decimal_odds(entry.get("odds"))
+                if other is None:
+                    continue
+                if abs(other / float(odds) - 1.0) <= PRICE_CORROBORATION_MAX_DEV:
+                    corroborators.add(src)
+        pick["price_corroborated"] = bool(corroborators)
+        pick["price_corroborators"] = sorted(corroborators)
+        n += bool(corroborators)
+    return n
+
+
 def enrich_with_live_odds(
     picks: list[dict],
     primary_odds: dict,
@@ -3546,6 +3589,7 @@ def enrich_unmatched_with_betexplorer(
     day: str,
     *,
     max_fetches: int = 12,
+    bundles: tuple | None = None,
 ) -> int:
     try:
         import importlib.util as _ilu
@@ -3608,6 +3652,12 @@ def enrich_unmatched_with_betexplorer(
         pick.pop("suspect_price", None)
         if previous_odds is not None and previous_source != pick["odds_source"]:
             pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+        if bundles is not None:
+            # Keep the archived board complete: the rescued quote becomes the
+            # chosen row next to every other source's candidate, so the
+            # corroboration pass can judge a sole-source rescue honestly.
+            _stamp_price_board(pick, bundles, chosen_row=matching_row,
+                               chosen_source=_BE_SOURCE, chosen_method="betexplorer")
         # Idempotent normalisation hook (betexplorer rows are bare "HH:MM"
         # today, so this is a no-op until the adapter emits a zoned kickoff).
         resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=_BE_SOURCE)
@@ -3729,7 +3779,10 @@ def main():
         prices_index = load_prices_index(ROOT, day)
         enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
 
-        be_enriched = enrich_unmatched_with_betexplorer(picks, day)
+        be_enriched = enrich_unmatched_with_betexplorer(
+            picks, day, bundles=(odds_bundle, secondary_bundle))
+        corroborated_n = _stamp_price_corroboration(picks)
+        priced_n = sum(1 for p in picks if p.get("odds") is not None)
 
         if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or enriched_n or picks:
             exact_n = sum(1 for p in picks if p.get("odds_match_method") == "exact")
@@ -3759,6 +3812,7 @@ def main():
                 f"ss_valid_keys={scouting_stats.get('valid_keys', len(secondary_bundle.get('exact', {})))} "
                 f"ss_retired={bool(scouting_stats.get('retired_stale_cache', False))} "
                 f"ss_age_h={scouting_stats.get('cache_age_h', 'n/a')} "
+                f"corroborated={corroborated_n}/{priced_n} "
                 f"enriched={enriched_n} betexplorer={be_enriched} bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
                 f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "

@@ -1768,6 +1768,15 @@ def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=Fa
         # carry an older label.  The enrichment boundary is the authority.
         if execution_safe and p.get("price_push_eligible") is False:
             continue
+        # Option C price-quality gate (2026-10-02, operator sign-off): a real
+        # money leg needs a second source quoting the same market+selection
+        # within 7% of the chosen price. The 10-01 card rode 4/4 single-source
+        # BETEXPLORER_RESCUE quotes: one feed can be wrong, stale or rescuing
+        # against nothing, and a sole-source quote is audit evidence, not an
+        # execution price. Field is stamped on newly built slates; legacy
+        # archives without it (None) keep the parity behaviour.
+        if execution_safe and p.get("price_corroborated") is False:
+            continue
         # Market guard: the validated recipe is 1X2 ONLY. Goals/OU picks
         # (first seen 2026-08-31, "Breidablik OVER") stay out until the
         # September O2.5 checkpoint passes its gate. Never before.
