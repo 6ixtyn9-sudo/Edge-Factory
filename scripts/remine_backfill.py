@@ -46,6 +46,10 @@ from typing import Any, Iterable
 ROOT = Path(__file__).resolve().parent.parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+try:
+    from edgefactory.identity import source_team_key as _source_team_key
+except ImportError:  # dry-run/test environments may not install src packages
+    _source_team_key = lambda value: _norm(value)  # type: ignore[assignment]
 
 LOCALDATA = ROOT / "localdata"
 INVENTORY_PATH = LOCALDATA / "coverage_inventory.json"
@@ -229,14 +233,12 @@ def _hold_statarea(run_date: str, inventory: dict[str, Any], ledger: list[dict[s
 
 
 def _be_csv_key(row: dict[str, Any]) -> tuple[str, str, str, str]:
-    # Event IDs are the strongest fence.  Older committed rows do not all
-    # have one, so kickoff is the stable fallback for a same-day team pair.
-    identity = str(row.get("event_id") or row.get("kickoff") or "")
+    """Use the shared source/date/fixture/market collision identity."""
     return (
-        str(row.get("date", "")),
-        identity,
-        _norm(row.get("home")),
-        _norm(row.get("away")),
+        str(row.get("date", ""))[:10],
+        _source_team_key(row.get("home")),
+        _source_team_key(row.get("away")),
+        "settled_score",
     )
 
 
@@ -255,6 +257,9 @@ def _merge_betexplorer_rows(day: str, incoming: list[dict[str, Any]]) -> dict[st
             existing_rows = [dict(row) for row in reader]
     counts: Counter[str] = Counter()
     by_key: dict[tuple[str, str, str, str], dict[str, str]] = {}
+    # Never rewrite away a committed duplicate: it remains visible for audit,
+    # while the first existing row owns the collision key.
+    merged_rows = list(existing_rows)
     for row in existing_rows:
         key = _be_csv_key(row)
         if key in by_key:
@@ -270,6 +275,7 @@ def _merge_betexplorer_rows(day: str, incoming: list[dict[str, Any]]) -> dict[st
             counts["existing_wins_collisions"] += 1
             continue
         by_key[key] = row
+        merged_rows.append(row)
         counts["inserted"] += 1
     if counts["inserted"]:
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -280,7 +286,7 @@ def _merge_betexplorer_rows(day: str, incoming: list[dict[str, Any]]) -> dict[st
                     text = io.TextIOWrapper(gz, encoding="utf-8", newline="")
                     writer = csv.DictWriter(text, fieldnames=fieldnames, extrasaction="ignore")
                     writer.writeheader()
-                    for row in by_key.values():
+                    for row in merged_rows:
                         writer.writerow(row)
                     text.flush()
                 binary.flush()
@@ -291,7 +297,7 @@ def _merge_betexplorer_rows(day: str, incoming: list[dict[str, Any]]) -> dict[st
                 os.unlink(temp_name)
             except FileNotFoundError:
                 pass
-    counts["rows_after"] = len(by_key)
+    counts["rows_after"] = len(merged_rows)
     return dict(counts)
 
 
