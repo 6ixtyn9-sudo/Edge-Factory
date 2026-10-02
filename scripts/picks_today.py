@@ -2616,13 +2616,14 @@ def _zero_shadow_stats(status: str = "unavailable") -> dict[str, dict]:
         "pinnapi_odds": {"status": status, "pa_raw": 0, "pa_matched": 0},
         "betbetter": {"status": status, "bb_raw": 0, "bb_scored": 0},
         "sharpapi_odds": {"status": status, "sa_raw": 0, "sa_matched": 0},
+        "boggio": {"status": status, "bg_raw": 0, "bg_scored": 0},
     }
 
 
 def _shadow_failure_lines(day: str, stats: dict[str, dict]) -> None:
     """Emit compact, secret-free diagnostics only for zero/skipped shadows."""
     for name, entry in stats.items():
-        raw_key = {"betminer": "bm_raw", "pinnapi_odds": "pa_raw", "betbetter": "bb_raw", "sharpapi_odds": "sa_raw"}.get(name)
+        raw_key = {"betminer": "bm_raw", "pinnapi_odds": "pa_raw", "betbetter": "bb_raw", "sharpapi_odds": "sa_raw", "boggio": "bg_raw"}.get(name)
         if raw_key is None:
             continue
         if int(entry.get(raw_key) or 0) != 0 and entry.get("status") not in {"not_run", "disabled", "unavailable", "auth", "quota", "cooldown"}:
@@ -2696,6 +2697,14 @@ def _capture_shadow_candidates(day: str) -> dict[str, dict]:
     except Exception as exc:
         stats["sharpapi_odds"]["status"] = "unavailable"
         stats["sharpapi_odds"]["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import boggio
+        bg_rows, bg_stats = boggio.capture_day(day)
+        boggio.persist_shadow(day, bg_rows, bg_stats, localdata=LOCALDATA)
+        stats["boggio"] = bg_stats
+    except Exception as exc:
+        stats["boggio"]["status"] = "unavailable"
+        stats["boggio"]["blocker"] = str(exc)[:180]
     _shadow_failure_lines(day, stats)
     return stats
 
@@ -3937,7 +3946,8 @@ def main():
     total_upcoming = 0
     shadow_totals = {"raw": 0, "scored": 0, "st_raw": 0, "st_matched": 0,
                     "bm_raw": 0, "bm_scored": 0, "pa_raw": 0, "pa_matched": 0,
-"bb_raw": 0, "bb_scored": 0, "sa_raw": 0, "sa_matched": 0}
+"bb_raw": 0, "bb_scored": 0, "sa_raw": 0, "sa_matched": 0,
+                    "bg_raw": 0, "bg_scored": 0}
 
     # ML-fade research capture: certification-independent collection of every
     # model-scored fixture (parent + deterministic fade candidate) into the
@@ -4022,6 +4032,7 @@ def main():
         pa_shadow_stats = shadow_stats.get("pinnapi_odds", {})
         bb_shadow_stats = shadow_stats.get("betbetter", {})
         sa_shadow_stats = shadow_stats.get("sharpapi_odds", {})
+        bg_shadow_stats = shadow_stats.get("boggio", {})
         shadow_totals["raw"] += int(fp_shadow_stats.get("raw") or 0)
         shadow_totals["scored"] += int(fp_shadow_stats.get("scored") or 0)
         shadow_totals["st_raw"] += int(st_shadow_stats.get("st_raw") or 0)
@@ -4034,6 +4045,8 @@ def main():
         shadow_totals["bb_scored"] += int(bb_shadow_stats.get("bb_scored") or 0)
         shadow_totals["sa_raw"] += int(sa_shadow_stats.get("sa_raw") or 0)
         shadow_totals["sa_matched"] += int(sa_shadow_stats.get("sa_matched") or 0)
+        shadow_totals["bg_raw"] += int(bg_shadow_stats.get("bg_raw") or 0)
+        shadow_totals["bg_scored"] += int(bg_shadow_stats.get("bg_scored") or 0)
         print(
             f"shadow candidates {day}: raw={fp_shadow_stats.get('raw', 0)} "
             f"scored={fp_shadow_stats.get('scored', 0)} "
@@ -4047,6 +4060,8 @@ def main():
             f"bb_scored={bb_shadow_stats.get('bb_scored', 0)} "
             f"sa_raw={sa_shadow_stats.get('sa_raw', 0)} "
             f"sa_matched={sa_shadow_stats.get('sa_matched', 0)} "
+            f"bg_raw={bg_shadow_stats.get('bg_raw', 0)} "
+            f"bg_scored={bg_shadow_stats.get('bg_scored', 0)} "
             f"corroborator={'on' if _sportytrader_corrob_flag_on() else 'off'}",
             file=sys.stderr,
         )
@@ -4169,6 +4184,16 @@ def main():
             "can_vote": False,
             "freshness_h": 0.0 if sa_shadow_stats.get("status") == "ok" else None,
             "blocker": sa_shadow_stats.get("blocker"),
+        }
+        health_observations["boggio"] = {
+            "fetched": bg_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(bg_shadow_stats.get("bg_scored") or 0),
+            "bg_raw": int(bg_shadow_stats.get("bg_raw") or 0),
+            "bg_scored": int(bg_shadow_stats.get("bg_scored") or 0),
+            "can_fetch_today": bg_shadow_stats.get("status") in {"ok", "empty"},
+            "can_price": False, "can_vote": False,
+            "freshness_h": 0.0 if bg_shadow_stats.get("status") == "ok" else None,
+            "blocker": bg_shadow_stats.get("blocker"),
         }
         health_observations["sportytrader_odds"] = {
             "fetched": st_shadow_stats.get("status") in {"ok", "empty"},

@@ -269,6 +269,14 @@ def test_sharpapi_health_token_renders_on_health_line(tmp_path):
     assert "sharpapi=sa_raw4/sa_matched4" in line
 
 
+def test_boggio_health_token_has_zero_reason_suffix(tmp_path):
+    source_health.persist_daily_source_health(
+        "2026-10-02", {"boggio": {"fetched": True, "rows": 0, "bg_raw": 0,
+        "bg_scored": 0, "status": "auth", "blocker": "HTTP 403", "can_fetch_today": False}}
+    )
+    assert "boggio=bg_raw0/bg_scored0(auth403)" in source_health.daily_status_block("2026-10-02")
+
+
 def test_convergent_source_renders_echo_only_on_health_line(tmp_path):
     source_health.persist_daily_source_health(
         "2026-10-02",

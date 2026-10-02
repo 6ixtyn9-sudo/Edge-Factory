@@ -103,7 +103,7 @@ DAILY_SOURCES = (
     #   betminer     - RapidAPI voice shadow (odds carry no bookmaker identity)
     #   pinnapi_odds - Pinnacle named-book price shadow (never a vote)
     #   betbetter    - keyless CC BY 4.0 benchmark board (echo-test asset)
-    "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds",
+    "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "boggio",
     # Convergent-tagged from day one - see CONVERGENT_SOURCES below.
     "predictiq",
 )
@@ -207,6 +207,8 @@ def build_daily_source_health(
             })
         elif name == "sharpapi_odds":
             row.update({"sa_raw": int(obs.get("sa_raw") or 0), "sa_matched": int(obs.get("sa_matched") or 0)})
+        elif name == "boggio":
+            row.update({"bg_raw": int(obs.get("bg_raw") or 0), "bg_scored": int(obs.get("bg_scored") or 0)})
         elif name == "betbetter":
             row.update({
                 "bb_raw": int(obs.get("bb_raw") or 0),
@@ -284,7 +286,7 @@ def daily_status_block(day: str) -> str:
     for name in (
         "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet",
         "futbolpronosticos", "sportytrader_odds",
-        "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "predictiq",
+        "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "boggio", "predictiq",
     ):
         row = sources.get(name, {})
         if name == "futbolpronosticos":
@@ -304,6 +306,9 @@ def daily_status_block(day: str) -> str:
             continue
         if name == "sharpapi_odds":
             tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason(row, int(row.get('sa_raw') or 0))}")
+            continue
+        if name == "boggio":
+            tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason(row, int(row.get('bg_raw') or 0))}")
             continue
         if name == "forebet":
             tokens.append(
