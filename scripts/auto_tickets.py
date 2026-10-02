@@ -211,6 +211,75 @@ BAD_QUARANTINE = {"alias_fuzzy", "suspect", "suspect_alias_fuzzy"}
 
 STATE_FILE = LOCALDATA / "auto_tickets_state.json"
 
+# ---- daily freeze lock (2026-10-02, OP-01 T2) -------------------------------
+# A frozen card is the operator's placed bet. The old lock was a per-day
+# sidecar file `localdata/auto_tickets_<date>.frozen`; its durability depended
+# on that file surviving (gitignore allowlists, cache namespaces, cold
+# checkouts). When it did not survive, `frozen.exists()` read False and the
+# engine rebuilt a card for a date already staked — bets rotated under the
+# operator.
+#
+# The lock now lives inside the committed ticket state as a write-once
+# `frozen_by_date` book: once a date is in it, that date can never be
+# rewritten, by any path, including --force. The entry is written in the same
+# `save_state` call that persists the slip, so no later phase can land a card
+# for a date without its lock. Legacy sidecar files are still READ (compat,
+# and their timestamp is adopted on first touch) and are never deleted; new
+# ones are no longer created.
+FROZEN_BOOK_KEY = "frozen_by_date"
+
+
+def legacy_frozen_path(target: str):
+    """The pre-T2 per-day marker file. Read-only from here on."""
+    return LOCALDATA / f"auto_tickets_{target}.frozen"
+
+
+def frozen_entry(st: dict, target: str) -> dict | None:
+    """The write-once freeze record for ``target``, or None."""
+    book = (st or {}).get(FROZEN_BOOK_KEY) or {}
+    entry = book.get(str(target))
+    return entry if isinstance(entry, dict) else None
+
+
+def is_frozen(st: dict, target: str) -> bool:
+    """True when the date is locked by state OR by a legacy marker file."""
+    return frozen_entry(st, target) is not None or legacy_frozen_path(target).exists()
+
+
+def record_freeze(st: dict, target: str, when) -> dict:
+    """Write-once freeze of ``target``. Never overwrites an existing entry.
+
+    Returns the entry in force — the pre-existing one if the date was already
+    locked, so callers (slip footer included) always print the original
+    freeze time rather than the time of the run that re-read it.
+    """
+    book = st.setdefault(FROZEN_BOOK_KEY, {})
+    existing = book.get(str(target))
+    if isinstance(existing, dict):
+        return existing                      # write-once: immutable
+    legacy = legacy_frozen_path(target)
+    if legacy.exists():
+        stamp = (legacy.read_text() or "").strip()
+        entry = {"frozen_at": stamp or when.isoformat(timespec="seconds"),
+                 "final": True, "lock_source": "legacy_marker_file"}
+    else:
+        entry = {"frozen_at": when.isoformat(timespec="seconds"),
+                 "final": True, "lock_source": "state"}
+    book[str(target)] = entry
+    return entry
+
+
+def freeze_footer(entry: dict) -> str:
+    """The human artifact's final line: 'FROZEN AT HH:MM - FINAL'."""
+    stamp = str((entry or {}).get("frozen_at") or "")
+    hhmm = ""
+    try:
+        hhmm = datetime.fromisoformat(stamp).strftime("%H:%M")
+    except Exception:
+        part = stamp[11:16] if len(stamp) >= 16 else ""
+        hhmm = part if len(part) == 5 and part[2] == ":" else "??:??"
+    return f"FROZEN AT {hhmm} - FINAL"
+
 # ---- bucket P&L tripwire (2026-09-23, operator-directed, red-teamed) ----
 # The firing tripwire only asks "is this rule still firing?" — never "is
 # this door still paying?" This block grades every deployed bucket on its
@@ -2291,11 +2360,16 @@ def cmd_backfill(args, st):
     print_status(st)
 
 
-def upsert_slip(st, target, plan):
+def upsert_slip(st, target, plan, freeze_at=None):
+    """Persist the card. When ``freeze_at`` is given the write-once freeze
+    entry for ``target`` is recorded in the SAME state write, so a card can
+    never be persisted for a date whose lock lands later (or not at all)."""
     st["open_slips"] = [s for s in st["open_slips"] if s["date"] != target]
     st["open_slips"].append({"date": target, "accas": plan,
                              "staked_pct": round(sum(a["stake_pct"] for a in plan), 4)})
+    entry = record_freeze(st, target, freeze_at) if freeze_at is not None else None
     save_state(st)
+    return entry
 
 
 def _leg_key(l) -> tuple[str, str]:
@@ -2420,9 +2494,8 @@ def cmd_today(args, st):
     settled = load_settled()
     now = datetime.now(TZ)
     target = args.date or now.strftime("%Y-%m-%d")
-    frozen = LOCALDATA / f"auto_tickets_{target}.frozen"
     slip_txt = LOCALDATA / f"auto_tickets_{target}.txt"
-    if frozen.exists() and not args.force:
+    if is_frozen(st, target) and not args.force:
         # A frozen rerun must not move ladder streaks, but it still upserts
         # today's real evidence row from the frozen slip. No line in the slip
         # is rewritten; the parser consumes the frozen leg print verbatim.
@@ -2561,7 +2634,12 @@ def cmd_today(args, st):
             target, pure_shadow_plan, pool_by_key, real_keys, diminished,
         )
     upsert_slice_day(real_rows + shadow_rows, target)
-    upsert_slip(st, target, plan)
+    # Freeze decision is taken BEFORE the state-persist phase and executed
+    # inside it (single save_state), never after the slip is on disk.
+    should_freeze = (str(target) == now.strftime("%Y-%m-%d")
+                     and now.hour >= FREEZE_HOUR and not args.force)
+    freeze_record = upsert_slip(st, target, plan,
+                                freeze_at=now if should_freeze else None)
     _log_printed_price_boards(target, plan, pool_by_key)   # Task F, append-only
     committed = st["bank"] - bank_eff
     lines = [f"AUTO TICKETS (ROLLING) — {target}", "=" * 62,
@@ -2604,12 +2682,15 @@ def cmd_today(args, st):
                  "Bet only what you can afford to lose.")
 
 
+    if should_freeze and freeze_record:
+        lines.append("")
+        lines.append(freeze_footer(freeze_record))
     txt = "\n".join(lines)
     print(txt)
     slip_txt.write_text(txt)
-    if str(target) == now.strftime("%Y-%m-%d") and now.hour >= FREEZE_HOUR and not args.force:
-        frozen.write_text(now.isoformat(timespec="seconds"))
-        print(f"\nSTATUS: ✅ FROZEN at {now.strftime('%H:%M')} — FINAL slip; later runs re-print unchanged.")
+    if should_freeze and freeze_record:
+        print(f"\nSTATUS: ✅ {freeze_footer(freeze_record)} slip; later runs re-print unchanged "
+              f"(write-once lock in {STATE_FILE.name}: {FROZEN_BOOK_KEY}[{target}]).")
     else:
         print(f"\nSTATUS: ⏳ DRAFT — regenerates each run until the {FREEZE_HOUR:02d}:00 freeze.")
     return 0

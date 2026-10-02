@@ -279,6 +279,9 @@ consensus2 ≈ 27,450 · consensus3 ≈ 15,807 · consensus4 ≈ 383
 certified audited: 9 · benched by decay: 1 · active certified: 8
 Disagreement → historically poor hit rate → VETO, never bet.
 See HANDOVER.md for full edge-level detail, buckets, and the purity logic.
+Operators start at [`docs/operator/README.md`](docs/operator/README.md) — daily
+card ops (incl. the FROZEN footer), source-health legend, experiments archive,
+source program and the OPERATOR ACTIONS checklist.
 
 Supabase
 

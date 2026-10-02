@@ -88,9 +88,10 @@ dist/
 !localdata/auto_tickets_slice_ledger.jsonl
 !localdata/auto_tickets_20*.txt
 !localdata/auto_tickets_20*.json
-# The freeze marker must be committed like the slip it freezes: on a cold
-# cache/fresh checkout, frozen.exists() is otherwise false and the engine
-# rebuilds a new card for a date already frozen and already staked.
+# LEGACY freeze markers (pre OP-01 T2). The lock now lives write-once inside
+# auto_tickets_state.json (`frozen_by_date`), which is already committed; no
+# new .frozen files are created. Existing ones are still read for compat and
+# are never deleted, so they stay allowlisted.
 !localdata/auto_tickets_20*.frozen
 !localdata/auto_tickets_performance.txt
 !localdata/auto_tickets_performance.json
