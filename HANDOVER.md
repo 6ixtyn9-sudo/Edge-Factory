@@ -10370,3 +10370,19 @@ edge by construction (short favorites at short quotes). Options A-D presented
 to the operator; measurement calibration (Option B) and price-quality gating
 (Option C, item-3-adjacent) are the credible paths if he wants any gate at all.
 The audit script is evidence-only; nothing in the pick path changed.
+
+---
+
+## Addendum 2026-10-02 (item 5, phase 1): source-independence triage
+
+`scripts/audit_source_independence.py` (read-only) + `docs/operator/SOURCE-TRIAGE.md`:
+- TR-1 HIGH: all committed prediction series (forebet/zulubet/statarea) end
+  2026-06-12 — persistence of daily captures stopped; live CI fetches still work,
+  so the walk-forward assays grade a pre-June world. Git history squashing blocks
+  in-repo forensics of the 06-12 freeze. Restore belongs to the outer pipeline.
+- TR-2: vitibet has no committed series at all (unauditable).
+- TR-3: scoutingstats stale since 2026-09-04 (item-3 containment landed).
+- TR-4 PASS: fb/zb/sa are independent voices (corr 0.53-0.69, agreement 61-69%;
+  no mirrors) and each flips 8-18% of consensus picks — keep all three.
+- Yardstick for phase-2 candidates (prosoccer.gr/vitibet template): >=30d shadow
+  capture, corr<0.95 & agreement<95% vs every live source, >=5% flip contribution.
