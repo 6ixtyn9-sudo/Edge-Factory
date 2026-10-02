@@ -54,7 +54,16 @@ KEY_ENV = "PINNAPI_KEY"
 
 
 def _sanitize(url: str) -> str:
-    return re.sub(r"([?&]key=)[^&]+", r"\1***", url)
+    """Return an endpoint without any query string (keys never reach stdout)."""
+    parsed = urllib.parse.urlsplit(url)
+    return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+
+
+def _scrub(text: object, key: str = "") -> str:
+    value = str(text)
+    if key:
+        value = value.replace(key, "[REDACTED]")
+    return re.sub(r"([?&]key=)[^&\s]+", r"\1[REDACTED]", value)
 
 
 def _request(url: str, key: str, timeout: int, extra_headers: dict[str, str] | None = None) -> dict[str, Any]:
@@ -78,7 +87,7 @@ def _request(url: str, key: str, timeout: int, extra_headers: dict[str, str] | N
                 data, parse_error = None, f"JSONDecodeError: {exc}"
             return {"ok": 200 <= resp.status < 400, "status": resp.status,
                     "rate_limit_headers": rate_headers, "data": data,
-                    "parse_error": parse_error, "error": None}
+                    "body_snippet": body[:200], "parse_error": parse_error, "error": None}
     except urllib.error.HTTPError as exc:
         snippet = ""
         try:
@@ -115,7 +124,8 @@ def _summarize(data: Any) -> dict[str, Any]:
         out["sample_event_keys"] = [str(k) for k in list(first.keys())[:18]]
         markets = first.get("markets") or first.get("odds") or []
         if isinstance(markets, list) and markets and isinstance(markets[0], dict):
-            out["sample_market_keys"] = [str(k) for k in list(markets[0].keys())[:12]]
+            out["first_market_keys"] = [str(k) for k in list(markets[0].keys())[:20]]
+            out["first_market_types"] = {str(k): type(v).__name__ for k, v in list(markets[0].items())[:20]}
         histogram: Counter[str] = Counter()
         leagues: Counter[str] = Counter()
         for event in events:
@@ -134,20 +144,20 @@ def _summarize(data: Any) -> dict[str, Any]:
     return out
 
 
-def _format(name: str, url: str, result: dict[str, Any]) -> str:
+def _format(name: str, url: str, result: dict[str, Any], secret: str = "") -> str:
     mark = "OK" if result.get("ok") else "ERR"
-    lines = [f"[{mark}] {name}  status={result.get('status')}", f"  url={_sanitize(url)}"]
+    lines = [f"[{mark}] {name}  status={result.get('status')}", f"  endpoint={_sanitize(url)}"]
     if result.get("error"):
-        lines.append(f"  error={result['error']}")
+        lines.append(f"  error={_scrub(result['error'], secret)}")
     if result.get("body_snippet"):
-        lines.append(f"  body_snippet={result['body_snippet']}")
+        lines.append(f"  body_sample={_scrub(result['body_snippet'], secret)[:200]}")
     if result.get("parse_error"):
-        lines.append(f"  parse_error={result['parse_error']}")
+        lines.append(f"  parse_error={_scrub(result['parse_error'], secret)}")
     if result.get("rate_limit_headers"):
         lines.append(f"  rate_limit_headers={result['rate_limit_headers']}")
     for key, value in (result.get("summary") or {}).items():
         if value not in (None, {}, []):
-            lines.append(f"  {key}={value}")
+            lines.append(f"  {key}={_scrub(value, secret)}")
     return "\n".join(lines)
 
 
@@ -167,23 +177,23 @@ def main() -> int:
 
     results: list[tuple[str, str, dict[str, Any]]] = []
 
-    health_url = f"{BASE}/health"
+    health_url = f"{BASE}/kit/v1/health"
     result = _request(health_url, key, args.timeout)
     result["summary"] = _summarize(result.get("data"))
     results.append(("health (connectivity/auth check)", health_url, result))
 
     if args.auth == "query":
         markets_url = BASE + "/kit/v1/markets?" + urllib.parse.urlencode(
-            {"sport": "soccer", "mode": "prematch", "key": key})
+            {"sport_id": 2, "event_type": "prematch", "key": key})
         result = _request(markets_url, key, args.timeout)
     else:
-        markets_url = BASE + "/kit/v1/markets?" + urllib.parse.urlencode({"sport": "soccer", "mode": "prematch"})
+        markets_url = BASE + "/kit/v1/markets?" + urllib.parse.urlencode({"sport_id": 2, "event_type": "prematch"})
         result = _request(markets_url, key, args.timeout, extra_headers={"X-API-Key": key})
     result["summary"] = _summarize(result.get("data"))
     results.append(("markets snapshot (soccer, prematch)", markets_url, result))
 
     for name, url, res in results:
-        print(_format(name, url, res))
+        print(_format(name, url, res, key))
         print("-" * 72)
 
     markets_result = results[-1][2]
