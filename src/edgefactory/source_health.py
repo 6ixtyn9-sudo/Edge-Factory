@@ -103,7 +103,7 @@ DAILY_SOURCES = (
     #   betminer     - RapidAPI voice shadow (odds carry no bookmaker identity)
     #   pinnapi_odds - Pinnacle named-book price shadow (never a vote)
     #   betbetter    - keyless CC BY 4.0 benchmark board (echo-test asset)
-    "betminer", "pinnapi_odds", "betbetter",
+    "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "boggio",
     # Convergent-tagged from day one - see CONVERGENT_SOURCES below.
     "predictiq",
 )
@@ -205,6 +205,10 @@ def build_daily_source_health(
                 "pa_raw": int(obs.get("pa_raw") or 0),
                 "pa_matched": int(obs.get("pa_matched") or 0),
             })
+        elif name == "sharpapi_odds":
+            row.update({"sa_raw": int(obs.get("sa_raw") or 0), "sa_matched": int(obs.get("sa_matched") or 0)})
+        elif name == "boggio":
+            row.update({"bg_raw": int(obs.get("bg_raw") or 0), "bg_scored": int(obs.get("bg_scored") or 0)})
         elif name == "betbetter":
             row.update({
                 "bb_raw": int(obs.get("bb_raw") or 0),
@@ -253,6 +257,23 @@ def _status_token(name: str, row: dict[str, Any]) -> str:
     return f"{name}={label if healthy else 'BLOCKED'}"
 
 
+def _zero_reason(row: dict[str, Any], raw: int) -> str:
+    """Compact deterministic reason for zero-row shadow observations."""
+    if raw:
+        return ""
+    status = str(row.get("status") or "")
+    if status in {"not_run", "cache_only", "ok", "empty"}:
+        return ""
+    blocker = str(row.get("blocker") or "")
+    import re
+    code = re.search(r"HTTP\s+(\d{3})", blocker)
+    if code:
+        return f"({('auth' if code.group(1) in {'401', '403'} else 'http')}{code.group(1)})"
+    if status in {"auth", "quota", "cooldown"}:
+        return f"({status})"
+    return "(unavailable)"
+
+
 def daily_status_block(day: str) -> str:
     """One compact, deterministic status line for the card/run log."""
     path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
@@ -265,7 +286,7 @@ def daily_status_block(day: str) -> str:
     for name in (
         "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet",
         "futbolpronosticos", "sportytrader_odds",
-        "betminer", "pinnapi_odds", "betbetter", "predictiq",
+        "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "boggio", "predictiq",
     ):
         row = sources.get(name, {})
         if name == "futbolpronosticos":
@@ -275,13 +296,19 @@ def daily_status_block(day: str) -> str:
             tokens.append(f"sportytrader=st_raw{row.get('st_raw', 0)}/st_matched{row.get('st_matched', 0)}")
             continue
         if name == "betminer":
-            tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}")
+            tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}{_zero_reason(row, int(row.get('bm_raw') or 0))}")
             continue
         if name == "pinnapi_odds":
-            tokens.append(f"pinnapi=pa_raw{row.get('pa_raw', 0)}/pa_matched{row.get('pa_matched', 0)}")
+            tokens.append(f"pinnapi=pa_raw{row.get('pa_raw', 0)}/pa_matched{row.get('pa_matched', 0)}{_zero_reason(row, int(row.get('pa_raw') or 0))}")
             continue
         if name == "betbetter":
-            tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}")
+            tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}{_zero_reason(row, int(row.get('bb_raw') or 0))}")
+            continue
+        if name == "sharpapi_odds":
+            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason(row, int(row.get('sa_raw') or 0))}")
+            continue
+        if name == "boggio":
+            tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason(row, int(row.get('bg_raw') or 0))}")
             continue
         if name == "forebet":
             tokens.append(

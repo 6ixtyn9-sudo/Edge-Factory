@@ -54,8 +54,11 @@ from typing import Any
 SOURCE = "pinnapi_odds"
 BASE = os.environ.get("PINNAPI_BASE_URL", "https://pinnapi.com").rstrip("/")
 KEY_ENV = "PINNAPI_KEY"
-SPORT = "soccer"
-MODE = "prematch"
+# Panel receipt 2026-10-02: soccer is sport_id=2 and the playground uses
+# event_type=prematch. Keep the constant as a fail-safe until a future /sports
+# introspection response is independently captured.
+SPORT_ID = 2
+EVENT_TYPE = "prematch"
 BOOK = "Pinnacle"
 UA = "EdgeFactory-cooperative-shadow/1.0 (+operator review)"
 MIN_INTERVAL_S = float(os.environ.get("EDGE_FACTORY_PINNAPI_MIN_INTERVAL_S", "2.0"))
@@ -141,7 +144,9 @@ def _throttle() -> None:
 
 def markets_url() -> str:
     """Bulk pre-match soccer snapshot URL (one call = the whole board)."""
-    return BASE + "/kit/v1/markets?" + urllib.parse.urlencode({"sport": SPORT, "mode": MODE, "key": _api_key() or ""})
+    return BASE + "/kit/v1/markets?" + urllib.parse.urlencode({
+        "sport_id": SPORT_ID, "event_type": EVENT_TYPE, "key": _api_key() or ""
+    })
 
 
 def _sanitize_headers(headers: Any) -> dict[str, str]:
@@ -359,8 +364,20 @@ def merge_with_committed(rows: list[dict[str, Any]], committed: list[dict[str, A
     return out
 
 
+def _scrub_secret(value: Any) -> Any:
+    """Redact key material from retained upstream diagnostics."""
+    secret = _api_key()
+    if isinstance(value, str):
+        return value.replace(secret, "[REDACTED]") if secret else value
+    if isinstance(value, dict):
+        return {str(k): _scrub_secret(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_scrub_secret(v) for v in value]
+    return value
+
+
 def _trim_event_sample(payload: Any) -> Any:
-    """One trimmed event retained verbatim for operator schema review."""
+    """One trimmed, secret-scrubbed event retained for operator schema review."""
     events = None
     if isinstance(payload, dict):
         for key in ("events", "data", "matches"):
@@ -372,8 +389,8 @@ def _trim_event_sample(payload: Any) -> Any:
     if isinstance(events, list) and events:
         sample = events[0]
         text = json.dumps(sample, sort_keys=True)
-        return json.loads(text[:20000]) if len(text) > 20000 else sample
-    return {"top_keys": [str(k) for k in list(payload.keys())[:12]]} if isinstance(payload, dict) else None
+        return _scrub_secret(json.loads(text[:20000]) if len(text) > 20000 else sample)
+    return _scrub_secret({"top_keys": [str(k) for k in list(payload.keys())[:12]]} if isinstance(payload, dict) else None)
 
 
 def _status_for_http(status: int | None) -> str:
@@ -466,7 +483,7 @@ def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], 
             "may corroborate only same-day-fetched prices - see same_day_rows)"
         ),
         "provenance": {
-            "api": f"{BASE}/kit/v1/markets (sport={SPORT}, mode={MODE})",
+            "api": f"{BASE}/kit/v1/markets (sport_id={SPORT_ID}, event_type={EVENT_TYPE})",
             "hunt": "docs/operator/SOURCE-HUNT-2026-10.md#57",
             "unofficial_feed": "Pinnacle public API closed 2025-07-23; pinnapi is an independent relay - expect death without notice",
             "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

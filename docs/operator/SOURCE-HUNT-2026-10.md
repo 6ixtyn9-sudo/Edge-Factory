@@ -749,3 +749,36 @@ No API keys, tokens, or credentials appear in code, tests, fixtures,
 docs, commit messages, or logs in this bundle. Adapters read keys only from
 `os.environ` (`RAPIDAPI_KEY`, `PINNAPI_KEY`); absent → graceful skip with
 `not_run` diagnostics. Probe scripts sanitize keys from all output.
+
+### SHADOW-02 first-contact diagnoses (2026-10-02)
+
+- **pinnapi:** the operator panel confirmed the authenticated calls and the
+  playground receipt `GET /kit/v1/markets?sport_id=2&event_type=prematch`.
+  The merged adapter's `sport=soccer&mode=prematch` contract was wrong;
+  SHADOW-02 changes it to `sport_id=2&event_type=prematch` while retaining
+  `key=` auth. Soccer `sport_id=2` is a panel receipt; the adapter remains
+  fail-closed and keeps a sanitized sample for any future schema adjustment.
+- **betminer:** `betminer.p.rapidapi.com` is host-verified. An unauthenticated
+  request reaches the RapidAPI gateway; the remaining variable is the
+  operator account's BASIC subscription (403 class), not a host-slug change.
+- **SharpAPI:** the price-shadow receipt pins the RapidAPI host to
+  `sharpapi1.p.rapidapi.com`; it is default-off for promotion, named-book
+  rows only, and never a vote. The provider's public docs show the odds
+  response's named `sportsbook`, `selection`, and decimal-odds fields
+  ([Quick Start](https://docs.sharpapi.io/en/quickstart/)); the pricing receipt
+  records 12 requests/minute and no-card free access
+  ([pricing](https://sharpapi.io/pricing)).
+
+### SHADOW-03 WAVE 3 receipts
+
+- **Boggio:** relay-fetched developer docs confirm the RapidAPI host
+  `football-prediction-api.p.rapidapi.com`, `GET /api/v2/predictions`,
+  `X-RapidAPI-Key`, and the free-tier `iso_date` publication window. The
+  adapter retains `published_at`/`last_update_at` alongside `captured_at` and
+  remains a zero-credit voice shadow.
+- **SportsGameOdds:** probe-first memo uses the provider FAQ definition that
+  one returned top-level event is one object, regardless of markets or books;
+  full-board volume is unbounded and 70 targeted fixtures/day fails 2x
+  headroom. Verdict: **SKIP**, no adapter shipped.
+- **Book families:** corroboration is bookmaker-based, not donor/API-based;
+  same-book relays are one family and never additional independence.

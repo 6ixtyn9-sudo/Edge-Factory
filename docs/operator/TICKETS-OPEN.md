@@ -331,6 +331,8 @@ site 1,216 vs docs 500+ — write the observed figure here).
    with a `betminer_shadow_{day}.json` ledger).
 5. Operator review of the offline echo report; promotion = explicit decision,
    never a threshold auto-flip.
+6. Acceptance: corroboration independence is counted per bookmaker family, not
+   per API donor. Same-book relays are one family and never add a vote.
 
 ### Standing constraints that survive promotion
 
@@ -358,6 +360,8 @@ site 1,216 vs docs 500+ — write the observed figure here).
    (Pinnacle lines within expected sharp-book tolerance).
 5. Offline 7%-gate evidence report in the SPORTYTRADER-7PCT-REPORT pattern;
    operator review; promotion = explicit decision. **Never a vote.**
+6. Acceptance: count independent bookmaker families, not donor APIs; pinnapi
+   and KDobrev/other Pinnacle relays are the single `pinnacle` family.
 
 ### Standing constraints that survive promotion
 
@@ -368,3 +372,36 @@ site 1,216 vs docs 500+ — write the observed figure here).
   behavior — no substitution scramble.
 - Corroboration may use ONLY same-day-fetched prices (`same_day_rows`);
   anything older abstains. This is enforced in the adapter and tested.
+
+## (i) SharpAPI price-shadow promotion — named-book freshness evidence
+
+**Status: OPEN — promotion criteria only; SHADOW-02 adapter shipped.**
+
+SharpAPI (`sharpapi1.p.rapidapi.com`, RapidAPI listing receipt; free tier
+approximately 12 requests/minute and two named bookmakers) is a price donor
+candidate only. It is never a vote and contributes no price credit until the
+operator explicitly promotes it.
+
+Bars: (1) at least 30 same-day shared fixture/market/selection rows with an
+existing approved donor; (2) at least 80% successful scheduled days over two
+weeks; (3) probe schema receipt confirms named-book rows and sane prices; (4)
+same-day freshness corroboration gate passes, with missing/stale rows
+abstaining; and (5) operator reviews an offline 7%-gate report. Cache-first is
+gap-aware: held dates are never refetched. Auth, quota, unavailable, and
+zero-row days remain retryable. Acceptance also requires bookmaker-family
+independence (same book through multiple donors counts once). No gate is
+weakened and no automatic promotion exists.
+
+
+## INTAKE INBOX (standing queue)
+
+- **KDobrev-Pinnacle** — failover peer only; family `pinnacle`; adopt only if
+  pinnapi becomes fragile.
+- **footballdata.io** — verify the free tier before any adapter work.
+- **Odds-API.io** — SKIP; free access is recreational-only under the archived
+  hunt rationale.
+- **ClubElo** — recheck monthly; API remains dark/auth-walled since roughly
+  2026-09.
+
+Boggio is shipped as SHADOW-03 W3-T1. SportsGameOdds is moved out as an
+explicit SKIP in `docs/operator/SGO-QUOTA.md`; neither has promotion credit.

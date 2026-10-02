@@ -38,8 +38,23 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+
+
+def coverage_report(data: Any, slate: list[dict[str, Any]]) -> dict[str, Any]:
+    """Join probe events to a supplied slate without persisting anything."""
+    events = _events(data)
+    priced = {(source_team_key(e.get("home")), source_team_key(e.get("away")))
+              for e in events if isinstance(e, dict) and (e.get("markets") or e.get("odds"))}
+    matched = []; unmatched = []
+    for row in slate:
+        key = (source_team_key(row.get("home")), source_team_key(row.get("away")))
+        (matched if key in priced else unmatched).append(f"{row.get('home')} v {row.get('away')}")
+    total = len(slate)
+    return {"slate": total, "matched": len(matched), "coverage_pct": round(100*len(matched)/total, 1) if total else 0.0, "unmatched_examples": unmatched[:5]}
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
+from edgefactory.identity import source_team_key
 
 try:
     from dotenv import load_dotenv
@@ -54,7 +69,16 @@ KEY_ENV = "PINNAPI_KEY"
 
 
 def _sanitize(url: str) -> str:
-    return re.sub(r"([?&]key=)[^&]+", r"\1***", url)
+    """Return an endpoint without any query string (keys never reach stdout)."""
+    parsed = urllib.parse.urlsplit(url)
+    return urllib.parse.urlunsplit((parsed.scheme, parsed.netloc, parsed.path, "", ""))
+
+
+def _scrub(text: object, key: str = "") -> str:
+    value = str(text)
+    if key:
+        value = value.replace(key, "[REDACTED]")
+    return re.sub(r"([?&]key=)[^&\s]+", r"\1[REDACTED]", value)
 
 
 def _request(url: str, key: str, timeout: int, extra_headers: dict[str, str] | None = None) -> dict[str, Any]:
@@ -78,7 +102,7 @@ def _request(url: str, key: str, timeout: int, extra_headers: dict[str, str] | N
                 data, parse_error = None, f"JSONDecodeError: {exc}"
             return {"ok": 200 <= resp.status < 400, "status": resp.status,
                     "rate_limit_headers": rate_headers, "data": data,
-                    "parse_error": parse_error, "error": None}
+                    "body_snippet": body[:200], "parse_error": parse_error, "error": None}
     except urllib.error.HTTPError as exc:
         snippet = ""
         try:
@@ -115,7 +139,8 @@ def _summarize(data: Any) -> dict[str, Any]:
         out["sample_event_keys"] = [str(k) for k in list(first.keys())[:18]]
         markets = first.get("markets") or first.get("odds") or []
         if isinstance(markets, list) and markets and isinstance(markets[0], dict):
-            out["sample_market_keys"] = [str(k) for k in list(markets[0].keys())[:12]]
+            out["first_market_keys"] = [str(k) for k in list(markets[0].keys())[:20]]
+            out["first_market_types"] = {str(k): type(v).__name__ for k, v in list(markets[0].items())[:20]}
         histogram: Counter[str] = Counter()
         leagues: Counter[str] = Counter()
         for event in events:
@@ -134,20 +159,20 @@ def _summarize(data: Any) -> dict[str, Any]:
     return out
 
 
-def _format(name: str, url: str, result: dict[str, Any]) -> str:
+def _format(name: str, url: str, result: dict[str, Any], secret: str = "") -> str:
     mark = "OK" if result.get("ok") else "ERR"
-    lines = [f"[{mark}] {name}  status={result.get('status')}", f"  url={_sanitize(url)}"]
+    lines = [f"[{mark}] {name}  status={result.get('status')}", f"  endpoint={_sanitize(url)}"]
     if result.get("error"):
-        lines.append(f"  error={result['error']}")
+        lines.append(f"  error={_scrub(result['error'], secret)}")
     if result.get("body_snippet"):
-        lines.append(f"  body_snippet={result['body_snippet']}")
+        lines.append(f"  body_sample={_scrub(result['body_snippet'], secret)[:200]}")
     if result.get("parse_error"):
-        lines.append(f"  parse_error={result['parse_error']}")
+        lines.append(f"  parse_error={_scrub(result['parse_error'], secret)}")
     if result.get("rate_limit_headers"):
         lines.append(f"  rate_limit_headers={result['rate_limit_headers']}")
     for key, value in (result.get("summary") or {}).items():
         if value not in (None, {}, []):
-            lines.append(f"  {key}={value}")
+            lines.append(f"  {key}={_scrub(value, secret)}")
     return "\n".join(lines)
 
 
@@ -167,26 +192,36 @@ def main() -> int:
 
     results: list[tuple[str, str, dict[str, Any]]] = []
 
-    health_url = f"{BASE}/health"
+    health_url = f"{BASE}/kit/v1/health"
     result = _request(health_url, key, args.timeout)
     result["summary"] = _summarize(result.get("data"))
     results.append(("health (connectivity/auth check)", health_url, result))
 
     if args.auth == "query":
         markets_url = BASE + "/kit/v1/markets?" + urllib.parse.urlencode(
-            {"sport": "soccer", "mode": "prematch", "key": key})
+            {"sport_id": 2, "event_type": "prematch", "key": key})
         result = _request(markets_url, key, args.timeout)
     else:
-        markets_url = BASE + "/kit/v1/markets?" + urllib.parse.urlencode({"sport": "soccer", "mode": "prematch"})
+        markets_url = BASE + "/kit/v1/markets?" + urllib.parse.urlencode({"sport_id": 2, "event_type": "prematch"})
         result = _request(markets_url, key, args.timeout, extra_headers={"X-API-Key": key})
     result["summary"] = _summarize(result.get("data"))
     results.append(("markets snapshot (soccer, prematch)", markets_url, result))
 
     for name, url, res in results:
-        print(_format(name, url, res))
+        print(_format(name, url, res, key))
         print("-" * 72)
 
     markets_result = results[-1][2]
+    slate_path = Path(os.environ.get("EDGE_FACTORY_SLATE", str(ROOT / "localdata" / "picks_today.json")))
+    try:
+        slate_payload = json.loads(slate_path.read_text())
+        slate = slate_payload if isinstance(slate_payload, list) else slate_payload.get("rows", [])
+    except (OSError, ValueError, TypeError):
+        slate = []
+    cov = coverage_report(markets_result.get("data"), slate)
+    print(f"coverage_pct={cov['coverage_pct']} slate={cov['slate']} matched={cov['matched']}")
+    print(f"unmatched_examples={cov['unmatched_examples']}")
+    print("projection: shared-fixture target >=30; coverage is diagnostic only and is not persisted.")
     print("ACCEPTANCE 1 - AUTH:", "mechanism works" if markets_result.get("ok") else
           "FAILED - try --auth header; if both fail, do not wire (fail-closed)")
     if markets_result.get("summary", {}).get("sample_event_keys"):

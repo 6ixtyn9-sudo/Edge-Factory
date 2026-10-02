@@ -20,6 +20,8 @@ def _adapter_modules():
         "betminer": importlib.import_module("edgefactory.sources.betminer"),
         "pinnapi_odds": importlib.import_module("edgefactory.sources.pinnapi_odds"),
         "betbetter": importlib.import_module("edgefactory.sources.betbetter"),
+        "sharpapi_odds": importlib.import_module("edgefactory.sources.sharpapi_odds"),
+        "boggio": importlib.import_module("edgefactory.sources.boggio"),
     }
 
 
@@ -27,7 +29,7 @@ def test_off_switch_disables_all_five(monkeypatch):
     monkeypatch.setenv("EDGE_FACTORY_SHADOW_CAPTURE", "off")
     stats = pt._capture_shadow_candidates("2026-10-03")
     assert set(stats) == {
-        "futbolpronosticos", "sportytrader_odds", "betminer", "pinnapi_odds", "betbetter"}
+        "futbolpronosticos", "sportytrader_odds", "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "boggio"}
     assert all(entry["status"] == "disabled" for entry in stats.values())
 
 
@@ -42,6 +44,8 @@ def test_capture_wires_all_five_sources(monkeypatch, tmp_path):
         "betminer": {"status": "ok", "bm_raw": 5, "bm_scored": 5},
         "pinnapi_odds": {"status": "ok", "pa_raw": 6, "pa_matched": 6},
         "betbetter": {"status": "ok", "bb_raw": 7, "bb_scored": 7},
+        "sharpapi_odds": {"status": "ok", "sa_raw": 8, "sa_matched": 8},
+        "boggio": {"status": "ok", "bg_raw": 9, "bg_scored": 9},
     }
     for name, module in modules.items():
         monkeypatch.setattr(
