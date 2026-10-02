@@ -10208,3 +10208,74 @@ Odds API secrets absent from this sandbox, so that run—not these TLS-limited
 local attempts—must establish which non-Forebet endpoints currently recover
 rows. Fix any remaining adapter/allowlist failure indicated by that report; do
 not force certification and do not spend another Forebet Browser Run probe.
+
+## Addendum — 2026-10-02: kickoff parser day/month repair ported to main; freeze markers committed
+
+**Defect (verified live on main, not inferred).** `picks_today.parse_kickoff_dt`
+matched `"DD-MM, HH:MM"` but unpacked the groups as `(mm, dd)`. The feeds
+publish day first — zulubet renders `2024-07-24` as `"24-07, 14:00"`. Three
+live consequences, keyed by calendar position:
+
+1. **Days 13–31** (e.g. `"30-09, 08:10"`): `datetime(year, 30, ...)` raises,
+   the parser returns `None`, and `operational_pick_eligibility` rejects the
+   pick as `missing_kickoff_same_day`. Matches the 2026-09-30 funnel audit's
+   eight phantom same-day kickoff gaps.
+2. **Days 1–12, swapped month behind the run month** (e.g. `"02-10, 18:00"`
+   on 2 Oct → February): the lead is months negative and the pick is wrongly
+   rejected as `inside_30m_lead_or_started` — silent same-day coverage loss.
+   This was active on main the day of this fix.
+3. **Days 1–12, swapped month ahead** (e.g. `"12-06, 07:00"` on 12 Jun →
+   December): the lead reads months out, the pre-match guard cannot fire, and
+   an already-started fixture stays playable. Live safety hole, matching the
+   PR #18 branch's June-era diagnosis.
+
+Also repaired at the same function: the bare `"HH:MM"` form was stamped with
+the wall-clock date instead of the fixture's, and the year came from the
+wall clock, so a 31 December run read a 1 January fixture as the previous
+January.
+
+**Blast radius checked before touching anything.** The only callers are
+`_kickoff_minutes` (clock-minutes extraction; hour/minute were never swapped)
+and `operational_pick_eligibility` (the pre-match guard). The zoned
+`kickoff_utc` normalisation path (`zoned_kickoff_to_utc`) accepts only
+offset-bearing strings, so naive DD-MM values never reached `kickoff_utc`;
+the ticket engine's live guard and `auto_tickets`' own parser (day-first
+already, pinned by `tests/test_kickoff_contract.py`) were unaffected. The
+defect was exactly one function.
+
+**Fix.** Ported the canonical repair from the unmerged PR #18 branch
+(`arena/01a0f2b3-edge-factory`), where it has been tested since 2026-09-30:
+day-first unpacking; new optional `reference_date` carrying the fixture's
+own date (never the wall clock) for the yearless forms; year-rollover at
+the December/January boundary (December run rolls a January fixture forward,
+January run reads a December fixture back). `operational_pick_eligibility`
+now passes `pick["date"]` as the reference. Signature is backward
+compatible; callers that pass no reference keep current-year semantics.
+
+**Freeze markers now committed.** `.gitignore` allowlists
+`!localdata/auto_tickets_20*.frozen` alongside the existing slip negations.
+Previously the slip was committed but its `.frozen` marker was not, so any
+cold-cache restore left `frozen.exists()` false and the engine could rebuild
+a new card for a date already frozen and already staked — the rotation
+hazard documented on the PR #18 branch (`Main has the same gap.`).
+
+**Receipts.**
+
+- Baseline before change: **786 passed**.
+- New `tests/test_kickoff_parser.py`: 41 cases — day-first across days
+  13–31, no January swap on the 1st, same-day upcoming kept, already-started
+  rejected (the safety case), lead-window rejection, missing-kickoff
+  fail-closed, future-date untimed, bare-time fixture dating, both year
+  rollovers, ISO/Zulu unchanged, invalid → None.
+- Load-bearing proof: the coverage tests fail against the pre-fix parser
+  (verified by restoring `HEAD` in-place and re-running).
+- After change: **827 passed**; pyflakes clean on both changed files;
+  `git diff --check` clean.
+
+**Boundaries.** No threshold, bucket, source weight, veto, staking, ticket
+formation, freeze cadence or notification rule changed. The guard is
+*stricter* where it was blind (started fixtures) and restores coverage where
+it was deaf (days 13–31); no gate was weakened. No betting constant touched.
+
+**Replacement paths:** `scripts/picks_today.py`,
+`tests/test_kickoff_parser.py`, `.gitignore`, and this HANDOVER entry.
