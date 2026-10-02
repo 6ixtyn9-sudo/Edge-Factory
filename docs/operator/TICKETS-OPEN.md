@@ -368,3 +368,21 @@ site 1,216 vs docs 500+ — write the observed figure here).
   behavior — no substitution scramble.
 - Corroboration may use ONLY same-day-fetched prices (`same_day_rows`);
   anything older abstains. This is enforced in the adapter and tested.
+
+## (i) SharpAPI price-shadow promotion — named-book freshness evidence
+
+**Status: OPEN — promotion criteria only; SHADOW-02 adapter shipped.**
+
+SharpAPI (`sharpapi1.p.rapidapi.com`, RapidAPI listing receipt; free tier
+approximately 12 requests/minute and two named bookmakers) is a price donor
+candidate only. It is never a vote and contributes no price credit until the
+operator explicitly promotes it.
+
+Bars: (1) at least 30 same-day shared fixture/market/selection rows with an
+existing approved donor; (2) at least 80% successful scheduled days over two
+weeks; (3) probe schema receipt confirms named-book rows and sane prices; (4)
+same-day freshness corroboration gate passes, with missing/stale rows
+abstaining; and (5) operator reviews an offline 7%-gate report. Cache-first is
+gap-aware: held dates are never refetched. Auth, quota, unavailable, and
+zero-row days remain retryable. No gate is weakened and no automatic
+promotion exists.
