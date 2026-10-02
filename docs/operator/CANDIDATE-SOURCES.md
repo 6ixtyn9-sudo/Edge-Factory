@@ -6,6 +6,14 @@ Arena page fetcher. No solver, proxy, browser challenge bypass, CAPTCHA
 workaround, login, or paid access was used. A successful sample is not a
 production approval.
 
+**Sandbox receipt for the new seed pass (2026-10-02 UTC):** direct `curl` from
+this checkout was attempted against every supplied seed page and its relevant
+`robots.txt`. Every attempt returned `HTTP 000` with
+`OpenSSL SSL_ERROR_SYSCALL` (zero bytes). Therefore the seed rows below are
+**UNVERIFIED from the sandbox**, even where the separate page fetcher returned
+content. They must not be promoted or fetched by a production adapter until a
+cooperative sandbox fetch succeeds.
+
 ## Decision rules
 
 - A source that cannot be fetched reliably is **not a production source**.
@@ -43,6 +51,37 @@ not mean that high-rate crawling is acceptable.
 | [Wettbasis Bundesliga](https://www.wettbasis.com/sportwetten-tipps/tipps-category/bundesliga-tipps) | German | Yes, HTML returned; robots does not disallow the sampled `/sportwetten-tipps/` path | cooperative HTML | German editorial/AI tips, 1X2, O/U, BTTS, handicap and bookmaker-labelled links; dated fixture cards | Archive is article-oriented; sample exposes fixture date and recent pages but no durable structured result field for every tip | **vote-source candidate** only as a low-volume shadow; no paid bookmaker navigation and no price ingestion from redirect links |
 | [OneFootball DE Wetten](https://onefootball.com/de/wetten/tipps/deutschland-vs-serbien-01-10-2026) | German | Yes, HTML returned; robots only disallows admin/magazine/network, not the public betting article | cooperative HTML | Single-match editorial tip (handicap), bookmaker link, H2H, last-five results and article date | H2H/form results are present, but the article does not expose an immutable settled-tip field | **regime-labelled training-only** unless the operator can prove an append-only tip/settlement archive; not a production donor |
 | [Football4Cast Japan](https://sports4cast.com/4casts/football4cast/japanese-football-predictions/) | English page, Japanese J1 coverage | Yes, HTML returned; robots allows `*` but explicitly disallows GPTBot/ClaudeBot/CCBot/Bytespider/etc. | cooperative HTML for a normal browser/operator, but **robots AI-training opt-out** | Predicted score/probability/verdict and a “Results & Predictions” section; no stable Japanese-language structured feed in sample | Public results table exists, but model-to-result linkage is not yet an auditable row contract | **reject for production** under the cooperative-only standing decision; do not crawl as a model-training donor while the robots opt-out applies |
+
+## New seed pass — sandbox verification is mandatory
+
+The following rows are the requested German/Spanish seeds. The **web-fetched
+observations** are useful scouting evidence only; the sandbox column is the
+decision gate. `UNVERIFIED` means no production use, no fetcher, and no vote or
+price weight.
+
+| candidate / URL actually checked | language | reachable from sandbox? | robots.txt cooperative? | fetchability class | observed data type | settlement path | verdict |
+|---|---|---|---|---|---|---|---|
+| [Bundesligatrend sample](https://www.bundesligatrend.de/mainz-gegen-gladbach-tipp-prognose-bundesliga-quoten-25-10-2024.html) | German | **UNVERIFIED** — sandbox `curl`: HTTP 000 / TLS `SSL_ERROR_SYSCALL` | Web-fetched robots allows the sample path; sandbox robots **UNVERIFIED** | Web fetcher showed cooperative HTML; sandbox class **UNVERIFIED** | 1X2 and O/U tip, predicted score, named NEO.bet/Bet365/Betano/Oddset quotes with quote timestamp | Article has fixture date and form, but the sample does not contain an immutable final settlement row; would need an append-only article/result join | **UNVERIFIED**; do not promote. If sandbox access is later proven, vote shadow first; named quotes are historical price cross-checks only |
+| `https://wettforum.de` (supplied seed) | German | **UNVERIFIED** — sandbox HTTP 000 / TLS error | **UNVERIFIED** | **UNVERIFIED**; no verified page | No sandbox observation. A related page linked by Wettbasis is [Wettforum on sportwettenvergleich.net](https://www.sportwettenvergleich.net/wettforum/), which is a public community forum | Forum posts are mutable/user-attributed and do not provide a stable tip/result ledger in the checked sample | **UNVERIFIED / training-only at most**; noisy community posts are not a production vote or price donor |
+| [Wettpoint Bundesliga tips](https://fussball.wettpoint.com/en/betting-tips/1-bundesliga_germany.html) | German/English UI | **UNVERIFIED** — sandbox HTTP 000 / TLS error; page fetcher redirected to a sparse Wettpoint home page | **UNVERIFIED** — robots request did not yield a usable robots document | **UNVERIFIED**; search evidence shows public HTML, but the exact path was not reproducibly fetched here | Search evidence shows 1X2 and O/U tips, historical results, H2H/statistics; no reliable named-book field in the checked evidence | Historical “Result” lines appear beside prior tips in search output, but the exact page contract and immutable joins were not verified | **UNVERIFIED**; do not promote until the exact archive path is sandbox-fetchable and settlement rows are proven |
+| [FutbolPronosticos](https://www.futbolpronosticos.com/predicciones-de-futbol) | Spanish | **UNVERIFIED** — sandbox HTTP 000 / TLS error | Web-fetched robots exposes content-signal text but sandbox robots **UNVERIFIED**; no production AI-training permission inferred | Web fetcher showed cooperative server-side HTML; sandbox class **UNVERIFIED** | Daily 1X2, O/U, BTTS, double chance, exact score, percentages and some decimal odds; sample included an affiliate-linked 22Bet quote | Per-match “Pronostico” pages and today/tomorrow/result routes exist; an immutable append-only settled-tip field was not shown | **UNVERIFIED**; vote-source candidate only after sandbox and settlement audit; price-source candidate only when bookmaker identity, selection and timestamp are retained |
+| [PronosticosFutbol.ai](https://pronosticosfutbol.ai/pronosticos-futbol-manana) | Spanish | **UNVERIFIED** — sandbox HTTP 000 / TLS error | Web-fetched robots: `User-agent: * Allow: /`, `Disallow: /api/`; sandbox robots **UNVERIFIED** | Web fetcher showed cooperative server-side HTML; sandbox class **UNVERIFIED** | 1X2, O/U, BTTS, double chance, Asian handicap, half-time and exact score with percentages; some pages show decimal odds | Dated match pages include finished/upcoming states and community agreement, but append-only settlement semantics need a historical sample | **UNVERIFIED**; vote-source candidate for bounded shadow only after sandbox verification; not a price donor without a named bookmaker per row |
+| [SportyTrader ES sample](https://sportytrader.es/pronosticos/grecia-holanda-375935) | Spanish | **UNVERIFIED** — sandbox HTTP 000 / TLS error | Web-fetched robots allows public prediction paths but disallows `/book/`, `/async/`, `/widgets/`, member/account and redirect surfaces; sandbox robots **UNVERIFIED** | Web fetcher showed cooperative HTML with affiliate/member prompts; sandbox class **UNVERIFIED** | Model 1X2/O/U/BTTS probabilities plus named bookmaker odds (Bet365, Sportium, Luckia, 1xBet, William Hill, Interwetten, etc.), live-results and recent-results links | Public page contains match date, publication/modified time, result links and recent results; preserve the page snapshot because model text can be edited | **UNVERIFIED**; **price-source candidate** only after sandbox/freshness audit. Treat ES/FR/DE/IT/PT-BR locales as one SportyTrader publisher, never five votes |
+| SportyTrader locale set — [ES sample](https://sportytrader.es/pronosticos/grecia-holanda-375935), existing [PT-BR sample](https://www.sportytrader.com/pt-br/palpites/futebol/brasil/brasileirao-serie-a-343/) | Spanish, Portuguese; FR/DE/IT not checked in this pass | ES/PT-BR sandbox HTTP 000; FR/DE/IT **UNVERIFIED** and not fetched from sandbox | ES robots reviewed by web fetcher; other locale robots **UNVERIFIED** | **UNVERIFIED** by sandbox; do not assume one locale's policy applies to another | Same publisher family: model probabilities, bookmaker-labelled odds, dated fixtures and result links; PT-BR sample also showed account/member prompts and an `Odd 0` hazard | Match pages and live-result links exist, but retain bookmaker, capture timestamp and locale; discard zero/missing odds | **UNVERIFIED / one publisher only**; price-source candidate after exact-locale checks, never independent vote expansion |
+
+### Seed-pass independence and access decisions
+
+- `futbolpronosticos.com`, `pronosticosfutbol.ai`, and SportyTrader are not
+  independent merely because they are Spanish or show different markets. They
+  need overlap testing against the existing fb-zb board before any shadow vote.
+- SportyTrader locale pages are one publisher. The ES/PT-BR evidence does not
+  authorize FR/DE/IT; each exact locale needs its own sandbox page and robots
+  receipt.
+- `wettforum.de` was not silently converted into a different domain. The
+  related `sportwettenvergleich.net/wettforum/` forum was recorded as a lead,
+  not as verification of the supplied seed.
+- A web-search/page-fetch hit is not a sandbox receipt. All HTTP 000 seed rows
+  remain unverified and are deliberately excluded from production.
 
 ## Triage notes
 
