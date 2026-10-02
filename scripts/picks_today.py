@@ -54,6 +54,7 @@ from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_d
 from edgefactory.veto_resolution import apply_resolution_to_ctx, build_pool_table
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
 from edgefactory.enh_registry import status_for as enh_status_for
+from edgefactory.source_health import bzzoiro_status_line, record_bzzoiro_run
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
@@ -2094,11 +2095,19 @@ def _scoutingstats_rows_to_odds(rows: list[dict]) -> list[dict]:
     return out
 
 
-def _fetch_live_bzzoiro_odds(day: str) -> list[dict]:
+def _fetch_live_bzzoiro_odds(day: str, stats: dict | None = None) -> list[dict]:
     try:
         mod = importlib.import_module("edgefactory.sources.bzzoiro_odds")
-        return list(mod.fetch_day(day) or [])
+        rows = list(mod.fetch_day(day) or [])
+        if stats is not None and hasattr(mod, "diagnostics"):
+            stats.update(mod.diagnostics())
+        return rows
     except Exception as exc:
+        if stats is not None and hasattr(locals().get("mod"), "diagnostics"):
+            stats.update(mod.diagnostics())
+        if stats is not None:
+            stats.setdefault("status", "unavailable")
+            stats.setdefault("errors", [str(exc).replace("\\n", " ")[:180]])
         print(f"bzzoiro_odds enrichment skipped for {day}: {exc}", file=sys.stderr)
         return []
 
@@ -2176,7 +2185,7 @@ def bzzoiro_odds_bundle(
     cached_rows = _read_cached_bzzoiro_odds(day)
     live_rows: list[dict] = []
     if live and (_refresh_bzzoiro_odds() or not cached_rows):
-        live_rows = _fetch_live_bzzoiro_odds(day)
+        live_rows = _fetch_live_bzzoiro_odds(day, stats=stats)
 
     bundle = _odds_bundle_from_rows(cached_rows + live_rows, provider=BZZOIRO_ODDS_SOURCE, stats=stats)
     if stats is not None:
@@ -2185,6 +2194,14 @@ def bzzoiro_odds_bundle(
             "live_rows": len(live_rows),
             "refreshed": bool(live_rows),
         })
+        if not live_rows and not stats.get("status"):
+            stats["status"] = "cache_only" if cached_rows else "not_run"
+        stats.setdefault("http_statuses", [])
+        stats.setdefault("errors", [])
+        stats.setdefault("quota_hint", "none")
+        stats.setdefault("best_results", 0)
+        stats.setdefault("comparison_rows", 0)
+        stats.setdefault("rows", 0)
     return bundle
 
 
@@ -3481,6 +3498,9 @@ def print_buckets(buckets: dict, title_date: str = ""):
     print(f"\nEdge Factory Picks — {title_date}" if title_date else "\nEdge Factory Picks")
     print("=" * 60)
     print(f"Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    unavailable = bzzoiro_status_line()
+    if unavailable:
+        print(f"⚠️  {unavailable}")
     print()
     for b in BUCKET_ORDER:
         picks = buckets.get(b, [])
@@ -3831,6 +3851,9 @@ def main():
         bzz_stats: dict = {}
         scouting_stats: dict = {}
         odds_bundle = bzzoiro_odds_bundle(day, stats=bzz_stats)
+        # Persist upstream zero-run evidence for visibility only. This never
+        # alters enrichment, certification, or ticket eligibility.
+        record_bzzoiro_run(day, bzz_stats)
         secondary_bundle = scoutingstats_odds_bundle(
             day,
             cached_rows=list(data.get("scoutingstats", {}).values()),
@@ -3865,6 +3888,10 @@ def main():
             print(
                 f"live odds enrichment {day}: "
                 f"picks={len(picks)} "
+                f"bzz_status={bzz_stats.get('status', 'unknown')} "
+                f"bzz_http={','.join(str(x) for x in (bzz_stats.get('http_statuses') or [])) or 'none'} "
+                f"bzz_errors={len(bzz_stats.get('errors') or [])} "
+                f"bzz_quota_hint={bzz_stats.get('quota_hint', 'none')} "
                 f"bzz_cached={bzz_stats.get('cached_rows', 0)} "
                 f"bzz_live={bzz_stats.get('live_rows', 0)} "
                 f"bzz_valid_keys={bzz_stats.get('valid_keys', len(odds_bundle.get('exact', {})))} "
