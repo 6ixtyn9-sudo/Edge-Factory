@@ -10354,3 +10354,19 @@ load-bearing. Full suite **835 passed**.
 
 Effect on cards: legs whose only price was the stale board now fall to
 UNMATCHED/uncorroborated handling instead of wearing a stale price as if fresh.
+
+---
+
+## Addendum 2026-10-02 (item 4): edge-gate evidence — NO gate applied
+
+`scripts/audit_edge_gate.py` (read-only, reproducible) grades every committed
+carded leg against the production settlement machinery: stated edge
+(prob x captured odds - 1) vs realized result. Findings in
+`docs/operator/EDGE-GATE-EVIDENCE.md`: stated edge is ANTI-informative at
+current calibration — the < -5pts money-leg cohort hit 86.7% for +10.9%/leg
+flat, while a >=0 stated-edge gate would have kept a -4.8% cohort and removed
+the +8.1% one (status quo +4.9%/leg). 75% of money legs carry negative stated
+edge by construction (short favorites at short quotes). Options A-D presented
+to the operator; measurement calibration (Option B) and price-quality gating
+(Option C, item-3-adjacent) are the credible paths if he wants any gate at all.
+The audit script is evidence-only; nothing in the pick path changed.
