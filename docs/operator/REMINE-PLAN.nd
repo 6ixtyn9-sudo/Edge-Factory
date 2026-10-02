@@ -55,11 +55,15 @@ reruns:
 3. `betexplorer_results/gap_fill_complete` is written only when all 62
    approved dates have successful or held terminal receipts. Exhausted reruns
    are idempotent and exit zero.
-4. Only after that marker, one pre-2026 Football-Data `E0 × 2024-25` CSV proof
-   is fetched. It is stored as an immutable, gitignored raw artifact with a
-   SHA-256, explicit provenance, opening/closing header checks, and normalized
-   donor-coverage report. A failed or incomplete proof is held and does not
-   unlock Legalbet.
+4. The Football-Data proof unlocks on a BetExplorer terminal state: either
+   `gap_fill_complete` (`gate_released_by=complete`) or a same-run
+   challenge/429 source freeze (`gate_released_by=frozen_blocked`). The latter
+   deliberately leaves the 62 dates open for a later retry; it does not hold
+   the independent price-history proof hostage. One pre-2026 `E0 × 2024-25`
+   CSV proof is then fetched, stored as an immutable, gitignored raw artifact
+   with a SHA-256, explicit provenance, opening/closing header checks, and
+   normalized donor-coverage report. A failed or incomplete proof is held and
+   does not unlock Legalbet.
 5. Only after a complete CSV proof, the driver checks Legalbet `robots.txt`
    first, then samples no more than three requests per run and 30 public
    archive pages in total. User/rating/stat paths are excluded. A RU-host

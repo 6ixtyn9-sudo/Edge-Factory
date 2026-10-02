@@ -315,6 +315,7 @@ def _betexplorer(run_date: str, inventory: dict[str, Any], ledger: list[dict[str
             value = {
                 "observed_at": _now(), "run_date": run_date,
                 "source": "betexplorer_results", "status": "gap_fill_complete",
+                "gate_released_by": "complete",
                 "approved_gap_count": len(days), "terminal_receipt_count": len(terminal),
                 "request_count": 0, "provenance": "all approved dates have terminal successful/held receipts",
             }
@@ -389,6 +390,7 @@ def _betexplorer(run_date: str, inventory: dict[str, Any], ledger: list[dict[str
             value = {
                 "observed_at": _now(), "run_date": run_date,
                 "source": "betexplorer_results", "status": "source_freeze",
+                "gate_released_by": "frozen_blocked",
                 "request_count": requests, "url": url,
                 "reason": freeze_reason,
                 "provenance": "source frozen for this runner day; no bypass or alternate transport",
@@ -414,6 +416,7 @@ def _betexplorer(run_date: str, inventory: dict[str, Any], ledger: list[dict[str
         value = {
             "observed_at": _now(), "run_date": run_date,
             "source": "betexplorer_results", "status": "gap_fill_complete",
+            "gate_released_by": "complete",
             "approved_gap_count": len(days), "terminal_receipt_count": len(terminal) + len(pending),
             "request_count": 0,
             "provenance": "all approved dates have terminal successful/held receipts",
@@ -475,11 +478,20 @@ def _football_donor_coverage(raw: bytes, inventory: dict[str, Any]) -> dict[str,
     }
 
 
-def _football_data(run_date: str, inventory: dict[str, Any], ledger: list[dict[str, Any]], dry_run: bool) -> dict[str, Any]:
+def _football_data(
+    run_date: str,
+    inventory: dict[str, Any],
+    ledger: list[dict[str, Any]],
+    dry_run: bool,
+    *,
+    gate_released_by: str,
+) -> dict[str, Any]:
+    if gate_released_by not in {"complete", "frozen_blocked"}:
+        raise ValueError(f"invalid BetExplorer gate release: {gate_released_by}")
     if any(row.get("source") == "football_data" and row.get("status") == FOOTBALL_COMPLETE for row in ledger):
-        return {"status": "complete", "requests": 0}
+        return {"status": "complete", "requests": 0, "gate_released_by": gate_released_by}
     if dry_run:
-        return {"status": "pending", "requests": 0, "dry_run": True}
+        return {"status": "pending", "requests": 0, "dry_run": True, "gate_released_by": gate_released_by}
     url = "https://www.football-data.co.uk/mmz4281/2425/E0.csv"
     try:
         status_code, headers, raw = _http_bytes(url)
@@ -489,6 +501,7 @@ def _football_data(run_date: str, inventory: dict[str, Any], ledger: list[dict[s
             value = {
                 "observed_at": _now(), "run_date": run_date, "source": "football_data",
                 "status": "hold", "request_count": 1, "url": url,
+                "gate_released_by": gate_released_by,
                 "http_status": status_code, "response_bytes": len(raw), "checksum": checksum,
                 "checksum_status": "sha256_raw_response" if raw else "unavailable_no_response_bytes",
                 "reason": "HTTP failure or empty response; retry on a later runner day",
@@ -496,7 +509,7 @@ def _football_data(run_date: str, inventory: dict[str, Any], ledger: list[dict[s
             }
             _record(run_date, {**value, "stage": "football_data"})
             _ledger_once(ledger, value, ("source", "status", "run_date"))
-            return {"status": "hold", "requests": 1}
+            return {"status": "hold", "requests": 1, "gate_released_by": gate_released_by}
         artifact_checksum, wrote, collision = _write_immutable(artifact, raw)
         reader = csv.reader(io.StringIO(raw.decode("latin-1", "replace")))
         header = next(reader, [])
@@ -511,6 +524,7 @@ def _football_data(run_date: str, inventory: dict[str, Any], ledger: list[dict[s
             "observed_at": _now(), "run_date": run_date, "source": "football_data",
             "status": FOOTBALL_COMPLETE if proof_status == "complete" else "header_or_artifact_hold",
             "request_count": 1, "url": url, "http_status": status_code,
+            "gate_released_by": gate_released_by,
             "response_bytes": len(raw), "checksum": artifact_checksum,
             "checksum_status": "sha256_raw_response", "raw_artifact": str(artifact.relative_to(ROOT)),
             "raw_artifact_written": wrote, "raw_artifact_collision": collision,
@@ -522,17 +536,24 @@ def _football_data(run_date: str, inventory: dict[str, Any], ledger: list[dict[s
         }
         _record(run_date, {**value, "stage": "football_data"})
         _ledger_once(ledger, value, ("source", "status"))
-        return {"status": value["status"], "requests": 1, "missing_open": missing_open, "missing_close": missing_close}
+        return {
+            "status": value["status"],
+            "requests": 1,
+            "missing_open": missing_open,
+            "missing_close": missing_close,
+            "gate_released_by": gate_released_by,
+        }
     except Exception as exc:
         value = {
             "observed_at": _now(), "run_date": run_date, "source": "football_data",
             "status": "hold", "request_count": 1, "url": url,
+            "gate_released_by": gate_released_by,
             "error": f"{type(exc).__name__}: {exc}",
             "provenance": "one controlled pre-2026 E0 x 2024-25 CSV proof",
         }
         _record(run_date, {**value, "stage": "football_data"})
         _ledger_once(ledger, value, ("source", "status", "run_date"))
-        return {"status": "hold", "requests": 1}
+        return {"status": "hold", "requests": 1, "gate_released_by": gate_released_by}
 
 
 def _legalbet_paths(page: bytes, base_url: str) -> list[str]:
@@ -701,13 +722,17 @@ def run(*, dry_run: bool = False) -> dict[str, Any]:
     ledger = _ledger_rows()
     statarea_held = _hold_statarea(run_date, inventory, ledger, dry_run=dry_run)
     be = _betexplorer(run_date, inventory, ledger, dry_run)
-    football = {"status": "gated", "requests": 0}
+    football = {"status": "gated", "requests": 0, "gate_released_by": None}
     legalbet = {"status": "gated", "requests": 0, "pages": sum(1 for row in ledger if row.get("source") == "legalbet" and row.get("status") == "archive_page")}
-    # Strict order fence: no Football-Data request before the BetExplorer
-    # completion marker, and no Legalbet request before a valid proof.
+    # Football-Data is released by a terminal BetExplorer state. A challenge
+    # or 429 freeze is terminal for this run but intentionally leaves the 62
+    # gaps open for a later retry; the freeze must not hold the independent
+    # price-history proof hostage.
     be_complete = bool(be.get("complete")) or any(row.get("source") == "betexplorer_results" and row.get("status") == "gap_fill_complete" for row in ledger)
-    if be_complete:
-        football = _football_data(run_date, inventory, ledger, dry_run)
+    be_frozen_blocked = bool(be.get("frozen")) and str(be.get("freeze_reason")) in {"BetExplorerChallenge", "BetExplorerCoolingDown"}
+    gate_released_by = "complete" if be_complete else ("frozen_blocked" if be_frozen_blocked else None)
+    if gate_released_by:
+        football = _football_data(run_date, inventory, ledger, dry_run, gate_released_by=gate_released_by)
         if football.get("status") == "complete":
             legalbet = _legalbet(run_date, ledger, dry_run)
     summary = {
@@ -715,11 +740,17 @@ def run(*, dry_run: bool = False) -> dict[str, Any]:
         "statarea_held": statarea_held,
         "betexplorer": be,
         "football_data": football,
+        "gate_released_by": football.get("gate_released_by"),
         "legalbet": legalbet,
         "meter": {
             "statarea": {"consumed": 0, "budget": 3, "held": statarea_held},
             "betexplorer": {"consumed": be.get("requests", 0), "budget": BETEXPLORER_BUDGET, "remaining_gaps": be.get("remaining")},
-            "football_data": {"consumed": football.get("requests", 0), "budget": 1, "status": football.get("status")},
+            "football_data": {
+                "consumed": football.get("requests", 0),
+                "budget": 1,
+                "status": football.get("status"),
+                "gate_released_by": football.get("gate_released_by"),
+            },
             "legalbet": {
                 "consumed_requests": legalbet.get("requests", 0),
                 "request_budget": LEGALBET_REQUEST_BUDGET,
