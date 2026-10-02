@@ -96,6 +96,72 @@ def test_daily_source_health_schema_is_conservative_and_forebet_is_historical_on
     assert source_health.daily_status_block("2026-10-02").startswith("Source health 2026-10-02:")
 
 
+def test_health_line_role_verdicts_are_per_role_not_all_three(tmp_path):
+    """SHADOW-01 T0: role-limited sources must not print constant BLOCKED."""
+    source_health.persist_daily_source_health(
+        "2026-10-02",
+        {
+            # bzzoiro is a vote feed: fetch+vote with can_price False is healthy.
+            "bzzoiro": {"fetched": True, "rows": 5, "can_fetch_today": True,
+                        "can_price": False, "can_vote": True},
+            # bzzoiro_odds is a price feed: fetch+price with can_vote False is healthy.
+            "bzzoiro_odds": {"fetched": True, "rows": 5, "can_fetch_today": True,
+                             "can_price": True, "can_vote": False},
+            # betexplorer prices but never votes.
+            "betexplorer": {"fetched": True, "rows": 2, "can_fetch_today": True,
+                            "can_price": True, "can_vote": False},
+            # scoutingstats is a full source: all three keys.
+            "scoutingstats": {"fetched": True, "rows": 9, "can_fetch_today": True,
+                              "can_price": True, "can_vote": True},
+        },
+    )
+    line = source_health.daily_status_block("2026-10-02")
+    assert "bzzoiro=fetch/vote" in line
+    assert "bzzoiro_odds=fetch/price" in line
+    assert "betexplorer=fetch/price" in line
+    assert "scoutingstats=fetch/price/vote" in line
+
+
+def test_health_line_role_verdicts_fail_when_role_key_fails(tmp_path):
+    source_health.persist_daily_source_health(
+        "2026-10-02",
+        {
+            # Vote feed that lost its vote capability: BLOCKED.
+            "bzzoiro": {"fetched": True, "rows": 0, "can_fetch_today": True,
+                        "can_price": False, "can_vote": False},
+            # Price feed with zero priced rows: BLOCKED.
+            "bzzoiro_odds": {"fetched": True, "rows": 0, "can_fetch_today": True,
+                             "can_price": False, "can_vote": False},
+            # Fetched but nothing to price: BLOCKED.
+            "betexplorer": {"fetched": True, "rows": 0, "can_fetch_today": True,
+                            "can_price": False, "can_vote": False},
+            # Full source missing its price capability: BLOCKED.
+            "scoutingstats": {"fetched": True, "rows": 3, "can_fetch_today": True,
+                              "can_price": False, "can_vote": True},
+        },
+    )
+    line = source_health.daily_status_block("2026-10-02")
+    assert "bzzoiro=BLOCKED" in line
+    assert "bzzoiro_odds=BLOCKED" in line
+    assert "betexplorer=BLOCKED" in line
+    assert "scoutingstats=BLOCKED" in line
+
+
+def test_health_line_role_verdicts_fail_when_fetch_fails(tmp_path):
+    source_health.persist_daily_source_health(
+        "2026-10-02",
+        {
+            "bzzoiro": {"fetched": False, "rows": 0, "can_fetch_today": False,
+                        "can_price": False, "can_vote": True},
+            "scoutingstats": {"fetched": False, "rows": 0, "can_fetch_today": False,
+                              "can_price": True, "can_vote": True},
+        },
+    )
+    line = source_health.daily_status_block("2026-10-02")
+    assert "bzzoiro=BLOCKED" in line
+    assert "scoutingstats=BLOCKED" in line
+
+
 def test_bzzoiro_429_is_recorded_as_rate_limit_quota_hint(monkeypatch):
     bzz._reset_diagnostics()
     monkeypatch.setattr(bzz, "time", type("Clock", (), {"sleep": staticmethod(lambda _s: None)})())
