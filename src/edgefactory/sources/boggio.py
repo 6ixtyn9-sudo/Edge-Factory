@@ -90,9 +90,16 @@ def capture_day(day,*,localdata=None):
   stats["bg_raw"]=len({(r["home"],r["away"]) for r in rows}); stats["bg_scored"]=len(rows); stats["status"]="ok" if rows else "empty"; return rows,_set_diag(stats)
  except UpstreamBlocked as e:
   msg=str(e); stats["http_429"]=_429; stats["status"]="cooldown" if _cooling else ("quota" if "429" in msg or "budget" in msg else _status(None)); stats["blocker"]=msg[:180]; stats["errors"]=[msg[:180]]; return [],_set_diag(stats)
+def _scrub(value):
+ secret=_key()
+ if isinstance(value,str): return value.replace(secret,"[REDACTED]") if secret else value
+ if isinstance(value,dict): return {str(k):_scrub(v) for k,v in value.items()}
+ if isinstance(value,list): return [_scrub(v) for v in value]
+ return value
+
 def _sample(payload):
  data=payload.get("data") if isinstance(payload,dict) else payload
- return data[0] if isinstance(data,list) and data else {"top_keys":list(payload)[:12]} if isinstance(payload,dict) else None
+ return _scrub(data[0] if isinstance(data,list) and data else {"top_keys":list(payload)[:12]} if isinstance(payload,dict) else None)
 
 def persist_shadow(day,rows,stats,*,localdata=None):
  root=localdata or LOCALDATA; root.mkdir(parents=True,exist_ok=True); path=_path(day,root)
