@@ -2607,12 +2607,29 @@ def _apply_sportytrader_corroborator(picks: list[dict], day: str) -> tuple[int, 
     return _append_sportytrader_shadow_board(picks, day)
 
 
-def _capture_shadow_candidates(day: str) -> tuple[dict, dict]:
-    """Capture both verified candidates without touching the production path."""
+def _zero_shadow_stats(status: str = "unavailable") -> dict[str, dict]:
+    """Conservative default stats per shadow source (SHADOW-01 extends the set)."""
+    return {
+        "futbolpronosticos": {"status": status, "raw": 0, "scored": 0},
+        "sportytrader_odds": {"status": status, "st_raw": 0, "st_matched": 0},
+        "betminer": {"status": status, "bm_raw": 0, "bm_scored": 0},
+        "pinnapi_odds": {"status": status, "pa_raw": 0, "pa_matched": 0},
+        "betbetter": {"status": status, "bb_raw": 0, "bb_scored": 0},
+    }
+
+
+def _capture_shadow_candidates(day: str) -> dict[str, dict]:
+    """Capture every verified shadow candidate without touching the production path.
+
+    SHADOW-01 adds betminer (voice), pinnapi_odds (Pinnacle named-book price)
+    and betbetter (keyless CC BY 4.0 benchmark) to the existing
+    futbolpronosticos/sportytrager lane. All five are zero-credit shadow:
+    per-date ledgers + health rows only. None enters consensus weights or
+    the pick path; adapters are inert without their env keys and never raise.
+    """
     if os.environ.get("EDGE_FACTORY_SHADOW_CAPTURE", "on").strip().lower() in {"0", "off", "false", "no"}:
-        return {"status": "disabled", "raw": 0, "scored": 0}, {"status": "disabled", "st_raw": 0, "st_matched": 0}
-    fp_stats: dict = {"status": "unavailable", "raw": 0, "scored": 0}
-    st_stats: dict = {"status": "unavailable", "st_raw": 0, "st_matched": 0}
+        return _zero_shadow_stats("disabled")
+    stats = _zero_shadow_stats()
     try:
         from edgefactory.sources import futbolpronosticos as fp
         fp_rows, fp_stats = fp.capture_day(day)
@@ -2623,17 +2640,38 @@ def _capture_shadow_candidates(day: str) -> tuple[dict, dict]:
             settled_rows = []
         fp_stats["settlement_coverage"] = fp.settlement_coverage(fp_rows, settled_rows)
         fp.persist_shadow(day, fp_rows, fp_stats, localdata=LOCALDATA)
+        stats["futbolpronosticos"] = fp_stats
     except Exception as exc:
-        fp_stats["status"] = "unavailable"
-        fp_stats["blocker"] = str(exc)[:180]
+        stats["futbolpronosticos"]["blocker"] = str(exc)[:180]
     try:
         from edgefactory.sources import sportytrader_odds as st
         st_rows, st_stats = st.capture_day(day)
         st.persist_shadow(day, st_rows, st_stats, localdata=LOCALDATA)
+        stats["sportytrader_odds"] = st_stats
     except Exception as exc:
-        st_stats["status"] = "unavailable"
-        st_stats["blocker"] = str(exc)[:180]
-    return fp_stats, st_stats
+        stats["sportytrader_odds"]["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import betminer as bm
+        bm_rows, bm_stats = bm.capture_day(day)
+        bm.persist_shadow(day, bm_rows, bm_stats, localdata=LOCALDATA)
+        stats["betminer"] = bm_stats
+    except Exception as exc:
+        stats["betminer"]["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import pinnapi_odds as pinnapi
+        pa_rows, pa_stats = pinnapi.capture_day(day)
+        pinnapi.persist_shadow(day, pa_rows, pa_stats, localdata=LOCALDATA)
+        stats["pinnapi_odds"] = pa_stats
+    except Exception as exc:
+        stats["pinnapi_odds"]["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import betbetter as bb
+        bb_rows, bb_stats = bb.capture_day(day)
+        bb.persist_shadow(day, bb_rows, bb_stats, localdata=LOCALDATA)
+        stats["betbetter"] = bb_stats
+    except Exception as exc:
+        stats["betbetter"]["blocker"] = str(exc)[:180]
+    return stats
 
 
 def enrich_with_live_odds(
@@ -3871,7 +3909,9 @@ def main():
     all_picks: list = []
     total_vetoes = 0
     total_upcoming = 0
-    shadow_totals = {"raw": 0, "scored": 0, "st_raw": 0, "st_matched": 0}
+    shadow_totals = {"raw": 0, "scored": 0, "st_raw": 0, "st_matched": 0,
+                    "bm_raw": 0, "bm_scored": 0, "pa_raw": 0, "pa_matched": 0,
+                    "bb_raw": 0, "bb_scored": 0}
 
     # ML-fade research capture: certification-independent collection of every
     # model-scored fixture (parent + deterministic fade candidate) into the
@@ -3949,16 +3989,33 @@ def main():
         # Candidate capture is shadow-only. It writes its own day ledgers and
         # never joins data/SOURCES_*; only the explicit, default-off
         # corroborator flag below can read SportyTrader into the price board.
-        fp_shadow_stats, st_shadow_stats = _capture_shadow_candidates(day)
+        shadow_stats = _capture_shadow_candidates(day)
+        fp_shadow_stats = shadow_stats.get("futbolpronosticos", {})
+        st_shadow_stats = shadow_stats.get("sportytrader_odds", {})
+        bm_shadow_stats = shadow_stats.get("betminer", {})
+        pa_shadow_stats = shadow_stats.get("pinnapi_odds", {})
+        bb_shadow_stats = shadow_stats.get("betbetter", {})
         shadow_totals["raw"] += int(fp_shadow_stats.get("raw") or 0)
         shadow_totals["scored"] += int(fp_shadow_stats.get("scored") or 0)
         shadow_totals["st_raw"] += int(st_shadow_stats.get("st_raw") or 0)
         shadow_totals["st_matched"] += int(st_shadow_stats.get("st_matched") or 0)
+        shadow_totals["bm_raw"] += int(bm_shadow_stats.get("bm_raw") or 0)
+        shadow_totals["bm_scored"] += int(bm_shadow_stats.get("bm_scored") or 0)
+        shadow_totals["pa_raw"] += int(pa_shadow_stats.get("pa_raw") or 0)
+        shadow_totals["pa_matched"] += int(pa_shadow_stats.get("pa_matched") or 0)
+        shadow_totals["bb_raw"] += int(bb_shadow_stats.get("bb_raw") or 0)
+        shadow_totals["bb_scored"] += int(bb_shadow_stats.get("bb_scored") or 0)
         print(
             f"shadow candidates {day}: raw={fp_shadow_stats.get('raw', 0)} "
             f"scored={fp_shadow_stats.get('scored', 0)} "
             f"st_raw={st_shadow_stats.get('st_raw', 0)} "
             f"st_matched={st_shadow_stats.get('st_matched', 0)} "
+            f"bm_raw={bm_shadow_stats.get('bm_raw', 0)} "
+            f"bm_scored={bm_shadow_stats.get('bm_scored', 0)} "
+            f"pa_raw={pa_shadow_stats.get('pa_raw', 0)} "
+            f"pa_matched={pa_shadow_stats.get('pa_matched', 0)} "
+            f"bb_raw={bb_shadow_stats.get('bb_raw', 0)} "
+            f"bb_scored={bb_shadow_stats.get('bb_scored', 0)} "
             f"corroborator={'on' if _sportytrader_corrob_flag_on() else 'off'}",
             file=sys.stderr,
         )
@@ -4031,6 +4088,45 @@ def main():
                 "settled-count coverage mismatch: " + str(fp_shadow_stats.get("settlement_coverage"))
                 if (fp_shadow_stats.get("settlement_coverage") or {}).get("mismatch") else None
             ),
+        }
+        health_observations["betminer"] = {
+            "fetched": bm_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(bm_shadow_stats.get("bm_scored") or 0),
+            "bm_raw": int(bm_shadow_stats.get("bm_raw") or 0),
+            "bm_scored": int(bm_shadow_stats.get("bm_scored") or 0),
+            "can_fetch_today": bm_shadow_stats.get("status") in {"ok", "empty"},
+            # Voice-only: the payload odds carry no bookmaker identity, so
+            # Betminer is never a price donor under the standing rule.
+            "can_price": False,
+            # Zero credit until the echo test passes and the operator promotes.
+            "can_vote": False,
+            "freshness_h": 0.0 if bm_shadow_stats.get("status") == "ok" else None,
+            "blocker": bm_shadow_stats.get("blocker"),
+        }
+        health_observations["pinnapi_odds"] = {
+            "fetched": pa_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(pa_shadow_stats.get("pa_matched") or 0),
+            "pa_raw": int(pa_shadow_stats.get("pa_raw") or 0),
+            "pa_matched": int(pa_shadow_stats.get("pa_matched") or 0),
+            "can_fetch_today": pa_shadow_stats.get("status") in {"ok", "empty"},
+            "can_price": int(pa_shadow_stats.get("pa_matched") or 0) > 0,
+            # Price donor, never a vote; corroboration stays default-off.
+            "can_vote": False,
+            "freshness_h": 0.0 if pa_shadow_stats.get("status") == "ok" else None,
+            "blocker": pa_shadow_stats.get("blocker"),
+        }
+        health_observations["betbetter"] = {
+            "fetched": bb_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(bb_shadow_stats.get("bb_scored") or 0),
+            "bb_raw": int(bb_shadow_stats.get("bb_raw") or 0),
+            "bb_scored": int(bb_shadow_stats.get("bb_scored") or 0),
+            "can_fetch_today": bb_shadow_stats.get("status") in {"ok", "empty"},
+            # Benchmark board: fair odds only (model-derived, no bookmaker).
+            "can_price": False,
+            # Zero-credit echo-test benchmark.
+            "can_vote": False,
+            "freshness_h": 0.0 if bb_shadow_stats.get("status") == "ok" else None,
+            "blocker": bb_shadow_stats.get("blocker"),
         }
         health_observations["sportytrader_odds"] = {
             "fetched": st_shadow_stats.get("status") in {"ok", "empty"},
@@ -4298,6 +4394,9 @@ def main():
                f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
                f"shadow_fp_raw={shadow_totals['raw']} shadow_fp_scored={shadow_totals['scored']} "
                f"st_raw={shadow_totals['st_raw']} st_matched={shadow_totals['st_matched']} "
+               f"bm_raw={shadow_totals['bm_raw']} bm_scored={shadow_totals['bm_scored']} "
+               f"pa_raw={shadow_totals['pa_raw']} pa_matched={shadow_totals['pa_matched']} "
+               f"bb_raw={shadow_totals['bb_raw']} bb_scored={shadow_totals['bb_scored']} "
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
     print(f"\n{summary}")
 

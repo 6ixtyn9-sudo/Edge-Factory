@@ -131,7 +131,11 @@ the operator's; this ticket is the evidence package.
 
 ## (c) Betminer — shadow prediction voice (HUNT-01 winner)
 
-**Status: DRAFT — operator registers free key; no code change in this bundle.**
+**Status: SHIPPED as zero-credit shadow (SHADOW-01, PR pending) — adapter
+`src/edgefactory/sources/betminer.py` + `scripts/probe_betminer.py` +
+offline test suite. Captures activate as soon as the operator sets
+`RAPIDAPI_KEY` (see docs/operator/patches/daily-rapidapi-env.patch);
+without it the adapter stays inert (`not_run`) and the suite stays green.**
 
 ### Why
 
@@ -196,7 +200,13 @@ no card, indefinite free tier, commercial use permitted.
 
 ## (d) PredictIQ Pro — shadow echo-test voice (HUNT-01 shortlist #2)
 
-**Status: DRAFT — operator registers free key; no code change in this bundle.**
+**Status: DEFERRED AS TAGGED (SHADOW-01 T5) — the convergent tag is enforced
+at the registry level from day one (`CONVERGENT_SOURCES` in
+`src/edgefactory/source_health.py`): zero voice credit permanently, never a
+corroborator, even if a future adapter claims `can_vote`/`can_price` — the
+daily contract refuses both (health line: `predictiq=echo/only`). An adapter
+ships only if the operator wants PredictIQ as an echo-test counterparty;
+until that decision this ticket stays open for the registry tag alone.**
 
 ### Why
 
@@ -243,7 +253,13 @@ proves divergence.
 
 ## (e) pinnapi — Pinnacle price corroborator (HUNT-01 shortlist #3)
 
-**Status: DRAFT — operator registers free key; no code change in this bundle.**
+**Status: SHIPPED as price shadow, corroboration default-off (SHADOW-01, PR
+pending) — adapter `src/edgefactory/sources/pinnapi_odds.py` +
+`scripts/probe_pinnapi.py` + offline test suite. Captures activate when the
+operator sets `PINNAPI_KEY` (same patch file); without it the adapter stays
+inert (`not_run`). The REST auth mechanism and snapshot schema remain
+UNVERIFIED, so the parser is fail-closed with a raw sample retained in the
+ledger — run the probe once before trusting `pa_raw`>0.**
 
 ### Why
 
@@ -291,3 +307,64 @@ feeds the 7% price-corroboration gate. **It is never a vote.**
   alternate transport. Capture raw + checksum + provenance per snapshot; the
   vendor is young (pages dated 2026-08-30, sibling site pinnodds.com) so keep
   the adapter disposable.
+
+---
+
+## (f) Betminer voice promotion — echo test on settled evidence (SHADOW-01)
+
+**Status: OPEN — promotion criteria only; do not weaken.**
+
+Triggered only after ≥2 weeks of shadow ledgers with `bm_scored` > 0 on most
+days AND the probe's league-count reconciliation recorded (RapidAPI 368+ vs
+site 1,216 vs docs 500+ — write the observed figure here).
+
+### Bars (all must hold)
+
+1. **≥30 shared settled fixtures** with at least one existing voice
+   (bzzoiro, forebet-archive, zulubet, …) on the same fixture+market,
+   settled by the existing warehouse path (Betminer fetches no results).
+2. **Correlation < 0.95** between Betminer probabilities and the incumbent
+   voice's on the shared set.
+3. **Agreement < 95%** on selection (1X2/BTTS/OU2.5) over the shared set.
+4. **Fetch success ≥ 80%** of scheduled capture days during the window
+   (cache-first: a held date never refetches, so this counts distinct days
+   with a `betminer_shadow_{day}.json` ledger).
+5. Operator review of the offline echo report; promotion = explicit decision,
+   never a threshold auto-flip.
+
+### Standing constraints that survive promotion
+
+- **Voice only, forever**: the payload odds carry no bookmaker identity, so
+  Betminer is NEVER a price donor under the "no book name, no price donor"
+  rule.
+- Free-tier fragility: 5 req/day. If the tier is pulled or shrunk, the
+  adapter fails closed (quota/unavailable, retryable) — abstention, not
+  adaptation; re-open the hunt instead.
+
+## (g) pinnapi price promotion — 7%-gate evidence report (SHADOW-01)
+
+**Status: OPEN — promotion criteria only; do not weaken.**
+
+### Bars (all must hold)
+
+1. **≥30 shared priced fixtures** vs scoutingstats on the same day
+   (fixture+market+selection), prices captured the same day (the
+   `same_day_rows` freshness gate is mandatory: stale or missing → ABSTAIN).
+2. **Fetch success ≥ 80%** of scheduled capture days over ≥2 weeks.
+3. **Sane schema-match**: the probe receipt (`scripts/probe_pinnapi.py`)
+   confirms the event/market shape and the parser is not in fail-closed
+   `unavailable` state on consecutive days.
+4. **Price sanity spot-check** vs betexplorer on ≥5 shared fixtures
+   (Pinnacle lines within expected sharp-book tolerance).
+5. Offline 7%-gate evidence report in the SPORTYTRADER-7PCT-REPORT pattern;
+   operator review; promotion = explicit decision. **Never a vote.**
+
+### Standing constraints that survive promotion
+
+- **Unofficial feed fragility is accepted policy**: pinnapi relays Pinnacle
+  after Pinnacle closed its public API (2025-07-23); it may die without
+  notice. The adapter stays disposable; when it dies, corroboration falls
+  back to existing donors and `SCOUTINGSTATS_SOLE` keeps its push=False
+  behavior — no substitution scramble.
+- Corroboration may use ONLY same-day-fetched prices (`same_day_rows`);
+  anything older abstains. This is enforced in the adapter and tested.

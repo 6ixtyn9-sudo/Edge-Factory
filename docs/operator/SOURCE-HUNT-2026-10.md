@@ -682,3 +682,70 @@ probe day writes a `localdata/` ledger like the existing shadow builds.
 - Any shortlisted source hitting auth/plan 403s like bzzoiro_odds → the
   zero-row-day RETRYABLE rule (TICKETS-OPEN §a) applies unchanged; no harder
   retrying, no alternate transport.
+
+---
+
+## 10. SHADOW-01 — implementation receipts and operator runbook
+
+Implemented on branch `arena/01a0fd9e-edge-factory` (base: main `d9ddc87`).
+Every new source is zero-credit shadow: per-date ledgers + health rows only,
+never consensus weights, never the pick path. Adapters are inert without
+their env keys (`not_run`/`cache_only`), the suite stays green, main is
+unaffected.
+
+### Task receipts
+
+| Task | Deliverable | Receipt |
+| --- | --- | --- |
+| T0 per-role health verdicts | `source_health.py` `ROLE_VERDICT_SOURCES`/`_status_token` + README legend + 3 tests | commit `1988ea6` |
+| T1 health rows for new sources | `DAILY_SOURCES` + `bm_/pa_/bb_` counters + tokens + 2 tests | commit `c16932b` |
+| T4 Bet Better benchmark shadow | `sources/betbetter.py`, fixture, 8 tests (keyless, CC BY 4.0 provenance, cache-first, budget cap) | commit `032fadc` |
+| T2 Betminer voice shadow (P0) | `sources/betminer.py`, `scripts/probe_betminer.py`, fixture, 14 tests (voice-only: odds carry no book identity) | commits `418d036`, `0840a7b` |
+| T3 pinnapi price shadow | `sources/pinnapi_odds.py`, `scripts/probe_pinnapi.py`, fixture, 11 tests (same-day-only corroboration gate) | commit `25597c6` |
+| T5 PredictIQ convergent tag | `CONVERGENT_SOURCES` in `source_health.py`, enforced fail-closed + 3 tests (`predictiq=echo/only`) | commit `b73c2d6` |
+| Wiring into daily lane | `picks_today.py` five-source shadow capture + counters + health observations + 3 wiring tests | commit `f1f5d4f` |
+| T6 docs + patch | this section, TICKETS-OPEN (c)–(g), `docs/operator/patches/daily-rapidapi-env.patch` (`git apply --check` clean) | this commit |
+
+Suite: 948 passed (baseline 904 + 44 new; all new tests offline — transport
+monkeypatched, CI never fetches, no keys in code/tests/fixtures/docs/logs).
+
+### Operator runbook (after merge)
+
+1. **Register keys (free, no card)**: one RapidAPI account → subscribe to
+   Betminer's BASIC $0 plan → key covers any RapidAPI source. Separately
+   register at pinnapi.com for its free key. Keys live in env/secrets ONLY.
+2. **Add GitHub secrets**: `RAPIDAPI_KEY`, `PINNAPI_KEY`
+   (Settings → Secrets and variables → Actions).
+3. **Merge this PR**, then apply
+   `docs/operator/patches/daily-rapidapi-env.patch` to
+   `.github/workflows/daily.yml` via the GitHub web editor (or locally:
+   `git apply docs/operator/patches/daily-rapidapi-env.patch` — verified
+   clean against the merged tree). Commit directly to main; this repo's
+   rule keeps CI file changes operator-owned.
+4. **Probe once, morning, before the nightly**:
+   `RAPIDAPI_KEY=… PYTHONPATH=src python scripts/probe_betminer.py`
+   (costs 3 of the 5 free daily calls; records the league-count figure for
+   ticket (f) and one `/matches/{date}` schema sample) and
+   `PINNAPI_KEY=… python3 scripts/probe_pinnapi.py` (2 of 100; reconciles
+   the REST auth mechanism and snapshot schema). Never paste key material
+   anywhere; the probes sanitize it.
+5. **Watch the health line** (next nightly run): new tokens
+   `betminer=bm_rawN/bm_scoredN`, `pinnapi=pa_rawN/pa_matchedN`,
+   `betbetter=bb_rawN/bb_scoredN`, `predictiq=echo/only`. `not_run` with a
+   "key not set" blocker means step 2/3 is missing; `quota`/`unavailable`
+   that persist = fail-closed abstention, ticket note, no adaptation.
+6. **Two policy calls on record**:
+   - **pinnapi fragility accepted**: unofficial relay, may die without
+     notice; disposable adapter; when down, corroboration falls back to
+     existing donors and `SCOUTINGSTATS_SOLE` keeps push=False. No
+     substitution scramble.
+   - **PredictIQ stays convergent-tagged**: zero voice credit permanently,
+     never corroborates (enforced at registry level, ticket (d)). An
+     echo-test adapter ships only on explicit operator request.
+
+### No-secrets statement
+
+No API keys, tokens, or credentials appear in code, tests, fixtures,
+docs, commit messages, or logs in this bundle. Adapters read keys only from
+`os.environ` (`RAPIDAPI_KEY`, `PINNAPI_KEY`); absent → graceful skip with
+`not_run` diagnostics. Probe scripts sanitize keys from all output.
