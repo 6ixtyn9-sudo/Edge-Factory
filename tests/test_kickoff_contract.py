@@ -482,8 +482,11 @@ def test_cmd_today_live_guard_regression(tmp_path, monkeypatch):
     assert "already started" not in txt                   # census: Miami
     # four kept legs pair into two accas (single-ticket-day risk split)
     assert "[ACCA #1]" in txt and "[ACCA #2]" in txt and "[ACCA #3]" not in txt
-    # the 09:13 run is at/after the freeze hour -> the FINAL marker lands
-    assert (at.LOCALDATA / "auto_tickets_2026-09-06.frozen").exists()
+    # the 09:13 run is at/after the freeze hour -> the FINAL lock lands.
+    # OP-01 T2: the lock is a write-once state entry, not a sidecar file.
+    assert not (at.LOCALDATA / "auto_tickets_2026-09-06.frozen").exists()
+    assert at.frozen_entry(st, "2026-09-06")["frozen_at"].startswith("2026-09-06T09:13")
+    assert txt.rstrip().endswith("FROZEN AT 09:13 - FINAL")
     # labels: the free-bank wording of Task 3 is on the ticket
     assert "free bank" in txt
     assert "total bank" in txt
