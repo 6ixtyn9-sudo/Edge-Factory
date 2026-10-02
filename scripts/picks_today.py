@@ -54,6 +54,14 @@ from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_d
 from edgefactory.veto_resolution import apply_resolution_to_ctx, build_pool_table
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
 from edgefactory.enh_registry import status_for as enh_status_for
+from edgefactory.source_health import (
+    FOREBET_LIVE_LAST_DAY,
+    bzzoiro_status_line,
+    daily_status_block,
+    persist_daily_source_health,
+    record_bzzoiro_run,
+)
+from edgefactory.shadow import append_price_board_rows, read_shadow_rows
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
@@ -1572,9 +1580,17 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
 
 
 # ------------------------------------------------------------------- fetch --
+def _forebet_historical(day: str) -> bool:
+    return str(day)[:10] > FOREBET_LIVE_LAST_DAY
+
+
 def fetch_all(day: str) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for name in ALL_SOURCES:
+        if name == "forebet" and _forebet_historical(day):
+            # Forebet remains available to historical rebuilds only. It must
+            # not enter a post-2026-06-12 production fetch, price, or vote.
+            continue
         try:
             mod = importlib.import_module(f"edgefactory.sources.{name}")
             rows = mod.fetch_day(day)
@@ -2094,11 +2110,19 @@ def _scoutingstats_rows_to_odds(rows: list[dict]) -> list[dict]:
     return out
 
 
-def _fetch_live_bzzoiro_odds(day: str) -> list[dict]:
+def _fetch_live_bzzoiro_odds(day: str, stats: dict | None = None) -> list[dict]:
     try:
         mod = importlib.import_module("edgefactory.sources.bzzoiro_odds")
-        return list(mod.fetch_day(day) or [])
+        rows = list(mod.fetch_day(day) or [])
+        if stats is not None and hasattr(mod, "diagnostics"):
+            stats.update(mod.diagnostics())
+        return rows
     except Exception as exc:
+        if stats is not None and hasattr(locals().get("mod"), "diagnostics"):
+            stats.update(mod.diagnostics())
+        if stats is not None:
+            stats.setdefault("status", "unavailable")
+            stats.setdefault("errors", [str(exc).replace("\\n", " ")[:180]])
         print(f"bzzoiro_odds enrichment skipped for {day}: {exc}", file=sys.stderr)
         return []
 
@@ -2176,7 +2200,7 @@ def bzzoiro_odds_bundle(
     cached_rows = _read_cached_bzzoiro_odds(day)
     live_rows: list[dict] = []
     if live and (_refresh_bzzoiro_odds() or not cached_rows):
-        live_rows = _fetch_live_bzzoiro_odds(day)
+        live_rows = _fetch_live_bzzoiro_odds(day, stats=stats)
 
     bundle = _odds_bundle_from_rows(cached_rows + live_rows, provider=BZZOIRO_ODDS_SOURCE, stats=stats)
     if stats is not None:
@@ -2185,6 +2209,14 @@ def bzzoiro_odds_bundle(
             "live_rows": len(live_rows),
             "refreshed": bool(live_rows),
         })
+        if not live_rows and not stats.get("status"):
+            stats["status"] = "cache_only" if cached_rows else "not_run"
+        stats.setdefault("http_statuses", [])
+        stats.setdefault("errors", [])
+        stats.setdefault("quota_hint", "none")
+        stats.setdefault("best_results", 0)
+        stats.setdefault("comparison_rows", 0)
+        stats.setdefault("rows", 0)
     return bundle
 
 
@@ -2549,6 +2581,61 @@ def _stamp_price_corroboration(picks: list[dict]) -> int:
     return n
 
 
+def _sportytrader_corrob_flag_on() -> bool:
+    """The only switch that lets SportyTrader reach price corroboration."""
+    return os.environ.get("SPORTYTRADER_CORROBORATOR", "off").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
+
+def _append_sportytrader_shadow_board(picks: list[dict], day: str) -> tuple[int, dict]:
+    """Add named bookmaker quotes from the shadow board, never replace odds."""
+    path = LOCALDATA / f"sportytrader_odds_shadow_{day}.json"
+    rows, stats = read_shadow_rows(path)
+    added = 0
+    for pick in picks:
+        added += append_price_board_rows(
+            pick, rows, source="sportytrader_odds", team_key=odds_match_team_key,
+        )
+    return added, stats
+
+
+def _apply_sportytrader_corroborator(picks: list[dict], day: str) -> tuple[int, dict]:
+    """Flag gate: OFF returns the exact input object contents unchanged."""
+    if not _sportytrader_corrob_flag_on():
+        return 0, {}
+    return _append_sportytrader_shadow_board(picks, day)
+
+
+def _capture_shadow_candidates(day: str) -> tuple[dict, dict]:
+    """Capture both verified candidates without touching the production path."""
+    if os.environ.get("EDGE_FACTORY_SHADOW_CAPTURE", "on").strip().lower() in {"0", "off", "false", "no"}:
+        return {"status": "disabled", "raw": 0, "scored": 0}, {"status": "disabled", "st_raw": 0, "st_matched": 0}
+    fp_stats: dict = {"status": "unavailable", "raw": 0, "scored": 0}
+    st_stats: dict = {"status": "unavailable", "st_raw": 0, "st_matched": 0}
+    try:
+        from edgefactory.sources import futbolpronosticos as fp
+        fp_rows, fp_stats = fp.capture_day(day)
+        settled_path = LOCALDATA / "settled_results.json"
+        try:
+            settled_rows = json.loads(settled_path.read_text()).get("rows", [])
+        except (OSError, ValueError, TypeError):
+            settled_rows = []
+        fp_stats["settlement_coverage"] = fp.settlement_coverage(fp_rows, settled_rows)
+        fp.persist_shadow(day, fp_rows, fp_stats, localdata=LOCALDATA)
+    except Exception as exc:
+        fp_stats["status"] = "unavailable"
+        fp_stats["blocker"] = str(exc)[:180]
+    try:
+        from edgefactory.sources import sportytrader_odds as st
+        st_rows, st_stats = st.capture_day(day)
+        st.persist_shadow(day, st_rows, st_stats, localdata=LOCALDATA)
+    except Exception as exc:
+        st_stats["status"] = "unavailable"
+        st_stats["blocker"] = str(exc)[:180]
+    return fp_stats, st_stats
+
+
 def enrich_with_live_odds(
     picks: list[dict],
     primary_odds: dict,
@@ -2781,6 +2868,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
             continue
             
         fb = data.get("forebet", {}).get(k) or {}
+        fb_quote = {} if _forebet_historical(day) else fb
         zb = data.get("zulubet", {}).get(k) or {}
         sa = data.get("statarea", {}).get(k) or {}
         bz = data.get("bzzoiro", {}).get(k) or {}
@@ -2847,7 +2935,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                 
                 _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
                 _col = _odds_map[majority_pick]
-                pick_odds_feat = _f(fb.get(_col)) or _f(zb.get(_col)) or 1.50
+                pick_odds_feat = _f(fb_quote.get(_col)) or _f(zb.get(_col)) or 1.50
                 
                 is_home = 1.0 if majority_pick == "home" else 0.0
                 is_away = 1.0 if majority_pick == "away" else 0.0
@@ -2964,8 +3052,8 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                         "league": anchor.get("league"), "pick": majority_pick,
                         "avg_p": round(ml_p * 100.0, 1),
                         "w_score": round(z, 4),
-                        "odds": _f(fb.get(_col)) or _f(zb.get(_col)) or None,
-                        "odds_source": ("forebet_best" if _f(fb.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
+                        "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
+                        "odds_source": ("forebet_best" if _f(fb_quote.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
                         "bookmaker": None,
                         "rule": rule["rule"],
                         "edge_rule": rule["rule"],
@@ -3009,7 +3097,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                     else:
                         fthr, fade_rule = fade_best
                         _fade_col = fade_odds_column(majority_pick)
-                        fade_odds = _f(fb.get(_fade_col)) or _f(zb.get(_fade_col)) or None
+                        fade_odds = _f(fb_quote.get(_fade_col)) or _f(zb.get(_fade_col)) or None
                         home = canonical_display_team(anchor.get("home"))
                         away = canonical_display_team(anchor.get("away"))
                         picks.append({
@@ -3027,7 +3115,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                             # derived_from for audit only and is never scored.
                             "odds": fade_odds,
                             "odds_source": (
-                                "forebet_best" if _f(fb.get(_fade_col)) is not None
+                                "forebet_best" if _f(fb_quote.get(_fade_col)) is not None
                                 else "zulubet" if _f(zb.get(_fade_col)) is not None else None),
                             "bookmaker": None,
                             "rule": fade_rule["rule"],
@@ -3044,7 +3132,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                                 "rule": (fade_rule.get("parent_rule")
                                          or f"ml-meta avg_p>={fthr:g}"),
                                 "pick": majority_pick,
-                                "odds": _f(fb.get(_col)) or _f(zb.get(_col)) or None,
+                                "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
                                 "ml_p": round(ml_p, 4),
                             },
                             "n_way": 3, "edge_n_way": 3,
@@ -3089,8 +3177,8 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
         sel = sels[0]
         _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
         _col = _odds_map[sel]
-        odds = _f(fb.get(_col)) or _f(zb.get(_col)) or None
-        odds_src = ("forebet_best" if _f(fb.get(_col)) is not None
+        odds = _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None
+        odds_src = ("forebet_best" if _f(fb_quote.get(_col)) is not None
                     else "zulubet" if _f(zb.get(_col)) is not None
                     else None)
         home = canonical_display_team(anchor.get("home"))
@@ -3210,6 +3298,7 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
         if avg_p < adj_thr:
             continue
         fb = data.get("forebet", {}).get(k) or {}
+        fb_quote = {} if _forebet_historical(day) else fb
         bz = data.get("bzzoiro", {}).get(k) or {}
         anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
         unstable, ko_dates = fixture_schedule_unstable(fb, bz)
@@ -3222,7 +3311,7 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
             )
             continue
         sel = sels[0]
-        odds = _f(fb.get(outcome_odds[sel])) if fb else None
+        odds = _f(fb_quote.get(outcome_odds[sel])) if fb_quote else None
         home = canonical_display_team(anchor.get("home"))
         away = canonical_display_team(anchor.get("away"))
         picks.append({
@@ -3251,8 +3340,13 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
 def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = None,
             research_collector: FadeResearchCollector | None = None):
     data = fetch_all(day)
+    effective_weights = dict(source_weights_1x2 or {})
+    if _forebet_historical(day):
+        # Keep historical registry metadata auditable, but make the retired
+        # source weightless in every post-cutoff production consensus.
+        effective_weights["forebet"] = 0.0
     picks, vetoes, n_up = eval_1x2(day, data, t1x2,
-                                   source_weights=source_weights_1x2 or {},
+                                   source_weights=effective_weights,
                                    research_collector=research_collector)
     picks += eval_binary(day, data, "ou_2.5", SOURCES_OU, OU_COL, ou_edge,
                          ("over", "under"),
@@ -3481,6 +3575,11 @@ def print_buckets(buckets: dict, title_date: str = ""):
     print(f"\nEdge Factory Picks — {title_date}" if title_date else "\nEdge Factory Picks")
     print("=" * 60)
     print(f"Generated at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    unavailable = bzzoiro_status_line()
+    if unavailable:
+        print(f"⚠️  {unavailable}")
+    health_day = str(title_date).split(", ")[-1] if title_date else date.today().isoformat()
+    print(f"{daily_status_block(health_day)}")
     print()
     for b in BUCKET_ORDER:
         picks = buckets.get(b, [])
@@ -3582,6 +3681,34 @@ def print_buckets(buckets: dict, title_date: str = ""):
 
 # ---------------------------------------------------------------- betexplorer --
 BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
+BE_RESCUE_TARGET_LEGS = 4  # enough to fill the current 2-acca x 2-leg card
+
+
+def _append_betexplorer_board_rows(pick: dict, rows: list[dict], source: str) -> None:
+    """Keep cached/rescue BetExplorer rows as corroboration candidates.
+
+    This is intentionally additive: it never changes the engine's chosen
+    price or chosen marker. The price-corroboration pass can therefore see a
+    second-source 1X2 quote even when rescue was skipped because Bzzoiro or
+    ScoutingStats already priced the fixture.
+    """
+    board = list(pick.get("price_board") or [])
+    seen = {
+        (str(entry.get("source") or ""), str(entry.get("bookmaker") or ""),
+         str(entry.get("selection") or ""), entry.get("odds"),
+         str(entry.get("captured_at") or ""))
+        for entry in board
+    }
+    for row in rows:
+        entry = _price_board_entry(source, row)
+        key = (source, str(entry.get("bookmaker") or ""),
+               str(entry.get("selection") or ""), entry.get("odds"),
+               str(entry.get("captured_at") or ""))
+        if key not in seen:
+            board.append(entry)
+            seen.add(key)
+    board.sort(key=_price_board_sort_key)
+    pick["price_board"] = board
 
 
 def enrich_unmatched_with_betexplorer(
@@ -3590,6 +3717,7 @@ def enrich_unmatched_with_betexplorer(
     *,
     max_fetches: int = 12,
     bundles: tuple | None = None,
+    stats: dict | None = None,
 ) -> int:
     try:
         import importlib.util as _ilu
@@ -3609,15 +3737,37 @@ def enrich_unmatched_with_betexplorer(
     from edgefactory.util import norm_team as _norm_team
 
     reset_fetch_count()
+    _be_mod._MAX_FETCHES_PER_RUN = max(0, int(max_fetches))
     enriched = 0
+    # Existing live-source prices count toward the bounded rescue target, but
+    # are never fetched again. This makes a sparse day cheap without reducing
+    # the primary/secondary corroboration board.
+    priced_before = sum(
+        1 for pick in picks
+        if pick.get("odds") is not None
+        and str(pick.get("odds_source") or "") in {
+            BZZOIRO_ODDS_SOURCE, SCOUTINGSTATS_ODDS_SOURCE,
+            BETEXPLORER_ODDS_SOURCE,
+        }
+    )
+    priced = priced_before
+    target = max(0, int(os.environ.get("EDGE_FACTORY_BE_RESCUE_TARGET_LEGS", str(BE_RESCUE_TARGET_LEGS))))
     for pick in picks:
         method = str(pick.get("odds_match_method") or "")
-        # A BetExplorer row can rescue an alias_fuzzy candidate because the
-        # suspect Bzzoiro/ScoutingStats price was never allowed to overwrite
-        # operational odds. Established BetExplorer matching remains the only
-        # way this function can clear that quarantine.
+
+        # A live source already priced this fixture: do not rescue it. A fresh
+        # same-day BetExplorer cache is still useful as a second-source board
+        # candidate, so reading cache is explicitly network-free.
         if method not in ("fallback", "none", "alias_fuzzy"):
+            cached_rows = _be_mod.cached_odds_rows_for_pick(pick, day)
+            if cached_rows:
+                _append_betexplorer_board_rows(pick, cached_rows, _BE_SOURCE)
             continue
+
+        # The current ticket surface needs at most four priced legs. Once that
+        # bounded supply exists, abstain from further rescue requests.
+        if priced >= target:
+            break
 
         rows = betexplorer_odds_rows_for_pick(pick, day, norm_team_fn=_norm_team)
         if not rows:
@@ -3625,12 +3775,12 @@ def enrich_unmatched_with_betexplorer(
 
         sel = str(pick.get("pick") or "")
         market = str(pick.get("market") or "")
-        matching_row = None
-        for r in rows:
-            if str(r.get("selection") or "") == sel and str(r.get("market") or "") == market:
-                matching_row = r
-                break
-
+        matching_row = next(
+            (r for r in rows
+             if str(r.get("selection") or "") == sel
+             and str(r.get("market") or "") == market),
+            None,
+        )
         if matching_row is None:
             continue
 
@@ -3652,17 +3802,26 @@ def enrich_unmatched_with_betexplorer(
         pick.pop("suspect_price", None)
         if previous_odds is not None and previous_source != pick["odds_source"]:
             pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+        be_bundle = _odds_bundle_from_rows(rows, provider=_BE_SOURCE)
         if bundles is not None:
-            # Keep the archived board complete: the rescued quote becomes the
-            # chosen row next to every other source's candidate, so the
-            # corroboration pass can judge a sole-source rescue honestly.
-            _stamp_price_board(pick, bundles, chosen_row=matching_row,
-                               chosen_source=_BE_SOURCE, chosen_method="betexplorer")
-        # Idempotent normalisation hook (betexplorer rows are bare "HH:MM"
-        # today, so this is a no-op until the adapter emits a zoned kickoff).
+            # Keep every BetExplorer 1X2 row on the board; the selected row is
+            # marked while the other sides remain corroboration candidates.
+            _stamp_price_board(
+                pick, (*bundles, be_bundle), chosen_row=matching_row,
+                chosen_source=_BE_SOURCE, chosen_method="betexplorer",
+            )
+        else:
+            _append_betexplorer_board_rows(pick, rows, _BE_SOURCE)
+        # Idempotent normalisation hook (BetExplorer rows are bare HH:MM today).
         resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=_BE_SOURCE)
         enriched += 1
+        priced += 1
 
+    if stats is not None:
+        stats.update(_be_mod.run_stats())
+        stats["be_priced_before"] = priced_before
+        stats["be_priced_after"] = priced
+        stats["be_target_legs"] = target
     return enriched
 
 
@@ -3712,6 +3871,7 @@ def main():
     all_picks: list = []
     total_vetoes = 0
     total_upcoming = 0
+    shadow_totals = {"raw": 0, "scored": 0, "st_raw": 0, "st_matched": 0}
 
     # ML-fade research capture: certification-independent collection of every
     # model-scored fixture (parent + deterministic fade candidate) into the
@@ -3771,6 +3931,9 @@ def main():
         bzz_stats: dict = {}
         scouting_stats: dict = {}
         odds_bundle = bzzoiro_odds_bundle(day, stats=bzz_stats)
+        # Persist upstream zero-run evidence for visibility only. This never
+        # alters enrichment, certification, or ticket eligibility.
+        record_bzzoiro_run(day, bzz_stats)
         secondary_bundle = scoutingstats_odds_bundle(
             day,
             cached_rows=list(data.get("scoutingstats", {}).values()),
@@ -3779,8 +3942,112 @@ def main():
         prices_index = load_prices_index(ROOT, day)
         enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
 
+        be_stats: dict = {}
         be_enriched = enrich_unmatched_with_betexplorer(
-            picks, day, bundles=(odds_bundle, secondary_bundle))
+            picks, day, bundles=(odds_bundle, secondary_bundle), stats=be_stats)
+
+        # Candidate capture is shadow-only. It writes its own day ledgers and
+        # never joins data/SOURCES_*; only the explicit, default-off
+        # corroborator flag below can read SportyTrader into the price board.
+        fp_shadow_stats, st_shadow_stats = _capture_shadow_candidates(day)
+        shadow_totals["raw"] += int(fp_shadow_stats.get("raw") or 0)
+        shadow_totals["scored"] += int(fp_shadow_stats.get("scored") or 0)
+        shadow_totals["st_raw"] += int(st_shadow_stats.get("st_raw") or 0)
+        shadow_totals["st_matched"] += int(st_shadow_stats.get("st_matched") or 0)
+        print(
+            f"shadow candidates {day}: raw={fp_shadow_stats.get('raw', 0)} "
+            f"scored={fp_shadow_stats.get('scored', 0)} "
+            f"st_raw={st_shadow_stats.get('st_raw', 0)} "
+            f"st_matched={st_shadow_stats.get('st_matched', 0)} "
+            f"corroborator={'on' if _sportytrader_corrob_flag_on() else 'off'}",
+            file=sys.stderr,
+        )
+        _apply_sportytrader_corroborator(picks, day)
+
+        def _rows_have_price(rows: object) -> bool:
+            if not isinstance(rows, dict):
+                return False
+            price_fields = ("odd1", "oddx", "odd2", "odd_o25", "odd_u25", "odd_gg", "odd_ng")
+            return any(_valid_decimal_odds(row.get(field)) is not None
+                       for row in rows.values() if isinstance(row, dict)
+                       for field in price_fields)
+
+        health_observations: dict[str, dict] = {}
+        for source_name in ALL_SOURCES:
+            source_rows = data.get(source_name, {})
+            source_count = len(source_rows) if isinstance(source_rows, dict) else 0
+            health_observations[source_name] = {
+                "fetched": source_name in data,
+                "rows": source_count,
+                "can_fetch_today": source_name in data,
+                "can_price": _rows_have_price(source_rows),
+                "can_vote": source_name in SOURCES_1X2 + SOURCES_OU + SOURCES_BTTS and source_count > 0,
+                "freshness_h": 0.0 if source_name in data else None,
+            }
+        bzz_status = str(bzz_stats.get("status") or "not_run")
+        health_observations["bzzoiro"] = {
+            "fetched": bzz_status in {"ok", "empty", "auth", "quota", "unavailable"},
+            "rows": int(bzz_stats.get("rows") or 0),
+            "can_fetch_today": bzz_status in {"ok", "empty"},
+            "can_price": False,
+            "can_vote": len(data.get("bzzoiro", {})) > 0,
+            "freshness_h": 0.0 if bzz_status in {"ok", "empty"} else None,
+            "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
+        }
+        health_observations["bzzoiro_odds"] = {
+            "fetched": bzz_status in {"ok", "empty", "auth", "quota", "unavailable"},
+            "rows": int(bzz_stats.get("rows") or bzz_stats.get("cached_rows") or 0),
+            "can_fetch_today": bzz_status in {"ok", "empty"},
+            "can_price": bool(bzz_stats.get("rows") or bzz_stats.get("cached_rows")),
+            "can_vote": False,
+            "freshness_h": 0.0 if bzz_status == "ok" else None,
+            "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
+        }
+        be_observed = bool(be_stats.get("be_429", 0) or be_enriched or be_stats.get("be_cached", 0))
+        health_observations["betexplorer"] = {
+            "fetched": be_observed,
+            "rows": int(be_enriched or 0),
+            "can_fetch_today": bool(be_enriched or be_stats.get("be_cached", 0)) and not bool(be_stats.get("be_cooling_down", False)),
+            "can_price": bool(be_enriched or be_stats.get("be_cached", 0)),
+            "can_vote": False,
+            "freshness_h": 0.0 if be_enriched else None,
+            "blocker": (
+                "run cooling down after 2 HTTP 429 responses"
+                if be_stats.get("be_cooling_down")
+                else "not requested; no unmatched rescue legs"
+                if not be_observed else None
+            ),
+        }
+        health_observations["futbolpronosticos"] = {
+            "fetched": fp_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(fp_shadow_stats.get("scored") or 0),
+            "raw": int(fp_shadow_stats.get("raw") or 0),
+            "scored": int(fp_shadow_stats.get("scored") or 0),
+            "can_fetch_today": fp_shadow_stats.get("status") in {"ok", "empty"},
+            "can_price": False,
+            "can_vote": False,
+            "freshness_h": 0.0 if fp_shadow_stats.get("status") == "ok" else None,
+            "blocker": fp_shadow_stats.get("blocker") or (
+                "settled-count coverage mismatch: " + str(fp_shadow_stats.get("settlement_coverage"))
+                if (fp_shadow_stats.get("settlement_coverage") or {}).get("mismatch") else None
+            ),
+        }
+        health_observations["sportytrader_odds"] = {
+            "fetched": st_shadow_stats.get("status") in {"ok", "empty"},
+            "rows": int(st_shadow_stats.get("st_matched") or 0),
+            "st_raw": int(st_shadow_stats.get("st_raw") or 0),
+            "st_matched": int(st_shadow_stats.get("st_matched") or 0),
+            "can_fetch_today": st_shadow_stats.get("status") in {"ok", "empty"},
+            "can_price": int(st_shadow_stats.get("st_matched") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": 0.0 if st_shadow_stats.get("status") == "ok" else None,
+            "blocker": st_shadow_stats.get("blocker") or (
+                "training-only after Cloudflare challenge" if st_shadow_stats.get("training_only") else None
+            ),
+        }
+        persist_daily_source_health(day, health_observations)
+        print(daily_status_block(day), file=sys.stderr)
+
         corroborated_n = _stamp_price_corroboration(picks)
         priced_n = sum(1 for p in picks if p.get("odds") is not None)
 
@@ -3804,6 +4071,10 @@ def main():
             print(
                 f"live odds enrichment {day}: "
                 f"picks={len(picks)} "
+                f"bzz_status={bzz_stats.get('status', 'unknown')} "
+                f"bzz_http={','.join(str(x) for x in (bzz_stats.get('http_statuses') or [])) or 'none'} "
+                f"bzz_errors={len(bzz_stats.get('errors') or [])} "
+                f"bzz_quota_hint={bzz_stats.get('quota_hint', 'none')} "
                 f"bzz_cached={bzz_stats.get('cached_rows', 0)} "
                 f"bzz_live={bzz_stats.get('live_rows', 0)} "
                 f"bzz_valid_keys={bzz_stats.get('valid_keys', len(odds_bundle.get('exact', {})))} "
@@ -3813,7 +4084,11 @@ def main():
                 f"ss_retired={bool(scouting_stats.get('retired_stale_cache', False))} "
                 f"ss_age_h={scouting_stats.get('cache_age_h', 'n/a')} "
                 f"corroborated={corroborated_n}/{priced_n} "
-                f"enriched={enriched_n} betexplorer={be_enriched} bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
+                f"enriched={enriched_n} betexplorer={be_enriched} "
+                f"be_429={be_stats.get('be_429', 0)} "
+                f"be_cooling_down={bool(be_stats.get('be_cooling_down', False))} "
+                f"be_cached={be_stats.get('be_cached', 0)} "
+                f"bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
                 f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "
                 f"uncorroborated_price={uncorroborated_n} suspect_price={suspect_price_n}",
@@ -3994,6 +4269,25 @@ def main():
     n_wl_uncorroborated = len(buckets[BUCKET_WL_UNCORROBORATED_PRICE])
     n_wl_suspect = len(buckets[BUCKET_WL_SUSPECT_PRICE])
     n_wl_ctx = len(buckets[BUCKET_WL_CTX])
+    # Evidence is generated offline by report_sportytrader_7pct.py. Echo the
+    # latest receipt into the run log, but never let a missing/stale report
+    # gate picks or alter the 7% constant.
+    for _report_path in (
+        LOCALDATA / "sportytrader_7pct_report.json",
+        ROOT / "docs" / "operator" / "SPORTYTRADER-7PCT-REPORT.json",
+    ):
+        try:
+            _test_7pct = json.loads(_report_path.read_text()).get("test_7pct", {})
+        except (OSError, ValueError, TypeError):
+            continue
+        print(
+            f"test_7pct eligible={_test_7pct.get('eligible', 0)} "
+            f"gained={_test_7pct.get('gained', 0)} "
+            f"rate={_test_7pct.get('rate', 'n/a')} "
+            f"max_deviation={float(_test_7pct.get('max_deviation', PRICE_CORROBORATION_MAX_DEV)):.0%}",
+            file=sys.stderr,
+        )
+        break
     n_skip_veto = len(buckets[BUCKET_SKIP_VETO])
     n_skip_dead = len(buckets[BUCKET_SKIP_DEAD])
     summary = (f"Summary: CLEAN={n_clean} CAUTION={n_caution} "
@@ -4002,6 +4296,8 @@ def main():
                f"WATCHLIST_suspect_price={n_wl_suspect} "
                f"WATCHLIST_ctx={n_wl_ctx} "
                f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
+               f"shadow_fp_raw={shadow_totals['raw']} shadow_fp_scored={shadow_totals['scored']} "
+               f"st_raw={shadow_totals['st_raw']} st_matched={shadow_totals['st_matched']} "
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
     print(f"\n{summary}")
 
