@@ -222,3 +222,47 @@ def test_bzzoiro_429_is_recorded_as_rate_limit_quota_hint(monkeypatch):
     assert diag["http_statuses"] == [429]
     assert diag["quota_hint"] == "rate_limit_or_quota"
     assert diag["requests"] == 1
+
+
+def test_convergent_source_never_earns_voice_or_price_credit(tmp_path):
+    """SHADOW-01 T5: the PredictIQ convergent tag is enforced at the registry.
+
+    Even if a future adapter reports healthy observations with can_vote and
+    can_price claimed True, the daily contract refuses them: a convergent
+    source (ensemble includes devigged market odds) earns zero voice credit
+    permanently and never corroborates a price.
+    """
+    payload = source_health.persist_daily_source_health(
+        "2026-10-02",
+        {
+            "predictiq": {
+                "fetched": True, "rows": 50, "can_fetch_today": True,
+                "can_price": True, "can_vote": True, "freshness_h": 0.5,
+            },
+        },
+    )
+    row = payload["sources"]["predictiq"]
+    assert row["can_fetch_today"] is True   # fetching for echo testing is fine
+    assert row["can_price"] is False        # never a corroborator
+    assert row["can_vote"] is False         # zero voice credit permanently
+    assert "convergent" in str(row["blocker"])
+    assert "never corroborates" in str(row["blocker"])
+
+
+def test_convergent_source_unobserved_is_conservative(tmp_path):
+    payload = source_health.build_daily_source_health("2026-10-02", {})
+    row = payload["sources"]["predictiq"]
+    assert row["can_fetch_today"] is False
+    assert row["can_price"] is False
+    assert row["can_vote"] is False
+    assert row["blocker"]
+
+
+def test_convergent_source_renders_echo_only_on_health_line(tmp_path):
+    source_health.persist_daily_source_health(
+        "2026-10-02",
+        {"predictiq": {"fetched": True, "rows": 50, "can_fetch_today": True,
+                       "can_price": True, "can_vote": True}},
+    )
+    line = source_health.daily_status_block("2026-10-02")
+    assert "predictiq=echo/only" in line
