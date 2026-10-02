@@ -47,7 +47,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Iterable
 
 ROOT = Path(__file__).resolve().parent.parent
 LOCALDATA = ROOT / "localdata"
@@ -80,6 +80,10 @@ FAILURE_COLUMNS = [
 
 class TerminalFetchError(RuntimeError):
     """Non-retryable fetch failure, e.g. BetExplorer stale 404 match URL."""
+
+
+class RateLimitCluster(RuntimeError):
+    """Run-level abort after a clustered 429 response."""
 
 
 @dataclass
@@ -138,6 +142,7 @@ def fetch(
     retries: int = 5,
     sleep: float = 1.0,
     jitter: float = 0.0,
+    on_429: Callable[[], None] | None = None,
 ) -> str:
     """Fetch URL with 429 Retry-After support and jittered backoff.
 
@@ -158,6 +163,8 @@ def fetch(
             if exc.code == 404:
                 raise TerminalFetchError(f"HTTP 404: {url}") from exc
             if exc.code == 429:
+                if on_429 is not None:
+                    on_429()
                 retry_after = _retry_after_seconds(exc)
                 wait = retry_after if retry_after is not None else max(5.0, sleep * (attempt + 2) * 3)
                 _nap(wait, jitter)
