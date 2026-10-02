@@ -10279,3 +10279,40 @@ it was deaf (days 13–31); no gate was weakened. No betting constant touched.
 
 **Replacement paths:** `scripts/picks_today.py`,
 `tests/test_kickoff_parser.py`, `.gitignore`, and this HANDOVER entry.
+
+---
+
+## Addendum 2026-10-02 (item 2): early-loss settlement for ghost accas
+
+**Defect** — `settle_open_slips` (`scripts/auto_tickets.py`) only settled an acca when
+ALL legs resolved. An acca with a settled losing leg but one unresolved leg sat "open"
+with its stake committed for up to 5 days (void horizon), e.g. the 2026-09-27 ghost:
+Kano Pillars home drew 0-0 (loss, donors reported it), Polanka nad Odrou had no donor
+result. A bookmaker kills the acca at the lost leg; our ledger did not — bank height and
+committed stake were wrong for days.
+
+**Fix** — `scripts/auto_tickets.py::settle_open_slips`: after leg results are built, any
+leg resolved `"loss"` settles the acca as LOST immediately (`a["won"] = False`), keeping
+the original combined odds in the history record (no void-style recompute; return 0).
+Precedence: `"conflict"` legs never count as losses (fail-closed, untrusted donors);
+a certain loss + conflicted sibling settles lost with the conflict surfaced in the event
+line. Void machinery unchanged (kickoff-anchor-else-slip-day ≥5d; all-void → stake back).
+The settle line is annotated `(decided by settled loss leg [; conflict(s) noted: ...])`.
+
+**Correction of earlier claim** — the 2026-09-27 ghost was NOT overdue at the 06:37
+report: its kickoff-anchor vacancy was due later the same day. The real defect was
+latency (known-dead acca held behind the horizon), not a misfiring timer.
+
+**Receipts** — `tests/test_auto_tickets_rolling.py`:
+- `test_settle_loss_leg_decides_acca_without_waiting_for_void` (ghost shape:
+  `["loss", None]` inside horizon → settles same day, bank −15.5%, stake released);
+- `test_settle_loss_leg_decides_even_with_conflicted_sibling` (loss + conflict →
+  settles lost, conflict noted).
+Both verified load-bearing (fail when the early branch is disabled). Full suite:
+**829 passed**. Existing pins stand untouched: unresolved-only accas hold
+(`test_settle_per_acca_does_not_freeze_bank_on_one_stuck_leg`), conflict-only holds
+(`test_settle_holds_acca_on_alias_conflict`), all-void stake-back and the 2026-09-10
+golden replay (`void, loss` → settled lost) unchanged.
+
+PR: accumulates on #20 (branch `arena/01a0fb18-edge-factory`; batch-merge on operator
+signal).
