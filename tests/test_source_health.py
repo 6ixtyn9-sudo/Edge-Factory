@@ -96,6 +96,115 @@ def test_daily_source_health_schema_is_conservative_and_forebet_is_historical_on
     assert source_health.daily_status_block("2026-10-02").startswith("Source health 2026-10-02:")
 
 
+def test_shadow01_sources_have_health_rows_counters_and_tokens(tmp_path):
+    """SHADOW-01 T1: betminer/pinnapi_odds/betbetter are health rows with
+    their own counter fields and compact status tokens, conservative when
+    unobserved."""
+    payload = source_health.persist_daily_source_health(
+        "2026-10-03",
+        {
+            "betminer": {
+                "fetched": True, "rows": 2, "bm_raw": 2, "bm_scored": 2,
+                "can_fetch_today": True, "can_vote": False,
+            },
+            "pinnapi_odds": {
+                "fetched": True, "rows": 5, "pa_raw": 7, "pa_matched": 5,
+                "can_fetch_today": True, "can_price": True, "can_vote": False,
+            },
+            "betbetter": {
+                "fetched": True, "rows": 3, "bb_raw": 4, "bb_scored": 3,
+                "can_fetch_today": True, "can_vote": False,
+            },
+        },
+    )
+    assert payload["sources"]["betminer"]["bm_raw"] == 2
+    assert payload["sources"]["betminer"]["bm_scored"] == 2
+    assert payload["sources"]["pinnapi_odds"]["pa_raw"] == 7
+    assert payload["sources"]["pinnapi_odds"]["pa_matched"] == 5
+    assert payload["sources"]["betbetter"]["bb_raw"] == 4
+    assert payload["sources"]["betbetter"]["bb_scored"] == 3
+    line = source_health.daily_status_block("2026-10-03")
+    assert "betminer=bm_raw2/bm_scored2" in line
+    assert "pinnapi=pa_raw7/pa_matched5" in line
+    assert "betbetter=bb_raw4/bb_scored3" in line
+
+
+def test_shadow01_sources_unobserved_are_conservative(tmp_path):
+    payload = source_health.persist_daily_source_health("2026-10-03", {})
+    for name in ("betminer", "pinnapi_odds", "betbetter"):
+        row = payload["sources"][name]
+        assert row["can_fetch_today"] is False
+        assert row["can_price"] is False
+        assert row["can_vote"] is False
+        assert row["blocker"]
+
+
+def test_health_line_role_verdicts_are_per_role_not_all_three(tmp_path):
+    """SHADOW-01 T0: role-limited sources must not print constant BLOCKED."""
+    source_health.persist_daily_source_health(
+        "2026-10-02",
+        {
+            # bzzoiro is a vote feed: fetch+vote with can_price False is healthy.
+            "bzzoiro": {"fetched": True, "rows": 5, "can_fetch_today": True,
+                        "can_price": False, "can_vote": True},
+            # bzzoiro_odds is a price feed: fetch+price with can_vote False is healthy.
+            "bzzoiro_odds": {"fetched": True, "rows": 5, "can_fetch_today": True,
+                             "can_price": True, "can_vote": False},
+            # betexplorer prices but never votes.
+            "betexplorer": {"fetched": True, "rows": 2, "can_fetch_today": True,
+                            "can_price": True, "can_vote": False},
+            # scoutingstats is a full source: all three keys.
+            "scoutingstats": {"fetched": True, "rows": 9, "can_fetch_today": True,
+                              "can_price": True, "can_vote": True},
+        },
+    )
+    line = source_health.daily_status_block("2026-10-02")
+    assert "bzzoiro=fetch/vote" in line
+    assert "bzzoiro_odds=fetch/price" in line
+    assert "betexplorer=fetch/price" in line
+    assert "scoutingstats=fetch/price/vote" in line
+
+
+def test_health_line_role_verdicts_fail_when_role_key_fails(tmp_path):
+    source_health.persist_daily_source_health(
+        "2026-10-02",
+        {
+            # Vote feed that lost its vote capability: BLOCKED.
+            "bzzoiro": {"fetched": True, "rows": 0, "can_fetch_today": True,
+                        "can_price": False, "can_vote": False},
+            # Price feed with zero priced rows: BLOCKED.
+            "bzzoiro_odds": {"fetched": True, "rows": 0, "can_fetch_today": True,
+                             "can_price": False, "can_vote": False},
+            # Fetched but nothing to price: BLOCKED.
+            "betexplorer": {"fetched": True, "rows": 0, "can_fetch_today": True,
+                            "can_price": False, "can_vote": False},
+            # Full source missing its price capability: BLOCKED.
+            "scoutingstats": {"fetched": True, "rows": 3, "can_fetch_today": True,
+                              "can_price": False, "can_vote": True},
+        },
+    )
+    line = source_health.daily_status_block("2026-10-02")
+    assert "bzzoiro=BLOCKED" in line
+    assert "bzzoiro_odds=BLOCKED" in line
+    assert "betexplorer=BLOCKED" in line
+    assert "scoutingstats=BLOCKED" in line
+
+
+def test_health_line_role_verdicts_fail_when_fetch_fails(tmp_path):
+    source_health.persist_daily_source_health(
+        "2026-10-02",
+        {
+            "bzzoiro": {"fetched": False, "rows": 0, "can_fetch_today": False,
+                        "can_price": False, "can_vote": True},
+            "scoutingstats": {"fetched": False, "rows": 0, "can_fetch_today": False,
+                              "can_price": True, "can_vote": True},
+        },
+    )
+    line = source_health.daily_status_block("2026-10-02")
+    assert "bzzoiro=BLOCKED" in line
+    assert "scoutingstats=BLOCKED" in line
+
+
 def test_bzzoiro_429_is_recorded_as_rate_limit_quota_hint(monkeypatch):
     bzz._reset_diagnostics()
     monkeypatch.setattr(bzz, "time", type("Clock", (), {"sleep": staticmethod(lambda _s: None)})())
@@ -113,3 +222,47 @@ def test_bzzoiro_429_is_recorded_as_rate_limit_quota_hint(monkeypatch):
     assert diag["http_statuses"] == [429]
     assert diag["quota_hint"] == "rate_limit_or_quota"
     assert diag["requests"] == 1
+
+
+def test_convergent_source_never_earns_voice_or_price_credit(tmp_path):
+    """SHADOW-01 T5: the PredictIQ convergent tag is enforced at the registry.
+
+    Even if a future adapter reports healthy observations with can_vote and
+    can_price claimed True, the daily contract refuses them: a convergent
+    source (ensemble includes devigged market odds) earns zero voice credit
+    permanently and never corroborates a price.
+    """
+    payload = source_health.persist_daily_source_health(
+        "2026-10-02",
+        {
+            "predictiq": {
+                "fetched": True, "rows": 50, "can_fetch_today": True,
+                "can_price": True, "can_vote": True, "freshness_h": 0.5,
+            },
+        },
+    )
+    row = payload["sources"]["predictiq"]
+    assert row["can_fetch_today"] is True   # fetching for echo testing is fine
+    assert row["can_price"] is False        # never a corroborator
+    assert row["can_vote"] is False         # zero voice credit permanently
+    assert "convergent" in str(row["blocker"])
+    assert "never corroborates" in str(row["blocker"])
+
+
+def test_convergent_source_unobserved_is_conservative(tmp_path):
+    payload = source_health.build_daily_source_health("2026-10-02", {})
+    row = payload["sources"]["predictiq"]
+    assert row["can_fetch_today"] is False
+    assert row["can_price"] is False
+    assert row["can_vote"] is False
+    assert row["blocker"]
+
+
+def test_convergent_source_renders_echo_only_on_health_line(tmp_path):
+    source_health.persist_daily_source_health(
+        "2026-10-02",
+        {"predictiq": {"fetched": True, "rows": 50, "can_fetch_today": True,
+                       "can_price": True, "can_vote": True}},
+    )
+    line = source_health.daily_status_block("2026-10-02")
+    assert "predictiq=echo/only" in line

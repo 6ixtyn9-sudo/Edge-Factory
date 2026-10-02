@@ -98,7 +98,27 @@ DAILY_SOURCES = (
     # Verified shadow-only candidates. They are explicit health rows, but
     # neither enters consensus weights nor the pick path by default.
     "futbolpronosticos", "sportytrader_odds",
+    # SHADOW-01 shadow-only candidates (zero voice credit, zero price weight
+    # until settled evidence and an explicit operator promotion):
+    #   betminer     - RapidAPI voice shadow (odds carry no bookmaker identity)
+    #   pinnapi_odds - Pinnacle named-book price shadow (never a vote)
+    #   betbetter    - keyless CC BY 4.0 benchmark board (echo-test asset)
+    "betminer", "pinnapi_odds", "betbetter",
+    # Convergent-tagged from day one - see CONVERGENT_SOURCES below.
+    "predictiq",
 )
+
+# Convergent sources (SHADOW-01 T5, registry-level tag from day one).
+#
+# A source whose predictions are derived in part from market odds cannot be
+# an independent voice: agreement with our price-corroborated consensus is
+# expected by construction, so it earns ZERO voice credit permanently and
+# NEVER corroborates a price. PredictIQ's ensemble includes devigged market
+# odds (ECHO-MED-HIGH, docs/operator/SOURCE-HUNT-2026-10.md section 5.5).
+# The tag is enforced fail-closed in build_daily_source_health: even if a
+# future adapter reports can_vote/can_price observations, the registry
+# refuses them. Fetching may be allowed later for echo testing only.
+CONVERGENT_SOURCES: frozenset[str] = frozenset({"predictiq"})
 
 
 def _freshness_value(observation: dict[str, Any]) -> float | None:
@@ -142,6 +162,15 @@ def build_daily_source_health(
         can_price = bool(obs.get("can_price", False))
         can_vote = bool(obs.get("can_vote", False))
         blocker = obs.get("blocker")
+        if name in CONVERGENT_SOURCES:
+            # Registry-level convergent tag: zero voice credit permanently,
+            # never a corroborator - enforced here, not left to the adapter.
+            can_price = False
+            can_vote = False
+            blocker = (
+                "convergent echo-candidate: zero voice credit permanently, "
+                "never corroborates (SOURCE-HUNT-2026-10 section 5.5)"
+            )
         if not blocker and not can_fetch:
             blocker = "not reliably fetched/observed today"
         elif not blocker and rows == 0:
@@ -166,6 +195,21 @@ def build_daily_source_health(
                 "st_raw": int(obs.get("st_raw") or 0),
                 "st_matched": int(obs.get("st_matched") or 0),
             })
+        elif name == "betminer":
+            row.update({
+                "bm_raw": int(obs.get("bm_raw") or 0),
+                "bm_scored": int(obs.get("bm_scored") or 0),
+            })
+        elif name == "pinnapi_odds":
+            row.update({
+                "pa_raw": int(obs.get("pa_raw") or 0),
+                "pa_matched": int(obs.get("pa_matched") or 0),
+            })
+        elif name == "betbetter":
+            row.update({
+                "bb_raw": int(obs.get("bb_raw") or 0),
+                "bb_scored": int(obs.get("bb_scored") or 0),
+            })
         sources[name] = row
     return {"schema": 1, "date": str(day), "sources": sources}
 
@@ -184,6 +228,31 @@ def persist_daily_source_health(
     return payload
 
 
+# Role verdicts for the compact health line (SHADOW-01 T0).
+#
+# The old all-of(fetch, price, vote) check could never pass for role-limited
+# sources: bzzoiro is a tips/vote feed that never prices, while bzzoiro_odds
+# and betexplorer are price feeds that never vote. They printed a constant
+# misleading BLOCKED. A source is healthy on the health line when fetch AND
+# every capability key of *its own role* hold; sources not listed here keep
+# the full three-key contract.
+ROLE_VERDICT_SOURCES: dict[str, tuple[str, ...]] = {
+    "bzzoiro": ("can_vote",),
+    "bzzoiro_odds": ("can_price",),
+    "betexplorer": ("can_price",),
+    "scoutingstats": ("can_price", "can_vote"),
+}
+
+
+def _status_token(name: str, row: dict[str, Any]) -> str:
+    if name in CONVERGENT_SOURCES:
+        return f"{name}=echo/only"
+    roles = ROLE_VERDICT_SOURCES.get(name, ("can_price", "can_vote"))
+    healthy = bool(row.get("can_fetch_today")) and all(row.get(k) for k in roles)
+    label = "fetch/" + "/".join(role.removeprefix("can_") for role in roles)
+    return f"{name}={label if healthy else 'BLOCKED'}"
+
+
 def daily_status_block(day: str) -> str:
     """One compact, deterministic status line for the card/run log."""
     path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
@@ -193,13 +262,26 @@ def daily_status_block(day: str) -> str:
     except (OSError, ValueError, TypeError):
         return f"Source health {day}: unavailable (health contract not persisted)"
     tokens = []
-    for name in ("bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet", "futbolpronosticos", "sportytrader_odds"):
+    for name in (
+        "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet",
+        "futbolpronosticos", "sportytrader_odds",
+        "betminer", "pinnapi_odds", "betbetter", "predictiq",
+    ):
         row = sources.get(name, {})
         if name == "futbolpronosticos":
             tokens.append(f"futbolpronosticos=raw{row.get('raw', 0)}/scored{row.get('scored', 0)}")
             continue
         if name == "sportytrader_odds":
             tokens.append(f"sportytrader=st_raw{row.get('st_raw', 0)}/st_matched{row.get('st_matched', 0)}")
+            continue
+        if name == "betminer":
+            tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}")
+            continue
+        if name == "pinnapi_odds":
+            tokens.append(f"pinnapi=pa_raw{row.get('pa_raw', 0)}/pa_matched{row.get('pa_matched', 0)}")
+            continue
+        if name == "betbetter":
+            tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}")
             continue
         if name == "forebet":
             tokens.append(
@@ -208,9 +290,7 @@ def daily_status_block(day: str) -> str:
                 else "forebet=available"
             )
             continue
-        tokens.append(
-            f"{name}={'fetch/price/vote' if all(row.get(k) for k in ('can_fetch_today', 'can_price', 'can_vote')) else 'BLOCKED'}"
-        )
+        tokens.append(_status_token(name, row))
     return f"Source health {day}: " + " ".join(tokens)
 
 

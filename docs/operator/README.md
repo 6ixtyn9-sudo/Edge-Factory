@@ -110,6 +110,15 @@ The same vocabulary is used across
 | `zero-row done` | a day terminated with zero rows | only legitimate when the day was genuinely empty — not when it was a 403 |
 | tripwire fired | an expected signal stopped firing | read the diagnostics artifact before changing anything |
 
+**Health-line role verdicts (T0):** the compact
+`Source health <date>: …` line judges each source against **its own role**, not
+an all-three check. `bzzoiro` is healthy at `fetch/vote` (it never prices);
+`bzzoiro_odds` and `betexplorer` are healthy at `fetch/price` (they never
+vote); full sources like `scoutingstats` still need `fetch/price/vote`. A
+source whose fetch or role capability fails prints `BLOCKED`. The verdict is
+display-only: the per-day health contract in
+`source_health_YYYY-MM-DD.json` remains the authoritative record.
+
 **Price evidence / quarantine buckets seen on legs:** `CERTIFIED_CLEAN`,
 `CAUTION`, `WATCHLIST_UNCORROBORATED_PRICE`, `WATCHLIST_UNKNOWN_CTX`,
 `SKIPPED_VETO`, `BETEXPLORER_RESCUE`, `SOURCE_FALLBACK`,
@@ -204,6 +213,18 @@ Proposed workflow artifacts (paste-ready, never pushed by the App):
   free key → probe → shadow (zero credit) → echo test → promotion only on
   settled evidence. See [`TICKETS-OPEN.md`](TICKETS-OPEN.md) and
   [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md).
+- **SHADOW-01 shipped (c), (e) + tagged (d)** — Betminer (voice shadow,
+  never a price donor: its odds carry no bookmaker identity), pinnapi_odds
+  (Pinnacle price shadow, corroboration default-off, same-day-only gate)
+  and keyless Bet Better (CC BY 4.0 benchmark board) now capture zero-credit
+  per-date ledgers in the nightly shadow lane; PredictIQ is
+  convergent-tagged at the registry level (`predictiq=echo/only`, zero
+  voice credit permanently). Keys are env-only
+  (`RAPIDAPI_KEY`/`PINNAPI_KEY` — see
+  `docs/operator/patches/daily-rapidapi-env.patch`); promotion requires the
+  echo/7%-gate evidence in tickets (f)/(g). See
+  [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md) §10 for receipts and
+  the operator runbook.
 
 ---
 
