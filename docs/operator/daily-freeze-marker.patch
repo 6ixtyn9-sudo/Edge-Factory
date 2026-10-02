@@ -1,0 +1,27 @@
+# PR #21 / A4 — operator-applied workflow patch
+#
+# The GitHub App cannot push .github/workflows/. Apply this paste-ready diff
+# manually to .github/workflows/daily.yml (and mirror the same hunk into
+# docs/operator/daily.yml.proposed if that operator copy is used).
+#
+# This is a zero-context hunk so the patch file itself has no whitespace-only
+# context lines. Apply it with:
+#   git apply --unidiff-zero docs/operator/daily-freeze-marker.patch
+#
+# Why: actions/cache/restore can restore the dated frozen marker into
+# localdata/. A bare `git clean -fd localdata/` then deletes
+# auto_tickets_YYYY-MM-DD.frozen before the always-run persist step. Keep the
+# cleanup, but explicitly exempt the freeze-marker family. The marker remains
+# untracked and is picked up by `git add -A localdata/`.
+
+diff --git a/.github/workflows/daily.yml b/.github/workflows/daily.yml
+--- a/.github/workflows/daily.yml
++++ b/.github/workflows/daily.yml
+@@ -110,2 +110,5 @@
+-          # files deleted from git must STAY deleted.
+-          git clean -fd localdata/ || true
++          # files deleted from git must STAY deleted. Do NOT remove the
++          # dated freeze marker: auto_tickets.py owns it and the later
++          # always-run persist step must be able to commit it.
++          git clean -fd localdata/ \
++            -e 'auto_tickets_*.frozen' || true

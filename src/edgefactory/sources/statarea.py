@@ -6,10 +6,22 @@ in a tooltip cell: '<span class="tool">2:4<span class="tip">Half time results: 0
 """
 from __future__ import annotations
 
+import hashlib
 import re
 import time
 import urllib.error
 import urllib.request
+
+
+LAST_FETCH_RECEIPT: dict[str, object] = {}
+_CHALLENGE_MARKERS = (
+    "captcha",
+    "verify you are human",
+    "checking your browser",
+    "security verification",
+    "access denied",
+    "cf-chl-",
+)
 
 HEADERS = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
 
@@ -26,26 +38,41 @@ _TIPS = re.compile(r"images/prd([12X])\.gif")
 
 
 def fetch_day(date: str, retries: int = 3) -> list[dict]:
+    global LAST_FETCH_RECEIPT
     url = f"https://old.statarea.com/predictions/{date}"
     html = None
+    LAST_FETCH_RECEIPT = {"url": url, "date": date, "status": "not_fetched"}
     for attempt in range(retries):
         try:
             req = urllib.request.Request(url, headers=HEADERS)
             with urllib.request.urlopen(req, timeout=40) as r:
-                html = r.read().decode("utf-8", "replace")
+                body = r.read()
+                html = body.decode("utf-8", "replace")
+                LAST_FETCH_RECEIPT = {
+                    "url": url,
+                    "date": date,
+                    "status": int(getattr(r, "status", 200)),
+                    "bytes": len(body),
+                    "sha256": hashlib.sha256(body).hexdigest(),
+                }
             break
         except urllib.error.HTTPError as e:
+            LAST_FETCH_RECEIPT = {"url": url, "date": date, "status": e.code, "error": str(e)}
             if e.code in (404, 410):
                 return []
             if attempt == retries - 1:
                 raise
             time.sleep(2.0 * (attempt + 1))
-        except Exception:
+        except Exception as exc:
+            LAST_FETCH_RECEIPT = {"url": url, "date": date, "status": "error", "error": str(exc)}
             if attempt == retries - 1:
                 raise
             time.sleep(2.0 * (attempt + 1))
     if not html:
         return []
+    lowered = html.lower()
+    if any(marker in lowered for marker in _CHALLENGE_MARKERS):
+        raise RuntimeError(f"statarea challenge detected at {url}")
 
     out = []
     league = None

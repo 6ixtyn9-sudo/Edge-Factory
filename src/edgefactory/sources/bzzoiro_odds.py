@@ -19,6 +19,7 @@ import json
 import os
 import sys
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date as _date, datetime, timezone, timedelta
@@ -44,6 +45,48 @@ COLUMNS = [
 ]
 
 
+_DIAG: dict[str, object] = {}
+
+
+def _reset_diagnostics() -> None:
+    global _DIAG
+    _DIAG = {
+        "status": "not_run",
+        "http_statuses": [],
+        "errors": [],
+        "quota_hint": "none",
+        "requests": 0,
+        "ok_responses": 0,
+        "max_event_comparison": MAX_EVENT_COMPARISON,
+    }
+
+
+def diagnostics() -> dict[str, object]:
+    """Return safe upstream diagnostics; never includes the API token."""
+    out = dict(_DIAG)
+    out["http_statuses"] = list(_DIAG.get("http_statuses") or [])
+    out["errors"] = list(_DIAG.get("errors") or [])
+    return out
+
+
+def _record_error(exc: Exception) -> None:
+    errors = _DIAG.setdefault("errors", [])
+    if not isinstance(errors, list):
+        errors = []
+        _DIAG["errors"] = errors
+    message = str(exc).replace("\n", " ")[:180] or type(exc).__name__
+    if len(errors) < 8 and message not in errors:
+        errors.append(message)
+    if isinstance(exc, urllib.error.HTTPError):
+        statuses = _DIAG.setdefault("http_statuses", [])
+        if exc.code not in statuses:
+            statuses.append(exc.code)
+        if exc.code in {401, 403}:
+            _DIAG["quota_hint"] = "auth_or_quota"
+        elif exc.code in {402, 429, 430, 509}:
+            _DIAG["quota_hint"] = "rate_limit_or_quota"
+
+
 def _verbose() -> bool:
     return os.environ.get("BZZOIRO_ODDS_VERBOSE", "").strip().lower() in {"1", "true", "yes", "on"}
 
@@ -55,13 +98,21 @@ def _log(message: str, *, verbose: bool = False) -> None:
 
 def _get(url: str, retries: int = 3):
     for attempt in range(retries):
+        _DIAG["requests"] = int(_DIAG.get("requests", 0)) + 1
         try:
             req = urllib.request.Request(
                 url, headers={"Authorization": f"Token {TOKEN}"}
             )
             with urllib.request.urlopen(req, timeout=30) as r:
+                _DIAG["ok_responses"] = int(_DIAG.get("ok_responses", 0)) + 1
                 return json.loads(r.read().decode("utf-8", "replace"))
-        except Exception:
+        except urllib.error.HTTPError as exc:
+            _record_error(exc)
+            if attempt == retries - 1:
+                raise
+            time.sleep(1.5 * (attempt + 1))
+        except Exception as exc:
+            _record_error(exc)
             if attempt == retries - 1:
                 raise
             time.sleep(1.5 * (attempt + 1))
@@ -404,7 +455,11 @@ def _event_comparison_rows(day: str) -> list[dict]:
 
 def fetch_day(date: str) -> list[dict]:
     """Fetch odds for a specific date (today or tomorrow supported)."""
+    _reset_diagnostics()
     if not TOKEN:
+        _DIAG["status"] = "auth"
+        _DIAG["quota_hint"] = "token_missing"
+        _DIAG["errors"] = ["BZZOIRO_TOKEN missing"]
         raise RuntimeError("bzzoiro_odds: BZZOIRO_TOKEN missing")
 
     start = date
@@ -439,9 +494,28 @@ def fetch_day(date: str) -> list[dict]:
         all_rows.extend(comparison_rows)
 
     out = _dedupe_rows(all_rows)
+    _DIAG["best_results"] = total_results
+    _DIAG["comparison_rows"] = len(comparison_rows)
+    _DIAG["rows"] = len(out)
+    if out:
+        _DIAG["status"] = "ok"
+    elif _DIAG.get("errors"):
+        statuses = set(_DIAG.get("http_statuses") or [])
+        if statuses and statuses <= {401, 403}:
+            _DIAG["status"] = "auth"
+        elif statuses & {402, 429, 430, 509}:
+            _DIAG["status"] = "quota"
+        else:
+            _DIAG["status"] = "unavailable"
+    else:
+        _DIAG["status"] = "empty"
+        _DIAG["quota_hint"] = "none_observed"
     _log(
         f"bzzoiro_odds {date}: best_results={total_results} "
-        f"comparison_rows={len(comparison_rows)} rows={len(out)}"
+        f"comparison_rows={len(comparison_rows)} rows={len(out)} "
+        f"status={_DIAG.get('status')} http={','.join(str(x) for x in (_DIAG.get('http_statuses') or [])) or 'none'} "
+        f"errors={len(_DIAG.get('errors') or [])} quota_hint={_DIAG.get('quota_hint')} "
+        f"comparison_cap={MAX_EVENT_COMPARISON}"
     )
     return out
 

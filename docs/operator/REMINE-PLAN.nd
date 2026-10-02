@@ -1,0 +1,78 @@
+# Re-mining plan
+
+
+<!-- coverage-inventory:start -->
+## B0 coverage inventory (local-only, no network)
+
+Observed: `2026-10-02T00:00:00Z`. The inventory is the only input to a future gap-aware crawl plan; no crawl budget is approved by this artifact.
+
+| source | availability | committed / cache-only / total rows | date range (observed days) | internal gaps (crawl candidates) | market coverage | duplicate keys | warehouse tables |
+|---|---|---:|---|---|---|---|---|
+| statarea | committed | 489,399 / 0 / 489,399 | 2017-01-01 → 2026-06-12 (3447d) | 0 | 1x2_probability (489,286 rows/3447d), ht_1x2_probability (489,286 rows/3447d), ou_probability (489,286 rows/3447d) | 2 groups, 2 rows | statarea:missing, statarea_settled:missing |
+| zulubet | committed | 67,216 / 0 / 67,216 | 2024-01-01 → 2026-06-12 (894d) | 0 | 1x2_odds (67,187 rows/894d), 1x2_probability (67,187 rows/894d) | 0 groups, 0 rows | zulubet:missing, zulubet_settled:missing |
+| predictz | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | predictz_raw:missing, predictz_settled:missing |
+| windrawwin | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | windrawwin:missing |
+| bettingclosed | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | bettingclosed:missing, bettingclosed_settled:missing |
+| betexplorer_odds | committed | 79,925 / 0 / 79,925 | 2026-01-01 → 2026-06-16 (167d) | 0 | 1x2_bookmaker_rows (79,925 rows/167d), 1x2_odds (61,379 rows/167d) | 0 groups, 0 rows | betexplorer:missing, betexplorer_settled:missing |
+| betexplorer_results | committed | 87,508 / 0 / 87,508 | 2026-01-01 → 2026-09-01 (182d) | 62 (2026-06-17, 2026-06-18, 2026-06-19, 2026-06-20, 2026-06-21, …) | settled_score (87,508 rows/182d) | 12 groups, 12 rows | betexplorer:missing, betexplorer_settled:missing |
+| scoutingstats | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | scoutingstats:missing, scoutingstats_settled:missing |
+| prosoccer | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | prosoccer:missing, prosoccer_settled:missing |
+| afootballreport | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | afootballreport:missing |
+| betclan | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | betclan:missing |
+| freesupertips | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | freesupertips:missing |
+| forebet | committed | 327,895 / 0 / 327,895 | 2024-01-01 → 2026-06-12 (894d) | 0 | 1x2_odds (225,697 rows/894d), 1x2_probability (327,849 rows/894d), btts_odds (225,711 rows/894d), btts_probability (327,853 rows/894d), ou_odds (225,711 rows/894d), ou_probability (327,853 rows/894d) | 0 groups, 0 rows | forebet:missing, forebet_settled:missing |
+| sa_cache | committed (alias/cache) | 489,399 / 0 / 489,399 | 2017-01-01 → 2026-06-12 (3447d) | 0 | — | — | alias of statarea |
+| fb_cache | committed (alias/cache) | 327,895 / 0 / 327,895 | 2024-01-01 → 2026-06-12 (894d) | 0 | — | — | alias of forebet |
+| clv_cache | committed (alias/cache) | 7,901 / 0 / 7,901 | 2026-06-18 → 2026-10-02 (101d) | 6 (2026-07-10, 2026-07-16, 2026-07-17, 2026-07-19, 2026-07-25, …) | — | — | alias of clv_snapshots |
+
+**Key rule:** `source + date + source_team_key(home) + source_team_key(away) + market`; existing committed rows win collisions. `source_team_key` is the existing alias-aware normalization seam. The `proposed_internal_gap_days` arrays in `localdata/coverage_inventory.json` are the driver input; ranges are display-only.
+
+**Budget gate:** proposed counts above are internal missing days only. Empty sources have no crawl range and require an operator-approved boundary/date floor. Operator approval is recorded for the 3 Statarea gap probes, the 62 BetExplorer result gaps, bounded ZuluBet backfill, and one Football-Data CSV; execution remains single-flight, immutable, and hist-only.
+<!-- coverage-inventory:end -->
+
+## B1 runner execution — bounded redirect
+
+`python3 scripts/remine_backfill.py` is invoked by the existing official and
+autonomous-intraday chain in `scripts/daily.py`; no workflow YAML change is
+needed. Sandbox crawling is closed. The GitHub Actions runner is the only
+place this state machine may make the remaining bounded requests.
+
+The append-only `localdata/backfill_ledger.jsonl` is the source of truth for
+reruns:
+
+1. The three committed Statarea `no_matches_day` confirmations become
+   `held` receipts with `request_count=0`. The runner never imports or calls a
+   Statarea fetcher for them.
+2. Up to ten not-yet-terminal BetExplorer dates are requested per run through
+   `edgefactory.sources.betexplorer_odds`. Its existing single-flight lock,
+   three-second throttle, Retry-After handling, and 429 cooling state remain
+   in force. Response bytes are written once below the ignored
+   `localdata/remine_raw/` tree; checksums, request URL, parser row count,
+   duplicate count, existing-wins collision count, and provenance are written
+   to both the ledger and `localdata/remine_audit_*.jsonl`. A 403/challenge or
+   429 cluster writes a source-freeze receipt and exits zero without trying an
+   alternate transport.
+3. `betexplorer_results/gap_fill_complete` is written only when all 62
+   approved dates have successful or held terminal receipts. Exhausted reruns
+   are idempotent and exit zero.
+4. The Football-Data proof unlocks on a BetExplorer terminal state: either
+   `gap_fill_complete` (`gate_released_by=complete`) or a same-run
+   challenge/429 source freeze (`gate_released_by=frozen_blocked`). The latter
+   deliberately leaves the 62 dates open for a later retry; it does not hold
+   the independent price-history proof hostage. One pre-2026 `E0 × 2024-25`
+   CSV proof is then fetched, stored as an immutable, gitignored raw artifact
+   with a SHA-256, explicit provenance, opening/closing header checks, and
+   normalized donor-coverage report. A failed or incomplete proof is held and
+   does not unlock Legalbet.
+5. Only after a complete CSV proof, the driver checks Legalbet `robots.txt`
+   first, then samples no more than three requests per run and 30 public
+   archive pages in total. User/rating/stat paths are excluded. A RU-host
+   failure or challenge is recorded and held with no alternate transport or
+   escalation. Legalbet page bytes are also immutable raw artifacts with
+   checksums.
+
+The per-run stdout meter reports consumed versus budget, remaining gaps,
+freeze state, Football-Data state, Legalbet page count, and ledger/audit/raw
+paths. The prior honest sandbox receipts remain in
+`localdata/remine_audit_2026-10-02.jsonl`; relay pages are not treated as raw
+bytes and are never used for runner backfill.

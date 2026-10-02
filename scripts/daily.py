@@ -850,6 +850,12 @@ def run_pipeline(
                 "--source-group forebet-resilience",
                 "capture_daily (non-Forebet D30 resilience pass)",
             )
+            # B1 is runner-only: it owns its append-only ledger and bounded
+            # source budgets, so workflow YAML does not need a second job.
+            run_soft(
+                f"EDGE_FACTORY_RUN_DATE={target_date} PYTHONPATH=src python3 scripts/remine_backfill.py",
+                "remine_backfill (bounded runner gap plan)",
+            )
             # A temporarily empty donor window must not discard prediction rows
             # captured from healthy sources. Settlement repair is best-effort;
             # the warehouse/miner gates remain fail-closed on unsettled rows.
@@ -982,6 +988,10 @@ def run_pipeline(
         run_soft(
             "python3 scripts/capture_daily.py --skip-build --sources prosoccer",
             "capture_daily prosoccer intraday recapture",
+        )
+        run_soft(
+            f"EDGE_FACTORY_RUN_DATE={target_date} PYTHONPATH=src python3 scripts/remine_backfill.py",
+            "remine_backfill (bounded runner gap plan)",
         )
         run_soft(
             f"python3 scripts/backfill_results.py --days {backfill_days}",
