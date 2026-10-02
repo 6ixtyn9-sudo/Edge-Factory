@@ -1768,6 +1768,15 @@ def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=Fa
         # carry an older label.  The enrichment boundary is the authority.
         if execution_safe and p.get("price_push_eligible") is False:
             continue
+        # Option C price-quality gate (2026-10-02, operator sign-off): a real
+        # money leg needs a second source quoting the same market+selection
+        # within 7% of the chosen price. The 10-01 card rode 4/4 single-source
+        # BETEXPLORER_RESCUE quotes: one feed can be wrong, stale or rescuing
+        # against nothing, and a sole-source quote is audit evidence, not an
+        # execution price. Field is stamped on newly built slates; legacy
+        # archives without it (None) keep the parity behaviour.
+        if execution_safe and p.get("price_corroborated") is False:
+            continue
         # Market guard: the validated recipe is 1X2 ONLY. Goals/OU picks
         # (first seen 2026-08-31, "Breidablik OVER") stay out until the
         # September O2.5 checkpoint passes its gate. Never before.
@@ -2146,12 +2155,16 @@ def _slip_day_anchor(slip_date):
 
 
 def settle_open_slips(st, settled, archives=None, entries_by_date=None):
-    """Grade every acca whose legs are all settled; the bank moves per acca.
+    """Grade every acca whose outcome is decided; the bank moves per acca.
 
     An acca settles as soon as all its legs resolve — a single stuck leg no
-    longer freezes the whole day's stake. A leg whose fixture is filed under
+    longer freezes the whole day's stake. A settled LOSING leg decides the
+    acca immediately (bookmaker rules): stuck or void-pending legs cannot
+    change that, so the loss is booked at once instead of waiting up to
+    5 days behind the void horizon. A leg whose fixture is filed under
     several spellings with differing outcomes is held open (fail-closed) and
-    surfaced as a conflict. Returns event lines.
+    surfaced as a conflict — unless another leg is already a settled loss,
+    which decides the acca regardless; a conflict never counts as a loss.
     """
     if archives is None:
         archives = load_archived_picks()
@@ -2197,6 +2210,7 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
             a = dict(a)
             a["results"] = legres
             resolved = legres and all(r in ("win", "loss", "void") for r in legres)
+            early = False
             if resolved:
                 live = [l for l, r in zip(a["legs"], legres) if r != "void"]
                 if not live:
@@ -2204,6 +2218,18 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
                 else:
                     a["won"] = all(r == "win" for r in legres if r != "void")
                     a["odds"] = round(math.prod(l["odds"] for l in live), 2)  # book-style: void drops out
+            elif any(r == "loss" for r in legres):
+                # Early-loss settlement (2026-10-02): a settled LOSING leg
+                # decides the acca now, bookmaker rules — no stuck, conflicted
+                # or void-pending leg can change that outcome. Booking the
+                # loss behind the 5-day void horizon only delayed the trading
+                # truth (bank height + committed stake): the 2026-09-27 ghost
+                # acca held ~15.5% of capital open for days with a known Kano
+                # Pillars loss. A "conflict" leg never counts as a loss —
+                # conflicting donors are untrusted data, not a decided result,
+                # so conflict-only accas still hold fail-closed below.
+                a["won"] = False
+                early = True
             else:
                 a["won"] = None
             if a["won"] is None:
@@ -2218,6 +2244,9 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
             ev = _apply_settlement(st, ret, a["stake_pct"], slip["date"])
             _record_acca_settlement(st, slip["date"], a)
             lines.append(f"settled {slip['date']} acca @{a['odds']:.2f} legs={legres}: bank {st['bank']:.1f}%"
+                         + (" (decided by settled loss leg"
+                            + (f"; conflict(s) noted: {', '.join(conflicts)}" if conflicts else "")
+                            + ")" if early else "")
                          + ((" | " + " | ".join(ev)) if ev else ""))
         if open_accas:
             slip = dict(slip)
