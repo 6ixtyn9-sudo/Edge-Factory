@@ -238,6 +238,11 @@ def parse_results_page(page: str) -> list[dict]:
         if " - " not in match_text:
             continue
         home, away = [x.strip() for x in match_text.split(" - ", 1)]
+        score = re.search(
+            r'class="table-main__result"[^>]*>.*?(?:<strong[^>]*>)?\s*(\d+)\s*[:\-]\s*(\d+)',
+            token,
+            re.S,
+        )
         dd, mm, yyyy, hh, minute = [int(x) for x in dt.groups()]
         event_id = link.group(1).rstrip("/").split("/")[-1]
         rel_url = html.unescape(link.group(1))
@@ -249,6 +254,10 @@ def parse_results_page(page: str) -> list[dict]:
             "league": current_league,
             "home": home,
             "away": away,
+            "hs": score.group(1) if score else "",
+            "gs": score.group(2) if score else "",
+            "ht_hs": "",
+            "ht_gs": "",
             "match_url": full_url,
             "event_id": event_id,
         })

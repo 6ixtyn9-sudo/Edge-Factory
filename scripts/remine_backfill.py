@@ -334,7 +334,8 @@ def _betexplorer(run_date: str, inventory: dict[str, Any], ledger: list[dict[str
             raw = betexplorer_odds.last_response_bytes()
             artifact = RAW_ROOT / "betexplorer_results" / f"{day}.html"
             checksum, wrote, artifact_collision = _write_immutable(artifact, raw) if raw else (None, False, False)
-            merge = _merge_betexplorer_rows(day, rows) if receipt.get("status") in BE_TERMINAL and not artifact_collision else {}
+            merge_rows = [{**row, "fetched_at": _now()} for row in rows]
+            merge = _merge_betexplorer_rows(day, merge_rows) if receipt.get("status") in BE_TERMINAL and not artifact_collision else {}
             status = str(receipt.get("status", "transport_error"))
             if artifact_collision:
                 status = "raw_artifact_collision"

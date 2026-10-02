@@ -32,6 +32,19 @@ def _http_429(retry_after: str | None = None):
     )
 
 
+def test_results_parser_captures_final_score_for_result_backfill():
+    page = '''
+    <tr class="js-tournament"><td class="table-main__tournament">England: Test League</a></td></tr>
+    <tr data-dt="17,6,2026,18,30">
+      <td class="table-main__tt"><a href="/football/match/alpha-beta/">Alpha FC - Beta FC</a></td>
+      <td class="table-main__result"><a><strong>2:1</strong></a></td>
+    </tr>
+    '''
+    rows = be.parse_results_page(page)
+    assert rows[0]["date"] == "2026-06-17"
+    assert rows[0]["hs"] == "2" and rows[0]["gs"] == "1"
+
+
 def test_first_429_honors_retry_after_and_uses_30_second_floor(monkeypatch):
     calls = []
     sleeps = []
