@@ -768,3 +768,17 @@ docs, commit messages, or logs in this bundle. Adapters read keys only from
   ([Quick Start](https://docs.sharpapi.io/en/quickstart/)); the pricing receipt
   records 12 requests/minute and no-card free access
   ([pricing](https://sharpapi.io/pricing)).
+
+### SHADOW-03 WAVE 3 receipts
+
+- **Boggio:** relay-fetched developer docs confirm the RapidAPI host
+  `football-prediction-api.p.rapidapi.com`, `GET /api/v2/predictions`,
+  `X-RapidAPI-Key`, and the free-tier `iso_date` publication window. The
+  adapter retains `published_at`/`last_update_at` alongside `captured_at` and
+  remains a zero-credit voice shadow.
+- **SportsGameOdds:** probe-first memo uses the provider FAQ definition that
+  one returned top-level event is one object, regardless of markets or books;
+  full-board volume is unbounded and 70 targeted fixtures/day fails 2x
+  headroom. Verdict: **SKIP**, no adapter shipped.
+- **Book families:** corroboration is bookmaker-based, not donor/API-based;
+  same-book relays are one family and never additional independence.
