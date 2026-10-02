@@ -86,6 +86,7 @@ def _retry_after_seconds(value: str | None) -> float:
 
 
 def _throttle() -> None:
+    global _LAST_REQUEST
     with _LOCK:
         wait = MIN_INTERVAL_S - (time.monotonic() - _LAST_REQUEST)
         if wait > 0:

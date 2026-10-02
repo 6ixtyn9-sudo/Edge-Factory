@@ -115,6 +115,7 @@ def _retry_after_seconds(value: str | None) -> float:
 
 
 def _throttle() -> None:
+    global _LAST_REQUEST
     with _LOCK:
         wait = MIN_INTERVAL_S - (time.monotonic() - _LAST_REQUEST)
         if wait > 0:
@@ -337,7 +338,8 @@ def settlement_coverage(rows: list[dict[str, Any]], settled_scores: list[dict[st
     """
 
     def key(row: dict[str, Any]) -> tuple[str, str, str]:
-        clean = lambda value: re.sub(r"[^a-z0-9]+", "", str(value or "").lower())  # noqa: E731
+        def clean(value: object) -> str:
+            return re.sub(r"[^a-z0-9]+", "", str(value or "").lower())
         return str(row.get("date") or ""), clean(row.get("home")), clean(row.get("away"))
 
     settled_keys = {
@@ -358,7 +360,6 @@ def settlement_coverage(rows: list[dict[str, Any]], settled_scores: list[dict[st
 def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """Capture one dated Betminer slate. Cache-first, budget-capped, inert
     without ``RAPIDAPI_KEY`` (status ``not_run`` with a blocker)."""
-    global _429S
     stats: dict[str, Any] = {
         "status": "not_run", "bm_raw": 0, "bm_scored": 0, "requests": 0,
         "cache_hits": 0, "http_statuses": [], "http_429": 0, "errors": [],
