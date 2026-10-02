@@ -3928,14 +3928,20 @@ def main():
             "freshness_h": 0.0 if bzz_status == "ok" else None,
             "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
         }
+        be_observed = bool(be_stats.get("be_429", 0) or be_enriched or be_stats.get("be_cached", 0))
         health_observations["betexplorer"] = {
-            "fetched": bool(be_stats.get("be_429", 0) or be_enriched or be_stats.get("be_cached", 0)),
+            "fetched": be_observed,
             "rows": int(be_enriched or 0),
-            "can_fetch_today": not bool(be_stats.get("be_cooling_down", False)),
+            "can_fetch_today": bool(be_enriched or be_stats.get("be_cached", 0)) and not bool(be_stats.get("be_cooling_down", False)),
             "can_price": bool(be_enriched or be_stats.get("be_cached", 0)),
             "can_vote": False,
             "freshness_h": 0.0 if be_enriched else None,
-            "blocker": "run cooling down after 2 HTTP 429 responses" if be_stats.get("be_cooling_down") else None,
+            "blocker": (
+                "run cooling down after 2 HTTP 429 responses"
+                if be_stats.get("be_cooling_down")
+                else "not requested; no unmatched rescue legs"
+                if not be_observed else None
+            ),
         }
         persist_daily_source_health(day, health_observations)
         print(daily_status_block(day), file=sys.stderr)
