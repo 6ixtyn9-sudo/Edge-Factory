@@ -5,7 +5,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-02",
-      "n_last_window": 220,
+      "n_last_window": 217,
       "rule": "2way-unanimous avg_p>=60",
       "silent": false
     },
@@ -19,7 +19,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-02",
-      "n_last_window": 301,
+      "n_last_window": 304,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
@@ -45,7 +45,7 @@
       "silent": false
     }
   ],
-  "generated_at": "2026-10-02T17:01:10",
+  "generated_at": "2026-10-02T18:37:40",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
@@ -123,8 +123,8 @@
     },
     {
       "name": "freesupertips",
-      "newest_date": "2026-10-02",
-      "newest_file": "freesupertips_2026-10.csv.gz",
+      "newest_date": "2026-09-30",
+      "newest_file": "freesupertips_2026-09.csv.gz",
       "role": "not_ready",
       "stale": false
     },
@@ -137,7 +137,7 @@
     },
     {
       "name": "bzzoiro",
-      "newest_date": "2026-10-09",
+      "newest_date": "2026-10-08",
       "newest_file": "bzzoiro_2026-10.csv.gz",
       "role": "model_voter",
       "stale": false
