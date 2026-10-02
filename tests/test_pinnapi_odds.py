@@ -162,7 +162,7 @@ def test_diagnostics_never_leak_the_key(monkeypatch):
     pa.capture_day("2026-10-03")
     dumped = json.dumps(pa.diagnostics())
     assert "test-pinnapi-key" not in dumped
-    assert pa.markets_url().endswith("key=test-pinnapi-key")
+    assert pa.markets_url().endswith("sport_id=2&event_type=prematch&key=test-pinnapi-key")
     # Header sanitization drops auth material.
     sanitized = pa._sanitize_headers({"X-RateLimit-Remaining": "4", "Authorization": "Bearer x"})
     assert "Authorization" not in sanitized
