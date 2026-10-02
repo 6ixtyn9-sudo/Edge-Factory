@@ -23,10 +23,9 @@ Observed: `2026-10-02T00:00:00Z`. The inventory is the only input to a future ga
 | forebet | committed | 327,895 / 0 / 327,895 | 2024-01-01 → 2026-06-12 (894d) | 0 | 1x2_odds (225,697 rows/894d), 1x2_probability (327,849 rows/894d), btts_odds (225,711 rows/894d), btts_probability (327,853 rows/894d), ou_odds (225,711 rows/894d), ou_probability (327,853 rows/894d) | 0 groups, 0 rows | forebet:missing, forebet_settled:missing |
 | sa_cache | committed (alias/cache) | 489,399 / 0 / 489,399 | 2017-01-01 → 2026-06-12 (3447d) | 3 (2020-04-14, 2020-04-28, 2020-12-25) | — | — | alias of statarea |
 | fb_cache | committed (alias/cache) | 327,895 / 0 / 327,895 | 2024-01-01 → 2026-06-12 (894d) | 0 | — | — | alias of forebet |
-| clv_cache | committed (alias/cache) | 7,901 / 0 / 7,901 | 2026-06-18 → 2026-10-02 (101d) | 6 (2026-07-10, 2026-07-16, 2026-07-17, 2026-07-19, 2026-07-25, …) | — | — | alias of None |
+| clv_cache | committed (alias/cache) | 7,901 / 0 / 7,901 | 2026-06-18 → 2026-10-02 (101d) | 6 (2026-07-10, 2026-07-16, 2026-07-17, 2026-07-19, 2026-07-25, …) | — | — | alias of clv_snapshots |
 
 **Key rule:** `source + date + source_team_key(home) + source_team_key(away) + market`; existing committed rows win collisions. `source_team_key` is the existing alias-aware normalization seam. The `proposed_internal_gap_days` arrays in `localdata/coverage_inventory.json` are the driver input; ranges are display-only.
 
 **Budget gate:** proposed counts above are internal missing days only. Empty sources have no crawl range and require an operator-approved boundary/date floor. ZuluBet robots policy and the first Football-Data CSV download remain separately blocked pending operator approval.
 <!-- coverage-inventory:end -->
-

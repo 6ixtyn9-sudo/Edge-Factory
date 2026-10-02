@@ -158,7 +158,7 @@ SOURCE_SPECS: dict[str, dict] = {
 CACHE_SPECS: dict[str, dict] = {
     "sa_cache": {"patterns": ["statarea*.csv.gz"], "alias_of": "statarea", "date_fields": ["date"]},
     "fb_cache": {"patterns": ["forebet*.csv.gz"], "alias_of": "forebet", "date_fields": ["date"]},
-    "clv_cache": {"patterns": ["clv_snapshots_*.csv.gz"], "date_fields": ["match_date"]},
+    "clv_cache": {"patterns": ["clv_snapshots_*.csv.gz"], "alias_of": "clv_snapshots", "date_fields": ["match_date"]},
 }
 
 
@@ -535,8 +535,9 @@ def append_plan(path: Path, inventory: dict) -> None:
     existing = path.read_text() if path.exists() else "# Re-mining plan\n\n"
     if marker_start in existing and marker_end in existing:
         before = existing.split(marker_start, 1)[0]
-        after = existing.split(marker_end, 1)[1]
-        path.write_text(before + table + after)
+        after = existing.split(marker_end, 1)[1].lstrip("\n")
+        suffix = ("\n" + after) if after else ""
+        path.write_text(before + table + suffix)
     else:
         separator = "\n" if existing.endswith("\n") else "\n\n"
         path.write_text(existing + separator + table)
