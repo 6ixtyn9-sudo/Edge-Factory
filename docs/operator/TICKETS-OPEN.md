@@ -1,7 +1,11 @@
 # Open small tickets (OP-01 T4)
 
 Two fenced leftovers. Ticket (a) ships a contained fix + tests; ticket (b) is a
-recommendation with evidence and **no code change**.
+recommendation with evidence and **no code change**. Tickets (c)–(e) are the
+HUNT-01 shortlist drafts from
+[`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md) — operator-key, probe,
+shadow, echo-test, promotion-only-on-settled-evidence. **No code beyond docs
+ships with them.**
 
 ---
 
@@ -122,3 +126,168 @@ is negative expected value against the bounded budget.
 
 No code change, no capture-group edit, no deletion, no crawl. The decision is
 the operator's; this ticket is the evidence package.
+
+---
+
+## (c) Betminer — shadow prediction voice (HUNT-01 winner)
+
+**Status: DRAFT — operator registers free key; no code change in this bundle.**
+
+### Why
+
+The pipeline is corroboration-starved: bzzoiro quota-exhausts by evening,
+BetExplorer self-rate-limits after 2×429, and scoutingstats is the only fully
+live source (5 card picks vetoed on `SCOUTINGSTATS_SOLE` pricing on
+2026-10-02). Betminer is the only free-tier API that cleared every critical
+rubric bar in HUNT-01: bulk-by-date predictions, model-built probabilities,
+no card, indefinite free tier, commercial use permitted.
+
+### Quota-fit (from SOURCE-HUNT-2026-10 §5.1.E)
+
+- Free tier: **5 requests/day**, no card, full endpoint access
+  (betminer.co.uk pricing; RapidAPI listing shows a live BASIC $0 plan —
+  re-verify the number on the pricing tab at subscription, step 1).
+- Our cadence: 1 morning + 1 evening run = **2 bulk calls/day**
+  (`GET /matches/{date}` returns the whole day incl. probabilities,
+  predictions, odds objects); +1 retry each = 4/day worst case; **2× headroom
+  on baseline = 4 ≤ 5 → PASS**.
+- Per-match xG enrichment (`/match/{id}`) is **not affordable on free** — the
+  shadow uses bulk fields only.
+
+### Stage gates (in order, no skipping)
+
+1. **Operator registers** the free RapidAPI key (no card). Key lives in env
+   only — never in the repo, never in logs (bzzoiro_odds token pattern).
+2. **Probe checks** (SOURCE-HUNT §7.1, ≤2 calls/day): confirm the live BASIC
+   quota; `GET /matches/{today}` doubles as league-diff vs our 432-league net
+   (priority: Eerste Divisie, Ireland First Division, Frauen-Bundesliga,
+   Norway Div 3, Brazil Carioca B2, Colombia Primera B, Paraguay Intermedia,
+   Venezuela FUTVE 2, France National, Argentina Reserve); confirm the docs
+   schema in the wild; record `X-RateLimit-*` headers; take an evening second
+   snapshot to measure intraday revision.
+3. **Shadow adapter** `src/edgefactory/sources/betminer.py` — voice role,
+   `can_vote=False`, zero consensus weight, streams alongside
+   futbolpronosticos / sportytrader_odds as a health row + daily ledger
+   (`betminer_shadow_YYYY-MM-DD.json`, raw=N). Odds rows carry **no bookmaker
+   identity** in the schema → Betminer is never a price donor under the
+   standing "no book name, no price donor" rule.
+4. **Echo test after ≥30 shared settled fixtures**: correlation `< 0.95`,
+   pick agreement `< 95%`, overlap/phi vs bzzoiro/zulubet/statarea and the
+   price donors; the fb-zb receipt to beat is 0.535 / 60.6%. "Convergent" =
+   zero voice credit forever, no retry-harder.
+5. **Promotion only on settled evidence** — normal consensus-candidate
+   review; nothing may relax the 7% price gate, quorum, or kickoff guard.
+
+### Resilience requirements (mirror bzzoiro_odds.py / betexplorer_odds.py)
+
+- Single-flight fetch with min-interval throttle; **max 1 retry per run**,
+  then run-scoped cool-down after repeated 429s (the betexplorer 2×429
+  pattern) — a 5/day budget cannot survive retry loops.
+- Never-raise fetch; `diagnostics()` with the status vocabulary
+  (`auth`/`quota`/`unavailable`/`blocked`/`error`/`empty`/`cooldown`) and
+  `quota_hint`.
+- **Zero-row days with status auth/quota stay RETRYABLE — never marked done**
+  (the bzzoiro_odds 403 lesson, ticket (a)).
+- Hard per-run fetch cap (default 2 calls: morning/evening bulk) — per-match
+  calls are forbidden on the free tier by budget.
+- No proxy / stealth / alternate transport, ever; abort on challenge.
+
+---
+
+## (d) PredictIQ Pro — shadow echo-test voice (HUNT-01 shortlist #2)
+
+**Status: DRAFT — operator registers free key; no code change in this bundle.**
+
+### Why
+
+Bulk `GET /predictions/live` (probabilities, expected goals, best bet),
+published calibration, free tier ≫ our cadence, 89+ leagues incl.
+non-top-flight. Carried **only** as an echo-test candidate: its own model docs
+admit the ensemble meta-learner weighs reads "alongside devigged market
+odds" — a documented market-derived component. Zero voice credit until it
+proves divergence.
+
+### Quota-fit (from SOURCE-HUNT-2026-10 §5.5.E)
+
+- Free tier: 100 requests/day (homepage plan table) vs "100 requests/hour on
+  Free" (docs — docs win under the standing conflict rule); both readings fit.
+- Our cadence: **2–4 bulk calls/day** (morning/evening `/predictions/live`) ≪
+  100 → **PASS** with large margin.
+
+### Stage gates
+
+1. **Operator registers** the free key (no card; env only). Read and record
+   the ToS stance at registration — the fetched pages do not spell out
+   commercial use.
+2. **Probe checks** (SOURCE-HUNT §7.2, ≤10 calls/day): `GET /account/me` to
+   resolve the quota conflict empirically; one `/predictions/live` bulk call
+   to measure response size, fields, and league mix vs our net;
+   `/fixtures/?status=scheduled` league ids for our deep tiers.
+3. **Shadow adapter** (voice role, `can_vote=False`, zero credit) streaming
+   alongside the other shadow rows; per-match `/odds/{id}` is not its role —
+   we hold better price donors.
+4. **Echo test after ≥30 shared settled fixtures** — this is the decisive
+   gate: the market-odds ensemble member must not translate into
+   market-consensus picks. On failure: retire, do not retry harder.
+5. **Promotion only on settled evidence** — normal review; gates never
+   weakened.
+
+### Resilience requirements
+
+- Same contract as (c): single-flight throttle, Retry-After-first 30→60s
+  backoff, run-scoped cool-down after repeated 429s, never-raise fetch with
+  `diagnostics()` statuses, zero-row auth/quota days stay RETRYABLE, hard
+  per-run fetch cap (default 2–4 bulk calls), no alternate transport.
+
+---
+
+## (e) pinnapi — Pinnacle price corroborator (HUNT-01 shortlist #3)
+
+**Status: DRAFT — operator registers free key; no code change in this bundle.**
+
+### Why
+
+Five card picks were vetoed on `SCOUTINGSTATS_SOLE` pricing — the corroboration
+gap is price-side, not voice-side. pinnapi exposes bulk **Pinnacle pre-match
+snapshots** (`GET /kit/v1/markets`, one call per sport) on a free tier with no
+card. Pinnacle is the sharpest sanity reference; as a named-book donor it
+feeds the 7% price-corroboration gate. **It is never a vote.**
+
+### Quota-fit (from SOURCE-HUNT-2026-10 §5.7.E)
+
+- Free tier: **100 REST requests/day**, no card, live + prematch snapshots
+  (drop streams paid, not needed).
+- Our cadence: **1–2 soccer snapshot calls/run = 2–4/day; 2× headroom = 8 ≤
+  100 → PASS.**
+
+### Stage gates
+
+1. **Operator registers** the free key (no card; env only). Read and record
+   the ToS stance on relaying Pinnacle prices and any attribution duty —
+   "Not affiliated with Pinnacle"; upstream-rights ambiguity stays on the
+   record.
+2. **Probe checks** (SOURCE-HUNT §7.3, ≤10 calls/day): `GET /health`
+   connectivity receipt; one bulk pre-match soccer snapshot — event count,
+   market depth, league spread vs our 432-code net, field shape (prices,
+   capture timestamp, no-vig layer), rate-limit headers; freshness/price
+   sanity spot-check vs betexplorer on 5 shared fixtures.
+3. **Shadow price ledger** in the `sportytrader_odds` pattern — named-book
+   rows `fixture/market/selection/odds/book=Pinnacle/captured_at`,
+   `pinn_raw=N`/`pinn_matched=N` counters as a health row; corroboration
+   stays **default-off**.
+4. **Echo/settled evidence**: a price donor's test is the 7%-gate evidence
+   report (fixture/selection/book/freshness/sanity), the
+   SPORTYTRADER-7PCT-REPORT pattern — produce it offline before any
+   production role; no vote weight ever.
+5. **Promotion only on settled evidence** — operator review of the offline
+   report; gates never weakened.
+
+### Resilience requirements
+
+- Same contract as (c)/(d): single-flight throttle, backoff with
+  Retry-After-first, run-scoped cool-down after repeated 429s, never-raise
+  fetch with `diagnostics()` statuses, zero-row auth/quota days stay
+  RETRYABLE, hard per-run fetch cap (default 2–4 bulk snapshots), no
+  alternate transport. Capture raw + checksum + provenance per snapshot; the
+  vendor is young (pages dated 2026-08-30, sibling site pinnodds.com) so keep
+  the adapter disposable.
