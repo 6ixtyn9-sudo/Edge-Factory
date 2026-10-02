@@ -258,6 +258,17 @@ def test_convergent_source_unobserved_is_conservative(tmp_path):
     assert row["blocker"]
 
 
+def test_sharpapi_health_token_renders_on_health_line(tmp_path):
+    source_health.persist_daily_source_health(
+        "2026-10-02",
+        {"sharpapi_odds": {"fetched": True, "rows": 4, "sa_raw": 4,
+                           "sa_matched": 4, "can_fetch_today": True,
+                           "can_price": True, "can_vote": False}},
+    )
+    line = source_health.daily_status_block("2026-10-02")
+    assert "sharpapi=sa_raw4/sa_matched4" in line
+
+
 def test_convergent_source_renders_echo_only_on_health_line(tmp_path):
     source_health.persist_daily_source_health(
         "2026-10-02",

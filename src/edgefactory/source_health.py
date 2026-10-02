@@ -284,7 +284,7 @@ def daily_status_block(day: str) -> str:
     for name in (
         "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet",
         "futbolpronosticos", "sportytrader_odds",
-        "betminer", "pinnapi_odds", "betbetter", "predictiq",
+        "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "predictiq",
     ):
         row = sources.get(name, {})
         if name == "futbolpronosticos":
