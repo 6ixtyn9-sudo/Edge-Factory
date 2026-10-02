@@ -96,6 +96,49 @@ def test_daily_source_health_schema_is_conservative_and_forebet_is_historical_on
     assert source_health.daily_status_block("2026-10-02").startswith("Source health 2026-10-02:")
 
 
+def test_shadow01_sources_have_health_rows_counters_and_tokens(tmp_path):
+    """SHADOW-01 T1: betminer/pinnapi_odds/betbetter are health rows with
+    their own counter fields and compact status tokens, conservative when
+    unobserved."""
+    payload = source_health.persist_daily_source_health(
+        "2026-10-03",
+        {
+            "betminer": {
+                "fetched": True, "rows": 2, "bm_raw": 2, "bm_scored": 2,
+                "can_fetch_today": True, "can_vote": False,
+            },
+            "pinnapi_odds": {
+                "fetched": True, "rows": 5, "pa_raw": 7, "pa_matched": 5,
+                "can_fetch_today": True, "can_price": True, "can_vote": False,
+            },
+            "betbetter": {
+                "fetched": True, "rows": 3, "bb_raw": 4, "bb_scored": 3,
+                "can_fetch_today": True, "can_vote": False,
+            },
+        },
+    )
+    assert payload["sources"]["betminer"]["bm_raw"] == 2
+    assert payload["sources"]["betminer"]["bm_scored"] == 2
+    assert payload["sources"]["pinnapi_odds"]["pa_raw"] == 7
+    assert payload["sources"]["pinnapi_odds"]["pa_matched"] == 5
+    assert payload["sources"]["betbetter"]["bb_raw"] == 4
+    assert payload["sources"]["betbetter"]["bb_scored"] == 3
+    line = source_health.daily_status_block("2026-10-03")
+    assert "betminer=bm_raw2/bm_scored2" in line
+    assert "pinnapi=pa_raw7/pa_matched5" in line
+    assert "betbetter=bb_raw4/bb_scored3" in line
+
+
+def test_shadow01_sources_unobserved_are_conservative(tmp_path):
+    payload = source_health.persist_daily_source_health("2026-10-03", {})
+    for name in ("betminer", "pinnapi_odds", "betbetter"):
+        row = payload["sources"][name]
+        assert row["can_fetch_today"] is False
+        assert row["can_price"] is False
+        assert row["can_vote"] is False
+        assert row["blocker"]
+
+
 def test_health_line_role_verdicts_are_per_role_not_all_three(tmp_path):
     """SHADOW-01 T0: role-limited sources must not print constant BLOCKED."""
     source_health.persist_daily_source_health(
