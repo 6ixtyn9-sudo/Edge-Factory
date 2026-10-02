@@ -104,7 +104,21 @@ DAILY_SOURCES = (
     #   pinnapi_odds - Pinnacle named-book price shadow (never a vote)
     #   betbetter    - keyless CC BY 4.0 benchmark board (echo-test asset)
     "betminer", "pinnapi_odds", "betbetter",
+    # Convergent-tagged from day one - see CONVERGENT_SOURCES below.
+    "predictiq",
 )
+
+# Convergent sources (SHADOW-01 T5, registry-level tag from day one).
+#
+# A source whose predictions are derived in part from market odds cannot be
+# an independent voice: agreement with our price-corroborated consensus is
+# expected by construction, so it earns ZERO voice credit permanently and
+# NEVER corroborates a price. PredictIQ's ensemble includes devigged market
+# odds (ECHO-MED-HIGH, docs/operator/SOURCE-HUNT-2026-10.md section 5.5).
+# The tag is enforced fail-closed in build_daily_source_health: even if a
+# future adapter reports can_vote/can_price observations, the registry
+# refuses them. Fetching may be allowed later for echo testing only.
+CONVERGENT_SOURCES: frozenset[str] = frozenset({"predictiq"})
 
 
 def _freshness_value(observation: dict[str, Any]) -> float | None:
@@ -148,6 +162,15 @@ def build_daily_source_health(
         can_price = bool(obs.get("can_price", False))
         can_vote = bool(obs.get("can_vote", False))
         blocker = obs.get("blocker")
+        if name in CONVERGENT_SOURCES:
+            # Registry-level convergent tag: zero voice credit permanently,
+            # never a corroborator - enforced here, not left to the adapter.
+            can_price = False
+            can_vote = False
+            blocker = (
+                "convergent echo-candidate: zero voice credit permanently, "
+                "never corroborates (SOURCE-HUNT-2026-10 section 5.5)"
+            )
         if not blocker and not can_fetch:
             blocker = "not reliably fetched/observed today"
         elif not blocker and rows == 0:
@@ -222,6 +245,8 @@ ROLE_VERDICT_SOURCES: dict[str, tuple[str, ...]] = {
 
 
 def _status_token(name: str, row: dict[str, Any]) -> str:
+    if name in CONVERGENT_SOURCES:
+        return f"{name}=echo/only"
     roles = ROLE_VERDICT_SOURCES.get(name, ("can_price", "can_vote"))
     healthy = bool(row.get("can_fetch_today")) and all(row.get(k) for k in roles)
     label = "fetch/" + "/".join(role.removeprefix("can_") for role in roles)
@@ -240,7 +265,7 @@ def daily_status_block(day: str) -> str:
     for name in (
         "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet",
         "futbolpronosticos", "sportytrader_odds",
-        "betminer", "pinnapi_odds", "betbetter",
+        "betminer", "pinnapi_odds", "betbetter", "predictiq",
     ):
         row = sources.get(name, {})
         if name == "futbolpronosticos":
