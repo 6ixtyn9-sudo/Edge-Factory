@@ -66,6 +66,38 @@ def read_existing(path: Path):
     except Exception:
         return {}
 
+# OP-01 T4(a) — a zero-row day is only "done" when the source actually saw an
+# empty slate. Adapters that swallow transport/auth errors (bzzoiro_odds
+# `_fetch_url` "never raises") return [] after an HTTP 403, which used to be
+# recorded as a terminal success — the day was never retried again. Adapters
+# that expose diagnostics() are asked; everything else is unchanged.
+RETRYABLE_ZERO_ROW_STATUSES = {"auth", "quota", "unavailable", "blocked", "error"}
+
+
+def inspect_retryable_statuses() -> set[str]:
+    """The zero-row statuses that keep a day open (introspection/tests)."""
+    return set(RETRYABLE_ZERO_ROW_STATUSES)
+
+
+def zero_row_retry_reason(mod) -> str | None:
+    """Reason string when a zero-row day must stay open, else None."""
+    diag_fn = getattr(mod, "diagnostics", None)
+    if not callable(diag_fn):
+        return None
+    try:
+        diag = diag_fn() or {}
+    except Exception:
+        return None
+    status = str(diag.get("status") or "").strip().lower()
+    if status not in RETRYABLE_ZERO_ROW_STATUSES:
+        return None
+    codes = ",".join(str(c) for c in (diag.get("http_statuses") or [])) or "none"
+    hint = str(diag.get("quota_hint") or "none")
+    return (f"zero rows with status={status} http={codes} quota_hint={hint} "
+            f"— not an empty slate; day stays retryable")
+
+
+
 def main():
     if len(sys.argv) < 4:
         print("usage: local_backfill.py <source> <start YYYY-MM-DD> <end YYYY-MM-DD> [--max-seconds N] [--workers N]", file=sys.stderr)
@@ -148,6 +180,7 @@ def main():
 
     failed_this_run: dict[str, str] = {}
     budget_hit = False
+
     try:
         for d in todo:
             if time.time() - t0 > max_seconds:
@@ -164,8 +197,15 @@ def main():
                     month = d.strftime("%Y-%m")
                     buf.setdefault(month, []).extend(rows)
                     n_rows += len(rows)
-                elif source_key.endswith("_odds"):
-                    print(f"  {d} | 0 rows")
+                else:
+                    if source_key.endswith("_odds"):
+                        print(f"  {d} | 0 rows")
+                    reason = zero_row_retry_reason(mod)
+                    if reason:
+                        print(f"  {d} ZERO-ROW NOT DONE: {reason}")
+                        failures[d.isoformat()] = reason
+                        failed_this_run[d.isoformat()] = reason
+                        continue
                 done.add(d.isoformat())
                 failures.pop(d.isoformat(), None)
                 n += 1
