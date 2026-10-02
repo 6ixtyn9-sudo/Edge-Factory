@@ -31,7 +31,7 @@ production adapter.
   days and pass the existing independence yardstick: correlation `< 0.95`, pick
   agreement `< 95%`, and not dead weight on triple-covered fixtures. This is
   especially important because the current fb-zb overlap is **0.535 correlation
-  / 60.6% pick agreement** (the existing `docs/operator/SOURCE-TRIAGE.md`
+  / 60.6% pick agreement** (the existing `docs/operator/archive/SOURCE-TRIAGE.md`
   receipt). Prefer a source that adds a genuinely different voice, not another
   odds-copying echo chamber.
 - No row from this document enters the pick path. `scripts/auto_tickets.py`
@@ -175,7 +175,7 @@ post-TR-3 settled-evidence yardstick.
 
 The two verified candidates now have cooperative shadow adapters, saved HTML
 fixtures, offline tests, daily snapshot ledgers, and source-health rows. The
-implementation is documented in [`SPORTYTRADER-SHADOW-BUILD.md`](SPORTYTRADER-SHADOW-BUILD.md).
+implementation is documented in [`SPORTYTRADER-SHADOW-BUILD.md`](archive/SPORTYTRADER-SHADOW-BUILD.md).
 The focused receipt is **18 passed in 0.16s**; CI tests never fetch live pages.
 
 - FutbolPronosticos writes `futbolpronosticos_shadow_YYYY-MM-DD.json` and
@@ -187,7 +187,7 @@ The focused receipt is **18 passed in 0.16s**; CI tests never fetch live pages.
   `st_raw=N` / `st_matched=N`. The nine disallowed prefixes are hard-blocked in
   code and tests; challenges are training-only.
 - The offline 14-archive price-evidence report is
-  [`SPORTYTRADER-7PCT-REPORT.json`](SPORTYTRADER-7PCT-REPORT.json):
+  [`SPORTYTRADER-7PCT-REPORT.json`](archive/SPORTYTRADER-7PCT-REPORT.json):
   `test_7pct eligible=66 gained=0 rate=0.0 max_deviation=7%`. The 7% gate is
   unchanged and `SPORTYTRADER_CORROBORATOR` remains default-off.
 - Both candidates expose `can_fetch_today`, `can_price`, `can_vote`, and

@@ -10,7 +10,7 @@ Usage:
     PYTHONPATH=src python3 scripts/coverage_inventory.py \
         --observed-at 2026-10-02T00:00:00Z \
         --output localdata/coverage_inventory.json \
-        --append-plan docs/operator/REMINE-PLAN.nd
+        --append-plan docs/operator/REMINE-PLAN.md
 """
 from __future__ import annotations
 
