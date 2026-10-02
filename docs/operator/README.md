@@ -213,6 +213,18 @@ Proposed workflow artifacts (paste-ready, never pushed by the App):
   free key → probe → shadow (zero credit) → echo test → promotion only on
   settled evidence. See [`TICKETS-OPEN.md`](TICKETS-OPEN.md) and
   [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md).
+- **SHADOW-01 shipped (c), (e) + tagged (d)** — Betminer (voice shadow,
+  never a price donor: its odds carry no bookmaker identity), pinnapi_odds
+  (Pinnacle price shadow, corroboration default-off, same-day-only gate)
+  and keyless Bet Better (CC BY 4.0 benchmark board) now capture zero-credit
+  per-date ledgers in the nightly shadow lane; PredictIQ is
+  convergent-tagged at the registry level (`predictiq=echo/only`, zero
+  voice credit permanently). Keys are env-only
+  (`RAPIDAPI_KEY`/`PINNAPI_KEY` — see
+  `docs/operator/patches/daily-rapidapi-env.patch`); promotion requires the
+  echo/7%-gate evidence in tickets (f)/(g). See
+  [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md) §10 for receipts and
+  the operator runbook.
 
 ---
 
