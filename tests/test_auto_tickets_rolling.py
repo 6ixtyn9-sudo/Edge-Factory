@@ -872,3 +872,90 @@ def test_replacement_lines_name_changed_unchanged_and_dropped_accas():
     assert "total stake 10.0000% \u2192 12.0000% of capital" in out
 
 
+
+
+def test_settle_loss_leg_decides_acca_without_waiting_for_void(monkeypatch):
+    """The 2026-09-27 ghost class: one leg a settled LOSS, the other
+    unresolved inside the 5-day void horizon. The acca is dead in reality —
+    it settles now, the bank drops, and the committed stake is released
+    instead of sitting "open" for days behind the void horizon."""
+    class _InHorizon(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            from datetime import datetime as _dt
+            return _dt(2026, 9, 30, 12, 0, tzinfo=tz or at.TZ)
+    monkeypatch.setattr(at, "datetime", _InHorizon)
+    st = at.fresh_state()
+    st["bank"] = 184.5
+    st["open_slips"].append({"date": "2026-09-27", "staked_pct": 15.5, "accas": [
+        {"odds": 2.22, "stake_pct": 15.5, "legs": [
+            {"match": "Kano Pillars vs Enyimba", "pick": "HOME", "odds": 1.50, "prob": 0.72},
+            {"match": "Polanka nad Odrou vs Frydek-Mistek", "pick": "AWAY",
+             "odds": 1.48, "prob": 0.68},
+        ]}]})
+    settled = {
+        ("2026-09-27", norm_team("Kano Pillars"), norm_team("Enyimba")): "draw",
+        # Polanka intentionally unresolved (inside the void horizon)
+    }
+    archives = [
+        {"date": "2026-09-27", "home": "Kano Pillars", "away": "Enyimba", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.50, "avg_p": 72.0},
+        {"date": "2026-09-27", "home": "Polanka nad Odrou", "away": "Frydek-Mistek",
+         "pick": "away", "bucket": "SKIPPED_VETO", "quarantine": "none",
+         "odds": 1.48, "avg_p": 68.0},
+    ]
+    lines = at.settle_open_slips(st, settled, archives=archives)
+
+    assert st["open_slips"] == []
+    assert st["bank"] == pytest.approx(184.5 - 15.5, abs=1e-6)
+    h = st["history"][-1]
+    assert h["date"] == "2026-09-27"
+    # original combined odds kept in the record (no void-style recompute)
+    assert h["accas"] == [{"odds": 2.22, "won": False}]
+    assert h["returned_pct"] == 0.0
+    assert at.effective_bank(st) == pytest.approx(st["bank"])
+    assert any("settled 2026-09-27" in ln and "decided by settled loss leg" in ln
+               for ln in lines)
+
+
+def test_settle_loss_leg_decides_even_with_conflicted_sibling(monkeypatch):
+    """A conflicted fixture holds an UNdecided acca fail-closed — but it must
+    not delay one that is already dead: certain loss + conflict settles lost
+    immediately, with the conflict still noted for the operator."""
+    class _InHorizon(_FakeDateTime):
+        @classmethod
+        def now(cls, tz=None):
+            from datetime import datetime as _dt
+            return _dt(2026, 8, 29, 12, 0, tzinfo=tz or at.TZ)
+    monkeypatch.setattr(at, "datetime", _InHorizon)
+    st = at.fresh_state()
+    st["open_slips"].append({"date": "2026-08-27", "staked_pct": 50.0, "accas": [
+        {"odds": 1.87, "stake_pct": 50.0, "legs": [
+            {"match": "Pafos vs Dinamo Tirana", "pick": "HOME", "odds": 1.30, "prob": 0.62},
+            {"match": "MC Alger vs MC Oran", "pick": "HOME", "odds": 1.44, "prob": 0.62},
+        ]}]})
+    settled = {
+        ("2026-08-27", norm_team("Pafos"), norm_team("Dinamo Tirana")): "draw",
+        ("2026-08-27", norm_team("MC Alger"), norm_team("MC Oran")): "away",
+    }
+    entries = {"2026-08-27": [
+        {"home": "Pafos", "away": "Dinamo Tirana", "outcome": "draw"},
+        {"home": "Pafos", "away": "KS Dinamo Tirana", "outcome": "home"},
+    ]}
+    archives = [
+        {"date": "2026-08-27", "home": "Pafos", "away": "Dinamo Tirana", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.30, "avg_p": 62.0},
+        {"date": "2026-08-27", "home": "MC Alger", "away": "MC Oran", "pick": "home",
+         "bucket": "SKIPPED_VETO", "quarantine": "none", "odds": 1.44, "avg_p": 62.0},
+    ]
+    lines = at.settle_open_slips(st, settled, archives=archives,
+                                 entries_by_date=entries)
+
+    assert st["open_slips"] == []
+    assert st["bank"] == pytest.approx(100.0 - 50.0, abs=1e-6)
+    h = st["history"][-1]
+    assert h["accas"] == [{"odds": 1.87, "won": False}]
+    assert h["returned_pct"] == 0.0
+    # decided by the certain loss; the conflict is surfaced, not silent
+    assert any("decided by settled loss leg" in ln and "conflict" in ln and
+               "Dinamo Tirana" in ln for ln in lines)

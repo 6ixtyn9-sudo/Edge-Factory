@@ -82,6 +82,10 @@ dist/
 !localdata/auto_tickets_slice_ledger.jsonl
 !localdata/auto_tickets_20*.txt
 !localdata/auto_tickets_20*.json
+# The freeze marker must be committed like the slip it freezes: on a cold
+# cache/fresh checkout, frozen.exists() is otherwise false and the engine
+# rebuilds a new card for a date already frozen and already staked.
+!localdata/auto_tickets_20*.frozen
 !localdata/auto_tickets_performance.txt
 !localdata/auto_tickets_performance.json
 !localdata/auto_tickets_takeprofit_*.json

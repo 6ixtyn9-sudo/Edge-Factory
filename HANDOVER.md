@@ -10208,3 +10208,204 @@ Odds API secrets absent from this sandbox, so that run—not these TLS-limited
 local attempts—must establish which non-Forebet endpoints currently recover
 rows. Fix any remaining adapter/allowlist failure indicated by that report; do
 not force certification and do not spend another Forebet Browser Run probe.
+
+## Addendum — 2026-10-02: kickoff parser day/month repair ported to main; freeze markers committed
+
+**Defect (verified live on main, not inferred).** `picks_today.parse_kickoff_dt`
+matched `"DD-MM, HH:MM"` but unpacked the groups as `(mm, dd)`. The feeds
+publish day first — zulubet renders `2024-07-24` as `"24-07, 14:00"`. Three
+live consequences, keyed by calendar position:
+
+1. **Days 13–31** (e.g. `"30-09, 08:10"`): `datetime(year, 30, ...)` raises,
+   the parser returns `None`, and `operational_pick_eligibility` rejects the
+   pick as `missing_kickoff_same_day`. Matches the 2026-09-30 funnel audit's
+   eight phantom same-day kickoff gaps.
+2. **Days 1–12, swapped month behind the run month** (e.g. `"02-10, 18:00"`
+   on 2 Oct → February): the lead is months negative and the pick is wrongly
+   rejected as `inside_30m_lead_or_started` — silent same-day coverage loss.
+   This was active on main the day of this fix.
+3. **Days 1–12, swapped month ahead** (e.g. `"12-06, 07:00"` on 12 Jun →
+   December): the lead reads months out, the pre-match guard cannot fire, and
+   an already-started fixture stays playable. Live safety hole, matching the
+   PR #18 branch's June-era diagnosis.
+
+Also repaired at the same function: the bare `"HH:MM"` form was stamped with
+the wall-clock date instead of the fixture's, and the year came from the
+wall clock, so a 31 December run read a 1 January fixture as the previous
+January.
+
+**Blast radius checked before touching anything.** The only callers are
+`_kickoff_minutes` (clock-minutes extraction; hour/minute were never swapped)
+and `operational_pick_eligibility` (the pre-match guard). The zoned
+`kickoff_utc` normalisation path (`zoned_kickoff_to_utc`) accepts only
+offset-bearing strings, so naive DD-MM values never reached `kickoff_utc`;
+the ticket engine's live guard and `auto_tickets`' own parser (day-first
+already, pinned by `tests/test_kickoff_contract.py`) were unaffected. The
+defect was exactly one function.
+
+**Fix.** Ported the canonical repair from the unmerged PR #18 branch
+(`arena/01a0f2b3-edge-factory`), where it has been tested since 2026-09-30:
+day-first unpacking; new optional `reference_date` carrying the fixture's
+own date (never the wall clock) for the yearless forms; year-rollover at
+the December/January boundary (December run rolls a January fixture forward,
+January run reads a December fixture back). `operational_pick_eligibility`
+now passes `pick["date"]` as the reference. Signature is backward
+compatible; callers that pass no reference keep current-year semantics.
+
+**Freeze markers now committed.** `.gitignore` allowlists
+`!localdata/auto_tickets_20*.frozen` alongside the existing slip negations.
+Previously the slip was committed but its `.frozen` marker was not, so any
+cold-cache restore left `frozen.exists()` false and the engine could rebuild
+a new card for a date already frozen and already staked — the rotation
+hazard documented on the PR #18 branch (`Main has the same gap.`).
+
+**Receipts.**
+
+- Baseline before change: **786 passed**.
+- New `tests/test_kickoff_parser.py`: 41 cases — day-first across days
+  13–31, no January swap on the 1st, same-day upcoming kept, already-started
+  rejected (the safety case), lead-window rejection, missing-kickoff
+  fail-closed, future-date untimed, bare-time fixture dating, both year
+  rollovers, ISO/Zulu unchanged, invalid → None.
+- Load-bearing proof: the coverage tests fail against the pre-fix parser
+  (verified by restoring `HEAD` in-place and re-running).
+- After change: **827 passed**; pyflakes clean on both changed files;
+  `git diff --check` clean.
+
+**Boundaries.** No threshold, bucket, source weight, veto, staking, ticket
+formation, freeze cadence or notification rule changed. The guard is
+*stricter* where it was blind (started fixtures) and restores coverage where
+it was deaf (days 13–31); no gate was weakened. No betting constant touched.
+
+**Replacement paths:** `scripts/picks_today.py`,
+`tests/test_kickoff_parser.py`, `.gitignore`, and this HANDOVER entry.
+
+---
+
+## Addendum 2026-10-02 (item 2): early-loss settlement for ghost accas
+
+**Defect** — `settle_open_slips` (`scripts/auto_tickets.py`) only settled an acca when
+ALL legs resolved. An acca with a settled losing leg but one unresolved leg sat "open"
+with its stake committed for up to 5 days (void horizon), e.g. the 2026-09-27 ghost:
+Kano Pillars home drew 0-0 (loss, donors reported it), Polanka nad Odrou had no donor
+result. A bookmaker kills the acca at the lost leg; our ledger did not — bank height and
+committed stake were wrong for days.
+
+**Fix** — `scripts/auto_tickets.py::settle_open_slips`: after leg results are built, any
+leg resolved `"loss"` settles the acca as LOST immediately (`a["won"] = False`), keeping
+the original combined odds in the history record (no void-style recompute; return 0).
+Precedence: `"conflict"` legs never count as losses (fail-closed, untrusted donors);
+a certain loss + conflicted sibling settles lost with the conflict surfaced in the event
+line. Void machinery unchanged (kickoff-anchor-else-slip-day ≥5d; all-void → stake back).
+The settle line is annotated `(decided by settled loss leg [; conflict(s) noted: ...])`.
+
+**Correction of earlier claim** — the 2026-09-27 ghost was NOT overdue at the 06:37
+report: its kickoff-anchor vacancy was due later the same day. The real defect was
+latency (known-dead acca held behind the horizon), not a misfiring timer.
+
+**Receipts** — `tests/test_auto_tickets_rolling.py`:
+- `test_settle_loss_leg_decides_acca_without_waiting_for_void` (ghost shape:
+  `["loss", None]` inside horizon → settles same day, bank −15.5%, stake released);
+- `test_settle_loss_leg_decides_even_with_conflicted_sibling` (loss + conflict →
+  settles lost, conflict noted).
+Both verified load-bearing (fail when the early branch is disabled). Full suite:
+**829 passed**. Existing pins stand untouched: unresolved-only accas hold
+(`test_settle_per_acca_does_not_freeze_bank_on_one_stuck_leg`), conflict-only holds
+(`test_settle_holds_acca_on_alias_conflict`), all-void stake-back and the 2026-09-10
+golden replay (`void, loss` → settled lost) unchanged.
+
+PR: accumulates on #20 (branch `arena/01a0fb18-edge-factory`; batch-merge on operator
+signal).
+
+---
+
+## Addendum 2026-10-02 (item 3): scoutingstats stale-price containment
+
+**Defect** — the scoutingstats odds board stopped refreshing on 2026-09-04 (module
+`src/edgefactory/sources/scoutingstats.py` still fetches fine; the committed cache
+pipeline that produces `localdata/scoutingstats_YYYY-MM.csv.gz` went quiet and
+`actions/cache` keeps re-serving the last file), but the odds adapter FABRICATES
+`captured_at` = the fixture's `starting_at` kickoff (`picks_today._scoutingstats_
+rows_to_odds`), so every downstream freshness check always saw "captured at kickoff".
+Receipt from the committed 10-01 archive: three legs priced `SCOUTINGSTATS_SOLE`
+(Malta vs Gibraltar @1.28 SKIPPED_VETO bucket, Azerbaijan-Liechtenstein @1.12,
+Sacramento-Las Vegas @1.61) off a ≥27-day-old feed; the short prices look exactly
+like the stale-quote class. Feed restore belongs to the outer data pipeline; this
+change CONTAINS the damage on main until it is.
+
+**Fix** — the cache file's mtime is the only honest freshness witness on disk:
+- `scripts/picks_today.py::scoutingstats_odds_bundle`: file older than
+  `SCOUTINGSTATS_ODDS_MAX_AGE_H = 30` → board retired (empty bundle),
+  `ss_retired=True ss_age_h=…` in the run summary + stderr line. Self-healing:
+  a refreshed file carries a current mtime and pricing resumes. Explicitly
+  injected rows (audits/backtests, e.g. `audit_clv`) bypass the gate — callers
+  own injected provenance.
+- `src/edgefactory/enh_pricing.py::_accumulate_scoutingstats`: same 30h gate
+  (`SCOUTINGSTATS_MAX_AGE_H`) on the enhancement overlay's copy of the file.
+Deliberately NOT touched: the kickoff-witness contract
+(`auto_tickets.kickoff_utc_from_archived_row` "derived_odds_row" and
+`resolve_kickoff_utc`'s scoutingstats path) keeps using the odds row's zoned
+`starting_at`; with the board gated to fresh files that witness stays accurate
+and the incident-#6 started-fixture guard keeps working.
+
+**Receipts** — `tests/test_scoutingstats_freshness.py` (6 tests: pick-path retire/
+fresh/inject-bypass/missing-file, enh-path retire/fresh), enh gate verified
+load-bearing. Full suite **835 passed**.
+
+Effect on cards: legs whose only price was the stale board now fall to
+UNMATCHED/uncorroborated handling instead of wearing a stale price as if fresh.
+
+---
+
+## Addendum 2026-10-02 (item 4): edge-gate evidence — NO gate applied
+
+`scripts/audit_edge_gate.py` (read-only, reproducible) grades every committed
+carded leg against the production settlement machinery: stated edge
+(prob x captured odds - 1) vs realized result. Findings in
+`docs/operator/EDGE-GATE-EVIDENCE.md`: stated edge is ANTI-informative at
+current calibration — the < -5pts money-leg cohort hit 86.7% for +10.9%/leg
+flat, while a >=0 stated-edge gate would have kept a -4.8% cohort and removed
+the +8.1% one (status quo +4.9%/leg). 75% of money legs carry negative stated
+edge by construction (short favorites at short quotes). Options A-D presented
+to the operator; measurement calibration (Option B) and price-quality gating
+(Option C, item-3-adjacent) are the credible paths if he wants any gate at all.
+The audit script is evidence-only; nothing in the pick path changed.
+
+---
+
+## Addendum 2026-10-02 (item 5, phase 1): source-independence triage
+
+`scripts/audit_source_independence.py` (read-only) + `docs/operator/SOURCE-TRIAGE.md`:
+- TR-1 HIGH: all committed prediction series (forebet/zulubet/statarea) end
+  2026-06-12 — persistence of daily captures stopped; live CI fetches still work,
+  so the walk-forward assays grade a pre-June world. Git history squashing blocks
+  in-repo forensics of the 06-12 freeze. Restore belongs to the outer pipeline.
+- TR-2: vitibet has no committed series at all (unauditable).
+- TR-3: scoutingstats stale since 2026-09-04 (item-3 containment landed).
+- TR-4 PASS: fb/zb/sa are independent voices (corr 0.53-0.69, agreement 61-69%;
+  no mirrors) and each flips 8-18% of consensus picks — keep all three.
+- Yardstick for phase-2 candidates (prosoccer.gr/vitibet template): >=30d shadow
+  capture, corr<0.95 & agreement<95% vs every live source, >=5% flip contribution.
+
+---
+
+## Addendum 2026-10-02 (strategy directive): Option C price-quality gate LIVE
+
+Operator relayed the crossroads strategy: gate price quality now (C),
+recalibrate next (B), no hard edge gate until calibration is fixed; no re-mine
+until the input layer is repaired; one-lane production; shadow re-mine only
+after provenance/regime splits exist.
+
+Applied on this branch:
+- picks_today: `price_corroborated`/`price_corroborators` stamped from the
+  archived board (second distinct source, same market+selection, within 7%);
+  betexplorer rescue re-stamps its board (chosen row recorded);
+  `corroborated=X/Y` in the run summary line.
+- auto_tickets.playable_legs(execution_safe=True): drops corroborated=False
+  rows; legacy archives (field absent) keep parity; replay untouched.
+- Receipt: 10-01's whole money card (4/4 BETEXPERER_RESCUE sole-source, board
+  []) would print NO card under the gate — intended abstention per directive
+  priority 1.
+Not done (by directive): no re-mine, no regime mining, no access-fighting;
+TR-1..TR-3 pipeline restores stay operator-owned.
+Suite: 843 passed.

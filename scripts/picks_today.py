@@ -1679,7 +1679,7 @@ def _kickoff_minutes(value: object) -> int | None:
     return dt.hour * 60 + dt.minute
 
 
-def parse_kickoff_dt(value: object) -> datetime | None:
+def parse_kickoff_dt(value: object, reference_date: object = None) -> datetime | None:
     """Return the kickoff as an Africa/Johannesburg datetime, or None.
 
     Accepts:
@@ -1687,6 +1687,19 @@ def parse_kickoff_dt(value: object) -> datetime | None:
       - Zulu ("2026-08-08T19:00:00Z")
       - Naive "DD-MM, HH:MM" and "HH:MM" (assumed SAST)
     Rejects unparseable or out-of-range values.
+
+    ``reference_date`` is the fixture's own date ("YYYY-MM-DD" or a date).
+    The day-month forms carry no year, and the bare "HH:MM" form carries no
+    date at all, so the calendar context must come from the fixture rather
+    than from the wall clock: a run on the 30th must not stamp tomorrow's
+    fixture with today's date, and a run on 31 December must not regress a
+    1 January fixture by a full year.
+
+    Field order is DD-MM, matching the feeds: zulubet publishes
+    ``2024-07-24`` as ``"24-07, 14:00"``. Reading that as MM-DD silently
+    moves a fixture by months, or fails outright whenever the day exceeds
+    12 — which is why kickoffs went missing on the 30th of the month, and
+    why same-day candidates were being judged against the wrong month.
     """
     text = str(value or "").strip()
     if not text:
@@ -1701,24 +1714,48 @@ def parse_kickoff_dt(value: object) -> datetime | None:
         return dt.astimezone(tz)
     except ValueError:
         pass
+
+    ref = _kickoff_reference_date(reference_date, tz)
+
     # "DD-MM, HH:MM" or "DD-MM HH:MM"
     m = re.match(r"^(\d{1,2})-(\d{1,2})[ ,]+(\d{1,2}):(\d{2})\s*$", text)
     if m:
-        mm, dd, hh, mi = map(int, m.groups())
+        dd, mm, hh, mi = map(int, m.groups())
         if 0 <= hh <= 23 and 0 <= mi <= 59:
-            year = datetime.now(tz).year
+            # The reference year is the fixture's own year. A December run
+            # reading a January fixture rolls forward rather than back.
+            year = ref.year
+            if ref.month == 12 and mm == 1:
+                year += 1
+            elif ref.month == 1 and mm == 12:
+                year -= 1
             try:
                 return datetime(year, mm, dd, hh, mi, tzinfo=tz)
             except ValueError:
                 return None
-    # bare "HH:MM" — date supplied by caller via pick["date"]; return today
+    # bare "HH:MM" — the calendar day comes from the fixture's own date
+    # (reference_date); only with no reference does it fall back to today.
     m = re.match(r"^(\d{1,2}):(\d{2})\s*$", text)
     if m:
         hh, mi = map(int, m.groups())
         if 0 <= hh <= 23 and 0 <= mi <= 59:
-            today = datetime.now(tz).date()
-            return datetime(today.year, today.month, today.day, hh, mi, tzinfo=tz)
+            return datetime(ref.year, ref.month, ref.day, hh, mi, tzinfo=tz)
     return None
+
+
+def _kickoff_reference_date(reference_date: object, tz) -> date:
+    """The calendar context for a kickoff string that carries none."""
+    if isinstance(reference_date, datetime):
+        return reference_date.date()
+    if isinstance(reference_date, date):
+        return reference_date
+    text = str(reference_date or "").strip()[:10]
+    if text:
+        try:
+            return date.fromisoformat(text)
+        except ValueError:
+            pass
+    return datetime.now(tz).date()
 
 
 def _kickoff_delta_minutes(a: object, b: object) -> int | None:
@@ -1890,7 +1927,7 @@ def operational_pick_eligibility(
     if pick_date > as_of_date:
         return True, None
 
-    ko = parse_kickoff_dt(_kickoff_value(pick))
+    ko = parse_kickoff_dt(_kickoff_value(pick), pick.get("date"))
     if ko is None:
         return False, "missing_kickoff_same_day"
     if ko.tzinfo is None:
@@ -1992,6 +2029,29 @@ def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
             return [r for r in csv.DictReader(fh) if r.get("date") == day]
     except Exception:
         return []
+
+
+# Stale-price containment (2026-10-02): the scoutingstats odds board is only
+# as fresh as its cache file — nothing in the row itself says when the price
+# was captured, because the adapter FABRICATES captured_at = the fixture's
+# starting_at kickoff (_scoutingstats_rows_to_odds). That fabrication made
+# every downstream freshness check see "captured at kickoff" while the feed
+# itself had stopped refreshing on 2026-09-04 (10-01 archive: Malta-Gibraltar
+# @1.28 priced SCOUTINGSTATS_SOLE off a >=27-day-old file). The only honest
+# freshness witness on disk is the cache file's mtime, so pricing retires the
+# board past this horizon until the feed is refreshed. Self-healing: the next
+# generated file carries a current mtime and pricing resumes automatically.
+SCOUTINGSTATS_ODDS_MAX_AGE_H = 30.0
+
+
+def _scoutingstats_cache_age_hours(day: str) -> float | None:
+    """Age of the scoutingstats month cache in hours, or None when absent."""
+    path = LOCALDATA / f"scoutingstats_{day[:7]}.csv.gz"
+    try:
+        mtime = path.stat().st_mtime
+    except OSError:
+        return None
+    return (datetime.now(timezone.utc).timestamp() - mtime) / 3600.0
 
 
 def _read_cached_scoutingstats(day: str) -> list[dict]:
@@ -2134,7 +2194,29 @@ def scoutingstats_odds_bundle(
     cached_rows: list[dict] | None = None,
     stats: dict | None = None,
 ) -> dict[str, dict]:
-    source_rows = cached_rows if cached_rows is not None else _read_cached_scoutingstats(day)
+    if cached_rows is not None:
+        # Explicitly injected rows are an audit/backtest constructor; the
+        # caller owns their provenance, so the freshness gate does not apply.
+        source_rows = cached_rows
+    else:
+        age_h = _scoutingstats_cache_age_hours(day)
+        if stats is not None and age_h is not None:
+            stats["cache_age_h"] = round(age_h, 1)
+        if age_h is not None and age_h > SCOUTINGSTATS_ODDS_MAX_AGE_H:
+            # Retire a stale board from pricing entirely (see the constant's
+            # comment): an unmatched price is honest, a weeks-old sole-source
+            # price that LOOKS captured-at-kickoff is not.
+            source_rows: list[dict] = []
+            print(
+                f"scoutingstats odds: RETIRED — cache {age_h / 24:.1f}d old "
+                f"(>{SCOUTINGSTATS_ODDS_MAX_AGE_H:.0f}h); stale feed withheld "
+                f"from pricing until refreshed",
+                file=sys.stderr,
+            )
+            if stats is not None:
+                stats["retired_stale_cache"] = True
+        else:
+            source_rows = _read_cached_scoutingstats(day)
     odds_rows = _scoutingstats_rows_to_odds(source_rows)
     bundle = _odds_bundle_from_rows(odds_rows, provider=SCOUTINGSTATS_ODDS_SOURCE, stats=stats)
     if stats is not None:
@@ -2422,6 +2504,49 @@ def _stamp_price_board(pick: dict, bundles, chosen_row=None, chosen_source=None,
         match["chosen"] = True
         match["match_method"] = chosen_method
     pick["price_board"] = board
+
+
+# Option C price-quality gate (2026-10-02, operator sign-off): a money leg
+# needs price CORROBORATION — a second, distinct source quoting the same
+# market+selection within this relative deviation of the chosen price.
+# The 10-01 receipt: the whole real-money card rode single-source
+# BETEXPLORER_RESCUE quotes (4/4 legs) after the primary board delivered
+# nothing; a sole-source quote is audit evidence, not execution evidence.
+# 7% is deliberately wider than normal inter-book spread (~2-5%) while far
+# tighter than the stale-quote class (Dordrecht away 1.03 vs 2.00 ≈ 94%).
+PRICE_CORROBORATION_MAX_DEV = 0.07
+
+
+def _stamp_price_corroboration(picks: list[dict]) -> int:
+    """Stamp pick['price_corroborated'] / ['price_corroborators'] from the
+    archived board. Never changes which price the engine uses — the money
+    lane decides what to do with an uncorroborated pick (auto_tickets drops
+    it under execution_safe; paper/audit paths keep full visibility).
+    Returns the count of priced picks that earned corroboration."""
+    n = 0
+    for pick in picks:
+        odds = pick.get("odds")
+        chosen = str(pick.get("odds_source") or "")
+        sel = str(pick.get("pick") or "")
+        market = str(pick.get("market") or "")
+        corroborators: set[str] = set()
+        if isinstance(odds, (int, float)) and odds > 1.0:
+            for entry in pick.get("price_board") or []:
+                src = str(entry.get("source") or "")
+                if not src or src == chosen:
+                    continue
+                if (str(entry.get("market") or "") != market
+                        or str(entry.get("selection") or "") != sel):
+                    continue
+                other = _valid_decimal_odds(entry.get("odds"))
+                if other is None:
+                    continue
+                if abs(other / float(odds) - 1.0) <= PRICE_CORROBORATION_MAX_DEV:
+                    corroborators.add(src)
+        pick["price_corroborated"] = bool(corroborators)
+        pick["price_corroborators"] = sorted(corroborators)
+        n += bool(corroborators)
+    return n
 
 
 def enrich_with_live_odds(
@@ -3464,6 +3589,7 @@ def enrich_unmatched_with_betexplorer(
     day: str,
     *,
     max_fetches: int = 12,
+    bundles: tuple | None = None,
 ) -> int:
     try:
         import importlib.util as _ilu
@@ -3526,6 +3652,12 @@ def enrich_unmatched_with_betexplorer(
         pick.pop("suspect_price", None)
         if previous_odds is not None and previous_source != pick["odds_source"]:
             pick["odds_replaced"] = {"source": previous_source, "odds": previous_odds}
+        if bundles is not None:
+            # Keep the archived board complete: the rescued quote becomes the
+            # chosen row next to every other source's candidate, so the
+            # corroboration pass can judge a sole-source rescue honestly.
+            _stamp_price_board(pick, bundles, chosen_row=matching_row,
+                               chosen_source=_BE_SOURCE, chosen_method="betexplorer")
         # Idempotent normalisation hook (betexplorer rows are bare "HH:MM"
         # today, so this is a no-op until the adapter emits a zoned kickoff).
         resolve_kickoff_utc(pick, odds_row=matching_row, odds_provider=_BE_SOURCE)
@@ -3647,7 +3779,10 @@ def main():
         prices_index = load_prices_index(ROOT, day)
         enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
 
-        be_enriched = enrich_unmatched_with_betexplorer(picks, day)
+        be_enriched = enrich_unmatched_with_betexplorer(
+            picks, day, bundles=(odds_bundle, secondary_bundle))
+        corroborated_n = _stamp_price_corroboration(picks)
+        priced_n = sum(1 for p in picks if p.get("odds") is not None)
 
         if bzz_stats.get("raw_rows") or scouting_stats.get("raw_rows") or enriched_n or picks:
             exact_n = sum(1 for p in picks if p.get("odds_match_method") == "exact")
@@ -3675,6 +3810,9 @@ def main():
                 f"bzz_alias_keys={bzz_stats.get('time_match_keys', len(odds_bundle.get('time_candidates', {})))} "
                 f"ss_cached={scouting_stats.get('cached_rows', 0)} "
                 f"ss_valid_keys={scouting_stats.get('valid_keys', len(secondary_bundle.get('exact', {})))} "
+                f"ss_retired={bool(scouting_stats.get('retired_stale_cache', False))} "
+                f"ss_age_h={scouting_stats.get('cache_age_h', 'n/a')} "
+                f"corroborated={corroborated_n}/{priced_n} "
                 f"enriched={enriched_n} betexplorer={be_enriched} bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
                 f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "
