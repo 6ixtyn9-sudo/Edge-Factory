@@ -100,6 +100,45 @@ def test_betexplorer_challenge_freezes_source_without_marking_day_empty(tmp_path
 
     assert result["betexplorer"]["frozen"] is True
     assert result["betexplorer"]["requests"] == 1
-    statuses = [row["status"] for row in remine._read_jsonl(remine.LEDGER_PATH)]
+    ledger = remine._read_jsonl(remine.LEDGER_PATH)
+    statuses = [row["status"] for row in ledger]
     assert "source_freeze" in statuses
     assert "no_matches_day" not in statuses
+    assert next(row for row in ledger if row["status"] == "source_freeze")["gate_released_by"] == "frozen_blocked"
+
+
+def _assert_football_gate_release(tmp_path, monkeypatch, *, frozen: bool):
+    _configure(tmp_path, monkeypatch, _inventory(["2026-06-17"]))
+    gate = "frozen_blocked" if frozen else "complete"
+    be = {
+        "approved": 62,
+        "pending_before": 0 if not frozen else 1,
+        "requests": 0,
+        "remaining": 0 if not frozen else 1,
+        "complete": not frozen,
+        "frozen": frozen,
+        "freeze_reason": "BetExplorerChallenge" if frozen else None,
+    }
+    calls: list[str] = []
+    monkeypatch.setattr(remine, "_betexplorer", lambda *_args: be)
+
+    def fake_football(*_args, gate_released_by: str):
+        calls.append(gate_released_by)
+        return {"status": "pending", "requests": 0, "gate_released_by": gate_released_by}
+
+    monkeypatch.setattr(remine, "_football_data", fake_football)
+    monkeypatch.setattr(remine, "_legalbet", lambda *_args: {"status": "should-not-run", "requests": 0, "pages": 0})
+    result = remine.run(dry_run=True)
+
+    assert calls == [gate]
+    assert result["gate_released_by"] == gate
+    assert result["football_data"]["gate_released_by"] == gate
+    assert result["legalbet"]["status"] == "gated"
+
+
+def test_football_proof_unlocks_after_betexplorer_completion(tmp_path, monkeypatch):
+    _assert_football_gate_release(tmp_path, monkeypatch, frozen=False)
+
+
+def test_football_proof_unlocks_after_betexplorer_challenge_freeze(tmp_path, monkeypatch):
+    _assert_football_gate_release(tmp_path, monkeypatch, frozen=True)
