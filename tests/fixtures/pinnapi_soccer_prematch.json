@@ -1,0 +1,34 @@
+{
+  "events": [
+    {
+      "id": 98123,
+      "home": "Helmond Sport",
+      "away": "Heracles",
+      "start_at": "2026-10-03T19:00:00Z",
+      "league": {"id": 9, "name": "Eerste Divisie"},
+      "markets": [
+        {"market": "1x2", "selection": "home", "price": 6.0},
+        {"market": "1x2", "selection": "draw", "price": 4.05},
+        {"market": "1x2", "selection": "away", "price": 1.55},
+        {"market": "totals", "selection": "over", "line": 2.5, "price": 1.83},
+        {"market": "totals", "selection": "under", "line": 2.5, "price": 1.97},
+        {"market": "spreads", "selection": "away", "line": -0.5, "price": 1.71}
+      ]
+    },
+    {
+      "id": 98124,
+      "home": "Brøndby IF",
+      "away": "IK Sirius",
+      "start_at": "2026-10-04T17:00:00Z",
+      "tournament": "Superliga",
+      "markets": [
+        {"market": "moneyline", "selection": "home", "price": 2.10},
+        {"market": "moneyline", "selection": "x", "price": 3.50},
+        {"market": "moneyline", "selection": "away", "price": 3.20},
+        {"market": "corner_kick_race", "selection": "home", "price": 1.44},
+        {"market": "totals", "selection": "over", "line": 2.5, "price": 0.95}
+      ]
+    }
+  ],
+  "meta": {"generated_at": "2026-10-03T08:00:00Z"}
+}
