@@ -38,8 +38,23 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+
+
+def coverage_report(data: Any, slate: list[dict[str, Any]]) -> dict[str, Any]:
+    """Join probe events to a supplied slate without persisting anything."""
+    events = _events(data)
+    priced = {(source_team_key(e.get("home")), source_team_key(e.get("away")))
+              for e in events if isinstance(e, dict) and (e.get("markets") or e.get("odds"))}
+    matched = []; unmatched = []
+    for row in slate:
+        key = (source_team_key(row.get("home")), source_team_key(row.get("away")))
+        (matched if key in priced else unmatched).append(f"{row.get('home')} v {row.get('away')}")
+    total = len(slate)
+    return {"slate": total, "matched": len(matched), "coverage_pct": round(100*len(matched)/total, 1) if total else 0.0, "unmatched_examples": unmatched[:5]}
+
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
+from edgefactory.identity import source_team_key
 
 try:
     from dotenv import load_dotenv
@@ -197,6 +212,16 @@ def main() -> int:
         print("-" * 72)
 
     markets_result = results[-1][2]
+    slate_path = Path(os.environ.get("EDGE_FACTORY_SLATE", str(ROOT / "localdata" / "picks_today.json")))
+    try:
+        slate_payload = json.loads(slate_path.read_text())
+        slate = slate_payload if isinstance(slate_payload, list) else slate_payload.get("rows", [])
+    except (OSError, ValueError, TypeError):
+        slate = []
+    cov = coverage_report(markets_result.get("data"), slate)
+    print(f"coverage_pct={cov['coverage_pct']} slate={cov['slate']} matched={cov['matched']}")
+    print(f"unmatched_examples={cov['unmatched_examples']}")
+    print("projection: shared-fixture target >=30; coverage is diagnostic only and is not persisted.")
     print("ACCEPTANCE 1 - AUTH:", "mechanism works" if markets_result.get("ok") else
           "FAILED - try --auth header; if both fail, do not wire (fail-closed)")
     if markets_result.get("summary", {}).get("sample_event_keys"):
