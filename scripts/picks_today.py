@@ -4274,7 +4274,7 @@ def main():
     # gate picks or alter the 7% constant.
     for _report_path in (
         LOCALDATA / "sportytrader_7pct_report.json",
-        ROOT / "docs" / "operator" / "SPORTYTRADER-7PCT-REPORT.json",
+        ROOT / "docs" / "operator" / "archive" / "SPORTYTRADER-7PCT-REPORT.json",
     ):
         try:
             _test_7pct = json.loads(_report_path.read_text()).get("test_7pct", {})
