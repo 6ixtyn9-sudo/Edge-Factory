@@ -763,4 +763,8 @@ docs, commit messages, or logs in this bundle. Adapters read keys only from
   operator account's BASIC subscription (403 class), not a host-slug change.
 - **SharpAPI:** the price-shadow receipt pins the RapidAPI host to
   `sharpapi1.p.rapidapi.com`; it is default-off for promotion, named-book
-  rows only, and never a vote.
+  rows only, and never a vote. The provider's public docs show the odds
+  response's named `sportsbook`, `selection`, and decimal-odds fields
+  ([Quick Start](https://docs.sharpapi.io/en/quickstart/)); the pricing receipt
+  records 12 requests/minute and no-card free access
+  ([pricing](https://sharpapi.io/pricing)).
