@@ -84,3 +84,32 @@ tables show the same inversion with higher variance.)
   and redecide with clean prices.
 
 *Prepared by Arena agent 2026-10-02; decision belongs to the operator.*
+
+---
+
+## Decision record (2026-10-02): Option C applied — price-quality gate LIVE
+
+Per the operator-relayed strategy directive ("Choose option C now: gate price
+quality, not edge; option B next: recalibrate; do not choose a hard edge ≥ 0
+gate until calibration is fixed"):
+
+- **Price corroboration is now stamped on every priced pick**
+  (`price_corroborated` + `price_corroborators`; `corroborated=X/Y` in the
+  run summary). A pick corroborates only when a second, distinct source on
+  its archived `price_board` quotes the same market+selection within 7% of
+  the chosen price (`PRICE_CORROBORATION_MAX_DEV = 0.07`). The chosen source
+  never corroborates itself; the stamp never changes which price is used.
+- **The money lane enforces it**: `playable_legs(..., execution_safe=True)`
+  drops `price_corroborated is False` rows. Legacy archives without the
+  field (None) keep parity; replay/audit callers without `execution_safe`
+  are untouched.
+- **The betexplorer rescue now re-stamps its board** (chosen row recorded),
+  closing the gap that hid how sole-source rescues were.
+- **Receipt**: the 2026-10-01 card rode 4/4 single-source BETEXPLORER_RESCUE
+  quotes with `price_board: []` — under this gate every one of those legs
+  drops and 10-01 prints **no money card**. That abstention is the intended
+  behavior of the directive's priority 1 ("stop unprotected real-money
+  paths"): when only one feed can price the slate, the lane stands down.
+- Tests: `tests/test_price_corroboration.py` (8; gate verified load-bearing).
+  Option B (recalibration instrumentation) remains queued for after the
+  input-layer repairs (TR-1..TR-3).

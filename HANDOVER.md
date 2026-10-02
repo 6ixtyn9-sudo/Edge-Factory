@@ -10386,3 +10386,26 @@ The audit script is evidence-only; nothing in the pick path changed.
   no mirrors) and each flips 8-18% of consensus picks — keep all three.
 - Yardstick for phase-2 candidates (prosoccer.gr/vitibet template): >=30d shadow
   capture, corr<0.95 & agreement<95% vs every live source, >=5% flip contribution.
+
+---
+
+## Addendum 2026-10-02 (strategy directive): Option C price-quality gate LIVE
+
+Operator relayed the crossroads strategy: gate price quality now (C),
+recalibrate next (B), no hard edge gate until calibration is fixed; no re-mine
+until the input layer is repaired; one-lane production; shadow re-mine only
+after provenance/regime splits exist.
+
+Applied on this branch:
+- picks_today: `price_corroborated`/`price_corroborators` stamped from the
+  archived board (second distinct source, same market+selection, within 7%);
+  betexplorer rescue re-stamps its board (chosen row recorded);
+  `corroborated=X/Y` in the run summary line.
+- auto_tickets.playable_legs(execution_safe=True): drops corroborated=False
+  rows; legacy archives (field absent) keep parity; replay untouched.
+- Receipt: 10-01's whole money card (4/4 BETEXPERER_RESCUE sole-source, board
+  []) would print NO card under the gate — intended abstention per directive
+  priority 1.
+Not done (by directive): no re-mine, no regime mining, no access-fighting;
+TR-1..TR-3 pipeline restores stay operator-owned.
+Suite: 843 passed.
