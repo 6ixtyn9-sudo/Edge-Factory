@@ -115,8 +115,11 @@ The same vocabulary is used across
 an all-three check. `bzzoiro` is healthy at `fetch/vote` (it never prices);
 `bzzoiro_odds` and `betexplorer` are healthy at `fetch/price` (they never
 vote); full sources like `scoutingstats` still need `fetch/price/vote`. A
-source whose fetch or role capability fails prints `BLOCKED`. The verdict is
-display-only: the per-day health contract in
+source whose fetch or role capability fails prints `BLOCKED`. Shadow zero-row
+counters append a deterministic reason suffix, e.g.
+`betminer=bm_raw0/bm_scored0(auth403)` or
+`pinnapi=pa_raw0/pa_matched0(http400)`; success and `not_run` are unsuffixed.
+The verdict is display-only: the per-day health contract in
 `source_health_YYYY-MM-DD.json` remains the authoritative record.
 
 **Price evidence / quarantine buckets seen on legs:** `CERTIFIED_CLEAN`,
