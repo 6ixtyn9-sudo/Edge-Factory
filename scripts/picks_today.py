@@ -55,6 +55,7 @@ from edgefactory.veto_resolution import apply_resolution_to_ctx, build_pool_tabl
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
 from edgefactory.enh_registry import status_for as enh_status_for
 from edgefactory.source_health import (
+    FOREBET_LIVE_LAST_DAY,
     bzzoiro_status_line,
     daily_status_block,
     persist_daily_source_health,
@@ -1578,9 +1579,17 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
 
 
 # ------------------------------------------------------------------- fetch --
+def _forebet_historical(day: str) -> bool:
+    return str(day)[:10] > FOREBET_LIVE_LAST_DAY
+
+
 def fetch_all(day: str) -> dict[str, dict]:
     out: dict[str, dict] = {}
     for name in ALL_SOURCES:
+        if name == "forebet" and _forebet_historical(day):
+            # Forebet remains available to historical rebuilds only. It must
+            # not enter a post-2026-06-12 production fetch, price, or vote.
+            continue
         try:
             mod = importlib.import_module(f"edgefactory.sources.{name}")
             rows = mod.fetch_day(day)
@@ -2803,6 +2812,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
             continue
             
         fb = data.get("forebet", {}).get(k) or {}
+        fb_quote = {} if _forebet_historical(day) else fb
         zb = data.get("zulubet", {}).get(k) or {}
         sa = data.get("statarea", {}).get(k) or {}
         bz = data.get("bzzoiro", {}).get(k) or {}
@@ -2869,7 +2879,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                 
                 _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
                 _col = _odds_map[majority_pick]
-                pick_odds_feat = _f(fb.get(_col)) or _f(zb.get(_col)) or 1.50
+                pick_odds_feat = _f(fb_quote.get(_col)) or _f(zb.get(_col)) or 1.50
                 
                 is_home = 1.0 if majority_pick == "home" else 0.0
                 is_away = 1.0 if majority_pick == "away" else 0.0
@@ -2986,8 +2996,8 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                         "league": anchor.get("league"), "pick": majority_pick,
                         "avg_p": round(ml_p * 100.0, 1),
                         "w_score": round(z, 4),
-                        "odds": _f(fb.get(_col)) or _f(zb.get(_col)) or None,
-                        "odds_source": ("forebet_best" if _f(fb.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
+                        "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
+                        "odds_source": ("forebet_best" if _f(fb_quote.get(_col)) is not None else "zulubet" if _f(zb.get(_col)) is not None else None),
                         "bookmaker": None,
                         "rule": rule["rule"],
                         "edge_rule": rule["rule"],
@@ -3031,7 +3041,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                     else:
                         fthr, fade_rule = fade_best
                         _fade_col = fade_odds_column(majority_pick)
-                        fade_odds = _f(fb.get(_fade_col)) or _f(zb.get(_fade_col)) or None
+                        fade_odds = _f(fb_quote.get(_fade_col)) or _f(zb.get(_fade_col)) or None
                         home = canonical_display_team(anchor.get("home"))
                         away = canonical_display_team(anchor.get("away"))
                         picks.append({
@@ -3049,7 +3059,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                             # derived_from for audit only and is never scored.
                             "odds": fade_odds,
                             "odds_source": (
-                                "forebet_best" if _f(fb.get(_fade_col)) is not None
+                                "forebet_best" if _f(fb_quote.get(_fade_col)) is not None
                                 else "zulubet" if _f(zb.get(_fade_col)) is not None else None),
                             "bookmaker": None,
                             "rule": fade_rule["rule"],
@@ -3066,7 +3076,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                                 "rule": (fade_rule.get("parent_rule")
                                          or f"ml-meta avg_p>={fthr:g}"),
                                 "pick": majority_pick,
-                                "odds": _f(fb.get(_col)) or _f(zb.get(_col)) or None,
+                                "odds": _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None,
                                 "ml_p": round(ml_p, 4),
                             },
                             "n_way": 3, "edge_n_way": 3,
@@ -3111,8 +3121,8 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
         sel = sels[0]
         _odds_map = {"home": "odd1", "draw": "oddx", "away": "odd2"}
         _col = _odds_map[sel]
-        odds = _f(fb.get(_col)) or _f(zb.get(_col)) or None
-        odds_src = ("forebet_best" if _f(fb.get(_col)) is not None
+        odds = _f(fb_quote.get(_col)) or _f(zb.get(_col)) or None
+        odds_src = ("forebet_best" if _f(fb_quote.get(_col)) is not None
                     else "zulubet" if _f(zb.get(_col)) is not None
                     else None)
         home = canonical_display_team(anchor.get("home"))
@@ -3232,6 +3242,7 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
         if avg_p < adj_thr:
             continue
         fb = data.get("forebet", {}).get(k) or {}
+        fb_quote = {} if _forebet_historical(day) else fb
         bz = data.get("bzzoiro", {}).get(k) or {}
         anchor = fb or next(data[s][k] for s in used if k in data.get(s, {}))
         unstable, ko_dates = fixture_schedule_unstable(fb, bz)
@@ -3244,7 +3255,7 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
             )
             continue
         sel = sels[0]
-        odds = _f(fb.get(outcome_odds[sel])) if fb else None
+        odds = _f(fb_quote.get(outcome_odds[sel])) if fb_quote else None
         home = canonical_display_team(anchor.get("home"))
         away = canonical_display_team(anchor.get("away"))
         picks.append({
@@ -3273,8 +3284,13 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
 def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = None,
             research_collector: FadeResearchCollector | None = None):
     data = fetch_all(day)
+    effective_weights = dict(source_weights_1x2 or {})
+    if _forebet_historical(day):
+        # Keep historical registry metadata auditable, but make the retired
+        # source weightless in every post-cutoff production consensus.
+        effective_weights["forebet"] = 0.0
     picks, vetoes, n_up = eval_1x2(day, data, t1x2,
-                                   source_weights=source_weights_1x2 or {},
+                                   source_weights=effective_weights,
                                    research_collector=research_collector)
     picks += eval_binary(day, data, "ou_2.5", SOURCES_OU, OU_COL, ou_edge,
                          ("over", "under"),

@@ -336,6 +336,7 @@ def test_eval_binary_fires_primary_side_only():
                         ("over", "under"), ou_outcome_odds)
     assert [p["pick"] for p in picks] == ["over"]
     assert picks[0]["avg_p"] == 73.5
+    assert picks[0]["odds"] is None  # Forebet is historical-only after 2026-06-12.
 
     # 2) Both sources agree UNDER at high confidence: the pre-guard code would
     #    have fired "under" (~76.5% selected-side), but the under leg has no
