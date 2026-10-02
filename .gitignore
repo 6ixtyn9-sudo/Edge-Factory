@@ -24,6 +24,8 @@ localdata/*
 
 # B0 gap-aware re-mining coverage inventory (operator review artifact).
 !localdata/coverage_inventory.json
+!localdata/remine_audit_*.jsonl
+!localdata/sa_hist_*.csv.gz
 
 # Picks/performance snapshots intentionally committed for audit/review.
 # Keep the rest of localdata ignored, but allow all generated picks outputs

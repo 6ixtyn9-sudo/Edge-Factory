@@ -30,6 +30,8 @@
           "2026-07-25",
           "2026-07-26"
         ],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 101
       },
       "files": [
@@ -191,6 +193,8 @@
         "min": "2024-01-01",
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 894
       },
       "files": [
@@ -1108,19 +1112,17 @@
       "crawl_plan": {
         "driver_input": "date_range.missing_internal_days",
         "operator_approval_required": true,
-        "proposed_internal_gap_count": 3,
-        "proposed_internal_gap_days": [
-          "2020-04-14",
-          "2020-04-28",
-          "2020-12-25"
-        ]
+        "proposed_internal_gap_count": 0,
+        "proposed_internal_gap_days": []
       },
       "date_range": {
         "invalid_date_rows": 0,
         "max": "2026-06-12",
         "min": "2017-01-01",
-        "missing_internal_day_count": 3,
-        "missing_internal_days": [
+        "missing_internal_day_count": 0,
+        "missing_internal_days": [],
+        "no_matches_day_count": 3,
+        "no_matches_days": [
           "2020-04-14",
           "2020-04-28",
           "2020-12-25"
@@ -4727,12 +4729,8 @@
       "boundary_probe_below_floor": true,
       "driver_input": "date_range.missing_internal_days",
       "operator_approval_required": true,
-      "proposed_internal_gap_count": 3,
-      "proposed_internal_gap_days": [
-        "2020-04-14",
-        "2020-04-28",
-        "2020-12-25"
-      ]
+      "proposed_internal_gap_count": 0,
+      "proposed_internal_gap_days": []
     },
     "windrawwin": {
       "boundary_probe_below_floor": false,
@@ -4750,10 +4748,13 @@
     }
   },
   "gates": {
-    "football_data_first_csv": "operator approval required",
-    "network_crawl": "not run in B0",
+    "betexplorer_results_gap_budget": "approved: 62 dates; single-flight and abort on 429 cluster",
+    "football_data_first_csv": "approved: exactly one controlled pre-2026 league-season download before expansion",
+    "legalbet_sample": "approved: at most 30 public archive pages; no blocked user/rating/stat paths",
+    "network_crawl": "not run in B0; B1 execution is hist-only",
     "production_champion_weight": "zero",
-    "zulubet_robots_policy": "operator approval required"
+    "statarea_gap_budget": "approved: 3 dates; no_matches_day is distinct from crawl_failure",
+    "zulubet_robots_policy": "approved: bounded conservative backfill; abort on challenge; robots 404 remains documented"
   },
   "network_access": false,
   "normalization": {
@@ -4782,6 +4783,8 @@
         "min": null,
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 0
       },
       "duplicate_keys": {
@@ -4817,6 +4820,8 @@
         "min": null,
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 0
       },
       "duplicate_keys": {
@@ -4852,6 +4857,8 @@
         "min": "2026-01-01",
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 167
       },
       "duplicate_keys": {
@@ -5250,6 +5257,8 @@
           "2026-08-16",
           "2026-08-17"
         ],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 182
       },
       "duplicate_keys": {
@@ -5646,6 +5655,8 @@
         "min": null,
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 0
       },
       "duplicate_keys": {
@@ -5682,6 +5693,8 @@
         "min": "2024-01-01",
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 894
       },
       "duplicate_keys": {
@@ -6660,6 +6673,8 @@
         "min": null,
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 0
       },
       "duplicate_keys": {
@@ -6695,6 +6710,8 @@
         "min": null,
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 0
       },
       "duplicate_keys": {
@@ -6731,6 +6748,8 @@
         "min": null,
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 0
       },
       "duplicate_keys": {
@@ -6767,6 +6786,8 @@
         "min": null,
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 0
       },
       "duplicate_keys": {
@@ -6794,19 +6815,17 @@
         "boundary_probe_below_floor": true,
         "driver_input": "date_range.missing_internal_days",
         "operator_approval_required": true,
-        "proposed_internal_gap_count": 3,
-        "proposed_internal_gap_days": [
-          "2020-04-14",
-          "2020-04-28",
-          "2020-12-25"
-        ]
+        "proposed_internal_gap_count": 0,
+        "proposed_internal_gap_days": []
       },
       "date_range": {
         "invalid_date_rows": 113,
         "max": "2026-06-12",
         "min": "2017-01-01",
-        "missing_internal_day_count": 3,
-        "missing_internal_days": [
+        "missing_internal_day_count": 0,
+        "missing_internal_days": [],
+        "no_matches_day_count": 3,
+        "no_matches_days": [
           "2020-04-14",
           "2020-04-28",
           "2020-12-25"
@@ -10341,6 +10360,8 @@
         "min": null,
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 0
       },
       "duplicate_keys": {
@@ -10376,6 +10397,8 @@
         "min": "2024-01-01",
         "missing_internal_day_count": 0,
         "missing_internal_days": [],
+        "no_matches_day_count": 0,
+        "no_matches_days": [],
         "observed_days": 894
       },
       "duplicate_keys": {

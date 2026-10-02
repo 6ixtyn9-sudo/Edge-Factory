@@ -119,6 +119,9 @@ def test_inventory_fixture_is_reproducible_and_lists_internal_gap(tmp_path: Path
         writer = csv.DictWriter(fh, fieldnames=list(rows[0]))
         writer.writeheader()
         writer.writerows(rows)
+    (localdata / "remine_audit_2026-10-02.jsonl").write_text(
+        json.dumps({"source": "demo", "date": "2026-01-02", "status": "no_matches_day"}) + "\n"
+    )
 
     old_root, old_localdata = coverage_inventory.ROOT, coverage_inventory.LOCALDATA
     try:
@@ -136,6 +139,7 @@ def test_inventory_fixture_is_reproducible_and_lists_internal_gap(tmp_path: Path
         coverage_inventory.ROOT, coverage_inventory.LOCALDATA = old_root, old_localdata
 
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
-    assert first["date_range"]["missing_internal_days"] == ["2026-01-02"]
+    assert first["date_range"]["missing_internal_days"] == []
+    assert first["date_range"]["no_matches_days"] == ["2026-01-02"]
     assert first["duplicate_keys"]["duplicate_row_count"] == 1
     assert first["status"] == "committed"

@@ -8,7 +8,7 @@ Observed: `2026-10-02T00:00:00Z`. The inventory is the only input to a future ga
 
 | source | availability | committed / cache-only / total rows | date range (observed days) | internal gaps (crawl candidates) | market coverage | duplicate keys | warehouse tables |
 |---|---|---:|---|---|---|---|---|
-| statarea | committed | 489,399 / 0 / 489,399 | 2017-01-01 → 2026-06-12 (3447d) | 3 (2020-04-14, 2020-04-28, 2020-12-25) | 1x2_probability (489,286 rows/3447d), ht_1x2_probability (489,286 rows/3447d), ou_probability (489,286 rows/3447d) | 2 groups, 2 rows | statarea:missing, statarea_settled:missing |
+| statarea | committed | 489,399 / 0 / 489,399 | 2017-01-01 → 2026-06-12 (3447d) | 0 | 1x2_probability (489,286 rows/3447d), ht_1x2_probability (489,286 rows/3447d), ou_probability (489,286 rows/3447d) | 2 groups, 2 rows | statarea:missing, statarea_settled:missing |
 | zulubet | committed | 67,216 / 0 / 67,216 | 2024-01-01 → 2026-06-12 (894d) | 0 | 1x2_odds (67,187 rows/894d), 1x2_probability (67,187 rows/894d) | 0 groups, 0 rows | zulubet:missing, zulubet_settled:missing |
 | predictz | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | predictz_raw:missing, predictz_settled:missing |
 | windrawwin | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | windrawwin:missing |
@@ -21,11 +21,32 @@ Observed: `2026-10-02T00:00:00Z`. The inventory is the only input to a future ga
 | betclan | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | betclan:missing |
 | freesupertips | absent | 0 / 0 / 0 | — (0d) | 0 | — | 0 groups, 0 rows | freesupertips:missing |
 | forebet | committed | 327,895 / 0 / 327,895 | 2024-01-01 → 2026-06-12 (894d) | 0 | 1x2_odds (225,697 rows/894d), 1x2_probability (327,849 rows/894d), btts_odds (225,711 rows/894d), btts_probability (327,853 rows/894d), ou_odds (225,711 rows/894d), ou_probability (327,853 rows/894d) | 0 groups, 0 rows | forebet:missing, forebet_settled:missing |
-| sa_cache | committed (alias/cache) | 489,399 / 0 / 489,399 | 2017-01-01 → 2026-06-12 (3447d) | 3 (2020-04-14, 2020-04-28, 2020-12-25) | — | — | alias of statarea |
+| sa_cache | committed (alias/cache) | 489,399 / 0 / 489,399 | 2017-01-01 → 2026-06-12 (3447d) | 0 | — | — | alias of statarea |
 | fb_cache | committed (alias/cache) | 327,895 / 0 / 327,895 | 2024-01-01 → 2026-06-12 (894d) | 0 | — | — | alias of forebet |
 | clv_cache | committed (alias/cache) | 7,901 / 0 / 7,901 | 2026-06-18 → 2026-10-02 (101d) | 6 (2026-07-10, 2026-07-16, 2026-07-17, 2026-07-19, 2026-07-25, …) | — | — | alias of clv_snapshots |
 
 **Key rule:** `source + date + source_team_key(home) + source_team_key(away) + market`; existing committed rows win collisions. `source_team_key` is the existing alias-aware normalization seam. The `proposed_internal_gap_days` arrays in `localdata/coverage_inventory.json` are the driver input; ranges are display-only.
 
-**Budget gate:** proposed counts above are internal missing days only. Empty sources have no crawl range and require an operator-approved boundary/date floor. ZuluBet robots policy and the first Football-Data CSV download remain separately blocked pending operator approval.
+**Budget gate:** proposed counts above are internal missing days only. Empty sources have no crawl range and require an operator-approved boundary/date floor. Operator approval is recorded for the 3 Statarea gap probes, the 62 BetExplorer result gaps, bounded ZuluBet backfill, and one Football-Data CSV; execution remains single-flight, immutable, and hist-only.
 <!-- coverage-inventory:end -->
+
+## B1 execution receipts — 2026-10-02
+
+- **Statarea:** the three approved direct adapter requests returned a TLS/SSL EOF
+  before response bytes, so they were recorded as `crawl_failure`, never as
+  `no_matches_day`. The sandbox `fetch_page` receipt separately fetched all
+  three URLs, returned HTTP success, and explicitly rendered `No matches found!`.
+  They are therefore recorded as `no_matches_day` confirmations with
+  `checksum_status=relay_no_raw_bytes`; no rows were ingested and the committed
+  ledger was unchanged. The inventory now holds those dates as positively empty.
+- **BetExplorer results:** all 62 approved single-flight date attempts ended in
+  the same TLS/SSL EOF before response bytes. No result rows were written. A
+  relay sample for the first gap rendered an age-verification gate alongside
+  results; no age-gate bypass was attempted. The 62 dates remain open gaps and
+  the audit lines carry `checksum_status=unavailable_no_response_bytes`.
+- **Ordering fence:** the Football-Data CSV probe and Legalbet sample were not
+  started because the approved result-gap stage did not produce response bytes.
+  They remain next stages after transport/verification is resolved. No
+  production weight, vote weight, or warehouse table was changed.
+
+Receipts are in `localdata/remine_audit_2026-10-02.jsonl`.
