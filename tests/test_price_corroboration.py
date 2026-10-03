@@ -101,10 +101,34 @@ def _card_row(**extra):
     return out
 
 
-def test_execution_safe_drops_uncorroborated_money_price():
+def test_execution_safe_drops_uncorroborated_money_price(monkeypatch):
+    # Strict Option C gate: explicitly requested, never applied silently.
+    monkeypatch.setenv("EDGE_FACTORY_REQUIRE_PRICE_CORROBORATION", "1")
     rows = [_card_row(price_corroborated=False), _card_row(price_corroborated=True)]
     pool = at.playable_legs(rows, day="2026-10-02", execution_safe=True)
     assert len(pool) == 1
+
+
+def test_default_policy_keeps_an_uncorroborated_approved_donor_price(monkeypatch):
+    # The operator promoted non-bookmaker donors, so corroboration is
+    # PREFERRED, not REQUIRED. The leg survives - and the printed card has to
+    # disclose the donor type (see test_ticket_discloses_donor_type).
+    monkeypatch.delenv("EDGE_FACTORY_REQUIRE_PRICE_CORROBORATION", raising=False)
+    rows = [_card_row(price_corroborated=False)]
+    assert len(at.playable_legs(rows, day="2026-10-02", execution_safe=True)) == 1
+
+
+def test_price_availability_execution_and_corroboration_are_distinct(monkeypatch):
+    monkeypatch.setenv("EDGE_FACTORY_REQUIRE_PRICE_CORROBORATION", "1")
+    # available + eligible + corroborated -> plays
+    assert at.playable_legs([_card_row(price_corroborated=True)],
+                            day="2026-10-02", execution_safe=True)
+    # available + corroborated but NOT execution eligible -> no ticket
+    assert not at.playable_legs([_card_row(price_corroborated=True, price_push_eligible=False)],
+                                day="2026-10-02", execution_safe=True)
+    # eligible + corroborated but NO price -> no ticket
+    assert not at.playable_legs([_card_row(price_corroborated=True, odds=None)],
+                                day="2026-10-02", execution_safe=True)
 
 
 def test_replay_parity_keeps_uncorroborated_rows():

@@ -87,6 +87,7 @@ from edgefactory.assay import context_verdict_league                # noqa: E402
 from edgefactory.assay import grade as assay_grade                  # noqa: E402
 from edgefactory.assay import wilson_lb                              # noqa: E402
 from edgefactory.config import GATES                                 # noqa: E402
+from edgefactory import price_sources as psrc                        # noqa: E402
 
 # ---------------- cadence (unchanged from production) ----------------
 GENERATE_HOUR_START = 6    # local time — slips may START building on/after this hour
@@ -1835,6 +1836,16 @@ def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=Fa
         # while every newly built slate is safe.  Do not infer this from the
         # provider string: historical fixtures and synthetic replay rows can
         # carry an older label.  The enrichment boundary is the authority.
+        # --- price gate: three DISTINCT concepts (2026-10-03) ------------
+        #
+        #   price availability  - does any approved donor quote this leg?
+        #   execution eligibility - may the configured donor supply the
+        #                           PRINTED price for this leg?
+        #   corroboration       - is a second INDEPENDENT family quoting the
+        #                         same market+selection?
+        #
+        # They used to be collapsed into two booleans, which is why an
+        # available donor price looked identical to no price at all.
         if execution_safe and p.get("price_push_eligible") is False:
             continue
         # Option C price-quality gate (2026-10-02, operator sign-off): a real
@@ -1844,8 +1855,23 @@ def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=Fa
         # against nothing, and a sole-source quote is audit evidence, not an
         # execution price. Field is stamped on newly built slates; legacy
         # archives without it (None) keep the parity behaviour.
-        if execution_safe and p.get("price_corroborated") is False:
-            continue
+        # Corroboration policy is now EXPLICIT and printed, never silent.
+        # The operator has promoted non-bookmaker donors (Boggio average
+        # prices, Bet Better fair prices), so the default policy is:
+        #   a configured donor may supply a price; named-book corroboration
+        #   is PREFERRED but not REQUIRED; every printed leg discloses its
+        #   donor type.
+        # Setting EDGE_FACTORY_REQUIRE_PRICE_CORROBORATION=1 restores the
+        # stricter 2026-10-02 Option C gate. Nothing here lowers a gate
+        # silently: psrc.policy_line() prints the active policy on the card.
+        if execution_safe and psrc.require_corroboration():
+            sufficient = p.get("price_corroboration_sufficient")
+            if sufficient is None:
+                # Legacy archives: fall back to the old boolean, and keep the
+                # parity behaviour of treating a missing field as "unknown".
+                sufficient = p.get("price_corroborated") is not False
+            if not sufficient:
+                continue
         # Market guard: the validated recipe is 1X2 ONLY. Goals/OU picks
         # (first seen 2026-08-31, "Breidablik OVER") stay out until the
         # September O2.5 checkpoint passes its gate. Never before.
