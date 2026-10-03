@@ -1,239 +1,241 @@
-name: Autonomous Edge Factory 3-Hour Service
+name: Forebet Browser Run diagnostic
 
 on:
-  # Scheduling is EXTERNAL (cron-job.org, SAST 09/12/15/18/21) — punctual to the
-  # minute, which the 09:00 freeze depends on. GitHub's native cron fires 10-90
-  # min late under load (observed 2026-09-04: 06:00 UTC slot fired 89 min late,
-  # double-triggering alongside the external 09:00). Native schedule removed;
-  # the external trigger is the single source of cadence.
   workflow_dispatch:
     inputs:
-      mode:
-        description: 'Execution Mode'
-        required: false
-        default: 'auto'
+      probe:
+        description: 'Probe to run with exactly one Worker POST'
+        required: true
+        default: 'forebet_getrs'
         type: choice
         options:
-          - auto
-          - official_morning
-          - forecast_refresh
-          - clv_only
+          - forebet_getrs
+          - page_access
+      date:
+        description: 'Forebet getrs in= date (YYYY-MM-DD); used only by forebet_getrs'
+        required: true
+        default: '2026-09-30'
+      tp:
+        description: 'Forebet getrs market tp; used only by forebet_getrs'
+        required: true
+        default: '1x2'
+        type: choice
+        options:
+          - 1x2
+          - uo
+          - bts
+          - ht
 
 permissions:
-  contents: write
-
-concurrency:
-  group: edge-factory-main
-  cancel-in-progress: false
+  contents: read
 
 jobs:
-  run-autonomous-agent:
+  diagnostic:
+    name: One bounded Forebet Browser Run diagnostic POST
     runs-on: ubuntu-latest
-    timeout-minutes: 360
-
+    timeout-minutes: 3
     env:
-      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-      BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
-
-      # SHADOW-01: one free RapidAPI key covers betminer (voice shadow) and
-      # any future RapidAPI source. Absent key = adapters stay inert (not_run),
-      # the suite stays green and the pick path is unaffected.
-      RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
-      # SHADOW-01: pinnapi (Pinnacle price shadow) uses its own free key.
-      PINNAPI_KEY: ${{ secrets.PINNAPI_KEY }}
-
-      # Bound the per-event odds fallback so one sparse Bzzoiro response cannot
-      # consume the whole multi-source capture budget.
-      BZZOIRO_ODDS_MAX_EVENTS: ${{ secrets.BZZOIRO_ODDS_MAX_EVENTS || '20' }}
-
-      # Free multi-egress source relays.
-      # EDGE_FACTORY_RELAY_URLS order:
-      #   1. Cloudflare Worker
-      #   2. Google Apps Script
-      EDGE_FACTORY_RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
-      EDGE_FACTORY_RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
-
-      # Forebet Browser Run is deployed and contract-verified, but Forebet returned
-      # 403 HTML/non-JSON for getrs.php. Keep it off in production so the daily
-      # pipeline does not spend scarce Browser Run quota.
-      EDGE_FACTORY_FOREBET_BROWSER: "off"
-
-      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-
-      # The Odds API multi-key ring (comma-separated). Without this mapping the
-      # capture step soft-no-ops on every Actions run (keys never reach env).
-      ODDS_API_KEYS: ${{ secrets.ODDS_API_KEYS }}
-
-      # Tuning knobs. '||' fallbacks mirror the code defaults (theoddsapi.py /
-      # capture_theodds.py) so an unset or EMPTY secret is a no-op; secrets win
-      # whenever they are set. (Addendum 20, 2026-08-03)
-      ODDS_API_REGIONS: ${{ secrets.ODDS_API_REGIONS || 'eu' }}
-      ODDS_API_MARKETS: ${{ secrets.ODDS_API_MARKETS || 'h2h,totals' }}
-      ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '1.5,2.5,3.5,4.5' }}
-      ODDS_API_MONTHLY_BUDGET: ${{ secrets.ODDS_API_MONTHLY_BUDGET || '480' }}
-      ODDS_API_CLOSE_WINDOW_MIN: ${{ secrets.ODDS_API_CLOSE_WINDOW_MIN || '45' }}
-
-      # SharpAPI (RapidAPI). Uses the RAPIDAPI_KEY mapped above. The adapter
-      # fails closed while SHARPAPI_SPORT is unset (reason=missing_sport_filter).
-      # 'soccer' is the documented identifier from GET /api/v1/sports but has not
-      # yet been observed live; the secret override lets it be corrected without
-      # a workflow edit (agent sessions lack the 'workflows' permission).
-      SHARPAPI_SPORT: ${{ secrets.SHARPAPI_SPORT || 'soccer' }}
-      SHARPAPI_ENDPOINT: ${{ secrets.SHARPAPI_ENDPOINT || '/api/v1/odds' }}
-      SHARPAPI_LIMIT: ${{ secrets.SHARPAPI_LIMIT || '100' }}
-
-      # OddsPAPI bounded candidate-snapshot capture (PRICE-LANE-TEARDOWN-2026-10-03).
-      # Capture is ENABLED by default here now that the key secret is configured.
-      # Set the EDGE_FACTORY_ODDSPAPI_PRICES secret to 'off' to disable without a
-      # workflow edit. The key itself remains the hard guard: with no
-      # ODDSPAPI_API_KEYS the capture still no-ops ("no ODDSPAPI_API_KEYS configured").
-      ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
-      EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || '1' }}
-      ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
-
-      TZ: 'Africa/Johannesburg'
-
+      # The existing relay secret is an ordered comma-separated list. The
+      # Cloudflare Worker must remain first; this workflow never falls through
+      # to another relay and never retries.
+      RELAY_URLS: ${{ secrets.EDGE_FACTORY_RELAY_URLS }}
+      RELAY_TOKEN: ${{ secrets.EDGE_FACTORY_RELAY_TOKEN }}
+      PROBE_KIND: ${{ inputs.probe }}
+      PROBE_DATE: ${{ inputs.date }}
+      PROBE_TP: ${{ inputs.tp }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-
-      - name: Install dependencies
+      - name: Send exactly one Forebet Browser Run POST
+        shell: bash
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install "supabase>=2.4,<3"
+          set +x
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import sys
+          import urllib.error
+          import urllib.parse
+          import urllib.request
 
-      - name: Restore localdata State (Cache)
-        uses: actions/cache/restore@v4
-        with:
-          path: localdata
-          key: localdata-v2-${{ github.run_id }}
-          restore-keys: |
-            localdata-v2-
+          EXPECTED_GETRS_OPERATION = "forebet_getrs"
+          EXPECTED_GETRS_TRANSPORT = "cloudflare_browser_rendering"
+          PAGE_DIAGNOSTIC_OPERATION = "forebet_browser_diagnostic"
 
-      - name: Restore committed data (override stale cache)
-        # Committed files in localdata/ (registries + core history CSVs) survive
-        # cache eviction, but actions/cache/restore unpacks localdata/ AFTER
-        # checkout and can overwrite them with stale copies. Re-check out ALL
-        # git-tracked localdata files from HEAD so live versions always win.
-        # Includes the 3 core history CSVs so CI certifies autonomously.
-        run: |
-          set -e
-          for f in $(git ls-files localdata/); do
-            git checkout HEAD -- "$f" && echo "restored committed: $f"
-          done
+          relay_urls = os.environ.get("RELAY_URLS", "")
+          token = os.environ.get("RELAY_TOKEN", "")
+          worker_url = relay_urls.split(",", 1)[0].strip()
+          probe_kind = os.environ.get("PROBE_KIND", "forebet_getrs").strip()
+          day = os.environ.get("PROBE_DATE", "")
+          tp = os.environ.get("PROBE_TP", "")
 
-          # Prune untracked leftovers the cache restore may have unpacked —
-          # files deleted from git must STAY deleted.
-          git clean -fd localdata/ || true
+          def emit(payload, code=1):
+              print(json.dumps(payload, sort_keys=True))
+              sys.exit(code)
 
-          echo "certified edges present: $(python3 -c "import json;d=json.load(open('localdata/edges_consensus.json'));print(sum(1 for e in d.get('edges',[]) if e.get('status')=='certified'))" 2>/dev/null || echo n/a)"
+          if not worker_url or not token:
+              emit({
+                  "classification": "workflow_secret_configuration_error",
+                  "detail": "The first relay URL or relay token secret is missing",
+              })
 
-      - name: Execute Autonomous Smart Schedule
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${{ inputs.mode }}" != "auto" ]; then
-            echo ">>> Executing explicit manual mode: ${{ inputs.mode }}"
+          if probe_kind not in {"forebet_getrs", "page_access"}:
+              emit({"classification": "bad_probe_kind", "probe_kind": probe_kind})
 
-            if [ "${{ inputs.mode }}" = "official_morning" ]; then
-              PYTHONPATH=src python3 scripts/daily.py --force-repick
-            elif [ "${{ inputs.mode }}" = "forecast_refresh" ]; then
-              PYTHONPATH=src python3 scripts/daily.py --forecast-refresh
-            elif [ "${{ inputs.mode }}" = "clv_only" ]; then
-              PYTHONPATH=src python3 scripts/daily.py --clv-only
-            fi
-          else
-            # Execute exactly one autonomous iteration of the smart accumulating ledger.
-            PYTHONPATH=src python3 scripts/daily.py --auto-once
-          fi
+          if probe_kind == "forebet_getrs":
+              if tp not in {"1x2", "uo", "bts", "ht"}:
+                  emit({"classification": "bad_market", "probe_kind": probe_kind, "tp": tp})
+              if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", day or ""):
+                  emit({"classification": "bad_date", "probe_kind": probe_kind, "date": day})
+              query = urllib.parse.urlencode({
+                  "ln": "en",
+                  "tp": tp,
+                  "in": day,
+                  "ord": "0",
+                  "tz": "0",
+                  "tzs": "",
+                  "tze": "",
+                  "output": "1",
+              })
+              source_url = "https://www.forebet.com/scripts/getrs.php?" + query
+              payload = {
+                  "token": token,
+                  "operation": EXPECTED_GETRS_OPERATION,
+                  "url": source_url,
+              }
+              user_agent = "EdgeFactory-ForebetBrowserDiagnosticGetrs/1.0"
+          else:
+              source_url = None
+              payload = {
+                  "token": token,
+                  "operation": PAGE_DIAGNOSTIC_OPERATION,
+              }
+              user_agent = "EdgeFactory-BrowserDiagnostic/1.0"
 
-      - name: Persist localdata State (Cache)
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: localdata
-          key: localdata-v2-${{ github.run_id }}
+          request = urllib.request.Request(
+              worker_url,
+              data=json.dumps(payload).encode("utf-8"),
+              method="POST",
+              headers={
+                  "Content-Type": "application/json",
+                  "User-Agent": user_agent,
+              },
+          )
 
-      - name: Persist pipeline state to git (single source of truth)
-        # Every iteration commits its exact end state: frozen picks, WhatsApp
-        # sent/discovery ledgers, capture attempts, registries. Next run's
-        # Restore committed data step restores fresh state.
-        if: always()
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A localdata/
+          status = None
+          raw = b""
+          try:
+              with urllib.request.urlopen(request, timeout=75) as response:
+                  status = response.status
+                  raw = response.read(65537)
+          except urllib.error.HTTPError as error:
+              status = error.code
+              raw = error.read(65537)
+          except Exception as error:
+              emit({
+                  "classification": "workflow_transport_error",
+                  "probe_kind": probe_kind,
+                  "error_type": type(error).__name__,
+              })
 
-          if git diff --cached --quiet; then
-            echo "no localdata changes to persist"
-            exit 0
-          fi
+          if len(raw) > 65536:
+              emit({
+                  "http_response_status": status,
+                  "classification": "workflow_response_size_overflow",
+                  "probe_kind": probe_kind,
+              })
 
-          git commit -m "chore: persist pipeline state (run ${{ github.run_id }})"
+          try:
+              envelope = json.loads(raw.decode("utf-8", "replace"))
+          except Exception:
+              emit({
+                  "http_response_status": status,
+                  "classification": "workflow_non_json_response",
+                  "probe_kind": probe_kind,
+              })
 
-          # Conflict-proof synchronization. localdata is regenerable, so a
-          # collision must not strand the runner in a failed rebase.
-          if ! git pull --rebase --autostash; then
-            git rebase --abort 2>/dev/null || true
-            echo "WARN: localdata rebase conflicted; dropping regenerable state commit"
-            exit 0
-          fi
+          if not isinstance(envelope, dict):
+              emit({
+                  "http_response_status": status,
+                  "classification": "workflow_unexpected_json_response",
+                  "probe_kind": probe_kind,
+              })
 
-          if ! git push; then
-            if ! git pull --rebase --autostash; then
-              git rebase --abort 2>/dev/null || true
-              echo "WARN: push-race conflict; dropping regenerable state commit"
-              exit 0
-            fi
+          if probe_kind == "page_access":
+              receipt = {
+                  "classification": envelope.get("classification"),
+                  "http_response_status": status,
+                  "probe_kind": probe_kind,
+                  "ok": (
+                      status == 200
+                      and envelope.get("classification") == "genuine_forebet_prediction_content"
+                      and envelope.get("success") is True
+                  ),
+                  "diagnostic": envelope,
+              }
+              print(json.dumps(receipt, sort_keys=True))
+              if not receipt["ok"]:
+                  sys.exit(1)
+              sys.exit(0)
 
-            git push
-          fi
+          operation = envelope.get("operation")
+          transport = envelope.get("transport")
+          worker_supports_browser_getrs = (
+              operation == EXPECTED_GETRS_OPERATION
+              and transport == EXPECTED_GETRS_TRANSPORT
+          )
+          relay_status = envelope.get("status")
+          body_shape = envelope.get("body_shape")
+          row_count = envelope.get("row_count")
+          if isinstance(envelope.get("body"), str):
+              try:
+                  parsed = json.loads(envelope["body"])
+                  body_shape = (
+                      "forebet_getrs"
+                      if isinstance(parsed, list) and parsed and isinstance(parsed[0], list)
+                      else "unexpected"
+                  )
+                  row_count = len(parsed[0]) if body_shape == "forebet_getrs" else None
+              except Exception:
+                  body_shape = "non_json_body"
 
-      - name: Upload Pick Ledgers & Reports as Artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: EdgeFactory-Reports
-          path: |
-            localdata/*.txt
-            localdata/*.json
-            localdata/*.md
-          retention-days: 7
+          ok = (
+              status == 200
+              and worker_supports_browser_getrs
+              and relay_status == 200
+              and body_shape == "forebet_getrs"
+              and (row_count or 0) > 0
+          )
+          if ok:
+              classification = "forebet_getrs_browser_rows"
+          elif not worker_supports_browser_getrs and isinstance(envelope.get("body"), str):
+              classification = "legacy_generic_relay_or_worker_not_deployed"
+          elif not worker_supports_browser_getrs:
+              classification = "unexpected_relay_contract_or_worker_not_deployed"
+          elif envelope.get("error") == "browser_response_not_forebet_getrs_json":
+              classification = "browser_run_returned_non_getrs_json"
+          elif envelope.get("error"):
+              classification = "browser_run_" + str(envelope.get("error"))
+          else:
+              classification = "forebet_getrs_probe_failed"
 
-  regression-tests:
-    # Flag, never gate — and deliberately its OWN job, not a step at the end of
-    # the pipeline job. A test failure can mark the run red but cannot withhold
-    # the daily pipeline output.
-    name: Regression tests (flag, never gate)
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout repository
-        # Clean checkout: tracked files only, no pipeline cache or credentials.
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-          cache: 'pip'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: pytest
-        run: PYTHONPATH=src python3 -m pytest tests/ -q
+          receipt = {
+              "classification": classification,
+              "http_response_status": status,
+              "probe_kind": probe_kind,
+              "source_url": source_url,
+              "operation": operation,
+              "transport": transport,
+              "worker_supports_browser_getrs": worker_supports_browser_getrs,
+              "relay_status": relay_status,
+              "body_shape": body_shape,
+              "row_count": row_count,
+              "ok": ok,
+          }
+          if envelope.get("error"):
+              receipt["relay_error"] = envelope.get("error")
+          if envelope.get("content_type"):
+              receipt["content_type"] = envelope.get("content_type")
+          print(json.dumps(receipt, sort_keys=True))
+          if not ok:
+              sys.exit(1)
+          PY
