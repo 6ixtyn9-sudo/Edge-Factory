@@ -12,10 +12,10 @@ sent unless ``SHARPAPI_DATE_PARAM`` names a parameter the provider actually
 documents. Sending an unsupported filter is how a healthy source starts
 looking empty.
 
-Configuration (all optional, all explicit)::
+Configuration (all explicit; ``SHARPAPI_SPORT`` is required for capture)::
 
     SHARPAPI_ENDPOINT=/api/v1/odds
-    SHARPAPI_SPORT=...
+    SHARPAPI_SPORT=soccer
     SHARPAPI_LIMIT=...
     SHARPAPI_BOOK=...
     SHARPAPI_MARKET=...
@@ -31,6 +31,8 @@ import json, os, re, threading, time, urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from edgefactory.odds_normalization import canonical_market_selection
 
 SOURCE = "sharpapi_odds"
 BASE = "https://sharpapi1.p.rapidapi.com"
@@ -71,6 +73,7 @@ MIN_INTERVAL_S = float(os.environ.get("EDGE_FACTORY_SHARPAPI_MIN_INTERVAL_S", "5
 MAX_CALLS_PER_RUN = int(os.environ.get("EDGE_FACTORY_SHARPAPI_MAX_CALLS", "1"))
 RETRYABLE_ZERO_ROW_STATUSES = {"auth", "quota", "unavailable", "blocked", "error", "cooldown"}
 _lock = threading.Lock(); _last = 0.0; _calls = 0; _429 = 0; _cooling = False; _DIAG: dict[str, Any] = {}
+_CANONICALIZATION_DROP_REASONS: dict[str, int] = {}
 
 class UpstreamBlocked(RuntimeError): pass
 
@@ -139,6 +142,8 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
     # A recognized but EMPTY event list is a valid empty result, not a schema
     # failure: conflating the two turns a quiet slate into a false outage (and
     # a real contract break into a false "no games today").
+    global _CANONICALIZATION_DROP_REASONS
+    _CANONICALIZATION_DROP_REASONS = {}
     rows: list[dict[str, Any]] = []; shaped = not events; stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     for event in events:
         if not isinstance(event, dict): continue
@@ -157,7 +162,19 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
                 if not isinstance(market, dict): continue
                 price = _num(market.get("price") or market.get("odds") or market.get("value"))
                 if price is None or price <= 1: continue
-                rows.append({"source": SOURCE, "date": day, "home": str(home).strip(), "away": str(away).strip(), "kickoff": event.get("kickoff") or event.get("start_at"), "market": str(market.get("market") or market.get("name") or "").strip(), "selection": str(market.get("selection") or market.get("label") or "").strip(), "line": market.get("line"), "odds": price, "book": bookmaker, "bookmaker": bookmaker, "odds_kind": "bookmaker", "named_bookmaker": True, "captured_at": stamp})
+                raw_market = str(market.get("market") or market.get("name") or "").strip()
+                raw_selection = str(market.get("selection") or market.get("label") or "").strip()
+                canonical, _failure = canonical_market_selection(
+                    raw_market, raw_selection, home=home, away=away,
+                    line=market.get("line"),
+                )
+                if canonical is None:
+                    reason = failure.reason if failure is not None else "unmappable"
+                    _CANONICALIZATION_DROP_REASONS[reason] = (
+                        _CANONICALIZATION_DROP_REASONS.get(reason, 0) + 1
+                    )
+                    continue
+                rows.append({"source": SOURCE, "date": day, "home": str(home).strip(), "away": str(away).strip(), "kickoff": event.get("kickoff") or event.get("start_at"), "market": canonical.market, "selection": canonical.selection, "line": canonical.line, "raw_market": raw_market, "raw_selection": raw_selection, "odds": price, "book": bookmaker, "bookmaker": bookmaker, "odds_kind": "bookmaker", "named_bookmaker": True, "captured_at": stamp})
     return rows, shaped
 
 def _status(code: int | None) -> str:
@@ -178,8 +195,16 @@ def _reason(code: int | None) -> str:
 
 def _path(day: str, localdata: Path | None = None) -> Path: return (localdata or LOCALDATA) / f"{SOURCE}_shadow_{day}.json"
 def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day))}
+    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day)),"canonicalization_dropped":0,"canonicalization_drop_reasons":{}}
     reset_state()
+    sport = (os.environ.get("SHARPAPI_SPORT") or "").strip()
+    if not sport:
+        stats.update(
+            status="not_run",
+            reason="missing_sport_filter",
+            blocker="SHARPAPI_SPORT not set; soccer sport filter is required; capture skipped",
+        )
+        return [], _set_diag(stats)
     if not _key(): stats["blocker"] = f"{KEY_ENV} not set; shadow capture skipped"; return [], _set_diag(stats)
     try:
         held = json.loads(_path(day, localdata).read_text()).get("rows", [])
@@ -189,6 +214,8 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         code, payload, headers = get_json(odds_url(day)); stats["requests"] = 1; stats["http_statuses"] = [code]; stats["rate_limit_headers"] = headers
         if code != 200 or payload is None: stats.update(status=_status(code), reason=_reason(code), blocker=f"sharpapi: HTTP {code} or non-JSON payload"); return [], _set_diag(stats)
         rows, shaped = parse_snapshot(payload, day=day); stats["schema_match"] = shaped
+        stats["canonicalization_drop_reasons"] = dict(_CANONICALIZATION_DROP_REASONS)
+        stats["canonicalization_dropped"] = sum(_CANONICALIZATION_DROP_REASONS.values())
         # A recognizable but empty event list is a VALID empty result; only an
         # unrecognizable payload is a contract failure.
         if not shaped: stats.update(status="unavailable", reason="schema_unrecognized", blocker="sharpapi: snapshot schema not recognized; raw sample retained"); stats["sample_event"] = _scrub(str(payload)[:200]); return [], _set_diag(stats)
