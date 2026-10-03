@@ -50,6 +50,21 @@ one health-aware ranking path for every populated bundle above. It does not
 invent a row for an absent feed or promote an audit/fair/average number into a
 named bookmaker price.
 
+**Actions deployment prerequisite.** The code path is shipped, but the current
+GitHub Actions workflow still needs its environment mappings before its
+optional OddsPAPI capture can run in Actions:
+
+```yaml
+ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
+EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || 'off' }}
+ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
+```
+
+This session's GitHub App token can push application code but lacks the
+`workflows` permission required to update `.github/workflows/daily.yml`; the
+workflow edit was therefore not pushed. This is a deployment configuration
+requirement, not evidence that the source is already active.
+
 ## Direct artifact checks
 
 ### The actual printed ticket
