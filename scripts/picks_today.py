@@ -2226,7 +2226,10 @@ ODDSPAPI_ODDS_SOURCE = "oddspapi_odds"
 # Generation 1 (and unmarked rows) came from the parser that read outcome
 # names from the wrong key and had no fixture identity, so every one of its
 # selections is untrustworthy — not merely the ones with blank teams.
-ODDSPAPI_MIN_SCHEMA_VERSION = 2
+# Generation 3 additionally fails closed on outcome-identity ambiguity and
+# retains the provider outcome key; generation-2 rows were written without
+# that check and cannot be re-audited from the CSV, so they are superseded.
+ODDSPAPI_MIN_SCHEMA_VERSION = 3
 
 
 def _utc_price_stamp(value: object) -> datetime | None:
