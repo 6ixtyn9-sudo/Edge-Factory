@@ -331,9 +331,13 @@ def ml_fade_research_maintenance(target_date: str) -> None:
 
 
 def capture_theodds_snapshot(target_date: str, trigger: str) -> None:
-    """The Odds API price snapshot for the frozen shortlist (audit-only CLV).
+    """Capture the named-book The Odds API snapshot for CLV and the next build.
 
-    --auto is idempotent and attempt-guarded: first snapshot once per fixture
+    This follows the pick build because ``--auto`` derives its fixture list
+    from the frozen shortlist.  Accordingly it is never used to rewrite the
+    card that caused the capture: the next build may use only its pre-build,
+    timestamp-qualified cached rows.  --auto is idempotent and attempt-guarded:
+    first snapshot once per fixture
     per day, close snapshot once per fixture inside the pre-kickoff window;
     0 credits otherwise. Key rotation + monthly budget live in the adapter."""
     run_soft(

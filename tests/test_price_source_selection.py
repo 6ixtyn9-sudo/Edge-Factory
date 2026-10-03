@@ -130,6 +130,18 @@ def test_a_healthy_named_book_outranks_a_fair_price_donor():
     assert source == "bzzoiro_odds"
 
 
+def test_named_book_provenance_beats_a_fresher_stakeable_fair_price(monkeypatch):
+    # Even when an operator deliberately enables fair-price staking, a healthy
+    # exact named-book quote is preferred. This pins the ordering rather than
+    # relying on microsecond differences in per-row clock sampling.
+    monkeypatch.setenv("EDGE_FACTORY_FAIR_PRICE_STAKEABLE", "1")
+    candidates = [
+        psrc.SourceCandidate(name="betbetter", healthy=True, exact_match=True, freshness_h=0.0),
+        psrc.SourceCandidate(name="bzzoiro_odds", healthy=True, exact_match=True, freshness_h=8.0),
+    ]
+    assert psrc.rank_candidates(candidates, execution_only=True)[0].name == "bzzoiro_odds"
+
+
 def test_unavailable_bzzoiro_never_wins_on_historic_priority():
     candidates = [
         psrc.SourceCandidate(name="bzzoiro_odds", healthy=False, exact_match=False),
