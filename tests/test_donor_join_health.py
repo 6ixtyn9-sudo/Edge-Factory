@@ -65,3 +65,21 @@ def test_oddspapi_health_receipt_keeps_capture_validation_and_join_counts(tmp_pa
     assert (receipt["op_raw"], receipt["op_usable"], receipt["op_matched"]) == (12, 8, 2)
     assert "oddspapi=raw12/usable8/matched2" in source_health.daily_status_block("2026-10-03")
     assert "oddspapi_odds: healthy named-book price source" in source_health.source_role_lines("2026-10-03")
+
+
+def test_betexplorer_health_receipt_keeps_snapshot_and_join_counts(tmp_path, monkeypatch):
+    monkeypatch.setattr(source_health, "LOCALDATA", tmp_path)
+    payload = source_health.persist_daily_source_health(
+        "2026-10-03",
+        {
+            "betexplorer": {
+                "status": "cache_only", "fetched": False, "rows": 9,
+                "be_raw": 12, "be_usable": 9, "be_matched": 3,
+                "can_fetch_today": False, "can_price": True, "can_vote": False,
+            },
+        },
+    )
+    receipt = payload["sources"]["betexplorer"]
+    assert (receipt["be_raw"], receipt["be_usable"], receipt["be_matched"]) == (12, 9, 3)
+    assert "betexplorer=raw12/usable9/matched3" in source_health.daily_status_block("2026-10-03")
+    assert "betexplorer: healthy named-book price source" in source_health.source_role_lines("2026-10-03")

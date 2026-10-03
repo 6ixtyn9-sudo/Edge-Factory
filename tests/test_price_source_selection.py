@@ -270,3 +270,14 @@ def test_candidate_pass_skips_provider_shadow_capture(monkeypatch):
     assert stats["pinnapi_odds"]["status"] == "candidate_only"
     assert stats["sharpapi_odds"]["status"] == "candidate_only"
     assert stats["boggio"]["status"] == "candidate_only"
+
+
+def test_observed_execution_contributor_order_beats_cross_source_freshness():
+    # Archived end-to-end contribution through 2026-10-03: BetExplorer had
+    # 497 push-eligible matches over 84 source-days; Bzzoiro had 85 over 53.
+    # This is an availability ordering, not a claim about settled performance.
+    candidates = [
+        psrc.SourceCandidate(name="bzzoiro_odds", healthy=True, exact_match=True, freshness_h=0.0),
+        psrc.SourceCandidate(name="betexplorer_odds", healthy=True, exact_match=True, freshness_h=12.0),
+    ]
+    assert psrc.rank_candidates(candidates, execution_only=True)[0].name == "betexplorer_odds"

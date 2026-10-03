@@ -50,6 +50,27 @@ one health-aware ranking path for every populated bundle above. It does not
 invent a row for an absent feed or promote an audit/fair/average number into a
 named bookmaker price.
 
+### Source order is now evidence-based
+
+The archived pick ledgers provide the only retained end-to-end contribution
+record. Across 109 dated archives through Oct-03, BetExplorer supplied 497
+push-eligible price matches on 84 source-days; Bzzoiro supplied 85 on 53.
+No other named-book route has a retained execution contribution in that
+window: The Odds API was unwired at the time, while PinnAPI, SharpAPI, and
+OddsPAPI have no retained source receipt. This is coverage evidence, not a
+settled-profit claim (the pick archives do not contain settled outcomes).
+
+The deterministic named-book order is consequently now:
+
+```text
+BetExplorer → Bzzoiro → The Odds API → PinnAPI → SharpAPI → OddsPAPI
+```
+
+Configured source order is evaluated before cross-source freshness, after
+health, exact match, execution eligibility, and named-book provenance. A
+bounded BetExplorer candidate snapshot is now an ordinary time-qualified
+bundle in that same matcher, rather than a post-decision rescue override.
+
 ### Operational simplification now enforced
 
 The official and intraday paths now use two explicit stages instead of treating
@@ -255,7 +276,7 @@ line retain all three counts.
 
 ```text
 PYTHONPATH=src .venv/bin/python -m pytest tests/ -q
-1042 passed
+1046 passed
 ```
 
 (The count includes the new cached-board and source-health tests.)

@@ -102,3 +102,26 @@ def test_cached_oddspapi_board_uses_its_raw_source_alias_and_registry_provider(t
     assert (source, method, row["bookmaker"], row["named_bookmaker"]) == (
         "oddspapi_odds", "exact", "Pinnacle", True,
     )
+
+
+def test_cached_betexplorer_snapshot_joins_as_the_highest_contributor(tmp_path, monkeypatch):
+    payload = {
+        "schema": 1,
+        "date": DAY,
+        "fixtures": {
+            "fixture": {
+                "cached_at": f"{DAY}T07:00:00+00:00",
+                "rows": [_row(source="ignored", bookmaker="betexplorer_best", odds="2.35")],
+            },
+        },
+    }
+    (tmp_path / f"betexplorer_odds_cache_{DAY}.json").write_text(__import__("json").dumps(payload))
+    monkeypatch.setattr(pt, "LOCALDATA", tmp_path)
+    stats: dict = {}
+    bundle = pt.betexplorer_cached_odds_bundle(
+        DAY, not_after=datetime(2026, 10, 3, 8, tzinfo=timezone.utc), stats=stats,
+    )
+    row, method, source = pt.select_price_source(_pick("Albacete", "SD Eibar", "away"), [bundle])
+    assert stats["status"] == "cache_only"
+    assert stats["raw_rows"] == stats["usable_rows"] == 1
+    assert (source, method, row["bookmaker"]) == ("betexplorer_odds", "exact", "betexplorer_best")
