@@ -140,6 +140,18 @@ def test_off_switch_disables_without_requests(monkeypatch):
     assert stats["status"] == "disabled"
 
 
+def test_all_transport_failures_are_unavailable_not_an_empty_slate(monkeypatch):
+    def fail(url, timeout=30):
+        raise bb._UpstreamError("betbetter: TLS transport failed")
+
+    monkeypatch.setattr(bb, "get_json", fail)
+    rows, stats = bb.capture_day("2026-10-02")
+    assert rows == []
+    assert stats["status"] == "unavailable"
+    assert stats["requests"] == len(bb.LEAGUE_SLUGS)
+    assert "every configured league request failed" in stats["blocker"]
+
+
 def test_budget_cap_skips_remaining_leagues(monkeypatch):
     payload = _payload()
     monkeypatch.setattr(bb, "MAX_CALLS_PER_RUN", 2)

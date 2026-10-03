@@ -337,8 +337,8 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             break
         url = league_url(slug)
         try:
-            status, payload, _headers = get_json(url)
             stats["requests"] += 1
+            status, payload, _headers = get_json(url)
             if status != 200 or payload is None:
                 stats["errors"].append(f"{slug}: HTTP {status} or non-JSON payload")
                 continue
@@ -377,7 +377,13 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             stats["errors"].append(f"{slug}: HTTP {exc.code}")
     stats["bb_raw"] = len(rows)
     stats["bb_scored"] = len(rows)
-    stats["status"] = "ok" if rows else "empty"
+    if rows:
+        stats["status"] = "ok"
+    elif stats["errors"]:
+        stats["status"] = "unavailable"
+        stats["blocker"] = "betbetter: every configured league request failed"
+    else:
+        stats["status"] = "empty"
     return rows, _set_diag(stats)
 
 
