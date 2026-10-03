@@ -341,12 +341,15 @@ def test_board_rejected_before_the_bundle_still_reports_a_counted_reason(tmp_pat
     )
     assert stats["raw_rows"] == 3
     assert stats["usable_rows"] == 0, "teamless rows were never usable supply"
-    assert stats["identity_missing_rows"] == 3
+    # These rows predate the generation marker, so they are refused on the
+    # generation — the cause — rather than on blank participants, which is
+    # only the symptom that generation happened to show.
+    assert stats["stale_schema_rows"] == 3
 
     report = pt.donor_join_diagnostics(
         [_pick("Croatia", "England", "1x2", "home")], [bundle],
     )[pt.ODDSPAPI_ODDS_SOURCE]
-    assert report["miss_counts"] == {"fixture_identity_missing": 3}
+    assert report["miss_counts"] == {"stale_schema": 3}
     assert report["raw_rows"] == 3
     line = pt.donor_join_miss_lines({pt.ODDSPAPI_ODDS_SOURCE: report})[0]
-    assert "fixture_identity_missing=3" in line
+    assert "stale_schema=3" in line
