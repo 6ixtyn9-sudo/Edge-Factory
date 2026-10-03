@@ -16,6 +16,17 @@ def test_parse_keeps_publication_and_capture_timestamps():
     assert "12h" in rows[0]["lookahead_note"]
 
 
+def test_missing_or_unparseable_kickoff_never_defaults_to_capture_date():
+    for bad_kickoff in (None, "not-a-provider-kickoff"):
+        data = payload()
+        data["data"][0]["start_date"] = bad_kickoff
+        rows, shaped = boggio.parse_predictions(data, day="2026-10-03")
+        assert shaped and len(rows) == 1
+        assert rows[0]["date"] is None
+        assert rows[0]["odds_kind"] == "provider_average"
+        assert rows[0]["price_push_eligible"] is False
+
+
 def test_raw_classic_tokens_join_through_shared_canonicalizer():
     raw = payload()["data"][0]
     bundle = pt._odds_bundle_from_rows([{
