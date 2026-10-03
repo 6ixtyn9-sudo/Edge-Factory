@@ -27,6 +27,29 @@ found, and it was unsafe that it was printable at all. The state contains no
 second eligible two-leg pair, which is why it did not print two accas. A large
 prediction slate is not a large executable-price slate.
 
+## Price-source integration matrix
+
+There is more than one odds source. The relevant question is not how many
+names are in the registry, but which routes can produce a time-qualified row
+and which role that row may play.
+
+| route | current wiring | execution role | Oct-03 evidence state |
+|---|---|---|---|
+| Bzzoiro odds | live/cache bundle | named-book | active adapter, but not evidence that another provider is healthy |
+| The Odds API | persisted monthly bundle | named-book | 404 raw rows; six later exact joins; zero usable at official cutoff |
+| OddsPAPI | persisted monthly bundle; bounded opt-in capture added | named-book | no committed Oct-03 receipt; remains absent until flag/key are enabled |
+| PinnAPI / SharpAPI | same-run shadow capture → donor bundle | named-book | can participate only when their captured shadow ledger contains a normalized row |
+| BetExplorer | bounded rescue + cache board | named-book | no current committed monthly receipt; historical archive is not a current quote |
+| SportyTrader | price-board corroborator when explicitly enabled | corroborator only, never selected price | current cache alone is not execution evidence |
+| Boggio | same-run shadow capture → donor bundle | average-book price, disclosed as such | never a named bookmaker |
+| Bet Better | same-run shadow capture → donor bundle | fair/model price; direct staking off by default | never a named bookmaker |
+| BetMiner / ScoutingStats | shadow/audit route | non-executable by default | retained as evidence; quarantined from direct execution |
+
+The repair now uses one shared canonical fixture/market/selection matcher and
+one health-aware ranking path for every populated bundle above. It does not
+invent a row for an absent feed or promote an audit/fair/average number into a
+named bookmaker price.
+
 ## Direct artifact checks
 
 ### The actual printed ticket
@@ -97,9 +120,12 @@ needed to validate the identity rule.
 * The committed `zulubet.csv.gz`, `forebet.csv.gz`, and `statarea.csv.gz`
   contain no 2026-10-03/04 source rows. The latest committed BetExplorer
   archive is June. They cannot substantiate a current-price fallback claim.
-* `OddspAPI` capture/probe code is not called by `daily.py` or the workflow.
-  A registry entry is capability metadata, not proof that the scheduled run
-  fetched or consumed it.
+* At the audited Oct-03 run, OddsPAPI capture/probe code was not called by
+  `daily.py` or the workflow. It had no persisted current receipt, so a
+  registry entry was capability metadata rather than proof of source activity.
+  The repair now adds a quota-bounded, explicit `EDGE_FACTORY_ODDSPAPI_PRICES=1`
+  post-build capture and a time-safe cached-board reader for the later build.
+  It remains absent/disabled until that flag and its secret are configured.
 * SportyTrader is present as a shadow/corroboration candidate, not a donor in
   the active donor-bundle loop. It must not be described as an active price
   source unless its own receipt is present and its role is explicitly enabled.
@@ -195,7 +221,7 @@ line retain all three counts.
 
 ```text
 PYTHONPATH=src .venv/bin/python -m pytest tests/ -q
-1037 passed
+1040 passed
 ```
 
 (The count includes the new cached-board and source-health tests.)

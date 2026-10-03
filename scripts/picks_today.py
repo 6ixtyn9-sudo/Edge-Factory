@@ -2071,14 +2071,13 @@ def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
         return []
 
 
-# The Odds API is a named-book feed captured by capture_theodds.py.  It used
-# to be CLV-only: the pipeline paid for and persisted its rows after pick
-# generation but never offered them to the price matcher.  The reader below is
-# deliberately cache-only and never makes a provider call.  A row is usable
-# only when its own capture timestamp is known, pre-dates this pick build, and
-# is no older than one day.  That makes a price an observation, not a promise
-# that a later/stale quote existed at decision time.
+# Persisted API snapshots are named-book boards, but never live requests from
+# the picker.  Each adapter gets the same capture-time containment: a row can
+# influence only a later build, never the card that triggered its capture.
+# The source aliases reflect the unified CSV writers (OddsPAPI writes
+# ``oddspapi`` rows into an ``oddspapi_odds_YYYY-MM`` file).
 THEODDSAPI_ODDS_MAX_AGE_H = 24.0
+ODDSPAPI_ODDS_SOURCE = "oddspapi_odds"
 
 
 def _utc_price_stamp(value: object) -> datetime | None:
@@ -2094,40 +2093,43 @@ def _utc_price_stamp(value: object) -> datetime | None:
         return None
 
 
-def theoddsapi_odds_bundle(
+def _cached_named_book_bundle(
     day: str,
     *,
+    provider: str,
+    file_prefix: str,
+    raw_source_names: tuple[str, ...],
     not_after: datetime | None = None,
     stats: dict | None = None,
 ) -> dict:
-    """Return the pre-build The Odds API board for ``day``.
+    """Read one persisted named-book board with a strict build-time cutoff.
 
-    The API's monthly CSV is an immutable capture ledger.  This function
-    refuses rows captured after ``not_after`` (the current build instant),
-    without a timezone-bearing capture timestamp, or older than the defined
-    cache horizon.  It therefore cannot backfill a card with a quote learned
-    after the card was generated.  The returned ``stats`` separates presence,
-    validation, and joinability for the daily health receipt.
+    This is shared by The Odds API and OddsPAPI intentionally: both are
+    provider captures, not a permission to treat a later cache row as an
+    earlier executable quote.  ``raw_rows`` counts provider rows observed;
+    ``usable_rows`` is the independently auditable subset that survived all
+    timing and bookmaker-identity checks.
     """
     cutoff = not_after or datetime.now(timezone.utc)
     if cutoff.tzinfo is None:
         cutoff = cutoff.replace(tzinfo=timezone.utc)
     else:
         cutoff = cutoff.astimezone(timezone.utc)
-    path = LOCALDATA / f"theoddsapi_odds_{str(day)[:7]}.csv.gz"
+    path = LOCALDATA / f"{file_prefix}_{str(day)[:7]}.csv.gz"
     report = {
         "status": "absent", "raw_rows": 0, "usable_rows": 0,
         "after_build_rows": 0, "stale_rows": 0, "invalid_timestamp_rows": 0,
         "path": str(path),
     }
     rows: list[dict] = []
+    accepted_sources = {str(name).strip() for name in raw_source_names}
     if path.exists():
         try:
             with gzip.open(path, "rt", newline="") as fh:
                 for raw in csv.DictReader(fh):
                     if str(raw.get("date") or "")[:10] != str(day)[:10]:
                         continue
-                    if str(raw.get("source") or "").strip() != THEODDSAPI_ODDS_SOURCE:
+                    if str(raw.get("source") or "").strip() not in accepted_sources:
                         continue
                     report["raw_rows"] += 1
                     stamp = _utc_price_stamp(raw.get("captured_at"))
@@ -2141,11 +2143,11 @@ def theoddsapi_odds_bundle(
                     if age_h > THEODDSAPI_ODDS_MAX_AGE_H:
                         report["stale_rows"] += 1
                         continue
-                    # Explicit book identity is mandatory even though this
-                    # provider is registry-classified as named-book.
+                    # A registry declaration cannot manufacture the identity
+                    # of a bookmaker missing from a provider payload.
                     if not str(raw.get("bookmaker") or "").strip():
                         continue
-                    rows.append(psrc.annotate_row(raw, source=THEODDSAPI_ODDS_SOURCE))
+                    rows.append(psrc.annotate_row(raw, source=provider))
         except (OSError, csv.Error, gzip.BadGzipFile):
             report["status"] = "unavailable"
     report["usable_rows"] = len(rows)
@@ -2153,18 +2155,53 @@ def theoddsapi_odds_bundle(
         # Selection reads a persisted capture only.  Do not report a network
         # fetch here merely because the cache contains usable rows.
         report["status"] = "cache_only" if rows else ("empty" if path.exists() else "absent")
-    # The generic bundle helper calls its input count ``raw_rows``.  Keep that
-    # join-local value separate: the health receipt's ``raw_rows`` means rows
-    # observed in the provider CSV before timestamp safety filtering.
     observed_raw_rows = int(report["raw_rows"])
     bundle_stats: dict = {}
-    bundle = _odds_bundle_from_rows(rows, provider=THEODDSAPI_ODDS_SOURCE, stats=bundle_stats)
+    bundle = _odds_bundle_from_rows(rows, provider=provider, stats=bundle_stats)
     report.update(bundle_stats)
     report["raw_rows"] = observed_raw_rows
     report["usable_rows"] = len(rows)
     if stats is not None:
         stats.update(report)
     return bundle
+
+
+def theoddsapi_odds_bundle(
+    day: str,
+    *,
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Return the time-qualified persisted The Odds API named-book board."""
+    return _cached_named_book_bundle(
+        day,
+        provider=THEODDSAPI_ODDS_SOURCE,
+        file_prefix="theoddsapi_odds",
+        raw_source_names=(THEODDSAPI_ODDS_SOURCE,),
+        not_after=not_after,
+        stats=stats,
+    )
+
+
+def oddspapi_odds_bundle(
+    day: str,
+    *,
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Return the time-qualified persisted OddsPAPI named-book board.
+
+    Capture is opt-in and bounded because of the provider's quota.  Absence of
+    its monthly receipt is an honest empty bundle, never a synthetic fallback.
+    """
+    return _cached_named_book_bundle(
+        day,
+        provider=ODDSPAPI_ODDS_SOURCE,
+        file_prefix=ODDSPAPI_ODDS_SOURCE,
+        raw_source_names=("oddspapi", ODDSPAPI_ODDS_SOURCE),
+        not_after=not_after,
+        stats=stats,
+    )
 
 
 # Stale-price containment (2026-10-02): the scoutingstats odds board is only
@@ -4296,7 +4333,8 @@ def main():
                     "bm_raw": 0, "bm_scored": 0, "pa_raw": 0, "pa_matched": 0,
 "bb_raw": 0, "bb_scored": 0, "sa_raw": 0, "sa_matched": 0,
                     "bg_raw": 0, "bg_scored": 0, "oa_raw": 0,
-                    "oa_usable": 0, "oa_matched": 0}
+                    "oa_usable": 0, "oa_matched": 0, "op_raw": 0,
+                    "op_usable": 0, "op_matched": 0}
 
     # ML-fade research capture: certification-independent collection of every
     # model-scored fixture (parent + deterministic fade candidate) into the
@@ -4377,12 +4415,17 @@ def main():
         # cannot time-travel into an already-generated card.
         theodds_stats: dict = {}
         theodds_bundle = theoddsapi_odds_bundle(day, not_after=as_of, stats=theodds_stats)
+        oddspapi_stats: dict = {}
+        oddspapi_bundle = oddspapi_odds_bundle(day, not_after=as_of, stats=oddspapi_stats)
         # Bzzoiro is no longer "the primary source": it is one approved source
         # among several, and `enrich_with_live_odds` ranks them by health.
-        donor_bundles = [theodds_bundle, *donor_odds_bundles(day)]
+        # Both persisted APIs enter this shared board only after their own
+        # capture-time checks; no source gets a positional preference.
+        donor_bundles = [theodds_bundle, oddspapi_bundle, *donor_odds_bundles(day)]
         enriched_n = enrich_with_live_odds(
             picks, odds_bundle, secondary_bundle, donor_bundles=donor_bundles)
         theodds_matches = donor_match_counts(picks, [theodds_bundle]).get(THEODDSAPI_ODDS_SOURCE, 0)
+        oddspapi_matches = donor_match_counts(picks, [oddspapi_bundle]).get(ODDSPAPI_ODDS_SOURCE, 0)
         donor_matches = donor_match_counts(picks, donor_bundles)
         for source_name, stats_name, scored_key, raw_key in (
             ("betbetter", "bb_matched", "bb_scored", "bb_raw"),
@@ -4426,6 +4469,9 @@ def main():
         shadow_totals["oa_raw"] += int(theodds_stats.get("raw_rows") or 0)
         shadow_totals["oa_usable"] += int(theodds_stats.get("usable_rows") or 0)
         shadow_totals["oa_matched"] += int(theodds_matches or 0)
+        shadow_totals["op_raw"] += int(oddspapi_stats.get("raw_rows") or 0)
+        shadow_totals["op_usable"] += int(oddspapi_stats.get("usable_rows") or 0)
+        shadow_totals["op_matched"] += int(oddspapi_matches or 0)
         print(
             f"shadow candidates {day}: raw={fp_shadow_stats.get('raw', 0)} "
             f"scored={fp_shadow_stats.get('scored', 0)} "
@@ -4441,6 +4487,12 @@ def main():
             f"sa_matched={sa_shadow_stats.get('sa_matched', 0)} "
             f"bg_raw={bg_shadow_stats.get('bg_raw', 0)} "
             f"bg_scored={bg_shadow_stats.get('bg_scored', 0)} "
+            f"theodds_raw={theodds_stats.get('raw_rows', 0)} "
+            f"theodds_usable={theodds_stats.get('usable_rows', 0)} "
+            f"theodds_matched={theodds_matches} "
+            f"oddspapi_raw={oddspapi_stats.get('raw_rows', 0)} "
+            f"oddspapi_usable={oddspapi_stats.get('usable_rows', 0)} "
+            f"oddspapi_matched={oddspapi_matches} "
             f"corroborator={'on' if _sportytrader_corrob_flag_on() else 'off'}",
             file=sys.stderr,
         )
@@ -4564,6 +4616,27 @@ def main():
             "status": theodds_stats.get("status"),
             "reason": None,
         }
+        health_observations["oddspapi_odds"] = {
+            # As with TheOddsAPI, this selection stage consumes only a
+            # persisted pre-build snapshot; it does not claim an HTTP fetch.
+            "fetched": False,
+            "rows": int(oddspapi_stats.get("usable_rows") or 0),
+            "op_raw": int(oddspapi_stats.get("raw_rows") or 0),
+            "op_usable": int(oddspapi_stats.get("usable_rows") or 0),
+            "op_matched": int(oddspapi_matches or 0),
+            "can_fetch_today": False,
+            "can_price": int(oddspapi_stats.get("usable_rows") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": None,
+            "blocker": (
+                "cache-only pre-build snapshot; selection does not fetch provider"
+                if oddspapi_stats.get("status") == "cache_only"
+                else ("no pre-build OddsPAPI rows" if oddspapi_stats.get("status") in {"absent", "empty"}
+                      else "OddsPAPI cache unreadable")
+            ),
+            "status": oddspapi_stats.get("status"),
+            "reason": None,
+        }
         health_observations["betbetter"] = {
             "fetched": bb_shadow_stats.get("status") in {"ok", "empty"},
             "rows": int(bb_shadow_stats.get("bb_scored") or 0),
@@ -4675,6 +4748,9 @@ def main():
                 f"theodds_raw={theodds_stats.get('raw_rows', 0)} "
                 f"theodds_usable={theodds_stats.get('usable_rows', 0)} "
                 f"theodds_matched={theodds_matches} "
+                f"oddspapi_raw={oddspapi_stats.get('raw_rows', 0)} "
+                f"oddspapi_usable={oddspapi_stats.get('usable_rows', 0)} "
+                f"oddspapi_matched={oddspapi_matches} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
                 f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "
                 f"uncorroborated_price={uncorroborated_n} suspect_price={suspect_price_n}",
