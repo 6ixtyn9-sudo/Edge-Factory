@@ -98,18 +98,72 @@ def parse_zoned_timestamp(value: Any) -> datetime | None:
     return parsed
 
 
-def provider_kickoff_date(value: Any) -> str | None:
+def provider_kickoff_date(value: Any, *, declared_zone: str | None = None) -> str | None:
     """Return the provider-declared date for an absolute ISO kickoff.
 
     The lexical date is intentional: an event at 00:30+02:00 belongs to the
     provider's declared local date even though its UTC instant is on the prior
     day. Missing, malformed, or timezone-free values fail closed.
+
+    ``declared_zone`` is the one sanctioned exception to that fail-closed
+    rule: a zone key fixed by the provider's OWN documented payload contract
+    (not by us, and not by the capture machine's locale). Only an adapter
+    that has such a contract may pass it; see
+    :func:`parse_declared_zone_timestamp`.
     """
 
-    parsed = parse_zoned_timestamp(value)
+    parsed = (
+        parse_declared_zone_timestamp(value, declared_zone)
+        if declared_zone
+        else parse_zoned_timestamp(value)
+    )
     if parsed is None:
         return None
     return parsed.date().isoformat()
+
+
+def parse_declared_zone_timestamp(value: Any, zone_key: str | None) -> datetime | None:
+    """Parse a naive stamp whose zone is fixed by the provider's contract.
+
+    This is NOT the banned "assume the capture zone" behaviour. The zone must
+    come from the provider's own published payload documentation, and only
+    the adapter for that provider may pass its key here. Anything the string
+    itself names (ISO offset, ``Z``, ``UTC``/``GMT`` suffix) is honoured as
+    written via :func:`parse_zoned_timestamp`; a value with no time-of-day
+    component, or a value that is not a well-formed naive ISO datetime, still
+    fails closed to ``None``.
+
+    Grounding (2026-10-03): football-prediction-api v2 (Boggio) documents
+    ``start_date``/``last_update_at`` as ``"2018-12-06T19:00:00"``-shaped
+    naive stamps whose wall clock is GMT/BST — "The GMT/BST start date of the
+    predicted event", "Day starts at 00:00 London Timezone"
+    (developer.boggio-analytics.com). Rounds 1–2 assumed a
+    ``"YYYY-MM-DD HH:MM:SS UTC"`` suffix that appears nowhere in the
+    provider's documentation, which is why the date repair never moved a row.
+    """
+    if not zone_key:
+        return parse_zoned_timestamp(value)
+    zoned = parse_zoned_timestamp(value)
+    if zoned is not None:
+        return zoned
+    text = str(value or "").strip()
+    # A date with no time-of-day names no kick-off instant; refuse it rather
+    # than stamping midnight in the declared zone.
+    if not text or ":" not in text:
+        return None
+    try:
+        naive = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if naive.tzinfo is not None:  # pragma: no cover - parse_zoned_timestamp handled it
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+
+        zone = ZoneInfo(str(zone_key))
+    except Exception:  # noqa: BLE001 - unknown zone key must fail closed
+        return None
+    return naive.replace(tzinfo=zone)
 
 
 def _token(value: object) -> str:
@@ -361,6 +415,7 @@ __all__ = [
     "market_support",
     "miss_bucket",
     "miss_vocabulary_token",
+    "parse_declared_zone_timestamp",
     "parse_zoned_timestamp",
     "provider_kickoff_date",
 ]
