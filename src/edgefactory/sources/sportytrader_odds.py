@@ -20,6 +20,8 @@ from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any
 
+from edgefactory.odds_normalization import canonical_market_selection
+
 SOURCE = "sportytrader_odds"
 BASE = "https://www.sportytrader.es"
 UA = "EdgeFactory-cooperative-shadow/1.0 (+operator review)"
@@ -295,9 +297,15 @@ def parse_match_page(page: str, *, day: str, url: str | None = None) -> list[dic
     parser.feed(page)
     rows: list[dict[str, Any]] = []
     for raw in parser.rows:
-        market = (raw.get("data-market") or raw.get("market") or "").lower()
-        selection = (raw.get("data-selection") or raw.get("selection") or "").lower()
-        if not market or not selection:
+        raw_market = raw.get("data-market") or raw.get("market") or ""
+        raw_selection = raw.get("data-selection") or raw.get("selection") or ""
+        if not raw_market or not raw_selection:
+            continue
+        canonical, _failure = canonical_market_selection(
+            raw_market, raw_selection, home=home, away=away,
+            line=raw.get("data-line") or raw.get("line"),
+        )
+        if canonical is None:
             continue
         odds = _num(raw.get("data-odds") or raw.get("odds"))
         probability = _num(raw.get("data-probability") or raw.get("probability"))
@@ -309,7 +317,9 @@ def parse_match_page(page: str, *, day: str, url: str | None = None) -> list[dic
                 bookmaker = match.group(2).strip()
         rows.append({
             "source": SOURCE, "date": day, "home": home, "away": away,
-            "fixture_url": url, "market": market, "selection": selection,
+            "fixture_url": url, "market": canonical.market, "selection": canonical.selection,
+            "raw_market": raw_market, "raw_selection": raw_selection,
+            "line": canonical.line,
             "probability": probability, "odds": odds, "book": bookmaker, "bookmaker": bookmaker,
             "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         })
