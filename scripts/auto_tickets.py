@@ -1503,7 +1503,10 @@ def price_supply_report(rows, day=None, qualifying=None) -> list[str]:
             average += 1
         elif kind == psrc.ODDS_KIND_FAIR:
             fair += 1
-        if row.get("price_push_eligible") is not False:
+        source_name = str(row.get("odds_source") or "").strip()
+        if (row.get("price_push_eligible") is not False
+                and psrc.known(source_name)
+                and psrc.spec(source_name).can_execute()):
             execution_safe_n += 1
     qualifying = len(rows) if qualifying is None else qualifying
     return [
@@ -1516,7 +1519,40 @@ def price_supply_report(rows, day=None, qualifying=None) -> list[str]:
         f"  qualifying legs: {qualifying}",
         f"  required legs: {LEGS_PER_ACCA}",
         "  " + psrc.policy_line(),
-    ]
+    ] + _donor_supply_lines(day)
+
+
+def _donor_supply_lines(day: str | None) -> list[str]:
+    """Show capture/scored/matched donor counts on every ticket day.
+
+    The pick build persists the source-health contract before auto-tickets
+    runs. Reading that receipt here keeps the card diagnostic truthful even
+    when the donor captured many rows that joined zero fixtures.
+    """
+    if not day:
+        return []
+    path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
+    try:
+        payload = json.loads(path.read_text())
+        sources = payload.get("sources", {})
+    except (OSError, ValueError, TypeError):
+        return ["  donor capture/match counters: source-health receipt unavailable"]
+    lines = ["  donor capture/match counters:"]
+    counters = (
+        ("betbetter", "bb_raw", "bb_scored", "bb_matched"),
+        ("boggio", "bg_raw", "bg_scored", "bg_matched"),
+        ("betminer", "bm_raw", "bm_scored", "bm_matched"),
+        ("pinnapi_odds", "pa_raw", "pa_matched", "pa_matched"),
+        ("sharpapi_odds", "sa_raw", "sa_matched", "sa_matched"),
+    )
+    for name, raw, scored, matched in counters:
+        row = sources.get(name) or {}
+        lines.append(
+            f"    {name}: captured={int(row.get(raw) or 0)} "
+            f"scored={int(row.get(scored) or 0)} "
+            f"matched={int(row.get(matched) or 0)}"
+        )
+    return lines
 
 
 def load_archived_picks():
@@ -1903,8 +1939,17 @@ def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=Fa
         #
         # They used to be collapsed into two booleans, which is why an
         # available donor price looked identical to no price at all.
-        if execution_safe and p.get("price_push_eligible") is False:
-            continue
+        if execution_safe:
+            # A printable leg must name a registered donor whose active policy
+            # permits execution. Do not trust an adapter-provided boolean:
+            # unknown/stale ``odds_source`` values were the path that let the
+            # 2026-10-03 Forebet/miner fallback reach a frozen slip.
+            source_name = str(p.get("odds_source") or "").strip()
+            source_spec = psrc.spec(source_name)
+            if not psrc.known(source_name) or not source_spec.can_execute():
+                continue
+            if p.get("price_push_eligible") is False:
+                continue
         # Option C price-quality gate (2026-10-02, operator sign-off): a real
         # money leg needs a second source quoting the same market+selection
         # within 7% of the chosen price. The 10-01 card rode 4/4 single-source
@@ -2459,6 +2504,26 @@ def _leg_key(l) -> tuple[str, str]:
     return (str(l.get("match") or ""), str(l.get("pick") or "").upper())
 
 
+def _superseded_no_bet_lines(target: str, prior: dict | None, frozen: dict | None) -> list[str]:
+    """Record a force recut when the corrected plan is an honest no-bet.
+
+    The frozen slip remains write-once and is never overwritten. The note is
+    printed and, by the caller, written to a separate recut report so the
+    operator can see which card was superseded even though no replacement
+    legs qualified.
+    """
+    if not prior:
+        return []
+    frozen_at = str((frozen or {}).get("frozen_at") or "unknown")
+    return [
+        "FORCE RE-CUT — superseded the prior same-day card; corrected result is NO BET:",
+        f"  original frozen slip retained: localdata/auto_tickets_{target}.txt",
+        f"  original frozen_at retained: {frozen_at}",
+        f"  superseded card had {len(prior.get('accas') or [])} acca(s); no replacement legs qualified",
+        "  write-once freeze semantics preserved; the frozen slip was not edited",
+    ]
+
+
 def _replacement_lines(prior, plan) -> list[str]:
     """Leg-level diff of a slip being replaced.
 
@@ -2602,6 +2667,12 @@ def cmd_today(args, st):
     except Exception as e:
         print(f"cannot read picks_today.json: {e}")
         return 1
+    prior_slip = next(
+        (dict(s) for s in st.get("open_slips", [])
+         if str(s.get("date") or "")[:10] == str(target)[:10]),
+        None,
+    )
+    prior_frozen = frozen_entry(st, target)
     pool = playable_legs(slate, day=target, settled=settled, execution_safe=True)
     total_in = len(pool)
     census: dict[str, list[str]] = {}
@@ -2688,12 +2759,20 @@ def cmd_today(args, st):
         # for this date. A printed slip on disk is the frozen record of legs
         # already at the bookmaker, and that evidence must survive.
         upsert_slice_day(shadow_rows, target, allow_empty=not slip_txt.exists())
-        print("\n".join(census_lines))
-        print("\n".join(_slice_action_lines(slice_verdicts)))
-        print("\n".join(_slice_table_lines(slice_verdicts)))
-        print("\n".join(price_supply_report(slate, day=target, qualifying=len(plan_pool))))
-        print(f"NO BET TODAY — {len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
-        print("(bank stays unbet)")
+        recut_lines = _superseded_no_bet_lines(target, prior_slip, prior_frozen) if args.force else []
+        output_lines = (
+            census_lines
+            + _slice_action_lines(slice_verdicts)
+            + _slice_table_lines(slice_verdicts)
+            + price_supply_report(slate, day=target, qualifying=len(plan_pool))
+            + recut_lines
+            + [f"NO BET TODAY — {len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}",
+               "(bank stays unbet)"]
+        )
+        text = "\n".join(output_lines)
+        print(text)
+        if recut_lines:
+            (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(text + "\n")
         return 0
 
     fixture_report: dict[str, list[str]] = {}
@@ -2702,11 +2781,19 @@ def cmd_today(args, st):
                     rank_caps=slice_policy.get("rank_caps") or None)
     if not plan:
         upsert_slice_day(shadow_rows, target, allow_empty=not slip_txt.exists())
-        print("\n".join(census_lines))
-        print("\n".join(_slice_action_lines(slice_verdicts)))
-        print("\n".join(_slice_table_lines(slice_verdicts)))
-        print("\n".join(price_supply_report(slate, day=target, qualifying=len(plan_pool))))
-        print("NO BET TODAY — plan empty")
+        recut_lines = _superseded_no_bet_lines(target, prior_slip, prior_frozen) if args.force else []
+        output_lines = (
+            census_lines
+            + _slice_action_lines(slice_verdicts)
+            + _slice_table_lines(slice_verdicts)
+            + price_supply_report(slate, day=target, qualifying=len(plan_pool))
+            + recut_lines
+            + ["NO BET TODAY — plan empty"]
+        )
+        text = "\n".join(output_lines)
+        print(text)
+        if recut_lines:
+            (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(text + "\n")
         return 0
     # Task E (2026-09-06): a force-repick REPLACES the target date's own
     # existing slip (upsert below deletes it) — so its stake was excluded
@@ -2719,6 +2806,10 @@ def cmd_today(args, st):
             target, pure_shadow_plan, pool_by_key, real_keys, diminished,
         )
     upsert_slice_day(real_rows + shadow_rows, target)
+    # ``prior_slip`` was captured before upsert above. This is an append-to-
+    # output audit note only; the write-once freeze entry is deliberately
+    # untouched by --force.
+    replacement_lines = _replacement_lines(prior_slip, plan) if prior_slip else []
     # Freeze decision is taken BEFORE the state-persist phase and executed
     # inside it (single save_state), never after the slip is on disk.
     should_freeze = (str(target) == now.strftime("%Y-%m-%d")
@@ -2745,6 +2836,14 @@ def cmd_today(args, st):
                      + "; ".join(parts))
     lines.extend(_slice_action_lines(slice_verdicts))
     lines.extend(_slice_table_lines(slice_verdicts))
+    lines.extend(price_supply_report(slate, day=target, qualifying=len(plan_pool)))
+    if replacement_lines:
+        lines.append("FORCE RE-CUT — superseded the prior same-day card before writing this card:")
+        lines.extend(replacement_lines)
+        lines.append(
+            "  The original frozen_at entry is retained; --force replaces the card "
+            "without changing the write-once freeze timestamp."
+        )
     if shadow_rows:
         lines.append(f"SELECTION LADDER SHADOW: {len(shadow_rows)} diminished-bucket leg(s) logged")
     if fixture_report.get("dropped"):

@@ -205,7 +205,7 @@ def _slate_rows_with_boards():
             ("Arouca", "Boavista", "2026-09-06T21:45:00+02:00"),
     ]):
         odds = 1.30 + i * 0.02
-        source = (pt.SCOUTINGSTATS_ODDS_SOURCE if i < 2 else pt.BZZOIRO_ODDS_SOURCE)
+        source = pt.BZZOIRO_ODDS_SOURCE
         board = [{"source": pt.BZZOIRO_ODDS_SOURCE, "bookmaker": "BookOne",
                   "odds": odds - 0.01, "captured_at": "2026-09-06T08:00:00Z",
                   "league": "x", "kickoff": ko, "market": "1x2",
@@ -235,8 +235,8 @@ def test_every_printed_leg_is_logged_append_only_with_its_board(tmp_path, monkey
     assert all(ln["date"] == "2026-09-06" and ln["engine_odds"] for ln in lines)
     assert all(ln["price_board"] for ln in lines)
     # engine odds/source appear next to the board (no archive needed later)
-    ss_lines = [ln for ln in lines if ln["odds_source"] == pt.SCOUTINGSTATS_ODDS_SOURCE]
-    assert len(ss_lines) == 2 and all(ln["price_board"] for ln in ss_lines)
+    bzz_lines = [ln for ln in lines if ln["odds_source"] == pt.BZZOIRO_ODDS_SOURCE]
+    assert len(bzz_lines) == 4 and all(ln["price_board"] for ln in bzz_lines)
     # a second run appends, never overwrites
     assert at.cmd_today(args, st) == 0
     lines2 = [json.loads(x) for x in log.read_text().splitlines()]

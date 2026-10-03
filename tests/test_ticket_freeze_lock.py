@@ -45,7 +45,7 @@ def _slate(day="2026-09-06"):
         rows.append({"date": day, "home": home, "away": away, "kickoff": ko,
                      "league": "x", "bucket": "CERTIFIED_CLEAN", "market": "1x2",
                      "pick": "home", "avg_p": 70.0, "odds": odds,
-                     "quarantine": "none"})
+                     "quarantine": "none", "odds_source": "bzzoiro_odds"})
     return rows
 
 
