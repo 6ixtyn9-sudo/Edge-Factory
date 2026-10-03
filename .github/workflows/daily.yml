@@ -75,6 +75,15 @@ jobs:
       ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '1.5,2.5,3.5,4.5' }}
       ODDS_API_MONTHLY_BUDGET: ${{ secrets.ODDS_API_MONTHLY_BUDGET || '480' }}
       ODDS_API_CLOSE_WINDOW_MIN: ${{ secrets.ODDS_API_CLOSE_WINDOW_MIN || '45' }}
+
+      # OddsPAPI bounded candidate-snapshot capture (PRICE-LANE-TEARDOWN-2026-10-03).
+      # The code path ships disabled: without these mappings the capture never
+      # runs in Actions and OddsPAPI stays capability metadata rather than an
+      # active source. Fails closed on a missing key or an 'off' flag.
+      ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
+      EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || 'off' }}
+      ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
+
       TZ: 'Africa/Johannesburg'
 
     steps:
