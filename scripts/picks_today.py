@@ -2274,6 +2274,12 @@ def _cached_named_book_bundle(
     observed_raw_rows = int(report["raw_rows"])
     bundle_stats: dict = {}
     bundle = _odds_bundle_from_rows(rows, provider=provider, stats=bundle_stats)
+    # Rows rejected BEFORE the bundle still have to be counted, or a board
+    # that was thrown away wholesale reports an indistinguishable "none=0".
+    if report["identity_missing_rows"]:
+        bundle["prebundle_misses"] = {
+            "fixture_identity_missing": int(report["identity_missing_rows"]),
+        }
     report.update(bundle_stats)
     report["raw_rows"] = observed_raw_rows
     report["usable_rows"] = len(rows)
@@ -3194,6 +3200,13 @@ def donor_join_diagnostics(
         misses: Counter = Counter()
         vocabulary: Counter = Counter()
         matched_rows = 0
+        # Misses the board already recorded before this bundle was built
+        # (e.g. persisted rows with no fixture identity).
+        prebundle = Counter({
+            str(reason): int(count or 0)
+            for reason, count in dict(bundle.get("prebundle_misses") or {}).items()
+        })
+        misses.update(prebundle)
         input_rows = list(bundle.get("input_rows") or bundle.get("raw_rows_list") or [])
         for raw_row in input_rows:
             normalized, failure = canonicalize_row(raw_row)
@@ -3265,7 +3278,7 @@ def donor_join_diagnostics(
             )
             misses["no_pick_for_fixture" if fixture_exists else "fixture_key_miss"] += 1
         report[source] = {
-            "raw_rows": len(input_rows),
+            "raw_rows": len(input_rows) + sum(prebundle.values()),
             "matched_rows": matched_rows,
             "miss_counts": dict(sorted(misses.items())),
             # Counts of provider market/selection tokens only. No payloads,
