@@ -201,6 +201,12 @@ def min_lead_minutes() -> int:
     except (TypeError, ValueError):
         return DEFAULT_MIN_LEAD_MINUTES
 
+def candidate_only_build() -> bool:
+    """True for the first, non-ticketable pass of the two-pass daily build."""
+    return os.environ.get("EDGE_FACTORY_CANDIDATE_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
 # ---- purity buckets ----
 BUCKET_CERTIFIED = "CERTIFIED_CLEAN"
 BUCKET_CAUTION = "CAUTION"
@@ -2834,12 +2840,17 @@ def _shadow_failure_lines(day: str, stats: dict[str, dict]) -> None:
 def _capture_shadow_candidates(day: str) -> dict[str, dict]:
     """Capture every verified shadow candidate without touching the production path.
 
+    The candidate pass intentionally makes no paid/provider capture. Its sole
+    job is to freeze a fixture shortlist for the final priced pass.
+
     SHADOW-01 adds betminer (voice), pinnapi_odds (Pinnacle named-book price)
     and betbetter (keyless CC BY 4.0 benchmark) to the existing
     futbolpronosticos/sportytrager lane. All five are zero-credit shadow:
     per-date ledgers + health rows only. None enters consensus weights or
     the pick path; adapters are inert without their env keys and never raise.
     """
+    if candidate_only_build():
+        return _zero_shadow_stats("candidate_only")
     if os.environ.get("EDGE_FACTORY_SHADOW_CAPTURE", "on").strip().lower() in {"0", "off", "false", "no"}:
         stats = _zero_shadow_stats("disabled")
         _shadow_failure_lines(day, stats)
@@ -4300,8 +4311,10 @@ def main():
     _veto_pools = build_pool_table(_veto_contexts) if _veto_contexts else {}
     as_of = pick_run_as_of()
     lead_minutes = min_lead_minutes()
+    candidate_only = candidate_only_build()
     print(
-        f"operational as_of={as_of.isoformat(timespec='seconds')} min_lead={lead_minutes}m",
+        f"operational as_of={as_of.isoformat(timespec='seconds')} min_lead={lead_minutes}m "
+        f"build={'candidate' if candidate_only else 'priced_final'}",
         file=sys.stderr,
     )
 
@@ -4400,7 +4413,7 @@ def main():
 
         bzz_stats: dict = {}
         scouting_stats: dict = {}
-        odds_bundle = bzzoiro_odds_bundle(day, stats=bzz_stats)
+        odds_bundle = bzzoiro_odds_bundle(day, live=not candidate_only, stats=bzz_stats)
         # Persist upstream zero-run evidence for visibility only. This never
         # alters enrichment, certification, or ticket eligibility.
         record_bzzoiro_run(day, bzz_stats)
@@ -4441,8 +4454,10 @@ def main():
                 entry[stats_name] = int(donor_matches.get(source_name, 0))
 
         be_stats: dict = {}
-        be_enriched = enrich_unmatched_with_betexplorer(
+        be_enriched = 0 if candidate_only else enrich_unmatched_with_betexplorer(
             picks, day, bundles=(odds_bundle, secondary_bundle), stats=be_stats)
+        if candidate_only:
+            be_stats["status"] = "candidate_only"
 
         # Shadow stats were captured above, before bundle construction.
         fp_shadow_stats = shadow_stats.get("futbolpronosticos", {})

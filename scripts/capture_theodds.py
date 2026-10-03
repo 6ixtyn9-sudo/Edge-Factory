@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """capture_theodds.py — snapshot The Odds API prices for the frozen daily shortlist.
 
-This is not a consensus voter.  It captures named-book observations for CLV
-and for a *subsequent* pick build's cached price board.  The current invocation
-still cannot use a row captured after its build started; picks_today enforces
-that per-row timestamp cutoff rather than backfilling an already-made card.
+This is not a consensus voter. It captures named-book observations for the
+second, final pricing pass of a two-pass candidate → price → ticket build (and
+for CLV). The candidate pass cannot use a row captured after it began;
+picks_today enforces that per-row timestamp cutoff rather than backfilling an
+already-made card.
 
 Wired into scripts/daily.py via --auto at the existing CLV capture points, so
 the established commands cover everything:

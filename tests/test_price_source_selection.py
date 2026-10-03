@@ -262,3 +262,11 @@ def test_policy_is_explicit_and_printable():
     line = psrc.policy_line()
     assert "avg_donor=on" in line and "fair_donor=on" in line
     assert "corroboration=preferred" in line
+
+
+def test_candidate_pass_skips_provider_shadow_capture(monkeypatch):
+    monkeypatch.setenv("EDGE_FACTORY_CANDIDATE_ONLY", "1")
+    stats = pt._capture_shadow_candidates(DAY)
+    assert stats["pinnapi_odds"]["status"] == "candidate_only"
+    assert stats["sharpapi_odds"]["status"] == "candidate_only"
+    assert stats["boggio"]["status"] == "candidate_only"
