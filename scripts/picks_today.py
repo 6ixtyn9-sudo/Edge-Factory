@@ -33,7 +33,12 @@ from edgefactory.util import (
     strip_retired_top_scores,
 )
 from edgefactory.market_registry import get_odds_tier
-from edgefactory.odds_normalization import canonicalize_row, provider_kickoff_date
+from edgefactory.odds_normalization import (
+    canonicalize_row,
+    miss_bucket,
+    miss_vocabulary_token,
+    provider_kickoff_date,
+)
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.fade import (
     FADE_FAMILY,
@@ -62,6 +67,7 @@ from edgefactory.source_health import (
     persist_daily_source_health,
     source_role_lines,
     record_bzzoiro_run,
+    zero_row_reason,
 )
 from edgefactory.shadow import append_price_board_rows, read_shadow_rows
 from edgefactory import price_sources as psrc
@@ -1900,6 +1906,7 @@ def resolve_kickoff_utc(
     could not see, e.g. live-fetched bzzoiro odds rows).
     """
     if pick.get("kickoff_utc"):
+        attach_kickoff_display(pick)
         return
     own_raw = _kickoff_value(pick) or ""
     own_utc = zoned_kickoff_to_utc(own_raw) if own_raw else None
@@ -1907,6 +1914,7 @@ def resolve_kickoff_utc(
         pick["kickoff_utc"] = own_utc
         pick["kickoff_source"] = KICKOFF_SRC_OFFSET
         pick["kickoff_witness"] = f"own kickoff {own_raw!r}"
+        attach_kickoff_display(pick)
         return
 
     candidates: list[tuple[str, str, str, bool]] = []  # (utc, source_name, raw, is_odds_row)
@@ -1924,6 +1932,7 @@ def resolve_kickoff_utc(
     if not candidates:
         pick["kickoff_utc"] = None
         pick["kickoff_source"] = KICKOFF_SRC_UNRESOLVED
+        pick["kickoff_sast"] = None
         return
     distinct = {c[0] for c in candidates}
     if len(distinct) > 1:
@@ -1932,6 +1941,7 @@ def resolve_kickoff_utc(
         # guard's region fallback still covers it.
         pick["kickoff_utc"] = None
         pick["kickoff_source"] = KICKOFF_SRC_UNRESOLVED
+        pick["kickoff_sast"] = None
         pick["kickoff_witness"] = (
             f"conflicting zoned witnesses: "
             + "; ".join(f"{n} {r!r}" for _, n, r, _ in candidates[:4]))
@@ -1940,6 +1950,86 @@ def resolve_kickoff_utc(
     pick["kickoff_utc"] = utc
     pick["kickoff_source"] = KICKOFF_SRC_ODDS_ROW if is_odds else KICKOFF_SRC_SIBLING
     pick["kickoff_witness"] = f"{sname} kickoff {sraw!r}"
+    attach_kickoff_display(pick)
+
+
+def attach_kickoff_display(pick: dict) -> None:
+    """Add ``kickoff_sast``: the one consistent human rendering.
+
+    The raw ``kickoff`` text is deliberately left alone - it is the
+    pre-match guard's input and the audit's provenance, and rewriting it
+    could move a kickoff LATER, which is the one direction the lead guard
+    must never be nudged. ``kickoff_sast`` is derived from the authoritative
+    zone-bearing ``kickoff_utc`` only, so it is exact rather than merely
+    consistent, and it replaces the two incompatible feed renderings
+    ("03-10, 17:00" from a UK-local source, bare "11:00" from an
+    Americas-local one) with a single unambiguous string.
+    """
+    utc_text = str(pick.get("kickoff_utc") or "").strip()
+    if not utc_text:
+        pick.setdefault("kickoff_sast", None)
+        return
+    try:
+        stamp = datetime.fromisoformat(utc_text)
+    except ValueError:
+        pick.setdefault("kickoff_sast", None)
+        return
+    if stamp.tzinfo is None:
+        pick.setdefault("kickoff_sast", None)
+        return
+    pick["kickoff_sast"] = stamp.astimezone(_local_tz()).strftime("%Y-%m-%d %H:%M SAST")
+
+
+def kickoff_display_offset_census(picks: list[dict]) -> dict[str, dict[str, int]]:
+    """How far each feed's kickoff TEXT sits from the true SAST instant.
+
+    Answers "systematic or per-source?" from data on every run instead of
+    from a single fixture. Buckets are minutes of (displayed wall clock -
+    true SAST wall clock), grouped by the shape of the rendering, because
+    the rendering - not the pick - is what identifies the upstream feed.
+    """
+    census: dict[str, Counter] = {}
+    for pick in picks:
+        utc_text = str(pick.get("kickoff_utc") or "").strip()
+        raw = str(_kickoff_value(pick) or "").strip()
+        if not utc_text or not raw:
+            continue
+        try:
+            stamp = datetime.fromisoformat(utc_text)
+        except ValueError:
+            continue
+        if stamp.tzinfo is None:
+            continue
+        match = re.search(r"(\d{1,2}):(\d{2})", raw)
+        if not match:
+            continue
+        local = stamp.astimezone(_local_tz())
+        displayed = int(match.group(1)) * 60 + int(match.group(2))
+        actual = local.hour * 60 + local.minute
+        delta = (displayed - actual) % 1440
+        if delta > 720:
+            delta -= 1440
+        shape = "dd-mm_hh:mm" if re.match(r"^\d{1,2}-\d{1,2}[ ,]", raw) else (
+            "iso" if re.match(r"^\d{4}-\d{2}-\d{2}", raw) else "bare_hh:mm")
+        census.setdefault(shape, Counter())[f"{delta:+d}m"] += 1
+    return {shape: dict(sorted(counts.items())) for shape, counts in sorted(census.items())}
+
+
+def kickoff_offset_lines(census: dict[str, dict[str, int]]) -> list[str]:
+    """One compact line per rendering shape, plus the systematic verdict."""
+    if not census:
+        return []
+    lines = []
+    for shape, counts in census.items():
+        rendered = " ".join(f"{offset}={count}" for offset, count in counts.items())
+        lines.append(f"kickoff display offset [{shape}]: {rendered}")
+    distinct = {offset for counts in census.values() for offset in counts}
+    lines.append(
+        "kickoff display offset verdict: "
+        + ("systematic" if len(distinct) == 1 else f"per-source ({len(distinct)} distinct offsets)")
+        + " — kickoff_utc is authoritative; kickoff_sast is rendered from it"
+    )
+    return lines
 
 
 def attach_kickoff_normalisation(picks: list[dict], data: dict[str, dict]) -> None:
@@ -1949,6 +2039,25 @@ def attach_kickoff_normalisation(picks: list[dict], data: dict[str, dict]) -> No
     run-day scan cannot see them (see enrich_with_live_odds)."""
     for p in picks:
         resolve_kickoff_utc(p, data=data)
+
+
+def _parse_resolved_kickoff_instant(pick: dict) -> datetime | None:
+    """The pick's authoritative absolute kickoff, if one was resolved.
+
+    ``kickoff_utc`` is only ever set from an explicitly zoned witness (see
+    ``resolve_kickoff_utc``); a zone-free string cannot produce one. It is
+    therefore safe to compare against, unlike the raw display text.
+    """
+    raw = pick.get("kickoff_utc")
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed
 
 
 def operational_pick_eligibility(
@@ -1971,9 +2080,24 @@ def operational_pick_eligibility(
 
     ko = parse_kickoff_dt(_kickoff_value(pick), pick.get("date"))
     if ko is None:
+        # An absent display string stays a skip even when kickoff_utc is
+        # known: admitting it here would ADD picks, and this guard is only
+        # ever allowed to subtract them.
         return False, "missing_kickoff_same_day"
     if ko.tzinfo is None:
+        # The raw feed text carries no zone, so it is read as local time.
+        # On 2026-10-03 every zone-free renderer observed (statarea UTC-5,
+        # zulubet UTC+1) sits BEHIND SAST, which made this read early — the
+        # safe direction — by luck rather than by construction. A renderer
+        # ahead of SAST would make it read LATE, which is the one direction
+        # a pre-match guard must never move.
         ko = ko.replace(tzinfo=_local_tz())
+    resolved = _parse_resolved_kickoff_instant(pick)
+    if resolved is not None:
+        # Take the EARLIER of the feed text and the authoritative instant.
+        # This can only ever shorten the computed lead, so it can only ever
+        # skip more picks, never admit one the old guard rejected.
+        ko = min(ko, resolved)
     lead = (ko - as_of).total_seconds() / 60.0
     if lead < min_lead:
         return False, f"inside_{min_lead}m_lead_or_started"
@@ -2086,6 +2210,13 @@ def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
 # ``oddspapi`` rows into an ``oddspapi_odds_YYYY-MM`` file).
 THEODDSAPI_ODDS_MAX_AGE_H = 24.0
 ODDSPAPI_ODDS_SOURCE = "oddspapi_odds"
+# Lowest OddsPAPI row generation this selection will consume. Must track
+# scripts/capture_oddspapi.py:SCHEMA_VERSION; the pairing is asserted in
+# tests/test_oddspapi_schema_invalidation.py so the two cannot drift.
+# Generation 1 (and unmarked rows) came from the parser that read outcome
+# names from the wrong key and had no fixture identity, so every one of its
+# selections is untrustworthy — not merely the ones with blank teams.
+ODDSPAPI_MIN_SCHEMA_VERSION = 2
 
 
 def _utc_price_stamp(value: object) -> datetime | None:
@@ -2108,6 +2239,7 @@ def _cached_named_book_bundle(
     file_prefix: str,
     raw_source_names: tuple[str, ...],
     not_after: datetime | None = None,
+    min_schema_version: int | None = None,
     stats: dict | None = None,
 ) -> dict:
     """Read one persisted named-book board with a strict build-time cutoff.
@@ -2127,6 +2259,7 @@ def _cached_named_book_bundle(
     report = {
         "status": "absent", "raw_rows": 0, "usable_rows": 0,
         "after_build_rows": 0, "stale_rows": 0, "invalid_timestamp_rows": 0,
+        "identity_missing_rows": 0, "stale_schema_rows": 0,
         "path": str(path),
     }
     rows: list[dict] = []
@@ -2150,6 +2283,19 @@ def _cached_named_book_bundle(
                     if str(raw.get("source") or "").strip() not in accepted_sources:
                         continue
                     report["raw_rows"] += 1
+                    # Rows persisted by a superseded parser generation are
+                    # bypassed on the generation marker, not on whatever
+                    # symptom that generation happened to show. The file is
+                    # kept intact as evidence; the rows are classified and
+                    # counted, never silently reused and never deleted.
+                    if min_schema_version is not None:
+                        try:
+                            row_schema = int(str(raw.get("schema_version") or 0) or 0)
+                        except (TypeError, ValueError):
+                            row_schema = 0
+                        if row_schema < int(min_schema_version):
+                            report["stale_schema_rows"] += 1
+                            continue
                     stamp = _utc_price_stamp(raw.get("captured_at"))
                     if stamp is None:
                         report["invalid_timestamp_rows"] += 1
@@ -2165,6 +2311,13 @@ def _cached_named_book_bundle(
                     # of a bookmaker missing from a provider payload.
                     if not str(raw.get("bookmaker") or "").strip():
                         continue
+                    # Nor the identity of the fixture. A persisted row with no
+                    # teams cannot join any pick, so counting it as "usable"
+                    # overstated OddsPAPI's supply by 414 rows on 2026-10-03.
+                    if not str(raw.get("home") or "").strip() or not str(
+                            raw.get("away") or "").strip():
+                        report["identity_missing_rows"] += 1
+                        continue
                     rows.append(psrc.annotate_row(raw, source=provider))
         except (OSError, csv.Error, gzip.BadGzipFile):
             report["status"] = "unavailable"
@@ -2176,6 +2329,15 @@ def _cached_named_book_bundle(
     observed_raw_rows = int(report["raw_rows"])
     bundle_stats: dict = {}
     bundle = _odds_bundle_from_rows(rows, provider=provider, stats=bundle_stats)
+    # Rows rejected BEFORE the bundle still have to be counted, or a board
+    # that was thrown away wholesale reports an indistinguishable "none=0".
+    prebundle_misses = {
+        "fixture_identity_missing": int(report["identity_missing_rows"]),
+        "stale_schema": int(report["stale_schema_rows"]),
+    }
+    prebundle_misses = {k: v for k, v in prebundle_misses.items() if v}
+    if prebundle_misses:
+        bundle["prebundle_misses"] = prebundle_misses
     report.update(bundle_stats)
     report["raw_rows"] = observed_raw_rows
     report["usable_rows"] = len(rows)
@@ -2218,6 +2380,7 @@ def oddspapi_odds_bundle(
         file_prefix=ODDSPAPI_ODDS_SOURCE,
         raw_source_names=("oddspapi", ODDSPAPI_ODDS_SOURCE),
         not_after=not_after,
+        min_schema_version=ODDSPAPI_MIN_SCHEMA_VERSION,
         stats=stats,
     )
 
@@ -3094,25 +3257,51 @@ def donor_join_diagnostics(
         if not source:
             continue
         misses: Counter = Counter()
+        vocabulary: Counter = Counter()
         matched_rows = 0
+        # Misses the board already recorded before this bundle was built
+        # (e.g. persisted rows with no fixture identity).
+        prebundle = Counter({
+            str(reason): int(count or 0)
+            for reason, count in dict(bundle.get("prebundle_misses") or {}).items()
+        })
+        misses.update(prebundle)
         input_rows = list(bundle.get("input_rows") or bundle.get("raw_rows_list") or [])
         for raw_row in input_rows:
             normalized, failure = canonicalize_row(raw_row)
             if normalized is None:
-                failure_text = str(failure or "")
-                reason = (
-                    "selection_unmapped"
-                    if failure_text.startswith("unknown_selection:")
-                    else "market_unmapped"
-                )
-                misses[reason] += 1
+                # Four buckets, not two: an *unsupported* market/selection is
+                # recognised provider vocabulary we deliberately do not price;
+                # an *unmapped* one has never been seen. Both are counted; the
+                # vocabulary census records the raw token either way so the
+                # next run prints the provider's actual market strings without
+                # a live call.
+                misses[miss_bucket(failure)] += 1
+                vocabulary[miss_vocabulary_token(failure)] += 1
+                continue
+            if not str(normalized.get("home") or "").strip() or not str(
+                    normalized.get("away") or "").strip():
+                # A priced row with no teams can never join anything. It is
+                # not a fixture-coverage miss and must not be reported as
+                # one: it is a parser/identity defect in the capture.
+                misses["fixture_identity_missing"] += 1
                 continue
             if normalized.get("timestamp_suspect") is True:
                 misses["timestamp_rejected"] += 1
                 continue
             row_day = str(normalized.get("date") or "")[:10]
-            if not row_day or row_day not in pick_days:
+            if not row_day:
+                # No usable kickoff date at all. This IS a defect: the join
+                # date failed closed because the provider stamp was missing
+                # or unparseable.
                 misses["date_mismatch"] += 1
+                continue
+            if row_day not in pick_days:
+                # A well-formed date outside the slate window. An upcoming
+                # multi-day board (Bet Better publishes one) legitimately
+                # lands here; calling it a "mismatch" implied a bug that is
+                # not there.
+                misses["out_of_window"] += 1
                 continue
             if _valid_decimal_odds(normalized.get("odds")) is None:
                 # Not one of the six join-key failures: preserve it explicitly
@@ -3148,14 +3337,19 @@ def donor_join_diagnostics(
             )
             misses["no_pick_for_fixture" if fixture_exists else "fixture_key_miss"] += 1
         report[source] = {
-            "raw_rows": len(input_rows),
+            "raw_rows": len(input_rows) + sum(prebundle.values()),
             "matched_rows": matched_rows,
             "miss_counts": dict(sorted(misses.items())),
+            # Counts of provider market/selection tokens only. No payloads,
+            # no identifiers, nothing credential-bearing.
+            "unmapped_vocabulary": dict(
+                sorted(vocabulary.items(), key=lambda item: (-item[1], item[0]))
+            ),
         }
     return report
 
 
-def donor_join_miss_lines(report: dict[str, dict], *, limit: int = 4) -> list[str]:
+def donor_join_miss_lines(report: dict[str, dict], *, limit: int = 6) -> list[str]:
     """Compact, stable top-count lines suitable for Actions logs."""
     lines: list[str] = []
     for source in sorted(report):
@@ -3167,6 +3361,27 @@ def donor_join_miss_lines(report: dict[str, dict], *, limit: int = 4) -> list[st
             f"donor join misses {source}: {rendered} "
             f"(matched_rows={int(row.get('matched_rows') or 0)} "
             f"raw_rows={int(row.get('raw_rows') or 0)})"
+        )
+    return lines
+
+
+def donor_vocabulary_lines(report: dict[str, dict], *, limit: int = 12) -> list[str]:
+    """Print the provider tokens behind every canonicalisation miss.
+
+    This is how the next run enumerates a donor's real market/selection
+    vocabulary without a live discovery call: the raw token is already in
+    the captured ledger, so the miss itself can report it.
+    """
+    lines: list[str] = []
+    for source in sorted(report):
+        vocabulary = Counter(report[source].get("unmapped_vocabulary") or {})
+        if not vocabulary:
+            continue
+        top = sorted(vocabulary.items(), key=lambda item: (-item[1], item[0]))[:limit]
+        rendered = " ".join(f"{token}={count}" for token, count in top)
+        lines.append(
+            f"donor unmapped vocabulary {source}: {rendered} "
+            f"(distinct={len(vocabulary)})"
         )
     return lines
 
@@ -4647,6 +4862,11 @@ def main():
         donor_matches = donor_match_counts(picks, donor_bundles)
         shadow_donor_names = {
             "betbetter", "boggio", "betminer", "pinnapi_odds", "sharpapi_odds",
+            # OddsPAPI is a named-book price source, not a shadow donor, but
+            # it captured 414 usable rows and matched zero with no miss
+            # accounting at all. A counted miss is worth more than a silent
+            # zero, so it gets the same per-reason buckets.
+            ODDSPAPI_ODDS_SOURCE,
         }
         donor_join_report = donor_join_diagnostics(
             picks,
@@ -4668,7 +4888,17 @@ def main():
                 join_row = donor_join_report.get(source_name) or {}
                 entry["join_miss_counts"] = dict(join_row.get("miss_counts") or {})
                 entry["join_matched_rows"] = int(join_row.get("matched_rows") or 0)
+        oddspapi_join_row = donor_join_report.get(ODDSPAPI_ODDS_SOURCE) or {}
+        if oddspapi_join_row:
+            oddspapi_stats["join_miss_counts"] = dict(
+                oddspapi_join_row.get("miss_counts") or {})
+            oddspapi_stats["join_matched_rows"] = int(
+                oddspapi_join_row.get("matched_rows") or 0)
         for line in donor_join_miss_lines(donor_join_report):
+            print(line, file=sys.stderr)
+        for line in donor_vocabulary_lines(donor_join_report):
+            print(line, file=sys.stderr)
+        for line in kickoff_offset_lines(kickoff_display_offset_census(picks)):
             print(line, file=sys.stderr)
 
         be_stats: dict = {}
@@ -4770,6 +5000,9 @@ def main():
             "can_vote": len(data.get("bzzoiro", {})) > 0,
             "freshness_h": 0.0 if bzz_status in {"ok", "empty"} else None,
             "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
+            "status": bzz_status or None,
+            "reason": zero_row_reason(
+                bzz_status, bzz_stats.get("http_statuses"), bzz_stats.get("quota_hint")),
         }
         health_observations["bzzoiro_odds"] = {
             "fetched": bzz_status in {"ok", "empty", "auth", "quota", "unavailable"},
@@ -4779,6 +5012,11 @@ def main():
             "can_vote": False,
             "freshness_h": 0.0 if bzz_status == "ok" else None,
             "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
+            # Credential-blocked diagnostics only: the operator must be able
+            # to tell "the key/plan was rejected" from "the endpoint moved".
+            "status": bzz_status or None,
+            "reason": zero_row_reason(
+                bzz_status, bzz_stats.get("http_statuses"), bzz_stats.get("quota_hint")),
         }
         be_cache_rows = int(betexplorer_cache_stats.get("usable_rows") or 0)
         health_observations["betexplorer"] = {
@@ -4841,6 +5079,15 @@ def main():
             "can_vote": False,
             "freshness_h": 0.0 if pa_shadow_stats.get("status") == "ok" else None,
             "blocker": pa_shadow_stats.get("blocker"),
+            # An authenticated HTTP 200 that returns no events is VALID-EMPTY,
+            # not "unavailable". Reporting it as unavailable told the operator
+            # to go and fix an integration that is already working.
+            "status": pa_shadow_stats.get("status"),
+            "reason": zero_row_reason(
+                pa_shadow_stats.get("status"),
+                pa_shadow_stats.get("http_statuses"),
+                pa_shadow_stats.get("quota_hint"),
+            ),
         }
         health_observations["theoddsapi"] = {
             # This stage deliberately does not make an API request.  A usable
@@ -4883,6 +5130,9 @@ def main():
             ),
             "status": oddspapi_stats.get("status"),
             "reason": None,
+            # Same per-reason join accounting the shadow donors already had.
+            "join_miss_counts": dict(oddspapi_stats.get("join_miss_counts") or {}),
+            "join_matched_rows": int(oddspapi_stats.get("join_matched_rows") or 0),
         }
         health_observations["betbetter"] = {
             "fetched": bb_shadow_stats.get("status") in {"ok", "empty"},
