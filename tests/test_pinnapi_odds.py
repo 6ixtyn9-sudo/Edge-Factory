@@ -36,21 +36,25 @@ def _payload():
 def test_parse_snapshot_normalizes_markets_and_filters_junk_prices():
     rows, schema_match = pa.parse_snapshot(_payload(), day="2026-10-03")
     assert schema_match is True
-    # 6 mapped markets from event 1; event 2 keeps moneyline->1x2 rows and
-    # the unknown corner market verbatim; the 0.95 price (<= 1.0) is dropped.
-    assert len(rows) == 10
+    # 6 mapped markets from event 1; event 2 keeps moneyline->1x2 rows.
+    # Unmappable corner-market selections are dropped by the shared
+    # canonicalizer; the 0.95 price (<= 1.0) is also dropped.
+    assert len(rows) == 8
     eerste = [r for r in rows if r["home"] == "Helmond Sport"]
     assert {(r["market"], r["selection"]) for r in eerste} >= {
         ("1x2", "home"), ("1x2", "draw"), ("1x2", "away"),
-        ("totals", "over"), ("totals", "under"), ("spreads", "away"),
+        ("ou_2.5", "over"), ("ou_2.5", "under"),
     }
+    # The shared canonical vocabulary deliberately has no spread market;
+    # that unmappable provider row is counted and withheld.
     assert all(r["book"] == "Pinnacle" and r["bookmaker"] == "Pinnacle" for r in rows)
     assert all(r["odds"] > 1.0 for r in rows)
     # moneyline alias + x->draw normalization
     brondby = [r for r in rows if r["home"] == "Brøndby IF"]
     assert ("1x2", "draw") in {(r["market"], r["selection"]) for r in brondby}
-    # Unknown market names are kept verbatim, never silently re-mapped.
-    assert any(r["market"] == "corner_kick_race" for r in brondby)
+    # Unknown market names are not silently re-mapped into the canonical
+    # price board.
+    assert not any(r.get("market") == "corner_kick_race" for r in brondby)
     assert {r["league"] for r in eerste} == {"Eerste Divisie"}
 
 
@@ -84,7 +88,7 @@ def test_capture_ok_counts_and_is_cache_first(monkeypatch, tmp_path):
     rows, stats = pa.capture_day("2026-10-03")
     assert stats["status"] == "ok"
     assert stats["pa_raw"] == 2       # distinct fixtures
-    assert stats["pa_matched"] == 10  # price rows
+    assert stats["pa_matched"] == 8  # canonical price rows
     assert stats["schema_match"] is True
     path = pa.persist_shadow("2026-10-03", rows, stats, localdata=tmp_path)
     ledger = json.loads(path.read_text())

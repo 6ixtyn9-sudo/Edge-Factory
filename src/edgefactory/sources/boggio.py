@@ -26,6 +26,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from edgefactory.odds_normalization import canonical_market_selection
+
 SOURCE="boggio"; BASE="https://football-prediction-api.p.rapidapi.com"; API_HOST="football-prediction-api.p.rapidapi.com"; KEY_ENV="RAPIDAPI_KEY"
 MIN_INTERVAL_S=float(os.environ.get("EDGE_FACTORY_BOGGIO_MIN_INTERVAL_S","10")); MAX_CALLS_PER_RUN=1
 LOCALDATA=Path(os.environ.get("EDGE_FACTORY_LOCALDATA",Path(__file__).resolve().parents[3]/"localdata"))
@@ -139,6 +141,12 @@ def parse_predictions(payload:Any, *, day:str):
   probs=item.get("probabilities") if isinstance(item.get("probabilities"),dict) else {}
   odds=item.get("odds") if isinstance(item.get("odds"),dict) else {}
   prediction=item.get("prediction")
+  raw_market=item.get("market") or "classic"
+  canonical, _failure = canonical_market_selection(
+    raw_market, prediction, home=home, away=away,
+  )
+  if canonical is None:
+   continue
   average_price=_selection_odds(odds,prediction)
   suspect=timestamp_suspect(published,stamp)
   rows.append({
@@ -147,8 +155,10 @@ def parse_predictions(payload:Any, *, day:str):
     "home":home,
     "away":away,
     "kickoff":item.get("start_date"),
-    "market":item.get("market") or "classic",
-    "selection":prediction,
+    "market":canonical.market,
+    "selection":canonical.selection,
+    "raw_market":raw_market,
+    "raw_selection":prediction,
     "probability":_num(probs.get(str(prediction)) or probs.get(prediction)),
     # --- price donor fields (operator promotion 2026-10-03) ---
     "odds":average_price,
@@ -183,6 +193,8 @@ def capture_day(day,*,localdata=None):
   if code!=200 or payload is None: stats.update(status=_status(code),blocker=f"boggio: HTTP {code} or non-JSON payload"); return [],_set_diag(stats)
   rows,shape=parse_predictions(payload,day=day); stats["schema_match"]=shape; stats["sample"]=_sample(payload)
   if not shape: stats.update(status="unavailable",blocker="boggio: snapshot schema not recognized; raw sample retained"); return [],_set_diag(stats)
+  source_items = payload.get("data") if isinstance(payload, dict) else payload
+  stats["canonicalization_dropped"] = max(0, len(source_items or []) - len(rows)) if isinstance(source_items, list) else 0
   stats["bg_raw"]=len({(r["home"],r["away"]) for r in rows}); stats["bg_scored"]=len(rows); stats["status"]="ok" if rows else "empty"; return rows,_set_diag(stats)
  except UpstreamBlocked as e:
   msg=str(e); stats["http_429"]=_429; stats["status"]="cooldown" if _cooling else ("quota" if "429" in msg or "budget" in msg else _status(None)); stats["blocker"]=msg[:180]; stats["errors"]=[msg[:180]]; return [],_set_diag(stats)
