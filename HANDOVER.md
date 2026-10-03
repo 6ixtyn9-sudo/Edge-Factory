@@ -1,6 +1,34 @@
 Edge Factory — Handover
 
-Date: 2026-06-18
+Date: 2026-10-03
+
+2026-10-03 operator-brief addendum — fail-closed prices, canonical donor joins, and production recut
+
+Delivered
+
+- Registered price-source execution gate now fails closed for unknown or stale `odds_source` values. The historical `forebet_best` / `SOURCE_FALLBACK` path is registered, disabled by default, and its active policy is printed. Fair/model prices remain evidence only unless the operator explicitly sets `EDGE_FACTORY_FAIR_PRICE_STAKEABLE=1`.
+- Boggio, Bet Better, BetMiner, PinnAPI, and SharpAPI use the shared `src/edgefactory/odds_normalization.py` vocabulary. Unmappable market/selection tokens are withheld and counted; donor health reports captured/scored/matched rows so shadow volume cannot masquerade as join health.
+- `cache_only` donors with usable rows remain available. Auto-ticket output prints `PRICE SUPPLY` and donor capture/match counters on both bet and no-bet days.
+- BetMiner now makes one documented same-day range request, `/value-bets/{date}/{date}`. HTTP 404 and unrecognized schemas write a scrubbed `localdata/betminer_probe_<date>.json` receipt and suppress same-day re-probing; diagnostics retain the five-call daily-cap and four-call run-budget fields.
+- SharpAPI uses the documented RapidAPI `/api/v1/odds` path and fails closed with `reason=missing_sport_filter` when `SHARPAPI_SPORT` is absent. The env example documents the sport and optional filters.
+- `picks_today.py` accepts both the historical positional date and the required `--date YYYY-MM-DD` form. The exact production command no longer treats `--date` as a pseudo-day.
+
+Production artifact review — 2026-10-03
+
+The authenticated Actions run supplied for review checked out `5714241612c6edcce7d7bb75139a98eee3335d7d` on `arena/01a100ac-edge-factory`; redacted Actions secrets were present. Capture completed for the usable sources, with `bzzoiro_odds` retryable at HTTP 403 and `soccervista` retryable after transport failures. The live run reported `shadow_fp_raw=253/scored=79`, `bb_raw=1324/bb_scored=1324/bb_matched=0`, `bg_raw=20/bg_scored=20/bg_matched=0`, `bm_raw=0/bm_scored=0` with the BetMiner HTTP-404 contract reason, and `sa_raw=0/sa_matched=0` with `missing_sport_filter`. The zero matched donor counters are therefore join failures, not missing credentials.
+
+The restored git-backed 2026-10-03 slate contains 55 rows and 32 donor-priced candidates, but zero named-book execution prices. The 28 ScoutingStats-derived prices are audit-only provider averages; the remaining priced fallback/unregistered rows are rejected by the registered-source gate. Operator review confirms the two prices on the original frozen card were not verified bookmaker odds: they came through `odds_source=zulubet`, `odds_match_method=fallback`, and `price_evidence=SOURCE_FALLBACK`. That card is invalid audit evidence, not a betting instruction, and must not be reused.
+
+The required corrective recut was then run against the restored production slate with `picks_today.py --date 2026-10-03` followed by `auto_tickets.py --date 2026-10-03 --force`. It produced an honest `NO BET TODAY`: `named-book execution prices: 0`, `execution-safe candidates: 0`, and `qualifying legs: 0`; the printed policy was `source_fallback=abstain`. The recut recorded `superseded_by_date[2026-10-03]=NO BET` through the command path, without changing the original frozen card or its write-once freeze record. Ordinary later runs now show the superseded/no-bet notice instead of re-printing the hallucinated prices. The original remains at `localdata/auto_tickets_2026-10-03.txt` with write-once `frozen_at` `2026-10-03T09:15:03+02:00`; it was not hand-edited. The local recut used the restored slate while provider credentials were unavailable in the sandbox, so the authenticated Actions diagnostics above remain the source of truth for live capture counters.
+
+Validation
+
+- Focused donor/contract run: 98 passed.
+- Full suite: 1033 passed.
+- `python -m compileall -q scripts src tests`: passed.
+- No `.github/workflows/*` changes.
+
+Date: 2026-10-03
 
 2026-06-27 addendum — short-odds sniper narrowing, purity rewrite, and monitoring plan
 

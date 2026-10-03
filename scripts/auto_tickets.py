@@ -228,6 +228,10 @@ STATE_FILE = LOCALDATA / "auto_tickets_state.json"
 # and their timestamp is adopted on first touch) and are never deleted; new
 # ones are no longer created.
 FROZEN_BOOK_KEY = "frozen_by_date"
+# A force recut can invalidate a frozen card without mutating its audit
+# artifact or write-once freeze record. This separate book prevents a later
+# ordinary run from re-printing an unsafe, superseded card as if it were live.
+SUPERSEDED_BOOK_KEY = "superseded_by_date"
 
 
 def legacy_frozen_path(target: str):
@@ -240,6 +244,36 @@ def frozen_entry(st: dict, target: str) -> dict | None:
     book = (st or {}).get(FROZEN_BOOK_KEY) or {}
     entry = book.get(str(target))
     return entry if isinstance(entry, dict) else None
+
+
+def superseded_entry(st: dict, target: str) -> dict | None:
+    """The corrected result that superseded a frozen card, if any."""
+    book = (st or {}).get(SUPERSEDED_BOOK_KEY) or {}
+    entry = book.get(str(target))
+    return entry if isinstance(entry, dict) else None
+
+
+def record_superseded_no_bet(st: dict, target: str, when, *, reason: str) -> dict:
+    """Record a force-recut no-bet without touching the frozen card.
+
+    The old slip remains available for audit and any already-placed bet must
+    not be silently deleted from the settlement ledger. The separate marker
+    only changes what a later ordinary run may present to the operator.
+    """
+    book = st.setdefault(SUPERSEDED_BOOK_KEY, {})
+    existing = book.get(str(target))
+    if isinstance(existing, dict):
+        return existing
+    frozen = frozen_entry(st, target) or {}
+    entry = {
+        "recorded_at": when.isoformat(timespec="seconds"),
+        "result": "NO BET",
+        "reason": reason,
+        "frozen_at": frozen.get("frozen_at"),
+        "audit_slip": f"localdata/auto_tickets_{target}.txt",
+    }
+    book[str(target)] = entry
+    return entry
 
 
 def is_frozen(st: dict, target: str) -> bool:
@@ -2644,6 +2678,18 @@ def cmd_today(args, st):
     target = args.date or now.strftime("%Y-%m-%d")
     slip_txt = LOCALDATA / f"auto_tickets_{target}.txt"
     if is_frozen(st, target) and not args.force:
+        superseded = superseded_entry(st, target)
+        if superseded is not None:
+            # The original frozen text is immutable audit evidence, not a
+            # current betting instruction. Never re-print its stale prices
+            # after a force recut has established an honest no-bet.
+            print(f"TICKETS SUPERSEDED — corrected result for {target}: NO BET")
+            print("=" * 62)
+            print(f"  original frozen slip retained for audit: {slip_txt}")
+            print(f"  original frozen_at retained: {superseded.get('frozen_at') or 'unknown'}")
+            print("  do not place the superseded selections; no replacement legs qualified")
+            print(f"  rerun with --force only after a new, verified slate is available")
+            return 0
         # A frozen rerun must not move ladder streaks, but it still upserts
         # today's real evidence row from the frozen slip. No line in the slip
         # is rewritten; the parser consumes the frozen leg print verbatim.
@@ -2760,6 +2806,12 @@ def cmd_today(args, st):
         # already at the bookmaker, and that evidence must survive.
         upsert_slice_day(shadow_rows, target, allow_empty=not slip_txt.exists())
         recut_lines = _superseded_no_bet_lines(target, prior_slip, prior_frozen) if args.force else []
+        if args.force and prior_slip:
+            record_superseded_no_bet(
+                st, target, now,
+                reason="registered execution-price gate left fewer than two qualifying legs",
+            )
+            save_state(st)
         output_lines = (
             census_lines
             + _slice_action_lines(slice_verdicts)
@@ -2782,6 +2834,12 @@ def cmd_today(args, st):
     if not plan:
         upsert_slice_day(shadow_rows, target, allow_empty=not slip_txt.exists())
         recut_lines = _superseded_no_bet_lines(target, prior_slip, prior_frozen) if args.force else []
+        if args.force and prior_slip:
+            record_superseded_no_bet(
+                st, target, now,
+                reason="no executable plan remained after price and policy gates",
+            )
+            save_state(st)
         output_lines = (
             census_lines
             + _slice_action_lines(slice_verdicts)
