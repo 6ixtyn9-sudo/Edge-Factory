@@ -1510,7 +1510,141 @@ def leg_price_disclosure(leg) -> str:
     return psrc.donor_disclosure(row.get("odds_source"), row.get("bookmaker"))
 
 
-def price_supply_report(rows, day=None, qualifying=None) -> list[str]:
+def _fixture_selection_key(obj: dict) -> tuple[str, str]:
+    """Stable identity shared by slate rows, playable legs and plan legs."""
+    match = str(obj.get("match") or "").strip()
+    if not match:
+        match = f"{obj.get('home')} vs {obj.get('away')}"
+    selection = str(obj.get("pick") or obj.get("selection") or "").upper()
+    return match, selection
+
+
+def playable_leg_rejection(
+    row: dict,
+    *,
+    day: str | None = None,
+    floor: float | None = None,
+    execution_safe: bool = False,
+) -> tuple[str, str] | None:
+    """Return the first live candidate-gate rejection as a machine code.
+
+    This is the single source of truth used by both :func:`playable_legs` and
+    the operator rejection ledger.  Keeping the predicate and its explanation
+    together prevents a safeguard from silently dropping a leg while the
+    diagnostic claims a different reason.
+    """
+    floor = MIN_LEG_ODDS if floor is None else floor
+    row_day = str(row.get("date") or row.get("_archive_day") or "")[:10]
+    if day is not None and row_day != day:
+        return "date_mismatch", f"candidate date {row_day or 'missing'} != {day}"
+    bucket = str(row.get("bucket") or "")
+    if bucket not in BUCKETS:
+        return "bucket_veto", f"bucket {bucket or 'missing'} is not ticket-eligible"
+    quarantine = str(
+        row.get("price_quarantine_reason") or row.get("quarantine") or "none"
+    ).strip().lower()
+    if quarantine in BAD_QUARANTINE and not row.get("odds_replaced"):
+        return "price_quarantine", f"quarantine={quarantine}"
+    if (str(row.get("price_evidence") or "").upper() == "SUSPECT_ALIAS_FUZZY"
+            and not row.get("odds_replaced")):
+        return "price_quarantine", "price_evidence=SUSPECT_ALIAS_FUZZY"
+    if execution_safe:
+        source_name = str(row.get("odds_source") or "").strip()
+        source_spec = psrc.spec(source_name)
+        if not psrc.known(source_name):
+            return "price_source_unregistered", f"odds_source={source_name or 'missing'}"
+        if not source_spec.can_execute():
+            return "price_source_not_execution_eligible", f"odds_source={source_name}"
+        if row.get("price_push_eligible") is False:
+            return "price_push_ineligible", "price_push_eligible=false"
+        if psrc.require_corroboration():
+            sufficient = row.get("price_corroboration_sufficient")
+            if sufficient is None:
+                sufficient = row.get("price_corroborated") is not False
+            if not sufficient:
+                return "corroboration_required", "independent price corroboration is insufficient"
+    market = str(row.get("market") or "1x2").lower()
+    if market != "1x2":
+        return "market_not_ticket_eligible", f"market={market or 'missing'}"
+    selection = str(row.get("pick") or "").lower()
+    if selection in ("over", "under", "yes", "no"):
+        return "selection_not_ticket_eligible", f"selection={selection}"
+    if not row.get("avg_p"):
+        return "missing_probability", "avg_p is missing or zero"
+    try:
+        odds = float(row.get("odds")) if row.get("odds") is not None else 0.0
+    except (TypeError, ValueError):
+        odds = 0.0
+    if odds <= 1.0:
+        return "invalid_odds", f"decimal_odds={row.get('odds')!r}"
+    if odds < floor:
+        return "min_odds_floor", f"decimal_odds={odds:.2f} < floor={floor:.2f}"
+    return None
+
+
+def build_rejection_ledger(
+    rows: list[dict],
+    *,
+    day: str | None,
+    selected=(),
+    staged: dict[tuple[str, str], tuple[str, str]] | None = None,
+    default_rule: tuple[str, str] = (
+        "stake_ladder_not_selected",
+        "candidate cleared earlier gates but was not selected for an executable acca",
+    ),
+) -> list[dict]:
+    """Explain every push-eligible candidate absent from the printed slip.
+
+    One JSON object is emitted per rejected leg.  ``staged`` carries decisions
+    made after the row-level price gate (kickoff, tripwire and slice policy);
+    ``default_rule`` names the branch-level terminal decision (for example a
+    write-once supersede lock or the stake ladder's minimum-leg rule).
+    """
+    selected_keys = {_fixture_selection_key(obj) for obj in selected}
+    staged = staged or {}
+    ledger: list[dict] = []
+    for row in rows:
+        row_day = str(row.get("date") or row.get("_archive_day") or "")[:10]
+        if day is not None and row_day != day:
+            continue
+        if row.get("price_push_eligible") is not True:
+            continue
+        key = _fixture_selection_key(row)
+        if key in selected_keys:
+            continue
+        reason = playable_leg_rejection(row, day=day, execution_safe=True)
+        if reason is None:
+            reason = staged.get(key, default_rule)
+        try:
+            odds = float(row.get("odds"))
+        except (TypeError, ValueError):
+            odds = None
+        ledger.append({
+            "fixture": key[0],
+            "selection": key[1],
+            "odds": odds,
+            "rule": reason[0],
+            "detail": reason[1],
+        })
+    ledger.sort(key=lambda item: (item["fixture"], item["selection"]))
+    return ledger
+
+
+def _rejection_ledger_lines(ledger: list[dict] | None) -> list[str]:
+    return [
+        "REJECTION LEDGER:",
+        *([f"  {json.dumps(item, sort_keys=True)}" for item in (ledger or [])]
+          or ["  []"]),
+    ]
+
+
+def price_supply_report(
+    rows,
+    day=None,
+    qualifying=None,
+    *,
+    rejection_ledger: list[dict] | None = None,
+) -> list[str]:
     """Why a day produced no ticket: "no odds" vs "odds rejected by policy".
 
     The old abstention message said only how many qualifying legs survived,
@@ -1553,7 +1687,7 @@ def price_supply_report(rows, day=None, qualifying=None) -> list[str]:
         f"  qualifying legs: {qualifying}",
         f"  required legs: {LEGS_PER_ACCA}",
         "  " + psrc.policy_line(),
-    ] + _donor_supply_lines(day)
+    ] + _donor_supply_lines(day) + _rejection_ledger_lines(rejection_ledger)
 
 
 def _donor_supply_lines(day: str | None) -> list[str]:
@@ -1944,90 +2078,12 @@ def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=Fa
     floor = MIN_LEG_ODDS if floor is None else floor
     out = []
     for p in rows:
-        if day is not None and str(p.get("date") or p.get("_archive_day") or "")[:10] != day:
-            continue
-        if p.get("bucket") not in BUCKETS:
-            continue
-        q = str(p.get("price_quarantine_reason") or p.get("quarantine") or "none").strip().lower()
-        if q in BAD_QUARANTINE and not p.get("odds_replaced"):
-            continue   # suspect price unless betexplorer-rescued (rescue pops the reason)
-        if str(p.get("price_evidence") or "").upper() == "SUSPECT_ALIAS_FUZZY" and not p.get("odds_replaced"):
-            continue
-        # A secondary ScoutingStats quote is retained on the pick for audit,
-        # but it is not a bookmaker-verified execution price.  It must never
-        # reach an automatic ticket: the 2026-09-25 Dordrecht/Almere incident
-        # printed AWAY @ 2.00 from a ScoutingStats-only quote while the
-        # operator-reported bookmaker board (home 2.05 / draw 3.00 / away
-        # 1.03, no source record in the repo) disagreed.  The enrichment layer already stamps this
-        # boolean; legacy archives without the field remain comparable,
-        # while every newly built slate is safe.  Do not infer this from the
-        # provider string: historical fixtures and synthetic replay rows can
-        # carry an older label.  The enrichment boundary is the authority.
-        # --- price gate: three DISTINCT concepts (2026-10-03) ------------
-        #
-        #   price availability  - does any approved donor quote this leg?
-        #   execution eligibility - may the configured donor supply the
-        #                           PRINTED price for this leg?
-        #   corroboration       - is a second INDEPENDENT family quoting the
-        #                         same market+selection?
-        #
-        # They used to be collapsed into two booleans, which is why an
-        # available donor price looked identical to no price at all.
-        if execution_safe:
-            # A printable leg must name a registered donor whose active policy
-            # permits execution. Do not trust an adapter-provided boolean:
-            # unknown/stale ``odds_source`` values were the path that let the
-            # 2026-10-03 Forebet/miner fallback reach a frozen slip.
-            source_name = str(p.get("odds_source") or "").strip()
-            source_spec = psrc.spec(source_name)
-            if not psrc.known(source_name) or not source_spec.can_execute():
-                continue
-            if p.get("price_push_eligible") is False:
-                continue
-        # Option C price-quality gate (2026-10-02, operator sign-off): a real
-        # money leg needs a second source quoting the same market+selection
-        # within 7% of the chosen price. The 10-01 card rode 4/4 single-source
-        # BETEXPLORER_RESCUE quotes: one feed can be wrong, stale or rescuing
-        # against nothing, and a sole-source quote is audit evidence, not an
-        # execution price. Field is stamped on newly built slates; legacy
-        # archives without it (None) keep the parity behaviour.
-        # Corroboration policy is now EXPLICIT and printed, never silent.
-        # The operator has promoted non-bookmaker donors (Boggio average
-        # prices, Bet Better fair prices), so the default policy is:
-        #   a configured donor may supply a price; named-book corroboration
-        #   is PREFERRED but not REQUIRED; every printed leg discloses its
-        #   donor type.
-        # Setting EDGE_FACTORY_REQUIRE_PRICE_CORROBORATION=1 restores the
-        # stricter 2026-10-02 Option C gate. Nothing here lowers a gate
-        # silently: psrc.policy_line() prints the active policy on the card.
-        if execution_safe and psrc.require_corroboration():
-            sufficient = p.get("price_corroboration_sufficient")
-            if sufficient is None:
-                # Legacy archives: fall back to the old boolean, and keep the
-                # parity behaviour of treating a missing field as "unknown".
-                sufficient = p.get("price_corroborated") is not False
-            if not sufficient:
-                continue
-        # Market guard: the validated recipe is 1X2 ONLY. Goals/OU picks
-        # (first seen 2026-08-31, "Breidablik OVER") stay out until the
-        # September O2.5 checkpoint passes its gate. Never before.
-        if str(p.get("market") or "1x2").lower() != "1x2":
-            continue
-        if str(p.get("pick") or "").lower() in ("over", "under", "yes", "no"):
+        if playable_leg_rejection(
+            p, day=day, floor=floor, execution_safe=execution_safe,
+        ) is not None:
             continue
         ap = p.get("avg_p")
-        try:
-            odds = float(p.get("odds")) if p.get("odds") is not None else 0.0
-        except (TypeError, ValueError):
-            odds = 0.0
-        if odds <= 1.0 or not ap:
-            continue
-        # Min leg odds floor (2026-09-02: Bayern @1.05 rode slot 1 pre-freeze).
-        # Sub-1.10 legs cap their acca's payout below the recipe's economics:
-        # the pairing math needs avg ~1.4+ per leg; a 1.05 leg makes slot 1
-        # the worst-paying ticket by construction. Value lives in MIN_LEG_ODDS.
-        if odds < floor:
-            continue
+        odds = float(p.get("odds"))
         res = pick_result(p, settled) if settled is not None else None
         out.append({"match": f"{p.get('home')} vs {p.get('away')}",
                     "pick": str(p.get("pick") or "").upper(),
@@ -2677,18 +2733,39 @@ def cmd_today(args, st):
     now = datetime.now(TZ)
     target = args.date or now.strftime("%Y-%m-%d")
     slip_txt = LOCALDATA / f"auto_tickets_{target}.txt"
+    slate_error = None
+    try:
+        slate = json.loads((LOCALDATA / "picks_today.json").read_text())
+        if not isinstance(slate, list):
+            raise ValueError("top-level value is not a list")
+    except Exception as exc:
+        slate = []
+        slate_error = exc
     if is_frozen(st, target) and not args.force:
         superseded = superseded_entry(st, target)
         if superseded is not None:
             # The original frozen text is immutable audit evidence, not a
             # current betting instruction. Never re-print its stale prices
-            # after a force recut has established an honest no-bet.
+            # after a force recut has established an honest no-bet. The
+            # diagnostic is nevertheless rebuilt from the latest persisted
+            # slate: immutability must not make the no-bet opaque.
+            ledger = build_rejection_ledger(
+                slate,
+                day=target,
+                default_rule=(
+                    "superseded_card_locked",
+                    "write-once card is already superseded; non-force rerun cannot create replacement legs",
+                ),
+            )
             print(f"TICKETS SUPERSEDED — corrected result for {target}: NO BET")
             print("=" * 62)
             print(f"  original frozen slip retained for audit: {slip_txt}")
             print(f"  original frozen_at retained: {superseded.get('frozen_at') or 'unknown'}")
             print("  do not place the superseded selections; no replacement legs qualified")
             print(f"  rerun with --force only after a new, verified slate is available")
+            print("\n".join(price_supply_report(
+                slate, day=target, qualifying=0, rejection_ledger=ledger,
+            )))
             return 0
         # A frozen rerun must not move ladder streaks, but it still upserts
         # today's real evidence row from the frozen slip. No line in the slip
@@ -2699,8 +2776,28 @@ def cmd_today(args, st):
             slip_txt, archive_index, existing_rows=read_slice_ledger(),
         )
         upsert_slice_day(frozen_rows, target)
+        frozen_slip = next(
+            (item for item in st.get("open_slips", [])
+             if str(item.get("date") or "")[:10] == str(target)[:10]),
+            {},
+        )
+        selected = [
+            leg for acca in frozen_slip.get("accas", []) for leg in acca.get("legs", [])
+        ]
+        ledger = build_rejection_ledger(
+            slate,
+            day=target,
+            selected=selected,
+            default_rule=(
+                "frozen_card_not_selected",
+                "candidate is not on the immutable frozen card",
+            ),
+        )
         print(f"TICKETS FROZEN — final slip for {target}. Re-printing saved slip:")
         print("=" * 62)
+        print("\n".join(price_supply_report(
+            slate, day=target, qualifying=len(selected), rejection_ledger=ledger,
+        )))
         if slip_txt.exists():
             print(slip_txt.read_text())
         return 0
@@ -2708,10 +2805,8 @@ def cmd_today(args, st):
         print(f"NOT YET — TICKETS START BUILDING AT {GENERATE_HOUR_START:02d}:00, FREEZE AT {FREEZE_HOUR:02d}:00")
         print(f"(now {now.strftime('%H:%M')} local)")
         return 0
-    try:
-        slate = json.loads((LOCALDATA / "picks_today.json").read_text())
-    except Exception as e:
-        print(f"cannot read picks_today.json: {e}")
+    if slate_error is not None:
+        print(f"cannot read picks_today.json: {slate_error}")
         return 1
     prior_slip = next(
         (dict(s) for s in st.get("open_slips", [])
@@ -2722,6 +2817,11 @@ def cmd_today(args, st):
     pool = playable_legs(slate, day=target, settled=settled, execution_safe=True)
     total_in = len(pool)
     census: dict[str, list[str]] = {}
+    staged_rejections: dict[tuple[str, str], tuple[str, str]] = {}
+
+    def stage_rejections(legs, rule: str, detail: str) -> None:
+        for leg in legs:
+            staged_rejections[_fixture_selection_key(leg)] = (rule, detail)
     # LIVE KICKOFF GUARD (incident #6, revised 2026-09-06 round 2 after the
     # region audit): the Vancouver row's kickoff was the bare string "22:30"
     # — no date, no offset, no zone — in an MLS league whose local clock is
@@ -2734,14 +2834,22 @@ def cmd_today(args, st):
     # It never assumes a zone for a remote clock and never computes a kickoff
     # from the region list; the fail-closed proof contract is NOT applied
     # here (it is the off-by-default --kickoff-contract audit instrument).
+    pre_kickoff_pool = list(pool)
     pool, ko_drops = live_kickoff_guard(pool, now)
     for reason, names in ko_drops.items():
         census.setdefault(reason, []).extend(names)
+        stage_rejections(
+            [leg for leg in pre_kickoff_pool if leg["match"] in set(names)],
+            "kickoff_guard",
+            reason,
+        )
     # Already-settled legs are finished matches: result known -> not a bet.
-    settled_drops = [l["match"] for l in pool if l.get("result")]
+    settled_legs = [l for l in pool if l.get("result")]
+    settled_drops = [l["match"] for l in settled_legs]
     pool = [l for l in pool if not l.get("result")]
     if settled_drops:
         census["already settled (result known)"] = settled_drops
+        stage_rejections(settled_legs, "already_settled", "result is already known")
     # Cross-slate guard: a fixture already archived on an EARLIER day's slate
     # has already kicked off (late finishers carried into today's capture).
     past = set()
@@ -2749,14 +2857,20 @@ def cmd_today(args, st):
         if str(a.get("date") or a.get("_archive_day") or "")[:10] < target:
             past.add((str(a.get("home") or "").strip().lower(),
                       str(a.get("away") or "").strip().lower()))
-    cross_drops = [l["match"] for l in pool
-                   if (str(l["row"].get("home") or "").strip().lower(),
-                       str(l["row"].get("away") or "").strip().lower()) in past]
+    cross_drop_legs = [l for l in pool
+                       if (str(l["row"].get("home") or "").strip().lower(),
+                           str(l["row"].get("away") or "").strip().lower()) in past]
+    cross_drops = [l["match"] for l in cross_drop_legs]
     pool = [l for l in pool
             if (str(l["row"].get("home") or "").strip().lower(),
                 str(l["row"].get("away") or "").strip().lower()) not in past]
     if cross_drops:
         census["fixture already on an earlier day's slate (kicked off)"] = cross_drops
+        stage_rejections(
+            cross_drop_legs,
+            "earlier_slate_fixture",
+            "fixture already appeared on an earlier slate and has kicked off",
+        )
     # --- selection ladder + door P&L tripwires --------------------------
     # Door-level P&L remains the first policy call. Its bench filter and
     # stake weighting remain separate from the slice ladder's rank-only cap.
@@ -2767,21 +2881,34 @@ def cmd_today(args, st):
     slice_policy, slice_verdicts = compute_bucket_slice(target)
     base_pool = list(pool)  # shadow planning strips BOTH ladder and door policy
     door_pool = list(base_pool)
-    benched_drops = [f"{l['match']} [{l['row'].get('bucket')}]" for l in door_pool
-                     if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) <= 0.0]
+    benched_legs = [l for l in door_pool
+                    if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) <= 0.0]
+    benched_drops = [f"{l['match']} [{l['row'].get('bucket')}]" for l in benched_legs]
     if benched_drops:
         door_pool = [l for l in door_pool
                      if pnl_weights.get(str(l["row"].get("bucket") or ""), 1.0) > 0.0]
         census["P&L tripwire: bucket benched (VETO streak >= "
               f"{PNL_BENCH_STREAK} days)"] = sorted(benched_drops)
+        stage_rejections(
+            benched_legs,
+            "tripwire_bucket_benched",
+            f"P&L tripwire bucket bench streak >= {PNL_BENCH_STREAK} days",
+        )
 
     slice_benched = set(slice_policy.get("bench_buckets") or ())
-    slice_bench_drops = [f"{l['match']} [{l['row'].get('bucket')}]" for l in door_pool
-                         if str(l["row"].get("bucket") or "") in slice_benched]
+    slice_bench_legs = [l for l in door_pool
+                        if str(l["row"].get("bucket") or "") in slice_benched]
+    slice_bench_drops = [f"{l['match']} [{l['row'].get('bucket')}]"
+                         for l in slice_bench_legs]
     plan_pool = [l for l in door_pool
                  if str(l["row"].get("bucket") or "") not in slice_benched]
     if slice_bench_drops:
         census["SELECTION LADDER: slice bucket benched"] = sorted(slice_bench_drops)
+        stage_rejections(
+            slice_bench_legs,
+            "selection_ladder_bucket_benched",
+            "selection ladder bench_buckets policy vetoed the bucket",
+        )
 
     # The shadow plan is a second pure call. It deliberately strips both the
     # slice caps and the door bench/weights, then keeps only diminished-bucket
@@ -2812,11 +2939,22 @@ def cmd_today(args, st):
                 reason="registered execution-price gate left fewer than two qualifying legs",
             )
             save_state(st)
+        ledger = build_rejection_ledger(
+            slate,
+            day=target,
+            staged=staged_rejections,
+            default_rule=(
+                "stake_ladder_minimum_legs",
+                f"{len(plan_pool)} qualifying leg(s) < required {LEGS_PER_ACCA}",
+            ),
+        )
         output_lines = (
             census_lines
             + _slice_action_lines(slice_verdicts)
             + _slice_table_lines(slice_verdicts)
-            + price_supply_report(slate, day=target, qualifying=len(plan_pool))
+            + price_supply_report(
+                slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
+            )
             + recut_lines
             + [f"NO BET TODAY — {len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}",
                "(bank stays unbet)"]
@@ -2840,11 +2978,22 @@ def cmd_today(args, st):
                 reason="no executable plan remained after price and policy gates",
             )
             save_state(st)
+        ledger = build_rejection_ledger(
+            slate,
+            day=target,
+            staged=staged_rejections,
+            default_rule=(
+                "stake_ladder_no_executable_acca",
+                "stake ladder could not form the configured executable acca set",
+            ),
+        )
         output_lines = (
             census_lines
             + _slice_action_lines(slice_verdicts)
             + _slice_table_lines(slice_verdicts)
-            + price_supply_report(slate, day=target, qualifying=len(plan_pool))
+            + price_supply_report(
+                slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
+            )
             + recut_lines
             + ["NO BET TODAY — plan empty"]
         )
@@ -2894,7 +3043,16 @@ def cmd_today(args, st):
                      + "; ".join(parts))
     lines.extend(_slice_action_lines(slice_verdicts))
     lines.extend(_slice_table_lines(slice_verdicts))
-    lines.extend(price_supply_report(slate, day=target, qualifying=len(plan_pool)))
+    selected_legs = [leg for acca in plan for leg in acca.get("legs", [])]
+    ledger = build_rejection_ledger(
+        slate,
+        day=target,
+        selected=selected_legs,
+        staged=staged_rejections,
+    )
+    lines.extend(price_supply_report(
+        slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
+    ))
     if replacement_lines:
         lines.append("FORCE RE-CUT — superseded the prior same-day card before writing this card:")
         lines.extend(replacement_lines)
