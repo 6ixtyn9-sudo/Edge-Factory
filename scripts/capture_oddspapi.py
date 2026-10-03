@@ -51,9 +51,30 @@ from edgefactory.sources.oddspapi_odds import (
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "localdata"
 
+# Row schema generation for this store.
+#
+#   (blank)/1  rows written before 2026-10-03. The parser that produced them
+#              read the outcome name from ``name`` only — but the live /odds
+#              payload carries it at ``players.0.playerName`` — and took the
+#              participants from /odds, which does not supply them. Every such
+#              row was emitted with blank home/away and the selection
+#              defaulted to "home" because the empty name compared equal to
+#              the empty home name. 414 of them are in
+#              localdata/oddspapi_odds_2026-10.csv.gz.
+#   2          identity comes from the /fixtures record, outcome names are
+#              read from name|playerName, empty names are refused, mainLine
+#              is honoured and provider stamps are kept.
+#
+# Blank home/away is only the *symptom* of generation 1; the mislabelled
+# selection is the defect. A reader that bypassed rows on blank participants
+# alone would still trust a generation-1 row that happened to carry teams.
+# Readers therefore gate on the generation, not on the symptom.
+SCHEMA_VERSION = 2
+
 COLUMNS = ["source", "source_type", "sport", "date", "kickoff", "league",
            "home", "away", "market", "selection", "odds", "bookmaker",
-           "captured_at", "published_at", "provider_changed_at"]
+           "captured_at", "published_at", "provider_changed_at",
+           "schema_version"]
 
 
 def _out_path(day: str) -> Path:
@@ -96,9 +117,16 @@ def _append_rows(rows: list[dict], day: str) -> int:
     path = _out_path(day)
     path.parent.mkdir(parents=True, exist_ok=True)
     _migrate_header(path)
+    # Stamp the generation on the way out so no write path can produce an
+    # unmarked row. Migration deliberately leaves pre-existing rows blank.
+    rows = [{**r, "schema_version": SCHEMA_VERSION} for r in rows]
     # Red-team F7 (fixed 2026-08-05): dedupe key EXCLUDES the timestamp
     # columns so re-capturing the same price does not append an unbounded
     # duplicate row per run. A genuinely changed price still appends.
+    #
+    # schema_version is deliberately IN the dedupe key: a corrected row must
+    # never be suppressed because a row from the broken generation happens to
+    # collide with it. Invalidation beats idempotence here.
     DEDUP_COLS = [c for c in COLUMNS if c not in _STAMP_COLS]
     seen: set[tuple] = set()
     if path.exists():

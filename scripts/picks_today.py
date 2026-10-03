@@ -2176,6 +2176,13 @@ def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
 # ``oddspapi`` rows into an ``oddspapi_odds_YYYY-MM`` file).
 THEODDSAPI_ODDS_MAX_AGE_H = 24.0
 ODDSPAPI_ODDS_SOURCE = "oddspapi_odds"
+# Lowest OddsPAPI row generation this selection will consume. Must track
+# scripts/capture_oddspapi.py:SCHEMA_VERSION; the pairing is asserted in
+# tests/test_oddspapi_schema_invalidation.py so the two cannot drift.
+# Generation 1 (and unmarked rows) came from the parser that read outcome
+# names from the wrong key and had no fixture identity, so every one of its
+# selections is untrustworthy — not merely the ones with blank teams.
+ODDSPAPI_MIN_SCHEMA_VERSION = 2
 
 
 def _utc_price_stamp(value: object) -> datetime | None:
@@ -2198,6 +2205,7 @@ def _cached_named_book_bundle(
     file_prefix: str,
     raw_source_names: tuple[str, ...],
     not_after: datetime | None = None,
+    min_schema_version: int | None = None,
     stats: dict | None = None,
 ) -> dict:
     """Read one persisted named-book board with a strict build-time cutoff.
@@ -2217,7 +2225,7 @@ def _cached_named_book_bundle(
     report = {
         "status": "absent", "raw_rows": 0, "usable_rows": 0,
         "after_build_rows": 0, "stale_rows": 0, "invalid_timestamp_rows": 0,
-        "identity_missing_rows": 0,
+        "identity_missing_rows": 0, "stale_schema_rows": 0,
         "path": str(path),
     }
     rows: list[dict] = []
@@ -2241,6 +2249,19 @@ def _cached_named_book_bundle(
                     if str(raw.get("source") or "").strip() not in accepted_sources:
                         continue
                     report["raw_rows"] += 1
+                    # Rows persisted by a superseded parser generation are
+                    # bypassed on the generation marker, not on whatever
+                    # symptom that generation happened to show. The file is
+                    # kept intact as evidence; the rows are classified and
+                    # counted, never silently reused and never deleted.
+                    if min_schema_version is not None:
+                        try:
+                            row_schema = int(str(raw.get("schema_version") or 0) or 0)
+                        except (TypeError, ValueError):
+                            row_schema = 0
+                        if row_schema < int(min_schema_version):
+                            report["stale_schema_rows"] += 1
+                            continue
                     stamp = _utc_price_stamp(raw.get("captured_at"))
                     if stamp is None:
                         report["invalid_timestamp_rows"] += 1
@@ -2276,10 +2297,13 @@ def _cached_named_book_bundle(
     bundle = _odds_bundle_from_rows(rows, provider=provider, stats=bundle_stats)
     # Rows rejected BEFORE the bundle still have to be counted, or a board
     # that was thrown away wholesale reports an indistinguishable "none=0".
-    if report["identity_missing_rows"]:
-        bundle["prebundle_misses"] = {
-            "fixture_identity_missing": int(report["identity_missing_rows"]),
-        }
+    prebundle_misses = {
+        "fixture_identity_missing": int(report["identity_missing_rows"]),
+        "stale_schema": int(report["stale_schema_rows"]),
+    }
+    prebundle_misses = {k: v for k, v in prebundle_misses.items() if v}
+    if prebundle_misses:
+        bundle["prebundle_misses"] = prebundle_misses
     report.update(bundle_stats)
     report["raw_rows"] = observed_raw_rows
     report["usable_rows"] = len(rows)
@@ -2322,6 +2346,7 @@ def oddspapi_odds_bundle(
         file_prefix=ODDSPAPI_ODDS_SOURCE,
         raw_source_names=("oddspapi", ODDSPAPI_ODDS_SOURCE),
         not_after=not_after,
+        min_schema_version=ODDSPAPI_MIN_SCHEMA_VERSION,
         stats=stats,
     )
 
