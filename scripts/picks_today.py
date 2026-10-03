@@ -2848,10 +2848,14 @@ def select_price_source(pick: dict, bundles) -> tuple[dict | None, str | None, s
     if not ranked:
         ranked = psrc.rank_candidates(matched)
     if not ranked:
-        # Every matched source is unregistered or disabled. Fail closed to
-        # input order rather than dropping an otherwise valid quote silently;
-        # the caller still applies the execution-eligibility quarantine.
-        ranked = matched
+        # Nothing registered and enabled matched. Fall back ONLY to
+        # unregistered bundles (hand-built indexes and injected audit
+        # bundles), never to a source the operator has deliberately
+        # disabled - a disabled donor must stay silent, not reappear as a
+        # last resort.
+        ranked = [c for c in matched if not psrc.known(c.name)]
+    if not ranked:
+        return None, None, None
     chosen = ranked[0]
     return chosen.extra["row"], chosen.extra["method"], chosen.name
 
