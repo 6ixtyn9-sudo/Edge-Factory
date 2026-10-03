@@ -33,6 +33,7 @@ from edgefactory.util import (
     strip_retired_top_scores,
 )
 from edgefactory.market_registry import get_odds_tier
+from edgefactory.odds_normalization import canonicalize_row
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.fade import (
     FADE_FAMILY,
@@ -1988,11 +1989,17 @@ def _bookmaker_priority(bookmaker: object) -> int:
 
 
 def _odds_row_key(row: dict) -> tuple[str, str, str, str, str] | None:
-    day = str(row.get("date") or "")
-    home = odds_team_key(row.get("home") or "")
-    away = odds_team_key(row.get("away") or "")
-    market = str(row.get("market") or "")
-    selection = str(row.get("selection") or "")
+    # All donor adapters pass through the shared canonicalizer. Keep this
+    # boundary defensive as well because tests, cached ledgers and hand-built
+    # audit indexes can still contain provider vocabulary.
+    normalized, _reason = canonicalize_row(row)
+    if normalized is None:
+        return None
+    day = str(normalized.get("date") or "")
+    home = odds_team_key(normalized.get("home") or "")
+    away = odds_team_key(normalized.get("away") or "")
+    market = str(normalized.get("market") or "")
+    selection = str(normalized.get("selection") or "")
     if not (day and home and away and market and selection):
         return None
     return (day, home, away, market, selection)
@@ -2142,7 +2149,15 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
     time_candidates: dict[tuple[str, str, str, str, str], list[dict]] = {}
     market_candidates: dict[tuple[str, str, str], list[dict]] = {}
     valid_rows = 0
+    canonicalization_dropped = Counter()
+    normalized_rows: list[dict] = []
     for row in rows:
+        normalized_row, reason = canonicalize_row(row)
+        if normalized_row is None:
+            canonicalization_dropped[str(reason or "unmappable")] += 1
+            continue
+        normalized_rows.append(normalized_row)
+        row = normalized_row
         odds = _valid_decimal_odds(row.get("odds"))
         if odds is None:
             continue
@@ -2186,6 +2201,8 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
             "valid_keys": len(exact),
             "time_match_keys": len(time_candidates),
             "market_candidate_keys": len(market_candidates),
+            "canonicalization_dropped": sum(canonicalization_dropped.values()),
+            "canonicalization_drop_reasons": dict(canonicalization_dropped),
         })
 
     return {
@@ -2648,11 +2665,11 @@ def _zero_shadow_stats(status: str = "unavailable") -> dict[str, dict]:
     return {
         "futbolpronosticos": {"status": status, "raw": 0, "scored": 0},
         "sportytrader_odds": {"status": status, "st_raw": 0, "st_matched": 0},
-        "betminer": {"status": status, "bm_raw": 0, "bm_scored": 0},
+        "betminer": {"status": status, "bm_raw": 0, "bm_scored": 0, "bm_matched": 0},
         "pinnapi_odds": {"status": status, "pa_raw": 0, "pa_matched": 0},
-        "betbetter": {"status": status, "bb_raw": 0, "bb_scored": 0},
+        "betbetter": {"status": status, "bb_raw": 0, "bb_scored": 0, "bb_matched": 0},
         "sharpapi_odds": {"status": status, "sa_raw": 0, "sa_matched": 0},
-        "boggio": {"status": status, "bg_raw": 0, "bg_scored": 0},
+        "boggio": {"status": status, "bg_raw": 0, "bg_scored": 0, "bg_matched": 0},
     }
 
 
@@ -2777,6 +2794,26 @@ def donor_odds_bundles(day: str, *, localdata=None) -> list[dict]:
         if bundle["exact"] or bundle["market_candidates"]:
             bundles.append(bundle)
     return bundles
+
+
+def donor_match_counts(picks: list[dict], donor_bundles: list[dict]) -> dict[str, int]:
+    """Count donor rows that actually join the day's pick slate.
+
+    ``raw`` and ``scored`` are capture/parser counters.  This separate count
+    is deliberately computed after the shared canonicalization boundary, so a
+    large shadow ledger cannot masquerade as usable price supply when its
+    fixture/market/selection vocabulary does not join.
+    """
+    counts: Counter = Counter()
+    for bundle in donor_bundles or []:
+        source = str(bundle.get("provider") or "").strip()
+        if not source:
+            continue
+        for pick in picks:
+            row, _method = find_side_keyed_odds_row(pick, bundle)
+            if row is not None:
+                counts[source] += 1
+    return dict(counts)
 
 
 def _bundle_candidates(pick: dict, bundles, default_names=()) -> list:
@@ -2914,10 +2951,18 @@ def enrich_with_live_odds(
         if not row:
             _stamp_price_board(pick, bundles)
             if previous_odds is not None:
-                pick.setdefault("odds_source", "forebet_best")
+                fallback_source = str(previous_source or "forebet_best").strip()
+                fallback_spec = psrc.spec(fallback_source)
+                pick["odds_source"] = fallback_source
                 pick["odds_match_method"] = "fallback"
                 pick["price_evidence"] = PRICE_EVIDENCE_SOURCE_FALLBACK
-                pick["price_push_eligible"] = True
+                pick["price_donor_role"] = fallback_spec.role
+                pick["price_odds_kind"] = fallback_spec.odds_kind
+                pick["price_disclosure"] = psrc.donor_disclosure(
+                    fallback_source, previous_bookmaker)
+                pick["price_push_eligible"] = bool(fallback_spec.can_execute())
+                if not pick["price_push_eligible"]:
+                    pick["price_quarantine_reason"] = "source_fallback_not_execution_eligible"
             else:
                 pick.setdefault("odds_source", None)
                 pick["odds_match_method"] = "none"
@@ -4080,9 +4125,20 @@ def enrich_unmatched_with_betexplorer(
 
 
 def main():
-    days = sys.argv[1:] or [
-        date.today().isoformat(),
-    ]
+    # Keep the historical positional form (``picks_today.py YYYY-MM-DD``)
+    # while accepting the operator-standard form used by the runbook and
+    # daily orchestration (``picks_today.py --date YYYY-MM-DD``). Treating the
+    # flag as a date silently created ``picks_--date.json`` and mixed an
+    # invalid pseudo-day into the source-health receipt.
+    argv = sys.argv[1:]
+    if argv[:1] == ["--date"]:
+        if len(argv) != 2:
+            raise SystemExit("usage: picks_today.py [--date YYYY-MM-DD]")
+        days = [argv[1]]
+    elif len(argv) == 1 and argv[0].startswith("--date="):
+        days = [argv[0].split("=", 1)[1]]
+    else:
+        days = argv or [date.today().isoformat()]
     t1x2, ou_edge, btts_edge, fallback = load_thresholds()
     edge_meta = load_edge_meta()
     purity = load_purity()
@@ -4209,6 +4265,19 @@ def main():
         donor_bundles = donor_odds_bundles(day)
         enriched_n = enrich_with_live_odds(
             picks, odds_bundle, secondary_bundle, donor_bundles=donor_bundles)
+        donor_matches = donor_match_counts(picks, donor_bundles)
+        for source_name, stats_name, scored_key, raw_key in (
+            ("betbetter", "bb_matched", "bb_scored", "bb_raw"),
+            ("boggio", "bg_matched", "bg_scored", "bg_raw"),
+            ("betminer", "bm_matched", "bm_scored", "bm_raw"),
+            ("pinnapi_odds", "pa_matched", "pa_scored", "pa_raw"),
+            ("sharpapi_odds", "sa_matched", "sa_scored", "sa_raw"),
+        ):
+            if source_name in shadow_stats:
+                entry = shadow_stats[source_name]
+                if scored_key not in entry:
+                    entry[scored_key] = int(entry.get(stats_name) or entry.get(raw_key) or 0)
+                entry[stats_name] = int(donor_matches.get(source_name, 0))
 
         be_stats: dict = {}
         be_enriched = enrich_unmatched_with_betexplorer(
@@ -4329,7 +4398,7 @@ def main():
             "rows": int(bm_shadow_stats.get("bm_scored") or 0),
             "bm_raw": int(bm_shadow_stats.get("bm_raw") or 0),
             "bm_scored": int(bm_shadow_stats.get("bm_scored") or 0),
-            "can_fetch_today": bm_shadow_stats.get("status") in {"ok", "empty"},
+            "can_fetch_today": bm_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
             # Conditional price donor: only rows whose provenance the response
             # actually identified count, and BetMiner is never execution-eligible.
             "can_price": int(bm_shadow_stats.get("bm_priced") or 0) > 0,
@@ -4342,11 +4411,12 @@ def main():
         }
         health_observations["pinnapi_odds"] = {
             "fetched": pa_shadow_stats.get("status") in {"ok", "empty"},
-            "rows": int(pa_shadow_stats.get("pa_matched") or 0),
+            "rows": int(pa_shadow_stats.get("pa_scored") or 0),
             "pa_raw": int(pa_shadow_stats.get("pa_raw") or 0),
+            "pa_scored": int(pa_shadow_stats.get("pa_scored") or 0),
             "pa_matched": int(pa_shadow_stats.get("pa_matched") or 0),
-            "can_fetch_today": pa_shadow_stats.get("status") in {"ok", "empty"},
-            "can_price": int(pa_shadow_stats.get("pa_matched") or 0) > 0,
+            "can_fetch_today": pa_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
+            "can_price": int(pa_shadow_stats.get("pa_scored") or 0) > 0,
             # Price donor, never a vote; corroboration stays default-off.
             "can_vote": False,
             "freshness_h": 0.0 if pa_shadow_stats.get("status") == "ok" else None,
@@ -4357,7 +4427,7 @@ def main():
             "rows": int(bb_shadow_stats.get("bb_scored") or 0),
             "bb_raw": int(bb_shadow_stats.get("bb_raw") or 0),
             "bb_scored": int(bb_shadow_stats.get("bb_scored") or 0),
-            "can_fetch_today": bb_shadow_stats.get("status") in {"ok", "empty"},
+            "can_fetch_today": bb_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
             # Approved FAIR-price donor (operator promotion 2026-10-03). These
             # are model fair odds, never bookmaker quotes - the role label in
             # source_health keeps that distinction visible.
@@ -4371,11 +4441,12 @@ def main():
         }
         health_observations["sharpapi_odds"] = {
             "fetched": sa_shadow_stats.get("status") in {"ok", "empty"},
-            "rows": int(sa_shadow_stats.get("sa_matched") or 0),
+            "rows": int(sa_shadow_stats.get("sa_scored") or 0),
             "sa_raw": int(sa_shadow_stats.get("sa_raw") or 0),
+            "sa_scored": int(sa_shadow_stats.get("sa_scored") or 0),
             "sa_matched": int(sa_shadow_stats.get("sa_matched") or 0),
-            "can_fetch_today": sa_shadow_stats.get("status") in {"ok", "empty"},
-            "can_price": int(sa_shadow_stats.get("sa_matched") or 0) > 0,
+            "can_fetch_today": sa_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
+            "can_price": int(sa_shadow_stats.get("sa_scored") or 0) > 0,
             "can_vote": False,
             "freshness_h": 0.0 if sa_shadow_stats.get("status") == "ok" else None,
             "blocker": sa_shadow_stats.get("blocker"),
@@ -4387,7 +4458,7 @@ def main():
             "rows": int(bg_shadow_stats.get("bg_scored") or 0),
             "bg_raw": int(bg_shadow_stats.get("bg_raw") or 0),
             "bg_scored": int(bg_shadow_stats.get("bg_scored") or 0),
-            "can_fetch_today": bg_shadow_stats.get("status") in {"ok", "empty"},
+            "can_fetch_today": bg_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
             # Approved AVERAGE-bookmaker price donor (operator promotion
             # 2026-10-03). Not a named bookmaker, never named-book corroboration.
             "can_price": int(bg_shadow_stats.get("bg_scored") or 0) > 0,

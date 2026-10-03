@@ -51,6 +51,8 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
+from edgefactory.odds_normalization import canonical_market_selection
+
 SOURCE = "pinnapi_odds"
 BASE = os.environ.get("PINNAPI_BASE_URL", "https://pinnapi.com").rstrip("/")
 KEY_ENV = "PINNAPI_KEY"
@@ -71,6 +73,7 @@ _429S = 0
 _COOLING_DOWN = False
 _CALLS_THIS_RUN = 0
 _DIAG: dict[str, Any] = {}
+_CANONICALIZATION_DROP_REASONS: dict[str, int] = {}
 
 # Zero-row days with these statuses stay RETRYABLE (never terminal "empty").
 RETRYABLE_ZERO_ROW_STATUSES = {"auth", "quota", "unavailable", "blocked", "error", "cooldown"}
@@ -265,6 +268,8 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
         return [], False
     if not isinstance(events, list):
         return [], False
+    global _CANONICALIZATION_DROP_REASONS
+    _CANONICALIZATION_DROP_REASONS = {}
     captured_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     rows: list[dict[str, Any]] = []
     matched_shape = False
@@ -289,8 +294,18 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
             price = _num(market_entry.get("price") or market_entry.get("odds"))
             if price is None or price <= 1.0:
                 continue
-            market = _normalize_market(market_entry.get("market") or market_entry.get("name"))
-            selection = _normalize_selection(market, market_entry.get("selection") or market_entry.get("label"))
+            raw_market = market_entry.get("market") or market_entry.get("name")
+            raw_selection = market_entry.get("selection") or market_entry.get("label")
+            canonical, _failure = canonical_market_selection(
+                raw_market, raw_selection, home=home, away=away,
+                line=market_entry.get("line"),
+            )
+            if canonical is None:
+                reason = _failure.reason if _failure is not None else "unmappable"
+                _CANONICALIZATION_DROP_REASONS[reason] = (
+                    _CANONICALIZATION_DROP_REASONS.get(reason, 0) + 1
+                )
+                continue
             rows.append({
                 "source": SOURCE,
                 "date": day,
@@ -299,9 +314,11 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
                 "home": home,
                 "away": away,
                 "event_id": event.get("id"),
-                "market": market,
-                "selection": selection,
-                "line": market_entry.get("line"),
+                "market": canonical.market,
+                "selection": canonical.selection,
+                "raw_market": raw_market,
+                "raw_selection": raw_selection,
+                "line": canonical.line,
                 "odds": price,
                 "book": BOOK,
                 "bookmaker": BOOK,
@@ -410,6 +427,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         "quota_hint": "none", "blocker": None, "budget": MAX_CALLS_PER_RUN,
         "rate_limit_headers": {}, "schema_match": None,
         "sample_event": None, "key_present": _api_key() is not None,
+        "canonicalization_dropped": 0, "canonicalization_drop_reasons": {},
     }
     reset_state()
     if not _api_key():
@@ -437,6 +455,8 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             return [], _set_diag(stats)
         rows, schema_match = parse_snapshot(payload, day=day)
         stats["schema_match"] = schema_match
+        stats["canonicalization_drop_reasons"] = dict(_CANONICALIZATION_DROP_REASONS)
+        stats["canonicalization_dropped"] = sum(_CANONICALIZATION_DROP_REASONS.values())
         stats["sample_event"] = _trim_event_sample(payload)
         if not schema_match:
             # Fail-closed: keep the raw sample, map nothing, stay retryable.
