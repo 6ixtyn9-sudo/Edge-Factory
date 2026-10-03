@@ -1,6 +1,38 @@
 Edge Factory — Handover
 
-Date: 2026-06-18
+Date: 2026-10-03
+
+2026-10-03 operator-brief addendum — fail-closed prices, canonical donor joins, and production recut
+
+Delivered
+
+- Registered price-source execution gate now fails closed for unknown or stale `odds_source` values. The historical `forebet_best` / `SOURCE_FALLBACK` path is registered, disabled by default, and its active policy is printed. Fair/model prices remain evidence only unless the operator explicitly sets `EDGE_FACTORY_FAIR_PRICE_STAKEABLE=1`.
+- Boggio, Bet Better, BetMiner, PinnAPI, and SharpAPI use the shared `src/edgefactory/odds_normalization.py` vocabulary. Unmappable market/selection tokens are withheld and counted; donor health reports captured/scored/matched rows so shadow volume cannot masquerade as join health.
+- `cache_only` donors with usable rows remain available. Auto-ticket output prints `PRICE SUPPLY` and donor capture/match counters on both bet and no-bet days.
+- BetMiner now makes one documented same-day range request, `/value-bets/{date}/{date}`. HTTP 404 and unrecognized schemas write a scrubbed `localdata/betminer_probe_<date>.json` receipt and suppress same-day re-probing; diagnostics retain the five-call daily-cap and four-call run-budget fields.
+- SharpAPI uses the documented RapidAPI `/api/v1/odds` path and fails closed with `reason=missing_sport_filter` when `SHARPAPI_SPORT` is absent. The env example documents the sport and optional filters.
+- `picks_today.py` accepts both the historical positional date and the required `--date YYYY-MM-DD` form. The exact production command no longer treats `--date` as a pseudo-day.
+
+Production run — 2026-10-03
+
+Commands run:
+
+`python scripts/picks_today.py --date 2026-10-03`
+
+`python scripts/auto_tickets.py --date 2026-10-03 --force`
+
+Observed result: no usable execution donor rows were available, so the corrected run printed an honest `NO BET TODAY — 0 qualifying leg(s), need 2`. The active policy printed `fair_stakeable=off` and `source_fallback=abstain`; source-health diagnostics showed zero captured/scored/matched rows for the unavailable shadow donors and SharpAPI's missing-sport blocker. The superseded-card recut report is `localdata/auto_tickets_2026-10-03_force_recut.txt`.
+
+The original frozen card remains at `localdata/auto_tickets_2026-10-03.txt` with its write-once `frozen_at` preserved as `2026-10-03T09:15:03+02:00`; it was not hand-edited. The force recut records that card as superseded while preserving the freeze entry in `auto_tickets_state.json`.
+
+Validation
+
+- Focused donor/contract run: 65 passed.
+- Full suite: 1032 passed.
+- `python -m compileall -q scripts src tests`: passed.
+- No `.github/workflows/*` changes.
+
+Date: 2026-10-03
 
 2026-06-27 addendum — short-odds sniper narrowing, purity rewrite, and monitoring plan
 
