@@ -80,6 +80,16 @@ SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
 THEODDSAPI_ODDS_SOURCE = "theoddsapi"
 _KICKOFF_DATE_AUTHORITY_PROVIDERS = frozenset({"boggio", "betbetter", "theoddsapi"})
+# Providers whose naive stamps carry a zone fixed by the provider's OWN
+# documented payload contract (never by our capture machine's locale). The
+# shared parser stays fail-closed for everyone else: a zone-free value
+# without a documented contract still yields no join date.
+#   boggio: football-prediction-api v2 publishes naive "2018-12-06T19:00:00"
+#   stamps on an Europe/London (GMT/BST) clock - "The GMT/BST start date of
+#   the predicted event" / "Day starts at 00:00 London Timezone"
+#   (developer.boggio-analytics.com, API endpoints; the official examples
+#   localize the stamps with Europe/London).
+_PROVIDER_DECLARED_ZONES = {"boggio": "Europe/London"}
 
 # Voter-row (source) aliasing lives in edgefactory/identity.py
 # (source_team_key + TEAM_KEY_RAW_ALIASES, width-24 collision-safe keys).
@@ -2270,7 +2280,10 @@ def _cached_named_book_bundle(
                 for raw in csv.DictReader(fh):
                     capture_day = str(raw.get("date") or "")[:10]
                     kickoff_day = (
-                        provider_kickoff_date(raw.get("kickoff"))
+                        provider_kickoff_date(
+                            raw.get("kickoff"),
+                            declared_zone=_PROVIDER_DECLARED_ZONES.get(provider),
+                        )
                         if provider in _KICKOFF_DATE_AUTHORITY_PROVIDERS
                         else None
                     )
@@ -2545,11 +2558,19 @@ def _kickoff_attributed_odds_row(row: dict, provider: str) -> dict:
     belongs on that date. Providers in this narrow allowlist expose absolute
     ISO kickoffs; if one is absent or malformed, keep the row observable but
     make its join date empty so matching fails closed as ``date_mismatch``.
+
+    A provider whose stamps are naive *by documented contract* (see
+    ``_PROVIDER_DECLARED_ZONES``) gets its declared zone applied here - the
+    zone comes from the provider's own payload documentation, not from the
+    capture machine's locale, so this is not the banned default-zone
+    behaviour. The shared default remains fail-closed.
     """
     attributed = dict(row)
     source = str(provider or attributed.get("source") or "").strip().lower()
     if source in _KICKOFF_DATE_AUTHORITY_PROVIDERS:
-        attributed["date"] = provider_kickoff_date(attributed.get("kickoff")) or ""
+        declared_zone = _PROVIDER_DECLARED_ZONES.get(source)
+        attributed["date"] = provider_kickoff_date(
+            attributed.get("kickoff"), declared_zone=declared_zone) or ""
     return attributed
 
 
@@ -3204,6 +3225,14 @@ def donor_odds_bundles(day: str, *, localdata=None) -> list[dict]:
         rows, _stats = read_shadow_rows(root / f"{source}_shadow_{day}.json")
         if not rows:
             continue
+        if source == "boggio":
+            # A cached Boggio ledger can predate a stamp-contract repair and
+            # pin pre-repair derived fields (empty join date, withheld
+            # eligibility) on rows whose raw stamps are parseable today.
+            # Re-derive from the raw fields so the bundle sees exactly what a
+            # fresh capture would produce; raw evidence is never rewritten.
+            from edgefactory.sources import boggio as _boggio
+            rows = [_boggio.reattribute_shadow_row(r) for r in rows if isinstance(r, dict)]
         annotated = []
         for row in rows:
             if row.get("price_push_eligible") is False and not source_spec.can_execute():
