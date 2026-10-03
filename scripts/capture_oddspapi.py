@@ -14,9 +14,9 @@ Safety rails (operator-approved):
   broad-polls the whole day. Unmatched same-day picks are prioritized first,
   then enhancement-relevant fixtures.
 - FLAG-GATED: daily.py invokes this only when
-  EDGE_FACTORY_ODDSPAPI_PRICES=1. It follows the official pick build, so its
-  rows are evidence for a later timestamp-qualified build, never a rewrite of
-  the card that triggered capture. Fail-soft: any error degrades to "no rows"
+  EDGE_FACTORY_ODDSPAPI_PRICES=1. It follows the non-ticketable candidate
+  build and can be used only by the final timestamp-qualified pricing pass,
+  never as a rewrite of a ticketed card. Fail-soft: any error degrades to "no rows"
   and never raises into a caller.
 - KEYS STAY LOCAL: ODDSPAPI_API_KEYS is read from .env; never printed,
   logged, committed, or placed in Actions.

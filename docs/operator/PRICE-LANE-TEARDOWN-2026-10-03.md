@@ -50,6 +50,24 @@ one health-aware ranking path for every populated bundle above. It does not
 invent a row for an absent feed or promote an audit/fair/average number into a
 named bookmaker price.
 
+### Operational simplification now enforced
+
+The official and intraday paths now use two explicit stages instead of treating
+an incidental post-ticket capture as a source integration:
+
+1. **Candidate pass:** derive the fixture/selection shortlist only. It sets
+   `EDGE_FACTORY_CANDIDATE_ONLY=1`, does not call shadow providers, does not
+   perform Bzzoiro live fallback or BetExplorer rescue, and cannot emit a
+   ticket.
+2. **Final priced pass:** capture the shortlist, then rebuild with a new
+   `as_of` after capture. This is the only card archived, reported, sent to
+   `auto_tickets`, or marked as an official completed run.
+
+An archive without the official completion marker is now treated as an
+unfinalized candidate artifact and rebuilt rather than restored as a frozen
+card. This closes the old “capture after selection” hole without pretending
+that a post-selection price was available earlier.
+
 **Actions deployment prerequisite.** The code path is shipped, but the current
 GitHub Actions workflow still needs its environment mappings before its
 optional OddsPAPI capture can run in Actions:
@@ -139,8 +157,9 @@ needed to validate the identity rule.
   `daily.py` or the workflow. It had no persisted current receipt, so a
   registry entry was capability metadata rather than proof of source activity.
   The repair now adds a quota-bounded, explicit `EDGE_FACTORY_ODDSPAPI_PRICES=1`
-  post-build capture and a time-safe cached-board reader for the later build.
-  It remains absent/disabled until that flag and its secret are configured.
+  candidate-snapshot capture and a time-safe cached-board reader for the
+  final priced pass. It remains absent/disabled until that flag and its secret
+  are configured.
 * SportyTrader is present as a shadow/corroboration candidate, not a donor in
   the active donor-bundle loop. It must not be described as an active price
   source unless its own receipt is present and its role is explicitly enabled.
@@ -236,7 +255,7 @@ line retain all three counts.
 
 ```text
 PYTHONPATH=src .venv/bin/python -m pytest tests/ -q
-1040 passed
+1042 passed
 ```
 
 (The count includes the new cached-board and source-health tests.)
