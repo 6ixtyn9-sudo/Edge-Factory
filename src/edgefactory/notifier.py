@@ -27,7 +27,16 @@ BUCKET_WL_SUSPECT_PRICE = "WATCHLIST_SUSPECT_PRICE"
 
 
 def format_kickoff(pick: dict[str, Any]) -> str:
-    for key in ("kickoff", "time", "start_time", "ko"):
+    """The kickoff to SHOW a human.
+
+    ``kickoff_sast`` is preferred because it is rendered from the
+    authoritative zone-bearing ``kickoff_utc``; the raw feed strings it
+    replaces are two incompatible local renderings ("03-10, 17:00" from a
+    UK-local source, bare "09:00" from an Americas-local one) that differ
+    from the true SAST wall clock by -60 to -540 minutes. This is display
+    only: no guard, gate or join reads it.
+    """
+    for key in ("kickoff_sast", "kickoff", "time", "start_time", "ko"):
         value = pick.get(key)
         if value not in (None, ""):
             return str(value)
@@ -195,6 +204,10 @@ def _tg_short_kickoff(kickoff: str) -> str:
     if not kickoff or kickoff == "n/a":
         return "—"
     k = str(kickoff).strip()
+    # 'YYYY-MM-DD HH:MM SAST' (the normalised rendering)
+    m = re.search(r"(\d{2}):(\d{2})\s*SAST$", k)
+    if m:
+        return f"{m.group(1)}:{m.group(2)}"
     # ISO datetime
     m = re.search(r"T(\d{2}):(\d{2})", k)
     if m:
