@@ -33,7 +33,12 @@ from edgefactory.util import (
     strip_retired_top_scores,
 )
 from edgefactory.market_registry import get_odds_tier
-from edgefactory.odds_normalization import canonicalize_row, provider_kickoff_date
+from edgefactory.odds_normalization import (
+    canonicalize_row,
+    miss_bucket,
+    miss_vocabulary_token,
+    provider_kickoff_date,
+)
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.fade import (
     FADE_FAMILY,
@@ -3094,25 +3099,37 @@ def donor_join_diagnostics(
         if not source:
             continue
         misses: Counter = Counter()
+        vocabulary: Counter = Counter()
         matched_rows = 0
         input_rows = list(bundle.get("input_rows") or bundle.get("raw_rows_list") or [])
         for raw_row in input_rows:
             normalized, failure = canonicalize_row(raw_row)
             if normalized is None:
-                failure_text = str(failure or "")
-                reason = (
-                    "selection_unmapped"
-                    if failure_text.startswith("unknown_selection:")
-                    else "market_unmapped"
-                )
-                misses[reason] += 1
+                # Four buckets, not two: an *unsupported* market/selection is
+                # recognised provider vocabulary we deliberately do not price;
+                # an *unmapped* one has never been seen. Both are counted; the
+                # vocabulary census records the raw token either way so the
+                # next run prints the provider's actual market strings without
+                # a live call.
+                misses[miss_bucket(failure)] += 1
+                vocabulary[miss_vocabulary_token(failure)] += 1
                 continue
             if normalized.get("timestamp_suspect") is True:
                 misses["timestamp_rejected"] += 1
                 continue
             row_day = str(normalized.get("date") or "")[:10]
-            if not row_day or row_day not in pick_days:
+            if not row_day:
+                # No usable kickoff date at all. This IS a defect: the join
+                # date failed closed because the provider stamp was missing
+                # or unparseable.
                 misses["date_mismatch"] += 1
+                continue
+            if row_day not in pick_days:
+                # A well-formed date outside the slate window. An upcoming
+                # multi-day board (Bet Better publishes one) legitimately
+                # lands here; calling it a "mismatch" implied a bug that is
+                # not there.
+                misses["out_of_window"] += 1
                 continue
             if _valid_decimal_odds(normalized.get("odds")) is None:
                 # Not one of the six join-key failures: preserve it explicitly
@@ -3151,11 +3168,16 @@ def donor_join_diagnostics(
             "raw_rows": len(input_rows),
             "matched_rows": matched_rows,
             "miss_counts": dict(sorted(misses.items())),
+            # Counts of provider market/selection tokens only. No payloads,
+            # no identifiers, nothing credential-bearing.
+            "unmapped_vocabulary": dict(
+                sorted(vocabulary.items(), key=lambda item: (-item[1], item[0]))
+            ),
         }
     return report
 
 
-def donor_join_miss_lines(report: dict[str, dict], *, limit: int = 4) -> list[str]:
+def donor_join_miss_lines(report: dict[str, dict], *, limit: int = 6) -> list[str]:
     """Compact, stable top-count lines suitable for Actions logs."""
     lines: list[str] = []
     for source in sorted(report):
@@ -3167,6 +3189,27 @@ def donor_join_miss_lines(report: dict[str, dict], *, limit: int = 4) -> list[st
             f"donor join misses {source}: {rendered} "
             f"(matched_rows={int(row.get('matched_rows') or 0)} "
             f"raw_rows={int(row.get('raw_rows') or 0)})"
+        )
+    return lines
+
+
+def donor_vocabulary_lines(report: dict[str, dict], *, limit: int = 12) -> list[str]:
+    """Print the provider tokens behind every canonicalisation miss.
+
+    This is how the next run enumerates a donor's real market/selection
+    vocabulary without a live discovery call: the raw token is already in
+    the captured ledger, so the miss itself can report it.
+    """
+    lines: list[str] = []
+    for source in sorted(report):
+        vocabulary = Counter(report[source].get("unmapped_vocabulary") or {})
+        if not vocabulary:
+            continue
+        top = sorted(vocabulary.items(), key=lambda item: (-item[1], item[0]))[:limit]
+        rendered = " ".join(f"{token}={count}" for token, count in top)
+        lines.append(
+            f"donor unmapped vocabulary {source}: {rendered} "
+            f"(distinct={len(vocabulary)})"
         )
     return lines
 
@@ -4647,6 +4690,11 @@ def main():
         donor_matches = donor_match_counts(picks, donor_bundles)
         shadow_donor_names = {
             "betbetter", "boggio", "betminer", "pinnapi_odds", "sharpapi_odds",
+            # OddsPAPI is a named-book price source, not a shadow donor, but
+            # it captured 414 usable rows and matched zero with no miss
+            # accounting at all. A counted miss is worth more than a silent
+            # zero, so it gets the same per-reason buckets.
+            ODDSPAPI_ODDS_SOURCE,
         }
         donor_join_report = donor_join_diagnostics(
             picks,
@@ -4668,7 +4716,15 @@ def main():
                 join_row = donor_join_report.get(source_name) or {}
                 entry["join_miss_counts"] = dict(join_row.get("miss_counts") or {})
                 entry["join_matched_rows"] = int(join_row.get("matched_rows") or 0)
+        oddspapi_join_row = donor_join_report.get(ODDSPAPI_ODDS_SOURCE) or {}
+        if oddspapi_join_row:
+            oddspapi_stats["join_miss_counts"] = dict(
+                oddspapi_join_row.get("miss_counts") or {})
+            oddspapi_stats["join_matched_rows"] = int(
+                oddspapi_join_row.get("matched_rows") or 0)
         for line in donor_join_miss_lines(donor_join_report):
+            print(line, file=sys.stderr)
+        for line in donor_vocabulary_lines(donor_join_report):
             print(line, file=sys.stderr)
 
         be_stats: dict = {}
@@ -4883,6 +4939,9 @@ def main():
             ),
             "status": oddspapi_stats.get("status"),
             "reason": None,
+            # Same per-reason join accounting the shadow donors already had.
+            "join_miss_counts": dict(oddspapi_stats.get("join_miss_counts") or {}),
+            "join_matched_rows": int(oddspapi_stats.get("join_matched_rows") or 0),
         }
         health_observations["betbetter"] = {
             "fetched": bb_shadow_stats.get("status") in {"ok", "empty"},
