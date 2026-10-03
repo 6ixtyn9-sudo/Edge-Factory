@@ -308,3 +308,45 @@ def test_every_unmapped_token_is_counted_and_named(row, bucket, token):
     assert report["unmapped_vocabulary"] == {token: 1}
     assert pt.donor_vocabulary_lines({"betbetter": report})[0].startswith(
         "donor unmapped vocabulary betbetter:")
+
+
+def test_board_rejected_before_the_bundle_still_reports_a_counted_reason(tmp_path, monkeypatch):
+    """414 rows thrown away wholesale must not print as ``none=0``."""
+    import csv
+    import gzip
+
+    monkeypatch.setattr(pt, "LOCALDATA", tmp_path)
+    path = tmp_path / "oddspapi_odds_2026-10.csv.gz"
+    cols = ["source", "source_type", "sport", "date", "kickoff", "league",
+            "home", "away", "market", "selection", "odds", "bookmaker",
+            "captured_at"]
+    with gzip.open(path, "wt", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=cols)
+        writer.writeheader()
+        # Exactly the 2026-10-03 shape: priced, booked, and with no teams.
+        for odds in (4.3, 4.75, 1.532):
+            writer.writerow({
+                "source": "oddspapi", "source_type": "odds", "sport": "soccer",
+                "date": DAY, "kickoff": f"{DAY}T09:00:00.000Z", "league": "",
+                "home": "", "away": "", "market": "1x2", "selection": "home",
+                "odds": odds, "bookmaker": "bodog.eu",
+                "captured_at": f"{DAY}T13:13:33+00:00",
+            })
+    stats: dict = {}
+    from datetime import datetime, timezone
+    bundle = pt.oddspapi_odds_bundle(
+        DAY,
+        not_after=datetime(2026, 10, 3, 15, 0, tzinfo=timezone.utc),
+        stats=stats,
+    )
+    assert stats["raw_rows"] == 3
+    assert stats["usable_rows"] == 0, "teamless rows were never usable supply"
+    assert stats["identity_missing_rows"] == 3
+
+    report = pt.donor_join_diagnostics(
+        [_pick("Croatia", "England", "1x2", "home")], [bundle],
+    )[pt.ODDSPAPI_ODDS_SOURCE]
+    assert report["miss_counts"] == {"fixture_identity_missing": 3}
+    assert report["raw_rows"] == 3
+    line = pt.donor_join_miss_lines({pt.ODDSPAPI_ODDS_SOURCE: report})[0]
+    assert "fixture_identity_missing=3" in line
