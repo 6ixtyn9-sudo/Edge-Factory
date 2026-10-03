@@ -295,7 +295,11 @@ def self_test() -> int:
     check("team totals tt_home_1.5 over", ("tt_home_1.5", "over") in markets)
     check("team totals tt_away_1.5 under", ("tt_away_1.5", "under") in markets)
     check("totals ou_2.5 over", ("ou_2.5", "over") in markets)
-    check("unified schema columns", all(set(COLUMNS) <= set(r.keys()) for r in rows))
+    # schema_version is a property of the STORE, stamped on write, so the
+    # parser is not expected to supply it. Everything else must be present.
+    _PARSER_COLUMNS = [c for c in COLUMNS if c != "schema_version"]
+    check("unified schema columns",
+          all(set(_PARSER_COLUMNS) <= set(r.keys()) for r in rows))
     check("all source=oddspapi", all(r["source"] == "oddspapi" for r in rows))
 
     # write-path: append + dedupe
@@ -308,9 +312,15 @@ def self_test() -> int:
         try:
             added1 = _append_rows(rows, "2026-08-03")
             added2 = _append_rows(rows, "2026-08-03")
+            with gzip.open(_out_path("2026-08-03"), "rt", newline="",
+                           encoding="utf-8") as fh:
+                stored = [dict(r) for r in csv.DictReader(fh)]
         finally:
             OUT_DIR = _orig
         check("append adds 10 then dedupes to 0", added1 == 10 and added2 == 0)
+        check("every stored row carries the current generation",
+              bool(stored) and all(
+                  r.get("schema_version") == str(SCHEMA_VERSION) for r in stored))
 
     if failures:
         print(f"self-test: FAIL ({len(failures)} failures)")
