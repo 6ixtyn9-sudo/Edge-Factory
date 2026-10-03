@@ -13,17 +13,11 @@ Delivered
 - SharpAPI uses the documented RapidAPI `/api/v1/odds` path and fails closed with `reason=missing_sport_filter` when `SHARPAPI_SPORT` is absent. The env example documents the sport and optional filters.
 - `picks_today.py` accepts both the historical positional date and the required `--date YYYY-MM-DD` form. The exact production command no longer treats `--date` as a pseudo-day.
 
-Production run — 2026-10-03
+Production artifact review — 2026-10-03
 
-Commands run:
+The git-backed 2026-10-03 slate contains 55 captured rows, including 32 donor-priced candidates, but zero named-book execution prices. The 28 ScoutingStats-derived prices are audit-only provider averages; the remaining priced fallback/unregistered rows are rejected by policy. This explains why the corrected policy would abstain, but no credentialed live capture was performed in this sandbox.
 
-`python scripts/picks_today.py --date 2026-10-03`
-
-`python scripts/auto_tickets.py --date 2026-10-03 --force`
-
-The git-backed 2026-10-03 slate contains 55 captured rows, including 32 donor-priced candidates, but zero named-book execution prices and zero execution-safe candidates. The 28 ScoutingStats-derived prices are audit-only provider averages; the remaining priced fallback/unregistered rows are rejected by policy. The corrected run therefore printed an honest `NO BET TODAY — 0 qualifying leg(s), need 2`. The active policy printed `fair_stakeable=off` and `source_fallback=abstain`; the sandbox transport replay additionally reported missing runtime env values, but those are not used to reinterpret the git-backed card. The superseded-card recut report is `localdata/auto_tickets_2026-10-03_force_recut.txt`.
-
-The original frozen card remains at `localdata/auto_tickets_2026-10-03.txt` with its write-once `frozen_at` preserved as `2026-10-03T09:15:03+02:00`; it was not hand-edited. The force recut records that card as superseded while preserving the freeze entry in `auto_tickets_state.json`.
+The original frozen card remains at `localdata/auto_tickets_2026-10-03.txt` with its write-once `frozen_at` preserved as `2026-10-03T09:15:03+02:00`; it was not hand-edited. No sandbox-generated ticket or recut report is retained. The next credentialed Actions run must validate live BetMiner/SharpAPI responses and the donor `bb_matched` counter; its output, not a local replay, is the production result.
 
 Validation
 
