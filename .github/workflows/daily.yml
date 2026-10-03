@@ -76,12 +76,22 @@ jobs:
       ODDS_API_MONTHLY_BUDGET: ${{ secrets.ODDS_API_MONTHLY_BUDGET || '480' }}
       ODDS_API_CLOSE_WINDOW_MIN: ${{ secrets.ODDS_API_CLOSE_WINDOW_MIN || '45' }}
 
+      # SharpAPI (RapidAPI). Uses the RAPIDAPI_KEY mapped above. The adapter
+      # fails closed while SHARPAPI_SPORT is unset (reason=missing_sport_filter).
+      # 'soccer' is the documented identifier from GET /api/v1/sports but has not
+      # yet been observed live; the secret override lets it be corrected without
+      # a workflow edit (agent sessions lack the 'workflows' permission).
+      SHARPAPI_SPORT: ${{ secrets.SHARPAPI_SPORT || 'soccer' }}
+      SHARPAPI_ENDPOINT: ${{ secrets.SHARPAPI_ENDPOINT || '/api/v1/odds' }}
+      SHARPAPI_LIMIT: ${{ secrets.SHARPAPI_LIMIT || '100' }}
+
       # OddsPAPI bounded candidate-snapshot capture (PRICE-LANE-TEARDOWN-2026-10-03).
-      # The code path ships disabled: without these mappings the capture never
-      # runs in Actions and OddsPAPI stays capability metadata rather than an
-      # active source. Fails closed on a missing key or an 'off' flag.
+      # Capture is ENABLED by default here now that the key secret is configured.
+      # Set the EDGE_FACTORY_ODDSPAPI_PRICES secret to 'off' to disable without a
+      # workflow edit. The key itself remains the hard guard: with no
+      # ODDSPAPI_API_KEYS the capture still no-ops ("no ODDSPAPI_API_KEYS configured").
       ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
-      EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || 'off' }}
+      EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || '1' }}
       ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
 
       TZ: 'Africa/Johannesburg'
