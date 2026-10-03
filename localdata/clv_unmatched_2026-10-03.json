@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-10-03",
+    "kickoff": "03-10, 13:00",
+    "home": "Sri Lanka",
+    "away": "Djibouti",
+    "league": "World Friendlies",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "srilanka",
+    "away_key": "djibouti",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Brentwood Town",
+        "away": "Dagenham & Redbridge",
+        "league": "FA Cup",
+        "kickoff": "2026-10-03T11:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.8,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "brentwoodtown",
+        "away_key": "dagenhamredbridge",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Crystal Palace",
+        "away": "Bristol City",
+        "league": "Club Friendlies 3",
+        "kickoff": "2026-10-03T11:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.72,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "crystalpalace",
+        "away_key": "bristolcity",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Chesterfield",
+        "away": "Tranmere Rovers",
+        "league": "League Two",
+        "kickoff": "2026-10-03T11:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.66,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "chesterfield",
+        "away_key": "tranmererovers",
+        "kickoff_delta_minutes": 30
+      },
+      {
+        "home": "Veres",
+        "away": "Kudrivka",
+        "league": "Premier League",
+        "kickoff": "2026-10-03T10:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.15,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "veres",
+        "away_key": "kudrivka",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "Viktoria K\u00f6ln",
+        "away": "FC K\u00f6ln",
+        "league": "Club Friendlies 3",
+        "kickoff": "2026-10-03T12:00:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "viktoriakoln",
+        "away_key": "fckoln",
+        "kickoff_delta_minutes": 60
+      }
+    ]
+  },
+  {
+    "date": "2026-10-03",
     "kickoff": "03-10, 12:00",
     "home": "Pite\u00e5 W",
     "away": "Norrk\u00f6ping W",
