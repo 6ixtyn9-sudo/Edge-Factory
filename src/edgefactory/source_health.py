@@ -248,6 +248,20 @@ def build_daily_source_health(
                 "bb_scored": int(obs.get("bb_scored") or 0),
                 "bb_matched": int(obs.get("bb_matched") or 0),
             })
+        if obs.get("join_miss_counts") is not None:
+            # Fixed reason vocabulary plus invalid_price; values are counts
+            # only, so the receipt cannot retain provider payloads or secrets.
+            allowed = {
+                "date_mismatch", "fixture_key_miss", "market_unmapped",
+                "selection_unmapped", "no_pick_for_fixture",
+                "timestamp_rejected", "invalid_price",
+            }
+            row["join_miss_counts"] = {
+                str(reason): int(count or 0)
+                for reason, count in dict(obs.get("join_miss_counts") or {}).items()
+                if str(reason) in allowed
+            }
+            row["join_matched_rows"] = int(obs.get("join_matched_rows") or 0)
         sources[name] = row
     return {"schema": 1, "date": str(day), "sources": sources}
 

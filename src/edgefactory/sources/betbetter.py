@@ -44,7 +44,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
-from edgefactory.odds_normalization import canonical_market_selection
+from edgefactory.odds_normalization import canonical_market_selection, provider_kickoff_date
 
 SOURCE = "betbetter"
 BASE = "https://betbetter.world"
@@ -191,6 +191,11 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
         if not home or not away:
             continue
         kickoff = str(pick.get("gameTimeUtc") or "") or None
+        # The endpoint is an upcoming board, not a day-scoped board.  Labelling
+        # every returned fixture with the capture day made future matches look
+        # joinable to today's slate. Use the provider's gameTimeUtc calendar
+        # date; malformed or missing stamps deliberately have no join date.
+        event_day = provider_kickoff_date(kickoff)
         probability = pick.get("winProbabilityPct")
         if probability is None:
             probability = pick.get("modelProbabilityPct")
@@ -217,7 +222,7 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
         canonical_line = canonical.line if canonical is not None else pick.get("line")
         rows.append({
             "source": SOURCE,
-            "date": day,
+            "date": event_day,
             "league_slug": slug,
             "home": home,
             "away": away,
@@ -241,7 +246,8 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
             "named_bookmaker": False,
             "price_independence_family": "betbetter_fair",
             "price_push_eligible": bool(
-                canonicalization_mappable and fair_odds is not None and fair_price_donor_enabled()),
+                event_day and canonicalization_mappable and fair_odds is not None
+                and fair_price_donor_enabled()),
             "confidence": pick.get("confidence"),
             "attribution": str(payload.get("attribution") or "Bet Better — https://betbetter.world"),
             "licence": str(payload.get("licence") or "CC BY 4.0 — free to use with attribution to Bet Better (https://betbetter.world)"),
@@ -332,8 +338,8 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             break
         url = league_url(slug)
         try:
-            status, payload, _headers = get_json(url)
             stats["requests"] += 1
+            status, payload, _headers = get_json(url)
             if status != 200 or payload is None:
                 stats["errors"].append(f"{slug}: HTTP {status} or non-JSON payload")
                 continue
@@ -372,7 +378,13 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             stats["errors"].append(f"{slug}: HTTP {exc.code}")
     stats["bb_raw"] = len(rows)
     stats["bb_scored"] = len(rows)
-    stats["status"] = "ok" if rows else "empty"
+    if rows:
+        stats["status"] = "ok"
+    elif stats["errors"]:
+        stats["status"] = "unavailable"
+        stats["blocker"] = "betbetter: every configured league request failed"
+    else:
+        stats["status"] = "empty"
     return rows, _set_diag(stats)
 
 
