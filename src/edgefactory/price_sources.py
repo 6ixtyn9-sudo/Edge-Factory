@@ -212,16 +212,17 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
     PriceSourceSpec(
         name="bzzoiro_odds",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=10,
+        priority=20,
         independence_family="bzzoiro_book",
         named_bookmaker=True,
         label="Bzzoiro named-book price",
-        notes="Historic default primary. Kept as one approved source among several.",
+        notes=("Second observed execution contributor: 85 push-eligible archived "
+               "matches across 53 source-days through 2026-10-03."),
     ),
     PriceSourceSpec(
         name="betexplorer",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=20,
+        priority=10,
         independence_family="betexplorer_book",
         named_bookmaker=True,
         label="BetExplorer named-book price",
@@ -229,16 +230,18 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
     PriceSourceSpec(
         name="betexplorer_odds",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=20,
+        priority=10,
         independence_family="betexplorer_book",
         named_bookmaker=True,
         label="BetExplorer named-book price",
-        notes="Compatibility name used by the rescue adapter; same family as betexplorer.",
+        notes=("Top observed execution contributor: 497 push-eligible archived "
+               "matches across 84 source-days through 2026-10-03; same family "
+               "as the compatibility name betexplorer."),
     ),
     PriceSourceSpec(
         name="theoddsapi",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=20,
+        priority=30,
         independence_family="theoddsapi_bookmaker",
         named_bookmaker=True,
         label="TheOddsAPI named-book price",
@@ -247,7 +250,7 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
     PriceSourceSpec(
         name="oddspapi_odds",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=25,
+        priority=60,
         independence_family="oddspapi_bookmaker",
         named_bookmaker=True,
         label="OddsPAPI named-book price",
@@ -255,7 +258,7 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
     PriceSourceSpec(
         name="pinnapi_odds",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=15,
+        priority=40,
         independence_family="pinnacle_book",
         named_bookmaker=True,
         label="Pinnacle named-book price",
@@ -263,7 +266,7 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
     PriceSourceSpec(
         name="sharpapi_odds",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=18,
+        priority=50,
         independence_family="sharpapi_book",
         named_bookmaker=True,
         label="SharpAPI named-book price",
@@ -523,13 +526,14 @@ def rank_candidates(
     2. exact fixture and market match;
     3. execution eligibility;
     4. named-book provenance;
-    5. freshness (smaller age wins; unknown age sorts last);
-    6. configured source priority.
+    5. observed execution-contribution order (configured source priority);
+    6. freshness within that source order (smaller age wins; unknown last).
 
-    Provenance intentionally precedes freshness. A marginally newer fair or
-    aggregate number is not an executable bookmaker quote and must never
-    displace a healthy named-book quote merely because the two capture loops
-    completed milliseconds apart.
+    The fixed source order is set from the archived end-to-end contribution
+    record, not an asserted bookmaker-quality claim. Provenance intentionally
+    precedes source order: a marginally newer fair or aggregate number is not
+    an executable bookmaker quote and must never displace a healthy named-book
+    quote merely because capture loops completed milliseconds apart.
 
     Bzzoiro no longer wins by construction: a healthy source with a valid exact
     fixture match beats an unavailable source whatever its historic priority.
@@ -546,8 +550,8 @@ def rank_candidates(
             0 if candidate.exact_match else 1,
             0 if source_spec.can_execute() else 1,
             0 if source_spec.named_bookmaker else 1,
-            float(age) if isinstance(age, (int, float)) else float("inf"),
             source_spec.priority,
+            float(age) if isinstance(age, (int, float)) else float("inf"),
             source_spec.name,
         )
 

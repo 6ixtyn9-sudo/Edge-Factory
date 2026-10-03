@@ -71,6 +71,7 @@ PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
 LOCALDATA = ROOT / "localdata"
 BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
+BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
 THEODDSAPI_ODDS_SOURCE = "theoddsapi"
 
 # Voter-row (source) aliasing lives in edgefactory/identity.py
@@ -2210,6 +2211,75 @@ def oddspapi_odds_bundle(
     )
 
 
+def betexplorer_cached_odds_bundle(
+    day: str,
+    *,
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Read the bounded candidate-snapshot cache as a named-book bundle.
+
+    The cache is written by ``capture_betexplorer.py`` before the final build.
+    No network call is made here.  Its individual row timestamps receive the
+    same post-cutoff/stale containment as the two API CSV boards.
+    """
+    cutoff = not_after or datetime.now(timezone.utc)
+    cutoff = cutoff.replace(tzinfo=timezone.utc) if cutoff.tzinfo is None else cutoff.astimezone(timezone.utc)
+    path = LOCALDATA / f"betexplorer_odds_cache_{str(day)[:10]}.json"
+    report = {
+        "status": "absent", "raw_rows": 0, "usable_rows": 0,
+        "after_build_rows": 0, "stale_rows": 0, "invalid_timestamp_rows": 0,
+        "path": str(path),
+    }
+    rows: list[dict] = []
+    try:
+        payload = json.loads(path.read_text())
+        fixtures = payload.get("fixtures") if isinstance(payload, dict) else None
+        if not isinstance(fixtures, dict):
+            raise ValueError("invalid BetExplorer cache payload")
+        for entry in fixtures.values():
+            for raw in (entry.get("rows") or []) if isinstance(entry, dict) else []:
+                if not isinstance(raw, dict) or str(raw.get("date") or "")[:10] != str(day)[:10]:
+                    continue
+                report["raw_rows"] += 1
+                stamp = _utc_price_stamp(raw.get("captured_at"))
+                if stamp is None:
+                    report["invalid_timestamp_rows"] += 1
+                    continue
+                if stamp > cutoff:
+                    report["after_build_rows"] += 1
+                    continue
+                if (cutoff - stamp).total_seconds() / 3600.0 > THEODDSAPI_ODDS_MAX_AGE_H:
+                    report["stale_rows"] += 1
+                    continue
+                if not str(raw.get("bookmaker") or "").strip():
+                    continue
+                rows.append(psrc.annotate_row(raw, source=BETEXPLORER_ODDS_SOURCE))
+    except FileNotFoundError:
+        pass
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        report["status"] = "unavailable"
+    report["usable_rows"] = len(rows)
+    if report["status"] != "unavailable":
+        report["status"] = "cache_only" if rows else ("empty" if path.exists() else "absent")
+    observed_raw_rows = int(report["raw_rows"])
+    bundle_stats: dict = {}
+    bundle = _odds_bundle_from_rows(rows, provider=BETEXPLORER_ODDS_SOURCE, stats=bundle_stats)
+    report.update(bundle_stats)
+    report["raw_rows"] = observed_raw_rows
+    report["usable_rows"] = len(rows)
+    if stats is not None:
+        stats.update(report)
+    return bundle
+
+
+def _allow_live_betexplorer_rescue() -> bool:
+    """Emergency-only compatibility switch; final cards use snapshots by default."""
+    return os.environ.get("EDGE_FACTORY_ALLOW_LIVE_BETEXPLORER_RESCUE", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
+
 # Stale-price containment (2026-10-02): the scoutingstats odds board is only
 # as fresh as its cache file — nothing in the row itself says when the price
 # was captured, because the adapter FABRICATES captured_at = the fixture's
@@ -4138,8 +4208,7 @@ def print_buckets(buckets: dict, title_date: str = ""):
 
 
 # ---------------------------------------------------------------- betexplorer --
-BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
-BE_RESCUE_TARGET_LEGS = 4  # enough to fill the current 2-acca x 2-leg card
+BE_RESCUE_TARGET_LEGS = 4  # legacy live-rescue cap; disabled for final cards by default
 
 
 def _append_betexplorer_board_rows(pick: dict, rows: list[dict], source: str) -> None:
@@ -4430,15 +4499,21 @@ def main():
         theodds_bundle = theoddsapi_odds_bundle(day, not_after=as_of, stats=theodds_stats)
         oddspapi_stats: dict = {}
         oddspapi_bundle = oddspapi_odds_bundle(day, not_after=as_of, stats=oddspapi_stats)
-        # Bzzoiro is no longer "the primary source": it is one approved source
-        # among several, and `enrich_with_live_odds` ranks them by health.
-        # Both persisted APIs enter this shared board only after their own
-        # capture-time checks; no source gets a positional preference.
-        donor_bundles = [theodds_bundle, oddspapi_bundle, *donor_odds_bundles(day)]
+        betexplorer_cache_stats: dict = {}
+        betexplorer_bundle = betexplorer_cached_odds_bundle(
+            day, not_after=as_of, stats=betexplorer_cache_stats,
+        )
+        # All populated boards enter one matcher. Source contribution priority,
+        # not construction position, resolves healthy exact named-book ties.
+        donor_bundles = [
+            betexplorer_bundle, theodds_bundle, oddspapi_bundle,
+            *donor_odds_bundles(day),
+        ]
         enriched_n = enrich_with_live_odds(
             picks, odds_bundle, secondary_bundle, donor_bundles=donor_bundles)
         theodds_matches = donor_match_counts(picks, [theodds_bundle]).get(THEODDSAPI_ODDS_SOURCE, 0)
         oddspapi_matches = donor_match_counts(picks, [oddspapi_bundle]).get(ODDSPAPI_ODDS_SOURCE, 0)
+        betexplorer_matches = donor_match_counts(picks, [betexplorer_bundle]).get(BETEXPLORER_ODDS_SOURCE, 0)
         donor_matches = donor_match_counts(picks, donor_bundles)
         for source_name, stats_name, scored_key, raw_key in (
             ("betbetter", "bb_matched", "bb_scored", "bb_raw"),
@@ -4454,10 +4529,17 @@ def main():
                 entry[stats_name] = int(donor_matches.get(source_name, 0))
 
         be_stats: dict = {}
-        be_enriched = 0 if candidate_only else enrich_unmatched_with_betexplorer(
-            picks, day, bundles=(odds_bundle, secondary_bundle), stats=be_stats)
         if candidate_only:
             be_stats["status"] = "candidate_only"
+            be_enriched = 0
+        elif _allow_live_betexplorer_rescue():
+            # Emergency-only compatibility route. Normal final cards already
+            # have a bounded pre-build snapshot in betexplorer_bundle.
+            be_enriched = enrich_unmatched_with_betexplorer(
+                picks, day, bundles=(odds_bundle, secondary_bundle, *donor_bundles), stats=be_stats)
+        else:
+            be_stats["status"] = "snapshot_only"
+            be_enriched = 0
 
         # Shadow stats were captured above, before bundle construction.
         fp_shadow_stats = shadow_stats.get("futbolpronosticos", {})
@@ -4508,6 +4590,9 @@ def main():
             f"oddspapi_raw={oddspapi_stats.get('raw_rows', 0)} "
             f"oddspapi_usable={oddspapi_stats.get('usable_rows', 0)} "
             f"oddspapi_matched={oddspapi_matches} "
+            f"betexplorer_raw={betexplorer_cache_stats.get('raw_rows', 0)} "
+            f"betexplorer_usable={betexplorer_cache_stats.get('usable_rows', 0)} "
+            f"betexplorer_matched={betexplorer_matches} "
             f"corroborator={'on' if _sportytrader_corrob_flag_on() else 'off'}",
             file=sys.stderr,
         )
@@ -4552,19 +4637,23 @@ def main():
             "freshness_h": 0.0 if bzz_status == "ok" else None,
             "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
         }
-        be_observed = bool(be_stats.get("be_429", 0) or be_enriched or be_stats.get("be_cached", 0))
+        be_cache_rows = int(betexplorer_cache_stats.get("usable_rows") or 0)
         health_observations["betexplorer"] = {
-            "fetched": be_observed,
-            "rows": int(be_enriched or 0),
-            "can_fetch_today": bool(be_enriched or be_stats.get("be_cached", 0)) and not bool(be_stats.get("be_cooling_down", False)),
-            "can_price": bool(be_enriched or be_stats.get("be_cached", 0)),
+            "fetched": False,
+            "rows": be_cache_rows,
+            "be_raw": int(betexplorer_cache_stats.get("raw_rows") or 0),
+            "be_usable": be_cache_rows,
+            "be_matched": int(betexplorer_matches or 0),
+            "can_fetch_today": False,
+            "can_price": bool(be_cache_rows),
             "can_vote": False,
-            "freshness_h": 0.0 if be_enriched else None,
+            "freshness_h": None,
+            "status": betexplorer_cache_stats.get("status") or be_stats.get("status"),
             "blocker": (
                 "run cooling down after 2 HTTP 429 responses"
                 if be_stats.get("be_cooling_down")
-                else "not requested; no unmatched rescue legs"
-                if not be_observed else None
+                else "cache-only pre-build snapshot; final card makes no live rescue"
+                if be_cache_rows else "no pre-build BetExplorer rows"
             ),
         }
         health_observations["futbolpronosticos"] = {
@@ -4766,6 +4855,9 @@ def main():
                 f"oddspapi_raw={oddspapi_stats.get('raw_rows', 0)} "
                 f"oddspapi_usable={oddspapi_stats.get('usable_rows', 0)} "
                 f"oddspapi_matched={oddspapi_matches} "
+                f"betexplorer_raw={betexplorer_cache_stats.get('raw_rows', 0)} "
+                f"betexplorer_usable={betexplorer_cache_stats.get('usable_rows', 0)} "
+                f"betexplorer_matched={betexplorer_matches} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
                 f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "
                 f"uncorroborated_price={uncorroborated_n} suspect_price={suspect_price_n}",

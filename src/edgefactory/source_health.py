@@ -190,7 +190,13 @@ def build_daily_source_health(
         # Candidate-specific counters are deliberately retained in the daily
         # contract so an operator can distinguish an empty slate from a parser
         # mismatch without treating either as a production gate.
-        if name == "futbolpronosticos":
+        if name == "betexplorer":
+            row.update({
+                "be_raw": int(obs.get("be_raw") or 0),
+                "be_usable": int(obs.get("be_usable") or 0),
+                "be_matched": int(obs.get("be_matched") or 0),
+            })
+        elif name == "futbolpronosticos":
             row.update({
                 "raw": int(obs.get("raw") or 0),
                 "scored": int(obs.get("scored") or 0),
@@ -375,6 +381,12 @@ def daily_status_block(day: str) -> str:
         "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "boggio", "predictiq",
     ):
         row = sources.get(name, {})
+        if name == "betexplorer" and str(row.get("status") or "") == "cache_only":
+            tokens.append(
+                f"betexplorer=raw{row.get('be_raw', 0)}/usable{row.get('be_usable', 0)}"
+                f"/matched{row.get('be_matched', 0)}"
+            )
+            continue
         if name == "futbolpronosticos":
             tokens.append(f"futbolpronosticos=raw{row.get('raw', 0)}/scored{row.get('scored', 0)}")
             continue

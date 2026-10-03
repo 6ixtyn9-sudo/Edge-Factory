@@ -368,6 +368,19 @@ def capture_oddspapi_snapshot(target_date: str, trigger: str) -> None:
     )
 
 
+def capture_betexplorer_snapshot(target_date: str, trigger: str) -> None:
+    """Create the bounded BetExplorer cache used by the final priced pass."""
+    try:
+        max_fixtures = max(1, min(12, int(os.environ.get("EDGE_FACTORY_BETEXPLORER_MAX_FIXTURES", "12"))))
+    except (TypeError, ValueError):
+        max_fixtures = 12
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/capture_betexplorer.py --date {target_date} "
+        f"--max-fixtures {max_fixtures}",
+        f"betexplorer bounded capture {target_date} [{trigger}]",
+    )
+
+
 def finalize_priced_candidate_slate(target_date: str) -> str:
     """Turn one candidate slate into one final priced card.
 
@@ -380,6 +393,7 @@ def finalize_priced_candidate_slate(target_date: str) -> str:
     """
     capture_theodds_snapshot(target_date, "candidate_price_snapshot")
     capture_oddspapi_snapshot(target_date, "candidate_price_snapshot")
+    capture_betexplorer_snapshot(target_date, "candidate_price_snapshot")
     priced_as_of = make_run_as_of()
     run(
         f"{picks_env_prefix(priced_as_of)} PYTHONPATH=src python3 "
