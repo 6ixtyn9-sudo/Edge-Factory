@@ -1,32 +1,42 @@
-"""Betminer shadow voice adapter (SHADOW-01 T2, HUNT-01 winner).
+"""BetMiner adapter - prediction voice donor, conditional price donor.
 
-Zero voice credit until settled evidence: this adapter only captures a
-per-date shadow ledger. It never enters consensus weights, the pick path, or
-price corroboration, and promotion happens only through the echo test
-(>=30 shared settled fixtures vs existing donors) plus an explicit operator
-decision - see docs/operator/TICKETS-OPEN.md (c).
+Endpoint contract (repaired 2026-10-03)
+---------------------------------------
+The adapter used to call ``GET /matches/{date}``. That path is no longer part
+of the published RapidAPI contract; the listing exposes::
 
-Facts pinned by HUNT-01 (docs/operator/SOURCE-HUNT-2026-10.md section 5.1):
+    GET /value-bets/{date}
+    GET /value-bets/{dateFrom}/{dateTo}
+    GET /accumulators/{date}
+    GET /accumulators/{dateFrom}/{dateTo}
+    GET /acca-builder
+    GET /edge-analysis/{date}
 
-- RapidAPI free tier: 5 requests/day, no card, all endpoints; the free budget
-  is tiny, so this adapter is **cache-first per date** (the first successful
-  capture of a day is the committed capture; later runs the same day are
-  cache-only and make no request) and hard-caps calls per run.
-- ``GET /matches/{date}`` returns the whole day of predictions in ONE call:
-  1X2/BTTS/over-under probabilities (integers 0-100), a six-outcome result
-  prediction (1/X/2/1X/X2/12), correct score, HT/FT, and an odds object.
-- The odds carry **no bookmaker identity** in the schema: Betminer is a voice
-  donor only and is NEVER a price donor under the standing "no book name, no
-  price donor" rule. The odds object is retained in rows as provenance only.
+``/value-bets/{date}`` is now the default. The legacy ``/matches/{date}``
+response shape is still parsed, because the repository holds a captured
+receipt for it (``tests/fixtures/betminer_matches_2026-10-03.json``) and a
+cached ledger written under the old contract must keep parsing; it is never
+*requested* any more.
+
+HTTP 404 is classified as an **endpoint-contract failure**
+(``reason=http_404_endpoint_contract``) rather than a generic outage, so the
+next contract drift is visible in the health line instead of silently looking
+like an empty slate.
+
+Price role
+----------
+BetMiner is a *conditional* price donor and is never execution-eligible: a
+value-bet number only becomes a quote when the response identifies its
+provenance. Without a bookmaker name it is labelled ``provider_average`` and
+is evidence only - it must never be printed as a named-book execution price.
 
 Resilience contract (mirrors bzzoiro_odds.py / betexplorer_odds.py):
-single-flight throttle; one retry on 429 with a Retry-After-first 30-60s
-backoff; a second 429 trips run-scoped cool-down; 401/403 classify as
-``auth`` (plan/key problem - never retried harder); 402/429/430/509 classify
-as ``quota``; 404 and 5xx/network classify as ``unavailable`` (fail-closed:
-an unexpected shape is NEVER interpreted as an empty slate). Zero-row days
-whose status is auth/quota/unavailable/blocked/cooldown stay RETRYABLE - they
-are never terminal, so a later run may try again (OP-01 T4 lesson).
+cache-first per date; single-flight throttle; one retry on 429 with a
+Retry-After-first 30-60s backoff; a second 429 trips run-scoped cool-down;
+401/403 classify as ``auth``; 402/429/430/509 classify as ``quota``; 404 and
+5xx/network classify as ``unavailable`` (fail-closed: an unexpected shape is
+NEVER interpreted as an empty slate). Zero-row days whose status is
+auth/quota/unavailable/blocked/cooldown stay RETRYABLE.
 """
 from __future__ import annotations
 
@@ -44,6 +54,10 @@ from typing import Any
 
 SOURCE = "betminer"
 BASE = "https://betminer.p.rapidapi.com"
+#: Current published contract.
+ENDPOINT_VALUE_BETS = "/value-bets"
+#: Obsolete contract; parsed for cached ledgers, never requested.
+ENDPOINT_LEGACY_MATCHES = "/matches"
 API_HOST = "betminer.p.rapidapi.com"
 KEY_ENV = "RAPIDAPI_KEY"
 UA = "EdgeFactory-cooperative-shadow/1.0 (+operator review)"
@@ -123,8 +137,26 @@ def _throttle() -> None:
         _LAST_REQUEST = time.monotonic()
 
 
+def value_bets_url(day: str) -> str:
+    """The current contract: one call returns the whole dated value-bet board."""
+    return f"{BASE}{ENDPOINT_VALUE_BETS}/{day}"
+
+
 def matches_url(day: str) -> str:
-    return f"{BASE}/matches/{day}"
+    """Legacy ``/matches/{date}`` path.
+
+    Retained only so cached ledgers and the captured legacy receipt stay
+    explicable. ``capture_day`` never requests it.
+    """
+    return f"{BASE}{ENDPOINT_LEGACY_MATCHES}/{day}"
+
+
+def capture_url(day: str) -> str:
+    """The endpoint ``capture_day`` actually calls (configurable, fail-safe)."""
+    endpoint = os.environ.get("BETMINER_ENDPOINT", ENDPOINT_VALUE_BETS).strip() or ENDPOINT_VALUE_BETS
+    if not endpoint.startswith("/"):
+        endpoint = "/" + endpoint
+    return f"{BASE}{endpoint}/{day}"
 
 
 def _sanitize_headers(headers: Any) -> dict[str, str]:
@@ -286,6 +318,194 @@ def parse_matches(payload: Any, *, day: str) -> list[dict[str, Any]]:
     return rows
 
 
+# --- current contract: /value-bets/{date} ---------------------------------
+#
+# Field names below are ALIASES observed across the provider's own
+# documentation and playground, not invented schema: the parser accepts a
+# value only when it can also say where the value came from. Anything it
+# cannot label is dropped rather than guessed.
+
+_VALUE_BET_LIST_KEYS = ("value_bets", "valueBets", "data", "bets", "results", "value-bets")
+_HOME_KEYS = ("home", "home_team", "homeTeam", "home_name")
+_AWAY_KEYS = ("away", "away_team", "awayTeam", "away_name")
+_ODDS_KEYS = ("odds", "price", "bookmaker_odds", "bookmakerOdds", "best_odds", "bestOdds", "decimal_odds")
+_FAIR_ODDS_KEYS = ("fair_odds", "fairOdds", "true_odds", "trueOdds", "model_odds")
+_BOOKMAKER_KEYS = ("bookmaker", "bookie", "book", "bookmaker_name", "bookmakerName")
+_SELECTION_KEYS = ("selection", "bet", "pick", "tip", "outcome", "prediction")
+_MARKET_KEYS = ("market", "market_name", "bet_type", "betType")
+_PROBABILITY_KEYS = ("probability", "prob", "model_probability", "modelProbability", "confidence")
+_KICKOFF_KEYS = ("kickoff", "kick_off", "start_time", "startTime", "date_time", "commence_time")
+_PUBLISHED_KEYS = ("published_at", "publishedAt", "updated_at", "updatedAt", "last_update_at")
+
+_VALUE_BET_SELECTIONS = {
+    "1": "home", "home": "home", "home_win": "home", "h": "home",
+    "x": "draw", "draw": "draw", "d": "draw",
+    "2": "away", "away": "away", "away_win": "away", "a": "away",
+    "1x": "1x", "x2": "x2", "12": "12",
+}
+
+
+def _first(item: dict[str, Any], keys: tuple[str, ...]) -> Any:
+    for key in keys:
+        if key in item and item[key] not in (None, ""):
+            return item[key]
+    return None
+
+
+def _team_name(value: Any) -> str | None:
+    if isinstance(value, dict):
+        value = value.get("name") or value.get("team") or value.get("title")
+    text = str(value or "").strip()
+    return text or None
+
+
+def value_bet_rows(payload: Any) -> list[dict[str, Any]] | None:
+    """Locate the value-bet list in the response wrapper, or ``None``."""
+    if isinstance(payload, list):
+        return [item for item in payload if isinstance(item, dict)]
+    if not isinstance(payload, dict):
+        return None
+    for key in _VALUE_BET_LIST_KEYS:
+        candidate = payload.get(key)
+        if isinstance(candidate, list):
+            return [item for item in candidate if isinstance(item, dict)]
+    return None
+
+
+def parse_value_bet(item: dict[str, Any], *, day: str, captured_at: str) -> dict[str, Any] | None:
+    """Normalize one value-bet object. Returns ``None`` when unlabelable."""
+    home = _team_name(_first(item, _HOME_KEYS))
+    away = _team_name(_first(item, _AWAY_KEYS))
+    if not home or not away:
+        # Some payloads carry a single "match"/"fixture" string instead.
+        fixture = str(_first(item, ("match", "fixture", "event", "game")) or "")
+        for separator in (" vs ", " v ", " - "):
+            if separator in fixture:
+                home, _, away = fixture.partition(separator)
+                home, away = home.strip() or None, away.strip() or None
+                break
+    if not home or not away:
+        return None
+
+    selection_raw = _first(item, _SELECTION_KEYS)
+    selection = _VALUE_BET_SELECTIONS.get(str(selection_raw or "").strip().lower())
+    market = str(_first(item, _MARKET_KEYS) or "").strip().lower() or "1x2"
+    if selection is None and market == "1x2":
+        return None
+
+    bookmaker = _first(item, _BOOKMAKER_KEYS)
+    bookmaker = str(bookmaker).strip() if bookmaker not in (None, "") else None
+    odds = _num(_first(item, _ODDS_KEYS))
+    fair_odds = _num(_first(item, _FAIR_ODDS_KEYS))
+    if odds is not None and odds <= 1.0:
+        odds = None
+    if fair_odds is not None and fair_odds <= 1.0:
+        fair_odds = None
+
+    # Provenance decides the label, never convenience. A number with no book
+    # name is a provider aggregate; a model number is fair, not executable.
+    if odds is not None and bookmaker:
+        odds_kind: str | None = "bookmaker"
+    elif odds is not None:
+        odds_kind = "provider_average"
+    elif fair_odds is not None:
+        odds, odds_kind = fair_odds, "fair"
+    else:
+        odds, odds_kind = None, None
+
+    probability = _num(_first(item, _PROBABILITY_KEYS))
+    if probability is not None and probability > 1.5:
+        probability = probability / 100.0
+
+    return {
+        "source": SOURCE,
+        "date": day,
+        "home": home,
+        "away": away,
+        "kickoff": _first(item, _KICKOFF_KEYS),
+        "league": _team_name(_first(item, ("league", "competition", "league_name"))),
+        "market": market,
+        "selection": selection,
+        "probability": probability,
+        "odds": odds,
+        "odds_kind": odds_kind,
+        "fair_odds": fair_odds,
+        "bookmaker": bookmaker,
+        "named_bookmaker": bool(bookmaker),
+        "value_pct": _num(_first(item, ("value", "value_pct", "edge", "edge_pct"))),
+        "published_at": _first(item, _PUBLISHED_KEYS),
+        "captured_at": captured_at,
+        "schema_shape": "value_bets",
+    }
+
+
+def parse_value_bets(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], bool]:
+    """Parse a ``/value-bets/{date}`` payload.
+
+    Returns ``(rows, shaped)``. ``shaped`` separates a VALID EMPTY day (the
+    provider returned a recognizable but empty list) from an UNRECOGNIZED
+    payload - conflating those is how a contract break turns into a silent
+    "no bets today".
+    """
+    items = value_bet_rows(payload)
+    if items is None:
+        return [], False
+    captured_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    rows: list[dict[str, Any]] = []
+    for item in items:
+        parsed = parse_value_bet(item, day=day, captured_at=captured_at)
+        if parsed is not None:
+            rows.append(parsed)
+    return rows, True
+
+
+def parse_payload(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], str | None]:
+    """Dispatch across the supported shapes. Returns ``(rows, shape)``.
+
+    ``shape`` is ``None`` when nothing recognizable was found, which the
+    caller must treat as a contract failure, not an empty slate.
+    """
+    if isinstance(payload, dict) and isinstance(payload.get("data"), list) and any(
+        isinstance(item, dict) and ("home_team" in item or "probabilities" in item)
+        for item in payload["data"]
+    ):
+        legacy = parse_matches(payload, day=day)
+        if legacy:
+            return legacy, "legacy_matches"
+    rows, shaped = parse_value_bets(payload, day=day)
+    if shaped:
+        return rows, "value_bets"
+    legacy = parse_matches(payload, day=day)
+    if legacy:
+        return legacy, "legacy_matches"
+    return [], None
+
+
+def _scrub(value: Any) -> Any:
+    """Redact the API key from anything retained for diagnostics."""
+    secret = _api_key()
+    if isinstance(value, str):
+        return value.replace(secret, "[REDACTED]") if secret else value
+    if isinstance(value, dict):
+        return {str(k): _scrub(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_scrub(v) for v in value[:3]]
+    return value
+
+
+def schema_sample(payload: Any) -> Any:
+    """A small, scrubbed sample of the response for contract diagnostics."""
+    if isinstance(payload, dict):
+        items = value_bet_rows(payload)
+        if items:
+            return _scrub({k: items[0][k] for k in list(items[0])[:12]})
+        return _scrub({"top_keys": list(payload)[:12]})
+    if isinstance(payload, list) and payload:
+        first = payload[0]
+        return _scrub({k: first[k] for k in list(first)[:12]} if isinstance(first, dict) else first)
+    return None
+
+
 def _resolve_localdata(localdata: Path | None) -> Path:
     return localdata if localdata is not None else LOCALDATA
 
@@ -365,6 +585,9 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         "cache_hits": 0, "http_statuses": [], "http_429": 0, "errors": [],
         "quota_hint": "none", "blocker": None, "budget": MAX_CALLS_PER_RUN,
         "rate_limit_headers": {}, "key_present": _api_key() is not None,
+        "reason": None, "schema_shape": None, "schema_match": None,
+        "schema_sample": None, "bm_priced": 0,
+        "endpoint": capture_url("{date}"),
     }
     reset_state()
     if not _api_key():
@@ -379,22 +602,38 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["bm_scored"] = len(committed)
         return list(committed), _set_diag(stats)
     try:
-        status, payload, rate_headers = get_json(matches_url(day))
+        status, payload, rate_headers = get_json(capture_url(day))
         stats["requests"] += 1
         stats["http_statuses"].append(status)
         stats["rate_limit_headers"] = rate_headers
         if status == 200 and payload is not None:
-            if payload.get("success") is False:
+            if isinstance(payload, dict) and payload.get("success") is False:
                 stats["status"] = "unavailable"
+                stats["reason"] = "provider_error"
                 stats["blocker"] = f"betminer: success=false payload: {str(payload.get('error'))[:160]}"
+                stats["schema_sample"] = schema_sample(payload)
                 return [], _set_diag(stats)
-            rows = parse_matches(payload, day=day)
+            rows, shape = parse_payload(payload, day=day)
+            stats["schema_shape"] = shape
+            stats["schema_match"] = shape is not None
+            stats["schema_sample"] = schema_sample(payload)
+            stats["quota_hint"] = _quota_hint_from_headers(rate_headers)
+            if shape is None:
+                # Recognizable-but-empty and unrecognizable are NOT the same
+                # thing; only the former may be reported as an empty slate.
+                stats["status"] = "unavailable"
+                stats["reason"] = "schema_unrecognized"
+                stats["blocker"] = "betminer: response schema not recognized; scrubbed sample retained"
+                return [], _set_diag(stats)
             stats["bm_raw"] = len(rows)
             stats["bm_scored"] = len(rows)
+            stats["bm_priced"] = sum(1 for row in rows if row.get("odds"))
             stats["status"] = "ok" if rows else "empty"
-            stats["quota_hint"] = _quota_hint_from_headers(rate_headers)
+            if not rows:
+                stats["reason"] = "provider_empty_slate"
             return rows, _set_diag(stats)
         stats["status"] = _status_for_http(status)
+        stats["reason"] = _reason_for_http(status)
         stats["quota_hint"] = _quota_hint_for_status(stats["status"])
         stats["blocker"] = f"betminer: HTTP {status} or non-JSON payload"
         return [], _set_diag(stats)
@@ -412,6 +651,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         else:
             code = _http_code_in(message)
             stats["status"] = _status_for_http(code)
+            stats["reason"] = _reason_for_http(code)
             stats["quota_hint"] = _quota_hint_for_status(stats["status"])
         stats["blocker"] = message[:180]
         stats["errors"].append(message[:180])
@@ -429,6 +669,25 @@ def _status_for_http(status: int | None) -> str:
     if status in {402, 429, 430, 509}:
         return "quota"
     return "unavailable"
+
+
+def _reason_for_http(status: int | None) -> str:
+    """Deterministic zero-row reason suffix for the health line.
+
+    A 404 on a RapidAPI path is almost never an outage: it means the path we
+    are asking for is not the path the provider publishes. Naming that
+    explicitly is the difference between "the provider is down" and "our
+    endpoint contract is stale" - the exact failure this repair addresses.
+    """
+    if status == 404:
+        return "http_404_endpoint_contract"
+    if status in {401, 403}:
+        return f"http_{status}_auth"
+    if status in {402, 429, 430, 509}:
+        return f"http_{status}_quota"
+    if status is None:
+        return "transport_error"
+    return f"http_{status}_unavailable"
 
 
 def _quota_hint_for_status(status: str) -> str:
@@ -460,9 +719,13 @@ def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], 
         "schema": 1,
         "source": SOURCE,
         "date": day,
-        "role": "voice-shadow (zero credit until echo test; never a price donor - odds carry no bookmaker identity)",
+        "role": (
+            "prediction vote donor; conditional provider-price donor - a "
+            "value-bet number is a price only when the response identifies "
+            "its provenance, and it is never execution-eligible"
+        ),
         "provenance": {
-            "api": "RapidAPI betminer.p.rapidapi.com /matches/{date}",
+            "api": f"RapidAPI {API_HOST} {ENDPOINT_VALUE_BETS}/{{date}}",
             "docs": "https://betminer.co.uk/documentation/",
             "hunt": "docs/operator/SOURCE-HUNT-2026-10.md#51",
             "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

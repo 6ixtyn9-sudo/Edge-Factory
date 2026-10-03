@@ -87,6 +87,7 @@ from edgefactory.assay import context_verdict_league                # noqa: E402
 from edgefactory.assay import grade as assay_grade                  # noqa: E402
 from edgefactory.assay import wilson_lb                              # noqa: E402
 from edgefactory.config import GATES                                 # noqa: E402
+from edgefactory import price_sources as psrc                        # noqa: E402
 
 # ---------------- cadence (unchanged from production) ----------------
 GENERATE_HOUR_START = 6    # local time — slips may START building on/after this hour
@@ -1461,6 +1462,63 @@ def format_skip_census(total_in, kept, census, *, title="KICKOFF GUARD") -> list
     return out
 
 
+def leg_price_disclosure(leg) -> str:
+    """What kind of price this leg is printing, in the operator's words.
+
+    A named-book quote says so. An average-book aggregate and a model fair
+    price both say explicitly that they are NOT a named-book execution quote,
+    because that is the single most dangerous thing a ticket could imply.
+    """
+    row = leg.get("row") or {}
+    stated = str(row.get("price_disclosure") or "").strip()
+    if stated:
+        return stated
+    return psrc.donor_disclosure(row.get("odds_source"), row.get("bookmaker"))
+
+
+def price_supply_report(rows, day=None, qualifying=None) -> list[str]:
+    """Why a day produced no ticket: "no odds" vs "odds rejected by policy".
+
+    The old abstention message said only how many qualifying legs survived,
+    so a day with 22 donor-priced candidates and a policy rejection looked
+    exactly like a day with no prices at all. This block separates price
+    SUPPLY from price POLICY.
+    """
+    named = average = fair = priced = execution_safe_n = 0
+    for row in rows:
+        if day is not None and str(row.get("date") or row.get("_archive_day") or "")[:10] != day:
+            continue
+        try:
+            odds = float(row.get("odds")) if row.get("odds") is not None else 0.0
+        except (TypeError, ValueError):
+            odds = 0.0
+        if odds <= 1.0:
+            continue
+        priced += 1
+        kind = str(row.get("price_odds_kind")
+                   or psrc.spec(row.get("odds_source")).odds_kind or "")
+        if kind == psrc.ODDS_KIND_BOOKMAKER:
+            named += 1
+        elif kind == psrc.ODDS_KIND_PROVIDER_AVERAGE:
+            average += 1
+        elif kind == psrc.ODDS_KIND_FAIR:
+            fair += 1
+        if row.get("price_push_eligible") is not False:
+            execution_safe_n += 1
+    qualifying = len(rows) if qualifying is None else qualifying
+    return [
+        "PRICE SUPPLY:",
+        f"  named-book execution prices: {named}",
+        f"  average-bookmaker donor prices: {average}",
+        f"  fair-price donor prices: {fair}",
+        f"  total donor-priced candidates: {priced}",
+        f"  execution-safe candidates: {execution_safe_n}",
+        f"  qualifying legs: {qualifying}",
+        f"  required legs: {LEGS_PER_ACCA}",
+        "  " + psrc.policy_line(),
+    ]
+
+
 def load_archived_picks():
     out = []
     for f in sorted(LOCALDATA.glob("picks_*.json")):
@@ -1835,6 +1893,16 @@ def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=Fa
         # while every newly built slate is safe.  Do not infer this from the
         # provider string: historical fixtures and synthetic replay rows can
         # carry an older label.  The enrichment boundary is the authority.
+        # --- price gate: three DISTINCT concepts (2026-10-03) ------------
+        #
+        #   price availability  - does any approved donor quote this leg?
+        #   execution eligibility - may the configured donor supply the
+        #                           PRINTED price for this leg?
+        #   corroboration       - is a second INDEPENDENT family quoting the
+        #                         same market+selection?
+        #
+        # They used to be collapsed into two booleans, which is why an
+        # available donor price looked identical to no price at all.
         if execution_safe and p.get("price_push_eligible") is False:
             continue
         # Option C price-quality gate (2026-10-02, operator sign-off): a real
@@ -1844,8 +1912,23 @@ def playable_legs(rows, day=None, settled=None, floor=None, *, execution_safe=Fa
         # against nothing, and a sole-source quote is audit evidence, not an
         # execution price. Field is stamped on newly built slates; legacy
         # archives without it (None) keep the parity behaviour.
-        if execution_safe and p.get("price_corroborated") is False:
-            continue
+        # Corroboration policy is now EXPLICIT and printed, never silent.
+        # The operator has promoted non-bookmaker donors (Boggio average
+        # prices, Bet Better fair prices), so the default policy is:
+        #   a configured donor may supply a price; named-book corroboration
+        #   is PREFERRED but not REQUIRED; every printed leg discloses its
+        #   donor type.
+        # Setting EDGE_FACTORY_REQUIRE_PRICE_CORROBORATION=1 restores the
+        # stricter 2026-10-02 Option C gate. Nothing here lowers a gate
+        # silently: psrc.policy_line() prints the active policy on the card.
+        if execution_safe and psrc.require_corroboration():
+            sufficient = p.get("price_corroboration_sufficient")
+            if sufficient is None:
+                # Legacy archives: fall back to the old boolean, and keep the
+                # parity behaviour of treating a missing field as "unknown".
+                sufficient = p.get("price_corroborated") is not False
+            if not sufficient:
+                continue
         # Market guard: the validated recipe is 1X2 ONLY. Goals/OU picks
         # (first seen 2026-08-31, "Breidablik OVER") stay out until the
         # September O2.5 checkpoint passes its gate. Never before.
@@ -2608,6 +2691,7 @@ def cmd_today(args, st):
         print("\n".join(census_lines))
         print("\n".join(_slice_action_lines(slice_verdicts)))
         print("\n".join(_slice_table_lines(slice_verdicts)))
+        print("\n".join(price_supply_report(slate, day=target, qualifying=len(plan_pool))))
         print(f"NO BET TODAY — {len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}")
         print("(bank stays unbet)")
         return 0
@@ -2621,6 +2705,7 @@ def cmd_today(args, st):
         print("\n".join(census_lines))
         print("\n".join(_slice_action_lines(slice_verdicts)))
         print("\n".join(_slice_table_lines(slice_verdicts)))
+        print("\n".join(price_supply_report(slate, day=target, qualifying=len(plan_pool))))
         print("NO BET TODAY — plan empty")
         return 0
     # Task E (2026-09-06): a force-repick REPLACES the target date's own
@@ -2674,6 +2759,10 @@ def cmd_today(args, st):
                      f"({a['stake_pct']/bank_eff:.1%} of free bank){demote_tag}")
         for l in a["legs"]:
             lines.append(f"   {l['match']:46s} {l['pick']:5s} @ {l['odds']:.2f}  (stated {l['prob']:.0%})")
+            # MANDATORY donor disclosure: the card must never imply a named
+            # bookmaker is offering a price that came from an average-book
+            # aggregate or a model's fair odds.
+            lines.append(f"      price: {leg_price_disclosure(l)}")
     day_staked = sum(a["stake_pct"] for a in plan)
     lines.append(f"\ndeploying {STAKE_FRAC:.0%} of free bank today "
                  f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "

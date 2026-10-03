@@ -16,13 +16,17 @@ def coverage_report(data, slate):
 from datetime import datetime, timezone
 BASE = "https://sharpapi1.p.rapidapi.com"
 HOST = "sharpapi1.p.rapidapi.com"
-ENDPOINT = os.environ.get("SHARPAPI_ENDPOINT", "/odds")
+from edgefactory.sources.sharpapi_odds import endpoint as _endpoint, query_params as _query_params
 
 def main() -> int:
     key = os.environ.get("RAPIDAPI_KEY", "").strip()
     print(f"RAPIDAPI_KEY present: {'yes' if key else 'no'}")
     if not key: return 0
-    url = BASE + ENDPOINT + "?" + urllib.parse.urlencode({"date": datetime.now(timezone.utc).date().isoformat()})
+    # Use the adapter's own contract so the probe can never drift from it.
+    day = datetime.now(timezone.utc).date().isoformat()
+    params = _query_params(day)
+    url = BASE + _endpoint() + (("?" + urllib.parse.urlencode(sorted(params.items()))) if params else "")
+    print(f"endpoint={_endpoint()} params={sorted(params)}")
     req = urllib.request.Request(url, headers={"Accept":"application/json", "X-RapidAPI-Key":key, "X-RapidAPI-Host":HOST})
     try:
         with urllib.request.urlopen(req, timeout=20) as response:

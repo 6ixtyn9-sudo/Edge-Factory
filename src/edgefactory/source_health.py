@@ -181,6 +181,11 @@ def build_daily_source_health(
             "can_vote": can_vote,
             "freshness_h": _freshness_value(obs),
             "blocker": str(blocker) if blocker else None,
+            # Deterministic adapter reason (e.g. http_404_endpoint_contract).
+            # Reasons are generated from status codes only - never from a URL,
+            # a header or a payload - so they can never carry a credential.
+            "reason": str(obs.get("reason")) if obs.get("reason") else None,
+            "status": str(obs.get("status")) if obs.get("status") else None,
         }
         # Candidate-specific counters are deliberately retained in the daily
         # contract so an operator can distinguish an empty slate from a parser
@@ -257,10 +262,44 @@ def _status_token(name: str, row: dict[str, Any]) -> str:
     return f"{name}={label if healthy else 'BLOCKED'}"
 
 
+#: Price role of each promoted source, printed so the health line can never
+#: imply that every source returning a number is a bookmaker source.
+SOURCE_ROLE_LABELS: dict[str, str] = {
+    "bzzoiro_odds": "named-book price source",
+    "betexplorer": "named-book price source",
+    "theoddsapi": "named-book price source",
+    "oddspapi_odds": "named-book price source",
+    "pinnapi_odds": "named-book price source",
+    "sharpapi_odds": "named-book price source",
+    "boggio": "average-bookmaker price donor",
+    "betbetter": "fair-price donor",
+    "betminer": "prediction vote donor / conditional provider-price donor",
+    "scoutingstats": "audit-only price source",
+}
+
+#: Deterministic reason suffix attached to a HEALTHY promoted donor, so an
+#: operator can see at a glance WHAT KIND of rows the source contributed.
+_HEALTHY_ROLE_REASON: dict[str, str] = {
+    "boggio": "average_price_donor",
+    "betbetter": "fair_price_donor",
+}
+
+
 def _zero_reason(row: dict[str, Any], raw: int) -> str:
-    """Compact deterministic reason for zero-row shadow observations."""
+    """Compact deterministic reason for shadow/donor observations.
+
+    Non-zero rows now also carry a reason for the promoted donors
+    (``[reason=average_price_donor]``), because "20 rows" alone does not say
+    whether those rows were bookmaker prices, average prices or fair prices.
+    A reason never contains a key, a header or a URL.
+    """
+    name = str(row.get("_source_name") or "")
     if raw:
-        return ""
+        role_reason = _HEALTHY_ROLE_REASON.get(name)
+        return f"[reason={role_reason}]" if role_reason else ""
+    explicit = str(row.get("reason") or "")
+    if explicit:
+        return f"[reason={explicit}]"
     status = str(row.get("status") or "")
     if status in {"not_run", "cache_only", "ok", "empty"}:
         return ""
@@ -272,6 +311,23 @@ def _zero_reason(row: dict[str, Any], raw: int) -> str:
     if status in {"auth", "quota", "cooldown"}:
         return f"({status})"
     return "(unavailable)"
+
+
+def source_role_lines(day: str) -> list[str]:
+    """Deterministic ``name: health + role`` lines for the operator log."""
+    path = LOCALDATA / f"source_health_{str(day)[:10]}.json"
+    try:
+        sources = json.loads(path.read_text()).get("sources", {})
+    except (OSError, ValueError, TypeError):
+        sources = {}
+    out: list[str] = []
+    for name, role in SOURCE_ROLE_LABELS.items():
+        row = sources.get(name)
+        if row is None:
+            continue
+        healthy = bool(row.get("can_fetch_today")) and bool(row.get("can_price"))
+        out.append(f"{name}: {'healthy' if healthy else 'unavailable'} {role}")
+    return out
 
 
 def daily_status_block(day: str) -> str:
@@ -296,19 +352,19 @@ def daily_status_block(day: str) -> str:
             tokens.append(f"sportytrader=st_raw{row.get('st_raw', 0)}/st_matched{row.get('st_matched', 0)}")
             continue
         if name == "betminer":
-            tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}{_zero_reason(row, int(row.get('bm_raw') or 0))}")
+            tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}{_zero_reason({**row, '_source_name': 'betminer'}, int(row.get('bm_raw') or 0))}")
             continue
         if name == "pinnapi_odds":
-            tokens.append(f"pinnapi=pa_raw{row.get('pa_raw', 0)}/pa_matched{row.get('pa_matched', 0)}{_zero_reason(row, int(row.get('pa_raw') or 0))}")
+            tokens.append(f"pinnapi=pa_raw{row.get('pa_raw', 0)}/pa_matched{row.get('pa_matched', 0)}{_zero_reason({**row, '_source_name': 'pinnapi_odds'}, int(row.get('pa_raw') or 0))}")
             continue
         if name == "betbetter":
-            tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}{_zero_reason(row, int(row.get('bb_raw') or 0))}")
+            tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}{_zero_reason({**row, '_source_name': 'betbetter'}, int(row.get('bb_raw') or 0))}")
             continue
         if name == "sharpapi_odds":
-            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason(row, int(row.get('sa_raw') or 0))}")
+            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason({**row, '_source_name': 'sharpapi_odds'}, int(row.get('sa_raw') or 0))}")
             continue
         if name == "boggio":
-            tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason(row, int(row.get('bg_raw') or 0))}")
+            tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason({**row, '_source_name': 'boggio'}, int(row.get('bg_raw') or 0))}")
             continue
         if name == "forebet":
             tokens.append(

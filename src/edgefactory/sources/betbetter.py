@@ -3,13 +3,25 @@
 Bet Better exposes an open, **keyless** JSON feed of its model's win
 probabilities and fair odds under CC BY 4.0 (docs: betbetter.world/api/; the
 licence and attribution strings are embedded in every payload). Coverage is
-eight top soccer leagues - deliberately NOT our scarcity classes - so this
-source is a **benchmark / echo-test counterparty and calibration asset only**:
+eight top soccer leagues.
 
-- zero voice credit, forever, like every shadow candidate;
-- it never enters consensus weights, the pick path, or price corroboration;
-- its value is a free, independent model board to run echo tests against
-  once >=30 shared settled fixtures accumulate.
+Role change (operator decision, 2026-10-03)
+-------------------------------------------
+Bet Better was benchmark-only and never a price donor. The operator has
+explicitly promoted it to an approved **fair-price donor**. Its numbers are
+labelled for what they are:
+
+- ``odds_kind="fair"`` - a model's no-vig price, NOT a market quote;
+- ``provider_role="model_fair_price_donor"``;
+- ``bookmaker=None`` and ``named_bookmaker=False`` - there is no book behind
+  this number, so it can never satisfy named-book corroboration;
+- ``price_independence_family="betbetter_fair"``.
+
+It still earns zero voice credit: a fair price is price evidence, not a vote.
+Execution eligibility is controlled by
+``EDGE_FACTORY_ENABLE_FAIR_PRICE_DONOR`` (default on, operator-requested) and
+the separate ``EDGE_FACTORY_FAIR_PRICE_STAKEABLE`` switch. A fair price must
+never be printed as though a bookmaker were offering it.
 
 Politeness/refresh contract: one request per league per date, min-interval
 throttle, single retry on 429 then run-scoped cool-down (the betexplorer
@@ -200,12 +212,31 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
             "line": pick.get("line"),
             "probability": probability,
             "fair_odds": fair_odds,
+            # --- fair-price donor fields (operator promotion 2026-10-03) ---
+            # `odds` carries the model fair price so the price board can see
+            # it, and `odds_kind` makes sure nobody can mistake it for a
+            # bookmaker quote.
+            "odds": fair_odds,
+            "odds_kind": "fair",
+            "provider_role": "model_fair_price_donor",
+            "bookmaker": None,
+            "named_bookmaker": False,
+            "price_independence_family": "betbetter_fair",
+            "price_push_eligible": bool(fair_odds is not None and fair_price_donor_enabled()),
             "confidence": pick.get("confidence"),
             "attribution": str(payload.get("attribution") or "Bet Better — https://betbetter.world"),
             "licence": str(payload.get("licence") or "CC BY 4.0 — free to use with attribution to Bet Better (https://betbetter.world)"),
             "captured_at": captured_at,
         })
     return rows
+
+
+def fair_price_donor_enabled() -> bool:
+    """Operator switch that lets Bet Better's fair price reach a ticket."""
+    raw = os.environ.get("EDGE_FACTORY_ENABLE_FAIR_PRICE_DONOR")
+    if raw is None or not raw.strip():
+        return True  # operator-requested default-on
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _resolve_localdata(localdata: Path | None) -> Path:
@@ -328,7 +359,10 @@ def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], 
         "schema": 1,
         "source": SOURCE,
         "date": day,
-        "role": "benchmark-shadow (zero voice credit, never a price donor)",
+        "role": (
+            "approved fair-price donor (operator promotion 2026-10-03); model "
+            "fair odds, NOT executable bookmaker quotes; zero voice credit"
+        ),
         "provenance": {
             "attribution": stats.get("attribution"),
             "licence": stats.get("licence"),

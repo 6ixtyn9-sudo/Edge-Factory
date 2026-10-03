@@ -81,6 +81,8 @@ def test_daily_source_health_schema_is_conservative_and_forebet_is_historical_on
         "can_vote": True,
         "freshness_h": 0.0,
         "blocker": None,
+        "reason": None,
+        "status": None,
     }
     assert payload["sources"]["forebet"] == {
         "can_fetch_today": False,
