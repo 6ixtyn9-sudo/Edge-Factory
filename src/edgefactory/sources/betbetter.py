@@ -44,7 +44,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
-from edgefactory.odds_normalization import canonical_market_selection
+from edgefactory.odds_normalization import canonical_market_selection, provider_kickoff_date
 
 SOURCE = "betbetter"
 BASE = "https://betbetter.world"
@@ -193,9 +193,9 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
         kickoff = str(pick.get("gameTimeUtc") or "") or None
         # The endpoint is an upcoming board, not a day-scoped board.  Labelling
         # every returned fixture with the capture day made future matches look
-        # joinable to today's slate.  Use the provider's gameTimeUtc calendar
-        # date when present; retain ``day`` only for malformed/missing stamps.
-        event_day = kickoff[:10] if kickoff and re.match(r"^\d{4}-\d{2}-\d{2}", kickoff) else day
+        # joinable to today's slate. Use the provider's gameTimeUtc calendar
+        # date; malformed or missing stamps deliberately have no join date.
+        event_day = provider_kickoff_date(kickoff)
         probability = pick.get("winProbabilityPct")
         if probability is None:
             probability = pick.get("modelProbabilityPct")
@@ -246,7 +246,8 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
             "named_bookmaker": False,
             "price_independence_family": "betbetter_fair",
             "price_push_eligible": bool(
-                canonicalization_mappable and fair_odds is not None and fair_price_donor_enabled()),
+                event_day and canonicalization_mappable and fair_odds is not None
+                and fair_price_donor_enabled()),
             "confidence": pick.get("confidence"),
             "attribution": str(payload.get("attribution") or "Bet Better — https://betbetter.world"),
             "licence": str(payload.get("licence") or "CC BY 4.0 — free to use with attribution to Bet Better (https://betbetter.world)"),

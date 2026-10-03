@@ -33,7 +33,7 @@ from edgefactory.util import (
     strip_retired_top_scores,
 )
 from edgefactory.market_registry import get_odds_tier
-from edgefactory.odds_normalization import canonicalize_row
+from edgefactory.odds_normalization import canonicalize_row, provider_kickoff_date
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.fade import (
     FADE_FAMILY,
@@ -73,6 +73,7 @@ BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
 THEODDSAPI_ODDS_SOURCE = "theoddsapi"
+_KICKOFF_DATE_AUTHORITY_PROVIDERS = frozenset({"boggio", "betbetter", "theoddsapi"})
 
 # Voter-row (source) aliasing lives in edgefactory/identity.py
 # (source_team_key + TEAM_KEY_RAW_ALIASES, width-24 collision-safe keys).
@@ -2134,7 +2135,17 @@ def _cached_named_book_bundle(
         try:
             with gzip.open(path, "rt", newline="") as fh:
                 for raw in csv.DictReader(fh):
-                    if str(raw.get("date") or "")[:10] != str(day)[:10]:
+                    capture_day = str(raw.get("date") or "")[:10]
+                    kickoff_day = (
+                        provider_kickoff_date(raw.get("kickoff"))
+                        if provider in _KICKOFF_DATE_AUTHORITY_PROVIDERS
+                        else None
+                    )
+                    # When this provider supplies an absolute kickoff, it is
+                    # authoritative over the request/capture date. Invalid
+                    # kickoffs are allowed through only from this day's
+                    # capture so the bundle can reject them fail-closed.
+                    if (kickoff_day or capture_day) != str(day)[:10]:
                         continue
                     if str(raw.get("source") or "").strip() not in accepted_sources:
                         continue
@@ -2364,14 +2375,30 @@ def _refresh_bzzoiro_odds() -> bool:
     return os.environ.get("BZZOIRO_ODDS_REFRESH", "").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _kickoff_attributed_odds_row(row: dict, provider: str) -> dict:
+    """Use an absolute provider kickoff as the row's authoritative date.
+
+    Capture/request dates are transport metadata, not evidence that an event
+    belongs on that date. Providers in this narrow allowlist expose absolute
+    ISO kickoffs; if one is absent or malformed, keep the row observable but
+    make its join date empty so matching fails closed as ``date_mismatch``.
+    """
+    attributed = dict(row)
+    source = str(provider or attributed.get("source") or "").strip().lower()
+    if source in _KICKOFF_DATE_AUTHORITY_PROVIDERS:
+        attributed["date"] = provider_kickoff_date(attributed.get("kickoff")) or ""
+    return attributed
+
+
 def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | None = None) -> dict[str, dict]:
     exact: dict[tuple[str, str, str, str, str], dict] = {}
     time_candidates: dict[tuple[str, str, str, str, str], list[dict]] = {}
     market_candidates: dict[tuple[str, str, str], list[dict]] = {}
     valid_rows = 0
     canonicalization_dropped = Counter()
+    attributed_rows = [_kickoff_attributed_odds_row(row, provider) for row in rows]
     normalized_rows: list[dict] = []
-    for row in rows:
+    for row in attributed_rows:
         normalized_row, reason = canonicalize_row(row)
         if normalized_row is None:
             canonicalization_dropped[str(reason or "unmappable")] += 1
@@ -2435,7 +2462,7 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
         # indexes above stay canonical; diagnostics must be able to distinguish
         # an unmappable market/selection from an uncovered fixture instead of
         # silently losing the row at this boundary.
-        "input_rows": [dict(row) for row in rows],
+        "input_rows": [dict(row) for row in attributed_rows],
     }
 
 
