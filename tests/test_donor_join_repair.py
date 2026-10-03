@@ -61,6 +61,47 @@ def test_betbetter_raw_market_strings_map_or_are_explicitly_unsupported():
     assert failure.raw == "draw_no_bet"
 
 
+def test_betbetter_head_to_head_3_way_maps_to_1x2_with_team_selections():
+    """Round 3, Task 1: "Head to Head 3-Way" is 1X2, not an unknown market.
+
+    Raw strings exactly as the keyless board emits them (observed 2026-10-03,
+    e.g. "Hull City @ Fulham" / "Head to Head 3-Way" / "Hull City"). The
+    selection side is a team name, so the market fix must NOT leave the rows
+    in a selection miss bucket.
+    """
+    result, failure = canonical_market_selection(
+        "Head to Head 3-Way", "Hull City", home="Fulham", away="Hull City")
+    assert failure is None
+    assert (result.market, result.selection) == ("1x2", "away")
+
+    # The draw leg of the three-way market canonicalises too.
+    draw, failure = canonical_market_selection(
+        "Head to Head 3-Way", "Draw", home="Fulham", away="Hull City")
+    assert failure is None
+    assert (draw.market, draw.selection) == ("1x2", "draw")
+
+    # ...and the home leg, spelled as either the team name or the token.
+    home_leg, _ = canonical_market_selection(
+        "Head to Head 3-Way", "Fulham", home="Fulham", away="Hull City")
+    assert (home_leg.market, home_leg.selection) == ("1x2", "home")
+
+
+def test_betbetter_spread_is_asian_handicap_shaped_and_explicitly_unsupported():
+    """Round 3, Task 1: "Spread" carries quarter lines (-1.75, -2.25) and a
+    0 line; the pipeline prices no handicap market, so the token is
+    *recognised but unpriced* -- an explicit `unsupported` classification,
+    never a silent drop and never an unexamined `unknown`.
+    """
+    for line in (-2, -2.25, -1.75, -1.5, 0):
+        result, failure = canonical_market_selection(
+            "Spread", "Manchester City", home="Manchester City",
+            away="Ipswich Town", line=line)
+        assert result is None
+        assert failure.kind == "unsupported_market"
+        assert failure.raw == "spread"
+
+
+
 def test_betbetter_unmappable_market_is_kept_and_counted_not_dropped():
     payload = _load("betbetter_brazil_serie_a.json")
     rows = bb.parse_picks(payload, day="2026-10-02", slug="brazil-serie-a")
@@ -105,6 +146,49 @@ def test_betbetter_matches_a_realistic_slate_from_raw_vocabulary():
     # The third row is not lost: it is an explicitly counted, named miss.
     assert report["miss_counts"] == {"market_unsupported": 1}
     assert report["unmapped_vocabulary"] == {"unsupported_market:draw_no_bet": 1}
+
+
+def test_betbetter_head_to_head_3_way_rows_join_and_spread_rows_are_counted():
+    """End to end over the shared bundle/join machinery, raw board strings.
+
+    Before the round-3 mapping these 115 rows were ``market_unmapped`` and
+    the ~480 Spread rows were ``market_unmapped`` too. After it the 1X2 rows
+    must MATCH and the Spread rows must land in the explicit
+    ``market_unsupported`` bucket -- still counted, still named.
+    """
+    day = "2026-10-17"
+    raw_payload = {
+        "attribution": "Bet Better — https://betbetter.world",
+        "licence": "CC BY 4.0",
+        "picks": [
+            {"game": "Hull City @ Fulham", "gameTimeUtc": f"{day}T14:00:00.0000000Z",
+             "market": "Head to Head 3-Way", "selection": "Hull City", "line": None,
+             "winProbabilityPct": 25.2, "fairOdds": 5.17, "confidence": "LONG-SHOT"},
+            {"game": "Ipswich Town @ Manchester City", "gameTimeUtc": f"{day}T14:00:00.0000000Z",
+             "market": "Spread", "selection": "Manchester City", "line": -1.75,
+             "winProbabilityPct": 55.7, "fairOdds": 2.37, "confidence": "LEAN"},
+            {"game": "Fulham @ Ipswich Town", "gameTimeUtc": f"{day}T14:00:00.0000000Z",
+             "market": "Draw No Bet", "selection": "Fulham", "line": None,
+             "winProbabilityPct": 63.6, "fairOdds": 1.98, "confidence": "LEAN"},
+        ],
+    }
+    rows = bb.parse_picks(raw_payload, day=day, slug="epl")
+    bundle = pt._odds_bundle_from_rows(rows, provider="betbetter")
+    picks = [
+        _pick("Fulham", "Hull City", "1x2", "away", day=day),
+        _pick("Ipswich Town", "Manchester City", "1x2", "home", day=day),
+    ]
+    report = pt.donor_join_diagnostics(picks, [bundle])["betbetter"]
+
+    assert report["matched_rows"] == 1, "Head to Head 3-Way fair prices must join"
+    # The Spread and Draw No Bet rows are counted as explicit unsupported
+    # misses at the canonicalisation boundary - before any fixture question,
+    # so there is no fixture bucket left to report.
+    assert report["miss_counts"] == {"market_unsupported": 2}
+    assert report["unmapped_vocabulary"] == {
+        "unsupported_market:spread": 1,
+        "unsupported_market:draw_no_bet": 1,
+    }
 
 
 def test_betbetter_feed_is_multi_day_so_off_slate_rows_are_out_of_window():

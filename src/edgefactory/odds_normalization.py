@@ -131,11 +131,13 @@ def _line_from(value: object) -> str | None:
 
 # --- provider vocabulary -------------------------------------------------
 #
-# Every token below was read off a captured payload or a committed capture
-# receipt, never invented:
-#   * Bet Better (``tests/fixtures/betbetter_brazil_serie_a.json`` and the
-#     league picks feed it mirrors): "Head to Head", "Both Teams to Score",
-#     "Draw No Bet".
+# Every token below was read off a captured payload, a committed capture
+# receipt, or the provider's own published payload documentation; never
+# invented:
+#   * Bet Better (``tests/fixtures/betbetter_brazil_serie_a.json``, the
+#     league picks feed it mirrors, and the live keyless board observed
+#     2026-10-03): "Head to Head", "Head to Head 3-Way", "Both Teams to
+#     Score", "Total Goals", "Draw No Bet", "Spread".
 #   * Boggio / football-prediction-api v2: market "classic"; predictions
 #     "1" / "X" / "2" and the double-chance "1X" / "12" / "X2".
 #   * OddsPAPI: the unified market strings its own writer emits -- "1x2",
@@ -147,6 +149,12 @@ _1X2_TOKENS = {
     "match_winner", "full_time_result", "three_way", "3way", "3_way",
     "winner", "match_odds", "match_result", "win_draw_win", "1x2_full_time",
     "full_time_1x2", "to_win_match",
+    # Bet Better publishes the three-way variant alongside the two-way one
+    # (captured board 2026-10-03, e.g. "Hull City @ Fulham" / "Head to Head
+    # 3-Way" / selection "Hull City"). It is the same 1X2 market this
+    # pipeline prices; the two-way "Head to Head" token above was already
+    # mapped and the three-way spelling was dropping 115 fair-price rows.
+    "head_to_head_3_way",
 }
 _BTTS_TOKENS = {
     "btts", "both_teams_to_score", "both_teams_score", "gg_ng",
@@ -172,6 +180,12 @@ _UNSUPPORTED_MARKET_TOKENS = {
     "team_total", "team_totals", "player_props", "corners", "cards",
     "both_teams_to_score_and_win", "btts_and_win", "scorecast",
     "winning_margin", "race_to_goals", "method_of_victory",
+    # Bet Better's "Spread" (captured board 2026-10-03): point-spread /
+    # Asian-handicap shaped, with quarter lines (-1.75, -2.25) and a 0 line
+    # the two-way markets render as draw-no-bet. This pipeline prices no
+    # handicap market, so it is recognised-but-unpriced vocabulary -- an
+    # explicit `unsupported` classification, not an unexamined `unknown`.
+    "spread",
 }
 _UNSUPPORTED_MARKET_PREFIXES = ("tt_home", "tt_away", "team_total")
 
@@ -203,7 +217,7 @@ def canonical_market(market: object, line: object = None) -> tuple[str | None, s
         raw.startswith(prefix) for prefix in _UNSUPPORTED_MARKET_PREFIXES
     ):
         return None, f"unsupported_market:{raw or 'empty'}"
-    if raw in _1X2_TOKENS or compact in {"1x2", "12", "headtohead", "matchodds"}:
+    if raw in _1X2_TOKENS or compact in {"1x2", "12", "headtohead", "headtohead3way", "matchodds"}:
         return "1x2", None
     if raw in _BTTS_TOKENS or "bothteamstoscore" in compact:
         return "btts", None
