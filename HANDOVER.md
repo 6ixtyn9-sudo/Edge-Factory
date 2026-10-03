@@ -10438,3 +10438,36 @@ Applied on this branch:
 Not done (by directive): no re-mine, no regime mining, no access-fighting;
 TR-1..TR-3 pipeline restores stay operator-owned.
 Suite: 843 passed.
+
+---
+
+## Addendum 2026-10-03: explained abstain, donor joins, and operator blockers
+
+- `auto_tickets.py` now emits `PRICE SUPPLY` on bet, no-bet, frozen, and
+  superseded paths. `REJECTION LEDGER` entries are JSON objects keyed by
+  fixture/selection with the first exact policy rule. On the 12:15 slate:
+  Cuiaba @1.16 and Stromsgodset @1.15 fail `min_odds_floor` (1.20); Iceland
+  @1.48 and Croatia @1.78 clear the row/kickoff/tripwire gates but the non-force
+  rerun cannot create a new card after the write-once no-bet supersede, so they
+  report `superseded_card_locked`. The Odds API close window schedules a later
+  capture; it is not a ticket eligibility rule and was not invented as one.
+- Donor joins retain raw provider vocabulary for miss accounting. Per-source
+  top counts use `date_mismatch`, `fixture_key_miss`, `market_unmapped`,
+  `selection_unmapped`, `no_pick_for_fixture`, and `timestamp_rejected`
+  (`invalid_price` is retained separately rather than mislabelled). Bet Better
+  `Head to Head` now maps explicitly to 1X2, and Bet Better/Boggio rows use the
+  provider kickoff date rather than relabelling future fixtures as the capture
+  day. Small/zero true coverage remains visible; no fuzzy threshold changed.
+- BetMiner V3 capture uses the documented single `/matches/{date}` Match Object
+  board. Both value-bet date forms had returned 404. Probe/capture failures
+  persist a scrubbed once-per-day receipt; there is no endpoint ladder. This
+  checkout consumed 0 of the 5 daily calls. See
+  `docs/operator/BETMINER-CONTRACT.md`.
+- SharpAPI's documented sports discovery id is `soccer`. The probe can verify
+  it with `--discover-sport`; without `RAPIDAPI_KEY` it is inert. SharpAPI and
+  OddsPAPI remain operator opt-ins. Exact secret/env steps and expected health
+  deltas are in `docs/operator/PRICE-SOURCE-OPERATOR-CHECKLIST.md`.
+- Receipt persistence: workflow cleanup precedes pipeline execution, while the
+  state commit follows it. The allowlists for source-health and BetMiner probe
+  receipts make newly written receipts stageable; tracked prior receipts are
+  not removable by `git clean -fd`. No workflow file was changed.
