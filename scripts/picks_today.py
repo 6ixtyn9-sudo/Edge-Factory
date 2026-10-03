@@ -2132,6 +2132,7 @@ def _cached_named_book_bundle(
     report = {
         "status": "absent", "raw_rows": 0, "usable_rows": 0,
         "after_build_rows": 0, "stale_rows": 0, "invalid_timestamp_rows": 0,
+        "identity_missing_rows": 0,
         "path": str(path),
     }
     rows: list[dict] = []
@@ -2169,6 +2170,13 @@ def _cached_named_book_bundle(
                     # A registry declaration cannot manufacture the identity
                     # of a bookmaker missing from a provider payload.
                     if not str(raw.get("bookmaker") or "").strip():
+                        continue
+                    # Nor the identity of the fixture. A persisted row with no
+                    # teams cannot join any pick, so counting it as "usable"
+                    # overstated OddsPAPI's supply by 414 rows on 2026-10-03.
+                    if not str(raw.get("home") or "").strip() or not str(
+                            raw.get("away") or "").strip():
+                        report["identity_missing_rows"] += 1
                         continue
                     rows.append(psrc.annotate_row(raw, source=provider))
         except (OSError, csv.Error, gzip.BadGzipFile):
@@ -3113,6 +3121,13 @@ def donor_join_diagnostics(
                 # a live call.
                 misses[miss_bucket(failure)] += 1
                 vocabulary[miss_vocabulary_token(failure)] += 1
+                continue
+            if not str(normalized.get("home") or "").strip() or not str(
+                    normalized.get("away") or "").strip():
+                # A priced row with no teams can never join anything. It is
+                # not a fixture-coverage miss and must not be reported as
+                # one: it is a parser/identity defect in the capture.
+                misses["fixture_identity_missing"] += 1
                 continue
             if normalized.get("timestamp_suspect") is True:
                 misses["timestamp_rejected"] += 1
