@@ -15,13 +15,15 @@ Delivered
 
 Production artifact review — 2026-10-03
 
-The git-backed 2026-10-03 slate contains 55 captured rows, including 32 donor-priced candidates, but zero named-book execution prices. The 28 ScoutingStats-derived prices are audit-only provider averages; the remaining priced fallback/unregistered rows are rejected by policy. This explains why the corrected policy would abstain, but no credentialed live capture was performed in this sandbox.
+The authenticated Actions run supplied for review checked out `5714241612c6edcce7d7bb75139a98eee3335d7d` on `arena/01a100ac-edge-factory`; redacted Actions secrets were present. Capture completed for the usable sources, with `bzzoiro_odds` retryable at HTTP 403 and `soccervista` retryable after transport failures. The live run reported `shadow_fp_raw=253/scored=79`, `bb_raw=1324/bb_scored=1324/bb_matched=0`, `bg_raw=20/bg_scored=20/bg_matched=0`, `bm_raw=0/bm_scored=0` with the BetMiner HTTP-404 contract reason, and `sa_raw=0/sa_matched=0` with `missing_sport_filter`. The zero matched donor counters are therefore join failures, not missing credentials.
 
-The original frozen card remains at `localdata/auto_tickets_2026-10-03.txt` with its write-once `frozen_at` preserved as `2026-10-03T09:15:03+02:00`; it was not hand-edited. No sandbox-generated ticket or recut report is retained. The next credentialed Actions run must validate live BetMiner/SharpAPI responses and the donor `bb_matched` counter; its output, not a local replay, is the production result.
+The restored git-backed 2026-10-03 slate contains 55 rows and 32 donor-priced candidates, but zero named-book execution prices. The 28 ScoutingStats-derived prices are audit-only provider averages; the remaining priced fallback/unregistered rows are rejected by the registered-source gate. The authenticated run's automatic ticket step reprinted the old frozen card because it did not pass `--force`; that card displayed two unregistered prices and must not be reused.
+
+The required corrective recut was then run against the restored production slate with `picks_today.py --date 2026-10-03` followed by `auto_tickets.py --date 2026-10-03 --force`. It produced an honest `NO BET TODAY`: `named-book execution prices: 0`, `execution-safe candidates: 0`, and `qualifying legs: 0`; the printed policy was `source_fallback=abstain`. The recut recorded the supersession without changing the original frozen card or state. The original remains at `localdata/auto_tickets_2026-10-03.txt` with write-once `frozen_at` `2026-10-03T09:15:03+02:00`; it was not hand-edited. The local recut used the restored slate while provider credentials were unavailable in the sandbox, so the authenticated Actions diagnostics above remain the source of truth for live capture counters.
 
 Validation
 
-- Focused donor/contract run: 65 passed.
+- Focused donor/contract run: 87 passed.
 - Full suite: 1032 passed.
 - `python -m compileall -q scripts src tests`: passed.
 - No `.github/workflows/*` changes.
