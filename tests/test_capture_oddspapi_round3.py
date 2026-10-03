@@ -197,6 +197,32 @@ def test_vocabulary_snapshot_absent_without_a_catalog(tmp_path, monkeypatch):
     assert not (tmp_path / "source_health" / "odds_vocabulary").exists()
 
 
+def test_census_and_vocabulary_are_state_commit_persistable():
+    """Run 37138618268 wrote both artefacts and the state commit kept
+    neither: `git add -A localdata/` silently skips ignored files, and
+    ``localdata/*`` ignored them. Without these negations the census exists
+    only in the 7-day Actions artifact and dies with the runner cache."""
+    gitignore = (Path(__file__).resolve().parents[1] / ".gitignore").read_text()
+    lines = {ln.strip() for ln in gitignore.splitlines()}
+    assert "!localdata/oddspapi_market_census_*.json" in lines
+    assert "!localdata/source_health/" in lines
+    assert "!localdata/source_health/**" in lines
+    # And the negation actually wins over the localdata/* ignore.
+    import subprocess
+    for path in ("localdata/oddspapi_market_census_2026-10.json",
+                 "localdata/source_health/odds_vocabulary/2026-10-03+oddspapi.json"):
+        result = subprocess.run(
+            ["git", "check-ignore", "-v", path],
+            cwd=Path(__file__).resolve().parents[1],
+            capture_output=True, text=True)
+        # check-ignore -v prints "<file>:<line>:<pattern>\t<pathname>".
+        decided = (result.stdout.split("\t")[0].rsplit(":", 1)[-1].strip()
+                   if result.returncode == 0 else "")
+        assert decided.startswith("!"), (
+            f"{path} is ignored (deciding pattern: {decided or 'localdata/*'}); "
+            "the state commit would silently drop it")
+
+
 def test_census_file_is_provider_data_only(tmp_path, monkeypatch):
     """The census must never carry credentials or request URLs."""
     monkeypatch.setattr(cap, "OUT_DIR", tmp_path)
