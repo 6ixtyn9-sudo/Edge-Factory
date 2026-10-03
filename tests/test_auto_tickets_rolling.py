@@ -786,7 +786,8 @@ def _six_leg_slate_rows():
                      "kickoff": ko, "league": "Portugal,Primeira Liga",
                      "bucket": "CERTIFIED_CLEAN", "market": "1x2", "pick": "home",
                      "avg_p": 70.0 - i, "odds": 1.30 + i * 0.02,
-                     "quarantine": "none", "edge_rule": "ml-consensus"})
+                     "quarantine": "none", "edge_rule": "ml-consensus",
+                     "odds_source": "bzzoiro_odds"})
     return rows
 
 

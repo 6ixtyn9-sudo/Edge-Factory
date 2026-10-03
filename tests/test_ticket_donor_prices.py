@@ -107,7 +107,10 @@ def test_price_supply_report_separates_supply_from_policy():
     assert "average-bookmaker donor prices: 1" in text
     assert "fair-price donor prices: 2" in text
     assert "total donor-priced candidates: 4" in text
-    assert "execution-safe candidates: 3" in text
+    # Fair/model prices remain visible supply but are not directly stakeable
+    # unless EDGE_FACTORY_FAIR_PRICE_STAKEABLE=1 is explicitly set.
+    assert "execution-safe candidates: 2" in text
+    assert "fair_stakeable=off" in text
     assert "qualifying legs: 1" in text
     assert f"required legs: {at.LEGS_PER_ACCA}" in text
     # The active policy is printed with the abstention, never implied.
