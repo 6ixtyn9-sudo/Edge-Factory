@@ -1,9 +1,24 @@
-"""Boggio Analytics prediction voice shadow (SHADOW-03 W3-T1).
+"""Boggio Analytics - approved AVERAGE-BOOKMAKER price donor.
 
-RapidAPI endpoint and schema are pinned to the provider developer receipt.
-Rows are zero-credit voice evidence only: average bookie odds are retained as
-provenance and never become a price donor. Free predictions are published up
-to 12 hours ahead, so consumers must use both timestamps and never look ahead.
+Role change (operator decision, 2026-10-03)
+-------------------------------------------
+Boggio was a voice-only shadow whose ``odds`` object was retained as
+provenance and never used. The operator has explicitly promoted it to an
+approved price donor. What that does and does not mean:
+
+- its ``odds`` object is an **average across bookmakers**, so it is labelled
+  ``odds_kind="provider_average"`` with ``bookmaker="average_bookie_aggregate"``;
+- it is **not a named bookmaker**: ``named_bookmaker`` is always ``False`` and
+  its independence family is ``boggio_average``, so it can never stand in for
+  named-book corroboration;
+- it may supply a printed price only while
+  ``EDGE_FACTORY_ENABLE_AVERAGE_PRICE_DONOR`` is enabled.
+
+Timestamp safeguards are unchanged and still enforced here, not downstream:
+the free tier publishes predictions up to 12 hours ahead, so ``published_at``
+and ``captured_at`` are both retained and a row published *after* it was
+captured is marked ``timestamp_suspect`` and loses price eligibility. A
+lookahead observation must never become either settled evidence or a price.
 """
 from __future__ import annotations
 import json, os, re, threading, time, urllib.error, urllib.parse, urllib.request
@@ -59,6 +74,59 @@ def _num(x):
  try: return float(x)
  except (TypeError,ValueError): return None
 
+AVERAGE_BOOK_LABEL = "average_bookie_aggregate"
+PRICE_INDEPENDENCE_FAMILY = "boggio_average"
+PROVIDER_ROLE = "average_bookmaker_price_donor"
+LOOKAHEAD_NOTE = (
+    "Free tier publishes up to 12h pre-kickoff; consumers must enforce "
+    "published_at <= captured_at and never use future observations."
+)
+
+
+def price_donor_enabled() -> bool:
+    """Operator switch that lets Boggio's average price reach a ticket."""
+    raw = os.environ.get("EDGE_FACTORY_ENABLE_AVERAGE_PRICE_DONOR")
+    if raw is None or not raw.strip():
+        return True  # operator-requested default-on
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _parse_stamp(value):
+    try:
+        text = str(value or "").strip().replace("Z", "+00:00")
+        if not text:
+            return None
+        stamp = datetime.fromisoformat(text)
+        return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def timestamp_suspect(published_at, captured_at) -> bool:
+    """True when the row claims to have been published after we saw it.
+
+    A future publication stamp is the signature of a lookahead artefact. It
+    is never an error we can correct, so the row stays visible but loses
+    price eligibility.
+    """
+    published, captured = _parse_stamp(published_at), _parse_stamp(captured_at)
+    if published is None or captured is None:
+        return False
+    return published > captured
+
+
+def _selection_odds(odds, prediction):
+    """The average-book price for the predicted selection, if it is quoted."""
+    if not isinstance(odds, dict):
+        return None
+    for key in (prediction, str(prediction)):
+        if key in odds:
+            value = _num(odds[key])
+            if value is not None and value > 1.0:
+                return value
+    return None
+
+
 def parse_predictions(payload:Any, *, day:str):
  data=payload.get("data") if isinstance(payload,dict) else payload
  if not isinstance(data,list): return [],False
@@ -70,8 +138,36 @@ def parse_predictions(payload:Any, *, day:str):
   shaped=True; published=item.get("last_update_at") or item.get("published_at") or item.get("updated_at")
   probs=item.get("probabilities") if isinstance(item.get("probabilities"),dict) else {}
   odds=item.get("odds") if isinstance(item.get("odds"),dict) else {}
-  rows.append({"source":SOURCE,"date":day,"home":home,"away":away,"kickoff":item.get("start_date"),"market":item.get("market") or "classic","selection":item.get("prediction"),"probability":_num(probs.get(str(item.get("prediction"))) or probs.get(item.get("prediction"))),"odds_provenance":odds,"bookmaker":"average_bookie_aggregate","published_at":published,"captured_at":stamp,"lookahead_note":"Free tier publishes up to 12h pre-kickoff; consumers must enforce published_at <= captured_at and never use future observations."})
+  prediction=item.get("prediction")
+  average_price=_selection_odds(odds,prediction)
+  suspect=timestamp_suspect(published,stamp)
+  rows.append({
+    "source":SOURCE,
+    "date":day,
+    "home":home,
+    "away":away,
+    "kickoff":item.get("start_date"),
+    "market":item.get("market") or "classic",
+    "selection":prediction,
+    "probability":_num(probs.get(str(prediction)) or probs.get(prediction)),
+    # --- price donor fields (operator promotion 2026-10-03) ---
+    "odds":average_price,
+    "odds_kind":"provider_average",
+    "provider_role":PROVIDER_ROLE,
+    "bookmaker":AVERAGE_BOOK_LABEL,
+    "named_bookmaker":False,
+    "price_independence_family":PRICE_INDEPENDENCE_FAMILY,
+    # Eligible only when the operator switch is on, a price exists, and the
+    # publication stamp is not in the future relative to capture.
+    "price_push_eligible":bool(average_price is not None and price_donor_enabled() and not suspect),
+    "timestamp_suspect":suspect,
+    "odds_provenance":odds,
+    "published_at":published,
+    "captured_at":stamp,
+    "lookahead_note":LOOKAHEAD_NOTE,
+  })
  return rows,shaped
+
 
 def _path(day,localdata=None): return (localdata or LOCALDATA)/f"{SOURCE}_shadow_{day}.json"
 def capture_day(day,*,localdata=None):
@@ -103,5 +199,5 @@ def _sample(payload):
 
 def persist_shadow(day,rows,stats,*,localdata=None):
  root=localdata or LOCALDATA; root.mkdir(parents=True,exist_ok=True); path=_path(day,root)
- payload={"schema":1,"source":SOURCE,"date":day,"role":"voice-shadow (zero credit until settled echo evidence and explicit promotion; average odds provenance only, never a price donor)","provenance":{"api":BASE+"/api/v2/predictions","hunt":"docs/operator/SOURCE-HUNT-2026-10.md#54","publication_lag":"free tier exposes predictions up to 12h ahead; published_at and captured_at are retained"},"stats":stats,"rows":rows}
+ payload={"schema":1,"source":SOURCE,"date":day,"role":"approved average-bookmaker price donor (operator promotion 2026-10-03); NOT a named bookmaker, never counts as named-book corroboration","provenance":{"api":BASE+"/api/v2/predictions","hunt":"docs/operator/SOURCE-HUNT-2026-10.md#54","publication_lag":"free tier exposes predictions up to 12h ahead; published_at and captured_at are retained"},"stats":stats,"rows":rows}
  tmp=path.with_suffix(path.suffix+".tmp"); tmp.write_text(json.dumps(payload,indent=2,sort_keys=True)); tmp.replace(path); return path

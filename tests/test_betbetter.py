@@ -59,7 +59,7 @@ def test_capture_day_is_ok_and_persists_provenance(monkeypatch, tmp_path):
     assert ledger["provenance"]["licence"].startswith("CC BY 4.0")
     assert "betbetter.world" in ledger["provenance"]["attribution"]
     assert ledger["provenance"]["docs"] == "https://betbetter.world/api/"
-    assert "benchmark-shadow" in ledger["role"]
+    assert "approved fair-price donor" in ledger["role"]
 
 
 def test_capture_day_is_cache_first_never_refetching_a_held_date(monkeypatch, tmp_path):
@@ -148,3 +148,29 @@ def test_diagnostics_never_leak_secrets(monkeypatch):
     assert diag["status"] == "ok"
     assert diag["budget"] == bb.MAX_CALLS_PER_RUN
     assert "key" not in json.dumps(diag).lower()
+
+
+# --- fair-price donor promotion (operator decision, 2026-10-03) ----------
+
+
+def test_fair_rows_are_labelled_fair_and_never_as_bookmaker_prices():
+    rows = bb.parse_picks(_payload(), day="2026-10-02", slug="epl")
+    assert rows
+    for row in rows:
+        assert row["odds_kind"] == "fair"
+        assert row["provider_role"] == "model_fair_price_donor"
+        assert row["bookmaker"] is None
+        assert row["named_bookmaker"] is False
+        assert row["price_independence_family"] == "betbetter_fair"
+        # The fair price is exposed as `odds` so the board can see it, but it
+        # is always the same number as fair_odds - nothing is invented.
+        assert row["odds"] == row["fair_odds"]
+
+
+def test_execution_eligibility_is_controlled_by_explicit_configuration(monkeypatch):
+    monkeypatch.setenv("EDGE_FACTORY_ENABLE_FAIR_PRICE_DONOR", "0")
+    off = bb.parse_picks(_payload(), day="2026-10-02", slug="epl")
+    assert all(row["price_push_eligible"] is False for row in off)
+    monkeypatch.setenv("EDGE_FACTORY_ENABLE_FAIR_PRICE_DONOR", "1")
+    on = bb.parse_picks(_payload(), day="2026-10-02", slug="epl")
+    assert any(row["price_push_eligible"] for row in on)
