@@ -11,8 +11,8 @@ import scripts.picks_today as pt
 DAY = "2026-10-03"
 
 
-def _write_monthly_board(tmp_path, rows: list[dict]) -> None:
-    path = tmp_path / "theoddsapi_odds_2026-10.csv.gz"
+def _write_monthly_board(tmp_path, rows: list[dict], *, prefix: str = "theoddsapi_odds") -> None:
+    path = tmp_path / f"{prefix}_2026-10.csv.gz"
     fields = [
         "source", "source_type", "sport", "date", "kickoff", "league",
         "home", "away", "market", "selection", "odds", "bookmaker", "captured_at",
@@ -83,3 +83,22 @@ def test_cached_theodds_price_cannot_time_travel_or_lose_timestamp(tmp_path, mon
     assert stats["stale_rows"] == 1
     assert stats["usable_rows"] == 0
     assert pt.select_price_source(_pick("Albacete", "Eibar", "away"), [bundle]) == (None, None, None)
+
+
+def test_cached_oddspapi_board_uses_its_raw_source_alias_and_registry_provider(tmp_path, monkeypatch):
+    _write_monthly_board(
+        tmp_path,
+        [_row(source="oddspapi", bookmaker="Pinnacle", odds="2.22")],
+        prefix="oddspapi_odds",
+    )
+    monkeypatch.setattr(pt, "LOCALDATA", tmp_path)
+    stats: dict = {}
+    bundle = pt.oddspapi_odds_bundle(
+        DAY, not_after=datetime(2026, 10, 3, 8, tzinfo=timezone.utc), stats=stats,
+    )
+    row, method, source = pt.select_price_source(_pick("Albacete", "SD Eibar", "away"), [bundle])
+    assert stats["status"] == "cache_only"
+    assert stats["raw_rows"] == stats["usable_rows"] == 1
+    assert (source, method, row["bookmaker"], row["named_bookmaker"]) == (
+        "oddspapi_odds", "exact", "Pinnacle", True,
+    )

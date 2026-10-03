@@ -346,6 +346,29 @@ def capture_theodds_snapshot(target_date: str, trigger: str) -> None:
     )
 
 
+def capture_oddspapi_snapshot(target_date: str, trigger: str) -> None:
+    """Optionally snapshot OddsPAPI for a later, timestamp-safe build.
+
+    OddsPAPI has a small free quota, so it is deliberately opt-in.  Capture
+    follows the official pick build and cannot revise that build; the cached
+    reader in picks_today will admit only a subsequent build whose cutoff is
+    after the row's own capture time.
+    """
+    enabled = os.environ.get("EDGE_FACTORY_ODDSPAPI_PRICES", "").strip().lower()
+    if enabled not in {"1", "true", "yes", "on"}:
+        print("oddspapi capture disabled (set EDGE_FACTORY_ODDSPAPI_PRICES=1 to opt in)")
+        return
+    try:
+        max_fixtures = max(1, min(20, int(os.environ.get("ODDSPAPI_MAX_FIXTURES", "20"))))
+    except (TypeError, ValueError):
+        max_fixtures = 20
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/capture_oddspapi.py --date {target_date} "
+        f"--max-fixtures {max_fixtures}",
+        f"oddspapi bounded capture {target_date} [{trigger}]",
+    )
+
+
 def run(cmd: str, label: str | None = None) -> None:
     """Run a pipeline step and stream its output."""
     display = label or cmd
@@ -934,6 +957,8 @@ def run_pipeline(
             f"audit_clv capture {target_date} [pick_time]",
         )
         capture_theodds_snapshot(target_date, "pick_time")
+        # Explicitly quota-gated; this writes evidence for a later run only.
+        capture_oddspapi_snapshot(target_date, "pick_time")
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
 
         target_picks = load_picks_file()

@@ -13,10 +13,11 @@ Safety rails (operator-approved):
   bounded set of fixtures per run (--max-fixtures, default 20) and never
   broad-polls the whole day. Unmatched same-day picks are prioritized first,
   then enhancement-relevant fixtures.
-- FLAG-GATED: this script is NOT in daily.py/capture_daily.py by default.
-  It is meant to be run explicitly (or wired via
-  EDGE_FACTORY_ODDSPAPI_PRICES=1). Fail-soft: any error degrades to "no
-  rows" and never raises into a caller.
+- FLAG-GATED: daily.py invokes this only when
+  EDGE_FACTORY_ODDSPAPI_PRICES=1. It follows the official pick build, so its
+  rows are evidence for a later timestamp-qualified build, never a rewrite of
+  the card that triggered capture. Fail-soft: any error degrades to "no rows"
+  and never raises into a caller.
 - KEYS STAY LOCAL: ODDSPAPI_API_KEYS is read from .env; never printed,
   logged, committed, or placed in Actions.
 - WALK-FORWARD ONLY: rows accumulate from activation forward; no backfill,

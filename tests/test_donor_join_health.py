@@ -47,3 +47,21 @@ def test_theodds_health_receipt_keeps_capture_validation_and_join_counts(tmp_pat
     assert (receipt["oa_raw"], receipt["oa_usable"], receipt["oa_matched"]) == (404, 404, 6)
     assert "theoddsapi=raw404/usable404/matched6" in source_health.daily_status_block("2026-10-03")
     assert "theoddsapi: healthy named-book price source" in source_health.source_role_lines("2026-10-03")
+
+
+def test_oddspapi_health_receipt_keeps_capture_validation_and_join_counts(tmp_path, monkeypatch):
+    monkeypatch.setattr(source_health, "LOCALDATA", tmp_path)
+    payload = source_health.persist_daily_source_health(
+        "2026-10-03",
+        {
+            "oddspapi_odds": {
+                "status": "cache_only", "fetched": False, "rows": 8,
+                "op_raw": 12, "op_usable": 8, "op_matched": 2,
+                "can_fetch_today": False, "can_price": True, "can_vote": False,
+            },
+        },
+    )
+    receipt = payload["sources"]["oddspapi_odds"]
+    assert (receipt["op_raw"], receipt["op_usable"], receipt["op_matched"]) == (12, 8, 2)
+    assert "oddspapi=raw12/usable8/matched2" in source_health.daily_status_block("2026-10-03")
+    assert "oddspapi_odds: healthy named-book price source" in source_health.source_role_lines("2026-10-03")

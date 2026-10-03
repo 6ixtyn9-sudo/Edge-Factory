@@ -302,17 +302,22 @@ Stable daily pipeline since 2026-06-17 (day 0/1 of the current machine-auditable
 BetExplorer investigation concluded negative — research-only.
 WhatsApp push wired in; pending the whatsapp.php endpoint fix and CallMeBot authorization.
 Updated – 2026-06-18
-OddsPapi market-coverage probe
+OddsPapi market-coverage probe and bounded price board
 
-The repository includes a read-only market-coverage probe for evaluating whether
-OddsPapi actually exposes the bookmaker and market depth a future adapter would
-need. It is not wired into daily.py, capture_daily.py, selection, settlement, or
-WhatsApp.
+The repository includes a read-only market-coverage probe and an **opt-in**
+bounded capture for OddsPapi. It is never a consensus vote. When
+`EDGE_FACTORY_ODDSPAPI_PRICES=1`, the official daily run captures at most
+`ODDSPAPI_MAX_FIXTURES` (capped at 20) after the card is built. A later build
+may use only its persisted, timestamp-qualified canonical named-book rows; the
+capture can never rewrite the card that triggered it. Missing keys, a disabled
+flag, absent rows, unknown markets, or a post-build timestamp all fail closed.
 
 Keep real keys only in `.env`:
 
 ```text
 ODDSPAPI_API_KEYS=key1,key2,key3,key4
+EDGE_FACTORY_ODDSPAPI_PRICES=off
+ODDSPAPI_MAX_FIXTURES=20
 ```
 
 The comma-separated ring is tried only on auth/quota rejection; values are never

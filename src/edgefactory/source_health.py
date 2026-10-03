@@ -206,6 +206,12 @@ def build_daily_source_health(
                 "oa_usable": int(obs.get("oa_usable") or 0),
                 "oa_matched": int(obs.get("oa_matched") or 0),
             })
+        elif name == "oddspapi_odds":
+            row.update({
+                "op_raw": int(obs.get("op_raw") or 0),
+                "op_usable": int(obs.get("op_usable") or 0),
+                "op_matched": int(obs.get("op_matched") or 0),
+            })
         elif name == "betminer":
             row.update({
                 "bm_raw": int(obs.get("bm_raw") or 0),
@@ -267,6 +273,7 @@ ROLE_VERDICT_SOURCES: dict[str, tuple[str, ...]] = {
     "bzzoiro_odds": ("can_price",),
     "betexplorer": ("can_price",),
     "theoddsapi": ("can_price",),
+    "oddspapi_odds": ("can_price",),
     "scoutingstats": ("can_price", "can_vote"),
 }
 
@@ -363,7 +370,7 @@ def daily_status_block(day: str) -> str:
         return f"Source health {day}: unavailable (health contract not persisted)"
     tokens = []
     for name in (
-        "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "theoddsapi", "forebet",
+        "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "theoddsapi", "oddspapi_odds", "forebet",
         "futbolpronosticos", "sportytrader_odds",
         "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "boggio", "predictiq",
     ):
@@ -378,6 +385,12 @@ def daily_status_block(day: str) -> str:
             tokens.append(
                 f"theoddsapi=raw{row.get('oa_raw', 0)}/usable{row.get('oa_usable', 0)}"
                 f"/matched{row.get('oa_matched', 0)}"
+            )
+            continue
+        if name == "oddspapi_odds":
+            tokens.append(
+                f"oddspapi=raw{row.get('op_raw', 0)}/usable{row.get('op_usable', 0)}"
+                f"/matched{row.get('op_matched', 0)}"
             )
             continue
         if name == "betminer":
