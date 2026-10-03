@@ -53,26 +53,58 @@ OUT_DIR = ROOT / "localdata"
 
 COLUMNS = ["source", "source_type", "sport", "date", "kickoff", "league",
            "home", "away", "market", "selection", "odds", "bookmaker",
-           "captured_at"]
+           "captured_at", "published_at", "provider_changed_at"]
 
 
 def _out_path(day: str) -> Path:
     return OUT_DIR / f"oddspapi_odds_{day[:7]}.csv.gz"
 
 
+_STAMP_COLS = ("captured_at", "published_at", "provider_changed_at")
+
+
+def _migrate_header(path: Path) -> None:
+    """Rewrite an existing store whose header predates a new column.
+
+    Appending wider rows to a narrower header silently shifts every value
+    one column left for any later reader, so the file is rewritten (atomic
+    tmp + replace) with the current header and blanks for the new fields.
+    No row is dropped and no value is changed.
+    """
+    if not path.exists():
+        return
+    try:
+        with gzip.open(path, "rt", newline="", encoding="utf-8") as fh:
+            reader = csv.DictReader(fh)
+            existing_header = list(reader.fieldnames or [])
+            if existing_header == COLUMNS:
+                return
+            rows = [dict(r) for r in reader]
+    except (OSError, csv.Error, EOFError):
+        return
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with gzip.open(tmp, "wt", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=COLUMNS)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({k: row.get(k, "") for k in COLUMNS})
+    tmp.replace(path)
+
+
 def _append_rows(rows: list[dict], day: str) -> int:
     """Append rows to the unified store, deduped on the full row (idempotent re-runs)."""
     path = _out_path(day)
     path.parent.mkdir(parents=True, exist_ok=True)
-    # Red-team F7 (fixed 2026-08-05): dedupe key EXCLUDES captured_at so
-    # re-capturing the same price does not append an unbounded duplicate
-    # row per run. A genuinely changed price (different odds) still appends.
-    DEDUP_COLS = [c for c in COLUMNS if c != "captured_at"]
+    _migrate_header(path)
+    # Red-team F7 (fixed 2026-08-05): dedupe key EXCLUDES the timestamp
+    # columns so re-capturing the same price does not append an unbounded
+    # duplicate row per run. A genuinely changed price still appends.
+    DEDUP_COLS = [c for c in COLUMNS if c not in _STAMP_COLS]
     seen: set[tuple] = set()
     if path.exists():
         with gzip.open(path, "rt", newline="", encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
-                seen.add(tuple(r.get(k) for k in DEDUP_COLS))
+                seen.add(tuple(str(r.get(k) or "") for k in DEDUP_COLS))
     added = 0
     fresh = []
     for r in rows:
@@ -153,7 +185,21 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
                                 "player0_keys": sorted(p0.keys()) if isinstance(p0, dict) else None,
                                 "player0_nonbet_fields": {k: v for k, v in p0.items() if k != "betslip"} if isinstance(p0, dict) else None,
                             })
-            rows = rows_from_odds_response(odds, market_type_map=type_map) if odds else []
+            # The /odds payload observed on 2026-10-03 carried no participant
+            # names, so every emitted row was unjoinable. The /fixtures record
+            # we already hold is the identity of record; pass it through and
+            # fail closed when neither endpoint names the teams.
+            parse_stats: dict = {}
+            rows = rows_from_odds_response(
+                odds,
+                market_type_map=type_map,
+                home=fx.get("participant1Name"),
+                away=fx.get("participant2Name"),
+                stats=parse_stats,
+            ) if odds else []
+            for reason, count in parse_stats.items():
+                skips = stats.setdefault("parse_skips", {})
+                skips[reason] = int(skips.get(reason) or 0) + int(count)
             if rows:
                 stats["matched"] += 1
             stats["rows"] += len(rows)

@@ -20,7 +20,10 @@ from edgefactory.enh_pricing import (ODDSPAPI_SOURCE, attach_enhancement_price,
 from edgefactory.sources.oddspapi_odds import rows_from_odds_response
 
 COLS = ["source", "source_type", "sport", "date", "kickoff", "league", "home", "away",
-        "market", "selection", "odds", "bookmaker", "captured_at"]
+        "market", "selection", "odds", "bookmaker", "captured_at",
+        # Provider publication stamps are preserved alongside OUR capture
+        # time; captured_at stays the freshness clock (red-team F2).
+        "published_at", "provider_changed_at"]
 
 
 def _odds_payload(**over):
