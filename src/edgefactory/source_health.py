@@ -252,9 +252,11 @@ def build_daily_source_health(
             # Fixed reason vocabulary plus invalid_price; values are counts
             # only, so the receipt cannot retain provider payloads or secrets.
             allowed = {
-                "date_mismatch", "fixture_key_miss", "market_unmapped",
-                "selection_unmapped", "no_pick_for_fixture",
-                "timestamp_rejected", "invalid_price",
+                "date_mismatch", "out_of_window", "fixture_key_miss",
+                "market_unmapped", "market_unsupported",
+                "selection_unmapped", "selection_unsupported",
+                "no_pick_for_fixture", "timestamp_rejected", "invalid_price",
+                "fixture_identity_missing",
             }
             row["join_miss_counts"] = {
                 str(reason): int(count or 0)
