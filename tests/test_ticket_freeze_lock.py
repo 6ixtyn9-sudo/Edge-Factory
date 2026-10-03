@@ -100,6 +100,31 @@ def test_frozen_date_is_never_rebuilt_on_a_later_run(lane, monkeypatch):
     assert slip.read_text() == before          # re-print, never a rewrite
 
 
+def test_force_no_bet_supersedes_card_without_reprinting_its_prices(lane, monkeypatch, capsys):
+    monkeypatch.setattr(at, "datetime", _clock(2026, 9, 6, 9, 13))
+    st = _run()
+    slip = lane / f"auto_tickets_{DAY}.txt"
+    before = slip.read_text()
+    frozen = dict(at.frozen_entry(st, DAY))
+
+    # Simulate the corrected source gate rejecting every stale/unverified
+    # price. The force recut may write state metadata, but never the frozen
+    # slip or its write-once timestamp.
+    monkeypatch.setattr(at, "playable_legs", lambda *args, **kwargs: [])
+    assert at.cmd_today(SimpleNamespace(date=DAY, force=True), st) == 0
+    assert slip.read_text() == before
+    assert at.frozen_entry(st, DAY) == frozen
+    assert at.superseded_entry(st, DAY)["result"] == "NO BET"
+
+    capsys.readouterr()
+    assert at.cmd_today(SimpleNamespace(date=DAY, force=False), st) == 0
+    output = capsys.readouterr().out
+    assert "TICKETS SUPERSEDED" in output
+    assert "do not place the superseded selections" in output
+    assert "[ACCA #" not in output
+    assert "@1.47" not in output
+
+
 # ---------------- 2./3. legacy compat, no new sidecars ----------------
 
 def test_legacy_marker_file_still_locks_and_is_never_deleted(lane, monkeypatch):
