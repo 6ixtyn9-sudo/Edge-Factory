@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 183,
-   "inv_price_sum": 180.8884456433562,
-   "multi_n": 26,
-   "n": 276,
+   "hits": 195,
+   "inv_price_sum": 190.97944659295646,
+   "multi_n": 28,
+   "n": 292,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -612,9 +612,25 @@
     "2026-10-01|Germany vs Serbia|match_over_25@v1",
     "2026-10-01|Malta vs Gibraltar|match_over_25@v1",
     "2026-10-02|Helmond Sport vs Heracles|match_over_25@v1",
-    "2026-10-02|Belgium vs T\u00fcrkiye|match_over_25@v1"
+    "2026-10-02|Belgium vs T\u00fcrkiye|match_over_25@v1",
+    "2026-10-03|Croatia vs England|match_over_25@v1",
+    "2026-10-03|Spain vs Czech Republic|match_over_25@v1",
+    "2026-10-03|Spain vs Czechia|match_over_25@v1",
+    "2026-10-03|Hamilton Academical vs Peterhead|match_over_25@v1",
+    "2026-10-03|Switzerland vs Slovenia|match_over_25@v1",
+    "2026-10-03|Caernarfon Town vs Barry Town|match_over_25@v1",
+    "2026-10-03|Dorking Wanderers vs Chatham Town|match_over_25@v1",
+    "2026-10-03|The New Saints vs Cambrian & Clydach|match_over_25@v1",
+    "2026-10-03|Cittadella vs AlbinoLeffe|match_over_25@v1",
+    "2026-10-03|Gateshead vs Worthing|match_over_25@v1",
+    "2026-10-03|Briton Ferry vs Colwyn Bay|match_over_25@v1",
+    "2026-10-03|Ross County vs Alloa Athletic|match_over_25@v1",
+    "2026-10-03|Amiens vs Villefranche|match_over_25@v1",
+    "2026-10-03|Grosseto vs Sambenedettese|match_over_25@v1",
+    "2026-10-03|Boreham Wood vs Altrincham|match_over_25@v1",
+    "2026-10-03|Ospitaletto vs Renate|match_over_25@v1"
    ],
-   "profit": 2.94,
+   "profit": 6.46,
    "records": [
     {
      "date": "2026-08-01",
@@ -2820,6 +2836,134 @@
      "match": "Belgium vs T\u00fcrkiye",
      "multi_source": false,
      "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Croatia vs England",
+     "multi_source": true,
+     "price": 1.7,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Spain vs Czech Republic",
+     "multi_source": false,
+     "price": 1.22,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Spain vs Czechia",
+     "multi_source": false,
+     "price": 1.81,
+     "source": "oddspapi"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Hamilton Academical vs Peterhead",
+     "multi_source": false,
+     "price": 1.7,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Switzerland vs Slovenia",
+     "multi_source": true,
+     "price": 2.0,
+     "source": "oddspapi"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": false,
+     "match": "Caernarfon Town vs Barry Town",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": false,
+     "match": "Dorking Wanderers vs Chatham Town",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "The New Saints vs Cambrian & Clydach",
+     "multi_source": false,
+     "price": 1.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Cittadella vs AlbinoLeffe",
+     "multi_source": false,
+     "price": 1.95,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Gateshead vs Worthing",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": false,
+     "match": "Briton Ferry vs Colwyn Bay",
+     "multi_source": false,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Ross County vs Alloa Athletic",
+     "multi_source": false,
+     "price": 1.53,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Amiens vs Villefranche",
+     "multi_source": false,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Grosseto vs Sambenedettese",
+     "multi_source": false,
+     "price": 1.85,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Boreham Wood vs Altrincham",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": false,
+     "match": "Ospitaletto vs Renate",
+     "multi_source": false,
+     "price": 1.95,
      "source": "scoutingstats"
     }
    ],
