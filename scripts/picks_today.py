@@ -1905,6 +1905,7 @@ def resolve_kickoff_utc(
     could not see, e.g. live-fetched bzzoiro odds rows).
     """
     if pick.get("kickoff_utc"):
+        attach_kickoff_display(pick)
         return
     own_raw = _kickoff_value(pick) or ""
     own_utc = zoned_kickoff_to_utc(own_raw) if own_raw else None
@@ -1912,6 +1913,7 @@ def resolve_kickoff_utc(
         pick["kickoff_utc"] = own_utc
         pick["kickoff_source"] = KICKOFF_SRC_OFFSET
         pick["kickoff_witness"] = f"own kickoff {own_raw!r}"
+        attach_kickoff_display(pick)
         return
 
     candidates: list[tuple[str, str, str, bool]] = []  # (utc, source_name, raw, is_odds_row)
@@ -1929,6 +1931,7 @@ def resolve_kickoff_utc(
     if not candidates:
         pick["kickoff_utc"] = None
         pick["kickoff_source"] = KICKOFF_SRC_UNRESOLVED
+        pick["kickoff_sast"] = None
         return
     distinct = {c[0] for c in candidates}
     if len(distinct) > 1:
@@ -1937,6 +1940,7 @@ def resolve_kickoff_utc(
         # guard's region fallback still covers it.
         pick["kickoff_utc"] = None
         pick["kickoff_source"] = KICKOFF_SRC_UNRESOLVED
+        pick["kickoff_sast"] = None
         pick["kickoff_witness"] = (
             f"conflicting zoned witnesses: "
             + "; ".join(f"{n} {r!r}" for _, n, r, _ in candidates[:4]))
@@ -1945,6 +1949,86 @@ def resolve_kickoff_utc(
     pick["kickoff_utc"] = utc
     pick["kickoff_source"] = KICKOFF_SRC_ODDS_ROW if is_odds else KICKOFF_SRC_SIBLING
     pick["kickoff_witness"] = f"{sname} kickoff {sraw!r}"
+    attach_kickoff_display(pick)
+
+
+def attach_kickoff_display(pick: dict) -> None:
+    """Add ``kickoff_sast``: the one consistent human rendering.
+
+    The raw ``kickoff`` text is deliberately left alone - it is the
+    pre-match guard's input and the audit's provenance, and rewriting it
+    could move a kickoff LATER, which is the one direction the lead guard
+    must never be nudged. ``kickoff_sast`` is derived from the authoritative
+    zone-bearing ``kickoff_utc`` only, so it is exact rather than merely
+    consistent, and it replaces the two incompatible feed renderings
+    ("03-10, 17:00" from a UK-local source, bare "11:00" from an
+    Americas-local one) with a single unambiguous string.
+    """
+    utc_text = str(pick.get("kickoff_utc") or "").strip()
+    if not utc_text:
+        pick.setdefault("kickoff_sast", None)
+        return
+    try:
+        stamp = datetime.fromisoformat(utc_text)
+    except ValueError:
+        pick.setdefault("kickoff_sast", None)
+        return
+    if stamp.tzinfo is None:
+        pick.setdefault("kickoff_sast", None)
+        return
+    pick["kickoff_sast"] = stamp.astimezone(_local_tz()).strftime("%Y-%m-%d %H:%M SAST")
+
+
+def kickoff_display_offset_census(picks: list[dict]) -> dict[str, dict[str, int]]:
+    """How far each feed's kickoff TEXT sits from the true SAST instant.
+
+    Answers "systematic or per-source?" from data on every run instead of
+    from a single fixture. Buckets are minutes of (displayed wall clock -
+    true SAST wall clock), grouped by the shape of the rendering, because
+    the rendering - not the pick - is what identifies the upstream feed.
+    """
+    census: dict[str, Counter] = {}
+    for pick in picks:
+        utc_text = str(pick.get("kickoff_utc") or "").strip()
+        raw = str(_kickoff_value(pick) or "").strip()
+        if not utc_text or not raw:
+            continue
+        try:
+            stamp = datetime.fromisoformat(utc_text)
+        except ValueError:
+            continue
+        if stamp.tzinfo is None:
+            continue
+        match = re.search(r"(\d{1,2}):(\d{2})", raw)
+        if not match:
+            continue
+        local = stamp.astimezone(_local_tz())
+        displayed = int(match.group(1)) * 60 + int(match.group(2))
+        actual = local.hour * 60 + local.minute
+        delta = (displayed - actual) % 1440
+        if delta > 720:
+            delta -= 1440
+        shape = "dd-mm_hh:mm" if re.match(r"^\d{1,2}-\d{1,2}[ ,]", raw) else (
+            "iso" if re.match(r"^\d{4}-\d{2}-\d{2}", raw) else "bare_hh:mm")
+        census.setdefault(shape, Counter())[f"{delta:+d}m"] += 1
+    return {shape: dict(sorted(counts.items())) for shape, counts in sorted(census.items())}
+
+
+def kickoff_offset_lines(census: dict[str, dict[str, int]]) -> list[str]:
+    """One compact line per rendering shape, plus the systematic verdict."""
+    if not census:
+        return []
+    lines = []
+    for shape, counts in census.items():
+        rendered = " ".join(f"{offset}={count}" for offset, count in counts.items())
+        lines.append(f"kickoff display offset [{shape}]: {rendered}")
+    distinct = {offset for counts in census.values() for offset in counts}
+    lines.append(
+        "kickoff display offset verdict: "
+        + ("systematic" if len(distinct) == 1 else f"per-source ({len(distinct)} distinct offsets)")
+        + " — kickoff_utc is authoritative; kickoff_sast is rendered from it"
+    )
+    return lines
 
 
 def attach_kickoff_normalisation(picks: list[dict], data: dict[str, dict]) -> None:
@@ -4740,6 +4824,8 @@ def main():
         for line in donor_join_miss_lines(donor_join_report):
             print(line, file=sys.stderr)
         for line in donor_vocabulary_lines(donor_join_report):
+            print(line, file=sys.stderr)
+        for line in kickoff_offset_lines(kickoff_display_offset_census(picks)):
             print(line, file=sys.stderr)
 
         be_stats: dict = {}

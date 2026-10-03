@@ -209,7 +209,7 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
             fair_odds = None
         raw_market = str(pick.get("market") or "").strip()
         raw_selection = str(pick.get("selection") or "").strip()
-        canonical, _failure = canonical_market_selection(
+        canonical, failure = canonical_market_selection(
             raw_market, raw_selection, home=home, away=away, line=pick.get("line"),
         )
         canonicalization_mappable = canonical is not None
@@ -232,6 +232,10 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
             "raw_market": raw_market,
             "raw_selection": raw_selection,
             "canonicalization_mappable": canonicalization_mappable,
+            # The provider token behind an unmappable row, so the join-miss
+            # vocabulary census can enumerate Bet Better's real market
+            # strings from the captured ledger instead of a live call.
+            "canonicalization_reason": (failure.reason if failure is not None else None),
             "line": canonical_line,
             "probability": probability,
             "fair_odds": fair_odds,
