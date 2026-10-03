@@ -2761,7 +2761,8 @@ def cmd_today(args, st):
             print("=" * 62)
             print(f"  original frozen slip retained for audit: {slip_txt}")
             print(f"  original frozen_at retained: {superseded.get('frozen_at') or 'unknown'}")
-            print("  do not place the superseded selections; no replacement legs qualified")
+            print("  do not place the superseded selections; no replacement card was created")
+            print("  current candidates below distinguish row-gate failures from the write-once supersede lock")
             print(f"  rerun with --force only after a new, verified slate is available")
             print("\n".join(price_supply_report(
                 slate, day=target, qualifying=0, rejection_ledger=ledger,
