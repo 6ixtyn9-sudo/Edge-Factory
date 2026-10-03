@@ -72,6 +72,16 @@ dist/
 !localdata/theoddsapi_odds_2026-*.csv.gz
 # Bounded OddsPAPI captures are a named-book receipt used by a later build.
 !localdata/oddspapi_odds_2026-*.csv.gz
+# Round 3: the OddsPAPI market-id census and the served-catalog vocabulary
+# snapshot are the DURABLE join-layer evidence (distinct market ids with
+# classification/label/period/line, expected-vs-loss parse-skip split,
+# unresolved-1x2 provider tuples). The "persist pipeline state" step runs
+# `git add -A localdata/`, which silently drops ignored files - run
+# 37138618268 (2026-10-03) wrote both and persisted neither until these
+# negations existed. Provider data only; never credentials or URLs.
+!localdata/oddspapi_market_census_*.json
+!localdata/source_health/
+!localdata/source_health/**
 # The bounded BetExplorer snapshot is the raw receipt for its final-card rows.
 !localdata/betexplorer_odds_cache_20*.json
 !localdata/betexplorer_capture_20*.json
