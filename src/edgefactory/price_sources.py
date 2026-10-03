@@ -404,7 +404,11 @@ def annotate_row(row: dict[str, Any], *, source: str | None = None) -> dict[str,
         out.setdefault("odds_kind", source_spec.odds_kind)
     out["named_bookmaker"] = bool(source_spec.named_bookmaker and out.get("bookmaker"))
     out["price_independence_family"] = independence_family(name, out.get("bookmaker"))
-    out["price_push_eligible"] = bool(source_spec.can_execute())
+    # An adapter may already have withheld this row (future publication
+    # stamp, missing quote, operator switch). Annotation must never upgrade
+    # a withheld row back to eligible - it can only ever narrow.
+    out["price_push_eligible"] = bool(
+        source_spec.can_execute() and row.get("price_push_eligible", True) is not False)
     return out
 
 
