@@ -96,7 +96,8 @@ def test_unpriced_pick_is_uncorroborated():
 def _card_row(**extra):
     out = {"date": "2026-10-02", "home": "Alpha United", "away": "Beta City",
            "market": "1x2", "pick": "home", "avg_p": 72.0, "odds": 1.50,
-           "bucket": "CAUTION", "quarantine": "none", "price_push_eligible": True}
+           "bucket": "CAUTION", "quarantine": "none", "price_push_eligible": True,
+           "odds_source": BZZ}
     out.update(extra)
     return out
 

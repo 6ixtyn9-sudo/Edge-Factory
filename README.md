@@ -249,6 +249,8 @@ Only CERTIFIED_CLEAN and CAUTION buckets are pushed **as bets** (main slate). De
 
 Price evidence is independently gated from model/context quality (Addendum 26): a Bzzoiro primary price may remain push-eligible; a ScoutingStats-only fallback price is quarantined to WATCHLIST_UNCORROBORATED_PRICE; an `alias_fuzzy` candidate is saved as `suspect_price` and never replaces operational best odds, landing in WATCHLIST_SUSPECT_PRICE. Both remain archived and scored in the rolling audit. The automatic ticket builder now consumes only rows with `price_push_eligible=true`; quarantined prices stay visible for audit/shadow review but can never be printed as executable legs. Historical replay/audit keeps the legacy pool, so the frozen parity baseline is unchanged. 1X2 prices are strictly side-keyed (`odd1`→home, `oddx`→draw, `odd2`→away). The archived `price_board` holds the complete home/draw/away book. A matched row labelled for another side or market is rejected, and marking the chosen board row requires selection identity. A fuzzy fixture join must agree on home/away orientation, so a reversed listing cannot hand one team's price to the other.
 
+The daily price lane is explicitly two-pass: a non-ticketable candidate shortlist is captured first, then provider snapshots are taken, then a final priced card is built. Source preference is based on observed end-to-end execution contribution, not adapter count: the archived record through 2026-10-03 ranks BetExplorer first (497 push-eligible matches / 84 source-days), then Bzzoiro (85 / 53). The final card uses a bounded pre-build BetExplorer cache; live BetExplorer rescue is disabled by default so no post-cutoff quote can silently enter a ticket.
+
 Shadow slate (Addenda 24–26, default ON — kill with EDGE_FACTORY_NOTIFY_SHADOW=0): a SECOND daily message carries all non-pushed streams — SKIPPED_VETO, WATCHLIST_NO_ODDS, WATCHLIST_UNKNOWN_CTX, WATCHLIST_UNCORROBORATED_PRICE, and WATCHLIST_SUSPECT_PRICE — each labeled with that stream's rolling 30d audit record (from localdata/picks_audit_rolling.json). Independent dedup ledger localdata/whatsapp_shadow_sent_ledger_YYYY-MM-DD.json means main and shadow sends never suppress each other. Shown for transparency, not pushed as bets; weight the streams by their records.
 
 Golden rules
@@ -302,17 +304,23 @@ Stable daily pipeline since 2026-06-17 (day 0/1 of the current machine-auditable
 BetExplorer investigation concluded negative — research-only.
 WhatsApp push wired in; pending the whatsapp.php endpoint fix and CallMeBot authorization.
 Updated – 2026-06-18
-OddsPapi market-coverage probe
+OddsPapi market-coverage probe and bounded price board
 
-The repository includes a read-only market-coverage probe for evaluating whether
-OddsPapi actually exposes the bookmaker and market depth a future adapter would
-need. It is not wired into daily.py, capture_daily.py, selection, settlement, or
-WhatsApp.
+The repository includes a read-only market-coverage probe and an **opt-in**
+bounded capture for OddsPapi. It is never a consensus vote. When
+`EDGE_FACTORY_ODDSPAPI_PRICES=1`, the official daily run captures at most
+`ODDSPAPI_MAX_FIXTURES` (capped at 20) after a non-ticketable candidate
+shortlist is built. The final priced pass may use only persisted,
+timestamp-qualified canonical named-book rows; a ticketed card is never
+rewritten. Missing keys, a disabled flag, absent rows, unknown markets, or a
+post-cutoff timestamp all fail closed.
 
 Keep real keys only in `.env`:
 
 ```text
 ODDSPAPI_API_KEYS=key1,key2,key3,key4
+EDGE_FACTORY_ODDSPAPI_PRICES=off
+ODDSPAPI_MAX_FIXTURES=20
 ```
 
 The comma-separated ring is tried only on auth/quota rejection; values are never

@@ -190,7 +190,13 @@ def build_daily_source_health(
         # Candidate-specific counters are deliberately retained in the daily
         # contract so an operator can distinguish an empty slate from a parser
         # mismatch without treating either as a production gate.
-        if name == "futbolpronosticos":
+        if name == "betexplorer":
+            row.update({
+                "be_raw": int(obs.get("be_raw") or 0),
+                "be_usable": int(obs.get("be_usable") or 0),
+                "be_matched": int(obs.get("be_matched") or 0),
+            })
+        elif name == "futbolpronosticos":
             row.update({
                 "raw": int(obs.get("raw") or 0),
                 "scored": int(obs.get("scored") or 0),
@@ -200,24 +206,47 @@ def build_daily_source_health(
                 "st_raw": int(obs.get("st_raw") or 0),
                 "st_matched": int(obs.get("st_matched") or 0),
             })
+        elif name == "theoddsapi":
+            row.update({
+                "oa_raw": int(obs.get("oa_raw") or 0),
+                "oa_usable": int(obs.get("oa_usable") or 0),
+                "oa_matched": int(obs.get("oa_matched") or 0),
+            })
+        elif name == "oddspapi_odds":
+            row.update({
+                "op_raw": int(obs.get("op_raw") or 0),
+                "op_usable": int(obs.get("op_usable") or 0),
+                "op_matched": int(obs.get("op_matched") or 0),
+            })
         elif name == "betminer":
             row.update({
                 "bm_raw": int(obs.get("bm_raw") or 0),
                 "bm_scored": int(obs.get("bm_scored") or 0),
+                "bm_matched": int(obs.get("bm_matched") or 0),
             })
         elif name == "pinnapi_odds":
             row.update({
                 "pa_raw": int(obs.get("pa_raw") or 0),
+                "pa_scored": int(obs.get("pa_scored") or obs.get("pa_matched") or 0),
                 "pa_matched": int(obs.get("pa_matched") or 0),
             })
         elif name == "sharpapi_odds":
-            row.update({"sa_raw": int(obs.get("sa_raw") or 0), "sa_matched": int(obs.get("sa_matched") or 0)})
+            row.update({
+                "sa_raw": int(obs.get("sa_raw") or 0),
+                "sa_scored": int(obs.get("sa_scored") or obs.get("sa_matched") or 0),
+                "sa_matched": int(obs.get("sa_matched") or 0),
+            })
         elif name == "boggio":
-            row.update({"bg_raw": int(obs.get("bg_raw") or 0), "bg_scored": int(obs.get("bg_scored") or 0)})
+            row.update({
+                "bg_raw": int(obs.get("bg_raw") or 0),
+                "bg_scored": int(obs.get("bg_scored") or 0),
+                "bg_matched": int(obs.get("bg_matched") or 0),
+            })
         elif name == "betbetter":
             row.update({
                 "bb_raw": int(obs.get("bb_raw") or 0),
                 "bb_scored": int(obs.get("bb_scored") or 0),
+                "bb_matched": int(obs.get("bb_matched") or 0),
             })
         sources[name] = row
     return {"schema": 1, "date": str(day), "sources": sources}
@@ -249,6 +278,8 @@ ROLE_VERDICT_SOURCES: dict[str, tuple[str, ...]] = {
     "bzzoiro": ("can_vote",),
     "bzzoiro_odds": ("can_price",),
     "betexplorer": ("can_price",),
+    "theoddsapi": ("can_price",),
+    "oddspapi_odds": ("can_price",),
     "scoutingstats": ("can_price", "can_vote"),
 }
 
@@ -325,7 +356,12 @@ def source_role_lines(day: str) -> list[str]:
         row = sources.get(name)
         if row is None:
             continue
-        healthy = bool(row.get("can_fetch_today")) and bool(row.get("can_price"))
+        # A time-qualified cache is price-available but not a same-stage
+        # network fetch.  Keep that distinction in the receipt/status field
+        # without falsely calling a usable cached named-book board unavailable.
+        healthy = bool(row.get("can_price")) and (
+            bool(row.get("can_fetch_today")) or str(row.get("status") or "") == "cache_only"
+        )
         out.append(f"{name}: {'healthy' if healthy else 'unavailable'} {role}")
     return out
 
@@ -340,31 +376,53 @@ def daily_status_block(day: str) -> str:
         return f"Source health {day}: unavailable (health contract not persisted)"
     tokens = []
     for name in (
-        "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet",
+        "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "theoddsapi", "oddspapi_odds", "forebet",
         "futbolpronosticos", "sportytrader_odds",
         "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "boggio", "predictiq",
     ):
         row = sources.get(name, {})
+        if name == "betexplorer" and str(row.get("status") or "") == "cache_only":
+            tokens.append(
+                f"betexplorer=raw{row.get('be_raw', 0)}/usable{row.get('be_usable', 0)}"
+                f"/matched{row.get('be_matched', 0)}"
+            )
+            continue
         if name == "futbolpronosticos":
             tokens.append(f"futbolpronosticos=raw{row.get('raw', 0)}/scored{row.get('scored', 0)}")
             continue
         if name == "sportytrader_odds":
             tokens.append(f"sportytrader=st_raw{row.get('st_raw', 0)}/st_matched{row.get('st_matched', 0)}")
             continue
+        if name == "theoddsapi":
+            tokens.append(
+                f"theoddsapi=raw{row.get('oa_raw', 0)}/usable{row.get('oa_usable', 0)}"
+                f"/matched{row.get('oa_matched', 0)}"
+            )
+            continue
+        if name == "oddspapi_odds":
+            tokens.append(
+                f"oddspapi=raw{row.get('op_raw', 0)}/usable{row.get('op_usable', 0)}"
+                f"/matched{row.get('op_matched', 0)}"
+            )
+            continue
         if name == "betminer":
-            tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}{_zero_reason({**row, '_source_name': 'betminer'}, int(row.get('bm_raw') or 0))}")
+            tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}{_zero_reason({**row, '_source_name': 'betminer'}, int(row.get('bm_raw') or 0))}/bm_matched{row.get('bm_matched', 0)}")
             continue
         if name == "pinnapi_odds":
-            tokens.append(f"pinnapi=pa_raw{row.get('pa_raw', 0)}/pa_matched{row.get('pa_matched', 0)}{_zero_reason({**row, '_source_name': 'pinnapi_odds'}, int(row.get('pa_raw') or 0))}")
+            reason = _zero_reason({**row, '_source_name': 'pinnapi_odds'}, int(row.get('pa_raw') or 0))
+            tokens.append(
+                f"pinnapi=pa_raw{row.get('pa_raw', 0)}/pa_matched{row.get('pa_matched', 0)}"
+                f"{reason}/pa_scored{row.get('pa_scored', 0)}"
+            )
             continue
         if name == "betbetter":
-            tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}{_zero_reason({**row, '_source_name': 'betbetter'}, int(row.get('bb_raw') or 0))}")
+            tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}{_zero_reason({**row, '_source_name': 'betbetter'}, int(row.get('bb_raw') or 0))}/bb_matched{row.get('bb_matched', 0)}")
             continue
         if name == "sharpapi_odds":
-            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason({**row, '_source_name': 'sharpapi_odds'}, int(row.get('sa_raw') or 0))}")
+            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason({**row, '_source_name': 'sharpapi_odds'}, int(row.get('sa_raw') or 0))}/sa_scored{row.get('sa_scored', 0)}")
             continue
         if name == "boggio":
-            tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason({**row, '_source_name': 'boggio'}, int(row.get('bg_raw') or 0))}")
+            tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason({**row, '_source_name': 'boggio'}, int(row.get('bg_raw') or 0))}/bg_matched{row.get('bg_matched', 0)}")
             continue
         if name == "forebet":
             tokens.append(

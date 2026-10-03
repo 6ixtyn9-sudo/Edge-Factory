@@ -44,6 +44,8 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
+from edgefactory.odds_normalization import canonical_market_selection
+
 SOURCE = "betbetter"
 BASE = "https://betbetter.world"
 UA = "EdgeFactory-cooperative-shadow/1.0 (+operator review)"
@@ -200,6 +202,19 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
             fair_odds = float(pick.get("fairOdds")) if pick.get("fairOdds") is not None else None
         except (TypeError, ValueError):
             fair_odds = None
+        raw_market = str(pick.get("market") or "").strip()
+        raw_selection = str(pick.get("selection") or "").strip()
+        canonical, _failure = canonical_market_selection(
+            raw_market, raw_selection, home=home, away=away, line=pick.get("line"),
+        )
+        canonicalization_mappable = canonical is not None
+        # Keep an unmappable provider row in the shadow ledger as raw evidence,
+        # but mark it non-priceable. The shared bundle boundary drops it from
+        # joins and reports the reason; preserving the capture is what makes
+        # raw/scored/matched accounting auditable.
+        canonical_market = canonical.market if canonical is not None else raw_market
+        canonical_selection = canonical.selection if canonical is not None else raw_selection
+        canonical_line = canonical.line if canonical is not None else pick.get("line")
         rows.append({
             "source": SOURCE,
             "date": day,
@@ -207,9 +222,12 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
             "home": home,
             "away": away,
             "kickoff": kickoff,
-            "market": str(pick.get("market") or "").strip() or None,
-            "selection": str(pick.get("selection") or "").strip() or None,
-            "line": pick.get("line"),
+            "market": canonical_market,
+            "selection": canonical_selection,
+            "raw_market": raw_market,
+            "raw_selection": raw_selection,
+            "canonicalization_mappable": canonicalization_mappable,
+            "line": canonical_line,
             "probability": probability,
             "fair_odds": fair_odds,
             # --- fair-price donor fields (operator promotion 2026-10-03) ---
@@ -222,7 +240,8 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
             "bookmaker": None,
             "named_bookmaker": False,
             "price_independence_family": "betbetter_fair",
-            "price_push_eligible": bool(fair_odds is not None and fair_price_donor_enabled()),
+            "price_push_eligible": bool(
+                canonicalization_mappable and fair_odds is not None and fair_price_donor_enabled()),
             "confidence": pick.get("confidence"),
             "attribution": str(payload.get("attribution") or "Bet Better — https://betbetter.world"),
             "licence": str(payload.get("licence") or "CC BY 4.0 — free to use with attribution to Bet Better (https://betbetter.world)"),
@@ -289,7 +308,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         "status": "not_run", "bb_raw": 0, "bb_scored": 0, "requests": 0,
         "cache_hits": 0, "http_429": 0, "errors": [], "blocker": None,
         "budget": MAX_CALLS_PER_RUN, "enabled": _enabled(),
-        "attribution": None, "licence": None,
+        "attribution": None, "licence": None, "canonicalization_dropped": 0,
     }
     reset_state()
     if not _enabled():
@@ -319,6 +338,12 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
                 stats["errors"].append(f"{slug}: HTTP {status} or non-JSON payload")
                 continue
             league_rows = parse_picks(payload, day=day, slug=slug, url=url)
+            raw_picks = payload.get("picks") if isinstance(payload, dict) else None
+            if isinstance(raw_picks, list):
+                stats["canonicalization_dropped"] += sum(
+                    1 for row in league_rows
+                    if row.get("canonicalization_mappable") is False
+                ) + max(0, len(raw_picks) - len(league_rows))
             rows.extend(league_rows)
             if league_rows:
                 stats["attribution"] = str(payload.get("attribution") or "") or stats["attribution"]

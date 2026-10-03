@@ -33,6 +33,7 @@ from edgefactory.util import (
     strip_retired_top_scores,
 )
 from edgefactory.market_registry import get_odds_tier
+from edgefactory.odds_normalization import canonicalize_row
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.fade import (
     FADE_FAMILY,
@@ -70,6 +71,8 @@ PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
 LOCALDATA = ROOT / "localdata"
 BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
+BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
+THEODDSAPI_ODDS_SOURCE = "theoddsapi"
 
 # Voter-row (source) aliasing lives in edgefactory/identity.py
 # (source_team_key + TEAM_KEY_RAW_ALIASES, width-24 collision-safe keys).
@@ -98,6 +101,10 @@ ODDS_EXACT_TEAM_ALIASES = {
     "lions": "queenslan",            # Lions → Queensland Lions FC (NPL Queensland)
     "belshina": "belshinab",         # Belshina → Belshina Bobruisk (Belarus)
     "thorakure": "thor",             # Thor Akureyri → Thór (Iceland Besta Deildin)
+    # 2026-10-03 TheOddsAPI receipt: provider shortens these two English
+    # club names.  Narrow, one-way aliases are preferred to fuzzy matching.
+    "eibar": "sdeibar",                # Eibar -> SD Eibar (Spain Segunda)
+    "grimsbyto": "grimsby",            # Grimsby Town -> Grimsby (England L2)
 }
 
 ODDS_MATCH_TEAM_ALIASES = {
@@ -126,6 +133,9 @@ ODDS_MATCH_TEAM_ALIASES = {
     "dinamominsk": "fcdinamominsk",      # Dinamo Minsk → FC Dinamo Minsk (Belarus PL)
     "belshina": "belshinabobruisk",      # Belshina → Belshina Bobruisk (Belarus)
     "thorakureyri": "thor",              # Thor Akureyri → Thór (Iceland Besta Deildin)
+    # 2026-10-03 TheOddsAPI receipt; see exact-key aliases above.
+    "eibar": "sdeibar",                    # Eibar -> SD Eibar
+    "grimsbytown": "grimsby",              # Grimsby Town -> Grimsby
 }
 
 DISPLAY_TEAM_ALIASES = {
@@ -192,6 +202,12 @@ def min_lead_minutes() -> int:
     except (TypeError, ValueError):
         return DEFAULT_MIN_LEAD_MINUTES
 
+def candidate_only_build() -> bool:
+    """True for the first, non-ticketable pass of the two-pass daily build."""
+    return os.environ.get("EDGE_FACTORY_CANDIDATE_ONLY", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+
 # ---- purity buckets ----
 BUCKET_CERTIFIED = "CERTIFIED_CLEAN"
 BUCKET_CAUTION = "CAUTION"
@@ -205,7 +221,10 @@ BUCKET_SKIP_DEAD = "SKIPPED_DEAD_EDGE"
 
 # Stable price-evidence states, archived on every operational pick. These name
 # what we know about the displayed odds, not a prediction-quality verdict.
+# Keep the Bzzoiro-specific label for its historical receipts.  Other named
+# bookmakers must not inherit its name merely because they use the same lane.
 PRICE_EVIDENCE_BZZOIRO_PRIMARY = "BZZOIRO_PRIMARY"
+PRICE_EVIDENCE_NAMED_BOOKMAKER = "NAMED_BOOKMAKER_PRICE"
 PRICE_EVIDENCE_SCOUTINGSTATS_SOLE = "SCOUTINGSTATS_SOLE"
 PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY = "SUSPECT_ALIAS_FUZZY"
 PRICE_EVIDENCE_BETEXPLORER_RESCUE = "BETEXPLORER_RESCUE"
@@ -1988,11 +2007,17 @@ def _bookmaker_priority(bookmaker: object) -> int:
 
 
 def _odds_row_key(row: dict) -> tuple[str, str, str, str, str] | None:
-    day = str(row.get("date") or "")
-    home = odds_team_key(row.get("home") or "")
-    away = odds_team_key(row.get("away") or "")
-    market = str(row.get("market") or "")
-    selection = str(row.get("selection") or "")
+    # All donor adapters pass through the shared canonicalizer. Keep this
+    # boundary defensive as well because tests, cached ledgers and hand-built
+    # audit indexes can still contain provider vocabulary.
+    normalized, _reason = canonicalize_row(row)
+    if normalized is None:
+        return None
+    day = str(normalized.get("date") or "")
+    home = odds_team_key(normalized.get("home") or "")
+    away = odds_team_key(normalized.get("away") or "")
+    market = str(normalized.get("market") or "")
+    selection = str(normalized.get("selection") or "")
     if not (day and home and away and market and selection):
         return None
     return (day, home, away, market, selection)
@@ -2051,6 +2076,208 @@ def _read_cached_bzzoiro_odds(day: str) -> list[dict]:
             return [r for r in csv.DictReader(fh) if r.get("date") == day]
     except Exception:
         return []
+
+
+# Persisted API snapshots are named-book boards, but never live requests from
+# the picker.  Each adapter gets the same capture-time containment: a row can
+# influence only a later build, never the card that triggered its capture.
+# The source aliases reflect the unified CSV writers (OddsPAPI writes
+# ``oddspapi`` rows into an ``oddspapi_odds_YYYY-MM`` file).
+THEODDSAPI_ODDS_MAX_AGE_H = 24.0
+ODDSPAPI_ODDS_SOURCE = "oddspapi_odds"
+
+
+def _utc_price_stamp(value: object) -> datetime | None:
+    try:
+        text = str(value or "").strip().replace("Z", "+00:00")
+        if not text:
+            return None
+        stamp = datetime.fromisoformat(text)
+        if stamp.tzinfo is None:
+            return None
+        return stamp.astimezone(timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def _cached_named_book_bundle(
+    day: str,
+    *,
+    provider: str,
+    file_prefix: str,
+    raw_source_names: tuple[str, ...],
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Read one persisted named-book board with a strict build-time cutoff.
+
+    This is shared by The Odds API and OddsPAPI intentionally: both are
+    provider captures, not a permission to treat a later cache row as an
+    earlier executable quote.  ``raw_rows`` counts provider rows observed;
+    ``usable_rows`` is the independently auditable subset that survived all
+    timing and bookmaker-identity checks.
+    """
+    cutoff = not_after or datetime.now(timezone.utc)
+    if cutoff.tzinfo is None:
+        cutoff = cutoff.replace(tzinfo=timezone.utc)
+    else:
+        cutoff = cutoff.astimezone(timezone.utc)
+    path = LOCALDATA / f"{file_prefix}_{str(day)[:7]}.csv.gz"
+    report = {
+        "status": "absent", "raw_rows": 0, "usable_rows": 0,
+        "after_build_rows": 0, "stale_rows": 0, "invalid_timestamp_rows": 0,
+        "path": str(path),
+    }
+    rows: list[dict] = []
+    accepted_sources = {str(name).strip() for name in raw_source_names}
+    if path.exists():
+        try:
+            with gzip.open(path, "rt", newline="") as fh:
+                for raw in csv.DictReader(fh):
+                    if str(raw.get("date") or "")[:10] != str(day)[:10]:
+                        continue
+                    if str(raw.get("source") or "").strip() not in accepted_sources:
+                        continue
+                    report["raw_rows"] += 1
+                    stamp = _utc_price_stamp(raw.get("captured_at"))
+                    if stamp is None:
+                        report["invalid_timestamp_rows"] += 1
+                        continue
+                    if stamp > cutoff:
+                        report["after_build_rows"] += 1
+                        continue
+                    age_h = (cutoff - stamp).total_seconds() / 3600.0
+                    if age_h > THEODDSAPI_ODDS_MAX_AGE_H:
+                        report["stale_rows"] += 1
+                        continue
+                    # A registry declaration cannot manufacture the identity
+                    # of a bookmaker missing from a provider payload.
+                    if not str(raw.get("bookmaker") or "").strip():
+                        continue
+                    rows.append(psrc.annotate_row(raw, source=provider))
+        except (OSError, csv.Error, gzip.BadGzipFile):
+            report["status"] = "unavailable"
+    report["usable_rows"] = len(rows)
+    if report["status"] != "unavailable":
+        # Selection reads a persisted capture only.  Do not report a network
+        # fetch here merely because the cache contains usable rows.
+        report["status"] = "cache_only" if rows else ("empty" if path.exists() else "absent")
+    observed_raw_rows = int(report["raw_rows"])
+    bundle_stats: dict = {}
+    bundle = _odds_bundle_from_rows(rows, provider=provider, stats=bundle_stats)
+    report.update(bundle_stats)
+    report["raw_rows"] = observed_raw_rows
+    report["usable_rows"] = len(rows)
+    if stats is not None:
+        stats.update(report)
+    return bundle
+
+
+def theoddsapi_odds_bundle(
+    day: str,
+    *,
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Return the time-qualified persisted The Odds API named-book board."""
+    return _cached_named_book_bundle(
+        day,
+        provider=THEODDSAPI_ODDS_SOURCE,
+        file_prefix="theoddsapi_odds",
+        raw_source_names=(THEODDSAPI_ODDS_SOURCE,),
+        not_after=not_after,
+        stats=stats,
+    )
+
+
+def oddspapi_odds_bundle(
+    day: str,
+    *,
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Return the time-qualified persisted OddsPAPI named-book board.
+
+    Capture is opt-in and bounded because of the provider's quota.  Absence of
+    its monthly receipt is an honest empty bundle, never a synthetic fallback.
+    """
+    return _cached_named_book_bundle(
+        day,
+        provider=ODDSPAPI_ODDS_SOURCE,
+        file_prefix=ODDSPAPI_ODDS_SOURCE,
+        raw_source_names=("oddspapi", ODDSPAPI_ODDS_SOURCE),
+        not_after=not_after,
+        stats=stats,
+    )
+
+
+def betexplorer_cached_odds_bundle(
+    day: str,
+    *,
+    not_after: datetime | None = None,
+    stats: dict | None = None,
+) -> dict:
+    """Read the bounded candidate-snapshot cache as a named-book bundle.
+
+    The cache is written by ``capture_betexplorer.py`` before the final build.
+    No network call is made here.  Its individual row timestamps receive the
+    same post-cutoff/stale containment as the two API CSV boards.
+    """
+    cutoff = not_after or datetime.now(timezone.utc)
+    cutoff = cutoff.replace(tzinfo=timezone.utc) if cutoff.tzinfo is None else cutoff.astimezone(timezone.utc)
+    path = LOCALDATA / f"betexplorer_odds_cache_{str(day)[:10]}.json"
+    report = {
+        "status": "absent", "raw_rows": 0, "usable_rows": 0,
+        "after_build_rows": 0, "stale_rows": 0, "invalid_timestamp_rows": 0,
+        "path": str(path),
+    }
+    rows: list[dict] = []
+    try:
+        payload = json.loads(path.read_text())
+        fixtures = payload.get("fixtures") if isinstance(payload, dict) else None
+        if not isinstance(fixtures, dict):
+            raise ValueError("invalid BetExplorer cache payload")
+        for entry in fixtures.values():
+            for raw in (entry.get("rows") or []) if isinstance(entry, dict) else []:
+                if not isinstance(raw, dict) or str(raw.get("date") or "")[:10] != str(day)[:10]:
+                    continue
+                report["raw_rows"] += 1
+                stamp = _utc_price_stamp(raw.get("captured_at"))
+                if stamp is None:
+                    report["invalid_timestamp_rows"] += 1
+                    continue
+                if stamp > cutoff:
+                    report["after_build_rows"] += 1
+                    continue
+                if (cutoff - stamp).total_seconds() / 3600.0 > THEODDSAPI_ODDS_MAX_AGE_H:
+                    report["stale_rows"] += 1
+                    continue
+                if not str(raw.get("bookmaker") or "").strip():
+                    continue
+                rows.append(psrc.annotate_row(raw, source=BETEXPLORER_ODDS_SOURCE))
+    except FileNotFoundError:
+        pass
+    except (OSError, ValueError, TypeError, json.JSONDecodeError):
+        report["status"] = "unavailable"
+    report["usable_rows"] = len(rows)
+    if report["status"] != "unavailable":
+        report["status"] = "cache_only" if rows else ("empty" if path.exists() else "absent")
+    observed_raw_rows = int(report["raw_rows"])
+    bundle_stats: dict = {}
+    bundle = _odds_bundle_from_rows(rows, provider=BETEXPLORER_ODDS_SOURCE, stats=bundle_stats)
+    report.update(bundle_stats)
+    report["raw_rows"] = observed_raw_rows
+    report["usable_rows"] = len(rows)
+    if stats is not None:
+        stats.update(report)
+    return bundle
+
+
+def _allow_live_betexplorer_rescue() -> bool:
+    """Emergency-only compatibility switch; final cards use snapshots by default."""
+    return os.environ.get("EDGE_FACTORY_ALLOW_LIVE_BETEXPLORER_RESCUE", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
 
 
 # Stale-price containment (2026-10-02): the scoutingstats odds board is only
@@ -2142,7 +2369,15 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
     time_candidates: dict[tuple[str, str, str, str, str], list[dict]] = {}
     market_candidates: dict[tuple[str, str, str], list[dict]] = {}
     valid_rows = 0
+    canonicalization_dropped = Counter()
+    normalized_rows: list[dict] = []
     for row in rows:
+        normalized_row, reason = canonicalize_row(row)
+        if normalized_row is None:
+            canonicalization_dropped[str(reason or "unmappable")] += 1
+            continue
+        normalized_rows.append(normalized_row)
+        row = normalized_row
         odds = _valid_decimal_odds(row.get("odds"))
         if odds is None:
             continue
@@ -2186,6 +2421,8 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
             "valid_keys": len(exact),
             "time_match_keys": len(time_candidates),
             "market_candidate_keys": len(market_candidates),
+            "canonicalization_dropped": sum(canonicalization_dropped.values()),
+            "canonicalization_drop_reasons": dict(canonicalization_dropped),
         })
 
     return {
@@ -2648,11 +2885,11 @@ def _zero_shadow_stats(status: str = "unavailable") -> dict[str, dict]:
     return {
         "futbolpronosticos": {"status": status, "raw": 0, "scored": 0},
         "sportytrader_odds": {"status": status, "st_raw": 0, "st_matched": 0},
-        "betminer": {"status": status, "bm_raw": 0, "bm_scored": 0},
+        "betminer": {"status": status, "bm_raw": 0, "bm_scored": 0, "bm_matched": 0},
         "pinnapi_odds": {"status": status, "pa_raw": 0, "pa_matched": 0},
-        "betbetter": {"status": status, "bb_raw": 0, "bb_scored": 0},
+        "betbetter": {"status": status, "bb_raw": 0, "bb_scored": 0, "bb_matched": 0},
         "sharpapi_odds": {"status": status, "sa_raw": 0, "sa_matched": 0},
-        "boggio": {"status": status, "bg_raw": 0, "bg_scored": 0},
+        "boggio": {"status": status, "bg_raw": 0, "bg_scored": 0, "bg_matched": 0},
     }
 
 
@@ -2673,12 +2910,17 @@ def _shadow_failure_lines(day: str, stats: dict[str, dict]) -> None:
 def _capture_shadow_candidates(day: str) -> dict[str, dict]:
     """Capture every verified shadow candidate without touching the production path.
 
+    The candidate pass intentionally makes no paid/provider capture. Its sole
+    job is to freeze a fixture shortlist for the final priced pass.
+
     SHADOW-01 adds betminer (voice), pinnapi_odds (Pinnacle named-book price)
     and betbetter (keyless CC BY 4.0 benchmark) to the existing
     futbolpronosticos/sportytrager lane. All five are zero-credit shadow:
     per-date ledgers + health rows only. None enters consensus weights or
     the pick path; adapters are inert without their env keys and never raise.
     """
+    if candidate_only_build():
+        return _zero_shadow_stats("candidate_only")
     if os.environ.get("EDGE_FACTORY_SHADOW_CAPTURE", "on").strip().lower() in {"0", "off", "false", "no"}:
         stats = _zero_shadow_stats("disabled")
         _shadow_failure_lines(day, stats)
@@ -2779,6 +3021,26 @@ def donor_odds_bundles(day: str, *, localdata=None) -> list[dict]:
     return bundles
 
 
+def donor_match_counts(picks: list[dict], donor_bundles: list[dict]) -> dict[str, int]:
+    """Count donor rows that actually join the day's pick slate.
+
+    ``raw`` and ``scored`` are capture/parser counters.  This separate count
+    is deliberately computed after the shared canonicalization boundary, so a
+    large shadow ledger cannot masquerade as usable price supply when its
+    fixture/market/selection vocabulary does not join.
+    """
+    counts: Counter = Counter()
+    for bundle in donor_bundles or []:
+        source = str(bundle.get("provider") or "").strip()
+        if not source:
+            continue
+        for pick in picks:
+            row, _method = find_side_keyed_odds_row(pick, bundle)
+            if row is not None:
+                counts[source] += 1
+    return dict(counts)
+
+
 def _bundle_candidates(pick: dict, bundles, default_names=()) -> list:
     """Observe each bundle for THIS pick: healthy? exact fixture match?
 
@@ -2874,7 +3136,7 @@ def enrich_with_live_odds(
     because it was the best or healthiest board on the day. Now every
     approved source - the primary board, the secondary board and the
     operator-promoted donors - is ranked per pick by health, exact fixture
-    match, freshness, execution eligibility, named-book provenance and only
+    match, execution eligibility, named-book provenance, freshness and only
     then configured priority.
 
     What has NOT changed: a non-execution-eligible source (ScoutingStats
@@ -2914,10 +3176,18 @@ def enrich_with_live_odds(
         if not row:
             _stamp_price_board(pick, bundles)
             if previous_odds is not None:
-                pick.setdefault("odds_source", "forebet_best")
+                fallback_source = str(previous_source or "forebet_best").strip()
+                fallback_spec = psrc.spec(fallback_source)
+                pick["odds_source"] = fallback_source
                 pick["odds_match_method"] = "fallback"
                 pick["price_evidence"] = PRICE_EVIDENCE_SOURCE_FALLBACK
-                pick["price_push_eligible"] = True
+                pick["price_donor_role"] = fallback_spec.role
+                pick["price_odds_kind"] = fallback_spec.odds_kind
+                pick["price_disclosure"] = psrc.donor_disclosure(
+                    fallback_source, previous_bookmaker)
+                pick["price_push_eligible"] = bool(fallback_spec.can_execute())
+                if not pick["price_push_eligible"]:
+                    pick["price_quarantine_reason"] = "source_fallback_not_execution_eligible"
             else:
                 pick.setdefault("odds_source", None)
                 pick["odds_match_method"] = "none"
@@ -3004,7 +3274,11 @@ def enrich_with_live_odds(
             pick["price_push_eligible"] = False
             pick["price_quarantine_reason"] = f"{source_spec.name}_not_execution_eligible"
         elif source_spec.named_bookmaker:
-            pick["price_evidence"] = PRICE_EVIDENCE_BZZOIRO_PRIMARY
+            pick["price_evidence"] = (
+                PRICE_EVIDENCE_BZZOIRO_PRIMARY
+                if source_spec.name == BZZOIRO_ODDS_SOURCE
+                else PRICE_EVIDENCE_NAMED_BOOKMAKER
+            )
             pick["price_push_eligible"] = True
         else:
             # An approved donor price: usable, but explicitly NOT a named-book
@@ -3934,8 +4208,7 @@ def print_buckets(buckets: dict, title_date: str = ""):
 
 
 # ---------------------------------------------------------------- betexplorer --
-BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
-BE_RESCUE_TARGET_LEGS = 4  # enough to fill the current 2-acca x 2-leg card
+BE_RESCUE_TARGET_LEGS = 4  # legacy live-rescue cap; disabled for final cards by default
 
 
 def _append_betexplorer_board_rows(pick: dict, rows: list[dict], source: str) -> None:
@@ -4080,9 +4353,20 @@ def enrich_unmatched_with_betexplorer(
 
 
 def main():
-    days = sys.argv[1:] or [
-        date.today().isoformat(),
-    ]
+    # Keep the historical positional form (``picks_today.py YYYY-MM-DD``)
+    # while accepting the operator-standard form used by the runbook and
+    # daily orchestration (``picks_today.py --date YYYY-MM-DD``). Treating the
+    # flag as a date silently created ``picks_--date.json`` and mixed an
+    # invalid pseudo-day into the source-health receipt.
+    argv = sys.argv[1:]
+    if argv[:1] == ["--date"]:
+        if len(argv) != 2:
+            raise SystemExit("usage: picks_today.py [--date YYYY-MM-DD]")
+        days = [argv[1]]
+    elif len(argv) == 1 and argv[0].startswith("--date="):
+        days = [argv[0].split("=", 1)[1]]
+    else:
+        days = argv or [date.today().isoformat()]
     t1x2, ou_edge, btts_edge, fallback = load_thresholds()
     edge_meta = load_edge_meta()
     purity = load_purity()
@@ -4096,8 +4380,10 @@ def main():
     _veto_pools = build_pool_table(_veto_contexts) if _veto_contexts else {}
     as_of = pick_run_as_of()
     lead_minutes = min_lead_minutes()
+    candidate_only = candidate_only_build()
     print(
-        f"operational as_of={as_of.isoformat(timespec='seconds')} min_lead={lead_minutes}m",
+        f"operational as_of={as_of.isoformat(timespec='seconds')} min_lead={lead_minutes}m "
+        f"build={'candidate' if candidate_only else 'priced_final'}",
         file=sys.stderr,
     )
 
@@ -4128,7 +4414,9 @@ def main():
     shadow_totals = {"raw": 0, "scored": 0, "st_raw": 0, "st_matched": 0,
                     "bm_raw": 0, "bm_scored": 0, "pa_raw": 0, "pa_matched": 0,
 "bb_raw": 0, "bb_scored": 0, "sa_raw": 0, "sa_matched": 0,
-                    "bg_raw": 0, "bg_scored": 0}
+                    "bg_raw": 0, "bg_scored": 0, "oa_raw": 0,
+                    "oa_usable": 0, "oa_matched": 0, "op_raw": 0,
+                    "op_usable": 0, "op_matched": 0}
 
     # ML-fade research capture: certification-independent collection of every
     # model-scored fixture (parent + deterministic fade candidate) into the
@@ -4194,7 +4482,7 @@ def main():
 
         bzz_stats: dict = {}
         scouting_stats: dict = {}
-        odds_bundle = bzzoiro_odds_bundle(day, stats=bzz_stats)
+        odds_bundle = bzzoiro_odds_bundle(day, live=not candidate_only, stats=bzz_stats)
         # Persist upstream zero-run evidence for visibility only. This never
         # alters enrichment, certification, or ticket eligibility.
         record_bzzoiro_run(day, bzz_stats)
@@ -4204,15 +4492,54 @@ def main():
             stats=scouting_stats,
         )
         prices_index = load_prices_index(ROOT, day)
-        # Bzzoiro is no longer "the primary source": it is one approved source
-        # among several, and `enrich_with_live_odds` ranks them by health.
-        donor_bundles = donor_odds_bundles(day)
+        # TheOddsAPI is a cached named-book board, not another live request.
+        # Its cutoff is this pick build's ``as_of`` so a later CLV snapshot
+        # cannot time-travel into an already-generated card.
+        theodds_stats: dict = {}
+        theodds_bundle = theoddsapi_odds_bundle(day, not_after=as_of, stats=theodds_stats)
+        oddspapi_stats: dict = {}
+        oddspapi_bundle = oddspapi_odds_bundle(day, not_after=as_of, stats=oddspapi_stats)
+        betexplorer_cache_stats: dict = {}
+        betexplorer_bundle = betexplorer_cached_odds_bundle(
+            day, not_after=as_of, stats=betexplorer_cache_stats,
+        )
+        # All populated boards enter one matcher. Source contribution priority,
+        # not construction position, resolves healthy exact named-book ties.
+        donor_bundles = [
+            betexplorer_bundle, theodds_bundle, oddspapi_bundle,
+            *donor_odds_bundles(day),
+        ]
         enriched_n = enrich_with_live_odds(
             picks, odds_bundle, secondary_bundle, donor_bundles=donor_bundles)
+        theodds_matches = donor_match_counts(picks, [theodds_bundle]).get(THEODDSAPI_ODDS_SOURCE, 0)
+        oddspapi_matches = donor_match_counts(picks, [oddspapi_bundle]).get(ODDSPAPI_ODDS_SOURCE, 0)
+        betexplorer_matches = donor_match_counts(picks, [betexplorer_bundle]).get(BETEXPLORER_ODDS_SOURCE, 0)
+        donor_matches = donor_match_counts(picks, donor_bundles)
+        for source_name, stats_name, scored_key, raw_key in (
+            ("betbetter", "bb_matched", "bb_scored", "bb_raw"),
+            ("boggio", "bg_matched", "bg_scored", "bg_raw"),
+            ("betminer", "bm_matched", "bm_scored", "bm_raw"),
+            ("pinnapi_odds", "pa_matched", "pa_scored", "pa_raw"),
+            ("sharpapi_odds", "sa_matched", "sa_scored", "sa_raw"),
+        ):
+            if source_name in shadow_stats:
+                entry = shadow_stats[source_name]
+                if scored_key not in entry:
+                    entry[scored_key] = int(entry.get(stats_name) or entry.get(raw_key) or 0)
+                entry[stats_name] = int(donor_matches.get(source_name, 0))
 
         be_stats: dict = {}
-        be_enriched = enrich_unmatched_with_betexplorer(
-            picks, day, bundles=(odds_bundle, secondary_bundle), stats=be_stats)
+        if candidate_only:
+            be_stats["status"] = "candidate_only"
+            be_enriched = 0
+        elif _allow_live_betexplorer_rescue():
+            # Emergency-only compatibility route. Normal final cards already
+            # have a bounded pre-build snapshot in betexplorer_bundle.
+            be_enriched = enrich_unmatched_with_betexplorer(
+                picks, day, bundles=(odds_bundle, secondary_bundle, *donor_bundles), stats=be_stats)
+        else:
+            be_stats["status"] = "snapshot_only"
+            be_enriched = 0
 
         # Shadow stats were captured above, before bundle construction.
         fp_shadow_stats = shadow_stats.get("futbolpronosticos", {})
@@ -4236,6 +4563,12 @@ def main():
         shadow_totals["sa_matched"] += int(sa_shadow_stats.get("sa_matched") or 0)
         shadow_totals["bg_raw"] += int(bg_shadow_stats.get("bg_raw") or 0)
         shadow_totals["bg_scored"] += int(bg_shadow_stats.get("bg_scored") or 0)
+        shadow_totals["oa_raw"] += int(theodds_stats.get("raw_rows") or 0)
+        shadow_totals["oa_usable"] += int(theodds_stats.get("usable_rows") or 0)
+        shadow_totals["oa_matched"] += int(theodds_matches or 0)
+        shadow_totals["op_raw"] += int(oddspapi_stats.get("raw_rows") or 0)
+        shadow_totals["op_usable"] += int(oddspapi_stats.get("usable_rows") or 0)
+        shadow_totals["op_matched"] += int(oddspapi_matches or 0)
         print(
             f"shadow candidates {day}: raw={fp_shadow_stats.get('raw', 0)} "
             f"scored={fp_shadow_stats.get('scored', 0)} "
@@ -4251,6 +4584,15 @@ def main():
             f"sa_matched={sa_shadow_stats.get('sa_matched', 0)} "
             f"bg_raw={bg_shadow_stats.get('bg_raw', 0)} "
             f"bg_scored={bg_shadow_stats.get('bg_scored', 0)} "
+            f"theodds_raw={theodds_stats.get('raw_rows', 0)} "
+            f"theodds_usable={theodds_stats.get('usable_rows', 0)} "
+            f"theodds_matched={theodds_matches} "
+            f"oddspapi_raw={oddspapi_stats.get('raw_rows', 0)} "
+            f"oddspapi_usable={oddspapi_stats.get('usable_rows', 0)} "
+            f"oddspapi_matched={oddspapi_matches} "
+            f"betexplorer_raw={betexplorer_cache_stats.get('raw_rows', 0)} "
+            f"betexplorer_usable={betexplorer_cache_stats.get('usable_rows', 0)} "
+            f"betexplorer_matched={betexplorer_matches} "
             f"corroborator={'on' if _sportytrader_corrob_flag_on() else 'off'}",
             file=sys.stderr,
         )
@@ -4295,19 +4637,23 @@ def main():
             "freshness_h": 0.0 if bzz_status == "ok" else None,
             "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
         }
-        be_observed = bool(be_stats.get("be_429", 0) or be_enriched or be_stats.get("be_cached", 0))
+        be_cache_rows = int(betexplorer_cache_stats.get("usable_rows") or 0)
         health_observations["betexplorer"] = {
-            "fetched": be_observed,
-            "rows": int(be_enriched or 0),
-            "can_fetch_today": bool(be_enriched or be_stats.get("be_cached", 0)) and not bool(be_stats.get("be_cooling_down", False)),
-            "can_price": bool(be_enriched or be_stats.get("be_cached", 0)),
+            "fetched": False,
+            "rows": be_cache_rows,
+            "be_raw": int(betexplorer_cache_stats.get("raw_rows") or 0),
+            "be_usable": be_cache_rows,
+            "be_matched": int(betexplorer_matches or 0),
+            "can_fetch_today": False,
+            "can_price": bool(be_cache_rows),
             "can_vote": False,
-            "freshness_h": 0.0 if be_enriched else None,
+            "freshness_h": None,
+            "status": betexplorer_cache_stats.get("status") or be_stats.get("status"),
             "blocker": (
                 "run cooling down after 2 HTTP 429 responses"
                 if be_stats.get("be_cooling_down")
-                else "not requested; no unmatched rescue legs"
-                if not be_observed else None
+                else "cache-only pre-build snapshot; final card makes no live rescue"
+                if be_cache_rows else "no pre-build BetExplorer rows"
             ),
         }
         health_observations["futbolpronosticos"] = {
@@ -4329,7 +4675,7 @@ def main():
             "rows": int(bm_shadow_stats.get("bm_scored") or 0),
             "bm_raw": int(bm_shadow_stats.get("bm_raw") or 0),
             "bm_scored": int(bm_shadow_stats.get("bm_scored") or 0),
-            "can_fetch_today": bm_shadow_stats.get("status") in {"ok", "empty"},
+            "can_fetch_today": bm_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
             # Conditional price donor: only rows whose provenance the response
             # actually identified count, and BetMiner is never execution-eligible.
             "can_price": int(bm_shadow_stats.get("bm_priced") or 0) > 0,
@@ -4342,22 +4688,65 @@ def main():
         }
         health_observations["pinnapi_odds"] = {
             "fetched": pa_shadow_stats.get("status") in {"ok", "empty"},
-            "rows": int(pa_shadow_stats.get("pa_matched") or 0),
+            "rows": int(pa_shadow_stats.get("pa_scored") or 0),
             "pa_raw": int(pa_shadow_stats.get("pa_raw") or 0),
+            "pa_scored": int(pa_shadow_stats.get("pa_scored") or 0),
             "pa_matched": int(pa_shadow_stats.get("pa_matched") or 0),
-            "can_fetch_today": pa_shadow_stats.get("status") in {"ok", "empty"},
-            "can_price": int(pa_shadow_stats.get("pa_matched") or 0) > 0,
+            "can_fetch_today": pa_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
+            "can_price": int(pa_shadow_stats.get("pa_scored") or 0) > 0,
             # Price donor, never a vote; corroboration stays default-off.
             "can_vote": False,
             "freshness_h": 0.0 if pa_shadow_stats.get("status") == "ok" else None,
             "blocker": pa_shadow_stats.get("blocker"),
+        }
+        health_observations["theoddsapi"] = {
+            # This stage deliberately does not make an API request.  A usable
+            # cached capture may price a pick, but it is not a fresh fetch.
+            "fetched": False,
+            "rows": int(theodds_stats.get("usable_rows") or 0),
+            "oa_raw": int(theodds_stats.get("raw_rows") or 0),
+            "oa_usable": int(theodds_stats.get("usable_rows") or 0),
+            "oa_matched": int(theodds_matches or 0),
+            "can_fetch_today": False,
+            "can_price": int(theodds_stats.get("usable_rows") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": None,
+            "blocker": (
+                "cache-only pre-build snapshot; selection does not fetch provider"
+                if theodds_stats.get("status") == "cache_only"
+                else ("no pre-build TheOddsAPI rows" if theodds_stats.get("status") in {"absent", "empty"}
+                      else "TheOddsAPI cache unreadable")
+            ),
+            "status": theodds_stats.get("status"),
+            "reason": None,
+        }
+        health_observations["oddspapi_odds"] = {
+            # As with TheOddsAPI, this selection stage consumes only a
+            # persisted pre-build snapshot; it does not claim an HTTP fetch.
+            "fetched": False,
+            "rows": int(oddspapi_stats.get("usable_rows") or 0),
+            "op_raw": int(oddspapi_stats.get("raw_rows") or 0),
+            "op_usable": int(oddspapi_stats.get("usable_rows") or 0),
+            "op_matched": int(oddspapi_matches or 0),
+            "can_fetch_today": False,
+            "can_price": int(oddspapi_stats.get("usable_rows") or 0) > 0,
+            "can_vote": False,
+            "freshness_h": None,
+            "blocker": (
+                "cache-only pre-build snapshot; selection does not fetch provider"
+                if oddspapi_stats.get("status") == "cache_only"
+                else ("no pre-build OddsPAPI rows" if oddspapi_stats.get("status") in {"absent", "empty"}
+                      else "OddsPAPI cache unreadable")
+            ),
+            "status": oddspapi_stats.get("status"),
+            "reason": None,
         }
         health_observations["betbetter"] = {
             "fetched": bb_shadow_stats.get("status") in {"ok", "empty"},
             "rows": int(bb_shadow_stats.get("bb_scored") or 0),
             "bb_raw": int(bb_shadow_stats.get("bb_raw") or 0),
             "bb_scored": int(bb_shadow_stats.get("bb_scored") or 0),
-            "can_fetch_today": bb_shadow_stats.get("status") in {"ok", "empty"},
+            "can_fetch_today": bb_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
             # Approved FAIR-price donor (operator promotion 2026-10-03). These
             # are model fair odds, never bookmaker quotes - the role label in
             # source_health keeps that distinction visible.
@@ -4371,11 +4760,12 @@ def main():
         }
         health_observations["sharpapi_odds"] = {
             "fetched": sa_shadow_stats.get("status") in {"ok", "empty"},
-            "rows": int(sa_shadow_stats.get("sa_matched") or 0),
+            "rows": int(sa_shadow_stats.get("sa_scored") or 0),
             "sa_raw": int(sa_shadow_stats.get("sa_raw") or 0),
+            "sa_scored": int(sa_shadow_stats.get("sa_scored") or 0),
             "sa_matched": int(sa_shadow_stats.get("sa_matched") or 0),
-            "can_fetch_today": sa_shadow_stats.get("status") in {"ok", "empty"},
-            "can_price": int(sa_shadow_stats.get("sa_matched") or 0) > 0,
+            "can_fetch_today": sa_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
+            "can_price": int(sa_shadow_stats.get("sa_scored") or 0) > 0,
             "can_vote": False,
             "freshness_h": 0.0 if sa_shadow_stats.get("status") == "ok" else None,
             "blocker": sa_shadow_stats.get("blocker"),
@@ -4387,7 +4777,7 @@ def main():
             "rows": int(bg_shadow_stats.get("bg_scored") or 0),
             "bg_raw": int(bg_shadow_stats.get("bg_raw") or 0),
             "bg_scored": int(bg_shadow_stats.get("bg_scored") or 0),
-            "can_fetch_today": bg_shadow_stats.get("status") in {"ok", "empty"},
+            "can_fetch_today": bg_shadow_stats.get("status") in {"ok", "empty", "cache_only"},
             # Approved AVERAGE-bookmaker price donor (operator promotion
             # 2026-10-03). Not a named bookmaker, never named-book corroboration.
             "can_price": int(bg_shadow_stats.get("bg_scored") or 0) > 0,
@@ -4459,6 +4849,15 @@ def main():
                 f"be_cooling_down={bool(be_stats.get('be_cooling_down', False))} "
                 f"be_cached={be_stats.get('be_cached', 0)} "
                 f"bzz={bzz_n} scoutingstats={scouting_n} betexplorer_src={be_source_n} "
+                f"theodds_raw={theodds_stats.get('raw_rows', 0)} "
+                f"theodds_usable={theodds_stats.get('usable_rows', 0)} "
+                f"theodds_matched={theodds_matches} "
+                f"oddspapi_raw={oddspapi_stats.get('raw_rows', 0)} "
+                f"oddspapi_usable={oddspapi_stats.get('usable_rows', 0)} "
+                f"oddspapi_matched={oddspapi_matches} "
+                f"betexplorer_raw={betexplorer_cache_stats.get('raw_rows', 0)} "
+                f"betexplorer_usable={betexplorer_cache_stats.get('usable_rows', 0)} "
+                f"betexplorer_matched={betexplorer_matches} "
                 f"exact={exact_n} alias_time={alias_time_n} alias_unique={alias_unique_n} alias_fuzzy={alias_fuzzy_n} "
                 f"fallback={fallback_n} none={none_n} betexplorer_m={betexp_n} "
                 f"uncorroborated_price={uncorroborated_n} suspect_price={suspect_price_n}",

@@ -331,15 +331,76 @@ def ml_fade_research_maintenance(target_date: str) -> None:
 
 
 def capture_theodds_snapshot(target_date: str, trigger: str) -> None:
-    """The Odds API price snapshot for the frozen shortlist (audit-only CLV).
+    """Capture the named-book The Odds API snapshot for CLV and the next build.
 
-    --auto is idempotent and attempt-guarded: first snapshot once per fixture
+    This follows the non-ticketable candidate build because ``--auto`` derives
+    its fixture list from that shortlist. It is then admitted only by the
+    second, final priced build whose cutoff follows capture; it never rewrites
+    an already-ticketed card. --auto is idempotent and attempt-guarded:
+    first snapshot once per fixture
     per day, close snapshot once per fixture inside the pre-kickoff window;
     0 credits otherwise. Key rotation + monthly budget live in the adapter."""
     run_soft(
         f"PYTHONPATH=src python3 scripts/capture_theodds.py --date {target_date} --auto",
         f"theoddsapi capture {target_date} [{trigger}]",
     )
+
+
+def capture_oddspapi_snapshot(target_date: str, trigger: str) -> None:
+    """Optionally snapshot OddsPAPI for a later, timestamp-safe build.
+
+    OddsPAPI has a small free quota, so it is deliberately opt-in. Capture
+    follows the non-ticketable candidate build; only the final pricing pass,
+    whose cutoff follows its row capture time, may consume the snapshot.
+    """
+    enabled = os.environ.get("EDGE_FACTORY_ODDSPAPI_PRICES", "").strip().lower()
+    if enabled not in {"1", "true", "yes", "on"}:
+        print("oddspapi capture disabled (set EDGE_FACTORY_ODDSPAPI_PRICES=1 to opt in)")
+        return
+    try:
+        max_fixtures = max(1, min(20, int(os.environ.get("ODDSPAPI_MAX_FIXTURES", "20"))))
+    except (TypeError, ValueError):
+        max_fixtures = 20
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/capture_oddspapi.py --date {target_date} "
+        f"--max-fixtures {max_fixtures}",
+        f"oddspapi bounded capture {target_date} [{trigger}]",
+    )
+
+
+def capture_betexplorer_snapshot(target_date: str, trigger: str) -> None:
+    """Create the bounded BetExplorer cache used by the final priced pass."""
+    try:
+        max_fixtures = max(1, min(12, int(os.environ.get("EDGE_FACTORY_BETEXPLORER_MAX_FIXTURES", "12"))))
+    except (TypeError, ValueError):
+        max_fixtures = 12
+    run_soft(
+        f"PYTHONPATH=src python3 scripts/capture_betexplorer.py --date {target_date} "
+        f"--max-fixtures {max_fixtures}",
+        f"betexplorer bounded capture {target_date} [{trigger}]",
+    )
+
+
+def finalize_priced_candidate_slate(target_date: str) -> str:
+    """Turn one candidate slate into one final priced card.
+
+    The first pick build creates the candidate shortlist only; no ticket is
+    emitted between it and this function.  Captures then have a concrete,
+    bounded fixture list.  The second build is the authoritative priced card
+    and receives a new ``as_of`` after capture, so every accepted persisted
+    quote genuinely predates the *final* decision.  This replaces the old
+    accidental model of capturing after a card had already been archived.
+    """
+    capture_theodds_snapshot(target_date, "candidate_price_snapshot")
+    capture_oddspapi_snapshot(target_date, "candidate_price_snapshot")
+    capture_betexplorer_snapshot(target_date, "candidate_price_snapshot")
+    priced_as_of = make_run_as_of()
+    run(
+        f"{picks_env_prefix(priced_as_of)} PYTHONPATH=src python3 "
+        f"scripts/picks_today.py {target_date}",
+        f"picks_today {target_date} (final priced card)",
+    )
+    return priced_as_of
 
 
 def run(cmd: str, label: str | None = None) -> None:
@@ -834,6 +895,7 @@ def run_pipeline(
         return
 
     run_as_of = make_run_as_of()
+    price_snapshot_finalized = False
     print(f"=== Edge Factory Pipeline ({mode.upper()}) ===")
     print(f"    target date : {target_date}")
     print(f"    future_days : {future_days}")
@@ -880,18 +942,40 @@ def run_pipeline(
         run("PYTHONPATH=src python3 scripts/assay_purity.py", "assay_purity")
 
         target_archive = archived_picks_file(target_date)
-        if target_archive.exists() and not force_repick:
+        # A picks archive is also written by the candidate pass and by the
+        # future planner. Only the official completion marker proves it became
+        # a frozen, ticket-eligible card. This prevents a crash between the
+        # two passes from resurrecting an unpriced candidate slate as official.
+        target_is_frozen = (
+            target_archive.exists()
+            and official_run_marker_file(target_date).exists()
+        )
+        if target_is_frozen and not force_repick:
             print(f"\n>>> restore frozen target picks {target_date}")
             target_picks_text = target_archive.read_text()
             restore_target_picks(target_picks_text)
             save_morning_baseline(target_date, target_picks_text, overwrite=False)
             print(f"  reused archive: {target_archive}")
         else:
+            if target_archive.exists() and not target_is_frozen:
+                print(
+                    f">>> unfinalized candidate archive {target_archive}; rebuilding two-pass priced card",
+                    file=sys.stderr,
+                )
+            # Pass 1 is a candidate shortlist. It is never sent to tickets.
             run(
-                f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
-                f"picks_today {target_date}",
+                f"EDGE_FACTORY_CANDIDATE_ONLY=1 {picks_env_prefix(run_as_of)} "
+                f"PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
+                f"picks_today {target_date} (candidate shortlist)",
             )
             if PICKS_TODAY_FILE.exists():
+                # Pass 2 is the only authoritative card: provider snapshots
+                # were captured between passes and are time-qualified against
+                # this second build's as_of timestamp.
+                run_as_of = finalize_priced_candidate_slate(target_date)
+                price_snapshot_finalized = True
+                if not PICKS_TODAY_FILE.exists():
+                    raise RuntimeError("final priced-card build removed picks_today.json")
                 current_picks = load_picks_file()
                 archive_picks_by_kickoff(current_picks, target_date)
                 # STACKING: dispatch the merged archive (prior runs + fresh) instead
@@ -929,7 +1013,11 @@ def run_pipeline(
             f"PYTHONPATH=src python3 scripts/audit_clv.py capture --date {target_date} --label pick_time",
             f"audit_clv capture {target_date} [pick_time]",
         )
-        capture_theodds_snapshot(target_date, "pick_time")
+        if not price_snapshot_finalized:
+            # A frozen/reused card did not receive the two-pass finalization;
+            # retain the periodic CLV snapshot for a later run.
+            capture_theodds_snapshot(target_date, "pick_time")
+            capture_oddspapi_snapshot(target_date, "pick_time")
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
 
         target_picks = load_picks_file()
@@ -1016,10 +1104,15 @@ def run_pipeline(
             existing_ledger = []
 
         print(f"\n>>> Autonomous Intraday Discovery Run {target_date}")
+        # As in the official run, discovery is non-ticketable until the
+        # candidate shortlist has been priced and rebuilt with a later cutoff.
         run(
-            f"{picks_env_prefix(run_as_of)} PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
-            f"picks_today {target_date} (Late Slate Scan)",
+            f"EDGE_FACTORY_CANDIDATE_ONLY=1 {picks_env_prefix(run_as_of)} "
+            f"PYTHONPATH=src python3 scripts/picks_today.py {target_date}",
+            f"picks_today {target_date} (candidate late-slate scan)",
         )
+        if PICKS_TODAY_FILE.exists():
+            run_as_of = finalize_priced_candidate_slate(target_date)
 
         fresh_picks = load_picks_file()
         merged_picks, new_added, superseded = autonomous_intraday_merge(
