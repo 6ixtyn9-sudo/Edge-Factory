@@ -10,6 +10,7 @@ import json
 import pytest
 
 from edgefactory.sources import sharpapi_odds as sa
+from scripts import probe_sharpapi
 
 
 @pytest.fixture(autouse=True)
@@ -58,6 +59,16 @@ def _payload():
 def test_default_endpoint_is_the_documented_api_v1_odds():
     assert sa.endpoint() == "/api/v1/odds"
     assert sa.odds_url("2026-10-03") == "https://sharpapi1.p.rapidapi.com/api/v1/odds?sport=soccer"
+
+
+def test_probe_confirms_documented_soccer_identifier_from_sports_response():
+    # Fields mirror the provider's documented GET /api/v1/sports object.
+    payload = {"data": [
+        {"id": "basketball", "name": "Basketball", "leagues": ["NBA"]},
+        {"id": "soccer", "name": "Soccer", "leagues": ["EPL", "MLS"]},
+    ]}
+    assert probe_sharpapi.soccer_identifier(payload) == "soccer"
+    assert probe_sharpapi.soccer_identifier({"data": []}) is None
 
 
 def test_date_is_not_sent_unless_the_operator_confirms_the_parameter():
