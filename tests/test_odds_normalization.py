@@ -37,9 +37,18 @@ def test_raw_btts_and_totals_tokens_are_canonical():
 
 
 def test_unmappable_tokens_fail_closed_with_a_reason():
+    # "Draw No Bet" is RECOGNISED Bet Better vocabulary the pipeline does not
+    # price: an explicit unsupported classification, still a counted miss.
     result, failure = canonical_market_selection("Draw No Bet", "Home FC", home="Home FC", away="Away FC")
     assert result is None
     assert failure is not None
+    assert failure.reason == "unsupported_market:draw_no_bet"
+    assert failure.kind == "unsupported_market"
+    assert failure.raw == "draw_no_bet"
+
+    # A token nobody has ever seen stays "unknown", a different bucket.
+    result, failure = canonical_market_selection("Provider Mystery", "Home FC")
+    assert result is None
     assert failure.reason.startswith("unknown_market:")
 
     row, reason = canonicalize_row({
