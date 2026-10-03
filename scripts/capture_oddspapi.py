@@ -34,19 +34,23 @@ from __future__ import annotations
 import argparse
 import csv
 import gzip
+import hashlib
 import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
 from edgefactory.sources.oddspapi_odds import (
+    EXPECTED_PARSE_SKIPS,
     api_keys,
     fetch_fixtures,
     fetch_odds,
     load_market_type_map,
     market_catalog,
+    market_catalog_entries,
     rows_from_odds_response,
 )
+from edgefactory.util import fold_ascii
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "localdata"
@@ -64,16 +68,24 @@ OUT_DIR = ROOT / "localdata"
 #   2          identity comes from the /fixtures record, outcome names are
 #              read from name|playerName, empty names are refused, mainLine
 #              is honoured and provider stamps are kept.
+#   3          outcome identity is resolved from the provider's documented
+#              outcome ids (catalog outcome names / the 101/102/103 mapping)
+#              with a fail-closed ambiguity check, and the row RETAINS the
+#              provider's outcome key + market id for audit. Generation-2
+#              rows did not run the ambiguity check and did not retain the
+#              outcome key, so their evidence can no longer be verified from
+#              the CSV - they are superseded (counted stale, never deleted).
 #
 # Blank home/away is only the *symptom* of generation 1; the mislabelled
 # selection is the defect. A reader that bypassed rows on blank participants
 # alone would still trust a generation-1 row that happened to carry teams.
 # Readers therefore gate on the generation, not on the symptom.
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 COLUMNS = ["source", "source_type", "sport", "date", "kickoff", "league",
            "home", "away", "market", "selection", "odds", "bookmaker",
            "captured_at", "published_at", "provider_changed_at",
+           "outcome_key", "bookmaker_market_id",
            "schema_version"]
 
 
@@ -81,7 +93,185 @@ def _out_path(day: str) -> Path:
     return OUT_DIR / f"oddspapi_odds_{day[:7]}.csv.gz"
 
 
+def _census_path(day: str) -> Path:
+    return OUT_DIR / f"oddspapi_market_census_{day[:7]}.json"
+
+
 _STAMP_COLS = ("captured_at", "published_at", "provider_changed_at")
+
+# Team-name normalisation for slate prioritisation: same standard as the
+# coverage probe (fold_ascii + club-noise tokens), so an EXACT normalized
+# pair match - never a fuzzy one - promotes a fixture.
+_CLUB_NOISE = {"fc", "cf", "sc", "ac", "as", "pfc", "ofc", "gnk", "fk", "afc",
+               "club", "the", "if", "bk", "sk", "ff", "u19", "u21", "ii"}
+
+
+def _team_key(value: object) -> str:
+    tokens = [t for t in str(fold_ascii(value)).lower().split() if t]
+    meaningful = [t for t in tokens if t not in _CLUB_NOISE]
+    return " ".join(meaningful or tokens)
+
+
+def _fixture_pair(fixture: dict) -> tuple[str, str]:
+    home = fixture.get("participant1Name") or fixture.get("home") or ""
+    away = fixture.get("participant2Name") or fixture.get("away") or ""
+    return _team_key(home), _team_key(away)
+
+
+def _load_slate_pairs(day: str) -> set[tuple[str, str]]:
+    """Normalized (home, away) pairs of the day's pick slate, if a built
+    candidate/final slate exists on disk. Absent or unreadable -> empty."""
+    path = OUT_DIR / "picks_today.json"
+    try:
+        raw = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return set()
+    picks = raw if isinstance(raw, list) else (
+        raw.get("picks") if isinstance(raw, dict) else None)
+    if not isinstance(picks, list):
+        return set()
+    pairs: set[tuple[str, str]] = set()
+    for pick in picks:
+        if not isinstance(pick, dict):
+            continue
+        if str(pick.get("date") or "")[:10] != str(day)[:10]:
+            continue
+        home, away = _team_key(pick.get("home")), _team_key(pick.get("away"))
+        if home and away:
+            pairs.add((home, away))
+            pairs.add((away, home))  # orientation-independent
+    return pairs
+
+
+def _prioritise_slate_fixtures(fixtures: list[dict], day: str) -> tuple[list[dict], int]:
+    """Put fixtures the day's slate actually covers first (stable order).
+
+    The docstring has always promised "unmatched same-day picks are
+    prioritized first"; the 2026-10-03 run showed what happens without it:
+    the 20-fixture budget went to provider-ordered fixtures the slate never
+    covered (BK Forward vs IK Sleipner has no pick on the card), so even the
+    three healthy rows could only land in fixture_key_miss. Unmatched
+    fixtures are NOT dropped - enhancement coverage keeps whatever budget
+    remains after the slate fixtures.
+    """
+    try:
+        slate = _load_slate_pairs(day)
+    except Exception:  # noqa: BLE001 - prioritisation must never break capture
+        return fixtures, 0
+    if not slate:
+        return fixtures, 0
+    prioritised = [fx for fx in fixtures if _fixture_pair(fx) in slate]
+    if not prioritised:
+        return fixtures, 0
+    rest = [fx for fx in fixtures if _fixture_pair(fx) not in slate]
+    return prioritised + rest, len(prioritised)
+
+
+def _classify_parse_skips(parse_skips: dict) -> dict:
+    """Split per-reason skip counts into expected provider behaviour and
+    everything else (defects / coverage loss). `outcome_inactive` and
+    `market_inactive` are documented provider state flags - a suspended
+    quote is not a price and skipping it is correct, so it is reported as
+    expected, not as loss."""
+    expected: dict[str, int] = {}
+    loss: dict[str, int] = {}
+    for reason, count in sorted(parse_skips.items()):
+        if str(reason) in EXPECTED_PARSE_SKIPS:
+            expected[str(reason)] = int(count)
+        else:
+            loss[str(reason)] = int(count)
+    return {"expected": expected, "loss_or_diagnosis": loss}
+
+
+def _persist_vocabulary_snapshot(day: str, catalog_entries: dict) -> str:
+    """Persist the provider's served market vocabulary for source_health.
+
+    ``localdata/source_health/odds_vocabulary/<day>+oddspapi.json`` holds
+    the /markets catalog EXACTLY as served (id -> name / marketType /
+    period / handicap / playerProp / outcomes), so a future classification
+    change is rebuilt from captured evidence, never from guesswork. Content
+    -deduped: when the served vocabulary is byte-identical to the newest
+    existing snapshot, no new file is written ("unchanged"), so an idle
+    catalog does not bloat the store. Provider data only - never
+    credentials, never request URLs.
+    """
+    if not catalog_entries:
+        return "absent"
+    vdir = OUT_DIR / "source_health" / "odds_vocabulary"
+    vdir.mkdir(parents=True, exist_ok=True)
+    digest = hashlib.sha256(
+        json.dumps(catalog_entries, sort_keys=True).encode("utf-8")
+    ).hexdigest()
+    for path in sorted(vdir.glob("*+oddspapi.json")):
+        try:
+            previous = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        if previous.get("digest") == digest:
+            return "unchanged"
+    payload = {
+        "schema": 1,
+        "source": "oddspapi",
+        "day": str(day)[:10],
+        "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "digest": digest,
+        "catalog_size": len(catalog_entries),
+        "markets": dict(sorted(catalog_entries.items())),
+    }
+    path = vdir / f"{str(day)[:10]}+oddspapi.json"
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
+    tmp.replace(path)
+    return "written"
+
+
+def _persist_market_census(day: str, census: dict, parse_skips: dict,
+                           samples: list, catalog_entries: dict,
+                           catalog_labels: dict) -> Path:
+    """Persist the durable market-id census for the month.
+
+    The enumeration of distinct market_id / type / label triples actually
+    present in payloads previously existed only in the run log (masked by
+    secret scrubbing on top). Persisting it makes the mapping auditable from
+    the artefact alone: which ids the catalog classified, which are
+    explicitly unsupported, which remain unknown, and the provider tuples
+    behind unresolved 1X2 outcomes. Provider data only - never credentials.
+    """
+    path = _census_path(day)
+    markets: dict[str, dict] = {}
+    try:
+        previous = json.loads(path.read_text())
+        if isinstance(previous, dict) and previous.get("markets"):
+            markets = dict(previous["markets"])
+    except (OSError, ValueError):
+        pass
+    for mid, entry in census.items():
+        label = catalog_labels.get(mid)
+        catalog_entry = catalog_entries.get(mid) or {}
+        markets[mid] = {
+            "count": int(entry["count"]),
+            "type": entry.get("type"),
+            "label": label,
+            "catalog": mid in catalog_entries,
+            "period": catalog_entry.get("period"),
+            "handicap": catalog_entry.get("handicap"),
+            "market_type": catalog_entry.get("marketType"),
+        }
+    payload = {
+        "schema": 1,
+        "source": "oddspapi",
+        "month": str(day)[:7],
+        "last_run": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "catalog_size": len(catalog_entries),
+        "markets": dict(sorted(markets.items())),
+        "parse_skips": _classify_parse_skips(parse_skips),
+        "unresolved_1x2_samples": samples[:20],
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
+    tmp.replace(path)
+    return path
 
 
 def _migrate_header(path: Path) -> None:
@@ -166,17 +356,20 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
         stats["fixtures"] = len(fixtures)
         type_map = load_market_type_map()
         catalog = market_catalog()
-        # Compact summary only — the full catalog is thousands of ids and
-        # dumping it is bloat. Counts + a few (id, label) samples per type
-        # let us verify classification (e.g. that "totals" are goal totals,
-        # not corners/cards, and team totals are not folded into totals).
-        by_type: dict[str, dict] = {}
-        for mid, mtype in type_map.items():
-            slot = by_type.setdefault(mtype, {"count": 0, "samples": []})
-            slot["count"] += 1
-            if len(slot["samples"]) < 5:
-                slot["samples"].append({"id": mid, "label": catalog.get(mid, "?")})
-        stats["type_map_summary"] = by_type
+        catalog_entries = market_catalog_entries()
+        # The day's slate fixtures go first (stable order): the bounded budget
+        # must price picks before it prices enhancement-only coverage. On
+        # 2026-10-03 the provider-ordered first 20 fixtures contained no slate
+        # fixture at all, which is why even healthy rows landed in
+        # fixture_key_miss.
+        fixtures, slate_n = _prioritise_slate_fixtures(fixtures, day)
+        stats["slate_priority_fixtures"] = slate_n
+        # Market-id census: every id actually present in the payloads, with
+        # its classification and catalog label, persisted for the month. This
+        # is the durable enumeration of market_id / type / label triples that
+        # the run log previously showed only partially (and masked).
+        census: dict[str, dict] = {}
+        unresolved_samples: list = []
         for fx in fixtures[:max_fixtures]:
             fid = str(fx.get("fixtureId") or fx.get("id") or "")
             if not fid:
@@ -186,33 +379,16 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             except Exception as exc:  # noqa: BLE001 - fail-soft
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
                 continue
-            # Payload-vs-emitted accounting: which market ids actually appear
-            # in the fixture payload, and which rows we got. If a non-1x2 id
-            # appears in the payload but no rows for it are emitted, the
-            # parser is dropping it (name/line shape) — the sample shows why.
             if odds:
                 books = (odds or {}).get("bookmakerOdds") or {}
                 for _b, bd in books.items():
                     if not isinstance(bd, dict):
                         continue
-                    for mid, mkt in (bd.get("markets") or {}).items():
+                    for mid in (bd.get("markets") or {}).keys():
                         mid_s = str(mid)
-                        if type_map.get(mid_s, "1x2") == "1x2":
-                            continue
-                        stats["payload_non1x2"] = stats.get("payload_non1x2", 0) + 1
-                        if stats.get("payload_non1x2") <= 5 and isinstance(mkt, dict):
-                            oc = next(iter((mkt.get("outcomes") or {}).values()), None)
-                            p0 = ((oc or {}).get("players") or {}).get("0") if isinstance(oc, dict) else None
-                            stats.setdefault("non1x2_samples", []).append({
-                                "market_id": mid_s,
-                                "type": type_map.get(mid_s),
-                                "label": catalog.get(mid_s),
-                                "market_keys": sorted(mkt.keys()) if isinstance(mkt, dict) else None,
-                                "market_non_outcome": {k: v for k, v in mkt.items() if k != "outcomes" and k != "players"} if isinstance(mkt, dict) else None,
-                                "outcome_keys": sorted(oc.keys()) if isinstance(oc, dict) else None,
-                                "player0_keys": sorted(p0.keys()) if isinstance(p0, dict) else None,
-                                "player0_nonbet_fields": {k: v for k, v in p0.items() if k != "betslip"} if isinstance(p0, dict) else None,
-                            })
+                        slot = census.setdefault(
+                            mid_s, {"count": 0, "type": type_map.get(mid_s)})
+                        slot["count"] += 1
             # The /odds payload observed on 2026-10-03 carried no participant
             # names, so every emitted row was unjoinable. The /fixtures record
             # we already hold is the identity of record; pass it through and
@@ -224,8 +400,12 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
                 home=fx.get("participant1Name"),
                 away=fx.get("participant2Name"),
                 stats=parse_stats,
+                market_catalog=catalog_entries,
             ) if odds else []
             for reason, count in parse_stats.items():
+                if reason == "_unresolved_1x2_samples":
+                    unresolved_samples.extend(count or [])
+                    continue
                 skips = stats.setdefault("parse_skips", {})
                 skips[reason] = int(skips.get(reason) or 0) + int(count)
             if rows:
@@ -235,6 +415,25 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
                 m = str(r.get("market") or "?")
                 stats["markets"][m] = stats["markets"].get(m, 0) + 1
             stats["added"] += _append_rows(rows, day)
+        # Durable market census: the distinct market ids the payloads
+        # actually carried, their classification and catalog label, the
+        # expected-vs-loss split of the parse skips, and the provider tuples
+        # behind unresolved 1X2 outcomes. Written even when no rows were
+        # emitted - a zero-yield capture is exactly when the census matters.
+        try:
+            census_path = _persist_market_census(
+                day, census, stats.get("parse_skips") or {},
+                unresolved_samples, catalog_entries, catalog)
+            stats["market_census"] = str(census_path.name)
+            stats["market_census_distinct"] = len(census)
+            stats["parse_skips_classified"] = _classify_parse_skips(
+                stats.get("parse_skips") or {})
+        except Exception as exc:  # noqa: BLE001 - census must never break capture
+            stats["errors"].append(f"census: {type(exc).__name__}")
+        try:
+            stats["odds_vocabulary"] = _persist_vocabulary_snapshot(day, catalog_entries)
+        except Exception as exc:  # noqa: BLE001 - vocabulary must never break capture
+            stats["errors"].append(f"vocabulary: {type(exc).__name__}")
         return stats
     except Exception as exc:  # noqa: BLE001 - never raises
         stats["errors"].append(f"capture: {type(exc).__name__}: {exc}")

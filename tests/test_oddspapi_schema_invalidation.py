@@ -70,8 +70,12 @@ def _read(path: Path) -> list[dict]:
 
 
 def test_capture_and_selection_agree_on_the_current_generation():
-    """A drift between writer and reader would silently blank the lane."""
+    """A drift between writer and readers would silently blank the lane."""
+    import edgefactory.enh_pricing as enh
     assert pt.ODDSPAPI_MIN_SCHEMA_VERSION == capture_oddspapi.SCHEMA_VERSION
+    # Round 3: the enhancement overlay reads the same store through its own
+    # accumulator, so its floor must track the same generation.
+    assert enh.ODDSPAPI_MIN_SCHEMA_VERSION == capture_oddspapi.SCHEMA_VERSION
 
 
 def test_old_schema_rows_are_counted_and_bypassed_not_reused(tmp_path, monkeypatch):
