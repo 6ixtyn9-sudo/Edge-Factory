@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 from edgefactory.sources import boggio
+import scripts.picks_today as pt
 
 
 def payload():
@@ -11,7 +12,28 @@ def test_parse_keeps_publication_and_capture_timestamps():
     assert shaped and len(rows)==1
     assert rows[0]["published_at"].startswith("2026-10-03")
     assert rows[0]["captured_at"]
+    assert rows[0]["date"] == "2026-10-03"
     assert "12h" in rows[0]["lookahead_note"]
+
+
+def test_raw_classic_tokens_join_through_shared_canonicalizer():
+    raw = payload()["data"][0]
+    bundle = pt._odds_bundle_from_rows([{
+        "date": raw["start_date"][:10],
+        "home": "Alpha FC",
+        "away": "Beta FC",
+        "kickoff": raw["start_date"],
+        "market": raw["market"],
+        "selection": raw["prediction"],
+        "odds": raw["odds"][raw["prediction"]],
+    }], provider="boggio")
+    pick = {
+        "date": "2026-10-03", "home": "Alpha FC", "away": "Beta FC",
+        "market": "1x2", "pick": "home",
+    }
+    row, method = pt.find_side_keyed_odds_row(pick, bundle)
+    assert method == "exact"
+    assert (row["market"], row["selection"]) == ("1x2", "home")
 
 def test_junk_fails_closed():
     assert boggio.parse_predictions({"unexpected":1},day="2026-10-03")==([],False)

@@ -191,6 +191,11 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
         if not home or not away:
             continue
         kickoff = str(pick.get("gameTimeUtc") or "") or None
+        # The endpoint is an upcoming board, not a day-scoped board.  Labelling
+        # every returned fixture with the capture day made future matches look
+        # joinable to today's slate.  Use the provider's gameTimeUtc calendar
+        # date when present; retain ``day`` only for malformed/missing stamps.
+        event_day = kickoff[:10] if kickoff and re.match(r"^\d{4}-\d{2}-\d{2}", kickoff) else day
         probability = pick.get("winProbabilityPct")
         if probability is None:
             probability = pick.get("modelProbabilityPct")
@@ -217,7 +222,7 @@ def parse_picks(payload: Any, *, day: str, slug: str, url: str | None = None) ->
         canonical_line = canonical.line if canonical is not None else pick.get("line")
         rows.append({
             "source": SOURCE,
-            "date": day,
+            "date": event_day,
             "league_slug": slug,
             "home": home,
             "away": away,

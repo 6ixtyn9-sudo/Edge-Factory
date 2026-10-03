@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 
 from edgefactory import source_health
+import scripts.picks_today as pt
 
 
 def test_health_contract_exposes_captured_scored_and_matched_counts(tmp_path, monkeypatch):
@@ -83,3 +84,58 @@ def test_betexplorer_health_receipt_keeps_snapshot_and_join_counts(tmp_path, mon
     assert (receipt["be_raw"], receipt["be_usable"], receipt["be_matched"]) == (12, 9, 3)
     assert "betexplorer=raw12/usable9/matched3" in source_health.daily_status_block("2026-10-03")
     assert "betexplorer: healthy named-book price source" in source_health.source_role_lines("2026-10-03")
+
+
+def test_raw_donor_rows_are_bucketed_by_exact_join_failure():
+    day = "2026-10-03"
+    pick = {
+        "date": day, "home": "Home FC", "away": "Away FC",
+        "market": "1x2", "pick": "home", "kickoff": f"{day}T16:00:00Z",
+    }
+    base = {
+        "date": day, "home": "Home FC", "away": "Away FC",
+        "market": "classic", "selection": "1", "odds": 1.80,
+        "kickoff": f"{day}T16:00:00Z",
+    }
+    # Every row is provider vocabulary, not a pre-canonicalised fixture.
+    rows = [
+        dict(base),
+        dict(base, date="2026-10-04"),
+        dict(base, market="provider mystery"),
+        dict(base, selection="mystery side"),
+        dict(base, home="Other FC", away="Another FC"),
+        dict(base, selection="2"),
+        dict(base, timestamp_suspect=True),
+    ]
+    bundle = pt._odds_bundle_from_rows(rows, provider="boggio")
+    report = pt.donor_join_diagnostics([pick], [bundle])["boggio"]
+    assert report["matched_rows"] == 1
+    assert report["miss_counts"] == {
+        "date_mismatch": 1,
+        "fixture_key_miss": 1,
+        "market_unmapped": 1,
+        "no_pick_for_fixture": 1,
+        "selection_unmapped": 1,
+        "timestamp_rejected": 1,
+    }
+    line = pt.donor_join_miss_lines({"boggio": report}, limit=6)[0]
+    assert "donor join misses boggio:" in line
+    assert "fixture_key_miss=1" in line
+
+
+def test_join_miss_counts_persist_as_count_only_health_data(tmp_path, monkeypatch):
+    monkeypatch.setattr(source_health, "LOCALDATA", tmp_path)
+    payload = source_health.persist_daily_source_health(
+        "2026-10-03",
+        {"boggio": {
+            "status": "cache_only", "bg_raw": 20, "bg_scored": 20,
+            "bg_matched": 1, "can_fetch_today": True, "can_price": True,
+            "join_miss_counts": {"fixture_key_miss": 18, "market_unmapped": 1},
+            "join_matched_rows": 1,
+        }},
+    )
+    receipt = payload["sources"]["boggio"]
+    assert receipt["join_miss_counts"] == {
+        "fixture_key_miss": 18, "market_unmapped": 1,
+    }
+    assert receipt["join_matched_rows"] == 1

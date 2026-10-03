@@ -149,12 +149,15 @@ def parse_predictions(payload:Any, *, day:str):
    continue
   average_price=_selection_odds(odds,prediction)
   suspect=timestamp_suspect(published,stamp)
+  kickoff=item.get("start_date")
+  kickoff_text=str(kickoff or "")
+  event_day=kickoff_text[:10] if re.match(r"^\d{4}-\d{2}-\d{2}",kickoff_text) else day
   rows.append({
     "source":SOURCE,
-    "date":day,
+    "date":event_day,
     "home":home,
     "away":away,
-    "kickoff":item.get("start_date"),
+    "kickoff":kickoff,
     "market":canonical.market,
     "selection":canonical.selection,
     "raw_market":raw_market,
