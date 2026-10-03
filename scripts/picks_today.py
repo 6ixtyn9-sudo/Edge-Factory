@@ -67,6 +67,7 @@ from edgefactory.source_health import (
     persist_daily_source_health,
     source_role_lines,
     record_bzzoiro_run,
+    zero_row_reason,
 )
 from edgefactory.shadow import append_price_board_rows, read_shadow_rows
 from edgefactory import price_sources as psrc
@@ -4927,6 +4928,9 @@ def main():
             "can_vote": len(data.get("bzzoiro", {})) > 0,
             "freshness_h": 0.0 if bzz_status in {"ok", "empty"} else None,
             "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
+            "status": bzz_status or None,
+            "reason": zero_row_reason(
+                bzz_status, bzz_stats.get("http_statuses"), bzz_stats.get("quota_hint")),
         }
         health_observations["bzzoiro_odds"] = {
             "fetched": bzz_status in {"ok", "empty", "auth", "quota", "unavailable"},
@@ -4936,6 +4940,11 @@ def main():
             "can_vote": False,
             "freshness_h": 0.0 if bzz_status == "ok" else None,
             "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
+            # Credential-blocked diagnostics only: the operator must be able
+            # to tell "the key/plan was rejected" from "the endpoint moved".
+            "status": bzz_status or None,
+            "reason": zero_row_reason(
+                bzz_status, bzz_stats.get("http_statuses"), bzz_stats.get("quota_hint")),
         }
         be_cache_rows = int(betexplorer_cache_stats.get("usable_rows") or 0)
         health_observations["betexplorer"] = {
@@ -4998,6 +5007,15 @@ def main():
             "can_vote": False,
             "freshness_h": 0.0 if pa_shadow_stats.get("status") == "ok" else None,
             "blocker": pa_shadow_stats.get("blocker"),
+            # An authenticated HTTP 200 that returns no events is VALID-EMPTY,
+            # not "unavailable". Reporting it as unavailable told the operator
+            # to go and fix an integration that is already working.
+            "status": pa_shadow_stats.get("status"),
+            "reason": zero_row_reason(
+                pa_shadow_stats.get("status"),
+                pa_shadow_stats.get("http_statuses"),
+                pa_shadow_stats.get("quota_hint"),
+            ),
         }
         health_observations["theoddsapi"] = {
             # This stage deliberately does not make an API request.  A usable
