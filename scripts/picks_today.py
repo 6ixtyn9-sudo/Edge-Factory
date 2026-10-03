@@ -62,6 +62,7 @@ from edgefactory.source_health import (
     record_bzzoiro_run,
 )
 from edgefactory.shadow import append_price_board_rows, read_shadow_rows
+from edgefactory import price_sources as psrc
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
@@ -209,6 +210,10 @@ PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY = "SUSPECT_ALIAS_FUZZY"
 PRICE_EVIDENCE_BETEXPLORER_RESCUE = "BETEXPLORER_RESCUE"
 PRICE_EVIDENCE_SOURCE_FALLBACK = "SOURCE_FALLBACK"
 PRICE_EVIDENCE_UNMATCHED = "UNMATCHED"
+# A price supplied by an operator-approved donor that is NOT a named book
+# (Boggio average aggregate, Bet Better fair price). It is a real, usable
+# number - but the ticket must say what kind of number it is.
+PRICE_EVIDENCE_DONOR_PRICE = "APPROVED_DONOR_PRICE"
 
 BUCKET_ORDER = [
     BUCKET_CERTIFIED,
@@ -2408,11 +2413,25 @@ def nearby_odds_candidates(pick: dict, odds_data: dict, *, limit: int = 5) -> li
 
 
 def _price_board_entry(source: str, row: dict) -> dict:
-    """One build-time price the source showed for this fixture+selection."""
+    """One build-time price the source showed for this fixture+selection.
+
+    Every entry is self-describing: ``odds_kind`` / ``provider_role`` /
+    ``named_bookmaker`` / ``price_independence_family`` travel with the number
+    so no later reader can mistake a model fair price or an average-book
+    aggregate for a named bookmaker's quote, and so corroboration can be
+    computed over independent FAMILIES rather than a count of API vendors.
+    """
+    source_spec = psrc.spec(source)
     return {
         "source": source,
         "bookmaker": row.get("bookmaker"),
         "odds": row.get("odds"),
+        "odds_kind": row.get("odds_kind") or source_spec.odds_kind,
+        "provider_role": row.get("provider_role") or source_spec.role,
+        "named_bookmaker": bool(
+            row.get("named_bookmaker", source_spec.named_bookmaker) and row.get("bookmaker")),
+        "price_independence_family": row.get("price_independence_family")
+            or psrc.independence_family(source, row.get("bookmaker")),
         "captured_at": row.get("captured_at"),   # raw source stamp, no claims
         "league": row.get("league"),
         "kickoff": row.get("kickoff"),
@@ -2562,6 +2581,9 @@ def _stamp_price_corroboration(picks: list[dict]) -> int:
         sel = str(pick.get("pick") or "")
         market = str(pick.get("market") or "")
         corroborators: set[str] = set()
+        matched_entries: list[dict] = []
+        chosen_family = psrc.independence_family(chosen, pick.get("bookmaker"))
+        families: set[str] = set()
         if isinstance(odds, (int, float)) and odds > 1.0:
             for entry in pick.get("price_board") or []:
                 src = str(entry.get("source") or "")
@@ -2574,9 +2596,22 @@ def _stamp_price_corroboration(picks: list[dict]) -> int:
                 if other is None:
                     continue
                 if abs(other / float(odds) - 1.0) <= PRICE_CORROBORATION_MAX_DEV:
+                    family = str(entry.get("price_independence_family")
+                                 or psrc.independence_family(src, entry.get("bookmaker")))
+                    # Independence is by FAMILY, not by vendor: two APIs
+                    # republishing one model number are one piece of evidence.
+                    if family == chosen_family:
+                        continue
                     corroborators.add(src)
+                    families.add(family)
+                    matched_entries.append(entry)
         pick["price_corroborated"] = bool(corroborators)
         pick["price_corroborators"] = sorted(corroborators)
+        pick["price_corroborating_families"] = sorted(families)
+        pick["price_named_book_corroborated"] = any(
+            entry.get("named_bookmaker") for entry in matched_entries)
+        pick["price_corroboration_sufficient"] = psrc.corroborators_are_sufficient(
+            chosen, matched_entries)
         n += bool(corroborators)
     return n
 
@@ -2709,19 +2744,140 @@ def _capture_shadow_candidates(day: str) -> dict[str, dict]:
     return stats
 
 
+def donor_odds_bundles(day: str, *, localdata=None) -> list[dict]:
+    """Build price bundles from every approved non-primary donor's ledger.
+
+    Boggio (average-book aggregate) and Bet Better (model fair price) were
+    promoted to price donors by the operator; SharpAPI and BetMiner
+    contribute whatever their repaired adapters captured. Every bundle is
+    built from the SAME ``_odds_bundle_from_rows`` machinery as the primary
+    board, so a donor price is matched by the same fixture/market/selection
+    keys and cannot slip in through a looser join.
+
+    A donor with no ledger simply contributes nothing - a missing donor is
+    never an error and never a synthetic row.
+    """
+    root = LOCALDATA if localdata is None else localdata
+    bundles: list[dict] = []
+    for source in ("boggio", "betbetter", "sharpapi_odds", "betminer", "pinnapi_odds"):
+        source_spec = psrc.spec(source)
+        if not source_spec.enabled():
+            continue
+        rows, _stats = read_shadow_rows(root / f"{source}_shadow_{day}.json")
+        if not rows:
+            continue
+        annotated = []
+        for row in rows:
+            if row.get("price_push_eligible") is False and not source_spec.can_execute():
+                # Keep it for the board, but it can never be chosen below.
+                pass
+            annotated.append(psrc.annotate_row(dict(row), source=source))
+        bundle = _odds_bundle_from_rows(annotated, provider=source)
+        if bundle["exact"] or bundle["market_candidates"]:
+            bundles.append(bundle)
+    return bundles
+
+
+def _bundle_candidates(pick: dict, bundles, default_names=()) -> list:
+    """Observe each bundle for THIS pick: healthy? exact fixture match?
+
+    A hand-built plain index carries no ``provider``; the positional defaults
+    preserve the historic contract (first bundle = the primary board, second =
+    the ScoutingStats audit board) so an injected bundle is still attributed
+    to a registered source instead of silently becoming unregistered.
+    """
+    candidates = []
+    for position, bundle in enumerate(bundles):
+        if not bundle:
+            continue
+        default = default_names[position] if position < len(default_names) else ""
+        name = str(bundle.get("provider") or default or "")
+        rows = len(bundle.get("exact") or {}) if "exact" in bundle else len(bundle)
+        row, method = find_side_keyed_odds_row(pick, bundle)
+        healthy = psrc.status_is_healthy("ok" if rows else "empty", rows)
+        candidates.append(psrc.SourceCandidate(
+            name=name,
+            healthy=healthy,
+            exact_match=bool(row) and method == "exact",
+            rows=rows,
+            freshness_h=_row_age_hours(row),
+            bundle=bundle,
+            extra={"row": row, "method": method},
+        ))
+    return candidates
+
+
+def _row_age_hours(row: dict | None) -> float | None:
+    """Age of a matched quote in hours; ``None`` when it cannot be known."""
+    if not row:
+        return None
+    stamp = _parse_utc_stamp(row.get("captured_at"))
+    if stamp is None:
+        return None
+    return max(0.0, (datetime.now(timezone.utc) - stamp).total_seconds() / 3600.0)
+
+
+def _parse_utc_stamp(value):
+    try:
+        text = str(value or "").strip().replace("Z", "+00:00")
+        if not text:
+            return None
+        stamp = datetime.fromisoformat(text)
+        return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
+    except (TypeError, ValueError):
+        return None
+
+
+def select_price_source(pick: dict, bundles) -> tuple[dict | None, str | None, str | None]:
+    """Pick the healthiest approved source quoting THIS fixture+selection.
+
+    Returns ``(row, method, source_name)``. Selection is health-aware, not
+    order-aware: Bzzoiro no longer wins merely because it was built first.
+    A healthy source with a valid exact fixture match beats an unavailable
+    source whatever its historic priority. Sources that are not execution
+    eligible (ScoutingStats, BetMiner) can still be returned - the caller
+    quarantines them - but they are ranked behind anything that can execute.
+    """
+    candidates = _bundle_candidates(
+        pick, bundles, default_names=(BZZOIRO_ODDS_SOURCE, SCOUTINGSTATS_ODDS_SOURCE))
+    matched = [c for c in candidates if c.extra.get("row")]
+    if not matched:
+        return None, None, None
+    ranked = psrc.rank_candidates(matched, execution_only=True)
+    if not ranked:
+        ranked = psrc.rank_candidates(matched)
+    if not ranked:
+        # Every matched source is unregistered or disabled. Fail closed to
+        # input order rather than dropping an otherwise valid quote silently;
+        # the caller still applies the execution-eligibility quarantine.
+        ranked = matched
+    chosen = ranked[0]
+    return chosen.extra["row"], chosen.extra["method"], chosen.name
+
+
 def enrich_with_live_odds(
     picks: list[dict],
     primary_odds: dict,
     secondary_odds: dict | None = None,
+    donor_bundles: list[dict] | None = None,
 ) -> int:
     """Attach auditable live-price evidence without promoting weak joins.
 
-    Bzzoiro is the operational primary. ScoutingStats is intentionally a
-    secondary fallback: its price can be retained for audit but is quarantined
-    from push eligibility when no primary match exists. An alias_fuzzy match is
-    more serious: its candidate price is saved under ``suspect_price`` and is
-    never allowed to replace the operational odds used by reports/ROI.
+    Source selection is HEALTH-AWARE (2026-10-03). The old code hard-coded
+    Bzzoiro as the primary bundle and ScoutingStats as the only fallback;
+    Bzzoiro was "primary" because it was first in the argument list, not
+    because it was the best or healthiest board on the day. Now every
+    approved source - the primary board, the secondary board and the
+    operator-promoted donors - is ranked per pick by health, exact fixture
+    match, freshness, execution eligibility, named-book provenance and only
+    then configured priority.
+
+    What has NOT changed: a non-execution-eligible source (ScoutingStats
+    audit board) is still quarantined from push eligibility, an
+    ``alias_fuzzy`` join is still never allowed to become the operational
+    price, and a pick with no usable quote is still left unpriced.
     """
+    bundles = [b for b in (primary_odds, secondary_odds, *(donor_bundles or [])) if b]
     enriched = 0
     for pick in picks:
         # Re-derive on every run. A stale quarantine or stale suspect price next
@@ -2732,14 +2888,15 @@ def enrich_with_live_odds(
             "price_quarantine_reason",
             "suspect_price",
             "price_board",
+            "price_donor_role",
+            "price_odds_kind",
+            "price_disclosure",
+            "price_independence_family",
         ):
             pick.pop(field, None)
 
-        row, match_method = find_side_keyed_odds_row(pick, primary_odds)
-        provider = primary_odds.get("provider", BZZOIRO_ODDS_SOURCE) if row else None
-        if not row and secondary_odds is not None:
-            row, match_method = find_side_keyed_odds_row(pick, secondary_odds)
-            provider = secondary_odds.get("provider", SCOUTINGSTATS_ODDS_SOURCE) if row else None
+        row, match_method, provider = select_price_source(pick, bundles)
+        source_spec = psrc.spec(provider)
 
         previous_odds = pick.get("odds")
         previous_source = pick.get("odds_source") or (
@@ -2750,7 +2907,7 @@ def enrich_with_live_odds(
         previous_league = pick.get("odds_league")
 
         if not row:
-            _stamp_price_board(pick, (primary_odds, secondary_odds))
+            _stamp_price_board(pick, bundles)
             if previous_odds is not None:
                 pick.setdefault("odds_source", "forebet_best")
                 pick["odds_match_method"] = "fallback"
@@ -2778,7 +2935,7 @@ def enrich_with_live_odds(
             # odds”. Preserve any prior source price, otherwise leave odds n/a;
             # archive the candidate separately so the audit can grade this
             # failure mode rather than erase it.
-            _stamp_price_board(pick, (primary_odds, secondary_odds),
+            _stamp_price_board(pick, bundles,
                                chosen_row=row, chosen_source=provider,
                                chosen_method=method)
             pick["odds_match_method"] = method
@@ -2821,16 +2978,35 @@ def enrich_with_live_odds(
         # bzzoiro rows). Idempotent — never overwrites the run-day verdict.
         resolve_kickoff_utc(pick, odds_row=row, odds_provider=provider)
 
+        # --- truthful price labelling (2026-10-03) ------------------------
+        # The engine must never print a model fair price or an average-book
+        # aggregate as if a named bookmaker were offering it.
+        pick["price_donor_role"] = source_spec.role
+        pick["price_odds_kind"] = row.get("odds_kind") or source_spec.odds_kind
+        pick["price_independence_family"] = psrc.independence_family(
+            provider, row.get("bookmaker"))
+        pick["price_disclosure"] = psrc.donor_disclosure(provider, row.get("bookmaker"))
+
         if pick["odds_source"] == SCOUTINGSTATS_ODDS_SOURCE:
-            # The secondary fallback matched, but the primary provider had no
-            # corroborating price for this fixture/selection.
+            # The secondary fallback matched, but no execution-eligible
+            # provider had a corroborating price for this fixture/selection.
             pick["price_evidence"] = PRICE_EVIDENCE_SCOUTINGSTATS_SOLE
             pick["price_push_eligible"] = False
             pick["price_quarantine_reason"] = "scoutingstats_sole_source"
-        else:
+        elif not source_spec.can_execute():
+            # Registered, but the operator has not made it stakeable.
+            pick["price_evidence"] = PRICE_EVIDENCE_DONOR_PRICE
+            pick["price_push_eligible"] = False
+            pick["price_quarantine_reason"] = f"{source_spec.name}_not_execution_eligible"
+        elif source_spec.named_bookmaker:
             pick["price_evidence"] = PRICE_EVIDENCE_BZZOIRO_PRIMARY
             pick["price_push_eligible"] = True
-        _stamp_price_board(pick, (primary_odds, secondary_odds),
+        else:
+            # An approved donor price: usable, but explicitly NOT a named-book
+            # execution quote, and the ticket has to say so.
+            pick["price_evidence"] = PRICE_EVIDENCE_DONOR_PRICE
+            pick["price_push_eligible"] = bool(row.get("price_push_eligible", True))
+        _stamp_price_board(pick, bundles,
                            chosen_row=row, chosen_source=provider,
                            chosen_method=method)
         enriched += 1
@@ -4004,6 +4180,13 @@ def main():
             except Exception:
                 pass
 
+        # Shadow/donor capture runs BEFORE enrichment (2026-10-03): the
+        # operator-promoted donors (Boggio average prices, Bet Better fair
+        # prices, SharpAPI books) can only reach the price board if their
+        # ledgers for `day` exist by the time the bundles are built. Capture
+        # is still shadow-only and still writes its own ledgers.
+        shadow_stats = _capture_shadow_candidates(day)
+
         bzz_stats: dict = {}
         scouting_stats: dict = {}
         odds_bundle = bzzoiro_odds_bundle(day, stats=bzz_stats)
@@ -4016,16 +4199,17 @@ def main():
             stats=scouting_stats,
         )
         prices_index = load_prices_index(ROOT, day)
-        enriched_n = enrich_with_live_odds(picks, odds_bundle, secondary_bundle)
+        # Bzzoiro is no longer "the primary source": it is one approved source
+        # among several, and `enrich_with_live_odds` ranks them by health.
+        donor_bundles = donor_odds_bundles(day)
+        enriched_n = enrich_with_live_odds(
+            picks, odds_bundle, secondary_bundle, donor_bundles=donor_bundles)
 
         be_stats: dict = {}
         be_enriched = enrich_unmatched_with_betexplorer(
             picks, day, bundles=(odds_bundle, secondary_bundle), stats=be_stats)
 
-        # Candidate capture is shadow-only. It writes its own day ledgers and
-        # never joins data/SOURCES_*; only the explicit, default-off
-        # corroborator flag below can read SportyTrader into the price board.
-        shadow_stats = _capture_shadow_candidates(day)
+        # Shadow stats were captured above, before bundle construction.
         fp_shadow_stats = shadow_stats.get("futbolpronosticos", {})
         st_shadow_stats = shadow_stats.get("sportytrader_odds", {})
         bm_shadow_stats = shadow_stats.get("betminer", {})
