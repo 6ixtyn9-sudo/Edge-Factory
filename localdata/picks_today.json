@@ -1,11 +1,11 @@
 [
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 73.2,
     "away": "Djibouti",
     "bookmaker": null,
     "bucket": "CAUTION",
-    "confidence": 0.8935,
+    "confidence": 0.8931,
     "ctx": {
       "away_norm": "djibouti",
       "comp_type_name": "league",
@@ -42,8 +42,8 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.5034,
-    "enhancement_reason": "Mathematical expectation is 66.1% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 50.3%)",
+    "enhancement_probability": 0.5052,
+    "enhancement_reason": "Mathematical expectation is 66.4% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 50.5%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
@@ -51,26 +51,26 @@
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.5033578796143368,
-        "raw_probability": 0.661385925287527,
-        "reason": "Mathematical expectation is 66.1% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 50.3%)"
+        "probability": 0.5051555977394498,
+        "raw_probability": 0.6637480328728799,
+        "reason": "Mathematical expectation is 66.4% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 50.5%)"
       },
       {
         "cohort_n": 610,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9583637266917715,
-        "raw_probability": 0.9838568753900562,
-        "reason": "Combined Under 3.5 is 98.4% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 95.8%)"
+        "probability": 0.9590658964703119,
+        "raw_probability": 0.9845777233782129,
+        "reason": "Combined Under 3.5 is 98.5% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 95.9%)"
       },
       {
         "cohort_n": 610,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9028880249470975,
-        "raw_probability": 0.950364052423549,
+        "probability": 0.9028328702427922,
+        "raw_probability": 0.9503059975520196,
         "reason": "Combined Under 2.5 is 95.0% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 90.3%)"
       },
       {
@@ -78,17 +78,17 @@
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8376631966656699,
-        "raw_probability": 0.8326555023923445,
-        "reason": "Combined Under 1.5 is 83.3% (ML-calibrated 82.8%->84.6%, n=13)"
+        "probability": 0.8395661943428702,
+        "raw_probability": 0.834547123623011,
+        "reason": "Combined Under 1.5 is 83.5% (ML-calibrated 82.8%->84.6%, n=13)"
       },
       {
         "cohort_n": 610,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.2958574722031428,
-        "raw_probability": 0.28741829619040027,
+        "probability": 0.2956412048757119,
+        "raw_probability": 0.28720819777270956,
         "reason": "Poisson expected hit rate is 28.7% (ML-calibrated 23.7%->26.7%, n=450)"
       }
     ],
@@ -117,9 +117,13 @@
     "price_corroborating_families": [],
     "price_corroboration_sufficient": true,
     "price_corroborators": [],
+    "price_disclosure": "zulubet vote donor \u2014 not a price donor",
+    "price_donor_role": "prediction_vote_donor",
     "price_evidence": "SOURCE_FALLBACK",
     "price_named_book_corroborated": false,
-    "price_push_eligible": true,
+    "price_odds_kind": null,
+    "price_push_eligible": false,
+    "price_quarantine_reason": "source_fallback_not_execution_eligible",
     "recommended_enhancement": "match_over_25",
     "recommended_market": "avoid_raw_1x2",
     "rule": "2way-unanimous avg_p>=60",
@@ -136,7 +140,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 64.0,
     "away": "Norrk\u00f6ping W",
     "bookmaker": null,
@@ -253,9 +257,13 @@
     "price_corroborating_families": [],
     "price_corroboration_sufficient": true,
     "price_corroborators": [],
+    "price_disclosure": "zulubet vote donor \u2014 not a price donor",
+    "price_donor_role": "prediction_vote_donor",
     "price_evidence": "SOURCE_FALLBACK",
     "price_named_book_corroborated": false,
-    "price_push_eligible": true,
+    "price_odds_kind": null,
+    "price_push_eligible": false,
+    "price_quarantine_reason": "source_fallback_not_execution_eligible",
     "recommended_enhancement": "match_over_25",
     "recommended_market": "avoid_raw_1x2",
     "rule": "2way-unanimous avg_p>=60",
@@ -272,8 +280,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
-    "avg_p": 80.0,
+    "as_of": "2026-10-03T10:08:01+02:00",
+    "avg_p": 79.3,
     "away": "Czech Republic",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
@@ -304,7 +312,7 @@
     },
     "date": "2026-10-03",
     "decay_verdict": "WATCH",
-    "display_rule": "ML-META\u226580",
+    "display_rule": "ML-META\u226575",
     "draw_risk_flag": "LOW",
     "duplicate_bucket_sources": [
       "SKIPPED_VETO"
@@ -315,17 +323,17 @@
     "duplicate_rows_collapsed": 1,
     "duplicate_rules_collapsed": [
       "2WAY-UNANIMOUS\u226560",
-      "ML-META\u226580"
+      "ML-META\u226575"
     ],
     "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=80",
+    "edge_rule": "ml-meta avg_p>=75",
     "edge_status": "certified",
-    "enhancement_breakeven": 0.7519,
-    "enhancement_edge_sample": -0.3837,
+    "enhancement_breakeven": 0.8,
+    "enhancement_edge_sample": -0.4208,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
-    "enhancement_price": 1.33,
+    "enhancement_price": 1.25,
     "enhancement_price_at": null,
     "enhancement_price_book": null,
     "enhancement_price_source": "scoutingstats",
@@ -354,7 +362,7 @@
       }
     ],
     "home": "Spain",
-    "kickoff": "13:45",
+    "kickoff": "11:45",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T18:45:00+00:00",
     "kickoff_witness": "scoutingstats kickoff '2026-10-03T18:45:00Z'",
@@ -367,7 +375,7 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.8003,
+    "ml_p": 0.793,
     "model_version": null,
     "n_way": 3,
     "odds": 1.05,
@@ -444,7 +452,7 @@
     "price_quarantine_reason": "scoutingstats_sole_source",
     "recommended_enhancement": "match_over_25",
     "recommended_market": "keep_1x2",
-    "rule": "ml-meta avg_p>=80",
+    "rule": "ml-meta avg_p>=75",
     "source_weights": {
       "forebet": 0.0
     },
@@ -453,18 +461,18 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=66): Avg Goals: 4.09 | Over 2.5: 74.2% | BTTS: 34.8% | Home Over 1.5 Goals: 90.9% | Away Over 1.5 Goals: 9.1%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=77): Avg Goals: 4.12 | Over 2.5: 75.3% | BTTS: 36.4% | Home Over 1.5 Goals: 90.9% | Away Over 1.5 Goals: 9.1%",
     "veto_reason": "context VETO in ['team_a', 'odds_band']",
     "vitibet_index": 5.07,
-    "w_score": 1.3881
+    "w_score": 1.3428
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
-    "avg_p": 73.8,
+    "as_of": "2026-10-03T10:08:01+02:00",
+    "avg_p": 74.0,
     "away": "Czechia",
     "bookmaker": null,
     "bucket": "SKIPPED_VETO",
-    "confidence": 0.8855,
+    "confidence": 0.8913,
     "ctx": {
       "away_norm": "czechia",
       "comp_type_name": "league",
@@ -501,45 +509,45 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.5198,
-    "enhancement_reason": "Mathematical expectation is 68.3% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 52.0%)",
+    "enhancement_probability": 0.5208,
+    "enhancement_reason": "Mathematical expectation is 68.4% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 52.1%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 546,
+        "cohort_n": 552,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.5197789948989071,
-        "raw_probability": 0.6829624118522353,
-        "reason": "Mathematical expectation is 68.3% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 52.0%)"
+        "probability": 0.5207571324281045,
+        "raw_probability": 0.6842476334033558,
+        "reason": "Mathematical expectation is 68.4% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 52.1%)"
       },
       {
-        "cohort_n": 546,
+        "cohort_n": 552,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.943729035616719,
-        "raw_probability": 0.9688328912466844,
+        "probability": 0.9439885187284734,
+        "raw_probability": 0.9690992767915845,
         "reason": "Combined Under 3.5 is 96.9% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 94.4%)"
       },
       {
-        "cohort_n": 546,
+        "cohort_n": 552,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8790640507997873,
-        "raw_probability": 0.9252873563218391,
-        "reason": "Combined Under 2.5 is 92.5% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 87.9%)"
+        "probability": 0.8769640411227693,
+        "raw_probability": 0.9230769230769231,
+        "reason": "Combined Under 2.5 is 92.3% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 87.7%)"
       },
       {
-        "cohort_n": 546,
+        "cohort_n": 552,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.29902911624453843,
-        "raw_probability": 0.29049947078339633,
-        "reason": "Poisson expected hit rate is 29.0% (ML-calibrated 23.7%->26.7%, n=450)"
+        "probability": 0.3013458983474643,
+        "raw_probability": 0.2927501679170829,
+        "reason": "Poisson expected hit rate is 29.3% (ML-calibrated 23.7%->26.7%, n=450)"
       }
     ],
     "home": "Spain",
@@ -607,7 +615,7 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=450): Avg Goals: 3.83 | Over 2.5: 75.8% | BTTS: 41.1% | Home Over 1.5 Goals: 87.8% | Away Over 1.5 Goals: 10.0%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=455): Avg Goals: 3.84 | Over 2.5: 75.8% | BTTS: 41.5% | Home Over 1.5 Goals: 87.7% | Away Over 1.5 Goals: 10.1%",
     "suspect_price": {
       "bookmaker": "scoutingstats_odds",
       "captured_at": "2026-10-03T18:45:00Z",
@@ -832,12 +840,12 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
-    "avg_p": 68.2,
+    "as_of": "2026-10-03T10:08:01+02:00",
+    "avg_p": 71.8,
     "away": "Slovenia",
     "bookmaker": "scoutingstats_odds",
     "bucket": "SKIPPED_VETO",
-    "confidence": 0.7162,
+    "confidence": 0.7299,
     "ctx": {
       "away_norm": "slovenia",
       "comp_type_name": "league",
@@ -848,7 +856,7 @@
       "home_norm": "switzerland",
       "league": "ALLOW",
       "league_key": "uefa nations league",
-      "league_raw": "International,Uefa Nations League B Grp. 1",
+      "league_raw": "World UEFA Nations League",
       "niche": "BOOST",
       "odds_band": "VETO",
       "odds_band_name": "1.20-1.35",
@@ -880,7 +888,7 @@
     "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
     "enhancement_breakeven": 0.5405,
-    "enhancement_edge_sample": -0.1285,
+    "enhancement_edge_sample": -0.0778,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
@@ -889,62 +897,62 @@
     "enhancement_price_book": null,
     "enhancement_price_source": "scoutingstats",
     "enhancement_priced": true,
-    "enhancement_probability": 0.4711,
-    "enhancement_reason": "Mathematical expectation is 61.9% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 47.1%)",
+    "enhancement_probability": 0.4985,
+    "enhancement_reason": "Mathematical expectation is 65.5% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 49.8%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 1020,
+        "cohort_n": 577,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4710677937870626,
-        "raw_probability": 0.6189584414685629,
-        "reason": "Mathematical expectation is 61.9% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 47.1%)"
+        "probability": 0.4984939801820071,
+        "raw_probability": 0.6549950158434918,
+        "reason": "Mathematical expectation is 65.5% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 49.8%)"
       },
       {
-        "cohort_n": 1020,
+        "cohort_n": 577,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9613696913189014,
-        "raw_probability": 0.9869428007889547,
-        "reason": "Combined Under 3.5 is 98.7% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 96.1%)"
+        "probability": 0.9589789011531314,
+        "raw_probability": 0.9844884139244524,
+        "reason": "Combined Under 3.5 is 98.4% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 95.9%)"
       },
       {
-        "cohort_n": 1020,
+        "cohort_n": 577,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9143162132446649,
-        "raw_probability": 0.9623931623931624,
-        "reason": "Combined Under 2.5 is 96.2% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 91.4%)"
+        "probability": 0.9134539479232696,
+        "raw_probability": 0.9614855570839065,
+        "reason": "Combined Under 2.5 is 96.1% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 91.3%)"
       },
       {
-        "cohort_n": 1020,
+        "cohort_n": 577,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8256737611617184,
-        "raw_probability": 0.8207377417903734,
-        "reason": "Combined Under 1.5 is 82.1% (ML-calibrated 82.8%->84.6%, n=13)"
+        "probability": 0.8334047370140447,
+        "raw_probability": 0.8284225005429667,
+        "reason": "Combined Under 1.5 is 82.8% (ML-calibrated 82.8%->84.6%, n=13)"
       },
       {
-        "cohort_n": 1020,
+        "cohort_n": 577,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.2599687563346272,
-        "raw_probability": 0.2525532867296706,
-        "reason": "Poisson expected hit rate is 25.3% (ML-calibrated 23.7%->26.7%, n=450)"
+        "probability": 0.3025975777838443,
+        "raw_probability": 0.29396614386760367,
+        "reason": "Poisson expected hit rate is 29.4% (ML-calibrated 23.7%->26.7%, n=450)"
       }
     ],
     "home": "Switzerland",
-    "kickoff": "13:45",
+    "kickoff": "03-10, 19:45",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T18:45:00+00:00",
     "kickoff_witness": "bzzoiro kickoff '2026-10-03T18:45:00Z'",
-    "league": "International,Uefa Nations League B Grp. 1",
+    "league": "World UEFA Nations League",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
     "market_recommendation_reason": "historically unstable out of sample above 1.25",
@@ -952,12 +960,16 @@
     "match": "Switzerland vs Slovenia",
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
-    "n_way": 3,
+    "n_way": 4,
     "odds": 1.28,
     "odds_captured_at": "2026-10-03T18:45:00Z",
     "odds_league": "UEFA Nations League",
     "odds_match_method": "exact",
     "odds_match_status": "uncorroborated",
+    "odds_replaced": {
+      "odds": 1.31,
+      "source": "zulubet"
+    },
     "odds_source": "scoutingstats_odds",
     "odds_tier": "low",
     "pick": "home",
@@ -1032,12 +1044,13 @@
       "forebet": 0.0
     },
     "sources_used": [
+      "zulubet",
       "statarea",
       "vitibet",
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=793): Avg Goals: 3.65 | Over 2.5: 71.1% | BTTS: 40.6% | Home Over 1.5 Goals: 87.3% | Away Over 1.5 Goals: 10.7%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=482): Avg Goals: 3.85 | Over 2.5: 74.9% | BTTS: 40.2% | Home Over 1.5 Goals: 88.2% | Away Over 1.5 Goals: 10.0%",
     "veto_reason": "context VETO in ['team_a', 'odds_band']",
     "vitibet_index": 3.25,
     "w_score": 1.0
@@ -1228,7 +1241,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 67.0,
     "away": "Miami FC",
     "bookmaker": "scoutingstats_odds",
@@ -1277,12 +1290,12 @@
     "edge_n_way": 2,
     "edge_rule": "2way-unanimous avg_p>=60",
     "edge_status": "certified",
-    "enhancement_breakeven": 0.6369,
-    "enhancement_edge_sample": -0.2646,
+    "enhancement_breakeven": 0.625,
+    "enhancement_edge_sample": -0.2506,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
-    "enhancement_price": 1.57,
+    "enhancement_price": 1.6,
     "enhancement_price_at": null,
     "enhancement_price_book": null,
     "enhancement_price_source": "scoutingstats",
@@ -1338,7 +1351,7 @@
       }
     ],
     "home": "Tampa Bay Rowdies",
-    "kickoff": "18:30",
+    "kickoff": "16:30",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T23:30:00+00:00",
     "kickoff_witness": "bzzoiro kickoff '2026-10-03T23:30:00Z'",
@@ -1408,7 +1421,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 66.0,
     "away": "Scotland",
     "bookmaker": null,
@@ -1534,7 +1547,7 @@
         "market": "1x2",
         "match_method": "alias_fuzzy",
         "named_bookmaker": false,
-        "odds": 1.66,
+        "odds": 1.61,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -1542,14 +1555,10 @@
         "source": "scoutingstats_odds"
       }
     ],
-    "price_corroborated": true,
-    "price_corroborating_families": [
-      "scoutingstats_average"
-    ],
+    "price_corroborated": false,
+    "price_corroborating_families": [],
     "price_corroboration_sufficient": true,
-    "price_corroborators": [
-      "scoutingstats_odds"
-    ],
+    "price_corroborators": [],
     "price_evidence": "SUSPECT_ALIAS_FUZZY",
     "price_named_book_corroborated": false,
     "price_push_eligible": false,
@@ -1571,7 +1580,7 @@
       "captured_at": "2026-10-03T18:45:00Z",
       "league": "UEFA Nations League",
       "match_method": "alias_fuzzy",
-      "odds": 1.66,
+      "odds": 1.61,
       "source": "scoutingstats_odds"
     },
     "veto_reason": "context VETO in ['team_a', 'odds_band']",
@@ -2804,7 +2813,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 58.0,
     "away": "Barry Town",
     "bookmaker": "scoutingstats_odds",
@@ -3098,7 +3107,7 @@
     "w_score": 1.4165
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 77.5,
     "away": "Hohenems",
     "bookmaker": null,
@@ -3510,7 +3519,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 71.5,
     "away": "Greenville Triumph SC",
     "bookmaker": null,
@@ -3608,7 +3617,7 @@
       }
     ],
     "home": "Boise",
-    "kickoff": "14:00",
+    "kickoff": "12:00",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T19:00:00+00:00",
     "kickoff_witness": "vitibet kickoff '2026-10-03T21:00:00+02:00'",
@@ -3651,7 +3660,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 71.4,
     "away": "America Mineiro",
     "bookmaker": null,
@@ -3673,9 +3682,9 @@
       "odds_band_name": "NO_ODDS",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O1-pool",
-      "resolution_pool_n": 64,
-      "resolution_pool_roi": -0.289671875,
-      "resolution_reason": "O1 pool n=64 w_roi=-0.2897 -> VETO",
+      "resolution_pool_n": 65,
+      "resolution_pool_roi": -0.27844615384615384,
+      "resolution_reason": "O1 pool n=65 w_roi=-0.2784 -> VETO",
       "resolution_verdict": "VETO",
       "side_role": "home",
       "team_a": "UNKNOWN",
@@ -3749,7 +3758,7 @@
       }
     ],
     "home": "Atletico Goianiense",
-    "kickoff": "14:00",
+    "kickoff": "12:00",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T19:00:00+00:00",
     "kickoff_witness": "bzzoiro kickoff '2026-10-03T19:00:00Z'",
@@ -4195,143 +4204,6 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
-    "avg_p": 64.0,
-    "away": "HFX Wanderers",
-    "bookmaker": null,
-    "bucket": "WATCHLIST_NO_ODDS",
-    "confidence": null,
-    "ctx": {
-      "away_norm": "hfxwanderers",
-      "comp_type_name": "league",
-      "competition_type": "BOOST",
-      "home_norm": "forge",
-      "league": "UNKNOWN",
-      "league_key": "canada premier league",
-      "league_raw": "Canada,Premier League",
-      "niche": "UNKNOWN",
-      "odds_band": "UNKNOWN",
-      "odds_band_name": "NO_ODDS",
-      "resolution_original_verdict": "UNKNOWN",
-      "resolution_path": "O2-competition_type",
-      "resolution_pool_n": null,
-      "resolution_pool_roi": null,
-      "resolution_reason": "O2-competition_type resolved to BOOST",
-      "resolution_verdict": "BOOST",
-      "side_role": "home",
-      "team_a": "UNKNOWN",
-      "team_h": "UNKNOWN"
-    },
-    "date": "2026-10-03",
-    "decay_verdict": "HEALTHY",
-    "display_rule": "ML-META\u226555",
-    "draw_risk_flag": "UNKNOWN",
-    "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=55",
-    "edge_status": "certified",
-    "enhancement_label": "Away Team Under 3.5 Goals",
-    "enhancement_mapped": true,
-    "enhancement_multi_source": false,
-    "enhancement_price": null,
-    "enhancement_price_at": null,
-    "enhancement_price_book": null,
-    "enhancement_price_source": null,
-    "enhancement_priced": false,
-    "enhancement_probability": 0.9643,
-    "enhancement_reason": "Combined Under 3.5 is 99.0% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 96.4%)",
-    "enhancement_state": "SHADOW",
-    "event_notes": [
-      {
-        "cohort_n": 1638,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 3.5 Goals",
-        "market": "away_under_35",
-        "probability": 0.9643181406199688,
-        "raw_probability": 0.9899696809136936,
-        "reason": "Combined Under 3.5 is 99.0% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 96.4%)"
-      },
-      {
-        "cohort_n": 1638,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 2.5 Goals",
-        "market": "away_under_25",
-        "probability": 0.9052750886611866,
-        "raw_probability": 0.9528766336983399,
-        "reason": "Combined Under 2.5 is 95.3% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 90.5%)"
-      },
-      {
-        "cohort_n": 1638,
-        "engine": "hybrid_cohort",
-        "label": "Away Team Under 1.5 Goals",
-        "market": "away_under_15",
-        "probability": 0.8094575856532585,
-        "raw_probability": 0.8046185093606499,
-        "reason": "Combined Under 1.5 is 80.5% (ML-calibrated 82.8%->84.6%, n=13)"
-      },
-      {
-        "cohort_n": 1638,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.4398430317428567,
-        "raw_probability": 0.5779307373779609,
-        "reason": "Mathematical expectation is 57.8% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 44.0%)"
-      },
-      {
-        "cohort_n": 1638,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.20897193361834662,
-        "raw_probability": 0.20301112108116157,
-        "reason": "Poisson expected hit rate is 20.3% (ML-calibrated 23.7%->26.7%, n=450)"
-      }
-    ],
-    "home": "Forge FC",
-    "kickoff": "15:00",
-    "kickoff_source": "derived_sibling_row",
-    "kickoff_utc": "2026-10-03T20:00:00+00:00",
-    "kickoff_witness": "vitibet kickoff '2026-10-03T22:00:00+02:00'",
-    "league": "Canada,Premier League",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "no odds available",
-    "market_type": "1x2",
-    "match": "Forge FC vs HFX Wanderers",
-    "min_lead_minutes": 30,
-    "model_version": null,
-    "n_way": 3,
-    "odds": null,
-    "odds_match_method": "none",
-    "odds_match_status": "unmatched",
-    "odds_source": null,
-    "odds_tier": "low",
-    "pick": "home",
-    "price_board": [],
-    "price_corroborated": false,
-    "price_corroborating_families": [],
-    "price_corroboration_sufficient": true,
-    "price_corroborators": [],
-    "price_evidence": "UNMATCHED",
-    "price_named_book_corroborated": false,
-    "price_push_eligible": false,
-    "recommended_enhancement": "away_under_35",
-    "recommended_market": "unknown",
-    "rule": "ml-meta avg_p>=55",
-    "source_weights": {
-      "forebet": 0.0
-    },
-    "sources_used": [
-      "statarea",
-      "vitibet",
-      "betclan"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1193): Avg Goals: 3.40 | Over 2.5: 66.3% | BTTS: 40.6% | Home Over 1.5 Goals: 84.1% | Away Over 1.5 Goals: 10.1%",
-    "vitibet_index": 2.28,
-    "w_score": 1.0
-  },
-  {
     "as_of": "2026-10-03T06:00:49+02:00",
     "avg_p": 64.0,
     "away": "Ayr Utd",
@@ -4736,7 +4608,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 62.5,
     "away": "Imst",
     "bookmaker": null,
@@ -4869,6 +4741,142 @@
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=935): Avg Goals: 3.46 | Over 2.5: 68.3% | BTTS: 42.5% | Home Over 1.5 Goals: 10.9% | Away Over 1.5 Goals: 84.1%",
     "vitibet_index": -1.56,
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-10-03T10:08:01+02:00",
+    "avg_p": 62.0,
+    "away": "HFX Wanderers",
+    "bookmaker": null,
+    "bucket": "WATCHLIST_NO_ODDS",
+    "confidence": null,
+    "ctx": {
+      "away_norm": "hfxwanderers",
+      "comp_type_name": "league",
+      "competition_type": "CAUTION",
+      "home_norm": "forge",
+      "league": "UNKNOWN",
+      "league_key": "canada premier league",
+      "league_raw": "Canada,Premier League",
+      "niche": "UNKNOWN",
+      "odds_band": "UNKNOWN",
+      "odds_band_name": "NO_ODDS",
+      "resolution_original_verdict": "UNKNOWN",
+      "resolution_path": "O2-competition_type",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "O2-competition_type resolved to CAUTION",
+      "resolution_verdict": "CAUTION",
+      "side_role": "home",
+      "team_a": "UNKNOWN",
+      "team_h": "UNKNOWN"
+    },
+    "date": "2026-10-03",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "2WAY-UNANIMOUS\u226560",
+    "draw_risk_flag": "UNKNOWN",
+    "edge_n_way": 2,
+    "edge_rule": "2way-unanimous avg_p>=60",
+    "edge_status": "certified",
+    "enhancement_label": "Away Team Under 3.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": null,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.961,
+    "enhancement_reason": "Combined Under 3.5 is 98.7% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 96.1%)",
+    "enhancement_state": "SHADOW",
+    "event_notes": [
+      {
+        "cohort_n": 3039,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 3.5 Goals",
+        "market": "away_under_35",
+        "probability": 0.9609741905188762,
+        "raw_probability": 0.9865367793896783,
+        "reason": "Combined Under 3.5 is 98.7% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 96.1%)"
+      },
+      {
+        "cohort_n": 3039,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 2.5 Goals",
+        "market": "away_under_25",
+        "probability": 0.8990248262980444,
+        "raw_probability": 0.9462977174827945,
+        "reason": "Combined Under 2.5 is 94.6% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 89.9%)"
+      },
+      {
+        "cohort_n": 3039,
+        "engine": "hybrid_cohort",
+        "label": "Away Team Under 1.5 Goals",
+        "market": "away_under_15",
+        "probability": 0.8046402854023287,
+        "raw_probability": 0.7998300077569276,
+        "reason": "Combined Under 1.5 is 80.0% (ML-calibrated 82.8%->84.6%, n=13)"
+      },
+      {
+        "cohort_n": 3039,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.44135109061971645,
+        "raw_probability": 0.579912247861961,
+        "reason": "Mathematical expectation is 58.0% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 44.1%)"
+      },
+      {
+        "cohort_n": 3039,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.2189800033901958,
+        "raw_probability": 0.21273371602040467,
+        "reason": "Poisson expected hit rate is 21.3% (ML-calibrated 23.7%->26.7%, n=450)"
+      }
+    ],
+    "home": "Forge FC",
+    "kickoff": "13:00",
+    "kickoff_source": "derived_sibling_row",
+    "kickoff_utc": "2026-10-03T20:00:00+00:00",
+    "kickoff_witness": "vitibet kickoff '2026-10-03T22:00:00+02:00'",
+    "league": "Canada,Premier League",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "no odds available",
+    "market_type": "1x2",
+    "match": "Forge FC vs HFX Wanderers",
+    "min_lead_minutes": 30,
+    "model_version": null,
+    "n_way": 2,
+    "odds": null,
+    "odds_match_method": "none",
+    "odds_match_status": "unmatched",
+    "odds_source": null,
+    "odds_tier": "low",
+    "pick": "home",
+    "price_board": [],
+    "price_corroborated": false,
+    "price_corroborating_families": [],
+    "price_corroboration_sufficient": true,
+    "price_corroborators": [],
+    "price_evidence": "UNMATCHED",
+    "price_named_book_corroborated": false,
+    "price_push_eligible": false,
+    "recommended_enhancement": "away_under_35",
+    "recommended_market": "unknown",
+    "rule": "2way-unanimous avg_p>=60",
+    "source_weights": {
+      "forebet": 0.0
+    },
+    "sources_used": [
+      "statarea",
+      "vitibet"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=2105): Avg Goals: 3.47 | Over 2.5: 67.1% | BTTS: 40.1% | Home Over 1.5 Goals: 84.5% | Away Over 1.5 Goals: 8.9%",
+    "vitibet_index": 2.28,
     "w_score": 1.0
   },
   {
@@ -5019,7 +5027,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 61.5,
     "away": "Chico",
     "bookmaker": null,
@@ -5117,7 +5125,7 @@
       }
     ],
     "home": "Deportes Tolima",
-    "kickoff": "16:05",
+    "kickoff": "14:05",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T21:05:00+00:00",
     "kickoff_witness": "vitibet kickoff '2026-10-03T23:05:00+02:00'",
@@ -5742,8 +5750,8 @@
     "w_score": 1.3582
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
-    "avg_p": 74.7,
+    "as_of": "2026-10-03T10:08:01+02:00",
+    "avg_p": 73.9,
     "away": "Asane",
     "bookmaker": "scoutingstats_odds",
     "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
@@ -5798,45 +5806,45 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.5068,
-    "enhancement_reason": "Mathematical expectation is 66.6% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 50.7%)",
+    "enhancement_probability": 0.5116,
+    "enhancement_reason": "Mathematical expectation is 67.2% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 51.2%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 299,
+        "cohort_n": 393,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.5068118610031671,
-        "raw_probability": 0.6659242761692651,
-        "reason": "Mathematical expectation is 66.6% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 50.7%)"
+        "probability": 0.5115816493314365,
+        "raw_probability": 0.6721915285451197,
+        "reason": "Mathematical expectation is 67.2% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 51.2%)"
       },
       {
-        "cohort_n": 299,
+        "cohort_n": 393,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.953478668117225,
-        "raw_probability": 0.9788418708240535,
+        "probability": 0.953458691484895,
+        "raw_probability": 0.9788213627992634,
         "reason": "Combined Under 3.5 is 97.9% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 95.3%)"
       },
       {
-        "cohort_n": 299,
+        "cohort_n": 393,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.8738715547119799,
-        "raw_probability": 0.9198218262806236,
-        "reason": "Combined Under 2.5 is 92.0% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 87.4%)"
+        "probability": 0.8853083889664788,
+        "raw_probability": 0.9318600368324125,
+        "reason": "Combined Under 2.5 is 93.2% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 88.5%)"
       },
       {
-        "cohort_n": 299,
+        "cohort_n": 393,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.32745148300126353,
-        "raw_probability": 0.31811110474377674,
-        "reason": "Poisson expected hit rate is 31.8% (ML-calibrated 23.7%->26.7%, n=450)"
+        "probability": 0.32837356367700127,
+        "raw_probability": 0.31900688356185797,
+        "reason": "Poisson expected hit rate is 31.9% (ML-calibrated 23.7%->26.7%, n=450)"
       }
     ],
     "home": "Stromsgodset",
@@ -5853,7 +5861,7 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.7466,
+    "ml_p": 0.7389,
     "model_version": null,
     "n_way": 3,
     "odds": 1.14,
@@ -5944,12 +5952,12 @@
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=255): Avg Goals: 4.15 | Over 2.5: 81.2% | BTTS: 43.9% | Home Over 1.5 Goals: 90.6% | Away Over 1.5 Goals: 11.0%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=336): Avg Goals: 4.02 | Over 2.5: 78.6% | BTTS: 42.0% | Home Over 1.5 Goals: 89.3% | Away Over 1.5 Goals: 10.1%",
     "vitibet_index": 5.43,
-    "w_score": 1.0808
+    "w_score": 1.0405
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 79.6,
     "away": "Ponte Preta",
     "bookmaker": "scoutingstats_odds",
@@ -5971,9 +5979,9 @@
       "odds_band_name": "1.10-1.20",
       "resolution_original_verdict": "UNKNOWN",
       "resolution_path": "O1-pool",
-      "resolution_pool_n": 64,
-      "resolution_pool_roi": -0.289671875,
-      "resolution_reason": "O1 pool n=64 w_roi=-0.2897 -> VETO",
+      "resolution_pool_n": 65,
+      "resolution_pool_roi": -0.27844615384615384,
+      "resolution_reason": "O1 pool n=65 w_roi=-0.2784 -> VETO",
       "resolution_verdict": "VETO",
       "side_role": "home",
       "team_a": "UNKNOWN",
@@ -6038,7 +6046,7 @@
       }
     ],
     "home": "Cuiaba",
-    "kickoff": "15:00",
+    "kickoff": "13:00",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T20:00:00+00:00",
     "kickoff_witness": "bzzoiro kickoff '2026-10-03T20:00:00Z'",
@@ -6141,12 +6149,12 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 73.3,
     "away": "Brazil",
     "bookmaker": "scoutingstats_odds",
     "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-    "confidence": 0.9385,
+    "confidence": 0.9388,
     "ctx": {
       "away_norm": "brazil",
       "comp_type_name": "league",
@@ -6518,7 +6526,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 68.0,
     "away": "Villefranche",
     "bookmaker": "scoutingstats_odds",
@@ -6552,12 +6560,12 @@
     "edge_n_way": 2,
     "edge_rule": "2way-unanimous avg_p>=60",
     "edge_status": "certified",
-    "enhancement_breakeven": 0.5128,
-    "enhancement_edge_sample": -0.0747,
+    "enhancement_breakeven": 0.5714,
+    "enhancement_edge_sample": -0.1696,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
-    "enhancement_price": 1.95,
+    "enhancement_price": 1.75,
     "enhancement_price_at": null,
     "enhancement_price_book": null,
     "enhancement_price_source": "scoutingstats",
@@ -6613,7 +6621,7 @@
       }
     ],
     "home": "Amiens",
-    "kickoff": "13:45",
+    "kickoff": "11:45",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T18:45:00+00:00",
     "kickoff_witness": "scoutingstats kickoff '2026-10-03T18:45:00Z'",
@@ -6682,7 +6690,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 68.0,
     "away": "Central Espanol",
     "bookmaker": "scoutingstats_odds",
@@ -6716,12 +6724,12 @@
     "edge_n_way": 2,
     "edge_rule": "2way-unanimous avg_p>=60",
     "edge_status": "certified",
-    "enhancement_breakeven": 0.4878,
-    "enhancement_edge_sample": -0.0238,
+    "enhancement_breakeven": 0.5128,
+    "enhancement_edge_sample": -0.0714,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
-    "enhancement_price": 2.05,
+    "enhancement_price": 1.95,
     "enhancement_price_at": null,
     "enhancement_price_book": null,
     "enhancement_price_source": "scoutingstats",
@@ -6768,7 +6776,7 @@
       }
     ],
     "home": "Deportivo Maldonado",
-    "kickoff": "16:00",
+    "kickoff": "14:00",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T21:00:00+00:00",
     "kickoff_witness": "scoutingstats kickoff '2026-10-03T21:00:00Z'",
@@ -7248,7 +7256,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
+    "as_of": "2026-10-03T10:08:01+02:00",
     "avg_p": 65.0,
     "away": "Renate",
     "bookmaker": "scoutingstats_odds",
@@ -7282,12 +7290,12 @@
     "edge_n_way": 2,
     "edge_rule": "2way-unanimous avg_p>=60",
     "edge_status": "certified",
-    "enhancement_breakeven": 0.5,
-    "enhancement_edge_sample": -0.098,
+    "enhancement_breakeven": 0.5263,
+    "enhancement_edge_sample": -0.1431,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": false,
-    "enhancement_price": 2.0,
+    "enhancement_price": 1.9,
     "enhancement_price_at": null,
     "enhancement_price_book": null,
     "enhancement_price_source": "scoutingstats",
@@ -7343,7 +7351,7 @@
       }
     ],
     "home": "Ospitaletto",
-    "kickoff": "13:30",
+    "kickoff": "11:30",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-03T18:30:00+00:00",
     "kickoff_witness": "scoutingstats kickoff '2026-10-03T18:30:00Z'",
@@ -7775,12 +7783,12 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
-    "avg_p": 61.9,
+    "as_of": "2026-10-03T10:08:01+02:00",
+    "avg_p": 62.6,
     "away": "Bulgaria",
     "bookmaker": "scoutingstats_odds",
     "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-    "confidence": 0.6579,
+    "confidence": 0.653,
     "ctx": {
       "away_norm": "bulgaria",
       "comp_type_name": "league",
@@ -7817,54 +7825,54 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9627,
+    "enhancement_probability": 0.9629,
     "enhancement_reason": "Combined Under 3.5 is 98.8% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 96.3%)",
     "enhancement_state": "SHADOW",
     "event_notes": [
       {
-        "cohort_n": 1848,
+        "cohort_n": 1786,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9627403192144918,
-        "raw_probability": 0.9883498883498884,
+        "probability": 0.9628800390750737,
+        "raw_probability": 0.9884933248569612,
         "reason": "Combined Under 3.5 is 98.8% (ML-calibrated 95.9%->97.0%, n=399) (Performance feedback: HR=96.4%, Adjusted Prob: 96.3%)"
       },
       {
-        "cohort_n": 1848,
+        "cohort_n": 1786,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9034456045934434,
-        "raw_probability": 0.950950950950951,
-        "reason": "Combined Under 2.5 is 95.1% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 90.3%)"
+        "probability": 0.9048976409174855,
+        "raw_probability": 0.9524793388429752,
+        "reason": "Combined Under 2.5 is 95.2% (ML-calibrated 91.8%->91.0%, n=365) (Performance feedback: HR=95.8%, Adjusted Prob: 90.5%)"
       },
       {
-        "cohort_n": 1848,
+        "cohort_n": 1786,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 1.5 Goals",
         "market": "away_under_15",
-        "probability": 0.8088267968202578,
-        "raw_probability": 0.8039914914914915,
-        "reason": "Combined Under 1.5 is 80.4% (ML-calibrated 82.8%->84.6%, n=13)"
+        "probability": 0.8129046212793776,
+        "raw_probability": 0.8080449380165289,
+        "reason": "Combined Under 1.5 is 80.8% (ML-calibrated 82.8%->84.6%, n=13)"
       },
       {
-        "cohort_n": 1848,
+        "cohort_n": 1786,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.43148423597149965,
-        "raw_probability": 0.566947716947717,
-        "reason": "Mathematical expectation is 56.7% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 43.1%)"
+        "probability": 0.4358677356402811,
+        "raw_probability": 0.5727074062301335,
+        "reason": "Mathematical expectation is 57.3% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 43.6%)"
       },
       {
-        "cohort_n": 1848,
+        "cohort_n": 1786,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.19372135165782076,
-        "raw_probability": 0.18819555380694133,
-        "reason": "Poisson expected hit rate is 18.8% (ML-calibrated 23.7%->26.7%, n=450)"
+        "probability": 0.19719450532806748,
+        "raw_probability": 0.19156963762803317,
+        "reason": "Poisson expected hit rate is 19.2% (ML-calibrated 23.7%->26.7%, n=450)"
       }
     ],
     "home": "Iceland",
@@ -7881,7 +7889,7 @@
     "min_lead_minutes": 30,
     "model_version": "dc-blend-v1",
     "n_way": 4,
-    "odds": 1.45,
+    "odds": 1.48,
     "odds_captured_at": "2026-10-03T16:00:00Z",
     "odds_league": "UEFA Nations League",
     "odds_match_method": "exact",
@@ -7905,7 +7913,7 @@
         "market": "1x2",
         "match_method": "exact",
         "named_bookmaker": false,
-        "odds": 1.45,
+        "odds": 1.48,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -7937,7 +7945,7 @@
         "league": "UEFA Nations League",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 7.0,
+        "odds": 6.5,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -7970,7 +7978,7 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1278): Avg Goals: 3.33 | Over 2.5: 65.6% | BTTS: 41.7% | Home Over 1.5 Goals: 83.4% | Away Over 1.5 Goals: 10.6%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1253): Avg Goals: 3.36 | Over 2.5: 65.8% | BTTS: 41.1% | Home Over 1.5 Goals: 83.6% | Away Over 1.5 Goals: 10.1%",
     "vitibet_index": 3.29,
     "w_score": 1.0
   },
@@ -8308,12 +8316,12 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-03T09:00:51+02:00",
-    "avg_p": 57.9,
+    "as_of": "2026-10-03T10:08:01+02:00",
+    "avg_p": 58.6,
     "away": "England",
     "bookmaker": "scoutingstats_odds",
     "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-    "confidence": 0.517,
+    "confidence": 0.5418,
     "ctx": {
       "away_norm": "england",
       "comp_type_name": "league",
@@ -8356,64 +8364,64 @@
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
-    "enhancement_breakeven": 0.6211,
-    "enhancement_edge_sample": -0.2552,
+    "enhancement_breakeven": 0.5952,
+    "enhancement_edge_sample": -0.2331,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
-    "enhancement_multi_source": false,
-    "enhancement_price": 1.61,
-    "enhancement_price_at": null,
-    "enhancement_price_book": null,
-    "enhancement_price_source": "scoutingstats",
+    "enhancement_multi_source": true,
+    "enhancement_price": 1.68,
+    "enhancement_price_at": "2026-10-03T07:14:23.325900+00:00",
+    "enhancement_price_book": "1xBet",
+    "enhancement_price_source": "theoddsapi",
     "enhancement_priced": true,
-    "enhancement_probability": 0.4626,
-    "enhancement_reason": "Mathematical expectation is 60.8% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 46.3%)",
+    "enhancement_probability": 0.4565,
+    "enhancement_reason": "Mathematical expectation is 60.0% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 45.7%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 985,
+        "cohort_n": 935,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4625593556138785,
-        "raw_probability": 0.6077787987494808,
-        "reason": "Mathematical expectation is 60.8% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 46.3%)"
+        "probability": 0.45651919060424906,
+        "raw_probability": 0.5998423378623602,
+        "reason": "Mathematical expectation is 60.0% (ML-calibrated 45.1%->62.0%, n=569) (Performance feedback: HR=65.1%, Adjusted Prob: 45.7%)"
       },
       {
-        "cohort_n": 985,
+        "cohort_n": 935,
         "engine": "hybrid_cohort",
         "label": "Away Team Over 0.5 Goals",
         "market": "away_over_05",
-        "probability": 0.8060109444863011,
-        "raw_probability": 0.8780322275324554,
-        "reason": "Away scoring rate is 89.7% (ML-calibrated 87.8%->90.9%, n=33) (Performance feedback: HR=89.5%, Adjusted Prob: 80.6%)"
+        "probability": 0.8033895243359288,
+        "raw_probability": 0.875176569815057,
+        "reason": "Away scoring rate is 89.7% (ML-calibrated 87.8%->90.9%, n=33) (Performance feedback: HR=89.5%, Adjusted Prob: 80.3%)"
       },
       {
-        "cohort_n": 985,
+        "cohort_n": 935,
         "engine": "hybrid_cohort",
         "label": "Home Team Under 3.5 Goals",
         "market": "home_under_35",
-        "probability": 0.9656867125526502,
-        "raw_probability": 0.9636930470410646,
+        "probability": 0.9658572511300664,
+        "raw_probability": 0.963863233540653,
         "reason": "Combined Under 3.5 is 96.4% (ML-calibrated 93.9%->97.5%, n=159) (Performance feedback: HR=96.8%, Adjusted Prob: 96.6%)"
       },
       {
-        "cohort_n": 985,
+        "cohort_n": 935,
         "engine": "hybrid_cohort",
         "label": "Home Team Under 2.5 Goals",
         "market": "home_under_25",
-        "probability": 0.863866290206412,
-        "raw_probability": 0.8948140845938203,
+        "probability": 0.8636355733050762,
+        "raw_probability": 0.8945751023170379,
         "reason": "Combined Under 2.5 is 89.5% (ML-calibrated 90.5%->93.2%, n=133) (Performance feedback: HR=93.9%, Adjusted Prob: 86.4%)"
       },
       {
-        "cohort_n": 985,
+        "cohort_n": 935,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.20258763764465676,
-        "raw_probability": 0.19680893373240585,
-        "reason": "Poisson expected hit rate is 19.7% (ML-calibrated 23.7%->26.7%, n=450)"
+        "probability": 0.2022176751643023,
+        "raw_probability": 0.19644952423375092,
+        "reason": "Poisson expected hit rate is 19.6% (ML-calibrated 23.7%->26.7%, n=450)"
       }
     ],
     "home": "Croatia",
@@ -8468,7 +8476,7 @@
         "league": "UEFA Nations League",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 3.9,
+        "odds": 4.0,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -8519,7 +8527,7 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=643): Avg Goals: 3.34 | Over 2.5: 69.5% | BTTS: 44.5% | Home Over 1.5 Goals: 10.6% | Away Over 1.5 Goals: 84.8%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=610): Avg Goals: 3.35 | Over 2.5: 69.2% | BTTS: 43.8% | Home Over 1.5 Goals: 10.5% | Away Over 1.5 Goals: 84.6%",
     "vitibet_index": -1.56,
     "w_score": 1.0
   },
