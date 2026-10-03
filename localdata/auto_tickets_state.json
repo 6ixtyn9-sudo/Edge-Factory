@@ -1,41 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 152.1935550000001,
+  "bank": 142.68145500000008,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-10-03",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Sri Lanka vs Djibouti",
-              "pick": "HOME",
-              "prob": 0.732,
-              "odds": 2.6,
-              "result": null
-            },
-            {
-              "match": "Pite\u00e5 W vs Norrk\u00f6ping W",
-              "pick": "HOME",
-              "prob": 0.64,
-              "odds": 2.07,
-              "result": null
-            }
-          ],
-          "odds": 5.38,
-          "stake_pct": 9.5121,
-          "bench_weight": 0.5,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 9.5121
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -644,6 +611,18 @@
         }
       ],
       "bank_pct": 152.1936
+    },
+    {
+      "date": "2026-10-03",
+      "staked_pct": 9.5121,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 5.38,
+          "won": false
+        }
+      ],
+      "bank_pct": 142.6815
     }
   ],
   "events": [],

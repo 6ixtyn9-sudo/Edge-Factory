@@ -1,35 +1,35 @@
 {
   "by_bucket": {
     "CAUTION": {
-      "avg_implied_prob_delta": 0.001926,
-      "avg_raw_odds_delta": -0.002472,
-      "beat_later_price_n": 89,
-      "beat_later_price_rate": 0.179775,
-      "total_picks": 98,
-      "with_two_prices": 89
+      "avg_implied_prob_delta": 0.001905,
+      "avg_raw_odds_delta": -0.002444,
+      "beat_later_price_n": 90,
+      "beat_later_price_rate": 0.177778,
+      "total_picks": 99,
+      "with_two_prices": 90
     },
     "CERTIFIED_CLEAN": {
-      "avg_implied_prob_delta": 0.00149,
-      "avg_raw_odds_delta": -0.003136,
-      "beat_later_price_n": 118,
-      "beat_later_price_rate": 0.161017,
-      "total_picks": 131,
-      "with_two_prices": 118
+      "avg_implied_prob_delta": 0.001477,
+      "avg_raw_odds_delta": -0.003109,
+      "beat_later_price_n": 119,
+      "beat_later_price_rate": 0.159664,
+      "total_picks": 132,
+      "with_two_prices": 119
     },
     "SKIPPED_VETO": {
-      "avg_implied_prob_delta": 0.00088,
-      "avg_raw_odds_delta": -0.001927,
-      "beat_later_price_n": 467,
-      "beat_later_price_rate": 0.147752,
-      "total_picks": 551,
-      "with_two_prices": 467
+      "avg_implied_prob_delta": 0.001079,
+      "avg_raw_odds_delta": -0.002112,
+      "beat_later_price_n": 464,
+      "beat_later_price_rate": 0.146552,
+      "total_picks": 549,
+      "with_two_prices": 464
     },
     "WATCHLIST_NO_ODDS": {
       "avg_implied_prob_delta": 0.0,
       "avg_raw_odds_delta": 0.0,
       "beat_later_price_n": 2,
       "beat_later_price_rate": 0.0,
-      "total_picks": 80,
+      "total_picks": 84,
       "with_two_prices": 2
     },
     "WATCHLIST_SUSPECT_PRICE": {
@@ -41,12 +41,12 @@
       "with_two_prices": 14
     },
     "WATCHLIST_UNCORROBORATED_PRICE": {
-      "avg_implied_prob_delta": 0.002004,
-      "avg_raw_odds_delta": -0.005271,
-      "beat_later_price_n": 203,
-      "beat_later_price_rate": 0.068966,
-      "total_picks": 229,
-      "with_two_prices": 203
+      "avg_implied_prob_delta": 0.001994,
+      "avg_raw_odds_delta": -0.005245,
+      "beat_later_price_n": 204,
+      "beat_later_price_rate": 0.068627,
+      "total_picks": 230,
+      "with_two_prices": 204
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "avg_implied_prob_delta": 0.0,
@@ -59,36 +59,36 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=60": {
-      "avg_implied_prob_delta": 0.000271,
-      "avg_raw_odds_delta": -0.000769,
-      "beat_later_price_n": 130,
-      "beat_later_price_rate": 0.084615,
-      "total_picks": 186,
-      "with_two_prices": 130
+      "avg_implied_prob_delta": 0.000263,
+      "avg_raw_odds_delta": -0.000746,
+      "beat_later_price_n": 134,
+      "beat_later_price_rate": 0.08209,
+      "total_picks": 195,
+      "with_two_prices": 134
     },
     "2way-unanimous avg_p>=70": {
-      "avg_implied_prob_delta": 0.001093,
-      "avg_raw_odds_delta": -0.001546,
-      "beat_later_price_n": 97,
-      "beat_later_price_rate": 0.206186,
-      "total_picks": 146,
-      "with_two_prices": 97
+      "avg_implied_prob_delta": 0.001116,
+      "avg_raw_odds_delta": -0.001579,
+      "beat_later_price_n": 95,
+      "beat_later_price_rate": 0.210526,
+      "total_picks": 143,
+      "with_two_prices": 95
     },
     "ml-meta avg_p>=55": {
-      "avg_implied_prob_delta": 0.00188,
-      "avg_raw_odds_delta": -0.004173,
-      "beat_later_price_n": 508,
-      "beat_later_price_rate": 0.149606,
-      "total_picks": 567,
-      "with_two_prices": 508
+      "avg_implied_prob_delta": 0.002068,
+      "avg_raw_odds_delta": -0.004356,
+      "beat_later_price_n": 505,
+      "beat_later_price_rate": 0.148515,
+      "total_picks": 565,
+      "with_two_prices": 505
     },
     "ml-meta avg_p>=60": {
-      "avg_implied_prob_delta": 0.000441,
-      "avg_raw_odds_delta": -0.001059,
-      "beat_later_price_n": 85,
-      "beat_later_price_rate": 0.070588,
-      "total_picks": 110,
-      "with_two_prices": 85
+      "avg_implied_prob_delta": 0.000436,
+      "avg_raw_odds_delta": -0.001047,
+      "beat_later_price_n": 86,
+      "beat_later_price_rate": 0.069767,
+      "total_picks": 111,
+      "with_two_prices": 86
     },
     "ml-meta avg_p>=65": {
       "avg_implied_prob_delta": 0.000179,
@@ -131,18 +131,18 @@
       "with_two_prices": 35
     }
   },
-  "end": "2026-10-03",
+  "end": "2026-10-04",
   "meta": {
     "insufficient_snapshots": 116,
-    "unmatched_picks": 104
+    "unmatched_picks": 109
   },
   "overall": {
-    "avg_implied_prob_delta": 0.001233,
-    "avg_raw_odds_delta": -0.002697,
+    "avg_implied_prob_delta": 0.001333,
+    "avg_raw_odds_delta": -0.002786,
     "beat_later_price_n": 901,
-    "beat_later_price_rate": 0.132075,
-    "total_picks": 1121,
+    "beat_later_price_rate": 0.130966,
+    "total_picks": 1126,
     "with_two_prices": 901
   },
-  "start": "2026-09-03"
+  "start": "2026-09-04"
 }
