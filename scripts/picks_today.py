@@ -59,6 +59,7 @@ from edgefactory.source_health import (
     bzzoiro_status_line,
     daily_status_block,
     persist_daily_source_health,
+    source_role_lines,
     record_bzzoiro_run,
 )
 from edgefactory.shadow import append_price_board_rows, read_shadow_rows
@@ -4325,13 +4326,15 @@ def main():
             "bm_raw": int(bm_shadow_stats.get("bm_raw") or 0),
             "bm_scored": int(bm_shadow_stats.get("bm_scored") or 0),
             "can_fetch_today": bm_shadow_stats.get("status") in {"ok", "empty"},
-            # Voice-only: the payload odds carry no bookmaker identity, so
-            # Betminer is never a price donor under the standing rule.
-            "can_price": False,
-            # Zero credit until the echo test passes and the operator promotes.
+            # Conditional price donor: only rows whose provenance the response
+            # actually identified count, and BetMiner is never execution-eligible.
+            "can_price": int(bm_shadow_stats.get("bm_priced") or 0) > 0,
+            # Zero voice credit until the echo test passes and the operator promotes.
             "can_vote": False,
             "freshness_h": 0.0 if bm_shadow_stats.get("status") == "ok" else None,
             "blocker": bm_shadow_stats.get("blocker"),
+            "status": bm_shadow_stats.get("status"),
+            "reason": bm_shadow_stats.get("reason"),
         }
         health_observations["pinnapi_odds"] = {
             "fetched": pa_shadow_stats.get("status") in {"ok", "empty"},
@@ -4351,12 +4354,16 @@ def main():
             "bb_raw": int(bb_shadow_stats.get("bb_raw") or 0),
             "bb_scored": int(bb_shadow_stats.get("bb_scored") or 0),
             "can_fetch_today": bb_shadow_stats.get("status") in {"ok", "empty"},
-            # Benchmark board: fair odds only (model-derived, no bookmaker).
-            "can_price": False,
-            # Zero-credit echo-test benchmark.
+            # Approved FAIR-price donor (operator promotion 2026-10-03). These
+            # are model fair odds, never bookmaker quotes - the role label in
+            # source_health keeps that distinction visible.
+            "can_price": int(bb_shadow_stats.get("bb_scored") or 0) > 0,
+            # A fair price is price evidence, never a vote.
             "can_vote": False,
             "freshness_h": 0.0 if bb_shadow_stats.get("status") == "ok" else None,
             "blocker": bb_shadow_stats.get("blocker"),
+            "status": bb_shadow_stats.get("status"),
+            "reason": bb_shadow_stats.get("reason"),
         }
         health_observations["sharpapi_odds"] = {
             "fetched": sa_shadow_stats.get("status") in {"ok", "empty"},
@@ -4368,6 +4375,8 @@ def main():
             "can_vote": False,
             "freshness_h": 0.0 if sa_shadow_stats.get("status") == "ok" else None,
             "blocker": sa_shadow_stats.get("blocker"),
+            "status": sa_shadow_stats.get("status"),
+            "reason": sa_shadow_stats.get("reason"),
         }
         health_observations["boggio"] = {
             "fetched": bg_shadow_stats.get("status") in {"ok", "empty"},
@@ -4375,9 +4384,14 @@ def main():
             "bg_raw": int(bg_shadow_stats.get("bg_raw") or 0),
             "bg_scored": int(bg_shadow_stats.get("bg_scored") or 0),
             "can_fetch_today": bg_shadow_stats.get("status") in {"ok", "empty"},
-            "can_price": False, "can_vote": False,
+            # Approved AVERAGE-bookmaker price donor (operator promotion
+            # 2026-10-03). Not a named bookmaker, never named-book corroboration.
+            "can_price": int(bg_shadow_stats.get("bg_scored") or 0) > 0,
+            "can_vote": False,
             "freshness_h": 0.0 if bg_shadow_stats.get("status") == "ok" else None,
             "blocker": bg_shadow_stats.get("blocker"),
+            "status": bg_shadow_stats.get("status"),
+            "reason": bg_shadow_stats.get("reason"),
         }
         health_observations["sportytrader_odds"] = {
             "fetched": st_shadow_stats.get("status") in {"ok", "empty"},
@@ -4394,6 +4408,11 @@ def main():
         }
         persist_daily_source_health(day, health_observations)
         print(daily_status_block(day), file=sys.stderr)
+        # Source ROLES, printed next to health: the pipeline must never imply
+        # that every source returning a number is a bookmaker source.
+        for line in source_role_lines(day):
+            print(f"  {line}", file=sys.stderr)
+        print(psrc.policy_line(), file=sys.stderr)
 
         corroborated_n = _stamp_price_corroboration(picks)
         priced_n = sum(1 for p in picks if p.get("odds") is not None)
