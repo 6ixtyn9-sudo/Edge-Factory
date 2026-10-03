@@ -22,12 +22,13 @@ lookahead observation must never become either settled evidence or a price.
 """
 from __future__ import annotations
 import json, os, threading, time, urllib.error, urllib.parse, urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
 
 from edgefactory.odds_normalization import (
     canonical_market_selection,
+    parse_declared_zone_timestamp,
     parse_zoned_timestamp,
     provider_kickoff_date,
 )
@@ -88,6 +89,27 @@ LOOKAHEAD_NOTE = (
     "published_at <= captured_at and never use future observations."
 )
 
+# The v2 feed's documented timestamp contract. start_date and last_update_at
+# are NAIVE ISO stamps ("2018-12-06T19:00:00", "2018-12-04T20:11:57.506000")
+# whose wall clock is the API server's Europe/London (GMT/BST) time:
+# "The GMT/BST start date of the predicted event", "Day starts at 00:00
+# London Timezone" (developer.boggio-analytics.com, API endpoints + how-tos;
+# the official examples localize with pytz Europe/London).
+#
+# Rounds 1-2 assumed a "YYYY-MM-DD HH:MM:SS UTC" suffix instead. That shape
+# appears nowhere in the provider's documentation, the shared parser (rightly)
+# refused the zone-free stamps the feed actually emits, and every Boggio row
+# kept joining with no date. The zone below is the provider's own contract,
+# not an assumption on our side; the shared parser still fails closed for
+# every provider that does not document one.
+DECLARED_ZONE = "Europe/London"
+
+# The provider's London clock face runs up to +1h ahead of UTC (BST). A
+# published_at that is ahead of our capture clock by no more than that face
+# difference is the same instant written on the provider's clock, not a
+# lookahead artefact; anything further ahead cannot be explained by the zone.
+_DECLARED_ZONE_MAX_SKEW = timedelta(hours=1)
+
 
 def price_donor_enabled() -> bool:
     """Operator switch that lets Boggio's average price reach a ticket."""
@@ -98,15 +120,15 @@ def price_donor_enabled() -> bool:
 
 
 def _parse_stamp(value):
-    """Absolute, zone-bearing stamp or ``None``.
+    """Parse a Boggio stamp under the provider's documented zone contract.
 
-    The v2 feed renders both ``last_update_at`` and ``start_date`` as
-    ``"YYYY-MM-DD HH:MM:SS UTC"``.  ``datetime.fromisoformat`` rejects that
-    trailing zone name, which is why every Boggio row used to land with no
-    join date at all.  The shared parser accepts the named zone and still
-    fails closed on anything that does not name one.
+    Zone-bearing shapes (if the feed ever emits them) are honoured as written
+    through the shared parser. A naive stamp is localised to the documented
+    Europe/London zone. Anything else - including a date with no time -
+    returns ``None``; this adapter never falls back to the capture date or
+    the capture machine's locale.
     """
-    return parse_zoned_timestamp(value)
+    return parse_declared_zone_timestamp(value, DECLARED_ZONE)
 
 
 def timestamp_suspect(published_at, captured_at) -> bool:
@@ -115,11 +137,20 @@ def timestamp_suspect(published_at, captured_at) -> bool:
     A future publication stamp is the signature of a lookahead artefact. It
     is never an error we can correct, so the row stays visible but loses
     price eligibility.
+
+    A ``published_at`` that names its own zone is an absolute claim and is
+    compared strictly. A naive ``published_at`` carries the provider's
+    documented London clock face, which can sit up to +1h (BST) ahead of
+    UTC; exactly that documented face difference is allowed and nothing
+    more, so the zone contract cannot manufacture a false suspicion and a
+    genuine lookahead still fails.
     """
     published, captured = _parse_stamp(published_at), _parse_stamp(captured_at)
     if published is None or captured is None:
         return False
-    return published > captured
+    if parse_zoned_timestamp(published_at) is not None:
+        return published > captured
+    return published > captured + _DECLARED_ZONE_MAX_SKEW
 
 
 def _selection_odds(odds, prediction):
@@ -162,7 +193,10 @@ def parse_predictions(payload:Any, *, day:str):
   suspect=timestamp_suspect(published,stamp)
   kickoff=item.get("start_date")
   kickoff_text=str(kickoff or "")
-  event_day=provider_kickoff_date(kickoff_text)
+  # The provider's documented zone contract (see DECLARED_ZONE) resolves the
+  # naive London stamps the v2 feed actually emits. A stamp that violates
+  # even that contract still fails closed to a missing join date.
+  event_day=provider_kickoff_date(kickoff_text,declared_zone=DECLARED_ZONE)
   rows.append({
     "source":SOURCE,
     "date":event_day,
@@ -196,13 +230,51 @@ def parse_predictions(payload:Any, *, day:str):
 
 
 def _path(day,localdata=None): return (localdata or LOCALDATA)/f"{SOURCE}_shadow_{day}.json"
+
+def reattribute_shadow_row(row):
+    """Re-derive the stamp-dependent fields of a cached shadow row.
+
+    A cached ledger can predate a stamp-contract repair: its rows then hold
+    ``date=None`` and ``price_push_eligible=False`` even though the raw
+    ``kickoff``/``published_at`` values they retained are perfectly
+    parseable under the current contract. Re-deriving from the RAW fields
+    makes a cached row exactly what a fresh capture would have produced -
+    the ledger self-heals instead of pinning pre-repair verdicts for the
+    rest of the day. Raw values are never rewritten; only derived fields
+    move, and only to what the current code derives from them.
+    """
+    out=dict(row)
+    home=out.get("home"); away=out.get("away")
+    raw_market=out.get("raw_market") or out.get("market") or "classic"
+    raw_selection=out.get("raw_selection") or out.get("selection")
+    canonical,_failure=canonical_market_selection(raw_market,raw_selection,home=home,away=away)
+    mappable=canonical is not None
+    event_day=provider_kickoff_date(out.get("kickoff"),declared_zone=DECLARED_ZONE)
+    suspect=timestamp_suspect(out.get("published_at"),out.get("captured_at"))
+    # Ledgers cached before the price-donor promotion carry no ``odds`` key,
+    # only the raw ``odds_provenance`` object; re-derive the average price
+    # from it exactly as a fresh capture would have.
+    odds=_num(out.get("odds")) if out.get("odds") is not None else (
+        _selection_odds(out.get("odds_provenance"),raw_selection) if isinstance(out.get("odds_provenance"),dict) else None)
+    out["odds"]=odds
+    out["date"]=event_day
+    out["timestamp_suspect"]=suspect
+    out["price_push_eligible"]=bool(event_day and mappable and odds is not None and odds>1.0 and price_donor_enabled() and not suspect)
+    return out
+
 def capture_day(day,*,localdata=None):
  stats={"status":"not_run","bg_raw":0,"bg_scored":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"budget":1}
  reset_state()
  if not _key(): stats["blocker"]=f"{KEY_ENV} not set; shadow capture skipped"; return [],_set_diag(stats)
  try:
   held=json.loads(_path(day,localdata).read_text()).get("rows",[])
-  if held: stats.update(status="cache_only",cache_hits=1,bg_raw=len(held),bg_scored=len(held),schema_match=True); return held,_set_diag(stats)
+  if held:
+   # Heal the cache before serving it: rows cached by a pre-repair parser
+   # keep their raw evidence but regain the derived fields the current
+   # contract produces. persist_shadow (called by the capture orchestrator)
+   # writes the healed rows back, so the ledger converges without a refetch.
+   held=[reattribute_shadow_row(r) for r in held if isinstance(r,dict)]
+   stats.update(status="cache_only",cache_hits=1,bg_raw=len(held),bg_scored=len(held),schema_match=True); return held,_set_diag(stats)
  except (OSError,ValueError,TypeError): pass
  try:
   code,payload,headers=get_json(predictions_url(day)); stats.update(requests=1,http_statuses=[code],rate_limit_headers=headers)

@@ -1,4 +1,5 @@
 {
+  "_note": "Raw shape of the football-prediction-api v2 /api/v2/predictions payload exactly as documented by the provider (developer.boggio-analytics.com, API endpoints): start_date and last_update_at are NAIVE ISO stamps on the API's Europe/London (GMT/BST) clock, e.g. '2018-12-06T19:00:00' and '2018-12-04T20:11:57.506000'. Rounds 1-2 tested a 'YYYY-MM-DD HH:MM:SS UTC' suffix that the provider does not emit - that gap is why the date repair never moved a row. Field names and vocabulary are the provider's own.",
   "data": [
     {
       "id": 762111,
@@ -7,14 +8,14 @@
       "competition_name": "Premier League",
       "federation": "UEFA",
       "is_expired": false,
-      "last_update_at": "2026-10-03 06:10:11 UTC",
+      "last_update_at": "2026-10-03T06:10:11.506000",
       "market": "classic",
       "odds": {"1": 1.85, "2": 4.2, "X": 3.5},
       "prediction": "1",
       "prediction_probability": 55.2,
       "probabilities": {"1": 55.2, "2": 20.1, "X": 24.7},
       "result": null,
-      "start_date": "2026-10-03 16:00:00 UTC",
+      "start_date": "2026-10-03T16:00:00",
       "status": "pending"
     },
     {
@@ -24,14 +25,14 @@
       "competition_name": "Serie A",
       "federation": "UEFA",
       "is_expired": false,
-      "last_update_at": "2026-10-03 06:10:11 UTC",
+      "last_update_at": "2026-10-03T06:10:11.506000",
       "market": "classic",
       "odds": {"1": 2.6, "2": 2.9, "X": 3.1},
       "prediction": "X",
       "prediction_probability": 34.0,
       "probabilities": {"1": 33.0, "2": 33.0, "X": 34.0},
       "result": null,
-      "start_date": "2026-10-03 18:45:00 UTC",
+      "start_date": "2026-10-03T18:45:00",
       "status": "pending"
     },
     {
@@ -41,14 +42,14 @@
       "competition_name": "La Liga",
       "federation": "UEFA",
       "is_expired": false,
-      "last_update_at": "2026-10-03 06:10:11 UTC",
+      "last_update_at": "2026-10-03T06:10:11.506000",
       "market": "classic",
       "odds": {"1": 1.4, "2": 7.5, "X": 4.8, "1X": 1.12},
       "prediction": "1X",
       "prediction_probability": 81.0,
       "probabilities": {"1": 62.0, "2": 15.0, "X": 23.0},
       "result": null,
-      "start_date": "2026-10-03 20:00:00 UTC",
+      "start_date": "2026-10-03T20:00:00",
       "status": "pending"
     }
   ]

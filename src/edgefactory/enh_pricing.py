@@ -86,6 +86,13 @@ THEODDSAPI_SOURCE = "theoddsapi"
 BZZOIRO_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_SOURCE = "scoutingstats"
 ODDSPAPI_SOURCE = "oddspapi"
+# Lowest OddsPapi row generation the enhancement overlay will consume. Must
+# track scripts/capture_oddspapi.py:SCHEMA_VERSION (and picks_today's
+# ODDSPAPI_MIN_SCHEMA_VERSION); the pairing is asserted in
+# tests/test_oddspapi_schema_invalidation.py. Generation 1 mislabelled
+# selections; generation 2 wrote no ambiguity check and retained no outcome
+# key, so its rows cannot be re-audited from the CSV.
+ODDSPAPI_MIN_SCHEMA_VERSION = 3
 
 DIVERGENCE_MIN_SPREAD = 0.10  # flag when max/min best-source prices differ by >10%
 # Governance N4 (Addendum 27.11, 2026-08-05): max pre-kickoff capture age in
@@ -176,9 +183,16 @@ def _fresh_row(row: dict[str, Any], max_age_h: float) -> bool:
 
 def _accumulate_unified(path: Path, *, day: str, source_tag: str,
                         strict_source: str | None, out: dict[str, Any],
-                        max_age_h: float | None = None) -> None:
+                        max_age_h: float | None = None,
+                        min_schema_version: int | None = None) -> None:
     """Read a unified-schema odds csv.gz (source,date,...,market,selection,odds,
-    bookmaker,captured_at). Fail-soft; contributes nothing on any error."""
+    bookmaker,captured_at). Fail-soft; contributes nothing on any error.
+
+    ``min_schema_version`` gates the row generation the same way the
+    picks_today bundle reader does: the OddsPapi store mixes generations on
+    disk (414 generation-1 rows with mislabelled selections are permanent
+    evidence), and blank participants alone are only the symptom - the gate
+    is on the generation marker."""
     try:
         if not path.exists():
             return
@@ -188,6 +202,13 @@ def _accumulate_unified(path: Path, *, day: str, source_tag: str,
                     continue
                 if row.get("date") != day:
                     continue
+                if min_schema_version is not None:
+                    try:
+                        row_schema = int(str(row.get("schema_version") or 0) or 0)
+                    except ValueError:
+                        row_schema = 0
+                    if row_schema < int(min_schema_version):
+                        continue
                 if max_age_h is not None and not _fresh_row(row, max_age_h):
                     continue
                 home, away = row.get("home"), row.get("away")
@@ -269,7 +290,8 @@ def load_prices_index(root: Path, day: str) -> dict[str, Any]:
         _accumulate_unified(localdata / f"oddspapi_odds_{month}.csv.gz",
                             day=day, source_tag=ODDSPAPI_SOURCE,
                             strict_source=ODDSPAPI_SOURCE, out=out,
-                            max_age_h=ODDSPAPI_MAX_AGE_H)
+                            max_age_h=ODDSPAPI_MAX_AGE_H,
+                            min_schema_version=ODDSPAPI_MIN_SCHEMA_VERSION)
     return out
 
 

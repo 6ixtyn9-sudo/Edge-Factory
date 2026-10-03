@@ -61,6 +61,47 @@ def test_betbetter_raw_market_strings_map_or_are_explicitly_unsupported():
     assert failure.raw == "draw_no_bet"
 
 
+def test_betbetter_head_to_head_3_way_maps_to_1x2_with_team_selections():
+    """Round 3, Task 1: "Head to Head 3-Way" is 1X2, not an unknown market.
+
+    Raw strings exactly as the keyless board emits them (observed 2026-10-03,
+    e.g. "Hull City @ Fulham" / "Head to Head 3-Way" / "Hull City"). The
+    selection side is a team name, so the market fix must NOT leave the rows
+    in a selection miss bucket.
+    """
+    result, failure = canonical_market_selection(
+        "Head to Head 3-Way", "Hull City", home="Fulham", away="Hull City")
+    assert failure is None
+    assert (result.market, result.selection) == ("1x2", "away")
+
+    # The draw leg of the three-way market canonicalises too.
+    draw, failure = canonical_market_selection(
+        "Head to Head 3-Way", "Draw", home="Fulham", away="Hull City")
+    assert failure is None
+    assert (draw.market, draw.selection) == ("1x2", "draw")
+
+    # ...and the home leg, spelled as either the team name or the token.
+    home_leg, _ = canonical_market_selection(
+        "Head to Head 3-Way", "Fulham", home="Fulham", away="Hull City")
+    assert (home_leg.market, home_leg.selection) == ("1x2", "home")
+
+
+def test_betbetter_spread_is_asian_handicap_shaped_and_explicitly_unsupported():
+    """Round 3, Task 1: "Spread" carries quarter lines (-1.75, -2.25) and a
+    0 line; the pipeline prices no handicap market, so the token is
+    *recognised but unpriced* -- an explicit `unsupported` classification,
+    never a silent drop and never an unexamined `unknown`.
+    """
+    for line in (-2, -2.25, -1.75, -1.5, 0):
+        result, failure = canonical_market_selection(
+            "Spread", "Manchester City", home="Manchester City",
+            away="Ipswich Town", line=line)
+        assert result is None
+        assert failure.kind == "unsupported_market"
+        assert failure.raw == "spread"
+
+
+
 def test_betbetter_unmappable_market_is_kept_and_counted_not_dropped():
     payload = _load("betbetter_brazil_serie_a.json")
     rows = bb.parse_picks(payload, day="2026-10-02", slug="brazil-serie-a")
@@ -105,6 +146,49 @@ def test_betbetter_matches_a_realistic_slate_from_raw_vocabulary():
     # The third row is not lost: it is an explicitly counted, named miss.
     assert report["miss_counts"] == {"market_unsupported": 1}
     assert report["unmapped_vocabulary"] == {"unsupported_market:draw_no_bet": 1}
+
+
+def test_betbetter_head_to_head_3_way_rows_join_and_spread_rows_are_counted():
+    """End to end over the shared bundle/join machinery, raw board strings.
+
+    Before the round-3 mapping these 115 rows were ``market_unmapped`` and
+    the ~480 Spread rows were ``market_unmapped`` too. After it the 1X2 rows
+    must MATCH and the Spread rows must land in the explicit
+    ``market_unsupported`` bucket -- still counted, still named.
+    """
+    day = "2026-10-17"
+    raw_payload = {
+        "attribution": "Bet Better — https://betbetter.world",
+        "licence": "CC BY 4.0",
+        "picks": [
+            {"game": "Hull City @ Fulham", "gameTimeUtc": f"{day}T14:00:00.0000000Z",
+             "market": "Head to Head 3-Way", "selection": "Hull City", "line": None,
+             "winProbabilityPct": 25.2, "fairOdds": 5.17, "confidence": "LONG-SHOT"},
+            {"game": "Ipswich Town @ Manchester City", "gameTimeUtc": f"{day}T14:00:00.0000000Z",
+             "market": "Spread", "selection": "Manchester City", "line": -1.75,
+             "winProbabilityPct": 55.7, "fairOdds": 2.37, "confidence": "LEAN"},
+            {"game": "Fulham @ Ipswich Town", "gameTimeUtc": f"{day}T14:00:00.0000000Z",
+             "market": "Draw No Bet", "selection": "Fulham", "line": None,
+             "winProbabilityPct": 63.6, "fairOdds": 1.98, "confidence": "LEAN"},
+        ],
+    }
+    rows = bb.parse_picks(raw_payload, day=day, slug="epl")
+    bundle = pt._odds_bundle_from_rows(rows, provider="betbetter")
+    picks = [
+        _pick("Fulham", "Hull City", "1x2", "away", day=day),
+        _pick("Ipswich Town", "Manchester City", "1x2", "home", day=day),
+    ]
+    report = pt.donor_join_diagnostics(picks, [bundle])["betbetter"]
+
+    assert report["matched_rows"] == 1, "Head to Head 3-Way fair prices must join"
+    # The Spread and Draw No Bet rows are counted as explicit unsupported
+    # misses at the canonicalisation boundary - before any fixture question,
+    # so there is no fixture bucket left to report.
+    assert report["miss_counts"] == {"market_unsupported": 2}
+    assert report["unmapped_vocabulary"] == {
+        "unsupported_market:spread": 1,
+        "unsupported_market:draw_no_bet": 1,
+    }
 
 
 def test_betbetter_feed_is_multi_day_so_off_slate_rows_are_out_of_window():
@@ -173,19 +257,84 @@ def test_boggio_matches_a_realistic_slate_and_counts_the_rest():
     assert report["unmapped_vocabulary"] == {"unsupported_selection:1x": 1}
 
 
-def test_boggio_kickoff_without_a_zone_still_fails_closed():
-    """The repair must not reintroduce capture-date defaulting."""
+def test_boggio_kickoff_contract_round3():
+    """Round 3: the stamps the feed ACTUALLY emits are naive London ISO.
+
+    The provider documents start_date as "2018-12-06T19:00:00" on a GMT/BST
+    clock. Round 2 tested a "YYYY-MM-DD HH:MM:SS UTC" suffix the provider
+    does not emit, so its fix never applied to a single row.
+    """
+    # Documented contract: naive stamp + declared zone -> real London date.
+    assert provider_kickoff_date("2026-10-03T16:00:00", declared_zone="Europe/London") == "2026-10-03"
+    assert provider_kickoff_date(
+        "2018-12-04T20:11:57.506000", declared_zone="Europe/London") == "2018-12-04"
+    # A zone the string itself names is honoured as written.
     assert provider_kickoff_date("2026-10-03 16:00:00 UTC") == "2026-10-03"
+    # THE SHARED PARSER STILL FAILS CLOSED: no declared contract, no date.
+    assert provider_kickoff_date("2026-10-03T16:00:00") is None
     assert provider_kickoff_date("2026-10-03 16:00:00") is None
     assert provider_kickoff_date("16:00") is None
+    assert provider_kickoff_date("2026-10-03") is None  # a date is not a kickoff
     assert provider_kickoff_date(None) is None
 
+
+def test_boggio_attribution_is_kickoff_authoritative_not_capture_date():
+    """The declared-zone repair must not reintroduce capture-date defaulting.
+
+    A kickoff at 00:30 London belongs to the provider's declared 2026-10-04
+    date even though its UTC instant (23:30 on 10-03 in BST) is the prior
+    day and even though the capture day is 2026-10-03. A stamp that violates
+    the contract still yields no date and no eligibility.
+    """
     payload = _load("boggio_predictions_classic.json")
-    payload["data"][0]["start_date"] = "2026-10-03 16:00:00"
+    payload["data"][0]["start_date"] = "2026-10-04T00:30:00"
+    payload["data"][1]["start_date"] = "not-a-provider-stamp"
     rows, _shaped = boggio.parse_predictions(payload, day=DAY)
-    naive = [r for r in rows if r["home"] == "Alpha FC"][0]
-    assert naive["date"] is None
-    assert naive["price_push_eligible"] is False
+
+    by_home = {r["home"]: r for r in rows}
+    assert by_home["Alpha FC"]["date"] == "2026-10-04", "London wall-clock date wins"
+    assert by_home["Alpha FC"]["price_push_eligible"] is True
+    assert by_home["Gamma FC"]["date"] is None, "a broken stamp still fails closed"
+    assert by_home["Gamma FC"]["price_push_eligible"] is False
+
+
+def test_boggio_cached_pre_repair_ledger_self_heals_from_raw_fields():
+    """The round-2 fix looked inert partly because the same-day ledger is
+    cached: rows written by a pre-repair parser pinned date=None. Healing
+    re-derives the cached rows from their RAW stamps so the repair takes
+    effect without waiting for tomorrow's fresh capture."""
+    from edgefactory.sources.boggio import reattribute_shadow_row
+
+    # A row shaped exactly like a pre-repair cache entry: raw vocabulary in
+    # market/selection, no odds key (only odds_provenance), no date.
+    cached = {
+        "source": "boggio", "date": None,
+        "home": "Alpha FC", "away": "Beta FC",
+        "kickoff": "2026-10-03T16:00:00",          # raw provider stamp, naive London
+        "market": "classic", "selection": "1",      # raw provider vocabulary
+        "odds_provenance": {"1": 1.85, "2": 4.2, "X": 3.5},
+        "published_at": "2026-10-03T06:10:11.506000",
+        "captured_at": "2026-10-03T07:00:00+00:00",
+    }
+    healed = reattribute_shadow_row(cached)
+    assert healed["date"] == "2026-10-03"
+    assert healed["odds"] == 1.85
+    assert healed["price_push_eligible"] is True
+    # The raw evidence is untouched; only derived fields moved.
+    assert healed["kickoff"] == "2026-10-03T16:00:00"
+    assert healed["odds_provenance"] == cached["odds_provenance"]
+
+    # A lookahead publication stamp still withholds the price after healing.
+    lookahead = dict(cached, published_at="2026-10-03T09:00:00+00:00",
+                     captured_at="2026-10-03T07:00:00+00:00")
+    assert reattribute_shadow_row(lookahead)["price_push_eligible"] is False
+
+    # The double-chance row stays non-eligible even with a quoted 1X price.
+    dc = dict(cached, selection="1X", raw_selection="1X",
+              odds_provenance={"1": 1.4, "X": 4.8, "1X": 1.12})
+    healed_dc = reattribute_shadow_row(dc)
+    assert healed_dc["odds"] == 1.12
+    assert healed_dc["price_push_eligible"] is False
 
 
 # ---------------------------------------------------------------------------

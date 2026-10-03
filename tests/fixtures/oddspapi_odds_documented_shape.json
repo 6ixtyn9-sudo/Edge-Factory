@@ -1,0 +1,177 @@
+{
+  "_note": "The 2026-10-03 run's /odds payload shape, completed with the outcome identity the provider documents but the scrubbed schema dump could not show: outcome dict KEYS are the provider's outcome ids (market 101 -> 101/102/103 = 1/X/2 per the oddspapi.io docs and tutorial), and playerName is null for team-level markets on some books (the websocket docs' own example shows playerName: null). This is the shape that produced unresolved_1x2=238 and unresolved_totals=1010 in run 662c99f1: no outcome names, no lines, and a parser that discarded the outcome keys.",
+  "startTime": "2026-10-03T16:00:00.000Z",
+  "tournamentName": "UEFA Nations League",
+  "bookmakerOdds": {
+    "cloudbet": {
+      "markets": {
+        "101": {
+          "bookmakerMarketId": "bm-101",
+          "marketActive": true,
+          "outcomes": {
+            "101": {
+              "players": {
+                "0": {
+                  "price": 4.3,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": null,
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            },
+            "102": {
+              "players": {
+                "0": {
+                  "price": 3.2,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": null,
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            },
+            "103": {
+              "players": {
+                "0": {
+                  "price": 1.625,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": null,
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "10194": {
+          "bookmakerMarketId": "bm-10194-ou",
+          "marketActive": true,
+          "outcomes": {
+            "10194": {
+              "players": {
+                "0": {
+                  "price": 1.98,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": null,
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            },
+            "10195": {
+              "players": {
+                "0": {
+                  "price": 1.86,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": null,
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "10262": {
+          "bookmakerMarketId": "bm-10262-oufh",
+          "marketActive": true,
+          "outcomes": {
+            "10262": {
+              "players": {
+                "0": {
+                  "price": 2.10,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": null,
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "10701": {
+          "bookmakerMarketId": "bm-10701-ah",
+          "marketActive": true,
+          "outcomes": {
+            "10701": {
+              "players": {
+                "0": {
+                  "price": 1.90,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": null,
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            }
+          }
+        },
+        "99999": {
+          "bookmakerMarketId": "bm-99999-unknown",
+          "marketActive": true,
+          "outcomes": {
+            "99999": {
+              "players": {
+                "0": {
+                  "price": 3.33,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "bodog.eu": {
+      "markets": {
+        "101": {
+          "bookmakerMarketId": "bm-101",
+          "marketActive": true,
+          "outcomes": {
+            "101": {
+              "players": {
+                "0": {
+                  "price": 4.5,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": "England",
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "demo": {
+      "markets": {
+        "101": {
+          "bookmakerMarketId": "bm-101-demo",
+          "marketActive": true,
+          "outcomes": {
+            "101": {
+              "players": {
+                "0": {
+                  "price": 9.99,
+                  "mainLine": true,
+                  "active": true,
+                  "playerName": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
