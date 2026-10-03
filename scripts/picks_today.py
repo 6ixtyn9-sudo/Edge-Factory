@@ -2431,6 +2431,11 @@ def _odds_bundle_from_rows(rows: list[dict], *, provider: str, stats: dict | Non
         "time_candidates": time_candidates,
         "market_candidates": market_candidates,
         "raw_rows_list": list(exact.values()),
+        # Preserve provider vocabulary for join-miss accounting.  The matching
+        # indexes above stay canonical; diagnostics must be able to distinguish
+        # an unmappable market/selection from an uncovered fixture instead of
+        # silently losing the row at this boundary.
+        "input_rows": [dict(row) for row in rows],
     }
 
 
@@ -3016,8 +3021,10 @@ def donor_odds_bundles(day: str, *, localdata=None) -> list[dict]:
                 pass
             annotated.append(psrc.annotate_row(dict(row), source=source))
         bundle = _odds_bundle_from_rows(annotated, provider=source)
-        if bundle["exact"] or bundle["market_candidates"]:
-            bundles.append(bundle)
+        # Keep an all-unmappable bundle for miss diagnostics. It contributes no
+        # candidates to pricing, but dropping it here would turn a parser
+        # failure into the indistinguishable claim that the donor had no rows.
+        bundles.append(bundle)
     return bundles
 
 
@@ -3039,6 +3046,102 @@ def donor_match_counts(picks: list[dict], donor_bundles: list[dict]) -> dict[str
             if row is not None:
                 counts[source] += 1
     return dict(counts)
+
+
+def donor_join_diagnostics(
+    picks: list[dict],
+    donor_bundles: list[dict],
+) -> dict[str, dict]:
+    """Bucket every unmatched provider row by its first honest failure.
+
+    Matching itself still goes through the production one-row bundle and
+    :func:`find_side_keyed_odds_row`; diagnostics do not invent a looser join.
+    The fixture census is consulted only *after* the real matcher says no, to
+    distinguish an uncovered fixture from a covered fixture with no pick for
+    that market/selection.
+    """
+    report: dict[str, dict] = {}
+    pick_days = {str(pick.get("date") or "")[:10] for pick in picks}
+    for bundle in donor_bundles or []:
+        source = str(bundle.get("provider") or "").strip()
+        if not source:
+            continue
+        misses: Counter = Counter()
+        matched_rows = 0
+        input_rows = list(bundle.get("input_rows") or bundle.get("raw_rows_list") or [])
+        for raw_row in input_rows:
+            normalized, failure = canonicalize_row(raw_row)
+            if normalized is None:
+                failure_text = str(failure or "")
+                reason = (
+                    "selection_unmapped"
+                    if failure_text.startswith("unknown_selection:")
+                    else "market_unmapped"
+                )
+                misses[reason] += 1
+                continue
+            if normalized.get("timestamp_suspect") is True:
+                misses["timestamp_rejected"] += 1
+                continue
+            row_day = str(normalized.get("date") or "")[:10]
+            if not row_day or row_day not in pick_days:
+                misses["date_mismatch"] += 1
+                continue
+            if _valid_decimal_odds(normalized.get("odds")) is None:
+                # Not one of the six join-key failures: preserve it explicitly
+                # rather than misreporting a malformed/non-price row as a
+                # fixture miss.
+                misses["invalid_price"] += 1
+                continue
+
+            one_row_bundle = _odds_bundle_from_rows([normalized], provider=source)
+            same_day_picks = [
+                pick for pick in picks
+                if str(pick.get("date") or "")[:10] == row_day
+            ]
+            if any(find_side_keyed_odds_row(pick, one_row_bundle)[0] is not None
+                   for pick in same_day_picks):
+                matched_rows += 1
+                continue
+
+            row_exact = (
+                odds_team_key(normalized.get("home") or ""),
+                odds_team_key(normalized.get("away") or ""),
+            )
+            row_alias = (
+                odds_match_team_key(normalized.get("home") or ""),
+                odds_match_team_key(normalized.get("away") or ""),
+            )
+            fixture_exists = any(
+                ((odds_team_key(pick.get("home") or ""),
+                  odds_team_key(pick.get("away") or "")) == row_exact)
+                or ((odds_match_team_key(pick.get("home") or ""),
+                     odds_match_team_key(pick.get("away") or "")) == row_alias)
+                for pick in same_day_picks
+            )
+            misses["no_pick_for_fixture" if fixture_exists else "fixture_key_miss"] += 1
+        report[source] = {
+            "raw_rows": len(input_rows),
+            "matched_rows": matched_rows,
+            "miss_counts": dict(sorted(misses.items())),
+        }
+    return report
+
+
+def donor_join_miss_lines(report: dict[str, dict], *, limit: int = 4) -> list[str]:
+    """Compact, stable top-count lines suitable for Actions logs."""
+    lines: list[str] = []
+    for source in sorted(report):
+        row = report[source]
+        counts = Counter(row.get("miss_counts") or {})
+        top = sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:limit]
+        rendered = ",".join(f"{reason}={count}" for reason, count in top) or "none=0"
+        lines.append(
+            f"donor join misses {source}: {rendered} "
+            f"(matched_rows={int(row.get('matched_rows') or 0)} "
+            f"raw_rows={int(row.get('raw_rows') or 0)})"
+        )
+    return lines
 
 
 def _bundle_candidates(pick: dict, bundles, default_names=()) -> list:
@@ -4515,6 +4618,14 @@ def main():
         oddspapi_matches = donor_match_counts(picks, [oddspapi_bundle]).get(ODDSPAPI_ODDS_SOURCE, 0)
         betexplorer_matches = donor_match_counts(picks, [betexplorer_bundle]).get(BETEXPLORER_ODDS_SOURCE, 0)
         donor_matches = donor_match_counts(picks, donor_bundles)
+        shadow_donor_names = {
+            "betbetter", "boggio", "betminer", "pinnapi_odds", "sharpapi_odds",
+        }
+        donor_join_report = donor_join_diagnostics(
+            picks,
+            [bundle for bundle in donor_bundles
+             if str(bundle.get("provider") or "") in shadow_donor_names],
+        )
         for source_name, stats_name, scored_key, raw_key in (
             ("betbetter", "bb_matched", "bb_scored", "bb_raw"),
             ("boggio", "bg_matched", "bg_scored", "bg_raw"),
@@ -4527,6 +4638,11 @@ def main():
                 if scored_key not in entry:
                     entry[scored_key] = int(entry.get(stats_name) or entry.get(raw_key) or 0)
                 entry[stats_name] = int(donor_matches.get(source_name, 0))
+                join_row = donor_join_report.get(source_name) or {}
+                entry["join_miss_counts"] = dict(join_row.get("miss_counts") or {})
+                entry["join_matched_rows"] = int(join_row.get("matched_rows") or 0)
+        for line in donor_join_miss_lines(donor_join_report):
+            print(line, file=sys.stderr)
 
         be_stats: dict = {}
         if candidate_only:
@@ -4800,6 +4916,12 @@ def main():
                 "training-only after Cloudflare challenge" if st_shadow_stats.get("training_only") else None
             ),
         }
+        for source_name, join_row in donor_join_report.items():
+            if source_name in health_observations:
+                health_observations[source_name]["join_miss_counts"] = dict(
+                    join_row.get("miss_counts") or {})
+                health_observations[source_name]["join_matched_rows"] = int(
+                    join_row.get("matched_rows") or 0)
         persist_daily_source_health(day, health_observations)
         print(daily_status_block(day), file=sys.stderr)
         # Source ROLES, printed next to health: the pipeline must never imply

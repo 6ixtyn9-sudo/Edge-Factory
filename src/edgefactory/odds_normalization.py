@@ -51,8 +51,9 @@ def canonical_market(market: object, line: object = None) -> tuple[str | None, s
     """
     raw = _token(market)
     compact = _compact(market)
-    if raw in {"1x2", "12", "classic", "h2h", "moneyline", "match_winner",
-               "full_time_result", "three_way", "3way", "3_way", "winner"} or compact in {"1x2", "12"}:
+    if raw in {"1x2", "12", "classic", "h2h", "head_to_head", "moneyline",
+               "match_winner", "full_time_result", "three_way", "3way", "3_way",
+               "winner"} or compact in {"1x2", "12", "headtohead"}:
         return "1x2", None
     if raw in {"btts", "both_teams_to_score", "both_teams_score", "gg_ng",
                "both_teams_to_score_yes_no"} or "bothteamstoscore" in compact:

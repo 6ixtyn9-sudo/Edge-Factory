@@ -17,6 +17,14 @@ def test_raw_1x2_tokens_and_team_names_are_canonical():
     assert failure is None
     assert (result.market, result.selection) == ("1x2", "away")
 
+    # Bet Better's captured provider vocabulary; this must not be replaced by
+    # a pre-canonicalised test fixture.
+    result, failure = canonical_market_selection(
+        "Head to Head", "Away FC", home="Home FC", away="Away FC"
+    )
+    assert failure is None
+    assert (result.market, result.selection) == ("1x2", "away")
+
 
 def test_raw_btts_and_totals_tokens_are_canonical():
     result, failure = canonical_market_selection("Both Teams to Score", "Yes")
