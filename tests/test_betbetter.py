@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 
 from edgefactory.sources import betbetter as bb
+import scripts.picks_today as pt
 
 FIXTURES = Path(__file__).parent / "fixtures"
 
@@ -39,8 +40,34 @@ def test_parse_picks_maps_rows_and_stores_attribution():
     assert first["probability"] == 52.9
     assert first["fair_odds"] == 2.64
     assert first["kickoff"] == "2026-10-13T00:00:00.0000000Z"
+    assert first["date"] == "2026-10-13"  # event date, never capture-day relabelling
     assert "Bet Better" in first["attribution"]
     assert "CC BY 4.0" in first["licence"]
+
+
+def test_raw_head_to_head_provider_row_joins_the_shared_matcher():
+    payload = {
+        "picks": [{
+            "game": "Away FC @ Home FC",
+            "gameTimeUtc": "2026-10-03T16:00:00Z",
+            "market": "Head to Head",
+            "selection": "Away FC",
+            "fairOdds": 2.25,
+            "winProbabilityPct": 44.4,
+        }],
+    }
+    rows = bb.parse_picks(payload, day="2026-10-02", slug="epl")
+    assert rows[0]["raw_market"] == "Head to Head"
+    assert rows[0]["raw_selection"] == "Away FC"
+    assert rows[0]["date"] == "2026-10-03"
+    bundle = pt._odds_bundle_from_rows(rows, provider="betbetter")
+    pick = {
+        "date": "2026-10-03", "home": "Home FC", "away": "Away FC",
+        "market": "1x2", "pick": "away",
+    }
+    row, method = pt.find_side_keyed_odds_row(pick, bundle)
+    assert method == "exact"
+    assert row["odds"] == 2.25
 
 
 def test_capture_day_is_ok_and_persists_provenance(monkeypatch, tmp_path):
@@ -111,6 +138,18 @@ def test_off_switch_disables_without_requests(monkeypatch):
     rows, stats = bb.capture_day("2026-10-02")
     assert rows == []
     assert stats["status"] == "disabled"
+
+
+def test_all_transport_failures_are_unavailable_not_an_empty_slate(monkeypatch):
+    def fail(url, timeout=30):
+        raise bb._UpstreamError("betbetter: TLS transport failed")
+
+    monkeypatch.setattr(bb, "get_json", fail)
+    rows, stats = bb.capture_day("2026-10-02")
+    assert rows == []
+    assert stats["status"] == "unavailable"
+    assert stats["requests"] == len(bb.LEAGUE_SLUGS)
+    assert "every configured league request failed" in stats["blocker"]
 
 
 def test_budget_cap_skips_remaining_leagues(monkeypatch):

@@ -21,12 +21,12 @@ captured is marked ``timestamp_suspect`` and loses price eligibility. A
 lookahead observation must never become either settled evidence or a price.
 """
 from __future__ import annotations
-import json, os, re, threading, time, urllib.error, urllib.parse, urllib.request
+import json, os, threading, time, urllib.error, urllib.parse, urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from edgefactory.odds_normalization import canonical_market_selection
+from edgefactory.odds_normalization import canonical_market_selection, provider_kickoff_date
 
 SOURCE="boggio"; BASE="https://football-prediction-api.p.rapidapi.com"; API_HOST="football-prediction-api.p.rapidapi.com"; KEY_ENV="RAPIDAPI_KEY"
 MIN_INTERVAL_S=float(os.environ.get("EDGE_FACTORY_BOGGIO_MIN_INTERVAL_S","10")); MAX_CALLS_PER_RUN=1
@@ -149,12 +149,15 @@ def parse_predictions(payload:Any, *, day:str):
    continue
   average_price=_selection_odds(odds,prediction)
   suspect=timestamp_suspect(published,stamp)
+  kickoff=item.get("start_date")
+  kickoff_text=str(kickoff or "")
+  event_day=provider_kickoff_date(kickoff_text)
   rows.append({
     "source":SOURCE,
-    "date":day,
+    "date":event_day,
     "home":home,
     "away":away,
-    "kickoff":item.get("start_date"),
+    "kickoff":kickoff,
     "market":canonical.market,
     "selection":canonical.selection,
     "raw_market":raw_market,
@@ -169,7 +172,7 @@ def parse_predictions(payload:Any, *, day:str):
     "price_independence_family":PRICE_INDEPENDENCE_FAMILY,
     # Eligible only when the operator switch is on, a price exists, and the
     # publication stamp is not in the future relative to capture.
-    "price_push_eligible":bool(average_price is not None and price_donor_enabled() and not suspect),
+    "price_push_eligible":bool(event_day and average_price is not None and price_donor_enabled() and not suspect),
     "timestamp_suspect":suspect,
     "odds_provenance":odds,
     "published_at":published,

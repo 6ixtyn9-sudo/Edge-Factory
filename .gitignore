@@ -80,6 +80,9 @@ dist/
 # whether a source supplied a price.
 !localdata/source_health_20*.json
 !localdata/source_health_state.json
+# BetMiner's one-call/day endpoint-contract receipt. It contains only endpoint,
+# status, scrubbed schema keys/counts and timestamp (never a key or raw body).
+!localdata/betminer_probe_20*.json
 
 # Addendum 25: shadow-slate dedup ledger is bot-owned like the other ledgers
 !localdata/shadow_sent_ledger_20*.json

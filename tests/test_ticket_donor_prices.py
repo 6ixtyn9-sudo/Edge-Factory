@@ -128,3 +128,52 @@ def test_fewer_than_two_qualifying_legs_still_means_no_bet():
     rows = [_row("Alpha", "Beta")]
     pool = at.playable_legs(rows, day=DAY, execution_safe=True)
     assert len(pool) < at.LEGS_PER_ACCA
+
+
+def test_abstain_with_push_candidate_has_machine_readable_rejection_ledger():
+    rows = [_row("Short", "Price", odds=1.16)]
+    ledger = at.build_rejection_ledger(
+        rows,
+        day=DAY,
+        default_rule=("stake_ladder_minimum_legs", "one leg cannot form an acca"),
+    )
+    block = at.price_supply_report(
+        rows, day=DAY, qualifying=0, rejection_ledger=ledger,
+    )
+    text = "\n".join(block)
+    assert "PRICE SUPPLY:" in text
+    assert "REJECTION LEDGER:" in text
+    assert ledger
+    assert ledger[0]["rule"] == "min_odds_floor"
+    assert '"rule": "min_odds_floor"' in text
+
+
+def test_2026_10_03_four_named_book_candidates_have_verified_reasons():
+    rows = [
+        _row("Cuiaba", "Ponte Preta", odds=1.16,
+             odds_source="betexplorer_odds", price_odds_kind="bookmaker"),
+        _row("Stromsgodset", "Asane", odds=1.15,
+             odds_source="betexplorer_odds", price_odds_kind="bookmaker"),
+        _row("Iceland", "Bulgaria", odds=1.48,
+             odds_source="theoddsapi", price_odds_kind="bookmaker"),
+        _row("Croatia", "England", odds=1.78, pick="away",
+             odds_source="theoddsapi", price_odds_kind="bookmaker"),
+    ]
+    ledger = at.build_rejection_ledger(
+        rows,
+        day=DAY,
+        default_rule=(
+            "superseded_card_locked",
+            "write-once card is already superseded; non-force rerun cannot create replacement legs",
+        ),
+    )
+    reasons = {item["fixture"]: item["rule"] for item in ledger}
+    assert reasons == {
+        "Cuiaba vs Ponte Preta": "min_odds_floor",
+        "Stromsgodset vs Asane": "min_odds_floor",
+        "Iceland vs Bulgaria": "superseded_card_locked",
+        "Croatia vs England": "superseded_card_locked",
+    }
+    # The close-window rule belongs to capture scheduling; it is not a ticket
+    # eligibility rule and therefore must not be invented as the rejection.
+    assert all("close_window" not in item["rule"] for item in ledger)

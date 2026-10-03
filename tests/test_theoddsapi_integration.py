@@ -65,6 +65,25 @@ def test_cached_theodds_named_book_is_selectable_and_uses_narrow_aliases(tmp_pat
     assert priced[0]["price_disclosure"] == "TheOddsAPI named-book price (Betfair)"
 
 
+def test_cached_theodds_kickoff_date_overrides_capture_date(tmp_path, monkeypatch):
+    # Raw The Odds API vocabulary: h2h plus the outcome's team name.
+    _write_monthly_board(tmp_path, [_row(
+        date="2026-10-04", market="h2h", selection="Albacete",
+        kickoff="2026-10-03T23:30:00-02:00",
+    )])
+    monkeypatch.setattr(pt, "LOCALDATA", tmp_path)
+    stats: dict = {}
+    bundle = pt.theoddsapi_odds_bundle(
+        DAY, not_after=datetime(2026, 10, 3, 8, tzinfo=timezone.utc), stats=stats,
+    )
+
+    assert stats["raw_rows"] == stats["usable_rows"] == 1
+    row, method, source = pt.select_price_source(
+        _pick("Albacete", "Eibar", "home"), [bundle]
+    )
+    assert (source, method, row["date"]) == ("theoddsapi", "exact", DAY)
+
+
 def test_cached_theodds_price_cannot_time_travel_or_lose_timestamp(tmp_path, monkeypatch):
     _write_monthly_board(tmp_path, [
         _row(captured_at=f"{DAY}T09:00:01+00:00"),

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import json
 
+import pytest
+
 from edgefactory import source_health
+import scripts.picks_today as pt
 
 
 def test_health_contract_exposes_captured_scored_and_matched_counts(tmp_path, monkeypatch):
@@ -83,3 +86,144 @@ def test_betexplorer_health_receipt_keeps_snapshot_and_join_counts(tmp_path, mon
     assert (receipt["be_raw"], receipt["be_usable"], receipt["be_matched"]) == (12, 9, 3)
     assert "betexplorer=raw12/usable9/matched3" in source_health.daily_status_block("2026-10-03")
     assert "betexplorer: healthy named-book price source" in source_health.source_role_lines("2026-10-03")
+
+
+def test_raw_donor_rows_are_bucketed_by_exact_join_failure():
+    day = "2026-10-03"
+    pick = {
+        "date": day, "home": "Home FC", "away": "Away FC",
+        "market": "1x2", "pick": "home", "kickoff": f"{day}T16:00:00Z",
+    }
+    base = {
+        "date": day, "home": "Home FC", "away": "Away FC",
+        "market": "classic", "selection": "1", "odds": 1.80,
+        "kickoff": f"{day}T16:00:00Z",
+    }
+    # Every row is provider vocabulary, not a pre-canonicalised fixture.
+    rows = [
+        dict(base),
+        dict(base, date="2026-10-04", kickoff="2026-10-04T16:00:00Z"),
+        dict(base, market="provider mystery"),
+        dict(base, selection="mystery side"),
+        dict(base, home="Other FC", away="Another FC"),
+        dict(base, selection="2"),
+        dict(base, timestamp_suspect=True),
+    ]
+    bundle = pt._odds_bundle_from_rows(rows, provider="boggio")
+    report = pt.donor_join_diagnostics([pick], [bundle])["boggio"]
+    assert report["matched_rows"] == 1
+    assert report["miss_counts"] == {
+        "date_mismatch": 1,
+        "fixture_key_miss": 1,
+        "market_unmapped": 1,
+        "no_pick_for_fixture": 1,
+        "selection_unmapped": 1,
+        "timestamp_rejected": 1,
+    }
+    line = pt.donor_join_miss_lines({"boggio": report}, limit=6)[0]
+    assert "donor join misses boggio:" in line
+    assert "fixture_key_miss=1" in line
+
+
+# Captured provider vocabulary: Boggio's classic/1 prediction choice and The
+# Odds API's h2h outcome name. Deliberately do not pre-canonicalize either row.
+_RAW_DATE_ROWS = (
+    ("boggio", {"market": "classic", "selection": "1"}),
+    (
+        "theoddsapi",
+        {"market": "h2h", "selection": "Home FC", "bookmaker": "Sample Book"},
+    ),
+)
+
+
+@pytest.mark.parametrize(("provider", "provider_fields"), _RAW_DATE_ROWS)
+@pytest.mark.parametrize("bad_kickoff", [None, "not-a-provider-kickoff"])
+def test_missing_or_unparseable_provider_kickoff_is_date_mismatch(
+    provider, provider_fields, bad_kickoff
+):
+    day = "2026-10-03"
+    pick = {
+        "date": day, "home": "Home FC", "away": "Away FC",
+        "market": "1x2", "pick": "home", "kickoff": f"{day}T16:00:00Z",
+    }
+    # The capture date agrees with the pick. It must not rescue bad kickoff
+    # attribution or manufacture a same-day price.
+    row = {
+        "date": day, "home": "Home FC", "away": "Away FC", "odds": 1.80,
+        "kickoff": bad_kickoff, **provider_fields,
+    }
+    bundle = pt._odds_bundle_from_rows([row], provider=provider)
+
+    assert pt.find_side_keyed_odds_row(pick, bundle)[0] is None
+    assert bundle["input_rows"][0]["date"] == ""
+    report = pt.donor_join_diagnostics([pick], [bundle])[provider]
+    assert report["matched_rows"] == 0
+    assert report["miss_counts"] == {"date_mismatch": 1}
+
+
+@pytest.mark.parametrize(("provider", "provider_fields"), _RAW_DATE_ROWS)
+def test_provider_local_kickoff_date_wins_across_utc_boundary(
+    provider, provider_fields
+):
+    day = "2026-10-03"
+    pick = {
+        "date": day, "home": "Home FC", "away": "Away FC",
+        "market": "1x2", "pick": "home", "kickoff": f"{day}T16:00:00Z",
+    }
+    row = {
+        # The capture says October 3 and the instant is October 3 UTC, but the
+        # provider-declared local kickoff calendar date is October 4.
+        "date": day, "home": "Home FC", "away": "Away FC", "odds": 1.80,
+        "kickoff": "2026-10-04T00:30:00+02:00", **provider_fields,
+    }
+    bundle = pt._odds_bundle_from_rows([row], provider=provider)
+
+    assert bundle["input_rows"][0]["date"] == "2026-10-04"
+    assert pt.find_side_keyed_odds_row(pick, bundle)[0] is None
+    report = pt.donor_join_diagnostics([pick], [bundle])[provider]
+    assert report["matched_rows"] == 0
+    assert report["miss_counts"] == {"date_mismatch": 1}
+
+
+@pytest.mark.parametrize(("provider", "provider_fields"), _RAW_DATE_ROWS)
+def test_provider_kickoff_overrides_disagreeing_capture_date(
+    provider, provider_fields
+):
+    day = "2026-10-03"
+    pick = {
+        "date": day, "home": "Home FC", "away": "Away FC",
+        "market": "1x2", "pick": "home", "kickoff": f"{day}T16:00:00Z",
+    }
+    row = {
+        # Capture date and UTC date are October 4. The provider's written
+        # kickoff date is October 3, which is the date used for the pick join.
+        "date": "2026-10-04", "home": "Home FC", "away": "Away FC",
+        "odds": 1.80, "kickoff": "2026-10-03T23:30:00-02:00",
+        **provider_fields,
+    }
+    bundle = pt._odds_bundle_from_rows([row], provider=provider)
+
+    assert bundle["input_rows"][0]["date"] == day
+    matched, _method = pt.find_side_keyed_odds_row(pick, bundle)
+    assert matched is not None
+    report = pt.donor_join_diagnostics([pick], [bundle])[provider]
+    assert report["matched_rows"] == 1
+    assert report["miss_counts"] == {}
+
+
+def test_join_miss_counts_persist_as_count_only_health_data(tmp_path, monkeypatch):
+    monkeypatch.setattr(source_health, "LOCALDATA", tmp_path)
+    payload = source_health.persist_daily_source_health(
+        "2026-10-03",
+        {"boggio": {
+            "status": "cache_only", "bg_raw": 20, "bg_scored": 20,
+            "bg_matched": 1, "can_fetch_today": True, "can_price": True,
+            "join_miss_counts": {"fixture_key_miss": 18, "market_unmapped": 1},
+            "join_matched_rows": 1,
+        }},
+    )
+    receipt = payload["sources"]["boggio"]
+    assert receipt["join_miss_counts"] == {
+        "fixture_key_miss": 18, "market_unmapped": 1,
+    }
+    assert receipt["join_matched_rows"] == 1

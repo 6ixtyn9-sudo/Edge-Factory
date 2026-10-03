@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 import unicodedata
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 
@@ -23,6 +24,26 @@ class CanonicalMarketSelection:
 @dataclass(frozen=True)
 class NormalizationFailure:
     reason: str
+
+
+def provider_kickoff_date(value: Any) -> str | None:
+    """Return the provider-declared date for an absolute ISO kickoff.
+
+    The lexical date is intentional: an event at 00:30+02:00 belongs to the
+    provider's declared local date even though its UTC instant is on the prior
+    day. Missing, malformed, or timezone-free values fail closed.
+    """
+
+    text = str(value or "").strip()
+    if not text:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed.date().isoformat()
 
 
 def _token(value: object) -> str:
@@ -51,8 +72,9 @@ def canonical_market(market: object, line: object = None) -> tuple[str | None, s
     """
     raw = _token(market)
     compact = _compact(market)
-    if raw in {"1x2", "12", "classic", "h2h", "moneyline", "match_winner",
-               "full_time_result", "three_way", "3way", "3_way", "winner"} or compact in {"1x2", "12"}:
+    if raw in {"1x2", "12", "classic", "h2h", "head_to_head", "moneyline",
+               "match_winner", "full_time_result", "three_way", "3way", "3_way",
+               "winner"} or compact in {"1x2", "12", "headtohead"}:
         return "1x2", None
     if raw in {"btts", "both_teams_to_score", "both_teams_score", "gg_ng",
                "both_teams_to_score_yes_no"} or "bothteamstoscore" in compact:

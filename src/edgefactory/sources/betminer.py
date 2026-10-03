@@ -1,21 +1,19 @@
 """BetMiner adapter - prediction voice donor, conditional price donor.
 
-Endpoint contract (repaired 2026-10-03)
+Endpoint contract (verified 2026-10-03)
 ---------------------------------------
-The adapter used to call ``GET /matches/{date}``. That path is no longer part
-of the published RapidAPI contract; the listing exposes::
+The provider's V3 documentation names the dated match board explicitly::
 
-    GET /value-bets/{dateFrom}/{dateTo}
-    GET /accumulators/{dateFrom}/{dateTo}
-    GET /acca-builder
-    GET /edge-analysis/{date}
+    GET /matches/{date}
 
-The documented same-day request is ``/value-bets/{date}/{date}`` (the
-provider's date-range contract). The legacy ``/matches/{date}`` response
-shape is still parsed, because the repository holds a captured receipt for it
-(``tests/fixtures/betminer_matches_2026-10-03.json``) and a cached ledger
-written under the old contract must keep parsing; it is never *requested* any
-more.
+Both RapidAPI-listed value-bet forms (``/value-bets/{date}`` and
+``/value-bets/{dateFrom}/{dateTo}``) returned HTTP 404 in production. They are
+betting-system endpoints, not this adapter's full dated fixture board. The
+capture therefore makes exactly one ``/matches/{date}`` request and parses the
+captured Match Object schema in
+``tests/fixtures/betminer_matches_2026-10-03.json``. There is no endpoint
+ladder: a contract failure writes one scrubbed daily probe receipt and every
+later run that day reads it instead of spending another free-tier call.
 
 HTTP 404 is classified as an **endpoint-contract failure**
 (``reason=http_404_endpoint_contract``) rather than a generic outage, so the
@@ -55,10 +53,11 @@ from edgefactory.odds_normalization import canonical_market_selection
 
 SOURCE = "betminer"
 BASE = "https://betminer.p.rapidapi.com"
-#: Current published contract.
+#: Documented dated Match Object board used by capture.
+ENDPOINT_MATCHES = "/matches"
+#: Betting-system endpoint retained only for parser/backward-compat tests;
+#: production observations showed both dated forms returning HTTP 404.
 ENDPOINT_VALUE_BETS = "/value-bets"
-#: Obsolete contract; parsed for cached ledgers, never requested.
-ENDPOINT_LEGACY_MATCHES = "/matches"
 API_HOST = "betminer.p.rapidapi.com"
 KEY_ENV = "RAPIDAPI_KEY"
 UA = "EdgeFactory-cooperative-shadow/1.0 (+operator review)"
@@ -140,33 +139,33 @@ def _throttle() -> None:
 
 
 def value_bets_url(day: str) -> str:
-    """The current contract: one same-day range call returns the board."""
+    """Observed-404 range form, retained for explicit offline regression."""
     return f"{BASE}{ENDPOINT_VALUE_BETS}/{day}/{day}"
 
 
 def matches_url(day: str) -> str:
-    """Legacy ``/matches/{date}`` path.
-
-    Retained only so cached ledgers and the captured legacy receipt stay
-    explicable. ``capture_day`` never requests it.
-    """
-    return f"{BASE}{ENDPOINT_LEGACY_MATCHES}/{day}"
+    """Provider-documented V3 dated Match Object board."""
+    return f"{BASE}{ENDPOINT_MATCHES}/{day}"
 
 
 def capture_url(day: str) -> str:
-    """The endpoint ``capture_day`` actually calls (configurable, fail-safe).
+    """The one endpoint ``capture_day`` calls; never an endpoint ladder.
 
-    The documented default is a date range. An explicit endpoint override is
-    treated as a path prefix and remains one call; it is never an implicit
-    ladder.
+    ``BETMINER_ENDPOINT`` is an operator-only escape hatch for a documented
+    future contract. It may contain ``{date}``; otherwise the date is appended
+    once. No alternate path is attempted after any status.
     """
     configured = os.environ.get("BETMINER_ENDPOINT")
     if not configured or not configured.strip():
-        return value_bets_url(day)
+        return matches_url(day)
     endpoint = configured.strip()
     if not endpoint.startswith("/"):
         endpoint = "/" + endpoint
-    return f"{BASE}{endpoint}/{day}"
+    if "{date}" in endpoint:
+        endpoint = endpoint.format(date=day)
+    else:
+        endpoint = f"{endpoint.rstrip('/')}/{day}"
+    return f"{BASE}{endpoint}"
 
 
 def _sanitize_headers(headers: Any) -> dict[str, str]:
@@ -488,13 +487,13 @@ def parse_payload(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], str 
     ):
         legacy = parse_matches(payload, day=day)
         if legacy:
-            return legacy, "legacy_matches"
+            return legacy, "match_objects"
     rows, shaped = parse_value_bets(payload, day=day)
     if shaped:
         return rows, "value_bets"
     legacy = parse_matches(payload, day=day)
     if legacy:
-        return legacy, "legacy_matches"
+        return legacy, "match_objects"
     return [], None
 
 
