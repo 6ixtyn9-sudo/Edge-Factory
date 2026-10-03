@@ -1,9 +1,30 @@
-"""SharpAPI named-book price shadow (SHADOW-02 T4).
+"""SharpAPI named-book price source.
 
-This adapter is deliberately price-shadow only: it cannot vote and is not
-read by the pick path. The RapidAPI host is pinned to the operator hunt
-receipt: sharpapi1.p.rapidapi.com. Endpoint/schema remains fail-closed until
-the operator's probe supplies a fixture.
+Endpoint contract (repaired 2026-10-03)
+---------------------------------------
+The adapter used to call ``/odds``. The published RapidAPI contract is::
+
+    GET https://sharpapi1.p.rapidapi.com/api/v1/odds?sport=basketball_nba&limit=5
+
+so ``/api/v1/odds`` is now the default endpoint. The query is built from
+explicit configuration rather than assumption - in particular ``date`` is NOT
+sent unless ``SHARPAPI_DATE_PARAM`` names a parameter the provider actually
+documents. Sending an unsupported filter is how a healthy source starts
+looking empty.
+
+Configuration (all optional, all explicit)::
+
+    SHARPAPI_ENDPOINT=/api/v1/odds
+    SHARPAPI_SPORT=...
+    SHARPAPI_LIMIT=...
+    SHARPAPI_BOOK=...
+    SHARPAPI_MARKET=...
+    SHARPAPI_DATE_PARAM=...   # only when the provider confirms a date filter
+
+Failure classification is deliberately granular: 401 is auth, 403 is
+auth/plan, 429 is quota, and a VALID EMPTY result is never confused with an
+unrecognized schema. The host stays pinned to the operator hunt receipt
+(``sharpapi1.p.rapidapi.com``) and no credential is ever logged.
 """
 from __future__ import annotations
 import json, os, re, threading, time, urllib.error, urllib.parse, urllib.request
@@ -14,7 +35,36 @@ from typing import Any
 SOURCE = "sharpapi_odds"
 BASE = "https://sharpapi1.p.rapidapi.com"
 API_HOST = "sharpapi1.p.rapidapi.com"
-ENDPOINT = os.environ.get("SHARPAPI_ENDPOINT", "/odds")
+DEFAULT_ENDPOINT = "/api/v1/odds"
+
+
+def endpoint() -> str:
+    """Current endpoint path, normalized to a leading slash."""
+    value = (os.environ.get("SHARPAPI_ENDPOINT") or DEFAULT_ENDPOINT).strip() or DEFAULT_ENDPOINT
+    return value if value.startswith("/") else "/" + value
+
+
+def query_params(day: str | None = None) -> dict[str, str]:
+    """The documented, configurable request contract.
+
+    ``date`` is intentionally absent by default: the published example filters
+    by ``sport`` and ``limit`` only. An operator who has confirmed a date
+    filter in the playground sets ``SHARPAPI_DATE_PARAM`` to its real name.
+    """
+    params: dict[str, str] = {}
+    for env_name, param in (
+        ("SHARPAPI_SPORT", "sport"),
+        ("SHARPAPI_LIMIT", "limit"),
+        ("SHARPAPI_BOOK", "book"),
+        ("SHARPAPI_MARKET", "market"),
+    ):
+        value = (os.environ.get(env_name) or "").strip()
+        if value:
+            params[param] = value
+    date_param = (os.environ.get("SHARPAPI_DATE_PARAM") or "").strip()
+    if date_param and day:
+        params[date_param] = str(day)
+    return params
 KEY_ENV = "RAPIDAPI_KEY"
 LOCALDATA = Path(os.environ.get("EDGE_FACTORY_LOCALDATA", Path(__file__).resolve().parents[3] / "localdata"))
 MIN_INTERVAL_S = float(os.environ.get("EDGE_FACTORY_SHARPAPI_MIN_INTERVAL_S", "5"))
@@ -33,8 +83,10 @@ def _set_diag(value: dict[str, Any]) -> dict[str, Any]: _DIAG.update(value); ret
 def _key() -> str | None:
     value = os.environ.get(KEY_ENV, "").strip(); return value or None
 
-def odds_url(day: str) -> str:
-    return BASE + ENDPOINT + "?" + urllib.parse.urlencode({"date": day})
+def odds_url(day: str | None = None) -> str:
+    params = query_params(day)
+    query = urllib.parse.urlencode(sorted(params.items()))
+    return BASE + endpoint() + (f"?{query}" if query else "")
 
 def _headers(headers: Any) -> dict[str, str]:
     return {str(k): str(v) for k, v in (headers.items() if hasattr(headers, "items") else [])
@@ -70,6 +122,12 @@ def get_json(url: str, *, timeout: int = 30) -> tuple[int, Any, dict[str, str]]:
         except Exception as exc: raise UpstreamBlocked(f"sharpapi: {type(exc).__name__}: {exc}") from exc
     raise UpstreamBlocked("sharpapi: exhausted retries")
 
+def _scrub(value: str) -> str:
+    """Never echo credential material into diagnostics or ledgers."""
+    secret = _key()
+    return value.replace(secret, "[REDACTED]") if secret else value
+
+
 def _num(x: object) -> float | None:
     try: return float(x)
     except (TypeError, ValueError): return None
@@ -78,7 +136,10 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
     """Accept only explicit event/bookmaker/market rows; unknown shapes yield no rows."""
     events = payload if isinstance(payload, list) else next((payload.get(k) for k in ("events", "data", "matches", "odds") if isinstance(payload, dict) and isinstance(payload.get(k), list)), None)
     if not isinstance(events, list): return [], False
-    rows: list[dict[str, Any]] = []; shaped = False; stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    # A recognized but EMPTY event list is a valid empty result, not a schema
+    # failure: conflating the two turns a quiet slate into a false outage (and
+    # a real contract break into a false "no games today").
+    rows: list[dict[str, Any]] = []; shaped = not events; stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     for event in events:
         if not isinstance(event, dict): continue
         home = event.get("home") or event.get("home_team"); away = event.get("away") or event.get("away_team")
@@ -96,7 +157,7 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
                 if not isinstance(market, dict): continue
                 price = _num(market.get("price") or market.get("odds") or market.get("value"))
                 if price is None or price <= 1: continue
-                rows.append({"source": SOURCE, "date": day, "home": str(home).strip(), "away": str(away).strip(), "kickoff": event.get("kickoff") or event.get("start_at"), "market": str(market.get("market") or market.get("name") or "").strip(), "selection": str(market.get("selection") or market.get("label") or "").strip(), "line": market.get("line"), "odds": price, "book": bookmaker, "bookmaker": bookmaker, "captured_at": stamp})
+                rows.append({"source": SOURCE, "date": day, "home": str(home).strip(), "away": str(away).strip(), "kickoff": event.get("kickoff") or event.get("start_at"), "market": str(market.get("market") or market.get("name") or "").strip(), "selection": str(market.get("selection") or market.get("label") or "").strip(), "line": market.get("line"), "odds": price, "book": bookmaker, "bookmaker": bookmaker, "odds_kind": "bookmaker", "named_bookmaker": True, "captured_at": stamp})
     return rows, shaped
 
 def _status(code: int | None) -> str:
@@ -104,9 +165,20 @@ def _status(code: int | None) -> str:
     if code in (402, 429, 509): return "quota"
     return "unavailable"
 
+
+def _reason(code: int | None) -> str:
+    """Deterministic zero-row reason suffix for the health line."""
+    if code == 401: return "http_401_auth"
+    if code == 403: return "http_403_auth_plan"
+    if code == 429: return "http_429_quota"
+    if code in (402, 509): return f"http_{code}_quota"
+    if code == 404: return "http_404_endpoint_contract"
+    if code is None: return "transport_error"
+    return f"http_{code}_unavailable"
+
 def _path(day: str, localdata: Path | None = None) -> Path: return (localdata or LOCALDATA) / f"{SOURCE}_shadow_{day}.json"
 def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN}
+    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day))}
     reset_state()
     if not _key(): stats["blocker"] = f"{KEY_ENV} not set; shadow capture skipped"; return [], _set_diag(stats)
     try:
@@ -115,14 +187,24 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
     except (OSError, ValueError, TypeError): pass
     try:
         code, payload, headers = get_json(odds_url(day)); stats["requests"] = 1; stats["http_statuses"] = [code]; stats["rate_limit_headers"] = headers
-        if code != 200 or payload is None: stats.update(status=_status(code), blocker=f"sharpapi: HTTP {code} or non-JSON payload"); return [], _set_diag(stats)
+        if code != 200 or payload is None: stats.update(status=_status(code), reason=_reason(code), blocker=f"sharpapi: HTTP {code} or non-JSON payload"); return [], _set_diag(stats)
         rows, shaped = parse_snapshot(payload, day=day); stats["schema_match"] = shaped
-        if not shaped: stats.update(status="unavailable", blocker="sharpapi: snapshot schema not recognized; raw sample retained"); stats["sample_event"] = str(payload)[:200]; return [], _set_diag(stats)
-        stats["sa_raw"] = len({(r["home"], r["away"]) for r in rows}); stats["sa_matched"] = len(rows); stats["status"] = "ok" if rows else "empty"; return rows, _set_diag(stats)
+        # A recognizable but empty event list is a VALID empty result; only an
+        # unrecognizable payload is a contract failure.
+        if not shaped: stats.update(status="unavailable", reason="schema_unrecognized", blocker="sharpapi: snapshot schema not recognized; raw sample retained"); stats["sample_event"] = _scrub(str(payload)[:200]); return [], _set_diag(stats)
+        stats["sa_raw"] = len({(r["home"], r["away"]) for r in rows}); stats["sa_matched"] = len(rows); stats["status"] = "ok" if rows else "empty"
+        if not rows: stats["reason"] = "provider_empty_slate"
+        return rows, _set_diag(stats)
     except UpstreamBlocked as exc:
-        msg = str(exc); stats["http_429"] = _429; stats["status"] = "cooldown" if _cooling else ("quota" if "budget" in msg or "429" in msg else _status(None)); stats["blocker"] = msg[:180]; stats["errors"] = [msg[:180]]; return [], _set_diag(stats)
+        msg = _scrub(str(exc)); stats["http_429"] = _429
+        import re as _re
+        found = _re.search(r"HTTP (\d{3})", msg)
+        code = int(found.group(1)) if found else None
+        stats["status"] = "cooldown" if _cooling else ("quota" if "budget" in msg or "429" in msg else _status(code))
+        stats["reason"] = "run_cooldown" if _cooling else ("budget_reached" if "budget" in msg else _reason(code))
+        stats["blocker"] = msg[:180]; stats["errors"] = [msg[:180]]; return [], _set_diag(stats)
 
 def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], *, localdata: Path | None = None) -> Path:
     root = localdata or LOCALDATA; root.mkdir(parents=True, exist_ok=True); path = _path(day, root)
-    payload = {"schema":1,"source":SOURCE,"date":day,"role":"price-shadow (SharpAPI named-book rows; never a vote; corroboration default-off; same-day freshness required)","provenance":{"api":BASE + ENDPOINT,"host":API_HOST,"hunt":"docs/operator/SOURCE-HUNT-2026-10.md#sharpapi"},"stats":stats,"rows":rows}
+    payload = {"schema":1,"source":SOURCE,"date":day,"role":"named-book price source (never a vote; same-day freshness required)","provenance":{"api":BASE + endpoint(),"host":API_HOST,"hunt":"docs/operator/SOURCE-HUNT-2026-10.md#sharpapi"},"stats":stats,"rows":rows}
     tmp = path.with_suffix(path.suffix + ".tmp"); tmp.write_text(json.dumps(payload, indent=2, sort_keys=True)); tmp.replace(path); return path
