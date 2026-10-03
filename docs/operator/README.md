@@ -180,6 +180,12 @@ Deep evidence retained in [`archive/`](archive/):
   donor), the health-aware selection order that replaced the hard-coded
   Bzzoiro-first path, independence families, the active donor policy and its
   switches, and the repaired BetMiner and SharpAPI endpoint contracts.
+- [`JOIN-REPAIR-2026-10-03.md`](JOIN-REPAIR-2026-10-03.md) — why every donor
+  lane scored 0 matched on 2026-10-03 and what was repaired: the shared
+  canonicaliser's `mapped`/`unsupported`/`unknown` outcomes, Boggio's silent
+  drop, OddsPAPI's teamless `/odds` rows (all 414 mislabelled `1x2/home`),
+  `date_mismatch` vs `out_of_window`, the per-source (NOT systematic) kickoff
+  display offset census, and the deterministic zero-row reason tokens.
 - [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md) — HUNT-01 exhaustive
   hunt for free prediction/odds APIs ("like bzzoiro"): search log, 25-candidate
   inventory, A–H scorecards, shortlist of 3 (**Betminer** voice winner /

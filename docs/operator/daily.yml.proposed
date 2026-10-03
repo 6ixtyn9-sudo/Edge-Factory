@@ -1,3 +1,36 @@
+# ---------------------------------------------------------------------------
+# Join-layer repair, 2026-10-03 — Task 6 note (diagnostics only).
+#
+# The four all-zero sources (bzzoiro_odds, pinnapi_odds, betminer,
+# sharpapi_odds) were re-diagnosed. NONE of them needs a change to this
+# workflow; the delta is entirely in repository secrets and in the receipt
+# vocabulary. Recorded here because agent sessions cannot edit
+# .github/workflows/*, so this file is where workflow-adjacent findings land.
+#
+#   bzzoiro_odds  BLOCKED[reason=http_403_auth]
+#                 Credential REJECTED (403), not quota-exhausted (429).
+#                 Rotate/repair BZZOIRO_TOKEN. No workflow change.
+#   pinnapi_odds  [reason=valid_empty_http_200]
+#                 Authenticated HTTP 200 carrying no events. This is a
+#                 WORKING integration with an empty board, not an outage;
+#                 it was previously mislabelled "(unavailable)". No action.
+#   betminer      [reason=http_404_endpoint_contract]
+#                 /matches/{date} and /value-bets/{date} both 404. Endpoint
+#                 contract must be read off the RapidAPI playground. Do NOT
+#                 probe live — the 5 calls/day budget belongs to this run.
+#   sharpapi_odds [reason=http_404_endpoint_contract]
+#                 Resolved entirely via the EXISTING SHARPAPI_ENDPOINT and
+#                 SHARPAPI_SPORT secrets, both already passed through below.
+#                 No new env entry required. Do not send a `date` param
+#                 unless the provider documents support for it.
+#
+# The reason tokens are derived from status + HTTP code only and can never
+# carry a key, header, URL or payload fragment (asserted in
+# tests/test_credential_blocked_diagnostics.py).
+#
+# Full write-up: docs/operator/JOIN-REPAIR-2026-10-03.md
+# ---------------------------------------------------------------------------
+
 name: Autonomous Edge Factory 3-Hour Service
 
 on:
