@@ -247,7 +247,7 @@ def test_diagnostics_and_payloads_never_leak_the_key(monkeypatch):
     assert sanitized["X-RateLimit-Remaining"] == "4"
 
 
-# --- current endpoint contract: /value-bets/{date} (2026-10-03 repair) ----
+# --- current endpoint contract: /value-bets/{dateFrom}/{dateTo} (2026-10-03 repair) ----
 
 
 def _value_bet_payload():
@@ -296,7 +296,7 @@ def test_capture_calls_the_current_value_bets_endpoint(monkeypatch):
 
     monkeypatch.setattr(bm, "get_json", fake_get)
     rows, stats = bm.capture_day("2026-10-03")
-    assert seen == ["https://betminer.p.rapidapi.com/value-bets/2026-10-03"]
+    assert seen == ["https://betminer.p.rapidapi.com/value-bets/2026-10-03/2026-10-03"]
     assert "/matches/" not in seen[0]
     assert stats["status"] == "ok"
     assert stats["schema_shape"] == "value_bets"
@@ -362,6 +362,35 @@ def test_http_404_is_an_endpoint_contract_failure(monkeypatch):
     assert stats["status"] == "unavailable"
     assert stats["reason"] == "http_404_endpoint_contract"
     assert stats["status"] in bm.RETRYABLE_ZERO_ROW_STATUSES
+
+
+def test_404_probe_receipt_is_write_once_for_the_day(monkeypatch, tmp_path):
+    calls = []
+
+    def first_probe(url, timeout=30):
+        calls.append(url)
+        return 404, None, {}
+
+    monkeypatch.setattr(bm, "get_json", first_probe)
+    rows, first = bm.capture_day("2026-10-03", localdata=tmp_path)
+    assert rows == []
+    assert first["probe_receipt"] is True
+    receipt_path = tmp_path / "betminer_probe_2026-10-03.json"
+    assert receipt_path.exists()
+    receipt = json.loads(receipt_path.read_text())
+    assert receipt["endpoint"].endswith("/value-bets/2026-10-03/2026-10-03")
+    assert receipt["http_status"] == 404
+    assert "test-key-material" not in receipt_path.read_text()
+
+    def should_not_probe(url, timeout=30):
+        raise AssertionError("same-day probe receipt must short-circuit transport")
+
+    monkeypatch.setattr(bm, "get_json", should_not_probe)
+    rows2, second = bm.capture_day("2026-10-03", localdata=tmp_path)
+    assert rows2 == []
+    assert second["probe_receipt"] is True
+    assert second["requests"] == 0
+    assert len(calls) == 1
 
 
 def test_valid_empty_day_is_not_a_schema_failure(monkeypatch):
