@@ -2041,6 +2041,25 @@ def attach_kickoff_normalisation(picks: list[dict], data: dict[str, dict]) -> No
         resolve_kickoff_utc(p, data=data)
 
 
+def _parse_resolved_kickoff_instant(pick: dict) -> datetime | None:
+    """The pick's authoritative absolute kickoff, if one was resolved.
+
+    ``kickoff_utc`` is only ever set from an explicitly zoned witness (see
+    ``resolve_kickoff_utc``); a zone-free string cannot produce one. It is
+    therefore safe to compare against, unlike the raw display text.
+    """
+    raw = pick.get("kickoff_utc")
+    if not raw:
+        return None
+    try:
+        parsed = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if parsed.tzinfo is None:
+        return None
+    return parsed
+
+
 def operational_pick_eligibility(
     pick: dict,
     *,
@@ -2061,9 +2080,24 @@ def operational_pick_eligibility(
 
     ko = parse_kickoff_dt(_kickoff_value(pick), pick.get("date"))
     if ko is None:
+        # An absent display string stays a skip even when kickoff_utc is
+        # known: admitting it here would ADD picks, and this guard is only
+        # ever allowed to subtract them.
         return False, "missing_kickoff_same_day"
     if ko.tzinfo is None:
+        # The raw feed text carries no zone, so it is read as local time.
+        # On 2026-10-03 every zone-free renderer observed (statarea UTC-5,
+        # zulubet UTC+1) sits BEHIND SAST, which made this read early — the
+        # safe direction — by luck rather than by construction. A renderer
+        # ahead of SAST would make it read LATE, which is the one direction
+        # a pre-match guard must never move.
         ko = ko.replace(tzinfo=_local_tz())
+    resolved = _parse_resolved_kickoff_instant(pick)
+    if resolved is not None:
+        # Take the EARLIER of the feed text and the authoritative instant.
+        # This can only ever shorten the computed lead, so it can only ever
+        # skip more picks, never admit one the old guard rejected.
+        ko = min(ko, resolved)
     lead = (ko - as_of).total_seconds() / 60.0
     if lead < min_lead:
         return False, f"inside_{min_lead}m_lead_or_started"
