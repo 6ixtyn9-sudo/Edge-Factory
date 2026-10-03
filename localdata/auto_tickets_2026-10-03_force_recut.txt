@@ -1,0 +1,29 @@
+SELECTION LADDER SLICE (assay context_verdict_league, recent 30d, printed-slip evidence only):
+  bucket                                      n       roi    recent      LB     grade  verdict demote bench action
+  CAUTION                                 14    -11.6%       --   0.388 UNGRADED VETO          1     1 FULL  [calib gap -5.9%]  | replay ctx (excluded): n=36 roi=-4.7% gap=-10.6%
+  CERTIFIED_CLEAN                         12    +33.2%       --   0.646 UNGRADED ALLOW         0     0 FULL  [calib gap +25.4%]  | replay ctx (excluded): n=4 roi=+11.2% gap=+8.0%
+  SKIPPED_VETO                           107     +4.8%    +4.0%   0.698   SILVER BOOST         0     0 FULL  [calib gap +8.6%]  | replay ctx (excluded): n=80 roi=+6.4% gap=+5.9%
+  WATCHLIST_UNCORROBORATED_PRICE          22     +7.4%       --   0.615 UNGRADED ALLOW         0     0 FULL  [calib gap +9.7%]  | replay ctx (excluded): n=10 roi=+15.0% gap=+20.2%
+  WATCHLIST_UNKNOWN_CTX                    5     -3.2%       --   0.376 UNGRADED UNKNOWN       0     0 FULL  [calib gap +3.8%]  | replay ctx (excluded): n=22 roi=+11.1% gap=+15.3%
+PRICE SUPPLY:
+  named-book execution prices: 0
+  average-bookmaker donor prices: 0
+  fair-price donor prices: 0
+  total donor-priced candidates: 0
+  execution-safe candidates: 0
+  qualifying legs: 0
+  required legs: 2
+  PRICE POLICY: avg_donor=on fair_donor=on fair_stakeable=off corroboration=preferred named_book_corroboration=preferred source_fallback=abstain
+  donor capture/match counters:
+    betbetter: captured=0 scored=0 matched=0
+    boggio: captured=0 scored=0 matched=0
+    betminer: captured=0 scored=0 matched=0
+    pinnapi_odds: captured=0 scored=0 matched=0
+    sharpapi_odds: captured=0 scored=0 matched=0
+FORCE RE-CUT — superseded the prior same-day card; corrected result is NO BET:
+  original frozen slip retained: localdata/auto_tickets_2026-10-03.txt
+  original frozen_at retained: 2026-10-03T09:15:03+02:00
+  superseded card had 1 acca(s); no replacement legs qualified
+  write-once freeze semantics preserved; the frozen slip was not edited
+NO BET TODAY — 0 qualifying leg(s), need 2
+(bank stays unbet)
