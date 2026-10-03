@@ -21,7 +21,7 @@
       "avg_raw_odds_delta": -0.001814,
       "beat_later_price_n": 463,
       "beat_later_price_rate": 0.144708,
-      "total_picks": 545,
+      "total_picks": 546,
       "with_two_prices": 463
     },
     "WATCHLIST_NO_ODDS": {
@@ -29,7 +29,7 @@
       "avg_raw_odds_delta": 0.0,
       "beat_later_price_n": 2,
       "beat_later_price_rate": 0.0,
-      "total_picks": 68,
+      "total_picks": 74,
       "with_two_prices": 2
     },
     "WATCHLIST_SUSPECT_PRICE": {
@@ -45,7 +45,7 @@
       "avg_raw_odds_delta": -0.00375,
       "beat_later_price_n": 200,
       "beat_later_price_rate": 0.055,
-      "total_picks": 225,
+      "total_picks": 228,
       "with_two_prices": 200
     },
     "WATCHLIST_UNKNOWN_CTX": {
@@ -63,7 +63,7 @@
       "avg_raw_odds_delta": -0.0,
       "beat_later_price_n": 125,
       "beat_later_price_rate": 0.072,
-      "total_picks": 172,
+      "total_picks": 175,
       "with_two_prices": 125
     },
     "2way-unanimous avg_p>=70": {
@@ -79,7 +79,7 @@
       "avg_raw_odds_delta": -0.003506,
       "beat_later_price_n": 502,
       "beat_later_price_rate": 0.143426,
-      "total_picks": 557,
+      "total_picks": 562,
       "with_two_prices": 502
     },
     "ml-meta avg_p>=60": {
@@ -106,6 +106,14 @@
       "total_picks": 21,
       "with_two_prices": 9
     },
+    "ml-meta avg_p>=75": {
+      "avg_implied_prob_delta": null,
+      "avg_raw_odds_delta": null,
+      "beat_later_price_n": 0,
+      "beat_later_price_rate": null,
+      "total_picks": 2,
+      "with_two_prices": 0
+    },
     "ml-meta avg_p>=80": {
       "avg_implied_prob_delta": -0.004033,
       "avg_raw_odds_delta": 0.004444,
@@ -125,15 +133,15 @@
   },
   "end": "2026-10-03",
   "meta": {
-    "insufficient_snapshots": 111,
-    "unmatched_picks": 91
+    "insufficient_snapshots": 121,
+    "unmatched_picks": 97
   },
   "overall": {
     "avg_implied_prob_delta": 0.001034,
     "avg_raw_odds_delta": -0.002238,
     "beat_later_price_n": 889,
     "beat_later_price_rate": 0.127109,
-    "total_picks": 1094,
+    "total_picks": 1104,
     "with_two_prices": 889
   },
   "start": "2026-09-03"
