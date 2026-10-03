@@ -70,6 +70,11 @@ dist/
 !localdata/theoddsapi_sports.json
 !localdata/theoddsapi_attempts_20*.json
 !localdata/theoddsapi_odds_2026-*.csv.gz
+# Compact source-health receipts are the auditable attempt/join trail.  Raw
+# shadow ledgers stay ignored: they can be large and are not needed to prove
+# whether a source supplied a price.
+!localdata/source_health_20*.json
+!localdata/source_health_state.json
 
 # Addendum 25: shadow-slate dedup ledger is bot-owned like the other ledgers
 !localdata/shadow_sent_ledger_20*.json

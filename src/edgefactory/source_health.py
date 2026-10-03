@@ -200,6 +200,12 @@ def build_daily_source_health(
                 "st_raw": int(obs.get("st_raw") or 0),
                 "st_matched": int(obs.get("st_matched") or 0),
             })
+        elif name == "theoddsapi":
+            row.update({
+                "oa_raw": int(obs.get("oa_raw") or 0),
+                "oa_usable": int(obs.get("oa_usable") or 0),
+                "oa_matched": int(obs.get("oa_matched") or 0),
+            })
         elif name == "betminer":
             row.update({
                 "bm_raw": int(obs.get("bm_raw") or 0),
@@ -260,6 +266,7 @@ ROLE_VERDICT_SOURCES: dict[str, tuple[str, ...]] = {
     "bzzoiro": ("can_vote",),
     "bzzoiro_odds": ("can_price",),
     "betexplorer": ("can_price",),
+    "theoddsapi": ("can_price",),
     "scoutingstats": ("can_price", "can_vote"),
 }
 
@@ -336,7 +343,12 @@ def source_role_lines(day: str) -> list[str]:
         row = sources.get(name)
         if row is None:
             continue
-        healthy = bool(row.get("can_fetch_today")) and bool(row.get("can_price"))
+        # A time-qualified cache is price-available but not a same-stage
+        # network fetch.  Keep that distinction in the receipt/status field
+        # without falsely calling a usable cached named-book board unavailable.
+        healthy = bool(row.get("can_price")) and (
+            bool(row.get("can_fetch_today")) or str(row.get("status") or "") == "cache_only"
+        )
         out.append(f"{name}: {'healthy' if healthy else 'unavailable'} {role}")
     return out
 
@@ -351,7 +363,7 @@ def daily_status_block(day: str) -> str:
         return f"Source health {day}: unavailable (health contract not persisted)"
     tokens = []
     for name in (
-        "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "forebet",
+        "bzzoiro", "bzzoiro_odds", "scoutingstats", "betexplorer", "theoddsapi", "forebet",
         "futbolpronosticos", "sportytrader_odds",
         "betminer", "pinnapi_odds", "betbetter", "sharpapi_odds", "boggio", "predictiq",
     ):
@@ -361,6 +373,12 @@ def daily_status_block(day: str) -> str:
             continue
         if name == "sportytrader_odds":
             tokens.append(f"sportytrader=st_raw{row.get('st_raw', 0)}/st_matched{row.get('st_matched', 0)}")
+            continue
+        if name == "theoddsapi":
+            tokens.append(
+                f"theoddsapi=raw{row.get('oa_raw', 0)}/usable{row.get('oa_usable', 0)}"
+                f"/matched{row.get('oa_matched', 0)}"
+            )
             continue
         if name == "betminer":
             tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}{_zero_reason({**row, '_source_name': 'betminer'}, int(row.get('bm_raw') or 0))}/bm_matched{row.get('bm_matched', 0)}")

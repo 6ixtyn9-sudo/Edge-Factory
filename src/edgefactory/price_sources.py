@@ -521,10 +521,15 @@ def rank_candidates(
 
     1. source health for the requested date;
     2. exact fixture and market match;
-    3. freshness (smaller age wins; unknown age sorts last);
-    4. execution eligibility;
-    5. named-book provenance;
+    3. execution eligibility;
+    4. named-book provenance;
+    5. freshness (smaller age wins; unknown age sorts last);
     6. configured source priority.
+
+    Provenance intentionally precedes freshness. A marginally newer fair or
+    aggregate number is not an executable bookmaker quote and must never
+    displace a healthy named-book quote merely because the two capture loops
+    completed milliseconds apart.
 
     Bzzoiro no longer wins by construction: a healthy source with a valid exact
     fixture match beats an unavailable source whatever its historic priority.
@@ -539,9 +544,9 @@ def rank_candidates(
         return (
             0 if candidate.healthy else 1,
             0 if candidate.exact_match else 1,
-            float(age) if isinstance(age, (int, float)) else float("inf"),
             0 if source_spec.can_execute() else 1,
             0 if source_spec.named_bookmaker else 1,
+            float(age) if isinstance(age, (int, float)) else float("inf"),
             source_spec.priority,
             source_spec.name,
         )
