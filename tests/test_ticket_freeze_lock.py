@@ -45,7 +45,8 @@ def _slate(day="2026-09-06"):
         rows.append({"date": day, "home": home, "away": away, "kickoff": ko,
                      "league": "x", "bucket": "CERTIFIED_CLEAN", "market": "1x2",
                      "pick": "home", "avg_p": 70.0, "odds": odds,
-                     "quarantine": "none", "odds_source": "bzzoiro_odds"})
+                     "quarantine": "none", "odds_source": "bzzoiro_odds",
+                     "price_push_eligible": True})
     return rows
 
 
@@ -121,6 +122,9 @@ def test_force_no_bet_supersedes_card_without_reprinting_its_prices(lane, monkey
     output = capsys.readouterr().out
     assert "TICKETS SUPERSEDED" in output
     assert "do not place the superseded selections" in output
+    assert "PRICE SUPPLY:" in output
+    assert "REJECTION LEDGER:" in output
+    assert '"rule": "superseded_card_locked"' in output
     assert "[ACCA #" not in output
     assert "@1.47" not in output
 
