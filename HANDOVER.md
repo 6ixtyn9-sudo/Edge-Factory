@@ -12,6 +12,7 @@ Delivered
 - BetMiner now makes one documented same-day range request, `/value-bets/{date}/{date}`. HTTP 404 and unrecognized schemas write a scrubbed `localdata/betminer_probe_<date>.json` receipt and suppress same-day re-probing; diagnostics retain the five-call daily-cap and four-call run-budget fields.
 - SharpAPI uses the documented RapidAPI `/api/v1/odds` path and fails closed with `reason=missing_sport_filter` when `SHARPAPI_SPORT` is absent. The env example documents the sport and optional filters.
 - `picks_today.py` accepts both the historical positional date and the required `--date YYYY-MM-DD` form. The exact production command no longer treats `--date` as a pseudo-day.
+- The `origin/main` BetExplorer contribution is now the production baseline: bounded candidate capture writes a time-qualified snapshot cache, the final pricing pass consumes cache-only rows, and live BetExplorer rescue remains explicit opt-in rather than an implicit network dependency.
 
 Production artifact review — 2026-10-03
 
@@ -23,8 +24,8 @@ The required corrective recut was then run against the restored production slate
 
 Validation
 
-- Focused donor/contract run: 98 passed.
-- Full suite: 1033 passed.
+- Focused donor/contract and safety runs: 132 passed.
+- Full suite: 1047 passed.
 - `python -m compileall -q scripts src tests`: passed.
 - No `.github/workflows/*` changes.
 
