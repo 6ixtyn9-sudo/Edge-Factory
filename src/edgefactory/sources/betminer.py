@@ -5,18 +5,17 @@ Endpoint contract (repaired 2026-10-03)
 The adapter used to call ``GET /matches/{date}``. That path is no longer part
 of the published RapidAPI contract; the listing exposes::
 
-    GET /value-bets/{date}
     GET /value-bets/{dateFrom}/{dateTo}
-    GET /accumulators/{date}
     GET /accumulators/{dateFrom}/{dateTo}
     GET /acca-builder
     GET /edge-analysis/{date}
 
-``/value-bets/{date}`` is now the default. The legacy ``/matches/{date}``
-response shape is still parsed, because the repository holds a captured
-receipt for it (``tests/fixtures/betminer_matches_2026-10-03.json``) and a
-cached ledger written under the old contract must keep parsing; it is never
-*requested* any more.
+The documented same-day request is ``/value-bets/{date}/{date}`` (the
+provider's date-range contract). The legacy ``/matches/{date}`` response
+shape is still parsed, because the repository holds a captured receipt for it
+(``tests/fixtures/betminer_matches_2026-10-03.json``) and a cached ledger
+written under the old contract must keep parsing; it is never *requested* any
+more.
 
 HTTP 404 is classified as an **endpoint-contract failure**
 (``reason=http_404_endpoint_contract``) rather than a generic outage, so the
@@ -52,6 +51,8 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
+from edgefactory.odds_normalization import canonical_market_selection
+
 SOURCE = "betminer"
 BASE = "https://betminer.p.rapidapi.com"
 #: Current published contract.
@@ -63,6 +64,7 @@ KEY_ENV = "RAPIDAPI_KEY"
 UA = "EdgeFactory-cooperative-shadow/1.0 (+operator review)"
 MIN_INTERVAL_S = float(os.environ.get("EDGE_FACTORY_BETMINER_MIN_INTERVAL_S", "2.0"))
 MAX_CALLS_PER_RUN = int(os.environ.get("EDGE_FACTORY_BETMINER_MAX_CALLS", "4"))
+FREE_TIER_DAILY_CALL_CAP = 5
 LOCALDATA = Path(os.environ.get("EDGE_FACTORY_LOCALDATA", Path(__file__).resolve().parents[3] / "localdata"))
 
 _LOCK = threading.Lock()
@@ -138,8 +140,8 @@ def _throttle() -> None:
 
 
 def value_bets_url(day: str) -> str:
-    """The current contract: one call returns the whole dated value-bet board."""
-    return f"{BASE}{ENDPOINT_VALUE_BETS}/{day}"
+    """The current contract: one same-day range call returns the board."""
+    return f"{BASE}{ENDPOINT_VALUE_BETS}/{day}/{day}"
 
 
 def matches_url(day: str) -> str:
@@ -152,8 +154,16 @@ def matches_url(day: str) -> str:
 
 
 def capture_url(day: str) -> str:
-    """The endpoint ``capture_day`` actually calls (configurable, fail-safe)."""
-    endpoint = os.environ.get("BETMINER_ENDPOINT", ENDPOINT_VALUE_BETS).strip() or ENDPOINT_VALUE_BETS
+    """The endpoint ``capture_day`` actually calls (configurable, fail-safe).
+
+    The documented default is a date range. An explicit endpoint override is
+    treated as a path prefix and remains one call; it is never an implicit
+    ladder.
+    """
+    configured = os.environ.get("BETMINER_ENDPOINT")
+    if not configured or not configured.strip():
+        return value_bets_url(day)
+    endpoint = configured.strip()
     if not endpoint.startswith("/"):
         endpoint = "/" + endpoint
     return f"{BASE}{endpoint}/{day}"
@@ -388,10 +398,15 @@ def parse_value_bet(item: dict[str, Any], *, day: str, captured_at: str) -> dict
         return None
 
     selection_raw = _first(item, _SELECTION_KEYS)
-    selection = _VALUE_BET_SELECTIONS.get(str(selection_raw or "").strip().lower())
-    market = str(_first(item, _MARKET_KEYS) or "").strip().lower() or "1x2"
-    if selection is None and market == "1x2":
+    market_raw = str(_first(item, _MARKET_KEYS) or "").strip() or "1x2"
+    canonical, _failure = canonical_market_selection(
+        market_raw, selection_raw, home=home, away=away,
+        line=_first(item, ("line", "total", "points")),
+    )
+    if canonical is None:
         return None
+    market = canonical.market
+    selection = canonical.selection
 
     bookmaker = _first(item, _BOOKMAKER_KEYS)
     bookmaker = str(bookmaker).strip() if bookmaker not in (None, "") else None
@@ -426,6 +441,8 @@ def parse_value_bet(item: dict[str, Any], *, day: str, captured_at: str) -> dict
         "league": _team_name(_first(item, ("league", "competition", "league_name"))),
         "market": market,
         "selection": selection,
+        "raw_market": market_raw,
+        "raw_selection": selection_raw,
         "probability": probability,
         "odds": odds,
         "odds_kind": odds_kind,
@@ -514,6 +531,47 @@ def _ledger_path(day: str, *, localdata: Path | None = None) -> Path:
     return _resolve_localdata(localdata) / f"{SOURCE}_shadow_{day}.json"
 
 
+def _probe_receipt_path(day: str, *, localdata: Path | None = None) -> Path:
+    return _resolve_localdata(localdata) / f"{SOURCE}_probe_{day}.json"
+
+
+def _load_probe_receipt(day: str, *, localdata: Path | None = None) -> dict[str, Any] | None:
+    try:
+        payload = json.loads(_probe_receipt_path(day, localdata=localdata).read_text())
+        return payload if isinstance(payload, dict) else None
+    except (OSError, ValueError, TypeError):
+        return None
+
+
+def _persist_probe_receipt(
+    day: str,
+    *,
+    endpoint: str,
+    http_status: int | None,
+    reason: str | None,
+    schema_sample: Any = None,
+    localdata: Path | None = None,
+) -> Path:
+    """Persist one scrubbed endpoint-contract observation for this day."""
+    root = _resolve_localdata(localdata)
+    root.mkdir(parents=True, exist_ok=True)
+    payload = {
+        "schema": 1,
+        "source": SOURCE,
+        "date": str(day)[:10],
+        "endpoint": endpoint,
+        "http_status": http_status,
+        "reason": reason,
+        "schema_sample": _scrub(schema_sample),
+        "probed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+    }
+    path = _probe_receipt_path(day, localdata=localdata)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True, default=str))
+    tmp.replace(path)
+    return path
+
+
 def _load_ledger_rows(day: str, *, localdata: Path | None = None) -> list[dict[str, Any]]:
     try:
         payload = json.loads(_ledger_path(day, localdata=localdata).read_text())
@@ -586,8 +644,10 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         "quota_hint": "none", "blocker": None, "budget": MAX_CALLS_PER_RUN,
         "rate_limit_headers": {}, "key_present": _api_key() is not None,
         "reason": None, "schema_shape": None, "schema_match": None,
-        "schema_sample": None, "bm_priced": 0,
-        "endpoint": capture_url("{date}"),
+        "schema_sample": None, "bm_priced": 0, "canonicalization_dropped": 0,
+        "endpoint": capture_url("{date}"), "probe_receipt": False,
+        "probe_receipt_path": None, "daily_free_tier_cap": FREE_TIER_DAILY_CALL_CAP,
+        "calls_consumed": 0, "calls_remaining": FREE_TIER_DAILY_CALL_CAP,
     }
     reset_state()
     if not _api_key():
@@ -601,9 +661,29 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["bm_raw"] = len(committed)
         stats["bm_scored"] = len(committed)
         return list(committed), _set_diag(stats)
+    receipt = _load_probe_receipt(day, localdata=localdata)
+    if receipt is not None:
+        # A contract failure already consumed today's discovery observation.
+        # Never re-run an endpoint ladder on a free-tier day; the operator can
+        # inspect the scrubbed receipt or explicitly remove it after confirming
+        # a new contract.
+        stats.update(
+            status="unavailable",
+            reason=str(receipt.get("reason") or "probe_receipt"),
+            endpoint=str(receipt.get("endpoint") or stats["endpoint"]),
+            probe_receipt=True,
+            probe_receipt_path=str(_probe_receipt_path(day, localdata=localdata)),
+            http_statuses=([receipt.get("http_status")]
+                           if receipt.get("http_status") is not None else []),
+            schema_sample=receipt.get("schema_sample"),
+            blocker="betminer: persisted endpoint probe receipt; no re-probe today",
+        )
+        return [], _set_diag(stats)
     try:
         status, payload, rate_headers = get_json(capture_url(day))
         stats["requests"] += 1
+        stats["calls_consumed"] = stats["requests"]
+        stats["calls_remaining"] = max(0, FREE_TIER_DAILY_CALL_CAP - stats["calls_consumed"])
         stats["http_statuses"].append(status)
         stats["rate_limit_headers"] = rate_headers
         if status == 200 and payload is not None:
@@ -618,12 +698,22 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             stats["schema_match"] = shape is not None
             stats["schema_sample"] = schema_sample(payload)
             stats["quota_hint"] = _quota_hint_from_headers(rate_headers)
+            source_items = value_bet_rows(payload)
+            if isinstance(source_items, list):
+                stats["canonicalization_dropped"] = max(0, len(source_items) - len(rows))
             if shape is None:
                 # Recognizable-but-empty and unrecognizable are NOT the same
                 # thing; only the former may be reported as an empty slate.
                 stats["status"] = "unavailable"
                 stats["reason"] = "schema_unrecognized"
                 stats["blocker"] = "betminer: response schema not recognized; scrubbed sample retained"
+                receipt = _persist_probe_receipt(
+                    day, endpoint=capture_url(day), http_status=status,
+                    reason=stats["reason"], schema_sample=stats["schema_sample"],
+                    localdata=localdata,
+                )
+                stats["probe_receipt"] = True
+                stats["probe_receipt_path"] = str(receipt)
                 return [], _set_diag(stats)
             stats["bm_raw"] = len(rows)
             stats["bm_scored"] = len(rows)
@@ -636,9 +726,19 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["reason"] = _reason_for_http(status)
         stats["quota_hint"] = _quota_hint_for_status(stats["status"])
         stats["blocker"] = f"betminer: HTTP {status} or non-JSON payload"
+        if status == 404:
+            receipt = _persist_probe_receipt(
+                day, endpoint=capture_url(day), http_status=status,
+                reason=stats["reason"], schema_sample=schema_sample(payload),
+                localdata=localdata,
+            )
+            stats["probe_receipt"] = True
+            stats["probe_receipt_path"] = str(receipt)
         return [], _set_diag(stats)
     except UpstreamBlocked as exc:
         message = str(exc)
+        stats["calls_consumed"] = int(_CALLS_THIS_RUN)
+        stats["calls_remaining"] = max(0, FREE_TIER_DAILY_CALL_CAP - stats["calls_consumed"])
         stats["http_429"] = _429S
         if "429" in message:
             stats["status"] = "cooldown" if _COOLING_DOWN else "quota"
@@ -655,6 +755,18 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             stats["quota_hint"] = _quota_hint_for_status(stats["status"])
         stats["blocker"] = message[:180]
         stats["errors"].append(message[:180])
+        code = _http_code_in(message)
+        if code is not None:
+            stats["http_statuses"] = [code]
+            stats["requests"] = max(int(stats.get("requests") or 0), int(_CALLS_THIS_RUN))
+        if code == 404:
+            receipt = _persist_probe_receipt(
+                day, endpoint=capture_url(day), http_status=code,
+                reason="http_404_endpoint_contract", schema_sample=None,
+                localdata=localdata,
+            )
+            stats["probe_receipt"] = True
+            stats["probe_receipt_path"] = str(receipt)
         return [], _set_diag(stats)
 
 
@@ -725,7 +837,7 @@ def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], 
             "its provenance, and it is never execution-eligible"
         ),
         "provenance": {
-            "api": f"RapidAPI {API_HOST} {ENDPOINT_VALUE_BETS}/{{date}}",
+            "api": f"RapidAPI {API_HOST} {ENDPOINT_VALUE_BETS}/{{from}}/{{to}}",
             "docs": "https://betminer.co.uk/documentation/",
             "hunt": "docs/operator/SOURCE-HUNT-2026-10.md#51",
             "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

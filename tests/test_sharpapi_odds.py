@@ -18,6 +18,9 @@ def _clean_env(monkeypatch, tmp_path):
                  "SHARPAPI_BOOK", "SHARPAPI_MARKET", "SHARPAPI_DATE_PARAM"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("RAPIDAPI_KEY", "sharp-test-key")
+    # Every transport test must opt into the provider's required sport filter;
+    # the adapter must not guess it in production.
+    monkeypatch.setenv("SHARPAPI_SPORT", "soccer")
     monkeypatch.setattr(sa, "LOCALDATA", tmp_path)
     sa.reset_state()
     yield
@@ -54,7 +57,7 @@ def _payload():
 
 def test_default_endpoint_is_the_documented_api_v1_odds():
     assert sa.endpoint() == "/api/v1/odds"
-    assert sa.odds_url("2026-10-03") == "https://sharpapi1.p.rapidapi.com/api/v1/odds"
+    assert sa.odds_url("2026-10-03") == "https://sharpapi1.p.rapidapi.com/api/v1/odds?sport=soccer"
 
 
 def test_date_is_not_sent_unless_the_operator_confirms_the_parameter():
@@ -108,7 +111,8 @@ def test_rapidapi_host_header_is_pinned(monkeypatch):
     monkeypatch.setattr(sa.urllib.request, "urlopen", fake_urlopen)
     sa.get_json(sa.odds_url("2026-10-03"))
     assert captured["headers"]["X-rapidapi-host"] == "sharpapi1.p.rapidapi.com"
-    assert captured["url"].endswith("/api/v1/odds")
+    assert captured["url"].split("?", 1)[0].endswith("/api/v1/odds")
+    assert "sport=soccer" in captured["url"]
 
 
 # --- failure classification ----------------------------------------------
@@ -179,6 +183,18 @@ def test_diagnostics_never_leak_the_key(monkeypatch):
     blob = json.dumps(sa.diagnostics())
     assert "leak-me-not" not in blob
     assert "[REDACTED]" in blob
+
+
+def test_missing_sport_filter_is_inert(monkeypatch):
+    monkeypatch.delenv("SHARPAPI_SPORT", raising=False)
+    monkeypatch.setattr(
+        sa, "get_json",
+        lambda *a, **k: (_ for _ in ()).throw(AssertionError("missing sport must not fetch")))
+    rows, stats = sa.capture_day("2026-10-03")
+    assert rows == []
+    assert stats["status"] == "not_run"
+    assert stats["reason"] == "missing_sport_filter"
+    assert "sport" in str(stats["blocker"])
 
 
 def test_missing_key_is_inert(monkeypatch):
