@@ -6,17 +6,15 @@ scripts/probe_bzzoiro_odds.py). Prints compact metadata only: endpoint
 status, JSON shape, counts, one trimmed sample match, and rate-limit
 headers. It never prints RAPIDAPI_KEY or full response bodies.
 
-BUDGET WARNING: the free tier is 5 requests/day and this probe costs up to
-3 of them (leagues + countries + one /matches/{date}). Run it once, in the
-morning, and let the shadow adapter's cache-first capture handle the rest.
+BUDGET WARNING: the free tier is 5 requests/day. This probe makes at most ONE
+``/matches/{date}`` request and writes a scrubbed daily receipt under
+``localdata/``. A later run reads that receipt and consumes zero calls. It never
+tries an endpoint ladder.
 
-Acceptance checks (HUNT-01 SOURCE-HUNT-2026-10 section 7.1):
-  1. LEAGUE-COUNT  - reconcile the listing-vs-site-vs-docs conflict
-                     (RapidAPI listing says 368+, site 1,216, docs 500+).
-  2. SCHEMA-SAMPLE - confirm the documented Match Object in the wild
-                     (probabilities/predictions/odds subkeys).
-  3. RATE-LIMIT    - record X-RateLimit-* response headers so the adapter's
-                     quota diagnostics are grounded, not assumed.
+Acceptance checks:
+  1. CONTRACT      - confirm the documented V3 Match Object endpoint.
+  2. SCHEMA-SAMPLE - retain scrubbed keys/counts, never the full payload.
+  3. RATE-LIMIT    - record only X-RateLimit/Retry-After response headers.
 
 Usage:
     RAPIDAPI_KEY=... PYTHONPATH=src python scripts/probe_betminer.py
@@ -43,6 +41,8 @@ except Exception:  # pragma: no cover - requirements includes python-dotenv
 
 if load_dotenv:
     load_dotenv()
+
+from edgefactory.sources import betminer as adapter  # noqa: E402
 
 BASE = "https://betminer.p.rapidapi.com"
 API_HOST = "betminer.p.rapidapi.com"
@@ -156,60 +156,43 @@ def format_result(name: str, url: str, result: dict[str, Any]) -> str:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Probe Betminer (RapidAPI) capability")
+    parser = argparse.ArgumentParser(description="Probe one documented Betminer endpoint")
     parser.add_argument("--date", default=None, help="YYYY-MM-DD (default: today UTC)")
     parser.add_argument("--timeout", type=int, default=20, help="HTTP timeout seconds")
-    parser.add_argument("--skip-leagues", action="store_true",
-                        help="skip the /leagues + /countries probes (saves 2 of the 5 free daily calls)")
     args = parser.parse_args()
 
-    from datetime import date as _date
     from datetime import datetime, timezone
     day = args.date or datetime.now(timezone.utc).date().isoformat()
-    _ = _date  # silence unused import
+    endpoint = adapter.matches_url(day)
+    existing = adapter._load_probe_receipt(day)  # daily quota guard shared with capture
+    if existing is not None:
+        print(f"Probe date={day} calls_consumed=0/5 (persisted receipt reused)")
+        print(json.dumps(existing, indent=2, sort_keys=True))
+        return 0
 
     key = os.environ.get(KEY_ENV, "").strip()
     print(f"{KEY_ENV} present: {'yes' if key else 'no'}")
-    print(f"Probe date={day}  (free tier: 5 requests/day; this probe costs {'1' if args.skip_leagues else '3'})")
+    print(f"Probe date={day} calls_budgeted=1/5 endpoint=/matches/{{date}}")
     if not key:
-        print("No key: nothing to probe. The shadow adapter stays inert (status=not_run) without a key.")
+        print("No key: calls_consumed=0/5; adapter remains inert (status=not_run).")
         return 0
 
-    results: list[tuple[str, str, dict[str, Any]]] = []
-    if not args.skip_leagues:
-        for name, url in (
-            ("leagues (league-count reconciliation)", f"{BASE}/leagues"),
-            ("countries", f"{BASE}/countries"),
-        ):
-            result = request_json(url, key, args.timeout)
-            result["summary"] = summarize(result.get("data"))
-            results.append((name, url, result))
-    result = request_json(f"{BASE}/matches/{day}", key, args.timeout)
+    result = request_json(endpoint, key, args.timeout)
     result["summary"] = summarize(result.get("data"))
-    results.append((f"matches {day} (schema sample)", f"{BASE}/matches/{day}", result))
-
-    for name, url, result in results:
-        print(format_result(name, url, result))
-        print("-" * 72)
-
-    # Acceptance-check digest (operator fills the blanks from the output above).
-    leagues_result = next((r for n, _u, r in results if n.startswith("leagues")), None)
-    if leagues_result and leagues_result.get("summary", {}).get("list_len") is not None:
-        observed = leagues_result["summary"]["list_len"]
-        print("ACCEPTANCE 1 - LEAGUE-COUNT: observed", observed,
-              "vs claims", LEAGUE_COUNT_CLAIMS,
-              "-> record the observed figure in the ticket before any promotion talk.")
-    matches_result = results[-1]
-    if matches_result.get("summary", {}).get("sample_probabilities_keys"):
-        print("ACCEPTANCE 2 - SCHEMA-SAMPLE: Match Object subkeys observed; confirm they match",
-              "the documented probabilities/predictions/odds shape before wiring expectations.")
-    if any(r.get("rate_limit_headers") for _n, _u, r in results):
-        print("ACCEPTANCE 3 - RATE-LIMIT: headers observed above; feed the real figures into the adapter quota hints.")
-    else:
-        print("ACCEPTANCE 3 - RATE-LIMIT: no rate-limit headers observed; quota hints stay header-independent.")
-    print("Done. No key or full payload was printed.")
-
-    # Diagnostic-only: failures are reported but do not fail CI/nightly.
+    print(format_result(f"matches {day} (schema sample)", endpoint, result))
+    reason = None if result.get("ok") else (
+        "http_404_endpoint_contract" if result.get("status") == 404 else "probe_http_failure"
+    )
+    receipt_path = adapter._persist_probe_receipt(
+        day,
+        endpoint=endpoint,
+        http_status=result.get("status"),
+        reason=reason,
+        schema_sample=result.get("summary"),
+    )
+    print(f"receipt={receipt_path}")
+    print("calls_consumed=1/5; later probes/captures read this receipt (zero calls).")
+    print("No key or full payload was printed.")
     return 0
 
 

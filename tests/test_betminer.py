@@ -247,7 +247,7 @@ def test_diagnostics_and_payloads_never_leak_the_key(monkeypatch):
     assert sanitized["X-RateLimit-Remaining"] == "4"
 
 
-# --- current endpoint contract: /value-bets/{dateFrom}/{dateTo} (2026-10-03 repair) ----
+# --- current endpoint contract: /matches/{date} (V3 docs + captured sample) ----
 
 
 def _value_bet_payload():
@@ -287,20 +287,20 @@ def _value_bet_payload():
     }
 
 
-def test_capture_calls_the_current_value_bets_endpoint(monkeypatch):
+def test_capture_calls_the_documented_matches_endpoint_once(monkeypatch):
     seen = []
 
     def fake_get(url, timeout=30):
         seen.append(url)
-        return 200, _value_bet_payload(), {}
+        return 200, _payload(), {}
 
     monkeypatch.setattr(bm, "get_json", fake_get)
     rows, stats = bm.capture_day("2026-10-03")
-    assert seen == ["https://betminer.p.rapidapi.com/value-bets/2026-10-03/2026-10-03"]
-    assert "/matches/" not in seen[0]
+    assert seen == ["https://betminer.p.rapidapi.com/matches/2026-10-03"]
+    assert all("/value-bets/" not in url for url in seen)
     assert stats["status"] == "ok"
-    assert stats["schema_shape"] == "value_bets"
-    assert len(rows) == 3
+    assert stats["schema_shape"] == "match_objects"
+    assert len(rows) == 2
 
 
 def test_value_bet_rows_label_price_provenance_truthfully():
@@ -378,7 +378,7 @@ def test_404_probe_receipt_is_write_once_for_the_day(monkeypatch, tmp_path):
     receipt_path = tmp_path / "betminer_probe_2026-10-03.json"
     assert receipt_path.exists()
     receipt = json.loads(receipt_path.read_text())
-    assert receipt["endpoint"].endswith("/value-bets/2026-10-03/2026-10-03")
+    assert receipt["endpoint"].endswith("/matches/2026-10-03")
     assert receipt["http_status"] == 404
     assert "test-key-material" not in receipt_path.read_text()
 
@@ -411,9 +411,9 @@ def test_unrecognized_payload_fails_closed_with_a_scrubbed_sample(monkeypatch):
     assert stats["schema_sample"] == {"top_keys": ["surprise"]}
 
 
-def test_legacy_match_payload_still_parses_from_cached_receipts():
+def test_documented_match_object_fixture_parses():
     rows, shape = bm.parse_payload(_payload(), day="2026-10-03")
-    assert shape == "legacy_matches"
+    assert shape == "match_objects"
     assert len(rows) == 2
 
 
