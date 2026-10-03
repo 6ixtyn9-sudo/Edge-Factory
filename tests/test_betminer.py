@@ -87,7 +87,7 @@ def test_capture_ok_persists_and_is_cache_first(monkeypatch, tmp_path):
     path = bm.persist_shadow("2026-10-03", rows, stats, localdata=tmp_path)
     ledger = json.loads(path.read_text())
     assert ledger["source"] == "betminer"
-    assert "never a price donor" in ledger["role"]
+    assert "never execution-eligible" in ledger["role"]
     assert ledger["provenance"]["docs"].startswith("https://betminer.co.uk")
 
     # Second capture the same date: cache-only, zero requests.
@@ -245,3 +245,153 @@ def test_diagnostics_and_payloads_never_leak_the_key(monkeypatch):
     sanitized = bm._sanitize_headers({"X-RateLimit-Remaining": "4", "Authorization": "Bearer x", "Retry-After": "9"})
     assert "Authorization" not in sanitized
     assert sanitized["X-RateLimit-Remaining"] == "4"
+
+
+# --- current endpoint contract: /value-bets/{date} (2026-10-03 repair) ----
+
+
+def _value_bet_payload():
+    return {
+        "success": True,
+        "value_bets": [
+            {
+                "home_team": "Ajax",
+                "away_team": "PSV",
+                "league": "Eredivisie",
+                "kickoff": "2026-10-03T18:45:00Z",
+                "market": "1x2",
+                "selection": "2",
+                "probability": 48,
+                "odds": 2.35,
+                "bookmaker": "Bet365",
+                "value": 12.8,
+                "published_at": "2026-10-03T08:00:00Z",
+            },
+            {
+                "home_team": "Feyenoord",
+                "away_team": "AZ",
+                "market": "1x2",
+                "selection": "1",
+                "probability": 52,
+                "odds": 1.95,
+                "published_at": "2026-10-03T08:00:00Z",
+            },
+            {
+                "home_team": "Twente",
+                "away_team": "Utrecht",
+                "market": "1x2",
+                "selection": "X",
+                "fair_odds": 3.40,
+            },
+        ],
+    }
+
+
+def test_capture_calls_the_current_value_bets_endpoint(monkeypatch):
+    seen = []
+
+    def fake_get(url, timeout=30):
+        seen.append(url)
+        return 200, _value_bet_payload(), {}
+
+    monkeypatch.setattr(bm, "get_json", fake_get)
+    rows, stats = bm.capture_day("2026-10-03")
+    assert seen == ["https://betminer.p.rapidapi.com/value-bets/2026-10-03"]
+    assert "/matches/" not in seen[0]
+    assert stats["status"] == "ok"
+    assert stats["schema_shape"] == "value_bets"
+    assert len(rows) == 3
+
+
+def test_value_bet_rows_label_price_provenance_truthfully():
+    rows, shaped = bm.parse_value_bets(_value_bet_payload(), day="2026-10-03")
+    assert shaped
+    booked, aggregate, fair = rows
+    # A named book is the only thing that may be called a bookmaker price.
+    assert (booked["odds"], booked["odds_kind"], booked["bookmaker"]) == (2.35, "bookmaker", "Bet365")
+    assert booked["named_bookmaker"] is True
+    assert booked["selection"] == "away"
+    # No book name -> provider aggregate, never a named-book quote.
+    assert (aggregate["odds_kind"], aggregate["bookmaker"]) == ("provider_average", None)
+    assert aggregate["named_bookmaker"] is False
+    # A model number is fair, not executable.
+    assert (fair["odds"], fair["odds_kind"]) == (3.40, "fair")
+    assert fair["selection"] == "draw"
+    # Probabilities are normalized to a 0-1 scale, never invented.
+    assert booked["probability"] == 0.48
+    assert rows[0]["published_at"] == "2026-10-03T08:00:00Z"
+    assert rows[0]["captured_at"]
+
+
+def test_rapidapi_headers_are_sent_for_the_betminer_host(monkeypatch):
+    captured = {}
+
+    class _Response:
+        status = 200
+        headers: dict[str, str] = {}
+
+        def read(self, _n=0):
+            return b'{"value_bets": []}'
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    def fake_urlopen(request, timeout=30):
+        captured["url"] = request.full_url
+        captured["headers"] = dict(request.headers)
+        return _Response()
+
+    monkeypatch.setattr(bm.urllib.request, "urlopen", fake_urlopen)
+    bm.reset_state()
+    status, payload, _headers = bm.get_json(bm.capture_url("2026-10-03"))
+    assert status == 200 and payload == {"value_bets": []}
+    assert captured["headers"]["X-rapidapi-host"] == "betminer.p.rapidapi.com"
+    assert captured["headers"]["X-rapidapi-key"] == "test-key-material"
+
+
+def test_http_404_is_an_endpoint_contract_failure(monkeypatch):
+    def fake_get(url, timeout=30):
+        raise bm.UpstreamBlocked("betminer: HTTP 404 Not Found; ")
+
+    monkeypatch.setattr(bm, "get_json", fake_get)
+    rows, stats = bm.capture_day("2026-10-03")
+    assert rows == []
+    assert stats["status"] == "unavailable"
+    assert stats["reason"] == "http_404_endpoint_contract"
+    assert stats["status"] in bm.RETRYABLE_ZERO_ROW_STATUSES
+
+
+def test_valid_empty_day_is_not_a_schema_failure(monkeypatch):
+    monkeypatch.setattr(bm, "get_json", lambda url, timeout=30: (200, {"value_bets": []}, {}))
+    rows, stats = bm.capture_day("2026-10-03")
+    assert rows == []
+    assert stats["status"] == "empty"
+    assert stats["schema_match"] is True
+    assert stats["reason"] == "provider_empty_slate"
+
+
+def test_unrecognized_payload_fails_closed_with_a_scrubbed_sample(monkeypatch):
+    monkeypatch.setattr(bm, "get_json", lambda url, timeout=30: (200, {"surprise": 1}, {}))
+    rows, stats = bm.capture_day("2026-10-03")
+    assert rows == []
+    assert stats["status"] == "unavailable"
+    assert stats["reason"] == "schema_unrecognized"
+    assert stats["schema_sample"] == {"top_keys": ["surprise"]}
+
+
+def test_legacy_match_payload_still_parses_from_cached_receipts():
+    rows, shape = bm.parse_payload(_payload(), day="2026-10-03")
+    assert shape == "legacy_matches"
+    assert len(rows) == 2
+
+
+def test_diagnostics_never_leak_the_api_key(monkeypatch):
+    monkeypatch.setenv("RAPIDAPI_KEY", "super-secret-key")
+    monkeypatch.setattr(
+        bm, "get_json",
+        lambda url, timeout=30: (200, {"note": "key super-secret-key used"}, {}))
+    bm.capture_day("2026-10-03")
+    assert "super-secret-key" not in json.dumps(bm.diagnostics())
