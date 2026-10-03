@@ -16,6 +16,7 @@ def _write_monthly_board(tmp_path, rows: list[dict], *, prefix: str = "theoddsap
     fields = [
         "source", "source_type", "sport", "date", "kickoff", "league",
         "home", "away", "market", "selection", "odds", "bookmaker", "captured_at",
+        "schema_version",
     ]
     with gzip.open(path, "wt", newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=fields)
@@ -30,6 +31,10 @@ def _row(**overrides) -> dict:
         "home": "Albacete", "away": "Eibar", "market": "1x2", "selection": "away",
         "odds": "2.14", "bookmaker": "Betfair",
         "captured_at": f"{DAY}T07:00:00+00:00",
+        # A row a current capture would write. OddsPAPI boards are gated on
+        # this generation marker, so an unstamped row here would (correctly)
+        # be refused as stale-schema rather than exercising the path we want.
+        "schema_version": pt.ODDSPAPI_MIN_SCHEMA_VERSION,
     }
     row.update(overrides)
     return row

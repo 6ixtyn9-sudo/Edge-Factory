@@ -51,28 +51,88 @@ from edgefactory.sources.oddspapi_odds import (
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "localdata"
 
+# Row schema generation for this store.
+#
+#   (blank)/1  rows written before 2026-10-03. The parser that produced them
+#              read the outcome name from ``name`` only — but the live /odds
+#              payload carries it at ``players.0.playerName`` — and took the
+#              participants from /odds, which does not supply them. Every such
+#              row was emitted with blank home/away and the selection
+#              defaulted to "home" because the empty name compared equal to
+#              the empty home name. 414 of them are in
+#              localdata/oddspapi_odds_2026-10.csv.gz.
+#   2          identity comes from the /fixtures record, outcome names are
+#              read from name|playerName, empty names are refused, mainLine
+#              is honoured and provider stamps are kept.
+#
+# Blank home/away is only the *symptom* of generation 1; the mislabelled
+# selection is the defect. A reader that bypassed rows on blank participants
+# alone would still trust a generation-1 row that happened to carry teams.
+# Readers therefore gate on the generation, not on the symptom.
+SCHEMA_VERSION = 2
+
 COLUMNS = ["source", "source_type", "sport", "date", "kickoff", "league",
            "home", "away", "market", "selection", "odds", "bookmaker",
-           "captured_at"]
+           "captured_at", "published_at", "provider_changed_at",
+           "schema_version"]
 
 
 def _out_path(day: str) -> Path:
     return OUT_DIR / f"oddspapi_odds_{day[:7]}.csv.gz"
 
 
+_STAMP_COLS = ("captured_at", "published_at", "provider_changed_at")
+
+
+def _migrate_header(path: Path) -> None:
+    """Rewrite an existing store whose header predates a new column.
+
+    Appending wider rows to a narrower header silently shifts every value
+    one column left for any later reader, so the file is rewritten (atomic
+    tmp + replace) with the current header and blanks for the new fields.
+    No row is dropped and no value is changed.
+    """
+    if not path.exists():
+        return
+    try:
+        with gzip.open(path, "rt", newline="", encoding="utf-8") as fh:
+            reader = csv.DictReader(fh)
+            existing_header = list(reader.fieldnames or [])
+            if existing_header == COLUMNS:
+                return
+            rows = [dict(r) for r in reader]
+    except (OSError, csv.Error, EOFError):
+        return
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    with gzip.open(tmp, "wt", newline="", encoding="utf-8") as fh:
+        writer = csv.DictWriter(fh, fieldnames=COLUMNS)
+        writer.writeheader()
+        for row in rows:
+            writer.writerow({k: row.get(k, "") for k in COLUMNS})
+    tmp.replace(path)
+
+
 def _append_rows(rows: list[dict], day: str) -> int:
     """Append rows to the unified store, deduped on the full row (idempotent re-runs)."""
     path = _out_path(day)
     path.parent.mkdir(parents=True, exist_ok=True)
-    # Red-team F7 (fixed 2026-08-05): dedupe key EXCLUDES captured_at so
-    # re-capturing the same price does not append an unbounded duplicate
-    # row per run. A genuinely changed price (different odds) still appends.
-    DEDUP_COLS = [c for c in COLUMNS if c != "captured_at"]
+    _migrate_header(path)
+    # Stamp the generation on the way out so no write path can produce an
+    # unmarked row. Migration deliberately leaves pre-existing rows blank.
+    rows = [{**r, "schema_version": SCHEMA_VERSION} for r in rows]
+    # Red-team F7 (fixed 2026-08-05): dedupe key EXCLUDES the timestamp
+    # columns so re-capturing the same price does not append an unbounded
+    # duplicate row per run. A genuinely changed price still appends.
+    #
+    # schema_version is deliberately IN the dedupe key: a corrected row must
+    # never be suppressed because a row from the broken generation happens to
+    # collide with it. Invalidation beats idempotence here.
+    DEDUP_COLS = [c for c in COLUMNS if c not in _STAMP_COLS]
     seen: set[tuple] = set()
     if path.exists():
         with gzip.open(path, "rt", newline="", encoding="utf-8") as fh:
             for r in csv.DictReader(fh):
-                seen.add(tuple(r.get(k) for k in DEDUP_COLS))
+                seen.add(tuple(str(r.get(k) or "") for k in DEDUP_COLS))
     added = 0
     fresh = []
     for r in rows:
@@ -153,7 +213,21 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
                                 "player0_keys": sorted(p0.keys()) if isinstance(p0, dict) else None,
                                 "player0_nonbet_fields": {k: v for k, v in p0.items() if k != "betslip"} if isinstance(p0, dict) else None,
                             })
-            rows = rows_from_odds_response(odds, market_type_map=type_map) if odds else []
+            # The /odds payload observed on 2026-10-03 carried no participant
+            # names, so every emitted row was unjoinable. The /fixtures record
+            # we already hold is the identity of record; pass it through and
+            # fail closed when neither endpoint names the teams.
+            parse_stats: dict = {}
+            rows = rows_from_odds_response(
+                odds,
+                market_type_map=type_map,
+                home=fx.get("participant1Name"),
+                away=fx.get("participant2Name"),
+                stats=parse_stats,
+            ) if odds else []
+            for reason, count in parse_stats.items():
+                skips = stats.setdefault("parse_skips", {})
+                skips[reason] = int(skips.get(reason) or 0) + int(count)
             if rows:
                 stats["matched"] += 1
             stats["rows"] += len(rows)
@@ -221,7 +295,11 @@ def self_test() -> int:
     check("team totals tt_home_1.5 over", ("tt_home_1.5", "over") in markets)
     check("team totals tt_away_1.5 under", ("tt_away_1.5", "under") in markets)
     check("totals ou_2.5 over", ("ou_2.5", "over") in markets)
-    check("unified schema columns", all(set(COLUMNS) <= set(r.keys()) for r in rows))
+    # schema_version is a property of the STORE, stamped on write, so the
+    # parser is not expected to supply it. Everything else must be present.
+    _PARSER_COLUMNS = [c for c in COLUMNS if c != "schema_version"]
+    check("unified schema columns",
+          all(set(_PARSER_COLUMNS) <= set(r.keys()) for r in rows))
     check("all source=oddspapi", all(r["source"] == "oddspapi" for r in rows))
 
     # write-path: append + dedupe
@@ -234,9 +312,15 @@ def self_test() -> int:
         try:
             added1 = _append_rows(rows, "2026-08-03")
             added2 = _append_rows(rows, "2026-08-03")
+            with gzip.open(_out_path("2026-08-03"), "rt", newline="",
+                           encoding="utf-8") as fh:
+                stored = [dict(r) for r in csv.DictReader(fh)]
         finally:
             OUT_DIR = _orig
         check("append adds 10 then dedupes to 0", added1 == 10 and added2 == 0)
+        check("every stored row carries the current generation",
+              bool(stored) and all(
+                  r.get("schema_version") == str(SCHEMA_VERSION) for r in stored))
 
     if failures:
         print(f"self-test: FAIL ({len(failures)} failures)")

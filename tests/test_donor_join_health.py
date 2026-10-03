@@ -113,7 +113,10 @@ def test_raw_donor_rows_are_bucketed_by_exact_join_failure():
     report = pt.donor_join_diagnostics([pick], [bundle])["boggio"]
     assert report["matched_rows"] == 1
     assert report["miss_counts"] == {
-        "date_mismatch": 1,
+        # A well-formed kickoff on another calendar day is OUT OF WINDOW,
+        # not a date defect. "date_mismatch" is now reserved for a join
+        # date that failed closed (missing/unparseable provider kickoff).
+        "out_of_window": 1,
         "fixture_key_miss": 1,
         "market_unmapped": 1,
         "no_pick_for_fixture": 1,
@@ -162,7 +165,7 @@ def test_missing_or_unparseable_provider_kickoff_is_date_mismatch(
 
 
 @pytest.mark.parametrize(("provider", "provider_fields"), _RAW_DATE_ROWS)
-def test_provider_local_kickoff_date_wins_across_utc_boundary(
+def test_provider_local_kickoff_date_wins_across_utc_boundary_as_out_of_window(
     provider, provider_fields
 ):
     day = "2026-10-03"
@@ -182,7 +185,8 @@ def test_provider_local_kickoff_date_wins_across_utc_boundary(
     assert pt.find_side_keyed_odds_row(pick, bundle)[0] is None
     report = pt.donor_join_diagnostics([pick], [bundle])[provider]
     assert report["matched_rows"] == 0
-    assert report["miss_counts"] == {"date_mismatch": 1}
+    # Date attribution still wins; the row is simply not on this slate.
+    assert report["miss_counts"] == {"out_of_window": 1}
 
 
 @pytest.mark.parametrize(("provider", "provider_fields"), _RAW_DATE_ROWS)

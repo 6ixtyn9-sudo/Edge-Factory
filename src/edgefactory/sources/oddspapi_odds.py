@@ -233,42 +233,99 @@ _DC_SELECTION = {
 }
 
 
+# Outcome-name field names actually observed in captured OddsPapi payloads:
+# ``name`` (verified 2026-08-05 fixture payload) and ``playerName`` (the
+# 2026-10-03 scrubbed schema dump, which carries no ``name`` at all). Nothing
+# here is guessed - an unknown shape resolves to no name and the row is
+# skipped, never priced.
+_OUTCOME_NAME_FIELDS = ("name", "playerName")
+
+
+def _outcome_name(player0: dict | None, outcome: dict | None) -> str:
+    for container in (player0 or {}, outcome or {}):
+        if not isinstance(container, dict):
+            continue
+        for field in _OUTCOME_NAME_FIELDS:
+            value = str(container.get(field) or "").strip()
+            if value:
+                return value
+    return ""
+
+
 def _selection_from_name(name: object, home: object, away: object) -> str | None:
-    """Map an outcome name to a canonical selection for 1x2 / totals / btts."""
+    """Map an outcome name to a canonical selection for 1x2 / totals / btts.
+
+    Fail-closed on an empty name. The 2026-10-03 capture is the reason this
+    guard exists: the payload carried no ``name`` and no participant names,
+    so ``"" == ""`` matched the home branch and every one of the 414 captured
+    rows was written as ``1x2/home``. Three different prices for the same
+    fixture were all labelled the home side. An unnamed outcome has no
+    resolvable side and must never be priced.
+    """
     n = str(name or "").strip()
+    if not n:
+        return None
     low = n.lower()
     if low in {"over", "under", "yes", "no"}:
         return low
     if low in {"draw", "tie", "x"}:
         return "draw"
-    if low == str(home or "").strip().lower():
+    home_name = str(home or "").strip().lower()
+    away_name = str(away or "").strip().lower()
+    if home_name and low == home_name:
         return "home"
-    if low == str(away or "").strip().lower():
+    if away_name and low == away_name:
         return "away"
     return None
 
 
-def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None = None) -> list[dict]:
+def rows_from_odds_response(
+    data: dict,
+    market_type_map: dict[str, str] | None = None,
+    *,
+    home: object = None,
+    away: object = None,
+    stats: dict | None = None,
+) -> list[dict]:
     """Convert OddsPapi odds payload to flat unified-schema rows.
 
     Handles 1x2, btts, double_chance, team_totals and totals when the
     market-id is known. Unknown market ids are skipped (never guessed).
     ``market_type_map`` overrides the built-in id vocabulary (e.g. from a
     live catalog); keys are market-id strings, values are the types above.
+
+    ``home``/``away`` let the caller supply the fixture identity it already
+    holds (the /fixtures record) when the /odds payload does not repeat it.
+    Fixture identity is REQUIRED: a priced row with no teams can never join
+    a pick, and emitting it manufactured 414 unjoinable rows on 2026-10-03.
+    ``stats`` receives per-reason skip counts so the zero is never silent.
     """
-    home = data.get("participant1Name")
-    away = data.get("participant2Name")
+    counters = stats if isinstance(stats, dict) else {}
+
+    def _skip(reason: str) -> None:
+        counters[reason] = int(counters.get(reason) or 0) + 1
+
+    home = home if str(home or "").strip() else data.get("participant1Name")
+    away = away if str(away or "").strip() else data.get("participant2Name")
     kickoff = data.get("startTime")
     day = str(kickoff or "")[:10]
     league = data.get("tournamentName") or data.get("categoryName")
     # Red-team F2 (fixed 2026-08-05): captured_at is OUR capture time, not
     # the provider's updatedAt (which can be stale by days). Freshness is
-    # then meaningful for enh_pricing/CLV.
+    # then meaningful for enh_pricing/CLV. The provider's own stamps are
+    # preserved separately as published_at / provider_changed_at.
     from datetime import datetime as _dt, timezone as _tz
     captured_at = _dt.now(_tz.utc).isoformat()
+    captured_dt = _dt.now(_tz.utc)
     rows: list[dict] = []
     bookmaker_odds = data.get("bookmakerOdds") or {}
     if not isinstance(bookmaker_odds, dict):
+        _skip("no_bookmaker_odds")
+        return rows
+    if not str(home or "").strip() or not str(away or "").strip():
+        # Fail closed. Without participants the row has no fixture key, so
+        # it is priced evidence that can never be audited against a pick.
+        _skip("fixture_identity_missing")
         return rows
     type_map = dict(market_type_map) if market_type_map else dict(_MARKET_ID_TO_TYPE)
     if not type_map:
@@ -281,32 +338,64 @@ def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None =
             continue
         for mid, mkt in markets.items():
             mtype = type_map.get(str(mid))
-            if not mtype or not isinstance(mkt, dict):
+            if not isinstance(mkt, dict):
+                continue
+            if not mtype:
+                _skip("market_id_unknown")
                 continue
             # Red-team F2 (fixed 2026-08-05): dead markets/outcomes are
             # dropped at the boundary — never ingested.
             if mkt.get("marketActive") is False:
+                _skip("market_inactive")
                 continue
             outcomes = mkt.get("outcomes") or {}
             if not isinstance(outcomes, dict):
                 continue
-            for outcome in outcomes.values():
-                if not isinstance(outcome, dict):
-                    continue
+            # mainLine: when a market quotes several lines, only the main one
+            # is the comparable price. Prefer it when the provider flags it
+            # and keep every outcome when it flags none (observed both ways).
+            outcome_items = [o for o in outcomes.values() if isinstance(o, dict)]
+            main_line_items = [o for o in outcome_items if _is_main_line(o)]
+            if main_line_items:
+                skipped_alt = len(outcome_items) - len(main_line_items)
+                if skipped_alt:
+                    counters["alt_line_skipped"] = int(
+                        counters.get("alt_line_skipped") or 0) + skipped_alt
+                outcome_items = main_line_items
+            for outcome in outcome_items:
                 players = outcome.get("players") or {}
                 player0 = players.get("0") if isinstance(players, dict) else None
                 if not isinstance(player0, dict):
                     continue
                 if player0.get("active") is False:
+                    _skip("outcome_inactive")
                     continue
                 price = player0.get("price")
                 if price is None:
+                    _skip("no_price")
                     continue
-                name = player0.get("name") or outcome.get("name")
+                published_at = (
+                    player0.get("bookmakerChangedAt")
+                    or outcome.get("bookmakerChangedAt")
+                    or mkt.get("bookmakerChangedAt")
+                )
+                provider_changed_at = (
+                    player0.get("changedAt")
+                    or outcome.get("changedAt")
+                    or mkt.get("changedAt")
+                )
+                if _published_after(published_at, captured_dt):
+                    # No-lookahead safeguard: a quote that claims to have been
+                    # published after we observed it is an artefact, not a
+                    # price. Enforced here, at the boundary.
+                    _skip("published_after_capture")
+                    continue
+                name = _outcome_name(player0, outcome)
                 market, selection = _market_selection(
                     mtype, name, home, away, player0.get("bookmakerOutcomeId"),
                     outcome=outcome, player0=player0)
                 if not market or not selection:
+                    _skip(f"unresolved_{mtype}")
                     continue
                 # Unified schema only (same shape as theoddsapi/bzzoiro stores)
                 # so enh_pricing can merge this source with zero special-casing.
@@ -324,8 +413,29 @@ def rows_from_odds_response(data: dict, market_type_map: dict[str, str] | None =
                     "odds": price,
                     "bookmaker": bookmaker,
                     "captured_at": captured_at,
+                    "published_at": published_at,
+                    "provider_changed_at": provider_changed_at,
                 })
     return rows
+
+
+def _is_main_line(outcome: dict) -> bool:
+    """True when the provider flags this outcome as the main line."""
+    if outcome.get("mainLine") is True:
+        return True
+    players = outcome.get("players") or {}
+    player0 = players.get("0") if isinstance(players, dict) else None
+    return isinstance(player0, dict) and player0.get("mainLine") is True
+
+
+def _published_after(published_at: object, captured_dt) -> bool:
+    """True when a provider publication stamp is later than our capture."""
+    from edgefactory.odds_normalization import parse_zoned_timestamp
+
+    stamp = parse_zoned_timestamp(published_at)
+    if stamp is None:
+        return False
+    return stamp > captured_dt
 
 
 def _line_from(obj: dict) -> object:

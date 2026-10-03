@@ -1,0 +1,101 @@
+{
+  "_note": "Shape of the OddsPAPI /odds payload as captured on 2026-10-03. The payload carries NO participant names and NO outcome 'name' field; the outcome identity lives in players.0.playerName. Fields present here are exactly those observed in the run's scrubbed schema dump.",
+  "startTime": "2026-10-03T16:00:00.000Z",
+  "tournamentName": "UEFA Nations League",
+  "bookmakerOdds": {
+    "bodog.eu": {
+      "markets": {
+        "101": {
+          "bookmakerMarketId": "bm-10194",
+          "marketActive": true,
+          "outcomes": {
+            "o1": {
+              "players": {
+                "0": {
+                  "price": 4.3,
+                  "priceAmerican": "+330",
+                  "priceFractional": "33/10",
+                  "mainLine": true,
+                  "limit": 500,
+                  "playerName": "Croatia",
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z",
+                  "exchangeMeta": null
+                }
+              }
+            },
+            "ox": {
+              "players": {
+                "0": {
+                  "price": 3.2,
+                  "priceAmerican": "+220",
+                  "priceFractional": "11/5",
+                  "mainLine": true,
+                  "limit": 500,
+                  "playerName": "Draw",
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z",
+                  "exchangeMeta": null
+                }
+              }
+            },
+            "o2": {
+              "players": {
+                "0": {
+                  "price": 1.625,
+                  "priceAmerican": "-160",
+                  "priceFractional": "5/8",
+                  "mainLine": true,
+                  "limit": 500,
+                  "playerName": "England",
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z",
+                  "exchangeMeta": null
+                }
+              }
+            }
+          }
+        },
+        "10194": {
+          "bookmakerMarketId": "bm-10194-ou",
+          "marketActive": true,
+          "outcomes": {
+            "t1": {
+              "players": {
+                "0": {
+                  "price": 1.98,
+                  "mainLine": true,
+                  "playerName": "Over 2.5",
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            },
+            "t2": {
+              "players": {
+                "0": {
+                  "price": 1.86,
+                  "mainLine": true,
+                  "playerName": "Under 2.5",
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            },
+            "t3": {
+              "players": {
+                "0": {
+                  "price": 3.4,
+                  "mainLine": false,
+                  "playerName": "Over 3.5",
+                  "bookmakerChangedAt": "2026-10-03T09:50:00.000Z",
+                  "changedAt": "2026-10-03T09:51:00.000Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

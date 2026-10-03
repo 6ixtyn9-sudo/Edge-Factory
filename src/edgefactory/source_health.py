@@ -252,9 +252,11 @@ def build_daily_source_health(
             # Fixed reason vocabulary plus invalid_price; values are counts
             # only, so the receipt cannot retain provider payloads or secrets.
             allowed = {
-                "date_mismatch", "fixture_key_miss", "market_unmapped",
-                "selection_unmapped", "no_pick_for_fixture",
-                "timestamp_rejected", "invalid_price",
+                "date_mismatch", "out_of_window", "fixture_key_miss",
+                "market_unmapped", "market_unsupported",
+                "selection_unmapped", "selection_unsupported",
+                "no_pick_for_fixture", "timestamp_rejected", "invalid_price",
+                "fixture_identity_missing",
             }
             row["join_miss_counts"] = {
                 str(reason): int(count or 0)
@@ -298,13 +300,60 @@ ROLE_VERDICT_SOURCES: dict[str, tuple[str, ...]] = {
 }
 
 
+def zero_row_reason(
+    status: object,
+    http_statuses: object = (),
+    quota_hint: object = None,
+) -> str | None:
+    """Deterministic zero-row reason token for a credential-blocked source.
+
+    Operator-facing triage only: the token names the transport outcome, never
+    a key, a header, a URL or any part of a payload.
+
+    * ``http_403_auth`` / ``http_401_auth`` - the credential was rejected.
+    * ``credential_rejected_auth`` - auth failure with no observed code.
+    * ``valid_empty_http_200`` - authenticated, answered, returned nothing.
+      Deliberately distinct from a malformed or unavailable response: an
+      empty 200 is a working integration with no rows today.
+    * ``http_429_quota`` / ``quota_exhausted`` - rate/plan limit.
+    """
+    state = str(status or "").strip().lower()
+    codes = [int(code) for code in (http_statuses or []) if str(code).isdigit()]
+    if state == "auth":
+        for code in (403, 401):
+            if code in codes:
+                return f"http_{code}_auth"
+        return "credential_rejected_auth"
+    if state == "quota":
+        return "http_429_quota" if 429 in codes else "quota_exhausted"
+    if state == "cooldown":
+        return "cooldown_after_429"
+    if state == "empty":
+        return "valid_empty_http_200" if (200 in codes or not codes) else "empty_response"
+    if state == "not_run":
+        return "credential_absent_not_run"
+    if state == "unavailable":
+        for code in codes:
+            if code >= 400:
+                return f"http_{code}_unavailable"
+        hint = str(quota_hint or "").strip().lower()
+        return f"unavailable_{hint}" if hint and hint not in {"none", "none_observed"} else "unavailable"
+    return None
+
+
 def _status_token(name: str, row: dict[str, Any]) -> str:
     if name in CONVERGENT_SOURCES:
         return f"{name}=echo/only"
     roles = ROLE_VERDICT_SOURCES.get(name, ("can_price", "can_vote"))
     healthy = bool(row.get("can_fetch_today")) and all(row.get(k) for k in roles)
     label = "fetch/" + "/".join(role.removeprefix("can_") for role in roles)
-    return f"{name}={label if healthy else 'BLOCKED'}"
+    if healthy:
+        return f"{name}={label}"
+    # A bare "BLOCKED" does not tell an operator whether to check the key,
+    # the plan or the endpoint. Attach the deterministic reason when one is
+    # known; never guess one.
+    reason = str(row.get("reason") or "")
+    return f"{name}=BLOCKED" + (f"[reason={reason}]" if reason else "")
 
 
 #: Price role of each promoted source, printed so the health line can never

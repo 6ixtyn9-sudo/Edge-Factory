@@ -26,7 +26,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from edgefactory.odds_normalization import canonical_market_selection, provider_kickoff_date
+from edgefactory.odds_normalization import (
+    canonical_market_selection,
+    parse_zoned_timestamp,
+    provider_kickoff_date,
+)
 
 SOURCE="boggio"; BASE="https://football-prediction-api.p.rapidapi.com"; API_HOST="football-prediction-api.p.rapidapi.com"; KEY_ENV="RAPIDAPI_KEY"
 MIN_INTERVAL_S=float(os.environ.get("EDGE_FACTORY_BOGGIO_MIN_INTERVAL_S","10")); MAX_CALLS_PER_RUN=1
@@ -94,14 +98,15 @@ def price_donor_enabled() -> bool:
 
 
 def _parse_stamp(value):
-    try:
-        text = str(value or "").strip().replace("Z", "+00:00")
-        if not text:
-            return None
-        stamp = datetime.fromisoformat(text)
-        return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
-    except (TypeError, ValueError):
-        return None
+    """Absolute, zone-bearing stamp or ``None``.
+
+    The v2 feed renders both ``last_update_at`` and ``start_date`` as
+    ``"YYYY-MM-DD HH:MM:SS UTC"``.  ``datetime.fromisoformat`` rejects that
+    trailing zone name, which is why every Boggio row used to land with no
+    join date at all.  The shared parser accepts the named zone and still
+    fails closed on anything that does not name one.
+    """
+    return parse_zoned_timestamp(value)
 
 
 def timestamp_suspect(published_at, captured_at) -> bool:
@@ -142,11 +147,17 @@ def parse_predictions(payload:Any, *, day:str):
   odds=item.get("odds") if isinstance(item.get("odds"),dict) else {}
   prediction=item.get("prediction")
   raw_market=item.get("market") or "classic"
-  canonical, _failure = canonical_market_selection(
+  canonical, failure = canonical_market_selection(
     raw_market, prediction, home=home, away=away,
   )
-  if canonical is None:
-   continue
+  # An unmappable prediction (the feed answers "1X"/"12"/"X2" whenever its
+  # model declines a single side) used to be dropped here.  A dropped row
+  # cannot be counted, so the join-miss report could never show why Boggio
+  # contributed nothing.  Keep the row with its RAW provider vocabulary and
+  # mark it non-priceable; the shared bundle boundary buckets it by reason.
+  mappable = canonical is not None
+  market = canonical.market if mappable else raw_market
+  selection = canonical.selection if mappable else prediction
   average_price=_selection_odds(odds,prediction)
   suspect=timestamp_suspect(published,stamp)
   kickoff=item.get("start_date")
@@ -158,10 +169,12 @@ def parse_predictions(payload:Any, *, day:str):
     "home":home,
     "away":away,
     "kickoff":kickoff,
-    "market":canonical.market,
-    "selection":canonical.selection,
+    "market":market,
+    "selection":selection,
     "raw_market":raw_market,
     "raw_selection":prediction,
+    "canonicalization_mappable":mappable,
+    "canonicalization_reason":(failure.reason if failure is not None else None),
     "probability":_num(probs.get(str(prediction)) or probs.get(prediction)),
     # --- price donor fields (operator promotion 2026-10-03) ---
     "odds":average_price,
@@ -172,7 +185,7 @@ def parse_predictions(payload:Any, *, day:str):
     "price_independence_family":PRICE_INDEPENDENCE_FAMILY,
     # Eligible only when the operator switch is on, a price exists, and the
     # publication stamp is not in the future relative to capture.
-    "price_push_eligible":bool(event_day and average_price is not None and price_donor_enabled() and not suspect),
+    "price_push_eligible":bool(event_day and mappable and average_price is not None and price_donor_enabled() and not suspect),
     "timestamp_suspect":suspect,
     "odds_provenance":odds,
     "published_at":published,
@@ -197,7 +210,16 @@ def capture_day(day,*,localdata=None):
   rows,shape=parse_predictions(payload,day=day); stats["schema_match"]=shape; stats["sample"]=_sample(payload)
   if not shape: stats.update(status="unavailable",blocker="boggio: snapshot schema not recognized; raw sample retained"); return [],_set_diag(stats)
   source_items = payload.get("data") if isinstance(payload, dict) else payload
-  stats["canonicalization_dropped"] = max(0, len(source_items or []) - len(rows)) if isinstance(source_items, list) else 0
+  # Unmappable rows are retained (never dropped) so they stay countable.
+  # "dropped" now means "captured but not priceable", with a reason census.
+  stats["canonicalization_dropped"] = sum(1 for r in rows if r.get("canonicalization_mappable") is False) + (
+    max(0, len(source_items) - len(rows)) if isinstance(source_items, list) else 0)
+  reasons: dict[str, int] = {}
+  for r in rows:
+   reason = r.get("canonicalization_reason")
+   if reason:
+    reasons[str(reason)] = reasons.get(str(reason), 0) + 1
+  stats["canonicalization_drop_reasons"] = dict(sorted(reasons.items()))
   stats["bg_raw"]=len({(r["home"],r["away"]) for r in rows}); stats["bg_scored"]=len(rows); stats["status"]="ok" if rows else "empty"; return rows,_set_diag(stats)
  except UpstreamBlocked as e:
   msg=str(e); stats["http_429"]=_429; stats["status"]="cooldown" if _cooling else ("quota" if "429" in msg or "budget" in msg else _status(None)); stats["blocker"]=msg[:180]; stats["errors"]=[msg[:180]]; return [],_set_diag(stats)
