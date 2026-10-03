@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """capture_theodds.py — snapshot The Odds API prices for the frozen daily shortlist.
 
-Audit-only by design: this captures prices (pick-time and near-close) for CLV;
-nothing gates picks on this feed.
+This is not a consensus voter. It captures named-book observations for the
+second, final pricing pass of a two-pass candidate → price → ticket build (and
+for CLV). The candidate pass cannot use a row captured after it began;
+picks_today enforces that per-row timestamp cutoff rather than backfilling an
+already-made card.
 
 Wired into scripts/daily.py via --auto at the existing CLV capture points, so
 the established commands cover everything:

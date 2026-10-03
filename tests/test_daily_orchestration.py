@@ -399,3 +399,38 @@ def test_intraday_runs_prosoccer_capture_daily_recapture(tmp_path):
         "capture_daily.py --skip-build --sources prosoccer" in call.args[0]
         for call in mock_run_soft.call_args_list
     )
+
+
+def test_oddspapi_capture_is_quota_opt_in_and_bounded(monkeypatch):
+    with patch.object(daily, "run_soft") as run_soft:
+        monkeypatch.delenv("EDGE_FACTORY_ODDSPAPI_PRICES", raising=False)
+        daily.capture_oddspapi_snapshot("2026-10-03", "pick_time")
+        run_soft.assert_not_called()
+
+        monkeypatch.setenv("EDGE_FACTORY_ODDSPAPI_PRICES", "1")
+        monkeypatch.setenv("ODDSPAPI_MAX_FIXTURES", "999")
+        daily.capture_oddspapi_snapshot("2026-10-03", "pick_time")
+
+    command, label = run_soft.call_args.args
+    assert "scripts/capture_oddspapi.py --date 2026-10-03 --max-fixtures 20" in command
+    assert label == "oddspapi bounded capture 2026-10-03 [pick_time]"
+
+
+def test_priced_finalization_captures_then_rebuilds_with_a_new_cutoff(monkeypatch):
+    commands: list[tuple[str, str]] = []
+    monkeypatch.setattr(daily, "make_run_as_of", lambda: "2026-10-03T09:15:00+02:00")
+    with patch.object(daily, "capture_theodds_snapshot") as theodds, \
+            patch.object(daily, "capture_oddspapi_snapshot") as oddspapi, \
+            patch.object(daily, "capture_betexplorer_snapshot") as betexplorer, \
+            patch.object(daily, "run", side_effect=lambda cmd, label: commands.append((cmd, label))):
+        result = daily.finalize_priced_candidate_slate("2026-10-03")
+
+    assert result == "2026-10-03T09:15:00+02:00"
+    theodds.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
+    oddspapi.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
+    betexplorer.assert_called_once_with("2026-10-03", "candidate_price_snapshot")
+    assert commands == [(
+        "EDGE_FACTORY_RUN_AS_OF=2026-10-03T09:15:00+02:00 "
+        "PYTHONPATH=src python3 scripts/picks_today.py 2026-10-03",
+        "picks_today 2026-10-03 (final priced card)",
+    )]

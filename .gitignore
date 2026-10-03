@@ -70,6 +70,16 @@ dist/
 !localdata/theoddsapi_sports.json
 !localdata/theoddsapi_attempts_20*.json
 !localdata/theoddsapi_odds_2026-*.csv.gz
+# Bounded OddsPAPI captures are a named-book receipt used by a later build.
+!localdata/oddspapi_odds_2026-*.csv.gz
+# The bounded BetExplorer snapshot is the raw receipt for its final-card rows.
+!localdata/betexplorer_odds_cache_20*.json
+!localdata/betexplorer_capture_20*.json
+# Compact source-health receipts are the auditable attempt/join trail.  Raw
+# shadow ledgers stay ignored: they can be large and are not needed to prove
+# whether a source supplied a price.
+!localdata/source_health_20*.json
+!localdata/source_health_state.json
 
 # Addendum 25: shadow-slate dedup ledger is bot-owned like the other ledgers
 !localdata/shadow_sent_ledger_20*.json

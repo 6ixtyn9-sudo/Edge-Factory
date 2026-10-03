@@ -130,6 +130,18 @@ def test_a_healthy_named_book_outranks_a_fair_price_donor():
     assert source == "bzzoiro_odds"
 
 
+def test_named_book_provenance_beats_a_fresher_stakeable_fair_price(monkeypatch):
+    # Even when an operator deliberately enables fair-price staking, a healthy
+    # exact named-book quote is preferred. This pins the ordering rather than
+    # relying on microsecond differences in per-row clock sampling.
+    monkeypatch.setenv("EDGE_FACTORY_FAIR_PRICE_STAKEABLE", "1")
+    candidates = [
+        psrc.SourceCandidate(name="betbetter", healthy=True, exact_match=True, freshness_h=0.0),
+        psrc.SourceCandidate(name="bzzoiro_odds", healthy=True, exact_match=True, freshness_h=8.0),
+    ]
+    assert psrc.rank_candidates(candidates, execution_only=True)[0].name == "bzzoiro_odds"
+
+
 def test_unavailable_bzzoiro_never_wins_on_historic_priority():
     candidates = [
         psrc.SourceCandidate(name="bzzoiro_odds", healthy=False, exact_match=False),
@@ -250,3 +262,22 @@ def test_policy_is_explicit_and_printable():
     line = psrc.policy_line()
     assert "avg_donor=on" in line and "fair_donor=on" in line
     assert "corroboration=preferred" in line
+
+
+def test_candidate_pass_skips_provider_shadow_capture(monkeypatch):
+    monkeypatch.setenv("EDGE_FACTORY_CANDIDATE_ONLY", "1")
+    stats = pt._capture_shadow_candidates(DAY)
+    assert stats["pinnapi_odds"]["status"] == "candidate_only"
+    assert stats["sharpapi_odds"]["status"] == "candidate_only"
+    assert stats["boggio"]["status"] == "candidate_only"
+
+
+def test_observed_execution_contributor_order_beats_cross_source_freshness():
+    # Archived end-to-end contribution through 2026-10-03: BetExplorer had
+    # 497 push-eligible matches over 84 source-days; Bzzoiro had 85 over 53.
+    # This is an availability ordering, not a claim about settled performance.
+    candidates = [
+        psrc.SourceCandidate(name="bzzoiro_odds", healthy=True, exact_match=True, freshness_h=0.0),
+        psrc.SourceCandidate(name="betexplorer_odds", healthy=True, exact_match=True, freshness_h=12.0),
+    ]
+    assert psrc.rank_candidates(candidates, execution_only=True)[0].name == "betexplorer_odds"

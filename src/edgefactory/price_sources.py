@@ -99,14 +99,28 @@ def require_corroboration() -> bool:
     return _flag("EDGE_FACTORY_REQUIRE_PRICE_CORROBORATION", False)
 
 
+def source_fallback_enabled() -> bool:
+    """Whether the legacy source fallback is allowed into execution.
+
+    The fallback is disabled by default. It is a separately registered audit
+    source because the historical Forebet/miner path is not a named-book
+    quote. Turning it on is an explicit operator decision and is printed in
+    the active policy; it is never an implicit rescue when donor joins fail.
+    """
+    return _flag("EDGE_FACTORY_ALLOW_SOURCE_FALLBACK", False)
+
+
 def fair_price_directly_stakeable() -> bool:
     """Separate, explicit switch: may a fair price be the *printed* price?
 
     This is deliberately its own setting. Enabling the fair-price donor makes
     its numbers visible and usable as evidence; making them stakeable is a
-    second, conscious decision and must never happen as a side effect.
+    second, conscious decision and must never happen as a side effect. The
+    setting remains separate from donor enablement so policy can turn it off
+    without changing capture or evidence. The production-safe default is OFF;
+    an operator must explicitly set EDGE_FACTORY_FAIR_PRICE_STAKEABLE=1.
     """
-    return _flag("EDGE_FACTORY_FAIR_PRICE_STAKEABLE", True)
+    return _flag("EDGE_FACTORY_FAIR_PRICE_STAKEABLE", False)
 
 
 def corroboration_policy() -> dict[str, Any]:
@@ -117,6 +131,7 @@ def corroboration_policy() -> dict[str, Any]:
         "fair_price_directly_stakeable": fair_price_directly_stakeable(),
         "require_corroboration": require_corroboration(),
         "require_named_book_corroboration": require_named_book_corroboration(),
+        "source_fallback_enabled": source_fallback_enabled(),
         "min_independent_families": 2 if require_corroboration() else 1,
     }
 
@@ -131,6 +146,7 @@ def policy_line() -> str:
         "corroboration=" + ("required" if policy["require_corroboration"] else "preferred"),
         "named_book_corroboration="
         + ("required" if policy["require_named_book_corroboration"] else "preferred"),
+        "source_fallback=" + ("execution" if policy["source_fallback_enabled"] else "abstain"),
     ]
     return "PRICE POLICY: " + " ".join(bits)
 
@@ -196,24 +212,36 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
     PriceSourceSpec(
         name="bzzoiro_odds",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=10,
+        priority=20,
         independence_family="bzzoiro_book",
         named_bookmaker=True,
         label="Bzzoiro named-book price",
-        notes="Historic default primary. Kept as one approved source among several.",
+        notes=("Second observed execution contributor: 85 push-eligible archived "
+               "matches across 53 source-days through 2026-10-03."),
     ),
     PriceSourceSpec(
         name="betexplorer",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=20,
+        priority=10,
         independence_family="betexplorer_book",
         named_bookmaker=True,
         label="BetExplorer named-book price",
     ),
     PriceSourceSpec(
+        name="betexplorer_odds",
+        role=ROLE_NAMED_BOOKMAKER,
+        priority=10,
+        independence_family="betexplorer_book",
+        named_bookmaker=True,
+        label="BetExplorer named-book price",
+        notes=("Top observed execution contributor: 497 push-eligible archived "
+               "matches across 84 source-days through 2026-10-03; same family "
+               "as the compatibility name betexplorer."),
+    ),
+    PriceSourceSpec(
         name="theoddsapi",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=20,
+        priority=30,
         independence_family="theoddsapi_bookmaker",
         named_bookmaker=True,
         label="TheOddsAPI named-book price",
@@ -222,7 +250,7 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
     PriceSourceSpec(
         name="oddspapi_odds",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=25,
+        priority=60,
         independence_family="oddspapi_bookmaker",
         named_bookmaker=True,
         label="OddsPAPI named-book price",
@@ -230,7 +258,7 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
     PriceSourceSpec(
         name="pinnapi_odds",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=15,
+        priority=40,
         independence_family="pinnacle_book",
         named_bookmaker=True,
         label="Pinnacle named-book price",
@@ -238,7 +266,7 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
     PriceSourceSpec(
         name="sharpapi_odds",
         role=ROLE_NAMED_BOOKMAKER,
-        priority=18,
+        priority=50,
         independence_family="sharpapi_book",
         named_bookmaker=True,
         label="SharpAPI named-book price",
@@ -310,6 +338,23 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
         named_bookmaker=False,
         label="ScoutingStats audit-only price",
         notes="Retained for audit; quarantined from push eligibility (sole-source incident 2026-09-25).",
+    ),
+    # Historical Forebet/miner fallback. It is registered so its provenance
+    # cannot silently become an execution quote, but disabled unless the
+    # operator explicitly opts in. The default production decision is abstain:
+    # Forebet is historical-only and carries no named-book provenance.
+    PriceSourceSpec(
+        name="forebet_best",
+        role=ROLE_AVERAGE_PRICE_DONOR,
+        priority=90,
+        enabled_by_default=False,
+        execution_eligible=True,
+        corroboration_eligible=False,
+        independence_family="forebet_fallback",
+        named_bookmaker=False,
+        label="Forebet/miner fallback price",
+        notes="Historical-only fallback; not a named bookmaker and off by default.",
+        enable_flag="EDGE_FACTORY_ALLOW_SOURCE_FALLBACK",
     ),
 )
 
@@ -479,10 +524,16 @@ def rank_candidates(
 
     1. source health for the requested date;
     2. exact fixture and market match;
-    3. freshness (smaller age wins; unknown age sorts last);
-    4. execution eligibility;
-    5. named-book provenance;
-    6. configured source priority.
+    3. execution eligibility;
+    4. named-book provenance;
+    5. observed execution-contribution order (configured source priority);
+    6. freshness within that source order (smaller age wins; unknown last).
+
+    The fixed source order is set from the archived end-to-end contribution
+    record, not an asserted bookmaker-quality claim. Provenance intentionally
+    precedes source order: a marginally newer fair or aggregate number is not
+    an executable bookmaker quote and must never displace a healthy named-book
+    quote merely because capture loops completed milliseconds apart.
 
     Bzzoiro no longer wins by construction: a healthy source with a valid exact
     fixture match beats an unavailable source whatever its historic priority.
@@ -497,10 +548,10 @@ def rank_candidates(
         return (
             0 if candidate.healthy else 1,
             0 if candidate.exact_match else 1,
-            float(age) if isinstance(age, (int, float)) else float("inf"),
             0 if source_spec.can_execute() else 1,
             0 if source_spec.named_bookmaker else 1,
             source_spec.priority,
+            float(age) if isinstance(age, (int, float)) else float("inf"),
             source_spec.name,
         )
 

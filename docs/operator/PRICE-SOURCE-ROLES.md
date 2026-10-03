@@ -30,6 +30,7 @@ price at all.
 | Model / fair-price donor | `betbetter` | `fair` | **no** | yes, while the donor switch *and* the stakeable switch are on |
 | Conditional provider-price donor | `betminer` | `provider_average` / `bookmaker` when provenance is given | no | **no** — evidence only |
 | Audit-only price | `scoutingstats_odds` | `provider_average` | no | **no** — quarantined |
+| Historical source fallback | `forebet_best` | `provider_average` | no | **no by default** — explicit opt-in only |
 | Vote donors | `bzzoiro`, `forebet`, `futbolpronosticos`, tips feeds, … | — | — | **no** |
 
 `predictiq` remains a convergent echo-candidate: zero voice credit, never a
@@ -92,9 +93,10 @@ betminer_provider
 |---|---|---|
 | `EDGE_FACTORY_ENABLE_AVERAGE_PRICE_DONOR` | `1` | Boggio (and BetMiner aggregates) may donate prices |
 | `EDGE_FACTORY_ENABLE_FAIR_PRICE_DONOR` | `1` | Bet Better may donate fair prices |
-| `EDGE_FACTORY_FAIR_PRICE_STAKEABLE` | `1` | A fair price may be the *printed* price |
+| `EDGE_FACTORY_FAIR_PRICE_STAKEABLE` | `1` | Separate switch permitting a fair price to be the *printed* price; evidence remains visible while off |
 | `EDGE_FACTORY_REQUIRE_PRICE_CORROBORATION` | `0` | Restores the strict 2026-10-02 Option C gate |
 | `EDGE_FACTORY_REQUIRE_NAMED_BOOK_CORROBORATION` | `0` | Only named-book families may corroborate |
+| `EDGE_FACTORY_ALLOW_SOURCE_FALLBACK` | `0` | Explicitly opts the registered historical `forebet_best` fallback into execution; default is abstain |
 
 The active policy is printed by `psrc.policy_line()` on every run and with
 every abstention. Nothing here is a silent default.
@@ -118,8 +120,23 @@ available but rejected by policy".
 
 | Adapter | Before | After |
 |---|---|---|
-| BetMiner | `GET /matches/{date}` | `GET /value-bets/{date}` (legacy shape still parsed for cached receipts; 404 ⇒ `reason=http_404_endpoint_contract`) |
-| SharpAPI | `GET /odds?date=…` | `GET /api/v1/odds` with configurable `sport` / `limit` / `book` / `market`; `date` only when `SHARPAPI_DATE_PARAM` is set |
+| BetMiner | `GET /matches/{date}` and an unverified single-date value-bets probe | `GET /value-bets/{dateFrom}/{dateTo}` with same-day range (legacy shape still parsed for cached receipts; 404 ⇒ `reason=http_404_endpoint_contract`) |
+| SharpAPI | `GET /odds?date=…` | `GET /api/v1/odds` with required `SHARPAPI_SPORT` plus configurable `limit` / `book` / `market`; `date` only when `SHARPAPI_DATE_PARAM` is set |
 
 Diagnostics carry status-derived reason codes only — never a key, a header or
 a request URL.
+
+## Shared donor join vocabulary
+
+Every donor adapter and the final bundle boundary use
+`edgefactory.odds_normalization`. Explicit provider aliases become `1x2`,
+`btts`, or `ou[_line]`, and 1/X/2 or an exact home/away team token becomes
+`home`, `draw`, or `away`. Unmappable market or selection tokens are withheld
+from the join and counted as `canonicalization_drop_reasons`; they are never
+silently guessed. Source-health receipts also report captured/scored versus
+matched rows, so a large ledger with zero overlap is visible.
+
+BetMiner contract discovery is cache/receipt-first: a failed endpoint probe
+writes `localdata/betminer_probe_<date>.json` with the endpoint, status,
+scrubbed schema sample, and timestamp. A later run on that date reads the
+receipt and consumes no further provider calls.

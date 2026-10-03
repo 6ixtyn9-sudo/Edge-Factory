@@ -13,6 +13,8 @@ What is pruned (exact filename shapes only, see ``TELEMETRY_PATTERNS``):
   discovery_sent_ledger_DATE.json,
   notify_delivery_failures_DATE.json                     notification ledgers
   theoddsapi_attempts_DATE.json                          odds-attempt logs
+  betexplorer_capture_DATE.json, betexplorer_odds_cache_DATE.json
+                                                        bounded price snapshots
   supabase_sync_manifest_DATE.json                       sync manifests
   official_run_DATE.json                                 official-run markers
   picks_DATE.txt                                         pick text reports
@@ -81,6 +83,8 @@ TELEMETRY_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
         rf"^discovery_sent_ledger_{_DATE}\.json$",
         rf"^notify_delivery_failures_{_DATE}\.json$",
         rf"^theoddsapi_attempts_{_DATE}\.json$",
+        rf"^betexplorer_capture_{_DATE}\.json$",
+        rf"^betexplorer_odds_cache_{_DATE}\.json$",
         rf"^supabase_sync_manifest_{_DATE}\.json$",
         rf"^official_run_{_DATE}\.json$",
         rf"^picks_{_DATE}\.txt$",
