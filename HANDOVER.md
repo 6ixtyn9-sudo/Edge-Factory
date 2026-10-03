@@ -21,7 +21,7 @@ Commands run:
 
 `python scripts/auto_tickets.py --date 2026-10-03 --force`
 
-Observed result: no usable execution donor rows were available, so the corrected run printed an honest `NO BET TODAY — 0 qualifying leg(s), need 2`. The active policy printed `fair_stakeable=off` and `source_fallback=abstain`; source-health diagnostics showed zero captured/scored/matched rows for the unavailable shadow donors and SharpAPI's missing-sport blocker. The superseded-card recut report is `localdata/auto_tickets_2026-10-03_force_recut.txt`.
+The git-backed 2026-10-03 slate contains 55 captured rows, including 32 donor-priced candidates, but zero named-book execution prices and zero execution-safe candidates. The 28 ScoutingStats-derived prices are audit-only provider averages; the remaining priced fallback/unregistered rows are rejected by policy. The corrected run therefore printed an honest `NO BET TODAY — 0 qualifying leg(s), need 2`. The active policy printed `fair_stakeable=off` and `source_fallback=abstain`; the sandbox transport replay additionally reported missing runtime env values, but those are not used to reinterpret the git-backed card. The superseded-card recut report is `localdata/auto_tickets_2026-10-03_force_recut.txt`.
 
 The original frozen card remains at `localdata/auto_tickets_2026-10-03.txt` with its write-once `frozen_at` preserved as `2026-10-03T09:15:03+02:00`; it was not hand-edited. The force recut records that card as superseded while preserving the freeze entry in `auto_tickets_state.json`.
 
