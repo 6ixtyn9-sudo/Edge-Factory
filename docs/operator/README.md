@@ -175,6 +175,11 @@ Deep evidence retained in [`archive/`](archive/):
   `localdata/backfill_ledger.jsonl`. Hist namespaces only; zero vote-weight
   change. Regenerate the inventory with
   `python3 scripts/coverage_inventory.py --append-plan docs/operator/REMINE-PLAN.md`.
+- [`PRICE-SOURCE-ROLES.md`](PRICE-SOURCE-ROLES.md) — the authoritative source
+  role table (named book / average-bookmaker donor / fair-price donor / vote
+  donor), the health-aware selection order that replaced the hard-coded
+  Bzzoiro-first path, independence families, the active donor policy and its
+  switches, and the repaired BetMiner and SharpAPI endpoint contracts.
 - [`SOURCE-HUNT-2026-10.md`](SOURCE-HUNT-2026-10.md) — HUNT-01 exhaustive
   hunt for free prediction/odds APIs ("like bzzoiro"): search log, 25-candidate
   inventory, A–H scorecards, shortlist of 3 (**Betminer** voice winner /
