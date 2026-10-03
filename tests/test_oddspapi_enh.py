@@ -23,7 +23,10 @@ COLS = ["source", "source_type", "sport", "date", "kickoff", "league", "home", "
         "market", "selection", "odds", "bookmaker", "captured_at",
         # Provider publication stamps are preserved alongside OUR capture
         # time; captured_at stays the freshness clock (red-team F2).
-        "published_at", "provider_changed_at"]
+        "published_at", "provider_changed_at",
+        # Generation 3 retention: the provider's outcome key + market id so
+        # every written selection can be re-audited from the CSV alone.
+        "outcome_key", "bookmaker_market_id"]
 
 
 def _odds_payload(**over):
@@ -60,15 +63,22 @@ def _odds_payload(**over):
     return data
 
 
-def _write_oddspapi_month(root, rows, month="2026-08"):
+def _write_oddspapi_month(root, rows, month="2026-08", schema_version=None):
     ld = root / "localdata"
     ld.mkdir(parents=True, exist_ok=True)
     path = ld / f"oddspapi_odds_{month}.csv.gz"
+    import scripts.capture_oddspapi as cap
     with gzip.open(path, "wt", newline="", encoding="utf-8") as fh:
-        w = csv.DictWriter(fh, fieldnames=COLS)
+        w = csv.DictWriter(fh, fieldnames=COLS + ["schema_version"])
         w.writeheader()
         for r in rows:
-            w.writerow(r)
+            # Default to the CURRENT generation so the on-disk shape matches
+            # what capture writes; tests may override to forge stale rows.
+            row = {k: r.get(k, "") for k in COLS}
+            row["schema_version"] = (
+                schema_version if schema_version is not None
+                else str(cap.SCHEMA_VERSION))
+            w.writerow(row)
     return path
 
 
@@ -217,6 +227,24 @@ def test_oddspapi_flag_gate_controls_merge(tmp_path, monkeypatch):
     idx = load_prices_index(tmp_path, "2026-08-03")
     p = attach_enhancement_price(_pick(recommended_enhancement="home_over_15"), idx)
     assert p["enhancement_priced"] is True and p["enhancement_price_source"] == ODDSPAPI_SOURCE
+
+
+def test_oddspapi_stale_generation_never_feeds_enhancement(tmp_path, monkeypatch):
+    """Round-3 gap: the enhancement reader must gate the OddsPapi row
+    generation exactly like the picks_today bundle reader. The 414
+    generation-1 rows in the real October file have mislabelled selections
+    (and no schema marker at all); a generation-1 row that happens to carry
+    teams would otherwise price an enhancement."""
+    rows = rows_from_odds_response(_odds_payload(), market_type_map={
+        "101": "1x2", "103": "btts", "108": "double_chance",
+        "115": "team_totals", "107": "totals"})
+    rows = [dict(r, captured_at="2026-08-03T16:00:00Z") for r in rows]
+    # Written unmarked: exactly the on-disk shape of the corrupt rows.
+    _write_oddspapi_month(tmp_path, rows, schema_version="")
+    monkeypatch.setenv("EDGE_FACTORY_ODDSPAPI_PRICES", "1")
+    idx = load_prices_index(tmp_path, "2026-08-03")
+    p = attach_enhancement_price(_pick(recommended_enhancement="home_over_15"), idx)
+    assert p["enhancement_priced"] is False, "stale generation must not price"
 
 
 def test_oddspapi_inactive_outcomes_dropped():
