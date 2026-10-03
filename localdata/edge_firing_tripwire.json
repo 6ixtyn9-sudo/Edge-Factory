@@ -5,7 +5,7 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-03",
-      "n_last_window": 336,
+      "n_last_window": 349,
       "rule": "2way-unanimous avg_p>=60",
       "silent": false
     },
@@ -19,33 +19,33 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-03",
-      "n_last_window": 318,
+      "n_last_window": 324,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-03",
-      "n_last_window": 49,
+      "n_last_window": 48,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-03",
-      "n_last_window": 33,
+      "n_last_window": 34,
       "rule": "ml-meta avg_p>=65",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-10-03",
-      "n_last_window": 15,
+      "n_last_window": 14,
       "rule": "ml-meta avg_p>=80",
       "silent": false
     }
   ],
-  "generated_at": "2026-10-03T09:16:27",
+  "generated_at": "2026-10-03T12:30:53",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
@@ -95,14 +95,14 @@
     },
     {
       "name": "predictz",
-      "newest_date": "2026-10-02",
+      "newest_date": "2026-10-03",
       "newest_file": "predictz_2026-10.csv.gz",
       "role": "shadow",
       "stale": false
     },
     {
       "name": "windrawwin",
-      "newest_date": "2026-10-03",
+      "newest_date": "2026-10-04",
       "newest_file": "windrawwin_2026-10.csv.gz",
       "role": "shadow",
       "stale": false
@@ -123,8 +123,8 @@
     },
     {
       "name": "freesupertips",
-      "newest_date": "2026-09-30",
-      "newest_file": "freesupertips_2026-09.csv.gz",
+      "newest_date": "2026-10-03",
+      "newest_file": "freesupertips_2026-10.csv.gz",
       "role": "not_ready",
       "stale": false
     },
@@ -137,7 +137,7 @@
     },
     {
       "name": "bzzoiro",
-      "newest_date": "2026-10-09",
+      "newest_date": "2026-10-11",
       "newest_file": "bzzoiro_2026-10.csv.gz",
       "role": "model_voter",
       "stale": false
