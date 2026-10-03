@@ -99,14 +99,28 @@ def require_corroboration() -> bool:
     return _flag("EDGE_FACTORY_REQUIRE_PRICE_CORROBORATION", False)
 
 
+def source_fallback_enabled() -> bool:
+    """Whether the legacy source fallback is allowed into execution.
+
+    The fallback is disabled by default. It is a separately registered audit
+    source because the historical Forebet/miner path is not a named-book
+    quote. Turning it on is an explicit operator decision and is printed in
+    the active policy; it is never an implicit rescue when donor joins fail.
+    """
+    return _flag("EDGE_FACTORY_ALLOW_SOURCE_FALLBACK", False)
+
+
 def fair_price_directly_stakeable() -> bool:
     """Separate, explicit switch: may a fair price be the *printed* price?
 
     This is deliberately its own setting. Enabling the fair-price donor makes
     its numbers visible and usable as evidence; making them stakeable is a
-    second, conscious decision and must never happen as a side effect.
+    second, conscious decision and must never happen as a side effect. The
+    setting remains separate from donor enablement so policy can turn it off
+    without changing capture or evidence. The production-safe default is OFF;
+    an operator must explicitly set EDGE_FACTORY_FAIR_PRICE_STAKEABLE=1.
     """
-    return _flag("EDGE_FACTORY_FAIR_PRICE_STAKEABLE", True)
+    return _flag("EDGE_FACTORY_FAIR_PRICE_STAKEABLE", False)
 
 
 def corroboration_policy() -> dict[str, Any]:
@@ -117,6 +131,7 @@ def corroboration_policy() -> dict[str, Any]:
         "fair_price_directly_stakeable": fair_price_directly_stakeable(),
         "require_corroboration": require_corroboration(),
         "require_named_book_corroboration": require_named_book_corroboration(),
+        "source_fallback_enabled": source_fallback_enabled(),
         "min_independent_families": 2 if require_corroboration() else 1,
     }
 
@@ -131,6 +146,7 @@ def policy_line() -> str:
         "corroboration=" + ("required" if policy["require_corroboration"] else "preferred"),
         "named_book_corroboration="
         + ("required" if policy["require_named_book_corroboration"] else "preferred"),
+        "source_fallback=" + ("execution" if policy["source_fallback_enabled"] else "abstain"),
     ]
     return "PRICE POLICY: " + " ".join(bits)
 
@@ -209,6 +225,15 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
         independence_family="betexplorer_book",
         named_bookmaker=True,
         label="BetExplorer named-book price",
+    ),
+    PriceSourceSpec(
+        name="betexplorer_odds",
+        role=ROLE_NAMED_BOOKMAKER,
+        priority=20,
+        independence_family="betexplorer_book",
+        named_bookmaker=True,
+        label="BetExplorer named-book price",
+        notes="Compatibility name used by the rescue adapter; same family as betexplorer.",
     ),
     PriceSourceSpec(
         name="theoddsapi",
@@ -310,6 +335,23 @@ _SPECS: tuple[PriceSourceSpec, ...] = (
         named_bookmaker=False,
         label="ScoutingStats audit-only price",
         notes="Retained for audit; quarantined from push eligibility (sole-source incident 2026-09-25).",
+    ),
+    # Historical Forebet/miner fallback. It is registered so its provenance
+    # cannot silently become an execution quote, but disabled unless the
+    # operator explicitly opts in. The default production decision is abstain:
+    # Forebet is historical-only and carries no named-book provenance.
+    PriceSourceSpec(
+        name="forebet_best",
+        role=ROLE_AVERAGE_PRICE_DONOR,
+        priority=90,
+        enabled_by_default=False,
+        execution_eligible=True,
+        corroboration_eligible=False,
+        independence_family="forebet_fallback",
+        named_bookmaker=False,
+        label="Forebet/miner fallback price",
+        notes="Historical-only fallback; not a named bookmaker and off by default.",
+        enable_flag="EDGE_FACTORY_ALLOW_SOURCE_FALLBACK",
     ),
 )
 
