@@ -20,6 +20,11 @@
       "can_price": true,
       "can_vote": false,
       "freshness_h": null,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "date_mismatch": 637,
+        "market_unmapped": 687
+      },
       "reason": null,
       "status": "cache_only"
     },
@@ -33,9 +38,9 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 7,
-      "be_raw": 18,
-      "be_usable": 15,
+      "be_matched": 1,
+      "be_raw": 21,
+      "be_usable": 18,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -45,7 +50,7 @@
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/value-bets\\/2026-10-03\\/2026-10-03' does not exist\"}",
+      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-03' does not exist\"}",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -74,6 +79,11 @@
       "can_price": true,
       "can_vote": false,
       "freshness_h": null,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "date_mismatch": 11,
+        "selection_unmapped": 9
+      },
       "reason": null,
       "status": "cache_only"
     },
@@ -123,16 +133,16 @@
       "status": null
     },
     "oddspapi_odds": {
-      "blocker": "no pre-build OddsPAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "freshness_h": null,
       "op_matched": 0,
-      "op_raw": 0,
-      "op_usable": 0,
+      "op_raw": 414,
+      "op_usable": 414,
       "reason": null,
-      "status": "absent"
+      "status": "cache_only"
     },
     "pinnapi_odds": {
       "blocker": "fetch returned zero rows",
@@ -183,16 +193,16 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "SHARPAPI_SPORT not set; soccer sport filter is required; capture skipped",
+      "blocker": "sharpapi: HTTP 404 Not Found",
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
       "freshness_h": null,
-      "reason": "missing_sport_filter",
+      "reason": "http_404_endpoint_contract",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
-      "status": "not_run"
+      "status": "unavailable"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
@@ -229,7 +239,7 @@
       "can_price": true,
       "can_vote": false,
       "freshness_h": null,
-      "oa_matched": 5,
+      "oa_matched": 3,
       "oa_raw": 404,
       "oa_usable": 404,
       "reason": null,
