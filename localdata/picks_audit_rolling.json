@@ -115,10 +115,10 @@
       "wins": 195
     },
     "WATCHLIST_NO_ODDS": {
-      "hit_rate": 0.688889,
+      "hit_rate": 0.659574,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 45,
+      "settled_picks": 47,
       "wins": 31
     },
     "WATCHLIST_SUSPECT_PRICE": {
@@ -129,11 +129,11 @@
       "wins": 10
     },
     "WATCHLIST_UNCORROBORATED_PRICE": {
-      "hit_rate": 0.687943,
-      "priced_picks": 141,
-      "roi": -0.010709,
-      "settled_picks": 141,
-      "wins": 97
+      "hit_rate": 0.690141,
+      "priced_picks": 142,
+      "roi": -0.00662,
+      "settled_picks": 142,
+      "wins": 98
     },
     "WATCHLIST_UNKNOWN_CTX": {
       "hit_rate": 0.75,
@@ -160,11 +160,11 @@
       "wins": 110
     },
     "exact": {
-      "hit_rate": 0.658863,
-      "priced_picks": 299,
-      "roi": -0.057592,
-      "settled_picks": 299,
-      "wins": 197
+      "hit_rate": 0.66,
+      "priced_picks": 300,
+      "roi": -0.0555,
+      "settled_picks": 300,
+      "wins": 198
     },
     "fallback": {
       "hit_rate": 0.690909,
@@ -174,19 +174,19 @@
       "wins": 38
     },
     "none": {
-      "hit_rate": 0.706897,
+      "hit_rate": 0.683333,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 58,
+      "settled_picks": 60,
       "wins": 41
     }
   },
   "by_odds_source": {
     "UNKNOWN": {
-      "hit_rate": 0.709677,
+      "hit_rate": 0.6875,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 62,
+      "settled_picks": 64,
       "wins": 44
     },
     "betexplorer_odds": {
@@ -211,11 +211,11 @@
       "wins": 48
     },
     "scoutingstats_odds": {
-      "hit_rate": 0.646853,
-      "priced_picks": 286,
-      "roi": -0.073357,
-      "settled_picks": 286,
-      "wins": 185
+      "hit_rate": 0.648084,
+      "priced_picks": 287,
+      "roi": -0.071115,
+      "settled_picks": 287,
+      "wins": 186
     },
     "theoddsapi": {
       "hit_rate": 1.0,
@@ -255,11 +255,11 @@
       "wins": 5
     },
     "SCOUTINGSTATS_SOLE": {
-      "hit_rate": 0.646853,
-      "priced_picks": 286,
-      "roi": -0.073357,
-      "settled_picks": 286,
-      "wins": 185
+      "hit_rate": 0.648084,
+      "priced_picks": 287,
+      "roi": -0.071115,
+      "settled_picks": 287,
+      "wins": 186
     },
     "SOURCE_FALLBACK": {
       "hit_rate": 0.690909,
@@ -276,20 +276,20 @@
       "wins": 18
     },
     "UNMATCHED": {
-      "hit_rate": 0.706897,
+      "hit_rate": 0.683333,
       "priced_picks": 0,
       "roi": null,
-      "settled_picks": 58,
+      "settled_picks": 60,
       "wins": 41
     }
   },
   "by_price_quarantine_reason": {
     "NONE": {
       "avg_suspect_price": null,
-      "hit_rate": 0.689655,
+      "hit_rate": 0.684932,
       "priced_picks": 232,
       "roi": -0.018448,
-      "settled_picks": 290,
+      "settled_picks": 292,
       "suspect_price_captures": 0,
       "wins": 200
     },
@@ -304,12 +304,12 @@
     },
     "scoutingstats_sole_source": {
       "avg_suspect_price": null,
-      "hit_rate": 0.646853,
-      "priced_picks": 286,
-      "roi": -0.073357,
-      "settled_picks": 286,
+      "hit_rate": 0.648084,
+      "priced_picks": 287,
+      "roi": -0.071115,
+      "settled_picks": 287,
       "suspect_price_captures": 0,
-      "wins": 185
+      "wins": 186
     },
     "source_fallback_not_execution_eligible": {
       "avg_suspect_price": null,
@@ -323,11 +323,11 @@
   },
   "by_rule": {
     "2way-unanimous avg_p>=60": {
-      "hit_rate": 0.633333,
-      "priced_picks": 92,
-      "roi": -0.124674,
-      "settled_picks": 120,
-      "wins": 76
+      "hit_rate": 0.626016,
+      "priced_picks": 93,
+      "roi": -0.117204,
+      "settled_picks": 123,
+      "wins": 77
     },
     "2way-unanimous avg_p>=70": {
       "hit_rate": 0.743243,
@@ -407,12 +407,12 @@
         "recommended": 24
       },
       "away_under_35": {
-        "hit_rate": 0.967033,
-        "hits": 176,
+        "hit_rate": 0.967391,
+        "hits": 178,
         "priced_hits": 0,
         "priced_n": 0,
         "priced_roi": null,
-        "recommended": 182
+        "recommended": 184
       },
       "home_over_05": {
         "hit_rate": 0.73913,
@@ -447,12 +447,12 @@
         "recommended": 8
       },
       "match_over_25": {
-        "hit_rate": 0.65,
-        "hits": 169,
-        "priced_hits": 95,
-        "priced_n": 144,
-        "priced_roi": -0.012569,
-        "recommended": 260
+        "hit_rate": 0.651341,
+        "hits": 170,
+        "priced_hits": 96,
+        "priced_n": 145,
+        "priced_roi": -0.006621,
+        "recommended": 261
       },
       "match_over_35": {
         "hit_rate": 0.444444,
@@ -463,19 +463,19 @@
         "recommended": 18
       }
     },
-    "hit_rate": 0.795681,
-    "total_hits": 479,
-    "total_recommended": 602
+    "hit_rate": 0.796694,
+    "total_hits": 482,
+    "total_recommended": 605
   },
   "event_notes_audit": {
     "by_engine": {
       "hybrid_cohort": {
-        "brier": 0.137107,
-        "delta": 0.047644,
-        "hits": 1551,
-        "mean_promised": 0.661547,
-        "n": 2187,
-        "realized": 0.709191
+        "brier": 0.137654,
+        "delta": 0.047168,
+        "hits": 1559,
+        "mean_promised": 0.661468,
+        "n": 2200,
+        "realized": 0.708636
       },
       "model": {
         "brier": 0.176753,
@@ -497,28 +497,28 @@
           "realized": 0.897436
         },
         "away_under_15": {
-          "brier": 0.194019,
-          "delta": -0.067882,
+          "brier": 0.209654,
+          "delta": -0.093287,
           "hits": 21,
-          "mean_promised": 0.817882,
-          "n": 28,
-          "realized": 0.75
+          "mean_promised": 0.817425,
+          "n": 29,
+          "realized": 0.724138
         },
         "away_under_25": {
-          "brier": 0.078957,
-          "delta": -0.002233,
-          "hits": 341,
-          "mean_promised": 0.916442,
-          "n": 373,
-          "realized": 0.914209
+          "brier": 0.080534,
+          "delta": -0.004055,
+          "hits": 343,
+          "mean_promised": 0.916289,
+          "n": 376,
+          "realized": 0.912234
         },
         "away_under_35": {
-          "brier": 0.018917,
-          "delta": 0.021643,
-          "hits": 380,
-          "mean_promised": 0.960269,
-          "n": 387,
-          "realized": 0.981912
+          "brier": 0.018784,
+          "delta": 0.021791,
+          "hits": 383,
+          "mean_promised": 0.960261,
+          "n": 390,
+          "realized": 0.982051
         },
         "double_chance": {
           "brier": 0.257185,
@@ -569,12 +569,12 @@
           "realized": 0.428571
         },
         "match_over_25": {
-          "brier": 0.261668,
-          "delta": 0.160518,
-          "hits": 330,
-          "mean_promised": 0.450593,
-          "n": 540,
-          "realized": 0.611111
+          "brier": 0.261657,
+          "delta": 0.160817,
+          "hits": 332,
+          "mean_promised": 0.450601,
+          "n": 543,
+          "realized": 0.611418
         },
         "match_over_35": {
           "brier": 0.274949,
@@ -585,12 +585,12 @@
           "realized": 0.466667
         },
         "match_over_45": {
-          "brier": 0.17969,
-          "delta": 0.005298,
-          "hits": 106,
-          "mean_promised": 0.237821,
-          "n": 436,
-          "realized": 0.243119
+          "brier": 0.180114,
+          "delta": 0.005954,
+          "hits": 107,
+          "mean_promised": 0.237782,
+          "n": 439,
+          "realized": 0.243736
         }
       },
       "model": {
@@ -703,31 +703,31 @@
         "realized": 0.902439
       },
       "away_under_15": {
-        "brier": 0.187663,
-        "delta": -0.062146,
+        "brier": 0.202989,
+        "delta": -0.086896,
         "hits": 22,
-        "mean_promised": 0.820767,
-        "n": 29,
-        "notes": 29,
-        "realized": 0.758621
+        "mean_promised": 0.820229,
+        "n": 30,
+        "notes": 30,
+        "realized": 0.733333
       },
       "away_under_25": {
-        "brier": 0.078534,
-        "delta": -0.0011,
-        "hits": 353,
-        "mean_promised": 0.915608,
-        "n": 386,
-        "notes": 386,
-        "realized": 0.914508
+        "brier": 0.080061,
+        "delta": -0.002871,
+        "hits": 355,
+        "mean_promised": 0.915467,
+        "n": 389,
+        "notes": 389,
+        "realized": 0.912596
       },
       "away_under_35": {
-        "brier": 0.027795,
-        "delta": 0.01319,
-        "hits": 409,
-        "mean_promised": 0.958306,
-        "n": 421,
-        "notes": 421,
-        "realized": 0.971496
+        "brier": 0.02761,
+        "delta": 0.013386,
+        "hits": 412,
+        "mean_promised": 0.958313,
+        "n": 424,
+        "notes": 424,
+        "realized": 0.971698
       },
       "double_chance": {
         "brier": 0.257185,
@@ -784,13 +784,13 @@
         "realized": 0.5
       },
       "match_over_25": {
-        "brier": 0.262648,
-        "delta": 0.165004,
-        "hits": 367,
-        "mean_promised": 0.450767,
-        "n": 596,
-        "notes": 596,
-        "realized": 0.615772
+        "brier": 0.262632,
+        "delta": 0.165253,
+        "hits": 369,
+        "mean_promised": 0.450774,
+        "n": 599,
+        "notes": 599,
+        "realized": 0.616027
       },
       "match_over_35": {
         "brier": 0.271169,
@@ -802,13 +802,13 @@
         "realized": 0.454545
       },
       "match_over_45": {
-        "brier": 0.182115,
-        "delta": 0.00879,
-        "hits": 117,
-        "mean_promised": 0.237526,
-        "n": 475,
-        "notes": 475,
-        "realized": 0.246316
+        "brier": 0.18249,
+        "delta": 0.00937,
+        "hits": 118,
+        "mean_promised": 0.237492,
+        "n": 478,
+        "notes": 478,
+        "realized": 0.246862
       }
     },
     "definition": "plain-market: a note hits iff its market lands in the final score (selection-independent for match totals and BTTS; the 1X2 selection only picks the team for team totals and the double-chance leg)",
@@ -823,13 +823,13 @@
         "realized": 0.168224
       },
       {
-        "brier": 0.184404,
+        "brier": 0.184936,
         "bucket": "0.2-0.3",
-        "delta": 0.002877,
-        "hits": 78,
-        "mean_promised": 0.240873,
-        "n": 320,
-        "realized": 0.24375
+        "delta": 0.00379,
+        "hits": 79,
+        "mean_promised": 0.240792,
+        "n": 323,
+        "realized": 0.244582
       },
       {
         "brier": 0.269902,
@@ -841,13 +841,13 @@
         "realized": 0.494118
       },
       {
-        "brier": 0.264,
+        "brier": 0.263975,
         "bucket": "0.4-0.5",
-        "delta": 0.161075,
-        "hits": 319,
-        "mean_promised": 0.444238,
-        "n": 527,
-        "realized": 0.605313
+        "delta": 0.161378,
+        "hits": 321,
+        "mean_promised": 0.444282,
+        "n": 530,
+        "realized": 0.60566
       },
       {
         "brier": 0.243678,
@@ -859,39 +859,39 @@
         "realized": 0.646154
       },
       {
-        "brier": 0.113776,
+        "brier": 0.116845,
         "bucket": "0.8-0.9",
-        "delta": 0.006931,
-        "hits": 285,
-        "mean_promised": 0.859331,
-        "n": 329,
-        "realized": 0.866261
+        "delta": 0.002353,
+        "hits": 287,
+        "mean_promised": 0.859509,
+        "n": 333,
+        "realized": 0.861862
       },
       {
-        "brier": 0.046208,
+        "brier": 0.046066,
         "bucket": "0.9-1.0",
-        "delta": 0.007642,
-        "hits": 895,
-        "mean_promised": 0.943474,
-        "n": 941,
-        "realized": 0.951116
+        "delta": 0.007748,
+        "hits": 898,
+        "mean_promised": 0.943524,
+        "n": 944,
+        "realized": 0.951271
       }
     ],
     "promised_missing": 0,
-    "scored": 2374,
-    "total_notes": 2374,
+    "scored": 2387,
+    "total_notes": 2387,
     "unscorable": {}
   },
   "include_same_day": false,
   "morning_baseline_rows": 645,
   "overall": {
-    "hit_rate": 0.671096,
-    "priced_picks": 540,
-    "roi": -0.044278,
-    "settled_picks": 602,
-    "wins": 404
+    "hit_rate": 0.669421,
+    "priced_picks": 541,
+    "roi": -0.043142,
+    "settled_picks": 605,
+    "wins": 405
   },
-  "pending_result_picks": 16,
+  "pending_result_picks": 13,
   "regular_only_rows": 0,
   "rescheduled_examples": [
     {
@@ -1075,12 +1075,12 @@
   "same_day_cutoff": "2026-10-04",
   "same_day_excluded": 17,
   "secondary_stats": {
-    "btts_total": 576,
-    "btts_wins": 315,
-    "over25_total": 576,
-    "over25_wins": 355,
-    "team_o15_total": 576,
-    "team_o15_wins": 373
+    "btts_total": 579,
+    "btts_wins": 316,
+    "over25_total": 579,
+    "over25_wins": 357,
+    "team_o15_total": 579,
+    "team_o15_wins": 375
   },
   "settled_ledger": [
     {
@@ -37130,6 +37130,76 @@
     {
       "avg_p": 62.0,
       "date": "2026-10-03",
+      "gs": 3,
+      "hs": 3,
+      "market": "1x2",
+      "match": "Forge FC vs HFX Wanderers",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9609741905188762,
+          "raw_promised": 0.9865367793896783
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8990248262980444,
+          "raw_promised": 0.9462977174827945
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Away Team Under 1.5 Goals",
+          "market": "away_under_15",
+          "promised": 0.8046402854023287,
+          "raw_promised": 0.7998300077569276
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.44135109061971645,
+          "raw_promised": 0.579912247861961
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2189800033901958,
+          "raw_promised": 0.21273371602040467
+        }
+      ],
+      "odds": null,
+      "odds_match_method": "none",
+      "odds_source": "UNKNOWN",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.08900000000000001,
+        "away_o15_hit": false,
+        "btts_expected": 0.401,
+        "btts_hit": false,
+        "home_o15_expected": 0.845,
+        "home_o15_hit": true,
+        "over25_expected": 0.6709999999999999,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "UNMATCHED",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 62.0,
+      "date": "2026-10-03",
       "gs": 2,
       "hs": 0,
       "market": "1x2",
@@ -37188,6 +37258,68 @@
         "home_o15_expected": 0.845,
         "home_o15_hit": false,
         "over25_expected": 0.6709999999999999,
+        "over25_hit": false,
+        "top_scores": []
+      },
+      "price_evidence": "UNMATCHED",
+      "price_quarantine_reason": "NONE",
+      "selection": "home",
+      "suspect_price": null,
+      "won": false
+    },
+    {
+      "avg_p": 61.5,
+      "date": "2026-10-03",
+      "gs": 0,
+      "hs": 0,
+      "market": "1x2",
+      "match": "Deportes Tolima vs Chico",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9601014960325776,
+          "raw_promised": 0.9856408706166868
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8957643333183425,
+          "raw_promised": 0.9428657799274486
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.4385098148355708,
+          "raw_promised": 0.5761789600967352
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.21429828064201256,
+          "raw_promised": 0.20818553690733926
+        }
+      ],
+      "odds": null,
+      "odds_match_method": "none",
+      "odds_source": "UNKNOWN",
+      "outcome": "draw",
+      "parsed_stats": {
+        "away_o15_expected": 0.08800000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.4,
+        "btts_hit": true,
+        "home_o15_expected": 0.8440000000000001,
+        "home_o15_hit": false,
+        "over25_expected": 0.67,
         "over25_hit": false,
         "top_scores": []
       },
@@ -37533,6 +37665,68 @@
         }
       ],
       "odds": 1.66,
+      "odds_match_method": "exact",
+      "odds_source": "scoutingstats_odds",
+      "outcome": "home",
+      "parsed_stats": {
+        "away_o15_expected": 0.09300000000000001,
+        "away_o15_hit": true,
+        "btts_expected": 0.426,
+        "btts_hit": true,
+        "home_o15_expected": 0.8540000000000001,
+        "home_o15_hit": true,
+        "over25_expected": 0.711,
+        "over25_hit": true,
+        "top_scores": []
+      },
+      "price_evidence": "SCOUTINGSTATS_SOLE",
+      "price_quarantine_reason": "scoutingstats_sole_source",
+      "selection": "home",
+      "suspect_price": null,
+      "won": true
+    },
+    {
+      "avg_p": 68.0,
+      "date": "2026-10-03",
+      "gs": 0,
+      "hs": 3,
+      "market": "1x2",
+      "match": "Deportivo Maldonado vs Central Espanol",
+      "notes_audit": [
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Match Over 2.5 Goals",
+          "market": "match_over_25",
+          "promised": 0.47617214107080075,
+          "raw_promised": 0.625665286812537
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 3.5 Goals",
+          "market": "away_under_35",
+          "promised": 0.9565192509571651,
+          "raw_promised": 0.9819633353045535
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": true,
+          "label": "Away Team Under 2.5 Goals",
+          "market": "away_under_25",
+          "promised": 0.8972329222230342,
+          "raw_promised": 0.9444115907746895
+        },
+        {
+          "engine": "hybrid_cohort",
+          "hit": false,
+          "label": "Match Over 4.5 Goals",
+          "market": "match_over_45",
+          "promised": 0.2632225019306758,
+          "raw_promised": 0.25571422097442476
+        }
+      ],
+      "odds": 1.57,
       "odds_match_method": "exact",
       "odds_source": "scoutingstats_odds",
       "outcome": "home",
@@ -38140,56 +38334,56 @@
   "start": "2026-09-05",
   "statline_calibration": {
     "avg_goals": {
-      "bias": -0.272417,
-      "mae": 1.564557,
-      "mean_actual": 3.248696,
-      "mean_promised": 3.521113,
-      "n": 575
+      "bias": -0.273737,
+      "mae": 1.567924,
+      "mean_actual": 3.247405,
+      "mean_promised": 3.521142,
+      "n": 578
     },
     "by_metric": {
       "away_o15": {
-        "brier": 0.214618,
-        "delta": 0.033471,
-        "hits": 197,
-        "mean_promised": 0.309137,
-        "n": 575,
-        "realized": 0.342609
+        "brier": 0.214968,
+        "delta": 0.034561,
+        "hits": 198,
+        "mean_promised": 0.308,
+        "n": 578,
+        "realized": 0.342561
       },
       "btts": {
-        "brier": 0.26413,
-        "delta": 0.130911,
-        "hits": 314,
-        "mean_promised": 0.415176,
-        "n": 575,
-        "realized": 0.546087
+        "brier": 0.263971,
+        "delta": 0.129839,
+        "hits": 315,
+        "mean_promised": 0.415144,
+        "n": 578,
+        "realized": 0.544983
       },
       "home_o15": {
-        "brier": 0.251694,
-        "delta": -0.101711,
-        "hits": 309,
-        "mean_promised": 0.639103,
-        "n": 575,
-        "realized": 0.537391
+        "brier": 0.251698,
+        "delta": -0.102123,
+        "hits": 311,
+        "mean_promised": 0.640185,
+        "n": 578,
+        "realized": 0.538062
       },
       "over25": {
-        "brier": 0.242878,
-        "delta": -0.079085,
-        "hits": 354,
-        "mean_promised": 0.694737,
-        "n": 575,
-        "realized": 0.615652
+        "brier": 0.242726,
+        "delta": -0.078765,
+        "hits": 356,
+        "mean_promised": 0.694682,
+        "n": 578,
+        "realized": 0.615917
       }
     },
     "definition": "each active metric is scored as a probabilistic forecast of its event (Over 2.5 / BTTS-Yes / Home|Away Over 1.5) \u2014 calibration, not a direction call; the retired exact-score field remains in machine history only",
     "promised_buckets": [
       {
-        "brier": 0.201704,
+        "brier": 0.202685,
         "bucket": "0.0-0.1",
-        "delta": 0.148173,
-        "hits": 57,
-        "mean_promised": 0.086395,
-        "n": 243,
-        "realized": 0.234568
+        "delta": 0.149333,
+        "hits": 58,
+        "mean_promised": 0.086439,
+        "n": 246,
+        "realized": 0.235772
       },
       {
         "brier": 0.197029,
@@ -38219,13 +38413,13 @@
         "realized": 0.522936
       },
       {
-        "brier": 0.261706,
+        "brier": 0.261522,
         "bucket": "0.4-0.5",
-        "delta": 0.12314,
-        "hits": 252,
-        "mean_promised": 0.428282,
-        "n": 457,
-        "realized": 0.551422
+        "delta": 0.121843,
+        "hits": 253,
+        "mean_promised": 0.428157,
+        "n": 460,
+        "realized": 0.55
       },
       {
         "brier": 0.25,
@@ -38237,31 +38431,31 @@
         "realized": 0.0
       },
       {
-        "brier": 0.243235,
+        "brier": 0.243411,
         "bucket": "0.6-0.7",
-        "delta": -0.066775,
-        "hits": 241,
-        "mean_promised": 0.669275,
-        "n": 400,
-        "realized": 0.6025
+        "delta": -0.067291,
+        "hits": 242,
+        "mean_promised": 0.669281,
+        "n": 402,
+        "realized": 0.60199
       },
       {
-        "brier": 0.235928,
+        "brier": 0.234957,
         "bucket": "0.7-0.8",
-        "delta": -0.095295,
-        "hits": 101,
-        "mean_promised": 0.742731,
-        "n": 156,
-        "realized": 0.647436
+        "delta": -0.092847,
+        "hits": 102,
+        "mean_promised": 0.742529,
+        "n": 157,
+        "realized": 0.649682
       },
       {
-        "brier": 0.269271,
+        "brier": 0.26918,
         "bucket": "0.8-0.9",
-        "delta": -0.202905,
-        "hits": 350,
-        "mean_promised": 0.845106,
-        "n": 545,
-        "realized": 0.642202
+        "delta": -0.202785,
+        "hits": 352,
+        "mean_promised": 0.84512,
+        "n": 548,
+        "realized": 0.642336
       },
       {
         "brier": 0.270725,
@@ -38509,63 +38703,9 @@
       "pick": "away",
       "reason": "pending_or_unmatched_result",
       "rule": "2way-unanimous avg_p>=60"
-    },
-    {
-      "away": "HFX Wanderers",
-      "away_key_candidates": [
-        "hfxwander"
-      ],
-      "bucket": "WATCHLIST_NO_ODDS",
-      "date": "2026-10-03",
-      "home": "Forge FC",
-      "home_key_candidates": [
-        "forge"
-      ],
-      "league": "Canada,Premier League",
-      "match": "Forge FC vs HFX Wanderers",
-      "odds": null,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way-unanimous avg_p>=60"
-    },
-    {
-      "away": "Chico",
-      "away_key_candidates": [
-        "chico"
-      ],
-      "bucket": "WATCHLIST_NO_ODDS",
-      "date": "2026-10-03",
-      "home": "Deportes Tolima",
-      "home_key_candidates": [
-        "deportest"
-      ],
-      "league": "Colombia,Primera A Apertura Finalizacion",
-      "match": "Deportes Tolima vs Chico",
-      "odds": null,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way-unanimous avg_p>=60"
-    },
-    {
-      "away": "Central Espanol",
-      "away_key_candidates": [
-        "centrales"
-      ],
-      "bucket": "WATCHLIST_UNCORROBORATED_PRICE",
-      "date": "2026-10-03",
-      "home": "Deportivo Maldonado",
-      "home_key_candidates": [
-        "maldonado"
-      ],
-      "league": "Uruguay,Liga Auf Clausura",
-      "match": "Deportivo Maldonado vs Central Espanol",
-      "odds": 1.57,
-      "pick": "home",
-      "reason": "pending_or_unmatched_result",
-      "rule": "2way-unanimous avg_p>=60"
     }
   ],
-  "unmatched_result_picks": 16,
+  "unmatched_result_picks": 13,
   "unsafe_regular_ledger_dates": [
     "2026-09-05",
     "2026-09-06",
@@ -38594,7 +38734,8 @@
     "2026-09-29",
     "2026-10-01",
     "2026-10-02",
-    "2026-10-03"
+    "2026-10-03",
+    "2026-10-04"
   ],
   "verified_late_additions": 0,
   "veto_deep_dive": {

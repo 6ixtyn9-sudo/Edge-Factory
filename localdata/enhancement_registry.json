@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 195,
-   "inv_price_sum": 190.97944659295646,
+   "hits": 196,
+   "inv_price_sum": 191.519987133497,
    "multi_n": 28,
-   "n": 292,
+   "n": 293,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -628,9 +628,10 @@
     "2026-10-03|Amiens vs Villefranche|match_over_25@v1",
     "2026-10-03|Grosseto vs Sambenedettese|match_over_25@v1",
     "2026-10-03|Boreham Wood vs Altrincham|match_over_25@v1",
-    "2026-10-03|Ospitaletto vs Renate|match_over_25@v1"
+    "2026-10-03|Ospitaletto vs Renate|match_over_25@v1",
+    "2026-10-03|Deportivo Maldonado vs Central Espanol|match_over_25@v1"
    ],
-   "profit": 6.46,
+   "profit": 7.31,
    "records": [
     {
      "date": "2026-08-01",
@@ -2964,6 +2965,14 @@
      "match": "Ospitaletto vs Renate",
      "multi_source": false,
      "price": 1.95,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Deportivo Maldonado vs Central Espanol",
+     "multi_source": false,
+     "price": 1.85,
      "source": "scoutingstats"
     }
    ],

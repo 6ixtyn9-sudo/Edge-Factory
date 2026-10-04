@@ -1,15 +1,15 @@
-O2.5 TRACKER — graded 617/662 listed overs (window 2026-07-31..2026-10-05)
+O2.5 TRACKER — graded 619/661 listed overs (window 2026-07-31..2026-10-05)
 
 cut                                   n    hit  stated     ROI
-ALL priced                          575    64%     50%   -6.5%
+ALL priced                          576    64%     50%   -6.3%
 band 50-60%                         191    66%     53%   -7.9%
-band <50%                           365    63%     47%   -5.0%
+band <50%                           366    63%     47%   -4.8%
 band >=60%                           19    63%     90%  -19.9%
 SHARP-priced (theoddsapi/betexpl)   190    65%     49%   -8.8%
-SOFT-priced (scoutingstats)         234    65%     49%   -2.5%
+SOFT-priced (scoutingstats)         235    65%     49%   -2.1%
 
 --- goals surface by rule ---
-rule 2way-unanimous avg_p>=60        47    62%     48%   -9.6%
+rule 2way-unanimous avg_p>=60        48    62%     48%   -7.7%
 rule 2way-unanimous avg_p>=70       136    68%     51%   -6.8%
 rule 2way-unanimous min_p>=60 avg_p>=65    1   100%     45%  +36.0%
 rule 3way-unanimous avg_p>=65         4    75%     52%   +9.7%
@@ -26,7 +26,7 @@ bucket CERTIFIED_CLEAN               33    55%     48%  -13.4%
 bucket SKIPPED_VETO                 309    67%     49%   -5.9%
 bucket WATCHLIST_NO_ODDS              4    50%     51%  -28.2%
 bucket WATCHLIST_SUSPECT_PRICE       17    65%     59%  -10.2%
-bucket WATCHLIST_UNCORROBORATED_PRICE  121    59%     53%  -12.6%
+bucket WATCHLIST_UNCORROBORATED_PRICE  122    59%     53%  -11.8%
 bucket WATCHLIST_UNKNOWN_CTX         19    74%     52%   -7.9%
 GATE cut: 50-60% AND sharp           75    65%     52%  -12.0%
 
@@ -34,14 +34,14 @@ CHECKPOINT 3 GATE (50-60% band, priced):
    band 50-60% priced               191    66%     53%   -7.9%
    STATUS: PENDING — hit 66% < 70%, ROI -7.9% <= 0
 
-pending priced overs (results not yet filed): 31
+pending priced overs (results not yet filed): 29
+   2026-09-18 47% @ 1.5 (betexplorer_odds)
+   2026-09-19 49% @ 1.31 (betexplorer_odds)
    2026-09-22 45% @ 2.37 (scoutingstats)
    2026-09-27 46% @ 1.31 (betexplorer_odds)
    2026-10-03 50% @ 2.6 (zulubet)
    2026-10-03 52% @ 1.07 (zulubet)
    2026-10-03 47% @ 1.6 (scoutingstats)
-   2026-10-03 48% @ 1.85 (scoutingstats)
-   2026-10-04 45% @ 1.36 (scoutingstats)
-   2026-10-04 45% @ 1.09 (zulubet)
+   2026-10-04 41% @ 2.87 (scoutingstats)
    2026-10-04 45% @ 1.9 (scoutingstats_odds)
    2026-10-04 46% @ 1.65 (scoutingstats)
