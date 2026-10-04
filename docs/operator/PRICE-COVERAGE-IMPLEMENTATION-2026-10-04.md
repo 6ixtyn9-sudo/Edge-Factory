@@ -7,12 +7,12 @@ price capture on the picked slate before provider-order leftovers. It does not
 change any matching rule, odds floor, veto, abstain, certification, or
 stakeability safeguard.
 
-The uploaded `run-autonomous-agent` log was not present in this sandbox under
-`/home/user/uploads`, so pre-change numbers below are grounded in committed
-run receipts/source-health files where available. The missing pieces are called
-out instead of estimated.
+The operator pasted the 2026-10-04 `run-autonomous-agent` log after the first
+implementation pass. The log is not committed in full (too large/noisy), but the
+numbers below are copied from that log and from committed receipts where the log
+omitted a field. Missing pieces are called out instead of estimated.
 
-## Pre-change coverage evidence available in the checkout
+## Log-grounded pre-change coverage evidence
 
 2026-10-03 BetExplorer receipt (`localdata/betexplorer_capture_2026-10-03.json`):
 
@@ -30,18 +30,46 @@ oddspapi op_raw=30468 op_usable=30022 op_matched=0
 theoddsapi oa_raw=589 oa_usable=589 oa_matched=0
 ```
 
-2026-10-04 archive snapshot (`localdata/picks_2026-10-04.json`), evaluated
-with the new diagnostic helper against the already captured bundles:
+2026-10-04 pasted run log (run `37175689485`, intraday mode):
+
+```text
+ML-meta 2026-10-04: scored 50 fixture(s), max ml_p = 81.0% -> 18 pick(s)
+pre-match guard 2026-10-04: skipped 9
+live odds enrichment 2026-10-04: picks=23 ... theodds_matched=1 oddspapi_matched=9 betexplorer_matched=6 ... none=5
+Summary: CLEAN=3 CAUTION=1 WATCHLIST_odds=4 WATCHLIST_uncorroborated_price=1 SKIPPED_veto=8
+Autonomous Accumulating Ledger: existing=22 new=2 superseded=15 total_active=24
+PRICE SUPPLY: named-book execution prices=11 average-bookmaker donor prices=4 total donor-priced candidates=16 execution-safe candidates=11 qualifying legs=3
+```
+
+Provider capture evidence from the same pasted log:
+
+```text
+env: ODDSPAPI_MAX_FIXTURES=20 EDGE_FACTORY_ODDSPAPI_PRICES=1
+TheOddsAPI candidate capture: shortlist=24, auto=2 fixture(s) due, rows=0, credits_used_month=30/1440
+OddsPAPI candidate capture: fixtures=860, matched=11, rows=42916, added=29304, slate_priority_fixtures=6
+BetExplorer candidate capture: candidates=24 attempted=12 fixtures=8 rows=24 status=ok
+Final priced pass bundles: theodds_raw=67 usable=67 matched=1; oddspapi_raw=81314 usable=81314 matched=9; betexplorer_raw=36 usable=36 matched=6
+TheOddsAPI later CLV capture: auto=7 fixture(s) due, matched=2, rows=114, credits_used_month=34/1440
+```
+
+What cannot be derived from this pre-change log:
+
+* Total `attempted=<n>` across all three priced sources: BetExplorer attempted
+  `12` and TheOddsAPI candidate capture attempted `2`, but old OddsPAPI stats did
+  not print attempted fixture count (only cap=20, `fixtures=860`, `matched=11`,
+  and `slate_priority_fixtures=6`).
+* `never_attempted` vs `attempted_no_quote` vs `quote_not_joined`: old receipts
+  did not store `attempted_fixtures`, so the four-way cause split for the four
+  `WATCHLIST_NO_ODDS` final fresh picks is not recoverable without guessing.
+
+2026-10-04 archive snapshot (`localdata/picks_2026-10-04.json`), evaluated with
+the new diagnostic helper against the already captured bundles, gives the active
+ledger surface but still inherits old missing-attempt receipts:
 
 ```text
 picks=24 priceable_candidates=24 fixtures_quoted=11 picks_matched=11 picks_unmatched=13
 per-source: betexplorer=12/24 oddspapi=0/0 theoddsapi=0/0
 ```
-
-The old receipts did not store `attempted_fixtures`, so the four-way cause split
-could not be derived honestly before this change. In particular, `never_attempted`
-versus `attempted_no_quote` was not recoverable for pre-change Oddspapi/TheOddsAPI
-runs from committed state.
 
 ## What changed
 
@@ -105,13 +133,15 @@ post-change lift.
 
 ## Budget/cap proposal
 
-* **TheOddsAPI**: no workflow/code cap increase. The submitted prompt cited
-  `credits_used_month=24/1440`; the committed local usage ledger currently shows
-  `34/1440` October credits across three keys. With `ODDS_API_MARKETS=h2h,totals`,
-  each fetched event costs 2 credits. Existing attempts ledger already prevents
-  every 3-hour run from re-fetching the same fixture.
-* **OddsPAPI**: code ceiling raised from 20 to 40 while keeping the code default
-  at 20. Proposed secret: `ODDSPAPI_MAX_FIXTURES=40` only if the operator confirms
+* **TheOddsAPI**: no workflow/code cap increase. The pasted run log shows
+  `credits_used_month=30/1440` after the candidate capture and `34/1440` after
+  the later CLV capture, leaving `1406` monthly credits unused at that point.
+  With `ODDS_API_MARKETS=h2h,totals`, each fetched event costs 2 credits.
+  Existing attempts ledger already prevents every 3-hour run from re-fetching
+  the same fixture.
+* **OddsPAPI**: the pasted workflow env was still `ODDSPAPI_MAX_FIXTURES=20`.
+  Code ceiling is raised from 20 to 40 while keeping the code default at 20.
+  Proposed secret: `ODDSPAPI_MAX_FIXTURES=40` only if the operator confirms
   provider allowance of at least 250 fixture-odds requests/day (40 × 5 runs/day =
   200, leaving 20% margin). No workflow file was edited; proposed YAML lives in
   `docs/operator/daily.yml.proposed`.
