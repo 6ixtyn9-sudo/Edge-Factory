@@ -332,10 +332,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 196,
-   "inv_price_sum": 191.519987133497,
-   "multi_n": 28,
-   "n": 293,
+   "hits": 197,
+   "inv_price_sum": 192.11986715749222,
+   "multi_n": 29,
+   "n": 294,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -629,9 +629,10 @@
     "2026-10-03|Grosseto vs Sambenedettese|match_over_25@v1",
     "2026-10-03|Boreham Wood vs Altrincham|match_over_25@v1",
     "2026-10-03|Ospitaletto vs Renate|match_over_25@v1",
-    "2026-10-03|Deportivo Maldonado vs Central Espanol|match_over_25@v1"
+    "2026-10-03|Deportivo Maldonado vs Central Espanol|match_over_25@v1",
+    "2026-10-03|Tampa Bay Rowdies vs Miami FC|match_over_25@v1"
    ],
-   "profit": 7.31,
+   "profit": 7.977,
    "records": [
     {
      "date": "2026-08-01",
@@ -2974,6 +2975,14 @@
      "multi_source": false,
      "price": 1.85,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": true,
+     "match": "Tampa Bay Rowdies vs Miami FC",
+     "multi_source": true,
+     "price": 1.667,
+     "source": "oddspapi"
     }
    ],
    "status": "PAPER",

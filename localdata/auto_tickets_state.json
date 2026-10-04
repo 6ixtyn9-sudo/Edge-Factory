@@ -2,7 +2,40 @@
   "base_pct": 100.0,
   "bank": 142.68145500000008,
   "cycle_base": 100.0,
-  "open_slips": [],
+  "open_slips": [
+    {
+      "date": "2026-10-04",
+      "accas": [
+        {
+          "legs": [
+            {
+              "match": "Portugal vs Norway",
+              "pick": "HOME",
+              "prob": 0.645,
+              "odds": 1.765,
+              "result": null
+            },
+            {
+              "match": "Wales vs Denmark",
+              "pick": "AWAY",
+              "prob": 0.568,
+              "odds": 2.05,
+              "result": null
+            }
+          ],
+          "odds": 3.62,
+          "stake_pct": 8.9176,
+          "bench_weight": 0.5,
+          "results": [
+            null,
+            null
+          ],
+          "won": null
+        }
+      ],
+      "staked_pct": 8.9176
+    }
+  ],
   "history": [
     {
       "date": "2026-08-28",
