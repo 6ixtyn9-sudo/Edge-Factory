@@ -1,77 +1,74 @@
 # Price coverage by competition
 
 Archive files scanned: 110
-Picks generated: 1716
-Picks ever named-book priced: 715
-Structurally-zero candidates (priced=0, picks>=3): 60
+Picks generated: 1722
+Picks ever named-book priced: 720
+Structurally-zero candidates (priced=0, picks>=3): 59
 
 | Competition | Picks generated | Picks ever priced | Coverage |
 |---|---:|---:|---:|
+| World UEFA Nations League | 41 | 19 | 46.3% |
+| World UEFA Europa Conference League | 40 | 34 | 85.0% |
 | Bg1 | 26 | 9 | 34.6% |
 | Nl1 | 23 | 7 | 30.4% |
 | Wl1 | 22 | 7 | 31.8% |
 | ScC | 21 | 18 | 85.7% |
+| Spain La Liga | 20 | 3 | 15.0% |
 | Us1 | 20 | 8 | 40.0% |
-| World UEFA Europa Conference League | 20 | 19 | 95.0% |
+| World UEFA Champions League | 20 | 12 | 60.0% |
 | Se4 | 19 | 0 | 0.0% |
 | Norway,1. Division | 19 | 3 | 15.8% |
+| Iceland,Besta Deildin | 19 | 11 | 57.9% |
 | NL | 18 | 1 | 5.6% |
-| Es1 | 18 | 2 | 11.1% |
 | Ng1 | 17 | 14 | 82.4% |
 | No1 | 16 | 2 | 12.5% |
-| ECL | 16 | 11 | 68.8% |
+| Latvia Virsliga | 16 | 7 | 43.8% |
+| Spain Segunda División | 16 | 7 | 43.8% |
 | Jp1 | 15 | 0 | 0.0% |
 | Sc1 | 15 | 0 | 0.0% |
 | De4 | 14 | 0 | 0.0% |
+| World UEFA Europa League | 14 | 11 | 78.6% |
 | It1 | 13 | 2 | 15.4% |
+| France,Ligue 1 | 13 | 4 | 30.8% |
 | NCQ | 13 | 4 | 30.8% |
 | Ie2 | 13 | 8 | 61.5% |
-| Is1 | 13 | 8 | 61.5% |
 | USA,Major League Soccer | 13 | 8 | 61.5% |
 | Ie1 | 12 | 0 | 0.0% |
 | Ch1 | 12 | 1 | 8.3% |
 | EPL | 12 | 2 | 16.7% |
 | De1 | 12 | 3 | 25.0% |
 | AuA | 12 | 6 | 50.0% |
-| World UEFA Nations League | 12 | 6 | 50.0% |
 | DFB | 12 | 8 | 66.7% |
-| World UEFA Champions League | 12 | 9 | 75.0% |
 | L2 | 11 | 0 | 0.0% |
 | Portugal,Liga Portugal | 11 | 6 | 54.5% |
 | International,Friendlies | 11 | 7 | 63.6% |
 | England,National League | 10 | 6 | 60.0% |
 | Switzerland,Super League | 10 | 6 | 60.0% |
 | WC | 10 | 9 | 90.0% |
+| Mexico Liga MX Femenil | 10 | 10 | 100.0% |
 | Cz4 | 9 | 0 | 0.0% |
 | L1 | 9 | 0 | 0.0% |
 | EFL | 9 | 4 | 44.4% |
 | World Friendlies Clubs | 9 | 6 | 66.7% |
 | Mexico,Liga Mx Apertura | 9 | 7 | 77.8% |
-| NoW | 8 | 0 | 0.0% |
+| Norway Women | 8 | 0 | 0.0% |
 | Pl1 | 8 | 0 | 0.0% |
 | Ee1 | 8 | 1 | 12.5% |
-| UNL | 8 | 2 | 25.0% |
-| Spain,Laliga2 | 8 | 3 | 37.5% |
-| UCL | 8 | 3 | 37.5% |
-| Fr1 | 8 | 4 | 50.0% |
 | Denmark,Superligaen | 8 | 5 | 62.5% |
+| USA NWSL | 8 | 5 | 62.5% |
 | Br2 | 8 | 6 | 75.0% |
 | CNL | 8 | 6 | 75.0% |
 | Ca1 | 8 | 6 | 75.0% |
-| UEL | 8 | 6 | 75.0% |
 | Am1 | 8 | 8 | 100.0% |
-| MxW | 8 | 8 | 100.0% |
 | Norway,2. Division Avdeling 1 | 7 | 0 | 0.0% |
 | Sc3 | 7 | 0 | 0.0% |
 | CH | 7 | 1 | 14.3% |
 | Scotland,Championship | 7 | 2 | 28.6% |
 | Se3 | 7 | 2 | 28.6% |
 | Nl2 | 7 | 3 | 42.9% |
-| Es2 | 7 | 4 | 57.1% |
 | Is2 | 7 | 4 | 57.1% |
-| Lv1 | 7 | 4 | 57.1% |
 | Sc4 | 7 | 4 | 57.1% |
-| USA,Nwsl | 7 | 4 | 57.1% |
+| Sweden Damallsvenskan | 7 | 4 | 57.1% |
 | Ch2 | 7 | 6 | 85.7% |
 | Sweden Allsvenskan | 7 | 6 | 85.7% |
 | Il1 | 6 | 0 | 0.0% |
@@ -84,16 +81,13 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Sk1 | 6 | 1 | 16.7% |
 | Th1 | 6 | 1 | 16.7% |
 | Tr1 | 6 | 1 | 16.7% |
-| Latvia Virsliga | 6 | 2 | 33.3% |
 | Us2 | 6 | 2 | 33.3% |
-| Iceland,Besta Deildin | 6 | 3 | 50.0% |
 | International,Copa Sudamericana Knockout Stage | 6 | 3 | 50.0% |
 | Russia,First League | 6 | 3 | 50.0% |
 | Us4 | 6 | 3 | 50.0% |
 | Belarus: Premier League | 6 | 5 | 83.3% |
 | Romania: Liga I | 6 | 5 | 83.3% |
 | JpC | 6 | 6 | 100.0% |
-| France,Ligue 1 | 5 | 0 | 0.0% |
 | Hu1 | 5 | 0 | 0.0% |
 | International,Club Friendlies | 5 | 0 | 0.0% |
 | Kr2 | 5 | 0 | 0.0% |
@@ -104,7 +98,7 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Za1 | 5 | 0 | 0.0% |
 | Be1 | 5 | 1 | 20.0% |
 | Dz1 | 5 | 1 | 20.0% |
-| England,Wsl | 5 | 1 | 20.0% |
+| England WSL | 5 | 1 | 20.0% |
 | Norway 1. Division | 5 | 1 | 20.0% |
 | Colombia,Primera A Apertura Finalizacion | 5 | 2 | 40.0% |
 | Pt1 | 5 | 2 | 40.0% |
@@ -112,11 +106,11 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Uz1 | 5 | 2 | 40.0% |
 | Croatia,Hnl | 5 | 3 | 60.0% |
 | Saudi Arabia,Saudi Pro League | 5 | 3 | 60.0% |
+| Spain Liga F | 5 | 3 | 60.0% |
 | Ve1 | 5 | 3 | 60.0% |
 | Br1 | 5 | 4 | 80.0% |
 | Ge1 | 5 | 4 | 80.0% |
 | Ru1 | 5 | 4 | 80.0% |
-| SeW | 5 | 4 | 80.0% |
 | Cy1 | 5 | 5 | 100.0% |
 | England,Efl Cup | 5 | 5 | 100.0% |
 | Italy,Coppa Italia | 5 | 5 | 100.0% |
@@ -145,8 +139,6 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | AuV | 4 | 2 | 50.0% |
 | Australia Queensland NPL | 4 | 2 | 50.0% |
 | England,League One | 4 | 2 | 50.0% |
-| EsW | 4 | 2 | 50.0% |
-| International,Uefa Nations League A Grp. 4 | 4 | 2 | 50.0% |
 | Israel: Liga Leumit | 4 | 2 | 50.0% |
 | South Korea,K-league 2 | 4 | 2 | 50.0% |
 | AuN | 4 | 3 | 75.0% |
@@ -160,15 +152,12 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Bolivia,Primera Division | 4 | 4 | 100.0% |
 | E21 | 4 | 4 | 100.0% |
 | Romania Liga I | 4 | 4 | 100.0% |
-| World UEFA Europa League | 4 | 4 | 100.0% |
-| World: UEFA Europa Conference League | 4 | 4 | 100.0% |
 | Argentina,Primera Nacional Grp. B | 3 | 0 | 0.0% |
 | AtW | 3 | 0 | 0.0% |
 | Austria: Regionalliga - West | 3 | 0 | 0.0% |
 | Belarus,Premier League | 3 | 0 | 0.0% |
 | Bg2 | 3 | 0 | 0.0% |
-| BrW | 3 | 0 | 0.0% |
-| CLW | 3 | 0 | 0.0% |
+| Brazil Women | 3 | 0 | 0.0% |
 | Czech Republic,1. Liga | 3 | 0 | 0.0% |
 | Egypt,Premier League | 3 | 0 | 0.0% |
 | Finland Ykkönen | 3 | 0 | 0.0% |
@@ -181,6 +170,7 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Pl3 | 3 | 0 | 0.0% |
 | Slovenia,Prva Liga | 3 | 0 | 0.0% |
 | Tunisia,Ligue I | 3 | 0 | 0.0% |
+| UEFA Women's Champions League | 3 | 0 | 0.0% |
 | Uruguay,Liga Auf Clausura | 3 | 0 | 0.0% |
 | Wl2 | 3 | 0 | 0.0% |
 | AuS | 3 | 1 | 33.3% |
@@ -191,12 +181,12 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Gt1 | 3 | 1 | 33.3% |
 | ItC | 3 | 1 | 33.3% |
 | Japan,J. League | 3 | 1 | 33.3% |
-| Latvia,Virsliga | 3 | 1 | 33.3% |
 | Nigeria,Npfl | 3 | 1 | 33.3% |
 | Ru4 | 3 | 1 | 33.3% |
 | Se1 | 3 | 1 | 33.3% |
 | Slovenia 1. SNL | 3 | 1 | 33.3% |
 | Ua1 | 3 | 1 | 33.3% |
+| Argentina Liga Profesional Argentina | 3 | 2 | 66.7% |
 | AuQ | 3 | 2 | 66.7% |
 | AuT | 3 | 2 | 66.7% |
 | China: League One | 3 | 2 | 66.7% |
@@ -205,8 +195,6 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Hr1 | 3 | 2 | 66.7% |
 | Id1 | 3 | 2 | 66.7% |
 | International,Conference League Playoff Round | 3 | 2 | 66.7% |
-| International,Uefa Nations League A Grp. 1 | 3 | 2 | 66.7% |
-| International,Uefa Nations League A Grp. 3 | 3 | 2 | 66.7% |
 | Kazakhstan,Premier League | 3 | 2 | 66.7% |
 | Lu1 | 3 | 2 | 66.7% |
 | PlC | 3 | 2 | 66.7% |
@@ -249,7 +237,6 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Saudi Arabia: Pro League | 2 | 0 | 0.0% |
 | Scotland,League Two | 2 | 0 | 0.0% |
 | Slovakia,1. Liga | 2 | 0 | 0.0% |
-| Sweden Damallsvenskan | 2 | 0 | 0.0% |
 | Sweden Ettan - Norra | 2 | 0 | 0.0% |
 | Sweden,Ettan Sodra | 2 | 0 | 0.0% |
 | Tn1 | 2 | 0 | 0.0% |
@@ -260,7 +247,6 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | WSL | 2 | 0 | 0.0% |
 | Wales Premier League | 2 | 0 | 0.0% |
 | Ar3 | 2 | 1 | 50.0% |
-| Argentina Liga Profesional Argentina | 2 | 1 | 50.0% |
 | Australia South Australia NPL | 2 | 1 | 50.0% |
 | Austria,Bundesliga | 2 | 1 | 50.0% |
 | Azerbaijan: Premyer Liqa | 2 | 1 | 50.0% |
@@ -269,20 +255,15 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Estonia Esiliiga A | 2 | 1 | 50.0% |
 | Finland Veikkausliiga | 2 | 1 | 50.0% |
 | Hu2 | 2 | 1 | 50.0% |
-| International,Uefa Nations League B Grp. 1 | 2 | 1 | 50.0% |
-| International,Uefa Nations League C Grp. 1 | 2 | 1 | 50.0% |
-| International,Uefa Nations League C Grp. 3 | 2 | 1 | 50.0% |
 | Israel Liga Leumit | 2 | 1 | 50.0% |
 | Lv2 | 2 | 1 | 50.0% |
 | Md1 | 2 | 1 | 50.0% |
 | Py2 | 2 | 1 | 50.0% |
 | Rs2 | 2 | 1 | 50.0% |
 | Ru2 | 2 | 1 | 50.0% |
-| Spain,Laliga | 2 | 1 | 50.0% |
 | Turkey: Süper Lig | 2 | 1 | 50.0% |
 | USA,Usl League One | 2 | 1 | 50.0% |
 | Vn1 | 2 | 1 | 50.0% |
-| World: UEFA Europa League | 2 | 1 | 50.0% |
 | Australia Capital Territory NPL | 2 | 2 | 100.0% |
 | Australia Tasmania NPL | 2 | 2 | 100.0% |
 | Austria Bundesliga | 2 | 2 | 100.0% |
@@ -301,7 +282,6 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Iraq: Iraqi League | 2 | 2 | 100.0% |
 | Kazakhstan Premier League | 2 | 2 | 100.0% |
 | Latvia 1. Liga | 2 | 2 | 100.0% |
-| Mexico Liga MX Femenil | 2 | 2 | 100.0% |
 | Mt1 | 2 | 2 | 100.0% |
 | Netherlands Eerste Divisie | 2 | 2 | 100.0% |
 | Netherlands Eredivisie | 2 | 2 | 100.0% |
@@ -315,8 +295,6 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Al1 | 1 | 0 | 0.0% |
 | Algeria Ligue 2 | 1 | 0 | 0.0% |
 | Argentina,Clausura | 1 | 0 | 0.0% |
-| Argentina,Liga Profesional Clausura Grp. B | 1 | 0 | 0.0% |
-| Argentina,Primera Nacional Grp. A | 1 | 0 | 0.0% |
 | Argentina: Primera Nacional | 1 | 0 | 0.0% |
 | At2 | 1 | 0 | 0.0% |
 | Australia,Victorian | 1 | 0 | 0.0% |
@@ -334,6 +312,7 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | CzU | 1 | 0 | 0.0% |
 | Czech Republic,Msfl | 1 | 0 | 0.0% |
 | Czech Republic: 3. liga - CFL A | 1 | 0 | 0.0% |
+| Czech Republic: 3. liga - CFL B | 1 | 0 | 0.0% |
 | De2 | 1 | 0 | 0.0% |
 | Dk3 | 1 | 0 | 0.0% |
 | DkC | 1 | 0 | 0.0% |
@@ -357,7 +336,6 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | International,Champions League Playoff Round | 1 | 0 | 0.0% |
 | International,Conference League Qualification | 1 | 0 | 0.0% |
 | International,Europa League Playoff Round | 1 | 0 | 0.0% |
-| International,Uefa Nations League D Grp. 2 | 1 | 0 | 0.0% |
 | Ireland First Division | 1 | 0 | 0.0% |
 | Israel,Ligat Haal | 1 | 0 | 0.0% |
 | Italy Serie B | 1 | 0 | 0.0% |
@@ -391,9 +369,9 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Uzbekistan Super League | 1 | 0 | 0.0% |
 | World CONMEBOL Sudamericana | 1 | 0 | 0.0% |
 | World: Africa Cup of Nations - Qualification | 1 | 0 | 0.0% |
-| World: UEFA Nations League | 1 | 0 | 0.0% |
 | ArR | 1 | 1 | 100.0% |
 | Argentina Primera B Metropolitana | 1 | 1 | 100.0% |
+| Argentina,Primera Nacional Grp. A | 1 | 1 | 100.0% |
 | Armenia Premier League | 1 | 1 | 100.0% |
 | Australia Victoria NPL | 1 | 1 | 100.0% |
 | Australia,Northern New South Wales | 1 | 1 | 100.0% |
@@ -439,7 +417,6 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Iceland,1. Deild Promotion Playoffs | 1 | 1 | 100.0% |
 | Id2 | 1 | 1 | 100.0% |
 | International,Europa League | 1 | 1 | 100.0% |
-| International,Uefa Nations League A Grp. 2 | 1 | 1 | 100.0% |
 | International,World Cup Final Stage | 1 | 1 | 100.0% |
 | Ir1 | 1 | 1 | 100.0% |
 | Iran,Persian Gulf Pro League | 1 | 1 | 100.0% |
@@ -469,16 +446,16 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Serbia Super Liga | 1 | 1 | 100.0% |
 | Serbia: Prva Liga | 1 | 1 | 100.0% |
 | Sg1 | 1 | 1 | 100.0% |
-| Spain,Liga F | 1 | 1 | 100.0% |
+| Spain Primera División RFEF - Group 2 | 1 | 1 | 100.0% |
 | Sweden Superettan | 1 | 1 | 100.0% |
 | Sweden: Allsvenskan | 1 | 1 | 100.0% |
 | USA Major League Soccer | 1 | 1 | 100.0% |
-| USA NWSL Women | 1 | 1 | 100.0% |
 | Uruguay,Copa Uruguay Group B | 1 | 1 | 100.0% |
 | VeC | 1 | 1 | 100.0% |
 | Venezuela Primera División | 1 | 1 | 100.0% |
 | Venezuela,Primera Division - Clausura | 1 | 1 | 100.0% |
 | World Africa Cup of Nations - Qualification | 1 | 1 | 100.0% |
+| World CONCACAF Nations League | 1 | 1 | 100.0% |
 | World UEFA Super Cup | 1 | 1 | 100.0% |
 
 ## Persistent zero-coverage competitions
@@ -493,7 +470,7 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | L2 | 11 | Bristol Rovers vs Newport County |
 | Cz4 | 9 | Slavoj Vysehrad vs Sokol Hostouň |
 | L1 | 9 | Stockport County vs Blackpool |
-| NoW | 8 | Stabæk W vs Bodø / Glimt W |
+| Norway Women | 8 | Stabæk W vs Bodø / Glimt W |
 | Pl1 | 8 | Piast Gliwice vs Legia Warszawa |
 | Norway,2. Division Avdeling 1 | 7 | Bjarg vs Vidar |
 | Sc3 | 7 | East Fife vs Hamilton Academical |
@@ -502,7 +479,6 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | NLn | 6 | Chester FC vs Morecambe |
 | Norway,2. Division Avdeling 2 | 6 | Levanger vs Ull/Kisa |
 | Tz1 | 6 | Mtibwa Sugar vs Simba |
-| France,Ligue 1 | 5 | Paris Saint Germain vs Rennes |
 | Hu1 | 5 | Gyori ETO FC vs Zalaegerszegi TE |
 | International,Club Friendlies | 5 | BG Pathum United vs Aston Villa |
 | Kr2 | 5 | Ansan Greeners vs Suwon Bluewings |
@@ -529,8 +505,7 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Austria: Regionalliga - West | 3 | Hohenems vs Kufstein |
 | Belarus,Premier League | 3 | Dinamo Minsk vs Vitebsk |
 | Bg2 | 3 | CSKA II Sofia vs Spartak Pleven |
-| BrW | 3 | Cruzeiro W vs Botafogo W |
-| CLW | 3 | Juventus W vs SL Benfica W |
+| Brazil Women | 3 | Cruzeiro W vs Botafogo W |
 | Czech Republic,1. Liga | 3 | Slavia Praha vs Pardubice |
 | Egypt,Premier League | 3 | Zamalek SC vs Al-Ittihad Alexandria |
 | Finland Ykkönen | 3 | FC jazz vs Tampere United |
@@ -543,6 +518,7 @@ Structurally-zero candidates (priced=0, picks>=3): 60
 | Pl3 | 3 | Znicz Pruszkow vs Swit Skolwin |
 | Slovenia,Prva Liga | 3 | FC Koper vs Radomlje |
 | Tunisia,Ligue I | 3 | CS Sfaxien vs ES Zarzis |
+| UEFA Women's Champions League | 3 | Juventus W vs SL Benfica W |
 | Uruguay,Liga Auf Clausura | 3 | Penarol vs Central Espanol |
 | Wl2 | 3 | Gresford Athletic vs Mold Alexandra |
 

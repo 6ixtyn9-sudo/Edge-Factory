@@ -57,6 +57,8 @@ def test_skip_reason_counts_are_stable_due_gate_receipt_keys():
         "C|D (retry cooldown (6h after failed attempt))",
         "E|F (kickoff already passed)",
         "G|H (too close to kickoff for first capture)",
+        "West Ham (w)|Chelsea (w) (priced)",
+        "Chicago Red Stars (w)|Denver Summit Fc (w) (priced)",
     ])
     assert counts == {
         "kickoff_mismatch": 1,
@@ -64,4 +66,5 @@ def test_skip_reason_counts_are_stable_due_gate_receipt_keys():
         "retry_cooldown": 1,
         "kickoff_already_passed": 1,
         "too_close_for_first_capture": 1,
+        "priced": 2,
     }

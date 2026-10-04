@@ -83,12 +83,37 @@ def _line_reason(line: str) -> str:
 
 
 def _skip_reason(line: str) -> str:
-    """Normalize auto-planner skip lines into stable due-gate counters."""
-    if str(line).startswith("WARN kickoff-mismatch"):
+    """Normalize auto-planner skip lines into stable due-gate counters.
+
+    Fixture names can contain parenthesised tokens (``Team (w)``), and some
+    reasons also contain parentheses (``retry cooldown (6h...)``).  Parse from
+    the known reason vocabulary rather than splitting at the first ``" ("``;
+    otherwise women-team fixture names become bogus receipt keys such as
+    ``w)|Chelsea_(w)_(priced``.
+    """
+    text = str(line)
+    if text.startswith("WARN kickoff-mismatch"):
         return "kickoff_mismatch"
-    if " (" not in str(line) or not str(line).endswith(")"):
+    if " (" not in text or not text.endswith(")"):
         return "unknown"
-    reason = str(line).split(" (", 1)[1][:-1].strip()
+    body = text[:-1]
+    candidates = [body[i + 2:].strip() for i in range(len(body)) if body.startswith(" (", i)]
+    reason = ""
+    known = {
+        "priced, close window not open",
+        "priced",
+        "kickoff already passed",
+        "too close to kickoff for first capture",
+    }
+    for candidate in candidates:
+        if candidate.startswith("retry cooldown"):
+            reason = candidate
+            break
+        if candidate in known:
+            reason = candidate
+            break
+    if not reason and candidates:
+        reason = candidates[-1]
     if reason.startswith("retry cooldown"):
         return "retry_cooldown"
     if reason == "priced, close window not open":
