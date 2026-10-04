@@ -19,14 +19,14 @@
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "market_unsupported": 572,
         "out_of_window": 747
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -50,7 +50,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-05' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -122,7 +122,7 @@
       "can_price": false,
       "can_vote": false,
       "freshness_h": 0.0,
-      "raw": 253,
+      "raw": 250,
       "reason": null,
       "scored": 79,
       "status": null
