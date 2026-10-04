@@ -1,0 +1,46 @@
+AUTO TICKETS (ROLLING) — 2026-10-04
+==============================================================
+PERFORMANCE: total bank 142.7% of capital (x1.43) = free bank 142.7% + committed 0.0% · next take-profit notification at 200.0%
+P&L TRIPWIRE (assay context_verdict_league on all playable legs, recent 30d, streak floors): CAUTION VETO streak 3 (n=212, roi -5.9%, grade BRONZE; calib gap -4.5%, z -1.39) -> x0.5
+SELECTION LADDER: CAUTION demoted | rank cap 0.70 | slice streak 3 | assay verdict VETO (grade UNGRADED, roi -17.5%) | n 15
+SELECTION LADDER SLICE (assay context_verdict_league, recent 30d, printed-slip evidence only):
+  bucket                                      n       roi    recent      LB     grade  verdict demote bench action
+  CAUTION                                 15    -17.5%       --   0.357 UNGRADED VETO          3     3 DEMOTED  [calib gap -9.8%]  | replay ctx (excluded): n=42 roi=-3.1% gap=-7.7%
+  CERTIFIED_CLEAN                         12    +33.2%       --   0.646 UNGRADED ALLOW         0     0 FULL  [calib gap +25.4%]  | replay ctx (excluded): n=4 roi=+11.2% gap=+8.0%
+  SKIPPED_VETO                           107     +4.8%    +3.6%   0.698   SILVER BOOST         0     0 FULL  [calib gap +8.6%]  | replay ctx (excluded): n=92 roi=+8.5% gap=+7.0%
+  WATCHLIST_UNCORROBORATED_PRICE          22     +7.4%       --   0.615 UNGRADED ALLOW         0     0 FULL  [calib gap +9.7%]  | replay ctx (excluded): n=10 roi=+15.0% gap=+20.2%
+  WATCHLIST_UNKNOWN_CTX                    5     -3.2%       --   0.376 UNGRADED UNKNOWN       0     0 FULL  [calib gap +3.8%]  | replay ctx (excluded): n=22 roi=+11.1% gap=+15.3%
+PRICE SUPPLY:
+  named-book execution prices: 11
+  average-bookmaker donor prices: 4
+  fair-price donor prices: 0
+  total donor-priced candidates: 16
+  execution-safe candidates: 11
+  qualifying legs: 3
+  required legs: 2
+  PRICE POLICY: avg_donor=on fair_donor=on fair_stakeable=off corroboration=preferred named_book_corroboration=preferred source_fallback=abstain
+  donor capture/match counters:
+    betbetter: captured=1324 scored=1324 matched=0
+    boggio: captured=5 scored=5 matched=0
+    betminer: captured=0 scored=0 matched=0
+    pinnapi_odds: captured=0 scored=0 matched=0
+    sharpapi_odds: captured=0 scored=0 matched=0
+REJECTION LEDGER:
+  {"detail": "decimal_odds=1.02 < floor=1.20", "fixture": "Argentina vs Burkina Faso", "odds": 1.02, "rule": "min_odds_floor", "selection": "HOME"}
+  {"detail": "decimal_odds=1.13 < floor=1.20", "fixture": "Barcelona (w) vs Real Madrid (w)", "odds": 1.13, "rule": "min_odds_floor", "selection": "HOME"}
+  {"detail": "candidate cleared earlier gates but was not selected for an executable acca", "fixture": "Greece vs Germany", "odds": 1.92, "rule": "stake_ladder_not_selected", "selection": "AWAY"}
+  {"detail": "result is already known", "fixture": "Morocco vs Mali", "odds": 1.43, "rule": "already_settled", "selection": "HOME"}
+  {"detail": "decimal_odds=1.07 < floor=1.20", "fixture": "Necaxa W vs Cruz Azul W", "odds": 1.07, "rule": "min_odds_floor", "selection": "AWAY"}
+  {"detail": "decimal_odds=1.17 < floor=1.20", "fixture": "Netherlands vs Serbia", "odds": 1.17, "rule": "min_odds_floor", "selection": "HOME"}
+  {"detail": "decimal_odds=1.18 < floor=1.20", "fixture": "Niger Tornadoes FC vs Kun Khalifat FC", "odds": 1.182, "rule": "min_odds_floor", "selection": "HOME"}
+  {"detail": "clock-only kickoff (bare time or no-year day-month) in a league region far from SAST \u2014 SAST rendering untrusted", "fixture": "Spokane Velocity vs Portland Hearts Of Pine", "odds": 1.59, "rule": "kickoff_guard", "selection": "HOME"}
+  {"detail": "decimal_odds=1.16 < floor=1.20", "fixture": "West Ham (w) vs Chelsea (w)", "odds": 1.16, "rule": "min_odds_floor", "selection": "AWAY"}
+
+[ACCA #1] @3.62 — stake 8.9% of capital (6.3% of free bank) [TRIPWIRE-DEMOTED x0.5]
+   Portugal vs Norway                             HOME  @ 1.76  (stated 64%)
+      price: unregistered source — not a price donor
+   Wales vs Denmark                               AWAY  @ 2.05  (stated 57%)
+      price: unregistered source — not a price donor
+
+deploying 25% of free bank today = 8.9% of capital · take-profit NOTIFICATION at +100% per cycle (performance-based; you act on it).
+All figures are percentages of capital. Round to your bookmaker's minimum stake. Bet only what you can afford to lose.
