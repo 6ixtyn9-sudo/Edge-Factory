@@ -88,7 +88,7 @@
     "league": "Spain,Liga F",
     "market": "1x2",
     "pick": "home",
-    "rule_name": "ml-meta avg_p>=55",
+    "rule_name": "ml-meta avg_p>=60",
     "match_method": "fallback",
     "home_key": "barcelonaw",
     "away_key": "realmadridw",
@@ -325,7 +325,7 @@
   },
   {
     "date": "2026-10-04",
-    "kickoff": "2026-10-04T17:00:00+02:00",
+    "kickoff": "2026-10-04T16:00:00+02:00",
     "home": "Niger Tornadoes FC",
     "away": "Kun Khalifat FC",
     "league": "Nigeria: NPFL",
@@ -337,6 +337,19 @@
     "away_key": "kunkhalifatfc",
     "nearby_bzzoiro_candidates": [],
     "nearby_scoutingstats_candidates": [
+      {
+        "home": "Sporting Gij\u00f3n",
+        "away": "Celta de Vigo II",
+        "league": "La Liga 2",
+        "kickoff": "2026-10-04T14:15:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 1.55,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "sportinggijon",
+        "away_key": "celtadevigoii",
+        "kickoff_delta_minutes": 15
+      },
       {
         "home": "Ponferradina",
         "away": "Mirand\u00e9s",
@@ -364,42 +377,29 @@
         "kickoff_delta_minutes": 30
       },
       {
-        "home": "Dolomiti Bellunesi",
-        "away": "Novara",
-        "league": "Serie C: Girone A",
-        "kickoff": "2026-10-04T15:30:00Z",
+        "home": "West Ham W",
+        "away": "Chelsea W",
+        "league": "Women's Super League",
+        "kickoff": "2026-10-04T13:00:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 2.75,
+        "odds": 12.0,
         "bookmaker": "scoutingstats_odds",
-        "home_key": "dolomitibellunesi",
-        "away_key": "novara",
-        "kickoff_delta_minutes": 30
+        "home_key": "westhamw",
+        "away_key": "chelseaw",
+        "kickoff_delta_minutes": 60
       },
       {
-        "home": "Sporting Gij\u00f3n",
-        "away": "Celta de Vigo II",
-        "league": "La Liga 2",
-        "kickoff": "2026-10-04T14:15:00Z",
+        "home": "Azerbaijan",
+        "away": "Lithuania",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-10-04T13:00:00Z",
         "market": "1x2",
         "selection": "home",
-        "odds": 1.55,
+        "odds": 2.25,
         "bookmaker": "scoutingstats_odds",
-        "home_key": "sportinggijon",
-        "away_key": "celtadevigoii",
-        "kickoff_delta_minutes": 45
-      },
-      {
-        "home": "Bangor",
-        "away": "Coleraine",
-        "league": "Premiership",
-        "kickoff": "2026-10-04T14:00:00Z",
-        "market": "1x2",
-        "selection": "home",
-        "odds": 8.5,
-        "bookmaker": "scoutingstats_odds",
-        "home_key": "bangor",
-        "away_key": "coleraine",
+        "home_key": "azerbaijan",
+        "away_key": "lithuania",
         "kickoff_delta_minutes": 60
       }
     ]

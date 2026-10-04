@@ -28,24 +28,24 @@ PRICE SUPPLY:
 REJECTION LEDGER:
   {"detail": "decimal_odds=1.02 < floor=1.20", "fixture": "Argentina vs Burkina Faso", "odds": 1.02, "rule": "min_odds_floor", "selection": "HOME"}
   {"detail": "decimal_odds=1.13 < floor=1.20", "fixture": "Barcelona (w) vs Real Madrid (w)", "odds": 1.13, "rule": "min_odds_floor", "selection": "HOME"}
-  {"detail": "candidate cleared earlier gates but was not selected for an executable acca", "fixture": "Greece vs Germany", "odds": 1.92, "rule": "stake_ladder_not_selected", "selection": "AWAY"}
   {"detail": "result is already known", "fixture": "Morocco vs Mali", "odds": 1.43, "rule": "already_settled", "selection": "HOME"}
   {"detail": "decimal_odds=1.07 < floor=1.20", "fixture": "Necaxa W vs Cruz Azul W", "odds": 1.07, "rule": "min_odds_floor", "selection": "AWAY"}
   {"detail": "decimal_odds=1.17 < floor=1.20", "fixture": "Netherlands vs Serbia", "odds": 1.17, "rule": "min_odds_floor", "selection": "HOME"}
   {"detail": "decimal_odds=1.19 < floor=1.20", "fixture": "Niger Tornadoes FC vs Kun Khalifat FC", "odds": 1.193, "rule": "min_odds_floor", "selection": "HOME"}
   {"detail": "clock-only kickoff (bare time or no-year day-month) in a league region far from SAST \u2014 SAST rendering untrusted", "fixture": "Spokane Velocity vs Portland Hearts Of Pine", "odds": 1.59, "rule": "kickoff_guard", "selection": "HOME"}
+  {"detail": "candidate cleared earlier gates but was not selected for an executable acca", "fixture": "Wales vs Denmark", "odds": 2.05, "rule": "stake_ladder_not_selected", "selection": "AWAY"}
   {"detail": "decimal_odds=1.16 < floor=1.20", "fixture": "West Ham (w) vs Chelsea (w)", "odds": 1.16, "rule": "min_odds_floor", "selection": "AWAY"}
 FORCE RE-CUT — superseded the prior same-day card before writing this card:
-  ADDED (2)
-      Godoy Cruz vs Los Andes                      HOME  @1.65
-      Huracan vs Aldosivi                          HOME  @1.74
-  total stake 8.9176% → 26.7528% of capital
+  DROPPED (1) — if you already placed these, the engine will NOT grade them
+      Wales vs Denmark                             AWAY  @2.05
+  ADDED (1)
+      Greece vs Germany                            AWAY  @1.92
   The original frozen_at entry is retained; --force replaces the card without changing the write-once freeze timestamp.
 
-[ACCA #1] @3.44 — stake 8.9% of capital (6.3% of free bank) [TRIPWIRE-DEMOTED x0.5]
+[ACCA #1] @3.23 — stake 8.9% of capital (6.3% of free bank) [TRIPWIRE-DEMOTED x0.5]
    Portugal vs Norway                             HOME  @ 1.68  (stated 64%)
       price: unregistered source — not a price donor
-   Wales vs Denmark                               AWAY  @ 2.05  (stated 57%)
+   Greece vs Germany                              AWAY  @ 1.92  (stated 55%)
       price: unregistered source — not a price donor
 
 [ACCA #2] @2.87 — stake 17.8% of capital (12.5% of free bank)
@@ -56,3 +56,5 @@ FORCE RE-CUT — superseded the prior same-day card before writing this card:
 
 deploying 25% of free bank today = 26.8% of capital · take-profit NOTIFICATION at +100% per cycle (performance-based; you act on it).
 All figures are percentages of capital. Round to your bookmaker's minimum stake. Bet only what you can afford to lose.
+
+FROZEN AT 09:21 - FINAL
