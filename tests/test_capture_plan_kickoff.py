@@ -48,3 +48,20 @@ def test_small_divergence_does_not_warn():
     # 10-minute divergence is under the 15-minute threshold -> silent, normal planning.
     due, updates, skips = _plan("2026-08-03T15:50:00Z", "2026-08-03T16:10:00Z")
     assert not any("kickoff-mismatch" in s for s in skips)
+
+
+def test_skip_reason_counts_are_stable_due_gate_receipt_keys():
+    counts = capture._skip_reason_counts([
+        "WARN kickoff-mismatch A|B: pick lists 16:00Z, captured rows say 17:00Z (Δ=60m; planning from the earlier)",
+        "A|B (priced, close window not open)",
+        "C|D (retry cooldown (6h after failed attempt))",
+        "E|F (kickoff already passed)",
+        "G|H (too close to kickoff for first capture)",
+    ])
+    assert counts == {
+        "kickoff_mismatch": 1,
+        "priced_close_window_not_open": 1,
+        "retry_cooldown": 1,
+        "kickoff_already_passed": 1,
+        "too_close_for_first_capture": 1,
+    }

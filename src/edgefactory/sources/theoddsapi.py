@@ -631,6 +631,23 @@ def _shortlist_file(date: str) -> Path | None:
     return None
 
 
+def _confidence(row: dict, key: str) -> float:
+    try:
+        return float(row.get(key) or 0.0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _fixture_receipt(f: dict) -> dict:
+    return {
+        "date": str(f.get("date") or "")[:10],
+        "home": f.get("home") or "",
+        "away": f.get("away") or "",
+        "league": f.get("league") or "",
+        "kickoff": f.get("kickoff") or "",
+    }
+
+
 def shortlist(date: str) -> list[dict]:
     """Unique fixtures from the frozen daily picks archive (quota shield).
 
@@ -647,10 +664,18 @@ def shortlist(date: str) -> list[dict]:
         _log(f"cannot parse {path.name}: {exc}", always=True)
         return []
     picks = data if isinstance(data, list) else data.get("picks", []) if isinstance(data, dict) else []
+    # Spend odds credits on picked fixtures first, in pick-confidence order.
+    # Deduplication is by exact displayed fixture pair; no fuzzy expansion is
+    # introduced here (event matching later remains pair-constrained).
+    sorted_picks = sorted(
+        [p for p in picks if isinstance(p, dict)],
+        key=lambda p: (
+            -_confidence(p, "avg_p"), -_confidence(p, "w_score"),
+            str(p.get("home") or ""), str(p.get("away") or ""),
+        ),
+    )
     fixtures: dict[tuple, dict] = {}
-    for p in picks:
-        if not isinstance(p, dict):
-            continue
+    for p in sorted_picks:
         home, away = p.get("home"), p.get("away")
         if not home or not away:
             continue
@@ -662,6 +687,8 @@ def shortlist(date: str) -> list[dict]:
             "league": ctx.get("league_raw") or p.get("league") or "",
             "home": home,
             "away": away,
+            "avg_p": p.get("avg_p"),
+            "w_score": p.get("w_score"),
         })
     return list(fixtures.values())
 
