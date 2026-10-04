@@ -1,11 +1,16 @@
 {
-  "added": 35527,
+  "added": 26034,
   "attempted": 20,
   "attempted_fixtures": [
     {
       "away": "Serbia",
       "fixture_id": "id1002375568931582",
       "home": "Netherlands"
+    },
+    {
+      "away": "Dominica",
+      "fixture_id": "id1002742073220858",
+      "home": "Guyana"
     },
     {
       "away": "Kun Khalifat FC",
@@ -28,34 +33,9 @@
       "home": "Malta"
     },
     {
-      "away": "Gyeongju FC",
-      "fixture_id": "id1001512368916470",
-      "home": "Dangjin Citizen"
-    },
-    {
       "away": "Mamelodi Sundowns",
       "fixture_id": "id1005285273884620",
       "home": "Richmond Ladies"
-    },
-    {
-      "away": "FC Nosta Novotroitsk",
-      "fixture_id": "id1000109774155770",
-      "home": "FC Ural-2 Yekaterinburg"
-    },
-    {
-      "away": "Rakow Czestochowa",
-      "fixture_id": "id1000136573050808",
-      "home": "Stal Rzeszow"
-    },
-    {
-      "away": "Sekhukhune United",
-      "fixture_id": "id1004866375244038",
-      "home": "Marumo Gallants"
-    },
-    {
-      "away": "United Arab Emirates",
-      "fixture_id": "id1000085674898358",
-      "home": "Faroe Islands"
     },
     {
       "away": "Persela Lamongan",
@@ -63,173 +43,207 @@
       "home": "Barito Putera"
     },
     {
-      "away": "KFC Komarno B",
-      "fixture_id": "id1004753672471452",
-      "home": "FK Dac 1904 Dunajska Streda B"
+      "away": "PFC Dobrudzha Dobrich",
+      "fixture_id": "id1000036575017080",
+      "home": "PFC Belasitsa Petrich"
     },
     {
-      "away": "MFK Dukla Banska Bystrica B",
-      "fixture_id": "id1004753672471936",
-      "home": "MFK Ruzomberok B"
+      "away": "CP Mijas-Las Lagunas",
+      "fixture_id": "id1000054472508402",
+      "home": "Atletico Sanluqueno"
     },
     {
-      "away": "NK Sampion Celje",
-      "fixture_id": "id1004799872812244",
-      "home": "SD Videm"
+      "away": "CD Tenerife B",
+      "fixture_id": "id1000054472508406",
+      "home": "CD Xerez"
     },
     {
-      "away": "ETSV Hamburg",
-      "fixture_id": "id1000050972807354",
-      "home": "USC Paloma Hamburg"
+      "away": "FC Zorya Luhansk",
+      "fixture_id": "id1000085375262328",
+      "home": "Kolos Kovalivka"
     },
     {
-      "away": "SpVgg Landshut",
-      "fixture_id": "id1000109172699642",
-      "home": "SpVgg Hankofen-Hailing"
+      "away": "FC Dynamo Barnaul",
+      "fixture_id": "id1000109774155348",
+      "home": "FK Akron-2 Tolyatti"
     },
     {
-      "away": "FC Chertanovo Moscow",
-      "fixture_id": "id1000109970250960",
-      "home": "Yenisey 2 Krasnoyarsk"
+      "away": "Khimik Dzerzhinsk",
+      "fixture_id": "id1000109774166898",
+      "home": "Kdv Tomsk"
     },
     {
-      "away": "VfL Bochum",
-      "fixture_id": "id1000232272726662",
-      "home": "FC Ingolstadt 04"
+      "away": "Miedz Legnica",
+      "fixture_id": "id1000136573050802",
+      "home": "Lech Poznan"
     },
     {
-      "away": "N. Byskovice",
-      "fixture_id": "id1001415172415598",
-      "home": "FK Teplice B"
+      "away": "Legia Warszawa",
+      "fixture_id": "id1000136573050812",
+      "home": "Polonia Warszawa"
+    },
+    {
+      "away": "Unionistas de Salamanca CF B",
+      "fixture_id": "id1002603273582086",
+      "home": "CD Palencia Cristo Atletico"
+    },
+    {
+      "away": "SD Formentera",
+      "fixture_id": "id1002603873584612",
+      "home": "CD Ibiza Islas Pitiusas"
+    },
+    {
+      "away": "Husqvarna FF",
+      "fixture_id": "id1003894167473476",
+      "home": "Umea IK"
+    },
+    {
+      "away": "Villarreal CF",
+      "fixture_id": "id1004754873295772",
+      "home": "Sport Extremadura CD"
     }
   ],
-  "captured_at": "2026-10-04T10:06:01+00:00",
+  "captured_at": "2026-10-04T13:07:13+00:00",
   "date": "2026-10-04",
-  "errors": [],
-  "fixtures": 757,
+  "errors": [
+    "fetch id1005285273884620: HTTPError",
+    "fetch id1002056073929298: HTTPError",
+    "fetch id1000036575017080: HTTPError",
+    "fetch id1000054472508402: HTTPError",
+    "fetch id1000054472508406: HTTPError",
+    "fetch id1000085375262328: HTTPError",
+    "fetch id1000109774155348: HTTPError",
+    "fetch id1000109774166898: HTTPError",
+    "fetch id1000136573050802: HTTPError",
+    "fetch id1000136573050812: HTTPError",
+    "fetch id1002603273582086: HTTPError",
+    "fetch id1002603873584612: HTTPError",
+    "fetch id1003894167473476: HTTPError",
+    "fetch id1004754873295772: HTTPError"
+  ],
+  "fixtures": 582,
   "keys": 1,
   "market_census": "oddspapi_market_census_2026-10.json",
-  "market_census_distinct": 814,
+  "market_census_distinct": 792,
   "markets": {
-    "1x2": 4827,
-    "ou_0.5": 1575,
-    "ou_0.75": 254,
-    "ou_1": 494,
-    "ou_1.25": 496,
-    "ou_1.5": 2569,
-    "ou_1.75": 846,
+    "1x2": 3663,
+    "ou_0.5": 1224,
+    "ou_0.75": 118,
+    "ou_1": 269,
+    "ou_1.25": 234,
+    "ou_1.5": 2003,
+    "ou_1.75": 608,
     "ou_10.5": 40,
-    "ou_11.5": 40,
-    "ou_12.5": 30,
+    "ou_11.5": 30,
+    "ou_12.5": 20,
     "ou_13.5": 10,
-    "ou_2": 950,
-    "ou_2.25": 952,
-    "ou_2.5": 3121,
-    "ou_2.75": 1063,
-    "ou_3": 1108,
-    "ou_3.25": 1001,
-    "ou_3.5": 3439,
-    "ou_3.75": 917,
-    "ou_4": 857,
-    "ou_4.25": 693,
-    "ou_4.5": 2702,
-    "ou_4.75": 400,
-    "ou_5": 390,
-    "ou_5.25": 286,
-    "ou_5.5": 1761,
-    "ou_5.75": 183,
-    "ou_6": 141,
-    "ou_6.25": 91,
-    "ou_6.5": 897,
-    "ou_6.75": 50,
-    "ou_7": 46,
+    "ou_2": 744,
+    "ou_2.25": 770,
+    "ou_2.5": 2586,
+    "ou_2.75": 964,
+    "ou_3": 977,
+    "ou_3.25": 1046,
+    "ou_3.5": 3011,
+    "ou_3.75": 962,
+    "ou_4": 874,
+    "ou_4.25": 796,
+    "ou_4.5": 2541,
+    "ou_4.75": 412,
+    "ou_5": 414,
+    "ou_5.25": 316,
+    "ou_5.5": 1884,
+    "ou_5.75": 187,
+    "ou_6": 247,
+    "ou_6.25": 87,
+    "ou_6.5": 948,
+    "ou_6.75": 48,
+    "ou_7": 44,
     "ou_7.25": 44,
-    "ou_7.5": 372,
-    "ou_7.75": 39,
-    "ou_8": 39,
+    "ou_7.5": 438,
+    "ou_7.75": 35,
+    "ou_8": 35,
     "ou_8.25": 35,
-    "ou_8.5": 204,
+    "ou_8.5": 284,
     "ou_9.5": 41,
-    "tt_away_0.5": 1941,
-    "tt_away_0.75": 162,
-    "tt_away_1": 174,
-    "tt_away_1.25": 150,
-    "tt_away_1.5": 2228,
-    "tt_away_1.75": 124,
-    "tt_away_2": 135,
-    "tt_away_2.25": 86,
-    "tt_away_2.5": 1887,
-    "tt_away_2.75": 42,
-    "tt_away_3": 67,
-    "tt_away_3.25": 26,
-    "tt_away_3.5": 1040,
-    "tt_away_3.75": 18,
-    "tt_away_4": 24,
-    "tt_away_4.25": 14,
-    "tt_away_4.5": 314,
+    "tt_away_0.5": 1804,
+    "tt_away_0.75": 92,
+    "tt_away_1": 106,
+    "tt_away_1.25": 92,
+    "tt_away_1.5": 2160,
+    "tt_away_1.75": 76,
+    "tt_away_2": 67,
+    "tt_away_2.25": 6,
+    "tt_away_2.5": 1839,
+    "tt_away_2.75": 20,
+    "tt_away_3": 26,
+    "tt_away_3.25": 8,
+    "tt_away_3.5": 858,
+    "tt_away_3.75": 4,
+    "tt_away_4": 10,
+    "tt_away_4.5": 234,
     "tt_away_5": 1,
-    "tt_away_5.5": 92,
+    "tt_away_5.5": 65,
     "tt_away_6.5": 22,
-    "tt_away_7.5": 3,
-    "tt_home_0.5": 1836,
-    "tt_home_0.75": 136,
-    "tt_home_1": 182,
-    "tt_home_1.25": 146,
-    "tt_home_1.5": 2556,
-    "tt_home_1.75": 128,
-    "tt_home_2": 164,
-    "tt_home_2.25": 132,
-    "tt_home_2.5": 2105,
-    "tt_home_2.75": 88,
-    "tt_home_3": 77,
-    "tt_home_3.25": 36,
-    "tt_home_3.5": 1303,
-    "tt_home_3.75": 10,
-    "tt_home_4": 11,
-    "tt_home_4.5": 705,
-    "tt_home_5": 5,
-    "tt_home_5.5": 314,
-    "tt_home_6.5": 76,
-    "tt_home_7.5": 6
+    "tt_away_7.5": 1,
+    "tt_home_0.5": 1494,
+    "tt_home_0.75": 34,
+    "tt_home_1": 80,
+    "tt_home_1.25": 50,
+    "tt_home_1.5": 2346,
+    "tt_home_1.75": 64,
+    "tt_home_2": 116,
+    "tt_home_2.25": 86,
+    "tt_home_2.5": 2185,
+    "tt_home_2.75": 74,
+    "tt_home_3": 108,
+    "tt_home_3.25": 54,
+    "tt_home_3.5": 1432,
+    "tt_home_3.75": 34,
+    "tt_home_4": 54,
+    "tt_home_4.5": 932,
+    "tt_home_5": 21,
+    "tt_home_5.5": 518,
+    "tt_home_6.5": 135,
+    "tt_home_7.5": 51
   },
-  "matched": 16,
+  "matched": 6,
   "odds_vocabulary": "unchanged",
   "parse_skips": {
-    "alt_line_skipped": 12,
-    "market_id_unknown": 12144,
-    "market_inactive": 7960,
-    "market_unsupported_clean_sheet": 868,
-    "market_unsupported_corners": 14629,
-    "market_unsupported_correct_score": 3449,
-    "market_unsupported_double_chance": 2013,
-    "market_unsupported_draw_no_bet": 1454,
-    "market_unsupported_handicap": 20742,
-    "market_unsupported_odd_even": 3198,
-    "market_unsupported_period": 68572,
-    "market_unsupported_player_prop": 5682,
-    "market_unsupported_win_to_nil": 1691,
-    "outcome_inactive": 14728,
-    "unresolved_btts": 2258
+    "alt_line_skipped": 20,
+    "market_id_unknown": 9876,
+    "market_inactive": 4890,
+    "market_unsupported_clean_sheet": 887,
+    "market_unsupported_corners": 13175,
+    "market_unsupported_correct_score": 2537,
+    "market_unsupported_double_chance": 1108,
+    "market_unsupported_draw_no_bet": 966,
+    "market_unsupported_handicap": 16285,
+    "market_unsupported_odd_even": 2402,
+    "market_unsupported_period": 56642,
+    "market_unsupported_player_prop": 5634,
+    "market_unsupported_win_to_nil": 1493,
+    "outcome_inactive": 3042,
+    "unresolved_btts": 1939
   },
   "parse_skips_classified": {
     "expected": {
-      "alt_line_skipped": 12,
-      "market_inactive": 7960,
-      "outcome_inactive": 14728
+      "alt_line_skipped": 20,
+      "market_inactive": 4890,
+      "outcome_inactive": 3042
     },
     "loss_or_diagnosis": {
-      "market_id_unknown": 12144,
-      "market_unsupported_clean_sheet": 868,
-      "market_unsupported_corners": 14629,
-      "market_unsupported_correct_score": 3449,
-      "market_unsupported_double_chance": 2013,
-      "market_unsupported_draw_no_bet": 1454,
-      "market_unsupported_handicap": 20742,
-      "market_unsupported_odd_even": 3198,
-      "market_unsupported_period": 68572,
-      "market_unsupported_player_prop": 5682,
-      "market_unsupported_win_to_nil": 1691,
-      "unresolved_btts": 2258
+      "market_id_unknown": 9876,
+      "market_unsupported_clean_sheet": 887,
+      "market_unsupported_corners": 13175,
+      "market_unsupported_correct_score": 2537,
+      "market_unsupported_double_chance": 1108,
+      "market_unsupported_draw_no_bet": 966,
+      "market_unsupported_handicap": 16285,
+      "market_unsupported_odd_even": 2402,
+      "market_unsupported_period": 56642,
+      "market_unsupported_player_prop": 5634,
+      "market_unsupported_win_to_nil": 1493,
+      "unresolved_btts": 1939
     }
   },
   "quoted_fixtures": [
@@ -239,6 +253,11 @@
       "home": "Netherlands"
     },
     {
+      "away": "Dominica",
+      "fixture_id": "id1002742073220858",
+      "home": "Guyana"
+    },
+    {
       "away": "Kun Khalifat FC",
       "fixture_id": "id1000211274885954",
       "home": "Niger Tornadoes FC"
@@ -257,69 +276,14 @@
       "away": "Andorra",
       "fixture_id": "id1002375568932812",
       "home": "Malta"
-    },
-    {
-      "away": "Mamelodi Sundowns",
-      "fixture_id": "id1005285273884620",
-      "home": "Richmond Ladies"
-    },
-    {
-      "away": "FC Nosta Novotroitsk",
-      "fixture_id": "id1000109774155770",
-      "home": "FC Ural-2 Yekaterinburg"
-    },
-    {
-      "away": "Rakow Czestochowa",
-      "fixture_id": "id1000136573050808",
-      "home": "Stal Rzeszow"
-    },
-    {
-      "away": "Sekhukhune United",
-      "fixture_id": "id1004866375244038",
-      "home": "Marumo Gallants"
-    },
-    {
-      "away": "United Arab Emirates",
-      "fixture_id": "id1000085674898358",
-      "home": "Faroe Islands"
-    },
-    {
-      "away": "Persela Lamongan",
-      "fixture_id": "id1002056073929298",
-      "home": "Barito Putera"
-    },
-    {
-      "away": "KFC Komarno B",
-      "fixture_id": "id1004753672471452",
-      "home": "FK Dac 1904 Dunajska Streda B"
-    },
-    {
-      "away": "MFK Dukla Banska Bystrica B",
-      "fixture_id": "id1004753672471936",
-      "home": "MFK Ruzomberok B"
-    },
-    {
-      "away": "NK Sampion Celje",
-      "fixture_id": "id1004799872812244",
-      "home": "SD Videm"
-    },
-    {
-      "away": "FC Chertanovo Moscow",
-      "fixture_id": "id1000109970250960",
-      "home": "Yenisey 2 Krasnoyarsk"
-    },
-    {
-      "away": "N. Byskovice",
-      "fixture_id": "id1001415172415598",
-      "home": "FK Teplice B"
     }
   ],
-  "rows": 51569,
+  "rows": 46348,
   "schema": 1,
-  "slate_candidate_fixtures": 14,
+  "slate_candidate_fixtures": 16,
   "slate_match_mode": "exact_normalized_pair",
-  "slate_priority_fixtures": 5,
-  "slate_provider_overlap_fixtures": 5,
+  "slate_priority_fixtures": 6,
+  "slate_provider_overlap_fixtures": 6,
   "slate_unmatched_fixtures": [
     {
       "away": "Teruel",
@@ -328,28 +292,34 @@
       "normalized_pair": "teruel|zaragoza"
     },
     {
+      "away": "AD Ceuta FC",
+      "home": "Castell\u00f3n",
+      "league": "Spain Segunda Divisi\u00f3n",
+      "normalized_pair": "ad ceuta|castellon"
+    },
+    {
+      "away": "Slovan Liberec II",
+      "home": "Varnsdorf",
+      "league": "Czech Republic: 3. liga - CFL B",
+      "normalized_pair": "slovan liberec|varnsdorf"
+    },
+    {
+      "away": "Povltava FA",
+      "home": "Slavia III",
+      "league": "Czech Republic: 3. liga - CFL A",
+      "normalized_pair": "povltava fa|slavia iii"
+    },
+    {
       "away": "Israel",
       "home": "Rep. Of Ireland",
       "league": "World UEFA Nations League",
       "normalized_pair": "israel|rep. of ireland"
     },
     {
-      "away": "Brommapojkarna W",
-      "home": "Hammarby W",
-      "league": "Sweden Damallsvenskan",
-      "normalized_pair": "brommapojkarna w|hammarby w"
-    },
-    {
       "away": "Denver Summit Fc (w)",
       "home": "Chicago Red Stars (w)",
       "league": "USA,Nwsl",
       "normalized_pair": "chicago red stars (w)|denver summit (w)"
-    },
-    {
-      "away": "Celta de Vigo II",
-      "home": "Sporting Gijon",
-      "league": "Spain Segunda Divisi\u00f3n",
-      "normalized_pair": "celta de vigo|sporting gijon"
     },
     {
       "away": "Aldosivi",
