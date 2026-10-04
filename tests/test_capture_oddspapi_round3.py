@@ -212,14 +212,15 @@ def test_census_and_vocabulary_are_state_commit_persistable():
     for path in ("localdata/oddspapi_market_census_2026-10.json",
                  "localdata/source_health/odds_vocabulary/2026-10-03+oddspapi.json"):
         result = subprocess.run(
-            ["git", "check-ignore", "-v", path],
+            ["git", "check-ignore", "--no-index", "-v", path],
             cwd=Path(__file__).resolve().parents[1],
             capture_output=True, text=True)
         # check-ignore -v prints "<file>:<line>:<pattern>\t<pathname>".
         decided = (result.stdout.split("\t")[0].rsplit(":", 1)[-1].strip()
                    if result.returncode == 0 else "")
         assert decided.startswith("!"), (
-            f"{path} is ignored (deciding pattern: {decided or 'localdata/*'}); "
+            f"{path} is ignored (git check-ignore said: "
+            f"{result.stdout.strip() or result.stderr.strip() or '<no output>'}); "
             "the state commit would silently drop it")
 
 
