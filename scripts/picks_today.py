@@ -3418,6 +3418,171 @@ def donor_vocabulary_lines(report: dict[str, dict], *, limit: int = 12) -> list[
     return lines
 
 
+PRICE_COVERAGE_SOURCES = ("betexplorer", "oddspapi", "theoddsapi")
+_PRICE_SUPPORTED_MARKETS = {"1x2", "ou_2.5", "btts"}
+
+
+def _coverage_fixture_key(obj: dict, fallback_day: str | None = None) -> tuple[str, str, str] | None:
+    day = str(obj.get("date") or fallback_day or "")[:10]
+    home = odds_match_team_key(obj.get("home") or "")
+    away = odds_match_team_key(obj.get("away") or "")
+    if not (day and home and away):
+        return None
+    return (day, home, away)
+
+
+def _read_json_obj(path: Path) -> dict:
+    try:
+        data = json.loads(path.read_text())
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError, TypeError):
+        return {}
+
+
+def _coverage_receipts(day: str) -> dict[str, dict]:
+    day10 = str(day)[:10]
+    paths = {
+        "betexplorer": LOCALDATA / f"betexplorer_capture_{day10}.json",
+        "oddspapi": LOCALDATA / f"oddspapi_capture_{day10}.json",
+        "theoddsapi": LOCALDATA / f"theoddsapi_capture_{day10}.json",
+    }
+    return {name: _read_json_obj(path) for name, path in paths.items()}
+
+
+def _receipt_keys(receipt: dict, field: str, day: str) -> set[tuple[str, str, str]]:
+    out: set[tuple[str, str, str]] = set()
+    rows = receipt.get(field) if isinstance(receipt, dict) else None
+    if not isinstance(rows, list):
+        return out
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        key = _coverage_fixture_key(row, day)
+        if key:
+            out.add(key)
+    return out
+
+
+def _bundle_fixture_keys(bundle: dict, day: str) -> set[tuple[str, str, str]]:
+    out: set[tuple[str, str, str]] = set()
+    rows = bundle.get("raw_rows_list") or []
+    if not isinstance(rows, list):
+        return out
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        key = _coverage_fixture_key(row, day)
+        if key:
+            out.add(key)
+    return out
+
+
+def _named_book_price_matched(pick: dict) -> bool:
+    if pick.get("odds") is None:
+        return False
+    if str(pick.get("price_evidence") or "") == PRICE_EVIDENCE_SUSPECT_ALIAS_FUZZY:
+        return False
+    return bool(psrc.spec(pick.get("odds_source")).named_bookmaker)
+
+
+def _source_count(receipt: dict, count_key: str, list_key: str, day: str) -> int:
+    try:
+        return int(receipt.get(count_key) or 0)
+    except (AttributeError, TypeError, ValueError):
+        return len(_receipt_keys(receipt, list_key, day))
+
+
+def _print_price_coverage(
+    day: str,
+    picks: list[dict],
+    *,
+    scored: int,
+    betexplorer_bundle: dict,
+    theodds_bundle: dict,
+    oddspapi_bundle: dict,
+) -> None:
+    """Emit the picked-fixture price coverage funnel.
+
+    Counts are derived from same-day capture receipts plus the exact normalized
+    price bundles consumed by this build.  No fuzzy fixture joins are used.
+    ``league_not_carried`` is printed as zero with a note because the current
+    repository has no all-source competition catalogue; structural coverage is
+    derived separately by the archive report.
+    """
+    day10 = str(day)[:10]
+    priceable = [
+        p for p in picks
+        if str(p.get("date") or "")[:10] == day10
+        and str(p.get("market") or "") in _PRICE_SUPPORTED_MARKETS
+    ]
+    pick_fixture_keys = {
+        key for p in priceable
+        if (key := _coverage_fixture_key(p, day10)) is not None
+    }
+    receipts = _coverage_receipts(day10)
+    attempted_by_source = {
+        name: _receipt_keys(receipts.get(name) or {}, "attempted_fixtures", day10)
+        for name in PRICE_COVERAGE_SOURCES
+    }
+    quoted_by_source = {
+        "betexplorer": _bundle_fixture_keys(betexplorer_bundle, day10),
+        "theoddsapi": _bundle_fixture_keys(theodds_bundle, day10),
+        "oddspapi": _bundle_fixture_keys(oddspapi_bundle, day10),
+    }
+    attempted_pick_fixtures = set().union(*attempted_by_source.values()) & pick_fixture_keys if attempted_by_source else set()
+    quoted_pick_fixtures = set().union(*quoted_by_source.values()) & pick_fixture_keys if quoted_by_source else set()
+    picks_matched = sum(1 for p in priceable if _named_book_price_matched(p))
+    picks_unmatched = len(priceable) - picks_matched
+
+    per_source = {
+        "betexplorer": (
+            _source_count(receipts.get("betexplorer") or {}, "attempted", "attempted_fixtures", day10),
+            _source_count(receipts.get("betexplorer") or {}, "candidate_fixtures", "candidate_fixtures", day10),
+        ),
+        "oddspapi": (
+            _source_count(receipts.get("oddspapi") or {}, "attempted", "attempted_fixtures", day10),
+            _source_count(receipts.get("oddspapi") or {}, "fixtures", "candidate_fixtures", day10),
+        ),
+        "theoddsapi": (
+            _source_count(receipts.get("theoddsapi") or {}, "attempted", "attempted_fixtures", day10),
+            _source_count(receipts.get("theoddsapi") or {}, "candidate_fixtures", "candidate_fixtures", day10),
+        ),
+    }
+
+    never_attempted = attempted_no_quote = quote_not_joined = 0
+    for pick in priceable:
+        if _named_book_price_matched(pick):
+            continue
+        key = _coverage_fixture_key(pick, day10)
+        if key is None or key not in attempted_pick_fixtures:
+            never_attempted += 1
+        elif key not in quoted_pick_fixtures:
+            attempted_no_quote += 1
+        else:
+            quote_not_joined += 1
+    league_not_carried = 0
+
+    print(
+        f"coverage: scored={int(scored)} picks={len(priceable)} "
+        f"priceable_candidates={len(pick_fixture_keys)} "
+        f"attempted={len(attempted_pick_fixtures)} "
+        f"fixtures_quoted={len(quoted_pick_fixtures)} "
+        f"picks_matched={picks_matched} picks_unmatched={picks_unmatched} "
+        f"per-source: betexplorer={per_source['betexplorer'][0]}/{per_source['betexplorer'][1]} "
+        f"oddspapi={per_source['oddspapi'][0]}/{per_source['oddspapi'][1]} "
+        f"theoddsapi={per_source['theoddsapi'][0]}/{per_source['theoddsapi'][1]}",
+        file=sys.stderr,
+    )
+    print(
+        f"coverage unmatched_causes: never_attempted={never_attempted} "
+        f"attempted_no_quote={attempted_no_quote} "
+        f"quote_not_joined={quote_not_joined} "
+        f"league_not_carried={league_not_carried} "
+        "league_not_carried_note=not_derived_all_source_competition_catalog_absent",
+        file=sys.stderr,
+    )
+
+
 def _bundle_candidates(pick: dict, bundles, default_names=()) -> list:
     """Observe each bundle for THIS pick: healthy? exact fixture match?
 
@@ -4809,9 +4974,11 @@ def main():
         con = None
 
     for day in days:
+        ml_scored_before = int(getattr(research_collector, "scored", 0) or 0)
         picks, vetoes, n_up, data = run_day(day, t1x2, ou_edge, btts_edge,
                                             source_weights_1x2=source_weights_1x2,
                                             research_collector=research_collector)
+        ml_scored_day = max(0, int(getattr(research_collector, "scored", 0) or 0) - ml_scored_before)
         total_vetoes += vetoes
         total_upcoming += n_up
         picks, pre_match_skips = filter_operational_pre_match_picks(
@@ -5350,6 +5517,15 @@ def main():
         collapsed_day_picks, removed_dupes = collapse_final_operational_picks(day_picks)
         if removed_dupes:
             print(f"operational final pick collapse {day}: removed={removed_dupes}", file=sys.stderr)
+
+        if not candidate_only:
+            _print_price_coverage(
+                day, collapsed_day_picks,
+                scored=ml_scored_day or n_up,
+                betexplorer_bundle=betexplorer_bundle,
+                theodds_bundle=theodds_bundle,
+                oddspapi_bundle=oddspapi_bundle,
+            )
 
         all_picks.extend(collapsed_day_picks)
 

@@ -358,6 +358,9 @@ def capture_oddspapi_snapshot(target_date: str, trigger: str) -> None:
         print("oddspapi capture disabled (set EDGE_FACTORY_ODDSPAPI_PRICES=1 to opt in)")
         return
     try:
+        # ODDSPAPI_MAX_FIXTURES is a repository secret. Keep it bounded at the
+        # current 20 until the new receipts prove extra spend reaches slate
+        # fixtures rather than provider-order leftovers.
         max_fixtures = max(1, min(20, int(os.environ.get("ODDSPAPI_MAX_FIXTURES", "20"))))
     except (TypeError, ValueError):
         max_fixtures = 20
@@ -371,7 +374,10 @@ def capture_oddspapi_snapshot(target_date: str, trigger: str) -> None:
 def capture_betexplorer_snapshot(target_date: str, trigger: str) -> None:
     """Create the bounded BetExplorer cache used by the final priced pass."""
     try:
-        max_fixtures = max(1, min(12, int(os.environ.get("EDGE_FACTORY_BETEXPLORER_MAX_FIXTURES", "12"))))
+        # Default remains the historically safe 12.  The capture wrapper and
+        # adapter still enforce 429 cooldown; this only allows a deliberate
+        # operator raise within the 30s/cache-friendly BetExplorer budget.
+        max_fixtures = max(1, min(24, int(os.environ.get("EDGE_FACTORY_BETEXPLORER_MAX_FIXTURES", "12"))))
     except (TypeError, ValueError):
         max_fixtures = 12
     run_soft(

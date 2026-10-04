@@ -146,18 +146,21 @@ def test_budget_stop_marks_active_key_unusable(tmp_path, monkeypatch):
     assert active is not None and active != spent
 
 
-def test_shortlist_reads_frozen_archive(tmp_path, monkeypatch):
+def test_shortlist_reads_frozen_archive_in_confidence_order(tmp_path, monkeypatch):
     (tmp_path / "picks_2026-08-03.json").write_text(json.dumps([
+        {"home": "Low", "away": "Confidence", "league": "Sweden Allsvenskan",
+         "date": "2026-08-03", "kickoff": "03-08, 18:00", "avg_p": 55},
         {"home": "Halmstad", "away": "Sirius", "league": "Sweden Allsvenskan",
-         "date": "2026-08-03", "kickoff": "03-08, 18:00"},
+         "date": "2026-08-03", "kickoff": "03-08, 18:00", "avg_p": 80},
         {"home": "Halmstad", "away": "Sirius", "league": "Sweden Allsvenskan",
-         "date": "2026-08-03", "kickoff": "03-08, 18:00"},
+         "date": "2026-08-03", "kickoff": "03-08, 18:00", "avg_p": 70},
         {"home": "", "away": "Broken Row"},
     ]))
     monkeypatch.setattr(theoddsapi, "LOCALDATA", tmp_path)
     fixtures = theoddsapi.shortlist("2026-08-03")
-    assert len(fixtures) == 1
-    assert fixtures[0]["home"] == "Halmstad"
+    assert len(fixtures) == 2
+    assert [(f["home"], f["away"]) for f in fixtures] == [
+        ("Halmstad", "Sirius"), ("Low", "Confidence")]
     assert theoddsapi.shortlist("2026-01-01") == []
 
 

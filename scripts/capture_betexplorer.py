@@ -23,16 +23,43 @@ sys.path.insert(0, str(ROOT / "src"))
 
 LOCALDATA = Path(os.environ.get("EDGE_FACTORY_LOCALDATA") or (ROOT / "localdata"))
 DEFAULT_MAX_FIXTURES = 12
+# Hard safety ceiling for cooperative BetExplorer calls.  The default remains
+# 12; this only lets an operator deliberately spend more of the 30s/cache-rich
+# window without editing the workflow.  The adapter still cools down on 429.
+MAX_FIXTURES_CEILING = int(os.environ.get("EDGE_FACTORY_BETEXPLORER_MAX_CEILING", "24") or 24)
 
+
+def _slate_paths(day: str) -> tuple[Path, ...]:
+    d = str(day)[:10]
+    return (LOCALDATA / "picks_today.json", LOCALDATA / f"picks_{d}.json")
+
+
+def _read_same_day_rows(day: str) -> list[dict]:
+    """Prefer the fresh candidate slate; fall back to the same-day archive.
+
+    ``picks_today.json`` can hold yesterday's slate on standalone first-run
+    invocations.  In that case the same-day archive is the safe fallback.
+    """
+    day10 = str(day)[:10]
+    for path in _slate_paths(day10):
+        try:
+            raw = json.loads(path.read_text())
+        except (OSError, ValueError, TypeError):
+            continue
+        rows = raw if isinstance(raw, list) else (
+            raw.get("picks") if isinstance(raw, dict) else None)
+        if not isinstance(rows, list):
+            continue
+        same_day = [r for r in rows if isinstance(r, dict)
+                    and str(r.get("date") or "")[:10] == day10]
+        if same_day:
+            return same_day
+    return []
 
 
 def _candidate_rows(day: str) -> list[dict]:
-    path = LOCALDATA / f"picks_{str(day)[:10]}.json"
-    try:
-        rows = json.loads(path.read_text())
-    except (OSError, ValueError, TypeError):
-        return []
-    if not isinstance(rows, list):
+    rows = _read_same_day_rows(day)
+    if not rows:
         return []
     # The adapter supports 1X2. Keep the capture order deterministic and do
     # not spend its bounded budget on markets it cannot return.
@@ -44,15 +71,16 @@ def _candidate_rows(day: str) -> list[dict]:
         and str(row.get("home") or "").strip()
         and str(row.get("away") or "").strip()
     ]
-    def score(row: dict) -> float:
+    def score(row: dict, key: str) -> float:
         try:
-            return float(row.get("avg_p") or 0.0)
+            return float(row.get(key) or 0.0)
         except (TypeError, ValueError):
             return 0.0
 
     candidates.sort(
         key=lambda row: (
-            -score(row), str(row.get("home") or ""), str(row.get("away") or ""),
+            -score(row, "avg_p"), -score(row, "w_score"),
+            str(row.get("home") or ""), str(row.get("away") or ""),
         )
     )
     # One request per fixture, not one request per selection.
@@ -78,9 +106,22 @@ def _write_receipt(day: str, payload: dict) -> None:
     tmp.replace(path)
 
 
+def _fixture_receipt(pick: dict) -> dict:
+    return {
+        "date": str(pick.get("date") or "")[:10],
+        "home": pick.get("home") or "",
+        "away": pick.get("away") or "",
+        "league": pick.get("league") or "",
+        "market": pick.get("market") or "",
+        "pick": pick.get("pick") or "",
+        "avg_p": pick.get("avg_p"),
+        "w_score": pick.get("w_score"),
+    }
+
+
 def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
     """Populate bounded fixture caches and return a secret-free receipt."""
-    limit = max(0, min(DEFAULT_MAX_FIXTURES, int(max_fixtures)))
+    limit = max(0, min(MAX_FIXTURES_CEILING, int(max_fixtures)))
     receipt = {
         "schema": 1,
         "date": str(day)[:10],
@@ -92,6 +133,8 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
         "max_fixtures": limit,
         "status": "empty",
         "errors": [],
+        "attempted_fixtures": [],
+        "quoted_fixtures": [],
     }
     try:
         from edgefactory.sources import betexplorer_odds as source
@@ -103,6 +146,7 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
         source._MAX_FETCHES_PER_RUN = limit
         for pick in candidates[:limit]:
             receipt["attempted"] += 1
+            receipt["attempted_fixtures"].append(_fixture_receipt(pick))
             try:
                 rows = source.betexplorer_odds_rows_for_pick(
                     pick, day, norm_team_fn=norm_team,
@@ -113,6 +157,7 @@ def capture(day: str, *, max_fixtures: int = DEFAULT_MAX_FIXTURES) -> dict:
             if rows:
                 receipt["fixtures_with_rows"] += 1
                 receipt["rows"] += len(rows)
+                receipt["quoted_fixtures"].append(_fixture_receipt(pick))
         receipt.update({
             key: value for key, value in source.run_stats().items()
             if key in {"be_429", "be_cooling_down", "be_cached", "be_fetches"}

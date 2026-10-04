@@ -69,15 +69,31 @@ def test_slate_match_tolerates_club_noise_and_orientation(tmp_path, monkeypatch)
     assert ordered[0]["fixtureId"] == "fx2"
 
 
-def test_other_day_picks_do_not_prioritise(tmp_path, monkeypatch):
+def test_other_day_picks_fall_back_to_same_day_archive(tmp_path, monkeypatch):
+    """First run of a day: picks_today can still be yesterday's slate."""
     monkeypatch.setattr(cap, "OUT_DIR", tmp_path)
     _write_slate(tmp_path, [{
         "date": "2026-10-04", "home": "England", "away": "Croatia",
         "market": "1x2", "pick": "home",
     }])
+    (tmp_path / "picks_2026-10-03.json").write_text(json.dumps([{
+        "date": "2026-10-03", "home": "England", "away": "Croatia",
+        "market": "1x2", "pick": "home", "avg_p": 92,
+    }]))
     ordered, slate_n = cap._prioritise_slate_fixtures(_fixtures_list(), "2026-10-03")
-    assert slate_n == 0
-    assert [f["fixtureId"] for f in ordered] == ["fx1", "fx2", "fx3"]
+    assert slate_n == 1
+    assert ordered[0]["fixtureId"] == "fx2"
+
+
+def test_slate_priority_uses_pick_confidence(tmp_path, monkeypatch):
+    monkeypatch.setattr(cap, "OUT_DIR", tmp_path)
+    _write_slate(tmp_path, [
+        {"date": "2026-10-03", "home": "Alpha", "away": "Beta", "avg_p": 70},
+        {"date": "2026-10-03", "home": "England", "away": "Croatia", "avg_p": 90},
+    ])
+    ordered, slate_n = cap._prioritise_slate_fixtures(_fixtures_list(), "2026-10-03")
+    assert slate_n == 2
+    assert [f["fixtureId"] for f in ordered[:2]] == ["fx2", "fx3"]
 
 
 def test_no_slate_file_leaves_provider_order_untouched(tmp_path, monkeypatch):
@@ -85,6 +101,25 @@ def test_no_slate_file_leaves_provider_order_untouched(tmp_path, monkeypatch):
     ordered, slate_n = cap._prioritise_slate_fixtures(_fixtures_list(), "2026-10-03")
     assert slate_n == 0
     assert ordered == _fixtures_list()
+
+
+def test_slate_overlap_diagnostic_exposes_exact_pair_misses(tmp_path, monkeypatch):
+    monkeypatch.setattr(cap, "OUT_DIR", tmp_path)
+    _write_slate(tmp_path, [
+        {"date": "2026-10-03", "home": "England", "away": "Croatia", "avg_p": 90},
+        {"date": "2026-10-03", "home": "Alpha", "away": "Beta", "avg_p": 80},
+        {"date": "2026-10-03", "home": "No Such", "away": "Fixture", "avg_p": 70},
+    ])
+
+    diag = cap._slate_overlap_diagnostic(_fixtures_list(), "2026-10-03")
+
+    assert diag["slate_match_mode"] == "exact_normalized_pair"
+    assert diag["slate_candidate_fixtures"] == 3
+    assert diag["slate_provider_overlap_fixtures"] == 2
+    assert diag["slate_unmatched_fixtures"] == [{
+        "home": "No Such", "away": "Fixture", "league": "",
+        "normalized_pair": "fixture|no such",
+    }]
 
 
 # ---------------------------------------------------------------------------
@@ -164,6 +199,12 @@ def test_capture_persists_the_market_census(tmp_path, monkeypatch):
     assert stats["market_census"] == "oddspapi_market_census_2026-10.json"
     assert stats["market_census_distinct"] == len(markets)
     assert stats["slate_priority_fixtures"] == 0  # no slate file in tmp_path
+    assert stats["attempted"] == 1
+    receipt = json.loads((tmp_path / "oddspapi_capture_2026-10-03.json").read_text())
+    assert receipt["attempted"] == 1
+    assert receipt["attempted_fixtures"][0]["home"] == "Croatia"
+    assert receipt["quoted_fixtures"][0]["away"] == "England"
+    assert "apiKey" not in json.dumps(receipt) and "http" not in json.dumps(receipt)
     # The served catalog is persisted for source_health, provider data only.
     vocab_path = tmp_path / "source_health" / "odds_vocabulary" / "2026-10-03+oddspapi.json"
     assert vocab_path.exists()
@@ -204,12 +245,16 @@ def test_census_and_vocabulary_are_state_commit_persistable():
     only in the 7-day Actions artifact and dies with the runner cache."""
     gitignore = (Path(__file__).resolve().parents[1] / ".gitignore").read_text()
     lines = {ln.strip() for ln in gitignore.splitlines()}
+    assert "!localdata/theoddsapi_capture_20*.json" in lines
+    assert "!localdata/oddspapi_capture_20*.json" in lines
     assert "!localdata/oddspapi_market_census_*.json" in lines
     assert "!localdata/source_health/" in lines
     assert "!localdata/source_health/**" in lines
     # And the negation actually wins over the localdata/* ignore.
     import subprocess
-    for path in ("localdata/oddspapi_market_census_2026-10.json",
+    for path in ("localdata/theoddsapi_capture_2026-10-03.json",
+                 "localdata/oddspapi_capture_2026-10-03.json",
+                 "localdata/oddspapi_market_census_2026-10.json",
                  "localdata/source_health/odds_vocabulary/2026-10-03+oddspapi.json"):
         result = subprocess.run(
             ["git", "check-ignore", "--no-index", "-v", path],

@@ -11,12 +11,12 @@ SELECTION LADDER SLICE (assay context_verdict_league, recent 30d, printed-slip e
   WATCHLIST_UNCORROBORATED_PRICE          22     +7.4%       --   0.615 UNGRADED ALLOW         0     0 FULL  [calib gap +9.7%]  | replay ctx (excluded): n=10 roi=+15.0% gap=+20.2%
   WATCHLIST_UNKNOWN_CTX                    5     -3.2%       --   0.376 UNGRADED UNKNOWN       0     0 FULL  [calib gap +3.8%]  | replay ctx (excluded): n=22 roi=+11.1% gap=+15.3%
 PRICE SUPPLY:
-  named-book execution prices: 11
-  average-bookmaker donor prices: 4
+  named-book execution prices: 13
+  average-bookmaker donor prices: 2
   fair-price donor prices: 0
   total donor-priced candidates: 16
-  execution-safe candidates: 11
-  qualifying legs: 3
+  execution-safe candidates: 13
+  qualifying legs: 5
   required legs: 2
   PRICE POLICY: avg_donor=on fair_donor=on fair_stakeable=off corroboration=preferred named_book_corroboration=preferred source_fallback=abstain
   donor capture/match counters:
@@ -32,15 +32,27 @@ REJECTION LEDGER:
   {"detail": "result is already known", "fixture": "Morocco vs Mali", "odds": 1.43, "rule": "already_settled", "selection": "HOME"}
   {"detail": "decimal_odds=1.07 < floor=1.20", "fixture": "Necaxa W vs Cruz Azul W", "odds": 1.07, "rule": "min_odds_floor", "selection": "AWAY"}
   {"detail": "decimal_odds=1.17 < floor=1.20", "fixture": "Netherlands vs Serbia", "odds": 1.17, "rule": "min_odds_floor", "selection": "HOME"}
-  {"detail": "decimal_odds=1.18 < floor=1.20", "fixture": "Niger Tornadoes FC vs Kun Khalifat FC", "odds": 1.182, "rule": "min_odds_floor", "selection": "HOME"}
+  {"detail": "decimal_odds=1.19 < floor=1.20", "fixture": "Niger Tornadoes FC vs Kun Khalifat FC", "odds": 1.193, "rule": "min_odds_floor", "selection": "HOME"}
   {"detail": "clock-only kickoff (bare time or no-year day-month) in a league region far from SAST \u2014 SAST rendering untrusted", "fixture": "Spokane Velocity vs Portland Hearts Of Pine", "odds": 1.59, "rule": "kickoff_guard", "selection": "HOME"}
   {"detail": "decimal_odds=1.16 < floor=1.20", "fixture": "West Ham (w) vs Chelsea (w)", "odds": 1.16, "rule": "min_odds_floor", "selection": "AWAY"}
+FORCE RE-CUT — superseded the prior same-day card before writing this card:
+  ADDED (2)
+      Godoy Cruz vs Los Andes                      HOME  @1.65
+      Huracan vs Aldosivi                          HOME  @1.74
+  total stake 8.9176% → 26.7528% of capital
+  The original frozen_at entry is retained; --force replaces the card without changing the write-once freeze timestamp.
 
-[ACCA #1] @3.62 — stake 8.9% of capital (6.3% of free bank) [TRIPWIRE-DEMOTED x0.5]
-   Portugal vs Norway                             HOME  @ 1.76  (stated 64%)
+[ACCA #1] @3.44 — stake 8.9% of capital (6.3% of free bank) [TRIPWIRE-DEMOTED x0.5]
+   Portugal vs Norway                             HOME  @ 1.68  (stated 64%)
       price: unregistered source — not a price donor
    Wales vs Denmark                               AWAY  @ 2.05  (stated 57%)
       price: unregistered source — not a price donor
 
-deploying 25% of free bank today = 8.9% of capital · take-profit NOTIFICATION at +100% per cycle (performance-based; you act on it).
+[ACCA #2] @2.87 — stake 17.8% of capital (12.5% of free bank)
+   Godoy Cruz vs Los Andes                        HOME  @ 1.65  (stated 60%)
+      price: unregistered source — not a price donor
+   Huracan vs Aldosivi                            HOME  @ 1.74  (stated 58%)
+      price: unregistered source — not a price donor
+
+deploying 25% of free bank today = 26.8% of capital · take-profit NOTIFICATION at +100% per cycle (performance-based; you act on it).
 All figures are percentages of capital. Round to your bookmaker's minimum stake. Bet only what you can afford to lose.
