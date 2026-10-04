@@ -2762,11 +2762,7 @@ def cmd_today(args, st):
             print(f"  original frozen slip retained for audit: {slip_txt}")
             print(f"  original frozen_at retained: {superseded.get('frozen_at') or 'unknown'}")
             print("  do not place the superseded selections; no replacement card was created")
-            print("  current candidates below distinguish row-gate failures from the write-once supersede lock")
             print(f"  rerun with --force only after a new, verified slate is available")
-            print("\n".join(price_supply_report(
-                slate, day=target, qualifying=0, rejection_ledger=ledger,
-            )))
             return 0
         # A frozen rerun must not move ladder streaks, but it still upserts
         # today's real evidence row from the frozen slip. No line in the slip
@@ -2796,9 +2792,6 @@ def cmd_today(args, st):
         )
         print(f"TICKETS FROZEN — final slip for {target}. Re-printing saved slip:")
         print("=" * 62)
-        print("\n".join(price_supply_report(
-            slate, day=target, qualifying=len(selected), rejection_ledger=ledger,
-        )))
         if slip_txt.exists():
             print(slip_txt.read_text())
         return 0
@@ -2949,21 +2942,29 @@ def cmd_today(args, st):
                 f"{len(plan_pool)} qualifying leg(s) < required {LEGS_PER_ACCA}",
             ),
         )
-        output_lines = (
-            census_lines
-            + _slice_action_lines(slice_verdicts)
-            + _slice_table_lines(slice_verdicts)
-            + price_supply_report(
-                slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
-            )
-            + recut_lines
-            + [f"NO BET TODAY — {len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}",
-               "(bank stays unbet)"]
-        )
+        # Keep policy/rejection details available to the force-recut audit,
+        # but do not mix operator diagnostics into the customer-facing card.
+        audit_lines = census_lines + price_supply_report(
+            slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
+        ) + recut_lines
+        output_lines = [
+            f"AUTO TICKETS (ROLLING) — {target}",
+            "=" * 62,
+            f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
+            f"(x{st['bank']/st['base_pct']:.2f}) = free bank {bank_eff:.1f}%",
+            *_slice_table_lines(slice_verdicts),
+            "",
+            f"NO BET TODAY — {len(plan_pool)} qualifying leg(s), need {LEGS_PER_ACCA}",
+            "(bank stays unbet)",
+            "All figures are percentages of capital. Round to your bookmaker's minimum stake. "
+            "Bet only what you can afford to lose.",
+        ]
         text = "\n".join(output_lines)
         print(text)
         if recut_lines:
-            (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(text + "\n")
+            (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(
+                "\n".join(audit_lines) + "\n"
+            )
         return 0
 
     fixture_report: dict[str, list[str]] = {}
@@ -2988,20 +2989,26 @@ def cmd_today(args, st):
                 "stake ladder could not form the configured executable acca set",
             ),
         )
-        output_lines = (
-            census_lines
-            + _slice_action_lines(slice_verdicts)
-            + _slice_table_lines(slice_verdicts)
-            + price_supply_report(
-                slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
-            )
-            + recut_lines
-            + ["NO BET TODAY — plan empty"]
-        )
+        audit_lines = census_lines + price_supply_report(
+            slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
+        ) + recut_lines
+        output_lines = [
+            f"AUTO TICKETS (ROLLING) — {target}",
+            "=" * 62,
+            f"PERFORMANCE: total bank {st['bank']:.1f}% of capital "
+            f"(x{st['bank']/st['base_pct']:.2f}) = free bank {bank_eff:.1f}%",
+            *_slice_table_lines(slice_verdicts),
+            "",
+            "NO BET TODAY — plan empty",
+            "All figures are percentages of capital. Round to your bookmaker's minimum stake. "
+            "Bet only what you can afford to lose.",
+        ]
         text = "\n".join(output_lines)
         print(text)
         if recut_lines:
-            (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(text + "\n")
+            (LOCALDATA / f"auto_tickets_{target}_force_recut.txt").write_text(
+                "\n".join(audit_lines) + "\n"
+            )
         return 0
     # Task E (2026-09-06): a force-repick REPLACES the target date's own
     # existing slip (upsert below deletes it) — so its stake was excluded
@@ -3030,20 +3037,11 @@ def cmd_today(args, st):
              f"PERFORMANCE: total bank {st['bank']:.1f}% of capital (x{st['bank']/st['base_pct']:.2f}) = "
              f"free bank {bank_eff:.1f}% + committed {committed:.1f}% · "
              f"next take-profit notification at {take_profit_target(st):.1f}%"]
-    trip = sorted(((b, v) for b, v in pnl_verdicts.items() if v["weight"] < 1.0),
-                  key=lambda kv: kv[1]["weight"])
-    if trip:
-        parts = []
-        for b, v in trip:
-            z = "--" if v["z"] is None else f"{v['z']:+.2f}"
-            parts.append(f"{b} {v['verdict']} streak {v['streak']} (n={v['n']}, "
-                         f"roi {_pct(v['roi'])}, grade {v['grade']}; "
-                         f"calib gap {_pct(v['gap'])}, z {z}) -> x{v['weight']}")
-        lines.append("P&L TRIPWIRE (assay context_verdict_league on all playable "
-                     f"legs, recent {PNL_WINDOW_DAYS}d, streak floors): "
-                     + "; ".join(parts))
-    lines.extend(_slice_action_lines(slice_verdicts))
+    # Tripwire and ladder actions have already been applied to the plan.  The
+    # normal card intentionally renders only the concise ladder table; the
+    # detailed verdicts remain in their existing ledgers/operator helpers.
     lines.extend(_slice_table_lines(slice_verdicts))
+    lines.append("")
     selected_legs = [leg for acca in plan for leg in acca.get("legs", [])]
     ledger = build_rejection_ledger(
         slate,
@@ -3051,36 +3049,17 @@ def cmd_today(args, st):
         selected=selected_legs,
         staged=staged_rejections,
     )
-    lines.extend(price_supply_report(
-        slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
-    ))
-    if replacement_lines:
-        lines.append("FORCE RE-CUT — superseded the prior same-day card before writing this card:")
-        lines.extend(replacement_lines)
-        lines.append(
-            "  The original frozen_at entry is retained; --force replaces the card "
-            "without changing the write-once freeze timestamp."
-        )
-    if shadow_rows:
-        lines.append(f"SELECTION LADDER SHADOW: {len(shadow_rows)} diminished-bucket leg(s) logged")
-    if fixture_report.get("dropped"):
-        lines.append("SAME-FIXTURE DEDUP: dropped "
-                     + "; ".join(fixture_report["dropped"])
-                     + " (one match entered twice via a name-spelling split; "
-                        "highest-stated twin kept)")
+    # Compute the audit records above without rendering them on the normal
+    # ticket.  Price supply, rejection, replacement and dedup diagnostics are
+    # operator detail rather than instructions to the bettor.
     for i, a in enumerate(plan, 1):
-        demote_tag = (f" [TRIPWIRE-DEMOTED x{a['bench_weight']}]"
-                      if a.get("bench_weight", 1.0) < 1.0 else "")
-        lines.append(f"\n[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
-                     f"({a['stake_pct']/bank_eff:.1%} of free bank){demote_tag}")
+        lines.append(f"[ACCA #{i}] @{a['odds']:.2f} — stake {a['stake_pct']:.1f}% of capital "
+                     f"({a['stake_pct']/bank_eff:.1%} of free bank)")
         for l in a["legs"]:
             lines.append(f"   {l['match']:46s} {l['pick']:5s} @ {l['odds']:.2f}  (stated {l['prob']:.0%})")
-            # MANDATORY donor disclosure: the card must never imply a named
-            # bookmaker is offering a price that came from an average-book
-            # aggregate or a model's fair odds.
-            lines.append(f"      price: {leg_price_disclosure(l)}")
+        lines.append("")
     day_staked = sum(a["stake_pct"] for a in plan)
-    lines.append(f"\ndeploying {STAKE_FRAC:.0%} of free bank today "
+    lines.append(f"deploying {STAKE_FRAC:.0%} of free bank today "
                  f"= {day_staked:.1f}% of capital · take-profit NOTIFICATION at "
                  f"+{TAKE_PROFIT_GAIN:.0%} per cycle (performance-based; you act on it).")
     lines.append("All figures are percentages of capital. Round to your bookmaker's minimum stake. "
