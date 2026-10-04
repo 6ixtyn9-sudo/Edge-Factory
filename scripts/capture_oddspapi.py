@@ -118,41 +118,88 @@ def _fixture_pair(fixture: dict) -> tuple[str, str]:
     return _team_key(home), _team_key(away)
 
 
-def _load_slate_pairs(day: str) -> set[tuple[str, str]]:
-    """Normalized (home, away) pairs of the day's pick slate, if a built
-    candidate/final slate exists on disk. Absent or unreadable -> empty."""
-    path = OUT_DIR / "picks_today.json"
+def _pick_confidence(pick: dict) -> tuple[float, float]:
+    """Sort key for slate-first capture: highest pick confidence first."""
     try:
-        raw = json.loads(path.read_text())
-    except (OSError, ValueError):
-        return set()
-    picks = raw if isinstance(raw, list) else (
-        raw.get("picks") if isinstance(raw, dict) else None)
-    if not isinstance(picks, list):
-        return set()
-    pairs: set[tuple[str, str]] = set()
-    for pick in picks:
-        if not isinstance(pick, dict):
+        avg_p = float(pick.get("avg_p") or 0.0)
+    except (TypeError, ValueError):
+        avg_p = 0.0
+    try:
+        w_score = float(pick.get("w_score") or 0.0)
+    except (TypeError, ValueError):
+        w_score = 0.0
+    return avg_p, w_score
+
+
+def _slate_paths(day: str) -> tuple[Path, ...]:
+    """Same-day slate candidates in preference order.
+
+    ``picks_today.json`` is the normal two-pass handoff.  On a standalone first
+    run it can still contain yesterday's slate; fall back to the same-day
+    archive that the candidate pass writes before capture.  Both are exact
+    local artefacts — no provider search and no fuzzy expansion.
+    """
+    d = str(day)[:10]
+    return (OUT_DIR / "picks_today.json", OUT_DIR / f"picks_{d}.json")
+
+
+def _load_slate_pairs(day: str) -> dict[tuple[str, str], tuple[int, tuple[float, float]]]:
+    """Normalized fixture pairs on the day's slate, ranked by confidence.
+
+    Returns ``pair -> (rank, confidence)``.  The first readable same-day slate
+    wins; if ``picks_today.json`` exists but contains only another day's rows,
+    the same-day archive is tried next.  Matching is exact on normalized team
+    tokens (plus orientation-independent fixture intent), never fuzzy.
+    """
+    day10 = str(day)[:10]
+    chosen: list[dict] = []
+    for path in _slate_paths(day10):
+        try:
+            raw = json.loads(path.read_text())
+        except (OSError, ValueError, TypeError):
             continue
-        if str(pick.get("date") or "")[:10] != str(day)[:10]:
+        picks = raw if isinstance(raw, list) else (
+            raw.get("picks") if isinstance(raw, dict) else None)
+        if not isinstance(picks, list):
             continue
+        same_day = [
+            p for p in picks
+            if isinstance(p, dict)
+            and str(p.get("date") or "")[:10] == day10
+        ]
+        if same_day:
+            chosen = same_day
+            break
+    if not chosen:
+        return {}
+
+    ranked = sorted(
+        chosen,
+        key=lambda pick: (
+            -_pick_confidence(pick)[0], -_pick_confidence(pick)[1],
+            str(pick.get("home") or ""), str(pick.get("away") or ""),
+        ),
+    )
+    pairs: dict[tuple[str, str], tuple[int, tuple[float, float]]] = {}
+    for rank, pick in enumerate(ranked):
         home, away = _team_key(pick.get("home")), _team_key(pick.get("away"))
-        if home and away:
-            pairs.add((home, away))
-            pairs.add((away, home))  # orientation-independent
+        if not (home and away):
+            continue
+        confidence = _pick_confidence(pick)
+        # One request prices the fixture; provider orientation can differ, so
+        # both exact normalized orientations are attempt-prioritisation keys.
+        # The later price join remains side/orientation guarded.
+        pairs.setdefault((home, away), (rank, confidence))
+        pairs.setdefault((away, home), (rank, confidence))
     return pairs
 
 
 def _prioritise_slate_fixtures(fixtures: list[dict], day: str) -> tuple[list[dict], int]:
-    """Put fixtures the day's slate actually covers first (stable order).
+    """Put fixtures the day's slate actually covers first.
 
-    The docstring has always promised "unmatched same-day picks are
-    prioritized first"; the 2026-10-03 run showed what happens without it:
-    the 20-fixture budget went to provider-ordered fixtures the slate never
-    covered (BK Forward vs IK Sleipner has no pick on the card), so even the
-    three healthy rows could only land in fixture_key_miss. Unmatched
-    fixtures are NOT dropped - enhancement coverage keeps whatever budget
-    remains after the slate fixtures.
+    Slate fixtures are ordered by pick confidence before provider-order
+    leftovers.  Unmatched fixtures are NOT dropped - enhancement coverage keeps
+    whatever budget remains after picked fixtures.
     """
     try:
         slate = _load_slate_pairs(day)
@@ -160,11 +207,42 @@ def _prioritise_slate_fixtures(fixtures: list[dict], day: str) -> tuple[list[dic
         return fixtures, 0
     if not slate:
         return fixtures, 0
-    prioritised = [fx for fx in fixtures if _fixture_pair(fx) in slate]
+    indexed = list(enumerate(fixtures))
+    prioritised = [item for item in indexed if _fixture_pair(item[1]) in slate]
     if not prioritised:
         return fixtures, 0
-    rest = [fx for fx in fixtures if _fixture_pair(fx) not in slate]
-    return prioritised + rest, len(prioritised)
+    prioritised.sort(key=lambda item: (slate[_fixture_pair(item[1])][0], item[0]))
+    rest = [item for item in indexed if _fixture_pair(item[1]) not in slate]
+    return [fx for _idx, fx in prioritised + rest], len(prioritised)
+
+
+def _receipt_path(day: str) -> Path:
+    return OUT_DIR / f"oddspapi_capture_{str(day)[:10]}.json"
+
+
+def _fixture_receipt(fixture: dict) -> dict:
+    return {
+        "fixture_id": str(fixture.get("fixtureId") or fixture.get("id") or ""),
+        "home": fixture.get("participant1Name") or fixture.get("home") or "",
+        "away": fixture.get("participant2Name") or fixture.get("away") or "",
+    }
+
+
+def _write_receipt(day: str, stats: dict) -> None:
+    payload = {
+        "schema": 1,
+        "source": "oddspapi_odds",
+        "date": str(day)[:10],
+        "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        **stats,
+    }
+    # Keep the receipt compact and secret-free. It records fixture names/ids and
+    # counters only; no URLs, headers, or API keys.
+    path = _receipt_path(day)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_suffix(path.suffix + ".tmp")
+    tmp.write_text(json.dumps(payload, indent=2, sort_keys=True, default=str))
+    tmp.replace(path)
 
 
 def _classify_parse_skips(parse_skips: dict) -> dict:
@@ -344,13 +422,14 @@ def _append_rows(rows: list[dict], day: str) -> int:
 
 def capture(day: str, max_fixtures: int = 20) -> dict:
     """Bounded capture for one day. Returns a stats dict; never raises."""
-    stats = {"keys": 0, "fixtures": 0, "matched": 0, "rows": 0, "added": 0,
-             "errors": [], "markets": {}}
+    stats = {"keys": 0, "fixtures": 0, "attempted": 0, "matched": 0, "rows": 0, "added": 0,
+             "errors": [], "markets": {}, "attempted_fixtures": [], "quoted_fixtures": []}
     try:
         keys = api_keys()
         stats["keys"] = len(keys)
         if not keys:
             stats["errors"].append("no ODDSPAPI_API_KEYS configured")
+            _write_receipt(day, stats)
             return stats
         fixtures = fetch_fixtures(day) or []
         stats["fixtures"] = len(fixtures)
@@ -374,6 +453,8 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             fid = str(fx.get("fixtureId") or fx.get("id") or "")
             if not fid:
                 continue
+            stats["attempted"] += 1
+            stats["attempted_fixtures"].append(_fixture_receipt(fx))
             try:
                 odds = fetch_odds(fid)
             except Exception as exc:  # noqa: BLE001 - fail-soft
@@ -410,6 +491,7 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
                 skips[reason] = int(skips.get(reason) or 0) + int(count)
             if rows:
                 stats["matched"] += 1
+                stats["quoted_fixtures"].append(_fixture_receipt(fx))
             stats["rows"] += len(rows)
             for r in rows:
                 m = str(r.get("market") or "?")
@@ -434,9 +516,11 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             stats["odds_vocabulary"] = _persist_vocabulary_snapshot(day, catalog_entries)
         except Exception as exc:  # noqa: BLE001 - vocabulary must never break capture
             stats["errors"].append(f"vocabulary: {type(exc).__name__}")
+        _write_receipt(day, stats)
         return stats
     except Exception as exc:  # noqa: BLE001 - never raises
         stats["errors"].append(f"capture: {type(exc).__name__}: {exc}")
+        _write_receipt(day, stats)
         return stats
 
 

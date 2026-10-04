@@ -100,6 +100,24 @@ jobs:
       ODDS_API_TOTAL_POINTS: ${{ secrets.ODDS_API_TOTAL_POINTS || '1.5,2.5,3.5,4.5' }}
       ODDS_API_MONTHLY_BUDGET: ${{ secrets.ODDS_API_MONTHLY_BUDGET || '480' }}
       ODDS_API_CLOSE_WINDOW_MIN: ${{ secrets.ODDS_API_CLOSE_WINDOW_MIN || '45' }}
+
+      # Price coverage pass, 2026-10-04 — proposed only. Do NOT apply in
+      # .github/workflows/* from an agent session.
+      #
+      # The code default stays conservative; these secrets spend the priced
+      # sources on the picked slate first, with caps that can be rolled back
+      # without another workflow edit.
+      ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
+      EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || '1' }}
+      # Proposed secret value: 40. Arithmetic: 40 fixture-odds requests/run ×
+      # 5 external daily runs = 200 fixture requests/day. Keep the old value
+      # 20 unless the provider account's daily/monthly allowance is confirmed
+      # at >=250/day so a 20% safety margin remains.
+      ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '40' }}
+      # Proposed secret value: 18. This is not a paid quota; it is bounded by
+      # BetExplorer's cooperative 429 cooldown and the 30s capture budget. The
+      # code hard-stops at 24 even if the secret is larger.
+      EDGE_FACTORY_BETEXPLORER_MAX_FIXTURES: ${{ secrets.EDGE_FACTORY_BETEXPLORER_MAX_FIXTURES || '18' }}
       TZ: 'Africa/Johannesburg'
 
     steps:

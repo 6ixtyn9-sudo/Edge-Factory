@@ -40,6 +40,7 @@ import importlib
 import json
 import os
 import sys
+from collections import Counter
 from datetime import date as _date
 from datetime import datetime, timezone  # timedelta dropped: unused (red-team hygiene)
 from pathlib import Path
@@ -59,6 +60,44 @@ KICKOFF_MISMATCH_MIN = 15     # pick-listed vs captured-API kickoff divergence g
 
 def _month_file(day: str) -> Path:
     return LOCALDATA / f"{SOURCE_NAME}_{day[:7]}.csv.gz"
+
+
+def _receipt_path(day: str) -> Path:
+    return LOCALDATA / f"theoddsapi_capture_{str(day)[:10]}.json"
+
+
+def _fixture_receipt(f: dict) -> dict:
+    return {
+        "date": str(f.get("date") or "")[:10],
+        "home": f.get("home") or "",
+        "away": f.get("away") or "",
+        "league": f.get("league") or "",
+        "kickoff": f.get("kickoff") or "",
+    }
+
+
+def _line_reason(line: str) -> str:
+    if "(" not in line or not line.endswith(")"):
+        return "unknown"
+    return line.rsplit("(", 1)[1][:-1].strip() or "unknown"
+
+
+def _write_receipt(day: str, payload: dict) -> None:
+    try:
+        payload = {
+            "schema": 1,
+            "source": "theoddsapi",
+            "date": str(day)[:10],
+            "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            **payload,
+        }
+        LOCALDATA.mkdir(parents=True, exist_ok=True)
+        path = _receipt_path(day)
+        tmp = path.with_suffix(path.suffix + ".tmp")
+        tmp.write_text(json.dumps(payload, indent=2, sort_keys=True, default=str))
+        tmp.replace(path)
+    except Exception as exc:  # noqa: BLE001 - receipt must never break capture
+        print(f"theoddsapi: receipt write failed: {exc}", file=sys.stderr)
 
 
 def _read_month(path: Path) -> list[dict]:
@@ -376,6 +415,18 @@ def main() -> int:
 
     fixtures = mod.shortlist(args.date)
     print(f"date={args.date} shortlist={len(fixtures)} fixture(s)")
+    receipt_base = {
+        "candidate_fixtures": len(fixtures),
+        "attempted": 0,
+        "fixtures_with_rows": 0,
+        "rows": 0,
+        "added": 0,
+        "status": "empty",
+        "attempted_fixtures": [],
+        "quoted_fixtures": [],
+        "unmatched_reasons": {},
+        "errors": [],
+    }
 
     if args.dry_run:
         sports = []
@@ -399,10 +450,12 @@ def main() -> int:
         print(f"ledger: {status['credits_local']}/{status['budget']} used this month across "
               f"{status['n_keys']} key(s); server_remaining={status['server_remaining']}")
         print("dry-run: 0 credits spent")
+        _write_receipt(args.date, {**receipt_base, "status": "dry_run"})
         return 0
 
     if not mod.enabled():
         print("No The Odds API keys configured. Set ODDS_API_KEYS in .env (see .env.example).", file=sys.stderr)
+        _write_receipt(args.date, {**receipt_base, "status": "disabled", "errors": ["no ODDS_API_KEYS configured"]})
         return 2
 
     if args.refresh_sports:
@@ -421,6 +474,11 @@ def main() -> int:
             print(f"  skip {line}")
         if not due:
             print("auto: nothing due this iteration (0 credits)")
+            _write_receipt(args.date, {
+                **receipt_base,
+                "status": "not_due",
+                "skipped": skips,
+            })
             return 0
         print(f"auto: {len(due)} fixture(s) due -> fetching")
     else:
@@ -432,6 +490,13 @@ def main() -> int:
         rows, unmatched, matched = mod.fetch_fixtures(due, day=args.date)
     except Exception as exc:
         print(f"capture aborted: {exc}", file=sys.stderr)
+        _write_receipt(args.date, {
+            **receipt_base,
+            "attempted": len(due),
+            "attempted_fixtures": [_fixture_receipt(f) for f in due],
+            "status": "error",
+            "errors": [type(exc).__name__],
+        })
         return 1
 
     added = append_rows(args.date, rows, mod.COLUMNS) if rows else 0
@@ -457,6 +522,28 @@ def main() -> int:
     print(f"capture done: rows={len(rows)} new_appended={added} -> {_month_file(args.date).name}")
     print(f"ledger: {status['credits_local']}/{status['budget']} local across {status['n_keys']} key(s); "
           f"near-term remaining={status['server_remaining']}")
+    quoted: dict[tuple[str, str], dict] = {}
+    for row in rows or []:
+        key = (str(row.get("home") or ""), str(row.get("away") or ""))
+        quoted.setdefault(key, {
+            "date": str(row.get("date") or args.date)[:10],
+            "home": row.get("home") or "",
+            "away": row.get("away") or "",
+            "league": row.get("league") or "",
+            "kickoff": row.get("kickoff") or "",
+        })
+    _write_receipt(args.date, {
+        **receipt_base,
+        "attempted": len(due),
+        "attempted_fixtures": [_fixture_receipt(f) for f in due],
+        "fixtures_with_rows": matched,
+        "quoted_fixtures": list(quoted.values()),
+        "rows": len(rows),
+        "added": added,
+        "status": "ok" if rows else "empty",
+        "unmatched_reasons": dict(Counter(_line_reason(line) for line in unmatched)),
+        "unmatched": unmatched[:100],
+    })
     return 0
 
 

@@ -40,8 +40,9 @@ Operator actions:
    ring.
 2. Add repository secret **`EDGE_FACTORY_ODDSPAPI_PRICES`** with value `1` to
    opt in. The workflow default is deliberately `off`.
-3. Optionally set **`ODDSPAPI_MAX_FIXTURES`** (default `20`, hard bounded by the
-   capture code). The existing workflow already maps all three names.
+3. Optionally set **`ODDSPAPI_MAX_FIXTURES`** (default `20`, hard bounded at
+   `40` by the capture/orchestration code after the 2026-10-04 coverage pass).
+   The existing workflow already maps all three names.
 
 Expected health change: `oddspapi=raw0/usable0/matched0` becomes
 `oddspapi=rawN/usableU/matchedM` when the provider covers the bounded slate.

@@ -412,7 +412,7 @@ def test_oddspapi_capture_is_quota_opt_in_and_bounded(monkeypatch):
         daily.capture_oddspapi_snapshot("2026-10-03", "pick_time")
 
     command, label = run_soft.call_args.args
-    assert "scripts/capture_oddspapi.py --date 2026-10-03 --max-fixtures 20" in command
+    assert "scripts/capture_oddspapi.py --date 2026-10-03 --max-fixtures 40" in command
     assert label == "oddspapi bounded capture 2026-10-03 [pick_time]"
 
 

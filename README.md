@@ -309,8 +309,8 @@ OddsPapi market-coverage probe and bounded price board
 The repository includes a read-only market-coverage probe and an **opt-in**
 bounded capture for OddsPapi. It is never a consensus vote. When
 `EDGE_FACTORY_ODDSPAPI_PRICES=1`, the official daily run captures at most
-`ODDSPAPI_MAX_FIXTURES` (capped at 20) after a non-ticketable candidate
-shortlist is built. The final priced pass may use only persisted,
+`ODDSPAPI_MAX_FIXTURES` (default 20, code ceiling 40) after a non-ticketable
+candidate shortlist is built. The final priced pass may use only persisted,
 timestamp-qualified canonical named-book rows; a ticketed card is never
 rewritten. Missing keys, a disabled flag, absent rows, unknown markets, or a
 post-cutoff timestamp all fail closed.
