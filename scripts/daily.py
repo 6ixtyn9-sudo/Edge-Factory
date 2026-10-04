@@ -358,10 +358,10 @@ def capture_oddspapi_snapshot(target_date: str, trigger: str) -> None:
         print("oddspapi capture disabled (set EDGE_FACTORY_ODDSPAPI_PRICES=1 to opt in)")
         return
     try:
-        # ODDSPAPI_MAX_FIXTURES is a repository secret.  Keep the code default
-        # at 20, but allow a deliberate operator raise up to a conservative
-        # 40-fixture ceiling without editing workflow YAML.
-        max_fixtures = max(1, min(40, int(os.environ.get("ODDSPAPI_MAX_FIXTURES", "20"))))
+        # ODDSPAPI_MAX_FIXTURES is a repository secret. Keep it bounded at the
+        # current 20 until the new receipts prove extra spend reaches slate
+        # fixtures rather than provider-order leftovers.
+        max_fixtures = max(1, min(20, int(os.environ.get("ODDSPAPI_MAX_FIXTURES", "20"))))
     except (TypeError, ValueError):
         max_fixtures = 20
     run_soft(

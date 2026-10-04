@@ -143,16 +143,9 @@ def _slate_paths(day: str) -> tuple[Path, ...]:
     return (OUT_DIR / "picks_today.json", OUT_DIR / f"picks_{d}.json")
 
 
-def _load_slate_pairs(day: str) -> dict[tuple[str, str], tuple[int, tuple[float, float]]]:
-    """Normalized fixture pairs on the day's slate, ranked by confidence.
-
-    Returns ``pair -> (rank, confidence)``.  The first readable same-day slate
-    wins; if ``picks_today.json`` exists but contains only another day's rows,
-    the same-day archive is tried next.  Matching is exact on normalized team
-    tokens (plus orientation-independent fixture intent), never fuzzy.
-    """
+def _load_slate_picks(day: str) -> list[dict]:
+    """Return the first readable same-day slate in handoff/archive order."""
     day10 = str(day)[:10]
-    chosen: list[dict] = []
     for path in _slate_paths(day10):
         try:
             raw = json.loads(path.read_text())
@@ -168,20 +161,30 @@ def _load_slate_pairs(day: str) -> dict[tuple[str, str], tuple[int, tuple[float,
             and str(p.get("date") or "")[:10] == day10
         ]
         if same_day:
-            chosen = same_day
-            break
-    if not chosen:
-        return {}
+            return same_day
+    return []
 
-    ranked = sorted(
-        chosen,
+
+def _ranked_slate_picks(day: str) -> list[dict]:
+    return sorted(
+        _load_slate_picks(day),
         key=lambda pick: (
             -_pick_confidence(pick)[0], -_pick_confidence(pick)[1],
             str(pick.get("home") or ""), str(pick.get("away") or ""),
         ),
     )
+
+
+def _load_slate_pairs(day: str) -> dict[tuple[str, str], tuple[int, tuple[float, float]]]:
+    """Normalized fixture pairs on the day's slate, ranked by confidence.
+
+    Returns ``pair -> (rank, confidence)``. The first readable same-day slate
+    wins; if ``picks_today.json`` exists but contains only another day's rows,
+    the same-day archive is tried next. Matching is exact on normalized team
+    tokens (plus orientation-independent fixture intent), never fuzzy.
+    """
     pairs: dict[tuple[str, str], tuple[int, tuple[float, float]]] = {}
-    for rank, pick in enumerate(ranked):
+    for rank, pick in enumerate(_ranked_slate_picks(day)):
         home, away = _team_key(pick.get("home")), _team_key(pick.get("away"))
         if not (home and away):
             continue
@@ -193,6 +196,47 @@ def _load_slate_pairs(day: str) -> dict[tuple[str, str], tuple[int, tuple[float,
         pairs.setdefault((away, home), (rank, confidence))
     return pairs
 
+
+def _canonical_pair(home: object, away: object) -> tuple[str, str]:
+    h, a = _team_key(home), _team_key(away)
+    return tuple(sorted((h, a)))
+
+
+def _slate_overlap_diagnostic(fixtures: list[dict], day: str) -> dict:
+    """Secret-free receipt fields explaining slate/provider overlap.
+
+    This does not loosen the prioritisation join. It only records how many
+    unique same-day slate fixtures had an exact normalized pair in the provider
+    fixture list, plus compact unmatched names for the next repair pass.
+    """
+    provider_pairs = {
+        _canonical_pair(fx.get("participant1Name") or fx.get("home"),
+                        fx.get("participant2Name") or fx.get("away"))
+        for fx in fixtures
+    }
+    provider_pairs.discard(("", ""))
+    seen: set[tuple[str, str]] = set()
+    slate_records: list[dict] = []
+    for pick in _ranked_slate_picks(day):
+        home = pick.get("home") or ""
+        away = pick.get("away") or ""
+        key = _canonical_pair(home, away)
+        if "" in key or key in seen:
+            continue
+        seen.add(key)
+        slate_records.append({
+            "home": home,
+            "away": away,
+            "league": pick.get("league") or "",
+            "normalized_pair": "|".join(key),
+        })
+    unmatched = [r for r in slate_records if tuple(r["normalized_pair"].split("|", 1)) not in provider_pairs]
+    return {
+        "slate_match_mode": "exact_normalized_pair",
+        "slate_candidate_fixtures": len(slate_records),
+        "slate_provider_overlap_fixtures": len(slate_records) - len(unmatched),
+        "slate_unmatched_fixtures": unmatched[:50],
+    }
 
 def _prioritise_slate_fixtures(fixtures: list[dict], day: str) -> tuple[list[dict], int]:
     """Put fixtures the day's slate actually covers first.
@@ -433,6 +477,7 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             return stats
         fixtures = fetch_fixtures(day) or []
         stats["fixtures"] = len(fixtures)
+        stats.update(_slate_overlap_diagnostic(fixtures, day))
         type_map = load_market_type_map()
         catalog = market_catalog()
         catalog_entries = market_catalog_entries()

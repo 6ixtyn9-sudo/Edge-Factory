@@ -136,14 +136,18 @@ post-change lift.
 * **TheOddsAPI**: no workflow/code cap increase. The pasted run log shows
   `credits_used_month=30/1440` after the candidate capture and `34/1440` after
   the later CLV capture, leaving `1406` monthly credits unused at that point.
-  With `ODDS_API_MARKETS=h2h,totals`, each fetched event costs 2 credits.
-  Existing attempts ledger already prevents every 3-hour run from re-fetching
-  the same fixture.
-* **OddsPAPI**: the pasted workflow env was still `ODDSPAPI_MAX_FIXTURES=20`.
-  Code ceiling is raised from 20 to 40 while keeping the code default at 20.
-  Proposed secret: `ODDSPAPI_MAX_FIXTURES=40` only if the operator confirms
-  provider allowance of at least 250 fixture-odds requests/day (40 × 5 runs/day =
-  200, leaving 20% margin). No workflow file was edited; proposed YAML lives in
+  Quota was not binding; the important unknown was why auto mode marked only
+  `2` of `24` shortlist fixtures due. Receipts now persist and logs print
+  `skip_reasons` / `due_reasons` so the next production run shows whether the
+  gate was prior rows, close-window timing, retry cooldown, or kickoff guard.
+* **OddsPAPI**: no cap increase. The pasted workflow env was still
+  `ODDSPAPI_MAX_FIXTURES=20`, and the same log showed provider supply of
+  `fixtures=860` but only `slate_priority_fixtures=6` against roughly 24
+  priceable slate fixtures. Raising 20 → 40 before improving exact slate/provider
+  overlap would mostly buy provider-order leftovers. Receipts now record
+  `slate_match_mode=exact_normalized_pair`, `slate_candidate_fixtures`,
+  `slate_provider_overlap_fixtures`, and compact unmatched slate names for the
+  next repair pass. No workflow file was edited; proposed YAML lives in
   `docs/operator/daily.yml.proposed`.
 * **BetExplorer**: code ceiling raised to 24 while default remains 12. Proposed
   secret/workflow value: `EDGE_FACTORY_BETEXPLORER_MAX_FIXTURES=18`; the adapter

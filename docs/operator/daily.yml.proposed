@@ -104,16 +104,15 @@ jobs:
       # Price coverage pass, 2026-10-04 — proposed only. Do NOT apply in
       # .github/workflows/* from an agent session.
       #
-      # The code default stays conservative; these secrets spend the priced
-      # sources on the picked slate first, with caps that can be rolled back
-      # without another workflow edit.
+      # These secrets spend priced sources on the picked slate first, with caps
+      # that can be rolled back without another workflow edit.
       ODDSPAPI_API_KEYS: ${{ secrets.ODDSPAPI_API_KEYS }}
       EDGE_FACTORY_ODDSPAPI_PRICES: ${{ secrets.EDGE_FACTORY_ODDSPAPI_PRICES || '1' }}
-      # Proposed secret value: 40. Arithmetic: 40 fixture-odds requests/run ×
-      # 5 external daily runs = 200 fixture requests/day. Keep the old value
-      # 20 unless the provider account's daily/monthly allowance is confirmed
-      # at >=250/day so a 20% safety margin remains.
-      ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '40' }}
+      # Hold at 20. The 2026-10-04 log showed only 6 exact slate/provider
+      # overlaps against ~24 priceable slate fixtures and an 860-fixture
+      # provider pool; raising this before overlap repair would likely buy
+      # provider-order leftovers, not card coverage.
+      ODDSPAPI_MAX_FIXTURES: ${{ secrets.ODDSPAPI_MAX_FIXTURES || '20' }}
       # Proposed secret value: 18. This is not a paid quota; it is bounded by
       # BetExplorer's cooperative 429 cooldown and the 30s capture budget. The
       # code hard-stops at 24 even if the secret is larger.

@@ -40,9 +40,11 @@ Operator actions:
    ring.
 2. Add repository secret **`EDGE_FACTORY_ODDSPAPI_PRICES`** with value `1` to
    opt in. The workflow default is deliberately `off`.
-3. Optionally set **`ODDSPAPI_MAX_FIXTURES`** (default `20`, hard bounded at
-   `40` by the capture/orchestration code after the 2026-10-04 coverage pass).
-   The existing workflow already maps all three names.
+3. Leave **`ODDSPAPI_MAX_FIXTURES`** at `20` for now. The 2026-10-04 log showed
+   `slate_priority_fixtures=6` out of roughly 24 priceable slate fixtures, so
+   the next lever is exact slate/provider fixture-overlap repair, not spending
+   20 extra requests on provider-order leftovers. The existing workflow already
+   maps all three names.
 
 Expected health change: `oddspapi=raw0/usable0/matched0` becomes
 `oddspapi=rawN/usableU/matchedM` when the provider covers the bounded slate.

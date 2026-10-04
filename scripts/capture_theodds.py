@@ -82,6 +82,30 @@ def _line_reason(line: str) -> str:
     return line.rsplit("(", 1)[1][:-1].strip() or "unknown"
 
 
+def _skip_reason(line: str) -> str:
+    """Normalize auto-planner skip lines into stable due-gate counters."""
+    if str(line).startswith("WARN kickoff-mismatch"):
+        return "kickoff_mismatch"
+    if " (" not in str(line) or not str(line).endswith(")"):
+        return "unknown"
+    reason = str(line).split(" (", 1)[1][:-1].strip()
+    if reason.startswith("retry cooldown"):
+        return "retry_cooldown"
+    if reason == "priced, close window not open":
+        return "priced_close_window_not_open"
+    if reason == "priced":
+        return "priced"
+    if reason == "kickoff already passed":
+        return "kickoff_already_passed"
+    if reason == "too close to kickoff for first capture":
+        return "too_close_for_first_capture"
+    return reason.replace(" ", "_") or "unknown"
+
+
+def _skip_reason_counts(lines: list[str]) -> dict[str, int]:
+    return dict(Counter(_skip_reason(line) for line in lines))
+
+
 def _write_receipt(day: str, payload: dict) -> None:
     try:
         payload = {
@@ -425,6 +449,9 @@ def main() -> int:
         "attempted_fixtures": [],
         "quoted_fixtures": [],
         "unmatched_reasons": {},
+        "skipped": [],
+        "skip_reasons": {},
+        "due_reasons": {},
         "errors": [],
     }
 
@@ -470,21 +497,30 @@ def main() -> int:
         due, updates, skips = plan_auto(fixtures, existing, attempts,
                                         kickoff_fn=mod._pick_kickoff_utc,
                                         match_fn=mod._team_names_match)
+        skip_counts = _skip_reason_counts(skips)
+        due_counts = dict(Counter(updates.values()))
         for line in skips:
             print(f"  skip {line}")
+        if skip_counts:
+            print(f"auto: skipped={len(skips)} skip_reasons={json.dumps(skip_counts, sort_keys=True)}")
         if not due:
             print("auto: nothing due this iteration (0 credits)")
             _write_receipt(args.date, {
                 **receipt_base,
                 "status": "not_due",
                 "skipped": skips,
+                "skip_reasons": skip_counts,
+                "due_reasons": due_counts,
             })
             return 0
-        print(f"auto: {len(due)} fixture(s) due -> fetching")
+        print(f"auto: {len(due)} fixture(s) due -> fetching due_reasons={json.dumps(due_counts, sort_keys=True)}")
     else:
         due = fixtures
         updates = {_fixture_key(f): "first_at" for f in fixtures}
         attempts = _load_attempts(args.date)
+        skips = []
+        skip_counts = {}
+        due_counts = dict(Counter(updates.values()))
 
     try:
         rows, unmatched, matched = mod.fetch_fixtures(due, day=args.date)
@@ -494,6 +530,9 @@ def main() -> int:
             **receipt_base,
             "attempted": len(due),
             "attempted_fixtures": [_fixture_receipt(f) for f in due],
+            "skipped": skips,
+            "skip_reasons": skip_counts,
+            "due_reasons": due_counts,
             "status": "error",
             "errors": [type(exc).__name__],
         })
@@ -541,6 +580,9 @@ def main() -> int:
         "rows": len(rows),
         "added": added,
         "status": "ok" if rows else "empty",
+        "skipped": skips,
+        "skip_reasons": skip_counts,
+        "due_reasons": due_counts,
         "unmatched_reasons": dict(Counter(_line_reason(line) for line in unmatched)),
         "unmatched": unmatched[:100],
     })

@@ -103,6 +103,25 @@ def test_no_slate_file_leaves_provider_order_untouched(tmp_path, monkeypatch):
     assert ordered == _fixtures_list()
 
 
+def test_slate_overlap_diagnostic_exposes_exact_pair_misses(tmp_path, monkeypatch):
+    monkeypatch.setattr(cap, "OUT_DIR", tmp_path)
+    _write_slate(tmp_path, [
+        {"date": "2026-10-03", "home": "England", "away": "Croatia", "avg_p": 90},
+        {"date": "2026-10-03", "home": "Alpha", "away": "Beta", "avg_p": 80},
+        {"date": "2026-10-03", "home": "No Such", "away": "Fixture", "avg_p": 70},
+    ])
+
+    diag = cap._slate_overlap_diagnostic(_fixtures_list(), "2026-10-03")
+
+    assert diag["slate_match_mode"] == "exact_normalized_pair"
+    assert diag["slate_candidate_fixtures"] == 3
+    assert diag["slate_provider_overlap_fixtures"] == 2
+    assert diag["slate_unmatched_fixtures"] == [{
+        "home": "No Such", "away": "Fixture", "league": "",
+        "normalized_pair": "fixture|no such",
+    }]
+
+
 # ---------------------------------------------------------------------------
 # Expected-vs-loss classification
 # ---------------------------------------------------------------------------
