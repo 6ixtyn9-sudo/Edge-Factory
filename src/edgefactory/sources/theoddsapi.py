@@ -45,6 +45,7 @@ import re
 import sys
 import time
 import contextlib
+import unicodedata
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -116,6 +117,7 @@ LEAGUE_KEY_ALIASES: dict[str, tuple[str, ...]] = {
                             "soccer_uefa_champs_league_qualification"),
     "uefaeuropaconferenceleague": ("soccer_uefa_europa_conference_league",),
     "uefaeuropaleague": ("soccer_uefa_europa_league",),
+    "uefanationsleague": ("soccer_uefa_nations_league",),
     # England
     "englandpremierleague": ("soccer_epl",),
     "englisnpremierleague": ("soccer_epl",),  # historical provider typo, kept
@@ -132,6 +134,11 @@ LEAGUE_KEY_ALIASES: dict[str, tuple[str, ...]] = {
     "italyseriea": ("soccer_italy_serie_a",),
     "franceligue2": ("soccer_france_ligue_two",),
     "franceligue1": ("soccer_france_ligue_one",),
+    # Women's competitions: only map when The Odds API exposes a dedicated
+    # women's sport key.  A women's label must never fall through to a men's
+    # top-flight key merely because it contains "La Liga" or "Bundesliga".
+    "germanybundesligawomen": ("soccer_germany_bundesliga_women",),
+    "germanyfrauenbundesliga": ("soccer_germany_bundesliga_women",),
     # Rest of the covered domestic leagues
     "netherlandseredivisie": ("soccer_netherlands_eredivisie",),
     "swedenallsvenskan": ("soccer_sweden_allsvenskan",),
@@ -163,18 +170,50 @@ SHORT_LEAGUE_KEYS: dict[str, tuple[str, ...]] = {
     "ucl": ("soccer_uefa_champs_league", "soccer_uefa_champs_league_qualification"),
     "uel": ("soccer_uefa_europa_league",),
     "ecl": ("soccer_uefa_europa_conference_league",),
+    "unl": ("soccer_uefa_nations_league",),
     "fi1": ("soccer_finland_veikkausliiga",),
     "se2": ("soccer_sweden_superettan",),
     "ie1": ("soccer_league_of_ireland",),
 }
 
 
+def _ascii_fold(raw: object) -> str:
+    folded = unicodedata.normalize("NFKD", str(raw or ""))
+    return "".join(ch for ch in folded if not unicodedata.combining(ch)).lower()
+
+
 def _league_code(raw: object) -> str:
     """Digit-preserving normalization — the competition tier lives in the digit
     ("Se2"=Superettan / "Se4"=Division 2; "La Liga 2" != "La Liga"). Fragment
     and containment matching both run on this form, so a second-tier label can
-    never collapse onto its top tier's sport key."""
-    return re.sub(r"[^a-z0-9]", "", str(raw or "").lower())
+    never collapse onto its top tier's sport key.
+
+    Fold accents before stripping punctuation.  The provider catalogue uses
+    ASCII keys such as ``soccer_spain_segunda_division`` while our slates may
+    carry labels like ``Spain Segunda División``; dropping ``ó`` outright made
+    a covered league look absent and suppressed safe first-snapshot coverage.
+    """
+    return re.sub(r"[^a-z0-9]", "", _ascii_fold(raw))
+
+
+def _league_words(raw: object) -> set[str]:
+    return set(re.sub(r"[^a-z0-9]+", " ", _ascii_fold(raw)).split())
+
+
+def _looks_womens_league(raw: object) -> bool:
+    words = _league_words(raw)
+    code = _league_code(raw)
+    if words & {
+        "women", "womens", "woman", "ladies", "female", "fem", "feminine",
+        "feminino", "feminina", "femenino", "femenina", "frauen", "damer",
+        "damallsvenskan", "nwsl", "wsl",
+    }:
+        return True
+    return any(marker in code for marker in ("women", "frauen", "feminina", "femenina", "damallsvenskan", "nwsl"))
+
+
+def _sport_entry_is_womens(sport: dict) -> bool:
+    return _looks_womens_league(f"{sport.get('key', '')} {sport.get('title', '')} {sport.get('description', '')}")
 
 
 def _first_listed(keys: tuple[str, ...], sports: list[dict]) -> str | None:
@@ -599,12 +638,18 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
     if len(code) < 4:
         # too short to match safely ("ie2" -> "ie" would false-hit "premiership")
         return None
+    womens_label = _looks_womens_league(league_raw)
     for frag, keys in _ALIAS_FRAGS:
         if frag in code:
+            if womens_label and not any("women" in key for key in keys):
+                return None
             return _first_listed(keys, sports)  # wins-or-None; never falls through
     candidates = []
     for s in sports:
         if not s.get("active", True):
+            continue
+        entry_is_womens = _sport_entry_is_womens(s)
+        if womens_label != entry_is_womens:
             continue
         title_code = _league_code(s.get("title"))
         key_code = _league_code(str(s.get("key", "")).replace("soccer_", "").replace("_", ""))
