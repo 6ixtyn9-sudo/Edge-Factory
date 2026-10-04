@@ -122,11 +122,30 @@ def test_force_no_bet_supersedes_card_without_reprinting_its_prices(lane, monkey
     output = capsys.readouterr().out
     assert "TICKETS SUPERSEDED" in output
     assert "do not place the superseded selections" in output
-    assert "PRICE SUPPLY:" in output
-    assert "REJECTION LEDGER:" in output
-    assert '"rule": "superseded_card_locked"' in output
+    assert "PRICE SUPPLY:" not in output
+    assert "REJECTION LEDGER:" not in output
+    assert '"rule": "superseded_card_locked"' not in output
     assert "[ACCA #" not in output
     assert "@1.47" not in output
+
+
+def test_default_ticket_text_uses_the_concise_customer_contract(lane, monkeypatch):
+    monkeypatch.setattr(at, "datetime", _clock(2026, 9, 6, 9, 13))
+    _run()
+    text = (lane / f"auto_tickets_{DAY}.txt").read_text()
+
+    assert text.startswith(f"AUTO TICKETS (ROLLING) — {DAY}\n" + "=" * 62)
+    assert "PERFORMANCE:" in text
+    assert "SELECTION LADDER SLICE" in text
+    assert "[ACCA #1] @" in text
+    assert "deploying 25% of free bank today" in text
+    assert "Bet only what you can afford to lose." in text
+    for diagnostic in (
+        "P&L TRIPWIRE", "SELECTION LADDER:", "PRICE SUPPLY:",
+        "donor capture/match counters", "REJECTION LEDGER:",
+        "FORCE RE-CUT", "price:", "unregistered source", "TRIPWIRE-DEMOTED",
+    ):
+        assert diagnostic not in text
 
 
 # ---------------- 2./3. legacy compat, no new sidecars ----------------
