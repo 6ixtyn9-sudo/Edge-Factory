@@ -1,5 +1,51 @@
 {
  "markets": {
+  "away_under_25@v1": {
+   "hits": 1,
+   "inv_price_sum": 0.5263157894736842,
+   "multi_n": 0,
+   "n": 1,
+   "processed": [
+    "2026-10-04|Portugal vs Norway|away_under_25@v1"
+   ],
+   "profit": 0.9,
+   "records": [
+    {
+     "date": "2026-10-04",
+     "hit": true,
+     "match": "Portugal vs Norway",
+     "multi_source": false,
+     "price": 1.9,
+     "source": "oddspapi"
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-10-05"
+  },
+  "away_under_35@v1": {
+   "hits": 1,
+   "inv_price_sum": 0.6968641114982578,
+   "multi_n": 0,
+   "n": 1,
+   "processed": [
+    "2026-10-04|Netherlands vs Serbia|away_under_35@v1"
+   ],
+   "profit": 0.435,
+   "records": [
+    {
+     "date": "2026-10-04",
+     "hit": true,
+     "match": "Netherlands vs Serbia",
+     "multi_source": false,
+     "price": 1.435,
+     "source": "oddspapi"
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-10-05"
+  },
   "btts_yes@v1": {
    "hits": 4,
    "inv_price_sum": 3.260311243018132,
@@ -332,10 +378,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 197,
-   "inv_price_sum": 192.11986715749222,
-   "multi_n": 29,
-   "n": 294,
+   "hits": 198,
+   "inv_price_sum": 193.94650053014684,
+   "multi_n": 31,
+   "n": 297,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -630,9 +676,12 @@
     "2026-10-03|Boreham Wood vs Altrincham|match_over_25@v1",
     "2026-10-03|Ospitaletto vs Renate|match_over_25@v1",
     "2026-10-03|Deportivo Maldonado vs Central Espanol|match_over_25@v1",
-    "2026-10-03|Tampa Bay Rowdies vs Miami FC|match_over_25@v1"
+    "2026-10-03|Tampa Bay Rowdies vs Miami FC|match_over_25@v1",
+    "2026-10-04|West Ham (w) vs Chelsea (w)|match_over_25@v1",
+    "2026-10-04|Wales vs Denmark|match_over_25@v1",
+    "2026-10-04|Greece vs Germany|match_over_25@v1"
    ],
-   "profit": 7.977,
+   "profit": 6.337,
    "records": [
     {
      "date": "2026-08-01",
@@ -2983,6 +3032,30 @@
      "multi_source": true,
      "price": 1.667,
      "source": "oddspapi"
+    },
+    {
+     "date": "2026-10-04",
+     "hit": true,
+     "match": "West Ham (w) vs Chelsea (w)",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-04",
+     "hit": false,
+     "match": "Wales vs Denmark",
+     "multi_source": true,
+     "price": 1.961,
+     "source": "oddspapi"
+    },
+    {
+     "date": "2026-10-04",
+     "hit": false,
+     "match": "Greece vs Germany",
+     "multi_source": true,
+     "price": 1.72,
+     "source": "oddspapi"
     }
    ],
    "status": "PAPER",
@@ -3128,6 +3201,29 @@
    "status": "PAPER",
    "status_reason": "first priced outcome recorded",
    "status_since": "2026-08-10"
+  },
+  "match_over_45@v1": {
+   "hits": 1,
+   "inv_price_sum": 0.15151515151515152,
+   "multi_n": 0,
+   "n": 1,
+   "processed": [
+    "2026-10-04|Argentina vs Burkina Faso|match_over_45@v1"
+   ],
+   "profit": 5.6,
+   "records": [
+    {
+     "date": "2026-10-04",
+     "hit": true,
+     "match": "Argentina vs Burkina Faso",
+     "multi_source": false,
+     "price": 6.6,
+     "source": "oddspapi"
+    }
+   ],
+   "status": "PAPER",
+   "status_reason": "first priced outcome recorded",
+   "status_since": "2026-10-05"
   }
  },
  "version": 2

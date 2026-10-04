@@ -1,37 +1,11 @@
 {
   "base_pct": 100.0,
-  "bank": 142.68145500000008,
+  "bank": 133.7638550000001,
   "cycle_base": 100.0,
   "open_slips": [
     {
       "date": "2026-10-04",
       "accas": [
-        {
-          "legs": [
-            {
-              "match": "Portugal vs Norway",
-              "pick": "HOME",
-              "prob": 0.645,
-              "odds": 1.68,
-              "result": null
-            },
-            {
-              "match": "Greece vs Germany",
-              "pick": "AWAY",
-              "prob": 0.5539999999999999,
-              "odds": 1.92,
-              "result": null
-            }
-          ],
-          "odds": 3.23,
-          "stake_pct": 8.9176,
-          "bench_weight": 0.5,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
         {
           "legs": [
             {
@@ -53,12 +27,12 @@
           "stake_pct": 17.8352,
           "results": [
             null,
-            null
+            "win"
           ],
           "won": null
         }
       ],
-      "staked_pct": 26.7528
+      "staked_pct": 17.8352
     }
   ],
   "history": [
@@ -681,6 +655,18 @@
         }
       ],
       "bank_pct": 142.6815
+    },
+    {
+      "date": "2026-10-04",
+      "staked_pct": 8.9176,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 3.23,
+          "won": false
+        }
+      ],
+      "bank_pct": 133.7639
     }
   ],
   "events": [],

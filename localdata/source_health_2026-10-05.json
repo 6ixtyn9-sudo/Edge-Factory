@@ -29,25 +29,25 @@
       "status": "cache_only"
     },
     "betclan": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
     "betexplorer": {
-      "be_matched": 0,
-      "be_raw": 0,
-      "be_usable": 0,
-      "blocker": "no pre-build BetExplorer rows",
+      "be_matched": 1,
+      "be_raw": 6,
+      "be_usable": 3,
+      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "freshness_h": null,
       "reason": null,
-      "status": "absent"
+      "status": "cache_only"
     },
     "betminer": {
       "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
@@ -91,7 +91,7 @@
       "blocker": "bzz status=auth; quota_hint=auth_or_quota",
       "can_fetch_today": false,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "freshness_h": null,
       "reason": "http_403_auth",
       "status": "auth"
@@ -236,16 +236,16 @@
       "status": null
     },
     "theoddsapi": {
-      "blocker": "no pre-build TheOddsAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "freshness_h": null,
-      "oa_matched": 0,
-      "oa_raw": 0,
-      "oa_usable": 0,
+      "oa_matched": 3,
+      "oa_raw": 121,
+      "oa_usable": 121,
       "reason": null,
-      "status": "empty"
+      "status": "cache_only"
     },
     "vitibet": {
       "blocker": null,
