@@ -63,6 +63,50 @@ def test_league_resolution():
     assert theoddsapi.sport_key_for_league("Ie2", sports_with_spl) is None
 
 
+def test_league_resolution_folds_accents_without_false_tier_hits():
+    sports = SPORTS + [
+        {"key": "soccer_spain_segunda_division", "group": "Soccer",
+         "title": "La Liga 2 - Spain", "active": True},
+        {"key": "soccer_spain_la_liga", "group": "Soccer",
+         "title": "La Liga - Spain", "active": True},
+    ]
+    assert (theoddsapi.sport_key_for_league("Spain Segunda División", sports)
+            == "soccer_spain_segunda_division")
+    # Third-tier RFEF is a distinct competition and must not inherit either
+    # La Liga or Segunda merely because it contains "Primera División".
+    assert theoddsapi.sport_key_for_league("Spain Primera División RFEF - Group 2", sports) is None
+
+
+def test_league_resolution_uefa_nations_variants_only_hit_nations_key():
+    sports = SPORTS + [
+        {"key": "soccer_uefa_nations_league", "group": "Soccer",
+         "title": "UEFA Nations League", "active": True},
+        {"key": "soccer_uefa_europa_conference_league", "group": "Soccer",
+         "title": "UEFA Europa Conference League", "active": True},
+    ]
+    assert theoddsapi.sport_key_for_league("UNL", sports) == "soccer_uefa_nations_league"
+    assert (theoddsapi.sport_key_for_league("World UEFA Nations League", sports)
+            == "soccer_uefa_nations_league")
+    assert (theoddsapi.sport_key_for_league("International,Uefa Nations League A Grp. 4", sports)
+            == "soccer_uefa_nations_league")
+    assert theoddsapi.sport_key_for_league("World CONCACAF Nations League", sports) is None
+
+
+def test_womens_labels_do_not_fall_through_to_mens_top_divisions():
+    sports = SPORTS + [
+        {"key": "soccer_spain_la_liga", "group": "Soccer", "title": "La Liga - Spain", "active": True},
+        {"key": "soccer_germany_bundesliga", "group": "Soccer", "title": "Bundesliga - Germany", "active": True},
+        {"key": "soccer_germany_bundesliga_women", "group": "Soccer", "title": "Frauen-Bundesliga", "active": True},
+    ]
+    assert theoddsapi.sport_key_for_league("Spain La Liga Women", sports) is None
+    assert theoddsapi.sport_key_for_league("Spain Liga F", sports) is None
+    assert theoddsapi.sport_key_for_league("USA,Nwsl", sports) is None
+    assert (theoddsapi.sport_key_for_league("Germany Bundesliga Women", sports)
+            == "soccer_germany_bundesliga_women")
+    assert (theoddsapi.sport_key_for_league("Germany Frauen Bundesliga", sports)
+            == "soccer_germany_bundesliga_women")
+
+
 def test_match_event_pair_constrained():
     ev = theoddsapi.match_event(PICK, EVENTS)
     assert ev is not None and ev["id"] == "evt_right"

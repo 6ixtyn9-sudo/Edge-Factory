@@ -11,6 +11,7 @@ import argparse
 import json
 import re
 import sys
+import unicodedata
 from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any
@@ -39,13 +40,103 @@ def load_rows(path: Path) -> list[dict[str, Any]]:
     return [row for row in data if isinstance(row, dict)]
 
 
-def competition_label(pick: dict[str, Any]) -> str:
+def _ascii_fold(raw: object) -> str:
+    folded = unicodedata.normalize("NFKD", str(raw or ""))
+    return "".join(ch for ch in folded if not unicodedata.combining(ch)).lower()
+
+
+def _label_words(raw: object) -> str:
+    return re.sub(r"\s+", " ", re.sub(r"[^a-z0-9]+", " ", _ascii_fold(raw))).strip()
+
+
+def _label_code(raw: object) -> str:
+    return re.sub(r"[^a-z0-9]", "", _ascii_fold(raw))
+
+
+def _raw_competition_label(pick: dict[str, Any]) -> str:
     ctx = pick.get("ctx") if isinstance(pick.get("ctx"), dict) else {}
     for value in (ctx.get("league_raw"), pick.get("league"), ctx.get("league"), ctx.get("league_key")):
         text = str(value or "").strip()
         if text and text not in {"?", "UNKNOWN"}:
             return text
     return "UNKNOWN"
+
+
+def _looks_womens_fixture(pick: dict[str, Any], raw_label: str) -> bool:
+    hay = " ".join(str(pick.get(k) or "") for k in ("home", "away", "match")) + " " + raw_label
+    words = set(_label_words(hay).split())
+    code = _label_code(hay)
+    return bool(
+        words & {"w", "women", "womens", "ladies", "female", "fem", "frauen", "nwsl", "wsl"}
+        or "(w)" in hay.lower()
+        or any(marker in code for marker in ("women", "frauen", "nwsl", "damallsvenskan"))
+    )
+
+
+def canonical_competition_label(raw_label: str, pick: dict[str, Any] | None = None) -> str:
+    """Canonical label for coverage reporting only.
+
+    This is intentionally narrower than the entity registry: it collapses known
+    competition-code fragments in operator coverage tables while preserving raw
+    labels in pick receipts.  It never changes price joins or selected picks.
+    """
+    pick = pick or {}
+    raw = str(raw_label or "").strip() or "UNKNOWN"
+    words = _label_words(raw)
+    code = _label_code(raw)
+    womens = _looks_womens_fixture(pick, raw)
+
+    # UEFA family: check Conference before Europa so the shorter phrase cannot
+    # swallow the distinct Conference League.
+    if code == "ucl" or "uefa champions league" in words:
+        return "World UEFA Champions League"
+    if code == "ecl" or "uefa europa conference league" in words:
+        return "World UEFA Europa Conference League"
+    if code == "uel" or "uefa europa league" in words:
+        return "World UEFA Europa League"
+    if code == "unl" or "uefa nations league" in words:
+        return "World UEFA Nations League"
+
+    # Women labels / women fixtures: keep them out of men's top-flight buckets.
+    if womens:
+        if code in {"esw", "spainligaf"} or "spain la liga" in words or "spain liga f" in words:
+            return "Spain Liga F"
+        if code in {"mxw", "mexicoligamxfemenil"} or "liga mx femenil" in words:
+            return "Mexico Liga MX Femenil"
+        if code in {"sew", "swedendamallsvenskan"} or "damallsvenskan" in words:
+            return "Sweden Damallsvenskan"
+        if code in {"now", "norwaywomen"}:
+            return "Norway Women"
+        if code in {"atw", "austriawomen"}:
+            return "Austria Women"
+        if code in {"brw", "brazilwomen"}:
+            return "Brazil Women"
+        if code == "clw":
+            return "UEFA Women's Champions League"
+        if "nwsl" in words or code == "usanwsl":
+            return "USA NWSL"
+        if "england wsl" in words or code == "englandwsl":
+            return "England WSL"
+
+    exact = {
+        "fr1": "France,Ligue 1",
+        "france ligue 1": "France,Ligue 1",
+        "lv1": "Latvia Virsliga",
+        "latvia virsliga": "Latvia Virsliga",
+        "is1": "Iceland,Besta Deildin",
+        "iceland besta deildin": "Iceland,Besta Deildin",
+        "es2": "Spain Segunda División",
+        "spain laliga2": "Spain Segunda División",
+        "spain segunda division": "Spain Segunda División",
+        "es1": "Spain La Liga",
+        "spain laliga": "Spain La Liga",
+    }
+    return exact.get(words, exact.get(code, raw))
+
+
+def competition_label(pick: dict[str, Any]) -> str:
+    raw = _raw_competition_label(pick)
+    return canonical_competition_label(raw, pick)
 
 
 def is_named_book_priced(pick: dict[str, Any]) -> bool:
