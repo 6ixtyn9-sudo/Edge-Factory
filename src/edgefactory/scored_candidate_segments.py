@@ -179,7 +179,13 @@ def _fixture_record(f: Mapping[str, Any], day: str,
         "roi_type": ROI_CAPTURED,
         "date": day,
         "weekday": weekday_of(day),
-        "fixture_id": str(f.get("fixture_id") or ""),
+        # occurrence id preferred for distinct-fixture counting (collision
+        # safe); legacy id retained below for backwards-compatible joins
+        "fixture_id": str(f.get("fixture_occurrence_id")
+                          or f.get("fixture_id") or ""),
+        "legacy_fixture_id": str(f.get("fixture_id") or ""),
+        "identity_ambiguous": bool(f.get("fixture_identity_ambiguous")),
+        "identity_ambiguity_reason": f.get("fixture_identity_ambiguity_reason"),
         "promotion_state": _promotion_state(bool(f.get("promoted")),
                                             bool(f.get("ticketed"))),
         "reasons": list(f.get("audit_reason_codes") or ["unknown"]),
@@ -217,7 +223,11 @@ def _candidate_record(c: Mapping[str, Any], day: str) -> dict[str, Any]:
         "roi_type": ROI_EXEC_SAFE,
         "date": day,
         "weekday": weekday_of(day),
-        "fixture_id": str(c.get("fixture_id") or ""),
+        "fixture_id": str(c.get("fixture_occurrence_id")
+                          or c.get("fixture_id") or ""),
+        "legacy_fixture_id": str(c.get("fixture_id") or ""),
+        "identity_ambiguous": bool(c.get("fixture_identity_ambiguous")),
+        "identity_ambiguity_reason": c.get("fixture_identity_ambiguity_reason"),
         "promotion_state": _promotion_state(bool(c.get("selected_as_pick")),
                                             bool(c.get("selected_on_ticket"))),
         "reasons": [str(r.get("code") or "unknown")
@@ -319,6 +329,7 @@ def _seg_blank() -> dict[str, Any]:
         "wins": 0, "losses": 0, "voids": 0, "pending": 0, "unmatched": 0,
         "excluded_no_selection": 0, "excluded_no_price": 0,
         "excluded_post_kickoff": 0, "excluded_timestamp_unknown": 0,
+        "excluded_identity_ambiguous": 0,
         "flat_profit_units": 0.0, "flat_roi": None,
         "average_odds": None, "median_odds": None,
         "min_odds": None, "max_odds": None,
@@ -328,6 +339,7 @@ def _seg_blank() -> dict[str, Any]:
         "_odds": [], "_rets": [],
         "_days": set(), "_fixtures": set(), "_leagues": set(),
         "_sources": set(),
+        "_identity_reasons": set(),
         "_day_settled": defaultdict(int), "_day_profit": defaultdict(float),
         "_fixture_settled": defaultdict(int),
         "_source_settled": defaultdict(int),
@@ -359,6 +371,15 @@ def _seg_add(seg: dict[str, Any], rec: Mapping[str, Any]) -> None:
         seg["execution_safe_count"] += 1
     elif rec.get("gradeable"):
         seg["captured_price_only_count"] += 1
+    # Fail-closed fixture identity dominates every other disposition: an
+    # ambiguous record contributes NOTHING to ROI/settled/pending counts
+    # (and is never a loss) — it is counted once, separately.
+    if (rec.get("identity_ambiguous")
+            or rec.get("status") == scs.SETTLE_IDENTITY_AMBIGUOUS):
+        seg["excluded_identity_ambiguous"] += 1
+        if rec.get("identity_ambiguity_reason"):
+            seg["_identity_reasons"].add(str(rec["identity_ambiguity_reason"]))
+        return
     if not rec.get("gradeable"):
         key = _EXCLUDED_KEY.get(str(rec.get("gradeable_reason")))
         if key:
@@ -415,6 +436,7 @@ def _seg_close(seg: dict[str, Any]) -> dict[str, Any]:
         seg["median_odds"] = round(
             odds[mid] if len(odds) % 2 else (odds[mid - 1] + odds[mid]) / 2, 4)
         seg["min_odds"], seg["max_odds"] = round(odds[0], 4), round(odds[-1], 4)
+    seg["identity_ambiguity_reasons"] = sorted(seg.pop("_identity_reasons"))
     seg["distinct_days"] = len(seg.pop("_days"))
     seg["distinct_fixtures"] = len(seg.pop("_fixtures"))
     seg["distinct_leagues"] = len(seg.pop("_leagues"))
@@ -506,6 +528,12 @@ def classify_segment(seg: Mapping[str, Any], *, roi_type: str,
     settled = int(seg["settled_records"])
     roi = seg.get("flat_roi")
     conf = seg.get("confidence") or {}
+    identity_ambiguous = int(seg.get("excluded_identity_ambiguous") or 0)
+    if identity_ambiguous:
+        warnings.append("identity_ambiguous")
+        for reason in seg.get("identity_ambiguity_reasons") or []:
+            if reason not in warnings:
+                warnings.append(reason)
     if roi_type == ROI_CAPTURED:
         warnings.append("audit_only_prices")
         if not seg.get("execution_safe_count"):
@@ -555,6 +583,14 @@ def classify_segment(seg: Mapping[str, Any], *, roi_type: str,
         else:
             tier = (TIER_PRICE_ENRICH if not seg.get("execution_safe_count")
                     else TIER_SHADOW_PROMO)
+
+    # Fixture identity gate: a segment whose evidence population contains
+    # unresolved identity ambiguity can never hold a promotion tier — the
+    # ambiguous records are already excluded from ROI, but their presence
+    # means the segment's fixture universe is not promotion-grade.
+    if identity_ambiguous and tier in (TIER_EXEC_PROMO, TIER_SHADOW_PROMO):
+        tier = TIER_WATCHLIST
+        warnings.append("identity_ambiguous_blocks_promotion")
 
     action, reason = ACTION_BY_TIER[tier]
     if tier == TIER_WATCHLIST and stale_only:
@@ -616,7 +652,8 @@ def build_segment_report(days: Sequence[str], *, root: Path | None = None,
                  for name, filt in _BASELINE_FILTERS.items()}
         baselines[roi_type] = {
             name: {k: pool[k] for k in
-                   ("total_records", "settled_records", "flat_profit_units",
+                   ("total_records", "settled_records", "wins", "losses",
+                    "excluded_identity_ambiguous", "flat_profit_units",
                     "flat_roi")}
             for name, pool in pools.items()}
         base = pools["all_scored"]
@@ -743,9 +780,26 @@ def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
 
     # cross-window survival of the ONLY ticket-relevant tier
     per_key: dict[tuple[str, str], dict[str, dict[str, Any]]] = defaultdict(dict)
+    identity_blocked_map: dict[tuple[str, str], list[str]] = defaultdict(list)
     for wname, rep in window_reports.items():
         for s in rep["segments"]:
             per_key[(s["roi_type"], s["segment_key"])][wname] = s
+            if "identity_ambiguous_blocks_promotion" in (s.get("warnings")
+                                                         or []):
+                identity_blocked_map[(s["roi_type"],
+                                      s["segment_key"])].append(wname)
+    identity_blocked = [
+        {"roi_type": roi_type, "segment_key": key,
+         "windows_blocked": wnames_blocked,
+         "action": "PROMOTION_BLOCKED_IDENTITY_AMBIGUOUS",
+         "action_reason": (
+             "segment evidence includes unresolved fixture identity "
+             "ambiguity (legacy fixture_id collision) — ambiguous records "
+             "are excluded from ROI and the segment is barred from every "
+             "promotion tier until identity is resolved by "
+             "fixture_occurrence_id")}
+        for (roi_type, key), wnames_blocked
+        in sorted(identity_blocked_map.items())]
     survivors, exploratory, non_survivors = [], [], []
     wnames = list(window_reports)
     for (roi_type, key), by_window in sorted(per_key.items()):
@@ -803,6 +857,7 @@ def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
         "promotion_proposal_ready": survivors,
         "exploratory_survivors": exploratory,
         "exec_promo_not_survived": non_survivors,
+        "promotion_blocked_identity": identity_blocked,
     }
 
 
@@ -848,6 +903,13 @@ def render_rolling_report(report: Mapping[str, Any]) -> str:
                              f"flat={stats['flat_profit_units']:+.2f}u "
                              f"roi={roi_s} days={stats['distinct_days']} "
                              f"fixtures={stats['distinct_fixtures']}")
+            lines.append(f"    ACTION: {e['action']} — {e['action_reason']}")
+    blocked = report.get("promotion_blocked_identity") or []
+    if blocked:
+        lines += ["", "PROMOTION BLOCKED — IDENTITY AMBIGUITY:"]
+        for e in blocked:
+            lines.append(f"  {e['segment_key']}  "
+                         f"[windows: {', '.join(e['windows_blocked'])}]")
             lines.append(f"    ACTION: {e['action']} — {e['action_reason']}")
     lines += ["", "EXEC-PROMO IN SOME WINDOWS ONLY (NOT SURVIVED):"]
     missed = report.get("exec_promo_not_survived") or []
