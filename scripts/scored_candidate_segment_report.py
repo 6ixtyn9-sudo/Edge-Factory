@@ -13,8 +13,16 @@ class, and what the recommended (non-live) action is.
 Usage:
   python scripts/scored_candidate_segment_report.py --date 2026-09-06
   python scripts/scored_candidate_segment_report.py --from 2026-09-01 --to 2026-09-07
+  python scripts/scored_candidate_segment_report.py --windows 7,14,30 --to 2026-10-07
   ... [--json] [--min-settled N] [--min-days N] [--min-fixtures N]
       [--all-runs] [--root PATH] [--top N]
+
+--windows runs rolling multi-window survival analysis anchored at --to:
+each window length gets its own (stricter-with-length) threshold profile,
+and only an EXECUTION_SAFE_PROMOTION_CANDIDATE that survives EVERY window
+is listed as promotion-proposal ready (still a label, never a behavior
+change). Passing explicit threshold flags with --windows overrides every
+window and the report flags the override.
 
 With --root, settled facts come ONLY from that root's settled_results.json
 overlay (hermetic, same semantics as scored_candidate_shadow_report.py).
@@ -56,10 +64,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--date")
     p.add_argument("--from", dest="day_from")
     p.add_argument("--to", dest="day_to")
+    p.add_argument("--windows",
+                   help="comma-separated window lengths in days (e.g. "
+                        "7,14,30) anchored at --to; rolling survival mode")
     p.add_argument("--json", action="store_true")
-    p.add_argument("--min-settled", type=int, default=30)
-    p.add_argument("--min-days", type=int, default=3)
-    p.add_argument("--min-fixtures", type=int, default=20)
+    p.add_argument("--min-settled", type=int, default=None)
+    p.add_argument("--min-days", type=int, default=None)
+    p.add_argument("--min-fixtures", type=int, default=None)
     p.add_argument("--watch-min-settled", type=int, default=10)
     p.add_argument("--max-day-concentration", type=float, default=0.6)
     p.add_argument("--max-fixture-concentration", type=float, default=0.5)
@@ -71,22 +82,49 @@ def main(argv: list[str] | None = None) -> int:
 
     if args.date and (args.day_from or args.day_to):
         p.error("use either --date or --from/--to, not both")
+    if args.windows and (args.date or args.day_from):
+        p.error("--windows takes only --to as anchor (no --date/--from)")
+
+    settled = _settled_for(args.root)
+    common = dict(watch_min_settled=args.watch_min_settled,
+                  max_day_concentration=args.max_day_concentration,
+                  max_fixture_concentration=args.max_fixture_concentration,
+                  max_pending_share=args.max_pending_share)
+
+    if args.windows:
+        if not args.day_to:
+            p.error("--windows requires --to as the anchor date")
+        try:
+            windows = [int(w) for w in str(args.windows).split(",") if w]
+        except ValueError:
+            p.error("--windows must be comma-separated integers")
+        overrides = {k: v for k, v in (
+            ("min_settled", args.min_settled), ("min_days", args.min_days),
+            ("min_fixtures", args.min_fixtures)) if v is not None}
+        report = seg.build_rolling_report(
+            args.day_to, windows=windows, root=args.root, settled=settled,
+            all_runs=args.all_runs, threshold_overrides=overrides or None,
+            top_n=args.top, **common)
+        if args.json:
+            print(json.dumps(report, indent=2, default=str, sort_keys=True))
+        else:
+            print(seg.render_rolling_report(report))
+        return 0
+
     if args.date:
         days = [str(args.date)[:10]]
     elif args.day_from and args.day_to:
         days = seg.date_range(args.day_from, args.day_to)
     else:
-        p.error("provide --date or both --from and --to")
+        p.error("provide --date, both --from and --to, or --windows + --to")
 
-    settled = _settled_for(args.root)
     report = seg.build_segment_report(
         days, root=args.root, settled=settled, all_runs=args.all_runs,
-        min_settled=args.min_settled, min_days=args.min_days,
-        min_fixtures=args.min_fixtures,
-        watch_min_settled=args.watch_min_settled,
-        max_day_concentration=args.max_day_concentration,
-        max_fixture_concentration=args.max_fixture_concentration,
-        max_pending_share=args.max_pending_share, top_n=args.top)
+        min_settled=(args.min_settled if args.min_settled is not None else 30),
+        min_days=(args.min_days if args.min_days is not None else 3),
+        min_fixtures=(args.min_fixtures if args.min_fixtures is not None
+                      else 20),
+        top_n=args.top, **common)
 
     if args.json:
         print(json.dumps(report, indent=2, default=str, sort_keys=True))
