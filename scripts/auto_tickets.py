@@ -1907,6 +1907,12 @@ def _collect_settled_facts() -> tuple[dict, dict]:
             {"home": v["home"], "away": v["away"], "outcome": v["outcome"]}
         )
     dropped, detail = _drop_ambiguous_result_keys(key_to, entries)
+    SETTLED_KEY_NAMES.clear()
+    for day, rows in entries.items():
+        for e in rows:
+            hn, an = str(e.get("home") or ""), str(e.get("away") or "")
+            for hk, ak in _exact_result_keys(hn, an):
+                SETTLED_KEY_NAMES.setdefault((day, hk, ak), set()).add((hn, an))
     AMBIGUOUS_SETTLEMENT_KEYS.clear()
     AMBIGUOUS_SETTLEMENT_KEYS.extend(detail)
     # Operator-visible counter: these legs can NEVER settle automatically,
@@ -2018,7 +2024,59 @@ def _alias_variants(key: str) -> set:
     return set(_alias_index().get(key, ())) | {key}
 
 
-def _lookup_fallback(settled, day, home, away):
+# Legs that a distinct-entity marker kept out of the similarity fallback.
+MARKER_GUARDED_LEGS: list[str] = []
+
+
+def _note_marker_guarded_leg(pick: dict) -> None:
+    label = f"{pick.get('date')} {pick.get('home')} vs {pick.get('away')}"
+    if label not in MARKER_GUARDED_LEGS:
+        MARKER_GUARDED_LEGS.append(label)
+        print(f"settlement_marker_guarded={len(MARKER_GUARDED_LEGS)} :: {label} "
+              "(youth/reserve/women's leg: no exact canonical result, "
+              "similarity fallback refused to cross the marker boundary)",
+              file=sys.stderr)
+
+
+def _key_markers(key: object) -> frozenset:
+    """Squad markers encoded in a canonical key's ``_w`` / ``_u21`` suffix."""
+    return frozenset(str(key or "").split("_")[1:])
+
+
+# (day, home_key, away_key) -> {(raw home, raw away)} for the results that
+# were actually loaded. Lets the marker guard below compare REAL names
+# instead of guessing from a marker-blind key.
+SETTLED_KEY_NAMES: dict = {}
+
+
+def _marker_boundary_blocks(mh, ma, d, h, a) -> bool:
+    """True when this candidate result may not settle a marked leg.
+
+    The similarity fallback compares MARKER-BLIND keys ("turkeyu21" vs
+    "turkey" scores exactly 0.80, the acceptance bar; norm_team strips
+    ``u21``/``b``/``w`` outright), so without this guard a youth, reserve
+    or women's leg could be graded with the senior side's result. The
+    chain therefore stops at a distinct-entity marker boundary:
+
+    * when the real names behind the key are known, the marker sets must
+      match exactly;
+    * otherwise only an EXPLICIT conflict blocks (the candidate key
+      carries a marker suffix that differs), so legacy-epoch rows written
+      under marker-blind keys keep settling.
+    """
+    from edgefactory.util import squad_markers
+
+    names = SETTLED_KEY_NAMES.get((d, h, a))
+    if names:
+        return not any(squad_markers(hn) == mh and squad_markers(an) == ma
+                       for hn, an in names)
+    cand_h, cand_a = _key_markers(h), _key_markers(a)
+    if cand_h or cand_a:
+        return cand_h != mh or cand_a != ma
+    return False
+
+
+def _lookup_fallback(settled, day, home, away, markers=None, pick=None):
     from datetime import timedelta as _td
     from difflib import SequenceMatcher
     try:
@@ -2030,11 +2088,16 @@ def _lookup_fallback(settled, day, home, away):
     # Curated aliases before fuzzy: "Hearts" and "Heart of Midlothian" score
     # ~0.44 on SequenceMatcher and never clear the 0.8 bar (2026-09-06: a
     # winning acca sat unresolved and was 5 days from auto-voiding).
+    mh, ma = (markers or (frozenset(), frozenset()))
+    blocked = False
     hv, av = _alias_variants(home), _alias_variants(away)
     if len(hv) > 1 or len(av) > 1:
         for d in sorted(cands):
             for h2 in hv:
                 for a2 in av:
+                    if _marker_boundary_blocks(mh, ma, d, h2, a2):
+                        blocked = True
+                        continue
                     oc = settled.get((d, h2, a2))
                     if oc is not None:
                         return oc
@@ -2043,12 +2106,17 @@ def _lookup_fallback(settled, day, home, away):
     for (d, h, a), oc in settled.items():
         if d not in cands:
             continue
+        if _marker_boundary_blocks(mh, ma, d, h, a):
+            blocked = True
+            continue
         rh = SequenceMatcher(None, fh, _fold(h)).ratio()
         if rh < 0.8:
             continue
         ra = SequenceMatcher(None, fa, _fold(a)).ratio()
         if ra >= 0.8 and rh + ra > best:
             best, best_oc = rh + ra, oc
+    if best_oc is None and blocked and pick is not None:
+        _note_marker_guarded_leg(pick)
     return best_oc
 
 
@@ -2063,8 +2131,12 @@ def _exact_result_keys(home: object, away: object) -> list[tuple[str, str]]:
 
     Exact dictionary keys only — no fuzzy matching is introduced here.
     """
-    from edgefactory.util import canonical_team_key, norm_team, norm_team_legacy
+    from edgefactory.util import (canonical_team_key, norm_team,
+                                  norm_team_legacy)
 
+    # NB: key spaces 2 and 3 are MARKER-BLIND ("Turkey U21" -> "turkey"),
+    # so every consumer must run them past _marker_boundary_blocks()
+    # before grading on them. pick_result does.
     keys = [
         (canonical_team_key(home), canonical_team_key(away)),
         (norm_team(home), norm_team(away)),
@@ -2078,21 +2150,33 @@ def _exact_result_keys(home: object, away: object) -> list[tuple[str, str]]:
 
 
 def pick_result(pick, settled):
-    from edgefactory.util import norm_team
+    from edgefactory.util import norm_team, squad_markers
     day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
     home = norm_team(pick.get("home") or "")
     away = norm_team(pick.get("away") or "")
     # Exact lookups across the deterministic key spaces (canonical alias,
     # transliterated, frozen legacy) BEFORE any existing fallback.
     outcome = None
+    mh = squad_markers(pick.get("home") or "")
+    ma = squad_markers(pick.get("away") or "")
     for hk, ak in _exact_result_keys(pick.get("home") or "", pick.get("away") or ""):
+        if _marker_boundary_blocks(mh, ma, day, hk, ak):
+            continue
         outcome = settled.get((day, hk, ak))
         if outcome is not None:
             break
     if outcome is not None and outcome not in ("home", "away", "draw"):
         return "void"
     if outcome is None:
-        outcome = _lookup_fallback(settled, day, home, away)
+        # Marker boundary: the similarity fallback compares MARKER-BLIND
+        # keys ("turkeyu21" vs "turkey" scores 0.80, exactly at the bar),
+        # so a youth/women's/reserve leg could be settled with the senior
+        # side's result. Those legs settle on the canonical marked key or
+        # not at all.
+        outcome = _lookup_fallback(
+            settled, day, home, away,
+            markers=(mh, ma),
+            pick=pick)
     if outcome is not None and outcome not in ("home", "away", "draw"):
         return "void"
     if outcome is None:
