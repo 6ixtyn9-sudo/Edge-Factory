@@ -34,6 +34,7 @@ from edgefactory.util import (
     resolve_team_alias,
     compact_key,
     is_degenerate_team_key,
+    script_anomaly,
     markers_conflict,
     MIN_IDENTITY_KEY_LEN,
     norm_team,
@@ -4814,6 +4815,24 @@ def _leagues_conflict(a_league: object, b_league: object) -> bool:
     return ta.isdisjoint(tb)
 
 
+# Curated pairs of DISTINCT clubs whose deterministic keys collide after
+# structure-token stripping / width truncation. Explicit and reviewed, the
+# mirror image of the curated alias table: aliases say "one club, two
+# spellings", this says "two clubs, one key". Never a heuristic.
+DISTINCT_TEAM_PAIRS: frozenset[frozenset[str]] = frozenset({
+    frozenset({"barcelona", "barcelona sc"}),
+    frozenset({"olympiakos", "olympiakos nicosia"}),
+    frozenset({"river plate", "river plate asuncion"}),
+    frozenset({"arsenal", "arsenal sarandi"}),
+    frozenset({"al ahli", "al ahly"}),
+})
+
+
+def _curated_distinct_clubs(a_name: str, b_name: str) -> bool:
+    a, b = fold_ascii(a_name).strip(), fold_ascii(b_name).strip()
+    return a != b and frozenset({a, b}) in DISTINCT_TEAM_PAIRS
+
+
 def _merge_veto_reason(rep: dict, pick: dict) -> str | None:
     """Deterministic reasons two picks may NEVER be merged as one fixture.
 
@@ -4826,6 +4845,11 @@ def _merge_veto_reason(rep: dict, pick: dict) -> str | None:
     for side in ("home", "away"):
         a_name = str(rep.get(side) or "")
         b_name = str(pick.get(side) or "")
+        # S8: curated distinct clubs that share a key. Checked FIRST: a
+        # kickoff match is necessary but NEVER sufficient, and these pairs
+        # pass every key-equality test by construction.
+        if _curated_distinct_clubs(a_name, b_name):
+            return f"curated_distinct_clubs:{side}"
         # S2: distinct-entity markers (U21/B/W/Reserves/Youth) are hard vetoes
         if markers_conflict(a_name, b_name):
             return f"squad_marker_conflict:{side}"
@@ -5037,20 +5061,48 @@ def cross_keyer_identity_warnings(picks: list[dict]) -> dict[str, list]:
     return {"merged": merged_warnings, "split": split_warnings}
 
 
+def mixed_script_names(picks: list[dict]) -> list[dict]:
+    """Report-only: team names mixing Latin with Cyrillic/Greek homoglyphs.
+
+    A single Cyrillic "a" in "Sp\u0430rt\u0430k" is invisible to a human
+    and folds to a DIFFERENT key than "Spartak" in every keyer, silently
+    reproducing the duplicate-fixture incident. Transliterating it would
+    be a guess, so this flags the row instead of merging it.
+    """
+    out: list[dict] = []
+    seen: set[str] = set()
+    for p in picks or []:
+        for side in ("home", "away"):
+            name = str(p.get(side) or "")
+            anomaly = script_anomaly(name)
+            if anomaly and name not in seen:
+                seen.add(name)
+                out.append({"name": name, "anomaly": anomaly,
+                            "key": canonical_team_key(name)})
+    return out
+
+
 def print_identity_sweep(picks: list[dict], day: str = "", stream=None) -> dict[str, int]:
     """Print the S4/S5/S6 identity summary lines. Report-only."""
     stream = stream if stream is not None else sys.stderr
     degenerate = stamp_identity_degenerate(picks)
     collisions = ledger_key_collisions(picks)
     sweep = cross_keyer_identity_warnings(picks)
+    anomalies = mixed_script_names(picks)
     counts = {
         "identity_degenerate": degenerate,
         "ledger_key_collision": len(collisions),
         "cross_keyer_merged": len(sweep["merged"]),
         "cross_keyer_split": len(sweep["split"]),
+        "mixed_script_name": len(anomalies),
     }
     print(f"identity sweep {day}: " + " ".join(f"{k}={v}" for k, v in counts.items()),
           file=stream)
+    for a in anomalies:
+        print(f"!! MIXED SCRIPT TEAM NAME {a['name']!r} ({a['anomaly']}): "
+              "homoglyph codepoints fold away, so this row can split from "
+              "its Latin-spelled twin — verify the feed spelling",
+              file=stream)
     for c in collisions:
         print(f"!! LEDGER KEY COLLISION {c['key']}: {c['teams']} "
               "(not merged, settled separately)", file=stream)
