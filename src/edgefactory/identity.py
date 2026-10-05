@@ -141,9 +141,32 @@ TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
     ("Cabo Verde", "Cape Verde"),
 )
 
+def _curated_override_pairs() -> tuple[tuple[str, str], ...]:
+    """Curated team aliases from Config/entity_overrides.json.
+
+    SINGLE SOURCE OF TRUTH: the voter-row seam derives its aliases from
+    the same reviewed file the entity/context layer uses, so the two
+    curated tables can no longer drift (2026-10-05 sweep found four that
+    already had: Ulsan Hyundai, KPV-j, Zvyagel, Maxline were canonicalized
+    for contexts but still split at the voter-row seam).
+    """
+    from .util import team_alias_table
+
+    pairs: list[tuple[str, str]] = []
+    for raw, canonical in sorted(team_alias_table().items()):
+        if not raw or not canonical or raw == canonical:
+            continue
+        # keep only human-readable spellings, not the derived key forms
+        if raw.islower() and " " not in raw and raw != canonical.lower():
+            continue
+        pairs.append((raw, str(canonical)))
+    return tuple(pairs)
+
+
 TEAM_KEY_ALIASES: dict[str, str] = {
     source_team_key_base(alias): source_team_key_base(canonical)
-    for alias, canonical in TEAM_KEY_RAW_ALIASES
+    for alias, canonical in TEAM_KEY_RAW_ALIASES + _curated_override_pairs()
+    if source_team_key_base(alias) and source_team_key_base(canonical)
 }
 
 
