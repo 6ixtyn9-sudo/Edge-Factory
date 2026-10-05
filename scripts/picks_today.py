@@ -20,7 +20,12 @@ from statistics import mean
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.entities import canonical_league, canonical_team, classify_competition
+from edgefactory.entities import (
+    canonical_league,
+    canonical_team,
+    canonical_team_variants,
+    classify_competition,
+)
 from edgefactory.identity import source_team_key as _identity_source_team_key
 from edgefactory.util import (
     compact_key,
@@ -1394,6 +1399,22 @@ def _best_ctx(candidates: list[dict | None]) -> tuple[str, dict]:
     return "UNKNOWN", best_unknown
 
 
+# Fail-closed ordering for merging verdicts across alias-equivalent keys.
+# A restrictive verdict learned under ANY spelling of a team wins; UNKNOWN
+# (no evidence) never displaces a verdict that exists under another
+# spelling.
+_CTX_SEVERITY = {"VETO": 4, "CAUTION": 3, "ALLOW": 2, "BOOST": 1, "UNKNOWN": 0}
+
+
+def _most_severe_ctx(results: list[tuple[str, dict]]) -> tuple[str, dict]:
+    best: tuple[str, dict] = ("UNKNOWN", {})
+    for verdict, meta in results:
+        if (_CTX_SEVERITY.get(str(verdict), 0)
+                > _CTX_SEVERITY.get(str(best[0]), 0)):
+            best = (str(verdict), meta)
+    return best
+
+
 def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
     """Find best context verdict from the purity registry.
 
@@ -1467,6 +1488,13 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     away = pick.get("away", "")
     home_norm = canonical_team(home)
     away_norm = canonical_team(away)
+    # Alias-equivalent entity keys (canonical first, then the historical
+    # pre-alias key and every curated sibling spelling). The purity
+    # registry learned its team keys under whichever spelling the feeds
+    # used, so looking up ONLY the canonical key would orphan existing
+    # evidence — including VETO verdicts. See the fail-closed merge below.
+    home_variants = canonical_team_variants(home)
+    away_variants = canonical_team_variants(away)
 
     league_key = f"{sport}|{league}|{market}|{rule}|{sel}"
     league_exact = league_ctx.get(league_key)
@@ -1479,14 +1507,26 @@ def lookup_context(purity: dict, pick: dict) -> dict:
 
     team_h_key = f"{sport}|{home_norm}|{league}|{market}|home"
     team_a_key = f"{sport}|{away_norm}|{league}|{market}|away"
-    team_h_exact = team_ctx.get(team_h_key)
-    team_a_exact = team_ctx.get(team_a_key)
-    team_h_any = team_ctx.get(f"{sport}|{home_norm}|*|{market}|home")
-    team_a_any = team_ctx.get(f"{sport}|{away_norm}|*|{market}|away")
-    team_h_scan = _scan_best(team_ctx, prefix=f"{sport}|{home_norm}|", suffix=f"|{market}|home")
-    team_a_scan = _scan_best(team_ctx, prefix=f"{sport}|{away_norm}|", suffix=f"|{market}|away")
-    team_h_v, team_h_meta = _best_ctx([team_h_exact, team_h_any, team_h_scan])
-    team_a_v, team_a_meta = _best_ctx([team_a_exact, team_a_any, team_a_scan])
+
+    def _team_verdict(variants: list[str], side: str) -> tuple[str, dict]:
+        """Most SEVERE verdict across every alias-equivalent team key.
+
+        Per-variant resolution is byte-identical to the legacy single-key
+        path (exact -> any-league -> prefix scan, via ``_best_ctx``); the
+        only addition is the fail-closed merge across spellings, so a VETO
+        learned under one spelling still vetoes the other.
+        """
+        results = []
+        for key in variants:
+            exact = team_ctx.get(f"{sport}|{key}|{league}|{market}|{side}")
+            any_league = team_ctx.get(f"{sport}|{key}|*|{market}|{side}")
+            scan = _scan_best(team_ctx, prefix=f"{sport}|{key}|",
+                              suffix=f"|{market}|{side}")
+            results.append(_best_ctx([exact, any_league, scan]))
+        return _most_severe_ctx(results)
+
+    team_h_v, team_h_meta = _team_verdict(home_variants, "home")
+    team_a_v, team_a_meta = _team_verdict(away_variants, "away")
 
     odds = pick.get("odds")
     band = odds_band(odds)
@@ -4597,6 +4637,10 @@ def _with_duplicate_metadata(group: list[dict]) -> dict:
     rep["duplicate_rules_collapsed"] = rules
     rep["duplicate_matches_collapsed"] = matches
     ctx["duplicate_alias_collapse"] = "true"
+    if any(_unanchored_identity_merge(rep, p) for p in group if p is not rep):
+        # Visibility: this collapse could not consult the 180-minute
+        # reschedule guard because a twin carried a bare clock.
+        ctx["duplicate_kickoff_unanchored"] = "true"
     ctx["duplicate_bucket_sources"] = ",".join(rep["duplicate_bucket_sources"])
     ctx["duplicate_event_keys"] = ",".join(keys)
     rep["ctx"] = ctx
@@ -4703,6 +4747,19 @@ def _kickoff_is_anchored(row: dict) -> bool:
     if not value:
         return False
     return kickoff_date(value) is not None
+
+
+def _unanchored_identity_merge(rep: dict, pick: dict) -> bool:
+    """Would this merge rely on a kickoff that cannot be trusted?
+
+    True when two rows share one canonical fixture identity but at least
+    one carries a bare clock, so the 180-minute reschedule guard could not
+    be consulted. Recorded on the surviving row so the audit can see which
+    collapses used the unanchored path.
+    """
+    if canonical_fixture_identity(pick) != canonical_fixture_identity(rep):
+        return False
+    return not (_kickoff_is_anchored(rep) and _kickoff_is_anchored(pick))
 
 
 def _canonical_identity_collapse(rep: dict, pick: dict) -> bool:
