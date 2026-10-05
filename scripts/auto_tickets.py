@@ -2132,6 +2132,17 @@ def _note_marker_guarded_leg(pick: dict) -> None:
               file=sys.stderr)
 
 
+def _report_marker_guarded_settlement() -> None:
+    """Operator-visible summary for marker-guarded pending legs.
+
+    Per-leg messages print only when the guard fires. The summary prints once
+    at the end of settlement/ticket commands even when the count is zero, so
+    production logs show that the guard is wired and quiet rather than absent.
+    """
+    print(f"settlement_marker_guarded_pending={len(MARKER_GUARDED_LEGS)}",
+          file=sys.stderr)
+
+
 def _key_markers(key: object) -> frozenset:
     """Squad markers encoded in a canonical key's ``_w`` / ``_u21`` suffix."""
     return frozenset(str(key or "").split("_")[1:])
@@ -3638,6 +3649,7 @@ def main():
     st = load_state()
     if args.backfill:
         cmd_backfill(args, st)
+        _report_marker_guarded_settlement()
         return 0
     wants_today = args.today or args.force or not sys.argv[1:]
     if not st and (wants_today or args.settle):
@@ -3648,8 +3660,11 @@ def main():
             print(line)
         if not wants_today:
             print_status(st)
+            _report_marker_guarded_settlement()
             return 0
-        return cmd_today(args, st)
+        rc = cmd_today(args, st)
+        _report_marker_guarded_settlement()
+        return rc
     print_status(st)
     return 0
 
