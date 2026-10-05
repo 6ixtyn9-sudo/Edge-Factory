@@ -711,6 +711,7 @@ def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
                          settled: Mapping[tuple, str] | None = None,
                          all_runs: bool = False,
                          threshold_overrides: Mapping[str, int] | None = None,
+                         guards_overridden: bool = False,
                          top_n: int = 15, **classify_kwargs) -> dict[str, Any]:
     """Rolling multi-window segment analysis with cross-window survival.
 
@@ -720,7 +721,14 @@ def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
     window judged against its own (stricter-with-length) thresholds.
     Exec-promo appearances that fail any window are listed as
     NOT_SURVIVED_ALL_WINDOWS — visible, never silently dropped.
+
+    ``guards_overridden`` must be set True by callers that explicitly
+    relaxed ANY anti-overfit knob (watch_min_settled, concentration caps,
+    pending share) — any explicit override, sample threshold OR guard,
+    demotes all-window survivors to exploratory. Relaxation can never mint
+    proposal material.
     """
+    overridden = bool(threshold_overrides) or bool(guards_overridden)
     to10 = str(to_day)[:10]
     window_reports: dict[str, dict[str, Any]] = {}
     for w in windows:
@@ -753,9 +761,10 @@ def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
                         for w in wnames if w in by_window},
         }
         if all(tiers.get(w) == TIER_EXEC_PROMO for w in wnames):
-            if threshold_overrides:
-                # Operator rule: overridden thresholds can NEVER mint
-                # promotion-proposal material — exploratory label only.
+            if overridden:
+                # Operator rule: ANY explicit override (sample thresholds
+                # or anti-overfit guards) can NEVER mint promotion-
+                # proposal material — exploratory label only.
                 entry["survival"] = "SURVIVES_ALL_WINDOWS_EXPLORATORY"
                 entry["action"] = "EXPLORATORY_REVIEW_ONLY"
                 entry["action_reason"] = (
@@ -789,7 +798,7 @@ def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
                                 for k in ("min_settled", "min_days",
                                           "min_fixtures")}
                             for w in wnames},
-        "thresholds_overridden": bool(threshold_overrides),
+        "thresholds_overridden": overridden,
         "window_reports": window_reports,
         "promotion_proposal_ready": survivors,
         "exploratory_survivors": exploratory,

@@ -71,10 +71,13 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--min-settled", type=int, default=None)
     p.add_argument("--min-days", type=int, default=None)
     p.add_argument("--min-fixtures", type=int, default=None)
-    p.add_argument("--watch-min-settled", type=int, default=10)
-    p.add_argument("--max-day-concentration", type=float, default=0.6)
-    p.add_argument("--max-fixture-concentration", type=float, default=0.5)
-    p.add_argument("--max-pending-share", type=float, default=0.5)
+    # Guard knobs default to None so EXPLICIT use is detectable: in
+    # --windows mode any explicit relaxation (sample threshold OR guard)
+    # demotes survivors to exploratory-only.
+    p.add_argument("--watch-min-settled", type=int, default=None)
+    p.add_argument("--max-day-concentration", type=float, default=None)
+    p.add_argument("--max-fixture-concentration", type=float, default=None)
+    p.add_argument("--max-pending-share", type=float, default=None)
     p.add_argument("--top", type=int, default=15)
     p.add_argument("--all-runs", action="store_true")
     p.add_argument("--root", type=Path, default=None)
@@ -86,10 +89,13 @@ def main(argv: list[str] | None = None) -> int:
         p.error("--windows takes only --to as anchor (no --date/--from)")
 
     settled = _settled_for(args.root)
-    common = dict(watch_min_settled=args.watch_min_settled,
-                  max_day_concentration=args.max_day_concentration,
-                  max_fixture_concentration=args.max_fixture_concentration,
-                  max_pending_share=args.max_pending_share)
+    guard_flags = dict(watch_min_settled=args.watch_min_settled,
+                       max_day_concentration=args.max_day_concentration,
+                       max_fixture_concentration=args.max_fixture_concentration,
+                       max_pending_share=args.max_pending_share)
+    guards_overridden = any(v is not None for v in guard_flags.values())
+    # explicit values where given, module defaults otherwise
+    common = {k: v for k, v in guard_flags.items() if v is not None}
 
     if args.windows:
         if not args.day_to:
@@ -98,12 +104,15 @@ def main(argv: list[str] | None = None) -> int:
             windows = [int(w) for w in str(args.windows).split(",") if w]
         except ValueError:
             p.error("--windows must be comma-separated integers")
+        if not windows or any(w < 1 for w in windows):
+            p.error("--windows lengths must be positive integers")
         overrides = {k: v for k, v in (
             ("min_settled", args.min_settled), ("min_days", args.min_days),
             ("min_fixtures", args.min_fixtures)) if v is not None}
         report = seg.build_rolling_report(
             args.day_to, windows=windows, root=args.root, settled=settled,
             all_runs=args.all_runs, threshold_overrides=overrides or None,
+            guards_overridden=guards_overridden,
             top_n=args.top, **common)
         if args.json:
             print(json.dumps(report, indent=2, default=str, sort_keys=True))
