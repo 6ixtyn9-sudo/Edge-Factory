@@ -16,8 +16,21 @@ An audit write failure is reported on stderr
 
 ## Where the scored universe is captured
 
-Two append-only capture points, both before final selection:
+Three append-only capture points, all before final selection:
 
+0. **Fixture level — the `coverage: scored=N` universe itself**
+   (`scripts/picks_today.py` `eval_1x2`, via an optional `fixture_audit`
+   list threaded through `run_day`): one audit entry is appended at the
+   EXACT sources of the pipeline counter — at the `n_up` key-union build
+   (`upcoming_fixture`) and at the ML-inference increment that drives
+   `ml_scored_day` (`ml_scored_fixture`, 1:1 with
+   `research_collector.scored`). `record_picks_build` persists one
+   `scored_fixture` event per entry of the effective universe (ML entries
+   when any exist, else upcoming entries — mirroring the pipeline's own
+   `ml_scored_day or n_up` expression). A fixture the pipeline scored but
+   never materialized into a candidate therefore still has a durable
+   record (`candidate_materialized=false`,
+   `not_materialized_reason="no_candidate_emitted"`).
 1. **Picks build** (`scripts/picks_today.py`, per-day loop, right after the
    operational collapse and before the day archive write): every emitted
    scored candidate row for the day — including rows the bucket-assignment
@@ -31,16 +44,35 @@ Two append-only capture points, both before final selection:
    appended at every terminal branch (draft, frozen, frozen reprint, no-bet
    minimum-legs, no-bet empty-plan, superseded).
 
-### "scored=N" reconciliation — one definition, stated explicitly
+### "scored=N" reconciliation — exact, flagged, never relabeled
 
 The pipeline log `coverage: scored=N picks=M` uses `ml_scored_day or n_up`,
-a **fixture-level** count (ML-model-scored fixtures, falling back to upcoming
-fixtures with >=2 sources). Fixtures scored without an emitted candidate row
-carry no market/selection/price and cannot be graded. The shadow ledger
-persists the **candidate-level** scored universe (one record per
-fixture/market/selection/rule). Both numbers are persisted in the
-`run_summary` event and the report prints both plus the explanation — the
-reconciliation is explicit, never faked.
+a **fixture-level** count. The ledger now persists that exact universe as
+`scored_fixture` events (capture point 0 above), so the report reconciles
+strictly:
+
+```
+pipeline_scored                = N   (from the coverage log)
+shadow_scored_fixture_records  = N   (one event per counter increment)
+reconciliation_ok              = true, else missing_count printed + MISMATCH flag
+materialized candidates        = M   (on K fixtures)
+promoted picks                 = P
+ticketed legs                  = T
+scored but not promoted        = N_unique − promoted fixtures
+```
+
+If the counts differ the report prints `missing_count` and a loud
+`RECONCILIATION MISMATCH` note; it never relabels the post-collapse
+candidate layer as the full scored universe. Ledgers written before
+fixture-level capture existed (or ticket-layer-only ledgers) get an
+explicit `RECONCILIATION UNAVAILABLE` note instead. Fixtures that never
+materialized into a candidate carry **no decision-time price**: they are
+counted (`dropped before materialization`) and are excluded from
+execution-safe ROI by construction — stated, not hidden. `scored_fixture`
+events are never settled (there is no selection or price to grade).
+Fixture identity (`fixture_id`) hashes trading date + normalized team pair
+only — league is deliberately excluded because source league spellings
+differ, and candidates carry the same `fixture_id` for exact joins.
 
 ## Files and schema (schema_version=1)
 
@@ -61,7 +93,16 @@ candidate's own trading date.
   `price_push_eligible`, quarantine), source registration flags, and the
   execution-safety verdict (`execution_safe_named_book_eligible`,
   `execution_safe_reason`, `price_valid_pre_kickoff`), plus
-  `run_id`/`workflow_run_id`/`git_sha` when available.
+  `run_id`/`workflow_run_id`/`git_sha` when available. Also carries
+  `fixture_id` (sha256 over trading date + width-24 team keys, no league)
+  for exact joins against `scored_fixture` events.
+* `scored_fixture` — one event per increment of the pipeline's
+  `coverage: scored=` counter (`kind` = `ml_scored_fixture` or
+  `upcoming_fixture`): `fixture_id`, teams (raw + normalized), league,
+  kickoff, `ml_probability`/`ml_majority_pick`/`sources_used` when
+  ML-scored, `candidate_materialized` and factual
+  `not_materialized_reason="no_candidate_emitted"`. Never settled — there
+  is no selection or price to grade.
 * `candidate_status` — `selected_as_pick`, `selected_on_ticket`,
   `final_ticket_status` (`draft`/`frozen`/`no_bet`/`not_selected`/
   `superseded_no_bet`/`pending_ticket_build`), `rejection_reasons`
@@ -108,7 +149,10 @@ PYTHONPATH=src python3 scripts/scored_candidate_shadow_report.py --date YYYY-MM-
   latest draft run (report prints `snapshot_used=draft`), else the
   picks-build status. `--all-runs` prints per-run diagnostics. The report
   always prints which run it used.
-* Report sections: headline counts (total scored, promoted, ticketed,
+* Report sections: the SCORED-UNIVERSE FUNNEL (pipeline_scored →
+  shadow_scored_fixture_records + reconciliation → materialized →
+  promoted → ticketed → scored-but-not-promoted →
+  dropped-before-materialization), headline counts (total scored, promoted, ticketed,
   promoted-not-ticketed, scored-not-promoted, execution-safe scored/rejected,
   pending, unmatched, no-execution-safe-price, unknown-reason,
   win/loss/void), ROI for ticketed legs / promoted-not-ticketed / all scored
@@ -132,5 +176,10 @@ PYTHONPATH=src python3 scripts/scored_candidate_shadow_report.py --date YYYY-MM-
   fail-closed, so some fixtures the slip grader resolves stay
   pending/unmatched in this report).
 * Fixture-level `scored=` log values cannot equal candidate-level
-  `shadow_scored` by construction; both are persisted and printed.
+  `shadow_scored` by construction; both levels are persisted
+  (`scored_fixture` + `scored_candidate` events) and reconciled exactly at
+  the fixture level in the report's SCORED-UNIVERSE FUNNEL section.
+* `shadow_scored_fixture_records` is entry-level (one per counter
+  increment); `fixture_records_unique` can be lower when two source keys
+  named the same fixture — both are reported.
 * The ledger only begins at deployment; earlier dates have no shadow data.
