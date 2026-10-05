@@ -504,3 +504,262 @@ def test_dropped_fixture_without_candidate_never_enters_any_roi(tmp_path):
     assert report["fixture_funnel"]["fixtures_dropped_without_price_evidence"] == 1
     assert report["roi"]["all_scored"]["candidates"] == 1   # cand only
     assert report["counts"]["settled_win"] == 0             # fixture not graded
+
+
+# ================= captured-price shadow grading (full universe) =============
+# "Bread on the table": grade every scored item flat-stake at the odds the
+# scorer itself saw, in an AUDIT-ONLY ROI class strictly separated from
+# execution-safe ROI. Stale/unregistered/donor prices allowed and labelled;
+# fair/model prices live only in their own bucket; post-kickoff/unknown-
+# timestamp prices excluded; pending is never a loss; matching stays exact.
+
+def _priced(i, **over):
+    e = _fixture_entry(i)
+    e.update({"market": "1x2", "selection": "home",
+              "selection_team": e["home"],
+              "shadow_price": 2.0, "shadow_price_source": "zulubet",
+              "shadow_price_captured_at_utc": f"{DAY}T06:00:00+00:00",
+              "shadow_price_as_of_basis": "fetched_this_run"})
+    e.update(over)
+    return e
+
+
+def _build_priced_day(tmp_path, fixtures, *, n_promote=0, n_ticket=0,
+                      pipeline=None):
+    cands = [_cand_for_fixture(fixtures[i], odds=1.9)
+             for i in range(n_promote)]
+    scs.record_picks_build(
+        day=DAY, scored_rows=cands, slate_rows=cands,
+        pipeline_scored_log=pipeline if pipeline is not None else len(fixtures),
+        scored_fixtures=fixtures, ml_scored_day=len(fixtures), n_up=0,
+        price_supported_markets={"1x2"}, root=tmp_path)
+    if cands:
+        selected = {_key_of(c): {"acca_id": "A1", "acca_leg_index": j,
+                                 "stake_pct_of_capital": 8.0,
+                                 "price_used_if_selected": 1.9}
+                    for j, c in enumerate(cands[:n_ticket])}
+        _record_statuses(tmp_path, cands, selected=selected, final="frozen")
+    return cands
+
+
+def test_bread_on_table_29_4_2_captured_price_roi_answers_the_question(tmp_path):
+    """pipeline scored=29, 4 promoted, 2 ticketed: the 25 non-promoted are
+    GRADED at the captured odds, not hidden behind 'no_candidate_emitted'."""
+    fixtures = [_priced(i) for i in range(29)]
+    _build_priced_day(tmp_path, fixtures, n_promote=4, n_ticket=2)
+    # 25 non-promoted fixtures: first 10 win at 2.0, next 10 lose, 5 pending
+    settled = {}
+    for i, f in enumerate(fixtures[4:24]):
+        settled.update(_settled((DAY, f["home"], f["away"],
+                                 "home" if i < 10 else "away")))
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+
+    sg = report["shadow_gradeability"]
+    assert sg["records"] == 29
+    assert sg["with_selection_intent"] == 29
+    assert sg["with_captured_price"] == 29
+    assert sg["shadow_gradeable"] == 29
+    assert sg["fresh_price"] == 29 and sg["stale_price"] == 0
+
+    cp = report["captured_price_shadow_roi"]
+    snp = cp["scored_not_promoted"]
+    assert snp["candidates"] == 25
+    assert snp["settled"] == 20 and snp["wins"] == 10 and snp["losses"] == 10
+    assert snp["pending"] == 5                    # pending excluded, not lost
+    assert snp["flat_profit"] == 0.0              # 10*(2.0-1) + 10*(-1)
+    assert snp["flat_roi"] == 0.0
+    assert cp["all_scored_gradeable"]["candidates"] == 29
+    assert cp["ticketed"]["candidates"] == 2
+    assert cp["promoted_not_ticketed"]["candidates"] == 2
+    # shadow prices never leak into the strict execution-safe class: the
+    # exec-safe count equals the CANDIDATE-level named-book count (the 4
+    # materialized rows), not the 29 shadow-priced fixtures
+    assert report["counts"]["execution_safe_scored"] == 4
+    assert report["shadow_gradeability"]["execution_safe_gradeable"] == 4
+    # exec-safe rejected = the 2 promoted-but-not-ticketed candidates only;
+    # none of the 25 shadow-priced dropped fixtures can enter this line
+    assert report["roi"]["execution_safe_rejected"]["candidates"] == 2
+    text = scs.render_report(report)
+    assert "AUDIT-ONLY — NOT STAKEABLE" in text
+    assert "scored but not promoted" in text
+
+
+def test_stale_captured_price_grades_in_shadow_roi_only_and_is_labelled(tmp_path):
+    stale = _priced(0, shadow_price_as_of_basis="",
+                    shadow_price_as_of_utc=f"{DAY}T02:00:00+00:00")  # 4h old
+    fresh = _priced(1)
+    _build_priced_day(tmp_path, [stale, fresh])
+    settled = _settled((DAY, stale["home"], stale["away"], "home"))
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+    fx = {f["home_team"]: f for f in report["fixtures"]}
+    s = fx[stale["home"]]
+    assert s["shadow_price_stale"] is True
+    assert s["shadow_price_age_seconds"] == 4 * 3600
+    assert s["shadow_price_gradeable"] is True
+    assert s["shadow_price_execution_safe"] is False
+    cp = report["captured_price_shadow_roi"]
+    assert cp["stale_price"]["candidates"] == 1
+    assert cp["stale_price"]["wins"] == 1
+    assert cp["stale_price"]["flat_profit"] == 1.0          # 2.0 - 1
+    assert cp["fresh_price"]["candidates"] == 1
+    # stale price NEVER becomes execution-safe anywhere
+    assert report["counts"]["execution_safe_scored"] == 0
+    assert report["shadow_gradeability"]["execution_safe_gradeable"] == 0
+
+
+def test_no_selection_intent_counted_not_silently_ignored(tmp_path):
+    no_intent = _fixture_entry(0, kind="ml_scored_fixture")  # no selection
+    with_intent = _priced(1)
+    _build_priced_day(tmp_path, [no_intent, with_intent])
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    sg = report["shadow_gradeability"]
+    assert sg["without_selection_intent"] == 1
+    assert sg["shadow_gradeable"] == 1
+    fx = {f["home_team"]: f for f in report["fixtures"]}
+    assert (fx[no_intent["home"]]["shadow_price_gradeable_reason"]
+            == "no_selection_intent_available")
+    assert report["captured_price_shadow_roi"]["all_scored_gradeable"][
+        "candidates"] == 1
+
+
+def test_intent_without_captured_price_counted_as_ungradeable_no_price(tmp_path):
+    no_price = _priced(0, shadow_price=None, shadow_price_source=None)
+    _build_priced_day(tmp_path, [no_price, _priced(1)])
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    sg = report["shadow_gradeability"]
+    assert sg["intent_but_no_price"] == 1
+    assert sg["without_captured_price"] == 1
+    fx = {f["home_team"]: f for f in report["fixtures"]}
+    assert (fx[no_price["home"]]["shadow_price_gradeable_reason"]
+            == "no_captured_price")
+    assert report["captured_price_shadow_roi"]["all_scored_gradeable"][
+        "candidates"] == 1
+
+
+def test_post_kickoff_captured_price_is_excluded(tmp_path):
+    post = _priced(0, shadow_price_captured_at_utc=f"{DAY}T19:00:00+00:00")
+    # kickoff is 18:30Z aware -> capture 19:00Z is provably post-kickoff
+    _build_priced_day(tmp_path, [post, _priced(1)])
+    settled = _settled((DAY, post["home"], post["away"], "home"))
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+    sg = report["shadow_gradeability"]
+    assert sg["post_kickoff_price_excluded"] == 1
+    fx = {f["home_team"]: f for f in report["fixtures"]}
+    p = fx[post["home"]]
+    assert p["shadow_price_gradeable"] is False
+    assert p["shadow_price_gradeable_reason"] == "post_kickoff_price"
+    assert p["shadow_price_post_kickoff"] is True
+    # a would-be winner at a post-kickoff price contributes NOTHING
+    assert report["captured_price_shadow_roi"]["all_scored_gradeable"][
+        "candidates"] == 1
+
+
+def test_unknown_price_timestamp_is_excluded(tmp_path):
+    unk = _priced(0, shadow_price_captured_at_utc=None,
+                  shadow_price_as_of_basis="")
+    _build_priced_day(tmp_path, [unk, _priced(1)])
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    assert report["shadow_gradeability"]["timestamp_unknown_excluded"] == 1
+    fx = {f["home_team"]: f for f in report["fixtures"]}
+    assert (fx[unk["home"]]["shadow_price_gradeable_reason"]
+            == "price_timestamp_unknown")
+
+
+def test_fair_model_price_lives_only_in_its_own_labelled_bucket(tmp_path):
+    fair = _priced(0, shadow_price_kind="fair_model",
+                   shadow_price_source="betbetter_fair")
+    real = _priced(1)
+    _build_priced_day(tmp_path, [fair, real])
+    settled = _settled((DAY, fair["home"], fair["away"], "home"),
+                       (DAY, real["home"], real["away"], "home"))
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+    cp = report["captured_price_shadow_roi"]
+    assert cp["fair_model_only_audit"]["candidates"] == 1
+    assert cp["fair_model_only_audit"]["wins"] == 1
+    assert cp["all_scored_gradeable"]["candidates"] == 1   # fair excluded
+    assert "fair_model" in cp["by_price_kind"]
+    assert report["counts"]["execution_safe_scored"] == 0  # never exec-safe
+
+
+def test_unregistered_source_price_shadow_only_and_labelled(tmp_path):
+    f0 = _priced(0)   # zulubet -> unregistered_source
+    _build_priced_day(tmp_path, [f0])
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    fx = report["fixtures"][0]
+    assert fx["shadow_price_kind"] == "unregistered_source"
+    assert fx["shadow_price_registered_source"] is False
+    assert fx["shadow_price_execution_safe"] is False
+    assert "zulubet" in report["captured_price_shadow_roi"]["by_source"]
+    assert report["counts"]["execution_safe_scored"] == 0
+
+
+def test_donor_average_source_classified_as_donor_average(tmp_path):
+    f0 = _priced(0, shadow_price_source="bzzoiro")
+    _build_priced_day(tmp_path, [f0])
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    assert report["fixtures"][0]["shadow_price_kind"] == "donor_average"
+    assert "donor_average" in report["captured_price_shadow_roi"][
+        "by_price_kind"]
+
+
+def test_pending_fixture_is_never_a_loss_in_shadow_roi(tmp_path):
+    _build_priced_day(tmp_path, [_priced(0)])
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    agg = report["captured_price_shadow_roi"]["all_scored_gradeable"]
+    assert agg["pending"] == 1
+    assert agg["settled"] == 0 and agg["losses"] == 0
+    assert agg["flat_profit"] == 0.0 and agg["flat_roi"] is None
+
+
+def test_near_match_fixture_does_not_settle_exact_only(tmp_path):
+    f0 = _priced(0)
+    _build_priced_day(tmp_path, [f0])
+    settled = _settled((DAY, f0["home"] + "x", f0["away"], "home"))
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+    fx = report["fixtures"][0]
+    assert fx["settlement_status"] == "pending"
+    assert fx["settlement_detail"] == "no_exact_result_match"
+
+
+def test_shadow_roi_grouping_dimensions_all_present(tmp_path):
+    fixtures = [_priced(0), _priced(1, selection="away",
+                                    shadow_price_source="bzzoiro"),
+                _priced(2, shadow_price_as_of_basis="",
+                        shadow_price_as_of_utc=f"{DAY}T00:00:00+00:00")]
+    _build_priced_day(tmp_path, fixtures, n_promote=1)
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    cp = report["captured_price_shadow_roi"]
+    for key in ("by_price_kind", "by_source", "by_bookmaker", "by_bucket",
+                "by_rule_model", "by_league", "by_promotion", "by_reason",
+                "by_stale_fresh", "by_kickoff_proof"):
+        assert key in cp, key
+    assert cp["by_stale_fresh"]["stale"]["candidates"] == 1
+    assert cp["by_stale_fresh"]["fresh"]["candidates"] == 2
+    assert set(cp["by_source"]) == {"zulubet", "bzzoiro"}
+    assert cp["by_promotion"]["not_promoted"]["candidates"] == 2
+    assert "no_candidate_emitted" in cp["by_reason"]
+    assert "instants_proven" in cp["by_kickoff_proof"]
+
+
+def test_record_picks_build_fail_soft_with_priced_fixtures(tmp_path, monkeypatch):
+    def _boom(*a, **k):
+        raise OSError("disk went away")
+    monkeypatch.setattr(scs, "_append_events", _boom)
+    out = scs.record_picks_build(
+        day=DAY, scored_rows=[], slate_rows=[],
+        pipeline_scored_log=1, scored_fixtures=[_priced(0)],
+        ml_scored_day=1, n_up=1, root=tmp_path)
+    assert out is None    # swallowed, never raises into the build
+
+
+def test_fixture_settlement_events_are_layer_labelled(tmp_path):
+    f0 = _priced(0)
+    _build_priced_day(tmp_path, [f0])
+    settled = _settled((DAY, f0["home"], f0["away"], "home"))
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+    events = scs.settlement_events(report)
+    fixture_evts = [e for e in events if e.get("layer") == "scored_fixture"]
+    assert len(fixture_evts) == 1
+    assert fixture_evts[0]["settlement_status"] == "win"
+    assert fixture_evts[0]["flat_stake_return"] == 1.0
+    assert fixture_evts[0]["shadow_price_kind"] == "unregistered_source"

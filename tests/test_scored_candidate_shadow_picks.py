@@ -91,7 +91,36 @@ def test_ml_scored_entries_append_at_the_inference_increment(monkeypatch):
     assert entry["home"] == "Sporting CP"
     assert entry["ml_majority_pick"] == "home"
     assert 0.0 < entry["ml_probability"] < 1.0
+    # betting intent is persisted at the scoring instant, with the side
+    # odds the scorer itself saw (zulubet odd1=1.5; no 1.50 feature-default
+    # fabrication — the odds really exist on the source row here)
+    assert entry["market"] == "1x2"
+    assert entry["selection"] == "home"
+    assert entry["selection_team"] == "Sporting CP"
+    assert entry["shadow_price"] == 1.5
+    assert entry["shadow_price_source"] == "zulubet"
+    assert entry["shadow_price_as_of_basis"] == "fetched_this_run"
+    assert entry["shadow_price_captured_at_utc"]
     # and the audit changed nothing in the certified-emission path
     base = pt.eval_1x2(DAY, data, [],
                        research_collector=pt.FadeResearchCollector())
     assert (picks, vetoes, n_up) == base
+
+
+def test_ml_entry_without_source_odds_carries_no_fabricated_price(monkeypatch):
+    """The 1.50 pick_odds FEATURE default must never become a shadow price:
+    when no source row has odds for the side, shadow_price is None."""
+    model = {"coef": [0.1], "intercept": 0.0, "feature_cols": ["fb_p"]}
+    monkeypatch.setattr(pt, "load_ml_rules_and_model", lambda: ([], model))
+    data = {
+        "zulubet": {"k1": _src_row("Sporting CP", "Portimonense",
+                                   p1=60, px=25, p2=15)},     # no odds cols
+        "statarea": {"k1": _src_row("Sporting CP", "Portimonense",
+                                    p1=58, px=27, p2=15)},
+    }
+    audit: list = []
+    pt.eval_1x2(DAY, data, [], fixture_audit=audit,
+                research_collector=pt.FadeResearchCollector())
+    entry = [e for e in audit if e["kind"] == "ml_scored_fixture"][0]
+    assert entry["shadow_price"] is None
+    assert entry["shadow_price_source"] is None
