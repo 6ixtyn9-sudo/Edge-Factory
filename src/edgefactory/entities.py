@@ -19,7 +19,10 @@ from typing import Any
 from .identity import canonical_league_key, fold_league_identity, team_identity_words
 from .util import (
     clear_team_alias_cache,
+    resolve_team_alias,
     compact_key,
+    squad_marker_suffix,
+    squad_markers,
     norm_entity_team,
     norm_league,
     norm_team,
@@ -60,6 +63,15 @@ def clear_entity_caches() -> None:
 
 
 def _override_lookup(kind: str, raw: object) -> str | None:
+    if kind == "teams":
+        # Single-sourced through util's curated table, which indexes every
+        # curated spelling in several deterministic key spaces (raw,
+        # folded, compact, fixed and legacy norm_team). Doing the lookup
+        # here with a narrower candidate list silently missed folded
+        # spellings such as "07 vestur" (2026-10-05 sweep).
+        canonical, matched = resolve_team_alias(raw)
+        if matched:
+            return canonical
     overrides = load_overrides().get(kind, {})
     if not isinstance(overrides, dict):
         return None
@@ -134,13 +146,23 @@ def classify_competition(league_name: object) -> str:
 
 
 def canonical_team(raw: object, *, width: int = 24) -> str:
-    """Return canonical team key for purity/reporting contexts."""
+    """Return canonical team key for purity/reporting contexts.
+
+    When a curated/learned alias replaces the name, any distinct-entity
+    marker on the RAW name is re-attached: the alias canonicalizes the
+    CLUB, never the squad, so "Copenhagen FC Women" must not resolve onto
+    "FC Copenhagen" (2026-10-05 sweep). Names resolved without an alias
+    keep their historical key byte-for-byte.
+    """
+    suffix = squad_marker_suffix(raw)
     override = _override_lookup("teams", raw)
     if override:
-        return norm_entity_team(override, width=width)
+        base = norm_entity_team(override, width=width)
+        return base + suffix if suffix and not squad_markers(override) else base
     learned = _registry_lookup("teams", raw)
     if learned:
-        return norm_entity_team(learned, width=width)
+        base = norm_entity_team(learned, width=width)
+        return base + suffix if suffix and not squad_markers(learned) else base
     # Folded identity fallback: identical to the legacy form for clean
     # names; unifies '&' <-> 'and' spellings (Dagenham incident).
     return norm_entity_team(team_identity_words(str(raw or "")), width=width)
