@@ -254,6 +254,27 @@ rewritten — that is the deliberate choice — so:
 Review this note again once every rolling window in use begins after the
 deploy date; it can be retired then.
 
+### 8a. Degenerate `deg<hash>` keys and the epoch
+
+Short/punctuation-only names (`CP`, `II`, `W`) used to normalize to the
+**empty string**, so every one of them collided on a single identity.
+They now key to `deg<hash>` (`is_degenerate_team_key`). That key is NOT
+cosmetic: it reaches persisted row identities through
+`canonical_team_key` → `ledger_team_key` → `_day_archive_row_key`.
+
+* Hash input is case- and whitespace-normalized (`fold_ascii` lowercases
+  and collapses runs of whitespace), so `"Athletic  Club"`,
+  `"athletic club"` and `" ATHLETIC CLUB "` produce one key.
+* **Settlement** was already safe: its readers try `norm_team_legacy`,
+  which still yields the pre-fix `''`, so frozen rows keep grading.
+* **Archive merge** was not. `_day_archive_row_key_legacy()` rebuilds the
+  pre-fix tuple from the frozen `research_ledger_team_key`, and
+  `merge_day_archive_rows` now skips a fresh row whose legacy key is
+  already present in the frozen file, registering both keys. Without it a
+  pre-fix degenerate row and its post-fix twin would have been written as
+  two rows for one match — the original incident, one epoch later.
+* Nothing is rewritten in place. This is a reader-side legacy path only.
+
 ## 9. Tests
 
 New: `tests/test_team_identity_transliteration.py` (27 tests) — accented
@@ -289,12 +310,12 @@ Live behaviour changes, complete list (all intended, all tested):
 3. two rows with one canonical identity merge when a bare clock makes the
    180-minute guard unusable, stamped `duplicate_kickoff_unanchored` (§5a).
 
-## 10. Roach sweep — the bug CLASS (2026-10-05, second pass)
+## 10. Identity sweep — the bug CLASS (2026-10-05, second pass)
 
 Türkiye/Turkey was one instance of "same real entity, several keys".
-A sweep of the pre-fix keyers found five species. Each is now closed by a
+A sweep of the pre-fix keyers found five defect classes. Each is now closed by a
 deterministic rule (never fuzz) and covered by
-`tests/test_identity_roach_sweep.py`.
+`tests/test_identity_identity defect_sweep.py`.
 
 | # | Species | Example (reproduced) | Closed by |
 |---|---|---|---|
@@ -371,3 +392,77 @@ closes the realistic cases; the ledger-collision tripwire and the daily
 sweep make the rest visible. Fixing it properly needs a country/
 competition field on every candidate, which the feeds do not reliably
 supply today.
+
+## 11. Closing round — merge gate evidence
+
+### 11a. Every newly-refused merge, classified (item 1)
+
+Tightening-only was re-proven by replaying **395 real archived pairs**
+through the pre-fix and post-fix collapse. "Newly allowed = 0" is
+necessary but not sufficient: a wrongly REFUSED merge recreates the
+original incident (two stakeable legs for one match). So every refusal
+was classified and ground-truthed.
+
+| veto reason | pre-fix refusals | after the fixes below |
+|---|---|---|
+| `squad_marker_conflict` | 120 | 120 |
+| `canonical_team_disagreement` | 142 | 136 |
+| **total newly REFUSED** | **262** | **256** |
+| **newly ALLOWED** | **0** | **0** |
+| unchanged | 133 | 139 |
+
+**Data-driven same-fixture test** (does the pair ever share an opponent
+on a common archive day?) over all 262: `same-fixture 0`,
+`distinct-evidence 19`, `no co-occurrence 243`. Two of the 19 were in
+fact one club and were linked deterministically — no fuzzy matching:
+
+| pair | mechanism |
+|---|---|
+| `Borussia M'gladbach` / `Borussia Mönchengladbach` | `source_team_key` equality in the veto's link test |
+| `Drogheda United` / `Drogheda Utd` | `TEAM_TOKEN_EXPANSIONS` (`utd`→`united`) inside `_name_tokens` |
+
+**Stratified manual sample**, seed 7, 31 pairs (15 marker / 16
+canonical): Bayer Leverkusen vs (w), Motherwell vs Youth,
+`Independiente Res.` vs `Independiente del Valle`, Spain vs Spain U21,
+Rapid Vienna vs Rapid Wien II, Hapoel Acre vs Hapoel Tel Aviv, Molde vs
+Moldova, Barrow vs Barry Town, Lille vs Lillestrøm, Catania vs
+Catanzaro, Port Vale vs Portugal, … — **all genuinely distinct, 0
+same-fixture refusals.**
+
+Deliberately left refused, no evidence either way: `Al Ahli` /
+`Al Ahly` (different clubs in most feeds). The collision tripwire makes
+any future conflict visible rather than guessing now.
+
+Guard rails held: `Launceston City`/`Launceston United`,
+`Manchester City`/`Manchester United`, `Al Nasar`/`Al Nassr` still veto.
+
+### 11b. Frozen real-slate regression (item 4)
+
+`tests/fixtures/slate_2026-10-05_identity_split.json` is a sanitized
+freeze of the 6-row inflated slate (no URLs, no credentials, no provider
+payloads; test data under `tests/`, never `localdata`).
+`tests/test_identity_collision_sweep.py` replays the whole collapse path
+against it: 6 → 5 rows, the twin merges on `kickoff_utc` despite
+disagreeing raw clock text, the league-spelling divergence does not veto,
+the archive merge yields one Italy row, and all four sweep counters are
+zero. Both defects caught in the second pass were invisible to synthetic
+unit tests and visible here.
+
+### 11c. `settlement_ambiguous_pending` (item 5)
+
+`_drop_ambiguous_result_keys` fails closed on a result key covering two
+real fixtures, which leaves those legs pending **forever**. It now
+returns the colliding fixtures as well as the count, and settlement
+prints `settlement_ambiguous_pending=N` plus one
+`!! AMBIGUOUS SETTLEMENT KEY <day>: <fixtures>` line each, so an operator
+resolves them (manual verified result, or a curated alias) instead of
+watching them accumulate silently.
+
+### 11d. Terminology (item 2)
+
+The informal metaphor from the incident channel is gone from every
+filename, identifier, counter, doc heading and report string. The terms
+of art are **identity collision** (two teams, one key) and **identity
+split** (one team, two keys). `test_identity_roach_sweep.py` was renamed
+to `tests/test_identity_collision_sweep.py` with `git mv`, preserving
+history.
