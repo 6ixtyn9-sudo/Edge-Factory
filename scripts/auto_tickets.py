@@ -1906,7 +1906,40 @@ def _collect_settled_facts() -> tuple[dict, dict]:
         entries.setdefault(d, []).append(
             {"home": v["home"], "away": v["away"], "outcome": v["outcome"]}
         )
+    dropped = _drop_ambiguous_result_keys(key_to, entries)
+    if dropped:
+        print(f"settlement: dropped {dropped} ambiguous result key(s) "
+              "(one key, two different real fixtures) — those legs stay pending",
+              file=sys.stderr)
     return key_to, entries
+
+
+def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> int:
+    """Refuse to settle on a key that covers TWO different real fixtures.
+
+    The frozen result keys are width-9 (``mancheste`` covers Manchester
+    City AND Manchester United; ``barcelona`` covers Barcelona and
+    Barcelona SC). When a day's results contain two fixtures whose raw
+    names are NOT curated-alias-linked but share a key, grading on that
+    key could settle a pick against the wrong match. Fail closed: delete
+    the key so those legs stay pending for manual verification. Never
+    guesses which one was meant.
+    """
+    from edgefactory.entities import canonical_team
+
+    seen: dict[tuple, set[tuple[str, str]]] = {}
+    for day, rows in entries.items():
+        for e in rows:
+            home, away = str(e.get("home") or ""), str(e.get("away") or "")
+            ident = (canonical_team(home), canonical_team(away))
+            for hk, ak in _exact_result_keys(home, away):
+                seen.setdefault((day, hk, ak), set()).add(ident)
+    dropped = 0
+    for key, idents in seen.items():
+        if len(idents) > 1 and key in key_to:
+            del key_to[key]
+            dropped += 1
+    return dropped
 
 
 def load_settled():
