@@ -288,3 +288,86 @@ Live behaviour changes, complete list (all intended, all tested):
    — a veto learned under any spelling vetoes all of them (§2a);
 3. two rows with one canonical identity merge when a bare clock makes the
    180-minute guard unusable, stamped `duplicate_kickoff_unanchored` (§5a).
+
+## 10. Roach sweep — the bug CLASS (2026-10-05, second pass)
+
+Türkiye/Turkey was one instance of "same real entity, several keys".
+A sweep of the pre-fix keyers found five species. Each is now closed by a
+deterministic rule (never fuzz) and covered by
+`tests/test_identity_roach_sweep.py`.
+
+| # | Species | Example (reproduced) | Closed by |
+|---|---|---|---|
+| R1 | exonym/rename SPLIT | Côte d'Ivoire/Ivory Coast, FC København/Copenhagen, Bayern München/Munich, 1.FC Köln/Cologne, Internazionale/Inter, Man Utd/Manchester United, PSG/Paris SG, FCSB/Steaua, Başakşehir, Wolves, Napoli, Göteborg, Legia, Dinamo București, Sporting | **S1**: 17 curated groups (174 spellings) in `Config/entity_overrides.json`; one canonical key per group, each with a nearest-distinct-neighbour guard test (Inter≠AC Milan, Sporting CP≠Sporting Gijón, Austria Wien≠Austria Lustenau, …) |
+| R2 | false MERGE in the final collapse | Turkey/Turkey U21 (sim 0.62), Girona/Girona B (0.83), Barcelona/Barcelona SC (0.80), Man City/Man United (0.59), Olympiakos/Olympiakos Nicosia, River Plate/River Plate Asunción, Arsenal/Arsenal Sarandí — all above the 0.40 bigram threshold | **S2** squad-marker hard veto + **S3** canonical-disagreement veto + league-conflict veto |
+| R3 | width-9 frozen-ledger collision | `mancheste` (City/United), `barcelona`, `nottingha`, `universid` | **S5** report-only tripwire: colliding rows are kept apart, stamped `ctx.ledger_key_collision`, and ambiguous result keys are dropped so those legs stay pending. The ledger is NOT rekeyed (history stays byte-identical) |
+| R4 | degenerate/empty keys | `Athletic Club`, `Sporting Club`, Cyrillic/Greek names → `""` | **S4**: unique non-empty `deg<hash>` keys, `is_degenerate_team_key`, merge refused unless raw strings match, `ctx.identity_degenerate` stamped and counted |
+| R5 | stopword amputation | `Sporting CP`→`cp`, `Atlético Madrid`→`madrid` | **S4/S3**: degenerate guard + canonical/league vetoes; curated canonical names chosen to avoid degenerate keys (Sporting canonicalizes to "Sporting Lisbon", not "CP") |
+
+### What merges and what does not (measured, same anchored kickoff)
+
+| pair | result |
+|---|---|
+| Türkiye / Turkey | MERGE (curated alias) |
+| Aldershot / Aldershot Town, Hannover / Hannover 96, Ebbsfleet / Ebbsfleet United | MERGE (`_token_prefix_link`: structural containment, not similarity) |
+| IFK Mariehamn / Mariehamn | MERGE (curated odds-alias link) |
+| Turkey / Turkey U21, Brazil / Brazil U20, Girona / Girona B, Arsenal / Arsenal W | REFUSE — `squad_marker_conflict` |
+| Man City / Man United, Launceston City / Launceston United | REFUSE — `canonical_team_disagreement` |
+| Barcelona / Barcelona SC, Olympiakos / Olympiakos Nicosia, Arsenal / Arsenal Sarandí | REFUSE — `league_disagreement` |
+| Athletic Club / Sporting Club | REFUSE — `degenerate_identity` |
+
+**Tightening-only proof.** Every similar name pair in the archives (395
+pairs over 110 days, bigram ≥ 0.40) replayed through the old and new
+collapse with equal anchored kickoffs: **unchanged 133, newly REFUSED
+262, newly ALLOWED 0.**
+
+### Two defects this pass found in the FIRST pass's own work
+
+1. **League veto was too strict.** Keyed on canonical-league inequality,
+   it blocked the very merge this branch exists for: the twins' feeds
+   spell the competition differently ("World UEFA Nations League" vs
+   "International,Uefa Nations League A Grp. 1"). Replaced with
+   `_leagues_conflict`, which fires only on fully DISJOINT distinctive
+   tokens. Caught by running the real 2026-10-05 slate, not by unit tests.
+2. **The collapse compared untrusted clock text.** Both twins already
+   carried the SAME resolved `kickoff_utc` (`2026-10-05T18:45:00+00:00`);
+   the collapse was comparing the raw renders ("05-10, 19:45" vs "14:45",
+   300 min apart) and refusing. `_kickoff_instants_agree` now decides on
+   `kickoff_utc` whenever both rows have it — strictly more accurate than
+   the naive text, and it shrinks the §5a unanchored-merge path to rows
+   whose kickoff the pipeline genuinely could not resolve.
+
+### Alias single-sourcing (supersedes §4a)
+
+`identity.TEAM_KEY_RAW_ALIASES` now DERIVES the curated override pairs
+from `Config/entity_overrides.json` at import, so the two tables cannot
+drift. The sweep had already found four that had: Ulsan Hyundai, KPV-j,
+Zvyagel and Maxline were canonicalized for contexts but still split at
+the voter-row seam. `entities._override_lookup` also routes team lookups
+through the same indexed table (it previously missed folded spellings
+such as "07 vestur"). Guarded by
+`test_every_curated_alias_group_agrees_in_every_keyer`.
+
+### Daily tripwire + historical audit
+
+* `print_identity_sweep()` runs after collapse every build (report-only):
+  `identity_degenerate`, `ledger_key_collision`, `cross_keyer_merged`,
+  `cross_keyer_split`. On the real 2026-10-05 slate: collapse 6 -> 5 rows
+  (the twin carries `duplicate_fixture`), all four counters **0**.
+* `tools/audit_identity_collisions.py` (read-only, mutates nothing) swept
+  110 days of archives: **6,744 same-day key collisions (2,167 SUSPECT**,
+  e.g. `Lokomotiv Plovdi`/`Lokomotíva Zvolen`, `Universitario de Vinto`/
+  `Universitatea Craiova`, `Launceston City`/`Launceston United`**)**,
+  5,190 split candidates, 54 degenerate-key names. Report:
+  `docs/operator/IDENTITY-COLLISION-AUDIT-2026-10-05.md`. These are
+  historical facts about frozen data — nothing was rewritten.
+
+### Known residual (documented, not fixed)
+
+Two different clubs whose names differ only by a generic token AND whose
+competitions are unknown or share a distinctive token can still merge
+(e.g. Barcelona / Barcelona SC with both leagues blank). The league veto
+closes the realistic cases; the ledger-collision tripwire and the daily
+sweep make the rest visible. Fixing it properly needs a country/
+competition field on every candidate, which the feeds do not reliably
+supply today.
