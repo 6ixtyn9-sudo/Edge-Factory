@@ -33,23 +33,78 @@ identities in the shadow ledger (the mirror image of the collision case —
 invisible to the collision detector), one variant permanently unsettleable,
 and worst case double stake exposure on one match.
 
-## 2. Blast radius — every consumer of the normalizers
+## 2. Blast radius — EVERY consumer of the normalizers
 
-| Consumer | Key used | Effect of the fix | Protection |
+Deploy epoch: this change takes effect on the deploy of branch
+`arena/01a10c3f-edge-factory`. "Re-keyed" below means the key an accented
+or exonym-aliased name produces changes at that epoch.
+
+| # | Consumer | Key | Status |
 |---|---|---|---|
-| `scripts/picks_today.py` operational collapse / archive key | `ledger_team_key` | accented names now key as their ASCII spelling; curated aliases canonicalize | new deterministic collapse path + tripwire; archive merge is append-only, old rows kept |
-| `scripts/audit_recent_picks.py` `_archive_pick_key` | `ledger_team_key` | same change, stays in lockstep with the engine key (test asserts equality) | mirrored by test |
-| `scripts/audit_recent_picks.py` warehouse/candidate keys | `norm_team` (9/14) | accented names now join the odds/results warehouse instead of missing | its own alias-candidate scan unchanged |
-| `src/edgefactory/scored_candidate_shadow.py` candidate/fixture/occurrence ids | `ledger_team_key(width=24)` | the pair now yields ONE identity in NEW events | old split records untouched on disk; readers unchanged |
-| `scored_candidate_shadow.settle_candidate` / `load_settled_overlay` | was `norm_team` | indexes and looks up under canonical + transliterated + **frozen legacy** keys | reader-side dual-key, exact lookups only |
-| `scripts/auto_tickets.py` settled map / `pick_result` | was `norm_team` | same three exact key spaces, tried before the pre-existing fallback | reader-side dual-key (`_exact_result_keys`) |
-| `scripts/export_settled_results.py`, `audit_source_independence.py`, miners (`mine_/backfill_/capture_betexplorer.py`), `warehouse_replay`, `enh_pricing`, `theoddsapi`, `o25_tracker`, `replay_harness` | `norm_team` / `norm_team_sql` | both sides of every join are normalized at read time by the same function, so joins tighten rather than break; SQL mirror updated in lockstep (`norm_team_sql` now ASCII-folds, `norm_team_sql_legacy` frozen) | recomputed-on-read joins, no persisted key depends on them |
-| `src/edgefactory/entities.py` override/registry lookup | `norm_team` | lookup candidate list now tries BOTH the fixed and the frozen legacy key | dual-key, additive only |
+| 1 | `picks_today.lookup_context` (ladder/purity team verdicts) | `canonical_team` (+ variants) | **RE-KEYED INTENTIONALLY — live gating change, see §2a** |
+| 2 | `assay_purity.py` (builds the purity registry team keys) | `canonical_team` | re-keyed intentionally; new registry rows write canonical keys, old rows stay and are still read via the variant lookup |
+| 3 | `picks_today` operational collapse / `_day_archive_row_key` | `ledger_team_key` | re-keyed intentionally (this is the fix); archive merge is append-only and recomputes keys on read |
+| 4 | `audit_recent_picks._archive_pick_key` | `ledger_team_key` | re-keyed in lockstep with #3 (test asserts the two keys are equal) |
+| 5 | `audit_recent_picks` warehouse/candidate joins | `norm_team` 9/14 + `norm_team_sql` | unaffected by persistence: both sides are normalized at read time; accented names now join instead of missing |
+| 6 | `scored_candidate_shadow` candidate/fixture/occurrence ids | `ledger_team_key(24)` | re-keyed intentionally — ONE identity for the pair going forward; old split records untouched (epoch note §8) |
+| 7 | `scored_candidate_shadow.settle_candidate` / `load_settled_overlay` | was `norm_team` | **dual-key protected**: canonical + transliterated + frozen legacy, exact lookups |
+| 8 | `auto_tickets` settled map / `pick_result` (`_exact_result_keys`) | was `norm_team` | **dual-key protected**, tried before the pre-existing fallback |
+| 9 | `auto_tickets` rolling hit-rate / bucket PnL / slice reports | grade via #8 | protected transitively by #8; grading inputs unchanged |
+| 10 | `ml_fade_research.event_key` + `TeamMatcher` (research ledger, persists `event_key`) | was `ledger_team_key` | **FROZEN**: now calls `util.research_ledger_team_key` (pre-alias transliteration), byte-identical to the pre-fix key — no ledger re-keying |
+| 11 | `daily.match_market_key` (kickoff-stacking ledger merge) | `ledger_team_key` | unaffected: keys are recomputed on read for BOTH archived and fresh rows in the same process; cross-spelling rows now supersede correctly instead of duplicating |
+| 12 | `sync_supabase.event_source_ref` (remote `source_ref`, upsert key) | `ledger_team_key` | re-keyed at the epoch; only forward-dated picks are synced and picks are collapsed before sync, so at most a historical remote row keeps its old ref (never updated again anyway) — epoch-noted, no rewrite |
+| 13 | `entities._override_lookup` / `_registry_lookup` (learned `entity_registry.json`) | `norm_team` | **dual-key protected**: legacy key added to the candidate list, so learned aliases keyed under the old normalization still resolve |
+| 14 | `enh_pricing` (enhancement price index + hit keys) | `norm_team` | unaffected: index and lookup are built in the same process from the same function |
+| 15 | `export_settled_results.py` (overlay writer) | `norm_team`, `norm_team_sql` | re-keyed on write going forward; readers (#7, #8) accept old and new keys |
+| 16 | `warehouse.py` / `warehouse_replay.validation_gate` / `replay_harness` | `norm_team_sql`, injected `norm_team` | unaffected: live/recon maps are built from the same injected function within one run; SQL mirror updated in lockstep (`norm_team_sql` now folds; `norm_team_sql_legacy` frozen) |
+| 17 | `mine_betexplorer`, `backfill_betexplorer`, `capture_betexplorer`, `sources/betexplorer_odds`, `sources/theoddsapi` | `norm_team` | unaffected: read-time joins on both sides; accented fixtures now match instead of missing |
+| 18 | `audit_source_independence`, `o25_tracker`, `scored_candidate_segment_report` | `norm_team` | unaffected: read-time aggregation keys, no persisted key |
+| 19 | `clv.py` | — | does not use team normalizers (joins on pick identity supplied by the caller); unaffected |
+| 20 | `identity.source_team_key` (voter-row seam) | own 24-char key | extended with the curated exonym pairs; drift test added (§4) |
 
-Nothing persisted is rewritten. Where a persisted artefact can be keyed by
-the old normalization (settled-result overlays, warehouse result rows,
-day archives, shadow ledgers), the reader tries the legacy key as an
-additional EXACT key.
+### 2a. 🔴 LIVE GATING CHANGE — team-verdict inheritance (intended, documented)
+
+The ladder's team context is keyed by `canonical_team`. With the curated
+alias applied, `Türkiye` keys as `turkey` instead of `turkiye`.
+
+Measured against the live `localdata/purity_registry.json` (22,929 team
+context entries): **8 of 22 curated alias groups have their learned
+evidence under only SOME spellings**, and four of those carry a
+restrictive verdict:
+
+| alias group | keys | entries | verdicts |
+|---|---|---|---|
+| Turkey | `turkey` / `turkiye` | 0 / 8 | VETO, UNKNOWN (only under `turkiye`) |
+| Czech Republic | `czechrepublic` / `czechia` | 9 / 0 | VETO, UNKNOWN |
+| Côte d'Ivoire | `cotedivoire` / `ivorycoast` | 7 / 0 | VETO, UNKNOWN |
+| Ulsan HD | `ulsanhd` / `ulsanhyundai` | 8 / 0 | CAUTION, UNKNOWN |
+| (+ 07 Vestur, Cape Verde, Klaksvik, zvyahel) | | | UNKNOWN only |
+
+Canonicalizing the lookup key ALONE would have orphaned that evidence —
+for Türkiye it would have turned an existing **VETO into UNKNOWN**, i.e.
+loosened a live gate. That is not acceptable, so the lookup is now
+**variant-union and fail-closed**:
+
+* `entities.canonical_team_variants()` returns the canonical key, the
+  pre-alias key, and every curated sibling spelling's key;
+* `picks_today._team_verdict()` resolves each variant through the
+  unchanged per-key path (`exact -> any-league -> prefix scan`) and keeps
+  the MOST SEVERE verdict (`VETO > CAUTION > ALLOW > BOOST > UNKNOWN`);
+  UNKNOWN never displaces a verdict found under another spelling.
+
+Net live effect, stated plainly: **a veto learned under one spelling now
+vetoes every spelling of that team.** On the 2026-10-05 slate both
+`Italy vs Türkiye` and `Italy vs Turkey` now resolve `team_a=VETO`
+(verified against the live registry) — previously only the accented row
+did, and the Turkey-spelled variant is the one the frozen ACCA carried.
+This is a TIGHTENING and it is intended: one team, one verdict. It is a
+live behavior change beyond duplicate collapse, and the earlier
+"no live gate changed" claim was wrong as written.
+
+Tests: `test_accented_spelling_inherits_canonical_team_verdict`,
+`test_verdict_merge_is_fail_closed_not_fail_open`,
+`test_unknown_never_displaces_an_existing_verdict`,
+`test_non_aliased_team_lookup_is_unchanged`.
 
 ## 3. Normalization change
 
@@ -87,6 +142,14 @@ so the voter-row identity seam resolves them too. No learned or fuzzy
 source feeds these entries; `alias_fuzzy` remains quarantined and
 non-stakeable.
 
+## 4a. Alias-table drift guard
+
+Curated aliases exist in two places by design — `Config/entity_overrides.json`
+(entity/context layer) and `identity.TEAM_KEY_RAW_ALIASES` (voter-row
+seam). `test_curated_alias_tables_do_not_drift` fails if any exonym pair
+in the identity table disagrees with the override file's canonicalization,
+so the two curated sources can never diverge silently.
+
 ## 5. Duplicate collapse + tripwire
 
 * `canonical_fixture_identity(pick)` = (date, canonical home key,
@@ -99,6 +162,41 @@ non-stakeable.
   The pre-existing fuzzy bigram path is untouched.
 * The dropped twin is persisted by the shadow ledger with the existing
   `duplicate_fixture` rejection code — never two stakeable legs.
+### 5a. Bare-clock merge — behavior change vs pre-fix (measured)
+
+Replaying the OLD collapse (`git show main:scripts/picks_today.py`) against
+the new one on identical inputs:
+
+| case | pre-fix | post-fix |
+|---|---|---|
+| identical names, one bare clock (apparent 300-min gap) | merged=0 | **merged=1** (flagged) |
+| identical names, both anchored, 300 min apart | merged=0 | merged=0 |
+| Türkiye/Turkey, one bare clock | merged=0 | merged=1 (flagged) |
+
+So the bare-clock merge IS new; it is not merely the old behavior under a
+new key. The trade-off, stated explicitly: a same-day, same-competition
+double-header between the SAME two teams would be falsely merged when one
+row carries an unanchored clock. That fixture pattern does not occur in
+football, while cross-source clock drift occurs daily, and the failure it
+prevents (two stakeable legs on one match) is the one with money attached.
+
+Mitigations, all verifiable:
+* anchored kickoffs >180 min apart still REFUSE to merge
+  (`test_anchored_kickoffs_more_than_180_min_apart_never_merge`, plus the
+  pre-existing `test_kickoffs_outside_180_min_do_not_cluster`);
+* every merge that could not consult the guard is stamped
+  `ctx.duplicate_kickoff_unanchored = "true"` on the surviving row, so the
+  audit can list exactly which collapses relied on it
+  (`test_unanchored_merge_is_flagged_for_audit`).
+
+Reconciliation with the shadow ledger's fail-closed occurrence policy:
+the ledger fails CLOSED on an AMBIGUOUS legacy fixture_id because there it
+cannot tell two real occurrences apart and money may already be attached
+to the wrong one. Here the direction of risk is inverted — refusing to
+merge produces two stakeable legs on one match — so the operational
+collapse fails toward ONE stake and records the uncertainty as a flag
+instead of silently keeping both.
+
 * `near_duplicate_fixture_warnings()` / `print_near_duplicate_fixture_tripwire()`:
   after collapse, any same-date, same-canonical-league pair where ONE team
   key matches and the other does not prints a loud warning block naming
@@ -136,9 +234,29 @@ still settle through the legacy reader key.
    bug. Whether UNKNOWN should ever earn the CERTIFIED_CLEAN *label* is a
    policy question for the operator; no gate was changed here.
 
-## 8. Tests
+## 8. Identity epoch split (audit-only distortion)
 
-New: `tests/test_team_identity_transliteration.py` (17 tests) — accented
+Accented / exonym-aliased teams carry **different fixture, candidate and
+occurrence ids before and after the deploy** of this branch. No history is
+rewritten — that is the deliberate choice — so:
+
+* rolling 7/14/30-day reports whose window SPANS the deploy date will see
+  one real team as two fixture identities (e.g. `turkiye` rows before,
+  `turkey` rows after). Read a window-spanning identity split as an
+  artefact of this change, **not** as signal.
+* settlement is NOT affected: the readers accept canonical, transliterated
+  and frozen-legacy keys (§2 rows 7–8).
+* the ml-fade research ledger is NOT affected: its identity is frozen
+  (§2 row 10).
+* the purity registry is NOT orphaned: the variant-union lookup reads both
+  spellings (§2a).
+
+Review this note again once every rolling window in use begins after the
+deploy date; it can be retired then.
+
+## 9. Tests
+
+New: `tests/test_team_identity_transliteration.py` (27 tests) — accented
 corpus transliteration; `norm_team`/`ledger_team_key` agreement; frozen
 legacy key; one canonical key for Türkiye/Turkey (+ other exonyms); alias
 explicit and visible; no false merges; end-to-end dedupe (one survivor,
@@ -150,12 +268,23 @@ key == audit key.
 
 Smoke: `python tools/smoke_fixture_identity_dedupe.py` -> `SMOKE: PASS`.
 
-Validation: `python -m pytest tests/ -q` -> **1291 passed**;
+Explicit parity run:
+`tests/test_scored_candidate_shadow_tickets.py::test_identical_ticket_output_with_shadow_on_off_and_crashing`
+-> **PASSED** (ticket stdout byte-identical with the audit ledger on, off,
+and crashing).
+
+Validation: `python -m pytest tests/ -q` -> **1300 passed**;
 `python -m compileall scripts src tests` clean; `git diff --check` clean;
 no `.github/workflows/*` or `localdata/*` changes.
 
-Unchanged: kickoff guards, `_fixture_orientation_agrees`,
-`_row_matches_selection`, odds floors, veto bands, ladder, staking,
-freeze/write-once, ticket output parity (audit on/off/crash) — the only
-live behaviour change is that duplicate collapse now catches
-cross-spelling twins, which is the fix.
+Unchanged: kickoff guards (the pre-match guard and the 180-minute
+anchored reschedule guard), `_fixture_orientation_agrees`,
+`_row_matches_selection`, odds floors, veto BANDS and thresholds, ladder
+structure, staking, freeze/write-once, ticket output parity.
+
+Live behaviour changes, complete list (all intended, all tested):
+1. duplicate collapse now catches cross-spelling twins (the fix);
+2. team verdicts are now shared across spellings of one team, fail-closed
+   — a veto learned under any spelling vetoes all of them (§2a);
+3. two rows with one canonical identity merge when a bare clock makes the
+   180-minute guard unusable, stamped `duplicate_kickoff_unanchored` (§5a).
