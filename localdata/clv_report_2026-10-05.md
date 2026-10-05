@@ -2,20 +2,20 @@
 
 ## Overall
 
-- total unique picks: 1110
-- picks with at least two prices: 881
-- average raw odds delta: -0.002985
-- average implied-probability delta: 0.001415
-- beat-later-price rate: 0.124858
-- beat-later-price sample: 881
+- total unique picks: 1112
+- picks with at least two prices: 885
+- average raw odds delta: -0.002972
+- average implied-probability delta: 0.001409
+- beat-later-price rate: 0.124294
+- beat-later-price sample: 885
 - unmatched picks: 111
-- picks with fewer than two snapshots: 118
+- picks with fewer than two snapshots: 116
 
 ## By rule
 
 - `2way-unanimous avg_p>=60`: n=206, two_prices=142, avg_raw=-0.000704, avg_ip=0.000248, beat_rate=0.077465
 - `2way-unanimous avg_p>=70`: n=135, two_prices=89, avg_raw=-0.00191, avg_ip=0.001274, beat_rate=0.202247
-- `ml-meta avg_p>=55`: n=553, two_prices=489, avg_raw=-0.004622, avg_ip=0.002183, beat_rate=0.143149
+- `ml-meta avg_p>=55`: n=555, two_prices=493, avg_raw=-0.004584, avg_ip=0.002166, beat_rate=0.141988
 - `ml-meta avg_p>=60`: n=109, two_prices=84, avg_raw=-0.001071, avg_ip=0.000446, beat_rate=0.071429
 - `ml-meta avg_p>=65`: n=41, two_prices=29, avg_raw=0.0, avg_ip=0.000173, beat_rate=0.068966
 - `ml-meta avg_p>=70`: n=21, two_prices=9, avg_raw=-0.002222, avg_ip=0.002695, beat_rate=0.111111
@@ -26,8 +26,8 @@
 ## By bucket
 
 - `CAUTION`: n=92, two_prices=83, avg_raw=-0.003012, avg_ip=0.001897, beat_rate=0.168675
-- `CERTIFIED_CLEAN`: n=134, two_prices=118, avg_raw=-0.002458, avg_ip=0.001135, beat_rate=0.144068
-- `SKIPPED_VETO`: n=539, two_prices=454, avg_raw=-0.002533, avg_ip=0.001327, beat_rate=0.140969
+- `CERTIFIED_CLEAN`: n=135, two_prices=121, avg_raw=-0.002397, avg_ip=0.001107, beat_rate=0.140496
+- `SKIPPED_VETO`: n=540, two_prices=455, avg_raw=-0.002527, avg_ip=0.001324, beat_rate=0.140659
 - `WATCHLIST_NO_ODDS`: n=86, two_prices=2, avg_raw=0.0, avg_ip=0.0, beat_rate=0.0
 - `WATCHLIST_SUSPECT_PRICE`: n=23, two_prices=15, avg_raw=0.008667, avg_ip=-0.003585, beat_rate=0.0
 - `WATCHLIST_UNCORROBORATED_PRICE`: n=224, two_prices=199, avg_raw=-0.005377, avg_ip=0.002044, beat_rate=0.070352

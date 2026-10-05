@@ -2,8 +2,8 @@
   "added": 0,
   "attempted": 0,
   "attempted_fixtures": [],
-  "candidate_fixtures": 4,
-  "captured_at": "2026-10-05T07:17:46+00:00",
+  "candidate_fixtures": 5,
+  "captured_at": "2026-10-05T08:47:49+00:00",
   "date": "2026-10-05",
   "due_reasons": {},
   "errors": [],
@@ -12,14 +12,15 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 3,
+    "priced": 4,
     "retry_cooldown": 1
   },
   "skipped": [
     "Montenegro|Armenia (priced)",
     "Italy|Turkey (priced)",
     "Moss|Kongsvinger (retry cooldown (6h after failed attempt))",
-    "Cyprus|Latvia (priced)"
+    "Cyprus|Latvia (priced)",
+    "France|Belgium (priced)"
   ],
   "source": "theoddsapi",
   "status": "not_due",
