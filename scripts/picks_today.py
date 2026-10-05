@@ -4110,17 +4110,48 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                 # feeds `coverage: scored=` (research_collector.record below
                 # bumps .scored 1:1 with this point, and ml_scored_day is its
                 # per-day delta). Observability only — no state changes.
+                # The entry also carries the scorer's own betting intent
+                # (1x2 majority side) and the side odds VISIBLE TO THE
+                # SCORER at this instant: the same source odds columns the
+                # pick_odds feature reads, scanned without the 1.50 feature
+                # default (a feature fallback is not a price). Never fetched
+                # for this purpose, never a named-book/stakeable price —
+                # captured-price shadow grading only.
                 if fixture_audit is not None:
+                    _aud_home = canonical_display_team(anchor.get("home"))
+                    _aud_away = canonical_display_team(anchor.get("away"))
+                    _shadow_odds = None
+                    _shadow_odds_src = None
+                    for _sp_name, _sp_row in (("forebet", fb_quote),
+                                              ("zulubet", zb),
+                                              ("statarea", sa),
+                                              ("bzzoiro", bz),
+                                              ("vitibet", vb)):
+                        _sp_val = _f((_sp_row or {}).get(_col))
+                        if _sp_val is not None and _sp_val > 1.0:
+                            _shadow_odds = float(_sp_val)
+                            _shadow_odds_src = _sp_name
+                            break
                     fixture_audit.append({
                         "kind": "ml_scored_fixture",
-                        "home": canonical_display_team(anchor.get("home")),
-                        "away": canonical_display_team(anchor.get("away")),
+                        "home": _aud_home,
+                        "away": _aud_away,
                         "league": anchor.get("league"),
                         "kickoff": anchor.get("kickoff") or anchor.get("time"),
                         "sport": anchor.get("sport", "soccer"),
                         "ml_probability": round(float(ml_p), 6),
                         "ml_majority_pick": majority_pick,
                         "sources_used": list(used),
+                        "market": "1x2",
+                        "selection": majority_pick,
+                        "selection_team": (_aud_home if majority_pick == "home"
+                                           else _aud_away if majority_pick == "away"
+                                           else None),
+                        "shadow_price": _shadow_odds,
+                        "shadow_price_source": _shadow_odds_src,
+                        "shadow_price_captured_at_utc": datetime.now(
+                            timezone.utc).isoformat(timespec="seconds"),
+                        "shadow_price_as_of_basis": "fetched_this_run",
                     })
 
                 # Research capture (certification-independent): record the
