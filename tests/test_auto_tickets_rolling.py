@@ -375,7 +375,9 @@ def _settled_for(date, legs_spec):
 
 def test_settle_losing_day_moves_bank_no_notification():
     st = at.fresh_state()   # bank 100%
-    spec = [("a", 1.4, "win"), ("b", 1.43, "loss")]
+    # Use non-squad placeholder suffixes; "Team B" is now intentionally
+    # parsed as a reserve-team marker by settlement identity.
+    spec = [("alpha", 1.4, "win"), ("delta", 1.43, "loss")]
     st["open_slips"].append(_one_acca_slip("2026-08-20", spec, 50.0, 2.0))
     at.settle_open_slips(st, _settled_for("2026-08-20", spec),
                          archives=_archives_for("2026-08-20", spec))
