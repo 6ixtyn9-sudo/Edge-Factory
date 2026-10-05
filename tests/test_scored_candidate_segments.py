@@ -421,28 +421,51 @@ def test_window_profiles_scale_with_length():
                                      "min_fixtures": 20}
 
 
-def test_rolling_survivor_requires_exec_promo_in_every_window(tmp_path):
+def test_rolling_survivor_under_overrides_is_exploratory_only(tmp_path):
+    """Operator rule: overridden thresholds can NEVER mint promotion-
+    proposal material — an all-window survivor under overrides is labelled
+    exploratory and promotion_proposal_ready stays empty."""
     settled = _exec_ledger(tmp_path)          # data on D1..D3
     overrides = dict(min_settled=4, min_days=3, min_fixtures=3)
-    # both windows span all 3 data days -> survivor
+    # both windows span all 3 data days -> survives, but under overrides
     rep = seg.build_rolling_report(D3, windows=(3, 4), root=tmp_path,
                                    settled=settled,
                                    threshold_overrides=overrides,
                                    watch_min_settled=2)
-    ready = rep["promotion_proposal_ready"]
-    keys = {e["segment_key"] for e in ready}
-    assert "market=1x2" in keys
-    entry = next(e for e in ready if e["segment_key"] == "market=1x2")
-    assert entry["survival"] == "SURVIVES_ALL_WINDOWS"
-    assert entry["action"] == "PROMOTION_PROPOSAL_REVIEW"
+    assert rep["promotion_proposal_ready"] == []
+    entry = next(e for e in rep["exploratory_survivors"]
+                 if e["segment_key"] == "market=1x2")
+    assert entry["survival"] == "SURVIVES_ALL_WINDOWS_EXPLORATORY"
+    assert entry["action"] == "EXPLORATORY_REVIEW_ONLY"
+    assert "NOT promotion-proposal material" in entry["action_reason"]
     assert set(entry["tiers_by_window"]) == {"3d", "4d"}
     assert all(t == seg.TIER_EXEC_PROMO
                for t in entry["tiers_by_window"].values())
     assert rep["thresholds_overridden"] is True
     text = seg.render_rolling_report(rep)
-    assert "SURVIVES ALL WINDOWS" in text
+    assert "EXPLORATORY SURVIVORS (OVERRIDDEN THRESHOLDS" in text
     assert "[THRESHOLDS EXPLICITLY OVERRIDDEN]" in text
     assert seg.NO_BEHAVIOR_LINE in text
+
+
+def test_rolling_survivor_under_unrelaxed_profiles_is_proposal_ready(tmp_path):
+    """The real gate: enough genuine evidence under the UNRELAXED 7d
+    profile (30 settled / 3 days / 20 fixtures) -> PROMOTION PROPOSAL
+    READY with no override flag anywhere."""
+    days = [f"2026-09-0{d}" for d in range(1, 8)]      # 7 days x 6 = 42
+    settled = _exec_ledger(tmp_path, days=days, per_day=6)
+    rep = seg.build_rolling_report(days[-1], windows=(7,), root=tmp_path,
+                                   settled=settled)
+    ready = rep["promotion_proposal_ready"]
+    entry = next(e for e in ready if e["segment_key"] == "market=1x2")
+    assert entry["survival"] == "SURVIVES_ALL_WINDOWS"
+    assert entry["action"] == "PROMOTION_PROPOSAL_REVIEW"
+    assert entry["windows"]["7d"]["settled_records"] == 42
+    assert rep["thresholds_overridden"] is False
+    assert rep["exploratory_survivors"] == []
+    text = seg.render_rolling_report(rep)
+    assert "PROMOTION PROPOSAL READY" in text
+    assert "[THRESHOLDS EXPLICITLY OVERRIDDEN]" not in text
 
 
 def test_rolling_short_window_only_edge_is_not_survivor(tmp_path):
