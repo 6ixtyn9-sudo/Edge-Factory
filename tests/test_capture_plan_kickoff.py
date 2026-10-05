@@ -68,3 +68,15 @@ def test_skip_reason_counts_are_stable_due_gate_receipt_keys():
         "too_close_for_first_capture": 1,
         "priced": 2,
     }
+
+
+def test_kickoff_utc_prevents_display_timezone_mismatch_warning():
+    fixture = dict(FIXTURE, kickoff="05-10, 19:45",
+                   kickoff_utc="2026-10-05T18:45:00+00:00",
+                   date="2026-10-05")
+    now = datetime.fromisoformat("2026-10-05T18:05:00+00:00")
+    due, updates, skips = capture.plan_auto(
+        [fixture], [_row("2026-10-05T18:45:00Z")], {}, now=now,
+        kickoff_fn=_pick_kickoff_utc, match_fn=_team_names_match)
+    assert not any("kickoff-mismatch" in s for s in skips)
+    assert due and updates.get("Halmstad|Sirius") == "close_at"

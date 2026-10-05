@@ -153,6 +153,9 @@ def test_curated_archive_truncation_aliases_are_explicit_and_marker_safe():
         ("Giravanz K.", "Giravanz Kitakyu"),
         ("Ellas Syrou", "Ellas Syros"),
         ("Egnatia Rrogozhi", "Egnatia Rrogozhine"),
+        ("Kiyovu Sport", "Kiyovu Sports"),
+        ("San Martin S.J.", "San Martin San Juan"),
+        ("Dinamo Samarkand", "Dinamo Samarqand"),
     ]
     at = _load_auto_tickets()
     for a, b in alias_pairs:
@@ -165,6 +168,13 @@ def test_same_club_name_link_compares_club_stems_after_equal_markers():
     assert at._same_club_names("Hegelmann II", "Hegelmann Litauen 2")
     assert at._same_club_names("Minnesota 2", "Minnesota United II")
     assert not at._same_club_names("Minnesota United", "Minnesota United II")
+
+
+def test_juventud_unida_san_luis_and_universitario_remain_distinct():
+    at = _load_auto_tickets()
+    assert canonical_team_key("Juventud Unida SL", width=24) != canonical_team_key(
+        "Juventud Unida Univ.", width=24)
+    assert not at._same_club_names("Juventud Unida SL", "Juventud Unida Univ.")
 
 # --- verified-result precedence and ambiguity live coverage ----------------
 
