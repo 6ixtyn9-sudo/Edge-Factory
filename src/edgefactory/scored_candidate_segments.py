@@ -683,6 +683,151 @@ def build_segment_report(days: Sequence[str], *, root: Path | None = None,
     }
 
 
+# ---------------------------------------------------------------- rolling --
+# Per-window-length threshold profiles (reviewer-set): longer windows must
+# clear HIGHER bars — an edge that only exists in the short window did not
+# survive. Unlisted lengths scale linearly from the 7-day base (documented,
+# deterministic). Explicit CLI threshold flags override ALL windows and the
+# report says so — relaxation must be explicit and visible, never silent.
+DEFAULT_WINDOW_PROFILES: dict[int, dict[str, int]] = {
+    7: {"min_settled": 30, "min_days": 3, "min_fixtures": 20},
+    14: {"min_settled": 50, "min_days": 5, "min_fixtures": 35},
+    30: {"min_settled": 90, "min_days": 8, "min_fixtures": 60},
+}
+
+
+def window_profile(window_days: int) -> dict[str, int]:
+    prof = DEFAULT_WINDOW_PROFILES.get(int(window_days))
+    if prof:
+        return dict(prof)
+    scale = max(1.0, window_days / 7.0)
+    return {"min_settled": max(30, round(30 * scale)),
+            "min_days": max(3, round(3 * scale)),
+            "min_fixtures": max(20, round(20 * scale))}
+
+
+def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
+                         root: Path | None = None,
+                         settled: Mapping[tuple, str] | None = None,
+                         all_runs: bool = False,
+                         threshold_overrides: Mapping[str, int] | None = None,
+                         top_n: int = 15, **classify_kwargs) -> dict[str, Any]:
+    """Rolling multi-window segment analysis with cross-window survival.
+
+    AUDIT ONLY. A segment is ``promotion_proposal_ready`` (still only a
+    label — no live behavior changes) ONLY when it is
+    EXECUTION_SAFE_PROMOTION_CANDIDATE in EVERY requested window, each
+    window judged against its own (stricter-with-length) thresholds.
+    Exec-promo appearances that fail any window are listed as
+    NOT_SURVIVED_ALL_WINDOWS — visible, never silently dropped.
+    """
+    to10 = str(to_day)[:10]
+    window_reports: dict[str, dict[str, Any]] = {}
+    for w in windows:
+        start = (datetime.strptime(to10, "%Y-%m-%d")
+                 - timedelta(days=int(w) - 1)).strftime("%Y-%m-%d")
+        prof = window_profile(int(w))
+        if threshold_overrides:
+            prof.update({k: int(v) for k, v in threshold_overrides.items()})
+        window_reports[f"{int(w)}d"] = build_segment_report(
+            date_range(start, to10), root=root, settled=settled,
+            all_runs=all_runs, top_n=top_n, **prof, **classify_kwargs)
+
+    # cross-window survival of the ONLY ticket-relevant tier
+    per_key: dict[tuple[str, str], dict[str, dict[str, Any]]] = defaultdict(dict)
+    for wname, rep in window_reports.items():
+        for s in rep["segments"]:
+            per_key[(s["roi_type"], s["segment_key"])][wname] = s
+    survivors, non_survivors = [], []
+    wnames = list(window_reports)
+    for (roi_type, key), by_window in sorted(per_key.items()):
+        tiers = {w: (by_window.get(w) or {}).get("tier") for w in wnames}
+        if not any(t == TIER_EXEC_PROMO for t in tiers.values()):
+            continue
+        entry = {
+            "roi_type": roi_type, "segment_key": key,
+            "tiers_by_window": tiers,
+            "windows": {w: {k: by_window[w][k] for k in
+                            ("settled_records", "flat_profit_units",
+                             "flat_roi", "distinct_days", "distinct_fixtures")}
+                        for w in wnames if w in by_window},
+        }
+        if all(tiers.get(w) == TIER_EXEC_PROMO for w in wnames):
+            entry["survival"] = "SURVIVES_ALL_WINDOWS"
+            entry["action"] = "PROMOTION_PROPOSAL_REVIEW"
+            entry["action_reason"] = (
+                "EXECUTION_SAFE_PROMOTION_CANDIDATE in every requested "
+                "window under per-window thresholds; eligible for a "
+                "SEPARATE written promotion proposal — no live behavior "
+                "changed by this report.")
+            survivors.append(entry)
+        else:
+            entry["survival"] = "NOT_SURVIVED_ALL_WINDOWS"
+            entry["action"] = "WATCH"
+            entry["action_reason"] = (
+                "exec-safe promotion tier reached in some windows only; "
+                "the edge has not yet survived every window.")
+            non_survivors.append(entry)
+    return {
+        "audit_banner": AUDIT_BANNER,
+        "no_behavior_change": NO_BEHAVIOR_LINE,
+        "to": to10,
+        "windows": {w: window_reports[w]["window"] for w in wnames},
+        "window_profiles": {w: {k: window_reports[w]["thresholds"][k]
+                                for k in ("min_settled", "min_days",
+                                          "min_fixtures")}
+                            for w in wnames},
+        "thresholds_overridden": bool(threshold_overrides),
+        "window_reports": window_reports,
+        "promotion_proposal_ready": survivors,
+        "exec_promo_not_survived": non_survivors,
+    }
+
+
+def render_rolling_report(report: Mapping[str, Any]) -> str:
+    lines = [
+        f"ROLLING SEGMENT SURVIVAL — AUDIT ONLY — {AUDIT_BANNER}",
+        "=" * 78,
+        f"Anchor date: {report['to']}   windows: "
+        + ", ".join(f"{w} {v['from']}..{v['to']}"
+                    for w, v in report["windows"].items()),
+        "Per-window thresholds: " + "; ".join(
+            f"{w}: {p}" for w, p in report["window_profiles"].items())
+        + ("   [THRESHOLDS EXPLICITLY OVERRIDDEN]"
+           if report.get("thresholds_overridden") else ""),
+        "",
+        "PROMOTION PROPOSAL READY (EXEC-SAFE, SURVIVES ALL WINDOWS):",
+    ]
+    ready = report.get("promotion_proposal_ready") or []
+    if not ready:
+        lines.append("  (none — no execution-safe segment survived every "
+                     "window; nothing to propose)")
+    for e in ready:
+        lines.append(f"  {e['segment_key']}")
+        for w, stats in e["windows"].items():
+            roi = stats.get("flat_roi")
+            roi_s = f"{roi * 100.0:+.1f}%" if roi is not None else "n/a"
+            lines.append(f"    {w}: settled={stats['settled_records']} "
+                         f"flat={stats['flat_profit_units']:+.2f}u "
+                         f"roi={roi_s} days={stats['distinct_days']} "
+                         f"fixtures={stats['distinct_fixtures']}")
+        lines.append(f"    ACTION: {e['action']} — {e['action_reason']}")
+    lines += ["", "EXEC-PROMO IN SOME WINDOWS ONLY (NOT SURVIVED):"]
+    missed = report.get("exec_promo_not_survived") or []
+    if not missed:
+        lines.append("  (none)")
+    for e in missed:
+        tier_s = ", ".join(f"{w}={t or 'absent'}"
+                           for w, t in e["tiers_by_window"].items())
+        lines.append(f"  {e['segment_key']}  [{tier_s}]")
+    lines += ["", "Per-window detail follows.", ""]
+    for w, rep in report["window_reports"].items():
+        lines += [f"{'#' * 8} WINDOW {w} {'#' * 8}",
+                  render_segment_report(rep), ""]
+    lines += [AUDIT_BANNER, NO_BEHAVIOR_LINE]
+    return "\n".join(lines)
+
+
 # ----------------------------------------------------------------- render --
 def _fmt_seg(s: Mapping[str, Any]) -> str:
     roi = s.get("flat_roi")
