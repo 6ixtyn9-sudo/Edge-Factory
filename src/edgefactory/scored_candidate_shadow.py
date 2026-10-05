@@ -55,6 +55,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 import sys
 import uuid
@@ -236,6 +237,23 @@ def _parse_instant(value: object) -> datetime | None:
     return parsed
 
 
+def finite_odds(value: object) -> float | None:
+    """Decimal odds usable for grading: a finite float > 1.0, else None.
+
+    Red-team guard: NaN compares False against every threshold (``nan <=
+    1.0`` is False), so without this check a NaN/inf price would sail
+    through gradeability, execution-safety and flat-stake maths and poison
+    every ROI sum it touched. Fail closed: not finite => no price.
+    """
+    try:
+        odds = float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(odds) or odds <= 1.0:
+        return None
+    return odds
+
+
 def price_pre_kickoff(row: Mapping[str, Any]) -> tuple[bool | None, str]:
     """Was the captured price provably known BEFORE kickoff?
 
@@ -264,11 +282,9 @@ def execution_safety(row: Mapping[str, Any]) -> dict[str, Any]:
         "execution_safe_reason": "",
         "price_valid_pre_kickoff": None,
     }
-    try:
-        odds = float(row.get("odds")) if row.get("odds") is not None else 0.0
-    except (TypeError, ValueError):
-        odds = 0.0
-    if odds <= 1.0:
+    if finite_odds(row.get("odds")) is None:
+        # covers missing, <=1.0, non-numeric AND NaN/inf (NaN passes any
+        # <=-comparison gate, so the finite check is load-bearing here)
         out["execution_safe_reason"] = "no_captured_price"
         return out
     quarantine = str(row.get("price_quarantine_reason")
@@ -366,12 +382,7 @@ def shadow_price_verdict(entry: Mapping[str, Any], *,
     side = str(entry.get("selection") or "").lower()
     has_intent = market == _SETTLEABLE_MARKET and side in _SETTLEABLE_SIDES
 
-    try:
-        price = float(entry.get("shadow_price"))
-    except (TypeError, ValueError):
-        price = None
-    if price is not None and price <= 1.0:
-        price = None
+    price = finite_odds(entry.get("shadow_price"))
 
     source = str(entry.get("shadow_price_source") or "").strip().lower()
     kind = str(entry.get("shadow_price_kind") or "").strip().lower()
@@ -477,10 +488,7 @@ def scored_event(row: Mapping[str, Any], *, trading_date: str, run_id: str,
         selection_team = row.get("home")
     elif side == "away":
         selection_team = row.get("away")
-    try:
-        odds = float(row.get("odds")) if row.get("odds") is not None else None
-    except (TypeError, ValueError):
-        odds = None
+    odds = finite_odds(row.get("odds"))   # NaN/inf/<=1 stored as no-price
     try:
         probability = (float(row.get("avg_p")) / 100.0
                        if row.get("avg_p") is not None else None)
@@ -983,6 +991,7 @@ def read_ledger(day: str, root: Path | None = None) -> list[dict[str, Any]]:
     events: list[dict[str, Any]] = []
     if not path.exists():
         return events
+    malformed = 0
     for idx, line in enumerate(path.read_text(encoding="utf-8").splitlines()):
         line = line.strip()
         if not line:
@@ -990,10 +999,18 @@ def read_ledger(day: str, root: Path | None = None) -> list[dict[str, Any]]:
         try:
             obj = json.loads(line)
         except ValueError:
+            malformed += 1
             continue
         if isinstance(obj, dict):
             obj["_order"] = idx
             events.append(obj)
+        else:
+            malformed += 1
+    if malformed:
+        # fail-soft but NEVER silent: skipped lines mean the ledger cannot
+        # be assumed complete for this date
+        _warn(f"{path.name}: skipped {malformed} malformed ledger line(s); "
+              "treat counts for this date as potentially incomplete")
     return events
 
 
@@ -1053,15 +1070,18 @@ def settle_candidate(cand: Mapping[str, Any],
 
 def flat_stake_return(settlement_status: str, odds: float | None) -> float | None:
     """Flat 1-unit stake convention: win=odds-1, loss=-1, void=0.
-    Pending/unmatched (and missing odds) return None: excluded from ROI."""
+    Pending/unmatched (and missing/non-finite odds) return None: excluded
+    from ROI. The finite check is load-bearing: a NaN win return would
+    silently poison every profit sum and ROI downstream."""
     if settlement_status == SETTLE_VOID:
         return 0.0
     if settlement_status == SETTLE_LOSS:
         return -1.0
     if settlement_status == SETTLE_WIN:
-        if odds is None or odds <= 1.0:
+        safe = finite_odds(odds)
+        if safe is None:
             return None
-        return float(odds) - 1.0
+        return safe - 1.0
     return None
 
 
@@ -1335,9 +1355,21 @@ def build_report(day: str, *, root: Path | None = None,
     if shadow_fixture_records is None and fixtures:
         shadow_fixture_records = len(fixtures)
 
+    fixture_collisions = None
+    if shadow_fixture_records is not None and fixtures:
+        fixture_collisions = max(0, int(shadow_fixture_records) - len(fixtures))
     fixture_funnel = {
         "shadow_scored_fixture_records": shadow_fixture_records,
         "fixture_records_unique": len(fixtures) if fixtures else None,
+        "fixture_id_collisions": fixture_collisions,
+        "fixture_id_collision_note": (
+            (f"WARNING: {fixture_collisions} scored_fixture entr"
+             f"{'y' if fixture_collisions == 1 else 'ies'} share a "
+             "fixture_id with another entry (fixture_id = date + team "
+             "keys, league excluded); collided entries are merged in the "
+             "funnel joins — verify the day's fixtures before trusting "
+             "per-fixture attribution for this date")
+            if fixture_collisions else None),
         "fixtures_materialized": (sum(1 for f in fixtures
                                       if f["candidate_materialized"])
                                   if fixtures else None),
@@ -1689,6 +1721,9 @@ def render_report(report: Mapping[str, Any]) -> str:
         "  <- never execution-safe; graded below at captured odds when the scorer saw a price",
         "",
     ]
+    if ff.get("fixture_id_collision_note"):
+        lines.append("  " + str(ff["fixture_id_collision_note"]))
+        lines.append("")
     sg = report.get("shadow_gradeability") or {}
     cp = report.get("captured_price_shadow_roi") or {}
     if sg.get("records"):
