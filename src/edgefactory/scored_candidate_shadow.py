@@ -69,6 +69,7 @@ from edgefactory.util import ledger_team_key, norm_league, norm_team
 SCHEMA_VERSION = 1
 
 EVENT_SCORED = "scored_candidate"
+EVENT_SCORED_FIXTURE = "scored_fixture"
 EVENT_STATUS = "candidate_status"
 EVENT_RUN_SUMMARY = "run_summary"
 EVENT_SETTLEMENT = "settlement"
@@ -201,6 +202,23 @@ def candidate_id(row: Mapping[str, Any], trading_date: str) -> str:
     return "scs1-" + hashlib.sha256(blob.encode("utf-8")).hexdigest()[:20]
 
 
+def fixture_id_from_keys(trading_date: str, home_key: str, away_key: str) -> str:
+    """Deterministic FIXTURE-level id (date + normalized team pair).
+
+    Deliberately league-independent: the same fixture reported by different
+    sources may carry different league spellings, and the fixture<->candidate
+    join must stay exact on the identity the pipeline actually shares."""
+    blob = f"{str(trading_date)[:10]}|{home_key}|{away_key}"
+    return "scf1-" + hashlib.sha256(blob.encode("utf-8")).hexdigest()[:20]
+
+
+def fixture_id(entry: Mapping[str, Any], trading_date: str) -> str:
+    return fixture_id_from_keys(
+        trading_date,
+        ledger_team_key(entry.get("home"), width=24),
+        ledger_team_key(entry.get("away"), width=24))
+
+
 # ------------------------------------------------------------ price safety --
 def _parse_instant(value: object) -> datetime | None:
     text = str(value or "").strip()
@@ -325,6 +343,9 @@ def scored_event(row: Mapping[str, Any], *, trading_date: str, run_id: str,
         "schema_version": SCHEMA_VERSION,
         "event_type": EVENT_SCORED,
         "candidate_id": candidate_id(row, trading_date),
+        "fixture_id": fixture_id_from_keys(ident["trading_date"],
+                                           ident["home_key"],
+                                           ident["away_key"]),
         "run_id": run_id,
         "stage": stage,
         "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
@@ -411,11 +432,62 @@ def status_event(*, candidate_id_: str, trading_date: str, run_id: str,
     }
 
 
+def scored_fixture_event(entry: Mapping[str, Any], *, trading_date: str,
+                         run_id: str, stage: str,
+                         build_day: str | None = None,
+                         candidate_materialized: bool = False) -> dict[str, Any]:
+    """One FIXTURE-level record from the exact `coverage: scored=` universe.
+
+    These entries come from the counter's own source (the ML-inference
+    increment, or the n_up key union fallback) BEFORE any candidate
+    emission, bucket promotion or collapse — so a fixture the pipeline
+    scored but never materialized into a candidate still gets a durable
+    record. No price was captured for such fixtures at decision time, so
+    they can never enter execution-safe ROI; the report states that count
+    instead of hiding it.
+    """
+    tdate = str(trading_date)[:10]
+    home_key = ledger_team_key(entry.get("home"), width=24)
+    away_key = ledger_team_key(entry.get("away"), width=24)
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "event_type": EVENT_SCORED_FIXTURE,
+        "fixture_id": fixture_id_from_keys(tdate, home_key, away_key),
+        "run_id": run_id,
+        "stage": stage,
+        "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
+        "git_sha": os.environ.get("GITHUB_SHA"),
+        "trading_date": tdate,
+        "build_day": str(build_day or tdate)[:10],
+        "captured_at_utc": utc_now_iso(),
+        "kind": str(entry.get("kind") or "unknown"),
+        "fixture": f"{entry.get('home')} vs {entry.get('away')}",
+        "home_team": entry.get("home"),
+        "away_team": entry.get("away"),
+        "normalized_home_team": home_key,
+        "normalized_away_team": away_key,
+        "league": entry.get("league"),
+        "league_key": norm_league(entry.get("league")),
+        "country": _country_hint(entry.get("league")),
+        "kickoff_raw": entry.get("kickoff"),
+        "sport": entry.get("sport"),
+        "ml_probability": entry.get("ml_probability"),
+        "ml_majority_pick": entry.get("ml_majority_pick"),
+        "sources_used": entry.get("sources_used"),
+        "candidate_materialized": bool(candidate_materialized),
+        "not_materialized_reason": (None if candidate_materialized
+                                    else "no_candidate_emitted"),
+    }
+
+
 # ------------------------------------------------------- recording (picks) --
 def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
                        slate_rows: Sequence[Mapping[str, Any]],
                        pre_collapse_rows: Sequence[Mapping[str, Any]] | None = None,
                        pipeline_scored_log: int | None = None,
+                       scored_fixtures: Sequence[Mapping[str, Any]] | None = None,
+                       ml_scored_day: int | None = None,
+                       n_up: int | None = None,
                        price_supported_markets: Iterable[str] = (),
                        root: Path | None = None,
                        run_id: str | None = None) -> dict[str, Any] | None:
@@ -431,6 +503,15 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
       CAUTION-bucket candidate under CAUTION_MIN_ODDS) -> ``odds_floor``;
     * in ``pre_collapse_rows`` but not in ``slate_rows``: operational
       duplicate collapse -> ``duplicate_fixture``.
+
+    ``scored_fixtures`` carries the FIXTURE-level entries mirrored at the
+    exact source of the ``coverage: scored=`` counter (``ml_scored_fixture``
+    entries at the model-inference increment; ``upcoming_fixture`` entries
+    at the n_up key union).  The effective universe follows the pipeline's
+    own ``ml_scored_day or n_up`` expression: ML entries when any exist,
+    else the upcoming entries.  Every effective entry is persisted as one
+    ``scored_fixture`` event so a fixture scored but never materialized into
+    a candidate still has a durable record.
 
     Fail-soft: every exception is swallowed and reported on stderr.
     """
@@ -485,6 +566,32 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
                         "detail": "bucket_pick returned None (the loop's only "
                                   "drop: CAUTION bucket below CAUTION_MIN_ODDS)",
                     }]))
+        # Candidate fixture ids (for materialization) use the candidate's
+        # own trading date — the same date basis the fixture entries carry.
+        candidate_fixture_ids = set()
+        for row in scored_rows:
+            tdate = row_trading_date(row, day)
+            candidate_fixture_ids.add(fixture_id(
+                {"home": row.get("home"), "away": row.get("away")}, tdate))
+
+        fixture_entries: list[Mapping[str, Any]] = []
+        n_ml_entries = n_up_entries = 0
+        if scored_fixtures:
+            ml_entries = [f for f in scored_fixtures
+                          if str(f.get("kind")) == "ml_scored_fixture"]
+            up_entries = [f for f in scored_fixtures
+                          if str(f.get("kind")) == "upcoming_fixture"]
+            n_ml_entries, n_up_entries = len(ml_entries), len(up_entries)
+            # Mirror the pipeline's own `ml_scored_day or n_up` expression.
+            fixture_entries = ml_entries if ml_entries else up_entries
+        for entry in fixture_entries:
+            tdate = str(entry.get("trading_date") or day)[:10]
+            fid = fixture_id(entry, tdate)
+            events.append(scored_fixture_event(
+                entry, trading_date=tdate, run_id=rid,
+                stage=STAGE_PICKS_BUILD, build_day=day,
+                candidate_materialized=fid in candidate_fixture_ids))
+
         written = _route_and_append(events, root)
         summary = {
             "schema_version": SCHEMA_VERSION,
@@ -503,16 +610,32 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
                 if str(r.get("market") or "") in supported
                 and row_trading_date(r, day) == str(day)[:10]) if supported else None,
             "pipeline_scored_log": pipeline_scored_log,
+            "pipeline_ml_scored_day": ml_scored_day,
+            "pipeline_n_up": n_up,
+            "shadow_scored_fixtures": (len(fixture_entries)
+                                       if scored_fixtures is not None else None),
+            "shadow_fixture_ml_entries": (n_ml_entries
+                                          if scored_fixtures is not None else None),
+            "shadow_fixture_upcoming_entries": (n_up_entries
+                                                if scored_fixtures is not None
+                                                else None),
+            "fixtures_materialized": (sum(
+                1 for e in events
+                if e.get("event_type") == EVENT_SCORED_FIXTURE
+                and e.get("candidate_materialized"))
+                if scored_fixtures is not None else None),
             "scored_definition": (
                 "pipeline 'coverage: scored=' counts ML-scored fixtures "
-                "(ml_scored_day) falling back to upcoming fixtures with >=2 "
-                "sources (n_up); shadow_scored counts emitted scored candidate "
-                "rows (one per fixture/market/selection/rule). Fixture-level "
-                "and candidate-level counts differ by construction; both are "
-                "persisted here."),
+                "(ml_scored_day) falling back to the upcoming-fixture key "
+                "union (n_up); scored_fixture events mirror that EXACT "
+                "universe one entry per counter increment, while "
+                "shadow_scored counts emitted scored candidate rows (one per "
+                "fixture/market/selection/rule). Both levels are persisted "
+                "and reconciled."),
         }
         _append_events(str(day)[:10], [summary], root)
-        return {"run_id": rid, "scored": n_scored, "events": written + 1}
+        return {"run_id": rid, "scored": n_scored,
+                "fixtures": len(fixture_entries), "events": written + 1}
     except Exception as exc:  # noqa: BLE001 - audit must never break the build
         _warn(f"picks-build ledger write failed: {exc}")
         return None
@@ -876,12 +999,17 @@ def build_report(day: str, *, root: Path | None = None,
     settled = settled if settled is not None else load_settled_overlay(root)
 
     scored_by_cid: dict[str, dict[str, Any]] = {}
+    fixtures_by_fid: dict[str, dict[str, Any]] = {}
+    fixture_entry_counts_by_run: dict[str, int] = defaultdict(int)
     status_by_run: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
     picks_status_by_cid: dict[str, dict[str, Any]] = {}
     run_summaries: list[dict[str, Any]] = []
     for e in events:
         etype = e.get("event_type")
-        if etype == EVENT_SCORED and str(e.get("trading_date")) == day10:
+        if etype == EVENT_SCORED_FIXTURE and str(e.get("trading_date")) == day10:
+            fixtures_by_fid[str(e.get("fixture_id"))] = dict(e)
+            fixture_entry_counts_by_run[str(e.get("run_id"))] += 1
+        elif etype == EVENT_SCORED and str(e.get("trading_date")) == day10:
             cid = str(e.get("candidate_id"))
             prev = scored_by_cid.get(cid)
             # keep the latest capture, but never let a later event ERASE an
@@ -990,14 +1118,81 @@ def build_report(day: str, *, root: Path | None = None,
                                if s.get("run_id") == effective_run
                                and s.get("event_type") == EVENT_RUN_SUMMARY), None)
 
+    # ---------------- fixture-level funnel (the `scored=` universe) --------
+    def _cand_fid(c: Mapping[str, Any]) -> str:
+        fid = c.get("fixture_id")
+        if fid:
+            return str(fid)
+        return fixture_id_from_keys(day10,
+                                    str(c.get("normalized_home_team") or ""),
+                                    str(c.get("normalized_away_team") or ""))
+
+    cands_by_fid: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for c in candidates:
+        cands_by_fid[_cand_fid(c)].append(c)
+
+    picks_run_id = str((picks_summary or {}).get("run_id") or "")
+    fixtures = [dict(f) for f in fixtures_by_fid.values()
+                if not picks_run_id or str(f.get("run_id")) == picks_run_id]
+    if not fixtures and fixtures_by_fid:
+        fixtures = [dict(f) for f in fixtures_by_fid.values()]
+    for f in fixtures:
+        linked = cands_by_fid.get(str(f.get("fixture_id")), [])
+        f["candidate_materialized"] = bool(linked) or bool(
+            f.get("candidate_materialized"))
+        f["materialized_candidates"] = len(linked)
+        f["promoted"] = any(c["selected_as_pick"] for c in linked)
+        f["ticketed"] = any(c["selected_on_ticket"] for c in linked)
+    fixtures.sort(key=lambda f: str(f.get("fixture")))
+
+    # Entry-level record count (exactly one event per counter increment) is
+    # the reconciliation figure; unique fixture_ids can be lower if two
+    # source keys named the same fixture — both numbers are reported.
+    shadow_fixture_records = (picks_summary or {}).get("shadow_scored_fixtures")
+    if shadow_fixture_records is None and picks_run_id:
+        shadow_fixture_records = fixture_entry_counts_by_run.get(picks_run_id)
+    if shadow_fixture_records is None and fixtures:
+        shadow_fixture_records = len(fixtures)
+
+    fixture_funnel = {
+        "shadow_scored_fixture_records": shadow_fixture_records,
+        "fixture_records_unique": len(fixtures) if fixtures else None,
+        "fixtures_materialized": (sum(1 for f in fixtures
+                                      if f["candidate_materialized"])
+                                  if fixtures else None),
+        "fixtures_promoted": (sum(1 for f in fixtures if f["promoted"])
+                              if fixtures else None),
+        "fixtures_ticketed": (sum(1 for f in fixtures if f["ticketed"])
+                              if fixtures else None),
+        "fixtures_not_promoted": (sum(1 for f in fixtures if not f["promoted"])
+                                  if fixtures else None),
+        "fixtures_dropped_without_price_evidence": (
+            sum(1 for f in fixtures if not f["candidate_materialized"])
+            if fixtures else None),
+        "note": ("fixtures scored but never materialized into a candidate "
+                 "carry NO decision-time price; they are counted here and "
+                 "are excluded from execution-safe ROI by construction"),
+    }
+
     shadow_scored = len(candidates)
     shadow_selected_as_pick = sum(1 for c in candidates if c["selected_as_pick"])
+    pl = (picks_summary or {}).get("pipeline_scored_log")
+    missing_count = None
+    reconciliation_ok = None
+    if pl is not None and shadow_fixture_records is not None:
+        missing_count = int(pl) - int(shadow_fixture_records)
+        reconciliation_ok = missing_count == 0
     reconciliation = {
+        "pipeline_scored_log": pl,
+        "shadow_scored_fixture_records": shadow_fixture_records,
+        "missing_count": missing_count,
+        "reconciliation_ok": reconciliation_ok,
         "shadow_scored": shadow_scored,
         "shadow_selected_as_pick": shadow_selected_as_pick,
         "shadow_selected_on_ticket": sum(1 for c in candidates
                                          if c["selected_on_ticket"]),
-        "pipeline_scored_log": (picks_summary or {}).get("pipeline_scored_log"),
+        "pipeline_ml_scored_day": (picks_summary or {}).get("pipeline_ml_scored_day"),
+        "pipeline_n_up": (picks_summary or {}).get("pipeline_n_up"),
         "pipeline_slate_price_supported":
             (picks_summary or {}).get("slate_price_supported"),
         "scored_definition": (picks_summary or {}).get(
@@ -1007,13 +1202,19 @@ def build_report(day: str, *, root: Path | None = None,
             "pipeline scored= counts cannot be reconciled for this date"),
         "note": None,
     }
-    pl = reconciliation["pipeline_scored_log"]
-    if pl is not None and int(pl) != shadow_scored:
+    if pl is not None and shadow_fixture_records is None:
         reconciliation["note"] = (
-            f"pipeline scored={pl} is a FIXTURE-level count while "
-            f"shadow_scored={shadow_scored} is candidate-level (see "
-            "scored_definition); fixtures scored without an emitted candidate "
-            "row have no market/selection and cannot be graded.")
+            f"RECONCILIATION UNAVAILABLE: pipeline scored={pl} but this "
+            "ledger has no scored_fixture events for the date (ticket-layer "
+            "capture only, or a build predating fixture-level capture); the "
+            f"{shadow_scored} candidate-level records below are NOT the full "
+            "scored universe.")
+    elif reconciliation_ok is False:
+        reconciliation["note"] = (
+            f"RECONCILIATION MISMATCH: pipeline scored={pl} but only "
+            f"{shadow_fixture_records} scored_fixture records were "
+            f"persisted (missing_count={missing_count}); do not treat the "
+            "shadow universe as complete for this date.")
 
     report: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
@@ -1080,9 +1281,11 @@ def build_report(day: str, *, root: Path | None = None,
                 "not_execution_safe": agg_of(lambda c: not is_exec_safe(c)),
             },
         },
+        "fixture_funnel": fixture_funnel,
         "reconciliation": reconciliation,
         "ticket_run_summary": ticket_summary,
         "candidates": candidates,
+        "fixtures": fixtures,
     }
     if all_runs:
         report["all_runs"] = {
@@ -1130,6 +1333,14 @@ def render_report(report: Mapping[str, Any]) -> str:
     c = report["counts"]
     r = report["roi"]
     rec = report["reconciliation"]
+    ff = report.get("fixture_funnel") or {}
+
+    def _n(v):
+        return "n/a" if v is None else v
+
+    recon_flag = rec.get("reconciliation_ok")
+    recon_s = ("ok" if recon_flag is True
+               else "MISMATCH" if recon_flag is False else "unavailable")
     lines = [
         f"SCORED-CANDIDATE SHADOW GRADING — {report['date']} (read-only audit)",
         "=" * 70,
@@ -1137,7 +1348,21 @@ def render_report(report: Mapping[str, Any]) -> str:
         f"effective_ticket_run={report['effective_ticket_run'] or 'none'}",
         f"dedupe: {report['dedupe_policy']}",
         "",
-        "COUNTS:",
+        "SCORED-UNIVERSE FUNNEL (pipeline `coverage: scored=` level):",
+        f"  pipeline_scored:                       {_n(rec.get('pipeline_scored_log'))}",
+        f"  shadow_scored_fixture_records:         {_n(ff.get('shadow_scored_fixture_records'))}"
+        f"  (reconciliation={recon_s}, missing={_n(rec.get('missing_count'))})",
+        f"  materialized operational candidates:   {c['total_scored']}"
+        f"  (on {_n(ff.get('fixtures_materialized'))} fixture(s))",
+        f"  promoted picks:                        {c['promoted_picks']}",
+        f"  ticketed legs:                         {c['ticketed_legs']}",
+        f"  scored but not promoted (fixtures):    {_n(ff.get('fixtures_not_promoted'))}",
+        f"  promoted but not ticketed (candidates):{c['promoted_not_ticketed']}",
+        f"  dropped before materialization:        "
+        f"{_n(ff.get('fixtures_dropped_without_price_evidence'))}"
+        "  <- no decision-time price exists for these; never in execution-safe ROI",
+        "",
+        "COUNTS (candidate level):",
         f"  total scored:               {c['total_scored']}",
         f"  promoted picks (slate):     {c['promoted_picks']}",
         f"  ticketed legs:              {c['ticketed_legs']}",
@@ -1187,11 +1412,16 @@ def render_report(report: Mapping[str, Any]) -> str:
         _fmt_agg("not execution-safe", r["by_execution_safety"]["not_execution_safe"]),
         "",
         "RECONCILIATION:",
-        f"  shadow_scored={rec['shadow_scored']} "
+        f"  pipeline_scored={_n(rec['pipeline_scored_log'])} "
+        f"shadow_scored_fixture_records={_n(rec['shadow_scored_fixture_records'])} "
+        f"missing_count={_n(rec['missing_count'])} "
+        f"reconciliation={recon_s}",
+        f"  (pipeline_ml_scored_day={_n(rec['pipeline_ml_scored_day'])} "
+        f"pipeline_n_up={_n(rec['pipeline_n_up'])})",
+        f"  candidate level: shadow_scored={rec['shadow_scored']} "
         f"shadow_selected_as_pick={rec['shadow_selected_as_pick']} "
-        f"shadow_selected_on_ticket={rec['shadow_selected_on_ticket']}",
-        f"  pipeline_scored_log={rec['pipeline_scored_log']} "
-        f"pipeline_slate_price_supported={rec['pipeline_slate_price_supported']}",
+        f"shadow_selected_on_ticket={rec['shadow_selected_on_ticket']} "
+        f"pipeline_slate_price_supported={_n(rec['pipeline_slate_price_supported'])}",
         f"  scored_definition: {rec['scored_definition']}",
     ]
     if rec.get("note"):
