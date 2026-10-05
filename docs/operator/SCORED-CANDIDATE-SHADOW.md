@@ -213,6 +213,41 @@ PYTHONPATH=src python3 scripts/scored_candidate_shadow_report.py --date YYYY-MM-
   source, bookmaker, selected-vs-rejected, execution-safe-vs-not, plus the
   reconciliation block.
 
+## Segment analysis and promotion map (AUDIT RECOMMENDATION — NOT LIVE STAKING LOGIC)
+
+```bash
+python scripts/scored_candidate_segment_report.py --date 2026-09-06
+python scripts/scored_candidate_segment_report.py --from 2026-09-01 --to 2026-09-07 \
+    [--json] [--min-settled N] [--min-days N] [--min-fixtures N] [--all-runs] [--root PATH]
+```
+
+Reads persisted ledgers only (no price fetching, no backfill, no mutation —
+pinned by test). Two populations stay strictly separate:
+`captured_price_shadow` (fixture-level, audit-only prices) and
+`execution_safe` (strict candidate-level gate). Segments are built over all
+single dimensions (promotion state, reasons, bucket, rule/model, market,
+side, league/competition/country, price source/bookmaker/kind, stale,
+registered, gradeable reason, kickoff proof, odds/probability/score/price-age
+bands — fixed documented bands, not quantiles — trading date, weekday) plus a
+CONTROLLED depth-2 compound whitelist; unconstrained mining is deliberately
+not offered.
+
+Promotion-readiness tiers (deterministic decision tree, thresholds
+configurable; defaults `min_settled=30 min_days=3 min_fixtures=20`):
+`BLOCKED_NEGATIVE`, `INSUFFICIENT_SAMPLE`, `WATCHLIST_POSITIVE`,
+`PRICE_ENRICHMENT_CANDIDATE`, `SHADOW_PROMOTION_CANDIDATE`, and
+`EXECUTION_SAFE_PROMOTION_CANDIDATE` — the last is reachable ONLY from the
+execution-safe population and is still just a proposal label. Anti-overfit
+guards: day/fixture concentration caps, single-source profit dominance,
+stale-only-profit detection (`WATCH_STALE_ARTIFACT`), high pending/unmatched
+share, and a conservative lower-confidence-bound ROI. Every segment carries
+baseline ROI + lift (vs the full pool of its ROI type), an action
+(`KEEP_BLOCKED` / `COLLECT_MORE_EVIDENCE` / `WATCH` / `WATCH_STALE_ARTIFACT`
+/ `PRICE_ENRICHMENT` / `PROMOTION_REVIEW_AUDIT_PRICES_ONLY` /
+`PROMOTION_REVIEW`) and warnings. The report always prints:
+"No live betting behavior changed. Promotion requires separate explicit
+implementation and review."
+
 ## Known limitations
 
 * `rejection_reason_unknown` appears when a candidate has a scored event but
