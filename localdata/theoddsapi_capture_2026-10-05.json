@@ -1,26 +1,40 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 3,
-  "captured_at": "2026-10-05T01:15:59+00:00",
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Kongsvinger",
+      "date": "2026-10-05",
+      "home": "Moss",
+      "kickoff": "13:00",
+      "league": "Norway,1. Division"
+    }
+  ],
+  "candidate_fixtures": 4,
+  "captured_at": "2026-10-05T04:19:26+00:00",
   "date": "2026-10-05",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "quoted_fixtures": [],
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 2,
-    "retry_cooldown": 1
+    "priced": 3
   },
   "skipped": [
     "Montenegro|Armenia (priced)",
     "Italy|Turkey (priced)",
-    "Moss|Kongsvinger (retry cooldown (6h after failed attempt))"
+    "Cyprus|Latvia (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Moss vs Kongsvinger (league not covered: Norway,1. Division)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: Norway,1. Division": 1
+  }
 }
