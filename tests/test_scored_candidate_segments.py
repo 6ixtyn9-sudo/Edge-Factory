@@ -572,3 +572,90 @@ def test_non_finite_odds_record_excluded_from_segment_roi():
     assert s["settled_records"] == 4
     assert s["flat_profit_units"] == 4.0        # finite, NaN excluded
     assert s["excluded_no_price"] == 1
+
+
+# ===================== fixture occurrence identity (v2) =====================
+def test_identity_ambiguous_record_is_excluded_and_blocks_promotion_tier():
+    """Required test 7 (segment layer): an identity-ambiguous record adds
+    NOTHING to the ROI denominator (never a loss/pending/unmatched, counted
+    separately as excluded_identity_ambiguous) and its presence bars the
+    segment from every promotion tier."""
+    clean = _spread(8, roi_type=seg.ROI_EXEC_SAFE)
+    s0, c0 = _classify(clean, roi_type=seg.ROI_EXEC_SAFE)
+    assert c0["tier"] == seg.TIER_EXEC_PROMO          # baseline: promotable
+    amb = _rec(roi_type=seg.ROI_EXEC_SAFE, fixture="fx-amb",
+               status=scs.SETTLE_IDENTITY_AMBIGUOUS,
+               identity_ambiguous=True,
+               identity_ambiguity_reason="legacy_fixture_id_collision")
+    s1, c1 = _classify(clean + [amb], roi_type=seg.ROI_EXEC_SAFE)
+    assert s1["excluded_identity_ambiguous"] == 1
+    assert s1["settled_records"] == 8                 # denominator unchanged
+    assert s1["losses"] == 0 and s1["pending"] == 0 and s1["unmatched"] == 0
+    assert s1["flat_profit_units"] == s0["flat_profit_units"]
+    assert c1["tier"] == seg.TIER_WATCHLIST           # demoted, not promoted
+    assert "identity_ambiguous" in c1["warnings"]
+    assert "legacy_fixture_id_collision" in c1["warnings"]
+    assert "identity_ambiguous_blocks_promotion" in c1["warnings"]
+
+
+def test_rolling_gate_blocks_identity_ambiguity_end_to_end(tmp_path):
+    """Required test 8: data that is PROMOTION PROPOSAL READY when clean
+    is blocked when one day's ledger contains a legacy fixture_id
+    collision touching the segment's evidence — the rolling report prints
+    the PROMOTION BLOCKED — IDENTITY AMBIGUITY section instead."""
+    days = [f"2026-09-0{d}" for d in range(1, 8)]
+
+    def _build(root, with_collision):
+        settled = {}
+        for di, day in enumerate(days):
+            cands = [_exec_cand(day, i) for i in range(6)]
+            fixtures = None
+            if with_collision and di == 3:
+                base = {"kind": "ml_scored_fixture", "home": cands[0]["home"],
+                        "away": cands[0]["away"], "sport": "soccer",
+                        "trading_date": day}
+                fixtures = [dict(base, league="Portugal,Primeira Liga",
+                                 kickoff=f"{day}T18:30:00+00:00"),
+                            dict(base, league="Portugal,Taca de Portugal",
+                                 kickoff=f"{day}T20:45:00+00:00")]
+            scs.record_picks_build(day=day, scored_rows=cands,
+                                   slate_rows=cands, pipeline_scored_log=6,
+                                   scored_fixtures=fixtures,
+                                   price_supported_markets={"1x2"}, root=root)
+            for c in cands:
+                settled[(day, norm_team(c["home"]),
+                         norm_team(c["away"]))] = "home"
+        return settled
+
+    clean_root = tmp_path / "clean"; clean_root.mkdir()
+    amb_root = tmp_path / "amb"; amb_root.mkdir()
+    clean = seg.build_rolling_report(days[-1], windows=(7,), root=clean_root,
+                                     settled=_build(clean_root, False))
+    assert clean["promotion_proposal_ready"]          # baseline survives
+    assert clean["promotion_blocked_identity"] == []
+
+    blocked = seg.build_rolling_report(days[-1], windows=(7,), root=amb_root,
+                                       settled=_build(amb_root, True))
+    assert blocked["promotion_proposal_ready"] == []  # ambiguity gates it
+    assert blocked["promotion_blocked_identity"]
+    assert all(e["action"] == "PROMOTION_BLOCKED_IDENTITY_AMBIGUOUS"
+               for e in blocked["promotion_blocked_identity"])
+    out = seg.render_rolling_report(blocked)
+    assert "PROMOTION BLOCKED — IDENTITY AMBIGUITY" in out
+    assert "PROMOTION_PROPOSAL_REVIEW" not in out
+    # the ambiguous record is visible, excluded, and never a loss
+    rep7 = blocked["window_reports"]["7d"]
+    pool = rep7["baselines"][seg.ROI_EXEC_SAFE]["all_scored"]
+    assert pool["excluded_identity_ambiguous"] == 1
+    assert pool["settled_records"] == 41 and pool["losses"] == 0
+
+
+def test_shadow_reports_are_not_wired_into_workflows():
+    """Required test 10 (CI isolation): the audit/report layer must stay
+    operator-run — no GitHub workflow may invoke the shadow/segment
+    reports, so no workflow edit is ever needed for this feature."""
+    wf_dir = ROOT / ".github" / "workflows"
+    for wf in wf_dir.glob("*.yml"):
+        text = wf.read_text()
+        assert "scored_candidate_segment_report" not in text
+        assert "scored_candidate_shadow_report" not in text

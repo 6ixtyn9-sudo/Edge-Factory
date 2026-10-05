@@ -827,20 +827,30 @@ def test_malformed_ledger_lines_are_skipped_with_loud_warning(tmp_path, capsys):
 
 
 def test_fixture_id_collisions_are_counted_and_loudly_noted(tmp_path):
-    # same teams, same date, DIFFERENT league strings: fixture_id excludes
-    # league by design, so these collide — the collision must be visible
+    # same teams, same date, DIFFERENT kickoffs/competitions: two real
+    # occurrences share one legacy fixture_id — the collision must be
+    # visible, both records must survive (no silent overwrite merge), and
+    # every affected record must fail CLOSED to identity_ambiguous.
     a = _fixture_entry(0)
-    b = dict(_fixture_entry(0), league="Portugal,Taca de Portugal")
+    b = dict(_fixture_entry(0), league="Portugal,Taca de Portugal",
+             kickoff=f"{DAY}T20:45:00+00:00")
     scs.record_picks_build(day=DAY, scored_rows=[], slate_rows=[],
                            pipeline_scored_log=2, scored_fixtures=[a, b],
                            ml_scored_day=2, n_up=2, root=tmp_path)
     report = scs.build_report(DAY, root=tmp_path, settled={})
     ff = report["fixture_funnel"]
     assert ff["shadow_scored_fixture_records"] == 2
-    assert ff["fixture_records_unique"] == 1
+    assert ff["fixture_records_unique"] == 2      # occurrence-keyed: no merge
     assert ff["fixture_id_collisions"] == 1
     assert "WARNING" in ff["fixture_id_collision_note"]
     assert ff["fixture_id_collision_note"] in scs.render_report(report)
+    ids = report["identity_safety"]
+    assert ids["legacy_fixture_id_collisions"] == 1
+    assert ids["ambiguous_identity_records"] == 2
+    assert ids["excluded_identity_ambiguous"] == 2
+    assert scs.IDENTITY_WARNING_TEXT in scs.render_report(report)
+    assert all(f["settlement_status"] == scs.SETTLE_IDENTITY_AMBIGUOUS
+               for f in report["fixtures"])
 
 
 def test_pre_shadow_schema_fixture_event_fails_closed_not_crashes(tmp_path):
@@ -872,3 +882,187 @@ def test_pre_shadow_schema_fixture_event_fails_closed_not_crashes(tmp_path):
     assert fx["shadow_price_gradeable"] is False
     assert fx["shadow_price_gradeable_reason"] == "no_selection_intent_available"
     assert report["shadow_gradeability"]["without_selection_intent"] == 1
+
+
+# ===================== fixture occurrence identity (v2) =====================
+def test_same_teams_date_different_competitions_get_distinct_occurrence_ids(
+        tmp_path):
+    """Required test 1: no kickoff on either entry, different canonical
+    competitions => distinct fixture_occurrence_ids, both records survive
+    (no silent merge), and the shared legacy id fails closed."""
+    a = dict(_fixture_entry(0), league="Portugal,Primeira Liga")
+    b = dict(_fixture_entry(0), league="Portugal,Taca de Portugal")
+    a.pop("kickoff"), b.pop("kickoff")
+    scs.record_picks_build(day=DAY, scored_rows=[], slate_rows=[],
+                           pipeline_scored_log=2, scored_fixtures=[a, b],
+                           ml_scored_day=2, n_up=2, root=tmp_path)
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    fixtures = report["fixtures"]
+    assert len(fixtures) == 2
+    occs = {f["fixture_occurrence_id"] for f in fixtures}
+    assert len(occs) == 2 and None not in occs
+    assert all(f["fixture_identity_precision"]
+               == scs.PRECISION_COMPETITION_ONLY for f in fixtures)
+    assert len({f["fixture_id"] for f in fixtures}) == 1   # legacy collides
+    assert report["identity_safety"]["legacy_fixture_id_collisions"] == 1
+    assert all(f["fixture_identity_ambiguous"] for f in fixtures)
+
+
+def test_same_teams_date_different_kickoffs_fail_closed_never_misattributed(
+        tmp_path):
+    """Required tests 2 + 7: distinct kickoffs => distinct occurrence ids;
+    the results overlay is keyed by date+teams only, so NO result can be
+    attributed to either occurrence — settlement fails CLOSED to
+    identity_ambiguous for all affected fixture AND candidate records.
+    Ambiguous records are excluded from the ROI denominator and are NEVER
+    losses, pending, or unmatched. Candidate statuses still attach to
+    their own candidate_ids (no cross-contamination)."""
+    a = _fixture_entry(0)                                   # 18:30 kickoff
+    b = dict(_fixture_entry(0), league="Portugal,Taca de Portugal",
+             kickoff=f"{DAY}T20:45:00+00:00")
+    cand = _cand_for_fixture(a, odds=2.0,
+                             odds_source="bzzoiro_odds",
+                             price_evidence="NAMED_BOOKMAKER_PRICE")
+    scs.record_picks_build(day=DAY, scored_rows=[cand], slate_rows=[cand],
+                           pipeline_scored_log=2, scored_fixtures=[a, b],
+                           ml_scored_day=2, n_up=2,
+                           price_supported_markets={"1x2"}, root=tmp_path)
+    # a result exists for the colliding key — attributing it to either
+    # occurrence would be a guess, and if counted as a loss it would be
+    # manufactured evidence
+    settled = _settled((DAY, a["home"], a["away"], "away"))
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+    occs = {f["fixture_occurrence_id"] for f in report["fixtures"]}
+    assert len(occs) == 2 and None not in occs
+    assert all(f["settlement_status"] == scs.SETTLE_IDENTITY_AMBIGUOUS
+               for f in report["fixtures"])
+    c = report["candidates"][0]
+    assert c["settlement_status"] == scs.SETTLE_IDENTITY_AMBIGUOUS
+    assert c["fixture_identity_ambiguous"] is True
+    # the status event still attached to the right candidate_id
+    assert c["selected_as_pick"] is True
+    # never a loss, never pending/unmatched, excluded from every ROI line
+    assert report["counts"]["settled_loss"] == 0
+    assert report["counts"]["identity_ambiguous"] == 1
+    all_roi = report["roi"]["all_scored"]
+    assert all_roi["settled"] == 0 and all_roi["losses"] == 0
+    assert all_roi["pending"] == 0 and all_roi["unmatched"] == 0
+    assert all_roi["excluded_identity_ambiguous"] == 1
+    assert scs.flat_stake_return(scs.SETTLE_IDENTITY_AMBIGUOUS, 2.0) is None
+
+
+def test_legacy_collision_without_v2_fields_fails_closed(tmp_path):
+    """Required test 3: two pre-v2 events (no kickoff, no league at all)
+    share a legacy fixture_id — identity cannot be derived, the merge is
+    unresolvable, the record fails closed and the collision is counted."""
+    rid = scs.new_run_id("picks_build")
+    fid = scs.fixture_id({"home": "aaholm", "away": "aaberg"}, DAY)
+    def _bare(kind):
+        return {"schema_version": scs.SCHEMA_VERSION,
+                "event_type": "scored_fixture", "fixture_id": fid,
+                "run_id": rid, "stage": "picks_build", "trading_date": DAY,
+                "build_day": DAY, "kind": kind,
+                "fixture": "aaholm vs aaberg", "home_team": "aaholm",
+                "away_team": "aaberg", "candidate_materialized": False,
+                "not_materialized_reason": "no_candidate_emitted"}
+    summary = {"schema_version": scs.SCHEMA_VERSION,
+               "event_type": "run_summary", "run_id": rid,
+               "stage": "picks_build", "trading_date": DAY,
+               "build_day": DAY, "pipeline_scored_log": 2,
+               "shadow_scored_fixtures": 2, "scored_definition": "x"}
+    scs._append_events(DAY, [_bare("ml_scored_fixture"),
+                             _bare("ml_scored_fixture"), summary], tmp_path)
+    report = scs.build_report(
+        DAY, root=tmp_path,
+        settled=_settled((DAY, "aaholm", "aaberg", "home")))
+    ff = report["fixture_funnel"]
+    assert ff["fixture_id_collisions"] == 1
+    (f,) = report["fixtures"]
+    assert f["fixture_occurrence_id"] is None
+    assert f["fixture_identity_precision"] == scs.PRECISION_LEGACY_AMBIGUOUS
+    assert f["fixture_identity_ambiguous"] is True
+    assert f["settlement_status"] == scs.SETTLE_IDENTITY_AMBIGUOUS
+    ids = report["identity_safety"]
+    assert ids["legacy_fixture_id_collisions"] == 1
+    assert ids["excluded_identity_ambiguous"] >= 1
+    assert ids["warning"] == scs.IDENTITY_WARNING_TEXT
+
+
+def test_collision_free_v2_records_settle_and_grade_normally(tmp_path):
+    """Required test 4: normal v2 records (kickoff + competition) are
+    unaffected — exact occurrence identity, no ambiguity, settlement and
+    captured-price ROI work exactly as before."""
+    entries = [_priced(i) for i in range(3)]
+    scs.record_picks_build(day=DAY, scored_rows=[], slate_rows=[],
+                           pipeline_scored_log=3, scored_fixtures=entries,
+                           ml_scored_day=3, n_up=3, root=tmp_path)
+    settled = _settled(*[(DAY, e["home"], e["away"], "home")
+                         for e in entries])
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+    ids = report["identity_safety"]
+    assert ids["fixture_identity_version"] == "v2"
+    assert ids["legacy_fixture_id_collisions"] == 0
+    assert ids["ambiguous_identity_records"] == 0
+    assert ids["excluded_identity_ambiguous"] == 0
+    assert ids["warning"] is None
+    for f in report["fixtures"]:
+        assert f["fixture_occurrence_id"].startswith("scfo2-")
+        assert f["fixture_identity_precision"] == scs.PRECISION_EXACT
+        assert f["legacy_fixture_id"] == f["fixture_id"]
+        assert f["settlement_status"] == "win"    # ml intent = home, home won
+
+
+def test_mixed_old_and_new_schema_records_coexist(tmp_path):
+    """Required test 5: a pre-identity bare record and a new v2 record in
+    the same ledger — both are read, the old one is classified
+    legacy_unambiguous (no collision evidence), the day reports
+    fixture_identity_version=mixed, and nothing crashes or merges."""
+    rid = scs.new_run_id("picks_build")
+    old_event = {"schema_version": scs.SCHEMA_VERSION,
+                 "event_type": "scored_fixture",
+                 "fixture_id": scs.fixture_id({"home": "aaholm",
+                                               "away": "aaberg"}, DAY),
+                 "run_id": rid, "stage": "picks_build", "trading_date": DAY,
+                 "build_day": DAY, "kind": "ml_scored_fixture",
+                 "fixture": "aaholm vs aaberg", "home_team": "aaholm",
+                 "away_team": "aaberg", "candidate_materialized": False,
+                 "not_materialized_reason": "no_candidate_emitted"}
+    new_event = scs.scored_fixture_event(_fixture_entry(1), trading_date=DAY,
+                                         run_id=rid, stage="picks_build")
+    summary = {"schema_version": scs.SCHEMA_VERSION,
+               "event_type": "run_summary", "run_id": rid,
+               "stage": "picks_build", "trading_date": DAY,
+               "build_day": DAY, "pipeline_scored_log": 2,
+               "shadow_scored_fixtures": 2, "scored_definition": "x"}
+    scs._append_events(DAY, [old_event, new_event, summary], tmp_path)
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    assert len(report["fixtures"]) == 2
+    ids = report["identity_safety"]
+    assert ids["fixture_identity_version"] == "mixed"
+    assert ids["legacy_fixture_id_collisions"] == 0
+    old = next(f for f in report["fixtures"] if f["home_team"] == "aaholm")
+    assert old["fixture_occurrence_id"] is None
+    assert old["fixture_identity_precision"] == scs.PRECISION_LEGACY_UNAMBIGUOUS
+    assert old["fixture_identity_ambiguous"] is False
+    new = next(f for f in report["fixtures"] if f["home_team"] != "aaholm")
+    assert new["fixture_occurrence_id"] and new["fixture_identity_version"] == 2
+
+
+def test_cross_source_league_spelling_never_splits_agreeing_kickoff(tmp_path):
+    """Required test 6: the same fixture reported twice with DIFFERENT raw
+    league spellings but an agreeing kickoff identity is ONE occurrence —
+    it must not be split into a fake collision, and it settles normally."""
+    a = _priced(0)                             # league "Portugal,Primeira Liga"
+    b = dict(_priced(0), league="Primeira Liga (POR)")         # same kickoff
+    scs.record_picks_build(day=DAY, scored_rows=[], slate_rows=[],
+                           pipeline_scored_log=2, scored_fixtures=[a, b],
+                           ml_scored_day=2, n_up=2, root=tmp_path)
+    report = scs.build_report(
+        DAY, root=tmp_path,
+        settled=_settled((DAY, a["home"], a["away"], "home")))
+    assert report["fixture_funnel"]["fixture_records_unique"] == 1
+    assert report["identity_safety"]["legacy_fixture_id_collisions"] == 0
+    assert report["identity_safety"]["ambiguous_identity_records"] == 0
+    (f,) = report["fixtures"]
+    assert f["fixture_identity_ambiguous"] is False
+    assert f["settlement_status"] == "win"     # settles normally, no fail-close
