@@ -289,3 +289,91 @@ def test_6c_collapse_is_idempotent_on_the_frozen_slate():
     second, removed2 = pt.collapse_final_operational_picks([dict(r) for r in first])
     assert removed1 == 1 and removed2 == 0
     assert json.dumps(first, sort_keys=True) == json.dumps(second, sort_keys=True)
+
+
+# --- settlement ambiguity must not fire on spelling variants -------------
+
+def _drop(rows):
+    at = _load("auto_tickets_ambig", "scripts/auto_tickets.py")
+    entries = {"2024-01-01": rows}
+    key_to = {}
+    for day, rs in entries.items():
+        for e in rs:
+            for hk, ak in at._exact_result_keys(e["home"], e["away"]):
+                key_to[(day, hk, ak)] = e.get("result")
+    dropped, detail = at._drop_ambiguous_result_keys(key_to, entries)
+    return at, key_to, dropped, detail
+
+
+def test_spelling_variants_of_one_club_are_not_ambiguous():
+    """Feeds spell one club many ways on the same day.
+
+    Treating those as a fixture conflict dropped ~24k result keys in the
+    2026-10-05 run, pushed every affected leg into the O(n) similarity
+    fallback and made the run take 63 minutes.
+    """
+    rows = [
+        {"home": "Blackburn Rovers", "away": "Rotherham", "result": "home"},
+        {"home": "Blackburn", "away": "Rotherham", "result": "away"},
+        {"home": "Sheffield Wed", "away": "Hull City", "result": "home"},
+        {"home": "Sheffield Wednesday", "away": "Hull City", "result": "away"},
+        {"home": "Colchester Utd", "away": "Gillingham", "result": "draw"},
+        {"home": "Colchester", "away": "Gillingham", "result": "home"},
+    ]
+    at, key_to, dropped, _ = _drop(rows)
+    assert dropped == 0, "same club, different spellings is not an ambiguity"
+    assert key_to, "keys must remain settleable"
+
+
+def test_identical_outcomes_are_never_ambiguous():
+    rows = [{"home": "Manchester City", "away": "Arsenal", "result": "home"},
+            {"home": "Manchester United", "away": "Arsenal", "result": "home"}]
+    _, key_to, dropped, _ = _drop(rows)
+    assert dropped == 0, "same verdict: nothing can be mis-settled"
+
+
+def test_truly_distinct_fixtures_with_conflicting_results_still_drop():
+    rows = [{"home": "Manchester City", "away": "Arsenal", "result": "home"},
+            {"home": "Manchester United", "away": "Arsenal", "result": "away"}]
+    _, key_to, dropped, detail = _drop(rows)
+    assert dropped >= 1
+    collided = {n for _d, names in detail for n in names}
+    assert "Manchester City vs Arsenal" in collided
+
+
+def test_same_club_name_link_is_deterministic_not_fuzzy():
+    at = _load("auto_tickets_link", "scripts/auto_tickets.py")
+    assert at._same_club_names("Blackburn Rovers", "Blackburn")
+    assert at._same_club_names("Maidstone Utd", "Maidstone United")
+    assert at._same_club_names("Borussia M'gladbach", "Borussia Mönchengladbach")
+    assert not at._same_club_names("Manchester City", "Manchester United")
+    assert not at._same_club_names("Launceston City", "Launceston United")
+    assert not at._same_club_names("Turkey", "Turkey U21")
+
+
+def test_marker_guard_is_quiet_for_unmarked_legs(capsys):
+    at = _load("auto_tickets_quiet", "scripts/auto_tickets.py")
+    at.MARKER_GUARDED_LEGS.clear()
+    at._note_marker_guarded_leg({"date": "2026-10-05", "home": "Moss",
+                                 "away": "Kongsvinger"})
+    assert at.MARKER_GUARDED_LEGS == []
+    at._note_marker_guarded_leg({"date": "2026-10-05", "home": "Korona II Kielce",
+                                 "away": "Radomiak Radom"})
+    assert len(at.MARKER_GUARDED_LEGS) == 1
+
+
+def test_ambiguous_detail_is_printed_once_and_capped(capsys):
+    at = _load("auto_tickets_log", "scripts/auto_tickets.py")
+    detail = [("2024-01-01", [f"A{i} vs B{i}", f"A{i}x vs B{i}"]) for i in range(40)]
+    at._AMBIGUOUS_DETAIL_PRINTED = False
+    at.AMBIGUOUS_SETTLEMENT_KEYS.clear()
+    at.AMBIGUOUS_SETTLEMENT_KEYS.extend(detail)
+    at._report_ambiguous_settlement(len(detail), detail)
+    first = capsys.readouterr().err
+    assert "settlement_ambiguous_pending=40" in first
+    assert first.count("!! AMBIGUOUS SETTLEMENT KEY") == 5
+    assert "+35 more" in first
+    at._report_ambiguous_settlement(len(detail), detail)
+    second = capsys.readouterr().err
+    assert "settlement_ambiguous_pending=40" in second
+    assert "!! AMBIGUOUS SETTLEMENT KEY" not in second  # detail printed once
