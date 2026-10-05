@@ -378,10 +378,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 198,
-   "inv_price_sum": 193.94650053014684,
+   "hits": 209,
+   "inv_price_sum": 205.3125206998796,
    "multi_n": 31,
-   "n": 297,
+   "n": 312,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -679,9 +679,24 @@
     "2026-10-03|Tampa Bay Rowdies vs Miami FC|match_over_25@v1",
     "2026-10-04|West Ham (w) vs Chelsea (w)|match_over_25@v1",
     "2026-10-04|Wales vs Denmark|match_over_25@v1",
-    "2026-10-04|Greece vs Germany|match_over_25@v1"
+    "2026-10-04|Greece vs Germany|match_over_25@v1",
+    "2026-09-06|Rudes vs HNK Hajduk Split|match_over_25@v1",
+    "2026-09-06|Sarpsborg 08 vs Valerenga|match_over_25@v1",
+    "2026-09-13|Stromsgodset IF vs Sandnes Ulf|match_over_25@v1",
+    "2026-09-13|SV Elversberg vs Bayern Munich|match_over_25@v1",
+    "2026-09-14|Bodo/Glimt vs Sandefjord|match_over_25@v1",
+    "2026-09-14|Vikingur Reykjavik vs Keflavik|match_over_25@v1",
+    "2026-09-15|America De Cali vs Deportivo Pasto|match_over_25@v1",
+    "2026-09-20|Kongsvinger vs Hodd|match_over_25@v1",
+    "2026-09-20|Brann vs Bodo/Glimt|match_over_25@v1",
+    "2026-09-20|Crvena Zvezda vs Radnicki Nis|match_over_25@v1",
+    "2026-09-20|Haugesund vs Strommen|match_over_25@v1",
+    "2026-09-20|Raufoss vs Stromsgodset|match_over_25@v1",
+    "2026-09-20|Ujpest FC vs Zalaegerszegi TE|match_over_25@v1",
+    "2026-10-03|Stromsgodset vs Asane|match_over_25@v1",
+    "2026-10-04|Castellon vs AD Ceuta|match_over_25@v1"
    ],
-   "profit": 6.337,
+   "profit": 6.047,
    "records": [
     {
      "date": "2026-08-01",
@@ -3056,6 +3071,126 @@
      "multi_source": true,
      "price": 1.72,
      "source": "oddspapi"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": true,
+     "match": "Rudes vs HNK Hajduk Split",
+     "multi_source": false,
+     "price": 1.5,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-06",
+     "hit": true,
+     "match": "Sarpsborg 08 vs Valerenga",
+     "multi_source": false,
+     "price": 1.4,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-13",
+     "hit": true,
+     "match": "Stromsgodset IF vs Sandnes Ulf",
+     "multi_source": false,
+     "price": 1.28,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-13",
+     "hit": true,
+     "match": "SV Elversberg vs Bayern Munich",
+     "multi_source": false,
+     "price": 1.16,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-14",
+     "hit": true,
+     "match": "Bodo/Glimt vs Sandefjord",
+     "multi_source": false,
+     "price": 1.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-14",
+     "hit": true,
+     "match": "Vikingur Reykjavik vs Keflavik",
+     "multi_source": false,
+     "price": 1.3,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-15",
+     "hit": false,
+     "match": "America De Cali vs Deportivo Pasto",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Kongsvinger vs Hodd",
+     "multi_source": false,
+     "price": 1.22,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Brann vs Bodo/Glimt",
+     "multi_source": false,
+     "price": 1.28,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Crvena Zvezda vs Radnicki Nis",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Haugesund vs Strommen",
+     "multi_source": false,
+     "price": 1.33,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": false,
+     "match": "Raufoss vs Stromsgodset",
+     "multi_source": false,
+     "price": 1.2,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-20",
+     "hit": true,
+     "match": "Ujpest FC vs Zalaegerszegi TE",
+     "multi_source": false,
+     "price": 1.6,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-03",
+     "hit": false,
+     "match": "Stromsgodset vs Asane",
+     "multi_source": false,
+     "price": 1.14,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-04",
+     "hit": false,
+     "match": "Castellon vs AD Ceuta",
+     "multi_source": false,
+     "price": 1.36,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",
@@ -3064,9 +3199,9 @@
   },
   "match_over_35@v1": {
    "hits": 5,
-   "inv_price_sum": 5.1649990803732395,
+   "inv_price_sum": 5.869544534918694,
    "multi_n": 0,
-   "n": 14,
+   "n": 16,
    "processed": [
     "2026-08-09|Benfica vs Academico Viseu|match_over_35@v1",
     "2026-08-09|Malm\u00f6 FF vs Degerfors IF|match_over_35@v1",
@@ -3081,9 +3216,11 @@
     "2026-09-11|Ammanford vs Caernarfon Town|match_over_35@v1",
     "2026-09-11|Sport Recife vs Ponte Preta|match_over_35@v1",
     "2026-09-11|AC Pisa vs Virtus Entella|match_over_35@v1",
-    "2026-09-11|Cienciano vs Montevideo City Torque|match_over_35@v1"
+    "2026-09-11|Cienciano vs Montevideo City Torque|match_over_35@v1",
+    "2026-09-12|Palmeiras vs Sao Paulo|match_over_35@v1",
+    "2026-09-12|IFK Goteborg vs Halmstad|match_over_35@v1"
    ],
-   "profit": -0.2,
+   "profit": -2.2,
    "records": [
     {
      "date": "2026-08-09",
@@ -3195,6 +3332,22 @@
      "match": "Cienciano vs Montevideo City Torque",
      "multi_source": false,
      "price": 3.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": false,
+     "match": "Palmeiras vs Sao Paulo",
+     "multi_source": false,
+     "price": 4.0,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-09-12",
+     "hit": false,
+     "match": "IFK Goteborg vs Halmstad",
+     "multi_source": false,
+     "price": 2.2,
      "source": "scoutingstats"
     }
    ],
