@@ -226,3 +226,16 @@ def test_ambiguity_detector_still_drops_distinct_width_collision():
     collided = {name for _day, names in detail for name in names}
     assert "Manchester City vs Arsenal" in collided
     assert "Manchester United vs Arsenal" in collided
+
+
+def test_marker_guard_summary_is_operator_visible_even_at_zero(capsys):
+    at = _load_auto_tickets()
+    at.MARKER_GUARDED_LEGS.clear()
+    at._report_marker_guarded_settlement()
+    assert "settlement_marker_guarded_pending=0" in capsys.readouterr().err
+
+    at._note_marker_guarded_leg({"date": "2026-10-05", "home": "Korona II Kielce",
+                                 "away": "Radomiak Radom"})
+    capsys.readouterr()  # discard per-leg detail; the summary is the contract here
+    at._report_marker_guarded_settlement()
+    assert "settlement_marker_guarded_pending=1" in capsys.readouterr().err
