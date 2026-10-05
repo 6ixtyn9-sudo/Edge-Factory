@@ -2,8 +2,8 @@
   "added": 0,
   "attempted": 0,
   "attempted_fixtures": [],
-  "candidate_fixtures": 5,
-  "captured_at": "2026-10-05T10:18:56+00:00",
+  "candidate_fixtures": 6,
+  "captured_at": "2026-10-05T13:17:09+00:00",
   "date": "2026-10-05",
   "due_reasons": {},
   "errors": [],
@@ -12,15 +12,21 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "priced": 4,
-    "retry_cooldown": 1
+    "kickoff_mismatch": 3,
+    "priced": 1,
+    "priced_close_window_not_open": 3,
+    "retry_cooldown": 2
   },
   "skipped": [
-    "Montenegro|Armenia (priced)",
+    "Italy|T\u00fcrkiye (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Montenegro|Armenia: pick lists 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from the earlier)",
+    "Montenegro|Armenia (priced, close window not open)",
     "Italy|Turkey (priced)",
     "Moss|Kongsvinger (retry cooldown (6h after failed attempt))",
-    "Cyprus|Latvia (priced)",
-    "France|Belgium (priced)"
+    "WARN kickoff-mismatch Cyprus|Latvia: pick lists 15:00Z, captured rows say 16:00Z (\u0394=60m; planning from the earlier)",
+    "Cyprus|Latvia (priced, close window not open)",
+    "WARN kickoff-mismatch France|Belgium: pick lists 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from the earlier)",
+    "France|Belgium (priced, close window not open)"
   ],
   "source": "theoddsapi",
   "status": "not_due",
