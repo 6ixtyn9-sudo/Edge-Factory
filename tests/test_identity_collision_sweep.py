@@ -405,7 +405,8 @@ def test_frozen_slate_identity_sweep_counters_are_all_zero():
         [dict(r) for r in _slate_rows()])
     counts = pt.print_identity_sweep(collapsed, day="2026-10-05")
     assert counts == {"identity_degenerate": 0, "ledger_key_collision": 0,
-                      "cross_keyer_merged": 0, "cross_keyer_split": 0}
+                      "cross_keyer_merged": 0, "cross_keyer_split": 0,
+                      "mixed_script_name": 0}
 
 
 def test_frozen_slate_archive_merge_is_not_inflated():
