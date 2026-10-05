@@ -146,6 +146,44 @@ def canonical_team(raw: object, *, width: int = 24) -> str:
     return norm_entity_team(team_identity_words(str(raw or "")), width=width)
 
 
+def canonical_team_variants(raw: object, *, width: int = 24) -> list[str]:
+    """Every entity-key spelling that denotes the SAME team.
+
+    Returned in priority order: the canonical key first, then the
+    pre-alias fallback key (what this name resolved to before the
+    2026-10-05 canonicalization), then the keys of every curated sibling
+    spelling that maps to the same canonical name.
+
+    Context/purity tables learned their keys under whichever spelling the
+    feeds used at the time (the live registry, for example, carries
+    ``turkiye`` entries and no ``turkey`` ones). Canonicalizing the lookup
+    key alone would therefore ORPHAN that evidence — including VETO
+    verdicts. Callers look up every variant and keep the most severe
+    verdict, so canonicalization can never lose a veto.
+
+    Deterministic: curated table + folding only, no fuzzy matching.
+    """
+    variants: list[str] = []
+
+    def _add(key: str) -> None:
+        if key and key not in variants:
+            variants.append(key)
+
+    _add(canonical_team(raw, width=width))
+    # pre-alias fallback: the historical key for this exact spelling
+    _add(norm_entity_team(team_identity_words(str(raw or "")), width=width))
+    override = _override_lookup("teams", raw)
+    if override:
+        teams = load_overrides().get("teams", {})
+        if isinstance(teams, dict):
+            for spelling, canonical in teams.items():
+                if str(canonical) != str(override):
+                    continue
+                _add(norm_entity_team(team_identity_words(str(spelling)),
+                                      width=width))
+    return variants
+
+
 def explain_entity(kind: str, raw: object) -> dict[str, Any]:
     """Return canonical key plus evidence metadata if available."""
     canonical = canonical_league(raw) if kind == "leagues" else canonical_team(raw)
