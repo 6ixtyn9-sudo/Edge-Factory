@@ -29,6 +29,8 @@ from edgefactory.entities import (
 from edgefactory.identity import source_team_key as _identity_source_team_key
 from edgefactory.util import (
     canonical_team_key,
+    research_ledger_team_key,
+    expand_team_token,
     resolve_team_alias,
     compact_key,
     is_degenerate_team_key,
@@ -4745,8 +4747,19 @@ _GENERIC_NAME_TOKENS = frozenset({
 
 
 def _name_tokens(name: object) -> list[str]:
-    return [t for t in re.findall(r"[a-z0-9]+", fold_ascii(name))
-            if t not in _GENERIC_NAME_TOKENS]
+    """Distinctive tokens, with curated abbreviations expanded.
+
+    "Drogheda Utd" and "Drogheda United" must link (one club); the
+    expansion table is an explicit dictionary, never a similarity score.
+    """
+    out = []
+    for token in re.findall(r"[a-z0-9]+", fold_ascii(name)):
+        if token in _GENERIC_NAME_TOKENS:
+            continue
+        expanded = expand_team_token(token)
+        if expanded:
+            out.append(expanded)
+    return out
 
 
 def _token_prefix_link(a_name: object, b_name: object) -> bool:
@@ -4806,7 +4819,7 @@ def _merge_veto_reason(rep: dict, pick: dict) -> str | None:
 
     Tightening-only: every reason here REFUSES a merge the old collapse
     might have made on bigram similarity alone. Measured examples from the
-    2026-10-05 roach sweep (all were above the 0.40 merge threshold):
+    2026-10-05 identity sweep (all were above the 0.40 merge threshold):
     Turkey/Turkey U21 (0.62), Girona/Girona B (0.83), Barcelona/Barcelona
     SC (0.80), Man City/Man United (0.59), Arsenal/Arsenal Sarandí (0.50).
     """
@@ -4823,8 +4836,13 @@ def _merge_veto_reason(rep: dict, pick: dict) -> str | None:
         # width-9 key, where "Manchester City" and "Manchester United"
         # both truncate to "mancheste" (the R3 collision class).
         op_a, op_b = operational_team_key(a_name), operational_team_key(b_name)
+        src_a, src_b = source_team_key(a_name), source_team_key(b_name)
         linked = (canonical_team(a_name) == canonical_team(b_name)
                   or (op_a == op_b and len(op_a) >= MIN_IDENTITY_KEY_LEN)
+                  # the curated voter-row alias table (single-sourced from
+                  # Config/entity_overrides.json + evidence-proven pairs,
+                  # e.g. Borussia M'gladbach / Mönchengladbach)
+                  or (src_a == src_b and len(src_a) >= MIN_IDENTITY_KEY_LEN)
                   or _token_prefix_link(a_name, b_name))
         if not linked:
             return f"canonical_team_disagreement:{side}"
@@ -4970,7 +4988,7 @@ def cross_keyer_identity_warnings(picks: list[dict]) -> dict[str, list]:
         without any curated alias linking them (possible false merge);
     (b) ``split``: curated-alias-linked raw names that still produce more
         than one key somewhere in the keyer stack (possible identity
-        split, the Türkiye species).
+        split, the Türkiye defect class).
     """
     raws: set[str] = set()
     for pick in picks:
@@ -5125,6 +5143,20 @@ def _day_archive_row_key(row: dict, day: str) -> tuple[str, str, str, str, str]:
     )
 
 
+def _day_archive_row_key_legacy(row: dict, day: str) -> tuple[str, str, str, str, str]:
+    """Pre-2026-10-05 ledger row key (transliteration only, no aliases,
+    empty key for degenerate names). Read-side only: rows frozen before
+    the deploy are keyed this way and must still dedupe against a fresh
+    run instead of silently doubling."""
+    return (
+        str(row.get("date") or day)[:10],
+        research_ledger_team_key(row.get("home") or ""),
+        research_ledger_team_key(row.get("away") or ""),
+        str(row.get("market") or "").lower(),
+        str(row.get("pick") or "").lower(),
+    )
+
+
 def merge_day_archive_rows(existing: list, fresh: list, day: str) -> list:
     """Append-only merge for the per-day frozen pick ledger.
 
@@ -5179,11 +5211,17 @@ def merge_day_archive_rows(existing: list, fresh: list, day: str) -> list:
         if key in seen and not _collides(key, row):
             continue
         seen.add(key)
+        seen.add(_day_archive_row_key_legacy(row, day))
         seen_identity.setdefault(key, (canonical_team(row.get("home")),
                                        canonical_team(row.get("away"))))
         merged.append(row)
     for row in fresh:
         key = _day_archive_row_key(row, day)
+        legacy_key = _day_archive_row_key_legacy(row, day)
+        if legacy_key in seen and key not in seen and not _collides(legacy_key, row):
+            # the frozen row was written under the pre-fix key (accented,
+            # aliased or degenerate name): same row, do not double it
+            continue
         if key in seen and not _collides(key, row):
             # first-frozen-wins, UNLESS the shared key covers two different
             # real fixtures (width-9 collision) — then keep both (S5).
