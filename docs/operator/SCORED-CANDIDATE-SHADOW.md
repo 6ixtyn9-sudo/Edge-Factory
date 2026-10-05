@@ -291,6 +291,60 @@ unrelaxed profiles, write a separate proposal document (e.g.
 No report output ever changes live behavior; the proposal is reviewed and
 implemented (or rejected) as its own explicit, separately-tested change.
 
+## Fixture occurrence identity (v2) — fail-closed collision policy
+
+The legacy `fixture_id` (trading date + normalized team pair, league
+deliberately excluded) remains the backwards-compatible grouping key, but it
+cannot distinguish two different real-world fixtures between the same teams
+on the same date (different competition/kickoff). Every scored
+fixture/candidate event now also persists an additive identity block:
+
+* `legacy_fixture_id` — same value as `fixture_id`, explicit.
+* `fixture_occurrence_id` (`scfo2-…`) — collision-resistant occurrence id.
+* `fixture_identity_version` (= 2), `fixture_identity_components`,
+  `fixture_identity_precision`, `fixture_identity_ambiguous`,
+  `fixture_identity_ambiguity_reason`.
+
+Disambiguator preference (first available wins the id): **kickoff identity**
+(proven-UTC instant, else the raw kickoff text as an opaque token) — so two
+sources reporting the same kickoff with different league spellings are the
+SAME occurrence and legitimate cross-source joins never split; then the
+**canonical competition key** (`league_key`; the `unknown` sentinel is never
+an identity); neither available ⇒ `precision=unknown` and the record cannot
+resolve a collision. Raw league text is never a hard join key.
+
+Precision labels: `occurrence_v2_exact`, `occurrence_v2_kickoff_only`,
+`occurrence_v2_competition_only`, `legacy_unambiguous`, `legacy_ambiguous`,
+`unknown`. Old ledgers are never rewritten; readers derive identity in
+memory from whatever safe fields old records carry.
+
+**Collision policy (fail closed).** When one legacy `fixture_id` maps to
+more than one occurrence (or to entries whose identity cannot be derived),
+every affected fixture AND candidate record gets
+`settlement_status=identity_ambiguous`: the results overlay is keyed by
+date+teams only, so no result can be attributed to one occurrence without
+guessing. Ambiguous records are excluded from every ROI denominator —
+never losses, never pending, never ordinary unmatched — and counted
+separately as `excluded_identity_ambiguous`. The daily report prints an
+IDENTITY SAFETY section (version, collisions, ambiguous/excluded counts,
+per-collision diagnosis) plus:
+
+> IDENTITY WARNING: legacy fixture_id collision detected. Affected records
+> are excluded from promotion-grade evidence unless resolved by
+> fixture_occurrence_id.
+
+**Promotion gating.** A segment whose evidence population contains
+identity-ambiguous records gains the warnings `identity_ambiguous` (+ the
+ambiguity reason) and can never hold EXECUTION_SAFE_PROMOTION_CANDIDATE or
+SHADOW_PROMOTION_CANDIDATE — it is demoted to WATCHLIST_POSITIVE with
+`identity_ambiguous_blocks_promotion`. The rolling report therefore can
+never print PROMOTION PROPOSAL READY for such a segment; it lists it under
+`PROMOTION BLOCKED — IDENTITY AMBIGUITY`
+(`PROMOTION_BLOCKED_IDENTITY_AMBIGUOUS`) instead. Proposal readiness now
+requires: execution-safe ROI, unrelaxed thresholds, survival in every
+window, no threshold/guard override, and no unresolved fixture identity
+ambiguity touching the segment.
+
 ## Known limitations
 
 * `rejection_reason_unknown` appears when a candidate has a scored event but
@@ -311,5 +365,15 @@ implemented (or rejected) as its own explicit, separately-tested change.
   the fixture level in the report's SCORED-UNIVERSE FUNNEL section.
 * `shadow_scored_fixture_records` is entry-level (one per counter
   increment); `fixture_records_unique` can be lower when two source keys
-  named the same fixture — both are reported.
+  named the same fixture (same occurrence id) — both are reported.
+* Kickoff identity is textual when no aware UTC instant exists: two sources
+  writing DIFFERENT raw kickoff strings for the same match produce two
+  occurrence ids and the pair fails closed as a collision (over-exclusion,
+  never mis-attribution). Resolving that requires a stable cross-source
+  fixture key, which does not exist today.
+* Identity ambiguity excludes records from settlement even when occurrence
+  ids resolve WHICH fixtures existed — the settled-results overlay carries
+  only date+teams, so the result row itself cannot be attributed to one
+  occurrence. Enriching the overlay with kickoff/competition would allow
+  safe settlement of resolved collisions; until then they stay excluded.
 * The ledger only begins at deployment; earlier dates have no shadow data.
