@@ -1,40 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 133.7638550000001,
+  "bank": 167.11567900000009,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-10-04",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Godoy Cruz vs Los Andes",
-              "pick": "HOME",
-              "prob": 0.597,
-              "odds": 1.65,
-              "result": null
-            },
-            {
-              "match": "Huracan vs Aldosivi",
-              "pick": "HOME",
-              "prob": 0.578,
-              "odds": 1.74,
-              "result": null
-            }
-          ],
-          "odds": 2.87,
-          "stake_pct": 17.8352,
-          "results": [
-            null,
-            "win"
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 17.8352
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -658,15 +626,19 @@
     },
     {
       "date": "2026-10-04",
-      "staked_pct": 8.9176,
-      "returned_pct": 0.0,
+      "staked_pct": 26.7528,
+      "returned_pct": 51.187,
       "accas": [
         {
           "odds": 3.23,
           "won": false
+        },
+        {
+          "odds": 2.87,
+          "won": true
         }
       ],
-      "bank_pct": 133.7639
+      "bank_pct": 167.1157
     }
   ],
   "events": [],

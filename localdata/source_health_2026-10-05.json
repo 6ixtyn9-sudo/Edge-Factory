@@ -40,7 +40,7 @@
     "betexplorer": {
       "be_matched": 1,
       "be_raw": 6,
-      "be_usable": 3,
+      "be_usable": 6,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -122,14 +122,14 @@
       "status": null
     },
     "futbolpronosticos": {
-      "blocker": "settled-count coverage mismatch: {'captured': 79, 'settled': 0, 'unmatched': 79, 'mismatch': True, 'settlement_source': 'existing warehouse-score backfill'}",
+      "blocker": "settled-count coverage mismatch: {'captured': 78, 'settled': 0, 'unmatched': 78, 'mismatch': True, 'settlement_source': 'existing warehouse-score backfill'}",
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
       "freshness_h": 0.0,
-      "raw": 250,
+      "raw": 252,
       "reason": null,
-      "scored": 79,
+      "scored": 78,
       "status": null
     },
     "oddspapi_odds": {
