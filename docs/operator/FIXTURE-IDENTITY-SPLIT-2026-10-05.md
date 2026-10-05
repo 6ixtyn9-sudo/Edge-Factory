@@ -466,3 +466,50 @@ of art are **identity collision** (two teams, one key) and **identity
 split** (one team, two keys). `test_identity_roach_sweep.py` was renamed
 to `tests/test_identity_collision_sweep.py` with `git mv`, preserving
 history.
+
+## 12. Red-team pass — adversarial findings (2026-10-05)
+
+Adversarial posture: the attacks below were designed to BREAK the fix and
+were **run and recorded before any repair**. Tests:
+`tests/test_identity_adversarial.py` (22).
+
+| # | Attack | Result on the branch BEFORE repair | Disposition |
+|---|---|---|---|
+| 1a | NFC vs NFD spellings (`Türkiye`, `Beşiktaş`, every curated spelling) | **PASS** — all 174 curated spellings + probes key identically in all keyers (NFKD runs inside `fold_ascii`) | locked by test |
+| 1b | Homoglyph `Sp‑а‑rt‑а‑k` (Cyrillic а) | **FAIL (confirmed)** — `spartak` vs `sprtk` in all three keyers, nothing flagged it | not repairable without a transliteration dependency → `script_anomaly()` + sweep counter `mixed_script_name=N` + `!! MIXED SCRIPT TEAM NAME` line; never auto-merged |
+| 1c | ZWSP / NBSP / soft hyphen / RLM / LRM / BOM, inside and around a name | **PASS** — identical keys | locked by test |
+| 1d | Turkish dotted `İ` (`İstanbul Başakşehir`, `DİYARBAKIR`) | **PASS** | locked by test |
+| 2 | `W Connection`, `B 1903`, `B36 Tórshavn`, `II Keila`, `Degerfors IF` vs `Degerfors` | **FAIL (confirmed)** — `W Connection` carried marker `w`; `B 1903` keyed to a sentinel; `Degerfors IF`/`Degerfors` was refused `degenerate_identity:home` | curated `MARKER_EXEMPT_NAMES`; numeric names fall back to the alphanumeric compact key (`B 1903` → `b1903`); all four same-club pairs now merge; `Keila II` keeps its genuine marker |
+| 3 | Sentinel integrity (`Degerfors`, `Degenhardt FC`, `deg12345678`) | **FAIL (confirmed)** — the sentinel was a plain `deg` **string prefix**, so real clubs starting "deg" were classified degenerate (this *caused* finding 2's Degerfors case) | sentinel moved out of the key alphabet: `deg~<hash>`; keys only ever contain `[a-z0-9_]`, so collision is impossible by construction; the old `deg[0-9a-f]{8}` form is recognised read-side only |
+| 4 | Two distinct clubs, identical `kickoff_utc`, both leagues blank (`Barcelona` vs `Barcelona SC`) | **FAIL (confirmed)** — merged (keys are equal after `sc` stripping, so no veto could fire) | curated `DISTINCT_TEAM_PAIRS` ("two clubs, one key" — the mirror of the alias table), checked FIRST in `_merge_veto_reason`; kickoff agreement is now explicitly necessary-never-sufficient |
+| 5 | Epoch shadowing: `Turkey U21` legacy key `turkey` == `Turkey` canonical key | **FAIL (confirmed)** — `norm_team`/`norm_team_legacy` strip `u21`, and the existing similarity fallback scores `turkeyu21`/`turkey` at exactly 0.80 (the acceptance bar) | `_marker_boundary_blocks()`: the chain stops at a distinct-entity marker. Real names behind each loaded key are registered (`SETTLED_KEY_NAMES`) so marker sets are compared exactly; where names are unknown only an explicit suffix conflict blocks, keeping legacy marker-blind rows settleable. Guarded legs print `settlement_marker_guarded=N` |
+| 6a | Survivorship bias — replay historical CORRECT merges | **PASS** — 518 archived rows carry collapse metadata; 10 record ≥2 distinct member spellings; all 10 clusters still collapse to one row, identical to pre-fix code | replayed in-suite |
+| 6b | Alias config deleted / malformed JSON | **FAIL (confirmed, silent)** — degraded to zero aliases with no signal, so every exonym fixture would split again unnoticed | all-or-nothing degradation kept (never half-applied) and now announced: `!! TEAM ALIAS CONFIG UNAVAILABLE …` on stderr + `ALIAS_CONFIG_WARNINGS` |
+| 6c | Idempotence — collapse the frozen slate twice | **PASS** — 6→5 then 5→5, byte-identical | locked by test |
+
+### 12a. Methodology correction to the round-2 proof
+
+Replaying the archives through the whole pipeline (old `main` vs this
+branch) on same-day candidate pairs above the old 0.40 merge threshold:
+**80 candidate pairs, 4 newly refused (`league_disagreement`, from round
+2), 7 newly ALLOWED.** All 7 are the curated exonym merges the fix
+exists to make — `Türkiye`/`Turkey` ×5 and `Czech Republic`/`Czechia` ×2,
+i.e. the incident itself. Round 2's "newly allowed = 0" was measured at
+the **veto-predicate** level, which cannot see merges enabled by
+alias-driven key *equality*; the pipeline-level number is the honest one
+and it is 7 intended merges, not 0.
+
+Against the branch head immediately before this red-team pass, the
+repairs above produce **0 newly refused and 0 newly allowed** on the same
+80 pairs: the Degerfors/B 1903/W Connection/Barcelona-SC cases do not
+occur in the archives, which is exactly why only adversarial inputs
+exposed them.
+
+### 12b. Residual, accepted
+
+* Homoglyph names cannot be transliterated deterministically here; they
+  are flagged, not merged (1b).
+* `Al Ahli`/`Al Ahly` remain refused (and are now on the curated
+  distinct-clubs list) — different clubs in most feeds.
+* Non-Latin-only names (wholly Cyrillic/Greek) still key to a `deg~`
+  sentinel: fail-closed, visible via `identity_degenerate`.
