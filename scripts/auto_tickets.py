@@ -1906,15 +1906,25 @@ def _collect_settled_facts() -> tuple[dict, dict]:
         entries.setdefault(d, []).append(
             {"home": v["home"], "away": v["away"], "outcome": v["outcome"]}
         )
-    dropped = _drop_ambiguous_result_keys(key_to, entries)
-    if dropped:
-        print(f"settlement: dropped {dropped} ambiguous result key(s) "
-              "(one key, two different real fixtures) — those legs stay pending",
-              file=sys.stderr)
+    dropped, detail = _drop_ambiguous_result_keys(key_to, entries)
+    AMBIGUOUS_SETTLEMENT_KEYS.clear()
+    AMBIGUOUS_SETTLEMENT_KEYS.extend(detail)
+    # Operator-visible counter: these legs can NEVER settle automatically,
+    # so they must not accumulate silently as "pending forever".
+    print(f"settlement_ambiguous_pending={dropped}", file=sys.stderr)
+    for day, teams in detail[:20]:
+        print(f"!! AMBIGUOUS SETTLEMENT KEY {day}: {teams} "
+              "— one ledger key, two real fixtures; resolve manually "
+              "(verified result) or add a curated alias", file=sys.stderr)
     return key_to, entries
 
 
-def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> int:
+# Keys that covered two different real fixtures in the last load; kept for
+# the report/summary so an operator can resolve them.
+AMBIGUOUS_SETTLEMENT_KEYS: list = []
+
+
+def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> tuple[int, list]:
     """Refuse to settle on a key that covers TWO different real fixtures.
 
     The frozen result keys are width-9 (``mancheste`` covers Manchester
@@ -1934,12 +1944,20 @@ def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> int:
             ident = (canonical_team(home), canonical_team(away))
             for hk, ak in _exact_result_keys(home, away):
                 seen.setdefault((day, hk, ak), set()).add(ident)
+    raws: dict[tuple, set[str]] = {}
+    for day, rows in entries.items():
+        for e in rows:
+            home, away = str(e.get("home") or ""), str(e.get("away") or "")
+            for hk, ak in _exact_result_keys(home, away):
+                raws.setdefault((day, hk, ak), set()).add(f"{home} vs {away}")
     dropped = 0
+    detail: list = []
     for key, idents in seen.items():
         if len(idents) > 1 and key in key_to:
             del key_to[key]
             dropped += 1
-    return dropped
+            detail.append((key[0], sorted(raws.get(key, set()))))
+    return dropped, detail
 
 
 def load_settled():
