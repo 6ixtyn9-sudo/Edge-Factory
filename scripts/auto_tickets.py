@@ -1860,7 +1860,8 @@ def _collect_settled_facts() -> tuple[dict, dict]:
                         continue
                     for day, home, away, outcome in rows:
                         d = str(day)[:10]
-                        key_to.setdefault((d, norm_team(home), norm_team(away)), str(outcome))
+                        for hk, ak in _exact_result_keys(home, away):
+                            key_to.setdefault((d, hk, ak), str(outcome))
                         entries.setdefault(d, []).append(
                             {"home": str(home), "away": str(away), "outcome": str(outcome)}
                         )
@@ -1878,7 +1879,8 @@ def _collect_settled_facts() -> tuple[dict, dict]:
         for r in data.get("rows", []):
             d = str(r.get("date") or "")[:10]
             home, away = r.get("home"), r.get("away")
-            key_to.setdefault((d, norm_team(home), norm_team(away)), r.get("outcome"))
+            for hk, ak in _exact_result_keys(home, away):
+                key_to.setdefault((d, hk, ak), r.get("outcome"))
             sig = (d, str(home or "").lower(), str(away or "").lower())
             if sig not in seen_sigs:
                 seen_sigs.add(sig)
@@ -1999,12 +2001,43 @@ def _lookup_fallback(settled, day, home, away):
     return best_oc
 
 
+def _exact_result_keys(home: object, away: object) -> list[tuple[str, str]]:
+    """Deterministic EXACT key spaces for a result/pick fixture.
+
+    1. canonical: transliteration + curated explicit aliases (so a result
+       recorded as "Turkey" grades a pick captured as "Türkiye");
+    2. plain transliterated norm_team;
+    3. frozen pre-2026-10-05 norm_team_legacy, for rows persisted under the
+       old diacritic-deleting key.
+
+    Exact dictionary keys only — no fuzzy matching is introduced here.
+    """
+    from edgefactory.util import canonical_team_key, norm_team, norm_team_legacy
+
+    keys = [
+        (canonical_team_key(home), canonical_team_key(away)),
+        (norm_team(home), norm_team(away)),
+        (norm_team_legacy(str(home or "")), norm_team_legacy(str(away or ""))),
+    ]
+    out: list[tuple[str, str]] = []
+    for k in keys:
+        if k not in out:
+            out.append(k)
+    return out
+
+
 def pick_result(pick, settled):
     from edgefactory.util import norm_team
     day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
     home = norm_team(pick.get("home") or "")
     away = norm_team(pick.get("away") or "")
-    outcome = settled.get((day, home, away))
+    # Exact lookups across the deterministic key spaces (canonical alias,
+    # transliterated, frozen legacy) BEFORE any existing fallback.
+    outcome = None
+    for hk, ak in _exact_result_keys(pick.get("home") or "", pick.get("away") or ""):
+        outcome = settled.get((day, hk, ak))
+        if outcome is not None:
+            break
     if outcome is not None and outcome not in ("home", "away", "draw"):
         return "void"
     if outcome is None:
