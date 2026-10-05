@@ -59,7 +59,11 @@ from edgefactory.fade import (
     fade_odds_column,
     inverse_selection,
 )
-from edgefactory.util import fold_ascii, ledger_team_key
+# The research ledger's identity is FROZEN (reconciliation stability): it
+# uses the pre-alias transliterating key, NOT the operational
+# canonicalizing ledger_team_key. See util.research_ledger_team_key.
+from edgefactory.util import fold_ascii
+from edgefactory.util import research_ledger_team_key as ledger_team_key
 
 SCHEMA = 1
 

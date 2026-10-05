@@ -17,7 +17,17 @@ from pathlib import Path
 from typing import Any
 
 from .identity import canonical_league_key, fold_league_identity, team_identity_words
-from .util import compact_key, norm_entity_team, norm_league, norm_team
+from .util import (
+    clear_team_alias_cache,
+    resolve_team_alias,
+    compact_key,
+    squad_marker_suffix,
+    squad_markers,
+    norm_entity_team,
+    norm_league,
+    norm_team,
+    norm_team_legacy,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG_OVERRIDES_PATH = ROOT / "Config" / "entity_overrides.json"
@@ -49,13 +59,29 @@ def clear_entity_caches() -> None:
     """Clear cached registry/override data, useful in tests or long processes."""
     load_overrides.cache_clear()
     load_registry.cache_clear()
+    clear_team_alias_cache()
 
 
 def _override_lookup(kind: str, raw: object) -> str | None:
+    if kind == "teams":
+        # Single-sourced through util's curated table, which indexes every
+        # curated spelling in several deterministic key spaces (raw,
+        # folded, compact, fixed and legacy norm_team). Doing the lookup
+        # here with a narrower candidate list silently missed folded
+        # spellings such as "07 vestur" (2026-10-05 sweep).
+        canonical, matched = resolve_team_alias(raw)
+        if matched:
+            return canonical
     overrides = load_overrides().get(kind, {})
     if not isinstance(overrides, dict):
         return None
-    candidates = [str(raw or ""), norm_league(raw), compact_key(raw), norm_team(str(raw or ""))]
+    candidates = [
+        str(raw or ""), norm_league(raw), compact_key(raw),
+        norm_team(str(raw or "")),
+        # Dual key: entries/callers created before the 2026-10-05
+        # transliteration fix still resolve through the frozen key.
+        norm_team_legacy(str(raw or "")),
+    ]
     for key in candidates:
         if key in overrides:
             return str(overrides[key])
@@ -72,7 +98,11 @@ def _registry_lookup(kind: str, raw: object) -> str | None:
     # Registry candidates use the PLAIN fold, not canonical_league_key, so
     # the curated alias table can never be applied twice through a learned
     # alias_index.
-    candidates = [str(raw or ""), norm_league(raw), compact_key(raw), norm_team(str(raw or ""))]
+    candidates = [
+        str(raw or ""), norm_league(raw), compact_key(raw),
+        norm_team(str(raw or "")),
+        norm_team_legacy(str(raw or "")),  # legacy-keyed learned aliases
+    ]
     if kind == "leagues":
         candidates.append(fold_league_identity(raw))
     else:
@@ -116,16 +146,64 @@ def classify_competition(league_name: object) -> str:
 
 
 def canonical_team(raw: object, *, width: int = 24) -> str:
-    """Return canonical team key for purity/reporting contexts."""
+    """Return canonical team key for purity/reporting contexts.
+
+    When a curated/learned alias replaces the name, any distinct-entity
+    marker on the RAW name is re-attached: the alias canonicalizes the
+    CLUB, never the squad, so "Copenhagen FC Women" must not resolve onto
+    "FC Copenhagen" (2026-10-05 sweep). Names resolved without an alias
+    keep their historical key byte-for-byte.
+    """
+    suffix = squad_marker_suffix(raw)
     override = _override_lookup("teams", raw)
     if override:
-        return norm_entity_team(override, width=width)
+        base = norm_entity_team(override, width=width)
+        return base + suffix if suffix and not squad_markers(override) else base
     learned = _registry_lookup("teams", raw)
     if learned:
-        return norm_entity_team(learned, width=width)
+        base = norm_entity_team(learned, width=width)
+        return base + suffix if suffix and not squad_markers(learned) else base
     # Folded identity fallback: identical to the legacy form for clean
     # names; unifies '&' <-> 'and' spellings (Dagenham incident).
     return norm_entity_team(team_identity_words(str(raw or "")), width=width)
+
+
+def canonical_team_variants(raw: object, *, width: int = 24) -> list[str]:
+    """Every entity-key spelling that denotes the SAME team.
+
+    Returned in priority order: the canonical key first, then the
+    pre-alias fallback key (what this name resolved to before the
+    2026-10-05 canonicalization), then the keys of every curated sibling
+    spelling that maps to the same canonical name.
+
+    Context/purity tables learned their keys under whichever spelling the
+    feeds used at the time (the live registry, for example, carries
+    ``turkiye`` entries and no ``turkey`` ones). Canonicalizing the lookup
+    key alone would therefore ORPHAN that evidence — including VETO
+    verdicts. Callers look up every variant and keep the most severe
+    verdict, so canonicalization can never lose a veto.
+
+    Deterministic: curated table + folding only, no fuzzy matching.
+    """
+    variants: list[str] = []
+
+    def _add(key: str) -> None:
+        if key and key not in variants:
+            variants.append(key)
+
+    _add(canonical_team(raw, width=width))
+    # pre-alias fallback: the historical key for this exact spelling
+    _add(norm_entity_team(team_identity_words(str(raw or "")), width=width))
+    override = _override_lookup("teams", raw)
+    if override:
+        teams = load_overrides().get("teams", {})
+        if isinstance(teams, dict):
+            for spelling, canonical in teams.items():
+                if str(canonical) != str(override):
+                    continue
+                _add(norm_entity_team(team_identity_words(str(spelling)),
+                                      width=width))
+    return variants
 
 
 def explain_entity(kind: str, raw: object) -> dict[str, Any]:

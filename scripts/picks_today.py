@@ -20,10 +20,23 @@ from statistics import mean
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 
-from edgefactory.entities import canonical_league, canonical_team, classify_competition
+from edgefactory.entities import (
+    canonical_league,
+    canonical_team,
+    canonical_team_variants,
+    classify_competition,
+)
 from edgefactory.identity import source_team_key as _identity_source_team_key
 from edgefactory.util import (
+    canonical_team_key,
+    research_ledger_team_key,
+    expand_team_token,
+    resolve_team_alias,
     compact_key,
+    is_degenerate_team_key,
+    script_anomaly,
+    markers_conflict,
+    MIN_IDENTITY_KEY_LEN,
     norm_team,
     fold_ascii,
     kickoff_date,
@@ -1394,6 +1407,22 @@ def _best_ctx(candidates: list[dict | None]) -> tuple[str, dict]:
     return "UNKNOWN", best_unknown
 
 
+# Fail-closed ordering for merging verdicts across alias-equivalent keys.
+# A restrictive verdict learned under ANY spelling of a team wins; UNKNOWN
+# (no evidence) never displaces a verdict that exists under another
+# spelling.
+_CTX_SEVERITY = {"VETO": 4, "CAUTION": 3, "ALLOW": 2, "BOOST": 1, "UNKNOWN": 0}
+
+
+def _most_severe_ctx(results: list[tuple[str, dict]]) -> tuple[str, dict]:
+    best: tuple[str, dict] = ("UNKNOWN", {})
+    for verdict, meta in results:
+        if (_CTX_SEVERITY.get(str(verdict), 0)
+                > _CTX_SEVERITY.get(str(best[0]), 0)):
+            best = (str(verdict), meta)
+    return best
+
+
 def _scan_best(ctx: dict, *, prefix: str, suffix: str = "") -> dict:
     """Find best context verdict from the purity registry.
 
@@ -1467,6 +1496,13 @@ def lookup_context(purity: dict, pick: dict) -> dict:
     away = pick.get("away", "")
     home_norm = canonical_team(home)
     away_norm = canonical_team(away)
+    # Alias-equivalent entity keys (canonical first, then the historical
+    # pre-alias key and every curated sibling spelling). The purity
+    # registry learned its team keys under whichever spelling the feeds
+    # used, so looking up ONLY the canonical key would orphan existing
+    # evidence — including VETO verdicts. See the fail-closed merge below.
+    home_variants = canonical_team_variants(home)
+    away_variants = canonical_team_variants(away)
 
     league_key = f"{sport}|{league}|{market}|{rule}|{sel}"
     league_exact = league_ctx.get(league_key)
@@ -1479,14 +1515,26 @@ def lookup_context(purity: dict, pick: dict) -> dict:
 
     team_h_key = f"{sport}|{home_norm}|{league}|{market}|home"
     team_a_key = f"{sport}|{away_norm}|{league}|{market}|away"
-    team_h_exact = team_ctx.get(team_h_key)
-    team_a_exact = team_ctx.get(team_a_key)
-    team_h_any = team_ctx.get(f"{sport}|{home_norm}|*|{market}|home")
-    team_a_any = team_ctx.get(f"{sport}|{away_norm}|*|{market}|away")
-    team_h_scan = _scan_best(team_ctx, prefix=f"{sport}|{home_norm}|", suffix=f"|{market}|home")
-    team_a_scan = _scan_best(team_ctx, prefix=f"{sport}|{away_norm}|", suffix=f"|{market}|away")
-    team_h_v, team_h_meta = _best_ctx([team_h_exact, team_h_any, team_h_scan])
-    team_a_v, team_a_meta = _best_ctx([team_a_exact, team_a_any, team_a_scan])
+
+    def _team_verdict(variants: list[str], side: str) -> tuple[str, dict]:
+        """Most SEVERE verdict across every alias-equivalent team key.
+
+        Per-variant resolution is byte-identical to the legacy single-key
+        path (exact -> any-league -> prefix scan, via ``_best_ctx``); the
+        only addition is the fail-closed merge across spellings, so a VETO
+        learned under one spelling still vetoes the other.
+        """
+        results = []
+        for key in variants:
+            exact = team_ctx.get(f"{sport}|{key}|{league}|{market}|{side}")
+            any_league = team_ctx.get(f"{sport}|{key}|*|{market}|{side}")
+            scan = _scan_best(team_ctx, prefix=f"{sport}|{key}|",
+                              suffix=f"|{market}|{side}")
+            results.append(_best_ctx([exact, any_league, scan]))
+        return _most_severe_ctx(results)
+
+    team_h_v, team_h_meta = _team_verdict(home_variants, "home")
+    team_a_v, team_a_meta = _team_verdict(away_variants, "away")
 
     odds = pick.get("odds")
     band = odds_band(odds)
@@ -4597,10 +4645,474 @@ def _with_duplicate_metadata(group: list[dict]) -> dict:
     rep["duplicate_rules_collapsed"] = rules
     rep["duplicate_matches_collapsed"] = matches
     ctx["duplicate_alias_collapse"] = "true"
+    if any(_unanchored_identity_merge(rep, p) for p in group if p is not rep):
+        # Visibility: this collapse could not consult the 180-minute
+        # reschedule guard because a twin carried a bare clock.
+        ctx["duplicate_kickoff_unanchored"] = "true"
     ctx["duplicate_bucket_sources"] = ",".join(rep["duplicate_bucket_sources"])
     ctx["duplicate_event_keys"] = ",".join(keys)
     rep["ctx"] = ctx
     return rep
+
+
+def canonical_fixture_identity(pick: dict) -> tuple[str, str, str]:
+    """Deterministic (date, home key, away key) fixture identity.
+
+    Uses the canonical team key (ASCII transliteration + curated explicit
+    aliases from Config/entity_overrides.json). No fuzzy matching: this is
+    the same key the shadow ledger and settlement use, so one real fixture
+    spelled two ways ("Italy vs Türkiye" / "Italy vs Turkey") yields ONE
+    identity here.
+    """
+    return (
+        str(pick.get("date") or "")[:10],
+        ledger_team_key(pick.get("home") or "", width=24),
+        ledger_team_key(pick.get("away") or "", width=24),
+    )
+
+
+def near_duplicate_fixture_warnings(picks: list[dict]) -> list[dict]:
+    """Detect fixtures that normalization alone could NOT join.
+
+    Same trading date + same canonical league + one team key identical and
+    the other differing. This is a VISIBILITY tripwire only — it never
+    merges anything (merging on this heuristic would be fuzzy matching).
+    A pair the curated alias layer already resolved never reaches here,
+    because the duplicate collapse has folded it into one row first.
+    """
+    out: list[dict] = []
+    rows = list(picks)
+    for i in range(len(rows)):
+        for j in range(i + 1, len(rows)):
+            a, b = rows[i], rows[j]
+            a_date, a_home, a_away = canonical_fixture_identity(a)
+            b_date, b_home, b_away = canonical_fixture_identity(b)
+            if a_date != b_date or not a_date:
+                continue
+            if canonical_league(a.get("league")) != canonical_league(b.get("league")):
+                continue
+            same_home = a_home == b_home and a_home != ""
+            same_away = a_away == b_away and a_away != ""
+            if same_home == same_away:
+                continue  # both identical (true dupe, collapse owns it) or both differ
+            out.append({
+                "date": a_date,
+                "league": canonical_league(a.get("league")),
+                "shared_side": "home" if same_home else "away",
+                "rows": [
+                    {
+                        "match": str(a.get("match") or f"{a.get('home')} vs {a.get('away')}"),
+                        "home_key": a_home, "away_key": a_away,
+                        "source": str(a.get("odds_source") or a.get("source") or "?"),
+                        "kickoff": str(a.get("kickoff") or ""),
+                    },
+                    {
+                        "match": str(b.get("match") or f"{b.get('home')} vs {b.get('away')}"),
+                        "home_key": b_home, "away_key": b_away,
+                        "source": str(b.get("odds_source") or b.get("source") or "?"),
+                        "kickoff": str(b.get("kickoff") or ""),
+                    },
+                ],
+            })
+    return out
+
+
+def print_near_duplicate_fixture_tripwire(picks: list[dict], day: str = "",
+                                          stream=None) -> int:
+    """Print a loud warning block for unjoined near-duplicate fixtures."""
+    stream = stream if stream is not None else sys.stderr
+    warnings = near_duplicate_fixture_warnings(picks)
+    if not warnings:
+        return 0
+    print("=" * 72, file=stream)
+    print(f"!! NEAR-DUPLICATE FIXTURE TRIPWIRE {day}: {len(warnings)} unjoined pair(s)",
+          file=stream)
+    print("!! One team key matches, the other does not. NOTHING was merged.",
+          file=stream)
+    print("!! If these are the same real match, add a curated alias to "
+          "Config/entity_overrides.json -> teams.", file=stream)
+    for w in warnings:
+        print(f"!!   [{w['date']}] league={w['league']} shared={w['shared_side']}",
+              file=stream)
+        for row in w["rows"]:
+            print(f"!!     {row['match']!r} keys=({row['home_key']}|{row['away_key']}) "
+                  f"src={row['source']} ko={row['kickoff']!r}", file=stream)
+    print("=" * 72, file=stream)
+    return len(warnings)
+
+
+_GENERIC_NAME_TOKENS = frozenset({
+    "fc", "cf", "sc", "ac", "cd", "ca", "club", "afc", "sk", "if", "fk",
+    "bk", "ik", "ff", "ssc", "ks", "mfk", "nk", "hk", "us", "as",
+})
+
+
+def _name_tokens(name: object) -> list[str]:
+    """Distinctive tokens, with curated abbreviations expanded.
+
+    "Drogheda Utd" and "Drogheda United" must link (one club); the
+    expansion table is an explicit dictionary, never a similarity score.
+    """
+    out = []
+    for token in re.findall(r"[a-z0-9]+", fold_ascii(name)):
+        if token in _GENERIC_NAME_TOKENS:
+            continue
+        expanded = expand_team_token(token)
+        if expanded:
+            out.append(expanded)
+    return out
+
+
+def _token_prefix_link(a_name: object, b_name: object) -> bool:
+    """Deterministic same-club link: one name's tokens PREFIX the other's.
+
+    "Aldershot" / "Aldershot Town", "Hannover" / "Hannover 96",
+    "Ebbsfleet" / "Ebbsfleet United" — the dominant real pattern in the
+    archives (the read-only audit found thousands). This is structural
+    containment, not similarity: "Manchester City" / "Manchester United"
+    and "Launceston City" / "Launceston United" do NOT link, because
+    neither token sequence is a prefix of the other.
+
+    Strictly tighter than the bigram rule it guards: a prefix link still
+    has to clear the marker, league and degenerate vetoes.
+    """
+    ta, tb = _name_tokens(a_name), _name_tokens(b_name)
+    if not ta or not tb:
+        return False
+    short, long_ = (ta, tb) if len(ta) <= len(tb) else (tb, ta)
+    return long_[:len(short)] == short
+
+
+# Tokens that say nothing about WHICH competition this is: every feed
+# prefixes/suffixes them differently ("World UEFA Nations League" vs
+# "International,Uefa Nations League A Grp. 1" — the SAME competition).
+_GENERIC_LEAGUE_TOKENS = frozenset({
+    "world", "international", "intl", "uefa", "conmebol", "concacaf",
+    "caf", "afc", "ofc", "fifa", "grp", "group", "qual", "qualification",
+    "qualifiers", "qualifying", "round", "stage", "div", "division",
+    "league", "liga", "cup", "a", "b", "c", "d", "1", "2", "3", "4",
+})
+
+
+def _league_core_tokens(name: object) -> set[str]:
+    return {t for t in canonical_league(name).split()
+            if t not in _GENERIC_LEAGUE_TOKENS}
+
+
+def _leagues_conflict(a_league: object, b_league: object) -> bool:
+    """True only when two labels name DIFFERENT competitions.
+
+    Deliberately conservative: feeds spell one competition many ways, so
+    a mere string difference is not evidence. Only fully DISJOINT
+    distinctive token sets count ("Spain La Liga" vs "Ecuador Serie A"
+    -> {spain} vs {ecuador, serie} -> conflict), while
+    "World UEFA Nations League" vs "International,Uefa Nations League A
+    Grp. 1" -> {nations} vs {nations} -> no conflict.
+    """
+    ta, tb = _league_core_tokens(a_league), _league_core_tokens(b_league)
+    if not ta or not tb or "unknown" in ta or "unknown" in tb:
+        return False
+    return ta.isdisjoint(tb)
+
+
+# Curated pairs of DISTINCT clubs whose deterministic keys collide after
+# structure-token stripping / width truncation. Explicit and reviewed, the
+# mirror image of the curated alias table: aliases say "one club, two
+# spellings", this says "two clubs, one key". Never a heuristic.
+DISTINCT_TEAM_PAIRS: frozenset[frozenset[str]] = frozenset({
+    frozenset({"barcelona", "barcelona sc"}),
+    frozenset({"olympiakos", "olympiakos nicosia"}),
+    frozenset({"river plate", "river plate asuncion"}),
+    frozenset({"arsenal", "arsenal sarandi"}),
+    frozenset({"al ahli", "al ahly"}),
+})
+
+
+def _curated_distinct_clubs(a_name: str, b_name: str) -> bool:
+    a, b = fold_ascii(a_name).strip(), fold_ascii(b_name).strip()
+    return a != b and frozenset({a, b}) in DISTINCT_TEAM_PAIRS
+
+
+def _merge_veto_reason(rep: dict, pick: dict) -> str | None:
+    """Deterministic reasons two picks may NEVER be merged as one fixture.
+
+    Tightening-only: every reason here REFUSES a merge the old collapse
+    might have made on bigram similarity alone. Measured examples from the
+    2026-10-05 identity sweep (all were above the 0.40 merge threshold):
+    Turkey/Turkey U21 (0.62), Girona/Girona B (0.83), Barcelona/Barcelona
+    SC (0.80), Man City/Man United (0.59), Arsenal/Arsenal Sarandí (0.50).
+    """
+    for side in ("home", "away"):
+        a_name = str(rep.get(side) or "")
+        b_name = str(pick.get(side) or "")
+        # S8: curated distinct clubs that share a key. Checked FIRST: a
+        # kickoff match is necessary but NEVER sufficient, and these pairs
+        # pass every key-equality test by construction.
+        if _curated_distinct_clubs(a_name, b_name):
+            return f"curated_distinct_clubs:{side}"
+        # S2: distinct-entity markers (U21/B/W/Reserves/Youth) are hard vetoes
+        if markers_conflict(a_name, b_name):
+            return f"squad_marker_conflict:{side}"
+        # S3: canonical disagreement. "Linked" means some CURATED table
+        # says these are one club: the entity overrides, or the local
+        # odds-matching alias maps. All explicit, none fuzzy.
+        # NB: odds_team_key is deliberately NOT consulted — it is the
+        # width-9 key, where "Manchester City" and "Manchester United"
+        # both truncate to "mancheste" (the R3 collision class).
+        op_a, op_b = operational_team_key(a_name), operational_team_key(b_name)
+        src_a, src_b = source_team_key(a_name), source_team_key(b_name)
+        linked = (canonical_team(a_name) == canonical_team(b_name)
+                  or (op_a == op_b and len(op_a) >= MIN_IDENTITY_KEY_LEN)
+                  # the curated voter-row alias table (single-sourced from
+                  # Config/entity_overrides.json + evidence-proven pairs,
+                  # e.g. Borussia M'gladbach / Mönchengladbach)
+                  or (src_a == src_b and len(src_a) >= MIN_IDENTITY_KEY_LEN)
+                  or _token_prefix_link(a_name, b_name))
+        if not linked:
+            return f"canonical_team_disagreement:{side}"
+        # S4: degenerate keys identify nothing; only exact raw equality may merge
+        if is_degenerate_team_key(canonical_team_key(a_name)):
+            if fold_ascii(a_name) != fold_ascii(b_name):
+                return f"degenerate_identity:{side}"
+    # different known competitions are different fixtures (Barcelona vs
+    # Barcelona SC, Olympiakos vs Olympiakos Nicosia, River Plate vs
+    # River Plate Asunción)
+    if _leagues_conflict(rep.get("league"), pick.get("league")):
+        return "league_disagreement"
+    return None
+
+
+def _kickoff_is_anchored(row: dict) -> bool:
+    """True when a row's kickoff names a calendar instant, not a bare clock.
+
+    A bare "14:45" (the naive foreign-clock render, incident-#6 family)
+    carries no date and cannot distinguish two occurrences of the same
+    fixture, so it must not be used to argue that two rows with identical
+    canonical identity are different events.
+    """
+    if str(row.get("kickoff_utc") or "").strip():
+        return True
+    value = _kickoff_value(row)
+    if not value:
+        return False
+    return kickoff_date(value) is not None
+
+
+def _unanchored_identity_merge(rep: dict, pick: dict) -> bool:
+    """Would this merge rely on a kickoff that cannot be trusted?
+
+    True when two rows share one canonical fixture identity but at least
+    one carries a bare clock, so the 180-minute reschedule guard could not
+    be consulted. Recorded on the surviving row so the audit can see which
+    collapses used the unanchored path.
+    """
+    if canonical_fixture_identity(pick) != canonical_fixture_identity(rep):
+        return False
+    if _kickoff_instants_agree(rep, pick) is not None:
+        return False  # decided on resolved UTC instants, not a bare clock
+    return not (_kickoff_is_anchored(rep) and _kickoff_is_anchored(pick))
+
+
+def _resolved_kickoff_instant(row: dict):
+    """The AUTHORITATIVE kickoff instant (``kickoff_utc``), if resolved."""
+    text = str(row.get("kickoff_utc") or "").strip()
+    if not text:
+        return None
+    try:
+        stamp = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return stamp if stamp.tzinfo is not None else None
+
+
+def _kickoff_instants_agree(rep: dict, pick: dict) -> bool | None:
+    """Compare resolved UTC instants; ``None`` when they are unavailable.
+
+    The raw ``kickoff`` text is a per-feed rendering — one source prints
+    "05-10, 19:45" and another the naive foreign clock "14:45" for the
+    SAME instant, which is exactly how the 2026-10-05 twins escaped the
+    collapse. ``kickoff_utc`` is the pipeline's own resolved answer
+    (incident-#6 ingest fix) and is strictly more trustworthy, so when
+    both rows have it, it decides.
+    """
+    a_dt, b_dt = _resolved_kickoff_instant(rep), _resolved_kickoff_instant(pick)
+    if a_dt is None or b_dt is None:
+        return None
+    return abs((a_dt - b_dt).total_seconds()) <= 180 * 60
+
+
+def _canonical_identity_collapse(rep: dict, pick: dict) -> bool:
+    """Same real fixture by deterministic identity?
+
+    Requires identical canonical fixture identity (date + both canonical
+    team keys). The 180-minute reschedule guard still applies whenever
+    BOTH rows carry an anchored kickoff; when either kickoff is a bare
+    clock it carries no occurrence information and cannot veto the merge.
+    """
+    if canonical_fixture_identity(pick) != canonical_fixture_identity(rep):
+        return False
+    resolved = _kickoff_instants_agree(rep, pick)
+    if resolved is not None:
+        return resolved
+    if _kickoff_is_anchored(rep) and _kickoff_is_anchored(pick):
+        return _same_event_cluster(rep, pick)
+    return True
+
+
+def stamp_identity_degenerate(picks: list[dict]) -> int:
+    """Mark rows whose team identity is unusable (S4). Report-only."""
+    n = 0
+    for pick in picks:
+        bad = [side for side in ("home", "away")
+               if is_degenerate_team_key(canonical_team_key(pick.get(side) or ""))]
+        if bad:
+            ctx = dict(pick.get("ctx") or {})
+            ctx["identity_degenerate"] = ",".join(bad)
+            pick["ctx"] = ctx
+            n += 1
+    return n
+
+
+def ledger_key_collisions(picks: list[dict]) -> list[dict]:
+    """Same frozen-ledger key tuple, different real teams (S5).
+
+    ``_day_archive_row_key`` is a width-9 key: "Manchester City" and
+    "Manchester United" both reduce to ``mancheste``; so do Barcelona /
+    Barcelona SC, Nottingham / Nottingham Forest, Universidad Católica /
+    Universidad de Chile. Rekeying the frozen ledger would rewrite audited
+    history, so this is REPORT-ONLY: the colliding rows are named, stamped
+    and never silently treated as one row.
+    """
+    by_key: dict[tuple, list[dict]] = {}
+    for pick in picks:
+        key = _day_archive_row_key(pick, str(pick.get("date") or "")[:10])
+        by_key.setdefault(key, []).append(pick)
+    out: list[dict] = []
+    for key, rows in by_key.items():
+        if len(rows) < 2:
+            continue
+        # curated-alias-linked spellings of ONE team are not a collision
+        canon = {canonical_team(r.get("home")) + "|" + canonical_team(r.get("away"))
+                 for r in rows}
+        if len(canon) == 1:
+            continue
+        out.append({"key": key, "rows": rows,
+                    "teams": sorted({f"{r.get('home')} vs {r.get('away')}" for r in rows})})
+        for r in rows:
+            ctx = dict(r.get("ctx") or {})
+            ctx["ledger_key_collision"] = "true"
+            r["ctx"] = ctx
+    return out
+
+
+def cross_keyer_identity_warnings(picks: list[dict]) -> dict[str, list]:
+    """Report-only daily sweep for the identity bug CLASS (S6).
+
+    (a) ``merged``: different raw names collapsing onto one canonical key
+        without any curated alias linking them (possible false merge);
+    (b) ``split``: curated-alias-linked raw names that still produce more
+        than one key somewhere in the keyer stack (possible identity
+        split, the Türkiye defect class).
+    """
+    raws: set[str] = set()
+    for pick in picks:
+        for side in ("home", "away"):
+            name = str(pick.get(side) or "").strip()
+            if name:
+                raws.add(name)
+
+    merged: dict[str, set[str]] = {}
+    for raw in raws:
+        merged.setdefault(canonical_team_key(raw, width=24), set()).add(raw)
+    merged_warnings = []
+    for key, names in sorted(merged.items()):
+        if len(names) < 2:
+            continue
+        if len({resolve_team_alias(n)[0].lower() for n in names}) == 1:
+            continue  # curated alias says these ARE one club
+        merged_warnings.append({"key": key, "names": sorted(names)})
+
+    # SPLIT: spellings the curated table says are ONE team, but some
+    # keyer still maps to more than one key. Compared WITHIN each keyer
+    # (across spellings), never across keyers — different keyers have
+    # different, legitimate noise rules (norm_entity_team strips
+    # "Sporting", source_team_key does not), and comparing those would
+    # warn forever about nothing.
+    groups: dict[str, set[str]] = {}
+    for raw in raws:
+        canonical, matched = resolve_team_alias(raw)
+        if matched:
+            groups.setdefault(canonical.lower(), set()).add(raw)
+    split_warnings = []
+    for canonical, spellings in sorted(groups.items()):
+        if len(spellings) < 2:
+            continue
+        keyers = {
+            "canonical": {canonical_team_key(n, width=24) for n in spellings},
+            "entity": {canonical_team(n) for n in spellings},
+            "source": {source_team_key(n) for n in spellings},
+            "ledger": {ledger_team_key(n, width=24) for n in spellings},
+        }
+        split = {name: sorted(keys) for name, keys in keyers.items() if len(keys) > 1}
+        if split:
+            split_warnings.append({"canonical_name": canonical,
+                                   "spellings": sorted(spellings),
+                                   "split_keyers": split})
+    return {"merged": merged_warnings, "split": split_warnings}
+
+
+def mixed_script_names(picks: list[dict]) -> list[dict]:
+    """Report-only: team names mixing Latin with Cyrillic/Greek homoglyphs.
+
+    A single Cyrillic "a" in "Sp\u0430rt\u0430k" is invisible to a human
+    and folds to a DIFFERENT key than "Spartak" in every keyer, silently
+    reproducing the duplicate-fixture incident. Transliterating it would
+    be a guess, so this flags the row instead of merging it.
+    """
+    out: list[dict] = []
+    seen: set[str] = set()
+    for p in picks or []:
+        for side in ("home", "away"):
+            name = str(p.get(side) or "")
+            anomaly = script_anomaly(name)
+            if anomaly and name not in seen:
+                seen.add(name)
+                out.append({"name": name, "anomaly": anomaly,
+                            "key": canonical_team_key(name)})
+    return out
+
+
+def print_identity_sweep(picks: list[dict], day: str = "", stream=None) -> dict[str, int]:
+    """Print the S4/S5/S6 identity summary lines. Report-only."""
+    stream = stream if stream is not None else sys.stderr
+    degenerate = stamp_identity_degenerate(picks)
+    collisions = ledger_key_collisions(picks)
+    sweep = cross_keyer_identity_warnings(picks)
+    anomalies = mixed_script_names(picks)
+    counts = {
+        "identity_degenerate": degenerate,
+        "ledger_key_collision": len(collisions),
+        "cross_keyer_merged": len(sweep["merged"]),
+        "cross_keyer_split": len(sweep["split"]),
+        "mixed_script_name": len(anomalies),
+    }
+    print(f"identity sweep {day}: " + " ".join(f"{k}={v}" for k, v in counts.items()),
+          file=stream)
+    for a in anomalies:
+        print(f"!! MIXED SCRIPT TEAM NAME {a['name']!r} ({a['anomaly']}): "
+              "homoglyph codepoints fold away, so this row can split from "
+              "its Latin-spelled twin — verify the feed spelling",
+              file=stream)
+    for c in collisions:
+        print(f"!! LEDGER KEY COLLISION {c['key']}: {c['teams']} "
+              "(not merged, settled separately)", file=stream)
+    for w in sweep["merged"]:
+        print(f"!! IDENTITY MERGE WARNING key={w['key']}: {w['names']} "
+              "(no curated alias links these)", file=stream)
+    for w in sweep["split"]:
+        print(f"!! IDENTITY SPLIT WARNING {w['canonical_name']!r} "
+              f"spellings={w['spellings']} split_in={w['split_keyers']}", file=stream)
+    return counts
 
 
 def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
@@ -4620,6 +5132,25 @@ def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int
             rep_sel = str(rep.get("pick") or "")
             
             if pick_date == rep_date and pick_market == rep_market and pick_sel == rep_sel:
+                # DETERMINISTIC path first (2026-10-05 Türkiye/Turkey split):
+                # identical canonical fixture identity (transliteration +
+                # curated alias) is the same real match by construction, so
+                # it collapses even when the two sources render the name
+                # differently ("Italy vs Türkiye" / "Italy vs Turkey")
+                # and the fuzzy bigram path would miss them.
+                # No gate is weakened: this only ever merges rows that are
+                # already identical in date, market, selection and both
+                # canonical team keys. The 180-minute reschedule guard
+                # still applies whenever both rows carry an anchored
+                # (dated) kickoff.
+                veto = _merge_veto_reason(rep, pick)
+                if veto is not None:
+                    # never merge these two, by any path
+                    continue
+                if _canonical_identity_collapse(rep, pick):
+                    cluster.append(pick)
+                    matched = True
+                    break
                 # Same date, market, selection. Now check kickoff and fuzzy team similarity
                 if _same_event_cluster(rep, pick):
                     # Compute team Jaccard bigram similarity
@@ -4664,6 +5195,20 @@ def _day_archive_row_key(row: dict, day: str) -> tuple[str, str, str, str, str]:
     )
 
 
+def _day_archive_row_key_legacy(row: dict, day: str) -> tuple[str, str, str, str, str]:
+    """Pre-2026-10-05 ledger row key (transliteration only, no aliases,
+    empty key for degenerate names). Read-side only: rows frozen before
+    the deploy are keyed this way and must still dedupe against a fresh
+    run instead of silently doubling."""
+    return (
+        str(row.get("date") or day)[:10],
+        research_ledger_team_key(row.get("home") or ""),
+        research_ledger_team_key(row.get("away") or ""),
+        str(row.get("market") or "").lower(),
+        str(row.get("pick") or "").lower(),
+    )
+
+
 def merge_day_archive_rows(existing: list, fresh: list, day: str) -> list:
     """Append-only merge for the per-day frozen pick ledger.
 
@@ -4688,21 +5233,54 @@ def merge_day_archive_rows(existing: list, fresh: list, day: str) -> list:
     """
     merged: list = []
     seen: set = set()
+    seen_identity: dict = {}
+
+    def _collides(key, row) -> bool:
+        """Same width-9 ledger key, different real fixture (S5).
+
+        Rekeying the frozen ledger would rewrite audited history, so the
+        collision is handled by REFUSING to treat the rows as one: both
+        are kept, stamped, and settled separately.
+        """
+        ident = (canonical_team(row.get("home")), canonical_team(row.get("away")))
+        prior = seen_identity.get(key)
+        if prior is None or prior == ident:
+            return False
+        ctx = dict(row.get("ctx") or {})
+        ctx["ledger_key_collision"] = "true"
+        row["ctx"] = ctx
+        print(f"warn: frozen-ledger key collision {key}: "
+              f"{row.get('home')} vs {row.get('away')} kept as a separate row",
+              file=sys.stderr)
+        return True
+
     for row in existing:
         if not isinstance(row, dict):
             continue
         if str(row.get("date") or day)[:10] != day:
             continue
         key = _day_archive_row_key(row, day)
-        if key in seen:
+        if key in seen and not _collides(key, row):
             continue
         seen.add(key)
+        seen.add(_day_archive_row_key_legacy(row, day))
+        seen_identity.setdefault(key, (canonical_team(row.get("home")),
+                                       canonical_team(row.get("away"))))
         merged.append(row)
     for row in fresh:
         key = _day_archive_row_key(row, day)
-        if key in seen:
+        legacy_key = _day_archive_row_key_legacy(row, day)
+        if legacy_key in seen and key not in seen and not _collides(legacy_key, row):
+            # the frozen row was written under the pre-fix key (accented,
+            # aliased or degenerate name): same row, do not double it
+            continue
+        if key in seen and not _collides(key, row):
+            # first-frozen-wins, UNLESS the shared key covers two different
+            # real fixtures (width-9 collision) — then keep both (S5).
             continue
         seen.add(key)
+        seen_identity.setdefault(key, (canonical_team(row.get("home")),
+                                       canonical_team(row.get("away"))))
         merged.append(row)
     return merged
 
@@ -5595,6 +6173,14 @@ def main():
         collapsed_day_picks, removed_dupes = collapse_final_operational_picks(day_picks)
         if removed_dupes:
             print(f"operational final pick collapse {day}: removed={removed_dupes}", file=sys.stderr)
+        # Visibility tripwire: anything that still looks like one fixture
+        # under two spellings AFTER canonical collapse needs a curated
+        # alias. Printed loudly; never auto-merged.
+        print_near_duplicate_fixture_tripwire(collapsed_day_picks, day=day)
+        # Report-only identity sweep (degenerate keys, frozen-ledger key
+        # collisions, cross-keyer merge/split candidates). Zero behaviour
+        # change: it only stamps ctx flags and prints counts.
+        print_identity_sweep(collapsed_day_picks, day=day)
 
         if not candidate_only:
             _print_price_coverage(
