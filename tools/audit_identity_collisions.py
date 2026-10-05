@@ -8,7 +8,7 @@ two failure directions:
   COLLISION  two different real teams sharing one key on one day
              (width-9 keys: "mancheste" covers Manchester City AND
              Manchester United);
-  SPLIT      one real team carrying two keys (the Türkiye species):
+  SPLIT      one real team carrying two keys (the Türkiye defect class):
              raw names that a curated alias links, or that are highly
              similar, yet key differently on the same day.
 

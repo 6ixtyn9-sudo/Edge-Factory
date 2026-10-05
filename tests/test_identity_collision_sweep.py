@@ -1,6 +1,6 @@
-"""Roach sweep: the fixture-identity bug CLASS, not the Türkiye instance.
+"""Identity collision/split sweep: the fixture-identity bug CLASS.
 
-Five species, each reproduced against the pre-fix code before being fixed:
+Five defect classes, each reproduced against the pre-fix code before being fixed:
 
 R1 exonym/diacritic SPLIT   one team, several keys   (S1 curated table)
 R2 false MERGE in collapse  two teams, one row       (S2/S3 vetoes)
@@ -25,7 +25,7 @@ from edgefactory.util import (  # noqa: E402
 
 def _load_picks_today():
     spec = importlib.util.spec_from_file_location(
-        "picks_today_roach", ROOT / "scripts" / "picks_today.py")
+        "picks_today_identity", ROOT / "scripts" / "picks_today.py")
     mod = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(mod)
     return mod
@@ -341,3 +341,124 @@ def test_no_previously_refused_merge_becomes_allowed():
         )
         if removed:
             assert legacy_would_merge, f"newly ALLOWED merge: {a} / {b}"
+
+
+# --- frozen real-slate regression (both self-caught defects) ---------------
+
+SLATE_FIXTURE = ROOT / "tests" / "fixtures" / "slate_2026-10-05_identity_split.json"
+
+
+def _slate_rows():
+    import json
+    return json.loads(SLATE_FIXTURE.read_text())
+
+
+def test_frozen_slate_collapses_the_twin_to_one_row():
+    """Replays the REAL 2026-10-05 slate end to end.
+
+    Both defects found in the second pass were invisible to synthetic
+    unit tests and only showed up here:
+      1. the two feeds spell the COMPETITION differently
+         ("World UEFA Nations League" vs
+          "International,Uefa Nations League A Grp. 1"), which an
+         equality-based league veto wrongly treated as two fixtures;
+      2. the rows' raw kickoff text disagreed by 300 minutes
+         ("05-10, 19:45" vs a bare "14:45") while both already carried
+         the SAME resolved kickoff_utc.
+    """
+    pt = _load_picks_today()
+    rows = _slate_rows()
+    assert len(rows) == 6, "fixture must keep the inflated archive count"
+    collapsed, removed = pt.collapse_final_operational_picks([dict(r) for r in rows])
+    assert removed == 1
+    assert len(collapsed) == 5
+    survivors = {(r["home"], r["away"]) for r in collapsed}
+    assert sum(1 for h, a in survivors if h == "Italy") == 1
+
+
+def test_frozen_slate_league_spelling_divergence_does_not_veto():
+    pt = _load_picks_today()
+    rows = _slate_rows()
+    a = next(r for r in rows if r["away"] == "Türkiye")
+    b = next(r for r in rows if r["away"] == "Turkey")
+    assert a["league"] != b["league"]  # the trap
+    assert not pt._leagues_conflict(a["league"], b["league"])
+    assert pt._merge_veto_reason(a, b) is None
+
+
+def test_frozen_slate_kickoff_utc_decides_over_raw_clock_text():
+    pt = _load_picks_today()
+    rows = _slate_rows()
+    a = next(r for r in rows if r["away"] == "Türkiye")
+    b = next(r for r in rows if r["away"] == "Turkey")
+    assert a["kickoff"] != b["kickoff"]
+    assert a["kickoff_utc"] == b["kickoff_utc"]
+    # naive text comparison says "different events"; the resolved instant wins
+    assert pt._same_event_cluster(a, b) is False
+    assert pt._kickoff_instants_agree(a, b) is True
+    assert pt._canonical_identity_collapse(a, b) is True
+
+
+def test_frozen_slate_identity_sweep_counters_are_all_zero():
+    pt = _load_picks_today()
+    collapsed, _ = pt.collapse_final_operational_picks(
+        [dict(r) for r in _slate_rows()])
+    counts = pt.print_identity_sweep(collapsed, day="2026-10-05")
+    assert counts == {"identity_degenerate": 0, "ledger_key_collision": 0,
+                      "cross_keyer_merged": 0, "cross_keyer_split": 0}
+
+
+def test_frozen_slate_archive_merge_is_not_inflated():
+    pt = _load_picks_today()
+    rows = _slate_rows()
+    merged = pt.merge_day_archive_rows([dict(r) for r in rows], [], "2026-10-05")
+    italy = [r for r in merged if r["home"] == "Italy"]
+    assert len(italy) == 1, "the twin spellings must share one ledger row"
+
+
+# --- degenerate-key epoch: pre-fix rows keyed '' still dedupe --------------
+
+def test_degenerate_key_input_is_case_and_whitespace_normalized():
+    assert canonical_team_key("Athletic  Club") == canonical_team_key("athletic club")
+    assert canonical_team_key(" ATHLETIC CLUB ") == canonical_team_key("Athletic Club")
+
+
+def test_legacy_empty_keyed_archive_row_still_dedupes():
+    pt = _load_picks_today()
+    # a row frozen BEFORE the fix keyed ('', '') for this team
+    old_row = _pick("Athletic Club", "Opponent", odds=1.42)
+    fresh_row = _pick("Athletic Club", "Opponent", odds=1.90)
+    merged = pt.merge_day_archive_rows([old_row], [fresh_row], "2026-10-05")
+    assert len(merged) == 1 and merged[0]["odds"] == 1.42
+
+
+# --- ambiguous settlement keys are operator-visible, not silently pending --
+
+def _load_auto_tickets():
+    spec = importlib.util.spec_from_file_location(
+        "auto_tickets_identity", ROOT / "scripts" / "auto_tickets.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def test_ambiguous_result_keys_are_counted_and_described(capsys):
+    at = _load_auto_tickets()
+    entries = {"2026-10-05": [
+        {"home": "Manchester City", "away": "Arsenal", "result": "1"},
+        {"home": "Manchester United", "away": "Arsenal", "result": "2"},
+        {"home": "Moss", "away": "Kongsvinger", "result": "2"},
+    ]}
+    key_to = {}
+    for day, rows in entries.items():
+        for e in rows:
+            for hk, ak in at._exact_result_keys(e["home"], e["away"]):
+                key_to[(day, hk, ak)] = e
+    dropped, detail = at._drop_ambiguous_result_keys(key_to, entries)
+    assert dropped >= 1
+    # the operator gets the raw fixtures that collided, not just a number
+    collided = {name for _day, names in detail for name in names}
+    assert "Manchester City vs Arsenal" in collided
+    assert "Manchester United vs Arsenal" in collided
+    # the unambiguous fixture is untouched
+    assert any("Moss" in str(v.get("home")) for v in key_to.values())
