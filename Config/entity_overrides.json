@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "notes": "Small safety layer for high-confidence aliases. The learned localdata/entity_registry.json should carry the bulk of aliases.",
+    "notes": "Small safety layer for high-confidence aliases. The learned localdata/entity_registry.json should carry the bulk of aliases. Team entries are curated, high-confidence aliases only (exonyms/renames such as Türkiye->Turkey, Czechia->Czech Republic, Ivory Coast->Côte d'Ivoire); never learned or fuzzy.",
     "leagues": {
         "br2": "brazil serie b",
         "Br2": "brazil serie b",
@@ -422,6 +422,14 @@
         "Kara-Balta": "Kyrgyzaltyn Kara-Balta",
         "Kyrgyzaltyn": "Kyrgyzaltyn Kara-Balta",
         "FC Kyrgyzaltyn": "Kyrgyzaltyn Kara-Balta",
-        "Kyrgyzaltyn Kara-Balta": "Kyrgyzaltyn Kara-Balta"
+        "Kyrgyzaltyn Kara-Balta": "Kyrgyzaltyn Kara-Balta",
+        "Türkiye": "Turkey",
+        "Turkiye": "Turkey",
+        "türkiye": "Turkey",
+        "turkiye": "Turkey",
+        "Turkey": "Turkey",
+        "Czechia": "Czech Republic",
+        "czechia": "Czech Republic",
+        "Czech Republic": "Czech Republic"
     }
 }

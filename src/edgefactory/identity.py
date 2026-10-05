@@ -132,6 +132,13 @@ TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
     ("Leicester", "Leicester City"),
     ("West Torrens", "West Torrens Birkalla"),
     ("Bayern Munich", "Bayern Munchen"),
+    # curated national-team exonyms / renames (2026-10-05 Türkiye split).
+    # Transliteration alone cannot join these: "turkiye" != "turkey".
+    # Mirrors Config/entity_overrides.json -> teams (same curated pairs).
+    ("Türkiye", "Turkey"),
+    ("Czechia", "Czech Republic"),
+    ("Ivory Coast", "Côte d'Ivoire"),
+    ("Cabo Verde", "Cape Verde"),
 )
 
 TEAM_KEY_ALIASES: dict[str, str] = {
