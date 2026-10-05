@@ -237,6 +237,7 @@ _SQUAD_MARKERS: dict[str, str] = {}
 for _age in range(14, 24):
     _SQUAD_MARKERS[f"u{_age}"] = f"u{_age}"
     _SQUAD_MARKERS[f"u{_age}s"] = f"u{_age}"
+_SQUAD_MARKERS["u2x"] = "u2x"
 for _tok in ("b", "ii"):
     _SQUAD_MARKERS[_tok] = "b"
 for _tok in ("iii", "c"):
@@ -263,18 +264,119 @@ MARKER_EXEMPT_NAMES: frozenset[str] = frozenset({
 })
 
 
+def _age_marker(value: str) -> str | None:
+    """Return a canonical U-age marker for a numeric token, if supported."""
+    try:
+        age = int(re.sub(r"[^0-9]", "", value))
+    except ValueError:
+        return None
+    if 14 <= age <= 23:
+        return f"u{age}"
+    return None
+
+
+def _squad_marker_analysis(name: object) -> tuple[frozenset[str], str]:
+    """Return ``(markers, club_stem_text)`` for a raw team name.
+
+    Detection is deterministic and token based: no similarity, no guessed
+    club aliases.  Marker words are removed from the stem so operational
+    keys are built from ``club stem + squad suffix`` rather than from a
+    marker-contaminated stem such as ``ajaxyouth_youth``.
+    """
+    folded = re.sub(r"[^a-z0-9 ]", " ", fold_ascii(name))
+    folded = re.sub(r"\s+", " ", folded).strip()
+    if not folded:
+        return frozenset(), ""
+    if folded in MARKER_EXEMPT_NAMES:
+        return frozenset(), folded
+
+    words = re.findall(r"[a-z0-9]+", folded)
+    markers: set[str] = set()
+    remove: set[int] = set()
+
+    for i, word in enumerate(words):
+        mapped = _SQUAD_MARKERS.get(word)
+        if mapped is not None:
+            markers.add(mapped)
+            remove.add(i)
+            continue
+
+        # Feed truncation: ``U2`` is not an age, it is an imprecise second
+        # team marker used by several result feeds for U20/U21/U23 rows.
+        if word == "u2":
+            markers.add("u2x")
+            remove.add(i)
+            continue
+
+        # U-21 / U 21 (punctuation has already become a word boundary).
+        if word == "u" and i + 1 < len(words):
+            age = _age_marker(words[i + 1])
+            if age:
+                markers.add(age)
+                remove.update({i, i + 1})
+                continue
+
+        # Under 21 / Sub 20 are explicit youth-level spellings.
+        if word in {"under", "sub"} and i + 1 < len(words):
+            age = _age_marker(words[i + 1])
+            if age:
+                markers.add(age)
+                remove.update({i, i + 1})
+                continue
+
+        # Locale-specific marker words.  ``Primavera`` is also the name of
+        # senior Brazilian clubs, so treat it as a squad marker only when it
+        # follows a club stem (e.g. ``Milan Primavera``), never as the first
+        # token in ``Primavera EC`` / ``Primavera SP`` / ``Primavera``.
+        if word == "primavera" and i > 0:
+            markers.add("youth")
+            remove.add(i)
+            continue
+        if word == "amateure" and len(words) > 1:
+            markers.add("res")
+            remove.add(i)
+            continue
+        if word == "frauen":
+            markers.add("w")
+            remove.add(i)
+            continue
+        if word == "jong":
+            markers.add("youth")
+            remove.add(i)
+            continue
+
+    # Numeric second-team suffix: ``Los Angeles FC 2`` / ``Ha Noi 2 W``.
+    # Apply after the first pass so a trailing women marker can be removed
+    # before deciding whether ``2`` is effectively at the end.
+    for i, word in enumerate(words):
+        if word != "2":
+            continue
+        if i == 0:
+            continue
+        if all(j in remove for j in range(i + 1, len(words))):
+            markers.add("b")
+            remove.add(i)
+
+    stem_words = [word for i, word in enumerate(words) if i not in remove]
+    return frozenset(markers), " ".join(stem_words)
+
+
 def squad_markers(name: object) -> frozenset[str]:
     """Distinct-entity markers carried by a raw team name.
 
     Word-level only: ``Wanderers`` is not ``W``, ``Boca`` is not ``B``.
     Returns a (possibly empty) frozenset of canonical marker tokens.
     """
-    folded = re.sub(r"[^a-z0-9 ]", " ", fold_ascii(name))
-    folded = re.sub(r"\s+", " ", folded).strip()
-    if folded in MARKER_EXEMPT_NAMES:
-        return frozenset()
-    words = re.findall(r"[a-z0-9]+", folded)
-    return frozenset(_SQUAD_MARKERS[w] for w in words if w in _SQUAD_MARKERS)
+    return _squad_marker_analysis(name)[0]
+
+
+def strip_squad_markers(name: object) -> str:
+    """Raw team text with explicit squad markers removed.
+
+    This is used only for deterministic identity keys; it does not rewrite
+    displayed team names or historical ledgers.
+    """
+    return _squad_marker_analysis(name)[1]
 
 
 def squad_marker_suffix(name: object) -> str:
@@ -403,14 +505,15 @@ def _canonical_team_key_uncached(name: object, width: int = 9) -> str:
     and its youth/reserve/women's squad can never share an identity.
     """
     canonical, _matched = resolve_team_alias(name)
-    base = norm_team(canonical, width=width)
+    stem = strip_squad_markers(canonical)
+    base = norm_team(stem, width=width)
     if len(base) < MIN_IDENTITY_KEY_LEN:
         # Numeric club names ("B 1903", "FC 08 Homburg") lose their only
         # distinctive token to the [^a-z] filter. Fall back to the
         # alphanumeric compact key BEFORE the sentinel: it is a real,
         # stable identity, so "B 1903" and "B 1903 Copenhagen" can still
         # be linked instead of both being refused as untrustworthy.
-        alnum = compact_key(canonical)
+        alnum = compact_key(stem)
         if len(alnum) >= MIN_IDENTITY_KEY_LEN and any(c.isdigit() for c in alnum):
             return alnum[:width] + squad_marker_suffix(name)
         # never emit an empty/1-char ledger key component
@@ -430,7 +533,8 @@ def explain_team_key(name: object, width: int = 9) -> dict[str, object]:
         "norm_team_legacy": norm_team_legacy(str(name or ""), width=width),
         "alias_matched_key": matched,
         "alias_canonical_name": canonical if matched else None,
-        "canonical_team_key": norm_team(canonical, width=width),
+        "canonical_team_key": canonical_team_key(name, width=width),
+        "club_stem_without_squad_markers": strip_squad_markers(canonical),
         "alias_source": "Config/entity_overrides.json:teams" if matched else None,
     }
 

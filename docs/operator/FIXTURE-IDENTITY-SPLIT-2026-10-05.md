@@ -513,3 +513,219 @@ exposed them.
   distinct-clubs list) — different clubs in most feeds.
 * Non-Latin-only names (wholly Cyrillic/Greek) still key to a `deg~`
   sentinel: fail-closed, visible via `identity_degenerate`.
+
+## 13. Youth/reserve squad-identity hardening handoff verification (2026-10-05)
+
+This section records only evidence generated in this session on branch
+`arena/01a10d17-edge-factory`. The three short commit IDs named in the
+handoff were not present in this checkout, so the work below was rebuilt
+and measured on this branch rather than cherry-picked.
+
+| Check | Command run | Actual result | Disposition |
+|---|---|---|---|
+| Handoff commits available locally? | `pwd && git status --short --branch && git log --oneline --decorate --max-count=12`<br>`git branch -a --contains 01032fc || true; git branch -a --contains d5e6797 || true; git branch -a --contains 90cfc1d || true; git cat-file -t 01032fc 2>/dev/null || true; git cat-file -t d5e6797 2>/dev/null || true; git cat-file -t 90cfc1d 2>/dev/null || true`<br>`git fetch --all --prune --tags && git show-ref --heads --tags`<br>`git fsck --no-reflogs --unreachable --lost-found 2>/dev/null; git reflog --date=iso` | `## arena/01a10d17-edge-factory` at `5927fab ... Fix duplicate-fixture identity split + identity collision hardening (#37)`.<br>`git branch --contains` reported `error: malformed object name 01032fc`, `d5e6797`, `90cfc1d`; `git cat-file` returned no object type.<br>`git show-ref` listed only `refs/heads/arena/01a10d17-edge-factory` and `refs/heads/main`, both at `5927fab...`.<br>Reflog showed clone/checkout only; no unreachable commits were printed. | Could not cherry-pick/rebase the named commits in this environment. Rebuilt the squad-identity hardening directly and covered it with tests below. |
+| Baseline local-archive measurement before this session's fix | `tmp=$(mktemp -d); ... cp -a Config $tmp/Config; git show HEAD~2:src/edgefactory/util.py > $tmp/src/edgefactory/util.py; git show HEAD~2:src/edgefactory/scored_candidate_shadow.py > $tmp/src/edgefactory/scored_candidate_shadow.py; git show HEAD~2:scripts/auto_tickets.py > $tmp/scripts/auto_tickets.py; git show HEAD~2:Config/entity_overrides.json > $tmp/Config/entity_overrides.json; ln -s /home/user/Edge-Factory/localdata $tmp/localdata; PYTHONPATH=$tmp/src .venv/bin/python - <<'PY' ... load_archived_picks(); _collect_settled_facts(); pick_result(...) ... PY` | `old_archived_picks 1729`<br>`old_graded 1590`<br>`old_squad_legs_total 113`<br>`old_squad_legs_graded 102`<br>`old_ambiguous_keys 27`<br>`old_marker_guarded_legs 8` | The prompt's quoted `1611`, `1489`, `86/94`, `26` figures were not reproduced in this checkout. Local baseline here is the output shown. The temp snapshot copied the full `Config/` directory so `verified_results.json` was present. |
+| Post-fix local-archive measurement | `PYTHONPATH=src .venv/bin/python - <<'PY' ... load_archived_picks(); _collect_settled_facts(); pick_result(...) ... PY` | `archived_picks 1729`<br>`graded 1593`<br>`squad_legs_total 113`<br>`squad_legs_graded 105`<br>`ambiguous_keys 0`<br>`marker_guarded_legs 5`<br>stderr included `settlement_ambiguous_pending=0`. | Improved local grading by 3 legs, improved squad-leg grading by 3 legs, and reduced local ambiguous settlement keys from 27 to 0. |
+| Status-change audit old vs new | `tmp=$(mktemp -d); ... cp -a Config $tmp/Config; old auto_tickets snapshot ... > /tmp/old_status2.json; PYTHONPATH=src .venv/bin/python ... > /tmp/new_status2.json; .venv/bin/python - <<'PY' ... compare results ... PY` | `status_changes 3`<br>`newly_graded 3`<br>`newly_ungraded 0`<br>`reversed 0`<br>Changed rows printed:<br>`Korona II Kielce vs Radomiak Radom`: `old None`, `new win`.<br>`Vukovar '91 vs Dinamo Zagreb B`: `old None`, `new loss`.<br>`Górnik Zabrze II vs Olimpia Grudziadz`: `old None`, `new win`. | No already-graded senior leg reversed after rerunning the comparison with the full `Config/` directory, including `verified_results.json`, present in the old snapshot. The earlier `Pafos` flip was a measurement harness artefact caused by omitting `Config/verified_results.json` from the temporary old snapshot. The three newly graded legs are exact/level-tolerant second-team joins with same-day archive result evidence; covered by `tests/test_squad_identity.py`. |
+| Pafos verified-result precedence provenance | `PYTHONPATH=src .venv/bin/python - <<'PY' ... print localdata Pafos donor rows, load_verified_results() rows, and canonical/norm keys ... PY` | Donor rows printed: `forebet_settled` = `Pafos 2-2 Dinamo Tirana` (`outcome draw`), `bettingclosed_settled` = `Pafos 4-2 KS Dinamo Tirana` (`outcome home`), `scoutingstats_settled` = `Pafos FC 4-2 Dinamo City` (`outcome home`). Verified row printed: `operator_verified` = `Pafos 4-2 Dinamo Tirana` (`outcome home`) with `verified_at 2026-09-01` evidence in `Config/verified_results.json`. Keys printed: `canonical ('2026-08-27', 'pafos', 'dinamotir')`, `norm_team ('2026-08-27', 'pafos', 'dinamotir')`. | Verified rows intentionally outrank donor rows in every exact key space. Regression pinned by `test_verified_result_overrides_canonical_donor_key`; the corrected old-vs-new comparison above shows `reversed 0` once the old snapshot includes `verified_results.json`. |
+| Senior leg must not grade from youth result, and youth leg must not grade from senior result | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py -q` | `13 passed in 0.39s` | Covered by `test_auto_ticket_senior_result_never_grades_youth_leg_and_vice_versa`, `test_shadow_settlement_senior_result_never_grades_youth_candidate`, and `test_level_tolerant_lookup_never_synthesizes_senior_boundary_key`. |
+| Legacy-blind keys cannot be written back for squad rows | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py::test_legacy_blind_lookup_keys_are_tagged_and_not_written_for_squad_rows -q` | `1 passed` | `_exact_result_lookup_specs("Turkey U21", "Spain U21")` still exposes `("turkey", "spain", True)` as a tagged compatibility key, but `_result_write_keys` / `_exact_result_keys` return only `("turkey_u21", "spain_u21")`. |
+| `_level_tolerant_lookup` fails closed when sibling second teams disagree | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py::test_level_tolerant_lookup_fails_closed_on_disagreeing_second_teams -q` | `1 passed` | The second-team family lookup returns `None` when U20 and U23 sibling keys on the same date produce different outcomes. |
+| Senior-key parity for real senior names | `PYTHONPATH=src .venv/bin/python - <<'PY' ... materialize old util/config from git show HEAD; sample 5000 senior-only archive fixtures; compare old.canonical_team_key and old exact keys to new canonical_team_key and _exact_result_keys ... PY` | `senior_fixture_sample 5000`<br>`canonical_team_key_diffs 0`<br>`exact_result_keys_diffs 0` | Senior keys in the 5,000-fixture senior-only sample were byte-identical for `canonical_team_key` and `_exact_result_keys`. |
+| Unicode and marker-veto adversarial classes still pass | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py tests/test_identity_collision_sweep.py tests/test_identity_adversarial.py tests/test_team_identity_transliteration.py -q` | `96 passed in 0.45s` | No regression in the existing Unicode, marker-veto, exonym, sentinel, and collision-sweep adversarial tests; new squad tests are included in the same run. |
+| Residual local ambiguous-key investigation | `PYTHONPATH=src .venv/bin/python - <<'PY' ... at._collect_settled_facts(); print(len(at.AMBIGUOUS_SETTLEMENT_KEYS)); ... PY` after marker-stem fix but before curated residual aliases | `ambiguous 10` with residual rows including `Charleston Battery vs Charlotte Independence` / `Charleston vs Charlotte Independ.`, `Neftci Baku W` / `Neftçi Bakı W`, `A.D. Isidro Meta` / `AD Isidro Metapan`, `Al Arabi Kuwait` / `Al-Arabi Club(KU`, `Ellas Syros` / `Ellas Syrou`, and `Egnatia Rrogozhine` / `Egnatia Rrogozhi`. | Added curated explicit aliases only for measured archive spelling/truncation pairs in `Config/entity_overrides.json`; no fuzzy matching. |
+| Residual ambiguous keys after curated aliases | `PYTHONPATH=src .venv/bin/python - <<'PY' ... at._collect_settled_facts(); print('ambiguous', len(at.AMBIGUOUS_SETTLEMENT_KEYS)) ... PY` | `ambiguous 0` | Local residual ambiguous settlement keys resolved to zero. Covered by `test_curated_archive_truncation_aliases_are_explicit_and_marker_safe`. |
+| Ambiguity detector still has live test coverage after local residuals reached zero | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py::test_ambiguity_detector_still_drops_distinct_width_collision -q` | `1 passed` | Synthetic Manchester City / Manchester United width collision still drops the colliding key. Existing adversarial tests also keep spelling-variant rows settleable and truly distinct conflicting fixtures dropped. |
+| Is `SECOND_TEAM_MARKERS` too broad for U20/U23? | `PYTHONPATH=src .venv/bin/python - <<'PY' ... scan localdata settled+picks for same day / same club stem / same opponent with both u20 and u23 ... PY` | `u20_and_u23_same_club_same_day_same_opponent 0` | No local evidence of U20 and U23 sides of one club meeting the same opponent on the same date. Kept the family lookup uniqueness-guarded anyway; disagreement returns `None`. |
+| Broader second-team level-split evidence | `PYTHONPATH=src .venv/bin/python - <<'PY' ... scan localdata settled+picks for second-team same-day same-opponent level splits ... PY` | `second_team_same_day_same_opponent_level_splits 158`.<br>Samples printed included `Brisbane Roar FC Youth` / `Brisbane Roar U21`, `Koln (Youth)` / `Koln II`, `Atl. San Luis U2` / `Atl. San Luis U21`, `Novorizontino U2` / `Novorizontino U20`, and `Brisbane Roar II` / `Brisbane Roar U23`. | Confirms feeds use several labels for the same second-team level family. The implementation tries the family only when a second-team marker is already present and never synthesizes the empty senior marker. |
+| u1x / academy evidence | Same scan command as above, printing `u17_u18_u19_name_occurrences` and `academy_name_occurrences`. | `u17_u18_u19_name_occurrences 2047 unique_names 513` with sample `Athletico-PR U17`, `Germany U19 W`, etc.<br>`academy_name_occurrences 105 unique_names 23` with sample `Puskas Academy`, `Wick Academy`, `Academy Pandev`, `Inter Academy U20`, `BFF Academy U19`, `Tottenham Hotspur Academy`. | Did not add a `u1x` tolerant family: exact U17/U18/U19 markers already remain distinct. Did not broaden academy treatment: archive evidence mixes senior club names containing Academy with youth-team academy names. |
+| Report-before-fix failure captured | Initial full-suite command before adjusting the synthetic placeholder test: `PYTHONPATH=src .venv/bin/python -m pytest tests/ -q` | Failed once: `tests/test_auto_tickets_rolling.py::test_settle_losing_day_moves_bank_no_notification` with `assert 120.0 == 50.0`; stderr showed `settlement_marker_guarded=1 :: 2026-08-20 Team b vs Other b ...`. | Recorded before fixing. The test used synthetic `Team b`, which is now intentionally parsed as a reserve marker; the test fixture now uses non-marker placeholders. Production code was not loosened. |
+| Full suite | `PYTHONPATH=src .venv/bin/python -m pytest tests/ -q` | `1373 passed in 32.84s` | Green after adding tests and adjusting the synthetic placeholder. |
+| Parity test | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_scored_candidate_shadow_tickets.py::test_identical_ticket_output_with_shadow_on_off_and_crashing -q` | `1 passed in 0.05s` | Ticket stdout parity remains green. |
+| Smoke | `PYTHONPATH=src .venv/bin/python tools/smoke_fixture_identity_dedupe.py` | Ended with `SMOKE: PASS (3/3 cases)`. | Smoke green. |
+| Marker-guard counter operator visibility | `PYTHONPATH=src .venv/bin/python -m pytest tests/test_squad_identity.py::test_marker_guard_summary_is_operator_visible_even_at_zero -q` | `1 passed in 0.05s`; the test asserts `settlement_marker_guarded_pending=0` at zero and `settlement_marker_guarded_pending=1` after a guarded marked leg is recorded. | Added `_report_marker_guarded_settlement()` and wired it into `main()` settlement/today/backfill paths, so production logs show the guard is wired even when quiet. |
+| CI backlog/log access | `gh run list --limit 5 --json databaseId,workflowName,status,conclusion,headBranch,headSha,createdAt,url`<br>`gh run view 37343204736 --log | wc -c`<br>`gh run view 37343204736 --json jobs,conclusion,status,headSha,headBranch,workflowName,createdAt` | Run list returned recent successful runs, including `37343204736` on branch `arena/01a10c3f-edge-factory`.<br>`gh run view 37343204736 --log | wc -c` printed `0`; stderr ended in `EOF` while fetching logs. The signed log URL emitted by `gh` is not recorded here.<br>JSON job view showed both jobs completed with `conclusion: success`. | Production backlog collision classes beyond localdata: not verified. Logs were not retrievable via `gh run view --log` in this environment. |
+| Paths touched | `git diff --name-only && git status --short` | At the time of the check before this doc append: `Config/entity_overrides.json`, `scripts/auto_tickets.py`, `src/edgefactory/scored_candidate_shadow.py`, `src/edgefactory/util.py`, `tests/test_auto_tickets_rolling.py`; untracked `tests/test_squad_identity.py`. | No `.github/workflows/*` or `localdata/*` paths touched. This doc section was appended afterwards. |
+
+### 13a. Curated residual-alias adjudication
+
+Every alias below was added explicitly to `Config/entity_overrides.json`; no
+`alias_fuzzy` result is consulted. The evidence column is from local archive
+commands in this session (settled rows plus pick archives), not from name
+similarity.
+
+| Alias spellings | Canonical | Archive evidence used |
+|---|---|---|
+| `Charleston` / `Charleston Battery` | `Charleston Battery` | Same-day common opponents appeared in the scan (`Brooklyn` on 2026-08-02 and `Las Vegas Lights` on 2026-08-30); the residual ambiguous row was the same 2026-07-12 fixture against `Charlotte Independ.` / `Charlotte Independence`. |
+| `Charlotte Independ.` / `Charlotte Independence` | `Charlotte Independence` | Abbreviation/truncation of one club name in the same 2026-07-12 inverse fixture against `Charleston` / `Charleston Battery`. |
+| `Neftci Baku` / `Neftçi Bakı` | `Neftci Baku` | Transliteration/diacritic variant in the residual women's fixture `Neftci Baku W` / `Neftçi Bakı W`; marker suffix remains `w`, so this does not cross the senior boundary. |
+| `Buducnost` / `Budućnost Podgorica` | `Buducnost Podgorica` | Diacritic plus city-suffix spelling variant in the same residual women's fixture against the Neftci/Neftçi pair; marker suffix remains `w`. |
+| `Ulricehamn` / `Ulricehamns IFK` | `Ulricehamns IFK` | Residual 2026-08-05 women's fixture against `Elfsborg W`; the suffix `IFK` is the club-designator expansion and marker suffix remains `w`. |
+| `A.D. Isidro Meta` / `AD Isidro Metapan` | `AD Isidro Metapan` | Feed truncation: scan found same-day/common-opponent evidence against `Aguila` (2026-08-08) and paired `Cacahuatique` / `CD Cacahuatique` rows (2026-07-25 and 2026-09-27). |
+| `Al-Arabi Club(KU` / `Al Arabi Kuwait` | `Al Arabi Kuwait` | Feed truncation/country qualifier: exact same archive day and opponent, `East Bengal`, on 2026-08-12. |
+| `St Patricks Dublin` / `St. Patricks Athletic` | `St. Patricks Athletic` | Repeated same-day common-opponent evidence (`Wexford Youths`, `Shamrock Rovers`) and paired opponent spellings (`Drogheda Utd` / `Drogheda United`, `Waterford United` / `Waterford FC`). |
+| `Giravanz K.` / `Giravanz Kitakyu` | `Giravanz Kitakyu` | `K.` abbreviation: same-day common-opponent evidence against `Okinawa SV`, `Tochigi SC`, `Matsumoto Yamaga`, `Ehime FC`, `Gainare Tottori`, and `Kagoshima United`. |
+| `Ellas Syrou` / `Ellas Syros` | `Ellas Syros` | Same Greek club spelling variant/genitive feed form; common-opponent evidence against `Marko` (2026-08-24) and `Apollon Pontou` (2026-09-07). |
+| `Egnatia Rrogozhi` / `Egnatia Rrogozhine` | `Egnatia Rrogozhine` | Feed truncation/terminal spelling variant; scan found paired same-day fixtures against `Lillestrom` / `Lillestrom SK` on 2026-08-20 and 2026-08-27 plus other paired opponent spellings. |
+
+Pairs such as `Dinamo Tbilisi` / `US Mondorf-les-bains` did **not** receive a
+new Config alias in this round; they were already resolved by deterministic
+structural containment (`US Mondorf` is a prefix of `US Mondorf-les-bains`) and
+therefore were absent from the residual list after the marker-stem fix.
+
+Implementation notes for this section:
+
+* `canonical_team_key` now builds operational keys from club stem plus squad suffix for explicit markers including `U-21`, `Under 21`, `Sub 20`, `Jong`, `Frauen`, `Amateure`, `Primavera` when it follows a club stem, trailing `2`, and truncated `U2` as `u2x`.
+* `_exact_result_keys` is write-safe: marker-aware canonical / transliterated / frozen-legacy keys are written; old marker-blind keys are exposed only through tagged lookup specs and are skipped for marked legs.
+* `SECOND_TEAM_MARKERS = {b, res, youth, u20, u21, u22, u23, u2x}` is tried as a family only when a second-team marker is already present. The empty senior marker is never synthesized, and disagreeing sibling outcomes fail closed.
+* No fuzzy matching was added. The residual zero-ambiguity improvement uses only explicit aliases added to `Config/entity_overrides.json` plus deterministic club-stem comparison after equal marker sets.
+
+## 14. Follow-up stack on PR #38 head — curated residual aliases and kickoff UTC boundary
+
+Base for this follow-up was the PR #38 head, not `main`:
+`2e93d0e Expose marker-guard settlement summary` on branch
+`arena/01a10d17-edge-factory`. The local ambiguity baseline immediately
+before this follow-up stayed at `settlement_ambiguous_pending=0`, with an
+empty `AMBIGUOUS_SETTLEMENT_KEYS` list. The production value
+`settlement_ambiguous_pending=21` remains operator-reported and was not
+locally reproduced in this sandbox.
+
+### 14a. Ground-truthed alias additions from archive rows
+
+Each alias below was added explicitly to `Config/entity_overrides.json`; no
+fuzzy, prefix, or substring rule was introduced. The archive evidence was
+read from local donor/settled files in this session. Remaining local
+ambiguous keys after these additions: none (`local_ambiguous_count 0`).
+
+| Alias spellings | Canonical | Archive evidence used |
+|---|---|---|
+| `Kiyovu Sport` / `Kiyovu Sports` | `Kiyovu Sports` | `forebet.csv.gz` and `zulubet.csv.gz` both carry the same Rwanda top-flight fixture on `2025-04-25`: `Vision vs Kiyovu Sport(s)`, score `0-1`; Forebet league code `Rw1`, Zulubet league `Rwanda National Soccer League`. Additional same-date/opponent agreement was observed for `Rutsiro` on `2025-05-16` and `Gasogi United` on `2026-04-03`. |
+| `San Martin S.J.` / `San Martin San Juan` | `San Martin San Juan` | `forebet.csv.gz` row `2024-02-18`, league `Ar2`, `San Martin San Juan vs Gimnasia Jujuy`, score `2-1`; `statarea.csv.gz` row same date/opponent/score, league `Argentina,Primera Nacional`, `San Martin S.J. (Argentina) vs Gimnasia Jujuy (Argentina)`. |
+| `Dinamo Samarkand` / `Dinamo Samarqand` | `Dinamo Samarqand` | `forebet.csv.gz` row `2024-04-05`, league `Uz1`, `FC Bunyodkor vs Dinamo Samarkand`, score `0-0`; `statarea.csv.gz` row same date/opponent/score, league `Uzbekistan,Superliga`, `FC Bunyodkor (Uzbekistan) vs Dinamo Samarqand (Uzbekistan)`. |
+
+### 14b. Refused correctness case retained
+
+`Juventud Unida SL` and `Juventud Unida Univ.` remain distinct by policy and
+by test, despite archive rows that can share a date/opponent. No alias was
+added for this pair. Regression coverage:
+`test_juventud_unida_san_luis_and_universitario_remain_distinct` asserts the
+24-character canonical keys differ and `_same_club_names()` refuses the pair.
+
+### 14c. The Odds API 60-minute kickoff mismatch boundary
+
+The three 2026-10-05 warning rows were traced to a donor-ingest boundary:
+`picks_today.json` already carries `kickoff_utc` matching the captured
+The Odds API row, but `_pick_kickoff_utc()` ignored it and reparsed the
+human display string as Africa/Johannesburg local time minus two hours. That
+made the planner compare `17:45Z` with captured `18:45Z` for Montenegro vs
+Armenia and France vs Belgium, and `15:00Z` with captured `16:00Z` for Cyprus
+vs Latvia. The fix is narrow: `_pick_kickoff_utc()` now prefers a valid
+`kickoff_utc` field and only falls back to the legacy display-string parse
+for old rows without `kickoff_utc`. The mismatch tolerance and lead-window
+guards were not changed.
+
+Evidence summary from local archive scans:
+
+| Measurement | Result |
+|---|---|
+| Before fix: The Odds API pick/display mismatches >15m | `48` rows: `2026-08/+60m=7`, `2026-09/+60m=10`, `2026-10/+60m=31`; the three named internationals were in the 2026-10 `+60m` class. |
+| After fix: mismatches >15m | `9` rows remain: seven August rows without `kickoff_utc`, plus two September rows with larger `+480m`/`+300m` disagreements that remain guarded. |
+| Named 2026-10 internationals after fix | `kickoff_mismatch_count 0`; planner skip lines become ordinary `priced, close window not open` rows. |
+
+### 14d. Follow-up clarifications before merge
+
+**Kickoff mismatch guard field sources.** The pick side of the comparison now
+reads `pick["kickoff_utc"]` first, falling back to the legacy `pick["kickoff"]`
+`DD-MM, HH:MM` parse only when `kickoff_utc` is absent. Command output:
+
+```text
+nl -ba src/edgefactory/sources/theoddsapi.py | sed -n '758,792p;886,894p'
+760 def _pick_kickoff_utc(pick: dict) -> datetime | None:
+761     resolved = str(pick.get("kickoff_utc") or "").strip()
+...
+769     raw = str(pick.get("kickoff") or "").strip()
+...
+891         "kickoff": event.get("commence_time") or pick.get("kickoff"),
+```
+
+The captured-row side reads `existing_rows[].kickoff`; for rows written by the
+The Odds API adapter, that field is `event["commence_time"]` unless the event
+omits it, in which case the adapter falls back to the pick display string.
+`plan_auto()` compares those two resolved instants and still emits
+`WARN kickoff-mismatch` when they differ by more than `KICKOFF_MISMATCH_MIN`:
+
+```text
+nl -ba scripts/capture_theodds.py | sed -n '244,300p'
+258             iso = (r.get("kickoff") or "").replace("Z", "+00:00")
+...
+287         row_ko = _fixture_row_kickoff(f, existing_rows, match_fn) if has_rows else None
+288         if row_ko is not None and kickoff is not None:
+289             delta_m = abs((row_ko - kickoff).total_seconds()) / 60.0
+290             if delta_m > KICKOFF_MISMATCH_MIN:
+291                 skips.append(
+292                     f"WARN kickoff-mismatch {fk}: pick lists {kickoff:%H:%MZ}, captured rows say "
+```
+
+A new regression test proves the warning path still fires when the pick has a
+valid `kickoff_utc` but the captured row carries a genuinely different kickoff:
+`test_kickoff_utc_mismatch_warning_still_fires_on_row_disagreement` feeds
+`kickoff_utc=2026-10-05T18:45:00+00:00` against an existing captured row at
+`2026-10-05T19:45:00Z` and asserts the warning contains `pick lists 18:45Z`,
+`captured rows say 19:45Z`, and `Δ=60m`. Targeted validation:
+
+```text
+PYTHONPATH=src .venv/bin/python -m pytest tests/test_capture_plan_kickoff.py::test_kickoff_utc_mismatch_warning_still_fires_on_row_disagreement tests/test_squad_identity.py::test_followup_aliases_are_pinned_without_local_ambiguous_backlog tests/test_squad_identity.py::test_juventud_unida_san_luis_and_universitario_remain_distinct -q
+...                                                                      [100%]
+3 passed in 0.13s
+```
+
+This means the guard is not blind for independent disagreement between
+`pick["kickoff_utc"]` and captured-row `kickoff`. It is also true that when
+`kickoff_utc` and the The Odds API captured row agree, this path no longer
+uses the raw human display string as an independent contradiction signal; that
+is intentional because the display string is zone-free provenance, not an
+instant.
+
+**Residual prevalence scan explanation.** The after-fix residuals were listed
+with old-display parse and new `kickoff_utc` parse side-by-side:
+
+```text
+PYTHONPATH=src .venv/bin/python - <<'PY'
+# scans localdata/theoddsapi_odds_*.csv.gz against picks_*.json and prints
+# rows where the post-fix pick instant still differs from captured kickoff by >15m
+PY
+after_residual_count 9
+('picks_2026-08-03.json', '2026-08-03', 'Halmstad', 'Sirius', '03-08, 18:00', None, None, None, 'Halmstads BK', 'IK Sirius', '2026-08-03T17:00:00+00:00', '2026-08-03T16:00:00+00:00', 60, '2026-08-03T16:00:00+00:00', 60)
+('picks_2026-08-08.json', '2026-08-08', 'PSV Eindhoven', 'Fortuna Sittard', '08-08, 19:00', None, None, None, 'PSV Eindhoven', 'Fortuna Sittard', '2026-08-08T18:00:00+00:00', '2026-08-08T17:00:00+00:00', 60, '2026-08-08T17:00:00+00:00', 60)
+('picks_2026-08-08.json', '2026-08-08', 'Viking', 'Sarpsborg 08 FF', '08-08, 15:00', None, None, None, 'Viking FK', 'Sarpsborg FK', '2026-08-08T14:00:00+00:00', '2026-08-08T13:00:00+00:00', 60, '2026-08-08T13:00:00+00:00', 60)
+('picks_2026-08-10.json', '2026-08-10', 'Sirius', 'IF Brommapojkarna', '10-08, 18:00', None, None, None, 'IK Sirius', 'IF Brommapojkarna', '2026-08-10T17:00:00+00:00', '2026-08-10T16:00:00+00:00', 60, '2026-08-10T16:00:00+00:00', 60)
+('picks_2026-08-11.json', '2026-08-11', 'Celje', 'Ararat-Armenia', '11-08, 19:15', None, None, None, 'NK Celje', 'FC Ararat-Armenia', '2026-08-11T18:15:00+00:00', '2026-08-11T17:15:00+00:00', 60, '2026-08-11T17:15:00+00:00', 60)
+('picks_2026-08-11.json', '2026-08-11', 'Kauno Žalgiris', 'Dinamo Zagreb', '11-08, 18:00', None, None, None, 'FK Kauno Žalgiris', 'Dinamo Zagreb', '2026-08-11T17:00:00+00:00', '2026-08-11T16:00:00+00:00', 60, '2026-08-11T16:00:00+00:00', 60)
+('picks_2026-09-08.json', '2026-09-08', 'Porto', 'Manchester City', '2026-09-08 21:00:00', '2026-09-08T11:00:00+00:00', 'derived_odds_row', "scoutingstats_odds kickoff '2026-09-08T11:00:00Z'", 'Porto', 'Manchester City', '2026-09-08T19:00:00+00:00', None, None, '2026-09-08T11:00:00+00:00', 480)
+('picks_2026-09-08.json', '2026-09-08', 'Borussia Dortmund', 'Villarreal', '2026-09-08 21:00:00', '2026-09-08T14:00:00+00:00', 'derived_odds_row', "scoutingstats_odds kickoff '2026-09-08T14:00:00Z'", 'Borussia Dortmund', 'Villarreal', '2026-09-08T19:00:00+00:00', None, None, '2026-09-08T14:00:00+00:00', 300)
+('picks_morning_2026-08-10.json', '2026-08-10', 'Sirius', 'IF Brommapojkarna', '10-08, 18:00', None, None, None, 'IK Sirius', 'IF Brommapojkarna', '2026-08-10T17:00:00+00:00', '2026-08-10T16:00:00+00:00', 60, '2026-08-10T16:00:00+00:00', 60)
+```
+
+Interpretation:
+
+* The seven August `+60m` residual rows all have `kickoff_utc=None`; they stay
+  on the legacy display fallback and therefore are untouched by this fix. One
+  of the seven is the duplicate morning archive for Sirius / IF Brommapojkarna.
+* The two September large deltas were not manufactured by the fix; they were
+  previously unobservable on this path because the old parser returned `None`
+  for raw strings shaped like `YYYY-MM-DD HH:MM:SS`. The new `kickoff_utc`
+  reader exposes two real donor disagreements: the pick instant came from
+  `scoutingstats_odds` (`11:00Z` and `14:00Z`), while the captured The Odds API
+  rows say `19:00Z`. The guard now remains active for those rows instead of
+  skipping comparison.
+
+**Alias tests and local fail-closed coverage.** Local data did not reproduce a
+non-zero ambiguous backlog before or after these follow-up aliases:
+`settlement_ambiguous_pending=0`, `local_ambiguous_count 0`, and an empty full
+list. The new positive alias test pins the three follow-up alias pairs directly
+against the canonicalizer even though the local warehouse has no backlog row for
+them, and the Juventud negative test pins the refused pair. Because local data
+now has zero ambiguous settlement keys, the fail-closed ambiguous-key path is
+not exercised by live local rows in this checkout; synthetic coverage
+(`test_ambiguity_detector_still_drops_distinct_width_collision`) is carrying
+that guard.
