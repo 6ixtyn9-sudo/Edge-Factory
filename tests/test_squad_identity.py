@@ -163,6 +163,17 @@ def test_curated_archive_truncation_aliases_are_explicit_and_marker_safe():
         assert at._same_club_names(a, b), (a, b)
 
 
+def test_followup_aliases_are_pinned_without_local_ambiguous_backlog():
+    at = _load_auto_tickets()
+    for a, b in [
+        ("Kiyovu Sport", "Kiyovu Sports"),
+        ("San Martin S.J.", "San Martin San Juan"),
+        ("Dinamo Samarkand", "Dinamo Samarqand"),
+    ]:
+        assert canonical_team_key(a, width=24) == canonical_team_key(b, width=24), (a, b)
+        assert at._same_club_names(a, b), (a, b)
+
+
 def test_same_club_name_link_compares_club_stems_after_equal_markers():
     at = _load_auto_tickets()
     assert at._same_club_names("Hegelmann II", "Hegelmann Litauen 2")

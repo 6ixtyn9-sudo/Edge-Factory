@@ -80,3 +80,17 @@ def test_kickoff_utc_prevents_display_timezone_mismatch_warning():
         kickoff_fn=_pick_kickoff_utc, match_fn=_team_names_match)
     assert not any("kickoff-mismatch" in s for s in skips)
     assert due and updates.get("Halmstad|Sirius") == "close_at"
+
+
+def test_kickoff_utc_mismatch_warning_still_fires_on_row_disagreement():
+    fixture = dict(FIXTURE, kickoff="05-10, 19:45",
+                   kickoff_utc="2026-10-05T18:45:00+00:00",
+                   date="2026-10-05")
+    now = datetime.fromisoformat("2026-10-05T18:05:00+00:00")
+    due, updates, skips = capture.plan_auto(
+        [fixture], [_row("2026-10-05T19:45:00Z")], {}, now=now,
+        kickoff_fn=_pick_kickoff_utc, match_fn=_team_names_match)
+    assert any(s.startswith("WARN kickoff-mismatch") for s in skips)
+    assert any("pick lists 18:45Z" in s and "captured rows say 19:45Z" in s
+               and "Δ=60m" in s for s in skips)
+    assert due and updates.get("Halmstad|Sirius") == "close_at"

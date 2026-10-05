@@ -631,3 +631,101 @@ Evidence summary from local archive scans:
 | Before fix: The Odds API pick/display mismatches >15m | `48` rows: `2026-08/+60m=7`, `2026-09/+60m=10`, `2026-10/+60m=31`; the three named internationals were in the 2026-10 `+60m` class. |
 | After fix: mismatches >15m | `9` rows remain: seven August rows without `kickoff_utc`, plus two September rows with larger `+480m`/`+300m` disagreements that remain guarded. |
 | Named 2026-10 internationals after fix | `kickoff_mismatch_count 0`; planner skip lines become ordinary `priced, close window not open` rows. |
+
+### 14d. Follow-up clarifications before merge
+
+**Kickoff mismatch guard field sources.** The pick side of the comparison now
+reads `pick["kickoff_utc"]` first, falling back to the legacy `pick["kickoff"]`
+`DD-MM, HH:MM` parse only when `kickoff_utc` is absent. Command output:
+
+```text
+nl -ba src/edgefactory/sources/theoddsapi.py | sed -n '758,792p;886,894p'
+760 def _pick_kickoff_utc(pick: dict) -> datetime | None:
+761     resolved = str(pick.get("kickoff_utc") or "").strip()
+...
+769     raw = str(pick.get("kickoff") or "").strip()
+...
+891         "kickoff": event.get("commence_time") or pick.get("kickoff"),
+```
+
+The captured-row side reads `existing_rows[].kickoff`; for rows written by the
+The Odds API adapter, that field is `event["commence_time"]` unless the event
+omits it, in which case the adapter falls back to the pick display string.
+`plan_auto()` compares those two resolved instants and still emits
+`WARN kickoff-mismatch` when they differ by more than `KICKOFF_MISMATCH_MIN`:
+
+```text
+nl -ba scripts/capture_theodds.py | sed -n '244,300p'
+258             iso = (r.get("kickoff") or "").replace("Z", "+00:00")
+...
+287         row_ko = _fixture_row_kickoff(f, existing_rows, match_fn) if has_rows else None
+288         if row_ko is not None and kickoff is not None:
+289             delta_m = abs((row_ko - kickoff).total_seconds()) / 60.0
+290             if delta_m > KICKOFF_MISMATCH_MIN:
+291                 skips.append(
+292                     f"WARN kickoff-mismatch {fk}: pick lists {kickoff:%H:%MZ}, captured rows say "
+```
+
+A new regression test proves the warning path still fires when the pick has a
+valid `kickoff_utc` but the captured row carries a genuinely different kickoff:
+`test_kickoff_utc_mismatch_warning_still_fires_on_row_disagreement` feeds
+`kickoff_utc=2026-10-05T18:45:00+00:00` against an existing captured row at
+`2026-10-05T19:45:00Z` and asserts the warning contains `pick lists 18:45Z`,
+`captured rows say 19:45Z`, and `Δ=60m`. Targeted validation:
+
+```text
+PYTHONPATH=src .venv/bin/python -m pytest tests/test_capture_plan_kickoff.py::test_kickoff_utc_mismatch_warning_still_fires_on_row_disagreement tests/test_squad_identity.py::test_followup_aliases_are_pinned_without_local_ambiguous_backlog tests/test_squad_identity.py::test_juventud_unida_san_luis_and_universitario_remain_distinct -q
+...                                                                      [100%]
+3 passed in 0.13s
+```
+
+This means the guard is not blind for independent disagreement between
+`pick["kickoff_utc"]` and captured-row `kickoff`. It is also true that when
+`kickoff_utc` and the The Odds API captured row agree, this path no longer
+uses the raw human display string as an independent contradiction signal; that
+is intentional because the display string is zone-free provenance, not an
+instant.
+
+**Residual prevalence scan explanation.** The after-fix residuals were listed
+with old-display parse and new `kickoff_utc` parse side-by-side:
+
+```text
+PYTHONPATH=src .venv/bin/python - <<'PY'
+# scans localdata/theoddsapi_odds_*.csv.gz against picks_*.json and prints
+# rows where the post-fix pick instant still differs from captured kickoff by >15m
+PY
+after_residual_count 9
+('picks_2026-08-03.json', '2026-08-03', 'Halmstad', 'Sirius', '03-08, 18:00', None, None, None, 'Halmstads BK', 'IK Sirius', '2026-08-03T17:00:00+00:00', '2026-08-03T16:00:00+00:00', 60, '2026-08-03T16:00:00+00:00', 60)
+('picks_2026-08-08.json', '2026-08-08', 'PSV Eindhoven', 'Fortuna Sittard', '08-08, 19:00', None, None, None, 'PSV Eindhoven', 'Fortuna Sittard', '2026-08-08T18:00:00+00:00', '2026-08-08T17:00:00+00:00', 60, '2026-08-08T17:00:00+00:00', 60)
+('picks_2026-08-08.json', '2026-08-08', 'Viking', 'Sarpsborg 08 FF', '08-08, 15:00', None, None, None, 'Viking FK', 'Sarpsborg FK', '2026-08-08T14:00:00+00:00', '2026-08-08T13:00:00+00:00', 60, '2026-08-08T13:00:00+00:00', 60)
+('picks_2026-08-10.json', '2026-08-10', 'Sirius', 'IF Brommapojkarna', '10-08, 18:00', None, None, None, 'IK Sirius', 'IF Brommapojkarna', '2026-08-10T17:00:00+00:00', '2026-08-10T16:00:00+00:00', 60, '2026-08-10T16:00:00+00:00', 60)
+('picks_2026-08-11.json', '2026-08-11', 'Celje', 'Ararat-Armenia', '11-08, 19:15', None, None, None, 'NK Celje', 'FC Ararat-Armenia', '2026-08-11T18:15:00+00:00', '2026-08-11T17:15:00+00:00', 60, '2026-08-11T17:15:00+00:00', 60)
+('picks_2026-08-11.json', '2026-08-11', 'Kauno Žalgiris', 'Dinamo Zagreb', '11-08, 18:00', None, None, None, 'FK Kauno Žalgiris', 'Dinamo Zagreb', '2026-08-11T17:00:00+00:00', '2026-08-11T16:00:00+00:00', 60, '2026-08-11T16:00:00+00:00', 60)
+('picks_2026-09-08.json', '2026-09-08', 'Porto', 'Manchester City', '2026-09-08 21:00:00', '2026-09-08T11:00:00+00:00', 'derived_odds_row', "scoutingstats_odds kickoff '2026-09-08T11:00:00Z'", 'Porto', 'Manchester City', '2026-09-08T19:00:00+00:00', None, None, '2026-09-08T11:00:00+00:00', 480)
+('picks_2026-09-08.json', '2026-09-08', 'Borussia Dortmund', 'Villarreal', '2026-09-08 21:00:00', '2026-09-08T14:00:00+00:00', 'derived_odds_row', "scoutingstats_odds kickoff '2026-09-08T14:00:00Z'", 'Borussia Dortmund', 'Villarreal', '2026-09-08T19:00:00+00:00', None, None, '2026-09-08T14:00:00+00:00', 300)
+('picks_morning_2026-08-10.json', '2026-08-10', 'Sirius', 'IF Brommapojkarna', '10-08, 18:00', None, None, None, 'IK Sirius', 'IF Brommapojkarna', '2026-08-10T17:00:00+00:00', '2026-08-10T16:00:00+00:00', 60, '2026-08-10T16:00:00+00:00', 60)
+```
+
+Interpretation:
+
+* The seven August `+60m` residual rows all have `kickoff_utc=None`; they stay
+  on the legacy display fallback and therefore are untouched by this fix. One
+  of the seven is the duplicate morning archive for Sirius / IF Brommapojkarna.
+* The two September large deltas were not manufactured by the fix; they were
+  previously unobservable on this path because the old parser returned `None`
+  for raw strings shaped like `YYYY-MM-DD HH:MM:SS`. The new `kickoff_utc`
+  reader exposes two real donor disagreements: the pick instant came from
+  `scoutingstats_odds` (`11:00Z` and `14:00Z`), while the captured The Odds API
+  rows say `19:00Z`. The guard now remains active for those rows instead of
+  skipping comparison.
+
+**Alias tests and local fail-closed coverage.** Local data did not reproduce a
+non-zero ambiguous backlog before or after these follow-up aliases:
+`settlement_ambiguous_pending=0`, `local_ambiguous_count 0`, and an empty full
+list. The new positive alias test pins the three follow-up alias pairs directly
+against the canonicalizer even though the local warehouse has no backlog row for
+them, and the Juventud negative test pins the refused pair. Because local data
+now has zero ambiguous settlement keys, the fail-closed ambiguous-key path is
+not exercised by live local rows in this checkout; synthetic coverage
+(`test_ambiguity_detector_still_drops_distinct_width_collision`) is carrying
+that guard.
