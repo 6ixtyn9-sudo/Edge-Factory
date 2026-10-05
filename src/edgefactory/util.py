@@ -226,6 +226,18 @@ def ledger_team_key(name: object, width: int = 9) -> str:
     return canonical_team_key(name, width=width)
 
 
+def research_ledger_team_key(name: object, width: int = 9) -> str:
+    """FROZEN pre-2026-10-05 operational key: transliteration, NO aliases.
+
+    Byte-identical to what ``ledger_team_key`` returned before the curated
+    alias layer existed. The ml-fade RESEARCH ledger persists ``event_key``
+    strings built from this key and reconciles against them across runs,
+    so its identity must never drift (see edgefactory/identity.py rule 4).
+    Operational identity seams use ``canonical_team_key`` instead.
+    """
+    return norm_team_legacy(fold_ascii(name), width=width)
+
+
 def norm_entity_team(name: object, width: int = 24) -> str:
     """Canonical team context key for purity/reporting/entity registry.
 
