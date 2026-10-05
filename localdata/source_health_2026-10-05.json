@@ -81,7 +81,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 5,
+        "out_of_window": 5,
         "selection_unsupported": 1
       },
       "reason": null,
@@ -241,9 +241,9 @@
       "can_price": true,
       "can_vote": false,
       "freshness_h": null,
-      "oa_matched": 3,
-      "oa_raw": 242,
-      "oa_usable": 242,
+      "oa_matched": 0,
+      "oa_raw": 365,
+      "oa_usable": 365,
       "reason": null,
       "status": "cache_only"
     },
