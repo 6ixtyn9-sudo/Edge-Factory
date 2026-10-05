@@ -758,6 +758,14 @@ def _team_tokens(name: object) -> set[str]:
 
 
 def _pick_kickoff_utc(pick: dict) -> datetime | None:
+    resolved = str(pick.get("kickoff_utc") or "").strip()
+    if resolved:
+        try:
+            dt = datetime.fromisoformat(resolved.replace("Z", "+00:00"))
+            return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+        except ValueError:
+            pass
+
     raw = str(pick.get("kickoff") or "").strip()
     m = re.match(r"(\d{1,2})-(\d{1,2}),\s*(\d{1,2}):(\d{2})", raw)
     if not m:
@@ -772,7 +780,8 @@ def _pick_kickoff_utc(pick: dict) -> datetime | None:
     except (TypeError, ValueError):
         year = datetime.now(timezone.utc).year
     try:
-        # pick kickoffs are pipeline-local (Africa/Johannesburg, UTC+2, no DST)
+        # Fallback for legacy rows without kickoff_utc: historical pick display
+        # values are pipeline-local (Africa/Johannesburg, UTC+2, no DST).
         return datetime(year, mm, dd, hh, mi, tzinfo=timezone.utc) - timedelta(hours=2)
     except ValueError:
         return None

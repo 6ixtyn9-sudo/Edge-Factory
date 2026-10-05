@@ -579,3 +579,55 @@ Implementation notes for this section:
 * `_exact_result_keys` is write-safe: marker-aware canonical / transliterated / frozen-legacy keys are written; old marker-blind keys are exposed only through tagged lookup specs and are skipped for marked legs.
 * `SECOND_TEAM_MARKERS = {b, res, youth, u20, u21, u22, u23, u2x}` is tried as a family only when a second-team marker is already present. The empty senior marker is never synthesized, and disagreeing sibling outcomes fail closed.
 * No fuzzy matching was added. The residual zero-ambiguity improvement uses only explicit aliases added to `Config/entity_overrides.json` plus deterministic club-stem comparison after equal marker sets.
+
+## 14. Follow-up stack on PR #38 head — curated residual aliases and kickoff UTC boundary
+
+Base for this follow-up was the PR #38 head, not `main`:
+`2e93d0e Expose marker-guard settlement summary` on branch
+`arena/01a10d17-edge-factory`. The local ambiguity baseline immediately
+before this follow-up stayed at `settlement_ambiguous_pending=0`, with an
+empty `AMBIGUOUS_SETTLEMENT_KEYS` list. The production value
+`settlement_ambiguous_pending=21` remains operator-reported and was not
+locally reproduced in this sandbox.
+
+### 14a. Ground-truthed alias additions from archive rows
+
+Each alias below was added explicitly to `Config/entity_overrides.json`; no
+fuzzy, prefix, or substring rule was introduced. The archive evidence was
+read from local donor/settled files in this session. Remaining local
+ambiguous keys after these additions: none (`local_ambiguous_count 0`).
+
+| Alias spellings | Canonical | Archive evidence used |
+|---|---|---|
+| `Kiyovu Sport` / `Kiyovu Sports` | `Kiyovu Sports` | `forebet.csv.gz` and `zulubet.csv.gz` both carry the same Rwanda top-flight fixture on `2025-04-25`: `Vision vs Kiyovu Sport(s)`, score `0-1`; Forebet league code `Rw1`, Zulubet league `Rwanda National Soccer League`. Additional same-date/opponent agreement was observed for `Rutsiro` on `2025-05-16` and `Gasogi United` on `2026-04-03`. |
+| `San Martin S.J.` / `San Martin San Juan` | `San Martin San Juan` | `forebet.csv.gz` row `2024-02-18`, league `Ar2`, `San Martin San Juan vs Gimnasia Jujuy`, score `2-1`; `statarea.csv.gz` row same date/opponent/score, league `Argentina,Primera Nacional`, `San Martin S.J. (Argentina) vs Gimnasia Jujuy (Argentina)`. |
+| `Dinamo Samarkand` / `Dinamo Samarqand` | `Dinamo Samarqand` | `forebet.csv.gz` row `2024-04-05`, league `Uz1`, `FC Bunyodkor vs Dinamo Samarkand`, score `0-0`; `statarea.csv.gz` row same date/opponent/score, league `Uzbekistan,Superliga`, `FC Bunyodkor (Uzbekistan) vs Dinamo Samarqand (Uzbekistan)`. |
+
+### 14b. Refused correctness case retained
+
+`Juventud Unida SL` and `Juventud Unida Univ.` remain distinct by policy and
+by test, despite archive rows that can share a date/opponent. No alias was
+added for this pair. Regression coverage:
+`test_juventud_unida_san_luis_and_universitario_remain_distinct` asserts the
+24-character canonical keys differ and `_same_club_names()` refuses the pair.
+
+### 14c. The Odds API 60-minute kickoff mismatch boundary
+
+The three 2026-10-05 warning rows were traced to a donor-ingest boundary:
+`picks_today.json` already carries `kickoff_utc` matching the captured
+The Odds API row, but `_pick_kickoff_utc()` ignored it and reparsed the
+human display string as Africa/Johannesburg local time minus two hours. That
+made the planner compare `17:45Z` with captured `18:45Z` for Montenegro vs
+Armenia and France vs Belgium, and `15:00Z` with captured `16:00Z` for Cyprus
+vs Latvia. The fix is narrow: `_pick_kickoff_utc()` now prefers a valid
+`kickoff_utc` field and only falls back to the legacy display-string parse
+for old rows without `kickoff_utc`. The mismatch tolerance and lead-window
+guards were not changed.
+
+Evidence summary from local archive scans:
+
+| Measurement | Result |
+|---|---|
+| Before fix: The Odds API pick/display mismatches >15m | `48` rows: `2026-08/+60m=7`, `2026-09/+60m=10`, `2026-10/+60m=31`; the three named internationals were in the 2026-10 `+60m` class. |
+| After fix: mismatches >15m | `9` rows remain: seven August rows without `kickoff_utc`, plus two September rows with larger `+480m`/`+300m` disagreements that remain guarded. |
+| Named 2026-10 internationals after fix | `kickoff_mismatch_count 0`; planner skip lines become ordinary `priced, close window not open` rows. |
