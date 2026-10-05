@@ -85,6 +85,24 @@ SETTLE_LOSS = "loss"
 SETTLE_VOID = "void"
 SETTLE_PENDING = "pending"
 SETTLE_UNMATCHED = "unmatched"
+# Fixture identity could not be safely resolved (legacy fixture_id shared by
+# more than one real-world occurrence): settlement fails CLOSED. Excluded
+# from every ROI denominator; never a loss, never pending, never unmatched.
+SETTLE_IDENTITY_AMBIGUOUS = "identity_ambiguous"
+
+# ---- fixture occurrence identity (v2) --------------------------------------
+FIXTURE_IDENTITY_VERSION = 2
+PRECISION_EXACT = "occurrence_v2_exact"              # kickoff + competition
+PRECISION_KICKOFF_ONLY = "occurrence_v2_kickoff_only"
+PRECISION_COMPETITION_ONLY = "occurrence_v2_competition_only"
+PRECISION_LEGACY_UNAMBIGUOUS = "legacy_unambiguous"
+PRECISION_LEGACY_AMBIGUOUS = "legacy_ambiguous"
+PRECISION_UNKNOWN = "unknown"
+
+IDENTITY_WARNING_TEXT = (
+    "IDENTITY WARNING: legacy fixture_id collision detected. Affected "
+    "records are excluded from promotion-grade evidence unless resolved "
+    "by fixture_occurrence_id.")
 
 REASON_UNKNOWN = "rejection_reason_unknown"
 
@@ -218,6 +236,116 @@ def fixture_id(entry: Mapping[str, Any], trading_date: str) -> str:
         trading_date,
         ledger_team_key(entry.get("home"), width=24),
         ledger_team_key(entry.get("away"), width=24))
+
+
+# ---------------------------------------------- fixture occurrence identity --
+def _identity_team_keys(record: Mapping[str, Any]) -> tuple[str, str]:
+    home = str(record.get("normalized_home_team") or "").strip()
+    away = str(record.get("normalized_away_team") or "").strip()
+    if not home:
+        home = ledger_team_key(record.get("home_team") or record.get("home"),
+                               width=24)
+    if not away:
+        away = ledger_team_key(record.get("away_team") or record.get("away"),
+                               width=24)
+    return home, away
+
+
+def _identity_kickoff(record: Mapping[str, Any]) -> str | None:
+    """Kickoff identity: proven-UTC instant when parseable, else the raw
+    kickoff text as an opaque identity token (it disambiguates occurrences
+    without claiming any timezone semantics), else None."""
+    inst = _parse_instant(record.get("kickoff_utc"))
+    if inst is not None:
+        return "utc:" + inst.astimezone(timezone.utc).isoformat()
+    raw = str(record.get("kickoff_raw") or record.get("kickoff") or "").strip()
+    if raw:
+        return "raw:" + raw
+    return None
+
+
+def _identity_competition(record: Mapping[str, Any]) -> str | None:
+    """Canonical competition key only — raw league text is NEVER a hard
+    join key (source spellings differ; that is exactly why legacy
+    fixture_id excluded league)."""
+    comp = str(record.get("league_key") or "").strip()
+    if not comp:
+        ctx = record.get("ctx") if isinstance(record.get("ctx"), dict) else {}
+        comp = str(ctx.get("league_key") or "").strip()
+    if not comp and record.get("league") is not None:
+        comp = str(norm_league(record.get("league")) or "").strip()
+    # norm_league maps missing/unparseable leagues to the sentinel
+    # "unknown" — that is NOT a competition identity and must never act
+    # as a disambiguator (two unknown leagues are not provably the same).
+    if comp.lower() in ("", "unknown", "none", "?"):
+        return None
+    return comp
+
+
+def fixture_occurrence_identity(record: Mapping[str, Any],
+                                trading_date: str) -> dict[str, Any]:
+    """Collision-resistant fixture OCCURRENCE identity (v2). Additive: the
+    legacy ``fixture_id`` (date + team keys) is kept unchanged for
+    backwards-compatible grouping; the occurrence id adds the strongest
+    safe disambiguator available.
+
+    Disambiguator preference (first available wins the id):
+
+    * kickoff identity — two sources reporting the same kickoff instant are
+      the SAME occurrence even when their league spellings differ (this is
+      what keeps legitimate cross-source joins intact);
+    * canonical competition key (``league_key``) when no kickoff exists;
+    * neither => no v2 id is derivable (``precision=unknown``) and any
+      legacy collision involving the record must fail closed downstream.
+    """
+    tdate = str(trading_date)[:10]
+    home_key, away_key = _identity_team_keys(record)
+    legacy = fixture_id_from_keys(tdate, home_key, away_key)
+    kickoff = _identity_kickoff(record)
+    competition = _identity_competition(record)
+    components: dict[str, Any] = {
+        "trading_date": tdate, "home_key": home_key, "away_key": away_key,
+        "kickoff_identity": kickoff, "competition_key": competition,
+        "country": record.get("country") or _country_hint(record.get("league")),
+    }
+    if kickoff is not None:
+        blob = f"{tdate}|{home_key}|{away_key}|ko:{kickoff}"
+        precision = PRECISION_EXACT if competition else PRECISION_KICKOFF_ONLY
+    elif competition is not None:
+        blob = f"{tdate}|{home_key}|{away_key}|comp:{competition}"
+        precision = PRECISION_COMPETITION_ONLY
+    else:
+        blob = None
+        precision = PRECISION_UNKNOWN
+    occurrence = ("scfo2-" + hashlib.sha256(blob.encode("utf-8")).hexdigest()[:20]
+                  if blob is not None else None)
+    return {
+        "legacy_fixture_id": legacy,
+        "fixture_occurrence_id": occurrence,
+        "fixture_identity_version": FIXTURE_IDENTITY_VERSION,
+        "fixture_identity_components": components,
+        "fixture_identity_precision": precision,
+        "fixture_identity_ambiguous": False,
+        "fixture_identity_ambiguity_reason": None,
+    }
+
+
+def ensure_fixture_identity(record: Mapping[str, Any],
+                            trading_date: str | None = None) -> dict[str, Any]:
+    """Reader-side backfill (IN MEMORY ONLY — ledgers are never rewritten):
+    records persisted before the v2 identity fields existed get an identity
+    derived from whatever safe fields they already carry; records that
+    already carry identity fields are returned untouched (a write-time
+    ambiguity stamp is never reset)."""
+    out = dict(record)
+    if out.get("fixture_occurrence_id") or out.get("fixture_identity_precision"):
+        return out
+    tdate = str(trading_date or out.get("trading_date") or "")[:10]
+    ident = fixture_occurrence_identity(out, tdate)
+    out.setdefault("fixture_id", ident["legacy_fixture_id"])
+    for key, value in ident.items():
+        out.setdefault(key, value)
+    return out
 
 
 # ------------------------------------------------------------ price safety --
@@ -496,6 +624,7 @@ def scored_event(row: Mapping[str, Any], *, trading_date: str, run_id: str,
         probability = None
     source_name = str(row.get("odds_source") or "").strip()
     source = psrc.spec(source_name)
+    occ_ident = fixture_occurrence_identity(row, ident["trading_date"])
     return {
         "schema_version": SCHEMA_VERSION,
         "event_type": EVENT_SCORED,
@@ -503,6 +632,7 @@ def scored_event(row: Mapping[str, Any], *, trading_date: str, run_id: str,
         "fixture_id": fixture_id_from_keys(ident["trading_date"],
                                            ident["home_key"],
                                            ident["away_key"]),
+        **occ_ident,
         "run_id": run_id,
         "stage": stage,
         "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
@@ -610,10 +740,12 @@ def scored_fixture_event(entry: Mapping[str, Any], *, trading_date: str,
     home_key = ledger_team_key(entry.get("home"), width=24)
     away_key = ledger_team_key(entry.get("away"), width=24)
     verdict = shadow_price_verdict(entry, trading_date=tdate)
+    occ_ident = fixture_occurrence_identity(entry, tdate)
     return {
         "schema_version": SCHEMA_VERSION,
         "event_type": EVENT_SCORED_FIXTURE,
         "fixture_id": fixture_id_from_keys(tdate, home_key, away_key),
+        **occ_ident,
         "run_id": run_id,
         "stage": stage,
         "workflow_run_id": os.environ.get("GITHUB_RUN_ID"),
@@ -753,6 +885,32 @@ def record_picks_build(*, day: str, scored_rows: Sequence[Mapping[str, Any]],
                 entry, trading_date=tdate, run_id=rid,
                 stage=STAGE_PICKS_BUILD, build_day=day,
                 candidate_materialized=fid in candidate_fixture_ids))
+
+        # Write-time identity fail-close: if the SAME legacy fixture_id is
+        # about to be written for more than one distinct occurrence (or for
+        # entries whose occurrence cannot be derived at all), stamp every
+        # affected fixture/candidate event ambiguous NOW so the persisted
+        # record itself carries the verdict. Settlement keyed by
+        # date+teams cannot tell such occurrences apart — downstream
+        # grading must exclude them (never count them as losses).
+        occ_by_fid: dict[str, set[str | None]] = defaultdict(set)
+        entries_by_fid: dict[str, int] = defaultdict(int)
+        for e in events:
+            if e.get("event_type") == EVENT_SCORED_FIXTURE:
+                occ_by_fid[str(e.get("fixture_id"))].add(
+                    e.get("fixture_occurrence_id"))
+                entries_by_fid[str(e.get("fixture_id"))] += 1
+        ambiguous_fids = {
+            fid for fid, occs in occ_by_fid.items()
+            if len({o for o in occs if o}) > 1
+            or (entries_by_fid[fid] > 1 and any(o is None for o in occs))}
+        if ambiguous_fids:
+            for e in events:
+                if (e.get("event_type") in (EVENT_SCORED_FIXTURE, EVENT_SCORED)
+                        and str(e.get("fixture_id")) in ambiguous_fids):
+                    e["fixture_identity_ambiguous"] = True
+                    e["fixture_identity_ambiguity_reason"] = \
+                        "legacy_fixture_id_collision"
 
         written = _route_and_append(events, root)
         summary = {
@@ -1130,6 +1288,7 @@ def _pick_effective_runs(events: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
 def _blank_agg() -> dict[str, Any]:
     return {"candidates": 0, "settled": 0, "wins": 0, "losses": 0, "voids": 0,
             "pending": 0, "unmatched": 0, "no_price": 0,
+            "excluded_identity_ambiguous": 0,
             "flat_profit": 0.0, "flat_roi": None}
 
 
@@ -1137,6 +1296,11 @@ def _agg_add(agg: dict[str, Any], cand: Mapping[str, Any]) -> None:
     agg["candidates"] += 1
     status = cand.get("settlement_status")
     odds = cand.get("captured_odds")
+    if status == SETTLE_IDENTITY_AMBIGUOUS:
+        # fail-closed identity: excluded from the ROI denominator entirely
+        # (never a loss, never pending, never a normal unmatched)
+        agg["excluded_identity_ambiguous"] += 1
+        return
     if status == SETTLE_PENDING:
         agg["pending"] += 1
         return
@@ -1173,7 +1337,7 @@ def build_report(day: str, *, root: Path | None = None,
     settled = settled if settled is not None else load_settled_overlay(root)
 
     scored_by_cid: dict[str, dict[str, Any]] = {}
-    fixtures_by_fid: dict[str, dict[str, Any]] = {}
+    fixture_events: list[dict[str, Any]] = []
     fixture_entry_counts_by_run: dict[str, int] = defaultdict(int)
     status_by_run: dict[str, dict[str, dict[str, Any]]] = defaultdict(dict)
     picks_status_by_cid: dict[str, dict[str, Any]] = {}
@@ -1181,7 +1345,9 @@ def build_report(day: str, *, root: Path | None = None,
     for e in events:
         etype = e.get("event_type")
         if etype == EVENT_SCORED_FIXTURE and str(e.get("trading_date")) == day10:
-            fixtures_by_fid[str(e.get("fixture_id"))] = dict(e)
+            # In-memory identity backfill for pre-v2 records; persisted
+            # ledgers are never rewritten.
+            fixture_events.append(ensure_fixture_identity(e, day10))
             fixture_entry_counts_by_run[str(e.get("run_id"))] += 1
         elif etype == EVENT_SCORED and str(e.get("trading_date")) == day10:
             cid = str(e.get("candidate_id"))
@@ -1218,7 +1384,8 @@ def build_report(day: str, *, root: Path | None = None,
     unknown_reason_count = 0
     candidates: list[dict[str, Any]] = []
     for cid, payload in scored_by_cid.items():
-        cand = dict(payload)
+        # in-memory identity backfill for pre-v2 candidate records
+        cand = ensure_fixture_identity(payload, day10)
         status = effective_statuses.get(cid) or picks_status_by_cid.get(cid)
         if status is None:
             cand["selected_as_pick"] = False
@@ -1306,10 +1473,125 @@ def build_report(day: str, *, root: Path | None = None,
         cands_by_fid[_cand_fid(c)].append(c)
 
     picks_run_id = str((picks_summary or {}).get("run_id") or "")
-    fixtures = [dict(f) for f in fixtures_by_fid.values()
-                if not picks_run_id or str(f.get("run_id")) == picks_run_id]
-    if not fixtures and fixtures_by_fid:
-        fixtures = [dict(f) for f in fixtures_by_fid.values()]
+    selected_events = [f for f in fixture_events
+                       if not picks_run_id
+                       or str(f.get("run_id")) == picks_run_id]
+    if not selected_events and fixture_events:
+        selected_events = list(fixture_events)
+    # Dedupe by OCCURRENCE identity (not legacy fixture_id): two entries
+    # with the same occurrence id are the same real-world fixture reported
+    # twice (last capture wins, as before); two occurrences sharing a
+    # legacy id are DIFFERENT fixtures and must both survive. Records with
+    # no derivable occurrence fall back to legacy-id keying (old behavior).
+    by_occ: dict[str, dict[str, Any]] = {}
+    for f in selected_events:
+        occ_key = str(f.get("fixture_occurrence_id")
+                      or "legacy:" + str(f.get("fixture_id")))
+        by_occ[occ_key] = dict(f)
+    fixtures = list(by_occ.values())
+
+    # ------- legacy fixture_id collision analysis (fail closed) ----------
+    legacy_groups: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for f in fixtures:
+        legacy_groups[str(f.get("fixture_id"))].append(f)
+    entries_per_fid: dict[str, int] = defaultdict(int)
+    for f in selected_events:
+        entries_per_fid[str(f.get("fixture_id"))] += 1
+    ambiguous_fids: set[str] = set()
+    collision_extra_records = 0
+    collision_details: list[dict[str, Any]] = []
+    for fid, group in sorted(legacy_groups.items()):
+        n_entries = entries_per_fid[fid]
+        occs = [g.get("fixture_occurrence_id") for g in group]
+        multi_occurrence = len(group) > 1
+        unresolved_merge = (n_entries > 1 and any(o is None for o in occs))
+        pre_stamped = any(g.get("fixture_identity_ambiguous") for g in group)
+        if not (multi_occurrence or unresolved_merge or pre_stamped):
+            continue
+        ambiguous_fids.add(fid)
+        collision_extra_records += max(len(group), n_entries) - 1
+        sample = group[0]
+        collision_details.append({
+            "legacy_fixture_id": fid,
+            "trading_date": sample.get("trading_date"),
+            "home_team": sample.get("home_team"),
+            "away_team": sample.get("away_team"),
+            "leagues": sorted({str(g.get("league") or "?") for g in group}),
+            "competition_keys": sorted({str(g.get("league_key") or "?")
+                                        for g in group}),
+            "countries": sorted({str(g.get("country") or "?") for g in group}),
+            "kickoffs": sorted({str(g.get("kickoff_utc")
+                                    or g.get("kickoff_raw") or "?")
+                                for g in group}),
+            "occurrence_ids": sorted(str(o or "underivable") for o in occs),
+            "precisions": sorted({str(g.get("fixture_identity_precision"))
+                                  for g in group}),
+            "record_count": len(group),
+            "entry_count": n_entries,
+        })
+    # Candidate-level detection too: legacy candidate-only ledgers have no
+    # fixture events, but two candidates sharing a legacy fixture key with
+    # DISTINCT occurrence identities are the same unsafe settlement join.
+    cand_occ_by_fid: dict[str, set[str]] = defaultdict(set)
+    for cand in candidates:
+        occ = cand.get("fixture_occurrence_id")
+        if occ:
+            cand_occ_by_fid[_cand_fid(cand)].add(str(occ))
+    detailed_fids = {d["legacy_fixture_id"] for d in collision_details}
+    for fid, occs in sorted(cand_occ_by_fid.items()):
+        if len(occs) > 1 and fid not in ambiguous_fids:
+            ambiguous_fids.add(fid)
+            if fid not in detailed_fids:
+                members = [c for c in candidates if _cand_fid(c) == fid]
+                collision_details.append({
+                    "legacy_fixture_id": fid,
+                    "trading_date": day10,
+                    "home_team": members[0].get("home_team") if members else None,
+                    "away_team": members[0].get("away_team") if members else None,
+                    "leagues": sorted({str(c.get("league") or "?")
+                                       for c in members}),
+                    "competition_keys": sorted({str(c.get("league_key") or "?")
+                                                for c in members}),
+                    "countries": sorted({str(c.get("country") or "?")
+                                         for c in members}),
+                    "kickoffs": sorted({str(c.get("kickoff_utc")
+                                            or c.get("kickoff_raw") or "?")
+                                        for c in members}),
+                    "occurrence_ids": sorted(occs),
+                    "precisions": sorted({str(c.get("fixture_identity_precision"))
+                                          for c in members}),
+                    "record_count": len(members),
+                    "entry_count": len(members),
+                    "detected_at": "candidate_level",
+                })
+    for fid in ambiguous_fids:
+        for g in legacy_groups.get(fid, []):
+            g["fixture_identity_ambiguous"] = True
+            g["fixture_identity_ambiguity_reason"] = (
+                g.get("fixture_identity_ambiguity_reason")
+                or "legacy_fixture_id_collision")
+    # Collision-free records get their legacy precision confirmed; collided
+    # ones are re-labelled legacy_ambiguous when no v2 id resolved them.
+    for f in fixtures:
+        if f.get("fixture_identity_precision") == PRECISION_UNKNOWN:
+            f["fixture_identity_precision"] = (
+                PRECISION_LEGACY_AMBIGUOUS
+                if str(f.get("fixture_id")) in ambiguous_fids
+                else PRECISION_LEGACY_UNAMBIGUOUS)
+
+    # Candidates sharing an ambiguous settlement key fail closed too: the
+    # result row (date + teams) cannot be attributed to one occurrence.
+    for cand in candidates:
+        if _cand_fid(cand) in ambiguous_fids:
+            cand["fixture_identity_ambiguous"] = True
+            cand["fixture_identity_ambiguity_reason"] = (
+                cand.get("fixture_identity_ambiguity_reason")
+                or "legacy_fixture_id_collision")
+            cand["settlement_status"] = SETTLE_IDENTITY_AMBIGUOUS
+            cand["settlement_detail"] = (
+                "legacy_fixture_id_collision_result_join_unsafe")
+            cand["outcome"] = None
+
     for f in fixtures:
         linked = cands_by_fid.get(str(f.get("fixture_id")), [])
         f["candidate_materialized"] = bool(linked) or bool(
@@ -1340,8 +1622,17 @@ def build_report(day: str, *, root: Path | None = None,
         # Read-only settlement of the scorer's own intent (exact matching
         # via the same settle_candidate used for candidates; no fuzz, no
         # tolerance change). Flat-stake grading uses the shadow price ONLY
-        # when the gradeability verdict allows it.
-        f.update(settle_candidate(f, settled))
+        # when the gradeability verdict allows it. Ambiguous identity
+        # fails CLOSED: the (date, home, away) result key is shared by
+        # more than one occurrence, so no result can be attributed —
+        # excluded from every ROI denominator, never a loss.
+        if f.get("fixture_identity_ambiguous"):
+            f.update({"settlement_status": SETTLE_IDENTITY_AMBIGUOUS,
+                      "settlement_detail":
+                          "legacy_fixture_id_collision_result_join_unsafe",
+                      "outcome": None})
+        else:
+            f.update(settle_candidate(f, settled))
         f["captured_odds"] = (f.get("shadow_price")
                               if f.get("shadow_price_gradeable") else None)
     fixtures.sort(key=lambda f: str(f.get("fixture")))
@@ -1355,20 +1646,19 @@ def build_report(day: str, *, root: Path | None = None,
     if shadow_fixture_records is None and fixtures:
         shadow_fixture_records = len(fixtures)
 
-    fixture_collisions = None
-    if shadow_fixture_records is not None and fixtures:
-        fixture_collisions = max(0, int(shadow_fixture_records) - len(fixtures))
+    fixture_collisions = collision_extra_records if fixtures else None
     fixture_funnel = {
         "shadow_scored_fixture_records": shadow_fixture_records,
         "fixture_records_unique": len(fixtures) if fixtures else None,
         "fixture_id_collisions": fixture_collisions,
         "fixture_id_collision_note": (
-            (f"WARNING: {fixture_collisions} scored_fixture entr"
-             f"{'y' if fixture_collisions == 1 else 'ies'} share a "
-             "fixture_id with another entry (fixture_id = date + team "
-             "keys, league excluded); collided entries are merged in the "
-             "funnel joins — verify the day's fixtures before trusting "
-             "per-fixture attribution for this date")
+            (f"WARNING: {fixture_collisions} scored_fixture record"
+             f"{'' if fixture_collisions == 1 else 's'} share"
+             f"{'s' if fixture_collisions == 1 else ''} a legacy "
+             "fixture_id with another record (fixture_id = date + team "
+             "keys, league excluded); every affected record fails CLOSED "
+             "to settlement_status=identity_ambiguous and is excluded "
+             "from all ROI — see IDENTITY SAFETY for the diagnosis detail")
             if fixture_collisions else None),
         "fixtures_materialized": (sum(1 for f in fixtures
                                       if f["candidate_materialized"])
@@ -1387,6 +1677,44 @@ def build_report(day: str, *, root: Path | None = None,
                  "itself saw side odds they are still graded in the "
                  "AUDIT-ONLY captured-price shadow ROI below — the two "
                  "classes are never mixed"),
+    }
+
+    # -------- identity safety (fixture occurrence identity, fail-closed) --
+    ambiguous_fixture_records = sum(
+        1 for f in fixtures if f.get("fixture_identity_ambiguous"))
+    ambiguous_candidate_records = sum(
+        1 for c in candidates if c.get("fixture_identity_ambiguous"))
+    with_v2 = sum(1 for f in fixtures if f.get("fixture_occurrence_id"))
+    if not fixtures:
+        identity_version = None
+    elif with_v2 == len(fixtures):
+        identity_version = "v2"
+    elif with_v2 == 0:
+        identity_version = "legacy"
+    else:
+        identity_version = "mixed"
+    identity_safety = {
+        "fixture_identity_version": identity_version,
+        "legacy_fixture_id_collisions": len(collision_details),
+        "ambiguous_identity_records": (ambiguous_fixture_records
+                                       + ambiguous_candidate_records),
+        "ambiguous_fixture_records": ambiguous_fixture_records,
+        "ambiguous_candidate_records": ambiguous_candidate_records,
+        "excluded_identity_ambiguous": (
+            sum(1 for f in fixtures
+                if f.get("settlement_status") == SETTLE_IDENTITY_AMBIGUOUS)
+            + sum(1 for c in candidates
+                  if c.get("settlement_status") == SETTLE_IDENTITY_AMBIGUOUS)),
+        "collisions": collision_details,
+        "warning": IDENTITY_WARNING_TEXT if collision_details else None,
+        "note": ("fixture_occurrence_id (v2) disambiguates by kickoff "
+                 "identity first (cross-source league spellings never "
+                 "split a fixture whose kickoff agrees), then canonical "
+                 "competition key; records whose legacy fixture_id is "
+                 "shared by multiple occurrences — or whose identity "
+                 "cannot be derived at all — fail CLOSED: "
+                 "settlement_status=identity_ambiguous, excluded from "
+                 "every ROI denominator, never counted as losses"),
     }
 
     # -------- captured-price shadow grading (AUDIT-ONLY, never stakeable) --
@@ -1580,6 +1908,9 @@ def build_report(day: str, *, root: Path | None = None,
                            if c["settlement_status"] == SETTLE_PENDING),
             "unmatched": sum(1 for c in candidates
                              if c["settlement_status"] == SETTLE_UNMATCHED),
+            "identity_ambiguous": sum(
+                1 for c in candidates
+                if c["settlement_status"] == SETTLE_IDENTITY_AMBIGUOUS),
             "no_execution_safe_price": sum(
                 1 for c in candidates if not is_exec_safe(c)),
             "unknown_rejection_reason": unknown_reason_count,
@@ -1618,6 +1949,7 @@ def build_report(day: str, *, root: Path | None = None,
             },
         },
         "fixture_funnel": fixture_funnel,
+        "identity_safety": identity_safety,
         "shadow_gradeability": shadow_gradeability,
         "captured_price_shadow_roi": captured_price_shadow_roi,
         "reconciliation": reconciliation,
@@ -1680,11 +2012,13 @@ def settlement_events(report: Mapping[str, Any]) -> list[dict[str, Any]]:
 def _fmt_agg(name: str, agg: Mapping[str, Any]) -> str:
     roi = agg.get("flat_roi")
     roi_s = f"{roi * 100.0:+.1f}%" if roi is not None else "n/a"
+    amb = agg.get("excluded_identity_ambiguous") or 0
+    amb_s = f" identity_ambiguous={amb}" if amb else ""
     return (f"  {name:42s} n={agg['candidates']:<3d} settled={agg['settled']:<3d} "
             f"W/L/V={agg['wins']}/{agg['losses']}/{agg['voids']} "
             f"pending={agg['pending']} unmatched={agg['unmatched']} "
             f"no_price={agg['no_price']} flat={agg['flat_profit']:+.2f}u "
-            f"roi={roi_s}")
+            f"roi={roi_s}{amb_s}")
 
 
 def render_report(report: Mapping[str, Any]) -> str:
@@ -1724,6 +2058,29 @@ def render_report(report: Mapping[str, Any]) -> str:
     if ff.get("fixture_id_collision_note"):
         lines.append("  " + str(ff["fixture_id_collision_note"]))
         lines.append("")
+    ids = report.get("identity_safety") or {}
+    lines += [
+        "IDENTITY SAFETY (fixture occurrence identity, fail-closed):",
+        f"  fixture_identity_version:     {_n(ids.get('fixture_identity_version'))}",
+        f"  legacy_fixture_id_collisions: {_n(ids.get('legacy_fixture_id_collisions'))}",
+        f"  ambiguous_identity_records:   {_n(ids.get('ambiguous_identity_records'))}"
+        f"  (fixtures={_n(ids.get('ambiguous_fixture_records'))} "
+        f"candidates={_n(ids.get('ambiguous_candidate_records'))})",
+        f"  excluded_identity_ambiguous:  {_n(ids.get('excluded_identity_ambiguous'))}"
+        "  <- excluded from every ROI denominator; never losses",
+    ]
+    if ids.get("warning"):
+        lines.append("  " + str(ids["warning"]))
+    for col in ids.get("collisions") or []:
+        lines.append(
+            f"    collision legacy_fixture_id={col['legacy_fixture_id']} "
+            f"{col.get('home_team')} vs {col.get('away_team')} "
+            f"({col.get('trading_date')}) records={col['record_count']} "
+            f"entries={col['entry_count']}")
+        lines.append(
+            f"      leagues={col['leagues']} kickoffs={col['kickoffs']} "
+            f"occurrence_ids={col['occurrence_ids']}")
+    lines.append("")
     sg = report.get("shadow_gradeability") or {}
     cp = report.get("captured_price_shadow_roi") or {}
     if sg.get("records"):
