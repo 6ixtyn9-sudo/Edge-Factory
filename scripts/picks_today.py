@@ -5527,6 +5527,33 @@ def main():
                 oddspapi_bundle=oddspapi_bundle,
             )
 
+        # AUDIT-ONLY scored-candidate shadow ledger: persist the full per-day
+        # scored candidate universe (every emitted candidate row, including
+        # the ones bucket assignment and the operational collapse drop)
+        # BEFORE final pick/ticket selection. The `coverage: scored=` log
+        # value above is persisted alongside for reconciliation — it is a
+        # FIXTURE-level count (ml_scored_day or n_up) while the ledger is
+        # candidate-level; the shadow report prints both and explains the
+        # difference. A write failure is reported and ignored: observability
+        # must never change picks, buckets, archives or tickets.
+        try:
+            from edgefactory import scored_candidate_shadow as _scs
+            _scs.record_picks_build(
+                day=day,
+                scored_rows=picks,
+                slate_rows=collapsed_day_picks,
+                pre_collapse_rows=day_picks,
+                pipeline_scored_log=int(ml_scored_day or n_up),
+                price_supported_markets=_PRICE_SUPPORTED_MARKETS,
+                root=LOCALDATA,
+            )
+        except Exception as _scs_exc:  # noqa: BLE001 - audit-only, fail-soft
+            print(
+                f"scored-candidate shadow ledger failed (audit-only; picks "
+                f"unchanged): {_scs_exc}",
+                file=sys.stderr,
+            )
+
         all_picks.extend(collapsed_day_picks)
 
         # Evidence-on-all-buckets (2026-08-05): persist a frozen per-day

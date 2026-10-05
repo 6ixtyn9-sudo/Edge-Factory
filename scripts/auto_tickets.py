@@ -89,6 +89,17 @@ from edgefactory.assay import wilson_lb                              # noqa: E40
 from edgefactory.config import GATES                                 # noqa: E402
 from edgefactory import price_sources as psrc                        # noqa: E402
 
+# Audit-only scored-candidate shadow grading ledger (observability only).
+# An import failure must never break ticket building: the glue helpers below
+# no-op when the module is unavailable, and every ledger write is wrapped so
+# an audit failure is reported on stderr without touching betting behaviour.
+try:
+    from edgefactory import scored_candidate_shadow as scs           # noqa: E402
+except Exception as _scs_import_error:  # pragma: no cover - defensive only
+    scs = None
+    print(f"scored-candidate shadow unavailable (audit-only; tickets "
+          f"unchanged): {_scs_import_error}", file=sys.stderr)
+
 # ---------------- cadence (unchanged from production) ----------------
 GENERATE_HOUR_START = 6    # local time — slips may START building on/after this hour
 FREEZE_HOUR = 9            # local time — the slip FREEZES on/after this hour.
@@ -1630,6 +1641,67 @@ def build_rejection_ledger(
     return ledger
 
 
+def _shadow_selected_info(accas, *, target: str) -> dict:
+    """Selected-leg lookup for the shadow ledger, keyed like plan legs."""
+    info: dict = {}
+    for acca_index, acca in enumerate(accas or [], 1):
+        for leg_index, leg in enumerate(acca.get("legs", [])):
+            info[_fixture_selection_key(leg)] = {
+                "acca_id": f"{target}:acca{acca_index}",
+                "acca_leg_index": leg_index,
+                "stake_pct_of_capital": acca.get("stake_pct"),
+                "price_used_if_selected": leg.get("odds"),
+            }
+    return info
+
+
+def _shadow_record_scored(target: str, slate: list[dict]):
+    """AUDIT-ONLY: persist every scored slate candidate BEFORE selection.
+
+    Returns a run handle ({'run_id': ...}) or None. Must never raise and
+    must never change the pool, the plan, or any printed output.
+    """
+    if scs is None:
+        return None
+    try:
+        return scs.record_ticket_build(day=target, slate_rows=slate,
+                                       root=LOCALDATA)
+    except Exception as exc:  # noqa: BLE001 - audit must never break tickets
+        print(f"shadow ledger scored write failed (audit-only; tickets "
+              f"unchanged): {exc}", file=sys.stderr)
+        return None
+
+
+def _shadow_record_outcome(run, target: str, slate: list[dict], *,
+                           selected=None, staged=None,
+                           default_rule: tuple[str, str],
+                           final_status: str, bank_pct=None) -> None:
+    """AUDIT-ONLY: append final selected/rejected status for every scored
+    slate candidate after selection completed. Reasons are derived from the
+    live gate predicate (playable_leg_rejection), the staged policy
+    decisions and the branch-level terminal rule — never invented."""
+    if scs is None:
+        return
+    try:
+        run_id = (run or {}).get("run_id") or scs.new_run_id("ticket_build")
+        rows = scs.build_ticket_status_rows(
+            slate, day=target,
+            selected=selected, staged=staged, default_rule=default_rule,
+            gate=lambda row: playable_leg_rejection(
+                row, day=target, execution_safe=True),
+            key_of=_fixture_selection_key,
+            final_ticket_status=final_status,
+            bank_pct=bank_pct,
+        )
+        scs.record_ticket_outcome(day=target, run_id=run_id,
+                                  status_rows=rows,
+                                  final_ticket_status=final_status,
+                                  root=LOCALDATA, bank_pct=bank_pct)
+    except Exception as exc:  # noqa: BLE001 - audit must never break tickets
+        print(f"shadow ledger status write failed (audit-only; tickets "
+              f"unchanged): {exc}", file=sys.stderr)
+
+
 def _rejection_ledger_lines(ledger: list[dict] | None) -> list[str]:
     return [
         "REJECTION LEDGER:",
@@ -2757,6 +2829,16 @@ def cmd_today(args, st):
                     "write-once card is already superseded; non-force rerun cannot create replacement legs",
                 ),
             )
+            _shadow_run = _shadow_record_scored(target, slate)
+            _shadow_record_outcome(
+                _shadow_run, target, slate,
+                default_rule=(
+                    "superseded_card_locked",
+                    "write-once card is already superseded; non-force rerun "
+                    "cannot create replacement legs",
+                ),
+                final_status="superseded_no_bet", bank_pct=st.get("bank"),
+            )
             print(f"TICKETS SUPERSEDED — corrected result for {target}: NO BET")
             print("=" * 62)
             print(f"  original frozen slip retained for audit: {slip_txt}")
@@ -2790,6 +2872,17 @@ def cmd_today(args, st):
                 "candidate is not on the immutable frozen card",
             ),
         )
+        _shadow_run = _shadow_record_scored(target, slate)
+        _shadow_record_outcome(
+            _shadow_run, target, slate,
+            selected=_shadow_selected_info(frozen_slip.get("accas"),
+                                           target=target),
+            default_rule=(
+                "frozen_card_not_selected",
+                "candidate is not on the immutable frozen card",
+            ),
+            final_status="frozen", bank_pct=st.get("bank"),
+        )
         print(f"TICKETS FROZEN — final slip for {target}. Re-printing saved slip:")
         print("=" * 62)
         if slip_txt.exists():
@@ -2808,6 +2901,10 @@ def cmd_today(args, st):
         None,
     )
     prior_frozen = frozen_entry(st, target)
+    # AUDIT-ONLY (scored-candidate shadow): persist every scored candidate on
+    # the slate BEFORE any selection/guard runs. A ledger failure is reported
+    # on stderr and ignored — it must never change the pool or the card.
+    shadow_run = _shadow_record_scored(target, slate)
     pool = playable_legs(slate, day=target, settled=settled, execution_safe=True)
     total_in = len(pool)
     census: dict[str, list[str]] = {}
@@ -2942,6 +3039,15 @@ def cmd_today(args, st):
                 f"{len(plan_pool)} qualifying leg(s) < required {LEGS_PER_ACCA}",
             ),
         )
+        _shadow_record_outcome(
+            shadow_run, target, slate,
+            staged=staged_rejections,
+            default_rule=(
+                "stake_ladder_minimum_legs",
+                f"{len(plan_pool)} qualifying leg(s) < required {LEGS_PER_ACCA}",
+            ),
+            final_status="no_bet", bank_pct=st.get("bank"),
+        )
         # Keep policy/rejection details available to the force-recut audit,
         # but do not mix operator diagnostics into the customer-facing card.
         audit_lines = census_lines + price_supply_report(
@@ -2988,6 +3094,15 @@ def cmd_today(args, st):
                 "stake_ladder_no_executable_acca",
                 "stake ladder could not form the configured executable acca set",
             ),
+        )
+        _shadow_record_outcome(
+            shadow_run, target, slate,
+            staged=staged_rejections,
+            default_rule=(
+                "stake_ladder_no_executable_acca",
+                "stake ladder could not form the configured executable acca set",
+            ),
+            final_status="no_bet", bank_pct=st.get("bank"),
         )
         audit_lines = census_lines + price_supply_report(
             slate, day=target, qualifying=len(plan_pool), rejection_ledger=ledger,
@@ -3048,6 +3163,18 @@ def cmd_today(args, st):
         day=target,
         selected=selected_legs,
         staged=staged_rejections,
+    )
+    _shadow_record_outcome(
+        shadow_run, target, slate,
+        selected=_shadow_selected_info(plan, target=target),
+        staged=staged_rejections,
+        default_rule=(
+            "stake_ladder_not_selected",
+            "candidate cleared earlier gates but was not selected for an "
+            "executable acca",
+        ),
+        final_status="frozen" if (should_freeze and freeze_record) else "draft",
+        bank_pct=st.get("bank"),
     )
     # Compute the audit records above without rendering them on the normal
     # ticket.  Price supply, rejection, replacement and dedup diagnostics are
