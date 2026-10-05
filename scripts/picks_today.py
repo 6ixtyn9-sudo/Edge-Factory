@@ -3898,11 +3898,34 @@ def fixture_schedule_unstable(*rows: dict) -> tuple[bool, set[str]]:
 
 # --------------------------------------------------------------- consensus --
 def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
-             research_collector: FadeResearchCollector | None = None):
+             research_collector: FadeResearchCollector | None = None,
+             fixture_audit: list | None = None):
     picks, vetoes = [], 0
     keys = set()
     for s in SOURCES_1X2:
         keys |= set(data.get(s, {}))
+
+    # AUDIT-ONLY (scored-candidate shadow): mirror the exact fixture-level
+    # universe behind the `coverage: scored=` log value. Its fallback
+    # definition n_up is len(keys) — the return below — so one
+    # `upcoming_fixture` entry is appended per key HERE, at the counter's
+    # source. The primary definition (ML-scored fixtures) is appended at the
+    # model-inference increment further down. Appending to a caller-owned
+    # list is the entire effect: picks, vetoes, counters and returns are
+    # untouched when fixture_audit is None (the default) and identical when
+    # it is not.
+    if fixture_audit is not None:
+        for k in keys:
+            row0 = next((data[s][k] for s in SOURCES_1X2
+                         if k in data.get(s, {})), None) or {}
+            fixture_audit.append({
+                "kind": "upcoming_fixture",
+                "home": canonical_display_team(row0.get("home")),
+                "away": canonical_display_team(row0.get("away")),
+                "league": row0.get("league"),
+                "kickoff": row0.get("kickoff") or row0.get("time"),
+                "sport": row0.get("sport", "soccer"),
+            })
 
     # --- Load ML rules and model ---
     ml_rules, ml_model = load_ml_rules_and_model()
@@ -4081,6 +4104,55 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                 ml_p = 1.0 / (1.0 + math.exp(-z))
                 ml_scored += 1
                 ml_max_p = max(ml_max_p, ml_p)
+
+                # AUDIT-ONLY (scored-candidate shadow): one entry per
+                # ML-scored fixture, appended at the EXACT increment that
+                # feeds `coverage: scored=` (research_collector.record below
+                # bumps .scored 1:1 with this point, and ml_scored_day is its
+                # per-day delta). Observability only — no state changes.
+                # The entry also carries the scorer's own betting intent
+                # (1x2 majority side) and the side odds VISIBLE TO THE
+                # SCORER at this instant: the same source odds columns the
+                # pick_odds feature reads, scanned without the 1.50 feature
+                # default (a feature fallback is not a price). Never fetched
+                # for this purpose, never a named-book/stakeable price —
+                # captured-price shadow grading only.
+                if fixture_audit is not None:
+                    _aud_home = canonical_display_team(anchor.get("home"))
+                    _aud_away = canonical_display_team(anchor.get("away"))
+                    _shadow_odds = None
+                    _shadow_odds_src = None
+                    for _sp_name, _sp_row in (("forebet", fb_quote),
+                                              ("zulubet", zb),
+                                              ("statarea", sa),
+                                              ("bzzoiro", bz),
+                                              ("vitibet", vb)):
+                        _sp_val = _f((_sp_row or {}).get(_col))
+                        if _sp_val is not None and _sp_val > 1.0:
+                            _shadow_odds = float(_sp_val)
+                            _shadow_odds_src = _sp_name
+                            break
+                    fixture_audit.append({
+                        "kind": "ml_scored_fixture",
+                        "home": _aud_home,
+                        "away": _aud_away,
+                        "league": anchor.get("league"),
+                        "kickoff": anchor.get("kickoff") or anchor.get("time"),
+                        "sport": anchor.get("sport", "soccer"),
+                        "ml_probability": round(float(ml_p), 6),
+                        "ml_majority_pick": majority_pick,
+                        "sources_used": list(used),
+                        "market": "1x2",
+                        "selection": majority_pick,
+                        "selection_team": (_aud_home if majority_pick == "home"
+                                           else _aud_away if majority_pick == "away"
+                                           else None),
+                        "shadow_price": _shadow_odds,
+                        "shadow_price_source": _shadow_odds_src,
+                        "shadow_price_captured_at_utc": datetime.now(
+                            timezone.utc).isoformat(timespec="seconds"),
+                        "shadow_price_as_of_basis": "fetched_this_run",
+                    })
 
                 # Research capture (certification-independent): record the
                 # parent selection + deterministic fade candidate with their
@@ -4408,7 +4480,8 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
 
 # --------------------------------------------------------------------- run --
 def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = None,
-            research_collector: FadeResearchCollector | None = None):
+            research_collector: FadeResearchCollector | None = None,
+            fixture_audit: list | None = None):
     data = fetch_all(day)
     effective_weights = dict(source_weights_1x2 or {})
     if _forebet_historical(day):
@@ -4417,7 +4490,8 @@ def run_day(day, t1x2, ou_edge, btts_edge, source_weights_1x2: dict | None = Non
         effective_weights["forebet"] = 0.0
     picks, vetoes, n_up = eval_1x2(day, data, t1x2,
                                    source_weights=effective_weights,
-                                   research_collector=research_collector)
+                                   research_collector=research_collector,
+                                   fixture_audit=fixture_audit)
     picks += eval_binary(day, data, "ou_2.5", SOURCES_OU, OU_COL, ou_edge,
                          ("over", "under"),
                          {"over": "odd_over", "under": "odd_under"})
@@ -4975,9 +5049,13 @@ def main():
 
     for day in days:
         ml_scored_before = int(getattr(research_collector, "scored", 0) or 0)
+        # Fixture-level audit mirror of the `coverage: scored=` universe
+        # (AUDIT-ONLY; consumed by the scored-candidate shadow hook below).
+        fixture_audit: list[dict] = []
         picks, vetoes, n_up, data = run_day(day, t1x2, ou_edge, btts_edge,
                                             source_weights_1x2=source_weights_1x2,
-                                            research_collector=research_collector)
+                                            research_collector=research_collector,
+                                            fixture_audit=fixture_audit)
         ml_scored_day = max(0, int(getattr(research_collector, "scored", 0) or 0) - ml_scored_before)
         total_vetoes += vetoes
         total_upcoming += n_up
@@ -5525,6 +5603,46 @@ def main():
                 betexplorer_bundle=betexplorer_bundle,
                 theodds_bundle=theodds_bundle,
                 oddspapi_bundle=oddspapi_bundle,
+            )
+
+        # AUDIT-ONLY scored-candidate shadow ledger: persist the full per-day
+        # scored candidate universe (every emitted candidate row, including
+        # the ones bucket assignment and the operational collapse drop)
+        # BEFORE final pick/ticket selection. The `coverage: scored=` log
+        # value above is persisted alongside for reconciliation — it is a
+        # FIXTURE-level count (ml_scored_day or n_up) while the ledger is
+        # candidate-level; the shadow report prints both and explains the
+        # difference. A write failure is reported and ignored: observability
+        # must never change picks, buckets, archives or tickets.
+        try:
+            from edgefactory import scored_candidate_shadow as _scs
+            # File fixture records under the same calendar date the pipeline
+            # files candidates under (kickoff_date resolution, fail-closed to
+            # the scan day) so the fixture<->candidate join stays exact.
+            _scs_fixtures = []
+            for _fx in fixture_audit:
+                _fx = dict(_fx)
+                _fx["trading_date"] = (
+                    kickoff_date(_fx.get("kickoff"), fallback_date=day) or day
+                )
+                _scs_fixtures.append(_fx)
+            _scs.record_picks_build(
+                day=day,
+                scored_rows=picks,
+                slate_rows=collapsed_day_picks,
+                pre_collapse_rows=day_picks,
+                pipeline_scored_log=int(ml_scored_day or n_up),
+                scored_fixtures=_scs_fixtures,
+                ml_scored_day=int(ml_scored_day),
+                n_up=int(n_up),
+                price_supported_markets=_PRICE_SUPPORTED_MARKETS,
+                root=LOCALDATA,
+            )
+        except Exception as _scs_exc:  # noqa: BLE001 - audit-only, fail-soft
+            print(
+                f"scored-candidate shadow ledger failed (audit-only; picks "
+                f"unchanged): {_scs_exc}",
+                file=sys.stderr,
             )
 
         all_picks.extend(collapsed_day_picks)
