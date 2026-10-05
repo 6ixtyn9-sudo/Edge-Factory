@@ -360,3 +360,147 @@ def test_settlement_events_are_append_only_derivation(tmp_path):
     assert events[0]["match_basis"] == "exact_normalized_fixture"
     # building the report mutated nothing
     assert scs.ledger_path(DAY, tmp_path).read_text() == before
+
+
+# =================== fixture-level scored-universe capture ===================
+# The original blind spot: `scored=29 picks=4 ticketed=2` with only the 4-6
+# operational candidates graded. These tests pin that the ledger preserves
+# the FULL fixture-level scored universe and reconciles it exactly.
+
+def _teamcode(i):
+    letters = "abcdefghijklmnopqrstuvwxyz"
+    return letters[i // 26] + letters[i % 26]
+
+
+def _fixture_entry(i, *, kind="ml_scored_fixture"):
+    # Letter-coded names: distinct under norm_team/ledger_team_key (digits
+    # and club-noise words would collapse, which is exactly what the legacy
+    # width-9 key does to lookalike names).
+    e = {"kind": kind, "home": f"{_teamcode(i)}holm", "away": f"{_teamcode(i)}berg",
+         "league": "Portugal,Primeira Liga", "kickoff": f"{DAY}T18:30:00+00:00",
+         "sport": "soccer", "trading_date": DAY}
+    if kind == "ml_scored_fixture":
+        e.update({"ml_probability": 0.6, "ml_majority_pick": "home",
+                  "sources_used": ["forebet", "zulubet"]})
+    return e
+
+
+def _cand_for_fixture(entry, **kw):
+    return _row(home=entry["home"], away=entry["away"], **kw)
+
+
+def test_scored_29_picks_4_ticketed_2_receipt_preserves_all_29(tmp_path):
+    """THE acceptance gate: pipeline scored=29, 4 promoted, 2 ticketed ->
+    the ledger/report preserves all 29 scored records and reports 25
+    scored-but-not-promoted. The 25 dropped fixtures are visible, counted,
+    and explicitly marked as carrying no decision-time price."""
+    fixtures = [_fixture_entry(i) for i in range(29)]
+    cands = [_cand_for_fixture(fixtures[i], odds=1.5 + i * 0.1)
+             for i in range(4)]
+    out = scs.record_picks_build(
+        day=DAY, scored_rows=cands, slate_rows=cands,
+        pipeline_scored_log=29, scored_fixtures=fixtures,
+        ml_scored_day=29, n_up=35, price_supported_markets={"1x2"},
+        root=tmp_path)
+    assert out["fixtures"] == 29
+    selected = {_key_of(c): {"acca_id": "A1", "acca_leg_index": j,
+                             "stake_pct_of_capital": 8.0,
+                             "price_used_if_selected": c["odds"]}
+                for j, c in enumerate(cands[:2])}
+    _record_statuses(tmp_path, cands, selected=selected, final="frozen")
+
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    rec = report["reconciliation"]
+    ff = report["fixture_funnel"]
+    assert rec["pipeline_scored_log"] == 29
+    assert rec["shadow_scored_fixture_records"] == 29
+    assert rec["missing_count"] == 0
+    assert rec["reconciliation_ok"] is True
+    assert ff["fixtures_materialized"] == 4
+    assert ff["fixtures_promoted"] == 4
+    assert ff["fixtures_ticketed"] == 2
+    assert ff["fixtures_not_promoted"] == 25
+    assert ff["fixtures_dropped_without_price_evidence"] == 25
+    assert report["counts"]["promoted_picks"] == 4
+    assert report["counts"]["ticketed_legs"] == 2
+    assert report["counts"]["promoted_not_ticketed"] == 2
+    # all 29 fixture records are durable rows in the report payload
+    assert len(report["fixtures"]) == 29
+    dropped = [f for f in report["fixtures"] if not f["candidate_materialized"]]
+    assert len(dropped) == 25
+    assert all(f["not_materialized_reason"] == "no_candidate_emitted"
+               for f in dropped)
+    text = scs.render_report(report)
+    assert "pipeline_scored:                       29" in text
+    assert "scored but not promoted (fixtures):    25" in text
+    assert "reconciliation=ok" in text
+
+
+def test_fixture_universe_mirrors_pipeline_ml_or_nup_expression(tmp_path):
+    """`scored=` is ml_scored_day OR n_up — the persisted universe follows
+    the same expression: ML entries when any exist, else upcoming entries."""
+    ml = [_fixture_entry(i) for i in range(3)]
+    up = [_fixture_entry(100 + i, kind="upcoming_fixture") for i in range(7)]
+    out = scs.record_picks_build(day=DAY, scored_rows=[], slate_rows=[],
+                                 pipeline_scored_log=3, scored_fixtures=ml + up,
+                                 ml_scored_day=3, n_up=7, root=tmp_path)
+    assert out["fixtures"] == 3                   # ML universe wins
+    events = scs.read_ledger(DAY, tmp_path)
+    kinds = {e["kind"] for e in events if e["event_type"] == "scored_fixture"}
+    assert kinds == {"ml_scored_fixture"}
+
+    # fallback day: no ML entries -> the n_up universe is persisted
+    out2 = scs.record_picks_build(day="2026-09-07", scored_rows=[],
+                                  slate_rows=[], pipeline_scored_log=7,
+                                  scored_fixtures=[
+                                      dict(e, trading_date="2026-09-07")
+                                      for e in up],
+                                  ml_scored_day=0, n_up=7, root=tmp_path)
+    assert out2["fixtures"] == 7
+
+
+def test_reconciliation_mismatch_is_flagged_not_hidden(tmp_path):
+    fixtures = [_fixture_entry(i) for i in range(28)]   # one short of 29
+    scs.record_picks_build(day=DAY, scored_rows=[], slate_rows=[],
+                           pipeline_scored_log=29, scored_fixtures=fixtures,
+                           ml_scored_day=29, n_up=30, root=tmp_path)
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    rec = report["reconciliation"]
+    assert rec["missing_count"] == 1
+    assert rec["reconciliation_ok"] is False
+    assert "RECONCILIATION MISMATCH" in rec["note"]
+    assert "reconciliation=MISMATCH" in scs.render_report(report)
+
+
+def test_ticket_layer_only_ledger_declares_reconciliation_unavailable(tmp_path):
+    """A ledger without scored_fixture events must say so loudly instead of
+    relabeling the candidate layer as the full scored universe."""
+    _record_statuses(tmp_path, [_row()])
+    # fake a picks summary carrying the pipeline count but no fixture events
+    scs._append_events(DAY, [{
+        "schema_version": scs.SCHEMA_VERSION, "event_type": "run_summary",
+        "run_id": scs.new_run_id("picks_build"), "stage": "picks_build",
+        "trading_date": DAY, "build_day": DAY,
+        "pipeline_scored_log": 29, "shadow_scored": 1,
+        "scored_definition": "x"}], tmp_path)
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    rec = report["reconciliation"]
+    assert rec["reconciliation_ok"] is None
+    assert "RECONCILIATION UNAVAILABLE" in rec["note"]
+    assert "NOT the full scored universe" in rec["note"]
+
+
+def test_dropped_fixture_without_candidate_never_enters_any_roi(tmp_path):
+    """A scored-but-never-materialized fixture has no selection and no
+    decision-time price: it appears in the funnel but in no ROI denominator,
+    and its result is never graded (no selection exists to grade)."""
+    fixtures = [_fixture_entry(0), _fixture_entry(1)]
+    cand = _cand_for_fixture(fixtures[0], odds=2.0)
+    scs.record_picks_build(day=DAY, scored_rows=[cand], slate_rows=[cand],
+                           pipeline_scored_log=2, scored_fixtures=fixtures,
+                           ml_scored_day=2, n_up=2, root=tmp_path)
+    settled = _settled((DAY, fixtures[1]["home"], fixtures[1]["away"], "home"))
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+    assert report["fixture_funnel"]["fixtures_dropped_without_price_evidence"] == 1
+    assert report["roi"]["all_scored"]["candidates"] == 1   # cand only
+    assert report["counts"]["settled_win"] == 0             # fixture not graded
