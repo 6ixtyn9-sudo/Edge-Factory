@@ -134,6 +134,26 @@ def _overrides_path():
 
 _TEAM_ALIAS_CACHE: dict[str, str] | None = None
 
+# Set when the curated alias config could not be loaded, so callers and
+# tests can assert the degradation was announced rather than silent.
+ALIAS_CONFIG_WARNINGS: list[str] = []
+
+
+def _warn_alias_config(detail: str) -> None:
+    """Announce loudly that the curated alias layer is NOT in effect.
+
+    Degrading to pre-alias behaviour is safe (keys simply stop merging
+    exonyms); degrading SILENTLY is not, because every Turkiye/Turkey-class
+    fixture then splits again with no operator signal. Never half-applied:
+    the table is all-or-nothing.
+    """
+    import sys as _sys
+
+    msg = ("!! TEAM ALIAS CONFIG UNAVAILABLE - running with ZERO curated "
+           f"aliases (exonym fixtures WILL split): {detail}")
+    ALIAS_CONFIG_WARNINGS.append(msg)
+    print(msg, file=_sys.stderr)
+
 
 def team_alias_table() -> dict[str, str]:
     """Curated raw-spelling -> canonical-name team aliases (cached).
@@ -149,11 +169,16 @@ def team_alias_table() -> dict[str, str]:
 
     table: dict[str, str] = {}
     path = _overrides_path()
+    if path is None:
+        _warn_alias_config("Config/entity_overrides.json not found")
     if path is not None:
         try:
             data = json.loads(path.read_text())
             teams = data.get("teams") if isinstance(data, dict) else None
-        except Exception:
+            if not isinstance(teams, dict):
+                _warn_alias_config(f"{path}: no usable 'teams' object")
+        except Exception as exc:
+            _warn_alias_config(f"{path}: unreadable/malformed JSON ({exc})")
             teams = None
         if isinstance(teams, dict):
             for raw, canonical in teams.items():
@@ -176,6 +201,7 @@ def team_alias_table() -> dict[str, str]:
 def clear_team_alias_cache() -> None:
     global _TEAM_ALIAS_CACHE
     _TEAM_ALIAS_CACHE = None
+    ALIAS_CONFIG_WARNINGS.clear()
 
 
 def resolve_team_alias(name: object) -> tuple[str, str | None]:
@@ -224,13 +250,28 @@ for _tok in ("youth", "academy"):
     _SQUAD_MARKERS[_tok] = "youth"
 
 
+# Curated real clubs whose name BEGINS with what looks like a squad
+# marker. Explicit list, never a heuristic: "W Connection" (Trinidad) is a
+# senior men's club, not a women's side; "B 1903" and "B36 Torshavn" are
+# Danish/Faroese club names. Compared on the folded name.
+MARKER_EXEMPT_NAMES: frozenset[str] = frozenset({
+    "w connection", "w connection fc",
+    "b 1903", "b 1903 copenhagen", "b 1908", "b 68", "b 71", "b 36",
+    "b36", "b36 torshavn", "b68 toftir", "b71 sandoy",
+})
+
+
 def squad_markers(name: object) -> frozenset[str]:
     """Distinct-entity markers carried by a raw team name.
 
     Word-level only: ``Wanderers`` is not ``W``, ``Boca`` is not ``B``.
     Returns a (possibly empty) frozenset of canonical marker tokens.
     """
-    words = re.findall(r"[a-z0-9]+", fold_ascii(name))
+    folded = re.sub(r"[^a-z0-9 ]", " ", fold_ascii(name))
+    folded = re.sub(r"\s+", " ", folded).strip()
+    if folded in MARKER_EXEMPT_NAMES:
+        return frozenset()
+    words = re.findall(r"[a-z0-9]+", folded)
     return frozenset(_SQUAD_MARKERS[w] for w in words if w in _SQUAD_MARKERS)
 
 
@@ -266,10 +307,45 @@ def expand_team_token(token: str) -> str:
     return TEAM_TOKEN_EXPANSIONS.get(token, token)
 
 
+_SCRIPT_RANGES = (
+    ("cyrillic", 0x0400, 0x04FF),
+    ("greek", 0x0370, 0x03FF),
+)
+
+
+def script_anomaly(name: object) -> str | None:
+    """Flag a predominantly-Latin name carrying homoglyph codepoints.
+
+    ``Sp\u0430rt\u0430k`` (Cyrillic a) is visually identical to ``Spartak``
+    but folds to ``sprtk``: one feed emitting it silently reproduces the
+    duplicate-fixture incident. Transliteration is deliberately NOT
+    attempted here (it would need a dependency and would be a guess) —
+    this is a visibility tripwire: the row is flagged, never auto-merged.
+    """
+    text = str(name or "")
+    latin = sum(1 for ch in text if "a" <= ch.lower() <= "z")
+    for label, lo, hi in _SCRIPT_RANGES:
+        foreign = sum(1 for ch in text if lo <= ord(ch) <= hi)
+        if foreign and latin:
+            return f"mixed_script_{label}"
+    return None
+
+
 MIN_IDENTITY_KEY_LEN = 3
 
 
-DEGENERATE_KEY_PREFIX = "deg"
+# Out-of-alphabet sentinel. Keys are built from ``[a-z0-9]`` only, so a
+# marker character that can NEVER appear in a normalized name is the only
+# safe way to distinguish a sentinel from a real club. A plain "deg"
+# string prefix was wrong: the real Swedish club ``Degerfors`` keys to
+# ``degerfors`` and was classified as degenerate, which made
+# ``Degerfors IF`` refuse to merge with ``Degerfors`` — the original
+# duplicate-leg incident, reintroduced by the sentinel itself.
+DEGENERATE_KEY_PREFIX = "deg~"
+
+# Sentinels written by earlier builds of this branch used the ambiguous
+# bare "deg" + 8 hex digits form. Recognized on read, never written.
+_LEGACY_DEGENERATE_RE = re.compile(r"^deg[0-9a-f]{8}$")
 
 
 def _degenerate_key(name: object) -> str:
@@ -301,6 +377,8 @@ def is_degenerate_team_key(key: object) -> bool:
     base = str(key or "").split("_")[0]
     if base.startswith(DEGENERATE_KEY_PREFIX) and len(base) > len(DEGENERATE_KEY_PREFIX):
         return True
+    if _LEGACY_DEGENERATE_RE.match(base):  # pre-"deg~" sentinel, read-side only
+        return True
     return len(base) < MIN_IDENTITY_KEY_LEN
 
 
@@ -314,6 +392,14 @@ def canonical_team_key(name: object, width: int = 9) -> str:
     canonical, _matched = resolve_team_alias(name)
     base = norm_team(canonical, width=width)
     if len(base) < MIN_IDENTITY_KEY_LEN:
+        # Numeric club names ("B 1903", "FC 08 Homburg") lose their only
+        # distinctive token to the [^a-z] filter. Fall back to the
+        # alphanumeric compact key BEFORE the sentinel: it is a real,
+        # stable identity, so "B 1903" and "B 1903 Copenhagen" can still
+        # be linked instead of both being refused as untrustworthy.
+        alnum = compact_key(canonical)
+        if len(alnum) >= MIN_IDENTITY_KEY_LEN and any(c.isdigit() for c in alnum):
+            return alnum[:width] + squad_marker_suffix(name)
         # never emit an empty/1-char ledger key component
         return _degenerate_key(name) + squad_marker_suffix(name)
     # markers come from the RAW name: the curated alias canonicalizes the
