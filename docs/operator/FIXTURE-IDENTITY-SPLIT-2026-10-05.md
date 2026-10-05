@@ -148,7 +148,7 @@ fixtures not collapsed; settlement across spellings and from legacy keys;
 one shadow identity for the pair; archive merge not inflated and engine
 key == audit key.
 
-Smoke: `python tools/smoke_turkiye_duplicate.py` -> `SMOKE: PASS`.
+Smoke: `python tools/smoke_fixture_identity_dedupe.py` -> `SMOKE: PASS`.
 
 Validation: `python -m pytest tests/ -q` -> **1291 passed**;
 `python -m compileall scripts src tests` clean; `git diff --check` clean;
