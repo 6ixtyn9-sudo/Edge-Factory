@@ -1,72 +1,31 @@
 {
-  "added": 123,
-  "attempted": 3,
-  "attempted_fixtures": [
-    {
-      "away": "Armenia",
-      "date": "2026-10-05",
-      "home": "Montenegro",
-      "kickoff": "05-10, 19:45",
-      "league": "World UEFA Nations League"
-    },
-    {
-      "away": "T\u00fcrkiye",
-      "date": "2026-10-05",
-      "home": "Italy",
-      "kickoff": "05-10, 19:45",
-      "league": "World UEFA Nations League"
-    },
-    {
-      "away": "Belgium",
-      "date": "2026-10-05",
-      "home": "France",
-      "kickoff": "05-10, 19:45",
-      "league": "World UEFA Nations League"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 5,
-  "captured_at": "2026-10-05T17:00:40+00:00",
+  "captured_at": "2026-10-05T19:17:17+00:00",
   "date": "2026-10-05",
-  "due_reasons": {
-    "close_at": 3
-  },
+  "due_reasons": {},
   "errors": [],
-  "fixtures_with_rows": 2,
-  "quoted_fixtures": [
-    {
-      "away": "Armenia",
-      "date": "2026-10-05",
-      "home": "Montenegro",
-      "kickoff": "2026-10-05T18:45:00Z",
-      "league": "World UEFA Nations League"
-    },
-    {
-      "away": "Belgium",
-      "date": "2026-10-05",
-      "home": "France",
-      "kickoff": "2026-10-05T18:45:00Z",
-      "league": "World UEFA Nations League"
-    }
-  ],
-  "rows": 123,
+  "fixtures_with_rows": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 2,
+    "kickoff_already_passed": 5,
     "kickoff_mismatch": 3
   },
   "skipped": [
     "WARN kickoff-mismatch Montenegro|Armenia: pick lists 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from the earlier)",
+    "Montenegro|Armenia (kickoff already passed)",
+    "Italy|T\u00fcrkiye (kickoff already passed)",
     "Moss|Kongsvinger (kickoff already passed)",
     "WARN kickoff-mismatch Cyprus|Latvia: pick lists 15:00Z, captured rows say 16:00Z (\u0394=60m; planning from the earlier)",
     "Cyprus|Latvia (kickoff already passed)",
-    "WARN kickoff-mismatch France|Belgium: pick lists 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from the earlier)"
+    "WARN kickoff-mismatch France|Belgium: pick lists 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from the earlier)",
+    "France|Belgium (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [
-    "Italy vs T\u00fcrkiye (no event in soccer_uefa_nations_league)"
-  ],
-  "unmatched_reasons": {
-    "no event in soccer_uefa_nations_league": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }

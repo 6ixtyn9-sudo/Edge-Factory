@@ -1,5 +1,5 @@
 {
-  "attempted": 2,
+  "attempted": 5,
   "attempted_fixtures": [
     {
       "avg_p": 67.2,
@@ -20,19 +20,70 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 64.0,
+      "away": "Kongsvinger",
+      "date": "2026-10-05",
+      "home": "Moss",
+      "league": "Norway 1. Division",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 62.6,
+      "away": "Latvia",
+      "date": "2026-10-05",
+      "home": "Cyprus",
+      "league": "World UEFA Nations League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 57.8,
+      "away": "Belgium",
+      "date": "2026-10-05",
+      "home": "France",
+      "league": "World UEFA Nations League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
     }
   ],
   "be_429": 0,
-  "be_cached": 2,
+  "be_cached": 5,
   "be_cooling_down": false,
-  "candidate_fixtures": 2,
-  "captured_at": "2026-10-05T16:49:16.059798+00:00",
+  "candidate_fixtures": 5,
+  "captured_at": "2026-10-05T19:06:21.563994+00:00",
   "date": "2026-10-05",
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 2,
   "max_fixtures": 12,
-  "quoted_fixtures": [],
-  "rows": 0,
+  "quoted_fixtures": [
+    {
+      "avg_p": 64.0,
+      "away": "Kongsvinger",
+      "date": "2026-10-05",
+      "home": "Moss",
+      "league": "Norway 1. Division",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 62.6,
+      "away": "Latvia",
+      "date": "2026-10-05",
+      "home": "Cyprus",
+      "league": "World UEFA Nations League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    }
+  ],
+  "rows": 6,
   "schema": 1,
-  "status": "empty"
+  "status": "ok"
 }
