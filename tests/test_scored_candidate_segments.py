@@ -354,3 +354,123 @@ def test_reading_ledger_never_mutates_it(tmp_path):
                              **SMALL)
     after = [p.read_bytes() for p in paths]
     assert before == after                     # byte-identical, read-only
+
+
+# ------------------------- end-to-end exec-promo + rolling survival ---------
+def _exec_cand(day, i, *, odds=2.0):
+    """Named-book execution-safe candidate row (ledger-real shape)."""
+    return {
+        "date": day, "home": f"{_teamcode(i)}holm", "away": f"{_teamcode(i)}berg",
+        "league": "Portugal,Primeira Liga", "market": "1x2", "pick": "home",
+        "rule": "ml-consensus", "bucket": "CERTIFIED_CLEAN", "avg_p": 70.0,
+        "w_score": 1.0, "odds": odds, "odds_source": "bzzoiro_odds",
+        "bookmaker": "BookyBook", "price_evidence": "NAMED_BOOKMAKER_PRICE",
+        "price_push_eligible": True, "quarantine": "none",
+        "kickoff_utc": f"{day}T18:30:00+00:00",
+        "as_of": f"{day}T06:00:00+00:00",
+    }
+
+
+def _exec_ledger(tmp_path, days=(D1, D2, D3), per_day=4):
+    settled = {}
+    for day in days:
+        cands = [_exec_cand(day, i) for i in range(per_day)]
+        scs.record_picks_build(day=day, scored_rows=cands, slate_rows=cands,
+                               pipeline_scored_log=per_day,
+                               price_supported_markets={"1x2"}, root=tmp_path)
+        for c in cands:
+            settled[(day, norm_team(c["home"]), norm_team(c["away"]))] = "home"
+    return settled
+
+
+def test_exec_promo_reachable_end_to_end_through_real_ledger(tmp_path):
+    """The reviewer's verification: EXECUTION_SAFE_PROMOTION_CANDIDATE must
+    actually be REACHABLE from the execution-safe population in real report
+    output (not only in classifier unit tests) — while remaining
+    structurally unreachable for every captured-price segment in the same
+    report."""
+    settled = _exec_ledger(tmp_path)
+    report = seg.build_segment_report(
+        seg.date_range(D1, D3), root=tmp_path, settled=settled, **SMALL)
+    promo = report["promotion_candidates"]
+    assert promo, "exec-safe promotion tier must be reachable end-to-end"
+    assert all(s["roi_type"] == seg.ROI_EXEC_SAFE for s in promo)
+    full = next(s for s in promo if s["segment_key"] == "market=1x2")
+    assert full["settled_records"] == 12 and full["flat_roi"] == 1.0
+    assert full["action"] == "PROMOTION_REVIEW"
+    # and in the SAME report no captured-price segment reaches the tier
+    assert all(s["tier"] != seg.TIER_EXEC_PROMO
+               for s in report["segments"]
+               if s["roi_type"] == seg.ROI_CAPTURED)
+    text = seg.render_segment_report(report)
+    assert "PROMOTION CANDIDATES (EXECUTION_SAFE_PROMOTION_CANDIDATE)" in text
+    assert seg.NO_BEHAVIOR_LINE in text
+
+
+def test_window_profiles_scale_with_length():
+    assert seg.window_profile(7) == {"min_settled": 30, "min_days": 3,
+                                     "min_fixtures": 20}
+    assert seg.window_profile(14) == {"min_settled": 50, "min_days": 5,
+                                      "min_fixtures": 35}
+    assert seg.window_profile(30) == {"min_settled": 90, "min_days": 8,
+                                      "min_fixtures": 60}
+    # unlisted lengths: linear from the 7-day base, never BELOW it
+    p10 = seg.window_profile(10)
+    assert p10 == {"min_settled": 43, "min_days": 4, "min_fixtures": 29}
+    assert seg.window_profile(2) == {"min_settled": 30, "min_days": 3,
+                                     "min_fixtures": 20}
+
+
+def test_rolling_survivor_requires_exec_promo_in_every_window(tmp_path):
+    settled = _exec_ledger(tmp_path)          # data on D1..D3
+    overrides = dict(min_settled=4, min_days=3, min_fixtures=3)
+    # both windows span all 3 data days -> survivor
+    rep = seg.build_rolling_report(D3, windows=(3, 4), root=tmp_path,
+                                   settled=settled,
+                                   threshold_overrides=overrides,
+                                   watch_min_settled=2)
+    ready = rep["promotion_proposal_ready"]
+    keys = {e["segment_key"] for e in ready}
+    assert "market=1x2" in keys
+    entry = next(e for e in ready if e["segment_key"] == "market=1x2")
+    assert entry["survival"] == "SURVIVES_ALL_WINDOWS"
+    assert entry["action"] == "PROMOTION_PROPOSAL_REVIEW"
+    assert set(entry["tiers_by_window"]) == {"3d", "4d"}
+    assert all(t == seg.TIER_EXEC_PROMO
+               for t in entry["tiers_by_window"].values())
+    assert rep["thresholds_overridden"] is True
+    text = seg.render_rolling_report(rep)
+    assert "SURVIVES ALL WINDOWS" in text
+    assert "[THRESHOLDS EXPLICITLY OVERRIDDEN]" in text
+    assert seg.NO_BEHAVIOR_LINE in text
+
+
+def test_rolling_short_window_only_edge_is_not_survivor(tmp_path):
+    settled = _exec_ledger(tmp_path)          # data on D1..D3
+    overrides = dict(min_settled=4, min_days=3, min_fixtures=3)
+    # 2d window sees only D2..D3 (2 days < min_days=3) -> fails there
+    rep = seg.build_rolling_report(D3, windows=(2, 3), root=tmp_path,
+                                   settled=settled,
+                                   threshold_overrides=overrides,
+                                   watch_min_settled=2)
+    assert not any(e["segment_key"] == "market=1x2"
+                   for e in rep["promotion_proposal_ready"])
+    missed = next(e for e in rep["exec_promo_not_survived"]
+                  if e["segment_key"] == "market=1x2")
+    assert missed["survival"] == "NOT_SURVIVED_ALL_WINDOWS"
+    assert missed["tiers_by_window"]["3d"] == seg.TIER_EXEC_PROMO
+    assert missed["tiers_by_window"]["2d"] != seg.TIER_EXEC_PROMO
+    text = seg.render_rolling_report(rep)
+    assert "NOT SURVIVED" in text
+
+
+def test_rolling_default_profiles_make_tiny_samples_unpromotable(tmp_path):
+    """Without explicit overrides the real profiles apply: 12 settled over
+    3 days can NEVER be proposal-ready (7d bar is 30 settled/20 fixtures).
+    Relaxation must be explicit — never a silent default."""
+    settled = _exec_ledger(tmp_path)
+    rep = seg.build_rolling_report(D3, windows=(7,), root=tmp_path,
+                                   settled=settled)
+    assert rep["promotion_proposal_ready"] == []
+    assert rep["thresholds_overridden"] is False
+    assert rep["window_profiles"]["7d"]["min_settled"] == 30
