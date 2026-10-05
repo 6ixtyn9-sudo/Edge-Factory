@@ -4603,6 +4603,123 @@ def _with_duplicate_metadata(group: list[dict]) -> dict:
     return rep
 
 
+def canonical_fixture_identity(pick: dict) -> tuple[str, str, str]:
+    """Deterministic (date, home key, away key) fixture identity.
+
+    Uses the canonical team key (ASCII transliteration + curated explicit
+    aliases from Config/entity_overrides.json). No fuzzy matching: this is
+    the same key the shadow ledger and settlement use, so one real fixture
+    spelled two ways ("Italy vs Türkiye" / "Italy vs Turkey") yields ONE
+    identity here.
+    """
+    return (
+        str(pick.get("date") or "")[:10],
+        ledger_team_key(pick.get("home") or "", width=24),
+        ledger_team_key(pick.get("away") or "", width=24),
+    )
+
+
+def near_duplicate_fixture_warnings(picks: list[dict]) -> list[dict]:
+    """Detect fixtures that normalization alone could NOT join.
+
+    Same trading date + same canonical league + one team key identical and
+    the other differing. This is a VISIBILITY tripwire only — it never
+    merges anything (merging on this heuristic would be fuzzy matching).
+    A pair the curated alias layer already resolved never reaches here,
+    because the duplicate collapse has folded it into one row first.
+    """
+    out: list[dict] = []
+    rows = list(picks)
+    for i in range(len(rows)):
+        for j in range(i + 1, len(rows)):
+            a, b = rows[i], rows[j]
+            a_date, a_home, a_away = canonical_fixture_identity(a)
+            b_date, b_home, b_away = canonical_fixture_identity(b)
+            if a_date != b_date or not a_date:
+                continue
+            if canonical_league(a.get("league")) != canonical_league(b.get("league")):
+                continue
+            same_home = a_home == b_home and a_home != ""
+            same_away = a_away == b_away and a_away != ""
+            if same_home == same_away:
+                continue  # both identical (true dupe, collapse owns it) or both differ
+            out.append({
+                "date": a_date,
+                "league": canonical_league(a.get("league")),
+                "shared_side": "home" if same_home else "away",
+                "rows": [
+                    {
+                        "match": str(a.get("match") or f"{a.get('home')} vs {a.get('away')}"),
+                        "home_key": a_home, "away_key": a_away,
+                        "source": str(a.get("odds_source") or a.get("source") or "?"),
+                        "kickoff": str(a.get("kickoff") or ""),
+                    },
+                    {
+                        "match": str(b.get("match") or f"{b.get('home')} vs {b.get('away')}"),
+                        "home_key": b_home, "away_key": b_away,
+                        "source": str(b.get("odds_source") or b.get("source") or "?"),
+                        "kickoff": str(b.get("kickoff") or ""),
+                    },
+                ],
+            })
+    return out
+
+
+def print_near_duplicate_fixture_tripwire(picks: list[dict], day: str = "",
+                                          stream=None) -> int:
+    """Print a loud warning block for unjoined near-duplicate fixtures."""
+    stream = stream if stream is not None else sys.stderr
+    warnings = near_duplicate_fixture_warnings(picks)
+    if not warnings:
+        return 0
+    print("=" * 72, file=stream)
+    print(f"!! NEAR-DUPLICATE FIXTURE TRIPWIRE {day}: {len(warnings)} unjoined pair(s)",
+          file=stream)
+    print("!! One team key matches, the other does not. NOTHING was merged.",
+          file=stream)
+    print("!! If these are the same real match, add a curated alias to "
+          "Config/entity_overrides.json -> teams.", file=stream)
+    for w in warnings:
+        print(f"!!   [{w['date']}] league={w['league']} shared={w['shared_side']}",
+              file=stream)
+        for row in w["rows"]:
+            print(f"!!     {row['match']!r} keys=({row['home_key']}|{row['away_key']}) "
+                  f"src={row['source']} ko={row['kickoff']!r}", file=stream)
+    print("=" * 72, file=stream)
+    return len(warnings)
+
+
+def _kickoff_is_anchored(row: dict) -> bool:
+    """True when a row's kickoff names a calendar instant, not a bare clock.
+
+    A bare "14:45" (the naive foreign-clock render, incident-#6 family)
+    carries no date and cannot distinguish two occurrences of the same
+    fixture, so it must not be used to argue that two rows with identical
+    canonical identity are different events.
+    """
+    if str(row.get("kickoff_utc") or "").strip():
+        return True
+    value = _kickoff_value(row)
+    if not value:
+        return False
+    return kickoff_date(value) is not None
+
+
+def _canonical_identity_collapse(rep: dict, pick: dict) -> bool:
+    """Same real fixture by deterministic identity?
+
+    Requires identical canonical fixture identity (date + both canonical
+    team keys). The 180-minute reschedule guard still applies whenever
+    BOTH rows carry an anchored kickoff; when either kickoff is a bare
+    clock it carries no occurrence information and cannot veto the merge.
+    """
+    if canonical_fixture_identity(pick) != canonical_fixture_identity(rep):
+        return False
+    if _kickoff_is_anchored(rep) and _kickoff_is_anchored(pick):
+        return _same_event_cluster(rep, pick)
+    return True
+
+
 def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
     clusters: list[list[dict]] = []
     for pick in picks:
@@ -4620,6 +4737,21 @@ def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int
             rep_sel = str(rep.get("pick") or "")
             
             if pick_date == rep_date and pick_market == rep_market and pick_sel == rep_sel:
+                # DETERMINISTIC path first (2026-10-05 Türkiye/Turkey split):
+                # identical canonical fixture identity (transliteration +
+                # curated alias) is the same real match by construction, so
+                # it collapses even when the two sources render the name
+                # differently ("Italy vs Türkiye" / "Italy vs Turkey")
+                # and the fuzzy bigram path would miss them.
+                # No gate is weakened: this only ever merges rows that are
+                # already identical in date, market, selection and both
+                # canonical team keys. The 180-minute reschedule guard
+                # still applies whenever both rows carry an anchored
+                # (dated) kickoff.
+                if _canonical_identity_collapse(rep, pick):
+                    cluster.append(pick)
+                    matched = True
+                    break
                 # Same date, market, selection. Now check kickoff and fuzzy team similarity
                 if _same_event_cluster(rep, pick):
                     # Compute team Jaccard bigram similarity
@@ -5595,6 +5727,10 @@ def main():
         collapsed_day_picks, removed_dupes = collapse_final_operational_picks(day_picks)
         if removed_dupes:
             print(f"operational final pick collapse {day}: removed={removed_dupes}", file=sys.stderr)
+        # Visibility tripwire: anything that still looks like one fixture
+        # under two spellings AFTER canonical collapse needs a curated
+        # alias. Printed loudly; never auto-merged.
+        print_near_duplicate_fixture_tripwire(collapsed_day_picks, day=day)
 
         if not candidate_only:
             _print_price_coverage(
