@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from functools import lru_cache
 from datetime import date, datetime
 
 # Historical miner/source join noise tokens. Keep byte-compatible in spirit with
@@ -73,11 +74,13 @@ def compact_key(text: object) -> str:
     return re.sub(r"[^a-z0-9]", "", fold_ascii(text))
 
 
-def norm_team(name: str, width: int = 9) -> str:
-    """Legacy team join key used by certified miners and warehouse joins.
+def norm_team_legacy(name: str, width: int = 9) -> str:
+    """Pre-2026-10-05 team join key: diacritics DELETED, not transliterated.
 
-    Do not upgrade this to accent-folding in-place: changing it alters historical
-    consensus joins and can invalidate certified edge counts.
+    Frozen byte-for-byte. Historical artefacts (settled-result exports,
+    warehouse caches, archived ledgers) were written under this key, so
+    readers keep it available as a SECOND lookup key alongside the fixed
+    ``norm_team``. Never use it to write new keys.
     """
     s = str(name or "").lower()
     s = _NOISE.sub(" ", s)
@@ -85,15 +88,374 @@ def norm_team(name: str, width: int = 9) -> str:
     return s[:width]
 
 
-def ledger_team_key(name: object, width: int = 9) -> str:
-    """Accent-safe team key for operational pick-ledger identity.
+def norm_team(name: str, width: int = 9) -> str:
+    """Team join key used by miners, warehouse joins and settlement.
 
-    This deliberately wraps, rather than changes, ``norm_team``. Certified
-    miner joins must retain their historical byte-compatible normalization,
-    while operational ledgers must treat spelling variants such as
-    ``Nordsjælland`` and ``Nordsjaelland`` as the same team.
+    2026-10-05 fix: the input is ASCII-FOLDED (transliterated) first, so
+    accented names keep their letters: "Türkiye" -> ``turkiye`` (was
+    ``trkiye``), "Beşiktaş" -> ``besiktas`` (was ``beikta``), "Atlético"
+    -> ``atletico``. Deleting diacritics produced keys that joined to
+    nothing and disagreed with :func:`ledger_team_key`, splitting one real
+    fixture into two identities.
+
+    This is a transliteration-only change: no fuzzy matching, no aliasing.
+    The frozen pre-fix behaviour remains available as
+    :func:`norm_team_legacy` for reader-side dual-key lookups against data
+    persisted before the fix.
     """
-    return norm_team(fold_ascii(name), width=width)
+    s = fold_ascii(name)
+    s = _NOISE.sub(" ", s)
+    s = re.sub(r"[^a-z]", "", s)
+    return s[:width]
+
+
+# ---------------------------------------------------------------------------
+# Curated exonym / spelling alias layer (explicit, reviewed, NEVER fuzzy).
+#
+# Source of truth: Config/entity_overrides.json -> "teams". Entries map a
+# raw spelling to ONE canonical display name; both spellings therefore
+# collapse onto a single canonical key. Transliteration alone cannot join
+# exonyms such as Türkiye/Turkey (the 2022 rename) or Czechia/Czech
+# Republic, so they are curated here rather than guessed.
+# ---------------------------------------------------------------------------
+
+_OVERRIDES_CANDIDATE_PATHS = ("Config/entity_overrides.json", "config/entity_overrides.json")
+
+
+def _overrides_path():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    for rel in _OVERRIDES_CANDIDATE_PATHS:
+        p = root / rel
+        if p.exists():
+            return p
+    return None
+
+
+_TEAM_ALIAS_CACHE: dict[str, str] | None = None
+
+# Set when the curated alias config could not be loaded, so callers and
+# tests can assert the degradation was announced rather than silent.
+ALIAS_CONFIG_WARNINGS: list[str] = []
+
+
+def _warn_alias_config(detail: str) -> None:
+    """Announce loudly that the curated alias layer is NOT in effect.
+
+    Degrading to pre-alias behaviour is safe (keys simply stop merging
+    exonyms); degrading SILENTLY is not, because every Turkiye/Turkey-class
+    fixture then splits again with no operator signal. Never half-applied:
+    the table is all-or-nothing.
+    """
+    import sys as _sys
+
+    msg = ("!! TEAM ALIAS CONFIG UNAVAILABLE - running with ZERO curated "
+           f"aliases (exonym fixtures WILL split): {detail}")
+    ALIAS_CONFIG_WARNINGS.append(msg)
+    print(msg, file=_sys.stderr)
+
+
+def team_alias_table() -> dict[str, str]:
+    """Curated raw-spelling -> canonical-name team aliases (cached).
+
+    Keys are indexed in several deterministic key spaces (raw text,
+    ASCII-folded text, compact key, fixed and legacy norm_team keys) so a
+    curated entry resolves whichever spelling a source emits.
+    """
+    global _TEAM_ALIAS_CACHE
+    if _TEAM_ALIAS_CACHE is not None:
+        return _TEAM_ALIAS_CACHE
+    import json
+
+    table: dict[str, str] = {}
+    path = _overrides_path()
+    if path is None:
+        _warn_alias_config("Config/entity_overrides.json not found")
+    if path is not None:
+        try:
+            data = json.loads(path.read_text())
+            teams = data.get("teams") if isinstance(data, dict) else None
+            if not isinstance(teams, dict):
+                _warn_alias_config(f"{path}: no usable 'teams' object")
+        except Exception as exc:
+            _warn_alias_config(f"{path}: unreadable/malformed JSON ({exc})")
+            teams = None
+        if isinstance(teams, dict):
+            for raw, canonical in teams.items():
+                canon = str(canonical or "").strip()
+                if not canon:
+                    continue
+                for key in (
+                    str(raw),
+                    fold_ascii(raw),
+                    compact_key(raw),
+                    norm_team(str(raw), width=64),
+                    norm_team_legacy(str(raw), width=64),
+                ):
+                    if key:
+                        table.setdefault(key, canon)
+    _TEAM_ALIAS_CACHE = table
+    return table
+
+
+def clear_team_alias_cache() -> None:
+    global _TEAM_ALIAS_CACHE
+    _TEAM_ALIAS_CACHE = None
+    ALIAS_CONFIG_WARNINGS.clear()
+    _canonical_team_key_cached.cache_clear()
+
+
+def resolve_team_alias(name: object) -> tuple[str, str | None]:
+    """Return ``(canonical_name, matched_alias_key)`` for a raw team name.
+
+    ``matched_alias_key`` is ``None`` when no curated alias applied — the
+    raw name is then returned unchanged. Deterministic dictionary lookup
+    only; nothing here guesses similarity.
+    """
+    raw = str(name or "")
+    table = team_alias_table()
+    for key in (raw, fold_ascii(raw), compact_key(raw),
+                norm_team(raw, width=64), norm_team_legacy(raw, width=64)):
+        if key and key in table:
+            return table[key], key
+    return raw, None
+
+
+# ---------------------------------------------------------------------------
+# Distinct-entity (squad) markers.
+#
+# "Turkey" and "Turkey U21" are DIFFERENT teams that play on the same day,
+# in the same market, often with the same selection. The legacy noise
+# regex deletes these tokens, so both sides key as "turkey" — identity
+# collapse in the dangerous direction. These tokens are therefore carried
+# into the canonical key as an explicit suffix and act as a hard veto on
+# any merge between names whose markers differ.
+# ---------------------------------------------------------------------------
+
+_SQUAD_MARKERS: dict[str, str] = {}
+for _age in range(14, 24):
+    _SQUAD_MARKERS[f"u{_age}"] = f"u{_age}"
+    _SQUAD_MARKERS[f"u{_age}s"] = f"u{_age}"
+for _tok in ("b", "ii"):
+    _SQUAD_MARKERS[_tok] = "b"
+for _tok in ("iii", "c"):
+    _SQUAD_MARKERS[_tok] = "c"
+for _tok in ("w", "women", "womens", "ladies", "feminine", "femenino", "fem"):
+    _SQUAD_MARKERS[_tok] = "w"
+for _tok in ("res", "reserve", "reserves"):
+    _SQUAD_MARKERS[_tok] = "res"
+# NB: "junior(s)" is deliberately NOT a marker — it is part of real senior
+# club names (Boca Juniors, Argentinos Juniors, Barnsley?); only
+# unambiguous squad words are listed.
+for _tok in ("youth", "academy"):
+    _SQUAD_MARKERS[_tok] = "youth"
+
+
+# Curated real clubs whose name BEGINS with what looks like a squad
+# marker. Explicit list, never a heuristic: "W Connection" (Trinidad) is a
+# senior men's club, not a women's side; "B 1903" and "B36 Torshavn" are
+# Danish/Faroese club names. Compared on the folded name.
+MARKER_EXEMPT_NAMES: frozenset[str] = frozenset({
+    "w connection", "w connection fc",
+    "b 1903", "b 1903 copenhagen", "b 1908", "b 68", "b 71", "b 36",
+    "b36", "b36 torshavn", "b68 toftir", "b71 sandoy",
+})
+
+
+def squad_markers(name: object) -> frozenset[str]:
+    """Distinct-entity markers carried by a raw team name.
+
+    Word-level only: ``Wanderers`` is not ``W``, ``Boca`` is not ``B``.
+    Returns a (possibly empty) frozenset of canonical marker tokens.
+    """
+    folded = re.sub(r"[^a-z0-9 ]", " ", fold_ascii(name))
+    folded = re.sub(r"\s+", " ", folded).strip()
+    if folded in MARKER_EXEMPT_NAMES:
+        return frozenset()
+    words = re.findall(r"[a-z0-9]+", folded)
+    return frozenset(_SQUAD_MARKERS[w] for w in words if w in _SQUAD_MARKERS)
+
+
+def squad_marker_suffix(name: object) -> str:
+    markers = squad_markers(name)
+    return ("_" + "_".join(sorted(markers))) if markers else ""
+
+
+def markers_conflict(a: object, b: object) -> bool:
+    """True when two names denote different squads of (possibly) one club."""
+    return squad_markers(a) != squad_markers(b)
+
+
+# Curated, explicit abbreviation expansions used ONLY when comparing two
+# names for same-club linkage (never when building a key). Deterministic
+# dictionary, no similarity: "Drogheda Utd" and "Drogheda United" are one
+# club; "Launceston City" and "Launceston United" still are not.
+TEAM_TOKEN_EXPANSIONS: dict[str, str] = {
+    "utd": "united", "unt": "united",
+    "cty": "city",
+    "ath": "athletic", "athl": "athletic",
+    "dep": "deportivo", "depor": "deportivo",
+    "spt": "sporting", "sptg": "sporting",
+    "rov": "rovers", "rovs": "rovers",
+    "wdrs": "wanderers", "wand": "wanderers",
+    "cf": "", "fc": "",
+    "mgladbach": "monchengladbach", "gladbach": "monchengladbach",
+    "utdd": "united",
+    "wed": "wednesday",   # Sheffield Wed / Sheffield Wednesday
+}
+
+
+def expand_team_token(token: str) -> str:
+    return TEAM_TOKEN_EXPANSIONS.get(token, token)
+
+
+_SCRIPT_RANGES = (
+    ("cyrillic", 0x0400, 0x04FF),
+    ("greek", 0x0370, 0x03FF),
+)
+
+
+def script_anomaly(name: object) -> str | None:
+    """Flag a predominantly-Latin name carrying homoglyph codepoints.
+
+    ``Sp\u0430rt\u0430k`` (Cyrillic a) is visually identical to ``Spartak``
+    but folds to ``sprtk``: one feed emitting it silently reproduces the
+    duplicate-fixture incident. Transliteration is deliberately NOT
+    attempted here (it would need a dependency and would be a guess) —
+    this is a visibility tripwire: the row is flagged, never auto-merged.
+    """
+    text = str(name or "")
+    latin = sum(1 for ch in text if "a" <= ch.lower() <= "z")
+    for label, lo, hi in _SCRIPT_RANGES:
+        foreign = sum(1 for ch in text if lo <= ord(ch) <= hi)
+        if foreign and latin:
+            return f"mixed_script_{label}"
+    return None
+
+
+MIN_IDENTITY_KEY_LEN = 3
+
+
+# Out-of-alphabet sentinel. Keys are built from ``[a-z0-9]`` only, so a
+# marker character that can NEVER appear in a normalized name is the only
+# safe way to distinguish a sentinel from a real club. A plain "deg"
+# string prefix was wrong: the real Swedish club ``Degerfors`` keys to
+# ``degerfors`` and was classified as degenerate, which made
+# ``Degerfors IF`` refuse to merge with ``Degerfors`` — the original
+# duplicate-leg incident, reintroduced by the sentinel itself.
+DEGENERATE_KEY_PREFIX = "deg~"
+
+# Sentinels written by earlier builds of this branch used the ambiguous
+# bare "deg" + 8 hex digits form. Recognized on read, never written.
+_LEGACY_DEGENERATE_RE = re.compile(r"^deg[0-9a-f]{8}$")
+
+
+def _degenerate_key(name: object) -> str:
+    """Stable, unique, NON-EMPTY placeholder for an unusable team key.
+
+    An empty key matches every other empty key, so ``Athletic Club``,
+    ``Sporting Club`` and every Cyrillic/Greek name would share one
+    identity. Instead each raw spelling gets its own marked key: distinct
+    teams stay distinct (fail-closed), and the ``deg`` prefix tells every
+    consumer the identity is not trustworthy.
+    """
+    import hashlib
+
+    seed = re.sub(r"\s+", " ", fold_ascii(name)).strip() or str(name or "")
+    digest = hashlib.sha1(seed.encode("utf-8")).hexdigest()[:8]
+    return f"{DEGENERATE_KEY_PREFIX}{digest}"
+
+
+def is_degenerate_team_key(key: object) -> bool:
+    """True when a normalized key is too short to identify a team.
+
+    ``Athletic Club`` and ``Sporting Club`` normalize to ``""`` (every word
+    is a structure token); non-Latin scripts (Cyrillic, Greek) are deleted
+    rather than transliterated and also collapse to ``""`` or a single
+    stray character. Such keys match EVERYTHING, so callers must refuse to
+    use them for identity. Mirrors the fail-closed guard that
+    ``ml_fade_research.event_key`` already applies.
+    """
+    base = str(key or "").split("_")[0]
+    if base.startswith(DEGENERATE_KEY_PREFIX) and len(base) > len(DEGENERATE_KEY_PREFIX):
+        return True
+    if _LEGACY_DEGENERATE_RE.match(base):  # pre-"deg~" sentinel, read-side only
+        return True
+    return len(base) < MIN_IDENTITY_KEY_LEN
+
+
+@lru_cache(maxsize=100_000)
+def _canonical_team_key_cached(name: str, width: int) -> str:
+    return _canonical_team_key_uncached(name, width)
+
+
+def canonical_team_key(name: object, width: int = 9) -> str:
+    """Cached front door (invalidated by clear_team_alias_cache)."""
+    return _canonical_team_key_cached(str(name or ""), width)
+
+
+def _canonical_team_key_uncached(name: object, width: int = 9) -> str:
+    """Canonical operational team key.
+
+    Transliteration + curated explicit aliases, with any distinct-entity
+    marker (U21/B/W/Reserves/...) preserved as a suffix so a senior side
+    and its youth/reserve/women's squad can never share an identity.
+    """
+    canonical, _matched = resolve_team_alias(name)
+    base = norm_team(canonical, width=width)
+    if len(base) < MIN_IDENTITY_KEY_LEN:
+        # Numeric club names ("B 1903", "FC 08 Homburg") lose their only
+        # distinctive token to the [^a-z] filter. Fall back to the
+        # alphanumeric compact key BEFORE the sentinel: it is a real,
+        # stable identity, so "B 1903" and "B 1903 Copenhagen" can still
+        # be linked instead of both being refused as untrustworthy.
+        alnum = compact_key(canonical)
+        if len(alnum) >= MIN_IDENTITY_KEY_LEN and any(c.isdigit() for c in alnum):
+            return alnum[:width] + squad_marker_suffix(name)
+        # never emit an empty/1-char ledger key component
+        return _degenerate_key(name) + squad_marker_suffix(name)
+    # markers come from the RAW name: the curated alias canonicalizes the
+    # club, never the squad.
+    return base + squad_marker_suffix(name)
+
+
+def explain_team_key(name: object, width: int = 9) -> dict[str, object]:
+    """Debug view of the key derivation (alias application is never silent)."""
+    canonical, matched = resolve_team_alias(name)
+    return {
+        "raw": str(name or ""),
+        "folded": fold_ascii(name),
+        "norm_team": norm_team(str(name or ""), width=width),
+        "norm_team_legacy": norm_team_legacy(str(name or ""), width=width),
+        "alias_matched_key": matched,
+        "alias_canonical_name": canonical if matched else None,
+        "canonical_team_key": norm_team(canonical, width=width),
+        "alias_source": "Config/entity_overrides.json:teams" if matched else None,
+    }
+
+
+def ledger_team_key(name: object, width: int = 9) -> str:
+    """Canonical team key for operational pick-ledger / fixture identity.
+
+    Transliterates (so ``Nordsjælland`` == ``Nordsjaelland``) and applies
+    the curated alias layer (so ``Türkiye`` == ``Turkey``). Identical to
+    :func:`canonical_team_key`; kept as the historical call name used by
+    the ledgers and the shadow fixture identity.
+    """
+    return canonical_team_key(name, width=width)
+
+
+def research_ledger_team_key(name: object, width: int = 9) -> str:
+    """FROZEN pre-2026-10-05 operational key: transliteration, NO aliases.
+
+    Byte-identical to what ``ledger_team_key`` returned before the curated
+    alias layer existed. The ml-fade RESEARCH ledger persists ``event_key``
+    strings built from this key and reconciles against them across runs,
+    so its identity must never drift (see edgefactory/identity.py rule 4).
+    Operational identity seams use ``canonical_team_key`` instead.
+    """
+    return norm_team_legacy(fold_ascii(name), width=width)
 
 
 def norm_entity_team(name: object, width: int = 24) -> str:
@@ -125,14 +487,27 @@ def strip_retired_top_scores(comment: object) -> str:
     return re.sub(r"\s*\|\s*Top Scores:\s*.*$", "", text, flags=re.IGNORECASE).strip()
 
 
-# Same legacy team normalization expressed as a DuckDB SQL expression.
-def norm_team_sql(col: str, width: int = 9) -> str:
-    noise = (
-        r"\b(fc|cf|sc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting|"
-        r"u17|u18|u19|u20|u21|u23|ii|b|w|women|reserves?|res)\b"
-    )
+_NORM_TEAM_SQL_NOISE = (
+    r"\b(fc|cf|sc|ac|cd|ca|club|deportivo|atletico|athletic|real|sporting|"
+    r"u17|u18|u19|u20|u21|u23|ii|b|w|women|reserves?|res)\b"
+)
+
+
+def norm_team_sql_legacy(col: str, width: int = 9) -> str:
+    """SQL mirror of :func:`norm_team_legacy` (diacritics deleted). Frozen."""
     return (
-        f"substr(regexp_replace(regexp_replace(lower({col}), '{noise}', ' ', 'g'),"
+        f"substr(regexp_replace(regexp_replace(lower({col}), '{_NORM_TEAM_SQL_NOISE}', ' ', 'g'),"
+        f" '[^a-z]', '', 'g'), 1, {width})"
+    )
+
+
+# Same team normalization expressed as a DuckDB SQL expression. Must stay in
+# lockstep with the Python norm_team() — including the 2026-10-05 ASCII fold,
+# otherwise warehouse-side and Python-side keys disagree on accented names.
+def norm_team_sql(col: str, width: int = 9) -> str:
+    folded = _sql_ascii_fold(col)
+    return (
+        f"substr(regexp_replace(regexp_replace({folded}, '{_NORM_TEAM_SQL_NOISE}', ' ', 'g'),"
         f" '[^a-z]', '', 'g'), 1, {width})"
     )
 

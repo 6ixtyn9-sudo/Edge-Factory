@@ -66,6 +66,7 @@ import json
 import math
 import re
 import sys
+from functools import lru_cache
 from collections import Counter
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -1860,7 +1861,8 @@ def _collect_settled_facts() -> tuple[dict, dict]:
                         continue
                     for day, home, away, outcome in rows:
                         d = str(day)[:10]
-                        key_to.setdefault((d, norm_team(home), norm_team(away)), str(outcome))
+                        for hk, ak in _exact_result_keys(home, away):
+                            key_to.setdefault((d, hk, ak), str(outcome))
                         entries.setdefault(d, []).append(
                             {"home": str(home), "away": str(away), "outcome": str(outcome)}
                         )
@@ -1878,7 +1880,8 @@ def _collect_settled_facts() -> tuple[dict, dict]:
         for r in data.get("rows", []):
             d = str(r.get("date") or "")[:10]
             home, away = r.get("home"), r.get("away")
-            key_to.setdefault((d, norm_team(home), norm_team(away)), r.get("outcome"))
+            for hk, ak in _exact_result_keys(home, away):
+                key_to.setdefault((d, hk, ak), r.get("outcome"))
             sig = (d, str(home or "").lower(), str(away or "").lower())
             if sig not in seen_sigs:
                 seen_sigs.add(sig)
@@ -1904,7 +1907,139 @@ def _collect_settled_facts() -> tuple[dict, dict]:
         entries.setdefault(d, []).append(
             {"home": v["home"], "away": v["away"], "outcome": v["outcome"]}
         )
+    dropped, detail = _drop_ambiguous_result_keys(key_to, entries)
+    SETTLED_KEY_NAMES.clear()
+    for day, rows in entries.items():
+        for e in rows:
+            hn, an = str(e.get("home") or ""), str(e.get("away") or "")
+            for hk, ak in _exact_result_keys(hn, an):
+                SETTLED_KEY_NAMES.setdefault((day, hk, ak), set()).add((hn, an))
+    AMBIGUOUS_SETTLEMENT_KEYS.clear()
+    AMBIGUOUS_SETTLEMENT_KEYS.extend(detail)
+    # Operator-visible counter: these legs can NEVER settle automatically,
+    # so they must not accumulate silently as "pending forever".
+    _report_ambiguous_settlement(dropped, detail)
     return key_to, entries
+
+
+# Keys that covered two different real fixtures in the last load; kept for
+# the report/summary so an operator can resolve them.
+AMBIGUOUS_SETTLEMENT_KEYS: list = []
+_AMBIGUOUS_DETAIL_PRINTED = False
+
+
+def _same_club_names(a: str, b: str) -> bool:
+    """Deterministic 'these two spellings are one club' test.
+
+    Mirrors the collapse-side link test (curated aliases, the width-24
+    source key, curated abbreviation expansion, structural containment).
+    No similarity scoring: "Blackburn Rovers"/"Blackburn" link,
+    "Manchester City"/"Manchester United" do not.
+    """
+    from edgefactory.entities import canonical_team
+    from edgefactory.identity import source_team_key
+    from edgefactory.util import (MIN_IDENTITY_KEY_LEN, expand_team_token,
+                                  fold_ascii, markers_conflict)
+
+    if fold_ascii(a) == fold_ascii(b):
+        return True
+    # a youth/reserve/women's squad is never the same entity as its senior
+    # side, however much of the name they share
+    if markers_conflict(a, b):
+        return False
+    if canonical_team(a) == canonical_team(b):
+        return True
+    sa, sb = source_team_key(a), source_team_key(b)
+    if sa and sa == sb and len(sa) >= MIN_IDENTITY_KEY_LEN:
+        return True
+    ta = {expand_team_token(t) for t in re.findall(r"[a-z0-9]+", fold_ascii(a))}
+    tb = {expand_team_token(t) for t in re.findall(r"[a-z0-9]+", fold_ascii(b))}
+    ta.discard("")
+    tb.discard("")
+    if not ta or not tb:
+        return False
+    # structural containment: one name is the other plus descriptors
+    return ta <= tb or tb <= ta
+
+
+def _fixtures_are_distinct(idents: list) -> bool:
+    """True only when the names behind one key are really different fixtures."""
+    first = idents[0]
+    for other in idents[1:]:
+        if not (_same_club_names(first[0], other[0])
+                and _same_club_names(first[1], other[1])):
+            return True
+    return False
+
+
+def _report_ambiguous_settlement(dropped: int, detail: list) -> None:
+    """Operator-visible counter, printed every load; detail printed once.
+
+    Settlement facts are reloaded several times per run and the detail is
+    identical each time; the 2026-10-05 run emitted the same 20-line block
+    five times. The counter still prints on every load so the number is
+    never hidden; AMBIGUOUS_SETTLEMENT_KEYS always holds the full list.
+    """
+    global _AMBIGUOUS_DETAIL_PRINTED
+
+    print(f"settlement_ambiguous_pending={dropped}", file=sys.stderr)
+    if not detail or _AMBIGUOUS_DETAIL_PRINTED:
+        return
+    _AMBIGUOUS_DETAIL_PRINTED = True
+    for day, teams in detail[:5]:
+        print(f"!! AMBIGUOUS SETTLEMENT KEY {day}: {teams} "
+              "— one ledger key, two real fixtures with different results; "
+              "resolve manually or add a curated alias", file=sys.stderr)
+    if len(detail) > 5:
+        print(f"   (+{len(detail) - 5} more ambiguous key(s); full list in "
+              "AMBIGUOUS_SETTLEMENT_KEYS)", file=sys.stderr)
+
+
+def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> tuple[int, list]:
+    """Refuse to settle on a key that covers TWO different real fixtures.
+
+    The frozen result keys are width-9 (``mancheste`` covers Manchester
+    City AND Manchester United; ``barcelona`` covers Barcelona and
+    Barcelona SC). Fail closed on those: delete the key so the legs stay
+    pending for manual verification, never guess which was meant.
+
+    Two conditions are required, and BOTH matter:
+
+    1. the names behind the key are not the same club. Result feeds spell
+       one club many ways on the same day ("Blackburn Rovers" /
+       "Blackburn", "Sheffield Wed" / "Sheffield Wednesday"); treating
+       those as a fixture conflict dropped ~24k keys in the 2026-10-05
+       run, pushed every affected leg into the O(n) similarity fallback
+       and turned a normal run into a 63-minute one;
+    2. the outcomes actually disagree. If every row behind the key says
+       "home", nothing can be mis-settled no matter whose fixture it is.
+    """
+    by_key: dict[tuple, dict] = {}
+    for day, rows in entries.items():
+        for e in rows:
+            home, away = str(e.get("home") or ""), str(e.get("away") or "")
+            outcome = e.get("result", e.get("outcome"))
+            for hk, ak in _exact_result_keys(home, away):
+                slot = by_key.setdefault((day, hk, ak),
+                                         {"names": [], "outcomes": set()})
+                if (home, away) not in slot["names"]:
+                    slot["names"].append((home, away))
+                slot["outcomes"].add(outcome)
+
+    dropped = 0
+    detail: list = []
+    for key, slot in by_key.items():
+        names = slot["names"]
+        if len(names) < 2 or key not in key_to:
+            continue
+        if len(slot["outcomes"]) < 2:
+            continue                      # same verdict: nothing to mis-settle
+        if not _fixtures_are_distinct(names):
+            continue                      # one club, several spellings
+        del key_to[key]
+        dropped += 1
+        detail.append((key[0], sorted(f"{h} vs {a}" for h, a in names)))
+    return dropped, detail
 
 
 def load_settled():
@@ -1965,7 +2100,70 @@ def _alias_variants(key: str) -> set:
     return set(_alias_index().get(key, ())) | {key}
 
 
-def _lookup_fallback(settled, day, home, away):
+# Legs that a distinct-entity marker kept out of the similarity fallback.
+MARKER_GUARDED_LEGS: list[str] = []
+
+
+def _note_marker_guarded_leg(pick: dict) -> None:
+    """Record a leg the marker boundary kept out of the similarity fallback.
+
+    Only reported when the LEG carries a distinct-entity marker: a senior
+    pick skipping a women's/reserve result key is the guard doing routine
+    work, not an operator-actionable pending leg.
+    """
+    from edgefactory.util import squad_markers
+
+    if not (squad_markers(pick.get("home") or "")
+            or squad_markers(pick.get("away") or "")):
+        return
+    label = f"{pick.get('date')} {pick.get('home')} vs {pick.get('away')}"
+    if label not in MARKER_GUARDED_LEGS:
+        MARKER_GUARDED_LEGS.append(label)
+        print(f"settlement_marker_guarded={len(MARKER_GUARDED_LEGS)} :: {label} "
+              "(marked squad: no exact canonical result, and the similarity "
+              "fallback may not cross a youth/reserve/women's boundary)",
+              file=sys.stderr)
+
+
+def _key_markers(key: object) -> frozenset:
+    """Squad markers encoded in a canonical key's ``_w`` / ``_u21`` suffix."""
+    return frozenset(str(key or "").split("_")[1:])
+
+
+# (day, home_key, away_key) -> {(raw home, raw away)} for the results that
+# were actually loaded. Lets the marker guard below compare REAL names
+# instead of guessing from a marker-blind key.
+SETTLED_KEY_NAMES: dict = {}
+
+
+def _marker_boundary_blocks(mh, ma, d, h, a) -> bool:
+    """True when this candidate result may not settle a marked leg.
+
+    The similarity fallback compares MARKER-BLIND keys ("turkeyu21" vs
+    "turkey" scores exactly 0.80, the acceptance bar; norm_team strips
+    ``u21``/``b``/``w`` outright), so without this guard a youth, reserve
+    or women's leg could be graded with the senior side's result. The
+    chain therefore stops at a distinct-entity marker boundary:
+
+    * when the real names behind the key are known, the marker sets must
+      match exactly;
+    * otherwise only an EXPLICIT conflict blocks (the candidate key
+      carries a marker suffix that differs), so legacy-epoch rows written
+      under marker-blind keys keep settling.
+    """
+    from edgefactory.util import squad_markers
+
+    names = SETTLED_KEY_NAMES.get((d, h, a))
+    if names:
+        return not any(squad_markers(hn) == mh and squad_markers(an) == ma
+                       for hn, an in names)
+    cand_h, cand_a = _key_markers(h), _key_markers(a)
+    if cand_h or cand_a:
+        return cand_h != mh or cand_a != ma
+    return False
+
+
+def _lookup_fallback(settled, day, home, away, markers=None, pick=None):
     from datetime import timedelta as _td
     from difflib import SequenceMatcher
     try:
@@ -1977,11 +2175,16 @@ def _lookup_fallback(settled, day, home, away):
     # Curated aliases before fuzzy: "Hearts" and "Heart of Midlothian" score
     # ~0.44 on SequenceMatcher and never clear the 0.8 bar (2026-09-06: a
     # winning acca sat unresolved and was 5 days from auto-voiding).
+    mh, ma = (markers or (frozenset(), frozenset()))
+    blocked = False
     hv, av = _alias_variants(home), _alias_variants(away)
     if len(hv) > 1 or len(av) > 1:
         for d in sorted(cands):
             for h2 in hv:
                 for a2 in av:
+                    if _marker_boundary_blocks(mh, ma, d, h2, a2):
+                        blocked = True
+                        continue
                     oc = settled.get((d, h2, a2))
                     if oc is not None:
                         return oc
@@ -1990,25 +2193,88 @@ def _lookup_fallback(settled, day, home, away):
     for (d, h, a), oc in settled.items():
         if d not in cands:
             continue
+        if _marker_boundary_blocks(mh, ma, d, h, a):
+            blocked = True
+            continue
         rh = SequenceMatcher(None, fh, _fold(h)).ratio()
         if rh < 0.8:
             continue
         ra = SequenceMatcher(None, fa, _fold(a)).ratio()
         if ra >= 0.8 and rh + ra > best:
             best, best_oc = rh + ra, oc
+    if best_oc is None and blocked and pick is not None:
+        _note_marker_guarded_leg(pick)
     return best_oc
 
 
+@lru_cache(maxsize=200_000)
+def _exact_result_keys_cached(home: str, away: str) -> tuple:
+    return tuple(_exact_result_keys_uncached(home, away))
+
+
+def _exact_result_keys(home: object, away: object) -> list[tuple[str, str]]:
+    """Cached wrapper: settlement rebuilds these keys for ~75k rows several
+    times per run, and every miss costs an alias-table lookup."""
+    return list(_exact_result_keys_cached(str(home or ""), str(away or "")))
+
+
+def _exact_result_keys_uncached(home: object, away: object) -> list[tuple[str, str]]:
+    """Deterministic EXACT key spaces for a result/pick fixture.
+
+    1. canonical: transliteration + curated explicit aliases (so a result
+       recorded as "Turkey" grades a pick captured as "Türkiye");
+    2. plain transliterated norm_team;
+    3. frozen pre-2026-10-05 norm_team_legacy, for rows persisted under the
+       old diacritic-deleting key.
+
+    Exact dictionary keys only — no fuzzy matching is introduced here.
+    """
+    from edgefactory.util import (canonical_team_key, norm_team,
+                                  norm_team_legacy)
+
+    # NB: key spaces 2 and 3 are MARKER-BLIND ("Turkey U21" -> "turkey"),
+    # so every consumer must run them past _marker_boundary_blocks()
+    # before grading on them. pick_result does.
+    keys = [
+        (canonical_team_key(home), canonical_team_key(away)),
+        (norm_team(home), norm_team(away)),
+        (norm_team_legacy(str(home or "")), norm_team_legacy(str(away or ""))),
+    ]
+    out: list[tuple[str, str]] = []
+    for k in keys:
+        if k not in out:
+            out.append(k)
+    return out
+
+
 def pick_result(pick, settled):
-    from edgefactory.util import norm_team
+    from edgefactory.util import norm_team, squad_markers
     day = str(pick.get("date") or pick.get("_archive_day") or "")[:10]
     home = norm_team(pick.get("home") or "")
     away = norm_team(pick.get("away") or "")
-    outcome = settled.get((day, home, away))
+    # Exact lookups across the deterministic key spaces (canonical alias,
+    # transliterated, frozen legacy) BEFORE any existing fallback.
+    outcome = None
+    mh = squad_markers(pick.get("home") or "")
+    ma = squad_markers(pick.get("away") or "")
+    for hk, ak in _exact_result_keys(pick.get("home") or "", pick.get("away") or ""):
+        if _marker_boundary_blocks(mh, ma, day, hk, ak):
+            continue
+        outcome = settled.get((day, hk, ak))
+        if outcome is not None:
+            break
     if outcome is not None and outcome not in ("home", "away", "draw"):
         return "void"
     if outcome is None:
-        outcome = _lookup_fallback(settled, day, home, away)
+        # Marker boundary: the similarity fallback compares MARKER-BLIND
+        # keys ("turkeyu21" vs "turkey" scores 0.80, exactly at the bar),
+        # so a youth/women's/reserve leg could be settled with the senior
+        # side's result. Those legs settle on the canonical marked key or
+        # not at all.
+        outcome = _lookup_fallback(
+            settled, day, home, away,
+            markers=(mh, ma),
+            pick=pick)
     if outcome is not None and outcome not in ("home", "away", "draw"):
         return "void"
     if outcome is None:

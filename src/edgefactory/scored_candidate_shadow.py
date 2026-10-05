@@ -65,7 +65,13 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
 from edgefactory import price_sources as psrc
-from edgefactory.util import ledger_team_key, norm_league, norm_team
+from edgefactory.util import (
+    canonical_team_key,
+    ledger_team_key,
+    norm_league,
+    norm_team,
+    norm_team_legacy,
+)
 
 SCHEMA_VERSION = 1
 
@@ -1183,8 +1189,20 @@ def load_settled_overlay(root: Path | None = None) -> dict[tuple, str]:
     out: dict[tuple, str] = {}
     for r in data.get("rows", []) if isinstance(data, dict) else []:
         day = str(r.get("date") or "")[:10]
-        out.setdefault((day, norm_team(r.get("home")), norm_team(r.get("away"))),
-                       str(r.get("outcome")))
+        outcome = str(r.get("outcome"))
+        home = r.get("home")
+        away = r.get("away")
+        # Index each result under every deterministic key space so a pick
+        # and a result spelled differently ("Türkiye" vs "Turkey") still
+        # join EXACTLY: canonical (transliteration + curated alias), plain
+        # transliterated norm_team, and the frozen pre-fix legacy key for
+        # rows written before 2026-10-05. No fuzzy matching is added.
+        for hk, ak in (
+            (canonical_team_key(home), canonical_team_key(away)),
+            (norm_team(home), norm_team(away)),
+            (norm_team_legacy(str(home or "")), norm_team_legacy(str(away or ""))),
+        ):
+            out.setdefault((day, hk, ak), outcome)
     return out
 
 
@@ -1193,8 +1211,12 @@ def settle_candidate(cand: Mapping[str, Any],
                      settled: Mapping[tuple, str]) -> dict[str, Any]:
     """Read-only settlement of one scored-candidate payload.
 
-    EXACT normalized matching only: ``(trading_date, norm_team(home),
-    norm_team(away))``.  No fuzzy matching, no alias scan, no reschedule
+    EXACT normalized matching only: ``(trading_date, canonical_team_key(
+    home), canonical_team_key(away))``, with the plain transliterated and
+    the frozen legacy ``norm_team`` keys tried as additional EXACT keys so
+    results persisted before the 2026-10-05 normalization fix (and results
+    feeds using the other curated spelling of a renamed national team)
+    still settle.  No fuzzy matching, no similarity scan, no reschedule
     window, no kickoff-tolerance change.  Non-1x2 markets and non
     home/away/draw sides are ``unmatched`` (not safely settleable here),
     missing results stay ``pending`` — never losses.
@@ -1212,7 +1234,15 @@ def settle_candidate(cand: Mapping[str, Any],
         return {"settlement_status": SETTLE_UNMATCHED,
                 "settlement_detail": "missing_fixture_identity",
                 "outcome": None}
-    outcome = settled.get((day, norm_team(home), norm_team(away)))
+    outcome = None
+    for hk, ak in (
+        (canonical_team_key(home), canonical_team_key(away)),
+        (norm_team(home), norm_team(away)),
+        (norm_team_legacy(str(home or "")), norm_team_legacy(str(away or ""))),
+    ):
+        outcome = settled.get((day, hk, ak))
+        if outcome is not None:
+            break
     if outcome is None:
         return {"settlement_status": SETTLE_PENDING,
                 "settlement_detail": "no_exact_result_match",
