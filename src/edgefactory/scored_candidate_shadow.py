@@ -59,7 +59,7 @@ import os
 import sys
 import uuid
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
@@ -306,6 +306,155 @@ def execution_safety(row: Mapping[str, Any]) -> dict[str, Any]:
     return out
 
 
+# ---------------------------------------------- captured-price shadow ROI --
+# Audit-only price classes for grading the FULL scored universe at the odds
+# the scoring layer itself saw. NONE of these labels ever makes a price
+# stakeable; execution-safe ROI remains the strict candidate-level gate
+# above and shadow prices can never enter it.
+SHADOW_PRICE_KINDS = frozenset({
+    "named_book", "cached_named_book", "stale_named_book",
+    "unregistered_source", "donor_average", "fair_model", "unknown",
+})
+_SHADOW_KIND_BY_SOURCE = {
+    # prediction-site boards: odds columns scraped alongside the probs the
+    # scorer consumed — present in pipeline state at the scoring instant,
+    # never registered/stakeable
+    "forebet": "unregistered_source",
+    "zulubet": "unregistered_source",
+    "statarea": "unregistered_source",
+    "vitibet": "unregistered_source",
+    "betclan": "unregistered_source",
+    # Boggio stays what policy says it is: an average-bookmaker donor
+    "bzzoiro": "donor_average",
+    "boggio": "donor_average",
+}
+# Freshness LABEL (audit only, not an execution gate): a captured price whose
+# own as-of stamp is more than this many seconds older than the capture
+# instant is labelled stale. Prices fetched within the scoring run itself
+# (basis "fetched_this_run") are fresh by construction.
+SHADOW_PRICE_FRESH_MAX_AGE_S = 3600
+
+
+def _date_only(value: object) -> str | None:
+    text = str(value or "").strip()
+    return text[:10] if len(text) >= 10 and text[4:5] == "-" else None
+
+
+def shadow_price_verdict(entry: Mapping[str, Any], *,
+                         trading_date: str) -> dict[str, Any]:
+    """Classify a fixture-level captured price for AUDIT-ONLY shadow grading.
+
+    Fail-closed ordering of the gradeability verdict:
+
+    1. no market/selection intent  -> ``no_selection_intent_available``
+    2. no captured price           -> ``no_captured_price``
+    3. capture instant unparseable -> ``price_timestamp_unknown``
+    4. provably post-kickoff       -> ``post_kickoff_price``
+    5. otherwise gradeable, with the pre-kickoff proof basis recorded:
+       ``instants_proven`` when aware instants prove capture < kickoff, else
+       ``scored_as_upcoming_unproven`` (the pipeline scored the fixture as
+       UPCOMING at the capture instant; source kickoff strings are naive so
+       exact proof is impossible — the basis is persisted, never hidden;
+       this mirrors the existing policy that grades candidates with
+       unprovable kickoffs informationally while keeping them out of
+       execution-safe ROI).
+
+    A shadow price is NEVER execution-safe (``shadow_price_execution_safe``
+    is always False) — these labels exist to answer the audit question only.
+    """
+    market = str(entry.get("market") or "").lower()
+    side = str(entry.get("selection") or "").lower()
+    has_intent = market == _SETTLEABLE_MARKET and side in _SETTLEABLE_SIDES
+
+    try:
+        price = float(entry.get("shadow_price"))
+    except (TypeError, ValueError):
+        price = None
+    if price is not None and price <= 1.0:
+        price = None
+
+    source = str(entry.get("shadow_price_source") or "").strip().lower()
+    kind = str(entry.get("shadow_price_kind") or "").strip().lower()
+    if kind not in SHADOW_PRICE_KINDS:
+        kind = _SHADOW_KIND_BY_SOURCE.get(source, "unknown") if price else None
+
+    captured_raw = entry.get("shadow_price_captured_at_utc")
+    captured = _parse_instant(captured_raw)
+    as_of_raw = entry.get("shadow_price_as_of_utc")
+    as_of = _parse_instant(as_of_raw)
+    basis = str(entry.get("shadow_price_as_of_basis") or "").strip()
+    if as_of is None and basis == "fetched_this_run":
+        as_of, as_of_raw = captured, captured_raw
+    age_s = None
+    if captured is not None and as_of is not None:
+        age_s = max(0, int((captured - as_of).total_seconds()))
+    stale = None if age_s is None else age_s > SHADOW_PRICE_FRESH_MAX_AGE_S
+
+    # pre/post-kickoff proof (exact instants first, conservative date check
+    # second — a capture two or more days after the kickoff date is post
+    # under any timezone reading of a naive kickoff string)
+    pre: bool | None = None
+    post: bool | None = None
+    proof = "no_capture_instant"
+    if captured is not None:
+        kickoff = _parse_instant(entry.get("kickoff"))
+        ko_date = _date_only(entry.get("kickoff")) or _date_only(trading_date)
+        if kickoff is not None:
+            pre, post = captured < kickoff, captured >= kickoff
+            proof = "instants_proven" if pre else "post_kickoff_proven"
+        elif ko_date is not None and _date_only(captured_raw) is not None \
+                and _date_only(captured_raw) > _next_day(ko_date):
+            pre, post, proof = False, True, "post_kickoff_proven_by_date"
+        else:
+            pre, post, proof = None, None, "scored_as_upcoming_unproven"
+
+    gradeable = False
+    if not has_intent:
+        reason = "no_selection_intent_available"
+    elif price is None:
+        reason = "no_captured_price"
+    elif captured is None:
+        reason = "price_timestamp_unknown"
+    elif post is True:
+        reason = "post_kickoff_price"
+    else:
+        gradeable = True
+        reason = ("captured_pre_kickoff_proven" if pre is True
+                  else "captured_while_scored_as_upcoming_kickoff_unproven")
+
+    return {
+        "market": market or None,
+        "selection": side or None,
+        "selection_side": side if has_intent else None,
+        "selection_team": entry.get("selection_team"),
+        "has_selection_intent": has_intent,
+        "shadow_price": price,
+        "shadow_price_source": source or None,
+        "shadow_price_bookmaker": entry.get("shadow_price_bookmaker"),
+        "shadow_price_kind": kind,
+        "shadow_price_captured_at_utc": captured_raw,
+        "shadow_price_as_of_utc": as_of_raw,
+        "shadow_price_as_of_basis": basis or None,
+        "shadow_price_age_seconds": age_s,
+        "shadow_price_stale": stale,
+        "shadow_price_pre_kickoff": pre,
+        "shadow_price_post_kickoff": post,
+        "shadow_price_pre_kickoff_basis": proof,
+        "shadow_price_registered_source": psrc.known(source) if source else False,
+        "shadow_price_execution_safe": False,
+        "shadow_price_gradeable": gradeable,
+        "shadow_price_gradeable_reason": reason,
+    }
+
+
+def _next_day(day10: str) -> str:
+    try:
+        d = datetime.strptime(day10, "%Y-%m-%d")
+    except ValueError:
+        return day10
+    return (d + timedelta(days=1)).strftime("%Y-%m-%d")
+
+
 # ------------------------------------------------------------------ events --
 def _country_hint(league: object) -> str | None:
     text = str(league or "")
@@ -442,13 +591,17 @@ def scored_fixture_event(entry: Mapping[str, Any], *, trading_date: str,
     increment, or the n_up key union fallback) BEFORE any candidate
     emission, bucket promotion or collapse — so a fixture the pipeline
     scored but never materialized into a candidate still gets a durable
-    record. No price was captured for such fixtures at decision time, so
-    they can never enter execution-safe ROI; the report states that count
-    instead of hiding it.
+    record. ML-scored entries also carry the scorer's own betting intent
+    (market/majority side) and the side odds visible to the scorer at the
+    inference instant (``shadow_price_*``), classified by
+    :func:`shadow_price_verdict` for AUDIT-ONLY captured-price grading.
+    Shadow prices are never execution-safe and never enter execution-safe
+    ROI; the report keeps the two classes separated.
     """
     tdate = str(trading_date)[:10]
     home_key = ledger_team_key(entry.get("home"), width=24)
     away_key = ledger_team_key(entry.get("away"), width=24)
+    verdict = shadow_price_verdict(entry, trading_date=tdate)
     return {
         "schema_version": SCHEMA_VERSION,
         "event_type": EVENT_SCORED_FIXTURE,
@@ -477,6 +630,7 @@ def scored_fixture_event(entry: Mapping[str, Any], *, trading_date: str,
         "candidate_materialized": bool(candidate_materialized),
         "not_materialized_reason": (None if candidate_materialized
                                     else "no_candidate_emitted"),
+        **verdict,
     }
 
 
@@ -1143,6 +1297,33 @@ def build_report(day: str, *, root: Path | None = None,
         f["materialized_candidates"] = len(linked)
         f["promoted"] = any(c["selected_as_pick"] for c in linked)
         f["ticketed"] = any(c["selected_on_ticket"] for c in linked)
+        # Older ledgers predate the shadow-price fields: classify them now
+        # (they come out intent-less/ungradeable — factual, not assumed).
+        if "shadow_price_gradeable" not in f:
+            f.update(shadow_price_verdict(
+                {**f, "kickoff": f.get("kickoff_raw")},
+                trading_date=str(f.get("trading_date") or day10)))
+        # Audit grouping labels: rejection reasons of the linked candidates
+        # for materialized fixtures, the factual not-materialized reason
+        # otherwise. Promoted fixtures with no rejection carry "none".
+        if linked:
+            codes = sorted({str(r.get("code") or "unknown")
+                            for c in linked
+                            for r in (c.get("rejection_reasons") or [])})
+            f["audit_reason_codes"] = codes or ["none"]
+            f["bucket"] = next((c.get("bucket") for c in linked
+                                if c.get("bucket")), None)
+        else:
+            f["audit_reason_codes"] = [str(f.get("not_materialized_reason")
+                                           or "no_candidate_emitted")]
+            f["bucket"] = None
+        # Read-only settlement of the scorer's own intent (exact matching
+        # via the same settle_candidate used for candidates; no fuzz, no
+        # tolerance change). Flat-stake grading uses the shadow price ONLY
+        # when the gradeability verdict allows it.
+        f.update(settle_candidate(f, settled))
+        f["captured_odds"] = (f.get("shadow_price")
+                              if f.get("shadow_price_gradeable") else None)
     fixtures.sort(key=lambda f: str(f.get("fixture")))
 
     # Entry-level record count (exactly one event per counter increment) is
@@ -1170,8 +1351,131 @@ def build_report(day: str, *, root: Path | None = None,
             sum(1 for f in fixtures if not f["candidate_materialized"])
             if fixtures else None),
         "note": ("fixtures scored but never materialized into a candidate "
-                 "carry NO decision-time price; they are counted here and "
-                 "are excluded from execution-safe ROI by construction"),
+                 "never acquire an execution-safe price; when the scorer "
+                 "itself saw side odds they are still graded in the "
+                 "AUDIT-ONLY captured-price shadow ROI below — the two "
+                 "classes are never mixed"),
+    }
+
+    # -------- captured-price shadow grading (AUDIT-ONLY, never stakeable) --
+    def _is_grad(f: Mapping[str, Any]) -> bool:
+        return (bool(f.get("shadow_price_gradeable"))
+                and f.get("shadow_price_kind") != "fair_model")
+
+    def _is_fair(f: Mapping[str, Any]) -> bool:
+        return (bool(f.get("shadow_price_gradeable"))
+                and f.get("shadow_price_kind") == "fair_model")
+
+    def fagg_of(filt: Callable[[Mapping[str, Any]], bool]) -> dict[str, Any]:
+        agg = _blank_agg()
+        for f in fixtures:
+            if filt(f):
+                _agg_add(agg, f)
+        return _agg_close(agg)
+
+    def fgroup_by(key_fn: Callable[[Mapping[str, Any]], object],
+                  filt: Callable[[Mapping[str, Any]], bool] = _is_grad,
+                  ) -> dict[str, dict[str, Any]]:
+        groups: dict[str, dict[str, Any]] = {}
+        for f in fixtures:
+            if not filt(f):
+                continue
+            key = str(key_fn(f) or "unknown")
+            groups.setdefault(key, _blank_agg())
+            _agg_add(groups[key], f)
+        return {k: _agg_close(v) for k, v in sorted(groups.items())}
+
+    def fgroup_by_reason(filt: Callable[[Mapping[str, Any]], bool] = _is_grad,
+                         ) -> dict[str, dict[str, Any]]:
+        groups: dict[str, dict[str, Any]] = {}
+        for f in fixtures:
+            if not filt(f):
+                continue
+            for code in (f.get("audit_reason_codes") or ["unknown"]):
+                groups.setdefault(str(code), _blank_agg())
+                _agg_add(groups[str(code)], f)
+        return {k: _agg_close(v) for k, v in sorted(groups.items())}
+
+    shadow_gradeability = {
+        "records": len(fixtures) if fixtures else None,
+        "with_selection_intent": sum(
+            1 for f in fixtures if f.get("has_selection_intent")),
+        "without_selection_intent": sum(
+            1 for f in fixtures if not f.get("has_selection_intent")),
+        "with_captured_price": sum(
+            1 for f in fixtures if f.get("shadow_price") is not None),
+        "without_captured_price": sum(
+            1 for f in fixtures if f.get("shadow_price") is None),
+        "intent_but_no_price": sum(
+            1 for f in fixtures if f.get("has_selection_intent")
+            and f.get("shadow_price") is None),
+        "fresh_price": sum(1 for f in fixtures if _is_grad(f)
+                           and f.get("shadow_price_stale") is False),
+        "stale_price": sum(1 for f in fixtures if _is_grad(f)
+                           and f.get("shadow_price_stale") is True),
+        "post_kickoff_price_excluded": sum(
+            1 for f in fixtures
+            if f.get("shadow_price_gradeable_reason") == "post_kickoff_price"),
+        "timestamp_unknown_excluded": sum(
+            1 for f in fixtures
+            if f.get("shadow_price_gradeable_reason") == "price_timestamp_unknown"),
+        "kickoff_unproven_graded": sum(
+            1 for f in fixtures if f.get("shadow_price_gradeable")
+            and f.get("shadow_price_pre_kickoff_basis")
+            == "scored_as_upcoming_unproven"),
+        "shadow_gradeable": sum(
+            1 for f in fixtures if f.get("shadow_price_gradeable")),
+        "fair_model_price_records": sum(1 for f in fixtures if _is_fair(f)),
+        "execution_safe_gradeable": sum(
+            1 for c in candidates
+            if c.get("execution_safe_named_book_eligible")),
+        "note": ("shadow prices are the odds the scoring layer itself saw "
+                 "(source boards / donor averages fetched in the scoring "
+                 "run) — AUDIT-ONLY, never stakeable, never execution-safe; "
+                 "kickoff_unproven_graded records are graded on the "
+                 "scored-as-upcoming basis with the proof basis persisted"),
+    }
+
+    captured_price_shadow_roi = {
+        "all_scored_gradeable": fagg_of(_is_grad),
+        "scored_not_promoted": fagg_of(
+            lambda f: _is_grad(f) and not f["promoted"]),
+        "promoted_not_ticketed": fagg_of(
+            lambda f: _is_grad(f) and f["promoted"] and not f["ticketed"]),
+        "ticketed": fagg_of(lambda f: _is_grad(f) and f["ticketed"]),
+        "fresh_price": fagg_of(
+            lambda f: _is_grad(f) and f.get("shadow_price_stale") is False),
+        "stale_price": fagg_of(
+            lambda f: _is_grad(f) and f.get("shadow_price_stale") is True),
+        "fair_model_only_audit": fagg_of(_is_fair),
+        "by_price_kind": fgroup_by(
+            lambda f: f.get("shadow_price_kind"),
+            lambda f: bool(f.get("shadow_price_gradeable"))),
+        "by_source": fgroup_by(lambda f: f.get("shadow_price_source")),
+        "by_bookmaker": fgroup_by(lambda f: f.get("shadow_price_bookmaker")),
+        "by_bucket": fgroup_by(lambda f: f.get("bucket")),
+        "by_rule_model": fgroup_by(lambda f: f.get("kind")),
+        "by_league": fgroup_by(lambda f: f.get("league")),
+        "by_promotion": {
+            "promoted": fagg_of(lambda f: _is_grad(f) and f["promoted"]),
+            "not_promoted": fagg_of(
+                lambda f: _is_grad(f) and not f["promoted"]),
+        },
+        "by_reason": fgroup_by_reason(),
+        "by_stale_fresh": {
+            "fresh": fagg_of(lambda f: _is_grad(f)
+                             and f.get("shadow_price_stale") is False),
+            "stale": fagg_of(lambda f: _is_grad(f)
+                             and f.get("shadow_price_stale") is True),
+        },
+        "by_kickoff_proof": fgroup_by(
+            lambda f: f.get("shadow_price_pre_kickoff_basis")),
+        "note": ("AUDIT-ONLY — NOT STAKEABLE: graded flat-stake at the odds "
+                 "visible to the scorer at capture time (stale/unregistered/"
+                 "donor prices allowed and labelled); fair/model prices live "
+                 "ONLY in the fair_model_only_audit line; execution-safe ROI "
+                 "below uses the strict candidate-level gate and is never "
+                 "fed by shadow prices"),
     }
 
     shadow_scored = len(candidates)
@@ -1282,6 +1586,8 @@ def build_report(day: str, *, root: Path | None = None,
             },
         },
         "fixture_funnel": fixture_funnel,
+        "shadow_gradeability": shadow_gradeability,
+        "captured_price_shadow_roi": captured_price_shadow_roi,
         "reconciliation": reconciliation,
         "ticket_run_summary": ticket_summary,
         "candidates": candidates,
@@ -1306,6 +1612,7 @@ def settlement_events(report: Mapping[str, Any]) -> list[dict[str, Any]]:
         out.append({
             "schema_version": SCHEMA_VERSION,
             "event_type": EVENT_SETTLEMENT,
+            "layer": "candidate",
             "candidate_id": c.get("candidate_id"),
             "trading_date": c.get("trading_date"),
             "recorded_at_utc": utc_now_iso(),
@@ -1315,6 +1622,25 @@ def settlement_events(report: Mapping[str, Any]) -> list[dict[str, Any]]:
             "match_basis": "exact_normalized_fixture",
             "flat_stake_return": flat_stake_return(
                 str(c.get("settlement_status")), c.get("captured_odds")),
+        })
+    for f in report.get("fixtures", []):
+        if not f.get("has_selection_intent"):
+            continue
+        out.append({
+            "schema_version": SCHEMA_VERSION,
+            "event_type": EVENT_SETTLEMENT,
+            "layer": "scored_fixture",
+            "fixture_id": f.get("fixture_id"),
+            "trading_date": f.get("trading_date"),
+            "recorded_at_utc": utc_now_iso(),
+            "settlement_status": f.get("settlement_status"),
+            "settlement_detail": f.get("settlement_detail"),
+            "outcome": f.get("outcome"),
+            "match_basis": "exact_normalized_fixture",
+            "shadow_price_gradeable": f.get("shadow_price_gradeable"),
+            "shadow_price_kind": f.get("shadow_price_kind"),
+            "flat_stake_return": flat_stake_return(
+                str(f.get("settlement_status")), f.get("captured_odds")),
         })
     return out
 
@@ -1360,8 +1686,59 @@ def render_report(report: Mapping[str, Any]) -> str:
         f"  promoted but not ticketed (candidates):{c['promoted_not_ticketed']}",
         f"  dropped before materialization:        "
         f"{_n(ff.get('fixtures_dropped_without_price_evidence'))}"
-        "  <- no decision-time price exists for these; never in execution-safe ROI",
+        "  <- never execution-safe; graded below at captured odds when the scorer saw a price",
         "",
+    ]
+    sg = report.get("shadow_gradeability") or {}
+    cp = report.get("captured_price_shadow_roi") or {}
+    if sg.get("records"):
+        lines += [
+            "SHADOW GRADEABILITY (fixture-level scored universe):",
+            f"  with_selection_intent:       {sg['with_selection_intent']}"
+            f"    without_selection_intent:  {sg['without_selection_intent']}",
+            f"  with_captured_price:         {sg['with_captured_price']}"
+            f"    without_captured_price:    {sg['without_captured_price']}"
+            f"    (intent but no price: {sg['intent_but_no_price']})",
+            f"  fresh_price:                 {sg['fresh_price']}"
+            f"    stale_price:               {sg['stale_price']}",
+            f"  post_kickoff_price_excluded: {sg['post_kickoff_price_excluded']}"
+            f"    timestamp_unknown_excluded:{sg['timestamp_unknown_excluded']}",
+            f"  kickoff_unproven_graded:     {sg['kickoff_unproven_graded']}"
+            "  (scored-as-upcoming basis, persisted per record)",
+            f"  shadow_gradeable:            {sg['shadow_gradeable']}"
+            f"    fair_model_price_records:  {sg['fair_model_price_records']}",
+            f"  execution_safe_gradeable:    {sg['execution_safe_gradeable']}"
+            "  (strict candidate-level gate)",
+            "",
+            "CAPTURED-PRICE SHADOW ROI — AUDIT-ONLY — NOT STAKEABLE:",
+            "  (flat stake at the odds the scorer saw; stale/unregistered/"
+            "donor prices allowed and labelled; NEVER execution-safe)",
+            _fmt_agg("all scored gradeable", cp["all_scored_gradeable"]),
+            _fmt_agg("scored but not promoted", cp["scored_not_promoted"]),
+            _fmt_agg("promoted but not ticketed", cp["promoted_not_ticketed"]),
+            _fmt_agg("ticketed", cp["ticketed"]),
+            _fmt_agg("fresh captured price", cp["fresh_price"]),
+            _fmt_agg("stale captured price", cp["stale_price"]),
+            _fmt_agg("fair/model price (separate audit)",
+                     cp["fair_model_only_audit"]),
+            "  BY PRICE KIND:",
+            *[_fmt_agg(f"  {k}", v) for k, v in cp["by_price_kind"].items()],
+            "  BY SOURCE (audit labels, unregistered allowed):",
+            *[_fmt_agg(f"  {k}", v) for k, v in cp["by_source"].items()],
+            "  BY REJECTION / NOT-MATERIALIZED REASON:",
+            *[_fmt_agg(f"  {k}", v) for k, v in cp["by_reason"].items()],
+            "  BY KICKOFF PROOF BASIS:",
+            *[_fmt_agg(f"  {k}", v) for k, v in cp["by_kickoff_proof"].items()],
+            "",
+        ]
+    else:
+        lines += [
+            "SHADOW GRADEABILITY: no fixture-level records for this date "
+            "(ledger predates fixture capture) — captured-price shadow ROI "
+            "unavailable; candidate-level sections below remain valid.",
+            "",
+        ]
+    lines += [
         "COUNTS (candidate level):",
         f"  total scored:               {c['total_scored']}",
         f"  promoted picks (slate):     {c['promoted_picks']}",
