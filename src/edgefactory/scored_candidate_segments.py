@@ -738,7 +738,7 @@ def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
     for wname, rep in window_reports.items():
         for s in rep["segments"]:
             per_key[(s["roi_type"], s["segment_key"])][wname] = s
-    survivors, non_survivors = [], []
+    survivors, exploratory, non_survivors = [], [], []
     wnames = list(window_reports)
     for (roi_type, key), by_window in sorted(per_key.items()):
         tiers = {w: (by_window.get(w) or {}).get("tier") for w in wnames}
@@ -753,14 +753,26 @@ def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
                         for w in wnames if w in by_window},
         }
         if all(tiers.get(w) == TIER_EXEC_PROMO for w in wnames):
-            entry["survival"] = "SURVIVES_ALL_WINDOWS"
-            entry["action"] = "PROMOTION_PROPOSAL_REVIEW"
-            entry["action_reason"] = (
-                "EXECUTION_SAFE_PROMOTION_CANDIDATE in every requested "
-                "window under per-window thresholds; eligible for a "
-                "SEPARATE written promotion proposal — no live behavior "
-                "changed by this report.")
-            survivors.append(entry)
+            if threshold_overrides:
+                # Operator rule: overridden thresholds can NEVER mint
+                # promotion-proposal material — exploratory label only.
+                entry["survival"] = "SURVIVES_ALL_WINDOWS_EXPLORATORY"
+                entry["action"] = "EXPLORATORY_REVIEW_ONLY"
+                entry["action_reason"] = (
+                    "survived every window but under EXPLICITLY OVERRIDDEN "
+                    "thresholds — exploratory only, NOT promotion-proposal "
+                    "material; rerun with the unrelaxed per-window profiles "
+                    "before any proposal.")
+                exploratory.append(entry)
+            else:
+                entry["survival"] = "SURVIVES_ALL_WINDOWS"
+                entry["action"] = "PROMOTION_PROPOSAL_REVIEW"
+                entry["action_reason"] = (
+                    "EXECUTION_SAFE_PROMOTION_CANDIDATE in every requested "
+                    "window under per-window thresholds; eligible for a "
+                    "SEPARATE written promotion proposal — no live behavior "
+                    "changed by this report.")
+                survivors.append(entry)
         else:
             entry["survival"] = "NOT_SURVIVED_ALL_WINDOWS"
             entry["action"] = "WATCH"
@@ -780,6 +792,7 @@ def build_rolling_report(to_day: str, *, windows: Sequence[int] = (7, 14, 30),
         "thresholds_overridden": bool(threshold_overrides),
         "window_reports": window_reports,
         "promotion_proposal_ready": survivors,
+        "exploratory_survivors": exploratory,
         "exec_promo_not_survived": non_survivors,
     }
 
@@ -801,7 +814,8 @@ def render_rolling_report(report: Mapping[str, Any]) -> str:
     ready = report.get("promotion_proposal_ready") or []
     if not ready:
         lines.append("  (none — no execution-safe segment survived every "
-                     "window; nothing to propose)")
+                     "window under unrelaxed per-window profiles; nothing "
+                     "to propose)")
     for e in ready:
         lines.append(f"  {e['segment_key']}")
         for w, stats in e["windows"].items():
@@ -812,6 +826,20 @@ def render_rolling_report(report: Mapping[str, Any]) -> str:
                          f"roi={roi_s} days={stats['distinct_days']} "
                          f"fixtures={stats['distinct_fixtures']}")
         lines.append(f"    ACTION: {e['action']} — {e['action_reason']}")
+    exploratory = report.get("exploratory_survivors") or []
+    if exploratory:
+        lines += ["", "EXPLORATORY SURVIVORS (OVERRIDDEN THRESHOLDS — "
+                  "NOT PROPOSAL MATERIAL):"]
+        for e in exploratory:
+            lines.append(f"  {e['segment_key']}")
+            for w, stats in e["windows"].items():
+                roi = stats.get("flat_roi")
+                roi_s = f"{roi * 100.0:+.1f}%" if roi is not None else "n/a"
+                lines.append(f"    {w}: settled={stats['settled_records']} "
+                             f"flat={stats['flat_profit_units']:+.2f}u "
+                             f"roi={roi_s} days={stats['distinct_days']} "
+                             f"fixtures={stats['distinct_fixtures']}")
+            lines.append(f"    ACTION: {e['action']} — {e['action_reason']}")
     lines += ["", "EXEC-PROMO IN SOME WINDOWS ONLY (NOT SURVIVED):"]
     missed = report.get("exec_promo_not_survived") or []
     if not missed:
