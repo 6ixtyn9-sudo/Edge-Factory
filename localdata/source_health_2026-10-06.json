@@ -78,14 +78,14 @@
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 1,
         "selection_unsupported": 2
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "bzzoiro": {
       "blocker": "bzz status=auth; quota_hint=auth_or_quota",
