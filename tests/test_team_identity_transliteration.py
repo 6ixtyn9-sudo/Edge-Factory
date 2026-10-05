@@ -298,3 +298,146 @@ def test_day_archive_merge_does_not_double_count_spellings():
     from scripts import audit_recent_picks as audit
     assert (pt._day_archive_row_key(existing[0], "2026-10-05")
             == audit._archive_pick_key(fresh[0], "2026-10-05"))
+
+
+# --- verdict inheritance across spellings (LIVE gating change) -------------
+
+def _purity(team_entries):
+    return {"contexts": {"league": {}, "team": team_entries, "odds_band": {},
+                         "competition_type": {}, "niche": {}}}
+
+
+def _ctx_pick(away):
+    return {"home": "Italy", "away": away, "league": "World Cup",
+            "market": "1x2", "pick": "home", "odds": 1.42,
+            "edge_rule": "2way-unanimous avg_p>=60"}
+
+
+def test_accented_spelling_inherits_canonical_team_verdict():
+    """Türkiye and Turkey must resolve to ONE verdict, fail-closed.
+
+    The live purity registry learned its keys under "turkiye" and has NO
+    "turkey" entries, so before this change the two spellings carried
+    different verdicts (VETO vs UNKNOWN). This is an intended LIVE gating
+    change: a veto learned under any spelling now vetoes both.
+    """
+    pt = _load_picks_today()
+    purity = _purity({
+        "soccer|turkiye|*|1x2|away": {"verdict": "VETO", "n": 40},
+    })
+    for away in ("Türkiye", "Turkey"):
+        ctx = pt.lookup_context(purity, _ctx_pick(away))
+        assert ctx["away_norm"] == "turkey"
+        assert ctx["team_a"] == "VETO", away
+
+
+def test_verdict_merge_is_fail_closed_not_fail_open():
+    pt = _load_picks_today()
+    purity = _purity({
+        "soccer|turkiye|*|1x2|away": {"verdict": "VETO", "n": 40},
+        "soccer|turkey|*|1x2|away": {"verdict": "ALLOW", "n": 400},
+    })
+    # the restrictive verdict wins regardless of sample size or spelling
+    for away in ("Türkiye", "Turkey"):
+        assert pt.lookup_context(purity, _ctx_pick(away))["team_a"] == "VETO"
+
+
+def test_unknown_never_displaces_an_existing_verdict():
+    pt = _load_picks_today()
+    purity = _purity({"soccer|turkiye|*|1x2|away": {"verdict": "ALLOW", "n": 40}})
+    assert pt.lookup_context(purity, _ctx_pick("Turkey"))["team_a"] == "ALLOW"
+
+
+def test_non_aliased_team_lookup_is_unchanged():
+    pt = _load_picks_today()
+    purity = _purity({"soccer|kongsvinger|*|1x2|away": {"verdict": "CAUTION", "n": 30}})
+    ctx = pt.lookup_context(purity, {"home": "Moss", "away": "Kongsvinger",
+                                     "league": "Norway 2", "market": "1x2",
+                                     "pick": "home", "odds": 1.5,
+                                     "edge_rule": "r"})
+    assert ctx["team_a"] == "CAUTION"
+    assert ctx["away_norm"] == "kongsvinger"
+
+
+# --- alias table drift ------------------------------------------------------
+
+def test_curated_alias_tables_do_not_drift():
+    """identity.TEAM_KEY_RAW_ALIASES mirrors Config/entity_overrides.json.
+
+    Every exonym pair expressed in the identity table must agree with the
+    override file's canonicalization, so the two curated sources can never
+    disagree about which spellings are the same team.
+    """
+    from edgefactory.entities import canonical_team
+    from edgefactory.identity import TEAM_KEY_RAW_ALIASES
+
+    from edgefactory.util import resolve_team_alias
+
+    for alias, canonical in TEAM_KEY_RAW_ALIASES:
+        a_override = resolve_team_alias(alias)[1]
+        c_override = resolve_team_alias(canonical)[1]
+        if a_override is None and c_override is None:
+            continue  # identity-only club pair, not an override entry
+        assert canonical_team(alias) == canonical_team(canonical), (
+            f"identity alias {alias!r}->{canonical!r} disagrees with "
+            "Config/entity_overrides.json")
+
+
+# --- collapse edges ---------------------------------------------------------
+
+def test_anchored_kickoffs_more_than_180_min_apart_never_merge():
+    pt = _load_picks_today()
+    rows = [
+        _pick("Italy", "Türkiye", 1.42, "2026-10-05T14:00:00+02:00", 0.70, "zulubet"),
+        _pick("Italy", "Turkey", 1.47, "2026-10-05T19:45:00+02:00", 0.64, "betexplorer"),
+    ]
+    out, removed = pt.collapse_final_operational_picks(rows)
+    assert removed == 0 and len(out) == 2
+
+
+def test_unanchored_merge_is_flagged_for_audit():
+    pt = _load_picks_today()
+    rows = [
+        _pick("Italy", "Türkiye", 1.42, "05-10, 19:45", 0.70, "zulubet"),
+        _pick("Italy", "Turkey", 1.47, "14:45", 0.64, "betexplorer"),
+    ]
+    out, removed = pt.collapse_final_operational_picks(rows)
+    assert removed == 1
+    assert out[0]["ctx"]["duplicate_kickoff_unanchored"] == "true"
+
+
+def test_anchored_merge_is_not_flagged_unanchored():
+    pt = _load_picks_today()
+    rows = [
+        _pick("Italy", "Türkiye", 1.42, "2026-10-05T19:45:00+02:00", 0.70, "zulubet"),
+        _pick("Italy", "Turkey", 1.47, "2026-10-05T19:45:00+02:00", 0.64, "betexplorer"),
+    ]
+    out, removed = pt.collapse_final_operational_picks(rows)
+    assert removed == 1
+    assert "duplicate_kickoff_unanchored" not in out[0]["ctx"]
+
+
+# --- frozen research-ledger identity ---------------------------------------
+
+def test_research_ledger_identity_is_frozen_pre_alias():
+    """The ml-fade research ledger persists event_key and reconciles on it.
+
+    It must keep the pre-2026-10-05 operational key (transliteration, no
+    curated alias) or historical rows would be orphaned by re-keying.
+    """
+    from edgefactory.util import fold_ascii as _fold
+    from edgefactory.util import research_ledger_team_key
+
+    for raw in ("Türkiye", "Nordsjælland", "Beşiktaş", "Turkey"):
+        # byte-identical to the pre-fix ledger_team_key definition
+        assert research_ledger_team_key(raw) == norm_team_legacy(_fold(raw))
+    # explicitly NOT canonicalized by the alias layer
+    assert research_ledger_team_key("Türkiye") == "turkiye"
+    assert research_ledger_team_key("Türkiye") != canonical_team_key("Türkiye")
+
+
+def test_ml_fade_event_key_unchanged_for_accented_names():
+    from edgefactory.ml_fade_research import event_key
+
+    assert (event_key("ml-fade", "2026-10-05", "Italy", "Türkiye")
+            == "2026-10-05|italy|turkiye|ml-fade|1x2")
