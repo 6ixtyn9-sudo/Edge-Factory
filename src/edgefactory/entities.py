@@ -17,7 +17,14 @@ from pathlib import Path
 from typing import Any
 
 from .identity import canonical_league_key, fold_league_identity, team_identity_words
-from .util import compact_key, norm_entity_team, norm_league, norm_team
+from .util import (
+    clear_team_alias_cache,
+    compact_key,
+    norm_entity_team,
+    norm_league,
+    norm_team,
+    norm_team_legacy,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 CONFIG_OVERRIDES_PATH = ROOT / "Config" / "entity_overrides.json"
@@ -49,13 +56,20 @@ def clear_entity_caches() -> None:
     """Clear cached registry/override data, useful in tests or long processes."""
     load_overrides.cache_clear()
     load_registry.cache_clear()
+    clear_team_alias_cache()
 
 
 def _override_lookup(kind: str, raw: object) -> str | None:
     overrides = load_overrides().get(kind, {})
     if not isinstance(overrides, dict):
         return None
-    candidates = [str(raw or ""), norm_league(raw), compact_key(raw), norm_team(str(raw or ""))]
+    candidates = [
+        str(raw or ""), norm_league(raw), compact_key(raw),
+        norm_team(str(raw or "")),
+        # Dual key: entries/callers created before the 2026-10-05
+        # transliteration fix still resolve through the frozen key.
+        norm_team_legacy(str(raw or "")),
+    ]
     for key in candidates:
         if key in overrides:
             return str(overrides[key])
@@ -72,7 +86,11 @@ def _registry_lookup(kind: str, raw: object) -> str | None:
     # Registry candidates use the PLAIN fold, not canonical_league_key, so
     # the curated alias table can never be applied twice through a learned
     # alias_index.
-    candidates = [str(raw or ""), norm_league(raw), compact_key(raw), norm_team(str(raw or ""))]
+    candidates = [
+        str(raw or ""), norm_league(raw), compact_key(raw),
+        norm_team(str(raw or "")),
+        norm_team_legacy(str(raw or "")),  # legacy-keyed learned aliases
+    ]
     if kind == "leagues":
         candidates.append(fold_league_identity(raw))
     else:
