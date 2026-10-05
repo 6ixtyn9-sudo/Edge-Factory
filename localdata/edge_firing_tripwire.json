@@ -4,8 +4,8 @@
   "edges": [
     {
       "decay": "WATCH",
-      "last_fired": "2026-09-21",
-      "n_last_window": 4,
+      "last_fired": "2026-10-06",
+      "n_last_window": 8,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -18,20 +18,20 @@
     },
     {
       "decay": "HEALTHY",
-      "last_fired": "2026-10-05",
-      "n_last_window": 23,
+      "last_fired": "2026-10-06",
+      "n_last_window": 30,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
     {
-      "decay": "HEALTHY",
-      "last_fired": "2026-10-04",
-      "n_last_window": 25,
-      "rule": "ml-meta avg_p>=65",
+      "decay": "WATCH",
+      "last_fired": "2026-10-03",
+      "n_last_window": 8,
+      "rule": "ml-meta avg_p>=80",
       "silent": false
     }
   ],
-  "generated_at": "2026-10-05T21:30:42",
+  "generated_at": "2026-10-06T00:42:15",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
@@ -52,28 +52,28 @@
     },
     {
       "name": "statarea",
-      "newest_date": "2026-10-05",
+      "newest_date": "2026-10-06",
       "newest_file": "statarea_2026-10.csv.gz",
       "role": "core_voter",
       "stale": false
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-10-05",
+      "newest_date": "2026-10-06",
       "newest_file": "scoutingstats_2026-10.csv.gz",
       "role": "voter_and_price",
       "stale": false
     },
     {
       "name": "vitibet",
-      "newest_date": "2026-10-06",
+      "newest_date": "2026-10-07",
       "newest_file": "vitibet_2026-10.csv.gz",
       "role": "thin_voter",
       "stale": false
     },
     {
       "name": "zulubet",
-      "newest_date": "2026-10-05",
+      "newest_date": "2026-10-06",
       "newest_file": "zulubet_2026-10.csv.gz",
       "role": "core_voter",
       "stale": false
@@ -94,14 +94,14 @@
     },
     {
       "name": "afootballreport",
-      "newest_date": "2026-10-05",
+      "newest_date": "2026-10-06",
       "newest_file": "afootballreport_2026-10.csv.gz",
       "role": "research",
       "stale": false
     },
     {
       "name": "betclan",
-      "newest_date": "2026-10-05",
+      "newest_date": "2026-10-06",
       "newest_file": "betclan_2026-10.csv.gz",
       "role": "partial_voter",
       "stale": false
@@ -115,7 +115,7 @@
     },
     {
       "name": "bettingclosed",
-      "newest_date": "2026-10-05",
+      "newest_date": "2026-10-06",
       "newest_file": "bettingclosed_2026-10.csv.gz",
       "role": "confirmation_results",
       "stale": false
