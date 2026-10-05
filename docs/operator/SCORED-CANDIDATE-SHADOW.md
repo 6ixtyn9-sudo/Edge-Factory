@@ -30,7 +30,16 @@ Three append-only capture points, all before final selection:
    `ml_scored_day or n_up` expression). A fixture the pipeline scored but
    never materialized into a candidate therefore still has a durable
    record (`candidate_materialized=false`,
-   `not_materialized_reason="no_candidate_emitted"`).
+   `not_materialized_reason="no_candidate_emitted"`). ML-scored entries
+   additionally carry the scorer's own **betting intent** (market `1x2`,
+   majority side, selection team) and the **side odds visible to the
+   scorer at the inference instant** — the same source odds columns the
+   `pick_odds` feature reads, scanned deterministically
+   (forebet→zulubet→statarea→bzzoiro→vitibet) WITHOUT the 1.50 feature
+   default (a feature fallback is not a price). Nothing is fetched for
+   this purpose; `shadow_price_captured_at_utc` is the scoring instant and
+   `shadow_price_as_of_basis="fetched_this_run"` records that the rows
+   were scraped in the same run.
 1. **Picks build** (`scripts/picks_today.py`, per-day loop, right after the
    operational collapse and before the day archive write): every emitted
    scored candidate row for the day — including rows the bucket-assignment
@@ -69,10 +78,40 @@ explicit `RECONCILIATION UNAVAILABLE` note instead. Fixtures that never
 materialized into a candidate carry **no decision-time price**: they are
 counted (`dropped before materialization`) and are excluded from
 execution-safe ROI by construction — stated, not hidden. `scored_fixture`
-events are never settled (there is no selection or price to grade).
 Fixture identity (`fixture_id`) hashes trading date + normalized team pair
 only — league is deliberately excluded because source league spellings
 differ, and candidates carry the same `fixture_id` for exact joins.
+
+### Two ROI classes — never mixed
+
+1. **`execution_safe_roi`** — unchanged, strict: named-book, registered
+   source, execution-eligible, pre-kickoff PROVEN by aware instants,
+   push-eligible, not quarantined. Candidate level only. Shadow prices can
+   never enter it (`shadow_price_execution_safe` is hard-coded False).
+2. **`captured_price_shadow_roi`** — AUDIT-ONLY — NOT STAKEABLE. Grades
+   the full fixture-level scored universe flat-stake at the odds the
+   scorer itself saw: stale, cached, unregistered-source, donor-average
+   prices are allowed **and labelled** (`shadow_price_kind` ∈ named_book /
+   cached_named_book / stale_named_book / unregistered_source /
+   donor_average / fair_model / unknown). Fair/model prices live ONLY in
+   the separately labelled `fair_model_only_audit` line — never in the
+   main captured-price lines, never execution-safe.
+
+Gradeability verdict (fail-closed order, reason persisted per record):
+`no_selection_intent_available` → `no_captured_price` →
+`price_timestamp_unknown` → `post_kickoff_price` → gradeable. Stale label:
+`shadow_price_stale=true` when the price's own as-of stamp is more than
+`SHADOW_PRICE_FRESH_MAX_AGE_S` (1h) older than the capture instant; prices
+fetched within the scoring run are fresh by construction. Pre-kickoff
+proof basis is persisted (`instants_proven` / `scored_as_upcoming_unproven`
+/ `post_kickoff_proven`): provable post-kickoff prices are excluded; naive
+source kickoff strings make exact proof impossible for same-day fixtures,
+so those are graded on the scored-as-upcoming basis with the basis both
+persisted and reported — mirroring the existing policy that grades
+candidates with unprovable kickoffs informationally while keeping them
+out of execution-safe ROI. Settlement of fixture intent reuses the exact
+`settle_candidate` matcher (no fuzz, no tolerance change); pending and
+unmatched are never losses.
 
 ## Files and schema (schema_version=1)
 
@@ -101,8 +140,14 @@ candidate's own trading date.
   `upcoming_fixture`): `fixture_id`, teams (raw + normalized), league,
   kickoff, `ml_probability`/`ml_majority_pick`/`sources_used` when
   ML-scored, `candidate_materialized` and factual
-  `not_materialized_reason="no_candidate_emitted"`. Never settled — there
-  is no selection or price to grade.
+  `not_materialized_reason="no_candidate_emitted"`. ML entries also carry
+  betting intent + the full `shadow_price_*` block (price, source,
+  bookmaker, kind, captured-at/as-of stamps, age, stale flag, pre/post
+  kickoff tri-state + proof basis, registered-source flag,
+  `shadow_price_execution_safe=false` always, gradeable verdict + reason)
+  and settle read-only via the exact candidate matcher for the
+  captured-price shadow ROI; intent-less records are counted as
+  ungradeable, never silently ignored.
 * `candidate_status` — `selected_as_pick`, `selected_on_ticket`,
   `final_ticket_status` (`draft`/`frozen`/`no_bet`/`not_selected`/
   `superseded_no_bet`/`pending_ticket_build`), `rejection_reasons`
@@ -152,7 +197,14 @@ PYTHONPATH=src python3 scripts/scored_candidate_shadow_report.py --date YYYY-MM-
 * Report sections: the SCORED-UNIVERSE FUNNEL (pipeline_scored →
   shadow_scored_fixture_records + reconciliation → materialized →
   promoted → ticketed → scored-but-not-promoted →
-  dropped-before-materialization), headline counts (total scored, promoted, ticketed,
+  dropped-before-materialization), SHADOW GRADEABILITY (intent/price/
+  fresh/stale/post-kickoff-excluded/timestamp-unknown-excluded/
+  kickoff-unproven-graded/gradeable/fair-model/execution-safe counts),
+  CAPTURED-PRICE SHADOW ROI (all gradeable, scored-not-promoted,
+  promoted-not-ticketed, ticketed, fresh/stale, fair-model-separate, by
+  price kind / source / bookmaker / bucket / rule-model / league /
+  promotion / rejection-or-not-materialized reason / kickoff proof —
+  all flagged AUDIT-ONLY — NOT STAKEABLE), headline counts (total scored, promoted, ticketed,
   promoted-not-ticketed, scored-not-promoted, execution-safe scored/rejected,
   pending, unmatched, no-execution-safe-price, unknown-reason,
   win/loss/void), ROI for ticketed legs / promoted-not-ticketed / all scored
