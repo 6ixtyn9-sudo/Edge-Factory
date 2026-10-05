@@ -263,10 +263,33 @@ relaxation is always explicit and visible. A segment is
 `PROMOTION PROPOSAL READY` ONLY when it is
 `EXECUTION_SAFE_PROMOTION_CANDIDATE` in EVERY requested window; exec-promo
 appearances that fail any window are listed under `NOT SURVIVED` instead of
-being dropped. Proposal-ready remains a label: the next step is a separate
-written promotion proposal (which rule would change, which gate caused the
-missed value, how many historical tickets would have changed, acca
-risk/exposure impact, floors/vetoes intact) — never an automatic change.
+being dropped. **Overridden thresholds can never mint proposal material**:
+an all-window survivor under explicit overrides is demoted to
+`EXPLORATORY SURVIVORS (OVERRIDDEN THRESHOLDS — NOT PROPOSAL MATERIAL)`
+with `action=EXPLORATORY_REVIEW_ONLY`, and `promotion_proposal_ready`
+stays empty — only the unrelaxed per-window profiles can produce
+`PROMOTION PROPOSAL READY`. Proposal-ready remains a label — never an
+automatic change.
+
+### Promotion proposal template (step 8 — manual, human-reviewed)
+
+When (and only when) a segment prints `PROMOTION PROPOSAL READY` under
+unrelaxed profiles, write a separate proposal document (e.g.
+`docs/operator/PROMOTION-PROPOSAL-<segment>-<date>.md`) answering ALL of:
+
+1. Which segment survived 7/14/30 (keys, per-window settled/ROI/days/fixtures)?
+2. What exact rule/gate currently rejects it (rejection reason codes, drop stage)?
+3. Is the ROI execution-safe — not just captured-price (cite the exec-safe lines)?
+4. How many historical tickets would have changed (replay count, dates)?
+5. Would acca concentration increase (legs per league/day before/after)?
+6. Would exposure/staking change (stake ladder impact, worst-case drawdown)?
+7. Which leagues/sources/bookmakers drive the edge (concentration stats from the report)?
+8. Are floors, vetoes, kickoff guards and source rules still intact under the proposal?
+9. What is the proposed MINIMAL live change (single rule, smallest diff)?
+10. What rollback/monitoring rule would disable it (metric, threshold, window)?
+
+No report output ever changes live behavior; the proposal is reviewed and
+implemented (or rejected) as its own explicit, separately-tested change.
 
 ## Known limitations
 
