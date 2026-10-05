@@ -248,6 +248,26 @@ baseline ROI + lift (vs the full pool of its ROI type), an action
 "No live betting behavior changed. Promotion requires separate explicit
 implementation and review."
 
+### Rolling windows and cross-window survival
+
+```bash
+python scripts/scored_candidate_segment_report.py --windows 7,14,30 --to 2026-10-07
+```
+
+Each window length gets its own stricter-with-length threshold profile
+(`7d: 30/3/20`, `14d: 50/5/35`, `30d: 90/8/60`; other lengths scale
+linearly from the 7-day base, never below it). Passing explicit
+`--min-settled/--min-days/--min-fixtures` with `--windows` overrides every
+window and the report prints `[THRESHOLDS EXPLICITLY OVERRIDDEN]` —
+relaxation is always explicit and visible. A segment is
+`PROMOTION PROPOSAL READY` ONLY when it is
+`EXECUTION_SAFE_PROMOTION_CANDIDATE` in EVERY requested window; exec-promo
+appearances that fail any window are listed under `NOT SURVIVED` instead of
+being dropped. Proposal-ready remains a label: the next step is a separate
+written promotion proposal (which rule would change, which gate caused the
+missed value, how many historical tickets would have changed, acca
+risk/exposure impact, floors/vetoes intact) — never an automatic change.
+
 ## Known limitations
 
 * `rejection_reason_unknown` appears when a candidate has a scored event but
