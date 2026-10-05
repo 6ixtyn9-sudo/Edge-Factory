@@ -194,10 +194,109 @@ def resolve_team_alias(name: object) -> tuple[str, str | None]:
     return raw, None
 
 
+# ---------------------------------------------------------------------------
+# Distinct-entity (squad) markers.
+#
+# "Turkey" and "Turkey U21" are DIFFERENT teams that play on the same day,
+# in the same market, often with the same selection. The legacy noise
+# regex deletes these tokens, so both sides key as "turkey" — identity
+# collapse in the dangerous direction. These tokens are therefore carried
+# into the canonical key as an explicit suffix and act as a hard veto on
+# any merge between names whose markers differ.
+# ---------------------------------------------------------------------------
+
+_SQUAD_MARKERS: dict[str, str] = {}
+for _age in range(14, 24):
+    _SQUAD_MARKERS[f"u{_age}"] = f"u{_age}"
+    _SQUAD_MARKERS[f"u{_age}s"] = f"u{_age}"
+for _tok in ("b", "ii"):
+    _SQUAD_MARKERS[_tok] = "b"
+for _tok in ("iii", "c"):
+    _SQUAD_MARKERS[_tok] = "c"
+for _tok in ("w", "women", "womens", "ladies", "feminine", "femenino", "fem"):
+    _SQUAD_MARKERS[_tok] = "w"
+for _tok in ("res", "reserve", "reserves"):
+    _SQUAD_MARKERS[_tok] = "res"
+# NB: "junior(s)" is deliberately NOT a marker — it is part of real senior
+# club names (Boca Juniors, Argentinos Juniors, Barnsley?); only
+# unambiguous squad words are listed.
+for _tok in ("youth", "academy"):
+    _SQUAD_MARKERS[_tok] = "youth"
+
+
+def squad_markers(name: object) -> frozenset[str]:
+    """Distinct-entity markers carried by a raw team name.
+
+    Word-level only: ``Wanderers`` is not ``W``, ``Boca`` is not ``B``.
+    Returns a (possibly empty) frozenset of canonical marker tokens.
+    """
+    words = re.findall(r"[a-z0-9]+", fold_ascii(name))
+    return frozenset(_SQUAD_MARKERS[w] for w in words if w in _SQUAD_MARKERS)
+
+
+def squad_marker_suffix(name: object) -> str:
+    markers = squad_markers(name)
+    return ("_" + "_".join(sorted(markers))) if markers else ""
+
+
+def markers_conflict(a: object, b: object) -> bool:
+    """True when two names denote different squads of (possibly) one club."""
+    return squad_markers(a) != squad_markers(b)
+
+
+MIN_IDENTITY_KEY_LEN = 3
+
+
+DEGENERATE_KEY_PREFIX = "deg"
+
+
+def _degenerate_key(name: object) -> str:
+    """Stable, unique, NON-EMPTY placeholder for an unusable team key.
+
+    An empty key matches every other empty key, so ``Athletic Club``,
+    ``Sporting Club`` and every Cyrillic/Greek name would share one
+    identity. Instead each raw spelling gets its own marked key: distinct
+    teams stay distinct (fail-closed), and the ``deg`` prefix tells every
+    consumer the identity is not trustworthy.
+    """
+    import hashlib
+
+    seed = re.sub(r"\s+", " ", fold_ascii(name)).strip() or str(name or "")
+    digest = hashlib.sha1(seed.encode("utf-8")).hexdigest()[:8]
+    return f"{DEGENERATE_KEY_PREFIX}{digest}"
+
+
+def is_degenerate_team_key(key: object) -> bool:
+    """True when a normalized key is too short to identify a team.
+
+    ``Athletic Club`` and ``Sporting Club`` normalize to ``""`` (every word
+    is a structure token); non-Latin scripts (Cyrillic, Greek) are deleted
+    rather than transliterated and also collapse to ``""`` or a single
+    stray character. Such keys match EVERYTHING, so callers must refuse to
+    use them for identity. Mirrors the fail-closed guard that
+    ``ml_fade_research.event_key`` already applies.
+    """
+    base = str(key or "").split("_")[0]
+    if base.startswith(DEGENERATE_KEY_PREFIX) and len(base) > len(DEGENERATE_KEY_PREFIX):
+        return True
+    return len(base) < MIN_IDENTITY_KEY_LEN
+
+
 def canonical_team_key(name: object, width: int = 9) -> str:
-    """Canonical operational team key: transliteration + curated aliases."""
+    """Canonical operational team key.
+
+    Transliteration + curated explicit aliases, with any distinct-entity
+    marker (U21/B/W/Reserves/...) preserved as a suffix so a senior side
+    and its youth/reserve/women's squad can never share an identity.
+    """
     canonical, _matched = resolve_team_alias(name)
-    return norm_team(canonical, width=width)
+    base = norm_team(canonical, width=width)
+    if len(base) < MIN_IDENTITY_KEY_LEN:
+        # never emit an empty/1-char ledger key component
+        return _degenerate_key(name) + squad_marker_suffix(name)
+    # markers come from the RAW name: the curated alias canonicalizes the
+    # club, never the squad.
+    return base + squad_marker_suffix(name)
 
 
 def explain_team_key(name: object, width: int = 9) -> dict[str, object]:
