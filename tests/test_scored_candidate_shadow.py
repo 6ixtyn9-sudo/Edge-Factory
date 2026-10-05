@@ -763,3 +763,112 @@ def test_fixture_settlement_events_are_layer_labelled(tmp_path):
     assert fixture_evts[0]["settlement_status"] == "win"
     assert fixture_evts[0]["flat_stake_return"] == 1.0
     assert fixture_evts[0]["shadow_price_kind"] == "unregistered_source"
+
+
+# ============================ red-team regressions ===========================
+# NaN compares False against every threshold gate (nan <= 1.0 is False), so
+# without explicit finite checks a NaN/inf price sails through gradeability,
+# execution-safety and flat-stake maths and poisons every ROI it touches.
+
+def test_non_finite_shadow_prices_are_never_gradeable(tmp_path):
+    for bad in (float("nan"), float("inf"), float("-inf"), 0.0, 1.0, "x"):
+        v = scs.shadow_price_verdict(
+            {"market": "1x2", "selection": "home", "shadow_price": bad,
+             "shadow_price_source": "zulubet",
+             "shadow_price_captured_at_utc": f"{DAY}T06:00:00+00:00",
+             "shadow_price_as_of_basis": "fetched_this_run",
+             "kickoff": f"{DAY}T18:30:00+00:00"}, trading_date=DAY)
+        assert v["shadow_price"] is None, bad
+        assert v["shadow_price_gradeable"] is False, bad
+        assert v["shadow_price_gradeable_reason"] == "no_captured_price", bad
+
+
+def test_flat_stake_return_never_emits_non_finite_values():
+    import math
+    for bad in (float("nan"), float("inf"), float("-inf"), None, 0.0, 1.0):
+        assert scs.flat_stake_return("win", bad) is None, bad
+    # sane values unaffected
+    assert scs.flat_stake_return("win", 2.5) == 1.5
+    assert scs.flat_stake_return("loss", float("nan")) == -1.0
+    assert scs.flat_stake_return("void", float("nan")) == 0.0
+    assert math.isfinite(scs.flat_stake_return("win", 1.01))
+
+
+def test_nan_odds_candidate_is_never_execution_safe(tmp_path):
+    nan_row = _row(odds=float("nan"))
+    safety = scs.execution_safety(nan_row)
+    assert safety["execution_safe_named_book_eligible"] is False
+    assert safety["execution_safe_reason"] == "no_captured_price"
+    # end-to-end: a would-be winner at NaN odds cannot poison any ROI line
+    scs.record_picks_build(day=DAY, scored_rows=[nan_row],
+                           slate_rows=[nan_row], pipeline_scored_log=1,
+                           price_supported_markets={"1x2"}, root=tmp_path)
+    settled = _settled((DAY, nan_row["home"], nan_row["away"], "home"))
+    report = scs.build_report(DAY, root=tmp_path, settled=settled)
+    assert report["counts"]["execution_safe_scored"] == 0
+    agg = report["roi"]["all_scored"]
+    assert agg["no_price"] == 1 and agg["settled"] == 0
+    assert agg["flat_profit"] == 0.0            # finite, not NaN
+
+
+def test_malformed_ledger_lines_are_skipped_with_loud_warning(tmp_path, capsys):
+    scs.record_picks_build(day=DAY, scored_rows=[_row()], slate_rows=[_row()],
+                           pipeline_scored_log=1, root=tmp_path)
+    path = scs.ledger_path(DAY, tmp_path)
+    with path.open("a", encoding="utf-8") as fh:
+        fh.write("{this is not json\n[1,2,3]\n")
+    capsys.readouterr()
+    events = scs.read_ledger(DAY, tmp_path)
+    err = capsys.readouterr().err
+    assert "skipped 2 malformed ledger line(s)" in err
+    assert "potentially incomplete" in err
+    assert all(isinstance(e, dict) for e in events)
+    assert any(e["event_type"] == "scored_candidate" for e in events)
+
+
+def test_fixture_id_collisions_are_counted_and_loudly_noted(tmp_path):
+    # same teams, same date, DIFFERENT league strings: fixture_id excludes
+    # league by design, so these collide — the collision must be visible
+    a = _fixture_entry(0)
+    b = dict(_fixture_entry(0), league="Portugal,Taca de Portugal")
+    scs.record_picks_build(day=DAY, scored_rows=[], slate_rows=[],
+                           pipeline_scored_log=2, scored_fixtures=[a, b],
+                           ml_scored_day=2, n_up=2, root=tmp_path)
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    ff = report["fixture_funnel"]
+    assert ff["shadow_scored_fixture_records"] == 2
+    assert ff["fixture_records_unique"] == 1
+    assert ff["fixture_id_collisions"] == 1
+    assert "WARNING" in ff["fixture_id_collision_note"]
+    assert ff["fixture_id_collision_note"] in scs.render_report(report)
+
+
+def test_pre_shadow_schema_fixture_event_fails_closed_not_crashes(tmp_path):
+    """A scored_fixture event written before the shadow-price fields
+    existed must classify factually (no intent) instead of crashing or
+    being silently dropped."""
+    rid = scs.new_run_id("picks_build")
+    old_event = {
+        "schema_version": scs.SCHEMA_VERSION,
+        "event_type": "scored_fixture",
+        "fixture_id": scs.fixture_id({"home": "aaholm", "away": "aaberg"}, DAY),
+        "run_id": rid, "stage": "picks_build", "trading_date": DAY,
+        "build_day": DAY, "kind": "ml_scored_fixture",
+        "fixture": "aaholm vs aaberg", "home_team": "aaholm",
+        "away_team": "aaberg", "league": "X,League",
+        "kickoff_raw": f"{DAY}T18:30:00+00:00",
+        "candidate_materialized": False,
+        "not_materialized_reason": "no_candidate_emitted",
+    }
+    summary = {"schema_version": scs.SCHEMA_VERSION,
+               "event_type": "run_summary", "run_id": rid,
+               "stage": "picks_build", "trading_date": DAY,
+               "build_day": DAY, "pipeline_scored_log": 1,
+               "shadow_scored_fixtures": 1, "scored_definition": "x"}
+    scs._append_events(DAY, [old_event, summary], tmp_path)
+    report = scs.build_report(DAY, root=tmp_path, settled={})
+    assert report["reconciliation"]["reconciliation_ok"] is True
+    fx = report["fixtures"][0]
+    assert fx["shadow_price_gradeable"] is False
+    assert fx["shadow_price_gradeable_reason"] == "no_selection_intent_available"
+    assert report["shadow_gradeability"]["without_selection_intent"] == 1

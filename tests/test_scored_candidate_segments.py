@@ -497,3 +497,78 @@ def test_rolling_default_profiles_make_tiny_samples_unpromotable(tmp_path):
     assert rep["promotion_proposal_ready"] == []
     assert rep["thresholds_overridden"] is False
     assert rep["window_profiles"]["7d"]["min_settled"] == 30
+
+
+# ============================ red-team regressions ===========================
+def test_guard_knob_override_also_demotes_survivors_to_exploratory(tmp_path):
+    """Red-team gap: relaxing an anti-overfit GUARD (not just the sample
+    thresholds) is still an explicit override and can never mint
+    proposal-ready output."""
+    settled = _exec_ledger(tmp_path)
+    overrides = dict(min_settled=4, min_days=3, min_fixtures=3)
+    rep = seg.build_rolling_report(D3, windows=(3, 4), root=tmp_path,
+                                   settled=settled,
+                                   threshold_overrides=overrides,
+                                   guards_overridden=True,
+                                   watch_min_settled=2,
+                                   max_day_concentration=1.0)
+    assert rep["promotion_proposal_ready"] == []
+    assert rep["thresholds_overridden"] is True
+    assert any(e["action"] == "EXPLORATORY_REVIEW_ONLY"
+               for e in rep["exploratory_survivors"])
+
+
+def test_guards_overridden_alone_demotes_even_without_threshold_overrides(tmp_path):
+    days = [f"2026-09-0{d}" for d in range(1, 8)]
+    settled = _exec_ledger(tmp_path, days=days, per_day=6)
+    # same data that IS proposal-ready under pure defaults...
+    clean = seg.build_rolling_report(days[-1], windows=(7,), root=tmp_path,
+                                     settled=settled)
+    assert clean["promotion_proposal_ready"]
+    # ...becomes exploratory-only the moment any guard is explicitly set
+    relaxed = seg.build_rolling_report(days[-1], windows=(7,), root=tmp_path,
+                                       settled=settled,
+                                       guards_overridden=True,
+                                       max_day_concentration=1.0)
+    assert relaxed["promotion_proposal_ready"] == []
+    assert relaxed["thresholds_overridden"] is True
+    assert relaxed["exploratory_survivors"]
+
+
+def test_cli_guard_flag_in_windows_mode_is_exploratory_only(tmp_path, capsys):
+    import importlib
+    sys.path.insert(0, str(ROOT / "scripts"))
+    cli = importlib.import_module("scored_candidate_segment_report")
+    days = [f"2026-09-0{d}" for d in range(1, 8)]
+    settled_rows = []
+    for day in days:
+        cands = [_exec_cand(day, i) for i in range(6)]
+        scs.record_picks_build(day=day, scored_rows=cands, slate_rows=cands,
+                               pipeline_scored_log=6,
+                               price_supported_markets={"1x2"},
+                               root=tmp_path)
+        settled_rows += [{"date": day, "home": c["home"], "away": c["away"],
+                          "outcome": "home"} for c in cands]
+    (tmp_path / "settled_results.json").write_text(
+        json.dumps({"rows": settled_rows}))
+    # clean run: proposal-ready present
+    cli.main(["--windows", "7", "--to", days[-1], "--root", str(tmp_path)])
+    clean_out = capsys.readouterr().out
+    assert "PROMOTION_PROPOSAL_REVIEW" in clean_out
+    # explicit guard relaxation: NO proposal-ready, exploratory only
+    cli.main(["--windows", "7", "--to", days[-1], "--root", str(tmp_path),
+              "--max-day-concentration", "1.0"])
+    out = capsys.readouterr().out
+    assert "PROMOTION_PROPOSAL_REVIEW" not in out
+    assert "EXPLORATORY SURVIVORS (OVERRIDDEN THRESHOLDS" in out
+    assert "EXPLORATORY_REVIEW_ONLY" in out
+
+
+def test_non_finite_odds_record_excluded_from_segment_roi():
+    nan_rec = _rec(status="win", odds=float("nan"))
+    nan_rec["ret"] = scs.flat_stake_return("win", float("nan"))  # None now
+    recs = _spread(4) + [nan_rec]
+    s, _ = _classify(recs)
+    assert s["settled_records"] == 4
+    assert s["flat_profit_units"] == 4.0        # finite, NaN excluded
+    assert s["excluded_no_price"] == 1
