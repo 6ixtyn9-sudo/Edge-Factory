@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import re
 import unicodedata
+from functools import lru_cache
 from datetime import date, datetime
 
 # Historical miner/source join noise tokens. Keep byte-compatible in spirit with
@@ -202,6 +203,7 @@ def clear_team_alias_cache() -> None:
     global _TEAM_ALIAS_CACHE
     _TEAM_ALIAS_CACHE = None
     ALIAS_CONFIG_WARNINGS.clear()
+    _canonical_team_key_cached.cache_clear()
 
 
 def resolve_team_alias(name: object) -> tuple[str, str | None]:
@@ -300,6 +302,7 @@ TEAM_TOKEN_EXPANSIONS: dict[str, str] = {
     "cf": "", "fc": "",
     "mgladbach": "monchengladbach", "gladbach": "monchengladbach",
     "utdd": "united",
+    "wed": "wednesday",   # Sheffield Wed / Sheffield Wednesday
 }
 
 
@@ -382,7 +385,17 @@ def is_degenerate_team_key(key: object) -> bool:
     return len(base) < MIN_IDENTITY_KEY_LEN
 
 
+@lru_cache(maxsize=100_000)
+def _canonical_team_key_cached(name: str, width: int) -> str:
+    return _canonical_team_key_uncached(name, width)
+
+
 def canonical_team_key(name: object, width: int = 9) -> str:
+    """Cached front door (invalidated by clear_team_alias_cache)."""
+    return _canonical_team_key_cached(str(name or ""), width)
+
+
+def _canonical_team_key_uncached(name: object, width: int = 9) -> str:
     """Canonical operational team key.
 
     Transliteration + curated explicit aliases, with any distinct-entity
