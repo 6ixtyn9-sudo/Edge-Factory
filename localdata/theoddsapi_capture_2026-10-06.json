@@ -1,0 +1,46 @@
+{
+  "added": 0,
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Bonaire",
+      "date": "2026-10-06",
+      "home": "Grenada",
+      "kickoff": "06-10, 01:00",
+      "league": "World CONCACAF Nations League"
+    }
+  ],
+  "candidate_fixtures": 6,
+  "captured_at": "2026-10-05T22:27:17+00:00",
+  "date": "2026-10-06",
+  "due_reasons": {
+    "close_at": 1
+  },
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "quoted_fixtures": [],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "kickoff_mismatch": 1,
+    "priced": 2,
+    "priced_close_window_not_open": 1,
+    "retry_cooldown": 2
+  },
+  "skipped": [
+    "India|Uruguay (retry cooldown (6h after failed attempt))",
+    "England|Czech Republic (priced)",
+    "WARN kickoff-mismatch Albania|San Marino: pick lists 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from the earlier)",
+    "Albania|San Marino (priced, close window not open)",
+    "Croatia|Spain (priced)",
+    "Angola|Malawi (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "empty",
+  "unmatched": [
+    "Grenada vs Bonaire (league not covered: World CONCACAF Nations League)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: World CONCACAF Nations League": 1
+  }
+}
