@@ -244,6 +244,28 @@ def markers_conflict(a: object, b: object) -> bool:
     return squad_markers(a) != squad_markers(b)
 
 
+# Curated, explicit abbreviation expansions used ONLY when comparing two
+# names for same-club linkage (never when building a key). Deterministic
+# dictionary, no similarity: "Drogheda Utd" and "Drogheda United" are one
+# club; "Launceston City" and "Launceston United" still are not.
+TEAM_TOKEN_EXPANSIONS: dict[str, str] = {
+    "utd": "united", "unt": "united",
+    "cty": "city",
+    "ath": "athletic", "athl": "athletic",
+    "dep": "deportivo", "depor": "deportivo",
+    "spt": "sporting", "sptg": "sporting",
+    "rov": "rovers", "rovs": "rovers",
+    "wdrs": "wanderers", "wand": "wanderers",
+    "cf": "", "fc": "",
+    "mgladbach": "monchengladbach", "gladbach": "monchengladbach",
+    "utdd": "united",
+}
+
+
+def expand_team_token(token: str) -> str:
+    return TEAM_TOKEN_EXPANSIONS.get(token, token)
+
+
 MIN_IDENTITY_KEY_LEN = 3
 
 
