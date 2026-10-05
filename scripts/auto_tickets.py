@@ -1861,7 +1861,7 @@ def _collect_settled_facts() -> tuple[dict, dict]:
                         continue
                     for day, home, away, outcome in rows:
                         d = str(day)[:10]
-                        for hk, ak in _exact_result_keys(home, away):
+                        for hk, ak in _result_write_keys(home, away):
                             key_to.setdefault((d, hk, ak), str(outcome))
                         entries.setdefault(d, []).append(
                             {"home": str(home), "away": str(away), "outcome": str(outcome)}
@@ -1880,7 +1880,7 @@ def _collect_settled_facts() -> tuple[dict, dict]:
         for r in data.get("rows", []):
             d = str(r.get("date") or "")[:10]
             home, away = r.get("home"), r.get("away")
-            for hk, ak in _exact_result_keys(home, away):
+            for hk, ak in _result_write_keys(home, away):
                 key_to.setdefault((d, hk, ak), r.get("outcome"))
             sig = (d, str(home or "").lower(), str(away or "").lower())
             if sig not in seen_sigs:
@@ -1895,8 +1895,8 @@ def _collect_settled_facts() -> tuple[dict, dict]:
     from edgefactory.settlement import load_verified_results
     for v in load_verified_results():
         d = v["date"]
-        h9, a9 = norm_team(v["home"]), norm_team(v["away"])
-        key_to[(d, h9, a9)] = v["outcome"]
+        for h9, a9 in _result_write_keys(v["home"], v["away"]):
+            key_to[(d, h9, a9)] = v["outcome"]
         alias_ids = {
             id(e)
             for e in _alias_candidate_entries(
@@ -1912,7 +1912,7 @@ def _collect_settled_facts() -> tuple[dict, dict]:
     for day, rows in entries.items():
         for e in rows:
             hn, an = str(e.get("home") or ""), str(e.get("away") or "")
-            for hk, ak in _exact_result_keys(hn, an):
+            for hk, ak in _result_write_keys(hn, an):
                 SETTLED_KEY_NAMES.setdefault((day, hk, ak), set()).add((hn, an))
     AMBIGUOUS_SETTLEMENT_KEYS.clear()
     AMBIGUOUS_SETTLEMENT_KEYS.extend(detail)
@@ -1939,7 +1939,8 @@ def _same_club_names(a: str, b: str) -> bool:
     from edgefactory.entities import canonical_team
     from edgefactory.identity import source_team_key
     from edgefactory.util import (MIN_IDENTITY_KEY_LEN, expand_team_token,
-                                  fold_ascii, markers_conflict)
+                                  fold_ascii, markers_conflict,
+                                  strip_squad_markers)
 
     if fold_ascii(a) == fold_ascii(b):
         return True
@@ -1952,8 +1953,14 @@ def _same_club_names(a: str, b: str) -> bool:
     sa, sb = source_team_key(a), source_team_key(b)
     if sa and sa == sb and len(sa) >= MIN_IDENTITY_KEY_LEN:
         return True
-    ta = {expand_team_token(t) for t in re.findall(r"[a-z0-9]+", fold_ascii(a))}
-    tb = {expand_team_token(t) for t in re.findall(r"[a-z0-9]+", fold_ascii(b))}
+    ta = {
+        expand_team_token(t)
+        for t in re.findall(r"[a-z0-9]+", fold_ascii(strip_squad_markers(a)))
+    }
+    tb = {
+        expand_team_token(t)
+        for t in re.findall(r"[a-z0-9]+", fold_ascii(strip_squad_markers(b)))
+    }
     ta.discard("")
     tb.discard("")
     if not ta or not tb:
@@ -2019,7 +2026,7 @@ def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> tuple[int, list]
         for e in rows:
             home, away = str(e.get("home") or ""), str(e.get("away") or "")
             outcome = e.get("result", e.get("outcome"))
-            for hk, ak in _exact_result_keys(home, away):
+            for hk, ak in _result_write_keys(home, away):
                 slot = by_key.setdefault((day, hk, ak),
                                          {"names": [], "outcomes": set()})
                 if (home, away) not in slot["names"]:
@@ -2160,6 +2167,11 @@ def _marker_boundary_blocks(mh, ma, d, h, a) -> bool:
     cand_h, cand_a = _key_markers(h), _key_markers(a)
     if cand_h or cand_a:
         return cand_h != mh or cand_a != ma
+    # Unknown-name, markerless candidate keys are the old collision surface
+    # (Turkey U21 -> turkey). A marked leg may not fall back across that
+    # boundary; it needs a marker-aware exact or level-tolerant key.
+    if mh or ma:
+        return True
     return False
 
 
@@ -2207,44 +2219,156 @@ def _lookup_fallback(settled, day, home, away, markers=None, pick=None):
     return best_oc
 
 
+SECOND_TEAM_MARKERS = frozenset({
+    "b", "res", "youth", "u20", "u21", "u22", "u23", "u2x",
+})
+
+
+def _squad_aware_norm_key(name: object, *, legacy: bool = False) -> str:
+    """``norm_team`` key built from club stem plus explicit squad suffix.
+
+    The legacy miner key strips markers such as U21/B/W.  For settlement we
+    keep the historical stem function but append the marker suffix so a
+    senior row and a squad row no longer share one result key.
+    """
+    from edgefactory.util import (norm_team, norm_team_legacy,
+                                  squad_marker_suffix, strip_squad_markers)
+
+    suffix = squad_marker_suffix(name)
+    if legacy and not suffix:
+        # Frozen pre-2026-10-05 behaviour for unmarked names: diacritics were
+        # deleted, not transliterated (Beşiktaş -> beikta).
+        return norm_team_legacy(str(name or ""))
+    stem = strip_squad_markers(name)
+    base = (norm_team_legacy if legacy else norm_team)(stem)
+    return base + suffix
+
+
 @lru_cache(maxsize=200_000)
-def _exact_result_keys_cached(home: str, away: str) -> tuple:
-    return tuple(_exact_result_keys_uncached(home, away))
+def _exact_result_key_specs_cached(home: str, away: str, include_legacy_blind: bool) -> tuple:
+    return tuple(_exact_result_key_specs_uncached(home, away, include_legacy_blind))
 
 
-def _exact_result_keys(home: object, away: object) -> list[tuple[str, str]]:
-    """Cached wrapper: settlement rebuilds these keys for ~75k rows several
-    times per run, and every miss costs an alias-table lookup."""
-    return list(_exact_result_keys_cached(str(home or ""), str(away or "")))
+def _exact_result_key_specs(home: object, away: object, *,
+                            include_legacy_blind: bool = False) -> list[tuple[str, str, bool]]:
+    """Deterministic exact key spaces plus a read-only legacy-blind flag.
+
+    ``legacy_blind=True`` keys reproduce the pre-squad-suffix norm_team
+    spaces. They are lookup-only compatibility keys and are never written
+    into the freshly built settled-result map.
+    """
+    return list(_exact_result_key_specs_cached(
+        str(home or ""), str(away or ""), bool(include_legacy_blind)))
 
 
-def _exact_result_keys_uncached(home: object, away: object) -> list[tuple[str, str]]:
+def _exact_result_key_specs_uncached(home: object, away: object,
+                                     include_legacy_blind: bool = False
+                                     ) -> list[tuple[str, str, bool]]:
     """Deterministic EXACT key spaces for a result/pick fixture.
 
     1. canonical: transliteration + curated explicit aliases (so a result
        recorded as "Turkey" grades a pick captured as "Türkiye");
-    2. plain transliterated norm_team;
-    3. frozen pre-2026-10-05 norm_team_legacy, for rows persisted under the
-       old diacritic-deleting key.
+    2. plain transliterated norm_team built from club stem + squad suffix;
+    3. frozen pre-2026-10-05 norm_team_legacy built the same way.
 
-    Exact dictionary keys only — no fuzzy matching is introduced here.
+    Optional legacy-blind keys are tagged and kept out of write paths so
+    they cannot recreate the senior/youth identity collision. Exact
+    dictionary keys only — no fuzzy matching is introduced here.
     """
-    from edgefactory.util import (canonical_team_key, norm_team,
-                                  norm_team_legacy)
+    from edgefactory.util import canonical_team_key, norm_team, norm_team_legacy
 
-    # NB: key spaces 2 and 3 are MARKER-BLIND ("Turkey U21" -> "turkey"),
-    # so every consumer must run them past _marker_boundary_blocks()
-    # before grading on them. pick_result does.
-    keys = [
-        (canonical_team_key(home), canonical_team_key(away)),
-        (norm_team(home), norm_team(away)),
-        (norm_team_legacy(str(home or "")), norm_team_legacy(str(away or ""))),
+    specs = [
+        (canonical_team_key(home), canonical_team_key(away), False),
+        (_squad_aware_norm_key(home), _squad_aware_norm_key(away), False),
+        (_squad_aware_norm_key(home, legacy=True),
+         _squad_aware_norm_key(away, legacy=True), False),
     ]
-    out: list[tuple[str, str]] = []
-    for k in keys:
-        if k not in out:
-            out.append(k)
+    if include_legacy_blind:
+        specs.extend([
+            (norm_team(home), norm_team(away), True),
+            (norm_team_legacy(str(home or "")),
+             norm_team_legacy(str(away or "")), True),
+        ])
+    out: list[tuple[str, str, bool]] = []
+    seen: set[tuple[str, str]] = set()
+    for hk, ak, legacy_blind in specs:
+        key = (hk, ak)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append((hk, ak, legacy_blind))
     return out
+
+
+def _exact_result_keys(home: object, away: object) -> list[tuple[str, str]]:
+    """Write-safe exact result keys: no legacy-blind squad-colliding keys."""
+    return [(hk, ak) for hk, ak, legacy_blind in _exact_result_key_specs(home, away)
+            if not legacy_blind]
+
+
+def _exact_result_lookup_specs(home: object, away: object) -> list[tuple[str, str, bool]]:
+    """Read specs including tagged legacy-blind compatibility keys."""
+    return _exact_result_key_specs(home, away, include_legacy_blind=True)
+
+
+def _result_write_keys(home: object, away: object) -> list[tuple[str, str]]:
+    """Keys that may be written into the current settled-result map."""
+    return _exact_result_keys(home, away)
+
+
+def _replace_key_markers(key: str, markers: frozenset[str]) -> str:
+    base = str(key or "").split("_")[0]
+    return base + (("_" + "_".join(sorted(markers))) if markers else "")
+
+
+def _level_marker_variants(markers: frozenset[str]) -> set[frozenset[str]]:
+    """Second-team marker family variants, preserving other boundaries.
+
+    A U20/U21/U23/U2x/youth/reserve/B row may look like a sibling level in
+    another feed.  We try that family only when a second-team marker is
+    already present; the empty senior marker set is never introduced.
+    """
+    second = set(markers) & set(SECOND_TEAM_MARKERS)
+    if not second:
+        return {markers}
+    fixed = set(markers) - set(SECOND_TEAM_MARKERS)
+    return {frozenset(fixed | {m}) for m in SECOND_TEAM_MARKERS}
+
+
+def _level_tolerant_lookup(settled, day: str, home: object, away: object,
+                           markers: tuple[frozenset[str], frozenset[str]]):
+    """Lookup across the second-team marker family with a uniqueness guard.
+
+    This never crosses the senior boundary: markerless sides stay markerless.
+    If several sibling-level results disagree on the same day, the function
+    returns ``None`` (fail closed) rather than choosing one.
+    """
+    mh, ma = markers
+    if not ((set(mh) & set(SECOND_TEAM_MARKERS))
+            or (set(ma) & set(SECOND_TEAM_MARKERS))):
+        return None
+
+    candidates: dict[tuple[str, str], object] = {}
+    for hk, ak in _result_write_keys(home, away):
+        base_h, base_a = str(hk).split("_")[0], str(ak).split("_")[0]
+        for hv in _level_marker_variants(mh):
+            for av in _level_marker_variants(ma):
+                # keep at least one second-team marker on every side that
+                # originally had one; senior keys are never synthesized.
+                if (set(mh) & set(SECOND_TEAM_MARKERS)
+                        and not (set(hv) & set(SECOND_TEAM_MARKERS))):
+                    continue
+                if (set(ma) & set(SECOND_TEAM_MARKERS)
+                        and not (set(av) & set(SECOND_TEAM_MARKERS))):
+                    continue
+                key = (day, _replace_key_markers(base_h, hv),
+                       _replace_key_markers(base_a, av))
+                if key in settled:
+                    candidates[(key[1], key[2])] = settled[key]
+    outcomes = {v for v in candidates.values() if v is not None}
+    if len(outcomes) == 1:
+        return next(iter(outcomes))
+    return None
 
 
 def pick_result(pick, settled):
@@ -2257,12 +2381,20 @@ def pick_result(pick, settled):
     outcome = None
     mh = squad_markers(pick.get("home") or "")
     ma = squad_markers(pick.get("away") or "")
-    for hk, ak in _exact_result_keys(pick.get("home") or "", pick.get("away") or ""):
+    raw_home, raw_away = pick.get("home") or "", pick.get("away") or ""
+    for hk, ak, legacy_blind in _exact_result_lookup_specs(raw_home, raw_away):
+        # The pre-squad-suffix key spaces are compatibility-only.  A marked
+        # leg may not read them because that is exactly the senior/youth
+        # collision this guard is here to prevent.
+        if legacy_blind and (mh or ma):
+            continue
         if _marker_boundary_blocks(mh, ma, day, hk, ak):
             continue
         outcome = settled.get((day, hk, ak))
         if outcome is not None:
             break
+    if outcome is None:
+        outcome = _level_tolerant_lookup(settled, day, raw_home, raw_away, (mh, ma))
     if outcome is not None and outcome not in ("home", "away", "draw"):
         return "void"
     if outcome is None:

@@ -71,6 +71,8 @@ from edgefactory.util import (
     norm_league,
     norm_team,
     norm_team_legacy,
+    squad_marker_suffix,
+    strip_squad_markers,
 )
 
 SCHEMA_VERSION = 1
@@ -1178,6 +1180,31 @@ def read_ledger(day: str, root: Path | None = None) -> list[dict[str, Any]]:
     return events
 
 
+
+def _squad_aware_result_key(name: object, *, legacy: bool = False) -> str:
+    """Settlement key from club stem plus squad suffix, no fuzzy matching."""
+    suffix = squad_marker_suffix(name)
+    if legacy and not suffix:
+        return norm_team_legacy(str(name or ""))
+    stem = strip_squad_markers(name)
+    base = (norm_team_legacy if legacy else norm_team)(stem)
+    return base + suffix
+
+
+def _settlement_key_specs(home: object, away: object) -> list[tuple[str, str]]:
+    """Write/read exact keys that cannot cross a squad marker boundary."""
+    keys = [
+        (canonical_team_key(home), canonical_team_key(away)),
+        (_squad_aware_result_key(home), _squad_aware_result_key(away)),
+        (_squad_aware_result_key(home, legacy=True),
+         _squad_aware_result_key(away, legacy=True)),
+    ]
+    out: list[tuple[str, str]] = []
+    for key in keys:
+        if key not in out:
+            out.append(key)
+    return out
+
 def load_settled_overlay(root: Path | None = None) -> dict[tuple, str]:
     """Exact settled-fact map from the shared overlay file ONLY (fallback
     when the full warehouse loader is unavailable). Exact keys, no fuzz."""
@@ -1192,16 +1219,11 @@ def load_settled_overlay(root: Path | None = None) -> dict[tuple, str]:
         outcome = str(r.get("outcome"))
         home = r.get("home")
         away = r.get("away")
-        # Index each result under every deterministic key space so a pick
-        # and a result spelled differently ("Türkiye" vs "Turkey") still
-        # join EXACTLY: canonical (transliteration + curated alias), plain
-        # transliterated norm_team, and the frozen pre-fix legacy key for
-        # rows written before 2026-10-05. No fuzzy matching is added.
-        for hk, ak in (
-            (canonical_team_key(home), canonical_team_key(away)),
-            (norm_team(home), norm_team(away)),
-            (norm_team_legacy(str(home or "")), norm_team_legacy(str(away or ""))),
-        ):
+        # Index each result under deterministic marker-aware key spaces so a
+        # result spelled differently ("Türkiye" vs "Turkey") still joins
+        # EXACTLY, while a senior row and a youth/reserve row never share the
+        # old marker-blind norm_team key. No fuzzy matching is added.
+        for hk, ak in _settlement_key_specs(home, away):
             out.setdefault((day, hk, ak), outcome)
     return out
 
@@ -1235,11 +1257,7 @@ def settle_candidate(cand: Mapping[str, Any],
                 "settlement_detail": "missing_fixture_identity",
                 "outcome": None}
     outcome = None
-    for hk, ak in (
-        (canonical_team_key(home), canonical_team_key(away)),
-        (norm_team(home), norm_team(away)),
-        (norm_team_legacy(str(home or "")), norm_team_legacy(str(away or ""))),
-    ):
+    for hk, ak in _settlement_key_specs(home, away):
         outcome = settled.get((day, hk, ak))
         if outcome is not None:
             break
