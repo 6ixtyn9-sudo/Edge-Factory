@@ -753,11 +753,20 @@ docs, commit messages, or logs in this bundle. Adapters read keys only from
 ### SHADOW-02 first-contact diagnoses (2026-10-02)
 
 - **pinnapi:** the operator panel confirmed the authenticated calls and the
-  playground receipt `GET /kit/v1/markets?sport_id=2&event_type=prematch`.
+  playground receipt `GET /kit/v1/markets?sport_id=…&event_type=…`.
   The merged adapter's `sport=soccer&mode=prematch` contract was wrong;
-  SHADOW-02 changes it to `sport_id=2&event_type=prematch` while retaining
-  `key=` auth. Soccer `sport_id=2` is a panel receipt; the adapter remains
-  fail-closed and keeps a sanitized sample for any future schema adjustment.
+  SHADOW-02 changed it to `sport_id=…&event_type=prematch` while retaining
+  `key=` auth.
+  **CORRECTED 2026-10-06 (WO-8):** the sport id recorded here as a panel
+  receipt (`sport_id=2`) was never captured — it was an inference written
+  down as a receipt, and it cost four days. Soccer is **`sport_id=1`**, and
+  REST authenticates with an **`x-portal-apikey` request header**, not the
+  SSE docs' `key=` query parameter; the query form is now only a fallback
+  retried on HTTP 401. Both come from the vendor's panel playground as
+  relayed by the operator; neither has been exercised against the live API
+  from a sandbox (no network). The adapter remains fail-closed, records
+  which auth mechanism answered, and keeps a sanitized sample plus the
+  observed payload shape for any future schema adjustment.
 - **betminer:** `betminer.p.rapidapi.com` is host-verified. An unauthenticated
   request reaches the RapidAPI gateway; the remaining variable is the
   operator account's BASIC subscription (403 class), not a host-slug change.

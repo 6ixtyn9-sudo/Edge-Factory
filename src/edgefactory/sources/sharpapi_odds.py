@@ -1,12 +1,19 @@
 """SharpAPI named-book price source.
 
-Endpoint contract (repaired 2026-10-03)
----------------------------------------
-The adapter used to call ``/odds``. The published RapidAPI contract is::
+Endpoint contract (repaired 2026-10-06 against the vendor playground)
+---------------------------------------------------------------------
+This adapter used to go through the RapidAPI marketplace relay at
+``sharpapi1.p.rapidapi.com``, which returned HTTP 401 with SharpAPI's own
+``disabled_api_key`` envelope. The operator's account is a DIRECT one, and
+the vendor playground shows the real contract::
 
-    GET https://sharpapi1.p.rapidapi.com/api/v1/odds?sport=basketball_nba&limit=5
+    GET https://api.sharpapi.io/api/v1/odds?sport=soccer
+    X-API-Key: <SHARPAPI_KEY>
 
-so ``/api/v1/odds`` is now the default endpoint. The query is built from
+One host, one credential, no gateway. A captured soccer response confirms
+the board carries UEFA Nations League with a three-way ``moneyline`` (the
+draw included) and ``total_goals`` lines - the two markets this system
+bets. The query is built from
 explicit configuration rather than assumption - in particular ``date`` is NOT
 sent unless ``SHARPAPI_DATE_PARAM`` names a parameter the provider actually
 documents. Sending an unsupported filter is how a healthy source starts
@@ -23,8 +30,9 @@ Configuration (all explicit; ``SHARPAPI_SPORT`` is required for capture)::
 
 Failure classification is deliberately granular: 401 is auth, 403 is
 auth/plan, 429 is quota, and a VALID EMPTY result is never confused with an
-unrecognized schema. The host stays pinned to the operator hunt receipt
-(``sharpapi1.p.rapidapi.com``) and no credential is ever logged.
+unrecognized schema. Prices are PREMATCH only: the captured sample was entirely ``is_live``
+in-play pricing, which must never reach a prematch card or a closing-line
+measurement. No credential is ever logged.
 """
 from __future__ import annotations
 import json, os, re, threading, time, urllib.error, urllib.parse, urllib.request
@@ -36,8 +44,8 @@ from edgefactory import rapidapi_diagnostics as _rapidapi
 from edgefactory.odds_normalization import canonical_market_selection
 
 SOURCE = "sharpapi_odds"
-BASE = "https://sharpapi1.p.rapidapi.com"
-API_HOST = "sharpapi1.p.rapidapi.com"
+BASE = "https://api.sharpapi.io"
+API_HOST = "api.sharpapi.io"
 DEFAULT_ENDPOINT = "/api/v1/odds"
 
 
@@ -60,6 +68,10 @@ def query_params(day: str | None = None) -> dict[str, str]:
         ("SHARPAPI_LIMIT", "limit"),
         ("SHARPAPI_BOOK", "book"),
         ("SHARPAPI_MARKET", "market"),
+        # Constrains the board at the server. The soccer feed pages at 50 rows
+        # behind a cursor and the per-run call budget is small, so filtering
+        # here is the only way to see a specific competition without paging.
+        ("SHARPAPI_LEAGUE", "league"),
     ):
         value = (os.environ.get(env_name) or "").strip()
         if value:
@@ -68,19 +80,19 @@ def query_params(day: str | None = None) -> dict[str, str]:
     if date_param and day:
         params[date_param] = str(day)
     return params
-KEY_ENV = "RAPIDAPI_KEY"
-# SharpAPI authenticates TWICE. RAPIDAPI_KEY gets the request through the
-# RapidAPI gateway; SharpAPI's OWN origin then checks a separate X-API-Key.
-# Sending only the gateway key is why 2026-10-06 (Actions run 37427532347)
-# returned 401 with SharpAPI's own envelope {"error":{"code":"disabled_api_key"}}
-# rather than the gateway's {"message":"Endpoint ... does not exist"}. Two
-# services, two error shapes: receiving the ORIGIN's proves the path routes
-# and the only remaining fault was the missing origin credential.
+KEY_ENV = "SHARPAPI_KEY"
+# One credential, one host. The earlier two-key theory was wrong in an
+# instructive way: the 401 carried SharpAPI's OWN envelope
+# {"error":{"code":"disabled_api_key"}} rather than the gateway's
+# {"message":"Endpoint ... does not exist"}, which was read as "the gateway
+# passed us through and the origin rejected the key". The likelier reading,
+# confirmed by the vendor playground, is that the marketplace listing is not
+# the operator's account at all. The direct host accepts SHARPAPI_KEY alone.
 #
-# Unset, the header is OMITTED ENTIRELY rather than sent blank -- a blank
-# credential is indistinguishable from a revoked one in the provider's logs
-# and turns a configuration gap into a false "bad key" diagnosis.
-ORIGIN_KEY_ENV = "SHARPAPI_KEY"
+# Unset, the header is sent blank rather than omitted so the provider's own
+# 401 wording is what gets recorded; a silently dropped header produces a
+# different error and teaches us nothing about the credential.
+ORIGIN_KEY_ENV = KEY_ENV   # retained: one credential now serves both roles
 LOCALDATA = Path(os.environ.get("EDGE_FACTORY_LOCALDATA", Path(__file__).resolve().parents[3] / "localdata"))
 MIN_INTERVAL_S = float(os.environ.get("EDGE_FACTORY_SHARPAPI_MIN_INTERVAL_S", "5"))
 MAX_CALLS_PER_RUN = int(os.environ.get("EDGE_FACTORY_SHARPAPI_MAX_CALLS", "1"))
@@ -104,16 +116,14 @@ def _origin_key() -> str | None:
     value = os.environ.get(ORIGIN_KEY_ENV, "").strip(); return value or None
 
 def auth_headers() -> dict[str, str]:
-    """Both credentials this source needs, omitting any that is unset.
+    """The single credential the direct vendor API accepts.
 
-    The gateway key and the origin key are independent: the request must clear
-    the RapidAPI gateway AND then satisfy SharpAPI itself.
+    The gateway headers are gone. Sending them to the vendor's own host was
+    the defect: the marketplace relay answered 401 with SharpAPI's own
+    disabled-key envelope, which reads like a dead credential and is in fact
+    a dead middleman. One key, one header, named by the vendor's docs.
     """
-    headers = {"X-RapidAPI-Key": _key() or "", "X-RapidAPI-Host": API_HOST}
-    origin = _origin_key()
-    if origin:
-        headers["X-API-Key"] = origin
-    return headers
+    return {"X-API-Key": _key() or ""}
 
 def odds_url(day: str | None = None) -> str:
     params = query_params(day)
@@ -177,6 +187,109 @@ def _num(x: object) -> float | None:
     try: return float(x)
     except (TypeError, ValueError): return None
 
+_PREMATCH_DROP_REASONS: dict[str, int] = {}
+
+
+def _text(value: object) -> str:
+    """Flatten either a bare string or a {"name": ...} reference object."""
+    if isinstance(value, dict):
+        value = value.get("name") or value.get("title") or value.get("display_name")
+    return str(value or "").strip()
+
+
+def _sides(row: dict[str, Any]) -> tuple[str, str]:
+    """Home and away from the DECLARED fields only.
+
+    Deliberately never parsed out of ``event_id``. The captured sample proves
+    the slug does not encode orientation: ``..._kazakhstan_moldova_...`` is a
+    Moldova home fixture while ``..._faroeislands_kazakhstan_...`` is a
+    Kazakhstan home fixture. Deriving sides from the slug would silently
+    invert the card for an unknowable subset of events, and an inverted side
+    prices perfectly - it just prices the wrong team.
+    """
+    home = _text(row.get("home_team")) or _text(row.get("home"))
+    away = _text(row.get("away_team")) or _text(row.get("away"))
+    return home, away
+
+
+def _selection_for(row: dict[str, Any], home: str, away: str) -> str:
+    """Prefer the vendor's explicit side token over the display label.
+
+    ``selection_type`` is a closed vocabulary (home/away/draw/over/under);
+    ``selection`` is free text carrying club names that drift between books.
+    Resolving home/away back to the fixture's own team names lets the shared
+    normalizer confirm the side instead of string-matching a brand.
+    """
+    kind = str(row.get("selection_type") or "").strip().lower()
+    if kind == "home" and home: return home
+    if kind == "away" and away: return away
+    if kind in {"draw", "tie"}: return "draw"
+    if kind in {"over", "under"}: return kind
+    return _text(row.get("selection"))
+
+
+def _is_flat(events: list[Any]) -> bool:
+    """True when rows are one-selection-per-record rather than nested books."""
+    for event in events:
+        if not isinstance(event, dict): continue
+        if any(isinstance(event.get(k), list) for k in ("bookmakers", "bookies", "books")):
+            return False
+        if "market_type" in event or "selection_type" in event or "odds_decimal" in event:
+            return True
+    return False
+
+
+def parse_flat_rows(events: list[Any], *, day: str) -> tuple[list[dict[str, Any]], bool]:
+    """Parse the vendor's flat one-row-per-selection board.
+
+    Each record is a single price: fixture, book, market, selection, odds.
+    Live and stale prices are refused here rather than downstream - this lane
+    feeds a prematch card, and an in-play price is not a worse prematch price,
+    it is a different quantity.
+    """
+    global _PREMATCH_DROP_REASONS
+    rows: list[dict[str, Any]] = []; shaped = False
+    stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    for row in events:
+        if not isinstance(row, dict): continue
+        home, away = _sides(row)
+        book = _text(row.get("sportsbook")) or _text(row.get("sportsbook_ref"))
+        raw_market = _text(row.get("market_type")) or _text(row.get("market_ref"))
+        if not home or not away or not book or not raw_market: continue
+        shaped = True
+        if row.get("is_live"):
+            _PREMATCH_DROP_REASONS["live_price"] = _PREMATCH_DROP_REASONS.get("live_price", 0) + 1
+            continue
+        if row.get("is_stale_pregame_price"):
+            _PREMATCH_DROP_REASONS["stale_pregame_price"] = _PREMATCH_DROP_REASONS.get("stale_pregame_price", 0) + 1
+            continue
+        if row.get("is_player_prop"):
+            _PREMATCH_DROP_REASONS["player_prop"] = _PREMATCH_DROP_REASONS.get("player_prop", 0) + 1
+            continue
+        price = _num(row.get("odds_decimal") or row.get("decimal_odds") or row.get("price"))
+        if price is None or price <= 1:
+            _PREMATCH_DROP_REASONS["no_decimal_price"] = _PREMATCH_DROP_REASONS.get("no_decimal_price", 0) + 1
+            continue
+        raw_selection = _selection_for(row, home, away)
+        canonical, _failure = canonical_market_selection(
+            raw_market, raw_selection, home=home, away=away, line=row.get("line"),
+        )
+        if canonical is None:
+            reason = _failure.reason if _failure is not None else "unmappable"
+            _CANONICALIZATION_DROP_REASONS[reason] = _CANONICALIZATION_DROP_REASONS.get(reason, 0) + 1
+            continue
+        rows.append({"source": SOURCE, "date": day, "home": home, "away": away,
+                     "kickoff": row.get("event_start_time") or row.get("kickoff"),
+                     "market": canonical.market, "selection": canonical.selection,
+                     "line": canonical.line, "raw_market": raw_market,
+                     "raw_selection": raw_selection, "odds": price, "book": book,
+                     "bookmaker": book, "odds_kind": "bookmaker",
+                     "league": _text(row.get("league")) or _text(row.get("league_ref")),
+                     "event_uuid": _text(row.get("event_uuid")),
+                     "named_bookmaker": True, "captured_at": stamp})
+    return rows, shaped
+
+
 def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], bool]:
     """Accept only explicit event/bookmaker/market rows; unknown shapes yield no rows."""
     events = payload if isinstance(payload, list) else next((payload.get(k) for k in ("events", "data", "matches", "odds") if isinstance(payload, dict) and isinstance(payload.get(k), list)), None)
@@ -184,8 +297,13 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
     # A recognized but EMPTY event list is a valid empty result, not a schema
     # failure: conflating the two turns a quiet slate into a false outage (and
     # a real contract break into a false "no games today").
-    global _CANONICALIZATION_DROP_REASONS
+    global _CANONICALIZATION_DROP_REASONS, _PREMATCH_DROP_REASONS
     _CANONICALIZATION_DROP_REASONS = {}
+    _PREMATCH_DROP_REASONS = {}
+    if not events:
+        return [], True   # recognized board, nothing on it
+    if _is_flat(events):
+        return parse_flat_rows(events, day=day)
     rows: list[dict[str, Any]] = []; shaped = not events; stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     for event in events:
         if not isinstance(event, dict): continue
@@ -237,7 +355,7 @@ def _reason(code: int | None) -> str:
 
 def _path(day: str, localdata: Path | None = None) -> Path: return (localdata or LOCALDATA) / f"{SOURCE}_shadow_{day}.json"
 def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day)),"canonicalization_dropped":0,"canonicalization_drop_reasons":{}}
+    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day)),"canonicalization_dropped":0,"canonicalization_drop_reasons":{},"prematch_dropped":0,"prematch_drop_reasons":{}}
     reset_state()
     sport = (os.environ.get("SHARPAPI_SPORT") or "").strip()
     if not sport:
@@ -258,11 +376,24 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         rows, shaped = parse_snapshot(payload, day=day); stats["schema_match"] = shaped
         stats["canonicalization_drop_reasons"] = dict(_CANONICALIZATION_DROP_REASONS)
         stats["canonicalization_dropped"] = sum(_CANONICALIZATION_DROP_REASONS.values())
+        stats["prematch_drop_reasons"] = dict(_PREMATCH_DROP_REASONS)
+        stats["prematch_dropped"] = sum(_PREMATCH_DROP_REASONS.values())
         # A recognizable but empty event list is a VALID empty result; only an
         # unrecognizable payload is a contract failure.
         if not shaped: stats.update(status="unavailable", reason="schema_unrecognized", blocker="sharpapi: snapshot schema not recognized; raw sample retained"); stats["sample_event"] = _scrub(str(payload)[:200]); return [], _set_diag(stats)
         stats["sa_raw"] = len({(r["home"], r["away"]) for r in rows}); stats["sa_matched"] = len(rows); stats["status"] = "ok" if rows else "empty"
-        if not rows: stats["reason"] = "provider_empty_slate"
+        if not rows:
+            # Three different diagnoses hide behind "zero rows", and they
+            # prescribe opposite actions: an empty board means come back
+            # later, an all-live board means the capture ran too late for
+            # the prematch lane, and an all-dropped board means the market
+            # vocabulary moved. Naming which one is the whole value here.
+            if _PREMATCH_DROP_REASONS and not _CANONICALIZATION_DROP_REASONS:
+                stats["reason"] = "all_rows_live_or_stale"
+            elif _CANONICALIZATION_DROP_REASONS:
+                stats["reason"] = "all_rows_unmappable"
+            else:
+                stats["reason"] = "provider_empty_slate"
         return rows, _set_diag(stats)
     except UpstreamBlocked as exc:
         msg = _scrub(str(exc)); stats["http_429"] = _429

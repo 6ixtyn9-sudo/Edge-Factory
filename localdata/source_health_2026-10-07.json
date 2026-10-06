@@ -87,14 +87,14 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "out_of_window": 3,
         "selection_unsupported": 1
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "bzzoiro": {
       "blocker": "bzz status=auth; quota_hint=auth_or_quota",
@@ -161,7 +161,7 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": "pinnapi: HTTP 200 for sport_id=1 event_type=prematch produced zero usable rows [no_usable_rows] - fixtures parsed but every price was discarded; see the named drop reasons; observed payload shape recorded - do not extend the parser without a captured sample",
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,

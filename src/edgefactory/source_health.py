@@ -139,6 +139,26 @@ def _int_or_zero(value: object) -> int:
         return 0
 
 
+PINNAPI_CONTRACT_FIELDS = (
+    "sport_id", "event_type", "auth_mechanism", "auth_attempts",
+    "zero_row_kind", "response_shape",
+)
+
+
+def pinnapi_contract_observation(stats: dict[str, Any]) -> dict[str, Any]:
+    """Lift the request-contract discriminators out of the adapter stats.
+
+    The caller builds the health observation by hand, field by field, so a
+    field the adapter records is NOT in the health row unless it is named
+    here. That is how the 2026-10-06 run lost the answer: the adapter wrote
+    which auth mechanism replied, and nothing carried it across. Keeping the
+    list in one place means the passthrough and the row agree by
+    construction rather than by someone remembering both ends.
+    """
+    stats = stats or {}
+    return {k: stats.get(k) for k in PINNAPI_CONTRACT_FIELDS}
+
+
 def build_daily_source_health(
     day: str,
     observations: dict[str, dict[str, Any]] | None = None,
@@ -244,6 +264,31 @@ def build_daily_source_health(
                 "pa_raw": int(obs.get("pa_raw") or 0),
                 "pa_scored": int(obs.get("pa_scored") or obs.get("pa_matched") or 0),
                 "pa_matched": int(obs.get("pa_matched") or 0),
+            })
+            # The request-contract discriminators. These decide what a zero
+            # MEANS - which auth mechanism answered, and which kind of zero
+            # it was - and until now they existed only in the per-date
+            # shadow ledger, which .gitignore excludes. The 2026-10-06 run
+            # proved the cost: the vendor answered, and the answer did not
+            # survive the run. Small, scrubbed fields only; never the key.
+            shape = obs.get("response_shape") or {}
+            row.update({
+                "sport_id": obs.get("sport_id"),
+                "event_type": obs.get("event_type"),
+                "auth_mechanism": obs.get("auth_mechanism"),
+                "auth_attempts": [
+                    {"auth": a.get("auth"), "status": a.get("status")}
+                    for a in (obs.get("auth_attempts") or [])
+                    if isinstance(a, dict)
+                ],
+                "zero_row_kind": obs.get("zero_row_kind"),
+                "response_shape_summary": {
+                    k: shape.get(k) for k in
+                    ("event_count", "events_with_teams", "events_with_markets",
+                     "envelope_found", "events_key", "markets_type",
+                     "error_blames_credential")
+                    if shape.get(k) is not None
+                } or None,
             })
         elif name == "sharpapi_odds":
             row.update({
