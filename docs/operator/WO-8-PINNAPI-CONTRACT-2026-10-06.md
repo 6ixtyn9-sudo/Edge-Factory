@@ -113,10 +113,67 @@ evidence about the vendor.
   second call; a pre-match answer with nothing usable in it records the
   shape of what arrived; the key never surfaces in diagnostics, stats or the
   ledger; the shadow role text is unchanged by the fix.
-- Full suite: **1584 passed, 0 failed** (baseline was 1571).
+- Full suite: **1590 passed, 0 failed** (baseline was 1571).
 - Work-order verifier: **14/14, ALL PASS**. Settlement verifier: **9/9**.
 
-## 5. If it returns nothing
+Honest accounting of that +19, because a bare suite total is a poor
+acceptance number: **17** are tests written for this work order (the
+Pinnacle shadow's own file went from 21 tests to 38) and **2** are the
+dead-link check, which is parametrised over every markdown file in the
+repository and therefore grows by one each time anyone adds a document.
+This report and the filed work order are those two. An earlier draft of
+this report said 1584; that figure was measured before the two documents
+existed and was wrong by exactly those two.
+
+"Never fewer than N collected" is a contract that drifts whenever someone
+writes documentation. The durable form is "nothing failed, and no existing
+test was deleted", and the second half of that is now enforced: the
+work-order verifier counts test *functions* against a floor, and the floor
+has been raised to the current count.
+
+## 5. Review findings, and what they changed
+
+Three questions were put to this work after the first pass. Two were real
+defects and are fixed; the third was correct arithmetic worth stating.
+
+**An empty board read exactly like an unreadable one.** Both produced zero
+rows, the same status and the same message, which made the capture record
+useless for the one decision it exists to support: an empty board points at
+the sport id or a quiet hour, an unreadable payload points at the parser —
+opposite diagnoses. Worse, the first pass had written a test asserting the
+conflation was acceptable, which is the same failure the false sport-id
+receipt was: an inference recorded as a finding. A zero-row answer is now
+classified as one of four, each with a different next action:
+
+| recorded as | what it means | next action |
+|---|---|---|
+| `unrecognized_shape` | no envelope we can read | parser question; capture the shape first |
+| `empty_board` | readable envelope, zero fixtures | sport id, or a genuinely quiet window |
+| `events_without_teams` | fixtures arrived, none named both sides | shape drift inside the event |
+| `no_usable_rows` | fixtures parsed, every price discarded | read the named drop reasons |
+
+Because zero fixtures means nothing on its own, the recorded shape now
+carries the counts beside it: how many events arrived, how many named both
+teams, how many carried any market block at all. The status values and their
+retry semantics are unchanged — the discriminator is a new field, not a new
+behaviour.
+
+**A rejected header was re-learned on every capture.** The per-capture state
+reset each time, so a second capture in the same run would have tried the
+header again and spent another call discovering the same rejection. The
+rejection is now remembered for the life of the run: later captures go
+straight to the form that works, and the record says so — but only when the
+header was actually skipped on remembered grounds, not when the rejection
+was learned during that same capture. Verified end to end against a local
+imitation server that rejects header auth: the first capture spends two
+calls, every later one spends a single call.
+
+**Budget arithmetic.** A fallback attempt is a real call. A capture whose
+header form is rejected fetches two boards, not four; with the memory above,
+subsequent captures fetch one. That is now stated in the code rather than
+left to be discovered, and a test pins it.
+
+## 6. If it returns nothing
 
 A 200 response that yields no usable rows now records what actually arrived
 — the container types, the key names at each level, the event count, and the
@@ -132,7 +189,7 @@ trial key is worth anything, not an attempt to solve pricing. Pricing
 coverage across these leagues is around 11.4%, this remains a shadow, and
 nothing here moves it closer to a price-corroboration role.
 
-## 6. Unverified from here
+## 7. Unverified from here
 
 - No live call was made. Whether the header is accepted, whether sport 1 is
   soccer on the live service, and whether a pre-match snapshot contains our
@@ -145,17 +202,32 @@ nothing here moves it closer to a price-corroboration role.
   mechanism answered, whether the board was recognisable, and — if it was
   empty — exactly what shape it had.
 
-## 7. Files
+### Read the auth-mechanism line first
+
+It is a clean discriminator, and the zero-row classification settles what it
+cannot:
+
+| mechanism answered | rows | reading |
+|---|---|---|
+| header | yes | both corrections were needed; done |
+| header | no | authentication was the bug, and the sport id may *still* be wrong — `empty_board` says the sport id, anything else says the parser |
+| query | either | the panel guidance was wrong about REST, the original authentication was right all along, and the sport number was the only real defect |
+| neither | — | key, endpoint or vendor; not our code |
+
+## 8. Files
 
 - `src/edgefactory/sources/pinnapi_odds.py` — sport id, header auth with a
-  401-only fallback, reworked credential guard, auth record in the capture
-  stats, observed-shape recording on an empty answer, corrected docstring,
+  401-only fallback remembered for the run, reworked credential guard, auth
+  record in the capture stats, four-way zero-row classification with fixture
+  counts, observed-shape recording on an empty answer, corrected docstring,
   false receipt comment deleted.
+- `scripts/verify_work_order.py` — test-function floor raised to the current
+  count, with the reason the collected-test total is the wrong contract.
 - `scripts/probe_pinnapi.py` — builds its request from the shipped adapter
   rather than its own copy, so the acceptance probe cannot drift from the
   contract; tries the header first and falls back on 401; reports which
   mechanism worked; still prints no key.
-- `tests/test_pinnapi_odds.py` — 34 tests (was 21).
+- `tests/test_pinnapi_odds.py` — 38 tests (was 21).
 - `docs/operator/SOURCE-HUNT-2026-10.md` — the paragraph that recorded the
   false sport-id receipt is corrected in place, labelled as the inference it
   was.

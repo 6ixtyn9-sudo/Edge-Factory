@@ -29,6 +29,14 @@ def _key(monkeypatch):
     yield
 
 
+@pytest.fixture(autouse=True)
+def _auth_memory():
+    """The 401 memory is run-scoped by design, so tests must not share it."""
+    pa.reset_auth_memory()
+    yield
+    pa.reset_auth_memory()
+
+
 def _payload():
     return json.loads((FIXTURES / "pinnapi_soccer_prematch.json").read_text())
 
@@ -448,21 +456,106 @@ def test_zero_row_prematch_records_the_payload_shape(monkeypatch):
     assert "zero usable rows" in stats["blocker"]
 
 
-def test_empty_event_list_records_a_shape_too(monkeypatch):
-    """An empty board is unrecognizable from an unrecognized board.
+def test_an_empty_board_is_not_an_unreadable_one(monkeypatch):
+    """Zero fixtures and an unreadable payload are opposite diagnoses.
 
-    It keeps the pre-existing fail-closed, retryable classification - the
-    change here is only that the observed shape is written down.
+    Both produce zero rows and the same fail-closed retryable status, so
+    the capture record has to tell them apart: an empty board points at the
+    sport id or a quiet hour, an unreadable payload points at the parser.
     """
-    def fake_get(url, timeout=30, auth="header"):
+    def empty_board(url, timeout=30, auth="header"):
         return 200, {"events": [], "meta": {"page": 1}}, {}
 
-    monkeypatch.setattr(pa, "get_json", fake_get)
+    monkeypatch.setattr(pa, "get_json", empty_board)
     rows, stats = pa.capture_day("2026-10-03")
     assert rows == [] and stats["status"] == "unavailable"
     assert stats["status"] in pa.RETRYABLE_ZERO_ROW_STATUSES
+    assert stats["zero_row_kind"] == "empty_board"
+    assert stats["response_shape"]["envelope_found"] is True
     assert stats["response_shape"]["event_count"] == 0
     assert set(stats["response_shape"]["top_keys"]) == {"events", "meta"}
+    assert "NOT a parser question" in stats["blocker"]
+
+    def unreadable(url, timeout=30, auth="header"):
+        return 200, {"fixtures": [{"h": "Arsenal", "a": "Chelsea"}]}, {}
+
+    monkeypatch.setattr(pa, "get_json", unreadable)
+    rows, stats = pa.capture_day("2026-10-04")
+    assert rows == [] and stats["zero_row_kind"] == "unrecognized_shape"
+    assert stats["response_shape"]["envelope_found"] is False
+    assert "parser question" in stats["blocker"]
+
+
+def test_zero_rows_names_which_of_the_four_answers_it_is(monkeypatch):
+    """Each zero has a different next action; the record must say which."""
+    def shaped(payload):
+        def fake_get(url, timeout=30, auth="header"):
+            return 200, payload, {}
+        return fake_get
+
+    # fixtures arrived, but no event exposes both team names
+    monkeypatch.setattr(pa, "get_json", shaped(
+        {"events": [{"id": "e1", "home": "Arsenal"}]}))
+    assert pa.capture_day("2026-10-03")[1]["zero_row_kind"] == "events_without_teams"
+
+    # fixtures parsed, every price discarded
+    monkeypatch.setattr(pa, "get_json", shaped(
+        {"events": [{"id": "e1", "home": "Arsenal", "away": "Chelsea",
+                     "markets": [{"market": "moneyline", "selection": "home",
+                                  "decimal": 2.1}]}]}))
+    stats = pa.capture_day("2026-10-04")[1]
+    assert stats["zero_row_kind"] == "no_usable_rows"
+    assert stats["response_shape"]["drop_reasons"] == {"price_unreadable": 1}
+
+
+def test_event_counts_give_the_zero_some_context(monkeypatch):
+    """A bare zero is unreadable; fixture counts come with it."""
+    def fake_get(url, timeout=30, auth="header"):
+        return 200, {"events": [
+            {"id": "e1", "home": "Arsenal", "away": "Chelsea", "markets": []},
+            {"id": "e2", "home": "Spurs", "away": "Fulham"},
+            {"id": "e3", "home": "Leeds"},
+        ]}, {}
+
+    monkeypatch.setattr(pa, "get_json", fake_get)
+    shape = pa.capture_day("2026-10-03")[1]["response_shape"]
+    assert shape["event_count"] == 3
+    assert shape["events_with_teams"] == 2
+    assert shape["events_with_markets"] == 0
+
+
+def test_a_401_is_remembered_for_the_rest_of_the_run(monkeypatch):
+    """Rediscovering the same 401 costs a call out of a budget of four."""
+    recorder = _Recorder((401, {"message": "unauthorized"}, {}),
+                         (200, _payload(), {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert [c["auth"] for c in recorder.calls] == ["header", "query"]
+    assert stats["auth_memory"] is None  # learned during this capture
+
+    # A later capture in the same run goes straight to the form that works.
+    recorder.responses = [(200, _payload(), {})]
+    recorder.calls.clear()
+    rows2, stats2 = pa.capture_day("2026-10-04")
+    assert [c["auth"] for c in recorder.calls] == ["query"]
+    assert rows2 and stats2["requests"] == 1
+    assert stats2["auth_mechanism"] == "query"
+    assert "earlier this run" in stats2["auth_memory"]
+
+    # The memory is run-scoped, not permanent.
+    pa.reset_auth_memory()
+    recorder.calls.clear()
+    pa.capture_day("2026-10-05")
+    assert [c["auth"] for c in recorder.calls] == ["header"]
+
+
+def test_a_fully_rejected_capture_spends_two_calls_not_four(monkeypatch):
+    """Fallback attempts are real calls and count against the budget."""
+    recorder = _Recorder((401, {"message": "unauthorized"}, {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert rows == [] and len(recorder.calls) == 2
+    assert stats["requests"] == 2 <= pa.MAX_CALLS_PER_RUN
 
 
 def test_the_key_never_reaches_diagnostics_or_the_ledger(monkeypatch, tmp_path):
