@@ -41,7 +41,7 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 6,
+      "be_matched": 4,
       "be_raw": 30,
       "be_usable": 30,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
@@ -50,10 +50,10 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 5,
+      "join_matched_rows": 4,
       "join_miss_counts": {
-        "fixture_key_miss": 15,
-        "no_pick_for_fixture": 10
+        "fixture_key_miss": 18,
+        "no_pick_for_fixture": 8
       },
       "reason": null,
       "status": "cache_only"
@@ -164,17 +164,35 @@
       "status": "empty"
     },
     "pinnapi_odds": {
+      "auth_attempts": [
+        {
+          "auth": "header",
+          "status": 200
+        }
+      ],
+      "auth_mechanism": "header",
       "blocker": "pinnapi: HTTP 200 for sport_id=1 event_type=prematch produced zero usable rows [no_usable_rows] - fixtures parsed but every price was discarded; see the named drop reasons; observed payload shape recorded - do not extend the parser without a captured sample",
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
+      "event_type": "prematch",
       "freshness_h": null,
       "pa_matched": 0,
       "pa_raw": 0,
       "pa_scored": 0,
       "reason": "http_200_zero_rows_after_parse",
-      "status": "empty"
+      "response_shape_summary": {
+        "envelope_found": true,
+        "event_count": 1568,
+        "events_key": "events",
+        "events_with_markets": 0,
+        "events_with_teams": 1568,
+        "markets_type": "NoneType"
+      },
+      "sport_id": 1,
+      "status": "empty",
+      "zero_row_kind": "no_usable_rows"
     },
     "predictiq": {
       "blocker": "convergent echo-candidate: zero voice credit permanently, never corroborates (SOURCE-HUNT-2026-10 section 5.5)",
@@ -217,17 +235,17 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "sharpapi: HTTP 401 Unauthorized; {\"error\":{\"code\":\"disabled_api_key\",\"docs\":\"https://docs.sharpapi.io/en/authentication#authentication-methods\",\"message\":\"API key is disabled. This",
-      "can_fetch_today": false,
+      "blocker": "fetch returned zero rows",
+      "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "http_401_auth",
+      "reason": "all_rows_live_or_stale",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
-      "status": "auth"
+      "status": "empty"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",

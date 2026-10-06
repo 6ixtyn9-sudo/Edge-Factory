@@ -1,6 +1,6 @@
 [
   {
-    "as_of": "2026-10-06T16:21:10+02:00",
+    "as_of": "2026-10-06T18:16:36+02:00",
     "avg_p": 63.2,
     "away": "Iceland",
     "bookmaker": "betexplorer_best",
@@ -181,7 +181,7 @@
         "league": "UEFA Nations League",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 5.25,
+        "odds": 5.5,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -197,7 +197,7 @@
         "league": "UEFA Nations League",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 3.9,
+        "odds": 3.8,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -990,8 +990,8 @@
     "w_score": 0.5054
   },
   {
-    "as_of": "2026-10-06T16:21:10+02:00",
-    "avg_p": 82.3,
+    "as_of": "2026-10-06T18:16:36+02:00",
+    "avg_p": 79.9,
     "away": "Czechia",
     "bookmaker": null,
     "bucket": "SKIPPED_VETO",
@@ -1007,7 +1007,7 @@
       "league": "ALLOW",
       "league_key": "uefa nations league",
       "league_raw": "World UEFA Nations League",
-      "niche": "UNKNOWN",
+      "niche": "BOOST",
       "odds_band": "BOOST",
       "odds_band_name": "1.10-1.20",
       "resolution_original_verdict": "ALLOW",
@@ -1021,8 +1021,8 @@
       "team_h": "VETO"
     },
     "date": "2026-10-06",
-    "decay_verdict": "WATCH",
-    "display_rule": "ML-META\u226580",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "ML-META\u226565",
     "draw_risk_flag": "LOW",
     "duplicate_bucket_sources": [
       "SKIPPED_VETO"
@@ -1033,10 +1033,10 @@
     "duplicate_rows_collapsed": 1,
     "duplicate_rules_collapsed": [
       "ML-META\u226555",
-      "ML-META\u226580"
+      "ML-META\u226565"
     ],
     "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=80",
+    "edge_rule": "ml-meta avg_p>=65",
     "edge_status": "certified",
     "enhancement_label": "Home Team Over 0.5 Goals",
     "enhancement_mapped": true,
@@ -1093,7 +1093,7 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.8225,
+    "ml_p": 0.7995,
     "model_version": "dc-blend-v1",
     "n_way": 3,
     "odds": 1.11,
@@ -1138,7 +1138,7 @@
     "price_quarantine_reason": "alias_fuzzy",
     "recommended_enhancement": "home_over_05",
     "recommended_market": "keep_1x2",
-    "rule": "ml-meta avg_p>=80",
+    "rule": "ml-meta avg_p>=65",
     "source_weights": {
       "forebet": 0.0
     },
@@ -1149,7 +1149,7 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=31): Avg Goals: 4.77 | Over 2.5: 80.6% | BTTS: 41.9% | Home Over 1.5 Goals: 90.3% | Away Over 1.5 Goals: 9.7%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=72): Avg Goals: 4.14 | Over 2.5: 75.0% | BTTS: 36.1% | Home Over 1.5 Goals: 91.7% | Away Over 1.5 Goals: 11.1%",
     "suspect_price": {
       "bookmaker": "1xBet",
       "captured_at": "2026-10-05T22:12:54.571500+00:00",
@@ -1160,11 +1160,11 @@
     },
     "veto_reason": "context VETO in ['team_h', 'team_a']",
     "vitibet_index": 6.15,
-    "w_score": 1.5337
+    "w_score": 1.383
   },
   {
-    "as_of": "2026-10-06T16:21:10+02:00",
-    "avg_p": 75.7,
+    "as_of": "2026-10-06T18:16:36+02:00",
+    "avg_p": 75.1,
     "away": "Spain",
     "bookmaker": "BetAnything",
     "bucket": "SKIPPED_VETO",
@@ -1177,25 +1177,25 @@
       "duplicate_bucket_sources": "SKIPPED_VETO",
       "duplicate_event_keys": "croatia vs spain",
       "home_norm": "croatia",
-      "league": "ALLOW",
+      "league": "VETO",
       "league_key": "uefa nations league",
       "league_raw": "World UEFA Nations League",
       "niche": "UNKNOWN",
-      "odds_band": "CAUTION",
+      "odds_band": "BOOST",
       "odds_band_name": "1.20-1.35",
-      "resolution_original_verdict": "ALLOW",
+      "resolution_original_verdict": "VETO",
       "resolution_path": "native",
       "resolution_pool_n": null,
       "resolution_pool_roi": null,
-      "resolution_reason": "native verdict ALLOW unchanged (only UNKNOWN is resolvable)",
-      "resolution_verdict": "ALLOW",
+      "resolution_reason": "native verdict VETO unchanged (only UNKNOWN is resolvable)",
+      "resolution_verdict": "VETO",
       "side_role": "away",
       "team_a": "ALLOW",
       "team_h": "ALLOW"
     },
     "date": "2026-10-06",
     "decay_verdict": "HEALTHY",
-    "display_rule": "ML-META\u226560",
+    "display_rule": "ML-META\u226565",
     "draw_risk_flag": "HIGH",
     "duplicate_bucket_sources": [
       "SKIPPED_VETO"
@@ -1206,10 +1206,10 @@
     "duplicate_rows_collapsed": 1,
     "duplicate_rules_collapsed": [
       "ML-META\u226555",
-      "ML-META\u226560"
+      "ML-META\u226565"
     ],
     "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=60",
+    "edge_rule": "ml-meta avg_p>=65",
     "edge_status": "certified",
     "enhancement_breakeven": 0.6944,
     "enhancement_edge_sample": -0.3259,
@@ -1268,7 +1268,7 @@
     "min_lead_minutes": 30,
     "ml_ht_diff": 0,
     "ml_ht_total": 0,
-    "ml_p": 0.7568,
+    "ml_p": 0.7511,
     "model_version": "dc-blend-v1",
     "n_way": 3,
     "odds": 1.28,
@@ -2216,7 +2216,7 @@
     "price_push_eligible": true,
     "recommended_enhancement": "match_over_25",
     "recommended_market": "avoid_raw_1x2",
-    "rule": "ml-meta avg_p>=60",
+    "rule": "ml-meta avg_p>=65",
     "source_weights": {
       "forebet": 0.0
     },
@@ -2227,10 +2227,10 @@
       "bzzoiro"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=28): Avg Goals: 4.04 | Over 2.5: 78.6% | BTTS: 21.4% | Home Over 1.5 Goals: 3.6% | Away Over 1.5 Goals: 89.3%",
-    "veto_reason": "short-odds away favourite 1.28",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=35): Avg Goals: 4.03 | Over 2.5: 77.1% | BTTS: 22.9% | Home Over 1.5 Goals: 2.9% | Away Over 1.5 Goals: 88.6%",
+    "veto_reason": "context VETO in ['league']",
     "vitibet_index": -4.06,
-    "w_score": 1.1352
+    "w_score": 1.1047
   },
   {
     "as_of": "2026-10-06T16:21:10+02:00",
@@ -2476,7 +2476,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-06T16:21:10+02:00",
+    "as_of": "2026-10-06T18:16:36+02:00",
     "avg_p": 78.6,
     "away": "San Marino",
     "bookmaker": "betexplorer_best",
@@ -3259,7 +3259,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-06T16:21:10+02:00",
+    "as_of": "2026-10-06T18:16:36+02:00",
     "avg_p": 77.5,
     "away": "Rochdale",
     "bookmaker": "betexplorer_best",
@@ -3715,7 +3715,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-06T16:21:10+02:00",
+    "as_of": "2026-10-06T18:16:36+02:00",
     "avg_p": 64.7,
     "away": "Slovakia",
     "bookmaker": "betexplorer_best",
@@ -3896,7 +3896,7 @@
         "league": "UEFA Nations League",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 8.5,
+        "odds": 7.5,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -3912,7 +3912,7 @@
         "league": "UEFA Nations League",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 4.75,
+        "odds": 4.5,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -3928,7 +3928,7 @@
         "league": "UEFA Nations League",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 1.36,
+        "odds": 1.4,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",

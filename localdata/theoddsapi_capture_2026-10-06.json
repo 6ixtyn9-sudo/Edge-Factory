@@ -1,11 +1,28 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "attempted": 2,
+  "attempted_fixtures": [
+    {
+      "away": "Rochdale",
+      "date": "2026-10-06",
+      "home": "Huddersfield",
+      "kickoff": "06-10, 19:00",
+      "league": "England EFL Trophy"
+    },
+    {
+      "away": "Malawi",
+      "date": "2026-10-06",
+      "home": "Angola",
+      "kickoff": "14:00",
+      "league": "International,Africa Cup Of Nations Qualification Grp. B"
+    }
+  ],
   "candidate_fixtures": 14,
-  "captured_at": "2026-10-06T14:32:42+00:00",
+  "captured_at": "2026-10-06T16:28:43+00:00",
   "date": "2026-10-06",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 2
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -18,7 +35,7 @@
     "kickoff_already_passed": 3,
     "kickoff_mismatch": 4,
     "priced_close_window_not_open": 4,
-    "retry_cooldown": 7
+    "retry_cooldown": 5
   },
   "skipped": [
     "Argentina|Benin (retry cooldown (6h after failed attempt))",
@@ -26,7 +43,6 @@
     "WARN kickoff-mismatch Albania|San Marino: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Albania|San Marino (priced, close window not open)",
     "Algeria|Niger (retry cooldown (6h after failed attempt))",
-    "Huddersfield|Rochdale (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Croatia|Spain: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Croatia|Spain (priced, close window not open)",
     "India|Uruguay (kickoff already passed)",
@@ -37,10 +53,16 @@
     "WARN kickoff-mismatch Estonia|Iceland: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Estonia|Iceland (priced, close window not open)",
     "Russia|Nigeria (retry cooldown (6h after failed attempt))",
-    "South Korea|Uzbekistan (kickoff already passed)",
-    "Angola|Malawi (retry cooldown (6h after failed attempt))"
+    "South Korea|Uzbekistan (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Huddersfield vs Rochdale (league not covered: England EFL Trophy)",
+    "Angola vs Malawi (league not covered: International,Africa Cup Of Nations Qualification Grp. B)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: England EFL Trophy": 1,
+    "league not covered: International,Africa Cup Of Nations Qualification Grp. B": 1
+  }
 }
