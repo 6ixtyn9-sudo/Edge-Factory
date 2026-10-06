@@ -643,17 +643,23 @@ count, run only as a diagnostic and never as a join, is also zero. The
 curated name register is therefore not the answer here, though it
 remains a genuine gap in the odds lane for other days (see below).
 
-**The overlap instrument was blind on this run, and that is a defect.**
+**The overlap instrument was blind on this run. Fixed.**
 The run recorded that we asked about zero fixtures, so the overlap
 verdict never fired and the source line carried no overlap token. The
 cause: this was an intraday pass whose fresh pick lane produced nothing,
 and the day's fourteen picks were preserved frozen rows from the
-morning. The card handed to the price lane is built from freshly
+morning. The card handed to the price lane was built from freshly
 generated picks only, so it was empty. The team census saved the run
-because it is unconditional. **Next change: hand the lane the day's
-operational card, not only the freshly generated one.** Until then, a
-zero overlap on an intraday pass means nothing was asked, not that
-nothing matched.
+because it is unconditional.
+
+The lane is now handed the day's card - the fresh run merged with the
+rows already in the day archive, deduplicated and filtered to the day.
+Replayed against the real board from 2026-10-06, the same payload now
+says fourteen fixtures were asked about and none matched, where before
+it remarked that the board was truncated live-first. A statement about
+strangers became a statement about us. The read is defensive: a missing
+or unreadable archive falls back to the fresh card rather than raising,
+because a diagnostic must not be able to take the run down.
 
 **What is now known, and what is still open.** Known: the vendor is
 reachable, the parser reads it, the limit is per price row, the top of

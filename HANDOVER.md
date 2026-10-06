@@ -18,7 +18,7 @@ Delivered, in commit e95784b
 
 Validation
 
-- Suite 1682 passed / 0 failed; both verifiers pass at 14/14 and 9/9. Test functions 1473 to 1515, none removed; the deletion tripwire was raised to 1515 and watched to fail when a test was disabled. The tripwire number is measured the way the verifier itself counts, which is narrower than a repo-wide search and was off by one against it - the check's own metric is the authority. Four guards were found inert across these rounds and all four were repaired: three in the previous round, and a census cap whose test padded names so far past the cut that every one of them collapsed into a single entry, making the cap unreachable. In that last case the mutation was faithful and the test was wrong, which is the distinction worth preserving.
+- Suite 1688 passed / 0 failed; both verifiers pass at 14/14 and 9/9. Test functions 1473 to 1521, none removed; the deletion tripwire was raised to 1521 and watched to fail when a test was disabled. The tripwire number is measured the way the verifier itself counts, which is narrower than a repo-wide search and was off by one against it - the check's own metric is the authority. Four guards were found inert across these rounds and all four were repaired: three in the previous round, and a census cap whose test padded names so far past the cut that every one of them collapsed into a single entry, making the cap unreachable. In that last case the mutation was faithful and the test was wrong, which is the distinction worth preserving.
 - Each new guard was broken on purpose, watched to fail, and restored. That includes the ambiguity rule, the stale-count reset, the pipeline forwarding, the secret boundary, the refusal-group split and its precedence.
 - Three guards were found inert by that exercise and none was left that way. The third is the most instructive: a wiring check written as a text search passed with the wiring removed, because the same keyword already appeared elsewhere in the file for a different source. It now matches the call itself rather than the text, which is the difference between a guard and a decoration.
 - Two guards were found inert by that exercise and were not left that way. One let the breakdowns be removed from the pipeline while a record-level test went on passing — the same wiring-versus-capability gap as before, one layer down. The other could not tell the census implementation from the defective one it replaced. Both now fail against the real defect, the second checked by restoring the actual earlier implementation rather than an approximation of it.
@@ -2357,7 +2357,10 @@ them even under a deliberately loose comparison run for diagnosis only.
 The run also asked about zero fixtures, because an intraday pass hands
 the price lane only freshly generated picks and that pass produced none,
 so the overlap verdict could not fire; the team census is unconditional
-and is what made the day readable at all.
+and is what made the day readable at all. The lane is now handed the
+day's card, merging the fresh run with the rows already archived for
+that day, so an intraday pass can no longer report an overlap of zero
+that only means nobody asked.
 
 *Inferred.* Narrowing by competition will not on its own put our card in
 front of the filter, because five matches per hundred rows is the
