@@ -504,3 +504,132 @@ def test_the_effective_endpoint_is_recorded_in_the_capture_stats(monkeypatch):
     monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": []}, {}))
     _rows, stats = sa.capture_day("2026-10-06")
     assert stats["endpoint"] == "/odds"
+
+
+# --- ticket (o): a zero must name which zero it was -----------------------
+#
+# The 2026-10-06 production run asked for an unfiltered global soccer board
+# with a 100-row limit, got HTTP 200, and reported "all rows live or stale".
+# That token tells the operator to capture earlier. If the board is sorted
+# live-first and the page filled before reaching our fixtures, capturing
+# earlier changes nothing and the real remedy is to narrow the request.
+# These are opposite actions behind one token, so the token had to split.
+
+
+def _live_board(count, league=lambda i: f"lg_{i % 7}"):
+    """A full page of in-play rows across several competitions."""
+    return [_flat(home_team=f"H{i}", away_team=f"A{i}", league=league(i),
+                  is_live=True) for i in range(count)]
+
+
+def test_a_full_page_of_live_rows_asks_to_narrow_not_to_wait(monkeypatch):
+    """The page hit its own limit, so the tail was never seen."""
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(100)}, {}))
+    rows, stats = sa.capture_day("2026-10-06")
+    assert rows == []
+    assert stats["reason"] == "board_truncated_live_first"
+    assert stats["board_truncated"] is True
+    assert stats["board_rows"] == 100 and stats["board_fixtures"] == 100
+    assert stats["board_non_prematch_rows"] == 100
+
+
+def test_a_short_all_live_board_still_reads_as_a_late_capture(monkeypatch):
+    """The contrast case: the board ended well short of the limit.
+
+    Nothing was cut off, so every game really had started and the original
+    advice - capture earlier - is still the right one.
+    """
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(6)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "all_rows_live_or_stale"
+    assert stats["board_truncated"] is False
+
+
+def test_a_competition_filter_the_server_ignored_is_not_an_empty_board(monkeypatch):
+    """The trap this ticket was written around.
+
+    A competition identifier the vendor does not recognise produces the same
+    bare zero as a competition with no games on. They are told apart only by
+    reading what the board actually contained: a board carrying several
+    OTHER competitions is a filter that was never applied.
+    """
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "uefa_-_nations_league")
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(100)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "league_filter_not_applied"
+    assert stats["league_filter_effective"] is False
+    assert stats["league_filter_requested"] is True
+
+
+def test_a_competition_filter_onto_an_empty_board_says_so(monkeypatch):
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "uefa_-_nations_league")
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": []}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "league_filter_returned_empty"
+    assert stats["board_rows"] == 0
+
+
+def test_a_single_unmatched_competition_is_not_called_a_rejected_filter(monkeypatch):
+    """Ticket (l) hazard: the vendor spells one competition several ways.
+
+    With exactly one competition on the board and no textual match, "the
+    filter was rejected" and "this is the vendor's other spelling" are both
+    live explanations. The verdict must stay unknown rather than accuse.
+    """
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "uefa_-_nations_league")
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (
+        200, {"data": [_flat(is_live=True, league="brazil_serie_a")]}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["league_filter_effective"] is None
+    assert stats["reason"] != "league_filter_not_applied"
+
+
+def test_an_alternate_spelling_counts_as_the_filter_working(monkeypatch):
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "uefa_-_nations_league")
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (
+        200, {"data": [_flat(is_live=True, league="UEFA Nations League A")]}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["league_filter_effective"] is True
+
+
+def test_board_counts_never_survive_into_an_unrecognized_payload(monkeypatch):
+    """A stale count reads as a measurement of the wrong response."""
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(9)}, {}))
+    _rows, first = sa.capture_day("2026-10-06")
+    assert first["board_rows"] == 9
+    sa.reset_state()
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"unexpected": "shape"}, {}))
+    _rows, second = sa.capture_day("2026-10-07")
+    assert second["reason"] == "schema_unrecognized"
+    assert second["board_rows"] == 0 and second["board_fixtures"] == 0
+
+
+def test_the_configured_competition_value_never_reaches_the_capture_stats(monkeypatch):
+    """The filter arrives from a deployment secret; the record is committed."""
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "a-private-competition-id")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(4)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert "a-private-competition-id" not in json.dumps(stats)
+    assert stats["league_filter_requested"] is True
+
+
+def test_board_context_is_recorded_on_a_successful_capture_too(monkeypatch):
+    """A capture that DID price rows still has to say how big the board was.
+
+    Otherwise a narrowing that quietly stopped being applied looks identical
+    to one that is still working.
+    """
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": [_flat()]}, {}))
+    rows, stats = sa.capture_day("2026-10-06")
+    assert rows and stats["status"] == "ok"
+    assert stats["board_rows"] == 1 and stats["board_priced_rows"] == 1
+    assert stats["board_leagues"] == {"uefa_-_nations_league": 1}

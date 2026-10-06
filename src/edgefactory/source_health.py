@@ -159,6 +159,31 @@ def pinnapi_contract_observation(stats: dict[str, Any]) -> dict[str, Any]:
     return {k: stats.get(k) for k in PINNAPI_CONTRACT_FIELDS}
 
 
+SHARPAPI_BOARD_FIELDS = (
+    "board_rows", "board_fixtures", "board_league_count", "board_leagues",
+    "board_non_prematch_rows", "board_priced_rows", "board_truncated",
+    "requested_limit", "league_filter_requested", "league_filter_effective",
+)
+
+
+def sharpapi_board_observation(stats: dict[str, Any]) -> dict[str, Any]:
+    """Lift the board-shape context out of the adapter stats.
+
+    Same hand-built-observation hazard as the pinnapi passthrough above, and
+    the same remedy: one list, named in one place, so the adapter and the
+    committed row cannot drift apart.
+
+    This context is what makes a zero readable. Without it a page that
+    filled with in-play games before reaching our fixtures, a competition
+    filter the server ignored, and a genuinely empty slate are the same
+    bare zero with three opposite remedies. The configured filter VALUE is
+    deliberately not among these fields - it arrives from a deployment
+    secret, and this row is committed.
+    """
+    stats = stats or {}
+    return {k: stats.get(k) for k in SHARPAPI_BOARD_FIELDS}
+
+
 def build_daily_source_health(
     day: str,
     observations: dict[str, dict[str, Any]] | None = None,
@@ -296,6 +321,13 @@ def build_daily_source_health(
                 "sa_scored": int(obs.get("sa_scored") or obs.get("sa_matched") or 0),
                 "sa_matched": int(obs.get("sa_matched") or 0),
             })
+            # Board context, so a zero says which zero it was. Counts and
+            # vendor-supplied competition names only; never the configured
+            # filter value and never a payload sample.
+            board = {k: obs.get(k) for k in SHARPAPI_BOARD_FIELDS
+                     if obs.get(k) is not None}
+            if board:
+                row["board_summary"] = board
         elif name == "boggio":
             row.update({
                 "bg_raw": int(obs.get("bg_raw") or 0),

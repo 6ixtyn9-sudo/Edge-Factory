@@ -356,3 +356,50 @@ def test_the_caller_actually_forwards_the_pinnapi_contract_fields():
         "the health observation; without this the discriminators exist only "
         "in the gitignored shadow ledger and leave with the runner"
     )
+
+
+def test_sharpapi_board_helper_names_every_board_field():
+    """One list, so the passthrough and the committed row cannot drift."""
+    out = source_health.sharpapi_board_observation({
+        "board_rows": 100, "board_fixtures": 100, "board_league_count": 7,
+        "board_leagues": {"lg_0": 15}, "board_non_prematch_rows": 100,
+        "board_priced_rows": 0, "board_truncated": True,
+        "requested_limit": 100, "league_filter_requested": False,
+        "league_filter_effective": None,
+    })
+    assert set(out) == set(source_health.SHARPAPI_BOARD_FIELDS)
+    assert out["board_truncated"] is True
+    assert source_health.sharpapi_board_observation({})["board_rows"] is None
+
+
+def test_the_sharpapi_board_summary_reaches_the_committed_row():
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "sa_raw": 0, "sa_matched": 0,
+            "can_fetch_today": True, "can_price": False, "can_vote": False,
+            "status": "empty", "reason": "board_truncated_live_first",
+            "board_rows": 100, "board_fixtures": 100, "board_truncated": True,
+            "board_league_count": 7, "board_leagues": {"lg_0": 15},
+            "board_non_prematch_rows": 100, "board_priced_rows": 0,
+            "requested_limit": 100, "league_filter_requested": False,
+        },
+    })["sources"]["sharpapi_odds"]
+    assert row["board_summary"]["board_rows"] == 100
+    assert row["board_summary"]["board_truncated"] is True
+    assert row["reason"] == "board_truncated_live_first"
+
+
+def test_the_caller_actually_forwards_the_sharpapi_board_fields():
+    """Same gap that cost the 2026-10-06 pinnacle answer, same guard.
+
+    The health observation is hand-built field by field, so board context
+    the adapter records reaches the committed row only if the caller
+    forwards it. A row-level test passes happily while the real pipeline
+    drops everything. This asserts the wiring, not the capability.
+    """
+    src = (ROOT / "scripts" / "picks_today.py").read_text(encoding="utf-8")
+    assert "sharpapi_board_observation(sa_shadow_stats)" in src, (
+        "picks_today must forward the sharpapi board-shape fields into the "
+        "health observation; without this a zero names no action and the "
+        "context leaves with the runner"
+    )
