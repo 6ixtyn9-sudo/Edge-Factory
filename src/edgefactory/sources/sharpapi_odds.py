@@ -317,23 +317,31 @@ def _selection_for(row: dict[str, Any], home: str, away: str) -> str:
     return _text(row.get("selection"))
 
 
-def _is_flat(events: list[Any]) -> bool:
+def _is_flat(records: list[Any]) -> bool:
     """True when rows are one-selection-per-record rather than nested books."""
-    for event in events:
-        if not isinstance(event, dict): continue
-        if any(isinstance(event.get(k), list) for k in ("bookmakers", "bookies", "books")):
+    for record in records:
+        if not isinstance(record, dict): continue
+        if any(isinstance(record.get(k), list) for k in ("bookmakers", "bookies", "books")):
             return False
-        if "market_type" in event or "selection_type" in event or "odds_decimal" in event:
+        if "market_type" in record or "selection_type" in record or "odds_decimal" in record:
             return True
     return False
 
 
-def parse_flat_rows(events: list[Any], *, day: str,
+def parse_flat_rows(price_rows: list[Any], *, day: str,
                     card_keys: set[tuple[str, str]] | None = None,
                     team_key: Any = None) -> tuple[list[dict[str, Any]], bool]:
     """Parse the vendor's flat one-row-per-selection board.
 
     Each record is a single price: fixture, book, market, selection, odds.
+    The parameter used to be called ``events``, which was a lie: a hundred
+    of these is not a hundred matches. On 2026-10-06 a hundred of them was
+    five fixtures, one of which carried sixty-seven. The name misled a
+    reader into annotating the board as a hundred events, which reverses
+    the verdict on the vendor - a hundred matches none of which are ours
+    is damning coverage evidence, five in-play strangers is a filtering
+    problem. ``board_rows`` counts these records; ``board_fixtures``
+    counts the distinct matches behind them, and both are recorded.
     Live and stale prices are refused here rather than downstream - this lane
     feeds a prematch card, and an in-play price is not a worse prematch price,
     it is a different quantity.
@@ -363,7 +371,7 @@ def parse_flat_rows(events: list[Any], *, day: str,
             target = card_vocabulary if bucket is _CANONICALIZATION_DROP_REASONS else card_drops
             target[reason] = target.get(reason, 0) + 1
 
-    for row in events:
+    for row in price_rows:
         if not isinstance(row, dict): continue
         home, away = _sides(row)
         # Overlap is answered BEFORE the well-formedness guard below. The
@@ -455,22 +463,24 @@ def parse_snapshot(payload: Any, *, day: str,
                       "card_fixtures_reversed": 0, "card_priced_rows": 0,
                       "card_prematch_drop_reasons": {},
                       "card_canonicalization_drop_reasons": {}}
-    events = payload if isinstance(payload, list) else next((payload.get(k) for k in ("events", "data", "matches", "odds") if isinstance(payload, dict) and isinstance(payload.get(k), list)), None)
-    if not isinstance(events, list): return [], False
+    records = payload if isinstance(payload, list) else next((payload.get(k) for k in ("events", "data", "matches", "odds") if isinstance(payload, dict) and isinstance(payload.get(k), list)), None)
+    if not isinstance(records, list): return [], False
     # A recognized but EMPTY event list is a valid empty result, not a schema
     # failure: conflating the two turns a quiet slate into a false outage (and
     # a real contract break into a false "no games today").
-    _BOARD_CONTEXT["board_rows"] = len(events)
-    if not events:
+    # Price records, not matches: see parse_flat_rows. board_fixtures
+    # carries the distinct-match count for the same board.
+    _BOARD_CONTEXT["board_rows"] = len(records)
+    if not records:
         return [], True   # recognized board, nothing on it
-    if _is_flat(events):
-        return parse_flat_rows(events, day=day, card_keys=card_keys,
+    if _is_flat(records):
+        return parse_flat_rows(records, day=day, card_keys=card_keys,
                                team_key=team_key)
-    rows: list[dict[str, Any]] = []; shaped = not events; stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    rows: list[dict[str, Any]] = []; shaped = not records; stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     fixtures: set[tuple[str, str]] = set()
     leagues: dict[str, int] = {}
     teams: dict[str, int] = {}
-    for event in events:
+    for event in records:
         if not isinstance(event, dict): continue
         home = event.get("home") or event.get("home_team"); away = event.get("away") or event.get("away_team")
         if isinstance(home, dict): home = home.get("name")
