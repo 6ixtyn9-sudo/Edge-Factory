@@ -188,6 +188,11 @@ def _num(x: object) -> float | None:
     except (TypeError, ValueError): return None
 
 _PREMATCH_DROP_REASONS: dict[str, int] = {}
+# Refusals that mean the capture window was wrong, as opposed to refusals
+# that mean the board carried markets we do not bet. The distinction decides
+# which remedy the health line asks for, so the two groups are named here
+# rather than inferred at the branch.
+_LIVE_LIKE_DROP_REASONS = ("live_price", "stale_pregame_price")
 
 # What the board itself looked like, independent of how many rows survived.
 # A zero with no board context is unreadable: an empty slate, a page that
@@ -470,25 +475,45 @@ def _league_filter_effective(board: dict[str, Any]) -> bool | None:
 
 
 def _zero_row_reason(stats: dict[str, Any]) -> str:
-    """Name which of five things produced a zero, because they differ.
+    """Name which of seven things produced a zero, because they differ.
 
     An empty slate means come back later. A page that filled with in-play
     games before reaching our fixtures means narrow the request - the
-    opposite of waiting. A competition filter the server ignored means the
-    identifier is not one it knows. A filter it honoured onto an empty board
-    means that competition had nothing on. An unmappable board means the
-    market vocabulary moved. Collapsing these into one zero is what kept the
-    2026-10-06 result unreadable.
+    opposite of waiting. A board of player props means the markets we bet
+    were not on it. A competition filter the server ignored means the
+    identifier is not one it knows. A filter it honoured onto an empty
+    board means that competition had nothing on. An unmappable board means
+    the market vocabulary moved. Collapsing these into one zero is what
+    kept the 2026-10-06 result unreadable.
     """
     if stats.get("league_filter_requested") and not int(stats.get("board_rows") or 0):
         return "league_filter_returned_empty"
     if stats.get("league_filter_effective") is False:
         return "league_filter_not_applied"
     if _PREMATCH_DROP_REASONS and not _CANONICALIZATION_DROP_REASONS:
-        # The distinction ticket (o) exists for. Same counters, same zero,
-        # opposite operator action, decided by whether the page was full.
-        return ("board_truncated_live_first" if stats.get("board_truncated")
-                else "all_rows_live_or_stale")
+        # READ THIS BEFORE CONCLUDING ANYTHING ABOUT MARKET VOCABULARY.
+        # Reaching this branch means the vocabulary map is EMPTY, and that
+        # is not evidence our market names match the vendor's. The prematch
+        # refusal above runs BEFORE the vocabulary step, so when every row
+        # is refused as in-play or as a prop, nothing ever reaches the
+        # mapper and it reports no failures for a purely trivial reason.
+        # An empty failure map here means "untested", never "agrees".
+        truncated = bool(stats.get("board_truncated"))
+        live = sum(_PREMATCH_DROP_REASONS.get(reason, 0)
+                   for reason in _LIVE_LIKE_DROP_REASONS)
+        props = _PREMATCH_DROP_REASONS.get("player_prop", 0)
+        # Timing outranks market selection when both are present. An in-play
+        # row is a different quantity that would corrupt a closing-line
+        # measurement, so it invalidates the capture window itself; a prop
+        # row is merely a market we never bet. Reporting props while live
+        # rows are also present would hide the more serious fault.
+        if live:
+            return ("board_truncated_live_first" if truncated
+                    else "all_rows_live_or_stale")
+        if props:
+            return ("board_truncated_player_props" if truncated
+                    else "all_rows_player_props")
+        return "all_rows_unpriced"
     if _CANONICALIZATION_DROP_REASONS:
         return "all_rows_unmappable"
     return "provider_empty_slate"

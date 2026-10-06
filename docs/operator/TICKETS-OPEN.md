@@ -512,16 +512,29 @@ truncated page is the opposite of capturing later.
 
 What shipped: the board is now measured alongside the rows that survive
 it. Every capture records how many records came back, how many distinct
-fixtures, how much of the board was in-play, which competitions were on
-it, and whether the page reached its own row limit. Five outcomes are now
-told apart where there were three:
+fixtures, how much of the board was refused and for which reasons, which
+competitions were on it, and whether the page reached its own row limit.
+Seven outcomes are now told apart where there were three:
 
 - an empty slate — come back later;
 - **a page truncated live-first** — narrow the request, do not wait;
+- **a page truncated on player props** — the markets we bet were not on
+  it; this is a market-selection problem, not a timing one;
+- a board of props that was not truncated — same remedy, no cut involved;
+- a board whose rows carried no usable price;
 - a competition filter the server ignored — the identifier is not one it
   knows;
 - a filter honoured onto an empty board — that competition had nothing on;
 - a board whose market vocabulary did not map — the vocabulary moved.
+
+Refusals are reported by group rather than summed. The first cut folded
+every prematch refusal into one in-play token, so a board that was wholly
+player props reported itself as live — a false statement about a board
+with no live rows on it, not merely a missing distinction. When both
+appear the in-play finding is reported, because it says the capture window
+itself was wrong and that outranks a board carrying markets we never bet.
+The per-reason split travels into the committed record alongside the
+total, since a total cannot be unpicked into its causes afterwards.
 
 What did NOT ship, deliberately: no competition identifier was chosen and
 configured. Picking one blind is the precise failure this ticket warns
@@ -556,3 +569,38 @@ error.
 - A dead secret reference at line 36 of the daily workflow should be
   deleted the next time that file is legitimately touched. The GitHub App
   cannot push workflow files, so it was not touched here.
+
+## (p) Standing rule: a handover states what discriminates, not what merely correlates
+
+Two failures in the 2026-10-06 handover round, both of the same family, both
+cheap to avoid.
+
+**A measurement without its scope travels as a general claim.** A count of
+dirty files was taken in one workspace, was correct there, and was written
+into a brief to be acted on first in a different one — where it was false.
+Nothing in the number said "here". This is the companion to ticket (k): a
+history search states its depth, and a workspace measurement states its
+workspace. Re-derivation does not catch this, because re-deriving it in the
+original workspace returns the same answer with the same confidence.
+
+**A number that only moves when someone moves it cannot witness that work
+landed.** The test-function floor was used as evidence that a particular
+turn had survived. The floor is set by hand and was last set two merges
+earlier, so it reads the same whether or not that turn landed. It answers
+"has anyone gutted the suite", and nothing else. What discriminates is the
+actual count, or a named symbol the work introduced:
+
+| state | floor | actual |
+|---|---|---|
+| merged work only | 1471 | 1473 |
+| merged work plus the follow-up turn | 1471 | 1475 |
+
+The practical conclusion reached from the floor happened to be right, which
+is the dangerous case — a wrong instrument agreeing with the truth once
+teaches nothing and is not repeatable.
+
+**The rule.** When a handover asserts that some specific work is or is not
+present, it names the discriminator and shows it separating the two cases.
+A hand-set threshold, a summary line, and a document's own description of
+itself are all excluded, because each reports what someone last decided to
+write rather than what is there.
