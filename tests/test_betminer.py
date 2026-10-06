@@ -352,7 +352,10 @@ def test_rapidapi_headers_are_sent_for_the_betminer_host(monkeypatch):
     assert captured["headers"]["X-rapidapi-key"] == "test-key-material"
 
 
-def test_http_404_is_an_endpoint_contract_failure(monkeypatch):
+def test_http_404_without_a_body_is_not_claimed_as_a_contract_failure(monkeypatch):
+    """Superseded assertion. This used to assert the blanket label
+    `http_404_endpoint_contract`, which asserted a *cause* ("our path is
+    stale") the response never evidenced. A bodyless 404 is undiagnosed."""
     def fake_get(url, timeout=30):
         raise bm.UpstreamBlocked("betminer: HTTP 404 Not Found; ")
 
@@ -360,8 +363,30 @@ def test_http_404_is_an_endpoint_contract_failure(monkeypatch):
     rows, stats = bm.capture_day("2026-10-03")
     assert rows == []
     assert stats["status"] == "unavailable"
-    assert stats["reason"] == "http_404_endpoint_contract"
+    assert stats["reason"] == "http_404_endpoint_contract_unconfirmed"
     assert stats["status"] in bm.RETRYABLE_ZERO_ROW_STATUSES
+
+
+def test_http_404_with_a_routing_body_is_a_contract_failure(monkeypatch):
+    def fake_get(url, timeout=30):
+        raise bm.UpstreamBlocked(
+            "betminer: HTTP 404 Not Found; "
+            "{\"message\":\"Endpoint '/matches/2026-10-03' does not exist\"}")
+
+    monkeypatch.setattr(bm, "get_json", fake_get)
+    _, stats = bm.capture_day("2026-10-03")
+    assert stats["reason"] == "http_404_endpoint_contract"
+
+
+def test_http_404_with_a_subscription_body_points_at_billing(monkeypatch):
+    def fake_get(url, timeout=30):
+        raise bm.UpstreamBlocked(
+            "betminer: HTTP 404 Not Found; "
+            "{\"message\":\"You are not subscribed to this API.\"}")
+
+    monkeypatch.setattr(bm, "get_json", fake_get)
+    _, stats = bm.capture_day("2026-10-03")
+    assert stats["reason"] == "http_404_not_subscribed"
 
 
 def test_404_probe_receipt_is_write_once_for_the_day(monkeypatch, tmp_path):
