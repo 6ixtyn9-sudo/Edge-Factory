@@ -668,6 +668,16 @@ competitions. Still unknown and still not answerable without another
 run: whether the vendor prices our fixtures at all at a quieter hour or
 under a competition filter, and whether its market names match ours.
 
+## (o) reading the board figures without tripping over them
+
+The vendor returns one record per price, so the figure for rows and the
+figure for matches are different quantities and both are recorded. On
+2026-10-06 the board was a hundred rows over five matches. Read them
+together or the verdict inverts: a hundred *matches* carrying none of
+ours condemns the source, five in-play strangers is a filtering problem
+with an obvious next move. A reader already made this mistake once,
+because the code called those records events.
+
 ## (o) the configured limit is honoured - corrected 2026-10-06
 
 A note in the request code claimed the soccer feed pages at fifty rows
