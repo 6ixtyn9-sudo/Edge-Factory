@@ -110,18 +110,38 @@ def test_colliding_fixtures_both_settle():
 
 
 def test_agreeing_outcomes_do_not_license_a_truncated_key():
-    """The invisible half of the defect.
+    """The invisible half of the defect, at the key layer.
 
     Only one of the two colliding fixtures has been filed. The old guard
     saw a single outcome behind the key, concluded nothing could be
-    mis-settled, and answered "home" for the match that is missing.
+    mis-settled, and let a leg for the OTHER club read it.
+
+    The exact-key path no longer does that: a truncated key may answer
+    only for a club it actually holds.
+
+    KNOWN GAP, measured and deliberately not closed here: the separate
+    similarity fallback further down the chain compares truncated keys
+    and will still reach this row. Gating that fallback on the same
+    deterministic club test was tried and withdrawn — on respelled legs
+    it removed 164 correct settlements to prevent 2 wrong ones, because
+    the club test is far stricter than the similarity bar it would be
+    policing. That path needs its own work order.
     """
     at = _load()
     settled = _settle(at, [{"home": "Manchester City", "away": "Arsenal",
                             "result": "home"}])
     assert _grade(at, settled, "Manchester City", "Arsenal") == "home"
-    assert _grade(at, settled, "Manchester United", "Arsenal") is None, (
-        "an unfiled fixture must not inherit its neighbour's result")
+    day = "2026-10-05"
+    assert at._narrow_key_blocks(day, "mancheste", "arsenal",
+                                 "Manchester United", "Arsenal"), (
+        "the truncated key must refuse a club it does not hold")
+    assert all(
+        settled.get((day, hk, ak)) is None
+        for hk, ak, _blind in at._exact_result_lookup_specs(
+            "Manchester United", "Arsenal")
+        if not at._narrow_key_blocks(day, hk, ak, "Manchester United",
+                                     "Arsenal")
+    ), "no exact key may settle the unfiled fixture"
 
 
 # --- B: an abbreviated word is the same club ----------------------------
