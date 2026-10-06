@@ -393,6 +393,45 @@ independence (same book through multiple donors counts once). No gate is
 weakened and no automatic promotion exists.
 
 
+## (j) Politeness budgets are named for the run, enforced per capture
+
+Opened 2026-10-06 out of WO-8. **Template-wide, not a pinnapi defect.**
+Nothing is broken until a caller captures more than one date per run.
+
+Every adapter with a per-run budget calls `reset_state()` on entry to
+`capture_day`, which zeroes the counter the cap measures. So the cap is
+per capture; across captures there is no run-level ceiling. Verified by
+walking each module's syntax tree — a line-based scan reports the opposite
+answer. Six of seven adapters reset per capture (`betbetter`, `betminer`,
+`boggio`, `pinnapi_odds`, `sharpapi_odds`, `sportytrader_odds`); five of
+those six advertise a per-run cap.
+
+Not patched here because the weight differs by vendor — for a 100/day
+trial key it is the whole budget, for the scrapers it is a courtesy
+question with a different owner — and a cap change is an operator call.
+Interim: `pinnapi_odds` counts calls issued across the process and reports
+the running total, so real spend is visible while behaviour is unchanged.
+
+Acceptance: decide per adapter whether the cap is per-run or per-capture,
+make the name match either way. No gate, floor, quorum or threshold.
+
+## (k) Standing rule: a history search states its depth
+
+Not a work item — a rule, written here because the last place it was
+written was a session transcript, and those do not reach the next session.
+
+**Any search over git history asserts the clone is not shallow first, or
+states its depth in its result.** `git rev-parse --is-shallow-repository`
+is the whole check.
+
+On 2026-10-06 a sandbox clone held six commits of a 1,528-commit history;
+a credential scan run inside it returned "clean" — correct for six commits
+— and nothing in the result said six. Re-running reproduces the same answer
+with the same confidence, so re-derivation does not catch this class. Only
+the scope does, and only if it travels with the number. `DATED-CLAIMS.md`
+makes a claim carry its provenance; this makes a measurement carry its
+scope.
+
 ## INTAKE INBOX (standing queue)
 
 - **KDobrev-Pinnacle** — failover peer only; family `pinnacle`; adopt only if
@@ -405,3 +444,54 @@ weakened and no automatic promotion exists.
 
 Boggio is shipped as SHADOW-03 W3-T1. SportsGameOdds is moved out as an
 explicit SKIP in `docs/operator/SGO-QUOTA.md`; neither has promotion credit.
+
+### (l) SharpAPI league ids are not canonical across books — OPEN
+
+Observed in the captured soccer page of 2026-10-06: the same competition
+appears as `euro_quals_-_u21_championship` on one book and
+`uefa_u21_euro_qualifiers` on another, within a single response. Any
+league-based matching or filtering that treats the id as a stable string
+will split one competition into two and under-count coverage.
+
+Not addressed in the host/parser repair, which deliberately matches on
+fixture sides rather than league. It becomes blocking the moment
+`SHARPAPI_LEAGUE` is used as a server-side filter, because filtering on one
+spelling silently discards the other book's prices for the same games.
+
+### (m) SharpAPI prematch coverage is still entirely unmeasured — OPEN
+
+The only captured page was pulled after kickoff and was 100% in-play. The
+adapter now refuses live prices, which is correct, but it means the number
+that decides this vendor's fate — how many of our fixtures it prices
+BEFORE kickoff, with a draw and a 2.5 line — has never been observed. One
+prematch capture answers it. Until then, treat all coverage estimates for
+this source as unfounded.
+
+### (n) The Odds API market list is narrowed in deployment and contradicts its own companion knob — OPEN
+
+The workflow comment above these settings states that the `||` fallbacks
+"mirror the code defaults". Four of the five do, exactly. One does not:
+
+- code default: `h2h,totals,totals_alt,btts,team_totals,double_chance`
+- deployment:   `h2h,totals`
+
+Each market costs one credit per event against a 480/month cap, so
+narrowing is a plausible deliberate economy — three markets instead of six
+is a third of the spend. It is recorded as accepted in the drift audit on
+that basis.
+
+What makes it a ticket rather than a settled decision is the companion
+knob. `ODDS_API_TOTAL_POINTS` is set to `1.5,2.5,3.5,4.5`, but the market
+that supplies the non-main lines is `totals_alt`, which is not requested.
+So the configuration filters for four goal lines while only ever fetching
+one. Either the narrowing was deliberate and `ODDS_API_TOTAL_POINTS` should
+be `2.5` to say so honestly, or the code default was widened later and the
+deployment was never updated — the same drift that hid the SharpAPI
+endpoint defect.
+
+The repository is shallow at 13 commits, so history cannot date the change
+from here and the question cannot be settled by `git log`. It needs an
+operator decision, not a code change: the enhancement overlay (alternate
+goal lines, both-teams-to-score, team totals, double chance) has parsing
+code that production never exercises, and the credit cost of enabling it
+is a budget matter.

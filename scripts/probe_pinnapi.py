@@ -8,9 +8,10 @@ event, and rate-limit headers. It never prints PINNAPI_KEY - URLs are
 sanitized before printing.
 
 Acceptance checks (HUNT-01 SOURCE-HUNT-2026-10 section 7.3):
-  1. AUTH      - reconcile the REST auth mechanism (default probe: ``key=``
-                 query param per pinnapi's SSE docs; ``--auth header`` tries
-                 an ``X-API-Key`` header instead). A 401/403 on both is a
+  1. AUTH      - exercise the same contract the adapter uses: the key as an
+                 ``x-portal-apikey`` request header, with the legacy ``key=``
+                 query form retried only on HTTP 401 (``--auth`` pins one
+                 mechanism and skips the fallback). A 401/403 on both is a
                  fail-closed "do not wire" answer.
   2. SCHEMA    - confirm the snapshot shape (event list with home/away and a
                  markets list with market/selection/price). If the shape is
@@ -18,15 +19,16 @@ Acceptance checks (HUNT-01 SOURCE-HUNT-2026-10 section 7.3):
                  pinnapi_odds.parse_snapshot - no new crawl needed.
   3. COVERAGE  - event count + league spread vs our 432-league net.
 
-Budget: 2 requests of the 100/day free tier.
+Budget: 2 requests of the 100/day free tier (3 if the 401 fallback fires).
 
 Usage:
     PINNAPI_KEY=... python3 scripts/probe_pinnapi.py
-    PINNAPI_KEY=... python3 scripts/probe_pinnapi.py --auth header
+    PINNAPI_KEY=... python3 scripts/probe_pinnapi.py --auth query
 """
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import os
 import re
@@ -55,6 +57,15 @@ def coverage_report(data: Any, slate: list[dict[str, Any]]) -> dict[str, Any]:
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
 from edgefactory.identity import source_team_key
+
+# Load the shipped adapter by path: importing edgefactory.sources as a
+# package would drag in every other adapter's third-party dependencies, and
+# this diagnostic must not fail for a reason unrelated to pinnapi. Reading
+# the real module is what keeps the probe on the same contract.
+_SPEC = importlib.util.spec_from_file_location(
+    "pinnapi_odds_probe", ROOT / "src" / "edgefactory" / "sources" / "pinnapi_odds.py")
+adapter = importlib.util.module_from_spec(_SPEC)
+_SPEC.loader.exec_module(adapter)
 
 try:
     from dotenv import load_dotenv
@@ -179,13 +190,15 @@ def _format(name: str, url: str, result: dict[str, Any], secret: str = "") -> st
 def main() -> int:
     parser = argparse.ArgumentParser(description="Probe pinnapi (Pinnacle relay) capability")
     parser.add_argument("--timeout", type=int, default=20, help="HTTP timeout seconds")
-    parser.add_argument("--auth", choices=("query", "header"), default="query",
-                        help="auth mechanism to try: key= query param (default) or X-API-Key header")
+    parser.add_argument("--auth", choices=("query", "header", "auto"), default="auto",
+                        help=("auth mechanism: auto (default) sends the "
+                              f"{adapter.AUTH_HEADER} header and retries the legacy key= "
+                              "query form on HTTP 401; query/header pin one mechanism"))
     args = parser.parse_args()
 
     key = os.environ.get(KEY_ENV, "").strip()
     print(f"{KEY_ENV} present: {'yes' if key else 'no'}")
-    print(f"Base={BASE}  auth={args.auth}  (free tier: 100 REST requests/day; this probe costs 2)")
+    print(f"Base={BASE}  auth={args.auth}  (free tier: 100 REST requests/day; this probe costs 2, 3 if the 401 fallback fires)")
     if not key:
         print("No key: nothing to probe. The shadow adapter stays inert (status=not_run) without a key.")
         return 0
@@ -197,15 +210,22 @@ def main() -> int:
     result["summary"] = _summarize(result.get("data"))
     results.append(("health (connectivity/auth check)", health_url, result))
 
-    if args.auth == "query":
-        markets_url = BASE + "/kit/v1/markets?" + urllib.parse.urlencode(
-            {"sport_id": 2, "event_type": "prematch", "key": key})
-        result = _request(markets_url, key, args.timeout)
-    else:
-        markets_url = BASE + "/kit/v1/markets?" + urllib.parse.urlencode({"sport_id": 2, "event_type": "prematch"})
-        result = _request(markets_url, key, args.timeout, extra_headers={"X-API-Key": key})
-    result["summary"] = _summarize(result.get("data"))
-    results.append(("markets snapshot (soccer, prematch)", markets_url, result))
+    # Same request the adapter builds - URL and auth both come from it, so
+    # the probe cannot drift away from the shipped contract.
+    order = {"auto": ("header", "query"), "header": ("header",), "query": ("query",)}[args.auth]
+    mechanism_used = None
+    for mechanism in order:
+        markets_url = adapter.markets_url(auth=mechanism)
+        headers = {adapter.AUTH_HEADER: key} if mechanism == "header" else None
+        result = _request(markets_url, key, args.timeout, extra_headers=headers)
+        result["summary"] = _summarize(result.get("data"))
+        results.append((f"markets snapshot (soccer sport_id={adapter.sport_id()}, "
+                        f"{adapter.EVENT_TYPE}, auth={mechanism})", markets_url, result))
+        mechanism_used = mechanism
+        if result.get("ok"):
+            break
+        if result.get("status") != 401:
+            break  # only a 401 is a question about the auth mechanism
 
     for name, url, res in results:
         print(_format(name, url, res, key))
@@ -222,8 +242,13 @@ def main() -> int:
     print(f"coverage_pct={cov['coverage_pct']} slate={cov['slate']} matched={cov['matched']}")
     print(f"unmatched_examples={cov['unmatched_examples']}")
     print("projection: shared-fixture target >=30; coverage is diagnostic only and is not persisted.")
-    print("ACCEPTANCE 1 - AUTH:", "mechanism works" if markets_result.get("ok") else
-          "FAILED - try --auth header; if both fail, do not wire (fail-closed)")
+    print("ACCEPTANCE 1 - AUTH:",
+          f"{mechanism_used} auth works (adapter records this as auth_mechanism)"
+          if markets_result.get("ok") else
+          "FAILED on every mechanism tried; do not wire (fail-closed)")
+    if not markets_result.get("summary", {}).get("event_count"):
+        print("ACCEPTANCE 2 - SCHEMA: zero events returned. Record this shape; do NOT")
+        print("  write a parser for a payload that has not been observed.")
     if markets_result.get("summary", {}).get("sample_event_keys"):
         print("ACCEPTANCE 2 - SCHEMA: event keys observed above; confirm home/away + markets/market/selection/price")
         print("ACCEPTANCE 3 - COVERAGE: leagues_top above - diff against our 432-league net before promotion talk")

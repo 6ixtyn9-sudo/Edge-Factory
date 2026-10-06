@@ -2,6 +2,60 @@ Edge Factory — Handover
 
 Date: 2026-10-03
 
+2026-10-06 addendum — SharpAPI repointed to the vendor's own host, shadow only
+
+Delivered
+
+- The SharpAPI price shadow had never returned a usable row, and the reason was three separate defects stacked on top of each other — which is why each earlier single-cause repair looked like it had failed. It was calling a marketplace relay the operator never had an account on; the deployment was overriding the endpoint with a path that only exists on that relay, silently undoing a correction made three days earlier; and the parser only understood a nested response shape the vendor does not send. It now calls the vendor directly with one credential, defaults to the documented path, and reads the flat one-record-per-selection board the vendor actually returns.
+- Prices are prematch only. The captured sample was entirely in-play because it was pulled after kickoff, and an in-play price is not a worse prematch price — it is a different quantity that would corrupt any closing-line measurement. Live, stale-pregame and player-prop rows are refused and counted by reason.
+- Fixture sides are taken only from the declared team fields, never from the event identifier. The captured page contains two fixtures whose identifiers list the teams in an order that contradicts which side is at home. Deriving sides from the identifier would have inverted the card for some games, and an inverted side prices perfectly — nothing downstream would ever have flagged it.
+- A zero-row answer now names which of four things happened: an empty board, a board that was entirely in-play, a board whose market vocabulary we could not map, or a payload shape we did not recognise. These prescribe opposite actions and were previously indistinguishable. The endpoint actually called is recorded too, so the override defect would now appear as data rather than as a mystery.
+- Still shadow only: never a vote, no consensus or corroboration wiring, no gate, floor, cap, quorum, threshold or veto touched. Call caps unchanged.
+
+Validation
+
+- Suite 1628 passed / 0 failed; `scripts/verify_work_order.py` 14/14; `scripts/verify_wo7.py` 9/9. Test functions 1448 to 1462, none removed.
+- Each new guard was broken on purpose, watched to fail, and restored, rather than merely asserted to work.
+
+What is observed and what is not
+
+Observed, from a response the operator captured in the vendor playground: the soccer board carries a genuine three-way match-odds market including the draw, and goal totals with numeric lines — the two markets this system bets, mapping through the existing normaliser with no new vocabulary. It also carries UEFA Nations League, which was the largest single league on the day's card at five of fourteen picks. The failure mode that killed the previous shadow vendor, a US two-way vocabulary with no draw, does not apply here.
+
+Not observed, and this is the number that actually matters: nobody has yet seen a single prematch row from this source. The one captured page was fifty rows, one sport, two books, one moment, all in-play. It is strong evidence about the response shape and no evidence about coverage.
+
+Blocking, and not doable from an agent session: the workflow still pins the endpoint to the relay-relative path, so production will 404 until it is changed. The corrected file is committed at `docs/operator/proposed-daily.yml` and must be copied over the live workflow by hand. The SharpAPI key also needs rotating — it was exposed in plaintext chat. That is a credential matter, not a repository-history one.
+
+2026-10-06 addendum — Pinnacle relay (pinnapi) request contract, shadow only
+
+Delivered
+
+- The Pinnacle price shadow had never returned a usable row because it asked the vendor for the wrong sport and authenticated the wrong way. It now requests soccer as `sport_id=1` (env-overridable) and sends the key as an `x-portal-apikey` request header; the old `key=` query form is retried once on 401/403 and the capture record states which form answered. The comment that recorded the wrong sport id as a captured panel receipt is deleted — nothing had been captured, and that false receipt froze the defect for four days.
+- The credential guard that refused unauthenticated requests used to test for `key=` in the URL, which would have rejected every header request and reported it as a dead vendor. It now asserts the request carries credentials by whichever mechanism is in use; the invariant is unchanged and the test pinning the old wording was rewritten with the reason recorded in it.
+- A zero-row answer is classified rather than collapsed: error envelope (a 200 whose body is an error, usually the credential), unrecognized shape (parser), empty board (sport id or a quiet hour), events without teams, or no usable rows. Each carries the observed payload shape and fixture counts. A 200 carrying an auth error no longer records the mechanism as having worked.
+- A rejected header is remembered for the run, so later captures spend one call rather than re-learning the same rejection.
+- Still shadow only: never a vote, no consensus or corroboration wiring, no gate, floor, cap, quorum, threshold or veto touched.
+
+Validation
+
+- Suite 1612 passed / 0 failed; `scripts/verify_work_order.py` 14/14; `scripts/verify_wo7.py` 9/9. Test-function floor raised to 1448.
+- **Live behaviour is now verified** by production run 37477487160 (2026-10-06, both jobs green). The earlier note in this section that no live call had been made is superseded; it was true when written and is not true now.
+
+What the first real run answered
+
+Observed, from the committed health record for 2026-10-06: the vendor replied HTTP 200 to a soccer prematch request, and the zero was classified as fixtures present but no usable price. That classification is only reachable when events came back carrying team names. So the credential was accepted and the sport number was right — both defects this work order existed to fix are fixed in production, confirmed against the live vendor and not only against mocks.
+
+Inferred, not yet confirmed: no drop reason was counted at all. Every named discard path increments a counter, so zero prices with zero discards points at fixtures arriving with no markets block rather than at a parser that failed to read one — meaning the prematch listing names matches but does not price them. Confirming this needs the recorded payload shape.
+
+What the run did not deliver, and why: the fields that confirm it — which auth mechanism answered, the attempt sequence, the payload shape — were written only to the per-date shadow ledger, which `.gitignore` excludes by design. The vendor answered and the answer did not survive the run. The discriminators are now carried in the committed health record as well, so the next run reports them without an artifact download. Carrying them took two changes, not one: the health record had to accept the fields, and the pipeline had to forward them. The first was written and tested on its own and would have shipped a row full of empty fields, because the observation handed to the health record is built by hand, field by field, and a field nobody names is a field that does not travel. The test that catches that asserts the wiring, not the capability. This was the third time evidence existed in a place that did not survive; the rule it earns is that a diagnostic is not delivered until it reaches somewhere durable.
+
+Extending the parser to read a prematch prices endpoint is now defensible, because a real sample exists. It is a new operator decision and deliberately not part of this work order.
+
+Clock and ranking
+
+The trial key lapses 20 October 2026. This work ranks below the next run's free counter lines, the replay at `unresolved="loss"`, and rotating the two exposed API keys. Full evidence, and the brief as issued, in `docs/operator/archive/WO-8-PINNAPI-2026-10-06.md`.
+
+Also filed: ticket (j) politeness budgets are named for the run but enforced per capture (template-wide, five adapters); ticket (k) a history search must state its depth; and `docs/operator/DATED-CLAIMS.md`, a ledger making every dated claim in a code comment name what backs it.
+
 2026-10-03 operator-brief addendum — fail-closed prices, canonical donor joins, and production recut
 
 Delivered

@@ -164,7 +164,7 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": "pinnapi: HTTP 200 for sport_id=1 event_type=prematch produced zero usable rows [no_usable_rows] - fixtures parsed but every price was discarded; see the named drop reasons; observed payload shape recorded - do not extend the parser without a captured sample",
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
