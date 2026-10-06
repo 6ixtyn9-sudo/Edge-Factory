@@ -156,6 +156,11 @@ Deep evidence retained in [`archive/`](archive/):
   and [`archive/SPORTYTRADER-7PCT-REPORT.json`](archive/SPORTYTRADER-7PCT-REPORT.json)
   — shadow corroborator build and its offline 7% evidence report.
 - [`archive/PR15-RED-TEAM.md`](archive/PR15-RED-TEAM.md) — PR #15 red-team pass.
+- [`archive/WO-8-PINNAPI-2026-10-06.md`](archive/WO-8-PINNAPI-2026-10-06.md) —
+  WO-8 Pinnacle relay request contract (CLOSED): outcome, the brief as issued,
+  and what stays unverified until a live run.
+- [`DATED-CLAIMS.md`](DATED-CLAIMS.md) — live ledger: every dated claim in a
+  code comment names what backs it, enforced by `tests/test_dated_claims_ledger.py`.
 - `../../HANDOVER.md` — the append-only repo-wide anti-drift log. It stays at
   the repository root on purpose: ~10 source files, `README.md` and the daily
   pipeline reference it by that path, so moving it would rot live references.
