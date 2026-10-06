@@ -16,7 +16,8 @@ from scripts import probe_sharpapi
 @pytest.fixture(autouse=True)
 def _clean_env(monkeypatch, tmp_path):
     for name in ("SHARPAPI_ENDPOINT", "SHARPAPI_SPORT", "SHARPAPI_LIMIT",
-                 "SHARPAPI_BOOK", "SHARPAPI_MARKET", "SHARPAPI_DATE_PARAM"):
+                 "SHARPAPI_BOOK", "SHARPAPI_MARKET", "SHARPAPI_DATE_PARAM",
+                 "SHARPAPI_KEY"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.setenv("RAPIDAPI_KEY", "sharp-test-key")
     # Every transport test must opt into the provider's required sport filter;
@@ -217,3 +218,106 @@ def test_missing_key_is_inert(monkeypatch):
         lambda *a, **k: (_ for _ in ()).throw(AssertionError("keyless run must not fetch")))
     rows, stats = sa.capture_day("2026-10-03")
     assert rows == [] and stats["status"] == "not_run"
+
+
+# --- origin (X-API-Key) credential ---------------------------------------
+# SharpAPI authenticates twice: the RapidAPI gateway checks X-RapidAPI-Key,
+# then SharpAPI's own origin checks X-API-Key. Sending only the gateway key
+# produced 401 {"error":{"code":"disabled_api_key"}} in production on
+# 2026-10-06, which reads as a revoked key rather than a missing one.
+
+
+def _capture_headers(monkeypatch):
+    """Run one request through a fake transport and return the sent headers."""
+    captured: dict = {}
+
+    class _Response:
+        status = 200
+        headers: dict[str, str] = {}
+
+        def read(self, _n=0):
+            return b'{"events": []}'
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+    def fake_urlopen(request, timeout=30):
+        captured["headers"] = dict(request.headers)
+        return _Response()
+
+    monkeypatch.setattr(sa.urllib.request, "urlopen", fake_urlopen)
+    sa.get_json(sa.odds_url("2026-10-07"))
+    return captured["headers"]
+
+
+def test_origin_key_is_sent_as_x_api_key(monkeypatch):
+    monkeypatch.setenv("RAPIDAPI_KEY", "gateway-key")
+    monkeypatch.setenv("SHARPAPI_KEY", "origin-key")
+    headers = _capture_headers(monkeypatch)
+    # urllib title-cases header names.
+    assert headers["X-api-key"] == "origin-key"
+    assert headers["X-rapidapi-key"] == "gateway-key"
+
+
+def test_both_credentials_are_independent(monkeypatch):
+    """The origin key must not be substituted for the gateway key."""
+    monkeypatch.setenv("RAPIDAPI_KEY", "gateway-key")
+    monkeypatch.setenv("SHARPAPI_KEY", "origin-key")
+    headers = sa.auth_headers()
+    assert headers["X-RapidAPI-Key"] == "gateway-key"
+    assert headers["X-API-Key"] == "origin-key"
+    assert headers["X-RapidAPI-Host"] == sa.API_HOST
+
+
+def test_unset_origin_key_omits_the_header_entirely(monkeypatch):
+    """A blank credential is indistinguishable from a revoked one upstream."""
+    monkeypatch.setenv("RAPIDAPI_KEY", "gateway-key")
+    monkeypatch.delenv("SHARPAPI_KEY", raising=False)
+    assert "X-API-Key" not in sa.auth_headers()
+    headers = _capture_headers(monkeypatch)
+    assert not any(k.lower() == "x-api-key" for k in headers)
+
+
+def test_blank_origin_key_omits_the_header(monkeypatch):
+    monkeypatch.setenv("RAPIDAPI_KEY", "gateway-key")
+    monkeypatch.setenv("SHARPAPI_KEY", "   ")
+    assert "X-API-Key" not in sa.auth_headers()
+
+
+def test_diagnostics_never_leak_the_origin_key(monkeypatch):
+    """Providers quote the offending credential in auth errors; redact it."""
+    monkeypatch.setenv("RAPIDAPI_KEY", "gateway-key")
+    monkeypatch.setenv("SHARPAPI_KEY", "origin-leak-me-not")
+
+    def boom(url, timeout=30):
+        raise sa.UpstreamBlocked(
+            'sharpapi: HTTP 401 Unauthorized; {"error":{"code":"disabled_api_key",'
+            '"key":"origin-leak-me-not"}}')
+
+    monkeypatch.setattr(sa, "get_json", boom)
+    monkeypatch.setenv("SHARPAPI_SPORT", "soccer")
+    sa.capture_day("2026-10-07")
+    blob = json.dumps(sa.diagnostics())
+    assert "origin-leak-me-not" not in blob
+    assert "[REDACTED]" in blob
+
+
+# --- unmappable markets must count, not crash -----------------------------
+
+
+def test_unmappable_market_is_counted_not_crashed():
+    """Reachable only once auth succeeds: an unknown market used to raise
+    NameError and abort the whole snapshot instead of dropping one row."""
+    payload = {"events": [{"home": "A", "away": "B", "bookmakers": [
+        {"name": "bk", "markets": [
+            {"market": "TOTALLY_UNKNOWN", "selection": "???", "price": 2.0},
+            {"market": "1X2", "selection": "A", "price": 2.5},
+        ]}]}]}
+    rows, shaped = sa.parse_snapshot(payload, day="2026-10-07")
+    assert shaped is True
+    # The good row survives; the unmappable one is accounted for, not fatal.
+    assert len(rows) == 1
+    assert sum(sa._CANONICALIZATION_DROP_REASONS.values()) == 1

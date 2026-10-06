@@ -36,6 +36,14 @@ def soccer_identifier(data):
     return None
 
 
+def _redact(text: str, *secrets: str) -> str:
+    """Strip every configured credential from provider output before printing."""
+    for secret in secrets:
+        if secret:
+            text = text.replace(secret, "[REDACTED]")
+    return text
+
+
 def main() -> int:
     import argparse
     parser = argparse.ArgumentParser(description="Probe SharpAPI without printing credentials")
@@ -45,7 +53,12 @@ def main() -> int:
     )
     args = parser.parse_args()
     key = os.environ.get("RAPIDAPI_KEY", "").strip()
+    origin_key = os.environ.get("SHARPAPI_KEY", "").strip()
     print(f"RAPIDAPI_KEY present: {'yes' if key else 'no'}")
+    # SharpAPI checks its own X-API-Key after the gateway checks the RapidAPI
+    # key. Probing with only the gateway key reports 401 disabled_api_key and
+    # makes a correctly-configured origin key look revoked.
+    print(f"SHARPAPI_KEY present: {'yes' if origin_key else 'no'}")
     print(f"documented_soccer_id={DOCUMENTED_SOCCER_ID}")
     if not key: return 0
     # Use the provider's discovery endpoint when requested, or automatically
@@ -57,13 +70,15 @@ def main() -> int:
     request_endpoint = SPORTS_ENDPOINT if discover else _endpoint()
     url = BASE + request_endpoint + (("?" + urllib.parse.urlencode(sorted(params.items()))) if params else "")
     print(f"endpoint={request_endpoint} params={sorted(params)}")
-    req = urllib.request.Request(url, headers={"Accept":"application/json", "X-RapidAPI-Key":key, "X-RapidAPI-Host":HOST})
+    headers = {"Accept":"application/json", "X-RapidAPI-Key":key, "X-RapidAPI-Host":HOST}
+    if origin_key: headers["X-API-Key"] = origin_key
+    req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=20) as response:
             body = response.read(2_000_000).decode("utf-8", "replace")
             print(f"status={response.status}")
             print("rate_limit_headers=" + repr({str(k):str(v) for k,v in response.headers.items() if 'ratelimit' in str(k).lower() or str(k).lower() == 'retry-after'}))
-            print("body_sample=" + body[:200].replace(key, "[REDACTED]"))
+            print("body_sample=" + _redact(body[:200], key, origin_key))
             try: data = json.loads(body)
             except json.JSONDecodeError: data = None
             if isinstance(data, dict): print("top_keys=" + repr(list(data)[:20]))
@@ -80,7 +95,7 @@ def main() -> int:
             cov=coverage_report(data,slate); print(f"coverage_pct={cov['coverage_pct']} slate={cov['slate']} matched={cov['matched']}"); print(f"unmatched_examples={cov['unmatched_examples']}"); print('projection: shared-fixture target >=30; coverage is diagnostic only and is not persisted.')
     except urllib.error.HTTPError as exc:
         sample = exc.read(200).decode("utf-8", "replace") if exc.fp else ""
-        print(f"status={exc.code} error_class=HTTPError body_sample={sample.replace(key, '[REDACTED]')[:200]}")
+        print(f"status={exc.code} error_class=HTTPError body_sample={_redact(sample, key, origin_key)[:200]}")
     except Exception as exc: print(f"status=error error_class={type(exc).__name__}")
     return 0
 if __name__ == "__main__": raise SystemExit(main())
