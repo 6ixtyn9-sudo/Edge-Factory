@@ -192,6 +192,47 @@ def test_structure_only_names_do_not_share_one_key():
     assert _grade(at, settled, "Atletico FC", "Sevilla") == "away"
 
 
+def test_superseded_keys_are_named_not_just_counted(capsys):
+    """A counter that can only print one value is not evidence.
+
+    Once the specific tier exists, the pending counter drops to zero for
+    this class of key by construction. The named receipt is what lets an
+    operator check that a key they used to resolve by hand moved into
+    the superseded bucket rather than quietly disappearing.
+    """
+    at = _load()
+    _settle(at, [
+        {"home": "Adelaide City", "away": "Adelaide Comets",
+         "result": "home"},
+        {"home": "Adelaide Cobras", "away": "Adelaide Croatia Raiders",
+         "result": "away"},
+    ])
+    err = capsys.readouterr().err
+    assert "settlement_narrow_key_superseded=1" in err
+    assert "SUPERSEDED NARROW KEY 2026-10-05" in err
+    assert "Adelaide City vs Adelaide Comets" in err
+    assert "Adelaide Cobras vs Adelaide Croatia Raiders" in err
+
+
+def test_superseded_detail_prints_once_but_counter_always(capsys):
+    at = _load()
+    rows = [
+        {"home": "Adelaide City", "away": "Adelaide Comets",
+         "result": "home"},
+        {"home": "Adelaide Cobras", "away": "Adelaide Croatia Raiders",
+         "result": "away"},
+    ]
+    _settle(at, rows)
+    first = capsys.readouterr().err
+    _settle(at, rows)
+    second = capsys.readouterr().err
+    assert "settlement_narrow_key_superseded=1" in first
+    assert "settlement_narrow_key_superseded=1" in second
+    assert "SUPERSEDED NARROW KEY" in first
+    assert "SUPERSEDED NARROW KEY" not in second, (
+        "the detail block must not repeat on every reload")
+
+
 # --- regression: WO-6 must keep settling --------------------------------
 
 def test_wo6_turkiye_regression():
