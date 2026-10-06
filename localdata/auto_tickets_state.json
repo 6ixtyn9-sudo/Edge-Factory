@@ -1,39 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 167.11567900000009,
+  "bank": 199.91219400000008,
   "cycle_base": 100.0,
   "open_slips": [
-    {
-      "date": "2026-10-05",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Italy vs Turkey",
-              "pick": "HOME",
-              "prob": 0.64,
-              "odds": 1.47,
-              "result": null
-            },
-            {
-              "match": "Moss vs Kongsvinger",
-              "pick": "AWAY",
-              "prob": 0.62,
-              "odds": 1.75,
-              "result": null
-            }
-          ],
-          "odds": 2.57,
-          "stake_pct": 20.8895,
-          "results": [
-            null,
-            "win"
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 20.8895
-    },
     {
       "date": "2026-10-06",
       "accas": [
@@ -727,6 +696,18 @@
         }
       ],
       "bank_pct": 167.1157
+    },
+    {
+      "date": "2026-10-05",
+      "staked_pct": 20.8895,
+      "returned_pct": 53.686,
+      "accas": [
+        {
+          "odds": 2.57,
+          "won": true
+        }
+      ],
+      "bank_pct": 199.9122
     }
   ],
   "events": [],
