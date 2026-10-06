@@ -560,6 +560,64 @@ A filter that was genuinely rejected onto a single-competition board will
 therefore read as unknown, not as rejected. That is the safe direction of
 error.
 
+### (o) follow-up — the number that decides the next move is the overlap
+
+Observed, from the deployed configuration: the request carries sport and a
+row limit only. The board is the whole world's soccer.
+
+That makes every refusal token a statement about **other people's
+fixtures**. Soccer runs continuously somewhere, so in-play rows at the top
+of an unfiltered board are background, not evidence about our capture
+window — the 15:20Z probe that returned fifty rows, all in-play, is that
+background measured. A board of a hundred in-play Brazilian games and a
+board of a hundred prop-only Japanese games are equally uninformative
+about whether tonight's fixtures were quotable. None of the refusal
+tokens answered the only question that decides what to do next.
+
+So the capture now measures one more thing, before any refusal logic runs:
+of the fixtures on our card for the day, how many appeared anywhere in the
+returned rows. The reading splits cleanly.
+
+- **Overlap zero** — every refusal token is a distraction, our fixtures
+  were never on the page, and narrowing by competition is the whole fix.
+  The verdict says so and outranks the refusal tokens.
+- **Overlap non-zero** — the refusals for *those specific rows* become the
+  diagnosis, and the seven-way split does the work it was built for. A
+  hundred in-play strangers no longer mask the fact that our two fixtures
+  were on the board as player props.
+
+Two boundaries worth stating. Absence is only claimed against a board that
+returned something; on an empty board our fixtures are trivially absent and
+saying so would dress a quiet slate up as a coverage finding. And fixtures
+listed with the sides the other way round are reported as their own verdict
+rather than as absence, because this vendor is already known to contradict
+itself about which side is at home.
+
+The card is folded with the same team key the price join downstream uses,
+handed in from the pipeline rather than reimplemented in the adapter. A
+private matcher here would produce a number that looked like coverage and
+quietly answered a different question.
+
+Still mocked-only: the sandbox has no network and no call was made.
+
+### Environment note — this sandbox resets to the branch point mid-session
+
+Observed twice, in two independent sessions on different branches: the
+working tree survives in full while the commit pointer is reset to the
+branch point, so finished work appears as a large pile of uncommitted
+changes and recent commits appear to have vanished.
+
+The correct response is narrow. Fetch, confirm the work is on the remote,
+and move the branch pointer back onto it with a SOFT reset, which never
+touches files. A plain reset afterwards re-syncs the index. Never use a
+hard reset and never clean: both destroy the only copy of anything that
+was not pushed. The failure mode is silent, and the instinct under time
+pressure is the destructive one, which is why it is written down here.
+
+The practical consequence: push early. The remote is the only place two
+sessions can reconcile, and in this environment it is the only copy worth
+trusting.
+
 ### Carried forward, unchanged by this round
 
 - The live price-source key still needs rotating — it was exposed in

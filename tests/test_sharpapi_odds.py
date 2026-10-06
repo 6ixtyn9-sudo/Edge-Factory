@@ -705,3 +705,96 @@ def test_the_classification_warns_the_next_reader_off_the_empty_map():
     source = inspect.getsource(sa._zero_row_reason)
     assert "BEFORE CONCLUDING ANYTHING ABOUT MARKET VOCABULARY" in source
     assert "never" in source and "agrees" in source
+
+
+# --- ticket (o) follow-up 2: on a global board, whose fixtures are these? --
+#
+# The request defaults to sport and limit only, so the board is the whole
+# world's soccer. Soccer runs continuously somewhere, so in-play rows at the
+# top of an unfiltered board are background noise, not a statement about our
+# capture window. A board of 100 in-play Brazilian games and a board of 100
+# prop-only Japanese games are equally uninformative about whether tonight's
+# fixtures were quotable. The overlap between the board and our card is the
+# number that decides the next move, so it outranks every refusal token.
+
+
+def _team_key(name):
+    return "".join(ch for ch in str(name).lower() if ch.isalnum())
+
+
+CARD = [("Scotland", "Portugal"), ("Croatia", "Czechia")]
+
+
+def _strangers(count, **over):
+    return [_flat(home_team=f"Flamengo{i}", away_team=f"Gremio{i}",
+                  is_live=True, **over) for i in range(count)]
+
+
+def _capture(payload, card=CARD, monkeypatch=None):
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": payload}, {}))
+    return sa.capture_day("2026-10-06", card=card, team_key=_team_key)
+
+
+def test_a_global_board_without_our_fixtures_says_exactly_that(monkeypatch):
+    """The refusal tokens describe strangers; the verdict must not."""
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    _rows, stats = _capture(_strangers(100), monkeypatch=monkeypatch)
+    assert stats["reason"] == "our_fixtures_absent_from_board"
+    assert stats["card_fixtures_on_board"] == 0
+    assert stats["card_fixture_count"] == 2
+
+
+def test_our_own_rows_decide_the_diagnosis_not_the_strangers(monkeypatch):
+    """A hundred in-play strangers must not mask what OUR rows were.
+
+    Before the overlap was measured, the board-wide counters won and this
+    board reported itself as truncated live-first. Our two fixtures were
+    on it, and they were props - a different remedy entirely.
+    """
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    payload = _strangers(98) + [
+        _flat(home_team="Scotland", away_team="Portugal", is_player_prop=True),
+        _flat(home_team="Croatia", away_team="Czechia", is_player_prop=True)]
+    _rows, stats = _capture(payload, monkeypatch=monkeypatch)
+    assert stats["reason"] == "board_truncated_player_props"
+    assert stats["card_fixtures_on_board"] == 2
+    assert stats["card_prematch_drop_reasons"] == {"player_prop": 2}
+    # the board-wide count still records the strangers, unchanged
+    assert stats["prematch_drop_reasons"]["live_price"] == 98
+
+
+def test_our_fixtures_listed_the_other_way_round_are_not_called_absent(monkeypatch):
+    """An inverted board is a different fault from an empty one.
+
+    This vendor is already known to contradict itself on which side is at
+    home, so a reversed pair is a live possibility rather than a curiosity.
+    """
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    payload = _strangers(99) + [_flat(home_team="Portugal",
+                                      away_team="Scotland", is_live=True)]
+    _rows, stats = _capture(payload, monkeypatch=monkeypatch)
+    assert stats["reason"] == "our_fixtures_absent_sides_reversed"
+    assert stats["card_fixtures_reversed"] == 1
+
+
+def test_an_empty_board_is_not_dressed_up_as_a_coverage_finding(monkeypatch):
+    """Absence only means something once something came back."""
+    _rows, stats = _capture([], monkeypatch=monkeypatch)
+    assert stats["reason"] == "provider_empty_slate"
+
+
+def test_our_fixtures_priced_reports_them_separately(monkeypatch):
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    payload = _strangers(98) + [_flat(home_team="Scotland", away_team="Portugal"),
+                                _flat(home_team="Croatia", away_team="Czechia")]
+    rows, stats = _capture(payload, monkeypatch=monkeypatch)
+    assert len(rows) == 2 and stats["status"] == "ok"
+    assert stats["card_priced_rows"] == 2
+
+
+def test_without_a_card_the_board_wide_reading_is_unchanged(monkeypatch):
+    """Back-compat: callers that pass no card see the previous behaviour."""
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    _rows, stats = _capture(_strangers(100), card=None, monkeypatch=monkeypatch)
+    assert stats["reason"] == "board_truncated_live_first"
+    assert stats["card_fixture_count"] == 0

@@ -168,6 +168,12 @@ SHARPAPI_BOARD_FIELDS = (
     # ask for different remedies. The aggregate count cannot be unpicked
     # afterwards, so the per-reason split has to travel with it.
     "prematch_drop_reasons", "canonicalization_drop_reasons",
+    # Overlap with our own card. On an unfiltered global board every other
+    # number here describes other people's fixtures, so this is the one
+    # that says whether any of it was about us.
+    "card_fixture_count", "card_fixtures_on_board", "card_fixtures_reversed",
+    "card_priced_rows", "card_prematch_drop_reasons",
+    "card_canonicalization_drop_reasons",
 )
 
 # The prematch refusals are our own closed vocabulary, so they are listed.
@@ -375,6 +381,12 @@ def build_daily_source_health(
             prematch = _reason_counts(
                 obs.get("prematch_drop_reasons"),
                 allowed=PREMATCH_DROP_REASON_VOCABULARY)
+            board["card_prematch_drop_reasons"] = _reason_counts(
+                obs.get("card_prematch_drop_reasons"),
+                allowed=PREMATCH_DROP_REASON_VOCABULARY)
+            board["card_canonicalization_drop_reasons"] = _reason_counts(
+                obs.get("card_canonicalization_drop_reasons"),
+                limit=_MAX_VOCABULARY_MISSES)
             vocabulary = _reason_counts(
                 obs.get("canonicalization_drop_reasons"),
                 limit=_MAX_VOCABULARY_MISSES)

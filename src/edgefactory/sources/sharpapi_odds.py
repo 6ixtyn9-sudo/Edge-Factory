@@ -286,22 +286,55 @@ def _is_flat(events: list[Any]) -> bool:
     return False
 
 
-def parse_flat_rows(events: list[Any], *, day: str) -> tuple[list[dict[str, Any]], bool]:
+def parse_flat_rows(events: list[Any], *, day: str,
+                    card_keys: set[tuple[str, str]] | None = None,
+                    team_key: Any = None) -> tuple[list[dict[str, Any]], bool]:
     """Parse the vendor's flat one-row-per-selection board.
 
     Each record is a single price: fixture, book, market, selection, odds.
     Live and stale prices are refused here rather than downstream - this lane
     feeds a prematch card, and an in-play price is not a worse prematch price,
     it is a different quantity.
+
+    When our own card is supplied, every refusal is counted twice: once for
+    the board and once restricted to OUR fixtures. On an unfiltered global
+    board those are different measurements and only the second one is about
+    us. Soccer runs continuously somewhere, so in-play rows in the top of a
+    world board are background, not a statement about our capture window.
     """
     global _PREMATCH_DROP_REASONS
     rows: list[dict[str, Any]] = []; shaped = False
     stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     fixtures: set[tuple[str, str]] = set()
     leagues: dict[str, int] = {}
+    card_keys = set(card_keys or ())
+    seen_card: set[tuple[str, str]] = set()
+    seen_reversed: set[tuple[str, str]] = set()
+    card_drops: dict[str, int] = {}
+    card_vocabulary: dict[str, int] = {}
+    card_priced = 0
+
+    def _refuse(reason: str, ours: bool, bucket: dict[str, int]) -> None:
+        bucket[reason] = bucket.get(reason, 0) + 1
+        if ours:
+            target = card_vocabulary if bucket is _CANONICALIZATION_DROP_REASONS else card_drops
+            target[reason] = target.get(reason, 0) + 1
+
     for row in events:
         if not isinstance(row, dict): continue
         home, away = _sides(row)
+        # Overlap is answered BEFORE the well-formedness guard below. The
+        # question is "did our fixture appear on this board at all", and a
+        # row of ours that is missing a book still answers it yes.
+        ours = False
+        if card_keys and home and away and team_key is not None:
+            pair = (team_key(home), team_key(away))
+            if pair in card_keys:
+                seen_card.add(pair); ours = True
+            elif (pair[1], pair[0]) in card_keys:
+                # Our fixture, listed the other way round. Recorded apart so
+                # an inverted board cannot be reported as an absent one.
+                seen_reversed.add((pair[1], pair[0]))
         book = _text(row.get("sportsbook")) or _text(row.get("sportsbook_ref"))
         raw_market = _text(row.get("market_type")) or _text(row.get("market_ref"))
         if not home or not away or not book or not raw_market: continue
@@ -315,17 +348,17 @@ def parse_flat_rows(events: list[Any], *, day: str) -> tuple[list[dict[str, Any]
         if league_name:
             leagues[league_name] = leagues.get(league_name, 0) + 1
         if row.get("is_live"):
-            _PREMATCH_DROP_REASONS["live_price"] = _PREMATCH_DROP_REASONS.get("live_price", 0) + 1
+            _refuse("live_price", ours, _PREMATCH_DROP_REASONS)
             continue
         if row.get("is_stale_pregame_price"):
-            _PREMATCH_DROP_REASONS["stale_pregame_price"] = _PREMATCH_DROP_REASONS.get("stale_pregame_price", 0) + 1
+            _refuse("stale_pregame_price", ours, _PREMATCH_DROP_REASONS)
             continue
         if row.get("is_player_prop"):
-            _PREMATCH_DROP_REASONS["player_prop"] = _PREMATCH_DROP_REASONS.get("player_prop", 0) + 1
+            _refuse("player_prop", ours, _PREMATCH_DROP_REASONS)
             continue
         price = _num(row.get("odds_decimal") or row.get("decimal_odds") or row.get("price"))
         if price is None or price <= 1:
-            _PREMATCH_DROP_REASONS["no_decimal_price"] = _PREMATCH_DROP_REASONS.get("no_decimal_price", 0) + 1
+            _refuse("no_decimal_price", ours, _PREMATCH_DROP_REASONS)
             continue
         raw_selection = _selection_for(row, home, away)
         canonical, _failure = canonical_market_selection(
@@ -333,8 +366,10 @@ def parse_flat_rows(events: list[Any], *, day: str) -> tuple[list[dict[str, Any]
         )
         if canonical is None:
             reason = _failure.reason if _failure is not None else "unmappable"
-            _CANONICALIZATION_DROP_REASONS[reason] = _CANONICALIZATION_DROP_REASONS.get(reason, 0) + 1
+            _refuse(reason, ours, _CANONICALIZATION_DROP_REASONS)
             continue
+        if ours:
+            card_priced += 1
         rows.append({"source": SOURCE, "date": day, "home": home, "away": away,
                      "kickoff": row.get("event_start_time") or row.get("kickoff"),
                      "market": canonical.market, "selection": canonical.selection,
@@ -345,10 +380,20 @@ def parse_flat_rows(events: list[Any], *, day: str) -> tuple[list[dict[str, Any]
                      "event_uuid": _text(row.get("event_uuid")),
                      "named_bookmaker": True, "captured_at": stamp})
     _record_board(fixtures, leagues, priced_rows=len(rows))
+    _BOARD_CONTEXT.update({
+        "card_fixture_count": len(card_keys),
+        "card_fixtures_on_board": len(seen_card),
+        "card_fixtures_reversed": len(seen_reversed - seen_card),
+        "card_priced_rows": card_priced,
+        "card_prematch_drop_reasons": dict(card_drops),
+        "card_canonicalization_drop_reasons": dict(card_vocabulary),
+    })
     return rows, shaped
 
 
-def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], bool]:
+def parse_snapshot(payload: Any, *, day: str,
+                   card_keys: set[tuple[str, str]] | None = None,
+                   team_key: Any = None) -> tuple[list[dict[str, Any]], bool]:
     """Accept only explicit event/bookmaker/market rows; unknown shapes yield no rows."""
     # Reset BEFORE any exit path. An unrecognized payload leaves this
     # function early, and a board count left over from an earlier parse
@@ -359,7 +404,11 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
     _PREMATCH_DROP_REASONS = {}
     _BOARD_CONTEXT = {"board_rows": 0, "board_fixtures": 0,
                       "board_league_count": 0, "board_leagues": {},
-                      "board_non_prematch_rows": 0, "board_priced_rows": 0}
+                      "board_non_prematch_rows": 0, "board_priced_rows": 0,
+                      "card_fixture_count": 0, "card_fixtures_on_board": 0,
+                      "card_fixtures_reversed": 0, "card_priced_rows": 0,
+                      "card_prematch_drop_reasons": {},
+                      "card_canonicalization_drop_reasons": {}}
     events = payload if isinstance(payload, list) else next((payload.get(k) for k in ("events", "data", "matches", "odds") if isinstance(payload, dict) and isinstance(payload.get(k), list)), None)
     if not isinstance(events, list): return [], False
     # A recognized but EMPTY event list is a valid empty result, not a schema
@@ -369,7 +418,8 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
     if not events:
         return [], True   # recognized board, nothing on it
     if _is_flat(events):
-        return parse_flat_rows(events, day=day)
+        return parse_flat_rows(events, day=day, card_keys=card_keys,
+                               team_key=team_key)
     rows: list[dict[str, Any]] = []; shaped = not events; stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     fixtures: set[tuple[str, str]] = set()
     leagues: dict[str, int] = {}
@@ -474,6 +524,21 @@ def _league_filter_effective(board: dict[str, Any]) -> bool | None:
     return False if len(observed) >= 2 else None
 
 
+def _drop_maps_in_scope(stats: dict[str, Any]) -> tuple[dict[str, int], dict[str, int]]:
+    """Refusal counts for OUR fixtures when we have a card, else the board's.
+
+    With a card supplied and at least one of our fixtures on the board, the
+    diagnosis is about those rows and not about the rest of the world's.
+    Falling back to the board-wide counts keeps behaviour unchanged for
+    callers that pass no card.
+    """
+    if int(stats.get("card_fixture_count") or 0) and int(
+            stats.get("card_fixtures_on_board") or 0):
+        return (dict(stats.get("card_prematch_drop_reasons") or {}),
+                dict(stats.get("card_canonicalization_drop_reasons") or {}))
+    return dict(_PREMATCH_DROP_REASONS), dict(_CANONICALIZATION_DROP_REASONS)
+
+
 def _zero_row_reason(stats: dict[str, Any]) -> str:
     """Name which of seven things produced a zero, because they differ.
 
@@ -490,7 +555,24 @@ def _zero_row_reason(stats: dict[str, Any]) -> str:
         return "league_filter_returned_empty"
     if stats.get("league_filter_effective") is False:
         return "league_filter_not_applied"
-    if _PREMATCH_DROP_REASONS and not _CANONICALIZATION_DROP_REASONS:
+    # Did our fixtures appear AT ALL? On an unfiltered global board this
+    # outranks every refusal token, because those tokens describe other
+    # people's games. Soccer runs continuously somewhere in the world, so
+    # a top-of-board full of in-play rows is background noise rather than
+    # a statement about our capture window, and a board of props from
+    # another continent is exactly as uninformative. Until the overlap is
+    # non-zero, no refusal reason on this board is about us.
+    # Only meaningful against a board that returned something. On an empty
+    # board our fixtures are trivially absent, and saying so would dress a
+    # quiet slate up as a coverage finding and send the operator to narrow
+    # a request that returned nothing to narrow.
+    if int(stats.get("card_fixture_count") or 0) and int(stats.get("board_rows") or 0):
+        if not int(stats.get("card_fixtures_on_board") or 0):
+            return ("our_fixtures_absent_sides_reversed"
+                    if int(stats.get("card_fixtures_reversed") or 0)
+                    else "our_fixtures_absent_from_board")
+    prematch, vocabulary = _drop_maps_in_scope(stats)
+    if prematch and not vocabulary:
         # READ THIS BEFORE CONCLUDING ANYTHING ABOUT MARKET VOCABULARY.
         # Reaching this branch means the vocabulary map is EMPTY, and that
         # is not evidence our market names match the vendor's. The prematch
@@ -499,9 +581,9 @@ def _zero_row_reason(stats: dict[str, Any]) -> str:
         # mapper and it reports no failures for a purely trivial reason.
         # An empty failure map here means "untested", never "agrees".
         truncated = bool(stats.get("board_truncated"))
-        live = sum(_PREMATCH_DROP_REASONS.get(reason, 0)
+        live = sum(prematch.get(reason, 0)
                    for reason in _LIVE_LIKE_DROP_REASONS)
-        props = _PREMATCH_DROP_REASONS.get("player_prop", 0)
+        props = prematch.get("player_prop", 0)
         # Timing outranks market selection when both are present. An in-play
         # row is a different quantity that would corrupt a closing-line
         # measurement, so it invalidates the capture window itself; a prop
@@ -514,14 +596,15 @@ def _zero_row_reason(stats: dict[str, Any]) -> str:
             return ("board_truncated_player_props" if truncated
                     else "all_rows_player_props")
         return "all_rows_unpriced"
-    if _CANONICALIZATION_DROP_REASONS:
+    if vocabulary:
         return "all_rows_unmappable"
     return "provider_empty_slate"
 
 
 def _path(day: str, localdata: Path | None = None) -> Path: return (localdata or LOCALDATA) / f"{SOURCE}_shadow_{day}.json"
-def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day)),"canonicalization_dropped":0,"canonicalization_drop_reasons":{},"prematch_dropped":0,"prematch_drop_reasons":{},"board_rows":0,"board_fixtures":0,"board_league_count":0,"board_leagues":{},"board_non_prematch_rows":0,"board_priced_rows":0,"board_truncated":None,"requested_limit":_requested_limit(),"league_filter_requested":bool(_requested_league()),"league_filter_effective":None}
+def capture_day(day: str, *, localdata: Path | None = None,
+                card: Any = None, team_key: Any = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day)),"canonicalization_dropped":0,"canonicalization_drop_reasons":{},"prematch_dropped":0,"prematch_drop_reasons":{},"board_rows":0,"board_fixtures":0,"board_league_count":0,"board_leagues":{},"board_non_prematch_rows":0,"board_priced_rows":0,"board_truncated":None,"requested_limit":_requested_limit(),"league_filter_requested":bool(_requested_league()),"league_filter_effective":None,"card_fixture_count":0,"card_fixtures_on_board":0,"card_fixtures_reversed":0,"card_priced_rows":0,"card_prematch_drop_reasons":{},"card_canonicalization_drop_reasons":{}}
     reset_state()
     sport = (os.environ.get("SHARPAPI_SPORT") or "").strip()
     if not sport:
@@ -531,6 +614,21 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             blocker="SHARPAPI_SPORT not set; soccer sport filter is required; capture skipped",
         )
         return [], _set_diag(stats)
+    # Our own card for the day, folded with the PIPELINE's team key so the
+    # overlap number means the same thing as the pipeline's own join. A
+    # second, private matcher here would produce a number that looked like
+    # coverage and answered a different question.
+    card_keys: set[tuple[str, str]] = set()
+    if card and team_key is not None:
+        for fixture in card:
+            try:
+                home, away = fixture
+            except (TypeError, ValueError):
+                continue
+            key = (team_key(home), team_key(away))
+            if all(key):
+                card_keys.add(key)
+    stats["card_fixture_count"] = len(card_keys)
     if not _key(): stats["blocker"] = f"{KEY_ENV} not set; shadow capture skipped"; return [], _set_diag(stats)
     try:
         held = json.loads(_path(day, localdata).read_text()).get("rows", [])
@@ -539,7 +637,8 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
     try:
         code, payload, headers = get_json(odds_url(day)); stats["requests"] = 1; stats["http_statuses"] = [code]; stats["rate_limit_headers"] = headers
         if code != 200 or payload is None: stats.update(status=_status(code), reason=_reason(code), blocker=f"sharpapi: HTTP {code} or non-JSON payload"); return [], _set_diag(stats)
-        rows, shaped = parse_snapshot(payload, day=day); stats["schema_match"] = shaped
+        rows, shaped = parse_snapshot(payload, day=day, card_keys=card_keys,
+                                      team_key=team_key); stats["schema_match"] = shaped
         stats["canonicalization_drop_reasons"] = dict(_CANONICALIZATION_DROP_REASONS)
         stats["canonicalization_dropped"] = sum(_CANONICALIZATION_DROP_REASONS.values())
         stats["prematch_drop_reasons"] = dict(_PREMATCH_DROP_REASONS)
@@ -548,6 +647,11 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         # non-zero capture that saw 100 rows of a global board is also worth
         # knowing about, because it says the narrowing has not taken effect.
         stats.update(board_context())
+        # board_context() carries this key with a parse-time default, and the
+        # legacy nested branch never fills it. The card size is known here
+        # regardless of which branch parsed, so it is restated rather than
+        # inherited - a zero here would read as "we asked about no fixtures".
+        stats["card_fixture_count"] = len(card_keys)
         limit = stats.get("requested_limit")
         stats["board_truncated"] = (
             bool(limit) and int(stats.get("board_rows") or 0) >= int(limit))

@@ -3176,7 +3176,7 @@ def _shadow_failure_lines(day: str, stats: dict[str, dict]) -> None:
         print(f"{name} {day}: status={entry.get('status', 'unknown')} http={http} note={note}", file=sys.stderr)
 
 
-def _capture_shadow_candidates(day: str) -> dict[str, dict]:
+def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, dict]:
     """Capture every verified shadow candidate without touching the production path.
 
     The candidate pass intentionally makes no paid/provider capture. Its sole
@@ -3238,7 +3238,14 @@ def _capture_shadow_candidates(day: str) -> dict[str, dict]:
         stats["betbetter"]["blocker"] = str(exc)[:180]
     try:
         from edgefactory.sources import sharpapi_odds as sa
-        sa_rows, sa_stats = sa.capture_day(day)
+        # Our own card, folded with THIS module's team key, so the overlap
+        # the adapter reports is the same notion of a fixture match that
+        # the price join downstream uses.
+        sa_rows, sa_stats = sa.capture_day(
+            day,
+            card=[(f.get("home"), f.get("away")) for f in (card or [])],
+            team_key=odds_match_team_key,
+        )
         sa.persist_shadow(day, sa_rows, sa_stats, localdata=LOCALDATA)
         stats["sharpapi_odds"] = sa_stats
     except Exception as exc:
@@ -5680,7 +5687,10 @@ def main():
         # prices, SharpAPI books) can only reach the price board if their
         # ledgers for `day` exist by the time the bundles are built. Capture
         # is still shadow-only and still writes its own ledgers.
-        shadow_stats = _capture_shadow_candidates(day)
+        shadow_stats = _capture_shadow_candidates(
+            day,
+            card=[p for p in picks if str(p.get("date") or "")[:10] == day],
+        )
 
         bzz_stats: dict = {}
         scouting_stats: dict = {}

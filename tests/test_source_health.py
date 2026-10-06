@@ -505,3 +505,39 @@ def test_the_census_cap_keeps_the_biggest_tokens_not_the_merged_ones():
     misses = {f"unknown_market:{'x' * 80}_{i}": i for i in range(40)}
     census = _census_for(misses)
     assert sum(census.values()) == sum(range(30, 40))
+
+
+def test_the_card_overlap_reaches_the_committed_row():
+    """The number that says whether any of the board was about us."""
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "reason": "our_fixtures_absent_from_board",
+            "board_rows": 100, "card_fixture_count": 14,
+            "card_fixtures_on_board": 0, "card_fixtures_reversed": 0,
+            "prematch_drop_reasons": {"live_price": 100},
+            "card_prematch_drop_reasons": {},
+        },
+    })["sources"]["sharpapi_odds"]
+    summary = row["board_summary"]
+    assert summary["card_fixture_count"] == 14
+    assert summary["card_fixtures_on_board"] == 0
+    # the board-wide refusals are still recorded, but they describe strangers
+    assert summary["prematch_drop_reasons"] == {"live_price": 100}
+
+
+def test_the_card_passthrough_carries_the_overlap_fields():
+    """Pins the wiring, not the capability - the recurring gap."""
+    out = source_health.sharpapi_board_observation({
+        "card_fixture_count": 14, "card_fixtures_on_board": 3,
+        "card_fixtures_reversed": 1, "card_priced_rows": 2,
+        "card_prematch_drop_reasons": {"player_prop": 4},
+    })
+    assert out["card_fixtures_on_board"] == 3
+    assert out["card_fixtures_reversed"] == 1
+    for field in ("card_fixture_count", "card_fixtures_on_board",
+                  "card_fixtures_reversed", "card_priced_rows",
+                  "card_prematch_drop_reasons",
+                  "card_canonicalization_drop_reasons"):
+        assert field in source_health.SHARPAPI_BOARD_FIELDS, field
