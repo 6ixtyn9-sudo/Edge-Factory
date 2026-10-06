@@ -892,3 +892,62 @@ def test_the_competition_census_also_loses_no_counts_to_shortening(monkeypatch):
     _rows, stats = sa.capture_day("2026-10-06")
     assert len(stats["board_leagues"]) == 1
     assert sum(stats["board_leagues"].values()) == 4
+
+
+# --- rows are not matches ------------------------------------------------
+#
+# Added after a reader annotated the committed board as "100 raw events"
+# when it was 100 price records over five fixtures. The parameter holding
+# them was called `events` and the name was believed over the docstring
+# directly beneath it. Every synthetic board in this file until now used
+# one row per fixture, the degenerate shape in which the two counts are
+# equal, so nothing here could ever have caught the confusion.
+
+
+def _real_board_20261006():
+    """The 2026-10-06 board as the committed census recorded it."""
+    spec = [("Israel U21", "Norway U21", "uefa_u21_euro_qualifiers", 67),
+            ("CA Atlas", "Fenix", "argentina_-_primera_c", 22),
+            ("Central Ballester", "Deportivo Muniz", "argentina_-_primera_c", 7),
+            ("FC Trollhattan", "Mjallby AIF", "sweden_-_svenska_cupen", 3),
+            ("IK Start", "Raufoss IL", "norway_-_cup", 1)]
+    return [_flat(home_team=h, away_team=a, league=lg, is_live=True)
+            for h, a, lg, n in spec for _ in range(n)]
+
+
+def test_a_hundred_price_rows_is_not_a_hundred_matches(monkeypatch):
+    board = _real_board_20261006()
+    assert len(board) == 100
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["board_rows"] == 100     # price records
+    assert stats["board_fixtures"] == 5   # distinct matches behind them
+    # the whole decision turns on these two not being read as one number:
+    # a hundred matches carrying none of ours condemns the vendor, five
+    # in-play strangers is a filtering problem.
+
+
+def test_both_counts_reach_the_committed_artefact(monkeypatch):
+    board = _real_board_20261006()
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    from edgefactory import source_health
+    payload = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            **source_health.sharpapi_board_observation(stats),
+        },
+    })
+    summary = payload["sources"]["sharpapi_odds"]["board_summary"]
+    assert summary["board_rows"] == 100
+    assert summary["board_fixtures"] == 5
+
+
+def test_the_distinct_match_count_covers_the_whole_board_not_survivors(monkeypatch):
+    """Every row on this board is refused; the match count still stands."""
+    board = _real_board_20261006()
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    rows, stats = sa.capture_day("2026-10-06")
+    assert rows == []                     # all in-play, nothing survives
+    assert stats["board_fixtures"] == 5   # measured before refusal
