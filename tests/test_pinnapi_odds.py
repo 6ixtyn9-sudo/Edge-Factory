@@ -382,8 +382,10 @@ def test_401_on_header_auth_falls_back_to_the_query_form(monkeypatch):
     assert "key=test-pinnapi-key" in recorder.calls[1]["url"]
     assert stats["status"] == "ok"
     assert stats["auth_mechanism"] == "query"
-    assert stats["auth_attempts"] == [{"auth": "header", "status": 401},
-                                      {"auth": "query", "status": 200}]
+    assert [(a["auth"], a["status"]) for a in stats["auth_attempts"]] == [
+        ("header", 401), ("query", 200)]
+    # the vendor's own words on the rejected attempt are kept, scrubbed
+    assert stats["auth_attempts"][0]["error_envelope"] == "unauthorized"
     assert stats["requests"] == 2
 
 
@@ -583,3 +585,126 @@ def test_shadow_role_is_unchanged_by_the_contract_fix(tmp_path):
         "2026-10-03", rows, {"status": "ok"}, localdata=tmp_path).read_text())
     assert "never a vote" in ledger["role"]
     assert ledger["role"].startswith("price-shadow")
+
+
+# --- a success code is not an accepted request (WO-8 review round 2) -------
+# Cheap relays answer a rejected credential with HTTP 200 and an error body,
+# and use 403 for a rejected credential as readily as 401. Both would have
+# re-entered the conflation the four-way classification exists to end: an
+# auth answer filed as a parser problem.
+
+
+def test_a_200_error_body_is_not_a_parser_problem(monkeypatch):
+    def fake_get(url, timeout=30, auth="header"):
+        return 200, {"error": "invalid api key"}, {}
+
+    monkeypatch.setattr(pa, "get_json", fake_get)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert rows == []
+    assert stats["zero_row_kind"] == "error_envelope"
+    assert stats["status"] == "auth"
+    assert stats["status"] in pa.RETRYABLE_ZERO_ROW_STATUSES
+    assert stats["quota_hint"] == "auth_or_quota"
+    assert stats["response_shape"]["error_blames_credential"] is True
+    assert "not a board" in stats["blocker"]
+
+
+def test_a_200_error_body_must_not_claim_the_mechanism_worked(monkeypatch):
+    """The worst failure here is a false positive on the discriminator.
+
+    Recording "header replied" for a rejected key would read as "auth was
+    fixed, the sport id may still be wrong" - the opposite of the truth.
+    """
+    recorder = _Recorder((200, {"error": "invalid api key"}, {}),
+                         (200, _payload(), {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert [c["auth"] for c in recorder.calls] == ["header", "query"]
+    assert rows, "the fallback answer is a real board"
+    assert stats["auth_mechanism"] == "query"
+    assert stats["auth_attempts"][0]["error_envelope"] == "invalid api key"
+
+
+def test_an_error_body_that_does_not_blame_the_credential(monkeypatch):
+    """Not every error body is an auth answer; do not over-read it."""
+    def fake_get(url, timeout=30, auth="header"):
+        return 200, {"message": "no fixtures scheduled for this window"}, {}
+
+    monkeypatch.setattr(pa, "get_json", fake_get)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert stats["zero_row_kind"] == "error_envelope"
+    assert stats["status"] == "unavailable"       # not claimed as auth
+    assert stats["response_shape"]["error_blames_credential"] is False
+    assert stats["auth_mechanism"] == "header"    # the request WAS accepted
+
+
+def test_classification_reads_raw_text_but_records_scrubbed(monkeypatch):
+    """Redaction must not destroy the evidence the classifier reads.
+
+    A short key redacted out of "invalid api key" leaves text that no
+    longer blames the credential. Classify raw, record scrubbed.
+    """
+    monkeypatch.setenv("PINNAPI_KEY", "k")
+    payload = {"error": "invalid api key"}
+    assert pa.error_envelope_blames_credential(payload) is True
+    assert pa.error_envelope_text(payload) == "invalid api [REDACTED]ey"
+    assert "k" not in pa.error_envelope_text(payload).replace("[REDACTED]", "")[:11]
+
+
+def test_403_falls_back_like_401(monkeypatch):
+    """403 is a credential rejection as often as 401 on relays like this."""
+    recorder = _Recorder((403, {"message": "Forbidden"}, {}),
+                         (200, _payload(), {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert [c["auth"] for c in recorder.calls] == ["header", "query"]
+    assert rows and stats["auth_mechanism"] == "query"
+
+
+def test_403_on_both_forms_says_it_was_not_the_mechanism(monkeypatch):
+    """A plan restriction answers 403 either way - and the record shows it."""
+    recorder = _Recorder((403, {"message": "plan does not include prematch"}, {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert rows == [] and stats["status"] == "auth"
+    assert [a["status"] for a in stats["auth_attempts"]] == [403, 403]
+    assert stats["auth_mechanism"] is None
+
+
+def test_an_event_payload_is_never_read_as_an_error_envelope():
+    """A real board that happens to carry a message field is still a board."""
+    payload = {"message": "ok", "events": [
+        {"id": "e1", "home": "Arsenal", "away": "Chelsea",
+         "markets": {"moneyline": [{"selection": "home", "price": 2.1}]}}]}
+    assert pa.error_envelope_text(payload) is None
+    rows, schema = pa.parse_snapshot(payload, day="2026-10-03")
+    assert schema is True and len(rows) == 1
+
+
+def test_the_real_run_spend_is_counted_even_though_the_cap_is_per_capture(monkeypatch):
+    """The cap resets per capture; the run tally does not, so it is reported.
+
+    Under header rejection a three-capture run issues 2 + 1 + 1 calls. No
+    individual capture approaches the cap of four, and there is no
+    run-level ceiling - which is exactly why the real total is recorded
+    rather than inferred from the cap's name.
+    """
+    monkeypatch.setattr(pa, "MIN_INTERVAL_S", 0.0)
+    bodies = {"header": (401, {"message": "unauthorized"}, {}),
+              "query": (200, {"events": []}, {})}
+
+    def fake_urlopen(request, timeout=30):
+        raise AssertionError("no network in tests")
+
+    def counting_get(url, timeout=30, auth="header"):
+        pa._CALLS_THIS_PROCESS += 1          # stands in for a real call
+        return bodies[auth]
+
+    monkeypatch.setattr(pa, "get_json", counting_get)
+    totals = []
+    for day in ("2026-10-07", "2026-10-08", "2026-10-09"):
+        totals.append(pa.capture_day(day)[1]["calls_this_run_so_far"])
+    assert totals == [2, 3, 4], "2 + 1 + 1 across the run"
+    assert pa.calls_this_process() == 4
+    pa.reset_auth_memory()
+    assert pa.calls_this_process() == 0
