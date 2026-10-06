@@ -466,3 +466,32 @@ that decides this vendor's fate — how many of our fixtures it prices
 BEFORE kickoff, with a draw and a 2.5 line — has never been observed. One
 prematch capture answers it. Until then, treat all coverage estimates for
 this source as unfounded.
+
+### (n) The Odds API market list is narrowed in deployment and contradicts its own companion knob — OPEN
+
+The workflow comment above these settings states that the `||` fallbacks
+"mirror the code defaults". Four of the five do, exactly. One does not:
+
+- code default: `h2h,totals,totals_alt,btts,team_totals,double_chance`
+- deployment:   `h2h,totals`
+
+Each market costs one credit per event against a 480/month cap, so
+narrowing is a plausible deliberate economy — three markets instead of six
+is a third of the spend. It is recorded as accepted in the drift audit on
+that basis.
+
+What makes it a ticket rather than a settled decision is the companion
+knob. `ODDS_API_TOTAL_POINTS` is set to `1.5,2.5,3.5,4.5`, but the market
+that supplies the non-main lines is `totals_alt`, which is not requested.
+So the configuration filters for four goal lines while only ever fetching
+one. Either the narrowing was deliberate and `ODDS_API_TOTAL_POINTS` should
+be `2.5` to say so honestly, or the code default was widened later and the
+deployment was never updated — the same drift that hid the SharpAPI
+endpoint defect.
+
+The repository is shallow at 13 commits, so history cannot date the change
+from here and the question cannot be settled by `git log`. It needs an
+operator decision, not a code change: the enhancement overlay (alternate
+goal lines, both-teams-to-score, team totals, double chance) has parsing
+code that production never exercises, and the credit cost of enabling it
+is a budget matter.
