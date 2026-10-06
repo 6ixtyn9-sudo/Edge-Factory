@@ -1563,7 +1563,11 @@ def playable_leg_rejection(
     if execution_safe:
         source_name = str(row.get("odds_source") or "").strip()
         source_spec = psrc.spec(source_name)
-        if not psrc.known(source_name):
+        # `resolvable()` (not `known()`) is the correct predicate here: a
+        # vote-only donor is registered-and-intentionally-non-executable, not
+        # unrecognised. Both paths still reject the leg — this only keeps the
+        # REJECTION LEDGER reason honest.
+        if not psrc.resolvable(source_name):
             return "price_source_unregistered", f"odds_source={source_name or 'missing'}"
         if not source_spec.can_execute():
             return "price_source_not_execution_eligible", f"odds_source={source_name}"
