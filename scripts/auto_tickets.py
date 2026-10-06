@@ -2909,11 +2909,52 @@ def _folded_leg_key(day, home, away, pick):
     froze the 2026-09-10 slip for 13 days because the 5-day void timer
     lives behind the row-found branch. Structure-stripped identity keys
     ('SC', 'Club' tokens out) make the match generation-proof; two
-    same-club fixtures on one date cannot co-occur in one slate."""
-    from edgefactory.identity import source_team_key_base
+    same-club fixtures on one date cannot co-occur in one slate.
 
-    return (str(day)[:10], source_team_key_base(home), source_team_key_base(away),
+    Resolves curated aliases too (2026-10-06 Türkiye/Turkey settlement
+    orphan). Structure-stripping folds spelling; it cannot fold a RENAME.
+    "Türkiye" and "Turkey" transliterate to 'turkiye' and 'turkey' - two
+    different words for one country - so the Italy fixture of 2026-10-05
+    was filed under one spelling in the archive and the other on the frozen
+    slip, and the leg could never be found. The curated exonym table in
+    edgefactory.identity already carried the pair; this key simply was not
+    consulting it, because it called the alias-free base fold. Using the
+    alias-resolving key adds no new names: it reuses the same evidence-
+    seeded table the rest of the join layer already trusts."""
+    from edgefactory.identity import source_team_key
+
+    return (str(day)[:10], source_team_key(home), source_team_key(away),
             str(pick or "").upper())
+
+
+def leg_lookup_key(slip_date, leg):
+    """Settlement lookup key for one frozen leg.
+
+    Prefers the identifier stamped onto the leg when the slip FROZE. The
+    match string is a display artefact, not an identity: settlement used to
+    split "A vs B" back apart at grading time, so any respelling of the
+    fixture between freeze and settlement orphaned the leg permanently.
+    Yesterday's run logged 'superseded 11 archived row(s) with fresh picks',
+    so rows genuinely are rewritten during the day while the frozen slip
+    keeps the old wording - the window is real, not theoretical.
+
+    Falls back to parsing the text, with alias tolerance, so slips frozen
+    before this field existed still settle. Returns None when the leg
+    carries no usable identity at all; the caller treats that as 'not
+    found' and the void timer applies as before.
+    """
+    if not isinstance(leg, dict):
+        return None
+    pick = leg.get("pick")
+    stored = leg.get("fixture_key")
+    if isinstance(stored, (list, tuple)) and len(stored) >= 3:
+        day, home, away = stored[0], stored[1], stored[2]
+        if home or away:
+            return _folded_leg_key(str(day or slip_date), home, away, pick)
+    parts = str(leg.get("match") or "").split(" vs ")
+    if len(parts) != 2:
+        return None
+    return _folded_leg_key(slip_date, parts[0], parts[1], pick)
 
 
 def _slip_day_anchor(slip_date):
@@ -2953,12 +2994,8 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
             legres = []
             conflicts = []
             for l in a["legs"]:
-                match = str(l.get("match") or "")
-                parts = match.split(" vs ")
-                if len(parts) == 2:
-                    p = index.get(_folded_leg_key(slip["date"], parts[0], parts[1], l["pick"]))
-                else:
-                    p = None
+                key = leg_lookup_key(slip["date"], l)
+                p = index.get(key) if key is not None else None
                 if p is None:
                     r = None
                     anchor = _slip_day_anchor(slip["date"])
@@ -3063,11 +3100,37 @@ def cmd_backfill(args, st):
     print_status(st)
 
 
+def _stamp_fixture_keys(plan, target):
+    """Freeze each leg's fixture identity ALONGSIDE its display text.
+
+    The slip is the thing that outlives the day, so identity has to be
+    captured at the moment it is written and never re-derived afterwards.
+    Taken from the originating archive row where the leg still carries one,
+    because that is the spelling the result will eventually be filed under;
+    otherwise from the printed text, which is at least the spelling in hand.
+    Display text is left exactly as printed - it is the audit's provenance.
+    """
+    for acca in plan or []:
+        for leg in acca.get("legs", []) or []:
+            if not isinstance(leg, dict) or leg.get("fixture_key"):
+                continue
+            row = leg.get("row") or {}
+            home, away = row.get("home"), row.get("away")
+            day = str(row.get("date") or row.get("_archive_day") or target)[:10]
+            if not home and not away:
+                parts = str(leg.get("match") or "").split(" vs ")
+                if len(parts) != 2:
+                    continue
+                home, away, day = parts[0], parts[1], str(target)[:10]
+            leg["fixture_key"] = [day, str(home or ""), str(away or "")]
+
+
 def upsert_slip(st, target, plan, freeze_at=None):
     """Persist the card. When ``freeze_at`` is given the write-once freeze
     entry for ``target`` is recorded in the SAME state write, so a card can
     never be persisted for a date whose lock lands later (or not at all)."""
     st["open_slips"] = [s for s in st["open_slips"] if s["date"] != target]
+    _stamp_fixture_keys(plan, target)
     st["open_slips"].append({"date": target, "accas": plan,
                              "staked_pct": round(sum(a["stake_pct"] for a in plan), 4)})
     entry = record_freeze(st, target, freeze_at) if freeze_at is not None else None

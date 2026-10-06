@@ -257,6 +257,52 @@ def _():
 
 
 # ---------------------------------------------------------------------------
+# WO-6  Settlement loses a leg when the spelling drifts after freeze
+# ---------------------------------------------------------------------------
+
+def _auto_tickets():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "at_wo6", REPO / "scripts" / "auto_tickets.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@check("WO-6", "a fixture filed under two names resolves to one leg")
+def _():
+    at = _auto_tickets()
+    archive = at._folded_leg_key("2026-10-05", "Italy", "Türkiye", "home")
+    slip = at._folded_leg_key("2026-10-05", "Italy", "Turkey", "HOME")
+    if archive != slip:
+        return (f"archive {archive} != slip {slip}. Italy beat Türkiye on "
+                "2026-10-05 and the acca never settled, because the archive "
+                "says Türkiye and the frozen slip says Turkey. 20.89% of "
+                "capital is stuck and voids on 2026-10-10, booking a winning "
+                "double as a single and losing 17.13% of capital.")
+    return None
+
+
+@check("WO-6", "settlement uses a key frozen with the slip, not re-parsed text")
+def _():
+    at = _auto_tickets()
+    fn = getattr(at, "leg_lookup_key", None)
+    if fn is None:
+        return ("no leg_lookup_key(slip_date, leg) helper. Settlement splits "
+                "the free-text 'A vs B' back apart at settlement time, so any "
+                "respelling after freeze orphans the leg permanently. The slip "
+                "must carry a stable identifier captured when it froze.")
+    stable = fn("2026-10-05", {"match": "COMPLETELY WRONG vs TEXT",
+                               "fixture_key": ("2026-10-05", "italy",
+                                               "turkiye"), "pick": "HOME"})
+    parsed = fn("2026-10-05", {"match": "Italy vs Türkiye", "pick": "HOME"})
+    if stable != parsed:
+        return ("a stored fixture_key must take precedence over the match "
+                "string; free text is a display artefact, not an identifier")
+    return None
+
+
+# ---------------------------------------------------------------------------
 # WO-5  Guard rails: the work order must not change what bets
 # ---------------------------------------------------------------------------
 
