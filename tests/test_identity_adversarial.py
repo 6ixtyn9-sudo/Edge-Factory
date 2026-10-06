@@ -325,11 +325,32 @@ def test_spelling_variants_of_one_club_are_not_ambiguous():
     assert key_to, "keys must remain settleable"
 
 
-def test_identical_outcomes_are_never_ambiguous():
+def test_identical_outcomes_on_a_truncated_key_are_still_refused():
+    """Agreement on a truncated key is not evidence that it is safe.
+
+    This replaces an earlier rule that let a truncated key through
+    whenever the rows behind it agreed, on the reasoning that the same
+    verdict cannot be mis-applied. That reasoning is wrong, and it hid
+    roughly half of all collisions by construction: agreement is measured
+    over the rows the archive HAPPENS to hold. "Manchester City" and
+    "Manchester United" both shorten to the same nine characters, so if
+    only one of the two fixtures has been filed so far, the key looks
+    unanimous and quietly answers for the match that is missing.
+
+    So the truncated key is refused whatever the outcomes say — and
+    nothing is lost by refusing it, which is the second half of this
+    test: both fixtures still settle on the full-width key that names
+    them exactly.
+    """
     rows = [{"home": "Manchester City", "away": "Arsenal", "result": "home"},
             {"home": "Manchester United", "away": "Arsenal", "result": "home"}]
-    _, key_to, dropped, _ = _drop(rows)
-    assert dropped == 0, "same verdict: nothing can be mis-settled"
+    at, key_to, dropped, _ = _drop(rows)
+    assert dropped >= 1, "a truncated key covering two clubs must not be used"
+    for row in rows:
+        assert any(
+            key_to.get(("2024-01-01", hk, ak)) == "home"
+            for hk, ak in at._exact_result_keys(row["home"], row["away"])
+        ), f"{row['home']} must still settle on its own specific key"
 
 
 def test_truly_distinct_fixtures_with_conflicting_results_still_drop():

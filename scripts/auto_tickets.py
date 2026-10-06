@@ -1842,6 +1842,8 @@ def _collect_settled_facts() -> tuple[dict, dict]:
 
     key_to: dict = {}
     entries: dict[str, list[dict]] = {}
+    EMPTY_KEY_TIERS_DROPPED.clear()
+    EMPTY_KEY_FIXTURES.clear()
     wh = LOCALDATA / "warehouse.duckdb"
     if wh.exists():
         try:
@@ -1922,7 +1924,19 @@ def _collect_settled_facts() -> tuple[dict, dict]:
     AMBIGUOUS_SETTLEMENT_KEYS.extend(detail)
     # Operator-visible counter: these legs can NEVER settle automatically,
     # so they must not accumulate silently as "pending forever".
-    _report_ambiguous_settlement(dropped, detail)
+    #
+    # The counter deliberately reports only the keys that leave a leg
+    # stranded, not every key the guard refused. A truncated key dropped
+    # in favour of a full-width key that settles the same fixture is a
+    # repair; counting it here would make a fix look like a regression
+    # and bury the handful of cases that really do need an operator.
+    _report_ambiguous_settlement(len(AMBIGUOUS_PENDING_KEYS),
+                                 AMBIGUOUS_PENDING_KEYS)
+    print(f"settlement_empty_key_dropped={len(EMPTY_KEY_TIERS_DROPPED)}",
+          file=sys.stderr)
+    if EMPTY_KEY_FIXTURES:
+        print(f"settlement_nameless_fixture={len(EMPTY_KEY_FIXTURES)}",
+              file=sys.stderr)
     return key_to, entries
 
 
@@ -1970,7 +1984,61 @@ def _same_club_names(a: str, b: str) -> bool:
     if not ta or not tb:
         return False
     # structural containment: one name is the other plus descriptors
-    return ta <= tb or tb <= ta
+    if ta <= tb or tb <= ta:
+        return True
+    # one abbreviated word, everything else identical at full length
+    return _abbreviated_token_link(ta, tb)
+
+
+# An abbreviation must keep at least this many characters before it may be
+# paired with a longer token. One-letter stubs ("A" vs "Arsenal") carry no
+# evidence and would link half the catalogue.
+_MIN_ABBREVIATION_LEN = 2
+
+
+def _abbreviated_token_link(ta: set[str], tb: set[str]) -> bool:
+    """One name writes a word in full, the other abbreviates it.
+
+    Result feeds truncate the final word of long club names to fit a
+    column: "Accrington St" for "Accrington Stanley", "Nottingham For"
+    for "Nottingham Forest". Those are one club, but every token test
+    above declares them different because the words are not equal.
+
+    The rule is deliberately narrow and carries no notion of similarity,
+    distance or score, so it cannot be tuned into fuzzy matching:
+
+    * at least one token must be shared and equal at FULL length, so the
+      names already agree on their substantive part;
+    * the leftover tokens must pair ONE-TO-ONE, each pair being a strict
+      prefix relation (one token is the opening of the other, and they
+      are not equal);
+    * an abbreviation must retain two or more characters.
+
+    What it links: Accrington St/Stanley, Nottingham For/Forest.
+    What it refuses, by construction rather than by tuning: Manchester
+    City/Utd and Adelaide City/Cobras (neither leftover opens the
+    other), Juventud Unida SL/Univ. and Ferroviario Nacala/Nampula
+    (same: "sl" does not open "univ", "nacala" does not open "nampula").
+    """
+    shared = ta & tb
+    if not shared:
+        return False                       # nothing agrees at full length
+    rest_a, rest_b = sorted(ta - shared), sorted(tb - shared)
+    if not rest_a or not rest_b or len(rest_a) != len(rest_b):
+        return False                       # no one-to-one pairing possible
+    taken: set[str] = set()
+    for short in rest_a:
+        matches = [
+            other for other in rest_b
+            if other not in taken
+            and min(len(short), len(other)) >= _MIN_ABBREVIATION_LEN
+            and short != other
+            and (other.startswith(short) or short.startswith(other))
+        ]
+        if len(matches) != 1:
+            return False                   # unmatched, or ambiguous pairing
+        taken.add(matches[0])
+    return len(taken) == len(rest_b)
 
 
 def _fixtures_are_distinct(idents: list) -> bool:
@@ -2024,33 +2092,86 @@ def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> tuple[int, list]
        and turned a normal run into a 63-minute one;
     2. the outcomes actually disagree. If every row behind the key says
        "home", nothing can be mis-settled no matter whose fixture it is.
+
+    Condition 2 is sound ONLY for a key specific enough to name one
+    fixture. On a truncated nine-character key it is not: agreement is
+    measured over the rows the archive happens to hold, so if one of the
+    clubs sharing the key has a result and the other does not yet, the
+    key looks unanimous and quietly answers for the missing fixture. Any
+    truncated key covering more than one real fixture on a date is
+    therefore refused outright, whatever the outcomes say. Those legs do
+    not go unsettled: the full-width tiers are tried first and name the
+    fixture exactly.
     """
     by_key: dict[tuple, dict] = {}
     for day, rows in entries.items():
         for e in rows:
             home, away = str(e.get("home") or ""), str(e.get("away") or "")
             outcome = e.get("result", e.get("outcome"))
-            for hk, ak in _result_write_keys(home, away):
-                slot = by_key.setdefault((day, hk, ak),
-                                         {"names": [], "outcomes": set()})
+            for hk, ak, narrow in _result_write_key_specs(home, away):
+                slot = by_key.setdefault(
+                    (day, hk, ak),
+                    {"names": [], "outcomes": set(), "narrow": True})
                 if (home, away) not in slot["names"]:
                     slot["names"].append((home, away))
                 slot["outcomes"].add(outcome)
+                # A key reachable from any specific tier is specific.
+                slot["narrow"] = slot["narrow"] and narrow
 
     dropped = 0
+    superseded = 0
     detail: list = []
+    narrow_detail: list = []
+    pending_detail: list = []
     for key, slot in by_key.items():
         names = slot["names"]
         if len(names) < 2 or key not in key_to:
             continue
-        if len(slot["outcomes"]) < 2:
-            continue                      # same verdict: nothing to mis-settle
         if not _fixtures_are_distinct(names):
             continue                      # one club, several spellings
+        if not slot["narrow"] and len(slot["outcomes"]) < 2:
+            continue                      # same verdict: nothing to mis-settle
         del key_to[key]
         dropped += 1
-        detail.append((key[0], sorted(f"{h} vs {a}" for h, a in names)))
+        entry = (key[0], sorted(f"{h} vs {a}" for h, a in names))
+        detail.append(entry)
+        if slot["narrow"]:
+            # Truncated key over genuinely different fixtures: unusable
+            # even when today's rows agree. A full-width tier names these
+            # fixtures exactly, so the leg still settles; the key is
+            # superseded rather than lost. Counted in the same total so
+            # the refusal can never be under-reported, and listed
+            # separately so a rise here is not mistaken for new damage.
+            superseded += 1
+            narrow_detail.append(entry)
+        else:
+            pending_detail.append(entry)
+    NARROW_KEY_SUPERSEDED.clear()
+    NARROW_KEY_SUPERSEDED.extend(narrow_detail)
+    AMBIGUOUS_PENDING_KEYS.clear()
+    AMBIGUOUS_PENDING_KEYS.extend(pending_detail)
+    _report_narrow_key_supersession(superseded)
     return dropped, detail
+
+
+# Truncated keys refused because they covered several real fixtures. The
+# fixtures behind them still settle on a full-width key.
+NARROW_KEY_SUPERSEDED: list = []
+
+# Refused keys that leave a leg with nothing to settle against: a
+# specific key covering two genuinely different fixtures whose results
+# disagree. This is the subset an operator has to resolve by hand.
+AMBIGUOUS_PENDING_KEYS: list = []
+
+
+def _report_narrow_key_supersession(count: int) -> None:
+    """Counter for truncated keys refused in favour of the specific tier.
+
+    Kept separate from ``settlement_ambiguous_pending`` on purpose: these
+    keys are replaced by a better one rather than lost, so folding them
+    into the pending counter would report a repair as a regression.
+    """
+    print(f"settlement_narrow_key_superseded={count}", file=sys.stderr)
 
 
 def load_settled():
@@ -2067,10 +2188,20 @@ def load_settled_entries():
     return _collect_settled_facts()[1]
 
 
-def _fold(s):
+@lru_cache(maxsize=200_000)
+def _fold_cached(s: str) -> str:
     import unicodedata
-    return "".join(c for c in unicodedata.normalize("NFD", str(s))
+    return "".join(c for c in unicodedata.normalize("NFD", s)
                    if unicodedata.category(c) != "Mn").lower().strip()
+
+
+def _fold(s):
+    # Pure string transform, so it caches safely. The settlement fallback
+    # folds every key in the map on every call; the specific key tier made
+    # that map larger, and re-folding it each time is the whole cost.
+    # Coerced here rather than inside the cache so an unhashable argument
+    # behaves exactly as it did before.
+    return _fold_cached(str(s))
 
 
 # Rescheduled fallback window — mirrors the audit's ±3-day rescheduled scan.
@@ -2158,6 +2289,52 @@ def _key_markers(key: object) -> frozenset:
 SETTLED_KEY_NAMES: dict = {}
 
 
+def _narrow_result_keys(home: object, away: object) -> set:
+    """The truncated nine-character keys for a fixture, if any."""
+    return {(hk, ak)
+            for hk, ak, _blind, narrow in _exact_result_key_specs(
+                home, away, include_legacy_blind=True)
+            if narrow}
+
+
+def _names_behind_key_are_other_clubs(day: str, hk: str, ak: str,
+                                      raw_home: object,
+                                      raw_away: object) -> bool:
+    """True when every fixture filed under this key is a different club.
+
+    Returns False when the names are unknown, so rows written before the
+    name index existed keep settling.
+    """
+    names = SETTLED_KEY_NAMES.get((day, hk, ak))
+    if not names or not raw_home or not raw_away:
+        return False
+    return not any(_same_club_names(hn, raw_home)
+                   and _same_club_names(an, raw_away)
+                   for hn, an in names)
+
+
+def _narrow_key_blocks(day: str, hk: str, ak: str,
+                       raw_home: object, raw_away: object) -> bool:
+    """True when a truncated key must not answer for this leg.
+
+    Refusing truncated keys that cover two filed fixtures is not enough
+    on its own. The dangerous case is the one where only ONE of the
+    colliding fixtures has been filed: the bucket looks unanimous, the
+    guard sees nothing to resolve, and a leg for the OTHER club falls
+    through to the same nine characters and inherits a result that
+    belongs to its neighbour. "Manchester United vs Arsenal" quietly
+    settles on Manchester City's row.
+
+    So a truncated key is checked against the names actually stored
+    behind it: it may answer only for a club it really holds. This is
+    the same deterministic link test used everywhere else, not a
+    similarity score. When the names are unknown (rows written in the
+    legacy epoch, before the name index existed) the key still answers,
+    so old slips keep settling.
+    """
+    return _names_behind_key_are_other_clubs(day, hk, ak, raw_home, raw_away)
+
+
 def _marker_boundary_blocks(mh, ma, d, h, a) -> bool:
     """True when this candidate result may not settle a marked leg.
 
@@ -2228,6 +2405,19 @@ def _lookup_fallback(settled, day, home, away, markers=None, pick=None):
             continue
         ra = SequenceMatcher(None, fa, _fold(a)).ratio()
         if ra >= 0.8 and rh + ra > best:
+            # A near-spelling is not an identity. "manchesterunited"
+            # scores well above the bar against the truncated key
+            # "mancheste", which holds Manchester CITY's row. Where the
+            # names behind a key are known they must pass the same
+            # deterministic club test used elsewhere; unknown-name legacy
+            # rows are left alone so old slips keep settling.
+            #
+            # Checked only for a candidate that already leads, so the
+            # cost lands on a handful of rows per leg rather than on
+            # every row in the map.
+            if pick is not None and _names_behind_key_are_other_clubs(
+                    d, h, a, pick.get("home"), pick.get("away")):
+                continue
             best, best_oc = rh + ra, oc
     if best_oc is None and blocked and pick is not None:
         _note_marker_guarded_leg(pick)
@@ -2239,7 +2429,18 @@ SECOND_TEAM_MARKERS = frozenset({
 })
 
 
-def _squad_aware_norm_key(name: object, *, legacy: bool = False) -> str:
+# Width of the settlement key tiers. The narrow width is the historical
+# one: nine characters, which is shorter than most club names and so
+# cannot tell "Adelaide City" from "Adelaide Cobras" (both "adelaidec").
+# The specific tier keeps the full-width identity key instead and is
+# tried first; the narrow tier survives only as a guarded fallback for
+# legs frozen before the specific tier existed.
+SPECIFIC_KEY_WIDTH = 24
+NARROW_KEY_WIDTH = 9
+
+
+def _squad_aware_norm_key(name: object, *, legacy: bool = False,
+                          width: int = NARROW_KEY_WIDTH) -> str:
     """``norm_team`` key built from club stem plus explicit squad suffix.
 
     The legacy miner key strips markers such as U21/B/W.  For settlement we
@@ -2253,9 +2454,9 @@ def _squad_aware_norm_key(name: object, *, legacy: bool = False) -> str:
     if legacy and not suffix:
         # Frozen pre-2026-10-05 behaviour for unmarked names: diacritics were
         # deleted, not transliterated (Beşiktaş -> beikta).
-        return norm_team_legacy(str(name or ""))
+        return norm_team_legacy(str(name or ""), width)
     stem = strip_squad_markers(name)
-    base = (norm_team_legacy if legacy else norm_team)(stem)
+    base = (norm_team_legacy if legacy else norm_team)(stem, width)
     return base + suffix
 
 
@@ -2281,10 +2482,24 @@ def _exact_result_key_specs_uncached(home: object, away: object,
                                      ) -> list[tuple[str, str, bool]]:
     """Deterministic EXACT key spaces for a result/pick fixture.
 
-    1. canonical: transliteration + curated explicit aliases (so a result
-       recorded as "Turkey" grades a pick captured as "Türkiye");
-    2. plain transliterated norm_team built from club stem + squad suffix;
-    3. frozen pre-2026-10-05 norm_team_legacy built the same way.
+    Ordered MOST SPECIFIC FIRST, because a shorter key is a weaker claim
+    of identity and must never be consulted while a stronger one can
+    answer:
+
+    1. canonical at full width: transliteration + curated explicit
+       aliases (so a result recorded as "Turkey" grades a pick captured
+       as "Türkiye"), keeping enough characters to separate "Adelaide
+       City" from "Adelaide Cobras";
+    2. full-width norm_team built from club stem + squad suffix;
+    3. the historical nine-character canonical key;
+    4. the historical nine-character norm_team key;
+    5. frozen pre-2026-10-05 norm_team_legacy, also nine characters.
+
+    Tiers 3-5 are TRUNCATED: nine characters is shorter than most club
+    names, so one such key routinely covers several real clubs. They are
+    retained only so legs frozen before the full-width tiers existed can
+    still settle, and they are tagged ``narrow`` so the loader can refuse
+    them whenever their bucket is not unambiguous.
 
     Optional legacy-blind keys are tagged and kept out of write paths so
     they cannot recreate the senior/youth identity collision. Exact
@@ -2292,43 +2507,98 @@ def _exact_result_key_specs_uncached(home: object, away: object,
     """
     from edgefactory.util import canonical_team_key, norm_team, norm_team_legacy
 
+    wide = SPECIFIC_KEY_WIDTH
+    # (home key, away key, legacy_blind, narrow)
     specs = [
-        (canonical_team_key(home), canonical_team_key(away), False),
-        (_squad_aware_norm_key(home), _squad_aware_norm_key(away), False),
+        (canonical_team_key(home, wide), canonical_team_key(away, wide),
+         False, False),
+        (_squad_aware_norm_key(home, width=wide),
+         _squad_aware_norm_key(away, width=wide), False, False),
+        (canonical_team_key(home), canonical_team_key(away), False, True),
+        (_squad_aware_norm_key(home), _squad_aware_norm_key(away), False, True),
         (_squad_aware_norm_key(home, legacy=True),
-         _squad_aware_norm_key(away, legacy=True), False),
+         _squad_aware_norm_key(away, legacy=True), False, True),
     ]
     if include_legacy_blind:
         specs.extend([
-            (norm_team(home), norm_team(away), True),
+            (norm_team(home), norm_team(away), True, True),
             (norm_team_legacy(str(home or "")),
-             norm_team_legacy(str(away or "")), True),
+             norm_team_legacy(str(away or "")), True, True),
         ])
-    out: list[tuple[str, str, bool]] = []
+    out: list[tuple[str, str, bool, bool]] = []
     seen: set[tuple[str, str]] = set()
-    for hk, ak, legacy_blind in specs:
+    for hk, ak, legacy_blind, narrow in specs:
         key = (hk, ak)
         if key in seen:
             continue
+        # A key a wider tier already produced is not a truncation at all:
+        # the name simply fits, so it keeps the stronger tier's standing.
         seen.add(key)
-        out.append((hk, ak, legacy_blind))
+        out.append((hk, ak, legacy_blind, narrow))
     return out
 
 
+def _key_component_is_usable(part: object) -> bool:
+    """A key half must actually say something about a club.
+
+    Names made only of structure words and punctuation ("Athletic Club",
+    "Atletico FC", "B.93") normalise to the empty string. Writing that
+    into the settled map files every one of them under the same key:
+    eleven clubs shared ``('','')`` in the current archive, and whichever
+    row was written last answered for all of them. An empty half is not a
+    weak key, it is the absence of one, so it is never written and never
+    looked up.
+    """
+    return bool(str(part or "").strip())
+
+
+def _result_write_key_specs(home: object, away: object
+                            ) -> list[tuple[str, str, bool]]:
+    """Write-safe keys tagged ``narrow`` (truncated nine-character tier)."""
+    return [
+        (hk, ak, narrow)
+        for hk, ak, legacy_blind, narrow in _exact_result_key_specs(home, away)
+        if not legacy_blind
+        and _key_component_is_usable(hk) and _key_component_is_usable(ak)
+    ]
+
+
 def _exact_result_keys(home: object, away: object) -> list[tuple[str, str]]:
-    """Write-safe exact result keys: no legacy-blind squad-colliding keys."""
-    return [(hk, ak) for hk, ak, legacy_blind in _exact_result_key_specs(home, away)
-            if not legacy_blind]
+    """Write-safe exact result keys: no legacy-blind, no empty component."""
+    return [(hk, ak) for hk, ak, _narrow in _result_write_key_specs(home, away)]
 
 
 def _exact_result_lookup_specs(home: object, away: object) -> list[tuple[str, str, bool]]:
     """Read specs including tagged legacy-blind compatibility keys."""
-    return _exact_result_key_specs(home, away, include_legacy_blind=True)
+    return [
+        (hk, ak, legacy_blind)
+        for hk, ak, legacy_blind, _narrow in _exact_result_key_specs(
+            home, away, include_legacy_blind=True)
+        if _key_component_is_usable(hk) and _key_component_is_usable(ak)
+    ]
 
 
 def _result_write_keys(home: object, away: object) -> list[tuple[str, str]]:
-    """Keys that may be written into the current settled-result map."""
-    return _exact_result_keys(home, away)
+    """Keys that may be written into the current settled-result map.
+
+    Counts, rather than silently discards, the fixtures whose name gives
+    no usable key at all, so the loss is visible to an operator.
+    """
+    specs = _exact_result_key_specs(home, away)
+    keys = [(hk, ak) for hk, ak, legacy_blind, _n in specs if not legacy_blind]
+    usable = _exact_result_keys(home, away)
+    if len(usable) < len(keys):
+        EMPTY_KEY_TIERS_DROPPED.append((str(home or ""), str(away or "")))
+    if keys and not usable:
+        EMPTY_KEY_FIXTURES.add((str(home or ""), str(away or "")))
+    return usable
+
+
+# Key tiers refused because a component normalised to nothing, and the
+# fixtures left with no usable key at all. Both surfaced next to
+# settlement_ambiguous_pending so the loss is never silent.
+EMPTY_KEY_TIERS_DROPPED: list = []
+EMPTY_KEY_FIXTURES: set = set()
 
 
 def _replace_key_markers(key: str, markers: frozenset[str]) -> str:
@@ -2397,6 +2667,7 @@ def pick_result(pick, settled):
     mh = squad_markers(pick.get("home") or "")
     ma = squad_markers(pick.get("away") or "")
     raw_home, raw_away = pick.get("home") or "", pick.get("away") or ""
+    narrow_keys = _narrow_result_keys(raw_home, raw_away)
     for hk, ak, legacy_blind in _exact_result_lookup_specs(raw_home, raw_away):
         # The pre-squad-suffix key spaces are compatibility-only.  A marked
         # leg may not read them because that is exactly the senior/youth
@@ -2404,6 +2675,9 @@ def pick_result(pick, settled):
         if legacy_blind and (mh or ma):
             continue
         if _marker_boundary_blocks(mh, ma, day, hk, ak):
+            continue
+        if ((hk, ak) in narrow_keys
+                and _narrow_key_blocks(day, hk, ak, raw_home, raw_away)):
             continue
         outcome = settled.get((day, hk, ak))
         if outcome is not None:
