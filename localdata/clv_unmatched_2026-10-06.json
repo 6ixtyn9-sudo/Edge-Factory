@@ -79,5 +79,86 @@
         "kickoff_delta_minutes": 150
       }
     ]
+  },
+  {
+    "date": "2026-10-06",
+    "kickoff": "06-10, 19:00",
+    "home": "Huddersfield",
+    "away": "Rochdale",
+    "league": "England EFL Trophy",
+    "market": "1x2",
+    "pick": "home",
+    "rule_name": "2way-unanimous avg_p>=70",
+    "match_method": "fallback",
+    "home_key": "huddersfield",
+    "away_key": "rochdale",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Zoman",
+        "away": "Korhogo",
+        "league": "Ligue 1",
+        "kickoff": "2026-10-06T15:30:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 2.37,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "zoman",
+        "away_key": "korhogo",
+        "kickoff_delta_minutes": 90
+      },
+      {
+        "home": "Croatia",
+        "away": "Spain",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-10-06T18:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 9.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "croatia",
+        "away_key": "spain",
+        "kickoff_delta_minutes": 105
+      },
+      {
+        "home": "Moldova",
+        "away": "Slovakia",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-10-06T18:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 7.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "moldova",
+        "away_key": "slovakia",
+        "kickoff_delta_minutes": 105
+      },
+      {
+        "home": "Estonia",
+        "away": "Iceland",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-10-06T18:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 5.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "estonia",
+        "away_key": "iceland",
+        "kickoff_delta_minutes": 105
+      },
+      {
+        "home": "Belarus",
+        "away": "Finland",
+        "league": "UEFA Nations League",
+        "kickoff": "2026-10-06T18:45:00Z",
+        "market": "1x2",
+        "selection": "home",
+        "odds": 3.9,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "belarus",
+        "away_key": "finland",
+        "kickoff_delta_minutes": 105
+      }
+    ]
   }
 ]

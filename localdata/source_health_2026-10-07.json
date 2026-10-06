@@ -7,6 +7,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "status": null
@@ -19,6 +20,7 @@
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
@@ -33,6 +35,7 @@
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
       "status": null
@@ -45,6 +48,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {},
@@ -52,13 +56,14 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-07' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": "http_404_endpoint_contract",
       "status": "unavailable"
@@ -68,6 +73,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "status": null
@@ -80,27 +86,30 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "status": "unavailable"
     },
     "bzzoiro": {
-      "blocker": null,
-      "can_fetch_today": true,
+      "blocker": "bzz status=auth; quota_hint=auth_or_quota",
+      "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
-      "freshness_h": 0.0,
-      "reason": null,
-      "status": "ok"
+      "canonicalization_dropped": 0,
+      "freshness_h": null,
+      "reason": "http_403_plan_or_auth",
+      "status": "auth"
     },
     "bzzoiro_odds": {
-      "blocker": null,
-      "can_fetch_today": true,
-      "can_price": true,
+      "blocker": "bzz status=auth; quota_hint=auth_or_quota",
+      "can_fetch_today": false,
+      "can_price": false,
       "can_vote": false,
-      "freshness_h": 0.0,
-      "reason": null,
-      "status": "ok"
+      "canonicalization_dropped": 0,
+      "freshness_h": null,
+      "reason": "http_403_plan_or_auth",
+      "status": "auth"
     },
     "forebet": {
       "blocker": "historical-only post-2026-06-12; no production pricing or weighting",
@@ -114,6 +123,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "status": null
@@ -123,6 +133,7 @@
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "raw": 249,
       "reason": null,
@@ -134,6 +145,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {},
@@ -148,11 +160,12 @@
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "pa_matched": 0,
       "pa_raw": 0,
       "pa_scored": 0,
-      "reason": "valid_empty_http_200",
+      "reason": "http_200_zero_rows_after_parse",
       "status": "empty"
     },
     "predictiq": {
@@ -160,6 +173,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "status": null
@@ -169,6 +183,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "status": null
@@ -178,6 +193,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "status": null
@@ -187,6 +203,7 @@
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": true,
+      "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
       "status": null
@@ -196,6 +213,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": "http_401_auth",
       "sa_matched": 0,
@@ -208,6 +226,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "status": null
@@ -217,6 +236,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "st_matched": 0,
@@ -228,6 +248,7 @@
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": true,
+      "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
       "status": null
@@ -237,6 +258,7 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {},
@@ -251,6 +273,7 @@
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": true,
+      "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
       "status": null
@@ -260,15 +283,17 @@
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
+      "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": null,
       "status": null
     },
     "zulubet": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "can_fetch_today": true,
-      "can_price": false,
-      "can_vote": false,
+      "can_price": true,
+      "can_vote": true,
+      "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
       "status": null
