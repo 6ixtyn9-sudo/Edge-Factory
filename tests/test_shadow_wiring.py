@@ -141,3 +141,30 @@ def test_the_shadow_capture_is_handed_the_days_card():
     kwargs = _call_keywords(tree, func_name="_capture_shadow_candidates")
     assert kwargs is not None and "card" in kwargs, (
         "picks_today must pass the day's card into the shadow capture lane")
+
+
+def test_the_shadow_lane_is_handed_the_days_whole_card():
+    """The card must come from the day's card, not the fresh run alone.
+
+    Matched structurally. A substring check for the helper's name would
+    be vacuous the moment the name appears anywhere else in this file,
+    which is exactly how an earlier wiring guard in this module passed
+    with the wiring deleted.
+    """
+    import ast
+    source = pathlib.Path(pt.__file__).read_text()
+    tree = ast.parse(source)
+    kwargs = _call_keywords(tree, func_name="_capture_shadow_candidates")
+    assert kwargs is not None, "the shadow lane is never called"
+    assert "card" in kwargs, "the shadow lane is no longer handed a card"
+
+    # ...and the card argument must be the day-card helper's return value,
+    # not a bare comprehension over the freshly generated picks.
+    call = None
+    for node in ast.walk(tree):
+        if (isinstance(node, ast.Call) and isinstance(node.func, ast.Name)
+                and node.func.id == "_capture_shadow_candidates"):
+            call = node
+    arg = {kw.arg: kw.value for kw in call.keywords}["card"]
+    assert isinstance(arg, ast.Call), "the card is not built by a helper call"
+    assert getattr(arg.func, "id", None) == "_day_card_fixtures"
