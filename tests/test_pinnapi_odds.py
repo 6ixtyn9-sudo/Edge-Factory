@@ -67,7 +67,7 @@ def test_parse_snapshot_unrecognized_shape_fails_closed():
 def test_capture_without_key_is_inert_not_run(monkeypatch):
     monkeypatch.delenv("PINNAPI_KEY", raising=False)
 
-    def fail(url, timeout=30):
+    def fail(url, timeout=30, auth="header"):
         raise AssertionError("keyless run must not fetch")
 
     monkeypatch.setattr(pa, "get_json", fail)
@@ -80,7 +80,7 @@ def test_capture_without_key_is_inert_not_run(monkeypatch):
 def test_capture_ok_counts_and_is_cache_first(monkeypatch, tmp_path):
     calls = []
 
-    def fake_get(url, timeout=30):
+    def fake_get(url, timeout=30, auth="header"):
         calls.append(url)
         return 200, _payload(), {"x-ratelimit-remaining": "77"}
 
@@ -103,7 +103,7 @@ def test_capture_ok_counts_and_is_cache_first(monkeypatch, tmp_path):
 
 
 def test_schema_mismatch_is_unavailable_with_raw_sample_retained(monkeypatch):
-    def fake_get(url, timeout=30):
+    def fake_get(url, timeout=30, auth="header"):
         return 200, {"totally": "different"}, {}
 
     monkeypatch.setattr(pa, "get_json", fake_get)
@@ -117,7 +117,7 @@ def test_schema_mismatch_is_unavailable_with_raw_sample_retained(monkeypatch):
 
 
 def test_auth_403_is_retryable_zero(monkeypatch):
-    def fake_get(url, timeout=30):
+    def fake_get(url, timeout=30, auth="header"):
         return 403, {"message": "Forbidden"}, {}
 
     monkeypatch.setattr(pa, "get_json", fake_get)
@@ -145,9 +145,36 @@ def test_budget_cap_is_classified_quota(monkeypatch):
     assert stats["quota_hint"] == "budget_reached"
 
 
-def test_get_json_refuses_unauthenticated_urls():
+def test_get_json_refuses_requests_that_carry_no_credential():
+    """The guard moved with the contract; its intent did not.
+
+    It used to assert ``key=`` was in the URL. The key now travels in the
+    ``x-portal-apikey`` header, so that spelling no longer tests anything -
+    but the invariant is unchanged: a request that carries the key by
+    NEITHER mechanism is refused before it leaves the process.
+    """
     with pytest.raises(pa.UpstreamBlocked, match="unauthenticated"):
-        pa.get_json("https://pinnapi.com/kit/v1/markets?sport=soccer&mode=prematch")
+        pa.get_json("https://pinnapi.com/kit/v1/markets?sport_id=1&event_type=prematch",
+                    auth="query")
+
+
+def test_header_auth_is_accepted_by_the_guard(monkeypatch):
+    """A key-less URL is fine when the header carries the credential."""
+    sent = {}
+
+    def fake_urlopen(request, timeout=30):
+        sent["headers"] = dict(request.headers)
+        sent["url"] = request.full_url
+        raise AssertionError("stop before the network")
+
+    monkeypatch.setattr(pa.urllib.request, "urlopen", fake_urlopen)
+    with pytest.raises(pa.UpstreamBlocked) as excinfo:
+        pa.get_json(pa.markets_url())
+    assert "unauthenticated" not in str(excinfo.value)
+    # urllib title-cases header names; compare case-insensitively.
+    headers = {k.lower(): v for k, v in sent["headers"].items()}
+    assert headers["x-portal-apikey"] == "test-pinnapi-key"
+    assert "key=" not in sent["url"]
 
 
 def test_dedupe_existing_committed_rows_win():
@@ -159,14 +186,19 @@ def test_dedupe_existing_committed_rows_win():
 
 
 def test_diagnostics_never_leak_the_key(monkeypatch):
-    def fake_get(url, timeout=30):
+    def fake_get(url, timeout=30, auth="header"):
         return 200, _payload(), {}
 
     monkeypatch.setattr(pa, "get_json", fake_get)
     pa.capture_day("2026-10-03")
     dumped = json.dumps(pa.diagnostics())
     assert "test-pinnapi-key" not in dumped
-    assert pa.markets_url().endswith("sport_id=2&event_type=prematch&key=test-pinnapi-key")
+    # The default (header) request URL carries no credential at all.
+    assert pa.markets_url().endswith("sport_id=1&event_type=prematch")
+    assert "key=" not in pa.markets_url()
+    # Only the 401 fallback puts the key in the query string.
+    assert pa.markets_url(auth="query").endswith(
+        "sport_id=1&event_type=prematch&key=test-pinnapi-key")
     # Header sanitization drops auth material.
     sanitized = pa._sanitize_headers({"X-RateLimit-Remaining": "4", "Authorization": "Bearer x"})
     assert "Authorization" not in sanitized
@@ -271,3 +303,190 @@ def test_a_good_row_survives_alongside_a_dropped_one():
     rows, _ = pa.parse_snapshot(payload, day="2026-10-07")
     assert len(rows) == 1 and rows[0]["selection"] == "away"
     assert pa.canonicalization_drop_reasons().get("price_unreadable") == 1
+
+
+# --- REST request contract (WO-8) -----------------------------------------
+# Two things were wrong at once: the adapter asked for the wrong sport and
+# authenticated the wrong way. Soccer is sport_id=1, and REST auth is the
+# x-portal-apikey header; the key= query form survives only as a 401
+# fallback. Everything below is proved against mocked responses - this
+# sandbox has no network and no live call was ever made.
+
+
+class _Recorder:
+    """Stands in for get_json, recording how each attempt was built."""
+
+    def __init__(self, *responses):
+        self.responses = list(responses)
+        self.calls = []
+
+    def __call__(self, url, timeout=30, auth="header"):
+        self.calls.append({"url": url, "auth": auth,
+                           "headers": pa.request_headers(auth)})
+        return self.responses[min(len(self.calls) - 1, len(self.responses) - 1)]
+
+
+def test_soccer_is_sport_id_one():
+    assert pa.SPORT_ID == 1
+    assert pa.sport_id() == 1
+    assert "sport_id=1" in pa.markets_url()
+
+
+def test_sport_id_is_env_overridable(monkeypatch):
+    monkeypatch.setenv("EDGE_FACTORY_PINNAPI_SPORT_ID", "9")
+    assert pa.sport_id() == 9
+    assert "sport_id=9" in pa.markets_url()
+    # A junk override falls back to the constant rather than sending garbage.
+    monkeypatch.setenv("EDGE_FACTORY_PINNAPI_SPORT_ID", "soccer")
+    assert pa.sport_id() == 1
+
+
+def test_request_carries_the_portal_api_key_header():
+    headers = pa.request_headers()
+    assert headers[pa.AUTH_HEADER] == "test-pinnapi-key"
+    assert pa.AUTH_HEADER == "x-portal-apikey"
+    # The fallback form carries it in the URL instead, never in both.
+    assert pa.AUTH_HEADER not in pa.request_headers(auth="query")
+
+
+def test_header_auth_is_tried_first_and_recorded(monkeypatch):
+    recorder = _Recorder((200, _payload(), {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert rows
+    assert [c["auth"] for c in recorder.calls] == ["header"]
+    assert recorder.calls[0]["headers"][pa.AUTH_HEADER] == "test-pinnapi-key"
+    assert "key=" not in recorder.calls[0]["url"]
+    assert "sport_id=1" in recorder.calls[0]["url"]
+    assert "event_type=prematch" in recorder.calls[0]["url"]
+    assert stats["auth_mechanism"] == "header"
+    assert stats["auth_attempts"] == [{"auth": "header", "status": 200}]
+    assert stats["sport_id"] == 1 and stats["event_type"] == "prematch"
+
+
+def test_401_on_header_auth_falls_back_to_the_query_form(monkeypatch):
+    recorder = _Recorder((401, {"message": "unauthorized"}, {}),
+                         (200, _payload(), {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert rows, "the fallback answer must still be parsed"
+    assert [c["auth"] for c in recorder.calls] == ["header", "query"]
+    assert "key=test-pinnapi-key" in recorder.calls[1]["url"]
+    assert stats["status"] == "ok"
+    assert stats["auth_mechanism"] == "query"
+    assert stats["auth_attempts"] == [{"auth": "header", "status": 401},
+                                      {"auth": "query", "status": 200}]
+    assert stats["requests"] == 2
+
+
+def test_401_raised_as_upstream_blocked_also_falls_back(monkeypatch):
+    """A real 401 arrives as an HTTPError, not as a returned status."""
+    calls = []
+
+    def fake_get(url, timeout=30, auth="header"):
+        calls.append(auth)
+        if auth == "header":
+            raise pa.UpstreamBlocked("pinnapi: HTTP 401 Unauthorized; ")
+        return 200, _payload(), {}
+
+    monkeypatch.setattr(pa, "get_json", fake_get)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert calls == ["header", "query"]
+    assert rows and stats["auth_mechanism"] == "query"
+    assert stats["auth_attempts"] == [{"auth": "header", "status": 401},
+                                      {"auth": "query", "status": 200}]
+
+
+def test_both_mechanisms_rejected_is_a_retryable_auth_zero(monkeypatch):
+    recorder = _Recorder((401, {"message": "unauthorized"}, {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert rows == []
+    assert stats["status"] == "auth"
+    assert stats["status"] in pa.RETRYABLE_ZERO_ROW_STATUSES
+    assert stats["auth_mechanism"] is None, "nothing succeeded; claim nothing"
+    assert [a["auth"] for a in stats["auth_attempts"]] == ["header", "query"]
+
+
+def test_non_401_failure_does_not_spend_a_second_call(monkeypatch):
+    """Only 401 is an auth-mechanism question. 500 is not; do not re-ask."""
+    recorder = _Recorder((500, {"message": "boom"}, {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert rows == []
+    assert len(recorder.calls) == 1
+    assert stats["status"] == "unavailable"
+
+
+def test_zero_row_prematch_records_the_payload_shape(monkeypatch):
+    """A 200 with nothing usable must describe what arrived.
+
+    Recording the shape is the whole deliverable in that case: the next
+    step is an operator decision on an observed payload, not a parser
+    invented for one nobody has seen.
+    """
+    payload = {"events": [{"id": "e1", "home": "Arsenal", "away": "Chelsea",
+                           "markets": {"corner_race": [
+                               {"selection": "home", "price": 2.1}]}}]}
+
+    def fake_get(url, timeout=30, auth="header"):
+        return 200, payload, {}
+
+    monkeypatch.setattr(pa, "get_json", fake_get)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert rows == []
+    assert stats["status"] == "empty"
+    shape = stats["response_shape"]
+    assert shape["event_count"] == 1
+    assert shape["events_key"] == "events"
+    assert "home" in shape["event_keys"] and "markets" in shape["event_keys"]
+    assert shape["markets_type"] == "dict"
+    assert shape["market_group_keys"] == ["corner_race"]
+    assert shape["market_entry_keys"] == ["price", "selection"] or set(
+        shape["market_entry_keys"]) == {"selection", "price"}
+    assert shape["drop_reasons"], "the reason rows vanished must be named"
+    assert "zero usable rows" in stats["blocker"]
+
+
+def test_empty_event_list_records_a_shape_too(monkeypatch):
+    """An empty board is unrecognizable from an unrecognized board.
+
+    It keeps the pre-existing fail-closed, retryable classification - the
+    change here is only that the observed shape is written down.
+    """
+    def fake_get(url, timeout=30, auth="header"):
+        return 200, {"events": [], "meta": {"page": 1}}, {}
+
+    monkeypatch.setattr(pa, "get_json", fake_get)
+    rows, stats = pa.capture_day("2026-10-03")
+    assert rows == [] and stats["status"] == "unavailable"
+    assert stats["status"] in pa.RETRYABLE_ZERO_ROW_STATUSES
+    assert stats["response_shape"]["event_count"] == 0
+    assert set(stats["response_shape"]["top_keys"]) == {"events", "meta"}
+
+
+def test_the_key_never_reaches_diagnostics_or_the_ledger(monkeypatch, tmp_path):
+    """Trap 2: moving the key into a header must not leak it elsewhere.
+
+    _sanitize_headers covers RESPONSE headers; nothing we SEND may be
+    recorded, so the stats are checked as a whole, including the ledger
+    written to disk.
+    """
+    recorder = _Recorder((401, {"error": "bad key test-pinnapi-key"}, {}),
+                         (200, _payload(), {}))
+    monkeypatch.setattr(pa, "get_json", recorder)
+    rows, stats = pa.capture_day("2026-10-03")
+    path = pa.persist_shadow("2026-10-03", rows, stats, localdata=tmp_path)
+    assert "test-pinnapi-key" not in json.dumps(pa.diagnostics())
+    assert "test-pinnapi-key" not in json.dumps(stats)
+    assert "test-pinnapi-key" not in path.read_text()
+    assert "x-portal-apikey" in json.loads(path.read_text())["provenance"]["auth"]
+
+
+def test_shadow_role_is_unchanged_by_the_contract_fix(tmp_path):
+    """Parsing what the vendor sends is a bug fix, not a promotion."""
+    rows, _ = pa.parse_snapshot(_payload(), day="2026-10-03")
+    ledger = json.loads(pa.persist_shadow(
+        "2026-10-03", rows, {"status": "ok"}, localdata=tmp_path).read_text())
+    assert "never a vote" in ledger["role"]
+    assert ledger["role"].startswith("price-shadow")
