@@ -513,7 +513,7 @@ def test_the_card_overlap_reaches_the_committed_row():
         "sharpapi_odds": {
             "fetched": True, "rows": 0, "can_fetch_today": True,
             "can_price": False, "can_vote": False, "status": "empty",
-            "reason": "our_fixtures_absent_from_board",
+            "reason": "card_fixtures_unmatched_on_board",
             "board_rows": 100, "card_fixture_count": 14,
             "card_fixtures_on_board": 0, "card_fixtures_reversed": 0,
             "prematch_drop_reasons": {"live_price": 100},
@@ -541,3 +541,54 @@ def test_the_card_passthrough_carries_the_overlap_fields():
                   "card_prematch_drop_reasons",
                   "card_canonicalization_drop_reasons"):
         assert field in source_health.SHARPAPI_BOARD_FIELDS, field
+
+
+def test_the_source_line_shows_how_much_of_the_board_was_ours(tmp_path, monkeypatch):
+    """A global board can price a hundred rows, none of them ours.
+
+    Without this the line reads like success. The overlap belongs where
+    the operator already looks, for the same reason the discarded-row
+    count does.
+    """
+    monkeypatch.setattr(source_health, "LOCALDATA", tmp_path)
+    source_health.persist_daily_source_health("2026-10-07", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 100, "sa_raw": 100, "sa_matched": 100,
+            "sa_scored": 100, "can_fetch_today": True, "can_price": True,
+            "can_vote": False, "status": "ok",
+            "card_fixture_count": 14, "card_fixtures_on_board": 0,
+        },
+    })
+    assert "/card0of14" in source_health.daily_status_block("2026-10-07")
+
+
+def test_the_overlap_token_is_absent_when_no_card_was_compared(tmp_path, monkeypatch):
+    monkeypatch.setattr(source_health, "LOCALDATA", tmp_path)
+    source_health.persist_daily_source_health("2026-10-08", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 1, "sa_raw": 1, "sa_matched": 1,
+            "sa_scored": 1, "can_fetch_today": True, "can_price": True,
+            "can_vote": False, "status": "ok",
+        },
+    })
+    assert "/card" not in source_health.daily_status_block("2026-10-08")
+
+
+def test_the_vendors_team_names_reach_the_committed_artefact():
+    """A row-level census that never lands in the health record cannot
+    settle anything after the run, which is its only purpose."""
+    payload = source_health.build_daily_source_health("2026-10-09", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "reason": "card_fixtures_unmatched_on_board",
+            **source_health.sharpapi_board_observation({
+                "board_rows": 2, "board_team_count": 4,
+                "board_team_names": {"Heart of Midlothian": 1, "Rangers FC": 1},
+                "card_fixture_count": 2, "card_fixtures_on_board": 0,
+            }),
+        },
+    })
+    summary = payload["sources"]["sharpapi_odds"]["board_summary"]
+    assert summary["board_team_names"] == {"Heart of Midlothian": 1, "Rangers FC": 1}
+    assert summary["board_team_count"] == 4

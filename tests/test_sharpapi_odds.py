@@ -739,7 +739,7 @@ def test_a_global_board_without_our_fixtures_says_exactly_that(monkeypatch):
     """The refusal tokens describe strangers; the verdict must not."""
     monkeypatch.setenv("SHARPAPI_LIMIT", "100")
     _rows, stats = _capture(_strangers(100), monkeypatch=monkeypatch)
-    assert stats["reason"] == "our_fixtures_absent_from_board"
+    assert stats["reason"] == "card_fixtures_unmatched_on_board"
     assert stats["card_fixtures_on_board"] == 0
     assert stats["card_fixture_count"] == 2
 
@@ -773,7 +773,7 @@ def test_our_fixtures_listed_the_other_way_round_are_not_called_absent(monkeypat
     payload = _strangers(99) + [_flat(home_team="Portugal",
                                       away_team="Scotland", is_live=True)]
     _rows, stats = _capture(payload, monkeypatch=monkeypatch)
-    assert stats["reason"] == "our_fixtures_absent_sides_reversed"
+    assert stats["reason"] == "card_fixtures_matched_sides_reversed"
     assert stats["card_fixtures_reversed"] == 1
 
 
@@ -798,3 +798,97 @@ def test_without_a_card_the_board_wide_reading_is_unchanged(monkeypatch):
     _rows, stats = _capture(_strangers(100), card=None, monkeypatch=monkeypatch)
     assert stats["reason"] == "board_truncated_live_first"
     assert stats["card_fixture_count"] == 0
+
+
+# --- ticket (o) follow-up 3: a zero overlap has two causes ----------------
+#
+# The join key is an exact match on a compacted name plus a small curated
+# alias table, built against the sources we already run. This vendor has
+# never been exercised against it, so "none of our fixtures matched" means
+# either the board does not carry our card, or it carries it spelled a way
+# the table does not fold - opposite remedies. The vendor's own team names
+# are recorded so the artefact settles which, after the run, without
+# committing to a looser matcher before a real board has ever been seen.
+
+
+def test_a_board_that_carries_our_card_under_other_names_is_recoverable(monkeypatch):
+    """The false negative that would condemn a working vendor."""
+    board = [_flat(home_team="Heart of Midlothian", away_team="Rangers FC",
+                   is_live=True)]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06", card=[("Hearts", "Rangers")],
+                                  team_key=_team_key)
+    assert stats["reason"] == "card_fixtures_unmatched_on_board"
+    assert stats["card_fixtures_on_board"] == 0
+    # ...and the evidence that says it was an alias gap, not absent coverage
+    assert "Heart of Midlothian" in stats["board_team_names"]
+    assert "Rangers FC" in stats["board_team_names"]
+
+
+def test_no_verdict_this_adapter_emits_claims_absence(monkeypatch):
+    """Naming a cause this evidence cannot support is the oldest bug here.
+
+    An earlier wording asserted our fixtures were absent from the board.
+    Absence is one of two explanations and the recorded names exist
+    precisely because the capture cannot tell which. Driven through real
+    captures rather than read off the source.
+    """
+    seen = set()
+    scenarios = [
+        ([_flat(home_team="Heart of Midlothian", away_team="Rangers FC",
+                is_live=True)], [("Hearts", "Rangers")]),
+        ([_flat(home_team="Rangers", away_team="Hearts", is_live=True)],
+         [("Hearts", "Rangers")]),
+    ]
+    for board, card in scenarios:
+        monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+        _rows, stats = sa.capture_day("2026-10-06", card=card, team_key=_team_key)
+        seen.add(stats["reason"])
+    assert seen == {"card_fixtures_unmatched_on_board",
+                    "card_fixtures_matched_sides_reversed"}
+    assert not any("absent" in r for r in seen)
+
+
+def test_the_team_census_caps_how_many_names_it_keeps(monkeypatch):
+    """Names are short and distinct here on purpose.
+
+    A first attempt padded them to 80 characters and put the only
+    distinguishing digit past the 40-character cut, so all sixty collapsed
+    into one entry and the count cap was never reached. The mutation that
+    disabled the cap passed, and the test - not the guard - was at fault.
+    """
+    board = [_flat(home_team=f"Home {i:03d}", away_team=f"Away {i:03d}")
+             for i in range(60)]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["board_team_count"] == 120      # all of them counted
+    assert len(stats["board_team_names"]) == 40  # only this many committed
+
+
+def test_the_team_census_caps_how_long_each_name_may_be(monkeypatch):
+    board = [_flat(home_team="N" * 300, away_team="Rangers")]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert max(len(n) for n in stats["board_team_names"]) == 40
+
+
+def test_the_team_census_loses_no_counts_to_shortening(monkeypatch):
+    """Same defect the competition census had: shorten after ranking, and
+    add on collision rather than letting one name replace another."""
+    board = [_flat(home_team=f"{'H' * 60}{i}", away_team="Rangers")
+             for i in range(5)]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    merged = [n for n in stats["board_team_names"] if n.startswith("HHH")]
+    assert len(merged) == 1
+    assert stats["board_team_names"][merged[0]] == 5
+
+
+def test_the_competition_census_also_loses_no_counts_to_shortening(monkeypatch):
+    """The same helper now guards both censuses."""
+    board = [_flat(home_team=f"H{i}", away_team=f"A{i}",
+                   league=f"{'L' * 60}{i}") for i in range(4)]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert len(stats["board_leagues"]) == 1
+    assert sum(stats["board_leagues"].values()) == 4
