@@ -2132,9 +2132,7 @@ def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> tuple[int, list]
         if not slot["narrow"] and len(slot["outcomes"]) < 2:
             continue                      # same verdict: nothing to mis-settle
         del key_to[key]
-        dropped += 1
         entry = (key[0], sorted(f"{h} vs {a}" for h, a in names))
-        detail.append(entry)
         if slot["narrow"]:
             # Truncated key over genuinely different fixtures: unusable
             # even when today's rows agree. A full-width tier names these
@@ -2145,7 +2143,9 @@ def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> tuple[int, list]
             superseded += 1
             narrow_detail.append(entry)
         else:
+            dropped += 1
             pending_detail.append(entry)
+            detail.append(entry)
     NARROW_KEY_SUPERSEDED.clear()
     NARROW_KEY_SUPERSEDED.extend(narrow_detail)
     AMBIGUOUS_PENDING_KEYS.clear()
@@ -2405,19 +2405,6 @@ def _lookup_fallback(settled, day, home, away, markers=None, pick=None):
             continue
         ra = SequenceMatcher(None, fa, _fold(a)).ratio()
         if ra >= 0.8 and rh + ra > best:
-            # A near-spelling is not an identity. "manchesterunited"
-            # scores well above the bar against the truncated key
-            # "mancheste", which holds Manchester CITY's row. Where the
-            # names behind a key are known they must pass the same
-            # deterministic club test used elsewhere; unknown-name legacy
-            # rows are left alone so old slips keep settling.
-            #
-            # Checked only for a candidate that already leads, so the
-            # cost lands on a handful of rows per leg rather than on
-            # every row in the map.
-            if pick is not None and _names_behind_key_are_other_clubs(
-                    d, h, a, pick.get("home"), pick.get("away")):
-                continue
             best, best_oc = rh + ra, oc
     if best_oc is None and blocked and pick is not None:
         _note_marker_guarded_leg(pick)

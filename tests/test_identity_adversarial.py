@@ -344,8 +344,9 @@ def test_identical_outcomes_on_a_truncated_key_are_still_refused():
     """
     rows = [{"home": "Manchester City", "away": "Arsenal", "result": "home"},
             {"home": "Manchester United", "away": "Arsenal", "result": "home"}]
-    at, key_to, dropped, _ = _drop(rows)
-    assert dropped >= 1, "a truncated key covering two clubs must not be used"
+    at, key_to, _dropped, _ = _drop(rows)
+    assert ("2024-01-01", "mancheste", "arsenal") not in key_to, (
+        "a truncated key covering two clubs must not be used")
     for row in rows:
         assert any(
             key_to.get(("2024-01-01", hk, ak)) == "home"
@@ -354,12 +355,23 @@ def test_identical_outcomes_on_a_truncated_key_are_still_refused():
 
 
 def test_truly_distinct_fixtures_with_conflicting_results_still_drop():
+    """The truncated key is refused, and the refusal is described.
+
+    It is reported as superseded rather than pending: both fixtures
+    still settle on their own full-width key, so no leg is stranded and
+    nothing needs an operator. The thing that must never happen is the
+    truncated key surviving in the map.
+    """
     rows = [{"home": "Manchester City", "away": "Arsenal", "result": "home"},
             {"home": "Manchester United", "away": "Arsenal", "result": "away"}]
-    _, key_to, dropped, detail = _drop(rows)
-    assert dropped >= 1
-    collided = {n for _d, names in detail for n in names}
+    at, key_to, _dropped, _detail = _drop(rows)
+    assert ("2024-01-01", "mancheste", "arsenal") not in key_to
+    collided = {n for _d, names in at.NARROW_KEY_SUPERSEDED for n in names}
     assert "Manchester City vs Arsenal" in collided
+    assert "Manchester United vs Arsenal" in collided
+    # and neither fixture lost its result
+    assert key_to[("2024-01-01", "manchestercity", "arsenal")] == "home"
+    assert key_to[("2024-01-01", "manchesterunited", "arsenal")] == "away"
 
 
 def test_same_club_name_link_is_deterministic_not_fuzzy():
