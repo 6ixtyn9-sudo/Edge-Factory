@@ -63,13 +63,13 @@ ACCEPTED = {
 # outstanding debt must not look alike in a config file, or the debt stops
 # being paid. Delete the entry when the step is done; the audit will then
 # confirm the two sides agree.
-PENDING_WORKFLOW_APPLY = {
-    "SHARPAPI_ENDPOINT": (
-        "Corrected file is committed at docs/operator/proposed-daily.yml and "
-        "must be copied over .github/workflows/daily.yml by hand, because an "
-        "agent session cannot push workflow changes. Until then production "
-        "calls a marketplace-relative path on the vendor's own host and 404s."
-    ),
+PENDING_WORKFLOW_APPLY: dict[str, str] = {
+    # Empty, and that is the point. The SharpAPI endpoint entry lived here
+    # until the corrected workflow was applied on 2026-10-06 (main commit
+    # eed2bfe6, byte-identical to the file proposed here). The stale-entry
+    # test then failed and demanded this removal, which is the mechanism
+    # working: a paid debt must disappear from the record rather than
+    # linger where it would pre-approve the next divergence.
 }
 
 

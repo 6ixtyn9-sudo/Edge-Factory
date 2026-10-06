@@ -1,11 +1,15 @@
 # SharpAPI — repointed from the marketplace relay to the vendor's own host
 
-> **Status: code change complete, live behaviour UNVERIFIED.** The sandbox has
+> **Status: code change complete and the workflow has been applied; live
+> behaviour still UNVERIFIED.** The endpoint correction landed on main as
+> commit `eed2bfe6`, byte-identical to the file proposed here, so the
+> blocking manual step described below is DONE and the proposed copy has
+> been deleted. What remains unverified is the vendor's actual response:
+> no pipeline run has yet exercised the repaired path. The sandbox has
 > no network, so every claim below is either (a) read off a response the
 > operator captured in the vendor playground and pasted in, or (b) proved
 > against a mocked payload. Nothing here was observed from a pipeline run.
-> One required step is **not** done and cannot be done from here: the
-> workflow still pins the wrong endpoint. See "What still has to happen".
+
 
 ## What was wrong — three bugs, stacked
 
@@ -104,13 +108,11 @@ effective endpoint is recorded too, so bug 2 would now show as data.
 
 ## What still has to happen
 
-1. **Apply the workflow change — this is blocking.** Agent sessions cannot
-   push `.github/workflows/`. The corrected file is committed at
-   `docs/operator/proposed-daily.yml` (valid YAML, verified). Copy it over
-   `.github/workflows/daily.yml`. Until then production still calls `/odds`
-   on the new host and will 404. The only functional change is
-   `SHARPAPI_ENDPOINT` → `/api/v1/odds`, plus an optional `SHARPAPI_LEAGUE`
-   passthrough; the rest is comment correction.
+1. ~~Apply the workflow change.~~ **Done**, on 2026-10-06 as main commit
+   `eed2bfe6`. The applied file was byte-identical to the proposed one, so
+   `docs/operator/proposed-daily.yml` has been deleted rather than left to
+   rot into a second source of truth. The drift audit confirms the
+   deployment and the code now agree on the endpoint.
 2. **Rotate the SharpAPI key.** It was exposed in plaintext chat earlier.
    This is not a repository-history incident — no rewrite, no force-push —
    but the credential is burned.
