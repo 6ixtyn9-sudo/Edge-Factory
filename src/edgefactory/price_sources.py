@@ -401,6 +401,26 @@ def known(name: str | None) -> bool:
     return str(name or "").strip() in REGISTRY
 
 
+def resolvable(name: str | None) -> bool:
+    """True when :func:`spec` resolves ``name`` to a real role rather than
+    failing closed to ``_UNKNOWN``.
+
+    ``known()`` consults :data:`REGISTRY` only, but ``spec()`` additionally
+    resolves :data:`VOTE_ONLY_SOURCES` to a vote-donor spec. A caller that
+    gates on ``known()`` before inspecting ``can_execute()`` therefore reports
+    a *registered, intentionally non-executable* vote donor (``zulubet``,
+    ``statarea``, …) as if it were an unrecognised source. Both outcomes
+    reject the leg; only the recorded reason differs. This predicate exists so
+    that reason can be accurate.
+
+    Deliberately NOT folded into ``known()``: that function has callers which
+    mean "is in REGISTRY" (price-donor ranking, shadow-ledger provenance) and
+    whose behaviour must not change.
+    """
+    key = str(name or "").strip()
+    return key in REGISTRY or key in VOTE_ONLY_SOURCES
+
+
 def price_donor_names() -> tuple[str, ...]:
     """Every registered source that may contribute a price, by priority."""
     return tuple(
