@@ -68,9 +68,19 @@ def query_params(day: str | None = None) -> dict[str, str]:
         ("SHARPAPI_LIMIT", "limit"),
         ("SHARPAPI_BOOK", "book"),
         ("SHARPAPI_MARKET", "market"),
-        # Constrains the board at the server. The soccer feed pages at 50 rows
-        # behind a cursor and the per-run call budget is small, so filtering
-        # here is the only way to see a specific competition without paging.
+        # Constrains the board at the server. An earlier note here said the
+        # soccer feed pages at 50 rows behind a cursor, which would have made
+        # the configured limit a no-op. The live board on 2026-10-06 says
+        # otherwise: one request, a configured limit of 100, and exactly 100
+        # rows came back truncated at the limit. The limit is honoured and the
+        # real board is larger than the page we see. Whether values ABOVE 100
+        # are honoured has never been tried.
+        #
+        # What actually binds is that rows are metered per market per book,
+        # not per match: those 100 rows carried five fixtures and a single
+        # under-21 qualifier took 67 of them. So this filter is what puts a
+        # chosen competition in front of the prematch filter. A larger page
+        # reaches deeper for free but is not a substitute for it.
         ("SHARPAPI_LEAGUE", "league"),
     ):
         value = (os.environ.get(env_name) or "").strip()

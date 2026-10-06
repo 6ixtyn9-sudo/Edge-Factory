@@ -2347,6 +2347,22 @@ Deferred (recorded, not in scope):
 ---
 
 
+### The configured page limit is honoured, contrary to a stale code note
+
+A comment in the request code said the soccer feed pages at fifty rows
+behind a cursor, which would have made the configured limit of a
+hundred meaningless. The live board disagrees: a single request with a
+limit of a hundred returned exactly a hundred rows, truncated at the
+limit. *Observed:* the limit is honoured up to a hundred and the real
+board is larger than the page we see. *Inferred, not shown:* nothing
+about values above a hundred, which have never been requested. The
+comment has been corrected where it sits, since it had already led to
+one wrong conclusion about the vendor being capped.
+
+Both the competition filter and the limit read from repository secrets
+with the present values as fallbacks, so changing either is an operator
+action needing no workflow edit and no extra call.
+
 ### The price board was read on 2026-10-06 and the answer is coverage, not naming
 
 *Observed.* One hundred rows came back, all in-play, covering five
