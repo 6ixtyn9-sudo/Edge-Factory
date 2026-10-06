@@ -1,11 +1,21 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 12,
-  "captured_at": "2026-10-06T06:28:07+00:00",
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Czechia",
+      "date": "2026-10-06",
+      "home": "England",
+      "kickoff": "06-10, 19:45",
+      "league": "World UEFA Nations League"
+    }
+  ],
+  "candidate_fixtures": 13,
+  "captured_at": "2026-10-06T07:22:32+00:00",
   "date": "2026-10-06",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
@@ -17,29 +27,33 @@
   "skip_reasons": {
     "kickoff_already_passed": 1,
     "kickoff_mismatch": 4,
-    "priced": 1,
     "priced_close_window_not_open": 4,
-    "retry_cooldown": 6
+    "retry_cooldown": 7
   },
   "skipped": [
     "Argentina|Benin (retry cooldown (6h after failed attempt))",
-    "England|Czech Republic (priced)",
-    "Algeria|Niger (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Albania|San Marino: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Albania|San Marino (priced, close window not open)",
+    "Algeria|Niger (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Croatia|Spain: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Croatia|Spain (priced, close window not open)",
     "India|Uruguay (retry cooldown (6h after failed attempt))",
-    "Colombia|Peru (retry cooldown (6h after failed attempt))",
     "Grenada|Bonaire (kickoff already passed)",
-    "Russia|Nigeria (retry cooldown (6h after failed attempt))",
+    "Colombia|Peru (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Moldova|Slovakia: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Moldova|Slovakia (priced, close window not open)",
     "WARN kickoff-mismatch Estonia|Iceland: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Estonia|Iceland (priced, close window not open)",
+    "Russia|Nigeria (retry cooldown (6h after failed attempt))",
+    "South Korea|Uzbekistan (retry cooldown (6h after failed attempt))",
     "Angola|Malawi (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "England vs Czechia (no event in soccer_uefa_nations_league)"
+  ],
+  "unmatched_reasons": {
+    "no event in soccer_uefa_nations_league": 1
+  }
 }
