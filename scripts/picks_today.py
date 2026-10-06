@@ -3176,6 +3176,49 @@ def _shadow_failure_lines(day: str, stats: dict[str, dict]) -> None:
         print(f"{name} {day}: status={entry.get('status', 'unknown')} http={http} note={note}", file=sys.stderr)
 
 
+def _day_card_fixtures(day: str, picks: list) -> list:
+    """The day's whole card, for comparison against a vendor's board.
+
+    Freshly generated picks are not the card. An intraday pass routinely
+    generates nothing - the day's real selections were frozen that
+    morning and sit in the day archive - and a lane handed an empty card
+    reports an overlap of zero that means "nobody asked". That reads
+    exactly like "nothing matched", which is the false negative this
+    whole diagnostic exists to prevent; it is what the 2026-10-06 run
+    did. The archive is written later in the run, so at this point it
+    still holds the earlier frozen rows, which is precisely what we want.
+
+    Observation only: this card is compared with a price board and never
+    prices, selects, stakes or settles anything. A bad read here can
+    only make a diagnostic less informative, never change a bet.
+    """
+    fresh = [p for p in picks
+             if isinstance(p, dict) and str(p.get("date") or "")[:10] == day]
+    seen = {(str(p.get("home") or "").strip(), str(p.get("away") or "").strip())
+            for p in fresh}
+    out = list(fresh)
+    try:
+        rows = json.loads((ROOT / "localdata" / f"picks_{day}.json").read_text())
+    except Exception:
+        # Missing or unreadable archive must never take the run down: the
+        # fresh card is a worse answer, not a fatal one.
+        return out
+    if not isinstance(rows, list):
+        return out
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("date") or "")[:10] != day:
+            continue
+        key = (str(row.get("home") or "").strip(),
+               str(row.get("away") or "").strip())
+        if not key[0] or not key[1] or key in seen:
+            continue
+        seen.add(key)
+        out.append(row)
+    return out
+
+
 def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, dict]:
     """Capture every verified shadow candidate without touching the production path.
 
@@ -5689,7 +5732,7 @@ def main():
         # is still shadow-only and still writes its own ledgers.
         shadow_stats = _capture_shadow_candidates(
             day,
-            card=[p for p in picks if str(p.get("date") or "")[:10] == day],
+            card=_day_card_fixtures(day, picks),
         )
 
         bzz_stats: dict = {}
