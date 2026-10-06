@@ -2,6 +2,38 @@ Edge Factory — Handover
 
 Date: 2026-10-03
 
+2026-10-06 addendum — ticket (o): a zero-row price board now names which zero it was
+
+Delivered, in commit e95784b
+
+- The price board is now measured alongside the rows that survive it. The 2026-10-06 run asked for the whole global soccer board with a hundred-row limit and no competition filter, and recorded that every row was refused as in-play. That wording tells the operator to capture earlier. If the board is ordered live-first and the page filled before reaching our fixtures, capturing earlier changes nothing and the remedy is the opposite one — narrow the request. The run could not say which had happened, because nothing recorded how big the board was or what was on it.
+- Five outcomes are now told apart where there were three: an empty slate, a page that filled with in-play games before reaching our fixtures, a competition filter the vendor ignored, a filter honoured onto an empty competition, and a board whose market vocabulary did not map. Each carries the board's own counts and the competitions observed on it.
+- The competition filter was deliberately left unset. Choosing an identifier blind is the exact failure this work was commissioned to avoid, and the report that says whether a guess worked is the thing that shipped. The passthrough is already wired in the deployment, so narrowing is one secret away and needs no workflow change.
+- The configured filter value is never recorded. It arrives from a deployment secret and the health record is committed; only whether a filter was asked for, and whether it appears to have been honoured, travel.
+- Shadow and diagnostic only: no gate, floor, cap, quorum, threshold or veto touched, no settlement or staking arithmetic, no new vendor, no change to call budgets or minimum intervals, no workflow edited.
+
+Validation
+
+- Suite 1652 passed / 0 failed; both verifiers pass at 14/14 and 9/9. Test functions 1473 to 1485, none removed; the deletion tripwire was raised to 1485 and watched to fail when a test was disabled.
+- Each new guard was broken on purpose, watched to fail, and restored. That includes the ambiguity rule, the stale-count reset, the pipeline forwarding and the secret boundary.
+- An existing deployment-drift guard caught a genuine defect in this work before it shipped: a second reader of the row limit declared an empty default that contradicted the deployment's hundred. The limit and the competition filter are now read back out of the request that was actually built, so there is one reader rather than two.
+
+What is observed and what is not
+
+Observed: each of the five outcomes produces its own distinct record, and that record survives the run into the committed health file. Proved against mocked responses only — the sandbox has no network and no call was made to any vendor.
+
+Not observed, and unchanged by this round: whether this vendor prices our fixtures before kickoff. That number is still the one that decides its fate. This change makes the next attempt readable; it does not answer it.
+
+Still entirely untested: whether our market names match this vendor's. The 2026-10-06 run produced an empty vocabulary-failure record, and that is not evidence of agreement — the prematch refusal runs before the vocabulary step, so when every row is refused as in-play nothing reaches it and the record is empty for a trivial reason. If a narrowed request does return our fixtures, this question gets tested for the first time and may fail.
+
+2026-10-06 addendum — the Pinnacle relay's recorded shape, read
+
+Observed, from the committed health record for 2026-10-06 and 2026-10-07: the relay returned one thousand five hundred and sixty-eight soccer events, every one of them carrying team names, and not one of them carrying a markets block at all — the markets field is absent rather than empty.
+
+This settles the open question in the work-order note below, which recorded as inference that the prematch listing names matches but does not price them. It is now an observation. It also answers the sport-number question directly: the sport number is correct, because the wrong one would not return one and a half thousand named soccer fixtures. Neither defect that work order existed to fix is still present.
+
+What follows from it is a decision, not a repair: prices for this relay live behind a different request than the one that lists fixtures. Extending to that request is an operator decision and remains outside any shipped work. The relay stays shadow only — it does not vote, price, or corroborate, and reading its payload is a bug fix rather than a promotion. The trial key lapses 20 October 2026.
+
 2026-10-06 addendum — SharpAPI repointed to the vendor's own host, shadow only
 
 Delivered

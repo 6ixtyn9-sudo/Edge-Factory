@@ -495,3 +495,64 @@ operator decision, not a code change: the enhancement overlay (alternate
 goal lines, both-teams-to-score, team totals, double chance) has parsing
 code that production never exercises, and the credit cost of enabling it
 is a budget matter.
+
+### (o) The price board is read live-first and our fixtures fall below the cut — FIXED (diagnosis); narrowing still needs one operator setting
+
+Observed, from the committed health record for 2026-10-06: the price
+vendor answered HTTP 200 and the run recorded that every row was refused
+as in-play or stale. The request was the whole global soccer board with a
+100-row limit and no competition filter.
+
+Inferred, and the reason this was a ticket rather than a fix: a board
+ordered live-first with a 100-row cut would produce exactly that record
+whether or not our fixtures were priced, because they would sit below the
+cut and never be seen. The run could not tell the operator which had
+happened — the old wording named a late capture, and the remedy for a
+truncated page is the opposite of capturing later.
+
+What shipped: the board is now measured alongside the rows that survive
+it. Every capture records how many records came back, how many distinct
+fixtures, how much of the board was in-play, which competitions were on
+it, and whether the page reached its own row limit. Five outcomes are now
+told apart where there were three:
+
+- an empty slate — come back later;
+- **a page truncated live-first** — narrow the request, do not wait;
+- a competition filter the server ignored — the identifier is not one it
+  knows;
+- a filter honoured onto an empty board — that competition had nothing on;
+- a board whose market vocabulary did not map — the vocabulary moved.
+
+What did NOT ship, deliberately: no competition identifier was chosen and
+configured. Picking one blind is the precise failure this ticket warns
+about — see ticket (l) — and the diagnostic that reports whether the guess
+worked is the thing being delivered here. The passthrough is already wired
+in the deployment and is currently empty, so **narrowing is one secret
+away and needs no workflow change.** Set the competition filter secret and
+the next run returns a verdict on the identifier instead of a bare zero.
+
+Boundary of the claim: this is proved against mocked responses only. The
+sandbox has no network, so no call was made to the vendor. What is proved
+is that each of the five outcomes produces its own distinct, committed
+record, and that the context survives the run. Whether this vendor prices
+our fixtures before kickoff remains unmeasured — that is ticket (m), and
+this change is what makes the next attempt readable rather than what
+answers it.
+
+Known limit: the ambiguity rule is conservative on purpose. With exactly
+one competition on the board and no textual match against the request,
+the verdict stays unknown rather than accusing the filter, because this
+vendor spells one competition several ways inside a single response.
+A filter that was genuinely rejected onto a single-competition board will
+therefore read as unknown, not as rejected. That is the safe direction of
+error.
+
+### Carried forward, unchanged by this round
+
+- The live price-source key still needs rotating — it was exposed in
+  plaintext chat. Not a repository-history incident, so no rewrite and no
+  force-push.
+- Ticket (n) still needs an operator decision, not a code change.
+- A dead secret reference at line 36 of the daily workflow should be
+  deleted the next time that file is legitimately touched. The GitHub App
+  cannot push workflow files, so it was not touched here.
