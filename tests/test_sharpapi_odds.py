@@ -633,3 +633,75 @@ def test_board_context_is_recorded_on_a_successful_capture_too(monkeypatch):
     assert rows and stats["status"] == "ok"
     assert stats["board_rows"] == 1 and stats["board_priced_rows"] == 1
     assert stats["board_leagues"] == {"uefa_-_nations_league": 1}
+
+
+# --- ticket (o) follow-up: "refused" is not one fault, it is three --------
+#
+# The first cut of this classification folded every prematch refusal into
+# one live-or-stale token. A board that was entirely player props therefore
+# reported itself as live, which is not a missing distinction but a false
+# statement about a board with no live rows on it. The refusal groups ask
+# for different remedies, so they are reported separately.
+
+
+def _props_board(count):
+    return [_flat(home_team=f"H{i}", away_team=f"A{i}", is_player_prop=True)
+            for i in range(count)]
+
+
+def test_a_board_of_player_props_is_never_reported_as_live(monkeypatch):
+    """Nothing on this board was in-play; the token must not say it was."""
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _props_board(100)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "board_truncated_player_props"
+    assert "live" not in stats["reason"]
+    assert stats["prematch_drop_reasons"] == {"player_prop": 100}
+
+
+def test_a_short_board_of_player_props_is_named_without_truncation(monkeypatch):
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _props_board(6)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "all_rows_player_props"
+
+
+def test_live_rows_outrank_player_props_when_both_are_present(monkeypatch):
+    """Timing beats market selection.
+
+    An in-play row is a different quantity and would corrupt a closing-line
+    measurement, so it invalidates the capture window itself. A prop row is
+    only a market we never bet. Reporting the props while live rows are
+    also on the board would hide the more serious of the two faults.
+    """
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    mixed = ([_flat(home_team=f"L{i}", away_team=f"A{i}", is_live=True)
+              for i in range(50)] + _props_board(50))
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": mixed}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "board_truncated_live_first"
+    assert stats["prematch_drop_reasons"]["live_price"] == 50
+    assert stats["prematch_drop_reasons"]["player_prop"] == 50
+
+
+def test_a_board_whose_rows_carry_no_usable_price_is_named_separately(monkeypatch):
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (
+        200, {"data": [_flat(odds_decimal=None)]}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "all_rows_unpriced"
+
+
+def test_the_classification_warns_the_next_reader_off_the_empty_map():
+    """The inference that was drawn wrongly once, fenced at the site.
+
+    An empty vocabulary-failure map is empty because the prematch refusal
+    runs first and nothing reached the mapper. It means untested, never
+    agrees. The warning lives at the branch rather than in a document,
+    because the branch is where someone reads the empty map.
+    """
+    import inspect
+    source = inspect.getsource(sa._zero_row_reason)
+    assert "BEFORE CONCLUDING ANYTHING ABOUT MARKET VOCABULARY" in source
+    assert "never" in source and "agrees" in source

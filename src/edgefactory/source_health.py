@@ -163,7 +163,53 @@ SHARPAPI_BOARD_FIELDS = (
     "board_rows", "board_fixtures", "board_league_count", "board_leagues",
     "board_non_prematch_rows", "board_priced_rows", "board_truncated",
     "requested_limit", "league_filter_requested", "league_filter_effective",
+    # Breakdowns, not just totals. "97 rows refused" does not say whether
+    # the capture ran late or whether the board was player props, and those
+    # ask for different remedies. The aggregate count cannot be unpicked
+    # afterwards, so the per-reason split has to travel with it.
+    "prematch_drop_reasons", "canonicalization_drop_reasons",
 )
+
+# The prematch refusals are our own closed vocabulary, so they are listed.
+# The vocabulary-failure keys are NOT: they embed the provider's own raw
+# market token by design, which is what makes them useful and also what
+# makes them unbounded. They are capped and truncated into a census rather
+# than copied, so a committed row can never become a payload archive.
+PREMATCH_DROP_REASON_VOCABULARY = (
+    "live_price", "stale_pregame_price", "player_prop", "no_decimal_price",
+)
+_MAX_VOCABULARY_MISSES = 10
+_MAX_VOCABULARY_TOKEN_CHARS = 60
+
+
+def _reason_counts(value: object, *, allowed: tuple[str, ...] | None = None,
+                   limit: int | None = None) -> dict[str, int] | None:
+    """Coerce a drop-reason map to bounded, counts-only form."""
+    if not isinstance(value, dict) or not value:
+        return None
+    ranked: list[tuple[str, int]] = []
+    for key, count in value.items():
+        name = str(key)
+        if allowed is not None and name not in allowed:
+            continue
+        try:
+            ranked.append((name, max(0, int(count))))
+        except (TypeError, ValueError):
+            continue
+    # Rank on the FULL token, then cap, then shorten. Shortening first
+    # merges tokens that share a long prefix into a single entry and throws
+    # the count away with them - which is how a census quietly starts
+    # reporting one miss where there were forty.
+    ranked.sort(key=lambda kv: (-kv[1], kv[0]))
+    if limit is not None:
+        ranked = ranked[:limit]
+    counts: dict[str, int] = {}
+    for name, count in ranked:
+        short = name[:_MAX_VOCABULARY_TOKEN_CHARS]
+        # Two distinct tokens can still collide once shortened. Adding keeps
+        # the total honest rather than letting one silently replace another.
+        counts[short] = counts.get(short, 0) + count
+    return counts or None
 
 
 def sharpapi_board_observation(stats: dict[str, Any]) -> dict[str, Any]:
@@ -326,6 +372,15 @@ def build_daily_source_health(
             # filter value and never a payload sample.
             board = {k: obs.get(k) for k in SHARPAPI_BOARD_FIELDS
                      if obs.get(k) is not None}
+            prematch = _reason_counts(
+                obs.get("prematch_drop_reasons"),
+                allowed=PREMATCH_DROP_REASON_VOCABULARY)
+            vocabulary = _reason_counts(
+                obs.get("canonicalization_drop_reasons"),
+                limit=_MAX_VOCABULARY_MISSES)
+            board["prematch_drop_reasons"] = prematch
+            board["canonicalization_drop_reasons"] = vocabulary
+            board = {k: v for k, v in board.items() if v is not None}
             if board:
                 row["board_summary"] = board
         elif name == "boggio":

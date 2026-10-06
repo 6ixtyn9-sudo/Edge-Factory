@@ -403,3 +403,105 @@ def test_the_caller_actually_forwards_the_sharpapi_board_fields():
         "health observation; without this a zero names no action and the "
         "context leaves with the runner"
     )
+
+
+def test_the_per_reason_breakdown_reaches_the_committed_row():
+    """A total cannot be unpicked afterwards; the split has to travel.
+
+    "97 rows refused" does not say whether the capture ran late or whether
+    the board was player props, and those ask for different remedies.
+    """
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "reason": "board_truncated_player_props", "board_rows": 100,
+            "prematch_drop_reasons": {"player_prop": 100},
+        },
+    })["sources"]["sharpapi_odds"]
+    assert row["board_summary"]["prematch_drop_reasons"] == {"player_prop": 100}
+
+
+def test_the_prematch_breakdown_admits_only_our_own_vocabulary():
+    """These tokens are ours, so an unknown one is a bug, not a datum."""
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "prematch_drop_reasons": {"live_price": 3, "smuggled_payload": 9},
+        },
+    })["sources"]["sharpapi_odds"]
+    assert row["board_summary"]["prematch_drop_reasons"] == {"live_price": 3}
+
+
+def _census_for(misses):
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "canonicalization_drop_reasons": misses,
+        },
+    })["sources"]["sharpapi_odds"]
+    return row["board_summary"]["canonicalization_drop_reasons"]
+
+
+def test_the_vocabulary_census_is_bounded_in_count_and_length():
+    """These keys carry the provider's own raw market token by design.
+
+    That is what makes them worth keeping and what makes them unbounded.
+    A committed row must stay a census and never become a payload archive.
+    """
+    census = _census_for({f"unknown_market:{i:03d}_{'x' * 200}": i
+                          for i in range(40)})
+    assert len(census) == 10
+    assert max(len(k) for k in census) <= 60
+    # the ten KEPT are the ten biggest, chosen on the full token
+    assert min(census.values()) == 30
+
+
+def test_the_vocabulary_census_loses_no_counts_to_shortening():
+    """Tokens that differ only past the cut must not erase each other.
+
+    Shortening a key can collide it with another. Ranking on the full
+    token and adding on collision keeps the total honest; the earlier cut
+    shortened first and reported one miss where there had been forty.
+    """
+    # six tokens, so the cap of ten cannot be what removes any of them;
+    # they differ only past the shortening cut and must therefore merge
+    # into one entry whose count is their sum, not one that replaced five
+    misses = {f"unknown_market:{'x' * 80}_{i}": 1 for i in range(6)}
+    census = _census_for(misses)
+    assert len(census) == 1
+    assert sum(census.values()) == 6
+
+
+def test_the_passthrough_itself_carries_the_breakdowns():
+    """Not the row builder - the passthrough.
+
+    The row builder attaches these breakdowns directly, so a row-level
+    test keeps passing even when the field is removed from the list the
+    PIPELINE copies. That is the same gap that lost the earlier answer:
+    the capability works and the wiring does not. This pins the wiring.
+    """
+    out = source_health.sharpapi_board_observation({
+        "prematch_drop_reasons": {"player_prop": 7},
+        "canonicalization_drop_reasons": {"unknown_market:x": 2},
+    })
+    assert out["prematch_drop_reasons"] == {"player_prop": 7}
+    assert out["canonicalization_drop_reasons"] == {"unknown_market:x": 2}
+    assert "prematch_drop_reasons" in source_health.SHARPAPI_BOARD_FIELDS
+    assert "canonicalization_drop_reasons" in source_health.SHARPAPI_BOARD_FIELDS
+
+
+def test_the_census_cap_keeps_the_biggest_tokens_not_the_merged_ones():
+    """Ranking must happen on the full token, before any shortening.
+
+    Forty tokens sharing a long prefix. Shortening first merges them all
+    into one bucket and the cap then keeps that single merged lump -
+    reporting every miss as one. Ranking first keeps the ten largest and
+    only then shortens, so the recorded total is the top ten's and not
+    the whole board's.
+    """
+    misses = {f"unknown_market:{'x' * 80}_{i}": i for i in range(40)}
+    census = _census_for(misses)
+    assert sum(census.values()) == sum(range(30, 40))
