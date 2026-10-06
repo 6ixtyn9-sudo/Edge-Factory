@@ -113,12 +113,12 @@ evidence about the vendor.
   second call; a pre-match answer with nothing usable in it records the
   shape of what arrived; the key never surfaces in diagnostics, stats or the
   ledger; the shadow role text is unchanged by the fix.
-- Full suite: **1590 passed, 0 failed** (baseline was 1571).
+- Full suite: **1598 passed, 0 failed** (baseline was 1571).
 - Work-order verifier: **14/14, ALL PASS**. Settlement verifier: **9/9**.
 
-Honest accounting of that +19, because a bare suite total is a poor
-acceptance number: **17** are tests written for this work order (the
-Pinnacle shadow's own file went from 21 tests to 38) and **2** are the
+Honest accounting of that +27, because a bare suite total is a poor
+acceptance number: **25** are tests written for this work order (the
+Pinnacle shadow's own file went from 21 tests to 46) and **2** are the
 dead-link check, which is parametrised over every markdown file in the
 repository and therefore grows by one each time anyone adds a document.
 This report and the filed work order are those two. An earlier draft of
@@ -129,7 +129,9 @@ existed and was wrong by exactly those two.
 writes documentation. The durable form is "nothing failed, and no existing
 test was deleted", and the second half of that is now enforced: the
 work-order verifier counts test *functions* against a floor, and the floor
-has been raised to the current count.
+has been raised to the current count. Its limit is worth stating: a count
+catches gutting, not substitution — delete-one-add-one passes it. It is a
+tripwire, not a guarantee, and no substitute for reading the diff.
 
 ## 5. Review findings, and what they changed
 
@@ -147,6 +149,7 @@ classified as one of four, each with a different next action:
 
 | recorded as | what it means | next action |
 |---|---|---|
+| `error_envelope` | a 200 whose body is an error, not a board | usually the credential; read the recorded text |
 | `unrecognized_shape` | no envelope we can read | parser question; capture the shape first |
 | `empty_board` | readable envelope, zero fixtures | sport id, or a genuinely quiet window |
 | `events_without_teams` | fixtures arrived, none named both sides | shape drift inside the event |
@@ -173,7 +176,50 @@ header form is rejected fetches two boards, not four; with the memory above,
 subsequent captures fetch one. That is now stated in the code rather than
 left to be discovered, and a test pins it.
 
-## 6. If it returns nothing
+A correction to that, found on the second look: the cap is enforced **per
+capture, not per run**, despite its name — the counter is zeroed on entry to
+every capture. With one capture per run, which is the only caller today, the
+two are identical. Across several captures there is no run-level ceiling at
+all, so a three-capture run under header rejection issues 2 + 1 + 1 calls
+without ever approaching the cap. Changing a cap is not this work order's to
+make, so the behaviour is untouched and the real running total is now
+counted and reported instead, where the operator who owns the cap can see
+it.
+
+## 6. Second review round: a success code is not an accepted request
+
+Two more paths would have re-entered the conflation the classification was
+built to end, both found by review rather than by me.
+
+**A 403 did not trigger the fallback.** Only 401 did. Relays like this one
+use 403 for a rejected credential as readily as 401, so the discriminator
+lost a branch whenever they did. Both codes now trigger the one retry. If
+the cause was a plan restriction rather than the mechanism, the second
+attempt answers 403 as well and the record shows both — which is itself the
+answer.
+
+**A 200 carrying an error body was filed as a parser problem.** Cheap relays
+answer a rejected key with a success code and a body like
+`{"error": "invalid api key"}`. It parses, it has no event collection, and
+it was classified as an unreadable payload: a parser question, when the
+cause is the credential. It is now a classification of its own, and — the
+part that mattered most — such a response no longer records the mechanism as
+having *worked*. Before the fix it reported "header replied", which through
+the discriminator below reads as "authentication is fixed, the sport id may
+still be wrong": the exact opposite of the truth, stated confidently. An
+error body that does *not* blame the credential is still recorded as an
+error envelope but is not claimed as an auth answer.
+
+**A flaw of mine the fix exposed.** The first version of this classified the
+*scrubbed* text. Redaction can delete the very words the classifier reads —
+a short key redacted out of "invalid api key" leaves text that no longer
+blames the credential — so the classifier was defeated by its own safety
+measure. Classification now reads the raw body and only the recorded copy is
+scrubbed. Verified both ways: the key never reaches the ledger, and the
+classification holds regardless of key length.
+
+## 7. If it returns nothing
+
 
 A 200 response that yields no usable rows now records what actually arrived
 — the container types, the key names at each level, the event count, and the
@@ -189,7 +235,7 @@ trial key is worth anything, not an attempt to solve pricing. Pricing
 coverage across these leagues is around 11.4%, this remains a shadow, and
 nothing here moves it closer to a price-corroboration role.
 
-## 7. Unverified from here
+## 8. Unverified from here
 
 - No live call was made. Whether the header is accepted, whether sport 1 is
   soccer on the live service, and whether a pre-match snapshot contains our
@@ -214,7 +260,11 @@ cannot:
 | query | either | the panel guidance was wrong about REST, the original authentication was right all along, and the sport number was the only real defect |
 | neither | — | key, endpoint or vendor; not our code |
 
-## 8. Files
+A caveat on reading that table: `error_envelope` means the mechanism line is
+reporting a rejection, not a success, even though the status code was 200.
+Read the zero-row classification beside it, never the mechanism alone.
+
+## 9. Files
 
 - `src/edgefactory/sources/pinnapi_odds.py` — sport id, header auth with a
   401-only fallback remembered for the run, reworked credential guard, auth
@@ -227,7 +277,7 @@ cannot:
   rather than its own copy, so the acceptance probe cannot drift from the
   contract; tries the header first and falls back on 401; reports which
   mechanism worked; still prints no key.
-- `tests/test_pinnapi_odds.py` — 38 tests (was 21).
+- `tests/test_pinnapi_odds.py` — 46 tests (was 21).
 - `docs/operator/SOURCE-HUNT-2026-10.md` — the paragraph that recorded the
   false sport-id receipt is corrected in place, labelled as the inference it
   was.

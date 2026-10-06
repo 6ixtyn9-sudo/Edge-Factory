@@ -76,6 +76,11 @@ EVENT_TYPE = "prematch"
 AUTH_HEADER = "x-portal-apikey"
 AUTH_HEADER_FIRST = "header"
 AUTH_QUERY_FALLBACK = "query"
+# HTTP codes that are a question about the auth MECHANISM, so the other form
+# is worth one retry. 403 is included because cheap relays use it for a
+# rejected credential as readily as 401; if it turns out to be a plan
+# restriction instead, the second attempt says so in the record.
+AUTH_FALLBACK_STATUSES = (401, 403)
 BOOK = "Pinnacle"
 UA = "EdgeFactory-cooperative-shadow/1.0 (+operator review)"
 MIN_INTERVAL_S = float(os.environ.get("EDGE_FACTORY_PINNAPI_MIN_INTERVAL_S", "2.0"))
@@ -98,6 +103,13 @@ _AUTH_MECHANISM: str | None = None
 # spending a call rediscovering the same 401. Deliberately NOT cleared by
 # reset_state(), which is per-capture; see reset_auth_memory().
 _HEADER_AUTH_REJECTED = False
+# MAX_CALLS_PER_RUN is enforced per CAPTURE, not per run: capture_day calls
+# reset_state() on entry, which zeroes the counter. With one capture per run
+# (the only caller today) the two are the same thing; across several captures
+# there is no run-level ceiling at all. Rather than silently change a cap
+# this work order was told not to touch, the real spend is counted here and
+# reported, so the discrepancy is visible to the operator who owns the cap.
+_CALLS_THIS_PROCESS = 0
 
 # Zero-row days with these statuses stay RETRYABLE (never terminal "empty").
 RETRYABLE_ZERO_ROW_STATUSES = {"auth", "quota", "unavailable", "blocked", "error", "cooldown"}
@@ -156,14 +168,27 @@ def sport_id() -> int:
 
 
 def reset_auth_memory() -> None:
-    """Forget the run-scoped 401 memory (new process, or a test).
+    """Start a fresh run: forget the 401 memory and the run call tally.
 
-    reset_state() intentionally leaves this alone: the per-capture state
+    reset_state() intentionally leaves both alone: the per-capture state
     resets every call, but "the header form was rejected" is a fact about
     the run, and re-learning it costs a call out of a budget of four.
     """
-    global _HEADER_AUTH_REJECTED
+    global _HEADER_AUTH_REJECTED, _CALLS_THIS_PROCESS
     _HEADER_AUTH_REJECTED = False
+    _CALLS_THIS_PROCESS = 0
+
+
+def calls_this_process() -> int:
+    """Calls actually issued since the run began, across all captures."""
+    return _CALLS_THIS_PROCESS
+# MAX_CALLS_PER_RUN is enforced per CAPTURE, not per run: capture_day calls
+# reset_state() on entry, which zeroes the counter. With one capture per run
+# (the only caller today) the two are the same thing; across several captures
+# there is no run-level ceiling at all. Rather than silently change a cap
+# this work order was told not to touch, the real spend is counted here and
+# reported, so the discrepancy is visible to the operator who owns the cap.
+_CALLS_THIS_PROCESS = 0
 
 
 def header_auth_rejected() -> bool:
@@ -255,13 +280,71 @@ def _carries_credentials(url: str, headers: dict[str, str]) -> bool:
     return any(str(value).strip() for value in query.get("key", []))
 
 
+_ERROR_ENVELOPE_KEYS = ("error", "errors", "message", "detail", "error_message",
+                        "errorMessage", "msg", "status_message")
+_AUTH_FLAVOURED = re.compile(
+    r"api[_ -]?key|apikey|unauthor|unauthenticat|forbidden|invalid\s+key|"
+    r"\btoken\b|credential|\bauth\b|not\s+permitted|access\s+denied", re.I)
+
+
+def _error_envelope_raw(payload: Any) -> str | None:
+    """Unscrubbed error text from a 200 body, for CLASSIFICATION only.
+
+    Never record this. Redaction can remove the very words the classifier
+    reads - a short key redacted out of "invalid api key" leaves text that
+    no longer blames the credential - so the order matters: classify the
+    raw text, scrub what gets written down.
+    """
+    events, _key = _envelope(payload)
+    if events is not None or not isinstance(payload, dict):
+        return None
+    for key in _ERROR_ENVELOPE_KEYS:
+        value = payload.get(key)
+        if isinstance(value, dict):
+            value = value.get("message") or value.get("detail") or value.get("text")
+        if isinstance(value, list) and value:
+            value = value[0] if isinstance(value[0], str) else None
+        if isinstance(value, str) and value.strip():
+            return value.strip()
+    return None
+
+
+def error_envelope_text(payload: Any) -> str | None:
+    """Scrubbed error text when a 200 body is an error envelope, for the record.
+
+    Cheap relays answer a rejected credential with HTTP 200 and a body like
+    ``{"error": "invalid api key"}``. That parses, carries no event
+    collection, and would otherwise be filed as an unreadable payload - a
+    parser problem - when the real cause is authentication. Detecting it is
+    what keeps the zero-row classification honest.
+    """
+    raw = _error_envelope_raw(payload)
+    return str(_scrub_secret(raw))[:200] if raw else None
+
+
+def looks_like_auth_error(text: str | None) -> bool:
+    """True when an error envelope blames the credential, not the request."""
+    return bool(text and _AUTH_FLAVOURED.search(text))
+
+
+def error_envelope_blames_credential(payload: Any) -> bool:
+    """Whether a 200 error body blames the credential. Reads the raw text."""
+    return looks_like_auth_error(_error_envelope_raw(payload))
+
+
 def _http_code_in(message: str) -> int | None:
     match = re.search(r"HTTP (\d{3})", message)
     return int(match.group(1)) if match else None
 
 
-def _record_attempt(mechanism: str, status: int | None) -> None:
-    _AUTH_ATTEMPTS.append({"auth": mechanism, "status": status})
+def _record_attempt(mechanism: str, status: int | None,
+                    *, error_envelope: str | None = None) -> None:
+    attempt: dict[str, Any] = {"auth": mechanism, "status": status}
+    if error_envelope:
+        # Already scrubbed by error_envelope_text; a vendor that echoes the
+        # key back must not get it written into the ledger.
+        attempt["error_envelope"] = error_envelope
+    _AUTH_ATTEMPTS.append(attempt)
 
 
 def _auth_memory_note(attempts: list[dict[str, Any]]) -> str | None:
@@ -299,7 +382,7 @@ def get_json(url: str, *, timeout: int = 30, auth: str = AUTH_HEADER_FIRST) -> t
     diagnostics, and request headers are never logged. One 429 retry with
     Retry-After-first backoff; a second 429 trips run-scoped cool-down.
     """
-    global _429S, _COOLING_DOWN, _CALLS_THIS_RUN
+    global _429S, _COOLING_DOWN, _CALLS_THIS_RUN, _CALLS_THIS_PROCESS
     if _COOLING_DOWN:
         raise UpstreamBlocked("pinnapi: run cooling down after repeated HTTP 429 responses")
     if not _api_key():
@@ -314,6 +397,7 @@ def get_json(url: str, *, timeout: int = 30, auth: str = AUTH_HEADER_FIRST) -> t
             raise UpstreamBlocked(f"pinnapi: per-run call budget {MAX_CALLS_PER_RUN} reached; no further calls this run")
         _throttle()
         _CALLS_THIS_RUN += 1
+        _CALLS_THIS_PROCESS += 1
         request = urllib.request.Request(url, headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
@@ -368,16 +452,22 @@ def fetch_markets(*, timeout: int = 30) -> tuple[int, Any, dict[str, str], str]:
         except UpstreamBlocked as exc:
             code = _http_code_in(str(exc))
             _record_attempt(mechanism, code)
-            if code == 401 and mechanism == AUTH_HEADER_FIRST:
+            if code in AUTH_FALLBACK_STATUSES and mechanism == AUTH_HEADER_FIRST:
                 _HEADER_AUTH_REJECTED = True
-                continue  # header rejected: try the legacy query form once
+                continue  # credential rejected: try the legacy form once
             raise
-        _record_attempt(mechanism, status)
+        # A 200 can still be a rejected credential: some relays answer with
+        # an error envelope and a success code. Treat that as a rejection
+        # rather than recording it as "this mechanism worked".
+        envelope_error = error_envelope_text(payload)
+        rejected = error_envelope_blames_credential(payload)
+        _record_attempt(mechanism, status,
+                        error_envelope=envelope_error if envelope_error else None)
         result = (status, payload, rate_headers, mechanism)
-        if status == 401 and mechanism == AUTH_HEADER_FIRST:
+        if (status in AUTH_FALLBACK_STATUSES or rejected) and mechanism == AUTH_HEADER_FIRST:
             _HEADER_AUTH_REJECTED = True
             continue
-        _AUTH_MECHANISM = mechanism if status == 200 else None
+        _AUTH_MECHANISM = mechanism if status == 200 and not rejected else None
         return result
     if result is None:  # pragma: no cover - loop always returns or raises
         raise UpstreamBlocked("pinnapi: no snapshot attempt completed")
@@ -674,6 +764,9 @@ def classify_zero_rows(payload: Any, rows: list[dict[str, Any]], schema_match: b
 
     Four zero-row answers with four different next actions:
 
+    * ``error_envelope``       - a 200 whose body is an error, not a board.
+      Usually the credential. NOT a parser question, though it parses like
+      one, which is exactly why it is named separately.
     * ``unrecognized_shape``   - no envelope we can read. A parser question.
     * ``empty_board``          - a readable envelope holding zero fixtures.
       NOT a parser question: either the sport id is wrong or the board was
@@ -686,6 +779,8 @@ def classify_zero_rows(payload: Any, rows: list[dict[str, Any]], schema_match: b
     """
     if rows:
         return None
+    if error_envelope_text(payload):
+        return "error_envelope"
     events, _key = _envelope(payload)
     if not isinstance(events, list):
         return "unrecognized_shape"
@@ -697,6 +792,10 @@ def classify_zero_rows(payload: Any, rows: list[dict[str, Any]], schema_match: b
 
 
 _ZERO_ROW_DIAGNOSIS = {
+    "error_envelope": (
+        "the body is an error, not a board - a 200 status does not mean the request "
+        "was accepted. Read the recorded error text: if it blames the credential, "
+        "this is an auth answer wearing a success code, not a parser question"),
     "unrecognized_shape": (
         "no recognizable event envelope; this is a parser question - capture the "
         "recorded shape and run scripts/probe_pinnapi.py before changing any mapping"),
@@ -751,6 +850,10 @@ def _payload_shape(payload: Any) -> dict[str, Any]:
             entry = entry[0] if entry else None
         if isinstance(entry, dict):
             shape["market_entry_keys"] = [str(k) for k in list(entry.keys())[:20]]
+    envelope_error = error_envelope_text(payload)
+    if envelope_error:
+        shape["error_text"] = envelope_error
+        shape["error_blames_credential"] = error_envelope_blames_credential(payload)
     shape["drop_reasons"] = dict(_CANONICALIZATION_DROP_REASONS)
     return _scrub_secret(shape)
 
@@ -779,6 +882,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         "auth_header_name": AUTH_HEADER, "auth_mechanism": None,
         "auth_attempts": [], "auth_memory": None,
         "response_shape": None, "zero_row_kind": None,
+        "calls_this_run_so_far": 0,
     }
     reset_state()
     if not _api_key():
@@ -800,12 +904,28 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["http_statuses"] = [a["status"] for a in stats["auth_attempts"]]
         stats["auth_mechanism"] = auth_mechanism()
         stats["auth_memory"] = _auth_memory_note(stats["auth_attempts"])
+        stats["calls_this_run_so_far"] = calls_this_process()
         stats["rate_limit_headers"] = rate_headers
         if status != 200 or payload is None:
             stats["status"] = _status_for_http(status)
             stats["quota_hint"] = "auth_or_quota" if stats["status"] == "auth" else (
                 "rate_limit_or_quota" if stats["status"] == "quota" else "none_observed")
             stats["blocker"] = f"pinnapi: HTTP {status} or non-JSON payload"
+            return [], _set_diag(stats)
+        envelope_error = error_envelope_text(payload)
+        if envelope_error:
+            # HTTP 200 carrying an error body. It parses, so it would
+            # otherwise be filed as an unreadable payload - a parser
+            # question - when the usual cause is the credential.
+            blames_credential = error_envelope_blames_credential(payload)
+            stats["status"] = "auth" if blames_credential else "unavailable"
+            stats["quota_hint"] = "auth_or_quota" if blames_credential else "none_observed"
+            stats["zero_row_kind"] = "error_envelope"
+            stats["response_shape"] = _payload_shape(payload)
+            stats["blocker"] = (
+                f"pinnapi: HTTP 200 with an error body [{envelope_error}] - "
+                f"{_ZERO_ROW_DIAGNOSIS['error_envelope']}")
+            stats["errors"].append(f"http_200_error_envelope: {envelope_error}"[:180])
             return [], _set_diag(stats)
         rows, schema_match = parse_snapshot(payload, day=day)
         stats["schema_match"] = schema_match
@@ -852,6 +972,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             a["status"] for a in stats["auth_attempts"] if a["status"] is not None]
         stats["auth_mechanism"] = auth_mechanism()
         stats["auth_memory"] = _auth_memory_note(stats["auth_attempts"])
+        stats["calls_this_run_so_far"] = calls_this_process()
         if "429" in message:
             stats["status"] = "cooldown" if _COOLING_DOWN else "quota"
             stats["quota_hint"] = "rate_limit_or_quota"
