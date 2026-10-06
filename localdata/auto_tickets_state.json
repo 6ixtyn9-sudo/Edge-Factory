@@ -42,19 +42,19 @@
             {
               "match": "Croatia vs Spain",
               "pick": "AWAY",
-              "prob": 0.779,
+              "prob": 0.76,
               "odds": 1.28,
               "result": null
             },
             {
-              "match": "Estonia vs Iceland",
-              "pick": "AWAY",
-              "prob": 0.63,
-              "odds": 1.62,
+              "match": "Russia vs Nigeria",
+              "pick": "HOME",
+              "prob": 0.624,
+              "odds": 1.57,
               "result": null
             }
           ],
-          "odds": 2.07,
+          "odds": 2.01,
           "stake_pct": 18.2783,
           "results": [
             null,
@@ -65,21 +65,21 @@
         {
           "legs": [
             {
-              "match": "Russia vs Nigeria",
-              "pick": "HOME",
-              "prob": 0.6459999999999999,
-              "odds": 1.57,
-              "result": null
-            },
-            {
               "match": "Moldova vs Slovakia",
               "pick": "AWAY",
               "prob": 0.6409999999999999,
               "odds": 1.4,
               "result": null
+            },
+            {
+              "match": "Estonia vs Iceland",
+              "pick": "AWAY",
+              "prob": 0.63,
+              "odds": 1.58,
+              "result": null
             }
           ],
-          "odds": 2.2,
+          "odds": 2.21,
           "stake_pct": 18.2782,
           "results": [
             null,
@@ -743,6 +743,11 @@
     },
     "2026-10-05": {
       "frozen_at": "2026-10-05T09:18:31+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-10-06": {
+      "frozen_at": "2026-10-06T09:31:13+02:00",
       "final": true,
       "lock_source": "state"
     }
