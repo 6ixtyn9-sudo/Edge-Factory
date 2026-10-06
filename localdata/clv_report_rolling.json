@@ -21,7 +21,7 @@
       "avg_raw_odds_delta": -0.00253,
       "beat_later_price_n": 423,
       "beat_later_price_rate": 0.141844,
-      "total_picks": 505,
+      "total_picks": 510,
       "with_two_prices": 423
     },
     "WATCHLIST_NO_ODDS": {
@@ -45,7 +45,7 @@
       "avg_raw_odds_delta": -0.006199,
       "beat_later_price_n": 171,
       "beat_later_price_rate": 0.076023,
-      "total_picks": 195,
+      "total_picks": 196,
       "with_two_prices": 171
     },
     "WATCHLIST_UNKNOWN_CTX": {
@@ -71,8 +71,16 @@
       "avg_raw_odds_delta": -0.00075,
       "beat_later_price_n": 80,
       "beat_later_price_rate": 0.2,
-      "total_picks": 122,
+      "total_picks": 124,
       "with_two_prices": 80
+    },
+    "3way-unanimous avg_p>=65": {
+      "avg_implied_prob_delta": null,
+      "avg_raw_odds_delta": null,
+      "beat_later_price_n": 0,
+      "beat_later_price_rate": null,
+      "total_picks": 4,
+      "with_two_prices": 0
     },
     "ml-meta avg_p>=55": {
       "avg_implied_prob_delta": 0.002278,
@@ -133,7 +141,7 @@
   },
   "end": "2026-10-06",
   "meta": {
-    "insufficient_snapshots": 107,
+    "insufficient_snapshots": 113,
     "unmatched_picks": 101
   },
   "overall": {
@@ -141,7 +149,7 @@
     "avg_raw_odds_delta": -0.002964,
     "beat_later_price_n": 813,
     "beat_later_price_rate": 0.125461,
-    "total_picks": 1023,
+    "total_picks": 1029,
     "with_two_prices": 813
   },
   "start": "2026-09-06"

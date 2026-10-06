@@ -1,13 +1,33 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 6,
-  "captured_at": "2026-10-06T01:18:32+00:00",
+  "attempted": 2,
+  "attempted_fixtures": [
+    {
+      "away": "Uruguay",
+      "date": "2026-10-06",
+      "home": "India",
+      "kickoff": "06-10, 15:00",
+      "league": "World Friendlies"
+    },
+    {
+      "away": "Malawi",
+      "date": "2026-10-06",
+      "home": "Angola",
+      "kickoff": "12:00",
+      "league": "International,Africa Cup Of Nations Qualification Grp. B"
+    }
+  ],
+  "candidate_fixtures": 8,
+  "captured_at": "2026-10-06T04:18:17+00:00",
   "date": "2026-10-06",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 2
+  },
   "errors": [],
   "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
   "quoted_fixtures": [],
   "rows": 0,
   "schema": 1,
@@ -19,15 +39,22 @@
     "retry_cooldown": 2
   },
   "skipped": [
-    "India|Uruguay (retry cooldown (6h after failed attempt))",
+    "Argentina|Benin (retry cooldown (6h after failed attempt))",
     "England|Czech Republic (priced)",
-    "WARN kickoff-mismatch Albania|San Marino: pick lists 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from the earlier)",
+    "WARN kickoff-mismatch Albania|San Marino: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Albania|San Marino (priced, close window not open)",
+    "Algeria|Niger (retry cooldown (6h after failed attempt))",
     "Croatia|Spain (priced)",
-    "Grenada|Bonaire (kickoff already passed)",
-    "Angola|Malawi (retry cooldown (6h after failed attempt))"
+    "Grenada|Bonaire (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "India vs Uruguay (league not covered: World Friendlies)",
+    "Angola vs Malawi (league not covered: International,Africa Cup Of Nations Qualification Grp. B)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: International,Africa Cup Of Nations Qualification Grp. B": 1,
+    "league not covered: World Friendlies": 1
+  }
 }
