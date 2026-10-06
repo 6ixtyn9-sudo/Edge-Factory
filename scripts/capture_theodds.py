@@ -39,6 +39,7 @@ import gzip
 import importlib
 import json
 import os
+import re
 import sys
 from collections import Counter
 from datetime import date as _date
@@ -56,6 +57,16 @@ CLOSE_WINDOW_MIN = int(os.environ.get("ODDS_API_CLOSE_WINDOW_MIN", "45") or 45)
 START_GRACE_MIN = 30          # don't first-capture a match this close to/after kickoff
 ATTEMPT_RETRY_HOURS = 6       # failure cooldown per fixture/snapshot-type
 KICKOFF_MISMATCH_MIN = 15     # pick-listed vs captured-API kickoff divergence guard
+
+# Pick-side kickoff provenance tags, mirrored by value (not imported) from
+# edgefactory.sources.theoddsapi.PICK_KICKOFF_SOURCE_UTC / _LEGACY: this module
+# intentionally defers importing that package until main() runs (see the
+# importlib.import_module() call below), so --help/--self-test stay usable
+# without PYTHONPATH=src. A bare string-tag contract keeps that lazy-import
+# boundary while still letting plan_auto() tell a real UTC witness apart from
+# a legacy display-string assumption.
+PICK_KICKOFF_SOURCE_UTC = "pick_kickoff_utc"
+PICK_KICKOFF_SOURCE_LEGACY = "legacy_display_fallback"
 
 
 def _month_file(day: str) -> Path:
@@ -241,6 +252,12 @@ def _fixture_priced(f: dict, existing_rows: list[dict], match_fn) -> bool:
     return False
 
 
+# Provenance tag for the captured-row side of the kickoff-mismatch guard. A
+# parsed ISO/Z/offset kickoff from an already-captured odds row is a real UTC
+# witness (the-odds-api's own commence_time) — there's no "legacy" row variant.
+ROW_KICKOFF_SOURCE_UTC = "captured_row_utc"
+
+
 def _fixture_row_kickoff(f: dict, existing_rows: list[dict], match_fn) -> datetime | None:
     """Kickoff (UTC) from already-captured rows for this fixture, if present.
 
@@ -263,12 +280,51 @@ def _fixture_row_kickoff(f: dict, existing_rows: list[dict], match_fn) -> dateti
     return None
 
 
+def _kickoff_mismatch_detail(line: str) -> str | None:
+    """Classify a kickoff-mismatch WARN line into a specific sub-reason.
+
+    Reads a stable, machine-readable `[kickoff_mismatch_detail=...]` tag that
+    `plan_auto` appends to each mismatch WARN line, rather than pattern-matching
+    the human-readable prose -- so a future wording tweak to the warning text
+    cannot silently break this classification (it would instead just fail to
+    find the bracketed tag and `_kickoff_mismatch_detail_counts` would notice
+    lines are going unclassified).
+
+    Purely additive bookkeeping: callers must keep counting every line that
+    starts with "WARN kickoff-mismatch" under the existing `kickoff_mismatch`
+    bucket (see `_skip_reason`); this only adds finer-grained detail so logs
+    and receipts can distinguish *why* the guard did what it did.
+    """
+    if not line.startswith("WARN kickoff-mismatch"):
+        return None
+    m = re.search(r"\[kickoff_mismatch_detail=(\w+)\]", line)
+    return m.group(1) if m else None
+
+
+def _kickoff_mismatch_detail_counts(lines: list[str]) -> dict[str, int]:
+    counts: Counter = Counter()
+    for line in lines:
+        detail = _kickoff_mismatch_detail(line)
+        if detail:
+            counts[detail] += 1
+    return dict(counts)
+
+
 def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *,
-              now: datetime | None = None, kickoff_fn=None, match_fn=None) -> tuple[list[dict], dict, list[str]]:
+              now: datetime | None = None, kickoff_fn=None, kickoff_source_fn=None,
+              match_fn=None) -> tuple[list[dict], dict, list[str]]:
     """Decide which fixtures need a snapshot this iteration.
 
     Returns (due_fixtures, updates, skip_lines). `updates` maps fixture key ->
     snapshot type so the caller can stamp the attempts ledger after the run.
+
+    `kickoff_source_fn(fixture) -> (datetime | None, str | None)` is the
+    provenance-aware pick-side resolver (e.g.
+    edgefactory.sources.theoddsapi._pick_kickoff_with_source). When supplied
+    it takes precedence over the plain `kickoff_fn` so the kickoff-mismatch
+    guard below can tell a real `pick_kickoff_utc` witness apart from a
+    `legacy_display_fallback` assumption. Callers that only pass `kickoff_fn`
+    keep the original conservative (provenance-unknown) behavior.
     """
     now = now or datetime.now(timezone.utc)
 
@@ -278,20 +334,60 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
     for f in fixtures:
         fk = _fixture_key(f)
         rec = attempts.get(fk, {})
-        kickoff = kickoff_fn(f) if kickoff_fn else None
+        if kickoff_source_fn:
+            kickoff, kickoff_source = kickoff_source_fn(f)
+        else:
+            kickoff = kickoff_fn(f) if kickoff_fn else None
+            kickoff_source = None
         has_rows = _fixture_priced(f, existing_rows, match_fn) if match_fn else False
 
-        # Kickoff divergence guard: if captured rows disagree with the listing by
-        # more than KICKOFF_MISMATCH_MIN, plan from the EARLIER time — conservative
-        # in both directions (never fire after a true kickoff). Surfaced as WARN.
+        # Kickoff divergence guard: if captured rows disagree with the listing
+        # by more than KICKOFF_MISMATCH_MIN, this fires. The *default* and
+        # *provenance-unknown* response stays maximally conservative: plan from
+        # the EARLIER time so a fixture can never be captured after a true
+        # kickoff. Only when we can PROVE the earlier side is merely a legacy
+        # display-string assumption (not a UTC witness) and the later side is
+        # a real captured-row UTC witness do we plan from the later, real time
+        # instead — otherwise a stale timezone guess would starve the slate of
+        # a legitimate close-window snapshot. Every branch still warns.
         row_ko = _fixture_row_kickoff(f, existing_rows, match_fn) if has_rows else None
+        row_source = ROW_KICKOFF_SOURCE_UTC if row_ko is not None else None
         if row_ko is not None and kickoff is not None:
             delta_m = abs((row_ko - kickoff).total_seconds()) / 60.0
             if delta_m > KICKOFF_MISMATCH_MIN:
-                skips.append(
-                    f"WARN kickoff-mismatch {fk}: pick lists {kickoff:%H:%MZ}, captured rows say "
-                    f"{row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from the earlier)")
-                kickoff = min(kickoff, row_ko)
+                is_pick_utc = kickoff_source == PICK_KICKOFF_SOURCE_UTC
+                is_pick_legacy = kickoff_source == PICK_KICKOFF_SOURCE_LEGACY
+                is_row_utc = row_source == ROW_KICKOFF_SOURCE_UTC
+                if is_pick_legacy and is_row_utc:
+                    # Non-starving override: the earlier time is only a legacy
+                    # display-string assumption; the captured row is a real
+                    # UTC witness, so plan from it rather than letting the
+                    # legacy guess falsely mark the fixture already-passed.
+                    skips.append(
+                        f"WARN kickoff-mismatch {fk}: pick legacy display says {kickoff:%H:%MZ}, "
+                        f"captured rows say {row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from "
+                        f"captured UTC witness, display-fallback override) "
+                        f"[kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]")
+                    kickoff = row_ko
+                elif is_pick_utc and is_row_utc:
+                    # Both sides are real UTC witnesses and still disagree:
+                    # stay strict/fail-closed exactly as before.
+                    skips.append(
+                        f"WARN kickoff-mismatch {fk}: pick kickoff_utc says {kickoff:%H:%MZ}, "
+                        f"captured rows say {row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from "
+                        f"the earlier real UTC witness) "
+                        f"[kickoff_mismatch_detail=kickoff_mismatch_planned_from_earlier_utc]")
+                    kickoff = min(kickoff, row_ko)
+                else:
+                    # Provenance unknown/unrecognized on at least one side: no
+                    # extra trust signal to safely override, so behave exactly
+                    # like the original guard (earlier-of-two, fail-closed).
+                    skips.append(
+                        f"WARN kickoff-mismatch {fk}: pick lists {kickoff:%H:%MZ}, captured rows say "
+                        f"{row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from the earlier, "
+                        f"legacy-grade provenance only) "
+                        f"[kickoff_mismatch_detail=kickoff_mismatch_legacy_only]")
+                    kickoff = min(kickoff, row_ko)
 
         in_close_window = False
         started = False
@@ -520,14 +616,17 @@ def main() -> int:
         existing = _read_month(_month_file(args.date))
         attempts = _load_attempts(args.date)
         due, updates, skips = plan_auto(fixtures, existing, attempts,
-                                        kickoff_fn=mod._pick_kickoff_utc,
+                                        kickoff_source_fn=mod._pick_kickoff_with_source,
                                         match_fn=mod._team_names_match)
         skip_counts = _skip_reason_counts(skips)
+        mismatch_detail_counts = _kickoff_mismatch_detail_counts(skips)
         due_counts = dict(Counter(updates.values()))
         for line in skips:
             print(f"  skip {line}")
         if skip_counts:
             print(f"auto: skipped={len(skips)} skip_reasons={json.dumps(skip_counts, sort_keys=True)}")
+        if mismatch_detail_counts:
+            print(f"auto: kickoff_mismatch_detail={json.dumps(mismatch_detail_counts, sort_keys=True)}")
         if not due:
             print("auto: nothing due this iteration (0 credits)")
             _write_receipt(args.date, {
@@ -535,6 +634,7 @@ def main() -> int:
                 "status": "not_due",
                 "skipped": skips,
                 "skip_reasons": skip_counts,
+                "kickoff_mismatch_detail": mismatch_detail_counts,
                 "due_reasons": due_counts,
             })
             return 0
@@ -545,6 +645,7 @@ def main() -> int:
         attempts = _load_attempts(args.date)
         skips = []
         skip_counts = {}
+        mismatch_detail_counts = {}
         due_counts = dict(Counter(updates.values()))
 
     try:
@@ -557,6 +658,7 @@ def main() -> int:
             "attempted_fixtures": [_fixture_receipt(f) for f in due],
             "skipped": skips,
             "skip_reasons": skip_counts,
+            "kickoff_mismatch_detail": mismatch_detail_counts,
             "due_reasons": due_counts,
             "status": "error",
             "errors": [type(exc).__name__],
@@ -607,6 +709,7 @@ def main() -> int:
         "status": "ok" if rows else "empty",
         "skipped": skips,
         "skip_reasons": skip_counts,
+        "kickoff_mismatch_detail": mismatch_detail_counts,
         "due_reasons": due_counts,
         "unmatched_reasons": dict(Counter(_line_reason(line) for line in unmatched)),
         "unmatched": unmatched[:100],

@@ -757,19 +757,41 @@ def _team_tokens(name: object) -> set[str]:
     return {w for w in words if w not in _TEAM_NOISE and len(w) > 1}
 
 
-def _pick_kickoff_utc(pick: dict) -> datetime | None:
+# Provenance tags for _pick_kickoff_with_source() — downstream guards (e.g.
+# scripts/capture_theodds.py::plan_auto) must not treat these as equal-confidence
+# evidence: PICK_KICKOFF_SOURCE_UTC is a real witness, PICK_KICKOFF_SOURCE_LEGACY
+# is only a parsed display string under an assumed timezone.
+PICK_KICKOFF_SOURCE_UTC = "pick_kickoff_utc"
+PICK_KICKOFF_SOURCE_LEGACY = "legacy_display_fallback"
+
+
+def _pick_kickoff_with_source(pick: dict) -> tuple[datetime | None, str | None]:
+    """Resolve a pick's kickoff AND report how confident that value is.
+
+    Two distinct provenances:
+      * PICK_KICKOFF_SOURCE_UTC: parsed straight from pick['kickoff_utc'] — a
+        real UTC witness.
+      * PICK_KICKOFF_SOURCE_LEGACY: pick['kickoff_utc'] absent/unparseable, so
+        we fell back to parsing the legacy display string pick['kickoff']
+        under the assumed Africa/Johannesburg (UTC+2, no DST) pipeline-local
+        timezone. This is a display-string *assumption*, not a witness, and
+        must not be trusted with the same confidence as a real UTC value.
+
+    Returns (None, None) when neither can be parsed.
+    """
     resolved = str(pick.get("kickoff_utc") or "").strip()
     if resolved:
         try:
             dt = datetime.fromisoformat(resolved.replace("Z", "+00:00"))
-            return dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+            dt = dt if dt.tzinfo else dt.replace(tzinfo=timezone.utc)
+            return dt, PICK_KICKOFF_SOURCE_UTC
         except ValueError:
             pass
 
     raw = str(pick.get("kickoff") or "").strip()
     m = re.match(r"(\d{1,2})-(\d{1,2}),\s*(\d{1,2}):(\d{2})", raw)
     if not m:
-        return None
+        return None, None
     dd, mm, hh, mi = (int(x) for x in m.groups())
     # Year comes from the fixture's own pipeline date, NEVER from wall-clock:
     # a Dec-31 run on a Jan-01 slate must not regress the fixture a full year
@@ -782,9 +804,15 @@ def _pick_kickoff_utc(pick: dict) -> datetime | None:
     try:
         # Fallback for legacy rows without kickoff_utc: historical pick display
         # values are pipeline-local (Africa/Johannesburg, UTC+2, no DST).
-        return datetime(year, mm, dd, hh, mi, tzinfo=timezone.utc) - timedelta(hours=2)
+        dt = datetime(year, mm, dd, hh, mi, tzinfo=timezone.utc) - timedelta(hours=2)
+        return dt, PICK_KICKOFF_SOURCE_LEGACY
     except ValueError:
-        return None
+        return None, None
+
+
+def _pick_kickoff_utc(pick: dict) -> datetime | None:
+    dt, _source = _pick_kickoff_with_source(pick)
+    return dt
 
 
 def _team_names_match(a: object, b: object) -> bool:
