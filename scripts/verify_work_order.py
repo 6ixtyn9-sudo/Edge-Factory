@@ -340,11 +340,15 @@ def _():
 def _():
     count = sum(p.read_text().count("def test_")
                 for p in (REPO / "tests").rglob("test_*.py"))
-    # pytest reports ~1491 collected because many tests are parametrised; the
-    # count of test *functions* is the stable floor. Raise this when you add
-    # tests; never lower it to make this check pass.
-    if count < 1339:
-        return (f"{count} test functions found, floor is 1339. Tests were "
+    # The count of test *functions* is the stable floor; the collected count
+    # is not. test_docs_links parametrises over every markdown file in the
+    # repo, so "the suite must report at least N" drifts upward whenever
+    # anyone writes documentation - a bad acceptance contract. What actually
+    # matters is: nothing failed, and no existing test was deleted. This
+    # check is the second half. Raise it when you add tests; never lower it
+    # to make the check pass.
+    if count < 1432:
+        return (f"{count} test functions found, floor is 1432. Tests were "
                 "deleted rather than fixed.")
     return None
 

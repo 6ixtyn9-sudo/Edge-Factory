@@ -93,6 +93,11 @@ _CANONICALIZATION_DROP_REASONS: dict[str, int] = {}
 # the next operator reads the answer instead of re-deriving it.
 _AUTH_ATTEMPTS: list[dict[str, Any]] = []
 _AUTH_MECHANISM: str | None = None
+# Run-scoped memory: once the header form has been rejected as unauthorized,
+# later captures in the same process go straight to the fallback instead of
+# spending a call rediscovering the same 401. Deliberately NOT cleared by
+# reset_state(), which is per-capture; see reset_auth_memory().
+_HEADER_AUTH_REJECTED = False
 
 # Zero-row days with these statuses stay RETRYABLE (never terminal "empty").
 RETRYABLE_ZERO_ROW_STATUSES = {"auth", "quota", "unavailable", "blocked", "error", "cooldown"}
@@ -148,6 +153,22 @@ def sport_id() -> int:
         return int(str(raw).strip())
     except ValueError:
         return SPORT_ID
+
+
+def reset_auth_memory() -> None:
+    """Forget the run-scoped 401 memory (new process, or a test).
+
+    reset_state() intentionally leaves this alone: the per-capture state
+    resets every call, but "the header form was rejected" is a fact about
+    the run, and re-learning it costs a call out of a budget of four.
+    """
+    global _HEADER_AUTH_REJECTED
+    _HEADER_AUTH_REJECTED = False
+
+
+def header_auth_rejected() -> bool:
+    """True once header auth has answered 401 anywhere in this run."""
+    return _HEADER_AUTH_REJECTED
 
 
 def auth_mechanism() -> str | None:
@@ -243,6 +264,18 @@ def _record_attempt(mechanism: str, status: int | None) -> None:
     _AUTH_ATTEMPTS.append({"auth": mechanism, "status": status})
 
 
+def _auth_memory_note(attempts: list[dict[str, Any]]) -> str | None:
+    """Say so only when the header attempt was SKIPPED on remembered grounds.
+
+    Learning the 401 during this capture is not the same event as acting on
+    it later, and conflating them would make the field useless.
+    """
+    if _HEADER_AUTH_REJECTED and not any(
+            a.get("auth") == AUTH_HEADER_FIRST for a in attempts):
+        return "header form rejected earlier this run; went straight to the query form"
+    return None
+
+
 def _sanitize_headers(headers: Any) -> dict[str, str]:
     out: dict[str, str] = {}
     try:
@@ -317,11 +350,18 @@ def fetch_markets(*, timeout: int = 30) -> tuple[int, Any, dict[str, str], str]:
     Returns ``(status, payload, rate_limit_headers, mechanism)`` and records
     every attempt as (mechanism, status) so the ledger states which form the
     vendor actually accepted instead of leaving the next operator to guess.
-    Both attempts are counted against the per-run call budget.
+
+    Budget arithmetic, stated so nobody is surprised by it: a fallback
+    attempt is a real call and counts against ``MAX_CALLS_PER_RUN``, so a
+    capture where the header form is rejected fetches at most two boards,
+    not four. Once rejected, the rejection is remembered for the rest of the
+    run and later captures spend one call, not two.
     """
-    global _AUTH_MECHANISM
+    global _AUTH_MECHANISM, _HEADER_AUTH_REJECTED
+    order = ((AUTH_QUERY_FALLBACK,) if _HEADER_AUTH_REJECTED
+             else (AUTH_HEADER_FIRST, AUTH_QUERY_FALLBACK))
     result: tuple[int, Any, dict[str, str], str] | None = None
-    for mechanism in (AUTH_HEADER_FIRST, AUTH_QUERY_FALLBACK):
+    for mechanism in order:
         try:
             status, payload, rate_headers = get_json(
                 markets_url(auth=mechanism), timeout=timeout, auth=mechanism)
@@ -329,11 +369,13 @@ def fetch_markets(*, timeout: int = 30) -> tuple[int, Any, dict[str, str], str]:
             code = _http_code_in(str(exc))
             _record_attempt(mechanism, code)
             if code == 401 and mechanism == AUTH_HEADER_FIRST:
+                _HEADER_AUTH_REJECTED = True
                 continue  # header rejected: try the legacy query form once
             raise
         _record_attempt(mechanism, status)
         result = (status, payload, rate_headers, mechanism)
         if status == 401 and mechanism == AUTH_HEADER_FIRST:
+            _HEADER_AUTH_REJECTED = True
             continue
         _AUTH_MECHANISM = mechanism if status == 200 else None
         return result
@@ -445,6 +487,25 @@ def _count_drop(reason: str) -> None:
     )
 
 
+def _envelope(payload: Any) -> tuple[list[Any] | None, str | None]:
+    """Locate the event list. Returns ``(events, key)``; ``(None, None)``
+    when the payload carries no envelope this adapter recognizes.
+
+    An envelope holding zero events and no envelope at all are different
+    answers with opposite diagnoses - a board that was genuinely empty (or
+    a wrong sport id) versus a payload shape we cannot read - so they are
+    distinguished here rather than collapsed into one zero.
+    """
+    if isinstance(payload, dict):
+        for key in ("events", "data", "matches"):
+            if isinstance(payload.get(key), list):
+                return payload[key], key
+        return None, None
+    if isinstance(payload, list):
+        return payload, None
+    return None, None
+
+
 def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], bool]:
     """Map a snapshot into price-ledger rows. Returns (rows, schema_match).
 
@@ -452,16 +513,7 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
     event/market shape - in that case NO rows are returned (fail-closed) and
     the caller retains a trimmed raw sample for operator review.
     """
-    if isinstance(payload, dict):
-        events = None
-        for key in ("events", "data", "matches"):
-            if isinstance(payload.get(key), list):
-                events = payload[key]
-                break
-    elif isinstance(payload, list):
-        events = payload
-    else:
-        return [], False
+    events, _key = _envelope(payload)
     if not isinstance(events, list):
         return [], False
     global _CANONICALIZATION_DROP_REASONS
@@ -617,6 +669,49 @@ def _trim_event_sample(payload: Any) -> Any:
     return _scrub_secret({"top_keys": [str(k) for k in list(payload.keys())[:12]]} if isinstance(payload, dict) else None)
 
 
+def classify_zero_rows(payload: Any, rows: list[dict[str, Any]], schema_match: bool) -> str | None:
+    """Name WHY a 200 produced nothing. ``None`` when it produced rows.
+
+    Four zero-row answers with four different next actions:
+
+    * ``unrecognized_shape``   - no envelope we can read. A parser question.
+    * ``empty_board``          - a readable envelope holding zero fixtures.
+      NOT a parser question: either the sport id is wrong or the board was
+      genuinely empty at this hour. Zero events means nothing without the
+      day's fixture count beside it.
+    * ``events_without_teams`` - fixtures arrived but none exposed both
+      team names; shape drift inside the event, not in the envelope.
+    * ``no_usable_rows``       - fixtures parsed, every price discarded;
+      the named drop reasons say which.
+    """
+    if rows:
+        return None
+    events, _key = _envelope(payload)
+    if not isinstance(events, list):
+        return "unrecognized_shape"
+    if not events:
+        return "empty_board"
+    if not schema_match:
+        return "events_without_teams"
+    return "no_usable_rows"
+
+
+_ZERO_ROW_DIAGNOSIS = {
+    "unrecognized_shape": (
+        "no recognizable event envelope; this is a parser question - capture the "
+        "recorded shape and run scripts/probe_pinnapi.py before changing any mapping"),
+    "empty_board": (
+        "a readable envelope holding zero fixtures; this is NOT a parser question - "
+        "either the sport id is wrong or the board was empty at this hour. Compare "
+        "against the day's fixture count before concluding anything"),
+    "events_without_teams": (
+        "fixtures returned but none exposed both team names; shape drift inside the "
+        "event, not in the envelope"),
+    "no_usable_rows": (
+        "fixtures parsed but every price was discarded; see the named drop reasons"),
+}
+
+
 def _payload_shape(payload: Any) -> dict[str, Any]:
     """Describe what actually arrived - container types and key names only.
 
@@ -625,17 +720,22 @@ def _payload_shape(payload: Any) -> dict[str, Any]:
     parser is written for a shape nobody has seen.
     """
     shape: dict[str, Any] = {"json_type": type(payload).__name__}
-    events: Any = None
     if isinstance(payload, dict):
         shape["top_keys"] = [str(key) for key in list(payload.keys())[:12]]
-        for key in ("events", "data", "matches"):
-            if isinstance(payload.get(key), list):
-                shape["events_key"] = key
-                events = payload[key]
-                break
-    elif isinstance(payload, list):
-        events = payload
+    events, envelope_key = _envelope(payload)
+    shape["envelope_found"] = events is not None
+    if envelope_key:
+        shape["events_key"] = envelope_key
     shape["event_count"] = len(events) if isinstance(events, list) else 0
+    if isinstance(events, list):
+        # Fixture-count context: a bare zero is unreadable without it.
+        dicts = [e for e in events if isinstance(e, dict)]
+        shape["events_with_teams"] = sum(
+            1 for e in dicts
+            if _team_name(e.get("home") or e.get("team_home"))
+            and _team_name(e.get("away") or e.get("team_away")))
+        shape["events_with_markets"] = sum(
+            1 for e in dicts if e.get("markets") or e.get("odds"))
     first = events[0] if isinstance(events, list) and events else None
     if isinstance(first, dict):
         shape["event_keys"] = [str(key) for key in list(first.keys())[:20]]
@@ -677,7 +777,8 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         # ask?" without anyone re-reading the adapter.
         "sport_id": sport_id(), "event_type": EVENT_TYPE,
         "auth_header_name": AUTH_HEADER, "auth_mechanism": None,
-        "auth_attempts": [], "response_shape": None,
+        "auth_attempts": [], "auth_memory": None,
+        "response_shape": None, "zero_row_kind": None,
     }
     reset_state()
     if not _api_key():
@@ -698,6 +799,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["requests"] = len(stats["auth_attempts"]) or 1
         stats["http_statuses"] = [a["status"] for a in stats["auth_attempts"]]
         stats["auth_mechanism"] = auth_mechanism()
+        stats["auth_memory"] = _auth_memory_note(stats["auth_attempts"])
         stats["rate_limit_headers"] = rate_headers
         if status != 200 or payload is None:
             stats["status"] = _status_for_http(status)
@@ -712,12 +814,17 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["sample_event"] = _trim_event_sample(payload)
         if not schema_match:
             # Fail-closed: keep the raw sample, map nothing, stay retryable.
+            # An unreadable envelope and a readable-but-empty board both land
+            # here with zero rows; they are told apart by zero_row_kind
+            # because their diagnoses are opposite (parser vs sport id).
+            kind = classify_zero_rows(payload, rows, schema_match)
             stats["status"] = "unavailable"
             stats["quota_hint"] = "none_observed"
             stats["response_shape"] = _payload_shape(payload)
+            stats["zero_row_kind"] = kind
             stats["blocker"] = (
-                "pinnapi: snapshot schema not recognized; raw sample retained for operator review "
-                "(run scripts/probe_pinnapi.py to reconcile auth + schema)")
+                f"pinnapi: HTTP 200 for sport_id={sport_id()} event_type={EVENT_TYPE} "
+                f"produced zero rows [{kind}] - {_ZERO_ROW_DIAGNOSIS[kind]}")
             return [], _set_diag(stats)
         stats["pa_raw"] = len({(row["home"], row["away"]) for row in rows})
         stats["pa_matched"] = len(rows)
@@ -727,11 +834,14 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             # payload shape and stop: the next step is an operator decision
             # on an observed payload, not a parser invented for one that has
             # never been seen.
+            kind = classify_zero_rows(payload, rows, schema_match)
             stats["response_shape"] = _payload_shape(payload)
+            stats["zero_row_kind"] = kind
             stats["blocker"] = (
                 f"pinnapi: HTTP 200 for sport_id={sport_id()} event_type={EVENT_TYPE} "
-                "produced zero usable rows; observed payload shape recorded for operator "
-                "review - do not extend the parser without a captured sample")
+                f"produced zero usable rows [{kind}] - {_ZERO_ROW_DIAGNOSIS[kind]}; "
+                "observed payload shape recorded - do not extend the parser without "
+                "a captured sample")
         return rows, _set_diag(stats)
     except UpstreamBlocked as exc:
         message = str(exc)
@@ -741,6 +851,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["http_statuses"] = [
             a["status"] for a in stats["auth_attempts"] if a["status"] is not None]
         stats["auth_mechanism"] = auth_mechanism()
+        stats["auth_memory"] = _auth_memory_note(stats["auth_attempts"])
         if "429" in message:
             stats["status"] = "cooldown" if _COOLING_DOWN else "quota"
             stats["quota_hint"] = "rate_limit_or_quota"
