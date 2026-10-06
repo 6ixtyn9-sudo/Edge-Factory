@@ -1,3 +1,24 @@
+> # CLOSED — do not run this brief
+>
+> **Carried out 2026-10-06 in commit `31b81c8a`**, with follow-ups
+> `8c1d9cd2`, `51d8a113`, `aeb1d210`, `7e46f804`, `6122ffa2` on branch
+> `arena/95b13304-edge-factory`. Outcome and what remains unverified:
+> `WO-8-PINNAPI-CONTRACT-2026-10-06.md`.
+>
+> **Everything below describes the code as it was before that commit and is
+> now false.** The sport id is 1, authentication is the `x-portal-apikey`
+> header with the query form kept as a fallback, and the credential guard
+> has been reworked. Re-running this brief would be re-doing finished work
+> against code that is already correct.
+>
+> An older copy of this file exists outside this branch (local commit
+> `a4b5c75c`, never pushed) carrying no such banner. If you are reading a
+> version of this document that presents the work as outstanding, it is the
+> stale one — check the adapter before believing either.
+>
+> Kept verbatim below as the work order of record, for auditing what was
+> asked against what was done.
+
 # Work order 8 — Pinnacle (pinnapi) REST contract
 
 You are picking this up cold. Everything you need is below; nothing depends
@@ -168,5 +189,7 @@ and should be reported as one.
 
 ---
 
-**Outcome:** carried out 2026-10-06. See `WO-8-PINNAPI-CONTRACT-2026-10-06.md`
-for what was changed and what remains unverified.
+**Outcome:** closed 2026-10-06 in `31b81c8a` and the follow-ups listed at the
+top. See `WO-8-PINNAPI-CONTRACT-2026-10-06.md` for what was changed, which
+findings are observed versus relayed, and what stays unverified until a live
+run.
