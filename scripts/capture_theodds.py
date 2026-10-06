@@ -39,6 +39,7 @@ import gzip
 import importlib
 import json
 import os
+import re
 import sys
 from collections import Counter
 from datetime import date as _date
@@ -282,6 +283,13 @@ def _fixture_row_kickoff(f: dict, existing_rows: list[dict], match_fn) -> dateti
 def _kickoff_mismatch_detail(line: str) -> str | None:
     """Classify a kickoff-mismatch WARN line into a specific sub-reason.
 
+    Reads a stable, machine-readable `[kickoff_mismatch_detail=...]` tag that
+    `plan_auto` appends to each mismatch WARN line, rather than pattern-matching
+    the human-readable prose -- so a future wording tweak to the warning text
+    cannot silently break this classification (it would instead just fail to
+    find the bracketed tag and `_kickoff_mismatch_detail_counts` would notice
+    lines are going unclassified).
+
     Purely additive bookkeeping: callers must keep counting every line that
     starts with "WARN kickoff-mismatch" under the existing `kickoff_mismatch`
     bucket (see `_skip_reason`); this only adds finer-grained detail so logs
@@ -289,13 +297,8 @@ def _kickoff_mismatch_detail(line: str) -> str | None:
     """
     if not line.startswith("WARN kickoff-mismatch"):
         return None
-    if "display-fallback override" in line:
-        return "kickoff_mismatch_display_fallback_overridden"
-    if "earlier real UTC witness" in line:
-        return "kickoff_mismatch_planned_from_earlier_utc"
-    if "legacy-grade provenance only" in line:
-        return "kickoff_mismatch_legacy_only"
-    return None
+    m = re.search(r"\[kickoff_mismatch_detail=(\w+)\]", line)
+    return m.group(1) if m else None
 
 
 def _kickoff_mismatch_detail_counts(lines: list[str]) -> dict[str, int]:
@@ -363,7 +366,8 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
                     skips.append(
                         f"WARN kickoff-mismatch {fk}: pick legacy display says {kickoff:%H:%MZ}, "
                         f"captured rows say {row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from "
-                        f"captured UTC witness, display-fallback override)")
+                        f"captured UTC witness, display-fallback override) "
+                        f"[kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]")
                     kickoff = row_ko
                 elif is_pick_utc and is_row_utc:
                     # Both sides are real UTC witnesses and still disagree:
@@ -371,7 +375,8 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
                     skips.append(
                         f"WARN kickoff-mismatch {fk}: pick kickoff_utc says {kickoff:%H:%MZ}, "
                         f"captured rows say {row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from "
-                        f"the earlier real UTC witness)")
+                        f"the earlier real UTC witness) "
+                        f"[kickoff_mismatch_detail=kickoff_mismatch_planned_from_earlier_utc]")
                     kickoff = min(kickoff, row_ko)
                 else:
                     # Provenance unknown/unrecognized on at least one side: no
@@ -380,7 +385,8 @@ def plan_auto(fixtures: list[dict], existing_rows: list[dict], attempts: dict, *
                     skips.append(
                         f"WARN kickoff-mismatch {fk}: pick lists {kickoff:%H:%MZ}, captured rows say "
                         f"{row_ko:%H:%MZ} (Δ={delta_m:.0f}m; planning from the earlier, "
-                        f"legacy-grade provenance only)")
+                        f"legacy-grade provenance only) "
+                        f"[kickoff_mismatch_detail=kickoff_mismatch_legacy_only]")
                     kickoff = min(kickoff, row_ko)
 
         in_close_window = False
