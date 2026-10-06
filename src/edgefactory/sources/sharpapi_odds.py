@@ -189,6 +189,48 @@ def _num(x: object) -> float | None:
 
 _PREMATCH_DROP_REASONS: dict[str, int] = {}
 
+# What the board itself looked like, independent of how many rows survived.
+# A zero with no board context is unreadable: an empty slate, a page that
+# filled up with live games before reaching our fixtures, and a competition
+# filter the server did not recognise all print the same bare zero. These
+# counts are what separate them. Vendor-supplied values only - never a
+# configured filter value, which arrives from a deployment secret.
+_BOARD_CONTEXT: dict[str, Any] = {}
+# Bounds on what travels into a committed artefact: enough competitions to
+# recognise a global board, short enough that no payload gets archived.
+_MAX_LEAGUES_RECORDED = 12
+_MAX_LEAGUE_NAME_CHARS = 48
+
+
+def board_context() -> dict[str, Any]:
+    """Board shape observed by the most recent parse."""
+    return dict(_BOARD_CONTEXT)
+
+
+def _league_token(value: object) -> str:
+    """Comparison form for a competition id: case and punctuation removed.
+
+    Deliberately tolerant. The vendor spells one competition at least two
+    ways inside a single response (``euro_quals_-_u21_championship`` and
+    ``uefa_u21_euro_qualifiers`` were both observed on 2026-10-06), so an
+    exact string comparison would report a working filter as a broken one.
+    """
+    return re.sub(r"[^a-z0-9]+", "", str(value or "").strip().lower())
+
+
+def _record_board(fixtures: set[tuple[str, str]], leagues: dict[str, int],
+                  *, priced_rows: int) -> None:
+    """Store what the board carried, bounded for a committed artefact."""
+    ranked = sorted(leagues.items(), key=lambda kv: (-kv[1], kv[0]))
+    _BOARD_CONTEXT.update({
+        "board_fixtures": len(fixtures),
+        "board_league_count": len(leagues),
+        "board_leagues": {name[:_MAX_LEAGUE_NAME_CHARS]: count
+                          for name, count in ranked[:_MAX_LEAGUES_RECORDED]},
+        "board_non_prematch_rows": sum(_PREMATCH_DROP_REASONS.values()),
+        "board_priced_rows": priced_rows,
+    })
+
 
 def _text(value: object) -> str:
     """Flatten either a bare string or a {"name": ...} reference object."""
@@ -250,6 +292,8 @@ def parse_flat_rows(events: list[Any], *, day: str) -> tuple[list[dict[str, Any]
     global _PREMATCH_DROP_REASONS
     rows: list[dict[str, Any]] = []; shaped = False
     stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    fixtures: set[tuple[str, str]] = set()
+    leagues: dict[str, int] = {}
     for row in events:
         if not isinstance(row, dict): continue
         home, away = _sides(row)
@@ -257,6 +301,14 @@ def parse_flat_rows(events: list[Any], *, day: str) -> tuple[list[dict[str, Any]
         raw_market = _text(row.get("market_type")) or _text(row.get("market_ref"))
         if not home or not away or not book or not raw_market: continue
         shaped = True
+        # Recorded BEFORE the prematch refusal. A board that was entirely
+        # in-play still has to be able to say which competitions were on it:
+        # that is the difference between "the filter matched nothing" and
+        # "the filter was ignored and we got the whole world".
+        fixtures.add((home, away))
+        league_name = _text(row.get("league")) or _text(row.get("league_ref"))
+        if league_name:
+            leagues[league_name] = leagues.get(league_name, 0) + 1
         if row.get("is_live"):
             _PREMATCH_DROP_REASONS["live_price"] = _PREMATCH_DROP_REASONS.get("live_price", 0) + 1
             continue
@@ -287,24 +339,35 @@ def parse_flat_rows(events: list[Any], *, day: str) -> tuple[list[dict[str, Any]
                      "league": _text(row.get("league")) or _text(row.get("league_ref")),
                      "event_uuid": _text(row.get("event_uuid")),
                      "named_bookmaker": True, "captured_at": stamp})
+    _record_board(fixtures, leagues, priced_rows=len(rows))
     return rows, shaped
 
 
 def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], bool]:
     """Accept only explicit event/bookmaker/market rows; unknown shapes yield no rows."""
+    # Reset BEFORE any exit path. An unrecognized payload leaves this
+    # function early, and a board count left over from an earlier parse
+    # would be worse than no count at all, because it reads as a
+    # measurement of this response rather than of the previous one.
+    global _CANONICALIZATION_DROP_REASONS, _PREMATCH_DROP_REASONS, _BOARD_CONTEXT
+    _CANONICALIZATION_DROP_REASONS = {}
+    _PREMATCH_DROP_REASONS = {}
+    _BOARD_CONTEXT = {"board_rows": 0, "board_fixtures": 0,
+                      "board_league_count": 0, "board_leagues": {},
+                      "board_non_prematch_rows": 0, "board_priced_rows": 0}
     events = payload if isinstance(payload, list) else next((payload.get(k) for k in ("events", "data", "matches", "odds") if isinstance(payload, dict) and isinstance(payload.get(k), list)), None)
     if not isinstance(events, list): return [], False
     # A recognized but EMPTY event list is a valid empty result, not a schema
     # failure: conflating the two turns a quiet slate into a false outage (and
     # a real contract break into a false "no games today").
-    global _CANONICALIZATION_DROP_REASONS, _PREMATCH_DROP_REASONS
-    _CANONICALIZATION_DROP_REASONS = {}
-    _PREMATCH_DROP_REASONS = {}
+    _BOARD_CONTEXT["board_rows"] = len(events)
     if not events:
         return [], True   # recognized board, nothing on it
     if _is_flat(events):
         return parse_flat_rows(events, day=day)
     rows: list[dict[str, Any]] = []; shaped = not events; stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    fixtures: set[tuple[str, str]] = set()
+    leagues: dict[str, int] = {}
     for event in events:
         if not isinstance(event, dict): continue
         home = event.get("home") or event.get("home_team"); away = event.get("away") or event.get("away_team")
@@ -313,6 +376,10 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
         books = event.get("bookmakers") or event.get("bookies") or event.get("books")
         if not home or not away or not isinstance(books, list): continue
         shaped = True
+        fixtures.add((str(home).strip(), str(away).strip()))
+        league_name = _text(event.get("league")) or _text(event.get("league_ref"))
+        if league_name:
+            leagues[league_name] = leagues.get(league_name, 0) + 1
         for book in books:
             if not isinstance(book, dict): continue
             bookmaker = str(book.get("name") or book.get("bookmaker") or book.get("title") or "").strip()
@@ -335,6 +402,7 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
                     )
                     continue
                 rows.append({"source": SOURCE, "date": day, "home": str(home).strip(), "away": str(away).strip(), "kickoff": event.get("kickoff") or event.get("start_at"), "market": canonical.market, "selection": canonical.selection, "line": canonical.line, "raw_market": raw_market, "raw_selection": raw_selection, "odds": price, "book": bookmaker, "bookmaker": bookmaker, "odds_kind": "bookmaker", "named_bookmaker": True, "captured_at": stamp})
+    _record_board(fixtures, leagues, priced_rows=len(rows))
     return rows, shaped
 
 def _status(code: int | None) -> str:
@@ -353,9 +421,82 @@ def _reason(code: int | None) -> str:
     if code is None: return "transport_error"
     return f"http_{code}_unavailable"
 
+def _requested_limit() -> int | None:
+    """Row limit actually present on the request, or None.
+
+    Read back out of the built query rather than from the environment a
+    second time. Two readers of one setting is how a deployment value and a
+    code default drift apart, and it describes what was SENT rather than
+    what was configured - which is the thing the board count is compared
+    against.
+    """
+    try:
+        value = int(query_params().get("limit", ""))
+    except ValueError:
+        return None
+    return value if value > 0 else None
+
+
+def _requested_league() -> str:
+    """Competition filter actually present on the request, or empty."""
+    return query_params().get("league", "")
+
+
+def _league_filter_effective(board: dict[str, Any]) -> bool | None:
+    """Did the server actually apply the competition filter we asked for?
+
+    Returns True when the board agrees with the request, False when it
+    plainly does not, and None when the question cannot be answered from
+    what came back. The None cases matter as much as the False one: with no
+    competition on the board, or with exactly one that does not match, a
+    "not applied" verdict would be a guess. The vendor is known to spell one
+    competition two ways in a single response, so a single unmatched name is
+    at least as likely to be the other spelling as a rejected filter.
+
+    The configured value is read here and never stored: it arrives from a
+    deployment secret and this verdict ends up in a committed artefact.
+    """
+    requested = _league_token(_requested_league())
+    if not requested:
+        return None
+    observed = [_league_token(name) for name in (board.get("board_leagues") or {})]
+    observed = [token for token in observed if token]
+    if not observed:
+        return None
+    if any(token == requested or requested in token or token in requested
+           for token in observed):
+        return True
+    return False if len(observed) >= 2 else None
+
+
+def _zero_row_reason(stats: dict[str, Any]) -> str:
+    """Name which of five things produced a zero, because they differ.
+
+    An empty slate means come back later. A page that filled with in-play
+    games before reaching our fixtures means narrow the request - the
+    opposite of waiting. A competition filter the server ignored means the
+    identifier is not one it knows. A filter it honoured onto an empty board
+    means that competition had nothing on. An unmappable board means the
+    market vocabulary moved. Collapsing these into one zero is what kept the
+    2026-10-06 result unreadable.
+    """
+    if stats.get("league_filter_requested") and not int(stats.get("board_rows") or 0):
+        return "league_filter_returned_empty"
+    if stats.get("league_filter_effective") is False:
+        return "league_filter_not_applied"
+    if _PREMATCH_DROP_REASONS and not _CANONICALIZATION_DROP_REASONS:
+        # The distinction ticket (o) exists for. Same counters, same zero,
+        # opposite operator action, decided by whether the page was full.
+        return ("board_truncated_live_first" if stats.get("board_truncated")
+                else "all_rows_live_or_stale")
+    if _CANONICALIZATION_DROP_REASONS:
+        return "all_rows_unmappable"
+    return "provider_empty_slate"
+
+
 def _path(day: str, localdata: Path | None = None) -> Path: return (localdata or LOCALDATA) / f"{SOURCE}_shadow_{day}.json"
 def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day)),"canonicalization_dropped":0,"canonicalization_drop_reasons":{},"prematch_dropped":0,"prematch_drop_reasons":{}}
+    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day)),"canonicalization_dropped":0,"canonicalization_drop_reasons":{},"prematch_dropped":0,"prematch_drop_reasons":{},"board_rows":0,"board_fixtures":0,"board_league_count":0,"board_leagues":{},"board_non_prematch_rows":0,"board_priced_rows":0,"board_truncated":None,"requested_limit":_requested_limit(),"league_filter_requested":bool(_requested_league()),"league_filter_effective":None}
     reset_state()
     sport = (os.environ.get("SHARPAPI_SPORT") or "").strip()
     if not sport:
@@ -378,22 +519,20 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["canonicalization_dropped"] = sum(_CANONICALIZATION_DROP_REASONS.values())
         stats["prematch_drop_reasons"] = dict(_PREMATCH_DROP_REASONS)
         stats["prematch_dropped"] = sum(_PREMATCH_DROP_REASONS.values())
+        # Board context travels with every capture, not only with a zero. A
+        # non-zero capture that saw 100 rows of a global board is also worth
+        # knowing about, because it says the narrowing has not taken effect.
+        stats.update(board_context())
+        limit = stats.get("requested_limit")
+        stats["board_truncated"] = (
+            bool(limit) and int(stats.get("board_rows") or 0) >= int(limit))
+        stats["league_filter_effective"] = _league_filter_effective(stats)
         # A recognizable but empty event list is a VALID empty result; only an
         # unrecognizable payload is a contract failure.
         if not shaped: stats.update(status="unavailable", reason="schema_unrecognized", blocker="sharpapi: snapshot schema not recognized; raw sample retained"); stats["sample_event"] = _scrub(str(payload)[:200]); return [], _set_diag(stats)
         stats["sa_raw"] = len({(r["home"], r["away"]) for r in rows}); stats["sa_matched"] = len(rows); stats["status"] = "ok" if rows else "empty"
         if not rows:
-            # Three different diagnoses hide behind "zero rows", and they
-            # prescribe opposite actions: an empty board means come back
-            # later, an all-live board means the capture ran too late for
-            # the prematch lane, and an all-dropped board means the market
-            # vocabulary moved. Naming which one is the whole value here.
-            if _PREMATCH_DROP_REASONS and not _CANONICALIZATION_DROP_REASONS:
-                stats["reason"] = "all_rows_live_or_stale"
-            elif _CANONICALIZATION_DROP_REASONS:
-                stats["reason"] = "all_rows_unmappable"
-            else:
-                stats["reason"] = "provider_empty_slate"
+            stats["reason"] = _zero_row_reason(stats)
         return rows, _set_diag(stats)
     except UpstreamBlocked as exc:
         msg = _scrub(str(exc)); stats["http_429"] = _429

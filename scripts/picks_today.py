@@ -79,6 +79,7 @@ from edgefactory.source_health import (
     daily_status_block,
     persist_daily_source_health,
     pinnapi_contract_observation,
+    sharpapi_board_observation,
     source_role_lines,
     record_bzzoiro_run,
     zero_row_reason,
@@ -6035,6 +6036,10 @@ def main():
             "can_price": int(sa_shadow_stats.get("sa_scored") or 0) > 0,
             "can_vote": False,
             "freshness_h": 0.0 if sa_shadow_stats.get("status") == "ok" else None,
+            # Board-shape context: how big the board was, how much of it was
+            # in-play, which competitions were on it, and whether the page
+            # hit its own limit. Without these a zero names no action.
+            **sharpapi_board_observation(sa_shadow_stats),
             "blocker": sa_shadow_stats.get("blocker"),
             "status": sa_shadow_stats.get("status"),
             "reason": sa_shadow_stats.get("reason"),
