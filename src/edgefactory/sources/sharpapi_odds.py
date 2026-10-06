@@ -69,6 +69,18 @@ def query_params(day: str | None = None) -> dict[str, str]:
         params[date_param] = str(day)
     return params
 KEY_ENV = "RAPIDAPI_KEY"
+# SharpAPI authenticates TWICE. RAPIDAPI_KEY gets the request through the
+# RapidAPI gateway; SharpAPI's OWN origin then checks a separate X-API-Key.
+# Sending only the gateway key is why 2026-10-06 (Actions run 37427532347)
+# returned 401 with SharpAPI's own envelope {"error":{"code":"disabled_api_key"}}
+# rather than the gateway's {"message":"Endpoint ... does not exist"}. Two
+# services, two error shapes: receiving the ORIGIN's proves the path routes
+# and the only remaining fault was the missing origin credential.
+#
+# Unset, the header is OMITTED ENTIRELY rather than sent blank -- a blank
+# credential is indistinguishable from a revoked one in the provider's logs
+# and turns a configuration gap into a false "bad key" diagnosis.
+ORIGIN_KEY_ENV = "SHARPAPI_KEY"
 LOCALDATA = Path(os.environ.get("EDGE_FACTORY_LOCALDATA", Path(__file__).resolve().parents[3] / "localdata"))
 MIN_INTERVAL_S = float(os.environ.get("EDGE_FACTORY_SHARPAPI_MIN_INTERVAL_S", "5"))
 MAX_CALLS_PER_RUN = int(os.environ.get("EDGE_FACTORY_SHARPAPI_MAX_CALLS", "1"))
@@ -86,6 +98,22 @@ def diagnostics() -> dict[str, Any]: return dict(_DIAG)
 def _set_diag(value: dict[str, Any]) -> dict[str, Any]: _DIAG.update(value); return value
 def _key() -> str | None:
     value = os.environ.get(KEY_ENV, "").strip(); return value or None
+
+def _origin_key() -> str | None:
+    """SharpAPI's own origin credential, sent as X-API-Key. None when unset."""
+    value = os.environ.get(ORIGIN_KEY_ENV, "").strip(); return value or None
+
+def auth_headers() -> dict[str, str]:
+    """Both credentials this source needs, omitting any that is unset.
+
+    The gateway key and the origin key are independent: the request must clear
+    the RapidAPI gateway AND then satisfy SharpAPI itself.
+    """
+    headers = {"X-RapidAPI-Key": _key() or "", "X-RapidAPI-Host": API_HOST}
+    origin = _origin_key()
+    if origin:
+        headers["X-API-Key"] = origin
+    return headers
 
 def odds_url(day: str | None = None) -> str:
     params = query_params(day)
@@ -110,7 +138,7 @@ def get_json(url: str, *, timeout: int = 30) -> tuple[int, Any, dict[str, str]]:
             delay = MIN_INTERVAL_S - (time.monotonic() - _last)
             if delay > 0: time.sleep(delay)
             _last = time.monotonic(); _calls += 1
-        req = urllib.request.Request(url, headers={"Accept":"application/json", "User-Agent":"EdgeFactory-cooperative-shadow/1.0 (+operator review)", "X-RapidAPI-Key": _key() or "", "X-RapidAPI-Host": API_HOST})
+        req = urllib.request.Request(url, headers={"Accept":"application/json", "User-Agent":"EdgeFactory-cooperative-shadow/1.0 (+operator review)", **auth_headers()})
         try:
             with urllib.request.urlopen(req, timeout=timeout) as response:
                 body = response.read(8_000_000).decode("utf-8", "replace")
@@ -133,9 +161,16 @@ def get_json(url: str, *, timeout: int = 30) -> tuple[int, Any, dict[str, str]]:
     raise UpstreamBlocked("sharpapi: exhausted retries")
 
 def _scrub(value: str) -> str:
-    """Never echo credential material into diagnostics or ledgers."""
-    secret = _key()
-    return value.replace(secret, "[REDACTED]") if secret else value
+    """Never echo credential material into diagnostics or ledgers.
+
+    BOTH credentials are redacted. The origin key is the one most likely to be
+    echoed back, because providers quote the offending credential in auth
+    errors and that error body is retained verbatim in the ledger.
+    """
+    for secret in (_key(), _origin_key()):
+        if secret:
+            value = value.replace(secret, "[REDACTED]")
+    return value
 
 
 def _num(x: object) -> float | None:
@@ -176,7 +211,7 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
                     line=market.get("line"),
                 )
                 if canonical is None:
-                    reason = failure.reason if failure is not None else "unmappable"
+                    reason = _failure.reason if _failure is not None else "unmappable"
                     _CANONICALIZATION_DROP_REASONS[reason] = (
                         _CANONICALIZATION_DROP_REASONS.get(reason, 0) + 1
                     )

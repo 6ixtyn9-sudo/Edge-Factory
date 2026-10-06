@@ -249,6 +249,76 @@ def _normalize_selection(market: str, selection: object) -> str:
     return raw
 
 
+def _market_entries(markets: Any) -> tuple[list[dict[str, Any]], str | None]:
+    """Flatten the markets container into a list of per-selection entries.
+
+    The provider sends this block in EITHER of two shapes:
+
+    * a LIST of entries, each naming its own market::
+
+          [{"market": "moneyline", "selection": "home", "price": 2.10}, ...]
+
+    * a DICT keyed by market name, whose values list the selections::
+
+          {"moneyline": [{"selection": "home", "price": 2.10}, ...]}
+
+    The dict form carries the market name in the KEY, not in the entry, so it
+    has to be injected into each selection. Reading it as a list instead -
+    which is what the adapter used to do - discarded every event that arrived
+    this way, while still reporting schema_match=True because the team names
+    parsed. That is the production signature: the source looks healthy and
+    delivers nothing.
+
+    Returns ``(entries, drop_reason)``. ``drop_reason`` is non-None when the
+    container itself is unusable, so the caller counts it rather than
+    dropping the event in silence.
+    """
+    if isinstance(markets, list):
+        entries = [m for m in markets if isinstance(m, dict)]
+        malformed = len(markets) - len(entries)
+        return entries, (f"market_entry_not_an_object_x{malformed}"
+                         if malformed else None)
+    if isinstance(markets, dict):
+        entries = []
+        unusable = 0
+        for name, value in markets.items():
+            # A single selection may arrive unwrapped rather than in a list.
+            selections = [value] if isinstance(value, dict) else value
+            if not isinstance(selections, list):
+                unusable += 1
+                continue
+            for selection in selections:
+                if not isinstance(selection, dict):
+                    unusable += 1
+                    continue
+                entry = dict(selection)
+                # Never overwrite a market the entry already names for itself.
+                if not entry.get("market") and not entry.get("name"):
+                    entry["market"] = name
+                entries.append(entry)
+        return entries, (f"market_group_unreadable_x{unusable}"
+                         if unusable else None)
+    # Neither shape. Record what actually arrived so the next outage names
+    # itself instead of looking like an empty slate.
+    return [], f"markets_container_not_list_or_dict:{type(markets).__name__}"
+
+
+def canonicalization_drop_reasons() -> dict[str, int]:
+    """Named reasons for rows discarded during the last parse, with counts.
+
+    Every ``continue`` on the parsing path increments one of these. A silent
+    discard is indistinguishable from a provider with nothing to offer, which
+    is precisely how this source went unnoticed while dropping everything.
+    """
+    return dict(_CANONICALIZATION_DROP_REASONS)
+
+
+def _count_drop(reason: str) -> None:
+    _CANONICALIZATION_DROP_REASONS[reason] = (
+        _CANONICALIZATION_DROP_REASONS.get(reason, 0) + 1
+    )
+
+
 def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], bool]:
     """Map a snapshot into price-ledger rows. Returns (rows, schema_match).
 
@@ -286,13 +356,24 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
         if isinstance(league, dict):
             league = league.get("name")
         markets = event.get("markets") or event.get("odds") or []
-        if not isinstance(markets, list):
-            continue
-        for market_entry in markets:
-            if not isinstance(market_entry, dict):
+        market_entries, container_problem = _market_entries(markets)
+        if container_problem:
+            _count_drop(container_problem)
+        for market_entry in market_entries:
+            raw_price = market_entry.get("price")
+            if raw_price is None:
+                raw_price = market_entry.get("odds")
+            price = _num(raw_price)
+            if price is None:
+                # The price sits under a key this adapter does not read, or is
+                # not a number. Either way it is a contract gap, not an absence
+                # of odds, and it must be visible as one.
+                _count_drop("price_unreadable")
                 continue
-            price = _num(market_entry.get("price") or market_entry.get("odds"))
-            if price is None or price <= 1.0:
+            if price <= 1.0:
+                # Decimal odds of 1.0 or less pay nothing; treat as a bad value
+                # rather than a real quote, but still account for it.
+                _count_drop("price_not_above_one")
                 continue
             raw_market = market_entry.get("market") or market_entry.get("name")
             raw_selection = market_entry.get("selection") or market_entry.get("label")

@@ -543,6 +543,78 @@ def _load_probe_receipt(day: str, *, localdata: Path | None = None) -> dict[str,
         return None
 
 
+# How long a receipt recording a FAILURE goes on suppressing re-probes.
+# Matched to the free-tier daily window: the cap this protects is a daily
+# one, so the suppression it justifies should be a daily one too - measured
+# from when the probe actually ran, not from the date it was asking about.
+PROBE_RECEIPT_FAILURE_TTL_S = 24 * 60 * 60
+
+
+def _receipt_records_failure(receipt: dict[str, Any]) -> bool:
+    """True when the receipt records a contract FAILURE rather than a success.
+
+    A receipt that confirms a working contract is a durable fact and may
+    suppress indefinitely. A receipt that records a failure is a perishable
+    observation about one moment: the endpoint may since have been fixed, the
+    key re-subscribed, the outage ended.
+    """
+    if receipt.get("contract_confirmed") is True:
+        return False
+    status = receipt.get("http_status")
+    if isinstance(status, bool):
+        return True
+    if isinstance(status, int) and 200 <= status < 300:
+        return False
+    return True
+
+
+def _receipt_probed_at(receipt: dict[str, Any]) -> datetime | None:
+    """When the probe RAN. Deliberately not the date it was asking about."""
+    raw = receipt.get("probed_at")
+    if not isinstance(raw, str) or not raw.strip():
+        return None
+    text = raw.strip()
+    if text.endswith(("Z", "z")):
+        text = text[:-1] + "+00:00"
+    try:
+        stamp = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    return stamp.replace(tzinfo=timezone.utc) if stamp.tzinfo is None else stamp
+
+
+def _probe_receipt_is_binding(
+    receipt: dict[str, Any] | None, *, now: datetime | None = None
+) -> bool:
+    """Whether this receipt should still suppress a re-probe.
+
+    The bug this replaces: ANY receipt file suppressed the probe forever, and
+    the file is named by the date it was asking about. The pipeline plans two
+    days ahead, so a probe that ran on Monday wrote a receipt for Wednesday -
+    and that receipt then blocked Wednesday's real probe from ever running.
+    A failure cached itself and then prevented the observation that would have
+    shown it had ended. Deleting the file did not help either: the next run
+    re-persisted it.
+
+    Staleness is therefore judged by ``probed_at`` - when the observation was
+    actually made - and never by the target date. A receipt with no usable
+    timestamp cannot prove it is recent, so it does not bind; re-probing costs
+    one call, while a wrong permanent block costs the source entirely.
+    """
+    if not isinstance(receipt, dict):
+        return False
+    if not _receipt_records_failure(receipt):
+        return True
+    probed_at = _receipt_probed_at(receipt)
+    if probed_at is None:
+        return False
+    age = ((now or datetime.now(timezone.utc)) - probed_at).total_seconds()
+    if age < 0:
+        # Stamped in the future: corrupt or a clock skew. Do not let it bind.
+        return False
+    return age < PROBE_RECEIPT_FAILURE_TTL_S
+
+
 def _persist_probe_receipt(
     day: str,
     *,
@@ -676,11 +748,16 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["bm_scored"] = len(committed)
         return list(committed), _set_diag(stats)
     receipt = _load_probe_receipt(day, localdata=localdata)
-    if receipt is not None:
+    if receipt is not None and _probe_receipt_is_binding(receipt):
         # A contract failure already consumed today's discovery observation.
         # Never re-run an endpoint ladder on a free-tier day; the operator can
         # inspect the scrubbed receipt or explicitly remove it after confirming
         # a new contract.
+        #
+        # Binding is now time-bounded. A failure receipt stops suppressing once
+        # it is older than the free-tier window, so a cached failure can no
+        # longer outlive the condition it described -- or block the very
+        # re-probe that would show the condition had cleared.
         stats.update(
             status="unavailable",
             reason=str(receipt.get("reason") or "probe_receipt"),

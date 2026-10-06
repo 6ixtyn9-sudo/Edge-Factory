@@ -455,10 +455,14 @@ def test_ambiguous_result_keys_are_counted_and_described(capsys):
         for e in rows:
             for hk, ak in at._exact_result_keys(e["home"], e["away"]):
                 key_to[(day, hk, ak)] = e
-    dropped, detail = at._drop_ambiguous_result_keys(key_to, entries)
-    assert dropped >= 1
-    # the operator gets the raw fixtures that collided, not just a number
-    collided = {name for _day, names in detail for name in names}
+    at._drop_ambiguous_result_keys(key_to, entries)
+    # the truncated key that covered both fixtures is gone from the map
+    assert ("2026-10-05", "mancheste", "arsenal") not in key_to
+    # the operator gets the raw fixtures that collided, not just a number.
+    # They are listed as superseded, not pending: each fixture still
+    # settles on its own full-width key, so no leg needs resolving.
+    collided = {name for _day, names in at.NARROW_KEY_SUPERSEDED
+                for name in names}
     assert "Manchester City vs Arsenal" in collided
     assert "Manchester United vs Arsenal" in collided
     # the unambiguous fixture is untouched

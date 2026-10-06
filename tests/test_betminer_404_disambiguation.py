@@ -141,14 +141,21 @@ def test_receipt_without_a_message_stays_null(tmp_path):
 
 
 def test_committed_receipts_are_still_readable():
-    """Schema 1 receipts on disk predate `provider_message`. They must keep
-    loading -- the free-tier no-re-probe guard depends on it."""
+    """Committed receipts must keep loading -- the free-tier no-re-probe
+    guard depends on it.
+
+    Receipts on disk now span BOTH generations: schema 1 predates
+    ``provider_message`` and carries None, while a schema 2 receipt written
+    by a later run carries the provider's own words. Both must load. The
+    field's presence is not what this test is about; readability is.
+    """
     for day in ("2026-10-03", "2026-10-06"):
         receipt = betminer._load_probe_receipt(day)
         if receipt is None:
             continue
         assert receipt.get("http_status") == 404
-        assert receipt.get("provider_message") is None
+        message = receipt.get("provider_message")
+        assert message is None or isinstance(message, str)
 
 
 # --------------------------------------------------------------------------

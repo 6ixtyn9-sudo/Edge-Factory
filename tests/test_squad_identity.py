@@ -242,9 +242,13 @@ def test_ambiguity_detector_still_drops_distinct_width_collision():
             for hk, ak in at._result_write_keys(row["home"], row["away"]):
                 key_to[(day, hk, ak)] = row["result"]
 
-    dropped, detail = at._drop_ambiguous_result_keys(key_to, entries)
-    assert dropped >= 1
-    collided = {name for _day, names in detail for name in names}
+    at._drop_ambiguous_result_keys(key_to, entries)
+    # The width-9 key covering both clubs must not survive in the map.
+    # It is reported as superseded rather than pending because both
+    # fixtures still settle on their own full-width key.
+    assert ("2026-10-05", "mancheste", "arsenal") not in key_to
+    collided = {name for _day, names in at.NARROW_KEY_SUPERSEDED
+                for name in names}
     assert "Manchester City vs Arsenal" in collided
     assert "Manchester United vs Arsenal" in collided
 

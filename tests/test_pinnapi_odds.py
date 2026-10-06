@@ -170,3 +170,104 @@ def test_diagnostics_never_leak_the_key(monkeypatch):
     # Header sanitization drops auth material.
     sanitized = pa._sanitize_headers({"X-RateLimit-Remaining": "4", "Authorization": "Bearer x"})
     assert "Authorization" not in sanitized
+
+
+# --- dict-shaped markets block (WO-1) -------------------------------------
+# The provider sends the markets block either as a list of entries that each
+# name their own market, or as a dict keyed by market name. Reading only the
+# list form discarded every event of the second shape while still reporting
+# schema_match=True, so the source looked healthy and delivered nothing.
+
+
+def _event(markets):
+    return {"events": [{"id": "e1", "home": "Arsenal", "away": "Chelsea",
+                        "start_at": "2026-10-07T18:00:00Z",
+                        "league": {"name": "Premier League"},
+                        "markets": markets}]}
+
+
+def test_dict_shaped_markets_block_yields_rows():
+    payload = _event({"moneyline": [
+        {"selection": "home", "price": 2.10},
+        {"selection": "draw", "price": 3.40},
+        {"selection": "away", "price": 3.20},
+    ]})
+    rows, schema = pa.parse_snapshot(payload, day="2026-10-07")
+    assert schema is True
+    assert len(rows) == 3
+    assert {r["selection"] for r in rows} == {"home", "draw", "away"}
+    assert {r["market"] for r in rows} == {"1x2"}
+    assert sorted(r["odds"] for r in rows) == [2.10, 3.20, 3.40]
+
+
+def test_dict_key_supplies_the_market_name():
+    """The market name lives in the key; without it every row is marketless."""
+    payload = _event({"moneyline": [{"selection": "home", "price": 2.10}]})
+    rows, _ = pa.parse_snapshot(payload, day="2026-10-07")
+    assert rows and rows[0]["market"] == "1x2"
+
+
+def test_entry_market_is_not_overwritten_by_its_group_key():
+    payload = _event({"ignored_group": [
+        {"market": "moneyline", "selection": "home", "price": 2.10}]})
+    rows, _ = pa.parse_snapshot(payload, day="2026-10-07")
+    assert rows and rows[0]["raw_market"] == "moneyline"
+
+
+def test_unwrapped_single_selection_is_read():
+    payload = _event({"moneyline": {"selection": "home", "price": 2.10}})
+    rows, _ = pa.parse_snapshot(payload, day="2026-10-07")
+    assert len(rows) == 1
+
+
+def test_list_shaped_markets_block_still_works():
+    """The original shape must keep parsing; this is a widening, not a swap."""
+    payload = _event([{"market": "moneyline", "selection": "home", "price": 2.10}])
+    rows, schema = pa.parse_snapshot(payload, day="2026-10-07")
+    assert schema is True and len(rows) == 1
+
+
+# --- every discard is counted ---------------------------------------------
+
+
+def test_unusable_markets_container_is_counted():
+    payload = _event("not-a-container")
+    rows, _ = pa.parse_snapshot(payload, day="2026-10-07")
+    reasons = pa.canonicalization_drop_reasons()
+    assert rows == []
+    assert reasons, "an event was discarded with no reason recorded"
+    assert any("markets_container" in k for k in reasons)
+    assert "str" in " ".join(reasons), "the reason should name what arrived"
+
+
+def test_price_under_an_unexpected_key_is_counted():
+    payload = _event([{"market": "moneyline", "selection": "home",
+                       "decimal": 2.10}])
+    rows, _ = pa.parse_snapshot(payload, day="2026-10-07")
+    assert rows == []
+    assert pa.canonicalization_drop_reasons().get("price_unreadable") == 1
+
+
+def test_implausible_price_is_counted_separately():
+    payload = _event([{"market": "moneyline", "selection": "home", "price": 1.0}])
+    rows, _ = pa.parse_snapshot(payload, day="2026-10-07")
+    assert rows == []
+    assert pa.canonicalization_drop_reasons().get(
+        "price_not_above_one") == 1
+
+
+def test_drop_reasons_reset_between_parses():
+    pa.parse_snapshot(_event("not-a-container"), day="2026-10-07")
+    assert pa.canonicalization_drop_reasons()
+    pa.parse_snapshot(
+        _event([{"market": "moneyline", "selection": "home", "price": 2.10}]),
+        day="2026-10-07")
+    assert pa.canonicalization_drop_reasons() == {}
+
+
+def test_a_good_row_survives_alongside_a_dropped_one():
+    payload = _event([{"market": "moneyline", "selection": "home", "decimal": 2.1},
+                      {"market": "moneyline", "selection": "away", "price": 3.2}])
+    rows, _ = pa.parse_snapshot(payload, day="2026-10-07")
+    assert len(rows) == 1 and rows[0]["selection"] == "away"
+    assert pa.canonicalization_drop_reasons().get("price_unreadable") == 1
