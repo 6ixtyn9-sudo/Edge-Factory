@@ -91,13 +91,31 @@ jobs:
       #   {"message":"Endpoint '/api/v1/odds' does not exist"}
       #
       # Vendor docs list the gateway-routed paths WITHOUT the /api/v1 prefix:
-      # /odds, /odds/best, /odds/delta, /events. '/odds' is therefore inferred
-      # from documentation, not yet observed returning 200 — if it also 404s the
-      # receipt now names the rejected path, so the next correction is evidenced
-      # rather than guessed. Override via the SHARPAPI_ENDPOINT secret.
+      # /odds, /odds/best, /odds/delta, /events.
+      #
+      # '/odds' is now CONFIRMED routed, not inferred. On 2026-10-06 (run
+      # 37427532347) it returned 401 with SharpAPI's own error envelope
+      # {"error":{"code":...}} rather than the gateway's {"message":"Endpoint
+      # ... does not exist"}. Two different services, two different error
+      # shapes: receiving the origin's proves the request reached SharpAPI,
+      # which proves the path resolves. Override via SHARPAPI_ENDPOINT.
       SHARPAPI_SPORT: ${{ secrets.SHARPAPI_SPORT || 'soccer' }}
       SHARPAPI_ENDPOINT: ${{ secrets.SHARPAPI_ENDPOINT || '/odds' }}
       SHARPAPI_LIMIT: ${{ secrets.SHARPAPI_LIMIT || '100' }}
+      # SharpAPI authenticates TWICE: RAPIDAPI_KEY gets the request through the
+      # gateway, then SharpAPI's own origin checks X-API-Key separately. The
+      # RapidAPI console for this listing declares Header Auth with a required
+      # X-API-Key, and the vendor docs agree (X-API-Key: sk_live_...).
+      #
+      # Sending only the gateway key is why 2026-10-06 returned
+      #   401 {"error":{"code":"disabled_api_key", ...
+      # That envelope is SharpAPI's own, not the gateway's "Endpoint does not
+      # exist" - which is the evidence that /odds routes correctly and the
+      # remaining fault was the missing origin credential.
+      #
+      # Set the repository secret SHARPAPI_KEY to the SharpAPI key. Unset, the
+      # header is omitted entirely rather than sent blank.
+      SHARPAPI_KEY: ${{ secrets.SHARPAPI_KEY }}
 
       # OddsPAPI bounded candidate-snapshot capture (PRICE-LANE-TEARDOWN-2026-10-03).
       # Capture is ENABLED by default here now that the key secret is configured.
