@@ -2150,7 +2150,7 @@ def _drop_ambiguous_result_keys(key_to: dict, entries: dict) -> tuple[int, list]
     NARROW_KEY_SUPERSEDED.extend(narrow_detail)
     AMBIGUOUS_PENDING_KEYS.clear()
     AMBIGUOUS_PENDING_KEYS.extend(pending_detail)
-    _report_narrow_key_supersession(superseded)
+    _report_narrow_key_supersession(superseded, narrow_detail)
     return dropped, detail
 
 
@@ -2164,14 +2164,40 @@ NARROW_KEY_SUPERSEDED: list = []
 AMBIGUOUS_PENDING_KEYS: list = []
 
 
-def _report_narrow_key_supersession(count: int) -> None:
-    """Counter for truncated keys refused in favour of the specific tier.
+def _report_narrow_key_supersession(count: int, detail: list) -> None:
+    """Counter plus named receipt for truncated keys refused in favour of
+    the specific tier.
 
     Kept separate from ``settlement_ambiguous_pending`` on purpose: these
     keys are replaced by a better one rather than lost, so folding them
     into the pending counter would report a repair as a regression.
+
+    The names are printed for the same reason the pending list prints
+    them. Once the specific tier exists, the pending counter goes to zero
+    for this class of key BY CONSTRUCTION, so a zero there proves
+    nothing on its own. Naming the keys that moved into this bucket is
+    what makes the repair checkable: an operator can see a key they
+    previously had to resolve by hand arrive here instead of vanishing.
+
+    Detail prints once per process, like the pending list, because the
+    settlement facts are reloaded several times per run.
     """
+    global _SUPERSEDED_DETAIL_PRINTED
+
     print(f"settlement_narrow_key_superseded={count}", file=sys.stderr)
+    if not detail or _SUPERSEDED_DETAIL_PRINTED:
+        return
+    _SUPERSEDED_DETAIL_PRINTED = True
+    for day, teams in detail[:5]:
+        print(f"!! SUPERSEDED NARROW KEY {day}: {teams} "
+              "— one truncated key over several real fixtures; "
+              "now settled on distinct wide keys", file=sys.stderr)
+    if len(detail) > 5:
+        print(f"   (+{len(detail) - 5} more superseded key(s); full list in "
+              "NARROW_KEY_SUPERSEDED)", file=sys.stderr)
+
+
+_SUPERSEDED_DETAIL_PRINTED = False
 
 
 def load_settled():
