@@ -7,7 +7,7 @@
 - immutable morning-baseline rows: 548
 - verified official late-slate additions: 0
 - regular-ledger-only legacy rows: 0
-- unsafe regular ledgers ignored: 28
+- unsafe regular ledgers ignored: 29
 - empty regular ledgers (morning-baseline coverage only): 0
 - settled picks: 520
 - eligible prior picks: 540
