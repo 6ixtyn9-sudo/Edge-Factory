@@ -2,6 +2,31 @@ Edge Factory — Handover
 
 Date: 2026-10-03
 
+2026-10-06 addendum — Pinnacle relay (pinnapi) request contract, shadow only
+
+Delivered
+
+- The Pinnacle price shadow had never returned a usable row because it asked the vendor for the wrong sport and authenticated the wrong way. It now requests soccer as `sport_id=1` (env-overridable) and sends the key as an `x-portal-apikey` request header; the old `key=` query form is retried once on 401/403 and the capture record states which form answered. The comment that recorded the wrong sport id as a captured panel receipt is deleted — nothing had been captured, and that false receipt froze the defect for four days.
+- The credential guard that refused unauthenticated requests used to test for `key=` in the URL, which would have rejected every header request and reported it as a dead vendor. It now asserts the request carries credentials by whichever mechanism is in use; the invariant is unchanged and the test pinning the old wording was rewritten with the reason recorded in it.
+- A zero-row answer is classified rather than collapsed: error envelope (a 200 whose body is an error, usually the credential), unrecognized shape (parser), empty board (sport id or a quiet hour), events without teams, or no usable rows. Each carries the observed payload shape and fixture counts. A 200 carrying an auth error no longer records the mechanism as having worked.
+- A rejected header is remembered for the run, so later captures spend one call rather than re-learning the same rejection.
+- Still shadow only: never a vote, no consensus or corroboration wiring, no gate, floor, cap, quorum, threshold or veto touched.
+
+Validation
+
+- Suite 1610 passed / 0 failed (baseline 1571); `scripts/verify_work_order.py` 14/14; `scripts/verify_wo7.py` 9/9. Test-function floor raised to 1445.
+- No live call was made — the sandbox has no network. Everything is proved against mocked responses plus a local imitation server exercising both auth mechanisms. **Live behaviour is unverified.**
+
+What the first real run answers, in one line
+
+Read the recorded auth mechanism first: header + rows = both fixes were needed; header + zero rows = auth was the bug and the sport id may still be wrong (the zero-row classification says which); query form answered = the panel guidance was wrong about REST and the sport number was the only real defect; neither = key, endpoint or vendor, not our code.
+
+Clock and ranking
+
+The trial key lapses 20 October 2026. This work ranks below the next run's free counter lines, the replay at `unresolved="loss"`, and rotating the two exposed API keys. Full evidence, and the brief as issued, in `docs/operator/archive/WO-8-PINNAPI-2026-10-06.md`.
+
+Also filed: ticket (j) politeness budgets are named for the run but enforced per capture (template-wide, five adapters); ticket (k) a history search must state its depth; and `docs/operator/DATED-CLAIMS.md`, a ledger making every dated claim in a code comment name what backs it.
+
 2026-10-03 operator-brief addendum — fail-closed prices, canonical donor joins, and production recut
 
 Delivered
