@@ -147,11 +147,107 @@ it changes live pricing behaviour and needs operator sign-off.
 
 ---
 
-## 5. The one lead with real volume
+## 5. RETRACTED — the "late capture" finding was an artifact
 
-`theoddsapi_capture_2026-10-04.json` — the operator's standing open question
-("why did auto mode mark only 2 of 24 shortlist fixtures due?") is now
-answered by the persisted receipts:
+**The scheduling finding originally published in this section is withdrawn. It
+was wrong.** It is left here, struck, because a retraction that deletes its own
+evidence teaches nobody anything.
+
+The claim was: `theoddsapi_capture_2026-10-04.json` shows
+`skip_reasons = {"kickoff_already_passed": 14, ...}` with
+`captured_at = 19:17 UTC`, therefore the capture runs too late and loses 14
+fixtures a day.
+
+**Why it is wrong.** `_write_receipt()` writes one file per *day*, overwritten
+by every run. The external cadence is SAST 09/12/15/18/21 (= 07/10/13/16/19
+UTC), so the receipt only ever shows the **last** run of the day. At 21:17 SAST
+"kickoff already passed" is the correct and expected verdict for a fixture that
+kicked off at 19:00 — and says nothing about whether the 09:00 run attempted it.
+
+The persistent `theoddsapi_attempts_<day>.json` ledger is *not* overwritten,
+and it settles the question:
+
+```
+2026-10-03   fail_at 07h x6 · 10h x2 · 13h x32 · 17h x11 · 22h x1
+             first_at 07h x1 · 13h x1 · 22h x5
+2026-10-04   fail_at 01h x1 · 04h x1 · 05h x1 · 10h x2 · 13h x7 · 16h x2 · 19h x9 · 22h x3
+```
+
+Attempts are spread across the entire day from 01h to 22h UTC. **The capture is
+not running late. There is no scheduling defect and no workflow change is
+needed.**
+
+Generalisable lesson: a per-day receipt that is overwritten in place cannot be
+read as a per-day summary. Only the append-style ledger can.
+
+---
+
+## 5b. What the ledger actually shows — and the real repair
+
+With the artifact removed, the attempt ledgers give the structural number over
+30 days:
+
+| | fixtures | share |
+|---|---:|---:|
+| shortlisted for pricing | 765 | — |
+| ever obtained a TheOddsAPI price | 87 | **11.4%** |
+| never priced | 678 | 88.6% |
+
+Attributing those failures by competition: **270 competitions never once
+obtained a price, against 40 that did.** The pick generator ranges across ~310
+competitions; the only execution-eligible board carries 49 keys.
+
+But the split inside those failures is the finding. `USA,Major League Soccer`
+failed 7 of 7 — while `soccer_usa_mls` sits in the catalogue. So does
+`soccer_netherlands_eredivisie` (`Nl1`, 11 failures),
+`soccer_poland_ekstraklasa` (`Pl1`), `soccer_norway_eliteserien` (`No1`) and —
+indefensibly — `soccer_epl`:
+
+```
+sport_key_for_league("EPL", sports)  ->  None
+```
+
+`sport_key_for_league` rejects any label under 4 characters after
+`_league_code` unless stage 1 lists it in `SHORT_LEAGUE_KEYS`. **That table had
+7 entries.** Every 2-3 character provider code in the archives — `EPL`, `L1`,
+`Nl1`, `Us1`, `De1`, `It1`, `Es1` — resolved to `None` and was reported
+`league not covered` without ever being requested.
+
+**Fixed in `c407609`**: 36 codes added, each verified three ways — key present
+in the catalogue, provider `title`/`description` confirms the tier, and the
+fixtures observed under that code in the committed archives are the right
+competition (`epl` → Arsenal/Man City, `l2` → Crawley/Barnet, `sc1` →
+Rangers/Celtic, `us1` → LAFC, `br2` → Fortaleza).
+
+Replayed over the same 30 ledgers:
+
+| | fixtures |
+|---|---:|
+| newly resolve to a sport key | **109** (~3.6/day) |
+| regressions (lost a key) | **0** |
+
+`efl` was deliberately left unmapped (ambiguous between `soccer_efl_champ` and
+`soccer_england_efl_cup`), and every genuinely absent competition still returns
+`None` — friendlies, AFCON qualification, CONCACAF, national leagues, lower
+tiers. None remains strictly preferred over a wrong-competition key.
+
+This **partially reinstates ranked-fix #3**, which §3 of the first version of
+this document withdrew. The withdrawal was right about the *mechanism* — there
+is no friendlies or AFCON SKU to buy, so 2026-10-06 itself is unchanged and
+remains a correct abstention — and wrong about the *scope*: a sixth of the
+unpriced slate was in competitions the provider already sells, lost to a
+7-entry lookup table.
+
+Credits are only spent on fixtures that now resolve, and usage was 56/1440 for
+the month. Quota is not a constraint.
+
+---
+
+## 6. (SUPERSEDED — see §5) The reading that produced the retracted claim
+
+Kept verbatim as the evidence trail for the §5 retraction. The numbers are
+real; the inference drawn from them was not, because this receipt is the
+last run of the day overwriting all earlier ones.
 
 ```
 candidate_fixtures = 30   attempted = 5   rows = 0
@@ -160,33 +256,39 @@ skip_reasons = {"kickoff_already_passed": 14, "retry_cooldown": 8,
 captured_at  = 2026-10-04T19:17:32+00:00
 ```
 
-**14 of 30 candidates were skipped because kickoff had already passed**, on a
-capture that ran at **19:17 UTC** — after most European kickoffs. 10-05 is the
-same shape (`kickoff_already_passed: 5`, capture at 19:17 UTC, `status:
-not_due`, zero attempts). 10-06 ran early, at 04:18 UTC, and lost only one
-fixture that way.
-
-That is a **scheduling** finding, not a coverage one, and it is the only lead
-here with double-digit fixture volume. It is a workflow-timing question, so it
-is reported rather than changed: the GitHub App cannot push
-`.github/workflows/`, and capture cadence is operator-owned.
+The operator's standing question ("why did auto mode mark only 2 of 24
+shortlist fixtures due?") is genuinely answered by the receipts, but the
+answer is §5b's: most candidates never resolved to a sport key at all, so
+they were never due.
 
 ---
 
-## 6. What I recommend
+## 7. What I recommend
 
-1. **Accept 2026-10-06 as a correct abstention.** No remediation is owed.
-2. **Investigate the 19:17 UTC capture slot** (§5) — 14 fixtures/day lost to
-   late scheduling dwarfs everything else measured here. Operator-owned.
-3. **Expect no-bet days during international breaks** and consider whether
-   generating picks for competitions no execution-eligible source prices is
-   worth the funnel noise.
-4. **Hold the variant-union alias fix** (§4) until something else makes it
-   worth a pricing-behaviour change; +3 picks does not justify it alone.
-5. **Do not pursue** TheOddsAPI league-key mapping (§3) — withdrawn.
+1. **Accept 2026-10-06 as a correct abstention.** No remediation is owed; the
+   slate was an international break and the floor did its job.
+2. **Ship `c407609`** (short league codes) — 109 fixtures over 30 days move
+   from never-requested to requestable, 0 regressions, no gate touched. This
+   is the one item here with real volume.
+3. **No workflow change.** §5 is retracted; capture cadence is fine.
+4. **Expect no-bet days during international breaks.** Consider whether
+   generating picks in competitions no execution-eligible source prices is
+   worth the funnel noise — a reporting question, not a gate.
+5. **Hold the variant-union alias fix** (§4): +3 picks over 1,298 does not
+   justify a pricing-behaviour change on its own.
+6. **Do not pursue** friendlies/AFCON/CONCACAF key mapping (§3) — those SKUs
+   do not exist.
 
 ## Verification
 
-- `PYTHONPATH=src python -m pytest -q` → **1410 passed**
+- `PYTHONPATH=src python -m pytest -q` → **1457 passed**
 - `git diff --stat origin/main...HEAD -- .github/workflows/ localdata/` → empty
-- All numbers above are reproducible from committed receipts and archives.
+- Every number is reproducible from committed receipts and archives; the
+  replays use the production resolver and matcher, not reimplementations.
+
+## Corrections log
+
+| § | claim | status |
+|---|---|---|
+| 3 | "no keys to map, fix #3 impossible" | **partially reinstated** by §5b — true for friendlies/AFCON, false for the 36 short codes |
+| 5 | "capture runs at 19:17 UTC, loses 14 fixtures/day" | **retracted** — artifact of an overwritten per-day receipt |
