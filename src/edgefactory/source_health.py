@@ -245,6 +245,31 @@ def build_daily_source_health(
                 "pa_scored": int(obs.get("pa_scored") or obs.get("pa_matched") or 0),
                 "pa_matched": int(obs.get("pa_matched") or 0),
             })
+            # The request-contract discriminators. These decide what a zero
+            # MEANS - which auth mechanism answered, and which kind of zero
+            # it was - and until now they existed only in the per-date
+            # shadow ledger, which .gitignore excludes. The 2026-10-06 run
+            # proved the cost: the vendor answered, and the answer did not
+            # survive the run. Small, scrubbed fields only; never the key.
+            shape = obs.get("response_shape") or {}
+            row.update({
+                "sport_id": obs.get("sport_id"),
+                "event_type": obs.get("event_type"),
+                "auth_mechanism": obs.get("auth_mechanism"),
+                "auth_attempts": [
+                    {"auth": a.get("auth"), "status": a.get("status")}
+                    for a in (obs.get("auth_attempts") or [])
+                    if isinstance(a, dict)
+                ],
+                "zero_row_kind": obs.get("zero_row_kind"),
+                "response_shape_summary": {
+                    k: shape.get(k) for k in
+                    ("event_count", "events_with_teams", "events_with_markets",
+                     "envelope_found", "events_key", "markets_type",
+                     "error_blames_credential")
+                    if shape.get(k) is not None
+                } or None,
+            })
         elif name == "sharpapi_odds":
             row.update({
                 "sa_raw": int(obs.get("sa_raw") or 0),

@@ -14,12 +14,18 @@ Delivered
 
 Validation
 
-- Suite 1610 passed / 0 failed (baseline 1571); `scripts/verify_work_order.py` 14/14; `scripts/verify_wo7.py` 9/9. Test-function floor raised to 1445.
-- No live call was made — the sandbox has no network. Everything is proved against mocked responses plus a local imitation server exercising both auth mechanisms. **Live behaviour is unverified.**
+- Suite 1610 passed / 0 failed; `scripts/verify_work_order.py` 14/14; `scripts/verify_wo7.py` 9/9. Test-function floor raised to 1446.
+- **Live behaviour is now verified** by production run 37477487160 (2026-10-06, both jobs green). The earlier note in this section that no live call had been made is superseded; it was true when written and is not true now.
 
-What the first real run answers, in one line
+What the first real run answered
 
-Read the recorded auth mechanism first: header + rows = both fixes were needed; header + zero rows = auth was the bug and the sport id may still be wrong (the zero-row classification says which); query form answered = the panel guidance was wrong about REST and the sport number was the only real defect; neither = key, endpoint or vendor, not our code.
+Observed, from the committed health record for 2026-10-06: the vendor replied HTTP 200 to a soccer prematch request, and the zero was classified as fixtures present but no usable price. That classification is only reachable when events came back carrying team names. So the credential was accepted and the sport number was right — both defects this work order existed to fix are fixed in production, confirmed against the live vendor and not only against mocks.
+
+Inferred, not yet confirmed: no drop reason was counted at all. Every named discard path increments a counter, so zero prices with zero discards points at fixtures arriving with no markets block rather than at a parser that failed to read one — meaning the prematch listing names matches but does not price them. Confirming this needs the recorded payload shape.
+
+What the run did not deliver, and why: the fields that confirm it — which auth mechanism answered, the attempt sequence, the payload shape — were written only to the per-date shadow ledger, which `.gitignore` excludes by design. The vendor answered and the answer did not survive the run. The discriminators are now carried in the committed health record as well, so the next run reports them without an artifact download. This was the third time evidence existed in a place that did not survive; the rule it earns is that a diagnostic is not delivered until it reaches somewhere durable.
+
+Extending the parser to read a prematch prices endpoint is now defensible, because a real sample exists. It is a new operator decision and deliberately not part of this work order.
 
 Clock and ranking
 
