@@ -282,6 +282,15 @@ def _carries_credentials(url: str, headers: dict[str, str]) -> bool:
 
 _ERROR_ENVELOPE_KEYS = ("error", "errors", "message", "detail", "error_message",
                         "errorMessage", "msg", "status_message")
+# Phrases that mean "your credential was refused". This list matches PROSE
+# from a vendor whose wording nobody here has seen, so it is deliberately
+# short and deliberately fail-safe: an unmatched body (say
+# {"status":"ERR","code":4001}) is recorded as an error envelope, no
+# fallback fires, and no mechanism is claimed. That is the safe direction.
+# DO NOT add more phrases before a real run has shown the vendor's actual
+# wording - the scrubbed body is recorded precisely so the first run
+# teaches it. Guessing phrasings here is the same mistake as inventing a
+# parser for a payload nobody has seen.
 _AUTH_FLAVOURED = re.compile(
     r"api[_ -]?key|apikey|unauthor|unauthenticat|forbidden|invalid\s+key|"
     r"\btoken\b|credential|\bauth\b|not\s+permitted|access\s+denied", re.I)
