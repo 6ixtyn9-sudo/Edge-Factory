@@ -55,3 +55,8 @@ named no receipt, so no ledger would have stopped it. Only review did.
 
 A count or a ledger is a tripwire against gutting, not a guarantee against
 substitution.
+
+It also says nothing about the **scope** of a measurement, which is a
+separate failure: a scan reporting "clean" from inside a six-commit slice
+of a 1,528-commit history is accurate, reproducible, and wrong in the way
+that matters. Provenance is this file's job; scope is ticket (k).

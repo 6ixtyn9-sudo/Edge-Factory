@@ -441,6 +441,31 @@ state the decision for the metered vendors explicitly. No gate, floor,
 quorum or threshold is involved.
 
 
+## (k) Standing rule: a history search states its depth
+
+Not a work item — a rule, written here because the last place it was
+written was a session transcript and transcripts do not survive into the
+next session.
+
+**Any search over git history asserts the clone is not shallow first, or
+states its depth in the result.**
+
+On 2026-10-06 a sandbox clone held six commits of a 1,528-commit history.
+A credential scan run inside it returned "clean" — correctly, for six
+commits — and the result carried nothing that said six. This is worse than
+an unsupported claim: re-running the scan reproduces the same answer with
+the same confidence, so re-derivation does not catch it. Only the scope
+does, and only if the scope travels with the number.
+
+`git rev-parse --is-shallow-repository` is the whole check. The same
+engagement had already been caught by this once, when a shallow clone made
+a history look destroyed and nearly produced a loss report.
+
+Same shape as the dated-claims ledger (`docs/operator/DATED-CLAIMS.md`),
+aimed one step further back: that ledger makes a claim carry its
+provenance, this makes a measurement carry its scope.
+
+
 ## INTAKE INBOX (standing queue)
 
 - **KDobrev-Pinnacle** — failover peer only; family `pinnacle`; adopt only if
