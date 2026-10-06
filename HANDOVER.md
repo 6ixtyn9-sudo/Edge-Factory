@@ -18,7 +18,7 @@ Delivered, in commit e95784b
 
 Validation
 
-- Suite 1688 passed / 0 failed; both verifiers pass at 14/14 and 9/9. Test functions 1473 to 1521, none removed; the deletion tripwire was raised to 1521 and watched to fail when a test was disabled. The tripwire number is measured the way the verifier itself counts, which is narrower than a repo-wide search and was off by one against it - the check's own metric is the authority. Four guards were found inert across these rounds and all four were repaired: three in the previous round, and a census cap whose test padded names so far past the cut that every one of them collapsed into a single entry, making the cap unreachable. In that last case the mutation was faithful and the test was wrong, which is the distinction worth preserving.
+- Suite 1691 passed / 0 failed; both verifiers pass at 14/14 and 9/9. Test functions 1473 to 1524, none removed; the deletion tripwire was raised to 1524 and watched to fail when a test was disabled. The tripwire number is measured the way the verifier itself counts, which is narrower than a repo-wide search and was off by one against it - the check's own metric is the authority. Four guards were found inert across these rounds and all four were repaired: three in the previous round, and a census cap whose test padded names so far past the cut that every one of them collapsed into a single entry, making the cap unreachable. In that last case the mutation was faithful and the test was wrong, which is the distinction worth preserving.
 - Each new guard was broken on purpose, watched to fail, and restored. That includes the ambiguity rule, the stale-count reset, the pipeline forwarding, the secret boundary, the refusal-group split and its precedence.
 - Three guards were found inert by that exercise and none was left that way. The third is the most instructive: a wiring check written as a text search passed with the wiring removed, because the same keyword already appeared elsewhere in the file for a different source. It now matches the call itself rather than the text, which is the difference between a guard and a decoration.
 - Two guards were found inert by that exercise and were not left that way. One let the breakdowns be removed from the pipeline while a record-level test went on passing — the same wiring-versus-capability gap as before, one layer down. The other could not tell the census implementation from the defective one it replaced. Both now fail against the real defect, the second checked by restoring the actual earlier implementation rather than an approximation of it.
@@ -2346,6 +2346,29 @@ Deferred (recorded, not in scope):
 
 ---
 
+
+### A hundred rows on this board is five matches, not a hundred
+
+The array the vendor returns holds one record per price - fixture, book,
+market, selection - so the row count and the match count are different
+measurements. The parameter holding them was called "events", and that
+name was believed over the docstring directly beneath it, producing a
+written claim that the board carried a hundred events. It carried five
+fixtures; a single under-21 qualifier accounted for sixty-seven rows.
+
+This matters because it reverses the verdict. A hundred matches none of
+which are ours would be damning evidence about coverage and the answer
+would be to stop paying for the source. Five in-play strangers is a
+filtering problem and the answer is to narrow the request and try again.
+The recommendation did not change, but it was one run from doing so.
+
+*Observed:* both counts were already recorded side by side and both
+already reached the committed record, the match count measured across
+the whole board before any refusal. *Inferred:* nothing was missing from
+the instrument - what was missing was a test able to tell the counts
+apart, because every synthetic board in the suite used one row per
+fixture, the one shape where the two numbers agree. The suite now
+carries the real board from that day.
 
 ### The configured page limit is honoured, contrary to a stale code note
 
