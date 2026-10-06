@@ -325,3 +325,34 @@ def test_pinnapi_request_contract_survives_into_the_committed_health_row():
     assert row["response_shape_summary"]["event_count"] == 42
     # the full payload sample is NOT dragged into the committed row
     assert "response_shape" not in row
+
+
+def test_pinnapi_contract_helper_names_every_discriminator():
+    """One list, so the passthrough and the row cannot drift apart."""
+    out = source_health.pinnapi_contract_observation({
+        "sport_id": 1, "event_type": "prematch", "auth_mechanism": "query",
+        "auth_attempts": [{"auth": "header", "status": 401}],
+        "zero_row_kind": "empty_board", "response_shape": {"event_count": 0},
+    })
+    assert set(out) == set(source_health.PINNAPI_CONTRACT_FIELDS)
+    assert out["auth_mechanism"] == "query"
+    # absent fields are present as None rather than missing, so a reader can
+    # tell "not recorded" from "key never existed"
+    assert source_health.pinnapi_contract_observation({})["auth_mechanism"] is None
+
+
+def test_the_caller_actually_forwards_the_pinnapi_contract_fields():
+    """The gap that cost the 2026-10-06 answer.
+
+    The health observation for this source is hand-built field by field, so
+    a field the adapter records reaches the committed row only if the
+    caller forwards it. The row-level passthrough passed its own test while
+    the real pipeline still dropped everything, because the test fed the
+    builder directly. This asserts the wiring, not the capability.
+    """
+    src = (ROOT / "scripts" / "picks_today.py").read_text(encoding="utf-8")
+    assert "pinnapi_contract_observation(pa_shadow_stats)" in src, (
+        "picks_today must forward the pinnapi request-contract fields into "
+        "the health observation; without this the discriminators exist only "
+        "in the gitignored shadow ledger and leave with the runner"
+    )
