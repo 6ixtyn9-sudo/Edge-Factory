@@ -131,6 +131,14 @@ def _freshness_value(observation: dict[str, Any]) -> float | None:
         return None
 
 
+def _int_or_zero(value: object) -> int:
+    """Coerce a reported counter to a non-negative int; never raise."""
+    try:
+        return max(0, int(value or 0))
+    except (TypeError, ValueError):
+        return 0
+
+
 def build_daily_source_health(
     day: str,
     observations: dict[str, dict[str, Any]] | None = None,
@@ -186,6 +194,13 @@ def build_daily_source_health(
             # a header or a payload - so they can never carry a credential.
             "reason": str(obs.get("reason")) if obs.get("reason") else None,
             "status": str(obs.get("status")) if obs.get("status") else None,
+            # Rows the adapter fetched and then discarded while parsing.
+            # Several adapters already counted this and wrote it only into a
+            # per-source ledger nobody opens, so a source could discard every
+            # row it fetched and still print a bare zero -- indistinguishable
+            # from a provider with nothing on. Carried for every source.
+            "canonicalization_dropped": _int_or_zero(
+                obs.get("canonicalization_dropped")),
         }
         # Candidate-specific counters are deliberately retained in the daily
         # contract so an operator can distinguish an empty slate from a parser
@@ -300,6 +315,22 @@ ROLE_VERDICT_SOURCES: dict[str, tuple[str, ...]] = {
 }
 
 
+# Reason tokens must state what was OBSERVED, never infer a cause the
+# evidence cannot carry. A label that asserts a cause sends the operator to
+# fix the wrong thing, and -- worse -- stops them looking at the right one.
+REASON_HTTP_401_AUTH = "http_401_auth"
+# 403 means "refused", not "bad key". A live credential hitting an endpoint
+# outside its plan returns the same code as a dead one.
+REASON_HTTP_403_PLAN_OR_AUTH = "http_403_plan_or_auth"
+# Replaces the former "valid empty" token, which asserted the provider
+# genuinely had nothing. All that is actually observed is: it answered, and
+# no rows survived parsing. Those are different claims with opposite fixes.
+REASON_HTTP_200_ZERO_ROWS = "http_200_zero_rows_after_parse"
+# A source that was rate-limited must say so on its own health line rather
+# than printing a bare zero.
+REASON_HTTP_429_QUOTA = "http_429_quota"
+
+
 def zero_row_reason(
     status: object,
     http_statuses: object = (),
@@ -310,26 +341,40 @@ def zero_row_reason(
     Operator-facing triage only: the token names the transport outcome, never
     a key, a header, a URL or any part of a payload.
 
-    * ``http_403_auth`` / ``http_401_auth`` - the credential was rejected.
+    * ``http_401_auth`` - the credential was rejected outright.
+    * ``http_403_plan_or_auth`` - 403 is ambiguous and must stay ambiguous
+      here. It is returned both for a dead credential AND for a live
+      credential calling an endpoint its plan does not include. Bzzoiro
+      demonstrated the second case: the same token returned best_results=12
+      on a sibling call in the same run while the comparison endpoint 403'd.
+      Reporting that as plain "auth" sends the operator to rotate a key that
+      is already fine.
     * ``credential_rejected_auth`` - auth failure with no observed code.
-    * ``valid_empty_http_200`` - authenticated, answered, returned nothing.
-      Deliberately distinct from a malformed or unavailable response: an
-      empty 200 is a working integration with no rows today.
+    * ``http_200_zero_rows_after_parse`` - authenticated, answered, and
+      nothing survived parsing. States the OBSERVATION only. The previous
+      "valid empty" token asserted a CAUSE - that the provider legitimately
+      had nothing - which this evidence cannot support and which was wrong
+      for Pinnacle for days while its parser discarded every row. A
+      zero-row 200 and a genuinely empty slate are the same transport
+      outcome and opposite faults.
     * ``http_429_quota`` / ``quota_exhausted`` - rate/plan limit.
     """
     state = str(status or "").strip().lower()
     codes = [int(code) for code in (http_statuses or []) if str(code).isdigit()]
     if state == "auth":
-        for code in (403, 401):
-            if code in codes:
-                return f"http_{code}_auth"
+        # 401 is unambiguous: the credential was rejected. 403 is not, and the
+        # label must not pretend otherwise - see the docstring.
+        if 401 in codes:
+            return REASON_HTTP_401_AUTH
+        if 403 in codes:
+            return REASON_HTTP_403_PLAN_OR_AUTH
         return "credential_rejected_auth"
     if state == "quota":
         return "http_429_quota" if 429 in codes else "quota_exhausted"
     if state == "cooldown":
         return "cooldown_after_429"
     if state == "empty":
-        return "valid_empty_http_200" if (200 in codes or not codes) else "empty_response"
+        return REASON_HTTP_200_ZERO_ROWS if (200 in codes or not codes) else "empty_response"
     if state == "not_run":
         return "credential_absent_not_run"
     if state == "unavailable":
@@ -377,6 +422,23 @@ _HEALTHY_ROLE_REASON: dict[str, str] = {
     "boggio": "average_price_donor",
     "betbetter": "fair_price_donor",
 }
+
+
+def _dropped_token(row: dict[str, Any]) -> str:
+    """``/dropped<N>`` when rows were discarded during parsing, else "".
+
+    Several adapters already counted their own discards and wrote the number
+    into a per-source ledger nobody opens. Pinnacle was discarding every row
+    it fetched for days while its health line printed a bare zero, which is
+    indistinguishable from a provider with nothing on. Surfacing the count
+    where the operator actually looks is the whole point: a source that
+    fetched plenty and kept none is a parser fault, not a quiet slate.
+    """
+    try:
+        dropped = int(row.get("canonicalization_dropped") or 0)
+    except (TypeError, ValueError):
+        return ""
+    return f"/dropped{dropped}" if dropped > 0 else ""
 
 
 def _zero_reason(row: dict[str, Any], raw: int) -> str:
@@ -463,29 +525,33 @@ def daily_status_block(day: str) -> str:
             )
             continue
         if name == "oddspapi_odds":
+            # oddspapi printed a bare "raw0" through four days of hard 429s
+            # with no reason attached, which is why nobody looked at it.
+            reason = _zero_reason({**row, '_source_name': 'oddspapi_odds'},
+                                  int(row.get('op_raw') or 0))
             tokens.append(
                 f"oddspapi=raw{row.get('op_raw', 0)}/usable{row.get('op_usable', 0)}"
-                f"/matched{row.get('op_matched', 0)}"
+                f"{reason}{_dropped_token(row)}/matched{row.get('op_matched', 0)}"
             )
             continue
         if name == "betminer":
-            tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}{_zero_reason({**row, '_source_name': 'betminer'}, int(row.get('bm_raw') or 0))}/bm_matched{row.get('bm_matched', 0)}")
+            tokens.append(f"betminer=bm_raw{row.get('bm_raw', 0)}/bm_scored{row.get('bm_scored', 0)}{_zero_reason({**row, '_source_name': 'betminer'}, int(row.get('bm_raw') or 0))}{_dropped_token(row)}/bm_matched{row.get('bm_matched', 0)}")
             continue
         if name == "pinnapi_odds":
             reason = _zero_reason({**row, '_source_name': 'pinnapi_odds'}, int(row.get('pa_raw') or 0))
             tokens.append(
                 f"pinnapi=pa_raw{row.get('pa_raw', 0)}/pa_matched{row.get('pa_matched', 0)}"
-                f"{reason}/pa_scored{row.get('pa_scored', 0)}"
+                f"{reason}{_dropped_token(row)}/pa_scored{row.get('pa_scored', 0)}"
             )
             continue
         if name == "betbetter":
-            tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}{_zero_reason({**row, '_source_name': 'betbetter'}, int(row.get('bb_raw') or 0))}/bb_matched{row.get('bb_matched', 0)}")
+            tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}{_zero_reason({**row, '_source_name': 'betbetter'}, int(row.get('bb_raw') or 0))}{_dropped_token(row)}/bb_matched{row.get('bb_matched', 0)}")
             continue
         if name == "sharpapi_odds":
-            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason({**row, '_source_name': 'sharpapi_odds'}, int(row.get('sa_raw') or 0))}/sa_scored{row.get('sa_scored', 0)}")
+            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason({**row, '_source_name': 'sharpapi_odds'}, int(row.get('sa_raw') or 0))}{_dropped_token(row)}/sa_scored{row.get('sa_scored', 0)}")
             continue
         if name == "boggio":
-            tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason({**row, '_source_name': 'boggio'}, int(row.get('bg_raw') or 0))}/bg_matched{row.get('bg_matched', 0)}")
+            tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason({**row, '_source_name': 'boggio'}, int(row.get('bg_raw') or 0))}{_dropped_token(row)}/bg_matched{row.get('bg_matched', 0)}")
             continue
         if name == "forebet":
             tokens.append(
