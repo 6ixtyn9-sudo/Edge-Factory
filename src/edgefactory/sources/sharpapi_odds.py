@@ -205,6 +205,11 @@ _BOARD_CONTEXT: dict[str, Any] = {}
 # recognise a global board, short enough that no payload gets archived.
 _MAX_LEAGUES_RECORDED = 12
 _MAX_LEAGUE_NAME_CHARS = 48
+# Team names are two per row, so the cap is larger than the competition
+# one but still a census: enough to recognise our own card written the
+# vendor's way, never enough to archive a board.
+_MAX_TEAM_NAMES_RECORDED = 40
+_MAX_TEAM_NAME_CHARS = 40
 
 
 def board_context() -> dict[str, Any]:
@@ -223,15 +228,42 @@ def _league_token(value: object) -> str:
     return re.sub(r"[^a-z0-9]+", "", str(value or "").strip().lower())
 
 
+def _bounded_census(counts: dict[str, int], *, limit: int, width: int) -> dict[str, int]:
+    """Rank on the full name, cap, and only then shorten.
+
+    Shortening first merges names that share a long prefix and throws one
+    of the counts away with them. Adding on collision keeps the total
+    honest when two names are still identical once shortened.
+    """
+    ranked = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))[:limit]
+    out: dict[str, int] = {}
+    for name, count in ranked:
+        short = name[:width]
+        out[short] = out.get(short, 0) + count
+    return out
+
+
 def _record_board(fixtures: set[tuple[str, str]], leagues: dict[str, int],
-                  *, priced_rows: int) -> None:
+                  teams: dict[str, int], *, priced_rows: int) -> None:
     """Store what the board carried, bounded for a committed artefact."""
-    ranked = sorted(leagues.items(), key=lambda kv: (-kv[1], kv[0]))
     _BOARD_CONTEXT.update({
         "board_fixtures": len(fixtures),
         "board_league_count": len(leagues),
-        "board_leagues": {name[:_MAX_LEAGUE_NAME_CHARS]: count
-                          for name, count in ranked[:_MAX_LEAGUES_RECORDED]},
+        "board_leagues": _bounded_census(leagues, limit=_MAX_LEAGUES_RECORDED,
+                                         width=_MAX_LEAGUE_NAME_CHARS),
+        # The vendor's own spelling of the sides. This is what makes a zero
+        # overlap answerable after the fact: the join key is an exact match
+        # on a compacted string plus a small hand-curated alias table built
+        # against the sources we already run, and this vendor's naming has
+        # never been exercised against it. So "none of our fixtures matched"
+        # has two causes with opposite remedies - the board genuinely does
+        # not carry our card, or it carries it under names the table does
+        # not fold. Recording the names lets the artefact settle which,
+        # without committing to a looser matcher before a real board has
+        # ever been seen.
+        "board_team_count": len(teams),
+        "board_team_names": _bounded_census(teams, limit=_MAX_TEAM_NAMES_RECORDED,
+                                            width=_MAX_TEAM_NAME_CHARS),
         "board_non_prematch_rows": sum(_PREMATCH_DROP_REASONS.values()),
         "board_priced_rows": priced_rows,
     })
@@ -307,6 +339,7 @@ def parse_flat_rows(events: list[Any], *, day: str,
     stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     fixtures: set[tuple[str, str]] = set()
     leagues: dict[str, int] = {}
+    teams: dict[str, int] = {}
     card_keys = set(card_keys or ())
     seen_card: set[tuple[str, str]] = set()
     seen_reversed: set[tuple[str, str]] = set()
@@ -344,6 +377,8 @@ def parse_flat_rows(events: list[Any], *, day: str,
         # that is the difference between "the filter matched nothing" and
         # "the filter was ignored and we got the whole world".
         fixtures.add((home, away))
+        for side in (home, away):
+            teams[side] = teams.get(side, 0) + 1
         league_name = _text(row.get("league")) or _text(row.get("league_ref"))
         if league_name:
             leagues[league_name] = leagues.get(league_name, 0) + 1
@@ -379,7 +414,7 @@ def parse_flat_rows(events: list[Any], *, day: str,
                      "league": _text(row.get("league")) or _text(row.get("league_ref")),
                      "event_uuid": _text(row.get("event_uuid")),
                      "named_bookmaker": True, "captured_at": stamp})
-    _record_board(fixtures, leagues, priced_rows=len(rows))
+    _record_board(fixtures, leagues, teams, priced_rows=len(rows))
     _BOARD_CONTEXT.update({
         "card_fixture_count": len(card_keys),
         "card_fixtures_on_board": len(seen_card),
@@ -405,6 +440,7 @@ def parse_snapshot(payload: Any, *, day: str,
     _BOARD_CONTEXT = {"board_rows": 0, "board_fixtures": 0,
                       "board_league_count": 0, "board_leagues": {},
                       "board_non_prematch_rows": 0, "board_priced_rows": 0,
+                      "board_team_count": 0, "board_team_names": {},
                       "card_fixture_count": 0, "card_fixtures_on_board": 0,
                       "card_fixtures_reversed": 0, "card_priced_rows": 0,
                       "card_prematch_drop_reasons": {},
@@ -423,6 +459,7 @@ def parse_snapshot(payload: Any, *, day: str,
     rows: list[dict[str, Any]] = []; shaped = not events; stamp = datetime.now(timezone.utc).isoformat(timespec="seconds")
     fixtures: set[tuple[str, str]] = set()
     leagues: dict[str, int] = {}
+    teams: dict[str, int] = {}
     for event in events:
         if not isinstance(event, dict): continue
         home = event.get("home") or event.get("home_team"); away = event.get("away") or event.get("away_team")
@@ -432,6 +469,8 @@ def parse_snapshot(payload: Any, *, day: str,
         if not home or not away or not isinstance(books, list): continue
         shaped = True
         fixtures.add((str(home).strip(), str(away).strip()))
+        for side in (str(home).strip(), str(away).strip()):
+            teams[side] = teams.get(side, 0) + 1
         league_name = _text(event.get("league")) or _text(event.get("league_ref"))
         if league_name:
             leagues[league_name] = leagues.get(league_name, 0) + 1
@@ -457,7 +496,7 @@ def parse_snapshot(payload: Any, *, day: str,
                     )
                     continue
                 rows.append({"source": SOURCE, "date": day, "home": str(home).strip(), "away": str(away).strip(), "kickoff": event.get("kickoff") or event.get("start_at"), "market": canonical.market, "selection": canonical.selection, "line": canonical.line, "raw_market": raw_market, "raw_selection": raw_selection, "odds": price, "book": bookmaker, "bookmaker": bookmaker, "odds_kind": "bookmaker", "named_bookmaker": True, "captured_at": stamp})
-    _record_board(fixtures, leagues, priced_rows=len(rows))
+    _record_board(fixtures, leagues, teams, priced_rows=len(rows))
     return rows, shaped
 
 def _status(code: int | None) -> str:
@@ -566,11 +605,18 @@ def _zero_row_reason(stats: dict[str, Any]) -> str:
     # board our fixtures are trivially absent, and saying so would dress a
     # quiet slate up as a coverage finding and send the operator to narrow
     # a request that returned nothing to narrow.
+    # The token names the OBSERVATION - nothing of ours matched - and not a
+    # cause. Two causes produce it and they have opposite remedies: the
+    # board does not carry our card, or it carries it under names our join
+    # key does not fold. That key is an exact match on a compacted string
+    # plus a small curated alias table, and this vendor has never been
+    # exercised against it, so the naming case is the likelier one on first
+    # contact. The recorded team names are what settle it after the run.
     if int(stats.get("card_fixture_count") or 0) and int(stats.get("board_rows") or 0):
         if not int(stats.get("card_fixtures_on_board") or 0):
-            return ("our_fixtures_absent_sides_reversed"
+            return ("card_fixtures_matched_sides_reversed"
                     if int(stats.get("card_fixtures_reversed") or 0)
-                    else "our_fixtures_absent_from_board")
+                    else "card_fixtures_unmatched_on_board")
     prematch, vocabulary = _drop_maps_in_scope(stats)
     if prematch and not vocabulary:
         # READ THIS BEFORE CONCLUDING ANYTHING ABOUT MARKET VOCABULARY.
@@ -604,7 +650,7 @@ def _zero_row_reason(stats: dict[str, Any]) -> str:
 def _path(day: str, localdata: Path | None = None) -> Path: return (localdata or LOCALDATA) / f"{SOURCE}_shadow_{day}.json"
 def capture_day(day: str, *, localdata: Path | None = None,
                 card: Any = None, team_key: Any = None) -> tuple[list[dict[str, Any]], dict[str, Any]]:
-    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day)),"canonicalization_dropped":0,"canonicalization_drop_reasons":{},"prematch_dropped":0,"prematch_drop_reasons":{},"board_rows":0,"board_fixtures":0,"board_league_count":0,"board_leagues":{},"board_non_prematch_rows":0,"board_priced_rows":0,"board_truncated":None,"requested_limit":_requested_limit(),"league_filter_requested":bool(_requested_league()),"league_filter_effective":None,"card_fixture_count":0,"card_fixtures_on_board":0,"card_fixtures_reversed":0,"card_priced_rows":0,"card_prematch_drop_reasons":{},"card_canonicalization_drop_reasons":{}}
+    stats = {"status":"not_run","sa_raw":0,"sa_matched":0,"requests":0,"http_statuses":[],"http_429":0,"errors":[],"blocker":None,"schema_match":None,"sample_event":None,"budget":MAX_CALLS_PER_RUN,"reason":None,"endpoint":endpoint(),"query_params":sorted(query_params(day)),"canonicalization_dropped":0,"canonicalization_drop_reasons":{},"prematch_dropped":0,"prematch_drop_reasons":{},"board_rows":0,"board_fixtures":0,"board_league_count":0,"board_leagues":{},"board_non_prematch_rows":0,"board_priced_rows":0,"board_team_count":0,"board_team_names":{},"board_truncated":None,"requested_limit":_requested_limit(),"league_filter_requested":bool(_requested_league()),"league_filter_effective":None,"card_fixture_count":0,"card_fixtures_on_board":0,"card_fixtures_reversed":0,"card_priced_rows":0,"card_prematch_drop_reasons":{},"card_canonicalization_drop_reasons":{}}
     reset_state()
     sport = (os.environ.get("SHARPAPI_SPORT") or "").strip()
     if not sport:

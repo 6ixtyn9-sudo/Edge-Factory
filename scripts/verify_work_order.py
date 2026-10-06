@@ -347,8 +347,8 @@ def _():
     # matters is: nothing failed, and no existing test was deleted. This
     # check is the second half. Raise it when you add tests; never lower it
     # to make the check pass.
-    if count < 1506:
-        return (f"{count} test functions found, floor is 1506. Tests were "
+    if count < 1515:
+        return (f"{count} test functions found, floor is 1515. Tests were "
                 "deleted rather than fixed.")
     return None
 

@@ -171,6 +171,7 @@ SHARPAPI_BOARD_FIELDS = (
     # Overlap with our own card. On an unfiltered global board every other
     # number here describes other people's fixtures, so this is the one
     # that says whether any of it was about us.
+    "board_team_count", "board_team_names",
     "card_fixture_count", "card_fixtures_on_board", "card_fixtures_reversed",
     "card_priced_rows", "card_prematch_drop_reasons",
     "card_canonicalization_drop_reasons",
@@ -585,6 +586,28 @@ def _dropped_token(row: dict[str, Any]) -> str:
     return f"/dropped{dropped}" if dropped > 0 else ""
 
 
+def _card_token(row: dict[str, Any]) -> str:
+    """``/card<seen>of<asked>`` when our own card was compared to the board.
+
+    A global board can return a hundred priced rows, none of them ours, and
+    the source line then reads like success. The same reasoning as the
+    discarded-row count: the number that matters belongs where the operator
+    already looks, not only in a nested record nobody opens.
+    """
+    summary = row.get("board_summary") or {}
+    try:
+        asked = int(summary.get("card_fixture_count") or 0)
+    except (TypeError, ValueError):
+        return ""
+    if asked <= 0:
+        return ""
+    try:
+        seen = int(summary.get("card_fixtures_on_board") or 0)
+    except (TypeError, ValueError):
+        seen = 0
+    return f"/card{seen}of{asked}"
+
+
 def _zero_reason(row: dict[str, Any], raw: int) -> str:
     """Compact deterministic reason for shadow/donor observations.
 
@@ -692,7 +715,7 @@ def daily_status_block(day: str) -> str:
             tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}{_zero_reason({**row, '_source_name': 'betbetter'}, int(row.get('bb_raw') or 0))}{_dropped_token(row)}/bb_matched{row.get('bb_matched', 0)}")
             continue
         if name == "sharpapi_odds":
-            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason({**row, '_source_name': 'sharpapi_odds'}, int(row.get('sa_raw') or 0))}{_dropped_token(row)}/sa_scored{row.get('sa_scored', 0)}")
+            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason({**row, '_source_name': 'sharpapi_odds'}, int(row.get('sa_raw') or 0))}{_dropped_token(row)}{_card_token(row)}/sa_scored{row.get('sa_scored', 0)}")
             continue
         if name == "boggio":
             tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason({**row, '_source_name': 'boggio'}, int(row.get('bg_raw') or 0))}{_dropped_token(row)}/bg_matched{row.get('bg_matched', 0)}")
