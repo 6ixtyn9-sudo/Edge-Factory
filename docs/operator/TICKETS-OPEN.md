@@ -668,6 +668,43 @@ competitions. Still unknown and still not answerable without another
 run: whether the vendor prices our fixtures at all at a quieter hour or
 under a competition filter, and whether its market names match ours.
 
+## (o) the configured limit is honoured - corrected 2026-10-06
+
+A note in the request code claimed the soccer feed pages at fifty rows
+behind a cursor. If that were true the configured limit of a hundred
+would be ignored, one call would buy two or three matches rather than
+five, and raising the limit would not be an option at all. The live run
+settles it: one request, a configured limit of a hundred, and exactly a
+hundred rows came back, truncated at the limit. The limit is honoured
+and the real board is bigger than the page we see. The note was stale
+and has been corrected in place, because it had already produced one
+wrong conclusion.
+
+**Boundary.** This shows the limit is honoured *up to a hundred*. Nobody
+has ever asked for more than a hundred, so whether larger values are
+honoured is untested. The next run answers it free from the same
+artefact: ask for more and compare the rows recorded against the limit
+recorded.
+
+**Neither knob needs a workflow edit.** Both the competition filter and
+the limit already read from repository secrets, falling back to the
+current values when unset. Setting `SHARPAPI_LEAGUE`, and optionally
+`SHARPAPI_LIMIT`, as repository secrets changes the next run with no
+file change and no extra call. Note this removes the occasion that was
+being saved for deleting the dead secret reference in the workflow -
+that cleanup now needs its own moment.
+
+**What the trial actually needs.** This lane is shadow only and its
+question is whether the vendor is worth anything, not whether it can
+cover the card. Judging a price source needs a few fixtures seen
+repeatedly over several days, not the whole card in one night. Two or
+three correctly priced fixtures a night in a competition we actually
+bet accumulates a real answer inside a week at no additional call cost.
+Paging only becomes a question if the vendor earns promotion to
+production coverage, and promotion is explicitly out of scope - so
+spending call budget on it now would be buying a solution to a problem
+we have not decided to have.
+
 ## (o) how to read the result of the narrowed run
 
 The run is now instrumented to explain itself whichever way it fails, so
