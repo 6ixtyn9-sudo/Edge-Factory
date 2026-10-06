@@ -618,7 +618,61 @@ The practical consequence: push early. The remote is the only place two
 sessions can reconcile, and in this environment it is the only copy worth
 trusting.
 
-### Carried forward, unchanged by this round
+### (o) how to read the result of the narrowed run
+
+The run is now instrumented to explain itself whichever way it fails, so
+the next move can be decided from the committed record without another
+build. Read it in this order.
+
+**First: did any of our card appear?** The source line carries the
+overlap directly, as "card0of14" - how many of the day's fixtures were
+found on the board, out of how many we asked about. This is the number
+that decides everything else, and it is deliberately in front of you
+rather than nested in the record, because a global board can return a
+hundred priced rows with none of them ours and otherwise read like a
+perfectly healthy source.
+
+**If the overlap is greater than zero**, the vendor carries our fixtures
+and the narrowing worked. What happens next is a genuine unknown that has
+never been tested: whether its market vocabulary matches ours. That can
+still fail, and failing there is informative rather than disappointing.
+
+**If the overlap is zero**, it has two causes and they pull in opposite
+directions, so do not act before separating them. The record now lists
+the competitions the board carried and the vendor's own spelling of the
+team names, both capped so the artefact stays small.
+
+- Our competition is in the list, and our teams are recognisably there
+  under different spellings - *Heart of Midlothian* where our card says
+  *Hearts*. That is a naming gap, not a coverage gap. The vendor is fine
+  and the fix is small: the names fold into the existing alias table.
+  Do not narrow the request further and do not abandon the source.
+- Our competition never appears and no name resembles our card. That is
+  genuine absence. The vendor does not price what we bet, and the honest
+  conclusion is to narrow the request or stop paying calls for it.
+
+The distinction matters because the two look identical without the
+names, and the expensive mistake is the first one read as the second -
+dropping a source that works because our own key could not recognise it.
+That key is an exact match on a compacted name plus a hand-curated alias
+table of 27 entries, built against the sources already in production and
+never exercised against this vendor. Of seven realistic name variants,
+six do not fold; only an identical string matches. This is the same
+family of defect as the collision that once let two different clubs from
+the same city share a key.
+
+One rule if this is ever taken further: a more forgiving name match may
+report a number, but it must never become the way rows are joined. A key
+that quietly settles for a near-miss produces a confident wrong answer,
+which is worse than the empty result it replaces, and that road is
+already in the discarded list from the settled-results comparison.
+
+**Still unmeasured, and not answerable here.** Whether this vendor prices
+our fixtures before kickoff, and whether its market names match ours.
+Both need a live run. The sandbox has no route to the vendor and no
+amount of further building will change that.
+
+## Carried forward, unchanged by this round
 
 - The live price-source key still needs rotating — it was exposed in
   plaintext chat. Not a repository-history incident, so no rewrite and no
