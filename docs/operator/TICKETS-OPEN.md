@@ -393,6 +393,54 @@ independence (same book through multiple donors counts once). No gate is
 weakened and no automatic promotion exists.
 
 
+## (j) Politeness budgets are named for the run and enforced per capture
+
+**Opened 2026-10-06, out of WO-8. Not a pinnapi defect — a template-wide
+one.** Nothing is broken today; the discrepancy only bites when a caller
+captures more than one date per run.
+
+Every source adapter that carries a per-run call budget calls
+`reset_state()` on entry to `capture_day`, which zeroes the counter the cap
+is measured against. The cap is therefore enforced **per capture**, not per
+run, and across several captures there is no run-level ceiling at all. The
+real multiplier is captures-per-run, which belongs to the caller, not the
+adapter.
+
+Checked by walking each module's syntax tree rather than by grep (a
+line-based scan gets this wrong — it matches whichever entry point is
+defined last):
+
+| adapter | resets the counter inside `capture_day` | advertises a per-run cap |
+|---|---|---|
+| `betbetter.py` | yes | yes |
+| `betminer.py` | yes | yes |
+| `boggio.py` | yes | yes |
+| `pinnapi_odds.py` | yes | yes |
+| `sharpapi_odds.py` | yes | yes |
+| `sportytrader_odds.py` | yes | no cap declared |
+| `futbolpronosticos.py` | no reset | no cap declared |
+
+Six of seven reset per capture; five of those six advertise a ceiling named
+for the run.
+
+**Why it is a ticket and not a patch.** The weight differs by vendor. For a
+metered trial key — pinnapi is 100 requests/day on an unofficial relay — the
+difference between "four per run" and "four per capture times N captures" is
+the whole budget. For the scrapers it is a courtesy question with a
+different owner. Deciding that is a cap change, and cap changes are an
+operator call, not a side effect of a bug fix.
+
+**Interim, already in place:** `pinnapi_odds.py` counts calls actually
+issued across the whole process and reports the running total in its capture
+record, so the real spend is visible while the cap keeps its current
+behaviour. Nothing else was touched.
+
+**Acceptance when picked up:** decide per adapter whether the cap is
+per-run or per-capture, make the name match the behaviour either way, and
+state the decision for the metered vendors explicitly. No gate, floor,
+quorum or threshold is involved.
+
+
 ## INTAKE INBOX (standing queue)
 
 - **KDobrev-Pinnacle** — failover peer only; family `pinnacle`; adopt only if

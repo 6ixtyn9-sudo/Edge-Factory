@@ -113,12 +113,13 @@ evidence about the vendor.
   second call; a pre-match answer with nothing usable in it records the
   shape of what arrived; the key never surfaces in diagnostics, stats or the
   ledger; the shadow role text is unchanged by the fix.
-- Full suite: **1598 passed, 0 failed** (baseline was 1571).
+- Full suite: **1610 passed, 0 failed** (baseline was 1571).
 - Work-order verifier: **14/14, ALL PASS**. Settlement verifier: **9/9**.
 
-Honest accounting of that +27, because a bare suite total is a poor
-acceptance number: **25** are tests written for this work order (the
-Pinnacle shadow's own file went from 21 tests to 46) and **2** are the
+Honest accounting of that +39, because a bare suite total is a poor
+acceptance number: **36** are tests written for this work order (the
+Pinnacle shadow's own file went from 21 tests to 46, plus 11 for the dated
+claims ledger) and **3** are the
 dead-link check, which is parametrised over every markdown file in the
 repository and therefore grows by one each time anyone adds a document.
 This report and the filed work order are those two. An earlier draft of
@@ -218,7 +219,50 @@ measure. Classification now reads the raw body and only the recorded copy is
 scrubbed. Verified both ways: the key never reaches the ledger, and the
 classification holds regardless of key length.
 
-## 7. If it returns nothing
+## 7. Third round: the one structural guard that was available
+
+Two of the three things raised here were not defects but follow-ups, and
+both are now filed rather than done silently.
+
+**The per-capture cap is template-wide, not a pinnacle-relay bug.** Checked
+by walking each adapter's syntax tree, because a line-based scan gets it
+wrong — my own first scan did, matching whichever entry point is defined
+last and reporting the opposite answer. Six of seven adapters zero the
+counter on entry to a capture; five of those six advertise a ceiling named
+for the run. It is now ticket (j) in the open tickets, with the method and
+the table, left as an operator decision because the weight differs by vendor
+and changing a cap is not a bug fix's business.
+
+**Cited receipts must now resolve.** The first failure in this sequence — a
+comment reading "panel receipt 2026-10-02" that named nothing — has a cheap
+mechanical guard: `docs/operator/DATED-CLAIMS.md` lists every comment in the
+codebase that cites a dated observation, together with what backs it, and a
+test holds the two halves together. A backing may be a repo path, which must
+exist on disk, or an explicit label saying a person reported it with no
+artifact. Labelling something as unbacked is a valid answer; leaving the
+reader unable to tell is not.
+
+It earned its place immediately: it found a dated claim my own grep had
+missed, in the enhanced-pricing module. That one resolves. As a negative
+control I re-inserted the exact comment that caused the four-day defect, and
+the suite failed on it.
+
+**What it cannot do**, stated in the ledger itself: it catches claims about
+the outside world, not confident claims about our own behaviour. The second
+failure in this sequence was a test docstring justifying a conflation — no
+date, no receipt, no ledger entry would have stopped it. That one has no
+cheap structural answer, and pretending otherwise would be the same error
+one level up.
+
+**On the auth-phrase matching:** it matches prose from a vendor whose
+wording nobody has seen, and an unmatched error body gets no fallback and no
+claimed mechanism. That is the fail-safe direction and it stays. A comment
+at the pattern now says not to add phrases before a real run has shown the
+actual wording — the scrubbed body is recorded so the first run teaches it.
+Guessing more phrasings would be inventing a parser for a payload nobody has
+seen, one level removed.
+
+## 8. If it returns nothing
 
 
 A 200 response that yields no usable rows now records what actually arrived
@@ -235,7 +279,7 @@ trial key is worth anything, not an attempt to solve pricing. Pricing
 coverage across these leagues is around 11.4%, this remains a shadow, and
 nothing here moves it closer to a price-corroboration role.
 
-## 8. Unverified from here
+## 9. Unverified from here
 
 - No live call was made. Whether the header is accepted, whether sport 1 is
   soccer on the live service, and whether a pre-match snapshot contains our
@@ -264,7 +308,7 @@ A caveat on reading that table: `error_envelope` means the mechanism line is
 reporting a rejection, not a success, even though the status code was 200.
 Read the zero-row classification beside it, never the mechanism alone.
 
-## 9. Files
+## 10. Files
 
 - `src/edgefactory/sources/pinnapi_odds.py` — sport id, header auth with a
   401-only fallback remembered for the run, reworked credential guard, auth
@@ -281,3 +325,7 @@ Read the zero-row classification beside it, never the mechanism alone.
 - `docs/operator/SOURCE-HUNT-2026-10.md` — the paragraph that recorded the
   false sport-id receipt is corrected in place, labelled as the inference it
   was.
+- `docs/operator/DATED-CLAIMS.md` + `tests/test_dated_claims_ledger.py` —
+  every dated claim in a comment must say what backs it, and a cited path
+  must resolve.
+- `docs/operator/TICKETS-OPEN.md` — ticket (j), the template-wide cap.
