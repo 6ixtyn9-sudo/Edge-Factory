@@ -78,6 +78,7 @@ from edgefactory.source_health import (
     bzzoiro_status_line,
     daily_status_block,
     persist_daily_source_health,
+    pinnapi_contract_observation,
     source_role_lines,
     record_bzzoiro_run,
     zero_row_reason,
@@ -5946,6 +5947,11 @@ def main():
             # Price donor, never a vote; corroboration stays default-off.
             "can_vote": False,
             "freshness_h": 0.0 if pa_shadow_stats.get("status") == "ok" else None,
+            # Request-contract discriminators: which auth mechanism replied,
+            # what sport/event was asked for, and what the payload looked
+            # like. Without these a zero is unreadable, and they are
+            # otherwise confined to the gitignored shadow ledger.
+            **pinnapi_contract_observation(pa_shadow_stats),
             "blocker": pa_shadow_stats.get("blocker"),
             # An authenticated HTTP 200 that returns no events is VALID-EMPTY,
             # not "unavailable". Reporting it as unavailable told the operator

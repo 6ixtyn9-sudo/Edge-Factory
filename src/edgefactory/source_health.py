@@ -139,6 +139,26 @@ def _int_or_zero(value: object) -> int:
         return 0
 
 
+PINNAPI_CONTRACT_FIELDS = (
+    "sport_id", "event_type", "auth_mechanism", "auth_attempts",
+    "zero_row_kind", "response_shape",
+)
+
+
+def pinnapi_contract_observation(stats: dict[str, Any]) -> dict[str, Any]:
+    """Lift the request-contract discriminators out of the adapter stats.
+
+    The caller builds the health observation by hand, field by field, so a
+    field the adapter records is NOT in the health row unless it is named
+    here. That is how the 2026-10-06 run lost the answer: the adapter wrote
+    which auth mechanism replied, and nothing carried it across. Keeping the
+    list in one place means the passthrough and the row agree by
+    construction rather than by someone remembering both ends.
+    """
+    stats = stats or {}
+    return {k: stats.get(k) for k in PINNAPI_CONTRACT_FIELDS}
+
+
 def build_daily_source_health(
     day: str,
     observations: dict[str, dict[str, Any]] | None = None,

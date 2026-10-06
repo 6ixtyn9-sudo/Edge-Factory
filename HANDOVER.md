@@ -14,7 +14,7 @@ Delivered
 
 Validation
 
-- Suite 1610 passed / 0 failed; `scripts/verify_work_order.py` 14/14; `scripts/verify_wo7.py` 9/9. Test-function floor raised to 1446.
+- Suite 1612 passed / 0 failed; `scripts/verify_work_order.py` 14/14; `scripts/verify_wo7.py` 9/9. Test-function floor raised to 1448.
 - **Live behaviour is now verified** by production run 37477487160 (2026-10-06, both jobs green). The earlier note in this section that no live call had been made is superseded; it was true when written and is not true now.
 
 What the first real run answered
@@ -23,7 +23,7 @@ Observed, from the committed health record for 2026-10-06: the vendor replied HT
 
 Inferred, not yet confirmed: no drop reason was counted at all. Every named discard path increments a counter, so zero prices with zero discards points at fixtures arriving with no markets block rather than at a parser that failed to read one — meaning the prematch listing names matches but does not price them. Confirming this needs the recorded payload shape.
 
-What the run did not deliver, and why: the fields that confirm it — which auth mechanism answered, the attempt sequence, the payload shape — were written only to the per-date shadow ledger, which `.gitignore` excludes by design. The vendor answered and the answer did not survive the run. The discriminators are now carried in the committed health record as well, so the next run reports them without an artifact download. This was the third time evidence existed in a place that did not survive; the rule it earns is that a diagnostic is not delivered until it reaches somewhere durable.
+What the run did not deliver, and why: the fields that confirm it — which auth mechanism answered, the attempt sequence, the payload shape — were written only to the per-date shadow ledger, which `.gitignore` excludes by design. The vendor answered and the answer did not survive the run. The discriminators are now carried in the committed health record as well, so the next run reports them without an artifact download. Carrying them took two changes, not one: the health record had to accept the fields, and the pipeline had to forward them. The first was written and tested on its own and would have shipped a row full of empty fields, because the observation handed to the health record is built by hand, field by field, and a field nobody names is a field that does not travel. The test that catches that asserts the wiring, not the capability. This was the third time evidence existed in a place that did not survive; the rule it earns is that a diagnostic is not delivered until it reaches somewhere durable.
 
 Extending the parser to read a prematch prices endpoint is now defensible, because a real sample exists. It is a new operator decision and deliberately not part of this work order.
 
