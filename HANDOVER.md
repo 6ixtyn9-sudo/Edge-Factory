@@ -2347,6 +2347,25 @@ Deferred (recorded, not in scope):
 ---
 
 
+### The price board was read on 2026-10-06 and the answer is coverage, not naming
+
+*Observed.* One hundred rows came back, all in-play, covering five
+fixtures: the request is metered in price rows rather than matches, and
+a single under-21 qualifier consumed sixty-seven of them. None of the
+day's fourteen fixtures appeared, and nothing on the board resembled
+them even under a deliberately loose comparison run for diagnosis only.
+The run also asked about zero fixtures, because an intraday pass hands
+the price lane only freshly generated picks and that pass produced none,
+so the overlap verdict could not fire; the team census is unconditional
+and is what made the day readable at all.
+
+*Inferred.* Narrowing by competition will not on its own put our card in
+front of the filter, because five matches per hundred rows is the
+ceiling regardless of which competition is asked for. The curated name
+register is not the cause of this zero, though it remains a real gap
+elsewhere: of the twenty-seven name pairs it resolves for settlement,
+the price-board join recognises three.
+
 ### Reading a zero overlap on the price board
 
 The capture now records the vendor's own spelling of the team names

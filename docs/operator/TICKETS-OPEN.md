@@ -618,7 +618,51 @@ The practical consequence: push early. The remote is the only place two
 sessions can reconcile, and in this environment it is the only copy worth
 trusting.
 
-### (o) how to read the result of the narrowed run
+### (o) RESULT of the live run on 2026-10-06 (run 37511693120)
+
+The board was read and the question is answered. Summary first: the
+fixtures genuinely are not there, it is not a naming problem, and the
+reason is much worse than a sort order.
+
+**The hundred rows bought five fixtures.** The request returns one row
+per market per bookmaker, not one row per match, so the limit of a
+hundred was spent on five games: a single under-21 qualifier took
+sixty-seven of them, two Argentine third-tier games took twenty-nine,
+and a Swedish and a Norwegian cup tie took the last four. Every row was
+in-play. This is the finding that matters, and nobody knew it before
+the run: even a perfect competition filter returns about five matches
+per hundred rows, so narrowing the request cannot by itself put our card
+in front of the filter. The arithmetic checks: 67 + 22 + 7 + 3 + 1 = 100.
+
+**It is not an alias gap.** Our fourteen fixtures that day were senior
+internationals plus one English league game. The board carried an
+Israel/Norway under-21 qualifier, two Argentine Primera C games and two
+Scandinavian cup ties. Nothing on the board resembles anything on our
+card - the strict count is zero and a deliberately loose look-alike
+count, run only as a diagnostic and never as a join, is also zero. The
+curated name register is therefore not the answer here, though it
+remains a genuine gap in the odds lane for other days (see below).
+
+**The overlap instrument was blind on this run, and that is a defect.**
+The run recorded that we asked about zero fixtures, so the overlap
+verdict never fired and the source line carried no overlap token. The
+cause: this was an intraday pass whose fresh pick lane produced nothing,
+and the day's fourteen picks were preserved frozen rows from the
+morning. The card handed to the price lane is built from freshly
+generated picks only, so it was empty. The team census saved the run
+because it is unconditional. **Next change: hand the lane the day's
+operational card, not only the freshly generated one.** Until then, a
+zero overlap on an intraday pass means nothing was asked, not that
+nothing matched.
+
+**What is now known, and what is still open.** Known: the vendor is
+reachable, the parser reads it, the limit is per price row, the top of
+the board is in-play, and on this day it carried none of our
+competitions. Still unknown and still not answerable without another
+run: whether the vendor prices our fixtures at all at a quieter hour or
+under a competition filter, and whether its market names match ours.
+
+## (o) how to read the result of the narrowed run
 
 The run is now instrumented to explain itself whichever way it fails, so
 the next move can be decided from the committed record without another
