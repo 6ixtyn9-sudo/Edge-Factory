@@ -83,6 +83,9 @@ def test_daily_source_health_schema_is_conservative_and_forebet_is_historical_on
         "blocker": None,
         "reason": None,
         "status": None,
+        # Rows fetched then discarded while parsing. Carried for every source
+        # so a parser fault cannot hide behind a bare zero.
+        "canonicalization_dropped": 0,
     }
     assert payload["sources"]["forebet"] == {
         "can_fetch_today": False,
