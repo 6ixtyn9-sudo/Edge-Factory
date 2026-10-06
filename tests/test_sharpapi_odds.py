@@ -132,7 +132,9 @@ def test_rapidapi_host_header_is_pinned(monkeypatch):
     (401, "auth", "http_401_auth"),
     (403, "auth", "http_403_auth_plan"),
     (429, "quota", "http_429_quota"),
-    (404, "unavailable", "http_404_endpoint_contract"),
+    # A 404 with no captured body states no cause -- see
+    # edgefactory.rapidapi_diagnostics.
+    (404, "unavailable", "http_404_endpoint_contract_unconfirmed"),
 ])
 def test_http_failures_are_classified_distinctly(monkeypatch, code, status, reason):
     monkeypatch.setattr(sa, "get_json", lambda url, timeout=30: (code, None, {}))

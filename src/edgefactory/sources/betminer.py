@@ -49,6 +49,7 @@ from email.utils import parsedate_to_datetime
 from pathlib import Path
 from typing import Any
 
+from edgefactory import rapidapi_diagnostics as _rapidapi
 from edgefactory.odds_normalization import canonical_market_selection
 
 SOURCE = "betminer"
@@ -549,18 +550,25 @@ def _persist_probe_receipt(
     http_status: int | None,
     reason: str | None,
     schema_sample: Any = None,
+    provider_message: str | None = None,
     localdata: Path | None = None,
 ) -> Path:
     """Persist one scrubbed endpoint-contract observation for this day."""
     root = _resolve_localdata(localdata)
     root.mkdir(parents=True, exist_ok=True)
     payload = {
-        "schema": 1,
+        "schema": 2,
         "source": SOURCE,
         "date": str(day)[:10],
         "endpoint": endpoint,
         "http_status": http_status,
         "reason": reason,
+        # The provider's own words, scrubbed and capped. Without this a 404 is
+        # unactionable: "the path is wrong" and "this key is not subscribed"
+        # are the same status code but opposite fixes, and the operator cannot
+        # tell which they are looking at. RapidAPI states it plainly in the
+        # body; we were reading that body and discarding it.
+        "provider_message": _scrub(provider_message)[:240] if provider_message else None,
         "schema_sample": _scrub(schema_sample),
         "probed_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
     }
@@ -569,6 +577,13 @@ def _persist_probe_receipt(
     tmp.write_text(json.dumps(payload, indent=2, sort_keys=True, default=str))
     tmp.replace(path)
     return path
+
+
+# 404 disambiguation lives in edgefactory.rapidapi_diagnostics because
+# sharpapi_odds shares the same gateway, the same RAPIDAPI_KEY and the same
+# ambiguity. Re-exported here so this adapter's public surface is unchanged.
+classify_404 = _rapidapi.classify_404
+
 
 
 def _load_ledger_rows(day: str, *, localdata: Path | None = None) -> list[dict[str, Any]]:
@@ -675,6 +690,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             http_statuses=([receipt.get("http_status")]
                            if receipt.get("http_status") is not None else []),
             schema_sample=receipt.get("schema_sample"),
+            provider_message=receipt.get("provider_message"),
             blocker="betminer: persisted endpoint probe receipt; no re-probe today",
         )
         return [], _set_diag(stats)
@@ -759,14 +775,25 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             stats["http_statuses"] = [code]
             stats["requests"] = max(int(stats.get("requests") or 0), int(_CALLS_THIS_RUN))
         if code == 404:
+            # `message` is the UpstreamBlocked text, which already carries the
+            # provider's response snippet after the status. Recover it so the
+            # receipt records WHY we got a 404 rather than only that we did.
+            provider_message = _provider_snippet(message)
+            reason = classify_404(provider_message)
+            stats["reason"] = reason
             receipt = _persist_probe_receipt(
                 day, endpoint=capture_url(day), http_status=code,
-                reason="http_404_endpoint_contract", schema_sample=None,
+                reason=reason, schema_sample=None,
+                provider_message=provider_message,
                 localdata=localdata,
             )
             stats["probe_receipt"] = True
             stats["probe_receipt_path"] = str(receipt)
+            stats["provider_message"] = provider_message
         return [], _set_diag(stats)
+
+
+_provider_snippet = _rapidapi.provider_snippet
 
 
 def _http_code_in(message: str) -> int | None:
