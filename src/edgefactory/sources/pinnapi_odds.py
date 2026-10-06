@@ -22,13 +22,22 @@ criteria in docs/operator/TICKETS-OPEN.md are met):
 Verified vs unverified (HUNT-01 SOURCE-HUNT-2026-10 section 5.7):
 - VERIFIED: free tier exists (100 REST requests/day, no card), endpoints
   /kit/v1/markets (bulk snapshot per sport), /kit/v1/details, /health.
-- UNVERIFIED: exact REST auth mechanism and response schema. The docs show
-  ``key=`` query-parameter auth on the SSE endpoints; this adapter uses the
-  same on REST and treats any non-200 or unrecognized shape as
-  ``unavailable`` (fail-closed, stays retryable). scripts/probe_pinnapi.py
-  is the acceptance tool that reconciles auth + schema before any promotion
-  discussion; a trimmed raw sample is retained in the ledger stats so a
-  parser adjustment needs no new crawl.
+- KNOWN FROM THE VENDOR'S PANEL PLAYGROUND (supersedes this adapter's
+  original assumption): REST authenticates with an ``x-portal-apikey``
+  **request header**, and soccer is ``sport_id=1``. The earlier text here
+  said the SSE docs' ``key=`` query auth was assumed to apply to REST and
+  that soccer was ``sport_id=2``; both were wrong, and the sport id was
+  additionally written down as if it were a receipt. The ``key=`` query
+  form is retained ONLY as a fallback retried on HTTP 401, and the ledger
+  stats record which mechanism actually answered.
+- STILL UNVERIFIED: the response schema, and whether a prematch snapshot
+  returns anything for our fixtures at all. Any non-200 or unrecognized
+  shape stays ``unavailable`` (fail-closed, retryable); a 200 that yields
+  no usable rows records the observed payload shape rather than guessing a
+  parser for it. scripts/probe_pinnapi.py is the acceptance tool that
+  reconciles auth + schema before any promotion discussion; a trimmed raw
+  sample is retained in the ledger stats so a parser adjustment needs no
+  new crawl.
 
 Resilience contract mirrors bzzoiro_odds.py / betexplorer_odds.py: cache-
 first per date (a held date is never refetched), single-flight throttle,
@@ -56,11 +65,17 @@ from edgefactory.odds_normalization import canonical_market_selection
 SOURCE = "pinnapi_odds"
 BASE = os.environ.get("PINNAPI_BASE_URL", "https://pinnapi.com").rstrip("/")
 KEY_ENV = "PINNAPI_KEY"
-# Panel receipt 2026-10-02: soccer is sport_id=2 and the playground uses
-# event_type=prematch. Keep the constant as a fail-safe until a future /sports
-# introspection response is independently captured.
-SPORT_ID = 2
+# Soccer is sport_id=1 (vendor panel playground). Overridable without a code
+# change if the vendor renumbers its sports; a /sports introspection response
+# has never been captured, so the override is the escape hatch, not a comment.
+SPORT_ID_ENV = "EDGE_FACTORY_PINNAPI_SPORT_ID"
+SPORT_ID = 1
 EVENT_TYPE = "prematch"
+# REST auth is a request header, not a query parameter. The query form below
+# is kept only as a 401 fallback; see fetch_markets().
+AUTH_HEADER = "x-portal-apikey"
+AUTH_HEADER_FIRST = "header"
+AUTH_QUERY_FALLBACK = "query"
 BOOK = "Pinnacle"
 UA = "EdgeFactory-cooperative-shadow/1.0 (+operator review)"
 MIN_INTERVAL_S = float(os.environ.get("EDGE_FACTORY_PINNAPI_MIN_INTERVAL_S", "2.0"))
@@ -74,6 +89,10 @@ _COOLING_DOWN = False
 _CALLS_THIS_RUN = 0
 _DIAG: dict[str, Any] = {}
 _CANONICALIZATION_DROP_REASONS: dict[str, int] = {}
+# Which auth mechanism was tried, and what each attempt answered. Recorded so
+# the next operator reads the answer instead of re-deriving it.
+_AUTH_ATTEMPTS: list[dict[str, Any]] = []
+_AUTH_MECHANISM: str | None = None
 
 # Zero-row days with these statuses stay RETRYABLE (never terminal "empty").
 RETRYABLE_ZERO_ROW_STATUSES = {"auth", "quota", "unavailable", "blocked", "error", "cooldown"}
@@ -100,15 +119,45 @@ class UpstreamBlocked(RuntimeError):
 
 def reset_state() -> None:
     global _LAST_REQUEST, _429S, _COOLING_DOWN, _CALLS_THIS_RUN
+    global _AUTH_ATTEMPTS, _AUTH_MECHANISM
     _LAST_REQUEST = 0.0
     _429S = 0
     _COOLING_DOWN = False
     _CALLS_THIS_RUN = 0
+    _AUTH_ATTEMPTS = []
+    _AUTH_MECHANISM = None
 
 
 def _api_key() -> str | None:
     value = os.environ.get(KEY_ENV)
     return value.strip() if value and value.strip() else None
+
+
+def sport_id() -> int:
+    """Soccer sport id, env-overridable (``EDGE_FACTORY_PINNAPI_SPORT_ID``).
+
+    Soccer is 1. This used to be 2, carried by a comment that read like a
+    captured receipt; nothing had been captured, and the wrong id silently
+    cost four days. An unparseable override falls back to the constant
+    rather than sending garbage upstream.
+    """
+    raw = os.environ.get(SPORT_ID_ENV)
+    if raw is None or not str(raw).strip():
+        return SPORT_ID
+    try:
+        return int(str(raw).strip())
+    except ValueError:
+        return SPORT_ID
+
+
+def auth_mechanism() -> str | None:
+    """Mechanism that carried the last successful snapshot, if any."""
+    return _AUTH_MECHANISM
+
+
+def auth_attempts() -> list[dict[str, Any]]:
+    """Per-attempt record of (mechanism, HTTP status). Never the key."""
+    return [dict(attempt) for attempt in _AUTH_ATTEMPTS]
 
 
 def _set_diag(stats: dict[str, Any]) -> dict[str, Any]:
@@ -145,11 +194,53 @@ def _throttle() -> None:
         _LAST_REQUEST = time.monotonic()
 
 
-def markets_url() -> str:
-    """Bulk pre-match soccer snapshot URL (one call = the whole board)."""
-    return BASE + "/kit/v1/markets?" + urllib.parse.urlencode({
-        "sport_id": SPORT_ID, "event_type": EVENT_TYPE, "key": _api_key() or ""
-    })
+def markets_url(auth: str = AUTH_HEADER_FIRST) -> str:
+    """Bulk pre-match soccer snapshot URL (one call = the whole board).
+
+    Under header auth (the real contract) the key is NOT in the URL. The
+    query form is built only for the 401 fallback.
+    """
+    query = {"sport_id": sport_id(), "event_type": EVENT_TYPE}
+    if auth == AUTH_QUERY_FALLBACK:
+        query["key"] = _api_key() or ""
+    return BASE + "/kit/v1/markets?" + urllib.parse.urlencode(query)
+
+
+def request_headers(auth: str = AUTH_HEADER_FIRST) -> dict[str, str]:
+    """Headers for one snapshot request.
+
+    Under header auth this dict carries the key, so it must never be
+    logged, echoed into diagnostics, or persisted. ``_sanitize_headers``
+    protects RESPONSE headers only and is no help here.
+    """
+    headers = {"User-Agent": UA, "Accept": "application/json"}
+    key = _api_key()
+    if auth == AUTH_HEADER_FIRST and key:
+        headers[AUTH_HEADER] = key
+    return headers
+
+
+def _carries_credentials(url: str, headers: dict[str, str]) -> bool:
+    """True iff this request authenticates by SOME mechanism.
+
+    The original guard asserted ``"key=" in url``, which stopped being a
+    test of authentication the moment the key moved into a header. The
+    invariant it protected is unchanged: never issue an unauthenticated
+    request.
+    """
+    if str(headers.get(AUTH_HEADER) or "").strip():
+        return True
+    query = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+    return any(str(value).strip() for value in query.get("key", []))
+
+
+def _http_code_in(message: str) -> int | None:
+    match = re.search(r"HTTP (\d{3})", message)
+    return int(match.group(1)) if match else None
+
+
+def _record_attempt(mechanism: str, status: int | None) -> None:
+    _AUTH_ATTEMPTS.append({"auth": mechanism, "status": status})
 
 
 def _sanitize_headers(headers: Any) -> dict[str, str]:
@@ -165,28 +256,32 @@ def _sanitize_headers(headers: Any) -> dict[str, str]:
     return out
 
 
-def get_json(url: str, *, timeout: int = 30) -> tuple[int, Any, dict[str, str]]:
+def get_json(url: str, *, timeout: int = 30, auth: str = AUTH_HEADER_FIRST) -> tuple[int, Any, dict[str, str]]:
     """One GET as JSON; raises UpstreamBlocked on 429/auth walls/budget.
 
-    The key travels as a ``key=`` query parameter (the auth mechanism shown
-    in pinnapi's own SSE docs) - which is also why the URL never appears in
-    diagnostics output. One 429 retry with Retry-After-first backoff; a
-    second 429 trips run-scoped cool-down.
+    ``auth="header"`` sends the key as ``x-portal-apikey`` (the real REST
+    contract); ``auth="query"`` is the legacy ``key=`` form, used only as a
+    401 fallback. Either way the request must carry credentials or it is
+    refused before it leaves the process. The URL never appears in
+    diagnostics, and request headers are never logged. One 429 retry with
+    Retry-After-first backoff; a second 429 trips run-scoped cool-down.
     """
     global _429S, _COOLING_DOWN, _CALLS_THIS_RUN
     if _COOLING_DOWN:
         raise UpstreamBlocked("pinnapi: run cooling down after repeated HTTP 429 responses")
     if not _api_key():
         raise UpstreamBlocked(f"pinnapi: {KEY_ENV} not set; shadow capture skipped")
-    if "key=" not in url:
-        # Defensive: never issue an unauthenticated snapshot request.
+    headers = request_headers(auth)
+    if not _carries_credentials(url, headers):
+        # Defensive: never issue an unauthenticated snapshot request - by
+        # header or by query parameter, the credential must be present.
         raise UpstreamBlocked("pinnapi: refusing unauthenticated request")
     for attempt in range(2):
         if _CALLS_THIS_RUN >= MAX_CALLS_PER_RUN:
             raise UpstreamBlocked(f"pinnapi: per-run call budget {MAX_CALLS_PER_RUN} reached; no further calls this run")
         _throttle()
         _CALLS_THIS_RUN += 1
-        request = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "application/json"})
+        request = urllib.request.Request(url, headers=headers)
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
                 status = int(getattr(response, "status", 200))
@@ -214,6 +309,37 @@ def get_json(url: str, *, timeout: int = 30) -> tuple[int, Any, dict[str, str]]:
         except Exception as exc:
             raise UpstreamBlocked(f"pinnapi: {type(exc).__name__}: {exc}") from exc
     raise UpstreamBlocked("pinnapi: exhausted retries")
+
+
+def fetch_markets(*, timeout: int = 30) -> tuple[int, Any, dict[str, str], str]:
+    """One snapshot: header auth first, ``key=`` query retried only on 401.
+
+    Returns ``(status, payload, rate_limit_headers, mechanism)`` and records
+    every attempt as (mechanism, status) so the ledger states which form the
+    vendor actually accepted instead of leaving the next operator to guess.
+    Both attempts are counted against the per-run call budget.
+    """
+    global _AUTH_MECHANISM
+    result: tuple[int, Any, dict[str, str], str] | None = None
+    for mechanism in (AUTH_HEADER_FIRST, AUTH_QUERY_FALLBACK):
+        try:
+            status, payload, rate_headers = get_json(
+                markets_url(auth=mechanism), timeout=timeout, auth=mechanism)
+        except UpstreamBlocked as exc:
+            code = _http_code_in(str(exc))
+            _record_attempt(mechanism, code)
+            if code == 401 and mechanism == AUTH_HEADER_FIRST:
+                continue  # header rejected: try the legacy query form once
+            raise
+        _record_attempt(mechanism, status)
+        result = (status, payload, rate_headers, mechanism)
+        if status == 401 and mechanism == AUTH_HEADER_FIRST:
+            continue
+        _AUTH_MECHANISM = mechanism if status == 200 else None
+        return result
+    if result is None:  # pragma: no cover - loop always returns or raises
+        raise UpstreamBlocked("pinnapi: no snapshot attempt completed")
+    return result
 
 
 def _num(value: object) -> float | None:
@@ -491,6 +617,44 @@ def _trim_event_sample(payload: Any) -> Any:
     return _scrub_secret({"top_keys": [str(k) for k in list(payload.keys())[:12]]} if isinstance(payload, dict) else None)
 
 
+def _payload_shape(payload: Any) -> dict[str, Any]:
+    """Describe what actually arrived - container types and key names only.
+
+    Recorded whenever a 200 yields no usable rows. The point is to make the
+    next decision from an observed payload instead of an imagined one: no
+    parser is written for a shape nobody has seen.
+    """
+    shape: dict[str, Any] = {"json_type": type(payload).__name__}
+    events: Any = None
+    if isinstance(payload, dict):
+        shape["top_keys"] = [str(key) for key in list(payload.keys())[:12]]
+        for key in ("events", "data", "matches"):
+            if isinstance(payload.get(key), list):
+                shape["events_key"] = key
+                events = payload[key]
+                break
+    elif isinstance(payload, list):
+        events = payload
+    shape["event_count"] = len(events) if isinstance(events, list) else 0
+    first = events[0] if isinstance(events, list) and events else None
+    if isinstance(first, dict):
+        shape["event_keys"] = [str(key) for key in list(first.keys())[:20]]
+        markets = first.get("markets") or first.get("odds")
+        shape["markets_type"] = type(markets).__name__
+        entry: Any = None
+        if isinstance(markets, dict):
+            shape["market_group_keys"] = [str(k) for k in list(markets.keys())[:12]]
+            entry = next(iter(markets.values()), None)
+        elif isinstance(markets, list):
+            entry = markets[0] if markets else None
+        if isinstance(entry, list):
+            entry = entry[0] if entry else None
+        if isinstance(entry, dict):
+            shape["market_entry_keys"] = [str(k) for k in list(entry.keys())[:20]]
+    shape["drop_reasons"] = dict(_CANONICALIZATION_DROP_REASONS)
+    return _scrub_secret(shape)
+
+
 def _status_for_http(status: int | None) -> str:
     if status in {401, 403}:
         return "auth"
@@ -509,6 +673,11 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         "rate_limit_headers": {}, "schema_match": None,
         "sample_event": None, "key_present": _api_key() is not None,
         "canonicalization_dropped": 0, "canonicalization_drop_reasons": {},
+        # Request contract actually used, so the ledger answers "how did we
+        # ask?" without anyone re-reading the adapter.
+        "sport_id": sport_id(), "event_type": EVENT_TYPE,
+        "auth_header_name": AUTH_HEADER, "auth_mechanism": None,
+        "auth_attempts": [], "response_shape": None,
     }
     reset_state()
     if not _api_key():
@@ -524,9 +693,11 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["schema_match"] = True
         return list(committed), _set_diag(stats)
     try:
-        status, payload, rate_headers = get_json(markets_url())
-        stats["requests"] += 1
-        stats["http_statuses"].append(status)
+        status, payload, rate_headers, mechanism = fetch_markets()
+        stats["auth_attempts"] = auth_attempts()
+        stats["requests"] = len(stats["auth_attempts"]) or 1
+        stats["http_statuses"] = [a["status"] for a in stats["auth_attempts"]]
+        stats["auth_mechanism"] = auth_mechanism()
         stats["rate_limit_headers"] = rate_headers
         if status != 200 or payload is None:
             stats["status"] = _status_for_http(status)
@@ -543,6 +714,7 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
             # Fail-closed: keep the raw sample, map nothing, stay retryable.
             stats["status"] = "unavailable"
             stats["quota_hint"] = "none_observed"
+            stats["response_shape"] = _payload_shape(payload)
             stats["blocker"] = (
                 "pinnapi: snapshot schema not recognized; raw sample retained for operator review "
                 "(run scripts/probe_pinnapi.py to reconcile auth + schema)")
@@ -550,10 +722,25 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         stats["pa_raw"] = len({(row["home"], row["away"]) for row in rows})
         stats["pa_matched"] = len(rows)
         stats["status"] = "ok" if rows else "empty"
+        if not rows:
+            # A recognized shape that produced nothing. Record the observed
+            # payload shape and stop: the next step is an operator decision
+            # on an observed payload, not a parser invented for one that has
+            # never been seen.
+            stats["response_shape"] = _payload_shape(payload)
+            stats["blocker"] = (
+                f"pinnapi: HTTP 200 for sport_id={sport_id()} event_type={EVENT_TYPE} "
+                "produced zero usable rows; observed payload shape recorded for operator "
+                "review - do not extend the parser without a captured sample")
         return rows, _set_diag(stats)
     except UpstreamBlocked as exc:
         message = str(exc)
         stats["http_429"] = _429S
+        stats["auth_attempts"] = auth_attempts()
+        stats["requests"] = len(stats["auth_attempts"])
+        stats["http_statuses"] = [
+            a["status"] for a in stats["auth_attempts"] if a["status"] is not None]
+        stats["auth_mechanism"] = auth_mechanism()
         if "429" in message:
             stats["status"] = "cooldown" if _COOLING_DOWN else "quota"
             stats["quota_hint"] = "rate_limit_or_quota"
@@ -584,7 +771,10 @@ def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], 
             "may corroborate only same-day-fetched prices - see same_day_rows)"
         ),
         "provenance": {
-            "api": f"{BASE}/kit/v1/markets (sport_id={SPORT_ID}, event_type={EVENT_TYPE})",
+            "api": f"{BASE}/kit/v1/markets (sport_id={sport_id()}, event_type={EVENT_TYPE})",
+            "auth": (
+                f"{AUTH_HEADER} request header; the legacy key= query parameter is "
+                "retried only on HTTP 401 (stats.auth_mechanism records which answered)"),
             "hunt": "docs/operator/SOURCE-HUNT-2026-10.md#57",
             "unofficial_feed": "Pinnacle public API closed 2025-07-23; pinnapi is an independent relay - expect death without notice",
             "captured_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
