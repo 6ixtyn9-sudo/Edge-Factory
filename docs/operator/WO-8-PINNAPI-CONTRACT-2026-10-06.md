@@ -279,7 +279,23 @@ trial key is worth anything, not an attempt to solve pricing. Pricing
 coverage across these leagues is around 11.4%, this remains a shadow, and
 nothing here moves it closer to a price-corroboration role.
 
-## 9. Unverified from here
+## 9. The clock, and where this ranks
+
+The trial key lapses **20 October 2026**. Everything in this report is
+unvalidated until a real run, so there are roughly two weeks in which this
+either earns its keep or confirms the vendor is worthless for our fixtures.
+Both outcomes close it; only silence wastes it.
+
+It is also worth writing down that this work does **not** top the queue. The
+next production run's three counter lines are free and read-only. The replay
+at `unresolved="loss"` remains the cheapest high-information move available
+and needs no new code, and it can reorder everything beneath it. Rotating
+the two exposed API keys outranks both. This adapter is a cheap question
+about one unofficial relay, and four rounds of polish on it is already more
+than its place in that order justifies — the remaining step is a run, not
+more code.
+
+## 10. Unverified from here
 
 - No live call was made. Whether the header is accepted, whether sport 1 is
   soccer on the live service, and whether a pre-match snapshot contains our
@@ -308,7 +324,7 @@ A caveat on reading that table: `error_envelope` means the mechanism line is
 reporting a rejection, not a success, even though the status code was 200.
 Read the zero-row classification beside it, never the mechanism alone.
 
-## 10. Files
+## 11. Files
 
 - `src/edgefactory/sources/pinnapi_odds.py` — sport id, header auth with a
   401-only fallback remembered for the run, reworked credential guard, auth
