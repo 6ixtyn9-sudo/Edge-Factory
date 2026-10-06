@@ -5715,18 +5715,31 @@ def main():
         oddspapi_matches = donor_match_counts(picks, [oddspapi_bundle]).get(ODDSPAPI_ODDS_SOURCE, 0)
         betexplorer_matches = donor_match_counts(picks, [betexplorer_bundle]).get(BETEXPLORER_ODDS_SOURCE, 0)
         donor_matches = donor_match_counts(picks, donor_bundles)
-        shadow_donor_names = {
+        # Every donor that can leave rows unmatched gets per-reason miss
+        # accounting. The rule is the one written when OddsPAPI was added:
+        # a counted miss is worth more than a silent zero.
+        diagnosed_donor_names = {
             "betbetter", "boggio", "betminer", "pinnapi_odds", "sharpapi_odds",
             # OddsPAPI is a named-book price source, not a shadow donor, but
             # it captured 414 usable rows and matched zero with no miss
             # accounting at all. A counted miss is worth more than a silent
             # zero, so it gets the same per-reason buckets.
             ODDSPAPI_ODDS_SOURCE,
+            # Same argument, extended to the two boards that are actually
+            # alive. Through 2026-10-03..07 these were the ONLY priced
+            # sources returning rows, and they were the only ones with no
+            # miss accounting at all: 1,423 unmatched TheOddsAPI rows and 98
+            # unmatched BetExplorer rows over five days, every one of them
+            # recorded as a silent zero. That is the single largest blind
+            # spot in the price funnel, and it is exactly the surface the
+            # `coverage unmatched_causes` line claims to explain.
+            THEODDSAPI_ODDS_SOURCE,
+            BETEXPLORER_ODDS_SOURCE,
         }
         donor_join_report = donor_join_diagnostics(
             picks,
             [bundle for bundle in donor_bundles
-             if str(bundle.get("provider") or "") in shadow_donor_names],
+             if str(bundle.get("provider") or "") in diagnosed_donor_names],
         )
         for source_name, stats_name, scored_key, raw_key in (
             ("betbetter", "bb_matched", "bb_scored", "bb_raw"),
@@ -6048,11 +6061,18 @@ def main():
                 "training-only after Cloudflare challenge" if st_shadow_stats.get("training_only") else None
             ),
         }
+        # The bundle provider name and the source-health key are not always
+        # the same string: BetExplorer's board is published as
+        # `betexplorer_odds` but its health row is keyed `betexplorer`.
+        # Without this alias the join report is computed and then silently
+        # dropped on the `in health_observations` test.
+        join_report_health_key = {BETEXPLORER_ODDS_SOURCE: "betexplorer"}
         for source_name, join_row in donor_join_report.items():
-            if source_name in health_observations:
-                health_observations[source_name]["join_miss_counts"] = dict(
+            health_key = join_report_health_key.get(source_name, source_name)
+            if health_key in health_observations:
+                health_observations[health_key]["join_miss_counts"] = dict(
                     join_row.get("miss_counts") or {})
-                health_observations[source_name]["join_matched_rows"] = int(
+                health_observations[health_key]["join_matched_rows"] = int(
                     join_row.get("matched_rows") or 0)
         persist_daily_source_health(day, health_observations)
         print(daily_status_block(day), file=sys.stderr)

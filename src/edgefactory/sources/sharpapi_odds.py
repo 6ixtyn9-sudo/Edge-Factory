@@ -32,6 +32,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from edgefactory import rapidapi_diagnostics as _rapidapi
 from edgefactory.odds_normalization import canonical_market_selection
 
 SOURCE = "sharpapi_odds"
@@ -121,7 +122,13 @@ def get_json(url: str, *, timeout: int = 30) -> tuple[int, Any, dict[str, str]]:
                 _429 += 1
                 if _429 >= 2 or attempt: _cooling = True; raise UpstreamBlocked("sharpapi: repeated HTTP 429; cooling down") from exc
                 time.sleep(_wait(exc.headers.get("Retry-After") if exc.headers else None)); continue
-            raise UpstreamBlocked(f"sharpapi: HTTP {exc.code} {exc.reason}") from exc
+            # Capture the provider's own explanation. Without it a 404 is
+            # unactionable: "path not routed" and "key not subscribed to this
+            # API" are the same status code and opposite fixes.
+            snippet = ""
+            try: snippet = exc.read(400).decode("utf-8", "replace")
+            except Exception: pass
+            raise UpstreamBlocked(f"sharpapi: HTTP {exc.code} {exc.reason}; {snippet[:240]}") from exc
         except Exception as exc: raise UpstreamBlocked(f"sharpapi: {type(exc).__name__}: {exc}") from exc
     raise UpstreamBlocked("sharpapi: exhausted retries")
 
@@ -189,7 +196,7 @@ def _reason(code: int | None) -> str:
     if code == 403: return "http_403_auth_plan"
     if code == 429: return "http_429_quota"
     if code in (402, 509): return f"http_{code}_quota"
-    if code == 404: return "http_404_endpoint_contract"
+    if code == 404: return _rapidapi.REASON_UNCONFIRMED
     if code is None: return "transport_error"
     return f"http_{code}_unavailable"
 
@@ -229,6 +236,12 @@ def capture_day(day: str, *, localdata: Path | None = None) -> tuple[list[dict[s
         code = int(found.group(1)) if found else None
         stats["status"] = "cooldown" if _cooling else ("quota" if "budget" in msg or "429" in msg else _status(code))
         stats["reason"] = "run_cooldown" if _cooling else ("budget_reached" if "budget" in msg else _reason(code))
+        if code == 404 and not _cooling:
+            # Sub-classify from the body so the health line names the fix.
+            provider_message = _rapidapi.provider_snippet(msg)
+            stats["reason"] = _rapidapi.classify_404(provider_message)
+            stats["provider_message"] = provider_message
+            stats["operator_action"] = _rapidapi.explain(stats["reason"])
         stats["blocker"] = msg[:180]; stats["errors"] = [msg[:180]]; return [], _set_diag(stats)
 
 def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], *, localdata: Path | None = None) -> Path:

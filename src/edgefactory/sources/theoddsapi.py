@@ -174,6 +174,58 @@ SHORT_LEAGUE_KEYS: dict[str, tuple[str, ...]] = {
     "fi1": ("soccer_finland_veikkausliiga",),
     "se2": ("soccer_sweden_superettan",),
     "ie1": ("soccer_league_of_ireland",),
+    # --- 2026-10-06 coverage repair -------------------------------------
+    # Stage 1 is the ONLY safe place for a 2-3 character label: stage 2
+    # requires len(code) >= 4, so every short code not listed here resolves
+    # to None and the fixture is reported `league not covered` even when the
+    # provider plainly sells it. Measured over the 30 committed attempt
+    # ledgers, 111 of 657 unpriced shortlisted fixtures (17%) were in
+    # competitions whose sport key was already in the catalogue -- `EPL`
+    # among them.
+    #
+    # Every entry below was verified against the provider's own
+    # `title`/`description` in localdata/theoddsapi_sports.json, tier by
+    # tier. Codes are digit-preserving, so a second tier can never inherit
+    # its top tier's key. Deliberately NOT mapped: "efl" (ambiguous between
+    # soccer_efl_champ and soccer_england_efl_cup) and every code whose
+    # competition is absent from the catalogue -- None stays strictly
+    # preferred over a wrong-competition key.
+    "epl": ("soccer_epl",),                              # EPL
+    "l1": ("soccer_england_league1",),                   # League 1
+    "l2": ("soccer_england_league2",),                   # League 2
+    "sc1": ("soccer_spl",),                              # Premiership - Scotland
+    "de1": ("soccer_germany_bundesliga",),               # Bundesliga - Germany
+    "de2": ("soccer_germany_bundesliga2",),              # Bundesliga 2 - Germany
+    "de3": ("soccer_germany_liga3",),                    # 3. Liga - Germany
+    "it1": ("soccer_italy_serie_a",),                    # Serie A - Italy
+    "it2": ("soccer_italy_serie_b",),                    # Serie B - Italy
+    "es1": ("soccer_spain_la_liga",),                    # La Liga - Spain
+    "es2": ("soccer_spain_segunda_division",),           # La Liga 2 - Spain
+    "fr1": ("soccer_france_ligue_one",),                 # Ligue 1 - France
+    "fr2": ("soccer_france_ligue_two",),                 # Ligue 2 - France
+    "nl1": ("soccer_netherlands_eredivisie",),           # Dutch Eredivisie
+    "pt1": ("soccer_portugal_primeira_liga",),           # Primeira Liga - Portugal
+    "be1": ("soccer_belgium_first_div",),                # Belgium First Division
+    "at1": ("soccer_austria_bundesliga",),               # Austrian Bundesliga
+    "ch1": ("soccer_switzerland_superleague",),          # Swiss Superleague
+    "pl1": ("soccer_poland_ekstraklasa",),               # Ekstraklasa - Poland
+    "no1": ("soccer_norway_eliteserien",),               # Eliteserien - Norway
+    "se1": ("soccer_sweden_allsvenskan",),               # Allsvenskan - Sweden
+    "dk1": ("soccer_denmark_superliga",),                # Denmark Superliga
+    "tr1": ("soccer_turkey_super_league",),              # Turkey Super League
+    "gr1": ("soccer_greece_super_league",),              # Super League - Greece
+    "ru1": ("soccer_russia_premier_league",),            # Premier League - Russia
+    "us1": ("soccer_usa_mls",),                          # MLS
+    "mx1": ("soccer_mexico_ligamx",),                    # Liga MX
+    "br1": ("soccer_brazil_campeonato",),                # Brazil Serie A
+    "br2": ("soccer_brazil_serie_b",),                   # Brazil Serie B
+    "ar1": ("soccer_argentina_primera_division",),       # Primera Division - Argentina
+    "cl1": ("soccer_chile_campeonato",),                 # Primera Division - Chile
+    "jp1": ("soccer_japan_j_league",),                   # J League
+    "kr1": ("soccer_korea_kleague1",),                   # K League 1
+    "cn1": ("soccer_china_superleague",),                # Super League - China
+    "sa1": ("soccer_saudi_arabia_pro_league",),          # Saudi Pro League
+    "au1": ("soccer_australia_aleague",),                # A-League
 }
 
 
