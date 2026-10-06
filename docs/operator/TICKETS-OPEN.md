@@ -444,3 +444,25 @@ scope.
 
 Boggio is shipped as SHADOW-03 W3-T1. SportsGameOdds is moved out as an
 explicit SKIP in `docs/operator/SGO-QUOTA.md`; neither has promotion credit.
+
+### (l) SharpAPI league ids are not canonical across books — OPEN
+
+Observed in the captured soccer page of 2026-10-06: the same competition
+appears as `euro_quals_-_u21_championship` on one book and
+`uefa_u21_euro_qualifiers` on another, within a single response. Any
+league-based matching or filtering that treats the id as a stable string
+will split one competition into two and under-count coverage.
+
+Not addressed in the host/parser repair, which deliberately matches on
+fixture sides rather than league. It becomes blocking the moment
+`SHARPAPI_LEAGUE` is used as a server-side filter, because filtering on one
+spelling silently discards the other book's prices for the same games.
+
+### (m) SharpAPI prematch coverage is still entirely unmeasured — OPEN
+
+The only captured page was pulled after kickoff and was 100% in-play. The
+adapter now refuses live prices, which is correct, but it means the number
+that decides this vendor's fate — how many of our fixtures it prices
+BEFORE kickoff, with a draw and a 2.5 line — has never been observed. One
+prematch capture answers it. Until then, treat all coverage estimates for
+this source as unfounded.

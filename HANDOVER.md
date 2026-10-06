@@ -2,6 +2,29 @@ Edge Factory — Handover
 
 Date: 2026-10-03
 
+2026-10-06 addendum — SharpAPI repointed to the vendor's own host, shadow only
+
+Delivered
+
+- The SharpAPI price shadow had never returned a usable row, and the reason was three separate defects stacked on top of each other — which is why each earlier single-cause repair looked like it had failed. It was calling a marketplace relay the operator never had an account on; the deployment was overriding the endpoint with a path that only exists on that relay, silently undoing a correction made three days earlier; and the parser only understood a nested response shape the vendor does not send. It now calls the vendor directly with one credential, defaults to the documented path, and reads the flat one-record-per-selection board the vendor actually returns.
+- Prices are prematch only. The captured sample was entirely in-play because it was pulled after kickoff, and an in-play price is not a worse prematch price — it is a different quantity that would corrupt any closing-line measurement. Live, stale-pregame and player-prop rows are refused and counted by reason.
+- Fixture sides are taken only from the declared team fields, never from the event identifier. The captured page contains two fixtures whose identifiers list the teams in an order that contradicts which side is at home. Deriving sides from the identifier would have inverted the card for some games, and an inverted side prices perfectly — nothing downstream would ever have flagged it.
+- A zero-row answer now names which of four things happened: an empty board, a board that was entirely in-play, a board whose market vocabulary we could not map, or a payload shape we did not recognise. These prescribe opposite actions and were previously indistinguishable. The endpoint actually called is recorded too, so the override defect would now appear as data rather than as a mystery.
+- Still shadow only: never a vote, no consensus or corroboration wiring, no gate, floor, cap, quorum, threshold or veto touched. Call caps unchanged.
+
+Validation
+
+- Suite 1628 passed / 0 failed; `scripts/verify_work_order.py` 14/14; `scripts/verify_wo7.py` 9/9. Test functions 1448 to 1462, none removed.
+- Each new guard was broken on purpose, watched to fail, and restored, rather than merely asserted to work.
+
+What is observed and what is not
+
+Observed, from a response the operator captured in the vendor playground: the soccer board carries a genuine three-way match-odds market including the draw, and goal totals with numeric lines — the two markets this system bets, mapping through the existing normaliser with no new vocabulary. It also carries UEFA Nations League, which was the largest single league on the day's card at five of fourteen picks. The failure mode that killed the previous shadow vendor, a US two-way vocabulary with no draw, does not apply here.
+
+Not observed, and this is the number that actually matters: nobody has yet seen a single prematch row from this source. The one captured page was fifty rows, one sport, two books, one moment, all in-play. It is strong evidence about the response shape and no evidence about coverage.
+
+Blocking, and not doable from an agent session: the workflow still pins the endpoint to the relay-relative path, so production will 404 until it is changed. The corrected file is committed at `docs/operator/proposed-daily.yml` and must be copied over the live workflow by hand. The SharpAPI key also needs rotating — it was exposed in plaintext chat. That is a credential matter, not a repository-history one.
+
 2026-10-06 addendum — Pinnacle relay (pinnapi) request contract, shadow only
 
 Delivered
