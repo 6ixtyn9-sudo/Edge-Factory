@@ -41,9 +41,9 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 7,
+      "be_matched": 6,
       "be_raw": 30,
-      "be_usable": 27,
+      "be_usable": 30,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -52,7 +52,7 @@
       "freshness_h": null,
       "join_matched_rows": 5,
       "join_miss_counts": {
-        "fixture_key_miss": 12,
+        "fixture_key_miss": 15,
         "no_pick_for_fixture": 10
       },
       "reason": null,
@@ -164,7 +164,7 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": "pinnapi: HTTP 200 for sport_id=1 event_type=prematch produced zero usable rows [no_usable_rows] - fixtures parsed but every price was discarded; see the named drop reasons; observed payload shape recorded - do not extend the parser without a captured sample",
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
