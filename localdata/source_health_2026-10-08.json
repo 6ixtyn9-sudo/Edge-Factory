@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-07",
+  "date": "2026-10-08",
   "schema": 1,
   "sources": {
     "afootballreport": {
@@ -24,18 +24,20 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 13,
-        "market_unsupported": 596,
-        "out_of_window": 715
+        "fixture_key_miss": 1,
+        "market_unmapped": 1,
+        "market_unsupported": 587,
+        "out_of_window": 68,
+        "selection_unmapped": 667
       },
       "reason": null,
       "status": "cache_only"
     },
     "betclan": {
-      "blocker": null,
+      "blocker": "fetch returned zero rows",
       "can_fetch_today": true,
       "can_price": false,
-      "can_vote": true,
+      "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
@@ -43,20 +45,18 @@
     },
     "betexplorer": {
       "be_matched": 0,
-      "be_raw": 6,
-      "be_usable": 3,
-      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
+      "be_raw": 0,
+      "be_usable": 0,
+      "blocker": "no pre-build BetExplorer rows",
       "can_fetch_today": false,
-      "can_price": true,
+      "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
-      "join_miss_counts": {
-        "fixture_key_miss": 3
-      },
+      "join_miss_counts": {},
       "reason": null,
-      "status": "cache_only"
+      "status": "absent"
     },
     "betminer": {
       "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
@@ -83,41 +83,36 @@
     },
     "boggio": {
       "bg_matched": 0,
-      "bg_raw": 4,
-      "bg_scored": 4,
-      "blocker": null,
-      "can_fetch_today": true,
-      "can_price": true,
+      "bg_raw": 0,
+      "bg_scored": 0,
+      "blocker": "boggio: HTTP 404 Not Found",
+      "can_fetch_today": false,
+      "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {
-        "fixture_key_miss": 3,
-        "selection_unsupported": 1
-      },
       "reason": null,
-      "status": "cache_only"
+      "status": "unavailable"
     },
     "bzzoiro": {
-      "blocker": null,
-      "can_fetch_today": true,
+      "blocker": "bzz status=auth; quota_hint=auth_or_quota",
+      "can_fetch_today": false,
       "can_price": false,
-      "can_vote": true,
-      "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
-      "reason": null,
-      "status": "ok"
-    },
-    "bzzoiro_odds": {
-      "blocker": null,
-      "can_fetch_today": true,
-      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
-      "reason": null,
-      "status": "ok"
+      "freshness_h": null,
+      "reason": "http_403_plan_or_auth",
+      "status": "auth"
+    },
+    "bzzoiro_odds": {
+      "blocker": "bzz status=auth; quota_hint=auth_or_quota",
+      "can_fetch_today": false,
+      "can_price": false,
+      "can_vote": false,
+      "canonicalization_dropped": 0,
+      "freshness_h": null,
+      "reason": "http_403_plan_or_auth",
+      "status": "auth"
     },
     "forebet": {
       "blocker": "historical-only post-2026-06-12; no production pricing or weighting",
@@ -184,10 +179,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 1358,
+        "event_count": 1362,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 1358,
+        "events_with_teams": 1362,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -280,21 +275,19 @@
       "status": null
     },
     "theoddsapi": {
-      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
+      "blocker": "no pre-build TheOddsAPI rows",
       "can_fetch_today": false,
-      "can_price": true,
+      "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
-      "join_miss_counts": {
-        "fixture_key_miss": 69
-      },
+      "join_miss_counts": {},
       "oa_matched": 0,
-      "oa_raw": 69,
-      "oa_usable": 69,
+      "oa_raw": 0,
+      "oa_usable": 0,
       "reason": null,
-      "status": "cache_only"
+      "status": "empty"
     },
     "vitibet": {
       "blocker": null,
@@ -317,10 +310,10 @@
       "status": null
     },
     "zulubet": {
-      "blocker": null,
+      "blocker": "fetch returned zero rows",
       "can_fetch_today": true,
-      "can_price": true,
-      "can_vote": true,
+      "can_price": false,
+      "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
