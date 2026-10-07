@@ -1,0 +1,32 @@
+{
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 4,
+  "captured_at": "2026-10-07T22:28:54+00:00",
+  "date": "2026-10-08",
+  "due_reasons": {},
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 1
+  },
+  "quoted_fixtures": [],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "kickoff_mismatch": 1,
+    "priced_close_window_not_open": 1,
+    "retry_cooldown": 3
+  },
+  "skipped": [
+    "Shakhter Karagandy|Akademiya Ontustik (retry cooldown (6h after failed attempt))",
+    "Shamrock Rovers|Drogheda United (retry cooldown (6h after failed attempt))",
+    "KuPS|AC Oulu (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Cruzeiro|Sao Paulo: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Cruzeiro|Sao Paulo (priced, close window not open)"
+  ],
+  "source": "theoddsapi",
+  "status": "not_due",
+  "unmatched_reasons": {}
+}

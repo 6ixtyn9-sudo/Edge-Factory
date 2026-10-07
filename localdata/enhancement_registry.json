@@ -432,10 +432,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 209,
-   "inv_price_sum": 205.3125206998796,
+   "hits": 210,
+   "inv_price_sum": 206.12204450940342,
    "multi_n": 31,
-   "n": 312,
+   "n": 314,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -748,9 +748,11 @@
     "2026-09-20|Raufoss vs Stromsgodset|match_over_25@v1",
     "2026-09-20|Ujpest FC vs Zalaegerszegi TE|match_over_25@v1",
     "2026-10-03|Stromsgodset vs Asane|match_over_25@v1",
-    "2026-10-04|Castellon vs AD Ceuta|match_over_25@v1"
+    "2026-10-04|Castellon vs AD Ceuta|match_over_25@v1",
+    "2026-10-07|CR Belouizdad vs Khenchela|match_over_25@v1",
+    "2026-10-07|CS Constantine vs US Biskra|match_over_25@v1"
    ],
-   "profit": 6.047,
+   "profit": 7.047,
    "records": [
     {
      "date": "2026-08-01",
@@ -3244,6 +3246,22 @@
      "match": "Castellon vs AD Ceuta",
      "multi_source": false,
      "price": 1.36,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-07",
+     "hit": false,
+     "match": "CR Belouizdad vs Khenchela",
+     "multi_source": false,
+     "price": 2.1,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-07",
+     "hit": true,
+     "match": "CS Constantine vs US Biskra",
+     "multi_source": false,
+     "price": 3.0,
      "source": "scoutingstats"
     }
    ],
