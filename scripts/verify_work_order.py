@@ -348,9 +348,12 @@ def _():
     # check is the second half. Raise it when you add tests; never lower it
     # to make the check pass.
     # Raised 1524 -> 1526 on 2026-10-07: tests/test_team_identity_transliteration.py
-    # gains 2 curated-alias tests for the SharpAPI long-form fold (measured).
-    if count < 1526:
-        return (f"{count} test functions found, floor is 1526. Tests were "
+    # gains 2 curated-alias tests for the SharpAPI long-form fold.
+    # Raised 1526 -> 1528 on 2026-10-07: tests/test_identity.py gains the
+    # curated-LEAGUE analogue (derived from the table) plus the cup/league
+    # no-merge invariant. Both numbers measured, never guessed.
+    if count < 1528:
+        return (f"{count} test functions found, floor is 1528. Tests were "
                 "deleted rather than fixed.")
     return None
 
