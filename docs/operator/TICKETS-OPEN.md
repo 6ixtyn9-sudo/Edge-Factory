@@ -813,3 +813,16 @@ present, it names the discriminator and shows it separating the two cases.
 A hand-set threshold, a summary line, and a document's own description of
 itself are all excluded, because each reports what someone last decided to
 write rather than what is there.
+
+## (o) the schedule file has to be applied by hand
+
+The automation cannot write to the directory that holds the schedule
+file, so the change for the next run is parked beside this document as
+daily.yml.proposed. Copy it over the live schedule file whole; it is the
+complete file, not a fragment. Three things differ from the version in
+service: a dead secret line is gone, the row limit rises from a hundred
+to a thousand, and the comment above the competition filter no longer
+repeats the fifty-row claim that was already corrected elsewhere. The
+filter itself stays empty on purpose - see the ticket above on reading
+the vendor's own name for a competition off the record before setting
+it. The run still makes exactly one request to the price source.
