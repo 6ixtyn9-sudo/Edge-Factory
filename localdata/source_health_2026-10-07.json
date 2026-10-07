@@ -43,8 +43,8 @@
     },
     "betexplorer": {
       "be_matched": 0,
-      "be_raw": 6,
-      "be_usable": 3,
+      "be_raw": 9,
+      "be_usable": 6,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -53,7 +53,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 3
+        "fixture_key_miss": 6
       },
       "reason": null,
       "status": "cache_only"
@@ -184,10 +184,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 1358,
+        "event_count": 1368,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 1358,
+        "events_with_teams": 1368,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -235,17 +235,69 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
+      "board_summary": {
+        "board_fixtures": 4,
+        "board_league_count": 3,
+        "board_leagues": {
+          "concacaf_-_nations_league": 5,
+          "japan_-_emperor_cup": 79,
+          "world_-_international_friendlies": 116
+        },
+        "board_non_prematch_rows": 121,
+        "board_priced_rows": 19,
+        "board_rows": 200,
+        "board_team_count": 8,
+        "board_team_names": {
+          "Avispa Fukuoka": 7,
+          "Belize": 5,
+          "Chile": 116,
+          "French Guyana": 5,
+          "Mexico": 116,
+          "Omiya Ardija": 72,
+          "Urawa Red Diamonds": 72,
+          "Yokohama FC": 7
+        },
+        "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_moneyline": 6,
+          "unknown_market:2nd_half_moneyline": 6,
+          "unknown_market:match_result_total_goals": 9,
+          "unknown_market:point_spread": 2,
+          "unknown_market:team_clean_sheet": 2,
+          "unknown_market:team_to_win_to_nil": 2,
+          "unsupported_market:double_chance": 3,
+          "unsupported_market:team_total_exact": 10,
+          "unsupported_market:team_total_goals": 14,
+          "unsupported_market:team_total_points_odd_even": 4
+        },
+        "card_fixture_count": 4,
+        "card_fixtures_on_board": 1,
+        "card_fixtures_reversed": 0,
+        "card_prematch_drop_reasons": {
+          "live_price": 116
+        },
+        "card_priced_rows": 0,
+        "league_filter_requested": false,
+        "prematch_drop_reasons": {
+          "live_price": 121
+        },
+        "requested_limit": 1000
+      },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "all_rows_live_or_stale",
-      "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "freshness_h": 0.0,
+      "join_matched_rows": 1,
+      "join_miss_counts": {
+        "fixture_key_miss": 18
+      },
+      "reason": null,
+      "sa_matched": 1,
+      "sa_raw": 2,
+      "sa_scored": 19,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
