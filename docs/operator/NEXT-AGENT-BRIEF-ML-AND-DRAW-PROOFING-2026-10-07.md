@@ -197,6 +197,23 @@ side by side, and **no threshold movement until the shadow certifies**.
 the shadow protocol is what makes it revertible, so it is not optional.
 
 ---
+# STANDING OPERATOR DECISIONS (not part of these missions — do not action)
+Two decisions stay with the operator. Recorded here so they survive the
+handoff:
+1. **The C scores** (Items C/D: the two stalled settlement keys and the two
+   frozen Kladno rows). Fenced — the cases and the standing remedy are in
+   `docs/operator/FINDINGS-2026-10-07.md` §2–3. The operator sets the scores.
+2. **forebet's fate.** Before buying a proxy or routing around the block,
+   run the forebet capture ONCE from the operator's own (home) IP. If it
+   succeeds, the block is IP-based and a proxy — or simply running that one
+   source locally — genuinely fixes it. If it still 403s, the block is not
+   IP-based and a proxy is wasted money. Context: forebet is a
+   `backfill_donor` now and its staleness is visibility-only (the system runs
+   without it), but it still supplies ~43% of the settled overlay
+   (FINDINGS §1), so restoring the capture has real value. Routing around a
+   block is a ToS and new-dependency decision — the operator's, not yours.
+
+---
 
 # COMMIT HYGIENE (operator requirement)
 
