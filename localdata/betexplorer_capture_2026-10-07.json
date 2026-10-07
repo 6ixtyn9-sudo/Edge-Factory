@@ -1,12 +1,32 @@
 {
-  "attempted": 3,
+  "attempted": 5,
   "attempted_fixtures": [
+    {
+      "avg_p": 75.7,
+      "away": "Juventude",
+      "date": "2026-10-07",
+      "home": "Ponte Preta",
+      "league": "Brazil: Serie B",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    },
     {
       "avg_p": 71.0,
       "away": "Khenchela",
       "date": "2026-10-07",
       "home": "CR Belouizdad",
       "league": "Algeria: Ligue 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 61.2,
+      "away": "Chile",
+      "date": "2026-10-07",
+      "home": "Mexico",
+      "league": "International,Friendlies",
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
@@ -33,15 +53,35 @@
     }
   ],
   "be_429": 0,
-  "be_cached": 2,
+  "be_cached": 5,
   "be_cooling_down": false,
-  "candidate_fixtures": 3,
-  "captured_at": "2026-10-07T07:06:16.883145+00:00",
+  "candidate_fixtures": 5,
+  "captured_at": "2026-10-07T20:37:27.699340+00:00",
   "date": "2026-10-07",
   "errors": [],
-  "fixtures_with_rows": 2,
+  "fixtures_with_rows": 4,
   "max_fixtures": 12,
   "quoted_fixtures": [
+    {
+      "avg_p": 75.7,
+      "away": "Juventude",
+      "date": "2026-10-07",
+      "home": "Ponte Preta",
+      "league": "Brazil: Serie B",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 61.2,
+      "away": "Chile",
+      "date": "2026-10-07",
+      "home": "Mexico",
+      "league": "International,Friendlies",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
     {
       "avg_p": 58.4,
       "away": "Shonan Bellmare",
@@ -63,7 +103,7 @@
       "w_score": 0.2011
     }
   ],
-  "rows": 6,
+  "rows": 12,
   "schema": 1,
   "status": "ok"
 }
