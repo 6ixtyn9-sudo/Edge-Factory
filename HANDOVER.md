@@ -2,6 +2,45 @@ Edge Factory — Handover
 
 Date: 2026-10-03
 
+2026-10-06 addendum — ticket (o): a zero-row price board now names which zero it was
+
+Delivered, in commit e95784b
+
+- The price board is now measured alongside the rows that survive it. The 2026-10-06 run asked for the whole global soccer board with a hundred-row limit and no competition filter, and recorded that every row was refused as in-play. That wording tells the operator to capture earlier. If the board is ordered live-first and the page filled before reaching our fixtures, capturing earlier changes nothing and the remedy is the opposite one — narrow the request. The run could not say which had happened, because nothing recorded how big the board was or what was on it.
+- Seven outcomes are now told apart where there were three: an empty slate, a page that filled with in-play games before reaching our fixtures, the same page filled instead with player props, a board of props that was not truncated, a board whose rows carried no usable price, a competition filter the vendor ignored, and a filter honoured onto an empty competition — plus the board whose market vocabulary did not map. Each carries the board's own counts and the competitions observed on it.
+- The refusal groups are reported separately rather than summed. The first cut of this work folded every prematch refusal into one in-play token, so a board that was entirely player props described itself as live — not a missing distinction but a false statement about a board with no live rows on it. Where both appear, the in-play finding is the one reported: it says the capture window itself was wrong, which outranks a board merely carrying markets we do not bet.
+- The per-reason breakdown travels into the committed record, not just the total. A count of rows refused cannot be unpicked afterwards into why they were refused, and the two causes ask for different remedies. The vendor's own market tokens are kept as a bounded census — ranked, capped and only then shortened — so the record stays a census and never becomes a payload archive.
+- The capture now also measures the overlap between the board and our own card, before any refusal runs, and that number outranks every refusal token. The request asks for sport and a row limit only, so the board is the whole world's soccer and every refusal describes other people's fixtures. Soccer runs continuously somewhere, so in-play rows at the top of an unfiltered board are background rather than evidence about our capture window. With no overlap the verdict says our fixtures were never on the page and narrowing is the whole fix; with overlap, the refusals for those specific rows become the diagnosis, so a hundred in-play strangers can no longer mask our own two fixtures sitting there as player props. Absence is claimed only against a board that returned something, and fixtures listed with the sides reversed get their own verdict rather than being called absent.
+- The card is folded with the same team key the price join downstream uses, passed in from the pipeline rather than reimplemented in the adapter, so the overlap means what the join means.
+- The competition filter was deliberately left unset. Choosing an identifier blind is the exact failure this work was commissioned to avoid, and the report that says whether a guess worked is the thing that shipped. The passthrough is already wired in the deployment, so narrowing is one secret away and needs no workflow change.
+- The configured filter value is never recorded. It arrives from a deployment secret and the health record is committed; only whether a filter was asked for, and whether it appears to have been honoured, travel.
+- Shadow and diagnostic only: no gate, floor, cap, quorum, threshold or veto touched, no settlement or staking arithmetic, no new vendor, no change to call budgets or minimum intervals, no workflow edited.
+
+Validation
+
+- Suite 1691 passed / 0 failed; both verifiers pass at 14/14 and 9/9. Test functions 1473 to 1524, none removed; the deletion tripwire was raised to 1524 and watched to fail when a test was disabled. The tripwire number is measured the way the verifier itself counts, which is narrower than a repo-wide search and was off by one against it - the check's own metric is the authority. Four guards were found inert across these rounds and all four were repaired: three in the previous round, and a census cap whose test padded names so far past the cut that every one of them collapsed into a single entry, making the cap unreachable. In that last case the mutation was faithful and the test was wrong, which is the distinction worth preserving.
+- Each new guard was broken on purpose, watched to fail, and restored. That includes the ambiguity rule, the stale-count reset, the pipeline forwarding, the secret boundary, the refusal-group split and its precedence.
+- Three guards were found inert by that exercise and none was left that way. The third is the most instructive: a wiring check written as a text search passed with the wiring removed, because the same keyword already appeared elsewhere in the file for a different source. It now matches the call itself rather than the text, which is the difference between a guard and a decoration.
+- Two guards were found inert by that exercise and were not left that way. One let the breakdowns be removed from the pipeline while a record-level test went on passing — the same wiring-versus-capability gap as before, one layer down. The other could not tell the census implementation from the defective one it replaced. Both now fail against the real defect, the second checked by restoring the actual earlier implementation rather than an approximation of it.
+- One defect in this work was found by its own test rather than by inspection: shortening a vendor token before ranking merged forty distinct misses into one entry and reported a single miss. Ranking now happens on the full token, and colliding entries are added rather than allowed to replace one another.
+- An existing deployment-drift guard caught a genuine defect in this work before it shipped: a second reader of the row limit declared an empty default that contradicted the deployment's hundred. The limit and the competition filter are now read back out of the request that was actually built, so there is one reader rather than two.
+
+What is observed and what is not
+
+Observed: each of the five outcomes produces its own distinct record, and that record survives the run into the committed health file. Proved against mocked responses only — the sandbox has no network and no call was made to any vendor.
+
+Not observed, and unchanged by this round: whether this vendor prices our fixtures before kickoff. That number is still the one that decides its fate. This change makes the next attempt readable; it does not answer it.
+
+Still entirely untested: whether our market names match this vendor's. The 2026-10-06 run produced an empty vocabulary-failure record, and that is not evidence of agreement — the prematch refusal runs before the vocabulary step, so when every row is refused as in-play nothing reaches it and the record is empty for a trivial reason. If a narrowed request does return our fixtures, this question gets tested for the first time and may fail.
+
+2026-10-06 addendum — the Pinnacle relay's recorded shape, read
+
+Observed, from the committed health record for 2026-10-06 and 2026-10-07: the relay returned one thousand five hundred and sixty-eight soccer events, every one of them carrying team names, and not one of them carrying a markets block at all — the markets field is absent rather than empty.
+
+This settles the open question in the work-order note below, which recorded as inference that the prematch listing names matches but does not price them. It is now an observation. It also answers the sport-number question directly: the sport number is correct, because the wrong one would not return one and a half thousand named soccer fixtures. Neither defect that work order existed to fix is still present.
+
+What follows from it is a decision, not a repair: prices for this relay live behind a different request than the one that lists fixtures. Extending to that request is an operator decision and remains outside any shipped work. The relay stays shadow only — it does not vote, price, or corroborate, and reading its payload is a bug fix rather than a promotion. The trial key lapses 20 October 2026.
+
 2026-10-06 addendum — SharpAPI repointed to the vendor's own host, shadow only
 
 Delivered
@@ -2306,6 +2345,98 @@ Deferred (recorded, not in scope):
       views on different lines.
 
 ---
+
+
+### A hundred rows on this board is five matches, not a hundred
+
+The array the vendor returns holds one record per price - fixture, book,
+market, selection - so the row count and the match count are different
+measurements. The parameter holding them was called "events", and that
+name was believed over the docstring directly beneath it, producing a
+written claim that the board carried a hundred events. It carried five
+fixtures; a single under-21 qualifier accounted for sixty-seven rows.
+
+This matters because it reverses the verdict. A hundred matches none of
+which are ours would be damning evidence about coverage and the answer
+would be to stop paying for the source. Five in-play strangers is a
+filtering problem and the answer is to narrow the request and try again.
+The recommendation did not change, but it was one run from doing so.
+
+*Observed:* both counts were already recorded side by side and both
+already reached the committed record, the match count measured across
+the whole board before any refusal. *Inferred:* nothing was missing from
+the instrument - what was missing was a test able to tell the counts
+apart, because every synthetic board in the suite used one row per
+fixture, the one shape where the two numbers agree. The suite now
+carries the real board from that day.
+
+### The configured page limit is honoured, contrary to a stale code note
+
+A comment in the request code said the soccer feed pages at fifty rows
+behind a cursor, which would have made the configured limit of a
+hundred meaningless. The live board disagrees: a single request with a
+limit of a hundred returned exactly a hundred rows, truncated at the
+limit. *Observed:* the limit is honoured up to a hundred and the real
+board is larger than the page we see. *Inferred, not shown:* nothing
+about values above a hundred, which have never been requested. The
+comment has been corrected where it sits, since it had already led to
+one wrong conclusion about the vendor being capped.
+
+Both the competition filter and the limit read from repository secrets
+with the present values as fallbacks, so changing either is an operator
+action needing no workflow edit and no extra call.
+
+### The price board was read on 2026-10-06 and the answer is coverage, not naming
+
+*Observed.* One hundred rows came back, all in-play, covering five
+fixtures: the request is metered in price rows rather than matches, and
+a single under-21 qualifier consumed sixty-seven of them. None of the
+day's fourteen fixtures appeared, and nothing on the board resembled
+them even under a deliberately loose comparison run for diagnosis only.
+The run also asked about zero fixtures, because an intraday pass hands
+the price lane only freshly generated picks and that pass produced none,
+so the overlap verdict could not fire; the team census is unconditional
+and is what made the day readable at all. The lane is now handed the
+day's card, merging the fresh run with the rows already archived for
+that day, so an intraday pass can no longer report an overlap of zero
+that only means nobody asked.
+
+*Inferred.* Narrowing by competition will not on its own put our card in
+front of the filter, because five matches per hundred rows is the
+ceiling regardless of which competition is asked for. The curated name
+register is not the cause of this zero, though it remains a real gap
+elsewhere: of the twenty-seven name pairs it resolves for settlement,
+the price-board join recognises three.
+
+### Reading a zero overlap on the price board
+
+The capture now records the vendor's own spelling of the team names
+alongside the competitions, both capped. This exists because an overlap
+of zero had two causes with opposite remedies and nothing to separate
+them: either the board does not carry our card, or it carries it under
+names our key does not recognise. Our key is an exact match on a
+compacted name plus a small hand-curated alias list assembled against
+the sources already running, and it had never been tried against this
+vendor. Of seven realistic name variants, six fail to fold together.
+
+*Observed:* the key matches only identical strings in practice, and the
+competition census shipped with a flaw that merged two names sharing a
+long prefix and discarded one of the counts; both censuses now rank on
+the full name, cap, then shorten, adding rather than overwriting when
+two shortened names collide. *Inferred:* on first contact with a vendor,
+a naming mismatch is more likely than genuine absence, which is why the
+names are recorded rather than a matcher loosened.
+
+The verdict wording was also changed. It previously stated that our
+fixtures were absent from the board, which asserts a cause the evidence
+cannot establish; it now states only that nothing of ours matched. The
+step-by-step reading of the result is in the open tickets file under
+ticket (o).
+
+A boundary worth stating: none of this measures whether the vendor
+prices our fixtures before kickoff, or whether its market names match
+ours. Both require a live run against the vendor, which cannot happen
+here. Everything above was proved with recorded responses only.
 
 ## Addendum 9 — 2026-08-03 (post-package RED TEAM → payload v2 supersedes v1)
 

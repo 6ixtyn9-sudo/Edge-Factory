@@ -504,3 +504,450 @@ def test_the_effective_endpoint_is_recorded_in_the_capture_stats(monkeypatch):
     monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": []}, {}))
     _rows, stats = sa.capture_day("2026-10-06")
     assert stats["endpoint"] == "/odds"
+
+
+# --- ticket (o): a zero must name which zero it was -----------------------
+#
+# The 2026-10-06 production run asked for an unfiltered global soccer board
+# with a 100-row limit, got HTTP 200, and reported "all rows live or stale".
+# That token tells the operator to capture earlier. If the board is sorted
+# live-first and the page filled before reaching our fixtures, capturing
+# earlier changes nothing and the real remedy is to narrow the request.
+# These are opposite actions behind one token, so the token had to split.
+
+
+def _live_board(count, league=lambda i: f"lg_{i % 7}"):
+    """A full page of in-play rows across several competitions."""
+    return [_flat(home_team=f"H{i}", away_team=f"A{i}", league=league(i),
+                  is_live=True) for i in range(count)]
+
+
+def test_a_full_page_of_live_rows_asks_to_narrow_not_to_wait(monkeypatch):
+    """The page hit its own limit, so the tail was never seen."""
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(100)}, {}))
+    rows, stats = sa.capture_day("2026-10-06")
+    assert rows == []
+    assert stats["reason"] == "board_truncated_live_first"
+    assert stats["board_truncated"] is True
+    assert stats["board_rows"] == 100 and stats["board_fixtures"] == 100
+    assert stats["board_non_prematch_rows"] == 100
+
+
+def test_a_short_all_live_board_still_reads_as_a_late_capture(monkeypatch):
+    """The contrast case: the board ended well short of the limit.
+
+    Nothing was cut off, so every game really had started and the original
+    advice - capture earlier - is still the right one.
+    """
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(6)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "all_rows_live_or_stale"
+    assert stats["board_truncated"] is False
+
+
+def test_a_competition_filter_the_server_ignored_is_not_an_empty_board(monkeypatch):
+    """The trap this ticket was written around.
+
+    A competition identifier the vendor does not recognise produces the same
+    bare zero as a competition with no games on. They are told apart only by
+    reading what the board actually contained: a board carrying several
+    OTHER competitions is a filter that was never applied.
+    """
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "uefa_-_nations_league")
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(100)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "league_filter_not_applied"
+    assert stats["league_filter_effective"] is False
+    assert stats["league_filter_requested"] is True
+
+
+def test_a_competition_filter_onto_an_empty_board_says_so(monkeypatch):
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "uefa_-_nations_league")
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": []}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "league_filter_returned_empty"
+    assert stats["board_rows"] == 0
+
+
+def test_a_single_unmatched_competition_is_not_called_a_rejected_filter(monkeypatch):
+    """Ticket (l) hazard: the vendor spells one competition several ways.
+
+    With exactly one competition on the board and no textual match, "the
+    filter was rejected" and "this is the vendor's other spelling" are both
+    live explanations. The verdict must stay unknown rather than accuse.
+    """
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "uefa_-_nations_league")
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (
+        200, {"data": [_flat(is_live=True, league="brazil_serie_a")]}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["league_filter_effective"] is None
+    assert stats["reason"] != "league_filter_not_applied"
+
+
+def test_an_alternate_spelling_counts_as_the_filter_working(monkeypatch):
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "uefa_-_nations_league")
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (
+        200, {"data": [_flat(is_live=True, league="UEFA Nations League A")]}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["league_filter_effective"] is True
+
+
+def test_board_counts_never_survive_into_an_unrecognized_payload(monkeypatch):
+    """A stale count reads as a measurement of the wrong response."""
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(9)}, {}))
+    _rows, first = sa.capture_day("2026-10-06")
+    assert first["board_rows"] == 9
+    sa.reset_state()
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"unexpected": "shape"}, {}))
+    _rows, second = sa.capture_day("2026-10-07")
+    assert second["reason"] == "schema_unrecognized"
+    assert second["board_rows"] == 0 and second["board_fixtures"] == 0
+
+
+def test_the_configured_competition_value_never_reaches_the_capture_stats(monkeypatch):
+    """The filter arrives from a deployment secret; the record is committed."""
+    monkeypatch.setenv("SHARPAPI_LEAGUE", "a-private-competition-id")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _live_board(4)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert "a-private-competition-id" not in json.dumps(stats)
+    assert stats["league_filter_requested"] is True
+
+
+def test_board_context_is_recorded_on_a_successful_capture_too(monkeypatch):
+    """A capture that DID price rows still has to say how big the board was.
+
+    Otherwise a narrowing that quietly stopped being applied looks identical
+    to one that is still working.
+    """
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": [_flat()]}, {}))
+    rows, stats = sa.capture_day("2026-10-06")
+    assert rows and stats["status"] == "ok"
+    assert stats["board_rows"] == 1 and stats["board_priced_rows"] == 1
+    assert stats["board_leagues"] == {"uefa_-_nations_league": 1}
+
+
+# --- ticket (o) follow-up: "refused" is not one fault, it is three --------
+#
+# The first cut of this classification folded every prematch refusal into
+# one live-or-stale token. A board that was entirely player props therefore
+# reported itself as live, which is not a missing distinction but a false
+# statement about a board with no live rows on it. The refusal groups ask
+# for different remedies, so they are reported separately.
+
+
+def _props_board(count):
+    return [_flat(home_team=f"H{i}", away_team=f"A{i}", is_player_prop=True)
+            for i in range(count)]
+
+
+def test_a_board_of_player_props_is_never_reported_as_live(monkeypatch):
+    """Nothing on this board was in-play; the token must not say it was."""
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _props_board(100)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "board_truncated_player_props"
+    assert "live" not in stats["reason"]
+    assert stats["prematch_drop_reasons"] == {"player_prop": 100}
+
+
+def test_a_short_board_of_player_props_is_named_without_truncation(monkeypatch):
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    monkeypatch.setattr(sa, "get_json",
+                        lambda *a, **k: (200, {"data": _props_board(6)}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "all_rows_player_props"
+
+
+def test_live_rows_outrank_player_props_when_both_are_present(monkeypatch):
+    """Timing beats market selection.
+
+    An in-play row is a different quantity and would corrupt a closing-line
+    measurement, so it invalidates the capture window itself. A prop row is
+    only a market we never bet. Reporting the props while live rows are
+    also on the board would hide the more serious of the two faults.
+    """
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    mixed = ([_flat(home_team=f"L{i}", away_team=f"A{i}", is_live=True)
+              for i in range(50)] + _props_board(50))
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": mixed}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "board_truncated_live_first"
+    assert stats["prematch_drop_reasons"]["live_price"] == 50
+    assert stats["prematch_drop_reasons"]["player_prop"] == 50
+
+
+def test_a_board_whose_rows_carry_no_usable_price_is_named_separately(monkeypatch):
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (
+        200, {"data": [_flat(odds_decimal=None)]}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["reason"] == "all_rows_unpriced"
+
+
+def test_the_classification_warns_the_next_reader_off_the_empty_map():
+    """The inference that was drawn wrongly once, fenced at the site.
+
+    An empty vocabulary-failure map is empty because the prematch refusal
+    runs first and nothing reached the mapper. It means untested, never
+    agrees. The warning lives at the branch rather than in a document,
+    because the branch is where someone reads the empty map.
+    """
+    import inspect
+    source = inspect.getsource(sa._zero_row_reason)
+    assert "BEFORE CONCLUDING ANYTHING ABOUT MARKET VOCABULARY" in source
+    assert "never" in source and "agrees" in source
+
+
+# --- ticket (o) follow-up 2: on a global board, whose fixtures are these? --
+#
+# The request defaults to sport and limit only, so the board is the whole
+# world's soccer. Soccer runs continuously somewhere, so in-play rows at the
+# top of an unfiltered board are background noise, not a statement about our
+# capture window. A board of 100 in-play Brazilian games and a board of 100
+# prop-only Japanese games are equally uninformative about whether tonight's
+# fixtures were quotable. The overlap between the board and our card is the
+# number that decides the next move, so it outranks every refusal token.
+
+
+def _team_key(name):
+    return "".join(ch for ch in str(name).lower() if ch.isalnum())
+
+
+CARD = [("Scotland", "Portugal"), ("Croatia", "Czechia")]
+
+
+def _strangers(count, **over):
+    return [_flat(home_team=f"Flamengo{i}", away_team=f"Gremio{i}",
+                  is_live=True, **over) for i in range(count)]
+
+
+def _capture(payload, card=CARD, monkeypatch=None):
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": payload}, {}))
+    return sa.capture_day("2026-10-06", card=card, team_key=_team_key)
+
+
+def test_a_global_board_without_our_fixtures_says_exactly_that(monkeypatch):
+    """The refusal tokens describe strangers; the verdict must not."""
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    _rows, stats = _capture(_strangers(100), monkeypatch=monkeypatch)
+    assert stats["reason"] == "card_fixtures_unmatched_on_board"
+    assert stats["card_fixtures_on_board"] == 0
+    assert stats["card_fixture_count"] == 2
+
+
+def test_our_own_rows_decide_the_diagnosis_not_the_strangers(monkeypatch):
+    """A hundred in-play strangers must not mask what OUR rows were.
+
+    Before the overlap was measured, the board-wide counters won and this
+    board reported itself as truncated live-first. Our two fixtures were
+    on it, and they were props - a different remedy entirely.
+    """
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    payload = _strangers(98) + [
+        _flat(home_team="Scotland", away_team="Portugal", is_player_prop=True),
+        _flat(home_team="Croatia", away_team="Czechia", is_player_prop=True)]
+    _rows, stats = _capture(payload, monkeypatch=monkeypatch)
+    assert stats["reason"] == "board_truncated_player_props"
+    assert stats["card_fixtures_on_board"] == 2
+    assert stats["card_prematch_drop_reasons"] == {"player_prop": 2}
+    # the board-wide count still records the strangers, unchanged
+    assert stats["prematch_drop_reasons"]["live_price"] == 98
+
+
+def test_our_fixtures_listed_the_other_way_round_are_not_called_absent(monkeypatch):
+    """An inverted board is a different fault from an empty one.
+
+    This vendor is already known to contradict itself on which side is at
+    home, so a reversed pair is a live possibility rather than a curiosity.
+    """
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    payload = _strangers(99) + [_flat(home_team="Portugal",
+                                      away_team="Scotland", is_live=True)]
+    _rows, stats = _capture(payload, monkeypatch=monkeypatch)
+    assert stats["reason"] == "card_fixtures_matched_sides_reversed"
+    assert stats["card_fixtures_reversed"] == 1
+
+
+def test_an_empty_board_is_not_dressed_up_as_a_coverage_finding(monkeypatch):
+    """Absence only means something once something came back."""
+    _rows, stats = _capture([], monkeypatch=monkeypatch)
+    assert stats["reason"] == "provider_empty_slate"
+
+
+def test_our_fixtures_priced_reports_them_separately(monkeypatch):
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    payload = _strangers(98) + [_flat(home_team="Scotland", away_team="Portugal"),
+                                _flat(home_team="Croatia", away_team="Czechia")]
+    rows, stats = _capture(payload, monkeypatch=monkeypatch)
+    assert len(rows) == 2 and stats["status"] == "ok"
+    assert stats["card_priced_rows"] == 2
+
+
+def test_without_a_card_the_board_wide_reading_is_unchanged(monkeypatch):
+    """Back-compat: callers that pass no card see the previous behaviour."""
+    monkeypatch.setenv("SHARPAPI_LIMIT", "100")
+    _rows, stats = _capture(_strangers(100), card=None, monkeypatch=monkeypatch)
+    assert stats["reason"] == "board_truncated_live_first"
+    assert stats["card_fixture_count"] == 0
+
+
+# --- ticket (o) follow-up 3: a zero overlap has two causes ----------------
+#
+# The join key is an exact match on a compacted name plus a small curated
+# alias table, built against the sources we already run. This vendor has
+# never been exercised against it, so "none of our fixtures matched" means
+# either the board does not carry our card, or it carries it spelled a way
+# the table does not fold - opposite remedies. The vendor's own team names
+# are recorded so the artefact settles which, after the run, without
+# committing to a looser matcher before a real board has ever been seen.
+
+
+def test_a_board_that_carries_our_card_under_other_names_is_recoverable(monkeypatch):
+    """The false negative that would condemn a working vendor."""
+    board = [_flat(home_team="Heart of Midlothian", away_team="Rangers FC",
+                   is_live=True)]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06", card=[("Hearts", "Rangers")],
+                                  team_key=_team_key)
+    assert stats["reason"] == "card_fixtures_unmatched_on_board"
+    assert stats["card_fixtures_on_board"] == 0
+    # ...and the evidence that says it was an alias gap, not absent coverage
+    assert "Heart of Midlothian" in stats["board_team_names"]
+    assert "Rangers FC" in stats["board_team_names"]
+
+
+def test_no_verdict_this_adapter_emits_claims_absence(monkeypatch):
+    """Naming a cause this evidence cannot support is the oldest bug here.
+
+    An earlier wording asserted our fixtures were absent from the board.
+    Absence is one of two explanations and the recorded names exist
+    precisely because the capture cannot tell which. Driven through real
+    captures rather than read off the source.
+    """
+    seen = set()
+    scenarios = [
+        ([_flat(home_team="Heart of Midlothian", away_team="Rangers FC",
+                is_live=True)], [("Hearts", "Rangers")]),
+        ([_flat(home_team="Rangers", away_team="Hearts", is_live=True)],
+         [("Hearts", "Rangers")]),
+    ]
+    for board, card in scenarios:
+        monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+        _rows, stats = sa.capture_day("2026-10-06", card=card, team_key=_team_key)
+        seen.add(stats["reason"])
+    assert seen == {"card_fixtures_unmatched_on_board",
+                    "card_fixtures_matched_sides_reversed"}
+    assert not any("absent" in r for r in seen)
+
+
+def test_the_team_census_caps_how_many_names_it_keeps(monkeypatch):
+    """Names are short and distinct here on purpose.
+
+    A first attempt padded them to 80 characters and put the only
+    distinguishing digit past the 40-character cut, so all sixty collapsed
+    into one entry and the count cap was never reached. The mutation that
+    disabled the cap passed, and the test - not the guard - was at fault.
+    """
+    board = [_flat(home_team=f"Home {i:03d}", away_team=f"Away {i:03d}")
+             for i in range(60)]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["board_team_count"] == 120      # all of them counted
+    assert len(stats["board_team_names"]) == 40  # only this many committed
+
+
+def test_the_team_census_caps_how_long_each_name_may_be(monkeypatch):
+    board = [_flat(home_team="N" * 300, away_team="Rangers")]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert max(len(n) for n in stats["board_team_names"]) == 40
+
+
+def test_the_team_census_loses_no_counts_to_shortening(monkeypatch):
+    """Same defect the competition census had: shorten after ranking, and
+    add on collision rather than letting one name replace another."""
+    board = [_flat(home_team=f"{'H' * 60}{i}", away_team="Rangers")
+             for i in range(5)]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    merged = [n for n in stats["board_team_names"] if n.startswith("HHH")]
+    assert len(merged) == 1
+    assert stats["board_team_names"][merged[0]] == 5
+
+
+def test_the_competition_census_also_loses_no_counts_to_shortening(monkeypatch):
+    """The same helper now guards both censuses."""
+    board = [_flat(home_team=f"H{i}", away_team=f"A{i}",
+                   league=f"{'L' * 60}{i}") for i in range(4)]
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert len(stats["board_leagues"]) == 1
+    assert sum(stats["board_leagues"].values()) == 4
+
+
+# --- rows are not matches ------------------------------------------------
+#
+# Added after a reader annotated the committed board as "100 raw events"
+# when it was 100 price records over five fixtures. The parameter holding
+# them was called `events` and the name was believed over the docstring
+# directly beneath it. Every synthetic board in this file until now used
+# one row per fixture, the degenerate shape in which the two counts are
+# equal, so nothing here could ever have caught the confusion.
+
+
+def _real_board_20261006():
+    """The 2026-10-06 board as the committed census recorded it."""
+    spec = [("Israel U21", "Norway U21", "uefa_u21_euro_qualifiers", 67),
+            ("CA Atlas", "Fenix", "argentina_-_primera_c", 22),
+            ("Central Ballester", "Deportivo Muniz", "argentina_-_primera_c", 7),
+            ("FC Trollhattan", "Mjallby AIF", "sweden_-_svenska_cupen", 3),
+            ("IK Start", "Raufoss IL", "norway_-_cup", 1)]
+    return [_flat(home_team=h, away_team=a, league=lg, is_live=True)
+            for h, a, lg, n in spec for _ in range(n)]
+
+
+def test_a_hundred_price_rows_is_not_a_hundred_matches(monkeypatch):
+    board = _real_board_20261006()
+    assert len(board) == 100
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    assert stats["board_rows"] == 100     # price records
+    assert stats["board_fixtures"] == 5   # distinct matches behind them
+    # the whole decision turns on these two not being read as one number:
+    # a hundred matches carrying none of ours condemns the vendor, five
+    # in-play strangers is a filtering problem.
+
+
+def test_both_counts_reach_the_committed_artefact(monkeypatch):
+    board = _real_board_20261006()
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    _rows, stats = sa.capture_day("2026-10-06")
+    from edgefactory import source_health
+    payload = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            **source_health.sharpapi_board_observation(stats),
+        },
+    })
+    summary = payload["sources"]["sharpapi_odds"]["board_summary"]
+    assert summary["board_rows"] == 100
+    assert summary["board_fixtures"] == 5
+
+
+def test_the_distinct_match_count_covers_the_whole_board_not_survivors(monkeypatch):
+    """Every row on this board is refused; the match count still stands."""
+    board = _real_board_20261006()
+    monkeypatch.setattr(sa, "get_json", lambda *a, **k: (200, {"data": board}, {}))
+    rows, stats = sa.capture_day("2026-10-06")
+    assert rows == []                     # all in-play, nothing survives
+    assert stats["board_fixtures"] == 5   # measured before refusal

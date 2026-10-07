@@ -79,6 +79,7 @@ from edgefactory.source_health import (
     daily_status_block,
     persist_daily_source_health,
     pinnapi_contract_observation,
+    sharpapi_board_observation,
     source_role_lines,
     record_bzzoiro_run,
     zero_row_reason,
@@ -3175,7 +3176,50 @@ def _shadow_failure_lines(day: str, stats: dict[str, dict]) -> None:
         print(f"{name} {day}: status={entry.get('status', 'unknown')} http={http} note={note}", file=sys.stderr)
 
 
-def _capture_shadow_candidates(day: str) -> dict[str, dict]:
+def _day_card_fixtures(day: str, picks: list) -> list:
+    """The day's whole card, for comparison against a vendor's board.
+
+    Freshly generated picks are not the card. An intraday pass routinely
+    generates nothing - the day's real selections were frozen that
+    morning and sit in the day archive - and a lane handed an empty card
+    reports an overlap of zero that means "nobody asked". That reads
+    exactly like "nothing matched", which is the false negative this
+    whole diagnostic exists to prevent; it is what the 2026-10-06 run
+    did. The archive is written later in the run, so at this point it
+    still holds the earlier frozen rows, which is precisely what we want.
+
+    Observation only: this card is compared with a price board and never
+    prices, selects, stakes or settles anything. A bad read here can
+    only make a diagnostic less informative, never change a bet.
+    """
+    fresh = [p for p in picks
+             if isinstance(p, dict) and str(p.get("date") or "")[:10] == day]
+    seen = {(str(p.get("home") or "").strip(), str(p.get("away") or "").strip())
+            for p in fresh}
+    out = list(fresh)
+    try:
+        rows = json.loads((ROOT / "localdata" / f"picks_{day}.json").read_text())
+    except Exception:
+        # Missing or unreadable archive must never take the run down: the
+        # fresh card is a worse answer, not a fatal one.
+        return out
+    if not isinstance(rows, list):
+        return out
+    for row in rows:
+        if not isinstance(row, dict):
+            continue
+        if str(row.get("date") or "")[:10] != day:
+            continue
+        key = (str(row.get("home") or "").strip(),
+               str(row.get("away") or "").strip())
+        if not key[0] or not key[1] or key in seen:
+            continue
+        seen.add(key)
+        out.append(row)
+    return out
+
+
+def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, dict]:
     """Capture every verified shadow candidate without touching the production path.
 
     The candidate pass intentionally makes no paid/provider capture. Its sole
@@ -3237,7 +3281,14 @@ def _capture_shadow_candidates(day: str) -> dict[str, dict]:
         stats["betbetter"]["blocker"] = str(exc)[:180]
     try:
         from edgefactory.sources import sharpapi_odds as sa
-        sa_rows, sa_stats = sa.capture_day(day)
+        # Our own card, folded with THIS module's team key, so the overlap
+        # the adapter reports is the same notion of a fixture match that
+        # the price join downstream uses.
+        sa_rows, sa_stats = sa.capture_day(
+            day,
+            card=[(f.get("home"), f.get("away")) for f in (card or [])],
+            team_key=odds_match_team_key,
+        )
         sa.persist_shadow(day, sa_rows, sa_stats, localdata=LOCALDATA)
         stats["sharpapi_odds"] = sa_stats
     except Exception as exc:
@@ -5679,7 +5730,10 @@ def main():
         # prices, SharpAPI books) can only reach the price board if their
         # ledgers for `day` exist by the time the bundles are built. Capture
         # is still shadow-only and still writes its own ledgers.
-        shadow_stats = _capture_shadow_candidates(day)
+        shadow_stats = _capture_shadow_candidates(
+            day,
+            card=_day_card_fixtures(day, picks),
+        )
 
         bzz_stats: dict = {}
         scouting_stats: dict = {}
@@ -6035,6 +6089,10 @@ def main():
             "can_price": int(sa_shadow_stats.get("sa_scored") or 0) > 0,
             "can_vote": False,
             "freshness_h": 0.0 if sa_shadow_stats.get("status") == "ok" else None,
+            # Board-shape context: how big the board was, how much of it was
+            # in-play, which competitions were on it, and whether the page
+            # hit its own limit. Without these a zero names no action.
+            **sharpapi_board_observation(sa_shadow_stats),
             "blocker": sa_shadow_stats.get("blocker"),
             "status": sa_shadow_stats.get("status"),
             "reason": sa_shadow_stats.get("reason"),
