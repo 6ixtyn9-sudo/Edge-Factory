@@ -35,23 +35,23 @@ are not from the same run. Provenance note: all 27,638 of the overlay's
 `forebet_settled` rows postdate the committed forebet archive (which ends
 2026-06-12) — the overlay is pipeline state, not archive-derived.
 
-**Step 1 — Mission A, draw-proofing replay.** One verified substitution: the
-committed prediction archives end 2026-06-12 (forebet 327,866 clean rows,
-zulubet 67,187, statarea 489,286 — all ending the same day; each also carries
-repeated header rows where `date == 'date'` — skip them), so they cannot price
-the ACCA window (2026-08-27 → 2026-10-06). Derive DNB / Double Chance / ±0.25
-prices for that window from `localdata/theoddsapi_odds_2026-08/09/10.csv.gz`
-(11,415 rows, 2026-08-03 → 2026-10-07): every one of its 156 1x2 fixtures
-carries a full home/draw/away triple across 26 bookmakers, with `captured_at`
-per row (8 of 156 carry more than one capture). Declare two bases on every
-price you derive: the bookmaker (the feed's mix differs from the slips' named
-books) and the capture time. Report leg-level coverage — the priced subset.
-`betexplorer_odds` ends 2026-06-16; `oddspapi_odds` covers only 2026-10-03 →
-2026-10-04. `clv_snapshots_2026-06…10.csv.gz` carries per-pick
-`observed_odds` and `implied_prob` keyed on `match_date` — a price-basis
-cross-check. Then A/B at the same stake schedule, count sub-1.20 legs under
-each market, and answer A3 (realised draw rate vs draw-price-implied)
-explicitly.
+**Step 1 — Mission A, RE-SCOPED (amended 2026-10-07 after the feasibility
+check).** The price replay is **BLOCKED on committed data**: the only feed
+reaching the window, `theoddsapi_odds_2026-08/09/10.csv.gz`, matches **16 of
+174 ACCA legs (9.2%)**; no committed source carries the window's 1x2 triples
+(`betexplorer_odds` ends 2026-06-16; `oddspapi_odds` covers 2026-10-03 →
+2026-10-04; `clv_snapshots` is per-pick; `picks_*.json` is pick-only). Do
+**not** run a DNB/DC/±0.25 replay on the 9% subset and call it a verdict.
+Record A1/A2/A3 as blocked-pending-capture — capturing triples for ACCA legs
+is a scope change, the operator's decision. **Run the flag-axis replay
+instead** (needs no new prices; see the Mission A AMENDMENT): the flag table,
+the 17 draw-killed legs' flags, and the first-pass counterfactual are all in
+the amendment. Tasks in order: (1) find the flag's producer and inputs;
+(2) measure its calibration, `n` per bucket; (3) verify structurally whether
+ACCA construction consults it; (4) run the counterfactual at the same stake
+schedule; (5) state the in-sample limit — any composition change is
+finding-first, the operator's call. Then B1 (calibration) — unblocked, its
+data exists.
 
 **Step 2 — Mission B1, calibration.** Platt/isotonic on a held-out slice;
 reliability curve + Brier; report which picks change band.
@@ -77,6 +77,85 @@ baseline named (2395, floor 1534), and what you did NOT do and why.
 ---
 
 # MISSION A — DRAW-PROOFING REPLAY (the ACCA complaint)
+
+## AMENDMENT (2026-10-07) — Mission A re-scoped after the feasibility check
+
+**A1, A2 and A3 are BLOCKED on committed data.** The only committed feed
+reaching the ACCA window, `localdata/theoddsapi_odds_2026-08/09/10.csv.gz`,
+matches **16 of 174 legs (9.2%)** — verified by joining every leg on (date,
+folded home, folded away). No committed source carries the window's 1x2
+triples: `betexplorer_odds_*` (the one with `odd1/oddx/odd2`) ends 2026-06-16;
+`oddspapi_odds` covers 2026-10-03 → 2026-10-04 only; `clv_snapshots_*` is
+per-pick (`observed_odds`, `implied_prob`, keyed on `match_date`), not the
+triple; `picks_*.json` carries the pick's price only. The feed itself is
+sound — 156 fixtures, 26 bookmakers, every fixture a full home/draw/away
+triple, markets `1x2` (9,129 rows) / `ou_2.5` / `ou_3.5`, no DNB or DC
+market — it simply does not cover these legs. **Do not** run a DNB/DC/±0.25
+replay on the 9% subset and call it a verdict. Record A1/A2/A3 as
+blocked-pending-capture; capturing triples for ACCA legs is a scope change
+and the operator's decision.
+
+**The replacement: the flag-axis replay (needs no new prices).**
+`draw_risk_flag` is systemic on the picks rows — present with a value on
+1,654 of 1,747 rows (absent on 93). Verified on the legs matched to picks
+rows (join: date + folded team names, side-agreed; **172 of 174 legs match,
+0 flag conflicts**):
+
+| flag | n | drew | rate |
+|---|---|---|---|
+| EXTREME | 38 | 8 | **21.1%** |
+| HIGH | 91 | 9 | 9.9% |
+| MEDIUM | 28 | 3 | 10.7% |
+| LOW | 12 | 2 | 16.7% |
+| UNKNOWN | 3 | 0 | 0.0% |
+
+(A first-pass on a different join — 146 legs — gave EXTREME 25.8% (n=31),
+HIGH 12.0% (n=75), MEDIUM 13.6% (n=22), LOW 18.2% (n=11). The drew counts
+are identical on both bases and the direction is the same: EXTREME draws at
+roughly twice the HIGH rate. The denominators differ by join basis —
+re-derive on the stated basis.) The 17 draw-killed legs (draws inside the 64
+fully-joined ACCAs) carry **HIGH 8 / EXTREME 6 / MEDIUM 2 / LOW 1**. So the
+operator's question — can the legs that draw be identified — is already
+answered by the system. Open: whether the flag is calibrated (LOW above HIGH
+breaks monotonicity, n=12), who produces it, and whether ACCA construction
+consults it at all.
+
+**The counterfactual that runs today** (same stake schedule, 64 fully-joined
+ACCAs; first-pass, in-sample, n=64, no bootstrapping — re-derive, do not
+inherit):
+
+| variant | ACCAs | net P&L |
+|---|---|---|
+| as-bet | 64 | staked 748.8 → returned 840.4 = **+91.6 pts** |
+| drop EXTREME legs | 42 | **+111.9 pts** |
+| drop EXTREME+HIGH | 5 | **+2.9 pts** |
+
+(A first-pass on the other join gave drop-EXTREME as 43 ACCAs / +94.0 pts;
+the one-ACC difference is a single EXTREME-flagged leg in a losing ACCA that
+the other join leaves unflagged. Both bases agree on the direction: excluding
+EXTREME-flagged legs holds or improves the P&L on roughly a third less staked
+and removes 6 of the 17 draw-kills; dropping HIGH as well destroys the book.)
+
+**Tasks, in order:**
+1. Find the flag's producer and its inputs — odds-band/league-derived or
+   model-derived? Report the mechanism.
+2. Measure its calibration on the full archived window, `n` per bucket and
+   flags per cell.
+3. Verify whether ACCA construction consults it at all — read the
+   leg-selection path structurally (AST), not by text search.
+4. Run the ACCA counterfactual at the same stake schedule: as-bet vs
+   drop-EXTREME vs drop-EXTREME+HIGH. Re-derive the figures above on the
+   stated join basis.
+5. State the in-sample limit, and that any composition change is
+   finding-first — the operator's call.
+
+**Caveats that stay visible:** the counterfactual is in-sample on 64 ACCAs
+with no bootstrapping; the flag's non-monotonicity (LOW above HIGH) suggests
+a coarse heuristic rather than a probability — which is why the producer
+matters before anyone gates legs on it. **Pre-registered bar for the
+replacement:** the counterfactual is reported against the as-bet baseline at
+the same stake schedule, `n` per cell; a flag-based leg filter is a finding
+for the operator, not a change.
 
 ## Why it exists (measured 2026-10-07)
 
@@ -131,21 +210,18 @@ that limit in every claim built on it. And note the confound: longer-odds legs
 are genuinely less certain, so part of the 30% is the market working, not a
 hidden pattern. That is exactly why Task A3 exists.
 
-## Task A1 — price every draw-handling market exactly
-DNB is not the only one. **Price-source caveat (verified 2026-10-07): the
+## Task A1 — price every draw-handling market exactly **[BLOCKED — see AMENDMENT: the feed below matches 16 of 174 legs (9.2%)]**
+DNB is not the only one. **Price-source record (verified 2026-10-07): the
 committed prediction histories end 2026-06-12** (`forebet.csv.gz` 327,866
 clean rows, `zulubet.csv.gz` 67,187, `statarea.csv.gz` 489,286 — all ending
 the same day; skip their repeated header rows where `date == 'date'`). They
-predate the ACCA window (2026-08-27 → 2026-10-06) and **cannot price it**.
-The committed source that covers the window is
-`localdata/theoddsapi_odds_2026-08/09/10.csv.gz` (2026-08-03 → 2026-10-07):
-every one of its 156 1x2 fixtures carries a full home/draw/away triple
-across 26 bookmakers, with `captured_at` per row. Declare two bases on every
-price: the bookmaker (the feed's mix differs from the slips' named books) and
-the capture time (8 of 156 fixtures carry more than one). Report leg-level
-coverage (the priced subset); cross-check the basis against
-`clv_snapshots_2026-06…10.csv.gz` (per-pick `observed_odds` and
-`implied_prob`, keyed on `match_date`). Derive, for every archived leg:
+predate the ACCA window (2026-08-27 → 2026-10-06) and cannot price it. The
+only committed feed reaching the window is
+`localdata/theoddsapi_odds_2026-08/09/10.csv.gz` (2026-08-03 → 2026-10-07;
+156 1x2 fixtures, 26 bookmakers, full home/draw/away triples) — **but it
+matches only 16 of 174 legs (9.2%)**. Nothing committed prices the window's
+triples. This task is blocked pending a capture decision (the operator's).
+Derive, for every archived leg:
 
 - **DNB / Asian 0.0** — void on draw; the ACCA collapses to its remaining legs.
 - **Double Chance (1X / X2)** — WINS on the draw; the ACCA stays whole at a
@@ -157,7 +233,7 @@ Re-price every leg, recompute each ACCA's combined odds and payout under each
 market, and A/B against the as-bet slips at the same stake schedule, same legs,
 same days.
 
-## Task A2 — the floor (measure; DO NOT change)
+## Task A2 — the floor (measure; DO NOT change) **[BLOCKED pending the same capture — the per-market floor count needs the DNB/DC prices]**
 `MIN_LEG_ODDS = 1.20` (`scripts/auto_tickets.py:193`) is global. Under DNB/DC,
 short favourites collapse toward 1.02–1.10 and would fail it. Report how many
 archived legs fall below 1.20 under each market, and in which price bands. The
@@ -165,7 +241,7 @@ operator's read — "the 1.2 min odds should not be global" — is a **hypothesi
 to test**, not an instruction to edit. The count is what would license a
 per-market floor.
 
-## Task A3 — is the draw mispriced, or merely volatile?
+## Task A3 — is the draw mispriced, or merely volatile? **[BLOCKED — see AMENDMENT]**
 For each price band, compare the **realised** draw rate against the rate
 implied by `oddx`. If realised ≫ implied, the draw is underpriced and
 avoiding/covering those legs is +EV. If they match, the market is right and
