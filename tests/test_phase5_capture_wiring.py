@@ -17,14 +17,20 @@ from edgefactory.sources import betminer
 ROOT = Path(__file__).resolve().parent.parent
 
 
-def test_phase5_ledgers_are_allowlisted_for_existing_git_persistence():
-    for name in (
-        phase5_shadow.ROWS_NAME,
-        phase5_shadow.ATTEMPTS_NAME,
-        "status.json",
-        "evaluation.json",
-    ):
-        path = f"localdata/{phase5_shadow.SHADOW_DIR}/{name}"
+def test_phase5_artifacts_are_allowlisted_for_existing_git_persistence():
+    paths = [
+        f"localdata/{phase5_shadow.SHADOW_DIR}/{name}"
+        for name in (
+            phase5_shadow.ROWS_NAME,
+            phase5_shadow.ATTEMPTS_NAME,
+            "status.json",
+            "evaluation.json",
+        )
+    ] + [
+        "localdata/phase5_activation/active_era.json",
+        "localdata/phase5_activation/registry.jsonl",
+    ]
+    for path in paths:
         result = subprocess.run(
             ["git", "check-ignore", "--no-index", "-q", path],
             cwd=ROOT,
