@@ -159,6 +159,84 @@ def pinnapi_contract_observation(stats: dict[str, Any]) -> dict[str, Any]:
     return {k: stats.get(k) for k in PINNAPI_CONTRACT_FIELDS}
 
 
+SHARPAPI_BOARD_FIELDS = (
+    "board_rows", "board_fixtures", "board_league_count", "board_leagues",
+    "board_non_prematch_rows", "board_priced_rows", "board_truncated",
+    "requested_limit", "league_filter_requested", "league_filter_effective",
+    # Breakdowns, not just totals. "97 rows refused" does not say whether
+    # the capture ran late or whether the board was player props, and those
+    # ask for different remedies. The aggregate count cannot be unpicked
+    # afterwards, so the per-reason split has to travel with it.
+    "prematch_drop_reasons", "canonicalization_drop_reasons",
+    # Overlap with our own card. On an unfiltered global board every other
+    # number here describes other people's fixtures, so this is the one
+    # that says whether any of it was about us.
+    "board_team_count", "board_team_names",
+    "card_fixture_count", "card_fixtures_on_board", "card_fixtures_reversed",
+    "card_priced_rows", "card_prematch_drop_reasons",
+    "card_canonicalization_drop_reasons",
+)
+
+# The prematch refusals are our own closed vocabulary, so they are listed.
+# The vocabulary-failure keys are NOT: they embed the provider's own raw
+# market token by design, which is what makes them useful and also what
+# makes them unbounded. They are capped and truncated into a census rather
+# than copied, so a committed row can never become a payload archive.
+PREMATCH_DROP_REASON_VOCABULARY = (
+    "live_price", "stale_pregame_price", "player_prop", "no_decimal_price",
+)
+_MAX_VOCABULARY_MISSES = 10
+_MAX_VOCABULARY_TOKEN_CHARS = 60
+
+
+def _reason_counts(value: object, *, allowed: tuple[str, ...] | None = None,
+                   limit: int | None = None) -> dict[str, int] | None:
+    """Coerce a drop-reason map to bounded, counts-only form."""
+    if not isinstance(value, dict) or not value:
+        return None
+    ranked: list[tuple[str, int]] = []
+    for key, count in value.items():
+        name = str(key)
+        if allowed is not None and name not in allowed:
+            continue
+        try:
+            ranked.append((name, max(0, int(count))))
+        except (TypeError, ValueError):
+            continue
+    # Rank on the FULL token, then cap, then shorten. Shortening first
+    # merges tokens that share a long prefix into a single entry and throws
+    # the count away with them - which is how a census quietly starts
+    # reporting one miss where there were forty.
+    ranked.sort(key=lambda kv: (-kv[1], kv[0]))
+    if limit is not None:
+        ranked = ranked[:limit]
+    counts: dict[str, int] = {}
+    for name, count in ranked:
+        short = name[:_MAX_VOCABULARY_TOKEN_CHARS]
+        # Two distinct tokens can still collide once shortened. Adding keeps
+        # the total honest rather than letting one silently replace another.
+        counts[short] = counts.get(short, 0) + count
+    return counts or None
+
+
+def sharpapi_board_observation(stats: dict[str, Any]) -> dict[str, Any]:
+    """Lift the board-shape context out of the adapter stats.
+
+    Same hand-built-observation hazard as the pinnapi passthrough above, and
+    the same remedy: one list, named in one place, so the adapter and the
+    committed row cannot drift apart.
+
+    This context is what makes a zero readable. Without it a page that
+    filled with in-play games before reaching our fixtures, a competition
+    filter the server ignored, and a genuinely empty slate are the same
+    bare zero with three opposite remedies. The configured filter VALUE is
+    deliberately not among these fields - it arrives from a deployment
+    secret, and this row is committed.
+    """
+    stats = stats or {}
+    return {k: stats.get(k) for k in SHARPAPI_BOARD_FIELDS}
+
+
 def build_daily_source_health(
     day: str,
     observations: dict[str, dict[str, Any]] | None = None,
@@ -296,6 +374,28 @@ def build_daily_source_health(
                 "sa_scored": int(obs.get("sa_scored") or obs.get("sa_matched") or 0),
                 "sa_matched": int(obs.get("sa_matched") or 0),
             })
+            # Board context, so a zero says which zero it was. Counts and
+            # vendor-supplied competition names only; never the configured
+            # filter value and never a payload sample.
+            board = {k: obs.get(k) for k in SHARPAPI_BOARD_FIELDS
+                     if obs.get(k) is not None}
+            prematch = _reason_counts(
+                obs.get("prematch_drop_reasons"),
+                allowed=PREMATCH_DROP_REASON_VOCABULARY)
+            board["card_prematch_drop_reasons"] = _reason_counts(
+                obs.get("card_prematch_drop_reasons"),
+                allowed=PREMATCH_DROP_REASON_VOCABULARY)
+            board["card_canonicalization_drop_reasons"] = _reason_counts(
+                obs.get("card_canonicalization_drop_reasons"),
+                limit=_MAX_VOCABULARY_MISSES)
+            vocabulary = _reason_counts(
+                obs.get("canonicalization_drop_reasons"),
+                limit=_MAX_VOCABULARY_MISSES)
+            board["prematch_drop_reasons"] = prematch
+            board["canonicalization_drop_reasons"] = vocabulary
+            board = {k: v for k, v in board.items() if v is not None}
+            if board:
+                row["board_summary"] = board
         elif name == "boggio":
             row.update({
                 "bg_raw": int(obs.get("bg_raw") or 0),
@@ -486,6 +586,28 @@ def _dropped_token(row: dict[str, Any]) -> str:
     return f"/dropped{dropped}" if dropped > 0 else ""
 
 
+def _card_token(row: dict[str, Any]) -> str:
+    """``/card<seen>of<asked>`` when our own card was compared to the board.
+
+    A global board can return a hundred priced rows, none of them ours, and
+    the source line then reads like success. The same reasoning as the
+    discarded-row count: the number that matters belongs where the operator
+    already looks, not only in a nested record nobody opens.
+    """
+    summary = row.get("board_summary") or {}
+    try:
+        asked = int(summary.get("card_fixture_count") or 0)
+    except (TypeError, ValueError):
+        return ""
+    if asked <= 0:
+        return ""
+    try:
+        seen = int(summary.get("card_fixtures_on_board") or 0)
+    except (TypeError, ValueError):
+        seen = 0
+    return f"/card{seen}of{asked}"
+
+
 def _zero_reason(row: dict[str, Any], raw: int) -> str:
     """Compact deterministic reason for shadow/donor observations.
 
@@ -593,7 +715,7 @@ def daily_status_block(day: str) -> str:
             tokens.append(f"betbetter=bb_raw{row.get('bb_raw', 0)}/bb_scored{row.get('bb_scored', 0)}{_zero_reason({**row, '_source_name': 'betbetter'}, int(row.get('bb_raw') or 0))}{_dropped_token(row)}/bb_matched{row.get('bb_matched', 0)}")
             continue
         if name == "sharpapi_odds":
-            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason({**row, '_source_name': 'sharpapi_odds'}, int(row.get('sa_raw') or 0))}{_dropped_token(row)}/sa_scored{row.get('sa_scored', 0)}")
+            tokens.append(f"sharpapi=sa_raw{row.get('sa_raw', 0)}/sa_matched{row.get('sa_matched', 0)}{_zero_reason({**row, '_source_name': 'sharpapi_odds'}, int(row.get('sa_raw') or 0))}{_dropped_token(row)}{_card_token(row)}/sa_scored{row.get('sa_scored', 0)}")
             continue
         if name == "boggio":
             tokens.append(f"boggio=bg_raw{row.get('bg_raw', 0)}/bg_scored{row.get('bg_scored', 0)}{_zero_reason({**row, '_source_name': 'boggio'}, int(row.get('bg_raw') or 0))}{_dropped_token(row)}/bg_matched{row.get('bg_matched', 0)}")

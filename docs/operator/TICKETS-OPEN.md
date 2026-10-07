@@ -495,3 +495,334 @@ operator decision, not a code change: the enhancement overlay (alternate
 goal lines, both-teams-to-score, team totals, double chance) has parsing
 code that production never exercises, and the credit cost of enabling it
 is a budget matter.
+
+### (o) The price board is read live-first and our fixtures fall below the cut — FIXED (diagnosis); narrowing still needs one operator setting
+
+Observed, from the committed health record for 2026-10-06: the price
+vendor answered HTTP 200 and the run recorded that every row was refused
+as in-play or stale. The request was the whole global soccer board with a
+100-row limit and no competition filter.
+
+Inferred, and the reason this was a ticket rather than a fix: a board
+ordered live-first with a 100-row cut would produce exactly that record
+whether or not our fixtures were priced, because they would sit below the
+cut and never be seen. The run could not tell the operator which had
+happened — the old wording named a late capture, and the remedy for a
+truncated page is the opposite of capturing later.
+
+What shipped: the board is now measured alongside the rows that survive
+it. Every capture records how many records came back, how many distinct
+fixtures, how much of the board was refused and for which reasons, which
+competitions were on it, and whether the page reached its own row limit.
+Seven outcomes are now told apart where there were three:
+
+- an empty slate — come back later;
+- **a page truncated live-first** — narrow the request, do not wait;
+- **a page truncated on player props** — the markets we bet were not on
+  it; this is a market-selection problem, not a timing one;
+- a board of props that was not truncated — same remedy, no cut involved;
+- a board whose rows carried no usable price;
+- a competition filter the server ignored — the identifier is not one it
+  knows;
+- a filter honoured onto an empty board — that competition had nothing on;
+- a board whose market vocabulary did not map — the vocabulary moved.
+
+Refusals are reported by group rather than summed. The first cut folded
+every prematch refusal into one in-play token, so a board that was wholly
+player props reported itself as live — a false statement about a board
+with no live rows on it, not merely a missing distinction. When both
+appear the in-play finding is reported, because it says the capture window
+itself was wrong and that outranks a board carrying markets we never bet.
+The per-reason split travels into the committed record alongside the
+total, since a total cannot be unpicked into its causes afterwards.
+
+What did NOT ship, deliberately: no competition identifier was chosen and
+configured. Picking one blind is the precise failure this ticket warns
+about — see ticket (l) — and the diagnostic that reports whether the guess
+worked is the thing being delivered here. The passthrough is already wired
+in the deployment and is currently empty, so **narrowing is one secret
+away and needs no workflow change.** Set the competition filter secret and
+the next run returns a verdict on the identifier instead of a bare zero.
+
+Boundary of the claim: this is proved against mocked responses only. The
+sandbox has no network, so no call was made to the vendor. What is proved
+is that each of the five outcomes produces its own distinct, committed
+record, and that the context survives the run. Whether this vendor prices
+our fixtures before kickoff remains unmeasured — that is ticket (m), and
+this change is what makes the next attempt readable rather than what
+answers it.
+
+Known limit: the ambiguity rule is conservative on purpose. With exactly
+one competition on the board and no textual match against the request,
+the verdict stays unknown rather than accusing the filter, because this
+vendor spells one competition several ways inside a single response.
+A filter that was genuinely rejected onto a single-competition board will
+therefore read as unknown, not as rejected. That is the safe direction of
+error.
+
+### (o) follow-up — the number that decides the next move is the overlap
+
+Observed, from the deployed configuration: the request carries sport and a
+row limit only. The board is the whole world's soccer.
+
+That makes every refusal token a statement about **other people's
+fixtures**. Soccer runs continuously somewhere, so in-play rows at the top
+of an unfiltered board are background, not evidence about our capture
+window — the 15:20Z probe that returned fifty rows, all in-play, is that
+background measured. A board of a hundred in-play Brazilian games and a
+board of a hundred prop-only Japanese games are equally uninformative
+about whether tonight's fixtures were quotable. None of the refusal
+tokens answered the only question that decides what to do next.
+
+So the capture now measures one more thing, before any refusal logic runs:
+of the fixtures on our card for the day, how many appeared anywhere in the
+returned rows. The reading splits cleanly.
+
+- **Overlap zero** — every refusal token is a distraction, our fixtures
+  were never on the page, and narrowing by competition is the whole fix.
+  The verdict says so and outranks the refusal tokens.
+- **Overlap non-zero** — the refusals for *those specific rows* become the
+  diagnosis, and the seven-way split does the work it was built for. A
+  hundred in-play strangers no longer mask the fact that our two fixtures
+  were on the board as player props.
+
+Two boundaries worth stating. Absence is only claimed against a board that
+returned something; on an empty board our fixtures are trivially absent and
+saying so would dress a quiet slate up as a coverage finding. And fixtures
+listed with the sides the other way round are reported as their own verdict
+rather than as absence, because this vendor is already known to contradict
+itself about which side is at home.
+
+The card is folded with the same team key the price join downstream uses,
+handed in from the pipeline rather than reimplemented in the adapter. A
+private matcher here would produce a number that looked like coverage and
+quietly answered a different question.
+
+Still mocked-only: the sandbox has no network and no call was made.
+
+### Environment note — this sandbox resets to the branch point mid-session
+
+Observed twice, in two independent sessions on different branches: the
+working tree survives in full while the commit pointer is reset to the
+branch point, so finished work appears as a large pile of uncommitted
+changes and recent commits appear to have vanished.
+
+The correct response is narrow. Fetch, confirm the work is on the remote,
+and move the branch pointer back onto it with a SOFT reset, which never
+touches files. A plain reset afterwards re-syncs the index. Never use a
+hard reset and never clean: both destroy the only copy of anything that
+was not pushed. The failure mode is silent, and the instinct under time
+pressure is the destructive one, which is why it is written down here.
+
+The practical consequence: push early. The remote is the only place two
+sessions can reconcile, and in this environment it is the only copy worth
+trusting.
+
+### (o) RESULT of the live run on 2026-10-06 (run 37511693120)
+
+The board was read and the question is answered. Summary first: the
+fixtures genuinely are not there, it is not a naming problem, and the
+reason is much worse than a sort order.
+
+**The hundred rows bought five fixtures.** The request returns one row
+per market per bookmaker, not one row per match, so the limit of a
+hundred was spent on five games: a single under-21 qualifier took
+sixty-seven of them, two Argentine third-tier games took twenty-nine,
+and a Swedish and a Norwegian cup tie took the last four. Every row was
+in-play. This is the finding that matters, and nobody knew it before
+the run: even a perfect competition filter returns about five matches
+per hundred rows, so narrowing the request cannot by itself put our card
+in front of the filter. The arithmetic checks: 67 + 22 + 7 + 3 + 1 = 100.
+
+**It is not an alias gap.** Our fourteen fixtures that day were senior
+internationals plus one English league game. The board carried an
+Israel/Norway under-21 qualifier, two Argentine Primera C games and two
+Scandinavian cup ties. Nothing on the board resembles anything on our
+card - the strict count is zero and a deliberately loose look-alike
+count, run only as a diagnostic and never as a join, is also zero. The
+curated name register is therefore not the answer here, though it
+remains a genuine gap in the odds lane for other days (see below).
+
+**The overlap instrument was blind on this run. Fixed.**
+The run recorded that we asked about zero fixtures, so the overlap
+verdict never fired and the source line carried no overlap token. The
+cause: this was an intraday pass whose fresh pick lane produced nothing,
+and the day's fourteen picks were preserved frozen rows from the
+morning. The card handed to the price lane was built from freshly
+generated picks only, so it was empty. The team census saved the run
+because it is unconditional.
+
+The lane is now handed the day's card - the fresh run merged with the
+rows already in the day archive, deduplicated and filtered to the day.
+Replayed against the real board from 2026-10-06, the same payload now
+says fourteen fixtures were asked about and none matched, where before
+it remarked that the board was truncated live-first. A statement about
+strangers became a statement about us. The read is defensive: a missing
+or unreadable archive falls back to the fresh card rather than raising,
+because a diagnostic must not be able to take the run down.
+
+**What is now known, and what is still open.** Known: the vendor is
+reachable, the parser reads it, the limit is per price row, the top of
+the board is in-play, and on this day it carried none of our
+competitions. Still unknown and still not answerable without another
+run: whether the vendor prices our fixtures at all at a quieter hour or
+under a competition filter, and whether its market names match ours.
+
+## (o) reading the board figures without tripping over them
+
+The vendor returns one record per price, so the figure for rows and the
+figure for matches are different quantities and both are recorded. On
+2026-10-06 the board was a hundred rows over five matches. Read them
+together or the verdict inverts: a hundred *matches* carrying none of
+ours condemns the source, five in-play strangers is a filtering problem
+with an obvious next move. A reader already made this mistake once,
+because the code called those records events.
+
+## (o) the configured limit is honoured - corrected 2026-10-06
+
+A note in the request code claimed the soccer feed pages at fifty rows
+behind a cursor. If that were true the configured limit of a hundred
+would be ignored, one call would buy two or three matches rather than
+five, and raising the limit would not be an option at all. The live run
+settles it: one request, a configured limit of a hundred, and exactly a
+hundred rows came back, truncated at the limit. The limit is honoured
+and the real board is bigger than the page we see. The note was stale
+and has been corrected in place, because it had already produced one
+wrong conclusion.
+
+**Boundary.** This shows the limit is honoured *up to a hundred*. Nobody
+has ever asked for more than a hundred, so whether larger values are
+honoured is untested. The next run answers it free from the same
+artefact: ask for more and compare the rows recorded against the limit
+recorded.
+
+**Neither knob needs a workflow edit.** Both the competition filter and
+the limit already read from repository secrets, falling back to the
+current values when unset. Setting `SHARPAPI_LEAGUE`, and optionally
+`SHARPAPI_LIMIT`, as repository secrets changes the next run with no
+file change and no extra call. Note this removes the occasion that was
+being saved for deleting the dead secret reference in the workflow -
+that cleanup now needs its own moment.
+
+**What the trial actually needs.** This lane is shadow only and its
+question is whether the vendor is worth anything, not whether it can
+cover the card. Judging a price source needs a few fixtures seen
+repeatedly over several days, not the whole card in one night. Two or
+three correctly priced fixtures a night in a competition we actually
+bet accumulates a real answer inside a week at no additional call cost.
+Paging only becomes a question if the vendor earns promotion to
+production coverage, and promotion is explicitly out of scope - so
+spending call budget on it now would be buying a solution to a problem
+we have not decided to have.
+
+## (o) how to read the result of the narrowed run
+
+The run is now instrumented to explain itself whichever way it fails, so
+the next move can be decided from the committed record without another
+build. Read it in this order.
+
+**First: did any of our card appear?** The source line carries the
+overlap directly, as "card0of14" - how many of the day's fixtures were
+found on the board, out of how many we asked about. This is the number
+that decides everything else, and it is deliberately in front of you
+rather than nested in the record, because a global board can return a
+hundred priced rows with none of them ours and otherwise read like a
+perfectly healthy source.
+
+**If the overlap is greater than zero**, the vendor carries our fixtures
+and the narrowing worked. What happens next is a genuine unknown that has
+never been tested: whether its market vocabulary matches ours. That can
+still fail, and failing there is informative rather than disappointing.
+
+**If the overlap is zero**, it has two causes and they pull in opposite
+directions, so do not act before separating them. The record now lists
+the competitions the board carried and the vendor's own spelling of the
+team names, both capped so the artefact stays small.
+
+- Our competition is in the list, and our teams are recognisably there
+  under different spellings - *Heart of Midlothian* where our card says
+  *Hearts*. That is a naming gap, not a coverage gap. The vendor is fine
+  and the fix is small: the names fold into the existing alias table.
+  Do not narrow the request further and do not abandon the source.
+- Our competition never appears and no name resembles our card. That is
+  genuine absence. The vendor does not price what we bet, and the honest
+  conclusion is to narrow the request or stop paying calls for it.
+
+The distinction matters because the two look identical without the
+names, and the expensive mistake is the first one read as the second -
+dropping a source that works because our own key could not recognise it.
+That key is an exact match on a compacted name plus a hand-curated alias
+table of 27 entries, built against the sources already in production and
+never exercised against this vendor. Of seven realistic name variants,
+six do not fold; only an identical string matches. This is the same
+family of defect as the collision that once let two different clubs from
+the same city share a key.
+
+One rule if this is ever taken further: a more forgiving name match may
+report a number, but it must never become the way rows are joined. A key
+that quietly settles for a near-miss produces a confident wrong answer,
+which is worse than the empty result it replaces, and that road is
+already in the discarded list from the settled-results comparison.
+
+**Still unmeasured, and not answerable here.** Whether this vendor prices
+our fixtures before kickoff, and whether its market names match ours.
+Both need a live run. The sandbox has no route to the vendor and no
+amount of further building will change that.
+
+## Carried forward, unchanged by this round
+
+- The live price-source key still needs rotating — it was exposed in
+  plaintext chat. Not a repository-history incident, so no rewrite and no
+  force-push.
+- Ticket (n) still needs an operator decision, not a code change.
+- A dead secret reference at line 36 of the daily workflow should be
+  deleted the next time that file is legitimately touched. The GitHub App
+  cannot push workflow files, so it was not touched here.
+
+## (p) Standing rule: a handover states what discriminates, not what merely correlates
+
+Two failures in the 2026-10-06 handover round, both of the same family, both
+cheap to avoid.
+
+**A measurement without its scope travels as a general claim.** A count of
+dirty files was taken in one workspace, was correct there, and was written
+into a brief to be acted on first in a different one — where it was false.
+Nothing in the number said "here". This is the companion to ticket (k): a
+history search states its depth, and a workspace measurement states its
+workspace. Re-derivation does not catch this, because re-deriving it in the
+original workspace returns the same answer with the same confidence.
+
+**A number that only moves when someone moves it cannot witness that work
+landed.** The test-function floor was used as evidence that a particular
+turn had survived. The floor is set by hand and was last set two merges
+earlier, so it reads the same whether or not that turn landed. It answers
+"has anyone gutted the suite", and nothing else. What discriminates is the
+actual count, or a named symbol the work introduced:
+
+| state | floor | actual |
+|---|---|---|
+| merged work only | 1471 | 1473 |
+| merged work plus the follow-up turn | 1471 | 1475 |
+
+The practical conclusion reached from the floor happened to be right, which
+is the dangerous case — a wrong instrument agreeing with the truth once
+teaches nothing and is not repeatable.
+
+**The rule.** When a handover asserts that some specific work is or is not
+present, it names the discriminator and shows it separating the two cases.
+A hand-set threshold, a summary line, and a document's own description of
+itself are all excluded, because each reports what someone last decided to
+write rather than what is there.
+
+## (o) the schedule file has to be applied by hand
+
+The automation cannot write to the directory that holds the schedule
+file, so the change for the next run is parked beside this document as
+daily.yml.proposed. Copy it over the live schedule file whole; it is the
+complete file, not a fragment. Three things differ from the version in
+service: a dead secret line is gone, the row limit rises from a hundred
+to a thousand, and the comment above the competition filter no longer
+repeats the fifty-row claim that was already corrected elsewhere. The
+filter itself stays empty on purpose - see the ticket above on reading
+the vendor's own name for a competition off the record before setting
+it. The run still makes exactly one request to the price source.

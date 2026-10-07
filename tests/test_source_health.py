@@ -356,3 +356,239 @@ def test_the_caller_actually_forwards_the_pinnapi_contract_fields():
         "the health observation; without this the discriminators exist only "
         "in the gitignored shadow ledger and leave with the runner"
     )
+
+
+def test_sharpapi_board_helper_names_every_board_field():
+    """One list, so the passthrough and the committed row cannot drift."""
+    out = source_health.sharpapi_board_observation({
+        "board_rows": 100, "board_fixtures": 100, "board_league_count": 7,
+        "board_leagues": {"lg_0": 15}, "board_non_prematch_rows": 100,
+        "board_priced_rows": 0, "board_truncated": True,
+        "requested_limit": 100, "league_filter_requested": False,
+        "league_filter_effective": None,
+    })
+    assert set(out) == set(source_health.SHARPAPI_BOARD_FIELDS)
+    assert out["board_truncated"] is True
+    assert source_health.sharpapi_board_observation({})["board_rows"] is None
+
+
+def test_the_sharpapi_board_summary_reaches_the_committed_row():
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "sa_raw": 0, "sa_matched": 0,
+            "can_fetch_today": True, "can_price": False, "can_vote": False,
+            "status": "empty", "reason": "board_truncated_live_first",
+            "board_rows": 100, "board_fixtures": 100, "board_truncated": True,
+            "board_league_count": 7, "board_leagues": {"lg_0": 15},
+            "board_non_prematch_rows": 100, "board_priced_rows": 0,
+            "requested_limit": 100, "league_filter_requested": False,
+        },
+    })["sources"]["sharpapi_odds"]
+    assert row["board_summary"]["board_rows"] == 100
+    assert row["board_summary"]["board_truncated"] is True
+    assert row["reason"] == "board_truncated_live_first"
+
+
+def test_the_caller_actually_forwards_the_sharpapi_board_fields():
+    """Same gap that cost the 2026-10-06 pinnacle answer, same guard.
+
+    The health observation is hand-built field by field, so board context
+    the adapter records reaches the committed row only if the caller
+    forwards it. A row-level test passes happily while the real pipeline
+    drops everything. This asserts the wiring, not the capability.
+    """
+    src = (ROOT / "scripts" / "picks_today.py").read_text(encoding="utf-8")
+    assert "sharpapi_board_observation(sa_shadow_stats)" in src, (
+        "picks_today must forward the sharpapi board-shape fields into the "
+        "health observation; without this a zero names no action and the "
+        "context leaves with the runner"
+    )
+
+
+def test_the_per_reason_breakdown_reaches_the_committed_row():
+    """A total cannot be unpicked afterwards; the split has to travel.
+
+    "97 rows refused" does not say whether the capture ran late or whether
+    the board was player props, and those ask for different remedies.
+    """
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "reason": "board_truncated_player_props", "board_rows": 100,
+            "prematch_drop_reasons": {"player_prop": 100},
+        },
+    })["sources"]["sharpapi_odds"]
+    assert row["board_summary"]["prematch_drop_reasons"] == {"player_prop": 100}
+
+
+def test_the_prematch_breakdown_admits_only_our_own_vocabulary():
+    """These tokens are ours, so an unknown one is a bug, not a datum."""
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "prematch_drop_reasons": {"live_price": 3, "smuggled_payload": 9},
+        },
+    })["sources"]["sharpapi_odds"]
+    assert row["board_summary"]["prematch_drop_reasons"] == {"live_price": 3}
+
+
+def _census_for(misses):
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "canonicalization_drop_reasons": misses,
+        },
+    })["sources"]["sharpapi_odds"]
+    return row["board_summary"]["canonicalization_drop_reasons"]
+
+
+def test_the_vocabulary_census_is_bounded_in_count_and_length():
+    """These keys carry the provider's own raw market token by design.
+
+    That is what makes them worth keeping and what makes them unbounded.
+    A committed row must stay a census and never become a payload archive.
+    """
+    census = _census_for({f"unknown_market:{i:03d}_{'x' * 200}": i
+                          for i in range(40)})
+    assert len(census) == 10
+    assert max(len(k) for k in census) <= 60
+    # the ten KEPT are the ten biggest, chosen on the full token
+    assert min(census.values()) == 30
+
+
+def test_the_vocabulary_census_loses_no_counts_to_shortening():
+    """Tokens that differ only past the cut must not erase each other.
+
+    Shortening a key can collide it with another. Ranking on the full
+    token and adding on collision keeps the total honest; the earlier cut
+    shortened first and reported one miss where there had been forty.
+    """
+    # six tokens, so the cap of ten cannot be what removes any of them;
+    # they differ only past the shortening cut and must therefore merge
+    # into one entry whose count is their sum, not one that replaced five
+    misses = {f"unknown_market:{'x' * 80}_{i}": 1 for i in range(6)}
+    census = _census_for(misses)
+    assert len(census) == 1
+    assert sum(census.values()) == 6
+
+
+def test_the_passthrough_itself_carries_the_breakdowns():
+    """Not the row builder - the passthrough.
+
+    The row builder attaches these breakdowns directly, so a row-level
+    test keeps passing even when the field is removed from the list the
+    PIPELINE copies. That is the same gap that lost the earlier answer:
+    the capability works and the wiring does not. This pins the wiring.
+    """
+    out = source_health.sharpapi_board_observation({
+        "prematch_drop_reasons": {"player_prop": 7},
+        "canonicalization_drop_reasons": {"unknown_market:x": 2},
+    })
+    assert out["prematch_drop_reasons"] == {"player_prop": 7}
+    assert out["canonicalization_drop_reasons"] == {"unknown_market:x": 2}
+    assert "prematch_drop_reasons" in source_health.SHARPAPI_BOARD_FIELDS
+    assert "canonicalization_drop_reasons" in source_health.SHARPAPI_BOARD_FIELDS
+
+
+def test_the_census_cap_keeps_the_biggest_tokens_not_the_merged_ones():
+    """Ranking must happen on the full token, before any shortening.
+
+    Forty tokens sharing a long prefix. Shortening first merges them all
+    into one bucket and the cap then keeps that single merged lump -
+    reporting every miss as one. Ranking first keeps the ten largest and
+    only then shortens, so the recorded total is the top ten's and not
+    the whole board's.
+    """
+    misses = {f"unknown_market:{'x' * 80}_{i}": i for i in range(40)}
+    census = _census_for(misses)
+    assert sum(census.values()) == sum(range(30, 40))
+
+
+def test_the_card_overlap_reaches_the_committed_row():
+    """The number that says whether any of the board was about us."""
+    row = source_health.build_daily_source_health("2026-10-06", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "reason": "card_fixtures_unmatched_on_board",
+            "board_rows": 100, "card_fixture_count": 14,
+            "card_fixtures_on_board": 0, "card_fixtures_reversed": 0,
+            "prematch_drop_reasons": {"live_price": 100},
+            "card_prematch_drop_reasons": {},
+        },
+    })["sources"]["sharpapi_odds"]
+    summary = row["board_summary"]
+    assert summary["card_fixture_count"] == 14
+    assert summary["card_fixtures_on_board"] == 0
+    # the board-wide refusals are still recorded, but they describe strangers
+    assert summary["prematch_drop_reasons"] == {"live_price": 100}
+
+
+def test_the_card_passthrough_carries_the_overlap_fields():
+    """Pins the wiring, not the capability - the recurring gap."""
+    out = source_health.sharpapi_board_observation({
+        "card_fixture_count": 14, "card_fixtures_on_board": 3,
+        "card_fixtures_reversed": 1, "card_priced_rows": 2,
+        "card_prematch_drop_reasons": {"player_prop": 4},
+    })
+    assert out["card_fixtures_on_board"] == 3
+    assert out["card_fixtures_reversed"] == 1
+    for field in ("card_fixture_count", "card_fixtures_on_board",
+                  "card_fixtures_reversed", "card_priced_rows",
+                  "card_prematch_drop_reasons",
+                  "card_canonicalization_drop_reasons"):
+        assert field in source_health.SHARPAPI_BOARD_FIELDS, field
+
+
+def test_the_source_line_shows_how_much_of_the_board_was_ours(tmp_path, monkeypatch):
+    """A global board can price a hundred rows, none of them ours.
+
+    Without this the line reads like success. The overlap belongs where
+    the operator already looks, for the same reason the discarded-row
+    count does.
+    """
+    monkeypatch.setattr(source_health, "LOCALDATA", tmp_path)
+    source_health.persist_daily_source_health("2026-10-07", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 100, "sa_raw": 100, "sa_matched": 100,
+            "sa_scored": 100, "can_fetch_today": True, "can_price": True,
+            "can_vote": False, "status": "ok",
+            "card_fixture_count": 14, "card_fixtures_on_board": 0,
+        },
+    })
+    assert "/card0of14" in source_health.daily_status_block("2026-10-07")
+
+
+def test_the_overlap_token_is_absent_when_no_card_was_compared(tmp_path, monkeypatch):
+    monkeypatch.setattr(source_health, "LOCALDATA", tmp_path)
+    source_health.persist_daily_source_health("2026-10-08", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 1, "sa_raw": 1, "sa_matched": 1,
+            "sa_scored": 1, "can_fetch_today": True, "can_price": True,
+            "can_vote": False, "status": "ok",
+        },
+    })
+    assert "/card" not in source_health.daily_status_block("2026-10-08")
+
+
+def test_the_vendors_team_names_reach_the_committed_artefact():
+    """A row-level census that never lands in the health record cannot
+    settle anything after the run, which is its only purpose."""
+    payload = source_health.build_daily_source_health("2026-10-09", {
+        "sharpapi_odds": {
+            "fetched": True, "rows": 0, "can_fetch_today": True,
+            "can_price": False, "can_vote": False, "status": "empty",
+            "reason": "card_fixtures_unmatched_on_board",
+            **source_health.sharpapi_board_observation({
+                "board_rows": 2, "board_team_count": 4,
+                "board_team_names": {"Heart of Midlothian": 1, "Rangers FC": 1},
+                "card_fixture_count": 2, "card_fixtures_on_board": 0,
+            }),
+        },
+    })
+    summary = payload["sources"]["sharpapi_odds"]["board_summary"]
+    assert summary["board_team_names"] == {"Heart of Midlothian": 1, "Rangers FC": 1}
+    assert summary["board_team_count"] == 4

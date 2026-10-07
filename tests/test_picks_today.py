@@ -565,3 +565,64 @@ def test_display_rule_cannot_be_relabelled_without_fighting_the_self_heal():
     }
     assert heal_ledger_labels([row]) == 1
     assert row["display_rule"] == "ML-META\u226555"
+
+
+# --- the day's card handed to the price-board diagnostic -----------------
+#
+# Pinned after the 2026-10-06 live run. The shadow price lane was handed
+# only freshly generated picks. That run was an intraday pass whose fresh
+# lane produced nothing - the day's fourteen selections had been frozen
+# that morning - so the capture asked about zero fixtures and reported an
+# overlap of zero meaning "nobody asked". On a global board that is
+# indistinguishable from "nothing matched", which is the exact false
+# negative the overlap diagnostic exists to prevent.
+
+
+def _archive(tmp_path, monkeypatch, rows):
+    (tmp_path / "localdata").mkdir(exist_ok=True)
+    (tmp_path / "localdata" / "picks_2026-10-06.json").write_text(json.dumps(rows))
+    monkeypatch.setattr(picks_today, "ROOT", tmp_path)
+
+
+def test_an_intraday_pass_with_no_fresh_picks_still_knows_the_card(tmp_path, monkeypatch):
+    _archive(tmp_path, monkeypatch, [
+        {"date": "2026-10-06", "home": "Croatia", "away": "Spain"},
+        {"date": "2026-10-06", "home": "Estonia", "away": "Iceland"},
+    ])
+    card = picks_today._day_card_fixtures("2026-10-06", [])
+    assert {(c["home"], c["away"]) for c in card} == {
+        ("Croatia", "Spain"), ("Estonia", "Iceland")}
+
+
+def test_a_fixture_in_both_the_fresh_run_and_the_archive_is_counted_once(tmp_path, monkeypatch):
+    _archive(tmp_path, monkeypatch, [
+        {"date": "2026-10-06", "home": "Croatia", "away": "Spain"},
+        {"date": "2026-10-06", "home": "Estonia", "away": "Iceland"},
+    ])
+    fresh = [{"date": "2026-10-06", "home": "Croatia", "away": "Spain"}]
+    card = picks_today._day_card_fixtures("2026-10-06", fresh)
+    assert len(card) == 2  # not 3: an inflated denominator understates coverage
+
+
+def test_the_card_ignores_archived_rows_for_another_day(tmp_path, monkeypatch):
+    _archive(tmp_path, monkeypatch, [
+        {"date": "2026-10-06", "home": "Croatia", "away": "Spain"},
+        {"date": "2026-10-07", "home": "Brazil", "away": "Chile"},
+    ])
+    card = picks_today._day_card_fixtures("2026-10-06", [])
+    assert [(c["home"], c["away"]) for c in card] == [("Croatia", "Spain")]
+
+
+def test_an_unreadable_archive_degrades_to_the_fresh_card(tmp_path, monkeypatch):
+    (tmp_path / "localdata").mkdir(exist_ok=True)
+    (tmp_path / "localdata" / "picks_2026-10-06.json").write_text("{ not json")
+    monkeypatch.setattr(picks_today, "ROOT", tmp_path)
+    fresh = [{"date": "2026-10-06", "home": "Croatia", "away": "Spain"}]
+    # a diagnostic read must never be able to take the pipeline down
+    assert picks_today._day_card_fixtures("2026-10-06", fresh) == fresh
+
+
+def test_a_missing_archive_degrades_to_the_fresh_card(tmp_path, monkeypatch):
+    monkeypatch.setattr(picks_today, "ROOT", tmp_path)
+    fresh = [{"date": "2026-10-06", "home": "Croatia", "away": "Spain"}]
+    assert picks_today._day_card_fixtures("2026-10-06", fresh) == fresh
