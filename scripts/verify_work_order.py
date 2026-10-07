@@ -347,8 +347,10 @@ def _():
     # matters is: nothing failed, and no existing test was deleted. This
     # check is the second half. Raise it when you add tests; never lower it
     # to make the check pass.
-    if count < 1524:
-        return (f"{count} test functions found, floor is 1524. Tests were "
+    # Raised 1524 -> 1526 on 2026-10-07: tests/test_team_identity_transliteration.py
+    # gains 2 curated-alias tests for the SharpAPI long-form fold (measured).
+    if count < 1526:
+        return (f"{count} test functions found, floor is 1526. Tests were "
                 "deleted rather than fixed.")
     return None
 

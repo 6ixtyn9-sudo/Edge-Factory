@@ -137,6 +137,11 @@ ODDS_EXACT_TEAM_ALIASES = {
     # club names.  Narrow, one-way aliases are preferred to fuzzy matching.
     "eibar": "sdeibar",                # Eibar -> SD Eibar (Spain Segunda)
     "grimsbyto": "grimsby",            # Grimsby Town -> Grimsby (England L2)
+    # 2026-10-07 SharpAPI board census (run 37570304076): the vendor writes
+    # the full club name "Urawa Red Diamonds" where our card writes "Urawa".
+    # width-9 exact key of the long form (and of the feed-truncated "Urawa
+    # Red Diamon") -> our key.  Mirrors Config/entity_overrides.json -> teams.
+    "urawaredd": "urawa",              # Urawa Red Diamonds -> Urawa (Japan Emperor Cup)
 }
 
 ODDS_MATCH_TEAM_ALIASES = {
@@ -168,6 +173,11 @@ ODDS_MATCH_TEAM_ALIASES = {
     # 2026-10-03 TheOddsAPI receipt; see exact-key aliases above.
     "eibar": "sdeibar",                    # Eibar -> SD Eibar
     "grimsbytown": "grimsby",              # Grimsby Town -> Grimsby
+    # 2026-10-07 SharpAPI board census; see exact-key aliases above.  This is
+    # the compact-key half of the same fold, so the fixture census
+    # (card_fixtures_on_board) and the timed join see the SAME club, not a
+    # spelling pair.
+    "urawareddiamonds": "urawa",           # Urawa Red Diamonds -> Urawa
 }
 
 DISPLAY_TEAM_ALIASES = {

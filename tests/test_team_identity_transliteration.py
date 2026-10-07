@@ -14,8 +14,11 @@ reported, ledgered and nearly staked twice.
 """
 
 import importlib.util
+import json
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -441,3 +444,56 @@ def test_ml_fade_event_key_unchanged_for_accented_names():
 
     assert (event_key("ml-fade", "2026-10-05", "Italy", "Türkiye")
             == "2026-10-05|italy|turkiye|ml-fade|1x2")
+
+
+# --- curated alias layer (Config/entity_overrides.json -> teams) ------------
+#
+# Every curated pair must fold at EVERY key seam, and — where the odds-matching
+# maps carry the same fold — must join a donor price as ``exact``.  Coverage is
+# derived from the curated table itself, so a newly curated team is covered by
+# construction instead of needing a test of its own.
+#
+# 2026-10-07 SharpAPI receipt: the vendor's "Urawa Red Diamonds" against our
+# card's "Urawa" missed the exact key, fell through to the bigram matcher, and
+# quarantined the pick as SUSPECT_ALIAS_FUZZY (push_eligible=False).
+
+
+def _curated_team_pairs():
+    teams = json.loads((ROOT / "Config" / "entity_overrides.json").read_text())["teams"]
+    return sorted((raw, str(canon)) for raw, canon in teams.items() if raw != canon)
+
+
+@pytest.mark.parametrize("raw,canonical", _curated_team_pairs())
+def test_curated_alias_folds_every_identity_seam(raw, canonical):
+    from edgefactory.entities import canonical_team
+
+    assert canonical_team_key(raw) == canonical_team_key(canonical)
+    assert ledger_team_key(raw, width=24) == ledger_team_key(canonical, width=24)
+    assert canonical_team(raw) == canonical_team(canonical)
+    assert source_team_key(raw) == source_team_key(canonical)
+
+
+def test_curated_alias_donor_spelling_joins_the_card_pick_exactly():
+    """Where both curated layers carry the fold, the price join is exact."""
+    pt = _load_picks_today()
+    from edgefactory import price_sources as psrc
+
+    folded = [(raw, canon) for raw, canon in _curated_team_pairs()
+              if pt.odds_team_key(raw) == pt.odds_team_key(canon)
+              and pt.odds_match_team_key(raw) == pt.odds_match_team_key(canon)]
+    # the 2026-10-07 receipt must stay in the set the fold actually reaches
+    assert ("Urawa Red Diamonds", "urawa") in folded
+
+    day, away = "2026-10-07", "Omiya Ardija"
+    for vendor_home, card_home in folded:
+        pick = {"date": day, "home": card_home, "away": away, "match": f"{card_home} vs {away}",
+                "kickoff": "07-10, 10:00", "kickoff_utc": f"{day}T09:00:00+00:00",
+                "market": "1x2", "pick": "home"}
+        row = {"source": "sharpapi_odds", "date": day, "home": vendor_home, "away": away,
+               "market": "1x2", "selection": "home", "odds": 1.741,
+               "bookmaker": "draftkings", "odds_kind": "bookmaker",
+               "kickoff": f"{day}T09:00Z", "captured_at": f"{day}T04:21:52+00:00"}
+        bundle = pt._odds_bundle_from_rows(
+            [psrc.annotate_row(dict(row), source="sharpapi_odds")], provider="sharpapi_odds")
+        _, method = pt.find_odds_row(pick, bundle)
+        assert method == "exact", (vendor_home, card_home)
