@@ -36,6 +36,7 @@ from edgefactory.util import (
     is_degenerate_team_key,
     script_anomaly,
     markers_conflict,
+    squad_markers,
     MIN_IDENTITY_KEY_LEN,
     norm_team,
     fold_ascii,
@@ -1757,22 +1758,47 @@ def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
     return len(g1 & g2) / len(g1 | g2)
 
 
+def _odds_alias_key(raw: object, key: str, aliases: dict) -> str:
+    """Apply an odds alias map — but never across a squad boundary.
+
+    Same rule the entity layer already enforces (entities.canonical_team:
+    "the alias canonicalizes the CLUB, never the squad").  The width-9 key
+    space this feeds strips a distinct-entity marker before truncating, so
+    "Urawa Red Diamonds W" and "Urawa Red Diamonds" BOTH key as "urawaredd"
+    — an alias applied there resolves a women's/reserve spelling onto the
+    senior side's key and hands it our card's exact join (2026-10-07
+    correction to the Urawa fold; measured: 17 curated pairs were
+    alias-bridged across the marker, 87 collapse by truncation alone).
+
+    A marked name therefore keeps its unaliased key.  Fail-closed on
+    purpose: the join falls back to the timed/fuzzy tiers — a wrong-squad
+    price can still be *seen* and quarantined, never claimed as exact.
+    """
+    if squad_markers(str(raw or "")):
+        return key
+    return aliases.get(key, key)
+
+
 def odds_team_key(name: object) -> str:
-    key = norm_team(fold_ascii(str(name or "")))
-    return ODDS_EXACT_TEAM_ALIASES.get(key, key)
+    raw = str(name or "")
+    key = norm_team(fold_ascii(raw))
+    return _odds_alias_key(raw, key, ODDS_EXACT_TEAM_ALIASES)
 
 
 def odds_match_team_key(name: object) -> str:
     raw = str(name or "")
     compact = compact_key(raw)
-    return ODDS_MATCH_TEAM_ALIASES.get(compact, compact)
+    # The compact key retains the marker, so the guard is belt-and-braces
+    # here; it is stated once so no future key space has to re-derive it.
+    return _odds_alias_key(raw, compact, ODDS_MATCH_TEAM_ALIASES)
 
 
 def operational_team_key(name: object) -> str:
-    tokens = re.findall(r"[a-z0-9]+", fold_ascii(str(name or "")))
+    raw = str(name or "")
+    tokens = re.findall(r"[a-z0-9]+", fold_ascii(raw))
     filtered = [t for t in tokens if t not in OPERATIONAL_CLUB_TOKENS]
-    compact = "".join(filtered) or compact_key(name)
-    return ODDS_MATCH_TEAM_ALIASES.get(compact, compact)
+    compact = "".join(filtered) or compact_key(raw)
+    return _odds_alias_key(raw, compact, ODDS_MATCH_TEAM_ALIASES)
 
 
 def _kickoff_value(obj: dict) -> str | None:
