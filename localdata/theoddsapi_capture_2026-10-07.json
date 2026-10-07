@@ -1,21 +1,11 @@
 {
   "added": 0,
-  "attempted": 1,
-  "attempted_fixtures": [
-    {
-      "away": "Omiya Ardija",
-      "date": "2026-10-07",
-      "home": "Urawa",
-      "kickoff": "07-10, 10:00",
-      "league": "Japan Emperor Cup"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 5,
-  "captured_at": "2026-10-07T07:16:53+00:00",
+  "captured_at": "2026-10-07T10:18:00+00:00",
   "date": "2026-10-07",
-  "due_reasons": {
-    "close_at": 1
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -23,21 +13,18 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
+    "kickoff_already_passed": 2,
     "priced": 1,
-    "retry_cooldown": 3
+    "retry_cooldown": 2
   },
   "skipped": [
     "Ponte Preta|Juventude (priced)",
     "CR Belouizdad|Khenchela (retry cooldown (6h after failed attempt))",
     "Mexico|Chile (retry cooldown (6h after failed attempt))",
-    "FC Tokyo|Shonan Bellmare (retry cooldown (6h after failed attempt))"
+    "FC Tokyo|Shonan Bellmare (kickoff already passed)",
+    "Urawa|Omiya Ardija (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Urawa vs Omiya Ardija (league not covered: Japan Emperor Cup)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Japan Emperor Cup": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
