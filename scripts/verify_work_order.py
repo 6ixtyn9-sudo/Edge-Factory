@@ -351,9 +351,11 @@ def _():
     # gains 2 curated-alias tests for the SharpAPI long-form fold.
     # Raised 1526 -> 1528 on 2026-10-07: tests/test_identity.py gains the
     # curated-LEAGUE analogue (derived from the table) plus the cup/league
-    # no-merge invariant. Both numbers measured, never guessed.
-    if count < 1528:
-        return (f"{count} test functions found, floor is 1528. Tests were "
+    # no-merge invariant.
+    # Raised 1528 -> 1529 on 2026-10-07: the retired-capture classification
+    # guard in tests/test_edge_firing_tripwire.py. All measured, never guessed.
+    if count < 1529:
+        return (f"{count} test functions found, floor is 1529. Tests were "
                 "deleted rather than fixed.")
     return None
 

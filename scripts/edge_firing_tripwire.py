@@ -29,7 +29,12 @@ LOCALDATA = ROOT / "localdata"
 # Active CSV sources.  Roles are telemetry labels, not weights or selection
 # changes.  BetExplorer remains absent because its capture is retired.
 SOURCES = (
-    ("forebet", "date", "core_voter"),
+    # forebet is NOT a voter: post-cutoff it is skipped by fetch_all
+    # (picks_today._forebet_historical), zero-weighted in every production
+    # consensus (run_day), and source_health reports it historical-only.  It
+    # remains a result/backfill donor, which is what its role says now; the
+    # "core_voter" label it carried was the misclassification.
+    ("forebet", "date", "backfill_donor"),
     ("statarea", "date", "core_voter"),
     ("scoutingstats", "date", "voter_and_price"),
     ("vitibet", "date", "thin_voter"),
@@ -42,6 +47,19 @@ SOURCES = (
     ("bettingclosed", "date", "confirmation_results"),
     ("bzzoiro", "date", "model_voter"),
 )
+
+# Sources whose capture is deliberately retired. A retired source is still
+# REPORTED, with its newest row and this reason, but it is not held to the
+# freshness SLA: an alarm that can never clear is not a signal, it is the
+# reason the next real one gets skimmed past. Nothing is hidden by this -
+# the date, the file and the reason all still print, and the JSON keeps
+# stale=true; the flag and the warning COUNT are what change.
+RETIRED_SOURCES: dict[str, str] = {
+    "forebet": (
+        "pricing/voting retired 2026-06-12 (source_health.FOREBET_LIVE_LAST_DAY); "
+        "capture walled upstream, result/backfill donor only"
+    ),
+}
 
 PICKS_GLOBS = ("picks_*.json", "picks_today.json", "picks_morning_*.json")
 QUALIFIED_TOKENS = (
@@ -325,8 +343,14 @@ def main() -> int:
             )
             continue
         stale = newest_date < stale_cutoff
-        flag = "⚠️ STALE" if stale else "ok"
-        print(f"  [{flag}] {name} ({role}): newest row {newest_date} (file {newest_file})")
+        retired = RETIRED_SOURCES.get(name)
+        if retired:
+            # Visible, not silent: same date, same file, plus why it is old.
+            print(f"  [–] {name} ({role}): newest row {newest_date} "
+                  f"(file {newest_file}) - capture retired: {retired}")
+        else:
+            flag = "⚠️ STALE" if stale else "ok"
+            print(f"  [{flag}] {name} ({role}): newest row {newest_date} (file {newest_file})")
         findings["sources"].append(
             {
                 "name": name,
@@ -334,6 +358,7 @@ def main() -> int:
                 "newest_date": newest_date,
                 "newest_file": newest_file,
                 "stale": stale,
+                "retired": retired,
             }
         )
 
@@ -343,14 +368,24 @@ def main() -> int:
     silent_only = [
         item for item in edge_findings if item["silent"] and item["rule"] not in ceiling_rules
     ]
-    stale_sources = [item for item in findings["sources"] if item.get("stale")]
+    # A retired capture is reported but never counted: it is stale by design.
+    retired_sources = [
+        item for item in findings["sources"]
+        if item.get("stale") and item.get("retired")
+    ]
+    stale_sources = [
+        item for item in findings["sources"]
+        if item.get("stale") and not item.get("retired")
+    ]
     findings["warn_count"] = len(silent_only) + len(ceilings) + len(stale_sources)
+    findings["retired_captures"] = len(retired_sources)
 
     out = ld / "edge_firing_tripwire.json"
     out.write_text(json.dumps(findings, indent=2, sort_keys=True))
     print(
         f"\n=== edge firing tripwire: {len(silent_only)} silent operational edge(s), "
         f"{len(ceilings)} ceiling(s), {len(stale_sources)} stale source cache(s), "
+        f"{len(retired_sources)} retired capture(s), "
         f"{len(ignored)} analytical rule(s) excluded ==="
     )
     if findings["warn_count"]:

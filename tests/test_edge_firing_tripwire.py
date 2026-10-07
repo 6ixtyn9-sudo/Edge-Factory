@@ -132,3 +132,39 @@ def test_ceiling_is_a_single_specific_classification(tmp_path, monkeypatch):
     assert result["ignored_non_operational_rules"] == [
         "2way-unanimous min_p>=60 avg_p>=70"
     ]
+
+
+def test_retired_capture_is_reported_but_never_an_alarm(tmp_path, monkeypatch):
+    """forebet is not a voter; its cache cannot be held to a voter SLA.
+
+    The 2026-10-07 run flagged "[STALE] forebet (core_voter)" against a
+    source that source_health declares historical-only and that run_day
+    zero-weights in every production consensus. A permanently-red line is
+    how a real stale voter gets skimmed past, so the classification is
+    corrected: same date, same file, same JSON stale=true, plus the reason
+    - but it is not counted as a warning. A live source on the same data
+    must still alarm, which is what this test really guards.
+    """
+    old = (date.today() - timedelta(days=30)).isoformat()
+    _write_gz(tmp_path / "forebet.csv.gz",
+              [{"date": old, "home": "A", "away": "B"}])
+    _write_gz(tmp_path / "zulubet.csv.gz",
+              [{"date": old, "home": "A", "away": "B"}])
+
+    monkeypatch.setattr(sys, "argv",
+                        ["edge_firing_tripwire.py", "--localdata", str(tmp_path)])
+    assert tripwire.main() == 0
+    result = json.loads((tmp_path / "edge_firing_tripwire.json").read_text())
+    by_name = {item["name"]: item for item in result["sources"]}
+
+    forebet = by_name["forebet"]
+    assert forebet["role"] == "backfill_donor"
+    assert forebet["stale"] is True          # the fact is still recorded
+    assert forebet["retired"]                # ... with the reason attached
+    assert "2026-06-12" in forebet["retired"]
+
+    zulubet = by_name["zulubet"]
+    assert zulubet["stale"] is True and not zulubet["retired"]
+
+    assert result["retired_captures"] == 1
+    assert result["warn_count"] == 1         # the LIVE source, not forebet
