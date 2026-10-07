@@ -1,7 +1,10 @@
 """Shared identity fold: properties, goldens, and no-merge invariants."""
 
+import json
 import sys
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 for extra in ("src", "scripts"):
@@ -176,3 +179,37 @@ def test_source_team_key_disambiguates_squads():
     # and every key carries more information than the legacy width-9 —
     # a 24-char ceiling means near-identical prefixes no longer collapse.
     assert key("Los Angeles FC") != key("Los Angeles Galaxy")
+
+
+# --- curated league table (Config/entity_overrides.json -> leagues) --------
+#
+# Coverage is derived from the curated table, so a newly curated competition
+# is covered by construction rather than needing a test of its own. Added with
+# the 2026-10-07 declarations of "Japan Emperor Cup" and "Algeria: Ligue 1",
+# the two the run reported as UNKNOWN league verdicts.
+
+
+def _curated_league_pairs():
+    leagues = json.loads(
+        (ROOT / "Config" / "entity_overrides.json").read_text())["leagues"]
+    return sorted((raw, str(canon)) for raw, canon in leagues.items() if raw != canon)
+
+
+@pytest.mark.parametrize("raw,canonical", _curated_league_pairs())
+def test_curated_league_entry_resolves_to_its_declared_canonical(raw, canonical):
+    from edgefactory.entities import canonical_league
+
+    assert canonical_league(raw) == canonical_league(canonical)
+
+
+def test_curated_cup_canonical_stays_distinct_from_its_league():
+    """A cup is not its league: the Japan cup must never key as ``jp1``.
+
+    The curated table is the only thing standing between "the two Japanese
+    competitions we know by name" and a future edit that folds the cup onto
+    the J1 League key, which would hand the cup that league's purity pool.
+    """
+    from edgefactory.entities import canonical_league
+
+    assert canonical_league("Japan Emperor Cup") == "japan emperor cup"
+    assert canonical_league("Japan Emperor Cup") != canonical_league("Japan J1 League")
