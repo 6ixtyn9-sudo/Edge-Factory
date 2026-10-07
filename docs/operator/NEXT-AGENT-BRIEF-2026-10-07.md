@@ -340,14 +340,16 @@ that is a record correction and must be stated in the report and in
 ### Scope fences (frozen — a human decides, not you)
 
 22. **Do not touch settlement, staking, bank arithmetic, or any gate, floor,
-    cap, quorum, threshold or veto rule** for Items C/D. Two stalled
+    cap, quorum, threshold or veto rule** for Items C/D. The two stalled
     settlement keys (Tochigi SC v Giravanz Kitakyushu 2026-06-07; Samgurali v
-    Meshakhte Tkibuli 2026-08-01) and two frozen Kladno conflict rows
-    (2026-09-23, `kladno|banikostr`, ml-fade + ml-meta) are awaiting a human —
-    the cases and the standing remedy (`Config/verified_results.json`, one row
-    per case, operator sets the score) are written up in
-    `docs/operator/FINDINGS-2026-10-07.md` §2–3. `Config/verified_results.json`
-    and `localdata/team_aliases.json` are off-limits for edits.
+    Meshakhte Tkibuli 2026-08-01) now have externally corroborated facts and
+    drafted `source_verified` rows — both settle to a draw at 90 minutes; see
+    `docs/operator/FINDINGS-2026-10-07.md` §5, including the correction of the
+    first draft's case-2 row. The two frozen Kladno conflict rows (2026-09-23,
+    `kladno|banikostr`, ml-fade + ml-meta) are unchanged: frozen, human's.
+    Writing any row awaits the operator's policy call after the §5 pre-write
+    flags. `Config/verified_results.json` and `localdata/team_aliases.json`
+    are off-limits for edits.
 23. **Do not re-open resolved questions:** the historical test-count baselines
     (1850/1851 at `d6d163d`, 2215 at `522a3c0`, 2392 at `6f52b92`); the fuzzy
     tier's marker blindness; the league verdicts (no purity context exists for
@@ -502,6 +504,12 @@ fixed and not part of this mission** — do not fix them unasked:
   conflates "not in the registry" with "no verdict".
 * Two archived legs carry squad markers and have no settled result row in the
   64,849-row overlay under any spelling — `2026-06-21 Tartu Welco v Nõmme
+  United II` and `2026-09-27 Brommapojkarna W vs Malmö FF W` — so the marker
+  guard (`_note_marker_guarded_leg`, `scripts/auto_tickets.py:2275`, prints
+  `settlement_marker_guarded=N :: {label}`) is what keeps them out of the
+  similarity fallback; they stay pending for a human. Not introduced by this
+  work.
+under any spelling — `2026-06-21 Tartu Welco v Nõmme
   United II` and `2026-09-27 Brommapojkarna W vs Malmö FF W` — so the marker
   guard (`_note_marker_guarded_leg`, `scripts/auto_tickets.py:2275`, prints
   `settlement_marker_guarded=N :: {label}`) is what keeps them out of the
