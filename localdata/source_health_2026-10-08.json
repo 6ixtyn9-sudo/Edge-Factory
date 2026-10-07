@@ -90,14 +90,14 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 3,
         "selection_unsupported": 4
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "bzzoiro": {
       "blocker": "bzz status=auth; quota_hint=auth_or_quota",
@@ -184,10 +184,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 1540,
+        "event_count": 1560,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 1540,
+        "events_with_teams": 1560,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
