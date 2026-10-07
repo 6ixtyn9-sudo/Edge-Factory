@@ -138375,6 +138375,115 @@
    "w_score": -0.6846
   },
   {
+   "as_of": "2026-10-07T18:01:02+02:00",
+   "avg_p": 64.9,
+   "away": "Khenchela",
+   "captured_at": "2026-10-07T18:01:02+02:00",
+   "date": "2026-10-07",
+   "derivation": "inverse-selection",
+   "edge_family": "ml-fade",
+   "event_key": "2026-10-07|crbelouiz|khenchela|ml-fade|1x2",
+   "family": "ml-fade",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 8.64,
+   "first_seen_at": "2026-10-07T18:01:02+02:00",
+   "graduation": null,
+   "home": "CR Belouizdad",
+   "kickoff": "07-10, 20:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 8.64,
+   "league": "Algeria Ligue 1",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.6491,
+   "model_key": "f26119bb92a4",
+   "model_keys_seen": [
+    "f26119bb92a4"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 8.64,
+   "outcome": null,
+   "parent_avg_p": 35.1,
+   "parent_family": "ml-meta",
+   "parent_ml_p": 0.3509,
+   "parent_pick": "home",
+   "pick": "away",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet",
+    "betclan"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.6149
+  },
+  {
+   "as_of": "2026-10-07T18:01:02+02:00",
+   "avg_p": 35.1,
+   "away": "Khenchela",
+   "captured_at": "2026-10-07T18:01:02+02:00",
+   "date": "2026-10-07",
+   "derivation": null,
+   "edge_family": "ml-meta",
+   "event_key": "2026-10-07|crbelouiz|khenchela|ml-meta|1x2",
+   "family": "ml-meta",
+   "first_odds_forebet": null,
+   "first_odds_zulubet": 1.34,
+   "first_seen_at": "2026-10-07T18:01:02+02:00",
+   "graduation": null,
+   "home": "CR Belouizdad",
+   "kickoff": "07-10, 20:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
+   "latest_odds_forebet": null,
+   "latest_odds_zulubet": 1.34,
+   "league": "Algeria Ligue 1",
+   "market": "1x2",
+   "min_lead_minutes": 30,
+   "ml_ht_diff": 0,
+   "ml_ht_total": 0,
+   "ml_p": 0.3509,
+   "model_key": "f26119bb92a4",
+   "model_keys_seen": [
+    "f26119bb92a4"
+   ],
+   "odds_forebet": null,
+   "odds_source": "zulubet",
+   "odds_zulubet": 1.34,
+   "outcome": null,
+   "parent_family": "ml-meta",
+   "pick": "home",
+   "repriced_count": 0,
+   "result_source": null,
+   "schema": 1,
+   "score": null,
+   "settle_notes": [],
+   "settled_at": null,
+   "sources_present": [
+    "zulubet"
+   ],
+   "sources_used": [
+    "zulubet",
+    "vitibet",
+    "betclan"
+   ],
+   "sport": "soccer",
+   "status": "pending",
+   "w_score": -0.6149
+  },
+  {
    "as_of": "2026-10-07T15:01:02+02:00",
    "avg_p": 62.1,
    "away": "US Biskra",
@@ -140392,7 +140501,7 @@
    "graduation": null,
    "home": "Arsenal Tivat",
    "kickoff": "13:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Montenegro,1. Cfl",
@@ -140403,7 +140512,8 @@
    "ml_p": 0.4809,
    "model_key": "fe7746eb27d2",
    "model_keys_seen": [
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140445,7 +140555,7 @@
    "graduation": null,
    "home": "Arsenal Tivat",
    "kickoff": "13:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Montenegro,1. Cfl",
@@ -140456,7 +140566,8 @@
    "ml_p": 0.5191,
    "model_key": "fe7746eb27d2",
    "model_keys_seen": [
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140495,7 +140606,7 @@
    "graduation": null,
    "home": "CFR 1907 Cluj",
    "kickoff": "13:30",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Romania,Superliga",
@@ -140511,7 +140622,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140553,7 +140665,7 @@
    "graduation": null,
    "home": "CFR 1907 Cluj",
    "kickoff": "13:30",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Romania,Superliga",
@@ -140569,7 +140681,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140608,7 +140721,7 @@
    "graduation": null,
    "home": "Cruzeiro",
    "kickoff": "20:30",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Serie A",
@@ -140624,7 +140737,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140666,7 +140780,7 @@
    "graduation": null,
    "home": "Cruzeiro",
    "kickoff": "20:30",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Brazil,Serie A",
@@ -140682,7 +140796,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140721,7 +140836,7 @@
    "graduation": null,
    "home": "KuPS",
    "kickoff": "12:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Finland,Veikkausliiga Championship Round",
@@ -140737,7 +140852,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140779,7 +140895,7 @@
    "graduation": null,
    "home": "KuPS",
    "kickoff": "12:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Finland,Veikkausliiga Championship Round",
@@ -140795,7 +140911,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140834,7 +140951,7 @@
    "graduation": null,
    "home": "Maghreb Fes",
    "kickoff": "21:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Morocco,Botola Pro",
@@ -140845,7 +140962,8 @@
    "ml_p": 0.6843,
    "model_key": "fe7746eb27d2",
    "model_keys_seen": [
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140887,7 +141005,7 @@
    "graduation": null,
    "home": "Maghreb Fes",
    "kickoff": "21:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Morocco,Botola Pro",
@@ -140898,7 +141016,8 @@
    "ml_p": 0.3157,
    "model_key": "fe7746eb27d2",
    "model_keys_seen": [
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140937,7 +141056,7 @@
    "graduation": null,
    "home": "Mornar",
    "kickoff": "17:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Montenegro,1. Cfl",
@@ -140948,7 +141067,8 @@
    "ml_p": 0.4531,
    "model_key": "fe7746eb27d2",
    "model_keys_seen": [
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -140990,7 +141110,7 @@
    "graduation": null,
    "home": "Mornar",
    "kickoff": "17:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Montenegro,1. Cfl",
@@ -141001,7 +141121,8 @@
    "ml_p": 0.5469,
    "model_key": "fe7746eb27d2",
    "model_keys_seen": [
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -141040,7 +141161,7 @@
    "graduation": null,
    "home": "Shakhter Karagandy",
    "kickoff": "06:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Kazakhstan,Pervaya Liga",
@@ -141056,7 +141177,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -141098,7 +141220,7 @@
    "graduation": null,
    "home": "Shakhter Karagandy",
    "kickoff": "06:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Kazakhstan,Pervaya Liga",
@@ -141114,7 +141236,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -141153,7 +141276,7 @@
    "graduation": null,
    "home": "Shamrock Rovers",
    "kickoff": "15:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Rep. Of Ireland,Premier Division",
@@ -141167,7 +141290,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -141209,7 +141333,7 @@
    "graduation": null,
    "home": "Shamrock Rovers",
    "kickoff": "15:00",
-   "last_seen_at": "2026-10-07T15:06:07+02:00",
+   "last_seen_at": "2026-10-07T18:05:58+02:00",
    "latest_odds_forebet": null,
    "latest_odds_zulubet": null,
    "league": "Rep. Of Ireland,Premier Division",
@@ -141223,7 +141347,8 @@
     "39f146eb3303",
     "a45beab0c878",
     "d452872aa0aa",
-    "fe7746eb27d2"
+    "fe7746eb27d2",
+    "f26119bb92a4"
    ],
    "odds_forebet": null,
    "odds_source": null,
@@ -141248,5 +141373,5 @@
   }
  ],
  "schema": 1,
- "updated_at": "2026-10-07T15:48:59+02:00"
+ "updated_at": "2026-10-07T18:49:49+02:00"
 }

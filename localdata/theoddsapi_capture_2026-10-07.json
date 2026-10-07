@@ -1,28 +1,11 @@
 {
   "added": 0,
-  "attempted": 2,
-  "attempted_fixtures": [
-    {
-      "away": "Khenchela",
-      "date": "2026-10-07",
-      "home": "CR Belouizdad",
-      "kickoff": "2026-10-07T21:00:00+02:00",
-      "league": "Algeria: Ligue 1"
-    },
-    {
-      "away": "Chile",
-      "date": "2026-10-07",
-      "home": "Mexico",
-      "kickoff": "19:30",
-      "league": "International,Friendlies"
-    }
-  ],
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 6,
-  "captured_at": "2026-10-07T13:17:02+00:00",
+  "captured_at": "2026-10-07T16:17:19+00:00",
   "date": "2026-10-07",
-  "due_reasons": {
-    "first_at": 2
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -32,22 +15,17 @@
   "skip_reasons": {
     "kickoff_already_passed": 2,
     "priced": 1,
-    "retry_cooldown": 1
+    "retry_cooldown": 3
   },
   "skipped": [
     "Ponte Preta|Juventude (priced)",
+    "CR Belouizdad|Khenchela (retry cooldown (6h after failed attempt))",
     "CS Constantine|US Biskra (retry cooldown (6h after failed attempt))",
+    "Mexico|Chile (retry cooldown (6h after failed attempt))",
     "FC Tokyo|Shonan Bellmare (kickoff already passed)",
     "Urawa|Omiya Ardija (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "CR Belouizdad vs Khenchela (league not covered: Algeria: Ligue 1)",
-    "Mexico vs Chile (league not covered: International,Friendlies)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Algeria: Ligue 1": 1,
-    "league not covered: International,Friendlies": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
