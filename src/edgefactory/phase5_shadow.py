@@ -49,6 +49,11 @@ _PICK_FIELDS = (
 )
 
 
+def _capture_context(value: object) -> str:
+    text = str(value or "manual_or_unspecified")
+    return text if text in {"official_daily_pipeline", "manual_or_unspecified"} else "other"
+
+
 def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
@@ -177,6 +182,7 @@ def normalize_shadow_row(
     capture_day: str,
     captured_at: str | None = None,
     requested_day: str | None = None,
+    capture_context: str = "manual_or_unspecified",
 ) -> tuple[dict[str, Any] | None, str | None]:
     """Create one source-tagged, marker-aware shadow row without scoring it."""
     if source not in AUTHORIZED_SOURCES:
@@ -230,6 +236,7 @@ def normalize_shadow_row(
         "record_type": "phase5_shadow_prediction",
         "source": source,
         "capture_day": capture_day,
+        "capture_context": _capture_context(capture_context),
         "captured_at": captured_at_value,
         "source_timestamp": source_timestamp,
         "identity": identity,
@@ -285,6 +292,7 @@ def append_shadow_rows(
     capture_day: str,
     requested_day: str | None = None,
     captured_at: str | None = None,
+    capture_context: str = "manual_or_unspecified",
     root: Path | str,
 ) -> dict[str, int]:
     """Append valid source predictions; never reads or feeds a production path."""
@@ -300,7 +308,7 @@ def append_shadow_rows(
             continue
         record, reason = normalize_shadow_row(
             source, row, capture_day=capture_day, captured_at=captured_at,
-            requested_day=requested_day,
+            requested_day=requested_day, capture_context=capture_context,
         )
         if record is None:
             if reason == "identity_unusable":
@@ -352,9 +360,7 @@ def append_capture_attempt(
     if source not in AUTHORIZED_SOURCES:
         raise ValueError(f"source not authorized for Phase 5 shadow capture: {source}")
     capture_day = date.fromisoformat(str(capture_day)[:10]).isoformat()
-    capture_context = str(capture_context)
-    if capture_context not in {"official_daily_pipeline", "manual_or_unspecified"}:
-        capture_context = "other"
+    capture_context = _capture_context(capture_context)
     record = {
         "schema": SCHEMA,
         "record_type": "phase5_shadow_capture_attempt",

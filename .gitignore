@@ -129,10 +129,12 @@ dist/
 
 # Phase 5 forward-era evidence is required for the 90-day maturity clock.
 # The existing daily pipeline already stages and persists all non-ignored localdata.
-# Keep only these append-only capture ledgers durable; no workflow edits needed.
+# Keep the append-only ledgers and compact certifier artefacts durable; no workflow edits needed.
 !localdata/phase5_shadow/
 !localdata/phase5_shadow/rows.jsonl
 !localdata/phase5_shadow/attempts.jsonl
+!localdata/phase5_shadow/status.json
+!localdata/phase5_shadow/evaluation.json
 
 # ML-fade research capture ledger + checkpoint state + checkpoint REPORTS
 # (bot-owned, tracked so certification-independent evidence survives cache

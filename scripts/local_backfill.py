@@ -236,7 +236,9 @@ def main():
                     try:
                         shadow_result = append_shadow_rows(
                             source_key, rows or [], capture_day=phase5_capture_day,
-                            requested_day=requested_day, root=LOCALDATA,
+                            requested_day=requested_day,
+                            capture_context=phase5_capture_context,
+                            root=LOCALDATA,
                         )
                         phase5_rows_fetched += (
                             shadow_result["rows_seen"]
