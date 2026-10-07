@@ -3322,6 +3322,7 @@ def _record_phase5_betminer_capture(
     counters = {
         "rows_fetched": 0,
         "rows_appended": 0,
+        "rows_bytes_appended": 0,
         "rows_ignored_historical": 0,
         "rows_rejected_identity": 0,
         "rows_rejected_signal": 0,
@@ -3336,6 +3337,7 @@ def _record_phase5_betminer_capture(
         counters.update({
             "rows_fetched": result["rows_seen"] - result["rows_ignored_historical"],
             "rows_appended": result["rows_appended"],
+            "rows_bytes_appended": result["rows_bytes_appended"],
             "rows_ignored_historical": result["rows_ignored_historical"],
             "rows_rejected_identity": result["rows_rejected_identity"],
             "rows_rejected_signal": result["rows_rejected_signal"],
@@ -3357,6 +3359,9 @@ def _record_phase5_betminer_capture(
             completed_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
             requested_days=[day],
             forward_days=[day],
+            capture_context=os.environ.get(
+                "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+            ),
             source_status=diag.get("status") or stats.get("status"),
             quota_hint=diag.get("quota_hint"),
             http_statuses=diag.get("http_statuses") or stats.get("http_statuses") or (),

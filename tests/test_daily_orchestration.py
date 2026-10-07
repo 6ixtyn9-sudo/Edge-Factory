@@ -446,7 +446,9 @@ def test_official_finalization_enables_phase5_only_on_the_existing_pick_capture(
         daily.finalize_priced_candidate_slate("2026-10-07", phase5_shadow=True)
 
     assert commands == [(
-        "EDGE_FACTORY_PHASE5_SHADOW=1 EDGE_FACTORY_RUN_AS_OF=2026-10-07T09:15:00+02:00 "
+        "EDGE_FACTORY_PHASE5_SHADOW=1 "
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline "
+        "EDGE_FACTORY_RUN_AS_OF=2026-10-07T09:15:00+02:00 "
         "PYTHONPATH=src python3 scripts/picks_today.py 2026-10-07",
         "picks_today 2026-10-07 (final priced card)",
     )]
@@ -459,3 +461,4 @@ def test_official_capture_command_opts_into_phase5_on_resilience_group():
         in source
     )
     assert "forebet-resilience" in source
+    assert "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline" in source

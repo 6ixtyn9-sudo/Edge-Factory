@@ -11,6 +11,7 @@ import csv
 import gzip
 import importlib
 import json
+import os
 import sys
 import time
 from datetime import date, datetime, timedelta, timezone
@@ -111,6 +112,9 @@ def main():
     phase5_capture = "--phase5-shadow" in sys.argv[4:]
     phase5_capture_day = None
     phase5_started_at = None
+    phase5_capture_context = os.environ.get(
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+    )
 
     sys.path.insert(0, str(ROOT / "src"))
     if phase5_capture:
@@ -204,6 +208,7 @@ def main():
     phase5_forward_days: set[str] = set()
     phase5_rows_fetched = 0
     phase5_rows_appended = 0
+    phase5_rows_bytes_appended = 0
     phase5_rows_ignored_historical = 0
     phase5_rows_rejected_identity = 0
     phase5_rows_rejected_signal = 0
@@ -238,6 +243,7 @@ def main():
                             - shadow_result["rows_ignored_historical"]
                         )
                         phase5_rows_appended += shadow_result["rows_appended"]
+                        phase5_rows_bytes_appended += shadow_result["rows_bytes_appended"]
                         phase5_rows_ignored_historical += shadow_result["rows_ignored_historical"]
                         phase5_rows_rejected_identity += shadow_result["rows_rejected_identity"]
                         phase5_rows_rejected_signal += shadow_result["rows_rejected_signal"]
@@ -319,8 +325,10 @@ def main():
                 completed_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
                 requested_days=phase5_requested_days,
                 forward_days=phase5_forward_days,
+                capture_context=phase5_capture_context,
                 rows_fetched=phase5_rows_fetched,
                 rows_appended=phase5_rows_appended,
+                rows_bytes_appended=phase5_rows_bytes_appended,
                 rows_ignored_historical=phase5_rows_ignored_historical,
                 rows_rejected_identity=phase5_rows_rejected_identity,
                 rows_rejected_signal=phase5_rows_rejected_signal,

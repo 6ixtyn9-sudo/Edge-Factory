@@ -401,7 +401,11 @@ def finalize_priced_candidate_slate(target_date: str, *, phase5_shadow: bool = F
     capture_oddspapi_snapshot(target_date, "candidate_price_snapshot")
     capture_betexplorer_snapshot(target_date, "candidate_price_snapshot")
     priced_as_of = make_run_as_of()
-    phase5_prefix = "EDGE_FACTORY_PHASE5_SHADOW=1 " if phase5_shadow else ""
+    phase5_prefix = (
+        "EDGE_FACTORY_PHASE5_SHADOW=1 "
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline "
+        if phase5_shadow else ""
+    )
     run(
         f"{phase5_prefix}{picks_env_prefix(priced_as_of)} PYTHONPATH=src python3 "
         f"scripts/picks_today.py {target_date}",
@@ -915,6 +919,7 @@ def run_pipeline(
             # response. Capture every resilient source and let individual
             # adapter failures remain retryable without starving the rebuild.
             run(
+                "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline "
                 "python3 scripts/capture_daily.py --skip-build --phase5-shadow "
                 "--source-group forebet-resilience",
                 "capture_daily (non-Forebet D30 resilience pass)",
