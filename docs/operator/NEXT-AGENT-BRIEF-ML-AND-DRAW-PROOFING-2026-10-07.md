@@ -346,8 +346,12 @@ Certified probability bands use `<55`, `[55,60)`, `[60,65)`, `[65,80)`,
 2,344/1,888; 204/243; 152/245; 231/464; 4/95 (n=2,935 in each column).
 **903/2,935 (30.8%) picks move upward; none move down.** Crossings (overlap
 by threshold): 456 at 55, 417 at 60, 324 at 65, 91 at 80. All identities and
-old/new bands are in the [threshold-mover CSV](ML-CALIBRATION-THRESHOLD-MOVERS-2026-10-07.csv) (903 data rows).
-This is not authority to move a certified threshold.
+old/new bands are in the [T7 threshold-mover CSV](ML-CALIBRATION-THRESHOLD-MOVERS-2026-10-07.csv)
+(903 CSV records). This is a current served-input/unmatched calibration
+sensitivity (frozen incumbent raw versus Platt), not a source-expansion
+estimate; separate R2.2 candidate-versus-incumbent movers are in [the R2.2
+CSV](ML-R2-2-SHADOW-MOVERS-2026-10-07.csv). Neither file authorizes a
+certified-threshold move.
 
 ## T8 / B2 — halftime-score ablation (completed; not adopted)
 
