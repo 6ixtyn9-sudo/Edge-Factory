@@ -511,8 +511,10 @@ def test_curated_alias_never_carries_a_marked_squad_onto_the_senior_key(raw, can
     re-attaches the marker suffix, ``urawa_w``); the odds layer did not,
     and handed a women's row our card's byte-identical exact join key.
     Measured at the defect: 17 of 157 curated pairs were alias-bridged
-    across the marker (87 more collapse by truncation alone — pre-existing
-    and explicitly NOT claimed as fixed here).
+    across the marker, all released by this guard; the wider hazard is
+    older and only partly fixed — 87 marked variants collapsed onto their
+    canonical at the defect and 70 still do by truncation/stripping alone,
+    with no alias involved. Measured before/after the guard.
     """
     pt = _load_picks_today()
     marked = f"{raw} W"

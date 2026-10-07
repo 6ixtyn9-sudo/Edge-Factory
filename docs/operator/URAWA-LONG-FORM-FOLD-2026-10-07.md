@@ -96,9 +96,10 @@ Known pre-existing wart, recorded so it is not mistaken for damage from this
 change: width-9 `pt.odds_team_key("Urawa W")` already equals
 `pt.odds_team_key("Urawa")` because `norm_team` strips the `w` noise token.
 That is truncation/stripping, not aliasing — the guard cannot help it, and it is
-in the same class as the 87 curated pairs that collapse with no alias involved
-(measured; see Correction). No observed women's long-form spelling exists in the
-warehouse, the settled window or the SharpAPI board.
+in the same class as the 70 curated pairs that still collapse with no alias
+involved after the guard (87 collapsed at the defect; measured; see Correction).
+No observed women's long-form spelling exists in the warehouse, the settled
+window or the SharpAPI board.
 
 ## Step 4 — the guard was watched failing
 
@@ -167,12 +168,16 @@ odds `1.741` — the most trusted verdict, no quarantine. Re-derived from
 the same row keyed `urawaredd` and did **not** join at all. The change converted
 a dormant collision into a live one on the path that attaches prices to picks.
 
-**The class, measured so it cannot be overread.** 17 of the 157 curated pairs
-were alias-bridged across a marker (the guard changes exactly these); a further
-87 marked variants collapse onto their canonical **by truncation/stripping alone**
-— pre-existing, and explicitly *not* fixed by this guard. Across 2,877 archived
-pick rows carrying 140 distinct marked names, **zero** sat on an alias key, so no
-live join changes.
+**The class, measured so it cannot be overread.** Of the 157 curated pairs, 17
+were alias-bridged across a marker **at the defect**, and all 17 are released by
+the guard (re-measured after it: zero marked names can receive an alias). The
+wider hazard is older than this fold and is **not** fully fixed: 87 marked
+variants collapsed onto their canonical at the defect and **70 still do, by
+truncation/stripping alone, with no alias involved** — the guard cannot reach
+that, and this document does not claim it does. (Numbers re-derived before and
+after the fix; the same 17-pair set is the one a test pins.) Across 2,877
+archived pick rows carrying 140 distinct marked names, **zero** sat on an alias
+key, so no live join changes.
 
 **Fix.** One helper, three call sites: the odds key functions refuse the alias
 lookup when the raw name carries a squad marker. The rule is already the entity
