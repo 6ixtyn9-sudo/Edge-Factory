@@ -1,6 +1,16 @@
 {
-  "attempted": 1,
+  "attempted": 6,
   "attempted_fixtures": [
+    {
+      "avg_p": 75.7,
+      "away": "Juventude",
+      "date": "2026-10-07",
+      "home": "Ponte Preta",
+      "league": "Brazil: Serie B",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    },
     {
       "avg_p": 67.7,
       "away": "Khenchela",
@@ -10,19 +20,100 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 63.7,
+      "away": "US Biskra",
+      "date": "2026-10-07",
+      "home": "CS Constantine",
+      "league": "Algeria Ligue 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 61.2,
+      "away": "Chile",
+      "date": "2026-10-07",
+      "home": "Mexico",
+      "league": "International,Friendlies",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 58.4,
+      "away": "Shonan Bellmare",
+      "date": "2026-10-07",
+      "home": "FC Tokyo",
+      "league": "Japan Emperor Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.3404
+    },
+    {
+      "avg_p": 55.0,
+      "away": "Omiya Ardija",
+      "date": "2026-10-07",
+      "home": "Urawa",
+      "league": "Japan Emperor Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.2011
     }
   ],
   "be_429": 0,
-  "be_cached": 1,
+  "be_cached": 6,
   "be_cooling_down": false,
-  "candidate_fixtures": 1,
-  "captured_at": "2026-10-07T16:05:57.898736+00:00",
+  "candidate_fixtures": 6,
+  "captured_at": "2026-10-07T19:06:21.204045+00:00",
   "date": "2026-10-07",
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 4,
   "max_fixtures": 12,
-  "quoted_fixtures": [],
-  "rows": 0,
+  "quoted_fixtures": [
+    {
+      "avg_p": 75.7,
+      "away": "Juventude",
+      "date": "2026-10-07",
+      "home": "Ponte Preta",
+      "league": "Brazil: Serie B",
+      "market": "1x2",
+      "pick": "away",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 61.2,
+      "away": "Chile",
+      "date": "2026-10-07",
+      "home": "Mexico",
+      "league": "International,Friendlies",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 58.4,
+      "away": "Shonan Bellmare",
+      "date": "2026-10-07",
+      "home": "FC Tokyo",
+      "league": "Japan Emperor Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.3404
+    },
+    {
+      "avg_p": 55.0,
+      "away": "Omiya Ardija",
+      "date": "2026-10-07",
+      "home": "Urawa",
+      "league": "Japan Emperor Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.2011
+    }
+  ],
+  "rows": 12,
   "schema": 1,
-  "status": "empty"
+  "status": "ok"
 }
