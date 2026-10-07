@@ -347,8 +347,21 @@ def _():
     # matters is: nothing failed, and no existing test was deleted. This
     # check is the second half. Raise it when you add tests; never lower it
     # to make the check pass.
-    if count < 1524:
-        return (f"{count} test functions found, floor is 1524. Tests were "
+    # Raised 1524 -> 1526 on 2026-10-07: tests/test_team_identity_transliteration.py
+    # gains 2 curated-alias tests for the SharpAPI long-form fold.
+    # Raised 1526 -> 1528 on 2026-10-07: tests/test_identity.py gains the
+    # curated-LEAGUE analogue (derived from the table) plus the cup/league
+    # no-merge invariant.
+    # Raised 1528 -> 1529 on 2026-10-07: the retired-capture classification
+    # guard in tests/test_edge_firing_tripwire.py.
+    # Raised 1529 -> 1531 on 2026-10-07: the squad-marker guard on the odds
+    # alias lookup (rule + join consequence). All measured, never guessed.
+    # Raised 1531 -> 1534 on 2026-10-07: the squad-marker precondition at
+    # the JOIN (tests/test_team_identity_transliteration.py) - one
+    # parametrised case table for the exact tier plus two standalone
+    # guards, closing the uncurated half of the same class.
+    if count < 1534:
+        return (f"{count} test functions found, floor is 1534. Tests were "
                 "deleted rather than fixed.")
     return None
 

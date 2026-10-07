@@ -36,6 +36,7 @@ from edgefactory.util import (
     is_degenerate_team_key,
     script_anomaly,
     markers_conflict,
+    squad_markers,
     MIN_IDENTITY_KEY_LEN,
     norm_team,
     fold_ascii,
@@ -137,6 +138,11 @@ ODDS_EXACT_TEAM_ALIASES = {
     # club names.  Narrow, one-way aliases are preferred to fuzzy matching.
     "eibar": "sdeibar",                # Eibar -> SD Eibar (Spain Segunda)
     "grimsbyto": "grimsby",            # Grimsby Town -> Grimsby (England L2)
+    # 2026-10-07 SharpAPI board census (run 37570304076): the vendor writes
+    # the full club name "Urawa Red Diamonds" where our card writes "Urawa".
+    # width-9 exact key of the long form (and of the feed-truncated "Urawa
+    # Red Diamon") -> our key.  Mirrors Config/entity_overrides.json -> teams.
+    "urawaredd": "urawa",              # Urawa Red Diamonds -> Urawa (Japan Emperor Cup)
 }
 
 ODDS_MATCH_TEAM_ALIASES = {
@@ -168,6 +174,11 @@ ODDS_MATCH_TEAM_ALIASES = {
     # 2026-10-03 TheOddsAPI receipt; see exact-key aliases above.
     "eibar": "sdeibar",                    # Eibar -> SD Eibar
     "grimsbytown": "grimsby",              # Grimsby Town -> Grimsby
+    # 2026-10-07 SharpAPI board census; see exact-key aliases above.  This is
+    # the compact-key half of the same fold, so the fixture census
+    # (card_fixtures_on_board) and the timed join see the SAME club, not a
+    # spelling pair.
+    "urawareddiamonds": "urawa",           # Urawa Red Diamonds -> Urawa
 }
 
 DISPLAY_TEAM_ALIASES = {
@@ -1747,22 +1758,47 @@ def char_ngram_similarity(s1: str, s2: str, n: int = 2) -> float:
     return len(g1 & g2) / len(g1 | g2)
 
 
+def _odds_alias_key(raw: object, key: str, aliases: dict) -> str:
+    """Apply an odds alias map — but never across a squad boundary.
+
+    Same rule the entity layer already enforces (entities.canonical_team:
+    "the alias canonicalizes the CLUB, never the squad").  The width-9 key
+    space this feeds strips a distinct-entity marker before truncating, so
+    "Urawa Red Diamonds W" and "Urawa Red Diamonds" BOTH key as "urawaredd"
+    — an alias applied there resolves a women's/reserve spelling onto the
+    senior side's key and hands it our card's exact join (2026-10-07
+    correction to the Urawa fold; measured: 17 curated pairs were
+    alias-bridged across the marker, 87 collapse by truncation alone).
+
+    A marked name therefore keeps its unaliased key.  Fail-closed on
+    purpose: the join falls back to the timed/fuzzy tiers — a wrong-squad
+    price can still be *seen* and quarantined, never claimed as exact.
+    """
+    if squad_markers(str(raw or "")):
+        return key
+    return aliases.get(key, key)
+
+
 def odds_team_key(name: object) -> str:
-    key = norm_team(fold_ascii(str(name or "")))
-    return ODDS_EXACT_TEAM_ALIASES.get(key, key)
+    raw = str(name or "")
+    key = norm_team(fold_ascii(raw))
+    return _odds_alias_key(raw, key, ODDS_EXACT_TEAM_ALIASES)
 
 
 def odds_match_team_key(name: object) -> str:
     raw = str(name or "")
     compact = compact_key(raw)
-    return ODDS_MATCH_TEAM_ALIASES.get(compact, compact)
+    # The compact key retains the marker, so the guard is belt-and-braces
+    # here; it is stated once so no future key space has to re-derive it.
+    return _odds_alias_key(raw, compact, ODDS_MATCH_TEAM_ALIASES)
 
 
 def operational_team_key(name: object) -> str:
-    tokens = re.findall(r"[a-z0-9]+", fold_ascii(str(name or "")))
+    raw = str(name or "")
+    tokens = re.findall(r"[a-z0-9]+", fold_ascii(raw))
     filtered = [t for t in tokens if t not in OPERATIONAL_CLUB_TOKENS]
-    compact = "".join(filtered) or compact_key(name)
-    return ODDS_MATCH_TEAM_ALIASES.get(compact, compact)
+    compact = "".join(filtered) or compact_key(raw)
+    return _odds_alias_key(raw, compact, ODDS_MATCH_TEAM_ALIASES)
 
 
 def _kickoff_value(obj: dict) -> str | None:
@@ -2818,6 +2854,34 @@ def find_side_keyed_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, 
     return row, method
 
 
+def _exact_join_marker_agrees(pick: dict, row: dict) -> bool:
+    """True when the pick and the matched row carry the SAME squad markers.
+
+    The width-9 key space drops a distinct-entity marker (``norm_team``
+    strips it, so ``Ajax`` / ``Ajax W`` / ``Ajax U21`` all key ``ajax`` —
+    measured marker-blind for 145 of 150 marked names in the live
+    populations). The exact tier therefore cannot tell a squad from its
+    senior side on the key alone, and would hand a women's/reserve/youth
+    price to the senior pick as the most trusted verdict, unquarantined.
+
+    The key space is a certified artefact — re-keying it would move every
+    historical join — so the marker is enforced here instead, on the raw
+    names, as a precondition of the exact tier: fail-closed, and the row
+    falls through to the time/fuzzy tiers, whose ``compact_key`` retains
+    the marker.
+
+    Comparison is per side, on the canonical marker frozenset, so spelling
+    variants of the same marker agree (``W`` / ``Women`` / ``(w)`` are all
+    ``{'w'}``); differing markers (``W`` vs ``U21``) or marked-vs-unmarked
+    do not.
+    """
+
+    return (
+        squad_markers(pick.get("home")) == squad_markers(row.get("home"))
+        and squad_markers(pick.get("away")) == squad_markers(row.get("away"))
+    )
+
+
 def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
     if "exact" not in odds_data:
         key = (
@@ -2828,6 +2892,10 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
             str(pick.get("pick") or ""),
         )
         row = odds_data.get(key)
+        if row is not None and not _exact_join_marker_agrees(pick, row):
+            # A caller handed us a bare index with no timed/fuzzy tiers to
+            # fall through to; refusing is the only fail-closed answer.
+            return None, None
         return row, ("exact" if row else None)
 
     exact_key = (
@@ -2838,7 +2906,7 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
         str(pick.get("pick") or ""),
     )
     row = odds_data["exact"].get(exact_key)
-    if row:
+    if row and _exact_join_marker_agrees(pick, row):
         return row, "exact"
 
     candidates = odds_data["time_candidates"].get(_time_pick_key(pick), [])
