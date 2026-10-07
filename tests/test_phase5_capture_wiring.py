@@ -18,7 +18,12 @@ ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_phase5_ledgers_are_allowlisted_for_existing_git_persistence():
-    for name in (phase5_shadow.ROWS_NAME, phase5_shadow.ATTEMPTS_NAME):
+    for name in (
+        phase5_shadow.ROWS_NAME,
+        phase5_shadow.ATTEMPTS_NAME,
+        "status.json",
+        "evaluation.json",
+    ):
         path = f"localdata/{phase5_shadow.SHADOW_DIR}/{name}"
         result = subprocess.run(
             ["git", "check-ignore", "--no-index", "-q", path],
@@ -125,6 +130,7 @@ def test_local_backfill_writes_forward_rows_from_the_same_fetch_results(
     assert len(rows) == 1
     assert rows[0]["identity"]["date"] == "2026-10-07"
     assert rows[0]["capture_day"] == "2026-10-07"
+    assert rows[0]["capture_context"] == "official_daily_pipeline"
 
     attempts_path = tmp_path / phase5_shadow.SHADOW_DIR / phase5_shadow.ATTEMPTS_NAME
     [attempt] = [json.loads(line) for line in attempts_path.read_text().splitlines()]
@@ -221,6 +227,7 @@ def test_betminer_existing_capture_response_is_persisted_separately_only_when_op
     [row] = [json.loads(line) for line in rows_path.read_text().splitlines()]
     [attempt] = [json.loads(line) for line in attempts_path.read_text().splitlines()]
     assert row["source"] == "betminer"
+    assert row["capture_context"] == "official_daily_pipeline"
     assert row["identity"]["home_markers"] == ["u21"]
     assert attempt["source"] == "betminer"
     assert attempt["status"] == "ok"

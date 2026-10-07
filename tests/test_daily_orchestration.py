@@ -462,3 +462,5 @@ def test_official_capture_command_opts_into_phase5_on_resilience_group():
     )
     assert "forebet-resilience" in source
     assert "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline" in source
+    assert "phase5_shadow=not picks_only" in source
+    assert "scripts/phase5_certify.py" in source

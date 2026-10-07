@@ -985,7 +985,7 @@ def run_pipeline(
                 # were captured between passes and are time-qualified against
                 # this second build's as_of timestamp.
                 run_as_of = finalize_priced_candidate_slate(
-                    target_date, phase5_shadow=True
+                    target_date, phase5_shadow=not picks_only
                 )
                 price_snapshot_finalized = True
                 if not PICKS_TODAY_FILE.exists():
@@ -1066,6 +1066,10 @@ def run_pipeline(
             "o25_tracker (goals surface + checkpoint gate)",
         )
         ml_fade_research_maintenance(target_date)
+        run_soft(
+            "PYTHONPATH=src python3 scripts/phase5_certify.py",
+            "phase5 daily clause status (read-only)",
+        )
         sync_official_archive(target_date, "sync_supabase")
         _notify(target_date, "notify (Smart Dispatch + empty-slate heartbeat)")
         if not picks_only:

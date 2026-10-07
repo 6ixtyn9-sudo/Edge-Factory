@@ -3332,7 +3332,11 @@ def _record_phase5_betminer_capture(
     try:
         result = append_shadow_rows(
             "betminer", rows or [], capture_day=capture_day,
-            requested_day=day, root=LOCALDATA,
+            requested_day=day,
+            capture_context=os.environ.get(
+                "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+            ),
+            root=LOCALDATA,
         )
         counters.update({
             "rows_fetched": result["rows_seen"] - result["rows_ignored_historical"],

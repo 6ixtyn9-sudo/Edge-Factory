@@ -51,6 +51,7 @@ def test_normalizes_marker_aware_identity_probabilities_and_capture_timestamp(tm
     assert record["record_type"] == "phase5_shadow_prediction"
     assert record["source"] == "vitibet"
     assert record["capture_day"] == "2026-10-07"
+    assert record["capture_context"] == "manual_or_unspecified"
     assert datetime.fromisoformat(record["captured_at"].replace("Z", "+00:00"))
     assert record["source_timestamp"] == "2026-10-07T12:00:00Z"
     assert record["identity"]["home_key"] == shadow.source_team_key("North FC U21")
