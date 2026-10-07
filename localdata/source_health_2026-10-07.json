@@ -59,7 +59,7 @@
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-07' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -184,10 +184,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 1513,
+        "event_count": 1531,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 1513,
+        "events_with_teams": 1531,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -245,7 +245,7 @@
         "board_rows": 0,
         "board_team_count": 0,
         "board_team_names": {},
-        "card_fixture_count": 5,
+        "card_fixture_count": 6,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
