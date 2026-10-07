@@ -2,8 +2,8 @@
   "added": 0,
   "attempted": 0,
   "attempted_fixtures": [],
-  "candidate_fixtures": 3,
-  "captured_at": "2026-10-07T01:18:16+00:00",
+  "candidate_fixtures": 4,
+  "captured_at": "2026-10-07T04:30:56+00:00",
   "date": "2026-10-07",
   "due_reasons": {},
   "errors": [],
@@ -14,12 +14,13 @@
   "schema": 1,
   "skip_reasons": {
     "priced": 1,
-    "retry_cooldown": 2
+    "retry_cooldown": 3
   },
   "skipped": [
     "Ponte Preta|Juventude (priced)",
     "CR Belouizdad|Khenchela (retry cooldown (6h after failed attempt))",
-    "Mexico|Chile (retry cooldown (6h after failed attempt))"
+    "Mexico|Chile (retry cooldown (6h after failed attempt))",
+    "Urawa|Omiya Ardija (retry cooldown (6h after failed attempt))"
   ],
   "source": "theoddsapi",
   "status": "not_due",
