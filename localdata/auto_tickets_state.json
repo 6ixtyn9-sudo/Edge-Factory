@@ -1,65 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 199.91219400000008,
+  "bank": 163.35569400000008,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-10-06",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "Croatia vs Spain",
-              "pick": "AWAY",
-              "prob": 0.76,
-              "odds": 1.28,
-              "result": null
-            },
-            {
-              "match": "Russia vs Nigeria",
-              "pick": "HOME",
-              "prob": 0.624,
-              "odds": 1.57,
-              "result": null
-            }
-          ],
-          "odds": 2.01,
-          "stake_pct": 18.2783,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Moldova vs Slovakia",
-              "pick": "AWAY",
-              "prob": 0.6409999999999999,
-              "odds": 1.4,
-              "result": null
-            },
-            {
-              "match": "Estonia vs Iceland",
-              "pick": "AWAY",
-              "prob": 0.63,
-              "odds": 1.58,
-              "result": null
-            }
-          ],
-          "odds": 2.21,
-          "stake_pct": 18.2782,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 36.5565
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -708,6 +651,22 @@
         }
       ],
       "bank_pct": 199.9122
+    },
+    {
+      "date": "2026-10-06",
+      "staked_pct": 36.5565,
+      "returned_pct": 0.0,
+      "accas": [
+        {
+          "odds": 2.01,
+          "won": false
+        },
+        {
+          "odds": 2.21,
+          "won": false
+        }
+      ],
+      "bank_pct": 163.3557
     }
   ],
   "events": [],

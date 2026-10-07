@@ -24,17 +24,18 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
+        "fixture_key_miss": 13,
         "market_unsupported": 596,
-        "out_of_window": 728
+        "out_of_window": 715
       },
       "reason": null,
       "status": "cache_only"
     },
     "betclan": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
@@ -42,18 +43,20 @@
     },
     "betexplorer": {
       "be_matched": 0,
-      "be_raw": 0,
-      "be_usable": 0,
-      "blocker": "no pre-build BetExplorer rows",
+      "be_raw": 6,
+      "be_usable": 3,
+      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_miss_counts": {
+        "fixture_key_miss": 3
+      },
       "reason": null,
-      "status": "absent"
+      "status": "cache_only"
     },
     "betminer": {
       "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
@@ -90,31 +93,31 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "out_of_window": 3,
+        "fixture_key_miss": 3,
         "selection_unsupported": 1
       },
       "reason": null,
       "status": "cache_only"
     },
     "bzzoiro": {
-      "blocker": "bzz status=auth; quota_hint=auth_or_quota",
-      "can_fetch_today": false,
+      "blocker": null,
+      "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "http_403_plan_or_auth",
-      "status": "auth"
+      "freshness_h": 0.0,
+      "reason": null,
+      "status": "ok"
     },
     "bzzoiro_odds": {
-      "blocker": "bzz status=auth; quota_hint=auth_or_quota",
-      "can_fetch_today": false,
-      "can_price": false,
+      "blocker": null,
+      "can_fetch_today": true,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "http_403_plan_or_auth",
-      "status": "auth"
+      "freshness_h": 0.0,
+      "reason": null,
+      "status": "ok"
     },
     "forebet": {
       "blocker": "historical-only post-2026-06-12; no production pricing or weighting",
@@ -140,7 +143,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
-      "raw": 249,
+      "raw": 254,
       "reason": null,
       "scored": 79,
       "status": null
@@ -181,10 +184,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 1536,
+        "event_count": 1358,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 1536,
+        "events_with_teams": 1358,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -233,50 +236,12 @@
     },
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
-      "board_summary": {
-        "board_fixtures": 6,
-        "board_league_count": 4,
-        "board_leagues": {
-          "argentina_-_primera_c": 66,
-          "euro_quals_-_u21_championship": 30,
-          "norway_-_cup": 1,
-          "sweden_-_svenska_cupen": 3
-        },
-        "board_non_prematch_rows": 100,
-        "board_priced_rows": 0,
-        "board_rows": 100,
-        "board_team_count": 12,
-        "board_team_names": {
-          "Andorra U21": 30,
-          "CA Atlas": 22,
-          "Central Ballester": 22,
-          "Claypole": 22,
-          "Deportivo Espanol": 22,
-          "Deportivo Muniz": 22,
-          "FC Trollhattan": 3,
-          "Fenix": 22,
-          "IK Start": 1,
-          "Mjallby AIF": 3,
-          "Raufoss IL": 1,
-          "Slovakia U21": 30
-        },
-        "board_truncated": true,
-        "card_fixture_count": 0,
-        "card_fixtures_on_board": 0,
-        "card_fixtures_reversed": 0,
-        "card_priced_rows": 0,
-        "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 100
-        },
-        "requested_limit": 100
-      },
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "board_truncated_live_first",
+      "reason": "all_rows_live_or_stale",
       "sa_matched": 0,
       "sa_raw": 0,
       "sa_scored": 0,
@@ -315,19 +280,21 @@
       "status": null
     },
     "theoddsapi": {
-      "blocker": "no pre-build TheOddsAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_miss_counts": {
+        "fixture_key_miss": 69
+      },
       "oa_matched": 0,
-      "oa_raw": 0,
-      "oa_usable": 0,
+      "oa_raw": 69,
+      "oa_usable": 69,
       "reason": null,
-      "status": "empty"
+      "status": "cache_only"
     },
     "vitibet": {
       "blocker": null,
