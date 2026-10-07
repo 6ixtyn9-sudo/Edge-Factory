@@ -29,6 +29,7 @@ def test_phase5_artifacts_are_allowlisted_for_existing_git_persistence():
     ] + [
         "localdata/phase5_activation/active_era.json",
         "localdata/phase5_activation/registry.jsonl",
+        "localdata/phase5_activation/mutation_receipts.jsonl",
     ]
     for path in paths:
         result = subprocess.run(

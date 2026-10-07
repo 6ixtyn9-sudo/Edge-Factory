@@ -166,6 +166,33 @@ def test_revert_dry_run_activation_kill_switch_and_revert_use_exact_incumbent_fa
         )
 
 
+def test_zero_weight_mutation_invalidates_candidate_and_uses_incumbent(tmp_path):
+    root, incumbent_path, initial = _initialize(tmp_path)
+    certificate = _candidate_certificate(tmp_path / "cert.json", era_id="era-zero-weight")
+    dry_run_revert(
+        root, certificate, era_id="era-zero-weight",
+        now=_now("2026-10-08T10:00:00Z"),
+    )
+    activate_candidate(
+        root, certificate, incumbent_path, era_id="era-zero-weight",
+        confirmed=True, now=_now("2026-10-08T11:00:00Z"),
+    )
+
+    active_path = root / "active_era.json"
+    active = json.loads(active_path.read_text())
+    source_weight = K_FEATURES.index("vitibet_p")
+    assert active["candidate_model_payload"]["coef"][source_weight] != 0.0
+    active["candidate_model_payload"]["coef"][source_weight] = 0.0
+    mutated_key = model_key(active["candidate_model_payload"])
+    assert mutated_key != active["candidate_model_key"]
+    active_path.write_text(json.dumps(active, sort_keys=True))
+
+    resolved = resolve_effective_state(root)
+    assert resolved["effective_mode"] == "incumbent"
+    assert resolved["effective_model_key"] == initial["active_model_key"]
+    assert resolved["reason"] == "invalid_candidate_config_fallback"
+
+
 def test_30_day_cooldown_is_enforced_but_expires_at_30_days(tmp_path):
     root, incumbent_path, _ = _initialize(tmp_path)
     cert_one = _candidate_certificate(tmp_path / "one.json", era_id="era-one", weight=0.02)

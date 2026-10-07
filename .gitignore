@@ -128,7 +128,7 @@ dist/
 !localdata/team_aliases.json
 
 # Phase 5 evidence and activation state use the existing localdata persistence path.
-# Keep append-only ledgers/registry plus compact config and verdict artefacts durable.
+# Keep append-only ledgers/registry plus compact config, verdict, and receipt artefacts durable.
 # No workflow edits are needed.
 !localdata/phase5_shadow/
 !localdata/phase5_shadow/rows.jsonl
@@ -138,6 +138,7 @@ dist/
 !localdata/phase5_activation/
 !localdata/phase5_activation/active_era.json
 !localdata/phase5_activation/registry.jsonl
+!localdata/phase5_activation/mutation_receipts.jsonl
 
 # ML-fade research capture ledger + checkpoint state + checkpoint REPORTS
 # (bot-owned, tracked so certification-independent evidence survives cache
