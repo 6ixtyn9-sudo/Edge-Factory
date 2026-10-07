@@ -3287,6 +3287,89 @@ def _day_card_fixtures(day: str, picks: list) -> list:
     return out
 
 
+def _record_phase5_betminer_capture(
+    day: str,
+    *,
+    rows: list[dict] | None,
+    stats: dict,
+    started_at: str,
+    error_class: str | None = None,
+) -> None:
+    """Piggyback the existing BetMiner response into the isolated Phase 5 ledger."""
+    if os.environ.get("EDGE_FACTORY_PHASE5_SHADOW", "").strip().lower() not in {
+        "1", "true", "yes", "on",
+    }:
+        return
+    try:
+        from edgefactory.phase5_shadow import (
+            append_capture_attempt,
+            append_shadow_rows,
+            local_capture_date,
+        )
+    except Exception:
+        return
+
+    capture_day = local_capture_date()
+    diag = {}
+    try:
+        from edgefactory.sources import betminer as bm
+        diag_fn = getattr(bm, "diagnostics", None)
+        if callable(diag_fn):
+            diag = diag_fn() or {}
+    except Exception:
+        diag = {}
+
+    counters = {
+        "rows_fetched": 0,
+        "rows_appended": 0,
+        "rows_ignored_historical": 0,
+        "rows_rejected_identity": 0,
+        "rows_rejected_signal": 0,
+    }
+    status = str(stats.get("status") or "failed")
+    error_classes = [error_class] if error_class else []
+    try:
+        result = append_shadow_rows(
+            "betminer", rows or [], capture_day=capture_day,
+            requested_day=day, root=LOCALDATA,
+        )
+        counters.update({
+            "rows_fetched": result["rows_seen"] - result["rows_ignored_historical"],
+            "rows_appended": result["rows_appended"],
+            "rows_ignored_historical": result["rows_ignored_historical"],
+            "rows_rejected_identity": result["rows_rejected_identity"],
+            "rows_rejected_signal": result["rows_rejected_signal"],
+        })
+        if status in {"ok", "empty", "cache_only"}:
+            attempt_status = "ok"
+        elif status in {"not_run", "candidate_only", "disabled"}:
+            attempt_status = "not_run"
+        else:
+            attempt_status = "failed"
+    except Exception as exc:
+        attempt_status = "shadow_write_failed"
+        error_classes.append(type(exc).__name__)
+
+    try:
+        append_capture_attempt(
+            "betminer", capture_day=capture_day, status=attempt_status,
+            started_at=started_at,
+            completed_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            requested_days=[day],
+            forward_days=[day],
+            source_status=diag.get("status") or stats.get("status"),
+            quota_hint=diag.get("quota_hint"),
+            http_statuses=diag.get("http_statuses") or stats.get("http_statuses") or (),
+            error_classes=error_classes,
+            root=LOCALDATA,
+            **counters,
+        )
+    except Exception:
+        # Phase 5 sidecar failures are diagnostic only and never change the
+        # existing BetMiner shadow, picks, or capture return path.
+        return
+
+
 def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, dict]:
     """Capture every verified shadow candidate without touching the production path.
 
@@ -3326,13 +3409,31 @@ def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, 
         stats["sportytrader_odds"] = st_stats
     except Exception as exc:
         stats["sportytrader_odds"]["blocker"] = str(exc)[:180]
+    bm_phase5_enabled = os.environ.get("EDGE_FACTORY_PHASE5_SHADOW", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    bm_phase5_started_at = (
+        datetime.now(timezone.utc).isoformat(timespec="seconds")
+        if bm_phase5_enabled else ""
+    )
+    bm_rows: list[dict] = []
+    bm_stats: dict = {"status": "failed", "http_statuses": []}
     try:
         from edgefactory.sources import betminer as bm
         bm_rows, bm_stats = bm.capture_day(day)
         bm.persist_shadow(day, bm_rows, bm_stats, localdata=LOCALDATA)
         stats["betminer"] = bm_stats
+        if bm_phase5_enabled:
+            _record_phase5_betminer_capture(
+                day, rows=bm_rows, stats=bm_stats, started_at=bm_phase5_started_at,
+            )
     except Exception as exc:
         stats["betminer"]["blocker"] = str(exc)[:180]
+        if bm_phase5_enabled:
+            _record_phase5_betminer_capture(
+                day, rows=bm_rows, stats=bm_stats, started_at=bm_phase5_started_at,
+                error_class=type(exc).__name__,
+            )
     try:
         from edgefactory.sources import pinnapi_odds as pinnapi
         pa_rows, pa_stats = pinnapi.capture_day(day)

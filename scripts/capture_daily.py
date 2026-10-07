@@ -71,6 +71,12 @@ SOURCE_GROUPS = {
     "forebet-resilience": FOREBET_RESILIENCE_SOURCES,
 }
 
+# Piggyback only the four authorized response-backed sources already in the
+# daily capture plan. BetMiner's existing request path lives in picks_today.
+PHASE5_BACKFILL_SOURCES = frozenset({
+    "vitibet", "bzzoiro", "betclan", "scoutingstats",
+})
+
 
 def _csv_sources(value: str | None) -> set[str]:
     return {part.strip() for part in (value or "").split(",") if part.strip()}
@@ -148,6 +154,14 @@ def main() -> None:
         action="store_true",
         help="exit non-zero after all adapters run if any source failed",
     )
+    ap.add_argument(
+        "--phase5-shadow",
+        action="store_true",
+        help=(
+            "append forward-only Phase 5 rows from existing authorized responses; "
+            "never adds a source request"
+        ),
+    )
     args = ap.parse_args()
 
     try:
@@ -156,6 +170,14 @@ def main() -> None:
         ap.error(str(exc))
 
     jobs = [job for job in JOBS if selected is None or job[0] in selected]
+    phase5_capture_day = None
+    if args.phase5_shadow:
+        if not any(source in PHASE5_BACKFILL_SOURCES for source, _start, _end in jobs):
+            ap.error("--phase5-shadow requires an authorized backfill source in the selected jobs")
+        sys.path.insert(0, str(ROOT / "src"))
+        from edgefactory.phase5_shadow import local_capture_date
+
+        phase5_capture_day = local_capture_date()
 
     window = [
         D30,
@@ -179,6 +201,8 @@ def main() -> None:
             "--workers",
             "4",
         ]
+        if args.phase5_shadow and source in PHASE5_BACKFILL_SOURCES:
+            cmd.extend(["--phase5-shadow", "--capture-day", phase5_capture_day])
         print(f"\n=== {source} {start}..{end} ===", flush=True)
         rc = subprocess.run(cmd, cwd=ROOT).returncode
         status = "ok" if rc == 0 else f"failed(rc={rc})"

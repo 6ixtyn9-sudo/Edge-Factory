@@ -434,3 +434,28 @@ def test_priced_finalization_captures_then_rebuilds_with_a_new_cutoff(monkeypatc
         "PYTHONPATH=src python3 scripts/picks_today.py 2026-10-03",
         "picks_today 2026-10-03 (final priced card)",
     )]
+
+
+def test_official_finalization_enables_phase5_only_on_the_existing_pick_capture(monkeypatch):
+    commands: list[tuple[str, str]] = []
+    monkeypatch.setattr(daily, "make_run_as_of", lambda: "2026-10-07T09:15:00+02:00")
+    with patch.object(daily, "capture_theodds_snapshot"), \
+            patch.object(daily, "capture_oddspapi_snapshot"), \
+            patch.object(daily, "capture_betexplorer_snapshot"), \
+            patch.object(daily, "run", side_effect=lambda cmd, label: commands.append((cmd, label))):
+        daily.finalize_priced_candidate_slate("2026-10-07", phase5_shadow=True)
+
+    assert commands == [(
+        "EDGE_FACTORY_PHASE5_SHADOW=1 EDGE_FACTORY_RUN_AS_OF=2026-10-07T09:15:00+02:00 "
+        "PYTHONPATH=src python3 scripts/picks_today.py 2026-10-07",
+        "picks_today 2026-10-07 (final priced card)",
+    )]
+
+
+def test_official_capture_command_opts_into_phase5_on_resilience_group():
+    source = (ROOT / "scripts" / "daily.py").read_text()
+    assert (
+        '"python3 scripts/capture_daily.py --skip-build --phase5-shadow "'
+        in source
+    )
+    assert "forebet-resilience" in source
