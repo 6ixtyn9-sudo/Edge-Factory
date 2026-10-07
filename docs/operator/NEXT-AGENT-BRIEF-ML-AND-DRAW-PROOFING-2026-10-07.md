@@ -203,15 +203,21 @@ handoff:
 1. **The C scores** (Items C/D: the two stalled settlement keys and the two
    frozen Kladno rows). Fenced — the cases and the standing remedy are in
    `docs/operator/FINDINGS-2026-10-07.md` §2–3. The operator sets the scores.
-2. **forebet's fate.** Before buying a proxy or routing around the block,
-   run the forebet capture ONCE from the operator's own (home) IP. If it
-   succeeds, the block is IP-based and a proxy — or simply running that one
-   source locally — genuinely fixes it. If it still 403s, the block is not
-   IP-based and a proxy is wasted money. Context: forebet is a
-   `backfill_donor` now and its staleness is visibility-only (the system runs
-   without it), but it still supplies ~43% of the settled overlay
-   (FINDINGS §1), so restoring the capture has real value. Routing around a
-   block is a ToS and new-dependency decision — the operator's, not yours.
+2. **forebet's fate — PARKED (operator, 2026-10-07).** No capture test, no
+   proxy purchase, no forebet work of any kind until the operator has the
+   capable machine. The resumption step, when the operator unparks it, is the
+   same free test as before: run the forebet capture ONCE from the operator's
+   own (home) IP. If it succeeds, the block is IP-based and a proxy — or
+   simply running that one source locally — genuinely fixes it. If it still
+   403s, the block is not IP-based and a proxy is wasted money. The resume
+   path already exists and stays parked with it:
+   `docs/operator/forebet-browser-diagnostic.yml.proposed` (unapplied — a
+   workflow-dispatch diagnostic, not a fix). Context for whenever it resumes:
+   forebet is a `backfill_donor` now and its staleness is visibility-only
+   (the system runs without it), but it still supplies ~43% of the settled
+   overlay (FINDINGS §1), so restoring the capture has real value. Routing
+   around a block is a ToS and new-dependency decision — the operator's, not
+   yours.
 
 ---
 
