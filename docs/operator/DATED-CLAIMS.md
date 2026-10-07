@@ -45,7 +45,7 @@ recollection.
 | `scripts/picks_today.py` | on 2026-10-03 every zone-free renderer observed | RUNTIME-OBSERVED |
 | `tests/test_kickoff_guard_direction.py` | renderings verbatim from the 2026-10-03 picks file | `localdata/picks_2026-10-03.json` |
 | `tests/test_team_identity_transliteration.py` | 2026-10-07 SharpAPI receipt: the vendor's long-form spelling must not fall through to the bigram matcher | `localdata/source_health_2026-10-07.json` |
-| `scripts/picks_today.py` | 2026-10-07 correction to the Urawa fold: 17 of 157 curated pairs were alias-bridged across a squad marker, 87 collapse by truncation alone | `docs/operator/URAWA-LONG-FORM-FOLD-2026-10-07.md` |
+| `scripts/picks_today.py` | 2026-10-07 correction to the Urawa fold: 17 of 157 curated pairs were alias-bridged across a squad marker (all released by the guard; 70 still collapse by truncation alone) | `docs/operator/URAWA-LONG-FORM-FOLD-2026-10-07.md` |
 
 ## What this does not catch
 
