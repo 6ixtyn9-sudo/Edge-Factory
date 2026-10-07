@@ -33,7 +33,6 @@ jobs:
 
     env:
       SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
       SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       BZZOIRO_TOKEN: ${{ secrets.BZZOIRO_TOKEN }}
 
@@ -98,11 +97,12 @@ jobs:
       # also be correct; it is kept only so an operator can override it.
       SHARPAPI_SPORT: ${{ secrets.SHARPAPI_SPORT || 'soccer' }}
       SHARPAPI_ENDPOINT: ${{ secrets.SHARPAPI_ENDPOINT || '/api/v1/odds' }}
-      SHARPAPI_LIMIT: ${{ secrets.SHARPAPI_LIMIT || '100' }}
-      # Optional server-side competition filter. The soccer board pages at 50
-      # rows behind a cursor and the per-run call budget is 1, so an unfiltered
-      # pull sees only the first page. UEFA Nations League was the largest
-      # single league on the 2026-10-06 card (5 of 14 picks).
+      SHARPAPI_LIMIT: ${{ secrets.SHARPAPI_LIMIT || '1000' }}
+      # Optional server-side competition filter. HOLD THIS UNSET until a
+      # run reports the vendor's own identifier for a competition we bet:
+      # a wrong string is indistinguishable from an empty board, and the
+      # committed board census now lists the identifiers verbatim, so the
+      # value can be read off a measurement instead of guessed.
       SHARPAPI_LEAGUE: ${{ secrets.SHARPAPI_LEAGUE }}
       # The ONLY credential this source needs. Unset, the adapter does not
       # spend a call at all.
