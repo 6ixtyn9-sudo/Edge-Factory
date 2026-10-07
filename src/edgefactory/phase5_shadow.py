@@ -12,6 +12,7 @@ import json
 import math
 import os
 import re
+import unicodedata
 from datetime import date, datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
@@ -67,6 +68,14 @@ def _iso_date(value: object, fallback: str) -> str:
         return date.fromisoformat(text).isoformat()
     except ValueError:
         return fallback
+
+
+def _section4_name_key(value: object) -> str:
+    """Reproduce Findings §4's exact name normalizer; no alias/fuzzy path."""
+    decomposed = unicodedata.normalize("NFKD", str(value or ""))
+    unmarked = "".join(char for char in decomposed if not unicodedata.combining(char))
+    normalized = unmarked.replace("&", "and").replace(".", "")
+    return " ".join(normalized.casefold().split())
 
 
 def _as_float(value: object) -> float | None:
@@ -175,7 +184,12 @@ def normalize_shadow_row(
     home = str(row.get("home") or "").strip()
     away = str(row.get("away") or "").strip()
     home_key, away_key = source_team_key(home), source_team_key(away)
-    if not home or not away or not home_key or not away_key or home_key == away_key:
+    home_exact_key, away_exact_key = _section4_name_key(home), _section4_name_key(away)
+    home_markers, away_markers = sorted(squad_markers(home)), sorted(squad_markers(away))
+    if (
+        not home or not away or not home_exact_key or not away_exact_key
+        or (home_exact_key, home_markers) == (away_exact_key, away_markers)
+    ):
         return None, "identity_unusable"
 
     raw_probabilities: dict[str, Any] = {}
@@ -200,11 +214,16 @@ def normalize_shadow_row(
     identity = {
         "date": fixture_date,
         "home_key": home_key,
-        "home_markers": sorted(squad_markers(home)),
+        "home_markers": home_markers,
         "away_key": away_key,
-        "away_markers": sorted(squad_markers(away)),
+        "away_markers": away_markers,
+        "era_pair_key": [
+            fixture_date, home_exact_key, home_markers,
+            away_exact_key, away_markers,
+        ],
         "orientation": "home_away",
         "normalizer": "edgefactory.identity.source_team_key",
+        "era_pair_normalizer": "FINDINGS-2026-10-07.md#4",
     }
     record: dict[str, Any] = {
         "schema": SCHEMA,
@@ -231,10 +250,10 @@ def normalize_shadow_row(
     return record, None
 
 
-def _append_jsonl(root: Path, name: str, records: Iterable[dict[str, Any]]) -> int:
+def _append_jsonl(root: Path, name: str, records: Iterable[dict[str, Any]]) -> tuple[int, int]:
     records = list(records)
     if not records:
-        return 0
+        return 0, 0
     directory = Path(root) / SHADOW_DIR
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / name
@@ -245,16 +264,18 @@ def _append_jsonl(root: Path, name: str, records: Iterable[dict[str, Any]]) -> i
             fcntl.flock(fh.fileno(), fcntl.LOCK_EX)
         except OSError:
             pass
+        bytes_written = 0
         for record in records:
-            fh.write(json.dumps(record, sort_keys=True, separators=(",", ":"), default=str))
-            fh.write("\n")
+            line = json.dumps(record, sort_keys=True, separators=(",", ":"), default=str) + "\n"
+            fh.write(line)
+            bytes_written += len(line.encode("utf-8"))
         fh.flush()
         os.fsync(fh.fileno())
         try:
             fcntl.flock(fh.fileno(), fcntl.LOCK_UN)
         except OSError:
             pass
-    return len(records)
+    return len(records), bytes_written
 
 
 def append_shadow_rows(
@@ -294,10 +315,11 @@ def append_shadow_rows(
             ignored_historical += 1
             continue
         valid.append(record)
-    appended = _append_jsonl(Path(root), ROWS_NAME, valid)
+    appended, bytes_appended = _append_jsonl(Path(root), ROWS_NAME, valid)
     return {
         "rows_seen": len(row_list),
         "rows_appended": appended,
+        "rows_bytes_appended": bytes_appended,
         "rows_ignored_historical": ignored_historical,
         "rows_rejected_identity": rejected_identity,
         "rows_rejected_signal": rejected_signal,
@@ -313,8 +335,10 @@ def append_capture_attempt(
     completed_at: str | None = None,
     requested_days: Iterable[str] = (),
     forward_days: Iterable[str] = (),
+    capture_context: str = "manual_or_unspecified",
     rows_fetched: int = 0,
     rows_appended: int = 0,
+    rows_bytes_appended: int = 0,
     rows_ignored_historical: int = 0,
     rows_rejected_identity: int = 0,
     rows_rejected_signal: int = 0,
@@ -328,11 +352,15 @@ def append_capture_attempt(
     if source not in AUTHORIZED_SOURCES:
         raise ValueError(f"source not authorized for Phase 5 shadow capture: {source}")
     capture_day = date.fromisoformat(str(capture_day)[:10]).isoformat()
+    capture_context = str(capture_context)
+    if capture_context not in {"official_daily_pipeline", "manual_or_unspecified"}:
+        capture_context = "other"
     record = {
         "schema": SCHEMA,
         "record_type": "phase5_shadow_capture_attempt",
         "source": source,
         "capture_day": capture_day,
+        "capture_context": capture_context,
         "status": str(status),
         "source_status": str(source_status) if source_status else None,
         "quota_hint": str(quota_hint) if quota_hint else None,
@@ -344,6 +372,7 @@ def append_capture_attempt(
         "forward_days": sorted({_iso_date(day, capture_day) for day in forward_days}),
         "rows_fetched": max(0, int(rows_fetched or 0)),
         "rows_appended": max(0, int(rows_appended or 0)),
+        "rows_bytes_appended": max(0, int(rows_bytes_appended or 0)),
         "rows_ignored_historical": max(0, int(rows_ignored_historical or 0)),
         "rows_rejected_identity": max(0, int(rows_rejected_identity or 0)),
         "rows_rejected_signal": max(0, int(rows_rejected_signal or 0)),

@@ -42,6 +42,7 @@ def test_normalizes_marker_aware_identity_probabilities_and_capture_timestamp(tm
     assert rows == {
         "rows_seen": 1,
         "rows_appended": 1,
+        "rows_bytes_appended": (tmp_path / shadow.SHADOW_DIR / shadow.ROWS_NAME).stat().st_size,
         "rows_ignored_historical": 0,
         "rows_rejected_identity": 0,
         "rows_rejected_signal": 0,
@@ -81,12 +82,31 @@ def test_forward_capture_ignores_history_and_rejects_unusable_rows(tmp_path):
     assert results == {
         "rows_seen": 4,
         "rows_appended": 1,
+        "rows_bytes_appended": (tmp_path / shadow.SHADOW_DIR / shadow.ROWS_NAME).stat().st_size,
         "rows_ignored_historical": 1,
         "rows_rejected_identity": 1,
         "rows_rejected_signal": 1,
     }
     records = _jsonl(tmp_path / shadow.SHADOW_DIR / shadow.ROWS_NAME)
     assert [row["identity"]["date"] for row in records] == ["2026-10-07"]
+
+
+def test_era_pair_key_preserves_the_frozen_section4_identity_boundary(tmp_path):
+    rows = shadow.append_shadow_rows(
+        "vitibet",
+        [_prediction("2026-10-08", home="FC Porto", away="Porto")],
+        capture_day="2026-10-07",
+        root=tmp_path,
+    )
+    assert rows["rows_appended"] == 1
+    [record] = _jsonl(tmp_path / shadow.SHADOW_DIR / shadow.ROWS_NAME)
+    identity = record["identity"]
+    # The production source_team_key removes pure club-structure tokens, so it
+    # must not be used for the contract's exact §4 era join.
+    assert identity["home_key"] == identity["away_key"]
+    assert identity["era_pair_key"][1] == "fc porto"
+    assert identity["era_pair_key"][3] == "porto"
+    assert identity["era_pair_normalizer"] == "FINDINGS-2026-10-07.md#4"
 
 
 def test_capture_attempt_is_append_only_and_contains_no_headers_or_raw_error(tmp_path):
@@ -97,7 +117,9 @@ def test_capture_attempt_is_append_only_and_contains_no_headers_or_raw_error(tmp
         started_at="2026-10-07T06:00:00+00:00",
         completed_at="2026-10-07T06:00:01+00:00",
         requested_days=["2026-10-07", "2026-10-08"],
+        capture_context="official_daily_pipeline",
         rows_fetched=0,
+        rows_bytes_appended=123,
         source_status="auth_or_quota",
         quota_hint="auth_or_quota",
         http_statuses=[403],
@@ -112,6 +134,8 @@ def test_capture_attempt_is_append_only_and_contains_no_headers_or_raw_error(tmp
     assert len(records) == 2
     assert records[0]["attempt_id"] == first["attempt_id"]
     assert records[0]["requested_days"] == ["2026-10-07", "2026-10-08"]
+    assert records[0]["capture_context"] == "official_daily_pipeline"
+    assert records[0]["rows_bytes_appended"] == 123
     assert records[0]["http_statuses"] == [403]
     assert "headers" not in records[0]
     assert "request_headers" not in records[0]

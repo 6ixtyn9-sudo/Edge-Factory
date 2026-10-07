@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 import types
 from datetime import datetime, timezone
@@ -14,6 +15,17 @@ from edgefactory import phase5_shadow
 from edgefactory.sources import betminer
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def test_phase5_ledgers_are_allowlisted_for_existing_git_persistence():
+    for name in (phase5_shadow.ROWS_NAME, phase5_shadow.ATTEMPTS_NAME):
+        path = f"localdata/{phase5_shadow.SHADOW_DIR}/{name}"
+        result = subprocess.run(
+            ["git", "check-ignore", "--no-index", "-q", path],
+            cwd=ROOT,
+            check=False,
+        )
+        assert result.returncode == 1, f"{path} is still ignored by Git"
 
 
 def _load_script(module_name: str, relpath: str):
@@ -95,6 +107,7 @@ def test_local_backfill_writes_forward_rows_from_the_same_fetch_results(
     source.fetch_day = fetch_day
     monkeypatch.setitem(sys.modules, "edgefactory.sources.vitibet", source)
     monkeypatch.setattr(backfill, "LOCALDATA", tmp_path)
+    monkeypatch.setenv("EDGE_FACTORY_PHASE5_RUN_CONTEXT", "official_daily_pipeline")
     monkeypatch.setattr(
         sys,
         "argv",
@@ -118,8 +131,10 @@ def test_local_backfill_writes_forward_rows_from_the_same_fetch_results(
     assert attempt["status"] == "ok"
     assert attempt["requested_days"] == ["2026-10-06", "2026-10-07"]
     assert attempt["forward_days"] == ["2026-10-07"]
+    assert attempt["capture_context"] == "official_daily_pipeline"
     assert attempt["rows_fetched"] == 1
     assert attempt["rows_appended"] == 1
+    assert attempt["rows_bytes_appended"] == rows_path.stat().st_size
     assert attempt["rows_ignored_historical"] == 1
 
 
@@ -195,6 +210,7 @@ def test_betminer_existing_capture_response_is_persisted_separately_only_when_op
     assert not (tmp_path / phase5_shadow.SHADOW_DIR).exists()
 
     monkeypatch.setenv("EDGE_FACTORY_PHASE5_SHADOW", "1")
+    monkeypatch.setenv("EDGE_FACTORY_PHASE5_RUN_CONTEXT", "official_daily_pipeline")
     picks._record_phase5_betminer_capture(
         capture_day, rows=response_rows, stats={"status": "ok", "http_statuses": [200]},
         started_at="2026-10-07T06:00:00+00:00",
@@ -208,4 +224,6 @@ def test_betminer_existing_capture_response_is_persisted_separately_only_when_op
     assert row["identity"]["home_markers"] == ["u21"]
     assert attempt["source"] == "betminer"
     assert attempt["status"] == "ok"
+    assert attempt["capture_context"] == "official_daily_pipeline"
     assert attempt["rows_appended"] == 1
+    assert attempt["rows_bytes_appended"] == rows_path.stat().st_size
