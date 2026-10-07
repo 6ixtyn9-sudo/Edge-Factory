@@ -497,3 +497,60 @@ def test_curated_alias_donor_spelling_joins_the_card_pick_exactly():
             [psrc.annotate_row(dict(row), source="sharpapi_odds")], provider="sharpapi_odds")
         _, method = pt.find_odds_row(pick, bundle)
         assert method == "exact", (vendor_home, card_home)
+
+
+@pytest.mark.parametrize("raw,canonical", _curated_team_pairs())
+def test_curated_alias_never_carries_a_marked_squad_onto_the_senior_key(raw, canonical):
+    """The alias canonicalizes the CLUB, never the squad (2026-10-07 fix).
+
+    The width-9 odds key space strips a distinct-entity marker before
+    truncating, so ``"Urawa Red Diamonds W"`` and ``"Urawa Red Diamonds"``
+    both key as ``urawaredd`` — an alias lookup on that key resolves a
+    women's/reserve spelling onto the SENIOR side's canonical key. The
+    entity layer already refuses this (``entities.canonical_team``
+    re-attaches the marker suffix, ``urawa_w``); the odds layer did not,
+    and handed a women's row our card's byte-identical exact join key.
+    Measured at the defect: 17 of 157 curated pairs were alias-bridged
+    across the marker (87 more collapse by truncation alone — pre-existing
+    and explicitly NOT claimed as fixed here).
+    """
+    pt = _load_picks_today()
+    marked = f"{raw} W"
+    assert pt.odds_team_key(marked) == norm_team(fold_ascii(marked))
+
+
+def test_curated_alias_marked_squad_never_joins_the_card_pick_exactly():
+    """The rule above, at the join: fail-closed means never ``exact``.
+
+    Before the guard, a vendor's women's spelling keyed byte-identically to
+    our card row and ``find_odds_row`` returned "exact" — the most trusted
+    verdict, no quarantine. A marked donor row may still be picked up by
+    the similarity fallback (quarantined SUSPECT_ALIAS_FUZZY, never
+    push-eligible); it must not reach the exact tier.
+    """
+    pt = _load_picks_today()
+    from edgefactory import price_sources as psrc
+
+    # Pairs where ONLY an alias could bridge the marked spelling: the fold
+    # reaches the unmarked pair, and the marked spelling's unaliased key
+    # differs from the canonical's key.
+    bridged = [(raw, canon) for raw, canon in _curated_team_pairs()
+               if pt.odds_team_key(raw) == pt.odds_team_key(canon)
+               and norm_team(fold_ascii(f"{raw} W")) != pt.odds_team_key(canon)]
+    assert ("Urawa Red Diamonds", "urawa") in bridged
+    assert bridged  # the defect class must stay reachable by this test
+
+    day, away = "2026-10-07", "Omiya Ardija"
+    for vendor_home, card_home in bridged:
+        pick = {"date": day, "home": card_home, "away": away,
+                "match": f"{card_home} vs {away}", "kickoff": "07-10, 10:00",
+                "kickoff_utc": f"{day}T09:00:00+00:00",
+                "market": "1x2", "pick": "home"}
+        row = {"source": "sharpapi_odds", "date": day, "home": f"{vendor_home} W",
+               "away": away, "market": "1x2", "selection": "home", "odds": 1.741,
+               "bookmaker": "draftkings", "odds_kind": "bookmaker",
+               "kickoff": f"{day}T09:00Z", "captured_at": f"{day}T04:21:52+00:00"}
+        bundle = pt._odds_bundle_from_rows(
+            [psrc.annotate_row(dict(row), source="sharpapi_odds")], provider="sharpapi_odds")
+        _, method = pt.find_odds_row(pick, bundle)
+        assert method != "exact", (vendor_home, card_home)
