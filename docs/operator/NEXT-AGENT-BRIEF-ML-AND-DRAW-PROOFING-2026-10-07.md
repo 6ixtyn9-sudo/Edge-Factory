@@ -17,6 +17,65 @@ disagreement as drift, not as a contradiction.
 
 ---
 
+# GO — operator authorisation (2026-10-07)
+
+> **GO — begin the brief work (operator authorisation, 2026-10-07).** You are
+> the execution session. Continue on branch `arena/438d7dd2-edge-factory` — it
+> carries all three briefs, their target docs, and the data. Read the three
+> briefs first; their premises are refute-first.
+
+**Step 0 — refresh anchors.** `main` has moved past `6f52b92` (now `afb1fde`,
+run 37604431325 — a forced pipeline rewrite). This branch's measurements were
+taken against `6f52b92`'s state, and `6f52b92` remains in this branch's
+history, but a fresh `main` checkout cannot see it. Read merged code from the
+working tree or the current `main` tip; treat any cited hash as drift
+(landmark wins). Name each artefact's generation — the settled overlay's last
+date is 2026-10-07 while the research ledger carries rows to 2026-10-08; they
+are not from the same run. Provenance note: all 27,638 of the overlay's
+`forebet_settled` rows postdate the committed forebet archive (which ends
+2026-06-12) — the overlay is pipeline state, not archive-derived.
+
+**Step 1 — Mission A, draw-proofing replay.** One verified substitution: the
+committed prediction archives end 2026-06-12 (forebet 327,866 clean rows,
+zulubet 67,187, statarea 489,286 — all ending the same day; each also carries
+repeated header rows where `date == 'date'` — skip them), so they cannot price
+the ACCA window (2026-08-27 → 2026-10-06). Derive DNB / Double Chance / ±0.25
+prices for that window from `localdata/theoddsapi_odds_2026-08/09/10.csv.gz`
+(11,415 rows, 2026-08-03 → 2026-10-07): every one of its 156 1x2 fixtures
+carries a full home/draw/away triple across 26 bookmakers, with `captured_at`
+per row (8 of 156 carry more than one capture). Declare two bases on every
+price you derive: the bookmaker (the feed's mix differs from the slips' named
+books) and the capture time. Report leg-level coverage — the priced subset.
+`betexplorer_odds` ends 2026-06-16; `oddspapi_odds` covers only 2026-10-03 →
+2026-10-04. `clv_snapshots_2026-06…10.csv.gz` carries per-pick
+`observed_odds` and `implied_prob` keyed on `match_date` — a price-basis
+cross-check. Then A/B at the same stake schedule, count sub-1.20 legs under
+each market, and answer A3 (realised draw rate vs draw-price-implied)
+explicitly.
+
+**Step 2 — Mission B1, calibration.** Platt/isotonic on a held-out slice;
+reliability curve + Brier; report which picks change band.
+
+**Step 3 — draw-value mining**, under its pre-registered bar. **Step 4 —
+B2–B5.**
+
+**Fences (unchanged).** Findings first: no threshold, floor, gate, cap,
+quorum or veto value moves; `MIN_LEG_ODDS` stays 1.20 unless the A2 count
+licenses a per-market floor and the operator calls it; no leg-rule, emission
+or registry change without the finding in hand plus an explicit operator call.
+Do not write `Config/verified_results.json` — the two C rows in FINDINGS §5
+remain a proposal pending the operator's policy call and the written
+convention statement. Forebet is PARKED (now also retired-stale — no capture
+test, no proxy).
+
+**Delivery.** One commit per change, message naming what changed and what it
+invalidates; no backticks in commit messages; never force-push; push to the
+branch; PR only if your GitHub access allows. **Report** against each
+pre-registered bar (one sentence each), `n` on every cell, suite count with
+baseline named (2395, floor 1534), and what you did NOT do and why.
+
+---
+
 # MISSION A — DRAW-PROOFING REPLAY (the ACCA complaint)
 
 ## Why it exists (measured 2026-10-07)
@@ -73,11 +132,20 @@ are genuinely less certain, so part of the 30% is the market working, not a
 hidden pattern. That is exactly why Task A3 exists.
 
 ## Task A1 — price every draw-handling market exactly
-DNB is not the only one. The warehouse exposes `odd1` / `oddx` / `odd2` per
-settled row (`src/edgefactory/warehouse.py:66/88/125/136/179`), and the
-committed prediction histories (`localdata/forebet.csv.gz`,
-`localdata/zulubet.csv.gz`, `localdata/statarea.csv.gz`) carry them. Derive,
-for every archived leg:
+DNB is not the only one. **Price-source caveat (verified 2026-10-07): the
+committed prediction histories end 2026-06-12** (`forebet.csv.gz` 327,866
+clean rows, `zulubet.csv.gz` 67,187, `statarea.csv.gz` 489,286 — all ending
+the same day; skip their repeated header rows where `date == 'date'`). They
+predate the ACCA window (2026-08-27 → 2026-10-06) and **cannot price it**.
+The committed source that covers the window is
+`localdata/theoddsapi_odds_2026-08/09/10.csv.gz` (2026-08-03 → 2026-10-07):
+every one of its 156 1x2 fixtures carries a full home/draw/away triple
+across 26 bookmakers, with `captured_at` per row. Declare two bases on every
+price: the bookmaker (the feed's mix differs from the slips' named books) and
+the capture time (8 of 156 fixtures carry more than one). Report leg-level
+coverage (the priced subset); cross-check the basis against
+`clv_snapshots_2026-06…10.csv.gz` (per-pick `observed_odds` and
+`implied_prob`, keyed on `match_date`). Derive, for every archived leg:
 
 - **DNB / Asian 0.0** — void on draw; the ACCA collapses to its remaining legs.
 - **Double Chance (1X / X2)** — WINS on the draw; the ACCA stays whole at a
