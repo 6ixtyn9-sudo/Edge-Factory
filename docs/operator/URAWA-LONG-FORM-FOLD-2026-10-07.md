@@ -1,9 +1,10 @@
-# Urawa long-form fold — closed by `d6d163d`, corrected by `1ac5ebc` (2026-10-07)
+# Urawa long-form fold — closed by `d6d163d`, corrected by `1ac5ebc` and the join guard (2026-10-07)
 
 This document describes a **past state**: the defect existed at `5bdecdd`
-(production run 37570304076) and its two halves were closed by `d6d163d` (the
-fold) and `1ac5ebc` (the squad-marker guard the first commit lacked — see
-"Correction" below). Re-read it as history, not as current behaviour.
+(production run 37570304076) and it took three commits to close — `d6d163d`
+(the fold), `1ac5ebc` (the squad-marker alias guard the first commit lacked) and
+the join-marker precondition on top of `ce437d2` (the uncurated half of the same
+class; see "Correction" below). Re-read it as history, not as current behaviour.
 
 ## What the run showed
 
@@ -170,14 +171,23 @@ a dormant collision into a live one on the path that attaches prices to picks.
 
 **The class, measured so it cannot be overread.** Of the 157 curated pairs, 17
 were alias-bridged across a marker **at the defect**, and all 17 are released by
-the guard (re-measured after it: zero marked names can receive an alias). The
-wider hazard is older than this fold and is **not** fully fixed: 87 marked
-variants collapsed onto their canonical at the defect and **70 still do, by
-truncation/stripping alone, with no alias involved** — the guard cannot reach
-that, and this document does not claim it does. (Numbers re-derived before and
-after the fix; the same 17-pair set is the one a test pins.) Across 2,877
-archived pick rows carrying 140 distinct marked names, **zero** sat on an alias
-key, so no live join changes.
+the guard (re-measured after it: zero marked names can receive an alias). Across
+the archived pick rows carrying marked names, **zero** sat on an alias key, so
+the alias guard changed no live join.
+
+**The residue is the key space itself, not a curated-table property.** An
+earlier revision of this section sized the residue as "70 curated pairs still
+collapse by truncation/stripping alone", which reads as a bounded set. It is
+not bounded: the width-9 space *strips* the marker before truncating, so the
+collapse applies to any club, curated or not — `Ajax W`, `Ajax U21` and `Ajax`
+all key `ajax`, and the exact tier accepted all three as the same team.
+Measured over the marked names in the two live populations (archived cards and
+vendor rows): **145 of 150** have an exact key byte-identical to their unmarked
+form; the 5 exceptions keep the marker only because it is a *prefix*
+(`Jong Ajax`, `Slavia III`). The curated 87-at-defect / 70-post-fix count is a
+slice of that class, not its boundary. `norm_team` is a certified key space —
+re-keying it would move every historical join — so it is deliberately
+untouched; the rule is enforced at the join instead (below).
 
 **Fix.** One helper, three call sites: the odds key functions refuse the alias
 lookup when the raw name carries a squad marker. The rule is already the entity
@@ -194,10 +204,45 @@ consequence (the 17 bridgeable pairs must never return `exact`, receipt pair
 included). Mutation receipt: guard removed → **18 failed** (17 parametrized cases
 + the join case); restored → green. `def test_` floor 1529 → **1531** (measured).
 
-**Still open, recorded so this is not read as closed:** the truncation class
-(`odds_team_key("Urawa W") == "urawa"`) and the similarity fallback's marker
-blindness are pre-existing and untouched. Both are narrower than what was fixed —
-neither can promote a row to `exact` — but neither is gone.
+**Fix 2 — the uncurated half (join-level, on top of `ce437d2`).** Found by audit
+after the first fix was pushed: the alias guard closes only the seventeen
+alias-mediated pairs, while the key-space collapse above reaches the exact tier
+for **any** club. Reproduced pre-fix through the real builder and join with an
+uncurated name: card `Ajax` vs row `Ajax W` → `exact`, price 1.741 attached, no
+quarantine (same for `Barcelona`/`Barcelona W`, `Urawa`/`Urawa U21`,
+`Ajax`/`Ajax Women`, `Vejle`/`Vejle Reserves`, `Ajax`/`Ajax U19`). The fix makes
+marker agreement a **precondition of the exact tier**: if the pick's raw name
+and the row's raw name disagree on their squad markers, the exact verdict is
+refused and the row falls through to the time/fuzzy tiers, whose `compact_key`
+retains the marker. Additive; the certified key space is not touched.
+
+* Receipts, post-fix: all six uncurated leak fixtures return `alias_fuzzy` (the
+  quarantined tier), never `exact`. Legitimate joins survive — `Barcelona (w)`
+  card ← `Barcelona W` row still `exact`, as do `Ajax W` ← `Ajax Women`,
+  `Necaxa W` ← `Necaxa W`, and every unmarked pair.
+* Blast radius, real rows: 61 fixtures re-joined end-to-end from the committed
+  betexplorer fixture caches (2026-10-03..07) × the archived picks for those
+  days — **0 verdict changes** pre/post; the 4 fixtures whose matched row
+  carries a marker all have agreeing markers (two of them across marker
+  *spellings*: card `Barcelona (w)`, row `Barcelona W`).
+* Guards: one table of 15 (card, vendor, may-join-exactly) cases for the exact
+  tier — 9 refusals across every marker family, 6 legitimate joins as the
+  over-reach companion — plus the flat-index seam (`"exact" not in odds_data`)
+  and a test pinning *why* the guard lives at the join (the key space is blind;
+  if that assertion ever fails, the key space changed shape). Mutation receipt:
+  both join guards removed → **7 failed** / 2385 passed; restored → green.
+  `def test_` floor 1531 → **1534** (measured).
+* Known, measured cost, stated rather than hidden: markers that are different
+  *tokens* for the same squad refuse the exact tier (`Brisbane Roar U21` card vs
+  a `Brisbane Roar Youth` row now lands in the quarantined fuzzy tier). Fail-
+  closed by design: a lost price, never a wrong one. Mapping youth-token
+  equivalences would be guessing a spelling, which this work order forbids.
+
+**Still open, recorded so this is not read as closed:** the key space remains
+marker-blind (`odds_team_key("Urawa W") == "urawa"` — deliberately not
+re-keyed), and the similarity fallback remains marker-blind. What changed is
+that neither can promote a marked row to `exact` any more: the alias guard
+closes the curated subset and the join precondition closes the general case.
 
 ## Out of scope, stated for the record
 
