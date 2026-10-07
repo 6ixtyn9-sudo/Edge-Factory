@@ -201,8 +201,17 @@ the shadow protocol is what makes it revertible, so it is not optional.
 Two decisions stay with the operator. Recorded here so they survive the
 handoff:
 1. **The C scores** (Items C/D: the two stalled settlement keys and the two
-   frozen Kladno rows). Fenced — the cases and the standing remedy are in
-   `docs/operator/FINDINGS-2026-10-07.md` §2–3. The operator sets the scores.
+   frozen Kladno rows). The FACTS are now externally corroborated and
+   recorded — with one correction — in `docs/operator/FINDINGS-2026-10-07.md`
+   §5: both stalled keys are the same seam (donors split between the 90'
+   score and the full result after extra time) and both settle to a **draw at
+   90 minutes** (2026-06-07 Tochigi v Giravanz 1-1; 2026-08-01 Samgurali v
+   Meshakhte 0-0 — the first draft's 1-0/home was the AET score; §5 corrects
+   it). The drafted `source_verified` rows are in §5 and are NOT written. What
+   remains is the POLICY call — whether to write them — after the three
+   pre-write flags in §5 (document the 90' convention; confirm the purge
+   reaches outside the 90-day overlay; size the conflict class with the
+   guard's own key). The Kladno rows (D) are unchanged: frozen, human's.
 2. **forebet's fate — PARKED (operator, 2026-10-07).** No capture test, no
    proxy purchase, no forebet work of any kind until the operator has the
    capable machine. The resumption step, when the operator unparks it, is the

@@ -207,6 +207,13 @@ are the **null hypothesis**, not a baseline to beat by a hair.
 - Verify by re-derivation, not restatement. Separate OBSERVED from INFERRED;
   state the boundary and scope of every claim; name the price basis (soft
   forebet vs execution-eligible) on every ROI line.
+- **Attempt external corroboration before escalating a fact.** A score, a date,
+  a venue — if a source can settle it, search first;
+  `src: "source_verified"` in `Config/verified_results.json` is the schema's
+  route for it (Fenerbahçe precedent). Reserve operator escalation for facts no
+  source can settle, and for every policy call. Verify the corroboration
+  against the convention before writing: a corroborated row can still be the
+  wrong convention (`docs/operator/FINDINGS-2026-10-07.md` §5, case 2).
 - Never assert wiring by text search — match structurally (AST) and assert
   against specific returned values.
 - An identifier that asserts more than its measurement supports is this
