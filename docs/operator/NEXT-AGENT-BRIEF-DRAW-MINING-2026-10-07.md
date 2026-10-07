@@ -50,7 +50,15 @@ All figures below are OBSERVED on `localdata/ml_fade_research_ledger.json`
    price 3.51, break-even implied by those prices 29.4% (mean of 1/price),
    flat-stake ROI **−30.9%**. Every price band negative, measured on
    `[2.5,3.0)` n=19 ROI −40.0%, `[3.0,3.5)` n=77 ROI −28.7%, `[3.5,∞)` n=61
-   ROI −30.8%. **Soft forebet prices, not execution** — redo on the
+   ROI −30.8%. **Band convention: lower-inclusive, upper-exclusive** (`[lo,
+   hi)`) — 12 of the 157 priced rows sit exactly on an edge (6 at 3.0, 6 at
+   3.5, 0 at 2.5; draw prices cluster on short decimals, so edge collisions
+   are structural, not coincidence). The opposite convention `(lo, hi]`
+   moves only those 12 rows and yields 25 / 77 / 55 at −54.4% / −28.7% /
+   −23.3% — **the verdict (every band negative) survives both conventions**;
+   only the per-band numbers move. Any band table you publish must state its
+   boundary convention, or it is not reproducible even when every figure in
+   it is right. **Soft forebet prices, not execution** — redo on the
    execution-eligible path before any of this is called economics.
 4. **The operator's premise needs one correction, and it matters.** Draws are
    22.0% of ml-meta outcomes (250 of 1,137) but cause **35.6%** of ml-meta
@@ -276,3 +284,5 @@ session based on `main` will NOT see it (the pipeline rewrites `main` as a
 single-commit snapshot and does not carry session branches). Hand it over by
 starting the new session from this branch, or by pasting this file's contents
 as the first message of the new session — it is written to be self-contained.
+If a workspace ever holds a second, divergent copy of this file, the branch
+version is authoritative — the pushed one is the superset.
