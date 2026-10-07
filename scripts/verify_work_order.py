@@ -356,8 +356,12 @@ def _():
     # guard in tests/test_edge_firing_tripwire.py.
     # Raised 1529 -> 1531 on 2026-10-07: the squad-marker guard on the odds
     # alias lookup (rule + join consequence). All measured, never guessed.
-    if count < 1531:
-        return (f"{count} test functions found, floor is 1531. Tests were "
+    # Raised 1531 -> 1534 on 2026-10-07: the squad-marker precondition at
+    # the JOIN (tests/test_team_identity_transliteration.py) - one
+    # parametrised case table for the exact tier plus two standalone
+    # guards, closing the uncurated half of the same class.
+    if count < 1534:
+        return (f"{count} test functions found, floor is 1534. Tests were "
                 "deleted rather than fixed.")
     return None
 

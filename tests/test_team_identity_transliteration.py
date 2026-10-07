@@ -511,10 +511,12 @@ def test_curated_alias_never_carries_a_marked_squad_onto_the_senior_key(raw, can
     re-attaches the marker suffix, ``urawa_w``); the odds layer did not,
     and handed a women's row our card's byte-identical exact join key.
     Measured at the defect: 17 of 157 curated pairs were alias-bridged
-    across the marker, all released by this guard; the wider hazard is
-    older and only partly fixed — 87 marked variants collapsed onto their
-    canonical at the defect and 70 still do by truncation/stripping alone,
-    with no alias involved. Measured before/after the guard.
+    across the marker and all 17 are released by this guard. The wider
+    hazard is the key space itself, not the curated table (145 of 150
+    marked names seen in the live populations key identically to their
+    unmarked form); that half is closed at the join by
+    ``picks_today._exact_join_marker_agrees``, tested in the
+    ``_JOIN_MARKER_CASES`` table below. Measured before/after each guard.
     """
     pt = _load_picks_today()
     marked = f"{raw} W"
@@ -556,3 +558,132 @@ def test_curated_alias_marked_squad_never_joins_the_card_pick_exactly():
             [psrc.annotate_row(dict(row), source="sharpapi_odds")], provider="sharpapi_odds")
         _, method = pt.find_odds_row(pick, bundle)
         assert method != "exact", (vendor_home, card_home)
+
+
+# ---------------------------------------------------------------------------
+# The squad-marker class at the JOIN, off the curated table.
+#
+# The curated table has 157 aliases; the width-9 key space is marker-blind
+# for any club (``norm_team`` strips the marker, so ``Ajax`` / ``Ajax W`` /
+# ``Ajax U21`` all key ``ajax`` — measured: 145 of 150 marked names seen in
+# the live populations key identically to their unmarked form). The alias
+# guard cannot reach that class, because no alias is involved; the join
+# tier therefore requires the raw names to agree on their squad markers.
+#
+# Table-driven: one row per (card name, vendor name, may_join_exactly).
+# ---------------------------------------------------------------------------
+
+_JOIN_MARKER_CASES = [
+    # (card name, vendor row name, exact join allowed, why)
+    # -- the leak class: uncurated club, marked vendor row on a senior pick
+    ("Ajax", "Ajax W", False, "women's price on a senior pick"),
+    ("Barcelona", "Barcelona W", False, "women's price on a senior pick"),
+    ("Urawa", "Urawa U21", False, "youth price on a senior pick"),
+    ("Vejle", "Vejle Reserves", False, "reserve price on a senior pick"),
+    ("Santos", "Santos Ladies", False, "a different marker spelling, same leak"),
+    ("Tochigi", "Tochigi Youth", False, "academy/youth price on a senior pick"),
+    ("Girona", "Girona Academy", False, "academy price on a senior pick"),
+    # -- the reverse direction, and mismatched markers
+    ("Ajax W", "Ajax", False, "senior price on a women's pick"),
+    ("Ajax W", "Ajax U21", False, "two different squads"),
+    # -- legitimate exact joins that the guard must NOT remove
+    ("Ajax", "Ajax", True, "identical, unmarked"),
+    ("Necaxa W", "Necaxa W", True, "identical, marked"),
+    ("Ajax W", "Ajax Women", True, "same marker, vendor spelling variant"),
+    ("Barcelona (w)", "Barcelona W", True, "same marker, vendor spelling variant"),
+    ("Brisbane Roar U21", "Brisbane Roar U21", True, "same marker token"),
+    # -- names that merely LOOK marked must not be treated as marked
+    ("W Connection", "W Connection", True, "marker-exempt name (MARKER_EXEMPT_NAMES)"),
+]
+
+
+def _marked_join_bundle(vendor_home: str, *, day: str = "2026-10-07", away: str = "Omiya Ardija"):
+    """A real bundle through the real builder, from one vendor row."""
+    from edgefactory import price_sources as psrc
+
+    pt = _load_picks_today()
+    row = {"source": "sharpapi_odds", "date": day, "home": vendor_home, "away": away,
+           "market": "1x2", "selection": "home", "odds": 1.741,
+           "bookmaker": "draftkings", "odds_kind": "bookmaker",
+           "kickoff": f"{day}T09:00Z", "captured_at": f"{day}T04:21:52+00:00"}
+    return pt, pt._odds_bundle_from_rows(
+        [psrc.annotate_row(dict(row), source="sharpapi_odds")], provider="sharpapi_odds")
+
+
+def _join_pick(pt, home: str, *, day: str = "2026-10-07", away: str = "Omiya Ardija"):
+    return {"date": day, "home": home, "away": away, "match": f"{home} vs {away}",
+            "kickoff": "07-10, 10:00", "kickoff_utc": f"{day}T09:00:00+00:00",
+            "market": "1x2", "pick": "home"}
+
+
+@pytest.mark.parametrize("card,vendor,allowed,why", _JOIN_MARKER_CASES)
+def test_squad_marker_agreement_decides_the_exact_tier(card, vendor, allowed, why):
+    """The exact tier requires the raw names to agree on squad markers.
+
+    ``allowed`` rows are the over-reach companion: a guard that refuses
+    marked names wholesale would green the first half of this table and
+    silently drop every women's/reserve fixture's price.
+    """
+    pt, bundle = _marked_join_bundle(vendor)
+    row, method = pt.find_odds_row(_join_pick(pt, card), bundle)
+    if allowed:
+        assert method == "exact", (card, vendor, why, method)
+        assert row is not None
+    else:
+        assert method != "exact", (card, vendor, why)
+        # Fail-closed, not fail-silent: if a row is still offered it must be
+        # on a tier that cannot become a pushed bet (alias_fuzzy), never the
+        # trusted one.
+        assert method in (None, "alias_fuzzy"), (card, vendor, why, method)
+
+
+def test_the_leak_class_is_reachable_and_the_key_space_stays_blind():
+    """Pin WHY the guard lives at the join: the certified key space is blind.
+
+    ``odds_team_key`` is the width-9 exact key; it strips the marker, so a
+    women's spelling keys byte-identically to the senior side. Re-keying it
+    would move every historical join, so the rule is enforced at the join
+    instead. If this assertion ever fails, the key space changed shape and
+    the join guard must be re-derived — do not simply delete it.
+    """
+    pt = _load_picks_today()
+    assert pt.odds_team_key("Ajax W") == pt.odds_team_key("Ajax")
+    assert pt.odds_team_key("Ajax U21") == pt.odds_team_key("Ajax")
+    assert pt.odds_team_key("Necaxa W") == pt.odds_team_key("Necaxa")
+    # ...while the tier keys that retain the marker keep the two apart.
+    assert pt.odds_match_team_key("Ajax W") != pt.odds_match_team_key("Ajax")
+    # The class is not a curated-table property: none of these are aliases.
+    from edgefactory.util import squad_markers
+
+    assert not any(name in json.loads(
+        (ROOT / "Config" / "entity_overrides.json").read_text())["teams"]
+        for name in ("Ajax", "Ajax W", "Barcelona", "Urawa U21"))
+    assert squad_markers("Ajax W") == frozenset({"w"})
+    assert squad_markers("W Connection") == frozenset()
+    # Marker-exempt names are not marked, so the guard cannot be what
+    # refuses them:
+    assert pt._exact_join_marker_agrees({"home": "B 1903", "away": "x"},
+                                        {"home": "B 1903", "away": "x"})
+    # ("B 1903" never reaches the exact tier for a separate, pre-existing
+    # reason: norm_team empties its key, so _odds_row_key drops the row.
+    # Recorded so the two behaviours are not confused with each other.)
+    assert pt.odds_team_key("B 1903") == ""
+
+
+def test_flat_exact_index_also_refuses_a_marked_row():
+    """The bare-index seam (``"exact" not in odds_data``) refuses too.
+
+    That branch has no timed/fuzzy tiers to fall through to, so the only
+    fail-closed answer is (None, None).
+    """
+    pt = _load_picks_today()
+    day = "2026-10-07"
+    key = (day, pt.odds_team_key("Ajax"), pt.odds_team_key("Omiya Ardija"), "1x2", "home")
+    row = {"date": day, "home": "Ajax W", "away": "Omiya Ardija", "market": "1x2",
+           "selection": "home", "odds": 1.741}
+    got, method = pt.find_odds_row(_join_pick(pt, "Ajax"), {key: row})
+    assert (got, method) == (None, None)
+    # The same index still serves an agreeing pair.
+    ok = dict(row, home="Ajax")
+    got, method = pt.find_odds_row(_join_pick(pt, "Ajax"), {key: ok})
+    assert got is ok and method == "exact"

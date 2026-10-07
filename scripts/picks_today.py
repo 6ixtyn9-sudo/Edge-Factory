@@ -2854,6 +2854,34 @@ def find_side_keyed_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, 
     return row, method
 
 
+def _exact_join_marker_agrees(pick: dict, row: dict) -> bool:
+    """True when the pick and the matched row carry the SAME squad markers.
+
+    The width-9 key space drops a distinct-entity marker (``norm_team``
+    strips it, so ``Ajax`` / ``Ajax W`` / ``Ajax U21`` all key ``ajax`` —
+    measured marker-blind for 145 of 150 marked names in the live
+    populations). The exact tier therefore cannot tell a squad from its
+    senior side on the key alone, and would hand a women's/reserve/youth
+    price to the senior pick as the most trusted verdict, unquarantined.
+
+    The key space is a certified artefact — re-keying it would move every
+    historical join — so the marker is enforced here instead, on the raw
+    names, as a precondition of the exact tier: fail-closed, and the row
+    falls through to the time/fuzzy tiers, whose ``compact_key`` retains
+    the marker.
+
+    Comparison is per side, on the canonical marker frozenset, so spelling
+    variants of the same marker agree (``W`` / ``Women`` / ``(w)`` are all
+    ``{'w'}``); differing markers (``W`` vs ``U21``) or marked-vs-unmarked
+    do not.
+    """
+
+    return (
+        squad_markers(pick.get("home")) == squad_markers(row.get("home"))
+        and squad_markers(pick.get("away")) == squad_markers(row.get("away"))
+    )
+
+
 def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]:
     if "exact" not in odds_data:
         key = (
@@ -2864,6 +2892,10 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
             str(pick.get("pick") or ""),
         )
         row = odds_data.get(key)
+        if row is not None and not _exact_join_marker_agrees(pick, row):
+            # A caller handed us a bare index with no timed/fuzzy tiers to
+            # fall through to; refusing is the only fail-closed answer.
+            return None, None
         return row, ("exact" if row else None)
 
     exact_key = (
@@ -2874,7 +2906,7 @@ def find_odds_row(pick: dict, odds_data: dict) -> tuple[dict | None, str | None]
         str(pick.get("pick") or ""),
     )
     row = odds_data["exact"].get(exact_key)
-    if row:
+    if row and _exact_join_marker_agrees(pick, row):
         return row, "exact"
 
     candidates = odds_data["time_candidates"].get(_time_pick_key(pick), [])
