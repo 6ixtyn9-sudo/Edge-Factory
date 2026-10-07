@@ -387,7 +387,7 @@ def capture_betexplorer_snapshot(target_date: str, trigger: str) -> None:
     )
 
 
-def finalize_priced_candidate_slate(target_date: str) -> str:
+def finalize_priced_candidate_slate(target_date: str, *, phase5_shadow: bool = False) -> str:
     """Turn one candidate slate into one final priced card.
 
     The first pick build creates the candidate shortlist only; no ticket is
@@ -401,8 +401,9 @@ def finalize_priced_candidate_slate(target_date: str) -> str:
     capture_oddspapi_snapshot(target_date, "candidate_price_snapshot")
     capture_betexplorer_snapshot(target_date, "candidate_price_snapshot")
     priced_as_of = make_run_as_of()
+    phase5_prefix = "EDGE_FACTORY_PHASE5_SHADOW=1 " if phase5_shadow else ""
     run(
-        f"{picks_env_prefix(priced_as_of)} PYTHONPATH=src python3 "
+        f"{phase5_prefix}{picks_env_prefix(priced_as_of)} PYTHONPATH=src python3 "
         f"scripts/picks_today.py {target_date}",
         f"picks_today {target_date} (final priced card)",
     )
@@ -914,7 +915,7 @@ def run_pipeline(
             # response. Capture every resilient source and let individual
             # adapter failures remain retryable without starving the rebuild.
             run(
-                "python3 scripts/capture_daily.py --skip-build "
+                "python3 scripts/capture_daily.py --skip-build --phase5-shadow "
                 "--source-group forebet-resilience",
                 "capture_daily (non-Forebet D30 resilience pass)",
             )
@@ -978,7 +979,9 @@ def run_pipeline(
                 # Pass 2 is the only authoritative card: provider snapshots
                 # were captured between passes and are time-qualified against
                 # this second build's as_of timestamp.
-                run_as_of = finalize_priced_candidate_slate(target_date)
+                run_as_of = finalize_priced_candidate_slate(
+                    target_date, phase5_shadow=True
+                )
                 price_snapshot_finalized = True
                 if not PICKS_TODAY_FILE.exists():
                     raise RuntimeError("final priced-card build removed picks_today.json")
