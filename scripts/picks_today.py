@@ -72,6 +72,11 @@ from edgefactory.ml_fade_research import (
 )
 from edgefactory.debias import ENV_FLAG, load_engine_aware_debias_map, resolve_debias_hr
 from edgefactory.veto_resolution import apply_resolution_to_ctx, build_pool_table
+from edgefactory.phase5_k import (
+    DECLARED_SOURCE_ORDER as PHASE5_K_SOURCES,
+    feature_vector as phase5_feature_vector,
+    source_columns as phase5_source_columns,
+)
 from edgefactory.enh_pricing import attach_enhancement_price, load_prices_index
 from edgefactory.enh_registry import status_for as enh_status_for
 from edgefactory.source_health import (
@@ -211,6 +216,31 @@ _RULE_NWAY = re.compile(r"(\d+)\s*way")
 _RULE_THR = re.compile(r"avg_p\s*>=?\s*([\d.]+)")
 _TIME_RE = re.compile(r"(?<!\d)(\d{1,2}):(\d{2})(?!\d)")
 DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
+
+# K-contract imputation loudness. The legacy scoring loop substituted 0.0
+# for any model column the live path did not produce; for a probability
+# feature that is a silent logit shift (the train/serve skew class the
+# 2026-10-06 diagnosis is about). Missing columns are now imputed from the
+# model's own recorded fallback means and reported once per model shape.
+_IMPUTED_FEATURE_WARNINGS: set = set()
+
+
+def _warn_imputed_features(model: dict, imputed: list, day: str) -> None:
+    signature = (
+        str(model.get("intercept")),
+        len(model.get("feature_cols") or []),
+        tuple(sorted(str(c) for c in imputed)),
+    )
+    if signature in _IMPUTED_FEATURE_WARNINGS:
+        return
+    _IMPUTED_FEATURE_WARNINGS.add(signature)
+    print(
+        f"served model imputed {len(imputed)} column(s) the live path did "
+        f"not produce on {day}: {', '.join(sorted(str(c) for c in imputed))} "
+        "— scored with the model's recorded fallback means; investigate "
+        "before trusting these scores",
+        file=sys.stderr,
+    )
 DEFAULT_MIN_LEAD_MINUTES = 30
 
 
@@ -4454,12 +4484,20 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                 intercept = ml_model["intercept"]
                 feature_cols = ml_model["feature_cols"]
                 
-                x = []
-                for col in feature_cols:
-                    v = feat_dict.get(col, 0.0)
-                    if v is None:
-                        v = 0.0
-                    x.append(v)
+                # Phase 5 K contract: the declared-source columns, built from
+                # the same per-source rows the election above used. A dark feed
+                # is REPRESENTED (available=0.0, prob None) rather than dropped,
+                # so a certified K model serves through this same loop and a
+                # returning feed is a data event, not a code change.
+                _k_sources = {}
+                for _src in PHASE5_K_SOURCES:
+                    _spr = probs_1x2(data.get(_src, {}).get(k) or {})
+                    _k_sources[_src] = (_spr[idx], True) if _spr else (None, False)
+                feat_dict.update(phase5_source_columns(_k_sources))
+
+                x, _imputed_cols = phase5_feature_vector(feat_dict, ml_model)
+                if _imputed_cols:
+                    _warn_imputed_features(ml_model, _imputed_cols, day)
                 z = sum(w * val for w, val in zip(coefs, x)) + intercept
                 ml_p = 1.0 / (1.0 + math.exp(-z))
                 ml_scored += 1

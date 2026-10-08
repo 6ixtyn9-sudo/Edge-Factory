@@ -1059,11 +1059,10 @@ def main():
         # by the SAME walk-forward gates — if they certify, the edge fires
         # NOW instead of waiting for the season; if phantom, they stay
         # candidates. The data decides, not impatience.
-        # Full rung ladder from 30 up. Widening the ladder only widens what
-        # gets JUDGED — every rung still faces the identical walk-forward
-        # gates (min_n_train/min_n_valid/min_roi_valid/LB), and a rung that
-        # does not clear them stays a candidate and fires nothing. The data
-        # decides, not impatience.
+        # The ladder now starts at 30. Widening it only widens what gets
+        # JUDGED: every rung faces the identical walk-forward gates
+        # (min_n_train/min_n_valid/min_roi_valid/LB), and a rung that does not
+        # clear them stays a candidate and fires nothing.
         for thr in (30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85):
             results.append(evaluate(
                 con, f"ml-meta avg_p>={thr}", "ml_meta_settled",
