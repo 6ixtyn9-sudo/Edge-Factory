@@ -1,0 +1,78 @@
+# ML ladder + Phase 5 K contract — branch state (2026-10-08)
+
+Branch `arena/4b287a0a-edge-factory`, commits `a2d56aa` and `53799b2` (plus this
+note). Everything below was verified on a rebuilt warehouse (18,478 consensus3
+rows) before being committed; nothing in these commits touches the served model
+until an operator promotes an activated era.
+
+## What changed
+
+**Miner (`scripts/mine_consensus.py`)**
+1. ml-meta / ml-fade rung ladder widened to 30..85. Widening the ladder widens
+   what gets *judged*: every rung faces the same walk-forward gates and anything
+   that misses them stays a candidate and fires nothing.
+2. `ht_diff` / `ht_total` dropped from the ml-meta feature set (diagnosis
+   2026-10-06 fix #6). They are the actual half-time score — target leakage —
+   and are pinned to 0 at serve, so they could only inflate a research fit.
+3. `_score_live_model` now scores the incumbent on the incumbent's own feature
+   contract. Without this, (2) would have silently stopped the incumbent
+   prediction export and sent the decay monitor fail-closed on every ML edge.
+4. One `weighted-1x2` rule instead of six identical ones (unanimity forces
+   `w_score == 1.0`, so 0.55..0.80 selected byte-identical match sets).
+
+**Serve (`scripts/picks_today.py`)**
+5. The context odds-floor drop is no longer silent: the reason is tagged on the
+   row and counted in the run summary, split into evidence-backed CAUTION vs
+   UNKNOWN-odds-band-only. Staking behaviour is unchanged.
+6. The declared-source columns of the K contract are built from the same rows
+   the 1x2 election uses; missing model columns are imputed from the model's own
+   recorded means (never a bare `0.0`) and reported once.
+
+**Phase 5 (`src/edgefactory/phase5_k.py`, `scripts/fit_phase5_candidate.py`,
+`src/edgefactory/phase5_promotion.py`, guard, `phase5_activate` CLI)**
+7. One shared builder for the frozen 32-column K contract, used by both the fit
+   and the scorer. A dark feed is *represented* (`_available=0.0`, `_p` = the
+   recorded era mean), never dropped — so a returning feed is a data event, not
+   a schema change.
+8. A read-only era fit that emits an activation-shaped payload, refuses below
+   its declared floors, and writes only `localdata/ml_meta_k_candidate.json`.
+9. The promotion bridge. Activation alone could never reach the registry: the
+   guard treated any non-incumbent mode as unverifiable, so activating a
+   candidate would have switched ML off. `phase5_activate promote` now verifies
+   the post-state with the guard **before** writing, keeps a byte-for-byte
+   backup under `localdata/phase5_reconciliation/`, and benches the `ml-fade`
+   family (those cuts were derived from the incumbent's selection).
+   `phase5_activate restore` puts the frozen incumbent back.
+
+## What a branch run should show
+
+* Miner: `... preserving model_key=a45beab0c878 and 14 current ML edge(s)` —
+  the ML payload must NOT change; `candidate_certified=17` in the research file.
+* `edges_consensus_research.json`: ml-meta rungs 30..80 certified on the
+  leak-free model (>=85 no longer reaches `min_overlap_n`); one weighted rule.
+* `Saved 18,478 live-incumbent ML predictions (model_key=a45beab0c878)`.
+* picks summary gains `ctx_floor_dropped=N`, plus a `context floor:` line when
+  it fires.
+* `served model imputed ...` on stderr means a served model is missing columns
+  it was trained on — investigate before trusting that slate. The incumbent's
+  26 columns are all produced, so it should stay silent.
+* The miner prints a `Phase 5 K-contract coverage (read-only)` block at the
+  end of every run — which of the 32 columns the era can fill, and whether a
+  candidate fit is due. Diagnostics only; it cannot affect the mine.
+
+## What is deliberately NOT live
+
+The retrained model, the new rungs and everything K-shaped are research-only.
+Path to live: `fit_phase5_candidate.py` → certify (clauses 3..9 still blocked:
+era evaluator, identity audit, comparator, Forebet overlap) → `dry-run-revert` →
+`activate --confirm` → `promote --confirm`. `kill-switch` + `restore --confirm`
+is the way back.
+
+## Gotchas for the run
+
+* Scoutingstats and betminer are not 1x2 voters, so their K columns stay
+  unavailable even with working feeds — a roster decision, not a bug.
+* Only vitibet / bzzoiro / betclan of the five declared sources are 1x2 voters.
+* `tests/test_supabase.py` and `tests/test_sync_supabase.py` cannot import
+  without the `supabase` package; CI installs it.
+* No DC/DNB prices exist in any committed corpus — do not go looking.

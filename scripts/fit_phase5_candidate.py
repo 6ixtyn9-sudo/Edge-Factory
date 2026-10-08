@@ -493,6 +493,42 @@ def main() -> int:
 
     fixtures = _merge(shadow, warehouse)
     frame = build_frame(fixtures)
+
+    if args.explain:
+        if not args.warehouse.exists():
+            print(f"warehouse: missing at {args.warehouse} — only the shadow-captured "
+                  "sources can be seen, so no fixture can reach the election trio")
+        # Coverage is reported from the RAW fixtures: a fixture only becomes
+        # era evidence once it has an outcome AND two sources, so the useful
+        # forward-looking number is how much is already captured but unsettled.
+        def _eligible(row: dict) -> bool:
+            # Same criterion as build_frame: two sources AND at least one of the
+            # election trio, whose majority supplies the target.
+            return (len(row["sources"]) >= 2
+                    and any(src in row["sources"] for src in ELECTION_SOURCES))
+
+        settled = sum(1 for r in fixtures.values()
+                      if _eligible(r) and r.get("outcome") is not None)
+        pending = sum(1 for r in fixtures.values()
+                      if _eligible(r) and r.get("outcome") is None)
+        trio_less = sum(1 for r in fixtures.values()
+                        if len(r["sources"]) >= 2 and not _eligible(r))
+        print(f"era fixtures: settled_eligible={settled} pending_outcome={pending} "
+              f"two_source_without_election_trio={trio_less} "
+              f"shadow_rows={len(shadow)} warehouse_rows={len(warehouse)} "
+              f"shadow_days={len(era_days)}")
+        for source in DECLARED_SOURCE_ORDER:
+            present = sum(1 for row in fixtures.values() if source in row["sources"])
+            print(f"  {source:16s} fixtures_present={present}")
+        print(f"floors: era_train_rows={MIN_ERA_TRAIN_ROWS} era_days={MIN_ERA_TRAIN_DAYS} "
+              f"valid_rows={MIN_VALID_ROWS} test_rows={MIN_TEST_ROWS}")
+        if not frame.empty:
+            bounds = era_bounds(frame)
+            notes = _shortfall(frame, bounds)
+            print("shortfall:", "; ".join(notes) if notes else "none")
+            print("projected era-train floor:", _projected(frame))
+        return 2 if frame.empty else 0
+
     if frame.empty:
         print("fit refused: no settled era fixtures with >=2 sources "
               f"(shadow rows={len(shadow)} warehouse rows={len(warehouse)})")
@@ -502,15 +538,6 @@ def main() -> int:
     counts = {"fixtures": len(frame), "shadow": len(shadow), "warehouse": len(warehouse),
               "era_start": str(min(frame['day'])), "era_end": str(max(frame['day']))}
     print(json.dumps(counts, sort_keys=True))
-
-    if args.explain:
-        for source in DECLARED_SOURCE_ORDER:
-            present = sum(1 for row in fixtures.values() if source in row["sources"])
-            print(f"  {source:16s} fixtures_present={present}")
-        notes = _shortfall(frame, bounds)
-        print("shortfall:", "; ".join(notes) if notes else "none")
-        print("projected era-train floor:", _projected(frame))
-        return 0
 
     notes = _shortfall(frame, bounds)
     if notes:

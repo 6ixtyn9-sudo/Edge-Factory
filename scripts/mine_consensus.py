@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 import numpy as np
 import pandas as pd
@@ -1419,6 +1420,35 @@ def main():
         payload["ml_model"] = ml_model_payload
 
     write_registry(payload)
+    _print_k_coverage_diagnostic()
+
+
+def _print_k_coverage_diagnostic() -> None:
+    """Read-only Phase 5 K coverage report, printed in every miner run.
+
+    The forward era's 32-column contract is fed by sources that are partly
+    dark; this block says which ones, and when a candidate fit becomes due, so
+    a returning feed is visible in the log the day it lands. It runs the same
+    read-only explain path as ``fit_phase5_candidate.py --explain`` and can
+    never affect the mine — diagnostics, not pipeline state.
+    """
+    script = Path(__file__).resolve().parent / "fit_phase5_candidate.py"
+    if not script.exists():
+        return
+    print("\n--- Phase 5 K-contract coverage (read-only) ---")
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "--explain"],
+            capture_output=True, text=True, timeout=180,
+        )
+    except Exception as exc:  # pragma: no cover - diagnostics must never gate
+        print(f"(K coverage diagnostic skipped: {type(exc).__name__})")
+        return
+    output = (proc.stdout or "").strip()
+    if output:
+        print(output)
+    if proc.returncode not in (0, 1, 2, 3, 4) and proc.stderr:
+        print(f"(explain exited {proc.returncode}) {proc.stderr.strip()[:400]}")
 
 
 if __name__ == "__main__":
