@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 2,
@@ -31,7 +31,7 @@
         "selection_unmapped": 634
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -59,7 +59,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-09' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -138,7 +138,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
-      "raw": 254,
+      "raw": 251,
       "reason": null,
       "scored": 79,
       "status": null
@@ -179,10 +179,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 1569,
+        "event_count": 1548,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 1569,
+        "events_with_teams": 1548,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -232,45 +232,44 @@
     "sharpapi_odds": {
       "blocker": "fetch returned zero rows",
       "board_summary": {
-        "board_fixtures": 5,
+        "board_fixtures": 9,
         "board_league_count": 3,
         "board_leagues": {
-          "brazil_-_serie_a": 25,
-          "chile_-_cup": 76,
-          "colombia_-_primera_b": 99
+          "brazil_-_serie_a": 43,
+          "brazil_-_serie_b": 156,
+          "canada_-_premier_league": 1
         },
-        "board_non_prematch_rows": 175,
+        "board_non_prematch_rows": 200,
         "board_priced_rows": 0,
         "board_rows": 200,
-        "board_team_count": 10,
+        "board_team_count": 17,
         "board_team_names": {
-          "Antofagasta": 58,
-          "Barranquilla": 45,
-          "Boca Juniors de Cali": 54,
-          "Cobreloa": 18,
-          "Coquimbo Unido": 18,
-          "Corinthians": 25,
-          "Internacional RS": 25,
-          "Leones FC": 45,
-          "Uni De Chile": 58,
-          "Union Magdalena": 54
+          "America MG": 5,
+          "America Mineiro": 12,
+          "Atletico GO": 30,
+          "Atletico Goianiense": 23,
+          "Botafogo FR": 17,
+          "Botafogo RJ": 26,
+          "CRB": 30,
+          "CRB Maceio": 23,
+          "Cuiaba": 57,
+          "Cuiaba MT": 29,
+          "Forge FC": 1,
+          "Fortaleza CE": 12,
+          "Fortaleza EC": 5,
+          "Pacific FC": 1,
+          "Vasco Da Gama": 17,
+          "Vasco da Gama": 26,
+          "Vila Nova": 86
         },
         "board_truncated": false,
-        "canonicalization_drop_reasons": {
-          "unknown_market:1st_half_asian_handicap_corners": 2,
-          "unknown_market:1st_half_moneyline": 3,
-          "unknown_market:1st_half_total_corners": 13,
-          "unknown_market:2nd_half_asian_handicap_corners": 2,
-          "unknown_market:2nd_half_moneyline": 3,
-          "unknown_market:2nd_half_total_corners": 2
-        },
-        "card_fixture_count": 4,
+        "card_fixture_count": 5,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 175
+          "live_price": 200
         },
         "requested_limit": 1000
       },
