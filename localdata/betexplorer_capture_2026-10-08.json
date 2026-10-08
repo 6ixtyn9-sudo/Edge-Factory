@@ -1,5 +1,5 @@
 {
-  "attempted": 1,
+  "attempted": 3,
   "attempted_fixtures": [
     {
       "avg_p": 65.7,
@@ -10,16 +10,36 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 56.0,
+      "away": "ES Setif",
+      "date": "2026-10-08",
+      "home": "MC Oran",
+      "league": "Algeria Ligue 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 55.2,
+      "away": "Abu Qair Semad",
+      "date": "2026-10-08",
+      "home": "Ghazl El Mehalla",
+      "league": "Egypt League Cup",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 0.2106
     }
   ],
   "be_429": 0,
   "be_cached": 1,
   "be_cooling_down": false,
-  "candidate_fixtures": 1,
-  "captured_at": "2026-10-08T10:07:42.763812+00:00",
+  "candidate_fixtures": 3,
+  "captured_at": "2026-10-08T15:16:01.302607+00:00",
   "date": "2026-10-08",
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 2,
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
@@ -31,9 +51,19 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 56.0,
+      "away": "ES Setif",
+      "date": "2026-10-08",
+      "home": "MC Oran",
+      "league": "Algeria Ligue 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
     }
   ],
-  "rows": 3,
+  "rows": 6,
   "schema": 1,
   "status": "ok"
 }
