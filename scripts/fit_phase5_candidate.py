@@ -161,49 +161,99 @@ def load_warehouse_fixtures(con, era_start: date, era_end: date) -> dict:
         s for s in DECLARED_SOURCE_ORDER if s not in ELECTION_SOURCES
     ]
     for source in candidates:
-        table = None
-        for name in (f"{source}_settled", source):
+        # Read BOTH the raw table and the settled view. warehouse.py builds
+        # "{name}_settled" for the electors as a pure filter - only fixtures
+        # with a final score survive - and the forward era is a window of
+        # fixtures still to be played, so a settle-only read is blind to
+        # exactly the rows the era is made of: the trio reports dark while its
+        # feeds are capturing. Neither table is a strict superset (a settled
+        # view can carry outcomes a raw shard lacks), so both are read and
+        # merged into the same fixture entries.
+        names: list[str] = []
+        for name in (source, f"{source}_settled"):
+            if name in names:
+                continue
             try:
                 con.execute(f"SELECT 1 FROM {name} LIMIT 0")
-                table = name
-                break
             except Exception:
                 continue
-        if table is None:
-            continue
-        cols = {r[1] for r in con.execute(f"PRAGMA table_info('{table}')").fetchall()}
-        if not {"p1", "px", "p2"} <= cols:
-            continue
-        extras = [c for c in ("odd1", "oddx", "odd2", "league", "hs", "gs") + XML_EXTRAS
-                  if c in cols]
-        select = ", ".join(["date", "home", "away", "p1", "px", "p2"] + extras)
-        for row in con.execute(f"SELECT {select} FROM {table}").fetchall():
-            rec = dict(zip(["date", "home", "away", "p1", "px", "p2"] + extras, row))
-            day = _parse_day(rec["date"])
-            if day is None or not (era_start <= day <= era_end):
+            names.append(name)
+        for table in names:
+            cols = {r[1] for r in con.execute(f"PRAGMA table_info('{table}')").fetchall()}
+            if not {"p1", "px", "p2"} <= cols:
                 continue
-            if rec["home"] is None or rec["away"] is None:
-                continue
-            if None in (rec["p1"], rec["px"], rec["p2"]):
-                continue
-            home_key, away_key = source_team_key(rec["home"]), source_team_key(rec["away"])
-            if not home_key or not away_key:
-                continue
-            entry = _fixture(store, (day.isoformat(), home_key, away_key),
-                             league=rec.get("league"))
-            entry["sources"][source] = (float(rec["p1"]), float(rec["px"]),
-                                        float(rec["p2"]))
-            if entry["outcome"] is None and rec.get("hs") is not None \
-                    and rec.get("gs") is not None:
-                hs, gs = int(rec["hs"]), int(rec["gs"])
-                entry["outcome"] = "home" if hs > gs else ("away" if hs < gs else "draw")
-            for extra in XML_EXTRAS:
-                if rec.get(extra) is not None:
-                    entry["extras"].setdefault(extra, float(rec[extra]))
-            for col in ("odd1", "oddx", "odd2"):
-                if rec.get(col) is not None:
-                    entry["extras"].setdefault(col, float(rec[col]))
+            extras = [c for c in ("odd1", "oddx", "odd2", "league", "hs", "gs") + XML_EXTRAS
+                      if c in cols]
+            select = ", ".join(["date", "home", "away", "p1", "px", "p2"] + extras)
+            for row in con.execute(f"SELECT {select} FROM {table}").fetchall():
+                rec = dict(zip(["date", "home", "away", "p1", "px", "p2"] + extras, row))
+                day = _parse_day(rec["date"])
+                if day is None or not (era_start <= day <= era_end):
+                    continue
+                if rec["home"] is None or rec["away"] is None:
+                    continue
+                if None in (rec["p1"], rec["px"], rec["p2"]):
+                    continue
+                home_key, away_key = source_team_key(rec["home"]), source_team_key(rec["away"])
+                if not home_key or not away_key:
+                    continue
+                entry = _fixture(store, (day.isoformat(), home_key, away_key),
+                                 league=rec.get("league"))
+                entry["sources"][source] = (float(rec["p1"]), float(rec["px"]),
+                                            float(rec["p2"]))
+                if entry["outcome"] is None and rec.get("hs") is not None \
+                        and rec.get("gs") is not None:
+                    hs, gs = int(rec["hs"]), int(rec["gs"])
+                    entry["outcome"] = "home" if hs > gs else ("away" if hs < gs else "draw")
+                for extra in XML_EXTRAS:
+                    if rec.get(extra) is not None:
+                        entry["extras"].setdefault(extra, float(rec[extra]))
+                for col in ("odd1", "oddx", "odd2"):
+                    if rec.get(col) is not None:
+                        entry["extras"].setdefault(col, float(rec[col]))
     return store
+
+
+def probe_tables(con, era_start: date, era_end: date) -> dict:
+    """Per-source newest-day evidence, for the read-only coverage report.
+
+    Reports every table a source can be read from (raw and settled) so the
+    report can separate "the feed is capturing" from "the settled view has not
+    caught up yet" without guessing. Read-only: never used by a fit.
+    """
+    probe: dict = {}
+    ordered = list(ELECTION_SOURCES) + [
+        s for s in DECLARED_SOURCE_ORDER if s not in ELECTION_SOURCES
+    ]
+    for source in ordered:
+        entry: dict = {}
+        for label, table in (("raw", source), ("settled", f"{source}_settled")):
+            try:
+                overall = con.execute(
+                    f"SELECT max(CAST(date AS VARCHAR)) FROM {table} "
+                    "WHERE CAST(date AS VARCHAR) LIKE '____-__-__%'"
+                ).fetchone()[0]
+                in_era = con.execute(
+                    f"SELECT count(*) FROM {table} WHERE CAST(date AS VARCHAR) >= ? "
+                    "AND CAST(date AS VARCHAR) <= ? AND CAST(date AS VARCHAR) "
+                    "LIKE '____-__-__%'",
+                    [era_start.isoformat(), era_end.isoformat()],
+                ).fetchone()[0]
+            except Exception:
+                continue
+            entry[label] = {"newest": overall, "rows_in_era": int(in_era or 0)}
+        probe[source] = entry
+    return probe
+
+
+def _probe_text(entry: dict | None) -> str:
+    """One line-friendly rendering of ``probe_tables`` output for a source."""
+    if not entry:
+        return "   (no table visible)"
+    bits = [f"{label} newest={info['newest']} rows_in_era={info['rows_in_era']}"
+            for label, info in (("raw", entry.get("raw")), ("settled", entry.get("settled")))
+            if info]
+    return "   " + ("; ".join(bits) if bits else "(no table visible)")
 
 
 def _merge(*stores: dict) -> dict:
@@ -479,6 +529,7 @@ def main() -> int:
     era_start = (date.fromisoformat(args.era_start) if args.era_start
                  else (date.fromisoformat(era_days[0]) if era_days else None))
     warehouse: dict = {}
+    probe: dict = {}
     if args.warehouse.exists() and era_start is not None:
         import duckdb
 
@@ -488,6 +539,8 @@ def main() -> int:
                 [date.fromisoformat(d) for d in era_days] + [era_start]
             )
             warehouse = load_warehouse_fixtures(con, era_start, last_day)
+            if args.explain:
+                probe = probe_tables(con, era_start, last_day)
         finally:
             con.close()
 
@@ -522,21 +575,24 @@ def main() -> int:
         for source in ELECTION_SOURCES:
             present = sum(1 for row in fixtures.values() if source in row["sources"])
             trio_present[source] = present
-            print(f"    {source:16s} fixtures_present={present}")
+            print(f"    {source:16s} fixtures_present={present}{_probe_text(probe.get(source))}")
         print("  declared capture sources (supply the K columns):")
         for source in DECLARED_SOURCE_ORDER:
             present = sum(1 for row in fixtures.values() if source in row["sources"])
-            print(f"    {source:16s} fixtures_present={present}")
+            print(f"    {source:16s} fixtures_present={present}{_probe_text(probe.get(source))}")
         if not any(trio_present.values()):
-            print("  note: no election-trio row visible in this checkout's era, so no "
-                  "target can be formed here. Do not read that as 'the feeds are dead': "
-                  "the per-source monthly shards the pipeline appends to (e.g. "
-                  "zulubet_2026-10.csv.gz, statarea_2026-10.csv.gz) are gitignored "
-                  "cache-local data, so a clean or sandbox checkout shows zero trio rows "
-                  "while a real run's warehouse has them. Forebet, the third elector, is "
-                  "retired for production days after 2026-06-12 "
-                  "(source_health.FOREBET_LIVE_LAST_DAY) and is excluded by policy, so in "
-                  "the forward era the electors are zulubet and statarea.")
+            era_span = (f"{era_days[0]}..{era_days[-1]}" if era_days else "n/a")
+            print(
+                f"  note: the era window is a window of fixtures still to be played "
+                f"({era_span}). fixtures_present counts what each source contributes inside "
+                "it, reading that source's raw table AND its settled view. A `raw newest=` "
+                "inside the era means the feed is capturing and only the settled table is "
+                "behind, because that view keeps fixtures with a final score only; as results "
+                "land the same rows enter it on the next warehouse build and the era starts "
+                "accruing - no code change and no retrain. Forebet is retired for production "
+                "days after 2026-06-12 (source_health.FOREBET_LIVE_LAST_DAY), so the forward "
+                "electors are zulubet and statarea."
+            )
         print(f"floors: era_train_rows={MIN_ERA_TRAIN_ROWS} era_days={MIN_ERA_TRAIN_DAYS} "
               f"valid_rows={MIN_VALID_ROWS} test_rows={MIN_TEST_ROWS}")
         if not frame.empty:
