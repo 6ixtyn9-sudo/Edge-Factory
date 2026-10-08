@@ -1,0 +1,189 @@
+{
+  "absent_declared_s": [
+    "forebet",
+    "zulubet",
+    "statarea",
+    "betminer"
+  ],
+  "as_of": "2026-10-08",
+  "clauses": {
+    "1": {
+      "reason": "90-day gap-aware capture, trailing-30 success, and 100% timestamps",
+      "status": "not_yet_due"
+    },
+    "2": {
+      "excluded_sources": [
+        "vitibet",
+        "betclan",
+        "scoutingstats"
+      ],
+      "reason": "\u226599% pre-kickoff timing; contaminated sources are excluded from S",
+      "status": "pass_with_source_exclusions"
+    },
+    "3": {
+      "reason": "fixed 200-fixture marker-aware identity audit is not materialized",
+      "sample_n": 0,
+      "status": "not_yet_due"
+    },
+    "4": {
+      "reason": "era-local gates cannot run until maturity and a compatible evaluator exists",
+      "status": "not_yet_due"
+    },
+    "5": {
+      "reason": "paired Brier/logloss bootstrap awaits the era-local evaluator",
+      "status": "not_yet_due"
+    },
+    "6": {
+      "reason": "coverage floor awaits a same-window incumbent/candidate scorecard",
+      "status": "not_yet_due"
+    },
+    "7": {
+      "reason": "\u2265200 common rows are required for every existing source; Forebet is parked",
+      "status": "not_yet_due"
+    },
+    "8": {
+      "reason": "pre-activation revert dry run is not recorded",
+      "status": "not_yet_due"
+    },
+    "9": {
+      "reason": "no activation is authorized or recorded",
+      "status": "not_yet_due"
+    }
+  },
+  "declared_s": [
+    "forebet",
+    "zulubet",
+    "statarea",
+    "vitibet",
+    "bzzoiro",
+    "betclan",
+    "scoutingstats",
+    "betminer"
+  ],
+  "eligible_s_after_timing": [
+    "bzzoiro"
+  ],
+  "era_start": "2026-10-08",
+  "evaluated_at": "2026-10-08T08:40:23+00:00",
+  "failing_clauses": [],
+  "findings_changed": true,
+  "full_evaluation_status": "not_run_not_due_or_weekly_cooldown",
+  "malformed_attempts": 0,
+  "malformed_rows": 0,
+  "maturity_reached": false,
+  "not_yet_due_clauses": [
+    "1",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9"
+  ],
+  "overall_status": "not_yet_due",
+  "projected_90_day_maturity": "2027-01-05",
+  "projected_first_certification": null,
+  "projection_note": "maturity estimate is based on measured gap-aware capture accrual; gate-n and settled-outcome projections are unavailable until the era evaluator runs",
+  "realized_s": [
+    "vitibet",
+    "bzzoiro",
+    "betclan",
+    "scoutingstats"
+  ],
+  "record_type": "phase5_daily_certifier_status",
+  "schema": 1,
+  "source_metrics": {
+    "betclan": {
+      "capture_timestamp_rate": 1.0,
+      "current_gap_aware_streak_days": 1,
+      "eligible_after_timing": false,
+      "latest_success_day": "2026-10-08",
+      "max_gap_between_success_days": 0,
+      "missing_scheduled_attempt_days": 0,
+      "official_attempt_records": 1,
+      "pre_kickoff_rate": 0.0,
+      "projected_90_day_maturity": null,
+      "realized_membership": true,
+      "rows": 33,
+      "scheduled_days_since_era_start": 1,
+      "successful_capture_days": 1,
+      "trailing_30_scheduled_days": 1,
+      "trailing_30_success_days": 1,
+      "trailing_30_success_rate": 1.0
+    },
+    "betminer": {
+      "capture_timestamp_rate": null,
+      "current_gap_aware_streak_days": 0,
+      "eligible_after_timing": false,
+      "latest_success_day": null,
+      "max_gap_between_success_days": null,
+      "missing_scheduled_attempt_days": 0,
+      "official_attempt_records": 1,
+      "pre_kickoff_rate": null,
+      "projected_90_day_maturity": null,
+      "realized_membership": false,
+      "rows": 0,
+      "scheduled_days_since_era_start": 1,
+      "successful_capture_days": 0,
+      "trailing_30_scheduled_days": 1,
+      "trailing_30_success_days": 0,
+      "trailing_30_success_rate": 0.0
+    },
+    "bzzoiro": {
+      "capture_timestamp_rate": 1.0,
+      "current_gap_aware_streak_days": 1,
+      "eligible_after_timing": true,
+      "latest_success_day": "2026-10-08",
+      "max_gap_between_success_days": 0,
+      "missing_scheduled_attempt_days": 0,
+      "official_attempt_records": 1,
+      "pre_kickoff_rate": 1.0,
+      "projected_90_day_maturity": "2027-01-05",
+      "realized_membership": true,
+      "rows": 527,
+      "scheduled_days_since_era_start": 1,
+      "successful_capture_days": 1,
+      "trailing_30_scheduled_days": 1,
+      "trailing_30_success_days": 1,
+      "trailing_30_success_rate": 1.0
+    },
+    "scoutingstats": {
+      "capture_timestamp_rate": 1.0,
+      "current_gap_aware_streak_days": 1,
+      "eligible_after_timing": false,
+      "latest_success_day": "2026-10-08",
+      "max_gap_between_success_days": 0,
+      "missing_scheduled_attempt_days": 0,
+      "official_attempt_records": 1,
+      "pre_kickoff_rate": 0.956522,
+      "projected_90_day_maturity": null,
+      "realized_membership": true,
+      "rows": 23,
+      "scheduled_days_since_era_start": 1,
+      "successful_capture_days": 1,
+      "trailing_30_scheduled_days": 1,
+      "trailing_30_success_days": 1,
+      "trailing_30_success_rate": 1.0
+    },
+    "vitibet": {
+      "capture_timestamp_rate": 1.0,
+      "current_gap_aware_streak_days": 1,
+      "eligible_after_timing": false,
+      "latest_success_day": "2026-10-08",
+      "max_gap_between_success_days": 0,
+      "missing_scheduled_attempt_days": 0,
+      "official_attempt_records": 1,
+      "pre_kickoff_rate": 0.935484,
+      "projected_90_day_maturity": null,
+      "realized_membership": true,
+      "rows": 248,
+      "scheduled_days_since_era_start": 1,
+      "successful_capture_days": 1,
+      "trailing_30_scheduled_days": 1,
+      "trailing_30_success_days": 1,
+      "trailing_30_success_rate": 1.0
+    }
+  },
+  "status_signature": "d70eca99d0dd71aea4e3de723d0c87fe4216ac4fa0b7aa68fb0c7e6d47123db8"
+}
