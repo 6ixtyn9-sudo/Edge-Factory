@@ -517,9 +517,26 @@ def main() -> int:
               f"two_source_without_election_trio={trio_less} "
               f"shadow_rows={len(shadow)} warehouse_rows={len(warehouse)} "
               f"shadow_days={len(era_days)}")
+        print("  election trio (supplies the target):")
+        trio_present = {}
+        for source in ELECTION_SOURCES:
+            present = sum(1 for row in fixtures.values() if source in row["sources"])
+            trio_present[source] = present
+            print(f"    {source:16s} fixtures_present={present}")
+        print("  declared capture sources (supply the K columns):")
         for source in DECLARED_SOURCE_ORDER:
             present = sum(1 for row in fixtures.values() if source in row["sources"])
-            print(f"  {source:16s} fixtures_present={present}")
+            print(f"    {source:16s} fixtures_present={present}")
+        if not any(trio_present.values()):
+            print("  note: no election-trio row visible in this checkout's era, so no "
+                  "target can be formed here. Do not read that as 'the feeds are dead': "
+                  "the per-source monthly shards the pipeline appends to (e.g. "
+                  "zulubet_2026-10.csv.gz, statarea_2026-10.csv.gz) are gitignored "
+                  "cache-local data, so a clean or sandbox checkout shows zero trio rows "
+                  "while a real run's warehouse has them. Forebet, the third elector, is "
+                  "retired for production days after 2026-06-12 "
+                  "(source_health.FOREBET_LIVE_LAST_DAY) and is excluded by policy, so in "
+                  "the forward era the electors are zulubet and statarea.")
         print(f"floors: era_train_rows={MIN_ERA_TRAIN_ROWS} era_days={MIN_ERA_TRAIN_DAYS} "
               f"valid_rows={MIN_VALID_ROWS} test_rows={MIN_TEST_ROWS}")
         if not frame.empty:
