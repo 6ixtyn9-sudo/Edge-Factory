@@ -1,5 +1,5 @@
 {
-  "attempted": 1,
+  "attempted": 4,
   "attempted_fixtures": [
     {
       "avg_p": 65.7,
@@ -10,16 +10,46 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 65.5,
+      "away": "AC Oulu",
+      "date": "2026-10-08",
+      "home": "KuPS",
+      "league": "Finland Veikkausliiga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 60.3,
+      "away": "Fajr Sepasi",
+      "date": "2026-10-08",
+      "home": "Sepahan FC",
+      "league": "Iran Persian Gulf Pro League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 56.0,
+      "away": "ES Setif",
+      "date": "2026-10-08",
+      "home": "MC Oran",
+      "league": "Algeria Ligue 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
     }
   ],
   "be_429": 0,
-  "be_cached": 1,
+  "be_cached": 3,
   "be_cooling_down": false,
-  "candidate_fixtures": 1,
-  "captured_at": "2026-10-08T10:07:42.763812+00:00",
+  "candidate_fixtures": 4,
+  "captured_at": "2026-10-08T13:07:41.479004+00:00",
   "date": "2026-10-08",
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 4,
   "max_fixtures": 12,
   "quoted_fixtures": [
     {
@@ -31,9 +61,39 @@
       "market": "1x2",
       "pick": "home",
       "w_score": 1.0
+    },
+    {
+      "avg_p": 65.5,
+      "away": "AC Oulu",
+      "date": "2026-10-08",
+      "home": "KuPS",
+      "league": "Finland Veikkausliiga",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 60.3,
+      "away": "Fajr Sepasi",
+      "date": "2026-10-08",
+      "home": "Sepahan FC",
+      "league": "Iran Persian Gulf Pro League",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
+    },
+    {
+      "avg_p": 56.0,
+      "away": "ES Setif",
+      "date": "2026-10-08",
+      "home": "MC Oran",
+      "league": "Algeria Ligue 1",
+      "market": "1x2",
+      "pick": "home",
+      "w_score": 1.0
     }
   ],
-  "rows": 3,
+  "rows": 12,
   "schema": 1,
   "status": "ok"
 }
