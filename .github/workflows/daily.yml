@@ -171,6 +171,16 @@ jobs:
             PYTHONPATH=src python3 scripts/daily.py --auto-once
           fi
 
+      - name: Phase 5 K-contract coverage (read-only diagnostic)          # <-- NEW
+        # Which of the frozen 32 contract columns this run can fill, how much
+        # captured evidence is only waiting on outcomes, and how many two-source
+        # fixtures exist without any election-trio member (those can never
+        # supply a target). Writes nothing; cannot mark the run red.
+        if: always()
+        continue-on-error: true
+        run: |
+          PYTHONPATH=src python3 scripts/fit_phase5_candidate.py --explain || true
+
       - name: Persist localdata State (Cache)
         uses: actions/cache/save@v4
         if: always()
