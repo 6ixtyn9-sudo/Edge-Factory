@@ -246,6 +246,26 @@ def probe_tables(con, era_start: date, era_end: date) -> dict:
     return probe
 
 
+def accrual_text(settled_days) -> str | None:
+    """How fast the forward era is filling, printed beside the floors.
+
+    The floors are a distance, not a verdict: reading "0 of 2000 rows" without
+    the rate that number is moving at makes a healthy feeding era look broken.
+    ``settled_days`` carries one entry per eligible-and-settled fixture (the
+    caller applies the eligibility rule, so this never disagrees with the
+    ``settled_eligible=`` count printed just above). Returns None — no line —
+    when nothing has settled yet; an empty era is already reported and must not
+    be dressed up with a rate.
+    """
+    days = [day for day in settled_days if day]
+    if not days:
+        return None
+    unique = set(days)
+    return (f"accrual: {len(days)} settled fixture(s) over {len(unique)} day(s) "
+            f"= {len(days) / len(unique):.1f}/day "
+            "(a fit is attempted only once the floors below are met)")
+
+
 def _probe_text(entry: dict | None) -> str:
     """One line-friendly rendering of ``probe_tables`` output for a source."""
     if not entry:
@@ -593,6 +613,12 @@ def main() -> int:
                 "days after 2026-06-12 (source_health.FOREBET_LIVE_LAST_DAY), so the forward "
                 "electors are zulubet and statarea."
             )
+        accrual = accrual_text(
+            day for (day, _h, _a), row in fixtures.items()
+            if _eligible(row) and row.get("outcome") is not None
+        )
+        if accrual:
+            print(accrual)
         print(f"floors: era_train_rows={MIN_ERA_TRAIN_ROWS} era_days={MIN_ERA_TRAIN_DAYS} "
               f"valid_rows={MIN_VALID_ROWS} test_rows={MIN_TEST_ROWS}")
         if not frame.empty:
