@@ -224,3 +224,74 @@ def test_shadow_capture_parsing_marks_only_present_sources(tmp_path):
     entry = store[("2026-10-08", "alpha", "beta")]
     assert set(entry["sources"]) == {"vitibet", "scoutingstats"}
     assert entry["sources"]["vitibet"][0] == 0.5
+
+
+# --------------------------------------------------------------------------
+# Warehouse coverage: the era is a window of unplayed fixtures
+# --------------------------------------------------------------------------
+def _ci_shaped_warehouse(tmp_path):
+    """A warehouse shaped like a real run: raw elector tables plus the
+    settle-only views ``warehouse.py`` builds for the trio."""
+    duckdb = pytest.importorskip("duckdb")
+    db = tmp_path / "wh.duckdb"
+    con = duckdb.connect(str(db))
+    # An elector row for a fixture still to be played (no score yet).
+    con.execute(
+        "CREATE TABLE zulubet AS SELECT * FROM (VALUES "
+        "('2026-10-09', 'Alpha FC', 'Beta FC', 0.51, 0.28, 0.21, NULL, NULL, 'League')) "
+        "t(date, home, away, p1, px, p2, hs, gs, league)"
+    )
+    # Exactly the trio view warehouse.py builds: scored fixtures only.
+    con.execute(
+        "CREATE VIEW zulubet_settled AS SELECT *, "
+        "CASE WHEN hs > gs THEN 'home' WHEN hs < gs THEN 'away' ELSE 'draw' END AS outcome "
+        "FROM zulubet WHERE hs IS NOT NULL AND gs IS NOT NULL"
+    )
+    # A declared source that only exists through a settled table, which is the
+    # case vitibet/scoutingstats were built for: outcomes attached by a join.
+    con.execute(
+        "CREATE TABLE vitibet_settled AS SELECT * FROM (VALUES "
+        "('2026-10-09', 'Gamma FC', 'Delta FC', 0.44, 0.31, 0.25, 2, 1, 'League')) "
+        "t(date, home, away, p1, px, p2, hs, gs, league)"
+    )
+    con.close()
+    return duckdb, db
+
+
+def test_warehouse_read_sees_the_raw_row_the_settled_view_drops(tmp_path):
+    """The electors' settled views are settle-only; the raw table is the feed.
+
+    A settle-only read reports the trio dark for an entire forward era while
+    its feeds are capturing, which is a lie the branch must not tell.
+    """
+    duckdb, db = _ci_shaped_warehouse(tmp_path)
+    module = _load_script("fit_phase5_candidate_raw", "scripts/fit_phase5_candidate.py")
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        store = module.load_warehouse_fixtures(con, date(2026, 10, 9), date(2026, 10, 9))
+    finally:
+        con.close()
+    rows = list(store.values())
+    assert len(rows) == 2, "both the raw elector row and the settled declared row count"
+    zulubet = next(r for r in rows if "zulubet" in r["sources"])
+    assert zulubet["sources"]["zulubet"] == (0.51, 0.28, 0.21)   # visible, unsettled
+    assert zulubet["outcome"] is None                            # and honestly target-less
+    vitibet = next(r for r in rows if "vitibet" in r["sources"])
+    assert vitibet["outcome"] == "home"                          # settled table still read
+
+
+def test_probe_separates_a_live_feed_from_a_lagging_settled_view(tmp_path):
+    duckdb, db = _ci_shaped_warehouse(tmp_path)
+    module = _load_script("fit_phase5_candidate_probe", "scripts/fit_phase5_candidate.py")
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        probe = module.probe_tables(con, date(2026, 10, 9), date(2026, 10, 15))
+    finally:
+        con.close()
+    assert probe["zulubet"]["raw"]["newest"] == "2026-10-09"
+    assert probe["zulubet"]["raw"]["rows_in_era"] == 1
+    assert probe["zulubet"]["settled"]["rows_in_era"] == 0
+    text = module._probe_text(probe["zulubet"])
+    assert "raw newest=2026-10-09" in text
+    assert "settled newest=" in text
+    assert module._probe_text(None) == "   (no table visible)"

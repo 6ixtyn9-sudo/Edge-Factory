@@ -93,3 +93,47 @@ Forebet is retired for production days after 2026-06-12
 * `tests/test_supabase.py` and `tests/test_sync_supabase.py` cannot import
   without the `supabase` package; CI installs it.
 * No DC/DNB prices exist in any committed corpus — do not go looking.
+
+## What the branch run actually showed (run 37798663313, 2026-10-08)
+
+Both jobs green, 38 minutes, `mode=auto` (`--auto-once`).
+
+**Confirmed as designed**
+
+* `PHASE5_REGISTRY_GUARD incumbent verified; preserving model_key=a45beab0c878
+  and 14 current ML edge(s)` — the ML payload after the run is byte-identical to
+  before it (same 26 columns, same coefficients, same intercept).
+* `weighted-1x2`: six identical rules on main, one after the miner change.
+* Research ladder: ml-meta 30..80 all certified on the leak-free fit, ml-fade all
+  candidate, `candidate_certified=21`; picks summary carries the new
+  `ctx_floor_dropped` counter.
+* The new K-contract coverage block printed twice — once from the miner, once
+  from the new CI step — with identical numbers.
+* `served model imputed ... fb_p` on every slate. That is the retired Forebet
+  elector, now an honest, visible imputation instead of a silent `0.0`.
+
+**Two things the run taught us**
+
+1. `mode=auto` resolves to `autonomous_intraday` at this hour, and the shadow
+   capture is authorized only for the full official run, so the log says
+   `PHASE5_CAPTURE status=skipped_by_mode`. The Phase 5 capture lane is exercised
+   by `mode=official_morning` (`--force-repick`, mode `official`, not
+   picks-only). Note that it force-repicks and overwrites the morning baseline.
+2. The coverage report said `warehouse_rows=533` yet the trio reported
+   `fixtures_present=0`, and the note printed at the time blamed a missing local
+   shard. That was wrong. The era window is built from *fixture* dates and is a
+   window of fixtures still to be played (`2026-10-08..2026-10-15` from a single
+   capture day), while `warehouse.py` builds `forebet_settled` / `zulubet_settled`
+   / `statarea_settled` as settle-only filters (`WHERE hs IS NOT NULL AND gs IS
+   NOT NULL`). The fitter preferred those views, so for an unplayed window the
+   electors are structurally invisible however healthy the feeds are.
+
+   Fixed: the fitter now reads each source's raw table *and* its settled view and
+   merges them (neither is a superset — the settled view can carry outcomes a raw
+   shard lacks), and `--explain` prints a per-table probe
+   (`raw newest=… rows_in_era=…; settled newest=…`) so "the feed is capturing"
+   and "the settled view has not caught up" can be told apart from the log alone.
+
+   This also means the era accrues without any code change: once results land,
+   the same rows enter the settled tables on the next warehouse build. That is
+   the "feeds in, no retrain" path working as intended.
