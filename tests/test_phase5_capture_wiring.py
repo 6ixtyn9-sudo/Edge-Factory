@@ -30,6 +30,8 @@ def test_phase5_artifacts_are_allowlisted_for_existing_git_persistence():
         "localdata/phase5_activation/active_era.json",
         "localdata/phase5_activation/registry.jsonl",
         "localdata/phase5_activation/mutation_receipts.jsonl",
+        "localdata/phase5_reconciliation/20261008T-incumbent-reconcile-01/audit.json",
+        "localdata/scored_candidate_shadow_2026-10-08.jsonl",
     ]
     for path in paths:
         result = subprocess.run(
@@ -62,6 +64,7 @@ def test_capture_daily_opt_in_piggybacks_only_four_authorized_existing_jobs(
         return SimpleNamespace(returncode=0)
 
     monkeypatch.setattr(capture.subprocess, "run", fake_run)
+    monkeypatch.setenv("EDGE_FACTORY_PHASE5_RUN_CONTEXT", "official_daily_pipeline")
     monkeypatch.setattr(
         sys,
         "argv",
@@ -84,9 +87,50 @@ def test_capture_daily_opt_in_piggybacks_only_four_authorized_existing_jobs(
     assert "--phase5-shadow" not in by_source["zulubet"]
     assert "Rebuilding warehouse" not in capsys.readouterr().out
 
+    # Run the exact same capture selection without the sidecar flag. The
+    # adapter call count/source order is unchanged; Phase 5 only observes the
+    # response already returned by these existing jobs.
+    phase5_call_sources = [command[2] for command in commands]
+    commands.clear()
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "capture_daily.py", "--skip-build", "--sources",
+            "vitibet,bzzoiro,betclan,scoutingstats,zulubet",
+        ],
+    )
+    capture.main()
+    assert [command[2] for command in commands] == phase5_call_sources
+
+
+def test_capture_daily_rejects_phase5_accrual_outside_official_context(
+    monkeypatch, capsys
+):
+    capture = _load_script("phase5_test_capture_daily_nonofficial", "scripts/capture_daily.py")
+    commands: list[list[str]] = []
+    monkeypatch.delenv("EDGE_FACTORY_PHASE5_RUN_CONTEXT", raising=False)
+    monkeypatch.setattr(capture, "reset_recent_state", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(
+        capture.subprocess,
+        "run",
+        lambda command, *, cwd: (commands.append(list(command)) or SimpleNamespace(returncode=0)),
+    )
+    monkeypatch.setattr(
+        sys, "argv",
+        ["capture_daily.py", "--skip-build", "--phase5-shadow", "--sources", "vitibet"],
+    )
+
+    capture.main()
+
+    assert len(commands) == 1
+    assert "--phase5-shadow" not in commands[0]
+    assert "PHASE5_CAPTURE status=skipped_by_mode" in capsys.readouterr().out
+
 
 def test_phase5_opt_in_rejects_a_control_only_capture_plan(monkeypatch):
     capture = _load_script("phase5_test_capture_daily_control", "scripts/capture_daily.py")
+    monkeypatch.setenv("EDGE_FACTORY_PHASE5_RUN_CONTEXT", "official_daily_pipeline")
     monkeypatch.setattr(
         sys,
         "argv",
@@ -168,6 +212,7 @@ def test_retryable_forward_zero_row_is_recorded_as_a_failed_attempt(
         "status": "auth", "http_statuses": [403], "quota_hint": "auth_or_quota"
     }
     monkeypatch.setitem(sys.modules, "edgefactory.sources.vitibet", source)
+    monkeypatch.setenv("EDGE_FACTORY_PHASE5_RUN_CONTEXT", "official_daily_pipeline")
     monkeypatch.setattr(backfill, "LOCALDATA", tmp_path)
     monkeypatch.setattr(
         sys,
@@ -190,6 +235,35 @@ def test_retryable_forward_zero_row_is_recorded_as_a_failed_attempt(
     assert attempt["error_classes"] == ["retryable_zero_row"]
     assert "request_headers" not in attempt
     assert "Authorization" not in json.dumps(attempt)
+
+
+def test_nonofficial_local_backfill_flag_cannot_write_rows_or_failed_attempts(
+    monkeypatch, tmp_path, capsys
+):
+    backfill = _load_script("phase5_test_local_backfill_nonofficial", "scripts/local_backfill.py")
+    source = types.ModuleType("edgefactory.sources.vitibet")
+    source.COLUMNS = ["date", "home", "away", "p1", "px", "p2"]
+    source.fetch_day = lambda day: [{
+        "date": day, "home": "Home FC", "away": "Away FC",
+        "p1": 0.7, "px": 0.2, "p2": 0.1,
+        "kickoff": f"{day}T20:00:00Z",
+    }]
+    monkeypatch.setitem(sys.modules, "edgefactory.sources.vitibet", source)
+    monkeypatch.setattr(backfill, "LOCALDATA", tmp_path)
+    monkeypatch.setenv("EDGE_FACTORY_PHASE5_RUN_CONTEXT", "autonomous_intraday")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "local_backfill.py", "vitibet", "2026-10-07", "2026-10-07",
+            "--max-seconds", "60", "--phase5-shadow", "--capture-day", "2026-10-07",
+        ],
+    )
+
+    backfill.main()
+
+    assert not (tmp_path / phase5_shadow.SHADOW_DIR).exists()
+    assert "PHASE5_CAPTURE status=skipped_by_mode" in capsys.readouterr().out
 
 
 def test_betminer_existing_capture_response_is_persisted_separately_only_when_opted_in(

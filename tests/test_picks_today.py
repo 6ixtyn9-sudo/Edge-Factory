@@ -24,6 +24,7 @@ live in tests/test_auto_tickets_rolling.py.
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -464,14 +465,15 @@ def test_eval_binary_suppresses_fixture_with_cross_source_kickoff_move():
 #    machinery, and it is the reason a label must never be "corrected" here.
 # --------------------------------------------------------------------------
 
-# Certified registry as it stood on 2026-09-24 (thresholds nested: a fixture
-# at 74.3% clears 55, 60, 65 and 70 -- only one of them can own the slot).
+# Frozen-baseline-compatible registry: thresholds are nested, but 70/75 are
+# already risk-reducingly benched in the immutable Phase 5 incumbent. A fixture
+# at 74.3% clears 55, 60 and 65 -- only one of those tiers can own the slot.
 _REGISTRY = {
     "ml-meta avg_p>=55": "certified",
     "ml-meta avg_p>=60": "certified",
     "ml-meta avg_p>=65": "certified",
-    "ml-meta avg_p>=70": "certified",
-    "ml-meta avg_p>=75": "certified",
+    "ml-meta avg_p>=70": "benched",
+    "ml-meta avg_p>=75": "benched",
     "ml-meta avg_p>=80": "certified",
     "2way-unanimous avg_p>=60": "certified",
     "2way-unanimous avg_p>=70": "certified",
@@ -480,27 +482,49 @@ _REGISTRY = {
 
 
 def _registry(monkeypatch, tmp_path, statuses):
-    """Fabricate edges_consensus.json and point the module at it."""
-    edges = [
-        {
+    """Fabricate a frozen-baseline registry and point the module at it."""
+    activation_source = ROOT / "localdata" / "phase5_activation"
+    activation_root = tmp_path / "phase5_activation"
+    activation_root.mkdir(exist_ok=True)
+    for filename in ("active_era.json", "registry.jsonl"):
+        shutil.copy2(activation_source / filename, activation_root / filename)
+    baseline_record = json.loads(
+        (activation_root / "registry.jsonl").read_text().splitlines()[0]
+    )
+    edges = []
+    for frozen_edge in baseline_record["incumbent_cuts"]:
+        edge = dict(frozen_edge)
+        default_status = (
+            "benched" if frozen_edge.get("status") == "certified"
+            else frozen_edge.get("status")
+        )
+        edge["status"] = statuses.get(edge["rule"], default_status)
+        edges.append(edge)
+    for rule, status in statuses.items():
+        if rule.startswith("ml-meta "):
+            continue
+        edges.append({
             "rule": rule,
             "market": "1x2",
             "status": status,
             "train": {"n": 100, "hit": 0.70},
             "valid": {"n": 60, "hit": 0.72, "wilson_lb": 0.60, "roi": 0.20},
-        }
-        for rule, status in statuses.items()
-    ]
+        })
     path = tmp_path / "edges_consensus.json"
-    path.write_text(json.dumps({"edges": edges, "gates": {}, "ml_model": {"model_key": "t"}}))
+    path.write_text(json.dumps({
+        "edges": edges,
+        "gates": {},
+        "ml_model": baseline_record["incumbent_model"],
+    }))
     monkeypatch.setattr(picks_today, "EDGES_PATH", path)
+    monkeypatch.setattr(picks_today, "PHASE5_ACTIVATION_ROOT", activation_root)
     return picks_today.load_thresholds()
 
 
 def test_slot_holds_the_loosest_certified_threshold_per_n_way(monkeypatch, tmp_path):
     t1x2, _ou, _btts, is_fallback = _registry(monkeypatch, tmp_path, _REGISTRY)
     assert not is_fallback, "a registry with certified edges must not take the fallback path"
-    # 3-way: every ml-meta tier competes for one slot and 55 wins it.
+    # 3-way: the verified certified ML-meta tiers share one slot; 55 wins it.
     assert t1x2[3]["rule"] == "ml-meta avg_p>=55"
     assert t1x2[3]["threshold"] == 55.0
     # 2-way: same rule, and it is why a 76.0% leg reads ">=60" on the board.
@@ -510,9 +534,9 @@ def test_slot_holds_the_loosest_certified_threshold_per_n_way(monkeypatch, tmp_p
 
 
 def test_benching_a_tier_that_does_not_own_the_slot_changes_nothing(monkeypatch, tmp_path):
-    """The 2026-09-24 case, executable: two DECAYING tiers benched, no leg moves."""
+    """Benching certified tiers behind the slot owner does not move the floor."""
     before, _, _, _ = _registry(monkeypatch, tmp_path, _REGISTRY)
-    benched = dict(_REGISTRY, **{"ml-meta avg_p>=70": "benched", "ml-meta avg_p>=75": "benched"})
+    benched = dict(_REGISTRY, **{"ml-meta avg_p>=60": "benched", "ml-meta avg_p>=65": "benched"})
     after, _, _, _ = _registry(monkeypatch, tmp_path, benched)
     assert after[3]["rule"] == before[3]["rule"] == "ml-meta avg_p>=55"
     assert after[2]["rule"] == before[2]["rule"]

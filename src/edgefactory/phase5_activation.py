@@ -317,6 +317,17 @@ def _load_state(root: Path | str) -> tuple[list[dict[str, Any]], dict[str, Any],
     return records, baseline, config
 
 
+def load_incumbent_state(root: Path | str) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Return the validated immutable baseline and active config.
+
+    This is a read-only surface for the operational *guard*. It does not
+    resolve or activate a candidate, and it deliberately raises on missing or
+    corrupted Phase 5 state so callers can fail closed.
+    """
+    _records, baseline, config = _load_state(root)
+    return baseline, config
+
+
 def _cut_snapshot(source: dict[str, Any]) -> list[dict[str, Any]]:
     edges = source.get("edges")
     if not isinstance(edges, list):

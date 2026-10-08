@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import stat
 import subprocess
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
@@ -28,6 +29,86 @@ MAX_CAPTURE_GAP_DAYS = 7
 CAPTURE_SUCCESS_FLOOR = 0.95
 PREKICKOFF_FLOOR = 0.99
 FULL_EVAL_INTERVAL_DAYS = 7
+
+
+class Phase5CertifierIsolationError(RuntimeError):
+    """A certifier input/output path crossed the Phase 5 evidence boundary."""
+
+
+def _phase5_shadow_directory(root: Path | str) -> Path:
+    root_path = Path(root).resolve()
+    directory = root_path / "phase5_shadow"
+    if directory.is_symlink():
+        raise Phase5CertifierIsolationError("phase5_shadow directory must not be a symlink")
+    if directory.exists() and not directory.is_dir():
+        raise Phase5CertifierIsolationError("phase5_shadow path must be a directory")
+    resolved = directory.resolve(strict=False)
+    if not resolved.is_relative_to(root_path):
+        raise Phase5CertifierIsolationError("phase5_shadow directory escapes the configured root")
+    return directory
+
+
+def _phase5_shadow_file(root: Path | str, name: str) -> Path:
+    if name not in {"rows.jsonl", "attempts.jsonl", "status.json", "evaluation.json"}:
+        raise Phase5CertifierIsolationError(f"unsupported Phase 5 certifier path: {name}")
+    directory = _phase5_shadow_directory(root)
+    path = directory / name
+    if path.is_symlink():
+        raise Phase5CertifierIsolationError(f"Phase 5 certifier file must not be a symlink: {name}")
+    if path.exists():
+        metadata = path.stat()
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise Phase5CertifierIsolationError(
+                f"Phase 5 certifier file must be a single-link regular file: {name}"
+            )
+    if not path.resolve(strict=False).is_relative_to(directory.resolve(strict=False)):
+        raise Phase5CertifierIsolationError(
+            f"Phase 5 certifier file escapes its evidence directory: {name}"
+        )
+    return path
+
+
+def _validate_findings_path(path: Path | str) -> Path:
+    findings = Path(path)
+    if findings.suffix.lower() != ".md" or not findings.name.casefold().startswith("findings"):
+        raise Phase5CertifierIsolationError(
+            "certifier Findings output must be a Findings*.md document"
+        )
+    for component in (findings, *findings.parents):
+        if component.is_symlink():
+            raise Phase5CertifierIsolationError(
+                "certifier Findings path must not traverse symlinks"
+            )
+    if findings.exists():
+        metadata = findings.stat()
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise Phase5CertifierIsolationError(
+                "certifier Findings output must be a single-link regular file"
+            )
+    return findings
+
+
+def _checked_phase5_artifact_path(path: Path) -> tuple[Path, Path]:
+    if path.name not in {"status.json", "evaluation.json"}:
+        raise Phase5CertifierIsolationError(
+            "certifier may write only its status/evaluation artifacts"
+        )
+    checked = _phase5_shadow_file(path.parent.parent, path.name)
+    temporary = checked.with_suffix(checked.suffix + ".tmp")
+    if temporary.is_symlink():
+        raise Phase5CertifierIsolationError("certifier temporary output must not be a symlink")
+    if temporary.exists():
+        metadata = temporary.stat()
+        if not stat.S_ISREG(metadata.st_mode) or metadata.st_nlink != 1:
+            raise Phase5CertifierIsolationError(
+                "certifier temporary output must be a single-link regular file"
+            )
+    if not temporary.resolve(strict=False).is_relative_to(checked.parent.resolve(strict=False)):
+        raise Phase5CertifierIsolationError(
+            "certifier temporary output escapes its evidence directory"
+        )
+    return checked, temporary
+
 
 # These landmarks are a fail-closed preflight, not a replacement evaluator.
 ERA_EVALUATION_BLOCKERS = (
@@ -483,13 +564,14 @@ def build_daily_status(
 
 
 def _atomic_json(path: Path, value: dict[str, Any]) -> None:
+    path, temporary = _checked_phase5_artifact_path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     os.replace(temporary, path)
 
 
 def _append_findings(path: Path, status: dict[str, Any]) -> None:
+    path = _validate_findings_path(path)
     statuses = ", ".join(
         f"C{clause}={detail['status']}" for clause, detail in status["clauses"].items()
     )
@@ -526,16 +608,16 @@ def update_status(
     findings_path: Path,
     stage_findings: bool = False,
 ) -> dict[str, Any]:
-    directory = root / "phase5_shadow"
-    rows, malformed_rows = _read_jsonl(directory / "rows.jsonl")
-    attempts, malformed_attempts = _read_jsonl(directory / "attempts.jsonl")
+    findings_path = _validate_findings_path(findings_path)
+    rows, malformed_rows = _read_jsonl(_phase5_shadow_file(root, "rows.jsonl"))
+    attempts, malformed_attempts = _read_jsonl(_phase5_shadow_file(root, "attempts.jsonl"))
     status = build_daily_status(
         rows, attempts, as_of=as_of,
         malformed_rows=malformed_rows,
         malformed_attempts=malformed_attempts,
     )
-    status_path = directory / "status.json"
-    evaluation_path = directory / "evaluation.json"
+    status_path = _phase5_shadow_file(root, "status.json")
+    evaluation_path = _phase5_shadow_file(root, "evaluation.json")
     try:
         previous = json.loads(status_path.read_text(encoding="utf-8"))
         previous_signature = previous.get("status_signature")

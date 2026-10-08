@@ -715,6 +715,7 @@ def generate_forecast_report(target_date: str, flabel: str, picks: list[dict[str
 
 def promote_forecast(forecast_arg: str, default_date: str) -> None:
     """Deliberately promote a non-official forecast JSON to become the official record."""
+    report_phase5_capture_status("manual_forecast_promotion")
     path = Path(forecast_arg)
     if not path.exists():
         candidates = [
@@ -868,6 +869,50 @@ def get_qualitative_hour_label() -> str:
     return "morning"
 
 
+def phase5_capture_command(mode: str, *, picks_only: bool = False) -> str | None:
+    """Return the authorized sidecar invocation only for a full official run."""
+    if mode != "official" or picks_only:
+        return None
+    return (
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline "
+        "python3 scripts/capture_daily.py --skip-build --phase5-shadow "
+        "--source-group forebet-resilience"
+    )
+
+
+def phase5_capture_skip_reason(mode: str, *, picks_only: bool = False) -> str | None:
+    """Explain why a selected orchestrator mode is not a Phase 5 capture day."""
+    if mode == "official" and not picks_only:
+        return None
+    if mode == "official" and picks_only:
+        return "picks_only run skips the authorized full daily capture"
+    reasons = {
+        "autonomous_intraday": "intraday recapture is non-authorized for Phase 5 accrual",
+        "forecast": "forecast refresh is non-official research mode",
+        "clv_only": "CLV-only mode does not run the authorized daily capture",
+        "manual_forecast_promotion": "manual forecast promotion is not authorized daily capture work",
+    }
+    return reasons.get(mode, "mode is not the full official daily pipeline")
+
+
+def report_phase5_capture_status(
+    mode: str,
+    *,
+    executed: bool = False,
+    picks_only: bool = False,
+) -> None:
+    if executed:
+        print(
+            "PHASE5_CAPTURE status=executed mode=official "
+            "reason=authorized_responses_observed_in_existing_jobs "
+            "additional_provider_calls=false"
+        )
+        return
+    reason = phase5_capture_skip_reason(mode, picks_only=picks_only)
+    if reason is not None:
+        print(f"PHASE5_CAPTURE status=skipped_by_mode mode={mode} reason={reason}")
+
+
 def run_pipeline(
     target_date: str,
     mode: str,  # "official", "autonomous_intraday", "forecast", "clv_only"
@@ -879,6 +924,7 @@ def run_pipeline(
     clv_label: str | None = None,
 ) -> None:
     """Execute the pipeline according to the requested operational mode."""
+    report_phase5_capture_status(mode, picks_only=picks_only)
     sync_repo_state()
     # Keep the committed state bounded (GitHub lists at most 1,000 entries per
     # directory). Runs before this pipeline writes anything and therefore
@@ -918,12 +964,14 @@ def run_pipeline(
             # Forebet's Browser Run path is parked after an upstream 403 HTML
             # response. Capture every resilient source and let individual
             # adapter failures remain retryable without starving the rebuild.
+            phase5_command = phase5_capture_command(mode, picks_only=picks_only)
+            if phase5_command is None:
+                raise RuntimeError("full official pipeline lost its authorized Phase 5 capture route")
             run(
-                "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline "
-                "python3 scripts/capture_daily.py --skip-build --phase5-shadow "
-                "--source-group forebet-resilience",
+                phase5_command,
                 "capture_daily (non-Forebet D30 resilience pass)",
             )
+            report_phase5_capture_status(mode, executed=True)
             # B1 is runner-only: it owns its append-only ledger and bounded
             # source budgets, so workflow YAML does not need a second job.
             run_soft(

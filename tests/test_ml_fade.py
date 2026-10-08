@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import gzip
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -499,15 +500,26 @@ def test_serve_fade_fires_without_parent_rule_firing(served):
 
 
 def test_loader_takes_only_certified_fade_rules(tmp_path, monkeypatch):
-    registry = {"edges": [
-        {"rule": "ml-fade avg_p>=55", "status": "certified"},
-        {"rule": "ml-fade avg_p>=60", "status": "candidate"},
-        {"rule": "ml-fade avg_p>=65", "status": "benched"},
-        {"rule": "ml-meta avg_p>=55", "status": "certified"},
-    ]}
+    activation_source = ROOT / "localdata" / "phase5_activation"
+    activation_root = tmp_path / "phase5_activation"
+    activation_root.mkdir()
+    for filename in ("active_era.json", "registry.jsonl"):
+        shutil.copy2(activation_source / filename, activation_root / filename)
+    baseline_record = json.loads(
+        (activation_root / "registry.jsonl").read_text().splitlines()[0]
+    )
+    registry = {
+        "ml_model": baseline_record["incumbent_model"],
+        "edges": baseline_record["incumbent_cuts"] + [
+            {"rule": "ml-fade avg_p>=55", "status": "certified"},
+            {"rule": "ml-fade avg_p>=60", "status": "candidate"},
+            {"rule": "ml-fade avg_p>=65", "status": "benched"},
+        ],
+    }
     path = tmp_path / "edges_consensus.json"
     path.write_text(json.dumps(registry))
     monkeypatch.setattr(pt, "EDGES_PATH", path)
+    monkeypatch.setattr(pt, "PHASE5_ACTIVATION_ROOT", activation_root)
     rules = pt.load_ml_fade_rules()
     assert [r["rule"] for r in rules] == ["ml-fade avg_p>=55"]
 
