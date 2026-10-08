@@ -109,12 +109,21 @@ def main():
     if "--max-seconds" in sys.argv:
         max_seconds = int(sys.argv[sys.argv.index("--max-seconds") + 1])
     # --workers is accepted for compatibility with capture_daily, ignored (single-process)
-    phase5_capture = "--phase5-shadow" in sys.argv[4:]
+    phase5_requested = "--phase5-shadow" in sys.argv[4:]
     phase5_capture_day = None
     phase5_started_at = None
     phase5_capture_context = os.environ.get(
         "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
     )
+    phase5_capture = (
+        phase5_requested
+        and phase5_capture_context == "official_daily_pipeline"
+    )
+    if phase5_requested and not phase5_capture:
+        print(
+            "PHASE5_CAPTURE status=skipped_by_mode "
+            f"reason=official_daily_pipeline_required context={phase5_capture_context}"
+        )
 
     sys.path.insert(0, str(ROOT / "src"))
     if phase5_capture:

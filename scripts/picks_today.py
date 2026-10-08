@@ -86,11 +86,13 @@ from edgefactory.source_health import (
     zero_row_reason,
 )
 from edgefactory.shadow import append_price_board_rows, read_shadow_rows
+from edgefactory.phase5_registry_guard import inspect_operational_registry
 from edgefactory import price_sources as psrc
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
 LOCALDATA = ROOT / "localdata"
+PHASE5_ACTIVATION_ROOT = LOCALDATA / "phase5_activation"
 BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
@@ -1202,10 +1204,27 @@ def _prefer_entry(new: dict, old: dict | None) -> bool:
 def load_thresholds():
     edges = []
     try:
-        data = json.loads(EDGES_PATH.read_text())
+        data = json.loads(EDGES_PATH.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("registry must be an object")
         edges = [e for e in data.get("edges", [])
-                 if e.get("status") == "certified"]
-    except (OSError, json.JSONDecodeError, AttributeError):
+                 if isinstance(e, dict) and e.get("status") == "certified"]
+        if any(
+            str(edge.get("rule", "")).lower().startswith("ml-meta ")
+            for edge in edges
+        ):
+            guard = inspect_operational_registry(data, PHASE5_ACTIVATION_ROOT)
+            if not guard["ok"]:
+                edges = [
+                    edge for edge in edges
+                    if not str(edge.get("rule", "")).lower().startswith("ml-meta ")
+                ]
+                print(
+                    "PHASE5_REGISTRY_GUARD ML_META_RULES_BLOCKED "
+                    f"model_key={guard.get('model_key') or 'missing'} reason={guard['reason']}",
+                    file=sys.stderr,
+                )
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError, TypeError, AttributeError):
         edges = []
 
     if not edges:
@@ -1296,33 +1315,57 @@ def ml_meta_contract_breaches(picks: list[dict]) -> list[dict]:
     return out
 
 
-def load_ml_rules_and_model() -> tuple[list[dict], dict | None]:
+def _read_guarded_ml_registry() -> dict | None:
     try:
-        data = json.loads(EDGES_PATH.read_text())
-        edges = data.get("edges", [])
-        rules = [e for e in edges if e.get("status") == "certified" and "ml-meta" in e.get("rule", "")]
-        model = data.get("ml_model")
-        return rules, model
-    except Exception:
+        data = json.loads(EDGES_PATH.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return None
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+
+    guard = inspect_operational_registry(data, PHASE5_ACTIVATION_ROOT)
+    if not guard["ok"]:
+        print(
+            "PHASE5_REGISTRY_GUARD ML_EMISSION_BLOCKED "
+            f"model_key={guard.get('model_key') or 'missing'} reason={guard['reason']}",
+            file=sys.stderr,
+        )
+        return None
+    return data
+
+
+def load_ml_rules_and_model() -> tuple[list[dict], dict | None]:
+    data = _read_guarded_ml_registry()
+    if data is None:
         return [], None
+    edges = data.get("edges", [])
+    rules = [
+        edge for edge in edges
+        if isinstance(edge, dict)
+        and edge.get("status") == "certified"
+        and str(edge.get("rule", "")).lower().startswith("ml-meta ")
+    ]
+    model = data.get("ml_model")
+    return rules, model if isinstance(model, dict) else None
 
 
 def load_ml_fade_rules() -> list[dict]:
-    """Certified ml-fade rules from the same registry the ml-meta family reads.
+    """Read certified fade cuts only when the same frozen incumbent verifies.
 
-    ml-fade rules are their own family (derived inverse of ml-meta selections)
-    so they are matched by exact family prefix, and carry their own
-    walk-forward certification — a fade row may only be emitted from a rule
-    the miner certified and the decay monitor has not benched.
+    The legacy miner may not rewrite ``ml-fade`` entries either; its writer
+    carries their existing state forward. A model/baseline mismatch blocks both
+    ML rule families so neither can use a retrained payload at pick time.
     """
-    try:
-        data = json.loads(EDGES_PATH.read_text())
-        edges = data.get("edges", [])
-        return [e for e in edges
-                if e.get("status") == "certified"
-                and str(e.get("rule", "")).startswith(f"{FADE_FAMILY} ")]
-    except Exception:
+    data = _read_guarded_ml_registry()
+    if data is None:
         return []
+    edges = data.get("edges", [])
+    return [
+        edge for edge in edges
+        if isinstance(edge, dict)
+        and edge.get("status") == "certified"
+        and str(edge.get("rule", "")).startswith(f"{FADE_FAMILY} ")
+    ]
 
 
 def get_rolling_hit_rate_last_14d(target_date_str: str) -> float:
@@ -3296,9 +3339,20 @@ def _record_phase5_betminer_capture(
     error_class: str | None = None,
 ) -> None:
     """Piggyback the existing BetMiner response into the isolated Phase 5 ledger."""
-    if os.environ.get("EDGE_FACTORY_PHASE5_SHADOW", "").strip().lower() not in {
+    phase5_enabled = os.environ.get("EDGE_FACTORY_PHASE5_SHADOW", "").strip().lower() in {
         "1", "true", "yes", "on",
-    }:
+    }
+    phase5_context = os.environ.get(
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+    )
+    if not phase5_enabled:
+        return
+    if phase5_context != "official_daily_pipeline":
+        print(
+            "PHASE5_CAPTURE status=skipped_by_mode source=betminer "
+            f"reason=official_daily_pipeline_required context={phase5_context}",
+            file=sys.stderr,
+        )
         return
     try:
         from edgefactory.phase5_shadow import (

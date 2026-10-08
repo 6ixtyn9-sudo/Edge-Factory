@@ -47,6 +47,111 @@ def test_run_smart_auto_forecast_archive_without_marker_runs_heavy(
         assert any("edge_firing_tripwire.py" in call.args[0] for call in mock_run_soft.call_args_list)
 
 
+def test_manual_auto_once_resolves_to_intraday_and_skips_phase5(monkeypatch):
+    archive = MagicMock()
+    archive.exists.return_value = True
+    marker = MagicMock()
+    marker.exists.return_value = True
+    monkeypatch.setattr(daily, "archived_picks_file", lambda _day: archive)
+    monkeypatch.setattr(daily, "official_run_marker_file", lambda _day: marker)
+    monkeypatch.setattr(daily, "run_pipeline", MagicMock())
+    monkeypatch.setattr(daily, "run_soft", MagicMock())
+    monkeypatch.setattr(daily.sys, "argv", ["daily.py", "--auto-once"])
+
+    with patch("daily.datetime") as mock_dt:
+        mock_dt.now.return_value.strftime.side_effect = (
+            lambda fmt: "2026-10-08" if "%Y" in fmt else "1100"
+        )
+        mock_dt.now.return_value.hour = 11
+        daily.main()
+
+    daily.run_pipeline.assert_called_once()
+    assert daily.run_pipeline.call_args.kwargs["mode"] == "autonomous_intraday"
+    assert daily.phase5_capture_command("autonomous_intraday") is None
+    assert "intraday" in daily.phase5_capture_skip_reason("autonomous_intraday")
+
+
+def test_full_official_pipeline_runs_authorized_sidecar_and_status_receipt(
+    monkeypatch, tmp_path, capsys
+):
+    calls: list[tuple[str, str | None]] = []
+    finalize_routes: list[bool] = []
+    picks_file = tmp_path / "picks_today.json"
+    marker = tmp_path / "official_run_2026-10-08.json"
+    monkeypatch.setattr(daily, "sync_repo_state", lambda: None)
+    monkeypatch.setattr(daily, "run_soft", lambda cmd, label=None: calls.append((cmd, label)))
+
+    def fake_run(cmd, label=None):
+        calls.append((cmd, label))
+        if "picks_today.py" in cmd:
+            picks_file.write_text("[]", encoding="utf-8")
+
+    monkeypatch.setattr(daily, "run", fake_run)
+    monkeypatch.setattr(daily, "PICKS_TODAY_FILE", picks_file)
+    monkeypatch.setattr(daily, "archived_picks_file", lambda _day: tmp_path / "picks_2026-10-08.json")
+    monkeypatch.setattr(daily, "official_run_marker_file", lambda _day: marker)
+    monkeypatch.setattr(daily, "get_build_entity_registry_cmd", lambda: "mock build_entity_registry")
+    monkeypatch.setattr(
+        daily,
+        "finalize_priced_candidate_slate",
+        lambda _day, *, phase5_shadow=False: (finalize_routes.append(phase5_shadow) or "2026-10-08T07:00:00+02:00"),
+    )
+    monkeypatch.setattr(daily, "archive_picks_by_kickoff", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "load_picks_file", lambda: [])
+    monkeypatch.setattr(daily, "save_morning_baseline", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "generate_daily_report", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "run_future_planner", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "restore_target_picks", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "sync_official_archive", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "_notify", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "mark_official_run_complete", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "ml_fade_research_maintenance", lambda *_args, **_kwargs: None)
+
+    daily.run_pipeline("2026-10-08", mode="official", future_days=2, picks_only=False)
+
+    capture_commands = [cmd for cmd, _label in calls if "capture_daily.py" in cmd]
+    assert len(capture_commands) == 1
+    assert "--phase5-shadow" in capture_commands[0]
+    assert "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline" in capture_commands[0]
+    assert finalize_routes == [True]
+    assert any("scripts/phase5_certify.py" in cmd for cmd, _label in calls)
+    assert "PHASE5_CAPTURE status=executed mode=official" in capsys.readouterr().out
+
+
+def test_manual_forecast_promotion_reports_phase5_skip(
+    monkeypatch, tmp_path, capsys
+):
+    forecast = tmp_path / "forecast.json"
+    forecast.write_text("[]", encoding="utf-8")
+    archive = tmp_path / "official.json"
+    live = tmp_path / "picks_today.json"
+    monkeypatch.setattr(daily, "archived_picks_file", lambda _day: archive)
+    monkeypatch.setattr(daily, "PICKS_TODAY_FILE", live)
+    monkeypatch.setattr(daily, "generate_daily_report", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(daily, "run_soft", lambda *_args, **_kwargs: None)
+
+    daily.promote_forecast(str(forecast), "2026-10-08")
+
+    output = capsys.readouterr().out
+    assert "status=skipped_by_mode mode=manual_forecast_promotion" in output
+    assert "not authorized daily capture work" in output
+
+
+def test_capture_route_is_full_official_only_and_forecast_has_distinct_reason(capsys):
+    command = daily.phase5_capture_command("official")
+    assert command is not None
+    assert "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline" in command
+    assert "--phase5-shadow" in command
+    assert daily.phase5_capture_command("official", picks_only=True) is None
+    assert daily.phase5_capture_command("forecast") is None
+    assert daily.phase5_capture_command("autonomous_intraday") is None
+
+    daily.report_phase5_capture_status("forecast")
+    forecast_line = capsys.readouterr().out.strip()
+    assert "status=skipped_by_mode mode=forecast" in forecast_line
+    assert "forecast" in forecast_line
+
+
 @patch("daily.run_soft")
 @patch("daily.run_pipeline")
 @patch("daily.official_run_marker_file")

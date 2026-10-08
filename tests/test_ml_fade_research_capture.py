@@ -17,6 +17,7 @@ Contracts pinned here:
 from __future__ import annotations
 
 import json
+import shutil
 import sys
 from pathlib import Path
 
@@ -71,18 +72,32 @@ def _eval_data(key: str = "alpha-beta") -> dict:
 
 @pytest.fixture
 def no_certified_ml_rules(monkeypatch, tmp_path):
-    """A registry with a serving model but ZERO certified ml rules.
+    """A verified incumbent with every certified cut risk-reducingly benched.
 
-    Patched at the registry FILE seam (EDGES_PATH), exactly like the worst
-    realistic future: every ml-meta/ml-fade rule benched while the ml_model
-    payload still exists. Then load_ml_rules_and_model -> ([], model),
-    load_ml_fade_rules -> [], load_thresholds -> fallback thresholds, and no
-    operational ml pick may be emitted — yet research capture MUST keep
-    working.
+    The live model still verifies against the immutable baseline, so serve-time
+    research capture remains available while no certified ML rule may emit.
     """
+    activation_source = ROOT / "localdata" / "phase5_activation"
+    activation_root = tmp_path / "phase5_activation"
+    activation_root.mkdir()
+    for filename in ("active_era.json", "registry.jsonl"):
+        shutil.copy2(activation_source / filename, activation_root / filename)
+    baseline_record = json.loads(
+        (activation_root / "registry.jsonl").read_text().splitlines()[0]
+    )
+    edges = []
+    for baseline_edge in baseline_record["incumbent_cuts"]:
+        edge = dict(baseline_edge)
+        if edge.get("status") == "certified":
+            edge["status"] = "benched"
+        edges.append(edge)
     empty_reg = tmp_path / "edges_consensus.json"
-    empty_reg.write_text(json.dumps({"edges": [], "ml_model": dict(FAKE_MODEL)}))
+    empty_reg.write_text(json.dumps({
+        "edges": edges,
+        "ml_model": baseline_record["incumbent_model"],
+    }))
     monkeypatch.setattr(pt, "EDGES_PATH", empty_reg)
+    monkeypatch.setattr(pt, "PHASE5_ACTIVATION_ROOT", activation_root)
     return pt
 
 

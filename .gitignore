@@ -129,7 +129,7 @@ dist/
 
 # Phase 5 evidence and activation state use the existing localdata persistence path.
 # Keep append-only ledgers/registry plus compact config, verdict, and receipt artefacts durable.
-# No workflow edits are needed.
+# The daily workflow unions append-only evidence across cache/rebase races and uploads a recovery artifact.
 !localdata/phase5_shadow/
 !localdata/phase5_shadow/rows.jsonl
 !localdata/phase5_shadow/attempts.jsonl
@@ -139,6 +139,9 @@ dist/
 !localdata/phase5_activation/active_era.json
 !localdata/phase5_activation/registry.jsonl
 !localdata/phase5_activation/mutation_receipts.jsonl
+!localdata/phase5_reconciliation/
+!localdata/phase5_reconciliation/**
+!localdata/scored_candidate_shadow_*.jsonl
 
 # ML-fade research capture ledger + checkpoint state + checkpoint REPORTS
 # (bot-owned, tracked so certification-independent evidence survives cache

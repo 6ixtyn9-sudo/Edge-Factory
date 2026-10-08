@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from datetime import date, timedelta
@@ -171,7 +172,18 @@ def main() -> None:
 
     jobs = [job for job in JOBS if selected is None or job[0] in selected]
     phase5_capture_day = None
-    if args.phase5_shadow:
+    phase5_context = os.environ.get(
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+    )
+    phase5_authorized = (
+        args.phase5_shadow and phase5_context == "official_daily_pipeline"
+    )
+    if args.phase5_shadow and not phase5_authorized:
+        print(
+            "PHASE5_CAPTURE status=skipped_by_mode "
+            f"reason=official_daily_pipeline_required context={phase5_context}"
+        )
+    if phase5_authorized:
         if not any(source in PHASE5_BACKFILL_SOURCES for source, _start, _end in jobs):
             ap.error("--phase5-shadow requires an authorized backfill source in the selected jobs")
         sys.path.insert(0, str(ROOT / "src"))
@@ -201,7 +213,7 @@ def main() -> None:
             "--workers",
             "4",
         ]
-        if args.phase5_shadow and source in PHASE5_BACKFILL_SOURCES:
+        if phase5_authorized and source in PHASE5_BACKFILL_SOURCES:
             cmd.extend(["--phase5-shadow", "--capture-day", phase5_capture_day])
         print(f"\n=== {source} {start}..{end} ===", flush=True)
         rc = subprocess.run(cmd, cwd=ROOT).returncode
