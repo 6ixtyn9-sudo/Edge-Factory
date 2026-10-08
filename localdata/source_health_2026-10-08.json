@@ -44,19 +44,18 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 5,
+      "be_matched": 4,
       "be_raw": 12,
-      "be_usable": 9,
+      "be_usable": 12,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 3,
+      "join_matched_rows": 2,
       "join_miss_counts": {
-        "fixture_key_miss": 2,
-        "no_pick_for_fixture": 4
+        "fixture_key_miss": 10
       },
       "reason": null,
       "status": "cache_only"
@@ -140,7 +139,7 @@
       "status": null
     },
     "futbolpronosticos": {
-      "blocker": "settled-count coverage mismatch: {'captured': 79, 'settled': 2, 'unmatched': 77, 'mismatch': True, 'settlement_source': 'existing warehouse-score backfill'}",
+      "blocker": "settled-count coverage mismatch: {'captured': 79, 'settled': 3, 'unmatched': 76, 'mismatch': True, 'settlement_source': 'existing warehouse-score backfill'}",
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
@@ -187,10 +186,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 2101,
+        "event_count": 2178,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 2101,
+        "events_with_teams": 2178,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -248,7 +247,7 @@
         "board_rows": 0,
         "board_team_count": 0,
         "board_team_names": {},
-        "card_fixture_count": 6,
+        "card_fixture_count": 7,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,

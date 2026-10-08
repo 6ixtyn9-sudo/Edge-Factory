@@ -16,6 +16,8 @@ from typing import Any
 from edgefactory.ml_fade_research import model_key
 from edgefactory.phase5_activation import (
     Phase5ActivationError,
+    _read_registry,
+    _resolve_from_config,
     load_incumbent_state,
 )
 
@@ -83,31 +85,66 @@ def inspect_operational_registry(
         "model_key": model_key(registry.get("ml_model")),
         "reason": None,
     }
+    # NOTE: the module docstring's "never replace the live incumbent" invariant
+    # is about the MINER. An era activated through the Phase 5 gate is a
+    # deliberate, audited replacement, and this function verifies the live
+    # registry against whichever era is active — incumbent while dormant or
+    # killed, the activated candidate otherwise.
     try:
         baseline, config = load_incumbent_state(activation_root)
     except (Phase5ActivationError, OSError, ValueError, TypeError) as exc:
         report["reason"] = f"immutable Phase 5 state unavailable: {exc}"
         return report
 
-    if config.get("mode") != "incumbent" or config.get("kill_switch") is not False:
-        report["reason"] = "active Phase 5 mode is not the dormant incumbent"
+    # The expectation follows the EFFECTIVE era, not the configured one: the
+    # kill switch reverts the resolver to the incumbent while the config still
+    # names the candidate, and revert_to_incumbent does the same deliberately.
+    try:
+        effective = _resolve_from_config(config, baseline, _read_registry(activation_root))
+    except (Phase5ActivationError, OSError, ValueError, TypeError) as exc:
+        report["reason"] = f"effective era could not be resolved: {exc}"
         return report
-    expected_key = baseline.get("incumbent_model_key")
+    if effective.get("effective_model_key") == baseline.get("incumbent_model_key"):
+        expected_key = baseline.get("incumbent_model_key")
+        expected_cuts_sha = baseline.get("incumbent_cuts_sha256")
+        expected_cuts = baseline.get("incumbent_cuts")
+        expected_label = "frozen incumbent"
+    elif config.get("mode") == "candidate" and config.get("kill_switch") is False:
+        # An ACTIVATED era becomes the expected live state; the frozen
+        # incumbent baseline remains immutable history. Promotion is the only
+        # writer that can put a candidate here, and it runs this same check on
+        # the payload before writing — so the registry and the active config
+        # cannot silently disagree about which model is live.
+        expected_key = config.get("active_model_key")
+        expected_cuts_sha = config.get("active_cuts_sha256")
+        expected_cuts = config.get("candidate_cuts")
+        expected_label = f"activated era {config.get('era_id') or '?'}"
+    else:
+        report["reason"] = (
+            "effective Phase 5 era is neither the incumbent nor an activated "
+            f"candidate (mode={config.get('mode')!r})"
+        )
+        return report
     if (
         not isinstance(registry.get("ml_model"), dict)
         or report["model_key"] != expected_key
-        or config.get("active_model_key") != expected_key
-        or config.get("active_cuts_sha256") != baseline.get("incumbent_cuts_sha256")
     ):
         report["reason"] = (
             f"live model_key {report['model_key'] or 'missing'} does not match "
-            f"frozen incumbent {expected_key or 'missing'}"
+            f"{expected_label} {expected_key or 'missing'}"
         )
         return report
+    if expected_label != "frozen incumbent" and (
+        config.get("active_cuts_sha256") != expected_cuts_sha
+    ):
+        # The configured cut digest must describe the cut set the live
+        # registry is being held to. (While dormant or killed the config may
+        # still name a candidate's digest — the effective era is the baseline,
+        # and the cut-set comparison below is what holds the line.)
+        report["reason"] = "configured active cuts digest does not match the candidate cuts"
+        return report
 
-    expected_edges, expected_error = _edge_map(
-        baseline.get("incumbent_cuts"), prefixes=("ml-meta",)
-    )
+    expected_edges, expected_error = _edge_map(expected_cuts, prefixes=("ml-meta",))
     live_edges, live_error = _edge_map(
         registry.get("edges"), prefixes=("ml-meta",)
     )
@@ -132,7 +169,7 @@ def inspect_operational_registry(
             )
             return report
 
-    report.update({"ok": True, "reason": "frozen incumbent model/cuts verified"})
+    report.update({"ok": True, "reason": f"{expected_label} model/cuts verified"})
     return report
 
 
