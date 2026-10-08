@@ -2,497 +2,6 @@
   "edges": [
     {
       "market": "1x2",
-      "rule": "ml-meta avg_p>=55",
-      "sport": "soccer",
-      "status": "certified",
-      "train": {
-        "avg_odds": 1.94,
-        "hit": 0.6892,
-        "n": 4549,
-        "n_priced": 4412,
-        "roi": 0.3161,
-        "wilson_lb": 0.6756,
-        "wins": 3135
-      },
-      "valid": {
-        "avg_odds": 1.905,
-        "hit": 0.7197,
-        "n": 2665,
-        "n_priced": 2521,
-        "roi": 0.3323,
-        "wilson_lb": 0.7023,
-        "wins": 1918
-      },
-      "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 55",
-      "decay": {
-        "verdict": "HEALTHY",
-        "window_days": 30,
-        "checked_at": "2026-10-08",
-        "recent": {
-          "n": 101,
-          "wins": 72,
-          "hit": 0.7129,
-          "wilson_lb": 0.6181,
-          "roi": 0.5524
-        },
-        "baseline_lb": 0.7023,
-        "recent_lb": 0.6181,
-        "recent_ub": 0.792
-      }
-    },
-    {
-      "market": "1x2",
-      "rule": "ml-meta avg_p>=60",
-      "sport": "soccer",
-      "status": "certified",
-      "train": {
-        "avg_odds": 1.868,
-        "hit": 0.7312,
-        "n": 3453,
-        "n_priced": 3344,
-        "roi": 0.357,
-        "wilson_lb": 0.7162,
-        "wins": 2525
-      },
-      "valid": {
-        "avg_odds": 1.829,
-        "hit": 0.754,
-        "n": 2077,
-        "n_priced": 1963,
-        "roi": 0.345,
-        "wilson_lb": 0.735,
-        "wins": 1566
-      },
-      "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 60",
-      "decay": {
-        "verdict": "HEALTHY",
-        "window_days": 30,
-        "checked_at": "2026-10-08",
-        "recent": {
-          "n": 82,
-          "wins": 62,
-          "hit": 0.7561,
-          "wilson_lb": 0.6531,
-          "roi": 0.5616
-        },
-        "baseline_lb": 0.7354,
-        "recent_lb": 0.6531,
-        "recent_ub": 0.8362
-      }
-    },
-    {
-      "market": "1x2",
-      "rule": "ml-meta avg_p>=65",
-      "sport": "soccer",
-      "status": "certified",
-      "train": {
-        "avg_odds": 1.817,
-        "hit": 0.7756,
-        "n": 2473,
-        "n_priced": 2391,
-        "roi": 0.4136,
-        "wilson_lb": 0.7587,
-        "wins": 1918
-      },
-      "valid": {
-        "avg_odds": 1.777,
-        "hit": 0.7969,
-        "n": 1526,
-        "n_priced": 1441,
-        "roi": 0.3812,
-        "wilson_lb": 0.7759,
-        "wins": 1216
-      },
-      "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 65",
-      "decay": {
-        "verdict": "HEALTHY",
-        "window_days": 30,
-        "checked_at": "2026-10-08",
-        "recent": {
-          "n": 63,
-          "wins": 50,
-          "hit": 0.7937,
-          "wilson_lb": 0.6783,
-          "roi": 0.6367
-        },
-        "baseline_lb": 0.7765,
-        "recent_lb": 0.6783,
-        "recent_ub": 0.8752
-      }
-    },
-    {
-      "market": "1x2",
-      "rule": "ml-meta avg_p>=70",
-      "sport": "soccer",
-      "status": "benched",
-      "train": {
-        "avg_odds": 1.763,
-        "hit": 0.8118,
-        "n": 1679,
-        "n_priced": 1615,
-        "roi": 0.4519,
-        "wilson_lb": 0.7924,
-        "wins": 1363
-      },
-      "valid": {
-        "avg_odds": 1.705,
-        "hit": 0.8456,
-        "n": 1056,
-        "n_priced": 993,
-        "roi": 0.426,
-        "wilson_lb": 0.8226,
-        "wins": 893
-      },
-      "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 70",
-      "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
-        "checked_at": "2026-10-08",
-        "recent": {
-          "n": 42,
-          "wins": 33,
-          "hit": 0.7857,
-          "wilson_lb": 0.6406,
-          "roi": 0.5552
-        },
-        "baseline_lb": 0.8218,
-        "recent_lb": 0.6406,
-        "recent_ub": 0.8829
-      },
-      "benched_at": "2026-10-08"
-    },
-    {
-      "market": "1x2",
-      "rule": "ml-meta avg_p>=75",
-      "sport": "soccer",
-      "status": "benched",
-      "train": {
-        "avg_odds": 1.744,
-        "hit": 0.8565,
-        "n": 1059,
-        "n_priced": 1013,
-        "roi": 0.5115,
-        "wilson_lb": 0.8341,
-        "wins": 907
-      },
-      "valid": {
-        "avg_odds": 1.631,
-        "hit": 0.8737,
-        "n": 689,
-        "n_priced": 648,
-        "roi": 0.3937,
-        "wilson_lb": 0.8468,
-        "wins": 602
-      },
-      "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 75",
-      "decay": {
-        "verdict": "DECAYING",
-        "window_days": 30,
-        "checked_at": "2026-10-08",
-        "recent": {
-          "n": 29,
-          "wins": 23,
-          "hit": 0.7931,
-          "wilson_lb": 0.6161,
-          "roi": 0.3948
-        },
-        "baseline_lb": 0.8466,
-        "recent_lb": 0.6161,
-        "recent_ub": 0.9015
-      },
-      "benched_at": "2026-10-08"
-    },
-    {
-      "market": "1x2",
-      "rule": "ml-meta avg_p>=80",
-      "sport": "soccer",
-      "status": "certified",
-      "train": {
-        "avg_odds": 1.805,
-        "hit": 0.9044,
-        "n": 617,
-        "n_priced": 585,
-        "roi": 0.6656,
-        "wilson_lb": 0.8786,
-        "wins": 558
-      },
-      "valid": {
-        "avg_odds": 1.569,
-        "hit": 0.9149,
-        "n": 376,
-        "n_priced": 351,
-        "roi": 0.3881,
-        "wilson_lb": 0.8823,
-        "wins": 344
-      },
-      "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 80",
-      "decay": {
-        "verdict": "WATCH",
-        "window_days": 30,
-        "checked_at": "2026-10-08",
-        "recent": {
-          "n": 20,
-          "wins": 18,
-          "hit": 0.9,
-          "wilson_lb": 0.699,
-          "roi": 0.561
-        },
-        "baseline_lb": 0.882,
-        "recent_lb": 0.699,
-        "recent_ub": 0.9721
-      }
-    },
-    {
-      "market": "1x2",
-      "rule": "ml-meta avg_p>=85",
-      "sport": "soccer",
-      "status": "candidate",
-      "train": {
-        "avg_odds": 2.013,
-        "hit": 0.9492,
-        "n": 315,
-        "n_priced": 295,
-        "roi": 0.9463,
-        "wilson_lb": 0.9191,
-        "wins": 299
-      },
-      "valid": {
-        "avg_odds": 1.458,
-        "hit": 0.9355,
-        "n": 186,
-        "n_priced": 173,
-        "roi": 0.3188,
-        "wilson_lb": 0.8906,
-        "wins": 174
-      },
-      "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 85"
-    },
-    {
-      "derivation": "inverse-selection",
-      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
-      "edge_family": "ml-fade",
-      "market": "1x2",
-      "parent_family": "ml-meta",
-      "parent_rule": "ml-meta avg_p>=55",
-      "rule": "ml-fade avg_p>=55",
-      "sport": "soccer",
-      "status": "candidate",
-      "train": {
-        "avg_odds": 7.544,
-        "hit": 0.1389,
-        "n": 4520,
-        "n_priced": 4383,
-        "roi": -0.253,
-        "wilson_lb": 0.1292,
-        "wins": 628
-      },
-      "valid": {
-        "avg_odds": 8.419,
-        "hit": 0.1162,
-        "n": 2643,
-        "n_priced": 2503,
-        "roi": -0.3825,
-        "wilson_lb": 0.1045,
-        "wins": 307
-      },
-      "view": "ml_fade_settled",
-      "where": "ml_p*100 >= 55"
-    },
-    {
-      "derivation": "inverse-selection",
-      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
-      "edge_family": "ml-fade",
-      "market": "1x2",
-      "parent_family": "ml-meta",
-      "parent_rule": "ml-meta avg_p>=60",
-      "rule": "ml-fade avg_p>=60",
-      "sport": "soccer",
-      "status": "candidate",
-      "train": {
-        "avg_odds": 8.383,
-        "hit": 0.1184,
-        "n": 3437,
-        "n_priced": 3329,
-        "roi": -0.2937,
-        "wilson_lb": 0.108,
-        "wins": 407
-      },
-      "valid": {
-        "avg_odds": 9.31,
-        "hit": 0.1029,
-        "n": 2069,
-        "n_priced": 1957,
-        "roi": -0.4092,
-        "wilson_lb": 0.0906,
-        "wins": 213
-      },
-      "view": "ml_fade_settled",
-      "where": "ml_p*100 >= 60"
-    },
-    {
-      "derivation": "inverse-selection",
-      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
-      "edge_family": "ml-fade",
-      "market": "1x2",
-      "parent_family": "ml-meta",
-      "parent_rule": "ml-meta avg_p>=65",
-      "rule": "ml-fade avg_p>=65",
-      "sport": "soccer",
-      "status": "candidate",
-      "train": {
-        "avg_odds": 9.451,
-        "hit": 0.0998,
-        "n": 2466,
-        "n_priced": 2383,
-        "roi": -0.3443,
-        "wilson_lb": 0.0885,
-        "wins": 246
-      },
-      "valid": {
-        "avg_odds": 10.515,
-        "hit": 0.0882,
-        "n": 1520,
-        "n_priced": 1436,
-        "roi": -0.4676,
-        "wilson_lb": 0.0749,
-        "wins": 134
-      },
-      "view": "ml_fade_settled",
-      "where": "ml_p*100 >= 65"
-    },
-    {
-      "derivation": "inverse-selection",
-      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
-      "edge_family": "ml-fade",
-      "market": "1x2",
-      "parent_family": "ml-meta",
-      "parent_rule": "ml-meta avg_p>=70",
-      "rule": "ml-fade avg_p>=70",
-      "sport": "soccer",
-      "status": "candidate",
-      "train": {
-        "avg_odds": 10.741,
-        "hit": 0.0868,
-        "n": 1671,
-        "n_priced": 1607,
-        "roi": -0.32,
-        "wilson_lb": 0.0742,
-        "wins": 145
-      },
-      "valid": {
-        "avg_odds": 11.978,
-        "hit": 0.0706,
-        "n": 1048,
-        "n_priced": 989,
-        "roi": -0.5254,
-        "wilson_lb": 0.0566,
-        "wins": 74
-      },
-      "view": "ml_fade_settled",
-      "where": "ml_p*100 >= 70"
-    },
-    {
-      "derivation": "inverse-selection",
-      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
-      "edge_family": "ml-fade",
-      "market": "1x2",
-      "parent_family": "ml-meta",
-      "parent_rule": "ml-meta avg_p>=75",
-      "rule": "ml-fade avg_p>=75",
-      "sport": "soccer",
-      "status": "candidate",
-      "train": {
-        "avg_odds": 12.32,
-        "hit": 0.0678,
-        "n": 1047,
-        "n_priced": 1002,
-        "roi": -0.4064,
-        "wilson_lb": 0.0541,
-        "wins": 71
-      },
-      "valid": {
-        "avg_odds": 13.527,
-        "hit": 0.0598,
-        "n": 686,
-        "n_priced": 647,
-        "roi": -0.5732,
-        "wilson_lb": 0.0444,
-        "wins": 41
-      },
-      "view": "ml_fade_settled",
-      "where": "ml_p*100 >= 75"
-    },
-    {
-      "derivation": "inverse-selection",
-      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
-      "edge_family": "ml-fade",
-      "market": "1x2",
-      "parent_family": "ml-meta",
-      "parent_rule": "ml-meta avg_p>=80",
-      "rule": "ml-fade avg_p>=80",
-      "sport": "soccer",
-      "status": "candidate",
-      "train": {
-        "avg_odds": 14.415,
-        "hit": 0.0378,
-        "n": 609,
-        "n_priced": 577,
-        "roi": -0.6272,
-        "wilson_lb": 0.0253,
-        "wins": 23
-      },
-      "valid": {
-        "avg_odds": 16.51,
-        "hit": 0.0373,
-        "n": 375,
-        "n_priced": 352,
-        "roi": -0.5967,
-        "wilson_lb": 0.0224,
-        "wins": 14
-      },
-      "view": "ml_fade_settled",
-      "where": "ml_p*100 >= 80"
-    },
-    {
-      "derivation": "inverse-selection",
-      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
-      "edge_family": "ml-fade",
-      "market": "1x2",
-      "parent_family": "ml-meta",
-      "parent_rule": "ml-meta avg_p>=85",
-      "rule": "ml-fade avg_p>=85",
-      "sport": "soccer",
-      "status": "candidate",
-      "train": {
-        "avg_odds": 17.122,
-        "hit": 0.0227,
-        "n": 309,
-        "n_priced": 289,
-        "roi": -0.7803,
-        "wilson_lb": 0.011,
-        "wins": 7
-      },
-      "valid": {
-        "avg_odds": 18.897,
-        "hit": 0.0273,
-        "n": 183,
-        "n_priced": 172,
-        "roi": -0.6047,
-        "wilson_lb": 0.0117,
-        "wins": 5
-      },
-      "view": "ml_fade_settled",
-      "where": "ml_p*100 >= 85"
-    },
-    {
-      "market": "1x2",
       "rule": "2way-unanimous avg_p>=60",
       "sport": "soccer",
       "status": "candidate",
@@ -1407,189 +916,495 @@
       "where": "w_score >= 0.55"
     },
     {
-      "market": "1x2",
-      "rule": "weighted-1x2 w_score>=0.60",
-      "source_weights": {
-        "forebet": 0.4664,
-        "statarea": 0.5063,
-        "zulubet": 0.4942
+      "decay": {
+        "verdict": "HEALTHY",
+        "window_days": 30,
+        "checked_at": "2026-10-08",
+        "recent": {
+          "n": 101,
+          "wins": 72,
+          "hit": 0.7129,
+          "wilson_lb": 0.6181,
+          "roi": 0.5524
+        },
+        "baseline_lb": 0.7023,
+        "recent_lb": 0.6181,
+        "recent_ub": 0.792
       },
-      "sources": [
-        "forebet",
-        "zulubet",
-        "statarea"
-      ],
+      "market": "1x2",
+      "rule": "ml-meta avg_p>=55",
       "sport": "soccer",
-      "status": "candidate",
+      "status": "certified",
       "train": {
-        "avg_odds": null,
-        "hit": 0.5035,
-        "n": 44728,
-        "n_priced": 42894,
-        "roi": 0.0933,
-        "wilson_lb": 0.4988,
-        "wins": 22519
+        "avg_odds": 1.94,
+        "hit": 0.6892,
+        "n": 4549,
+        "n_priced": 4412,
+        "roi": 0.3161,
+        "wilson_lb": 0.6756,
+        "wins": 3135
       },
       "valid": {
-        "avg_odds": null,
-        "hit": 0.5033,
-        "n": 33878,
-        "n_priced": 32713,
-        "roi": 0.1139,
-        "wilson_lb": 0.498,
-        "wins": 17051
+        "avg_odds": 1.905,
+        "hit": 0.7197,
+        "n": 2665,
+        "n_priced": 2521,
+        "roi": 0.3323,
+        "wilson_lb": 0.7023,
+        "wins": 1918
       },
-      "view": "weighted_1x2",
-      "weighted": true,
-      "where": "w_score >= 0.6"
+      "view": "ml_meta_settled",
+      "where": "ml_p*100 >= 55"
+    },
+    {
+      "decay": {
+        "verdict": "HEALTHY",
+        "window_days": 30,
+        "checked_at": "2026-10-08",
+        "recent": {
+          "n": 82,
+          "wins": 62,
+          "hit": 0.7561,
+          "wilson_lb": 0.6531,
+          "roi": 0.5616
+        },
+        "baseline_lb": 0.735,
+        "recent_lb": 0.6531,
+        "recent_ub": 0.8362
+      },
+      "market": "1x2",
+      "rule": "ml-meta avg_p>=60",
+      "sport": "soccer",
+      "status": "certified",
+      "train": {
+        "avg_odds": 1.868,
+        "hit": 0.7312,
+        "n": 3453,
+        "n_priced": 3344,
+        "roi": 0.357,
+        "wilson_lb": 0.7162,
+        "wins": 2525
+      },
+      "valid": {
+        "avg_odds": 1.829,
+        "hit": 0.754,
+        "n": 2077,
+        "n_priced": 1963,
+        "roi": 0.345,
+        "wilson_lb": 0.735,
+        "wins": 1566
+      },
+      "view": "ml_meta_settled",
+      "where": "ml_p*100 >= 60"
+    },
+    {
+      "decay": {
+        "verdict": "HEALTHY",
+        "window_days": 30,
+        "checked_at": "2026-10-08",
+        "recent": {
+          "n": 62,
+          "wins": 49,
+          "hit": 0.7903,
+          "wilson_lb": 0.6736,
+          "roi": 0.6397
+        },
+        "baseline_lb": 0.7759,
+        "recent_lb": 0.6736,
+        "recent_ub": 0.8732
+      },
+      "market": "1x2",
+      "rule": "ml-meta avg_p>=65",
+      "sport": "soccer",
+      "status": "certified",
+      "train": {
+        "avg_odds": 1.817,
+        "hit": 0.7756,
+        "n": 2473,
+        "n_priced": 2391,
+        "roi": 0.4136,
+        "wilson_lb": 0.7587,
+        "wins": 1918
+      },
+      "valid": {
+        "avg_odds": 1.777,
+        "hit": 0.7969,
+        "n": 1526,
+        "n_priced": 1441,
+        "roi": 0.3812,
+        "wilson_lb": 0.7759,
+        "wins": 1216
+      },
+      "view": "ml_meta_settled",
+      "where": "ml_p*100 >= 65"
+    },
+    {
+      "benched_at": "2026-10-08",
+      "decay": {
+        "baseline_lb": 0.8218,
+        "checked_at": "2026-10-08",
+        "recent": {
+          "hit": 0.7857,
+          "n": 42,
+          "roi": 0.5552,
+          "wilson_lb": 0.6406,
+          "wins": 33
+        },
+        "recent_lb": 0.6406,
+        "recent_ub": 0.8829,
+        "verdict": "DECAYING",
+        "window_days": 30
+      },
+      "market": "1x2",
+      "rule": "ml-meta avg_p>=70",
+      "sport": "soccer",
+      "status": "benched",
+      "train": {
+        "avg_odds": 1.763,
+        "hit": 0.8118,
+        "n": 1679,
+        "n_priced": 1615,
+        "roi": 0.4519,
+        "wilson_lb": 0.7924,
+        "wins": 1363
+      },
+      "valid": {
+        "avg_odds": 1.705,
+        "hit": 0.8456,
+        "n": 1056,
+        "n_priced": 993,
+        "roi": 0.426,
+        "wilson_lb": 0.8226,
+        "wins": 893
+      },
+      "view": "ml_meta_settled",
+      "where": "ml_p*100 >= 70"
+    },
+    {
+      "benched_at": "2026-10-08",
+      "decay": {
+        "baseline_lb": 0.8466,
+        "checked_at": "2026-10-08",
+        "recent": {
+          "hit": 0.7931,
+          "n": 29,
+          "roi": 0.3948,
+          "wilson_lb": 0.6161,
+          "wins": 23
+        },
+        "recent_lb": 0.6161,
+        "recent_ub": 0.9015,
+        "verdict": "DECAYING",
+        "window_days": 30
+      },
+      "market": "1x2",
+      "rule": "ml-meta avg_p>=75",
+      "sport": "soccer",
+      "status": "benched",
+      "train": {
+        "avg_odds": 1.744,
+        "hit": 0.8565,
+        "n": 1059,
+        "n_priced": 1013,
+        "roi": 0.5115,
+        "wilson_lb": 0.8341,
+        "wins": 907
+      },
+      "valid": {
+        "avg_odds": 1.631,
+        "hit": 0.8737,
+        "n": 689,
+        "n_priced": 648,
+        "roi": 0.3937,
+        "wilson_lb": 0.8468,
+        "wins": 602
+      },
+      "view": "ml_meta_settled",
+      "where": "ml_p*100 >= 75"
+    },
+    {
+      "decay": {
+        "verdict": "WATCH",
+        "window_days": 30,
+        "checked_at": "2026-10-08",
+        "recent": {
+          "n": 20,
+          "wins": 18,
+          "hit": 0.9,
+          "wilson_lb": 0.699,
+          "roi": 0.561
+        },
+        "baseline_lb": 0.8823,
+        "recent_lb": 0.699,
+        "recent_ub": 0.9721
+      },
+      "market": "1x2",
+      "rule": "ml-meta avg_p>=80",
+      "sport": "soccer",
+      "status": "certified",
+      "train": {
+        "avg_odds": 1.805,
+        "hit": 0.9044,
+        "n": 617,
+        "n_priced": 585,
+        "roi": 0.6656,
+        "wilson_lb": 0.8786,
+        "wins": 558
+      },
+      "valid": {
+        "avg_odds": 1.569,
+        "hit": 0.9149,
+        "n": 376,
+        "n_priced": 351,
+        "roi": 0.3881,
+        "wilson_lb": 0.8823,
+        "wins": 344
+      },
+      "view": "ml_meta_settled",
+      "where": "ml_p*100 >= 80"
     },
     {
       "market": "1x2",
-      "rule": "weighted-1x2 w_score>=0.65",
-      "source_weights": {
-        "forebet": 0.4664,
-        "statarea": 0.5063,
-        "zulubet": 0.4942
-      },
-      "sources": [
-        "forebet",
-        "zulubet",
-        "statarea"
-      ],
+      "rule": "ml-meta avg_p>=85",
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": null,
-        "hit": 0.5035,
-        "n": 44728,
-        "n_priced": 42894,
-        "roi": 0.0933,
-        "wilson_lb": 0.4988,
-        "wins": 22519
+        "avg_odds": 2.013,
+        "hit": 0.9492,
+        "n": 315,
+        "n_priced": 295,
+        "roi": 0.9463,
+        "wilson_lb": 0.9191,
+        "wins": 299
       },
       "valid": {
-        "avg_odds": null,
-        "hit": 0.5033,
-        "n": 33878,
-        "n_priced": 32713,
-        "roi": 0.1139,
-        "wilson_lb": 0.498,
-        "wins": 17051
+        "avg_odds": 1.458,
+        "hit": 0.9355,
+        "n": 186,
+        "n_priced": 173,
+        "roi": 0.3188,
+        "wilson_lb": 0.8906,
+        "wins": 174
       },
-      "view": "weighted_1x2",
-      "weighted": true,
-      "where": "w_score >= 0.65"
+      "view": "ml_meta_settled",
+      "where": "ml_p*100 >= 85"
     },
     {
+      "derivation": "inverse-selection",
+      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
+      "edge_family": "ml-fade",
       "market": "1x2",
-      "rule": "weighted-1x2 w_score>=0.70",
-      "source_weights": {
-        "forebet": 0.4664,
-        "statarea": 0.5063,
-        "zulubet": 0.4942
-      },
-      "sources": [
-        "forebet",
-        "zulubet",
-        "statarea"
-      ],
+      "parent_family": "ml-meta",
+      "parent_rule": "ml-meta avg_p>=55",
+      "rule": "ml-fade avg_p>=55",
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": null,
-        "hit": 0.5035,
-        "n": 44728,
-        "n_priced": 42894,
-        "roi": 0.0933,
-        "wilson_lb": 0.4988,
-        "wins": 22519
+        "avg_odds": 7.544,
+        "hit": 0.1389,
+        "n": 4520,
+        "n_priced": 4383,
+        "roi": -0.253,
+        "wilson_lb": 0.1292,
+        "wins": 628
       },
       "valid": {
-        "avg_odds": null,
-        "hit": 0.5033,
-        "n": 33878,
-        "n_priced": 32713,
-        "roi": 0.1139,
-        "wilson_lb": 0.498,
-        "wins": 17051
+        "avg_odds": 8.419,
+        "hit": 0.1162,
+        "n": 2643,
+        "n_priced": 2503,
+        "roi": -0.3825,
+        "wilson_lb": 0.1045,
+        "wins": 307
       },
-      "view": "weighted_1x2",
-      "weighted": true,
-      "where": "w_score >= 0.7"
+      "view": "ml_fade_settled",
+      "where": "ml_p*100 >= 55"
     },
     {
+      "derivation": "inverse-selection",
+      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
+      "edge_family": "ml-fade",
       "market": "1x2",
-      "rule": "weighted-1x2 w_score>=0.75",
-      "source_weights": {
-        "forebet": 0.4664,
-        "statarea": 0.5063,
-        "zulubet": 0.4942
-      },
-      "sources": [
-        "forebet",
-        "zulubet",
-        "statarea"
-      ],
+      "parent_family": "ml-meta",
+      "parent_rule": "ml-meta avg_p>=60",
+      "rule": "ml-fade avg_p>=60",
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": null,
-        "hit": 0.5035,
-        "n": 44728,
-        "n_priced": 42894,
-        "roi": 0.0933,
-        "wilson_lb": 0.4988,
-        "wins": 22519
+        "avg_odds": 8.383,
+        "hit": 0.1184,
+        "n": 3437,
+        "n_priced": 3329,
+        "roi": -0.2937,
+        "wilson_lb": 0.108,
+        "wins": 407
       },
       "valid": {
-        "avg_odds": null,
-        "hit": 0.5033,
-        "n": 33878,
-        "n_priced": 32713,
-        "roi": 0.1139,
-        "wilson_lb": 0.498,
-        "wins": 17051
+        "avg_odds": 9.31,
+        "hit": 0.1029,
+        "n": 2069,
+        "n_priced": 1957,
+        "roi": -0.4092,
+        "wilson_lb": 0.0906,
+        "wins": 213
       },
-      "view": "weighted_1x2",
-      "weighted": true,
-      "where": "w_score >= 0.75"
+      "view": "ml_fade_settled",
+      "where": "ml_p*100 >= 60"
     },
     {
+      "derivation": "inverse-selection",
+      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
+      "edge_family": "ml-fade",
       "market": "1x2",
-      "rule": "weighted-1x2 w_score>=0.80",
-      "source_weights": {
-        "forebet": 0.4664,
-        "statarea": 0.5063,
-        "zulubet": 0.4942
-      },
-      "sources": [
-        "forebet",
-        "zulubet",
-        "statarea"
-      ],
+      "parent_family": "ml-meta",
+      "parent_rule": "ml-meta avg_p>=65",
+      "rule": "ml-fade avg_p>=65",
       "sport": "soccer",
       "status": "candidate",
       "train": {
-        "avg_odds": null,
-        "hit": 0.5035,
-        "n": 44728,
-        "n_priced": 42894,
-        "roi": 0.0933,
-        "wilson_lb": 0.4988,
-        "wins": 22519
+        "avg_odds": 9.451,
+        "hit": 0.0998,
+        "n": 2466,
+        "n_priced": 2383,
+        "roi": -0.3443,
+        "wilson_lb": 0.0885,
+        "wins": 246
       },
       "valid": {
-        "avg_odds": null,
-        "hit": 0.5033,
-        "n": 33878,
-        "n_priced": 32713,
-        "roi": 0.1139,
-        "wilson_lb": 0.498,
-        "wins": 17051
+        "avg_odds": 10.515,
+        "hit": 0.0882,
+        "n": 1520,
+        "n_priced": 1436,
+        "roi": -0.4676,
+        "wilson_lb": 0.0749,
+        "wins": 134
       },
-      "view": "weighted_1x2",
-      "weighted": true,
-      "where": "w_score >= 0.8"
+      "view": "ml_fade_settled",
+      "where": "ml_p*100 >= 65"
+    },
+    {
+      "derivation": "inverse-selection",
+      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
+      "edge_family": "ml-fade",
+      "market": "1x2",
+      "parent_family": "ml-meta",
+      "parent_rule": "ml-meta avg_p>=70",
+      "rule": "ml-fade avg_p>=70",
+      "sport": "soccer",
+      "status": "candidate",
+      "train": {
+        "avg_odds": 10.741,
+        "hit": 0.0868,
+        "n": 1671,
+        "n_priced": 1607,
+        "roi": -0.32,
+        "wilson_lb": 0.0742,
+        "wins": 145
+      },
+      "valid": {
+        "avg_odds": 11.978,
+        "hit": 0.0706,
+        "n": 1048,
+        "n_priced": 989,
+        "roi": -0.5254,
+        "wilson_lb": 0.0566,
+        "wins": 74
+      },
+      "view": "ml_fade_settled",
+      "where": "ml_p*100 >= 70"
+    },
+    {
+      "derivation": "inverse-selection",
+      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
+      "edge_family": "ml-fade",
+      "market": "1x2",
+      "parent_family": "ml-meta",
+      "parent_rule": "ml-meta avg_p>=75",
+      "rule": "ml-fade avg_p>=75",
+      "sport": "soccer",
+      "status": "candidate",
+      "train": {
+        "avg_odds": 12.32,
+        "hit": 0.0678,
+        "n": 1047,
+        "n_priced": 1002,
+        "roi": -0.4064,
+        "wilson_lb": 0.0541,
+        "wins": 71
+      },
+      "valid": {
+        "avg_odds": 13.527,
+        "hit": 0.0598,
+        "n": 686,
+        "n_priced": 647,
+        "roi": -0.5732,
+        "wilson_lb": 0.0444,
+        "wins": 41
+      },
+      "view": "ml_fade_settled",
+      "where": "ml_p*100 >= 75"
+    },
+    {
+      "derivation": "inverse-selection",
+      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
+      "edge_family": "ml-fade",
+      "market": "1x2",
+      "parent_family": "ml-meta",
+      "parent_rule": "ml-meta avg_p>=80",
+      "rule": "ml-fade avg_p>=80",
+      "sport": "soccer",
+      "status": "candidate",
+      "train": {
+        "avg_odds": 14.415,
+        "hit": 0.0378,
+        "n": 609,
+        "n_priced": 577,
+        "roi": -0.6272,
+        "wilson_lb": 0.0253,
+        "wins": 23
+      },
+      "valid": {
+        "avg_odds": 16.51,
+        "hit": 0.0373,
+        "n": 375,
+        "n_priced": 352,
+        "roi": -0.5967,
+        "wilson_lb": 0.0224,
+        "wins": 14
+      },
+      "view": "ml_fade_settled",
+      "where": "ml_p*100 >= 80"
+    },
+    {
+      "derivation": "inverse-selection",
+      "derivation_note": "binary 1X2 inverse of the ml-meta selection (home<->away) at the opposing side's own odds; parent draw selections are excluded \u2014 no honest binary inverse exists.",
+      "edge_family": "ml-fade",
+      "market": "1x2",
+      "parent_family": "ml-meta",
+      "parent_rule": "ml-meta avg_p>=85",
+      "rule": "ml-fade avg_p>=85",
+      "sport": "soccer",
+      "status": "candidate",
+      "train": {
+        "avg_odds": 17.122,
+        "hit": 0.0227,
+        "n": 309,
+        "n_priced": 289,
+        "roi": -0.7803,
+        "wilson_lb": 0.011,
+        "wins": 7
+      },
+      "valid": {
+        "avg_odds": 18.897,
+        "hit": 0.0273,
+        "n": 183,
+        "n_priced": 172,
+        "roi": -0.6047,
+        "wilson_lb": 0.0117,
+        "wins": 5
+      },
+      "view": "ml_fade_settled",
+      "where": "ml_p*100 >= 85"
     }
   ],
   "gates": {
