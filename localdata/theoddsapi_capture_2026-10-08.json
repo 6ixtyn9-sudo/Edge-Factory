@@ -1,34 +1,20 @@
 {
   "added": 0,
-  "attempted": 3,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Akademiya Ontustik",
+      "away": "Fajr Sepasi",
       "date": "2026-10-08",
-      "home": "Shakhter Karagandy",
-      "kickoff": "11:00",
-      "league": "Kazakhstan,Pervaya Liga"
-    },
-    {
-      "away": "AC Oulu",
-      "date": "2026-10-08",
-      "home": "KuPS",
-      "kickoff": "11:00",
-      "league": "Finland,Veikkausliiga Championship Round"
-    },
-    {
-      "away": "Drogheda United",
-      "date": "2026-10-08",
-      "home": "Shamrock Rovers",
-      "kickoff": "14:00",
-      "league": "Rep. Of Ireland,Premier Division"
+      "home": "Sepahan FC",
+      "kickoff": "16:15",
+      "league": "Iran,Persian Gulf Pro League"
     }
   ],
-  "candidate_fixtures": 4,
-  "captured_at": "2026-10-08T04:17:36+00:00",
+  "candidate_fixtures": 5,
+  "captured_at": "2026-10-08T07:15:43+00:00",
   "date": "2026-10-08",
   "due_reasons": {
-    "first_at": 3
+    "first_at": 1
   },
   "errors": [],
   "fixtures_with_rows": 0,
@@ -40,22 +26,22 @@
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 1,
-    "kickoff_mismatch": 1
+    "kickoff_mismatch": 1,
+    "retry_cooldown": 3
   },
   "skipped": [
+    "Shakhter Karagandy|Akademiya Ontustik (retry cooldown (6h after failed attempt))",
+    "KuPS|AC Oulu (retry cooldown (6h after failed attempt))",
+    "Shamrock Rovers|Drogheda United (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Cruzeiro|Sao Paulo: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Cruzeiro|Sao Paulo (kickoff already passed)"
   ],
   "source": "theoddsapi",
   "status": "empty",
   "unmatched": [
-    "Shakhter Karagandy vs Akademiya Ontustik (league not covered: Kazakhstan,Pervaya Liga)",
-    "Shamrock Rovers vs Drogheda United (league not covered: Rep. Of Ireland,Premier Division)",
-    "KuPS vs AC Oulu (no event in soccer_finland_veikkausliiga)"
+    "Sepahan FC vs Fajr Sepasi (league not covered: Iran,Persian Gulf Pro League)"
   ],
   "unmatched_reasons": {
-    "league not covered: Kazakhstan,Pervaya Liga": 1,
-    "league not covered: Rep. Of Ireland,Premier Division": 1,
-    "no event in soccer_finland_veikkausliiga": 1
+    "league not covered: Iran,Persian Gulf Pro League": 1
   }
 }
