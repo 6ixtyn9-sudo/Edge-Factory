@@ -20,6 +20,11 @@ from edgefactory.phase5_activation import (  # noqa: E402
     revert_to_incumbent,
     set_kill_switch,
 )
+from edgefactory.phase5_promotion import (  # noqa: E402
+    Phase5PromotionError,
+    promote_activated_candidate,
+    restore_incumbent,
+)
 
 
 def _common(parser: argparse.ArgumentParser) -> None:
@@ -67,6 +72,27 @@ def main() -> int:
     activate_parser.add_argument("--era-id", required=True)
     activate_parser.add_argument("--confirm", action="store_true")
 
+    promote_parser = commands.add_parser(
+        "promote", help="write the activated era into the served registry (dry run without --confirm)"
+    )
+    _common(promote_parser)
+    promote_parser.add_argument(
+        "--registry", type=Path,
+        default=ROOT / "localdata" / "edges_consensus.json",
+    )
+    promote_parser.add_argument("--era-id", required=True)
+    promote_parser.add_argument("--confirm", action="store_true")
+
+    restore_parser = commands.add_parser(
+        "restore", help="write the frozen incumbent back into the served registry"
+    )
+    _common(restore_parser)
+    restore_parser.add_argument(
+        "--registry", type=Path,
+        default=ROOT / "localdata" / "edges_consensus.json",
+    )
+    restore_parser.add_argument("--confirm", action="store_true")
+
     kill_parser = commands.add_parser("kill-switch", help="immediately force resolver to incumbent")
     _common(kill_parser)
 
@@ -88,6 +114,14 @@ def main() -> int:
                 args.root, args.certificate, args.incumbent_registry,
                 era_id=args.era_id, confirmed=args.confirm,
             )
+        elif args.command == "promote":
+            result = promote_activated_candidate(
+                args.root, args.registry, era_id=args.era_id, write=args.confirm,
+            )
+        elif args.command == "restore":
+            result = restore_incumbent(
+                args.root, args.registry, write=args.confirm,
+            )
         elif args.command == "kill-switch":
             result = set_kill_switch(args.root)
         else:
@@ -95,7 +129,7 @@ def main() -> int:
     except Phase5NotYetDue as exc:
         _json_line({"status": "not_yet_due", "reason": str(exc)})
         return 0 if args.command == "dry-run-revert" else 2
-    except Phase5ActivationError as exc:
+    except (Phase5ActivationError, Phase5PromotionError) as exc:
         _json_line({"status": "blocked", "reason": str(exc)})
         return 2
     _json_line(result)
