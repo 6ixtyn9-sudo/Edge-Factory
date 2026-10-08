@@ -137,3 +137,19 @@ Both jobs green, 38 minutes, `mode=auto` (`--auto-once`).
    This also means the era accrues without any code change: once results land,
    the same rows enter the settled tables on the next warehouse build. That is
    the "feeds in, no retrain" path working as intended.
+
+   Two more lines exist so the numbers cannot be misread:
+
+   * `accrual: N settled fixture(s) over D day(s) = R/day`, printed next to the
+     floors once anything has settled. The floors are a distance, not a verdict:
+     `settled_eligible=14` beside `era-train 0<2000` looks like a dead feed
+     until you see the pace it is filling at. A forward era has a span of 0d by
+     construction, so the span clause says nothing about feed health.
+   * `settled trails raw — …` on a probe line whose raw table is ahead of its
+     settled view, naming which of the two causes it is: newer rows with no
+     final score yet (normal, resolves on the next build) or newer rows that
+     *are* scored but whose `p1/px/p2` did not parse, which `_prob()` maps to
+     NULL so the settle filter drops them and they never settle (a shard fault).
+     This is the open Forebet question — `settled newest=2026-09-27` against a
+     `forebet_2026-09.csv.gz` holding rows to 2026-09-29 — stated rather than
+     guessed; the next run's coverage block answers it outright.
