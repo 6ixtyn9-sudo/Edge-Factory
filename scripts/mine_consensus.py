@@ -1436,10 +1436,16 @@ def _print_k_coverage_diagnostic() -> None:
     if not script.exists():
         return
     print("\n--- Phase 5 K-contract coverage (read-only) ---")
+    # Resolve imports and relative localdata paths from the repo root, not from
+    # whatever cwd the miner happened to be launched in.
+    root = script.parent.parent
+    env = dict(os.environ)
+    existing_path = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = str(root / "src") + (os.pathsep + existing_path if existing_path else "")
     try:
         proc = subprocess.run(
             [sys.executable, str(script), "--explain"],
-            capture_output=True, text=True, timeout=180,
+            capture_output=True, text=True, timeout=180, cwd=str(root), env=env,
         )
     except Exception as exc:  # pragma: no cover - diagnostics must never gate
         print(f"(K coverage diagnostic skipped: {type(exc).__name__})")
