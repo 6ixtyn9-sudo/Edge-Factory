@@ -1,11 +1,21 @@
 {
   "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
-  "candidate_fixtures": 5,
-  "captured_at": "2026-10-07T20:48:30+00:00",
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Chile",
+      "date": "2026-10-07",
+      "home": "Mexico",
+      "kickoff": "19:30",
+      "league": "International,Friendlies"
+    }
+  ],
+  "candidate_fixtures": 6,
+  "captured_at": "2026-10-07T19:17:18+00:00",
   "date": "2026-10-07",
-  "due_reasons": {},
+  "due_reasons": {
+    "first_at": 1
+  },
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {},
@@ -13,18 +23,22 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 2,
-    "priced": 1,
-    "retry_cooldown": 2
+    "kickoff_already_passed": 4,
+    "priced": 1
   },
   "skipped": [
     "Ponte Preta|Juventude (priced)",
-    "CR Belouizdad|Khenchela (retry cooldown (6h after failed attempt))",
-    "Mexico|Chile (retry cooldown (6h after failed attempt))",
+    "CR Belouizdad|Khenchela (kickoff already passed)",
+    "CS Constantine|US Biskra (kickoff already passed)",
     "FC Tokyo|Shonan Bellmare (kickoff already passed)",
     "Urawa|Omiya Ardija (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
-  "unmatched_reasons": {}
+  "status": "empty",
+  "unmatched": [
+    "Mexico vs Chile (league not covered: International,Friendlies)"
+  ],
+  "unmatched_reasons": {
+    "league not covered: International,Friendlies": 1
+  }
 }
