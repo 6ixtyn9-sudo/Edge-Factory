@@ -81,8 +81,8 @@ jobs:
       # routed through the marketplace relay sharpapi1.p.rapidapi.com and
       # sent two credentials. The relay answered 401 with SharpAPI's OWN
       # envelope {"error":{"code":"disabled_api_key"}}, which was read as
-      # "the gateway let us through and the origin rejected our key". The
-      # real explanation is simpler: the operator's account is a direct
+      # "the gateway let us through and the origin rejected our key".
+      # The real explanation is simpler: the operator's account is a direct
       # account and was never a marketplace account at all.
       #
       # The vendor playground shows the working contract:
@@ -144,20 +144,13 @@ jobs:
             localdata-v2-
 
       - name: Restore committed data (override stale cache)
-        # Committed files in localdata/ (registries + core history CSVs) survive
-        # cache eviction, but actions/cache/restore unpacks localdata/ AFTER
-        # checkout and can overwrite them with stale copies. Re-check out ALL
-        # git-tracked localdata files from HEAD so live versions always win.
-        # Includes the 3 core history CSVs so CI certifies autonomously.
+        # Cache is only an optimization. Union the cached append-only Phase 5
+        # ledgers with HEAD first; then restore every other tracked localdata
+        # file. Keep the evidence directories out of git clean so a first or
+        # conflicted capture cannot be erased before it is committed/artifacted.
         run: |
           set -e
-          for f in $(git ls-files localdata/); do
-            git checkout HEAD -- "$f" && echo "restored committed: $f"
-          done
-
-          # Prune untracked leftovers the cache restore may have unpacked —
-          # files deleted from git must STAY deleted.
-          git clean -fd localdata/ || true
+          python3 scripts/phase5_persistence.py restore
 
           echo "certified edges present: $(python3 -c "import json;d=json.load(open('localdata/edges_consensus.json'));print(sum(1 for e in d.get('edges',[]) if e.get('status')=='certified'))" 2>/dev/null || echo n/a)"
 
@@ -186,39 +179,14 @@ jobs:
           key: localdata-v2-${{ github.run_id }}
 
       - name: Persist pipeline state to git (single source of truth)
-        # Every iteration commits its exact end state: frozen picks, WhatsApp
-        # sent/discovery ledgers, capture attempts, registries. Next run's
-        # Restore committed data step restores fresh state.
+        # Append-only Phase 5 JSONL conflicts are resolved as a stable union.
+        # Other unrecoverable state conflicts are reported without force-push;
+        # the always-uploaded artifact remains the recovery copy.
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A localdata/
-
-          if git diff --cached --quiet; then
-            echo "no localdata changes to persist"
-            exit 0
-          fi
-
-          git commit -m "chore: persist pipeline state (run ${{ github.run_id }})"
-
-          # Conflict-proof synchronization. localdata is regenerable, so a
-          # collision must not strand the runner in a failed rebase.
-          if ! git pull --rebase --autostash; then
-            git rebase --abort 2>/dev/null || true
-            echo "WARN: localdata rebase conflicted; dropping regenerable state commit"
-            exit 0
-          fi
-
-          if ! git push; then
-            if ! git pull --rebase --autostash; then
-              git rebase --abort 2>/dev/null || true
-              echo "WARN: push-race conflict; dropping regenerable state commit"
-              exit 0
-            fi
-
-            git push
-          fi
+          python3 scripts/phase5_persistence.py persist --run-id "${{ github.run_id }}"
 
       - name: Upload Pick Ledgers & Reports as Artifacts
         uses: actions/upload-artifact@v4
@@ -229,7 +197,20 @@ jobs:
             localdata/*.txt
             localdata/*.json
             localdata/*.md
+            localdata/phase5_shadow/**
+            localdata/phase5_activation/**
+            localdata/phase5_reconciliation/**
           retention-days: 7
+
+      - name: Upload Scored-Candidate Audit Ledgers
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: Scored-Candidate-Audit-${{ github.run_id }}
+          path: |
+            localdata/scored_candidate_shadow_*.jsonl
+          if-no-files-found: ignore
+          retention-days: 30
 
   regression-tests:
     # Flag, never gate — and deliberately its OWN job, not a step at the end of
