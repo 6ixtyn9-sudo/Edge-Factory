@@ -68,6 +68,23 @@ era evaluator, identity audit, comparator, Forebet overlap) → `dry-run-revert`
 `activate --confirm` → `promote --confirm`. `kill-switch` + `restore --confirm`
 is the way back.
 
+## One decision this branch surfaces
+
+Forebet is retired for production days after 2026-06-12
+(`edgefactory.source_health.FOREBET_LIVE_LAST_DAY`; the firing tripwire records
+"pricing/voting retired 2026-06-12"). Two consequences that waiting cannot fix:
+
+* In the forward era the electors are **zulubet and statarea**; `fb_p` is
+  imputed every day. The K contract supports that by design (dark -> recorded
+  mean), so a fit can still be produced.
+* The certifier's clause 7 requires >=200 pairwise-overlap rows against *every*
+  existing source, Forebet included, and reports `blocked_forebet_overlap`.
+  While Forebet stays parked that clause **cannot** clear, so the era can never
+  certify and activation can never be reached — no matter how long the capture
+  accrues. Either clause 7 is re-scoped to the sources that still exist, or
+  Forebet has to come back for capture. This is a policy decision, not a bug,
+  and the certifier already refuses honestly rather than pretending.
+
 ## Gotchas for the run
 
 * Scoutingstats and betminer are not 1x2 voters, so their K columns stay
