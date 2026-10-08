@@ -432,10 +432,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 210,
-   "inv_price_sum": 206.12204450940342,
+   "hits": 211,
+   "inv_price_sum": 207.0917414791004,
    "multi_n": 31,
-   "n": 314,
+   "n": 316,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -750,9 +750,11 @@
     "2026-10-03|Stromsgodset vs Asane|match_over_25@v1",
     "2026-10-04|Castellon vs AD Ceuta|match_over_25@v1",
     "2026-10-07|CR Belouizdad vs Khenchela|match_over_25@v1",
-    "2026-10-07|CS Constantine vs US Biskra|match_over_25@v1"
+    "2026-10-07|CS Constantine vs US Biskra|match_over_25@v1",
+    "2026-10-08|Shamrock Rovers vs Drogheda United|match_over_25@v1",
+    "2026-10-08|MC Oran vs ES Setif|match_over_25@v1"
    ],
-   "profit": 7.047,
+   "profit": 6.697,
    "records": [
     {
      "date": "2026-08-01",
@@ -3262,6 +3264,22 @@
      "match": "CS Constantine vs US Biskra",
      "multi_source": false,
      "price": 3.0,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-08",
+     "hit": true,
+     "match": "Shamrock Rovers vs Drogheda United",
+     "multi_source": false,
+     "price": 1.65,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-08",
+     "hit": false,
+     "match": "MC Oran vs ES Setif",
+     "multi_source": false,
+     "price": 2.75,
      "source": "scoutingstats"
     }
    ],

@@ -1,0 +1,46 @@
+{
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 16,
+  "captured_at": "2026-10-08T22:29:13+00:00",
+  "date": "2026-10-09",
+  "due_reasons": {},
+  "errors": [],
+  "fixtures_with_rows": 0,
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 2
+  },
+  "quoted_fixtures": [],
+  "rows": 0,
+  "schema": 1,
+  "skip_reasons": {
+    "kickoff_mismatch": 2,
+    "priced": 5,
+    "priced_close_window_not_open": 2,
+    "retry_cooldown": 9
+  },
+  "skipped": [
+    "Cork City|Finn Harps (retry cooldown (6h after failed attempt))",
+    "Karmiotissa|Omonia Nicosia (retry cooldown (6h after failed attempt))",
+    "PSV Eindhoven|Heerenveen (priced)",
+    "Zlin|Slavia Praha (retry cooldown (6h after failed attempt))",
+    "Borussia Dortmund|Werder Bremen (priced)",
+    "WARN kickoff-mismatch Fluminense|Coritiba: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Fluminense|Coritiba (priced, close window not open)",
+    "Shelbourne|Sligo Rovers (retry cooldown (6h after failed attempt))",
+    "Galatasaray|Kasimpasa (priced)",
+    "Corvinul Hunedoara|FC Voluntari (retry cooldown (6h after failed attempt))",
+    "FC Nordsjaelland|Odense (priced)",
+    "Montpellier|Grenoble Foot 38 (priced)",
+    "Vejle|Hvidovre (retry cooldown (6h after failed attempt))",
+    "Athlone Town|Treaty United (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Palmeiras|Bahia: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Palmeiras|Bahia (priced, close window not open)",
+    "Penybont FC|Barry Town (retry cooldown (6h after failed attempt))",
+    "Antigua GFC|Municipal (retry cooldown (6h after failed attempt))"
+  ],
+  "source": "theoddsapi",
+  "status": "not_due",
+  "unmatched_reasons": {}
+}
