@@ -242,6 +242,31 @@ def probe_tables(con, era_start: date, era_end: date) -> dict:
             except Exception:
                 continue
             entry[label] = {"newest": overall, "rows_in_era": int(in_era or 0)}
+        # A settled view requires hs, gs AND p1/px/p2 to be present
+        # (warehouse.py builds it that way), so its newest day can sit behind
+        # the raw table's. Name the cause here rather than leaving a reader to
+        # guess between "the results are not in yet" (normal) and "the rows are
+        # scored but carry no usable probabilities" (a data fault).
+        raw, settled = entry.get("raw"), entry.get("settled")
+        if raw and settled and raw.get("newest") and settled.get("newest") \
+                and raw["newest"] > settled["newest"]:
+            try:
+                newer, scored, no_probs = con.execute(
+                    f"SELECT count(*), "
+                    f"sum(CASE WHEN hs IS NOT NULL AND gs IS NOT NULL THEN 1 ELSE 0 END), "
+                    f"sum(CASE WHEN hs IS NOT NULL AND gs IS NOT NULL "
+                    f"AND (p1 IS NULL OR px IS NULL OR p2 IS NULL) THEN 1 ELSE 0 END) "
+                    f"FROM {source} WHERE CAST(date AS VARCHAR) > ? "
+                    "AND CAST(date AS VARCHAR) LIKE '____-__-__%'",
+                    [settled["newest"]],
+                ).fetchone()
+                entry["trailing"] = {
+                    "newer_rows": int(newer or 0),
+                    "scored": int(scored or 0),
+                    "scored_without_probs": int(no_probs or 0),
+                }
+            except Exception:
+                pass
         probe[source] = entry
     return probe
 
@@ -273,6 +298,18 @@ def _probe_text(entry: dict | None) -> str:
     bits = [f"{label} newest={info['newest']} rows_in_era={info['rows_in_era']}"
             for label, info in (("raw", entry.get("raw")), ("settled", entry.get("settled")))
             if info]
+    trailing = entry.get("trailing") or {}
+    if trailing.get("newer_rows"):
+        scored = trailing.get("scored", 0)
+        if not scored:
+            why = f"{trailing['newer_rows']} newer row(s) have no final score yet"
+        elif trailing.get("scored_without_probs", 0) >= scored:
+            why = (f"{scored} newer row(s) are scored but carry no usable p1/px/p2, "
+                   "so no settled view can index them")
+        else:
+            why = (f"{trailing['newer_rows']} newer row(s): {scored} scored, "
+                   f"{trailing['scored_without_probs']} of those without probabilities")
+        bits.append(f"settled trails raw — {why}")
     return "   " + ("; ".join(bits) if bits else "(no table visible)")
 
 

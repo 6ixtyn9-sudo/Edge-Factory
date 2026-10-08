@@ -312,3 +312,74 @@ def test_accrual_line_reports_the_rate_the_floors_are_approached_at():
     assert "no retrain" not in text            # the note above carries that claim
     assert module.accrual_text([]) is None
     assert module.accrual_text([None, ""]) is None
+
+
+def _warehouse_with_a_trailing_settled_view(tmp_path, name, newer_row):
+    """One scored row on 10-07, then `newer_row` on 10-08, and the trio's
+    real settle filter copied from warehouse.py (scores *and* p1/px/p2)."""
+    duckdb = pytest.importorskip("duckdb")
+    db = tmp_path / f"{name}.duckdb"
+    con = duckdb.connect(str(db))
+    con.execute(
+        "CREATE TABLE zulubet AS SELECT * FROM (VALUES "
+        "('2026-10-07', 'Alpha FC', 'Beta FC', 0.51, 0.28, 0.21, 2, 1, 'League')) "
+        "t(date, home, away, p1, px, p2, hs, gs, league)"
+    )
+    con.execute(
+        f"INSERT INTO zulubet SELECT * FROM (VALUES {newer_row}) "
+        "t(date, home, away, p1, px, p2, hs, gs, league)"
+    )
+    con.execute(
+        "CREATE VIEW zulubet_settled AS SELECT * FROM zulubet "
+        "WHERE hs IS NOT NULL AND gs IS NOT NULL "
+        "AND p1 IS NOT NULL AND px IS NOT NULL AND p2 IS NOT NULL"
+    )
+    con.close()
+    return duckdb, db
+
+
+def test_probe_names_why_the_settled_view_trails_the_raw_table(tmp_path):
+    """Two causes look identical in `newest=` alone, so the probe states one.
+
+    A row with no final score is normal (results are not in) and resolves on
+    the next build; a scored row whose probabilities did not parse never
+    settles at all and needs a look at the shard. Reporting only "settled
+    newest=..." makes those two indistinguishable.
+    """
+    module = _load_script("fit_phase5_candidate_trailing", "scripts/fit_phase5_candidate.py")
+
+    duckdb, db = _warehouse_with_a_trailing_settled_view(
+        tmp_path, "unscored", "('2026-10-08', 'Gamma FC', 'Delta FC', 0.4, 0.3, 0.3, NULL, NULL, 'League')"
+    )
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        probe = module.probe_tables(con, date(2026, 10, 7), date(2026, 10, 8))
+    finally:
+        con.close()
+    entry = probe["zulubet"]
+    assert entry["raw"]["newest"] == "2026-10-08"
+    assert entry["settled"]["newest"] == "2026-10-07"
+    assert entry["trailing"] == {"newer_rows": 1, "scored": 0, "scored_without_probs": 0}
+    assert "no final score yet" in module._probe_text(entry)
+
+    duckdb, db = _warehouse_with_a_trailing_settled_view(
+        tmp_path, "noprobs", "('2026-10-08', 'Gamma FC', 'Delta FC', NULL, NULL, NULL, 1, 1, 'League')"
+    )
+    con = duckdb.connect(str(db), read_only=True)
+    try:
+        probe = module.probe_tables(con, date(2026, 10, 7), date(2026, 10, 8))
+    finally:
+        con.close()
+    entry = probe["zulubet"]
+    assert entry["trailing"] == {"newer_rows": 1, "scored": 1, "scored_without_probs": 1}
+    assert "no usable p1/px/p2" in module._probe_text(entry)
+
+    # No trailing rows at all -> no clause invented.
+    con = duckdb.connect(":memory:")
+    con.execute("CREATE TABLE zulubet (date VARCHAR, home VARCHAR, away VARCHAR, "
+                "p1 DOUBLE, px DOUBLE, p2 DOUBLE, hs INT, gs INT)")
+    con.execute("INSERT INTO zulubet VALUES ('2026-10-07','A','B',0.5,0.3,0.2,1,0)")
+    entry = module.probe_tables(con, date(2026, 10, 7), date(2026, 10, 7))["zulubet"]
+    assert "trailing" not in entry
+    assert "settled trails raw" not in module._probe_text(entry)
+    con.close()
