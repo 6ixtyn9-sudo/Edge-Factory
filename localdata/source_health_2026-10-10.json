@@ -1,5 +1,5 @@
 {
-  "date": "2026-10-09",
+  "date": "2026-10-10",
   "schema": 1,
   "sources": {
     "afootballreport": {
@@ -14,55 +14,53 @@
     },
     "betbetter": {
       "bb_matched": 0,
-      "bb_raw": 1370,
-      "bb_scored": 1370,
+      "bb_raw": 1371,
+      "bb_scored": 1371,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "market_unmapped": 80,
-        "market_unsupported": 589,
+        "fixture_key_miss": 12,
+        "market_unmapped": 100,
+        "market_unsupported": 611,
         "no_pick_for_fixture": 2,
-        "out_of_window": 65,
-        "selection_unmapped": 634
+        "out_of_window": 32,
+        "selection_unmapped": 614
       },
       "reason": null,
-      "status": "cache_only"
+      "status": "ok"
     },
     "betclan": {
-      "blocker": null,
+      "blocker": "fetch returned zero rows",
       "can_fetch_today": true,
       "can_price": false,
-      "can_vote": true,
+      "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
     "betexplorer": {
-      "be_matched": 12,
-      "be_raw": 36,
-      "be_usable": 33,
-      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
+      "be_matched": 0,
+      "be_raw": 0,
+      "be_usable": 0,
+      "blocker": "no pre-build BetExplorer rows",
       "can_fetch_today": false,
-      "can_price": true,
+      "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 8,
-      "join_miss_counts": {
-        "fixture_key_miss": 13,
-        "no_pick_for_fixture": 12
-      },
+      "join_matched_rows": 0,
+      "join_miss_counts": {},
       "reason": null,
-      "status": "cache_only"
+      "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
+      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-10' does not exist\"}",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -86,27 +84,22 @@
     },
     "boggio": {
       "bg_matched": 0,
-      "bg_raw": 7,
-      "bg_scored": 7,
-      "blocker": null,
-      "can_fetch_today": true,
-      "can_price": true,
+      "bg_raw": 0,
+      "bg_scored": 0,
+      "blocker": "boggio: HTTP 404 Not Found",
+      "can_fetch_today": false,
+      "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 2,
-      "join_miss_counts": {
-        "fixture_key_miss": 3,
-        "selection_unsupported": 2
-      },
       "reason": null,
-      "status": "cache_only"
+      "status": "unavailable"
     },
     "bzzoiro": {
       "blocker": "bzz status=auth; quota_hint=auth_or_quota",
       "can_fetch_today": false,
       "can_price": false,
-      "can_vote": true,
+      "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "reason": "http_403_plan_or_auth",
@@ -187,10 +180,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 2311,
+        "event_count": 2313,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 2311,
+        "events_with_teams": 2313,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -240,35 +233,66 @@
     "sharpapi_odds": {
       "blocker": null,
       "board_summary": {
-        "board_fixtures": 0,
-        "board_league_count": 0,
-        "board_leagues": {},
-        "board_non_prematch_rows": 0,
-        "board_priced_rows": 0,
-        "board_rows": 0,
-        "board_team_count": 0,
-        "board_team_names": {},
-        "card_fixture_count": 16,
+        "board_fixtures": 5,
+        "board_league_count": 4,
+        "board_leagues": {
+          "brazil_-_serie_a": 102,
+          "colombia_-_primera_b": 1,
+          "jamaica_-_premier_league": 2,
+          "peru_-_primera_division": 95
+        },
+        "board_non_prematch_rows": 155,
+        "board_priced_rows": 2,
+        "board_rows": 200,
+        "board_team_count": 9,
+        "board_team_names": {
+          "Atletico FC Cali": 1,
+          "Atletico Grau": 95,
+          "CD Los Chankas": 92,
+          "Chankas CYC": 3,
+          "Flamengo": 102,
+          "Portmore United": 2,
+          "Real Cartagena": 1,
+          "Santos": 102,
+          "Waterhouse FC": 2
+        },
+        "board_truncated": false,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_asian_handicap_corners": 2,
+          "unknown_market:1st_half_moneyline": 3,
+          "unknown_market:1st_half_total_corners": 13,
+          "unknown_market:2nd_half_asian_handicap_corners": 2,
+          "unknown_market:2nd_half_moneyline": 3,
+          "unknown_market:2nd_half_total_corners": 13,
+          "unknown_market:asian_handicap_corners": 2,
+          "unsupported_market:double_chance": 3,
+          "unsupported_market:draw_no_bet": 2
+        },
+        "card_fixture_count": 37,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
+        "prematch_drop_reasons": {
+          "live_price": 98,
+          "player_prop": 57
+        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 18
+        "fixture_key_miss": 2
       },
       "reason": null,
       "sa_matched": 0,
-      "sa_raw": 18,
-      "sa_scored": 18,
-      "status": "cache_only"
+      "sa_raw": 1,
+      "sa_scored": 2,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
@@ -303,22 +327,19 @@
       "status": null
     },
     "theoddsapi": {
-      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
+      "blocker": "no pre-build TheOddsAPI rows",
       "can_fetch_today": false,
-      "can_price": true,
+      "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 103,
-      "join_miss_counts": {
-        "fixture_key_miss": 148,
-        "no_pick_for_fixture": 278
-      },
-      "oa_matched": 9,
-      "oa_raw": 529,
-      "oa_usable": 529,
+      "join_matched_rows": 0,
+      "join_miss_counts": {},
+      "oa_matched": 0,
+      "oa_raw": 0,
+      "oa_usable": 0,
       "reason": null,
-      "status": "cache_only"
+      "status": "empty"
     },
     "vitibet": {
       "blocker": null,
@@ -341,10 +362,10 @@
       "status": null
     },
     "zulubet": {
-      "blocker": null,
+      "blocker": "fetch returned zero rows",
       "can_fetch_today": true,
-      "can_price": true,
-      "can_vote": true,
+      "can_price": false,
+      "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
