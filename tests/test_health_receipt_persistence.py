@@ -23,10 +23,17 @@ def test_health_and_probe_receipts_are_stageable_not_ignored():
 
 
 def test_cleanup_precedes_run_and_state_commit_follows_run():
-    """A receipt written by the run cannot be pruned before state staging."""
+    """Restore/clean stays before execution; persistence staging stays after it."""
     workflow = (ROOT / ".github" / "workflows" / "daily.yml").read_text()
-    clean_at = workflow.index("git clean -fd localdata/")
+    helper = (ROOT / "scripts" / "phase5_persistence.py").read_text()
+    restore_at = workflow.index("name: Restore committed data")
     execute_at = workflow.index("name: Execute Autonomous Smart Schedule")
     state_commit_at = workflow.index("name: Persist pipeline state to git")
-    add_at = workflow.index("git add -A localdata/", state_commit_at)
-    assert clean_at < execute_at < state_commit_at < add_at
+    persist_call_at = workflow.index("scripts/phase5_persistence.py persist", state_commit_at)
+    restore_logic_at = helper.index("def restore_committed_localdata")
+    clean_at = helper.index('"clean", "-fd", "localdata/"', restore_logic_at)
+    persist_logic_at = helper.index("def persist_localdata")
+    add_at = helper.index('"add", "-A", "localdata/"', persist_logic_at)
+    assert restore_at < execute_at < state_commit_at < persist_call_at
+    assert clean_at > restore_logic_at
+    assert add_at > persist_logic_at

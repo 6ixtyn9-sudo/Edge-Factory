@@ -127,6 +127,22 @@ dist/
 # Curated team-name aliases for settlement lookup (hand-maintained, not generated)
 !localdata/team_aliases.json
 
+# Phase 5 evidence and activation state use the existing localdata persistence path.
+# Keep append-only ledgers/registry plus compact config, verdict, and receipt artefacts durable.
+# The daily workflow unions append-only evidence across cache/rebase races and uploads a recovery artifact.
+!localdata/phase5_shadow/
+!localdata/phase5_shadow/rows.jsonl
+!localdata/phase5_shadow/attempts.jsonl
+!localdata/phase5_shadow/status.json
+!localdata/phase5_shadow/evaluation.json
+!localdata/phase5_activation/
+!localdata/phase5_activation/active_era.json
+!localdata/phase5_activation/registry.jsonl
+!localdata/phase5_activation/mutation_receipts.jsonl
+!localdata/phase5_reconciliation/
+!localdata/phase5_reconciliation/**
+!localdata/scored_candidate_shadow_*.jsonl
+
 # ML-fade research capture ledger + checkpoint state + checkpoint REPORTS
 # (bot-owned, tracked so certification-independent evidence survives cache
 # eviction — the pipeline's "persist pipeline state to git" step commits them

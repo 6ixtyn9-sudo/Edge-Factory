@@ -686,10 +686,10 @@ def test_verified_results_override_conflicting_donors(tmp_path, monkeypatch):
 
 
 def test_verified_results_purge_alternate_spelling(tmp_path, monkeypatch):
-    """A verified score must purge the fixture under EVERY donor spelling,
-    including diacritic variants (Fenerbahçe vs Fenerbahce) that normalize to
-    different team keys — the old exact-pair purge would leave the wrong-score
-    row behind and re-open the alias conflict."""
+    """Verified outcomes must replace alias-written exact keys and purge
+    alternate donor entries, including a stale result the grader finds before
+    it reaches the alias-conflict scan (the Samgurali C-row incident). The
+    Fenerbahçe pair also retains the diacritic-variant regression case."""
     import duckdb
 
     import edgefactory.settlement as settlement_mod
@@ -702,18 +702,38 @@ def test_verified_results_purge_alternate_spelling(tmp_path, monkeypatch):
     con.execute("CREATE TABLE bettingclosed_settled "
                 "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
     con.execute("INSERT INTO bettingclosed_settled VALUES ('2026-08-22','Fenerbahçe','Konyaspor',4,2,'home')")
+    # Reproduce the live C-row defect: alias-matched entries are purged, but
+    # the exact key written only by the alternate donor spelling used to keep
+    # its stale `home` outcome in key_to.
+    con.execute("CREATE TABLE statarea_settled "
+                "(date VARCHAR, home VARCHAR, away VARCHAR, hs INTEGER, gs INTEGER, outcome VARCHAR)")
+    con.execute("INSERT INTO statarea_settled VALUES "
+                "('2026-08-01','Samgurali Tskhaltubo','FC Meshakhte Tkibuli',1,0,'home')")
     con.close()
 
-    verified = [{"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor",
-                 "hs": 4, "gs": 2, "outcome": "home", "src": "source_verified"}]
+    verified = [
+        {"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor",
+         "hs": 4, "gs": 2, "outcome": "home", "src": "source_verified"},
+        {"date": "2026-08-01", "home": "Samgurali", "away": "Meshakhte Tkibuli",
+         "hs": 0, "gs": 0, "outcome": "draw", "src": "source_verified"},
+    ]
     monkeypatch.setattr(settlement_mod, "load_verified_results", lambda: verified)
 
     settled = at.load_settled()
     assert settled[("2026-08-22", norm_team("Fenerbahçe"), norm_team("Konyaspor"))] == "home"
+    for hkey, akey in at._result_write_keys("Samgurali Tskhaltubo", "FC Meshakhte Tkibuli"):
+        assert settled[("2026-08-01", hkey, akey)] == "draw"
+    # A home selection on the donor's alternate spelling must settle as a
+    # loss: a draw is the operator fact, not the donor's stale home win.
+    assert at.pick_result({"date": "2026-08-01", "home": "Samgurali Tskhaltubo",
+                           "away": "FC Meshakhte Tkibuli", "pick": "home"}, settled) == "loss"
 
     entries = at.load_settled_entries()
     pick = {"date": "2026-08-22", "home": "Fenerbahçe", "away": "Konyaspor"}
     assert at.alias_outcome_conflict(pick, entries) is False
+    samgurali_pick = {"date": "2026-08-01", "home": "Samgurali Tskhaltubo",
+                      "away": "FC Meshakhte Tkibuli"}
+    assert at.alias_outcome_conflict(samgurali_pick, entries) is False
 
 def test_card_completeness_on_starved_saturated_days():
     """2026-09-04: floor + volume gate compound -- 4 of 7 saturated days starve

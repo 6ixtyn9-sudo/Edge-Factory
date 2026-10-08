@@ -387,7 +387,7 @@ def capture_betexplorer_snapshot(target_date: str, trigger: str) -> None:
     )
 
 
-def finalize_priced_candidate_slate(target_date: str) -> str:
+def finalize_priced_candidate_slate(target_date: str, *, phase5_shadow: bool = False) -> str:
     """Turn one candidate slate into one final priced card.
 
     The first pick build creates the candidate shortlist only; no ticket is
@@ -401,8 +401,13 @@ def finalize_priced_candidate_slate(target_date: str) -> str:
     capture_oddspapi_snapshot(target_date, "candidate_price_snapshot")
     capture_betexplorer_snapshot(target_date, "candidate_price_snapshot")
     priced_as_of = make_run_as_of()
+    phase5_prefix = (
+        "EDGE_FACTORY_PHASE5_SHADOW=1 "
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline "
+        if phase5_shadow else ""
+    )
     run(
-        f"{picks_env_prefix(priced_as_of)} PYTHONPATH=src python3 "
+        f"{phase5_prefix}{picks_env_prefix(priced_as_of)} PYTHONPATH=src python3 "
         f"scripts/picks_today.py {target_date}",
         f"picks_today {target_date} (final priced card)",
     )
@@ -710,6 +715,7 @@ def generate_forecast_report(target_date: str, flabel: str, picks: list[dict[str
 
 def promote_forecast(forecast_arg: str, default_date: str) -> None:
     """Deliberately promote a non-official forecast JSON to become the official record."""
+    report_phase5_capture_status("manual_forecast_promotion")
     path = Path(forecast_arg)
     if not path.exists():
         candidates = [
@@ -863,6 +869,50 @@ def get_qualitative_hour_label() -> str:
     return "morning"
 
 
+def phase5_capture_command(mode: str, *, picks_only: bool = False) -> str | None:
+    """Return the authorized sidecar invocation only for a full official run."""
+    if mode != "official" or picks_only:
+        return None
+    return (
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT=official_daily_pipeline "
+        "python3 scripts/capture_daily.py --skip-build --phase5-shadow "
+        "--source-group forebet-resilience"
+    )
+
+
+def phase5_capture_skip_reason(mode: str, *, picks_only: bool = False) -> str | None:
+    """Explain why a selected orchestrator mode is not a Phase 5 capture day."""
+    if mode == "official" and not picks_only:
+        return None
+    if mode == "official" and picks_only:
+        return "picks_only run skips the authorized full daily capture"
+    reasons = {
+        "autonomous_intraday": "intraday recapture is non-authorized for Phase 5 accrual",
+        "forecast": "forecast refresh is non-official research mode",
+        "clv_only": "CLV-only mode does not run the authorized daily capture",
+        "manual_forecast_promotion": "manual forecast promotion is not authorized daily capture work",
+    }
+    return reasons.get(mode, "mode is not the full official daily pipeline")
+
+
+def report_phase5_capture_status(
+    mode: str,
+    *,
+    executed: bool = False,
+    picks_only: bool = False,
+) -> None:
+    if executed:
+        print(
+            "PHASE5_CAPTURE status=executed mode=official "
+            "reason=authorized_responses_observed_in_existing_jobs "
+            "additional_provider_calls=false"
+        )
+        return
+    reason = phase5_capture_skip_reason(mode, picks_only=picks_only)
+    if reason is not None:
+        print(f"PHASE5_CAPTURE status=skipped_by_mode mode={mode} reason={reason}")
+
+
 def run_pipeline(
     target_date: str,
     mode: str,  # "official", "autonomous_intraday", "forecast", "clv_only"
@@ -874,6 +924,7 @@ def run_pipeline(
     clv_label: str | None = None,
 ) -> None:
     """Execute the pipeline according to the requested operational mode."""
+    report_phase5_capture_status(mode, picks_only=picks_only)
     sync_repo_state()
     # Keep the committed state bounded (GitHub lists at most 1,000 entries per
     # directory). Runs before this pipeline writes anything and therefore
@@ -913,11 +964,14 @@ def run_pipeline(
             # Forebet's Browser Run path is parked after an upstream 403 HTML
             # response. Capture every resilient source and let individual
             # adapter failures remain retryable without starving the rebuild.
+            phase5_command = phase5_capture_command(mode, picks_only=picks_only)
+            if phase5_command is None:
+                raise RuntimeError("full official pipeline lost its authorized Phase 5 capture route")
             run(
-                "python3 scripts/capture_daily.py --skip-build "
-                "--source-group forebet-resilience",
+                phase5_command,
                 "capture_daily (non-Forebet D30 resilience pass)",
             )
+            report_phase5_capture_status(mode, executed=True)
             # B1 is runner-only: it owns its append-only ledger and bounded
             # source budgets, so workflow YAML does not need a second job.
             run_soft(
@@ -978,7 +1032,9 @@ def run_pipeline(
                 # Pass 2 is the only authoritative card: provider snapshots
                 # were captured between passes and are time-qualified against
                 # this second build's as_of timestamp.
-                run_as_of = finalize_priced_candidate_slate(target_date)
+                run_as_of = finalize_priced_candidate_slate(
+                    target_date, phase5_shadow=not picks_only
+                )
                 price_snapshot_finalized = True
                 if not PICKS_TODAY_FILE.exists():
                     raise RuntimeError("final priced-card build removed picks_today.json")
@@ -1058,6 +1114,10 @@ def run_pipeline(
             "o25_tracker (goals surface + checkpoint gate)",
         )
         ml_fade_research_maintenance(target_date)
+        run_soft(
+            "PYTHONPATH=src python3 scripts/phase5_certify.py",
+            "phase5 daily clause status (read-only)",
+        )
         sync_official_archive(target_date, "sync_supabase")
         _notify(target_date, "notify (Smart Dispatch + empty-slate heartbeat)")
         if not picks_only:

@@ -1895,20 +1895,22 @@ def _collect_settled_facts() -> tuple[dict, dict]:
                     {"home": str(home), "away": str(away), "outcome": str(r.get("outcome"))}
                 )
     # Operator-verified scores outrank every donor and the overlay. Overwrite
-    # the key and purge every alias-matching entry (any spelling) from the
-    # alias scan so a bad donor row filed under an alternate spelling cannot
-    # hold a leg as a conflict.
+    # the verified key AND every key written by an alias-matching donor before
+    # purging those entries from the alias scan. Purging entries alone is not
+    # enough: an alternate spelling may have populated a distinct exact key
+    # in key_to, which pick_result consults before the alias-conflict scan.
     from edgefactory.settlement import load_verified_results
     for v in load_verified_results():
         d = v["date"]
+        alias_entries = _alias_candidate_entries(
+            {"date": d, "home": v["home"], "away": v["away"]}, entries
+        )
+        for donor in alias_entries:
+            for hkey, akey in _result_write_keys(donor.get("home"), donor.get("away")):
+                key_to[(d, hkey, akey)] = v["outcome"]
         for h9, a9 in _result_write_keys(v["home"], v["away"]):
             key_to[(d, h9, a9)] = v["outcome"]
-        alias_ids = {
-            id(e)
-            for e in _alias_candidate_entries(
-                {"date": d, "home": v["home"], "away": v["away"]}, entries
-            )
-        }
+        alias_ids = {id(e) for e in alias_entries}
         entries[d] = [e for e in entries.get(d, []) if id(e) not in alias_ids]
         entries.setdefault(d, []).append(
             {"home": v["home"], "away": v["away"], "outcome": v["outcome"]}
