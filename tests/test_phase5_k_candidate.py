@@ -295,3 +295,20 @@ def test_probe_separates_a_live_feed_from_a_lagging_settled_view(tmp_path):
     assert "raw newest=2026-10-09" in text
     assert "settled newest=" in text
     assert module._probe_text(None) == "   (no table visible)"
+
+
+def test_accrual_line_reports_the_rate_the_floors_are_approached_at():
+    """The floors without a rate read as a stuck system; the rate is the fix.
+
+    The line must agree with the ``settled_eligible=`` count printed above it
+    (same eligibility rule, applied by the caller) and must vanish entirely
+    when nothing has settled, so an empty era is never decorated.
+    """
+    module = _load_script("fit_phase5_candidate_accrual", "scripts/fit_phase5_candidate.py")
+    days = ["2026-10-08"] * 14 + ["2026-10-09"] * 6
+    text = module.accrual_text(days)
+    assert "20 settled fixture(s)" in text
+    assert "over 2 day(s) = 10.0/day" in text
+    assert "no retrain" not in text            # the note above carries that claim
+    assert module.accrual_text([]) is None
+    assert module.accrual_text([None, ""]) is None
