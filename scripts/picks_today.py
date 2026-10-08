@@ -86,11 +86,13 @@ from edgefactory.source_health import (
     zero_row_reason,
 )
 from edgefactory.shadow import append_price_board_rows, read_shadow_rows
+from edgefactory.phase5_registry_guard import inspect_operational_registry
 from edgefactory import price_sources as psrc
 
 EDGES_PATH = ROOT / "localdata" / "edges_consensus.json"
 PURITY_PATH = ROOT / "localdata" / "purity_registry.json"
 LOCALDATA = ROOT / "localdata"
+PHASE5_ACTIVATION_ROOT = LOCALDATA / "phase5_activation"
 BZZOIRO_ODDS_SOURCE = "bzzoiro_odds"
 SCOUTINGSTATS_ODDS_SOURCE = "scoutingstats_odds"
 BETEXPLORER_ODDS_SOURCE = "betexplorer_odds"
@@ -1202,10 +1204,27 @@ def _prefer_entry(new: dict, old: dict | None) -> bool:
 def load_thresholds():
     edges = []
     try:
-        data = json.loads(EDGES_PATH.read_text())
+        data = json.loads(EDGES_PATH.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            raise ValueError("registry must be an object")
         edges = [e for e in data.get("edges", [])
-                 if e.get("status") == "certified"]
-    except (OSError, json.JSONDecodeError, AttributeError):
+                 if isinstance(e, dict) and e.get("status") == "certified"]
+        if any(
+            str(edge.get("rule", "")).lower().startswith("ml-meta ")
+            for edge in edges
+        ):
+            guard = inspect_operational_registry(data, PHASE5_ACTIVATION_ROOT)
+            if not guard["ok"]:
+                edges = [
+                    edge for edge in edges
+                    if not str(edge.get("rule", "")).lower().startswith("ml-meta ")
+                ]
+                print(
+                    "PHASE5_REGISTRY_GUARD ML_META_RULES_BLOCKED "
+                    f"model_key={guard.get('model_key') or 'missing'} reason={guard['reason']}",
+                    file=sys.stderr,
+                )
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError, TypeError, AttributeError):
         edges = []
 
     if not edges:
@@ -1296,33 +1315,57 @@ def ml_meta_contract_breaches(picks: list[dict]) -> list[dict]:
     return out
 
 
-def load_ml_rules_and_model() -> tuple[list[dict], dict | None]:
+def _read_guarded_ml_registry() -> dict | None:
     try:
-        data = json.loads(EDGES_PATH.read_text())
-        edges = data.get("edges", [])
-        rules = [e for e in edges if e.get("status") == "certified" and "ml-meta" in e.get("rule", "")]
-        model = data.get("ml_model")
-        return rules, model
-    except Exception:
+        data = json.loads(EDGES_PATH.read_text(encoding="utf-8"))
+        if not isinstance(data, dict):
+            return None
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        return None
+
+    guard = inspect_operational_registry(data, PHASE5_ACTIVATION_ROOT)
+    if not guard["ok"]:
+        print(
+            "PHASE5_REGISTRY_GUARD ML_EMISSION_BLOCKED "
+            f"model_key={guard.get('model_key') or 'missing'} reason={guard['reason']}",
+            file=sys.stderr,
+        )
+        return None
+    return data
+
+
+def load_ml_rules_and_model() -> tuple[list[dict], dict | None]:
+    data = _read_guarded_ml_registry()
+    if data is None:
         return [], None
+    edges = data.get("edges", [])
+    rules = [
+        edge for edge in edges
+        if isinstance(edge, dict)
+        and edge.get("status") == "certified"
+        and str(edge.get("rule", "")).lower().startswith("ml-meta ")
+    ]
+    model = data.get("ml_model")
+    return rules, model if isinstance(model, dict) else None
 
 
 def load_ml_fade_rules() -> list[dict]:
-    """Certified ml-fade rules from the same registry the ml-meta family reads.
+    """Read certified fade cuts only when the same frozen incumbent verifies.
 
-    ml-fade rules are their own family (derived inverse of ml-meta selections)
-    so they are matched by exact family prefix, and carry their own
-    walk-forward certification — a fade row may only be emitted from a rule
-    the miner certified and the decay monitor has not benched.
+    The legacy miner may not rewrite ``ml-fade`` entries either; its writer
+    carries their existing state forward. A model/baseline mismatch blocks both
+    ML rule families so neither can use a retrained payload at pick time.
     """
-    try:
-        data = json.loads(EDGES_PATH.read_text())
-        edges = data.get("edges", [])
-        return [e for e in edges
-                if e.get("status") == "certified"
-                and str(e.get("rule", "")).startswith(f"{FADE_FAMILY} ")]
-    except Exception:
+    data = _read_guarded_ml_registry()
+    if data is None:
         return []
+    edges = data.get("edges", [])
+    return [
+        edge for edge in edges
+        if isinstance(edge, dict)
+        and edge.get("status") == "certified"
+        and str(edge.get("rule", "")).startswith(f"{FADE_FAMILY} ")
+    ]
 
 
 def get_rolling_hit_rate_last_14d(target_date_str: str) -> float:
@@ -3287,6 +3330,109 @@ def _day_card_fixtures(day: str, picks: list) -> list:
     return out
 
 
+def _record_phase5_betminer_capture(
+    day: str,
+    *,
+    rows: list[dict] | None,
+    stats: dict,
+    started_at: str,
+    error_class: str | None = None,
+) -> None:
+    """Piggyback the existing BetMiner response into the isolated Phase 5 ledger."""
+    phase5_enabled = os.environ.get("EDGE_FACTORY_PHASE5_SHADOW", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    phase5_context = os.environ.get(
+        "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+    )
+    if not phase5_enabled:
+        return
+    if phase5_context != "official_daily_pipeline":
+        print(
+            "PHASE5_CAPTURE status=skipped_by_mode source=betminer "
+            f"reason=official_daily_pipeline_required context={phase5_context}",
+            file=sys.stderr,
+        )
+        return
+    try:
+        from edgefactory.phase5_shadow import (
+            append_capture_attempt,
+            append_shadow_rows,
+            local_capture_date,
+        )
+    except Exception:
+        return
+
+    capture_day = local_capture_date()
+    diag = {}
+    try:
+        from edgefactory.sources import betminer as bm
+        diag_fn = getattr(bm, "diagnostics", None)
+        if callable(diag_fn):
+            diag = diag_fn() or {}
+    except Exception:
+        diag = {}
+
+    counters = {
+        "rows_fetched": 0,
+        "rows_appended": 0,
+        "rows_bytes_appended": 0,
+        "rows_ignored_historical": 0,
+        "rows_rejected_identity": 0,
+        "rows_rejected_signal": 0,
+    }
+    status = str(stats.get("status") or "failed")
+    error_classes = [error_class] if error_class else []
+    try:
+        result = append_shadow_rows(
+            "betminer", rows or [], capture_day=capture_day,
+            requested_day=day,
+            capture_context=os.environ.get(
+                "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+            ),
+            root=LOCALDATA,
+        )
+        counters.update({
+            "rows_fetched": result["rows_seen"] - result["rows_ignored_historical"],
+            "rows_appended": result["rows_appended"],
+            "rows_bytes_appended": result["rows_bytes_appended"],
+            "rows_ignored_historical": result["rows_ignored_historical"],
+            "rows_rejected_identity": result["rows_rejected_identity"],
+            "rows_rejected_signal": result["rows_rejected_signal"],
+        })
+        if status in {"ok", "empty", "cache_only"}:
+            attempt_status = "ok"
+        elif status in {"not_run", "candidate_only", "disabled"}:
+            attempt_status = "not_run"
+        else:
+            attempt_status = "failed"
+    except Exception as exc:
+        attempt_status = "shadow_write_failed"
+        error_classes.append(type(exc).__name__)
+
+    try:
+        append_capture_attempt(
+            "betminer", capture_day=capture_day, status=attempt_status,
+            started_at=started_at,
+            completed_at=datetime.now(timezone.utc).isoformat(timespec="seconds"),
+            requested_days=[day],
+            forward_days=[day],
+            capture_context=os.environ.get(
+                "EDGE_FACTORY_PHASE5_RUN_CONTEXT", "manual_or_unspecified"
+            ),
+            source_status=diag.get("status") or stats.get("status"),
+            quota_hint=diag.get("quota_hint"),
+            http_statuses=diag.get("http_statuses") or stats.get("http_statuses") or (),
+            error_classes=error_classes,
+            root=LOCALDATA,
+            **counters,
+        )
+    except Exception:
+        # Phase 5 sidecar failures are diagnostic only and never change the
+        # existing BetMiner shadow, picks, or capture return path.
+        return
+
+
 def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, dict]:
     """Capture every verified shadow candidate without touching the production path.
 
@@ -3326,13 +3472,31 @@ def _capture_shadow_candidates(day: str, card: list | None = None) -> dict[str, 
         stats["sportytrader_odds"] = st_stats
     except Exception as exc:
         stats["sportytrader_odds"]["blocker"] = str(exc)[:180]
+    bm_phase5_enabled = os.environ.get("EDGE_FACTORY_PHASE5_SHADOW", "").strip().lower() in {
+        "1", "true", "yes", "on",
+    }
+    bm_phase5_started_at = (
+        datetime.now(timezone.utc).isoformat(timespec="seconds")
+        if bm_phase5_enabled else ""
+    )
+    bm_rows: list[dict] = []
+    bm_stats: dict = {"status": "failed", "http_statuses": []}
     try:
         from edgefactory.sources import betminer as bm
         bm_rows, bm_stats = bm.capture_day(day)
         bm.persist_shadow(day, bm_rows, bm_stats, localdata=LOCALDATA)
         stats["betminer"] = bm_stats
+        if bm_phase5_enabled:
+            _record_phase5_betminer_capture(
+                day, rows=bm_rows, stats=bm_stats, started_at=bm_phase5_started_at,
+            )
     except Exception as exc:
         stats["betminer"]["blocker"] = str(exc)[:180]
+        if bm_phase5_enabled:
+            _record_phase5_betminer_capture(
+                day, rows=bm_rows, stats=bm_stats, started_at=bm_phase5_started_at,
+                error_class=type(exc).__name__,
+            )
     try:
         from edgefactory.sources import pinnapi_odds as pinnapi
         pa_rows, pa_stats = pinnapi.capture_day(day)

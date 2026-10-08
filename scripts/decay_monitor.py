@@ -32,6 +32,8 @@ build_warehouse -> mine_consensus -> decay_monitor -> picks_today.
 from __future__ import annotations
 
 import argparse
+import csv
+import gzip
 import json
 import sys
 from datetime import date, timedelta
@@ -43,6 +45,7 @@ sys.path.insert(0, str(ROOT / "src"))
 from edgefactory.assay import decay_verdict, should_bench, wilson_lb  # noqa: E402
 from edgefactory.config import GATES  # noqa: E402
 from edgefactory.fade import FADE_VIEW, ml_fade_settled_sql  # noqa: E402
+from edgefactory.ml_fade_research import model_key  # noqa: E402
 
 DB = ROOT / "localdata" / "warehouse.duckdb"
 REG = ROOT / "localdata" / "edges_consensus.json"
@@ -67,7 +70,31 @@ def _get_scale(con, view: str) -> float:
         return 1.0
 
 
-def recreate_views(con) -> set[str]:
+def _prediction_export_matches_model(path: Path, expected_model_key: str | None) -> bool:
+    """Require model provenance before an export can drive ML decay/benching."""
+    if not expected_model_key:
+        return False
+    try:
+        with gzip.open(path, "rt", encoding="utf-8", newline="") as handle:
+            reader = csv.DictReader(handle)
+            if "model_key" not in (reader.fieldnames or []):
+                return False
+            rows = 0
+            for row in reader:
+                rows += 1
+                if row.get("model_key") != expected_model_key:
+                    return False
+        return rows > 0
+    except (OSError, EOFError, UnicodeDecodeError, csv.Error):
+        return False
+
+
+def recreate_views(
+    con,
+    *,
+    expected_model_key: str | None = None,
+    require_ml_provenance: bool = False,
+) -> set[str]:
     """Rebuild the TEMP consensus views mine_consensus.py uses, on top of the
     materialized warehouse tables. Returns the set of available view names.
     Every block is independent and failure-tolerant."""
@@ -451,9 +478,21 @@ def recreate_views(con) -> set[str]:
         except Exception:
             pass
 
-    # Recreate ML Meta view if predictions exist on disk (Handover Rule L1 View Graph)
+    # Recreate ML views only from predictions explicitly keyed to the current
+    # live model. The miner writes its fresh candidate predictions to a
+    # separate research export; those must never drive incumbent decay/bench.
     ML_PREDS_PATH = ROOT / "localdata" / "ml_meta_predictions.csv.gz"
-    if ML_PREDS_PATH.exists() and _table_exists(con, "consensus3"):
+    ml_export_ok = ML_PREDS_PATH.exists() and _table_exists(con, "consensus3")
+    if require_ml_provenance:
+        ml_export_ok = ml_export_ok and _prediction_export_matches_model(
+            ML_PREDS_PATH, expected_model_key
+        )
+        if not ml_export_ok:
+            print(
+                "PHASE5_REGISTRY_GUARD ML decay skipped: prediction export is "
+                "missing, unprovenanced, or for a different live model_key."
+            )
+    if ml_export_ok:
         try:
             con.execute(f"""
                 CREATE OR REPLACE TEMP VIEW ml_meta_raw AS
@@ -541,7 +580,12 @@ def main():
 
     import duckdb
     con = duckdb.connect(str(DB), read_only=True)
-    avail = recreate_views(con)
+    expected_ml_model_key = model_key(reg.get("ml_model"))
+    avail = recreate_views(
+        con,
+        expected_model_key=expected_ml_model_key,
+        require_ml_provenance=True,
+    )
     since = (date.today() - timedelta(days=args.window)).isoformat()
     today = date.today().isoformat()
 

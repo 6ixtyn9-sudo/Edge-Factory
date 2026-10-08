@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
 import numpy as np
 import pandas as pd
@@ -27,9 +28,18 @@ from edgefactory.config import GATES  # noqa: E402
 from edgefactory.fade import (  # noqa: E402
     FADE_VIEW, fade_edge_metadata, ml_fade_settled_sql,
 )
+from edgefactory.phase5_registry_guard import (  # noqa: E402
+    inspect_operational_registry,
+    preserve_live_ml_payload,
+)
+from edgefactory.ml_fade_research import model_key  # noqa: E402
 
 DB = ROOT / "localdata" / "warehouse.duckdb"
 OUT = ROOT / "localdata" / "edges_consensus.json"
+RESEARCH_OUT = ROOT / "localdata" / "edges_consensus_research.json"
+ML_PREDS_PATH = ROOT / "localdata" / "ml_meta_predictions.csv.gz"
+ML_RESEARCH_PREDS_PATH = ROOT / "localdata" / "ml_meta_predictions_research.csv.gz"
+ACTIVATION_ROOT = ROOT / "localdata" / "phase5_activation"
 
 # Cold-cache guard: certification must never silently run on a warehouse with
 # insufficient PRE-SPLIT settled history (the L9 cold-cache trap). The file may
@@ -87,22 +97,65 @@ def _existing_certified_count() -> int:
         return 0
 
 
-def write_registry(payload: dict) -> bool:
-    """Persist the mined registry with a regression-to-zero circuit breaker.
+def _atomic_registry_write(path: Path, payload: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    with temporary.open("w", encoding="utf-8") as handle:
+        json.dump(payload, handle, indent=2, sort_keys=True)
+        handle.write("\n")
+        handle.flush()
+        os.fsync(handle.fileno())
+    os.replace(temporary, path)
 
-    Deep walk-forward history (pre-split training rows) lives only on the
-    operator's local machine and in the GitHub Actions cache. On a cold or
-    evicted cache the warehouse holds only a rolling D30 window, which is
-    entirely post-split, so no rule can satisfy min_n_train and the miner
-    yields 0 certified edges.
 
-    Left unguarded, that empty result overwrites a good registry and cascades
-    into empty picks, empty WhatsApps, and a frozen intraday loop. This guard
-    preserves the last known-good registry whenever a run certifies nothing but
-    the existing file already holds certified edges.
+def _score_live_model(df, feature_cols: list[str], live_model: object) -> list[float] | None:
+    """Score the warehouse rows with the model currently in the live registry.
 
-    Returns True if a new file was written, False if the existing file was kept.
+    The fresh training fit is research-only for decay purposes; decay and
+    bench monitoring must use predictions from the current live scorer.
     """
+    if not isinstance(live_model, dict) or live_model.get("feature_cols") != feature_cols:
+        return None
+    try:
+        coefficients = np.asarray(live_model.get("coef"), dtype=float)
+        matrix = df[feature_cols].to_numpy(dtype=float)
+        intercept = float(live_model["intercept"])
+        if coefficients.ndim != 1 or coefficients.shape[0] != matrix.shape[1]:
+            return None
+        logits = matrix @ coefficients + intercept
+        if not np.isfinite(logits).all():
+            return None
+        probabilities = 1.0 / (1.0 + np.exp(-np.clip(logits, -700.0, 700.0)))
+        if not np.isfinite(probabilities).all():
+            return None
+        return probabilities.tolist()
+    except (KeyError, TypeError, ValueError, OverflowError):
+        return None
+
+
+def write_registry(payload: dict) -> bool:
+    """Write research output separately and merge only safe operational edges.
+
+    The legacy fit still runs unchanged for diagnostics, and its full candidate
+    payload is written to ``edges_consensus_research.json``. The operational
+    registry accepts the newly mined non-ML edges while carrying forward the
+    *current* model and ML rule entries byte-for-value. It never copies the
+    Phase 5 baseline over a mismatch, nor adopts a new legacy model/cut set.
+
+    A missing or unreadable live registry is not reconstructed from the
+    candidate or baseline: the write is refused so a missing incumbent or
+    existing bench cannot be silently cleared. The existing cold-cache
+    regression-to-zero guard remains in force.
+
+    Returns True if the safe operational registry was written, False if it was
+    kept unchanged.
+    """
+    try:
+        _atomic_registry_write(RESEARCH_OUT, payload)
+        print(f"\nlegacy candidate kept research-only -> {RESEARCH_OUT}")
+    except Exception as exc:  # research output must not disrupt the safe path
+        print(f"WARNING: could not persist separate legacy research payload ({type(exc).__name__})")
+
     new_certified = _count_certified(payload.get("edges", []))
     existing_certified = _existing_certified_count()
 
@@ -112,16 +165,47 @@ def write_registry(payload: dict) -> bool:
             f"registry already holds {existing_certified} certified edge(s)."
         )
         print("    Keeping the existing registry to avoid clobbering certified edges.")
-        print("    Usual cause: cold/evicted warehouse missing pre-split training history")
-        print("    (capture_daily only backfills a D30 window, all of it post-split).")
-        print("    Restore: re-run on a machine with full history, or commit edges_consensus.json")
-        print("    into the repo so the certified registry survives cache loss (see HANDOVER.md).")
         print(f"    Preserved file: {OUT}")
         return False
 
-    OUT.parent.mkdir(exist_ok=True)
-    OUT.write_text(json.dumps(payload, indent=2, sort_keys=True))
-    print(f"\nwritten -> {OUT}  (certified={new_certified})")
+    if not OUT.exists():
+        print(
+            f"\nPHASE5_REGISTRY_GUARD blocked operational write: live registry is missing; "
+            f"candidate model/cuts remain research-only ({RESEARCH_OUT})."
+        )
+        return False
+    try:
+        current = json.loads(OUT.read_text(encoding="utf-8"))
+        if not isinstance(current, dict) or not isinstance(current.get("edges"), list):
+            raise ValueError("live registry must contain an edge list")
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError, ValueError) as exc:
+        print(
+            f"\nPHASE5_REGISTRY_GUARD blocked operational write: live registry unreadable "
+            f"({type(exc).__name__}); candidate remains research-only."
+        )
+        return False
+
+    safe_payload, merge = preserve_live_ml_payload(payload, current)
+    guard = inspect_operational_registry(current, ACTIVATION_ROOT)
+    if guard["ok"]:
+        print(
+            "PHASE5_REGISTRY_GUARD incumbent verified; "
+            f"preserving model_key={merge['preserved_model_key']} and "
+            f"{merge['preserved_ml_edge_count']} current ML edge(s)."
+        )
+    else:
+        print(
+            "PHASE5_REGISTRY_GUARD BASELINE MISMATCH; no model/cut repair or adoption. "
+            "The current ML payload is preserved verbatim, ML scoring remains blocked, "
+            f"and unrelated non-ML edges may update. reason={guard['reason']}"
+        )
+
+    _atomic_registry_write(OUT, safe_payload)
+    print(
+        f"\nwritten -> {OUT} (candidate_certified={new_certified}; "
+        f"operational_non_ml={merge['accepted_non_ml_edge_count']}; "
+        f"preserved_ml={merge['preserved_ml_edge_count']})"
+    )
     return True
 
 
@@ -630,13 +714,53 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
         "feature_cols": feature_cols,
     }
     
-    # Save predictions to disk so subsequent pipeline stages can recreate the view natively
+    # Keep the just-fitted candidate export separate from the operational
+    # prediction file. Decay/bench monitoring reads only the latter and it must
+    # be scored by the model that is still present in edges_consensus.json.
+    candidate_predictions = df[['date', 'home', 'away', 'ml_p', 'pick']].copy()
+    candidate_predictions['model_key'] = model_key(payload)
     try:
-        ML_PREDS_PATH = ROOT / "localdata" / "ml_meta_predictions.csv.gz"
-        df[['date', 'home', 'away', 'ml_p', 'pick']].to_csv(ML_PREDS_PATH, index=False, compression="gzip")
-        print(f"Saved {len(df):,} ML predictions to disk -> {ML_PREDS_PATH}")
+        ML_RESEARCH_PREDS_PATH.parent.mkdir(parents=True, exist_ok=True)
+        candidate_predictions.to_csv(
+            ML_RESEARCH_PREDS_PATH, index=False, compression="gzip"
+        )
+        print(
+            f"Saved {len(df):,} candidate ML predictions (research-only) -> "
+            f"{ML_RESEARCH_PREDS_PATH}"
+        )
     except Exception as exc:
-        print(f"Failed to save ML predictions to disk: {exc}")
+        print(f"Failed to save separate candidate ML predictions: {type(exc).__name__}")
+
+    incumbent_registry = None
+    try:
+        incumbent_registry = json.loads(OUT.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError):
+        pass
+    live_model = (
+        incumbent_registry.get("ml_model")
+        if isinstance(incumbent_registry, dict) else None
+    )
+    incumbent_probabilities = _score_live_model(df, feature_cols, live_model)
+    if incumbent_probabilities is None:
+        print(
+            "Incumbent ML prediction export not refreshed: live model missing or "
+            "incompatible; decay monitor will fail closed for ML edges."
+        )
+    else:
+        incumbent_predictions = df[['date', 'home', 'away', 'pick']].copy()
+        incumbent_predictions['ml_p'] = incumbent_probabilities
+        incumbent_predictions['model_key'] = model_key(live_model)
+        try:
+            ML_PREDS_PATH.parent.mkdir(parents=True, exist_ok=True)
+            incumbent_predictions.to_csv(
+                ML_PREDS_PATH, index=False, compression="gzip"
+            )
+            print(
+                f"Saved {len(df):,} live-incumbent ML predictions "
+                f"(model_key={model_key(live_model)}) -> {ML_PREDS_PATH}"
+            )
+        except Exception as exc:
+            print(f"Failed to save incumbent ML predictions: {type(exc).__name__}")
 
     print(f"ML Meta-Classifier trained successfully! coefficients={payload['coef']}, intercept={payload['intercept']}")
     return payload, model
