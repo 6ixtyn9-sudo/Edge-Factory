@@ -1705,6 +1705,22 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
         if not ultra_short_home_soft_unknown:
             return BUCKET_WL_CTX
 
+    # Absence of evidence is not evidence of risk. An UNKNOWN odds-band
+    # context means no priced history exists for this rule/band cell (the
+    # odds_band dimension holds ~131 cells against tens of thousands of
+    # fixtures), not that the band is bad. CAUTION is a fair reading of
+    # UNKNOWN, but the sub-floor DELETE below was silent: the row left no
+    # archive trace at all, so the population could never be measured and it
+    # looked as if the floor applied to nothing. Keep the drop, tag WHY, and
+    # report it in the run summary — promoting this class to a staked bucket
+    # must come from its own recorded record, never from assuming
+    # UNKNOWN == bad.
+    caution_from_unknown_band_only = (
+        ctx.get("odds_band") == "UNKNOWN"
+        and "CAUTION" not in vals
+        and decay_verdict == "HEALTHY"
+    )
+
     if ctx.get("odds_band") == "UNKNOWN":
         bucket = BUCKET_CAUTION
     elif "CAUTION" in vals:
@@ -1720,6 +1736,18 @@ def bucket_pick(pick: dict, ctx: dict, edge_status: str = "certified",
         bucket = BUCKET_CERTIFIED
 
     if bucket == BUCKET_CAUTION and odds is not None and float(odds) < CAUTION_MIN_ODDS:
+        # The picked leg is dropped, and the caller records WHY by reason so
+        # the floor stops being silent (see the run summary). The two reasons
+        # are different animals: `caution_below_odds_floor` is evidence-backed
+        # (the CAUTION population measures ~-9.5% ROI at n=205), while
+        # `unknown_odds_band_no_evidence` only says the rule/band cell has no
+        # priced history yet — measured WATCHLIST_UNKNOWN_CTX legs won 86.4%
+        # (n=44, +3.4% ROI). Promote the second class only from its own
+        # recorded record, never by assuming UNKNOWN == bad.
+        pick["bucket_drop_reason"] = (
+            "unknown_odds_band_no_evidence" if caution_from_unknown_band_only
+            else "caution_below_odds_floor"
+        )
         return None
 
     return bucket
@@ -5887,6 +5915,7 @@ def main():
               file=sys.stderr)
 
     all_picks: list = []
+    context_floor_drops: Counter = Counter()
     total_vetoes = 0
     total_upcoming = 0
     shadow_totals = {"raw": 0, "scored": 0, "st_raw": 0, "st_matched": 0,
@@ -6454,6 +6483,9 @@ def main():
                                  edge_status=meta.get("status", "certified"),
                                  decay_verdict=meta.get("decay_verdict", "HEALTHY"))
             if bucket is None:
+                context_floor_drops[
+                    str(p.get("bucket_drop_reason") or "context_floor")
+                ] += 1
                 continue
             p["ctx"] = {k: v for k, v in ctx.items() if not k.startswith("_")}
             p["bucket"] = bucket
@@ -6686,12 +6718,14 @@ def main():
         break
     n_skip_veto = len(buckets[BUCKET_SKIP_VETO])
     n_skip_dead = len(buckets[BUCKET_SKIP_DEAD])
+    n_ctx_dropped = sum(context_floor_drops.values())
     summary = (f"Summary: CLEAN={n_clean} CAUTION={n_caution} "
                f"WATCHLIST_odds={n_wl_odds} "
                f"WATCHLIST_uncorroborated_price={n_wl_uncorroborated} "
                f"WATCHLIST_suspect_price={n_wl_suspect} "
                f"WATCHLIST_ctx={n_wl_ctx} "
-               f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead}  "
+               f"SKIPPED_veto={n_skip_veto} SKIPPED_dead={n_skip_dead} "
+               f"ctx_floor_dropped={n_ctx_dropped}  "
                f"shadow_fp_raw={shadow_totals['raw']} shadow_fp_scored={shadow_totals['scored']} "
                f"st_raw={shadow_totals['st_raw']} st_matched={shadow_totals['st_matched']} "
                f"bm_raw={shadow_totals['bm_raw']} bm_scored={shadow_totals['bm_scored']} "
@@ -6700,6 +6734,10 @@ def main():
                f"sa_raw={shadow_totals['sa_raw']} sa_matched={shadow_totals['sa_matched']} "
                f"({total_vetoes} vetoes, {total_upcoming} matches)")
     print(f"\n{summary}")
+    if context_floor_drops:
+        detail = " ".join(f"{k}={v}" for k, v in sorted(context_floor_drops.items()))
+        print(f"context floor: {n_ctx_dropped} caveated leg(s) dropped below the "
+              f"odds floor and NOT archived ({detail})")
 
     # Layer A: Alert on UNKNOWN league verdicts so missing aliases are caught
     # immediately instead of requiring cross-file manual inspection.
