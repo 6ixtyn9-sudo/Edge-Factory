@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 import numpy as np
 import pandas as pd
@@ -108,17 +109,30 @@ def _atomic_registry_write(path: Path, payload: dict) -> None:
     os.replace(temporary, path)
 
 
-def _score_live_model(df, feature_cols: list[str], live_model: object) -> list[float] | None:
+def _score_live_model(df, live_model: object) -> list[float] | None:
     """Score the warehouse rows with the model currently in the live registry.
 
     The fresh training fit is research-only for decay purposes; decay and
     bench monitoring must use predictions from the current live scorer.
+
+    The incumbent is scored on ITS OWN feature contract, never the
+    candidate's: retraining the candidate (e.g. dropping the leaking
+    ht_diff/ht_total features) must not silently stop the incumbent
+    prediction export and send the decay monitor fail-closed on every ML
+    edge. The live payload's own feature_cols drive the matrix, and the
+    columns must exist on the frame (they are still computed even when the
+    candidate no longer trains on them).
     """
-    if not isinstance(live_model, dict) or live_model.get("feature_cols") != feature_cols:
+    if not isinstance(live_model, dict):
+        return None
+    live_cols = live_model.get("feature_cols")
+    if not isinstance(live_cols, list) or not live_cols:
+        return None
+    if any(col not in df.columns for col in live_cols):
         return None
     try:
         coefficients = np.asarray(live_model.get("coef"), dtype=float)
-        matrix = df[feature_cols].to_numpy(dtype=float)
+        matrix = df[live_cols].to_numpy(dtype=float)
         intercept = float(live_model["intercept"])
         if coefficients.ndim != 1 or coefficients.shape[0] != matrix.shape[1]:
             return None
@@ -487,7 +501,16 @@ def _run_weighted_consensus(con, split: str, source_lbs: dict[str, dict[str, flo
                     lb = source_lbs[source]["1x2"]
                     matches[key]["votes"].append((pick, lb))
 
-            for w_thr in (0.55, 0.60, 0.65, 0.70, 0.75, 0.80):
+            # ONE rung, not six. `weighted_consensus_score` returns exactly
+            # 1.0 whenever the contributing sources agree, and the loop only
+            # keeps unanimous matches, so every threshold from 0.55 upward
+            # selected the byte-identical match set: the six
+            # `weighted-1x2 w_score>=0.55..0.80` entries were the same rule
+            # six times (44,728 rows / 50.3% / +9.3% each). 0.55 is kept as
+            # the single threshold because it is the rung that actually
+            # describes the selection; higher w_score rungs only become
+            # meaningful if non-unanimous scoring is ever admitted.
+            for w_thr in (0.55,):
                 rule_name = f"weighted-1x2 w_score>={w_thr:.2f}"
                 qualifying: list[dict] = []
                 for match in matches.values():
@@ -677,7 +700,13 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
         'is_home', 'is_away',
         'cat_friendly', 'cat_youth', 'cat_women', 'cat_cup', 'cat_league',
         'rolling_hit_rate',
-        'ht_p', 'ht_diff', 'ht_total',
+        'ht_p',
+        # ht_diff / ht_total are DROPPED (diagnosis_no_autobets_2026-10-06
+        # §3.2 / fix #6): they are the actual half-time score, i.e. the
+        # target leaking into training, and they are pinned to 0 at serve
+        # (FROZEN_FEATURE_COLS / checkpoint ⑫), so they can only inflate the
+        # research fit and are unreachable live. Any earlier certified number
+        # that leaned on them was not reachable at bet time.
         'kelly', 'pred_total', 'pred_diff',
         'goalsavg', 'p_ng', 'p_under',
         'sa_ht_p', 'p_gg',
@@ -740,7 +769,7 @@ def train_ml_meta_classifier(con, split: str) -> tuple[dict, LogisticRegression]
         incumbent_registry.get("ml_model")
         if isinstance(incumbent_registry, dict) else None
     )
-    incumbent_probabilities = _score_live_model(df, feature_cols, live_model)
+    incumbent_probabilities = _score_live_model(df, live_model)
     if incumbent_probabilities is None:
         print(
             "Incumbent ML prediction export not refreshed: live model missing or "
@@ -1031,7 +1060,11 @@ def main():
         # by the SAME walk-forward gates — if they certify, the edge fires
         # NOW instead of waiting for the season; if phantom, they stay
         # candidates. The data decides, not impatience.
-        for thr in (55, 60, 65, 70, 75, 80, 85):
+        # The ladder now starts at 30. Widening it only widens what gets
+        # JUDGED: every rung faces the identical walk-forward gates
+        # (min_n_train/min_n_valid/min_roi_valid/LB), and a rung that does not
+        # clear them stays a candidate and fires nothing.
+        for thr in (30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85):
             results.append(evaluate(
                 con, f"ml-meta avg_p>={thr}", "ml_meta_settled",
                 f"ml_p*100 >= {thr}", args.split))
@@ -1047,7 +1080,10 @@ def main():
         # ml-meta, not as part of it.
         try:
             con.execute(ml_fade_settled_sql("ml_meta_raw_df"))
-            for thr in (55, 60, 65, 70, 75, 80, 85):
+            # The fade ladder mirrors the parent rung ladder so the two
+            # families are always compared rung-for-rung; the same gates
+            # decide both.
+            for thr in (30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85):
                 fade_edge = evaluate(
                     con, f"ml-fade avg_p>={thr}", FADE_VIEW,
                     f"ml_p*100 >= {thr}", args.split)
@@ -1384,6 +1420,41 @@ def main():
         payload["ml_model"] = ml_model_payload
 
     write_registry(payload)
+    _print_k_coverage_diagnostic()
+
+
+def _print_k_coverage_diagnostic() -> None:
+    """Read-only Phase 5 K coverage report, printed in every miner run.
+
+    The forward era's 32-column contract is fed by sources that are partly
+    dark; this block says which ones, and when a candidate fit becomes due, so
+    a returning feed is visible in the log the day it lands. It runs the same
+    read-only explain path as ``fit_phase5_candidate.py --explain`` and can
+    never affect the mine — diagnostics, not pipeline state.
+    """
+    script = Path(__file__).resolve().parent / "fit_phase5_candidate.py"
+    if not script.exists():
+        return
+    print("\n--- Phase 5 K-contract coverage (read-only) ---")
+    # Resolve imports and relative localdata paths from the repo root, not from
+    # whatever cwd the miner happened to be launched in.
+    root = script.parent.parent
+    env = dict(os.environ)
+    existing_path = env.get("PYTHONPATH", "")
+    env["PYTHONPATH"] = str(root / "src") + (os.pathsep + existing_path if existing_path else "")
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(script), "--explain"],
+            capture_output=True, text=True, timeout=180, cwd=str(root), env=env,
+        )
+    except Exception as exc:  # pragma: no cover - diagnostics must never gate
+        print(f"(K coverage diagnostic skipped: {type(exc).__name__})")
+        return
+    output = (proc.stdout or "").strip()
+    if output:
+        print(output)
+    if proc.returncode not in (0, 1, 2, 3, 4) and proc.stderr:
+        print(f"(explain exited {proc.returncode}) {proc.stderr.strip()[:400]}")
 
 
 if __name__ == "__main__":
