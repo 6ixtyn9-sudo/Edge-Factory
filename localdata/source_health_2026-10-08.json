@@ -24,10 +24,9 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 1,
         "market_unmapped": 1,
         "market_unsupported": 587,
-        "out_of_window": 68,
+        "out_of_window": 69,
         "selection_unmapped": 667
       },
       "reason": null,
@@ -44,8 +43,8 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 4,
-      "be_raw": 12,
+      "be_matched": 0,
+      "be_raw": 15,
       "be_usable": 12,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
@@ -53,9 +52,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 2,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 10
+        "out_of_window": 12
       },
       "reason": null,
       "status": "cache_only"
@@ -95,7 +94,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 3,
+        "out_of_window": 3,
         "selection_unsupported": 4
       },
       "reason": null,
@@ -186,10 +185,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 2178,
+        "event_count": 2235,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 2178,
+        "events_with_teams": 2235,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -261,7 +260,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 33
+        "out_of_window": 33
       },
       "reason": null,
       "sa_matched": 0,
@@ -310,7 +309,7 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 100
+        "out_of_window": 100
       },
       "oa_matched": 0,
       "oa_raw": 100,
