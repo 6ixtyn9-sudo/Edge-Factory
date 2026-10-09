@@ -12,7 +12,7 @@ Unchecked items are requirements, not claims of completed tests. Only two isolat
 
 ## Gate A — Schema and storage contract, before coding
 
-**Submitted draft:** [mcp-audit/v1 schema/storage specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md). Draft 2 reconciles the [two supplied verdicts](GATE-A-REVIEW-DISPOSITION-2026-10-09.md); renewed A1–A4 approval is required before coding. Publication does not check any acceptance item.
+**Submitted draft:** [mcp-audit/v1 schema/storage specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md). Draft 3 records [renewed A1–A3 technical approval and separate review scopes](GATE-A-REVIEW-DISPOSITION-2026-10-09.md). A4 publication/retention review and explicit operator authorization are still required before coding. Publication does not check any acceptance item.
 
 - [ ] Approve a separate versioned sidecar stream and bounded retention/persistence contract; no unreviewed workflow changes or large tracked datasets.
 - [ ] Preserve operational rows, archives, exported payloads, IDs, models, rules, thresholds, prices, tickets and frozen state unchanged.
@@ -82,4 +82,4 @@ Attach commands, code revision, inputs and expected/actual outputs for each cont
 - [ ] No automatic model promotion, electorate substitution, relaxed gates, archive rewrite or new dual production lane.
 - [ ] Record implementation revision, activation decision, test receipts and unresolved limitations in a new operator decision entry.
 
-**Immediate next decision:** renewed explicit A1–A4 approval of Gate A draft 2, before coding. Reproducible controls and implementation acceptance follow separately; production routing is not the next authorized step.
+**Immediate next decision:** review of Gate A draft-3 A4 followed by explicit operator Gate A completion/authorization, before coding. Reproducible controls and implementation acceptance follow separately; production routing is not the next authorized step.

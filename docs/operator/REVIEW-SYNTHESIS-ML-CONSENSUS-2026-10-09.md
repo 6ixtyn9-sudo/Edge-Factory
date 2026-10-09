@@ -142,3 +142,18 @@ for explicit approval; it cannot preserve records or warehouse bytes.
 Verified-byte export remains a distinct enablement prerequisite. These are
 documentation amendments, not renewed reviewer approval or authorization to code.
 Permutation parity and the full failure matrix remain unchanged requirements.
+
+### Gate A draft-3 A4 amendment
+
+[Draft 3](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md) records renewed
+A1–A3 technical design approval, with [review scopes kept separate](GATE-A-REVIEW-DISPOSITION-2026-10-09.md).
+The pinned-prose review identifies a remaining dual-use manifest publication flaw;
+the storage-facts review did not read draft 2 line by line. The reported external
+`4764711` decision is not imported as local/operator authority. Detailed manifests
+now always stay ignored; a separately named compact index is eligible only after
+size/count admission and coordinated commit-before-clean publication. Unexported
+evidence is never automatically evicted: quota exhaustion stops auditing. No
+steward or export route exists yet, so close marks durable replay non-replayable.
+These amendments require A4 review and explicit operator authorization before
+coding; no ignore/workflow/hooks or operational records changed. §7 items 6 and 7
+remain mandatory and unchanged.

@@ -1,11 +1,11 @@
-# Gate A review reconciliation and draft-2 disposition
+# Gate A review reconciliation and draft-3 disposition
 
 **Date:** 2026-10-09 (SAST)<br>
-**Status:** documentation-only amendment; renewed approval required before coding.<br>
-**Reviewed version:** `b7dac06e945f6e9c4b322b7b314d4b90a0c0701f` ([pinned draft 1](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/b7dac06e945f6e9c4b322b7b314d4b90a0c0701f/docs/operator/GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)).<br>
-**Amended specification:** [draft 2](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md).
+**Status:** draft 3; A1–A3 renewed technical design approval; A4 amendment and operator authorization pending.<br>
+**Original reviewed version:** `b7dac06e945f6e9c4b322b7b314d4b90a0c0701f` ([pinned draft 1](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/b7dac06e945f6e9c4b322b7b314d4b90a0c0701f/docs/operator/GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)).<br>
+**Amended specification:** [draft 3](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md).
 
-## 1. Source identity and current verdicts
+## 1. Source identity and verdict history (draft 1)
 
 Two supplied reviews are recorded separately by content, not by permanent agent identity. This is an assistant-authored reconciliation, **not** a verbatim import of a reviewer's decision file and **not** operator authorization.
 
@@ -36,7 +36,7 @@ S2's 37,926 serialized / 102,594 estimated resident-byte illustration is reviewe
 
 **Correction acknowledged:** draft 1's absent-exclusion language was too strong. The new stream lacks a durable artifact route, but absence from existing Phase5 exclusions does not prove current cleanup deletes ignored bulk. `clean_localdata.py` needs no new nested-spool exclusion. A newly re-included untracked manifest needs separate ordering/recovery analysis; that is not the same claim.
 
-**Storage choice made for review, not implemented:** bounded compact-index pilot is an index-only option. Bulk segments and dependency bytes remain untracked; a committed digest/index cannot recover them. Therefore the workflow blocker is removed only from the index pilot, not from evidence-complete production enablement. The artifact route may be replaced by an explicitly approved external audit-only uploader, but no uploader is assumed provisioned. Long-term retention is not adopted. Unexported-build eviction under quota/expiry is explicitly a potential evidence-loss policy, not guaranteed preservation; refusal-only retention can be chosen by renewed review instead.
+**Storage choice made for review, not implemented:** bounded compact-index pilot is an index-only option. Bulk segments and dependency bytes remain untracked; a committed digest/index cannot recover them. Therefore the workflow blocker is removed only from the index pilot, not from evidence-complete production enablement. The artifact route may be replaced by an explicitly approved external audit-only uploader, but no uploader is assumed provisioned. Long-term retention is not adopted. Draft 2 proposed unexported eviction as a potential evidence-loss policy. **Superseded by draft 3:** refusal-only retention; no automatic unexported finalized/abandoned evidence eviction.
 
 ## 3. Verification actually performed for this amendment
 
@@ -57,8 +57,33 @@ Illustrative documentation checks only:
 
 No cleanup, providers, model fitting, production pipeline, operational-state write, executable schema/recorder, latency/allocation benchmark, adversarial failure suite, replay or artifact upload/download verification was run. The specification's quota/memory coefficients and lifecycle are proposed contracts awaiting implementation proof, not experimentally established guarantees.
 
-## 4. Decision requested
+## 4. Renewed draft-2 reviews — current supplied verdicts
 
-Renew explicit A1–A4 review of draft 2, particularly the complete inference/projection contract, calibrated admission accounting, manifest-only pilot versus verified-byte route, assigned export ownership, shared quota and unexported retention-loss policy. Publication does not resolve these decisions automatically.
+The renewed reviews concern [draft 2 pinned to `49a83da`](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/49a83da64e1ff0ea103177abd69ce6cba5188d0c/docs/operator/GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md).
 
-The [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md) remains unchecked. **§7 items 6 and 7 — per-order permutation parity and the full enabled/disabled/failure matrix — are not weakened.** Implementation is not started/accepted. Live routing, operational schema migration and long-term retention remain separate approvals.
+| Review (content-linked to above) | A1 | A2 | A3 | A4 | Actual reported scope |
+|---|---|---|---|---|---|
+| S2 — pinned-spec contract/staging review, pasted first in latest message | Approve as design | Approve as design | Approve design subject to acceptance gates | Amend index-publication boundary | Read pinned draft 2; independently matched all ten hash vectors; isolated nine-manifest/oversized broad-staging control |
+| S1 — storage-facts/rulings review, pasted after “agent 2” | Approve renewed | Approve renewed | Approve renewed | Approve with operator rulings | **Did not read draft 2 line by line**; read reconciliation and independently verified cleanup, ignores, artifacts and cleaner facts |
+
+Do not collapse these scopes or treat a pasted agent number as a stable identity. S2's staging result (nine manifests staged, including an oversized one, no record segments) is reviewer-reported, not a production failure or a local recorder test. It correctly exposes draft 2's dual-use filename: Git cannot enforce size/count eligibility when all detailed manifests share a re-included name.
+
+S1 reports a renewed decision file `GATE-A-DECISION-DRAFT2-2026-10-09.md` at local-only `4764711`. As with its earlier `d3dfe5c` decision, no document is imported or adopted as local authority. No further external-record reconciliation is needed to amend A4. Its “operator rulings” are **supplied reviewer recommendations**, not authority to assign an owner, provision resources, code or activate. No operator authorization has been given in this exchange.
+
+## 5. Draft-3 A4 resolution
+
+- **Separate publication path/name:** all detailed `localdata/ml_consensus_audit/**/build-manifest.json` remain ignored. Only separately typed `localdata/ml_consensus_index/v1/compact-index_YYYY-MM-DD_01.json` through slot `08` may become eligible, after size/count/window admission. No stageable oversized/ninth/refused compact file; detailed manifest content can never fall into the index allowlist.
+- **R1 ordering:** bootstrap ignore rules and first admitted compact index must be locally committed together before any persistence helper. Subsequent publication also commits before restore/clean. Documented publisher lock/coordination barrier, ignored candidate/journal, atomic slot reservation, exact-path stage/commit and crash recovery must prevent broad staging or cleanup in the rename→commit window. Existing persistence has no such barrier; future integration must prove it or the pilot is deferred. No code or ignore change is implemented here.
+- **R2 resources:** explicitly no steward assigned/no export route provisioned. Evidence-complete production enablement is blocked. Close and compact index must say `unprovisioned` and durable replay capabilities `non_replayable` before any analysis. Full copied evidence can still support local diagnostics; it cannot assert durable replay acceptance.
+- **R3 refusal-only retention:** never automatically evict unexported finalized or abandoned evidence. Reclaim verified-export builds only after owner-lock acquisition; otherwise stop auditing at quota exhaustion with incomplete coverage. Thirty days becomes an exported retention/reclamation target, not an unexported deletion deadline. Runner/cache loss is still outside collector guarantees; long-term retention remains separately unapproved.
+- **R4 quota:** retain separate retained-object/serialized accounting and shared spool reservations. Abandoned classification/reclamation requires explicit lock acquisition, never heartbeat/staleness alone.
+
+A4 implementation must test ninth slot, oversized detailed/compact manifests, retries, failed validation/commit/push, crashes before/after publication/staging/commit, concurrent publishers, bootstrap single commit and restore/clean coordination. Broad `git add -A localdata/` must find only eligible compact indices, never detailed manifests/bulk or refused compact outputs. Existing §7 items 6 and 7 remain unchanged, not traded for storage acceptance.
+
+## 6. Verification for draft 3 and next decision
+
+An isolated temporary Git repository demonstrates the **new path separation only**: nine ignored detailed manifests (including >8 KiB), eight separately allowlisted compact indices, and ignored rejected-candidate/control/record files; broad staging selects exactly eight compact indices. A slot-09 name is ignored. This is an ignore/staging layout control, **not** proof of the proposed publisher's admission, concurrency or crash/commit barrier. Those require implementation tests after authorization. The old `build-manifest.json` allowlist example in §3 describes draft-2 checks, now superseded.
+
+Rechecked ten documentation hash vectors, local links/fences, whitespace and unchanged §7 permutation/failure controls. No production cleanup, persistence, ignore/workflow changes, recorder, benchmark, replay, export verification or historical mutation occurred.
+
+**Decision requested:** technical review of draft-3 A4's separate compact-index publication and refusal-only lifecycle, then explicit **operator** Gate A completion/authorization before coding. A1–A3 design approvals do not accept their future implementation. Pilot integration remains proposed; evidence-complete production enablement remains blocked on missing steward/export resources. The [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md) stays unchecked. Live routing, operational schema migration and long-term retention are not approved.

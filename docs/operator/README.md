@@ -293,10 +293,12 @@ cannot rot silently; move a document and the suite tells you.
 ### Gate A specification — pending approval
 
 The [Gate A schema/storage draft](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)
-is now draft 2: exact hash preimages/projections, full non-emitting inference,
-producer admission accounting, corrected cleanup claims, a bounded manifest-only
-index pilot and separate verified-byte export route. The
+is now draft 3. A1–A3 have renewed technical design approval; A4 separates
+always-ignored detailed manifests from atomically admitted compact-index publication
+and adopts refusal-only unexported retention. Steward/export resources remain
+unassigned/unprovisioned; close must mark such builds non-replayable. The
 [attributed review reconciliation](GATE-A-REVIEW-DISPOSITION-2026-10-09.md) keeps
-S1/S2 verdicts separate; renewed approval is required before coding. A durable
+S1/S2 verdicts and verification scopes separate; A4 review and explicit operator
+authorization are required before coding. A durable
 index is not durable bulk evidence. No hooks, ignore/workflow edits, implementation
 tests, replay or activation were performed.
