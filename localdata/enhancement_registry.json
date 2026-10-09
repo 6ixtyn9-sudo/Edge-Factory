@@ -432,10 +432,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 211,
-   "inv_price_sum": 207.0917414791004,
-   "multi_n": 31,
-   "n": 316,
+   "hits": 212,
+   "inv_price_sum": 209.28803030277365,
+   "multi_n": 32,
+   "n": 319,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -752,9 +752,12 @@
     "2026-10-07|CR Belouizdad vs Khenchela|match_over_25@v1",
     "2026-10-07|CS Constantine vs US Biskra|match_over_25@v1",
     "2026-10-08|Shamrock Rovers vs Drogheda United|match_over_25@v1",
-    "2026-10-08|MC Oran vs ES Setif|match_over_25@v1"
+    "2026-10-08|MC Oran vs ES Setif|match_over_25@v1",
+    "2026-10-09|PSV Eindhoven vs Heerenveen|match_over_25@v1",
+    "2026-10-09|Zlin vs Slavia Praha|match_over_25@v1",
+    "2026-10-09|Borussia Dortmund vs Werder Bremen|match_over_25@v1"
    ],
-   "profit": 6.697,
+   "profit": 5.107,
    "records": [
     {
      "date": "2026-08-01",
@@ -3281,6 +3284,30 @@
      "multi_source": false,
      "price": 2.75,
      "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-09",
+     "hit": false,
+     "match": "PSV Eindhoven vs Heerenveen",
+     "multi_source": false,
+     "price": 1.16,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-10-09",
+     "hit": false,
+     "match": "Zlin vs Slavia Praha",
+     "multi_source": false,
+     "price": 1.6,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-09",
+     "hit": true,
+     "match": "Borussia Dortmund vs Werder Bremen",
+     "multi_source": true,
+     "price": 1.41,
+     "source": "theoddsapi"
     }
    ],
    "status": "PAPER",
