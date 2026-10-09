@@ -18,6 +18,22 @@ Latest reviewed decisions:
 snapshot-bound evidence, corrected archive/price/provenance claims, the
 test-first Authorization repair, and explicit unresolved/deployment boundaries.
 
+**Decision-record identity:** this repository's record is the **Edge-Factory
+transferred/re-reviewed D1–D5 record**, not the other workspace's independently
+written document with the same filename. Its existing §1 states that distinction.
+Use [the pinned repository record](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/01f580c1f41b78883d7c807e354ba76903bbd026/docs/operator/DECISIONS-2026-10-09.md)
+as the local D1–D5 reference for this proposal, within its explicit scope and
+operator-approval limits. Filename equality is not document identity.
+
+The latest supplied follow-up identifies a separate, local-only record at
+`e489654` and reports a D1–D7 scheme. That record has not been retrieved or
+verified here; it is **not an interchangeable repository authority**. No D6/D7
+numbering or dispositions are adopted by this handbook: this repository records
+the Authorization work under D4 and Kladno under D5. References across workspaces
+must include repository/workspace, full revision when available, path, section
+and preferably content hash. Importing or reconciling the external record needs
+the actual document and an explicit decision; no source text is silently replaced.
+
 Open review proposal (documentation only; not approved for production):
 [`PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md`](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md)
 revision 4 incorporates [two independent reviews](REVIEW-SYNTHESIS-ML-CONSENSUS-2026-10-09.md)
