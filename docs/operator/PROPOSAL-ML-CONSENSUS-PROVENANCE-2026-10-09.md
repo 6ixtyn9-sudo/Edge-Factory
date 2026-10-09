@@ -361,3 +361,18 @@ design deliverable without changing this revision-4 policy disposition. New
 sidecar persistence is not covered automatically by existing cleanup/artifacts;
 the proposed dedicated route requires authorized integration review. No audit
 code, executable schema, new controls, replay or activation is included.
+
+### Gate A draft-2 reconciliation
+
+Both supplied Gate A reviews are attributed separately in the
+[local reconciliation](GATE-A-REVIEW-DISPOSITION-2026-10-09.md); the reported
+external `d3dfe5c` decision is not available/imported here.
+[Draft 2](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md) amends exact
+hash/projection rules, full inference/fallback evidence, admission accounting
+and storage lifecycle. Current ignored bulk survives ordinary `git clean -fd`
+and cannot be reached by the dated top-level cleaner: a new exclusion is not
+a current prerequisite. A separately bounded manifest-only Git pilot is proposed
+for explicit approval; it cannot preserve records or warehouse bytes.
+Verified-byte export remains a distinct enablement prerequisite. These are
+documentation amendments, not renewed reviewer approval or authorization to code.
+Permutation parity and the full failure matrix remain unchanged requirements.
