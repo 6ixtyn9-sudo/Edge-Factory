@@ -1,6 +1,87 @@
 [
   {
     "date": "2026-10-09",
+    "kickoff": "09-10, 16:00",
+    "home": "N\u00f5mme United II",
+    "away": "FCI Levadia II",
+    "league": "Estonia Esiliiga A",
+    "market": "1x2",
+    "pick": "away",
+    "rule_name": "ml-meta avg_p>=60",
+    "match_method": "fallback",
+    "home_key": "nommeunitedii",
+    "away_key": "fcilevadiaii",
+    "nearby_bzzoiro_candidates": [],
+    "nearby_scoutingstats_candidates": [
+      {
+        "home": "Al Kholood",
+        "away": "Al-Qadsiah",
+        "league": "Pro League",
+        "kickoff": "2026-10-09T13:50:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.5,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alkholood",
+        "away_key": "alqadsiah",
+        "kickoff_delta_minutes": 10
+      },
+      {
+        "home": "Qatar SC",
+        "away": "Al Rayyan",
+        "league": "Stars League",
+        "kickoff": "2026-10-09T14:45:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.48,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "qatarsc",
+        "away_key": "alrayyan",
+        "kickoff_delta_minutes": 45
+      },
+      {
+        "home": "Al Fateh",
+        "away": "Al Ahli",
+        "league": "Pro League",
+        "kickoff": "2026-10-09T14:55:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 1.42,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "alfateh",
+        "away_key": "alahli",
+        "kickoff_delta_minutes": 55
+      },
+      {
+        "home": "Corvinul Hunedoara",
+        "away": "Voluntari",
+        "league": "Superliga",
+        "kickoff": "2026-10-09T15:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 5.0,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "corvinulhunedoara",
+        "away_key": "voluntari",
+        "kickoff_delta_minutes": 60
+      },
+      {
+        "home": "SJK",
+        "away": "Lahti",
+        "league": "Veikkausliiga",
+        "kickoff": "2026-10-09T15:00:00Z",
+        "market": "1x2",
+        "selection": "away",
+        "odds": 2.37,
+        "bookmaker": "scoutingstats_odds",
+        "home_key": "sjk",
+        "away_key": "lahti",
+        "kickoff_delta_minutes": 60
+      }
+    ]
+  },
+  {
+    "date": "2026-10-09",
     "kickoff": "12:00",
     "home": "FC Nordsjaelland",
     "away": "Odense",
