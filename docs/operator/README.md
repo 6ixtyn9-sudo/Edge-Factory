@@ -18,6 +18,14 @@ Latest reviewed decisions:
 snapshot-bound evidence, corrected archive/price/provenance claims, the
 test-first Authorization repair, and explicit unresolved/deployment boundaries.
 
+Open review proposal (documentation only; not approved for production):
+[`PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md`](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md)
+revision 3 incorporates [two independent reviews](REVIEW-SYNTHESIS-ML-CONSENSUS-2026-10-09.md)
+and requires sidecar-only provenance, distinct signal identities, and parity
+verification before any live routing, electorate, or representative change.
+The [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md)
+separates conditional design approval from implementation and activation evidence.
+
 ---
 
 ## 1. Daily card ops
