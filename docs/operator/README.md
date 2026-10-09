@@ -13,6 +13,11 @@ production re-mine without explicit operator promotion; gap-only mining
 settlement, raw + checksum + provenance per crawl). The GitHub App cannot push
 `.github/workflows/` — workflow changes ship as paste-ready docs only.
 
+Latest reviewed decisions:
+[`DECISIONS-2026-10-09.md`](DECISIONS-2026-10-09.md) transfers D1–D5 with
+snapshot-bound evidence, corrected archive/price/provenance claims, the
+test-first Authorization repair, and explicit unresolved/deployment boundaries.
+
 ---
 
 ## 1. Daily card ops

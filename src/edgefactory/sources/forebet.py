@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -134,8 +135,9 @@ def _browser_get(url: str) -> bytes:
         with urllib.request.urlopen(request, timeout=BROWSER_TIMEOUT_SECONDS) as response:
             raw = response.read(public_relay.MAX_RESPONSE_BYTES + 1)
     except urllib.error.HTTPError as error:
-        raw = error.read(public_relay.MAX_RESPONSE_BYTES + 1)
-        raise RuntimeError(f"browser relay HTTP {error.code}: {raw[:200]!r}") from error
+        # A relay can echo the credential-bearing POST body on an HTTP error.
+        # Report the status, not an arbitrary (or partly truncated) body.
+        raise RuntimeError(f"browser relay HTTP {error.code}") from error
     if len(raw) > public_relay.MAX_RESPONSE_BYTES:
         raise ValueError("browser relay response exceeds size limit")
     envelope = json.loads(raw.decode("utf-8", "replace"))
@@ -267,13 +269,13 @@ def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
         try:
             return _decode_payload(_browser_get(url))
         except Exception as exc:  # noqa: BLE001 - production browser may still see a challenge
-            browser_error = f"browser={type(exc).__name__}"
+            browser_error = _transport_failure("browser", exc)
     playwright_error = None
     if _playwright_enabled_for_date(date):
         try:
             return _decode_payload(_playwright_get(url))
         except Exception as exc:  # noqa: BLE001 - optional fallback must fail closed
-            playwright_error = f"playwright={type(exc).__name__}"
+            playwright_error = _transport_failure("playwright", exc)
     # Operator-owned free relays (Cloudflare Worker, then Apps Script) are
     # independent egress paths. Try them before public/direct datacenter paths;
     # Python re-validates every echoed URL and every JSON payload shape.
@@ -282,7 +284,7 @@ def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
         try:
             return _decode_payload(raw)
         except Exception as exc:  # noqa: BLE001 - try the next independent relay
-            operator_errors.append(f"operator:{relay_name}={type(exc).__name__}")
+            operator_errors.append(_transport_failure(f"operator:{relay_name}", exc))
 
     relay_error = None
     if mode == "relay":
@@ -291,7 +293,7 @@ def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
         except Exception as exc:  # noqa: BLE001 - relay itself is now challenged intermittently
             # Falling through is safe: every response is shape-validated, so
             # challenge HTML can never be mistaken for an empty slate.
-            relay_error = f"relay={type(exc).__name__}"
+            relay_error = _transport_failure("relay", exc)
 
     errors = (
         ([browser_error] if browser_error else [])
@@ -317,7 +319,7 @@ def _get(tp: str, date: str, retries: int = 3) -> list[dict]:
         try:
             return _decode_payload(request())
         except Exception as exc:  # noqa: BLE001 - retry with a distinct transport
-            errors.append(f"{name}={type(exc).__name__}")
+            errors.append(_transport_failure(name, exc))
             if attempt + 1 < attempt_limit:
                 time.sleep(1.5 * (attempt + 1))
     raise RuntimeError(
@@ -340,6 +342,70 @@ def _i(v):
         return None
 
 
+_FAILURE_DETAIL_MAX = 160
+_FAILURE_SUMMARY_MAX = 720
+
+
+def _safe_failure_text(detail: str) -> str:
+    """Sanitise untrusted transport text before it is truncated or logged."""
+    # The configured relay token may be echoed anywhere, not only in a token
+    # field. Never print private relay endpoints (including path credentials).
+    secrets = [os.environ.get(public_relay.TOKEN_ENV, "").strip()]
+    secrets += [s.strip() for s in os.environ.get(public_relay.URLS_ENV, "").split(",")]
+    for secret in sorted(filter(None, secrets), key=len, reverse=True):
+        detail = detail.replace(secret, "[redacted]")
+    detail = re.sub(r"https?://[^\s\"'<>]+", "[url]", detail, flags=re.I)
+    # Authorization is one opaque credential value, not just a scheme/token.
+    # Digest has quoted comma-separated parameters; AWS also has semicolons
+    # in SignedHeaders. Match complete escaped repr/JSON values, or fail
+    # closed over an unquoted header line and its indented continuations.
+    # Emit no ':'/'=' after the name, so re-sanitising a composed transport
+    # summary cannot swallow the following (already safe) failure reasons.
+    detail = re.sub(
+        r"\bauthorization[\"']?[ \t]*[:=][ \t]*"
+        r"(?:\"(?:\\.|[^\"\\])*\"|'(?:\\.|[^'\\])*'|"
+        r"[^\r\n]*(?:\r?\n[ \t]+[^\r\n]*)*)",
+        "Authorization [redacted]", detail, flags=re.I,
+    )
+    detail = re.sub(
+        r"(?i)\b(token|api[_-]?key|password|secret)[\"']?\s*[:=]\s*"
+        r"(?:[\"'][^\"']*[\"']|(?:Bearer|Basic)\s+[^\s,;]+|[^\s,;]+)",
+        r"\1=[redacted]", detail,
+    )
+    detail = re.sub(r"(?i)\b(Bearer|Basic)\s+[^\s,;]+", r"\1 [redacted]", detail)
+    return " ".join(detail.split())
+
+
+def _failure_detail(exc: Exception, market: str = "", day: str = "") -> str:
+    detail = _safe_failure_text(str(exc))
+    # _get includes market and day in its prefix. They are already reported
+    # outside the detail; removing that exact prefix lets equal causes group.
+    if market and day:
+        detail = detail.removeprefix(f"Forebet {market} {day} ")
+    return detail if len(detail) <= _FAILURE_DETAIL_MAX else detail[:_FAILURE_DETAIL_MAX - 3] + "..."
+
+
+def _transport_failure(name: str, exc: Exception) -> str:
+    # Operator relay names can be URLs containing credentials, too.
+    prefix = f"{_safe_failure_text(name)}={type(exc).__name__}"
+    detail = _failure_detail(exc)
+    return prefix + (f": {detail}" if detail else "")
+
+
+def _market_failures(failures: list[tuple[str, str, str]]) -> list[str]:
+    """Keep each market:Type prefix, print each distinct bounded reason once."""
+    grouped: dict[tuple[str, str], list[str]] = {}
+    for market, kind, detail in failures:
+        grouped.setdefault((kind, detail), []).append(f"{market}:{kind}")
+    return [",".join(prefixes) + (f": {detail}" if detail else "")
+            for (_, detail), prefixes in grouped.items()]
+
+
+def _failure_summary(failures: list[str]) -> str:
+    text = "; ".join(failures)
+    return text if len(text) <= _FAILURE_SUMMARY_MAX else text[:_FAILURE_SUMMARY_MAX - 3] + "..."
+
+
 def _fetch_market_payloads(
     date: str,
     markets: tuple[str, ...],
@@ -352,7 +418,7 @@ def _fetch_market_payloads(
     Local/direct traffic remains sequential and retains its politeness delay.
     """
     payloads: dict[str, list[dict]] = {}
-    failures: list[str] = []
+    failures: list[tuple[str, str, str]] = []
     if (
         _cloud_fetch_mode() == "relay"
         and not _browser_enabled_for_date(date)
@@ -365,18 +431,18 @@ def _fetch_market_payloads(
                 try:
                     payloads[market] = futures[market].result()
                 except Exception as exc:  # noqa: BLE001 - preserve partial markets
-                    failures.append(f"{market}:{type(exc).__name__}")
+                    failures.append((market, type(exc).__name__, _failure_detail(exc, market, date)))
                     payloads[market] = []
-        return payloads, failures
+        return payloads, _market_failures(failures)
 
     for market in markets:
         try:
             payloads[market] = _get(market, date)
         except Exception as exc:  # noqa: BLE001 - preserve partial markets
-            failures.append(f"{market}:{type(exc).__name__}")
+            failures.append((market, type(exc).__name__, _failure_detail(exc, market, date)))
             payloads[market] = []
         time.sleep(sleep)
-    return payloads, failures
+    return payloads, _market_failures(failures)
 
 
 def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[dict]:
@@ -438,11 +504,11 @@ def fetch_day(date: str, markets=DEFAULT_MARKETS, sleep: float = 0.15) -> list[d
         # zero-fixture day. Raising keeps the day retryable and makes the cause
         # visible in Actions logs.
         raise RuntimeError(
-            f"Forebet {date}: no usable rows; failed markets={','.join(failures)}"
+            f"Forebet {date}: no usable rows; failed markets={_failure_summary(failures)}"
         )
     if failures:
         print(
-            f"Forebet {date}: partial capture; failed markets={','.join(failures)}",
+            f"Forebet {date}: partial capture; failed markets={_failure_summary(failures)}",
             file=sys.stderr,
         )
     return list(rows.values())

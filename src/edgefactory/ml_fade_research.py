@@ -62,6 +62,7 @@ from edgefactory.fade import (
 # The research ledger's identity is FROZEN (reconciliation stability): it
 # uses the pre-alias transliterating key, NOT the operational
 # canonicalizing ledger_team_key. See util.research_ledger_team_key.
+from edgefactory.settlement import load_verified_results
 from edgefactory.util import fold_ascii
 from edgefactory.util import research_ledger_team_key as ledger_team_key
 
@@ -596,8 +597,9 @@ def settle_ledger(
     today: date | None = None,
     date_window: int = DEFAULT_DATE_WINDOW_DAYS,
     unmatched_after_days: int = DEFAULT_UNMATCHED_AFTER_DAYS,
+    verified_results_path: Path | None = None,
 ) -> SettleStats:
-    """Apply settled-results facts to pending/unmatched ledger rows.
+    """Apply donor facts and explicit operator decisions to ledger rows.
 
     Fail-closed rules:
       - a row settles only when every matching result fact AGREES
@@ -606,11 +608,27 @@ def settle_ledger(
       - result date may shift at most ``date_window`` days (postponement);
       - a row with no fact after ``unmatched_after_days`` is unmatched —
         visible staleness, never a silent win/loss;
-      - settled/conflict rows are FROZEN: later facts never reopen them.
+      - settled rows are FROZEN: later facts never reopen them;
+      - conflict rows remain frozen unless an operator-verified fact matches
+        both oriented teams and the exact ledger fixture date (not the donor
+        postponement window). Conflicting operator decisions fail closed.
+        Old conflict notes and all capture-time fields are retained.
     """
     stats = SettleStats()
     matcher = matcher or TeamMatcher([])
     ref_day = today or datetime.now(_LOCAL_TZ).date()
+
+    # Only the existing human-review file grants override authority. A donor
+    # claiming src=source_verified in settled_rows does NOT gain that authority.
+    verified: dict[str, list[dict]] = {}
+    for fr in load_verified_results(verified_results_path):
+        # The shared loader casts scores but does not check their consistency.
+        hs, gs = fr["hs"], fr["gs"]
+        expected = "home" if hs > gs else "away" if gs > hs else "draw"
+        if hs < 0 or gs < 0 or fr["outcome"] != expected:
+            raise ValueError("operator-verified result has invalid score/outcome")
+        date.fromisoformat(fr["date"])  # an invalid operator date fails closed
+        verified.setdefault(fr["date"], []).append(fr)
 
     # Index result facts by date -> list.
     facts: dict[str, list[dict]] = {}
@@ -622,7 +640,15 @@ def settle_ledger(
 
     for row in ledger.get("rows", []):
         status = row.get("status")
-        if status in (STATUS_SETTLED, STATUS_CONFLICT):
+        if status == STATUS_SETTLED:
+            stats.already_frozen += 1
+            continue
+        operator_facts = [
+            fr for fr in verified.get(str(row.get("date")), [])
+            if matcher.keyset(row.get("home")) & matcher.keyset(fr.get("home"))
+            and matcher.keyset(row.get("away")) & matcher.keyset(fr.get("away"))
+        ]
+        if status == STATUS_CONFLICT and not operator_facts:
             stats.already_frozen += 1
             continue
         try:
@@ -662,10 +688,24 @@ def settle_ledger(
                 sig = _result_signature(fr)
                 signatures.setdefault(sig, []).append(fr)
 
+        if operator_facts:
+            donor_signatures = set(signatures)
+            signatures = {}
+            for fr in operator_facts:
+                signatures.setdefault(_result_signature(fr), []).append(fr)
+            if len(signatures) == 1:
+                note = "operator-verified result applied (exact fixture date and teams)"
+                if donor_signatures - set(signatures):
+                    note += "; supersedes contradictory donor claims"
+                notes = row.setdefault("settle_notes", [])
+                if note not in notes:
+                    notes.append(note)
+
         if len(signatures) > 1:
             row["status"] = STATUS_CONFLICT
             row.setdefault("settle_notes", []).append(
-                f"conflicting result claims: {sorted(str(s) for s in signatures)}"
+                f"conflicting {'operator-verified' if operator_facts else 'result'} claims: "
+                f"{sorted(str(s) for s in signatures)}"
             )
             stats.conflicts += 1
             stats.conflict_keys.append(str(row.get("event_key")))

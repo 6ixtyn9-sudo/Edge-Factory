@@ -166,6 +166,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--ledger", type=Path, default=ROOT / "localdata" / mfr.LEDGER_NAME)
     ap.add_argument("--state", type=Path, default=ROOT / "localdata" / ckpt.STATE_NAME)
     ap.add_argument("--settled", type=Path, default=ROOT / "localdata" / "settled_results.json")
+    ap.add_argument("--verified-results", type=Path, default=ROOT / "Config" / "verified_results.json")
     ap.add_argument("--aliases", type=Path, default=ROOT / "localdata" / "team_aliases.json")
     ap.add_argument("--edges", type=Path, default=ROOT / "localdata" / "edges_consensus.json")
     ap.add_argument("--out-dir", type=Path, default=ROOT / "localdata")
@@ -207,13 +208,14 @@ def main(argv: list[str] | None = None) -> int:
             file=sys.stderr,
         )
 
-    # ---- 1) settlement pass (idempotent; frozen rows never reopen) --------
+    # ---- 1) settlement pass (only operator decisions may reopen conflicts) --------
     ledger = mfr.load_ledger(args.ledger)
     if not args.no_settle:
         settled_rows = _load_settled_rows(args.settled)
         matcher = mfr.TeamMatcher(mfr.load_alias_groups(args.aliases))
         settle_stats = mfr.settle_ledger(
-            ledger, settled_rows, matcher=matcher, now=now, today=today
+            ledger, settled_rows, matcher=matcher, now=now, today=today,
+            verified_results_path=args.verified_results
         )
         mfr.save_ledger(args.ledger, ledger, now=now)
         s = settle_stats.as_dict()
