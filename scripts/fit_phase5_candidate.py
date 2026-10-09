@@ -39,6 +39,7 @@ gates exist to prevent.
 from __future__ import annotations
 
 import argparse
+import glob as _glob
 import json
 import math
 import sys
@@ -60,6 +61,8 @@ from edgefactory.phase5_k import (  # noqa: E402
     majority_pick,
     payload_problems,
 )
+
+from edgefactory.warehouse import LOCALDATA, _prob, _table_exists
 
 DEFAULT_OUT = ROOT / "localdata" / "ml_meta_k_candidate.json"
 SHADOW_ROWS = ROOT / "localdata" / "phase5_shadow" / "rows.jsonl"
@@ -214,6 +217,22 @@ def load_warehouse_fixtures(con, era_start: date, era_end: date) -> dict:
     return store
 
 
+def _raw_relation(con, source: str) -> str | None:
+    """Resolve raw rows without writing to the read-only warehouse."""
+    if _table_exists(con, source):
+        return source
+    glob_path = LOCALDATA / f"{source}*.csv.gz"
+    if not _glob.glob(str(glob_path)):
+        return None
+    escaped = str(glob_path).replace("'", "''")
+    return (
+        "(SELECT TRY_CAST(date AS VARCHAR) AS date, "
+        "TRY_CAST(hs AS INTEGER) AS hs, TRY_CAST(gs AS INTEGER) AS gs, "
+        f"{_prob('p1')} AS p1, {_prob('px')} AS px, {_prob('p2')} AS p2 "
+        f"FROM read_csv_auto('{escaped}', all_varchar=true, union_by_name=true))"
+    )
+
+
 def probe_tables(con, era_start: date, era_end: date) -> dict:
     """Per-source newest-day evidence, for the read-only coverage report.
 
@@ -227,7 +246,10 @@ def probe_tables(con, era_start: date, era_end: date) -> dict:
     ]
     for source in ordered:
         entry: dict = {}
-        for label, table in (("raw", source), ("settled", f"{source}_settled")):
+        raw_relation = _raw_relation(con, source)
+        for label, table in (("raw", raw_relation), ("settled", f"{source}_settled")):
+            if table is None:
+                continue
             try:
                 overall = con.execute(
                     f"SELECT max(CAST(date AS VARCHAR)) FROM {table} "
@@ -256,7 +278,7 @@ def probe_tables(con, era_start: date, era_end: date) -> dict:
                     f"sum(CASE WHEN hs IS NOT NULL AND gs IS NOT NULL THEN 1 ELSE 0 END), "
                     f"sum(CASE WHEN hs IS NOT NULL AND gs IS NOT NULL "
                     f"AND (p1 IS NULL OR px IS NULL OR p2 IS NULL) THEN 1 ELSE 0 END) "
-                    f"FROM {source} WHERE CAST(date AS VARCHAR) > ? "
+                    f"FROM {raw_relation} WHERE CAST(date AS VARCHAR) > ? "
                     "AND CAST(date AS VARCHAR) LIKE '____-__-__%'",
                     [settled["newest"]],
                 ).fetchone()

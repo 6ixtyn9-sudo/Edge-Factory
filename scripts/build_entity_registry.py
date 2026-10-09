@@ -372,7 +372,12 @@ def main() -> None:
         df['league'] = df['league'].fillna("UNKNOWN").str.strip()
         df['day'] = df['date'].fillna("").str[:10]
         
-        df = df[(df['day'] != "") & (df['home'] != "") & (df['away'] != "")]
+        # Repeated CSV headers are not fixtures or alias evidence. Validate
+        # before counting names or adding anything to the learned registry.
+        valid_day = df['day'].str.fullmatch(r"\d{4}-\d{2}-\d{2}") & pd.to_datetime(
+            df['day'], format="%Y-%m-%d", errors="coerce"
+        ).notna()
+        df = df[valid_day & (df['home'] != "") & (df['away'] != "")]
         if df.empty:
             continue
 
