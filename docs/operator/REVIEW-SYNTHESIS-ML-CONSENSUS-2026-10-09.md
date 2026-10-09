@@ -178,3 +178,15 @@ and the external/unimported `35b0c88` report are preserved in the
 Gate A implementation permission follows. Recorder/hooks, production ignore
 rules/index publisher, workflows, live routing, schema migration and long-term
 retention remain explicitly unauthorized. §7 items 6 and 7 remain unchanged.
+
+### C1 confirmation closes design review, not implementation acceptance
+
+Both latest supplied reviews confirm C1 against `d458128`; **A1–A4 design
+approval is complete**. The [current disposition](GATE-A-REVIEW-DISPOSITION-2026-10-09.md)
+records their actual scope: path/staging reproduction, scoped fallback comparison
+and direct evaluator controls, not reruns of every reported pytest selection.
+The full suite remains red with six unsuppressed contract failures. No new
+implementation scope, production ignore application, publisher, hooks, recorder
+or live routing is authorized. Export is blocked by no route/steward. External
+`762373a`/`6442049` records and Kladno housekeeping are not imported. No further
+C1 revision is requested; next work requires explicit scoped authorization.

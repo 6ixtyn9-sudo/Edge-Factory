@@ -290,12 +290,12 @@ Proposed workflow artifacts (paste-ready, never pushed by the App):
 `docs/**` and this file and fails if a target does not exist. Links here
 cannot rot silently; move a document and the suite tells you.
 
-### Gate A specification — C1 evidence published, no recorder authorization
+### Gate A design approved — C1 confirmed, no recorder authorization
 
 The [Gate A specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)
 is draft 3 + C1: exact proposed ignore addition, complete isolated per-file/dry-run
 staging output and a [rerunnable control](controls/gate_a_c1_paths.py). A1–A4
-technical approvals are supplied; operator A4 approval is conditional on C1.
+design approvals are complete; both supplied independent reviews confirm C1.
 The [reconciliation](GATE-A-REVIEW-DISPOSITION-2026-10-09.md) preserves source
 scopes and prohibitions. No recorder, hooks, ignore/workflow edits, publisher or
 live routing is authorized. Steward/export resources remain missing.
@@ -305,4 +305,6 @@ failing qualifier/electorate tests. They were implemented **before** C1 publicat
 [execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md), commit
 `6c3699d`. Related regressions: 160 passed. New contract suite: six positive passes,
 **six intentional failures**, not skipped/xfail. Selection predicates remain
-unchanged; those defects are now exposed, not repaired.
+unchanged; those defects are now exposed, not repaired. **The full suite is not
+green.** C1 confirmation does not authorize skipping/xfailing the six failures or
+implementing any recorder, publisher, routing or ignore/workflow change.
