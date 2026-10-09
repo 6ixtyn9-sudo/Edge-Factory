@@ -143,13 +143,33 @@ def _fetch_result_rows(module: Any, source: str, day: str) -> list[dict[str, Any
     return list(module.fetch_day(day) or [])
 
 
+_ERROR_DETAIL_MAX = 160
+
+
+def _error_status(exc: BaseException) -> str:
+    """``ERROR:<Type>`` plus a bounded, single-line reason.
+
+    Reporting only the exception class made every failure look identical: the
+    Forebet adapter alone raises ``RuntimeError`` from nine distinct sites, so
+    an unconfigured relay, a blocked transport and a Cloudflare challenge all
+    printed the same bare ``ERROR:RuntimeError`` and nobody could tell which
+    repair was needed. The machine-readable prefix is kept; the message is
+    flattened to one line and truncated so a long relay body cannot flood the
+    log. This formatter is not a credential-redaction boundary: adapters must
+    sanitise sensitive transport text before raising it. Forebet does so in
+    its adapter and never includes arbitrary browser HTTP response bodies.
+    """
+    detail = " ".join(str(exc).split())[:_ERROR_DETAIL_MAX]
+    return f"ERROR:{type(exc).__name__}: {detail}" if detail else f"ERROR:{type(exc).__name__}"
+
+
 def refresh_source(source: str, day: str, *, localdata: Path = LOCALDATA) -> dict[str, Any]:
     """Fetch one completed day and upsert scores or terminal event statuses."""
     try:
         module = importlib.import_module(f"edgefactory.sources.{source}")
         fetched = _fetch_result_rows(module, source, day)
     except Exception as exc:  # noqa: BLE001 - report the source class, never abort the batch
-        return {"source": source, "status": f"ERROR:{type(exc).__name__}", "raw": 0, "scored": 0, "terminal_status": 0, "new": 0, "updated": 0}
+        return {"source": source, "status": _error_status(exc), "raw": 0, "scored": 0, "terminal_status": 0, "new": 0, "updated": 0}
 
     terminal_rows = [
         row for row in fetched

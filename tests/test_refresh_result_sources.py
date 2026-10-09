@@ -107,7 +107,7 @@ def test_refresh_source_reports_failure_without_raising(tmp_path, monkeypatch):
 
     receipt = refresh.refresh_source("forebet", "2026-08-04", localdata=tmp_path)
 
-    assert receipt["status"] == "ERROR:RuntimeError"
+    assert receipt["status"] == "ERROR:RuntimeError: network unavailable"
     assert receipt["raw"] == receipt["scored"] == receipt["terminal_status"] == receipt["new"] == receipt["updated"] == 0
 
 
@@ -154,3 +154,17 @@ def test_refresh_source_persists_positive_terminal_status(tmp_path, monkeypatch)
     assert receipt["updated"] == 1
     assert row["status"] == "Postp."
     assert (row["p1"], row["px"], row["p2"]) == ("0.25", "0.12", "0.63")
+
+
+def test_error_status_keeps_the_prefix_and_flattens_a_long_reason():
+    """The prefix stays machine-readable; a reason is single-line and bounded."""
+    assert refresh._error_status(RuntimeError("")) == "ERROR:RuntimeError"
+    assert refresh._error_status(ValueError()) == "ERROR:ValueError"
+    flat = refresh._error_status(
+        RuntimeError("Forebet 1x2 2026-10-07 failed across relays/browser paths:\n"
+                     "  relay=absent, browser=HTTP 403; GitHub direct skipped")
+    )
+    assert flat.startswith("ERROR:RuntimeError: Forebet 1x2 2026-10-07")
+    assert "\n" not in flat and "  " not in flat
+    long = refresh._error_status(RuntimeError("x" * 5000))
+    assert len(long) <= len("ERROR:RuntimeError: ") + refresh._ERROR_DETAIL_MAX

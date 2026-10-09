@@ -383,3 +383,31 @@ def test_probe_names_why_the_settled_view_trails_the_raw_table(tmp_path):
     assert "trailing" not in entry
     assert "settled trails raw" not in module._probe_text(entry)
     con.close()
+
+
+def test_probe_raw_shards_read_only(tmp_path, monkeypatch):
+    import duckdb
+    import gzip
+    module = _load_script("probe_raw_shards", "scripts/fit_phase5_candidate.py")
+    monkeypatch.setattr(module, "LOCALDATA", tmp_path)
+    with gzip.open(tmp_path / "forebet.csv.gz", "wt") as handle:
+        handle.write("date,hs,gs,p1,px,p2\n2026-10-07,1,0,0.6,0.2,0.2\n2026-10-08,,,0.6,0.2,0.2\n")
+    db = str(tmp_path / "warehouse.db")
+    with duckdb.connect(db) as con:
+        con.execute("CREATE TABLE forebet_settled AS SELECT '2026-10-07' AS date")
+    with duckdb.connect(db, read_only=True) as con:
+        entry = module.probe_tables(con, date(2026, 10, 1), date(2026, 10, 9))["forebet"]
+        assert entry["raw"]["newest"] > entry["settled"]["newest"]
+        assert entry["trailing"]["newer_rows"] == 1
+        assert "no final score yet" in module._probe_text(entry)
+    print("P1 after:", entry, module._probe_text(entry))
+
+
+def test_probe_dark_source_and_table_precedence(tmp_path, monkeypatch):
+    import duckdb
+    module = _load_script("probe_dark", "scripts/fit_phase5_candidate.py")
+    monkeypatch.setattr(module, "LOCALDATA", tmp_path)
+    with duckdb.connect() as con:
+        assert module._probe_text(module.probe_tables(con, date(2026, 10, 1), date(2026, 10, 9))["betminer"]) == "   (no table visible)"
+        con.execute("CREATE TABLE forebet (date VARCHAR)")
+        assert module._raw_relation(con, "forebet") == "forebet"
