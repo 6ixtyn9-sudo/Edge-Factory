@@ -24,9 +24,9 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
+        "fixture_key_miss": 2,
         "market_unmapped": 80,
         "market_unsupported": 589,
-        "no_pick_for_fixture": 2,
         "out_of_window": 65,
         "selection_unmapped": 634
       },
@@ -44,9 +44,9 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 12,
-      "be_raw": 36,
-      "be_usable": 33,
+      "be_matched": 11,
+      "be_raw": 42,
+      "be_usable": 39,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
@@ -55,14 +55,14 @@
       "freshness_h": null,
       "join_matched_rows": 8,
       "join_miss_counts": {
-        "fixture_key_miss": 13,
+        "fixture_key_miss": 19,
         "no_pick_for_fixture": 12
       },
       "reason": null,
       "status": "cache_only"
     },
     "betminer": {
-      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
+      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-09' does not exist\"}",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -94,9 +94,9 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 2,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 3,
+        "fixture_key_miss": 5,
         "selection_unsupported": 2
       },
       "reason": null,
@@ -146,7 +146,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
-      "raw": 251,
+      "raw": 249,
       "reason": null,
       "scored": 79,
       "status": null
@@ -187,10 +187,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 2311,
+        "event_count": 2332,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 2311,
+        "events_with_teams": 2332,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -248,7 +248,7 @@
         "board_rows": 0,
         "board_team_count": 0,
         "board_team_names": {},
-        "card_fixture_count": 16,
+        "card_fixture_count": 18,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
@@ -309,14 +309,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 103,
+      "join_matched_rows": 78,
       "join_miss_counts": {
-        "fixture_key_miss": 148,
-        "no_pick_for_fixture": 278
+        "fixture_key_miss": 380,
+        "no_pick_for_fixture": 134
       },
-      "oa_matched": 9,
-      "oa_raw": 529,
-      "oa_usable": 529,
+      "oa_matched": 6,
+      "oa_raw": 592,
+      "oa_usable": 592,
       "reason": null,
       "status": "cache_only"
     },
