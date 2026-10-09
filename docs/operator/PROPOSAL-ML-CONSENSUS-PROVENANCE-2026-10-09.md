@@ -1,7 +1,7 @@
 # Review proposal: separate ML and consensus provenance before changing selection
 
 **Date:** 2026-10-09 (SAST)  
-**Revision:** 3 — incorporates both reviews and the supplied reconciliation response (see §12)  
+**Revision:** 4 — updates current reviewer verdicts and pins source-version attribution (see §12)<br>
 **Status:** AUDIT DESIGN: APPROVE WITH CHANGES; LIVE ROUTING: NOT APPROVED FOR ACTIVATION  
 **Review baseline:** commit `01f580c1f41b78883d7c807e354ba76903bbd026`  
 **Session branch:** `arena/11e63d6d-edge-factory`  
@@ -88,7 +88,7 @@ Two isolated controls **were reproduced here** using the current checkout, in-me
 
 Code inspection also confirms whole-payload frozen equality, full-pick copying into Supabase `source_payload`, label-based ML emission counts, and date-qualified Forebet fetch exclusion. These controls are not a full replay or performance study.
 
-The first reviewer disputes whether §3.2's separated-routing result was observed. The cited decision record explicitly says its in-memory Option A control returned a unanimous candidate; retain it as an **attributed prior observation**, not a new experiment here. The second reviewer independently reports the same outcome. Baseline/checkout differences remain a review limitation.
+Review 1 now withdraws its claim that the separated-routing control was untested. Attribute the synthetic result directly to **Review 2's reported control**; no new evaluator experiment was run here. Review 1 disputes the wording in its decision-record copy; our baseline contains the relevant observation at [lines 57–59 of the pinned source](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/01f580c1f41b78883d7c807e354ba76903bbd026/docs/operator/DECISIONS-2026-10-09.md#L57-L59). This is a source-version discrepancy, not grounds to claim the reviewer's own copy or authorship is verified. The synthesis no longer uses a flattened block quote to resolve it.
 
 ## 4. A second issue reviewers must not overlook: electorate semantics
 
@@ -328,7 +328,7 @@ Minimal patch sequence and rollback:
 Read-only inspection of selector, emission, collapse, label healing, context lookup, downstream consumers, tests, registry predicates, and existing reviews. No new performance experiment or full replay was run. The historical measurements above are explicitly attributed to the existing decision document. Revision 1 changed this proposal and its handbook link. Revision 2 additionally records the review synthesis and performs the two isolated temporary/in-memory controls in §3.3. No production pipeline, provider calls, full replay, or performance experiment was run.
 
 
-## 12. Review disposition (revision 3)
+## 12. Review disposition (revision 4)
 
 See [the review synthesis](REVIEW-SYNTHESIS-ML-CONSENSUS-2026-10-09.md) for attributed verdicts, verification scope and unresolved disagreements.
 
@@ -340,3 +340,6 @@ Accepted amendments: sidecar-only storage; separate signal/observation identity;
 The supplied reconciliation response requests documentation and an acceptance checklist, not live implementation. Revision 3 clarifies: both probability kinds use percentage units; not every ROI population is mixed; Forebet roster retention is legitimate historical support; zero output from missing required electors can be valid abstention rather than blanket suppression. The acceptance checklist records every implementation/replay test as **not yet run**, except the two isolated counterexample probes already described.
 
 Before activation, explicitly choose **supported historical-contract enforcement**, or **a separately identified available-voter contract with required evidence and promotion**. A legacy label plus a false electorate flag is acceptable only as audit annotation while baseline behaviour is deliberately unchanged; it is not a completed live certification repair.
+
+
+Revision 4 records the latest consensus: **both reviewers conditionally approve the audit design with changes; neither approves live activation or audit implementation automatically**. Review 2 reports checking all three revision-3 documents pinned to `0dac025`; Review 1 reports reading the synthesis only. Its earlier verdict is superseded. The next requested deliverable is Gate A's concrete schema/storage specification for explicit review, not audit-hook code. This update makes no changes to the unchecked acceptance requirements.

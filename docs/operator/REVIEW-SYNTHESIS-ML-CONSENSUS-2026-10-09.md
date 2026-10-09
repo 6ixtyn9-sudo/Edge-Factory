@@ -2,21 +2,21 @@
 
 **Date:** 2026-10-09  
 **Status:** documentation only; no live-change authorization  
-**Proposal:** [revision 3](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md)  
+**Proposal:** [revision 4](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md)<br>
 **Local code baseline:** `01f580c1f41b78883d7c807e354ba76903bbd026`
 
 The user supplied two independent reviews in chat. This document summarizes their material claims and dispositions; it is **not** a claim that the review agents' experiments were all repeated here. Review identifiers below are local labels, not independently verified agent identities.
 
-## Verdicts supplied
+## Current verdicts supplied (supersede initial review)
 
-| Reviewer | Audit stage | Live routing |
+| Reviewer | Audit design | Live routing |
 |---|---|---|
-| Review 1 | Approve | Approve with changes |
-| Review 2 | Approve with changes | Reject activation now; support intended correction after prerequisites |
+| Review 1 | Approve with changes; not implementation acceptance | Reject activation now |
+| Review 2 | Conditional approval with changes; revision-3 documentation amendments addressed | Not approved for activation |
 
-Neither review authorizes immediate activation. Both endorse staged provenance and comparison, reject profitability promises, and require explicit electorate semantics.
+Review 1 initially said Approve / Approve with changes. Its supplied follow-up supersedes those verdicts. There is **no current live-activation split**. Both reviewers endorse staged provenance and comparison, reject profitability promises, and require explicit electorate semantics. Neither approves audit-hook implementation automatically.
 
-**Scope limitations:** Review 1 reports a different checkout (`a189fd4` plus local commits). Both reviewed pasted proposal text rather than a proposal file in their checkout. Review 2 reports isolated synthetic evaluator controls, no full replay, and 991 repository hashes unchanged; that hash inventory and its full test harness were not supplied or independently verified here.
+**Scope limitations:** Review 1 originally reported a different checkout (`a189fd4` plus local commits); its latest follow-up says it read the synthesis, but not the revision-3 proposal or checklist, and reports corrections committed elsewhere as `714f8cc`. That external commit was not fetched or verified here. Review 2 now reports reading all three documents pinned to `0dac025` and checking its four-file documentation-only scope. This scope is independently confirmed by local `git show --stat`. Its earlier 991-file hash inventory and full synthetic test harness remain reviewer-reported, not independently reproduced here.
 
 ## Accepted findings and amendments
 
@@ -36,15 +36,17 @@ Neither review authorizes immediate activation. Both endorse staged provenance a
 | Replay needs guard, derived features, identity, context and ticket state | Review 2; rolling-hit-rate dependency inspected | Expanded point-in-time manifest; missing dependencies declared |
 | Decay uses guarded prediction exports, not archived labels | Review 1; decay view/export code inspected here | Record bounded observation; include fade research and state consumers |
 
-## Two disagreements requiring care
+## Attribution clarification and policy boundary
 
-### Was the separated-routing control observed?
+### Separated-routing observation and source-version discrepancy
 
-Review 1 calls the prior separated-routing outcome untested. However, the cited `DECISIONS-2026-10-09.md` §3 explicitly records:
+Review 1 withdraws its earlier claim that the separated-routing outcome was untested. The observation is sufficient on **Review 2's reported synthetic control**: no model, Statarea/Vitibet/Bzzoiro agreement at 70%, then in-memory family separation, produced one unanimous≥65 candidate. This is the primary attribution used here, not a historical replay or a prediction of production removals.
 
-> No-model 70% fixture: current path returns an ML-labelled candidate; Option A returns a unanimous candidate; Option B returns zero candidates.
+Review 1 also says the sentence formerly block-quoted here does not occur in its decision-record version. In **our pinned baseline**, `git show 01f580c1f41b78883d7c807e354ba76903bbd026:docs/operator/DECISIONS-2026-10-09.md` contains the no-model/current-path/Option-A/Option-B observation at lines 57–59. See [the exact source version](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/01f580c1f41b78883d7c807e354ba76903bbd026/docs/operator/DECISIONS-2026-10-09.md#L49-L59). That file was not edited in proposal commit `0dac025` or this correction.
 
-Review 2 independently reports the family-separated control as well. Revision 2 retains this as an **attributed prior observation**, not a new result from this session. None of these controls demonstrates production-policy performance.
+We cannot identify which differing decision-record revision Review 1 grepped from the supplied follow-up. Do not assert that its copy contains the same text or assign authorship of our version to that agent. The flattened block quote has been removed; direct reviewer-control attribution is sufficient without depending on this source-version discrepancy. No additional evaluator control was rerun for this correction.
+
+Review 1 also withdraws its broad claim that every ROI figure conditioned on `avg_p` is mixed. Both score kinds use percentage units, but represent different estimands. Untyped pooling can mix them; verified model exports and provenance-stratified cohorts require separate analysis. This aligns with revision 3's formulation.
 
 ### Can a mismatch flag justify live family-only routing?
 
@@ -90,3 +92,10 @@ Accepted clarifications:
 - Sidecar-only capture, distinct signals, per-ordering baseline parity, precise fade receipts and an expanded replay manifest remain prerequisites.
 
 The [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md) is the implementation handoff. No audit hooks, new tests, full replay or live routing were implemented in this documentation revision.
+
+
+## Publication follow-up (revision 4)
+
+Both current verdicts are conditional audit-design approval and no live activation. Review 2 reports no further blocking documentation correction after reading revision 3, and identifies **Gate A** as the next design deliverable: a concrete schema/storage specification with identity derivation, missing receipts, persistence/retention bounds and fail-soft hook interface, submitted for approval before coding.
+
+This follow-up corrects review-status reporting and clarifies source-version attribution only. The proposal, checklist and handbook links are updated accordingly; acceptance boxes stay unchecked. No Gate A specification, audit implementation, new control suite, full replay or production change was performed.
