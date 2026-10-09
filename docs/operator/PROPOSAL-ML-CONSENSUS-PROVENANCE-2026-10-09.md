@@ -352,3 +352,12 @@ D1–D5 record pinned above, not that external D1–D7 document. See the
 [handbook's source-identity guidance](README.md) and the synthesis addendum.
 No external numbering, decisions or new test results are adopted by this note;
 all implementation/activation gates remain unchanged.
+
+## Gate A publication addendum
+
+The [concrete Gate A schema/storage specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)
+is now published as draft 1 for explicit A1–A4 approval. It supplies the next
+design deliverable without changing this revision-4 policy disposition. New
+sidecar persistence is not covered automatically by existing cleanup/artifacts;
+the proposed dedicated route requires authorized integration review. No audit
+code, executable schema, new controls, replay or activation is included.

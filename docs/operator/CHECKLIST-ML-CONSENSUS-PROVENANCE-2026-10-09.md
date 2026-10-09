@@ -12,6 +12,8 @@ Unchecked items are requirements, not claims of completed tests. Only two isolat
 
 ## Gate A — Schema and storage contract, before coding
 
+**Submitted draft:** [mcp-audit/v1 schema/storage specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md). A1–A4 await explicit approval; publication does not check any acceptance item.
+
 - [ ] Approve a separate versioned sidecar stream and bounded retention/persistence contract; no unreviewed workflow changes or large tracked datasets.
 - [ ] Preserve operational rows, archives, exported payloads, IDs, models, rules, thresholds, prices, tickets and frozen state unchanged.
 - [ ] Preserve canonical whole-payload equality; do not exclude provenance fields from the comparison as a workaround.
@@ -80,4 +82,4 @@ Attach commands, code revision, inputs and expected/actual outputs for each cont
 - [ ] No automatic model promotion, electorate substitution, relaxed gates, archive rewrite or new dual production lane.
 - [ ] Record implementation revision, activation decision, test receipts and unresolved limitations in a new operator decision entry.
 
-**Immediate next deliverable:** approved schema/storage specification plus reproducible tests. Production routing is not the next authorized step.
+**Immediate next decision:** explicit A1–A4 approval of the submitted Gate A draft, before coding. Reproducible controls and implementation acceptance follow separately; production routing is not the next authorized step.
