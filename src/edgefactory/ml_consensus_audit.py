@@ -1,6 +1,6 @@
 """Default-OFF MCP audit collector: explicit temporary-storage development only.
 
-No operational consumer reads this module. There is deliberately no production
+No operational consumer reads these records. There is deliberately no production
 storage default, environment path, uploader, Git integration or enablement in
 run_day. Callers may supply a handle to the optional evaluator/collapse hooks.
 All hashes/JSON/disk writes occur on the writer, never the scoring thread.
@@ -19,11 +19,11 @@ import os
 import platform
 import sys
 import threading
-import time
 from collections import Counter, deque
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
 
 SCHEMA = "mcp-audit/development-v1"
 MAX_NODES = 4096
@@ -148,8 +148,11 @@ def thaw(value):
 
 def _dependency_projection(entry):
     wrapper = entry["receipt"]
+    validate_wrapper(wrapper)
     if wrapper["state"] == "observed":
         value = wrapper["value"]
+        if value["logical_name"] != entry["logical_name"]:
+            raise ValueError("inconsistent dependency name")
         wrapper = observed({k: value[k] for k in (
             "logical_name", "version", "sha256", "size_bytes", "as_of_utc", "missing_members"
         )})
@@ -204,9 +207,10 @@ class TemporaryAudit:
         self._wake = threading.Event()
         self.ready = threading.Event()  # Tests may wait; scoring hooks never do.
         self.done = threading.Event()
+        self._scopes = 0
+        self._spool = None
+        self._loss_unknown = False
         self._emissions = Counter()
-        self._rows: dict[int, str] = {}  # Writer-only, bounded by RECORD_LIMIT.
-        self._inferences: dict[int, str] = {}
         self._thread = None
         self._root = None
         self.build_id = None
@@ -219,9 +223,12 @@ class TemporaryAudit:
         if type(temporary_directory) is not tempfile.TemporaryDirectory:
             raise ValueError("only caller-owned TemporaryDirectory storage is supported")
         if (platform.python_implementation() != "CPython" or sys.platform != "linux"
+                or sys.version != "3.11.2 (main, Apr  8 2026, 01:58:00) [GCC 12.2.0]"
                 or not getattr(sys, "_is_gil_enabled", lambda: True)()):
             return
         self._root = Path(temporary_directory.name)
+        from edgefactory.ml_consensus_storage import TemporarySpool
+        self._spool = TemporarySpool(temporary_directory)
         self.state = "STARTING"
         try:
             self._thread = threading.Thread(target=self._run, name="mcp-temporary-audit", daemon=True)
@@ -230,6 +237,14 @@ class TemporaryAudit:
             self.state = "FAILED"
             self.done.set()
 
+    @property
+    def state(self):
+        return "ABORTED" if getattr(self, "_abort", False) else self._state
+
+    @state.setter
+    def state(self, value):
+        self._state = value
+
     def _drop(self, reason):
         # Best-effort bounded enum counters; no caller waits for shared locks.
         if self._lock.acquire(blocking=False):
@@ -237,6 +252,8 @@ class TemporaryAudit:
                 self.dropped[reason] += 1
             finally:
                 self._lock.release()
+        else:
+            self._loss_unknown = True
 
     def try_capture(self, stage, receipt):
         self.capture_factory(stage, lambda: receipt)
@@ -265,8 +282,8 @@ class TemporaryAudit:
                 self._drop("closing")
                 return
             self._queue.append((stage, private, charge, size))
+            self._reserved -= MAX_RESERVATION - charge
             reserved = False
-            self._wake.set()
         except Exception:
             self._drop("capture_error")
         finally:
@@ -277,7 +294,6 @@ class TemporaryAudit:
 
     def try_close(self) -> None:
         self._close = True
-        self._wake.set()
 
     def finish(self, timeout: float = 1.0) -> None:
         """Teardown/test-only, outside scoring; never used by evaluator hooks."""
@@ -293,11 +309,13 @@ class TemporaryAudit:
         envelope["record_id"] = "mcr1:" + content_hash("mcp-record-v1", envelope)
         raw = (canonical(envelope) + "\n").encode("utf-8")
         if len(raw) > MAX_RECORD_BYTES or (maximum is not None and len(raw) > maximum):
-            raise CaptureLimit("serialization estimate exceeded")
+            raise RuntimeError("serialization estimate exceeded")
         limit = STREAM_BYTES if kind == "build_close" else STREAM_BYTES - CONTROL_BYTES
         count_limit = RECORD_LIMIT if kind == "build_close" else RECORD_LIMIT - 1
         if self._sequence >= count_limit or self._bytes + len(raw) > limit:
-            raise CaptureLimit("stream budget exceeded")
+            raise RuntimeError("stream budget exceeded")
+        if self._spool is not None:
+            self._spool.check_growth(len(raw))
         self._file.write(raw)
         self._bytes += len(raw)
         self._counts[kind] += 1
@@ -307,8 +325,7 @@ class TemporaryAudit:
     def _run(self):
         try:
             self.build_id = "mcb1:" + identity_hash("mcp-build-v1", self._build_material)
-            self._directory = self._root / self.build_id
-            self._directory.mkdir(exist_ok=False)
+            self._directory = self._spool.reserve(self.build_id)
             self._sequence = self._bytes = 0
             self._counts = Counter()
             with (self._directory / "records-000001.jsonl").open("xb") as self._file:
@@ -317,7 +334,7 @@ class TemporaryAudit:
                     "runtime": {"python": sys.version, "platform": sys.platform,
                                 "allocation_calibrated": False},
                     "audit_config": {"temporary_only": True, "export_route_state": "unprovisioned"},
-                    "input_manifest": [], "coverage_scope": ["development_hooks_partial"],
+                    "input_manifest": dependency_inventory(), "coverage_scope": ["development_hooks_partial"],
                     "operational_comparator_contract": missing(),
                 })
                 with self._producer:
@@ -326,8 +343,8 @@ class TemporaryAudit:
                     self.state = "READY"
                 self.ready.set()
                 while not self._abort:
-                    self._wake.wait(0.01)
-                    self._wake.clear()
+                    if not self._queue and not self._close:
+                        self._wake.wait(0.005)
                     with self._producer:
                         item = self._queue.popleft() if self._queue else None
                         closing = self._close and item is None
@@ -338,13 +355,13 @@ class TemporaryAudit:
                             stage, private, charge, size = item
                             payload = thaw(private)
                             body, kind = self._prepare(stage, payload)
-                            self._emit(kind, body)
+                            self._emit(kind, body, size)
                         except (CaptureLimit, ValueError, TypeError, KeyError):
                             self._drop("serialization_error")
                         finally:
                             item = private = payload = body = None
                             with self._producer:
-                                self._reserved -= MAX_RESERVATION
+                                self._reserved -= charge
                                 self._count -= 1
                     if closing:
                         break
@@ -358,7 +375,7 @@ class TemporaryAudit:
                         **self._counts, "build_close": 1},
                     "inference_attempts_observed": self._counts["inference_observation"],
                     "emissions_by_path": dict(self._emissions), "dropped_counts_by_reason": dict(self.dropped),
-                    "coverage": "partial", "close_reason": "temporary_development",
+                    "coverage": "unknown" if self._loss_unknown else "partial", "close_reason": "temporary_development",
                     "replay_capabilities": {c: "non_replayable" for c in (
                         "scoring", "selection_context", "full_policy", "ticket")},
                     "export_route_state": "unprovisioned", "segment_bytes": preceding.stat().st_size,
@@ -373,7 +390,11 @@ class TemporaryAudit:
                         "coverage": "partial", "export_route_state": "unprovisioned",
                         "replay_capabilities": "non_replayable", "files": inventory}
             temporary = self._directory / ".manifest.tmp"
-            temporary.write_text(canonical(manifest) + "\n", encoding="utf-8")
+            manifest_raw = canonical(manifest) + "\n"
+            if len(manifest_raw.encode("utf-8")) > CONTROL_BYTES:
+                raise CaptureLimit("manifest limit")
+            self._spool.check_growth(len(manifest_raw.encode("utf-8")))
+            temporary.write_text(manifest_raw, encoding="utf-8")
             if self._abort:
                 return
             temporary.replace(self._directory / "build-manifest.json")
@@ -388,6 +409,8 @@ class TemporaryAudit:
                 self._queue.clear()
                 self._count = 0
                 self._reserved = CONTROL_BYTES
+            if self._spool is not None:
+                self._spool.close()
             self.ready.set()
             self.done.set()
 
@@ -411,11 +434,12 @@ class TemporaryAudit:
     def _prepare(self, stage, payload):
         if not hasattr(self, "_emissions"):
             self._emissions = Counter()
-        if stage in ("emission", "collapse_choice"):
+        if stage in ("emission", "collapse_choice", "collapse_final", "decision"):
             if stage == "emission" and "path" in payload:
                 self._emissions[payload["path"]] += 1
             return payload, {"emission": "emission_observation",
-                             "collapse_choice": "collapse_observation"}[stage]
+                             "collapse_choice": "collapse_observation", "collapse_final": "collapse_final",
+                             "decision": "decision_observation"}[stage]
         if stage == "inference":
             if len(payload["model"]["x"]) > 512:
                 raise CaptureLimit("feature limit")
@@ -426,51 +450,9 @@ class TemporaryAudit:
             body = {"inference_id": identifier, "inference_attempt_ordinal": ordinal,
                     "occurrence_ref": occurrence, "target_selection_ref": selection,
                     "execution_state": "executed", "model_receipt": observed(payload["model"]),
-                    "input_snapshot_refs": []}
+                    "input_snapshot_refs": dependency_inventory()}
             body["evidence_sha256"] = content_hash("mcp-inference-evidence-v1", evidence_projection(body, True))
-            self._inferences[ordinal] = identifier
             return body, "inference_observation"
-        if stage == "signal":
-            occurrence, selection = self._occurrence(payload)
-            ordinal = payload["attempt"]
-            contract_fields = ("rule_contract_id", "model_contract_id", "feature_contract_id",
-                               "election_contract_id", "qualification_contract_id")
-            preimage = {"selection_ref": selection["value"], "emission_path": payload["path"],
-                        **{k: "unknown:" + k for k in contract_fields},
-                        "partial_scope": {"build_id": self.build_id, "emission_attempt_ordinal": ordinal}}
-            if payload["path"] == "consensus_unanimous":
-                preimage["model_contract_id"] = preimage["feature_contract_id"] = None
-            signal = "mcs1:" + identity_hash("mcp-signal-v1", preimage)
-            identifier = "mcv1:" + identity_hash("mcp-observation-v1", {
-                "build_id": self.build_id, "signal_id": signal, "emission_attempt_ordinal": ordinal})
-            parent = self._inferences.get(payload.get("inference"))
-            body = {"observation_id": identifier, "signal_id": signal, "identity_complete": False,
-                    "occurrence_ref": occurrence, "selection_ref": selection,
-                    "emission_path": payload["path"], "emission_attempt_ordinal": ordinal,
-                    "input_order": payload["fixture"], "rule_receipt": observed(payload["rule"]),
-                    "model_receipt": missing() if parent else not_applicable(),
-                    "consensus_receipt": observed(payload["consensus"]) if "consensus" in payload else not_applicable(),
-                    "fade_receipt": observed(payload["fade"]) if "fade" in payload else not_applicable(),
-                    "context_price_receipt": missing("hook_not_reached"), "input_snapshot_refs": [],
-                    "inference_attempt_ref": observed(parent) if parent else missing("hook_not_reached"),
-                    "baseline_decision": {"state": "emitted", "reason_code": "baseline",
-                                          "emitted_row_ordinal": payload["row"]},
-                    "operational_links": missing()}
-            body["evidence_sha256"] = content_hash("mcp-evidence-v1", evidence_projection(body))
-            self._rows[payload["row"]] = identifier
-            self._emissions[payload["path"]] += 1
-            return body, "signal_observation"
-        if stage == "collapse":
-            members = payload["members"]
-            body = {"collapse_contract_ref": "incumbent_input_order",
-                    "input_row_ordinals": members,
-                    "supporting_observation_ids": [self._rows[n] for n in members if n in self._rows],
-                    "unlinked_input_ordinals": [n for n in members if n not in self._rows],
-                    "representative_input_ordinal": observed(payload["representative"]),
-                    "output_row_ordinal": payload["output"], "operational_identity": missing(),
-                    "precollapse_row_sha256": missing(), "final_whole_row_sha256": missing(),
-                    "link_state": "partial", "reason_codes": ["receipt_not_exposed"]}
-            return body, "representative_link"
         raise ValueError("unknown capture stage")
 
 
@@ -545,9 +527,143 @@ def read_temporary_build(directory):
                         if identifier in identities:
                             raise ValueError('duplicate identity')
                         identities[identifier] = raw
+                validate_development_record(record)
                 records.append(record)
                 if len(records) > RECORD_LIMIT:
                     raise ValueError('record count exceeded')
     if records[0]['record_type'] != 'build_open' or records[-1]['record_type'] != 'build_close':
         raise ValueError('unclosed build')
+    close = records[-1]['body']
+    if close['segments'] != files[:-1] or close['segment_bytes'] != sum(e['size_bytes'] for e in files[:-1]):
+        raise ValueError('close inventory mismatch')
+    if close['last_sequence'] != records[-1]['sequence']:
+        raise ValueError('close sequence mismatch')
+    if close['counts_by_record_type'] != dict(Counter(r['record_type'] for r in records)):
+        raise ValueError('close counts mismatch')
     return manifest, records
+
+
+DEPENDENCIES = (
+    "source_snapshots", "date_eligibility", "model_bytes", "guard_activation",
+    "feature_contract", "rolling_hit_rate", "registry", "entity_overrides",
+    "purity_context_debias_veto", "competition_prices", "ticket_bank_ladder_freeze",
+)
+
+
+def dependency_inventory():
+    return [{"logical_name": name, "receipt": missing("dependency_unavailable")}
+            for name in DEPENDENCIES]
+
+
+class _Scope:
+    def __init__(self, handle, ordinal):
+        self.handle, self.ordinal = handle, ordinal
+
+    @property
+    def state(self):
+        return self.handle.state
+
+    def capture_factory(self, stage, factory):
+        def scoped():
+            payload = factory()
+            # Declared coordinates: no inference from surviving labels/rows.
+            payload["evaluation_ordinal"] = self.ordinal
+            for field in ("fixture", "attempt", "row", "inference"):
+                if field in payload:
+                    value = payload[field]
+                    if type(value) is not int or not 0 <= value < RECORD_LIMIT:
+                        raise CaptureLimit("local ordinal limit")
+                    payload[field] = self.ordinal * RECORD_LIMIT + value
+            return payload
+        self.handle.capture_factory(stage, scoped)
+
+    def _drop(self, reason):
+        self.handle._drop(reason)
+
+
+def evaluation_scope(handle):
+    """Read-only evaluation namespace; even dropped receipts cannot reuse IDs."""
+    try:
+        if not isinstance(handle, TemporaryAudit):
+            return handle
+        if handle.state == "DISABLED":
+            return None
+        if not handle._producer.acquire(False):
+            handle._drop("queue_contention")
+            return None
+        try:
+            if handle._scopes >= RECORD_LIMIT:
+                handle._drop("budget_exceeded")
+                return None
+            ordinal = handle._scopes
+            handle._scopes += 1
+            return _Scope(handle, ordinal)
+        finally:
+            handle._producer.release()
+    except Exception:
+        return None
+
+
+def emitted_fields(row):
+    # Positive projection, never a whole-pick traversal or provenance mutation.
+    return {key: row.get(key) for key in (
+        "date", "home", "away", "league", "kickoff", "market", "pick",
+        "avg_p", "w_score", "odds", "odds_source", "rule", "n_way", "edge_n_way")}
+
+
+RECORD_FIELDS = {
+    "build_open": {"trading_date", "producer", "invocation_id", "code_sha", "runtime", "audit_config", "input_manifest"},
+    "inference_observation": {"inference_id", "inference_attempt_ordinal", "occurrence_ref", "target_selection_ref", "execution_state", "model_receipt", "input_snapshot_refs", "evidence_sha256"},
+    "emission_observation": {"row"},
+    "decision_observation": {"stage"},
+    "collapse_observation": {"members", "representative", "pre_sort_output"},
+    "collapse_final": {"pre_sort_ordinals", "link_state", "reason"},
+    "build_close": {"last_sequence", "counts_by_record_type", "segments", "segment_bytes", "coverage", "replay_capabilities", "export_route_state"},
+}
+
+
+def validate_development_record(record):
+    """Strict development envelope/integrity validation; rejects v1 inputs."""
+    keys = {"schema_version", "record_type", "build_id", "record_id", "sequence", "recorded_at_utc", "body"}
+    if type(record) is not dict or set(record) != keys or record['schema_version'] != SCHEMA:
+        raise ValueError('unsupported envelope')
+    kind, body = record['record_type'], record['body']
+    if kind not in RECORD_FIELDS or type(body) is not dict or not RECORD_FIELDS[kind] <= body.keys():
+        raise ValueError('invalid record body')
+    if type(record['sequence']) is not int or record['sequence'] < 0:
+        raise ValueError('invalid sequence')
+    preimage = {k: v for k, v in record.items() if k != 'record_id'}
+    if record['record_id'] != 'mcr1:' + content_hash('mcp-record-v1', preimage):
+        raise ValueError('record digest mismatch')
+    if kind == 'inference_observation':
+        if body['execution_state'] != 'executed':
+            raise ValueError('invalid execution')
+        for key in ('occurrence_ref', 'target_selection_ref', 'model_receipt'):
+            validate_wrapper(body[key])
+        if body['evidence_sha256'] != content_hash('mcp-inference-evidence-v1', evidence_projection(body, True)):
+            raise ValueError('inference evidence mismatch')
+    if kind == 'build_close' and body['coverage'] not in ('partial', 'unknown'):
+        raise ValueError('development build cannot claim complete coverage')
+
+
+def validate_wrapper(wrapper):
+    if type(wrapper) is not dict or set(wrapper) != {'state', 'value', 'reason'}:
+        raise ValueError('invalid evidence wrapper')
+    state = wrapper['state']
+    if state == 'observed':
+        if wrapper['reason'] is not None:
+            raise ValueError('observed reason')
+    elif state in ('missing', 'failed', 'not_applicable'):
+        if wrapper['value'] is not None or wrapper['reason'] not in REASONS:
+            raise ValueError('invalid missing evidence')
+    else:
+        raise ValueError('unknown evidence state')
+
+
+REASONS = frozenset((
+    'hook_not_reached', 'receipt_not_exposed', 'dependency_unavailable', 'ambiguous_identity',
+    'no_inference', 'path_not_applicable', 'serialization_error', 'size_limit', 'writer_error',
+    'budget_exceeded', 'capture_error', 'startup_not_ready', 'queue_contention', 'closing',
+    'fallback_origin_unavailable', 'dependency_expired', 'abandoned_build', 'quota_unavailable',
+    'invariant_breach',
+))

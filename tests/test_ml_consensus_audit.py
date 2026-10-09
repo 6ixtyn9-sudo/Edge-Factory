@@ -51,8 +51,8 @@ def test_inference_parity_and_close(monkeypatch):
         h.finish()
         assert h.state == 'CLOSED'
         records = [json.loads(line) for p in sorted(Path(owner.name).glob('*/records-*.jsonl')) for line in p.read_text().splitlines()]
-        assert [r['record_type'] for r in records] == ['build_open', 'inference_observation', 'build_close']
-        evidence = records[1]['body']['model_receipt']['value']
+        assert [r['record_type'] for r in records] == ['build_open', 'decision_observation', 'inference_observation', 'build_close']
+        evidence = records[2]['body']['model_receipt']['value']
         assert evidence['x'] == [.7]
         assert records[-1]['body']['coverage'] == 'partial'
         class Broken:
@@ -197,7 +197,7 @@ def test_all_emission_paths_parity(monkeypatch, audit):
     assert data == before
     emissions = [p for stage, p in h.receipts if stage == 'emission']
     assert [p['path'] for p in emissions] == ['ml_main', 'ml_fade', 'consensus_unanimous']
-    assert [p['output'] for p in emissions] == baseline[0]
+    assert [p['output'] for p in emissions] == [pt.emitted_fields(row) for row in baseline[0]]
     assert emissions[0]['score'] == emissions[1]['score']
     assert emissions[2]['probabilities'] == [.75, .75, .75]
     assert emissions[2]['score'] == 75
@@ -232,3 +232,75 @@ def test_offline_inventory_integrity(audit):
     segment.write_bytes(segment.read_bytes()[:-1])
     with pytest.raises(ValueError, match='size mismatch'):
         read_temporary_build(audit._directory)
+
+
+def test_repeated_evaluation_ids_are_distinct(audit, monkeypatch):
+    monkeypatch.setattr(pt, 'load_ml_rules_and_model', lambda: ([], {'coef': [.1], 'intercept': 0., 'feature_cols': ['fb_p']}))
+    monkeypatch.setattr(pt, 'load_ml_fade_rules', lambda: [])
+    monkeypatch.setattr(pt, 'get_rolling_hit_rate_last_14d', lambda day: .75)
+    data = {source: {'f': {'home': 'Alpha', 'away': 'Beta', 'p1': 70, 'px': 20, 'p2': 10}}
+            for source in ('forebet', 'zulubet')}
+    for _ in range(2):
+        pt.eval_1x2('2026-06-01', data, {}, source_weights={}, mcp_audit=audit)
+    audit.finish()
+    from edgefactory.ml_consensus_audit import read_temporary_build
+    _, records = read_temporary_build(audit._directory)
+    inferences = [r['body'] for r in records if r['record_type'] == 'inference_observation']
+    assert len(inferences) == 2
+    assert len({b['inference_id'] for b in inferences}) == 2
+    assert len({b['occurrence_ref']['value']['id'] for b in inferences}) == 2
+
+
+def test_termination_not_swallowed(audit):
+    def terminate():
+        raise SystemExit(17)
+    with pytest.raises(SystemExit) as error:
+        safe_capture(audit, 'emission', terminate)
+    assert error.value.code == 17
+    assert audit._count == 0
+
+
+def test_serialization_estimate_violation_is_fatal(audit, monkeypatch):
+    import edgefactory.ml_consensus_audit as module
+    original = module.freeze
+    def underestimated(value):
+        private, charge, _ = original(value)
+        return private, charge, 1
+    monkeypatch.setattr(module, 'freeze', underestimated)
+    audit.try_capture('emission', {'row': 0})
+    assert audit.done.wait(1)
+    assert audit.state == 'FAILED'
+    assert not (audit._directory / 'build-manifest.json').exists()
+
+
+def test_reader_checks_record_digest_not_only_file_inventory(audit):
+    import hashlib
+    from edgefactory.ml_consensus_audit import read_temporary_build, canonical
+    audit.try_capture('emission', {'row': 0})
+    audit.finish()
+    manifest_file = audit._directory / 'build-manifest.json'
+    manifest = json.loads(manifest_file.read_text())
+    segment = audit._directory / manifest['files'][0]['name']
+    records = [json.loads(line) for line in segment.read_text().splitlines()]
+    records[1]['body']['row'] = 1
+    raw = ''.join(canonical(r)+'\n' for r in records).encode()
+    segment.write_bytes(raw)
+    manifest['files'][0]['sha256'] = hashlib.sha256(raw).hexdigest()
+    manifest['files'][0]['size_bytes'] = len(raw)
+    manifest_file.write_text(canonical(manifest)+'\n')
+    with pytest.raises(ValueError, match='record digest mismatch'):
+        read_temporary_build(audit._directory)
+
+
+def test_capacity_contract_refuses_full_fallbacks():
+    from edgefactory.phase5_k import feature_vector
+    from edgefactory.ml_fade_research import FROZEN_FEATURE_COLS
+    receipts = []
+    def actual(col, value, origin):
+        receipts.append({'feature_name': col, 'stage': 'vector_imputation', 'value': value,
+                         'unit': None, 'origin': origin, 'dependency_name': 'feature_contract',
+                         'origin_verification': 'observed'})
+    feature_vector({}, {'feature_cols': list(FROZEN_FEATURE_COLS)}, audit_receipt=actual)
+    assert len(receipts) == 26
+    with pytest.raises(CaptureLimit, match='string limit'):
+        freeze({'fallbacks': receipts})
