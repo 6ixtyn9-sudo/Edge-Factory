@@ -44,8 +44,8 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 16,
-      "be_raw": 48,
+      "be_matched": 13,
+      "be_raw": 51,
       "be_usable": 48,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
@@ -53,10 +53,10 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 10,
+      "join_matched_rows": 8,
       "join_miss_counts": {
-        "fixture_key_miss": 24,
-        "no_pick_for_fixture": 14
+        "fixture_key_miss": 30,
+        "no_pick_for_fixture": 10
       },
       "reason": null,
       "status": "cache_only"
@@ -140,7 +140,7 @@
       "status": null
     },
     "futbolpronosticos": {
-      "blocker": "settled-count coverage mismatch: {'captured': 79, 'settled': 0, 'unmatched': 79, 'mismatch': True, 'settlement_source': 'existing warehouse-score backfill'}",
+      "blocker": "settled-count coverage mismatch: {'captured': 78, 'settled': 0, 'unmatched': 78, 'mismatch': True, 'settlement_source': 'existing warehouse-score backfill'}",
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
@@ -187,10 +187,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 2601,
+        "event_count": 3061,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 2601,
+        "events_with_teams": 3061,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -309,12 +309,12 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 78,
+      "join_matched_rows": 59,
       "join_miss_counts": {
-        "fixture_key_miss": 380,
-        "no_pick_for_fixture": 134
+        "fixture_key_miss": 441,
+        "no_pick_for_fixture": 92
       },
-      "oa_matched": 7,
+      "oa_matched": 5,
       "oa_raw": 592,
       "oa_usable": 592,
       "reason": null,
