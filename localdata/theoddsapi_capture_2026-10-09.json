@@ -1,49 +1,23 @@
 {
-  "added": 61,
-  "attempted": 2,
-  "attempted_fixtures": [
-    {
-      "away": "FC Eindhoven",
-      "date": "2026-10-09",
-      "home": "Almere City FC",
-      "kickoff": "09-10, 19:00",
-      "league": "Netherlands Eerste Divisie"
-    },
-    {
-      "away": "Kas\u0131mpa\u015fa",
-      "date": "2026-10-09",
-      "home": "Galatasaray",
-      "kickoff": "09-10, 18:00",
-      "league": "Turkey S\u00fcper Lig"
-    }
-  ],
+  "added": 0,
+  "attempted": 0,
+  "attempted_fixtures": [],
   "candidate_fixtures": 24,
-  "captured_at": "2026-10-09T16:18:46+00:00",
+  "captured_at": "2026-10-09T19:19:54+00:00",
   "date": "2026-10-09",
-  "due_reasons": {
-    "close_at": 2
-  },
+  "due_reasons": {},
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
     "kickoff_mismatch_display_fallback_overridden": 5
   },
-  "quoted_fixtures": [
-    {
-      "away": "Kasimpasa SK",
-      "date": "2026-10-09",
-      "home": "Galatasaray",
-      "kickoff": "2026-10-09T17:00:00Z",
-      "league": "Turkey S\u00fcper Lig"
-    }
-  ],
-  "rows": 61,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 7,
+    "kickoff_already_passed": 11,
     "kickoff_mismatch": 5,
     "priced": 3,
-    "priced_close_window_not_open": 2,
     "retry_cooldown": 10
   },
   "skipped": [
@@ -51,13 +25,14 @@
     "Karmiotissa|Omonia Nicosia (kickoff already passed)",
     "Brothers Union|Fortis (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch PSV Eindhoven|Heerenveen: pick legacy display says 17:00Z, captured rows say 18:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "PSV Eindhoven|Heerenveen (priced, close window not open)",
+    "PSV Eindhoven|Heerenveen (kickoff already passed)",
     "Zlin|Slavia Praha (kickoff already passed)",
+    "Almere City FC|FC Eindhoven (kickoff already passed)",
     "Malkiya|Al Riffa (retry cooldown (6h after failed attempt))",
     "Qingdao Hainiu|Beijing Guoan (priced)",
     "Real Cundinamarca|Real Santander (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Borussia Dortmund|Werder Bremen: pick legacy display says 17:30Z, captured rows say 18:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Borussia Dortmund|Werder Bremen (priced, close window not open)",
+    "Borussia Dortmund|Werder Bremen (kickoff already passed)",
     "WARN kickoff-mismatch Fluminense|Coritiba: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Fluminense|Coritiba (kickoff already passed)",
     "Shelbourne|Sligo Rovers (retry cooldown (6h after failed attempt))",
@@ -69,6 +44,7 @@
     "Montpellier|Grenoble Foot 38 (priced)",
     "Arsenal Dzerzhinsk|Dinamo Brest (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Galatasaray|Kas\u0131mpa\u015fa: pick legacy display says 16:00Z, captured rows say 17:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Galatasaray|Kas\u0131mpa\u015fa (kickoff already passed)",
     "Vejle|Hvidovre (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Palmeiras|Bahia: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Palmeiras|Bahia (kickoff already passed)",
@@ -76,11 +52,6 @@
     "Antigua GFC|Municipal (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "ok",
-  "unmatched": [
-    "Almere City FC vs FC Eindhoven (league not covered: Netherlands Eerste Divisie)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Netherlands Eerste Divisie": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
