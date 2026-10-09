@@ -1,85 +1,8 @@
 {
   "base_pct": 100.0,
-  "bank": 163.35569400000008,
+  "bank": 158.8633260000001,
   "cycle_base": 100.0,
-  "open_slips": [
-    {
-      "date": "2026-10-09",
-      "accas": [
-        {
-          "legs": [
-            {
-              "match": "PSV Eindhoven vs Heerenveen",
-              "pick": "HOME",
-              "prob": 0.799,
-              "odds": 1.26,
-              "result": null,
-              "fixture_key": [
-                "2026-10-09",
-                "PSV Eindhoven",
-                "Heerenveen"
-              ]
-            },
-            {
-              "match": "Borussia Dortmund vs Werder Bremen",
-              "pick": "HOME",
-              "prob": 0.71,
-              "odds": 1.37,
-              "result": null,
-              "fixture_key": [
-                "2026-10-09",
-                "Borussia Dortmund",
-                "Werder Bremen"
-              ]
-            }
-          ],
-          "odds": 1.73,
-          "stake_pct": 20.4195,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        },
-        {
-          "legs": [
-            {
-              "match": "Zlin vs Slavia Praha",
-              "pick": "AWAY",
-              "prob": 0.7809999999999999,
-              "odds": 1.28,
-              "result": null,
-              "fixture_key": [
-                "2026-10-09",
-                "Zlin",
-                "Slavia Praha"
-              ]
-            },
-            {
-              "match": "Almere City FC vs FC Eindhoven",
-              "pick": "HOME",
-              "prob": 0.775,
-              "odds": 1.39,
-              "result": null,
-              "fixture_key": [
-                "2026-10-09",
-                "Almere City FC",
-                "FC Eindhoven"
-              ]
-            }
-          ],
-          "odds": 1.78,
-          "stake_pct": 20.4194,
-          "results": [
-            null,
-            null
-          ],
-          "won": null
-        }
-      ],
-      "staked_pct": 40.8389
-    }
-  ],
+  "open_slips": [],
   "history": [
     {
       "date": "2026-08-28",
@@ -744,6 +667,22 @@
         }
       ],
       "bank_pct": 163.3557
+    },
+    {
+      "date": "2026-10-09",
+      "staked_pct": 40.8389,
+      "returned_pct": 36.3465,
+      "accas": [
+        {
+          "odds": 1.73,
+          "won": false
+        },
+        {
+          "odds": 1.78,
+          "won": true
+        }
+      ],
+      "bank_pct": 158.8633
     }
   ],
   "events": [],
