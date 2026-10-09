@@ -1,11 +1,11 @@
 # Gate A: ML/consensus sidecar schema and storage specification
 
 **Date:** 2026-10-09 (SAST)<br>
-**Specification:** `mcp-audit/v1`, draft 3 — separates index publication; refusal-only unexported retention<br>
+**Specification:** `mcp-audit/v1`, draft 3 + C1 — verbatim ignore addition and rerunnable layout receipt<br>
 **Status:** AMENDED / APPROVAL PENDING — A1–A3 have renewed technical design approval; A4 amendment and operator authorization remain pending; not implementation acceptance.<br>
 **Parent:** [revision-4 proposal](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md), [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md)<br>
 **Inspected code baseline:** `01f580c1f41b78883d7c807e354ba76903bbd026`; draft-2 review pin `49a83da64e1ff0ea103177abd69ce6cba5188d0c`.<br>
-**Scope of this publication:** documentation only. No recorder, hooks, operational schema, storage integration, workflow changes or replay were implemented.
+**Gate A scope:** specification and isolated layout control only. No recorder, hooks, operational schema, storage integration, ignore/workflow changes or replay were implemented. Separately authorized fallback-origin correction and failing contract tests were committed first at `6c3699d`; they are not Gate A implementation (§10).
 
 ## 1. Approval boundary
 
@@ -354,7 +354,7 @@ Approve or amend explicitly:
 - **A3:** default-OFF fail-soft interface, resource/latency targets and residual-risk tests (§5).
 - **A4:** corrected cleanup claims; default >1 MiB references with named but unprovisioned input artifact/steward; separate compact-index publication boundary (not byte durability); refusal-only unexported retention, shared quota/liveness and exact export lifecycle (§6).
 
-**Current disposition:** both supplied draft-2 reviews renew A1–A3 technical design approval; one read the pinned draft and recalculated ten vectors, the other reviewed reconciliation/repository facts rather than draft 2 line by line. A4 requires a corrected compact-index publication boundary; the latter review additionally recommends R1–R4 resource/retention rulings. Draft 3 adopts those amendments for explicit review, **not as operator authorization**. See the [attributed disposition record](GATE-A-REVIEW-DISPOSITION-2026-10-09.md). Gate A completion and permission to code remain pending. Only after explicit operator authorization may implementation/control work begin; Gate C acceptance is required before prospective audit enablement. Evidence-complete production enablement remains blocked on unassigned steward/unprovisioned export resources. Live routing, operational schema migration and long-term retention remain separate approvals.
+**Current disposition:** latest operator-supplied decision approves draft-3 A4 with C1 (exact ignore block/control output); R1–R4 adoption confirmed. A separate technical reviewer approves draft-3 A4 after reading the pinned prose and independently checking layout; A1–A3 technical approvals stand. §10 publishes C1's exact proposed addition and output for confirmation, not a production ignore change. The operator explicitly authorizes only the fallback flag fix and failing qualifier/electorate tests, **outside Gate A**; those were committed first at `6c3699d`. Recorder, hooks, ignore edits, index publication, workflow changes, live routing, operational schema migration and long-term retention remain explicitly **not authorized**. Evidence-complete production enablement stays blocked on missing steward/export resources. See the [attributed disposition record](GATE-A-REVIEW-DISPOSITION-2026-10-09.md).
 
 ## 9. Worked preimages and illustrative calculations
 
@@ -473,3 +473,73 @@ For a required missing selection, use signal preimage `selection_ref="unknown:se
 Let `body_A` and `body_B` have identical **anchored complete** semantic fields from §4.5 but different `/body/inference_attempt_ref/value`, `/body/fade_receipt/value/parent_observation_ref/value` and `/body/fade_receipt/value/parent_inference_ref/value`. Also give them different envelopes, ordinals and artifact retrieval locations. The positive projection removes precisely those run-specific differences; `P(body_A) == P(body_B)` and `HC("mcp-evidence-v1", P(body_A))` is identical. Their complete `record_id` values differ. If `model_receipt` fitted-model SHA-256, ordered `x`, actual score or fade `parent_model_receipt` changes, the projection changes and evidence digests differ. This is not recursive field-name stripping. Equal `signal_id` with different fitted-model digests **requires model-stratified analysis**. Partial occurrence examples intentionally retain build scope and do not satisfy this equivalence.
 
 Resource illustration: 128 individually small serialized receipts need not fit the 8 MiB retained-object/reservation pool. The maximum conservative slot is 1,057,792 bytes; only seven fit before control reservations. After a successful bounded copy, refund to the actual formula charge; cap count and total independently. This is accounting arithmetic, **not measured Python heap/RSS or latency**. A build reservation is 37 MiB +64 KiB; 480 MiB already charged leaves 32 MiB, so no such full reservation fits, much less two.
+
+## 10. Operator C1: exact ignore addition and control output
+
+The operator's three unsuccessful attempts describe same-spool/generic-name rules, not the separate index-directory contract. Re-including only files without restoring their excluded parent prevents traversal; recursively re-including too much makes bulk stageable. This condition is addressed with a verbatim block and a [rerunnable isolated control](controls/gate_a_c1_paths.py), not by asking the implementer to derive rules from prose.
+
+**Exact prospective addition**, appended after existing rules in the repository's `.gitignore` (currently deny-by-default at line 10):
+
+```gitignore
+!localdata/ml_consensus_index/
+localdata/ml_consensus_index/*
+!localdata/ml_consensus_index/v1/
+localdata/ml_consensus_index/v1/*
+!localdata/ml_consensus_index/v1/compact-index_20??-??-??_0[1-8].json
+```
+
+The current baseline already contains `localdata/*` **before** its existing unrelated allowlists. Do **not** append that broad line again after those allowlists: that would revoke them. The five-line addition above re-includes only the separate index directory, re-ignores its children, opens just `v1`, re-ignores its children, then re-includes fixed-slot compact names. No exception under `ml_consensus_audit` exists; detailed manifests/records remain ignored. No later conflicting ignore rules may be introduced silently. This addition is proposed only; applying it is **not authorized** now.
+
+`compact-index.json` is **not** an eligible name in either directory and is deliberately reported IGNORED. The admitted name is `compact-index_2026-10-09_01.json` through `08`. The name pattern is not a content/date/window validator: an oversized file deliberately written to a valid eligible name **would be stageable**. Only the future reviewed publisher may create that name after admission; this control does not prove that publisher exists or enforces size.
+
+Run:
+
+```sh
+python3 docs/operator/controls/gate_a_c1_paths.py
+```
+
+The script copies the **real repository ignore baseline read-only** into a temporary Git repository, appends exactly the five lines above there, creates nine detailed manifests (one >8 KiB), eight synthetic compact indices, slot 09 and ignored candidates/control files. It prints per-file checks, dry-run selection, then actually stages in the **temporary repository only** and asserts the exact list. No production cleanup/staging/ignore modification occurs.
+
+Observed output:
+
+```text
+PER-FILE git check-ignore -q (before staging)
+IGNORED localdata/ml_consensus_audit/v1/2026-10-09/build-01/build-manifest.json
+IGNORED localdata/ml_consensus_audit/v1/2026-10-09/build-01/records-000001.jsonl
+IGNORED localdata/ml_consensus_audit/v1/2026-10-09/build-01/reservation.json
+IGNORED localdata/ml_consensus_audit/v1/2026-10-09/build-01/owner.lock
+IGNORED localdata/ml_consensus_audit/v1/2026-10-09/build-09/build-manifest.json
+IGNORED localdata/ml_consensus_audit/v1/2026-10-09/build-09/records-000001.jsonl
+IGNORED localdata/ml_consensus_audit/v1/2026-10-09/build-09/reservation.json
+IGNORED localdata/ml_consensus_audit/v1/2026-10-09/build-09/owner.lock
+IGNORED localdata/ml_consensus_audit/v1/2026-10-09/build-01/compact-index.json
+IGNORED localdata/ml_consensus_index/v1/compact-index.json
+STAGEABLE localdata/ml_consensus_index/v1/compact-index_2026-10-09_01.json
+STAGEABLE localdata/ml_consensus_index/v1/compact-index_2026-10-09_02.json
+STAGEABLE localdata/ml_consensus_index/v1/compact-index_2026-10-09_03.json
+STAGEABLE localdata/ml_consensus_index/v1/compact-index_2026-10-09_04.json
+STAGEABLE localdata/ml_consensus_index/v1/compact-index_2026-10-09_05.json
+STAGEABLE localdata/ml_consensus_index/v1/compact-index_2026-10-09_06.json
+STAGEABLE localdata/ml_consensus_index/v1/compact-index_2026-10-09_07.json
+STAGEABLE localdata/ml_consensus_index/v1/compact-index_2026-10-09_08.json
+IGNORED localdata/ml_consensus_index/v1/compact-index_2026-10-09_09.json
+IGNORED localdata/ml_consensus_index/v1/candidate_oversized.json
+IGNORED localdata/ml_consensus_index/v1/transaction.json
+IGNORED localdata/ml_consensus_index/v1/publisher.lock
+git add -A -n localdata/
+add 'localdata/ml_consensus_index/v1/compact-index_2026-10-09_01.json'
+add 'localdata/ml_consensus_index/v1/compact-index_2026-10-09_02.json'
+add 'localdata/ml_consensus_index/v1/compact-index_2026-10-09_03.json'
+add 'localdata/ml_consensus_index/v1/compact-index_2026-10-09_04.json'
+add 'localdata/ml_consensus_index/v1/compact-index_2026-10-09_05.json'
+add 'localdata/ml_consensus_index/v1/compact-index_2026-10-09_06.json'
+add 'localdata/ml_consensus_index/v1/compact-index_2026-10-09_07.json'
+add 'localdata/ml_consensus_index/v1/compact-index_2026-10-09_08.json'
+PASS: 9 detailed manifests ignored (one >8 KiB); exactly 8 compact indices staged.
+PASS: slot 09, generic compact-index.json, candidates, records and controls ignored.
+SCOPE: layout only; no size admission, concurrency, crash recovery or commit barrier proof.
+```
+
+**Limits:** verifies ignores and broad staging path separation, not size/count admission, concurrency, ninth-publisher refusal, index bootstrap commit, crash/restore coordination, retained-memory/latency bounds, export verification or replay acceptance. R1 commit-together and §7 items 6/7 remain implementation requirements.
+
+**Separate authorized work performed first:** commit `6c3699df50fb19efd7c52dc45c85117d4480e8ea` corrects the fallback-origin boolean without changing threshold/OU/BTTS return entries, and adds unsuppressed failing contract tests. See the [execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md). Its limited code/test authorization does not extend to Gate A recorder/storage implementation.

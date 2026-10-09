@@ -1,9 +1,9 @@
 # Gate A review reconciliation and draft-3 disposition
 
 **Date:** 2026-10-09 (SAST)<br>
-**Status:** draft 3; A1–A3 renewed technical design approval; A4 amendment and operator authorization pending.<br>
+**Status:** draft 3 + C1 evidence; A1–A4 technical approvals supplied, operator C1 awaiting confirmation. Only fallback-origin fix and failing contract tests authorized/performed, outside Gate A.<br>
 **Original reviewed version:** `b7dac06e945f6e9c4b322b7b314d4b90a0c0701f` ([pinned draft 1](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/b7dac06e945f6e9c4b322b7b314d4b90a0c0701f/docs/operator/GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)).<br>
-**Amended specification:** [draft 3](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md).
+**Current specification:** [draft 3 + C1](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md).
 
 ## 1. Source identity and verdict history (draft 1)
 
@@ -68,7 +68,7 @@ The renewed reviews concern [draft 2 pinned to `49a83da`](https://github.com/6ix
 
 Do not collapse these scopes or treat a pasted agent number as a stable identity. S2's staging result (nine manifests staged, including an oversized one, no record segments) is reviewer-reported, not a production failure or a local recorder test. It correctly exposes draft 2's dual-use filename: Git cannot enforce size/count eligibility when all detailed manifests share a re-included name.
 
-S1 reports a renewed decision file `GATE-A-DECISION-DRAFT2-2026-10-09.md` at local-only `4764711`. As with its earlier `d3dfe5c` decision, no document is imported or adopted as local authority. No further external-record reconciliation is needed to amend A4. Its “operator rulings” are **supplied reviewer recommendations**, not authority to assign an owner, provision resources, code or activate. No operator authorization has been given in this exchange.
+S1 reports a renewed decision file `GATE-A-DECISION-DRAFT2-2026-10-09.md` at local-only `4764711`. As with its earlier `d3dfe5c` decision, no document is imported or adopted as local authority. No further external-record reconciliation is needed to amend A4. Its “operator rulings” are **supplied reviewer recommendations**, not authority to assign an owner, provision resources, code or activate. No operator authorization was given in that draft-2 exchange; the later limited authorization is recorded in §7 below.
 
 ## 5. Draft-3 A4 resolution
 
@@ -87,3 +87,18 @@ An isolated temporary Git repository demonstrates the **new path separation only
 Rechecked ten documentation hash vectors, local links/fences, whitespace and unchanged §7 permutation/failure controls. No production cleanup, persistence, ignore/workflow changes, recorder, benchmark, replay, export verification or historical mutation occurred.
 
 **Decision requested:** technical review of draft-3 A4's separate compact-index publication and refusal-only lifecycle, then explicit **operator** Gate A completion/authorization before coding. A1–A3 design approvals do not accept their future implementation. Pilot integration remains proposed; evidence-complete production enablement remains blocked on missing steward/export resources. The [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md) stays unchecked. Live routing, operational schema migration and long-term retention are not approved.
+
+## 7. Latest draft-3 decisions and limited operator authorization
+
+| Source | Current decision | Verification/authority scope |
+|---|---|---|
+| Latest operator-supplied decision (reported file `GATE-A-DECISION-DRAFT3-2026-10-09.md`, `35b0c88`) | A4 approve with C1; R1–R4 confirmed; explicitly authorizes fallback-origin correction and failing qualifier/electorate tests outside Gate A | Reviewed amendment summary, **not draft-3 prose line by line**; three same-spool ignore attempts could not reproduce the described separation. Requires exact block/output. |
+| Latest pinned-prose technical review (pasted after “agent 2”) | A4 technical design approved; no further design amendment; A1–A3 approvals stand | Read pinned `8c49c55`, independently staged eight compact indices with nine detailed manifests (one 16,428 bytes), no bulk/control/slot09/candidate staged. No admission/crash/publisher acceptance. |
+
+These verdicts supersede the earlier A4 amendment request but do not waive C1. Do not relabel the latest operator text as merely reviewer advice: **its two named changes are expressly authorized now**, independently of Gate A. Conversely, do not extend that authority to recorder, hooks, ignore changes, index publication, workflow edits, routing, schema migration or long-term retention; they are expressly forbidden. The reported `35b0c88` decision remains external/unimported, not a local commit or a license to rewrite historical decision records. No further external-file identity investigation is needed for these explicit supplied instructions.
+
+Implemented the authorized work **first**, committed/pushed `6c3699d`, then published the exact C1 rule addition and output. See the [execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md): 160 related regressions pass; six positive contract controls pass; six unsuppressed contract assertions intentionally fail. Existing threshold/OU/BTTS return values compare exactly to the old function across seven temporary registry cases. This is not live qualifier/electorate repair, recorder acceptance, full payload replay or deployment.
+
+**C1 evidence:** the [specification §10](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md) contains the exact five-line addition and complete per-file `IGNORED`/`STAGEABLE` plus `git add -A -n localdata/` output. The [control script](controls/gate_a_c1_paths.py) copies the real repository ignore baseline read-only into an isolated temp repo and appends that addition only there. It asserts eight compact filenames stageable, nine detailed manifests ignored, no bulk/control/slot09/generic compact filename admitted. No production ignore changes occurred. A generic `compact-index.json` is intentionally ignored; only date/slot names qualify. This proves layout separation, not size/count admission or crash/publication coordination. Confirm C1 against the now reproducible block/output before any further Gate A implementation decision.
+
+§7 items 6/7 remain unchanged. Missing steward/export resources keep evidence-complete production enablement blocked. Limited code/test work is complete on this branch, not merged/deployed; all other implementation/activation prohibitions remain in force.

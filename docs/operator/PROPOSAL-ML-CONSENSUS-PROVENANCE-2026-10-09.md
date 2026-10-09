@@ -391,3 +391,24 @@ steward or export route exists yet, so close marks durable replay non-replayable
 These amendments require A4 review and explicit operator authorization before
 coding; no ignore/workflow/hooks or operational records changed. §7 items 6 and 7
 remain mandatory and unchanged.
+
+### Latest operator authorization and C1 publication
+
+The latest supplied operator decision approves draft-3 A4 conditionally on C1
+and **explicitly authorizes** only the fallback-origin fix and failing
+qualifier/electorate tests outside Gate A. These were implemented and pushed
+first at `6c3699d`; see the [execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md).
+160 related regressions pass, six positive contract controls pass, and six
+unsuppressed contract assertions intentionally fail. No selection predicate,
+source electorate, thresholds or operational rows were changed.
+
+The [specification §10](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md) now
+provides C1's exact ignore addition and per-file/dry-run output with a rerunnable
+isolated control. The latest pinned-prose technical review independently
+confirmed path separation and approves A4; the operator read the summary rather
+than prose line by line and requests C1 reproducibility. Their different scopes
+and the external/unimported `35b0c88` report are preserved in the
+[reconciliation](GATE-A-REVIEW-DISPOSITION-2026-10-09.md). Confirm C1; no automatic
+Gate A implementation permission follows. Recorder/hooks, production ignore
+rules/index publisher, workflows, live routing, schema migration and long-term
+retention remain explicitly unauthorized. §7 items 6 and 7 remain unchanged.
