@@ -4498,7 +4498,12 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                     _k_sources[_src] = (_spr[idx], True) if _spr else (None, False)
                 feat_dict.update(phase5_source_columns(_k_sources))
 
-                x, _imputed_cols = phase5_feature_vector(feat_dict, ml_model)
+                _mcp_origins = []
+                def _mcp_fallback(col, value, origin):
+                    if len(_mcp_origins) < 513:
+                        _mcp_origins.append(origin)
+                x, _imputed_cols = phase5_feature_vector(
+                    feat_dict, ml_model, audit_receipt=_mcp_fallback if mcp_audit is not None else None)
                 if _imputed_cols:
                     _warn_imputed_features(ml_model, _imputed_cols, day)
                 z = sum(w * val for w, val in zip(coefs, x)) + intercept
@@ -4517,8 +4522,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                                             "meaning": "model_target_probability"},
                               "qualification_score": {"value": ml_p * 100.0, "unit": "percent",
                                                       "basis": "raw_times_100"},
-                              "fallback_origins": {"state": "missing", "value": None,
-                                                   "reason": "fallback_origin_unavailable"}}
+                              "fallback_origins": _mcp_origins}
                 })
 
                 # AUDIT-ONLY (scored-candidate shadow): one entry per
@@ -4631,6 +4635,12 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                         "ml_ht_total": ht_total_feat,
                     })
 
+                    safe_capture(mcp_audit, "emission", lambda: {
+                        "fixture": _mcp_fixture, "row": len(picks)-1,
+                        "path": "ml_main", "inference": ml_scored-1,
+                        "rule": rule, "threshold": thr, "score": ml_p*100.0,
+                        "output": picks[-1]})
+
                 # --- ml-fade: certified inverse-selection sibling family ---
                 # Derive the fade from the SAME eligible ml-meta selection:
                 # binary 1X2 home<->away, scored at the FADE side's own odds
@@ -4708,6 +4718,13 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                             "ml_ht_total": ht_total_feat,
                         })
 
+                        safe_capture(mcp_audit, "emission", lambda: {
+                            "fixture": _mcp_fixture, "row": len(picks)-1,
+                            "path": "ml_fade", "inference": ml_scored-1,
+                            "rule": fade_rule, "threshold": fthr, "score": ml_p*100.0,
+                            "parent_selection": majority_pick, "raw_parent_score": ml_p,
+                            "output": picks[-1]})
+
         if len(set(sels)) > 1:
             vetoes += 1
             continue
@@ -4768,6 +4785,12 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
             "sources_used": used,
             "source_weights": source_weights or {},
         })
+        safe_capture(mcp_audit, "emission", lambda: {
+            "fixture": _mcp_fixture, "row": len(picks)-1,
+            "path": "consensus_unanimous", "rule": edge,
+            "threshold": thr, "required": n_req, "score": avg_p,
+            "used": used, "selections": sels, "probabilities": ps,
+            "votes": votes, "weighted_score": w_score, "output": picks[-1]})
     if (ml_rules or ml_fade_rules) and ml_model and ml_scored:
         thr_list = sorted(
             {float(m.group(1)) for r in ml_rules if (m := re.search(r">=\s*([\d.]+)", r.get("rule", "")))}
@@ -4992,8 +5015,14 @@ def _representative_score(pick: dict) -> tuple:
     )
 
 
-def _with_duplicate_metadata(group: list[dict]) -> dict:
-    rep = dict(max(group, key=_representative_score))
+def _with_duplicate_metadata(group: list[dict], audit_selected=None) -> dict:
+    selected = max(group, key=_representative_score)
+    if audit_selected is not None:
+        try:
+            audit_selected(selected)
+        except Exception:
+            pass
+    rep = dict(selected)
     if len(group) <= 1:
         return rep
 
@@ -5483,7 +5512,7 @@ def print_identity_sweep(picks: list[dict], day: str = "", stream=None) -> dict[
     return counts
 
 
-def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int]:
+def collapse_final_operational_picks(picks: list[dict], mcp_audit=None) -> tuple[list[dict], int]:
     clusters: list[list[dict]] = []
     for pick in picks:
         matched = False
@@ -5537,7 +5566,17 @@ def collapse_final_operational_picks(picks: list[dict]) -> tuple[list[dict], int
     out: list[dict] = []
     removed = 0
     for cluster in clusters:
-        out.append(_with_duplicate_metadata(cluster))
+        def _mcp_selected(selected):
+            def receipt():
+                if len(picks) > 4096 or len(cluster) > 4096:
+                    raise ValueError("audit collapse traversal limit")
+                members = {id(row) for row in cluster}
+                return {
+                    "members": [i for i, row in enumerate(picks) if id(row) in members],
+                    "representative": next(i for i, row in enumerate(picks) if row is selected),
+                    "pre_sort_output": len(out)}
+            safe_capture(mcp_audit, "collapse_choice", receipt)
+        out.append(_with_duplicate_metadata(cluster, _mcp_selected if mcp_audit is not None else None))
         removed += max(0, len(cluster) - 1)
 
     out.sort(key=lambda r: (-_bucket_severity(r.get("bucket")), -float(r.get("w_score") or 0.0), -float(r.get("avg_p") or 0)))

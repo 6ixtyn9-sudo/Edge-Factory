@@ -43,9 +43,6 @@ def test_inference_parity_and_close(monkeypatch):
     data = {s: {'fixture': {'home': 'Audit Home', 'away': 'Audit Away', 'league': 'Test League',
                           'p1': 70, 'px': 20, 'p2': 10}} for s in ('forebet', 'zulubet')}
     baseline = pt.eval_1x2('2026-06-01', data, {}, source_weights={})
-    with tempfile.TemporaryDirectory() as directory:
-        # Retain the actual owner, not its string path.
-        pass
     owner = tempfile.TemporaryDirectory()
     try:
         h = TemporaryAudit(owner, trading_date='2026-06-01', invocation_id='test', code_sha='0'*40)
@@ -65,3 +62,173 @@ def test_inference_parity_and_close(monkeypatch):
         assert pt.eval_1x2('2026-06-01', data, {}, source_weights={}, mcp_audit=Broken()) == baseline
     finally:
         owner.cleanup()
+
+
+def test_fallback_actual_precedence():
+    from edgefactory.phase5_k import feature_vector
+    receipts = []
+    model = {'feature_cols': ['fb_p', 'zb_p', 'sa_p', 'unknown'],
+             'fallback_means': {'fb_p': .2, 'zb_p': .3, 'unknown': .8}}
+    baseline = feature_vector({}, model, fallbacks={'fb_p': .4})
+    actual = feature_vector({}, model, fallbacks={'fb_p': .4},
+                            audit_receipt=lambda *v: receipts.append(v))
+    assert actual == baseline
+    assert [r[2] for r in receipts] == ['caller_override', 'payload_mean', 'default_fallback', 'unknown_column_zero']
+    assert [r[1] for r in receipts] == actual[0]
+    def broken(*args):
+        raise RuntimeError('capture')
+    assert feature_vector({}, model, fallbacks={'fb_p': .4}, audit_receipt=broken) == baseline
+
+
+@pytest.fixture
+def audit(monkeypatch):
+    monkeypatch.setenv('EDGE_FACTORY_MCP_AUDIT', '1')
+    owner = tempfile.TemporaryDirectory()
+    handle = TemporaryAudit(owner, trading_date='2026-06-01', invocation_id='test', code_sha='0'*40)
+    assert handle.ready.wait(1) and handle.state == 'READY'
+    yield handle
+    handle.finish()
+    assert handle.done.wait(1)
+    owner.cleanup()
+
+
+def test_admission_before_factory_and_refund(audit):
+    from edgefactory.ml_consensus_audit import CONTROL_BYTES, POOL_BYTES
+    audit._producer.acquire()
+    try:
+        safe_capture(audit, 'emission', lambda: pytest.fail('contended factory'))
+    finally:
+        audit._producer.release()
+    audit._reserved = POOL_BYTES
+    safe_capture(audit, 'emission', lambda: pytest.fail('full factory'))
+    audit._reserved = CONTROL_BYTES
+    safe_capture(audit, 'emission', lambda: {'bad': object()})
+    assert audit._reserved == CONTROL_BYTES and audit._count == 0
+    audit.try_close()
+    safe_capture(audit, 'emission', lambda: pytest.fail('closed factory'))
+
+
+def test_queue_no_overwrite_and_close(audit, monkeypatch):
+    import threading
+    entered, release = threading.Event(), threading.Event()
+    original = audit._prepare
+    def prepare(*args):
+        entered.set()
+        assert release.wait(1)
+        return original(*args)
+    monkeypatch.setattr(audit, '_prepare', prepare)
+    audit.try_capture('emission', {'row': 0})
+    assert entered.wait(1)
+    for n in range(1, 6):
+        audit.try_capture('emission', {'row': n})
+    audit.try_close()
+    release.set()
+    audit.finish()
+    records = [json.loads(line) for p in audit._directory.glob('records-*.jsonl') for line in p.read_text().splitlines()]
+    assert [r['body']['row'] for r in records if r['record_type'] == 'emission_observation'] == list(range(6))
+    assert audit._count == 0
+
+
+def test_timeout_latched(audit, monkeypatch):
+    import threading
+    entered, release = threading.Event(), threading.Event()
+    original = audit._prepare
+    def prepare(*args):
+        entered.set()
+        release.wait(1)
+        return original(*args)
+    monkeypatch.setattr(audit, '_prepare', prepare)
+    audit.try_capture('emission', {'row': 0})
+    assert entered.wait(1)
+    audit.finish(0)
+    assert audit.state == 'ABORTED'
+    release.set()
+    assert audit.done.wait(1)
+    assert audit.state == 'ABORTED'
+    assert not (audit._directory / 'build-manifest.json').exists()
+
+
+def test_disk_failure(audit, monkeypatch):
+    def fail(*args):
+        raise OSError('disk full')
+    monkeypatch.setattr(audit, '_emit', fail)
+    audit.try_capture('emission', {'row': 0})
+    assert audit.done.wait(1)
+    assert audit.state == 'FAILED' and audit._count == 0
+    assert not (audit._directory / 'build-manifest.json').exists()
+
+
+def test_collapse_per_ordering():
+    from itertools import permutations
+    rows = [dict(date='2026-06-01', home='Alpha', away='Beta', match='Alpha vs Beta',
+                 market='1x2', pick='home', avg_p=70, rule=rule) for rule in ('a', 'b')]
+    class Capture:
+        state = 'READY'
+        def __init__(self):
+            self.receipts = []
+        def try_capture(self, stage, payload):
+            self.receipts.append((stage, payload))
+    for order in permutations(rows):
+        baseline = pt.collapse_final_operational_picks(list(order))
+        capture = Capture()
+        assert pt.collapse_final_operational_picks(list(order), capture) == baseline
+        assert capture.receipts[0][1]['representative'] == 0
+        assert capture.receipts[0][1]['members'] == [0, 1]
+
+
+def test_all_emission_paths_parity(monkeypatch, audit):
+    import copy
+    monkeypatch.setattr(pt, 'load_ml_rules_and_model', lambda: (
+        [{'rule': 'ml-meta avg_p>=50'}], {'coef': [.1], 'intercept': 2., 'feature_cols': ['fb_p']}))
+    monkeypatch.setattr(pt, 'load_ml_fade_rules', lambda: [{'rule': 'ml-fade avg_p>=50'}])
+    monkeypatch.setattr(pt, 'get_rolling_hit_rate_last_14d', lambda day: .75)
+    data = {s: {'f': {'home': 'Alpha', 'away': 'Beta', 'league': 'Test League',
+                     'p1': 75, 'px': 15, 'p2': 10, 'odd1': 1.5, 'odd2': 3.}} for s in ('forebet', 'zulubet', 'statarea')}
+    thresholds = {3: {'n_way': 3, 'threshold': 60, 'rule': '3way-unanimous avg_p>=60', 'display_rule': '3way'}}
+    before = copy.deepcopy(data)
+    baseline = pt.eval_1x2('2026-06-01', data, thresholds, source_weights={})
+    class Capture:
+        state = 'READY'
+        def __init__(self): self.receipts = []
+        def try_capture(self, stage, payload):
+            self.receipts.append((stage, copy.deepcopy(payload)))
+    h = Capture()
+    assert pt.eval_1x2('2026-06-01', data, thresholds, source_weights={}, mcp_audit=h) == baseline
+    assert data == before
+    emissions = [p for stage, p in h.receipts if stage == 'emission']
+    assert [p['path'] for p in emissions] == ['ml_main', 'ml_fade', 'consensus_unanimous']
+    assert [p['output'] for p in emissions] == baseline[0]
+    assert emissions[0]['score'] == emissions[1]['score']
+    assert emissions[2]['probabilities'] == [.75, .75, .75]
+    assert emissions[2]['score'] == 75
+    assert pt.eval_1x2('2026-06-01', data, thresholds, source_weights={}, mcp_audit=audit) == baseline
+    audit.finish()
+    records = [json.loads(line) for p in audit._directory.glob('records-*.jsonl') for line in p.read_text().splitlines()]
+    assert [r['body']['path'] for r in records if r['record_type'] == 'emission_observation'] == ['ml_main', 'ml_fade', 'consensus_unanimous']
+
+
+def test_startup_failure(monkeypatch):
+    monkeypatch.setenv('EDGE_FACTORY_MCP_AUDIT', '1')
+    owner = tempfile.TemporaryDirectory()
+    try:
+        def fail(*args, **kwargs): raise OSError('startup')
+        monkeypatch.setattr(Path, 'mkdir', fail)
+        h = TemporaryAudit(owner, trading_date='2026-06-01', invocation_id='test', code_sha='0'*40)
+        assert h.done.wait(1)
+        assert h.state == 'FAILED'
+        safe_capture(h, 'emission', lambda: pytest.fail('failed factory'))
+    finally:
+        owner.cleanup()
+
+
+def test_offline_inventory_integrity(audit):
+    from edgefactory.ml_consensus_audit import read_temporary_build
+    audit.try_capture('emission', {'row': 0})
+    audit.finish()
+    manifest, records = read_temporary_build(audit._directory)
+    assert manifest['coverage'] == 'partial'
+    assert len(records) == 3
+    segment = audit._directory / manifest['files'][0]['name']
+    segment.write_bytes(segment.read_bytes()[:-1])
+    with pytest.raises(ValueError, match='size mismatch'):
+        read_temporary_build(audit._directory)

@@ -25,7 +25,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-SCHEMA = "mcp-audit/v1"
+SCHEMA = "mcp-audit/development-v1"
 MAX_NODES = 4096
 MAX_CHARS = 1024
 MAX_DEPTH = 12
@@ -218,7 +218,8 @@ class TemporaryAudit:
         import tempfile
         if type(temporary_directory) is not tempfile.TemporaryDirectory:
             raise ValueError("only caller-owned TemporaryDirectory storage is supported")
-        if platform.python_implementation() != "CPython" or sys.platform != "linux":
+        if (platform.python_implementation() != "CPython" or sys.platform != "linux"
+                or not getattr(sys, "_is_gil_enabled", lambda: True)()):
             return
         self._root = Path(temporary_directory.name)
         self.state = "STARTING"
@@ -237,46 +238,41 @@ class TemporaryAudit:
             finally:
                 self._lock.release()
 
-    def try_capture(self, stage: str, receipt: dict) -> None:
+    def try_capture(self, stage, receipt):
+        self.capture_factory(stage, lambda: receipt)
+
+    def capture_factory(self, stage, factory):
+        # A single audit-only critical section owns admission, copying and
+        # publication. Producers never wait; the worker may wait for copying.
         if self.state == "DISABLED":
             return
-        if not self._producer.acquire(blocking=False):
+        if not self._producer.acquire(False):
             self._drop("queue_contention")
             return
         reserved = False
         try:
-            if getattr(self, "_mailbox", None) is not None or getattr(self, "_cancelled", False):
-                self._drop("queue_contention")
+            if self.state != "READY" or self._close:
+                self._drop("startup_not_ready" if self.state == "STARTING" else "closing")
                 return
-            if not self._lock.acquire(blocking=False):
-                self._drop("queue_contention")
+            if self._count >= 128 or self._reserved + MAX_RESERVATION > POOL_BYTES:
+                self._drop("budget_exceeded")
                 return
-            try:
-                if self.state != "READY" or self._close:
-                    self.dropped["startup_not_ready" if self.state == "STARTING" else "closing"] += 1
-                    return
-                if self._count >= 128 or self._reserved + MAX_RESERVATION > POOL_BYTES:
-                    self.dropped["budget_exceeded"] += 1
-                    return
-                self._reserved += MAX_RESERVATION
-                self._count += 1
-                reserved = True
-            finally:
-                self._lock.release()
-            private, charge, size = freeze(receipt)
-            # A competing writer can briefly own the audit lock. Producer NEVER
-            # blocks: publish/refund via its single-owner mailbox instead.
-            self._mailbox = (stage, private, charge, size)
+            self._reserved += MAX_RESERVATION
+            self._count += 1
+            reserved = True
+            private, charge, size = freeze(factory())
+            if self._close or self._abort:
+                self._drop("closing")
+                return
+            self._queue.append((stage, private, charge, size))
             reserved = False
             self._wake.set()
         except Exception:
             self._drop("capture_error")
         finally:
             if reserved:
-                # Single producer mailbox also conveys cancellation/refund.
-                self._mailbox = None
-                self._cancelled = True
-                self._wake.set()
+                self._reserved -= MAX_RESERVATION
+                self._count -= 1
             self._producer.release()
 
     def try_close(self) -> None:
@@ -298,7 +294,9 @@ class TemporaryAudit:
         raw = (canonical(envelope) + "\n").encode("utf-8")
         if len(raw) > MAX_RECORD_BYTES or (maximum is not None and len(raw) > maximum):
             raise CaptureLimit("serialization estimate exceeded")
-        if self._sequence >= RECORD_LIMIT or self._bytes + len(raw) > STREAM_BYTES - CONTROL_BYTES:
+        limit = STREAM_BYTES if kind == "build_close" else STREAM_BYTES - CONTROL_BYTES
+        count_limit = RECORD_LIMIT if kind == "build_close" else RECORD_LIMIT - 1
+        if self._sequence >= count_limit or self._bytes + len(raw) > limit:
             raise CaptureLimit("stream budget exceeded")
         self._file.write(raw)
         self._bytes += len(raw)
@@ -322,40 +320,33 @@ class TemporaryAudit:
                     "input_manifest": [], "coverage_scope": ["development_hooks_partial"],
                     "operational_comparator_contract": missing(),
                 })
-                self.state = "READY"
+                with self._producer:
+                    if self._abort:
+                        return
+                    self.state = "READY"
                 self.ready.set()
                 while not self._abort:
                     self._wake.wait(0.01)
                     self._wake.clear()
-                    # Mailbox is single-owner until consumed. Producers use the
-                    # producer lock; writer can wait, producer never waits.
                     with self._producer:
-                        if getattr(self, "_cancelled", False):
-                            with self._lock:
-                                self._reserved -= MAX_RESERVATION
-                                self._count -= 1
-                            self._cancelled = False
-                        item = getattr(self, "_mailbox", None)
-                        self._mailbox = None
+                        item = self._queue.popleft() if self._queue else None
+                        closing = self._close and item is None
+                        if closing:
+                            self.state = "CLOSING"
                     if item is not None:
-                        stage, private, charge, size = item
-                        with self._lock:
-                            self._reserved -= MAX_RESERVATION - charge
                         try:
+                            stage, private, charge, size = item
                             payload = thaw(private)
                             body, kind = self._prepare(stage, payload)
-                            self._emit(kind, body, size)
+                            self._emit(kind, body)
+                        except (CaptureLimit, ValueError, TypeError, KeyError):
+                            self._drop("serialization_error")
                         finally:
-                            del private
-                            item = None
-                            with self._lock:
-                                self._reserved -= charge
+                            item = private = payload = body = None
+                            with self._producer:
+                                self._reserved -= MAX_RESERVATION
                                 self._count -= 1
-                    if self._close:
-                        with self._producer:
-                            if getattr(self, "_mailbox", None) is not None:
-                                continue
-                            self.state = "CLOSING"
+                    if closing:
                         break
                 if self._abort:
                     return
@@ -383,6 +374,8 @@ class TemporaryAudit:
                         "replay_capabilities": "non_replayable", "files": inventory}
             temporary = self._directory / ".manifest.tmp"
             temporary.write_text(canonical(manifest) + "\n", encoding="utf-8")
+            if self._abort:
+                return
             temporary.replace(self._directory / "build-manifest.json")
             if not self._abort:
                 self.state = "CLOSED"
@@ -391,6 +384,10 @@ class TemporaryAudit:
                 self.state = "FAILED"
             self._drop("writer_error")
         finally:
+            with self._producer:
+                self._queue.clear()
+                self._count = 0
+                self._reserved = CONTROL_BYTES
             self.ready.set()
             self.done.set()
 
@@ -414,7 +411,14 @@ class TemporaryAudit:
     def _prepare(self, stage, payload):
         if not hasattr(self, "_emissions"):
             self._emissions = Counter()
+        if stage in ("emission", "collapse_choice"):
+            if stage == "emission" and "path" in payload:
+                self._emissions[payload["path"]] += 1
+            return payload, {"emission": "emission_observation",
+                             "collapse_choice": "collapse_observation"}[stage]
         if stage == "inference":
+            if len(payload["model"]["x"]) > 512:
+                raise CaptureLimit("feature limit")
             occurrence, selection = self._occurrence(payload)
             ordinal = payload["attempt"]
             identifier = "mci1:" + identity_hash("mcp-inference-v1", {
@@ -472,10 +476,13 @@ class TemporaryAudit:
 
 def safe_capture(handle, stage, payload_factory) -> None:
     """No payload construction in default-OFF mode; audit exceptions fail soft."""
-    if handle is None or getattr(handle, "state", "DISABLED") == "DISABLED":
-        return
     try:
-        handle.try_capture(stage, payload_factory())
+        if handle is None or getattr(handle, "state", "DISABLED") == "DISABLED":
+            return
+        if hasattr(handle, "capture_factory"):
+            handle.capture_factory(stage, payload_factory)
+        else:
+            handle.try_capture(stage, payload_factory())
     except Exception:
         # Does not intercept exceptions outside this audit-only call boundary.
         try:
@@ -490,3 +497,57 @@ def file_digest(path):
         for chunk in iter(lambda: stream.read(64 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def read_temporary_build(directory):
+    """Offline integrity reader for development receipts, not v1 validation.
+
+    Requires a finalized manifest and verifies every segment before returning
+    records. Never used by operational scoring, settlement or archive code.
+    """
+    directory = Path(directory)
+    manifest_path = directory / 'build-manifest.json'
+    if manifest_path.is_symlink() or manifest_path.stat().st_size > CONTROL_BYTES:
+        raise ValueError('unsafe manifest')
+    manifest = json.loads(manifest_path.read_text(encoding='utf-8'))
+    if manifest.get('schema_version') != SCHEMA:
+        raise ValueError('unsupported schema')
+    files = manifest['files']
+    if not isinstance(files, list) or not 1 <= len(files) <= 64:
+        raise ValueError('invalid inventory')
+    records, names, identities = [], set(), {}
+    total = 0
+    for entry in files:
+        name = entry['name']
+        if (type(name) is not str or '/' in name or '\\' in name
+                or not name.startswith('records-') or not name.endswith('.jsonl') or name in names):
+            raise ValueError('unsafe or duplicate segment')
+        names.add(name)
+        path = directory / name
+        total += entry['size_bytes']
+        if total > STREAM_BYTES or path.is_symlink() or path.stat().st_size != entry['size_bytes']:
+            raise ValueError('segment size mismatch')
+        if file_digest(path) != entry['sha256']:
+            raise ValueError('segment digest mismatch')
+        with path.open('rb') as stream:
+            while raw := stream.readline(MAX_RECORD_BYTES + 1):
+                if len(raw) > MAX_RECORD_BYTES or not raw.endswith(b'\n'):
+                    raise ValueError('oversized or unterminated record')
+                record = json.loads(raw)
+                if (canonical(record) + '\n').encode('utf-8') != raw:
+                    raise ValueError('noncanonical record')
+                if (record['schema_version'] != SCHEMA or record['build_id'] != manifest['build_id']
+                        or record['sequence'] != len(records)):
+                    raise ValueError('record envelope mismatch')
+                for key in ('inference_id', 'observation_id'):
+                    identifier = record['body'].get(key)
+                    if identifier is not None:
+                        if identifier in identities:
+                            raise ValueError('duplicate identity')
+                        identities[identifier] = raw
+                records.append(record)
+                if len(records) > RECORD_LIMIT:
+                    raise ValueError('record count exceeded')
+    if records[0]['record_type'] != 'build_open' or records[-1]['record_type'] != 'build_close':
+        raise ValueError('unclosed build')
+    return manifest, records
