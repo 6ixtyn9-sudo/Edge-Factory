@@ -1,7 +1,7 @@
 # Acceptance checklist: ML/consensus provenance and routing
 
 **Date:** 2026-10-09  
-**Proposal:** [revision 3](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md)  
+**Proposal:** [revision 4](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md)<br>
 **Evidence:** [review synthesis](REVIEW-SYNTHESIS-ML-CONSENSUS-2026-10-09.md)
 
 **Audit-design disposition:** APPROVE WITH CHANGES (conditional).  
