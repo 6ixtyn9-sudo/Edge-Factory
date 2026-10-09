@@ -1,51 +1,67 @@
 {
-  "added": 0,
-  "attempted": 1,
+  "added": 61,
+  "attempted": 2,
   "attempted_fixtures": [
     {
-      "away": "FCI Levadia II",
+      "away": "FC Eindhoven",
       "date": "2026-10-09",
-      "home": "N\u00f5mme United II",
-      "kickoff": "09-10, 16:00",
-      "league": "Estonia Esiliiga A"
+      "home": "Almere City FC",
+      "kickoff": "09-10, 19:00",
+      "league": "Netherlands Eerste Divisie"
+    },
+    {
+      "away": "Kas\u0131mpa\u015fa",
+      "date": "2026-10-09",
+      "home": "Galatasaray",
+      "kickoff": "09-10, 18:00",
+      "league": "Turkey S\u00fcper Lig"
     }
   ],
   "candidate_fixtures": 24,
-  "captured_at": "2026-10-09T13:18:23+00:00",
+  "captured_at": "2026-10-09T16:18:46+00:00",
   "date": "2026-10-09",
   "due_reasons": {
-    "close_at": 1
+    "close_at": 2
   },
   "errors": [],
-  "fixtures_with_rows": 0,
+  "fixtures_with_rows": 1,
   "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 4
+    "kickoff_mismatch_display_fallback_overridden": 5
   },
-  "quoted_fixtures": [],
-  "rows": 0,
+  "quoted_fixtures": [
+    {
+      "away": "Kasimpasa SK",
+      "date": "2026-10-09",
+      "home": "Galatasaray",
+      "kickoff": "2026-10-09T17:00:00Z",
+      "league": "Turkey S\u00fcper Lig"
+    }
+  ],
+  "rows": 61,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 4,
-    "kickoff_mismatch": 4,
-    "priced": 4,
+    "kickoff_already_passed": 7,
+    "kickoff_mismatch": 5,
+    "priced": 3,
     "priced_close_window_not_open": 2,
-    "retry_cooldown": 13
+    "retry_cooldown": 10
   },
   "skipped": [
     "Cork City|Finn Harps (retry cooldown (6h after failed attempt))",
-    "Karmiotissa|Omonia Nicosia (retry cooldown (6h after failed attempt))",
+    "Karmiotissa|Omonia Nicosia (kickoff already passed)",
     "Brothers Union|Fortis (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch PSV Eindhoven|Heerenveen: pick legacy display says 17:00Z, captured rows say 18:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "PSV Eindhoven|Heerenveen (priced, close window not open)",
-    "Zlin|Slavia Praha (retry cooldown (6h after failed attempt))",
-    "Almere City FC|FC Eindhoven (retry cooldown (6h after failed attempt))",
+    "Zlin|Slavia Praha (kickoff already passed)",
     "Malkiya|Al Riffa (retry cooldown (6h after failed attempt))",
-    "Borussia Dortmund|Werder Bremen (priced)",
     "Qingdao Hainiu|Beijing Guoan (priced)",
     "Real Cundinamarca|Real Santander (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Borussia Dortmund|Werder Bremen: pick legacy display says 17:30Z, captured rows say 18:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Borussia Dortmund|Werder Bremen (priced, close window not open)",
     "WARN kickoff-mismatch Fluminense|Coritiba: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Fluminense|Coritiba (kickoff already passed)",
     "Shelbourne|Sligo Rovers (retry cooldown (6h after failed attempt))",
+    "N\u00f5mme United II|FCI Levadia II (kickoff already passed)",
     "Corvinul Hunedoara|FC Voluntari (retry cooldown (6h after failed attempt))",
     "FC Nordsjaelland|Odense (priced)",
     "Veres Rivne|Shakhtar Donetsk (kickoff already passed)",
@@ -53,7 +69,6 @@
     "Montpellier|Grenoble Foot 38 (priced)",
     "Arsenal Dzerzhinsk|Dinamo Brest (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Galatasaray|Kas\u0131mpa\u015fa: pick legacy display says 16:00Z, captured rows say 17:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Galatasaray|Kas\u0131mpa\u015fa (priced, close window not open)",
     "Vejle|Hvidovre (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Palmeiras|Bahia: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Palmeiras|Bahia (kickoff already passed)",
@@ -61,11 +76,11 @@
     "Antigua GFC|Municipal (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
+  "status": "ok",
   "unmatched": [
-    "N\u00f5mme United II vs FCI Levadia II (league not covered: Estonia Esiliiga A)"
+    "Almere City FC vs FC Eindhoven (league not covered: Netherlands Eerste Divisie)"
   ],
   "unmatched_reasons": {
-    "league not covered: Estonia Esiliiga A": 1
+    "league not covered: Netherlands Eerste Divisie": 1
   }
 }

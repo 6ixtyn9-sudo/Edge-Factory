@@ -1165,7 +1165,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 79.7,
     "away": "Heerenveen",
     "bookmaker": "Betfair",
@@ -2489,7 +2489,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 77.5,
     "away": "FC Eindhoven",
     "bookmaker": "betexplorer_best",
@@ -2663,8 +2663,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T12:06:51+02:00",
-    "avg_p": 71.0,
+    "as_of": "2026-10-09T18:06:54+02:00",
+    "avg_p": 69.0,
     "away": "Werder Bremen",
     "bookmaker": "GTbets",
     "bucket": "SKIPPED_VETO",
@@ -2672,30 +2672,30 @@
     "ctx": {
       "away_norm": "werderbremen",
       "comp_type_name": "league",
-      "competition_type": "CAUTION",
+      "competition_type": "BOOST",
       "duplicate_alias_collapse": "true",
       "duplicate_bucket_sources": "SKIPPED_VETO",
       "duplicate_event_keys": "borussiadortmund vs werderbremen",
       "home_norm": "borussiadortmund",
-      "league": "VETO",
+      "league": "BOOST",
       "league_key": "germany bundesliga",
-      "league_raw": "Germany,Bundesliga",
-      "niche": "UNKNOWN",
-      "odds_band": "CAUTION",
+      "league_raw": "Germany Bundesliga",
+      "niche": "BOOST",
+      "odds_band": "ALLOW",
       "odds_band_name": "1.35-1.50",
-      "resolution_original_verdict": "VETO",
+      "resolution_original_verdict": "BOOST",
       "resolution_path": "native",
       "resolution_pool_n": null,
       "resolution_pool_roi": null,
-      "resolution_reason": "native verdict VETO unchanged (only UNKNOWN is resolvable)",
-      "resolution_verdict": "VETO",
+      "resolution_reason": "native verdict BOOST unchanged (only UNKNOWN is resolvable)",
+      "resolution_verdict": "BOOST",
       "side_role": "home",
       "team_a": "VETO",
       "team_h": "CAUTION"
     },
     "date": "2026-10-09",
-    "decay_verdict": "WATCH",
-    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "ML-META\u226555",
     "draw_risk_flag": "HIGH",
     "duplicate_bucket_sources": [
       "SKIPPED_VETO"
@@ -2705,14 +2705,14 @@
     ],
     "duplicate_rows_collapsed": 1,
     "duplicate_rules_collapsed": [
-      "2WAY-UNANIMOUS\u226570",
-      "ML-META\u226560"
+      "ML-META\u226555",
+      "ML-META\u226565"
     ],
-    "edge_n_way": 2,
-    "edge_rule": "2way-unanimous avg_p>=70",
+    "edge_n_way": 3,
+    "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
     "enhancement_breakeven": 0.7092,
-    "enhancement_edge_sample": -0.3033,
+    "enhancement_edge_sample": -0.3212,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": true,
@@ -2721,54 +2721,54 @@
     "enhancement_price_book": "Betsson",
     "enhancement_price_source": "theoddsapi",
     "enhancement_priced": true,
-    "enhancement_probability": 0.4941,
-    "enhancement_reason": "Mathematical expectation is 65.1% (ML-calibrated 44.9%->61.8%, n=503) (Performance feedback: HR=64.9%, Adjusted Prob: 49.4%)",
+    "enhancement_probability": 0.4814,
+    "enhancement_reason": "Mathematical expectation is 63.4% (ML-calibrated 44.9%->61.8%, n=503) (Performance feedback: HR=64.9%, Adjusted Prob: 48.1%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 1108,
+        "cohort_n": 1089,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.49405953816615267,
-        "raw_probability": 0.651033386327504,
-        "reason": "Mathematical expectation is 65.1% (ML-calibrated 44.9%->61.8%, n=503) (Performance feedback: HR=64.9%, Adjusted Prob: 49.4%)"
+        "probability": 0.4814234791185472,
+        "raw_probability": 0.6343825665859564,
+        "reason": "Mathematical expectation is 63.4% (ML-calibrated 44.9%->61.8%, n=503) (Performance feedback: HR=64.9%, Adjusted Prob: 48.1%)"
       },
       {
-        "cohort_n": 1108,
+        "cohort_n": 1089,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9557083937797297,
-        "raw_probability": 0.983704292527822,
-        "reason": "Combined Under 3.5 is 98.4% (ML-calibrated 95.4%->96.9%, n=355) (Performance feedback: HR=95.8%, Adjusted Prob: 95.6%)"
+        "probability": 0.9570338771195835,
+        "raw_probability": 0.9850686037126715,
+        "reason": "Combined Under 3.5 is 98.5% (ML-calibrated 95.4%->96.9%, n=355) (Performance feedback: HR=95.8%, Adjusted Prob: 95.7%)"
       },
       {
-        "cohort_n": 1108,
+        "cohort_n": 1089,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9021267472178061,
-        "raw_probability": 0.9419713831478538,
-        "reason": "Combined Under 2.5 is 94.2% (ML-calibrated 91.0%->90.7%, n=334) (Performance feedback: HR=96.0%, Adjusted Prob: 90.2%)"
+        "probability": 0.9090041491525424,
+        "raw_probability": 0.9491525423728814,
+        "reason": "Combined Under 2.5 is 94.9% (ML-calibrated 91.0%->90.7%, n=334) (Performance feedback: HR=96.0%, Adjusted Prob: 90.9%)"
       },
       {
-        "cohort_n": 1108,
+        "cohort_n": 1089,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.27617547313822277,
-        "raw_probability": 0.27321545687840215,
-        "reason": "Poisson expected hit rate is 27.3% (ML-calibrated 23.9%->24.9%, n=413)"
+        "probability": 0.2602319051990012,
+        "raw_probability": 0.2574427702263687,
+        "reason": "Poisson expected hit rate is 25.7% (ML-calibrated 23.9%->24.9%, n=413)"
       }
     ],
     "home": "Borussia Dortmund",
-    "kickoff": "13:30",
+    "kickoff": "09-10, 19:30",
     "kickoff_sast": "2026-10-09 20:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-09T18:30:00+00:00",
     "kickoff_witness": "scoutingstats kickoff '2026-10-09T18:30:00Z'",
-    "league": "Germany,Bundesliga",
+    "league": "Germany Bundesliga",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
     "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
@@ -2776,12 +2776,16 @@
     "match": "Borussia Dortmund vs Werder Bremen",
     "min_lead_minutes": 30,
     "model_version": null,
-    "n_way": 2,
+    "n_way": 3,
     "odds": 1.37,
     "odds_captured_at": "2026-10-08T22:13:16.462061+00:00",
     "odds_league": "Germany,Bundesliga",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.33,
+      "source": "zulubet"
+    },
     "odds_source": "theoddsapi",
     "odds_tier": "low",
     "pick": "home",
@@ -2811,7 +2815,7 @@
         "league": "Bundesliga",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 5.5,
+        "odds": 5.25,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -3814,17 +3818,18 @@
     "price_push_eligible": true,
     "recommended_enhancement": "match_over_25",
     "recommended_market": "avoid_raw_1x2",
-    "rule": "2way-unanimous avg_p>=70",
+    "rule": "ml-meta avg_p>=55",
     "source_weights": {
       "forebet": 0.0
     },
     "sources_used": [
+      "zulubet",
       "statarea",
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=870): Avg Goals: 3.74 | Over 2.5: 73.7% | BTTS: 42.3% | Home Over 1.5 Goals: 87.1% | Away Over 1.5 Goals: 9.8%",
-    "veto_reason": "context VETO in ['league', 'team_a']",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=861): Avg Goals: 3.69 | Over 2.5: 71.9% | BTTS: 40.8% | Home Over 1.5 Goals: 87.3% | Away Over 1.5 Goals: 10.7%",
+    "veto_reason": "context VETO in ['team_a']",
     "vitibet_index": 5.31,
     "w_score": 1.0
   },
