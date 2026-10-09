@@ -708,3 +708,30 @@ def test_the_real_run_spend_is_counted_even_though_the_cap_is_per_capture(monkey
     assert pa.calls_this_process() == 4
     pa.reset_auth_memory()
     assert pa.calls_this_process() == 0
+
+
+def test_team_board_without_market_payload_is_not_price_discard(monkeypatch):
+    payload = {'events': [{'home': 'Alpha', 'away': 'Beta'},
+                          {'home': 'Gamma', 'away': 'Delta', 'markets': []}]}
+    monkeypatch.setattr(pa, 'get_json', lambda *args, **kwargs: (200, payload, {}))
+    rows, stats = pa.capture_day('2026-10-09')
+    assert rows == []
+    assert stats['zero_row_kind'] == 'events_without_market_payload'
+    assert stats['response_shape']['event_count'] == 2
+    assert stats['response_shape']['events_with_markets'] == 0
+    assert 'every price was discarded' not in stats['blocker']
+
+
+def test_large_diagnostic_sample_does_not_break_valid_price_parse(monkeypatch):
+    payload = _payload()
+    events, _ = pa._envelope(payload)
+    events[0]['description'] = 'x' * 25000
+    expected, shaped = pa.parse_snapshot(payload, day='2026-10-03')
+    assert shaped and expected
+    monkeypatch.setattr(pa, 'get_json', lambda *args, **kwargs: (200, payload, {}))
+    rows, stats = pa.capture_day('2026-10-03')
+    assert [(r['home'], r['market'], r['selection'], r['odds']) for r in rows] == [
+        (r['home'], r['market'], r['selection'], r['odds']) for r in expected]
+    assert stats['status'] == 'ok'
+    assert stats['sample_event']['sample_truncated'] is True
+    assert 'x' * 100 not in json.dumps(stats['sample_event'])

@@ -601,10 +601,13 @@ def _card_token(row: dict[str, Any]) -> str:
         return ""
     if asked <= 0:
         return ""
+    seen_value = summary.get("card_fixtures_on_board")
+    if seen_value is None:
+        return f"/cardunknownof{asked}"
     try:
-        seen = int(summary.get("card_fixtures_on_board") or 0)
+        seen = int(seen_value)
     except (TypeError, ValueError):
-        seen = 0
+        return f"/cardunknownof{asked}"
     return f"/card{seen}of{asked}"
 
 
