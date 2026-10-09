@@ -8,11 +8,11 @@
 **Audit implementation:** NOT IMPLEMENTED / NOT ACCEPTED.  
 **Live routing:** NOT APPROVED FOR ACTIVATION.
 
-Unchecked items are requirements, not claims of completed tests. Only two isolated risks have been reproduced locally: provenance-induced archive rejection and existing shadow signal-ID collision. Those probes demonstrate why controls are needed; they do not establish parity of an implementation that does not yet exist.
+Unchecked items are requirements, not claims of completed acceptance tests. The original two isolated probes reproduced provenance-induced archive rejection and existing shadow signal-ID collision. Later separately authorized [fallback/contract tests](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md) reproduce qualifier/electorate gaps and test the narrow fallback-origin fix; C1 adds an isolated layout/staging control. None establishes parity or acceptance of an audit implementation that does not yet exist.
 
 ## Gate A — Schema and storage contract, before coding
 
-**Submitted draft:** [mcp-audit/v1 schema/storage specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md). Draft 3 records [renewed A1–A3 technical approval and separate review scopes](GATE-A-REVIEW-DISPOSITION-2026-10-09.md). A4 publication/retention review and explicit operator authorization are still required before coding. Publication does not check any acceptance item.
+**Submitted draft:** [mcp-audit/v1 schema/storage specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md). Draft 3 records [renewed A1–A3 technical approval and separate review scopes](GATE-A-REVIEW-DISPOSITION-2026-10-09.md). Latest A4 technical approval and operator conditional approval (C1) are recorded; exact C1 evidence is published for confirmation. Recorder/publisher/hook implementation remains explicitly unauthorized. Publication does not check any acceptance item.
 
 - [ ] Approve a separate versioned sidecar stream and bounded retention/persistence contract; no unreviewed workflow changes or large tracked datasets.
 - [ ] Preserve operational rows, archives, exported payloads, IDs, models, rules, thresholds, prices, tickets and frozen state unchanged.
@@ -82,4 +82,4 @@ Attach commands, code revision, inputs and expected/actual outputs for each cont
 - [ ] No automatic model promotion, electorate substitution, relaxed gates, archive rewrite or new dual production lane.
 - [ ] Record implementation revision, activation decision, test receipts and unresolved limitations in a new operator decision entry.
 
-**Immediate next decision:** review of Gate A draft-3 A4 followed by explicit operator Gate A completion/authorization, before coding. Reproducible controls and implementation acceptance follow separately; production routing is not the next authorized step.
+**Immediate next decision:** confirm published C1 block/output. Recorder, hooks and publisher remain unauthorized. Separately authorized fallback/test work is complete ([execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md)); its six failing contract assertions do not accept an implementation or authorize routing.
