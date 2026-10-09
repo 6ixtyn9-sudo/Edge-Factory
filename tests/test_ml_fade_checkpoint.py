@@ -274,6 +274,7 @@ def _cli_env(tmp_path: Path, tmp_ledger: Path) -> dict:
         "ledger": tmp_ledger,
         "state": tmp_path / "state.json",
         "settled": tmp_path / "settled.json",
+        "verified": tmp_path / "verified_results.json",
         "aliases": tmp_path / "aliases.json",
         "edges": _fabricate_edges(tmp_path),
         "out": tmp_path,
@@ -301,6 +302,7 @@ def _run_eval(env: dict, *extra: str) -> subprocess.CompletedProcess:
         "--ledger", str(env["ledger"]), "--state", str(env["state"]),
         "--settled", str(env["settled"]), "--aliases", str(env["aliases"]),
         "--edges", str(env["edges"]), "--out-dir", str(env["out"]),
+        "--verified-results", str(env["verified"]),
         "--skip-studies",
         *extra,
     ]
@@ -524,3 +526,21 @@ def test_cli_force_checkpoint_appends_history(tmp_path):
     assert r1.returncode == 0 and r2.returncode == 0
     st = json.loads((tmp_path / "state.json").read_text())
     assert st["eval_count"] == 2 and len(st["history"]) == 2
+
+
+def test_cli_operator_verified_result_reopens_conflict(tmp_path):
+    path = tmp_path / "ledger.json"
+    row = _row(FADE_FAMILY, TODAY.isoformat(), 0, status="conflict")
+    path.write_text(json.dumps(_ledger([row])))
+    env = _cli_env(tmp_path, path)
+    env["settled"].write_text(json.dumps({"rows": []}))
+    env["verified"].write_text(json.dumps({"rows": [{
+        "date": row["date"], "home": row["home"], "away": row["away"],
+        "hs": 1, "gs": 1, "outcome": "draw", "src": "source_verified",
+    }]}))
+    result = _run_eval(env, "--settle-monitor-only")
+    assert result.returncode == 0, result.stderr
+    settled = json.loads(path.read_text())["rows"][0]
+    assert settled["status"] == "settled"
+    assert settled["result_source"] == "source_verified"
+    assert "UNRESOLVED CONFLICTS" not in result.stdout

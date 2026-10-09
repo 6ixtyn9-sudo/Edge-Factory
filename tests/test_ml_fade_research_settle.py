@@ -260,3 +260,100 @@ def test_wilson_lb_bounds():
     assert 0 < wilson_lb(8, 10) < 1
     assert wilson_lb(10, 10) < 1  # never touches 1
     assert wilson_lb(80, 100) < wilson_lb(90, 100)
+
+
+def _write_verified(tmp_path, rows):
+    path = tmp_path / "verified_results.json"
+    path.write_text(json.dumps({"schema": 1, "rows": rows}))
+    return path
+
+
+def _verified_fact(**over):
+    return dict({"date": "2026-09-21", "home": "Alpha FC", "away": "Beta United",
+                 "hs": 1, "gs": 1, "outcome": "draw", "src": "source_verified"}, **over)
+
+
+@pytest.mark.parametrize("already_conflicted", [False, True])
+def test_operator_verified_result_settles_both_rows(tmp_path, already_conflicted):
+    ledger = _fresh_ledger(_candidates())
+    facts = [_verified_fact(src="donor_a"),
+             _verified_fact(hs=2, gs=1, outcome="home", src="donor_b")]
+    absent = tmp_path / "absent.json"
+    if already_conflicted:
+        settle_ledger(ledger, facts, now=NOW, verified_results_path=absent)
+        assert all(r["status"] == "conflict" for r in ledger["rows"])
+    before = [{k: r.get(k) for k in ("pick", "ml_p", "avg_p", "first_odds_forebet",
+                                    "first_odds_zulubet", "captured_at", "event_key")}
+              for r in ledger["rows"]]
+    stats = settle_ledger(ledger, facts, now=NOW,
+                          verified_results_path=_write_verified(tmp_path, [_verified_fact()]))
+    assert stats.settled == 2
+    for r in ledger["rows"]:
+        assert r["status"] == "settled"
+        assert r["result_source"] == "source_verified"
+        assert r["score"] == {"hs": 1, "gs": 1}
+        assert r["graduation"] == "loss"
+        assert any("operator-verified result applied" in n for n in r["settle_notes"])
+        if already_conflicted:
+            assert any("conflicting result claims" in n for n in r["settle_notes"])
+    after = [{k: r.get(k) for k in b} for r, b in zip(ledger["rows"], before)]
+    assert before == after
+    print("P6 after:", stats.as_dict(), ledger["rows"][0]["status"],
+          ledger["rows"][0]["result_source"])
+    # Subsequent operator edits cannot change an already-settled result.
+    stats = settle_ledger(ledger, [], now=NOW, verified_results_path=_write_verified(
+        tmp_path, [_verified_fact(hs=2, gs=1, outcome="home")]))
+    assert stats.already_frozen == 2
+    assert all(r["outcome"] == "draw" for r in ledger["rows"])
+
+
+@pytest.mark.parametrize("override", [
+    {"date": "2026-09-22"}, {"away": "Other Team"},
+    {"home": "Beta United", "away": "Alpha FC"},
+])
+def test_operator_override_requires_exact_date_and_oriented_identity(tmp_path, override):
+    ledger = _fresh_ledger(_candidates())
+    for r in ledger["rows"]:
+        r["status"] = "conflict"
+    stats = settle_ledger(ledger, [], now=NOW, verified_results_path=_write_verified(
+        tmp_path, [_verified_fact(**override)]))
+    assert stats.already_frozen == 2
+    assert all(r["status"] == "conflict" for r in ledger["rows"])
+
+
+def test_conflicting_operator_decisions_remain_conflict(tmp_path):
+    ledger = _fresh_ledger(_candidates())
+    path = _write_verified(tmp_path, [_verified_fact(),
+                                    _verified_fact(hs=2, gs=1, outcome="home")])
+    stats = settle_ledger(ledger, [], now=NOW, verified_results_path=path)
+    assert stats.settled == 0 and stats.conflicts == 2
+    assert all(r["graduation"] is None for r in ledger["rows"])
+
+
+def test_donor_cannot_impersonate_operator_override(tmp_path):
+    ledger = _fresh_ledger(_candidates())
+    for r in ledger["rows"]:
+        r["status"] = "conflict"
+    stats = settle_ledger(ledger, [_verified_fact()], now=NOW,
+                          verified_results_path=tmp_path / "absent.json")
+    assert stats.already_frozen == 2
+
+
+def test_operator_verified_alias_match(tmp_path):
+    ledger = _fresh_ledger(_candidates())
+    matcher = TeamMatcher([["Alpha FC", "Alpha Football Club"]])
+    stats = settle_ledger(ledger, [], now=NOW, matcher=matcher,
+                          verified_results_path=_write_verified(
+                              tmp_path, [_verified_fact(home="Alpha Football Club")]))
+    assert stats.settled == 2
+
+
+@pytest.mark.parametrize("override", [{"hs": -1}, {"outcome": "away"},
+                                      {"date": "not-a-date"}])
+def test_invalid_operator_fact_fails_before_ledger_mutation(tmp_path, override):
+    ledger = _fresh_ledger(_candidates())
+    before = json.dumps(ledger, sort_keys=True)
+    with pytest.raises(ValueError):
+        settle_ledger(ledger, [], now=NOW, verified_results_path=_write_verified(
+            tmp_path, [_verified_fact(**override)]))
+    assert json.dumps(ledger, sort_keys=True) == before
