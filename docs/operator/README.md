@@ -293,7 +293,10 @@ cannot rot silently; move a document and the suite tells you.
 ### Gate A specification — pending approval
 
 The [Gate A schema/storage draft](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)
-defines the proposed `mcp-audit/v1` receipts, sidecar identities, missing-evidence
-semantics, fail-soft budgets and bounded artifact storage route. A1–A4 require
-explicit approval before coding. Persistence/workflow integration is a separate
-review prerequisite; no hooks, workflow edits, tests or activation were performed.
+is now draft 2: exact hash preimages/projections, full non-emitting inference,
+producer admission accounting, corrected cleanup claims, a bounded manifest-only
+index pilot and separate verified-byte export route. The
+[attributed review reconciliation](GATE-A-REVIEW-DISPOSITION-2026-10-09.md) keeps
+S1/S2 verdicts separate; renewed approval is required before coding. A durable
+index is not durable bulk evidence. No hooks, ignore/workflow edits, implementation
+tests, replay or activation were performed.
