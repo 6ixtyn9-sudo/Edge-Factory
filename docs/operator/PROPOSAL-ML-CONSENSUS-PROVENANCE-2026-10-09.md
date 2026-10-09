@@ -88,7 +88,7 @@ Two isolated controls **were reproduced here** using the current checkout, in-me
 
 Code inspection also confirms whole-payload frozen equality, full-pick copying into Supabase `source_payload`, label-based ML emission counts, and date-qualified Forebet fetch exclusion. These controls are not a full replay or performance study.
 
-Review 1 now withdraws its claim that the separated-routing control was untested. Attribute the synthetic result directly to **Review 2's reported control**; no new evaluator experiment was run here. Review 1 disputes the wording in its decision-record copy; our baseline contains the relevant observation at [lines 57–59 of the pinned source](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/01f580c1f41b78883d7c807e354ba76903bbd026/docs/operator/DECISIONS-2026-10-09.md#L57-L59). This is a source-version discrepancy, not grounds to claim the reviewer's own copy or authorship is verified. The synthesis no longer uses a flattened block quote to resolve it.
+Review 1 now withdraws its claim that the separated-routing control was untested. Attribute the synthetic result directly to **Review 2's reported control**; no new evaluator experiment was run here. Review 1 disputes the wording in its decision-record copy; our baseline contains the relevant observation at [lines 57–59 of the pinned source](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/01f580c1f41b78883d7c807e354ba76903bbd026/docs/operator/DECISIONS-2026-10-09.md#L57-L59). The subsequent supplied retraction identifies two independent records sharing a filename, not a demonstrated revision history of one record; the external copy and authorship remain unverified here. The synthesis no longer uses a flattened block quote to resolve it.
 
 ## 4. A second issue reviewers must not overlook: electorate semantics
 
@@ -343,3 +343,12 @@ Before activation, explicitly choose **supported historical-contract enforcement
 
 
 Revision 4 records the latest consensus: **both reviewers conditionally approve the audit design with changes; neither approves live activation or audit implementation automatically**. Review 2 reports checking all three revision-3 documents pinned to `0dac025`; Review 1 reports reading the synthesis only. Its earlier verdict is superseded. The next requested deliverable is Gate A's concrete schema/storage specification for explicit review, not audit-hook code. This update makes no changes to the unchecked acceptance requirements.
+
+
+**Distinct-record addendum:** the latest follow-up retracts the misquotation
+accusation and identifies an independently written, local-only external decision
+record at `e489654`. This proposal uses the repository's transferred/re-reviewed
+D1–D5 record pinned above, not that external D1–D7 document. See the
+[handbook's source-identity guidance](README.md) and the synthesis addendum.
+No external numbering, decisions or new test results are adopted by this note;
+all implementation/activation gates remain unchanged.

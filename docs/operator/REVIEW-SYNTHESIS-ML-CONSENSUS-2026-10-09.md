@@ -38,13 +38,13 @@ Review 1 initially said Approve / Approve with changes. Its supplied follow-up s
 
 ## Attribution clarification and policy boundary
 
-### Separated-routing observation and source-version discrepancy
+### Separated-routing observation and distinct-record discrepancy
 
 Review 1 withdraws its earlier claim that the separated-routing outcome was untested. The observation is sufficient on **Review 2's reported synthetic control**: no model, Statarea/Vitibet/Bzzoiro agreement at 70%, then in-memory family separation, produced one unanimous≥65 candidate. This is the primary attribution used here, not a historical replay or a prediction of production removals.
 
 Review 1 also says the sentence formerly block-quoted here does not occur in its decision-record version. In **our pinned baseline**, `git show 01f580c1f41b78883d7c807e354ba76903bbd026:docs/operator/DECISIONS-2026-10-09.md` contains the no-model/current-path/Option-A/Option-B observation at lines 57–59. See [the exact source version](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/01f580c1f41b78883d7c807e354ba76903bbd026/docs/operator/DECISIONS-2026-10-09.md#L49-L59). That file was not edited in proposal commit `0dac025` or this correction.
 
-We cannot identify which differing decision-record revision Review 1 grepped from the supplied follow-up. Do not assert that its copy contains the same text or assign authorship of our version to that agent. The flattened block quote has been removed; direct reviewer-control attribution is sufficient without depending on this source-version discrepancy. No additional evaluator control was rerun for this correction.
+The subsequent supplied retraction resolves the nature of the discrepancy: **two independently written records share a path**, rather than a demonstrated revision history of one document. The external copy is reported as local-only at `e489654`; its bytes and full commit identity have not been retrieved here. Our record's §1 already says it transfers/re-reviews positions and is not a verbatim copy of the unavailable other-workspace document. Do not assign authorship of our record to that agent. The flattened block quote remains removed; direct reviewer-control attribution is sufficient. No additional evaluator control was rerun for this correction.
 
 Review 1 also withdraws its broad claim that every ROI figure conditioned on `avg_p` is mixed. Both score kinds use percentage units, but represent different estimands. Untyped pooling can mix them; verified model exports and provenance-stratified cohorts require separate analysis. This aligns with revision 3's formulation.
 
@@ -99,3 +99,20 @@ The [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md) is t
 Both current verdicts are conditional audit-design approval and no live activation. Review 2 reports no further blocking documentation correction after reading revision 3, and identifies **Gate A** as the next design deliverable: a concrete schema/storage specification with identity derivation, missing receipts, persistence/retention bounds and fail-soft hook interface, submitted for approval before coding.
 
 This follow-up corrects review-status reporting and clarifies source-version attribution only. The proposal, checklist and handbook links are updated accordingly; acceptance boxes stay unchecked. No Gate A specification, audit implementation, new control suite, full replay or production change was performed.
+
+
+## Distinct-record clarification after revision 4
+
+The latest supplied follow-ups accept the pinned source and current conditional
+verdicts; one explicitly retracts the misquotation accusation after reading our
+record's §1. References to the other workspace's `e489654`, retraction sections,
+convergent numerical findings and D6/D7 numbering remain **reviewer-reported**,
+not newly verified experiments or imported decisions. The pasted agent labels
+have varied across rounds; track claims by their supplied text and verified
+source rather than infer a permanent identity from those labels.
+
+The [handbook](README.md) now names the repository's transferred/re-reviewed
+D1–D5 record as the local reference, distinguishes the unavailable independent
+D1–D7 record, and requires source-qualified references. This does not reconcile
+or approve external D6/D7 decisions. Gate A remains the next design deliverable;
+no concrete schema, hooks, controls or deployment are authorized by this update.
