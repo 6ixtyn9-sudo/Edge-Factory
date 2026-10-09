@@ -53,6 +53,7 @@ from edgefactory.odds_normalization import (
     miss_vocabulary_token,
     provider_kickoff_date,
 )
+from edgefactory.ml_consensus_audit import safe_capture
 from edgefactory.assay import weighted_consensus_score
 from edgefactory.fade import (
     FADE_FAMILY,
@@ -4291,7 +4292,7 @@ def fixture_schedule_unstable(*rows: dict) -> tuple[bool, set[str]]:
 # --------------------------------------------------------------- consensus --
 def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
              research_collector: FadeResearchCollector | None = None,
-             fixture_audit: list | None = None):
+             fixture_audit: list | None = None, mcp_audit=None):
     picks, vetoes = [], 0
     keys = set()
     for s in SOURCES_1X2:
@@ -4336,7 +4337,7 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
     if ml_model:
         rolling_hit_rate = get_rolling_hit_rate_last_14d(day)
 
-    for k in keys:
+    for _mcp_fixture, k in enumerate(keys):
         sels, ps, used = [], [], []
         for s in SOURCES_1X2:
             row = data.get(s, {}).get(k)
@@ -4504,6 +4505,21 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
                 ml_p = 1.0 / (1.0 + math.exp(-z))
                 ml_scored += 1
                 ml_max_p = max(ml_max_p, ml_p)
+                safe_capture(mcp_audit, "inference", lambda: {
+                    "fixture": _mcp_fixture, "attempt": ml_scored - 1,
+                    "selection": majority_pick, "date": day,
+                    "home": anchor.get("home"), "away": anchor.get("away"),
+                    "competition": anchor.get("league"), "kickoff": anchor.get("kickoff"),
+                    "model": {"feature_names": feature_cols, "x": x,
+                              "imputed_columns": _imputed_cols, "z": z,
+                              "target_selection": majority_pick, "electors": sels_maj,
+                              "raw_score": {"value": ml_p, "unit": "fraction",
+                                            "meaning": "model_target_probability"},
+                              "qualification_score": {"value": ml_p * 100.0, "unit": "percent",
+                                                      "basis": "raw_times_100"},
+                              "fallback_origins": {"state": "missing", "value": None,
+                                                   "reason": "fallback_origin_unavailable"}}
+                })
 
                 # AUDIT-ONLY (scored-candidate shadow): one entry per
                 # ML-scored fixture, appended at the EXACT increment that
