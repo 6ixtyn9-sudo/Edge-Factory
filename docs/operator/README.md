@@ -289,3 +289,11 @@ Proposed workflow artifacts (paste-ready, never pushed by the App):
 `tests/test_docs_links.py` walks every relative Markdown link in `README.md`,
 `docs/**` and this file and fails if a target does not exist. Links here
 cannot rot silently; move a document and the suite tells you.
+
+### Gate A specification — pending approval
+
+The [Gate A schema/storage draft](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)
+defines the proposed `mcp-audit/v1` receipts, sidecar identities, missing-evidence
+semantics, fail-soft budgets and bounded artifact storage route. A1–A4 require
+explicit approval before coding. Persistence/workflow integration is a separate
+review prerequisite; no hooks, workflow edits, tests or activation were performed.

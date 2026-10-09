@@ -116,3 +116,14 @@ D1–D5 record as the local reference, distinguishes the unavailable independent
 D1–D7 record, and requires source-qualified references. This does not reconcile
 or approve external D6/D7 decisions. Gate A remains the next design deliverable;
 no concrete schema, hooks, controls or deployment are authorized by this update.
+
+## Gate A draft publication (subsequent documentation step)
+
+The [Gate A draft](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md) is now the
+concrete specification submitted for approval before coding. Earlier statements
+that no Gate A document existed describe their publication step, not the current
+file inventory. A1–A4 remain pending; this draft has not received a new reviewer
+verdict. Inspection established that the proposed spool is not protected/uploaded
+by the current persistence/artifact paths. The storage route and numeric resource
+limits are proposals, not proven integration or measured isolation guarantees.
+No executable schema, hooks, new control suite, full replay or deployment was run.
