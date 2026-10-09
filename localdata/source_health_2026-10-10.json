@@ -21,7 +21,7 @@
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 12,
@@ -32,7 +32,7 @@
         "selection_unmapped": 614
       },
       "reason": null,
-      "status": "ok"
+      "status": "cache_only"
     },
     "betclan": {
       "blocker": "fetch returned zero rows",
@@ -60,7 +60,7 @@
       "status": "absent"
     },
     "betminer": {
-      "blocker": "betminer: HTTP 404 Not Found; {\"message\":\"Endpoint '\\/matches\\/2026-10-10' does not exist\"}",
+      "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
       "bm_matched": 0,
       "bm_raw": 0,
       "bm_scored": 0,
@@ -139,7 +139,7 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
-      "raw": 251,
+      "raw": 249,
       "reason": null,
       "scored": 79,
       "status": null
@@ -180,10 +180,10 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 2313,
+        "event_count": 2342,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 2313,
+        "events_with_teams": 2342,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
@@ -233,66 +233,35 @@
     "sharpapi_odds": {
       "blocker": null,
       "board_summary": {
-        "board_fixtures": 5,
-        "board_league_count": 4,
-        "board_leagues": {
-          "brazil_-_serie_a": 102,
-          "colombia_-_primera_b": 1,
-          "jamaica_-_premier_league": 2,
-          "peru_-_primera_division": 95
-        },
-        "board_non_prematch_rows": 155,
-        "board_priced_rows": 2,
-        "board_rows": 200,
-        "board_team_count": 9,
-        "board_team_names": {
-          "Atletico FC Cali": 1,
-          "Atletico Grau": 95,
-          "CD Los Chankas": 92,
-          "Chankas CYC": 3,
-          "Flamengo": 102,
-          "Portmore United": 2,
-          "Real Cartagena": 1,
-          "Santos": 102,
-          "Waterhouse FC": 2
-        },
-        "board_truncated": false,
-        "canonicalization_drop_reasons": {
-          "unknown_market:1st_half_asian_handicap_corners": 2,
-          "unknown_market:1st_half_moneyline": 3,
-          "unknown_market:1st_half_total_corners": 13,
-          "unknown_market:2nd_half_asian_handicap_corners": 2,
-          "unknown_market:2nd_half_moneyline": 3,
-          "unknown_market:2nd_half_total_corners": 13,
-          "unknown_market:asian_handicap_corners": 2,
-          "unsupported_market:double_chance": 3,
-          "unsupported_market:draw_no_bet": 2
-        },
+        "board_fixtures": 0,
+        "board_league_count": 0,
+        "board_leagues": {},
+        "board_non_prematch_rows": 0,
+        "board_priced_rows": 0,
+        "board_rows": 0,
+        "board_team_count": 0,
+        "board_team_names": {},
         "card_fixture_count": 37,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
-        "prematch_drop_reasons": {
-          "live_price": 98,
-          "player_prop": 57
-        },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": 0.0,
+      "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
         "fixture_key_miss": 2
       },
       "reason": null,
       "sa_matched": 0,
-      "sa_raw": 1,
+      "sa_raw": 2,
       "sa_scored": 2,
-      "status": "ok"
+      "status": "cache_only"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
