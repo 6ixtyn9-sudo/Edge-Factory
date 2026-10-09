@@ -12,7 +12,7 @@ Unchecked items are requirements, not claims of completed acceptance tests. The 
 
 ## Gate A — Schema and storage contract, before coding
 
-**Submitted draft:** [mcp-audit/v1 schema/storage specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md). Draft 3 records [renewed A1–A3 technical approval and separate review scopes](GATE-A-REVIEW-DISPOSITION-2026-10-09.md). Latest A4 technical approval and operator conditional approval (C1) are recorded; exact C1 evidence is published for confirmation. Recorder/publisher/hook implementation remains explicitly unauthorized. Publication does not check any acceptance item.
+**Submitted draft:** [mcp-audit/v1 schema/storage specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md). Draft 3 records [renewed A1–A3 technical approval and separate review scopes](GATE-A-REVIEW-DISPOSITION-2026-10-09.md). **A1–A4 design approval is complete; C1 is independently confirmed.** The confirmations cover path/staging only, not implementation acceptance. Recorder/publisher/hook implementation remains explicitly unauthorized. Design approval is recorded above; the unchecked items continue to express implementation/persistence/acceptance prerequisites, not an outstanding C1 confirmation request.
 
 - [ ] Approve a separate versioned sidecar stream and bounded retention/persistence contract; no unreviewed workflow changes or large tracked datasets.
 - [ ] Preserve operational rows, archives, exported payloads, IDs, models, rules, thresholds, prices, tickets and frozen state unchanged.
@@ -82,4 +82,6 @@ Attach commands, code revision, inputs and expected/actual outputs for each cont
 - [ ] No automatic model promotion, electorate substitution, relaxed gates, archive rewrite or new dual production lane.
 - [ ] Record implementation revision, activation decision, test receipts and unresolved limitations in a new operator decision entry.
 
-**Immediate next decision:** confirm published C1 block/output. Recorder, hooks and publisher remain unauthorized. Separately authorized fallback/test work is complete ([execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md)); its six failing contract assertions do not accept an implementation or authorize routing.
+**Immediate next decision:** explicit authorization for any further implementation scope; C1 is satisfied and needs no further review loop. Recorder, hooks and publisher remain unauthorized. Separately authorized fallback/test work is complete ([execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md)); its six failing contract assertions do not accept an implementation or authorize routing.
+
+**Suite status:** the six new contract failures remain unsuppressed. The full suite is not green; passing related selections do not grant acceptance.
