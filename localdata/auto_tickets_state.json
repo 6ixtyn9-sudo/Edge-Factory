@@ -11,7 +11,7 @@
             {
               "match": "PSV Eindhoven vs Heerenveen",
               "pick": "HOME",
-              "prob": 0.778,
+              "prob": 0.799,
               "odds": 1.26,
               "result": null,
               "fixture_key": [
@@ -44,6 +44,18 @@
         {
           "legs": [
             {
+              "match": "Zlin vs Slavia Praha",
+              "pick": "AWAY",
+              "prob": 0.7809999999999999,
+              "odds": 1.28,
+              "result": null,
+              "fixture_key": [
+                "2026-10-09",
+                "Zlin",
+                "Slavia Praha"
+              ]
+            },
+            {
               "match": "Almere City FC vs FC Eindhoven",
               "pick": "HOME",
               "prob": 0.775,
@@ -53,18 +65,6 @@
                 "2026-10-09",
                 "Almere City FC",
                 "FC Eindhoven"
-              ]
-            },
-            {
-              "match": "Zlin vs Slavia Praha",
-              "pick": "AWAY",
-              "prob": 0.757,
-              "odds": 1.28,
-              "result": null,
-              "fixture_key": [
-                "2026-10-09",
-                "Zlin",
-                "Slavia Praha"
               ]
             }
           ],
@@ -765,6 +765,11 @@
     },
     "2026-10-06": {
       "frozen_at": "2026-10-06T09:31:13+02:00",
+      "final": true,
+      "lock_source": "state"
+    },
+    "2026-10-09": {
+      "frozen_at": "2026-10-09T09:34:58+02:00",
       "final": true,
       "lock_source": "state"
     }
