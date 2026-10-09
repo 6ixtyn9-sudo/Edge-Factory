@@ -1172,7 +1172,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 79.7,
     "away": "Heerenveen",
     "bookmaker": "Betfair",
@@ -2498,7 +2498,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 77.5,
     "away": "FC Eindhoven",
     "bookmaker": "betexplorer_best",
@@ -2673,8 +2673,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T12:06:51+02:00",
-    "avg_p": 71.0,
+    "as_of": "2026-10-09T18:06:54+02:00",
+    "avg_p": 69.0,
     "away": "Werder Bremen",
     "bookmaker": "GTbets",
     "bucket": "SKIPPED_VETO",
@@ -2682,30 +2682,30 @@
     "ctx": {
       "away_norm": "werderbremen",
       "comp_type_name": "league",
-      "competition_type": "CAUTION",
+      "competition_type": "BOOST",
       "duplicate_alias_collapse": "true",
       "duplicate_bucket_sources": "SKIPPED_VETO",
       "duplicate_event_keys": "borussiadortmund vs werderbremen",
       "home_norm": "borussiadortmund",
-      "league": "VETO",
+      "league": "BOOST",
       "league_key": "germany bundesliga",
-      "league_raw": "Germany,Bundesliga",
-      "niche": "UNKNOWN",
-      "odds_band": "CAUTION",
+      "league_raw": "Germany Bundesliga",
+      "niche": "BOOST",
+      "odds_band": "ALLOW",
       "odds_band_name": "1.35-1.50",
-      "resolution_original_verdict": "VETO",
+      "resolution_original_verdict": "BOOST",
       "resolution_path": "native",
       "resolution_pool_n": null,
       "resolution_pool_roi": null,
-      "resolution_reason": "native verdict VETO unchanged (only UNKNOWN is resolvable)",
-      "resolution_verdict": "VETO",
+      "resolution_reason": "native verdict BOOST unchanged (only UNKNOWN is resolvable)",
+      "resolution_verdict": "BOOST",
       "side_role": "home",
       "team_a": "VETO",
       "team_h": "CAUTION"
     },
     "date": "2026-10-09",
-    "decay_verdict": "WATCH",
-    "display_rule": "2WAY-UNANIMOUS\u226570",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "ML-META\u226555",
     "draw_risk_flag": "HIGH",
     "duplicate_bucket_sources": [
       "SKIPPED_VETO"
@@ -2715,14 +2715,14 @@
     ],
     "duplicate_rows_collapsed": 1,
     "duplicate_rules_collapsed": [
-      "2WAY-UNANIMOUS\u226570",
-      "ML-META\u226560"
+      "ML-META\u226555",
+      "ML-META\u226565"
     ],
-    "edge_n_way": 2,
-    "edge_rule": "2way-unanimous avg_p>=70",
+    "edge_n_way": 3,
+    "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
     "enhancement_breakeven": 0.7092,
-    "enhancement_edge_sample": -0.3033,
+    "enhancement_edge_sample": -0.3212,
     "enhancement_label": "Match Over 2.5 Goals",
     "enhancement_mapped": true,
     "enhancement_multi_source": true,
@@ -2731,54 +2731,54 @@
     "enhancement_price_book": "Betsson",
     "enhancement_price_source": "theoddsapi",
     "enhancement_priced": true,
-    "enhancement_probability": 0.4941,
-    "enhancement_reason": "Mathematical expectation is 65.1% (ML-calibrated 44.9%->61.8%, n=503) (Performance feedback: HR=64.9%, Adjusted Prob: 49.4%)",
+    "enhancement_probability": 0.4814,
+    "enhancement_reason": "Mathematical expectation is 63.4% (ML-calibrated 44.9%->61.8%, n=503) (Performance feedback: HR=64.9%, Adjusted Prob: 48.1%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 1108,
+        "cohort_n": 1089,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.49405953816615267,
-        "raw_probability": 0.651033386327504,
-        "reason": "Mathematical expectation is 65.1% (ML-calibrated 44.9%->61.8%, n=503) (Performance feedback: HR=64.9%, Adjusted Prob: 49.4%)"
+        "probability": 0.4814234791185472,
+        "raw_probability": 0.6343825665859564,
+        "reason": "Mathematical expectation is 63.4% (ML-calibrated 44.9%->61.8%, n=503) (Performance feedback: HR=64.9%, Adjusted Prob: 48.1%)"
       },
       {
-        "cohort_n": 1108,
+        "cohort_n": 1089,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9557083937797297,
-        "raw_probability": 0.983704292527822,
-        "reason": "Combined Under 3.5 is 98.4% (ML-calibrated 95.4%->96.9%, n=355) (Performance feedback: HR=95.8%, Adjusted Prob: 95.6%)"
+        "probability": 0.9570338771195835,
+        "raw_probability": 0.9850686037126715,
+        "reason": "Combined Under 3.5 is 98.5% (ML-calibrated 95.4%->96.9%, n=355) (Performance feedback: HR=95.8%, Adjusted Prob: 95.7%)"
       },
       {
-        "cohort_n": 1108,
+        "cohort_n": 1089,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9021267472178061,
-        "raw_probability": 0.9419713831478538,
-        "reason": "Combined Under 2.5 is 94.2% (ML-calibrated 91.0%->90.7%, n=334) (Performance feedback: HR=96.0%, Adjusted Prob: 90.2%)"
+        "probability": 0.9090041491525424,
+        "raw_probability": 0.9491525423728814,
+        "reason": "Combined Under 2.5 is 94.9% (ML-calibrated 91.0%->90.7%, n=334) (Performance feedback: HR=96.0%, Adjusted Prob: 90.9%)"
       },
       {
-        "cohort_n": 1108,
+        "cohort_n": 1089,
         "engine": "hybrid_cohort",
         "label": "Match Over 4.5 Goals",
         "market": "match_over_45",
-        "probability": 0.27617547313822277,
-        "raw_probability": 0.27321545687840215,
-        "reason": "Poisson expected hit rate is 27.3% (ML-calibrated 23.9%->24.9%, n=413)"
+        "probability": 0.2602319051990012,
+        "raw_probability": 0.2574427702263687,
+        "reason": "Poisson expected hit rate is 25.7% (ML-calibrated 23.9%->24.9%, n=413)"
       }
     ],
     "home": "Borussia Dortmund",
-    "kickoff": "13:30",
+    "kickoff": "09-10, 19:30",
     "kickoff_sast": "2026-10-09 20:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-09T18:30:00+00:00",
     "kickoff_witness": "scoutingstats kickoff '2026-10-09T18:30:00Z'",
-    "league": "Germany,Bundesliga",
+    "league": "Germany Bundesliga",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
     "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
@@ -2786,12 +2786,16 @@
     "match": "Borussia Dortmund vs Werder Bremen",
     "min_lead_minutes": 30,
     "model_version": null,
-    "n_way": 2,
+    "n_way": 3,
     "odds": 1.37,
     "odds_captured_at": "2026-10-08T22:13:16.462061+00:00",
     "odds_league": "Germany,Bundesliga",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.33,
+      "source": "zulubet"
+    },
     "odds_source": "theoddsapi",
     "odds_tier": "low",
     "pick": "home",
@@ -2822,7 +2826,7 @@
         "league": "Bundesliga",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 5.5,
+        "odds": 5.25,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -3825,17 +3829,18 @@
     "price_push_eligible": true,
     "recommended_enhancement": "match_over_25",
     "recommended_market": "avoid_raw_1x2",
-    "rule": "2way-unanimous avg_p>=70",
+    "rule": "ml-meta avg_p>=55",
     "source_weights": {
       "forebet": 0.0
     },
     "sources_used": [
+      "zulubet",
       "statarea",
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=870): Avg Goals: 3.74 | Over 2.5: 73.7% | BTTS: 42.3% | Home Over 1.5 Goals: 87.1% | Away Over 1.5 Goals: 9.8%",
-    "veto_reason": "context VETO in ['league', 'team_a']",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=861): Avg Goals: 3.69 | Over 2.5: 71.9% | BTTS: 40.8% | Home Over 1.5 Goals: 87.3% | Away Over 1.5 Goals: 10.7%",
+    "veto_reason": "context VETO in ['team_a']",
     "vitibet_index": 5.31,
     "w_score": 1.0
   },
@@ -8309,7 +8314,7 @@
     "w_score": 0.351
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 59.9,
     "away": "Llaneros",
     "bookmaker": "average_bookie_aggregate",
@@ -8393,7 +8398,7 @@
       }
     ],
     "home": "Once Caldas",
-    "kickoff": "18:10",
+    "kickoff": "20:10",
     "kickoff_sast": "2026-10-10 03:10 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T01:10:00+00:00",
@@ -8517,7 +8522,7 @@
     "w_score": 0.4017
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 84.1,
     "away": "Kristiansund BK",
     "bookmaker": "scoutingstats_odds",
@@ -8606,7 +8611,7 @@
       }
     ],
     "home": "Bodo/Glimt",
-    "kickoff": "07:00",
+    "kickoff": "09:00",
     "kickoff_sast": "2026-10-10 16:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:00:00+00:00",
@@ -8680,7 +8685,7 @@
     "w_score": 1.667
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 80.5,
     "away": "Getafe",
     "bookmaker": "scoutingstats_odds",
@@ -8769,7 +8774,7 @@
       }
     ],
     "home": "Barcelona",
-    "kickoff": "09:30",
+    "kickoff": "11:30",
     "kickoff_sast": "2026-10-10 18:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T16:30:00+00:00",
@@ -8843,7 +8848,7 @@
     "w_score": 1.4197
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 78.6,
     "away": "Bnei Sakhnin",
     "bookmaker": "scoutingstats_odds",
@@ -8932,7 +8937,7 @@
       }
     ],
     "home": "Maccabi Tel Aviv",
-    "kickoff": "09:30",
+    "kickoff": "11:30",
     "kickoff_sast": "2026-10-10 18:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T16:30:00+00:00",
@@ -9038,7 +9043,7 @@
     "w_score": 1.3029
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 76.4,
     "away": "Kilmarnock",
     "bookmaker": "scoutingstats_odds",
@@ -9136,7 +9141,7 @@
       }
     ],
     "home": "Rangers",
-    "kickoff": "07:00",
+    "kickoff": "09:00",
     "kickoff_sast": "2026-10-10 16:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:00:00+00:00",
@@ -9242,7 +9247,7 @@
     "w_score": 1.177
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 75.5,
     "away": "Bayern Munich",
     "bookmaker": "scoutingstats_odds",
@@ -9269,7 +9274,7 @@
       "resolution_reason": "native verdict VETO unchanged (only UNKNOWN is resolvable)",
       "resolution_verdict": "VETO",
       "side_role": "away",
-      "team_a": "ALLOW",
+      "team_a": "VETO",
       "team_h": "ALLOW"
     },
     "date": "2026-10-10",
@@ -9340,7 +9345,7 @@
       }
     ],
     "home": "FC Augsburg",
-    "kickoff": "06:30",
+    "kickoff": "08:30",
     "kickoff_sast": "2026-10-10 15:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T13:30:00+00:00",
@@ -9357,7 +9362,7 @@
     "ml_p": 0.7549,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.18,
+    "odds": 1.16,
     "odds_captured_at": "2026-10-10T13:30:00Z",
     "odds_league": "Bundesliga",
     "odds_match_method": "exact",
@@ -9377,7 +9382,7 @@
         "market": "1x2",
         "match_method": "exact",
         "named_bookmaker": false,
-        "odds": 1.18,
+        "odds": 1.16,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -9409,12 +9414,12 @@
     ],
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=33): Avg Goals: 4.03 | Over 2.5: 78.8% | BTTS: 24.2% | Home Over 1.5 Goals: 3.0% | Away Over 1.5 Goals: 90.9%",
-    "veto_reason": "context VETO in ['league']",
+    "veto_reason": "context VETO in ['league', 'team_a']",
     "vitibet_index": -5.43,
     "w_score": 1.1251
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 74.5,
     "away": "Gubbio",
     "bookmaker": "scoutingstats_odds",
@@ -9428,18 +9433,18 @@
       "duplicate_bucket_sources": "SKIPPED_VETO",
       "duplicate_event_keys": "spezia vs gubbio",
       "home_norm": "spezia",
-      "league": "VETO",
-      "league_key": "italy serie a",
+      "league": "ALLOW",
+      "league_key": "italy serie b",
       "league_raw": "Italy,Serie C Grp. B",
-      "niche": "VETO",
+      "niche": "UNKNOWN",
       "odds_band": "ALLOW",
       "odds_band_name": "1.20-1.35",
-      "resolution_original_verdict": "VETO",
+      "resolution_original_verdict": "ALLOW",
       "resolution_path": "native",
       "resolution_pool_n": null,
       "resolution_pool_roi": null,
-      "resolution_reason": "native verdict VETO unchanged (only UNKNOWN is resolvable)",
-      "resolution_verdict": "VETO",
+      "resolution_reason": "native verdict ALLOW unchanged (only UNKNOWN is resolvable)",
+      "resolution_verdict": "ALLOW",
       "side_role": "home",
       "team_a": "UNKNOWN",
       "team_h": "VETO"
@@ -9512,7 +9517,7 @@
       }
     ],
     "home": "Spezia",
-    "kickoff": "11:30",
+    "kickoff": "13:30",
     "kickoff_sast": "2026-10-10 20:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T18:30:00+00:00",
@@ -9610,12 +9615,12 @@
     ],
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=461): Avg Goals: 3.84 | Over 2.5: 74.6% | BTTS: 40.6% | Home Over 1.5 Goals: 87.9% | Away Over 1.5 Goals: 8.9%",
-    "veto_reason": "context VETO in ['league', 'team_h', 'niche']",
+    "veto_reason": "context VETO in ['team_h']",
     "vitibet_index": 5.5,
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 73.5,
     "away": "Rayong FC",
     "bookmaker": "scoutingstats_odds",
@@ -9713,7 +9718,7 @@
       }
     ],
     "home": "Buriram United",
-    "kickoff": "04:30",
+    "kickoff": "06:30",
     "kickoff_sast": "2026-10-10 13:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T11:30:00+00:00",
@@ -9784,7 +9789,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 70.0,
     "away": "Eintracht Frankfurt",
     "bookmaker": "scoutingstats_odds",
@@ -9883,7 +9888,7 @@
       }
     ],
     "home": "RB Leipzig",
-    "kickoff": "09:30",
+    "kickoff": "11:30",
     "kickoff_sast": "2026-10-10 18:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T16:30:00+00:00",
@@ -9933,7 +9938,7 @@
         "league": "Bundesliga",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 4.75,
+        "odds": 4.5,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -9986,7 +9991,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 69.0,
     "away": "Le Mans",
     "bookmaker": "scoutingstats_odds",
@@ -10001,8 +10006,8 @@
       "league_key": "france ligue 1",
       "league_raw": "France,Ligue 1",
       "niche": "BOOST",
-      "odds_band": "BOOST",
-      "odds_band_name": "1.10-1.20",
+      "odds_band": "VETO",
+      "odds_band_name": "1.00-1.10",
       "resolution_original_verdict": "ALLOW",
       "resolution_path": "native",
       "resolution_pool_n": null,
@@ -10070,7 +10075,7 @@
       }
     ],
     "home": "Paris Saint Germain",
-    "kickoff": "11:45",
+    "kickoff": "13:45",
     "kickoff_sast": "2026-10-10 20:45 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T18:45:00+00:00",
@@ -10087,7 +10092,7 @@
     "ml_p": 0.6898,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.1,
+    "odds": 1.09,
     "odds_captured_at": "2026-10-10T18:45:00Z",
     "odds_league": "Ligue 1",
     "odds_match_method": "exact",
@@ -10107,7 +10112,7 @@
         "market": "1x2",
         "match_method": "exact",
         "named_bookmaker": false,
-        "odds": 1.1,
+        "odds": 1.09,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -10139,7 +10144,7 @@
         "league": "Ligue 1",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 19.0,
+        "odds": 21.0,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -10171,12 +10176,12 @@
     ],
     "sport": "soccer",
     "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=861): Avg Goals: 3.69 | Over 2.5: 71.9% | BTTS: 40.8% | Home Over 1.5 Goals: 87.3% | Away Over 1.5 Goals: 10.7%",
-    "veto_reason": "context VETO in ['team_a']",
+    "veto_reason": "context VETO in ['team_a', 'odds_band']",
     "vitibet_index": 1.76,
     "w_score": 0.7993
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 63.1,
     "away": "Queens Park",
     "bookmaker": "scoutingstats_odds",
@@ -10190,17 +10195,17 @@
       "duplicate_bucket_sources": "WATCHLIST_UNCORROBORATED_PRICE,SKIPPED_VETO",
       "duplicate_event_keys": "raithrovers vs queenspark",
       "home_norm": "raithrovers",
-      "league": "UNKNOWN",
+      "league": "ALLOW",
       "league_key": "england championship",
       "league_raw": "Scotland,Championship",
       "niche": "VETO",
       "odds_band": "BOOST",
       "odds_band_name": "1.35-1.50",
-      "resolution_original_verdict": "UNKNOWN",
-      "resolution_path": "O1-pool",
-      "resolution_pool_n": 96,
-      "resolution_pool_roi": 0.06164374999999999,
-      "resolution_reason": "O1 pool n=96 w_roi=+0.0616 -> ALLOW",
+      "resolution_original_verdict": "ALLOW",
+      "resolution_path": "native",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "native verdict ALLOW unchanged (only UNKNOWN is resolvable)",
       "resolution_verdict": "ALLOW",
       "side_role": "home",
       "team_a": "UNKNOWN",
@@ -10275,7 +10280,7 @@
       }
     ],
     "home": "Raith Rovers",
-    "kickoff": "07:00",
+    "kickoff": "09:00",
     "kickoff_sast": "2026-10-10 16:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:00:00+00:00",
@@ -10381,7 +10386,7 @@
     "w_score": 0.5376
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 62.8,
     "away": "Le Havre",
     "bookmaker": null,
@@ -10465,7 +10470,7 @@
       }
     ],
     "home": "Lille",
-    "kickoff": "08:15",
+    "kickoff": "10:15",
     "kickoff_sast": "2026-10-10 17:15 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T15:15:00+00:00",
@@ -10513,7 +10518,7 @@
     "w_score": 0.524
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 60.7,
     "away": "Ross County",
     "bookmaker": "scoutingstats_odds",
@@ -10606,7 +10611,7 @@
       }
     ],
     "home": "Montrose",
-    "kickoff": "07:00",
+    "kickoff": "09:00",
     "kickoff_sast": "2026-10-10 16:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:00:00+00:00",
@@ -10712,7 +10717,7 @@
     "w_score": 0.435
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 60.3,
     "away": "Toulouse",
     "bookmaker": "scoutingstats_odds",
@@ -10796,7 +10801,7 @@
       }
     ],
     "home": "Monaco",
-    "kickoff": "11:45",
+    "kickoff": "13:45",
     "kickoff_sast": "2026-10-10 20:45 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T18:45:00+00:00",
@@ -10902,7 +10907,7 @@
     "w_score": 0.4162
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 59.7,
     "away": "Villarreal",
     "bookmaker": "scoutingstats_odds",
@@ -10927,7 +10932,7 @@
       "resolution_verdict": "BOOST",
       "side_role": "home",
       "team_a": "VETO",
-      "team_h": "ALLOW"
+      "team_h": "BOOST"
     },
     "date": "2026-10-10",
     "decay_verdict": "HEALTHY",
@@ -10986,7 +10991,7 @@
       }
     ],
     "home": "Real Madrid",
-    "kickoff": "12:00",
+    "kickoff": "14:00",
     "kickoff_sast": "2026-10-10 21:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T19:00:00+00:00",
@@ -11003,7 +11008,7 @@
     "ml_p": 0.5969,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.4,
+    "odds": 1.36,
     "odds_captured_at": "2026-10-10T19:00:00Z",
     "odds_league": "La Liga",
     "odds_match_method": "exact",
@@ -11023,7 +11028,7 @@
         "market": "1x2",
         "match_method": "exact",
         "named_bookmaker": false,
-        "odds": 1.4,
+        "odds": 1.36,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -11055,7 +11060,7 @@
         "league": "La Liga",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 6.0,
+        "odds": 7.0,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -11092,7 +11097,7 @@
     "w_score": 0.3926
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 58.8,
     "away": "Leeds",
     "bookmaker": null,
@@ -11167,7 +11172,7 @@
       }
     ],
     "home": "Arsenal",
-    "kickoff": "04:30",
+    "kickoff": "06:30",
     "kickoff_sast": "2026-10-10 13:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T11:30:00+00:00",
@@ -11215,7 +11220,7 @@
     "w_score": 0.3555
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 57.9,
     "away": "Lech Poznan",
     "bookmaker": "scoutingstats_odds",
@@ -11308,7 +11313,7 @@
       }
     ],
     "home": "Slask Wroclaw",
-    "kickoff": "08:30",
+    "kickoff": "10:30",
     "kickoff_sast": "2026-10-10 17:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T15:30:00+00:00",
@@ -11414,7 +11419,7 @@
     "w_score": 0.3182
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 57.3,
     "away": "VfB Stuttgart",
     "bookmaker": "scoutingstats_odds",
@@ -11498,7 +11503,7 @@
       }
     ],
     "home": "SC Paderborn 07",
-    "kickoff": "06:30",
+    "kickoff": "08:30",
     "kickoff_sast": "2026-10-10 15:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T13:30:00+00:00",
@@ -11515,7 +11520,7 @@
     "ml_p": 0.5731,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.57,
+    "odds": 1.55,
     "odds_captured_at": "2026-10-10T13:30:00Z",
     "odds_league": "Bundesliga",
     "odds_match_method": "exact",
@@ -11535,7 +11540,7 @@
         "market": "1x2",
         "match_method": "exact",
         "named_bookmaker": false,
-        "odds": 1.57,
+        "odds": 1.55,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -11572,7 +11577,7 @@
     "w_score": 0.2946
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 57.2,
     "away": "Dumbarton",
     "bookmaker": null,
@@ -11647,7 +11652,7 @@
       }
     ],
     "home": "Clyde",
-    "kickoff": "07:00",
+    "kickoff": "09:00",
     "kickoff_sast": "2026-10-10 16:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:00:00+00:00",
@@ -11695,7 +11700,7 @@
     "w_score": 0.2903
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 57.1,
     "away": "Hamburger SV",
     "bookmaker": null,
@@ -11770,7 +11775,7 @@
       }
     ],
     "home": "1899 Hoffenheim",
-    "kickoff": "06:30",
+    "kickoff": "08:30",
     "kickoff_sast": "2026-10-10 15:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T13:30:00+00:00",
@@ -11818,7 +11823,7 @@
     "w_score": 0.2858
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 57.1,
     "away": "Kisvarda",
     "bookmaker": null,
@@ -11893,7 +11898,7 @@
       }
     ],
     "home": "Vasas",
-    "kickoff": "05:45",
+    "kickoff": "07:45",
     "kickoff_sast": "2026-10-10 14:45 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T12:45:00+00:00",
@@ -11941,7 +11946,7 @@
     "w_score": 0.2858
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 56.1,
     "away": "Scunthorpe",
     "bookmaker": null,
@@ -12016,7 +12021,7 @@
       }
     ],
     "home": "AFC Fylde",
-    "kickoff": "07:00",
+    "kickoff": "09:00",
     "kickoff_sast": "2026-10-10 16:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:00:00+00:00",
@@ -12064,7 +12069,7 @@
     "w_score": 0.2442
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 78.5,
     "away": "Zhetysu",
     "bookmaker": null,
@@ -12162,7 +12167,7 @@
       }
     ],
     "home": "Kairat Almaty",
-    "kickoff": "05:00",
+    "kickoff": "07:00",
     "kickoff_sast": "2026-10-10 14:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T12:00:00+00:00",
@@ -12209,7 +12214,7 @@
     "w_score": 1.2938
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 71.0,
     "away": "Dumbravita",
     "bookmaker": null,
@@ -12307,7 +12312,7 @@
       }
     ],
     "home": "Cetatea Suceava",
-    "kickoff": "01:00",
+    "kickoff": "03:00",
     "kickoff_sast": "2026-10-10 10:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T08:00:00+00:00",
@@ -12351,7 +12356,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 70.0,
     "away": "Al-Qadsia",
     "bookmaker": null,
@@ -12458,7 +12463,7 @@
       }
     ],
     "home": "Al-Tadhamon",
-    "kickoff": "07:50",
+    "kickoff": "09:50",
     "kickoff_sast": "2026-10-10 16:50 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:50:00+00:00",
@@ -12502,7 +12507,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 70.0,
     "away": "Kortrijk",
     "bookmaker": null,
@@ -12600,7 +12605,7 @@
       }
     ],
     "home": "Genk",
-    "kickoff": "11:45",
+    "kickoff": "13:45",
     "kickoff_sast": "2026-10-10 20:45 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T18:45:00+00:00",
@@ -12644,7 +12649,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 62.6,
     "away": "Giugliano",
     "bookmaker": null,
@@ -12655,18 +12660,18 @@
       "comp_type_name": "league",
       "competition_type": "BOOST",
       "home_norm": "bari",
-      "league": "BOOST",
-      "league_key": "italy serie a",
+      "league": "ALLOW",
+      "league_key": "italy serie b",
       "league_raw": "Italy,Serie C Grp. C",
       "niche": "ALLOW",
       "odds_band": "UNKNOWN",
       "odds_band_name": "NO_ODDS",
-      "resolution_original_verdict": "BOOST",
+      "resolution_original_verdict": "ALLOW",
       "resolution_path": "native",
       "resolution_pool_n": null,
       "resolution_pool_roi": null,
-      "resolution_reason": "native verdict BOOST unchanged (only UNKNOWN is resolvable)",
-      "resolution_verdict": "BOOST",
+      "resolution_reason": "native verdict ALLOW unchanged (only UNKNOWN is resolvable)",
+      "resolution_verdict": "ALLOW",
       "side_role": "home",
       "team_a": "UNKNOWN",
       "team_h": "UNKNOWN"
@@ -12728,7 +12733,7 @@
       }
     ],
     "home": "Bari",
-    "kickoff": "05:30",
+    "kickoff": "07:30",
     "kickoff_sast": "2026-10-10 14:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T12:30:00+00:00",
@@ -12775,7 +12780,7 @@
     "w_score": 0.514
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 62.5,
     "away": "Kristianstad FC",
     "bookmaker": null,
@@ -12859,7 +12864,7 @@
       }
     ],
     "home": "Trelleborgs FF",
-    "kickoff": "04:00",
+    "kickoff": "06:00",
     "kickoff_sast": "2026-10-10 13:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T11:00:00+00:00",
@@ -12906,7 +12911,7 @@
     "w_score": 0.5095
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 61.3,
     "away": "Debreceni VSC",
     "bookmaker": null,
@@ -12990,7 +12995,7 @@
       }
     ],
     "home": "Ferencvarosi TC",
-    "kickoff": "08:00",
+    "kickoff": "10:00",
     "kickoff_sast": "2026-10-10 17:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T15:00:00+00:00",
@@ -13037,7 +13042,7 @@
     "w_score": 0.4588
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 59.8,
     "away": "Northampton",
     "bookmaker": null,
@@ -13121,7 +13126,7 @@
       }
     ],
     "home": "York",
-    "kickoff": "07:00",
+    "kickoff": "09:00",
     "kickoff_sast": "2026-10-10 16:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:00:00+00:00",
@@ -13168,7 +13173,7 @@
     "w_score": 0.3981
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 58.7,
     "away": "Universidad De Concepcion",
     "bookmaker": null,
@@ -13179,18 +13184,18 @@
       "comp_type_name": "league",
       "competition_type": "BOOST",
       "home_norm": "cobresal",
-      "league": "ALLOW",
+      "league": "UNKNOWN",
       "league_key": "primera division",
       "league_raw": "Chile,Primera Division",
       "niche": "BOOST",
       "odds_band": "UNKNOWN",
       "odds_band_name": "NO_ODDS",
-      "resolution_original_verdict": "ALLOW",
-      "resolution_path": "native",
-      "resolution_pool_n": null,
-      "resolution_pool_roi": null,
-      "resolution_reason": "native verdict ALLOW unchanged (only UNKNOWN is resolvable)",
-      "resolution_verdict": "ALLOW",
+      "resolution_original_verdict": "UNKNOWN",
+      "resolution_path": "O1-pool",
+      "resolution_pool_n": 101,
+      "resolution_pool_roi": 0.2289929292929293,
+      "resolution_reason": "O1 pool n=101 w_roi=+0.2290 -> BOOST",
+      "resolution_verdict": "BOOST",
       "side_role": "home",
       "team_a": "UNKNOWN",
       "team_h": "UNKNOWN"
@@ -13243,7 +13248,7 @@
       }
     ],
     "home": "Cobresal",
-    "kickoff": "11:00",
+    "kickoff": "13:00",
     "kickoff_sast": "2026-10-10 20:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T18:00:00+00:00",
@@ -13290,7 +13295,7 @@
     "w_score": 0.351
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 57.4,
     "away": "Red Bull Salzburg",
     "bookmaker": null,
@@ -13383,7 +13388,7 @@
       }
     ],
     "home": "Grazer AK",
-    "kickoff": "08:00",
+    "kickoff": "10:00",
     "kickoff_sast": "2026-10-10 17:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T15:00:00+00:00",
@@ -13430,7 +13435,7 @@
     "w_score": 0.2991
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 70.0,
     "away": "FC Porto",
     "bookmaker": "scoutingstats_odds",
@@ -13537,7 +13542,7 @@
       }
     ],
     "home": "Maritimo",
-    "kickoff": "10:00",
+    "kickoff": "12:00",
     "kickoff_sast": "2026-10-10 19:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T17:00:00+00:00",
@@ -13607,7 +13612,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 64.4,
     "away": "Sandefjord",
     "bookmaker": "scoutingstats_odds",
@@ -13691,7 +13696,7 @@
       }
     ],
     "home": "Rosenborg",
-    "kickoff": "09:00",
+    "kickoff": "11:00",
     "kickoff_sast": "2026-10-10 18:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T16:00:00+00:00",
@@ -13708,7 +13713,7 @@
     "ml_p": 0.6442,
     "model_version": null,
     "n_way": 3,
-    "odds": 1.36,
+    "odds": 1.38,
     "odds_captured_at": "2026-10-10T16:00:00Z",
     "odds_league": "Eliteserien",
     "odds_match_method": "exact",
@@ -13728,7 +13733,7 @@
         "market": "1x2",
         "match_method": "exact",
         "named_bookmaker": false,
-        "odds": 1.36,
+        "odds": 1.38,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -13744,7 +13749,7 @@
         "league": "Eliteserien",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 4.75,
+        "odds": 5.0,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -13760,7 +13765,7 @@
         "league": "Eliteserien",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 6.5,
+        "odds": 7.0,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -13796,7 +13801,7 @@
     "w_score": 0.5937
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 62.7,
     "away": "Progreso",
     "bookmaker": "scoutingstats_odds",
@@ -13880,7 +13885,7 @@
       }
     ],
     "home": "Penarol",
-    "kickoff": "14:30",
+    "kickoff": "16:30",
     "kickoff_sast": "2026-10-10 23:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T21:30:00+00:00",
@@ -13953,7 +13958,7 @@
     "w_score": 0.5185
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 60.7,
     "away": "FC Porto B",
     "bookmaker": "scoutingstats_odds",
@@ -14037,7 +14042,7 @@
       }
     ],
     "home": "Leixoes",
-    "kickoff": "07:30",
+    "kickoff": "09:30",
     "kickoff_sast": "2026-10-10 16:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:30:00+00:00",
@@ -14110,7 +14115,7 @@
     "w_score": 0.4352
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 60.0,
     "away": "Gateshead",
     "bookmaker": "scoutingstats_odds",
@@ -14194,7 +14199,7 @@
       }
     ],
     "home": "FC Halifax Town",
-    "kickoff": "07:00",
+    "kickoff": "09:00",
     "kickoff_sast": "2026-10-10 16:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T14:00:00+00:00",
@@ -14267,7 +14272,7 @@
     "w_score": 0.4072
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 59.8,
     "away": "Hapoel Beer Sheva",
     "bookmaker": "scoutingstats_odds",
@@ -14360,7 +14365,7 @@
       }
     ],
     "home": "Ironi Tiberias",
-    "kickoff": "09:00",
+    "kickoff": "11:00",
     "kickoff_sast": "2026-10-10 18:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T16:00:00+00:00",
@@ -14465,7 +14470,7 @@
     "w_score": 0.3969
   },
   {
-    "as_of": "2026-10-09T15:06:59+02:00",
+    "as_of": "2026-10-09T18:06:54+02:00",
     "avg_p": 57.8,
     "away": "FC Koper",
     "bookmaker": "scoutingstats_odds",
@@ -14558,7 +14563,7 @@
       }
     ],
     "home": "Radomlje",
-    "kickoff": "06:00",
+    "kickoff": "08:00",
     "kickoff_sast": "2026-10-10 15:00 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-10T13:00:00+00:00",
