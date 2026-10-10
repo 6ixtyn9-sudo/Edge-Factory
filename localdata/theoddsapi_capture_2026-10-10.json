@@ -3,15 +3,15 @@
   "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "Paysandu",
+      "away": "BSK Banja Luka",
       "date": "2026-10-10",
-      "home": "Brusque",
-      "kickoff": "10-10, 21:00",
-      "league": "Brazil Serie C"
+      "home": "Borac Banja Luka",
+      "kickoff": "2026-10-10T18:30:00+02:00",
+      "league": "Bosnia: Premijer Liga"
     }
   ],
   "candidate_fixtures": 69,
-  "captured_at": "2026-10-10T18:27:09+00:00",
+  "captured_at": "2026-10-10T19:15:32+00:00",
   "date": "2026-10-10",
   "due_reasons": {
     "first_at": 1
@@ -25,16 +25,15 @@
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 12,
+    "kickoff_already_passed": 13,
     "kickoff_mismatch": 10,
     "priced": 22,
-    "priced_close_window_not_open": 2,
+    "priced_close_window_not_open": 1,
     "retry_cooldown": 32
   },
   "skipped": [
     "Bodo/Glimt|Kristiansund BK (priced)",
     "Barcelona|Getafe (priced)",
-    "Borac Banja Luka|BSK Banja Luka (retry cooldown (6h after failed attempt))",
     "Kairat Almaty|Zhetysu (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch FC Augsburg|Bayern M\u00fcnchen: pick legacy display says 12:30Z, captured rows say 13:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "FC Augsburg|Bayern M\u00fcnchen (kickoff already passed)",
@@ -57,7 +56,7 @@
     "Genk|Kortrijk (priced)",
     "FC Halifax Town|Gateshead (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Monaco|Toulouse: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Monaco|Toulouse (priced, close window not open)",
+    "Monaco|Toulouse (kickoff already passed)",
     "FCSB|Otelul Galati (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Lille|Le Havre: pick legacy display says 14:15Z, captured rows say 15:15Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Lille|Le Havre (kickoff already passed)",
@@ -84,6 +83,7 @@
     "Worthing|Solihull Moors (retry cooldown (6h after failed attempt))",
     "Ferencvarosi TC|Debreceni VSC (retry cooldown (6h after failed attempt))",
     "Botev Plovdiv|Slavia Sofia (kickoff already passed)",
+    "Brusque|Paysandu (retry cooldown (6h after failed attempt))",
     "York|Northampton (retry cooldown (6h after failed attempt))",
     "Montrose|Ross County (retry cooldown (6h after failed attempt))",
     "Crawley Town|Chesterfield (priced)",
@@ -114,9 +114,9 @@
   "source": "theoddsapi",
   "status": "empty",
   "unmatched": [
-    "Brusque vs Paysandu (league not covered: Brazil Serie C)"
+    "Borac Banja Luka vs BSK Banja Luka (league not covered: Bosnia: Premijer Liga)"
   ],
   "unmatched_reasons": {
-    "league not covered: Brazil Serie C": 1
+    "league not covered: Bosnia: Premijer Liga": 1
   }
 }
