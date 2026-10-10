@@ -1,0 +1,60 @@
+name: Bounded source interrogation probe
+on:
+  workflow_dispatch:
+    inputs:
+      probe:
+        required: true
+        type: choice
+        options:
+          - pinnapi
+          - betminer
+          - boggio
+          - sharpapi
+          - oddspapi_markets
+          - bzzoiro_odds
+          - card_enrich
+      date:
+        description: 'Optional date; passed ONLY to date-capable probes (betminer, oddspapi_markets, bzzoiro_odds, card_enrich)'
+        required: false
+        type: string
+      extra_args:
+        description: 'Optional extra CLI args appended verbatim (e.g. --verify-keys or --endpoint h2h --match-id 12345)'
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      PINNAPI_KEY: ${{ inputs.probe == 'pinnapi' && secrets.PINNAPI_KEY || '' }}
+      RAPIDAPI_KEY: ${{ (inputs.probe == 'betminer' || inputs.probe == 'boggio' || inputs.probe == 'card_enrich') && secrets.RAPIDAPI_KEY || '' }}
+      RAPIDAPI_KEYS: ${{ (inputs.probe == 'betminer' || inputs.probe == 'boggio' || inputs.probe == 'card_enrich') && secrets.RAPIDAPI_KEYS || '' }}
+      SHARPAPI_KEY: ${{ inputs.probe == 'sharpapi' && secrets.SHARPAPI_KEY || '' }}
+      ODDSPAPI_API_KEYS: ${{ inputs.probe == 'oddspapi_markets' && secrets.ODDSPAPI_API_KEYS || '' }}
+      BZZOIRO_TOKEN: ${{ inputs.probe == 'bzzoiro_odds' && secrets.BZZOIRO_TOKEN || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install existing repo dependencies
+        run: python3 -m pip install --quiet -r requirements.txt
+      - name: Run existing bounded probe
+        env:
+          PROBE: ${{ inputs.probe }}
+          DATE_IN: ${{ inputs.date }}
+          EXTRA: ${{ inputs.extra_args }}
+        run: |
+          ARGS=""
+          case "$PROBE" in
+            betminer|oddspapi_markets|bzzoiro_odds|card_enrich)
+              [ -n "$DATE_IN" ] && ARGS="--date $DATE_IN" ;;
+          esac
+          # card_enrich is a bounded CAPTURE (budget-ledgered), not an ad-hoc
+          # probe: it defaults to plan-only, spends ZERO vendor calls, and only
+          # pays quota when extra_args carries --execute. Every other choice
+          # keeps the existing probe path byte-identical.
+          if [ "$PROBE" = "card_enrich" ]; then
+            PYTHONPATH=src python3 scripts/capture_card_enrich.py $ARGS $EXTRA
+          else
+            PYTHONPATH=src python3 "scripts/probe_${PROBE}.py" $ARGS $EXTRA
+          fi
