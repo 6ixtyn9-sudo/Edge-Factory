@@ -101,7 +101,7 @@ def _request(url: str, key: str, timeout: int, extra_headers: dict[str, str] | N
     req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            body = resp.read(4_000_000).decode("utf-8", "replace")
+            body = resp.read(24_000_000).decode("utf-8", "replace")
             rate_headers = {
                 str(k): str(v) for k, v in resp.headers.items()
                 if "ratelimit" in str(k).lower() or str(k).lower() == "retry-after"
@@ -206,7 +206,7 @@ def main() -> int:
     results: list[tuple[str, str, dict[str, Any]]] = []
 
     health_url = f"{BASE}/kit/v1/health"
-    result = _request(health_url, key, args.timeout)
+    result = _request(health_url, key, args.timeout, extra_headers={adapter.AUTH_HEADER: key})
     result["summary"] = _summarize(result.get("data"))
     results.append(("health (connectivity/auth check)", health_url, result))
 
