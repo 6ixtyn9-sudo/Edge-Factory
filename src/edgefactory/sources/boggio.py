@@ -40,26 +40,35 @@ RETRYABLE_ZERO_ROW_STATUSES={"auth","quota","unavailable","blocked","error","coo
 _lock=threading.Lock(); _last=0.0; _calls=0; _429=0; _cooling=False; _DIAG:dict[str,Any]={}
 class UpstreamBlocked(RuntimeError): pass
 
+_active_key_index=0
+_logical_calls=0
+
+def configured_keys():
+ """Ordered, de-duplicated ring. Singular key is fallback, never appended."""
+ raw=os.environ.get("RAPIDAPI_KEYS") or os.environ.get(KEY_ENV) or ""
+ return tuple(dict.fromkeys(k.strip() for k in raw.split(",") if k.strip()))
+
 def reset_state():
- global _last,_calls,_429,_cooling
- _last=0.0; _calls=0; _429=0; _cooling=False
+ global _last,_calls,_429,_cooling,_active_key_index,_logical_calls
+ _last=0.0; _calls=0; _429=0; _cooling=False; _active_key_index=0; _logical_calls=0; _DIAG.clear()
+
 def diagnostics(): return dict(_DIAG)
 def _set_diag(x): _DIAG.update(x); return x
-def _key(): return os.environ.get(KEY_ENV, "").strip() or None
+def _key():
+ keys=configured_keys()
+ return keys[_active_key_index] if _active_key_index<len(keys) else None
 def predictions_url(day): return BASE+"/api/v2/predictions?"+urllib.parse.urlencode({"iso_date":day,"market":"classic"})
 def _headers(h): return {str(k):str(v) for k,v in (h.items() if hasattr(h,"items") else []) if "ratelimit" in str(k).lower() or str(k).lower()=="retry-after"}
 def _status(code): return "auth" if code in (401,403) else "quota" if code in (402,429,509) else "unavailable"
 
-def get_json(url, *, timeout=30):
- global _last,_calls,_429,_cooling
- if _cooling: raise UpstreamBlocked("boggio: run cooling down after repeated HTTP 429 responses")
- if not _key(): raise UpstreamBlocked(f"{KEY_ENV} not set; shadow capture skipped")
- if _calls>=MAX_CALLS_PER_RUN: raise UpstreamBlocked("boggio: per-run call budget reached")
+def request_with_key(url, key, *, timeout=30):
+ """One physical HTTP call, no retry; response/exception never exposes key."""
+ global _last,_calls
  with _lock:
   wait=MIN_INTERVAL_S-(time.monotonic()-_last)
   if wait>0: time.sleep(wait)
   _last=time.monotonic(); _calls+=1
- req=urllib.request.Request(url,headers={"Accept":"application/json","User-Agent":"EdgeFactory-cooperative-shadow/1.0 (+operator review)","X-RapidAPI-Key":_key() or "","X-RapidAPI-Host":API_HOST})
+ req=urllib.request.Request(url,headers={"Accept":"application/json","User-Agent":"EdgeFactory-cooperative-shadow/1.0 (+operator review)","X-RapidAPI-Key":key,"X-RapidAPI-Host":API_HOST})
  try:
   with urllib.request.urlopen(req,timeout=timeout) as r:
    body=r.read(8_000_000).decode("utf-8","replace")
@@ -67,15 +76,29 @@ def get_json(url, *, timeout=30):
    except json.JSONDecodeError: data=None
    return int(getattr(r,"status",200)),data,_headers(r.headers)
  except urllib.error.HTTPError as e:
-  if e.code==429:
-   _429+=1
-   if _429>=2: _cooling=True; raise UpstreamBlocked("boggio: repeated HTTP 429; cooling down") from e
-   retry=e.headers.get("Retry-After") if e.headers else None
-   try: time.sleep(max(1,min(60,float(retry or 5))))
-   except ValueError: time.sleep(5)
-   return get_json(url,timeout=timeout)
-  raise UpstreamBlocked(f"boggio: HTTP {e.code} {e.reason}") from e
- except Exception as e: raise UpstreamBlocked(f"boggio: {type(e).__name__}: {e}") from e
+  return e.code,None,_headers(e.headers)
+ except Exception as e:
+  raise UpstreamBlocked(f"boggio: transport {type(e).__name__}") from None
+
+def get_json(url, *, timeout=30):
+ global _active_key_index,_logical_calls,_cooling,_429
+ keys=configured_keys()
+ if not keys: raise UpstreamBlocked("RAPIDAPI_KEYS/RAPIDAPI_KEY not set; shadow capture skipped")
+ if _cooling: raise UpstreamBlocked("boggio: ring exhausted; run cooling down")
+ if _logical_calls>=MAX_CALLS_PER_RUN: raise UpstreamBlocked("boggio: per-run logical call budget reached")
+ _logical_calls+=1
+ while _active_key_index<len(keys):
+  index=_active_key_index
+  code,data,headers=request_with_key(url,keys[index],timeout=timeout)
+  _DIAG.setdefault("key_attempts",[]).append({"key_index":index+1,"status":code,"rate_limit_headers":headers})
+  if code in (401,402,403,429,509):
+   if code==429: _429+=1
+   _active_key_index+=1
+   continue
+  if code>=400: raise UpstreamBlocked(f"boggio: HTTP {code}")
+  return code,data,headers
+ _cooling=True
+ raise UpstreamBlocked("boggio: no eligible key in ring")
 
 def _num(x):
  try: return float(x)
