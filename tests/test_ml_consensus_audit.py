@@ -12,6 +12,14 @@ from edgefactory.ml_consensus_audit import TemporaryAudit, freeze, thaw, Capture
 import picks_today as pt
 
 
+@pytest.fixture(autouse=True)
+def synthetic_runtime_admission(monkeypatch):
+    # Exercise real worker/storage/parity paths on CI, NOT runtime calibration.
+    # The unpatched admission policy has separate refusal/acceptance controls.
+    from edgefactory import ml_consensus_audit
+    monkeypatch.setattr(ml_consensus_audit, '_runtime_supported', lambda: True)
+
+
 def test_disabled_no_storage_or_factory(monkeypatch):
     monkeypatch.delenv('EDGE_FACTORY_MCP_AUDIT', raising=False)
     with tempfile.TemporaryDirectory() as unused:
