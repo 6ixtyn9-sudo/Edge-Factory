@@ -174,3 +174,48 @@ def source_team_key(name: object) -> str:
     """Identity-folded voter-row team key with alias resolution."""
     key = source_team_key_base(name)
     return TEAM_KEY_ALIASES.get(key, key)
+
+
+# Squad distinguishers, as marker CLASSES. Two names whose marker classes
+# disagree never denote the same team: "Club Brugge KV" and "Club Brugge KV
+# U23" are different sides of the same club playing in different
+# competitions. Classes (not raw tokens) so "Arsenal W" == "Arsenal Women".
+#
+# Evidence (2026-10-10, localdata/betexplorer_odds_cache_2026-10-10.json):
+# the RAAL La Louvière vs Club Brugge KV odds-cache key held three price rows
+# for Dender vs Club Brugge KV U23 (Challenger Pro League) — the width-9
+# fuzzy key ("clubbrugg") collapsed the senior and U23 sides and the
+# partial-match branch accepted the reserve page. Wrong-squad pricing must
+# lose to unpriced.
+SQUAD_MARKER_CLASSES: dict[str, str] = {}
+for _tokens, _cls in (
+    (("u17", "u18", "u19", "u20", "u21", "u22", "u23", "u25"), None),  # age grade: exact token
+    (("ii", "b", "res", "reserve", "reserves", "yth", "youth", "amateur", "amateurs"), "reserve"),
+    (("w", "women", "womens", "woman", "ladies", "feminino", "feminina",
+      "femenino", "femenina", "damer"), "women"),
+):
+    for _tok in _tokens:
+        SQUAD_MARKER_CLASSES[_tok] = _cls or _tok
+
+
+def squad_markers(name: object) -> frozenset[str]:
+    """The squad-marker classes a team name carries (empty for a senior side)."""
+    out: set[str] = set()
+    for word in team_identity_words(name).split():
+        cls = SQUAD_MARKER_CLASSES.get(word)
+        if cls:
+            out.add(cls)
+    return frozenset(out)
+
+
+def squad_marker_mismatch(a: object, b: object) -> bool:
+    """True when the two names cannot be the same squad of the same club.
+
+    One side carries a squad/age/women marker the other lacks. Deliberately
+    one-directional in the VETO sense only: it never asserts two names ARE
+    the same team, it just refuses to let a truncated fuzzy key treat a
+    reserve/youth/women side as the senior side. A false veto costs one
+    price; a false match prices one fixture with another team's odds.
+    """
+    ma, mb = squad_markers(a), squad_markers(b)
+    return ma != mb
