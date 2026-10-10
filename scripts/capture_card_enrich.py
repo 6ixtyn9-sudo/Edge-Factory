@@ -188,7 +188,7 @@ def last_observed_remaining(localdata: Path) -> dict[str, int]:
 
 
 def plan_run(day: str, *, localdata: Path, limit: int, allow_listing: bool,
-             bootstrap: dict[str, int]) -> dict:
+             bootstrap: dict[str, int], now: datetime | None = None) -> dict:
     """Every decision that can cost money, taken offline. Never touches the network."""
     card = load_card(localdata, day)
     chosen, census = select_candidates(card, limit=limit)
@@ -212,7 +212,15 @@ def plan_run(day: str, *, localdata: Path, limit: int, allow_listing: bool,
                                 localdata=localdata, day=day, observed_remaining=known)
     for i in chosen:
         i["resolvable_after_listing"] = bool(i["resolvable"] or need_listing)
-    return {"day": day, "card_rows": len(card), "candidates": chosen, "census": census,
+    # Freshness, measured against NOW rather than against the card date: the
+    # provider's stats endpoints are upcoming-fixture-only and the lane's own
+    # rule marks a post-kickoff capture ineligible, so a run on a card whose
+    # matches have already started would pay full price for zero usable rows.
+    now = now or datetime.now(timezone.utc)
+    pre_kickoff = sum(1 for i in chosen
+                      if (k := boggio._aware(i.get("kickoff_utc"))) is not None and k > now)
+    return {"pre_kickoff": pre_kickoff,
+            "day": day, "card_rows": len(card), "candidates": chosen, "census": census,
             "unresolved": [i["fixture_key"] for i in unresolved],
             "allow_listing": bool(allow_listing), "preflight": preflight,
             "need_h2h": need_h2h, "need_listing": need_listing}
@@ -340,7 +348,9 @@ def _harvest_pool_readings(argv: list[str]) -> tuple[list[str], list[str]]:
     return kept, readings
 
 
-def main(argv=None) -> int:
+def main(argv=None, *, now=None) -> int:
+    """``now`` is injectable so the freshness guard stays deterministic: a test
+    that borrowed the wall clock would rot the day its fixture date passed."""
     argv, pool_readings = _harvest_pool_readings(list(sys.argv[1:] if argv is None else argv))
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--date", default=None, help="Card date (YYYY-MM-DD); default today, SAST")
@@ -374,13 +384,20 @@ def main(argv=None) -> int:
             parser.error(f"--pool-remaining value must be an integer, got {value!r}")
 
     plan = plan_run(day, localdata=localdata, limit=max(1, args.limit),
-                    allow_listing=args.allow_listing, bootstrap=bootstrap)
+                    allow_listing=args.allow_listing, bootstrap=bootstrap, now=now)
     plan["snapshots"] = []
     boggio.print_preflight(plan["preflight"], log=print)
     print(f"ledger=card_enrich_plan date={day} card_rows={plan['card_rows']} "
           f"candidates={len(plan['candidates'])} need_h2h={plan['need_h2h']} "
           f"need_listing={plan['need_listing']} unresolved={len(plan['unresolved'])} "
-          f"allow_listing={int(plan['allow_listing'])} verdict={plan['preflight']['verdict']}")
+          f"allow_listing={int(plan['allow_listing'])} verdict={plan['preflight']['verdict']} "
+          f"pre_kickoff_now={plan['pre_kickoff']}/{len(plan['candidates'])}")
+    if plan["candidates"] and plan["pre_kickoff"] == 0:
+        print(f"ledger=card_enrich_caution every selected fixture has already kicked off "
+              f"(card date={plan['day']}, now={datetime.now(timezone.utc).isoformat(timespec='seconds')}). "
+              f"A plan is still free, but --execute would pay up to {plan['preflight']['need_total']} "
+              f"call(s) for snapshots the pre-kickoff rule marks unusable. Re-run against the "
+              f"current card after the next 09:00 SAST freeze instead.")
     pools = plan["preflight"]["pool_labels"]
     for fingerprint, tail in sorted(pools.items()):
         print(f"ledger=card_enrich_pool fingerprint={fingerprint} key_tail=***{tail} "
@@ -394,6 +411,12 @@ def main(argv=None) -> int:
     for line in plan["census"]:
         print(f"ledger=card_enrich_rank {json.dumps(line, sort_keys=True)}")
 
+    if args.execute and plan["candidates"] and plan["pre_kickoff"] == 0:
+        # The caution is a guard, not a footnote: this exact spend is why the
+        # pre-kickoff rule exists, and nothing here should be paid for it.
+        print("ledger=card_enrich mode=execute calls_spent=0 verdict=all_fixtures_post_kickoff "
+              "note=refused; nothing was purchased (see the caution line above)")
+        return 0
     if not args.execute:
         print("ledger=card_enrich mode=plan_only calls_spent=0 "
               "note=pass --execute to pay quota (budget- and ledger-gated)")

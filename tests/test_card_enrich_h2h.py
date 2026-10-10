@@ -20,6 +20,12 @@ FIXTURES = Path(__file__).resolve().parent / "fixtures"
 H2H_DOC = json.loads((FIXTURES / "boggio_head_to_head_documented.json").read_text())
 CARD_DAY = "2026-10-11"
 CAPTURED = "2026-10-11T06:00:00+00:00"   # strictly before the 14:00Z kickoff
+# Every scripted run pins "now" inside the card day, pre-kickoff. Without this the
+# suite would rot the moment 2026-10-11 passed, because the freshness guard reads
+# the clock rather than the fixture date.
+NOW = datetime(2026, 10, 11, 4, 0, tzinfo=timezone.utc)
+# Every scripted run pins "now" inside the card day, pre-kickoff. Without this the
+NOW = datetime(2026, 10, 11, 4, 0, tzinfo=timezone.utc)
 FIXTURE = {"home": "Real Sociedad", "away": "Barcelona",
            "kickoff_utc": "2026-10-11T14:00:00+00:00"}
 
@@ -287,7 +293,7 @@ def test_plan_mode_never_calls_the_transport(tmp_path, monkeypatch, capsys):
         raise AssertionError("plan mode must not open a socket")
 
     monkeypatch.setattr(boggio.urllib.request, "urlopen", explode)
-    assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata)]) == 0
+    assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata)], now=NOW) == 0
     assert calls == []
     out = capsys.readouterr().out
     assert "ledger=card_enrich_preflight calls=" in out           # mandatory math line
@@ -301,7 +307,7 @@ def test_listing_call_is_charged_or_it_does_not_happen(tmp_path, monkeypatch):
     monkeypatch.setenv(boggio.CARD_ENRICH_BUDGET_ENV, "30")
     monkeypatch.setenv("RAPIDAPI_KEYS", "pool-a,pool-b")
     boot = {boggio.key_label("pool-a"): 31, boggio.key_label("pool-b"): 99}
-    without = ce.plan_run(CARD_DAY, localdata=localdata, limit=6, allow_listing=False, bootstrap=boot)
+    without = ce.plan_run(CARD_DAY, localdata=localdata, limit=6, allow_listing=False, bootstrap=boot, now=NOW)
     # A fixture whose provider id was retained from the paid listing needs no
     # extra call. One that was never resolved is REPORTED, never silently
     # dropped, and it can only be resolved by a listing call that the pre-flight
@@ -315,10 +321,10 @@ def test_listing_call_is_charged_or_it_does_not_happen(tmp_path, monkeypatch):
     payload = json.loads(shadow.read_text())
     payload["rows"] = [r for r in payload["rows"] if r["event_id"] != 424002]
     shadow.write_text(json.dumps(payload))
-    bare = ce.plan_run(CARD_DAY, localdata=localdata, limit=6, allow_listing=False, bootstrap=boot)
+    bare = ce.plan_run(CARD_DAY, localdata=localdata, limit=6, allow_listing=False, bootstrap=boot, now=NOW)
     assert bare["unresolved"] == ["athletic|getafe"] and bare["need_listing"] == 0
     assert bare["need_h2h"] == 1     # only the still-resolved fixture can be paid for
-    with_listing = ce.plan_run(CARD_DAY, localdata=localdata, limit=6, allow_listing=True, bootstrap=boot)
+    with_listing = ce.plan_run(CARD_DAY, localdata=localdata, limit=6, allow_listing=True, bootstrap=boot, now=NOW)
     assert with_listing["need_listing"] == 1
     # The listing does not only buy itself: it unlocks the fixture it resolves,
     # so that H2H is charged too (1 -> 2, i.e. +1 listing +1 unlocked call).
@@ -369,7 +375,7 @@ def test_execute_pays_at_most_the_pre_flight_allowance_and_ledgers_every_call(tm
     boot = {boggio.key_label("pool-a"): 31, boggio.key_label("pool-b"): 99}
     assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata),
                     "--pool-remaining", f"{boggio.key_label('pool-a')}=31",
-                    "--pool-remaining", f"{boggio.key_label('pool-b')}=99", "--execute"]) == 0
+                    "--pool-remaining", f"{boggio.key_label('pool-b')}=99", "--execute"], now=NOW) == 0
     assert len(seen) == 2 and all("/head-to-head/" in url for url in seen)
     out = capsys.readouterr().out
     assert "ledger=card_enrich_preflight calls=2" in out
@@ -401,7 +407,7 @@ def test_execute_stops_when_the_budget_says_zero_and_spends_nothing(tmp_path, mo
     monkeypatch.setattr(boggio.urllib.request, "urlopen",
                         _fake_transport({"head-to-head": H2H_DOC}, seen))
     assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata),
-                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"]) == 0
+                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"], now=NOW) == 0
     assert seen == [] and "calls_spent=0 verdict=budget_disabled" in capsys.readouterr().out
 
 
@@ -448,7 +454,7 @@ def test_a_transport_failure_is_still_attributed_to_a_named_pool(tmp_path, monke
     monkeypatch.setattr(boggio.urllib.request, "urlopen", die)
     assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata), "--execute",
                     "--pool-remaining", f"{boggio.key_label('pool-a')}=31",
-                    "--pool-remaining", f"{boggio.key_label('pool-b')}=99"]) == 0
+                    "--pool-remaining", f"{boggio.key_label('pool-b')}=99"], now=NOW) == 0
     entries = boggio.read_call_ledger(localdata)
     assert len(entries) == 2
     assert all(e["charged"] is True and e["error_class"] == "UpstreamBlocked" for e in entries)
@@ -477,7 +483,7 @@ def test_run_ceiling_refuses_an_unplanned_burst(tmp_path, monkeypatch, capsys):
     fingerprint = boggio.key_fingerprint("pool-a")
     assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata), "--limit", "9",
                     "--pool-remaining", f"{fingerprint}=25", "--max-requests", "1",
-                    "--execute"]) == 0
+                    "--execute"], now=NOW) == 0
     out = capsys.readouterr().out
     assert "verdict=run_ceiling" in out or "calls_spent=1" in out
     assert len(seen) <= 1
@@ -513,7 +519,7 @@ def test_pre_flight_count_equals_what_the_run_actually_pays(tmp_path, monkeypatc
     assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata), "--allow-listing",
                     "--pool-remaining", f"{boggio.key_label('pool-a')}=31",
                     "--pool-remaining", f"{boggio.key_label('pool-b')}=99",
-                    "--execute"]) == 0
+                    "--execute"], now=NOW) == 0
     out = capsys.readouterr().out
     planned = int(out.split("ledger=card_enrich_preflight calls=")[1].split(" ")[0])
     spent = int(out.split("calls_spent=")[1].split(" ")[0])
@@ -538,7 +544,7 @@ def test_a_tight_budget_degrades_the_plan_and_never_overspends_it(tmp_path, monk
     monkeypatch.setattr(boggio.urllib.request, "urlopen",
                         _fake_transport({"head-to-head": H2H_DOC, "predictions": listing}, seen))
     assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata), "--allow-listing",
-                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"]) == 0
+                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"], now=NOW) == 0
     out = capsys.readouterr().out
     assert "verdict=budget_degraded" in out
     planned = int(out.split("ledger=card_enrich_preflight calls=")[1].split(" ")[0])
@@ -553,7 +559,7 @@ def test_a_tight_budget_degrades_the_plan_and_never_overspends_it(tmp_path, monk
     seen.clear()
     capsys.readouterr()
     assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata), "--allow-listing",
-                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"]) == 0
+                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"], now=NOW) == 0
     assert seen == []
     assert "calls_spent=0" in capsys.readouterr().out
 
@@ -571,10 +577,51 @@ def test_a_first_run_with_no_retained_ids_says_why_it_spent_nothing(tmp_path, mo
     monkeypatch.setattr(boggio.urllib.request, "urlopen",
                         _fake_transport({"head-to-head": H2H_DOC}, seen))
     assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata),
-                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"]) == 0
+                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"], now=NOW) == 0
     out = capsys.readouterr().out
     assert "verdict=nothing_to_capture" in out and "--allow-listing" in out
     assert seen == [] and not (localdata / "card_enrich_call_ledger.jsonl").exists()
+
+
+def test_a_card_whose_fixtures_have_kicked_off_is_refused_not_billed(tmp_path, monkeypatch, capsys):
+    """7 calls for 0 usable rows was the recommended plan; it is now a refusal.
+
+    The provider's stats endpoints are upcoming-fixture-only AND the lane's own
+    pre-kickoff rule marks a late capture ineligible - so an evening run against
+    a card whose matches already started pays full price for snapshots that can
+    never be used. Plan mode warns; --execute declines.
+    """
+    localdata = _card(tmp_path)
+    monkeypatch.setattr(boggio, "MIN_INTERVAL_S", 0)
+    monkeypatch.setenv(boggio.CARD_ENRICH_BUDGET_ENV, "30")
+    monkeypatch.setenv(boggio.CARD_ENRICH_RESERVE_ENV, "0")
+    monkeypatch.setenv("RAPIDAPI_KEYS", "pool-a,pool-b")
+    boggio.reset_state()
+    seen = []
+    monkeypatch.setattr(boggio.urllib.request, "urlopen",
+                        _fake_transport({"head-to-head": H2H_DOC, "predictions": {
+                            "data": [{"id": 424001, "home_team": "Real Sociedad", "away_team": "Barcelona",
+                                      "status": "pending", "is_expired": False,
+                                      "start_date": "2099-01-01T12:00:00"}]}}, seen))
+    late = datetime(2026, 10, 11, 20, 0, tzinfo=timezone.utc)   # after the 14:00Z kickoffs
+    # Empty the retained-id ledger: now the listing is the only route, i.e. the
+    # exact "capture it today" shape (1 listing + 2 H2H) the guard must refuse.
+    (localdata / f"boggio_shadow_{CARD_DAY}.json").write_text(json.dumps({"schema": 1, "rows": []}))
+    assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata), "--allow-listing",
+                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31",
+                    "--pool-remaining", f"{boggio.key_label('pool-b')}=99",
+                    "--execute"], now=late) == 0
+    out = capsys.readouterr().out
+    assert "pre_kickoff_now=0/2" in out
+    assert "ledger=card_enrich_caution" in out
+    assert "would pay up to 3" in out          # the money the guard keeps in the pot
+    assert "verdict=all_fixtures_post_kickoff" in out and "calls_spent=0" in out
+    assert seen == [] and not (localdata / "card_enrich_call_ledger.jsonl").exists()
+    # the same clock, with the refusal lifted, would have spent 3 - which is the
+    # money this guard keeps in the pot
+    plan = ce.plan_run(CARD_DAY, localdata=localdata, limit=6, allow_listing=True,
+                       bootstrap={boggio.key_label("pool-a"): 31}, now=late)
+    assert plan["preflight"]["need_total"] == 3 and plan["pre_kickoff"] == 0
 
 
 def test_no_context_rule_is_registered_and_no_lane_is_wired_into_the_pick_path():
