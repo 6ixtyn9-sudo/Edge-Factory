@@ -216,3 +216,33 @@ def test_daily_pipeline_cleans_before_any_other_step():
     first = run_soft.call_args_list[0].args[0]
     assert "scripts/clean_localdata.py" in first
     assert "--keep-days 30" in first and "--today 2026-09-25" in first
+
+
+def test_shadow_capture_ledgers_are_pruned_on_the_same_clock(tmp_path):
+    # Committed as raw evidence since 2026-10-10; every reader is day-scoped,
+    # so the standard telemetry window bounds them too.
+    old = tmp_path / "betbetter_shadow_2026-06-01.json"
+    fresh = tmp_path / "betbetter_shadow_2026-10-10.json"
+    other = tmp_path / "sharpapi_odds_shadow_2026-06-01.json"
+    for p in (old, fresh, other):
+        p.write_text("{}")
+    removed = clean_localdata(tmp_path, keep_days=30,
+                              today=date(2026, 10, 10))
+    assert old in removed and other in removed
+    assert fresh.exists()
+
+
+def test_shadow_like_names_that_are_not_shadow_ledgers_survive(tmp_path):
+    tricky = [
+        # its own telemetry family with its own pattern; pruned by age, not
+        # by the new shadow-ledger patterns — on the 30-day clock it goes,
+        # so date it inside the window and assert it survives the run
+        "shadow_sent_ledger_2026-10-01.json",
+        "scored_candidate_shadow_2026-06-01.jsonl",
+        "pinnapi_odds_shadow_2026-06-01.json.bak",  # unknown shape: never delete
+        "ml_fade_research_ledger.json",
+    ]
+    for name in tricky:
+        (tmp_path / name).write_text("{}")
+    removed = clean_localdata(tmp_path, keep_days=30, today=date(2026, 10, 10))
+    assert removed == []

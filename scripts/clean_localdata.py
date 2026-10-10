@@ -89,6 +89,21 @@ TELEMETRY_PATTERNS: tuple[re.Pattern[str], ...] = tuple(
         rf"^official_run_{_DATE}\.json$",
         rf"^picks_{_DATE}\.txt$",
         rf"^picks_audit_{_DATE}\.md$",
+        # Shadow capture ledgers (<source>_shadow_DATE.json, seven writers:
+        # betbetter, betminer, boggio, futbolpronosticos, pinnapi_odds,
+        # sharpapi_odds, sportytrader_odds). Committed since 2026-10-10 as the
+        # raw evidence for join-miss triage (Bet Better's raw selection
+        # fields live nowhere else). Every reader is day-scoped and
+        # cache-first: a ledger older than yesterday is never read again, so
+        # the same 30-day window that bounds the other telemetry bounds
+        # these without changing any read.
+        rf"^betbetter_shadow_{_DATE}\.json$",
+        rf"^betminer_shadow_{_DATE}\.json$",
+        rf"^boggio_shadow_{_DATE}\.json$",
+        rf"^futbolpronosticos_shadow_{_DATE}\.json$",
+        rf"^pinnapi_odds_shadow_{_DATE}\.json$",
+        rf"^sharpapi_odds_shadow_{_DATE}\.json$",
+        rf"^sportytrader_odds_shadow_{_DATE}\.json$",
     )
 )
 
