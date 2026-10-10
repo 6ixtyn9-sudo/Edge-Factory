@@ -17,7 +17,7 @@ on:
         required: false
         type: string
       extra_args:
-        description: 'Optional extra CLI args appended verbatim (e.g. --endpoint h2h --match-id 12345)'
+        description: 'Optional extra CLI args (e.g. --endpoint head-to-head --match-id 12345)'
         required: false
         type: string
 permissions:
