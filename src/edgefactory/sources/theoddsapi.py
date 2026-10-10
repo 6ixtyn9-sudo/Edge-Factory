@@ -316,8 +316,8 @@ def _first_listed(keys: tuple[str, ...], sports: list[dict]) -> str | None:
 # title and Raith Rovers vs Queens Park was queried under soccer_efl_champ —
 # a wrong-competition price request. This guard rejects a containment
 # candidate whose entry text never mentions the label's country fragment.
-# Entries that genuinely belong to that country name it (key, title, group or
-# description), so legitimately matching labels keep resolving.
+# Entries that genuinely belong to that country name it in their key or
+# title, so legitimately matching labels keep resolving.
 _COUNTRY_PREFIX_RE = re.compile(r"^\s*([^,|:]{2,40})[,|:]")
 
 
@@ -756,9 +756,13 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
             if (overlap >= 8 and overlap * 2 >= max(len(cand), len(code))
                     and (cand in code or code in cand)):
                 if country_code and country_code not in cand:
-                    # Comma-form label names a country the provider entry never
-                    # mentions; the containment hit is a generic-title false
-                    # match, not this competition. None stays preferred.
+                    # Comma-form label names a country the provider entry's
+                    # key or title never mentions; the containment hit is a
+                    # generic-title false match, not this competition. None
+                    # stays preferred. (Deliberately narrower than checking
+                    # group/description too: rejecting a real match costs one
+                    # unpriced fixture; accepting a generic-title match
+                    # prices the wrong competition.)
                     _log(
                         f"containment rejected (country '{country_match.group(1).strip()}' "
                         f"absent from entry '{s.get('key')}') for label '{league_raw}'",

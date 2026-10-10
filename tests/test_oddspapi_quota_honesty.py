@@ -76,3 +76,29 @@ def test_429_on_a_fixture_call_stops_the_whole_pass(tmp_path, monkeypatch):
     assert receipt["status"] == "quota"
     assert receipt["attempted"] == 1
     assert any("capture stopped" in e for e in receipt["errors"])
+
+
+def test_5xx_on_the_board_is_unavailable_not_a_credential_story(tmp_path, monkeypatch):
+    # Negative control for the receipt classification: a server-side 500 on
+    # the fixtures board stops the pass (daily-bucket discipline) but must
+    # never be reported as auth/quota — the health line would otherwise name
+    # a credential fix for a provider outage.
+    monkeypatch.setattr(cap, "OUT_DIR", tmp_path)
+    monkeypatch.setattr(cap, "api_keys", lambda: ("k1",))
+
+    def server_error(day):
+        raise _http_error(500)
+
+    monkeypatch.setattr(cap, "fetch_fixtures", server_error)
+    monkeypatch.setattr(cap, "fetch_odds",
+                        lambda fid: (_ for _ in ()).throw(AssertionError("must not be called")))
+    receipt = cap.capture("2026-10-10")
+    assert receipt["status"] == "unavailable"
+    assert receipt["http_status"] == 500
+    assert receipt["attempted"] == 0
+    persisted = json.loads(
+        (Path(cap.OUT_DIR) / "oddspapi_capture_2026-10-10.json").read_text())
+    assert persisted["status"] == "unavailable"
+    # and the health-line classifier maps it to the unavailable reason family
+    from edgefactory.source_health import zero_row_reason
+    assert zero_row_reason("unavailable", [500]) == "http_500_unavailable"
