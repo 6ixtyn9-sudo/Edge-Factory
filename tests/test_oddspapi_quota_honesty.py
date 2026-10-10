@@ -33,6 +33,7 @@ def test_rate_limit_headers_are_recorded_not_lost():
 
 
 def test_429_on_the_board_stops_the_capture_and_writes_quota_evidence(tmp_path, monkeypatch):
+    monkeypatch.setattr(cap, "OUT_DIR", tmp_path)  # keep receipts out of repo localdata
     monkeypatch.setattr(cap, "api_keys", lambda: ("k1",))
     calls = {"fixtures": 0}
 
@@ -56,6 +57,7 @@ def test_429_on_the_board_stops_the_capture_and_writes_quota_evidence(tmp_path, 
 
 
 def test_429_on_a_fixture_call_stops_the_whole_pass(tmp_path, monkeypatch):
+    monkeypatch.setattr(cap, "OUT_DIR", tmp_path)  # keep receipts out of repo localdata
     monkeypatch.setattr(cap, "api_keys", lambda: ("k1",))
     fixtures = [{"fixtureId": f"f{i}", "participant1Name": "A", "participant2Name": "B"}
                 for i in range(5)]
