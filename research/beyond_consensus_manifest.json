@@ -1,8 +1,8 @@
 {
   "experiment": "beyond_consensus_baselines",
-  "generated_at_utc": "2026-10-10T07:33:48Z",
+  "generated_at_utc": "2026-10-10T07:48:16Z",
   "command": "PYTHONPATH=src python3 scripts/research_beyond_consensus.py",
-  "git_head": "28e42147",
+  "git_head": "752d3ee5",
   "python": "3.11.2",
   "numpy": "2.4.6",
   "pandas": "3.0.6",
@@ -33,12 +33,12 @@
   "outputs": {
     "dataset": {
       "path": "research/beyond_consensus_dataset.csv.gz",
-      "file_sha256": "cb2bed848189cf82d9d899623a9930538a6b9aa81eebe9c0013a09dbaabb4763",
+      "file_sha256": "d405b95640098d6356be3215fc697552466afc850343b628de40419d30c01705",
       "content_sha256": "5180870ac780e474fbeae3e989b967c160d74771f91c338f5ab6dc162de33079",
       "rows": 16286
     },
-    "results_json_sha256": "4a35f91943827f45c61e32684f55592d473fbbc4232079a275747e7214dc6557",
-    "report_md_sha256": "c8adf4fa2d21af25d4061ddc2d6cf0c5f0d8eb678ed37858c5cbf4a402242d9e"
+    "results_json_sha256": "94a043e444460f689a9285e05ed53de6c2908b9e74cb162a0449b7130b75f07a",
+    "report_md_sha256": "79fa76c2917251583254b82aed3878a6cbd6141083008003d98c0b151c0ad45e"
   },
   "splits": {
     "train": {
@@ -72,8 +72,8 @@
     "outcome": "target: home/draw/away from FINAL score (post-match, never a feature)",
     "fb_home/fb_draw/fb_away": "forebet 1x2 probabilities (0-1, prematch)",
     "fb_odd1/fb_oddx/fb_odd2": "forebet provider-average 1x2 decimal odds (NOT executable)",
-    "goalsavg": "forebet prematch expected total goals (provider estimate)",
-    "pred_hs/pred_gs": "forebet prematch PREDICTED score (context only, excluded from features)",
+    "goalsavg": "forebet expected-total-goals estimate, read off the same day-page fetch as the final scores; no ingest timestamp retained — pre-kickoff availability NOT demonstrated (exploratory only)",
+    "pred_hs/pred_gs": "forebet PREDICTED score (context only, excluded from features; same capture-time caveat as goalsavg)",
     "fb_p_over/fb_p_under": "forebet prematch over/under 2.5 probabilities",
     "fb_p_gg/fb_p_ng": "forebet prematch both-teams-score / not probabilities",
     "zb_home/zb_draw/zb_away": "zulubet 1x2 probabilities (0-1, prematch)",
