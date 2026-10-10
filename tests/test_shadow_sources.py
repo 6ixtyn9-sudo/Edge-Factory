@@ -134,10 +134,18 @@ def test_sportytrader_challenge_switches_training_only(monkeypatch):
 def test_sportytrader_capture_persists_st_raw_and_matched(monkeypatch, tmp_path):
     listing = (FIXTURES / "sportytrader_listing.html").read_text()
     page = (FIXTURES / "sportytrader_match.html").read_text()
+    # capture_day persists its HTML cache under LOCALDATA; point it at the
+    # test tmp dir so the repo's operational localdata/ stays untouched, and
+    # clear the module cache so this run cannot inherit (or feed) other
+    # tests' fetched pages.
+    monkeypatch.setattr(st, "LOCALDATA", tmp_path)
+    monkeypatch.setattr(st, "_HTML_CACHE", {})
     monkeypatch.setattr(st, "_get", lambda url: listing if "/pronosticos/futbol" in url else page)
     rows, stats = st.capture_day("2026-10-02")
     assert stats["st_raw"] == 1
     assert stats["st_matched"] == 4
+    # the HTML cache lands in tmp, beside the shadow ledger — not in localdata/
+    assert (tmp_path / "sportytrader_odds_html_cache_2026-10-02.json").exists()
     path = st.persist_shadow("2026-10-02", rows, stats, localdata=tmp_path)
     payload = json.loads(path.read_text())
     assert payload["stats"]["st_raw"] == 1
