@@ -185,6 +185,17 @@ def _utc():
     return datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def _runtime_supported():
+    """Exact calibrated development runtime; functional tests stub this boundary.
+
+    Passing synthetic tests on another interpreter does not authorize it for
+    operational audit capture.
+    """
+    return (platform.python_implementation() == "CPython" and sys.platform == "linux"
+            and sys.version == "3.11.2 (main, Apr  8 2026, 01:58:00) [GCC 12.2.0]"
+            and getattr(sys, "_is_gil_enabled", lambda: True)())
+
+
 class TemporaryAudit:
     """Explicit development handle. OFF unless the new flag is exactly '1'.
 
@@ -222,9 +233,7 @@ class TemporaryAudit:
         import tempfile
         if type(temporary_directory) is not tempfile.TemporaryDirectory:
             raise ValueError("only caller-owned TemporaryDirectory storage is supported")
-        if (platform.python_implementation() != "CPython" or sys.platform != "linux"
-                or sys.version != "3.11.2 (main, Apr  8 2026, 01:58:00) [GCC 12.2.0]"
-                or not getattr(sys, "_is_gil_enabled", lambda: True)()):
+        if not _runtime_supported():
             return
         self._root = Path(temporary_directory.name)
         from edgefactory.ml_consensus_storage import TemporarySpool
