@@ -45,19 +45,19 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 10,
-      "be_raw": 60,
-      "be_usable": 57,
+      "be_matched": 11,
+      "be_raw": 69,
+      "be_usable": 66,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 6,
+      "join_matched_rows": 8,
       "join_miss_counts": {
-        "fixture_key_miss": 41,
-        "no_pick_for_fixture": 10
+        "fixture_key_miss": 46,
+        "no_pick_for_fixture": 12
       },
       "reason": null,
       "status": "cache_only"
@@ -168,32 +168,27 @@
       "status": "empty"
     },
     "pinnapi_odds": {
-      "auth_attempts": [
-        {
-          "auth": "header",
-          "status": 200
-        }
-      ],
-      "auth_mechanism": "header",
+      "auth_attempts": [],
+      "auth_mechanism": null,
       "blocker": null,
       "can_fetch_today": true,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "event_type": "prematch",
-      "freshness_h": 0.0,
-      "join_matched_rows": 59,
+      "freshness_h": null,
+      "join_matched_rows": 54,
       "join_miss_counts": {
-        "fixture_key_miss": 38578,
-        "no_pick_for_fixture": 356
+        "fixture_key_miss": 38640,
+        "no_pick_for_fixture": 299
       },
-      "pa_matched": 25,
-      "pa_raw": 2323,
+      "pa_matched": 21,
+      "pa_raw": 38993,
       "pa_scored": 38993,
       "reason": null,
       "response_shape_summary": null,
       "sport_id": 1,
-      "status": "ok",
+      "status": "cache_only",
       "zero_row_kind": null
     },
     "predictiq": {
@@ -247,7 +242,7 @@
         "board_rows": 0,
         "board_team_count": 0,
         "board_team_names": {},
-        "card_fixture_count": 66,
+        "card_fixture_count": 68,
         "league_filter_requested": false,
         "requested_limit": 1000
       },
@@ -305,14 +300,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 142,
+      "join_matched_rows": 159,
       "join_miss_counts": {
-        "fixture_key_miss": 1175,
-        "no_pick_for_fixture": 292
+        "fixture_key_miss": 1301,
+        "no_pick_for_fixture": 310
       },
       "oa_matched": 12,
-      "oa_raw": 1609,
-      "oa_usable": 1609,
+      "oa_raw": 1770,
+      "oa_usable": 1770,
       "reason": null,
       "status": "cache_only"
     },
