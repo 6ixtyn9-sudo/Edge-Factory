@@ -17,7 +17,7 @@ on:
         required: false
         type: string
       extra_args:
-        description: 'Optional extra CLI args (e.g. --endpoint head-to-head --match-id 12345)'
+        description: 'Optional extra CLI args appended verbatim (e.g. --verify-keys or --endpoint h2h --match-id 12345)'
         required: false
         type: string
 permissions:
@@ -29,8 +29,8 @@ jobs:
     env:
       PINNAPI_KEY: ${{ inputs.probe == 'pinnapi' && secrets.PINNAPI_KEY || '' }}
       RAPIDAPI_KEY: ${{ (inputs.probe == 'betminer' || inputs.probe == 'boggio') && secrets.RAPIDAPI_KEY || '' }}
+      RAPIDAPI_KEYS: ${{ (inputs.probe == 'betminer' || inputs.probe == 'boggio') && secrets.RAPIDAPI_KEYS || '' }}
       SHARPAPI_KEY: ${{ inputs.probe == 'sharpapi' && secrets.SHARPAPI_KEY || '' }}
-      SHARPAPI_SPORT: soccer
       ODDSPAPI_API_KEYS: ${{ inputs.probe == 'oddspapi_markets' && secrets.ODDSPAPI_API_KEYS || '' }}
       BZZOIRO_TOKEN: ${{ inputs.probe == 'bzzoiro_odds' && secrets.BZZOIRO_TOKEN || '' }}
     steps:
