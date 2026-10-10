@@ -116,3 +116,22 @@ Candidate-page rows below are **prior 2026-10-02 scouting from `docs/operator/CA
 ### BetExplorer bounded page read and use constraint (2026-10-10)
 
 A read of `https://www.betexplorer.com/robots.txt` showed disallows for `/bookmaker/`, `/redirect/` and several query patterns (including `?year=`, `?page=`, `?match=`), but did not prohibit the plain match path. One cooperative read of `https://www.betexplorer.com/football/usa/nwsl-women/boston-legacy-angel-city/nT46QDpf/` rendered the archived match with score, H2H, standings and two bookmaker 1X2 rows; the page also displayed an age-verification prompt. This is a **single historical page**, not evidence of upcoming-slate join coverage, price timing, historical availability, or stable machine-readable extraction. The site terms (`https://www.betexplorer.com/terms-of-service.php`, article 2) specify personal, non-commercial use and restrict substantial database extraction absent agreement. Treat robots accessibility as distinct from permission to reuse; hold automated collection pending licensing review.
+
+### Operator rulings, 2026-10-10 (verbatim)
+
+```text
+1. Personal-use judgment: bounded own-card BetExplorer snapshots ARE authorized
+   personal use. The collection hold is LIFTED within these exact bounds:
+   fixtures already on the daily card only, <=1 fetch/fixture/day, >=5s spacing,
+   off-peak, explicit user-agent, bounded retention, no tab-crawling beyond
+   results/odds + the agreed match-page scope, no retries-hammering on failure.
+2. Bootstrap constraint: this project is bootstrapped. No paid plans, no priced
+   licenses. If Livesport replies with a price, the answer is a polite decline
+   and we remain at personal scale. Log any reply (date + gist) in
+   docs/operator/BETEXPLORER-LICENSING.md.
+3. Until/unless Livesport replies otherwise, the wire operates strictly within
+   the bounds described in the outreach email — no more.
+
+```
+
+These operator bounds supersede the earlier collection hold for own-card snapshots only. The opt-in Phase-2 wire is described in `BETEXPLORER-LICENSING.md`; it is not activated and its observations are not model features. Await forwarded SharpAPI, OddsPAPI and Betminer receipts before altering their verdicts.
