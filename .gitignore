@@ -142,17 +142,12 @@ dist/
 !localdata/phase5_reconciliation/
 !localdata/phase5_reconciliation/**
 !localdata/scored_candidate_shadow_*.jsonl
-# Raw shadow capture ledgers (raw evidence + rejection reasons). Negated
-# family-by-family, EXACTLY the seven writers scripts/clean_localdata.py
-# prunes on the 30-day telemetry clock: a future unknown *_shadow_20*.json
-# writer must not start being tracked with no prune pattern behind it.
-!localdata/betbetter_shadow_20*.json
-!localdata/betminer_shadow_20*.json
-!localdata/boggio_shadow_20*.json
-!localdata/futbolpronosticos_shadow_20*.json
-!localdata/pinnapi_odds_shadow_20*.json
-!localdata/sharpapi_odds_shadow_20*.json
-!localdata/sportytrader_odds_shadow_20*.json
+# Raw shadow capture ledgers are DELIBERATELY NOT COMMITTED. The 30-day
+# prune in scripts/clean_localdata.py bounds the RUNNER WORKING DIRECTORY
+# only — it does not bound Git history: committing daily shadow payloads
+# (e.g. BetBetter's ~1,371 raw rows/day) would grow repository history
+# indefinitely. Revisit only with an explicit size policy (compact
+# diagnostic receipts, not raw payloads).
 
 # ML-fade research capture ledger + checkpoint state + checkpoint REPORTS
 # (bot-owned, tracked so certification-independent evidence survives cache
