@@ -1,24 +1,42 @@
 {
-  "added": 0,
-  "attempted": 0,
-  "attempted_fixtures": [],
+  "added": 89,
+  "attempted": 1,
+  "attempted_fixtures": [
+    {
+      "away": "Bournemouth",
+      "date": "2026-10-10",
+      "home": "Chelsea",
+      "kickoff": "10-10, 15:00",
+      "league": "England Premier League"
+    }
+  ],
   "candidate_fixtures": 68,
-  "captured_at": "2026-10-10T12:05:39+00:00",
+  "captured_at": "2026-10-10T13:29:23+00:00",
   "date": "2026-10-10",
-  "due_reasons": {},
-  "errors": [],
-  "fixtures_with_rows": 0,
-  "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 7
+  "due_reasons": {
+    "close_at": 1
   },
-  "quoted_fixtures": [],
-  "rows": 0,
+  "errors": [],
+  "fixtures_with_rows": 1,
+  "kickoff_mismatch_detail": {
+    "kickoff_mismatch_display_fallback_overridden": 10
+  },
+  "quoted_fixtures": [
+    {
+      "away": "Bournemouth",
+      "date": "2026-10-10",
+      "home": "Chelsea",
+      "kickoff": "2026-10-10T14:00:00Z",
+      "league": "England Premier League"
+    }
+  ],
+  "rows": 89,
   "schema": 1,
   "skip_reasons": {
     "kickoff_already_passed": 3,
-    "kickoff_mismatch": 7,
-    "priced": 25,
-    "priced_close_window_not_open": 7,
+    "kickoff_mismatch": 10,
+    "priced": 22,
+    "priced_close_window_not_open": 9,
     "retry_cooldown": 33
   },
   "skipped": [
@@ -33,13 +51,14 @@
     "Spezia|Gubbio (retry cooldown (6h after failed attempt))",
     "Inter|Parma (priced)",
     "Jerv|FK Arendal (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Maritimo|FC Porto: pick legacy display says 16:00Z, captured rows say 17:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Maritimo|FC Porto (priced, close window not open)",
     "Buriram United|Rayong FC (retry cooldown (6h after failed attempt))",
     "RAAL La Louvi\u00e8re|Club Brugge KV (priced)",
     "Vasco da Gama|Remo (priced)",
     "Borac Cacak|Jedinstvo Ub (retry cooldown (6h after failed attempt))",
     "Cetatea Suceava|Dumbravita (retry cooldown (6h after failed attempt))",
     "Stockport County FC|Barnsley (priced)",
-    "Maritimo|FC Porto (priced)",
     "WARN kickoff-mismatch Real Madrid|Villarreal: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Real Madrid|Villarreal (priced, close window not open)",
     "Paris Saint Germain|Le Mans (priced)",
@@ -48,19 +67,21 @@
     "WARN kickoff-mismatch Monaco|Toulouse: pick legacy display says 17:45Z, captured rows say 18:45Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Monaco|Toulouse (priced, close window not open)",
     "FCSB|Otelul Galati (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Lille|Le Havre: pick legacy display says 14:15Z, captured rows say 15:15Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Lille|Le Havre (priced, close window not open)",
     "Grazer AK|Red Bull Salzburg (retry cooldown (6h after failed attempt))",
     "RB Leipzig|Eintracht Frankfurt (priced)",
     "WARN kickoff-mismatch Manchester United|Tottenham: pick legacy display says 15:30Z, captured rows say 16:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Manchester United|Tottenham (priced, close window not open)",
     "Rosenborg|Sandefjord (priced)",
+    "WARN kickoff-mismatch FC Lugano|FC Luzern: pick legacy display says 15:00Z, captured rows say 16:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "FC Lugano|FC Luzern (priced, close window not open)",
     "Leixoes|FC Porto B (retry cooldown (6h after failed attempt))",
     "Ansbach|N\u00fcrnberg II (kickoff already passed)",
     "Raith Rovers|Queens Park (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Alaves|Atletico Madrid: pick legacy display says 13:15Z, captured rows say 14:15Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Alaves|Atletico Madrid (priced, close window not open)",
-    "Lille|Le Havre (priced)",
     "Mjondalen|Pors Grenland (retry cooldown (6h after failed attempt))",
-    "FC Lugano|FC Luzern (priced)",
     "Al-Tadhamon|Al-Qadsia (retry cooldown (6h after failed attempt))",
     "Penarol|Progreso (retry cooldown (6h after failed attempt))",
     "Bari|Giugliano (retry cooldown (6h after failed attempt))",
@@ -95,10 +116,10 @@
     "SC Paderborn 07|VfB Stuttgart (priced)",
     "Clyde|Dumbarton (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Chelsea|Bournemouth: pick legacy display says 13:00Z, captured rows say 14:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Chelsea|Bournemouth (priced, close window not open)",
     "FC Tokyo|Urawa (priced)"
   ],
   "source": "theoddsapi",
-  "status": "not_due",
+  "status": "ok",
+  "unmatched": [],
   "unmatched_reasons": {}
 }
