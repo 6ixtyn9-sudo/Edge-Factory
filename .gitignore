@@ -142,6 +142,9 @@ dist/
 !localdata/phase5_reconciliation/
 !localdata/phase5_reconciliation/**
 !localdata/scored_candidate_shadow_*.jsonl
+# Raw shadow capture ledgers (raw evidence + rejection reasons; pruned on the
+# same 30-day telemetry clock by scripts/clean_localdata.py).
+!localdata/*_shadow_20*.json
 
 # ML-fade research capture ledger + checkpoint state + checkpoint REPORTS
 # (bot-owned, tracked so certification-independent evidence survives cache
