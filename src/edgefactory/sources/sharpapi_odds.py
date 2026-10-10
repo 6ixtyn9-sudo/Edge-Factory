@@ -709,8 +709,19 @@ def capture_day(day: str, *, localdata: Path | None = None,
             for field in SHARPAPI_BOARD_FIELDS:
                 stats[field] = None if field.startswith("card_") else captured_stats.get(field)
             stats["card_fixture_count"] = len(card_keys)
+            # Honesty repairs (2026-10-10): a cache hit used to claim
+            # sa_matched=len(held) and schema_match=True — facts no cache hit
+            # can know (the join had not run, and the shape assertion was the
+            # original capture's, not an observation about this call). Report
+            # what is actually known: the ledger holds N rows, when it was
+            # written, and nothing about today's schema or matches.
             stats.update(status="cache_only", cache_hits=1, sa_raw=len(held),
-                         sa_matched=len(held), schema_match=True)
+                         sa_matched=None, schema_match=captured_stats.get("schema_match"),
+                         reason="cache_rows_pending_join")
+            stats["cache_captured_at"] = (
+                (ledger.get("provenance") or {}).get("captured_at")
+                or max((str(r.get("captured_at") or "") for r in held
+                        if isinstance(r, dict)), default="") or None)
             return held, _set_diag(stats)
     except (OSError, ValueError, TypeError): pass
     try:
@@ -759,5 +770,5 @@ def capture_day(day: str, *, localdata: Path | None = None,
 
 def persist_shadow(day: str, rows: list[dict[str, Any]], stats: dict[str, Any], *, localdata: Path | None = None) -> Path:
     root = localdata or LOCALDATA; root.mkdir(parents=True, exist_ok=True); path = _path(day, root)
-    payload = {"schema":1,"source":SOURCE,"date":day,"role":"named-book price source (never a vote; same-day freshness required)","provenance":{"api":BASE + endpoint(),"host":API_HOST,"hunt":"docs/operator/SOURCE-HUNT-2026-10.md#sharpapi"},"stats":stats,"rows":rows}
+    payload = {"schema":1,"source":SOURCE,"date":day,"role":"named-book price source (never a vote; same-day freshness required)","provenance":{"api":BASE + endpoint(),"host":API_HOST,"hunt":"docs/operator/SOURCE-HUNT-2026-10.md#sharpapi","captured_at":datetime.now(timezone.utc).isoformat(timespec="seconds")},"stats":stats,"rows":rows}
     tmp = path.with_suffix(path.suffix + ".tmp"); tmp.write_text(json.dumps(payload, indent=2, sort_keys=True)); tmp.replace(path); return path

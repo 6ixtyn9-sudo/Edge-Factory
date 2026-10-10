@@ -735,3 +735,99 @@ def test_large_diagnostic_sample_does_not_break_valid_price_parse(monkeypatch):
     assert stats['status'] == 'ok'
     assert stats['sample_event']['sample_truncated'] is True
     assert 'x' * 100 not in json.dumps(stats['sample_event'])
+
+
+# --- documented prematch schema (pinnapi.com/docs, verified 2026-10-10) ----
+#
+# Run 38027657811 fetched 3,418 prematch events with teams and discarded every
+# one because only a `markets`/`odds` container was read. The vendor's own
+# documentation shows the prematch prices live in the periods tree
+# (periods.num_0.money_line / .totals). The fixture below is that documented
+# shape (values from the docs example).
+
+
+def _documented_payload():
+    with open("tests/fixtures/pinnapi_prematch_documented.json") as fh:
+        return json.load(fh)
+
+
+def test_documented_periods_shape_parses_1x2_and_totals():
+    rows, ok = pa.parse_snapshot(_documented_payload(), day="2026-05-04")
+    assert ok is True
+    assert rows, "documented periods shape must yield rows"
+    by_event = {}
+    for row in rows:
+        by_event.setdefault(row["event_id"], []).append(row)
+
+    ml = by_event[1629513753]
+    one_x_two = {r["selection"]: r["odds"] for r in ml if r["market"] == "1x2"}
+    assert one_x_two == {"home": 2.45, "draw": 3.3, "away": 2.9}
+    totals = {(r["market"], r["selection"], r["line"]): r["odds"]
+              for r in ml if r["market"].startswith("ou")}
+    assert totals[("ou_2.5", "over", "2.5")] == 1.9
+    assert totals[("ou_2.5", "under", "2.5")] == 1.98
+    # documented provenance fields survive into the ledger row
+    sample = ml[0]
+    assert sample["book"] == "Pinnacle" and sample["bookmaker"] == "Pinnacle"
+    assert sample["kickoff"] == "2026-05-04T16:30:00Z"
+    assert sample["league"] == "Italy - Serie A"
+    assert sample["raw_market"] in {"money_line", "totals"}
+
+
+def test_money_line_only_event_yields_1x2_without_totals_drops():
+    rows, ok = pa.parse_snapshot(_documented_payload(), day="2026-05-04")
+    assert ok
+    ev = [r for r in rows if r["event_id"] == 1629513999]
+    assert {r["market"] for r in ev} == {"1x2"}
+    assert len(ev) == 3
+
+
+def test_event_without_periods_is_counted_not_silent():
+    rows, ok = pa.parse_snapshot(_documented_payload(), day="2026-05-04")
+    assert ok  # teams parse; the shape overall is recognised
+    assert not [r for r in rows if r["event_id"] == 1629514000]
+    # A periods-less event carries no price container at all: no silent row
+    # and no drop reason (the container is absent, not unreadable) — it is
+    # the zero-row classification's job to name that case.
+    assert pa.canonicalization_drop_reasons() == {}
+
+
+def test_spreads_and_team_totals_are_never_converted():
+    # Recognised provider vocabulary this pipeline deliberately does not
+    # price: no row may carry a spread/handicap or team-total market.
+    rows, _ = pa.parse_snapshot(_documented_payload(), day="2026-05-04")
+    assert all(not str(r["raw_market"]).startswith(("spread", "team_total")) for r in rows)
+    assert all(r["market"] in {"1x2"} or r["market"].startswith("ou") for r in rows)
+
+
+def test_zero_row_classification_reads_periods():
+    payload = _documented_payload()
+    # Only the periods-less event: teams parse, nothing to price.
+    payload["events"] = [payload["events"][2]]
+    rows, ok = pa.parse_snapshot(payload, day="2026-05-04")
+    assert ok and not rows
+    assert pa.classify_zero_rows(payload, rows, ok) == "events_without_market_payload"
+    shape = pa._payload_shape(payload)
+    assert shape["events_with_periods"] == 0
+    assert shape["periods_type"] == "NoneType"
+
+
+def test_periods_present_but_prices_discarded_is_no_usable_rows():
+    # money_line values unparseable: containers exist, every price discarded —
+    # the kind must be no_usable_rows with a named drop reason.
+    payload = _documented_payload()
+    ev = payload["events"][0]
+    ev["periods"]["num_0"]["money_line"] = {"home": None, "draw": None, "away": None}
+    ev["periods"]["num_0"].pop("totals")
+    payload["events"] = [ev]
+    rows, ok = pa.parse_snapshot(payload, day="2026-05-04")
+    assert ok and not rows
+    assert pa.classify_zero_rows(payload, rows, ok) == "no_usable_rows"
+    assert pa.canonicalization_drop_reasons().get("money_line_without_prices") == 1
+
+
+def test_shape_probe_records_periods_evidence():
+    shape = pa._payload_shape(_documented_payload())
+    assert shape["events_with_periods"] == 2
+    assert "num_0" in shape["period_keys"]
+    assert sorted(shape["money_line_keys"]) == ["away", "draw", "home"]

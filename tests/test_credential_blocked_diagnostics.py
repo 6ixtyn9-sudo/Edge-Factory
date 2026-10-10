@@ -31,7 +31,15 @@ def test_authenticated_but_empty_is_distinct_from_unavailable():
     # Malformed/unreachable stays a different, non-empty classification.
     assert sh.zero_row_reason("unavailable", [404]) == "http_404_unavailable"
     assert sh.zero_row_reason("quota", [429]) == "http_429_quota"
-    assert sh.zero_row_reason("not_run", []) == "credential_absent_not_run"
+    # A stage that did not run may only claim "credential absent" when the
+    # caller can see the credential is genuinely unconfigured (2026-10-10:
+    # a not_run stage was rendered credential_absent_not_run next to a
+    # working capture through the same configured token).
+    assert sh.zero_row_reason("not_run", []) == "stage_not_run"
+    assert sh.zero_row_reason("not_run", [], credential_configured=True) \
+        == "stage_not_run_credential_present"
+    assert sh.zero_row_reason("not_run", [], credential_configured=False) \
+        == "credential_absent_not_run"
 
 
 def test_blocked_status_token_carries_the_reason(tmp_path, monkeypatch):

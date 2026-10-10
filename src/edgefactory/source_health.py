@@ -480,6 +480,8 @@ def zero_row_reason(
     status: object,
     http_statuses: object = (),
     quota_hint: object = None,
+    *,
+    credential_configured: object = None,
 ) -> str | None:
     """Deterministic zero-row reason token for a credential-blocked source.
 
@@ -503,6 +505,13 @@ def zero_row_reason(
       zero-row 200 and a genuinely empty slate are the same transport
       outcome and opposite faults.
     * ``http_429_quota`` / ``quota_exhausted`` - rate/plan limit.
+    * ``not_run`` family - ``credential_absent_not_run`` is returned ONLY
+      when the caller can see the credential is genuinely unconfigured
+      (``credential_configured=False``). With the credential present, or
+      with no knowledge either way, the stage simply did not run: that used
+      to be reported as ``credential_absent_not_run``, which asserted an
+      unverified cause (run 38027657811 showed it next to a working
+      Bzzoiro prediction capture through the same configured token).
     """
     state = str(status or "").strip().lower()
     codes = [int(code) for code in (http_statuses or []) if str(code).isdigit()]
@@ -521,7 +530,11 @@ def zero_row_reason(
     if state == "empty":
         return REASON_HTTP_200_ZERO_ROWS if (200 in codes or not codes) else "empty_response"
     if state == "not_run":
-        return "credential_absent_not_run"
+        if credential_configured is True:
+            return "stage_not_run_credential_present"
+        if credential_configured is False:
+            return "credential_absent_not_run"
+        return "stage_not_run"
     if state == "unavailable":
         for code in codes:
             if code >= 400:
