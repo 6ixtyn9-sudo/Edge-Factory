@@ -979,3 +979,50 @@ def test_legacy_cache_has_unknown_board_not_empty_board(monkeypatch, tmp_path):
     from edgefactory.source_health import _card_token
     assert _card_token({'board_summary': stats}) == '/cardunknownof1'
     assert _card_token({'board_summary': {'card_fixture_count': 1, 'card_fixtures_on_board': 0}}) == '/card0of1'
+
+
+# --- cache-hit honesty (2026-10-10) ----------------------------------------
+#
+# Run 38027657811: the Oct-10 receipt showed 2 cached rows with
+# sa_matched asserting they had matched, while the donor join reported zero
+# matches for the same day. A cache hit knows nothing about matches or
+# schema; it must say what it knows: N rows held, written when.
+
+
+def test_cache_hit_does_not_claim_matches_or_schema(monkeypatch, tmp_path):
+    held = [{'home': 'Alpha', 'away': 'Beta', 'market': '1x2', 'selection': 'home',
+             'odds': 2.1, 'captured_at': '2026-10-09T22:14:02+00:00'}]
+    original = {'rows': held, 'stats': {'board_rows': 100, 'schema_match': True},
+                'provenance': {'captured_at': '2026-10-09T22:14:30+00:00'}}
+    (tmp_path / 'sharpapi_odds_shadow_2026-10-09.json').write_text(json.dumps(original))
+    monkeypatch.setattr(sa, 'get_json',
+                        lambda *a, **k: pytest.fail('cache hit must not fetch'))
+    rows, stats = sa.capture_day('2026-10-09', card=[('Alpha', 'Beta')], team_key=str.lower)
+    assert rows == held
+    assert stats['status'] == 'cache_only'
+    assert stats['sa_raw'] == 2 or stats['sa_raw'] == len(held)
+    # The claims a bare cache hit cannot make:
+    assert stats['sa_matched'] is None
+    assert stats['schema_match'] is True  # inherited from the capture receipt
+    assert stats['reason'] == 'cache_rows_pending_join'
+    # The staleness facts it CAN state:
+    assert stats['cache_captured_at'] == '2026-10-09T22:14:30+00:00'
+
+
+def test_cache_hit_without_any_stamp_reports_unknown_age(monkeypatch, tmp_path):
+    held = [{'home': 'Alpha', 'away': 'Beta', 'odds': 2.1}]
+    (tmp_path / 'sharpapi_odds_shadow_2026-10-09.json').write_text({'rows': held} and json.dumps({'rows': held}))
+    rows, stats = sa.capture_day('2026-10-09')
+    assert stats['cache_captured_at'] is None
+    assert stats['sa_matched'] is None and stats['schema_match'] is None
+
+
+def test_persisted_ledger_stamps_its_capture_time(tmp_path, monkeypatch):
+    monkeypatch.setenv('SHARPAPI_SPORT', 'soccer')
+    monkeypatch.setattr(sa, 'get_json', lambda *a, **k: (
+        200, {"data": [_flat()]}, {}))
+    rows, _stats = sa.capture_day('2026-10-06')
+    sa.persist_shadow('2026-10-06', rows, _stats, localdata=tmp_path)
+    ledger = json.loads((tmp_path / 'sharpapi_odds_shadow_2026-10-06.json').read_text())
+    stamp = ledger['provenance']['captured_at']
+    assert stamp and stamp.startswith('20')
