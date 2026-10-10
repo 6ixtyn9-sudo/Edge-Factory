@@ -159,6 +159,36 @@ def test_source_team_key_same_club_pairs_from_redteam():
         assert _pt_source_team_key()(a) == _pt_source_team_key()(b), (a, b)
 
 
+def test_pinnapi_probe_2026_10_10_run4_aliases_and_negative_control():
+    # Both sides and senior/reserve league were printed for each fixture.
+    key = _pt_source_team_key()
+    pairs = (
+        ("Tottenham", "Tottenham Hotspur"),
+        ("Rizespor", "Caykur Rizespor"),
+        ("SC Paderborn 07", "Paderborn"),
+        ("VfB Stuttgart", "Stuttgart"),
+        ("Leeds", "Leeds United"),
+        ("1899 Hoffenheim", "Hoffenheim"),
+        ("Scunthorpe", "Scunthorpe United"),
+        ("Zhetysu", "Zhetysu Taldykorgan"),
+        ("Kortrijk", "KV Kortrijk"),
+        ("Red Bull Salzburg", "Salzburg"),
+        ("Al-Tadhamon", "Al Tadamon"),
+        ("Al-Qadsia", "Qadsia SC"),
+        ("York", "York City"),
+        ("Northampton", "Northampton Town"),
+        ("Club Brugge KV", "Club Brugge"),
+        ("Vilzing", "DJK Vilzing"),
+        ("FC Porto B", "Porto II"),
+        ("Dunajska Streda", "DAC 1904"),
+    )
+    for a, b in pairs:
+        assert key(a) == key(b), (a, b)
+    assert key("Kristianstad FC") != key("Kristiansund")
+    assert key("FC Porto B") != key("FC Porto")
+    assert key("Club Brugge KV U23") != key("Club Brugge KV")
+
+
 def test_source_team_key_disambiguates_squads():
     key = _pt_source_team_key()
     distinct_pairs = [
