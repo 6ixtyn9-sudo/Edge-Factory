@@ -1,0 +1,94 @@
+{
+  "experiment": "beyond_consensus_baselines",
+  "generated_at_utc": "2026-10-10T07:33:48Z",
+  "command": "PYTHONPATH=src python3 scripts/research_beyond_consensus.py",
+  "git_head": "28e42147",
+  "python": "3.11.2",
+  "numpy": "2.4.6",
+  "pandas": "3.0.6",
+  "reproducibility": "Deterministic given the three committed input archives: the dataset_content_sha256 below is the hash of the UNCOMPRESSED csv bytes; the .gz container itself is not byte-reproducible.",
+  "inputs": {
+    "forebet": {
+      "path": "localdata/forebet.csv.gz",
+      "sha256": "aba40d48421e64f8f346bce032ff306da9753932c593fbcd341ad7e5b023b9aa",
+      "rows": 327895,
+      "date_min": "2024-01-01",
+      "date_max": "2026-06-12"
+    },
+    "zulubet": {
+      "path": "localdata/zulubet.csv.gz",
+      "sha256": "f76f46ca3a1f4706a15efe061b816e5d70531e2d8e396a7dab25b19439b2c364",
+      "rows": 67216,
+      "date_min": "2024-01-01",
+      "date_max": "2026-06-12"
+    },
+    "statarea": {
+      "path": "localdata/statarea.csv.gz",
+      "sha256": "891b3aec437485a50cd10c5e9b9899bd0e101d76a93a72bde6f354acafa7c3bd",
+      "rows": 489399,
+      "date_min": "2017-01-01",
+      "date_max": "2026-06-12"
+    }
+  },
+  "outputs": {
+    "dataset": {
+      "path": "research/beyond_consensus_dataset.csv.gz",
+      "file_sha256": "cb2bed848189cf82d9d899623a9930538a6b9aa81eebe9c0013a09dbaabb4763",
+      "content_sha256": "5180870ac780e474fbeae3e989b967c160d74771f91c338f5ab6dc162de33079",
+      "rows": 16286
+    },
+    "results_json_sha256": "4a35f91943827f45c61e32684f55592d473fbbc4232079a275747e7214dc6557",
+    "report_md_sha256": "c8adf4fa2d21af25d4061ddc2d6cf0c5f0d8eb678ed37858c5cbf4a402242d9e"
+  },
+  "splits": {
+    "train": {
+      "window": [
+        null,
+        "2025-05-31"
+      ],
+      "fixtures": 10539
+    },
+    "validation": {
+      "window": [
+        "2025-05-31",
+        "2025-12-31"
+      ],
+      "fixtures": 3224
+    },
+    "test": {
+      "window": [
+        "2025-12-31",
+        "2026-06-12"
+      ],
+      "fixtures": 2523
+    }
+  },
+  "schema": {
+    "date": "fixture date YYYY-MM-DD (kickoff day, source-published)",
+    "key": "date|source_team_key(home)|source_team_key(away) — fixture identity",
+    "league_fold": "canonical_league_key(league) — identity-folded competition",
+    "home": "forebet home name (raw)",
+    "away": "forebet away name (raw)",
+    "outcome": "target: home/draw/away from FINAL score (post-match, never a feature)",
+    "fb_home/fb_draw/fb_away": "forebet 1x2 probabilities (0-1, prematch)",
+    "fb_odd1/fb_oddx/fb_odd2": "forebet provider-average 1x2 decimal odds (NOT executable)",
+    "goalsavg": "forebet prematch expected total goals (provider estimate)",
+    "pred_hs/pred_gs": "forebet prematch PREDICTED score (context only, excluded from features)",
+    "fb_p_over/fb_p_under": "forebet prematch over/under 2.5 probabilities",
+    "fb_p_gg/fb_p_ng": "forebet prematch both-teams-score / not probabilities",
+    "zb_home/zb_draw/zb_away": "zulubet 1x2 probabilities (0-1, prematch)",
+    "sa_home/sa_draw/sa_away": "statarea 1x2 probabilities (0-1, prematch)",
+    "avg_home/avg_draw/avg_away": "trio mean probabilities",
+    "avg_p_maxsel": "max of trio means (context)",
+    "std_p": "max over outcomes of per-outcome std across the trio (disagreement)",
+    "draw_spread": "max-min draw probability across the trio",
+    "strength_balance": "avg_home - avg_away",
+    "mkt_home/mkt_draw/mkt_away": "devigged forebet odds (market baseline; provider-average)",
+    "mkt_overround": "book sum of 1/odds before devig (context)",
+    "mkt_valid": "True where all three odds > 1.01 (market baseline coverage)",
+    "consensus_pick": "argmax trio mean (context, outcome-conditioned hit in consensus_hit)",
+    "consensus_hit": "consensus_pick == outcome (context only)",
+    "fb_extras_missing": "count of missing forebet extras before imputation (0-5)",
+    "lg_draw_rate/lg_home_rate": "league outcome rates, TRAIN rows only, EB shrinkage k=50"
+  }
+}
