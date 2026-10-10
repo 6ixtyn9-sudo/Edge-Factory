@@ -202,7 +202,9 @@ league-by-league catalogue review; the 3 no-event are **COVERAGE-GAP**.
 
 | source | state | classification |
 | --- | --- | --- |
-| forebet/zulubet/statarea | archives end 2026-06-12 — **structural dark** (FEATURE-AUDIT §1) | COVERAGE-GAP (source went historical-only) |
+| forebet | **Live lane retired, with source-specific evidence**: `localdata/source_health_2026-10-10.json` and `-10-11.json` both show `can_fetch_today=false`, blocker "historical-only post-2026-06-12; no production pricing or weighting". The committed deep-history dataset ends 2026-06-12 because the provider stopped publishing. | COVERAGE-GAP (provider retirement evidenced) |
+| zulubet | **LIVE**: 2026-10-10 health row `can_fetch_today=true, can_vote=true, can_price=true, freshness_h=0.0`; 2026-10-11 `can_fetch_today=true` with day-level blocker "fetch returned zero rows" (ordinary variance, not retirement). The committed deep-history **dataset** ends 2026-06-12 — that is a dataset cutoff of the archived csv.gz, NOT evidence the provider retired. | no unresolved defect (day-level empty slate on 10-11 is operational variance) |
+| statarea | **LIVE**: both 2026-10-10 and 2026-10-11 rows `can_fetch_today=true, can_vote=true, freshness_h=0.0`. Same distinction as zulubet: dataset cutoff ≠ provider retirement. | no unresolved defect |
 | sportytrader | Cloudflare-challenge walled; training_only lane with 9 disallowed prefixes honoured | ACCESS (bot wall) |
 | betclan / scoutingstats | can_vote=true (health rows) | OK |
 | vitibet / predictz / bettingclosed / prosoccer / windrawwin / freesupertips / afootballreport / soccervista | scheduled in capture_daily JOBS; soccervista "not reliably fetched/observed today" (health row 2026-10-10) | operational variance, no demonstrated defect |
@@ -234,7 +236,41 @@ league-by-league catalogue review; the 3 no-event are **COVERAGE-GAP**.
 4. **SharpAPI empty unfiltered board + no retained non-empty sample** — needs
    one quota-permitted fresh capture to settle board-vs-naming; not taken
    without approval.
-5. **Forebet/Zulubet/Statarea historical-only since 2026-06-12** — source
-   business change; live fb_p/zb_p/sa_p substitutes (stored fallback means)
-   are a degraded mode, not a fix.
+5. **Forebet live lane retired** (health-blocker "historical-only
+   post-2026-06-12" on 10-10 AND 10-11). **Corrected per October logs: this
+   is NOT true of zulubet and statarea** — both capture live (freshness 0.0,
+   can_vote true; zulubet also can_price on 10-10). An earlier draft of this
+   table and of the research audit labelled all three "historical-only";
+   that over-generalized a dataset cutoff of the committed archives into a
+   provider claim. What ends 2026-06-12 is the committed deep-history
+   dataset; the research trio panel cannot be extended into the live era
+   only because **forebet** is gone.
 6. **sportytrader Cloudflare wall** — training_only lane; no bypass attempted.
+
+## 5. Research benchmark status (retained record; files not in the production diff)
+
+The offline beyond-consensus work (feature audit + baseline experiment) was
+removed from this branch's final production diff by scope-reduction commit
+and is retained in Git history at:
+
+* `752d3ee564f4fb5cbdfd1c9c9b4fdcf8e5525cda` — experiment + feature audit
+* `a4de41754a96dcf351413b3bfcc8068b2bc9adb7` — corrections (goalsavg
+  provenance retraction, strict/exploratory split, freeze record, paired
+  deltas)
+* `0749848cea1e4822562ed817eade46f90caebec8` — PR preparation record
+  (superseded by the production-only PR opened from this branch)
+
+**Availability caveat that travels with that record** (corrects the audit's
+earlier framing): the archived source probabilities and provider-average
+odds carry **no verifiable pre-kickoff capture timestamps** — none of the
+three archives has an ingest-time column, the forebet `kickoff` field is the
+scheduled kickoff (not a capture time), and `goalsavg`/extras share a
+day-page fetch with the final scores. Decision-time availability is
+therefore **unverified**. The experiment must be read as a **historical
+benchmark** of feature groups against in-archive baselines — **not a
+point-in-time validated backtest** — and its negative result (nothing beats
+the devigged provider-average market baseline; consensus adds nothing beyond
+market) is about this benchmark only. Note also the record's "all three
+sources historical-only" framing was corrected above: only forebet has
+retirement evidence; zulubet/statarea capture live, so a future zb/sa-only
+live-era study is not excluded by source availability.
