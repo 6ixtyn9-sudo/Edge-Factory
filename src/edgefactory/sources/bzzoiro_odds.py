@@ -58,6 +58,10 @@ def _reset_diagnostics() -> None:
         "requests": 0,
         "ok_responses": 0,
         "max_event_comparison": MAX_EVENT_COMPARISON,
+        # Lets the receipt distinguish "the stage never ran" from "the
+        # credential is genuinely absent". A bare not_run used to be rendered
+        # credential_absent_not_run, which asserted an unverified cause.
+        "credential_configured": bool(TOKEN),
     }
 
 
