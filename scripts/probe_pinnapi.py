@@ -37,6 +37,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
+from datetime import datetime, timezone
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
@@ -45,14 +47,18 @@ from typing import Any
 def coverage_report(data: Any, slate: list[dict[str, Any]]) -> dict[str, Any]:
     """Join probe events to a supplied slate without persisting anything."""
     events = _events(data)
-    priced = {(source_team_key(e.get("home")), source_team_key(e.get("away")))
-              for e in events if isinstance(e, dict) and (e.get("markets") or e.get("odds"))}
-    matched = []; unmatched = []
+    listed = {(source_team_key(adapter._team_name(e.get("home") or e.get("team_home"))), source_team_key(adapter._team_name(e.get("away") or e.get("team_away"))))
+              for e in events if isinstance(e, dict)}
+    priced = {(source_team_key(adapter._team_name(e.get("home") or e.get("team_home"))), source_team_key(adapter._team_name(e.get("away") or e.get("team_away"))))
+              for e in events if isinstance(e, dict) and (e.get("markets") or e.get("odds") or e.get("periods"))}
+    matched = []; unmatched = []; listed_matches = 0
     for row in slate:
         key = (source_team_key(row.get("home")), source_team_key(row.get("away")))
+        listed_matches += key in listed
         (matched if key in priced else unmatched).append(f"{row.get('home')} v {row.get('away')}")
     total = len(slate)
-    return {"slate": total, "matched": len(matched), "coverage_pct": round(100*len(matched)/total, 1) if total else 0.0, "unmatched_examples": unmatched[:5]}
+    return {"slate": total, "matched": len(matched), "listed_matches": listed_matches,
+            "coverage_pct": round(100*len(matched)/total, 1) if total else 0.0, "unmatched_examples": unmatched[:5]}
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
@@ -101,7 +107,7 @@ def _request(url: str, key: str, timeout: int, extra_headers: dict[str, str] | N
     req = urllib.request.Request(url, headers=headers)
     try:
         with urllib.request.urlopen(req, timeout=timeout) as resp:
-            body = resp.read(4_000_000).decode("utf-8", "replace")
+            body = resp.read(24_000_000).decode("utf-8", "replace")
             rate_headers = {
                 str(k): str(v) for k, v in resp.headers.items()
                 if "ratelimit" in str(k).lower() or str(k).lower() == "retry-after"
@@ -157,7 +163,7 @@ def _summarize(data: Any) -> dict[str, Any]:
         for event in events:
             if not isinstance(event, dict):
                 continue
-            league = event.get("league") or event.get("tournament") or event.get("competition")
+            league = event.get("league") or event.get("league_name") or event.get("tournament") or event.get("competition")
             if isinstance(league, dict):
                 league = league.get("name")
             if league:
@@ -168,6 +174,31 @@ def _summarize(data: Any) -> dict[str, Any]:
         out["market_histogram_top"] = dict(histogram.most_common(10))
         out["leagues_top"] = dict(leagues.most_common(15))
     return out
+
+
+def _period_sample(data: Any) -> dict[str, Any]:
+    """Small, value-whitelisted price diagnostic; never echo arbitrary provider text."""
+    for event in _events(data):
+        if not isinstance(event, dict) or not isinstance(event.get("periods"), dict) or not event["periods"]:
+            continue
+        periods = event["periods"]
+        main = periods.get("num_0")
+        sample: dict[str, Any] = {"period_keys": list(map(str, list(periods)[:5]))}
+        if isinstance(main, dict):
+            sample["num_0_keys"] = list(map(str, list(main)[:8]))
+            for name, sides in (("money_line", ("home", "draw", "away")), ("totals", ())):
+                item = main.get(name)
+                if isinstance(item, dict):
+                    sample[name + "_keys"] = list(map(str, list(item)[:5]))
+                    if sides:
+                        sample[name + "_prices"] = {side: item[side] for side in sides
+                                                    if isinstance(item.get(side), (int, float))}
+                    else:
+                        first = next((v for v in item.values() if isinstance(v, dict)), {})
+                        sample["first_total_prices"] = {side: first[side] for side in ("over", "under")
+                                                        if isinstance(first.get(side), (int, float))}
+        return sample
+    return {"periods": "no nonempty periods found"}
 
 
 def _format(name: str, url: str, result: dict[str, Any], secret: str = "") -> str:
@@ -198,18 +229,14 @@ def main() -> int:
 
     key = os.environ.get(KEY_ENV, "").strip()
     print(f"{KEY_ENV} present: {'yes' if key else 'no'}")
-    print(f"Base={BASE}  auth={args.auth}  (free tier: 100 REST requests/day; this probe costs 2, 3 if the 401 fallback fires)")
+    print(f"Base={BASE}  auth={args.auth}  (free tier: 100 REST requests/day; this probe costs 1, 2 if the 401 fallback fires)")
     if not key:
         print("No key: nothing to probe. The shadow adapter stays inert (status=not_run) without a key.")
         return 0
 
     results: list[tuple[str, str, dict[str, Any]]] = []
 
-    health_url = f"{BASE}/kit/v1/health"
-    result = _request(health_url, key, args.timeout)
-    result["summary"] = _summarize(result.get("data"))
-    results.append(("health (connectivity/auth check)", health_url, result))
-
+    # /kit/v1/health returned 404 with valid authentication; markets is the auth check.
     # Same request the adapter builds - URL and auth both come from it, so
     # the probe cannot drift away from the shipped contract.
     order = {"auto": ("header", "query"), "header": ("header",), "query": ("query",)}[args.auth]
@@ -238,9 +265,40 @@ def main() -> int:
         slate = slate_payload if isinstance(slate_payload, list) else slate_payload.get("rows", [])
     except (OSError, ValueError, TypeError):
         slate = []
+    events = _events(markets_result.get("data"))
+    slate_dates = {str(row.get("date")) for row in slate if row.get("date")}
+    on_slate_date = sum(str(e.get("start_at") or e.get("starts_at") or e.get("starts") or e.get("kickoff") or "")[:10] in slate_dates
+                        for e in events if isinstance(e, dict))
+    print(f"events_on_slate_date_utc_prefix={on_slate_date} slate_dates={sorted(slate_dates)[:3]}")
+    print(f"period_sample={_period_sample(markets_result.get('data'))}")
     cov = coverage_report(markets_result.get("data"), slate)
-    print(f"coverage_pct={cov['coverage_pct']} slate={cov['slate']} matched={cov['matched']}")
+    print(f"coverage_pct={cov['coverage_pct']} slate={cov['slate']} matched={cov['matched']} listed_matches={cov['listed_matches']}")
     print(f"unmatched_examples={cov['unmatched_examples']}")
+    # Suggestions are diagnostics, NOT aliases: print both sides, date and league.
+    listed_keys = {(source_team_key(adapter._team_name(e.get("home") or e.get("team_home"))),
+                    source_team_key(adapter._team_name(e.get("away") or e.get("team_away"))))
+                   for e in events if isinstance(e, dict)}
+    for row in slate:
+        home, away = str(row.get("home") or ""), str(row.get("away") or "")
+        if (source_team_key(home), source_team_key(away)) in listed_keys:
+            continue
+        try:
+            day = datetime.fromisoformat(str(row.get("kickoff"))).astimezone(timezone.utc).date().isoformat()
+        except (ValueError, TypeError):
+            day = str(row.get("date") or "")
+        suggestions = []
+        for event in events:
+            if not isinstance(event, dict) or str(event.get("starts") or event.get("start_at") or "")[:10] != day:
+                continue
+            eh = adapter._team_name(event.get("home") or event.get("team_home")) or ""
+            ea = adapter._team_name(event.get("away") or event.get("team_away")) or ""
+            score = (SequenceMatcher(None, source_team_key(home), source_team_key(eh)).ratio()
+                     + SequenceMatcher(None, source_team_key(away), source_team_key(ea)).ratio())
+            if score >= 0.85:  # Diagnostic shortlist only; never used by identity joins.
+                suggestions.append((score, eh[:65], ea[:65], str(event.get("league_name") or event.get("league") or "")[:65]))
+        suggestions.sort(reverse=True)
+        print(f"unmatched={home[:65]} v {away[:65]} utc_day={day} league={str(row.get('league') or '')[:65]} "
+              f"candidates_same_utc_day={[(h, a, league) for _, h, a, league in suggestions[:3]]}")
     print("projection: shared-fixture target >=30; coverage is diagnostic only and is not persisted.")
     print("ACCEPTANCE 1 - AUTH:",
           f"{mechanism_used} auth works (adapter records this as auth_mechanism)"

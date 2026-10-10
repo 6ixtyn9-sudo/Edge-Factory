@@ -139,6 +139,42 @@ TEAM_KEY_RAW_ALIASES: tuple[tuple[str, str], ...] = (
     ("Czechia", "Czech Republic"),
     ("Ivory Coast", "Côte d'Ivoire"),
     ("Cabo Verde", "Cape Verde"),
+    # pinnapi probe 2026-10-10 run#4: Manchester United–Tottenham, England Premier League
+    ("Tottenham", "Tottenham Hotspur"),
+    # pinnapi probe 2026-10-10 run#4: Rizespor–Fenerbahçe, Turkey Super League (not U19)
+    ("Rizespor", "Caykur Rizespor"),
+    # pinnapi probe 2026-10-10 run#4: SC Paderborn 07–VfB Stuttgart, Germany Bundesliga
+    ("SC Paderborn 07", "Paderborn"),
+    # pinnapi probe 2026-10-10 run#4: SC Paderborn 07–VfB Stuttgart, Germany Bundesliga
+    ("VfB Stuttgart", "Stuttgart"),
+    # pinnapi probe 2026-10-10 run#4: Arsenal–Leeds, England Premier League
+    ("Leeds", "Leeds United"),
+    # pinnapi probe 2026-10-10 run#4: 1899 Hoffenheim–Hamburger SV, Germany Bundesliga
+    ("1899 Hoffenheim", "Hoffenheim"),
+    # pinnapi probe 2026-10-10 run#4: AFC Fylde–Scunthorpe, England National League
+    ("Scunthorpe", "Scunthorpe United"),
+    # pinnapi probe 2026-10-10 run#4: Kairat Almaty–Zhetysu, Kazakhstan Premier League
+    ("Zhetysu", "Zhetysu Taldykorgan"),
+    # pinnapi probe 2026-10-10 run#4: Genk–Kortrijk, Belgium Pro League
+    ("Kortrijk", "KV Kortrijk"),
+    # pinnapi probe 2026-10-10 run#4: Grazer AK–Red Bull Salzburg, Austria Bundesliga
+    ("Red Bull Salzburg", "Salzburg"),
+    # pinnapi probe 2026-10-10 run#4: Al-Tadhamon–Al-Qadsia, Kuwait Premier League
+    ("Al-Tadhamon", "Al Tadamon"),
+    # pinnapi probe 2026-10-10 run#4: Al-Tadhamon–Al-Qadsia, Kuwait Premier League
+    ("Al-Qadsia", "Qadsia SC"),
+    # pinnapi probe 2026-10-10 run#4: York–Northampton, England League 2
+    ("York", "York City"),
+    # pinnapi probe 2026-10-10 run#4: York–Northampton, England League 2
+    ("Northampton", "Northampton Town"),
+    # pinnapi probe 2026-10-10 run#4: RAAL La Louvière–Club Brugge KV, Belgium Pro League (senior only)
+    ("Club Brugge KV", "Club Brugge"),
+    # pinnapi probe 2026-10-10 run#4: Vilzing–Buchbach, Germany Regionalliga Bavaria
+    ("Vilzing", "DJK Vilzing"),
+    # pinnapi probe 2026-10-10 run#4: Leixoes–FC Porto B, Portugal Liga 2 (reserve only)
+    ("FC Porto B", "Porto II"),
+    # pinnapi probe 2026-10-10 run#4: Zemplin Michalovce–Dunajska Streda, Slovakia Super Liga
+    ("Dunajska Streda", "DAC 1904"),
 )
 
 def _curated_override_pairs() -> tuple[tuple[str, str], ...]:
