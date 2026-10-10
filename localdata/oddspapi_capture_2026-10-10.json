@@ -2,17 +2,26 @@
   "added": 0,
   "attempted": 0,
   "attempted_fixtures": [],
-  "captured_at": "2026-10-10T07:07:21+00:00",
+  "captured_at": "2026-10-10T08:40:18+00:00",
   "date": "2026-10-10",
   "errors": [
-    "capture: HTTPError: HTTP Error 429: Too Many Requests"
+    "fetch_fixtures: HTTP 429 (quota); capture stopped"
   ],
   "fixtures": 0,
+  "http_status": 429,
   "keys": 1,
   "markets": {},
   "matched": 0,
   "quoted_fixtures": [],
+  "rate_limit": {
+    "http_status": 429,
+    "rate_limit_limit": null,
+    "rate_limit_remaining": null,
+    "rate_limit_reset": null,
+    "retry_after_s": null
+  },
   "rows": 0,
   "schema": 1,
-  "source": "oddspapi_odds"
+  "source": "oddspapi_odds",
+  "status": "quota"
 }

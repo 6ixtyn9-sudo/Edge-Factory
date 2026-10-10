@@ -96,14 +96,14 @@
       "status": "unavailable"
     },
     "bzzoiro": {
-      "blocker": "bzz status=auth; quota_hint=auth_or_quota",
+      "blocker": "no bzzoiro prediction rows for today in the warehouse; the prediction capture stage outcome is not carried into this build - the odds-lane status below is a different access",
       "can_fetch_today": false,
       "can_price": false,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "reason": "http_403_plan_or_auth",
-      "status": "auth"
+      "reason": null,
+      "status": null
     },
     "bzzoiro_odds": {
       "blocker": "bzz status=auth; quota_hint=auth_or_quota",
@@ -156,7 +156,7 @@
       "op_matched": 0,
       "op_raw": 0,
       "op_usable": 0,
-      "reason": null,
+      "reason": "http_200_zero_rows_after_parse",
       "status": "empty"
     },
     "pinnapi_odds": {
@@ -167,28 +167,26 @@
         }
       ],
       "auth_mechanism": "header",
-      "blocker": "pinnapi: HTTP 200 for sport_id=1 event_type=prematch produced zero usable rows [events_without_market_payload] - fixtures returned but none carries a nonempty markets/odds container recognized by this adapter; inspect the retained event sample and endpoint contract, not selection aliases or credentials. Prices elsewhere in the payload are not ruled out; observed payload shape recorded - do not extend the parser without a captured sample",
+      "blocker": null,
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "event_type": "prematch",
-      "freshness_h": null,
-      "pa_matched": 0,
-      "pa_raw": 0,
-      "pa_scored": 0,
-      "reason": "http_200_zero_rows_after_parse",
-      "response_shape_summary": {
-        "envelope_found": true,
-        "event_count": 3566,
-        "events_key": "events",
-        "events_with_markets": 0,
-        "events_with_teams": 3566,
-        "markets_type": "NoneType"
+      "freshness_h": 0.0,
+      "join_matched_rows": 43,
+      "join_miss_counts": {
+        "fixture_key_miss": 38635,
+        "no_pick_for_fixture": 346
       },
+      "pa_matched": 22,
+      "pa_raw": 2324,
+      "pa_scored": 39024,
+      "reason": null,
+      "response_shape_summary": null,
       "sport_id": 1,
-      "status": "empty",
-      "zero_row_kind": "events_without_market_payload"
+      "status": "ok",
+      "zero_row_kind": null
     },
     "predictiq": {
       "blocker": "convergent echo-candidate: zero voice credit permanently, never corroborates (SOURCE-HUNT-2026-10 section 5.5)",
@@ -254,7 +252,7 @@
       "join_miss_counts": {
         "fixture_key_miss": 13
       },
-      "reason": null,
+      "reason": "cache_rows_pending_join",
       "sa_matched": 0,
       "sa_raw": 13,
       "sa_scored": 13,
