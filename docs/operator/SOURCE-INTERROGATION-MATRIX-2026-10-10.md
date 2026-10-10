@@ -19,6 +19,37 @@ Join verdict notation: **J** = fixture date/time + league + `source_team_key(hom
 | OddsPAPI | Fixture exposes book market IDs, active state, price, American/fractional equivalents, `limit`, `mainLine`, bookmakerChangedAt/changedAt; localdata market census exists. **2026-10-10 13:13Z dispatch failed on import** (`curl_cffi` missing via `edgefactory.sources.__init__`), before an API call; no live market verdict. | Price age, bookmaker limits, activity and extra catalog markets: ID/J; historical capture only where snapshots exist. Probe defaults up to six fixtures over two days, potentially multiple calls. | Inspect existing census offline; do not repeat the broken runner unchanged. |
 | The Odds API | Daily config h2h/totals and 480-credit safety threshold (500 monthly ceiling); no dedicated permitted probe script. | Alternate market lines/books and price changes: J; history requires already-stored snapshots or paid historical endpoint, incremental credits unknown. | Inspect existing cached headers/credit ledger **without API requests** before any decision. |
 
+### Operator budget override and Phase 2 boundary
+
+> OPERATOR OVERRIDE (standing): keys are regenerable; depletion in service of a working system is authorized. Keep per-family ledgers — attribution stays mandatory. Phase 2 (capture wires) is now in scope: minimal additive adapter code, existing src/edgefactory/sources/ patterns, branch + PR, no merge.
+
+Depletion is permitted; **unattributed** depletion is not. This note distinguishes documented shapes, live probes, and capture implementations. No model activation, gate change, or workflow merge is implied.
+
+### Boggio Match-Stats zero-call inventory (provider documentation)
+
+Documentation: https://developer.boggio-analytics.com/getting-started/api-endpoints (retrieved 2026-10-10). All endpoints use `X-RapidAPI-Key`, fixture `id` from `/api/v2/predictions?iso_date=YYYY-MM-DD&market=classic` or `/api/v2/get-list-of-fixture-ids`; `iso_date` begins at midnight London time. The following are **documented example schemas, NOT live entitlement verification**:
+
+| GET path (`:id` integer fixture ID) | Documented fields / feature opportunity | Backfill and cost verdict |
+|---|---|---|
+| `/api/v2/home-league-stats/:id` | home team, played/won/draw/lost, points, scored/conceded overall and home split; home venue form and goal strength | **Upcoming fixtures only**, no past-results access; 1 request per match. |
+| `/api/v2/away-league-stats/:id` | same overall and away split (points, scored/conceded, matches, W/D/L); away-form differential | Upcoming only; 1 request per match. |
+| `/api/v2/head-to-head/:id` | overall meetings, goals/overs/BTTS, per-team clean sheets/WDL/first-half and bookie-chance averages; dated encounters with HT/FT score | Historical encounters inside a live upcoming-fixture response, not evidence of historical endpoint backfill; 1 request per match; filter encounter dates strictly before kickoff. |
+| `/api/v2/home-last-10/:id` | results strings, scored/conceded by half and home/away, clean sheets, overs/BTTS; encounter opponents, result, date, first-half goals, played_away, quoted odds | Up to ten prior matches, fewer when unavailable; 1 request per match; verify previous-match cutoff and odds timing. |
+| `/api/v2/away-last-10/:id` | same form/stats for away team, prior encounter results/odds | Up to ten; 1 request per match. |
+| `/api/v2/predictions/:id` | up to eight markets, `available_markets`, `prediction_per_market` prediction/status/odds/probabilities, strengths, stadium capacity/field dimensions/distance | 1 request per match, separately from five stats-family calls; pre-match publication timestamp is essential. |
+
+The default Boggio probe remains unchanged; optional `--endpoint`/`--match-id` in the same existing script print a **single-call scrubbed log ledger**, key names/counts only. The current workflow shim **cannot pass those flags** (its `date` input is ignored); no stats-family calls have been made. An operator-approved web-editor workflow input/step change or another existing authorized invocation path is needed before clicking. Limit tonight to ≤10 actual stats-family calls, one per distinct endpoint first, and record each run/status/ID/remaining quota. Do not mistake the published 2019 sample fixture ID for an upcoming valid match.
+
+### Phase 2 shadow capture wire plan — decision menu, not activation
+
+| Source | Smallest proposed shadow lane | Cost / point-in-time guard |
+|---|---|---|
+| Bzzoiro predictions | Extend existing `sources/bzzoiro.py` projection with observed DNB/corners **after** nested schema is verified; retain original prediction/event ID and capture timestamp in daily `localdata` shadow ledger. | Same paginated predictions request (incremental calls 0), daily all-upcoming snapshot, reject values first observed after kickoff. |
+| Bzzoiro events | Bounded event-list snapshots for coach/referee/venue and season/round/stage IDs, joined by verified event ID then J. | At least one paginated event request per day/window, not guaranteed by odds fallback; keep updates/time before kickoff, no guessed person metadata. |
+| Bzzoiro Polymarket | Optional event-ID capped snapshots of goalscorers/exact scores/liquidity in existing `bzzoiro_odds` family; do not treat as a bookmaker vote. | One additional request per event, 2/3 sample availability only; explicit separate cap/ledger before routine capture, no paid comparison. |
+| Boggio stats | Extend `sources/boggio.py` shadow snapshot to one approved upcoming match ID per call per chosen stats family; league/home-away form and H2H are separate features, not new votes. | Up to five stats calls per fixture plus detail if approved; family-level budget ledger and reset date; no historical query guarantee, timestamp snapshots before kickoff. |
+| Pinnapi prices | Existing `sources/pinnapi_odds.py` already handles `periods.num_0` money-line/totals; verify live ledger rows, date/league/squad joins and price timestamps rather than duplicating parser code. | One board request per capture (+401 fallback), forward-only snapshots; 62/68 name/container overlap ≠ 62 priced fixtures. No activation. |
+
 ### Bzzoiro zero-call field-gap decision menu (2026-10-10)
 
 Existing `sources/bzzoiro.py:_row` already persists `event_id`, home/away, league, kickoff and `created_at`, plus xG, 1X2, totals, BTTS, likely score, recommendations and model metadata. It calls paginated `/api/v2/predictions/?limit=50` **once per daily capture** and retains all upcoming fixtures (~7 weeks). `capture_daily.py` separately calls `bzzoiro_odds` for today and tomorrow. These facts determine *incremental* rather than total costs below. All historical ML use requires the original `created_at`/capture time before kickoff; a current event record cannot be treated as a historical pre-match snapshot.
