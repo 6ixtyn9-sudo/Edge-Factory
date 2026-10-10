@@ -22,6 +22,7 @@ as a fallback so slips frozen before the field existed still settle.
 from __future__ import annotations
 
 import sys
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -40,6 +41,20 @@ def _sandbox_state(tmp_path, monkeypatch):
     monkeypatch.setattr(at, "STATE_FILE", tmp_path / "state.json")
     monkeypatch.setattr(at, "LOCALDATA", tmp_path)
     monkeypatch.setattr(at, "BUCKET_PNL_FILE", tmp_path / "bucket.json")
+
+
+@pytest.fixture(autouse=True)
+def settlement_clock(monkeypatch):
+    """Identity controls run before expiry, independently of the CI date."""
+    class Clock(datetime):
+        instant = datetime(2026, 10, 6, 12, tzinfo=at.TZ)
+
+        @classmethod
+        def now(cls, tz=None):
+            return cls.instant.astimezone(tz) if tz else cls.instant.replace(tzinfo=None)
+
+    monkeypatch.setattr(at, "datetime", Clock)
+    return Clock
 
 
 # --- the rename is resolved -----------------------------------------------
@@ -187,7 +202,47 @@ def test_an_unrelated_fixture_is_not_grabbed_by_the_alias(monkeypatch):
               "legs": [{"match": "Italy vs Türkiye", "pick": "HOME",
                         "prob": 0.64, "odds": 1.47, "result": None}]}]}]}
     archives = [_archive_row("Italy", "Turkmenistan", "home")]
-    monkeypatch.setattr(at, "pick_result", lambda p, s: "win")
+    def reject_unrelated_grading(*args):
+        pytest.fail("unrelated archive fixture reached pick_result")
+
+    monkeypatch.setattr(at, "pick_result", reject_unrelated_grading)
 
     at.settle_open_slips(st, {}, archives=archives, entries_by_date={})
     assert st["open_slips"], "a different fixture was matched by mistake"
+    assert st["open_slips"][0]["accas"][0]["results"] == [None]
+    assert st["bank"] == 100.0
+    assert st["history"] == []
+
+
+@pytest.mark.parametrize("offset,expires", [
+    (timedelta(days=5) - timedelta(seconds=1), False),
+    (timedelta(days=5), True),
+    (timedelta(days=6), True),
+])
+def test_unmatched_fixture_expiry_is_not_an_alias_match(
+        monkeypatch, settlement_clock, offset, expires):
+    """Missing evidence ages to void, never to the unrelated donor's win."""
+    settlement_clock.instant = datetime(2026, 10, 5, tzinfo=at.TZ) + offset
+    st = {"bank": 100.0, "base_pct": 10.0, "cycle_base": 10.0,
+          "history": [], "events": [],
+          "open_slips": [{"date": "2026-10-05", "staked_pct": 10.0, "accas": [{
+              "odds": 1.47, "stake_pct": 10.0, "results": [None], "won": None,
+              "legs": [{"match": "Italy vs Türkiye", "pick": "HOME",
+                        "prob": 0.64, "odds": 1.47, "result": None}]}]}]}
+
+    def reject_unrelated_grading(*args):
+        pytest.fail("unrelated archive fixture reached pick_result")
+
+    monkeypatch.setattr(at, "pick_result", reject_unrelated_grading)
+    lines = at.settle_open_slips(st, {}, archives=[
+        _archive_row("Italy", "Turkmenistan", "home")], entries_by_date={})
+    if expires:
+        assert st["open_slips"] == []
+        acca = st["history"][-1]["accas"][0]
+        assert any("legs=['void']" in line for line in lines)
+        assert st["history"][-1]["returned_pct"] == 10.0
+        assert acca["odds"] == 1.0
+    else:
+        assert st["open_slips"][0]["accas"][0]["results"] == [None]
+        assert st["history"] == []
+    assert st["bank"] == 100.0
