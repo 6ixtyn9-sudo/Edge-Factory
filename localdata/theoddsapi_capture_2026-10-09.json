@@ -1,120 +1,57 @@
 {
   "added": 0,
-  "attempted": 8,
-  "attempted_fixtures": [
-    {
-      "away": "Finn Harps",
-      "date": "2026-10-09",
-      "home": "Cork City",
-      "kickoff": "13:45",
-      "league": "Rep. Of Ireland,First Division"
-    },
-    {
-      "away": "Omonia Nicosia",
-      "date": "2026-10-09",
-      "home": "Karmiotissa",
-      "kickoff": "09-10, 17:00",
-      "league": "Cyprus 1. Division"
-    },
-    {
-      "away": "Slavia Praha",
-      "date": "2026-10-09",
-      "home": "Zlin",
-      "kickoff": "2026-10-09T18:00:00+02:00",
-      "league": "Czech Republic: Czech Liga"
-    },
-    {
-      "away": "Sligo Rovers",
-      "date": "2026-10-09",
-      "home": "Shelbourne",
-      "kickoff": "13:45",
-      "league": "Rep. Of Ireland,Premier Division"
-    },
-    {
-      "away": "FC Voluntari",
-      "date": "2026-10-09",
-      "home": "Corvinul Hunedoara",
-      "kickoff": "10:00",
-      "league": "Romania,Superliga"
-    },
-    {
-      "away": "Treaty United",
-      "date": "2026-10-09",
-      "home": "Athlone Town",
-      "kickoff": "13:45",
-      "league": "Rep. Of Ireland,First Division"
-    },
-    {
-      "away": "Hvidovre",
-      "date": "2026-10-09",
-      "home": "Vejle",
-      "kickoff": "11:00",
-      "league": "Denmark,1. Division"
-    },
-    {
-      "away": "Barry Town",
-      "date": "2026-10-09",
-      "home": "Penybont FC",
-      "kickoff": "13:45",
-      "league": "Wales,Premier League"
-    }
-  ],
-  "candidate_fixtures": 21,
-  "captured_at": "2026-10-09T04:16:48+00:00",
+  "attempted": 0,
+  "attempted_fixtures": [],
+  "candidate_fixtures": 24,
+  "captured_at": "2026-10-09T19:19:54+00:00",
   "date": "2026-10-09",
-  "due_reasons": {
-    "first_at": 8
-  },
+  "due_reasons": {},
   "errors": [],
   "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
-    "kickoff_mismatch_display_fallback_overridden": 2
+    "kickoff_mismatch_display_fallback_overridden": 5
   },
   "quoted_fixtures": [],
   "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 3,
-    "kickoff_mismatch": 2,
-    "priced": 6,
-    "retry_cooldown": 4
+    "kickoff_already_passed": 11,
+    "kickoff_mismatch": 5,
+    "priced": 3,
+    "retry_cooldown": 10
   },
   "skipped": [
+    "Cork City|Finn Harps (retry cooldown (6h after failed attempt))",
+    "Karmiotissa|Omonia Nicosia (kickoff already passed)",
     "Brothers Union|Fortis (retry cooldown (6h after failed attempt))",
-    "PSV Eindhoven|Heerenveen (priced)",
-    "Almere City FC|FC Eindhoven (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch PSV Eindhoven|Heerenveen: pick legacy display says 17:00Z, captured rows say 18:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "PSV Eindhoven|Heerenveen (kickoff already passed)",
+    "Zlin|Slavia Praha (kickoff already passed)",
+    "Almere City FC|FC Eindhoven (kickoff already passed)",
     "Malkiya|Al Riffa (retry cooldown (6h after failed attempt))",
     "Qingdao Hainiu|Beijing Guoan (priced)",
-    "Borussia Dortmund|Werder Bremen (priced)",
+    "Real Cundinamarca|Real Santander (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Borussia Dortmund|Werder Bremen: pick legacy display says 17:30Z, captured rows say 18:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Borussia Dortmund|Werder Bremen (kickoff already passed)",
     "WARN kickoff-mismatch Fluminense|Coritiba: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Fluminense|Coritiba (kickoff already passed)",
-    "Galatasaray|Kasimpasa (priced)",
+    "Shelbourne|Sligo Rovers (retry cooldown (6h after failed attempt))",
+    "N\u00f5mme United II|FCI Levadia II (kickoff already passed)",
+    "Corvinul Hunedoara|FC Voluntari (retry cooldown (6h after failed attempt))",
     "FC Nordsjaelland|Odense (priced)",
+    "Veres Rivne|Shakhtar Donetsk (kickoff already passed)",
+    "Athlone Town|Treaty United (retry cooldown (6h after failed attempt))",
     "Montpellier|Grenoble Foot 38 (priced)",
     "Arsenal Dzerzhinsk|Dinamo Brest (retry cooldown (6h after failed attempt))",
+    "WARN kickoff-mismatch Galatasaray|Kas\u0131mpa\u015fa: pick legacy display says 16:00Z, captured rows say 17:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Galatasaray|Kas\u0131mpa\u015fa (kickoff already passed)",
+    "Vejle|Hvidovre (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Palmeiras|Bahia: pick legacy display says 23:30Z, captured rows say 00:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Palmeiras|Bahia (kickoff already passed)",
+    "Penybont FC|Barry Town (retry cooldown (6h after failed attempt))",
     "Antigua GFC|Municipal (kickoff already passed)"
   ],
   "source": "theoddsapi",
-  "status": "empty",
-  "unmatched": [
-    "Cork City vs Finn Harps (league not covered: Rep. Of Ireland,First Division)",
-    "Karmiotissa vs Omonia Nicosia (league not covered: Cyprus 1. Division)",
-    "Zlin vs Slavia Praha (league not covered: Czech Republic: Czech Liga)",
-    "Shelbourne vs Sligo Rovers (league not covered: Rep. Of Ireland,Premier Division)",
-    "Corvinul Hunedoara vs FC Voluntari (league not covered: Romania,Superliga)",
-    "Athlone Town vs Treaty United (league not covered: Rep. Of Ireland,First Division)",
-    "Vejle vs Hvidovre (league not covered: Denmark,1. Division)",
-    "Penybont FC vs Barry Town (league not covered: Wales,Premier League)"
-  ],
-  "unmatched_reasons": {
-    "league not covered: Cyprus 1. Division": 1,
-    "league not covered: Czech Republic: Czech Liga": 1,
-    "league not covered: Denmark,1. Division": 1,
-    "league not covered: Rep. Of Ireland,First Division": 2,
-    "league not covered: Rep. Of Ireland,Premier Division": 1,
-    "league not covered: Romania,Superliga": 1,
-    "league not covered: Wales,Premier League": 1
-  }
+  "status": "not_due",
+  "unmatched_reasons": {}
 }
