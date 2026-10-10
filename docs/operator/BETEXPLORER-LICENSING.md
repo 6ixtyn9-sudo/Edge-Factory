@@ -24,4 +24,16 @@ Only the match page is fetched. No bookmaker redirects, tab traversal, query pag
 
 ## Livesport replies
 
-None recorded.
+None recorded. Checked 2026-10-10 by the continuation session: no reply had been
+forwarded by the operator, so the wire stays built-but-unrun and NO new BetExplorer
+collection happened. Standing state to remember:
+
+- The bounded own-card snapshot spec above is already authorized and already
+  implemented (`scripts/capture_betexplorer_match.py`, `sources/betexplorer_match_snapshot.py`);
+  directive (e) of the operator ruling holds any FURTHER collection until the
+  operator says go after Livesport.
+- If a reply arrives: log date + gist verbatim below. A quoted price => polite
+  decline per the bootstrap constraint (no paid tiers, no priced licenses) and we
+  stay at personal-use bounds. Actual permission granted => bring the proposed
+  own-card snapshot extension to the operator BEFORE building anything.
+- Nothing in this session dispatched, fetched, or retried a BetExplorer page.
