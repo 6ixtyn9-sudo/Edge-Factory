@@ -42,6 +42,7 @@ from typing import Any
 
 from edgefactory import rapidapi_diagnostics as _rapidapi
 from edgefactory.odds_normalization import canonical_market_selection
+from edgefactory.source_health import SHARPAPI_BOARD_FIELDS
 
 SOURCE = "sharpapi_odds"
 BASE = "https://api.sharpapi.io"
@@ -697,8 +698,20 @@ def capture_day(day: str, *, localdata: Path | None = None,
     stats["card_fixture_count"] = len(card_keys)
     if not _key(): stats["blocker"] = f"{KEY_ENV} not set; shadow capture skipped"; return [], _set_diag(stats)
     try:
-        held = json.loads(_path(day, localdata).read_text()).get("rows", [])
-        if held: stats.update(status="cache_only", cache_hits=1, sa_raw=len(held), sa_matched=len(held), schema_match=True); return held, _set_diag(stats)
+        ledger = json.loads(_path(day, localdata).read_text())
+        held = ledger.get("rows", [])
+        if held:
+            # The normalized cache is not the upstream board. Preserve its
+            # recorded board receipt; absent receipts are unknown, not zero.
+            # Never reuse an earlier card's overlap for today's caller/card.
+            captured_stats = ledger.get("stats")
+            captured_stats = captured_stats if isinstance(captured_stats, dict) else {}
+            for field in SHARPAPI_BOARD_FIELDS:
+                stats[field] = None if field.startswith("card_") else captured_stats.get(field)
+            stats["card_fixture_count"] = len(card_keys)
+            stats.update(status="cache_only", cache_hits=1, sa_raw=len(held),
+                         sa_matched=len(held), schema_match=True)
+            return held, _set_diag(stats)
     except (OSError, ValueError, TypeError): pass
     try:
         code, payload, headers = get_json(odds_url(day)); stats["requests"] = 1; stats["http_statuses"] = [code]; stats["rate_limit_headers"] = headers

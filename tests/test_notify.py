@@ -312,3 +312,45 @@ def test_shadow_kill_switch_blocks_dispatch(monkeypatch, tmp_path):
     assert rc == 0
     assert not any("Shadow Slate" in m for m in sent)
     assert not (ld / f"shadow_sent_ledger_{date}.json").exists()
+
+
+def test_quarantined_clean_picks_never_sent_or_deduped(monkeypatch, tmp_path):
+    date = '2099-03-05'
+    good = _mk(date, 'Eligible vs Opponent', notify.BUCKET_CLEAN)
+    good.update(price_push_eligible=True, price_evidence='NAMED_BOOKMAKER_PRICE')
+    bad = [dict(_mk(date, name, notify.BUCKET_CLEAN),
+                price_push_eligible=False, price_evidence='SOURCE_FALLBACK',
+                price_quarantine_reason='source_fallback_not_execution_eligible')
+           for name in ['Ansbach vs Nürnberg II', 'Vilzing vs Buchbach']]
+    fp = _picks_file(tmp_path, [good] + bad)
+    before = fp.read_bytes()
+    sent = _wire_e2e(monkeypatch, tmp_path, True)
+    assert _run(monkeypatch, '--picks', str(fp), '--date', date, '--force') == 0
+    assert sent and all(p['match'] not in '\n'.join(sent) for p in bad)
+    ledger = tmp_path / 'localdata' / f'sent_ledger_{date}.json'
+    assert set(json.loads(ledger.read_text())) == _keys(good, date=date)
+    assert fp.read_bytes() == before
+
+
+def test_telegram_large_shadow_partial_failure_keeps_ledger_unwritten(monkeypatch, tmp_path):
+    from edgefactory.notifier import telegram_text_units
+    date = '2099-03-05'
+    rows = [_mk(date, f'Team {i} vs Opponent {i}', 'SKIPPED_VETO') for i in range(100)]
+    fp = _picks_file(tmp_path, rows)
+    calls = _wire_e2e(monkeypatch, tmp_path, lambda msg: len(calls) != 2)
+    monkeypatch.setenv('TELEGRAM_BOT_TOKEN', 'offline-test')
+    monkeypatch.setenv('TELEGRAM_CHAT_ID', 'offline-test')
+    assert _run(monkeypatch, '--picks', str(fp), '--date', date) != 0
+    assert len(calls) == 2
+    assert all(telegram_text_units(c) <= 3800 for c in calls)
+    assert not (tmp_path / 'localdata' / f'shadow_sent_ledger_{date}.json').exists()
+    # Successful recovery must send every card before committing dedupe.
+    calls.clear()
+    monkeypatch.setattr(notify, '_dispatch_message',
+                        lambda **kw: calls.append(kw['message_text']) or True)
+    assert _run(monkeypatch, '--picks', str(fp), '--date', date) == 0
+    assert len(calls) > 2
+    for row in rows:
+        assert '\n'.join(calls).count(row['match']) == 1
+    ledger = tmp_path / 'localdata' / f'shadow_sent_ledger_{date}.json'
+    assert len(json.loads(ledger.read_text())) == len(rows)

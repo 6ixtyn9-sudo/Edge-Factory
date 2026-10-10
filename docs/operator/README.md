@@ -18,6 +18,30 @@ Latest reviewed decisions:
 snapshot-bound evidence, corrected archive/price/provenance claims, the
 test-first Authorization repair, and explicit unresolved/deployment boundaries.
 
+**Decision-record identity:** this repository's record is the **Edge-Factory
+transferred/re-reviewed D1–D5 record**, not the other workspace's independently
+written document with the same filename. Its existing §1 states that distinction.
+Use [the pinned repository record](https://github.com/6ixtyn9-sudo/Edge-Factory/blob/01f580c1f41b78883d7c807e354ba76903bbd026/docs/operator/DECISIONS-2026-10-09.md)
+as the local D1–D5 reference for this proposal, within its explicit scope and
+operator-approval limits. Filename equality is not document identity.
+
+The latest supplied follow-up identifies a separate, local-only record at
+`e489654` and reports a D1–D7 scheme. That record has not been retrieved or
+verified here; it is **not an interchangeable repository authority**. No D6/D7
+numbering or dispositions are adopted by this handbook: this repository records
+the Authorization work under D4 and Kladno under D5. References across workspaces
+must include repository/workspace, full revision when available, path, section
+and preferably content hash. Importing or reconciling the external record needs
+the actual document and an explicit decision; no source text is silently replaced.
+
+Open review proposal (documentation only; not approved for production):
+[`PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md`](PROPOSAL-ML-CONSENSUS-PROVENANCE-2026-10-09.md)
+revision 4 incorporates [two independent reviews](REVIEW-SYNTHESIS-ML-CONSENSUS-2026-10-09.md)
+and requires sidecar-only provenance, distinct signal identities, and parity
+verification before any live routing, electorate, or representative change.
+The [acceptance checklist](CHECKLIST-ML-CONSENSUS-PROVENANCE-2026-10-09.md)
+separates conditional design approval from implementation and activation evidence.
+
 ---
 
 ## 1. Daily card ops
@@ -265,3 +289,22 @@ Proposed workflow artifacts (paste-ready, never pushed by the App):
 `tests/test_docs_links.py` walks every relative Markdown link in `README.md`,
 `docs/**` and this file and fails if a target does not exist. Links here
 cannot rot silently; move a document and the suite tells you.
+
+### Gate A design approved — C1 confirmed, no recorder authorization
+
+The [Gate A specification](GATE-A-ML-CONSENSUS-SCHEMA-STORAGE-2026-10-09.md)
+is draft 3 + C1: exact proposed ignore addition, complete isolated per-file/dry-run
+staging output and a [rerunnable control](controls/gate_a_c1_paths.py). A1–A4
+design approvals are complete; both supplied independent reviews confirm C1.
+The [reconciliation](GATE-A-REVIEW-DISPOSITION-2026-10-09.md) preserves source
+scopes and prohibitions. No recorder, hooks, ignore/workflow edits, publisher or
+live routing is authorized. Steward/export resources remain missing.
+
+The operator separately authorized the fallback-origin boolean correction and
+failing qualifier/electorate tests. They were implemented **before** C1 publication:
+[execution receipt](EXECUTION-FALLBACK-CONTRACT-TESTS-2026-10-09.md), commit
+`6c3699d`. Related regressions: 160 passed. New contract suite: six positive passes,
+**six intentional failures**, not skipped/xfail. Selection predicates remain
+unchanged; those defects are now exposed, not repaired. **The full suite is not
+green.** C1 confirmation does not authorize skipping/xfailing the six failures or
+implementing any recorder, publisher, routing or ignore/workflow change.
