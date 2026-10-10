@@ -161,6 +161,29 @@ LEAGUE_KEY_ALIASES: dict[str, tuple[str, ...]] = {
     "scotlandpremiership": ("soccer_spl",),
     "chileprimeradivisin": ("soccer_chile_campeonato",),
     "czechliga": ("soccer_czech_liga",),
+    #
+    # --- 2026-10-10 coverage repair (run 38027657811 receipts) -------------
+    # The Oct-10 attempt ledger shows the comma-form labels our slates
+    # actually carry ("Country,League") falling through every stage while the
+    # provider's own catalogue (localdata/theoddsapi_sports.json) sells the
+    # competition. Each fragment below was verified against that catalogue's
+    # key/title. 33 fixtures reported `league not covered` that day; 6 of
+    # them were in competitions the provider lists.
+    "usamajorleaguesoccer": ("soccer_usa_mls",),          # USA,Major League Soccer
+    "portugalligaportugal": ("soccer_portugal_primeira_liga",),  # Portugal,Liga Portugal
+    # Tier guards BEFORE the fragment above (longest-first): "Liga Portugal 2"
+    # CONTAINS "Liga Portugal" as a fragment, so without an explicit dead-end
+    # the second tier would inherit the top tier's key — exactly the
+    # wrong-competition pricing the contract forbids. Provider sells no
+    # Liga Portugal 2 key, so the dead-end is the honest answer.
+    "portugalligaportugal2": (),
+    "belgianproleague": ("soccer_belgium_first_div",),    # Belgium,Belgian Pro League
+    "belgiumjupilerproleague": ("soccer_belgium_first_div",),  # Belgium: Jupiler Pro League
+    # The existing "chileprimeradivisin" entry is a pre-ASCII-fold spelling
+    # (the accented ó deleted instead of decomposed) and can never match the
+    # _league_code form "chileprimeradivision". Kept for history; the folded
+    # spelling below is the one that actually matches.
+    "chileprimeradivision": ("soccer_chile_campeonato",),  # Chile,Primera División
 }
 
 # Exact-match provider short codes, matched before any fragment logic on the
@@ -279,6 +302,19 @@ def _first_listed(keys: tuple[str, ...], sports: list[dict]) -> str | None:
         if any(s.get("key") == key for s in sports):
             return key
     return keys[0] if keys and not sports else None
+
+
+# Comma-form slate labels lead with the country ("Scotland,Championship",
+# "USA,Major League Soccer"). At the containment stage a provider entry whose
+# title is a generic competition word ("Championship", "Premier League") can
+# otherwise absorb a DIFFERENT country's competition: on 2026-10-10
+# `Scotland,Championship` containment-matched the EFL (English) Championship
+# title and Raith Rovers vs Queens Park was queried under soccer_efl_champ —
+# a wrong-competition price request. This guard rejects a containment
+# candidate whose entry text never mentions the label's country fragment.
+# Entries that genuinely belong to that country name it (key, title, group or
+# description), so legitimately matching labels keep resolving.
+_COUNTRY_PREFIX_RE = re.compile(r"^\s*([^,|:]{2,40})[,|:]")
 
 
 # Fragments checked longest-first: tier-guards ("germanybundesliga2") must win
@@ -676,7 +712,11 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
          half the longer string, otherwise a bare "league" token (digits
          stripped from "League 2") junk-matches every "...League" label and
          fabricates wrong-competition prices (2026-08-06 incident: 13 archived
-         labels, incl. all UEFA comps, resolved to soccer_england_league2).
+         labels, incl. all UEFA comps, resolved to soccer_england_league2);
+         AND, for comma-form labels ("Country,League"), the country fragment
+         must actually appear in the provider entry — "Scotland,Championship"
+         must never containment-match the EFL (English) Championship title
+         (2026-10-10 incident, Raith Rovers vs Queens Park).
 
     Stages 2 and 3 match on _league_code (digits preserved), so "K League 2"
     can never inherit soccer_korea_kleague1 and "Japan J2 League" can never
@@ -697,6 +737,8 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
                 return None
             return _first_listed(keys, sports)  # wins-or-None; never falls through
     candidates = []
+    country_match = _COUNTRY_PREFIX_RE.match(str(league_raw or ""))
+    country_code = _league_code(country_match.group(1)) if country_match else ""
     for s in sports:
         if not s.get("active", True):
             continue
@@ -709,6 +751,15 @@ def sport_key_for_league(league_raw: object, sports: list[dict]) -> str | None:
             overlap = min(len(cand), len(code))
             if (overlap >= 8 and overlap * 2 >= max(len(cand), len(code))
                     and (cand in code or code in cand)):
+                if country_code and country_code not in cand:
+                    # Comma-form label names a country the provider entry never
+                    # mentions; the containment hit is a generic-title false
+                    # match, not this competition. None stays preferred.
+                    _log(
+                        f"containment rejected (country '{country_match.group(1).strip()}' "
+                        f"absent from entry '{s.get('key')}') for label '{league_raw}'",
+                    )
+                    break
                 candidates.append((overlap, str(s.get("key"))))
                 break
     if candidates:
