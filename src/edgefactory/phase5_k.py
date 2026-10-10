@@ -153,7 +153,6 @@ def feature_vector(
     model: dict,
     *,
     fallbacks: dict[str, float] | None = None,
-    audit_receipt=None,
 ) -> tuple[list[float], list[str]]:
     """Build a model's input vector in ITS recorded column order.
 
@@ -178,17 +177,6 @@ def feature_vector(
             imputed.append(str(col))
             value = means.get(col, 0.0)
         vector.append(float(value))
-        if audit_receipt is not None:
-            try:
-                origin = "input"
-                if feat_dict.get(col) is None:
-                    origin = "unknown_column_zero" if col not in means else (
-                        "caller_override" if fallbacks and col in fallbacks else
-                        "payload_mean" if isinstance(payload_means, dict) and col in payload_means else
-                        "default_fallback")
-                audit_receipt(col, vector[-1], origin)
-            except Exception:
-                pass
     return vector, imputed
 
 
