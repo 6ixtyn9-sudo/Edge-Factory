@@ -30,6 +30,7 @@ jobs:
       PINNAPI_KEY: ${{ inputs.probe == 'pinnapi' && secrets.PINNAPI_KEY || '' }}
       RAPIDAPI_KEY: ${{ (inputs.probe == 'betminer' || inputs.probe == 'boggio') && secrets.RAPIDAPI_KEY || '' }}
       SHARPAPI_KEY: ${{ inputs.probe == 'sharpapi' && secrets.SHARPAPI_KEY || '' }}
+      SHARPAPI_SPORT: soccer
       ODDSPAPI_API_KEYS: ${{ inputs.probe == 'oddspapi_markets' && secrets.ODDSPAPI_API_KEYS || '' }}
       BZZOIRO_TOKEN: ${{ inputs.probe == 'bzzoiro_odds' && secrets.BZZOIRO_TOKEN || '' }}
     steps:
