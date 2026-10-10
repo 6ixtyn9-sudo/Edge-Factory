@@ -24,10 +24,10 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 11,
+        "fixture_key_miss": 13,
         "market_unmapped": 100,
         "market_unsupported": 611,
-        "no_pick_for_fixture": 3,
+        "no_pick_for_fixture": 1,
         "out_of_window": 32,
         "selection_unmapped": 614
       },
@@ -45,19 +45,19 @@
       "status": null
     },
     "betexplorer": {
-      "be_matched": 12,
-      "be_raw": 42,
-      "be_usable": 39,
+      "be_matched": 10,
+      "be_raw": 51,
+      "be_usable": 51,
       "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
       "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 7,
+      "join_matched_rows": 6,
       "join_miss_counts": {
-        "fixture_key_miss": 20,
-        "no_pick_for_fixture": 12
+        "fixture_key_miss": 35,
+        "no_pick_for_fixture": 10
       },
       "reason": null,
       "status": "cache_only"
@@ -175,7 +175,7 @@
         }
       ],
       "auth_mechanism": "header",
-      "blocker": "pinnapi: HTTP 200 for sport_id=1 event_type=prematch produced zero usable rows [no_usable_rows] - fixtures parsed but every price was discarded; see the named drop reasons; observed payload shape recorded - do not extend the parser without a captured sample",
+      "blocker": "pinnapi: HTTP 200 for sport_id=1 event_type=prematch produced zero usable rows [events_without_market_payload] - fixtures returned but none carries a nonempty markets/odds container recognized by this adapter; inspect the retained event sample and endpoint contract, not selection aliases or credentials. Prices elsewhere in the payload are not ruled out; observed payload shape recorded - do not extend the parser without a captured sample",
       "can_fetch_today": true,
       "can_price": false,
       "can_vote": false,
@@ -188,15 +188,15 @@
       "reason": "http_200_zero_rows_after_parse",
       "response_shape_summary": {
         "envelope_found": true,
-        "event_count": 3418,
+        "event_count": 3564,
         "events_key": "events",
         "events_with_markets": 0,
-        "events_with_teams": 3418,
+        "events_with_teams": 3564,
         "markets_type": "NoneType"
       },
       "sport_id": 1,
       "status": "empty",
-      "zero_row_kind": "no_usable_rows"
+      "zero_row_kind": "events_without_market_payload"
     },
     "predictiq": {
       "blocker": "convergent echo-candidate: zero voice credit permanently, never corroborates (SOURCE-HUNT-2026-10 section 5.5)",
@@ -249,10 +249,7 @@
         "board_rows": 0,
         "board_team_count": 0,
         "board_team_names": {},
-        "card_fixture_count": 63,
-        "card_fixtures_on_board": 0,
-        "card_fixtures_reversed": 0,
-        "card_priced_rows": 0,
+        "card_fixture_count": 66,
         "league_filter_requested": false,
         "requested_limit": 1000
       },
@@ -310,14 +307,14 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 245,
+      "join_matched_rows": 122,
       "join_miss_counts": {
-        "fixture_key_miss": 614,
-        "no_pick_for_fixture": 600
+        "fixture_key_miss": 1195,
+        "no_pick_for_fixture": 292
       },
-      "oa_matched": 21,
-      "oa_raw": 1459,
-      "oa_usable": 1459,
+      "oa_matched": 10,
+      "oa_raw": 1609,
+      "oa_usable": 1609,
       "reason": null,
       "status": "cache_only"
     },
