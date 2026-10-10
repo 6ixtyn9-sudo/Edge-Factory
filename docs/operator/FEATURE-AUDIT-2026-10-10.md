@@ -15,6 +15,21 @@ Nothing in this document changes an operational output. No model was
 activated; no selection threshold, staking rule, or price-matching rule was
 touched.
 
+> **Corrections (2026-10-10, post-review).** (1) An earlier draft claimed
+> `goalsavg` was "verified prematch" from distribution statistics. That was
+> wrong: non-integer values, 815 distinct values, corr 0.213 with actual
+> totals and 1.45% exact equality only show `goalsavg` is not the final goal
+> total — they say nothing about WHEN it was available or whether it was
+> revised afterwards. The provenance trace (§2, forebet extras row) shows the
+> field is read off the same day-page fetch as the final scores, with no
+> ingest timestamp retained: pre-kickoff availability is NOT demonstrable,
+> and the extras ablation has been moved out of the strict experiment (§3.2).
+> (2) "Test window evaluated once" is now stated precisely: the window HAS
+> been inspected under the final spec; no feature or modelling choice changed
+> after results were seen, with one documented correctness-bug exception
+> (§3.4); because the archives end 2026-06-12, no later in-archive window
+> exists to reserve (§3.4).
+
 ---
 
 ## 1. Headline finding: the prediction archives are historical-only
@@ -69,7 +84,7 @@ path before comparing.
 | `rolling_hit_rate` | 14-day rolling pick correctness | derived (consensus3) | full archive span | `get_rolling_hit_rate_last_14d`: share of `fb_pick==outcome` over prior 14 days; fallback 0.75 | computed at serve from settled rows | low after settlement | none: train version is day-lagged `shift(1)` | **mismatch** — train = majority-pick consensus correctness; live = `fb_pick` correctness only; fallback 0.75 in both paths |
 | `ht_p` (forebet), `sa_ht_p` (statarea p1_ht/px_ht/p2_ht) | **pre-match** half-time outcome probabilities | forebet / statarea archives | archive span | none since 2026-06-12 | none | structural live | **no leakage — these are published-before-kickoff HT probabilities, not HT scores** | broken (dark source) |
 | `ht_diff` / `ht_total` | **actual** half-time score margin / total | results join | archive span | n/a | n/a | n/a | **LEAKS if used pre-match** — **dropped** from `mine_consensus` feature_cols (diagnosis_no_autobets_2026-10-06 §3.2 fix #6); pinned at serve via `FROZEN_FEATURE_COLS` / checkpoint ⑫ | n/a (excluded) |
-| forebet extras: `goalsavg`, `p_over/p_under`, `p_gg/p_ng`, kelly, `pred_hs/pred_gs` | provider prematch estimates (goals, O/U 2.5, BTTS, kelly stake, predicted score) | forebet archive | 2024-01→2026-06-12 | none since 2026-06-12 | none | none within archive era (0% missing in panel) | **verified prematch**: goalsavg is 93.2% non-integer, 815 distinct values, corr 0.213 with actual total goals, 1.45% exact equality — a post-match column would show corr 1.0 | broken (dark source) |
+| forebet extras: `goalsavg`, `p_over/p_under`, `p_gg/p_ng`, kelly, `pred_hs/pred_gs` | provider estimates (goals, O/U 2.5, BTTS, kelly stake, predicted score) | forebet archive, over/under + BTTS market endpoints | 2024-01→2026-06-12 | none since 2026-06-12 | **none retained** — see below | none within archive era (0% missing in panel) | **availability NOT demonstrable**: `fetch_day(date)` reads `goalsavg` and the final scores (`Host_SC`/`Guest_SC`) off the SAME day-page fetch (merged by match id, `src/edgefactory/sources/forebet.py`), so the capture necessarily ran post-match for scores to be filled; the archive carries no ingest timestamp and Forebet's intraday revision behaviour is unobserved. Distribution stats (93.2% non-integer, corr 0.213, 1.45% exact equality) prove only that it is not the final total. **Excluded from the strict experiment; exploratory only.** | unproven |
 | "Realized Stats on Home/Away Win" | cohort avg rates **conditioned on `outcome == pick`** (consensus3 ⋈ forebet_settled, avg_p ±5 band, n≥5) | warehouse query | full | displayed at serve (`fetch_historical_profile`; hybrid `fetch_match_cohort` = same minus outcome filter) | computed at serve | n/a | **outcome-conditioned — NOT a pre-match forecast**; must stay display-only and never enter a feature vector | n/a (display-only) |
 | phase5 K features | 22 BASE_FEATURES + per declared source {vitibet,bzzoiro,betclan,scoutingstats,betminer} `{src}_p`,`{src}_available` = 32 cols | mixed live lanes | per-lane capture | partial (bzzoiro 403s; betminer provider-404; betclan can_vote; scoutingstats can_vote) | per-capture receipts | dark source → `_available=0` + era-train mean (never silent zero) | none found in construction | degraded where lanes dark |
 
@@ -84,15 +99,23 @@ Design: fixture-level panel = forebet ∩ zulubet ∩ statarea on
 `date + source_team_key` (identity-folded), one row per fixture, outcome known.
 Splits frozen **chronologically**, disjoint on fixtures:
 train 2024-01-01→2025-05-31 (10,539) / validation 2025-06-01→2025-12-31
-(3,224) / test 2026-01-01→2026-06-12 (2,523; evaluated once per final spec —
-no tuning against it). Everything data-driven is fitted on train only:
-`StandardScaler`, all logistic fits, extras medians, league draw/home rates
-(empirical-Bayes shrinkage k=50 toward train globals); ablation temperatures
-are fitted on the validation window only; the consensus-baseline temperature
-(0.8413) on train only. The script asserts the contract at runtime
-(`_leakage_guards`: split disjointness, forbidden-column exclusion —
-`outcome`/`consensus_pick`/`consensus_hit`/predicted-score columns never enter
-a design matrix — and finite design matrices).
+(3,224) / test 2026-01-01→2026-06-12 (2,523). Everything data-driven is fitted
+on train only: `StandardScaler`, all logistic fits, extras medians, league
+draw/home rates (empirical-Bayes shrinkage k=50 toward train globals);
+ablation temperatures are fitted on the validation window only; the
+consensus-baseline temperature (0.8413) on train only. The script asserts the
+contract at runtime (`_leakage_guards`: split disjointness, forbidden-column
+exclusion — `outcome`/`consensus_pick`/`consensus_hit`/predicted-score columns
+never enter a design matrix — and finite design matrices).
+
+Ablations are tiered:
+
+* **Strict** (evidence-backed features only): consensus_only, +balance,
+  +market, +market+balance.
+* **Exploratory** (quarantined): +forebet extras. Provenance (§2) shows the
+  extras share a capture with the final scores and carry no ingest timestamp;
+  pre-kickoff availability is not demonstrable, so this tier is reported
+  separately and is ineligible for promotion decisions.
 
 Panel coverage is a real constraint: 16,286 trio-complete fixtures = **5.0%**
 of Forebet's 2024+ outcome-known rows (the zulubet archive bounds the join).
@@ -100,7 +123,7 @@ of Forebet's 2024+ outcome-known rows (the zulubet archive bounds the join).
 Forebet extras are 0% missing, so *missingness-as-information could not be
 tested here* (the `fb_extras_missing` feature is constant 0).
 
-### 3.1 Results (test period, untouched)
+### 3.1 Results — strict tier (test period)
 
 | model | n | logloss | Brier | acc | mean p(draw) | realized draw rate |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -110,28 +133,36 @@ tested here* (the `fb_extras_missing` feature is constant 0).
 | consensus+balance | 2,523 | 0.9952 | 0.5941 | 0.516 | 0.2690 | 0.2628 |
 | consensus+market | 2,493 | 0.9716 | 0.5791 | 0.529 | 0.2622 | 0.2627 |
 | consensus+market+balance | 2,493 | 0.9766 | 0.5822 | 0.517 | 0.2740 | 0.2627 |
-| consensus+market+balance+extras | 2,493 | 0.9770 | 0.5825 | 0.518 | 0.2736 | 0.2627 |
 
-Test-period logloss deltas vs references (paired, **date-clustered** bootstrap
-95% CI, 2,000 resamples, seed 42; negative = better):
+Exploratory tier (quarantined — see above; transparency only):
+consensus+market+balance+extras n=2,493, logloss 0.9770, Brier 0.5825,
+acc 0.518, mean p(draw) 0.2736.
 
-| model | Δ vs consensus_mean | 95% CI | Δ vs market | 95% CI |
-| --- | --- | --- | --- | --- |
-| consensus_only | −0.0052 | [−0.0111, +0.0005] | — | — |
-| consensus+balance | −0.0026 | [−0.0100, +0.0052] | — | — |
-| consensus+market | −0.0267 | [−0.0356, −0.0177] | +0.0013 | [−0.0021, +0.0048] |
-| consensus+market+balance | −0.0217 | [−0.0305, −0.0127] | +0.0064 | [−0.0003, +0.0129] |
-| consensus+market+balance+extras | −0.0213 | [−0.0302, −0.0123] | **+0.0068** | **[+0.0003, +0.0133]** |
+Test-period logloss deltas vs references. Every delta is **paired row-for-row**:
+model and reference are evaluated on the identical fixture frame (for
+market-containing models, the same mkt_valid subset — the headline table's
+differing n, 2,493 vs 2,523, reflects that restriction and NOT an unpaired
+comparison; `paired_n` is reported per delta). Date-clustered bootstrap 95% CI,
+2,000 resamples, seed 42; negative = better:
+
+| model | paired n | Δ vs consensus_mean | 95% CI | Δ vs market | 95% CI |
+| --- | --- | --- | --- | --- | --- |
+| consensus_only | 2,523 | −0.0052 | [−0.0111, +0.0005] | — | — |
+| consensus+balance | 2,523 | −0.0026 | [−0.0100, +0.0052] | — | — |
+| consensus+market | 2,493 | −0.0267 | [−0.0356, −0.0177] | +0.0013 | [−0.0021, +0.0048] |
+| consensus+market+balance | 2,493 | −0.0217 | [−0.0305, −0.0127] | +0.0064 | [−0.0003, +0.0129] |
+| *(exploratory)* +extras | 2,493 | −0.0213 | [−0.0302, −0.0123] | +0.0068 | [+0.0003, +0.0133] |
 
 Context (descriptive, unfitted): test-period top-pick hit rates —
 statarea 0.5176, trio_mean 0.5117, zulubet 0.4907, forebet 0.4546.
 
 ### 3.2 Reading — a defensible negative result
 
-1. **Nothing beats the market baseline.** Every model containing market
+1. **Nothing beats the market baseline.** Every strict model containing market
    features is statistically indistinguishable from (or significantly *worse*
-   than) the devigged provider-average odds on test logloss; the extras group
-   is significantly worse (+0.0068, CI excludes 0 in the wrong direction).
+   than) the devigged provider-average odds on test logloss. In the
+   quarantined exploratory tier the extras group is significantly worse
+   (+0.0068, CI excludes 0 in the wrong direction) — reported, not promoted.
    And this "market" is Forebet's *provider-average* price — a soft proxy;
    true named-book lines would likely be sharper, raising the bar further.
 2. **Consensus adds nothing beyond market.** The trio mean's advantage over
@@ -156,10 +187,13 @@ statarea 0.5176, trio_mean 0.5117, zulubet 0.4907, forebet 0.4546.
   speak for the intersection (biased toward popular leagues), not any single
   source's full slate.
 * **Validation double-duty**: the validation window fits ablation temperatures
-  *and* screens models. Mild optimism possible in validation metrics; the test
-  window was evaluated once per final spec, after all choices were frozen.
+  *and* screens models. Mild optimism possible in validation metrics; see
+  §3.4 for the exact freeze/inspection relationship of the test window.
 * **Bootstrap unit**: date-clustered resampling handles same-day correlation;
-  it does not model longer-range season/league clustering.
+  it does not model longer-range season/league clustering. Paired deltas are
+  exactly paired (identical rows both sides); the market restriction to
+  mkt_valid rows means market-vs-model deltas exclude the 30/2,523 test
+  fixtures with invalid three-way odds.
 * **Linear balance terms only**; no interactions, no per-league models.
 * Not yet done: per-league breakdowns; live-era replication on timestamped
   named-book prices (quota-bounded; The Odds API only, 186 fixtures —
@@ -168,6 +202,32 @@ statarea 0.5176, trio_mean 0.5117, zulubet 0.4907, forebet 0.4546.
   coverage meeting the availability-timestamp bar — see §2 inventory; do not
   backfill silently); draw-specific CalibratorH/T-style recalibration on the
   operational path.
+
+### 3.4 Specification freeze vs test inspection (exact record)
+
+1. Splits, feature groups, fitting rules, and baselines were written into
+   `scripts/research_beyond_consensus.py` **before** the first successful
+   evaluation run; no metric had been observed when they were fixed.
+2. The first successful run exposed a **correctness bug** (sklearn's
+   alphabetical class order misaligned every probability matrix; accuracy
+   ~0.21 on ALL splits — the symptom was itself the diagnosis, visible on
+   train/validation without reference to test). The fix reorders model output
+   columns; it changed no feature, split, or fitting rule. Pre-fix metrics
+   are invalid and discarded.
+3. After the corrected run, additions were **reporting-only**: paired
+   bootstrap CIs, per-source context, the manifest, and the strict/exploratory
+   tier split of an ablation that already existed (the extras group's
+   quarantine reflects a provenance finding, not its test performance — the
+   extras numbers did not change: logloss 0.9770 before and after the
+   restructure).
+4. Honest status of the test window: it **has been inspected** under the
+   final spec. No feature, threshold, or fitting choice was changed after
+   test results were seen, so the numbers above are a valid untouched-window
+   evaluation *of this specification* — but the window is now burned for any
+   future spec change. Because the archives end 2026-06-12, **no later
+   in-archive window exists to reserve**: any further modelling iteration
+   makes this test period development evidence, and final validation must
+   then move to live-era data (quota-bounded).
 
 ## 4. Constraint compliance
 

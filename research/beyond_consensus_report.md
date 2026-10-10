@@ -19,7 +19,7 @@ No ROI is reported: this window has no timestamped named-book prices, and Forebe
 | market_provider_average | 2,493 | 0.9702 | 0.5781 | 0.529 | 0.2649 | 0.2627 |
 | consensus_mean | 2,523 | 0.9977 | 0.5954 | 0.512 | 0.2904 | 0.2628 |
 
-## ablations
+## ablations (strict — evidence-backed features only)
 
 | model | n | logloss | brier | acc | mean p when draw | draw rate |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -27,13 +27,18 @@ No ROI is reported: this window has no timestamped named-book prices, and Forebe
 | consensus+balance | 2,523 | 0.9952 | 0.5941 | 0.516 | 0.269 | 0.2628 |
 | consensus+market | 2,493 | 0.9716 | 0.5791 | 0.529 | 0.2622 | 0.2627 |
 | consensus+market+balance | 2,493 | 0.9766 | 0.5822 | 0.517 | 0.274 | 0.2627 |
+
+## ablations (EXPLORATORY — forebet extras: pre-kickoff availability NOT demonstrated; see audit doc §2)
+
+| model | n | logloss | brier | acc | mean p when draw | draw rate |
+| --- | --- | --- | --- | --- | --- | --- |
 | consensus+market+balance+extras | 2,493 | 0.9770 | 0.5825 | 0.518 | 0.2736 | 0.2627 |
 
-## Test-period logloss deltas (date-clustered bootstrap 95% CI)
+## Test-period logloss deltas (paired rows, date-clustered bootstrap 95% CI)
 
-Negative delta = lower log loss than the reference on the same rows.
+Each model and its reference are evaluated on IDENTICAL fixture rows (paired_n column); for market-containing models both are restricted to the same mkt_valid subset. Negative delta = lower log loss on those rows. Dependence handling: the resampling unit is the calendar day (same-day outcomes share conditions); season/league clustering is NOT modelled.
 
-| model | rows | Δ vs consensus_mean | 95% CI | Δ vs market | 95% CI |
+| model | paired n | Δ vs consensus_mean | 95% CI | Δ vs market | 95% CI |
 | --- | --- | --- | --- | --- | --- |
 | consensus_only | 2,523 | -0.00521 | [-0.01105, 0.00046] | — | [—, —] |
 | consensus+balance | 2,523 | -0.00256 | [-0.01004, 0.00518] | — | [—, —] |

@@ -143,6 +143,8 @@
             -0.01105,
             0.00046
           ],
+          "paired_n": 2523,
+          "rows_identical": true,
           "resample_unit": "calendar_day",
           "n_days": 157,
           "n_boot": 2000
@@ -197,6 +199,8 @@
             -0.01004,
             0.00518
           ],
+          "paired_n": 2523,
+          "rows_identical": true,
           "resample_unit": "calendar_day",
           "n_days": 157,
           "n_boot": 2000
@@ -252,6 +256,8 @@
             -0.03563,
             -0.01774
           ],
+          "paired_n": 2493,
+          "rows_identical": true,
           "resample_unit": "calendar_day",
           "n_days": 157,
           "n_boot": 2000
@@ -262,6 +268,8 @@
             -0.00208,
             0.00478
           ],
+          "paired_n": 2493,
+          "rows_identical": true,
           "resample_unit": "calendar_day",
           "n_days": 157,
           "n_boot": 2000
@@ -317,6 +325,8 @@
             -0.03047,
             -0.01266
           ],
+          "paired_n": 2493,
+          "rows_identical": true,
           "resample_unit": "calendar_day",
           "n_days": 157,
           "n_boot": 2000
@@ -327,12 +337,16 @@
             -0.00026,
             0.01292
           ],
+          "paired_n": 2493,
+          "rows_identical": true,
           "resample_unit": "calendar_day",
           "n_days": 157,
           "n_boot": 2000
         }
       }
-    },
+    }
+  },
+  "ablations_exploratory": {
     "consensus+market+balance+extras": {
       "model": "consensus+market+balance+extras",
       "temperature": 1.0864,
@@ -382,6 +396,8 @@
             -0.03018,
             -0.01231
           ],
+          "paired_n": 2493,
+          "rows_identical": true,
           "resample_unit": "calendar_day",
           "n_days": 157,
           "n_boot": 2000
@@ -392,6 +408,8 @@
             0.00033,
             0.01327
           ],
+          "paired_n": 2493,
+          "rows_identical": true,
           "resample_unit": "calendar_day",
           "n_days": 157,
           "n_boot": 2000

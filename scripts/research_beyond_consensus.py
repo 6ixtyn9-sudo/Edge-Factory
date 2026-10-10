@@ -41,8 +41,32 @@ Baselines and feature groups
 * ``consensus`` — the source trio's mean probability (temperature-fitted on
                   train).
 * ``blend``     — logistic (multinomial) over feature groups, one model per
-                  ablation: consensus only / +draw-balance / +market /
-                  +forebet extras.
+                  ablation. STRICT tier: consensus only / +draw-balance /
+                  +market / +market+balance. EXPLORATORY tier (reported
+                  separately, never for promotion): +forebet extras — the
+                  extras share a capture with the final scores and carry no
+                  ingest timestamp, so pre-kickoff availability is not
+                  demonstrable (see docs/operator/FEATURE-AUDIT-2026-10-10.md §2).
+
+Specification freeze timeline (relative to test-result inspection)
+------------------------------------------------------------------
+1. Splits, feature groups, fitting rules (train-only preprocessing,
+   validation-fitted temperatures), and baselines were fixed in this script
+   BEFORE the first successful evaluation run; no metric had been seen.
+2. The first successful run exposed a class-column misalignment bug (sklearn's
+   alphabetical class order) — a correctness defect whose symptom (accuracy
+   ~0.21) was identical on train and validation, not a modelling choice. The
+   fix (explicit column reordering) changed no feature, split, or fitting
+   rule. Pre-fix metrics are invalid and were discarded.
+3. After the corrected run, ONLY reporting infrastructure was added (paired
+   bootstrap CIs, per-source context, manifest, strict/exploratory split of a
+   pre-existing ablation). No feature, threshold, or fitting choice was
+   changed after test results were seen.
+4. Nevertheless the 2026-01-01→2026-06-12 window HAS been inspected under the
+   final spec, and the archives END at 2026-06-12: no later in-archive window
+   exists to reserve. Any future change to features or modelling demotes this
+   window to development evidence; final validation then requires live-era
+   data.
 
 Metrics: multiclass log loss, multiclass Brier, per-outcome calibration
 (draws reported explicitly), coverage (n), and per-source vote hit rates for
@@ -256,11 +280,27 @@ def impute_extras(panel: pd.DataFrame) -> pd.DataFrame:
     return panel
 
 ABLATIONS: dict[str, list[str]] = {
+    # STRICT: every feature here is either a core source probability (whose
+    # pre-match publication is the documented premise of the consensus
+    # product) or derived from those probabilities, or a market price that
+    # was on the same page the day of the fixture.
     "consensus_only": ["consensus"],
     "consensus+balance": ["consensus", "balance"],
     "consensus+market": ["consensus", "market"],
     "consensus+market+balance": ["consensus", "market", "balance"],
-    "consensus+market+balance+extras": ["consensus", "market", "balance", "forebet_extras"],
+}
+
+# EXPLORATORY — NOT part of the strict experiment. The forebet extras
+# (goalsavg, p_over/p_under, p_gg/p_ng) are read off the SAME daily page as
+# the final scores (forebet.fetch_day merges Host_SC/Guest_SC and goalsavg
+# from one day-page fetch), the archive carries no ingest timestamp, and
+# Forebet's intraday revision behaviour is unobserved. Pre-kickoff
+# availability therefore cannot be demonstrated from retained evidence; this
+# ablation is reported separately and its numbers must not be compared
+# against the strict table for promotion decisions.
+EXPLORATORY_ABLATIONS: dict[str, list[str]] = {
+    "consensus+market+balance+extras": [
+        "consensus", "market", "balance", "forebet_extras"],
 }
 
 CLASSES = ("home", "draw", "away")
@@ -281,8 +321,11 @@ DATASET_SCHEMA: dict[str, str] = {
     "outcome": "target: home/draw/away from FINAL score (post-match, never a feature)",
     "fb_home/fb_draw/fb_away": "forebet 1x2 probabilities (0-1, prematch)",
     "fb_odd1/fb_oddx/fb_odd2": "forebet provider-average 1x2 decimal odds (NOT executable)",
-    "goalsavg": "forebet prematch expected total goals (provider estimate)",
-    "pred_hs/pred_gs": "forebet prematch PREDICTED score (context only, excluded from features)",
+    "goalsavg": "forebet expected-total-goals estimate, read off the same day-page "
+                "fetch as the final scores; no ingest timestamp retained — "
+                "pre-kickoff availability NOT demonstrated (exploratory only)",
+    "pred_hs/pred_gs": "forebet PREDICTED score (context only, excluded from features; "
+                       "same capture-time caveat as goalsavg)",
     "fb_p_over/fb_p_under": "forebet prematch over/under 2.5 probabilities",
     "fb_p_gg/fb_p_ng": "forebet prematch both-teams-score / not probabilities",
     "zb_home/zb_draw/zb_away": "zulubet 1x2 probabilities (0-1, prematch)",
@@ -425,6 +468,11 @@ def _paired_delta_ci(y_a: np.ndarray, P_a: np.ndarray, y_b: np.ndarray,
         "delta_mean": round(float(deltas.mean()), 5),
         "ci95": [round(float(np.percentile(deltas, 2.5)), 5),
                  round(float(np.percentile(deltas, 97.5)), 5)],
+        # Both prediction arrays are produced on the SAME frame by the caller
+        # (same fixtures, same order — pinned by the count+label asserts
+        # above), so every delta is paired row-for-row.
+        "paired_n": int(len(y_a)),
+        "rows_identical": True,
         "resample_unit": "calendar_day",
         "n_days": int(len(uniq)),
         "n_boot": n_boot,
@@ -530,35 +578,41 @@ def main() -> int:
         split: row for split, (row, _y, _P) in cons_by_split.items()}
 
     # --- ablations -------------------------------------------------------
-    for name, groups in ABLATIONS.items():
-        cols = [c for g in groups for c in FEATURE_GROUPS[g]]
-        assert not (set(cols) & FORBIDDEN_FEATURES)
-        if "market" in groups:
-            # The market group needs valid three-way odds; restrict every
-            # split to market-valid fixtures and say so in the results.
-            sub = {k: f[f["mkt_valid"]] for k, f in frames.items()}
-            entry, y_test, P_test = _fit(
-                name, cols, sub["train"], sub["validation"], sub["test"])
-            entry["restricted_to"] = "mkt_valid"
-            for split in sub:
-                entry["splits"][split]["n"] = int(len(sub[split]))
-            _y_mkt, P_mkt = _baseline_market(sub["test"])[1:]
-            _y_cons, P_cons = _baseline_consensus(sub["test"], T_cons)[1:]
-            entry["test_delta_ci"] = {
-                "vs_consensus_mean": _paired_delta_ci(
-                    y_test, P_test, _y_cons, P_cons, sub["test"]["date"].to_numpy()),
-                "vs_market_provider_average": _paired_delta_ci(
-                    y_test, P_test, _y_mkt, P_mkt, sub["test"]["date"].to_numpy()),
-            }
-        else:
-            entry, y_test, P_test = _fit(
-                name, cols, frames["train"], frames["validation"], frames["test"])
-            _y_cons, P_cons = cons_by_split["test"][1:]
-            entry["test_delta_ci"] = {
-                "vs_consensus_mean": _paired_delta_ci(
-                    y_test, P_test, _y_cons, P_cons, frames["test"]["date"].to_numpy()),
-            }
-        results["ablations"][name] = entry
+    # STRICT tier first, then the EXPLORATORY tier (reported separately — see
+    # EXPLORATORY_ABLATIONS for why the extras group is quarantined).
+    for tier, spec in (("ablations", ABLATIONS),
+                       ("ablations_exploratory", EXPLORATORY_ABLATIONS)):
+        results[tier] = {}
+        for name, groups in spec.items():
+            cols = [c for g in groups for c in FEATURE_GROUPS[g]]
+            assert not (set(cols) & FORBIDDEN_FEATURES)
+            if "market" in groups:
+                # The market group needs valid three-way odds; restrict every
+                # split to market-valid fixtures and say so in the results.
+                sub = {k: f[f["mkt_valid"]] for k, f in frames.items()}
+                entry, y_test, P_test = _fit(
+                    name, cols, sub["train"], sub["validation"], sub["test"])
+                entry["restricted_to"] = "mkt_valid"
+                for split in sub:
+                    entry["splits"][split]["n"] = int(len(sub[split]))
+                # Paired references are evaluated on the SAME restricted rows.
+                _y_mkt, P_mkt = _baseline_market(sub["test"])[1:]
+                _y_cons, P_cons = _baseline_consensus(sub["test"], T_cons)[1:]
+                entry["test_delta_ci"] = {
+                    "vs_consensus_mean": _paired_delta_ci(
+                        y_test, P_test, _y_cons, P_cons, sub["test"]["date"].to_numpy()),
+                    "vs_market_provider_average": _paired_delta_ci(
+                        y_test, P_test, _y_mkt, P_mkt, sub["test"]["date"].to_numpy()),
+                }
+            else:
+                entry, y_test, P_test = _fit(
+                    name, cols, frames["train"], frames["validation"], frames["test"])
+                _y_cons, P_cons = cons_by_split["test"][1:]
+                entry["test_delta_ci"] = {
+                    "vs_consensus_mean": _paired_delta_ci(
+                        y_test, P_test, _y_cons, P_cons, frames["test"]["date"].to_numpy()),
+                }
+            results[tier][name] = entry
 
     # --- context (descriptive, unfitted): per-source pick hit rates -------
     test = frames["test"]
@@ -598,8 +652,14 @@ def main() -> int:
     ]
     for split, f in frames.items():
         lines.append(f"| {split} | {f['date'].min()} → {f['date'].max()} | {len(f):,} |")
-    for section in ("baselines", "ablations"):
-        lines += ["", f"## {section}", "",
+    for section, title in (("baselines", "baselines"),
+                           ("ablations", "ablations (strict — evidence-backed features only)"),
+                           ("ablations_exploratory",
+                            "ablations (EXPLORATORY — forebet extras: pre-kickoff "
+                            "availability NOT demonstrated; see audit doc §2)")):
+        if section not in results:
+            continue
+        lines += ["", f"## {title}", "",
                   "| model | n | logloss | brier | acc | mean p when draw | draw rate |",
                   "| --- | --- | --- | --- | --- | --- | --- |"]
         table = results[section]
@@ -611,20 +671,26 @@ def main() -> int:
             label = name
             lines.append(_line(label, row))
 
-    lines += ["", "## Test-period logloss deltas (date-clustered bootstrap 95% CI)", "",
-              "Negative delta = lower log loss than the reference on the same rows.", "",
-              "| model | rows | Δ vs consensus_mean | 95% CI | Δ vs market | 95% CI |",
+    lines += ["", "## Test-period logloss deltas (paired rows, date-clustered bootstrap 95% CI)", "",
+              "Each model and its reference are evaluated on IDENTICAL fixture rows "
+              "(paired_n column); for market-containing models both are restricted "
+              "to the same mkt_valid subset. Negative delta = lower log loss on "
+              "those rows. Dependence handling: the resampling unit is the calendar "
+              "day (same-day outcomes share conditions); season/league clustering "
+              "is NOT modelled.", "",
+              "| model | paired n | Δ vs consensus_mean | 95% CI | Δ vs market | 95% CI |",
               "| --- | --- | --- | --- | --- | --- |"]
-    for name, entry in results["ablations"].items():
-        ci = entry.get("test_delta_ci", {})
-        d1 = ci.get("vs_consensus_mean", {})
-        d2 = ci.get("vs_market_provider_average", {})
-        rows_n = entry["splits"]["test"]["n"]
-        lines.append(
-            f"| {name} | {rows_n:,} | {d1.get('delta_mean', '—')} "
-            f"| [{d1.get('ci95', ['—','—'])[0]}, {d1.get('ci95', ['—','—'])[1]}] "
-            f"| {d2.get('delta_mean', '—')} "
-            f"| [{d2.get('ci95', ['—','—'])[0]}, {d2.get('ci95', ['—','—'])[1]}] |")
+    for tier in ("ablations", "ablations_exploratory"):
+        for name, entry in results.get(tier, {}).items():
+            ci = entry.get("test_delta_ci", {})
+            d1 = ci.get("vs_consensus_mean", {})
+            d2 = ci.get("vs_market_provider_average", {})
+            paired_n = d1.get("paired_n", entry["splits"]["test"]["n"])
+            lines.append(
+                f"| {name} | {paired_n:,} | {d1.get('delta_mean', '—')} "
+                f"| [{d1.get('ci95', ['—','—'])[0]}, {d1.get('ci95', ['—','—'])[1]}] "
+                f"| {d2.get('delta_mean', '—')} "
+                f"| [{d2.get('ci95', ['—','—'])[0]}, {d2.get('ci95', ['—','—'])[1]}] |")
 
     ctx = results.get("context", {})
     if ctx:
