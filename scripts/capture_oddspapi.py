@@ -48,9 +48,11 @@ from edgefactory.sources.oddspapi_odds import (
     load_market_type_map,
     market_catalog,
     market_catalog_entries,
+    rate_limit_diagnostics,
     rows_from_odds_response,
 )
 from edgefactory.util import fold_ascii
+import urllib.error
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT_DIR = ROOT / "localdata"
@@ -475,7 +477,24 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             stats["errors"].append("no ODDSPAPI_API_KEYS configured")
             _write_receipt(day, stats)
             return stats
-        fixtures = fetch_fixtures(day) or []
+        try:
+            fixtures = fetch_fixtures(day) or []
+        except urllib.error.HTTPError as exc:
+            # Auth/quota rejection on the fixtures board. Record what the
+            # provider said (Retry-After / X-RateLimit-*), classify the day,
+            # and STOP: the free-tier quota is daily, so continuing into the
+            # per-fixture odds calls would only multiply requests against a
+            # bucket that is already empty (observed 2026-10-10: one key,
+            # 429 on the board, attempted 0 - and the health line read it as
+            # a quiet slate because the receipt carried no quota evidence).
+            stats["http_status"] = int(exc.code)
+            stats["rate_limit"] = rate_limit_diagnostics()
+            stats["status"] = "quota" if exc.code in (429, 402, 430, 509) else "auth"
+            stats["errors"].append(
+                f"fetch_fixtures: HTTP {exc.code} ({stats['status']}); capture stopped")
+            _write_receipt(day, stats)
+            return stats
+        fixtures = fixtures or []
         stats["fixtures"] = len(fixtures)
         stats.update(_slate_overlap_diagnostic(fixtures, day))
         type_map = load_market_type_map()
@@ -502,6 +521,20 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             stats["attempted_fixtures"].append(_fixture_receipt(fx))
             try:
                 odds = fetch_odds(fid)
+            except urllib.error.HTTPError as exc:
+                if exc.code in (401, 402, 403, 429, 430, 509):
+                    # Same quota/auth family as the board call: record the
+                    # provider's rate-limit headers and stop the whole pass.
+                    # A daily bucket does not recover mid-run.
+                    stats["http_status"] = int(exc.code)
+                    stats["rate_limit"] = rate_limit_diagnostics()
+                    stats["status"] = "quota" if exc.code in (429, 402, 430, 509) else "auth"
+                    stats["errors"].append(
+                        f"fetch {fid}: HTTP {exc.code} ({stats['status']}); capture stopped")
+                    _write_receipt(day, stats)
+                    return stats
+                stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
+                continue
             except Exception as exc:  # noqa: BLE001 - fail-soft
                 stats["errors"].append(f"fetch {fid}: {type(exc).__name__}")
                 continue

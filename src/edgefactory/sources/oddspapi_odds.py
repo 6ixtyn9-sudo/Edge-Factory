@@ -72,6 +72,11 @@ def _get_json(url: str, retries: int = 3):
         except urllib.error.HTTPError as exc:
             last = exc
             if exc.code in (401, 403, 429):
+                # Record the rate-limit evidence the provider actually sent,
+                # so a quota day is diagnosable from the receipt instead of
+                # being a bare "429". Never retried here: the free-tier quota
+                # is daily, so an in-run retry only burns what is left of it.
+                _record_rate_limit(exc)
                 raise
             if attempt < retries - 1:
                 time.sleep(1.5 * (attempt + 1))
@@ -82,6 +87,31 @@ def _get_json(url: str, retries: int = 3):
     if last is not None:
         raise last
     return None
+
+
+#: Rate-limit evidence from the most recent auth/quota rejection. Header
+#: names only; never key material. Read via rate_limit_diagnostics().
+_RATE_LIMIT_DIAG: dict = {}
+
+
+def _record_rate_limit(exc: urllib.error.HTTPError) -> None:
+    headers = exc.headers or {}
+    _RATE_LIMIT_DIAG.clear()
+    _RATE_LIMIT_DIAG.update({
+        "http_status": int(exc.code),
+        "retry_after_s": headers.get("Retry-After"),
+        "rate_limit_remaining": (headers.get("X-RateLimit-Remaining")
+                                 or headers.get("X-RateLimit-Remaining-Day")),
+        "rate_limit_limit": (headers.get("X-RateLimit-Limit")
+                             or headers.get("X-RateLimit-Limit-Day")),
+        "rate_limit_reset": (headers.get("X-RateLimit-Reset")
+                             or headers.get("X-RateLimit-Reset-Day")),
+    })
+
+
+def rate_limit_diagnostics() -> dict:
+    """What the provider last said about auth/quota rejection (headers only)."""
+    return dict(_RATE_LIMIT_DIAG)
 
 
 def fetch_json(path: str, params: dict[str, object], *, retries: int = 3):

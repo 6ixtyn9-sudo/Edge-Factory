@@ -6216,17 +6216,25 @@ def main():
                 "freshness_h": 0.0 if source_name in data else None,
             }
         bzz_status = str(bzz_stats.get("status") or "not_run")
+        # The PREDICTION and ODDS lanes are separate accesses and must be
+        # reported separately (2026-10-10: predictions captured 537 rows
+        # through the configured token while the odds endpoint 403'd; the
+        # prediction row inherited the odds lane's auth blocker, which read
+        # as "the configured secret is absent" — an unverified claim).
+        bzz_prediction_rows = len(data.get("bzzoiro") or {})
         health_observations["bzzoiro"] = {
-            "fetched": bzz_status in {"ok", "empty", "auth", "quota", "unavailable"},
-            "rows": int(bzz_stats.get("rows") or 0),
-            "can_fetch_today": bzz_status in {"ok", "empty"},
+            "fetched": bzz_prediction_rows > 0,
+            "rows": bzz_prediction_rows,
+            "can_fetch_today": bzz_prediction_rows > 0,
             "can_price": False,
-            "can_vote": len(data.get("bzzoiro", {})) > 0,
-            "freshness_h": 0.0 if bzz_status in {"ok", "empty"} else None,
-            "blocker": None if bzz_status == "ok" else f"bzz status={bzz_status}; quota_hint={bzz_stats.get('quota_hint', 'none')}",
-            "status": bzz_status or None,
-            "reason": zero_row_reason(
-                bzz_status, bzz_stats.get("http_statuses"), bzz_stats.get("quota_hint")),
+            "can_vote": bzz_prediction_rows > 0,
+            "freshness_h": 0.0 if bzz_prediction_rows > 0 else None,
+            "blocker": None if bzz_prediction_rows > 0 else (
+                "no bzzoiro prediction rows for today in the warehouse; the "
+                "prediction capture stage outcome is not carried into this "
+                "build - the odds-lane status below is a different access"),
+            "status": "ok" if bzz_prediction_rows > 0 else None,
+            "reason": None,
         }
         health_observations["bzzoiro_odds"] = {
             "fetched": bzz_status in {"ok", "empty", "auth", "quota", "unavailable"},
@@ -6240,7 +6248,8 @@ def main():
             # to tell "the key/plan was rejected" from "the endpoint moved".
             "status": bzz_status or None,
             "reason": zero_row_reason(
-                bzz_status, bzz_stats.get("http_statuses"), bzz_stats.get("quota_hint")),
+                bzz_status, bzz_stats.get("http_statuses"), bzz_stats.get("quota_hint"),
+                credential_configured=bzz_stats.get("credential_configured")),
         }
         be_cache_rows = int(betexplorer_cache_stats.get("usable_rows") or 0)
         health_observations["betexplorer"] = {
@@ -6339,6 +6348,17 @@ def main():
             "status": theodds_stats.get("status"),
             "reason": None,
         }
+        # The pre-build capture receipt carries the quota/auth evidence the
+        # cached bundle cannot (observed 2026-10-10: the capture receipt
+        # recorded HTTP 429 while the health line printed a bare "no rows",
+        # which reads as a quiet slate). Surface it as the lane's status.
+        _op_receipt = _coverage_receipts(day).get("oddspapi") or {}
+        _op_http = _op_receipt.get("http_status")
+        _op_status = (
+            str(oddspapi_stats.get("status") or "").strip()
+            or ("quota" if _op_http == 429 else None)
+            or ("auth" if _op_http in (401, 403) else None)
+        )
         health_observations["oddspapi_odds"] = {
             # As with TheOddsAPI, this selection stage consumes only a
             # persisted pre-build snapshot; it does not claim an HTTP fetch.
@@ -6354,11 +6374,15 @@ def main():
             "blocker": (
                 "cache-only pre-build snapshot; selection does not fetch provider"
                 if oddspapi_stats.get("status") == "cache_only"
-                else ("no pre-build OddsPAPI rows" if oddspapi_stats.get("status") in {"absent", "empty"}
+                else (f"pre-build capture stopped on HTTP {_op_http} "
+                      f"({'rate-limited' if _op_status == 'quota' else 'credential'}); "
+                      f"retry_after={(_op_receipt.get('rate_limit') or {}).get('retry_after_s')}"
+                      if _op_status in {"quota", "auth"} and _op_http
+                      else "no pre-build OddsPAPI rows" if oddspapi_stats.get("status") in {"absent", "empty"}
                       else "OddsPAPI cache unreadable")
             ),
-            "status": oddspapi_stats.get("status"),
-            "reason": None,
+            "status": _op_status or oddspapi_stats.get("status"),
+            "reason": zero_row_reason(_op_status, [_op_http] if _op_http else []),
             # Same per-reason join accounting the shadow donors already had.
             "join_miss_counts": dict(oddspapi_stats.get("join_miss_counts") or {}),
             "join_matched_rows": int(oddspapi_stats.get("join_matched_rows") or 0),
