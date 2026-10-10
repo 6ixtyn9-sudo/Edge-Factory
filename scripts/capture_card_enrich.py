@@ -202,11 +202,16 @@ def plan_run(day: str, *, localdata: Path, limit: int, allow_listing: bool,
         item["stale_skip"] = not boggio.needs_capture(item["fixture_key"], snapshots, day=day)
         item["needs_call"] = bool(not item["stale_skip"])
         item["resolvable"] = item["event_id"] is not None
-    need_h2h = sum(1 for i in chosen if i["needs_call"] and i["resolvable"])
     unresolved = [i for i in chosen if i["needs_call"] and not i["resolvable"]]
     need_listing = 1 if (allow_listing and unresolved) else 0
+    # A listing call does not just resolve ids, it BUYS the H2H calls it unlocks,
+    # so those fixtures must be counted in the pre-flight too. Under-counting
+    # here is how a "bounded" capture quietly spends 7 against a plan of 1.
+    need_h2h = sum(1 for i in chosen if i["needs_call"] and (i["resolvable"] or need_listing))
     preflight = boggio.preflight(need_h2h=need_h2h, need_listing=need_listing,
                                 localdata=localdata, day=day, observed_remaining=known)
+    for i in chosen:
+        i["resolvable_after_listing"] = bool(i["resolvable"] or need_listing)
     return {"day": day, "card_rows": len(card), "candidates": chosen, "census": census,
             "unresolved": [i["fixture_key"] for i in unresolved],
             "allow_listing": bool(allow_listing), "preflight": preflight,
@@ -221,7 +226,10 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print) -> dict:
     captured_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
     listing_ids: dict[tuple[str, str], dict] = {}
 
-    if plan["need_listing"] and budget["allowed"] > 0:
+    # A listing call is only worth paying if a call it unlocks also fits in the
+    # budget: buying ids and then being unable to use them is a charged call that
+    # can never become a snapshot. When the money is that tight, degrade to zero.
+    if plan["need_listing"] and budget["allowed"] > 1:
         try:
             key, index, code, payload, headers = boggio.listing_call(day)
             remaining = boggio.quota_remaining(headers)
@@ -247,7 +255,8 @@ def execute(day: str, plan: dict, *, localdata: Path, log=print) -> dict:
             log(f"ledger=card_enrich fixture={item['fixture_key']} decision=staleness_skip "
                 f"window_days={boggio.CARD_ENRICH_STALENESS_DAYS}")
             continue
-        event_id = item["event_id"] or (listing_ids.get((item["home_key"], item["away_key"])) or {}).get("event_id")
+        pair = (item["home_key"], item["away_key"])
+        event_id = item["event_id"] or (listing_ids.get(pair) or {}).get("event_id")
         if not event_id:
             log(f"ledger=card_enrich fixture={item['fixture_key']} decision=unresolved_id "
                 f"calls_spent=0 (no pending listing row; --allow-listing not credited)")
@@ -390,6 +399,15 @@ def main(argv=None) -> int:
               "note=pass --execute to pay quota (budget- and ledger-gated)")
         return 0
     if plan["preflight"]["allowed_calls"] <= 0:
+        if plan["unresolved"] and not plan["need_listing"]:
+            # The honest difference between "budget refused" and "nothing to buy":
+            # a silently inert first run reads like a working capture.
+            print(f"ledger=card_enrich mode=execute calls_spent=0 verdict=nothing_to_capture "
+                  f"unresolved={len(plan['unresolved'])} "
+                  f"note=no fixture id is resolvable from the retained shadow ledger and no listing "
+                  f"call is credited; ids appear only once a post-merge capture has run. "
+                  f"Pass --allow-listing to pay ONE listing call for this run")
+            return 0
         print(f"ledger=card_enrich mode=execute calls_spent=0 "
               f"verdict={plan['preflight']['verdict']} note=fails closed; nothing was purchased")
         return 0

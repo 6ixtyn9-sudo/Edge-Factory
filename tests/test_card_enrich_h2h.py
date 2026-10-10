@@ -320,7 +320,10 @@ def test_listing_call_is_charged_or_it_does_not_happen(tmp_path, monkeypatch):
     assert bare["need_h2h"] == 1     # only the still-resolved fixture can be paid for
     with_listing = ce.plan_run(CARD_DAY, localdata=localdata, limit=6, allow_listing=True, bootstrap=boot)
     assert with_listing["need_listing"] == 1
-    assert with_listing["preflight"]["need_total"] == bare["preflight"]["need_total"] + 1
+    # The listing does not only buy itself: it unlocks the fixture it resolves,
+    # so that H2H is charged too (1 -> 2, i.e. +1 listing +1 unlocked call).
+    assert with_listing["need_h2h"] == 2 and with_listing["need_listing"] == 1
+    assert with_listing["preflight"]["need_total"] == 3 == bare["preflight"]["need_total"] + 2
     assert with_listing["preflight"]["verdict"] == "approved"
 
 
@@ -478,6 +481,100 @@ def test_run_ceiling_refuses_an_unplanned_burst(tmp_path, monkeypatch, capsys):
     out = capsys.readouterr().out
     assert "verdict=run_ceiling" in out or "calls_spent=1" in out
     assert len(seen) <= 1
+
+
+def test_pre_flight_count_equals_what_the_run_actually_pays(tmp_path, monkeypatch, capsys):
+    """The number on the receipt must BE the number of calls, not a subset.
+
+    A listing call unlocks H2H calls, so it also owes them to the pre-flight;
+    under-counting there is how a bounded capture ends up spending 7 against a
+    printed plan of 1.
+    """
+    localdata = _card(tmp_path)
+    monkeypatch.setattr(boggio, "MIN_INTERVAL_S", 0)
+    monkeypatch.setenv(boggio.CARD_ENRICH_BUDGET_ENV, "30")
+    monkeypatch.setenv(boggio.CARD_ENRICH_RESERVE_ENV, "0")
+    monkeypatch.setenv("RAPIDAPI_KEYS", "pool-a,pool-b")
+    boggio.reset_state()
+    # neither fixture has a retained id -> the listing is the only route, and it
+    # must pre-pay for everything it unlocks
+    (localdata / f"boggio_shadow_{CARD_DAY}.json").write_text(json.dumps({"schema": 1, "rows": []}))
+    seen = []
+    listing = {"data": [
+        {"id": 424001, "home_team": "Real Sociedad", "away_team": "Barcelona", "status": "pending",
+         "is_expired": False, "start_date": "2099-01-01T12:00:00"},
+        {"id": 424002, "home_team": "Athletic Club", "away_team": "Getafe", "status": "pending",
+         "is_expired": False, "start_date": "2099-01-01T14:00:00"},
+        # an expired sample row must NEVER become a stats key (live-verified lesson)
+        {"id": 424009, "home_team": "Sevilla", "away_team": "Valencia", "status": "expired",
+         "is_expired": True, "start_date": "2020-01-01T12:00:00"}]}
+    monkeypatch.setattr(boggio.urllib.request, "urlopen",
+                        _fake_transport({"head-to-head": H2H_DOC, "predictions": listing}, seen))
+    assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata), "--allow-listing",
+                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31",
+                    "--pool-remaining", f"{boggio.key_label('pool-b')}=99",
+                    "--execute"]) == 0
+    out = capsys.readouterr().out
+    planned = int(out.split("ledger=card_enrich_preflight calls=")[1].split(" ")[0])
+    spent = int(out.split("calls_spent=")[1].split(" ")[0])
+    assert planned == 3 and spent == planned      # 1 listing + 2 unlocked h2h
+    assert len(seen) == spent
+    assert sum(1 for url in seen if "/head-to-head/" in url) == 2
+
+
+def test_a_tight_budget_degrades_the_plan_and_never_overspends_it(tmp_path, monkeypatch, capsys):
+    localdata = _card(tmp_path)
+    monkeypatch.setattr(boggio, "MIN_INTERVAL_S", 0)
+    monkeypatch.setenv(boggio.CARD_ENRICH_BUDGET_ENV, "2")
+    monkeypatch.setenv(boggio.CARD_ENRICH_RESERVE_ENV, "0")
+    monkeypatch.setenv("RAPIDAPI_KEYS", "pool-a")
+    boggio.reset_state()
+    (localdata / f"boggio_shadow_{CARD_DAY}.json").write_text(json.dumps({"schema": 1, "rows": []}))
+    seen = []
+    listing = {"data": [{"id": 424001, "home_team": "Real Sociedad", "away_team": "Barcelona",
+                         "status": "pending", "is_expired": False, "start_date": "2099-01-01T12:00:00"},
+                        {"id": 424002, "home_team": "Athletic Club", "away_team": "Getafe",
+                         "status": "pending", "is_expired": False, "start_date": "2099-01-01T14:00:00"}]}
+    monkeypatch.setattr(boggio.urllib.request, "urlopen",
+                        _fake_transport({"head-to-head": H2H_DOC, "predictions": listing}, seen))
+    assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata), "--allow-listing",
+                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"]) == 0
+    out = capsys.readouterr().out
+    assert "verdict=budget_degraded" in out
+    planned = int(out.split("ledger=card_enrich_preflight calls=")[1].split(" ")[0])
+    # affordable=2 of needed=3. The 2nd call would be an H2H, but the 1st is the
+    # listing that makes any H2H possible - so the pair is (listing, one H2H).
+    assert planned == 3 and "calls_spent=2" in out
+    assert "decision=budget_stop" in out                # and it said so for the third
+    assert len(seen) == 2
+    # and one notch tighter (allowed=1) must spend NOTHING rather than buy an
+    # unusable listing: no id, no snapshot, still charged.
+    monkeypatch.setenv(boggio.CARD_ENRICH_BUDGET_ENV, "1")
+    seen.clear()
+    capsys.readouterr()
+    assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata), "--allow-listing",
+                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"]) == 0
+    assert seen == []
+    assert "calls_spent=0" in capsys.readouterr().out
+
+
+def test_a_first_run_with_no_retained_ids_says_why_it_spent_nothing(tmp_path, monkeypatch, capsys):
+    """Distinguish "refused" from "nothing to buy" - a silently inert run reads
+    like a working capture, which is the worst possible failure here."""
+    localdata = _card(tmp_path)
+    monkeypatch.setenv(boggio.CARD_ENRICH_BUDGET_ENV, "30")
+    monkeypatch.setenv("RAPIDAPI_KEYS", "pool-a,pool-b")
+    (localdata / f"boggio_shadow_{CARD_DAY}.json").write_text(json.dumps({"schema": 1, "rows": [
+        {"source": "boggio", "date": CARD_DAY, "home": "Real Sociedad", "away": "Barcelona"}]}))
+    seen = []
+    monkeypatch.setattr(boggio, "MIN_INTERVAL_S", 0)
+    monkeypatch.setattr(boggio.urllib.request, "urlopen",
+                        _fake_transport({"head-to-head": H2H_DOC}, seen))
+    assert ce.main(["--date", CARD_DAY, "--localdata", str(localdata),
+                    "--pool-remaining", f"{boggio.key_label('pool-a')}=31", "--execute"]) == 0
+    out = capsys.readouterr().out
+    assert "verdict=nothing_to_capture" in out and "--allow-listing" in out
+    assert seen == [] and not (localdata / "card_enrich_call_ledger.jsonl").exists()
 
 
 def test_no_context_rule_is_registered_and_no_lane_is_wired_into_the_pick_path():
