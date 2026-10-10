@@ -1,6 +1,6 @@
 """Wrong-squad pricing guard on the BetExplorer odds matcher.
 
-Evidence (run 38027657811, localdata/betexplorer_odds_cache_2026-10-10.json):
+Evidence observed in the committed receipt (run 38027657811, 2026-10-10 cache):
 the cache key "2026-10-10|raallalouvire|clubbruggekv" held three price rows
 for Dender vs Club Brugge KV U23 (Belgium: Challenger Pro League, kickoff
 19:00) — the senior Jupiler Pro League fixture RAAL La Louvière vs Club
@@ -11,6 +11,7 @@ names' squad markers, at both the matcher and the cache-write seam.
 
 from __future__ import annotations
 
+# Observed 2026-10-10 in the committed odds cache receipt (run 38027657811).
 from edgefactory.identity import squad_marker_mismatch, squad_markers
 from edgefactory.sources import betexplorer_odds
 

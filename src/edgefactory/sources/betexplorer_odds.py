@@ -369,7 +369,7 @@ def match_pick_to_betexplorer(
         # teams, the full names must carry the same squad markers. Without
         # this, "Club Brugge KV U23" shares the width-9 key of "Club Brugge
         # KV" and the reserve side's page gets priced as the senior side
-        # (2026-10-10: Dender vs Club Brugge KV U23 rows cached under the
+        # (receipt 2026-10-10: Dender vs Club Brugge KV U23 rows cached under the
         # RAAL La Louvière vs Club Brugge KV key).
         if m_hk == pick_hk and squad_marker_mismatch(m.get("home", ""), pick_home):
             continue
