@@ -30,5 +30,7 @@ jobs:
       BZZOIRO_TOKEN: ${{ inputs.probe == 'bzzoiro_odds' && secrets.BZZOIRO_TOKEN || '' }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install existing repo dependencies
+        run: python3 -m pip install --quiet -r requirements.txt
       - name: Run existing bounded probe
         run: PYTHONPATH=src python3 scripts/probe_${{ inputs.probe }}.py
