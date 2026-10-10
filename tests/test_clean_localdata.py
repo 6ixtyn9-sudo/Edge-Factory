@@ -248,22 +248,19 @@ def test_shadow_like_names_that_are_not_shadow_ledgers_survive(tmp_path):
     assert removed == []
 
 
-def test_shadow_gitignore_negations_exactly_cover_the_prune_families():
-    # Invariant: every localdata shadow family the .gitignore negates (i.e.
-    # commits as evidence) must have a matching 30-day prune pattern in
-    # clean_localdata.TELEMETRY_PATTERNS — and nothing else may be negated.
-    # Otherwise a future writer family starts being tracked with no prune
-    # behind it (unbounded Git growth), or a prune pattern exists whose files
-    # can never be committed (silent evidence loss).
+def test_shadow_ledgers_are_deliberately_not_committed():
+    # Pre-merge review correction: the 30-day prune bounds the RUNNER WORKING
+    # DIRECTORY, not Git history — committing daily shadow payloads would
+    # grow repository history indefinitely. Pin the deliberate state: no
+    # localdata shadow family may be negated in .gitignore (i.e. tracked)
+    # without an explicit size policy, while the prune patterns stay in place.
     import re as _re
     from pathlib import Path as _Path
     from scripts.clean_localdata import TELEMETRY_PATTERNS
     gitignore = (_Path(__file__).resolve().parent.parent / ".gitignore").read_text()
-    negated = sorted(_re.findall(
-        r"^!localdata/([a-z0-9_]+)_shadow_20\*\.json$", gitignore, _re.M))
-    pruned = sorted({
-        p.pattern.split("_shadow_")[0][1:]
-        for p in TELEMETRY_PATTERNS if "_shadow_" in p.pattern
-    })
-    assert sorted(negated) == pruned, (sorted(negated), pruned)
-    assert pruned, "prune families must not become empty"
+    negated = _re.findall(r"^!localdata/\S*_shadow_20\*\.json$", gitignore, _re.M)
+    assert negated == [], f"shadow families must not be committed: {negated}"
+    # the runner-side prune (working-directory hygiene) must stay
+    pruned = {p.pattern.split("_shadow_")[0][1:]
+              for p in TELEMETRY_PATTERNS if "_shadow_" in p.pattern}
+    assert len(pruned) == 7, pruned
