@@ -95,6 +95,11 @@ dist/
 # BetMiner's one-call/day endpoint-contract receipt. It contains only endpoint,
 # status, scrubbed schema keys/counts and timestamp (never a key or raw body).
 !localdata/betminer_probe_20*.json
+# card_enrich's per-call budget ledger: opaque pool digests, provider header
+# readings and what each call bought. It is the ONLY record that bounds the
+# shared Boggio family pot across runs, so it must survive cache eviction
+# (the raw shadow snapshots it describes stay ignored).
+!localdata/card_enrich_call_ledger.jsonl
 
 # Addendum 25: shadow-slate dedup ledger is bot-owned like the other ledgers
 !localdata/shadow_sent_ledger_20*.json

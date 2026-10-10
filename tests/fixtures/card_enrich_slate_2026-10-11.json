@@ -1,0 +1,74 @@
+[
+  {
+    "date": "2026-10-11",
+    "home": "Real Sociedad",
+    "away": "Barcelona",
+    "league": "Spain,Laliga",
+    "kickoff": "14:00",
+    "kickoff_utc": "2026-10-11T14:00:00+00:00",
+    "rule": "ml-meta avg_p>=55",
+    "edge_rule": "ml-meta avg_p>=55",
+    "avg_p": 55.2,
+    "bucket": "WATCHLIST_NO_ODDS"
+  },
+  {
+    "date": "2026-10-11",
+    "home": "Athletic Club",
+    "away": "Getafe",
+    "league": "Spain,Laliga",
+    "kickoff": "16:30",
+    "kickoff_utc": "2026-10-11T16:30:00+00:00",
+    "rule": "ml-meta avg_p>=65",
+    "edge_rule": "ml-meta avg_p>=65",
+    "avg_p": 72.0,
+    "bucket": "CERTIFIED_CLEAN"
+  },
+  {
+    "date": "2026-10-11",
+    "home": "Sevilla",
+    "away": "Villarreal",
+    "league": "Spain,Laliga",
+    "kickoff": "18:00",
+    "kickoff_utc": "2026-10-11T18:00:00+00:00",
+    "rule": "2way-unanimous avg_p>=70",
+    "edge_rule": "2way-unanimous avg_p>=70",
+    "avg_p": 69.4,
+    "bucket": "SKIPPED_VETO"
+  },
+  {
+    "date": "2026-10-11",
+    "home": "Real Sociedad B",
+    "away": "Barcelona",
+    "league": "Spain,Primera Federacion",
+    "kickoff": "12:00",
+    "kickoff_utc": "2026-10-11T12:00:00+00:00",
+    "rule": "ml-meta avg_p>=55",
+    "edge_rule": "ml-meta avg_p>=55",
+    "avg_p": 55.0,
+    "bucket": "CAUTION"
+  },
+  {
+    "date": "2026-10-12",
+    "home": "Valencia",
+    "away": "Girona",
+    "league": "Spain,Laliga",
+    "kickoff": "20:00",
+    "kickoff_utc": "2026-10-12T20:00:00+00:00",
+    "rule": "ml-meta avg_p>=55",
+    "edge_rule": "ml-meta avg_p>=55",
+    "avg_p": 55.1,
+    "bucket": "CERTIFIED_CLEAN"
+  },
+  {
+    "date": "2026-10-11",
+    "home": "Odd Shape",
+    "away": "Rival",
+    "league": "Nowhere",
+    "kickoff": "11:00",
+    "kickoff_utc": "2026-10-11T11:00:00+00:00",
+    "rule": "free-text rule with no bar",
+    "edge_rule": "free-text rule with no bar",
+    "avg_p": 99.0,
+    "bucket": "CAUTION"
+  }
+]
