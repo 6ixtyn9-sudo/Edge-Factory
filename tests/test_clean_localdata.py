@@ -216,3 +216,51 @@ def test_daily_pipeline_cleans_before_any_other_step():
     first = run_soft.call_args_list[0].args[0]
     assert "scripts/clean_localdata.py" in first
     assert "--keep-days 30" in first and "--today 2026-09-25" in first
+
+
+def test_shadow_capture_ledgers_are_pruned_on_the_same_clock(tmp_path):
+    # Committed as raw evidence since 2026-10-10; every reader is day-scoped,
+    # so the standard telemetry window bounds them too.
+    old = tmp_path / "betbetter_shadow_2026-06-01.json"
+    fresh = tmp_path / "betbetter_shadow_2026-10-10.json"
+    other = tmp_path / "sharpapi_odds_shadow_2026-06-01.json"
+    for p in (old, fresh, other):
+        p.write_text("{}")
+    removed = clean_localdata(tmp_path, keep_days=30,
+                              today=date(2026, 10, 10))
+    assert old in removed and other in removed
+    assert fresh.exists()
+
+
+def test_shadow_like_names_that_are_not_shadow_ledgers_survive(tmp_path):
+    tricky = [
+        # its own telemetry family with its own pattern; pruned by age, not
+        # by the new shadow-ledger patterns — on the 30-day clock it goes,
+        # so date it inside the window and assert it survives the run
+        "shadow_sent_ledger_2026-10-01.json",
+        "scored_candidate_shadow_2026-06-01.jsonl",
+        "pinnapi_odds_shadow_2026-06-01.json.bak",  # unknown shape: never delete
+        "ml_fade_research_ledger.json",
+    ]
+    for name in tricky:
+        (tmp_path / name).write_text("{}")
+    removed = clean_localdata(tmp_path, keep_days=30, today=date(2026, 10, 10))
+    assert removed == []
+
+
+def test_shadow_ledgers_are_deliberately_not_committed():
+    # Pre-merge review correction: the 30-day prune bounds the RUNNER WORKING
+    # DIRECTORY, not Git history — committing daily shadow payloads would
+    # grow repository history indefinitely. Pin the deliberate state: no
+    # localdata shadow family may be negated in .gitignore (i.e. tracked)
+    # without an explicit size policy, while the prune patterns stay in place.
+    import re as _re
+    from pathlib import Path as _Path
+    from scripts.clean_localdata import TELEMETRY_PATTERNS
+    gitignore = (_Path(__file__).resolve().parent.parent / ".gitignore").read_text()
+    negated = _re.findall(r"^!localdata/\S*_shadow_20\*\.json$", gitignore, _re.M)
+    assert negated == [], f"shadow families must not be committed: {negated}"
+    # the runner-side prune (working-directory hygiene) must stay
+    pruned = {p.pattern.split("_shadow_")[0][1:]
+              for p in TELEMETRY_PATTERNS if "_shadow_" in p.pattern}
+    assert len(pruned) == 7, pruned

@@ -456,3 +456,136 @@ def test_fetch_fixtures_refreshes_stale_sports_cache(monkeypatch):
     assert calls["refresh"] == 1                    # exactly one free refresh
     assert matched == 1 and not unmatched           # stale-cache miss healed
     assert rows                                     # real rows out of the payload
+
+
+# --- 2026-10-10 coverage repair (run 38027657811 receipts) ------------------
+#
+# The Oct-10 attempt ledger committed 33 `league not covered` lines. Six of
+# those competitions are in the provider's own catalogue (captured same run
+# into localdata/theoddsapi_sports.json, mirrored here); the rest are genuine
+# provider gaps and must keep resolving to None. The same ledger shows one
+# wrong-competition query: `Scotland,Championship` containment-matched the
+# generic "Championship" title of soccer_efl_champ.
+
+with open("tests/data/theoddsapi_sports_2026-10-10.json") as _fh:
+    CATALOGUE_2026_10_10 = json.load(_fh)["sports"]
+
+
+def test_comma_form_labels_for_catalogued_competitions_resolve():
+    # Labels verbatim from the 2026-10-10 attempt ledger; keys verified
+    # against the provider's catalogue captured the same day.
+    assert (theoddsapi.sport_key_for_league("USA,Major League Soccer", CATALOGUE_2026_10_10)
+            == "soccer_usa_mls")
+    assert (theoddsapi.sport_key_for_league("Portugal,Liga Portugal", CATALOGUE_2026_10_10)
+            == "soccer_portugal_primeira_liga")
+    assert (theoddsapi.sport_key_for_league("Belgium,Belgian Pro League", CATALOGUE_2026_10_10)
+            == "soccer_belgium_first_div")
+    assert (theoddsapi.sport_key_for_league("Belgium: Jupiler Pro League", CATALOGUE_2026_10_10)
+            == "soccer_belgium_first_div")
+    assert (theoddsapi.sport_key_for_league("Chile,Primera Division", CATALOGUE_2026_10_10)
+            == "soccer_chile_campeonato")
+    # The accent-deleted historic alias spelling must not be the only one.
+    assert (theoddsapi.sport_key_for_league("Chile,Primera División", CATALOGUE_2026_10_10)
+            == "soccer_chile_campeonato")
+
+
+def test_second_tier_labels_never_inherit_the_repaired_fragments():
+    # "Liga Portugal 2" contains "Liga Portugal" — without the explicit
+    # dead-end it would price the second tier with top-tier odds.
+    assert theoddsapi.sport_key_for_league("Portugal,Liga Portugal 2", CATALOGUE_2026_10_10) is None
+    # Provider sells neither competition: honest None, not a top-tier key.
+    assert theoddsapi.sport_key_for_league("England,National League", CATALOGUE_2026_10_10) is None
+    assert theoddsapi.sport_key_for_league("Scotland,League One", CATALOGUE_2026_10_10) is None
+    assert theoddsapi.sport_key_for_league("Hungary,Nb I", CATALOGUE_2026_10_10) is None
+    assert theoddsapi.sport_key_for_league("Israel,Ligat Haal", CATALOGUE_2026_10_10) is None
+
+
+def test_scottish_championship_never_queries_the_efl_championship_key():
+    # 2026-10-10: Raith Rovers vs Queens Park (Scotland,Championship) was
+    # queried under soccer_efl_champ because the containment stage matched
+    # the generic "Championship" title. A wrong competition is worse than
+    # unpriced: the label must resolve to None.
+    assert theoddsapi.sport_key_for_league("Scotland,Championship", CATALOGUE_2026_10_10) is None
+    # ...and the guard must not break legitimate comma-form containment.
+    assert (theoddsapi.sport_key_for_league("Mexico,Liga Mx Apertura", CATALOGUE_2026_10_10)
+            == "soccer_mexico_ligamx")
+    assert (theoddsapi.sport_key_for_league("Scotland,Premiership", CATALOGUE_2026_10_10)
+            == "soccer_spl")
+
+
+def test_october_10_league_outcomes_match_the_attempt_ledger():
+    # Every league label the 2026-10-10 capture attempted, and the resolution
+    # the receipts show it got or should have got. Labels the provider
+    # genuinely lacks stay None; nothing may start resolving to a key that is
+    # not in the catalogue.
+    expected = {
+        "Kazakhstan,Premier League": None,
+        "Israel,Ligat Haal": None,
+        "Italy,Serie C Grp. B": None,
+        "Thailand,Thai League": None,
+        "Belgium: Jupiler Pro League": "soccer_belgium_first_div",
+        "Romania,Liga Ii": None,
+        "Portugal,Liga Portugal": "soccer_portugal_primeira_liga",
+        "Belgium,Belgian Pro League": "soccer_belgium_first_div",
+        "England,National League": None,
+        "Portugal,Liga Portugal 2": None,
+        "Germany Regionalliga - Bayern": None,
+        "Kuwait,Premier League": None,
+        "Uruguay,Liga Auf Clausura": None,
+        "Italy,Serie C Grp. C": None,
+        "Sweden,Ettan Sodra": None,
+        "USA,Major League Soccer": "soccer_usa_mls",
+        "Hungary,Nb I": None,
+        "Scotland,League One": None,
+        "Chile,Primera Division": "soccer_chile_campeonato",
+        "Moldova,Super Liga": None,
+        "Romania,Superliga": None,
+        "Slovenia,Prva Liga": None,
+        "Bulgaria,First Professional League": None,
+        "Slovakia,1. Liga": None,
+        "Colombia,Primera A Apertura Finalizacion": None,
+        "Scotland,League Two": None,
+        "Scotland,Championship": None,  # must NOT hit soccer_efl_champ
+        "England,League Two": "soccer_england_league2",
+        "Austria,Bundesliga": "soccer_austria_bundesliga",
+    }
+    for label, want in expected.items():
+        got = theoddsapi.sport_key_for_league(label, CATALOGUE_2026_10_10)
+        assert got == want, f"{label!r}: got {got!r}, want {want!r}"
+
+
+def test_argentina_top_flight_resolves_and_tiers_stay_unmapped():
+    # Catalogue evidence: soccer_argentina_primera_division is listed active
+    # (tests/data/theoddsapi_sports_2026-10-10.json, fetched 2026-10-10T04:20Z).
+    # The accent-FOLDED fragment "argentinaprimeradivision" is in
+    # LEAGUE_KEY_ALIASES, so the alias stage — not the containment fallback —
+    # resolves the top-flight label deterministically.
+    assert theoddsapi._league_code("Argentina,Primera División") == (
+        "argentinaprimeradivision")
+    assert theoddsapi.sport_key_for_league(
+        "Argentina,Primera División", CATALOGUE_2026_10_10) == (
+        "soccer_argentina_primera_division")
+    assert theoddsapi.sport_key_for_league(
+        "Argentina Primera División", CATALOGUE_2026_10_10) == (
+        "soccer_argentina_primera_division")
+    # Tier guards: lower tiers and reserve football must never inherit the
+    # top-flight key (labels observed in the picks archives).
+    for label in ("Argentina,Primera B Metropolitana",
+                  "Argentina: Primera Nacional",
+                  "Argentina,Primera Nacional Grp. B",
+                  "Argentina: Primera B",
+                  "Argentina: Reserve League"):
+        assert theoddsapi.sport_key_for_league(
+            label, CATALOGUE_2026_10_10) is None, label
+    # Other countries' top flights share the "Primera División" name; none may
+    # land on Argentina's key (wrong competition is worse than unpriced).
+    for country in ("Uruguay", "Peru", "Venezuela", "Bolivia", "Ecuador",
+                    "Paraguay", "Guatemala", "El Salvador", "Nicaragua",
+                    "Honduras", "Costa Rica", "Panama"):
+        label = f"{country},Primera División"
+        assert theoddsapi.sport_key_for_league(
+            label, CATALOGUE_2026_10_10) is None, label
+    # Clausura: no catalogue evidence the provider places it under the
+    # Primera División key — stays unmapped rather than guessed.
+    assert theoddsapi.sport_key_for_league(
+        "Argentina,Clausura", CATALOGUE_2026_10_10) is None

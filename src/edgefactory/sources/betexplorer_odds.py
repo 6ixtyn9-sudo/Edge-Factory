@@ -36,6 +36,8 @@ from datetime import date, datetime, timedelta, timezone
 from email.utils import parsedate_to_datetime
 from pathlib import Path
 
+from edgefactory.identity import squad_marker_mismatch
+
 BASE = "https://www.betexplorer.com"
 # A descriptive, cooperative identity; no evasion or browser impersonation is
 # needed for this adapter. The site is queried only for bounded rescue rows.
@@ -362,6 +364,22 @@ def match_pick_to_betexplorer(
         m_hk = norm_team_fn(m.get("home", ""), width=norm_width)
         m_ak = norm_team_fn(m.get("away", ""), width=norm_width)
 
+        # Squad-marker veto BEFORE any branch can accept: wherever a
+        # truncated fuzzy key treats a provider name as one of the pick's
+        # teams, the full names must carry the same squad markers. Without
+        # this, "Club Brugge KV U23" shares the width-9 key of "Club Brugge
+        # KV" and the reserve side's page gets priced as the senior side
+        # (receipt 2026-10-10: Dender vs Club Brugge KV U23 rows cached under the
+        # RAAL La Louvière vs Club Brugge KV key).
+        if m_hk == pick_hk and squad_marker_mismatch(m.get("home", ""), pick_home):
+            continue
+        if m_hk == pick_ak and squad_marker_mismatch(m.get("home", ""), pick_away):
+            continue
+        if m_ak == pick_hk and squad_marker_mismatch(m.get("away", ""), pick_home):
+            continue
+        if m_ak == pick_ak and squad_marker_mismatch(m.get("away", ""), pick_away):
+            continue
+
         # Exact team-key match (both sides)
         if m_hk == pick_hk and m_ak == pick_ak:
             candidates.append((0, m))
@@ -524,6 +542,21 @@ def cached_odds_rows_for_pick(pick: dict, day: str) -> list[dict]:
     return list(rows)
 
 
+def _orientation_marker_clean_guard(matched: dict, pick: dict) -> bool:
+    """True when the matched page can stand for the pick in either orientation.
+
+    Module-level so the write-seam refusal is unit-testable without network.
+    """
+    matched_home = str(matched.get("home") or "")
+    matched_away = str(matched.get("away") or "")
+    pick_home = str(pick.get("home") or "")
+    pick_away = str(pick.get("away") or "")
+    return (not squad_marker_mismatch(matched_home, pick_home)
+            and not squad_marker_mismatch(matched_away, pick_away)) or \
+           (not squad_marker_mismatch(matched_home, pick_away)
+            and not squad_marker_mismatch(matched_away, pick_home))
+
+
 def betexplorer_odds_rows_for_pick(
     pick: dict,
     day: str,
@@ -583,6 +616,25 @@ def betexplorer_odds_rows_for_pick(
             break
 
     if matched is None:
+        _fixture_cache[cache_key] = []
+        _write_fixture_cache(pick, day, [])
+        return []
+
+    # Second, write-seam identity check (defense in depth against future
+    # matcher changes and caller-supplied norm functions): the matched page's
+    # team names must not carry squad markers the pick's names lack, in
+    # EITHER orientation. Marker classes deliberately allow display variants
+    # ("Buriram" vs "Buriram United") and reject squad swaps ("Club Brugge KV
+    # U23" for "Club Brugge KV"). A refusal here must never write rows under
+    # the pick's key: wrong-fixture prices are worse than an absent cache.
+    if not _orientation_marker_clean_guard(matched, pick):
+        print(
+            f"  betexplorer_odds: refused matched page "
+            f"{matched.get('home')} vs {matched.get('away')} for pick "
+            f"{pick.get('home')} vs {pick.get('away')}: squad-marker mismatch; "
+            f"no rows cached",
+            file=sys.stderr,
+        )
         _fixture_cache[cache_key] = []
         _write_fixture_cache(pick, day, [])
         return []

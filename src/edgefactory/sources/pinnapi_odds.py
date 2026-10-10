@@ -605,12 +605,30 @@ def _envelope(payload: Any) -> tuple[list[Any] | None, str | None]:
     return None, None
 
 
+# Receipt observed 2026-10-10: a 200 prematch board with teams but no prices
+# after parse (source_health_2026-10-10.json, response_shape_summary).
 def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], bool]:
     """Map a snapshot into price-ledger rows. Returns (rows, schema_match).
 
     schema_match is False when the payload does not look like the documented
     event/market shape - in that case NO rows are returned (fail-closed) and
     the caller retains a trimmed raw sample for operator review.
+
+    Two event shapes are recognised, in precedence order:
+
+    * DOCUMENTED (pinnapi.com/docs, GET /kit/v1/prematch/fixtures and the
+      equivalent /kit/v1/markets?event_type=prematch): the prices live in a
+      periods tree - ``periods.num_0.money_line{home,draw,away}`` for 1x2 and
+      ``periods.num_0.totals{"2.5": {points, over, under, max}}`` for totals.
+      The 2026-10-10 run (health receipt observed) fetched 3,418 such events and discarded all of them
+      because only a ``markets``/``odds`` container was read; the vendor
+      documentation (verified 2026-10-10) shows the periods tree is THE
+      prematch shape, so it is parsed here. ``spreads`` and ``team_total``
+      stay unparsed by policy: recognised vocabulary this pipeline does not
+      price, never silently converted.
+    * LEGACY ``markets``/``odds`` container (the shape the original adapter
+      assumption and the committed synthetic fixture used). Kept working;
+      the historical record is what it is.
     """
     events, _key = _envelope(payload)
     if not isinstance(events, list):
@@ -628,61 +646,138 @@ def parse_snapshot(payload: Any, *, day: str) -> tuple[list[dict[str, Any]], boo
         if not home or not away:
             continue
         matched_shape = True
-        kickoff = event.get("start_at") or event.get("kickoff") or event.get("starts_at")
-        league = event.get("league") or event.get("tournament") or event.get("competition")
+        kickoff = (event.get("start_at") or event.get("kickoff")
+                   or event.get("starts_at") or event.get("starts"))
+        league = (event.get("league") or event.get("league_name")
+                  or event.get("tournament") or event.get("competition"))
         if isinstance(league, dict):
             league = league.get("name")
+        event_id = event.get("id") if event.get("id") is not None else event.get("event_id")
+
+        periods = event.get("periods")
+        if isinstance(periods, dict) and periods:
+            rows.extend(_rows_from_periods(
+                event, event_id, home, away, league, kickoff, periods,
+                captured_at, day))
+            continue
+
         markets = event.get("markets") or event.get("odds") or []
         market_entries, container_problem = _market_entries(markets)
         if container_problem:
             _count_drop(container_problem)
-        for market_entry in market_entries:
-            raw_price = market_entry.get("price")
-            if raw_price is None:
-                raw_price = market_entry.get("odds")
-            price = _num(raw_price)
-            if price is None:
-                # The price sits under a key this adapter does not read, or is
-                # not a number. Either way it is a contract gap, not an absence
-                # of odds, and it must be visible as one.
-                _count_drop("price_unreadable")
-                continue
-            if price <= 1.0:
-                # Decimal odds of 1.0 or less pay nothing; treat as a bad value
-                # rather than a real quote, but still account for it.
-                _count_drop("price_not_above_one")
-                continue
-            raw_market = market_entry.get("market") or market_entry.get("name")
-            raw_selection = market_entry.get("selection") or market_entry.get("label")
-            canonical, _failure = canonical_market_selection(
-                raw_market, raw_selection, home=home, away=away,
-                line=market_entry.get("line"),
-            )
-            if canonical is None:
-                reason = _failure.reason if _failure is not None else "unmappable"
-                _CANONICALIZATION_DROP_REASONS[reason] = (
-                    _CANONICALIZATION_DROP_REASONS.get(reason, 0) + 1
-                )
-                continue
-            rows.append({
-                "source": SOURCE,
-                "date": day,
-                "kickoff": kickoff,
-                "league": league,
-                "home": home,
-                "away": away,
-                "event_id": event.get("id"),
-                "market": canonical.market,
-                "selection": canonical.selection,
-                "raw_market": raw_market,
-                "raw_selection": raw_selection,
-                "line": canonical.line,
-                "odds": price,
-                "book": BOOK,
-                "bookmaker": BOOK,
-                "captured_at": captured_at,
-            })
+        rows.extend(_rows_from_market_entries(
+            day, home, away, league, kickoff, event_id, market_entries, captured_at))
     return rows, matched_shape
+
+
+def _rows_from_periods(event: dict[str, Any], event_id: Any, home: str, away: str,
+                       league: Any, kickoff: Any, periods: dict[str, Any],
+                       captured_at: str, day: str) -> list[dict[str, Any]]:
+    """Documented prematch shape: periods.num_0.{money_line,totals}."""
+    main = periods.get("num_0")
+    if not isinstance(main, dict):
+        _count_drop(f"period_container_unreadable:{type(main).__name__}")
+        return []
+    out: list[dict[str, Any]] = []
+    money_line = main.get("money_line")
+    if isinstance(money_line, dict):
+        priced_sides = 0
+        for side in ("home", "draw", "away"):
+            if money_line.get(side) is None:
+                continue
+            row = _build_row(day, home, away, league, kickoff, captured_at,
+                             event_id=event_id,
+                             raw_market="money_line", raw_selection=side, line=None,
+                             price=money_line.get(side))
+            if row is not None:
+                out.append(row)
+                priced_sides += 1
+        if priced_sides == 0:
+            # A container with no priced side is a named miss, not silence.
+            _count_drop("money_line_without_prices")
+    elif money_line is not None:
+        _count_drop(f"money_line_unreadable:{type(money_line).__name__}")
+    else:
+        _count_drop("money_line_absent")
+    totals = main.get("totals")
+    if isinstance(totals, dict):
+        for line_key, entry in totals.items():
+            if not isinstance(entry, dict):
+                _count_drop("totals_entry_unreadable")
+                continue
+            points = entry.get("points", line_key)
+            for side in ("over", "under"):
+                if entry.get(side) is None:
+                    continue
+                row = _build_row(day, home, away, league, kickoff, captured_at,
+                                 event_id=event_id,
+                                 raw_market="totals", raw_selection=side, line=points,
+                                 price=entry.get(side))
+                if row is not None:
+                    out.append(row)
+    elif totals is not None:
+        _count_drop(f"totals_unreadable:{type(totals).__name__}")
+    return out
+
+
+def _build_row(day: str, home: str, away: str, league: Any, kickoff: Any,
+               captured_at: str, *, event_id: Any, raw_market: Any,
+               raw_selection: Any, line: Any, price: Any) -> dict[str, Any] | None:
+    """Canonicalise one price into a ledger row; None (with a counted reason)."""
+    price_num = _num(price)
+    if price_num is None:
+        _count_drop("price_unreadable")
+        return None
+    if price_num <= 1.0:
+        _count_drop("price_not_above_one")
+        return None
+    canonical, _failure = canonical_market_selection(
+        raw_market, raw_selection, home=home, away=away, line=line,
+    )
+    if canonical is None:
+        reason = _failure.reason if _failure is not None else "unmappable"
+        _CANONICALIZATION_DROP_REASONS[reason] = (
+            _CANONICALIZATION_DROP_REASONS.get(reason, 0) + 1)
+        return None
+    return {
+        "source": SOURCE,
+        "date": day,
+        "kickoff": kickoff,
+        "league": league,
+        "home": home,
+        "away": away,
+        "event_id": event_id,
+        "market": canonical.market,
+        "selection": canonical.selection,
+        "raw_market": raw_market,
+        "raw_selection": raw_selection,
+        "line": canonical.line,
+        "odds": price_num,
+        "book": BOOK,
+        "bookmaker": BOOK,
+        "captured_at": captured_at,
+    }
+
+
+def _rows_from_market_entries(day: str, home: str, away: str, league: Any,
+                              kickoff: Any, event_id: Any,
+                              market_entries: list[dict[str, Any]],
+                              captured_at: str) -> list[dict[str, Any]]:
+    """Legacy markets/odds container shape (historical adapter assumption)."""
+    out: list[dict[str, Any]] = []
+    for market_entry in market_entries:
+        raw_price = market_entry.get("price")
+        if raw_price is None:
+            raw_price = market_entry.get("odds")
+        raw_market = market_entry.get("market") or market_entry.get("name")
+        raw_selection = market_entry.get("selection") or market_entry.get("label")
+        row = _build_row(day, home, away, league, kickoff, captured_at,
+                         event_id=event_id, raw_market=raw_market,
+                         raw_selection=raw_selection,
+                         line=market_entry.get("line"), price=raw_price)
+        if row is not None:
+            out.append(row)
+    return out
 
 
 def same_day_rows(rows: list[dict[str, Any]], day: str) -> list[dict[str, Any]]:
@@ -789,8 +884,8 @@ def classify_zero_rows(payload: Any, rows: list[dict[str, Any]], schema_match: b
     * ``events_without_teams`` - fixtures arrived but none exposed both
       team names; shape drift inside the event, not in the envelope.
     * ``events_without_market_payload`` - teams are readable, but no event
-      exposes a nonempty markets/odds container recognized by this adapter.
-      Inspect the retained sample; do not invent a market mapping.
+      exposes a markets/odds container OR a periods tree this adapter
+      reads. Inspect the retained sample; do not invent a market mapping.
     * ``no_usable_rows``       - fixtures parsed, every price discarded;
       the named drop reasons say which.
     """
@@ -805,7 +900,9 @@ def classify_zero_rows(payload: Any, rows: list[dict[str, Any]], schema_match: b
         return "empty_board"
     if not schema_match:
         return "events_without_teams"
-    if not any(isinstance(event, dict) and (event.get("markets") or event.get("odds"))
+    if not any(isinstance(event, dict)
+               and (event.get("markets") or event.get("odds")
+                    or isinstance(event.get("periods"), dict))
                for event in events):
         return "events_without_market_payload"
     return "no_usable_rows"
@@ -827,10 +924,10 @@ _ZERO_ROW_DIAGNOSIS = {
         "fixtures returned but none exposed both team names; shape drift inside the "
         "event, not in the envelope"),
     "events_without_market_payload": (
-        "fixtures returned but none carries a nonempty markets/odds container recognized "
-        "by this adapter; inspect the retained event sample and endpoint contract, "
-        "not selection aliases or credentials. Prices elsewhere in the payload "
-        "are not ruled out"),
+        "fixtures returned but none carries a markets/odds container or a "
+        "periods tree this adapter reads; inspect the retained event sample "
+        "and endpoint contract, not selection aliases or credentials. Prices "
+        "elsewhere in the payload are not ruled out"),
     "no_usable_rows": (
         "fixtures parsed but every price was discarded; see the named drop reasons"),
 }
@@ -860,11 +957,25 @@ def _payload_shape(payload: Any) -> dict[str, Any]:
             and _team_name(e.get("away") or e.get("team_away")))
         shape["events_with_markets"] = sum(
             1 for e in dicts if e.get("markets") or e.get("odds"))
+        # Documented prematch shape (pinnapi.com/docs): prices under
+        # periods.num_0.{money_line,totals}. Recorded so a periods-shaped
+        # board is recognisable from the receipt alone.
+        shape["events_with_periods"] = sum(
+            1 for e in dicts if isinstance(e.get("periods"), dict) and e.get("periods"))
     first = events[0] if isinstance(events, list) and events else None
     if isinstance(first, dict):
         shape["event_keys"] = [str(key) for key in list(first.keys())[:20]]
         markets = first.get("markets") or first.get("odds")
         shape["markets_type"] = type(markets).__name__
+        periods = first.get("periods")
+        shape["periods_type"] = type(periods).__name__
+        if isinstance(periods, dict) and periods:
+            shape["period_keys"] = [str(k) for k in list(periods.keys())[:8]]
+            main = periods.get("num_0")
+            if isinstance(main, dict):
+                shape["period_entry_keys"] = [str(k) for k in list(main.keys())[:12]]
+                if isinstance(main.get("money_line"), dict):
+                    shape["money_line_keys"] = sorted(str(k) for k in main["money_line"])
         entry: Any = None
         if isinstance(markets, dict):
             shape["market_group_keys"] = [str(k) for k in list(markets.keys())[:12]]
