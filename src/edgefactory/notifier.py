@@ -66,11 +66,28 @@ def _pick_rule_label(pick: dict[str, Any]) -> str:
     return str(honest_display_label(pick))
 
 
+def bet_alert_eligible(pick: dict[str, Any]) -> bool:
+    """Honor explicit execution-price refusals, including legacy quarantines.
+
+    Rows predating price receipts retain their existing bucket behaviour.
+    This does not certify their model or change operational archives.
+    """
+    if pick.get("price_push_eligible") is False:
+        return False
+    if pick.get("price_evidence") in {
+        "SOURCE_FALLBACK", "SCOUTINGSTATS_SOLE", "SUSPECT_ALIAS_FUZZY", "UNMATCHED"
+    }:
+        return False
+    return str(pick.get("price_quarantine_reason") or pick.get("quarantine") or
+               "none").lower() == "none"
+
+
 def format_whatsapp_summary(
     target_date: str,
     picks: list[dict[str, Any]],
     is_late_slate_alert: bool = False,
 ) -> str:
+    picks = [p for p in picks if bet_alert_eligible(p)]
     lines: list[str] = []
 
     if is_late_slate_alert:
@@ -308,6 +325,7 @@ def _tg_section_header(emoji: str, title: str, subtitle: str | None,
 def format_telegram_official(target_date: str, picks: list[dict[str, Any]],
                              is_late: bool = False) -> str:
     """Clean Telegram render of the operational (CLEAN + CAUTION) slate."""
+    picks = [p for p in picks if bet_alert_eligible(p)]
     lines: list[str] = []
     if is_late:
         lines.append("🚨  LATE-SLATE ALERT")
@@ -391,6 +409,54 @@ def format_telegram_shadow(target_date: str, picks: list[dict[str, Any]],
     text = "\n".join(lines)
     text = re.sub(r"\n{3,}", "\n\n", text)
     return text.rstrip()
+
+
+def telegram_text_units(text: str) -> int:
+    # Conservative UTF-16 accounting also bounds astral emoji safely.
+    return len(text.encode("utf-16-le")) // 2
+
+
+def chunk_telegram_shadow(target_date, picks, stats=None, budget=3800):
+    """Pack complete cards with repeated research/bucket headers, never truncate."""
+    if not 512 <= budget <= 4096:
+        raise ValueError("Telegram budget must be between 512 and 4096")
+    chunks, group = [], []
+
+    def render(rows):
+        return format_telegram_shadow(target_date, rows, stats=stats,
+                                      max_lines=len(rows))
+
+    for pick in picks:
+        if pick.get("bucket") not in SHADOW_BUCKETS:
+            continue
+        candidate = render(group + [pick])
+        if telegram_text_units(candidate) <= budget:
+            group.append(pick)
+            continue
+        if group:
+            chunks.append(render(group))
+            group = []
+        single = render([pick])
+        if telegram_text_units(single) <= budget:
+            group = [pick]
+        else:
+            # Pathological single card: preserve every character in bounded
+            # continuations and repeat the research-only context on each.
+            prefix = f"SHADOW SLATE {target_date} — NOT pushed as bets (continued)\n"
+            room = budget - telegram_text_units(prefix)
+            part, used = "", 0
+            for char in single:
+                size = telegram_text_units(char)
+                if used + size > room:
+                    chunks.append(prefix + part)
+                    part, used = "", 0
+                part += char
+                used += size
+            if part:
+                chunks.append(prefix + part)
+    if group:
+        chunks.append(render(group))
+    return chunks or [render([])]
 
 
 def format_telegram_discovery(target_date: str, picks: list[dict[str, Any]]) -> str:

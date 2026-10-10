@@ -32,6 +32,8 @@ from edgefactory.notifier import (  # noqa: E402
     SHADOW_BUCKETS,
     callmebot_request_len,
     chunk_whatsapp_shadow_summary,
+    chunk_telegram_shadow,
+    bet_alert_eligible,
     encoded_len,
     format_whatsapp_discovery_summary,
     format_whatsapp_shadow_summary,
@@ -391,7 +393,8 @@ def main() -> int:
     _annotate_enhancement_markers(raw_picks, target_date)
     logging.info(f"Loaded {len(raw_picks)} total operational picks from {picks_file}")
 
-    notifiable_picks = [p for p in raw_picks if p.get("bucket") in (BUCKET_CLEAN, BUCKET_CAUTION)]
+    notifiable_picks = [p for p in raw_picks if p.get("bucket") in (BUCKET_CLEAN, BUCKET_CAUTION)
+                        and bet_alert_eligible(p)]
     sent_keys = set() if args.force else _load_sent_ledger(sent_ledger_file)
     is_first_run_of_day = not sent_ledger_file.exists()
     unsent_picks = [p for p in notifiable_picks if _build_match_dedupe_key(p, target_date) not in sent_keys]
@@ -534,23 +537,16 @@ def main() -> int:
         any_failed = any_failed or not dispatched
 
     if shadow_message:
-        # Telegram allows 4096 chars per message vs CallMeBot's ~1500 URL cap.
-        # Use a larger chunk budget when Telegram is the primary transport so
-        # the full shadow slate arrives without '+N more' truncation.
-        # Telegram allows 4096 chars per message and has no per-message quota,
-        # so raise both the chunk budget and the max visible pick lines so the
-        # full season slate arrives instead of being cut to '+N more'.
+        # Telegram is packed by UTF-16 text units with complete card/context
+        # repetition. CallMeBot retains its existing encoded-URL budget.
         is_telegram = bool(telegram_token and telegram_chat_id)
         shadow_budget = 3800 if is_telegram else 1100
         shadow_max_lines = 200 if is_telegram else 12
         if is_telegram:
-            # Telegram gets a single clean plain-text message instead of the
-            # 5-chunk WhatsApp asterisk-markdown render.
-            shadow_chunks = [format_telegram_shadow(
-                target_date, shadow_picks,
-                stats=_load_rolling_bucket_stats(),
-                max_lines=shadow_max_lines,
-            )]
+            shadow_chunks = chunk_telegram_shadow(
+                target_date, shadow_picks, stats=_load_rolling_bucket_stats(),
+                budget=shadow_budget,
+            )
         else:
             shadow_chunks = chunk_whatsapp_shadow_summary(
                 target_date, shadow_picks, stats=_load_rolling_bucket_stats(),
@@ -558,7 +554,7 @@ def main() -> int:
                 max_lines=shadow_max_lines,
             )
         logging.info(
-            f"\n>>> Dispatching shadow-slate WhatsApp notification in {len(shadow_chunks)} chunk(s)...\n"
+            f"\n>>> Dispatching shadow-slate notification in {len(shadow_chunks)} chunk(s)...\n"
         )
         dispatched = _dispatch_shadow_chunks(
             shadow_chunks,
