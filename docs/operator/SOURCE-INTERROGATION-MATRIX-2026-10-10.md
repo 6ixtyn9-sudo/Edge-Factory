@@ -303,3 +303,71 @@ on the exception and the caller books it. A refused/failed call is recorded as
 and a pool that never answers keeps the cursor, so the next fixture is not silently
 billed to the pool after it. Covered by
 ``test_a_transport_failure_is_still_attributed_to_a_named_pool``.
+
+### Ring LANDED + first-run spend correction (2026-10-10, post-paste verification)
+
+**Priority #1 is CLOSED.** `main` `80ea3d1f` ("Update daily.yml to include
+RAPIDAPI_KEYS variable") is **+3 / -0** against `3594d21`: two comment lines plus
+`RAPIDAPI_KEYS: ${{ secrets.RAPIDAPI_KEYS || '' }}`, positioned between
+`RAPIDAPI_KEY` and `PINNAPI_KEY`. Verified two ways, because a raw content fetch
+served CDN-stale bytes and briefly looked like a missing paste: the commit diff and
+`git show origin/main:.github/workflows/daily.yml` both show the line, and stripping
+comments from main's file and from `daily-ring.proposed` leaves **identical** content
+— the operator trimmed my 10-line comment block to 2, changed nothing functional.
+Production boggio now rotates both pools from the next scheduled cycle (external
+cron, SAST 09/12/15/18/21); no dispatch was needed and none was made. **The
+2026-10-22/23 pool-A exhaustion is defused.** `git diff --quiet origin/main --
+.github/workflows/source-probe-dispatch.yml` still holds on the PR branch, so
+merging #52 cannot regress the registered shim.
+
+**Suite-evidence correction, against my own PR body.** I wrote that the PR's
+"Regression tests (flag, never gate)" check would supply the CI evidence. It
+cannot: all three workflows on main are `workflow_dispatch`-only — there is **no
+`pull_request` trigger anywhere in this repo**, so that job never runs for a PR,
+and the only check #52 ever received was the external Cloudflare *Workers Builds*
+integration (currently `fail`, unrelated to a docs/lane change, not a repo job).
+The available evidence is therefore the local run on the exact CI dependency set
+(`requirements.txt`, py3.11): **2677 passed**, including 30 in
+`test_card_enrich_h2h.py`. Recording this so a future reader does not go looking
+for a green check that cannot exist. (The regression job *is* the daily job's
+second runner, so ordinary daily runs do exercise it on main.)
+
+**First-run spend expectation corrected (the operator's step 4 said "ledger
+opens"; it would not have).** `event_id` is retained only by captures made AFTER
+this code lands, so on the first run no fixture id is resolvable from the shadow
+ledger and the honest outcome is **0 H2H calls**, not ≤6. Three defects surfaced
+by running exactly that scenario, all fixed here:
+
+1. **Pre-flight under-counted.** It charged the listing but not the H2H calls that
+   listing unlocks, so a run could pay 7 against a printed plan of 1 — the precise
+   failure mode the budget rules exist to prevent. `need_h2h` now includes
+   unlocked fixtures whenever a listing is credited, and
+   `test_pre_flight_count_equals_what_the_run_actually_pays` locks
+   `planned == calls_spent` on a live-executed run.
+2. **A silently inert run looked like an approved one** (`verdict=approved`,
+   `calls=0`). "Refused" and "nothing to buy" are different states; the run now
+   prints `verdict=nothing_to_capture` with the reason and the remedy, because a
+   capture that quietly did nothing is worse than one that visibly failed.
+3. **A tight budget bought an unusable listing.** With exactly one call of money,
+   the run would pay for ids it then had no budget to use — a charged call that can
+   never become a snapshot. A listing is now paid only when a call it unlocks also
+   fits (`allowed > 1`); at one call of budget the run spends **zero**.
+
+Consequences for the dispatch, in order of cost: a **plan-only** dispatch is still
+free and still the first click. To capture *today* the execute needs
+`--allow-listing` (1 listing + up to 6 H2H = **7** of the suggested 30). Or wait
+one production cycle: once a post-merge daily run has written `event_id` into the
+shadow ledger, `--execute` alone pays 6 and the listing is never bought. Both paths
+are ledger-attributed; neither can exceed its printed pre-flight.
+
+**Cadence correction, standing rule re-stated because the handoff drifted:**
+"discovery running nightly" does **not** apply to this lane. card_enrich is
+**weekly at most, never nightly** (directive g) — nightly top-6 is ~180 calls/month
+against a 100/key/month shared family and was rejected on arithmetic, not on
+taste. The nightly thing that exists is the ordinary daily pipeline; the enrichment
+lane is dispatched (or scheduled by the operator) separately, and the budget knob
+is what makes even a mis-set cadence harmless: at cap 30 the month's fourth weekly
+run prints `budget_exhausted` and spends nothing. Durable-ledger check performed,
+not assumed: `git add -A localdata/ --dry-run` **does** stage
+`card_enrich_call_ledger.jsonl` through its negation, so the budget survives cache
+eviction.
