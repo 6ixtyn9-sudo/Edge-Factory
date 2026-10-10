@@ -212,8 +212,19 @@ BTTS_COL = {"forebet": "p_gg", "scoutingstats": "p_gg", "bzzoiro": "p_gg"}
 
 FALLBACK_1X2 = {2: 70.0, 3: 65.0}
 
+# The miner certifies NAMED electorates: "2way-unanimous ..." means forebet +
+# zulubet, "3way-unanimous ..." means forebet + zulubet + statarea
+# (tests/test_consensus_contract_gaps.py contract). Used when a registry edge
+# carries no explicit "sources" field; edges that DO carry one always win.
+_HISTORICAL_ELECTORATES = {
+    2: ("forebet", "zulubet"),
+    3: ("forebet", "zulubet", "statarea"),
+}
+
 _RULE_NWAY = re.compile(r"(\d+)\s*way")
 _RULE_THR = re.compile(r"avg_p\s*>=?\s*([\d.]+)")
+_RULE_MINP = re.compile(r"min_p\s*>=\s*([\d.]+)")
+_RULE_ODDS_WIN = re.compile(r"odds-([\d.]+)-([\d.]+)")
 _TIME_RE = re.compile(r"(?<!\d)(\d{1,2}):(\d{2})(?!\d)")
 DEFAULT_LOCAL_TZ = "Africa/Johannesburg"
 
@@ -1200,13 +1211,32 @@ def _edge_entry(edge: dict) -> dict | None:
                 }
         return None
     n_way, threshold = int(mn.group(1)), float(mt.group(1))
-    return {
+    # Certification-contract repair (operator-authorized 2026-10-10): the
+    # qualifier tokens a rule name carries are ENFORCABLE predicates, not
+    # decoration. Parse them here so eval_1x2 can enforce every one before
+    # stamping the certified label -- and record the ELECTORATE the rule was
+    # certified on (mine_consensus writes "sources"; the named historical
+    # predicates are fb/zb for 2way and fb/zb/sa for 3way), so a substitute
+    # voter set can never inherit a label certified for a different one.
+    entry = {
         "n_way": n_way,
         "threshold": threshold,
         "rule": rule,
         "display_rule": display_rule(market, n_way, threshold, rule),
         "market": market,
+        "from_registry": True,
+        "electorate": (tuple(edge["sources"]) if edge.get("sources")
+                       else _HISTORICAL_ELECTORATES.get(n_way)),
+        "min_p": (float(_RULE_MINP.search(rule).group(1))
+                  if _RULE_MINP.search(rule) else None),
+        "home_only": "home-only" in rule.lower(),
+        "away_only": "away-only" in rule.lower(),
+        "odds_min": (float(_RULE_ODDS_WIN.search(rule).group(1))
+                     if _RULE_ODDS_WIN.search(rule) else None),
+        "odds_max": (float(_RULE_ODDS_WIN.search(rule).group(2))
+                     if _RULE_ODDS_WIN.search(rule) else None),
     }
+    return entry
 
 
 _QUALIFIED_TOKENS = ("min_p", "home-only", "away-only", "odds-", "bc-confirms", "predictz-confirms", "windrawwin-confirms", "freesupertips-confirms")
@@ -4730,6 +4760,34 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
         votes = [(sel, source_weights.get(s, 1.0)) for s, sel in zip(used, sels)]
         _, w_score, _ = weighted_consensus_score(votes)
 
+        # --- Certification-contract gate (operator-authorized 2026-10-10) ---
+        # The certified label may only be stamped when the enforced predicate
+        # IS the named one: every qualifier in the rule string (min_p>=N,
+        # home-only, away-only, odds-LO-HI with INCLUSIVE lower and EXCLUSIVE
+        # upper) must actually hold, and the voter set must BE the electorate
+        # the rule was certified on. Otherwise the row is still emitted --
+        # suppression is not the remedy -- but under an HONEST label naming
+        # exactly what was enforced, never under the certified name.
+        rule_label, display_label = edge["rule"], edge["display_rule"]
+        if edge.get("from_registry"):
+            electorate = edge.get("electorate")
+            electorate_ok = (not electorate) or (set(used) == set(electorate))
+            min_p_req = edge.get("min_p")
+            min_p_ok = (min_p_req is None
+                        or min(ps) * 100.0 >= min_p_req - 1e-9)
+            side_ok = ((not edge.get("home_only") or sel == "home")
+                       and (not edge.get("away_only") or sel == "away"))
+            o_lo, o_hi = edge.get("odds_min"), edge.get("odds_max")
+            odds_ok = ((o_lo is None and o_hi is None)
+                       or (odds is not None and o_lo <= odds < o_hi))
+            if not (electorate_ok and min_p_ok and side_ok and odds_ok):
+                if electorate_ok:
+                    rule_label = display_label = (
+                        f"{edge['n_way']}way-unanimous avg_p>={thr:g}")
+                else:
+                    rule_label = display_label = (
+                        f"unanimous[{'+'.join(sorted(used))}] avg_p>={thr:g}")
+
         picks.append({
             "date": day, "market": "1x2",
             "match": f"{home} vs {away}",
@@ -4742,9 +4800,9 @@ def eval_1x2(day, data, t1x2, source_weights: dict[str, float] | None = None,
             "odds": odds,
             "odds_source": odds_src,
             "bookmaker": None,
-            "rule": edge["rule"],
-            "edge_rule": edge["rule"],
-            "display_rule": edge["display_rule"],
+            "rule": rule_label,
+            "edge_rule": rule_label,
+            "display_rule": display_label,
             "n_way": len(used), "edge_n_way": n_req,
             "confidence": _f(bz.get("confidence")),
             "model_version": bz.get("model_version"),
@@ -4856,6 +4914,31 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
         odds = _f(fb_quote.get(outcome_odds[sel])) if fb_quote else None
         home = canonical_display_team(anchor.get("home"))
         away = canonical_display_team(anchor.get("away"))
+
+        # Same certification-contract gate as eval_1x2 (operator-authorized
+        # 2026-10-10): qualifiers are enforced, and the certified label is
+        # stamped only for the certified electorate; otherwise an honest
+        # enforced-predicate label. min_p here reads the binary confidences.
+        rule_label, display_label = edge["rule"], edge["display_rule"]
+        if edge.get("from_registry"):
+            electorate = edge.get("electorate")
+            electorate_ok = (not electorate) or (set(used) == set(electorate))
+            min_p_req = edge.get("min_p")
+            min_p_ok = (min_p_req is None
+                        or min(confs) * 100.0 >= min_p_req - 1e-9)
+            side_ok = ((not edge.get("home_only") or sel == "home")
+                       and (not edge.get("away_only") or sel == "away"))
+            o_lo, o_hi = edge.get("odds_min"), edge.get("odds_max")
+            odds_ok = ((o_lo is None and o_hi is None)
+                       or (odds is not None and o_lo <= odds < o_hi))
+            if not (electorate_ok and min_p_ok and side_ok and odds_ok):
+                if electorate_ok:
+                    rule_label = display_label = (
+                        f"{edge['n_way']}way-unanimous avg_p>={adj_thr:g}")
+                else:
+                    rule_label = display_label = (
+                        f"unanimous[{'+'.join(sorted(used))}] avg_p>={adj_thr:g}")
+
         picks.append({
             "date": day, "market": market,
             "match": f"{home} vs {away}",
@@ -4866,9 +4949,9 @@ def eval_binary(day, data, market, sources, col_map, edge, yes_no, outcome_odds)
             "avg_p": round(avg_p, 1), "odds": odds,
             "odds_source": "forebet_best" if odds is not None else None,
             "bookmaker": None,
-            "rule": edge["rule"],
-            "edge_rule": edge["rule"],
-            "display_rule": edge["display_rule"],
+            "rule": rule_label,
+            "edge_rule": rule_label,
+            "display_rule": display_label,
             "n_way": len(used), "edge_n_way": n_req,
             "confidence": _f(bz.get("confidence")),
             "model_version": bz.get("model_version"),

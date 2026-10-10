@@ -1,9 +1,15 @@
-"""Intentionally failing certification-contract tests; no routing repair.
+"""Certification-contract tests: the certified label follows the enforced predicate.
 
-Operator-authorized 2026-10-09 independently of Gate A. The negative cases
-assert the supported contract, NOT the incumbent available-voter behavior.
-They must fail on the current evaluator until separately authorized policy
-work repairs it. Do not skip/xfail them or weaken predicates to make CI green.
+Negative cases were operator-authorized 2026-10-09 and FAILED against the
+incumbent evaluator by design ("keep the gap visible"); the enforcement
+repair was separately authorized by the operator on 2026-10-10 ("I want them
+all gone") and implemented in picks_today.eval_1x2 + _edge_entry: every
+qualifier in a rule name (min_p>=N, home-only, away-only, odds-LO-HI with
+inclusive lower / exclusive upper) is now enforced, and a certified label is
+stamped only when the voter set IS the electorate the rule was certified on.
+Unsupported emissions keep flowing under honestly-named labels (e.g.
+"unanimous[statarea+vitibet] avg_p>=70") -- suppression was never the remedy.
+Do not skip/xfail these tests or weaken predicates to keep CI green.
 
 Synthetic temporary registries, one fixture, no serving model/provider/warehouse
 or operational-state writes. A forbidden certified label must not be attached
