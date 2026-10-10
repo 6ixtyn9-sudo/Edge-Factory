@@ -37,6 +37,8 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
+from datetime import datetime, timezone
+from difflib import SequenceMatcher
 from pathlib import Path
 from typing import Any
 
@@ -272,6 +274,31 @@ def main() -> int:
     cov = coverage_report(markets_result.get("data"), slate)
     print(f"coverage_pct={cov['coverage_pct']} slate={cov['slate']} matched={cov['matched']} listed_matches={cov['listed_matches']}")
     print(f"unmatched_examples={cov['unmatched_examples']}")
+    # Suggestions are diagnostics, NOT aliases: print both sides, date and league.
+    listed_keys = {(source_team_key(adapter._team_name(e.get("home") or e.get("team_home"))),
+                    source_team_key(adapter._team_name(e.get("away") or e.get("team_away"))))
+                   for e in events if isinstance(e, dict)}
+    for row in slate:
+        home, away = str(row.get("home") or ""), str(row.get("away") or "")
+        if (source_team_key(home), source_team_key(away)) in listed_keys:
+            continue
+        try:
+            day = datetime.fromisoformat(str(row.get("kickoff"))).astimezone(timezone.utc).date().isoformat()
+        except (ValueError, TypeError):
+            day = str(row.get("date") or "")
+        suggestions = []
+        for event in events:
+            if not isinstance(event, dict) or str(event.get("starts") or event.get("start_at") or "")[:10] != day:
+                continue
+            eh = adapter._team_name(event.get("home") or event.get("team_home")) or ""
+            ea = adapter._team_name(event.get("away") or event.get("team_away")) or ""
+            score = (SequenceMatcher(None, source_team_key(home), source_team_key(eh)).ratio()
+                     + SequenceMatcher(None, source_team_key(away), source_team_key(ea)).ratio())
+            if score >= 0.85:  # Diagnostic shortlist only; never used by identity joins.
+                suggestions.append((score, eh[:65], ea[:65], str(event.get("league_name") or event.get("league") or "")[:65]))
+        suggestions.sort(reverse=True)
+        print(f"unmatched={home[:65]} v {away[:65]} utc_day={day} league={str(row.get('league') or '')[:65]} "
+              f"candidates_same_utc_day={[(h, a, league) for _, h, a, league in suggestions[:3]]}")
     print("projection: shared-fixture target >=30; coverage is diagnostic only and is not persisted.")
     print("ACCEPTANCE 1 - AUTH:",
           f"{mechanism_used} auth works (adapter records this as auth_mechanism)"
