@@ -181,7 +181,7 @@ def source_team_key(name: object) -> str:
 # U23" are different sides of the same club playing in different
 # competitions. Classes (not raw tokens) so "Arsenal W" == "Arsenal Women".
 #
-# Evidence (2026-10-10, localdata/betexplorer_odds_cache_2026-10-10.json):
+# Evidence observed 2026-10-10 (localdata/betexplorer_odds_cache_2026-10-10.json):
 # the RAAL La Louvière vs Club Brugge KV odds-cache key held three price rows
 # for Dender vs Club Brugge KV U23 (Challenger Pro League) — the width-9
 # fuzzy key ("clubbrugg") collapsed the senior and U23 sides and the

@@ -46,6 +46,14 @@ recollection.
 | `tests/test_kickoff_guard_direction.py` | renderings verbatim from the 2026-10-03 picks file | `localdata/picks_2026-10-03.json` |
 | `tests/test_team_identity_transliteration.py` | 2026-10-07 SharpAPI receipt: the vendor's long-form spelling must not fall through to the bigram matcher | `localdata/source_health_2026-10-07.json` |
 | `scripts/picks_today.py` | 2026-10-07 correction to the Urawa fold: 17 of 157 curated pairs were alias-bridged across a squad marker (all released by the guard); the key space is marker-blind for 145 of 150 marked names in the live populations, so the exact tier now also requires the raw names to agree on squad markers | `docs/operator/URAWA-LONG-FORM-FOLD-2026-10-07.md` |
+| `src/edgefactory/sources/theoddsapi.py` | comma-form league labels observed in the 2026-10-10 attempt ledger; sport keys verified against the provider catalogue captured the same run | `tests/data/theoddsapi_sports_2026-10-10.json` |
+| `src/edgefactory/sources/theoddsapi.py` | Scotland,Championship containment hit on the EFL Championship title observed in the 2026-10-10 capture receipt | `localdata/theoddsapi_capture_2026-10-10.json` |
+| `tests/test_theoddsapi.py` | per-label resolution expectations mirror the 2026-10-10 attempt ledger | `localdata/theoddsapi_capture_2026-10-10.json` |
+| `src/edgefactory/identity.py` | wrong-squad cache rows observed in the 2026-10-10 odds cache | `localdata/betexplorer_odds_cache_2026-10-10.json` |
+| `src/edgefactory/sources/betexplorer_odds.py` | Dender vs Club Brugge KV U23 rows under the RAAL La Louvière vs Club Brugge KV cache key, 2026-10-10 | `localdata/betexplorer_odds_cache_2026-10-10.json` |
+| `tests/test_betexplorer_identity_guard.py` | regression fixtures reproduce the 2026-10-10 cache evidence | `localdata/betexplorer_odds_cache_2026-10-10.json` |
+| `src/edgefactory/sources/pinnapi_odds.py` | 3,418 prematch events with teams and no markets container observed 2026-10-10; periods tree is the documented prematch shape per vendor docs consulted 2026-10-10 | `localdata/source_health_2026-10-10.json` |
+| `tests/test_pinnapi_odds.py` | documented-shape fixture values taken from the vendor's published example, 2026-10-10 | `tests/fixtures/pinnapi_prematch_documented.json` |
 
 ## What this does not catch
 
