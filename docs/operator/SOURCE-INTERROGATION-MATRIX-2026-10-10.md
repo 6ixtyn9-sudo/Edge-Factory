@@ -371,3 +371,41 @@ run prints `budget_exhausted` and spends nothing. Durable-ledger check performed
 not assumed: `git add -A localdata/ --dry-run` **does** stage
 `card_enrich_call_ledger.jsonl` through its negation, so the budget survives cache
 eviction.
+
+### Step-4 sequencing correction: tonight's capture would have bought 7 unusable rows (2026-10-10 17:42Z)
+
+The operator's option (b) was "spend 7 today to see the ledger open". Measured against
+the real card and real clock, **all six top-6 fixtures on the 2026-10-10 card had
+already kicked off** (14:00Z, 06:00Z, 12:00Z, 14:00Z, 16:00Z, 14:00Z vs now 17:42Z). The
+lane's own pre-registered rule marks a capture at/after kickoff **ineligible**, and
+Boggio's stats endpoints are upcoming-fixture-only on top of that — so the run would
+have paid up to 7 family calls (1 listing + 6 H2H) and produced **0 usable snapshots**.
+Spending a shared 100/key/month pot on rows that cannot become evidence is the failure
+this lane was designed against, so it is now a refusal, not a recommendation:
+
+* the plan receipt carries `pre_kickoff_now=N/M` and prints a caution when N=0;
+* `--execute` against an all-post-kickoff card prints
+  `verdict=all_fixtures_post_kickoff`, spends 0, and writes no ledger line;
+* the refusal is checked **before** the budget branch, because "this card is over" is
+  the truer headline than "the money says approved";
+* `now` is injectable on `plan_run`/`main` so the guard's tests are deterministic — a
+  suite that read the wall clock would have rotted the moment 2026-10-11 passed.
+
+Verified against the live card: `--execute --allow-listing` tonight prints *"would pay
+up to 7 call(s) for snapshots the pre-kickoff rule marks unusable"* then
+`calls_spent=0`. Suite **2678 passed** on the CI command.
+
+**Revised dispatch sequence.** Steps 1 (merge) and 2 (shim paste) are unaffected and
+should happen today. Steps 3 and 4 move to **tomorrow ~09:15 SAST**, after the freeze
+regenerates the card: the 12-18:00Z fixtures will then be pre-kickoff and the day's
+`event_id`s will already be in the shadow ledger from tonight's post-merge production
+runs (18:00/21:00 SAST) — which means **option (b)'s `--allow-listing` should not be
+needed at all**. Read it off the free plan instead: if the plan prints
+`need_listing=0`, dispatch `--execute` alone (≤6 calls, not 7). If it prints
+`unresolved>0` with `--allow-listing`, the 1-call listing is still priced correctly in
+the pre-flight. First run's `--pool-remaining` readings: take them from whatever
+boggio call ran between now and then (any routine response header), not from memory.
+
+The 7 calls this correction saves stay in pool A/B; at ~2.5/day production plus
+~7/week enrichment the October plan is unchanged. Nothing here weakens a bar — the
+pre-kickoff rule already existed and simply refused to be paid for its own exception.
