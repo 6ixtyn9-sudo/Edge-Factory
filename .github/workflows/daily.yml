@@ -40,6 +40,9 @@ jobs:
       # any future RapidAPI source. Absent key = adapters stay inert (not_run),
       # the suite stays green and the pick path is unaffected.
       RAPIDAPI_KEY: ${{ secrets.RAPIDAPI_KEY }}
+      # Boggio quota ring (comma-separated, de-duplicated). sources/boggio.py
+      # prefers RAPIDAPI_KEYS and falls back to the singular key above.
+      RAPIDAPI_KEYS: ${{ secrets.RAPIDAPI_KEYS || '' }}
       # SHADOW-01: pinnapi (Pinnacle price shadow) uses its own free key.
       PINNAPI_KEY: ${{ secrets.PINNAPI_KEY }}
 
