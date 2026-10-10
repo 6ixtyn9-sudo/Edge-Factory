@@ -142,7 +142,7 @@ Operator delegates future context-rule activation to the system *within pre-regi
 
 **Pre-registered minimum bars for any later activation implementation (locked before first evaluation):** ≥200 distinct settled fixture outcomes per candidate predicate, ≥30 distinct capture dates, ≥50 distinct fixtures in each of two chronological holdout windows, positive net lift against the contemporaneous incumbent on both windows with lower 95% confidence bound >0 after candidate-search multiplicity correction, and no worsening of the existing risk/gate constraints. All feature snapshots must have verified identity and timestamps strictly before kickoff; H2H/form encounter dates must precede the target match. Any field without reliable as-of provenance is ineligible. Activation requires an immutable evidence receipt including candidate universe, exclusions, n, intervals, snapshot hashes and code version. Demote on pre-registered forward decay only after sufficient new settled outcomes; outages/missing data fail closed, never auto-certify. Until an offline assay demonstrates these clauses end-to-end, certification and auto-activation remain disabled. Existing Phase-5 certification is not interchangeable with this context contract.
 
-**Quota reality:** Boggio's shared free family has ~34 calls remaining after the five-call inventory and default predictions consume that same family. Five stats calls × 68 fixtures would cost 340 calls/day, not an available plan. The ~1,400 *dated encounter rows/day* claim is an upper-bound extrapolation, not unique independent settled target fixtures, not point-in-time historical snapshots, and not evidence that certification is days away. Bzzoiro v2 comparison returned 403 entitlement; DNB/corners from that payload cannot be asserted live available. No Boggio or OddsPAPI calls are authorized by this amendment alone. First capture must be bounded to verified entitlements and quotas. `card_enrich` is not ready for shim dispatch; do not paste an option that would run a nonexistent safe capture.
+**Quota reality:** Boggio's shared free family has ~34 calls remaining after the five-call inventory and default predictions consume that same family. Five stats calls × 68 fixtures would cost 340 calls/day, not an available plan. The ~1,400 *dated encounter rows/day* claim is an upper-bound extrapolation, not unique independent settled target fixtures, not point-in-time historical snapshots, and not evidence that certification is days away. Bzzoiro v2 comparison returned 403 entitlement; DNB/corners from that payload cannot be asserted live available. No Boggio or OddsPAPI calls are authorized by this amendment alone. First capture must be bounded to verified entitlements and quotas. `card_enrich` is not ready for shim dispatch; do not paste an option that would run a nonexistent safe capture. *(Superseded on 2026-10-10 by the 'card_enrich build receipt' section below: the safe capture now exists, the shim option is still an operator paste, and the first dispatch is plan-only.)*
 
 ### Boggio second-account proposal and verification gate (2026-10-10)
 
@@ -153,3 +153,153 @@ Conditional arithmetic **not entitlement evidence**: if two truly independent 10
 ### Boggio non-verification receipt, 16:32Z 2026-10-10
 
 Operator-supplied Actions log checked out **main `40b2ad9`** with `PROBE=boggio` and `EXTRA=--verify-keys`; both singular and ring secrets were injected, but main's old probe did not parse `--verify-keys` and executed its default prediction listing. Output was `RAPIDAPI_KEY present: yes`, HTTP 200, `Match-Stats-and-Prediction-endpoints-Remaining: 32` (prior reported remaining 33), reset header 2,001,454 seconds; moving board 34/68 matched (50.0%). **One family call spent on the singular key; neither ring length nor second key entitlement verified.** Do not repeat on main until PR #51 is merged and checkout commit visibly includes the ring code; verification output must begin `ledger=boggio_key_verification configured_keys=2` and show two `key_index` lines. This is an attribution correction, not a new budget authorization. No new Boggio stats calls or card enrichment activated.
+
+### Boggio key ring verification receipt and revised arithmetic (2026-10-10, re-recorded)
+
+The prior session's local follow-up commit for this receipt was **LOST**; this is a
+re-recording from the session handoff brief, marked accordingly per the standing
+state/transcript rule. The verification is **closed** - two family calls were spent
+to measure it and no further `--verify-keys` run is authorized or needed. Reading
+quota from here on means reading
+`X-RateLimit-Match-Stats-and-Prediction-endpoints-Remaining` off any routine call.
+
+| Pool | Evidence class | Verified state (2026-10-10) | Reset |
+|---|---|---|---|
+| A (original account) | LIVE-VERIFIED (2-call ring verification; consistent with the 16:32Z `remaining: 32` single-key reading minus the verification call) | **31 / 100** family calls remaining | ~2026-11-02 |
+| B (second account) | LIVE-VERIFIED (same verification run) | **99 / 100** family calls remaining | ~2026-11-10 |
+
+Resets are **staggered** (Nov 2 / Nov 10), so the two pools are not interchangeable:
+A refills first and is the pool the daily job drains today, because `daily.yml`
+injects only the singular `RAPIDAPI_KEY` - the ring never reaches production until
+the operator pastes `docs/operator/daily-ring.proposed`
+(see `docs/operator/DAILY-RING-WIRING-2026-10-10.md`). That is gap #1 and the
+reason this receipt is filed before any new capture.
+
+**Revised arithmetic (this supersedes the 16:32Z depletion line above; the 34-call
+figure and the "nightly does not fit" conclusion both stand).**
+
+*Family pot = 100 calls/KEY/month, SHARED by production capture, listing calls and
+all five stats families. It is not 100/day - a 5-stats x 68-fixture capture (340
+calls) was correctly stopped as impossible, and it remains impossible.*
+
+| Lane | Cost | October (21 production days left, measured from 2026-10-10) | November (fresh 200) |
+|---|---|---|---|
+| Production boggio shadow at ~2.5/day | ~53 calls | pool A supplies 31 -> **22-call shortfall**; ring closes it from B | ~75 |
+| card_enrich, weekly top-6, H2H-only, staleness-skip | 6 H2H + 0-1 listing = **~7 per run, 4 runs = 24-30** | fits inside B's 99 alongside production | combined ~105 -> exceeds ONE pool (100), fits the DOUBLED pool (200) |
+| The same lane run nightly (rejected shape) | 6 x 30 = **~180** | does not fit, even with two pools | does not fit; cadence is capped by design, not by budget |
+
+Consequences recorded, not argued: (1) the ring is worth pasting **for October
+alone** - without it the fail-soft boggio shadow goes `quota`-blocked for the last
+~8 days of the month; (2) with the ring, October's plan needs **no** budget
+increase; (3) card_enrich is therefore specified weekly, hard-capped by
+`EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS`, and **fail-closed at 0** so an unset
+knob cannot surprise-spend a pool that is already tight; (4) any cadence change
+must be re-priced against this table, not against a feeling.
+
+**Pooling ToS-permittedness: UNVERIFIED.** Two free accounts to obtain additive
+quota may violate vendor terms. The operator accepted that risk on 2026-10-10
+("keys are regenerable"), and the machinery stays deliberately account-agnostic -
+an ordered ring, no per-account semantics, no vendor-visible signal beyond ordinary
+requests - so the fallback is a single account: delete the `RAPIDAPI_KEYS` secret,
+leave the wiring line in place, and the system returns exactly to today's
+behaviour. No code change is required to de-pool.
+
+### card_enrich build receipt (2026-10-10) — Phase 2 capture wire, unbuilt→built, unspent→zero
+
+`sources/boggio.py` carries the additive lane; `scripts/capture_card_enrich.py` is
+the bounded runner; the H2H endpoint is the ONLY endpoint it can call
+(`h2h_url()` rejects non-positive/non-integer ids and the script never builds any
+other URL). Approved shape implemented verbatim: top-6 card fixtures ranked by
+**margin over their own consensus bar** (`avg_p` minus the `avg_p>=` threshold in
+the row's rule - proximity to certification, ties broken by folded fixture key,
+one entry per fixture so a two-market fixture cannot spend two calls), staleness
+skip at 7 days, per-call ledger, month-scoped per-key counters spanning both pools,
+`as_of` = capture instant on every dated row (the provider publishes no per-row
+history timestamp, so this is the strongest point-in-time bound available and the
+only honest one), and a **mandatory pre-flight budget math line on every receipt**.
+
+Zero-call design, deliberately: fixture ids come from the `event_id` now retained
+in the boggio shadow ledger - a field of the listing the pipeline **already pays
+for** - so a normal run costs H2H calls only. A default-listing call is possible
+but requires `--allow-listing`, is counted in the pre-flight before it happens,
+and is refused if the budget cannot pay for it. Listing rows are filtered to
+`status=pending`, `is_expired != true`, future kickoff, because expired sample rows
+are not valid stats keys.
+
+Evidence-class discipline for the endpoints this lane uses: the H2H response
+**shape** is LIVE-VERIFIED (5/5 calls, HTTP 200, 2026-10-10, id 423169); its
+**field names** are PAGE-SAMPLED (provider documentation) and the offline fixture
+is labelled as such; the **values** training-eligible verdict is OPEN until real
+snapshots accumulate. Two guards are pre-registered, not invented here: identity
+is only `identity_verified: true` when the provider's own dated encounters name
+BOTH card teams after `source_team_key` folding (a payload about other clubs is
+not this fixture, whatever the URL said), and `h2h_dominance` (home.won -
+away.won) is emitted only when both documented per-team fields are non-negative
+ints - missing values fail closed, and the dormant vocabulary's
+non-negative-threshold grammar is left exactly as locked, which means a
+home-disadvantage reading is simply unrepresentable.
+
+Not done, on purpose: no rule registered, no predicate evaluated, no pick-path or
+display change, no notification, no gate/certification edit, no test weakened.
+`tests/test_card_enrich_h2h.py` asserts that invisibility (tripwire over
+`enh_registry.py`, `picks_today.py`, `notifier.py`).
+
+**Dispatch path (operator actions, in order).** This lane is spend-gated twice
+over - by the plan/execute split and by the budget knob - so the click itself is
+free:
+
+1. Merge the code PR (operator). The ref that runs MUST contain
+   `scripts/capture_card_enrich.py`, or the option dispatches onto nothing.
+2. Paste `docs/operator/source-probe-dispatch-v5-card-enrich.yml.proposed` over
+   `.github/workflows/source-probe-dispatch.yml` on `main` (web editor; adds the
+   `card_enrich` choice, its secret gating, `--date` passthrough, the capture
+   branch, and 5->6 min timeout for the 10s pacing).
+3. **Free receipt first:** dispatch `probe=card_enrich`, `date=<today>`,
+   `extra_args` blank. Plan-only: ZERO calls, and it prints the pool fingerprints
+   and tails.
+4. Only then, with an explicit `EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS` decision
+   from the operator (suggested 30) and `--execute` in `extra_args`, does it pay.
+   With the knob unset the run prints `verdict=budget_disabled` and spends nothing,
+   by design.
+
+**Ledger delta for this session: 0 vendor calls spent.** No dispatch was made
+(agent lacks `actions:write`; 403 by design) and no probe or capture was run; the
+arithmetic above reuses receipts already recorded. BetExplorer collection remains
+held pending the Livesport reply; pinnapi/bzzoiro/forebet untouched.
+
+### CI red found on main and repaired at the detector (2026-10-10)
+
+`tests/test_env_drift_audit.py::test_the_blind_spot_does_not_hide_a_deployed_variable`
+is **RED on main today** (verified by running it against a clean `origin/main`
+worktree: `1 failed, 2671 passed` overall, the single failure being this one). It
+was introduced by the shim's own `RAPIDAPI_KEYS` line, not by anything here: the
+audit resolves a credential ring only when the *fallback* is written as a literal
+`os.environ.get("X_KEY")`, while `sources/boggio.py` writes
+`os.environ.get(KEY_ENV)`. The unresolved fallback pushed `RAPIDAPI_KEYS` into the
+blind set, and a blind-set member that a workflow sets is exactly what that guard
+refuses to certify.
+
+Fixed in the RESOLVER, not the guard: a module constant holding an env name now
+resolves when checking a fallback chain (`_env_name`), so `RAPIDAPI_KEYS` is
+neither a default to contradict nor an unverifiable gap - and the
+`daily-ring.proposed` paste cannot make this worse, which is why it matters before
+step 1 of the priorities. Scope was deliberately narrowed after a first attempt:
+resolving names in the FIRST argument too would newly expose
+`EDGE_FACTORY_FOREBET_BROWSER` (pinned `off` in `daily.yml` vs an `auto` code
+default - a real, unreviewed divergence) and that review belongs to the operator,
+not to this repair. Blind spot therefore goes 10 -> 9 with `RAPIDAPI_KEYS` gone
+and no new findings, accepted-divergence count unchanged at 4, and the planted-
+divergence test still fires. A regression test for the constant-named chain is
+added alongside the literal-named one.
+
+**Failure-path attribution (found by running it, not by reading it).** Exercising
+``--execute`` in a sandbox with no egress crashed the run inside the except branch
+(``UnboundLocalError`` on the pool index) — a transport that dies before any
+response appends nothing to the ring's attempt list, so the ledger had no pool to
+charge, which is unattributed depletion wearing a "handled the error" costume.
+``_ring_call`` now carries the touched pool (index + opaque key for digesting only)
+on the exception and the caller books it. A refused/failed call is recorded as
+**charged** — assuming uncharged is the unsafe direction against a monthly cap —
+and a pool that never answers keeps the cursor, so the next fixture is not silently
+billed to the pool after it. Covered by
+``test_a_transport_failure_is_still_attributed_to_a_named_pool``.
