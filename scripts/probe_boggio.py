@@ -5,6 +5,7 @@ import argparse, json, os, urllib.error, urllib.parse, urllib.request, sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent; sys.path.insert(0,str(ROOT/'src'))
 from edgefactory.identity import source_team_key
+from edgefactory.sources import boggio
 
 def coverage_report(data, slate):
     items=data.get('data',[]) if isinstance(data,dict) else []
@@ -17,12 +18,26 @@ from zoneinfo import ZoneInfo
 BASE="https://football-prediction-api.p.rapidapi.com"; HOST="football-prediction-api.p.rapidapi.com"
 def main():
  parser=argparse.ArgumentParser(description="Bounded Boggio prediction or fixture-stats probe")
+ parser.add_argument('--verify-keys', action='store_true', help='one predictions-family call per configured key; no retries')
  parser.add_argument('--endpoint', choices=('home-league-stats','away-league-stats','head-to-head','home-last-10','away-last-10','predictions'), default=None)
  parser.add_argument('--match-id', type=int, default=None)
  args=parser.parse_args()
+ if args.verify_keys:
+  if args.endpoint or args.match_id is not None: parser.error('--verify-keys cannot be combined with --endpoint/--match-id')
+  keys=boggio.configured_keys()
+  print(f"ledger=boggio_key_verification configured_keys={len(keys)}")
+  if not keys: return 0
+  day=datetime.now(timezone.utc).date().isoformat()
+  for index,key in enumerate(keys,1):
+   try:
+    status,_,headers=boggio.request_with_key(boggio.predictions_url(day),key)
+    print(f"key_index={index} status={status} verdict={'ok' if status==200 else 'rejected' if status in (401,402,403,429,509) else 'unavailable'} rate_limit_headers={headers!r}")
+   except Exception as exc:
+    print(f"key_index={index} status=unknown verdict=unavailable error_class={type(exc).__name__}")
+  return 0
  if args.endpoint:
   if args.match_id is None or args.match_id <= 0: parser.error('--endpoint requires a positive --match-id')
-  key=os.environ.get('RAPIDAPI_KEY','').strip()
+  key=(boggio.configured_keys() or ('',))[0]
   print(f"RAPIDAPI_KEY present: {'yes' if key else 'no'}")
   if not key:return 0
   path=f"/api/v2/{args.endpoint}/{args.match_id}"
@@ -50,7 +65,7 @@ def main():
   except Exception as e:
    print(f"ledger=boggio_stats endpoint={args.endpoint} match_id={args.match_id} calls=1 status=unknown error_class={type(e).__name__}")
   return 0
- key=os.environ.get("RAPIDAPI_KEY","").strip(); print(f"RAPIDAPI_KEY present: {'yes' if key else 'no'}")
+ key=(boggio.configured_keys() or ("",))[0]; print(f"RAPIDAPI_KEY present: {'yes' if key else 'no'}")
  if not key:return 0
  day=datetime.now(timezone.utc).date().isoformat(); url=BASE+"/api/v2/predictions?"+urllib.parse.urlencode({"iso_date":day,"market":"classic"})
  req=urllib.request.Request(url,headers={"Accept":"application/json","X-RapidAPI-Key":key,"X-RapidAPI-Host":HOST})
