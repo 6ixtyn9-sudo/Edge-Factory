@@ -24,10 +24,10 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 6,
+        "fixture_key_miss": 4,
         "market_unmapped": 119,
         "market_unsupported": 571,
-        "no_pick_for_fixture": 1,
+        "no_pick_for_fixture": 3,
         "out_of_window": 35,
         "selection_unmapped": 607
       },
@@ -35,29 +35,32 @@
       "status": "cache_only"
     },
     "betclan": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
     "betexplorer": {
-      "be_matched": 0,
-      "be_raw": 0,
-      "be_usable": 0,
-      "blocker": "no pre-build BetExplorer rows",
+      "be_matched": 6,
+      "be_raw": 21,
+      "be_usable": 21,
+      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_matched_rows": 5,
+      "join_miss_counts": {
+        "fixture_key_miss": 8,
+        "no_pick_for_fixture": 8
+      },
       "reason": null,
-      "status": "absent"
+      "status": "cache_only"
     },
     "betminer": {
       "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
@@ -101,14 +104,14 @@
       "status": "cache_only"
     },
     "bzzoiro": {
-      "blocker": "no bzzoiro prediction rows for today in the warehouse; the prediction capture stage outcome is not carried into this build - the odds-lane status below is a different access",
-      "can_fetch_today": false,
+      "blocker": null,
+      "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
-      "status": null
+      "status": "ok"
     },
     "bzzoiro_odds": {
       "blocker": "bzz status=auth; quota_hint=auth_or_quota",
@@ -161,7 +164,7 @@
       "op_matched": 0,
       "op_raw": 0,
       "op_usable": 0,
-      "reason": "http_200_zero_rows_after_parse",
+      "reason": "empty_response",
       "status": "empty"
     },
     "pinnapi_odds": {
@@ -174,12 +177,12 @@
       "canonicalization_dropped": 0,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 51,
+      "join_matched_rows": 86,
       "join_miss_counts": {
-        "fixture_key_miss": 38591,
-        "no_pick_for_fixture": 382
+        "fixture_key_miss": 38282,
+        "no_pick_for_fixture": 656
       },
-      "pa_matched": 25,
+      "pa_matched": 39,
       "pa_raw": 39024,
       "pa_scored": 39024,
       "reason": null,
@@ -239,7 +242,7 @@
         "board_rows": 0,
         "board_team_count": 0,
         "board_team_names": {},
-        "card_fixture_count": 28,
+        "card_fixture_count": 44,
         "league_filter_requested": false,
         "requested_limit": 1000
       },
@@ -291,19 +294,22 @@
       "status": null
     },
     "theoddsapi": {
-      "blocker": "no pre-build TheOddsAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
-      "oa_matched": 0,
-      "oa_raw": 0,
-      "oa_usable": 0,
+      "join_matched_rows": 297,
+      "join_miss_counts": {
+        "fixture_key_miss": 162,
+        "no_pick_for_fixture": 864
+      },
+      "oa_matched": 17,
+      "oa_raw": 1323,
+      "oa_usable": 1323,
       "reason": null,
-      "status": "empty"
+      "status": "cache_only"
     },
     "vitibet": {
       "blocker": null,
