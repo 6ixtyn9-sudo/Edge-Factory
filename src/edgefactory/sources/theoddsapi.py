@@ -150,6 +150,10 @@ LEAGUE_KEY_ALIASES: dict[str, tuple[str, ...]] = {
     "brazilcampeonato": ("soccer_brazil_campeonato",),
     # tightened: bare "argentinaprimera" mislabelled Primera B Metropolitana
     "argentinaprimeradivisin": ("soccer_argentina_primera_division",),
+    # accent-FOLD form (post-fold code of "Argentina Primera División");
+    # catalogue evidence: tests/data/theoddsapi_sports_2026-10-10.json lists
+    # soccer_argentina_primera_division active=true (fetched 2026-10-10T04:20Z)
+    "argentinaprimeradivision": ("soccer_argentina_primera_division",),
     "denmarksuperliga": ("soccer_denmark_superliga",),
     "belgiumfirstdiv": ("soccer_belgium_first_div",),
     "austriabundesliga": ("soccer_austria_bundesliga",),
