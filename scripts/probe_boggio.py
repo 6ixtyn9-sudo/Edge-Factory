@@ -13,6 +13,7 @@ def coverage_report(data, slate):
     matched=len(slate)-len(missing)
     return {'slate':len(slate),'matched':matched,'coverage_pct':round(100*matched/len(slate),1) if slate else 0.0,'unmatched_examples':missing[:5]}
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 BASE="https://football-prediction-api.p.rapidapi.com"; HOST="football-prediction-api.p.rapidapi.com"
 def main():
  parser=argparse.ArgumentParser(description="Bounded Boggio prediction or fixture-stats probe")
@@ -59,6 +60,16 @@ def main():
    data=json.loads(body) if body else None; items=data.get("data",[]) if isinstance(data,dict) else []
    if items and isinstance(items[0],dict):
     first=items[0]; print("first_keys_types="+repr({k:type(v).__name__ for k,v in list(first.items())[:24]})); print("publication_lag_hours="+repr(_lag(first)))
+   upcoming=[]; now_london=datetime.now(ZoneInfo('Europe/London'))
+   for item in items:
+    if not isinstance(item,dict) or str(item.get('status','')).lower()!='pending' or item.get('is_expired') is True:continue
+    try:
+     start=datetime.fromisoformat(str(item.get('start_date','')).replace('Z','+00:00'))
+     start=start.replace(tzinfo=ZoneInfo('Europe/London')) if start.tzinfo is None else start.astimezone(ZoneInfo('Europe/London'))
+    except ValueError:continue
+    if start<=now_london or not isinstance(item.get('id'),int):continue
+    upcoming.append({'id':item['id'],'start_london':start.isoformat(),'home':str(item.get('home_team',''))[:60], 'away':str(item.get('away_team',''))[:60], 'league':str(item.get('competition_name',''))[:60]})
+   print(f"ledger=boggio_listing calls=1 pending_upcoming_count={len(upcoming)} event_ids={upcoming[:8]}")
    slate_path=Path(os.environ.get('EDGE_FACTORY_SLATE',str(ROOT/'localdata'/'picks_today.json')))
    try:
     payload=json.loads(slate_path.read_text()); slate=payload if isinstance(payload,list) else payload.get('rows',[])
