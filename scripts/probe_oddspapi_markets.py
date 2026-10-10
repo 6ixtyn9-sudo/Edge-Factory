@@ -24,6 +24,7 @@ import argparse
 import json
 import re
 import sys
+import urllib.error
 from collections import Counter
 from datetime import date, timedelta
 from pathlib import Path
@@ -287,6 +288,11 @@ def main() -> int:
     wanted = {item.strip().lower() for item in args.bookmaker.split(",") if item.strip()}
     try:
         report = run_probe(args.date, args.days, Path(args.picks), args.limit, wanted)
+    except urllib.error.HTTPError as exc:  # exception URL/body can contain apiKey
+        safe_headers = {str(k): str(v) for k, v in exc.headers.items()
+                        if 'ratelimit' in str(k).lower() or str(k).lower() == 'retry-after'} if exc.headers else {}
+        print(f"OddsPapi coverage probe failed: HTTP {exc.code} rate_limit_headers={safe_headers}", file=sys.stderr)
+        return 1
     except Exception as exc:  # avoid leaking request URLs with apiKey parameters
         print(f"OddsPapi coverage probe failed: {type(exc).__name__}", file=sys.stderr)
         return 1
