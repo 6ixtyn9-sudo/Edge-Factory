@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import os
 import time
+import urllib.error
 import urllib.request
 from dotenv import load_dotenv
 
@@ -30,6 +31,15 @@ def _get(url: str, retries: int = 3):
                 url, headers={"Authorization": f"Token {TOKEN}"})
             with urllib.request.urlopen(req, timeout=30) as r:
                 return json.loads(r.read().decode("utf-8", "replace"))
+        except urllib.error.HTTPError as exc:
+            # Repeating the identical request cannot repair denied access,
+            # an invalid endpoint or an exhausted quota. Leave retries to a
+            # later authorized capture; do not hammer a 429 after 1.5 seconds.
+            if (400 <= exc.code < 500 and exc.code != 408) or exc.code == 509:
+                raise
+            if attempt == retries - 1:
+                raise
+            time.sleep(1.5 * (attempt + 1))
         except Exception:
             if attempt == retries - 1:
                 raise

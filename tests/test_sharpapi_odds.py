@@ -951,3 +951,31 @@ def test_the_distinct_match_count_covers_the_whole_board_not_survivors(monkeypat
     rows, stats = sa.capture_day("2026-10-06")
     assert rows == []                     # all in-play, nothing survives
     assert stats["board_fixtures"] == 5   # measured before refusal
+
+
+def test_cached_capture_preserves_board_receipt_not_previous_card(monkeypatch, tmp_path):
+    held = [{'home': 'Alpha', 'away': 'Beta', 'market': '1x2', 'selection': 'home', 'odds': 2.1}]
+    original = {'rows': held, 'stats': {'board_rows': 100, 'board_fixtures': 20,
+                'board_team_names': {'Alpha': 1}, 'card_fixture_count': 1,
+                'card_fixtures_on_board': 1, 'card_priced_rows': 1}}
+    path = tmp_path / 'sharpapi_odds_shadow_2026-10-09.json'
+    path.write_text(json.dumps(original))
+    before = path.read_bytes()
+    def no_network(*args, **kwargs): pytest.fail('cache hit must not fetch')
+    monkeypatch.setattr(sa, 'get_json', no_network)
+    rows, stats = sa.capture_day('2026-10-09', card=[('Other', 'Fixture')], team_key=str.lower)
+    assert rows == held and path.read_bytes() == before
+    assert stats['board_rows'] == 100 and stats['board_fixtures'] == 20
+    assert stats['card_fixture_count'] == 1 and stats['card_fixtures_on_board'] is None
+    assert stats['card_priced_rows'] is None and stats['requests'] == 0
+
+
+def test_legacy_cache_has_unknown_board_not_empty_board(monkeypatch, tmp_path):
+    held = [{'home': 'Alpha', 'away': 'Beta', 'odds': 2.1}]
+    (tmp_path / 'sharpapi_odds_shadow_2026-10-09.json').write_text(json.dumps({'rows': held}))
+    rows, stats = sa.capture_day('2026-10-09', card=[('Alpha', 'Beta')], team_key=str.lower)
+    assert rows == held
+    assert stats['board_rows'] is None and stats['board_fixtures'] is None
+    from edgefactory.source_health import _card_token
+    assert _card_token({'board_summary': stats}) == '/cardunknownof1'
+    assert _card_token({'board_summary': {'card_fixture_count': 1, 'card_fixtures_on_board': 0}}) == '/card0of1'

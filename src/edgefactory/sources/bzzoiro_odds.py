@@ -108,6 +108,10 @@ def _get(url: str, retries: int = 3):
                 return json.loads(r.read().decode("utf-8", "replace"))
         except urllib.error.HTTPError as exc:
             _record_error(exc)
+            # Keep the observed status, but do not retry the same rejected
+            # request. Other endpoints retain their independent eligibility.
+            if (400 <= exc.code < 500 and exc.code != 408) or exc.code == 509:
+                raise
             if attempt == retries - 1:
                 raise
             time.sleep(1.5 * (attempt + 1))

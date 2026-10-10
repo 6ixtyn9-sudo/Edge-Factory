@@ -764,14 +764,19 @@ def _trim_event_sample(payload: Any) -> Any:
     if isinstance(events, list) and events:
         sample = events[0]
         text = json.dumps(sample, sort_keys=True)
-        return _scrub_secret(json.loads(text[:20000]) if len(text) > 20000 else sample)
+        if len(text) > 20000:
+            # A JSON prefix is generally invalid JSON. Diagnostics must not
+            # turn a successfully parsed response into a capture failure.
+            return {"sample_truncated": True, "json_type": type(sample).__name__,
+                    "sample_bytes": len(text.encode("utf-8"))}
+        return _scrub_secret(sample)
     return _scrub_secret({"top_keys": [str(k) for k in list(payload.keys())[:12]]} if isinstance(payload, dict) else None)
 
 
 def classify_zero_rows(payload: Any, rows: list[dict[str, Any]], schema_match: bool) -> str | None:
     """Name WHY a 200 produced nothing. ``None`` when it produced rows.
 
-    Four zero-row answers with four different next actions:
+    Distinct zero-row answers require different next actions:
 
     * ``error_envelope``       - a 200 whose body is an error, not a board.
       Usually the credential. NOT a parser question, though it parses like
@@ -783,6 +788,9 @@ def classify_zero_rows(payload: Any, rows: list[dict[str, Any]], schema_match: b
       day's fixture count beside it.
     * ``events_without_teams`` - fixtures arrived but none exposed both
       team names; shape drift inside the event, not in the envelope.
+    * ``events_without_market_payload`` - teams are readable, but no event
+      exposes a nonempty markets/odds container recognized by this adapter.
+      Inspect the retained sample; do not invent a market mapping.
     * ``no_usable_rows``       - fixtures parsed, every price discarded;
       the named drop reasons say which.
     """
@@ -797,6 +805,9 @@ def classify_zero_rows(payload: Any, rows: list[dict[str, Any]], schema_match: b
         return "empty_board"
     if not schema_match:
         return "events_without_teams"
+    if not any(isinstance(event, dict) and (event.get("markets") or event.get("odds"))
+               for event in events):
+        return "events_without_market_payload"
     return "no_usable_rows"
 
 
@@ -815,6 +826,11 @@ _ZERO_ROW_DIAGNOSIS = {
     "events_without_teams": (
         "fixtures returned but none exposed both team names; shape drift inside the "
         "event, not in the envelope"),
+    "events_without_market_payload": (
+        "fixtures returned but none carries a nonempty markets/odds container recognized "
+        "by this adapter; inspect the retained event sample and endpoint contract, "
+        "not selection aliases or credentials. Prices elsewhere in the payload "
+        "are not ruled out"),
     "no_usable_rows": (
         "fixtures parsed but every price was discarded; see the named drop reasons"),
 }

@@ -521,6 +521,55 @@ def _registry(monkeypatch, tmp_path, statuses):
     return picks_today.load_thresholds()
 
 
+def test_certified_ou_only_registry_reports_1x2_fallback(monkeypatch, tmp_path):
+    """Certified non-1X2 edges do not imply a registry-supplied 1X2 floor.
+
+    The 1X2 fallback entries/thresholds and the OU entry must remain unchanged;
+    only the returned origin flag was wrong for this second fallback branch.
+    No activation/model state, providers or production registry are read.
+    """
+    ou_rule = "ou25-unanimous-2way-sa avg_p>=70"
+    path = tmp_path / "edges_consensus.json"
+    path.write_text(json.dumps({"edges": [{
+        "rule": ou_rule, "market": "ou_2.5", "status": "certified",
+    }]}))
+    monkeypatch.setattr(picks_today, "EDGES_PATH", path)
+
+    t1x2, ou, btts, is_fallback = picks_today.load_thresholds()
+
+    assert {n: e["threshold"] for n, e in t1x2.items()} == {2: 70.0, 3: 65.0}
+    assert t1x2 == {
+        n: {"n_way": n, "threshold": threshold,
+            "rule": picks_today.display_rule("1x2", n, threshold),
+            "display_rule": picks_today.display_rule("1x2", n, threshold),
+            "market": "1x2"}
+        for n, threshold in picks_today.FALLBACK_1X2.items()
+    }
+    assert ou == picks_today._edge_entry({"rule": ou_rule, "market": "ou_2.5"})
+    assert btts is None
+    assert is_fallback is True
+
+
+def test_missing_registry_reports_1x2_fallback(monkeypatch, tmp_path):
+    monkeypatch.setattr(picks_today, "EDGES_PATH", tmp_path / "missing.json")
+    t1x2, ou, btts, is_fallback = picks_today.load_thresholds()
+    assert {n: e["threshold"] for n, e in t1x2.items()} == {2: 70.0, 3: 65.0}
+    assert (ou, btts, is_fallback) == (None, None, True)
+
+
+def test_certified_1x2_registry_does_not_report_fallback(monkeypatch, tmp_path):
+    rule = "3way-unanimous avg_p>=70"
+    path = tmp_path / "edges_consensus.json"
+    path.write_text(json.dumps({"edges": [{
+        "rule": rule, "market": "1x2", "status": "certified",
+    }]}))
+    monkeypatch.setattr(picks_today, "EDGES_PATH", path)
+    t1x2, ou, btts, is_fallback = picks_today.load_thresholds()
+    assert t1x2[3]["rule"] == rule
+    assert t1x2[3]["threshold"] == 70.0
+    assert (ou, btts, is_fallback) == (None, None, False)
+
+
 def test_slot_holds_the_loosest_certified_threshold_per_n_way(monkeypatch, tmp_path):
     t1x2, _ou, _btts, is_fallback = _registry(monkeypatch, tmp_path, _REGISTRY)
     assert not is_fallback, "a registry with certified edges must not take the fallback path"

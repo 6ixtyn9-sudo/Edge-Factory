@@ -1287,7 +1287,9 @@ def load_thresholds():
             if _prefer_entry(entry, btts_best):
                 btts_best = entry
 
-    if not t1x2:
+    # Origin of the 1X2 floor, not whether any market had certified edges.
+    is_fallback = not bool(t1x2)
+    if is_fallback:
         t1x2 = {
             k: {
                 "n_way": k,
@@ -1298,7 +1300,7 @@ def load_thresholds():
             }
             for k, v in FALLBACK_1X2.items()
         }
-    return t1x2, ou_best, btts_best, not bool(edges)
+    return t1x2, ou_best, btts_best, is_fallback
 
 
 # --------------------------------------------------------------------------
