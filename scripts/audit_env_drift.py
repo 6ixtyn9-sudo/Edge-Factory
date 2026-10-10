@@ -21,10 +21,12 @@ Covered: literal and module-constant defaults in ``src/**.py`` and
 
 NOT covered: defaults computed at runtime (a call, a conditional, a dict
 lookup). Those cannot be resolved statically. As of this writing there are
-15 such reads and NONE of them is set by any workflow, so the blind spot
-does not currently hide anything -- but that is a fact about today, and the
-check ``--strict`` performs will re-verify it on every run rather than
-trusting this sentence.
+some such reads and NONE of them should be set by any workflow, so the blind
+spot must not hide anything -- but that is a fact about today, and the check
+``--strict`` performs (and ``test_the_blind_spot_does_not_hide_a_deployed_variable``)
+re-verifies it on every run rather than trusting this sentence. A read whose
+name comes from a module constant resolves too, so a credential ring written as
+``os.environ.get(KEY_ENV)`` is no longer counted as unresolvable.
 
 Consumers outside ``src``/``scripts`` are also invisible: the Forebet
 diagnostic workflow reads its variables in an inline heredoc, so those look
@@ -103,12 +105,36 @@ def _module_constants(tree: ast.Module) -> dict[str, object]:
     return consts
 
 
-def _is_env_get(node: ast.AST) -> bool:
-    return (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
-            and node.func.attr in ("get", "getenv") and bool(node.args)
-            and isinstance(node.args[0], ast.Constant)
-            and isinstance(node.args[0].value, str)
-            and bool(NAME_RE.match(node.args[0].value)))
+def _env_name(arg: ast.AST, consts: dict[str, object]) -> str | None:
+    """The variable name an ``os.environ.get(...)`` argument refers to.
+
+    ``os.environ.get("X")`` and ``os.environ.get(KEY_ENV)`` are the same read -
+    a module constant holding the name is exactly how the SharpAPI defect hid
+    once - so both must resolve. Resolution only ever ADDS coverage: a name we
+    cannot resolve is still left alone rather than guessed at.
+    """
+    if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+        return arg.value
+    if isinstance(arg, ast.Name) and isinstance(consts.get(arg.id), str):
+        return consts[arg.id]
+    return None
+
+
+def _is_env_get(node: ast.AST, consts: dict[str, object] | None = None) -> bool:
+    """An ``os.environ.get(NAME)`` read.
+
+    With ``consts`` the first argument may also be a module constant holding the
+    name. The parameter is OPTIONAL and only the fallback-chain check passes it:
+    widening the first-name detection would newly expose reads such as
+    ``os.environ.get(FOREGROUND_ENV, "auto")`` whose divergence nobody has
+    reviewed yet, and this audit must fix its blind spot without quietly
+    re-opening the case book.
+    """
+    if not (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+            and node.func.attr in ("get", "getenv") and bool(node.args)):
+        return False
+    name = _env_name(node.args[0], consts or {})
+    return bool(name) and bool(NAME_RE.match(name))
 
 
 def code_defaults() -> tuple[dict[str, set[tuple[str, str]]], set[str]]:
@@ -140,7 +166,7 @@ def code_defaults() -> tuple[dict[str, set[tuple[str, str]]], set[str]]:
 
         def record(name: str, value: ast.AST, lineno: int) -> None:
             value = terminal(value)
-            if _is_env_get(value):
+            if _is_env_get(value, consts):
                 return   # fallback is another env var: nothing to contradict
             if isinstance(value, ast.Constant):
                 defaults.setdefault(name, set()).add((str(value.value), f"{rel}:{lineno}"))

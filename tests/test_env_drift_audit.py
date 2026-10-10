@@ -146,3 +146,33 @@ def test_a_credential_fallback_chain_is_not_a_blind_spot(monkeypatch, tmp_path):
     monkeypatch.setattr(audit, "WORKFLOWS", wf)
     _defaults, blind = audit.code_defaults()
     assert "EDGE_FACTORY_KEYS" not in blind
+
+
+def test_a_credential_chain_named_by_a_constant_is_not_a_blind_spot(monkeypatch, tmp_path):
+    """The regression this audit was blind to.
+
+    ``os.environ.get("RAPIDAPI_KEYS") or os.environ.get(KEY_ENV) or ""`` is the
+    same ring read as the test above, with the fallback's NAME held in a module
+    constant. The chain's last element is a literal, so resolving the fallback
+    only ever happens through this name lookup - and until it resolved, the
+    fallback was neither a literal nor a recognised env read, the name landed in
+    the BLIND set, and a workflow setting it (both the probe shim and daily.yml)
+    tripped the blind-spot guard instead of passing. Fixing the RESOLVER, not the
+    guard: the guard still refuses to certify a pair it cannot read.
+    """
+    wf = tmp_path / "workflows"
+    wf.mkdir()
+    (wf / "k.yml").write_text(
+        "jobs:\n  x:\n    env:\n      EDGE_FACTORY_KEYS: ${{ secrets.S }}\n")
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "mod.py").write_text(
+        'import os\nKEY_ENV = "EDGE_FACTORY_KEY"\n'
+        'RAW = os.environ.get("EDGE_FACTORY_KEYS") or os.environ.get(KEY_ENV) or ""\n')
+    (tmp_path / "scripts").mkdir()
+    monkeypatch.setattr(audit, "ROOT", tmp_path)
+    monkeypatch.setattr(audit, "WORKFLOWS", wf)
+    _defaults, blind = audit.code_defaults()
+    assert "EDGE_FACTORY_KEYS" not in blind
+    assert "EDGE_FACTORY_KEYS" not in dict(_defaults)   # no default to contradict
+    assert audit.drift() == []                           # and no invented divergence
