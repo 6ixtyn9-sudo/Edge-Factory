@@ -84,16 +84,21 @@
     },
     "boggio": {
       "bg_matched": 0,
-      "bg_raw": 0,
-      "bg_scored": 0,
-      "blocker": "boggio: HTTP 404 Not Found",
-      "can_fetch_today": false,
-      "can_price": false,
+      "bg_raw": 19,
+      "bg_scored": 19,
+      "blocker": null,
+      "can_fetch_today": true,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "fixture_key_miss": 12,
+        "selection_unsupported": 7
+      },
       "reason": null,
-      "status": "unavailable"
+      "status": "ok"
     },
     "bzzoiro": {
       "blocker": "no bzzoiro prediction rows for today in the warehouse; the prediction capture stage outcome is not carried into this build - the odds-lane status below is a different access",
@@ -169,12 +174,12 @@
       "canonicalization_dropped": 0,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 43,
+      "join_matched_rows": 51,
       "join_miss_counts": {
-        "fixture_key_miss": 38635,
-        "no_pick_for_fixture": 346
+        "fixture_key_miss": 38591,
+        "no_pick_for_fixture": 382
       },
-      "pa_matched": 22,
+      "pa_matched": 25,
       "pa_raw": 39024,
       "pa_scored": 39024,
       "reason": null,
@@ -234,7 +239,7 @@
         "board_rows": 0,
         "board_team_count": 0,
         "board_team_names": {},
-        "card_fixture_count": 20,
+        "card_fixture_count": 26,
         "league_filter_requested": false,
         "requested_limit": 1000
       },
@@ -321,10 +326,10 @@
       "status": null
     },
     "zulubet": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "can_fetch_today": true,
-      "can_price": false,
-      "can_vote": false,
+      "can_price": true,
+      "can_vote": true,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
