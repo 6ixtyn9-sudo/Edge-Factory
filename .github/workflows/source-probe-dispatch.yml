@@ -1,0 +1,34 @@
+name: Bounded source interrogation probe
+on:
+  workflow_dispatch:
+    inputs:
+      probe:
+        required: true
+        type: choice
+        options:
+          - pinnapi
+          - betminer
+          - boggio
+          - sharpapi
+          - oddspapi_markets
+          - bzzoiro_odds
+      date:
+        description: 'Optional date (probe defaults to UTC today; existing scripts read their own defaults)'
+        required: false
+        type: string
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      PINNAPI_KEY: ${{ inputs.probe == 'pinnapi' && secrets.PINNAPI_KEY || '' }}
+      RAPIDAPI_KEY: ${{ (inputs.probe == 'betminer' || inputs.probe == 'boggio') && secrets.RAPIDAPI_KEY || '' }}
+      SHARPAPI_KEY: ${{ inputs.probe == 'sharpapi' && secrets.SHARPAPI_KEY || '' }}
+      ODDSPAPI_API_KEYS: ${{ inputs.probe == 'oddspapi_markets' && secrets.ODDSPAPI_API_KEYS || '' }}
+      BZZOIRO_TOKEN: ${{ inputs.probe == 'bzzoiro_odds' && secrets.BZZOIRO_TOKEN || '' }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run existing bounded probe
+        run: PYTHONPATH=src python3 scripts/probe_${{ inputs.probe }}.py
