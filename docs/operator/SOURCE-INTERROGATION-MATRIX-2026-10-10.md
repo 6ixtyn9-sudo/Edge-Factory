@@ -409,3 +409,38 @@ boggio call ran between now and then (any routine response header), not from mem
 The 7 calls this correction saves stay in pool A/B; at ~2.5/day production plus
 ~7/week enrichment the October plan is unchanged. Nothing here weakens a bar — the
 pre-kickoff rule already existed and simply refused to be paid for its own exception.
+
+### PR #52 MERGED on operator instruction (2026-10-10 17:45Z) — the one thing I do NOT decide
+
+Standing rule h ("operator merges") was overridden **by the operator in writing** and
+executed on that instruction: `gh pr merge 52 --merge` → merge commit **`d7e62c03`**,
+merged 2026-10-10T17:45:22Z. Post-merge verification, in the order that matters:
+
+* **The ring line survived the merge.** `git show origin/main:.github/workflows/daily.yml`
+  still reads `RAPIDAPI_KEYS: ${{ secrets.RAPIDAPI_KEYS || '' }}` at line 45 — i.e. the
+  rebase repair worked on main, not just on the branch. `git diff 80ea3d1f origin/main --
+  .github/workflows/` is **empty**: the merge touched no workflow file at all.
+* Main is `0 4` against the branch (no main-only drift), 4 commits landed, files present:
+  `scripts/capture_card_enrich.py`, `tests/test_card_enrich_h2h.py`, both `.proposed` docs.
+* PR state `MERGED`; the pre-merge `mergeStateStatus=UNSTABLE` was the external Cloudflare
+  *Workers Builds* check only, which this repo has never gated anything on and which
+  cannot pass or fail from a docs/lane change.
+
+**CI evidence is now free and imminent.** The merge lands on main, so the next scheduled
+`daily.yml` run executes the `regression-tests` job against this code — py3.13, real
+`requirements.txt` including `curl_cffi`. That is the authoritative confirmation the PR
+could never have its own check (no `pull_request` trigger exists here).
+
+**Correction to my own sequencing note, because I over-claimed it.** I wrote that "tonight's
+post-merge production runs (18:00 / 21:00 SAST) write `event_id` into the shadow ledger".
+The merge happened at 19:45 SAST, **after** the 18:00 run started, so tonight there is
+exactly **one** post-merge production capture — 21:00 SAST. Whether that single run's
+listing (the feed's documented next-48h/`iso_date` window, day starting midnight London)
+covers enough of tomorrow's card to resolve the top-6 ids is **unmeasured from here**, and
+measuring it would cost a call. So: do not pre-decide `--allow-listing` either way — read
+`need_listing`/`unresolved` off the free plan tomorrow morning and let it answer. A plan
+that says `need_listing=1` is the cheap, correctly-priced way to spend 7 instead of 6.
+
+Remaining operator-only steps: paste shim v5, tomorrow's plan-only dispatch, then
+`--execute`, plus the three owed receipts (sharpapi, oddspapi_markets, betminer
+`--date 2026-10-11`). Vendor calls spent by the agent across all sessions: **0**.
