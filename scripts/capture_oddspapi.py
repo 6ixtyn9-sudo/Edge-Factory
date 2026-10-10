@@ -487,9 +487,16 @@ def capture(day: str, max_fixtures: int = 20) -> dict:
             # bucket that is already empty (observed 2026-10-10: one key,
             # 429 on the board, attempted 0 - and the health line read it as
             # a quiet slate because the receipt carried no quota evidence).
+            # A server-side 5xx must NOT read as a credential problem, so the
+            # classification mirrors source_health: quota / auth / unavailable.
             stats["http_status"] = int(exc.code)
             stats["rate_limit"] = rate_limit_diagnostics()
-            stats["status"] = "quota" if exc.code in (429, 402, 430, 509) else "auth"
+            if exc.code in (429, 402, 430, 509):
+                stats["status"] = "quota"
+            elif exc.code in (401, 403):
+                stats["status"] = "auth"
+            else:
+                stats["status"] = "unavailable"
             stats["errors"].append(
                 f"fetch_fixtures: HTTP {exc.code} ({stats['status']}); capture stopped")
             _write_receipt(day, stats)
