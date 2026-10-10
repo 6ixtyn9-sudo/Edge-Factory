@@ -14,3 +14,7 @@ No recorder is activated or shipped by this release. The six known consensus
 qualification/electorate defects remain unresolved; this merge is not model
 certification. Main-branch operational records are preserved rather than
 publishing the experimental branch run's persisted state.
+
+Final release verification: 2592 passed, six preserved contract failures in
+64.46s. No recorder references remain in scripts/src/tests. Operational
+localdata tree matches integrated main exactly. No workflow changes.

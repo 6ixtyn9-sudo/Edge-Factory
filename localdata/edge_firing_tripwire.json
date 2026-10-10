@@ -5,7 +5,7 @@
     {
       "decay": "WATCH",
       "last_fired": "2026-10-10",
-      "n_last_window": 49,
+      "n_last_window": 54,
       "rule": "2way-unanimous avg_p>=70",
       "silent": false
     },
@@ -19,33 +19,33 @@
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-10",
-      "n_last_window": 280,
+      "n_last_window": 323,
       "rule": "ml-meta avg_p>=55",
       "silent": false
     },
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-10",
-      "n_last_window": 68,
+      "n_last_window": 65,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
     {
       "decay": "HEALTHY",
       "last_fired": "2026-10-10",
-      "n_last_window": 53,
+      "n_last_window": 57,
       "rule": "ml-meta avg_p>=65",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-10-10",
-      "n_last_window": 22,
+      "n_last_window": 18,
       "rule": "ml-meta avg_p>=80",
       "silent": false
     }
   ],
-  "generated_at": "2026-10-10T08:22:45",
+  "generated_at": "2026-10-10T06:57:04",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
@@ -101,7 +101,7 @@
     },
     {
       "name": "predictz",
-      "newest_date": "2026-10-10",
+      "newest_date": "2026-10-08",
       "newest_file": "predictz_2026-10.csv.gz",
       "retired": null,
       "role": "shadow",
@@ -109,7 +109,7 @@
     },
     {
       "name": "windrawwin",
-      "newest_date": "2026-10-10",
+      "newest_date": "2026-10-08",
       "newest_file": "windrawwin_2026-10.csv.gz",
       "retired": null,
       "role": "shadow",
@@ -133,7 +133,7 @@
     },
     {
       "name": "freesupertips",
-      "newest_date": "2026-10-10",
+      "newest_date": "2026-10-05",
       "newest_file": "freesupertips_2026-10.csv.gz",
       "retired": null,
       "role": "not_ready",
