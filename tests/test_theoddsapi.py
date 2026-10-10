@@ -552,3 +552,40 @@ def test_october_10_league_outcomes_match_the_attempt_ledger():
     for label, want in expected.items():
         got = theoddsapi.sport_key_for_league(label, CATALOGUE_2026_10_10)
         assert got == want, f"{label!r}: got {got!r}, want {want!r}"
+
+
+def test_argentina_top_flight_resolves_and_tiers_stay_unmapped():
+    # Catalogue evidence: soccer_argentina_primera_division is listed active
+    # (tests/data/theoddsapi_sports_2026-10-10.json, fetched 2026-10-10T04:20Z).
+    # The accent-FOLDED fragment "argentinaprimeradivision" is in
+    # LEAGUE_KEY_ALIASES, so the alias stage — not the containment fallback —
+    # resolves the top-flight label deterministically.
+    assert theoddsapi._league_code("Argentina,Primera División") == (
+        "argentinaprimeradivision")
+    assert theoddsapi.sport_key_for_league(
+        "Argentina,Primera División", CATALOGUE_2026_10_10) == (
+        "soccer_argentina_primera_division")
+    assert theoddsapi.sport_key_for_league(
+        "Argentina Primera División", CATALOGUE_2026_10_10) == (
+        "soccer_argentina_primera_division")
+    # Tier guards: lower tiers and reserve football must never inherit the
+    # top-flight key (labels observed in the picks archives).
+    for label in ("Argentina,Primera B Metropolitana",
+                  "Argentina: Primera Nacional",
+                  "Argentina,Primera Nacional Grp. B",
+                  "Argentina: Primera B",
+                  "Argentina: Reserve League"):
+        assert theoddsapi.sport_key_for_league(
+            label, CATALOGUE_2026_10_10) is None, label
+    # Other countries' top flights share the "Primera División" name; none may
+    # land on Argentina's key (wrong competition is worse than unpriced).
+    for country in ("Uruguay", "Peru", "Venezuela", "Bolivia", "Ecuador",
+                    "Paraguay", "Guatemala", "El Salvador", "Nicaragua",
+                    "Honduras", "Costa Rica", "Panama"):
+        label = f"{country},Primera División"
+        assert theoddsapi.sport_key_for_league(
+            label, CATALOGUE_2026_10_10) is None, label
+    # Clausura: no catalogue evidence the provider places it under the
+    # Primera División key — stays unmapped rather than guessed.
+    assert theoddsapi.sport_key_for_league(
+        "Argentina,Clausura", CATALOGUE_2026_10_10) is None
