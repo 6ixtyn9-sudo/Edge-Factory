@@ -75,6 +75,22 @@ Existing `sources/bzzoiro.py:_row` already persists `event_id`, home/away, leagu
 
 No new capture or model path is proposed by this inventory. The minimal Actions shim has no dependency install: Betminer, SharpAPI and OddsPAPI exited before vendor calls on `ModuleNotFoundError: curl_cffi`. An operator-proposed `pip install -r requirements.txt` step uses existing dependencies but must be applied in the GitHub web editor; until then do not repeat those exact dispatches. The existing Forebet diagnostic is stdlib-only: begin with `page_access`, then consider each getrs market as a separate scarce Browser Run.
 
+### Closing roll-up / pending receipts (2026-10-10)
+
+| Evidence class | Source and outcome | Capture verdict |
+|---|---|---|
+| LIVE-VERIFIED | Pinnapi: authenticated listing with `periods.num_0` 1X2/totals prices; 62/68 team-key/container overlap on moving board. | Existing adapter reads these markets; verify real ledger rows and date/squad/league joins before shadow use. No further probe tonight. |
+| LIVE-VERIFIED | Boggio: five distinct fixture-stats payloads, HTTP 200 for upcoming 423169; 5 calls charged 39→34. | **Not ingested**: venue-split W-D-L/points, H2H HT/FT scores, last-ten form and half-goals, dated opponent/result/odds. Shadow snapshot only before kickoff; no historical stats backfill established. |
+| LIVE-VERIFIED | Bzzoiro: v2 DNB/corners market names and event-context IDs, two standalone polymarket responses; v1 best odds work, v2 bookmaker comparison denied. | DNB/corners nested values uninspected; event IDs need extra listing/cadence; polymarket one call/event and separate cap; no paid entitlement. |
+| PRE-CALL BLOCKED | Betminer, SharpAPI, OddsPAPI earlier minimal-runner attempts lacked `curl_cffi`. | Not source failures; wait for amended-shim receipts. Existing Betminer 10-Oct receipt is a 404 endpoint-contract result; 11-Oct query is a distinct requested date and spend. |
+| PENDING | Forebet diagnostic `page_access` and four quota-gated getrs cells; BetExplorer match page failed in cooperative fetch; remaining page/candidate sources have prior fixtures/scouting, not today's live receipt. | Do not claim machine-readable coverage is complete until bounded receipts exist. Browser Run KV budget is distinct from API keys. |
+
+**Boggio depletion calendar (operator estimate, not a hard timestamp):** family remaining 34 at 14:38 UTC; at approximately 2.5 production calls/day, `34 / 2.5 ≈ 13.6` days of headroom, suggesting exhaustion around **2026-10-23/24**, until the provider header's reset in roughly 23 days (**~2026-11-02**). Interrogation is closed: reserve the remaining calls for production, no more Boggio probes. Its shadow is fail-soft; anticipate late-October absences/429s and label them quota rather than parser breakage. Recheck the actual header and daily ledgers because other RapidAPI family consumption can move the estimate. No key values or paid access needed.
+
+**Phase-2 operator decisions** are itemized in the tables above: Bzzoiro DNB/corners (zero incremental prediction calls) and context IDs (separate event pagination), standalone Polymarket scorer/exact-score/liquidity (one call/event, new explicit cap), Boggio five-family pre-kickoff snapshots (up to five calls/fixture under shared monthly quota), and Pinnapi existing periods price shadow (one board call with price-age validation). None is activated in this PR.
+
+**Merge hazard:** `.github/workflows/source-probe-dispatch.yml` is currently in the branch-side PR diff while main has v3. Operator must delete the branch workflow file via GitHub web editor after all branch probes; verify it is absent from PR #51's Files changed before considering merge. Do not merge here.
+
 Candidate-page rows below are **prior 2026-10-02 scouting from `docs/operator/CANDIDATE-SOURCES.md`**, not fresh page fetches. Candidate claims require one new cooperative sample and point-in-time proof. No bulk capture approved. Per-page cost is one request per fixture/article unless an actual listing aggregates rows; archive depth unknown unless noted. All fixture candidates use J; bookmaker prices additionally need book, selection and capture time.
 
 | Candidate | Prior exposure / ingestion | Unharvested ML candidate + viability/cost | Cheapest next action |
