@@ -1,79 +1,35 @@
 {
-  "added": 75,
-  "attempted": 6,
+  "added": 0,
+  "attempted": 1,
   "attempted_fixtures": [
     {
-      "away": "FK Arendal",
+      "away": "Paysandu",
       "date": "2026-10-10",
-      "home": "Jerv",
-      "kickoff": "10:00",
-      "league": "Norway,2. Division Avdeling 1"
-    },
-    {
-      "away": "FC Porto",
-      "date": "2026-10-10",
-      "home": "Maritimo",
-      "kickoff": "10-10, 18:00",
-      "league": "Portugal Primeira Liga"
-    },
-    {
-      "away": "Jedinstvo Ub",
-      "date": "2026-10-10",
-      "home": "Borac Cacak",
-      "kickoff": "07:00",
-      "league": "Serbia,Prva Liga"
-    },
-    {
-      "away": "Pors Grenland",
-      "date": "2026-10-10",
-      "home": "Mjondalen",
-      "kickoff": "10:00",
-      "league": "Norway,2. Division Avdeling 1"
-    },
-    {
-      "away": "Kwara United",
-      "date": "2026-10-10",
-      "home": "Ikorodu City",
-      "kickoff": "08:00",
-      "league": "Nigeria,Npfl"
-    },
-    {
-      "away": "Niger Tornadoes",
-      "date": "2026-10-10",
-      "home": "Ranchers Bees",
-      "kickoff": "08:00",
-      "league": "Nigeria,Npfl"
+      "home": "Brusque",
+      "kickoff": "10-10, 21:00",
+      "league": "Brazil Serie C"
     }
   ],
-  "candidate_fixtures": 68,
-  "captured_at": "2026-10-10T16:17:25+00:00",
+  "candidate_fixtures": 69,
+  "captured_at": "2026-10-10T18:27:09+00:00",
   "date": "2026-10-10",
   "due_reasons": {
-    "close_at": 1,
-    "first_at": 5
+    "first_at": 1
   },
   "errors": [],
-  "fixtures_with_rows": 1,
+  "fixtures_with_rows": 0,
   "kickoff_mismatch_detail": {
     "kickoff_mismatch_display_fallback_overridden": 10
   },
-  "quoted_fixtures": [
-    {
-      "away": "FC Porto",
-      "date": "2026-10-10",
-      "home": "CS Maritimo",
-      "kickoff": "2026-10-10T17:00:00Z",
-      "league": "Portugal Primeira Liga"
-    }
-  ],
-  "rows": 75,
+  "quoted_fixtures": [],
+  "rows": 0,
   "schema": 1,
   "skip_reasons": {
-    "kickoff_already_passed": 7,
+    "kickoff_already_passed": 12,
     "kickoff_mismatch": 10,
     "priced": 22,
-    "priced_close_window_not_open": 5,
-    "retry_cooldown": 28
+    "priced_close_window_not_open": 2,
+    "retry_cooldown": 32
   },
   "skipped": [
     "Bodo/Glimt|Kristiansund BK (priced)",
@@ -86,10 +42,13 @@
     "Rangers|Kilmarnock (priced)",
     "Spezia|Gubbio (retry cooldown (6h after failed attempt))",
     "Inter|Parma (priced)",
+    "Jerv|FK Arendal (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Maritimo|FC Porto: pick legacy display says 16:00Z, captured rows say 17:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
+    "Maritimo|FC Porto (kickoff already passed)",
     "Buriram United|Rayong FC (retry cooldown (6h after failed attempt))",
     "RAAL La Louvi\u00e8re|Club Brugge KV (priced)",
     "Vasco da Gama|Remo (priced)",
+    "Borac Cacak|Jedinstvo Ub (retry cooldown (6h after failed attempt))",
     "Cetatea Suceava|Dumbravita (retry cooldown (6h after failed attempt))",
     "Stockport County FC|Barnsley (priced)",
     "WARN kickoff-mismatch Real Madrid|Villarreal: pick legacy display says 18:00Z, captured rows say 19:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
@@ -105,25 +64,26 @@
     "Grazer AK|Red Bull Salzburg (retry cooldown (6h after failed attempt))",
     "RB Leipzig|Eintracht Frankfurt (priced)",
     "WARN kickoff-mismatch Manchester United|Tottenham: pick legacy display says 15:30Z, captured rows say 16:30Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Manchester United|Tottenham (priced, close window not open)",
+    "Manchester United|Tottenham (kickoff already passed)",
     "Rosenborg|Sandefjord (priced)",
     "WARN kickoff-mismatch FC Lugano|FC Luzern: pick legacy display says 15:00Z, captured rows say 16:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "FC Lugano|FC Luzern (priced, close window not open)",
+    "FC Lugano|FC Luzern (kickoff already passed)",
     "Leixoes|FC Porto B (retry cooldown (6h after failed attempt))",
     "Ansbach|N\u00fcrnberg II (kickoff already passed)",
     "Raith Rovers|Queens Park (retry cooldown (6h after failed attempt))",
     "WARN kickoff-mismatch Alaves|Atletico Madrid: pick legacy display says 13:15Z, captured rows say 14:15Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
     "Alaves|Atletico Madrid (kickoff already passed)",
+    "Mjondalen|Pors Grenland (retry cooldown (6h after failed attempt))",
     "Al-Tadhamon|Al-Qadsia (retry cooldown (6h after failed attempt))",
     "Penarol|Progreso (retry cooldown (6h after failed attempt))",
     "Bari|Giugliano (retry cooldown (6h after failed attempt))",
     "Trelleborgs FF|Kristianstad FC (retry cooldown (6h after failed attempt))",
     "Philadelphia Union|Real Salt Lake (priced)",
     "WARN kickoff-mismatch Rizespor|Fenerbah\u00e7e: pick legacy display says 15:00Z, captured rows say 16:00Z (\u0394=60m; planning from captured UTC witness, display-fallback override) [kickoff_mismatch_detail=kickoff_mismatch_display_fallback_overridden]",
-    "Rizespor|Fenerbah\u00e7e (priced, close window not open)",
+    "Rizespor|Fenerbah\u00e7e (kickoff already passed)",
     "Worthing|Solihull Moors (retry cooldown (6h after failed attempt))",
     "Ferencvarosi TC|Debreceni VSC (retry cooldown (6h after failed attempt))",
-    "Botev Plovdiv|Slavia Sofia (retry cooldown (6h after failed attempt))",
+    "Botev Plovdiv|Slavia Sofia (kickoff already passed)",
     "York|Northampton (retry cooldown (6h after failed attempt))",
     "Montrose|Ross County (retry cooldown (6h after failed attempt))",
     "Crawley Town|Chesterfield (priced)",
@@ -131,6 +91,7 @@
     "Vilzing|Buchbach (kickoff already passed)",
     "Arsenal|Leeds (priced)",
     "Cobresal|Universidad De Concepcion (priced)",
+    "Ikorodu City|Kwara United (retry cooldown (6h after failed attempt))",
     "Dacia Buiucani|Sheriff Tiraspol (retry cooldown (6h after failed attempt))",
     "Casa Pia|Santa Clara (priced)",
     "Radomlje|FC Koper (retry cooldown (6h after failed attempt))",
@@ -139,6 +100,7 @@
     "1899 Hoffenheim|Hamburger SV (priced)",
     "Vasas|Kisvarda (retry cooldown (6h after failed attempt))",
     "Samsunspor|Trabzonspor (priced)",
+    "Ranchers Bees|Niger Tornadoes (retry cooldown (6h after failed attempt))",
     "H\u00e4ssleholms IF|Jonkopings Sodra (kickoff already passed)",
     "AFC Fylde|Scunthorpe (retry cooldown (6h after failed attempt))",
     "Inter Miami|DC United (priced)",
@@ -150,17 +112,11 @@
     "FC Tokyo|Urawa (priced)"
   ],
   "source": "theoddsapi",
-  "status": "ok",
+  "status": "empty",
   "unmatched": [
-    "Jerv vs FK Arendal (league not covered: Norway,2. Division Avdeling 1)",
-    "Borac Cacak vs Jedinstvo Ub (league not covered: Serbia,Prva Liga)",
-    "Mjondalen vs Pors Grenland (league not covered: Norway,2. Division Avdeling 1)",
-    "Ikorodu City vs Kwara United (league not covered: Nigeria,Npfl)",
-    "Ranchers Bees vs Niger Tornadoes (league not covered: Nigeria,Npfl)"
+    "Brusque vs Paysandu (league not covered: Brazil Serie C)"
   ],
   "unmatched_reasons": {
-    "league not covered: Nigeria,Npfl": 2,
-    "league not covered: Norway,2. Division Avdeling 1": 2,
-    "league not covered: Serbia,Prva Liga": 1
+    "league not covered: Brazil Serie C": 1
   }
 }
