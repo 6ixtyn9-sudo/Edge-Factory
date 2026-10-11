@@ -18,27 +18,20 @@
     },
     {
       "decay": "HEALTHY",
-      "last_fired": "2026-10-11",
-      "n_last_window": 341,
-      "rule": "ml-meta avg_p>=55",
-      "silent": false
-    },
-    {
-      "decay": "HEALTHY",
-      "last_fired": "2026-10-11",
-      "n_last_window": 90,
+      "last_fired": "2026-10-12",
+      "n_last_window": 77,
       "rule": "ml-meta avg_p>=60",
       "silent": false
     },
     {
       "decay": "WATCH",
       "last_fired": "2026-10-10",
-      "n_last_window": 13,
+      "n_last_window": 12,
       "rule": "ml-meta avg_p>=80",
       "silent": false
     }
   ],
-  "generated_at": "2026-10-11T21:36:44",
+  "generated_at": "2026-10-12T00:31:46",
   "ignored_non_operational_rules": [
     "2way-unanimous home-only avg_p>=65",
     "2way-unanimous min_p>=60 avg_p>=65",
@@ -62,7 +55,7 @@
     },
     {
       "name": "statarea",
-      "newest_date": "2026-10-11",
+      "newest_date": "2026-10-12",
       "newest_file": "statarea_2026-10.csv.gz",
       "retired": null,
       "role": "core_voter",
@@ -70,7 +63,7 @@
     },
     {
       "name": "scoutingstats",
-      "newest_date": "2026-10-11",
+      "newest_date": "2026-10-12",
       "newest_file": "scoutingstats_2026-10.csv.gz",
       "retired": null,
       "role": "voter_and_price",
@@ -78,7 +71,7 @@
     },
     {
       "name": "vitibet",
-      "newest_date": "2026-10-12",
+      "newest_date": "2026-10-13",
       "newest_file": "vitibet_2026-10.csv.gz",
       "retired": null,
       "role": "thin_voter",
@@ -86,7 +79,7 @@
     },
     {
       "name": "zulubet",
-      "newest_date": "2026-10-11",
+      "newest_date": "2026-10-12",
       "newest_file": "zulubet_2026-10.csv.gz",
       "retired": null,
       "role": "core_voter",
@@ -110,7 +103,7 @@
     },
     {
       "name": "afootballreport",
-      "newest_date": "2026-10-11",
+      "newest_date": "2026-10-12",
       "newest_file": "afootballreport_2026-10.csv.gz",
       "retired": null,
       "role": "research",
@@ -118,7 +111,7 @@
     },
     {
       "name": "betclan",
-      "newest_date": "2026-10-11",
+      "newest_date": "2026-10-12",
       "newest_file": "betclan_2026-10.csv.gz",
       "retired": null,
       "role": "partial_voter",
@@ -134,7 +127,7 @@
     },
     {
       "name": "bettingclosed",
-      "newest_date": "2026-10-11",
+      "newest_date": "2026-10-12",
       "newest_file": "bettingclosed_2026-10.csv.gz",
       "retired": null,
       "role": "confirmation_results",

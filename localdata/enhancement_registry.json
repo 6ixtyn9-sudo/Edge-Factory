@@ -432,10 +432,10 @@
    "status_since": "2026-08-05"
   },
   "match_over_25@v1": {
-   "hits": 225,
-   "inv_price_sum": 222.409055812128,
-   "multi_n": 40,
-   "n": 338,
+   "hits": 231,
+   "inv_price_sum": 229.8783339456116,
+   "multi_n": 42,
+   "n": 350,
    "processed": [
     "2026-08-01|Cruzeiro W vs Botafogo W|match_over_25@v1",
     "2026-08-02|Ludogorets vs Botev Vratsa|match_over_25@v1",
@@ -774,9 +774,21 @@
     "2026-10-10|Maritimo vs FC Porto|match_over_25@v1",
     "2026-10-10|FC Halifax Town vs Gateshead|match_over_25@v1",
     "2026-10-10|Radomlje vs FC Koper|match_over_25@v1",
-    "2026-10-10|Vasco da Gama vs Remo|match_over_25@v1"
+    "2026-10-10|Vasco da Gama vs Remo|match_over_25@v1",
+    "2026-10-11|Sparta Praha vs Pardubice|match_over_25@v1",
+    "2026-10-11|Cherno More Varna vs Levski Sofia|match_over_25@v1",
+    "2026-10-11|Almeria vs Leganes|match_over_25@v1",
+    "2026-10-11|Sandnes ULF vs Haugesund|match_over_25@v1",
+    "2026-10-11|Benfica vs Vit\u00f3ria SC|match_over_25@v1",
+    "2026-10-11|River Plate vs Estudiantes de Rio Cuarto|match_over_25@v1",
+    "2026-10-11|BK Hacken vs Orgryte IS|match_over_25@v1",
+    "2026-10-11|Suwon Bluewings vs Ansan Greeners|match_over_25@v1",
+    "2026-10-11|Slovan Liberec vs Slovacko|match_over_25@v1",
+    "2026-10-11|Real Betis vs Osasuna|match_over_25@v1",
+    "2026-10-11|Brondby vs Lyngby|match_over_25@v1",
+    "2026-10-11|Besiktas vs Kocaelispor|match_over_25@v1"
    ],
-   "profit": 4.767,
+   "profit": 2.297,
    "records": [
     {
      "date": "2026-08-01",
@@ -3479,6 +3491,102 @@
      "multi_source": true,
      "price": 1.66,
      "source": "theoddsapi"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": false,
+     "match": "Sparta Praha vs Pardubice",
+     "multi_source": false,
+     "price": 1.57,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": false,
+     "match": "Cherno More Varna vs Levski Sofia",
+     "multi_source": false,
+     "price": 2.25,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": true,
+     "match": "Almeria vs Leganes",
+     "multi_source": true,
+     "price": 1.8,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": false,
+     "match": "Sandnes ULF vs Haugesund",
+     "multi_source": false,
+     "price": 1.33,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": false,
+     "match": "Benfica vs Vit\u00f3ria SC",
+     "multi_source": false,
+     "price": 1.44,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": false,
+     "match": "River Plate vs Estudiantes de Rio Cuarto",
+     "multi_source": false,
+     "price": 1.85,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": true,
+     "match": "BK Hacken vs Orgryte IS",
+     "multi_source": false,
+     "price": 1.37,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": true,
+     "match": "Suwon Bluewings vs Ansan Greeners",
+     "multi_source": false,
+     "price": 1.47,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": false,
+     "match": "Slovan Liberec vs Slovacko",
+     "multi_source": false,
+     "price": 1.72,
+     "source": "scoutingstats"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": true,
+     "match": "Real Betis vs Osasuna",
+     "multi_source": true,
+     "price": 1.81,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": true,
+     "match": "Brondby vs Lyngby",
+     "multi_source": false,
+     "price": 1.61,
+     "source": "theoddsapi"
+    },
+    {
+     "date": "2026-10-11",
+     "hit": true,
+     "match": "Besiktas vs Kocaelispor",
+     "multi_source": false,
+     "price": 1.47,
+     "source": "scoutingstats"
     }
    ],
    "status": "PAPER",

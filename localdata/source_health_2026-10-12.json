@@ -24,39 +24,42 @@
       "freshness_h": null,
       "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 9,
+        "fixture_key_miss": 1,
         "market_unmapped": 123,
         "market_unsupported": 480,
-        "out_of_window": 27,
+        "out_of_window": 35,
         "selection_unmapped": 587
       },
       "reason": null,
       "status": "cache_only"
     },
     "betclan": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
       "freshness_h": 0.0,
       "reason": null,
       "status": null
     },
     "betexplorer": {
-      "be_matched": 0,
-      "be_raw": 0,
-      "be_usable": 0,
-      "blocker": "no pre-build BetExplorer rows",
+      "be_matched": 4,
+      "be_raw": 12,
+      "be_usable": 12,
+      "blocker": "cache-only pre-build snapshot; final card makes no live rescue",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_matched_rows": 3,
+      "join_miss_counts": {
+        "fixture_key_miss": 5,
+        "no_pick_for_fixture": 4
+      },
       "reason": null,
-      "status": "absent"
+      "status": "cache_only"
     },
     "betminer": {
       "blocker": "betminer: persisted endpoint probe receipt; no re-probe today",
@@ -91,23 +94,23 @@
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
-      "join_matched_rows": 2,
+      "join_matched_rows": 0,
       "join_miss_counts": {
-        "fixture_key_miss": 6,
+        "fixture_key_miss": 8,
         "selection_unsupported": 5
       },
       "reason": null,
       "status": "cache_only"
     },
     "bzzoiro": {
-      "blocker": "no bzzoiro prediction rows for today in the warehouse; the prediction capture stage outcome is not carried into this build - the odds-lane status below is a different access",
-      "can_fetch_today": false,
+      "blocker": null,
+      "can_fetch_today": true,
       "can_price": false,
-      "can_vote": false,
+      "can_vote": true,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
+      "freshness_h": 0.0,
       "reason": null,
-      "status": null
+      "status": "ok"
     },
     "bzzoiro_odds": {
       "blocker": "bzz status=auth; quota_hint=auth_or_quota",
@@ -160,7 +163,7 @@
       "op_matched": 0,
       "op_raw": 0,
       "op_usable": 0,
-      "reason": "http_200_zero_rows_after_parse",
+      "reason": "empty_response",
       "status": "empty"
     },
     "pinnapi_odds": {
@@ -173,12 +176,12 @@
       "canonicalization_dropped": 0,
       "event_type": "prematch",
       "freshness_h": null,
-      "join_matched_rows": 7,
+      "join_matched_rows": 3,
       "join_miss_counts": {
-        "fixture_key_miss": 23417,
-        "no_pick_for_fixture": 96
+        "fixture_key_miss": 23469,
+        "no_pick_for_fixture": 48
       },
-      "pa_matched": 7,
+      "pa_matched": 4,
       "pa_raw": 23520,
       "pa_scored": 23520,
       "reason": null,
@@ -228,67 +231,68 @@
       "status": null
     },
     "sharpapi_odds": {
-      "blocker": "fetch returned zero rows",
+      "blocker": null,
       "board_summary": {
-        "board_fixtures": 10,
-        "board_league_count": 9,
+        "board_fixtures": 7,
+        "board_league_count": 5,
         "board_leagues": {
-          "andorran_primera_divisio": 9,
-          "argentina_-_primera_division": 16,
-          "bahrain_-_premier_league": 1,
-          "belgium_-_challenger_pro_league": 2,
-          "belgium_-_jupiler_pro_league": 39,
-          "germany_-_bundesliga_3": 29,
-          "israel_-_premier_league": 12,
-          "italy_-_serie_b": 39,
-          "norway_-_eliteserien": 53
+          "brazil_-_serie_a": 162,
+          "colombia_-_copa_colombia": 1,
+          "jamaica_-_premier_league": 3,
+          "spain_-_la_liga": 3,
+          "usa_-_usl_league_one": 31
         },
-        "board_non_prematch_rows": 200,
-        "board_priced_rows": 0,
+        "board_non_prematch_rows": 166,
+        "board_priced_rows": 20,
         "board_rows": 200,
-        "board_team_count": 19,
+        "board_team_count": 13,
         "board_team_names": {
-          "Al Najma [BRN]": 1,
-          "Atletic Club Escaldes": 9,
-          "Beitar Jerusalem": 12,
-          "CF Esperanca d'Andorra": 9,
-          "Deportivo Riestra": 16,
-          "Fortuna Dusseldorf": 29,
-          "Gent II": 2,
-          "Hapoel Ramat Gan": 12,
-          "KV Mechelen": 3,
-          "Lillestrom": 53,
-          "Modena": 39,
-          "Molde": 53,
-          "RFC Seraing": 2,
-          "San Lorenzo": 16,
-          "Sint Truiden": 39,
-          "Sitra": 1,
-          "Verl": 29,
-          "Verona": 39,
-          "Yellow-Red Mechelen": 36
+          "Chapelton Maroons FC": 3,
+          "Corinthians": 51,
+          "Flamengo": 111,
+          "Fluminense": 111,
+          "Fortaleza CEIF FC": 1,
+          "Humble Lions": 3,
+          "Indepen Santa Fe": 1,
+          "One Knoxville SC": 31,
+          "Palmeiras": 34,
+          "Racing Santander": 3,
+          "SE Palmeiras": 17,
+          "Spokane Velocity": 31,
+          "Valencia": 3
         },
         "board_truncated": false,
-        "card_fixture_count": 6,
+        "canonicalization_drop_reasons": {
+          "unknown_market:1st_half_moneyline": 3,
+          "unknown_market:point_spread": 2,
+          "unsupported_market:double_chance": 3,
+          "unsupported_market:draw_no_bet": 2,
+          "unsupported_market:team_total_points_odd_even": 4
+        },
+        "card_fixture_count": 7,
         "card_fixtures_on_board": 0,
         "card_fixtures_reversed": 0,
         "card_priced_rows": 0,
         "league_filter_requested": false,
         "prematch_drop_reasons": {
-          "live_price": 200
+          "live_price": 166
         },
         "requested_limit": 1000
       },
       "can_fetch_today": true,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
-      "freshness_h": null,
-      "reason": "card_fixtures_unmatched_on_board",
+      "freshness_h": 0.0,
+      "join_matched_rows": 0,
+      "join_miss_counts": {
+        "fixture_key_miss": 20
+      },
+      "reason": null,
       "sa_matched": 0,
-      "sa_raw": 0,
-      "sa_scored": 0,
-      "status": "empty"
+      "sa_raw": 2,
+      "sa_scored": 20,
+      "status": "ok"
     },
     "soccervista": {
       "blocker": "not reliably fetched/observed today",
@@ -323,19 +327,21 @@
       "status": null
     },
     "theoddsapi": {
-      "blocker": "no pre-build TheOddsAPI rows",
+      "blocker": "cache-only pre-build snapshot; selection does not fetch provider",
       "can_fetch_today": false,
-      "can_price": false,
+      "can_price": true,
       "can_vote": false,
       "canonicalization_dropped": 0,
       "freshness_h": null,
       "join_matched_rows": 0,
-      "join_miss_counts": {},
+      "join_miss_counts": {
+        "fixture_key_miss": 81
+      },
       "oa_matched": 0,
-      "oa_raw": 0,
-      "oa_usable": 0,
+      "oa_raw": 81,
+      "oa_usable": 81,
       "reason": null,
-      "status": "empty"
+      "status": "cache_only"
     },
     "vitibet": {
       "blocker": null,

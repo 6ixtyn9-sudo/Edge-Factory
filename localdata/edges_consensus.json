@@ -80,17 +80,17 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
-          "n": 13,
-          "wins": 12,
-          "hit": 0.9231,
-          "wilson_lb": 0.6669,
-          "roi": 0.1508
+          "n": 12,
+          "wins": 11,
+          "hit": 0.9167,
+          "wilson_lb": 0.6461,
+          "roi": 0.1542
         },
         "baseline_lb": 0.823,
-        "recent_lb": 0.6669,
-        "recent_ub": 0.9863
+        "recent_lb": 0.6461,
+        "recent_ub": 0.9851
       }
     },
     {
@@ -199,7 +199,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
           "n": 23,
           "wins": 20,
@@ -316,19 +316,19 @@
       "view": "v_consensus2",
       "where": "fb_pick = zb_pick AND fb_p/100.0 >= 0.60 AND zb_p/100.0 >= 0.60 AND ((fb_p/100.0 + zb_p/100.0)/2)*100 >= 65",
       "decay": {
-        "verdict": "HEALTHY",
+        "verdict": "WATCH",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
-          "n": 30,
-          "wins": 25,
-          "hit": 0.8333,
-          "wilson_lb": 0.6644,
-          "roi": 0.0577
+          "n": 27,
+          "wins": 23,
+          "hit": 0.8519,
+          "wilson_lb": 0.6752,
+          "roi": 0.093
         },
         "baseline_lb": 0.7634,
-        "recent_lb": 0.6644,
-        "recent_ub": 0.9266
+        "recent_lb": 0.6752,
+        "recent_ub": 0.9408
       }
     },
     {
@@ -359,17 +359,17 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
-          "n": 13,
-          "wins": 12,
-          "hit": 0.9231,
-          "wilson_lb": 0.6669,
-          "roi": 0.1508
+          "n": 12,
+          "wins": 11,
+          "hit": 0.9167,
+          "wilson_lb": 0.6461,
+          "roi": 0.1542
         },
         "baseline_lb": 0.8138,
-        "recent_lb": 0.6669,
-        "recent_ub": 0.9863
+        "recent_lb": 0.6461,
+        "recent_ub": 0.9851
       }
     },
     {
@@ -400,7 +400,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
           "n": 16,
           "wins": 14,
@@ -441,7 +441,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
           "n": 16,
           "wins": 14,
@@ -560,7 +560,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
           "n": 13,
           "wins": 11,
@@ -601,17 +601,17 @@
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
-          "n": 34,
-          "wins": 31,
-          "hit": 0.9118,
-          "wilson_lb": 0.7704,
-          "roi": 0.1521
+          "n": 32,
+          "wins": 30,
+          "hit": 0.9375,
+          "wilson_lb": 0.7985,
+          "roi": 0.1894
         },
         "baseline_lb": 0.7756,
-        "recent_lb": 0.7704,
-        "recent_ub": 0.9695
+        "recent_lb": 0.7985,
+        "recent_ub": 0.9827
       }
     },
     {
@@ -694,7 +694,7 @@
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
           "n": 30,
           "wins": 24,
@@ -735,7 +735,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
           "n": 20,
           "wins": 17,
@@ -904,12 +904,12 @@
       },
       "valid": {
         "avg_odds": null,
-        "hit": 0.5035,
-        "n": 33948,
-        "n_priced": 32783,
-        "roi": 0.1144,
-        "wilson_lb": 0.4982,
-        "wins": 17094
+        "hit": 0.5037,
+        "n": 33990,
+        "n_priced": 32825,
+        "roi": 0.1148,
+        "wilson_lb": 0.4984,
+        "wins": 17121
       },
       "view": "weighted_1x2",
       "weighted": true,
@@ -917,24 +917,24 @@
     },
     {
       "decay": {
-        "verdict": "HEALTHY",
+        "verdict": "DECAYING",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
-          "n": 89,
-          "wins": 63,
-          "hit": 0.7079,
-          "wilson_lb": 0.6064,
-          "roi": 0.6189
+          "n": 87,
+          "wins": 61,
+          "hit": 0.7011,
+          "wilson_lb": 0.5981,
+          "roi": 0.5806
         },
         "baseline_lb": 0.7023,
-        "recent_lb": 0.6064,
-        "recent_ub": 0.7922
+        "recent_lb": 0.5981,
+        "recent_ub": 0.7872
       },
       "market": "1x2",
       "rule": "ml-meta avg_p>=55",
       "sport": "soccer",
-      "status": "certified",
+      "status": "benched",
       "train": {
         "avg_odds": 1.94,
         "hit": 0.6892,
@@ -954,23 +954,24 @@
         "wins": 1918
       },
       "view": "ml_meta_settled",
-      "where": "ml_p*100 >= 55"
+      "where": "ml_p*100 >= 55",
+      "benched_at": "2026-10-12"
     },
     {
       "decay": {
         "verdict": "HEALTHY",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
-          "n": 72,
-          "wins": 54,
-          "hit": 0.75,
-          "wilson_lb": 0.6391,
-          "roi": 0.6221
+          "n": 71,
+          "wins": 53,
+          "hit": 0.7465,
+          "wilson_lb": 0.6345,
+          "roi": 0.5858
         },
         "baseline_lb": 0.735,
-        "recent_lb": 0.6391,
-        "recent_ub": 0.8356
+        "recent_lb": 0.6345,
+        "recent_ub": 0.8332
       },
       "market": "1x2",
       "rule": "ml-meta avg_p>=60",
@@ -1127,7 +1128,7 @@
       "decay": {
         "verdict": "WATCH",
         "window_days": 30,
-        "checked_at": "2026-10-11",
+        "checked_at": "2026-10-12",
         "recent": {
           "n": 18,
           "wins": 16,
