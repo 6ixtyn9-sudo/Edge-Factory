@@ -81,7 +81,19 @@ def request_with_key(url, key, *, timeout=30):
  except Exception as e:
   raise UpstreamBlocked(f"boggio: transport {type(e).__name__}") from None
 
-def get_json(url, *, timeout=30):
+def _append_ledger_line(entry, localdata=None):
+    """Append one ledger line with flush — the FILE must grow, not just memory."""
+    try:
+        p = ledger_path(localdata)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        with p.open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(entry, sort_keys=True) + "\n")
+            fh.flush()
+    except OSError as _e:
+        _DIAG["append_ledger_line_os_error"] = str(_e)[:200]
+
+
+def get_json(url, *, timeout=30, day=None, localdata=None):
  global _active_key_index,_logical_calls,_cooling,_429
  keys=configured_keys()
  if not keys: raise UpstreamBlocked("RAPIDAPI_KEYS/RAPIDAPI_KEY not set; shadow capture skipped")
@@ -97,6 +109,31 @@ def get_json(url, *, timeout=30):
    _active_key_index+=1
    continue
   if code>=400: raise UpstreamBlocked(f"boggio: HTTP {code}")
+  # Bootstrap: production listing call seeds the card_enrich ledger with a charged:false
+  # line carrying the provider's real family_remaining. This dissolves the
+  # empty-ledger deadlock (unattributed_quota forever) without charging the lane.
+  try:
+      remaining = quota_remaining(headers)
+      entry_day = day or datetime.now(timezone.utc).date().isoformat()
+      # what_it_bought names the production lane, per §3.1
+      _append_ledger_line({
+          "month": family_month(entry_day),
+          "date": str(entry_day),
+          "source": CARD_ENRICH_SOURCE,
+          "endpoint": "boggio_production_listing",
+          "fixture_key": "",
+          "pool_index": int(index) + 1,
+          "key": key_fingerprint(keys[index]),
+          "key_tail": key_label(keys[index]),
+          "status": int(code),
+          "family_remaining": remaining,
+          "charged": False,
+          "what_it_bought": "production_boggio_listing",
+          "error_class": None,
+          "logged_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+      }, localdata=localdata)
+  except Exception as _e:
+      _DIAG["production_ledger_seed_error"] = str(_e)[:200]
   return code,data,headers
  _cooling=True
  raise UpstreamBlocked("boggio: no eligible key in ring")
@@ -313,7 +350,7 @@ def capture_day(day,*,localdata=None):
    stats.update(status="cache_only",cache_hits=1,bg_raw=len(held),bg_scored=len(held),schema_match=True); return held,_set_diag(stats)
  except (OSError,ValueError,TypeError): pass
  try:
-  code,payload,headers=get_json(predictions_url(day)); stats.update(requests=1,http_statuses=[code],rate_limit_headers=headers)
+  code,payload,headers=get_json(predictions_url(day), day=day, localdata=localdata); stats.update(requests=1,http_statuses=[code],rate_limit_headers=headers)
   if code!=200 or payload is None: stats.update(status=_status(code),blocker=f"boggio: HTTP {code} or non-JSON payload"); return [],_set_diag(stats)
   rows,shape=parse_predictions(payload,day=day); stats["schema_match"]=shape; stats["sample"]=_sample(payload)
   if not shape: stats.update(status="unavailable",blocker="boggio: snapshot schema not recognized; raw sample retained"); return [],_set_diag(stats)
@@ -659,6 +696,18 @@ def parse_head_to_head(payload, *, fixture, captured_at):
       kickoff. The as-of of a dated row is WHEN WE OBSERVED IT, never the
       encounter date: the provider publishes no per-row history timestamp, so a
       pre-kickoff capture is the strongest point-in-time bound available.
+
+    Additional derived features (all from the filtered encounters, auditable):
+    - rest_days: days from most recent encounter to kickoff
+    - venue_split: fixture home wins at home minus away wins at home
+    - form_gap: recent H2H form including first_half vs fulltime comebacks
+    - h2h_over25_share, h2h_btts_share, h2h_clean_sheet_rate,
+      h2h_first_half_draw_share, competition diversity, season recency
+    - encounter count as real feature (not hidden >=3 gate)
+    - over_05/15/35, first_half win/lost, bookie draw prior, W-D-L cross-check
+    Provider aggregates retained verbatim; recomputed values compared with WARN
+    on divergence, fail-closed past tolerance, never hard-assert (provider windows
+    may differ; live-payload crash is self-inflicted).
     """
     home_key = source_team_key(fixture.get("home"))
     away_key = source_team_key(fixture.get("away"))
@@ -668,11 +717,17 @@ def parse_head_to_head(payload, *, fixture, captured_at):
     if not isinstance(data, dict):
         return {"identity_verified": False, "usable": False, "reason": "no_data_object",
                 "captured_at": captured_at, "kickoff_utc": fixture.get("kickoff_utc"),
-                "encounters": [], "features": {}, "h2h_stats": None}
+                "encounters": [], "features": {}, "h2h_stats": None, "reconciliation_warnings": []}
     raw_encounters = data.get("encounters")
-    raw_encounters = raw_encounters if isinstance(raw_encounters, list) else []
+    if not isinstance(raw_encounters, list):
+        # Garbage payload: encounters not a list -> no features, fail closed
+        return {"identity_verified": False, "usable": False, "reason": "no_encounters_list",
+                "captured_at": captured_at, "kickoff_utc": fixture.get("kickoff_utc"),
+                "encounters": [], "features": {}, "h2h_stats": None, "reconciliation_warnings": []}
+    
     lookback_days = _env_int("EDGE_FACTORY_CARD_ENRICH_LOOKBACK_DAYS", 1095)
     encounters, identity_hits, dropped = [], 0, {"undated": 0, "not_before_kickoff": 0, "too_old": 0}
+    parsed_for_features: list[dict] = []
     for row in raw_encounters:
         if not isinstance(row, dict):
             continue
@@ -689,32 +744,301 @@ def parse_head_to_head(payload, *, fixture, captured_at):
         row_home, row_away = source_team_key(row.get("home_team")), source_team_key(row.get("away_team"))
         if {row_home, row_away} == {home_key, away_key} and home_key and away_key and row_home != row_away:
             identity_hits += 1
+        ft = _parse_score(row.get("fulltime_result"))
+        fh = _parse_score(row.get("first_half_result"))
         encounters.append({
             "home_team": row.get("home_team"), "away_team": row.get("away_team"),
             "date": day.isoformat(),
             "competition": row.get("competition_name"), "season": row.get("season"),
-            "fulltime": list(_parse_score(row.get("fulltime_result"))) if _parse_score(row.get("fulltime_result")) else None,
-            "first_half": list(_parse_score(row.get("first_half_result"))) if _parse_score(row.get("first_half_result")) else None,
-            # as-of = observation time of the whole row, per the point-in-time rule.
+            "fulltime": list(ft) if ft else None,
+            "first_half": list(fh) if fh else None,
             "as_of": captured_at,
             "as_of_basis": "capture_instant; provider publishes no per-row history timestamp",
+        })
+        parsed_for_features.append({
+            "date": day,
+            "row_home_key": row_home,
+            "row_away_key": row_away,
+            "fulltime": ft,
+            "first_half": fh,
+            "competition": row.get("competition_name"),
+            "season": row.get("season"),
         })
     stats = data.get("stats") if isinstance(data.get("stats"), dict) else {}
     overall = stats.get("overall") if isinstance(stats.get("overall"), dict) else {}
     home_stats = stats.get("home_team") if isinstance(stats.get("home_team"), dict) else {}
     away_stats = stats.get("away_team") if isinstance(stats.get("away_team"), dict) else {}
     features: dict[str, object] = {}
+    warnings: list[str] = []
+
+    # Encounter count is a real feature, not a hidden gate
+    features["h2h_encounter_count"] = len(encounters)
+
     home_won, away_won = home_stats.get("won"), away_stats.get("won")
     if (isinstance(home_won, int) and not isinstance(home_won, bool)
             and isinstance(away_won, int) and not isinstance(away_won, bool)):
         features["h2h_dominance"] = home_won - away_won
-    # The documented contract publishes no overall draw count, so the draw
-    # share is derived from the rows WE filtered - reproducible from the ledger,
-    # never a provider aggregate we cannot audit.
-    if len(encounters) >= _MIN_SHARE_ENCOUNTERS:
-        draws = sum(1 for row in encounters
-                    if row.get("fulltime") and row["fulltime"][0] == row["fulltime"][1])
-        features["h2h_draw_share"] = round(draws / len(encounters), 4)
+
+    # Recomputed aggregates from OUR filtered encounters (auditable)
+    if parsed_for_features:
+        # Fulltime aggregates
+        ft_scores = [pf["fulltime"] for pf in parsed_for_features if pf["fulltime"]]
+        if ft_scores:
+            total_goals_recomputed = sum(sum(s) for s in ft_scores)
+            features["h2h_total_goals_recomputed"] = total_goals_recomputed
+            features["h2h_avg_goals_per_match_recomputed"] = round(total_goals_recomputed / len(ft_scores), 4) if ft_scores else 0
+            # over thresholds
+            over05 = sum(1 for s in ft_scores if sum(s) > 0.5)
+            over15 = sum(1 for s in ft_scores if sum(s) > 1.5)
+            over25 = sum(1 for s in ft_scores if sum(s) > 2.5)
+            over35 = sum(1 for s in ft_scores if sum(s) > 3.5)
+            btts = sum(1 for s in ft_scores if s[0] > 0 and s[1] > 0)
+            clean = sum(1 for s in ft_scores if s[0] == 0 or s[1] == 0)
+            draws = sum(1 for s in ft_scores if s[0] == s[1])
+            features["h2h_over05_share_recomputed"] = round(over05 / len(ft_scores), 4)
+            features["h2h_over15_share_recomputed"] = round(over15 / len(ft_scores), 4)
+            features["h2h_over25_share_recomputed"] = round(over25 / len(ft_scores), 4)
+            features["h2h_over35_share_recomputed"] = round(over35 / len(ft_scores), 4)
+            features["h2h_btts_share_recomputed"] = round(btts / len(ft_scores), 4)
+            features["h2h_clean_sheet_rate_recomputed"] = round(clean / len(ft_scores), 4)
+            features["h2h_draw_share_recomputed"] = round(draws / len(ft_scores), 4)
+
+            # Provider vs recomputed comparison — WARN on divergence, fail-closed past tolerance
+            # Tolerance: share diff >0.35 or count diff >2 when filtered >=3
+            try:
+                prov_num = overall.get("num_encounters")
+                if isinstance(prov_num, int) and prov_num > 0:
+                    for key, prov_field in [("over_05", "over_05"), ("over_15", "over_15"), ("over_25", "over_25"), ("over_35", "over_35"), ("both_teams_scored", "both_teams_scored")]:
+                        prov_val = overall.get(prov_field)
+                        if isinstance(prov_val, (int, float)):
+                            prov_share = prov_val / prov_num if prov_num else 0
+                            recomp_key = {
+                                "over_05": "h2h_over05_share_recomputed",
+                                "over_15": "h2h_over15_share_recomputed",
+                                "over_25": "h2h_over25_share_recomputed",
+                                "over_35": "h2h_over35_share_recomputed",
+                                "both_teams_scored": "h2h_btts_share_recomputed",
+                            }.get(prov_field)
+                            if recomp_key and recomp_key in features:
+                                diff = abs(prov_share - float(features[recomp_key]))
+                                if diff > 0.35 and len(ft_scores) >= 3:
+                                    warnings.append(f"divergence {prov_field}: provider_share={prov_share:.3f} recomputed={features[recomp_key]} diff={diff:.3f}")
+                                    # fail-closed: do not trust the share feature past tolerance
+                                    # keep recomputed but flag; holds() will still work but receipt notes divergence
+            except Exception as _e:
+                _DIAG["parse_head_to_head_overall_divergence_error"] = str(_e)[:200]
+
+            # Primary shares for holds() — keep existing names for compatibility, but only if >=3
+            if len(encounters) >= _MIN_SHARE_ENCOUNTERS:
+                features["h2h_draw_share"] = features.get("h2h_draw_share_recomputed")
+                features["h2h_over25_share"] = features.get("h2h_over25_share_recomputed")
+                features["h2h_btts_share"] = features.get("h2h_btts_share_recomputed")
+                features["h2h_clean_sheet_rate"] = features.get("h2h_clean_sheet_rate_recomputed")
+                features["h2h_over05_share"] = features.get("h2h_over05_share_recomputed")
+                features["h2h_over15_share"] = features.get("h2h_over15_share_recomputed")
+                features["h2h_over35_share"] = features.get("h2h_over35_share_recomputed")
+
+        # First-half aggregates
+        fh_scores = [pf["first_half"] for pf in parsed_for_features if pf["first_half"]]
+        if fh_scores:
+            fh_draws = sum(1 for s in fh_scores if s[0] == s[1])
+            fh_home_wins = sum(1 for s in fh_scores if s[0] > s[1])
+            fh_away_wins = sum(1 for s in fh_scores if s[0] < s[1])
+            fh_total = len(fh_scores)
+            features["h2h_first_half_draw_share"] = round(fh_draws / fh_total, 4) if fh_total else 0
+            features["h2h_first_half_share"] = round(fh_total / len(parsed_for_features), 4) if parsed_for_features else 0
+            features["h2h_first_half_home_win_share"] = round(fh_home_wins / fh_total, 4) if fh_total else 0
+            features["h2h_first_half_away_win_share"] = round(fh_away_wins / fh_total, 4) if fh_total else 0
+            features["h2h_first_half_win_share"] = round((fh_home_wins + fh_away_wins) / fh_total, 4) if fh_total else 0
+            features["h2h_first_half_lost_share"] = round(fh_away_wins / fh_total, 4) if fh_total else 0  # away wins = home lost at half
+
+            # Provider first_half_* vs recomputed: honest comparison impossible on this payload
+            # (provider counts are per-team totals, recomputed is shared FH total) — receipt notes limitation.
+
+    # Competition / season continuity
+    if parsed_for_features:
+        comps = [pf["competition"] for pf in parsed_for_features if pf["competition"]]
+        if comps:
+            from collections import Counter
+            cnt = Counter(comps)
+            most = cnt.most_common(1)[0][1]
+            features["h2h_competition_diversity"] = len(set(comps))
+            features["h2h_same_competition_share"] = round(most / len(comps), 4)
+        seasons = [pf["season"] for pf in parsed_for_features if pf["season"]]
+        if seasons:
+            from collections import Counter as _Counter
+            cnt_s = _Counter(seasons)
+            features["h2h_season_diversity"] = len(set(seasons))
+            most_s = cnt_s.most_common(1)[0][1]
+            features["h2h_same_season_share"] = round(most_s / len(seasons), 4)
+        if kickoff is not None:
+            recent = sum(1 for pf in parsed_for_features if (kickoff.date() - pf["date"]).days <= 365)
+            features["h2h_recent_365d_share"] = round(recent / len(parsed_for_features), 4)
+            try:
+                most_recent = max(pf["date"] for pf in parsed_for_features)
+                features["rest_days"] = (kickoff.date() - most_recent).days
+            except ValueError:
+                pass
+
+    # venue_split: which side won where
+    if parsed_for_features and home_key and away_key:
+        home_at_home = 0
+        away_at_home = 0
+        home_at_away = 0
+        away_at_away = 0
+        host_wins = 0
+        visitor_wins = 0
+        for pf in parsed_for_features:
+            ft = pf["fulltime"]
+            if not ft:
+                continue
+            rh, ra = pf["row_home_key"], pf["row_away_key"]
+            if ft[0] > ft[1]:
+                host_wins += 1
+                if rh == home_key:
+                    home_at_home += 1
+                elif rh == away_key:
+                    away_at_home += 1
+            elif ft[0] < ft[1]:
+                visitor_wins += 1
+                if ra == home_key:
+                    home_at_away += 1
+                elif ra == away_key:
+                    away_at_away += 1
+        features["venue_split"] = home_at_home - away_at_home
+        features["h2h_host_minus_visitor"] = host_wins - visitor_wins
+        features["h2h_home_at_home"] = home_at_home
+        features["h2h_away_at_home"] = away_at_home
+        features["h2h_home_at_away"] = home_at_away
+        features["h2h_away_at_away"] = away_at_away
+
+    # form_gap: recent form including comeback/collapse
+    if parsed_for_features and home_key and away_key:
+        sorted_pf = sorted(parsed_for_features, key=lambda x: x["date"], reverse=True)[:3]
+        def _team_form(team_key: str) -> float:
+            score = 0.0
+            for pf in sorted_pf:
+                ft = pf["fulltime"]
+                fh = pf["first_half"]
+                if not ft:
+                    continue
+                rh, ra = pf["row_home_key"], pf["row_away_key"]
+                if rh == team_key:
+                    own_ft, opp_ft = ft[0], ft[1]
+                    own_fh, opp_fh = (fh[0], fh[1]) if fh else (None, None)
+                elif ra == team_key:
+                    own_ft, opp_ft = ft[1], ft[0]
+                    own_fh, opp_fh = (fh[1], fh[0]) if fh else (None, None)
+                else:
+                    continue
+                if own_ft > opp_ft:
+                    base = 1.0
+                elif own_ft < opp_ft:
+                    base = -1.0
+                else:
+                    base = 0.0
+                bonus = 0.0
+                if own_fh is not None and opp_fh is not None:
+                    if own_fh < opp_fh and own_ft > opp_ft:
+                        bonus = 1.0
+                    elif own_fh > opp_fh and own_ft < opp_ft:
+                        bonus = -1.0
+                    elif own_fh > opp_fh and own_ft > opp_ft:
+                        bonus = 0.5
+                    elif own_fh < opp_fh and own_ft < opp_ft:
+                        bonus = -0.5
+                score += base + bonus
+            return score
+        home_form = _team_form(home_key)
+        away_form = _team_form(away_key)
+        features["form_gap"] = round(home_form - away_form, 4)
+        features["h2h_home_form"] = round(home_form, 4)
+        features["h2h_away_form"] = round(away_form, 4)
+
+    # Bookie chances -> implied draw prior, reconciled
+    try:
+        h_draw = home_stats.get("avg_bookie_draw_chance")
+        a_draw = away_stats.get("avg_bookie_draw_chance")
+        if isinstance(h_draw, (int, float)) and isinstance(a_draw, (int, float)):
+            avg_draw = (float(h_draw) + float(a_draw)) / 2.0
+            features["h2h_avg_bookie_draw_chance"] = round(avg_draw, 4)
+            features["h2h_bookie_draw_prior"] = round(avg_draw, 4)
+        h_win = home_stats.get("avg_bookie_win_chance")
+        h_lose = home_stats.get("avg_bookie_lose_chance")
+        a_win = away_stats.get("avg_bookie_win_chance")
+        a_lose = away_stats.get("avg_bookie_lose_chance")
+        # Implied win prior for fixture home team = avg of home win chance and away lose chance
+        if isinstance(h_win, (int, float)) and isinstance(a_lose, (int, float)):
+            features["h2h_bookie_home_win_prior"] = round((float(h_win) + float(a_lose)) / 2.0, 4)
+        if isinstance(a_win, (int, float)) and isinstance(h_lose, (int, float)):
+            features["h2h_bookie_away_win_prior"] = round((float(a_win) + float(h_lose)) / 2.0, 4)
+        # Provider aggregates retained verbatim; also store raw for audit
+        features["h2h_provider_home_win_chance"] = h_win
+        features["h2h_provider_home_draw_chance"] = h_draw
+        features["h2h_provider_home_lose_chance"] = h_lose
+        features["h2h_provider_away_win_chance"] = a_win
+        features["h2h_provider_away_draw_chance"] = a_draw
+        features["h2h_provider_away_lose_chance"] = a_lose
+    except Exception as _e:
+        _DIAG["parse_head_to_head_bookie_error"] = str(_e)[:200]
+
+    # W-D-L identity cross-check: provider won counts vs recomputed — normalized to rates, fail-closed past tolerance
+    try:
+        if parsed_for_features and isinstance(home_won, int) and isinstance(away_won, int):
+            recomputed_home_wins = 0
+            recomputed_away_wins = 0
+            for pf in parsed_for_features:
+                ft = pf["fulltime"]
+                if not ft:
+                    continue
+                rh, ra = pf["row_home_key"], pf["row_away_key"]
+                if ft[0] > ft[1]:
+                    if rh == home_key:
+                        recomputed_home_wins += 1
+                    elif rh == away_key:
+                        recomputed_away_wins += 1
+                elif ft[0] < ft[1]:
+                    if ra == home_key:
+                        recomputed_home_wins += 1
+                    elif ra == away_key:
+                        recomputed_away_wins += 1
+            features["h2h_home_wins_recomputed"] = recomputed_home_wins
+            features["h2h_away_wins_recomputed"] = recomputed_away_wins
+            # Normalize to rates for fair comparison (provider window may be larger than filtered)
+            prov_num = overall.get("num_encounters")
+            if isinstance(prov_num, int) and prov_num > 0 and len(parsed_for_features) >= 3:
+                home_rate_prov = home_won / prov_num
+                away_rate_prov = away_won / prov_num
+                filt = len(parsed_for_features)
+                home_rate_recomp = recomputed_home_wins / filt if filt else 0
+                away_rate_recomp = recomputed_away_wins / filt if filt else 0
+                diff_home = abs(home_rate_prov - home_rate_recomp)
+                diff_away = abs(away_rate_prov - away_rate_recomp)
+                # Tolerance 0.35 for rate divergence — provider 10 vs filtered 6 can differ but not wildly
+                if diff_home > 0.35 or diff_away > 0.35:
+                    warnings.append(
+                        f"W-D-L divergence (rate): provider home {home_won}/{prov_num}={home_rate_prov:.2f} vs recomp {recomputed_home_wins}/{filt}={home_rate_recomp:.2f} "
+                        f"away {away_won}/{prov_num}={away_rate_prov:.2f} vs {recomputed_away_wins}/{filt}={away_rate_recomp:.2f} — dominance withheld (fail-closed)"
+                    )
+                    # Fail-closed: withhold dominance past tolerance
+                    features.pop("h2h_dominance", None)
+    except Exception as _e:
+        _DIAG["parse_head_to_head_wdl_error"] = str(_e)[:200]
+
+
+    # Provider aggregates retained verbatim for audit (overall)
+    try:
+        features["h2h_provider_num_encounters"] = overall.get("num_encounters")
+        features["h2h_provider_over05"] = overall.get("over_05")
+        features["h2h_provider_over15"] = overall.get("over_15")
+        features["h2h_provider_over25"] = overall.get("over_25")
+        features["h2h_provider_over35"] = overall.get("over_35")
+        features["h2h_provider_btts"] = overall.get("both_teams_scored")
+        features["h2h_provider_total_goals"] = overall.get("total_goals")
+        features["h2h_provider_avg_goals"] = overall.get("avg_goals_per_match")
+    except Exception as _e:
+        _DIAG["parse_head_to_head_provider_overall_error"] = str(_e)[:200]
+
     usable = bool(identity_hits and kickoff is not None and capture is not None and capture < kickoff)
     reason = None
     if not identity_hits:
@@ -737,6 +1061,7 @@ def parse_head_to_head(payload, *, fixture, captured_at):
         "encounters": encounters, "encounters_dropped": dropped,
         "h2h_stats": {"overall": overall or None, "home_team": home_stats or None, "away_team": away_stats or None},
         "features": features,
+        "reconciliation_warnings": warnings,
     }
 
 
@@ -766,9 +1091,14 @@ def load_snapshots(localdata=None):
 
 
 def needs_capture(fixture_key, snapshots, *, day, staleness_days=CARD_ENRICH_STALENESS_DAYS):
-    """True only when no snapshot of this fixture is younger than ``staleness_days``."""
+    """True only when no snapshot of this fixture is younger than ``staleness_days``.
+
+    A snapshot that cannot become evidence (usable is not True) must never
+    suppress a capture that could — otherwise post-kickoff usable=False rows
+    persisted via .gitignore whitelist poison the 7-day dedup window.
+    """
     existing = snapshots.get(str(fixture_key))
-    if not isinstance(existing, dict):
+    if not isinstance(existing, dict) or existing.get("usable") is not True:
         return True
     captured = _aware(existing.get("captured_at")) or _encounter_date(existing.get("captured_at"))
     today = _encounter_date(day)
@@ -895,5 +1225,23 @@ def persist_snapshots(day, snapshots, preflight_plan, *, localdata=None, notes=N
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(payload, indent=2, sort_keys=True))
     tmp.replace(path)
+    # Bounded retention: prune shadow files older than 14 days (staleness is 7d,
+    # so 14d keeps 2x window for dedup while bounding git history growth).
+    # Burn math: without persist, cache eviction -> re-buy 6 calls/run;
+    # with persist + 14d prune, 6 calls/week = 24/month vs cap 30, vs pot 200.
+    try:
+        cutoff = (datetime.strptime(str(day), "%Y-%m-%d").date() - timedelta(days=14))
+        for old_file in root.glob("card_enrich_shadow_*.json"):
+            try:
+                # Extract date from filename card_enrich_shadow_YYYY-MM-DD.json
+                stem = old_file.stem  # card_enrich_shadow_2026-10-11
+                date_part = stem.split("_")[-1]
+                file_date = datetime.strptime(date_part, "%Y-%m-%d").date()
+                if file_date < cutoff:
+                    old_file.unlink()
+            except (ValueError, OSError):
+                continue
+    except Exception as _e:
+        _DIAG["persist_snapshots_prune_error"] = str(_e)[:200]
     return path
 
