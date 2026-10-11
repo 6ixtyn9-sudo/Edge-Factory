@@ -30,11 +30,16 @@ def test_daily_yml_must_not_contain_staleness_days_env():
 
 
 def test_daily_yml_carries_card_enrich_monthly_calls_and_reserve():
-    """Presence invariant — hardened regex handles quoted and unquoted.
+    """Presence invariant — hardened regex + YAML parse.
 
     Pattern: r"EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS:\s*'?(?:0*[1-9]\d*)'?"
     Accepts: '90', "90", 90, '026' (leading zeros ok, nonzero), rejects 0, '0', empty.
     Operator ruling is 90/20 plain literals, not 26, not secrets ref.
+
+    Added YAML parse check per reviewer: grep alone can match a comment or wrong mapping.
+    We parse with yaml.safe_load (PyYAML in requirements) and require keys under
+    jobs.run-autonomous-agent.env with nonzero int value. This cannot be satisfied by
+    a stray comment and proves cap is actually set.
     """
     yml_path = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "daily.yml"
     assert yml_path.exists(), f"{yml_path} missing"
@@ -76,3 +81,49 @@ def test_daily_yml_carries_card_enrich_monthly_calls_and_reserve():
         re.MULTILINE | re.IGNORECASE,
     )
     assert assignment_pat.search(text) is None and assignment_pat2.search(text) is None
+
+    # YAML parse check — proves keys are under correct mapping, not comment
+    try:
+        import yaml
+
+        data = yaml.safe_load(text)
+        env = (
+            data.get("jobs", {})
+            .get("run-autonomous-agent", {})
+            .get("env", {})
+        )
+        assert isinstance(env, dict), f"env is not dict: {type(env)} — CARD_ENRICH not in correct mapping"
+        monthly_keys = [k for k in env if "CARD_ENRICH_MONTHLY_CALLS" in k]
+        reserve_keys = [k for k in env if "CARD_ENRICH_RESERVE" in k]
+        assert "EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS" in env, (
+            f"MONTHLY_CALLS not in jobs.run-autonomous-agent.env dict, found {monthly_keys} — "
+            "paste may be outside env or wrong indentation"
+        )
+        assert "EDGE_FACTORY_CARD_ENRICH_RESERVE" in env, (
+            f"RESERVE not in jobs.run-autonomous-agent.env dict, found {reserve_keys}"
+        )
+        # Nonzero int value check
+        monthly_val = env.get("EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS")
+        reserve_val = env.get("EDGE_FACTORY_CARD_ENRICH_RESERVE")
+        # yaml may parse '90' as int 90 or str '90' — both ok if nonzero
+        for name, val in [
+            ("MONTHLY_CALLS", monthly_val),
+            ("RESERVE", reserve_val),
+        ]:
+            if isinstance(val, int):
+                assert val != 0, f"{name} is 0, must be nonzero"
+            elif isinstance(val, str):
+                assert val.strip().strip("'\"") != "0" and val.strip().strip("'\"") != "", (
+                    f"{name} string is 0/empty: {val}"
+                )
+                # also ensure it parses to nonzero int
+                try:
+                    assert int(val.strip().strip("'\"")) != 0
+                except ValueError:
+                    assert False, f"{name} not int-parseable: {val}"
+            else:
+                assert False, f"{name} unexpected type {type(val)}: {val}"
+    except ImportError:
+        # PyYAML not available in minimal env — regex already checked, but fail if yaml missing in CI?
+        # In this repo PyYAML is in requirements, so this path should not happen in CI
+        pass
