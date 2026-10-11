@@ -2,7 +2,7 @@
 
 Date: 2026-10-11 (UTC) — updated after verification seat audit D1-D7
 Branch: arena/f118e478-edge-factory
-HEAD: 677e519161415156b3eb76c4e531ef4e8cc2ee23
+HEAD: 2a8160700169c0b53ee8c382c3d185779bb676d4
 Previous HEADs: 9c672d1 (no bloat), 48f8ab4 (initial wiring)
 Mode: DORMANT — computed, persisted, not applied to stakes; pick-path ZERO delta
 
@@ -127,8 +127,9 @@ Previous claim "2685 passed (+6 +1)" was off by 1 — corrected to 2686 (7+1).
 ## 8. BRANCH + SHA + LOG
 
 Branch: arena/f118e478-edge-factory
-HEAD: 677e519161415156b3eb76c4e531ef4e8cc2ee23
+HEAD: 2a8160700169c0b53ee8c382c3d185779bb676d4
 Log:
+2a81607 fix D6-D7 + D1-D5 (latest)
 677e519 fix D1-D5: delete FH dead arithmetic, fail-closed dominance via rates, _DIAG for all except pass, differential inertness byte-identical, bootstrap default path test
 9c672d1 no bloat: remove new workflow, keep lane on existing daily.yml, ONE call site, zero pick-path delta, bootstrap charged:false seeding, provider+recomputed WARN, .gitignore whitelist+prune, capability fixture >=6
 48f8ab4 wire H2H snapshot into selection/autobet DORMANT with facet parity, whitelist, ledger fix, daily O(0) capture, operator receipt
