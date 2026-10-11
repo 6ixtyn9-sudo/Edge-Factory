@@ -84,9 +84,7 @@ LOCALDATA = ROOT / "localdata"
 # Never re-add a module-local wilson_lb here. One existed (z=1.645) with no
 # callers at all, and its only live effect was to SHADOW the engine's Z95 bound
 # for anything imported after it -- a floor quietly moved from 95% to 90%.
-from edgefactory.assay import context_verdict_league
-from edgefactory.sources import boggio
-from edgefactory import context_rules                # noqa: E402
+from edgefactory.assay import context_verdict_league                # noqa: E402
 from edgefactory.assay import grade as assay_grade                  # noqa: E402
 from edgefactory.assay import wilson_lb                              # noqa: E402
 from edgefactory.config import GATES                                 # noqa: E402
@@ -3359,124 +3357,6 @@ def settle_open_slips(st, settled, archives=None, entries_by_date=None):
 
 
 # ---------------- commands ----------------
-
-def enrich_with_h2h_context_autobet(picks: list[dict], day: str) -> dict:
-    """H2H wiring for autobet path (DORMANT).
-
-    Uses boggio.load_snapshots() as only data source and
-    context_rules.holds() as only predicate evaluator (fail-closed).
-    Grades H2H predicates via context_verdict_league (shared assay engine)
-    but does NOT apply to stakes until evidence clears — DORMANT.
-    """
-    try:
-        snapshots = boggio.load_snapshots()
-    except Exception:
-        snapshots = {}
-    # For assay grading, we need historical ROI per H2H predicate.
-    # Build stats from archived picks that had H2H features.
-    try:
-        archives = load_archived_picks()
-        settled = load_settled()
-    except Exception:
-        archives = []
-        settled = {}
-    # Define H2H predicates we want to grade
-    h2h_rules = list(context_rules.DORMANT_H2H_RULES)
-    # Stats per rule
-    from collections import defaultdict
-    rule_stats = {r: {"n":0,"wins":0,"profit":0.0,"n_priced":0,"rn":0,"rwins":0,"rprofit":0,"rn_priced":0} for r in h2h_rules}
-    # Recent window
-    try:
-        from datetime import datetime, timedelta
-        today_dt = datetime.strptime(str(day)[:10], "%Y-%m-%d")
-        recent_from = (today_dt - timedelta(days=30)).strftime("%Y-%m-%d")
-    except Exception:
-        recent_from = "1900-01-01"
-    for row in archives:
-        row_day = str(row.get("date") or row.get("_archive_day") or "")[:10]
-        feats = row.get("h2h_features") or {}
-        if not feats:
-            continue
-        # Ensure identity fields present for holds()
-        if "identity_verified" not in feats:
-            feats["identity_verified"] = row.get("h2h_identity_verified")
-        if "captured_at" not in feats:
-            feats["captured_at"] = row.get("h2h_captured_at")
-        kickoff = row.get("h2h_kickoff_utc") or row.get("kickoff_utc") or ""
-        if not kickoff:
-            continue
-        for rule in h2h_rules:
-            try:
-                if not context_rules.holds(rule, feats, kickoff=kickoff):
-                    continue
-            except Exception:
-                continue
-            # Grade this archived row if settled
-            res = pick_result(row, settled)
-            if res not in ("win","loss"):
-                continue
-            st = rule_stats[rule]
-            st["n"] += 1
-            if res == "win":
-                st["wins"] += 1
-            try:
-                odds = float(row.get("odds") or 0.0)
-            except Exception:
-                odds = 0.0
-            if odds > 0:
-                st["n_priced"] += 1
-                st["profit"] += (odds-1.0) if res=="win" else -1.0
-            if row_day >= recent_from:
-                st["rn"] += 1
-                if res=="win":
-                    st["rwins"] += 1
-                if odds>0:
-                    st["rn_priced"] += 1
-                    st["rprofit"] += (odds-1.0) if res=="win" else -1.0
-    # Compute verdicts via shared assay engine
-    verdicts = {}
-    for rule, st in rule_stats.items():
-        n = st["n"]
-        roi = (st["profit"]/st["n_priced"]) if st["n_priced"] else None
-        recent_roi = (st["rprofit"]/st["rn_priced"]) if st["rn_priced"] and st["rn"]>=30 else None
-        try:
-            v = context_verdict_league(n, roi, recent_roi)
-        except Exception:
-            v = "UNKNOWN"
-        verdicts[rule] = {"n": n, "roi": roi, "recent_roi": recent_roi, "verdict": v, "stats": st}
-    # Today's slate: attach and evaluate
-    matched = 0
-    for p in picks:
-        hk = None
-        try:
-            from edgefactory.identity import source_team_key as _stk
-            hk = f"{_stk(p.get('home') or '')}|{_stk(p.get('away') or '')}"
-        except Exception:
-            continue
-        snap = snapshots.get(hk) if hk else None
-        if not snap:
-            continue
-        matched += 1
-        feats = dict(snap.get("features") or {})
-        feats["identity_verified"] = snap.get("identity_verified")
-        feats["captured_at"] = snap.get("captured_at")
-        p["h2h_features"] = feats
-        kickoff = snap.get("kickoff_utc") or p.get("kickoff_utc") or ""
-        if not kickoff:
-            continue
-        holds = []
-        for rule in h2h_rules:
-            try:
-                if context_rules.holds(rule, feats, kickoff=kickoff):
-                    holds.append(rule)
-            except Exception:
-                continue
-        if holds:
-            p["h2h_holds_autobet"] = holds
-    return {"snapshots": len(snapshots), "matched": matched, "verdicts": verdicts}
-
-
-
 def cmd_backfill(args, st):
     """Replay the archived ledger through the engine (analysis / seeding)."""
     settled = load_settled()
@@ -3690,15 +3570,6 @@ def cmd_today(args, st):
     now = datetime.now(TZ)
     target = args.date or now.strftime("%Y-%m-%d")
     slip_txt = LOCALDATA / f"auto_tickets_{target}.txt"
-    # H2H wiring (DORMANT): assay grading via context_verdict_league, snapshot via boggio.load_snapshots()
-    try:
-        _h2h_pre = enrich_with_h2h_context_autobet([], target)
-        # Log assay verdicts for H2H predicates (DORMANT)
-        for _rule, _vd in _h2h_pre.get("verdicts", {}).items():
-            print(f"h2h assay {target}: rule={_rule} n={_vd['n']} roi={_vd['roi']} recent_roi={_vd['recent_roi']} verdict={_vd['verdict']} (DORMANT)", file=sys.stderr)
-    except Exception as _e:
-        print(f"h2h assay pre {target} failed: {_e}", file=sys.stderr)
-
     slate_error = None
     try:
         slate = json.loads((LOCALDATA / "picks_today.json").read_text())
@@ -3798,13 +3669,6 @@ def cmd_today(args, st):
     # AUDIT-ONLY (scored-candidate shadow): persist every scored candidate on
     # the slate BEFORE any selection/guard runs. A ledger failure is reported
     # on stderr and ignored — it must never change the pool or the card.
-    # H2H enrich today's slate (DORMANT, computed persisted not applied)
-    try:
-        _h2h_enrich = enrich_with_h2h_context_autobet(slate, target)
-        print(f"h2h enrich autobet {target}: snapshots={_h2h_enrich['snapshots']} matched={_h2h_enrich['matched']} (DORMANT)", file=sys.stderr)
-    except Exception as _h2h_e:
-        print(f"h2h enrich autobet {target} failed: {_h2h_e}", file=sys.stderr)
-
     shadow_run = _shadow_record_scored(target, slate)
     pool = playable_legs(slate, day=target, settled=settled, execution_safe=True)
     total_in = len(pool)

@@ -1113,7 +1113,6 @@ def run_pipeline(
             # retain the periodic CLV snapshot for a later run.
             capture_theodds_snapshot(target_date, "pick_time")
             capture_oddspapi_snapshot(target_date, "pick_time")
-            capture_card_enrich_snapshot(target_date, "pick_time")
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
 
         target_picks = load_picks_file()
@@ -1271,7 +1270,6 @@ def run_pipeline(
             f"audit_clv capture {target_date} [{qlabel}]",
         )
         capture_theodds_snapshot(target_date, qlabel)
-        capture_card_enrich_snapshot(target_date, qlabel)
 
         clv_start = (datetime.strptime(target_date, "%Y-%m-%d").date() - timedelta(days=30)).isoformat()
         run_soft(
