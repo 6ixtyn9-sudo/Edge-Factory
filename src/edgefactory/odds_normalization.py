@@ -199,7 +199,7 @@ def _line_from(value: object) -> str | None:
 #   * The Odds API: "h2h", "totals", "btts".
 
 _1X2_TOKENS = {
-    "1x2", "12", "classic", "h2h", "head_to_head", "moneyline", "money_line",
+    "1x2", "classic", "h2h", "head_to_head", "moneyline", "money_line",
     "match_winner", "full_time_result", "three_way", "3way", "3_way",
     "winner", "match_odds", "match_result", "win_draw_win", "1x2_full_time",
     "full_time_1x2", "to_win_match",
@@ -224,7 +224,14 @@ _OU_TOKENS = {
 # do not bet it" and "we have never seen this token".  Both stay counted
 # misses; only the bucket differs.
 _UNSUPPORTED_MARKET_TOKENS = {
-    "draw_no_bet", "dnb", "double_chance", "dc", "asian_handicap",
+    "draw_no_bet", "dnb", "double_chance", "dc",
+    # "12" is a 2-way market (home or away, no draw) in APIs like Pinnacle.
+    # It is NOT the 3-way "1x2" market.  Previously mis-mapped to 1x2, which
+    # contaminated price boards with non-1x2 prices (e.g. Vidar vs Brattvag
+    # 2026-10-11: handicap/double-chance price 2.39 overwrote the real 1x2
+    # away price 1.24).
+    "12",
+    "asian_handicap",
     "handicap", "european_handicap", "goal_line", "correct_score",
     "exact_goals", "exact_score", "half_time_full_time", "ht_ft",
     "first_half_result", "second_half_result", "halftime_result",
@@ -271,7 +278,7 @@ def canonical_market(market: object, line: object = None) -> tuple[str | None, s
         raw.startswith(prefix) for prefix in _UNSUPPORTED_MARKET_PREFIXES
     ):
         return None, f"unsupported_market:{raw or 'empty'}"
-    if raw in _1X2_TOKENS or compact in {"1x2", "12", "headtohead", "headtohead3way", "matchodds"}:
+    if raw in _1X2_TOKENS or compact in {"1x2", "headtohead", "headtohead3way", "matchodds"}:
         return "1x2", None
     if raw in _BTTS_TOKENS or "bothteamstoscore" in compact:
         return "btts", None
