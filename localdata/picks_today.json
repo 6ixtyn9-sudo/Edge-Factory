@@ -1754,7 +1754,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-11T12:13:31+02:00",
+    "as_of": "2026-10-11T15:10:22+02:00",
     "avg_p": 60.5,
     "away": "FC Schalke 04",
     "bookmaker": "Betfair",
@@ -2919,175 +2919,8 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-11T06:13:53+02:00",
-    "avg_p": 55.8,
-    "away": "Ulsan Hyundai FC",
-    "bookmaker": "Pinnacle",
-    "bucket": "CAUTION",
-    "confidence": 0.5743,
-    "ctx": {
-      "away_norm": "ulsanhd",
-      "comp_type_name": "league",
-      "competition_type": "BOOST",
-      "duplicate_alias_collapse": "true",
-      "duplicate_bucket_sources": "CAUTION",
-      "duplicate_event_keys": "gwangju vs ulsanhd",
-      "home_norm": "gwangju",
-      "league": "UNKNOWN",
-      "league_key": "south korea k league 1",
-      "league_raw": "South Korea,K-league 1",
-      "niche": "UNKNOWN",
-      "odds_band": "BOOST",
-      "odds_band_name": "2.00-2.50",
-      "resolution_original_verdict": "UNKNOWN",
-      "resolution_path": "O2-competition_type",
-      "resolution_pool_n": null,
-      "resolution_pool_roi": null,
-      "resolution_reason": "O2-competition_type resolved to BOOST",
-      "resolution_verdict": "BOOST",
-      "side_role": "away",
-      "team_a": "CAUTION",
-      "team_h": "ALLOW"
-    },
-    "date": "2026-10-11",
-    "decay_verdict": "HEALTHY",
-    "display_rule": "ML-META\u226555",
-    "draw_risk_flag": "EXTREME",
-    "duplicate_bucket_sources": [
-      "CAUTION"
-    ],
-    "duplicate_matches_collapsed": [
-      "Gwangju FC vs Ulsan Hyundai FC"
-    ],
-    "duplicate_rows_collapsed": 1,
-    "duplicate_rules_collapsed": [
-      "ML-META\u226555"
-    ],
-    "edge_n_way": 3,
-    "edge_rule": "ml-meta avg_p>=55",
-    "edge_status": "certified",
-    "enhancement_label": "Home Team Under 3.5 Goals",
-    "enhancement_mapped": true,
-    "enhancement_multi_source": false,
-    "enhancement_price": null,
-    "enhancement_price_at": null,
-    "enhancement_price_book": null,
-    "enhancement_price_source": null,
-    "enhancement_priced": false,
-    "enhancement_probability": 0.99,
-    "enhancement_reason": "Combined Under 3.5 is 98.3% (ML-calibrated 94.0%->98.6%, n=139)",
-    "enhancement_state": "SHADOW",
-    "event_notes": [
-      {
-        "cohort_n": 1236,
-        "engine": "hybrid_cohort",
-        "label": "Home Team Under 3.5 Goals",
-        "market": "home_under_35",
-        "probability": 0.99,
-        "raw_probability": 0.9831686056680173,
-        "reason": "Combined Under 3.5 is 98.3% (ML-calibrated 94.0%->98.6%, n=139)"
-      },
-      {
-        "cohort_n": 1236,
-        "engine": "hybrid_cohort",
-        "label": "Home Team Under 2.5 Goals",
-        "market": "home_under_25",
-        "probability": 0.8899168319236069,
-        "raw_probability": 0.9206780510616708,
-        "reason": "Combined Under 2.5 is 92.1% (ML-calibrated 89.6%->92.5%, n=134) (Performance feedback: HR=93.9%, Adjusted Prob: 89.0%)"
-      },
-      {
-        "cohort_n": 1236,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 2.5 Goals",
-        "market": "match_over_25",
-        "probability": 0.4334422220864622,
-        "raw_probability": 0.5734840588923903,
-        "reason": "Mathematical expectation is 57.3% (ML-calibrated 44.8%->60.8%, n=551) (Performance feedback: HR=65.2%, Adjusted Prob: 43.3%)"
-      },
-      {
-        "cohort_n": 1236,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.1834634826875903,
-        "raw_probability": 0.18255091068507562,
-        "reason": "Poisson expected hit rate is 18.3% (ML-calibrated 23.8%->24.3%, n=444)"
-      }
-    ],
-    "home": "Gwangju FC",
-    "kickoff": "22:00",
-    "kickoff_sast": "2026-10-11 07:00 SAST",
-    "kickoff_source": "derived_sibling_row",
-    "kickoff_utc": "2026-10-11T05:00:00+00:00",
-    "kickoff_witness": "bzzoiro kickoff '2026-10-11T05:00:00Z'",
-    "league": "South Korea,K-league 1",
-    "market": "1x2",
-    "market_expression_version": "phase1-warning-only",
-    "market_recommendation_reason": "price vs hit-rate math broken for 1X2",
-    "market_type": "1x2",
-    "match": "Gwangju FC vs Ulsan Hyundai FC",
-    "min_lead_minutes": 30,
-    "model_version": "dc-blend-v1",
-    "n_way": 3,
-    "odds": 2.33,
-    "odds_captured_at": "2026-10-10T08:48:58+00:00",
-    "odds_league": "Korea Republic - K League 1",
-    "odds_match_method": "exact",
-    "odds_match_status": "matched",
-    "odds_source": "pinnapi_odds",
-    "odds_tier": "low",
-    "pick": "away",
-    "price_board": [
-      {
-        "away": "Ulsan HD",
-        "bookmaker": "Pinnacle",
-        "captured_at": "2026-10-10T08:48:58+00:00",
-        "chosen": true,
-        "home": "Gwangju FC",
-        "kickoff": "2026-10-11T05:00:00Z",
-        "league": "Korea Republic - K League 1",
-        "market": "1x2",
-        "match_method": "exact",
-        "named_bookmaker": true,
-        "odds": 2.33,
-        "odds_kind": "bookmaker",
-        "price_independence_family": "pinnacle_book",
-        "provider_role": "named_bookmaker",
-        "selection": "away",
-        "source": "pinnapi_odds"
-      }
-    ],
-    "price_corroborated": false,
-    "price_corroborating_families": [],
-    "price_corroboration_sufficient": true,
-    "price_corroborators": [],
-    "price_disclosure": "Pinnacle named-book price (Pinnacle)",
-    "price_donor_role": "named_bookmaker",
-    "price_evidence": "NAMED_BOOKMAKER_PRICE",
-    "price_independence_family": "pinnacle_book",
-    "price_named_book_corroborated": false,
-    "price_odds_kind": "bookmaker",
-    "price_push_eligible": true,
-    "recommended_enhancement": "home_under_35",
-    "recommended_market": "avoid_raw_1x2",
-    "rule": "ml-meta avg_p>=55",
-    "source_weights": {
-      "forebet": 0.0
-    },
-    "sources_used": [
-      "statarea",
-      "vitibet",
-      "bzzoiro"
-    ],
-    "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=768): Avg Goals: 3.31 | Over 2.5: 68.2% | BTTS: 44.4% | Home Over 1.5 Goals: 10.9% | Away Over 1.5 Goals: 84.1%",
-    "vitibet_index": -1.7,
-    "w_score": 1.0
-  },
-  {
-    "as_of": "2026-10-11T09:17:36+02:00",
-    "avg_p": 59.5,
+    "as_of": "2026-10-11T15:10:22+02:00",
+    "avg_p": 56.0,
     "away": "Auxerre",
     "bookmaker": "1xBet",
     "bucket": "CAUTION",
@@ -3096,10 +2929,13 @@
       "away_norm": "auxerre",
       "comp_type_name": "league",
       "competition_type": "BOOST",
+      "duplicate_alias_collapse": "true",
+      "duplicate_bucket_sources": "CAUTION",
+      "duplicate_event_keys": "rennes vs auxerre",
       "home_norm": "rennes",
       "league": "ALLOW",
       "league_key": "france ligue 1",
-      "league_raw": "France,Ligue 1",
+      "league_raw": "France Ligue 1",
       "niche": "BOOST",
       "odds_band": "ALLOW",
       "odds_band_name": "1.35-1.50",
@@ -3117,6 +2953,16 @@
     "decay_verdict": "HEALTHY",
     "display_rule": "ML-META\u226555",
     "draw_risk_flag": "HIGH",
+    "duplicate_bucket_sources": [
+      "CAUTION"
+    ],
+    "duplicate_matches_collapsed": [
+      "Rennes vs Auxerre"
+    ],
+    "duplicate_rows_collapsed": 1,
+    "duplicate_rules_collapsed": [
+      "ML-META\u226555"
+    ],
     "edge_n_way": 3,
     "edge_rule": "ml-meta avg_p>=55",
     "edge_status": "certified",
@@ -3128,63 +2974,60 @@
     "enhancement_price_book": null,
     "enhancement_price_source": null,
     "enhancement_priced": false,
-    "enhancement_probability": 0.9719,
-    "enhancement_reason": "Combined Under 3.5 is 98.8% (ML-calibrated 95.3%->97.5%, n=395) (Performance feedback: HR=96.3%, Adjusted Prob: 97.2%)",
+    "enhancement_probability": 0.9677,
+    "enhancement_reason": "Combined Under 3.5 is 98.4% (ML-calibrated 95.3%->97.5%, n=395) (Performance feedback: HR=96.3%, Adjusted Prob: 96.8%)",
     "enhancement_state": "PAPER",
     "event_notes": [
       {
-        "cohort_n": 2410,
+        "cohort_n": 2786,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 3.5 Goals",
         "market": "away_under_35",
-        "probability": 0.9718770742863465,
-        "raw_probability": 0.9877278732662044,
-        "reason": "Combined Under 3.5 is 98.8% (ML-calibrated 95.3%->97.5%, n=395) (Performance feedback: HR=96.3%, Adjusted Prob: 97.2%)"
+        "probability": 0.9677262165941798,
+        "raw_probability": 0.9835093172893334,
+        "reason": "Combined Under 3.5 is 98.4% (ML-calibrated 95.3%->97.5%, n=395) (Performance feedback: HR=96.3%, Adjusted Prob: 96.8%)"
       },
       {
-        "cohort_n": 2410,
+        "cohort_n": 2786,
         "engine": "hybrid_cohort",
         "label": "Away Team Under 2.5 Goals",
         "market": "away_under_25",
-        "probability": 0.9196662230727527,
-        "raw_probability": 0.9417739522205921,
-        "reason": "Combined Under 2.5 is 94.2% (ML-calibrated 90.7%->92.4%, n=370) (Performance feedback: HR=96.0%, Adjusted Prob: 92.0%)"
+        "probability": 0.9079894912895937,
+        "raw_probability": 0.9298165250969741,
+        "reason": "Combined Under 2.5 is 93.0% (ML-calibrated 90.7%->92.4%, n=370) (Performance feedback: HR=96.0%, Adjusted Prob: 90.8%)"
       },
       {
-        "cohort_n": 2410,
+        "cohort_n": 2786,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.9067130335636733,
+        "raw_probability": 0.8674347219203958,
+        "reason": "Combined Under 3.5 is 86.7% (ML-calibrated 94.0%->98.6%, n=139)"
+      },
+      {
+        "cohort_n": 2786,
         "engine": "hybrid_cohort",
         "label": "Match Over 2.5 Goals",
         "market": "match_over_25",
-        "probability": 0.4223835209383899,
-        "raw_probability": 0.5581270370015338,
-        "reason": "Mathematical expectation is 55.8% (ML-calibrated 44.8%->60.9%, n=553) (Performance feedback: HR=65.2%, Adjusted Prob: 42.2%)"
-      },
-      {
-        "cohort_n": 2410,
-        "engine": "hybrid_cohort",
-        "label": "Match Over 4.5 Goals",
-        "market": "match_over_45",
-        "probability": 0.1825468702210941,
-        "raw_probability": 0.18171624526399238,
-        "reason": "Poisson expected hit rate is 18.2% (ML-calibrated 23.8%->24.3%, n=445)"
+        "probability": 0.41288352773846115,
+        "raw_probability": 0.5455739832165962,
+        "reason": "Mathematical expectation is 54.6% (ML-calibrated 44.8%->60.9%, n=553) (Performance feedback: HR=65.2%, Adjusted Prob: 41.3%)"
       }
     ],
     "home": "Rennes",
-    "kickoff": "11:15",
+    "kickoff": "11-10, 16:15",
     "kickoff_sast": "2026-10-11 17:15 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-11T15:15:00+00:00",
     "kickoff_witness": "scoutingstats kickoff '2026-10-11T15:15:00Z'",
-    "league": "France,Ligue 1",
+    "league": "France Ligue 1",
     "market": "1x2",
     "market_expression_version": "phase1-warning-only",
     "market_recommendation_reason": "draw-risk / medium-odds negative-EV zone",
     "market_type": "1x2",
     "match": "Rennes vs Auxerre",
     "min_lead_minutes": 30,
-    "ml_ht_diff": 0,
-    "ml_ht_total": 0,
-    "ml_p": 0.5947,
     "model_version": null,
     "n_way": 3,
     "odds": 1.48,
@@ -3192,6 +3035,10 @@
     "odds_league": "France,Ligue 1",
     "odds_match_method": "exact",
     "odds_match_status": "matched",
+    "odds_replaced": {
+      "odds": 1.44,
+      "source": "zulubet"
+    },
     "odds_source": "theoddsapi",
     "odds_tier": "low",
     "pick": "home",
@@ -4343,13 +4190,181 @@
       "forebet": 0.0
     },
     "sources_used": [
+      "zulubet",
       "statarea",
       "vitibet"
     ],
     "sport": "soccer",
-    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1608): Avg Goals: 3.27 | Over 2.5: 64.7% | BTTS: 42.8% | Home Over 1.5 Goals: 82.4% | Away Over 1.5 Goals: 10.6%",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Home Win (n=1693): Avg Goals: 3.18 | Over 2.5: 64.6% | BTTS: 45.3% | Home Over 1.5 Goals: 80.7% | Away Over 1.5 Goals: 10.2%",
     "vitibet_index": 1.49,
-    "w_score": 0.3836
+    "w_score": 1.0
+  },
+  {
+    "as_of": "2026-10-11T06:13:53+02:00",
+    "avg_p": 55.8,
+    "away": "Ulsan Hyundai FC",
+    "bookmaker": "Pinnacle",
+    "bucket": "CAUTION",
+    "confidence": 0.5743,
+    "ctx": {
+      "away_norm": "ulsanhd",
+      "comp_type_name": "league",
+      "competition_type": "BOOST",
+      "duplicate_alias_collapse": "true",
+      "duplicate_bucket_sources": "CAUTION",
+      "duplicate_event_keys": "gwangju vs ulsanhd",
+      "home_norm": "gwangju",
+      "league": "UNKNOWN",
+      "league_key": "south korea k league 1",
+      "league_raw": "South Korea,K-league 1",
+      "niche": "UNKNOWN",
+      "odds_band": "BOOST",
+      "odds_band_name": "2.00-2.50",
+      "resolution_original_verdict": "UNKNOWN",
+      "resolution_path": "O2-competition_type",
+      "resolution_pool_n": null,
+      "resolution_pool_roi": null,
+      "resolution_reason": "O2-competition_type resolved to BOOST",
+      "resolution_verdict": "BOOST",
+      "side_role": "away",
+      "team_a": "CAUTION",
+      "team_h": "ALLOW"
+    },
+    "date": "2026-10-11",
+    "decay_verdict": "HEALTHY",
+    "display_rule": "ML-META\u226555",
+    "draw_risk_flag": "EXTREME",
+    "duplicate_bucket_sources": [
+      "CAUTION"
+    ],
+    "duplicate_matches_collapsed": [
+      "Gwangju FC vs Ulsan Hyundai FC"
+    ],
+    "duplicate_rows_collapsed": 1,
+    "duplicate_rules_collapsed": [
+      "ML-META\u226555"
+    ],
+    "edge_n_way": 3,
+    "edge_rule": "ml-meta avg_p>=55",
+    "edge_status": "certified",
+    "enhancement_label": "Home Team Under 3.5 Goals",
+    "enhancement_mapped": true,
+    "enhancement_multi_source": false,
+    "enhancement_price": null,
+    "enhancement_price_at": null,
+    "enhancement_price_book": null,
+    "enhancement_price_source": null,
+    "enhancement_priced": false,
+    "enhancement_probability": 0.99,
+    "enhancement_reason": "Combined Under 3.5 is 98.3% (ML-calibrated 94.0%->98.6%, n=139)",
+    "enhancement_state": "SHADOW",
+    "event_notes": [
+      {
+        "cohort_n": 1236,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 3.5 Goals",
+        "market": "home_under_35",
+        "probability": 0.99,
+        "raw_probability": 0.9831686056680173,
+        "reason": "Combined Under 3.5 is 98.3% (ML-calibrated 94.0%->98.6%, n=139)"
+      },
+      {
+        "cohort_n": 1236,
+        "engine": "hybrid_cohort",
+        "label": "Home Team Under 2.5 Goals",
+        "market": "home_under_25",
+        "probability": 0.8899168319236069,
+        "raw_probability": 0.9206780510616708,
+        "reason": "Combined Under 2.5 is 92.1% (ML-calibrated 89.6%->92.5%, n=134) (Performance feedback: HR=93.9%, Adjusted Prob: 89.0%)"
+      },
+      {
+        "cohort_n": 1236,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 2.5 Goals",
+        "market": "match_over_25",
+        "probability": 0.4334422220864622,
+        "raw_probability": 0.5734840588923903,
+        "reason": "Mathematical expectation is 57.3% (ML-calibrated 44.8%->60.8%, n=551) (Performance feedback: HR=65.2%, Adjusted Prob: 43.3%)"
+      },
+      {
+        "cohort_n": 1236,
+        "engine": "hybrid_cohort",
+        "label": "Match Over 4.5 Goals",
+        "market": "match_over_45",
+        "probability": 0.1834634826875903,
+        "raw_probability": 0.18255091068507562,
+        "reason": "Poisson expected hit rate is 18.3% (ML-calibrated 23.8%->24.3%, n=444)"
+      }
+    ],
+    "home": "Gwangju FC",
+    "kickoff": "22:00",
+    "kickoff_sast": "2026-10-11 07:00 SAST",
+    "kickoff_source": "derived_sibling_row",
+    "kickoff_utc": "2026-10-11T05:00:00+00:00",
+    "kickoff_witness": "bzzoiro kickoff '2026-10-11T05:00:00Z'",
+    "league": "South Korea,K-league 1",
+    "market": "1x2",
+    "market_expression_version": "phase1-warning-only",
+    "market_recommendation_reason": "price vs hit-rate math broken for 1X2",
+    "market_type": "1x2",
+    "match": "Gwangju FC vs Ulsan Hyundai FC",
+    "min_lead_minutes": 30,
+    "model_version": "dc-blend-v1",
+    "n_way": 3,
+    "odds": 2.33,
+    "odds_captured_at": "2026-10-10T08:48:58+00:00",
+    "odds_league": "Korea Republic - K League 1",
+    "odds_match_method": "exact",
+    "odds_match_status": "matched",
+    "odds_source": "pinnapi_odds",
+    "odds_tier": "low",
+    "pick": "away",
+    "price_board": [
+      {
+        "away": "Ulsan HD",
+        "bookmaker": "Pinnacle",
+        "captured_at": "2026-10-10T08:48:58+00:00",
+        "chosen": true,
+        "home": "Gwangju FC",
+        "kickoff": "2026-10-11T05:00:00Z",
+        "league": "Korea Republic - K League 1",
+        "market": "1x2",
+        "match_method": "exact",
+        "named_bookmaker": true,
+        "odds": 2.33,
+        "odds_kind": "bookmaker",
+        "price_independence_family": "pinnacle_book",
+        "provider_role": "named_bookmaker",
+        "selection": "away",
+        "source": "pinnapi_odds"
+      }
+    ],
+    "price_corroborated": false,
+    "price_corroborating_families": [],
+    "price_corroboration_sufficient": true,
+    "price_corroborators": [],
+    "price_disclosure": "Pinnacle named-book price (Pinnacle)",
+    "price_donor_role": "named_bookmaker",
+    "price_evidence": "NAMED_BOOKMAKER_PRICE",
+    "price_independence_family": "pinnacle_book",
+    "price_named_book_corroborated": false,
+    "price_odds_kind": "bookmaker",
+    "price_push_eligible": true,
+    "recommended_enhancement": "home_under_35",
+    "recommended_market": "avoid_raw_1x2",
+    "rule": "ml-meta avg_p>=55",
+    "source_weights": {
+      "forebet": 0.0
+    },
+    "sources_used": [
+      "statarea",
+      "vitibet",
+      "bzzoiro"
+    ],
+    "sport": "soccer",
+    "statistical_comment": "\ud83d\udcca Realized Stats on Away Win (n=768): Avg Goals: 3.31 | Over 2.5: 68.2% | BTTS: 44.4% | Home Over 1.5 Goals: 10.9% | Away Over 1.5 Goals: 84.1%",
+    "vitibet_index": -1.7,
+    "w_score": 1.0
   },
   {
     "as_of": "2026-10-11T09:17:36+02:00",
@@ -6877,7 +6892,7 @@
     "w_score": 0.4443
   },
   {
-    "as_of": "2026-10-11T12:13:31+02:00",
+    "as_of": "2026-10-11T15:10:22+02:00",
     "avg_p": 59.1,
     "away": "Fluminense",
     "bookmaker": "GTbets",
@@ -6952,7 +6967,7 @@
       }
     ],
     "home": "Flamengo",
-    "kickoff": "13:30",
+    "kickoff": "16:30",
     "kickoff_sast": "2026-10-11 22:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-11T20:30:00+00:00",
@@ -7131,7 +7146,7 @@
         "league": "Serie A",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 7.0,
+        "odds": 7.5,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -9073,7 +9088,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-11T12:13:31+02:00",
+    "as_of": "2026-10-11T15:10:22+02:00",
     "avg_p": 75.0,
     "away": "Orgryte IS",
     "bookmaker": "Betfair",
@@ -10941,7 +10956,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-11T12:13:31+02:00",
+    "as_of": "2026-10-11T15:10:22+02:00",
     "avg_p": 71.4,
     "away": "Osasuna",
     "bookmaker": "betexplorer_best",
@@ -12298,7 +12313,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-11T12:13:31+02:00",
+    "as_of": "2026-10-11T15:10:22+02:00",
     "avg_p": 69.7,
     "away": "Vit\u00f3ria SC",
     "bookmaker": "Betfair",
@@ -17743,7 +17758,7 @@
     "w_score": 1.0
   },
   {
-    "as_of": "2026-10-11T12:13:31+02:00",
+    "as_of": "2026-10-11T15:10:22+02:00",
     "avg_p": 55.1,
     "away": "Juventus",
     "bookmaker": "1xBet",
@@ -18007,7 +18022,7 @@
         "league": "Serie A",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 1.53,
+        "odds": 1.55,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -19458,7 +19473,7 @@
     "w_score": 0.6915
   },
   {
-    "as_of": "2026-10-11T12:13:31+02:00",
+    "as_of": "2026-10-11T15:10:22+02:00",
     "avg_p": 63.7,
     "away": "Volos NFC",
     "bookmaker": null,
@@ -21181,7 +21196,7 @@
     "w_score": 0.523
   },
   {
-    "as_of": "2026-10-11T12:13:31+02:00",
+    "as_of": "2026-10-11T15:10:22+02:00",
     "avg_p": 62.7,
     "away": "Dinamo Tirana",
     "bookmaker": null,
@@ -21365,7 +21380,7 @@
     "w_score": 0.5173
   },
   {
-    "as_of": "2026-10-11T12:13:31+02:00",
+    "as_of": "2026-10-11T15:10:22+02:00",
     "avg_p": 59.5,
     "away": "Corinthians",
     "bookmaker": "Betfair",
@@ -21449,7 +21464,7 @@
       }
     ],
     "home": "Palmeiras",
-    "kickoff": "13:30",
+    "kickoff": "16:30",
     "kickoff_sast": "2026-10-11 22:30 SAST",
     "kickoff_source": "derived_sibling_row",
     "kickoff_utc": "2026-10-11T20:30:00+00:00",
@@ -21596,7 +21611,7 @@
         "league": "Serie A",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 1.65,
+        "odds": 1.66,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
@@ -21612,7 +21627,7 @@
         "league": "Serie A",
         "market": "1x2",
         "named_bookmaker": false,
-        "odds": 3.75,
+        "odds": 3.6,
         "odds_kind": "provider_average",
         "price_independence_family": "scoutingstats_average",
         "provider_role": "average_bookmaker_price_donor",
