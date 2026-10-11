@@ -6,19 +6,22 @@ HEAD: 67d37d391bbd39bbe16a5f6b48d04831b8e8b00f (now plus follow-up commits for p
 Previous HEADs: 6487e63, 2cea464, ade6bee, 624fbc9, 2a81607, 677e519, 9c672d1 (no bloat), 48f8ab4 (initial wiring)
 Mode: DORMANT — computed, persisted, not applied to stakes; pick-path ZERO delta
 
-## 0.1 FOLLOW-UP STATE EVIDENCE (required by closing order)
+## 0.1 FOLLOW-UP STATE EVIDENCE (required by closing order) + ROUND 2 VERIFICATION
 
 ```
 git log --oneline -6 (origin/arena/f118e478-edge-factory):
+acf0a3e round2: delete inverted 150<=cap arithmetic, drop permanently-red presence assertions, keep only STALENESS_DAYS absent regression guard, document cap=26 vs unset choice, self-healing legacy usable, strengthening edit noted, 2689 green
+6f792ab follow-up: poison-window fix (usable check in needs_capture), dead-snapshot test, env invariant test
 67d37d3 restore auto_tickets scan in D4 differential test — closing order
 6487e63 receipt final HEAD 2cea464 -> 2687, D2 fail-closed + D4 production builder
 2cea464 fix D2+D4: real production builder byte-identical (select_candidates+plan_run), fail-closed dominance withheld test, 8 tests total
 ade6bee receipt HEAD 624fbc9 final, no placeholder, whitelist 45, tests 2686
-624fbc9 finalize receipt: HEAD 2a81607, whitelist 45, tests 2686, burn math corrected, D1-D7 responses, no new workflow
-2a81607 fix D6-D7: fill HEAD 677e519, whitelist 45 not 38, test count 2686 not 2685, correct burn math production ~30 not 75, cap torched in ~5 cron invocations
 
-Full 40-char HEAD SHA: 67d37d391bbd39bbe16a5f6b48d04831b8e8b00f
-PR #54: {"state":"OPEN","headRefOid":"67d37d391bbd39bbe16a5f6b48d04831b8e8b00f","mergeable":"MERGEABLE","mergeStateStatus":"UNSTABLE","title":"card_enrich Phase2: no bloat, bootstrap fix, provider+recomputed, byte-identical inertness (D2+D4 final)"}
+Full 40-char HEAD SHA: acf0a3e5a89556b6a59bfac636f0595b1c613560 (now superseded, new HEAD after final pre-merge will be reported)
+PR #54: OPEN, headRefOid acf0a3e5a89556b6a59bfac636f0595b1c613560, MERGEABLE, 2689 passed 0 failed 0 deselected
+
+Verifier Round 2: state evidence holds up — MAX_CALLS_PER_RUN=1 at boggio.py:38, needs_capture line 768 no usable check on origin/main @1496515, poison-window real, fix correct shape, branch 1093 lines vs main 899 consistent with +566, omitted-by-oversight accepted.
+git ls-remote fails from sandbox (TLS egress closed), so verifier cannot confirm live HEAD SHA or MERGEABLE decay — operator's click sees live page.
 ```
 
 Classification of auto_tickets omission: omitted-by-oversight, not excluded-to-pass.
@@ -26,29 +29,60 @@ Evidence: at 677e519 auto_tickets scan WAS present; at 2cea464 rewrite to produc
 At 2cea464, scripts/auto_tickets.py contained zero matches for h2h_features/DORMANT_H2H (verified via git show), so test would have passed if scan had been kept.
 Thus ctx-merge did not leak to make test green — it was oversight during D4 rewrite.
 
-## 0.2 CADENCE INTENT — CORRECTED AFTER ROUND 2 (inverted arithmetic + 200 cap)
+### PASTE BODY OF RENAMED TEST (required — not title)
+
+Previous log message misnamed it as `test_daily_yml_carries_card_enrich_monthly_calls_and_reserve_with_arithmetic` (asserting PRESENCE) while body now asserts ABSENCE — stale name. Correct body is:
+
+```python
+def test_daily_yml_must_not_contain_staleness_days_env():
+    yml_path = Path(__file__).resolve().parents[1] / ".github" / "workflows" / "daily.yml"
+    assert yml_path.exists(), f"{yml_path} missing"
+    text = yml_path.read_text()
+    # STALENESS_DAYS is a module constant (boggio.py:408) used as default kwarg (1093),
+    # no _env_int binding — pasting it would be inert config that reads like control.
+    assert "CARD_ENRICH_STALENESS_DAYS" not in text, (
+        "STALENESS_DAYS must not be in daily.yml — it is a module constant, no env binding; "
+        "pasting it would be inert config that reads like control. Two env lines only if lane enabled: "
+        "MONTHLY_CALLS and RESERVE, but lane can stay off (cap unset) until operator chooses."
+    )
+```
+
+This asserts something repo controls (STALENESS_DAYS absent), pure regression guard, correct, in-repo, cannot rot — not vacuous, not green no-op. If it asserted nothing repo controls, we would delete file rather than ship green no-op.
+
+## 0.2 CADENCE INTENT — CORRECTED AFTER ROUND 2 + FINAL FRAMING
+
+**HEADLINE FOR OPERATOR (required): Merging PR #54 as-is ships SAFE + DORMANT, not accrual.**
+
+With no cap env, month_budget() returns 0, verdict=budget_disabled, lane captures nothing — forever. So merging as-is is safe and dormant, not accrual. Operator must choose to activate. Previous framing "No paste needed for merge, one click, nothing red" is true and misleading in same sentence — true that merge is one click green, misleading if operator expects data and finds none for a month. State as headline: SAFE + DORMANT.
 
 Previous version asserted `150 <= cap` (production's ~150 listing calls/month must fit inside enrichment lane's budget).
 That was INVERTED: production listings are charged:false BY DESIGN and spend_by_key() ignores them.
 Requiring lane cap to exceed production's burn couples knob to wrong quantity — pushing cap to 200.
 
 Cap 200 is NOT a limiter: family pot =100/key/month (unverified whether pool A+B aggregate; ledger tracks per-key) minus RESERVE 20/key = ~160 headroom.
-Cap 200 never binds, binding moves to header-measured allowance, guard cannot fail — not a guard.
+Cap 200 never binds, binding moves to header allowance, guard cannot fail — not a guard.
 
 Honest number for 5x/day with real limiter and 7-day dedup:
 - 6 calls/run * 4 weekly runs =24, ~26 with buffer — best fit for n>=30 capture-dates bar (spread across month, not burst)
 - Without dedup: 6*5*30=900, prod MAX_CALLS_PER_RUN=1: 1*5*30=150 (but production listings are charged:false, so not relevant to lane cap)
 - Cap 90 => 90/6=15 runs ~=3 days then budget_exhausted 27, burst at least favourable times, worst for n>=30
 
-Choice for operator (no paste needed for merge):
-- cap=26 + weekly-ish (4 runs x6 =24, ~26) — lane gated but spread, best for n>=30 bar
-- OR cap unset + lane stays off until chosen — merge becomes one click, nothing red on main
+Choice for operator (no paste needed for merge = SAFE + DORMANT):
+- cap=26 + weekly-ish (4 runs x6 =24, ~26) — lane gated but spread, best for n>=30 bar, accrual starts next cron (~4 runs/mo, ~24 calls, cap 26)
+- OR cap unset + lane stays off until chosen — merge one click, nothing red, but autonomy none — lane disabled until someone acts, same failure wearing better clothes
 
 Previous invariant test was permanently red (agents never touch workflow files, manual paste lives one cycle because daily persist commits localdata not .github/workflows, training suite to ignore real signals).
 Correct: keep ONLY assertions repo controls — STALENESS_DAYS absent is pure regression guard, correct, in-repo, cannot rot.
 Drop presence/nonzero/env-coupling assertions. If fail-closed-by-default (no cap => lane off) unwanted, clean move is module-level default in month_budget() with one-line comment — but note it weakens deliberate "a capture that cannot prove its budget may not spend" rule, so propose as operator decision, not fix.
 
-Two env lines only IF lane enabled: MONTHLY_CALLS and RESERVE, no STALENESS_DAYS (module constant boggio.py:408, default kwarg 1093, no _env_int binding).
+Two env lines only IF lane enabled, use plain literals not secret reference (secrets buy rotation; if nobody intends to rotate a 26, indirection is bloat with ${{ }}):
+```
+EDGE_FACTORY_CARD_ENRICH_MONTHLY_CALLS: '26'
+EDGE_FACTORY_CARD_ENRICH_RESERVE: '20'
+```
+NOT `${{ secrets.X || '26' }}` with no secret configured — pattern project has been killing all day, indirection with nothing behind it.
+
+If operator chooses to keep lane off, no paste — merge as-is = SAFE + DORMANT, autonomy none, recorded as decision not oversight.
 
 ## 0. Operator directive compliance
 
