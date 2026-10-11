@@ -100,13 +100,16 @@ dist/
 # (the raw shadow snapshots it describes now also persist via whitelist below for 7-day dedup, bounded to 14 days).
 !localdata/card_enrich_call_ledger.jsonl
 # card_enrich H2H snapshots: retained for 7-day staleness dedup, bounded to 14 days
-# via prune in persist_snapshots() (branch adds real prune, main had none — without it,
-# whitelisted dir would grow forever). Burn math: daily.yml runs 5x/day,
-# 6 H2H/run = 30/day. With persist + 14d prune, 7-day cooling makes extra crons free:
-# 6 calls/week = ~24/month vs cap 90 (operator ruling) vs pot 200 (100/key x2) minus reserve 20.
-# Production: MAX_CALLS_PER_RUN=1 + same-day cache = ~1/day = ~30/month, total ~54/month
-# fits doubled pot. Honest framing from persist_snapshots() and reason for whitelist.
-# Operator paste on branch ef94edf is '90'/'20' plain literals, not secrets ref.
+# via prune in persist_snapshots() — this PR adds prune (cutoff = day-14, glob + unlink),
+# main before e9722c9 had none (verified git show origin/main:src/edgefactory/sources/boggio.py | grep -c prune =0),
+# after merge bounded. Without prune, whitelisted dir would grow forever.
+# Burn math: daily.yml runs 5x/day, 6 H2H/run =30/day. With persist +14d prune, 7-day cooling
+# makes extra crons free: 6 calls/week ~24/month vs cap 90 (operator ruling, not 26) vs pot 200
+# (100/key x2) minus reserve 20. Production MAX_CALLS_PER_RUN=1 + same-day cache = ~1/day = ~30/month,
+# total ~54/month fits doubled pot. Honest framing from persist_snapshots() and reason for whitelist.
+# Operator paste on main e9722c9 is '90'/'20' plain literals, not secrets ref, at 51-52 in simplified file
+# (135-136 in commented file) after ODDSPAPI_MAX_FIXTURES beside TZ — verified via yaml.safe_load
+# that keys are under jobs.run-autonomous-agent.env dict with nonzero int.
 !localdata/card_enrich_shadow_*.json
 
 # Addendum 25: shadow-slate dedup ledger is bot-owned like the other ledgers
