@@ -746,7 +746,8 @@ def test_local_h2h_block_does_not_spend_or_write_a_receipt(tmp_path, monkeypatch
     refusal_receipt = "\n".join(line for line in out.splitlines()
                                  if "lane_blocked_local" in line)
     assert refusal_receipt
-    assert all(field not in refusal_receipt for field in ("pool=", "key_tail=", "attempts="))
+    assert all(field not in refusal_receipt for field in
+               ("pool=", "pool_index=", "key=", "key_tail=", "attempts="))
     assert transport_calls == []
     assert boggio.read_call_ledger(localdata) == []
 
